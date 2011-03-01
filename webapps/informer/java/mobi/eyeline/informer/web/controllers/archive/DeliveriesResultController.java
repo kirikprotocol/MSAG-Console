@@ -72,6 +72,7 @@ public class DeliveriesResultController extends InformerController{
       return;
 
     getRequest().put("delivery", getSelectedAsString());
+    getRequest().put("archive", "true");
     selected = null;
   }
 

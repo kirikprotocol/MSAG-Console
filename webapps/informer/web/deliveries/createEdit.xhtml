@@ -77,8 +77,8 @@
         <h:inputText id="email"  value="#{createDelivery.activePage.emailNotificationAddress}"/>
       </h:panelGroup>
 
-      <h:outputText value="#{deliveryBundle.archivate}" rendered="#{userSession.userInAdminRole and createDelivery.activePage.archivateAllowed}"/>
-      <h:panelGroup rendered="#{userSession.userInAdminRole and createDelivery.activePage.archivateAllowed}">
+      <h:outputText value="#{deliveryBundle.archivate}" rendered="#{userSession.userInAdminRole}"/>
+      <h:panelGroup rendered="#{userSession.userInAdminRole}">
         <h:selectBooleanCheckbox id="archivate" value="#{createDelivery.activePage.archivateCheck}" onchange="archivateChanged()" style="position: relative; top: 2px; left: -3px;"/>
         <h:inputText validatorMessage="#{msg['invalid_param_value']} #{deliveryBundle.archivate}" id="archiveTime" value="#{createDelivery.activePage.archiveTime}">
           <f:validateLongRange/>

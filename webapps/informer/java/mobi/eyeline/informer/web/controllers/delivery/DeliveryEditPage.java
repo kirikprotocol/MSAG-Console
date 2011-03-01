@@ -46,8 +46,6 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private boolean archivateCheck;
 
-  private boolean archivateAllowed;
-
   private String archiveTime;
 
   private final Configuration config;
@@ -69,12 +67,9 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
     User u = config.getUser(user);
 
-    archivateAllowed = u.isCreateArchive();
-    if(archivateAllowed) {
-      if(delivery.getArchiveTime() != null) {
-        archiveTime = Integer.toString(delivery.getArchiveTime());
-        archivateCheck = true;
-      }
+    if(delivery.getArchiveTime() != null) {
+      archiveTime = Integer.toString(delivery.getArchiveTime());
+      archivateCheck = true;
     }
 
     String p = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
@@ -104,14 +99,6 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   public void setArchivateCheck(boolean archivateCheck) {
     this.archivateCheck = archivateCheck;
-  }
-
-  public boolean isArchivateAllowed() {
-    return archivateAllowed;
-  }
-
-  public void setArchivateAllowed(boolean archivateAllowed) {
-    this.archivateAllowed = archivateAllowed;
   }
 
   public String getArchiveTime() {

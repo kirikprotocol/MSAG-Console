@@ -29,6 +29,7 @@
         <eye:button>
           <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
             <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
+            <f:param name="archive" value="true"/>
           </tr:commandLink>
         </eye:button>
         <eye:button>
@@ -196,6 +197,7 @@
         <eye:button>
           <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
             <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
+            <f:param name="archive" value="true"/>
           </tr:commandLink>
         </eye:button>
         <eye:button>

@@ -15,6 +15,8 @@
   <ui:define name="content">
     <tr:form>
 
+      <c:set var="rowIndex" value="0"/>
+
       <eye:pageSubtitle value="#{msg['status.page.services']}"/>
 
 
@@ -36,7 +38,7 @@
               </th>
             </tr>
 
-            <tr class="row0">
+            <tr class="row#{rowIndex%2}">
               <td width="center">
                 <h:graphicImage value="/images/ic_internal.gif" rendered="#{informerStatus.informerOnlineHost != null}"/>
                 <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{informerStatus.informerOnlineHost == null}"/>
@@ -67,7 +69,8 @@
             </tr>
 
             <c:if test="#{informerStatus.ftpServerDeployed}">
-              <tr class="row1">
+              <c:set var="rowIndex" value="#{rowIndex+1}"/>
+              <tr class="row#{rowIndex%2}">
               <td width="center">
                 <h:graphicImage value="/images/ic_internal.gif" rendered="#{informerStatus.ftpServerOnlineHost != null}"/>
                 <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{informerStatus.ftpServerOnlineHost == null}"/>
@@ -99,7 +102,8 @@
             </c:if>
 
             <c:if test="#{informerStatus.archiveDaemonDeployed}">
-              <tr class="row1">
+              <c:set var="rowIndex" value="#{rowIndex+1}"/>
+              <tr class="row#{rowIndex%2}">
               <td width="center">
                 <h:graphicImage value="/images/ic_internal.gif" rendered="#{informerStatus.archiveDaemonOnlineHost != null}"/>
                 <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{informerStatus.archiveDaemonOnlineHost == null}"/>

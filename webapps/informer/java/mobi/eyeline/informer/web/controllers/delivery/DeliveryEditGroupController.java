@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
-import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
@@ -167,10 +166,7 @@ public class DeliveryEditGroupController extends DeliveryController{
           }
           if(editArchiveTime) {
             if(archiveTime != null && (archiveTime = archiveTime.trim()).length() != 0) {
-              User u = config.getUser(d.getOwner());
-              if(u != null && u.isCreateArchive()) {
-                d.setArchiveTime(Integer.parseInt(archiveTime));
-              }
+              d.setArchiveTime(Integer.parseInt(archiveTime));
             }else {
               d.setArchiveTime(null);
             }

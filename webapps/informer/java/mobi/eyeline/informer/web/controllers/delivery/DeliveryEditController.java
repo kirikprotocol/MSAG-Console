@@ -38,8 +38,6 @@ public class DeliveryEditController extends DeliveryController {
 
   private boolean archivateCheck;
 
-  private boolean archivateAllowed;
-
   private String archiveTime;
 
   public DeliveryEditController() {
@@ -68,10 +66,6 @@ public class DeliveryEditController extends DeliveryController {
     } catch (AdminException e) {
       addError(e);
     }
-  }
-
-  public boolean isArchivateAllowed() {
-    return archivateAllowed;
   }
 
   public String getArchiveTime() {
@@ -120,9 +114,6 @@ public class DeliveryEditController extends DeliveryController {
     statusHistory = getConfig().getDeliveryStatusHistory(user.getLogin(), user.getPassword(), id);
 
     User u = getConfig().getUser(delivery.getOwner());
-    if(u != null) {
-      archivateAllowed = u.isCreateArchive();
-    }
     archiveTime = delivery.getArchiveTime() == null ? null : Integer.toString(delivery.getArchiveTime());
     archivateCheck = delivery.getArchiveTime() != null;
   }
