@@ -621,3 +621,4 @@ B3204: Feb 21, 2011
     SMSC	replace if present fixed. now old sms id will be used if message was replaced
     SMSC	mass cancel is prohibited now
     SMSC	error prone store startup
+    SMSC	support to change responding address for specified ussd codes (GgPA in resp != GdPA in incoming request)
