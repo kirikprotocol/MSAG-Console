@@ -46,26 +46,7 @@ class RequestProcessor {
   void execute(final Request r) {
     final RequestExecutor executor = getHandler(r.getCreater());
     final CountDownLatch downLatch = new CountDownLatch(1);
-    final Future future = poolExecutor.submit(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          if(logger.isDebugEnabled()) {
-            logger.debug("Execute request: "+r);
-          }
-          r.execute(executor);
-          requestStorage.changeStatus(r.getId(), Request.Status.FINISHED);
-        } catch (Throwable e) {
-          e.printStackTrace();
-          logger.error(e, e);
-        } finally {
-          try {
-            downLatch.await();
-          } catch (InterruptedException ignored) {}
-          submited.remove(r.getId());
-        }
-      }
-    });
+    final Future future = poolExecutor.submit(new RequestTask(r, executor, downLatch));
     submited.put(r.getId(), new SubmitedRequest(future,r));
     downLatch.countDown();
   }
@@ -111,4 +92,34 @@ class RequestProcessor {
   }
 
 
+  private class RequestTask implements Runnable {
+    private final Request r;
+    private final RequestExecutor executor;
+    private final CountDownLatch downLatch;
+
+    public RequestTask(Request r, RequestExecutor executor, CountDownLatch downLatch) {
+      this.r = r;
+      this.executor = executor;
+      this.downLatch = downLatch;
+    }
+
+    @Override
+    public void run() {
+      try {
+        if(logger.isDebugEnabled()) {
+          logger.debug("Execute request: "+ r);
+        }
+        r.execute(executor);
+        requestStorage.changeStatus(r.getId(), Request.Status.FINISHED);
+      } catch (Throwable e) {
+        e.printStackTrace();
+        logger.error(e, e);
+      } finally {
+        try {
+          downLatch.await();
+        } catch (InterruptedException ignored) {}
+        submited.remove(r.getId());
+      }
+    }
+  }
 }
