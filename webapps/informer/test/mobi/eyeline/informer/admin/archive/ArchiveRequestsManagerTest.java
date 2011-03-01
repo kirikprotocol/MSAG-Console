@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.archive;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
@@ -31,16 +30,16 @@ public class ArchiveRequestsManagerTest {
 
   private File resultDir;
 
-  private static class Context implements ArchiveContext {
-    private UnmodifiableDeliveryManager dm;
-    private FileSystem fs;
+  @Before
+  public void before() throws Exception {
+    Class.forName("mobi.eyeline.informer.admin.users.User");
+    resultDir = TestUtils.createRandomDir("-results");
+    dm = new TestDeliveryManager();
+    final RequestStorage rs = new RequestMemoryStorage();
+    final FileSystem fs = new TestFileSystem();
 
-    private Context(UnmodifiableDeliveryManager dm, FileSystem fs) {
-      this.dm = dm;
-      this.fs = fs;
-    }
-
-    @Override
+    requestsManager = new ArchiveRequestsManager(rs, new ArchiveContext() {
+      @Override
       public User getUser(String login) {
         User u = new User();
         u.setLogin(login);
@@ -55,27 +54,18 @@ public class ArchiveRequestsManagerTest {
       public FileSystem getFileSystem() {
         return fs;
       }
-  }
-
-  @Before
-  public void before() throws InitException {
-    resultDir = TestUtils.createRandomDir("-results");
-    dm = new TestDeliveryManager();
-    final RequestStorage rs = new RequestMemoryStorage();
-    final FileSystem fs = new TestFileSystem();
-
-    requestsManager = new ArchiveRequestsManager(rs, new Context(dm, fs), resultDir, 10, 10);
+    }, resultDir, 10, 10);
     assertTrue(resultDir.exists());
   }
 
   @After
   public void after() {
-    if(resultDir != null) {
-      TestUtils.recursiveDeleteFolder(resultDir);
-    }
     requestsManager.shutdown();
     if(dm != null) {
       dm.shutdown();
+    }
+    if(resultDir != null) {
+      TestUtils.recursiveDeleteFolder(resultDir);
     }
   }
 
