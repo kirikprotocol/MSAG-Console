@@ -108,6 +108,9 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
         <h:outputText value="#{archiveDelivery.smsNotificationAddress == null ? '-' : archiveDelivery.smsNotificationAddress}"/>
 
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.archivate}"/>
+        <h:outputText value="#{archiveDelivery.delivery.archiveTime}"/>
+
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
         <h:outputText value="#{archiveDelivery.emailNotificationAddress == null ? '-' : archiveDelivery.emailNotificationAddress}"/>
