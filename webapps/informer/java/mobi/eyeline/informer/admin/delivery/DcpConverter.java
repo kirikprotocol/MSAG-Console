@@ -8,6 +8,7 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.informer.util.Time;
+import org.apache.log4j.Logger;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,6 +30,8 @@ class DcpConverter {
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
   private static final String DATE_FORMAT_YY = "dd.MM.yy HH:mm:ss";
+
+  private static final Logger logger = Logger.getLogger(DcpConverter.class);
 
   public static Time convertTimeFromDcpFormat(String time) throws AdminException {
     return new Time(time);
@@ -145,6 +148,9 @@ class DcpConverter {
     }
     if(di.hasArchivationPeriod()) {
       delivery.setArchiveTime(Integer.parseInt(di.getArchivationPeriod().substring(0, di.getArchivationPeriod().indexOf(":"))));
+    }
+    if(logger.isDebugEnabled()) {
+      logger.debug("protogen archivationPeriod="+(di.hasArchivationPeriod() ? di.getArchivationPeriod() : "null"));
     }
     delivery.setTransactionMode(di.getTransactionMode());
     delivery.setUseDataSm(di.getUseDataSm());
