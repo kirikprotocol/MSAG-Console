@@ -139,7 +139,7 @@ class RequestExecutor {
   }
 
 
-  private interface GetDeliveriesStrategy {
+  private static interface GetDeliveriesStrategy {
 
     void getResults(User u, DeliveriesRequest request) throws AdminException;
   }
