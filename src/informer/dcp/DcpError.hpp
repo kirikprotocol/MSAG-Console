@@ -14,7 +14,7 @@ static const int TooManyDeliveries=4;
 static const int AuthFailed=5;
 static const int RequestNotFound=6;
 static const int Expired=7;
-
+static const int ItemNotFound=8;
 
 };
 

@@ -316,14 +316,20 @@ public:
 
             const DeliveryInfo& info = dlv->getDlvInfo();
             const dlvid_type dlvId = info.getDlvId();
-            const timediff_type arcTime = info.getArchivationTime();
-            if ( arcTime > 0 && currentTime < info.getStartDate()+arcTime ) {
-                try {
-                    mgr_.core_.deleteDelivery(dlv->getUserInfo(),dlvId,true);
-                } catch ( std::exception& e ) {
-                    smsc_log_error(log_,"D=%u cannot archivate: %s",dlvId,e.what());
+            if ( getCS()->isArchive() ) {
+                const timediff_type arcTime = info.getArchivationTime();
+                if ( arcTime > 0 && currentTime > info.getStartDate() + arcTime ) {
+                    smsc_log_debug(log_,"D=%u wants to archivate arcTime=%u start=%llu current=%llu",
+                                   dlvId,arcTime,
+                                   msgTimeToYmd(info.getStartDate()),
+                                   msgTimeToYmd(currentTime));
+                    try {
+                        mgr_.core_.deleteDelivery(dlv->getUserInfo(),dlvId,true);
+                    } catch ( std::exception& e ) {
+                        smsc_log_error(log_,"D=%u cannot archivate: %s",dlvId,e.what());
+                    }
+                    continue;
                 }
-                continue;
             }
             const userid_type userId = info.getUserInfo().getUserId();
 

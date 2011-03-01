@@ -69,7 +69,7 @@ endDate_(0),
 activePeriodStart_(-1),
 activePeriodEnd_(-1),
 validityPeriod_(-1),
-archivationTime_(0),
+archivationTime_(-1),
 activeWeekDays_(-1)
 {
     if (!log_) {

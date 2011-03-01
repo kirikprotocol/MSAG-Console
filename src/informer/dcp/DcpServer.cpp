@@ -252,6 +252,7 @@ void DcpServer::onHandleCommand(eyeline::protogen::ProtocolSocketBase::Packet& p
       case EXC_ACCESSDENIED:err=DcpError::AdminRoleRequired;break;
       case EXC_DLVLIMITEXCEED:err=DcpError::TooManyDeliveries;break;
       case EXC_EXPIRED:err=DcpError::Expired;break;
+      case EXC_NOTFOUND:err=DcpError::ItemNotFound;break;
       default:break;
     }
     mkFailResponse(pkt.connId,sb.readInt32(),err,e.what());
