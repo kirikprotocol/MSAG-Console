@@ -55,7 +55,7 @@
 
         <eye:delimiter/>
 
-        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init }" selectedRows="#{messages.selected}" >
+        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and messages.resendAllowed}" selectedRows="#{messages.selected}">
           <eye:row rowId="#{m.id}">
             <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
               <h:outputText value="#{m.abonent.simpleAddress}"/>
@@ -77,7 +77,31 @@
               <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
             </eye:column>
           </eye:row>
-        </eye:dataTable>        
+        </eye:dataTable>
+
+        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and!messages.resendAllowed}">
+          <eye:row rowId="#{m.id}">
+            <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
+              <h:outputText value="#{m.abonent.simpleAddress}"/>
+            </eye:column>
+            <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="15%">
+              <h:outputText value="#{m.state}" converter="messageStateConverter"/>
+            </eye:column>
+            <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" width="15%">
+              <tr:outputText value="#{m.date}">
+                <f:convertDateTime dateStyle="short" type="both"/>
+              </tr:outputText>
+            </eye:column>
+            <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%" rendered="#{messages.showTexts}">
+              <h:outputText value="#{m.text}"/>
+            </eye:column>
+            <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="#{!messages.showTexts ? '55' : '20'}%">
+              <h:outputText value="#{m.errorCode}"/>
+              <h:outputText value=":&#160;"/>
+              <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
+            </eye:column>
+          </eye:row>
+        </eye:dataTable>
 
         <eye:delimiter/>
 
