@@ -6,7 +6,6 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
@@ -325,7 +324,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
           log("create report for: " + f.getName());
           File reportTmpFile = new File(f.getParent(), deliveryName + ".rep." + deliveryId);
           createReport(reportTmpFile, d);
-          uploadFile(resource, reportTmpFile, deliveryName + ".csv.report");
+          uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
+          resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
+
           fileSys.delete(reportTmpFile);
         } else {
           log("no report needed for: " + f.getName());
