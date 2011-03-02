@@ -165,6 +165,10 @@ public class DeliveryListController extends DeliveryController {
     return null;
   }
 
+  public boolean isArchivationAllowed() {
+    return config.isArchiveDaemonDeployed();
+  }
+
   public String archivate() {
     if (selected != null) {
       for (String r : selected) {
