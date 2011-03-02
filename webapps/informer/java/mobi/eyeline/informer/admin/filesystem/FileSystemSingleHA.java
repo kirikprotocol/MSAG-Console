@@ -85,4 +85,16 @@ class FileSystemSingleHA extends FileSystem {
   public long length(File f) throws AdminException {
     return f.length();
   }
+
+  @Override
+  public void createNewFile(File f) throws AdminException {
+    try{
+      if(!f.createNewFile()) {
+        String err = "Can't create file '" + f.getAbsolutePath() + '\'';
+        throw new FileSystemException("io_error", err);
+      }
+    } catch (IOException e) {
+      throw new FileSystemException("io_error", e);
+    }
+  }
 }

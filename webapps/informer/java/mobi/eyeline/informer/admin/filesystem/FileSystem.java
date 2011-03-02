@@ -141,4 +141,11 @@ public abstract class FileSystem {
    */
   public abstract long length(File f) throws AdminException;
 
+  /**
+   * Создаёт новый файл
+   * @param f File
+   * @throws AdminException ошибка ввода/вывода
+   */
+  public abstract void createNewFile(File f) throws AdminException;
+
 }

@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin.notifications;
 
+import com.eyeline.utils.ThreadFactoryWithCounter;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
@@ -23,7 +24,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 
@@ -53,14 +53,7 @@ public class DeliveryNotificationsProvider extends DeliveryChangeListenerStub {
   public DeliveryNotificationsProvider(DeliveryNotificationsContext context, NotificationSettings notificationSettings) {
     this.context = context;
     this.notificationSettings = notificationSettings;
-    scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactory() {
-      int n = 0;
-
-      public Thread newThread(Runnable runnable) {
-        n++;
-        return new Thread(runnable, "DeliveryNotificationDaemon-" + n);
-      }
-    });
+    scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactoryWithCounter("DeliveryNotificationDaemon-"));
     context.getDeliveryChangesDetector().addListener(this);
 
   }

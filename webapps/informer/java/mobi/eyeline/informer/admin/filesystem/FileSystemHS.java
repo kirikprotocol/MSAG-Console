@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.filesystem;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.FileUtils;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 
@@ -11,6 +12,8 @@ import java.io.*;
  * @author Aleksandr Khalitov
  */
 class FileSystemHS extends FileSystem {
+
+  private static final Logger logger = Logger.getLogger(FileSystem.class);
 
   private File baseDir;
 
@@ -44,6 +47,7 @@ class FileSystemHS extends FileSystem {
       }
       return new HSFileOutputStream(file, oss);
     } catch (IOException e) {
+      logger.error(e,e);
       errStr = e.getMessage();
       error = true;
       throw new FileSystemException("io_error", e);
@@ -93,6 +97,7 @@ class FileSystemHS extends FileSystem {
       try {
         FileUtils.copyFileTo(files[i], toFiles[i]);
       } catch (IOException e) {
+        logger.error(e,e);
         error = true;
         errStr = "Can't copy file '" + files[i].getAbsolutePath() + "' to '" + toFiles[i].getAbsolutePath() + '\'';
         throw new FileSystemException("io_error", errStr);
@@ -118,6 +123,31 @@ class FileSystemHS extends FileSystem {
         errStr = "Can't remove file '" + files[i].getAbsolutePath() + '\'';
         throw new FileSystemException("io_error", errStr);
       }
+    }
+  }
+
+  @Override
+  public void createNewFile(File file) throws AdminException {
+    if (file == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
+    checkErrors();
+
+    File[] files = new File[mirrorsDir.length + 1];
+    getMirrorsFiles(file, files);
+    files[mirrorsDir.length] = file;
+
+    for (int i = files.length - 1; i > -1; i--) {
+      try{
+        if (files[i].createNewFile()) {
+          continue;
+        }
+      }catch (IOException e) {
+        logger.error(e,e);
+      }
+      error = true;
+      errStr = "Can't create file '" + files[i].getAbsolutePath() + '\'';
+      throw new FileSystemException("io_error", errStr);
     }
   }
 
@@ -184,7 +214,7 @@ class FileSystemHS extends FileSystem {
         throw new FileSystemException("io_error");
       }
     }
-    return len;        
+    return len;
   }
 
   private File[] getMirrorsFiles(File baseFile) throws AdminException {
