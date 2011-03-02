@@ -73,6 +73,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         }
 
         data.validityPeriod = config.getString("validityPeriod","");
+        data.archivationPeriod = config.getString("archivationPeriod","");
         data.flash = config.getBool("flash",false);
         data.useDataSm = config.getBool("useDataSm",false);
         const std::string dlvMode = config.getString("deliveryMode","sms");
@@ -524,6 +525,9 @@ void DeliveryImpl::writeDeliveryInfoData()
     }
     if (!data.validityPeriod.empty()) {
         config.setString("validityPeriod",data.validityPeriod.c_str());
+    }
+    if (!data.archivationPeriod.empty()) {
+        config.setString("archivationPeriod",data.archivationPeriod.c_str());
     }
     config.setBool("flash",data.flash);
     config.setBool("useDataSm",data.useDataSm);

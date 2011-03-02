@@ -27,6 +27,7 @@ public:
   {
     seqNum=0;
     deliveryIdFlag=false;
+    moveToArchiveFlag=false;
   }
  
   static int32_t messageGetTag()
@@ -55,6 +56,15 @@ public:
       sprintf(buf,"%d",deliveryId);
       rv+=buf;
     }
+    if(moveToArchiveFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="moveToArchive=";
+      rv+=moveToArchive?"true":"false";
+    }
     return rv;
   }
 
@@ -67,6 +77,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(deliveryId);
+    }
+    if(moveToArchiveFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(moveToArchive);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -93,6 +109,28 @@ public:
   {
     return deliveryIdFlag;
   }
+  bool getMoveToArchive()const
+  {
+    if(!moveToArchiveFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("moveToArchive");
+    }
+    return moveToArchive;
+  }
+  void setMoveToArchive(bool argValue)
+  {
+    moveToArchive=argValue;
+    moveToArchiveFlag=true;
+  }
+  bool& getMoveToArchiveRef()
+  {
+    moveToArchiveFlag=true;
+    return moveToArchive;
+  }
+  bool hasMoveToArchive()const
+  {
+    return moveToArchiveFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -105,6 +143,11 @@ public:
     //ds.writeInt32(seqNum);
     ds.writeTag(deliveryIdTag);
     ds.writeInt32LV(deliveryId); 
+    if(moveToArchiveFlag)
+    {
+      ds.writeTag(moveToArchiveTag);
+    ds.writeBoolLV(moveToArchive); 
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -133,6 +176,15 @@ public:
           }
           deliveryId=ds.readInt32LV();
           deliveryIdFlag=true;
+        }break;
+        case moveToArchiveTag:
+        {
+          if(moveToArchiveFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("moveToArchive");
+          }
+          moveToArchive=ds.readBoolLV();
+          moveToArchiveFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -178,13 +230,16 @@ protected:
   //static const int8_t versionMinor=0;
 
   static const int32_t deliveryIdTag=1;
+  static const int32_t moveToArchiveTag=2;
 
   int32_t seqNum;
   int connId;
 
   int32_t deliveryId;
+  bool moveToArchive;
 
   bool deliveryIdFlag;
+  bool moveToArchiveFlag;
 };
 
 }

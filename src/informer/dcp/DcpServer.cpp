@@ -414,7 +414,8 @@ void DcpServer::handle(const messages::DropDelivery& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  getCore()->deleteDelivery(*ui.get(),inmsg.getDeliveryId());
+  const bool moveToArchive = inmsg.hasMoveToArchive() && inmsg.getMoveToArchive();
+  getCore()->deleteDelivery(*ui.get(),inmsg.getDeliveryId(),moveToArchive);
   mkOkResponse(inmsg);
 }
 

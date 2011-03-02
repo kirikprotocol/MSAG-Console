@@ -316,7 +316,7 @@ public:
 
             const DeliveryInfo& info = dlv->getDlvInfo();
             const dlvid_type dlvId = info.getDlvId();
-            if ( getCS()->isArchive() ) {
+            if ( ! getCS()->isArchive() ) {
                 const timediff_type arcTime = info.getArchivationTime();
                 if ( arcTime > 0 && currentTime > info.getStartDate() + arcTime ) {
                     smsc_log_debug(log_,"D=%u wants to archivate arcTime=%u start=%llu current=%llu",

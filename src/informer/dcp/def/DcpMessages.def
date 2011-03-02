@@ -200,6 +200,7 @@ end
 
 message DropDelivery 33
   int32 deliveryId 1
+  bool moveToArchive 2 opt
 end
 
 

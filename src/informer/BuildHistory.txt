@@ -1,3 +1,7 @@
+2011-03-02 10:05 bukind
+  moveToArchive field added to dcp:DropDelivery message
+  archivation typo fix
+
 2011-03-01 15:00 bukind
   status.log is not necessary for delivery
 
