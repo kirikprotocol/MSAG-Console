@@ -1,3 +1,7 @@
+2011-03-02 11:00 bukind
+  signal archive from dlvmgr to wake it up
+  getsmscstats admin message added
+
 2011-03-02 10:05 bukind
   moveToArchive field added to dcp:DropDelivery message
   archivation typo fix

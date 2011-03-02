@@ -1,4 +1,5 @@
 #include "AdminServer.hpp"
+#include "informer/data/CoreSmscStats.h"
 
 namespace eyeline{
 namespace informer{
@@ -160,6 +161,43 @@ void AdminServer::handle(const messages::SendTestSms& cmd)
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
 }
 
+
+void AdminServer::handle(const messages::GetSmscStats& cmd)
+{
+  messages::GetSmscStatsResp resp;
+  resp.messageSetSeqNum(cmd.messageGetSeqNum());
+  try{
+    if(!core)
+    {
+      throw InfosmeException(EXC_SYSTEM,"Not ready yet.");
+    }
+    std::vector< CoreSmscStats > stats;
+    core->getSmscStats(stats);
+    std::vector<messages::SmscStats>& vec = resp.getSmscStatsRef();
+    vec.reserve(stats.size());
+    for ( std::vector< CoreSmscStats >::const_iterator i = stats.begin(), iend = stats.end();
+          i != iend; ++i ) {
+        vec.push_back(messages::SmscStats());
+        messages::SmscStats& res = vec.back();
+        res.setSmscId(i->smscId);
+        res.setLiveTime(i->liveTime);
+        res.setNumberOfRegions(i->nRegions);
+        res.setMaxBandwidth(i->maxBandwidth);
+        res.setAveragingPeriod(i->avgInterval);
+        res.setCurrentLoad(i->currentLoad);
+        res.setPendingResponses(i->nResponses);
+        res.setPendingReceipts(i->nReceipts);
+    }
+    resp.setStatus(0);
+  }catch(InfosmeException& e)
+  {
+    resp.setStatus(e.getCode());
+  }catch(std::exception& e)
+  {
+    resp.setStatus(EXC_GENERIC);
+  }
+  enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
+}
 
 }
 }

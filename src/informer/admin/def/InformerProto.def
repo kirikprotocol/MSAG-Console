@@ -11,4 +11,6 @@ protocol InformerAdminProto
   LoggerSetCategoriesResp outmsg
   SendTestSms inmsg
   SendTestSmsResp outmsg
+  GetSmscStats inmsg
+  GetSmscStatsResp outmsg
 end

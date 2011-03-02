@@ -6,6 +6,7 @@
 #include "messages/LoggerGetCategories.hpp"
 #include "messages/LoggerSetCategories.hpp"
 #include "messages/SendTestSms.hpp"
+#include "messages/GetSmscStats.hpp"
 
 namespace eyeline{
 namespace informer{
@@ -18,7 +19,7 @@ public:
   virtual void handle(const messages::LoggerGetCategories& cmd)=0;
   virtual void handle(const messages::LoggerSetCategories& cmd)=0;
   virtual void handle(const messages::SendTestSms& cmd)=0;
-
+  virtual void handle(const messages::GetSmscStats& cmd)=0;
 };
 
 

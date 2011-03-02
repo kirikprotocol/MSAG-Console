@@ -39,6 +39,7 @@ protected:
   virtual void handle(const messages::LoggerGetCategories& cmd);
   virtual void handle(const messages::LoggerSetCategories& cmd);
   virtual void handle(const messages::SendTestSms& cmd);
+  virtual void handle(const messages::GetSmscStats& cmd);
 
 };
 

@@ -811,6 +811,8 @@ int DeliveryMgr::Execute()
             if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
         }
         if (wakeTime>0) { mon_.wait(int(wakeTime)); }
+        // check if we have an archive dlvs pending
+        signalArchive(0);
     }
     return 0;
 }

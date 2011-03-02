@@ -11,4 +11,6 @@ protocol WebappAdminProto
   LoggerSetCategoriesResp inmsg
   SendTestSms outmsg
   SendTestSmsResp inmsg
+  GetSmscStats inmsg
+  GetSmscStatsResp outmsg
 end
