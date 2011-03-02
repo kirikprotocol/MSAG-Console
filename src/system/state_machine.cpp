@@ -1031,6 +1031,19 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG) && sms->hasBinProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    submitResp(t,sms,Status::INVOPTPARAMVAL);
+    smsc->submitMrKill(sms->getOriginatingAddress(),sms->getDestinationAddress(),sms->getConcatMsgRef());
+    warn2(smsLog, "SBM: 'replace if present' flag not supported in concatenated message Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      t.msgId,c.dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      c.src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
   if(sms->hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM) &&
      (
        sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)<1 ||
@@ -2628,7 +2641,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   char esmBuf[32]={0,};
   if(sms->hasIntProperty(Tag::SMPP_ESM_CLASS) && sms->getIntProperty(Tag::SMPP_ESM_CLASS)!=0)
   {
-    sprintf(esmBuf,"esm=%x",sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+    sprintf(esmBuf,";esm=%x",sms->getIntProperty(Tag::SMPP_ESM_CLASS));
   }
   info2(smsLog,"SBM: submit ok, seqnum=%d Id=%lld;seq=%d;%s;%s;srcprx=%s;dstprx=%s;valid=%lu%s%s",
     dialogId2,

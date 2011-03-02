@@ -1399,6 +1399,7 @@ void Smsc::run()
 #ifdef USE_MAP
     mapio::FraudControl::Init(findConfigFile("fraud.xml"));
     mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
+    mapio::NetworkProfiles::init(findConfigFile("network-profiles.xml"));
 #endif
 
     aliaser->Load();

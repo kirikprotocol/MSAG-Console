@@ -14,18 +14,18 @@ public:
   {
     memset(mrArray,0,sizeof(mrArray));
   }
-  uint16_t getNextMR(const smsc::sms::Address& addr)
+  uint8_t getNextMR(const smsc::sms::Address& addr)
   {
-    int idx=addr.length-4;
+    int idx=addr.length-5;
     if(idx<0)idx=0;
     idx=atoi(addr.value+idx);
     if(idx<0)idx=0;
-    if(idx>=10000)idx=9999;
+    if(idx>=100000)idx=99999;
     smsc::core::synchronization::MutexGuard mg(mtx);
     return mrArray[idx]++;
   }
 protected:
-  uint8_t mrArray[10000];
+  uint8_t mrArray[100000];
   smsc::core::synchronization::Mutex mtx;
 };
 
