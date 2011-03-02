@@ -1031,7 +1031,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG) && sms->hasBinProperty(Tag::SMSC_MERGE_CONCAT))
+  if(sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG) && sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
   {
     submitResp(t,sms,Status::INVOPTPARAMVAL);
     smsc->submitMrKill(sms->getOriginatingAddress(),sms->getDestinationAddress(),sms->getConcatMsgRef());
