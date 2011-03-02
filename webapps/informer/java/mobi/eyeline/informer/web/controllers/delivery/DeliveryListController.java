@@ -165,6 +165,21 @@ public class DeliveryListController extends DeliveryController {
     return null;
   }
 
+  public String archivate() {
+    if (selected != null) {
+      for (String r : selected) {
+        try {
+          int id = Integer.parseInt(r);
+          config.archivateDelivery(getUserName(), id);
+        } catch (AdminException e) {
+          addError(e);
+        }
+      }
+      selected = null;
+    }
+    return null;
+  }
+
   public String editGroup() {
     if(selected == null || selected.isEmpty()) {
       return null;

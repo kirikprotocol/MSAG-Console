@@ -546,6 +546,21 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     dropDelivery(login, u.getPassword(), deliveryId);
   }
 
+  public void archivateDelivery(String login, int deliveryId) throws AdminException {
+    if(!isArchiveDaemonDeployed()) {
+      throw new IntegrityException("archiveDaemon.undeployed");
+    }
+    User u = getUser(login);
+    synchronized (getLock(deliveryId)) {
+      Delivery d = deliveryManager.getDelivery(login, u.getPassword(), deliveryId);
+      if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
+        throw new IntegrityException("siebel.delivery.remove");
+      }
+      setDeliveryRestriction(login, u.getPassword(), deliveryId, false);
+      deliveryManager.archivateDelivery(login, u.getPassword(), deliveryId);
+    }
+  }
+
   @Deprecated
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {

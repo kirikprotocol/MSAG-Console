@@ -106,6 +106,12 @@ public class TestDcpConnection extends DcpConnection{
     deliveries.remove(deliveryId);
   }
 
+  @Override
+  public void archivateDelivery(int deliveryId) throws AdminException {
+    deliveries.remove(deliveryId);
+    System.out.println("MOVE DELIVERY TO ARCHIVE: "+deliveryId+" (not implemented)");
+  }
+
   private boolean accept(Delivery delivery, DeliveryFilter filter) {
     if(filter.getEndDateFrom()!= null && delivery.getEndDate() != null && delivery.getEndDate().before(filter.getEndDateFrom())) {
       return false;

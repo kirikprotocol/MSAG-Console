@@ -416,6 +416,10 @@ public class Journal {
     deliveries.logDeliveryDroped(this, user, d.getId(), d.getName());
   }
 
+  public void logDeliveryArchivated(String user, Delivery d) throws AdminException {
+    deliveries.logDeliveryArchivated(this, user, d.getId(), d.getName());
+  }
+
   public void logAddRestriction(Restriction r, String user) throws AdminException {
     restrictions.logRestrictionAdd(this, user, r);
   }

@@ -256,6 +256,22 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
   }
 
   /**
+   * Архивация рассылки
+   *
+   * @param login      логин
+   * @param password   пароль
+   * @param deliveryId идентификатор рассылки
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void archivateDelivery(String login, String password, int deliveryId) throws AdminException {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Drop delivery with id: " + deliveryId);
+    }
+    DcpConnection conn = getDcpConnection(login, password);
+    conn.archivateDelivery(deliveryId);
+  }
+
+  /**
    * Подсчёт кол-ва рассылок
    *
    * @param login          логин

@@ -573,6 +573,12 @@ public class Configuration {
     context.getArchiveMessages(login, filter, _pieceSize, visitor);
   }
 
+  public void archivateDelivery(String login, int deliveryId) throws AdminException {
+    Delivery d = context.getDelivery(login, deliveryId);
+    context.archivateDelivery(login, deliveryId);
+    journal.logDeliveryArchivated(login, d);
+  }
+
   public enum ConfigType {
     CONFIG, USERS
   }

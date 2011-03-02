@@ -108,6 +108,19 @@ class DcpConnection {
   }
 
   /**
+   * Перенос рассылки в архив
+   *
+   * @param deliveryId идентификатор рассылки
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void archivateDelivery(int deliveryId) throws AdminException {
+    DropDelivery req = new DropDelivery();
+    req.setDeliveryId(deliveryId);
+    req.setMoveToArchive(true);
+    client.send(req);
+  }
+
+  /**
    * Подсчёт кол-ва рассылок
    *
    * @param deliveryFilter фильтр
