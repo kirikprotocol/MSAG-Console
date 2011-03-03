@@ -6,7 +6,7 @@ import mobi.eyeline.informer.util.config.XmlConfigSection;
 /**
  * @author Aleksandr Khalitov
  */
-public class ArchiveRequestSettings {
+public class ArchiveRequestSettings {  //todo Как я понял, это настройки всего архива. Предлагаю переименовать в ArchiveSettings, а то кажется, что это настройки конкретного запроса.
 
   private String resultsDir;
 

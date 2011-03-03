@@ -8,7 +8,7 @@ import java.util.Date;
  */
 public class ArchiveDelivery {
 
-  private Integer id;
+  private Integer id; //todo Почему Integer а не int ?
 
   private String name;
 

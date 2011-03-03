@@ -29,16 +29,16 @@ class ResultsManager {
     this.fs = fs;
   }
 
-  DeliveriesResult createDeliveriesResutls(int requestId) throws AdminException{
+  DeliveriesResult createDeliveriesResutls(int requestId) throws AdminException{//todo опечатка в названии
     return new DeliveriesResult(requestId);
   }
 
-  MessagesResult createMessagesResutls(int requestId) throws AdminException{
+  MessagesResult createMessagesResutls(int requestId) throws AdminException{ //todo опечатка в названии
     return new MessagesResult(requestId);
   }
 
   void getDeliveriesResults(int requestId, Visitor<ArchiveDelivery> visitor) throws AdminException {
-    File file = new File(resultsDir, buildDeliveriesFile(requestId));
+    File file = new File(resultsDir, buildDeliveriesFile(requestId)); //todo Предлагаю сделать так, чтобы buildDeliveriesFile возвращал сразу экземпляр File. Это уменьшит дублирование кода
     if(!file.exists()) {
       logger.warn("Results don't exist: requestId="+requestId);
       return;
@@ -72,7 +72,7 @@ class ResultsManager {
   }
 
   void getMessagesResults(int requestId, Visitor<ArchiveMessage> visitor) throws AdminException {
-    File file = new File(resultsDir, buildMessagesFile(requestId));
+    File file = new File(resultsDir, buildMessagesFile(requestId));//todo Предлагаю сделать так, чтобы buildMessagesFile возвращал сразу экземпляр File. Это уменьшит дублирование кода
     if(!file.exists()) {
       logger.warn("Results don't exist: requestId="+requestId);
       return;

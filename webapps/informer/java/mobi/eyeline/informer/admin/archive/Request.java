@@ -16,7 +16,7 @@ public abstract class Request {
 
   public static enum Type {
     deliveries, messages;
-    public String getType() {
+    public String getType() {//todo вроде нигде не используется. удалим?
       return toString();
     }
   }
@@ -33,7 +33,7 @@ public abstract class Request {
 
   public static enum Status {
     IN_PROCESS, CANCELED, FINISHED;
-    public String getStatus() {
+    public String getStatus() { //todo вроде нигде не используется. удалим?
       return toString();
     }
   }

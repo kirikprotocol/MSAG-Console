@@ -265,7 +265,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
    */
   public void archivateDelivery(String login, String password, int deliveryId) throws AdminException {
     if (logger.isDebugEnabled()) {
-      logger.debug("Drop delivery with id: " + deliveryId);
+      logger.debug("Archivate delivery with id: " + deliveryId);
     }
     DcpConnection conn = getDcpConnection(login, password);
     conn.archivateDelivery(deliveryId);

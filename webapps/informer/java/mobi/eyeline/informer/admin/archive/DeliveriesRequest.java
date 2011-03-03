@@ -61,7 +61,7 @@ public class DeliveriesRequest extends Request{
     return owner;
   }
 
-  public void copyFrom(DeliveriesRequestPrototype pr) throws AdminException {
+  public void copyFrom(DeliveriesRequestPrototype pr) throws AdminException {     // todo package visibility
     deliveryId = pr.getDeliveryId();
     from = pr.getFrom() == null ? null : new Date(pr.getFrom().getTime());
     till = pr.getTill() == null ? null : new Date(pr.getTill().getTime());
@@ -70,7 +70,7 @@ public class DeliveriesRequest extends Request{
     deliveryName = pr.getDeliveryName();
   }
 
-  public void validate() throws AdminException {
+  public void validate() throws AdminException { // todo package visibility
     vh.checkNotEmpty("name", name);
     vh.checkNotNull("from", from);
   }

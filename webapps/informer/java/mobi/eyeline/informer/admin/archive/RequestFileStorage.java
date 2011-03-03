@@ -33,7 +33,7 @@ class RequestFileStorage implements RequestStorage {
   RequestFileStorage(File requestsDir, FileSystem fileSystem) throws InitException{
     this.requestsDir = requestsDir;
     this.fileSystem = fileSystem;
-    if(!requestsDir.exists()) {
+    if(!requestsDir.exists()) {//todo Надо использовать методы fileSystem.exist и fileSystem.mkdirs
       if(!requestsDir.mkdirs()) {
         throw new InitException("Can't create dir: "+requestsDir);
       }
@@ -83,7 +83,7 @@ class RequestFileStorage implements RequestStorage {
   public synchronized void removeRequest(int requestId) throws AdminException {
     Request request = requests.remove(requestId);
     if(request != null) {
-      fileSystem.delete(new File(requestsDir, buildFileName(request)));
+      fileSystem.delete(new File(requestsDir, buildFileName(request))); //todo Конструкция типа new File(requestsDir, buildFileName(request)) используется в куче мест. Предлагаю вместо buildFileName завести метод buildFile(request)
     }
   }
 
@@ -103,7 +103,7 @@ class RequestFileStorage implements RequestStorage {
     }
     request.setStatus(status);
     try {
-      saveRequest(new File(requestsDir, buildFileName(request)), request);
+      saveRequest(new File(requestsDir, buildFileName(request)), request); //todo Метод saveRequest всегда вызывается с первым параметром равным new File(requestsDir, buildFileName(request)). Может перенести эту логику внутть самого метода, оставив в нем один аргумент?
     } catch (Exception e) {
       logger.error(e,e);
       throw new ArchiveException("internal_error");
