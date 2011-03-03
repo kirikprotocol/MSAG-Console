@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.delivery.protogen;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import mobi.eyeline.informer.admin.protogen.ResponseWaitTimeoutException;
 import mobi.eyeline.informer.admin.protogen.ServerOfflineException;
 import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
 import mobi.eyeline.protogen.framework.PDU;
@@ -75,6 +76,8 @@ public class DcpClient extends SyncProtogenConnection {
       return response;
     } catch (ServerOfflineException e) {
       throw new DeliveryException("dcp_server_offline");
+    } catch (ResponseWaitTimeoutException e) {
+      throw new DeliveryException("response_timeout");
     } catch (IOException e) {
       throw new DeliveryException("interaction_error", e, e.getMessage());
     } finally {
