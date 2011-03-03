@@ -796,22 +796,24 @@ int DeliveryMgr::Execute()
             smsc_log_warn(log_,"reading from archive, exc: %s", e.what());
         }
 
-        MutexGuard mg(mon_);
-        DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
-        if ( uptoNow != deliveryWakeQueue_.begin() ) {
-            wakeList.insert(deliveryWakeQueue_.begin(),uptoNow);
-            deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
+        {
+            MutexGuard mg(mon_);
+            DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
+            if ( uptoNow != deliveryWakeQueue_.begin() ) {
+                wakeList.insert(deliveryWakeQueue_.begin(),uptoNow);
+                deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
+            }
+            if (!wakeList.empty()) continue;
+            
+            msectime_type wakeTime = 10000;
+            if (!deliveryWakeQueue_.empty()) {
+                msectime_type thisWakeTime = 
+                    msectime_type(deliveryWakeQueue_.begin()->first)*1000 - curTime;
+                if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
+            }
+            if (wakeTime>0) { mon_.wait(int(wakeTime)); }
+            // check if we have an archive dlvs pending
         }
-        if (!wakeList.empty()) continue;
-
-        msectime_type wakeTime = 10000;
-        if (!deliveryWakeQueue_.empty()) {
-            msectime_type thisWakeTime = 
-                msectime_type(deliveryWakeQueue_.begin()->first)*1000 - curTime;
-            if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
-        }
-        if (wakeTime>0) { mon_.wait(int(wakeTime)); }
-        // check if we have an archive dlvs pending
         signalArchive(0);
     }
     return 0;

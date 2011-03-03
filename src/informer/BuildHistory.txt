@@ -1,3 +1,6 @@
+2011-03-03 13:20 bukind
+  deadlock (archiveLock_, mon_) in dlvmgr are opposite locked
+
 =====================================================================
 2011-03-02 16:35 bukind informer-build-20110302
 

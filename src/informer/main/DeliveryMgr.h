@@ -127,7 +127,6 @@ private:
     smsc::core::threads::ThreadPool               ctp_;
 
     smsc::core::synchronization::Mutex            archiveLock_;
-    FileGuard                                     lastidFile_;
 };
 
 } // informer
