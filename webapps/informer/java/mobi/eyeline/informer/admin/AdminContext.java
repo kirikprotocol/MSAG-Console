@@ -693,7 +693,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
-  public static void getDefaultDelivery(User u, DeliveryPrototype delivery) throws AdminException {
+  public void getDefaultDelivery(User u, DeliveryPrototype delivery) throws AdminException {
     delivery.setOwner(u.getLogin());
 
     if (u.getSourceAddr() != null) {
@@ -705,7 +705,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     if (u.getPhone() != null && u.isSmsNotification()) {
       delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone().getSimpleAddress());
     }
-    if(u.isCreateArchive()) {
+    if(u.isCreateArchive() && isArchiveDaemonDeployed()) {
       delivery.setArchiveTime(u.getDeliveryLifetime());
     }
 
