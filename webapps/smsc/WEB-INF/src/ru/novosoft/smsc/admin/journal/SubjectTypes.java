@@ -32,6 +32,7 @@ public abstract class SubjectTypes {
     public static final byte TYPE_maplimits = 22;
     public static final byte TYPE_infosme = 23;
     public static final byte TYPE_regions = 24;
+    public static final byte TYPE_network_profiles = 25;
 
 
     public final static String typeToString(byte subjectType) {
@@ -84,6 +85,8 @@ public abstract class SubjectTypes {
                 return "infosme";
             case TYPE_regions:
                 return "regions";
+            case TYPE_network_profiles:
+                return "network profiles";
             default:
                 return "unknown";
         }
@@ -138,6 +141,8 @@ public abstract class SubjectTypes {
             return TYPE_infosme;
         if ("regions".equals(subjectType))
             return TYPE_regions;
+        if ("network profiles".equals(subjectType))
+            return TYPE_network_profiles;
         return TYPE_UNKNOWN;
     }
 }

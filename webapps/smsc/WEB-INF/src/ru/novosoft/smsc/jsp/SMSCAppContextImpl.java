@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.network_profiles.NetworkProfilesManager;
 import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.admin.fraud.FraudConfigManager;
 import ru.novosoft.smsc.admin.region.RegionsManager;
@@ -70,6 +71,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   private SmeManager smeManager = null;
   private RouteSubjectManagerImpl routeSubjectManager = null;
   private RegionsManager regionsManager = null;
+  private NetworkProfilesManager networkProfilesManager = null;
   private FraudConfigManager fraudConfigManager = null;
   private ResourcesManager resourcesManager = null;
   private ProviderManager providerManager = null;
@@ -155,6 +157,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             }
         };
       regionsManager.addObserver(regionsChangedObserver);
+      networkProfilesManager = NetworkProfilesManager.getInstance();
       routeSubjectManager.addObserver(regionsChangedObserver);
       fraudConfigManager = FraudConfigManager.getInstance();
 
@@ -416,6 +419,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
   public RegionsManager getRegionsManager() {
     return regionsManager;
+  }
+
+  public NetworkProfilesManager getNetworkProfilesManager() {
+    return networkProfilesManager;
   }
 
   public FraudConfigManager getFraudConfigManager() {

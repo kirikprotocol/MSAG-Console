@@ -96,6 +96,7 @@ public class Smsc extends Service {
 
     private static final String APPLY_FRAUD = "apply_fraud";
     private static final String APPLY_MAPLIMITS = "apply_maplimits";
+    private static final String APPLY_NETWORK_PROFILES = "apply_netprofiles";
 
     public HashMap defaultProfileProps = new HashMap();
 
@@ -391,6 +392,13 @@ public class Smsc extends Service {
             call(SMSC_COMPONENT_ID, APPLY_MAPLIMITS, Type.Types[Type.StringType], new HashMap());
         } else
             throw new AdminException("Couldn't apply Map limits: SMSC is not running");
+    }
+
+    public synchronized void applyNetworkProfilesConfig() throws AdminException {
+      if (getInfo().isOnline()) {
+            call(SMSC_COMPONENT_ID, APPLY_NETWORK_PROFILES, Type.Types[Type.StringType], new HashMap());
+        } else
+            throw new AdminException("Couldn't apply network profiles: SMSC is not running");
     }
 
     public synchronized Config getSmscConfig() {

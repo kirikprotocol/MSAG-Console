@@ -9,6 +9,7 @@ package ru.novosoft.smsc.jsp;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.journal.Journal;
+import ru.novosoft.smsc.admin.network_profiles.NetworkProfilesManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.service.HostsManager;
@@ -68,6 +69,8 @@ public interface SMSCAppContext extends AppContext {
     RouteSubjectManager getRouteSubjectManager();
 
     RegionsManager getRegionsManager();
+
+    NetworkProfilesManager getNetworkProfilesManager();
 
     FraudConfigManager getFraudConfigManager();
 
