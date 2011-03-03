@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import org.apache.log4j.Logger;
@@ -47,10 +48,17 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private boolean stop = true;
 
+  private FileSystem fs;
+
   public SiebelFinalStateListener(SiebelManager siebelManager, SiebelContext context, File workDir, int periodSec) throws InitException{
     this.dir = new File(workDir, "siebel");
-    if(!dir.exists() && !dir.mkdirs()) {
-      throw new InitException("Can't create file: "+dir.getAbsolutePath());
+    this.fs = context.getFileSystem();
+    try {
+      if(!fs.exists(dir)) {
+        fs.mkdirs(dir);
+      }
+    } catch (AdminException e) {
+      throw new InitException(e);
     }
     this.siebelManager = siebelManager;
     this.context = context;
@@ -174,13 +182,8 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   public synchronized void start() throws AdminException{
     if(stop) {
-      try {
-        curentFile = new File(dir, df.format(new Date())+".csv");
-        writer = new PrintWriter(new FileWriter(curentFile));
-      } catch (IOException e) {
-        logger.error(e,e);
-        throw new SiebelException("internal_error");
-      }
+      curentFile = new File(dir, df.format(new Date())+".csv");
+      writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(curentFile, false))));
       processor =  new Thread(new Processor(), "SiebelFinalStateFileProcessor");
       processor.start();
       stop = false;
@@ -241,7 +244,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
     Map<String, SiebelMessage.DeliveryState> states = new HashMap<String, SiebelMessage.DeliveryState>(1001);
     Map<String, SiebelDelivery.Status> deliveries = new HashMap<String, SiebelDelivery.Status>(1001);
     try{
-      reader = new BufferedReader(new FileReader(f));
+      reader = new BufferedReader(new InputStreamReader(fs.getInputStream(f)));
       int countDeliveries = 0;
       int countMessages = 0;
       String line;
@@ -324,14 +327,14 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
               writeLock();
               writer.close();
               curentFile = new File(dir, df.format(new Date())+".csv");
-              writer = new PrintWriter(new FileWriter(curentFile));
+              writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(curentFile, false))));
             }finally {
               writeUnlock();
             }
 
-            File[] files = dir.listFiles(new FileFilter() {
+            File[] files = fs.listFiles(dir, new FileFilter() {
               public boolean accept(File pathname) {
-                return !pathname.getName().equals(curentFile.getName()); 
+                return !pathname.getName().equals(curentFile.getName());
               }
             });
 

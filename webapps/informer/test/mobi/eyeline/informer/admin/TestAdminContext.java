@@ -260,12 +260,12 @@ public class TestAdminContext extends AdminContext {
 
       deliveryChangesDetector.start();
 
-      ArchiveRequestSettings requestSettings = webConfig.getArchiveSettings();
-      requestSettings.setRequestsDir(new File(workDir, "archive_requests").getAbsolutePath());
-      requestSettings.setResultsDir(new File(workDir, "archive_results").getAbsolutePath());
+      ArchiveSettings settings = webConfig.getArchiveSettings();
+      settings.setRequestsDir(new File(workDir, "archive_requests").getAbsolutePath());
+      settings.setResultsDir(new File(workDir, "archive_results").getAbsolutePath());
 
       archiveDeliveryManager = deliveryManager;
-      archiveRequestsManager = new ArchiveRequestsManager(this, requestSettings);
+      archiveRequestsManager = new ArchiveRequestsManager(this, settings);
       User u = usersManager.getUsers().get(0);
       archiveRequestsManager.createRequest(u.getLogin(), createDeliveriesPrototype("deliveries 1 "+System.currentTimeMillis()));
       archiveRequestsManager.createRequest(u.getLogin(), createDeliveriesPrototype("deliveries 2 "+System.currentTimeMillis()));

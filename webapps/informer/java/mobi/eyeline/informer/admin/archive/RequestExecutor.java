@@ -77,7 +77,7 @@ class RequestExecutor {
 
 
       try{
-        messagesResults[0] = resultsManager.createMessagesResutls(request.getId());
+        messagesResults[0] = resultsManager.createMessagesResults(request.getId());
 
         final int totalDeliveries = dm.countDeliveries(u.getLogin(), u.getPassword(), deliveryFilter);
 
@@ -157,7 +157,7 @@ class RequestExecutor {
       final UnmodifiableDeliveryManager dm = context.getDeliveryManager();
 
       try{
-        deliveriesResult[0] = resultsManager.createDeliveriesResutls(request.getId());
+        deliveriesResult[0] = resultsManager.createDeliveriesResults(request.getId());
 
         final int[] total = new int[1];
 
@@ -192,7 +192,7 @@ class RequestExecutor {
       final UnmodifiableDeliveryManager dm = context.getDeliveryManager();
 
       try{
-        deliveriesResult[0] = resultsManager.createDeliveriesResutls(request.getId());
+        deliveriesResult[0] = resultsManager.createDeliveriesResults(request.getId());
 
         try{
           final Delivery d = dm.getDelivery(u.getLogin(), u.getPassword(), request.getDeliveryId());

@@ -2,8 +2,8 @@ package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -38,5 +38,7 @@ public interface SiebelContext {
   public User getUser(String login) throws AdminException;
 
   public DeliveryChangesDetector getDeliveryChangesDetector();
+
+  public FileSystem getFileSystem();
 
 }

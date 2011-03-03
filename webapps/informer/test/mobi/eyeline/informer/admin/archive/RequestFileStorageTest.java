@@ -76,7 +76,7 @@ public class RequestFileStorageTest {
     Request r1 = storage.getRequest(r.getId());
     assertEquals(r, r1);
 
-    assertTrue("File is not exist", new File(testDir, RequestFileStorage.buildFileName(r)).exists());
+    assertTrue("File is not exist", storage.buildFile(r).exists());
 
 
   }
@@ -91,7 +91,7 @@ public class RequestFileStorageTest {
     Request r1 = storage.getRequest(r.getId());
     assertEquals(r, r1);
 
-    assertTrue("File is not exist", new File(testDir, RequestFileStorage.buildFileName(r)).exists());
+    assertTrue("File is not exist", storage.buildFile(r).exists());
 
 
   }
@@ -102,7 +102,7 @@ public class RequestFileStorageTest {
 
     storage.createRequest(r);
 
-    File f = new File(testDir, RequestFileStorage.buildFileName(r));
+    File f = storage.buildFile(r);
     assertTrue("File is not exist", f.exists());
 
     Request r1 = storage.loadRequest(f);
@@ -116,7 +116,7 @@ public class RequestFileStorageTest {
 
     storage.createRequest(r);
 
-    File f = new File(testDir, RequestFileStorage.buildFileName(r));
+    File f = storage.buildFile(r);
     assertTrue("File is not exist", f.exists());
 
     Request r1 = storage.loadRequest(f);
@@ -133,7 +133,7 @@ public class RequestFileStorageTest {
 
     storage.removeRequest(r.getId());
 
-    File f = new File(testDir, RequestFileStorage.buildFileName(r));
+    File f = storage.buildFile(r);
     assertTrue("File is exist", !f.exists());
 
   }
@@ -145,7 +145,7 @@ public class RequestFileStorageTest {
 
     storage.removeRequest(r.getId());
 
-    File f = new File(testDir, RequestFileStorage.buildFileName(r));
+    File f = storage.buildFile(r);
     assertTrue("File is exist", !f.exists());
   }
 }

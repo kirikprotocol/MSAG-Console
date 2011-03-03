@@ -92,7 +92,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       deliveryChangesDetector.start();
 
-      if(archiveDaemonManager != null) { //todo?
+      if(archiveDaemonManager != null) {
         ArchiveDaemonSettings archiveDaemonSettings = archiveDaemonManager.getSettings();
         archiveDeliveryManager = new DeliveryManager(archiveDaemonSettings.getDcpHost(), archiveDaemonSettings.getDcpPort());
         archiveRequestsManager = new ArchiveRequestsManager(this, this.webConfig.getArchiveSettings());

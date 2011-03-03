@@ -23,23 +23,27 @@ class ResultsManager {
 
   ResultsManager(File resultsDir, FileSystem fs) throws InitException{
     this.resultsDir = resultsDir;
-    if(!resultsDir.exists() && !resultsDir.mkdirs()) {
-      throw new InitException("Can't create dir: "+resultsDir.getAbsolutePath());
+    try {
+      if(!fs.exists(resultsDir)) {
+        fs.mkdirs(resultsDir);
+      }
+    } catch (AdminException e) {
+      throw new InitException(e);
     }
     this.fs = fs;
   }
 
-  DeliveriesResult createDeliveriesResutls(int requestId) throws AdminException{//todo опечатка в названии
+  DeliveriesResult createDeliveriesResults(int requestId) throws AdminException{
     return new DeliveriesResult(requestId);
   }
 
-  MessagesResult createMessagesResutls(int requestId) throws AdminException{ //todo опечатка в названии
+  MessagesResult createMessagesResults(int requestId) throws AdminException{
     return new MessagesResult(requestId);
   }
 
   void getDeliveriesResults(int requestId, Visitor<ArchiveDelivery> visitor) throws AdminException {
-    File file = new File(resultsDir, buildDeliveriesFile(requestId)); //todo Предлагаю сделать так, чтобы buildDeliveriesFile возвращал сразу экземпляр File. Это уменьшит дублирование кода
-    if(!file.exists()) {
+    File file = buildDeliveriesFile(requestId);
+    if(!fs.exists(file)) {
       logger.warn("Results don't exist: requestId="+requestId);
       return;
     }
@@ -72,8 +76,8 @@ class ResultsManager {
   }
 
   void getMessagesResults(int requestId, Visitor<ArchiveMessage> visitor) throws AdminException {
-    File file = new File(resultsDir, buildMessagesFile(requestId));//todo Предлагаю сделать так, чтобы buildMessagesFile возвращал сразу экземпляр File. Это уменьшит дублирование кода
-    if(!file.exists()) {
+    File file = buildMessagesFile(requestId);
+    if(!fs.exists(file)) {
       logger.warn("Results don't exist: requestId="+requestId);
       return;
     }
@@ -106,18 +110,18 @@ class ResultsManager {
   }
 
   void removeDeliveriesResult(int requestId) throws AdminException {
-    fs.delete(new File(resultsDir, buildDeliveriesFile(requestId)));
+    fs.delete(buildDeliveriesFile(requestId));
   }
   void removeMessagesResult(int requestId) throws AdminException {
-    fs.delete(new File(resultsDir, buildMessagesFile(requestId)));
+    fs.delete(buildMessagesFile(requestId));
   }
 
-  private static String buildDeliveriesFile(int requestId) {
-    return Request.Type.deliveries+"."+requestId+".csv";
+  private File buildDeliveriesFile(int requestId) {
+    return new File(resultsDir, Request.Type.deliveries+"."+requestId+".csv");
   }
 
-  private static String buildMessagesFile(int requestId) {
-    return Request.Type.messages+"."+requestId+".csv";
+  private File buildMessagesFile(int requestId) {
+    return new File(resultsDir, Request.Type.messages+"."+requestId+".csv");
   }
 
   class DeliveriesResult {
@@ -126,7 +130,7 @@ class ResultsManager {
 
     private DeliveriesResult(int requestId) throws AdminException {
       w = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(
-          new File(resultsDir, buildDeliveriesFile(requestId)), false))));
+          buildDeliveriesFile(requestId), false))));
     }
 
     void write(Delivery delivery) {
@@ -147,7 +151,7 @@ class ResultsManager {
 
     private MessagesResult(int requestId) throws AdminException {
       w = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(
-          new File(resultsDir, buildMessagesFile(requestId)), false))));
+          buildMessagesFile(requestId), false))));
     }
 
     void write(Delivery delivery, Message message) {

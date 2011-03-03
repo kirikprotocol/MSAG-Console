@@ -33,8 +33,8 @@ class JournalFileDataSource implements JournalDataSource {
   public JournalFileDataSource(File journalDir, FileSystem fileSystem) throws AdminException {
     this.journalDir = journalDir;
     this.fileSystem = fileSystem;
-    if (!journalDir.exists() && !journalDir.mkdirs()) {
-      throw new IllegalArgumentException("Can't create dir: " + journalDir.getAbsolutePath());
+    if (!fileSystem.exists(journalDir)) {
+      fileSystem.mkdirs(journalDir);
     }
 
     try {
@@ -67,8 +67,8 @@ class JournalFileDataSource implements JournalDataSource {
     Date date = new Date();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy" + File.separatorChar + "MM" + File.separator + "dd");
     File d = new File(journalDir, sdf.format(date));
-    if (!d.exists() && !d.mkdirs()) {
-      throw new JournalException("cant_add_record");
+    if (!fileSystem.exists(d)) {
+       fileSystem.mkdirs(d);
     }
     File file = new File(d, new SimpleDateFormat("HH").format(date) + ".csv");
 

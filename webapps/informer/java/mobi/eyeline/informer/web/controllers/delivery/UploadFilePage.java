@@ -158,8 +158,13 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
   }
 
   public void downloadRejectedLines(FacesContext context, OutputStream out) throws IOException {
-    if (!rejectedAddressesFile.exists())
+    try {
+      if (!getConfig().getFileSystem().exists(rejectedAddressesFile))
+        return;
+    } catch (AdminException e) {
+      logger.error(e,e);
       return;
+    }
 
     PrintWriter w = new PrintWriter(new OutputStreamWriter(out, fileEncoding));
     BufferedReader r = null;

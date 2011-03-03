@@ -248,7 +248,7 @@ public class ArchiveRequestsManagerTest {
     assertEquals(delivery.getStartDate().getTime() / 1000, d.getStartDate().getTime() / 1000);
     assertEquals(delivery.getEndDate().getTime() / 1000, d.getEndDate().getTime() / 1000);
     assertEquals(delivery.getName(), d.getName());
-    assertEquals(delivery.getId(), d.getId());
+    assertTrue(delivery.getId() == d.getId());
     assertEquals(delivery.getOwner(), d.getOwner());
   }
 

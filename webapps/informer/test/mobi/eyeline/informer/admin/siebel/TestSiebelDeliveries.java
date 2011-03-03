@@ -1,12 +1,19 @@
 package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.TestAdminContext;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
+import mobi.eyeline.informer.util.Time;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
 * @author Aleksandr Khalitov
@@ -63,7 +70,61 @@ class TestSiebelDeliveries implements SiebelContext {
   }
 
   public void copyUserSettingsToDeliveryPrototype(String user, DeliveryPrototype delivery) throws AdminException {
-    TestAdminContext.getDefaultDelivery(siebelUser, delivery);
+    delivery.setOwner(siebelUser.getLogin());
+
+    if (siebelUser.getSourceAddr() != null) {
+      delivery.setSourceAddress(siebelUser.getSourceAddr());
+    }
+    if (siebelUser.getEmail() != null && siebelUser.isEmailNotification()) {
+      delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, siebelUser.getEmail());
+    }
+    if (siebelUser.getPhone() != null && siebelUser.isSmsNotification()) {
+      delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, siebelUser.getPhone().getSimpleAddress());
+    }
+    if(siebelUser.isCreateArchive()) {
+      delivery.setArchiveTime(siebelUser.getDeliveryLifetime());
+    }
+
+    delivery.setUseDataSm(siebelUser.isUseDataSm());
+
+    if (siebelUser.getDeliveryType() != null) {
+      switch (siebelUser.getDeliveryType()) {
+        case SMS:
+          delivery.setDeliveryMode(DeliveryMode.SMS);
+          break;
+        case USSD_PUSH:
+          delivery.setDeliveryMode(DeliveryMode.USSD_PUSH);
+          delivery.setTransactionMode(true);
+          break;
+        case USSD_PUSH_VIA_VLR:
+          delivery.setDeliveryMode(DeliveryMode.USSD_PUSH_VLR);
+          delivery.setTransactionMode(true);
+          break;
+      }
+    }
+    if (siebelUser.isRetryOnFail()) {
+      delivery.setRetryPolicy(siebelUser.getPolicyId());
+      delivery.setRetryOnFail(true);
+    }
+
+    delivery.setPriority(siebelUser.getPriority());
+    Time t;
+    if((t = siebelUser.getDeliveryStartTime()) != null) {
+      delivery.setActivePeriodStart(t);
+    }
+
+    if((t = siebelUser.getDeliveryEndTime()) != null) {
+      delivery.setActivePeriodEnd(t);
+    }
+
+    delivery.setValidityPeriod(siebelUser.getValidityPeriod());
+    if(siebelUser.getDeliveryDays() != null && !siebelUser.getDeliveryDays().isEmpty()) {
+      List<Day> days = new ArrayList<Day>(7);
+      for (Integer i : siebelUser.getDeliveryDays()) {
+        days.add(Day.valueOf(i == 0 ? 7 : i));
+      }
+      delivery.setActiveWeekDays(days.toArray(new Day[days.size()]));
+    }
   }
 
   @Override
@@ -79,6 +140,11 @@ class TestSiebelDeliveries implements SiebelContext {
   @Override
   public DeliveryChangesDetector getDeliveryChangesDetector() {
     return detector;
+  }
+
+  @Override
+  public FileSystem getFileSystem() {
+    return new TestFileSystem();
   }
 
   public void shutdown() {

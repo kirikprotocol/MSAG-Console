@@ -33,12 +33,14 @@ class RequestFileStorage implements RequestStorage {
   RequestFileStorage(File requestsDir, FileSystem fileSystem) throws InitException{
     this.requestsDir = requestsDir;
     this.fileSystem = fileSystem;
-    if(!requestsDir.exists()) {//todo Надо использовать методы fileSystem.exist и fileSystem.mkdirs
-      if(!requestsDir.mkdirs()) {
-        throw new InitException("Can't create dir: "+requestsDir);
+    try {
+      if(!fileSystem.exists(requestsDir)) {
+        fileSystem.mkdirs(requestsDir);
+      }else {
+        loadFromFS();
       }
-    }else {
-      loadFromFS();
+    } catch (AdminException e) {
+      throw new InitException(e);
     }
   }
 
@@ -56,8 +58,9 @@ class RequestFileStorage implements RequestStorage {
     }
   }
 
-  static String buildFileName(Request request) {
-    return new StringBuilder(25).append(request.getType()).append('.').append(request.getId()).append(".xml").toString();
+  File buildFile(Request request) {
+    StringBuilder sb = new StringBuilder(25).append(request.getType()).append('.').append(request.getId()).append(".xml");
+    return new File(requestsDir, sb.toString());
   }
 
 
@@ -71,7 +74,7 @@ class RequestFileStorage implements RequestStorage {
   @Override
   public synchronized void createRequest(Request request) throws AdminException {
     try {
-      saveRequest(new File(requestsDir, buildFileName(request)), request.copy());
+      saveRequest(request.copy());
     } catch (Exception e) {
       logger.error(e,e);
       throw new ArchiveException("internal_error");
@@ -83,7 +86,7 @@ class RequestFileStorage implements RequestStorage {
   public synchronized void removeRequest(int requestId) throws AdminException {
     Request request = requests.remove(requestId);
     if(request != null) {
-      fileSystem.delete(new File(requestsDir, buildFileName(request))); //todo Конструкция типа new File(requestsDir, buildFileName(request)) используется в куче мест. Предлагаю вместо buildFileName завести метод buildFile(request)
+      fileSystem.delete(buildFile(request));
     }
   }
 
@@ -103,7 +106,7 @@ class RequestFileStorage implements RequestStorage {
     }
     request.setStatus(status);
     try {
-      saveRequest(new File(requestsDir, buildFileName(request)), request); //todo Метод saveRequest всегда вызывается с первым параметром равным new File(requestsDir, buildFileName(request)). Может перенести эту логику внутть самого метода, оставив в нем один аргумент?
+      saveRequest(request);
     } catch (Exception e) {
       logger.error(e,e);
       throw new ArchiveException("internal_error");
@@ -118,7 +121,7 @@ class RequestFileStorage implements RequestStorage {
     }
     request.setName(name);
     try {
-      saveRequest(new File(requestsDir, buildFileName(request)), request);
+      saveRequest(request);
     } catch (Exception e) {
       logger.error(e,e);
       throw new ArchiveException("internal_error");
@@ -154,10 +157,10 @@ class RequestFileStorage implements RequestStorage {
   }
 
 
-  void saveRequest(File f, Request r) throws XmlConfigException, AdminException, ParseException {
+  void saveRequest(Request r) throws XmlConfigException, AdminException, ParseException {
 
+    File f = buildFile(r);
     XmlConfig c = new XmlConfig();
-
     r.save(c);
 
     OutputStream os = null;

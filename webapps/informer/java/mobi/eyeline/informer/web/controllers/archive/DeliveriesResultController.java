@@ -98,7 +98,7 @@ public class DeliveriesResultController extends InformerController{
 
   @SuppressWarnings({"RedundantIfStatement"})
   private boolean accept(ArchiveDelivery value) {
-    if(id != null && id.length()>0 && !value.getId().equals(Integer.parseInt(id))) {
+    if(id != null && id.length()>0 && value.getId() != Integer.parseInt(id)) {
         return false;
     }
     if(name != null && name.length()>0 && !value.getName().startsWith(name)) {
@@ -252,7 +252,7 @@ public class DeliveriesResultController extends InformerController{
         public int compare(ArchiveDelivery o1, ArchiveDelivery o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
-          return o1.getId().compareTo(o2.getId()) * (sortOrder.isAsc() ? 1 : -1);
+          return (o1.getId() < o2.getId() ? -1 : o1.getId() > o2.getId() ? 1 : 0) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
     } else {

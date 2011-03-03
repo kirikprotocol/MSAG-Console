@@ -197,6 +197,10 @@ public class DeliveryEditGroupController extends DeliveryController{
     this.archiveTime = archiveTime;
   }
 
+  public boolean isArchiveDaemonDeployed() {
+    return config.isArchiveDaemonDeployed();
+  }
+
   public boolean isSmsDeliveryMode() {
     return deliveryMode == DeliveryMode.SMS;
   }

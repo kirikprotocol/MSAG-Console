@@ -68,6 +68,10 @@ public class DeliveryEditController extends DeliveryController {
     }
   }
 
+  public boolean isArchiveDaemonDeployed() {
+    return config.isArchiveDaemonDeployed();
+  }
+
   public String getArchiveTime() {
     return archiveTime;
   }

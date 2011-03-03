@@ -49,17 +49,17 @@ class CdrDaemon implements DeliveryChangeListener{
   private CdrProviderContext context;
 
   public CdrDaemon(File workDir, File cdrOutputDir, FileSystem fs, CdrProviderContext context) throws InitException{
-    if(!cdrOutputDir.exists() && !cdrOutputDir.mkdirs())  {
-      throw new InitException("Can't create dir: "+ cdrOutputDir.getAbsolutePath());
-    }
-    this.fs = fs;
-    this.cdrOutputDir = cdrOutputDir;
-    this.context = context;
-    this.workDir = workDir;
-    if(!this.workDir.exists() && !this.workDir.mkdirs()) {
-      throw new InitException("Can't create dir: "+ this.workDir.getAbsolutePath());
-    }
     try {
+      if(!fs.exists(cdrOutputDir))  {
+        fs.mkdirs(cdrOutputDir);
+      }
+      this.fs = fs;
+      this.cdrOutputDir = cdrOutputDir;
+      this.context = context;
+      this.workDir = workDir;
+      if(!fs.exists(this.workDir)) {
+        fs.mkdirs(this.workDir);
+      }
       lastDateBeforeCrash = restore(fs, this.workDir, lastEventsBeforeCrash);
     } catch (AdminException e) {
       logger.error(e,e);
@@ -127,9 +127,8 @@ class CdrDaemon implements DeliveryChangeListener{
   }
 
   public void setCdrOutputDir(File f) throws AdminException{
-    if(!f.exists() && !f.mkdirs()) {
-      logger.error("Can't create directory: "+f.getAbsolutePath());
-      throw new CdrDaemonException("internal_error");
+    if(!fs.exists(f)) {
+      fs.mkdirs(f);
     }
     this.cdrOutputDir = f;
   }

@@ -108,9 +108,9 @@
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
       <tr:inputText id="emailNotification" value="#{deliveryGroupEdit.emailNotification}" simple="true" />
 
-      <h:selectBooleanCheckbox id="editArchiveTime" value="#{deliveryGroupEdit.editArchiveTime}" onchange="document.getElementById('archiveTime').disabled=!this.checked" rendered="#{deliveryGroupEdit.userInAdminRole}"/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.archivate}" rendered="#{deliveryGroupEdit.userInAdminRole}"/>
-      <h:inputText id="archiveTime" value="#{deliveryGroupEdit.archiveTime}" validatorMessage="#{msg['invalid_param_value']} #{deliveryBundle.archivate}" rendered="#{deliveryGroupEdit.userInAdminRole}">
+      <h:selectBooleanCheckbox id="editArchiveTime" value="#{deliveryGroupEdit.editArchiveTime}" onchange="document.getElementById('archiveTime').disabled=!this.checked" rendered="#{deliveryGroupEdit.userInAdminRole and deliveryGroupEdit.archiveDaemonDeployed}"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.archivate}" rendered="#{deliveryGroupEdit.userInAdminRole and deliveryGroupEdit.archiveDaemonDeployed}" />
+      <h:inputText id="archiveTime" value="#{deliveryGroupEdit.archiveTime}" validatorMessage="#{msg['invalid_param_value']} #{deliveryBundle.archivate}" rendered="#{deliveryGroupEdit.userInAdminRole and deliveryGroupEdit.archiveDaemonDeployed}">
         <f:validateLongRange/>
       </h:inputText>
 
@@ -226,7 +226,9 @@
       }
       document.getElementById('smsNotification').disabled = !document.getElementById('editSmsNotification').checked;
       document.getElementById('emailNotification').disabled = !document.getElementById('editEmailNotification').checked;
-      document.getElementById('archiveTime').disabled = !document.getElementById('editArchiveTime').checked;
+      if(document.getElementById('archiveTime') != null) {
+        document.getElementById('archiveTime').disabled = !document.getElementById('editArchiveTime').checked;
+      }
       document.getElementById('flash').disabled = !document.getElementById('editFlash').checked;
 
       document.getElementById('useDataSm').disabled=!document.getElementById('editUseDataSm').checked;

@@ -25,9 +25,9 @@ public class ArchiveRequestsManager {
     return lastId.incrementAndGet();
   }
 
-  public ArchiveRequestsManager(ArchiveContext context, ArchiveRequestSettings requestSettings) throws InitException {
-    this(new RequestFileStorage(new File(requestSettings.getRequestsDir()), context.getFileSystem()),
-        context, new File(requestSettings.getResultsDir()), requestSettings.getChunkSize(), requestSettings.getExecutorsSize());
+  public ArchiveRequestsManager(ArchiveContext context, ArchiveSettings settings) throws InitException {
+    this(new RequestFileStorage(new File(settings.getRequestsDir()), context.getFileSystem()),
+        context, new File(settings.getResultsDir()), settings.getChunkSize(), settings.getExecutorsSize());
   }
 
   ArchiveRequestsManager(RequestStorage storage, ArchiveContext context, File resultDir, int chunkSize, int executorSize) throws InitException {

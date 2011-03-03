@@ -6,7 +6,7 @@ import mobi.eyeline.informer.util.config.XmlConfigSection;
 /**
  * @author Aleksandr Khalitov
  */
-public class ArchiveRequestSettings {  //todo Как я понял, это настройки всего архива. Предлагаю переименовать в ArchiveSettings, а то кажется, что это настройки конкретного запроса.
+public class ArchiveSettings {
 
   private String resultsDir;
 
@@ -16,14 +16,14 @@ public class ArchiveRequestSettings {  //todo Как я понял, это на�
 
   private int executorsSize = 10;
 
-  public ArchiveRequestSettings(ArchiveRequestSettings requestSettings) {
-    this.resultsDir = requestSettings.resultsDir;
-    this.requestsDir = requestSettings.requestsDir;
-    this.chunkSize = requestSettings.chunkSize;
-    this.executorsSize = requestSettings.executorsSize;
+  public ArchiveSettings(ArchiveSettings settings) {
+    this.resultsDir = settings.resultsDir;
+    this.requestsDir = settings.requestsDir;
+    this.chunkSize = settings.chunkSize;
+    this.executorsSize = settings.executorsSize;
   }
 
-  public ArchiveRequestSettings() {
+  public ArchiveSettings() {
   }
 
   public String getResultsDir() {

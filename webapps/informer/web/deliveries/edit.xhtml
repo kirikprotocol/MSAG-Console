@@ -124,8 +124,8 @@
           <tr:inputText id="email" value="#{deliveryEdit.emailNotificationAddress}" simple="true"/>
         </h:panelGroup>
 
-        <h:outputText value="#{deliveryBundle.archivate}" rendered="#{deliveryEdit.userInAdminRole}"/>
-        <h:panelGroup rendered="#{deliveryEdit.userInAdminRole}">
+        <h:outputText value="#{deliveryBundle.archivate}" rendered="#{deliveryEdit.userInAdminRole and deliveryEdit.archiveDaemonDeployed}"/>
+        <h:panelGroup rendered="#{deliveryEdit.userInAdminRole and deliveryEdit.archiveDaemonDeployed}">
           <h:selectBooleanCheckbox id="archivate" value="#{deliveryEdit.archivateCheck}" onchange="archivateChanged()" style="position: relative; top: 2px; left: -3px;"/>
           <h:inputText validatorMessage="#{msg['invalid_param_value']} #{deliveryBundle.archivate}" id="archiveTime" value="#{deliveryEdit.archiveTime}">
             <f:validateLongRange/>

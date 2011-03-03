@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.archive.ArchiveRequestSettings;
+import mobi.eyeline.informer.admin.archive.ArchiveSettings;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
@@ -28,7 +28,7 @@ class WebConfigSettings {
 
   private SiebelSettings siebelSettings;
   private CdrSettings cdrSettings;
-  private ArchiveRequestSettings archiveRequestSettings;
+  private ArchiveSettings archiveSettings;
   private boolean allowUssdPushDeliveries;
   private String workDir;
 
@@ -130,12 +130,12 @@ class WebConfigSettings {
     this.cdrSettings = new CdrSettings(cdrSettings);
   }
 
-  ArchiveRequestSettings getArchiveRequestSettings() {
-    return new ArchiveRequestSettings(archiveRequestSettings);
+  ArchiveSettings getArchiveSettings() {
+    return new ArchiveSettings(archiveSettings);
   }
 
-  void setArchiveRequestSettings(ArchiveRequestSettings archiveRequestSettings) throws AdminException{
-    this.archiveRequestSettings = new ArchiveRequestSettings(archiveRequestSettings);
+  void setArchiveSettings(ArchiveSettings archiveSettings) throws AdminException{
+    this.archiveSettings = new ArchiveSettings(archiveSettings);
   }
 
   boolean isAllowUssdPushDeliveries() {

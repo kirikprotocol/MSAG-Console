@@ -93,6 +93,10 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
   }
 
+  public boolean isArchiveDaemonDeployed() {
+    return config.isArchiveDaemonDeployed();
+  }
+
   public boolean isArchivateCheck() {
     return archivateCheck;
   }
