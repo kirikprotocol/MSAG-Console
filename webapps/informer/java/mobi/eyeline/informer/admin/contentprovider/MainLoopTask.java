@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
-import mobi.eyeline.informer.util.FileUtils;
 import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
@@ -92,13 +91,13 @@ class MainLoopTask implements Runnable {
   }
 
   //clean up unused dirs for this user
-  private void cleanUpDirs(String login, List<String> userDirsNames) {
+  private void cleanUpDirs(String login, List<String> userDirsNames) throws AdminException {
     String[] allDirs = fileSys.list(workDir);
     if(allDirs!=null) {
       for(String dirName : allDirs) {
         if(dirName.startsWith(login+"_")) {
           if(!userDirsNames.contains(dirName)) {
-            FileUtils.recursiveDeleteFolder(new File(workDir,dirName));
+            fileSys.recursiveDeleteFolder(new File(workDir,dirName));
           }
         }
       }

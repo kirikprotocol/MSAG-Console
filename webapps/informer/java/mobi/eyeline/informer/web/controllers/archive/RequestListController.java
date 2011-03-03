@@ -38,7 +38,7 @@ public class RequestListController extends InformerController{
     return new DataTableModel() {
       @Override
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-        List<Request> result = new ArrayList<Request>(count);
+        List<RequestWrapper> result = new ArrayList<RequestWrapper>(count);
 
         if (count <= 0) {
           return result;
@@ -67,7 +67,7 @@ public class RequestListController extends InformerController{
         for (Iterator<Request> i = requests.iterator(); i.hasNext() && count > 0;) {
           Request r = i.next();
           if (--startPos < 0) {
-            result.add(r);
+            result.add(new RequestWrapper(r));
             count--;
           }
         }
@@ -115,5 +115,58 @@ public class RequestListController extends InformerController{
       }
     }
     return null;
+  }
+
+  public static class RequestWrapper {
+
+    private Request request;
+
+    public RequestWrapper(Request request) {
+      this.request = request;
+    }
+
+    public boolean isInProgress() {
+      return request.getStatus() == Request.Status.IN_PROCESS;
+    }
+
+    public boolean isFinished() {
+      return request.getStatus() == Request.Status.FINISHED;
+    }
+
+    public boolean isDeliveriesSearch() {
+      return request.getType() == Request.Type.deliveries;
+    }
+
+    public String getCreater() {
+      return request.getCreater();
+    }
+
+    public Date getFrom() {
+      return request.getFrom();
+    }
+
+    public Date getTill() {
+      return request.getTill();
+    }
+
+    public Request.Status getStatus() {
+      return request.getStatus();
+    }
+
+    public int getProgress() {
+      return request.getProgress();
+    }
+
+    public int getId() {
+      return request.getId();
+    }
+
+    public String getName() {
+      return request.getName();
+    }
+
+    public Request.Type getType() {
+      return request.getType();
+    }
   }
 }

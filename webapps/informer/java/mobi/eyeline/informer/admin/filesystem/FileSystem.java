@@ -148,4 +148,24 @@ public abstract class FileSystem {
    */
   public abstract void createNewFile(File f) throws AdminException;
 
+
+  /**
+   * Удаляет директорию и все её поддиректории
+   *
+   * @param folder директория
+   * @throws AdminException ошибка ввода/вывода
+   */
+  public void recursiveDeleteFolder(File folder) throws AdminException {
+    File[] childs = listFiles(folder);
+    if (childs != null) {
+      for (File child : childs) {
+        if (isDirectory(child)) {
+          recursiveDeleteFolder(child);
+        } else {
+          delete(child);
+        }
+      }
+    }
+    delete(folder);
+  }
 }

@@ -29,10 +29,10 @@
       <eye:dataTable value="#{requests.requests}" selectedRows="#{requests.selectedRows}" var="m">
         <eye:row rowId="#{m.id}">
           <eye:column name="name" title="#{msg['archive.request.name']}" sortable="true" width="24%" align="left" defaultSortOrder="asc">
-            <tr:commandLink text="#{m.name}" action="DELIVERIES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{m.type.type == 'deliveries'}">
+            <tr:commandLink text="#{m.name}" action="DELIVERIES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{m.deliveriesSearch}">
               <f:param name="reqId" value="#{m.id}"/>
             </tr:commandLink>
-            <tr:commandLink text="#{m.name}" action="MESSAGES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{m.type.type == 'messages'}">
+            <tr:commandLink text="#{m.name}" action="MESSAGES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{!m.deliveriesSearch}">
               <f:param name="reqId" value="#{m.id}"/>
             </tr:commandLink>
           </eye:column>
@@ -50,18 +50,18 @@
             </h:outputText>
           </eye:column>
           <eye:column name="state" title="#{msg['archive.request.state']}" width="17%" align="center">
-            <h:outputText value="#{m.status}" converter="requestStatusConverter" rendered="#{m.status.status != 'IN_PROCESS'}"/>
-            <eye:progressBar fontSize="10" rendered="#{m.status.status == 'IN_PROCESS'}" current="#{m.progress}" maximum="100" width="150" height="10"/>
+            <h:outputText value="#{m.status}" converter="requestStatusConverter" rendered="#{!m.inProgress}"/>
+            <eye:progressBar fontSize="10" rendered="#{m.inProgress}" current="#{m.progress}" maximum="100" width="150" height="10"/>
           </eye:column>
           <eye:column name="action" title="#{msg['archive.request.action']}" width="10%" align="center">
-            <tr:commandLink rendered="#{m.status.status == 'IN_PROCESS'}" text="#{msg['cancel.button']}" action="#{requests.cancel}"
+            <tr:commandLink rendered="#{m.inProgress}" text="#{msg['cancel.button']}" action="#{requests.cancel}"
                             shortDesc="#{msg['archive.request.cancel.desc']}" onclick="if (!confirm('#{msg['archive.request.action.cancel.confirm']}')) return false">
               <f:param name="requestId" value="#{m.id}"/>
             </tr:commandLink>
-            <tr:commandLink rendered="#{m.status.status == 'FINISHED' and m.type.type == 'deliveries'}" text="#{msg['archive.request.results']}" action="DELIVERIES_RESULTS" shortDesc="#{msg['archive.request.results.desc']}">
+            <tr:commandLink rendered="#{m.finished and m.deliveriesSearch}" text="#{msg['archive.request.results']}" action="DELIVERIES_RESULTS" shortDesc="#{msg['archive.request.results.desc']}">
               <f:param name="reqId" value="#{m.id}"/>
             </tr:commandLink>
-            <tr:commandLink rendered="#{m.status.status == 'FINISHED' and m.type.type == 'messages'}" text="#{msg['archive.request.results']}" action="MESSAGES_RESULTS" shortDesc="#{msg['archive.request.results.desc']}">
+            <tr:commandLink rendered="#{m.finished and !m.deliveriesSearch}" text="#{msg['archive.request.results']}" action="MESSAGES_RESULTS" shortDesc="#{msg['archive.request.results.desc']}">
               <f:param name="reqId" value="#{m.id}"/>
             </tr:commandLink>
           </eye:column>

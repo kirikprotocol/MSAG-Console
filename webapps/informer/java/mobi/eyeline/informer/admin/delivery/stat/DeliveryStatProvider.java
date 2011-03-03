@@ -10,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -40,7 +39,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
     Date fromDate = prepareDateForFilesLookup(from);
     Date tillDate = prepareDateForFilesLookup(till);
 
-    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+    List<StatFile> files = StatUtils.lookupFiles(fileSys, baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
 
     for (StatFile statFile : files) {
       if (!visitor.visit(new StatEntity(
@@ -57,7 +56,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
     Date fromDate = prepareDateForFilesLookup(from);
     Date tillDate = prepareDateForFilesLookup(till);
 
-    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+    List<StatFile> files = StatUtils.lookupFiles(fileSys, baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
 
     Calendar c = Calendar.getInstance();
     c.setTime(Functions.convertTime(new Date(), LOCAL_TIMEZONE, STAT_TIMEZONE));
@@ -71,11 +70,8 @@ public class DeliveryStatProvider extends StatEntityProvider{
     for (StatFile f : files) {
       if(f.getDate().before(today)) {
         File _f = new File(baseDir, f.getFileName());
-        if (_f.exists()) {
-          if (!_f.delete()) {
-            logger.error("Can't remove file: " + _f.getAbsolutePath());
-            throw new DeliveryException("internal_error");
-          }
+        if (fileSys.exists(_f)) {
+          fileSys.delete(_f);
         }
         File _p = _f.getParentFile();
         if (_p != null) {
@@ -85,11 +81,8 @@ public class DeliveryStatProvider extends StatEntityProvider{
     }
 
     for(File _p : parents) {
-      if(_p.exists() && _p.list().length == 0) {
-        if(!_p.delete()) {
-          logger.error("Can't remove file: "+_p.getAbsolutePath());
-          throw new DeliveryException("internal_error");
-        }
+      if(fileSys.exists(_p) && fileSys.list(_p).length == 0) {
+        fileSys.delete(_p);
       }
     }
   }
@@ -99,7 +92,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
     Date fromDate = filter == null ? null : prepareDateForFilesLookup(filter.getFromDate());
     Date tillDate = filter == null ? null : prepareDateForFilesLookup(filter.getTillDate());
 
-    List<mobi.eyeline.informer.admin.delivery.stat.StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+    List<mobi.eyeline.informer.admin.delivery.stat.StatFile> files = StatUtils.lookupFiles(fileSys, baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
     int total = files.size();
 
     DeliveryStatFilter convertedFilter = new DeliveryStatFilter();
@@ -256,19 +249,19 @@ public class DeliveryStatProvider extends StatEntityProvider{
 //    return true;
 //  }
 
-  public Calendar getCalendarOfStatFile(File file) throws AdminException {
-    try {
-      String filePath = (new File(file.getParent())).getName() + File.separatorChar + file.getName();
-      Date fileDate = new SimpleDateFormat(filePathFormat).parse(filePath);
-
-      Calendar c = Calendar.getInstance();
-      c.setTime(fileDate);
-      return c;
-    }
-    catch (ParseException e) {
-      throw new DeliveryStatException("error.parsing.filedate", file.getAbsolutePath());
-    }
-  }
+//  public Calendar getCalendarOfStatFile(File file) throws AdminException {
+//    try {
+//      String filePath = (new File(file.getParent())).getName() + File.separatorChar + file.getName();
+//      Date fileDate = new SimpleDateFormat(filePathFormat).parse(filePath);
+//
+//      Calendar c = Calendar.getInstance();
+//      c.setTime(fileDate);
+//      return c;
+//    }
+//    catch (ParseException e) {
+//      throw new DeliveryStatException("error.parsing.filedate", file.getAbsolutePath());
+//    }
+//  }
 
 
 }

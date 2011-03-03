@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.delivery.stat;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 
 import java.io.File;
 import java.text.ParseException;
@@ -12,20 +13,20 @@ import java.util.*;
  */
 class StatUtils {
 
-  static List<StatFile> lookupFiles(File baseDir, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate) {
-    if (baseDir == null || !baseDir.isDirectory())
+  static List<StatFile> lookupFiles(FileSystem fs, File baseDir, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate) {
+    if (baseDir == null || !fs.isDirectory(baseDir))
       return Collections.emptyList();
 
     List<StatFile> result = new ArrayList<StatFile>();
 
-    recursivellyLookupFiles(baseDir, null, filePathFormat, fromDate, tillDate, result);
+    recursivellyLookupFiles(fs, baseDir, null, filePathFormat, fromDate, tillDate, result);
 
     return result;
   }
 
-  private static void recursivellyLookupFiles(File baseDir, String prefix, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate, List<StatFile> result) {
+  private static void recursivellyLookupFiles(FileSystem fs, File baseDir, String prefix, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate, List<StatFile> result) {
 
-    File[] files = baseDir.listFiles();
+    File[] files = fs.listFiles(baseDir);
     if (files == null)
       return;
 
@@ -36,9 +37,9 @@ class StatUtils {
       else
         fileName += File.separator + f.getName();
 
-      if (f.isDirectory())
-        recursivellyLookupFiles(f, fileName, filePathFormat, fromDate, tillDate, result);
-      if (f.isFile()) {
+      if (fs.isDirectory(f))
+        recursivellyLookupFiles(fs, f, fileName, filePathFormat, fromDate, tillDate, result);
+      if (!fs.isDirectory(f)) {
         Date fileDate;
         try {
           fileDate = filePathFormat.parse(fileName);

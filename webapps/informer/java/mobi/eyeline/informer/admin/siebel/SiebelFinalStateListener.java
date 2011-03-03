@@ -342,9 +342,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
               if (toProccess.length() > 0) {
                 processFile(toProccess);
               }
-              if (!toProccess.delete()) {
-                logger.error("Can't delete a file: " + toProccess.getAbsolutePath());
-              }
+              fs.delete(toProccess);
             }
           }catch (Exception e){
             logger.error(e,e);

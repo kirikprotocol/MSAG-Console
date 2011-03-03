@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin.delivery.stat;
 
+import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -28,7 +29,7 @@ public class StatUtilsTest {
   @Test
   public void testLookupFilesWithNoDates() {
 
-    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), null, null);
+    List<StatFile> files = StatUtils.lookupFiles(new TestFileSystem(), baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), null, null);
 
     assertEquals(2, files.size());
   }
@@ -45,7 +46,7 @@ public class StatUtilsTest {
     c.set(Calendar.SECOND, 0);
     c.set(Calendar.MILLISECOND, 0);
 
-    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), c.getTime(), null);
+    List<StatFile> files = StatUtils.lookupFiles(new TestFileSystem(), baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), c.getTime(), null);
 
     assertEquals(1, files.size());
   }
@@ -62,7 +63,7 @@ public class StatUtilsTest {
     c.set(Calendar.SECOND, 0);
     c.set(Calendar.MILLISECOND, 0);
 
-    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), null, c.getTime());
+    List<StatFile> files = StatUtils.lookupFiles(new TestFileSystem(), baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), null, c.getTime());
 
     assertEquals(1, files.size());
   }
