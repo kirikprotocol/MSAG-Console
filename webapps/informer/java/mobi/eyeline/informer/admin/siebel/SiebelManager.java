@@ -580,6 +580,7 @@ class SiebelManager {
     delivery.setEnableMsgFinalizationLogging(true);
     delivery.setEnableStateChangeLogging(true);
     delivery.setName(deliveryName);
+    delivery.setArchiveTime(null);
 
     delivery.setPriority(siebelDelivery.getPriority());
     delivery.setFlash(siebelDelivery.isFlash());
