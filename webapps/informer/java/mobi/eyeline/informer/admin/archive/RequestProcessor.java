@@ -56,6 +56,7 @@ class RequestProcessor {
           r.execute(executor);
           requestStorage.changeStatus(r.getId(), Request.Status.FINISHED);
         } catch (Exception e) {
+          logger.error("Error in request processing: "+r);
           logger.error(e, e);
           try {
             requestStorage.changeStatus(r.getId(), Request.Status.ERROR);
