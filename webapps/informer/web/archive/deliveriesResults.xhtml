@@ -13,6 +13,11 @@
 
     <tr:form>
 
+      <eye:message level="warn" rendered="#{deliveriesResults.error != null}">
+        <h:outputText value="#{deliveriesResults.error}"/>
+      </eye:message>
+
+
       <eye:dataTableFilter bean="#{deliveriesResults}" clearAction="clearFilter" applyAction="query">
         <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, column300Width,column50WidthNoWrap, columnTopLeftAlign">
 
@@ -82,7 +87,7 @@
           <tr:commandLink text="#{msg['archive.request.result.deliveries.requests']}" shortDesc="#{msg['archive.request.result.deliveries.requests.desc']}"
                           action="ARCHIVE_LIST" immediate="true"/>
         </eye:button>
-        <eye:button>
+        <eye:button rendered="#{!deliveriesResults.offline}">
           <tr:commandLink text="#{msg['archive.request.result.deliveries.statistics']}" shortDesc="#{msg['archive.request.result.deliveries.statistics.desc']}"
                           action="#{deliveryMessagesByPeriod.setDeliveryParam}" actionListener="#{deliveriesResults.statForSelected}"/>
         </eye:button>

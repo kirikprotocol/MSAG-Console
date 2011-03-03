@@ -14,9 +14,13 @@
 
     <tr:form>
 
-      <tr:inputHidden id="deliveryId" value="#{archiveDelivery.deliveryId}"/>
-      <tr:inputHidden id="reqId" value="#{archiveDelivery.reqId}"/>
-      <tr:inputHidden id="action" value="#{archiveDelivery.comeBackAction}"/>
+    <tr:inputHidden id="deliveryId" value="#{archiveDelivery.deliveryId}"/>
+    <tr:inputHidden id="reqId" value="#{archiveDelivery.reqId}"/>
+    <tr:inputHidden id="action" value="#{archiveDelivery.comeBackAction}"/>
+
+      <eye:message level="warn" rendered="#{archiveDelivery.error != null}">
+        <h:outputText value="#{archiveDelivery.error}"/>
+      </eye:message>
 
       <eye:buttons>
         <eye:button>
@@ -26,13 +30,13 @@
           </tr:commandLink>
         </eye:button>
         <eye:space/>
-        <eye:button>
+        <eye:button rendered="#{!archiveDelivery.offline}">
           <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
             <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
             <f:param name="archive" value="true"/>
           </tr:commandLink>
         </eye:button>
-        <eye:button>
+        <eye:button rendered="#{!archiveDelivery.offline}">
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
             <f:param name="archive" value="true"/>
@@ -41,6 +45,8 @@
       </eye:buttons>
 
       <eye:delimiter/>
+
+    <h:panelGroup rendered="#{!archiveDelivery.offline}">
 
       <eye:pageSubtitle value="#{msg['delivery.edit.settings']}"/>
 
@@ -186,10 +192,12 @@
 
       </h:panelGrid>
 
+      </h:panelGroup>
+
 
       <eye:delimiter/>
 
-      <eye:buttons>
+      <eye:buttons rendered="#{!archiveDelivery.offline}">
         <eye:button>
           <tr:commandLink text="#{msg['archive.request.requests']}" shortDesc="#{msg['archive.request.requests.desc']}"
                           action="#{archiveDelivery.getComeBackAction}">

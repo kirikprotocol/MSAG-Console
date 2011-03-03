@@ -55,6 +55,9 @@ class RequestExecutor {
 
 
   void execute(final DeliveriesRequest request) throws AdminException{
+    if(3 == 3) {   //todo
+      throw new IllegalArgumentException();
+    }
     final User u = context.getUser(request.getCreater());
     try{
       lock.lock();

@@ -17,6 +17,27 @@ public class RequestListController extends InformerController{
 
   private List selectedRows;
 
+
+  private String error;
+
+  public RequestListController() {
+    try {
+      if(!getConfig().isArchiveDaemonDeployed() || getConfig().getArchiveDaemonOnlineHost() == null) {
+        error = getLocalizedString("archive.daemon.offline");
+      }
+    } catch (AdminException e) {
+      addError(e);
+    }
+  }
+
+  public String getError() {
+    return error;
+  }
+
+  public boolean isOffline() {
+    return error != null;
+  }
+
   public DataTableModel getRequests() {
     final List<Request> requests;
     try{

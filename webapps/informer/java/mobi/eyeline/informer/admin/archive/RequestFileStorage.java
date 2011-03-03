@@ -177,7 +177,7 @@ class RequestFileStorage implements RequestStorage {
   }
 
   private static boolean isStatusFinished(DeliveriesRequest.Status st) {
-    return st == DeliveriesRequest.Status.FINISHED || st == DeliveriesRequest.Status.CANCELED;
+    return st == DeliveriesRequest.Status.FINISHED || st == DeliveriesRequest.Status.CANCELED ||  st == DeliveriesRequest.Status.ERROR ;
   }
 
 }

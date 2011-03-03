@@ -13,13 +13,19 @@
 
     <tr:form>
 
+      <eye:message level="warn" rendered="#{requests.error != null}">
+        <h:outputText value="#{requests.error}"/>
+      </eye:message>
+
       <eye:buttons>
-        <eye:button>
+        <eye:button rendered="#{!requests.offline}">
           <eye:menubar label="#{msg['archive.request.new']} ...">
             <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.deliveries']}" action="DELIVERIES_REQUEST"/></eye:menubaritem>
             <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.messages']}" action="MESSAGES_REQUEST"/></eye:menubaritem>
           </eye:menubar>
-          <eye:button><tr:commandLink text="#{msg['archive.request.remove.selected']}" shortDesc="#{msg['archive.request.remove.selected.desc']}" action="#{requests.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['archive.request.remove.selected']}" shortDesc="#{msg['archive.request.remove.selected.desc']}" action="#{requests.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -70,12 +76,14 @@
 
       <eye:delimiter/>
       <eye:buttons>
-        <eye:button>
+        <eye:button rendered="#{!requests.offline}">
           <eye:menubar label="#{msg['archive.request.new']} ...">
             <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.deliveries']}" action="DELIVERIES_REQUEST"/></eye:menubaritem>
             <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.messages']}" action="MESSAGES_REQUEST"/></eye:menubaritem>
           </eye:menubar>
-          <eye:button><tr:commandLink text="#{msg['archive.request.remove.selected']}" shortDesc="#{msg['archive.request.remove.selected.desc']}" action="#{requests.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['archive.request.remove.selected']}" shortDesc="#{msg['archive.request.remove.selected.desc']}" action="#{requests.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

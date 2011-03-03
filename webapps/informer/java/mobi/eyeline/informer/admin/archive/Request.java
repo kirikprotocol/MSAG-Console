@@ -32,7 +32,7 @@ public abstract class Request {
   protected String creater;
 
   public static enum Status {
-    IN_PROCESS, CANCELED, FINISHED;
+    IN_PROCESS, CANCELED, FINISHED, ERROR;
     public String getStatus() {
       return toString();
     }

@@ -88,7 +88,7 @@ public class ArchiveRequestsManager {
   }
 
   private void setStatus(Request q) {
-    if(q.getStatus() != Request.Status.CANCELED && q.getStatus() != Request.Status.FINISHED) {
+    if(q.getStatus() != Request.Status.CANCELED && q.getStatus() != Request.Status.FINISHED && q.getStatus() != Request.Status.ERROR) {
       q.setStatus(Request.Status.IN_PROCESS);
       Integer proggress = processor.getProgress(q.getId());
       if(proggress == null) {

@@ -34,6 +34,8 @@ public class DeliveriesResultController extends InformerController{
 
   private List selected;
 
+  private String error;
+
   public DeliveriesResultController() {
     String id = getRequestParameter("reqId");
     if(id == null || id.length() == 0) {
@@ -44,8 +46,22 @@ public class DeliveriesResultController extends InformerController{
     }else {
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "archive.request.not.found", "");
     }
+    try {
+      if(!getConfig().isArchiveDaemonDeployed() || getConfig().getArchiveDaemonOnlineHost() == null) {
+        error = getLocalizedString("archive.daemon.offline");
+      }
+    } catch (AdminException e) {
+      addError(e);
+    }
   }
 
+  public String getError() {
+    return error;
+  }
+
+  public boolean isOffline() {
+    return error != null;
+  }
 
   public void clearFilter() {
     owner = null;

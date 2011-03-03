@@ -45,8 +45,21 @@ public class DeliveryController extends InformerController{
   private String emailNotificationAddress;
   private String smsNotificationAddress;
 
+  private String error;
+
   public DeliveryController() {
+    comeBackAction = getRequestParameter("action");
+    reqId = getRequestParameter("reqId");
     Configuration config = getConfig();
+    try {
+      if(!config.isArchiveDaemonDeployed() || config.getArchiveDaemonOnlineHost() == null) {
+        error = getLocalizedString("archive.daemon.offline");
+        return;
+      }
+    } catch (AdminException e) {
+      addError(e);
+      return;
+    }
     String user = getUserName();
     String id = getRequestParameter("deliveryId");
     if(id == null || id.length() == 0) {            // come back
@@ -57,9 +70,6 @@ public class DeliveryController extends InformerController{
         id = ss[1];
         comeBackAction = ss[2];
       }
-    }else {
-      comeBackAction = getRequestParameter("action");
-      reqId = getRequestParameter("reqId");
     }
 
     if(id != null && id.length()>0) {
@@ -91,6 +101,14 @@ public class DeliveryController extends InformerController{
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found", id);
     }
 
+  }
+
+  public String getError() {
+    return error;
+  }
+
+  public boolean isOffline() {
+    return error != null;
   }
 
   public List<SelectItem> getAllDays() {
