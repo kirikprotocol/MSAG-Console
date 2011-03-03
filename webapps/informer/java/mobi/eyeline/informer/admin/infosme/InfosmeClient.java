@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
+import mobi.eyeline.informer.admin.protogen.ResponseWaitTimeoutException;
 import mobi.eyeline.informer.admin.protogen.ServerOfflineException;
 import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
 import mobi.eyeline.protogen.framework.PDU;
@@ -28,6 +29,8 @@ class InfosmeClient extends SyncProtogenConnection {
       return request(request, response);
     } catch (ServerOfflineException e) {
       throw new OfflineException("server_offline");
+    } catch (ResponseWaitTimeoutException e) {
+      throw new InfosmeException("response_timeout");
     } catch (IOException e) {
       throw new InfosmeException("io_error", e, e.getMessage());
     }
