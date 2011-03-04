@@ -10,10 +10,7 @@ import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -59,7 +56,8 @@ public class NetworkProfilesManager {
   }
 
   public synchronized NetworkProfile getProfile(String name) throws AdminException {
-    return (NetworkProfile) profiles.get(name);
+    NetworkProfile n = (NetworkProfile) profiles.get(name);
+    return n == null ? n : new NetworkProfile(n);
   }
 
   private synchronized void load() throws AdminException {
@@ -166,8 +164,13 @@ public class NetworkProfilesManager {
     load();
   }
 
-  public synchronized Collection getProfiles() {
-    return profiles.values();
+  public synchronized Collection getProfiles() throws AdminException {
+    Collection results = new ArrayList(profiles.size());
+    Iterator i = profiles.values().iterator();
+    while(i.hasNext()) {
+      results.add(new NetworkProfile((NetworkProfile)i.next()));
+    }
+    return results;
   }
 
   public String getDefaultUssdOpenDestRef() {

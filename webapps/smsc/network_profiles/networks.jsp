@@ -12,7 +12,7 @@
   switch(beanResult)
 	{
 		case NetworkProfilesBean.RESULT_EDIT:
-      response.sendRedirect("networkEdit.jsp?network=" + bean.getEdit());
+      response.sendRedirect("networkEdit.jsp?network=" + URLEncoder.encode(bean.getEdit()));
       return;
     case NetworkProfilesBean.RESULT_ADD:
       response.sendRedirect("networkEdit.jsp");
@@ -32,11 +32,43 @@
     <col width="49%">
     <tr>
       <td nowrap="true"><%=getLocString("network.abonentStatusMethod")%>:</td>
-      <td><input class=txt name=defaultAbonentStatusMethod id=defaultAbonentStatusMethod value="<%=bean.getDefaultAbonentStatusMethod() == null ? "" : bean.getDefaultAbonentStatusMethod()%>"></td>
+      <td>
+        <div class=select>
+          <select name="defaultAbonentStatusMethod" id="defaultAbonentStatusMethod">
+            <%
+              {
+                Iterator i = bean.getAbonentStateMethods().iterator();
+                while(i.hasNext()) {
+                  String o = (String)i.next();
+            %>
+            <option value="<%=o%>" <%=o.equals(bean.getDefaultAbonentStatusMethod()) ? "selected" : ""%>><%=o%></option>
+            <%
+                }
+              }
+            %>
+          </select>
+        </div>
+        </td>
     </tr>
     <tr>
       <td nowrap="true"><%=getLocString("network.ussdOpenDestRef")%>:</td>
-      <td><input class=txt name=defaultUssdOpenDestRef id=defaultUssdOpenDestRef value="<%=bean.getDefaultUssdOpenDestRef() == null ? "" : bean.getDefaultUssdOpenDestRef()%>"></td>
+      <td>
+        <div class=select>
+          <select name="defaultUssdOpenDestRef" id="defaultUssdOpenDestRef">
+            <%
+              {
+                Iterator i = bean.getUssdOpenDestRefs().iterator();
+                while(i.hasNext()) {
+                  String o = (String)i.next();
+            %>
+            <option value="<%=o%>" <%=o.equals(bean.getDefaultUssdOpenDestRef()) ? "selected" : ""%>><%=o%></option>
+            <%
+                }
+              }
+            %>
+          </select>
+        </div>
+        </td>
     </tr>
   </table>
 </div>

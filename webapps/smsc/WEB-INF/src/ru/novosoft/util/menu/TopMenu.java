@@ -40,6 +40,7 @@ public class TopMenu extends ArrayList {
             smsItems.add(new MenuItem("menu.smsc.regions", "/smsc/regions/regions.jsp", MenuItem.VISIBLE_IN_ALL, Constants.INST_MODE_SMSC | Constants.INST_MODE_INFO_SME));
             smsItems.add(new MenuItem("menu.smsc.switch", "/smsc/smsc_service/switch.jsp", MenuItem.VISIBLE_IN_HA, Constants.INST_MODE_SMSC));
             smsItems.add(new MenuItem("menu.smsc.fraud", "/smsc/fraud/fraud.jsp", MenuItem.VISIBLE_IN_ALL, Constants.INST_MODE_SMSC));
+            smsItems.add(new MenuItem("network_profiles.title", "/smsc/network_profiles/networks.jsp", MenuItem.VISIBLE_IN_ALL, Constants.INST_MODE_SMSC));
             add(new MenuItem("menu.smsc", "", smsItems, Constants.INST_MODE_SMSC | Constants.INST_MODE_INFO_SME));
 
             Collection statisticItems = new ArrayList();

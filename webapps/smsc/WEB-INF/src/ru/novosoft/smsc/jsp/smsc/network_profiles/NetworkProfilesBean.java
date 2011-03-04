@@ -13,10 +13,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.network_profiles.NetworkProfileQuer
 import ru.novosoft.smsc.jsp.util.tables.impl.network_profiles.NetworkProfilesDataSource;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -114,19 +111,15 @@ public class NetworkProfilesBean extends SmscBean {
 
   private int save() {
 
-    //todo validate
-
     try {
-//      if (defaultAbonentStatusMethod == null || defaultAbonentStatusMethod.length() == 0)
-//        return error("Default bandwidth is empty");
 
-        nm.setDefaultAbonentStatusMethod(defaultAbonentStatusMethod);
+      nm.setDefaultAbonentStatusMethod(defaultAbonentStatusMethod);
 
       nm.setDefaultUssdOpenDestRef(defaultUssdOpenDestRef);
 
       nm.save();
 
-      appContext.getSmsc().applyNetworkProfilesConfig();
+//      appContext.getSmsc().applyNetworkProfilesConfig();     todo todo
 
       journalAppend(SubjectTypes.TYPE_network_profiles, "Network profiles configuration", Actions.ACTION_MODIFY);
     } catch (AdminException e) {
@@ -145,6 +138,22 @@ public class NetworkProfilesBean extends SmscBean {
       return error("Can't delete profiles", e);
     }
     return PageBean.RESULT_OK;
+  }
+
+
+  public List getAbonentStateMethods() {
+    List list = new ArrayList(2);
+    list.add("SRI4SM");
+    list.add("ATI");
+    return list;
+  }
+
+  public List getUssdOpenDestRefs() {
+    List list = new ArrayList(3);
+    list.add("");
+    list.add("destAddr");
+    list.add("destIMSI");
+    return list;
   }
 
   public String getMbAdd() {

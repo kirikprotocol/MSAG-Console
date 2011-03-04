@@ -1,20 +1,34 @@
 package ru.novosoft.smsc.admin.network_profiles;
 
-import java.util.HashMap;
+import ru.novosoft.smsc.admin.AdminException;
+
+import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author Aleksandr Khalitov
  */
 public class NetworkProfile {
 
-  private Map masks = new HashMap(10);
+  private Map masks = new TreeMap();
 
   private String ussdOpenDestRef;
 
   private String abonentStatusMethod;
 
   private String name;
+
+  public NetworkProfile(NetworkProfile networkProfile) throws AdminException {
+    this.ussdOpenDestRef = networkProfile.ussdOpenDestRef;
+    this.abonentStatusMethod = networkProfile.abonentStatusMethod;
+    this.name = networkProfile.name;
+    Iterator mI = networkProfile.masks.values().iterator();
+    while(mI.hasNext()) {
+      Mask m = (Mask)mI.next();
+      this.masks.put(m.getMaskSimple(), new Mask(m.getMaskSimple()));
+    }
+  }
 
   public NetworkProfile(String name) {
     this.name = name;
