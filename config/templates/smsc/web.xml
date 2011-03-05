@@ -62,6 +62,7 @@
       <url-pattern>/smsc/smsc_service/maplimits.jsp</url-pattern>
       <url-pattern>/smsc/reshedule/*</url-pattern>
       <url-pattern>/smsc/directives/*</url-pattern>
+      <url-pattern>/smsc/network_profiles/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>smsc_service</role-name>
