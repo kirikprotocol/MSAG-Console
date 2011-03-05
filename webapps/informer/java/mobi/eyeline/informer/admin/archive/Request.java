@@ -29,6 +29,7 @@ public abstract class Request {
   protected String creater;
 
   protected String error;
+  protected String[] errorArgs;
 
   public static enum Status {
     IN_PROCESS, CANCELED, FINISHED, ERROR
@@ -108,8 +109,16 @@ public abstract class Request {
     return error;
   }
 
-  public void setError(String error) {
+  void setError(String error) {
     this.error = error;
+  }
+
+  public String[] getErrorArgs() {
+    return errorArgs;
+  }
+
+  void setErrorArgs(String[] errorArgs) {
+    this.errorArgs = errorArgs;
   }
 
   protected abstract void execute(RequestExecutor executor) throws AdminException;
@@ -139,6 +148,9 @@ public abstract class Request {
     if(error != null) {
       c.setString("error", error);
     }
+    if(errorArgs != null) {
+      c.setStringArray("errorArgs", errorArgs, "|");
+    }
   }
 
   protected void load(XmlConfig c) throws AdminException {
@@ -161,6 +173,9 @@ public abstract class Request {
       status = DeliveriesRequest.Status.valueOf(c.getString("status"));
 
       error = c.getString("error", null);
+      if(c.containsParam("errorArgs")) {
+        errorArgs = c.getStringArray("errorArgs", "|");
+      }
 
     }catch (Exception e){
       logger.error(e,e);

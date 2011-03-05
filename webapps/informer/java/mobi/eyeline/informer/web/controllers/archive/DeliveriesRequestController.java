@@ -4,14 +4,17 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.archive.DeliveriesRequest;
 import mobi.eyeline.informer.admin.archive.DeliveriesRequestPrototype;
 import mobi.eyeline.informer.admin.archive.Request;
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 /**
  * @author Aleksandr Khalitov
@@ -61,7 +64,16 @@ public class DeliveriesRequestController extends InformerController{
       deliveryId = request.getDeliveryId() == null ? null : Integer.toString(request.getDeliveryId());
       deliveryName = request.getDeliveryName();
       requestFinished = request.getStatus() == Request.Status.FINISHED;
-      requestError = request.getError();
+
+      if(request.getStatus() == Request.Status.ERROR) {
+          ResourceBundle bundle = ResourceBundle.getBundle(DeliveryException.class.getName(), getLocale());
+        if(request.getError() != null) {
+          String pattern = bundle.getString(request.getError());
+          requestError = request.getErrorArgs() == null ? pattern : MessageFormat.format(pattern, request.getErrorArgs());
+        }else {
+          requestError = bundle.getString("internal_error");
+        }
+      }
     }
   }
 

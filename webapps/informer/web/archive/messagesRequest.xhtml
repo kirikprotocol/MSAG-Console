@@ -16,7 +16,7 @@
       <eye:message level="error" rendered="#{messagesRequest.requestError != null}">
        <h:panelGrid style="padding-left:10px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText value="#{messagesRBundle.requestError}:" style="white-space:nowrap;"/>
-          <h:outputText value="#{messagesRequest.requestError}"/>
+          <h:outputText value="'#{messagesRequest.requestError}'"/>
         </h:panelGrid>
       </eye:message>
 

@@ -61,14 +61,13 @@ class RequestProcessor {
           logger.error(e, e);
           try {
             requestStorage.changeStatus(r.getId(), Request.Status.ERROR);
-            requestStorage.setError(r.getId(), e.getMessage());
+            requestStorage.setError(r.getId(), e.getKey(), e.getArgs());
           } catch (Exception ignored) {}
         } catch (Exception e) {
           logger.error("Error in request processing: "+r);
           logger.error(e, e);
           try {
             requestStorage.changeStatus(r.getId(), Request.Status.ERROR);
-            requestStorage.setError(r.getId(), "Unknown error");
           } catch (Exception ignored) {}
         } finally {
           try {

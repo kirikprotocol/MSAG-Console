@@ -16,7 +16,7 @@ public interface RequestStorage {
 
   public void changeStatus(int requestId, Request.Status status) throws AdminException;
 
-  public void setError(int requestId, String error) throws AdminException;
+  public void setError(int requestId, String error, String... errorArgs) throws AdminException;
 
   public void rename(int requestId, String name) throws AdminException;
 

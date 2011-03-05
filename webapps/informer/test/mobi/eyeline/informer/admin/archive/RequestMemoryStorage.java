@@ -34,12 +34,13 @@ public class RequestMemoryStorage implements RequestStorage {
   }
 
   @Override
-  public void setError(int requestId, String error) throws AdminException {
+  public void setError(int requestId, String error, String ... args) throws AdminException {
     Request r = requests.get(requestId);
     if(r == null) {
       throw new ArchiveException("request_not_found", Integer.toString(requestId));
     }
     r.setError(error);
+    r.setErrorArgs(args);
   }
 
   @Override

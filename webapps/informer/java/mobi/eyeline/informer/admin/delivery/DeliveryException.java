@@ -2,6 +2,9 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Aleksandr Khalitov
  */
@@ -10,16 +13,37 @@ public class DeliveryException extends AdminException {
   private ErrorStatus errorStatus = ErrorStatus.Unknown;
 
   public static enum ErrorStatus {
-    NotAuthorized,
-    CommandHandling,
-    AdminRoleRequired,
-    TooManyDeliveries,
-    AuthFailed,
-    RequestNotFound,
-    Expired,
-    NoSuchEntry,
-    Unknown
+    NotAuthorized(1),
+    CommandHandling(2),
+    AdminRoleRequired(3),
+    TooManyDeliveries(4),
+    AuthFailed(5),
+    RequestNotFound(6),
+    Expired(7),
+    NoSuchEntry(8),
+    Unknown(9);
+
+    private static Map<Integer, ErrorStatus> errors = new HashMap<Integer, ErrorStatus>(10) {{
+      for(ErrorStatus s : this.values()) {
+        errors.put(s.errorCode, s);
+      }
+    }};
+
+    private int errorCode;
+
+    ErrorStatus(int errorCode) {
+      this.errorCode = errorCode;
+    }
+
+    public static ErrorStatus valueOf(int code) {
+      return errors.get(code);
+    }
+
+    public int getErrorCode() {
+      return errorCode;
+    }
   }
+
 
   public DeliveryException(ErrorStatus errorStatus, String message) {
     super("error."+errorStatus.toString(), new String[]{message});
@@ -44,5 +68,13 @@ public class DeliveryException extends AdminException {
 
   public ErrorStatus getErrorStatus() {
     return errorStatus;
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public String[] getArgs() {
+    return args;
   }
 }

@@ -4,11 +4,14 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.archive.MessagesRequest;
 import mobi.eyeline.informer.admin.archive.MessagesRequestPrototype;
 import mobi.eyeline.informer.admin.archive.Request;
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
+import java.text.MessageFormat;
 import java.util.Date;
+import java.util.ResourceBundle;
 
 /**
  * @author Aleksandr Khalitov
@@ -52,7 +55,16 @@ public class MessagesRequestController extends InformerController{
       till = request.getTill();
       address = request.getAddress();
       requestFinished = request.getStatus() == Request.Status.FINISHED;
-      requestError = request.getError();
+
+      if(request.getStatus() == Request.Status.ERROR) {
+          ResourceBundle bundle = ResourceBundle.getBundle(DeliveryException.class.getName(), getLocale());
+        if(request.getError() != null) {
+          String pattern = bundle.getString(request.getError());
+          requestError = request.getErrorArgs() == null ? pattern : MessageFormat.format(pattern, request.getErrorArgs());
+        }else {
+          requestError = bundle.getString("internal_error");
+        }
+      }
     }
   }
 
