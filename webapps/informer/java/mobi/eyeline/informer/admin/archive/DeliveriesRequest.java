@@ -75,7 +75,7 @@ public class DeliveriesRequest extends Request{
     deliveryName = pr.getDeliveryName();
   }
 
-  void validate() throws AdminException {
+  protected void validate() throws AdminException {
     vh.checkNotEmpty("name", name);
     vh.checkNotNull("from", from);
   }

@@ -103,7 +103,7 @@ public class MessagesRequest extends Request{
     return new MessagesRequest(this);
   }
 
-  public void validate() throws AdminException {
+  protected void validate() throws AdminException {
     vh.checkNotEmpty("name", name);
     vh.checkNotNull("from", from);
     vh.checkNotNull("address", address);

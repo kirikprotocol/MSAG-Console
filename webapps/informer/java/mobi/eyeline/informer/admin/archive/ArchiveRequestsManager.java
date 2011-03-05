@@ -110,6 +110,7 @@ public class ArchiveRequestsManager {
   }
 
   public void modifyRequest(Request request) throws AdminException {
+    request.validate();
     Request q = storage.getRequest(request.getId());
     if(q == null) {
       throw new ArchiveException("request_not_found", Integer.toString(request.getId()));

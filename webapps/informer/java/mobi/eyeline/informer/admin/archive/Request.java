@@ -185,6 +185,8 @@ public abstract class Request {
 
   protected abstract Request copy();
 
+  protected abstract void validate() throws AdminException;
+
   @Override
   public String toString() {
     return "Request{" +

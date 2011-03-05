@@ -259,6 +259,7 @@
     <web-resource-collection>
       <web-resource-name>Администрирование Informer</web-resource-name>
       <url-pattern>/config/*</url-pattern>
+      <url-pattern>/archive/*</url-pattern>
       <url-pattern>/users/*</url-pattern>
       <url-pattern>/regions/*</url-pattern>
       <url-pattern>/smsc/*</url-pattern>
