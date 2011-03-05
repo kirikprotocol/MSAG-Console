@@ -38,7 +38,7 @@ protected:
   EncoderProducer_T<EncoderOfObjDescriptor> _encDescr;
 
   // constructor for encoder of tagged type referencing EXTERNAL
-  EncoderOfExternal(const ASTagging & eff_tags,
+  explicit EncoderOfExternal(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfStructure_T<4>(eff_tags, use_rule)
     , _encEnc(use_rule)
@@ -46,14 +46,14 @@ protected:
 
 public:
   // constructor for encoder of EXTERNAL
-  EncoderOfExternal(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructure_T<4>(asn1::_tagsEXTERNAL, use_rule)
+  explicit EncoderOfExternal(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfStructure_T<4>(asn1::_uniTagging().EXTERNAL, use_rule)
     , _encEnc(use_rule)
   { }
   // constructor for encoder of tagged EXTERNAL
   EncoderOfExternal(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructure_T<4>(use_tag, tag_env, asn1::_tagsEXTERNAL, use_rule)
+    : EncoderOfStructure_T<4>(use_tag, tag_env, asn1::_uniTagging().EXTERNAL, use_rule)
     , _encEnc(use_rule)
   { }
   //

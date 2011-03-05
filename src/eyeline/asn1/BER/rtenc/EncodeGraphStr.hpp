@@ -24,7 +24,7 @@ protected:
   TSLength      _numConverted;
 
 public:
-  GraphSTREncConverter(TSLength use_sz = 0, const char * use_chars = 0)
+  explicit GraphSTREncConverter(TSLength use_sz = 0, const char * use_chars = 0)
     : _encValSz(use_sz), _encVal(use_chars), _numConverted(0)
   { }
 
@@ -58,7 +58,7 @@ protected:
 
   // constructor for encoder of tagged type referencing GraphicString
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfGraphicSTR(const ASTagging & eff_tags,
+  explicit EncoderOfGraphicSTR(const ASTagging & eff_tags,
                       TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfRCSTR(&_valConv, eff_tags, use_rule)
     , _valConv(0, 0)
@@ -66,14 +66,14 @@ protected:
 
 public:
   //Constructors for GraphicString type
-  EncoderOfGraphicSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, asn1::_tagsGraphicSTR, use_rule)
+  explicit EncoderOfGraphicSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, asn1::_uniTagging().GraphicSTR, use_rule)
     , _valConv(0, 0)
   { }
   //Constructors for tagged GraphicString type
   EncoderOfGraphicSTR(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                       TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_tagsGraphicSTR, use_rule)
+    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_uniTagging().GraphicSTR, use_rule)
     , _valConv(0, 0)
   { }
   //

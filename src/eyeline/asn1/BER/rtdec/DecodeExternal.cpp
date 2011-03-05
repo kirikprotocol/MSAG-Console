@@ -20,9 +20,9 @@ namespace ber {
 //          }
 void DecoderOfExternal::construct(void)
 {
-  DecoderOfSequence_T<4>::setField(0, asn1::_tagObjectID, EDAlternative::altOPTIONAL);
-  DecoderOfSequence_T<4>::setField(1, asn1::_tagINTEGER, EDAlternative::altOPTIONAL);
-  DecoderOfSequence_T<4>::setField(2, asn1::_tagObjDescriptor, EDAlternative::altOPTIONAL);
+  DecoderOfSequence_T<4>::setField(0, asn1::_uniTag().ObjectID, EDAlternative::altOPTIONAL);
+  DecoderOfSequence_T<4>::setField(1, asn1::_uniTag().INTEGER, EDAlternative::altOPTIONAL);
+  DecoderOfSequence_T<4>::setField(2, asn1::_uniTag().ObjDescriptor, EDAlternative::altOPTIONAL);
   DecoderOfSequence_T<4>::setField(3, DecoderOfEmbdEncoding::_tagOptions, EDAlternative::altMANDATORY);
 }
 

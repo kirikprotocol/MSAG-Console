@@ -11,8 +11,8 @@ namespace ber {
 namespace tests {
 namespace dec {
 
-const ASTag MDSeqType5::_tag_C= ASTag(ASTag::tagContextSpecific, 10);
-const ASTag MDSeqType5::_tag_D= ASTag(ASTag::tagContextSpecific, 11);
+const ASTag MDSeqType5::_tag_C(ASTag::tagContextSpecific, 10);
+const ASTag MDSeqType5::_tag_D(ASTag::tagContextSpecific, 11);
 
 void
 MDSeqType5::construct(void)

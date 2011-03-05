@@ -31,7 +31,7 @@ public:
   // RCSDecConverterIface implementation
   // -------------------------------------------
   //Returns universal tag of fragment in case of fragmented string encoding
-  const ASTag & fragmentTag(void) const /* throw()*/ { return _tagOCTSTR; }
+  const ASTag & fragmentTag(void) const /* throw()*/ { return _uniTag().OCTSTR; }
   //Incrementally converts next fragment of string encoding to
   //characters from associated alphabet.
   //Returns number of bytes consumed from buffer.
@@ -45,7 +45,7 @@ public:
  *
  * NOTE: GraphicString is defined as [UNIVERSAL 25] IMPLICIT OCTET STRING
  * ************************************************************************* */
-//UNITypeValueDecoder_T<std::string, asn1::_tagsGraphicSTR>
+//UNITypeValueDecoder_T<std::string, asn1::_uniTagging().GraphicSTR>
 class DecoderOfGraphicSTR : public RCSTRValueDecoder {
 protected:
   GraphStrDecConverter  _vCvt;
@@ -53,12 +53,12 @@ protected:
 public:
   //Constructor for base type
   explicit DecoderOfGraphicSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : RCSTRValueDecoder(_vCvt, asn1::_tagsGraphicSTR, use_rule)
+    : RCSTRValueDecoder(_vCvt, asn1::_uniTagging().GraphicSTR, use_rule)
   { }
   //Constructor for tagged base type
   DecoderOfGraphicSTR(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : RCSTRValueDecoder(_vCvt, ASTagging(use_tag, tag_env, asn1::_tagsGraphicSTR), use_rule)
+    : RCSTRValueDecoder(_vCvt, ASTagging(use_tag, tag_env, asn1::_uniTagging().GraphicSTR), use_rule)
   { }
   virtual ~DecoderOfGraphicSTR()
   { }

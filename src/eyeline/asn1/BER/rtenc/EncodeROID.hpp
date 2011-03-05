@@ -39,29 +39,29 @@ protected:
 
   // constructor for encoder of tagged type referencing RELATIVE-OID 
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfRelativeOID(const ASTagging & eff_tags,
+  explicit EncoderOfRelativeOID(const ASTagging & eff_tags,
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeValueEncoderAC(eff_tags, use_rule), _encVal(0)
   { }
 
 public:
   //Constructor for RELATIVE-OID type
-  EncoderOfRelativeOID(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsRelativeOID, use_rule), _encVal(0)
+  explicit EncoderOfRelativeOID(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_uniTagging().RelativeOID, use_rule), _encVal(0)
   { }
-  EncoderOfRelativeOID(const asn1::RelativeOID & use_val,
+  explicit EncoderOfRelativeOID(const asn1::RelativeOID & use_val,
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsRelativeOID, use_rule), _encVal(&use_val)
+    : TypeValueEncoderAC(asn1::_uniTagging().RelativeOID, use_rule), _encVal(&use_val)
   { }
   //Constructor for tagged RELATIVE-OID type
   EncoderOfRelativeOID(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsRelativeOID, use_rule), _encVal(0)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().RelativeOID, use_rule), _encVal(0)
   { }
   EncoderOfRelativeOID(const asn1::RelativeOID & use_val,
                        const ASTag & use_tag, ASTagging::Environment_e tag_env,
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsRelativeOID, use_rule), _encVal(&use_val)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().RelativeOID, use_rule), _encVal(&use_val)
   { }
   ~EncoderOfRelativeOID()
   { }

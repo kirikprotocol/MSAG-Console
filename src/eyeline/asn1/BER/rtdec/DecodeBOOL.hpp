@@ -42,13 +42,13 @@ protected:
 public:
   //Untagged BOOLEAN type encoder constructor. 
   explicit DecoderOfBOOL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(asn1::_tagsBOOL, use_rule)
+    : TypeValueDecoderAC(asn1::_uniTagging().BOOL, use_rule)
     , _dVal(0)
   { }
   //Tagged BOOLEAN type encoder constructor
   DecoderOfBOOL(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                      TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(use_tag, tag_env, asn1::_tagsBOOL, use_rule)
+    : TypeValueDecoderAC(use_tag, tag_env, asn1::_uniTagging().BOOL, use_rule)
     , _dVal(0)
   { }
   ~DecoderOfBOOL()

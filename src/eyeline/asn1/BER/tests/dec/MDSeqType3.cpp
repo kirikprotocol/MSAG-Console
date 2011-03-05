@@ -11,12 +11,12 @@ namespace ber {
 namespace tests {
 namespace dec {
 
-const ASTag MDSeqType3::_tag_B= ASTag(ASTag::tagContextSpecific, 3);
+const ASTag MDSeqType3::_tag_B(ASTag::tagContextSpecific, 3);
 
 void
 MDSeqType3::construct(void)
 {
-  setField(0, asn1::_tagINTEGER, EDAlternative::altMANDATORY);
+  setField(0, asn1::_uniTag().INTEGER, EDAlternative::altMANDATORY);
   setField(1, _tag_B, ASTagging::tagsIMPLICIT, EDAlternative::altOPTIONAL);
   setUnkExtension(2);
 }

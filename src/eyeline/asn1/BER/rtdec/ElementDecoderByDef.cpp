@@ -67,7 +67,7 @@ uint16_t ElementDecoderByTDef::buildTDMatrixRow(
   }
 
   //check for unatagged OpenType ambiguity
-  if ((numTags > 1) && (tdRow.atLast()._tag == asn1::_tagANYTYPE))
+  if ((numTags > 1) && (tdRow.atLast()._tag == asn1::_uniTag().ANYTYPE))
     throw ElementDecoderAC::AmbiguousCtxException(tdRow.atLast()._altIdx);
 
   return endIdx;

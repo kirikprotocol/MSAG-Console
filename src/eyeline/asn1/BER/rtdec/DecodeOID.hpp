@@ -43,13 +43,13 @@ protected:
 public:
   //Untagged OBJECT-IDENTIFIER type encoder constructor. 
   explicit DecoderOfObjectID(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(asn1::_tagsObjectID, use_rule)
+    : TypeValueDecoderAC(asn1::_uniTagging().ObjectID, use_rule)
     , _dVal(0)
   { }
   //Tagged OBJECT-IDENTIFIER type encoder constructor
   DecoderOfObjectID(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                      TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(use_tag, tag_env, asn1::_tagsObjectID, use_rule)
+    : TypeValueDecoderAC(use_tag, tag_env, asn1::_uniTagging().ObjectID, use_rule)
     , _dVal(0)
   { }
   ~DecoderOfObjectID()

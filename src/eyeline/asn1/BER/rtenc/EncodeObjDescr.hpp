@@ -25,27 +25,27 @@ protected:
 
 public:
   //Constructors for ObjectDescriptor type
-  EncoderOfObjDescriptor(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, asn1::_tagsObjDescriptor, use_rule)
+  explicit EncoderOfObjDescriptor(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, asn1::_uniTagging().ObjDescriptor, use_rule)
     , _valConv(0, 0)
   { }
   //Constructors for ObjectDescriptor type
   EncoderOfObjDescriptor(TSLength str_sz, const char * use_chars,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, asn1::_tagsObjDescriptor, use_rule)
+    : EncoderOfRCSTR(&_valConv, asn1::_uniTagging().ObjDescriptor, use_rule)
     , _valConv(str_sz, use_chars)
   { }
 
   //Constructors for tagged ObjectDescriptor type
   EncoderOfObjDescriptor(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_tagsObjDescriptor, use_rule)
+    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_uniTagging().ObjDescriptor, use_rule)
     , _valConv(0, 0)
   { }
   EncoderOfObjDescriptor(TSLength str_sz, const char * use_chars,
                         const ASTag & use_tag, ASTagging::Environment_e tag_env,
                         TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_tagsObjDescriptor, use_rule)
+    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_uniTagging().ObjDescriptor, use_rule)
     , _valConv(str_sz, use_chars)
   { }
   //

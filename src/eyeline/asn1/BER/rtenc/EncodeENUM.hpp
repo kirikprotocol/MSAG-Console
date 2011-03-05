@@ -18,19 +18,19 @@ protected:
 
   //Tagged type referencing INTEGER. 
   // NOTE: eff_tags is a complete effective tagging of type!
-  EncoderOfENUM(const ASTagging & eff_tags,
+  explicit EncoderOfENUM(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfINTEGER(eff_tags, use_rule)
   { }
 
 public:
-  EncoderOfENUM(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfINTEGER(asn1::_tagsENUM, use_rule)
+  explicit EncoderOfENUM(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfINTEGER(asn1::_uniTagging().ENUM, use_rule)
   { }
   //Tagged ENUMERATED type encoder constructor
   EncoderOfENUM(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfINTEGER(ASTagging(use_tag, tag_env, asn1::_tagsENUM), use_rule)
+    : EncoderOfINTEGER(ASTagging(use_tag, tag_env, asn1::_uniTagging().ENUM), use_rule)
   { }
   ~EncoderOfENUM()
   { }

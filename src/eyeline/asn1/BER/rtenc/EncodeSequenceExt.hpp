@@ -28,13 +28,13 @@ template <
 class EncoderOfExtensibleSequence_T : public EncoderOfExtensibleStructure_T<_NumFieldsTArg> {
 public:
   //Constructor for SEQUENCE/SEQUENCE OF type
-  EncoderOfExtensibleSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfExtensibleStructure_T<_NumFieldsTArg>(asn1::_tagsSEQOF, use_rule)
+  explicit EncoderOfExtensibleSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfExtensibleStructure_T<_NumFieldsTArg>(asn1::_uniTagging().SEQOF, use_rule)
   { }
   //Constructor for tagged SEQUENCE/SEQUENCE OF type
   EncoderOfExtensibleSequence_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfExtensibleStructure_T<_NumFieldsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
+    : EncoderOfExtensibleStructure_T<_NumFieldsTArg>(use_tag, tag_env, asn1::_uniTagging().SEQOF, use_rule)
   { }
   virtual ~EncoderOfExtensibleSequence_T()
   { }

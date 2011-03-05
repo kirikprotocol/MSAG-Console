@@ -51,7 +51,7 @@ public:
   static const ASTag _tagOctetAligned;
   static const ASTag _tagBitAligned;
 
-  EncoderOfEmbdEncoding(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+  explicit EncoderOfEmbdEncoding(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfChoice(use_rule)
   {
     //add canonical alternative tagging (see EncodeChoice.hpp:NOTE.1)

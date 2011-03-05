@@ -22,11 +22,7 @@ class MDChoiceType1 : public DecoderOfChoice_T<2> {
 public:
   class TaggingOptions : public asn1::ber::TaggingOptions {
   public:
-    TaggingOptions() : asn1::ber::TaggingOptions()
-    {
-      addTagging(_tagINTEGER, ASTagging::tagsIMPLICIT);
-      addTagging(_tagBOOL, ASTagging::tagsIMPLICIT);
-    }
+    TaggingOptions();
   };
   static const TaggingOptions _tagOptions;
 

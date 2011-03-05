@@ -39,20 +39,20 @@ protected:
 
   // constructor for encoder of tagged type referencing BOOL
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfBOOL(const ASTagging & eff_tags,
+  explicit EncoderOfBOOL(const ASTagging & eff_tags,
                 TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeValueEncoderAC(eff_tags, use_rule)
   { }
 
 public:
   //constructor for encoder of BOOLEAN type 
-  EncoderOfBOOL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsBOOL, use_rule)
+  explicit EncoderOfBOOL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_uniTagging().BOOL, use_rule)
   { }
   // constructor for encoder of tagged BOOLEAN type
   EncoderOfBOOL(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsBOOL, use_rule)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().BOOL, use_rule)
   { }
   ~EncoderOfBOOL()
   { }

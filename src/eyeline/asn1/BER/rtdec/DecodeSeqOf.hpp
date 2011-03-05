@@ -90,13 +90,13 @@ protected:
 public:
   // constructor for untagged SEQUENCE OF
   explicit DecoderOfSeqOfAC_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfStructAC(_setofDec, asn1::_tagsSEQOF, use_rule)
+    : DecoderOfStructAC(_setofDec, asn1::_uniTagging().SEQOF, use_rule)
     , _maxNum(0), _curNum(0)
   { }
   // constructor for tagged SEQUENCE OF
   DecoderOfSeqOfAC_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfStructAC(_setofDec, ASTagging(use_tag, tag_env, asn1::_tagsSEQOF), use_rule)
+    : DecoderOfStructAC(_setofDec, ASTagging(use_tag, tag_env, asn1::_uniTagging().SEQOF), use_rule)
     , _maxNum(0), _curNum(0)
   { }
   DecoderOfSeqOfAC_T(const DecoderOfSeqOfAC_T & use_obj)

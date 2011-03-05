@@ -55,7 +55,7 @@ protected:
 public:
   //Untagged INTEGER type encoder constructor. 
   explicit DecoderOfINTEGER(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(asn1::_tagsINTEGER, use_rule)
+    : TypeValueDecoderAC(asn1::_uniTagging().INTEGER, use_rule)
     , _vSzo(szoNone), _vSigned(false)
   {
     _pVal.u32 = 0;
@@ -63,7 +63,7 @@ public:
   //Tagged INTEGER type encoder constructor
   DecoderOfINTEGER(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                      TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(use_tag, tag_env, asn1::_tagsINTEGER, use_rule)
+    : TypeValueDecoderAC(use_tag, tag_env, asn1::_uniTagging().INTEGER, use_rule)
     , _vSzo(szoNone), _vSigned(false)
   {
     _pVal.u32 = 0;

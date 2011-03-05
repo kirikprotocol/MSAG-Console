@@ -57,43 +57,19 @@ protected:
 
   //Sets tagged alternative of some type
   void setAlternative(uint16_t unique_idx, const ASTag & fld_tag, ASTagging::Environment_e fld_env)
-    /*throw(std::exception)*/
-  {
-    if (!isTagged()) //untagged CHOICE
-      _altTags.addTagging(fld_tag, fld_env);
-    _elDec->setAlternative(unique_idx, fld_tag, fld_env, EDAlternative::altOPTIONAL);
-  }
+    /*throw(std::exception)*/;
+
   //Sets untagged alternative of ordinary type
-  void setAlternative(uint16_t unique_idx, const ASTag & fld_tag)
-    /*throw(std::exception)*/
-  {
-    if (!isTagged()) //untagged CHOICE
-      _altTags.addTagging(fld_tag, ASTagging::tagsIMPLICIT);
-    _elDec->setAlternative(unique_idx, fld_tag, EDAlternative::altOPTIONAL);
-  }
+  void setAlternative(uint16_t unique_idx, const ASTag & fld_tag) /*throw(std::exception)*/;
+
   //Sets untagged alternative of ANY/Opentype
-  void setAlternative(uint16_t unique_idx)
-    /* throw(std::exception)*/
-  {
-    if (!isTagged()) //untagged CHOICE
-      _altTags.addTagging(asn1::_tagANYTYPE, ASTagging::tagsIMPLICIT);
-    _elDec->setAlternative(unique_idx, EDAlternative::altOPTIONAL);
-  }
+  void setAlternative(uint16_t unique_idx) /* throw(std::exception)*/;
+
   //Sets untagged alternative of untagged CHOICE type
-  void setAlternative(uint16_t unique_idx, const TaggingOptions & use_tag_opts)
-    /*throw(std::exception)*/
-  {
-    if (!isTagged()) //untagged CHOICE
-      _altTags.addOptions(use_tag_opts);
-    _elDec->setAlternative(unique_idx, use_tag_opts, EDAlternative::altOPTIONAL);
-  }
+  void setAlternative(uint16_t unique_idx, const TaggingOptions & use_tag_opts) /*throw(std::exception)*/;
+
   //Sets alternative for unknown extension additions entry
-  void setUnkExtension(uint16_t unique_idx) /* throw(std::exception)*/
-  {
-    if (!isTagged()) //untagged CHOICE
-      _altTags.addTagging(asn1::_tagUNI0, ASTagging::tagsIMPLICIT);
-    _elDec->setUnkExtension(unique_idx);
-  }
+  void setUnkExtension(uint16_t unique_idx) /* throw(std::exception)*/;
 
 public:
   virtual ~DecoderOfChoiceAC()

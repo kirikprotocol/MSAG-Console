@@ -96,14 +96,14 @@ public:
     : _kind(altUExtension), _uniqueId(unique_id)
     , _optional(true), _tagEnv(atgUntagged)
   {
-    setTag(asn1::_tagUNI0);
+    setTag(asn1::_uniTag().UNI0);
   }
   //untagged alternative of Opentype/ANY
   EDAlternative(uint16_t unique_id, Presence_e use_presence)
     : _kind(altOpentype), _uniqueId(unique_id)
     , _optional(use_presence != altMANDATORY), _tagEnv(atgUntagged)
   {
-    setTag(asn1::_tagANYTYPE);
+    setTag(asn1::_uniTag().ANYTYPE);
   }
   //untagged alternative of CHOICE option 
   EDAlternative(uint16_t unique_id, const TaggingOptions::TagsMAP & use_tag_opts,

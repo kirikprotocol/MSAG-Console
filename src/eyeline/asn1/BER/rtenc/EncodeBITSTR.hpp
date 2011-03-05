@@ -50,7 +50,7 @@ protected:
 
   //Constructors for encoder of tagged type referencing BIT STRING
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfBITSTR(const ASTagging & use_tags,
+  explicit EncoderOfBITSTR(const ASTagging & use_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeValueEncoderAC(use_tags, use_rule)
     , _encValBits(0), _encVal(0), _encValOcts(0)
@@ -58,26 +58,26 @@ protected:
 
 public:
   //Constructors for encoder of BIT STRING type
-  EncoderOfBITSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsBITSTR, use_rule)
+  explicit EncoderOfBITSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_uniTagging().BITSTR, use_rule)
     , _encValBits(0), _encVal(0), _encValOcts(0)
   { }
   EncoderOfBITSTR(TSLength num_bits, const uint8_t * use_octs,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsBITSTR, use_rule)
+    : TypeValueEncoderAC(asn1::_uniTagging().BITSTR, use_rule)
     , _encValBits(num_bits), _encVal(use_octs)
     , _encValOcts(eyeline::util::bitsNum2Octs(_encValBits))
   { }
   //Constructors for encoder of tagged BIT STRING type
   EncoderOfBITSTR(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsBITSTR, use_rule)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().BITSTR, use_rule)
     , _encValBits(0), _encVal(0), _encValOcts(0)
   { }
   EncoderOfBITSTR(TSLength num_bits, const uint8_t * use_octs,
                   const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsBITSTR, use_rule)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().BITSTR, use_rule)
     , _encValBits(num_bits), _encVal(use_octs)
     , _encValOcts(eyeline::util::bitsNum2Octs(_encValBits))
   { }

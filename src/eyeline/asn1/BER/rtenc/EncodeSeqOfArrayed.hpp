@@ -28,7 +28,7 @@ template <
 class EncoderOfSeqOfArrayed_T : public EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg> {
 protected:
   //constructor for types defined as SEQUENCE OF with own tagging
-  EncoderOfSeqOfArrayed_T(const ASTagging & eff_tags,
+  explicit EncoderOfSeqOfArrayed_T(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(eff_tags, use_rule)
   { }
@@ -39,12 +39,12 @@ public:
 
   // constructor for untagged SEQUENCE OF
   explicit EncoderOfSeqOfArrayed_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(asn1::_tagsSEQOF, use_rule)
+    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(asn1::_uniTagging().SEQOF, use_rule)
   { }
   // constructor for tagged SEQUENCE OF
   EncoderOfSeqOfArrayed_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
+    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(use_tag, tag_env, asn1::_uniTagging().SEQOF, use_rule)
   { }
 
   // ----------------------------------------------------------

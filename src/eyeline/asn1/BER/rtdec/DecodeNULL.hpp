@@ -33,12 +33,12 @@ protected:
 public:
   //Constructor for NULL type
   explicit DecoderOfNULL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(asn1::_tagsNULL, use_rule)
+    : TypeValueDecoderAC(asn1::_uniTagging().NULLTYPE, use_rule)
   { }
   //Constructor for tagged NULL type
   DecoderOfNULL(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(ASTagging(use_tag, tag_env, asn1::_tagsNULL), use_rule)
+    : TypeValueDecoderAC(ASTagging(use_tag, tag_env, asn1::_uniTagging().NULLTYPE), use_rule)
   { }
   ~DecoderOfNULL()
   { }

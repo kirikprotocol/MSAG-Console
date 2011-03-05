@@ -15,8 +15,8 @@ const ASTag MDChoiceType2::_typeTag(ASTag::tagContextSpecific, 15);
 void
 MDChoiceType2::construct()
 {
-  setAlternative(0, _tagINTEGER, asn1::ASTagging::tagsIMPLICIT);
-  setAlternative(1, _tagBOOL, asn1::ASTagging::tagsIMPLICIT);
+  setAlternative(0, _uniTag().INTEGER, asn1::ASTagging::tagsIMPLICIT);
+  setAlternative(1, _uniTag().BOOL, asn1::ASTagging::tagsIMPLICIT);
 }
 
 asn1::ber::TypeDecoderAC *

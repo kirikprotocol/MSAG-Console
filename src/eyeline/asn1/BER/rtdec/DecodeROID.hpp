@@ -43,13 +43,13 @@ protected:
 public:
   //Untagged RELATIVE-OID type encoder constructor. 
   explicit DecoderOfRelativeOID(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(asn1::_tagsRelativeOID, use_rule)
+    : TypeValueDecoderAC(asn1::_uniTagging().RelativeOID, use_rule)
     , _dVal(0)
   { }
   //Tagged RELATIVE-OID type encoder constructor
   DecoderOfRelativeOID(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                      TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(use_tag, tag_env, asn1::_tagsRelativeOID, use_rule)
+    : TypeValueDecoderAC(use_tag, tag_env, asn1::_uniTagging().RelativeOID, use_rule)
     , _dVal(0)
   { }
   ~DecoderOfRelativeOID()

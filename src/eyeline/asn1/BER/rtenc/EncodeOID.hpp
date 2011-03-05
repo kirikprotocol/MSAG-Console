@@ -41,31 +41,31 @@ protected:
 
   // constructor for encoder of tagged type referencing OBJECT IDENTIFIER
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfObjectID(const ASTagging & eff_tags,
+  explicit EncoderOfObjectID(const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeValueEncoderAC(eff_tags, use_rule), _encVal(0)
   { }
 
 public:
   //Constructor for OBJECT IDENTIFIER type
-  EncoderOfObjectID(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsObjectID, use_rule)
+  explicit EncoderOfObjectID(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_uniTagging().ObjectID, use_rule)
     , _encVal(0)
   { }
-  EncoderOfObjectID(const asn1::ObjectID & use_val,
+  explicit EncoderOfObjectID(const asn1::ObjectID & use_val,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsObjectID, use_rule)
+    : TypeValueEncoderAC(asn1::_uniTagging().ObjectID, use_rule)
     , _encVal(&use_val)
   { }
   //Constructor for tagged OBJECT IDENTIFIER type
   EncoderOfObjectID(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsObjectID, use_rule), _encVal(0)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().ObjectID, use_rule), _encVal(0)
   { }
   EncoderOfObjectID(const asn1::ObjectID & use_val,
                     const ASTag & use_tag, ASTagging::Environment_e tag_env,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsObjectID, use_rule), _encVal(&use_val)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().ObjectID, use_rule), _encVal(&use_val)
   { }
   ~EncoderOfObjectID()
   { }

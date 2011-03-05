@@ -39,12 +39,12 @@ protected:
 public:
   // constructor for untagged SEQUENCE
   explicit DecoderOfSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfStructAC(_seqDec, asn1::_tagsSEQOF, use_rule)
+    : DecoderOfStructAC(_seqDec, asn1::_uniTagging().SEQOF, use_rule)
   { }
   // constructor for tagged SEQUENCE
   DecoderOfSequence_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfStructAC(_seqDec, ASTagging(use_tag, tag_env, asn1::_tagsSEQOF), use_rule)
+    : DecoderOfStructAC(_seqDec, ASTagging(use_tag, tag_env, asn1::_uniTagging().SEQOF), use_rule)
   { }
   //copying constructor
   explicit DecoderOfSequence_T(const DecoderOfSequence_T & use_obj)

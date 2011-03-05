@@ -10,13 +10,19 @@ namespace ber {
 namespace tests {
 namespace dec {
 
+MDChoiceType1::TaggingOptions::TaggingOptions() : asn1::ber::TaggingOptions()
+{
+  addTagging(_uniTagging().INTEGER);
+  addTagging(_uniTagging().BOOL);
+}
+
 const MDChoiceType1::TaggingOptions MDChoiceType1::_tagOptions;
 
 void
 MDChoiceType1::construct()
 {
-  setAlternative(0, _tagINTEGER, asn1::ASTagging::tagsIMPLICIT);
-  setAlternative(1, _tagBOOL, asn1::ASTagging::tagsIMPLICIT);
+  setAlternative(0, _uniTag().INTEGER, asn1::ASTagging::tagsIMPLICIT);
+  setAlternative(1, _uniTag().BOOL, asn1::ASTagging::tagsIMPLICIT);
 }
 
 asn1::ber::TypeDecoderAC *

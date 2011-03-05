@@ -20,12 +20,12 @@ namespace ber {
 class DecoderOfENUM : public DecoderOfINTEGER {
 public:
   explicit DecoderOfENUM(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfINTEGER(asn1::_tagsENUM, use_rule)
+    : DecoderOfINTEGER(asn1::_uniTagging().ENUM, use_rule)
   { }
   //Tagged ENUMERATED type encoder constructor
   DecoderOfENUM(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfINTEGER(ASTagging(use_tag, tag_env, asn1::_tagsENUM), use_rule)
+    : DecoderOfINTEGER(ASTagging(use_tag, tag_env, asn1::_uniTagging().ENUM), use_rule)
   { }
   ~DecoderOfENUM()
   { }

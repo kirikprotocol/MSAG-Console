@@ -53,15 +53,15 @@ protected:
 
 public:
   //Constructor for INTEGER type
-  EncoderOfINTEGER(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsINTEGER, use_rule)
+  explicit EncoderOfINTEGER(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_uniTagging().INTEGER, use_rule)
     , _vSzo(szoNone), _signed(false)
   {
     _encVal.u32 = 0;
   }
-  EncoderOfINTEGER(const uint32_t & use_val,
+  explicit EncoderOfINTEGER(const uint32_t & use_val,
                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsINTEGER, use_rule)
+    : TypeValueEncoderAC(asn1::_uniTagging().INTEGER, use_rule)
     , _vSzo(szo32), _signed(false)
   {
     setValue(use_val);
@@ -69,7 +69,7 @@ public:
   //Constructor for tagged INTEGER type
   EncoderOfINTEGER(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsINTEGER, use_rule)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().INTEGER, use_rule)
     , _vSzo(szoNone), _signed(false)
   {
     _encVal.u32 = 0;
@@ -77,14 +77,14 @@ public:
   EncoderOfINTEGER(const uint32_t & use_val,
                    const ASTag & use_tag, ASTagging::Environment_e tag_env,
                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsINTEGER, use_rule)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().INTEGER, use_rule)
     , _vSzo(szo32), _signed(false)
   {
     setValue(use_val);
   }
   // constructor for encoder of tagged type referencing INTEGER
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfINTEGER(const ASTagging & eff_tags,
+  explicit EncoderOfINTEGER(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeValueEncoderAC(eff_tags, use_rule), _vSzo(szoNone)
   {

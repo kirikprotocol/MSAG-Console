@@ -34,7 +34,7 @@ public:
   explicit MEChoiceType1(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
     : EncoderOfChoice(use_rule)
   {
-    addCanonicalAlternative(asn1::_tagBOOL, asn1::ASTagging::tagsIMPLICIT);
+    addCanonicalAlternative(asn1::_uniTagging().BOOL);
   }
   //
   MEChoiceType1(const asn1::ASTag& outer_tag,
@@ -42,7 +42,7 @@ public:
                 asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
     : EncoderOfChoice(outer_tag, tag_env, use_rule)
   {
-    addCanonicalAlternative(asn1::_tagBOOL, asn1::ASTagging::tagsIMPLICIT);
+    addCanonicalAlternative(asn1::_uniTagging().BOOL);
   }
 
   void setValue(const ChoiceType1& value);

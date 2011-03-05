@@ -12,6 +12,50 @@ namespace ber {
  * Class DecoderOfChoiceAC implementation:
  * ************************************************************************* */
 
+//Sets tagged alternative of some type
+void DecoderOfChoiceAC::setAlternative(uint16_t unique_idx, const ASTag & fld_tag, ASTagging::Environment_e fld_env)
+  /*throw(std::exception)*/
+{
+  if (!isTagged()) //untagged CHOICE
+    _altTags.addTagging(fld_tag, fld_env);
+  _elDec->setAlternative(unique_idx, fld_tag, fld_env, EDAlternative::altOPTIONAL);
+}
+
+//Sets untagged alternative of ordinary type
+void DecoderOfChoiceAC::setAlternative(uint16_t unique_idx, const ASTag & fld_tag)
+  /*throw(std::exception)*/
+{
+  if (!isTagged()) //untagged CHOICE
+    _altTags.addTagging(fld_tag, ASTagging::tagsIMPLICIT);
+  _elDec->setAlternative(unique_idx, fld_tag, EDAlternative::altOPTIONAL);
+}
+
+//Sets untagged alternative of ANY/Opentype
+void DecoderOfChoiceAC::setAlternative(uint16_t unique_idx)
+  /* throw(std::exception)*/
+{
+  if (!isTagged()) //untagged CHOICE
+    _altTags.addTagging(asn1::_uniTag().ANYTYPE, ASTagging::tagsIMPLICIT);
+  _elDec->setAlternative(unique_idx, EDAlternative::altOPTIONAL);
+}
+
+//Sets untagged alternative of untagged CHOICE type
+void DecoderOfChoiceAC::setAlternative(uint16_t unique_idx, const TaggingOptions & use_tag_opts)
+  /*throw(std::exception)*/
+{
+  if (!isTagged()) //untagged CHOICE
+    _altTags.addOptions(use_tag_opts);
+  _elDec->setAlternative(unique_idx, use_tag_opts, EDAlternative::altOPTIONAL);
+}
+
+//Sets alternative for unknown extension additions entry
+void DecoderOfChoiceAC::setUnkExtension(uint16_t unique_idx) /* throw(std::exception)*/
+{
+  if (!isTagged()) //untagged CHOICE
+    _altTags.addTagging(asn1::_uniTag().UNI0, ASTagging::tagsIMPLICIT);
+  _elDec->setUnkExtension(unique_idx);
+}
+
 // ------------------------------------------------------------------------
 // -- DecoderOfChoiceAC interface methods
 // ------------------------------------------------------------------------

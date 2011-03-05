@@ -38,7 +38,7 @@ public:
   // RCSDecConverterIface implementation
   // -------------------------------------------
   //Returns universal tag of fragment in case of fragmented string encoding
-  const ASTag & fragmentTag(void) const /* throw()*/ { return _tagBITSTR; }
+  const ASTag & fragmentTag(void) const /* throw()*/ { return _uniTag().BITSTR; }
   //Incrementally converts next fragment of string encoding to
   //characters from associated alphabet.
   //Returns number of bytes consumed from buffer.
@@ -81,12 +81,12 @@ public:
 
   //Constructor for base type
   explicit DecoderOfBITSTR_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : RCSTRValueDecoder(_vCvt, asn1::_tagsBITSTR, use_rule)
+    : RCSTRValueDecoder(_vCvt, asn1::_uniTagging().BITSTR, use_rule)
   { }
   //Constructor for tagged base type
   DecoderOfBITSTR_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : RCSTRValueDecoder(_vCvt, ASTagging(use_tag, tag_env, asn1::_tagsBITSTR), use_rule)
+    : RCSTRValueDecoder(_vCvt, ASTagging(use_tag, tag_env, asn1::_uniTagging().BITSTR), use_rule)
   { }
   virtual ~DecoderOfBITSTR_T()
   { }

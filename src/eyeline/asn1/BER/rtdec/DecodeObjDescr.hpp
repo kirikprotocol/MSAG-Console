@@ -26,12 +26,12 @@ protected:
 public:
   //Constructor for base type
   DecoderOfObjDescriptor(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : RCSTRValueDecoder(_vCvt, asn1::_tagsObjDescriptor, use_rule)
+    : RCSTRValueDecoder(_vCvt, asn1::_uniTagging().ObjDescriptor, use_rule)
   { }
   //Constructor for tagged base type
   DecoderOfObjDescriptor(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : RCSTRValueDecoder(_vCvt, ASTagging(use_tag, tag_env, asn1::_tagsObjDescriptor), use_rule)
+    : RCSTRValueDecoder(_vCvt, ASTagging(use_tag, tag_env, asn1::_uniTagging().ObjDescriptor), use_rule)
   { }
   virtual ~DecoderOfObjDescriptor()
   { }

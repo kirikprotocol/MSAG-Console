@@ -55,7 +55,7 @@ protected:
 public:
   // constructor for untagged EXTERNAL
   explicit DecoderOfExternal(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfSequence_T<4>(asn1::_tagsEXTERNAL, use_rule)
+    : DecoderOfSequence_T<4>(asn1::_uniTagging().EXTERNAL, use_rule)
     , _dVal(0), _dvEnc(use_rule)
   {
     construct();
@@ -63,7 +63,7 @@ public:
   // constructor for tagged EXTERNAL
   DecoderOfExternal(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfSequence_T<4>(ASTagging(use_tag, tag_env, asn1::_tagsEXTERNAL), use_rule)
+    : DecoderOfSequence_T<4>(ASTagging(use_tag, tag_env, asn1::_uniTagging().EXTERNAL), use_rule)
     , _dVal(0), _dvEnc(use_rule)
   {
     construct();

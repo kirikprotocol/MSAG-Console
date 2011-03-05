@@ -40,18 +40,18 @@ protected:
 
 public:
   //constructor for NULL type
-  EncoderOfNULL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(asn1::_tagsNULL, use_rule)
+  explicit EncoderOfNULL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_uniTagging().NULLTYPE, use_rule)
   { }
 
   // constructor for tagged NULL type
   EncoderOfNULL(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsNULL, use_rule)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_uniTagging().NULLTYPE, use_rule)
   { }
   // constructor for encoder of tagged type referencing NULL
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfNULL(const ASTagging & eff_tags,
+  explicit EncoderOfNULL(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeValueEncoderAC(eff_tags, use_rule)
   { }

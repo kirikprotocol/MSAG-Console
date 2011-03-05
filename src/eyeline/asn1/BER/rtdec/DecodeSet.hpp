@@ -37,12 +37,12 @@ protected:
 public:
   // constructor for untagged SET
   explicit DecoderOfSet_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfSetAC(_setDec, asn1::_tagsSETOF, use_rule)
+    : DecoderOfSetAC(_setDec, asn1::_uniTagging().SETOF, use_rule)
   { }
   // constructor for tagged SET
   DecoderOfSet_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : DecoderOfSetAC(_setDec, ASTagging(use_tag, tag_env, asn1::_tagsSETOF), use_rule)
+    : DecoderOfSetAC(_setDec, ASTagging(use_tag, tag_env, asn1::_uniTagging().SETOF), use_rule)
   { }
   //
   explicit DecoderOfSet_T((const DecoderOfSet_T & use_obj)

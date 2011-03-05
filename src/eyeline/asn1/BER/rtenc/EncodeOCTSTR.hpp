@@ -29,7 +29,7 @@ protected:
     TSLength        _numConverted;
 
   public:
-    OCTSTRConverter(TSLength use_sz = 0, const uint8_t * use_octs = 0)
+    explicit OCTSTRConverter(TSLength use_sz = 0, const uint8_t * use_octs = 0)
       : _encValSz(use_sz), _encVal(use_octs), _numConverted(0)
     { }
 
@@ -51,7 +51,7 @@ protected:
 
   // constructor for encoder of tagged type referencing OCTET STRING
   // NOTE: eff_tags must be a complete tagging of type! 
-  EncoderOfOCTSTR(const ASTagging & eff_tags,
+  explicit EncoderOfOCTSTR(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfRCSTR(&_valConv, eff_tags, use_rule)
     , _valConv(0, 0)
@@ -59,26 +59,26 @@ protected:
 
 public:
   //Constructors for OCTET STRING type
-  EncoderOfOCTSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, asn1::_tagsOCTSTR, use_rule)
+  explicit EncoderOfOCTSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, asn1::_uniTagging().OCTSTR, use_rule)
     , _valConv(0, 0)
   { }
   EncoderOfOCTSTR(TSLength use_sz, const uint8_t * use_octs,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, asn1::_tagsOCTSTR, use_rule)
+    : EncoderOfRCSTR(&_valConv, asn1::_uniTagging().OCTSTR, use_rule)
     , _valConv(use_sz, use_octs)
   { }
 
   //Constructors for tagged OCTET STRING type
   EncoderOfOCTSTR(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_tagsOCTSTR, use_rule)
+    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_uniTagging().OCTSTR, use_rule)
     , _valConv(0, 0)
   { }
   EncoderOfOCTSTR(TSLength use_sz, const uint8_t * use_octs,
                   const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_tagsOCTSTR, use_rule)
+    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_uniTagging().OCTSTR, use_rule)
     , _valConv(use_sz, use_octs)
   { }
   //

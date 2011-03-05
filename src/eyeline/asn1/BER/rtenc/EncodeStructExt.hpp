@@ -62,7 +62,7 @@ protected:
 
   //'Generic structured type encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
-  EncoderOfExtensibleStructure_T(const ASTagging & eff_tags,
+  explicit EncoderOfExtensibleStructure_T(const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfStructureAC(_fieldsStore, eff_tags, use_rule)
     , _fieldsStore(_NumFieldsTArg)
