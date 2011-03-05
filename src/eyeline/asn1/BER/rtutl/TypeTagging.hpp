@@ -36,51 +36,34 @@ protected:
 public:
   TaggingOptions() : _effTags(0)
   { }
-  TaggingOptions(const ASTagging & use_tags, bool do_select = true)
-   : _effTags(0)
-  {
-    std::pair<TagsMAP::iterator, bool> res = 
-      _optTags.insert(TagsMAP::value_type(use_tags.outerTag(), use_tags));
-    if (do_select)
-      _effTags = &(res.first->second);
-  }
-  TaggingOptions(const TaggingOptions & use_obj)
-    : _optTags(use_obj._optTags), _effTags(0)
-  {
-    if (use_obj._effTags)
-      selectTagging(use_obj._effTags->outerTag());
-  }
-
+  explicit TaggingOptions(const ASTagging & use_tags, bool do_select = true);
+  //
+  TaggingOptions(const TaggingOptions & use_obj);
+  //
   ~TaggingOptions()
   { }
 
   void clear(void) { _optTags.clear(); _effTags = 0; }
 
   //Adds given tagging to type tagging options
+  const ASTagging * addTagging(const ASTagging & use_tags);
+
+  //Adds given tagging to type tagging options
   const ASTagging * addTagging(const ASTag & use_tag, ASTagging::Environment_e tag_env)
   {
-    std::pair<TagsMAP::iterator, bool> res = 
-      _optTags.insert(TagsMAP::value_type(use_tag, ASTagging(use_tag, tag_env)));
-    return &(res.first->second);
-  }
-  //Adds given tagging to type tagging options
-  const ASTagging * addTagging(const ASTagging & use_tags)
-  {
-    std::pair<TagsMAP::iterator, bool> res = 
-      _optTags.insert(TagsMAP::value_type(use_tags.outerTag(), use_tags));
-    return &(res.first->second);
-  }
-
-  //Sets given tagging as a selected type tagging option
-  const ASTagging * setTagging(const ASTag & use_tag, ASTagging::Environment_e tag_env)
-  {
-    return (_effTags = addTagging(use_tag, tag_env));
+    return addTagging(ASTagging(use_tag, tag_env));
   }
   //Sets given tagging as a selected type tagging option
   const ASTagging * setTagging(const ASTagging & use_tags)
   {
     return (_effTags = addTagging(use_tags));
   }
+  //Sets given tagging as a selected type tagging option
+  const ASTagging * setTagging(const ASTag & use_tag, ASTagging::Environment_e tag_env)
+  {
+    return setTagging(ASTagging(use_tag, tag_env));
+  }
+
   //
   void addOptions(const TaggingOptions & use_opt)
   {
@@ -89,16 +72,7 @@ public:
   //Select tagging option identified by given tag as an effective one.
   //Returns false if there is no option found
   //NOTE: in case of failure the effective tagging isn't defined! 
-  bool selectTagging(const ASTag & use_tag) //throw(std::exception)
-  {
-    TagsMAP::const_iterator cit = _optTags.find(use_tag);
-    if (cit != _optTags.end()) {
-      _effTags = &(cit->second);
-      return true;
-    }
-    _effTags = 0;
-    return false;
-  }
+  bool selectTagging(const ASTag & use_tag);
   //
   const ASTagging * getEffective(void) const { return _effTags; }
 
@@ -165,20 +139,7 @@ public:
   { }
 
   //recomposes complete tagging, meaningfull only if base type is untagged CHOICE
-  const ASTagging * refreshTagging(void)
-  {
-    if (_optTags) {
-      //cut off tags previously inherited from referenced type
-      _fullTags.resize(_isTagged);
-      if (_optTags->getEffective()) {
-        if (_isTagged)
-          _fullTags.append(*(_optTags->getEffective()));
-        else
-          _fullTags = *(_optTags->getEffective());
-      }
-    }
-    return getTagging();
-  }
+  const ASTagging * refreshTagging(void);
 
   bool isTagged(void) const { return _isTagged != 0; }
 
