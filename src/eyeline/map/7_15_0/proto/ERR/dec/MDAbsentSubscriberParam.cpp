@@ -15,7 +15,7 @@ MDAbsentSubscriberParam::_tag_absentSubscriberReason= asn1::ASTag(asn1::ASTag::t
 void
 MDAbsentSubscriberParam::construct()
 {
-  setField(0, asn1::_tagSEQOF, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, asn1::_uniTag().SEQOF, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
   setField(1, _tag_absentSubscriberReason, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
   setUnkExtension(2);
 }

@@ -15,8 +15,8 @@ MDExtensibleCallBarredParam::_tag_UnauthMsgOrig= asn1::ASTag(asn1::ASTag::tagCon
 void
 MDExtensibleCallBarredParam::construct()
 {
-  setField(0, asn1::_tagENUM, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
-  setField(1, asn1::_tagSEQOF, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, asn1::_uniTag().ENUM, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(1, asn1::_uniTag().SEQOF, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
   setField(2, _tag_UnauthMsgOrig, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
   setUnkExtension(3);
 }

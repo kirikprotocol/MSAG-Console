@@ -13,8 +13,8 @@ namespace dec {
 void
 MDPrivateExtension::construct(void)
 {
-  setField(0, asn1::_tagObjectID, asn1::ber::EDAlternative::altMANDATORY);
-  setField(1, asn1::_tagANYTYPE, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, asn1::_uniTag().ObjectID, asn1::ber::EDAlternative::altMANDATORY);
+  setField(1, asn1::_uniTag().ANYTYPE, asn1::ber::EDAlternative::altOPTIONAL);
 }
 
 /*

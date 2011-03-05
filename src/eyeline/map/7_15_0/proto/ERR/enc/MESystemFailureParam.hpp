@@ -50,7 +50,7 @@ public:
     : asn1::ber::EncoderOfChoice(use_rule)
   {
     //add canonical alternative tagging (see EncodeChoice.hpp:NOTE.1)
-    addCanonicalAlternative(asn1::_tagENUM, asn1::ASTagging::tagsIMPLICIT);
+    addCanonicalAlternative(asn1::_uniTag().ENUM, asn1::ASTagging::tagsIMPLICIT);
   }
   //
   MESystemFailureParam(const asn1::ASTag& outer_tag,
@@ -59,7 +59,7 @@ public:
     : asn1::ber::EncoderOfChoice(outer_tag, tag_env, use_rule)
   {
     //add canonical alternative tagging (see EncodeChoice.hpp:NOTE.1)
-    addCanonicalAlternative(asn1::_tagENUM, asn1::ASTagging::tagsIMPLICIT);
+    addCanonicalAlternative(asn1::_uniTag().ENUM, asn1::ASTagging::tagsIMPLICIT);
   }
   //
   ~MESystemFailureParam()

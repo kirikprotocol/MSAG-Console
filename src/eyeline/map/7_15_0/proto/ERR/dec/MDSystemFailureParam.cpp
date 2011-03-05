@@ -12,8 +12,8 @@ namespace dec {
 void
 MDSystemFailureParam::construct()
 {
-  setAlternative(0, asn1::_tagENUM, asn1::ASTagging::tagsIMPLICIT);
-  setAlternative(1, asn1::_tagSEQOF, asn1::ASTagging::tagsIMPLICIT);
+  setAlternative(0, asn1::_uniTag().ENUM, asn1::ASTagging::tagsIMPLICIT);
+  setAlternative(1, asn1::_uniTag().SEQOF, asn1::ASTagging::tagsIMPLICIT);
 }
 
 asn1::ber::TypeDecoderAC*

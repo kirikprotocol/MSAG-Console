@@ -16,7 +16,7 @@ const asn1::ASTag
   TDDialoguePortion::_typeTag(asn1::ASTag::tagApplication, 11);
 //complete tagging
 const asn1::ASTagging
-  TDDialoguePortion::_typeTags(_typeTag, asn1::ASTagging::tagsEXPLICIT, asn1::_tagsEXTERNAL);
+  TDDialoguePortion::_typeTags(_typeTag, asn1::ASTagging::tagsEXPLICIT, asn1::_uniTagging().EXTERNAL);
 
 
 void TDDialoguePortion::clearAll(void)
@@ -40,9 +40,9 @@ DialoguePortion ::= [APPLICATION 11] EXPLICIT [UNIVERSAL 8] IMPLICIT SEQUENCE {
 } */
 void TDDialoguePortion::construct(void)
 {
-  setField(0, asn1::_tagObjectID, asn1::ber::EDAlternative::altOPTIONAL);
-  setField(1, asn1::_tagINTEGER, asn1::ber::EDAlternative::altOPTIONAL);
-  setField(2, asn1::_tagObjDescriptor, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, asn1::_uniTag().ObjectID, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(1, asn1::_uniTag().INTEGER, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(2, asn1::_uniTag().ObjDescriptor, asn1::ber::EDAlternative::altOPTIONAL);
   setField(3, asn1::ber::DecoderOfEmbdEncoding::_tagOptions, asn1::ber::EDAlternative::altMANDATORY);
 }
 

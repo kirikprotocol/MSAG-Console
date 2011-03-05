@@ -18,7 +18,7 @@ DataMissingParam ::= SEQUENCE {
 void
 MDDataMissingParam::construct()
 {
-  setField(0, asn1::_tagSEQOF, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, asn1::_uniTag().SEQOF, asn1::ber::EDAlternative::altOPTIONAL);
   setUnkExtension(1);
 }
 

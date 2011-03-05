@@ -29,7 +29,7 @@ void MDUSSD_Arg::construct(void)
   asn1::ber::DecoderOfSequence_T<5,2>::setField(1, *_ussd.getTag(),
                                               asn1::ber::EDAlternative::altMANDATORY);
 
-  asn1::ber::DecoderOfSequence_T<5,2>::setField(2, asn1::_tagOCTSTR,
+  asn1::ber::DecoderOfSequence_T<5,2>::setField(2, asn1::_uniTag().OCTSTR,
                                               asn1::ber::EDAlternative::altOPTIONAL);
   asn1::ber::DecoderOfSequence_T<5,2>::setField(3, _tag_f3, asn1::ASTagging::tagsIMPLICIT,
                                               asn1::ber::EDAlternative::altOPTIONAL);

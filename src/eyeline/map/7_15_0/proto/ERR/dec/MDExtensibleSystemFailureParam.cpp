@@ -18,8 +18,8 @@ MDExtensibleSystemFailureParam::_tag_failureCauseParam= asn1::ASTag(asn1::ASTag:
 void
 MDExtensibleSystemFailureParam::construct()
 {
-  setField(0, asn1::_tagENUM, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
-  setField(1, asn1::_tagSEQOF, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, asn1::_uniTag().ENUM, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(1, asn1::_uniTag().SEQOF, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
   setField(2, _tag_additionalNetworkResource, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
   setField(3, _tag_failureCauseParam, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altOPTIONAL);
   setUnkExtension(4);
