@@ -48,7 +48,7 @@ protected:
       : asn1::ber::DecoderOfSequence_T<2>(use_rule)
       , _valMask(false), _opCode(use_rule), _resType(use_rule)
     {
-      asn1::ber::DecoderOfSequence_T<2>::setField(0, asn1::_tagINTEGER, asn1::ber::EDAlternative::altMANDATORY);
+      asn1::ber::DecoderOfSequence_T<2>::setField(0, asn1::_uniTag().INTEGER, asn1::ber::EDAlternative::altMANDATORY);
       asn1::ber::DecoderOfSequence_T<2>::setField(1, asn1::ber::EDAlternative::altMANDATORY);
     }
     ~RDResultField()

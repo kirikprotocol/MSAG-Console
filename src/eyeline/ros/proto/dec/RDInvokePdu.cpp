@@ -20,9 +20,9 @@ Invoke ::= SEQUENCE {
 //Initializes ElementDecoder for this type
 void RDInvokePdu::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<4>::setField(0, asn1::_tagINTEGER, asn1::ber::EDAlternative::altMANDATORY);
+  asn1::ber::DecoderOfSequence_T<4>::setField(0, asn1::_uniTag().INTEGER, asn1::ber::EDAlternative::altMANDATORY);
   asn1::ber::DecoderOfSequence_T<4>::setField(1, RDLinkedIdType::_tagOptions, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<4>::setField(2, asn1::_tagINTEGER, asn1::ber::EDAlternative::altMANDATORY);
+  asn1::ber::DecoderOfSequence_T<4>::setField(2, asn1::_uniTag().INTEGER, asn1::ber::EDAlternative::altMANDATORY);
   asn1::ber::DecoderOfSequence_T<4>::setField(3, asn1::ber::EDAlternative::altOPTIONAL);
 }
 

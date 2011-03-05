@@ -18,7 +18,7 @@ Reject ::= [4] SEQUENCE {
 //Initializes ElementDecoder for this type
 void RDRejectPdu::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<2>::setField(0, asn1::_tagINTEGER, asn1::ber::EDAlternative::altMANDATORY);
+  asn1::ber::DecoderOfSequence_T<2>::setField(0, asn1::_uniTag().INTEGER, asn1::ber::EDAlternative::altMANDATORY);
   asn1::ber::DecoderOfSequence_T<2>::setField(1, RDProblemType::_tagOptions, asn1::ber::EDAlternative::altMANDATORY);
 }
 
