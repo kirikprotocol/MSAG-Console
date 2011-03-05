@@ -189,7 +189,7 @@ public:
       denyIndex(use_idx);
 
     if (use_idx >= _numElem) {
-      LWArrayTraits<_TArg>::construct(_buf + _numElem, use_idx - _numElem + 1);
+      LWArrayTraits<_TArg>::construct(_buf + _numElem, (_SizeTypeArg)(use_idx - _numElem + 1));
       _numElem = use_idx + 1;
     }
     return _buf[use_idx];
@@ -214,7 +214,7 @@ public:
       num_to_erase = _numElem - at_pos;
 
     //copy elements starting from first to last
-    LWArrayTraits<_TArg>::shift_left(_buf + at_pos, _numElem - at_pos, num_to_erase);
+    LWArrayTraits<_TArg>::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), num_to_erase);
     //destroy excessive elements
     LWArrayTraits<_TArg>::destroy(_buf + _numElem - num_to_erase, num_to_erase);
     _numElem -= num_to_erase;
@@ -290,13 +290,13 @@ public:
     if (req_sz == _numElem)
       return true;
     if (req_sz < _numElem) { //shrink
-      LWArrayTraits<_TArg>::destroy(_buf + req_sz, _numElem - req_sz);
+      LWArrayTraits<_TArg>::destroy(_buf + req_sz, (_SizeTypeArg)(_numElem - req_sz));
       _numElem = req_sz;
       return true;
     }
     if (req_sz > _numElem) {
       reserve(req_sz);
-      LWArrayTraits<_TArg>::construct(_buf + _numElem, req_sz - _numElem);
+      LWArrayTraits<_TArg>::construct(_buf + _numElem, (_SizeTypeArg)(req_sz - _numElem));
       _numElem = req_sz;
       return true;
     }
@@ -328,7 +328,7 @@ public:
   void shiftLeft(_SizeTypeArg shift_sz, _SizeTypeArg at_pos = 0) //throw()
   {
     //copy elements starting from first to last
-    LWArrayTraits<_TArg>::shift_left(_buf + at_pos, _numElem - at_pos, shift_sz);
+    LWArrayTraits<_TArg>::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
     //reset excessive elements
     LWArrayTraits<_TArg>::reset(_buf + _numElem - shift_sz, shift_sz);
     _numElem -= shift_sz;
@@ -485,7 +485,7 @@ template <
   , _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
   , class _ResizerArg = LWArrayResizerDflt<_SizeTypeArg>
 >
-class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg> {
+class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg, _ResizerArg> {
 private:
   union {
     uint8_t  _buf[_max_STACK_SZ * sizeof(_TArg)];
@@ -493,32 +493,32 @@ private:
   } _stack;
 
 public:
-  typedef LWArrayExtension_T<_TArg, _SizeTypeArg> base_type;
-  typedef typename LWArrayExtension_T<_TArg, _SizeTypeArg>::size_type size_type;
+  typedef LWArrayExtension_T<_TArg, _SizeTypeArg, _ResizerArg> base_type;
+  typedef typename LWArrayExtension_T<_TArg, _SizeTypeArg, _ResizerArg>::size_type size_type;
 
   explicit LWArray_T(_SizeTypeArg num_to_reserve = 0) //throw()
-    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
+    : LWArrayExtension_T<_TArg, _SizeTypeArg, _ResizerArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
   {
     _stack._alignedPtr = 0;
     if (num_to_reserve)
       reserve(num_to_reserve);
   }
   LWArray_T(const _TArg * use_arr, _SizeTypeArg num_elem) //throw()
-    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
+    : LWArrayExtension_T<_TArg, _SizeTypeArg, _ResizerArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
   {
     _stack._alignedPtr = 0;
     append(use_arr, num_elem); //NOTE: here append() cann't fail
   }
   //
   LWArray_T(const LWArray_T & use_arr) //throw()
-    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
+    : LWArrayExtension_T<_TArg, _SizeTypeArg, _ResizerArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
   {
     _stack._alignedPtr = 0;
     append(use_arr); //NOTE: here append() cann't fail
   }
   template <_SizeTypeArg _SZArg>
-  LWArray_T(const LWArray_T<_TArg, _SizeTypeArg, _SZArg>& use_arr) //throw()
-    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
+  LWArray_T(const LWArray_T<_TArg, _SizeTypeArg, _SZArg, _ResizerArg>& use_arr) //throw()
+    : LWArrayExtension_T<_TArg, _SizeTypeArg, _ResizerArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
   {
     _stack._alignedPtr = 0;
     append(use_arr); //NOTE: here append() cann't fail
@@ -540,7 +540,7 @@ public:
   }
 
   template <_SizeTypeArg _SZArg>
-  LWArray_T & operator= (const LWArray_T<_TArg, _SizeTypeArg, _SZArg> & use_arr) //throw()
+  LWArray_T & operator= (const LWArray_T<_TArg, _SizeTypeArg, _SZArg, _ResizerArg> & use_arr) //throw()
   {
     this->clear();
     append(use_arr.get(), use_arr.size()); //cann't fail here
