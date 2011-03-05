@@ -95,8 +95,6 @@ public class NetworkProfileEditBean extends SmscBean {
 
   private int save() {
 
-    //todo validate
-
     try {
       NetworkProfile network;
       if (oldName != null && oldName.length() > 0) {
@@ -120,7 +118,10 @@ public class NetworkProfileEditBean extends SmscBean {
       if(!name.equals(oldName)) {
         nm.removeProfile(oldName);
       }
-      nm.saveProfile(network);
+      if(oldName == null || oldName.length() == 0) {
+        nm.addProfile(network);
+      }else {
+        nm.editProfile(network);      }
 
     } catch (AdminException e) {
       return error("Can't save region", e);

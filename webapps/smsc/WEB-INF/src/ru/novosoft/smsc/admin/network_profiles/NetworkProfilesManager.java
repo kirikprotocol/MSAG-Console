@@ -44,8 +44,42 @@ public class NetworkProfilesManager {
     }
   }
 
-  public synchronized void saveProfile(NetworkProfile profile) throws AdminException {
+  public synchronized void addProfile(NetworkProfile profile) throws AdminException {
+    if(profiles.get(profile.getName()) != null) {
+      throw new AdminException("Profile with name='"+profile.getName()+"' already exists");
+    }
+    saveProfile(profile);
+  }
 
+  public synchronized void editProfile(NetworkProfile profile) throws AdminException {
+    saveProfile(profile);
+  }
+
+  private void saveProfile(NetworkProfile profile) throws AdminException {
+    if(profile.getAbonentStatusMethod() == null || profile.getAbonentStatusMethod().length() == 0) {
+      throw new AdminException("Abonent status method is empty");
+    }
+    if(profile.getMasks() == null || profile.getMasks().isEmpty()) {
+      throw new AdminException("List of masks is empty");
+    }
+
+    Map masks = profile.getMasks();
+    Iterator pI = profiles.values().iterator();
+    while(pI.hasNext()) {
+      NetworkProfile p = (NetworkProfile)pI.next();
+      if(!p.getName().equals(profile.getName())) {
+        Iterator mI = p.getMasks().values().iterator();
+        while(mI.hasNext()) {
+          String mask = ((Mask)mI.next()).getMaskSimple();
+          if(masks.containsKey(mask)) {
+            throw new AdminException("Masks intersection: "+mask);
+          }
+        }
+      }
+    }
+    if(profile.getUssdOpenDestRef() == null) {
+      profile.setUssdOpenDestRef("");
+    }
     profiles.put(profile.getName(), profile);
     modified = true;
   }
@@ -130,12 +164,12 @@ public class NetworkProfilesManager {
         out.println("   </masks>");
         out.println(" </network>");
       }
-        out.println(" <default>");
-        out.println("   <params>");
-        out.print("     <param name=\"abonentStatusMethod\" value=\"");out.print(defaultAbonentStatusMethod);out.println("\"/>");
-        out.print("     <param name=\"ussdOpenDestRef\" value=\"");out.print(defaultUssdOpenDestRef);out.println("\"/>");
-        out.println("   </params>");
-        out.println(" </default>");
+      out.println(" <default>");
+      out.println("   <params>");
+      out.print("     <param name=\"abonentStatusMethod\" value=\"");out.print(defaultAbonentStatusMethod);out.println("\"/>");
+      out.print("     <param name=\"ussdOpenDestRef\" value=\"");if(defaultUssdOpenDestRef != null)out.print(defaultUssdOpenDestRef);out.println("\"/>");
+      out.println("   </params>");
+      out.println(" </default>");
 
       Functions.storeConfigFooter(out, "networks");
       modified = false;

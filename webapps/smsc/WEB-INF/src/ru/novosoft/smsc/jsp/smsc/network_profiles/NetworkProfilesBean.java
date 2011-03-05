@@ -119,7 +119,7 @@ public class NetworkProfilesBean extends SmscBean {
 
       nm.save();
 
-//      appContext.getSmsc().applyNetworkProfilesConfig();     todo todo
+      appContext.getSmsc().applyNetworkProfilesConfig();
 
       journalAppend(SubjectTypes.TYPE_network_profiles, "Network profiles configuration", Actions.ACTION_MODIFY);
     } catch (AdminException e) {
