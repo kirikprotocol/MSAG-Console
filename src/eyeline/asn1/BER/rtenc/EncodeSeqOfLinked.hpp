@@ -8,6 +8,7 @@
 #define __ASN1_BER_ENCODER_SEQUENCE_OF_LINKED
 
 #include <list>
+#include "util/Exception.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeSequenced.hpp"
 
 namespace eyeline {
@@ -57,7 +58,11 @@ public:
   {
     uint16_t last_idx = 0;
     if (!use_list.empty()) {
-      reserveElementEncoders(use_list.size()); //throws
+      ElementsList::size_type cnt = use_list.size();
+      if (cnt > (uint16_t)(-1))
+        throw smsc::util::Exception("EncoderOfSeqOfLinked::setValue(): too much elements");
+
+      reserveElementEncoders((uint16_t)cnt); //throws
       for(typename ElementsList::const_iterator it = use_list.begin(); it != use_list.end(); ++it, ++last_idx)
         addElementValue(*it); //throws
     }
@@ -68,7 +73,11 @@ public:
   {
     uint16_t last_idx = 0;
     if (!use_list.empty()) {
-      reserveElementEncoders(use_list.size()); //throws
+      ElementsList::size_type cnt = use_list.size();
+      if (cnt > (uint16_t)(-1))
+        throw smsc::util::Exception("EncoderOfSeqOfLinked::setValue(): too much elements");
+
+      reserveElementEncoders((uint16_t)cnt); //throws
       for(typename ElementsPtrList::const_iterator it = use_list.begin(); it != use_list.end(); ++it)
         if (*it) {
           addElementValue(**it); //throws

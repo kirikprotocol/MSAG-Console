@@ -16,6 +16,9 @@ namespace ber {
 
 //UnknownExtension is encoded as untagged Opentype
 class DecoderOfUExtension : public DecoderOfASType {
+private:
+  using DecoderOfASType::setValue;
+
 public:
   explicit DecoderOfUExtension(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfASType(use_rule)
