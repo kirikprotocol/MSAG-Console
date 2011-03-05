@@ -148,7 +148,7 @@ public abstract class Request {
     if(error != null) {
       c.setString("error", error);
     }
-    if(errorArgs != null) {
+    if(errorArgs != null && errorArgs.length>0) {
       c.setStringArray("errorArgs", errorArgs, "|");
     }
   }

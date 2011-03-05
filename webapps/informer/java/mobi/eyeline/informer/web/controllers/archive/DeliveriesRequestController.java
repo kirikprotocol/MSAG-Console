@@ -66,7 +66,7 @@ public class DeliveriesRequestController extends InformerController{
       requestFinished = request.getStatus() == Request.Status.FINISHED;
 
       if(request.getStatus() == Request.Status.ERROR) {
-          ResourceBundle bundle = ResourceBundle.getBundle(DeliveryException.class.getName(), getLocale());
+        ResourceBundle bundle = ResourceBundle.getBundle(DeliveryException.class.getName(), getLocale());
         if(request.getError() != null) {
           String pattern = bundle.getString(request.getError());
           requestError = request.getErrorArgs() == null ? pattern : MessageFormat.format(pattern, request.getErrorArgs());

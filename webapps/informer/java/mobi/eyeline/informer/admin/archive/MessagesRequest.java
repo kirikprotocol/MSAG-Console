@@ -33,6 +33,7 @@ public class MessagesRequest extends Request{
     id = r.id;
     progress = r.progress;
     status = r.status;
+    error = r.error;
     if(r.errorArgs != null) {
       errorArgs = new String[r.errorArgs.length];
       System.arraycopy(r.errorArgs, 0, errorArgs, 0, errorArgs.length);
