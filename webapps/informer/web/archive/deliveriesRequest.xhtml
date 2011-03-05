@@ -13,6 +13,13 @@
 
     <tr:form>
 
+      <eye:message level="error" rendered="#{deliveriesRequest.requestError != null}">
+       <h:panelGrid style="padding-left:10px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <h:outputText value="#{deliveriesRBundle.requestError}:" style="white-space:nowrap;"/>
+          <h:outputText value="#{deliveriesRequest.requestError}"/>
+        </h:panelGrid>
+      </eye:message>
+
       <eye:buttons>
         <eye:button rendered="#{deliveriesRequest.reqId == null}">
           <tr:commandLink text="#{msg['archive.request.create']}" shortDesc="#{msg['archive.request.create.desc']}" action="#{deliveriesRequest.save}" rendered="#{deliveriesRequest.reqId == null}"/>

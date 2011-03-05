@@ -34,6 +34,8 @@ public class DeliveriesRequestController extends InformerController{
 
   private boolean requestFinished;
 
+  private String requestError;
+
   public DeliveriesRequestController() {
     String id = getRequestParameter("reqId");
     if(id != null && id.length()>0) {
@@ -59,6 +61,7 @@ public class DeliveriesRequestController extends InformerController{
       deliveryId = request.getDeliveryId() == null ? null : Integer.toString(request.getDeliveryId());
       deliveryName = request.getDeliveryName();
       requestFinished = request.getStatus() == Request.Status.FINISHED;
+      requestError = request.getError();
     }
   }
 
@@ -107,6 +110,10 @@ public class DeliveriesRequestController extends InformerController{
       return null;
     }
     return "ARCHIVE_LIST";
+  }
+
+  public String getRequestError() {
+    return requestError;
   }
 
   public boolean isNew() {

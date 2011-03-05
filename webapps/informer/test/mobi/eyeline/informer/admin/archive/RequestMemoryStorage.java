@@ -34,6 +34,15 @@ public class RequestMemoryStorage implements RequestStorage {
   }
 
   @Override
+  public void setError(int requestId, String error) throws AdminException {
+    Request r = requests.get(requestId);
+    if(r == null) {
+      throw new ArchiveException("request_not_found", Integer.toString(requestId));
+    }
+    r.setError(error);
+  }
+
+  @Override
   public void rename(int requestId, String name) throws AdminException {
     Request r = requests.get(requestId);
     if(r == null) {

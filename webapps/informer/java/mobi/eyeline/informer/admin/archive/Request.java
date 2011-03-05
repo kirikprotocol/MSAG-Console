@@ -15,10 +15,7 @@ public abstract class Request {
   protected static final Logger logger = Logger.getLogger(Request.class);
 
   public static enum Type {
-    deliveries, messages;
-    public String getType() {
-      return toString();
-    }
+    deliveries, messages
   }
 
   protected int id;
@@ -31,11 +28,10 @@ public abstract class Request {
 
   protected String creater;
 
+  protected String error;
+
   public static enum Status {
-    IN_PROCESS, CANCELED, FINISHED, ERROR;
-    public String getStatus() {
-      return toString();
-    }
+    IN_PROCESS, CANCELED, FINISHED, ERROR
   }
 
   protected Date from;
@@ -108,6 +104,14 @@ public abstract class Request {
     return type;
   }
 
+  public String getError() {
+    return error;
+  }
+
+  public void setError(String error) {
+    this.error = error;
+  }
+
   protected abstract void execute(RequestExecutor executor) throws AdminException;
 
   protected void save(XmlConfig c) {
@@ -131,6 +135,10 @@ public abstract class Request {
     }
 
     c.setString("creater", creater);
+
+    if(error != null) {
+      c.setString("error", error);
+    }
   }
 
   protected void load(XmlConfig c) throws AdminException {
@@ -152,6 +160,8 @@ public abstract class Request {
 
       status = DeliveriesRequest.Status.valueOf(c.getString("status"));
 
+      error = c.getString("error", null);
+
     }catch (Exception e){
       logger.error(e,e);
       throw new ArchiveException("internal_error");
@@ -171,6 +181,8 @@ public abstract class Request {
         ", from=" + from +
         ", till=" + till +
         ", status=" + status +
+        ", error=" + error
+        +
         '}';
   }
 }

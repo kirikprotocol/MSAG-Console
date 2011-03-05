@@ -114,6 +114,21 @@ class RequestFileStorage implements RequestStorage {
   }
 
   @Override
+  public void setError(int requestId, String error) throws AdminException {
+    Request request = requests.get(requestId);
+    if(request == null) {
+      throw new ArchiveException("request_not_found", Integer.toString(requestId));
+    }
+    request.setError(error);
+    try {
+      saveRequest(request);
+    } catch (Exception e) {
+      logger.error(e,e);
+      throw new ArchiveException("internal_error");
+    }
+  }
+
+  @Override
   public synchronized void rename(int requestId, String name) throws AdminException {
     Request request = requests.get(requestId);
     if(request == null) {

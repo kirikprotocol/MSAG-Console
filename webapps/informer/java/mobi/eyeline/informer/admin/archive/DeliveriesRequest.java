@@ -35,6 +35,7 @@ public class DeliveriesRequest extends Request{
     id = r.id;
     progress = r.progress;
     status = r.status;
+    error = r.error;
   }
 
   void setDeliveryName(String deliveryName) {

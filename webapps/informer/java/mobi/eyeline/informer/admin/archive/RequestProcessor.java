@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.archive;
 import com.eyeline.utils.ThreadFactoryWithCounter;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
@@ -55,12 +56,20 @@ class RequestProcessor {
           }
           r.execute(executor);
           requestStorage.changeStatus(r.getId(), Request.Status.FINISHED);
+        } catch (DeliveryException e) {
+          logger.error("Error in request processing: "+r);
+          logger.error(e, e);
+          try {
+            requestStorage.changeStatus(r.getId(), Request.Status.ERROR);
+            requestStorage.setError(r.getId(), e.getMessage());
+          } catch (Exception ignored) {}
         } catch (Exception e) {
           logger.error("Error in request processing: "+r);
           logger.error(e, e);
           try {
             requestStorage.changeStatus(r.getId(), Request.Status.ERROR);
-          } catch (Exception e1) {}
+            requestStorage.setError(r.getId(), "Unknown error");
+          } catch (Exception ignored) {}
         } finally {
           try {
             downLatch.await();

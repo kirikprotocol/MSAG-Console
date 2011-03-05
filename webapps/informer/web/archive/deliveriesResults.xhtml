@@ -53,11 +53,12 @@
             <h:outputText value="#{m.id}"/>
           </eye:column>
           <eye:column name="name" title="#{deliveryBundle.name}" sortable="true" width="30%" align="left" defaultSortOrder="asc">
-            <tr:commandLink text="#{m.name}" action="RESULT_DELIVERY" shortDesc="#{msg['archive.request.result.deliveries.options.desc']}">
+            <tr:commandLink text="#{m.name}" action="RESULT_DELIVERY" rendered="#{!deliveriesResults.offline}" shortDesc="#{msg['archive.request.result.deliveries.options.desc']}">
               <f:param name="reqId" value="#{deliveriesResults.reqId}"/>
               <f:param name="action" value="DELIVERIES_RESULTS"/>
               <f:param name="deliveryId" value="#{m.id}"/>
             </tr:commandLink>
+            <h:outputText value="#{m.name}" rendered="#{deliveriesResults.offline}"/>
           </eye:column>
           <eye:column name="userId" title="#{deliveryBundle.owner}" sortable="true" width="20%" align="left" rendered="#{deliveriesResults.userInAdminRole}">
             <h:outputText value="#{m.owner}" rendered="#{!m.userExist}"/>

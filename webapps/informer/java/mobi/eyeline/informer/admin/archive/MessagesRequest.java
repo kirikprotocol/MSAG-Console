@@ -33,6 +33,7 @@ public class MessagesRequest extends Request{
     id = r.id;
     progress = r.progress;
     status = r.status;
+    error = r.error;
   }
 
   public Address getAddress() {

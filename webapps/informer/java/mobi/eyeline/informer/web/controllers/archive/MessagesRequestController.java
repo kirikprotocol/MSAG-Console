@@ -27,6 +27,8 @@ public class MessagesRequestController extends InformerController{
 
   private boolean requestFinished;
 
+  private String requestError;
+
   public MessagesRequestController() {
     String id = getRequestParameter("reqId");
     if(id != null && id.length()>0) {
@@ -50,6 +52,7 @@ public class MessagesRequestController extends InformerController{
       till = request.getTill();
       address = request.getAddress();
       requestFinished = request.getStatus() == Request.Status.FINISHED;
+      requestError = request.getError();
     }
   }
 
@@ -79,6 +82,10 @@ public class MessagesRequestController extends InformerController{
       return null;
     }
     return "ARCHIVE_LIST";
+  }
+
+  public String getRequestError() {
+    return requestError;
   }
 
   public boolean isNew() {
