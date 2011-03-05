@@ -58,11 +58,11 @@ public:
   {
     uint16_t last_idx = 0;
     if (!use_list.empty()) {
-      ElementsList::size_type cnt = use_list.size();
+      typename ElementsList::size_type cnt = use_list.size();
       if (cnt > (uint16_t)(-1))
         throw smsc::util::Exception("EncoderOfSeqOfLinked::setValue(): too much elements");
 
-      reserveElementEncoders((uint16_t)cnt); //throws
+      this->reserveElementEncoders((uint16_t)cnt); //throws
       for(typename ElementsList::const_iterator it = use_list.begin(); it != use_list.end(); ++it, ++last_idx)
         addElementValue(*it); //throws
     }
@@ -73,11 +73,11 @@ public:
   {
     uint16_t last_idx = 0;
     if (!use_list.empty()) {
-      ElementsList::size_type cnt = use_list.size();
+      typename ElementsList::size_type cnt = use_list.size();
       if (cnt > (uint16_t)(-1))
         throw smsc::util::Exception("EncoderOfSeqOfLinked::setValue(): too much elements");
 
-      reserveElementEncoders((uint16_t)cnt); //throws
+      this->reserveElementEncoders((uint16_t)cnt); //throws
       for(typename ElementsPtrList::const_iterator it = use_list.begin(); it != use_list.end(); ++it)
         if (*it) {
           addElementValue(**it); //throws
