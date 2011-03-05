@@ -22,11 +22,11 @@ template <
 > 
 class UIntToA_T { //converts unsigned integer type to its decimal string representation
 protected:
-  uint8_t _idx;
-  char _buf[sizeof(_SizeTypeArg)*3+1];
+  uint8_t  _idx;
+  char     _buf[sizeof(_SizeTypeArg)*3 + 1];
 
 public:
-  UIntToA_T(_SizeTypeArg use_val)
+  explicit UIntToA_T(_SizeTypeArg use_val)
     : _idx(sizeof(_SizeTypeArg)*3)
   {
     _buf[_idx] = 0;
@@ -38,6 +38,7 @@ public:
   { }
 
   const char * get(void) const { return _buf + _idx; }
+  uint8_t length(void) const { return sizeof(_SizeTypeArg)*3 - _idx; }
 };
 
 
