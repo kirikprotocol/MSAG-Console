@@ -108,7 +108,7 @@ page_menu_end(out);
     function refreshProgressStatus() {
       statusDataSource.update();
       var text = document.getElementById("tdcProgress").innerText;
-      if (text.substring(2) == "100%") {
+      if (text.trim() == "100%") {
         document.getElementById("nextButton").style.display="";
         document.getElementById("cancelButton").style.display="none";
       }
