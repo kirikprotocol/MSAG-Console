@@ -108,7 +108,7 @@ public class SiebelFinalStateThread {
   }
 
 
-  void processFile(String fileName) throws SiebelException {
+  void processFile(String fileName) throws SiebelException {   //todo SiebelException нигде не возникает внутри метода
     File fd = new File(path_, fileName);
     BufferedReader is = null;
     try {
@@ -144,14 +144,14 @@ public class SiebelFinalStateThread {
           String smppCodeDescription = LocaleMessages.getString(Locale.ENGLISH, "smsc.errcode." + fields[4]);
           map.put(fields[6], new SiebelMessage.DeliveryState(siebelState, fields[4], smppCodeDescription));
           if ((totalRecords - processedRecords) > 100) {
-            dataSource_.saveFinalStates(map);
+            dataSource_.saveFinalStates(map);       //todo внутри метода может возникать ошибка записи бд, наружу не кидаются
             map.clear();
             processedRecords = totalRecords;
           }
         } else if (fields[1].equals("0") && fields[3].equals("0")) {
           // end of messages in the task
           if (map.size() > 0) {
-            dataSource_.saveFinalStates(map);
+            dataSource_.saveFinalStates(map);        //todo внутри метода может возникать ошибка записи бд, наружу не кидаются
             map.clear();
             processedRecords = totalRecords;
           }
@@ -161,16 +161,16 @@ public class SiebelFinalStateThread {
           if (i >= 0) {
             wave = wave.substring(0, i);
           }
-          if (!dataSource_.hasUnfinished(wave)) {
+          if (!dataSource_.hasUnfinished(wave)) {      //todo внутри метода может возникать ошибка записи бд, наружу не кидаются
             if (log_.isDebugEnabled()) {
               log_.debug("Siebel: Task has finished waveId=" + wave);
             }
-            dataSource_.taskHasFinished(wave);
+            dataSource_.taskHasFinished(wave);         //todo внутри метода может возникать ошибка чтения бд, наружу не кидаются
           }
         }
       }
       if (map.size() > 0) {
-        dataSource_.saveFinalStates(map);
+        dataSource_.saveFinalStates(map);               //todo внутри метода может возникать ошибка записи бд, наружу не кидаются
       }
 
       if (log_.isInfoEnabled()) {
@@ -178,7 +178,7 @@ public class SiebelFinalStateThread {
       }
 
     } catch (IOException e) {
-      log_.error("exc processing file " + fileName + ": " + e.getMessage(), e);
+      log_.error("exc processing file " + fileName + ": " + e.getMessage(), e);   //todo если ошибка чтения, продолжаем ли мы в этом случае работу?
     } finally {
       if (is != null) {
         try {

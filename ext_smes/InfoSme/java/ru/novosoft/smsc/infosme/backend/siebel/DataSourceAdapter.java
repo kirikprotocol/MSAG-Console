@@ -11,7 +11,9 @@ import java.util.Map;
  * Time: 11:41:26
  * To change this template use File | Settings | File Templates.
  */
-public class DataSourceAdapter implements DataSource {
+public class DataSourceAdapter implements DataSource {   //todo Выгоды от использования интерфейса нет.
+                                                          //todo Сделать класс пакетным
+                                                          //todo Нужно бросать наружу ошибки SiebelException
 
   private final SiebelDataProvider provider_;
   private final Category log_;
