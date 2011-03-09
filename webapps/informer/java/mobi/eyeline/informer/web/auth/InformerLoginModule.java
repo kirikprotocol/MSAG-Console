@@ -7,7 +7,6 @@ import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.login.CredentialNotFoundException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 import java.util.Map;
@@ -58,13 +57,6 @@ public class InformerLoginModule implements LoginModule {
       this.password = new String(password.getPassword());
     } catch (Exception e) {
       throw new LoginException(e.getMessage());
-    }
-
-    if (isBlank(this.name)) {
-      throw new CredentialNotFoundException("User name is required");
-    }
-    if (isBlank(this.password)) {
-      throw new CredentialNotFoundException("Password is required");
     }
 
     return true;

@@ -16,4 +16,10 @@ public interface Authenticator {
    */
   public InformerPrincipal authenticate(String login, String password);
 
+  public Error getError(String login);
+
+  public static enum Error {
+    NOT_FOUND, USER_BLOCKED, WRONG_PASSWORD
+  }
+
 }

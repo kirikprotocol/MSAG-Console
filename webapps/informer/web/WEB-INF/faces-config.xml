@@ -148,6 +148,11 @@
     <converter-class>mobi.eyeline.informer.web.controllers.archive.RequestStatusConverter</converter-class>
   </converter>
 
+  <converter>
+    <converter-id>authErrorConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.AuthErrorConverter</converter-class>
+  </converter>
+
   <render-kit>
     <renderer>
       <component-family>Eyeline</component-family>
@@ -222,6 +227,12 @@
     </renderer>
 
   </render-kit>
+
+  <managed-bean>
+    <managed-bean-name>login</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.LoginPageController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>userSession</managed-bean-name>

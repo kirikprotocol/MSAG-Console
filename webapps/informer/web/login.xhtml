@@ -1,8 +1,5 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi">
 
@@ -11,12 +8,17 @@
   <ui:param name="pageTitle" value="#{msg['informer.title']}"/>
 
   <ui:define name="content">
+
+    <eye:message level="warn" rendered="#{login.error}">
+      <h:outputText value="#{login.message}" converter="authErrorConverter" rendered="#{login.message != null}"/>
+      <h:outputText value="#{msg['informer.admin.auth.error']}" rendered="#{login.message == null}"/>
+    </eye:message>
+
     <form name="opForm" id="opForm" action="j_security_check" method="post" enctype="application/x-www-form-urlencoded">
       <div class="content">
         <table cellspacing="10px">
           <tr>
             <td>
-              <h:outputText style="color:red" rendered="#{param['loginError'] != null}" value="Login error"/>
               <table class="properties_list">
                 <col width="1%"/>
                 <col width="99%"/>
