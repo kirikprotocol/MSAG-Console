@@ -115,13 +115,20 @@ public class NetworkProfileEditBean extends SmscBean {
       }
       network.setMasks(newMasks);
 
-      if(!name.equals(oldName)) {
-        nm.removeProfile(oldName);
+      if(oldName != null && oldName.length()>0 && !oldName.equals(name)) {
+        if(nm.getProfile(name) != null) {
+          return error("Profile with name='"+name+"' already exists");
+        }
       }
+
       if(oldName == null || oldName.length() == 0) {
         nm.addProfile(network);
       }else {
-        nm.editProfile(network);      }
+        if(!name.equals(oldName)) {
+          nm.removeProfile(oldName);
+        }
+        nm.editProfile(network);
+      }
 
     } catch (AdminException e) {
       return error("Can't save region", e);
