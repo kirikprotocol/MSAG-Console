@@ -110,10 +110,14 @@ class ResultsManager {
   }
 
   void removeDeliveriesResult(int requestId) throws AdminException {
-    fs.delete(buildDeliveriesFile(requestId));
+    try{
+      fs.delete(buildDeliveriesFile(requestId));
+    }catch (AdminException ignored){}
   }
   void removeMessagesResult(int requestId) throws AdminException {
-    fs.delete(buildMessagesFile(requestId));
+    try{
+      fs.delete(buildMessagesFile(requestId));
+    }catch (AdminException ignored){}
   }
 
   private File buildDeliveriesFile(int requestId) {
