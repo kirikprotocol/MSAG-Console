@@ -55,43 +55,68 @@ public class SiebelFinalStateThread {
   public void start() {
     if (!started_) {
       currentThread = new Thread(new Runnable() {
-        /** @noinspection EmptyCatchBlock*/
         public synchronized void run() {
           started_ = true;
           log_.info("final state thread is started");
-          try {
-            while (started_) {
+          while (started_) {
+            try {
               File dir = checkPath();
               String[] files = dir.list();
+
               for (int i = 0; i < files.length; ++i) {
                 if (files[i].endsWith(rollingExtension)) {
                   processFile(files[i]);
+                  archivateFile(files[i]);
                 }
               }
-              try {
-                Thread.sleep(10000);
-              } catch (InterruptedException e) {
-              }
+
+            } catch (Exception exc) {
+              log_.error("exc in run: " + exc.getMessage(), exc);
             }
-            log_.info("final state thread is shutdowned");
-          } catch (Exception exc) {
-            log_.error("exc in run: " + exc.getMessage());
-            started_ = false;
+
+            try {
+              Thread.sleep(10000);
+            } catch (InterruptedException ignored) {
+            }
           }
+          log_.info("final state thread is shutdowned");
         }
       });
       currentThread.start();
     }
   }
 
+  void archivateFile(String fileName) {
+    File fd = new File(path_, fileName);
+    try {
+      Date fileDate = sdf.parse(fd.getName().substring(0, fd.getName().length() - rollingExtension.length()));
+      Calendar c = new GregorianCalendar();
+      c.setTime(fileDate);
+      String dirStr = new StringBuffer(processedPath_.length() + 15).append(processedPath_).append(File.separatorChar).append(c.get(Calendar.YEAR)).
+          append(File.separatorChar).append(c.get(Calendar.MONTH) + 1).append(File.separatorChar).
+          append(c.get(Calendar.DAY_OF_MONTH)).append(File.separatorChar).append(c.get(Calendar.HOUR_OF_DAY)).toString();
+      File dir = new File(dirStr);
+      if (!dir.exists() && !dir.mkdirs()) {
+        log_.error("Can't create dir: " + dir.getAbsolutePath());
+      } else if (!fd.renameTo(new File(dir, fileName))) {
+        log_.error("Can't rename file " + fd.getAbsolutePath() + " to processed");
+      }
 
-  void processFile(String fileName) {
+    } catch (ParseException e) {
+      log_.error(e,e);
+    }
+  }
+
+
+  void processFile(String fileName) throws SiebelException {
     File fd = new File(path_, fileName);
     BufferedReader is = null;
     try {
       is = new BufferedReader(new FileReader(fd));
       String line = is.readLine();
-      if (line == null) throw new IOException("heading line is not found");
+      if (line == null)
+        return;
+
       int totalRecords = 0;
       int processedRecords = 0;
       TreeMap map = new TreeMap();
@@ -99,20 +124,11 @@ public class SiebelFinalStateThread {
         // parse line: date,state,taskId,msgId,smppStatus,abnt,userData,taskName
         ++totalRecords;
         String[] fields = recSep_.split(line, 8);
-        /*
-        if ( log_.isDebugEnabled() ) {
-          StringBuffer sb = new StringBuffer();
-          for ( int i = 0; i < fields.length; ++i ) {
-            if ( sb.length() > 0 ) sb.append(",");
-            sb.append("<" + fields[i] + ">");
-          }
-          log_.debug("line parsed into " + fields.length + " pieces:" + sb.toString());
-        }
-        */
+
         if (fields.length < 8) {
           // not all fields specified
           if (log_.isDebugEnabled()) {
-            log_.debug("message " + line + " cannot be parsed");
+            log_.error("message " + line + " cannot be parsed");
           }
           continue;
         }
@@ -156,31 +172,13 @@ public class SiebelFinalStateThread {
       if (map.size() > 0) {
         dataSource_.saveFinalStates(map);
       }
-      is.close();
-      is = null;
-      // renaming the file
 
-      Date fileDate = sdf.parse(fd.getName().substring(0, fd.getName().length() - rollingExtension.length()));
-      Calendar c = new GregorianCalendar();
-      c.setTime(fileDate);
-      String dirStr = new StringBuffer(processedPath_.length() + 15).append(processedPath_).append(File.separatorChar).append(c.get(Calendar.YEAR)).
-          append(File.separatorChar).append(c.get(Calendar.MONTH) + 1).append(File.separatorChar).
-          append(c.get(Calendar.DAY_OF_MONTH)).append(File.separatorChar).append(c.get(Calendar.HOUR_OF_DAY)).toString();
-      File dir = new File(dirStr);
-      if (!dir.exists() && !dir.mkdirs()) {
-        log_.error("Can't create dir: " + dir.getAbsolutePath());
-      }
-
-      if (!fd.renameTo(new File(dir, fileName))) {
-        log_.error("Can't rename file " + fd.getAbsolutePath() + " to processed");
-      }
       if (log_.isInfoEnabled()) {
         log_.info("file processed " + fileName + ", msg records=" + totalRecords);
       }
+
     } catch (IOException e) {
-      log_.error("exc processing file " + fileName + ": " + e.getMessage());
-    } catch (ParseException e) {
-      log_.error("exc processing file " + fileName + ": " + e.getMessage());
+      log_.error("exc processing file " + fileName + ": " + e.getMessage(), e);
     } finally {
       if (is != null) {
         try {
