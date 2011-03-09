@@ -178,7 +178,7 @@ public class SiebelFinalStateThread {
       }
 
     } catch (IOException e) {
-      log_.error("exc processing file " + fileName + ": " + e.getMessage(), e);   //todo если ошибка чтения, продолжаем ли мы в этом случае работу?
+      log_.error("exc processing file " + fileName + ": " + e.getMessage(), e);   //todo если ошибка чтения, продолжаем ли мы работу в этом случае ?
     } finally {
       if (is != null) {
         try {
