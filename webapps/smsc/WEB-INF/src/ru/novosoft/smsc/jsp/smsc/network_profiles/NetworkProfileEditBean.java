@@ -46,7 +46,6 @@ public class NetworkProfileEditBean extends SmscBean {
     if (result != PageBean.RESULT_OK)
       return result;
 
-    System.out.println("Network: "+request.getParameter("network"));
 
     if (request.getParameter("network") != null) {
       try {
@@ -55,7 +54,6 @@ public class NetworkProfileEditBean extends SmscBean {
         name = network.getName();
         abonentStatusMethod = network.getAbonentStatusMethod();
         ussdOpenDestRef = network.getUssdOpenDestRef();
-        System.out.println("Fill dynamic table: "+network.getMasks().values());
         masksHelper.fillMasks(network.getMasks().values());
 
       } catch (AdminException e) {

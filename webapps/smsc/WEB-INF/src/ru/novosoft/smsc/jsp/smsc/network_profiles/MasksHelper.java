@@ -49,7 +49,6 @@ public class MasksHelper extends DynamicTableHelper{
         Mask m = (Mask)iter.next();
         Row row = createNewRow();
         row.addValue(maskColumn, m.getMaskSimple());
-        System.out.println("Add row: "+m.getMaskSimple());
       }
     }
   }
