@@ -171,6 +171,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
             }
           }
         } catch (Exception e) {
+          logger.error(e,e);
           throw new DeliveryStatException("error.parsing.stat.line", f, line);
         }
       }
