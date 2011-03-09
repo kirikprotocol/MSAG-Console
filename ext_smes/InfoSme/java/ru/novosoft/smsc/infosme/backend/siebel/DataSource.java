@@ -12,9 +12,9 @@ import java.util.Map;
 public interface DataSource {
   /// set final states for messages, see SiebelDataProvider.updateDeliveryStates
 
-  public void saveFinalStates(Map states);
+  public void saveFinalStates(Map states) throws SiebelException;
 
-  public void taskHasFinished(String taskName);
+  public void taskHasFinished(String taskName) throws SiebelException;
 
-  public boolean hasUnfinished(String waveId);
+  public boolean hasUnfinished(String waveId) throws SiebelException;
 }

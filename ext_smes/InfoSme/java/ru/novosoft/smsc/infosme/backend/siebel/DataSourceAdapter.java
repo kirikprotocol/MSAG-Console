@@ -23,33 +23,20 @@ public class DataSourceAdapter implements DataSource {   //todo Выгоды о�
     this.log_ = log;
   }
 
-  public void saveFinalStates(Map states) {
-    try {
-      provider_.updateDeliveryStates(states);
-    } catch (SiebelException e) {
-      log_.error("exc to update states:" + e.getMessage());
-    }
+  public void saveFinalStates(Map states) throws SiebelException {
+    provider_.updateDeliveryStates(states);
   }
 
-  public void taskHasFinished(String waveId) {
-    try {
-      if (provider_.getTaskStatus(waveId) == SiebelTask.Status.IN_PROCESS) {
-        provider_.setTaskStatus(waveId, SiebelTask.Status.PROCESSED);
-        if (log_.isInfoEnabled()) {
-          log_.info("wave " + waveId + " is processed");
-        }
+  public void taskHasFinished(String waveId) throws SiebelException {
+    if (provider_.getTaskStatus(waveId) == SiebelTask.Status.IN_PROCESS) {
+      provider_.setTaskStatus(waveId, SiebelTask.Status.PROCESSED);
+      if (log_.isInfoEnabled()) {
+        log_.info("wave " + waveId + " is processed");
       }
-    } catch (SiebelException e) {
-      log_.error("cannot set wave " + waveId + " status: " + e.getMessage());
     }
   }
 
-  public boolean hasUnfinished(String waveId) {
-    try {
-      return provider_.containsUnfinished(waveId);
-    } catch (SiebelException e) {
-      log_.error("Can't get unfinished messages", e);
-      return true;
-    }
+  public boolean hasUnfinished(String waveId) throws SiebelException {
+    return provider_.containsUnfinished(waveId);
   }
 }
