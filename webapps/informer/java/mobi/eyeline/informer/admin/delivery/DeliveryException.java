@@ -24,7 +24,7 @@ public class DeliveryException extends AdminException {
     Unknown(9);
 
     private static Map<Integer, ErrorStatus> errors = new HashMap<Integer, ErrorStatus>(10) {{
-      for(ErrorStatus s : this.values()) {
+      for(ErrorStatus s : ErrorStatus.values()) {
         errors.put(s.errorCode, s);
       }
     }};

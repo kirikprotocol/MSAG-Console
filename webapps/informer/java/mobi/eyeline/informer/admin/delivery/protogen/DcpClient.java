@@ -60,7 +60,11 @@ public class DcpClient extends SyncProtogenConnection {
       if (resp == fail) {
         if(fail.hasStatus()) {
           String message = fail.hasStatusMessage() ?  fail.getStatusMessage() : "";
-          throw new DeliveryException(DeliveryException.ErrorStatus.valueOf(fail.getStatus()), message);
+          DeliveryException.ErrorStatus e = DeliveryException.ErrorStatus.valueOf(fail.getStatus());
+          if(e == null) {
+            log.warn("Unknown response status="+fail.getStatus());
+          }
+          throw new DeliveryException(e == null ? DeliveryException.ErrorStatus.Unknown : e, message);
         }
         throw new DeliveryException("interaction_error", fail.getStatus() + ": " + fail.getStatusMessage());
       }
