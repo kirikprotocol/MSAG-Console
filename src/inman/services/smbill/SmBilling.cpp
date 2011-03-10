@@ -1099,8 +1099,13 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
 #endif /* SMSEXTRA */
         abCsi.Merge(ab_info); //merge known abonent info
 
-      if (_cfg.abCache)
-        _cfg.abCache->setAbonentInfo(abNumber, abCsi);
+      if (_cfg.abCache) {
+        try {
+          _cfg.abCache->setAbonentInfo(abNumber, abCsi); //throws
+        } catch (const std::exception & exc) {
+          smsc_log_error(logger, "%s: abCache exception: %s", _logId, exc.what());
+        }
+      }
     }
     if (ConfigureSCFandCharge() == Billing::pgEnd)
       doFinalize();
