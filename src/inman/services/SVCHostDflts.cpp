@@ -25,6 +25,7 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/services/tcapdsp/ICSTCDspLoader.hpp"
 #include "inman/services/iapmgr/ICSIAPMgrLoader.hpp"
 #include "inman/services/iapSRI/ICSIAPrvdSRILoader.hpp"
+#include "inman/services/iapATSI/ICSIAPrvdATSILoader.hpp"
 #include "inman/services/scheduler/ICSSchedLoader.hpp"
 #include "inman/services/abdtcr/ICSAbntDtcrLoader.hpp"
 #include "inman/services/smbill/ICSSmBillLoader.hpp"
