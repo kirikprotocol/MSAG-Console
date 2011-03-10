@@ -75,7 +75,6 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     operationalJournalRollingPeriod_ = conf.getInt("operationalJournalRollingPeriod",300,30,1200);
     inputTransferThreadCount_ = conf.getInt("inputTransferThreadCount",30,10,100);
     resendIOThreadCount_ = conf.getInt("resendIOThreadCount",10,10,30);
-    almProcessTimeout_ = conf.getInt("almProcessTimeout",15,10,1000);
     validityPeriodDefault_ = conf.getInt("validityPeriodDefault",3600,1000,100000);
 }
 
