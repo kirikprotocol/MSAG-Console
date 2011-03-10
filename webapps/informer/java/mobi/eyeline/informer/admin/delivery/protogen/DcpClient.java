@@ -70,7 +70,7 @@ public class DcpClient extends SyncProtogenConnection {
       }
       return response;
     } catch (ServerOfflineException e) {
-      throw new DeliveryException("dcp_server_offline");
+      throw new DeliveryException(DeliveryException.ErrorStatus.ServiceOffline, "");
     } catch (ResponseWaitTimeoutException e) {
       throw new DeliveryException("response_timeout");
     } catch (IOException e) {

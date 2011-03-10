@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
@@ -12,8 +13,6 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * User: artem
@@ -22,8 +21,6 @@ import java.util.regex.Pattern;
 abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
   private static final Logger log = Logger.getLogger("CONTENT_PROVIDER");
-
-  private final Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
 
   ContentProviderContext context;
   FileSystem fileSys;
@@ -46,56 +43,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
     if (!fileSys.exists(workDir))
       fileSys.mkdirs(workDir);
-
-    restoreBrokenFiles();
   }
 
-  private void restoreBrokenFiles() {
-    File[] files = fileSys.listFiles(workDir);
-    if (files == null)
-      return;
-
-    for (File f : files) {
-
-      Matcher unfinishedMatcher = unfinishedFileName.matcher(f.getName());
-      if (!unfinishedMatcher.matches())
-        continue;
-
-      log("restoring file: " + f.getName() + " ...");
-
-      String ext = unfinishedMatcher.group();
-      String baseName = f.getName().substring(0, f.getName().length() - ext.length());
-      Integer deliveryId;
-      try {
-        deliveryId = Integer.valueOf(ext.substring(5));
-        try {
-          context.dropDelivery(user.getLogin(), deliveryId);
-        } catch (AdminException e) {
-          log.error(e,e);
-        }
-
-        //rename .csv.<id> to .csv
-        File newFile = new File(workDir, baseName + ".csv");
-        if (fileSys.exists(newFile)) {
-          fileSys.delete(f);
-        } else {
-          fileSys.rename(f, newFile);
-        }
-
-        File reportFile = new File(workDir, baseName + ".rep." + deliveryId);
-        if (fileSys.exists(reportFile)) {
-          fileSys.delete(reportFile);
-        }
-
-      } catch (Exception e) {
-        log.error(e, e);
-      }
-
-      log("restore finished: " + f.getName());
-    }
-  }
-
-  protected abstract void fileDownloaded(FileResource resource, String remoteFile) throws AdminException;
+  protected abstract void fileProccesed(FileResource resource, String remoteFile) throws AdminException;
 
   protected abstract void deliveryCreationError(FileResource resource, Exception e, String remoteFile);
 
@@ -114,12 +64,32 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
 
     for (File f : files) {
-      if (f.getName().endsWith(".csv"))
-        createDeliveryFromFile(f);
-
-      else if (f.getName().endsWith(".wait"))
+      if (f.getName().endsWith(".csv")) {
+        try {
+          createDeliveryFromFile(f);
+          fileProccesed(resource, f.getName());
+        } catch (DeliveryException e) {
+          log.error(e,e);
+          if(e.getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline) {   // informer is offline
+            deliveryCreationError(resource, e, f.getName());                         // other problems, notify cp
+          }
+        } catch (Exception e){
+          log.error(e,e);
+          deliveryCreationError(resource, e, f.getName());                           // other problems, notify cp
+        }
+      } else if (f.getName().endsWith(".wait")) {
         uploadDeliveryResults(f);
+      }
     }
+
+    for(File f : files) {
+      if(f.getName().endsWith(".not.generated")) {       // haven't analogs on resource
+        cleanNotGenerated(f);
+      } else if(f.getName().endsWith(".gen")) {          // haven't analogs on resource
+        cleanGenerated(f);
+      }
+    }
+
   }
 
   private void log(String text) {
@@ -142,13 +112,11 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         downloadFile(resource, remoteFile, localTmpFile);
 
         fileSys.rename(localTmpFile, new File(workDir, remoteFile));
-
-        fileDownloaded(resource, remoteFile);
       }
     } finally {
       try {
         resource.close();
-      } catch (AdminException e) {
+      } catch (AdminException ignored) {
       }
     }
     log("downloaded.");
@@ -164,23 +132,20 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (os != null)
         try {
           os.close();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
     }
   }
 
-  private Delivery createEmptyDelivery(String fileName) throws AdminException {
-    log("create empty delivery: " + fileName);
+  private DeliveryPrototype createDelivery(String deliveryName) throws AdminException {
+    log("create empty delivery: " + deliveryName);
     DeliveryPrototype delivery = new DeliveryPrototype();
     delivery.setStartDate(new Date());
     context.copyUserSettingsToDeliveryPrototype(user.getLogin(), delivery);
     delivery.setSourceAddress(sourceAddr);
-    String deliveryName = fileName.substring(0, fileName.length() - 4);
     delivery.setName(deliveryName);
-    Delivery d = context.createDeliveryWithIndividualTexts(user.getLogin(), delivery, null);
-    context.pauseDelivery(user.getLogin(), d.getId());
-    log("delivery created. id=" + d.getId());
-    return d;
+    delivery.setProperty(UserDataConsts.CP_DELIVERY, "true");
+    return delivery;
   }
 
   private void addMessagesToDelivery(Delivery d, File f, File reportFile) throws AdminException, UnsupportedEncodingException {
@@ -209,80 +174,130 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     log("all messages added.");
   }
 
-  private void deliveryCreationError(Exception e, String remoteFile) {
-    try {
-      try {
-        resource.open();
-
-        deliveryCreationError(resource, e, remoteFile);
-
-      } finally {
-        resource.close();
+  private File lookupGenFile(final String deliveryName, final File parentDir) {
+    return lookupFile(parentDir, new FileFilter() {
+      @Override
+      public boolean accept(File pathname) {
+        String name = pathname.getName();
+        return name.startsWith(deliveryName + ".csv.") && name.endsWith(".gen");
       }
-    } catch (Exception ex) {
-      log.error(ex,ex);
-    }
+    });
   }
 
-  private void createDeliveryFromFile(File f) {
-    String fileName = f.getName();
-    Delivery d;
-    try {
-      d = createEmptyDelivery(fileName);
-    } catch (Exception e) {
-      log.error(e,e);
-      deliveryCreationError(e, f.getName());
-      try {
-        fileSys.delete(f);
-      } catch (AdminException ignored) {
-      }
-      return;
+  private File lookupFile(File parentDir, FileFilter filter) {
+    File[] fs = fileSys.listFiles(parentDir, filter);
+    if(fs.length>0) {
+      return fs[0];
     }
+    return null;
+  }
 
-    String deliveryName = d.getName();
-    Integer deliveryId = d.getId();
+  private static File buildNotGeneratedFile(File parent, String deliveryName) {
+    return new File(parent, deliveryName+".not.generated");
+  }
 
-    File newFile = new File(f.getParentFile(), deliveryName + ".csv." + deliveryId);
-    File reportFile = new File(f.getParentFile(), deliveryName + ".rep." + deliveryId);
-    try {
-      //rename to .csv.<id>
-      fileSys.rename(f, newFile);
+  private static File buildGeneratedFile(File parent, String deliveryName, int dId) {
+    return new File(parent, deliveryName+".csv."+dId+".gen");
+  }
 
-      addMessagesToDelivery(d, newFile, reportFile);
+  private static File buildWaitFile(File parent, String deliveryName, int dId) {
+    return new File(parent, deliveryName+".csv."+dId+".wait");
+  }
+  private static File buildRepFile(File parent, String deliveryName, int dId) {
+    return new File(parent, deliveryName + ".rep." + dId);
+  }
 
-      context.activateDelivery(user.getLogin(), deliveryId);
+  private void createDeliveryFromFile(File f) throws Exception {
+    String fileName = f.getName();
+    final String deliveryName = fileName.substring(0, fileName.length() - 4);
 
-      fileSys.rename(newFile, new File(newFile.getParentFile(), newFile.getName() + ".wait"));
+    Delivery d = getExistingDelivery(deliveryName);
 
-      log("delivery created from: " + f.getName());
+    File parentDir = f.getParentFile();
 
-      if (!createReports)
-        try {
+    File genFile = lookupGenFile(deliveryName, parentDir);
+
+    File waitFile, reportFile;
+
+    if(d != null && fileSys.exists(genFile)) {
+
+      context.activateDelivery(user.getLogin(), d.getId());
+      waitFile = buildWaitFile(parentDir, deliveryName, d.getId());
+      fileSys.rename(genFile, waitFile);
+
+      if(!createReports) {
+        reportFile = buildRepFile(parentDir, deliveryName, d.getId());
+        fileSys.delete(reportFile);
+      }
+      fileSys.delete(f);
+
+    }else {
+
+      if(d != null) {
+        context.dropDelivery(user.getLogin(), d.getId());
+      }
+
+      File notGenerated = buildNotGeneratedFile(parentDir, deliveryName);
+
+      fileSys.delete(notGenerated);
+
+      fileSys.rename(f, notGenerated);
+
+      DeliveryPrototype proto = createDelivery(deliveryName);
+      try{
+        d = context.createDeliveryWithIndividualTexts(user.getLogin(), proto, null);
+      }catch (Exception e){
+        log.error(e,e);
+        try{
+          fileSys.delete(notGenerated);
+        }catch (Exception ignored){}
+        throw e;
+      }
+
+      waitFile =  buildWaitFile(parentDir, deliveryName, d.getId());
+      genFile = buildGeneratedFile(parentDir, deliveryName, d.getId());
+      reportFile = buildRepFile(parentDir, deliveryName, d.getId());
+
+      fileSys.delete(reportFile);
+
+      try{
+
+        addMessagesToDelivery(d, notGenerated, reportFile);
+
+        fileSys.delete(genFile);
+
+        fileSys.rename(notGenerated, genFile);
+
+        context.activateDelivery(user.getLogin(), d.getId());
+
+        fileSys.delete(waitFile);
+
+        fileSys.rename(genFile, waitFile);
+
+        if(!createReports) {
           fileSys.delete(reportFile);
-        } catch (AdminException ignored) {
         }
 
-    } catch (Exception e) {
-      log.error(e,e);
-
-      try {
-        context.dropDelivery(user.getLogin(), deliveryId);
-      } catch (AdminException ignored) {
+      }catch (Exception e) {
+        log.error(e,e);
+        if(!(e instanceof DeliveryException) || (((DeliveryException)e).getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline)) {
+          try{
+            context.dropDelivery(user.getLogin(), d.getId());
+            try{
+              fileSys.delete(notGenerated);
+            }catch (AdminException ignored){}
+            try{
+              fileSys.delete(genFile);
+            }catch (AdminException ignored){}
+            try{
+              fileSys.delete(waitFile);
+            }catch (AdminException ignored){}
+          }catch (Exception ex){
+            log.error(ex,ex);
+          }
+        }
+        throw e;
       }
-      try {
-        fileSys.delete(newFile);
-      } catch (AdminException ignored) {
-      }
-      try {
-        fileSys.delete(f);
-      } catch (AdminException ignored) {
-      }
-      try {
-        fileSys.delete(reportFile);
-      } catch (AdminException ignored) {
-      }
-
-      deliveryCreationError(e, f.getName());
     }
   }
 
@@ -295,11 +310,53 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (is != null)
         try {
           is.close();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
     }
 
   }
+
+  private void cleanNotGenerated(File f) {
+    log("not generated file: " + f.getName());
+
+    String deliveryName = f.getName().substring(0, f.getName().length() - ".not.generated".length());
+
+    try{
+      Delivery d = getExistingDelivery(deliveryName);
+      if(d != null) {
+        context.dropDelivery(user.getLogin(), d.getId());
+        fileSys.delete(buildRepFile(f.getParentFile(), deliveryName, d.getId()));
+      }
+      fileSys.delete(f);
+      log("not generated file: " + f.getName()+" is cleaned");
+    }catch (AdminException e){
+      log.error(e,e);
+    } finally {
+      try {
+        fileSys.delete(f);
+      } catch (AdminException ignored) {}
+    }
+  }
+  private void cleanGenerated(File f) {
+    log("generated file: " + f.getName());
+
+    String name = f.getName().substring(0, f.getName().length() - ".gen".length());
+    Integer deliveryId = Integer.parseInt(name.substring(name.lastIndexOf('.') + 1));
+    String deliveryName = name.substring(0, name.indexOf('.'));
+
+    try{
+      Delivery d = context.getDelivery(user.getLogin(), deliveryId);
+      if(d != null) {
+        context.dropDelivery(user.getLogin(), d.getId());
+      }
+      fileSys.delete(buildRepFile(f.getParentFile(), deliveryName, deliveryId));
+      fileSys.delete(f);
+      log("generated file: " + f.getName()+" is cleaned");
+    }catch (AdminException e){
+      log.error(e,e);
+    }
+  }
+
 
   private void uploadDeliveryResults(File f) {
     log("wait file: " + f.getName());
@@ -370,6 +427,23 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       } catch (Exception ignored) {
       }
     }
+  }
+
+  private Delivery getExistingDelivery(final String name) throws AdminException {
+    DeliveryFilter filter = new DeliveryFilter();
+    filter.setNameFilter(name);
+    final Delivery[] infos = new Delivery[1];
+    context.getDeliveries(user.getLogin(), filter,
+        new Visitor<mobi.eyeline.informer.admin.delivery.Delivery>() {
+          public boolean visit(Delivery value) throws AdminException {
+            if (value.getProperty(UserDataConsts.CP_DELIVERY) != null) {
+              infos[0] = value;
+              return false;
+            }
+            return true;
+          }
+        });
+    return infos[0];
   }
 
   private class CPMessageSource implements DataSource<Message> {

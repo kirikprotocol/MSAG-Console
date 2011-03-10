@@ -2,13 +2,7 @@ package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import org.apache.log4j.Logger;
-
-import java.io.File;
-import java.util.*;
 
 /**
  * User: artem
@@ -23,14 +17,14 @@ class DetailedResourceProcessStrategy extends BaseResourceProcessStrategy {
   }
 
   @Override
-  protected void fileDownloaded(FileResource resource, String remoteFile) throws AdminException {
+  protected void fileProccesed(FileResource resource, String remoteFile) throws AdminException {
     resource.rename(remoteFile, remoteFile + ".active");
   }
 
   @Override
   protected void deliveryCreationError(FileResource resource, Exception e, String remoteFile) {
     try {
-      resource.rename(remoteFile + ".active", remoteFile + ".error");
+      resource.rename(remoteFile, remoteFile + ".error");
     } catch (AdminException e1) {
       log.error(e1, e1);
     }

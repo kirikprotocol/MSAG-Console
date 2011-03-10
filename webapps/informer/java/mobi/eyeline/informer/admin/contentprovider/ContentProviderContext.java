@@ -2,7 +2,6 @@ package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
@@ -38,8 +37,6 @@ public interface ContentProviderContext {
 
   void pauseDelivery(String login, int deliveryId) throws AdminException;
 
-  void dropDelivery(String login,  int deliveryId) throws AdminException;
-
   void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException;
 
 
@@ -49,4 +46,10 @@ public interface ContentProviderContext {
   void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
 
   File getFtpUserHomeDir(String login) throws AdminException;
+
+  public void getDeliveries(String login, DeliveryFilter deliveryFilter, Visitor<Delivery> visitor) throws AdminException;
+
+  public void dropDelivery(String login, int deliveryId) throws AdminException;
+
+  public void modifyDelivery(String login, Delivery delivery) throws AdminException;
 }

@@ -2,13 +2,6 @@ package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
-
-import java.io.File;
-import java.util.Date;
-import java.util.List;
 
 /**
 * User: artem
@@ -21,7 +14,7 @@ class SimpleResourceProcessStrategy extends BaseResourceProcessStrategy {
   }
 
   @Override
-  protected void fileDownloaded(FileResource resource, String remoteFile) throws AdminException {
+  protected void fileProccesed(FileResource resource, String remoteFile) throws AdminException {
     resource.remove(remoteFile);
   }
 

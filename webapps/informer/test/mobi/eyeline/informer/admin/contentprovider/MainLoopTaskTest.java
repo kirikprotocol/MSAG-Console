@@ -323,6 +323,11 @@ public class MainLoopTaskTest {
     }
 
     @Override
+    public void modifyDelivery(String login, Delivery delivery) throws AdminException {
+      deliveryManager.modifyDelivery(login, "", delivery);
+    }
+
+    @Override
     public void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException {
       delivery.setOwner(login);
 
@@ -358,6 +363,11 @@ public class MainLoopTaskTest {
     @Override
     public File getFtpUserHomeDir(String login) throws AdminException {
       return null;
+    }
+
+    @Override
+    public void getDeliveries(String login, DeliveryFilter deliveryFilter, Visitor<Delivery> visitor) throws AdminException {
+      deliveryManager.getDeliveries(login,"", deliveryFilter, 1000, visitor);
     }
   }
 }
