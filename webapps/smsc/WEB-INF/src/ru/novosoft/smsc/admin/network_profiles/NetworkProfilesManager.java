@@ -152,16 +152,16 @@ public class NetworkProfilesManager {
       for (Iterator iter = profiles.values().iterator(); iter.hasNext();) {
         NetworkProfile profile = (NetworkProfile)iter.next();
         out.print(" <network name=\"");out.print(profile.getName());out.println("\">");
-        out.println("   <params>");
-        out.print("     <param name=\"abonentStatusMethod\" value=\"");out.print(profile.getAbonentStatusMethod());out.println("\"/>");
-        out.print("     <param name=\"ussdOpenDestRef\" value=\"");out.print(profile.getUssdOpenDestRef());out.println("\"/>");
-        out.println("   </params>");
         out.println("   <masks>");
         for (Iterator masks = profile.getMasks().values().iterator(); masks.hasNext();) {
           Mask m = (Mask)masks.next();
           out.print("     <mask value=\"");out.print(m.getMaskSimple());out.println("\"/>");
         }
         out.println("   </masks>");
+        out.println("   <params>");
+        out.print("     <param name=\"abonentStatusMethod\" value=\"");out.print(profile.getAbonentStatusMethod());out.println("\"/>");
+        out.print("     <param name=\"ussdOpenDestRef\" value=\"");out.print(profile.getUssdOpenDestRef());out.println("\"/>");
+        out.println("   </params>");
         out.println(" </network>");
       }
       out.println(" <default>");
