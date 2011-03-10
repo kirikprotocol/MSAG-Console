@@ -146,6 +146,10 @@ public:
         return 0;
     }
 
+    inline unsigned getALMProcessTimeout() const {
+        return almProcessTimeout_;
+    }
+
     // --- non-configurable parameters
 
     /// return a length of period (second) to split resend messages into.
@@ -191,6 +195,7 @@ private:
     unsigned protocolId_;
     unsigned receiptExtraWaitTime_;
     unsigned resendIOThreadCount_;
+    unsigned almProcessTimeout_;
     unsigned responseWaitTime_;
     unsigned retryMinTimeToLive_;
     unsigned skippedIdsChunkSize_;
