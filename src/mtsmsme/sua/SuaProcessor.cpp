@@ -98,7 +98,8 @@ enum State{
       INIT,
       SCCPBINDING,
       SCCPBINDERROR,
-      WORKING
+      WORKING,
+      CLOSING
 } state;
 
 static std::string getStateDescription(State cstate)
@@ -109,6 +110,7 @@ static std::string getStateDescription(State cstate)
     case SCCPBINDING: return "SCCPBINDING";
     case SCCPBINDERROR: return "SCCPBINDERROR";
     case WORKING: return "WORKING";
+    case CLOSING: return "CLOSING";
   }
 }
 static void changeState(State nstate)
@@ -241,6 +243,7 @@ int SuaProcessor::Run()
     if (result != libsccp::SccpApi::OK)
     {
       smsc_log_error(logger,"MsgRecv failed: %d", result);
+      changeState(CLOSING);
       going = 0;
       break;
     }
@@ -262,6 +265,7 @@ void SuaProcessor::send(uint8_t cdlen, uint8_t *cd,
                         uint8_t cllen, uint8_t *cl,
                         uint16_t ulen, uint8_t *udp)
 {
+  if ( state != WORKING ) return;
   libsccp::MessageProperties msgProperties;
   msgProperties.setReturnOnError(true);
   //msgProperties.hopCount = 2;
