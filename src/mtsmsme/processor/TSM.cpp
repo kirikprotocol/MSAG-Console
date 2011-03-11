@@ -70,11 +70,13 @@ void TSM::TBeginReq(uint8_t cdlen, uint8_t* cd, /* called party address */
   memcpy(raddr,cd,cdlen);
   laddrlen = cllen;
   memcpy(laddr,cl,cllen);
-// TO DO check component existing and if no then send empty begin
   BeginMsg begin;
   begin.setOTID(ltrid);
   begin.setDialog(appcntx);
-  begin.setInvokeReq(internal_invokeId,internal_opcode,internal_arg);
+  //TODO implement list of components
+  //send empty begin if no components
+  if ( !internal_arg.empty())
+    begin.setInvokeReq(internal_invokeId,internal_opcode,internal_arg);
   vector<unsigned char> data;
   begin.encode(data);
   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)data.size(),&data[0]);
@@ -90,6 +92,18 @@ void TSM::CONTINUE_received(uint8_t cdlen,
 void TSM::TEndReq()
 {
   smsc_log_warn(logger,"TSM::TEndReq() is NOT IMPLEMENTED");
+}
+void TSM::TContReq()
+{
+  // TODO make sure SCCP adresses were set
+  ContMsg cont;
+  cont.setOTID(ltrid);
+  cont.setDTID(rtrid);
+    if ( !internal_arg.empty())
+      cont.setInvokeReq(internal_invokeId,internal_opcode,internal_arg);
+    vector<unsigned char> data;
+    cont.encode(data);
+    tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)data.size(),&data[0]);
 }
 void TSM::TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 {

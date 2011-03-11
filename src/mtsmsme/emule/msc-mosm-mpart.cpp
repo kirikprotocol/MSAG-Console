@@ -1,13 +1,18 @@
 static char const ident[] = "$Id$";
 #include <string>
 #include <vector>
+#include <list>
 #include "core/threads/Thread.hpp"
 #include "logger/Logger.h"
+#include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
+#include "util/config/ConfigException.h"
 #include "util/sleep.h"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "mtsmsme/processor/HLRImpl.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
+#include "mtsmsme/processor/MOFTSM.hpp"
 #include "mtsmsme/comp/MoForwardSm.hpp"
 #include "mtsmsme/processor/Message.hpp"
 #include "mtsmsme/processor/util.hpp"
@@ -16,8 +21,12 @@ static char const ident[] = "$Id$";
 
 using std::vector;
 using std::string;
+using std::list;
 using smsc::core::threads::Thread;
 using smsc::logger::Logger;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigView;
+using smsc::util::config::ConfigException;
 using smsc::sms::Address;
 using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestSender;
@@ -31,6 +40,8 @@ using smsc::mtsmsme::processor::shortMsgMoRelayContext_v2;
 using smsc::mtsmsme::processor::TrId;
 using smsc::mtsmsme::processor::TSMSTAT;
 using smsc::mtsmsme::comp::MoForwardSmReq;
+using smsc::mtsmsme::processor::MOFTSM;
+using smsc::mtsmsme::processor::MOFTSMListener;
 using smsc::mtsmsme::processor::BeginMsg;
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
 using smsc::mtsmsme::processor::util::dump;
@@ -44,6 +55,8 @@ static char sca[]  = "79139869990"; // service center address
 static char rndmsto_pattern[]   = "791398699872%04d";
 static char rndmsfrom_pattern[] = "791398699871%04d";
 static int speed = 1;
+const int maxPhones=10000;
+static int partsNumber = 3; //Maximum number of short messages in the concatenated short message
 static int slowstartperiod = 60; //in seconds
 
 
@@ -114,72 +127,235 @@ class StatFlusher: public Thread {
       return 0;
     }
 };
-class Phone {
-    static uint8_t PartsNumber;
-  private:
-    uint8_t MR; //TP Message Reference
-    uint8_t MID;
-    uint8_t MP;
-    uint8_t MPN;
+class InvokationCount: public SccpSender {
   public:
-    uint8_t getMessageReference() { return MR++; }
-    uint8_t get();
-};
-class Flooder {
-    string pp;
-  public:
-    string& getPhone() {return pp;}
-};
-void makepdu(char* rndmsfrom,vector<unsigned char>& ui)
-{
-  Phone abnt;
-    uint8_t MR = abnt.getMessageReference(); //TP Message Reference
-    uint8_t MID;
-    uint8_t MP;
-    uint8_t MPN;
-
-    int pos;
-    pos = snprintf(rndmsfrom, 20, rndmsfrom_pattern, randint(0, 9999));
-    rndmsfrom[pos] = 0;
-
-    char rndmsto[20] = {0};
-    pos = snprintf(rndmsto, sizeof (rndmsto), rndmsto_pattern, randint(0, 9999));
-    rndmsto[pos] = 0;
-    string msto(rndmsto); // B-subsriber
-
-    OCTET_STRING_DECL(dest,20);
-    ZERO_OCTET_STRING(dest);
-    dest.size = (int)(packNumString2BCD91(dest.buf, msto.c_str(), (unsigned )(msto.length())));
-    ui.push_back(0x41); //MI = No reply path, UDH is present, SRR not requested, validity period not present, accept duplicates, SUBMIT
-    ui.push_back(MR); //TP Message Reference
-    ui.push_back((uint8_t)(msto.length())); // TP-Destination-Address length in digits
-    ui.insert(ui.end(), dest.buf, dest.buf + dest.size); //TP-Destination-Address
-    ui.push_back(0); //TP-Protocol-Identifier
-    ui.push_back(0x08); //TP-Data_Coding-Scheme = UCS2
-    //ui.push_back(0xFF); //TP-Validity-Period
-    ui.push_back(0x8c); //TP-User-Data-Length = 140 octets
-    ui.push_back(0x05); // UDH length
-    ui.push_back(0x00); // Concat IE tag
-    ui.push_back(0x03); // Concat IE len
-    ui.push_back(MID); // Concat Message identifier
-    ui.push_back(MP); // Concat mesaage parts total
-    ui.push_back(MPN); // Concat mesaage part number
-    // TP-User-Data SMS TEXT
-    for (int i = 0; i < 67; ++i) // 140 - 6 (UDH len + UDH) / 2 (UCS2)
+    void send(uint8_t cdlen, uint8_t *cd, uint8_t cllen, uint8_t *cl, uint16_t ulen, uint8_t *udp)
     {
-      ui.push_back(0x00);
-      ui.push_back(MPN);
+      invokation_count++;
     }
-}
+};
+class Phone {
+    //Maximum number of short messages in the concatenated short message
+    static uint8_t MP;
+  private:
+    uint16_t phoneIndex; //randint(0, 9999)
+    uint16_t destIndex;
+    uint8_t MR; //TP Message Reference
+    uint8_t MID; //Concatenated short message reference number
+    uint8_t MPN; //Sequence number of the current short message
+    enum State_e { phoneIDLE = 0, phoneBegin, phoneSent, phoneEnd, phoneWait };
+    State_e state;
+    static std::string getStateDescription(State_e state)
+    {
+      switch(state) {
+        case phoneIDLE: return "phoneIDLE";
+        case phoneBegin: return "phoneBegin";
+        case phoneSent: return "phoneSent";
+        case phoneEnd: return "phoneEnd";
+        case phoneWait: return "phoneWait";
+        default:return "UNKNOWN";
+      }
+    }
+    void changeState(State_e _state)
+    {
+      State_e old_state = state;
+      state = _state;
+      switch(state) {
+        case phoneIDLE: break;
+        case phoneBegin:
+          if (old_state == phoneIDLE) {
+            MPN=1; MID++; destIndex = randint(0, maxPhones-1);
+          }
+          break;
+        case phoneSent:
+          break;
+        case phoneEnd:
+          MPN++;
+          if (MPN <= MP)
+            state = phoneWait;
+          else
+            state = phoneIDLE;
+          break;
+        case phoneWait:
+          break;
+      }
+      smsc_log_debug(logger,"phone[%d].state=%s MPN=%d MID=%d MR=%d",
+          phoneIndex,getStateDescription(state).c_str(),MPN,MID,MR);
+    }
+  public:
+    Phone():phoneIndex(0),MR(0),MID(0),MPN(0),state(phoneIDLE){}
+    bool isWait() { return state == phoneWait; }
+    void setIndex(uint16_t idx) { phoneIndex=idx;}
+    uint16_t getIndex() { return phoneIndex; }
+    uint8_t getMessageReference() { return MR++; }
+    void begin(MOFTSM* tsm, uint8_t cdlen, uint8_t* cd, /* called party address */
+                            uint8_t cllen, uint8_t* cl /* calling party address */)
+    {
+      changeState(phoneBegin);
+      tsm->TBeginReq(cdlen, cd, cllen, cl);
+    }
+    void cont(MOFTSM* tsm)
+    {
+      changeState(phoneSent);
+      char rndmsfrom[20] = { 0 };
+      int pos;
+      pos = snprintf(rndmsfrom, sizeof(rndmsfrom), rndmsfrom_pattern, phoneIndex);
+      rndmsfrom[pos] = 0;
+      string msfrom(rndmsfrom); // A-subscriber
+      vector<unsigned char> ui;
+      makepdu(ui);
+      MoForwardSmReq mosms(sca, msfrom, ui);
+      tsm->TInvokeReq(1, 46, mosms);
+      tsm->TContReq();
+    }
+    void end(MOFTSM* tsm)
+    {
+      changeState(phoneEnd);
+    }
+    void makepdu(vector<unsigned char>& ui)
+    {
+      uint8_t MsgRef = getMessageReference(); //TP Message Reference
 
+      char rndmsfrom[20] = { 0 };
+      int pos;
+      pos = snprintf(rndmsfrom, 20, rndmsfrom_pattern, phoneIndex);
+      rndmsfrom[pos] = 0;
+
+      char rndmsto[20] = { 0 };
+      pos = snprintf(rndmsto, sizeof(rndmsto), rndmsto_pattern,destIndex);
+      rndmsto[pos] = 0;
+      string msto(rndmsto); // B-subsriber
+
+      OCTET_STRING_DECL(dest,20);
+      ZERO_OCTET_STRING(dest);
+      dest.size = (int) (packNumString2BCD91(dest.buf, msto.c_str(),
+          (unsigned) (msto.length())));
+      //MI = No reply path, UDH is present, SRR not requested,
+      // validity period field present - relative format
+      // accept duplicates, SUBMIT
+      ui.push_back(0x51);
+      ui.push_back(MsgRef); //TP Message Reference
+      ui.push_back((uint8_t) (msto.length())); // TP-Destination-Address length in digits
+      ui.insert(ui.end(), dest.buf, dest.buf + dest.size); //TP-Destination-Address
+      ui.push_back(0); //TP-Protocol-Identifier
+      ui.push_back(0x08); //TP-Data_Coding-Scheme = UCS2
+      ui.push_back(0x03); //TP-Validity-Period = 20 minutes
+      int symbolCount = (MPN == MP) ? 33 : 67;  //bug in SMSC 3part -> 4 part
+      ui.push_back(symbolCount*2+6); //TP-User-Data-Length = 140 octets
+      //ui.push_back(0x8c); //TP-User-Data-Length = 140 octets
+      ui.push_back(0x05); // UDH length
+      ui.push_back(0x00); // Concat IE tag
+      ui.push_back(0x03); // Concat IE len
+      ui.push_back(MID); // Concat Message identifier
+      ui.push_back(MP); // Concat message parts total
+      ui.push_back(MPN); // Concat message part number
+      // TP-User-Data SMS TEXT
+      for (int i = 0; i < symbolCount; ++i) // 140 - 6 (UDH len + UDH) / 2 (UCS2)
+      {
+        ui.push_back(0x00);
+        ui.push_back(MPN + '0');
+      }
+    }
+};
+uint8_t Phone::MP=partsNumber; //Maximum number of short messages in the concatenated short message
+
+class Flooder : public MOFTSMListener{
+  private:
+    Mutex lock;
+    SccpSender& shaper;
+    uint32_t smscount;
+    Phone* phones;
+    list<uint16_t> idxqueue;
+    // fill SCCP addresses for SMS sending, FROM = MSC GT, TO = SMSC GT
+    uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
+  public:
+    Flooder(SccpSender& _shaper): shaper(_shaper)
+    {
+      smscount = 0;
+      cdlen = packSCCPAddress(cd, 1 /* E.164 */, sca /* SMSC E.164 */, 8 /* SMSC SSN */);
+      cllen = packSCCPAddress(cl, 1 /* E.164 */, msca /* MSC E.164 */, 8 /* MSC SSN */);
+      phones = new Phone[maxPhones];
+      for (int idx = 0; idx < maxPhones; ++idx)
+      {
+        phones[idx].setIndex((uint16_t) idx);
+      }
+    }
+    ~Flooder() {delete []phones;}
+    void sendpart(MOFTSM* tsm)
+    {
+      uint16_t idx;
+      if (! idxqueue.empty())
+      {
+        MutexGuard g(lock);
+        idx = idxqueue.front();
+        idxqueue.pop_front();
+      }
+      else
+      {
+        idx = randint(0, maxPhones - 1);
+      }
+      tsm->addMOFTSMListener(this, idx);
+      phones[idx].begin(tsm,cdlen, cd, cllen, cl);
+      // call shaper
+      shaper.send(0,0,0,0,0,0);
+      smsc_log_debug(logger,"sent %010d",smscount);
+    }
+    virtual void end(MOFTSM* tsm,uint16_t idx)
+    {
+      phones[idx].end(tsm);
+      if ( phones[idx].isWait())
+      {
+        MutexGuard g(lock);
+        idxqueue.push_back(idx);
+      }
+    }
+    void cont(MOFTSM* tsm,uint16_t phoneIndex)
+    {
+      phones[phoneIndex].cont(tsm);
+    }
+};
+class ToolConfig {
+  private:
+    int cfgspeed;
+    int slow;
+    Logger* logger;
+  public:
+    ToolConfig(Logger* _logger):logger(_logger){}
+    void read(Manager& manager)
+    {
+      if (!manager.findSection("msc-mosm-mpart"))
+        throw ConfigException("\'msc-mosm-mpart\' section is missed");
+
+      ConfigView sccpConfig(manager, "msc-mosm-mpart");
+
+      try { cfgspeed = sccpConfig.getInt("speed");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'speed\' is unknown or missing");
+      }
+      speed = cfgspeed;
+
+      try { slow = sccpConfig.getInt("slowstartperiod");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'slowstartperiod\' is unknown or missing");
+      }
+      slowstartperiod = slow;
+    }
+};
 int main(int argc, char** argv)
 {
   try
   {
+
     smsc::logger::Logger::Init();
     logger = smsc::logger::Logger::getInstance("mosmgen");
     smsc_log_info(logger, "MO SMS generator");
     smsc_log_error(logger,"sizeof(MoForwardSmReq)=%d",sizeof(MoForwardSmReq));
+    Manager::init("config.xml");
+    Manager& manager = Manager::getInstance();
+    ToolConfig config(logger);
+    config.read(manager);
+
+    srand(time(NULL)); // set seed
     StatFlusher trener;
     trener.Start();
     EmptyRequestSender fakeSender;
@@ -188,41 +364,27 @@ int main(int argc, char** argv)
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms, &fakeHLR);
 
-    //inject traffic shaper
-    TrafficShaper shaper((SccpSender*)&listener, speed,slowstartperiod);
-    mtsms.setSccpSender((SccpSender*)&shaper);
+
+    mtsms.setSccpSender((SccpSender*)&listener);
 
     listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
         Address((uint8_t)strlen(vlra), 1, 1, vlra),
         Address((uint8_t)strlen(hlra), 1, 1, hlra));
     listener.Start();
     sleep(10);
-    uint32_t smscount = 0;
-    // fill SCCP addresses for SMS sending, FROM = MSC GT, TO = SMSC GT
-    uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
-    cdlen = packSCCPAddress(cd, 1 /* E.164 */, sca /* SMSC E.164 */, 8 /* SMSC SSN */);
-    cllen = packSCCPAddress(cl, 1 /* E.164 */, msca /* MSC E.164 */, 8 /* MSC SSN */);
+
+    //inject traffic shaper
+    InvokationCount shapecounter;
+    TrafficShaper shaper(&shapecounter, speed,slowstartperiod);
+    Flooder flood(shaper);
     while(true)
     {
 
-      TSM* tsm = 0;
-      tsm = mtsms.TC_BEGIN(shortMsgMoRelayContext_v2);
+      MOFTSM* tsm = 0;
+      tsm = (MOFTSM*)mtsms.TC_BEGIN(shortMsgMoRelayContext_v2);
       if (tsm)
       {
-        ////
-        char rndmsfrom[20] = {0};
-        int pos;
-        pos = snprintf(rndmsfrom,sizeof(rndmsfrom),rndmsfrom_pattern,randint(0,9999));
-        rndmsfrom[pos] = 0;
-        string msfrom(rndmsfrom); // A-subscriber
-        //////
-        vector<unsigned char> ui;
-        makepdu(rndmsfrom,ui);
-        MoForwardSmReq mosms(sca, msfrom, ui);
-        tsm->TInvokeReq(1, 46, mosms);
-        tsm->TBeginReq(cdlen, cd, cllen, cl);
-        smsc_log_debug(logger,"sent %010d",smscount);
-        invokation_count++;
+        flood.sendpart(tsm); // get random phone
       }
       else
       {
@@ -237,3 +399,4 @@ int main(int argc, char** argv)
   }
   return 0;
 }
+

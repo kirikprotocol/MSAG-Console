@@ -373,7 +373,7 @@ string Message::toString() {
   string result((char*)&stream[0],(char*)&stream[0]+stream.size());
   return result;
 }
-ContMsg::ContMsg()
+ContMsg::ContMsg():logger(0)
 {
   cont.present = TCMessage_PR_contiinue;
   cont.choice.contiinue.dialoguePortion = 0;
@@ -419,6 +419,27 @@ void ContMsg::setDialog(AC& _ac)
   //cont.choice.contiinue.dialoguePortion = ( DialoguePortion *)&dp;
   cont.choice.contiinue.dialoguePortion = ( struct EXT *)&dp;
 }
+void ContMsg::setInvokeReq(int iid, uint8_t opcode, vector<unsigned char>& _argument)
+{
+  //initialize component argument
+  argument.size = (int)_argument.size();
+  argument.buf = &_argument[0];
+
+  // intialize invoke with invokeID and operation code
+  comp.present = Component_PR_invoke;
+  comp.choice.invoke.invokeId = iid;
+  comp.choice.invoke.linkedId = 0;
+  comp.choice.invoke.opcode.present = Code_PR_local;
+  comp.choice.invoke.opcode.choice.local = opcode;
+  comp.choice.invoke.argument = &argument;
+
+  arr[0]= &comp;
+  comps.list.count = 1;
+  comps.list.size = 1;
+  comps.list.array = arr;
+  //begin.choice.begin.components = &comps;
+  cont.choice.contiinue.components = &comps;
+}
 void ContMsg::setComponent(int result, int iid)
 {
   if(result)
@@ -440,6 +461,16 @@ void ContMsg::setComponent(int result, int iid)
   comps.list.size = 1;
   comps.list.array = arr;
   cont.choice.contiinue.components = &comps;
+}
+void ContMsg::encode(vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er = der_encode(def,&cont,print2vec, &buf);
+  if(er.encoded == -1 && logger)
+  {
+    smsc_log_error(logger,
+        "ContMsg::encode() fails, encode %d bytes, can't encode %s",
+        er.encoded, er.failed_type->name);
+  }
 }
 EndMsg::EndMsg(): logger(0)
 {

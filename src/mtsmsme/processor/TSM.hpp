@@ -57,7 +57,7 @@ class TSM
                            uint8_t  cllen,
                            uint8_t* cl        /* calling party address */);
     virtual void TEndReq();
-
+    virtual void TContReq();
     virtual void TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void expiredwdtimer(uint32_t secret);

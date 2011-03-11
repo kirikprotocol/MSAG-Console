@@ -42,16 +42,21 @@ class ContMsg {
     void setOTID(TrId _otid);
     void setDTID(TrId _dtid);
     void setDialog(AC& _ac);
+    void setInvokeReq(int iid, uint8_t opcode, vector<unsigned char>& argument);
     void setComponent(int result, int iid);
+    void encode(vector<unsigned char>& buf);
 
     TCMessage_t cont;
     EXT_t         dp;
     ComponentPortion_t comps;
     Component_t *arr[1];
     Component_t comp;
+    ANY_t argument;
     AC ac;
     uint8_t otid[4];
     uint8_t dtid[4];
+  private:
+    Logger* logger;
 };
 
 class EndMsg {
