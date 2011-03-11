@@ -70,11 +70,17 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
           fileProccesed(resource, f.getName());
         } catch (DeliveryException e) {
           log.error(e,e);
+          try{
+            fileSys.delete(f);
+          }catch (AdminException ex){}
           if(e.getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline) {   // informer is offline
             deliveryCreationError(resource, e, f.getName());                         // other problems, notify cp
           }
         } catch (Exception e){
           log.error(e,e);
+          try{
+            fileSys.delete(f);
+          }catch (AdminException ex){}
           deliveryCreationError(resource, e, f.getName());                           // other problems, notify cp
         }
       } else if (f.getName().endsWith(".wait")) {
