@@ -41,7 +41,7 @@ static Mutex getKillMutex;
 static SmppProxy* getRegisteredProxy(SmeManager* smeManager,const char* sysId,const char* pass,int ct)
 {
   MutexGuard mg(getKillMutex);
-  SmppProxy* proxy=(SmppProxy*)smeManager->checkSmeProxy(sysId,pass);
+  SmppProxy* proxy=dynamic_cast<SmppProxy*>(smeManager->checkSmeProxy(sysId,pass));
   if(!proxy)return 0;
   proxy->AddRef(ct);
   return proxy;
