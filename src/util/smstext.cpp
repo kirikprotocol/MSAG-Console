@@ -383,7 +383,7 @@ int partitionSms(SMS* sms)
   {
     return psErrorLength;
   }
-  int maxlen=133;
+  int maxlen=134;
   int exudhilen=CalcExUserDataLen(sms);
   //if(udhi && exudhilen)return psErrorUdhi;
 
@@ -446,13 +446,13 @@ int partitionSms(SMS* sms)
   offsets[0]=0;
   if(sms->getIntProperty(Tag::SMSC_UDH_CONCAT) || dc==DataCoding::BINARY)
   {
-    maxlen=140-7-exudhilen;
+    maxlen=140-6-exudhilen;
   }else
   {
     int hdrlen=0;
     if(dc==DataCoding::UCS2)
     {
-      int estimate=len/(140-exudhilen-7);
+      int estimate=len/(140-exudhilen-6);
       if(estimate>10)
       {
         hdrlen=7*2;
@@ -463,7 +463,7 @@ int partitionSms(SMS* sms)
     }else
     if(dc!=DataCoding::BINARY)
     {
-      hdrlen=7;
+      hdrlen=6;
     }
     maxlen=140-exudhilen-hdrlen;
   }
@@ -637,7 +637,7 @@ bool extractSmsPart(SMS* sms,int partnum)
         msg=bufTr.get();
       }
     }
-    int maxlen=133;
+    int maxlen=134;
     if(dstdc==DataCoding::LATIN1 || dstdc==DataCoding::SMSC7BIT)
     {
       maxlen=152;
@@ -702,7 +702,7 @@ bool extractSmsPart(SMS* sms,int partnum)
       haveudh=false;
     }else
     {
-      if(sms->getConcatMsgRef()<256)
+      //if(sms->getConcatMsgRef()<256)
       {
         buf[0]=5;
         buf[1]=0;
@@ -712,7 +712,8 @@ bool extractSmsPart(SMS* sms,int partnum)
         buf[5]=partnum+1;
         memcpy(buf+6,msg+off,newlen);
         newlen+=6;
-      }else
+      }
+      /*else
       {
         buf[0]=6;
         buf[1]=8;
@@ -724,6 +725,7 @@ bool extractSmsPart(SMS* sms,int partnum)
         memcpy(buf+7,msg+off,newlen);
         newlen+=7;
       }
+      */
     }
 
     if(haveudh)
