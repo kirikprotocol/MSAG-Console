@@ -309,7 +309,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     {
       MutexGuard mg(sched.storeMtx);
       try{
-        Save(item.id,item.seq,item.smsBuf,item.smsBufSize);
+        Save(item.id,++item.seq,item.smsBuf,item.smsBufSize);
       }catch(std::exception& e)
       {
         smsc_log_error(log,"Failed to save sms with Id=%lld:%s",e.what(),item.id);
@@ -377,7 +377,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
         {
           sd->rit=sched.replMap.end();
         }
-        sd->it=sched.currentSnap.insert(sched.currentSnap.begin(),IdSeqPair(item.id,item.seq));
+        sd->it=sched.currentSnap.insert(sched.currentSnap.end(),item.id);
       }
     }catch(std::exception& e)
     {
@@ -426,14 +426,14 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   Start();
 }
 
-bool LocalFileStore::StartRoll(const IdSeqPairList& argSnap)
+bool LocalFileStore::StartRoll(/*const IdSeqPairList& argSnap*/)
 {
   MutexGuard mg1(mtx);
   MutexGuard mg2(mon);
   if(rolling)return false;
   info1(Scheduler::log,"Preparing rolling");
   rolling=true;
-  snap=argSnap;
+  //snap=argSnap;
   string pfn=primaryFile.getFileName();
   string rfn=pfn;
   string::size_type pos=rfn.rfind('.');
@@ -497,13 +497,30 @@ int LocalFileStore::Execute()
       mon.Unlock();
       bool ok=true;
       try{
-        int i=0;
+        long i=0;
         uint64_t blockStart=getmillis();
         //Target: 2Mb/sec
         //Estimation: 512b/sms
         //4000 sms/sec =~ 2Mb/sec
         //interval 10ms -> 40/10ms
 
+        while(sched.rollStoreNext() && running)
+        {
+          i++;
+          if((i%40)==0)
+          {
+            uint64_t curTime=getmillis();
+            int opTime=(int)(curTime-blockStart);
+            int sleepTime=10-opTime;
+            if(sleepTime>0)
+            {
+              millisleep(sleepTime);
+            }
+            blockStart=getmillis();
+          }
+        }
+        info2(log,"Rolled %ld messages",i);
+        /*
         for(IdSeqPairList::iterator it=snap.begin();it!=snap.end() && running;it++)
         {
           smsc_log_debug(log,"roll:id=%lld, seq=%d",it->first,it->second);
@@ -521,6 +538,7 @@ int LocalFileStore::Execute()
             blockStart=getmillis();
           }
         }
+        */
       }catch(exception& e)
       {
         warn2(log,"Exception during rolling:%s\n",e.what());
@@ -529,7 +547,7 @@ int LocalFileStore::Execute()
       mon.Lock();
       //delete snapPtr;
       //snapPtr=0;
-      IdSeqPairList().swap(snap);
+      //IdSeqPairList().swap(snap);
       rolling=false;
       if(ok)
       {
@@ -748,7 +766,8 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
         sd=store.Get(it->second);
         ripFound=true;
         sd->CopyBuf(buf);
-        sd->it->second=++(sd->seq);
+        updateInSnap(sd->it);
+        sd->seq++;
         CancelSms(id,sms.getDealiasedDestinationAddress());
         //StoreData *ptr=store.Get(it->second);
         //ptr->it->second=++(ptr->seq);
@@ -777,7 +796,8 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
     }
     if(!ripFound)
     {
-      sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
+      smsc_log_debug(log,"insert into to snap");
+      sd->it=currentSnap.insert(currentSnap.end(),id);
     }
   }
 
@@ -835,6 +855,7 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
     if(!ptr)throw NoSuchMessageException(id);
     sd=*ptr;
     lg.Lock(sd);
+    updateInSnap(sd->it);
   }
   //SMS& sms=(*ptr)->sms;
   SMS sms;
@@ -852,7 +873,7 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
   sms.setLastResult(failureCause);
   sms.setNextTime(nextTryTime);
   sms.setAttemptsCount(attempts);
-  sd->it->second=++sd->seq;
+  sd->seq++;
   sd->SaveSms(sms);
   LocalFileStoreSave(id,sd);
 }
@@ -898,6 +919,7 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
     if(!ptr)throw NoSuchMessageException(id);
     sd=*ptr;
     lg.Lock(sd);
+    updateInSnap(sd->it);
   }
   SMS sms;
   sd->LoadSms(sms);
@@ -909,7 +931,7 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
   sprintf(buf,"P%02d%02d%02d%02d\n",tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
   addHistoryItem(sms,buf);
 
-  sd->it->second=++sd->seq;
+  sd->seq++;
   sd->SaveSms(sms);
   LocalFileStoreSave(id,sd);
 }
@@ -921,9 +943,9 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,con
     MutexGuard mg(storeMtx);
     StoreData** ptr=store.GetPtr(id);
     if(!ptr)throw NoSuchMessageException(id);
-    currentSnap.erase((*ptr)->it);
     sd=*ptr;
     store.Delete(id);
+    removeFromSnap(sd->it);
     if(sd->rit!=replMap.end())
     {
       replMap.erase(sd->rit);
@@ -967,9 +989,10 @@ void Scheduler::replaceSms(SMSId id, SMS& sms)
     if(!ptr)throw NoSuchMessageException(id);
     sd=*ptr;
     lg.Lock(sd);
+    updateInSnap(sd->it);
   }
   sd->SaveSms(sms);
-  sd->it->second=++sd->seq;
+  sd->seq++;
   LocalFileStoreSave(id,sd);
 }
 

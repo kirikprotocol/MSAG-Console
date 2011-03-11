@@ -50,8 +50,8 @@ public:
   static const char storeSig[10];
   static const uint32_t storeVer;
 
-  typedef std::pair<SMSId,uint32_t> IdSeqPair;
-  typedef std::list<IdSeqPair> IdSeqPairList;
+  //typedef std::pair<SMSId,uint32_t> IdSeqPair;
+  //typedef std::list<IdSeqPair> IdSeqPairList;
 
   LocalFileStore(Scheduler& sc):sched(sc),loadup(true),running(true),rolling(false)
   {
@@ -78,7 +78,7 @@ public:
 
   void Init(smsc::util::config::Manager* cfgman,Smsc* smsc);
   bool Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBuf,int smsBufSize,bool final=false);
-  bool StartRoll(const IdSeqPairList& argSnap);
+  bool StartRoll(/*const IdSeqPairList& argSnap*/);
 
 protected:
   smsc::core::buffers::File primaryFile;
@@ -90,7 +90,7 @@ protected:
   bool rolling;
   uint64_t maxStoreSize;
   time_t minRollTime,lastRollTime;
-  IdSeqPairList snap;
+  //IdSeqPairList snap;
   std::string rolFile;
   EventMonitor mon;
 };
@@ -113,6 +113,8 @@ public:
     lastRejectTime=0;
     lastRejectReschedule=0;
     delayInit=false;
+    rolling=false;
+    rollHead=rollTail=currentSnap.end();
   }
   virtual ~Scheduler()
   {
@@ -520,6 +522,7 @@ public:
   typedef std::multimap<ReplaceIfPresentKey,SMSId> ReplaceIfPresentMap;
   ReplaceIfPresentMap replMap;
 
+  typedef std::list<smsc::sms::SMSId> SMSIdList;
 
   struct StoreData
   {
@@ -527,7 +530,7 @@ public:
     int smsBufSize;
     int seq;
     ReplaceIfPresentMap::iterator rit;
-    LocalFileStore::IdSeqPairList::iterator it;
+    SMSIdList::iterator it;
     smsc::core::synchronization::Condition cnd;
     bool locked;
 
@@ -668,11 +671,111 @@ public:
   int   lastIdSeqFlush;
   File  idFile;
   Mutex idMtx;
-  LocalFileStore::IdSeqPairList currentSnap;
+  SMSIdList currentSnap;
+  SMSIdList::iterator rollHead,rollTail;
+  bool rolling;
+
 
 
   friend class LocalFileStore;
   LocalFileStore localFileStore;
+
+  bool rollStoreNext()
+  {
+    SDLockGuard lg(storeMtx);
+    StoreData* sd;
+    SMSId id;
+    {
+      MutexGuard mg(storeMtx);
+      if(!rolling || rollHead==currentSnap.end() || rollTail==currentSnap.end())
+      {
+        smsc_log_debug(log,"ROLL: Rolling finished outside");
+        rolling=false;
+        return false;
+      }
+      id=*rollHead;
+      StoreData** ptr=store.GetPtr(id);
+      if(!ptr)
+      {
+        smsc_log_warn(log,"SMS with msgId=%lld not found in store during rolling.",id);
+      }else
+      {
+        sd=*ptr;
+        lg.Lock(sd);
+        sd->seq++;
+      }
+      if(rollHead==rollTail)
+      {
+        rolling=false;
+        rollHead=rollTail=currentSnap.end();
+      }else
+      {
+        rollHead++;
+      }
+    }
+    if(sd)
+    {
+      LocalFileStoreSave(id,sd,false);
+    }
+    return true;
+  }
+
+  void updateInSnap(SMSIdList::iterator it)
+  {
+    if(it==rollHead)
+    {
+      if(rollHead==rollTail)
+      {
+        smsc_log_debug(log,"ROLL: Update in snap met head.");
+        rolling=false;
+        rollHead=rollTail=currentSnap.end();
+      }else
+      {
+        rollHead++;
+      }
+    }
+    if(it==rollTail)
+    {
+      if(rollHead==rollTail)
+      {
+        smsc_log_debug(log,"ROLL: Update in snap met head.");
+        rolling=false;
+        rollHead=rollTail=currentSnap.end();
+      }else
+      {
+        rollTail--;
+      }
+    }
+    currentSnap.splice(currentSnap.end(),currentSnap,it);
+  }
+  void removeFromSnap(SMSIdList::iterator it)
+  {
+    if(it==rollHead)
+    {
+      if(rollHead==rollTail)
+      {
+        smsc_log_debug(log,"ROLL: Remove from snap met head.");
+        rolling=false;
+        rollHead=rollTail=currentSnap.end();
+      }else
+      {
+        rollHead++;
+      }
+    }
+    if(it==rollTail)
+    {
+      if(rollHead==rollTail)
+      {
+        smsc_log_debug(log,"ROLL: Remove from snap met head.");
+        rolling=false;
+        rollHead=rollTail=currentSnap.end();
+      }else
+      {
+        rollTail--;
+      }
+    }
+    currentSnap.erase(it);
+  }
 
   void LocalFileStoreSave(smsc::sms::SMSId id,StoreData* sd,bool final=false)
   {
@@ -683,7 +786,12 @@ public:
     if(localFileStore.Save(id,sd->seq,sd->smsBuf,sd->smsBufSize,final))
     {
       MutexGuard mg(storeMtx);
-      localFileStore.StartRoll(currentSnap);
+      if(localFileStore.StartRoll())
+      {
+        rollHead=currentSnap.begin();
+        rollTail=--currentSnap.end();
+        rolling=true;
+      }
     }
   }
 
