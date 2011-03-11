@@ -4645,7 +4645,7 @@ void makeAtiRequest(MapDialog* dlg)
 
     ET96MAP_APP_CNTX_T appContext;
     appContext.acType = ET96MAP_ANY_TIME_INFO_ENQUIRY_CONTEXT;
-    appContext.version=ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
+    appContext.version=VERSION_NS::ET96MAP_VERSION_3;
     memset(&dialog->mwdStatus,0,sizeof(dialog->mwdStatus));
     dialog->memoryExceeded = false;
     dialog->subscriberAbsent = false;
@@ -4751,6 +4751,11 @@ USHORT_T Et96MapV3AnyTimeInterrogationConf(
         dialog->s_msc=vlr.value;
       }
     }
+#ifdef EIN_HD
+#define STATE_NS
+#else
+#define STATE_NS ET96MAP_ATI_SUBSCRIBER_STATE_T
+#endif
     if(dialog->isQueryAbonentStatus)
     {
       int status=AbonentStatus::UNKNOWNVALUE;
@@ -4758,10 +4763,10 @@ USHORT_T Et96MapV3AnyTimeInterrogationConf(
       {
         switch(subscriberState_sp->choiceId)
         {
-          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_ASSUMED_IDLE:
-          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_CAMEL_BUSY:status=AbonentStatus::ONLINE;break;
-          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_NET_DET_NOT_REACHABLE:status=AbonentStatus::OFFLINE;break;
-          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_NOT_PROVIDED_FROM_VLR:status=AbonentStatus::UNKNOWNVALUE;break;
+          case STATE_NS::ET96MAP_ATI_ASSUMED_IDLE:
+          case STATE_NS::ET96MAP_ATI_CAMEL_BUSY:status=AbonentStatus::ONLINE;break;
+          case STATE_NS::ET96MAP_ATI_NET_DET_NOT_REACHABLE:status=AbonentStatus::OFFLINE;break;
+          case STATE_NS::ET96MAP_ATI_NOT_PROVIDED_FROM_VLR:status=AbonentStatus::UNKNOWNVALUE;break;
         }
       }
       //SendAbonentStatusToSmsc(dialog.get(),status);
