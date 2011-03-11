@@ -1,6 +1,7 @@
 #include "ActivityLogMiner.hpp"
 #include "informer/io/InfosmeException.h"
 #include "core/buffers/File.hpp"
+#include "informer/data/CommonSettings.h"
 
 namespace eyeline{
 namespace informer{
@@ -136,7 +137,6 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
   int& day=req->day;
   int& hour=req->hour;
 
-
   for(;;)
   {
     if(!f.isOpened())
@@ -187,24 +187,27 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
       }
       smsc_log_debug(log,"reading %s",filePath.c_str());
       f.ROpen(filePath.c_str());
-      if (!f.ReadLine(line)) {
+      if (!f.ReadLine(line))
+      {
+        f.Close();
+        req->offset=0;
+        nextFile=true;
+        continue;
+      }
+      {
+        int npos = 0;
+        sscanf(line.c_str(),"#%u %n",&req->version,&npos);
+        if (npos == 0)
+        {
           f.Close();
           req->offset=0;
           nextFile=true;
           continue;
-      }
-      {
-          int npos = 0;
-          sscanf(line.c_str(),"#%u %n",&req->version,&npos);
-          if (npos == 0) {
-              f.Close();
-              req->offset=0;
-              nextFile=true;
-              continue;
-          }
+        }
       }
       f.Seek(req->offset);
     }
+
     if(!f.ReadLine(line))
     {
       f.Close();
@@ -309,9 +312,10 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     {
       pos=skipField(line,pos);
     }
-    if(req->version > 1) {
-        // FIXME: impl reading FLAGS according to version
-        pos=skipField(line,pos);
+    if(req->version > 1)
+    {
+      // FIXME: impl reading FLAGS according to version
+      pos=skipField(line,pos);
     }
     if(req->filter.resultFields&rfText)
     {
