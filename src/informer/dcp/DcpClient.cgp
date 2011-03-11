@@ -1,6 +1,6 @@
 source=DcpClient.def
 
-#search.path=/Users/skv/Documents/cpp/protogen/tmpl
+search.path=/Users/skv/Documents/cpp/protogen/tmpl
 search.path=/home/bukind/cvs/protogen/tmpl
 search.path=def/
 
