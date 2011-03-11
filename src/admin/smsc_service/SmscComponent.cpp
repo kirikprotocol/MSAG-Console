@@ -260,8 +260,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
   Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
   Method apply_timezones       ((unsigned)applyTimeZonesMethod,      "apply_timezones",       empty_params, StringType);
-  Method apply_fraudcontrol    ((unsigned)applyFraudControlMethod,   "apply_fraud",           empty_params, StringType);
 #ifdef USE_MAP
+  Method apply_fraudcontrol    ((unsigned)applyFraudControlMethod,   "apply_fraud",           empty_params, StringType);
   Method apply_maplimits       ((unsigned)applyMapLimitsMethod,      "apply_maplimits",       empty_params, StringType);
   Method apply_netprofiles     ((unsigned)applyNetProfilesMethod,    "apply_netprofiles",     empty_params, StringType);
 #endif
@@ -364,9 +364,10 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[apply_services       .getName()] = apply_services;
   methods[apply_locale_resource.getName()] = apply_locale_resource;
   methods[apply_timezones      .getName()] = apply_timezones;
-  methods[apply_fraudcontrol   .getName()] = apply_fraudcontrol;
 #ifdef USE_MAP
+  methods[apply_fraudcontrol   .getName()] = apply_fraudcontrol;
   methods[apply_maplimits      .getName()] = apply_maplimits;
+  methods[apply_netprofiles    .getName()] = apply_netprofiles;
 #endif
 
 #ifdef SNMP
