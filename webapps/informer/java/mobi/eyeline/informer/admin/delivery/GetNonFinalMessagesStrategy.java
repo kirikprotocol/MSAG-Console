@@ -129,7 +129,6 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     return false;
   }
 
-  //CHECKME me
   public int countMessages(DcpConnection conn, MessageFilter messageFilter) throws AdminException {
 //    final int counter[] = new int[]{0};
 //    getMessages(conn, messageFilter, 1000, new Visitor<Message>() {

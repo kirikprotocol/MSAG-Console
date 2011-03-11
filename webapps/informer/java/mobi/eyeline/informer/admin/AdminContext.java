@@ -565,6 +565,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
       Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
+      if(d == null) {
+        return;
+      }
       if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
         throw new IntegrityException("siebel.delivery.remove");
       }

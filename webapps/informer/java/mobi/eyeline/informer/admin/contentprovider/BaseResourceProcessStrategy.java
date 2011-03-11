@@ -207,6 +207,11 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     return new File(parent, deliveryName + ".rep." + dId);
   }
 
+  private void silentRename(File from, File to) throws AdminException{
+    fileSys.delete(to);
+    fileSys.rename(from, to);
+  }
+
   private void createDeliveryFromFile(File f) throws Exception {
     String fileName = f.getName();
     final String deliveryName = fileName.substring(0, fileName.length() - 4);
@@ -219,7 +224,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
     File waitFile, reportFile;
 
-    if(d != null && fileSys.exists(genFile)) {
+    if(d != null && fileSys.exists(genFile)) {          // gen file exist, only activation is neeed
 
       context.activateDelivery(user.getLogin(), d.getId());
       waitFile = buildWaitFile(parentDir, deliveryName, d.getId());
@@ -239,9 +244,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
       File notGenerated = buildNotGeneratedFile(parentDir, deliveryName);
 
-      fileSys.delete(notGenerated);
-
-      fileSys.rename(f, notGenerated);
+      silentRename(f, notGenerated);
 
       DeliveryPrototype proto = createDelivery(deliveryName);
       try{
@@ -264,15 +267,11 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
         addMessagesToDelivery(d, notGenerated, reportFile);
 
-        fileSys.delete(genFile);
-
-        fileSys.rename(notGenerated, genFile);
+        silentRename(notGenerated, genFile);
 
         context.activateDelivery(user.getLogin(), d.getId());
 
-        fileSys.delete(waitFile);
-
-        fileSys.rename(genFile, waitFile);
+        silentRename(genFile, waitFile);
 
         if(!createReports) {
           fileSys.delete(reportFile);
@@ -291,6 +290,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             }catch (AdminException ignored){}
             try{
               fileSys.delete(waitFile);
+            }catch (AdminException ignored){}
+            try{
+              fileSys.delete(reportFile);
             }catch (AdminException ignored){}
           }catch (Exception ex){
             log.error(ex,ex);

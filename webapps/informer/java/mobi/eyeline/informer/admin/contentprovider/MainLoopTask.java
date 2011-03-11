@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.Pattern;
 
 
 /**
@@ -31,7 +30,6 @@ class MainLoopTask implements Runnable {
   private File workDir;
 
 
-  private Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
   private UserDirResolver userDirResolver;
 
   public MainLoopTask(ContentProviderContext context, UserDirResolver userDirResolver, File workDir) throws AdminException {
