@@ -5092,7 +5092,13 @@ void StateMachine::submitReceipt(SMS& sms,int type)
       sms.setDestinationSmeId(rr.info.smeSystemId.c_str());
       sms.setServiceId(rr.info.serviceId);
       sms.setArchivationRequested(rr.info.archived);
-      sms.setBillingRecord(rr.info.billing);
+      if(rr.info.billing==BILLING_CDR)
+      {
+        sms.setBillingRecord(rr.info.billing);
+      }else
+      {
+        sms.setBillingRecord(BILLING_NONE);
+      }
 
       sms.setEServiceType(serviceType.c_str());
       sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
