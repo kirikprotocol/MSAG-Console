@@ -147,10 +147,10 @@
         <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.useDataSm}"/>
         <h:selectBooleanCheckbox value="#{deliveryEdit.useDataSm}" style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
 
-        <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
+        <h:outputText rendered="#{deliveryEdit.allowUssdPushDeliveries}" style="white-space:nowrap;" value="#{deliveryBundle.deliveryMode}"/>
         <h:selectOneMenu converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.deliveryMode}" id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" converter="deliveryTypeConverter"
                          onchange="dModeChanged()"
-                         style="display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}">
+                         rendered="#{deliveryEdit.allowUssdPushDeliveries}">
           <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>
         </h:selectOneMenu>
 
@@ -158,8 +158,8 @@
         <tr:selectBooleanCheckbox id="flash" value="#{deliveryEdit.delivery.flash}" simple="true"/>
 
 
-        <h:outputText rendered="#{deliveryEdit.userInAdminRole}" id="trModeLabel" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-        <tr:selectBooleanCheckbox rendered="#{deliveryEdit.userInAdminRole}"  id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
+        <h:outputText rendered="#{deliveryEdit.userInAdminRole or deliveryEdit.allowUssdPushDeliveries}" id="trModeLabel" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+        <tr:selectBooleanCheckbox rendered="#{deliveryEdit.userInAdminRole or deliveryEdit.allowUssdPushDeliveries}"  id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
 
 
       </h:panelGrid>
@@ -250,7 +250,7 @@
       <script type="text/javascript" language="javascript">
 
         function dModeChanged() {
-          var d = (document.getElementById('dMode').value != 'SMS') ? 'none' : '';
+          var d = (document.getElementById('dMode') != null &amp;&amp; document.getElementById('dMode').value != 'SMS') ? 'none' : '';
           document.getElementById('flashLabel').style.display = d;
           document.getElementById('flash').style.display = d;
           var e = document.getElementById('trMode');

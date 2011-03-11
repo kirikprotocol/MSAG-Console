@@ -147,9 +147,9 @@
       <h:outputText id="editFlashLabel" style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
       <tr:selectBooleanCheckbox id="flash" value="#{deliveryGroupEdit.flash}" simple="true"/>
 
-      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editTransactionMode" value="#{deliveryGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
-      <h:outputText id="editTransactionModeLabel" rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"/>
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole or deliveryGroupEdit.allowUssdPushDeliveries}" id="editTransactionMode" value="#{deliveryGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
+      <h:outputText id="editTransactionModeLabel" rendered="#{deliveryGroupEdit.userInAdminRole or deliveryGroupEdit.allowUssdPushDeliveries}" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole or deliveryGroupEdit.allowUssdPushDeliveries}" id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"/>
 
     </h:panelGrid>
 

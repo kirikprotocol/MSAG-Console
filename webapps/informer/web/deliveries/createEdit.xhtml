@@ -113,8 +113,8 @@
       <h:outputText id="flashLabel" style="white-space: nowrap;" value="#{deliveryBundle.flash}"/>
       <h:selectBooleanCheckbox id="flash" value="#{createDelivery.activePage.delivery.flash}"/>
 
-      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
-      <tr:selectBooleanCheckbox rendered="#{createDelivery.activePage.userInAdminRole}" id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"/>
+      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole or createDelivery.allowUssdPushDelivery}" id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
+      <tr:selectBooleanCheckbox rendered="#{createDelivery.activePage.userInAdminRole or createDelivery.allowUssdPushDelivery}" id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"/>
 
 
 
@@ -134,8 +134,12 @@
 
     <script type="text/javascript" language="javascript">
       function retryOnFailChanged() {
-        var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
-        document.getElementById('retryPolicy1').style.display=d;
+        var e = document.getElementById('retryOnFail');
+        var d = (e != null &amp;&amp; e.options[2].selected) ? '' : 'none';
+        e =  document.getElementById('retryPolicy1');
+        if(e != null) {
+          e.style.display=d;
+        }
       }
 
       function archivateChanged() {
@@ -153,7 +157,8 @@
       document.getElementById('sms').disabled = !document.getElementById('smsNotif').checked;
       document.getElementById('email').disabled = !document.getElementById('emailNotif').checked;
 
-      var disp = document.getElementById('dMode').options[0].selected ? '' : 'none';
+      var e = document.getElementById('dMode');
+      var disp = (e == null || e.options[0].selected) ? '' : 'none';
       document.getElementById('flashLabel').style.display=disp;
       document.getElementById('flash').style.display=disp;
       document.getElementById('trModeLabel').style.display=disp;
