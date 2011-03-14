@@ -16,12 +16,12 @@ struct Message
     static const size_t USERDATA_LENGTH = 24;
 
     msgid_type       msgId;      // unique message id (constant)          8
+    personid_type    subscriber; // not changed (constant)                8
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // 24 (constant)
-    personid_type    subscriber; // not changed (constant)                4
+    MessageText      text;       // message text                         16
+    MessageFlags     flags;      // message flags                        16
     msgtime_type     lastTime;   // lasttime / filenumber                 4
-    MessageText      text;       // message text                         12
     timediff_type    timeLeft;   // ttl / filepos (for new messages)      4
-    MessageFlags     flags;      // message flags                        12
     uint16_t         retryCount; //                                       2
     uint8_t          state;      //                                       1
                                  // total size:                          71 

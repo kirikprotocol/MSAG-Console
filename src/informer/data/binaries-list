@@ -1,2 +1,6 @@
 informer/tests/testMsgSize testMsgSize \
- -linformer-data
+ -linformer-data \
+ -linformer-io \
+ @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lutil \
+ -lpthread -lrt -ldl
