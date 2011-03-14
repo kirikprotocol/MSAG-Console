@@ -263,7 +263,7 @@ int AbonentInfoSme::Execute()
           ContextEnvironment ce;
           ce.exportStr("abonent",as.originalAddr.c_str());
           ce.exportInt("status",as.status);
-          ce.exportInt("code",as.code);
+          ce.exportInt("code",GET_STATUS_CODE(as.code));
           ce.exportInt("encoding",p.codepage);
           ce.exportStr("msc",as.msc.length()?("+"+as.msc).c_str():"");
           ce.exportStr("imsi",as.imsi.length()?as.imsi.c_str():"");
