@@ -59,7 +59,7 @@ public:
         i_ = invalidIndex();
         v_ = const_cast<value_type*>(&v);
         if ( !buf_ ) buf_ = value_type::allocBackup();
-        if (log_) smsc_log_debug(log_,"serialize(%s)",v.toString().c_str());
+        if (log_) { smsc_log_debug(log_,"serialize(%s)",v.toString().c_str()); }
         io::Serializer ser(*buf_,glossary_);
         ser.setVersion(store_->version());
         ser.reset();
@@ -204,8 +204,10 @@ protected:
             if ( key != key_ ) {
                 key_type empty;
                 if ( key_ != empty ) {
-                    if (log_) smsc_log_warn(log_,"key mismatch: idx=%llx, key=%s, key_=%s",
-                                            uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
+                    if (log_) {
+                        smsc_log_warn(log_,"key mismatch: idx=%llx, key=%s, key_=%s",
+                                      uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
+                    }
                     smsc::util::Exception("key mismatch: idx=%llx, key=%s, key_=%s",
                                           uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
                 }

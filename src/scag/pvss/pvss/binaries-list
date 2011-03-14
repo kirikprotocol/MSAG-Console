@@ -52,6 +52,16 @@ scag/tests/pvss-read-abonent-entry readEntry \
         $(__LIBRARIES) \
         -lpthread -lrt -ldl
 
+scag/tests/pvss-collect-storage-stats collectStorageStats \
+        -lscag-util-storage \
+        -lscag-util-io \
+	-lscag-util \
+        -lcore-threads \
+        @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+        -lutil \
+        $(__LIBRARIES) \
+        -lpthread -lrt -ldl
+
 scag/pvss-repairIntStorage repairIntStorage \
         -lscag-pvss-base \
         -lscag-pvss-data \

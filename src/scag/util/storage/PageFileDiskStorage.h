@@ -106,10 +106,11 @@ public:
         index_type j;
         pf_->Read( i, buf, &j );
         if ( i != j ) {
-            if (disklog_) 
+            if (disklog_) {
                 smsc_log_warn( disklog_, "read: different index read: was=%llx is=%llx",
                                static_cast< unsigned long long >( i ),
                                static_cast< unsigned long long >( j ) );
+            }
         }
         // assert( buf.size() < 10000 && buf.buffer().capacity() < 10000 );
         return true;
@@ -123,8 +124,9 @@ public:
             s >> v;
             // key_ = "destroyed";
         } catch ( std::exception& e ) {
-            if (disklog_) 
+            if (disklog_) {
                 smsc_log_error( disklog_, "exception occurred: %s", e.what() );
+            }
             return false;
         }
         return true;

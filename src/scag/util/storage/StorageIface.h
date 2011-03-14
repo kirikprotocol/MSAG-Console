@@ -531,7 +531,7 @@ public:
         // key_type k;
         // stored_type v;
         unsigned int count = 0;
-        if (cachelog_) smsc_log_debug( cachelog_, "FLUSH STARTED" );
+        if (cachelog_) { smsc_log_debug( cachelog_, "FLUSH STARTED" ); }
         // cache_->preflush();
         for ( typename MemStorage::iterator_type i = cache_->begin();
               i.next(); ) {
@@ -547,7 +547,7 @@ public:
                 disk_->set( i.key(), cache_->store2ref(i.value()) );
             }
         }
-        if (cachelog_) smsc_log_debug( cachelog_, "FLUSH FINISHED, count=%d", count );
+        if (cachelog_) { smsc_log_debug( cachelog_, "FLUSH FINISHED, count=%d", count ); }
         return count;
     }
 

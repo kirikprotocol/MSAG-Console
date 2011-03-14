@@ -156,8 +156,9 @@ public:
     inline uint32_t version() const { return version_; }
     inline size_t headerSize() const { return idxSize() + navSize(); }
 
-private:
     inline size_t idxSize() const { return packer_.idxSize(); }
+
+private:
     inline size_t navSize() const { return packer_.navSize(); }
     inline index_type pos2idx( offset_type o ) const { return packer_.pos2idx(o); }
     inline offset_type idx2pos( index_type i ) const { return packer_.idx2pos(i); }

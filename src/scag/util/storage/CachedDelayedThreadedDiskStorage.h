@@ -412,7 +412,7 @@ private:
     inline bool addDirty( const key_type& k, stored_type sv )
     {
         // util::msectime_type now = util::currentTimeMillis();
-        if ( dirtyHash_.Count() > fc_.flushHighMark ) {
+        if ( unsigned(dirtyHash_.Count()) > fc_.flushHighMark ) {
             if (log_) {
                 smsc_log_debug(log_,"dirty queue is filled, sz=%u", unsigned(dirtyHash_.Count()));
             }

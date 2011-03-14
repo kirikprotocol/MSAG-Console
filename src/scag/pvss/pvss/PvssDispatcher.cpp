@@ -331,7 +331,7 @@ void PvssDispatcher::rebuildIndex( unsigned maxSpeed )
 void PvssDispatcher::dumpStorage( int index )
 {
     if ( index >= 0 ) {
-        for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
+        for ( unsigned i = 0; i < unsigned(abonentLogics_.Count()); ++i ) {
             abonentLogics_[i]->dumpStorage(index);
         }
     } else if ( infrastructLogic_.get() ) {
