@@ -15,15 +15,16 @@ struct Message
 {
     static const size_t USERDATA_LENGTH = 24;
 
-    personid_type    subscriber; // not changed (constant)
-    msgid_type       msgId;      // unique message id (constant)
-    msgtime_type     lastTime;   // lasttime / filenumber (for new messages)
-    timediff_type    timeLeft;   // ttl / filepos (for new messages)
-    smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
-    MessageText      text;       // message text
-    uint16_t         retryCount;
-    MessageFlags     flags;      // message flags
-    uint8_t          state;
+    msgid_type       msgId;      // unique message id (constant)          8
+    smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // 24 (constant)
+    personid_type    subscriber; // not changed (constant)                4
+    msgtime_type     lastTime;   // lasttime / filenumber                 4
+    MessageText      text;       // message text                         12
+    timediff_type    timeLeft;   // ttl / filepos (for new messages)      4
+    MessageFlags     flags;      // message flags                        12
+    uint16_t         retryCount; //                                       2
+    uint8_t          state;      //                                       1
+                                 // total size:                          71 
 
     inline void swap( Message& m ) {
         std::swap(subscriber,m.subscriber);
