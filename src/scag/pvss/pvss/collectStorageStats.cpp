@@ -22,6 +22,8 @@ int main( int argc, const char** argv )
     }
 
     scag2::util::storage::DataFileManager dfm(1,0,1000000);
+    std::vector< size_t > histo;
+    const size_t maxsize = 99999;
     try {
 
         ++argv;
@@ -47,13 +49,17 @@ int main( int argc, const char** argv )
                 throw smsc::util::Exception("cannot open %s", fullpath.c_str());
             }
 
-            const size_t blockSize = bs->blockSize();
+            printf("# blocksize %u\n", unsigned(bs->blockSize()));
 
             for ( storage_type::Iterator it(*bs.get()); it.next(); ) {
                 storage_type::buffer_type& buf = it.getBuffer();
-                const size_t ps = buf.size() - bs->idxSize();
-                printf("pf %llu %u %u\n", it.getIndex(),
-                       unsigned(ps), unsigned((ps+blockSize-1)/blockSize));
+                const size_t ps = std::min(buf.size() - bs->idxSize(),maxsize);
+                if ( histo.size() <= ps ) {
+                    histo.resize(ps+1);
+                }
+                ++histo[ps];
+                // printf("pf %llu %u %u\n", it.getIndex(),
+                // unsigned(ps), unsigned((ps+blockSize-1)/blockSize));
             }
 
         }
@@ -63,5 +69,13 @@ int main( int argc, const char** argv )
         std::terminate();
         return -1;
     }
+    size_t sum = 0;
+    for ( unsigned i = 0, iend = histo.size(); i != iend; ++i ) {
+        if ( histo[i] ) {
+            printf( "%05u %llu\n",i,uint64_t(histo[i]) );
+            sum += histo[i];
+        }
+    }
+    if (sum) { printf("total %llu\n",uint64_t(sum)); }
     return 0;
 }
