@@ -623,3 +623,7 @@ B3204: Feb 28, 2011
     SMSC	error prone store startup
     SMSC	store submit time of parts, use sumbit time of part in charge on submit's on data collected
     SMSC	support to change responding address for specified ussd codes (GgPA in resp != GdPA in incoming request)
+
+    SMSC  new rolling scheme
+    SMSC  use only 8 bit mr in concatenated messages for optimal partitioning
+    SMSC  new SNMP Counter - oid 1.3.6.1.4.1.26757.1.4.7
