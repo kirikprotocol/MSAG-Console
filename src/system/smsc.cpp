@@ -1738,7 +1738,6 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms,bool msuOnly)
       msu_submitOkCounter++;
       smePerfMonitor.incAccepted(sms->getSourceSmeId());
 #ifdef SNMP
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
       int smeIdx=smeman.lookup(sms->getSourceSmeId());
       smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntAccepted);
 #endif
@@ -1751,7 +1750,6 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms,bool msuOnly)
       msu_submitErrCounter++;
       smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
 #ifdef SNMP
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
       int smeIdx=smeman.lookup(sms->getSourceSmeId());
       smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntRejected);
       smeStats.incError(smeIdx,sms->getLastResult());
