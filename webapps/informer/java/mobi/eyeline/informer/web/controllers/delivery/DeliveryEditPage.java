@@ -346,7 +346,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
         config.sendTestSms(sms);
         addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
       } catch (TestSmsException e) {
-        addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms.error", u.getPhone(), e.getSmppStatus(), getSmppCodeDescription(e.getSmppStatus()));
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", u.getPhone(), e.getSmppStatus(), getSmppCodeDescription(e.getSmppStatus()));
       }
     } catch (AdminException e) {
       addError(e);
