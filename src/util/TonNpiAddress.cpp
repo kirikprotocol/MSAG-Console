@@ -9,6 +9,36 @@ static const char ident[] = "@(#)$Id$";
 namespace smsc {
 namespace util {
 
+const MobileAlphabet _MAPAlphabet;
+
+/* ************************************************************************** *
+ * IMSIString implementation
+ * ************************************************************************** */
+MobileAlphabet::MobileAlphabet() : _Numeric("[0-9]"), _Tele("[0-9*#abc]")
+  //NOTE: actually it's a subset of GSM-7bit alphabet(3GPP TS 23.038) with Greece chars excluded
+  , _Gsm7("[]0-9*#a-zA-Z _.,:;&+=()/'\"?!<>|^~\\{}[%-]")
+{ }
+
+//Validates and ouputs no more then 'max_chars' characters according to specified alphaBet.
+//NOTE: 'out_buf' MUST have enough capacity to store 'max_chars' + 1 symbols.
+bool MobileAlphabet::validateChars(const char * alpha_bet, const unsigned max_chars,
+                                   const char * in_buf, char * out_buf)
+{
+  char  trash[4];
+  char  fmt[_MAX_ALPHABET_LEN + sizeof("%NNN%2s ")];
+
+  //compose format string for sscanf()
+  snprintf(fmt, sizeof(fmt)-1, "%%%u%s%%2s", max_chars, alpha_bet);
+  //parse input string
+  int scanned = sscanf(in_buf, fmt, out_buf, trash);
+  return (scanned == 1);
+}
+
+
+/* ************************************************************************** *
+ * IMSIString implementation
+ * ************************************************************************** */
+
 const char * IMSIString::_numberingFmt = "%15[0-9]%2s";
 
 bool IMSIString::fromText(const char * in_text, char * out_str)
@@ -19,52 +49,64 @@ bool IMSIString::fromText(const char * in_text, char * out_str)
 }
 
 
-bool TonNpiAddress::fromText(const char* text)
+/* ************************************************************************** *
+ * TonNpiAddress implementation
+ * ************************************************************************** */
+
+bool TonNpiAddress::fromText(const char * text_str)
 {
-  if (!text || !*text)
-      return false;
-
-  char    buff[CAPConst::MAX_SMS_AddressValueLength + 1];
-  char *  addr_value = buff;
-  int     iplan = 0, itype = 0;
-  int     max_scan = 1, scanned = 0;
-
-  memset(buff, 0, sizeof(buff));
-  switch (text[0]) {
-  case '.': {  //ton.npi.adr
-    scanned = sscanf(text, ".%d.%d.%20[0-9a-zA-Z *#.:]s", &itype, &iplan, addr_value);
-    max_scan = 3;
-  } break;
-
-  case '+': {  //isdn international adr
-    scanned = sscanf(text, "+%20[0123456789]s", addr_value);
-    iplan = itype = 1;
-  } break;
-
-  default:    //isdn unknown or alpha-numeric adr
-    size_t txt_len = strlen(text);
-    if (txt_len > 0xFF)
-        return false;
-    length = (unsigned char)txt_len;
-
-    scanned = sscanf(text, "%20[0123456789]s", addr_value);
-    if (scanned == 1 && (length == strlen(addr_value))) {
-        iplan = 1; /*itype = 0;*/   // isdn unknown
-    } else {
-        if (length <= CAPConst::MAX_SMS_AddressValueLength) {
-            /*iplan = 0;*/ itype = 5;   //alpha-numeric adr
-            addr_value = (char*)text;
-            scanned = 1;
-        }
-    }
-  }
-  if ((scanned < max_scan) || (iplan > 0xFF) || (itype > 0xFF))
+  if (!text_str || !*text_str)
     return false;
 
-  numPlanInd = (unsigned char)iplan;
-  typeOfNumber = (unsigned char)itype;
-  memcpy(signals, addr_value, length = (unsigned char)strlen((const char*)addr_value));
-  signals[length] = 0;
+  unsigned      numChars = (unsigned)strlen(text_str);
+  int           offset = 0;
+  const char *  alphaBet = NULL;
+
+  // determine required alphabet depending on ToN
+  if (text_str[0] == '.') { //".ton.npi.signals"
+    unsigned  iplan = 0, itype = 0;
+    int       scanned = sscanf(text_str, ".%1u.%2u.%n", &itype, &iplan, &offset);
+
+    if ((scanned != 2) || (itype > tonReservedExt) || (iplan > npiReservedExt))
+      return false;
+
+    typeOfNumber = (uint8_t)(itype & 0x07);
+    numPlanInd = (uint8_t)(iplan & 0x0F);
+
+    if ((itype != TonNpiAddress::tonUnknown)
+        && (itype != TonNpiAddress::tonReservedExt)) {
+      alphaBet = (itype == TonNpiAddress::tonAlphanum) ? _MAPAlphabet._Gsm7 : _MAPAlphabet._Tele;
+    } //else autodetect alphabet
+  } else if (text_str[0] == '+') { //isdn international address
+    offset = 1;
+    typeOfNumber = TonNpiAddress::tonInternational;
+    numPlanInd = TonNpiAddress::npiISDNTele_e164;
+    alphaBet = _MAPAlphabet._Tele;
+  }
+
+  if ((numChars -= offset) > TonNpiAddress::_maxSIGNALS) {
+    clear();
+    return false; //to many signals
+  }
+
+  if (!alphaBet) { //autodetect alphabet
+    if (MobileAlphabet::validateChars(_MAPAlphabet._Tele, numChars, text_str + offset, signals)) {
+      alphaBet = _MAPAlphabet._Tele;
+      typeOfNumber = TonNpiAddress::tonUnknown;
+      numPlanInd = TonNpiAddress::npiISDNTele_e164;
+    } else if (MobileAlphabet::validateChars(_MAPAlphabet._Gsm7, numChars, text_str + offset, signals)) {
+      alphaBet = _MAPAlphabet._Gsm7;
+      typeOfNumber = TonNpiAddress::tonAlphanum;
+      numPlanInd = TonNpiAddress::npiUnknown;
+    }
+  } else if (!MobileAlphabet::validateChars(alphaBet, numChars, text_str + offset, signals))
+    alphaBet = NULL;
+
+  if (!alphaBet) {
+    clear();
+    return false;
+  }
+  length = (uint8_t)strlen((const char*)signals);
   return true;
 }
 

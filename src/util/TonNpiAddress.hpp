@@ -11,12 +11,6 @@
 
 #include "core/buffers/FixedLengthString.hpp"
 
-//TODO: proper define consts for MAP and CAP ToNs and NPis !!!
-#define NUMBERING_ISDN                  1
-#define ToN_INTERNATIONAL               1
-#define ToN_ALPHANUM                    5
-#define ToN_UNKNOWN                     0
-
 namespace smsc {
 namespace util {
 
@@ -44,6 +38,28 @@ struct CAPConst {
   static const unsigned MAX_TimeAndTimezoneLength = 8;
 };
 
+//Mobile addresses alphabets defined in sscanf() format.
+struct MobileAlphabet {
+  static const unsigned _MAX_ALPHABET_LEN = 60;
+  
+  const char * _Numeric;  //Decimal digits only
+  const char * _Tele;     //ISDN telephony
+  const char * _Gsm7;     //NOTE: actually it's a subset of GSM-7bit alphabet
+                          //      (3GPP TS 23.038) with Greece chars excluded
+
+  MobileAlphabet();
+
+  //Validates and ouputs no more then 'max_chars' characters according to specified alphaBet.
+  //NOTE: 'out_buf' MUST have enough capacity to store 'max_chars' + 1 symbols.
+  static bool validateChars(const char * alpha_bet, const unsigned max_chars, const char * in_buf, char * out_buf);
+};
+
+extern const MobileAlphabet _MAPAlphabet;
+
+/* ************************************************************************** *
+ * Various AddressStrings
+ * ************************************************************************** */
+
 class IMSIString : public smsc::core::buffers::FixedLengthString<MAPConst::MAX_IMSI_AddressValueLength> {
 public:
   static const char * _numberingFmt; // = "%15[0-9]%2s";
@@ -56,7 +72,6 @@ public:
   IMSIString(const char * use_val)
     : smsc::core::buffers::FixedLengthString<MAPConst::MAX_IMSI_AddressValueLength>(use_val)
   { }
-
 
   bool fromText(const char * in_text) { return fromText(in_text, str); }
 };
@@ -72,74 +87,101 @@ const unsigned TON_NPI_AddressStringLength = (9 + CAPConst::MAX_SMS_AddressValue
 typedef smsc::core::buffers::FixedLengthString<TON_NPI_AddressStringLength>
   TonNpiAddressString;
                                  
-//This is slightly more intelligent analog of sms::sms::Address,
-//it also accepts alpha-numeric addresses.
-//In opposite to sms::Address, all methods return error code instead
-//of throwing exception.
+//Represents variety of mobile addresses, which are based or derived from 
+//MAP-CommonDataTypes.AddressString ASN.1 type, i.e.:
+//
+//  MAPAddress, ISDNAddress, FTNAddress, ADNAddress, CAPSmsAddress
+//
 struct TonNpiAddress {
-    static const unsigned  _strSZ = TON_NPI_AddressStringLength;
+  enum TypeOfNumber_e { // 3 bits values
+    tonUnknown = 0x0, tonInternational = 0x1, tonNationalSign = 0x2
+    , tonNetworkSpec = 0x3, tonSubscriber = 0x4
+     //NOTE: tonAlphanum is defined only for CAPSmsAddress, for other ones it's reserved!
+    , tonAlphanum = 0x5
+    , tonAbbreviated = 0x6, tonReservedExt = 0x7
+  };
+  enum NumberingPlan_e { // 4 bits values
+    npiUnknown = 0x00, npiISDNTele_e164 = 0x01, npiSpare2 = 0x02,
+    npiData_x121 = 0x03, npiTelex_f69 = 0x04, npiSpare5 = 0x05,
+    npiLandMobile_e212 = 0x06, npiSpare7 = 0x07,
+    npiNational = 0x08, npiPrivate = 0x09,
+    npiSpare10 = 0x0A,  npiSpare11 = 0x0B,
+    npiSpare12 = 0x0C, npiSpare13 = 0x0D, npiSpare14 = 0x0E,
+    npiReservedExt = 0x0F
+  };
 
-    uint8_t length, typeOfNumber, numPlanInd;
-            //signals is always zero-terminated
-    char    signals[CAPConst::MAX_SMS_AddressValueLength + 1];
+  static const unsigned  _maxSIGNALS = CAPConst::MAX_SMS_AddressValueLength;
+  static const unsigned  _strSZ = TON_NPI_AddressStringLength;
 
-    void clear(void) { length = typeOfNumber = numPlanInd = signals[0] = 0; }
-    const char * getSignals(void) const { return (const char*)&signals[0]; }
-    bool empty(void) const { return (bool)!length; }
+  uint8_t length, typeOfNumber, numPlanInd;
+  char    signals[_maxSIGNALS + 1]; //signals is always zero-terminated
 
-    TonNpiAddress() { clear(); }
 
-    bool fromText(const char* text);
+  TonNpiAddress() : length(0), typeOfNumber(0), numPlanInd(0)
+  {
+    signals[0] = 0;
+  }
+  ~TonNpiAddress()
+  { }
 
-    //checks if address is ISDN International or Unknown and sets it to International
-    //returns false if address is not an ISDN International
-    bool fixISDN(void)
-    {
-        if ((numPlanInd != NUMBERING_ISDN) || (typeOfNumber > ToN_INTERNATIONAL))
-            return false;
-        typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
-        return true;
+  //Returns true on success
+  bool fromText(const char * text_str);
+
+  void clear(void) { length = typeOfNumber = numPlanInd = signals[0] = 0; }
+
+  const char * getSignals(void) const { return (const char*)&signals[0]; }
+
+  bool empty(void) const { return (bool)!length; }
+
+  //checks if address is ISDN International or Unknown and sets it to International
+  //returns false if address is not an ISDN International
+  bool fixISDN(void)
+  {
+    if ((numPlanInd != npiISDNTele_e164) || (typeOfNumber > tonInternational))
+      return false;
+    typeOfNumber = tonInternational; //correct isdn unknown
+    return true;
+  }
+
+  //Returns true if address numbering is ISDN international
+  bool interISDN(void) const
+  {
+    return ((tonInternational == typeOfNumber) && (numPlanInd == npiISDNTele_e164));
+  }
+              
+  //use at least TonNpiAddress::_strSZ chars buffer
+  int toString(char* buf, bool ton_npi = true, unsigned buflen = TonNpiAddress::_strSZ) const;
+
+  TonNpiAddressString toString(bool ton_npi = true) const
+  {
+    TonNpiAddressString buf;
+    toString(buf.str, ton_npi);
+    return buf;
+  }
+
+  bool operator== (const TonNpiAddress &adr2) const
+  {
+    if ((typeOfNumber == adr2.typeOfNumber)
+        && (numPlanInd == adr2.numPlanInd)
+        && (length == adr2.length)) {
+      return !strcmp(signals, adr2.signals) ? true : false;
     }
+    return false;
+  }
+  bool operator!= (const TonNpiAddress &adr2) const
+  {
+    return !(*this == adr2);
+  }
 
-    //Returns true if address numbering is ISDN international
-    bool interISDN(void) const
-    {
-        return ((ToN_INTERNATIONAL == typeOfNumber) && (numPlanInd == NUMBERING_ISDN));
+  bool operator < (const TonNpiAddress & cmp_obj) const
+  {
+    if (typeOfNumber == cmp_obj.typeOfNumber) {
+      if (numPlanInd == cmp_obj.numPlanInd)
+        return (strcmp(signals, cmp_obj.signals) < 0);
+      return (numPlanInd < cmp_obj.numPlanInd);
     }
-                
-    //use at least TonNpiAddress::_strSZ chars buffer
-    int toString(char* buf, bool ton_npi = true, unsigned buflen = TonNpiAddress::_strSZ) const;
-
-    TonNpiAddressString toString(bool ton_npi = true) const
-    {
-        TonNpiAddressString buf;
-        toString(buf.str, ton_npi);
-        return buf;
-    }
-
-    bool operator== (const TonNpiAddress &adr2) const
-    {
-        if ((typeOfNumber == adr2.typeOfNumber)
-            && (numPlanInd == adr2.numPlanInd)
-            && (length == adr2.length)) {
-            return !strcmp(signals, adr2.signals) ? true : false;
-        }
-        return false;
-    }
-    bool operator!= (const TonNpiAddress &adr2) const
-    {
-      return !(*this == adr2);
-    }
-
-    bool operator < (const TonNpiAddress & cmp_obj) const
-    {
-      if (typeOfNumber == cmp_obj.typeOfNumber) {
-        if (numPlanInd == cmp_obj.numPlanInd)
-          return (strcmp(signals, cmp_obj.signals) < 0);
-        return (numPlanInd < cmp_obj.numPlanInd);
-      }
-      return (typeOfNumber < cmp_obj.typeOfNumber);
-    }
+    return (typeOfNumber < cmp_obj.typeOfNumber);
+  }
 };
 
 
