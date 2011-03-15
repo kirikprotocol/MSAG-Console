@@ -1208,11 +1208,13 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
     if ( !sender ) {
         throw InfosmeException(EXC_NOTFOUND,"Smsc '%s' is not found",smscId.c_str());
     }
-    return (*sender)->sendTestSms( sourceAddr,
-                                   subscriber,
-                                   text,
-                                   isFlash,
-                                   deliveryMode );
+    const int result = (*sender)->sendTestSms( sourceAddr,
+                                               subscriber,
+                                               text,
+                                               isFlash,
+                                               deliveryMode );
+    smsc_log_debug(log_,"R=%u sendTestSms result=%u", rId, result);
+    return result;
 }
 
 
