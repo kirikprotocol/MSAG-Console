@@ -686,15 +686,6 @@ void InfosmeCoreV1::selfTest()
             dlv->getGlossary( glotexts );
         }
 
-        /*
-        {
-            smsc_log_info(log_,"--- pausing the delivery D=%u ---",dlvId);
-            dlv->setState(DLVSTATE_PAUSED);
-            smsc_log_info(log_,"--- archivating the delivery D=%u ---",dlvId);
-            deleteDelivery( *user, dlvId, true );
-        }
-         */
-
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"--- selftest failed, exc: %s",e.what());
     }
@@ -1159,8 +1150,11 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
          ptr->getState() == DLVSTATE_ACTIVE ) {
         throw InfosmeException(EXC_ACCESSDENIED,"cannot archivate an active delivery %u",dlvId);
     }
-    dlvMgr_->deleteDelivery(dlvId,bs.regIds,moveToArchive);
+    // collect regions to detach
+    ptr->getRegionList(bs.regIds);
     bindDeliveryRegions(bs);
+
+    dlvMgr_->deleteDelivery(dlvId,moveToArchive);
 }
 
 

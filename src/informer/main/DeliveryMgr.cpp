@@ -743,9 +743,12 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
 
 
 void DeliveryMgr::deleteDelivery( dlvid_type dlvId,
-                                  std::vector<regionid_type>& regIds,
                                   bool moveToArchive )
 {
+    // remove delivery from chunk
+    DeliveryChunk* chunk = deliveryChunkList_->getChunk(dlvId,false);
+    if (chunk) { chunk->setDelivery(dlvId,false); }
+
     DeliveryIList tokill;
     DeliveryIList::iterator iter;
     {
@@ -755,7 +758,6 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId,
     if (!moveToArchive) {
         (*iter)->setState(DLVSTATE_CANCELLED);
     }
-    (*iter)->getRegionList(regIds);
     (*iter)->detachEverything(!moveToArchive,moveToArchive);
     if (moveToArchive) {
         signalArchive(dlvId);

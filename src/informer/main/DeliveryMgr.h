@@ -39,7 +39,6 @@ public:
     dlvid_type createDelivery( UserInfo& userInfo,
                                const DeliveryInfoData& info );
     void deleteDelivery( dlvid_type dlvId,
-                         std::vector<regionid_type>& regIds,
                          bool moveToArchive );
 
     /// enter main loop, exit via 'stop()'
