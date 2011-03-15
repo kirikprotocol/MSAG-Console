@@ -486,13 +486,8 @@ void utl_set_msc(const std::vector<std::string> &args, bool is_org)
             args[0].c_str());
     return;
   }
-  //collect all args if alphaNum address contains SPACEs
-  std::string adrStr = args[1];
-  for (unsigned i = 2; i < args.size(); ++i) {
-    adrStr += ' '; adrStr += args[i];
-  }
 
-  if (!strcmp("db", adrStr.c_str()) || !strcmp("DB", adrStr.c_str())) {
+  if (!strcmp("db", args[1].c_str()) || !strcmp("DB", args[1].c_str())) {
     if (is_org)
       _billFacade->getDlgConfig().setOrgMSC(true);
     else
@@ -500,8 +495,8 @@ void utl_set_msc(const std::vector<std::string> &args, bool is_org)
   } else {
     TonNpiAddress tadr;
 
-    if (!tadr.fromText(adrStr.c_str())) {
-      fprintf(stdout, "ERR: invalid MSC address: %s!", adrStr.c_str());
+    if (!tadr.fromText(args[1].c_str())) {
+      fprintf(stdout, "ERR: invalid MSC address: %s!", args[1].c_str());
       return;
     }
     if (is_org)
@@ -672,7 +667,7 @@ int main(int argc, char** argv)
     } else {
       _billFacade->initConnect(host, port);
       _dtcrFacade->initConnect(host, port);
-      console.run("inman>"); //cycles
+      console.run("console>"); //cycles
     }
   } catch (const std::exception& error) {
     fprintf(stderr, "%s", error.what());

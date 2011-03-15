@@ -2,8 +2,12 @@
 static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
-#include "console.hpp"
+#define _DEBUG_PARSING
 
+#include "inman/common/console.hpp"
+#include "inman/common/CmdLine.hpp"
+
+//#include <stdio.h>
 #include <stdlib.h>
 
 namespace smsc {
@@ -54,24 +58,30 @@ void Console::parse(const std::string& commandLine)
     if (commandLine.empty())
         return;
 
-    std::string::size_type index = 0;
     std::vector<std::string> arguments;
-    std::list<console_item_t>::const_iterator iter;
-
-    while (index != std::string::npos) {
-        std::string::size_type next_space = commandLine.find(' ', index);
-        std::string token = commandLine.substr(index, next_space - index);
-        if (!token.empty())
-            arguments.push_back( token );
-        if (next_space != std::string::npos)
-            index = next_space + 1;
-        else
-            break;
+    ParsingResult res = parseCmdLine(commandLine.c_str(), arguments);
+    if (!res.isOk()) {
+      if (res._status == ParsingResult::rcMatch) {
+        std::cerr << "Unmatched delimiter at pos: " << res._pos << std::endl;
+      } else if (res._status == ParsingResult::rcEscape) {
+        std::cerr << "Invalid escape sequence at pos: " << res._pos << std::endl;
+      }
+      return;
     }
-    if (!arguments.size())
+
+    if (arguments.empty())
         return;
 
+#ifdef _DEBUG_PARSING
+    for (std::vector<std::string>::const_iterator
+      it = arguments.begin(); it != arguments.end(); ++it) {
+      //fprintf(stderr, "arg: '%s'\n", it->c_str());
+      std::cerr << "arg: \'" << *it << "\'" << std::endl;
+    }
+#endif /* _DEBUG_PARSING */
+
     // execute
+    std::list<console_item_t>::const_iterator iter;
     for (iter = m_itemList.begin(); iter != m_itemList.end(); ++iter) {
         if (iter->name == arguments[0]) {
             switch(iter->type) {
@@ -127,7 +137,7 @@ void Console::parse(const std::string& commandLine)
         }
     }
 
-    std::cerr << "Unknown command: " << arguments[0] << std::endl;
+    std::cerr << "Unknown command: '" << arguments[0] << "'" << std::endl;
     return;
 }
 
