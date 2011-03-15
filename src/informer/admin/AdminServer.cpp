@@ -158,7 +158,7 @@ void AdminServer::handle(const messages::SendTestSms& cmd)
     code=-EXC_GENERIC;
   }
   resp.setRespCode(code);
-  smsc_log_debug(log,"sendTestSms resp: %s",msg.toString().c_str());
+  smsc_log_debug(log,"sendTestSms resp: %s",resp.toString().c_str());
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
 }
 
