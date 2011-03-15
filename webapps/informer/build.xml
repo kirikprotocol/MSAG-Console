@@ -108,7 +108,7 @@ public class Mode {${line.separator}
   <target name="distr" depends="compile.tests, exploded, predistr.dev,predistr.prod">
     <delete dir="${informer.distr.dir}" failonerror="false"/>
     <mkdir dir="${informer.distr.dir}"/>
-    <war destfile="${informer.distr.dir}/informer.war" basedir="${informer.exploded.dir}">
+    <war destfile="${informer.distr.dir}/informer.war" basedir="${informer.exploded.dir}" >
       <manifest>
         <attribute name="Implementation-Version" value="${informer.implementation.version}"/>
       </manifest>
