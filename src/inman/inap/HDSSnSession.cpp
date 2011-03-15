@@ -112,8 +112,8 @@ Dialog* TCSessionMA::openDialog(const char* rmt_addr, Logger * use_log/* = NULL*
 
 Dialog* TCSessionMA::openDialog(const TonNpiAddress & rnpi, Logger * use_log/* = NULL*/)
 {
-    if ((rnpi.numPlanInd != NUMBERING_ISDN)
-        || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
+    if ((rnpi.numPlanInd != TonNpiAddress::npiISDNTele_e164)
+        || (rnpi.typeOfNumber > TonNpiAddress::tonInternational))
         return NULL; //todo: throw
 
     SCCP_ADDRESS_T  rmtAddr;
@@ -231,11 +231,11 @@ TCSessionMA * SSNSession::newMAsession(const TonNpiAddress & onpi,
 {
     TCSessionMA *   pSess = NULL;
 
-    if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+    if ((onpi.numPlanInd != TonNpiAddress::npiISDNTele_e164) || (onpi.typeOfNumber > TonNpiAddress::tonInternational))
         return NULL;
     const ROSComponentsFactory * acFab = acReg->getFactory(dlg_ac);
     if (acFab) {
-//        onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+//        onpi.typeOfNumber = TonNpiAddress::tonInternational; //correct isdn unknown
         MutexGuard tmp(_sync);
         std::string sid = mkSignature(onpi, acFab->acOID(), rmt_ssn, NULL);
         TCSessionsMAP::iterator it = tcSessions.find(sid);
@@ -270,9 +270,9 @@ TCSessionSR *
 {
     TCSessionSR *   pSess = NULL;
 
-    if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+    if ((onpi.numPlanInd != TonNpiAddress::npiISDNTele_e164) || (onpi.typeOfNumber > TonNpiAddress::tonInternational))
         return NULL;
-    if ((rnpi.numPlanInd != NUMBERING_ISDN) || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
+    if ((rnpi.numPlanInd != TonNpiAddress::npiISDNTele_e164) || (rnpi.typeOfNumber > TonNpiAddress::tonInternational))
         return NULL;
 
     const ROSComponentsFactory * acFab = acReg->getFactory(dlg_ac);
