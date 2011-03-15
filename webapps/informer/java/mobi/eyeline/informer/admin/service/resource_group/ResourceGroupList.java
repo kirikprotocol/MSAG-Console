@@ -31,7 +31,6 @@ class ResourceGroupList {
   }
 
   public ResourceGroup get(String name) throws AdminException {
-    require(name);
     return resourceGroups.get(name);
   }
 
