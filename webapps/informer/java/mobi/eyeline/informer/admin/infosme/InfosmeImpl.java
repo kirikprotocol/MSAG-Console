@@ -127,7 +127,12 @@ public class InfosmeImpl implements Infosme {
     req.setDeliveryMode(DeliveryMode.valueOf(sms.getMode().toString()));
     req.setFlash(sms.isFlash());
     req.setText(sms.getText());
-    checkResponse(client.send(req).getRespCode());
+    int status = client.send(req).getRespCode();
+    if (status > 0) {
+      throw new TestSmsException(status);
+    } else if (status < 0) {
+      throw new InfosmeException("interaction_error", String.valueOf(status));
+    }
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})

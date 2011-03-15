@@ -5,11 +5,13 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
 import mobi.eyeline.informer.admin.infosme.TestSms;
+import mobi.eyeline.informer.admin.infosme.TestSmsException;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.config.Configuration;
+import mobi.eyeline.informer.web.controllers.ErrorCodeConverter;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
@@ -311,6 +313,14 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     }
   }
 
+  private String getSmppCodeDescription(int smppCode) {
+    ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", getLocale());
+    try {
+      return bundle.getString("informer.errcode." + smppCode);
+    } catch (MissingResourceException e) {
+      return bundle.getString("informer.errcode.unknown");
+    }
+  }
 
   public String sendTest() {
     if (!singleText) {
@@ -332,8 +342,12 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       sms.setDestAddr(new Address(u.getPhone()));
       sms.setSourceAddr(delivery.getSourceAddress());
       sms.setText(delivery.getSingleText());
-      config.sendTestSms(sms);
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
+      try {
+        config.sendTestSms(sms);
+        addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
+      } catch (TestSmsException e) {
+        addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms.error", u.getPhone(), e.getSmppStatus(), getSmppCodeDescription(e.getSmppStatus()));
+      }
     } catch (AdminException e) {
       addError(e);
     }
