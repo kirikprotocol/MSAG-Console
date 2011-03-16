@@ -39,12 +39,18 @@ class MainLoopTask implements Runnable {
     this.userDirResolver=userDirResolver;
   }
 
-  private boolean checkNoRestriction(String login){
+  private boolean isCreationAvailable(User u){
+    if(u.getStatus() == User.Status.DISABLED) {
+      if(log.isDebugEnabled()) {
+        log.debug("User is blocked: "+u.getLogin());
+      }
+      return false;
+    }
     if(log.isDebugEnabled()) {
-      log.debug("Check restrictions for user: "+login);
+      log.debug("Check restrictions for user: "+u.getLogin());
     }
     try{
-      context.checkNoRestrictions(login);
+      context.checkNoRestrictions(u.getLogin());
     }catch (AdminException e){
       if(log.isDebugEnabled()) {
         log.debug(e.getLocalizedMessage());
@@ -60,10 +66,7 @@ class MainLoopTask implements Runnable {
       Set<String> checkedUcps = new HashSet<String>();
       for(User u : users ) {
         List<UserCPsettings> s = u.getCpSettings();
-        if(u.getStatus()==User.Status.ENABLED && s != null && s.size()>0) {
-          if(!checkNoRestriction(u.getLogin())) {
-            continue;
-          }
+        if(s != null && s.size()>0) {
           try {
             processUser(u, checkedUcps);
           }
@@ -148,7 +151,7 @@ class MainLoopTask implements Runnable {
 
         ResourceProcessStrategy strategy = getStrategy(u, userDir, ucps, userDirResolver.getConnection(u, ucps));
 
-        if(!isUpdateIsNeeded(ucps, mapKey, currentMillis)) {
+        if(!isUpdateIsNeeded(ucps, mapKey, currentMillis) || !isCreationAvailable(u)) {
           try {
             strategy.process(false);
           } catch (AdminException e) {
