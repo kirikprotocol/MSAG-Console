@@ -10,6 +10,7 @@
 
 #include <map>
 
+#include "inman/common/OptionalObjT.hpp"
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 #include "inman/inap/dispatcher.hpp"
@@ -59,9 +60,9 @@ protected:
   // -- ATSIhandlerITF interface
   // ---------------------------------------
   virtual void onATSIResult(ATSIRes & res);
-  //dialog finalization/error handling:
-  //if ercode != 0, no result has been got from MAP service,
-  virtual void onEndATSI(RCHash ercode = 0);
+  //if err_code != 0, no result has been got from MAP service,
+  //NOTE: MAP dialog may be safely released but not deleted from this callback!
+  virtual void onDialogEnd(RCHash ercode = 0);
   //
   virtual void Awake(void) { _sync.notify(); }
 
@@ -69,7 +70,7 @@ private:
   mutable EventMonitor  _sync;
   volatile bool         _active;
   TCSessionMA *         tcSesssion;
-  MapATSIDlg *          mapDlg;
+  smsc::util::OptionalObj_T<MapATSIDlg> _mapDlg;
   AT_CSIListenerIface *  csiHdl;
   RequestedSubscription _reqCfg;
   AbonentInfo           _abnInfo;

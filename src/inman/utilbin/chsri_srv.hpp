@@ -10,6 +10,7 @@
 
 #include <map>
 
+#include "inman/common/OptionalObjT.hpp"
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 #include "inman/inap/dispatcher.hpp"
@@ -60,7 +61,7 @@ protected:
   virtual void onMapResult(CHSendRoutingInfoRes & res);
   //dialog finalization/error handling:
   //if ercode != 0, no result has been got from MAP service,
-  virtual void onEndMapDlg(RCHash ercode = 0);
+  virtual void onDialogEnd(RCHash ercode = 0);
   //
   virtual void Awake(void) { _sync.notify(); }
 
@@ -68,12 +69,12 @@ private:
   mutable EventMonitor    _sync;
   volatile bool           _active;
   TCSessionMA *           tcSesssion;
-  MapCHSRIDlg *           sriDlg;
+  smsc::util::OptionalObj_T<MapCHSRIDlg> _mapDlg;
   SRI_CSIListenerIface *  csiHdl;
   AbonentInfo             _abnInfo;
   Logger *                logger;
 
-  void rlseSRIDialog(void);
+  void rlseMapDialog(void);
 };
 
 

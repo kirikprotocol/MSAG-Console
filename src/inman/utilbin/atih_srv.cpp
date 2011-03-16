@@ -152,6 +152,7 @@ void ServiceATIH::onCSIresult(const AbonentInfo & ab_info)
     if (_cfg.client)
       _cfg.client->onCSIresult(ab_info);
     pool.push_back(worker);
+    smsc_log_debug(logger, "Intrgtr[%s]: moved to pool", ab_info.msIsdn.toString().c_str());
   }
 }
 
@@ -165,6 +166,7 @@ void ServiceATIH::onCSIabort(const TonNpiAddress & subcr_addr, RCHash ercode)
     if (_cfg.client)
       _cfg.client->onCSIabort(subcr_addr, ercode);
     pool.push_back(worker);
+    smsc_log_debug(logger, "Intrgtr[%s]: moved to pool", subcr_addr.toString().c_str());
   }
 }
 
@@ -177,9 +179,11 @@ ATIInterrogator * ServiceATIH::newWorker(void)
     ATIInterrogator * worker = (*it);
     if (!worker->isActive()) {
       pool.erase(it);
+      smsc_log_debug(logger, "new Intrgtr[] from pool");
       return worker;
     }
   }
+  smsc_log_debug(logger, "new Intrgtr[] from heap");
   return new ATIInterrogator(mapSess, this);
 }
 
@@ -188,8 +192,7 @@ ATIInterrogator * ServiceATIH::newWorker(void)
  * ************************************************************************** */
 ATIInterrogator::ATIInterrogator(TCSessionMA * pSession, AT_CSIListenerIface * csi_listener,
                                   Logger * uselog/* = NULL*/)
-  : _active(false), tcSesssion(pSession), mapDlg(NULL), csiHdl(csi_listener)
-  ,  logger(uselog)
+  : _active(false), tcSesssion(pSession), csiHdl(csi_listener),  logger(uselog)
 { 
   if (!logger)
     logger = Logger::getInstance("smsc.inman.inap.atsi");
@@ -197,12 +200,10 @@ ATIInterrogator::ATIInterrogator(TCSessionMA * pSession, AT_CSIListenerIface * c
 
 void ATIInterrogator::rlseMapDialog(void)
 {
-  if (mapDlg) {
-    while (!mapDlg->Unbind()) //MAPDlg refers this query
-      _sync.wait();
-    mapDlg->destroy();
-    mapDlg = NULL;
-  }
+  while (_mapDlg.get() && !_mapDlg->unbindUser()) //MAPDlg refers this query
+    _sync.wait();
+  if (_mapDlg.get())
+    _mapDlg->endDialog();
   _active = false;
 }
 
@@ -210,6 +211,7 @@ ATIInterrogator::~ATIInterrogator()
 {
   MutexGuard  grd(_sync);
   rlseMapDialog();
+  smsc_log_debug(logger, "Intrgtr[%s]: destroyed", _abnInfo.msIsdn.toString().c_str());
 }
 
 bool ATIInterrogator::isActive(void)
@@ -227,11 +229,12 @@ bool ATIInterrogator::interrogate(const RequestedSubscription & req_cfg,
   _abnInfo.msIsdn = subcr_adr;
 
   try {
-    mapDlg = new MapATSIDlg(tcSesssion, this);
+    _mapDlg.init().init(*tcSesssion, *this, logger);
+
     smsc_log_debug(logger, "Intrgtr[%s]: requesting subscription ..",
                    _abnInfo.msIsdn.toString().c_str());
     _reqCfg = req_cfg;
-    mapDlg->subsciptionInterrogation(_reqCfg, _abnInfo.msIsdn);
+    _mapDlg->subsciptionInterrogation(_reqCfg, _abnInfo.msIsdn);
     _active = true;
   } catch (const std::exception & exc) {
     smsc_log_error(logger, "Intrgtr[%s]: %s",
@@ -244,12 +247,7 @@ bool ATIInterrogator::interrogate(const RequestedSubscription & req_cfg,
 void ATIInterrogator::cancel(void)
 {
   MutexGuard  grd(_sync);
-  if (mapDlg) {
-    while (!mapDlg->Unbind()) //MAPDlg refers this query
-      _sync.wait();
-    mapDlg->endMapDlg();
-  }
-  _active = false;
+  rlseMapDialog();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -274,7 +272,7 @@ void ATIInterrogator::onATSIResult(ATSIRes & res)
                  _abnInfo.toString().c_str());
 }
  //dialog finalization/error handling:
-void ATIInterrogator::onEndATSI(RCHash ercode/* =0*/)
+void ATIInterrogator::onDialogEnd(RCHash ercode/* =0*/)
 {
   MutexGuard  grd(_sync);
   rlseMapDialog();
@@ -282,6 +280,7 @@ void ATIInterrogator::onEndATSI(RCHash ercode/* =0*/)
     csiHdl->onCSIresult(_abnInfo);
   else
     csiHdl->onCSIabort(_abnInfo.msIsdn, ercode);
+  _sync.notify();
 }
 
 } // namespace inman

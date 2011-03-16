@@ -178,9 +178,11 @@ SRIInterrogator * ServiceCHSRI::newWorker(void)
     SRIInterrogator * worker = (*it);
     if (!worker->isActive()) {
       pool.erase(it);
+      smsc_log_debug(logger, "new Intrgtr[] from pool");
       return worker;
     }
   }
+  smsc_log_debug(logger, "new Intrgtr[] from heap");
   return new SRIInterrogator(mapSess, this);
 }
 
@@ -189,28 +191,26 @@ SRIInterrogator * ServiceCHSRI::newWorker(void)
  * ************************************************************************** */
 SRIInterrogator::SRIInterrogator(TCSessionMA * pSession, SRI_CSIListenerIface * csi_listener,
                                   Logger * uselog/* = NULL*/)
-  : _active(false), tcSesssion(pSession), sriDlg(NULL), csiHdl(csi_listener)
-  ,  logger(uselog)
+  : _active(false), tcSesssion(pSession), csiHdl(csi_listener),  logger(uselog)
 { 
   if (!logger)
     logger = Logger::getInstance("smsc.inman.inap.atih.Intrgtr");
 }
 
-void SRIInterrogator::rlseSRIDialog(void)
+void SRIInterrogator::rlseMapDialog(void)
 {
-  if (sriDlg) {
-    while (!sriDlg->Unbind()) //MAPDlg refers this query
-      _sync.wait();
-    sriDlg->destroy();
-    sriDlg = NULL;
-  }
+  while (_mapDlg.get() && !_mapDlg->unbindUser()) //MAPDlg refers this query
+    _sync.wait();
+  if (_mapDlg.get())
+    _mapDlg->endDialog();
   _active = false;
 }
 
 SRIInterrogator::~SRIInterrogator()
 {
   MutexGuard  grd(_sync);
-  rlseSRIDialog();
+  rlseMapDialog();
+  smsc_log_debug(logger, "Intrgtr[%s]: destroyed", _abnInfo.msIsdn.toString().c_str());
 }
 
 bool SRIInterrogator::isActive(void)
@@ -227,15 +227,16 @@ bool SRIInterrogator::interrogate(const TonNpiAddress & subcr_addr)
   _abnInfo.msIsdn = subcr_addr;
 
   try {
-    sriDlg = new MapCHSRIDlg(tcSesssion, this);
+    _mapDlg.init().init(*tcSesssion, *this, logger);
+    
     smsc_log_debug(logger, "Intrgtr[%s]: requesting subscription ..",
                    _abnInfo.msIsdn.toString().c_str());
-    sriDlg->reqRoutingInfo(_abnInfo.msIsdn);
+    _mapDlg->reqRoutingInfo(_abnInfo.msIsdn);
     _active = true;
   } catch (const std::exception & exc) {
     smsc_log_error(logger, "Intrgtr[%s]: %s",
                    _abnInfo.msIsdn.toString().c_str(), exc.what());
-    rlseSRIDialog();
+    rlseMapDialog();
   }
   return _active;
 }
@@ -243,12 +244,7 @@ bool SRIInterrogator::interrogate(const TonNpiAddress & subcr_addr)
 void SRIInterrogator::cancel(void)
 {
   MutexGuard  grd(_sync);
-  if (sriDlg) {
-    while (!sriDlg->Unbind()) //MAPDlg refers this query
-      _sync.wait();
-    sriDlg->endMapDlg();
-  }
-  _active = false;
+  rlseMapDialog();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -279,10 +275,10 @@ void SRIInterrogator::onMapResult(CHSendRoutingInfoRes & res)
 }
 
  //dialog finalization/error handling:
-void SRIInterrogator::onEndMapDlg(RCHash ercode/* =0*/)
+void SRIInterrogator::onDialogEnd(RCHash ercode/* =0*/)
 {
   MutexGuard  grd(_sync);
-  rlseSRIDialog();
+  rlseMapDialog();
   if (!ercode) {
     if (_abnInfo.getImsi())
       csiHdl->onCSIresult(_abnInfo);
@@ -291,6 +287,7 @@ void SRIInterrogator::onEndMapDlg(RCHash ercode/* =0*/)
                          _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
   } else
     csiHdl->onCSIabort(_abnInfo.msIsdn, ercode);
+  _sync.notify();
 }
 
 } // namespace inman
