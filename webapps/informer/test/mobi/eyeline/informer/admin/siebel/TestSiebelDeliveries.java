@@ -143,6 +143,11 @@ class TestSiebelDeliveries implements SiebelContext {
   }
 
   @Override
+  public void checkNoRestrictions(String login) throws AdminException {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
   public FileSystem getFileSystem() {
     return new TestFileSystem();
   }

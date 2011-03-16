@@ -39,6 +39,8 @@ public interface SiebelContext {
 
   public DeliveryChangesDetector getDeliveryChangesDetector();
 
+  public void checkNoRestrictions(String login) throws AdminException;
+
   public FileSystem getFileSystem();
 
 }

@@ -427,12 +427,27 @@ class SiebelManager {
     }
   }
 
+  private boolean isNoRestrictions() {
+    try {
+      context.checkNoRestrictions(siebelUser.getLogin());
+      return true;
+    } catch (AdminException e) {
+      if(logger.isDebugEnabled()) {
+        logger.debug(e.getLocalizedMessage());
+      }
+      return false;
+    }
+  }
+
   private void process(final SiebelDelivery st) throws AdminException {
     try {
 
       final Runnable thread;
 
       if (st.getStatus() == SiebelDelivery.Status.ENQUEUED) {
+        if(!isNoRestrictions()) {
+          return;
+        }
         thread = new Runnable() {
           public void run() {
             try {
