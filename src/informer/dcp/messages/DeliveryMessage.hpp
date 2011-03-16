@@ -6,6 +6,7 @@
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
 #include "MessageType.hpp"
+#include "MessageFlags.hpp"
 
 
 #ident "@(#) DeliveryMessage version 1.0"
@@ -31,6 +32,7 @@ public:
     textFlag=false;
     indexFlag=false;
     userDataFlag=false;
+    flagsFlag=false;
   }
  
 
@@ -89,6 +91,17 @@ public:
       rv+="userData=";
       rv+=userData;
     }
+    if(flagsFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="flags=";
+      rv+='(';
+      rv+=flags.toString();
+      rv+=')';
+    }
     return rv;
   }
 
@@ -126,6 +139,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(userData);
+    }
+    if(flagsFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=flags.length<DataStream>();
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -240,6 +259,28 @@ public:
   {
     return userDataFlag;
   }
+  const MessageFlags& getFlags()const
+  {
+    if(!flagsFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("flags");
+    }
+    return flags;
+  }
+  void setFlags(const MessageFlags& argValue)
+  {
+    flags=argValue;
+    flagsFlag=true;
+  }
+  MessageFlags& getFlagsRef()
+  {
+    flagsFlag=true;
+    return flags;
+  }
+  bool hasFlags()const
+  {
+    return flagsFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -273,6 +314,12 @@ public:
     {
       ds.writeTag(userDataTag);
     ds.writeStrLV(userData); 
+    }
+    if(flagsFlag)
+    {
+      ds.writeTag(flagsTag);
+    ds.writeLength(flags.length<DataStream>());
+    flags.serialize(ds);
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -339,6 +386,16 @@ public:
           userData=ds.readStrLV();
           userDataFlag=true;
         }break;
+        case flagsTag:
+        {
+          if(flagsFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("flags");
+          }
+
+          ds.readLength();flags.deserialize(ds);
+          flagsFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -382,6 +439,7 @@ protected:
   static const int32_t textTag=3;
   static const int32_t indexTag=4;
   static const int32_t userDataTag=5;
+  static const int32_t flagsTag=6;
 
   int connId;
 
@@ -390,12 +448,14 @@ protected:
   std::string text;
   int32_t index;
   std::string userData;
+  MessageFlags flags;
 
   bool abonentFlag;
   bool msgTypeFlag;
   bool textFlag;
   bool indexFlag;
   bool userDataFlag;
+  bool flagsFlag;
 };
 
 }

@@ -168,6 +168,19 @@ flags_(0), flagsize_(0)
 }
 
 
+void MessageFlags::reset( const MessageFlagBuilder& mfb )
+{
+    if (flags_) { delete flags_; }
+    flagsize_ = mfb.getSize();
+    if ( !flagsize_ ) {
+        flags_ = 0;
+        return;
+    }
+    flags_ = new char[flagsize_];
+    memcpy(flags_,mfb.getBuf(),flagsize_);
+}
+
+
 bool MessageFlags::hasBool( bool& value, uint16_t tag ) const
 {
     if (!flags_) return false;

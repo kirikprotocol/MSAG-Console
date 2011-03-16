@@ -98,6 +98,17 @@ enum byte MessageType
   GlossaryMessage 2
 end
 
+message MessageFlags
+  property innerMessage=true
+  bool transactionMode 1
+  bool useDataSm 2
+  bool replaceMessage 3
+  bool flash 4
+  string svcType 5 opt
+  string sourceAddress 6 opt
+  DeliveryMode deliveryMode 7 opt
+end
+
 message DeliveryMessage
   property innerMessage=true
   string abonent 1
@@ -105,6 +116,7 @@ message DeliveryMessage
   string text 3 opt
   int32 index 4 opt
   string userData 5 opt
+  MessageFlags flags 6 opt
 end
 
 

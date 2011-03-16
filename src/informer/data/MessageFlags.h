@@ -47,6 +47,9 @@ public:
     void setSourceAddress( const smsc::sms::Address& oa );
     void setDeliveryMode( DlvMode dlvMode );
 
+    inline size_t getSize() const { return buf_.GetPos(); }
+    inline const char* getBuf() const { return buf_.get(); }
+
 protected:
     void setBool(bool value, uint16_t tag);
     void cutField(uint16_t tag);
@@ -62,7 +65,7 @@ class MessageFlags : protected MessageTags
 {
 public:
     MessageFlags( const char* hexdump = 0 );
-    explicit MessageFlags( MessageFlagBuilder& mfb );
+    // explicit MessageFlags( MessageFlagBuilder& mfb );
 
     inline ~MessageFlags() {
         if (flags_) { delete flags_; }
@@ -72,6 +75,8 @@ public:
         std::swap(flags_,mf.flags_);
         std::swap(flagsize_,mf.flagsize_);
     }
+
+    void reset( const MessageFlagBuilder& mfb );
 
     inline char* buf() const { return flags_; }
     inline size_t bufsize() const { return flagsize_; }

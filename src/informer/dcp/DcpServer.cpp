@@ -480,6 +480,38 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
     {
       ml.msg.userData=it->getUserData().c_str();
     }
+    if(it->hasFlags()) {
+        const messages::MessageFlags& mf = it->getFlags();
+        MessageFlagBuilder mfb;
+        if ( mf.hasTransactionMode() && mf.getTransactionMode() ) {
+            mfb.setTransactional(true);
+        }
+        if ( mf.hasUseDataSm() && mf.getUseDataSm() ) {
+            mfb.setUseDataSm(true);
+        }
+        if ( mf.hasReplaceMessage() && mf.getReplaceMessage() ) {
+            mfb.setReplaceIfPresent(true);
+        }
+        if ( mf.hasFlash() && mf.getFlash() ) {
+            mfb.setFlash(true);
+        }
+        if ( mf.hasSvcType() ) {
+            mfb.setSvcType( mf.getSvcType().c_str() );
+        }
+        if ( mf.hasSourceAddress() ) {
+            smsc::sms::Address oa( mf.getSourceAddress().c_str() );
+            mfb.setSourceAddress(oa);
+        }
+        if ( mf.hasDeliveryMode() ) {
+            switch ( mf.getDeliveryMode().getValue() ) {
+            case messages::DeliveryMode::SMS : mfb.setDeliveryMode( DLVMODE_SMS ); break;
+            case messages::DeliveryMode::USSD_PUSH : mfb.setDeliveryMode( DLVMODE_USSDPUSH ); break;
+            case messages::DeliveryMode::USSD_PUSH_VLR : mfb.setDeliveryMode( DLVMODE_USSDPUSHVLR ); break;
+            default: throw InfosmeException(EXC_IOERROR,"invalid delivery mode %u",mf.getDeliveryMode().getValue());
+            }
+        }
+        ml.msg.flags.reset( mfb );
+    }
   }
   dlv->addNewMessages(lst.begin(),lst.end());
   messages::AddDeliveryMessagesResp resp;
