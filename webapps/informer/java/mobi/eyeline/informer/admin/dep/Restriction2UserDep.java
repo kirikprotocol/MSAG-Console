@@ -1,7 +1,9 @@
 package mobi.eyeline.informer.admin.dep;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.restriction.*;
+import mobi.eyeline.informer.admin.restriction.Restriction;
+import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
+import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManager;
 
@@ -51,10 +53,11 @@ public class Restriction2UserDep {
   }
 
   public void updateRestriction(Restriction restriction) throws IntegrityException {
-    for (String userId : restriction.getUserIds()) {
-      if (usersManager.getUser(userId) == null)
-        throw new IntegrityException("user_not_exist", userId);
+    if(restriction.getUserIds() != null) {
+      for (String userId : restriction.getUserIds()) {
+        if (usersManager.getUser(userId) == null)
+          throw new IntegrityException("user_not_exist", userId);
+      }
     }
-
   }
 }
