@@ -276,7 +276,7 @@ public class UserTest {
 
   @Test
   public void testPriority() throws AdminException {
-    User o = createUser();;
+    User o = createUser();
     o.setPriority(1001);
     assertEquals(o.getPriority(),1001);
     try {
@@ -288,7 +288,7 @@ public class UserTest {
 
   @Test
   public void testNotifications() throws AdminException {
-    User o = createUser();;
+    User o = createUser();
     o.setSmsNotification(true);
     o.setEmailNotification(false);
     assertEquals(o.isSmsNotification(),true);
@@ -297,7 +297,8 @@ public class UserTest {
 
   @Test
   public void testDeliveryLifetime() throws AdminException {
-    User o = createUser();;
+    User o = createUser();
+    o.setCreateArchive(true);
     o.setDeliveryLifetime(333);
     assertEquals(o.getDeliveryLifetime(),333);
     try {

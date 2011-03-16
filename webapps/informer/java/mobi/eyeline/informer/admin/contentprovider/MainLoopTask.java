@@ -39,12 +39,26 @@ class MainLoopTask implements Runnable {
     this.userDirResolver=userDirResolver;
   }
 
+  private boolean checkNoRestriction(String login){
+    try{
+      context.checkNoRestrictions(login);
+    }catch (AdminException e){
+      if(log.isDebugEnabled()) {
+        log.debug(e.getMessage());
+      }
+      return true;
+    }
+    return false;
+  }
 
   public void run() {
     try {
       List<User> users = context.getUsers();
       Set<String> checkedUcps = new HashSet<String>();
       for(User u : users ) {
+        if(!checkNoRestriction(u.getLogin())) {
+          continue;
+        }
         List<UserCPsettings> s = u.getCpSettings();
         if(u.getStatus()==User.Status.ENABLED && s != null && s.size()>0) {
           try {
@@ -105,7 +119,7 @@ class MainLoopTask implements Runnable {
   ResourceProcessStrategy getStrategy(User u, File workDir, UserCPsettings ucps, FileResource resource) throws AdminException {
     ResourceOptions opts = new ResourceOptions(u, workDir, ucps);
     return ucps.getWorkType() == UserCPsettings.WorkType.simple
-            ? new SimpleResourceProcessStrategy(context, resource, opts) : new DetailedResourceProcessStrategy(context, resource, opts);
+        ? new SimpleResourceProcessStrategy(context, resource, opts) : new DetailedResourceProcessStrategy(context, resource, opts);
   }
 
   private void processUser(User u, Collection<String> checkedUcps) throws AdminException {

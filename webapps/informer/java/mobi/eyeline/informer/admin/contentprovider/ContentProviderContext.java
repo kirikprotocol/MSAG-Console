@@ -52,4 +52,6 @@ public interface ContentProviderContext {
   public void dropDelivery(String login, int deliveryId) throws AdminException;
 
   public void modifyDelivery(String login, Delivery delivery) throws AdminException;
+
+  public void checkNoRestrictions(String login) throws AdminException;
 }

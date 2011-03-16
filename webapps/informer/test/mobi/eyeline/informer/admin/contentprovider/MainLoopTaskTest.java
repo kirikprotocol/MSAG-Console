@@ -328,6 +328,11 @@ public class MainLoopTaskTest {
     }
 
     @Override
+    public void checkNoRestrictions(String login) throws AdminException {
+      //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException {
       delivery.setOwner(login);
 

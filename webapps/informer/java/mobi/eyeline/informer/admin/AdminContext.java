@@ -516,6 +516,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     modifyDelivery(login, user.getPassword(), delivery);
   }
 
+  @Override
+  public void checkNoRestrictions(String login) throws AdminException {
+    checkHasNotRestriction("creation_restricted", login);
+  }
+
   @Deprecated
   public synchronized void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
     delivery2UserDep.checkDelivery(delivery);
