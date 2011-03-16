@@ -7,116 +7,69 @@
 #endif
 #define __SMSC_INMAN_INAP_MAP_CHSRI__
 
-#include "core/synchronization/EventMonitor.hpp"
-using smsc::core::synchronization::EventMonitor;
-
 #include "inman/inap/HDSSnSession.hpp"
-#include "inman/inap/dialog.hpp"
-using smsc::inman::inap::TCSessionMA;
-using smsc::inman::inap::Dialog;
-using smsc::inman::inap::TCDialogUserITF;
-
+#include "inman/inap/map/DlgMapAC.hpp"
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
-using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
-using smsc::util::RCHash;
 
 namespace smsc {
 namespace inman {
 namespace inap {
 namespace chsri {
 
-class CHSRIhandlerITF { // GMSC/SCF <- HLR
+using smsc::inman::inap::TCSessionMA;
+using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
+
+class CHSRIhandlerITF : public MapDlgUserIface { // GMSC/SCF <- HLR
 protected:
-    virtual ~CHSRIhandlerITF() //forbid interface destruction
-    { }
+  virtual ~CHSRIhandlerITF() //forbid interface destruction
+  { }
 
 public:
-    virtual void onMapResult(CHSendRoutingInfoRes & res) = 0;
-    //Dialog finalization/error handling:
-    //if ercode != 0, no result has been got from MAP service,
-    //NOTE: MAP dialog may be deleted only from this callback !!!
-    virtual void onEndMapDlg(RCHash ercode = 0) = 0;
-    //
-    virtual void Awake(void) = 0;
+  virtual void onMapResult(CHSendRoutingInfoRes & res) = 0;
 };
 
-typedef union {
-    unsigned short value;
-    struct {
-        unsigned int ctrInited : 2;
-        unsigned int ctrResulted : 2; // INITED - ResultNL, DONE - ResultL
-        unsigned int ctrAborted : 1;
-        unsigned int ctrFinished : 1;
-    } s;
-} CHSRIState;
+//MAP-CH-SRI dialog: 
+//initiates a CallHandling SEND-ROUTING-INFO request to HLR,
+//collects intermediate results, in case of success reports it to MAP User.
+class MapCHSRIDlg : public MapDialogAC { // GMSC/SCF -> HLR
+private:
+  TCSessionMA *         _tcSess;
+  CHSendRoutingInfoRes  _reqRes;
 
-//NOTE: MapCHSRI doesn't maintain own timer for operations, it uses instead the 
-//innate timer of the SS7 stack for Invoke lifetime.
-class MapCHSRIDlg : TCDialogUserITF { // GMSC/SCF -> HLR
+  CHSRIhandlerITF * sriHdl(void)
+  {
+    return static_cast<CHSRIhandlerITF *>(_resHdl.get());
+  }
+
 public:
-    MapCHSRIDlg(TCSessionMA * pSession, CHSRIhandlerITF * sri_handler,
-                Logger * uselog = NULL);
+  explicit MapCHSRIDlg(Logger * use_log = NULL)
+    : MapDialogAC("MapSRI", use_log), _tcSess(NULL)
+  { }
+  //
+  virtual ~MapCHSRIDlg()
+  { }
 
-    void destroy(void);
-
-    enum MapOperState  { operInited = 1, operFailed = 2, operDone = 3 };
-
-    void reqRoutingInfo(const char * subcr_adr, uint16_t timeout = 0) throw(CustomException);
-    void reqRoutingInfo(const TonNpiAddress & tnpi_adr, uint16_t timeout = 0) throw(CustomException);
-
-    //Attempts to unbind TC User.
-    //Returns true on succsess, false result means that this object has 
-    //established references to handler.
-    bool Unbind(void);
-    //May be called only after successfull Unbind() call
-    void endMapDlg(void);
+  //Sets TC Dialog registry and MAP user for this dialog
+  void init(TCSessionMA & tc_sess, CHSRIhandlerITF & res_hdl, Logger * use_log = NULL);
+  //
+  void reqRoutingInfo(const char * subcr_adr, uint16_t timeout_sec = 0)
+    throw(CustomException);
+  void reqRoutingInfo(const TonNpiAddress & tnpi_adr, uint16_t timeout_sec = 0)
+    throw(CustomException);
 
 protected:
-    friend class smsc::inman::inap::Dialog;
-    // TCDialogUserITF interface
-    void onDialogInvoke(Invoke* op, bool lastComp) { }
-    void onDialogContinue(bool compPresent);
-    void onDialogPAbort(uint8_t abortCause);
-    void onDialogREnd(bool compPresent);
-    void onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
-                        uint16_t userInfo_len, uint8_t *pUserInfo);
-    void onDialogNotice(uint8_t reportCause,
-                        TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
-                        uint8_t invId = 0, uint8_t opCode = 0);
+  // -----------------------------------------
+  // -- MapDialogAC interface methods:
+  // -----------------------------------------
+  //Releases TC dialog object
+  virtual void  rlseTCDialog(void) { _tcSess->releaseDialog(_tcDlg); }
 
-    void onInvokeResult(InvokeRFP pInv, TcapEntity* res);
-    void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
-    void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res);
-    void onInvokeLCancel(InvokeRFP pInv);
-    //
-    void Awake(void) { _sync.notify(); }
-
-private:
-    typedef smsc::core::synchronization::MTRefWrapper_T<CHSRIhandlerITF>
-      SRIUserRef;
-
-    mutable EventMonitor  _sync;
-    volatile  unsigned    _selfRef;
-    volatile  bool        _dieing;
-
-    TCDialogID      sriId;
-    //prefix for logging info
-    const char *    _logPfx; //"MapSRI"
-    char            _logId[sizeof("MapSRI[%u:%Xh]") + 2*sizeof(unsigned)*3 + 1];
-    Dialog *        dialog;     //TCAP dialog
-    TCSessionMA *   session;    //TCAP dialogs factory
-    Logger*         logger;
-    SRIUserRef      sriHdl;
-    CHSRIState      _sriState;  //current state of dialog
-    CHSendRoutingInfoRes reqRes;
-
-    void endTCap(void); //ends TC dialog, releases Dialog()
-    bool doRefHdl(void);
-    void unRefHdl(void);
-    void resetMapDlg();
-
-    void dieIfRequested(void);
-    virtual ~MapCHSRIDlg();
+  // -----------------------------------------
+  // -- TCDialogUserITF interface methods:
+  // -----------------------------------------
+  //InvokeListener iface methods
+  virtual void onInvokeResultNL(InvokeRFP pInv, TcapEntity * res);
+  virtual void onInvokeResult(InvokeRFP pInv, TcapEntity * res);
 };
 
 } //chsri
