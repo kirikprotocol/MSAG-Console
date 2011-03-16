@@ -446,6 +446,7 @@ class SiebelManager {
 
       if (st.getStatus() == SiebelDelivery.Status.ENQUEUED) {
         if(!isNoRestrictions()) {
+          addError(st.getWaveId());
           return;
         }
         thread = new Runnable() {
