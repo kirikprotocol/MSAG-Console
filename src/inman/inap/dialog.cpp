@@ -220,7 +220,7 @@ UCHAR_T /*inv_id*/ Dialog::sendInvoke(UCHAR_T opcode, const Component *p_arg,
                 _RCS_TC_Dialog->explainCode(TC_DlgError::invCompEnc).c_str(), exc.what());
     }
 
-    Invoke::InvokeResponse  resp = Invoke::respNone;
+    Invoke::Response_e  resp = Invoke::respNone;
     if (acFab->hasErrors(opcode))
         resp = Invoke::respError;
     if (acFab->hasResult(opcode))
@@ -474,12 +474,12 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
                     comp->decode(code); //throws
                     invoke.ownParam(comp);
                 } catch (std::exception & exc) {
-                    smsc_log_error(logger, "%s: Invoke[%u]{%u}.Arg: %s",
+                    smsc_log_error(logger, "%s: Invoke[%u:%u].Arg: %s",
                                    _logId, (unsigned)invId, (unsigned)op[0], exc.what());
                     delete comp;
                 }
             } else {
-                smsc_log_fatal(logger, "%s: Invoke[%u]{%u}: unregistered Arg",
+                smsc_log_fatal(logger, "%s: Invoke[%u:%u]: unregistered Arg",
                                _logId, (unsigned)invId, (unsigned)op[0]);
             }
         }
@@ -516,9 +516,8 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
         invMap.erase(it);
         if ((pInv->getStatus() <= Invoke::resNotLast)
             && (pInv->getResultType() == Invoke::respResultOrError)) {
-            smsc_log_error(logger,
-                "%s: Invoke[%u]{%u} got L_CANCEL expecting returnResult",
-                _logId, (unsigned)invId, pInv->getOpcode());
+            smsc_log_error(logger, "%s: %s got L_CANCEL expecting returnResult",
+                           _logId, pInv->idStr().c_str());
         }
         smsc_log_debug(logger, "%s: releasing %s", _logId,
                        pInv->strStatus().c_str());
@@ -529,11 +528,11 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
     }
     try { pUser->onInvokeLCancel(pInv);
     } catch (const std::exception & exc) {
-        smsc_log_error(logger, "%s: Invoke[%u].LCancel, listener: %s",
-                       _logId, (unsigned)invId, exc.what());
+        smsc_log_error(logger, "%s: %s.LCancel, listener: %s",
+                       _logId, pInv->idStr().c_str(), exc.what());
     } catch (...) {
-        smsc_log_error(logger, "%s: Invoke[%u].LCancel, listener: unknown exception",
-                       _logId, (unsigned)invId);
+        smsc_log_error(logger, "%s: %s.LCancel, listener: unknown exception",
+                       _logId, pInv->idStr().c_str());
     }
     unlockUser();
     return MSG_OK;
@@ -563,7 +562,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
         }
         pInv = it->second; //increases invoke ref count
         pInv->setStatus(Invoke::resLast);
-        invMap.erase(it); //remove invoke from list of being monitored ones
+        invMap.erase(it); //remove invoke from list of monitored ones
         
         //prepare result
         Component* resParm = acFab->createRes(op[0], logger);

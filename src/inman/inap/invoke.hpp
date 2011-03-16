@@ -7,9 +7,8 @@
 #endif
 #define __SMSC_INMAN_TCAP_INVOKE__
 
-#include <string>
-
 #include "inman/inap/entity.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc  {
 namespace inman {
@@ -17,47 +16,60 @@ namespace inap  {
 
 class Invoke : public TcapEntity {
 public:
-    typedef enum { resWait = 0, resNotLast, resLast, resError, resLCancel
-    } InvokeStatus;
+  enum Status_e {
+    resWait = 0, resNotLast, resLast, resError, resLCancel
+  };
 
-    typedef enum { respNone = 0, respError, respResultOrError
-    } InvokeResponse;
+  enum Response_e {
+    respNone = 0, respError, respResultOrError
+  };
 
-    Invoke(uint8_t tId = 0, uint8_t tOpCode = 0, InvokeResponse resp = Invoke::respNone)
-        : TcapEntity(tId, TcapEntity::tceInvoke, tOpCode)
-        , _status(Invoke::resWait), _linkedTo(NULL)
-        , _timeout(0), _respType(resp)
-    {}
+  static const size_t _idStr_SZ = sizeof("Invoke[%u:%u]") + (sizeof(unsigned)*3)*2;
+  typedef smsc::core::buffers::FixedLengthString<_idStr_SZ> IdentString_t;
 
-    ~Invoke()
-    {}
+  static const size_t _statusStr_SZ = sizeof("Invoke[%u:%u]: respType: %u, status: %u") + (sizeof(unsigned)*3)*4;
+  typedef smsc::core::buffers::FixedLengthString<_statusStr_SZ> StatusString_t;
 
-    void           setStatus(InvokeStatus use_st) { _status = use_st; }
-    InvokeStatus   getStatus(void) const { return _status; }
-    InvokeResponse getResultType(void) const { return _respType; }
-    
-    void  linkTo(Invoke * linkedInv) { _linkedTo = linkedInv; }
-    const Invoke * getLinkedTo(void) const { return _linkedTo; }
+  explicit Invoke(uint8_t inv_id = 0, uint8_t op_code = 0, Response_e resp_type = Invoke::respNone)
+    : TcapEntity(inv_id, TcapEntity::tceInvoke, op_code)
+    , _status(Invoke::resWait), _linkedTo(NULL), _timeout(0), _respType(resp_type)
+  { }
+  //
+  ~Invoke()
+  { }
 
-    void setTimeout(uint16_t timeOut) { _timeout = timeOut; }
-    uint16_t getTimeout(void) const   { return _timeout; }
+  void        setStatus(Status_e use_st) { _status = use_st; }
+  Status_e    getStatus(void) const { return _status; }
+  Response_e  getResultType(void) const { return _respType; }
+  
+  void  linkTo(Invoke * linkedInv) { _linkedTo = linkedInv; }
+  const Invoke * getLinkedTo(void) const { return _linkedTo; }
 
-    std::string strStatus(void)
-    {
-        char buf[sizeof("Invoke[%u]{%u}: respType: %u, status: %u") + (sizeof(unsigned)*3)*4];
-        int n = snprintf(buf, sizeof(buf)-1, "Invoke[%u]{%u}: respType: %u, status: %u",
-                         (unsigned)id, (unsigned)opcode, (unsigned)_respType, (unsigned)_status);
-        if ((n < 1) || (n >= (int)sizeof(buf))) {
-            buf[0]='?'; buf[1]=0;
-        }
-        return buf;
-    }
+  void setTimeout(uint16_t timeOut) { _timeout = timeOut; }
+  uint16_t getTimeout(void) const   { return _timeout; }
+
+  IdentString_t idStr(void) const
+  {
+    IdentString_t rval;
+    snprintf(rval.str, IdentString_t::MAX_SZ - 1,
+             "Invoke[%u:%u]", (unsigned)_invId, (unsigned)_opCode);
+    return rval;
+  }
+
+  StatusString_t strStatus(void) const
+  {
+    StatusString_t rval;
+    snprintf(rval.str, StatusString_t::MAX_SZ - 1,
+             "Invoke[%u:%u]: respType: %u, status: %u",
+             (unsigned)_invId, (unsigned)_opCode, (unsigned)_respType, (unsigned)_status);
+    return rval;
+  }
 
 protected:
-    InvokeStatus     _status;   //
-    Invoke *         _linkedTo; //invoke to which this one linked to
-    uint16_t         _timeout;  //response waiting timeout
-    InvokeResponse   _respType; //
+  Status_e    _status;   //
+  Invoke *    _linkedTo; //invoke to which this one linked to
+  uint16_t    _timeout;  //response waiting timeout
+  Response_e  _respType; //
 };
 
 } //inap
