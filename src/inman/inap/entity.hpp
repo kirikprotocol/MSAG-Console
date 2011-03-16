@@ -20,60 +20,63 @@ typedef std::vector<unsigned char> RawBuffer;
 //Transaction Component
 class TcapEntity {
 public:
-    typedef enum {
-        tceNone = 0, tceInvoke, tceResult, tceResultNL, tceError
-    } TCEntityKind;
+  enum TCEntityKind {
+    tceNone = 0, tceInvoke, tceResult, tceResultNL, tceError
+  };
 
-    TcapEntity(uint8_t tId, TCEntityKind e_kind = tceNone, uint8_t tOpCode = 0)
-        : id(tId), ekind(e_kind), opcode(tOpCode), param(NULL), ownComp(false) { }
+  explicit TcapEntity(uint8_t inv_id, TCEntityKind e_kind = tceNone, uint8_t op_code = 0)
+    : _invId(inv_id), _ekind(e_kind), _opCode(op_code), _param(NULL), _ownComp(false)
+  { }
+  virtual ~TcapEntity()
+  {
+    if (_ownComp) delete _param;
+  }
 
-    virtual ~TcapEntity() { if (ownComp) delete param; }
+  TCEntityKind kind() const           { return _ekind; }
+  uint8_t     getId() const           { return _invId; }
+  uint8_t     getOpcode() const       { return _opCode; }
+  Component*  getParam() const        { return _param; }
+  //sets '_param' without passing ownership, it's caller responsibility to free Component
+  void        setParam(Component * p)  { _param = p; _ownComp = false; }
+  //grands the ownership of '_param', Component will be freed by ~TcapEntity()
+  void        ownParam(Component * p)  { _param = p; _ownComp = true; }
 
-    TCEntityKind kind() const           { return ekind; }
-    uint8_t     getId() const           { return id; }
-    uint8_t     getOpcode() const       { return opcode; }
-    Component*  getParam() const        { return param; }
-    //sets 'param' without passing ownership, it's caller responsibility to free Component
-    void        setParam(Component* p)  { param = p; ownComp = false; }
-    //grands the ownership of 'param', Component will be freed by ~TcapEntity()
-    void        ownParam(Component* p)  { param = p; ownComp = true; }
-
-    //throws CustomException
-    void encode(RawBuffer& operation, RawBuffer& params) const throw(CustomException)
-    {
-        operation.clear(); params.clear();
-        operation.push_back(opcode);
-        if (param)
-            param->encode(params);
-    }
+  //throws CustomException
+  void encode(RawBuffer & operation, RawBuffer & params) const throw(CustomException)
+  {
+    operation.clear(); params.clear();
+    operation.push_back(_opCode);
+    if (_param)
+      _param->encode(params);
+  }
 
 protected:
-    uint8_t     id;
-    TCEntityKind ekind;
-    uint8_t     opcode;
-    Component*	param;
-    bool        ownComp; //this Entity is owner of 'param'
+  uint8_t       _invId;   //id of associated Invocation 
+  TCEntityKind  _ekind;   //ROS Component kind
+  uint8_t       _opCode;  //Operation code of associated Invocation 
+  Component *	_param;
+  bool          _ownComp; //this Entity is owner of 'param'
 };
 
 class TCResult : public TcapEntity {
 public:
-    TCResult(uint8_t tId, uint8_t tOpCode)
-        : TcapEntity(tId, TcapEntity::tceResult, tOpCode)
-    { }
+  TCResult(uint8_t inv_id, uint8_t op_code)
+    : TcapEntity(inv_id, TcapEntity::tceResult, op_code)
+  { }
 };
 
 class TCResultNL : public TcapEntity {
 public:
-    TCResultNL(uint8_t tId, uint8_t tOpCode)
-        : TcapEntity(tId, TcapEntity::tceResultNL, tOpCode)
-    { }
+  TCResultNL(uint8_t inv_id, uint8_t op_code)
+    : TcapEntity(inv_id, TcapEntity::tceResultNL, op_code)
+  { }
 };
 
 class TCError : public TcapEntity {
 public:
-    TCError(uint8_t tId, uint8_t tOpCode)
-        : TcapEntity(tId, TcapEntity::tceError, tOpCode)
-    { }
+  TCError(uint8_t inv_id, uint8_t op_code)
+    : TcapEntity(inv_id, TcapEntity::tceError, op_code)
+  { }
 };
 
 } //inap
