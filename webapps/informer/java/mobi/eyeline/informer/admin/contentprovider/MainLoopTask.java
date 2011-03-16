@@ -49,9 +49,9 @@ class MainLoopTask implements Runnable {
       if(log.isDebugEnabled()) {
         log.debug(e.getLocalizedMessage());
       }
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   public void run() {
