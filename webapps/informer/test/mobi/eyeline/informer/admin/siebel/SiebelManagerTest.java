@@ -7,8 +7,6 @@ import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
-import mobi.eyeline.informer.admin.delivery.changelog.TestDeliveryChangesDetector;
-import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
@@ -70,7 +68,7 @@ public class SiebelManagerTest {
     props.setProperty("timeout", Integer.toString(TIMEOUT));
 
 
-    siebel.start(siebelUser, new SiebelSettings(props));
+    siebel.start(siebelUser.getLogin(), new SiebelSettings(props));
   }
 
 
@@ -230,7 +228,7 @@ public class SiebelManagerTest {
     props.setProperty("timeout", Integer.toString(TIMEOUT));
 
 
-    siebel.start(siebelUser, new SiebelSettings(props));
+    siebel.start(siebelUser.getLogin(), new SiebelSettings(props));
 
     dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.STOPPED);
 

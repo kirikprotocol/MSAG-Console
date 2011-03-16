@@ -7,7 +7,6 @@ import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.Visitor;
-import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -32,8 +31,7 @@ public class SiebelProvider {
     changeListener = new SiebelFinalStateListener(manager, context, workDir, settings.getStatsPeriod());
     context.getDeliveryChangesDetector().addListener(changeListener);
 
-    User siebelUser = context.getUser(settings.getUser());
-    manager.start(siebelUser, settings);
+    manager.start(settings.getUser(), settings);
     changeListener.start();
 
     this.context = context;
@@ -55,14 +53,13 @@ public class SiebelProvider {
   public boolean updateSettings(SiebelSettings settings) throws AdminException {
 
     String u = settings.getUser();
-    User user = context.getUser(u);
 
     SiebelSettings old = this.settings;
     if (!old.getUser().equals(settings.getUser())) {
       DeliveryFilter filter = new DeliveryFilter();
       filter.setUserIdFilter(old.getUser());
       final boolean[] notExist = new boolean[]{true};
-      context.getDeliveries(user.getLogin(), filter, new Visitor<Delivery>() {
+      context.getDeliveries(u, filter, new Visitor<Delivery>() {
         public boolean visit(Delivery value) throws AdminException {
           if (value.getStatus() != DeliveryStatus.Finished && value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
             notExist[0] = false;
@@ -83,7 +80,7 @@ public class SiebelProvider {
       manager.stop();
       try {
         SiebelSettings _p = new SiebelSettings(settings);
-        manager.start(user, _p);
+        manager.start(u, _p);
         if(!changeListener.isStarted()) {
           changeListener.start();
         }
