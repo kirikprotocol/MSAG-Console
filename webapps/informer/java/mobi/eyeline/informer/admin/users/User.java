@@ -393,7 +393,7 @@ public class User implements Serializable {
     }
   }
 
-  private static final Pattern emailPattern = Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
+  public static final Pattern emailPattern = Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
 
   void validate() throws AdminException{
     vh.checkNotEmpty("login", login);
@@ -448,7 +448,9 @@ public class User implements Serializable {
       }
     }
 
-    vh.checkPositive("deliveryLifetime", deliveryLifetime);
+    if(createArchive) {
+      vh.checkPositive("deliveryLifetime", deliveryLifetime);
+    }
     vh.checkBetween("priority", priority, 1, 100);
 
     if(cpSettings != null) {

@@ -31,7 +31,8 @@
 
       <h:panelGrid columns="2" columnClasses="column50WidthNoWrap, columnTopLeftAlign">
         <h:outputText value="#{smscBundle.name}"/>
-        <tr:inputText value="#{smscEdit.smsc.name}" simple="true"/>
+        <tr:inputText value="#{smscEdit.smsc.name}" simple="true" rendered="#{smscEdit.newSmsc}"/>
+        <tr:outputText value="#{smscEdit.smsc.name}" rendered="#{!smscEdit.newSmsc}"/>
       </h:panelGrid>
 
       <eye:delimiter/>

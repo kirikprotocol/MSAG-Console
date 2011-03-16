@@ -2,7 +2,6 @@ package mobi.eyeline.informer.web.controllers.smsc;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.smsc.Smsc;
-import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
@@ -48,6 +47,10 @@ public class SmscEditController extends SmscController {
       smsc.setInterConnectTimeout(60);
       smsc.setTimeout(10);
     }
+  }
+
+  public boolean isNewSmsc() {
+    return oldName == null || oldName.length() == 0;
   }
 
   private void reload() throws AdminException {
@@ -162,18 +165,7 @@ public class SmscEditController extends SmscController {
       }
 
       if (oldName != null && oldName.length() > 0) {
-
-        if (!oldName.equals(smsc.name)) {
-
-          config.addSmsc(s, user);
-          if (config.getDefaultSmsc().equals(oldName)) {
-            config.setDefaultSmsc(smsc.name, user);
-          }
-          config.removeSmsc(oldName, user);
-        } else {
-          config.updateSmsc(s, user);
-        }
-
+        config.updateSmsc(s, user);
       } else {
         config.addSmsc(s, user);
       }
