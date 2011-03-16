@@ -63,8 +63,8 @@ int IAPQuerySRI::Execute(void)
       return (_qStatus = IAPQStatus::iqBadArg);
 
     try {
-      sriDlg = new MapCHSRIDlg(_cfg.mapSess, this); //binds this as user
-      sriDlg->reqRoutingInfo(abonent, _cfg.mapTimeout); //throws
+      _mapDlg.init().init(*_cfg.mapSess, *this, logger);
+      _mapDlg->reqRoutingInfo(abonent, _cfg.mapTimeout); //throws
 
       if (_mutex.wait(_cfg.mapTimeout*1000 + 100) != 0) //Unlocks, waits, locks
           _qStatus = IAPQStatus::iqTimeout;
@@ -74,15 +74,11 @@ int IAPQuerySRI::Execute(void)
       _qStatus = IAPQStatus::iqError;
       _exc = exc.what();
     }
-    if (sriDlg) {
-      while (!sriDlg->Unbind()) //MAPDlg refers this query
-          _mutex.wait();
-    }
+    while (_mapDlg.get() && !_mapDlg->unbindUser()) //MAPDlg refers this query
+      _mutex.wait();
   }
-  if (sriDlg) {
-    sriDlg->destroy();  //synchronization point, waits for sriDlg mutex
-    sriDlg = NULL;
-  }
+  if (_mapDlg.get())
+    _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
   return _qStatus;
 }
 
@@ -120,7 +116,7 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes & res)
   }
 }
 
-void IAPQuerySRI::onEndMapDlg(RCHash ercode/* = 0*/)
+void IAPQuerySRI::onDialogEnd(RCHash ercode/* = 0*/)
 {
   MutexGuard  grd(_mutex);
   if (ercode) {

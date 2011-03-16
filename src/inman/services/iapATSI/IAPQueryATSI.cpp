@@ -60,7 +60,7 @@ int IAPQueryATSI::Execute(void)
       return (_qStatus = IAPQStatus::iqBadArg);
 
     try {
-      _mapDlg = new MapATSIDlg(_cfg.mapSess, this); //binds this as user
+      _mapDlg.init().init(*_cfg.mapSess, *this, logger);
       _mapDlg->subsciptionInterrogation(_cfg, abonent, _cfg.mapTimeout);  //throws
 
       if (_mutex.wait(_cfg.mapTimeout*1000 + 100) != 0) //Unlocks, waits, locks
@@ -71,15 +71,11 @@ int IAPQueryATSI::Execute(void)
       _qStatus = IAPQStatus::iqError;
       _exc = exc.what();
     }
-    if (_mapDlg) {
-      while (!_mapDlg->Unbind()) //MAPDlg refers this query
-        _mutex.wait();
-    }
+    while (_mapDlg.get() && !_mapDlg->unbindUser()) //MAPDlg refers this query
+      _mutex.wait();
   }
-  if (_mapDlg) {
-    _mapDlg->destroy();  //synchronization point, waits for _mapDlg mutex
-    _mapDlg = NULL;
-  }
+  if (_mapDlg.get())
+    _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
   return _qStatus;
 }
 
@@ -111,7 +107,7 @@ void IAPQueryATSI::onATSIResult(ATSIRes & res)
                  abInfo.toString().c_str());
 }
 
-void IAPQueryATSI::onEndATSI(RCHash ercode/* = 0*/)
+void IAPQueryATSI::onDialogEnd(RCHash ercode/* = 0*/)
 {
   MutexGuard  grd(_mutex);
   if (ercode) {

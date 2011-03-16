@@ -11,6 +11,7 @@
 #endif
 #define SMSC_INMAN_IAPQUERY_HLR_ATSI_HPP
 
+#include "inman/common/OptionalObjT.hpp"
 #include "inman/abprov/facility/IAPThrFacility.hpp"
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 
@@ -68,15 +69,15 @@ protected:
   //-- ATSIhandlerITF implementation:
   // ****************************************
   virtual void onATSIResult(ATSIRes & arg);
-  //dialog finalization/error handling:
-  //if ercode != 0, dialog is aborted by reason = errcode
-  virtual void onEndATSI(RCHash ercode = 0);
+  //if err_code != 0, no result has been got from MAP service,
+  //NOTE: MAP dialog may be safely released but not deleted from this callback!
+  virtual void onDialogEnd(RCHash ercode = 0);
   //
   virtual void Awake(void) { _mutex.notify(); }
 
 
   IAPQueryATSI_CFG  _cfg;
-  MapATSIDlg *      _mapDlg;
+  smsc::util::OptionalObj_T<MapATSIDlg> _mapDlg;
 };
 
 class IAPQueryATSIFactory : public IAPQueryFactoryITF {

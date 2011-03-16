@@ -10,6 +10,7 @@
 #endif
 #define SMSC_INMAN_IAPQUERY_HLR_SRI_HPP
 
+#include "inman/common/OptionalObjT.hpp"
 #include "inman/abprov/facility/IAPThrFacility.hpp"
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 
@@ -24,9 +25,11 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::inman::iaprvd::IAPQueryAC;
 using smsc::inman::iaprvd::IAPQueryManagerITF;
 
+using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::chsri::MapCHSRIDlg;
 using smsc::inman::inap::chsri::CHSRIhandlerITF;
 
+using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 
 struct IAPQuerySRI_CFG {
   unsigned        mapTimeout;
@@ -55,15 +58,15 @@ protected:
   //-- CHSRIhandlerITF implementation:
   // ****************************************
   virtual void onMapResult(CHSendRoutingInfoRes & res);
-  //dialog finalization/error handling:
-  //if ercode != 0, dialog is aborted by reason = errcode
-  virtual void onEndMapDlg(RCHash ercode = 0);
+  //if err_code != 0, no result has been got from MAP service,
+  //NOTE: MAP dialog may be safely released but not deleted from this callback!
+  virtual void onDialogEnd(RCHash ercode = 0);
   //
   virtual void Awake(void) { _mutex.notify(); }
 
 
   IAPQuerySRI_CFG _cfg;
-  MapCHSRIDlg *   sriDlg;
+  smsc::util::OptionalObj_T<MapCHSRIDlg> _mapDlg;
 };
 
 class IAPQuerySRIFactory : public IAPQueryFactoryITF {
