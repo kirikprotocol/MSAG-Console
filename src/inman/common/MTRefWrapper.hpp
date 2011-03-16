@@ -20,53 +20,60 @@ namespace synchronization {
 template <class _TArg>
 class MTRefWrapper_T {
 protected:
-    _TArg   * first;
-    _TArg   * second;
-    pthread_t thrId;
+  volatile bool _locked;
+  pthread_t     _thrId;
+  _TArg *       _curState;
+  _TArg *       _nextState;
+
+  MTRefWrapper_T(const MTRefWrapper_T & cp_obj);
 
 public:
-    MTRefWrapper_T(_TArg * use_ref = NULL)
-        : thrId((pthread_t)(-1))
-    {
-        first = use_ref;  second = 0;
-    }
-    ~MTRefWrapper_T()
-    { }
+  explicit MTRefWrapper_T(_TArg * use_ref = NULL)
+    : _locked(false), _thrId((pthread_t)(-1))
+    , _curState(use_ref), _nextState(0)
+  { }
+  ~MTRefWrapper_T()
+  { }
 
-    void Reset(_TArg * use_ref)
-    {
-        thrId = (pthread_t)(-1);
-        first = use_ref;  second = 0;
-    }
+  void Reset(_TArg * use_ref)
+  {
+    _locked = false;
+    _thrId = (pthread_t)(-1);
+    _curState = use_ref;  _nextState = 0;
+  }
 
-    _TArg * get(void) const { return first; }
-    _TArg * operator->() const { return first; }
+  _TArg * get(void) const { return _curState; }
+  _TArg * operator->() const { return get(); }
 
-    _TArg * Lock(void)
-    {
-        if (first)
-            thrId = pthread_self();
-        return (second = first);
+  _TArg * Lock(void)
+  {
+    _locked = true;
+    if (_curState)
+      _thrId = pthread_self();
+    return (_nextState = _curState);
+  }
+
+  _TArg * UnLock(void)
+  {
+    _curState = _nextState;
+    _nextState = 0;
+    _thrId = (pthread_t)(-1);
+    _locked = false;
+    return _curState;
+  }
+
+  bool Unref(void)
+  {
+    if (!_locked) {
+      _curState = _nextState = 0;
+      return true;
     }
-    _TArg * UnLock(void)
-    {
-        first = second;
-        second = 0;
-        thrId = (pthread_t)(-1);
-        return first;
+    if (_thrId == pthread_self()) {  //locked by same thread,
+      _nextState = 0;                 //next Unlock() will perform Unref()
+      return true;
     }
-    bool Unref(void)
-    {
-        if (!second) { //not locked
-            first = 0;
-            return true;
-        }
-        if (thrId == pthread_self()) {  //locked by same thread,
-            second = 0;                 //next Unlock() will perform Unref()
-            return true;
-        }
-        return false;
-    }
+    return false;
+  }
 };
 
 
