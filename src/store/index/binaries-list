@@ -1,3 +1,4 @@
 idxtest/idxtest idxtest $(__LIBRARIES) $(XERCES_LIB) -lsms -lutil -lstore-index -lutil -lutil-config -lutil-xml -lrt -L$(SMSC_BUILDDIR)/bin -llogger
 idxtest/htest htest $(__LIBRARIES) $(XERCES_LIB) -lsms -lutil -lstore-index -lutil -lutil-config -lutil-xml -lrt -L$(SMSC_BUILDDIR)/bin -llogger
 store/indexer indexer $(__LIBRARIES) $(XERCES_LIB)  -lutil -lutil-config -lutil-xml -lstore -lutil-config -lutil-xml -lsms -lutil-recoder-recode_dll -lrt -L$(SMSC_BUILDDIR)/bin -llogger 
+store/calcstats calcstats $(__LIBRARIES) $(XERCES_LIB)  -lutil -lutil-config -lutil-xml -lstore -lutil-config -lutil-xml -lsms -lutil-recoder-recode_dll -lrt -L$(SMSC_BUILDDIR)/bin -llogger 
