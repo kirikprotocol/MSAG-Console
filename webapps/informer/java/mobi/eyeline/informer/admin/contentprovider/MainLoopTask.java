@@ -40,11 +40,14 @@ class MainLoopTask implements Runnable {
   }
 
   private boolean checkNoRestriction(String login){
+    if(log.isDebugEnabled()) {
+      log.debug("Check restrictions for user: "+login);
+    }
     try{
       context.checkNoRestrictions(login);
     }catch (AdminException e){
       if(log.isDebugEnabled()) {
-        log.debug(e.getMessage());
+        log.debug(e.getLocalizedMessage());
       }
       return true;
     }
@@ -56,11 +59,11 @@ class MainLoopTask implements Runnable {
       List<User> users = context.getUsers();
       Set<String> checkedUcps = new HashSet<String>();
       for(User u : users ) {
-        if(!checkNoRestriction(u.getLogin())) {
-          continue;
-        }
         List<UserCPsettings> s = u.getCpSettings();
         if(u.getStatus()==User.Status.ENABLED && s != null && s.size()>0) {
+          if(!checkNoRestriction(u.getLogin())) {
+            continue;
+          }
           try {
             processUser(u, checkedUcps);
           }
