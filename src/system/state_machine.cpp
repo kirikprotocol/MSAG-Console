@@ -5177,13 +5177,13 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 {
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
-    if(sms.lastResult!=0)
+/*    if(sms.lastResult!=0)
     {
       if(sms.hasIntProperty(Tag::SMPP_SET_DPF))
       {
         smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
       }
-    }
+    }*/
     //smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
     //smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
     SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
