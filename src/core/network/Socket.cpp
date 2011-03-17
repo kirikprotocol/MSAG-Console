@@ -106,10 +106,6 @@ int Socket::BindClient(const char* host)
 int Socket::Connect(bool nb)
 {
   Close();
-  if(connectTimeout)
-  {
-    nb=true;
-  }
   sock=socket(AF_INET,SOCK_STREAM,0);
 
   if(sock==INVALID_SOCKET)
@@ -117,7 +113,10 @@ int Socket::Connect(bool nb)
     return -1;
   }
 
-  if(nb) setNonBlocking(1);
+  if(nb || connectTimeout)
+  {
+    setNonBlocking(1);
+  }
 
   if(connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)) && errno != EINPROGRESS)
   {
@@ -150,6 +149,11 @@ int Socket::Connect(bool nb)
       sock=INVALID_SOCKET;
       return -1;
     }
+  }
+
+  if(!nb && connectTimeout)
+  {
+    setNonBlocking(0);
   }
 
   connected=1;
