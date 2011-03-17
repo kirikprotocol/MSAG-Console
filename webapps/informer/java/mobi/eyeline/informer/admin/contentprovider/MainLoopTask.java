@@ -132,42 +132,46 @@ class MainLoopTask implements Runnable {
     List<String> userDirsNames = new ArrayList<String>();
     if(u.getCpSettings()!=null) {
       for(UserCPsettings ucps : u.getCpSettings()) {
+        try{
 
-        String mapKey = ucps.toString();
+          String mapKey = ucps.toString();
+          checkedUcps.add(mapKey);
 
-        checkedUcps.add(mapKey);
+          long currentMillis = System.currentTimeMillis();
 
-        long currentMillis = System.currentTimeMillis();
+          if (log.isDebugEnabled())
+            log.debug("Start: '" + ucps + "'. User: '" + u.getLogin() + "'...");
 
-        if (log.isDebugEnabled())
-          log.debug("Start: '" + ucps + "'. User: '" + u.getLogin() + "'...");
+          File userDir = userDirResolver.getUserLocalDir(u.getLogin(), ucps);
 
-        File userDir = userDirResolver.getUserLocalDir(u.getLogin(), ucps);
-
-        if(!fileSys.exists(userDir)) {
-          fileSys.mkdirs(userDir);
-        }
-        userDirsNames.add(userDir.getName());
-
-        ResourceProcessStrategy strategy = getStrategy(u, userDir, ucps, userDirResolver.getConnection(u, ucps));
-
-        if(!isUpdateIsNeeded(ucps, mapKey, currentMillis) || !isCreationAvailable(u)) {
-          try {
-            strategy.process(false);
-          } catch (AdminException e) {
-            log.error(e,e);
+          if(!fileSys.exists(userDir)) {
+            fileSys.mkdirs(userDir);
           }
-        } else {
-          try {
-            strategy.process(true);
-          } catch (AdminException e) {
-            log.error(e,e);
-          }
-          lastUpdate.put(mapKey, currentMillis);
-        }
+          userDirsNames.add(userDir.getName());
 
-        if (log.isDebugEnabled())
-          log.debug("Finish: '" + ucps + "'. User: '" + u.getLogin() + "'...");
+          ResourceProcessStrategy strategy = getStrategy(u, userDir, ucps, userDirResolver.getConnection(u, ucps));
+
+          if(!isUpdateIsNeeded(ucps, mapKey, currentMillis) || !isCreationAvailable(u)) {
+            try {
+              strategy.process(false);
+            } catch (AdminException e) {
+              log.error(e,e);
+            }
+          } else {
+            try {
+              strategy.process(true);
+            } catch (AdminException e) {
+              log.error(e,e);
+            }
+            lastUpdate.put(mapKey, currentMillis);
+          }
+
+          if (log.isDebugEnabled())
+            log.debug("Finish: '" + ucps + "'. User: '" + u.getLogin() + "'...");
+
+        }catch (Exception e) {
+          log.error(e, e);
+        }
       }
     }
     cleanUpDirs(u.getLogin(), userDirsNames);

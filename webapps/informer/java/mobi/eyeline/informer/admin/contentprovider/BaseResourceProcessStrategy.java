@@ -64,40 +64,48 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
 
     for (File f : files) {
-      if (f.getName().endsWith(".csv")) {
-        try {
-          createDeliveryFromFile(f);
+      try{
+        if (f.getName().endsWith(".csv")) {
           try {
-            resource.open();
-            fileProccesed(resource, f.getName());
-          }finally {
-            resource.close();
+            createDeliveryFromFile(f);
+            try {
+              resource.open();
+              fileProccesed(resource, f.getName());
+            }finally {
+              resource.close();
+            }
+          } catch (DeliveryException e) {
+            log.error(e,e);
+            try{
+              fileSys.delete(f);
+            }catch (AdminException ignored){}
+            if(e.getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline) {   // informer is offline ?
+              deliveryCreationError(resource, e, f.getName());                         // other problems, notify cp
+            }
+          } catch (Exception e){
+            log.error(e,e);
+            try{
+              fileSys.delete(f);
+            }catch (AdminException ignored){}
+            deliveryCreationError(resource, e, f.getName());                           // other problems, notify cp
           }
-        } catch (DeliveryException e) {
-          log.error(e,e);
-          try{
-            fileSys.delete(f);
-          }catch (AdminException ex){}
-          if(e.getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline) {   // informer is offline
-            deliveryCreationError(resource, e, f.getName());                         // other problems, notify cp
-          }
-        } catch (Exception e){
-          log.error(e,e);
-          try{
-            fileSys.delete(f);
-          }catch (AdminException ex){}
-          deliveryCreationError(resource, e, f.getName());                           // other problems, notify cp
+        } else if (f.getName().endsWith(".wait")) {
+          uploadDeliveryResults(f);
         }
-      } else if (f.getName().endsWith(".wait")) {
-        uploadDeliveryResults(f);
+      }catch (Exception e) {
+        log.error(e,e);
       }
     }
 
     for(File f : files) {
-      if(f.getName().endsWith(".not.generated")) {       // haven't analogs on resource
-        cleanNotGenerated(f);
-      } else if(f.getName().endsWith(".gen")) {          // haven't analogs on resource
-        cleanGenerated(f);
+      try{
+        if(f.getName().endsWith(".not.generated")) {       // haven't analogs on resource
+          cleanNotGenerated(f);
+        } else if(f.getName().endsWith(".gen")) {          // haven't analogs on resource
+          cleanGenerated(f);
+        }
+      }catch (Exception e){
+        log.error(e,e);
       }
     }
 
@@ -411,10 +419,10 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     } catch (Exception e) {
       log.error(e, e);
     } finally {
-        try {
-          resource.close();
-        } catch (AdminException ignored) {
-        }
+      try {
+        resource.close();
+      } catch (AdminException ignored) {
+      }
     }
   }
 
