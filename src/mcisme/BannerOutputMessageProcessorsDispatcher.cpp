@@ -97,6 +97,7 @@ BannerOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications(con
 void
 BannerOutputMessageProcessorsDispatcher::dispatchBERollbackRequest(const BannerResponseTrace& bannerRespTrace)
 {
+  if( bannerRespTrace.bannerId == -1 ) return;
   OutputMessageProcessor* msgProc = getFreeProcessor();
   msgProc->assignMessageOutputWork(bannerRespTrace);
 }
