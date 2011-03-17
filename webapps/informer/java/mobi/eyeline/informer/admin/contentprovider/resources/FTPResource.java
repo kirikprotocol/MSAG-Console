@@ -36,6 +36,7 @@ class FTPResource extends FileResource {
     try{
       ftp = new FTPClient();
       ftp.setType(FTPClient.TYPE_BINARY);
+      ftp.setCharset("cp1251"); //todo hardcoded
       if(port == null || port == 0) {
         ftp.connect(host);
       } else {
