@@ -66,7 +66,8 @@ public:
   void clear(void)
   {
     AbonentContractInfo::clear(); 
-    csiSCF.clear(); vlrNum.clear(); tmQueried = 0;
+    csiSCF.clear(); odbGD.clear();
+    vlrNum.clear(); tmQueried = 0;
   }
 
   //Returns true if at least one parameter was updated
