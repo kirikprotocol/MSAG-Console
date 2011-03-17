@@ -67,7 +67,12 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (f.getName().endsWith(".csv")) {
         try {
           createDeliveryFromFile(f);
-          fileProccesed(resource, f.getName());
+          try {
+            resource.open();
+            fileProccesed(resource, f.getName());
+          }finally {
+            resource.close();
+          }
         } catch (DeliveryException e) {
           log.error(e,e);
           try{
