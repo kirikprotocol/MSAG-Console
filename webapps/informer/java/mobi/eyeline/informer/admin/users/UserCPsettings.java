@@ -297,8 +297,10 @@ public class UserCPsettings implements Serializable {
       }else {
         if(directoryMaxSize<=0)     throw new UserException("ucps.directoryMaxSize.invalid");
       }
-      if(login==null|| login.length()==0)    throw new UserException("ucps.login.invalid");
-      if(password==null || password.length()==0) throw new UserException("ucps.password.invalid");
+      if(protocol != Protocol.smb) {
+        if(login==null|| login.length()==0)    throw new UserException("ucps.login.invalid");
+        if(password==null || password.length()==0) throw new UserException("ucps.password.invalid");
+      }
     }
     if(protocol != Protocol.localFtp) {
       if(directory==null || directory.length()==0) throw new UserException("ucps.directory.invalid");
