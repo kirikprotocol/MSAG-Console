@@ -812,7 +812,6 @@ TaskProcessor::store_D_Event_in_logstore(const AbntAddr& abnt,
     AbonentProfile callerProfile;
     profileStorage->Get(AbntAddr(&iter->caller), callerProfile);
 
-    smsc_log_debug(logger, "TaskProcessor::store_D_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s,abntProfile.notify=%d,abntProfile.wantNotifyMe=%d", calledAbonent.c_str(), callingAbonent.c_str(), abntProfile.notify, abntProfile.wantNotifyMe);
     MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_MissedCallInfoDelivered(callingAbonent, calledAbonent, abntProfile.notify, callerProfile.wantNotifyMe));
   }
 }
@@ -826,7 +825,6 @@ TaskProcessor::store_F_Event_in_logstore(const AbntAddr& abnt,
       iter != end_iter; ++iter) {
     const std::string& callingAbonent = AbntAddr(&iter->caller).getText();
 
-    smsc_log_debug(logger, "TaskProcessor::store_F_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s", calledAbonent.c_str(), callingAbonent.c_str());
     MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_MissedCallInfoDeliveringFailed(callingAbonent, calledAbonent));
   }
 }
@@ -835,7 +833,6 @@ void
 TaskProcessor::store_N_Event_in_logstore(const std::string& calledAbonent,
                                          const std::string& callingAbonent)
 {
-  smsc_log_debug(logger, "TaskProcessor::store_N_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s", calledAbonent.c_str(), callingAbonent.c_str());
   MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_SendCallerNotification(callingAbonent, calledAbonent));
 }
 
@@ -845,7 +842,6 @@ TaskProcessor::store_A_Event_in_logstore(const AbntAddr& callingAbonent,
                                          const AbonentProfile& abntProfile,
                                          const AbonentProfile& callerProfile )
 {
-  smsc_log_debug(logger, "TaskProcessor::store_A_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s,abntProfile.notify=%d,abntProfile.wantNotifyMe=%d", calledAbonent.getText().c_str(), callingAbonent.getText().c_str(), abntProfile.notify, abntProfile.wantNotifyMe);
   MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_GotMissedCall(callingAbonent.getText(), calledAbonent.getText(), abntProfile.notify, callerProfile.wantNotifyMe));
 }
 
