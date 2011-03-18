@@ -25,6 +25,7 @@ public class Options extends MCISmeBean
   private String calledMask = "";
   private int protocolId = 0;
   private int daysValid = 1;
+  private int maxDataSmRegistrySize = 0;
   private int unrespondedMessagesMax = 0;
   private int unrespondedMessagesSleep = 0;
   private int outgoingSpeedMax = 0;
@@ -149,6 +150,7 @@ public class Options extends MCISmeBean
         daysValid  = getConfig().getInt("MCISme.DaysValid");
         callingMask = getConfig().getString("MCISme.CallingMask");
         calledMask  = getConfig().getString("MCISme.CalledMask");
+        maxDataSmRegistrySize = getConfig().getInt("MCISme.maxDataSmRegistrySize");
         unrespondedMessagesMax = getConfig().getInt("MCISme.unrespondedMessagesMax");
         unrespondedMessagesSleep = getConfig().getInt("MCISme.unrespondedMessagesSleep");
         outgoingSpeedMax = getConfig().getInt("MCISme.outgoingSpeedMax");
@@ -334,6 +336,7 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.DaysValid", daysValid);
     getConfig().setString("MCISme.CallingMask", callingMask);
     getConfig().setString("MCISme.CalledMask" , calledMask);
+    getConfig().setInt   ("MCISme.maxDataSmRegistrySize", maxDataSmRegistrySize);
     getConfig().setInt   ("MCISme.unrespondedMessagesMax", unrespondedMessagesMax);
     getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
     getConfig().setInt   ("MCISme.outgoingSpeedMax", outgoingSpeedMax);
@@ -621,6 +624,24 @@ public class Options extends MCISmeBean
   }
   public void setRedirectionAddress(String redirectionAddress) {
     this.redirectionAddress = redirectionAddress;
+  }
+
+  public int getMaxDataSmRegistrySizeInt() {
+    return maxDataSmRegistrySize;
+  }
+  public void setMaxDataSmRegistrySizeInt(int maxDataSmRegistrySize) {
+    this.maxDataSmRegistrySize = maxDataSmRegistrySize;
+  }
+
+  public String getMaxDataSmRegistrySize() {
+    return String.valueOf(maxDataSmRegistrySize);
+  }
+  public void setMaxDataSmRegistrySize(String maxDataSmRegistrySize) {
+    try {
+      this.maxDataSmRegistrySize = Integer.decode(maxDataSmRegistrySize).intValue();
+    } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.maxDataSmRegistrySize parameter value: " + maxDataSmRegistrySize + '"', e);
+    }
   }
 
   public int getUnrespondedMessagesMaxInt() {

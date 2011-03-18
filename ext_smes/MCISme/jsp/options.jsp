@@ -49,6 +49,10 @@
   <td><input class=txt name=calledMask value="<%=StringEncoderDecoder.encode(bean.getCalledMask())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Max DataSm registry size</th>
+  <td><input class=txt name=maxDataSmRegistrySize value="<%=StringEncoderDecoder.encode(bean.getMaxDataSmRegistrySize())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Unresponded messages max</th>
   <td><input class=txt name=unrespondedMessagesMax value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesMax())%>"></td>
 </tr>
