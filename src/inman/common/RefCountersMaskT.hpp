@@ -13,6 +13,7 @@
 namespace smsc {
 namespace util {
 
+//Maximum number of references is 255.
 class RefCountersMaskAC {
 private:
   const uint8_t   _maxRefs;
@@ -23,6 +24,8 @@ private:
 
   //Returns true if all _refMask bits have given value
   bool _isMaskBits(bool bit_value) const;
+  //Returns true if all _refMask bits, excluding specified one, have given value
+  bool _isMaskBitsExcept(uint8_t ref_idx, bool bit_value) const;
   //Returns true if all counter bits have given value
   bool _isCounterBits(uint8_t ref_idx, bool bit_value) const;
   //returns true if recursive counter isn't zero
@@ -40,19 +43,19 @@ private:
   uint16_t _getCounter(uint8_t ref_idx) const;
 
 protected:
-  static inline uint8_t _octMask(unsigned bit_idx)
+  static inline uint8_t _octMask(const uint8_t bit_idx)
   {
     return (uint8_t)(0x01 << (7 - (bit_idx % 8)));
   }
-  static inline bool _bitValue(const uint8_t * p_arr, unsigned bit_idx)
+  static inline bool _bitValue(const uint8_t * p_arr, const uint8_t bit_idx)
   {
     return ((p_arr[bit_idx/8] & _octMask(bit_idx)) != 0);
   }
-  static inline void _bitSet(uint8_t * p_arr, unsigned bit_idx)
+  static inline void _bitSet(uint8_t * p_arr, const uint8_t bit_idx)
   {
     p_arr[bit_idx/8] |= _octMask(bit_idx);
   }
-  static inline void _bitUnset(uint8_t * p_arr, unsigned bit_idx)
+  static inline void _bitUnset(uint8_t * p_arr, const uint8_t bit_idx)
   {
     p_arr[bit_idx/8] &= ~_octMask(bit_idx);
   }
@@ -82,6 +85,8 @@ public:
   bool hasRefs(void) const { return !_isMaskBits(false); }
   //returns true if reference with specified id is present
   bool hasRefs(uint8_t ref_idx) const { return _bitValue(_refMask, ref_idx); }
+  //returns true if if at least one reference, excluding specified one, is present
+  bool hasRefsExcept(uint8_t ref_idx) const { return !_isMaskBitsExcept(ref_idx, false); }
   //returns false if counter of reference with specified id
   //is exceeded the maximum, or referenced object is already
   //marked for deletion.

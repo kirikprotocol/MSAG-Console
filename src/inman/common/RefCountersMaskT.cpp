@@ -14,12 +14,23 @@ namespace util  {
 //Returns true if all _refMask bits have given value
 bool RefCountersMaskAC::_isMaskBits(bool bit_value) const
 {
-  for (unsigned i = 0; i < _maxRefs; ++i) {
+  for (uint8_t i = 0; i < _maxRefs; ++i) {
     if (_bitValue(_refMask, i) != bit_value)
       return false;
   }
   return true;
 }
+
+//Returns true if all _refMask bits, excluding specified one, have given value
+bool RefCountersMaskAC::_isMaskBitsExcept(uint8_t ref_idx, bool bit_value) const
+{
+  for (uint8_t i = 0; i < _maxRefs; ++i) {
+    if ((i != ref_idx) && (_bitValue(_refMask, i) != bit_value))
+      return false;
+  }
+  return true;
+}
+
 
 //Returns true if all counter bits have given value
 bool RefCountersMaskAC::_isCounterBits(uint8_t ref_idx, bool bit_value) const
