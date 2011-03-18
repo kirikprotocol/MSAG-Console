@@ -77,12 +77,25 @@ protected:
   MessageSender() {};
 };
 
+struct sms_info;
+struct TimeoutItem{
+  int seqNum;
+  sms_info* info;
+  time_t expirationTime;
+  TimeoutItem(int argSeqNum,time_t argExpirationTime,sms_info* argInfo):seqNum(argSeqNum),expirationTime(argExpirationTime),info(argInfo)
+  {
+  }
+};
+
+typedef std::list<TimeoutItem> TimeoutList;
+
 struct sms_info
 {
   time_t          sending_time;
   AbntAddr        abnt;
   vector<MCEvent> events;
   BannerResponseTrace bannerRespTrace;
+  TimeoutList::iterator timeoutIter;
 };
 
 class SendMessageEventHandler;
@@ -129,6 +142,7 @@ class TaskProcessor : public Thread, public MissedCallListener,
 
   Hash<bool>      lockedSmscIds;
 
+  TimeoutList toList;
   IntHash<sms_info*> smsInfo;
   mutable Mutex	     smsInfoMutex;
 
@@ -164,6 +178,8 @@ class TaskProcessor : public Thread, public MissedCallListener,
   time_t _sendAbntOnlineNotificationPeriod; // expressed in seconds
 
   size_t _maxMessageSize;
+
+  int maxDataSmRegistrySize;
 
   OutputMessageProcessorsDispatcher* _outputMessageProcessorsDispatcher;
   IASMEProxy* _iasmeProxy;
@@ -205,11 +221,14 @@ class TaskProcessor : public Thread, public MissedCallListener,
 
   void insertSmsInfo(int seqNum, sms_info* pInfo) {
     MutexGuard Lock(smsInfoMutex);
+    pInfo->timeoutIter=toList.insert(toList.end(),TimeoutItem(seqNum,pInfo->sending_time+responseWaitTime,pInfo));
     smsInfo.Insert(seqNum, pInfo);
   }
 
   void deleteSmsInfo(int seqNum) {
     MutexGuard Lock(smsInfoMutex);
+    sms_info* ptr=smsInfo.Get(seqNum);
+    toList.erase(ptr->timeoutIter);
     smsInfo.Delete(seqNum);
   }
   void processLocally(const AbntAddr& from, const AbntAddr& to,

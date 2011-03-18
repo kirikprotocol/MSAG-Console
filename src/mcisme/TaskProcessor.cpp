@@ -3,6 +3,7 @@
 #include <iconv.h>
 #include <string>
 #include <time.h>
+#include <unistd.h>
 #include <netinet/in.h>
 
 #include "sme/SmppBase.hpp"
@@ -132,6 +133,14 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     _qosTimeToLive = config->getInt("QosTimeToLive");
   } catch(ConfigException& exc) {
     _qosTimeToLive = 90; // in minutes
+  }
+
+  maxDataSmRegistrySize=50;
+  try{
+    maxDataSmRegistrySize=config->getInt("maxDataSmRegistrySize");
+  }catch(ConfigException& exc)
+  {
+
   }
 
   std::string callingMask = config->getString("CallingMask");
@@ -583,9 +592,14 @@ void TaskProcessor::Run()
       smsc_log_info(logger, "MCI Module is down. Exiting message processing loop");
       break;
     }
+    if(smsInfo.Count()>=maxDataSmRegistrySize)
+    {
+      usleep(10000);//microseconds
+    }
     try {
       AbntAddr abnt;
-      if(pDeliveryQueue->Get(abnt)) {
+      if(pDeliveryQueue->Get(abnt))
+      {
         // dispatch message to one of active processing threads
         _outputMessageProcessorsDispatcher->dispatchSendMissedCallNotification(abnt);
       }
@@ -847,6 +861,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
     }
     pInfo.reset(smsInfo.Get(seqNum));
     smsInfo.Delete(seqNum);
+    toList.erase(pInfo->timeoutIter);
   }
 
   smsc_log_info(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num=%d, status=%d", pInfo->abnt.toString().c_str(), seqNum, status);
@@ -918,6 +933,14 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
     int count_old = smsInfo.Count();
     if ( !count_old ) return;
     smsc_log_debug(logger, "Start searching unresponded DATA_SM. Total SMS in Hash is %d", count_old);
+    TimeoutList::iterator it;
+    while((it=toList.begin())->expirationTime<curTime)
+    {
+      smsInfoCache.push_back(sms_info_entry_t(it->seqNum,it->info));
+      smsInfo.Delete(it->seqNum);
+      toList.erase(it);
+    }
+    /*
     smsc::core::buffers::IntHash<sms_info*>::Iterator It(smsInfo.First());
 
     while (It.Next(seqNum, pInfo)) {
@@ -930,13 +953,19 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
         count++;
       }
     }
+    */
     int count_new = smsInfo.Count();
     smsc_log_debug(logger, "Complete searching unresponded DATA_SM. Total SMS in Hash is %d, removed %d (%d)", count_new, count_old - count_new, count);
+
   }
 
   for(std::list<sms_info_entry_t>::iterator iter = smsInfoCache.begin(), end_iter=smsInfoCache.end();
-      iter != end_iter; ++iter) {
-    seqNum = (*iter).first; pInfo = (*iter).second;
+      iter != end_iter; ++iter)
+  {
+    seqNum = (*iter).first;
+    pInfo = (*iter).second;
+    smsc_log_info(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
+    statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
     try {
       BannerResponseTrace emptyBannerRespTrace;
       if ( pInfo->bannerRespTrace != emptyBannerRespTrace &&
