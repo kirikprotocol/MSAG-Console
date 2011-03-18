@@ -61,12 +61,16 @@ stringParser(const std::string& inputStr)
 
   oldPos = pos;
   pos = inputStr.find_first_of(", ", oldPos);
-  
+
   if ( pos != std::string::npos ) throw smsc::util::Exception("stringParser::: wrong input string format - unexpected delimeter found at end of string");
   std::string eventType = inputStr.substr(oldPos);
+  while(!eventType.empty() && *eventType.rbegin()<=32)
+  {
+    eventType.erase(eventType.length()-1);
+  }
   printf("eventType=[%s] eventType=[%s]\n", hexdmp(eventType.c_str(), eventType.size()).c_str(), eventType.c_str());
-  eventType.erase(eventType.size()-2);
-  printf("eventType=[%s] eventType=[%s]\n", hexdmp(eventType.c_str(), eventType.size()).c_str(), eventType.c_str());
+  //eventType.erase(eventType.size()-2);
+  //printf("eventType=[%s] eventType=[%s]\n", hexdmp(eventType.c_str(), eventType.size()).c_str(), eventType.c_str());
 
   if ( !caseInsensitiveCompare(eventType, "ABSENT") )
     event.cause = ABSENT;
@@ -140,7 +144,7 @@ int MissedCallProcessorEmulator::run()
   _serverSocket.StartServer();
   core::network::Socket* clntSocket=NULL;
   char cmdBuf[128];
-  try { 
+  try {
     while (true) {
       if(clntSocket) delete clntSocket;
       clntSocket = _serverSocket.Accept();
