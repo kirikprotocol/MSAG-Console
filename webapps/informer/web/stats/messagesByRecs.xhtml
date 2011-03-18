@@ -80,7 +80,7 @@
                   <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.userId}">
                     #{row.userId}
                   </a>
-                </tr:panelGroupLayout>               -->
+                </tr:panelGroupLayout>
                 <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
               </eye:column>
               <eye:column name="text" title="#{msg['stat.page.text']}" sortable="true" width="20%" align="center">
