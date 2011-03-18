@@ -135,7 +135,7 @@ public:
     while (difference >= unrespondedMessagesMax) {
       smsc_log_debug(logger, "wait %d (o=%d, i=%d)",
                      difference*unrespondedMessagesSleep, out, inc);
-      trafficMonitor.wait(difference*unrespondedMessagesSleep);
+      trafficMonitor.wait(unrespondedMessagesSleep);
       out = outgoing.Get(); inc = incoming.Get(); difference = out-inc;
       if (TrafficControl::stopped) return;
     }
