@@ -1456,6 +1456,7 @@ void InfosmeCoreV1::loadUsers( const char* userId )
             } else {
                 user->addRole(USERROLE_USER);
             }
+            // FIXME: load allowed addresses
         }
     } catch ( InfosmeException& ) {
         throw;

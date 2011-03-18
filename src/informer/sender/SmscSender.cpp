@@ -440,7 +440,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
 
             smsc::sms::SMS sms;
             smsc::sms::Address oa;
-            if ( ! msg.flags.getSourceAddress(oa) ) {
+            if ( msg.flags.getSourceAddress(oa) ) {
+                // FIXME: check if the address is allowed
+            } else {
                 info.getSourceAddress(oa);
             }
             sms.setOriginatingAddress(oa);

@@ -711,6 +711,19 @@ void DeliveryMgr::stop()
 dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
                                         const DeliveryInfoData& infoData )
 {
+    // check delivery info data
+    try {
+        smsc::sms::Address oa(infoData.sourceAddress.c_str());
+        if ( !userInfo.checkSourceAddress(oa) ) {
+            throw InfosmeException( EXC_BADADDRESS, "address '%s' is not allowed for user '%s'",
+                                    infoData.sourceAddress.c_str(), userInfo.getUserId() );
+        }
+    } catch ( std::exception& e ) {
+        throw InfosmeException( EXC_BADADDRESS, "address '%s': %s",
+                                infoData.sourceAddress.c_str(),
+                                e.what() );
+    }
+
     const dlvid_type dlvId = getNextDlvId();
     DeliveryInfo* info = new DeliveryInfo(dlvId,infoData,userInfo);
     DlvState state = DLVSTATE_PAUSED;

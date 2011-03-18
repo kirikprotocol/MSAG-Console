@@ -90,6 +90,7 @@ public:
         return userId_.c_str();
     }
 
+    // buffer must has at least PASSWORD_LENGTH chars
     inline char* getPassword( char* pwd ) const {
         MutexGuard mg(dataLock_);
         strcpy(pwd,password_.c_str());
@@ -116,6 +117,11 @@ public:
 
     // roles are replaced by those of ruser.
     void update( const UserInfo& ruser );
+
+    void setAllowedAddresses( const std::vector< smsc::sms::Address >& oas );
+
+    // check if the address oa is allowed
+    bool checkSourceAddress( const smsc::sms::Address& oa );
 
     // mark the user as deleted
     void setDeleted( bool del ) {
@@ -163,6 +169,8 @@ private:
     bool        isDeleted_;
     // the list of owned deliveries, ordered by dlvid
     DeliveryList deliveries_;
+    // delivery limits, e.g. sourceaddrs, etc.
+    std::vector< smsc::sms::Address > allowedAddresses_; // or empty
 
     // statistics
     smsc::core::synchronization::Mutex statLock_;

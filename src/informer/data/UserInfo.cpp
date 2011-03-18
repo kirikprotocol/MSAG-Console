@@ -139,11 +139,31 @@ void UserInfo::update( const UserInfo& user )
     roles_ = user.roles_;
     maxTotalDeliveries_ = user.maxTotalDeliveries_;
     priority_ = user.priority_;
+    allowedAddresses_ = user.allowedAddresses_;
     smsc_log_info(log_,"U='%s' updated: roles=%llu maxTotalDlv=%u speed=%u prio=%u",
                   userId_.c_str(), ulonglong(roles_), unsigned(maxTotalDeliveries_),
                   unsigned(speedControl_.getSpeed()), unsigned(priority_) );
 }
 
+
+void UserInfo::setAllowedAddresses( const std::vector< smsc::sms::Address>& oas )
+{
+    MutexGuard mg(dataLock_);
+    allowedAddresses_ = oas;
+}
+
+
+bool UserInfo::checkSourceAddress( const smsc::sms::Address& oa )
+{
+    MutexGuard mg(dataLock_);
+    if ( allowedAddresses_.empty() ) return true;
+    std::vector< smsc::sms::Address >::const_iterator it =
+        std::find( allowedAddresses_.begin(),
+                   allowedAddresses_.end(),
+                   oa );
+    if ( it == allowedAddresses_.end() ) return false;
+    return true;
+}
 
 
 void UserInfo::getDeliveries( DeliveryList& dlvs ) const
