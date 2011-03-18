@@ -45,6 +45,8 @@ public:
   _TArg * get(void) const { return _curState; }
   _TArg * operator->() const { return get(); }
 
+  _TArg * getNext(void) const { return _locked ? _nextState : _curState; }
+
   _TArg * Lock(void)
   {
     _locked = true;
