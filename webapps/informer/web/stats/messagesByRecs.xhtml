@@ -71,14 +71,16 @@
                 <h:outputText value="#{row.recipient}"/>
               </eye:column>
               <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
-                <h:commandLink value="#{row.name}" action="DELIVERY_EDIT">
-                  <f:param name="delivery" value="#{row.deliveryId}"/>
-                </h:commandLink>
+                <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">
+                  #{row.name}
+                </a>
               </eye:column>
               <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="5%" align="center">
-                <h:commandLink value="#{row.userId}" action="USER_EDIT" title="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
-                  <f:param name="userId" value="#{row.userId}"/>
-                </h:commandLink>                
+                <tr:panelGroupLayout shortDesc="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
+                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.userId}">
+                    #{row.userId}
+                  </a>
+                </tr:panelGroupLayout>               -->
                 <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
               </eye:column>
               <eye:column name="text" title="#{msg['stat.page.text']}" sortable="true" width="20%" align="center">
