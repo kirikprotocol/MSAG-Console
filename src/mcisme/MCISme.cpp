@@ -63,7 +63,7 @@ const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 static smsc::logger::Logger *logger = 0;
 
 static TaskProcessor*         taskProcessor = 0;
-static ServiceSocketListener* adminListener = 0; 
+static ServiceSocketListener* adminListener = 0;
 static bool bAdminListenerInited = false;
 
 static Event mciSmeWaitEvent;
@@ -114,11 +114,11 @@ static int   outgoingSpeedMax = 50;
 
 class TrafficControl
 {
-  static EventMonitor   trafficMonitor; 
+  static EventMonitor   trafficMonitor;
   static TimeSlotCounter<int> incoming;
   static TimeSlotCounter<int> outgoing;
   static TimeSlotCounter<int> limitSpeed;
-  static bool                 stopped; 
+  static bool                 stopped;
 
 public:
 
@@ -152,7 +152,7 @@ public:
   static bool getTraffic(int& in, int& out)
   {
     MutexGuard guard(trafficMonitor);
-    in = incoming.Get()/10; out = outgoing.Get()/10; 
+    in = incoming.Get()/10; out = outgoing.Get()/10;
     return (!TrafficControl::stopped);
   }
 
@@ -193,7 +193,7 @@ private:
 public:
   MCISmeConfig(ConfigView* config)
     throw(ConfigException)
-    : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
+    : SmeConfig(), strHost(0), strSid(0), strPassword(0),
       strSysType(0), strOrigAddr(0)
   {
     // Mandatory fields
@@ -242,7 +242,7 @@ private:
   enum { MAX_VALUE_IN_DAYS = 10 };
 public:
 
-  MCISmeMessageSender(TaskProcessor& processor, SmppSession* session) 
+  MCISmeMessageSender(TaskProcessor& processor, SmppSession* session)
     : MessageSender(), processor(processor), session(session) {}
 
   virtual ~MCISmeMessageSender() {
@@ -278,7 +278,7 @@ public:
 
     if (message.notification) smsc_log_debug(logger, "Sender: sending notification message with seqNum=%d for %s from %s",
                                              seqNumber, message.abonent.c_str(), message.caller_abonent.c_str());
-    else smsc_log_debug(logger, "Sender: %s%s message with seqNum=%d for %s from %s", 
+    else smsc_log_debug(logger, "Sender: %s%s message with seqNum=%d for %s from %s",
                         (message.cancel) ? "canceling ":"sending", (message.cancel) ? message.smsc_id.c_str():"",
                         seqNumber, message.abonent.c_str(), message.caller_abonent.c_str());
 
@@ -462,13 +462,13 @@ public:
       if (outLen > MAX_ALLOWED_MESSAGE_LENGTH)
       {
         if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
-          smsc_log_error(logger, "Message with seqNum=%d is too large to send (%d bytes)", 
+          smsc_log_error(logger, "Message with seqNum=%d is too large to send (%d bytes)",
                          seqNumber, outLen);
           return false;
         }
         sm.get_optional().set_payloadType(0);
         sm.get_optional().set_messagePayload(out, outLen);
-      } 
+      }
       else sm.get_message().set_shortMessage(out, outLen);
 
       sm.get_header().set_commandLength(sm.size(false));
@@ -497,9 +497,26 @@ protected:
 
 public:
 
-  MCISmePduListener(TaskProcessor& proc) : SmppPduEventListener(),
-                                           processor(proc), syncTransmitter(0), asyncTransmitter(0) {};
-  virtual ~MCISmePduListener() {};
+  MCISmePduListener(TaskProcessor& proc, int argDispThreadsCount) : SmppPduEventListener(),
+                                           processor(proc), syncTransmitter(0), asyncTransmitter(0)
+  {
+    for(int i=0;i<argDispThreadsCount;i++)
+    {
+      dispThreads.push_back(new DispatcherRunner(this,i));
+      dispThreads.back()->Start();
+    }
+    lastDispIdx=0;
+  };
+  virtual ~MCISmePduListener()
+  {
+    for(int i=0;i<dispThreads.size();i++)
+    {
+      dispThreads[i]->mon.notify();
+      dispThreads[i]->WaitFor();
+      delete dispThreads[i];
+    }
+
+  };
 
   void setSyncTransmitter(SmppTransmitter *transmitter) {
     syncTransmitter = transmitter;
@@ -545,7 +562,7 @@ private:
     const char* source_addr = alert->get_source().get_value();
     uint8_t source_addr_size = static_cast<uint8_t>(strlen(source_addr));
 
-    smsc_log_debug(logger, "MCISme: Recieved Alert Notification: ton=%d, npi=%d, source_addr=%s, addr_size=%d avalible = %X", 
+    smsc_log_debug(logger, "MCISme: Recieved Alert Notification: ton=%d, npi=%d, source_addr=%s, addr_size=%d avalible = %X",
                    ton, npi, source_addr, source_addr_size, ms_availability_status);
     AbntAddr	abnt(source_addr_size, ton, npi, source_addr);
     processor.invokeProcessAlertNotification(cmdId, status, abnt);
@@ -560,6 +577,79 @@ private:
     smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
     asyncTransmitter->sendDeliverySmResp(smResp);
   }
+
+  void eventDispatcher(int idx)
+  {
+    PduQueue& queue=dispThreads[idx]->queue;
+    EventMonitor& mon=dispThreads[idx]->mon;
+
+    MutexGuard mg(mon);
+    while(!isNeedStop())
+    {
+      if(queue.Count()==0)
+      {
+        mon.wait(100);
+        continue;
+      }
+      SmppHeader* pdu;
+      queue.Pop(pdu);
+      try{
+        switch (pdu->get_commandId())
+        {
+          case SmppCommandSet::DATA_SM_RESP:
+            TrafficControl::incIncoming();
+            processDataSmResp(pdu);
+            break;
+          case SmppCommandSet::ALERT_NOTIFICATION:
+            processAlertNotification(pdu);
+            break;
+          case SmppCommandSet::DELIVERY_SM:
+            smsc_log_debug(logger, "Received DELIVERY_SM seq_num = %d", pdu->get_sequenceNumber());
+            processDeliverySm(pdu);
+            break;
+          case SmppCommandSet::CANCEL_SM_RESP:
+            smsc_log_debug(logger, "Received CANCEL_SM_RESP seq_num = %d", pdu->get_sequenceNumber());
+            break;
+          case SmppCommandSet::SUBMIT_SM_RESP:
+            TrafficControl::incIncoming();
+            processSubmitSmResp(pdu);
+            break;
+          case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
+            break;
+          default:
+            smsc_log_debug(logger, "Received unsupported Pdu !");
+            break;
+        }
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(logger,"pdu handling exception:%s",e.what());
+      }
+
+      disposePdu(pdu);
+
+    }
+  }
+  typedef smsc::core::buffers::CyclicQueue<SmppHeader*> PduQueue;
+
+  class DispatcherRunner:public smsc::core::threads::Thread{
+  public:
+    MCISmePduListener* listener;
+    int idx;
+    PduQueue queue;
+    EventMonitor mon;
+    DispatcherRunner(MCISmePduListener* argListener,int argIdx):listener(argListener),idx(argIdx)
+    {
+    }
+    int Execute()
+    {
+      listener->eventDispatcher(idx);
+      return 0;
+    }
+  };
+
+  std::vector<DispatcherRunner*> dispThreads;
+  int lastDispIdx;
+
 public:
   void handleEvent(SmppHeader *pdu)
   {
@@ -571,34 +661,12 @@ public:
       }
     }
 
-    switch (pdu->get_commandId())
     {
-    case SmppCommandSet::DATA_SM_RESP:
-      TrafficControl::incIncoming();
-      processDataSmResp(pdu);
-      break;
-    case SmppCommandSet::ALERT_NOTIFICATION:
-      processAlertNotification(pdu);
-      break;
-    case SmppCommandSet::DELIVERY_SM:
-      smsc_log_debug(logger, "Received DELIVERY_SM seq_num = %d", pdu->get_sequenceNumber());	
-      processDeliverySm(pdu);
-      break;
-    case SmppCommandSet::CANCEL_SM_RESP:
-      smsc_log_debug(logger, "Received CANCEL_SM_RESP seq_num = %d", pdu->get_sequenceNumber());
-      break;
-    case SmppCommandSet::SUBMIT_SM_RESP:
-      TrafficControl::incIncoming();
-      processSubmitSmResp(pdu);
-      break;
-    case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
-      break;
-    default:
-      smsc_log_debug(logger, "Received unsupported Pdu !");
-      break;
+      MutexGuard mg(dispThreads[lastDispIdx]->mon);
+      dispThreads[lastDispIdx]->queue.Push(pdu);
+      dispThreads[lastDispIdx]->mon.notify();
     }
-
-    disposePdu(pdu);
+    lastDispIdx=(lastDispIdx+1)%dispThreads.size();
   }
 
   void handleError(int errorCode)
@@ -628,7 +696,7 @@ extern "C" void atExitHandler(void)
 extern "C" void setShutdownHandler(void)
 {
   sigset_t set;
-  sigemptyset(&set); 
+  sigemptyset(&set);
   sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
   if(pthread_sigmask(SIG_UNBLOCK, &set, NULL) != 0) {
     if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
@@ -661,7 +729,7 @@ struct ShutdownThread : public Thread
     return 0;
   }
   void Stop() {
-    shutdownEvent.Signal();    
+    shutdownEvent.Signal();
   }
 } shutdownThread;
 
@@ -714,7 +782,7 @@ int main(void)
   adminListener = adml.get();
 
   int resultCode = 0;
-  try 
+  try
   {
     smsc_log_info(logger, getStrVersion());
     Manager::init("./conf/config.xml");
@@ -766,7 +834,7 @@ int main(void)
     smsc_log_warn(logger, "Profile Storage is opened");
 
     ProfilesStorageServer	pss;
-    try 
+    try
     {
       int portProfStor = profStorCfg->getInt("port");
       if(portProfStor > 0)
@@ -785,7 +853,7 @@ int main(void)
 
     ConfigView adminConfig(manager, "MCISme.Admin");
     smsc_log_debug(logger, "%s %d", adminConfig.getString("host"), adminConfig.getInt("port"));
-    adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
+    adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
     bAdminListenerInited = true;
 
     TaskProcessor processor(&tpConfig);
@@ -793,17 +861,25 @@ int main(void)
     taskProcessor = &processor;
 
     MCISmeAdministrator adminHandler(processor);
-    MCISmeComponent admin(adminHandler);                   
-    ComponentManager::registerComponent(&admin); 
+    MCISmeComponent admin(adminHandler);
+    ComponentManager::registerComponent(&admin);
     adminListener->Start();
 
     ConfigView smscConfig(manager, "MCISme.SMSC");
     MCISmeConfig cfg(&smscConfig);
 
+    int dispCount=4;
+    try{
+      dispCount=tpConfig.getInt("pduDispatchersCount");
+    }catch(...)
+    {
+      smsc_log_warn(logger,"MCISme.pduDispatchersCount not found using default:%d",dispCount);
+    }
+    MCISmePduListener       listener(processor,dispCount);
+    SmppSession             session(cfg, &listener);
+
     while (!isNeedStop())
     {
-      MCISmePduListener       listener(processor);
-      SmppSession             session(cfg, &listener);
       MCISmeMessageSender     sender(processor, &session);
 
       smsc_log_info(logger, "Connecting to SMSC ... ");
@@ -824,7 +900,7 @@ int main(void)
       }
       catch (SmppConnectException& exc)
       {
-        const char* msg = exc.what(); 
+        const char* msg = exc.what();
         smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
         bMCISmeIsConnecting = false;
         setNeedReconnect(true);

@@ -140,7 +140,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     maxDataSmRegistrySize=config->getInt("maxDataSmRegistrySize");
   }catch(ConfigException& exc)
   {
-
+    smsc_log_warn(logger,"MCISme.maxDataSmRegistrySize not found, using default:%d",maxDataSmRegistrySize);
   }
 
   std::string callingMask = config->getString("CallingMask");

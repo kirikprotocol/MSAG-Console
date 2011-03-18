@@ -24,7 +24,7 @@ public:
     gettimeofday(&_eventDate, 0);
   }
 
-  std::string toString(char eventPrintableCode) const;
+  void toString(char eventPrintableCode,char* buf,size_t size) const;
 private:
   struct timeval _eventDate;
   std::string _callingAbonent;
@@ -43,7 +43,7 @@ public:
                              calledProfileNotifyFlag, callerProfileWantNotifyMeFlag)
   {}
 
-  std::string toString() const;
+  void toString(char* buf,size_t size) const;
 };
 
 class Event_MissedCallInfoDelivered : private MissedCall_GenericInfo {
@@ -56,7 +56,7 @@ public:
                              calledProfileNotifyFlag, callerProfileWantNotifyMeFlag)
   {}
 
-  std::string toString() const;
+  void toString(char* buf,size_t size) const;
 };
 
 class MissedCallTransitionStateEvent {
@@ -68,7 +68,7 @@ public:
     gettimeofday(&_eventDate, 0);
   }
 
-  std::string toString(char eventPrintableCode) const;
+  void toString(char eventProntableCode,char* buf,size_t size) const;
 private:
   struct timeval _eventDate;
   std::string _callingAbonent;
@@ -82,7 +82,7 @@ public:
     : MissedCallTransitionStateEvent(callingAbonent, calledAbonent)
   {}
 
-  std::string toString() const;
+  void toString(char* buf,size_t size) const;
 };
 
 class Event_SendCallerNotification : private MissedCallTransitionStateEvent {
@@ -92,7 +92,7 @@ public:
     : MissedCallTransitionStateEvent(callingAbonent, calledAbonent)
   {}
 
-  std::string toString() const;
+  void toString(char* buf,size_t size) const;
 };
 
 class Event_DeleteMissedCallInfo : private MissedCallTransitionStateEvent {
@@ -102,7 +102,7 @@ public:
     : MissedCallTransitionStateEvent(callingAbonent, calledAbonent)
   {}
 
-  std::string toString() const;
+  void toString(char* buf,size_t size) const;
 };
 
 class Event_ChangeAbonentProfile {
@@ -116,7 +116,7 @@ public:
       throw smsc::util::Exception("Event_ChangeAbonentProfile::Event_ChangeAbonentProfile::: invalid profileNotify value='%d', expected value is 0 or 1", _profileNotify);
   }
 
-  std::string toString() const;
+  void toString(char* buf,size_t size) const;
 private:
   struct timeval _eventDate;
   std::string _abonent;
@@ -151,10 +151,12 @@ public:
 private:
   template <class EVENT>
   void _addEvent(const EVENT& event) {
-    smsc_log_info(_logger, "MCAEventsStorage::_addEvent::: write event [%s]", event.toString().c_str());
+    char eventBuf[256];
+    event.toString(eventBuf,sizeof(eventBuf));
+    smsc_log_info(_logger, "MCAEventsStorage::_addEvent::: write event [%s]", eventBuf);
     smsc::core::synchronization::MutexGuard synchronize(_lock);
     rollLoggingFileIfNeeded();
-    fprintf(_eventFileFD, "%s\n", event.toString().c_str());
+    fprintf(_eventFileFD, "%s\n", eventBuf);
   }
 
   void findMatchedFiles(const std::string& dirName,
@@ -194,7 +196,7 @@ class MCAEventsStorageRegister {
 public:
   static void init(const smsc::util::config::ConfigView& config);
   static MCAEventsStorage& getMCAEventsStorage();
-  
+
 private:
   static MCAEventsStorage* _storage;
 };

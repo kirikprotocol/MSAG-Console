@@ -13,16 +13,14 @@
 namespace smsc {
 namespace mcisme {
 
-static const std::string
-time2string(const timeval& tp)
+static void time2string(const timeval& tp,char* timeStr,size_t size)
 {
   tm lcltm;
-  char timeStr[64];
-  strftime(timeStr, sizeof(timeStr), "%Y%m%d %H:%M:%S.", localtime_r(&tp.tv_sec, &lcltm));
+  //char timeStr[64];
+  strftime(timeStr, size, "%Y%m%d %H:%M:%S.", localtime_r(&tp.tv_sec, &lcltm));
   long msec=tp.tv_usec/1000;
 
-  snprintf(timeStr + strlen(timeStr), sizeof(timeStr) - strlen(timeStr), "%3.3u", msec);
-  return timeStr;
+  snprintf(timeStr + strlen(timeStr), size - strlen(timeStr), "%3.3u", msec);
 }
 
 void
@@ -73,9 +71,14 @@ MCAEventsFileStorage::moveFiles(const std::string& dirName,
   }
 }
 
-std::string
-MissedCall_GenericInfo::toString(char eventPrintableCode) const
+void
+MissedCall_GenericInfo::toString(char eventPrintableCode,char* buf,size_t size) const
 {
+  char timeBuf[64];
+  time2string(_eventDate,timeBuf,sizeof(timeBuf));
+  snprintf(buf,size,"%c,%s,%s,%s,%u,%u",eventPrintableCode,timeBuf,
+      _callingAbonent.c_str(),_calledAbonent.c_str(),_calledProfileNotifyFlag,_callerProfileWantNotifyMeFlag);
+  /*
   std::ostringstream obuf;
   obuf << eventPrintableCode
        << "," << time2string(_eventDate)
@@ -85,23 +88,28 @@ MissedCall_GenericInfo::toString(char eventPrintableCode) const
        << "," << _callerProfileWantNotifyMeFlag;
 
   return obuf.str();
+  */
 }
 
-std::string
-Event_GotMissedCall::toString() const
+void
+Event_GotMissedCall::toString(char* buf,size_t size) const
 {
-  return MissedCall_GenericInfo::toString('A');
+  return MissedCall_GenericInfo::toString('A',buf,size);
 }
 
-std::string
-Event_MissedCallInfoDelivered::toString() const
+void
+Event_MissedCallInfoDelivered::toString(char* buf,size_t size) const
 {
-  return MissedCall_GenericInfo::toString('D');
+  return MissedCall_GenericInfo::toString('D',buf,size);
 }
 
-std::string
-MissedCallTransitionStateEvent::toString(char eventPrintableCode) const
+void
+MissedCallTransitionStateEvent::toString(char eventPrintableCode,char* buf,size_t size) const
 {
+  char timeBuf[64];
+  time2string(_eventDate,timeBuf,sizeof(timeBuf));
+  snprintf(buf,size,"%c,%s,%s,%s",eventPrintableCode,timeBuf,_callingAbonent.c_str(),_calledAbonent.c_str());
+  /*
   std::ostringstream obuf;
   obuf << eventPrintableCode
        << "," << time2string(_eventDate)
@@ -109,35 +117,41 @@ MissedCallTransitionStateEvent::toString(char eventPrintableCode) const
        << "," << _calledAbonent;
 
   return obuf.str();
+  */
 }
 
-std::string
-Event_MissedCallInfoDeliveringFailed::toString() const
+void
+Event_MissedCallInfoDeliveringFailed::toString(char* buf,size_t size) const
 {
-  return MissedCallTransitionStateEvent::toString('F');
+  return MissedCallTransitionStateEvent::toString('F',buf,size);
 }
 
-std::string
-Event_SendCallerNotification::toString() const
+void
+Event_SendCallerNotification::toString(char* buf,size_t size) const
 {
-  return MissedCallTransitionStateEvent::toString('N');
+  return MissedCallTransitionStateEvent::toString('N',buf,size);
 }
 
-std::string
-Event_DeleteMissedCallInfo::toString() const
+void
+Event_DeleteMissedCallInfo::toString(char* buf,size_t size) const
 {
-  return MissedCallTransitionStateEvent::toString('E');
+  return MissedCallTransitionStateEvent::toString('E',buf,size);
 }
 
-std::string
-Event_ChangeAbonentProfile::toString() const
+void
+Event_ChangeAbonentProfile::toString(char* buf,size_t size) const
 {
+  char timeBuf[64];
+  time2string(_eventDate,timeBuf,sizeof(timeBuf));
+  snprintf(buf,size,"%c,%s,%s,%s",'P',timeBuf,_abonent.c_str(),_profileNotify);
+  /*
   std::ostringstream obuf;
   obuf << "P," << time2string(_eventDate)
        << "," << _abonent
        << "," << _profileNotify;
 
   return obuf.str();
+  */
 }
 
 MCAEventsFileStorage::MCAEventsFileStorage(const std::string& dirName,
@@ -290,7 +304,7 @@ MCAEventsStorageRegister::getMCAEventsStorage()
     throw smsc::util::Exception("MCAEventsStorageRegister::getMCAEventsStorage::: MCAEventsStorage wasn't initialized");
 }
 
-MCAEventsStorage* 
+MCAEventsStorage*
 MCAEventsStorageRegister::_storage;
 
 }}
