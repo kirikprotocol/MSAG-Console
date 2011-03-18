@@ -160,7 +160,7 @@ BEProtocolV2SimpleClient::readAdvert(advertising_item* advItem,
                           &gotBannerString, &gotBannerRespTrace.bannerId, &gotBannerRespTrace.ownerId,
                           &gotBannerRespTrace.rotatorId);
 
-      smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert::: got BannerResponse message: transactionId=%d, bannerId=%d, ownerId=%d, rotatorId=%d", gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId);
+      smsc_log_info(_logger, "got BannerResponse: transactionId=%d, bannerId=%d, ownerId=%d, rotatorId=%d", gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId);
       if ( gotBannerRespTrace.transactionId == advItem->TransactID ) {
         *bannerRespTrace = gotBannerRespTrace;
         advItem->banReq->banner = gotBannerString;
@@ -183,8 +183,8 @@ BEProtocolV2SimpleClient::readAdvert(advertising_item* advItem,
 }
 
 uint32_t
-BEProtocolV2SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req /* буфер*/,
-                                              BannerRequest* par /*параметры запроса банера*/)
+BEProtocolV2SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req /* О©╫О©╫О©╫О©╫О©╫*/,
+                                              BannerRequest* par /*О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫*/)
 {
   uint32_t totalPacketSize = prepareHeader(CMD_BANNER_REQ, static_cast<uint32_t>(GET_BANNER_REQ_BODY_LEN + par->abonent.length() + par->serviceName.length()), req);
 
@@ -248,8 +248,8 @@ BEProtocolV2SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req /* 
 }
 
 uint32_t
-BEProtocolV2SimpleClient::prepareErrorInfoCmd(util::SerializationBuffer* req /* буфер*/,
-                                              const BannerRequest& par /*параметры запроса банера*/,
+BEProtocolV2SimpleClient::prepareErrorInfoCmd(util::SerializationBuffer* req /* О©╫О©╫О©╫О©╫О©╫*/,
+                                              const BannerRequest& par /*О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫*/,
                                               uint32_t errCode)
 {
   uint32_t totalPacketSize = prepareHeader(CMD_ROLLBACK_REQ, CMD_ROLLBACK_REQ_BODY_LEN, req);
