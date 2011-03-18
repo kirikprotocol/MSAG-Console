@@ -1456,7 +1456,30 @@ void InfosmeCoreV1::loadUsers( const char* userId )
             } else {
                 user->addRole(USERROLE_USER);
             }
-            // FIXME: load allowed addresses
+            // load allowed addresses
+            const std::string allowedAddrStr = cwrap.getString("allowedAddresses","");
+            std::vector< smsc::sms::Address > oas;
+            if (!allowedAddrStr.empty()) {
+                try {
+                    size_t pos = 0;
+                    do {
+                        const size_t next = allowedAddrStr.find(',',pos);
+                        if ( next == std::string::npos ) {
+                            // no more commas
+                            const std::string oa(allowedAddrStr,pos);
+                            oas.push_back( smsc::sms::Address(oa.c_str()) );
+                            break;
+                        }
+                        // comma is found
+                        const std::string oa(allowedAddrStr,pos,next-pos);
+                        oas.push_back( smsc::sms::Address(oa.c_str()) );
+                        pos = next+1;
+                    } while ( pos < allowedAddrStr.size() );
+                } catch ( std::exception& e ) {
+                    throw InfosmeException( EXC_CONFIG, "bad allowedAddresses value '%s'", allowedAddrStr.c_str() );
+                }
+            }
+            user->setAllowedAddresses(oas);
         }
     } catch ( InfosmeException& ) {
         throw;

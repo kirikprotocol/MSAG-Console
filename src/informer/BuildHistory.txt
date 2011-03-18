@@ -1,5 +1,5 @@
-2011-03-18 13:40 bukind
-  OA limitation on user, not loaded from config yet
+2011-03-18 14:40 bukind
+  OA limitation per user
 
 =====================================================================
 2011-03-15 12:10 bukind informer-build-20110315

@@ -49,7 +49,6 @@ public:
     virtual void updateRegion( regionid_type regionId ) = 0;
     virtual void deleteRegion( regionid_type regionId ) = 0;
 
-    /// FIXME: statistics
     virtual void getSmscStats( std::vector<CoreSmscStats>& css ) = 0;
     // virtual void getDeliveryStats( CoreDlvStats& cds ) = 0;
     // virtual void getRegionStats( CoreRegionStats& crs ) = 0;
