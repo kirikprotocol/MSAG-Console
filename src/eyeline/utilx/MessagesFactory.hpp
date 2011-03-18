@@ -28,11 +28,11 @@ public:
 
   MESSAGE* instanceMessage(unsigned int msg_idx, unsigned int protocol_num=0) {
     if ( protocol_num >= PROTOCOL_NUMS )
-      smsc::util::Exception("MessagesFactoryTmpl::instanceMessage::: invalid protocolNum=%u value, acceptable value is from interval [0..%u]",
-                            protocol_num, PROTOCOL_NUMS-1);
+      throw smsc::util::Exception("MessagesFactoryTmpl::instanceMessage::: invalid protocolNum=%u value, acceptable value is from interval [0..%u]",
+                                  protocol_num, PROTOCOL_NUMS-1);
     if ( msg_idx >= MSG_NUMS )
-      smsc::util::Exception("MessagesFactoryTmpl::instanceMessage::: invalid msgIdx=%u value, acceptable value is from interval [0..%u]",
-                            msg_idx, MSG_NUMS-1);
+      throw smsc::util::Exception("MessagesFactoryTmpl::instanceMessage::: invalid msgIdx=%u value, acceptable value is from interval [0..%u]",
+                                 msg_idx, MSG_NUMS-1);
 
     MessageCreator<MESSAGE>* msgCreator = _registredInstancers[protocol_num][msg_idx];
     if ( msgCreator ) return msgCreator->instance();
