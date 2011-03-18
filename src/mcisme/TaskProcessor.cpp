@@ -285,7 +285,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   bool hasStackEmulator = false;
   try {
     hasStackEmulator = config->getBool("HasStackEmulator");
-    hasStackEmulator = true;
   } catch(ConfigException& exc) {}
 
   if ( hasStackEmulator) {
@@ -594,7 +593,9 @@ void TaskProcessor::Run()
     }
     if(smsInfo.Count()>=maxDataSmRegistrySize)
     {
+      smsc_log_info(logger, "sleeping for 10ms, smsInfo.count=%d, maxDataSmRegistrySize=%d",smsInfo.Count(),maxDataSmRegistrySize);
       usleep(10000);//microseconds
+      continue;
     }
     try {
       AbntAddr abnt;
