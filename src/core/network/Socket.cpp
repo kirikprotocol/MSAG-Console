@@ -336,10 +336,10 @@ int Socket::Printf(const char* fmt,...)
       buf=new char[bufsize];
     }
   }while(res<0);
-  int ret=Write(buf,(int)strlen(buf));
+  int ret=WriteAll(buf,res);
   if(buf!=buf_init)delete [] buf;
   va_end (args);
-  return ret;
+  return ret==res?res:-1;
 }
 
 int Socket::Puts(const char* str)
