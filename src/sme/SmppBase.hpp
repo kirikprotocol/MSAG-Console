@@ -432,7 +432,11 @@ protected:
     DumpPduBuffer(log,"out:",pb.buf);
     do{
       wr=socket->Write(pb.buf+count,pb.size-count);
-      if(wr<=0)throw Exception("Failed to send smpp packet");
+      if(wr<=0)
+      {
+        int err=errno;
+        throw Exception("Failed to send smpp packet:%d(%s)",err,strerror(err));
+      }
       count+=wr;
     }while(count!=pb.size);
   }
@@ -1194,8 +1198,8 @@ protected:
     int seq=pdu->get_sequenceNumber();
     switch(pdu->get_commandId())
     {
-      //отдельно отработаем всякие разные респонсы.
-      case GENERIC_NACK://облом однако.
+      //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+      case GENERIC_NACK://пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
       {
         if(lock.Exist(seq))
         {
@@ -1270,7 +1274,7 @@ protected:
           listener->handleEvent(pdu);
         }
       }break;
-      // и отдельно собственно пришедшие smpp-шки.
+      // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ smpp-пїЅпїЅпїЅ.
       case DELIVERY_SM:
       case DATA_SM:
       case ALERT_NOTIFICATION:
