@@ -20,24 +20,40 @@ namespace inap {
 using smsc::util::RCHash;
 using smsc::core::synchronization::EventMonitor;
 
+class ObjFinalizerIface {
+protected:
+  virtual ~ObjFinalizerIface() //forbid interface destruction
+  { }
+
+public:
+  //Dialog allocation status
+  enum AllcStatus_e { objActive = 0, objFinalized, objDestroyed };
+
+  //
+  virtual AllcStatus_e finalizeObj(void) = 0;
+};
+typedef ObjFinalizerIface::AllcStatus_e ObjAllcStatus_e;
+
+
 class MapDlgUserIface {
 protected:
   virtual ~MapDlgUserIface() //forbid interface destruction
   { }
 
-public: 
+public:
   //if err_code != 0, no result has been got from MAP service,
-  //NOTE: MAP dialog may be safely released but not deleted from this callback!
-  virtual void onDialogEnd(RCHash err_code = 0) = 0;
+  //NOTE: dialog user may destroy reporting MAP dialog from this callback in two ways:
+  //   1) by calling MapDialogAC::releaseThis() if dialog is allocated on heap
+  //   2) by calling ObjFinalizerIface::finalizeObj() and then MapDialogAC destructor
+  virtual ObjAllcStatus_e onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash err_code = 0) = 0;
   //
   virtual void Awake(void) = 0;
 };
 
 
-//Primitive MAP dialog:
-//initiates a single ROS request to remote side,
+//Primitive MAP dialog: initiates a single ROS request to remote side,
 //awiats result, in case of success reports it to MAP User.
-class MapDialogAC : protected TCDialogUserITF {
+class MapDialogAC : protected TCDialogUserITF, protected ObjFinalizerIface {
 public:
   static const size_t _maxIdentSZ = 32;
 
@@ -47,8 +63,9 @@ public:
   //Marks dialog as released. Object will be destroyed by thread that will
   //reset the last reference. if no references present this method immediately
   //calls destructor.
+  //NOTE: this method is applicable only for objects allocated on heap.
   //NOTE: calling this method is mutually exclusive with explicit destructor call.
-  void releaseThis(void);
+  ObjAllcStatus_e releaseThis(void);
 
   //Ends/Aborts MAP dialog. Releases TCAP dialog if requested.
   //NOTE: method may block on TCAP dialog releasing.
@@ -56,12 +73,18 @@ public:
 
   //Attempts to unbind MAP User.
   //Returns true on succsess, or false if this object has established reference
-  //to handler (waits for its mutex). In that case, handler should wait on its
-  //mutex and then repeat this call.
+  //to MAP User (waits for its mutex). In that case, MAP User should wait on
+  //its mutex and then repeat this call.
   bool unbindUser(void);
 
 protected:
   explicit MapDialogAC(const char * use_ident, Logger * use_log = NULL);
+
+  // -----------------------------------------
+  // -- ObjFinalizerIface interface methods:
+  // -----------------------------------------
+  //Unrefs and unlocks result handler
+  virtual ObjAllcStatus_e finalizeObj(void);
 
   // -----------------------------------------
   // -- MapDialogAC interface methods:
@@ -137,11 +160,13 @@ protected:
   void endTCDialog(void);
   //ends TC dialog and releases TC dialog object
   void unbindTCDialog(void);
-  //Locks result handler.
+  //Locks reference to MAP user.
   //Returns false if result handler is not set.
-  bool doRefHdl(void);
-  //Unlocks result handler and destroys this object if it's released
-  void unRefHdl(void);
+  bool doRefUser(void);
+  //Unlocks reference to MAP user.
+  void doUnrefUser(void);
+  //Unrefs and unlocks result handler and destroys this object if it's released
+  void unRefAndDie(void);
 };
 
 } //inap

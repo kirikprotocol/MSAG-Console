@@ -275,10 +275,18 @@ void SRIInterrogator::onMapResult(CHSendRoutingInfoRes & res)
 }
 
  //dialog finalization/error handling:
-void SRIInterrogator::onDialogEnd(RCHash ercode/* =0*/)
+ObjAllcStatus_e
+  SRIInterrogator::onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash ercode/* = 0*/)
 {
   MutexGuard  grd(_sync);
-  rlseMapDialog();
+  rlseMapDialog();  //first unbind MAP User
+
+  ObjAllcStatus_e rval = use_finalizer.finalizeObj();
+  if (rval == ObjFinalizerIface::objFinalized) {
+    _mapDlg.clear();
+    rval = ObjFinalizerIface::objDestroyed;
+  }
+
   if (!ercode) {
     if (_abnInfo.getImsi())
       csiHdl->onCSIresult(_abnInfo);
@@ -288,6 +296,7 @@ void SRIInterrogator::onDialogEnd(RCHash ercode/* =0*/)
   } else
     csiHdl->onCSIabort(_abnInfo.msIsdn, ercode);
   _sync.notify();
+  return rval;
 }
 
 } // namespace inman

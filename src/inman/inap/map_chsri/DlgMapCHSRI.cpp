@@ -98,13 +98,19 @@ void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity * res)
     }
     if ((do_end = _ctrState.s.ctrFinished) != 0)
       unbindTCDialog();
-    if (!doRefHdl())
+    if (!doRefUser())
       return;
   }
   sriHdl()->onMapResult(_reqRes);
-  if (do_end)
-    sriHdl()->onDialogEnd(); //may call releaseThis()
-  unRefHdl(); //die if requested(
+
+  if (!do_end) {
+    MutexGuard  grd(_sync);
+    doUnrefUser();
+  } else {
+    //may call releaseThis()/finalizeObj();
+    if (_resHdl->onDialogEnd(*this) != ObjFinalizerIface::objDestroyed)
+      unRefAndDie(); //die if requested
+  }
 }
 
 } //chsri

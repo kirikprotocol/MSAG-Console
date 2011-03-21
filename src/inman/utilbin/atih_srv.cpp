@@ -272,15 +272,26 @@ void ATIInterrogator::onATSIResult(ATSIRes & res)
                  _abnInfo.toString().c_str());
 }
  //dialog finalization/error handling:
-void ATIInterrogator::onDialogEnd(RCHash ercode/* =0*/)
+
+ObjAllcStatus_e
+  ATIInterrogator::onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash ercode/* = 0*/)
 {
   MutexGuard  grd(_sync);
-  rlseMapDialog();
+  rlseMapDialog(); //first unbind MAP User
+
+  ObjAllcStatus_e rval = use_finalizer.finalizeObj();
+  if (rval == ObjFinalizerIface::objFinalized) {
+    _mapDlg.clear();
+    rval = ObjFinalizerIface::objDestroyed;
+  }
+
   if (!ercode)
     csiHdl->onCSIresult(_abnInfo);
   else
     csiHdl->onCSIabort(_abnInfo.msIsdn, ercode);
   _sync.notify();
+
+  return rval;
 }
 
 } // namespace inman

@@ -25,6 +25,9 @@ using smsc::inman::test::AbonentInfo;
 
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 
+using smsc::inman::inap::ObjFinalizerIface;
+using smsc::inman::inap::ObjAllcStatus_e;
+
 using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::MAPUsr_CFG;
@@ -59,9 +62,11 @@ protected:
   // -- CHSRIhandlerITF implementation:
   // ------------------------------------
   virtual void onMapResult(CHSendRoutingInfoRes & res);
-  //dialog finalization/error handling:
-  //if ercode != 0, no result has been got from MAP service,
-  virtual void onDialogEnd(RCHash ercode = 0);
+  //if err_code != 0, no result has been got from MAP service,
+  //NOTE: dialog user may destroy reporting MAP dialog from this callback in two ways:
+  //   1) by calling MapDialogAC::releaseThis() if dialog is allocated on heap
+  //   2) by calling ObjFinalizerIface::finalizeObj() and then MapDialogAC destructor
+  virtual ObjAllcStatus_e onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash err_code = 0);
   //
   virtual void Awake(void) { _sync.notify(); }
 

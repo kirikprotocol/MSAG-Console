@@ -79,6 +79,7 @@ int IAPQuerySRI::Execute(void)
   }
   if (_mapDlg.get())
     _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
+  _mapDlg.clear();
   return _qStatus;
 }
 
@@ -116,7 +117,8 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes & res)
   }
 }
 
-void IAPQuerySRI::onDialogEnd(RCHash ercode/* = 0*/)
+ObjAllcStatus_e
+  IAPQuerySRI::onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash ercode/* = 0*/)
 {
   MutexGuard  grd(_mutex);
   if (ercode) {
@@ -128,6 +130,8 @@ void IAPQuerySRI::onDialogEnd(RCHash ercode/* = 0*/)
   } else
     smsc_log_debug(logger, "%s(%s): query succeeded",
                     taskName(), abonent.getSignals());
+
+  return ObjFinalizerIface::objActive;
 }
 
 } //sri

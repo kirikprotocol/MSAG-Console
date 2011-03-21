@@ -41,9 +41,9 @@ MapDialogAC::~MapDialogAC()
   _delThis = false;
   unbindTCDialog();
 
-  if (_resHdl.get()) {
+  if (_resHdl.getNext()) {
     smsc_log_warn(_logger, "%s: result handler still binded!", _logId);
-    _resHdl.Reset(NULL);
+//    _resHdl.Reset(NULL);
   }
   if (_thisRefs.hasRefs()) {
     smsc_log_error(_logger, "%s: ~MapDialogAC() refs present: {%s}", _logId, _thisRefs.toString().c_str());
@@ -51,7 +51,7 @@ MapDialogAC::~MapDialogAC()
   smsc_log_debug(_logger, "%s: destroyed", _logId);
 }
 
-void MapDialogAC::releaseThis(void)
+ObjAllcStatus_e MapDialogAC::releaseThis(void)
 {
   bool doDel = false;
   {
@@ -60,16 +60,20 @@ void MapDialogAC::releaseThis(void)
     _delThis = true;
     doDel = !_thisRefs.hasRefs();
   }
-  if (doDel)
+  if (doDel) {
     delete this;
+    return ObjFinalizerIface::objDestroyed;
+  }
+  return ObjFinalizerIface::objActive;
 }
 
 void MapDialogAC::endDialog(bool do_release/* = true*/)
 {
   MutexGuard  grd(_sync);
-  endTCDialog();
   if (do_release)
     unbindTCDialog();
+  else
+    endTCDialog();
 }
 
 bool MapDialogAC::unbindUser(void)
@@ -83,21 +87,22 @@ bool MapDialogAC::unbindUser(void)
 }
 
 /* ------------------------------------------------------------------------ *
- * Private/protected methods
+ * ObjFinalizerIface interface methods
  * ------------------------------------------------------------------------ */
-//Unlocks result handler and destroys this object if it's released
-void MapDialogAC::unRefHdl(void)
+//Unrefs and unlocks result handler
+ObjAllcStatus_e MapDialogAC::finalizeObj(void)
 {
-  bool doDel = false;
-  {
-    MutexGuard tmp(_sync);
-    if (_resHdl.get())
-      _resHdl->Awake();
-    _resHdl.UnLock();
-    _thisRefs.unRef(MapDialogAC::refIdHandler);
-    doDel = _delThis && !_thisRefs.hasRefs();
-  }
-  if (doDel)
+  MutexGuard tmp(_sync);
+  doUnrefUser();
+  return _thisRefs.hasRefsExcept(MapDialogAC::refIdItself) ?
+            ObjFinalizerIface::objActive : ObjFinalizerIface::objFinalized;
+}
+
+//Unrefs and unlocks result handler and destroys this object if it's released
+void MapDialogAC::unRefAndDie(void)
+{
+  if ((finalizeObj() == ObjFinalizerIface::objFinalized)
+      && _delThis && !_thisRefs.hasRefs())
     delete this;
 }
 
@@ -124,15 +129,24 @@ void MapDialogAC::bindTCDialog(uint16_t timeout_sec/* = 0*/)
   _thisRefs.addRef(MapDialogAC::refIdTCDialog);
 }
 
-//Locks result handler.
+//Locks reference to MAP user.
 //Returns false if result handler is not set.
-bool MapDialogAC::doRefHdl(void)
+bool MapDialogAC::doRefUser(void)
 {
   if (_resHdl.Lock()) {
     _thisRefs.addRef(MapDialogAC::refIdHandler);
     return true;
   }
   return false;
+}
+
+//Unlocks reference to MAP user.
+void MapDialogAC::doUnrefUser(void)
+{
+  if (_resHdl.getNext())
+    _resHdl->Awake();
+  _resHdl.UnLock();
+  _thisRefs.unRef(MapDialogAC::refIdHandler);
 }
 
 //ends TC dialog
@@ -199,12 +213,13 @@ void MapDialogAC::onDialogPAbort(uint8_t abortCause)
     smsc_log_error(_logger, "%s: state 0x%x, P_ABORT: '%s'", _logId,
                     _ctrState.value, _RCS_TC_PAbort->code2Txt(abortCause));
     unbindTCDialog();
-    if (!doRefHdl())
+    if (!doRefUser())
       return;
   }
-  //may call releaseThis()
-  _resHdl->onDialogEnd(_RCS_TC_PAbort->mkhash(abortCause));
-  unRefHdl(); //die if requested(
+  //may call releaseThis()/finalizeObj()
+  if (_resHdl->onDialogEnd(*this, _RCS_TC_PAbort->mkhash(abortCause))
+      != ObjFinalizerIface::objDestroyed)
+    unRefAndDie(); //die if requested(
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -219,12 +234,13 @@ void MapDialogAC::onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
     smsc_log_error(_logger, "%s: state 0x%x, U_ABORT: '%s'", _logId,
                     _ctrState.value, _RCS_TC_UAbort->code2Txt(abortCause));
     unbindTCDialog();
-    if (!doRefHdl())
+    if (!doRefUser())
       return;
   }
-  //may call releaseThis()
-  _resHdl->onDialogEnd(_RCS_TC_UAbort->mkhash(abortCause));
-  unRefHdl(); //die if requested(
+  //may call releaseThis()/finalizeObj()
+  if (_resHdl->onDialogEnd(*this, _RCS_TC_UAbort->mkhash(abortCause))
+      != ObjFinalizerIface::objDestroyed)
+    unRefAndDie(); //die if requested(
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -250,12 +266,13 @@ void MapDialogAC::onDialogNotice(uint8_t reportCause,
                    _ctrState.value, _RCS_TC_Report->code2Txt(reportCause),
                    dstr.c_str());
     unbindTCDialog();
-    if (!doRefHdl())
+    if (!doRefUser())
       return;
   }
-  //may call releaseThis()
-  _resHdl->onDialogEnd(_RCS_TC_Report->mkhash(reportCause));
-  unRefHdl(); //die if requested(
+  //may call releaseThis()/finalizeObj()
+  if (_resHdl->onDialogEnd(*this, _RCS_TC_Report->mkhash(reportCause))
+      != ObjFinalizerIface::objDestroyed)
+    unRefAndDie(); //die if requested(
 }
 
 
@@ -275,12 +292,12 @@ void MapDialogAC::onDialogREnd(bool compPresent)
       smsc_log_error(_logger, "%s: T_END_IND, state 0x%x", _logId, _ctrState.value);
       errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
     }
-    if (!doRefHdl())
+    if (!doRefUser())
       return;
   }
-  //may call releaseThis()
-  _resHdl->onDialogEnd(errcode);
-  unRefHdl(); //die if requested(
+  //may call releaseThis()/finalizeObj()
+  if (_resHdl->onDialogEnd(*this, errcode) != ObjFinalizerIface::objDestroyed)
+    unRefAndDie(); //die if requested(
 }
 
 /* ------------------------------------------------------------------------ *
@@ -297,12 +314,13 @@ void MapDialogAC::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 
     _ctrState.s.ctrInited = MapDialogAC::operDone;
     unbindTCDialog();
-    if (!doRefHdl())
+    if (!doRefUser())
       return;
   }
-  //may call releaseThis()
-  _resHdl->onDialogEnd(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
-  unRefHdl(); //die if requested(
+  //may call releaseThis()/finalizeObj()
+  if (_resHdl->onDialogEnd(*this, _RCS_MAPOpErrors->mkhash(resE->getOpcode()))
+      != ObjFinalizerIface::objDestroyed)
+    unRefAndDie(); //die if requested(
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -313,12 +331,13 @@ void MapDialogAC::onInvokeLCancel(InvokeRFP pInv)
     smsc_log_error(_logger, "%s: %s got a LCancel", _logId, pInv->idStr().c_str());
     _ctrState.s.ctrInited = MapDialogAC::operFailed;
     unbindTCDialog();
-    if (!doRefHdl())
+    if (!doRefUser())
       return;
   }
-  //may call releaseThis()
-  _resHdl->onDialogEnd(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
-  unRefHdl(); //die if requested(
+  //may call releaseThis()/finalizeObj()
+  if (_resHdl->onDialogEnd(*this, _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse))
+      != ObjFinalizerIface::objDestroyed)
+    unRefAndDie(); //die if requested(
 }
 
 
