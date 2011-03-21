@@ -11,6 +11,10 @@ using smsc::inman::inap::SSNSession;
 using smsc::inman::comp::_ac_map_anyTimeInfoHandling_v3;
 using smsc::inman::comp::atih::initMAPATIH3Components;
 
+#include "inman/comp/MapOpErrors.hpp"
+using smsc::inman::comp::_RCS_MAPOpErrors;
+using smsc::inman::comp::MAPOpErrorId;
+
 using smsc::util::URCRegistry;
 
 namespace smsc {
@@ -76,6 +80,7 @@ int IAPQueryATSI::Execute(void)
   }
   if (_mapDlg.get())
     _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
+  _mapDlg.clear();
   return _qStatus;
 }
 
@@ -107,18 +112,27 @@ void IAPQueryATSI::onATSIResult(ATSIRes & res)
                  abInfo.toString().c_str());
 }
 
-void IAPQueryATSI::onDialogEnd(RCHash ercode/* = 0*/)
+ObjAllcStatus_e
+  IAPQueryATSI::onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash ercode/* = 0*/)
 {
   MutexGuard  grd(_mutex);
-  if (ercode) {
+
+  if (!ercode) {
+    smsc_log_debug(logger, "%s(%s): query succeeded",
+                    taskName(), abonent.getSignals());
+  } else if (ercode == _RCS_MAPOpErrors->mkhash(MAPOpErrorId::informationNotAvailable)) {
+    //non-barred non-prepaid abonent
+    abInfo.abType = AbonentContractInfo::abtPostpaid;
+    smsc_log_debug(logger, "%s(%s): query failed: code 0x%x, %s",
+                    taskName(), abonent.getSignals(), ercode, _exc.c_str());
+  } else {
     _qStatus = IAPQStatus::iqError;
     _qError = ercode;
     _exc = URCRegistry::explainHash(ercode);
     smsc_log_error(logger, "%s(%s): query failed: code 0x%x, %s",
                     taskName(), abonent.getSignals(), ercode, _exc.c_str());
-  } else
-    smsc_log_debug(logger, "%s(%s): query succeeded",
-                    taskName(), abonent.getSignals());
+  }
+  return ObjFinalizerIface::objActive;
 }
 
 } //atih

@@ -26,6 +26,9 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::inman::iaprvd::IAPQueryAC;
 using smsc::inman::iaprvd::IAPQueryManagerITF;
 
+using smsc::inman::inap::ObjFinalizerIface;
+using smsc::inman::inap::ObjAllcStatus_e;
+
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::atih::MapATSIDlg;
 using smsc::inman::inap::atih::ATSIhandlerITF;
@@ -70,8 +73,10 @@ protected:
   // ****************************************
   virtual void onATSIResult(ATSIRes & arg);
   //if err_code != 0, no result has been got from MAP service,
-  //NOTE: MAP dialog may be safely released but not deleted from this callback!
-  virtual void onDialogEnd(RCHash ercode = 0);
+  //NOTE: dialog user may destroy reporting MAP dialog from this callback in two ways:
+  //   1) by calling MapDialogAC::releaseThis() if dialog is allocated on heap
+  //   2) by calling ObjFinalizerIface::finalizeObj() and then MapDialogAC destructor
+  virtual ObjAllcStatus_e onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash ercode = 0);
   //
   virtual void Awake(void) { _mutex.notify(); }
 
