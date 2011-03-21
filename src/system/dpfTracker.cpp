@@ -128,6 +128,7 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
     if(!c.validate())
     {
       smsc_log_warn(log,"Invalid change record detected at %ld",f.Pos());
+      continue;
     }
     if(c.ct==ctRegisterSme)
     {
