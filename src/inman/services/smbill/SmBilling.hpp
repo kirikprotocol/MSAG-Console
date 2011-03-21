@@ -43,6 +43,7 @@ using smsc::core::timers::OPAQUE_OBJ;
 using smsc::inman::TaskRefereeITF;
 using smsc::inman::ScheduledTaskAC;
 
+using smsc::inman::iaprvd::IAPAbility;
 using smsc::inman::iaprvd::AbonentId;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
@@ -121,6 +122,8 @@ private:
 
     //Returns false if PDU contains invalid data preventing request processing
     bool verifyChargeSms(void);
+    //Returns true if next configured IAProvider has specified ability.
+    bool nextIAProviderHas(IAPAbility::Option_e op_val) const;
     //Returns true if qyery is started, so execution will continue in another thread.
     bool startIAPQuery(void);
     void cancelIAPQuery(void);

@@ -6,7 +6,6 @@ static char const ident[] = "@(#)$Id$";
 using smsc::inman::iaprvd::IAProviderAC;
 using smsc::inman::iaprvd::CSIRecord;
 using smsc::inman::iaprvd::IAPProperty;
-using smsc::inman::iaprvd::IAPAbility;
 
 using smsc::inman::iapmgr::IAProviderInfo;
 using smsc::inman::iapmgr::INParmsCapSms;
@@ -292,7 +291,21 @@ void Billing::Abort(const char * reason/* = NULL*/)
  * NOTE: these methods are not the processing graph entries, so never lock _sync,
  *       it's a caller responsibility to lock _sync !!!
  * ---------------------------------------------------------------------------------- */
-//Returns true if qyery is started, so execution will continue in another thread.
+//Returns true if next configured IAProvider has specified ability.
+bool Billing::nextIAProviderHas(IAPAbility::Option_e op_val) const
+{
+  unsigned i = _curIAPrvd;
+
+  while (i < AbonentPolicy::iapSecondary) {
+    const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(static_cast<IAPPrio_e>(++i));
+    if (pPrvd && pPrvd->hasAbility(op_val))
+      return true;
+  }
+  return false;
+}
+
+
+//Returns true if query is started, so execution will continue in another thread.
 bool Billing::startIAPQuery(void)
 {
   unsigned i = _curIAPrvd;
@@ -1059,24 +1072,10 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     StopTimer(state);
 
     if (qry_status) {
-#ifdef SMSEXTRA
-      //Special processing in case of SMSX WEB gateway
-      if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)
-          && (qry_status == _RCS_MAPOpErrors->mkhash(MAPOpErrorId::informationNotAvailable))) {
-        //non-barred non-prepraid abonent - allow processing
-        state = bilQueried;
-        if (chargeResult(true, qry_status) == Billing::pgEnd)
-          doFinalize();
-        return;
-      }
-#endif /* SMSEXTRA */
       billErr = qry_status;
       if (startIAPQuery()) //check if next IAProvider may ne requested
         return;            //keep bilStarted state
-    }
-    state = bilQueried;
-
-    if (!qry_status) {
+    } else {
 #ifdef SMSEXTRA
       //Special processing in case of SMSX WEB gateway
       if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
@@ -1087,17 +1086,27 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
           //Keep MSC address in case of special value reserved for SMSX WEB gateway
           abCsi.vlrNum = orgVLR;
         }
-        //Forbid billing in case of barred state
-        if (ab_info.odbGD.hasBit(ODBGeneralData::bit_allOG_CallsBarred)) {
-          smsc_log_info(logger, "%s: allOG_CallsBarred is set for %s", _logId,
-                        abNumber.toString().c_str());
-          if (chargeResult(false, _RCS_MAPOpErrors->mkhash(MAPOpErrorId::callBarred)) == Billing::pgEnd)
-            doFinalize();
-          return;
-        }
       } else
 #endif /* SMSEXTRA */
         abCsi.Merge(ab_info); //merge known abonent info
+
+      //Forbid billing in case of barred state
+      //NOTE: Barring data doesn't stored in cache!
+      if (ab_info.odbGD.hasBit(ODBGeneralData::bit_allOG_CallsBarred)) {
+        state = bilQueried;
+        smsc_log_info(logger, "%s: allOG_CallsBarred is set for %s", _logId,
+                      abNumber.toString().c_str());
+        if (chargeResult(false, _RCS_MAPOpErrors->mkhash(MAPOpErrorId::callBarred)) == Billing::pgEnd)
+          doFinalize();
+        return;
+      }
+
+      //NOTE: Migration to ATSI - in case of postpaid abonent check if secondary
+      //      provider able to provide IMSI
+      if (abCsi.isPostpaid() && !abCsi.getImsi() && nextIAProviderHas(IAPAbility::abIMSI)) {
+        if (startIAPQuery())
+          return;            //keep bilStarted state
+      }
 
       if (_cfg.abCache) {
         try {
@@ -1107,6 +1116,8 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
         }
       }
     }
+    state = bilQueried;
+
     if (ConfigureSCFandCharge() == Billing::pgEnd)
       doFinalize();
     return;
