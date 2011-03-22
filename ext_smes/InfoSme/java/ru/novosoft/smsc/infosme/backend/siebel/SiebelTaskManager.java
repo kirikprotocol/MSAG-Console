@@ -97,16 +97,20 @@ public class SiebelTaskManager implements Runnable {
         try {
           rs = provider.getTasksToUpdate();
           while (rs.next()) {
-            final SiebelTask st = (SiebelTask) rs.get();
+            try{
+              final SiebelTask st = (SiebelTask) rs.get();
 
-            if (logger.isDebugEnabled())
-              logger.debug("Siebel: found task to update: " + st.getWaveId());
-
-            if (!isInProcessing(st)) {
-              process(st);
-            } else {
               if (logger.isDebugEnabled())
-                logger.debug("Siebel: task: " + st.getWaveId() + " already in processing...");
+                logger.debug("Siebel: found task to update: " + st.getWaveId());
+
+              if (!isInProcessing(st)) {
+                process(st);
+              } else {
+                if (logger.isDebugEnabled())
+                  logger.debug("Siebel: task: " + st.getWaveId() + " already in processing...");
+              }
+            }catch (Exception e){
+              logger.error(e, e);
             }
           }
         } catch (Throwable e) {
