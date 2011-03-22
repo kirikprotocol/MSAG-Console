@@ -220,19 +220,23 @@ class SiebelManager {
             try {
               rs = provider.getDeliveriesToUpdate(lastUpdate);
               while (rs.next()) {
-                final SiebelDelivery st = rs.get();
+                try{
+                  final SiebelDelivery st = rs.get();
 
-                if (logger.isDebugEnabled())
-                  logger.debug("Siebel: found delivery to update: waveId=" + st.getWaveId());
-
-                if (!isInProcessing(st)) {
-                  process(st);
-                  if(st.getLastUpdate().after(lastUpdate)) {
-                    lastUpdate = new Date(st.getLastUpdate().getTime());
-                  }
-                }else{
                   if (logger.isDebugEnabled())
-                    logger.debug("Siebel: delivery (waveId=" + st.getWaveId() + ") is already in processing...");
+                    logger.debug("Siebel: found delivery to update: waveId=" + st.getWaveId());
+
+                  if (!isInProcessing(st)) {
+                    process(st);
+                    if(st.getLastUpdate().after(lastUpdate)) {
+                      lastUpdate = new Date(st.getLastUpdate().getTime());
+                    }
+                  }else{
+                    if (logger.isDebugEnabled())
+                      logger.debug("Siebel: delivery (waveId=" + st.getWaveId() + ") is already in processing...");
+                  }
+                }catch (Exception e){
+                  logger.error(e,e);
                 }
               }
 
