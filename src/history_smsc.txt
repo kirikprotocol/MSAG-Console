@@ -624,6 +624,15 @@ B3204: Feb 28, 2011
     SMSC	store submit time of parts, use sumbit time of part in charge on submit's on data collected
     SMSC	support to change responding address for specified ussd codes (GgPA in resp != GdPA in incoming request)
 
-    SMSC  new rolling scheme
-    SMSC  use only 8 bit mr in concatenated messages for optimal partitioning
-    SMSC  new SNMP Counter - oid 1.3.6.1.4.1.26757.1.4.7
+B3205: Mar 14, 2011
+    SMSC	new rolling scheme
+    SMSC	use only 8 bit mr in concatenated messages for optimal partitioning
+    SMSC	new SNMP Counter - oid 1.3.6.1.4.1.26757.1.4.7
+
+B3206: Mar 22, 2011
+    MCISme	EventStorage optimized, std::string resplaced
+    MCISme	ProcQueue implementation on receive PDU, thread pool processing of PDU's
+    MCISme	Tracking number DATA_SM in process in scheduler.
+    SMSC	inmancomm fix for limits for svctype and systemid.
+    SMSC	dpf tracker now can skip incorrect records on startup
+    
