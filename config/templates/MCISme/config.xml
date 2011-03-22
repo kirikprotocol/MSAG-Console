@@ -15,8 +15,10 @@
 	<param name="DaysValid"  type="int">1</param>
 	
 	<param name="unrespondedMessagesMax" type="int">100</param>
-	<param name="unrespondedMessagesSleep" type="int">20</param>
+	<param name="unrespondedMessagesSleep" type="int">2</param>
 	<param name="outgoingSpeedMax" type="int">50</param>
+	<param name="maxDataSmRegistrySize" type="int">500</param>
+	<param name="pduDispatchersCount" type="int">4</param>
 	
 	<param name="responceWaitTime" type="string">00:00:05</param>
 	<!-- should be deleted param name="receiptWaitTime" type="string">00:00:05</param-->
