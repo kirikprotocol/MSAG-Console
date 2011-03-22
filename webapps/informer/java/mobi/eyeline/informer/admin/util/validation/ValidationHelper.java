@@ -172,6 +172,12 @@ public class ValidationHelper {
     }
   }
 
+  public void checkNotContains(String argName, String str, String subStr) throws AdminException {
+    if (str != null && subStr != null && str.contains(subStr)) {
+      throw new ValidationException(paramNameBundle, argName);
+    }
+  }
+
   public void checkSizeGreaterThan(String argName, Collection collection, int size) throws AdminException {
     if (collection == null || collection.size() <= size)
       throw new ValidationException(paramNameBundle, argName);

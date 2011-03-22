@@ -397,6 +397,7 @@ public class User implements Serializable {
 
   void validate() throws AdminException{
     vh.checkNotEmpty("login", login);
+    vh.checkNotContains("login", login, ".");
     vh.checkNotEmpty("password", password);
     vh.checkNotNull("roles", roles);
     vh.checkNotEmpty("firstName", firstName);
