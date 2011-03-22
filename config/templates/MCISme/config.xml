@@ -14,8 +14,8 @@
         <!-- if DaysValid is greater than 10 then it measured in hours -->
 	<param name="DaysValid"  type="int">1</param>
 	
-	<param name="unrespondedMessagesMax" type="int">100</param>
-	<param name="unrespondedMessagesSleep" type="int">2</param>
+	<param name="unrespondedMessagesMax" type="int">500</param>
+	<param name="unrespondedMessagesSleep" type="int">10</param>
 	<param name="outgoingSpeedMax" type="int">50</param>
 	<param name="maxDataSmRegistrySize" type="int">500</param>
 	<param name="pduDispatchersCount" type="int">4</param>
@@ -235,6 +235,7 @@
         <param name="userpassword" type="string">T3JSJkYQ</param>
         <param name="voicemail" type="string"></param>
       </section>
+
       <section name="IASME">
        <param name="listen_iface" type="string">0.0.0.0</param>
        <param name="listen_port" type="int">9999</param>
