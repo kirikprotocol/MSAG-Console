@@ -457,7 +457,9 @@ class SiebelManager {
 
       if (st.getStatus() == SiebelDelivery.Status.ENQUEUED) {
         if(!isCreationAvailable()) {
-          addError(st.getWaveId());
+              if(st.getWaveId() != null) {
+                addError(st.getWaveId());
+              }
           return;
         }
         thread = new Runnable() {
@@ -466,7 +468,9 @@ class SiebelManager {
               beginDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
-              addError(st.getWaveId());
+              if(st.getWaveId() != null) {
+                addError(st.getWaveId());
+              }
             } finally {
               setProcessed(st);
             }
@@ -479,7 +483,9 @@ class SiebelManager {
               stopDelivery(st, removeOnStop);
             } catch (Exception e) {
               logger.error(e, e);
-              addError(st.getWaveId());
+              if(st.getWaveId() != null) {
+                addError(st.getWaveId());
+              }
             } finally {
               setProcessed(st);
             }
@@ -492,7 +498,9 @@ class SiebelManager {
               pauseDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
-              addError(st.getWaveId());
+              if(st.getWaveId() != null) {
+                addError(st.getWaveId());
+              }
             } finally {
               setProcessed(st);
             }
