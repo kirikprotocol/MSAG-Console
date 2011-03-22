@@ -49,6 +49,10 @@
   <td><input class=txt name=calledMask value="<%=StringEncoderDecoder.encode(bean.getCalledMask())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>PDU dispatchers count</th>
+  <td><input class=txt name=pduDispatchersCount value="<%=StringEncoderDecoder.encode(bean.getPduDispatchersCount())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Max DataSm registry size</th>
   <td><input class=txt name=maxDataSmRegistrySize value="<%=StringEncoderDecoder.encode(bean.getMaxDataSmRegistrySize())%>"></td>
 </tr>

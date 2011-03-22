@@ -26,6 +26,7 @@ public class Options extends MCISmeBean
   private int protocolId = 0;
   private int daysValid = 1;
   private int maxDataSmRegistrySize = 0;
+  private int pduDispatchersCount = 4;
   private int unrespondedMessagesMax = 0;
   private int unrespondedMessagesSleep = 0;
   private int outgoingSpeedMax = 0;
@@ -151,6 +152,7 @@ public class Options extends MCISmeBean
         callingMask = getConfig().getString("MCISme.CallingMask");
         calledMask  = getConfig().getString("MCISme.CalledMask");
         maxDataSmRegistrySize = getConfig().getInt("MCISme.maxDataSmRegistrySize");
+        pduDispatchersCount = getConfig().getInt("MCISme.pduDispatchersCount");
         unrespondedMessagesMax = getConfig().getInt("MCISme.unrespondedMessagesMax");
         unrespondedMessagesSleep = getConfig().getInt("MCISme.unrespondedMessagesSleep");
         outgoingSpeedMax = getConfig().getInt("MCISme.outgoingSpeedMax");
@@ -336,6 +338,7 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.DaysValid", daysValid);
     getConfig().setString("MCISme.CallingMask", callingMask);
     getConfig().setString("MCISme.CalledMask" , calledMask);
+    getConfig().setInt   ("MCISme.pduDispatchersCount", pduDispatchersCount);
     getConfig().setInt   ("MCISme.maxDataSmRegistrySize", maxDataSmRegistrySize);
     getConfig().setInt   ("MCISme.unrespondedMessagesMax", unrespondedMessagesMax);
     getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
@@ -641,6 +644,24 @@ public class Options extends MCISmeBean
       this.maxDataSmRegistrySize = Integer.decode(maxDataSmRegistrySize).intValue();
     } catch (NumberFormatException e) {
       logger.debug("Invalid int MCISme.maxDataSmRegistrySize parameter value: " + maxDataSmRegistrySize + '"', e);
+    }
+  }
+
+  public int getPduDispatchersCountInt() {
+    return pduDispatchersCount;
+  }
+  public void setPduDispatchersCountInt(int pduDispatchersCount) {
+    this.pduDispatchersCount = pduDispatchersCount;
+  }
+
+  public String getPduDispatchersCount() {
+    return String.valueOf(pduDispatchersCount);
+  }
+  public void setPduDispatchersCount(String pduDispatchersCount) {
+    try {
+      this.pduDispatchersCount = Integer.decode(pduDispatchersCount).intValue();
+    } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.pduDispatchersCount parameter value: " + pduDispatchersCount + '"', e);
     }
   }
 
