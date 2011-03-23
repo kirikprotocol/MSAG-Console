@@ -97,7 +97,7 @@ public class Mode {${line.separator}
         <infileset dir="${informer.tests.dir}" includes="*.emma" />
 
         <xml outfile="${informer.tests.dir}/coverage.xml.report" depth="method" />
-        <html outfile="${informer.tests.dir}/coverage.html" depth="method" />
+        <html outfile="${informer.tests.dir}/coverage.html" depth="method" encoding="utf-8"/>
 
       </report>
     </emma>
