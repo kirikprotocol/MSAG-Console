@@ -5,6 +5,8 @@ import java.util.List;
 
 public class StringEncoderDecoder {
 
+  private StringEncoderDecoder() {}
+
   public static String encode(String str) {
     if (str == null) return "";
     StringBuilder result = new StringBuilder(str.length());
@@ -37,32 +39,7 @@ public class StringEncoderDecoder {
     return str;
   }
 
-  public static String encodeHTML(String str) {
-    if (str == null) return "";
-    StringBuilder result = new StringBuilder(str.length());
-    for (int i = 0; i < str.length(); i++) {
-      switch (str.charAt(i)) {
-        case '<': // &lt;
-          result.append("&lt;");
-          break;
-        case '>': //&gt;
-          result.append("&gt;");
-          break;
-        case '&': //&amp;
-          result.append("&amp;");
-          break;
-        case '"': //&quot;
-          result.append("&quot;");
-          break;
-        case '\n':
-          result.append("<br/>");
-          break;
-        default:
-          result.append(str.charAt(i));
-      }
-    }
-    return result.toString();
-  }
+
 
   private static byte[] stringToBytes(String str) {
     byte[] bytes = new byte[str.length() * 2];

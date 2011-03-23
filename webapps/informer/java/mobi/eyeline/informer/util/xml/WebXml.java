@@ -38,22 +38,6 @@ public class WebXml {
     load(is);
   }
 
-  @SuppressWarnings({"EmptyCatchBlock"})
-  public WebXml(File webXmlFile) throws TransformerConfigurationException, ParserConfigurationException, SAXException, IOException {
-    InputStream is = null;
-    try {
-      is = new FileInputStream(webXmlFile);
-      load(is);
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-  }
-
   private void load(InputStream is) throws IOException, SAXException, ParserConfigurationException {
     document = XmlUtils.parse(is);
     initRoles();
@@ -116,14 +100,6 @@ public class WebXml {
     } finally {
       lock.readLock().unlock();
     }
-  }
-
-
-  private Element createRole(String roleName) {
-    Element securityRoleElement = document.createElement("security-role");
-    Element roleNameElement = XmlUtils.createChildElement(document, securityRoleElement, "role-name");
-    XmlUtils.createTextChild(document, roleNameElement, roleName);
-    return securityRoleElement;
   }
 
 

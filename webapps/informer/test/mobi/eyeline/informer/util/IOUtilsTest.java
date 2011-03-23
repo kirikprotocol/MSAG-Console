@@ -4,7 +4,10 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -94,5 +97,47 @@ public class IOUtilsTest {
       ByteArrayInputStream is = new ByteArrayInputStream(os.toByteArray());
       assertEquals(val, IOUtils.readString32(is));
     }
+  }
+
+  @Test
+  public void testWriteString() throws IOException {
+    String[] values= new String[]{"Привет мир", "Hello world"};
+
+    for (String val : values) {
+      ByteArrayOutputStream os = new ByteArrayOutputStream(500);
+      IOUtils.writeString(os, val, 5);
+      assertEquals(5, os.toByteArray().length);
+      ByteArrayInputStream is = new ByteArrayInputStream(os.toByteArray());
+      assertEquals(new String(val.getBytes(), 0, 5), IOUtils.readString(is, 5));
+    }
+  }
+
+  @Test
+  public void testSkip() throws IOException {
+    byte[] bytes = new byte[] {1,2,3,4,5,6,7,8,9,0};
+
+    InputStream is = new ByteArrayInputStream(bytes);
+    IOUtils.skip(is, 3);
+    assertEquals(4, is.read());
+  }
+
+  @Test
+  public void testNegativeSkip() throws IOException {
+    byte[] bytes = new byte[] {1,2,3,4,5,6,7,8,9,0};
+
+    InputStream is = new ByteArrayInputStream(bytes);
+    IOUtils.skip(is, -1);
+    assertEquals(1, is.read());
+  }
+
+  @Test
+  public void testReadFully() throws IOException {
+    byte[] bytes = new byte[] {1,2,3,4,5,6,7,8,9,0};
+
+    InputStream is = new ByteArrayInputStream(bytes);
+    byte[] newBytes = new byte[bytes.length];
+    IOUtils.readFully(is, newBytes);
+
+    assertArrayEquals(bytes, newBytes);
   }
 }

@@ -3,6 +3,7 @@ package mobi.eyeline.informer.util;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -63,7 +64,7 @@ public class AddressTest {
 
   @Test
   public void testCreateFromIncorrectString() {
-    String[] incorrectAddresses = new String[] {"Hello", ".1.1.Hello", ""};
+    String[] incorrectAddresses = new String[] {"Hello", ".1.1.Hello", "", ".0.123", ".1233", ".abc.5.123", ".5.fff.123"};
     for (String incorrectAddress : incorrectAddresses) {
       try {
         new Address(incorrectAddress);
@@ -83,12 +84,43 @@ public class AddressTest {
   }
 
   @Test
+  public void testEquals() {
+    assertEquals(new Address("+79139495113"), new Address("79139495113"));
+    assertEquals(new Address("+79139495113"), new Address("89139495113"));
+    assertFalse(new Address("+7123231239139495113").equals(new Address("7123231239139495113")));
+    assertFalse(new Address("+7123231239139495113").equals(new Address("8123231239139495113")));
+    assertFalse(new Address("+69139495113").equals(new Address("69139495113")));
+    assertFalse(new Address("+69139495113").equals(new Address("89139495113")));
+    assertFalse(new Address("+79139495113").equals(new String("+79139495113")));
+  }
+
+  @Test
   public void testHashCode()  {
     Address addr1 = new Address("+79139495113");
     Address addr2 = new Address("+79139495113");
 
     assertEquals(addr1, addr2);
     assertEquals(addr1.hashCode(), addr2.hashCode());
+  }
+
+  @Test
+  public void testGetSimpleAddress() {
+    assertEquals("+79139495113", new Address("+79139495113").getSimpleAddress());
+    assertEquals("79139495113", new Address(".0.1.79139495113").getSimpleAddress());
+    assertEquals(".0.0.79139495113", new Address(".0.0.79139495113").getSimpleAddress());
+    assertEquals(".1.0.79139495113", new Address(".1.0.79139495113").getSimpleAddress());
+  }
+
+  @Test
+  public void testGetNormalizedAddress() {
+    assertEquals(".1.1.79139495113", new Address(".1.1.79139495113").getNormalizedAddress());
+    assertEquals(".1.1.79139495113", new Address("+79139495113").getNormalizedAddress());
+    assertEquals(".1.1.79139495113", new Address("89139495113").getNormalizedAddress());
+    assertEquals(".1.1.79139495113", new Address("79139495113").getNormalizedAddress());
+
+    assertEquals(".0.1.79139495113", new Address(".0.1.79139495113").getNormalizedAddress());
+    assertEquals(".0.0.79139495113", new Address(".0.0.79139495113").getNormalizedAddress());
+    assertEquals(".1.0.79139495113", new Address(".1.0.79139495113").getNormalizedAddress());
   }
 
 }

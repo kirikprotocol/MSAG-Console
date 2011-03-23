@@ -4,3 +4,4 @@
 -mobi.eyeline.informer.admin.delivery.protogen.protocol*
 -mobi.eyeline.informer.admin.infosme.protogen.protocol*
 -*Test*
+-*Exception*

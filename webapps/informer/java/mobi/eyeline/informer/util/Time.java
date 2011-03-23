@@ -121,8 +121,6 @@ public class Time implements Comparable {
         sec = Integer.parseInt(st.nextToken().trim(), 10);
       if (st.hasMoreTokens())
         throw new IllegalArgumentException("Invalid time string:'" + s + "'");
-    } catch (NoSuchElementException e) {
-      throw new IllegalArgumentException("Invalid time string:'" + s + "'");
     } catch (NumberFormatException e) {
       throw new IllegalArgumentException("Invalid time string:'" + s + "'");
     }

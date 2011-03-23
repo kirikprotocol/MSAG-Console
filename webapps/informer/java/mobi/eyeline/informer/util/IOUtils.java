@@ -13,6 +13,8 @@ import java.io.OutputStream;
 
 public class IOUtils {
 
+  private IOUtils() {}
+
   public static void writeUInt8(OutputStream os, int value) throws IOException {
     os.write(value & 0xFF);
   }
@@ -77,16 +79,6 @@ public class IOUtils {
   public static long readUInt32(InputStream is) throws IOException {
     return ((long) readUInt8(is) << 24) | ((long) readUInt8(is) << 16) |
         ((long) readUInt8(is) << 8) | ((long) readUInt8(is));
-  }
-
-  public static int readInt32(InputStream is) throws IOException {
-    return (readUInt8(is) << 24) | (readUInt8(is) << 16) |
-        (readUInt8(is) << 8) | (readUInt8(is));
-  }
-
-  public static int readUInt32Int(InputStream is) throws IOException {
-    return (readUInt8(is) << 24) | (readUInt8(is) << 16) |
-        (readUInt8(is) << 8) | (readUInt8(is));
   }
 
   public static long readInt64(InputStream is) throws IOException {

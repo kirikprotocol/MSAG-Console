@@ -262,7 +262,7 @@ public class XmlConfigParam implements Cloneable {
    * @param delimiter  values delimiter
    */
   public void setStringArray(String[] stringList, String delimiter) {
-    value = Functions.arrayToString(stringList, delimiter);
+    value = arrayToString(stringList, delimiter);
     type = Type.STRING;
   }
 
@@ -277,7 +277,7 @@ public class XmlConfigParam implements Cloneable {
     for (int i = 0; i < values.length; i++) {
       os[i] = values[i];
     }
-    this.value = Functions.arrayToString(os, delimiter);
+    this.value = arrayToString(os, delimiter);
     type = Type.STRING;
   }
 
@@ -292,8 +292,21 @@ public class XmlConfigParam implements Cloneable {
     for (int i = 0; i < values.length; i++) {
       os[i] = values[i];
     }
-    this.value = Functions.arrayToString(os, delimiter);
+    this.value = arrayToString(os, delimiter);
     type = Type.STRING;
+  }
+
+  private static String arrayToString(final Object[] array, final String delimeter) {
+    if (array.length == 0) {
+      return "";
+    }
+    StringBuilder result = new StringBuilder(10 * array.length);
+    for (int i = 0; i < array.length - 1; i++) {
+      result.append(array[i].toString()).append(delimeter);
+    }
+    result.append(array[array.length - 1].toString());
+
+    return result.toString();
   }
 
   /**

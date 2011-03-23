@@ -46,9 +46,11 @@ public class Address implements Serializable {
    * @param address - адрес в виде строки
    */
   public Address(String address) {
-    address = address.trim();
+
     if (address == null)
       throw new NullPointerException("Address string is null");
+
+    address = address.trim();
 
     if (!validate(address))
       throw new IllegalArgumentException("Address \"" + address + "\" is not valid");
@@ -56,19 +58,12 @@ public class Address implements Serializable {
     if (address.startsWith(".")) {
       int dp = address.indexOf('.', 1);
       int dp2 = address.indexOf('.', dp + 1);
-      if (dp < 0 || dp2 < 0)
-        throw new IllegalArgumentException("Mask \"" + address + "\" is not valid");
 
-      try {
-        String toneStr = address.substring(1, dp);
-        tone = Byte.decode(toneStr);
-        String npiStr = address.substring(dp + 1, dp2);
-        npi = Byte.decode(npiStr);
-        this.address = address.substring(dp2 + 1);
-
-      } catch (NumberFormatException e) {
-        throw new IllegalArgumentException("Mask \"" + address + "\" is not valid, nested: " + e.getMessage());
-      }
+      String toneStr = address.substring(1, dp);
+      tone = Byte.decode(toneStr);
+      String npiStr = address.substring(dp + 1, dp2);
+      npi = Byte.decode(npiStr);
+      this.address = address.substring(dp2 + 1);
 
     } else {
       if (address.startsWith("+")) {
@@ -96,7 +91,7 @@ public class Address implements Serializable {
    * @param address проверяемый адрес
    * @return true, если адрес имеет корректный формат. Иначе - false.
    */
-  public static boolean validate(String address) {
+  public synchronized static boolean validate(String address) {
 
     return address != null && address.trim().length() > 0
         && ((pattern1.matcher(address).matches() && pattern2.matcher(address).matches())

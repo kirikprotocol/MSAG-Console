@@ -40,7 +40,7 @@ public class TimeTest {
 
     // Некорректные значения
     String[] incorrectValues = new String[]{
-        "00:","00", "abc"," ", "",
+        "00:","11", "abc"," ", "",
         "00:00:", "00:60", "-1:0","-1:-1","-0:-5:", "qq:qq","00:qq", "qq:00",
         "HH:mm:ss","-:0","00:00:00:", "0:0:0:","-1:-1:-1","00:60:00", "00:00:600", "00:qq:00", "qq:00:00", "00:00:qq"
     };
@@ -162,6 +162,12 @@ public class TimeTest {
     l = r;
     assertTrue(getTime("22:57:11").isInInterval(l,r));
 
+  }
+
+  @Test
+  public void testHashCode() {
+    assertEquals(new Time(1,2,3), new Time("01:02:03"));
+    assertEquals(new Time(1,2,3).hashCode(), new Time("01:02:03").hashCode());
   }
 
   @Test
