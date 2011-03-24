@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.monitoring.MBean;
-import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -40,32 +39,20 @@ public class InitListener implements ServletContextListener {
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
       initLog4j(new File(new File(appBaseDir, "conf"), "log4j.properties").getAbsolutePath());
 
-      WebXml webXml;
-      InputStream is = null;
-      try {
-        is = servletContextEvent.getServletContext().getResourceAsStream("WEB-INF/web.xml");
-        webXml = new WebXml(is);
-      } finally {
-        if (is != null) {
-          try {
-            is.close();
-          } catch (IOException e) {
-          }
-        }
-      }
-
       if (System.getProperty("java.security.auth.login.config") == null) {
         System.setProperty("java.security.auth.login.config",
             servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
       }
 
-      WebContext.init(webXml, appBaseDir);
+      WebContext.init(appBaseDir);
 
       context = WebContext.getInstance();
 
       servletContextEvent.getServletContext().setAttribute("informer-version",
           version);
 
+
+      MBean.getInstance(MBean.Source.SYSTEM).notifyConfigurationOk();
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e, e);

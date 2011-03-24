@@ -1,7 +1,9 @@
 package mobi.eyeline.informer.admin.monitoring;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Aleksandr Khalitov
@@ -12,7 +14,7 @@ public class MBean {
   private static ProgramMBean mbean = ProgramMBean.getInstance();
 
   public static enum Source {
-    DCP, SIEBEL, SYSTEM          //todo
+    DCP, SIEBEL, SYSTEM, DELIVERY_CHANGELOG          //todo
   }
 
   public synchronized static MBean getInstance(Source name) {
@@ -24,13 +26,13 @@ public class MBean {
     return instance;
   }
   private Source source;
-  private Set<String> openedConfigurationErrors = Collections.synchronizedSet(new HashSet<String>());
-  private Set<String> openedInterationErrors = Collections.synchronizedSet(new HashSet<String>());
+  private Map<String, Boolean> configurationState = Collections.synchronizedMap(new HashMap<String, Boolean>());
+  private Map<String, Boolean> interactionState = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
   private MBean(Source source) {
     this.source = source;
   }
-
+  
   public void addProperty(String name, String description, PropertyWrapper wrapper) {
     mbean.addProperty(source, name, description, wrapper);
   }
@@ -44,14 +46,18 @@ public class MBean {
   }
 
   public void notifyConfigurationError(File file, String message, String ... atts) {
-    openedConfigurationErrors.add(file.getAbsolutePath());
-    mbean.configurationError(source, file.getAbsolutePath(), message, atts);
+    Boolean state = configurationState.get(file.getAbsolutePath());
+    if (state == null || state == Boolean.TRUE) {
+      mbean.configurationError(source, file.getAbsolutePath(), message, atts);
+      configurationState.put(file.getAbsolutePath(), Boolean.FALSE);
+    }
   }
 
   public void notifyConfigurationOk(File file, String ... atts) {
-    if (openedConfigurationErrors.contains(file.getAbsolutePath())) {
-      openedConfigurationErrors.remove(file.getAbsolutePath());
+    Boolean state = configurationState.get(file.getAbsolutePath());
+    if (state == null || state == Boolean.FALSE) {
       mbean.configurationOk(source, file.getAbsolutePath(), "", atts);
+      configurationState.put(file.getAbsolutePath(), Boolean.TRUE);
     }
   }
 
@@ -64,14 +70,18 @@ public class MBean {
   }
 
   public void notifyInteractionError(String externalComponent, String message, String ... atts) {
-    openedInterationErrors.add(externalComponent);
-    mbean.interactionError(source, externalComponent, 0, message, atts);
+    Boolean state = interactionState.get(externalComponent);
+    if (state == null || state == Boolean.TRUE) {
+      mbean.interactionError(source, externalComponent, 0, message, atts);
+      interactionState.put(externalComponent, Boolean.FALSE);
+    }
   }
 
   public void notifyInteractionOk(String externalComponent, String ... atts) {
-    if (openedInterationErrors.contains(externalComponent)) {
-      openedInterationErrors.remove(externalComponent);
+    Boolean state = interactionState.get(externalComponent);
+    if (state == null || state == Boolean.FALSE) {
       mbean.interactionOk(source, externalComponent, 0, atts);
+      interactionState.put(externalComponent, Boolean.TRUE);
     }
   }
 

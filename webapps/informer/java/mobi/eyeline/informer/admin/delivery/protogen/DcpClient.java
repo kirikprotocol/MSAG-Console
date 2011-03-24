@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.delivery.protogen;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.admin.protogen.ResponseWaitTimeoutException;
 import mobi.eyeline.informer.admin.protogen.ServerOfflineException;
 import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
@@ -47,6 +48,10 @@ public class DcpClient extends SyncProtogenConnection {
     }
   }
 
+  private static MBean getMBean() {
+    return MBean.getInstance(MBean.Source.DCP);
+  }
+
   private <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
     FailResponse fail = new FailResponse();
     try {
@@ -68,12 +73,16 @@ public class DcpClient extends SyncProtogenConnection {
         }
         throw new DeliveryException("interaction_error", fail.getStatus() + ": " + fail.getStatusMessage());
       }
+      getMBean().notifyInteractionOk(getHost()+':'+getPort());
       return response;
     } catch (ServerOfflineException e) {
+      getMBean().notifyInteractionError(getHost()+':'+getPort(), "server offline");
       throw new DeliveryException(DeliveryException.ErrorStatus.ServiceOffline, "");
     } catch (ResponseWaitTimeoutException e) {
+      getMBean().notifyInteractionError(getHost()+':'+getPort(), "response wait timeout");
       throw new DeliveryException("response_timeout");
     } catch (IOException e) {
+      getMBean().notifyInteractionError(getHost()+':'+getPort(), "io error");
       throw new DeliveryException("interaction_error", e, e.getMessage());
     } finally {
       lock.unlock();

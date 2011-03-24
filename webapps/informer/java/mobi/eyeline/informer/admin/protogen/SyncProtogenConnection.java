@@ -44,6 +44,14 @@ public abstract class SyncProtogenConnection {
     this(host, port, timeout, DEFAULT_CONNECT_TIMEOUT);
   }
 
+  public String getHost() {
+    return host;
+  }
+
+  public int getPort() {
+    return port;
+  }
+
   private static void serialize(PDU request, OutputStream os) throws IOException {
     BufferWriter writer = new BufferWriter();
     int pos = writer.size();

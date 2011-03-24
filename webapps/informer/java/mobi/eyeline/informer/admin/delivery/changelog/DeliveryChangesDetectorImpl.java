@@ -5,11 +5,11 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.util.DateAndFile;
+import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.CSVTokenizer;
+import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.util.Functions;
-import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -59,7 +59,9 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
 
   }
 
-
+  private static MBean getMBean() {
+    return MBean.getInstance(MBean.Source.DELIVERY_CHANGELOG);
+  }
 
 
   public synchronized void start() {
@@ -84,33 +86,33 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
   public void run() {
     String[] files=null;
     try {
-       files = fileSys.list(baseDir);        
-    }
-    catch (Exception e) {
-      log.error("Fatal error,EXITING! can't access baseDir: "+baseDir.getAbsolutePath(), e);
-      shutdown();
-    }
+      files = fileSys.list(baseDir);
 
-    if (files == null) {
-      log.error("Unable to get list of files.");
-      return;
-    }
+      if (files == null) {
+        getMBean().notifyInteractionError("changelog dir", "Unable to get list of files: "+baseDir.getAbsolutePath());
+        log.error("Unable to get list of files.");
+        return;
+      }
 
-    try{
       Arrays.sort(files);
       for (String fileName : files) {
         if (fileName.endsWith(".csv")) {
-          processFile(fileName);
+          try{
+            processFile(fileName);
+          }catch (Exception e) {
+            log.error(e,e);
+            getMBean().notifyInternalError("changelog file processing", "Error procesing file: "+fileName);
+          }
         }
       }
     }
     catch (Exception e) {
+      getMBean().notifyInternalError("changelog internal", e.getMessage());
       log.error("Fatal error,EXITING! ", e);
-      shutdown();
     }
   }
 
-  private synchronized void processFile(String fileName) throws Exception {
+  private synchronized void processFile(String fileName) throws Exception{
     File f = new File(baseDir, fileName);
     BufferedReader reader = null;
     try {
@@ -124,11 +126,7 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
       while ((line = reader.readLine()) != null) {
         processLine(fileName, c, line);
       }
-    }
-    catch (Exception e) {
-      log.error("Error parsing delivery states log : " + fileName, e);
-    }
-    finally {
+    }finally {
       if (reader != null) try {
         reader.close();
       } catch (Exception e) {
@@ -139,7 +137,6 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
       }
       catch (Exception e) {
         log.error("Error moving file to backup dir, EXITING! ", e);
-        throw e;
       }
     }
 
@@ -159,40 +156,35 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
   }
 
   private void processLine(String fileName, Calendar c, String line) {
-    try {
-      CSVTokenizer t = new CSVTokenizer(line);
-      if (t.hasMoreTokens()) {
-        ChangeDeliveryStatusEvent stateEventChange;
-        int ss = Integer.valueOf(t.nextToken());
-        c.set(Calendar.SECOND, ss);
-        int deliveryId = Integer.valueOf(t.nextToken());
-        String userId = t.nextToken();
-        DeliveryNotificationType type = getTypeByInt(Integer.valueOf(t.nextToken()));
-        if (type == DeliveryNotificationType.MESSAGE_FINISHED) {
-          //MSG_ID, STATUS, SMPP_STATUS, ADDRESS, NSMS, USER_DATA
-          long msgId = Long.valueOf(t.nextToken());
-          MessageState messageState = getMessageState(t.nextToken());
-          int smpp_status = Integer.valueOf(t.nextToken());
-          Address addr = new Address(t.nextToken());
-          int nsms = Integer.parseInt(t.nextToken());
-          String userData = null;
-          if (t.hasMoreTokens()) userData = t.nextToken();
-          Properties props = new Properties();
-          if (userData != null)
-            props.putAll(convertUserData(userData));
+    CSVTokenizer t = new CSVTokenizer(line);
+    if (t.hasMoreTokens()) {
+      ChangeDeliveryStatusEvent stateEventChange;
+      int ss = Integer.valueOf(t.nextToken());
+      c.set(Calendar.SECOND, ss);
+      int deliveryId = Integer.valueOf(t.nextToken());
+      String userId = t.nextToken();
+      DeliveryNotificationType type = getTypeByInt(Integer.valueOf(t.nextToken()));
+      if (type == DeliveryNotificationType.MESSAGE_FINISHED) {
+        //MSG_ID, STATUS, SMPP_STATUS, ADDRESS, NSMS, USER_DATA
+        long msgId = Long.valueOf(t.nextToken());
+        MessageState messageState = getMessageState(t.nextToken());
+        int smpp_status = Integer.valueOf(t.nextToken());
+        Address addr = new Address(t.nextToken());
+        int nsms = Integer.parseInt(t.nextToken());
+        String userData = null;
+        if (t.hasMoreTokens()) userData = t.nextToken();
+        Properties props = new Properties();
+        if (userData != null)
+          props.putAll(convertUserData(userData));
 
-          fireEvent(new ChangeMessageStateEvent(c.getTime(), deliveryId, userId,
-              msgId, messageState, smpp_status, addr, nsms, props));
-        }
-        else {
-          DeliveryStatus state = type == DeliveryNotificationType.DELIVERY_START ? DeliveryStatus.Active : DeliveryStatus.Finished;
-          stateEventChange = new ChangeDeliveryStatusEvent(state, c.getTime(), deliveryId, userId);
-          fireEvent(stateEventChange);
-        }
+        fireEvent(new ChangeMessageStateEvent(c.getTime(), deliveryId, userId,
+            msgId, messageState, smpp_status, addr, nsms, props));
       }
-    }
-    catch (Exception e) {
-      log.error("Error processing log " + fileName + " line : " + line, e);
+      else {
+        DeliveryStatus state = type == DeliveryNotificationType.DELIVERY_START ? DeliveryStatus.Active : DeliveryStatus.Finished;
+        stateEventChange = new ChangeDeliveryStatusEvent(state, c.getTime(), deliveryId, userId);
+        fireEvent(stateEventChange);
+      }
     }
   }
 
@@ -242,7 +234,7 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
       }
       catch (Exception e) {
         log.error("Error parsing delivery processed file: " + f.getAbsolutePath(), e);
-      }      
+      }
     }
     return ret;
   }

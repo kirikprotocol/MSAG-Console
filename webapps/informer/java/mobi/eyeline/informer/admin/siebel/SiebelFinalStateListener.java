@@ -11,6 +11,7 @@ import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import org.apache.log4j.Logger;
@@ -49,6 +50,10 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
   private boolean stop = true;
 
   private FileSystem fs;
+
+  private static final String DELIVERIES_CHANGES_ERROR = "Delivery's changes processing";
+  private static final String MESSAGES_CHANGES_ERROR = "Message's changes processing";
+  private static final String FILE_PROCCESS_ERROR = "Can't process internal files";
 
   public SiebelFinalStateListener(SiebelManager siebelManager, SiebelContext context, File workDir, int periodSec) throws InitException{
     this.dir = new File(workDir, "siebel");
@@ -97,7 +102,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
     this.periodSec = periodSec;
   }
 
-  private void messageFinished(ChangeMessageStateEvent stateEvent) throws AdminException {
+  private void messageFinished(ChangeMessageStateEvent stateEvent) {
     if(stop) {
       logger.warn("Listener is stopped, can't process event");
       return;
@@ -168,16 +173,30 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
     }
   }
 
+  private static MBean getMBean() {
+    return MBean.getInstance(MBean.Source.SIEBEL);
+  }
+
   public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
     if (e.getMessageState() == MessageState.New || e.getMessageState() == MessageState.Process)
       return;
+    try{
     messageFinished(e);
+    }catch (RuntimeException ex){
+      getMBean().notifyInternalError(DELIVERIES_CHANGES_ERROR, "Can't process changes for: deliveryId="+e.getDeliveryId()+" messageId="+e.getMessageId());
+      throw ex;
+    }
   }
 
   public void deliveryStateChanged(ChangeDeliveryStatusEvent e) throws AdminException {
     if (e.getStatus() != DeliveryStatus.Finished)
       return;
-    deliveryFinished(e);
+    try{
+      deliveryFinished(e);
+    }catch (AdminException ex){
+      getMBean().notifyInternalError(MESSAGES_CHANGES_ERROR, "Can't process changes for: deliveryId="+e.getDeliveryId());
+      throw ex;
+    }
   }
 
   public synchronized void start() throws AdminException{
@@ -340,11 +359,17 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
             for (File toProccess : files) {
               if (toProccess.length() > 0) {
-                processFile(toProccess);
+                try{
+                  processFile(toProccess);
+                }catch (Exception e){
+                  getMBean().notifyInternalError(FILE_PROCCESS_ERROR, "Can't submit changes to Siebel from file: "+toProccess.getAbsolutePath());
+                  break;
+                }
               }
               fs.delete(toProccess);
             }
           }catch (Exception e){
+            getMBean().notifyInternalError(FILE_PROCCESS_ERROR, "Unknown error");
             logger.error(e,e);
           }
           if(logger.isDebugEnabled()) {
