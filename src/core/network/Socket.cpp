@@ -118,7 +118,8 @@ int Socket::Connect(bool nb)
     setNonBlocking(1);
   }
 
-  if(connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)) && errno != EINPROGRESS)
+  int connStatus;
+  if((connStatus=connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr))) && errno != EINPROGRESS)
   {
     closesocket(sock);
     sock=INVALID_SOCKET;
@@ -128,22 +129,22 @@ int Socket::Connect(bool nb)
   //l.l_onoff=1;
   //l.l_linger=0;
   //setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
-  if(connectTimeout)
+  if(connStatus && connectTimeout)
   {
-    fd_set rd,wr;
-    FD_ZERO(&rd);
+    fd_set wr;
+    //FD_ZERO(&rd);
     FD_ZERO(&wr);
-    FD_SET(sock,&rd);
+    //FD_SET(sock,&rd);
     FD_SET(sock,&wr);
     tv.tv_sec=connectTimeout;
     tv.tv_usec=0;
-    if(select(sock+1,&rd,&wr,0,&tv)<=0)
+    if(select(sock+1,0,&wr,0,&tv)<=0)
     {
       closesocket(sock);
       sock=INVALID_SOCKET;
       return -1;
     }
-    if(FD_ISSET(sock,&rd))
+    if(!FD_ISSET(sock,&wr))
     {
       closesocket(sock);
       sock=INVALID_SOCKET;
