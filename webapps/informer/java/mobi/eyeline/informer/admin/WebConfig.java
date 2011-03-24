@@ -115,6 +115,7 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
       XmlConfigSection system = webconfig.getSection("system");
       settings.setJournalDir(system.getString("journal dir"));
+      settings.setMonitoringDir(system.getString("monitoring dir"));
       settings.setWorkDir(system.getString("work dir"));
 
 

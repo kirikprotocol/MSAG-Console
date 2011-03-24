@@ -16,6 +16,9 @@ import mobi.eyeline.informer.admin.ftpserver.FtpUser;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.monitoring.MonitoringEvent;
+import mobi.eyeline.informer.admin.monitoring.MonitoringFilter;
+import mobi.eyeline.informer.admin.monitoring.MonitoringJournal;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsProvider;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
@@ -37,10 +40,7 @@ import mobi.eyeline.informer.util.Time;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Класс для управления моделью
@@ -954,6 +954,23 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   public int countArchiveMessages(String login, MessageFilter messageFilter) throws AdminException {
     User u = getUser(login);
     return archiveDeliveryManager.countMessages(login, u.getPassword(), messageFilter);
+  }
+
+  public List<MonitoringEvent> getMonitoringEvents(MonitoringFilter filter) throws AdminException{
+
+    final LinkedList<MonitoringEvent> records = new LinkedList<MonitoringEvent>();
+    monitoringJournal.visit(filter, new MonitoringJournal.Visitor(){
+      private static final int LIMIT = 1000;
+
+      public boolean visit(MonitoringEvent r) {
+        if (records.size() == LIMIT) {
+          records.removeFirst();
+        }
+        records.addLast(r);
+        return true;
+      }
+    });
+    return records;
   }
 
 }

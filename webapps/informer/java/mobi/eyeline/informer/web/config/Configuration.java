@@ -11,6 +11,8 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.monitoring.MonitoringEvent;
+import mobi.eyeline.informer.admin.monitoring.MonitoringFilter;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
@@ -571,6 +573,10 @@ public class Configuration {
 
   public void getArchiveMessages(String login, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
     context.getArchiveMessages(login, filter, _pieceSize, visitor);
+  }
+
+  public List<MonitoringEvent> getMonitoringEvents(MonitoringFilter filter) throws AdminException{
+    return context.getMonitoringEvents(filter);
   }
 
   public void archivateDelivery(String login, int deliveryId) throws AdminException {

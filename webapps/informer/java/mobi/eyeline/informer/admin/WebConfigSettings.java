@@ -23,6 +23,7 @@ class WebConfigSettings {
   private File[] appMirrorDirs;
   private Collection<String> HSDaemonHosts;
   private String journalDir;
+  private String monitoringDir;
 
   private NotificationSettings notificationSettings;  
 
@@ -105,6 +106,13 @@ class WebConfigSettings {
     this.journalDir = journalDir;
   }
 
+  String getMonitoringDir() {
+    return monitoringDir;
+  }
+
+  void setMonitoringDir(String monitoringDir) {
+    this.monitoringDir = monitoringDir;
+  }
 
   NotificationSettings getNotificationSettings() {
     return new NotificationSettings(notificationSettings);

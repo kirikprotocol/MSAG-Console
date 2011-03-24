@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.web;
 
+import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -32,6 +33,9 @@ public class InitListener implements ServletContextListener {
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
 
+      String version = readVersion(servletContextEvent.getServletContext());
+
+      MBean.getInstance(MBean.Source.SYSTEM).notifyStartup(version == null ? "" : version);
 
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
       initLog4j(new File(new File(appBaseDir, "conf"), "log4j.properties").getAbsolutePath());
@@ -60,7 +64,7 @@ public class InitListener implements ServletContextListener {
       context = WebContext.getInstance();
 
       servletContextEvent.getServletContext().setAttribute("informer-version",
-          readVersion(servletContextEvent.getServletContext()));
+          version);
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -71,8 +75,14 @@ public class InitListener implements ServletContextListener {
 
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
     if (context != null) {
-      context.shutdown();
+      try{
+        context.shutdown();
+      }catch (Exception e){
+        logger.error(e,e);
+      }
     }
+    MBean.getInstance(MBean.Source.SYSTEM).notifyShutdown();
+
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})

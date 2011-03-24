@@ -247,6 +247,12 @@
   </managed-bean>
 
   <managed-bean>
+    <managed-bean-name>monitoring</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.monitoring.MonitoringController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>config</managed-bean-name>
     <managed-bean-class>mobi.eyeline.informer.web.controllers.config.InformerConfigController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
@@ -519,6 +525,11 @@
     <navigation-case>
       <from-outcome>JOURNAL</from-outcome>
       <to-view-id>/journal/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>MONITORING</from-outcome>
+      <to-view-id>/monitoring/index.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

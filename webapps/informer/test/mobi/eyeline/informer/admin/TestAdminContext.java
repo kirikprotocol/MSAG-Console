@@ -13,6 +13,8 @@ import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerManager;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.monitoring.InformerNotificationListener;
+import mobi.eyeline.informer.admin.monitoring.MonitoringFileJournal;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsProvider;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
@@ -197,6 +199,16 @@ public class TestAdminContext extends AdminContext {
       this.webConfig = new  TestWebConfigManager(new File(webConfDir,"webconfig.xml") ,new File(webConfDir, "backup"), FileSystem.getFSForSingleInst()) ;
 
       fileSystem = new TestFileSystem();
+
+
+      File monitoringDir = new File(webConfig.getMonitoringDir());
+      if(!monitoringDir.exists() && !monitoringDir.mkdirs()) {
+        throw new InitException("Can't create dir: "+monitoringDir.getAbsolutePath());
+      }
+
+      monitoringJournal = new MonitoringFileJournal(monitoringDir, fileSystem);
+      InformerNotificationListener.setJournal(monitoringJournal);
+
       File servicesDir = new File(appBaseDir, "services");
       File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
       File archiveDaemonConf = new File(servicesDir, "ArchiveDaemon"+File.separatorChar+"conf");

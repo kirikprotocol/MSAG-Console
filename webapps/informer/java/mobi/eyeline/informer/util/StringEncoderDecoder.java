@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.util;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -292,6 +294,17 @@ public class StringEncoderDecoder {
       sb.append(sep).append(csvEscape(sep, s));
     }
     return sb.length() > 0 ? sb.substring(1) : "";
+  }
+
+  public static void toCSV(char sep, Writer os, Object... args) throws IOException {
+    boolean first = true;
+    for (Object s : args) {
+      if(!first) {
+        os.write(sep);
+      }
+      os.write(csvEscape(sep, s));
+      first = false;
+    }
   }
 
 

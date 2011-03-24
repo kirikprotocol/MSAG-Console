@@ -1,0 +1,80 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['monitor.page.title']}"/>
+
+  <ui:define name="content">
+    <h:form>
+
+      <h:inputHidden value="#{monitoring.init}"/>
+
+      <eye:dataTableFilter bean="#{monitoring}" clearAction="clearFilter" applyAction="query">
+        <h:panelGrid columns="4" columnClasses="column50WidthNoWrap, column400Width, column50WidthNoWrap, columnTopLeftAlign">
+
+          <h:outputText value="#{msg['monitor.page.source']}"/>
+          <h:selectOneMenu value="#{monitoring.filterBySource}" >
+            <f:selectItems value="#{monitoring.uniqueSources}"/>
+          </h:selectOneMenu>
+
+          <h:outputText value="#{msg['monitor.page.errorsOnly']}"/>
+          <h:selectBooleanCheckbox value="#{monitoring.errorsOnly}"/>
+
+          <h:outputText value="#{msg['monitor.page.from_date']}"/>
+          <eye:inputDate value="#{monitoring.filterByStartDate}" type="both" autocomplete="true"/>
+
+          <h:outputText value="#{msg['monitor.page.till_date']}"/>
+          <eye:inputDate value="#{monitoring.filterByEndDate}" type="both" autocomplete="true"/>
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
+      <eye:dataTable value="#{monitoring.records}" var="rec" rendered="#{monitoring.init}">
+        <eye:row>
+          <eye:column name="time" title="#{msg['monitor.page.time']}" sortable="true" width="15%" align="center" defaultSortOrder="time">
+            <h:outputText value="#{rec.date}">
+              <f:convertDateTime dateStyle="short" type="both"/>
+            </h:outputText>
+          </eye:column>
+          <eye:column name="sourceId" title="#{msg['monitor.page.source']}" sortable="true" width="15%" align="center">
+            <h:outputText value="#{rec.sourceId}"/>
+          </eye:column>
+          <eye:column name="severity" title="#{msg['monitor.page.severity']}" sortable="true" width="15%" align="center">
+            <h:outputText style="color:#{rec.style}" value="#{rec.severity}"/>
+          </eye:column>
+          <eye:column name="alarmId" title="#{msg['monitor.page.alarmId']}" sortable="true" width="15%" align="center">
+            <h:outputText value="#{rec.alarmId}"/>
+          </eye:column>
+          <eye:column name="text" title="#{msg['monitor.page.text']}" width="20%" align="center">
+            <h:outputText value="#{rec.text}"/>
+          </eye:column>
+          <eye:column name="props" title="#{msg['monitor.page.props']}" width="15%" align="center">
+            <h:outputText value="#{rec.props}"/>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <h:panelGroup style="#{monitoring.init ? '' : 'display:none'}">
+        <eye:delimiter/>
+        <eye:buttons>
+          <eye:space/>
+          <eye:button>
+            <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['monitor.details.download']}">
+              <tr:fileDownloadActionListener method="#{monitoring.download}" contentType="application/csv" filename="monitoring.csv"/>
+            </tr:commandLink>
+          </eye:button>
+        </eye:buttons>
+      </h:panelGroup>
+    </h:form>
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

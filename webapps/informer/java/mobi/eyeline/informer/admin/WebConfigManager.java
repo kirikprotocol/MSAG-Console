@@ -139,6 +139,19 @@ class WebConfigManager extends BaseManager<WebConfigSettings> {
     });
   }
 
+  /**
+   * Возвращает директория мониторинга
+   *
+   * @return директория мониторинга
+   */
+  public String getMonitoringDir() {
+    return readSettings(new SettingsReader<WebConfigSettings, String>() {
+      public String executeRead(WebConfigSettings settings) {
+        return settings.getMonitoringDir();
+      }
+    });
+  }
+
 
   public String getWorkDir() {
     return readSettings(new SettingsReader<WebConfigSettings, String>() {

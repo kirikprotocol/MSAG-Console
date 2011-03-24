@@ -17,6 +17,9 @@ import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.monitoring.InformerNotificationListener;
+import mobi.eyeline.informer.admin.monitoring.MonitoringFileJournal;
+import mobi.eyeline.informer.admin.monitoring.MonitoringJournal;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
@@ -38,6 +41,8 @@ class AdminContextBase {
   private InstallationType instType;
 
   protected Journal journal;
+
+  protected MonitoringJournal monitoringJournal;
 
   protected UsersManager usersManager;
 
@@ -108,6 +113,14 @@ class AdminContextBase {
           serviceManager = ServiceManager.getServiceManagerForHAInst(new File(appBaseDir, "conf/resourceGroups.properties"), servicesDir);
           fileSystem = FileSystem.getFSForHAInst();
       }
+
+      File monitoringDir = new File(webConfig.getMonitoringDir());
+      if(!monitoringDir.exists() && !monitoringDir.mkdirs()) {
+        throw new InitException("Can't create dir: "+monitoringDir.getAbsolutePath());
+      }
+
+      monitoringJournal = new MonitoringFileJournal(monitoringDir, fileSystem);
+      InformerNotificationListener.setJournal(monitoringJournal);
 
       if (serviceManager.getService("ftpserver") != null)
         ftpServerManager = new PureFtpServerManager(serviceManager, "ftpserver", fileSystem);
