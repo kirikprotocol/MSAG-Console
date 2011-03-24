@@ -196,7 +196,8 @@ class SiebelManager {
   }
 
   private String getSiebelUrl() {
-    return siebelProperties == null ? "" : siebelProperties.getProperty("jdbc.source");
+    String res = siebelProperties == null ? null : siebelProperties.getProperty("jdbc.source");
+    return res == null ? "" : res;
   }
 
   private class ProviderListener extends Thread{
