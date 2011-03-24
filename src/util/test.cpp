@@ -283,7 +283,7 @@ int main(int argc, char** argv)
   Logger::Init();
 
   {
-    const char *txt="Спасибо, твой рег.номер 54. Чтобы посмотреть свой профиль набери номер *739*54# и сообщи его друзьям! Отправь свое фото на email 739@loveintown.ru - покажи, что ты не такая как все и заработай больше голосов! Отправь SMS на номер 00839000002 с инфо о себе, напр.: Что нравится в людях? Любимое блюдо? Любимый CD? Как расслабляешься? Твой секс-символ? 3 вещи, без которых ты жить не можешь и тд. Удачи!";
+    const char *txt=",  . 54.       *739*54#    !     email 739@loveintown.ru - ,          !  SMS   00839000002    , .:    ?  ?  CD?  ?  -? 3 ,        . !";
     short buf[1024];
     int len=strlen(txt);
     ConvertMultibyteToUCS2(txt,len,buf,sizeof(buf),CONV_ENCODING_CP1251);
@@ -430,7 +430,7 @@ int main(int argc, char** argv)
 
   {
     SMS s;
-    const char * const msg="#template=emailsmenotify#{from}=\"vtiunov@scs-900.ru\" {to}=\"79139163330@scs-900.ru\" {subj}=\"Re: SMS-сообщение\" {body}=\"Здравствуйте 79139163330,.Wednesday, June25, 2003, 3:11:15 PM, от Вас получено:.7s9r> Абонентом МТС в Новосибирске.7s9r>Вам отправлено сообщение:.7s9r>--.7s9r> Kak dela?.С уважением,Тиунов Вадим.Группа эксплуатации дополнительныхуслуг.ЗАО Сибирские Сотовые Системы - 900.телефон: +7(3832)141038.e-mail: vtiunov@scs-900.ru\"";
+    const char * const msg="#template=emailsmenotify#{from}=\"vtiunov@scs-900.ru\" {to}=\"79139163330@scs-900.ru\" {subj}=\"Re: SMS-\" {body}=\" 79139163330,.Wednesday, June25, 2003, 3:11:15 PM,   :.7s9r>    .7s9r>  :.7s9r>--.7s9r> Kak dela?. , .  .    - 900.: +7(3832)141038.e-mail: vtiunov@scs-900.ru\"";
     short uni[2048];
     int len=ConvertMultibyteToUCS2(msg,strlen(msg),uni,sizeof(uni),CONV_ENCODING_CP1251);
     printf("len=%d\n",len);
@@ -463,7 +463,7 @@ int main(int argc, char** argv)
     s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setIntProperty(Tag::SMSC_UDH_CONCAT,1);
     s.setIntProperty(Tag::SMSC_DSTCODEPAGE,tst[t].dstdc);
-    s.setBinProperty(Tag::SMSC_RAW_PAYLOAD,tst[t].msg,tst[t].sz);
+    s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tst[t].msg,tst[t].sz);
 
     char x[]={8,8,8,8};
     s.setBinProperty(Tag::SMSC_DC_LIST,x,4);
