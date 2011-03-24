@@ -110,7 +110,13 @@ int SmppSocket::receive()
   int rd=socket->Read(buffer+bufferOffset,n);
   if(rd<=0)
   {
-    __trace__("SmppSocket: read failed");
+    if(log && proxy)
+    {
+      smsc_log_warn(log,"SmppSocket(%s): read failed %s",proxy->getSystemId(),strerror(errno));
+    }else
+    {
+      __warning2__("SmppSocket: read failed %s",strerror(errno));
+    }
     return -1;
   }
   bufferOffset+=rd;
