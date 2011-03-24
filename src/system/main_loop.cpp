@@ -489,6 +489,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
             reverseMergeCache.Insert(id,mci);
             std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
             mergeCacheTimeouts.Push(to);
+            eventqueue.enqueue(id,cmd);
+            return;
           }else
           {
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
