@@ -143,7 +143,7 @@ Event_ChangeAbonentProfile::toString(char* buf,size_t size) const
 {
   char timeBuf[64];
   time2string(_eventDate,timeBuf,sizeof(timeBuf));
-  snprintf(buf,size,"%c,%s,%s,%s",'P',timeBuf,_abonent.c_str(),_profileNotify);
+  snprintf(buf,size,"%c,%s,%s,%u",'P',timeBuf,_abonent.c_str(),_profileNotify);
   /*
   std::ostringstream obuf;
   obuf << "P," << time2string(_eventDate)
