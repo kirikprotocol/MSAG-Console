@@ -3,10 +3,7 @@ package mobi.eyeline.informer.util.config;
 import mobi.eyeline.informer.util.Functions;
 
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 
 /**
@@ -22,7 +19,7 @@ public class XmlConfigParam implements Cloneable {
   }
 
   private String name;
-  private String value;
+  private String value="";
   private final Properties attributes = new Properties();
   private Type type = Type.STRING;
 
@@ -177,8 +174,19 @@ public class XmlConfigParam implements Cloneable {
     return ConfigTools.getIntArray(name, value, delimiter);
   }
 
-  public String getAttribute(String attrName) {
-    return attributes.getProperty(attrName);
+  /**
+   * Rerturns parameter value as int list
+   *
+   * @param delimiter delimiter
+   * @return int list
+   * @throws XmlConfigException if param value can't be transformed to int list
+   */
+  public Collection<Integer> getIntList(String delimiter) throws XmlConfigException {
+    int[] array = ConfigTools.getIntArray(name, value, delimiter);
+    List<Integer> result = new ArrayList<Integer>();
+    for (int i : array)
+      result.add(i);
+    return result;
   }
 
 
@@ -250,7 +258,7 @@ public class XmlConfigParam implements Cloneable {
    * @param delimiter  values delimiter
    * @throws XmlConfigException error writting config
    */
-  public void setStringList(Collection stringList, String delimiter) throws XmlConfigException {
+  public void setStringList(Collection<String> stringList, String delimiter) throws XmlConfigException {
     value = Functions.collectionToString(stringList, delimiter);
     type = Type.STRING;
   }
@@ -320,7 +328,7 @@ public class XmlConfigParam implements Cloneable {
     type = Type.STRING;
   }
 
-  public void setAttribute(String attrName, String value) {
+  void setAttribute(String attrName, String value) {
     this.attributes.setProperty(attrName, value);
   }
 

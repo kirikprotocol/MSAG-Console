@@ -18,6 +18,8 @@ import java.io.OutputStream;
 
 class XmlConfigWriter {
 
+  private XmlConfigWriter() {}
+
   private static final DocumentBuilder docBuilder;
 
   static {
@@ -29,25 +31,6 @@ class XmlConfigWriter {
       throw new RuntimeException(e);
     }
   }
-//
-//  public static void main(String[] args) throws Exception{
-//    XmlConfig c = new XmlConfig();
-//    c.addParam(new XmlConfigParam("test", "testValue"));
-//    XmlConfigSection s = new XmlConfigSection("testS");
-//    s.setString("test", "testStringValue");
-//    c.addSection(s);
-//    OutputStream os = null;
-//    try{
-//      os = new FileOutputStream("file.test");
-//      XmlConfigWriter.writeConfig(c, os, c.getEncoding() == null ? "utf-8" : c.getEncoding(), "configuration.dtd");
-//    }finally {
-//      if(os != null) {
-//        try{
-//          os.close();
-//        }catch (IOException e){}
-//      }
-//    }
-//  }
 
   static void writeConfig(final XmlConfig config, final OutputStream os, String encoding, String docType) throws IOException, ParserConfigurationException, TransformerException {
     Document doc = createDocument(config);

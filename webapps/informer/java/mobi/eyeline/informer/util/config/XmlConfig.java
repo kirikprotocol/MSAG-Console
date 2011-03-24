@@ -32,25 +32,6 @@ public class XmlConfig extends XmlConfigSection {
   }
 
   /**
-   * Creates new instance of xml config and load it from other
-   *
-   * @param c XmlConfig
-   * @throws XmlConfigException If can't load
-   */
-  public XmlConfig(XmlConfig c) throws XmlConfigException {
-    try {
-      XmlConfigSection s = (XmlConfigSection) clone();
-      sections = s.sections;
-      params = s.params;
-      name = s.name;
-      encoding = c.encoding;
-    } catch (CloneNotSupportedException e) {
-      throw new XmlConfigException(e);
-    }
-
-  }
-
-  /**
    * Load config from file
    *
    * @param file file

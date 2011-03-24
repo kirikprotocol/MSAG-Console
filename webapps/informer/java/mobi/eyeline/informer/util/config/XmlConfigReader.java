@@ -15,6 +15,8 @@ import java.io.InputStream;
  */
 class XmlConfigReader {
 
+  private XmlConfigReader() {}
+
   static void loadConfig(InputStream is, XmlConfig config) throws XmlConfigException {
     try {
       final Document doc = XmlUtils.parse(is);

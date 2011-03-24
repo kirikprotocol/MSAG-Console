@@ -478,6 +478,19 @@ public class XmlConfigSection {
     return df.parse(param.getString());
   }
 
+  /**
+   * Return param value as int list
+   *
+   * @param name param name
+   * @param delimiter delimiter
+   * @return int list
+   * @throws XmlConfigException if param does not exists
+   */
+  public Collection<Integer> getIntList(String name, String delimiter) throws XmlConfigException {
+    final XmlConfigParam param = _getParam(name);
+    return param.getIntList(delimiter);
+  }
+
 
   // SETTERS ===========================================================================================================
 

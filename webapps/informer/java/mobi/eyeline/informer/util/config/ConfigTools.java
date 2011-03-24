@@ -12,14 +12,6 @@ import java.util.StringTokenizer;
  */
 class ConfigTools {
 
-  static long getLong(String str) throws XmlConfigException {
-    try {
-      return Long.parseLong(str);
-    } catch (NumberFormatException e) {
-      throw new XmlConfigException("Incorrect " + str + " type. It must be long.");
-    }
-  }
-
   static long getLong(String key, String propertyStr) throws XmlConfigException {
     if (propertyStr == null)
       throw new XmlConfigException("Value of " + key + " is empty");
@@ -28,14 +20,6 @@ class ConfigTools {
       return Long.parseLong(propertyStr);
     } catch (NumberFormatException e) {
       throw new XmlConfigException("Incorrect " + key + " type. It must be long.");
-    }
-  }
-
-  static int getInt(String str) throws XmlConfigException {
-    try {
-      return Integer.parseInt(str);
-    } catch (NumberFormatException e) {
-      throw new XmlConfigException("Incorrect " + str + " type. It must be int.");
     }
   }
 
@@ -50,52 +34,6 @@ class ConfigTools {
     }
   }
 
-  static short getShort(String str) throws XmlConfigException {
-    try {
-      return Short.parseShort(str);
-    } catch (NumberFormatException e) {
-      throw new XmlConfigException("Incorrect " + str + " type. It must be short.");
-    }
-  }
-
-  static short getShort(String key, String propertyStr) throws XmlConfigException {
-    if (propertyStr == null)
-      throw new XmlConfigException("Value of " + key + " is empty");
-
-    try {
-      return Short.parseShort(propertyStr);
-    } catch (NumberFormatException e) {
-      throw new XmlConfigException("Incorrect " + key + " type. It must be short.");
-    }
-  }
-
-  static byte getByte(String str) throws XmlConfigException {
-    try {
-      return Byte.parseByte(str);
-    } catch (NumberFormatException e) {
-      throw new XmlConfigException("Incorrect " + str + " type. It must be byte.");
-    }
-  }
-
-  static byte getByte(String key, String propertyStr) throws XmlConfigException {
-    if (propertyStr == null)
-      throw new XmlConfigException("Value of " + key + " is empty");
-
-    try {
-      return Byte.parseByte(propertyStr);
-    } catch (NumberFormatException e) {
-      throw new XmlConfigException("Incorrect " + key + " type. It must be byte.");
-    }
-  }
-
-  static boolean getBoolean(String str) throws XmlConfigException {
-    try {
-      return Boolean.valueOf(str);
-    } catch (NumberFormatException e) {
-      throw new XmlConfigException("Incorrect " + str + " type. It must be bool (true/false).");
-    }
-  }
-
   static boolean getBool(String key, String propertyStr) throws XmlConfigException {
     if (propertyStr == null)
       throw new XmlConfigException("Value of " + key + " is empty");
@@ -104,18 +42,6 @@ class ConfigTools {
       return Boolean.valueOf(propertyStr);
     } catch (NumberFormatException e) {
       throw new XmlConfigException("Incorrect " + key + " type. It must be bool (true/false).");
-    }
-  }
-
-  static Date getDate(String str, String dateFormat) throws XmlConfigException {
-    if (dateFormat == null)
-      throw new IllegalArgumentException("Date format is empty");
-
-    final SimpleDateFormat df = new SimpleDateFormat(dateFormat);
-    try {
-      return df.parse(str);
-    } catch (ParseException ex) {
-      throw new XmlConfigException("Incorrect " + str + " type. It must be date with format " + dateFormat);
     }
   }
 

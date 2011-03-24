@@ -7,9 +7,6 @@ package mobi.eyeline.informer.util.config;
 
 public final class XmlConfigException extends Exception {
 
-  XmlConfigException() {
-  }
-
   XmlConfigException(String message) {
     super(message);
   }
