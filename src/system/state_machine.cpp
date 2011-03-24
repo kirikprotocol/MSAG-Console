@@ -897,7 +897,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   if(newlen>255)
   {
     sms.getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
-    sms.getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+    //sms.getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,0);
     sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,(unsigned)newlen);
   }else
@@ -1066,13 +1066,13 @@ StateType StateMachine::submit(Tuple& t)
   {
     unsigned len;
     const unsigned char* msg;
-    if(sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD))
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
-      msg=(const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
     }
     else
     {
-      msg=(const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
     }
     if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
@@ -2283,14 +2283,15 @@ StateType StateMachine::submitChargeResp(Tuple& t)
                          );
     try{
       src_proxy->putCommand(response);
-    }catch(...)
+    }catch(std::exception& e)
     {
-      warn2(smsLog, "SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      warn2(smsLog, "SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s - %s",
         t.msgId,dialogId,
         sms->getOriginatingAddress().toString().c_str(),
         sms->getDestinationAddress().toString().c_str(),
         src_proxy->getSystemId(),
-        sms->getDestinationSmeId()
+        sms->getDestinationSmeId(),
+        e.what()
       );
     }
   }
@@ -2360,9 +2361,9 @@ StateType StateMachine::submitChargeResp(Tuple& t)
               );
           try{
             prx->putCommand(resp);
-          }catch(...)
+          }catch(std::exception& e)
           {
-            warn1(sm->smsLog,"SUBMIT: failed to put response command");
+            warn2(sm->smsLog,"SUBMIT: failed to put response command - '%s'",e.what());
           }
         }
       }
@@ -3743,9 +3744,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
                          );
         try{
           src_proxy->putCommand(resp);
-        }catch(...)
+        }catch(std::exception& e)
         {
-          smsc_log_warn(smsLog,"DELIVERYRESP: failed to put transaction response command");
+          smsc_log_warn(smsLog,"DELIVERYRESP: failed to put transaction response command - %s",e.what());
         }
       }
     }
@@ -4441,7 +4442,7 @@ StateType StateMachine::replace(Tuple& t)
   {
     smsc_log_debug(smsLog,"REPLACE: dropping payload");
     sms.getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-    sms.getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+    //sms.getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
   }
 
   try{
@@ -4472,7 +4473,7 @@ StateType StateMachine::replace(Tuple& t)
 
   sms.setBinProperty
   (
-    Tag::SMSC_RAW_SHORTMESSAGE,
+    Tag::SMPP_SHORT_MESSAGE,
     t.command->get_replaceSm().shortMessage.get(),
     t.command->get_replaceSm().smLength
   );
@@ -5350,7 +5351,7 @@ bool StateMachine::processMerge(SbmContext& c)
         c.sms->getOriginatingAddress().toString().c_str(),
         c.sms->getDestinationAddress().toString().c_str(),
         idx,num,(int)mr,dc,c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
-    c.sms->setIntProperty(Tag::SMPP_ESM_CLASS,c.sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
+    //c.sms->setIntProperty(Tag::SMPP_ESM_CLASS,c.sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
     TmpBuf<char,2048> tmp(0);
     if(!c.isForwardTo)
     {
@@ -5369,7 +5370,7 @@ bool StateMachine::processMerge(SbmContext& c)
     }
     c.sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(unsigned)tmp.GetPos());
     c.sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
-    c.sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+    //c.sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     c.sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
     c.sms->setIntProperty(Tag::SMSC_ORIGINALPARTSNUM,num);
 
@@ -5709,6 +5710,7 @@ bool StateMachine::processMerge(SbmContext& c)
         tmp.Append(newtmp.get(),newtmp.GetPos());
         newsms.messageBody.dropProperty(Tag::SMSC_CONCATINFO);
         newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+        newsms.setIntProperty(Tag::SMPP_ESM_CLASS,newsms.getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
         newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(int)tmp.GetPos());
         try{
           processDirectives(newsms,c.profile,c.srcprof);

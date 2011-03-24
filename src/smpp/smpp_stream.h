@@ -16,6 +16,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <memory.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -41,6 +42,10 @@ namespace smpp{
 
 struct SmppStream
 {
+  SmppStream()
+  {
+    memset(this,0,sizeof(*this));
+  }
   SmppHeader header;
   unsigned int dataLength;
   unsigned int dataOffset;
@@ -206,8 +211,11 @@ inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize,bool
   stream->dataOffset = 0;
   if ( readable )
   {
-    stream->dataLength = 4;
-    fetchX(stream,stream->header.commandLength);
+    if(stream->header.commandLength==0)
+    {
+      stream->dataLength = 4;
+      fetchX(stream,stream->header.commandLength);
+    }
     stream->dataLength = stream->header.commandLength;
     fetchX(stream,stream->header.commandId);
     fetchX(stream,stream->header.commandStatus);
@@ -265,10 +273,10 @@ inline void fillCOctetStr(SmppStream* stream,COStr& costr)
 inline void fillX(SmppStream* s,COStr& str){ fillCOctetStr(s,str); }
 
 /**
-  Вытаскиваем из потока строку
-  @param stream  поток
-  @param costr   строка
-  В случае возникновения ошибки бросает исключение
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+  @param stream  пїЅпїЅпїЅпїЅпїЅ
+  @param costr   пїЅпїЅпїЅпїЅпїЅпїЅ
+  пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 */
 inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
 {
@@ -332,10 +340,10 @@ inline void fillOctetStr(SmppStream* stream,OStr& ostr)
 inline void fillX(SmppStream* s,OStr& str){ fillOctetStr(s,str); }
 
 /**
-  Вытаскиваем из потока строку
-  @param stream  поток
-  @param ostr   строка
-  В случае возникновения ошибки бросает исключение
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+  @param stream  пїЅпїЅпїЅпїЅпїЅ
+  @param ostr   пїЅпїЅпїЅпїЅпїЅпїЅ
+  пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 */
 inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
 {

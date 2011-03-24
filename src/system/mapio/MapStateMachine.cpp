@@ -1199,10 +1199,13 @@ none_validity:;
   }
 
   {
-    if (  encoding == MAP_OCTET7BIT_ENCODING ){
-      if ( udhi){
+    if (  encoding == MAP_OCTET7BIT_ENCODING )
+    {
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
+      if ( udhi)
+      {
         MicroString ms;
-        auto_ptr<unsigned char> b(new unsigned char[255*2]);
+        unsigned char b[255*2];
         unsigned udh_len = ((unsigned)*user_data)&0x0ff;
 //        __map_trace2__("ud_length 0x%x udh_len 0x%x",user_data_len,udh_len);
         unsigned x = (udh_len+1)*8;
@@ -1210,22 +1213,29 @@ none_validity:;
         unsigned symbols = user_data_len-x/7;
 //        __map_trace2__("text symbols 0x%x bit offset 0x%x",symbols,x-(udh_len+1)*8);
         Convert7BitToSMSC7Bit(user_data+udh_len+1,symbols,&ms,x-(udh_len+1)*8);
-        memcpy(b.get(),user_data,udh_len+1);
-        memcpy(b.get()+udh_len+1,ms.bytes,ms.len);
-        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(char*)b.get(),udh_len+1+symbols);
+        memcpy(b,user_data,udh_len+1);
+        memcpy(b+udh_len+1,ms.bytes,ms.len);
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)b,udh_len+1+symbols);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
-      }else{
+      }else
+      {
         MicroString ms;
         Convert7BitToSMSC7Bit(user_data,user_data_len,&ms,0);
-        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       }
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
-    else{
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)user_data,user_data_len);
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
+    else
+    {
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)encoding);
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+      if(!HSNS_isEqual() && encoding==8)
+      {
+        unsigned msgLen;
+        char* msg=(char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&msgLen);
+        UCS_ntohs(msg,msg,msgLen,udhi?0x40:0);
+      }
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
     }
   }
   {
@@ -1246,12 +1256,14 @@ none_validity:;
 //        __map_trace2__("UDHI: ptr %d, tag %d, len %d",ptr,udh[ptr],elLength);
         if ( udh[ptr] == 0 || udh[ptr] == 8)
         {
-          if ( udh[ptr] == 0 ) {
+          if ( udh[ptr] == 0 )
+          {
             ref = udh[ptr+2];
             msgCount = udh[ptr+3];
             msgNum   = udh[ptr+4];
             break;
-          }else{
+          }else
+          {
             //ref = ntohs(*(unsigned short*)(udh+ptr+2));
             unsigned short tmpVal;
             memcpy(&tmpVal,udh+ptr+2,2);
@@ -1749,10 +1761,19 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
   unsigned text_len;
 
-  const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
-  if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD))
+  char tmpBuf[ET96MAP_MAX_USSD_STR_LEN+1];
+  const uint8_t* text;
+  if(dialog->sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
-    text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&text_len);
+    text=(const uint8_t*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
+  }else
+  {
+    text=(const uint8_t*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+  }
+  if(encoding==8 && !HSNS_isEqual())
+  {
+    UCS_htons(tmpBuf,(const char*)text,text_len>ET96MAP_MAX_USSD_STR_LEN?ET96MAP_MAX_USSD_STR_LEN:text_len,dialog->sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+    text=(uint8_t*)tmpBuf;
   }
 
   if(text_len==0)
@@ -1868,10 +1889,19 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   unsigned text_len;
   unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
 
-  const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
-  if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD))
+  char tmpBuf[ET96MAP_MAX_USSD_STR_LEN+1];
+  const uint8_t* text;
+  if(dialog->sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
-    text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&text_len);
+    text=(const uint8_t*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
+  }else
+  {
+    text=(const uint8_t*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+  }
+  if(encoding==8 && !HSNS_isEqual())
+  {
+    UCS_htons(tmpBuf,(const char*)text,text_len>ET96MAP_MAX_USSD_STR_LEN?ET96MAP_MAX_USSD_STR_LEN:text_len,dialog->sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+    text=(uint8_t*)tmpBuf;
   }
 
   if(text_len==0)
@@ -4077,7 +4107,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
       unsigned outLen = GetUSSDRequestString(ms.bytes, ms.len,outStr);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,outStr,outLen);
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,outStr,outLen);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);
     } else if(dataCoding == smsc::smpp::DataCoding::UCS2)
     {
@@ -4085,7 +4115,11 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       subsystem = GetUSSDSubsystemUCS2((char*)ussdString_s.ussdStr,ussdString_s.ussdStrLen);
       unsigned outLen = GetUSSDRequestStringUCS2((char*)ussdString_s.ussdStr,ussdString_s.ussdStrLen,outStr);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,outStr,outLen);
+      if(!HSNS_isEqual())
+      {
+        UCS_ntohs(outStr,outStr,outLen,0);
+      }
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,outStr,outLen);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);
     }else
     {
@@ -4167,12 +4201,18 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
         MicroString ms;
         unsigned chars = ussdString_sp->ussdStrLen*8/7;
         Convert7BitToSMSC7Bit(ussdString_sp->ussdStr,chars,&ms,0);
-        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
         sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
       } else
       {
-        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)(ussdString_sp->ussdStr),ussdString_sp->ussdStrLen);
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)(ussdString_sp->ussdStr),ussdString_sp->ussdStrLen);
+        if(!HSNS_isEqual() && dataCoding==8)
+        {
+          unsigned msgLen;
+          char* msg=(char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&msgLen);
+          UCS_ntohs(msg,msg,msgLen,0);
+        }
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdString_sp->ussdStrLen);
         sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
       }
@@ -4377,11 +4417,13 @@ USHORT_T Et96MapV2InformSCInd (
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn,INSTARG0(rinst)));
-    if ( dialog.isnull() ) {
+    if ( dialog.isnull() )
+    {
       unsigned _di = dialogid_map;
       dialogid_map = 0;
       throw MAPDIALOG_HEREISNO_ID(
-        FormatText("MAP::dialog 0x%x is not present",_di));}
+        FormatText("MAP::dialog 0x%x is not present",_di));
+    }
     __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
@@ -4609,7 +4651,7 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     char outStr[256];
     unsigned outLen = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen,outStr);
     sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
-    sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,outStr,outLen);
+    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,outStr,outLen);
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);
     dialog->ussdMrRef = MakeMrRef();
 
@@ -4779,7 +4821,10 @@ USHORT_T Et96MapV3AnyTimeInterrogationConf(
 
 #else
 
-#include "MapDialog_spcific.cxx"
+//#include "MapDialog_spcific.cxx"
+#include "smeman/smsccmd.h"
+#include "MapIoTask.h"
+using namespace smsc::smeman;
 void MAPIO_PutCommand(const SmscCommand& cmd )
 {
   if ( cmd->get_commandId() == QUERYABONENTSTATUS )

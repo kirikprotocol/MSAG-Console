@@ -844,6 +844,7 @@ public:
     __require__((tag>>8)==SMS_BIN_TAG);
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
+    /*
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) {
       //return prop.properties[Tag::SMSC_RAW_SHORTMESSAGE].isSet!=0;;
       tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
@@ -851,7 +852,7 @@ public:
     if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) {
       //return prop.properties[Tag::SMSC_RAW_SHORTMESSAGE].isSet!=0;;
       tag = unType(Tag::SMSC_RAW_PAYLOAD);
-    }
+    }*/
     return prop.properties[tag].isSet();
   }
 
@@ -1765,17 +1766,17 @@ struct SMS
 
   bool Invalidate(const char* file,int line)
   {
-    if(messageBody.hasBinProperty(Tag::SMSC_RAW_PAYLOAD))
+    if(messageBody.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
-      if(messageBody.hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
+      if(messageBody.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
       {
-#ifndef NOLOGGERPLEASE
-        logger::_sms_err_cat->log_(logger::Logger::LEVEL_WARN, "both rawpayload and rawshortmessage present at %s:%d",file,line);
-        smsc_log_warn(logger::_sms_err_cat, "both rawpayload and rawshortmessage present at %s:%d",file,line);
-#endif
         unsigned len=0;
-        messageBody.getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
+        messageBody.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
         if(len==0)return true;
+#ifndef NOLOGGERPLEASE
+        logger::_sms_err_cat->log_(logger::Logger::LEVEL_WARN, "both payload and shortmessage present at %s:%d",file,line);
+        //smsc_log_warn(logger::_sms_err_cat, "both payload and shortmessage present at %s:%d",file,line);
+#endif
         return false;
       }
     }
@@ -1848,15 +1849,9 @@ inline int getSMSPartsCount(SMS& sms)
   return (len-1)/data[0];
 }
 
-inline SMSPartInfo getSMSPartInfo(SMS& sms,int partIdx)
+inline SMSPartInfo getSMSPartInfoBin(const uint8_t* data,int len,int partIdx)
 {
-  if(!sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
-  {
-    throw smsc::util::Exception("sms part info requested, but not present");
-  }
   SMSPartInfo rv;
-  unsigned len;
-  const uint8_t* data=(const uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
   uint8_t sz=*data;
   data++;
   if((unsigned(partIdx)+1)*sz>len)
@@ -1877,6 +1872,18 @@ inline SMSPartInfo getSMSPartInfo(SMS& sms,int partIdx)
   }
   return rv;
 }
+
+inline SMSPartInfo getSMSPartInfo(SMS& sms,int partIdx)
+{
+  if(!sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+  {
+    throw smsc::util::Exception("sms part info requested, but not present");
+  }
+  unsigned len;
+  const uint8_t* data=(const uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
+  return getSMSPartInfoBin(data,len,partIdx);
+}
+
 
 inline void fillSMSPartInfo(SMS& sms,int partsNum,int partIdx,SMSPartInfo partInfo)
 {

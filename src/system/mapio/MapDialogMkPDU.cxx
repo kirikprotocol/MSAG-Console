@@ -355,12 +355,14 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         }
     }else{ // UCS2 || 8BIT
       unsigned text_len;
-      const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
-      if(text_len==0 && sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD))
+      const uint8_t* text;
+      if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
       {
-        text=(const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&text_len);
+        text=(const uint8_t*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
+      }else
+      {
+        text=(const uint8_t*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
       }
-      //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
       if ( text_len > 140 )
       {
         char *dbgtxt = new char[text_len*4];
@@ -373,7 +375,14 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         delete[] dbgtxt;
         throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
       }
-      memcpy(pdu_ptr+1,text,text_len);
+      if(encoding==8 && !HSNS_isEqual())
+      {
+        UCS_htons((char*)pdu_ptr+1,(const char*)text,text_len,sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+      }else
+      {
+      //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
+        memcpy(pdu_ptr+1,text,text_len);
+      }
       *pdu_ptr++ = text_len;
       pdu_ptr += text_len;
     }

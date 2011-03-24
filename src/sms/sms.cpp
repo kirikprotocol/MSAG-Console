@@ -16,8 +16,6 @@ int Body::getRequiredBufferSize() const
   int blength = 0;
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
-    if ( i == unType(Tag::SMPP_SHORT_MESSAGE) ) continue;
-    if ( i == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) continue;
     if(prop.properties[i].isSet())
     {
       switch(prop.properties[i].type)
@@ -46,10 +44,60 @@ void Body::encode(uint8_t* buffer,int& length) const
   int offset=0;
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
-    if ( i == unType(Tag::SMPP_SHORT_MESSAGE) ) continue;
-    if ( i == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) continue;
     if(prop.properties[i].isSet())
     {
+      if ( !HSNS_isEqual() && (i == unType(Tag::SMPP_SHORT_MESSAGE) || i == unType(Tag::SMPP_MESSAGE_PAYLOAD)) )
+      {
+        int dc=prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
+        if(dc==8)
+        {
+          uint16_t tag=htons(i|(SMS_BIN_TAG<<8));
+          memcpy(buffer+offset,&tag,2);
+          offset+=2;
+          __require__(offset<length);
+          uint32_t len=htonl((unsigned)prop.properties[i].xValue.length());
+          memcpy(buffer+offset,&len,4);
+          offset+=4;
+          len=(unsigned)prop.properties[i].xValue.length();
+          __require__(offset+len<=length);
+          memcpy(buffer+offset,prop.properties[i].xValue.c_str(),len);
+          int esm=prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt();
+          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet() && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet())
+          {
+            ConcatInfo* ci=(ConcatInfo*)prop.properties[unType(Tag::SMSC_CONCATINFO)].getBin(0);
+            char* dcList=0;
+            if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet())
+            {
+              dcList=(char*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
+            }
+            for(int p=0;p<ci->num;p++)
+            {
+              int partDc=dcList?dcList[p]:dc;
+              if(prop.properties[unType(Tag::SMSC_ORGPARTS_INFO)].isSet())
+              {
+                SMSPartInfo spi;
+                unsigned dataLen;
+                uint8_t* data=(uint8_t*)prop.properties[unType(Tag::SMSC_ORGPARTS_INFO)].getBin(&dataLen);
+                getSMSPartInfoBin(data,dataLen,p);
+                partDc=spi.dc;
+              }
+              if(partDc==8)
+              {
+                int off=ci->getOff(p);
+                int partLen=p==ci->num-1?len-off:ci->getOff(p+1)-off;
+                UCS_htons((char*)buffer+offset+off,(char*)buffer+offset+off,partLen,esm);
+              }
+            }
+          }else
+          {
+            UCS_htons((char*)buffer+offset,(char*)buffer+offset,len,esm);
+          }
+          offset+=len;
+          continue;
+        }
+      }
+
+
       __require__(offset<length);
       switch(prop.properties[i].type)
       {
@@ -175,6 +223,50 @@ void Body::decode(uint8_t* buffer,int length)
       default:__unreachable__("SMS decoding failure");
     }
   }
+  if(!HSNS_isEqual() && getIntProperty(Tag::SMPP_DATA_CODING)==8)
+  {
+    unsigned msgLen;
+    char* msg;
+    if(hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      msg=(char*)getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&msgLen);
+    }else
+    {
+      msg=(char*)getBinProperty(Tag::SMPP_SHORT_MESSAGE,&msgLen);
+    }
+    int esm=getIntProperty(Tag::SMPP_ESM_CLASS);
+    if(getIntProperty(Tag::SMSC_MERGE_CONCAT) && hasBinProperty(Tag::SMSC_CONCATINFO))
+    {
+      char* dcList=0;
+      if(hasBinProperty(Tag::SMSC_DC_LIST))
+      {
+        dcList=(char*)getBinProperty(Tag::SMSC_DC_LIST,0);
+      }
+      ConcatInfo* ci=(ConcatInfo*)getBinProperty(Tag::SMSC_CONCATINFO,0);
+      int dc=8;
+      for(int i=0;i<ci->num;i++)
+      {
+        int partDc=dcList?dcList[i]:dc;
+        if(hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+        {
+          unsigned dataLen;
+          uint8_t* data=(uint8_t*)getBinProperty(Tag::SMSC_ORGPARTS_INFO,&dataLen);
+          SMSPartInfo spi;
+          getSMSPartInfoBin(data,dataLen,i);
+          partDc=spi.dc;
+        }
+        if(partDc==8)
+        {
+          int off=ci->getOff(i);
+          int partLen=i==ci->num-1?msgLen-off:ci->getOff(i+1)-off;
+          UCS_ntohs(msg+off,msg+off,partLen,esm);
+        }
+      }
+    }else
+    {
+      UCS_ntohs(msg,msg,msgLen,esm);
+    }
+  }
   /*
   printf("Dump:");
   for(int i=0;i<=SMS_LAST_TAG;i++)
@@ -191,12 +283,15 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
   __require__((tag>>8)==SMS_BIN_TAG);
   tag&=0xff;
   __require__(tag<=SMS_LAST_TAG);
-  if ( !HSNS_isEqual() && len != 0 ) {
+  /*
+  if ( !HSNS_isEqual() && len != 0 )
+  {
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) || tag == unType(Tag::SMSC_RAW_SHORTMESSAGE))
     {
       //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
       dropProperty(Tag::SMPP_SHORT_MESSAGE);
-      if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ){
+      if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) )
+      {
         if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet() )
           throw runtime_error(":SMS::MessageBody::setBinProperty: encoding scheme must be set");
         if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet() )
@@ -298,14 +393,16 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
       }
     }else
       prop.properties[tag].setBin(value,len);
-  }else{
+  }else
+  {
 trivial:
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
     if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) tag = unType(Tag::SMSC_RAW_PAYLOAD);
     dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
     dropProperty(Tag::SMPP_SHORT_MESSAGE);
+    */
     prop.properties[tag].setBin(value,len);
-  }
+  //}
 }
 
 const char* Body::getBinProperty(int tag,unsigned* len)const
@@ -313,6 +410,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
   __require__((tag>>8)==SMS_BIN_TAG);
   tag&=0xff;
   __require__(tag<=SMS_LAST_TAG);
+  /*
   if ( !HSNS_isEqual() ) {
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) {
       //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
@@ -327,10 +425,9 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
         auto_ptr<char> buffer;
         unsigned rlen;
         const char* orig = prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].getBin(&rlen);
-        if ( rlen > 0 ){
-
+        if ( rlen > 0 )
+        {
           buffer = auto_ptr<char>(new char[rlen]);
-
           if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet() && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet())
           {
             char *bufptr=buffer.get();
@@ -437,7 +534,7 @@ trivial:
       tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
     if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
       tag = unType(Tag::SMSC_RAW_PAYLOAD);
-  }
+  }*/
   return prop.properties[tag].getBin(len);
 }
 

@@ -2,6 +2,7 @@
 #define __SMSC_SMS_SERIALIZER_H__
 
 #include "sms/sms.h"
+#include "util/smstext.h"
 #include "core/buffers/TmpBuf.hpp"
 #include "util/Exception.hpp"
 
@@ -189,10 +190,55 @@ inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
 
   for(size_t i=0;i<=SMS_LAST_TAG;i++)
   {
-    if ( i == Body::unType(Tag::SMPP_SHORT_MESSAGE) ) continue;
-    if ( i == Body::unType(Tag::SMPP_MESSAGE_PAYLOAD) ) continue;
     if(prop.properties[i].isSet())
     {
+      if ( !HSNS_isEqual() && (i == (Tag::SMPP_SHORT_MESSAGE&0xff) || i == (Tag::SMPP_MESSAGE_PAYLOAD&0xff)) )
+      {
+        int dc=sms.getIntProperty(Tag::SMPP_DATA_CODING);
+        if(dc==8)
+        {
+          uint16_t tag=uint16_t(i|(SMS_BIN_TAG<<8));
+          dst<<tag;
+          uint32_t len=(uint32_t)prop.properties[i].xValue.length();
+          dst<<len;
+          size_t msgOff=dst.GetPos();
+          dst.Append(prop.properties[i].xValue.c_str(),len);
+          int esm=sms.getIntProperty(Tag::SMPP_ESM_CLASS);
+          if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT) && sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+          {
+            smsc::util::ConcatInfo* ci=(smsc::util::ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
+            char* dcList=0;
+            if(sms.hasBinProperty(Tag::SMSC_DC_LIST))
+            {
+              dcList=(char*)sms.getBinProperty(Tag::SMSC_DC_LIST,0);
+            }
+            for(int p=0;p<ci->num;p++)
+            {
+              int partDc=dcList?dcList[p]:dc;
+              if(sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+              {
+                SMSPartInfo spi;
+                unsigned dataLen;
+                uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&dataLen);
+                getSMSPartInfoBin(data,dataLen,p);
+                partDc=spi.dc;
+              }
+              if(partDc==8)
+              {
+                int off=ci->getOff(p);
+                int partLen=p==ci->num-1?len-off:ci->getOff(p+1)-off;
+                UCS_htons(dst.get()+msgOff+off,dst.get()+msgOff+off,partLen,esm);
+              }
+            }
+          }else
+          {
+            UCS_htons(dst.get()+msgOff,dst.get()+msgOff,len,esm);
+          }
+          continue;
+        }
+      }
+
+
       switch(prop.properties[i].type)
       {
         case SMS_INT_TAG:
@@ -301,6 +347,52 @@ inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms,int ver)
       }break;
     }
   }
+
+  if(!HSNS_isEqual() && sms.getIntProperty(Tag::SMPP_DATA_CODING)==8)
+  {
+    unsigned msgLen;
+    char* msg;
+    if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      msg=(char*)sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&msgLen);
+    }else
+    {
+      msg=(char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&msgLen);
+    }
+    int esm=sms.getIntProperty(Tag::SMPP_ESM_CLASS);
+    if(sms.getIntProperty(Tag::SMSC_MERGE_CONCAT) && sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+    {
+      char* dcList=0;
+      if(sms.hasBinProperty(Tag::SMSC_DC_LIST))
+      {
+        dcList=(char*)sms.getBinProperty(Tag::SMSC_DC_LIST,0);
+      }
+      smsc::util::ConcatInfo* ci=(smsc::util::ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
+      int dc=8;
+      for(int i=0;i<ci->num;i++)
+      {
+        int partDc=dcList?dcList[i]:dc;
+        if(sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+        {
+          unsigned dataLen;
+          uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&dataLen);
+          SMSPartInfo spi;
+          getSMSPartInfoBin(data,dataLen,i);
+          partDc=spi.dc;
+        }
+        if(partDc==8)
+        {
+          int off=ci->getOff(i);
+          int partLen=i==ci->num-1?msgLen-off:ci->getOff(i+1)-off;
+          UCS_ntohs(msg+off,msg+off,partLen,esm);
+        }
+      }
+    }else
+    {
+      UCS_ntohs(msg,msg,msgLen,esm);
+    }
+  }
+
   /*
   uint8_t* bodyBuffer = new uint8_t[bodyLength];
   src.Read((char*)bodyBuffer,bodyLength);

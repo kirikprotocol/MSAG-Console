@@ -140,9 +140,9 @@ size_t fillSms(SMS* sms,const char *text,size_t length,ConvEncodingEnum encoding
   }
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
   sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-  sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+//  sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
   sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
-  sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+  //sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
   sms->getMessageBody().dropIntProperty(Tag::SMPP_SM_LENGTH);
   if(datalen>255)
   {
@@ -381,6 +381,7 @@ int partitionSms(SMS* sms)
   }
   if(!(len>=0 && len<=65535))
   {
+    __warning2__("udhlen=%d, data len=%d",udhilen,len);
     return psErrorLength;
   }
   int maxlen=134;
@@ -524,8 +525,12 @@ int partitionSms(SMS* sms)
         __trace2__("PARTITIONSMS: part=%d, l=%d, wl=%d",parts,l,wl);
         if(wl<maxlen || sms->getIntProperty(Tag::SMSC_UDH_CONCAT))
         {
-          if(i<len-1 && l<=maxlen && (c==32 || c==10 || c==13 || sms->getIntProperty(Tag::SMSC_UDH_CONCAT)))
+          if(i<len-1 && (c==32 || c==10 || c==13 || sms->getIntProperty(Tag::SMSC_UDH_CONCAT)))
           {
+            if(i==lastEsc-1)
+            {
+              i--;
+            }
             offsets[parts++]=i;
             lastword=i;
             wl=0;
@@ -535,6 +540,7 @@ int partitionSms(SMS* sms)
             offsets[parts++]=lastword+(wl==0?0:1);
             lastpos=offsets[parts-1];
             i=lastpos;
+            wl=0;
           }
           l=0;
         }else
@@ -545,6 +551,7 @@ int partitionSms(SMS* sms)
           offsets[parts++]=i;
           lastpos=i;
           l=0;
+          wl=0;
         }
         __trace2__("PARTITIONSMS: part=%d, off=%d",parts-1,offsets[parts-1]);
         if(parts>=256)return psErrorLength;
@@ -730,10 +737,11 @@ bool extractSmsPart(SMS* sms,int partnum)
 
     if(haveudh)
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+    sms->getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
     sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)buf,newlen);
     sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
     sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-    sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+    //sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
     sms->setIntProperty(Tag::SMPP_DATA_SM,0);
     FillUd(sms);
   }else
@@ -795,10 +803,11 @@ bool extractSmsPart(SMS* sms,int partnum)
       }
       sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+      sms->getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
       sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg,len);
       sms->setIntProperty(Tag::SMPP_SM_LENGTH,len);
       sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-      sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+      //sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
       sms->setIntProperty(Tag::SMPP_DATA_SM,0);
       FillUd(sms);
     }

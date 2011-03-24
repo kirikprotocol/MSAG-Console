@@ -16,7 +16,7 @@ namespace smpp{
 
 /**
   Octet String
-  двлее везде предпологается и проверяется что строка читается ОДИН раз!
+  пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ!
 */
 struct OStr //: public MemoryManagerUnit
 {
@@ -25,6 +25,12 @@ struct OStr //: public MemoryManagerUnit
   uint16_t length;
   OStr() : text(0),length(0) {};
   //void dispose() {if ( text ) smartFree(text);}
+  char* alloc(int sz)
+  {
+    text=new char[sz];
+    length=sz;
+    return text;
+  }
   void dispose() {if ( text ) delete [] text; text = 0; length = 0;}
   ~OStr() {/*__trace__(__PRETTY_FUNCTION__); __watch__(text);*/ dispose();}
   operator const char*(){__require__ (length==0 || text!=NULL); return text;}
@@ -75,7 +81,7 @@ struct OStr //: public MemoryManagerUnit
 
 /**
   C Octet String
-  двлее везде предпологается и проверяется что строка читается ОДИН раз!
+  пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ!
 */
 struct COStr //: public MemoryManagerUnit
 {
