@@ -1234,7 +1234,7 @@ int SmppOutputThread::Execute()
       mon.Unlock();
     }
     try{
-      if(mul.canWrite(ready,error,1000)>0)
+      if(mul.canWrite(ready,error,1)>0)
       {
         mon.Lock();
         for(i=0;i<sockets.Count();i++)
