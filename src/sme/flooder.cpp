@@ -23,9 +23,6 @@ using namespace smsc::logger;
 
 using namespace std;
 
-const int MAX_UNRESPONDED_HIGH=5000;
-const int MAX_UNRESPONDED_LOW=2000;
-
 
 int stopped=0;
 
@@ -59,7 +56,7 @@ public:
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
-      __trace2__("received submit sm resp:%x, seq=%d\n",pdu->get_commandStatus(),pdu->get_sequenceNumber());
+      __trace2__("received submit sm resp:%x, seq=%d",pdu->get_commandStatus(),pdu->get_sequenceNumber());
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
       MutexGuard g(cntMutex);
 
@@ -141,9 +138,12 @@ int probDefault=100;
 int probDatagram=0;
 int probForward=0;
 int probStoreAndForward=0;
-int replaceIfPresent;
+int replaceIfPresent=0;
+int maxSimultaneousMultipart=5;
 
 int setDpf=-1;
+
+bool doPartitionSms=false;
 
 Option options[]=
 {
@@ -176,7 +176,9 @@ Option options[]=
   {"probForward",'i',&probForward},
   {"probStoreAndForward",'i',&probStoreAndForward},
   {"setdpf",'i',&setDpf},
-  {"replaceIfPresent",'i',&replaceIfPresent}
+  {"replaceIfPresent",'i',&replaceIfPresent},
+  {"partitionSms",'b',&doPartitionSms},
+  {"maxSimultaneousMultipart",'i',&maxSimultaneousMultipart},
 };
 
 int optionsCount=sizeof(options)/sizeof(options[0]);
@@ -359,7 +361,6 @@ int main(int argc,char* argv[])
     lst.setTrans(atr);
     try{
       ss.connect();
-      PduSubmitSm sm;
       SMS s;
       char msc[]="123";
       char imsi[]="123";
@@ -368,11 +369,15 @@ int main(int argc,char* argv[])
       s.setValidTime(0);
 
       s.setArchivationRequested(false);
-
-      s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+      s.setIntProperty(Tag::SMSC_DSTCODEPAGE,8);
+      s.setIntProperty(Tag::SMSC_UDH_CONCAT,1);
 
       s.setEServiceType("XXX");
-      sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+
+      std::list<SMS> mparts;
+      std::list<SMS>::iterator current=mparts.end();
+      int mpartsSize=0;
+      bool lastWasPart=false;
 
       int cnt=0;
       time_t lasttime=time(NULL);
@@ -387,59 +392,82 @@ int main(int argc,char* argv[])
       while(!stopped)
       {
         hrtime_t msgstart=gethrtime();
-
-        if(!dests.empty())
-        {
-          s.setDestinationAddress(dests[dstidx].c_str());
-        }else
-        {
-          if(curAddr==endAddr)
-          {
-            curAddr=startAddr;
-          }
-          s.setDestinationAddress(curAddr);
-          uint64_t addrVal;
-          sscanf(curAddr.value,"%llu",&addrVal);
-          addrVal++;
-          sprintf(curAddr.value,"%0*llu",(int)strlen(curAddr.value),addrVal);
-        }
-        s.setOriginatingAddress(sources[srcidx].c_str());
-
-        string* msgptr;
-        if(messageMode==0)
-        {
-          msgptr=&msgs[msgidx];
-        }else
-        {
-          msgptr=&wordsTemp;
-          int len=minLength+((double)rand()/RAND_MAX)*(maxLength-minLength);
-          wordsTemp=words[rand()%words.size()];
-          while(wordsTemp.length()<len)
-          {
-            wordsTemp+=' ';
-            wordsTemp+=words[rand()%words.size()];
-          }
-        }
-
-        if(msgptr->length() && hasHighBit(msgptr->c_str(),msgptr->length()))
-        {
-          std::vector<short> tmp(msgptr->length());
-          ConvertMultibyteToUCS2(msgptr->c_str(), msgptr->length(),
-                                        &tmp[0], msgptr->length()*2,
-                                        CONV_ENCODING_CP1251);
-
-          s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)&tmp[0],(unsigned)msgptr->length()*2);
-        }else
-        {
-          s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgptr->c_str(),(unsigned)msgptr->length());
-        }
+        s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+        s.dropProperty(Tag::SMPP_SHORT_MESSAGE);
         s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
+
+        if(!doPartitionSms || mpartsSize<maxSimultaneousMultipart)
+        {
+          if(!dests.empty())
+          {
+            s.setDestinationAddress(dests[dstidx].c_str());
+          }else
+          {
+            if(curAddr==endAddr)
+            {
+              curAddr=startAddr;
+            }
+            s.setDestinationAddress(curAddr);
+            uint64_t addrVal;
+            sscanf(curAddr.value,"%llu",&addrVal);
+            addrVal++;
+            sprintf(curAddr.value,"%0*llu",(int)strlen(curAddr.value),addrVal);
+          }
+          s.setOriginatingAddress(sources[srcidx].c_str());
+
+          string* msgptr;
+          if(messageMode==0)
+          {
+            msgptr=&msgs[msgidx];
+          }else
+          {
+            msgptr=&wordsTemp;
+            int len=minLength+((double)rand()/RAND_MAX)*(maxLength-minLength);
+            wordsTemp=words[rand()%words.size()];
+            while(wordsTemp.length()<len)
+            {
+              wordsTemp+=' ';
+              wordsTemp+=words[rand()%words.size()];
+            }
+          }
+
+          if(msgptr->length() && hasHighBit(msgptr->c_str(),msgptr->length()))
+          {
+            std::vector<short> tmp(msgptr->length());
+            ConvertMultibyteToUCS2(msgptr->c_str(), msgptr->length(),
+                &tmp[0], msgptr->length()*2,
+                CONV_ENCODING_CP1251);
+
+            s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
+            s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)&tmp[0],(unsigned)msgptr->length()*2);
+          }else
+          {
+            s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+            s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgptr->c_str(),(unsigned)msgptr->length());
+          }
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
+          s.setIntProperty(Tag::SMSC_DSTCODEPAGE,8);
+          if(doPartitionSms)
+          {
+            s.setConcatSeqNum(0);
+            mparts.push_back(s);
+            int pres=partitionSms(&mparts.back());
+            if(pres!=psSingle && pres!=psMultiple)
+            {
+              __warning2__("pres result:%d!!!",pres);
+            }
+            if(current==mparts.end())
+            {
+              current=mparts.begin();
+            }
+            mpartsSize++;
+            msgidx++;
+          }
+        }
 
         {
           int mode=rand()%(probDefault+probDatagram+probForward+probStoreAndForward);
-          if(mode<probDefault)
+          if(mode<probDefault || doPartitionSms)
           {
             s.setIntProperty(Tag::SMPP_ESM_CLASS,s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3));
           }else if(mode<probDefault+probDatagram)
@@ -456,28 +484,65 @@ int main(int argc,char* argv[])
 
         {
           int ussd=rand()%100;
-          if(ussd<probUssdMessage)
+          if(ussd<probUssdMessage && !doPartitionSms)
           {
             s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1); // process ussd req ind
             s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mr++);
           }
         }
 
-        if(setDpf>=0)
+        if(setDpf>=0 && !doPartitionSms)
         {
           s.setIntProperty(Tag::SMPP_SET_DPF,setDpf);
         }
 
-        if(replaceIfPresent)
+        if(replaceIfPresent && !doPartitionSms)
         {
           s.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,replaceIfPresent);
         }
 
-        fillSmppPduFromSms(&sm,&s,0);
-        atr->submit(sm);
+        if(doPartitionSms && current->hasBinProperty(Tag::SMSC_CONCATINFO))
+        {
+          s=*current;
+          extractSmsPart(&s,s.getConcatSeqNum());
+          PduSubmitSm sm;
+          sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+          fillSmppPduFromSms(&sm,&s,0);
+          atr->submit(sm);
+          current->setConcatSeqNum(current->getConcatSeqNum()+1);
+          ConcatInfo* ci=(ConcatInfo*)current->getBinProperty(Tag::SMSC_CONCATINFO,0);
+          if(current->getConcatSeqNum()==ci->num)
+          {
+            mparts.erase(current++);
+            mpartsSize--;
+          }else
+          {
+            current++;
+          }
+          if(current==mparts.end())
+          {
+            current=mparts.begin();
+          }
+        }else
+        {
+          if(doPartitionSms)
+          {
+            s=*current;
+            mparts.erase(current++);
+            if(current==mparts.end())
+            {
+              current=mparts.begin();
+            }
+            mpartsSize--;
+          }
+          PduSubmitSm sm;
+          sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+          fillSmppPduFromSms(&sm,&s,0);
+          atr->submit(sm);
+          msgidx++;
+        }
 
         cnt++;
-        msgidx++;
         if(msgidx>=msgs.size())msgidx=0;
         srcidx++;
         if(srcidx>=sources.size())srcidx=0;
