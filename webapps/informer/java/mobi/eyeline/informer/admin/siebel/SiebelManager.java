@@ -195,8 +195,8 @@ class SiebelManager {
     return MBean.getInstance(MBean.Source.SIEBEL);
   }
 
-  private String getSibelUrl() {
-    return siebelProperties == null ? "" : siebelProperties.getProperty("jdbc.user")+":"+siebelProperties.getProperty("jdbc.password");
+  private String getSiebelUrl() {
+    return siebelProperties == null ? "" : siebelProperties.getProperty("jdbc.source");
   }
 
   private class ProviderListener extends Thread{
@@ -214,10 +214,10 @@ class SiebelManager {
           if(provider.isShutdowned()) {
             try{
               provider.connect(siebelProperties);
-              getMBean().notifyInteractionOk(getSibelUrl());
+              getMBean().notifyInteractionOk(getSiebelUrl());
             }catch (Exception e){
               logger.error(e, e);
-              getMBean().notifyInteractionError(getSibelUrl(), e.getMessage());
+              getMBean().notifyInteractionError(getSiebelUrl(), e.getMessage());
               connectionError = true;
             }
           }
@@ -252,10 +252,10 @@ class SiebelManager {
                   }
                 }
               }
-              getMBean().notifyInteractionOk(getSibelUrl());
+              getMBean().notifyInteractionOk(getSiebelUrl());
             } catch (Exception e) {
               logger.error(e, e);
-              getMBean().notifyInteractionError(getSibelUrl(), "Can't get deliveries: "+e.getMessage());
+              getMBean().notifyInteractionError(getSiebelUrl(), "Can't get deliveries: "+e.getMessage());
             } finally {
               if (rs != null) {
                 rs.close();
@@ -489,7 +489,7 @@ class SiebelManager {
               beginDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
-              getMBean().notifyInternalError("Siebel: delivery's processing", "Can't process delivery="+st);
+              getMBean().notifyInternalError("Siebel: delivery's processing", "Can't process delivery=" + st);
               if(st.getWaveId() != null) {
                 addError(st.getWaveId());
               }
@@ -505,7 +505,7 @@ class SiebelManager {
               stopDelivery(st, removeOnStop);
             } catch (Exception e) {
               logger.error(e, e);
-              getMBean().notifyInternalError("Siebel: delivery's processing", "Can't process delivery="+st);
+              getMBean().notifyInternalError("Siebel: delivery's processing", "Can't process delivery=" + st);
               if(st.getWaveId() != null) {
                 addError(st.getWaveId());
               }
@@ -521,7 +521,7 @@ class SiebelManager {
               pauseDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
-              getMBean().notifyInternalError("Siebel: delivery's processing", "Can't process delivery="+st);
+              getMBean().notifyInternalError("Siebel: delivery's processing", "Can't process delivery=" + st);
               if(st.getWaveId() != null) {
                 addError(st.getWaveId());
               }
