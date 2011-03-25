@@ -3,7 +3,8 @@ package mobi.eyeline.informer.web.controllers.monitoring;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.admin.monitoring.MonitoringEvent;
-import mobi.eyeline.informer.admin.monitoring.MonitoringFilter;
+import mobi.eyeline.informer.admin.monitoring.MonitoringEventsFilter;
+import mobi.eyeline.informer.admin.monitoring.MonitoringJournal;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -109,12 +110,24 @@ public class MonitoringController extends InformerController {
   }
 
   private void loadRecords() throws AdminException {
-    if (records == null) {
-      MonitoringFilter filter = new MonitoringFilter();
-      filter.setEndDate(filterByEndDate);
-      filter.setStartDate(filterByStartDate);
-      filter.setSource(filterBySource == null || filterBySource.length() == 0 ? null : MBean.Source.valueOf(filterBySource));
-      records = getConfig().getMonitoringEvents(filter);
+    if (this.records == null) {
+      MonitoringEventsFilter eventsFilter = new MonitoringEventsFilter();
+      eventsFilter.setEndDate(filterByEndDate);
+      eventsFilter.setStartDate(filterByStartDate);
+      eventsFilter.setSource(filterBySource == null || filterBySource.length() == 0 ? null : MBean.Source.valueOf(filterBySource));
+
+      final LinkedList<MonitoringEvent> records = new LinkedList<MonitoringEvent>();
+      getConfig().getMonitoringEvents(eventsFilter, new MonitoringJournal.Visitor(){
+        private static final int LIMIT = 1000;
+        public boolean visit(MonitoringEvent r) {
+          if (records.size() == LIMIT) {
+            records.removeFirst();
+          }
+          records.addLast(r);
+          return true;
+        }
+      });
+      this.records = records;
       if(errorsOnly) {
         errorsOnly();
       }

@@ -7,7 +7,7 @@ import java.util.Date;
 /**
  * @author Aleksandr Khalitov
  */
-public class MonitoringFilter { //todo Можно переименовать в EventsFilter?
+public class MonitoringEventsFilter {
   
   
   private Date startDate;
@@ -29,7 +29,7 @@ public class MonitoringFilter { //todo Можно переименовать в 
     return startDate;
   }
 
-  public MonitoringFilter setStartDate(Date startDate) {
+  public MonitoringEventsFilter setStartDate(Date startDate) {
     this.startDate = startDate;
     return this;
   }
@@ -38,7 +38,7 @@ public class MonitoringFilter { //todo Можно переименовать в 
     return endDate;
   }
 
-  public MonitoringFilter setEndDate(Date endDate) {
+  public MonitoringEventsFilter setEndDate(Date endDate) {
     this.endDate = endDate;
     return this;
   }

@@ -2,7 +2,6 @@ package mobi.eyeline.informer.admin.monitoring;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -20,27 +19,25 @@ class MonitringMemoryJournal implements MonitoringJournal{
 
   @Override
   public void addEvents(MonitoringEvent... events) throws AdminException {
-    List<MonitoringEvent> es = new ArrayList<MonitoringEvent>(events.length); // todo На мой взгляд, сомнительная оптимизация по экономии времени под lock-ом.
-    for(MonitoringEvent e : events) {                                         // todo может сразу внутри лока делать клонирование без использования вспомогательного списка?
-      es.add(new MonitoringEvent(e));                                         // todo Будет проще.
-    }
     try{
       lock.lock();
-      this.events.addAll(es);
+      for(MonitoringEvent e : events) {
+        this.events.add(new MonitoringEvent(e));
+      }
     }finally {
       lock.unlock();
     }
   }
 
   @Override
-  public void visit(MonitoringFilter filter, Visitor v) throws AdminException {
+  public void visit(MonitoringEventsFilter eventsFilter, Visitor v) throws AdminException {
     try{
       lock.lock();
       for(MonitoringEvent e : events) {
-        if(filter != null && !filter.accept(e)) {
+        if(eventsFilter != null && !eventsFilter.accept(e)) {
           continue;
         }
-        if(!v.visit(e)) { //todo Надо клонировать ивент?
+        if(!v.visit(new MonitoringEvent(e))) {
           break;
         }
       }

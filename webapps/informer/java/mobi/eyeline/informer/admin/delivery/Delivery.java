@@ -392,7 +392,11 @@ public class Delivery implements Serializable {
     if (status == null && m != null) {
       try {
         DeliveryStatusHistory h = m.getDeliveryStatusHistory(login, password, id);
-        status = h.getHistoryItems().get(h.getHistoryItems().size() - 1).getStatus();
+        if(!h.getHistoryItems().isEmpty()) {
+          status = h.getHistoryItems().get(h.getHistoryItems().size() - 1).getStatus();
+        }else {
+          return DeliveryStatus.Planned;
+        }
       } catch (AdminException e) {
         logger.error(e,e);
       }

@@ -26,9 +26,7 @@ public class MonitoringEvent {
     text = e.text;
     source = e.source;
     time = e.time;
-    for(Map.Entry<String, String> ent : props.entrySet()) { //todo тут явная бага. из props копируется в props :) И надо сократить до props.addAll(e.props); Напиши, пожалуйста тест с проверкой клонирования.
-      props.put(ent.getKey(), ent.getValue());
-    }
+    props.putAll(e.props);
   }
 
   public MonitoringEvent(String alarmId) {
@@ -79,6 +77,41 @@ public class MonitoringEvent {
     return props.get(name);
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    MonitoringEvent event = (MonitoringEvent) o;
+
+    if (time != event.time) return false;
+    if (alarmId != null ? !alarmId.equals(event.alarmId) : event.alarmId != null) return false;
+    if (severity != event.severity) return false;
+    if (source != event.source) return false;
+    if (text != null ? !text.equals(event.text) : event.text != null) return false;
+
+    if(props.size() != event.props.size()) {
+      return false;
+    }
+
+    for(Map.Entry<String, String> e : props.entrySet()) {
+      if(!event.props.containsKey(e.getKey()) || !e.getValue().equals(event.props.get(e.getKey()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = text != null ? text.hashCode() : 0;
+    result = 31 * result + (severity != null ? severity.hashCode() : 0);
+    result = 31 * result + (alarmId != null ? alarmId.hashCode() : 0);
+    result = 31 * result + (source != null ? source.hashCode() : 0);
+    result = 31 * result + (int) (time ^ (time >>> 32));
+    result = 31 * result + (props != null ? props.hashCode() : 0);
+    return result;
+  }
 
   public void setProperty(String name, String value) {
     props.put(name, value);

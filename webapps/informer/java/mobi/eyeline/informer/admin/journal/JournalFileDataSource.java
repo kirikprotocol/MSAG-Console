@@ -20,8 +20,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 class JournalFileDataSource implements JournalDataSource {
 
-  private static final long SHOW_PERIOD = 7 * 24 * 60 * 60 * 1000;
-
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   private static final Logger logger = Logger.getLogger(JournalFileDataSource.class);
@@ -222,23 +220,10 @@ class JournalFileDataSource implements JournalDataSource {
     return record;
   }
 
-  private List<File> getFiles(final JournalFilter filter) throws ParseException {
-
-    SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHH");
-
-    Date fromDate = filter == null || filter.getStartDate() == null ? null : df.parse(df.format(filter.getStartDate()));
-    Date toDate = filter == null || filter.getEndDate() == null ? null : df.parse(df.format(filter.getEndDate()));
-
+  private List<File> getYearsDir(File parent, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
     SimpleDateFormat ydf = new SimpleDateFormat("yyyy");
-    SimpleDateFormat mdf = new SimpleDateFormat("yyyyMM");
-    SimpleDateFormat ddf = new SimpleDateFormat("yyyyMMdd");
-    SimpleDateFormat hdf = new SimpleDateFormat("yyyyMMddHH");
-
-    List<File> results = new LinkedList<File>();
-
-    long showFrom = System.currentTimeMillis() - SHOW_PERIOD;
-
-    for (File y : journalDir.listFiles()) {
+    for (File y : parent.listFiles()) {
       Date yd = ydf.parse(y.getName());
       if (toDate != null && yd.after(ydf.parse(ydf.format(toDate)))) {
         continue;
@@ -246,40 +231,80 @@ class JournalFileDataSource implements JournalDataSource {
       if (fromDate != null && yd.before(ydf.parse(ydf.format(fromDate)))) {
         continue;
       }
-      for (File m : y.listFiles()) {
-        Date md = mdf.parse(y.getName() + m.getName());
-        if (toDate != null && md.after(mdf.parse(mdf.format(toDate)))) {
-          continue;
-        }
-        if (fromDate != null && md.before(mdf.parse(mdf.format(fromDate)))) {
-          continue;
-        }
-        for (File d : m.listFiles()) {
-          Date dd = ddf.parse(y.getName() + m.getName() + d.getName());
-          if (toDate != null && dd.after(ddf.parse(ddf.format(toDate)))) {
-            continue;
-          }
-          if (fromDate != null && dd.before(ddf.parse(ddf.format(fromDate)))) {
-            continue;
-          }
-          for (File h : d.listFiles()) {
-            Date hd = hdf.parse(y.getName() + m.getName() + d.getName() + h.getName().substring(0, h.getName().indexOf(".")));
+      result.add(y);
+    }
+    return result;
+  }
 
-            if (hd.getTime() < showFrom) {
-              continue;
-            }
+  private List<File> getMonthsDir(File y, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
+    SimpleDateFormat mdf = new SimpleDateFormat("yyyyMM");
+    for (File m : y.listFiles()) {
+      Date md = mdf.parse(y.getName() + m.getName());
+      if (toDate != null && md.after(mdf.parse(mdf.format(toDate)))) {
+        continue;
+      }
+      if (fromDate != null && md.before(mdf.parse(mdf.format(fromDate)))) {
+        continue;
+      }
+      result.add(m);
+    }
+    return result;
+  }
 
-            if (toDate != null && hd.after(hdf.parse(hdf.format(toDate)))) {
-              continue;
-            }
-            if (fromDate != null && hd.before(hdf.parse(hdf.format(fromDate)))) {
-              continue;
-            }
+  private List<File> getDaysDir(File y, File m, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
+    SimpleDateFormat ddf = new SimpleDateFormat("yyyyMMdd");
+    for (File d : m.listFiles()) {
+      Date dd = ddf.parse(y.getName() + m.getName() + d.getName());
+      if (toDate != null && dd.after(ddf.parse(ddf.format(toDate)))) {
+        continue;
+      }
+      if (fromDate != null && dd.before(ddf.parse(ddf.format(fromDate)))) {
+        continue;
+      }
+      result.add(d);
+    }
+    return result;
+  }
+
+  private List<File> getHoursDir(File y, File m, File d, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
+    SimpleDateFormat hdf = new SimpleDateFormat("yyyyMMddHH");
+
+    for (File h : d.listFiles()) {
+      Date hd = hdf.parse(y.getName() + m.getName() + d.getName() + h.getName().substring(0, h.getName().indexOf(".")));
+
+      if (toDate != null && hd.after(hdf.parse(hdf.format(toDate)))) {
+        continue;
+      }
+      if (fromDate != null && hd.before(hdf.parse(hdf.format(fromDate)))) {
+        continue;
+      }
+      result.add(h);
+    }
+    return result;
+  }
+
+  private List<File> getFiles(final JournalFilter filter) throws ParseException {
+
+    SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHH");
+
+    Date fromDate = filter == null || filter.getStartDate() == null ? null : df.parse(df.format(filter.getStartDate()));
+    Date toDate = filter == null || filter.getEndDate() == null ? null : df.parse(df.format(filter.getEndDate()));
+
+    List<File> results = new LinkedList<File>();
+
+    for(File y : getYearsDir(journalDir, fromDate, toDate)) {
+      for(File m : getMonthsDir(y, fromDate, toDate)) {
+        for(File d : getDaysDir(y, m ,fromDate, toDate)) {
+          for(File h: getHoursDir(y, m, d, fromDate, toDate)) {
             results.add(h);
           }
         }
       }
     }
+
     if (!results.isEmpty()) {
       Collections.sort(results);
     }

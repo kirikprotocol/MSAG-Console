@@ -18,11 +18,11 @@ public interface MonitoringJournal {
   /**
    * Просмотр событий, удовлетворяющих фильтру
    *
-   * @param filter фильтр
+   * @param eventsFilter фильтр
    * @param v посетитель
    * @throws AdminException ошибка при просмторе журнала
    */
-  void visit(MonitoringFilter filter, Visitor v) throws AdminException;
+  void visit(MonitoringEventsFilter eventsFilter, Visitor v) throws AdminException;
 
 
   public static interface Visitor {

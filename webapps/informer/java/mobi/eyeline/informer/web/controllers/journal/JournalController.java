@@ -1,10 +1,7 @@
 package mobi.eyeline.informer.web.controllers.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.journal.Journal;
-import mobi.eyeline.informer.admin.journal.JournalFilter;
-import mobi.eyeline.informer.admin.journal.JournalRecord;
-import mobi.eyeline.informer.admin.journal.Subject;
+import mobi.eyeline.informer.admin.journal.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
@@ -133,10 +130,22 @@ public class JournalController extends InformerController {
   }
 
   private void loadRecord() throws AdminException {
-    if (records == null) {
-      records = journal.getRecords(new JournalFilter().
+    if (this.records == null) {
+      final LinkedList<JournalRecord> records = new LinkedList<JournalRecord>();
+      journal.getRecords(new JournalFilter().
           setStartDate(filterByStartDate).setEndDate(filterByEndDate).setUser(filterByUser).
-          setSubject(Subject.getByKey(filterBySubject)));
+          setSubject(Subject.getByKey(filterBySubject)),
+          new JournalVisitor() {
+            private static final int LIMIT = 100;
+            public boolean visit(JournalRecord r) {
+              if (records.size() == LIMIT) {
+                records.removeFirst();
+              }
+              records.addLast(r);
+              return true;
+            }
+          });
+      this.records = records;
     }
   }
 

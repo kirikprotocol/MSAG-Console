@@ -95,9 +95,9 @@ public class MonitoringFileJournal implements MonitoringJournal {
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  public void visit(MonitoringFilter filter, Visitor v) throws AdminException {
+  public void visit(MonitoringEventsFilter eventsFilter, Visitor v) throws AdminException {
     try {
-      Collection<File> files = getFiles(filter);
+      Collection<File> files = getFiles(eventsFilter);
       try {
         lock.readLock().lock();
         for (File f : files) {
@@ -109,8 +109,9 @@ public class MonitoringFileJournal implements MonitoringJournal {
               if (line.length() == 0) {
                 continue;                   // may happens in repaired file
               }
-              MonitoringEvent record = convert(line); //todo Отсюда может вылететь IndexOutOfBoundsException, который не перехватится.
-              if (!filter.accept(record)) {
+              MonitoringEvent record = parse(line);
+
+              if (record == null || !eventsFilter.accept(record)) {
                 continue;
               }
               if (!v.visit(record)) {
@@ -159,53 +160,44 @@ public class MonitoringFileJournal implements MonitoringJournal {
     w.println();
   }
 
-  protected static MonitoringEvent convert(String ss) {
+  protected static MonitoringEvent parse(String ss) {
+    try{
+      List<String> es = StringEncoderDecoder.csvSplit(sepChar,ss);
 
-    List<String> es = StringEncoderDecoder.csvSplit(sepChar,ss);
-
-    // todo В одном из этих методов может возникнуть IndexOutOfBoundsException, который не будет перехвачен в методе visit
-    String time = es.get(0);
-    String source = es.get(1);
-    String alarmId = es.get(2);
-    String severity = es.get(3);
-    String text = es.get(4);
-
-    MonitoringEvent e = new MonitoringEvent(alarmId);
-    e.setTime(Long.parseLong(time));
-    e.setSource(MBean.Source.valueOf(source));
-    e.setSeverity(MonitoringEvent.Severity.valueOf(severity));
-    e.setText(text);
-
-    if(es.size()>5) { //todo эту проверочку выше поставить надо...
-      for(int i=5; i<es.size();i++) {
-        String[] ps = es.get(i).split("=",2);
-        e.setProperty(ps[0], ps[1]);
+      if(es.size()<4) {
+        logger.error("Can't parse line: "+ss);
+        return null;
       }
-    }
+      String time = es.get(0);
+      String source = es.get(1);
+      String alarmId = es.get(2);
+      String severity = es.get(3);
+      String text = es.get(4);
 
-    return e;
+      MonitoringEvent e = new MonitoringEvent(alarmId);
+      e.setTime(Long.parseLong(time));
+      e.setSource(MBean.Source.valueOf(source));
+      e.setSeverity(MonitoringEvent.Severity.valueOf(severity));
+      e.setText(text);
+
+      if(es.size()>5) {
+        for(int i=5; i<es.size();i++) {
+          String[] ps = es.get(i).split("=",2);
+          e.setProperty(ps[0], ps[1]);
+        }
+      }
+
+      return e;
+    } catch (Exception e){
+      logger.error(e,e);
+      return null;
+    }
   }
 
-  private List<File> getFiles(final MonitoringFilter filter) throws ParseException {
-
-    SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHH");
-
-    Date fromDate = filter == null || filter.getStartDate() == null ? null : df.parse(df.format(filter.getStartDate()));
-    Date toDate = filter == null || filter.getEndDate() == null ? null : df.parse(df.format(filter.getEndDate()));
-
+  private List<File> getYearsDir(File parent, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
     SimpleDateFormat ydf = new SimpleDateFormat("yyyy");
-    SimpleDateFormat mdf = new SimpleDateFormat("yyyyMM");
-    SimpleDateFormat ddf = new SimpleDateFormat("yyyyMMdd");
-    SimpleDateFormat hdf = new SimpleDateFormat("yyyyMMddHH");
-
-    List<File> results = new LinkedList<File>();
-
-    long showFrom = System.currentTimeMillis() - SHOW_PERIOD; //todo Зачем это захардкоженое ограничение? Может так:
-                                                              //todo if (fromDate == null) fromDate = new Date(System.currentTimeMillis() - SHOW_PERIOD)
-                                                              //todo Но в идеале это условие надо перенести в Controller, и убрать из модели.
-
-    // todo 4 вложенных цикла(!). Надо упростить (например, разбить на методы).
-    for (File y : dir.listFiles()) {
+    for (File y : parent.listFiles()) {
       Date yd = ydf.parse(y.getName());
       if (toDate != null && yd.after(ydf.parse(ydf.format(toDate)))) {
         continue;
@@ -213,40 +205,80 @@ public class MonitoringFileJournal implements MonitoringJournal {
       if (fromDate != null && yd.before(ydf.parse(ydf.format(fromDate)))) {
         continue;
       }
-      for (File m : y.listFiles()) {
-        Date md = mdf.parse(y.getName() + m.getName());
-        if (toDate != null && md.after(mdf.parse(mdf.format(toDate)))) {
-          continue;
-        }
-        if (fromDate != null && md.before(mdf.parse(mdf.format(fromDate)))) {
-          continue;
-        }
-        for (File d : m.listFiles()) {
-          Date dd = ddf.parse(y.getName() + m.getName() + d.getName());
-          if (toDate != null && dd.after(ddf.parse(ddf.format(toDate)))) {
-            continue;
-          }
-          if (fromDate != null && dd.before(ddf.parse(ddf.format(fromDate)))) {
-            continue;
-          }
-          for (File h : d.listFiles()) {
-            Date hd = hdf.parse(y.getName() + m.getName() + d.getName() + h.getName().substring(0, h.getName().indexOf(".")));
+      result.add(y);
+    }
+    return result;
+  }
 
-            if (hd.getTime() < showFrom) {
-              continue;
-            }
+  private List<File> getMonthsDir(File y, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
+    SimpleDateFormat mdf = new SimpleDateFormat("yyyyMM");
+    for (File m : y.listFiles()) {
+      Date md = mdf.parse(y.getName() + m.getName());
+      if (toDate != null && md.after(mdf.parse(mdf.format(toDate)))) {
+        continue;
+      }
+      if (fromDate != null && md.before(mdf.parse(mdf.format(fromDate)))) {
+        continue;
+      }
+      result.add(m);
+    }
+    return result;
+  }
 
-            if (toDate != null && hd.after(hdf.parse(hdf.format(toDate)))) {
-              continue;
-            }
-            if (fromDate != null && hd.before(hdf.parse(hdf.format(fromDate)))) {
-              continue;
-            }
+  private List<File> getDaysDir(File y, File m, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
+    SimpleDateFormat ddf = new SimpleDateFormat("yyyyMMdd");
+    for (File d : m.listFiles()) {
+      Date dd = ddf.parse(y.getName() + m.getName() + d.getName());
+      if (toDate != null && dd.after(ddf.parse(ddf.format(toDate)))) {
+        continue;
+      }
+      if (fromDate != null && dd.before(ddf.parse(ddf.format(fromDate)))) {
+        continue;
+      }
+      result.add(d);
+    }
+    return result;
+  }
+
+  private List<File> getHoursDir(File y, File m, File d, Date fromDate, Date toDate) throws ParseException {
+    List<File> result = new LinkedList<File>();
+    SimpleDateFormat hdf = new SimpleDateFormat("yyyyMMddHH");
+
+    for (File h : d.listFiles()) {
+      Date hd = hdf.parse(y.getName() + m.getName() + d.getName() + h.getName().substring(0, h.getName().indexOf(".")));
+
+      if (toDate != null && hd.after(hdf.parse(hdf.format(toDate)))) {
+        continue;
+      }
+      if (fromDate != null && hd.before(hdf.parse(hdf.format(fromDate)))) {
+        continue;
+      }
+      result.add(h);
+    }
+    return result;
+  }
+
+  private List<File> getFiles(final MonitoringEventsFilter eventsFilter) throws ParseException {
+
+    SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHH");
+
+    Date fromDate = eventsFilter == null || eventsFilter.getStartDate() == null ? null : df.parse(df.format(eventsFilter.getStartDate()));
+    Date toDate = eventsFilter == null || eventsFilter.getEndDate() == null ? null : df.parse(df.format(eventsFilter.getEndDate()));
+
+    List<File> results = new LinkedList<File>();
+
+    for(File y : getYearsDir(dir, fromDate, toDate)) {
+      for(File m : getMonthsDir(y, fromDate, toDate)) {
+        for(File d : getDaysDir(y, m ,fromDate, toDate)) {
+          for(File h: getHoursDir(y, m, d, fromDate, toDate)) {
             results.add(h);
           }
         }
       }
     }
+
     if (!results.isEmpty()) {
       Collections.sort(results);
     }

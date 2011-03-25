@@ -27,7 +27,7 @@ public class InformerNotificationListener implements NotificationListener, Notif
     MonitoringJournal old = instance.dataSource;
     instance.dataSource = dataSource;
     if(old != null) {
-      old.visit(new MonitoringFilter(), new MonitoringJournal.Visitor() {
+      old.visit(new MonitoringEventsFilter(), new MonitoringJournal.Visitor() {
         @Override
         public boolean visit(MonitoringEvent e) throws AdminException {
           instance.dataSource.addEvents(e);

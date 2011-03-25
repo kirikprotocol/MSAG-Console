@@ -14,7 +14,6 @@ import mobi.eyeline.informer.admin.users.User;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -65,24 +64,12 @@ public class Journal {
    * Возвращает все записи из журнала, удовлетворяющие фильтру (ограничение: 1000 записей)
    *
    * @param filter фильтр записей
-   * @return все записи из журнала, удовлетворяющие фильтру
+   * @param visitor визитер   *
    * @throws mobi.eyeline.informer.admin.AdminException
    *          ошибка при извлечении записей
    */
-  public List<JournalRecord> getRecords(JournalFilter filter) throws AdminException {
-    final LinkedList<JournalRecord> records = new LinkedList<JournalRecord>();
-    ds.visit(filter, new JournalVisitor() {
-      private static final int LIMIT = 1000;
-
-      public boolean visit(JournalRecord r) {
-        if (records.size() == LIMIT) {
-          records.removeFirst();
-        }
-        records.addLast(r);
-        return true;
-      }
-    });
-    return records;
+  public void getRecords(JournalFilter filter, JournalVisitor visitor) throws AdminException {
+    ds.visit(filter, visitor);
   }
 
   /**
