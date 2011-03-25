@@ -718,6 +718,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
 
     delivery.setUseDataSm(u.isUseDataSm());
+    delivery.setTransactionMode(u.isTransactionMode());
 
     if (u.getDeliveryType() != null) {
       switch (u.getDeliveryType()) {
