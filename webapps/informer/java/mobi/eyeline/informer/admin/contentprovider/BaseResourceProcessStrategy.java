@@ -73,6 +73,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     if (allowDeliveryCreation) {
       try{
         downloadFiles();
+        getMBean().notifyInteractionOk(createResourceUrl(), "type", "downloading");
       }catch (AdminException e) {
         getMBean().notifyInteractionError(createResourceUrl(), e.getMessage(), "type", "downloading");
         log.error(e,e);
@@ -93,6 +94,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             try {
               resource.open();
               fileProccesed(resource, f.getName());
+              getMBean().notifyInteractionOk(createResourceUrl(), "type", "file proccesed");
             }catch (AdminException e){
               log.error(e,e);
               getMBean().notifyInteractionError(createResourceUrl(), e.getMessage(), "type", "file proccesed");
@@ -437,6 +439,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
           try{
             uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
             resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
+            getMBean().notifyInteractionOk(createResourceUrl(), "type","uploading");
           }catch (AdminException e){
             log.error(e, e);
             getMBean().notifyInteractionError(createResourceUrl(), "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
@@ -449,6 +452,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         }
         try{
           deliveryFinished(resource, d.getName() + ".csv");
+          getMBean().notifyInteractionOk(createResourceUrl(), "type","finalizing");
         }catch (AdminException e){
           log.error(e, e);
           getMBean().notifyInteractionError(createResourceUrl(), "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
