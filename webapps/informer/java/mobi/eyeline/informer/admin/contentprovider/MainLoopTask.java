@@ -167,14 +167,14 @@ class MainLoopTask implements Runnable {
               strategy.process(false);
             } catch (AdminException e) {
               log.error(e,e);
-              getMBean().notifyInternalError(RESOURCE_PROC_ERR, "Resource processing error: "+ucps);
+              getMBean().notifyInternalError(RESOURCE_PROC_ERR+": "+ucps,  e.getMessage());
             }
           } else {
             try {
               strategy.process(true);
             } catch (AdminException e) {
               log.error(e,e);
-              getMBean().notifyInternalError(RESOURCE_PROC_ERR, "Resource processing error: "+ucps);
+              getMBean().notifyInternalError(RESOURCE_PROC_ERR+": "+ucps, e.getMessage());
             }
             lastUpdate.put(mapKey, currentMillis);
           }
@@ -184,7 +184,7 @@ class MainLoopTask implements Runnable {
 
         }catch (Exception e) {
           log.error(e, e);
-          getMBean().notifyInternalError(RESOURCE_PROC_ERR, "Resource processing error: "+ucps);
+          getMBean().notifyInternalError(RESOURCE_PROC_ERR+": "+ucps,  e.getMessage());
         }
       }
     }

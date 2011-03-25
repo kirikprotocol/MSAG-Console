@@ -48,15 +48,15 @@
           <eye:column name="severity" title="#{msg['monitor.page.severity']}" sortable="true" width="10%" align="center">
             <h:outputText style="color:#{rec.style}" value="#{rec.severity}"/>
           </eye:column>
-          <eye:column name="alarmId" title="#{msg['monitor.page.alarmId']}" sortable="true" width="20%" align="center">
+          <eye:column name="alarmId" title="#{msg['monitor.page.alarmId']}" sortable="true" width="30%" align="center">
             <h:outputText value="#{rec.alarmId}"/>
           </eye:column>
-          <eye:column name="text" title="#{msg['monitor.page.text']}" width="30%" align="center">
+          <eye:column name="text" title="#{msg['monitor.page.text']}" width="40%" align="center">
             <h:outputText value="#{rec.text}"/>
           </eye:column>
-          <eye:column name="props" title="#{msg['monitor.page.props']}" width="15%" align="center">
-            <h:outputText value="#{rec.props}"/>
-          </eye:column>
+          <!--<eye:column name="props" title="#{msg['monitor.page.props']}" width="15%" align="center">-->
+            <!--<h:outputText value="#{rec.props}"/>-->
+          <!--</eye:column>-->
         </eye:row>
       </eye:dataTable>
 

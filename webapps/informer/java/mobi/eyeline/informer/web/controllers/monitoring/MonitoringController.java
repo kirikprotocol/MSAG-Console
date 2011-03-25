@@ -217,9 +217,6 @@ public class MonitoringController extends InformerController {
           row.setAlarmId(r.getAlarmId());
           row.setText(r.getText());
           row.setSeverity(r.getSeverity());
-          if(!r.getProps().isEmpty()) {
-            row.setProps(r.getProps().toString());
-          }
           result.add(row);
         }
 
@@ -265,7 +262,6 @@ public class MonitoringController extends InformerController {
     private String sourceId;
     private String alarmId;
     private String text;
-    private String props;
     private MonitoringEvent.Severity severity;
 
     public Date getDate() {
@@ -298,14 +294,6 @@ public class MonitoringController extends InformerController {
 
     public void setText(String text) {
       this.text = text;
-    }
-
-    public String getProps() {
-      return props;
-    }
-
-    public void setProps(String props) {
-      this.props = props;
     }
 
     public String getSeverity() {
