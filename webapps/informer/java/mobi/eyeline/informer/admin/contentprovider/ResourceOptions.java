@@ -18,7 +18,7 @@ class ResourceOptions {
   String encoding;
   boolean createReports;
   String host;
-  int port;
+  Integer port;
   UserCPsettings.Protocol protocol;
 
 
@@ -37,7 +37,7 @@ class ResourceOptions {
     return host;
   }
 
-  public int getPort() {
+  public Integer getPort() {
     return port;
   }
 

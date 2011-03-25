@@ -50,7 +50,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     this.createReports = opts.isCreateReports();
     this.protocol = opts.getProtocol();
     this.host = opts.getHost();
-    this.port = opts.getPort();
+    this.port = opts.getPort() == null ? 0 : opts.getPort();
 
     if (!fileSys.exists(workDir))
       fileSys.mkdirs(workDir);
