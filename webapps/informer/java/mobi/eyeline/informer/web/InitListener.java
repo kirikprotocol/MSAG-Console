@@ -69,7 +69,7 @@ public class InitListener implements ServletContextListener {
       }
     }
     MBean.getInstance(MBean.Source.SYSTEM).notifyShutdown();
-
+    MBean.shutdown();
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})

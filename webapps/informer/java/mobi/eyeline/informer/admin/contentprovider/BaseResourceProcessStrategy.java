@@ -8,6 +8,7 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
@@ -31,6 +32,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   Address sourceAddr;
   String encoding;
   boolean createReports;
+  String host;
+  int port;
+  UserCPsettings.Protocol protocol;
 
   private static final String DELIVERY_PROC_ERR = "Delivery's processing";
   private static final String UPLOAD_REPORTS_ERR = "Results uploading";
@@ -44,6 +48,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     this.sourceAddr = opts.getSourceAddress();
     this.encoding = opts.getEncoding();
     this.createReports = opts.isCreateReports();
+    this.protocol = opts.getProtocol();
+    this.host = opts.getHost();
+    this.port = opts.getPort();
 
     if (!fileSys.exists(workDir))
       fileSys.mkdirs(workDir);
@@ -61,10 +68,15 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   }
 
   @Override
-  public final void process(boolean allowDeliveryCreation) throws AdminException {
+  public final void process(boolean allowDeliveryCreation) {
 
     if (allowDeliveryCreation) {
-      downloadFiles();
+      try{
+        downloadFiles();
+      }catch (AdminException e) {
+        getMBean().notifyInteractionError(createResourceUrl(), e.getMessage(), "type", "downloading");
+        log.error(e,e);
+      }
     }
 
     File[] files = fileSys.listFiles(workDir);
@@ -81,12 +93,15 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             try {
               resource.open();
               fileProccesed(resource, f.getName());
-            }finally {
+            }catch (AdminException e){
+              log.error(e,e);
+              getMBean().notifyInteractionError(createResourceUrl(), e.getMessage(), "type", "file proccesed");
+            } finally {
               resource.close();
             }
           } catch (DeliveryException e) {
             log.error(e,e);
-            getMBean().notifyInternalError(DELIVERY_PROC_ERR, "Can't process delivery for user="+user.getLogin());
+            getMBean().notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
             try{
               fileSys.delete(f);
             }catch (AdminException ignored){}
@@ -95,7 +110,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             }
           } catch (Exception e){
             log.error(e,e);
-            getMBean().notifyInternalError(DELIVERY_PROC_ERR, "Can't process delivery for user="+user.getLogin());
+            getMBean().notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
             try{
               fileSys.delete(f);
             }catch (AdminException ignored){}
@@ -106,7 +121,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         }
       }catch (Exception e) {
         log.error(e,e);
-        getMBean().notifyInternalError(DELIVERY_PROC_ERR, "Unknown error"+e.getMessage());
+        getMBean().notifyInternalError(DELIVERY_PROC_ERR, "Unknown error"+e.getMessage(), "type", "unknown");
       }
     }
 
@@ -392,6 +407,10 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   }
 
 
+  private String createResourceUrl() {
+    return protocol+"://"+host+':'+port;
+  }
+
   private void uploadDeliveryResults(File f) {
     log("wait file: " + f.getName());
 
@@ -415,15 +434,26 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
           log("create report for: " + f.getName());
           File reportTmpFile = new File(f.getParent(), deliveryName + ".rep." + deliveryId);
           createReport(reportTmpFile, d);
-          uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
-          resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
+          try{
+            uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
+            resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
+          }catch (AdminException e){
+            log.error(e, e);
+            getMBean().notifyInteractionError(createResourceUrl(), "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
+            return;
+          }
 
           fileSys.delete(reportTmpFile);
         } else {
           log("no report needed for: " + f.getName());
         }
-
-        deliveryFinished(resource, d.getName() + ".csv");
+        try{
+          deliveryFinished(resource, d.getName() + ".csv");
+        }catch (AdminException e){
+          log.error(e, e);
+          getMBean().notifyInteractionError(createResourceUrl(), "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
+          return;
+        }
 
         fileSys.delete(f);
       } else {
@@ -431,7 +461,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       }
     } catch (Exception e) {
       log.error(e, e);
-      getMBean().notifyInternalError(UPLOAD_REPORTS_ERR, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin());
+      getMBean().notifyInternalError(UPLOAD_REPORTS_ERR, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type", "unknown");
     } finally {
       try {
         resource.close();

@@ -93,4 +93,12 @@ public class MBean {
     mbean.internalOk(source, errorId, atts);
   }
 
+  public static void shutdown() {
+    try{
+      mbean.shutdown();
+    }catch (Exception ignored){}
+  }
+
+
+
 }

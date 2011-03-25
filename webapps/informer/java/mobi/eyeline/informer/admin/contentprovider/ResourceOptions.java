@@ -17,6 +17,10 @@ class ResourceOptions {
   Address sourceAddress;
   String encoding;
   boolean createReports;
+  String host;
+  int port;
+  UserCPsettings.Protocol protocol;
+
 
   ResourceOptions(User u, File workDir, UserCPsettings s) {
     this.user = u;
@@ -24,6 +28,21 @@ class ResourceOptions {
     this.sourceAddress = s.getSourceAddress();
     this.encoding = s.getEncoding();
     this.createReports = s.isCreateReports();
+    this.host = s.getHost();
+    this.port = s.getPort();
+    this.protocol = s.getProtocol();
+  }
+
+  public String getHost() {
+    return host;
+  }
+
+  public int getPort() {
+    return port;
+  }
+
+  public UserCPsettings.Protocol getProtocol() {
+    return protocol;
   }
 
   public boolean isCreateReports() {

@@ -46,10 +46,14 @@ class ProgramMBean extends AbstractDynamicMBean implements NotificationBroadcast
       ObjectName oname = new ObjectName(DOMAIN, "name", "Informer");
       mbs.registerMBean(this, oname);
       mbs.addNotificationListener(oname, InformerNotificationListener.getInstance(), InformerNotificationListener.getInstance(), null);
-
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  void shutdown() throws Exception {
+    ObjectName oname = new ObjectName(DOMAIN, "name", "Informer");
+    ManagementFactory.getPlatformMBeanServer().unregisterMBean(oname);
   }
 
   public void addProperty(MBean.Source sourceId, String name, String description, PropertyWrapper wrapper) {
