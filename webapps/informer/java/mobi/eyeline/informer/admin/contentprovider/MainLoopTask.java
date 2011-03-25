@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Time;
@@ -28,6 +29,10 @@ class MainLoopTask implements Runnable {
   private ContentProviderContext context;
   private FileSystem fileSys;
   private File workDir;
+
+  private static final String USER_PROC_ERR = "User processing error";
+  private static final String RESOURCE_PROC_ERR = "Resource processing error";
+  private static final String UNKNOWN_ERR = "Unknown error";
 
 
   private UserDirResolver userDirResolver;
@@ -60,6 +65,10 @@ class MainLoopTask implements Runnable {
     return true;
   }
 
+  private static MBean getMBean() {
+    return MBean.getInstance(MBean.Source.CONTENT_PROVIDER);
+  }
+
   public void run() {
     try {
       List<User> users = context.getUsers();
@@ -71,6 +80,7 @@ class MainLoopTask implements Runnable {
             processUser(u, checkedUcps);
           }
           catch (Exception e) {
+            getMBean().notifyInternalError(USER_PROC_ERR, e.getMessage());
             log.error("Error processing ",e);
           }
         }
@@ -84,6 +94,7 @@ class MainLoopTask implements Runnable {
       }
     }
     catch (Exception e) {
+      getMBean().notifyInternalError(UNKNOWN_ERR, e.getMessage());
       log.error(e,e);
     }
   }
@@ -156,12 +167,14 @@ class MainLoopTask implements Runnable {
               strategy.process(false);
             } catch (AdminException e) {
               log.error(e,e);
+              getMBean().notifyInternalError(RESOURCE_PROC_ERR, "Resource processing error: "+ucps);
             }
           } else {
             try {
               strategy.process(true);
             } catch (AdminException e) {
               log.error(e,e);
+              getMBean().notifyInternalError(RESOURCE_PROC_ERR, "Resource processing error: "+ucps);
             }
             lastUpdate.put(mapKey, currentMillis);
           }
@@ -171,6 +184,7 @@ class MainLoopTask implements Runnable {
 
         }catch (Exception e) {
           log.error(e, e);
+          getMBean().notifyInternalError(RESOURCE_PROC_ERR, "Resource processing error: "+ucps);
         }
       }
     }

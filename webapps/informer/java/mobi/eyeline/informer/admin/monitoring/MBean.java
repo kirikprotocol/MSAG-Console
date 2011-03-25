@@ -14,7 +14,7 @@ public class MBean {
   private static ProgramMBean mbean = ProgramMBean.getInstance();
 
   public static enum Source {
-    DCP, SIEBEL, SYSTEM, DELIVERY_CHANGELOG          //todo
+    DCP, SIEBEL, SYSTEM, DELIVERY_CHANGELOG, CONTENT_PROVIDER          //todo
   }
 
   public synchronized static MBean getInstance(Source name) {

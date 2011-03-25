@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -31,6 +32,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   String encoding;
   boolean createReports;
 
+  private static final String DELIVERY_PROC_ERR = "Delivery's processing";
+  private static final String UPLOAD_REPORTS_ERR = "Results uploading";
+
   protected BaseResourceProcessStrategy(ContentProviderContext context, FileResource resource, ResourceOptions opts) throws AdminException {
     this.context = context;
     this.user = opts.getUser();
@@ -51,11 +55,17 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
   protected abstract void deliveryFinished(FileResource resource, String remoteFile) throws AdminException;
 
+
+  private static MBean getMBean() {
+    return MBean.getInstance(MBean.Source.CONTENT_PROVIDER);
+  }
+
   @Override
   public final void process(boolean allowDeliveryCreation) throws AdminException {
 
-    if (allowDeliveryCreation)
+    if (allowDeliveryCreation) {
       downloadFiles();
+    }
 
     File[] files = fileSys.listFiles(workDir);
     if (files == null) {
@@ -76,6 +86,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             }
           } catch (DeliveryException e) {
             log.error(e,e);
+            getMBean().notifyInternalError(DELIVERY_PROC_ERR, "Can't process delivery for user="+user.getLogin());
             try{
               fileSys.delete(f);
             }catch (AdminException ignored){}
@@ -84,6 +95,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             }
           } catch (Exception e){
             log.error(e,e);
+            getMBean().notifyInternalError(DELIVERY_PROC_ERR, "Can't process delivery for user="+user.getLogin());
             try{
               fileSys.delete(f);
             }catch (AdminException ignored){}
@@ -94,6 +106,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         }
       }catch (Exception e) {
         log.error(e,e);
+        getMBean().notifyInternalError(DELIVERY_PROC_ERR, "Unknown error"+e.getMessage());
       }
     }
 
@@ -418,6 +431,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       }
     } catch (Exception e) {
       log.error(e, e);
+      getMBean().notifyInternalError(UPLOAD_REPORTS_ERR, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin());
     } finally {
       try {
         resource.close();
