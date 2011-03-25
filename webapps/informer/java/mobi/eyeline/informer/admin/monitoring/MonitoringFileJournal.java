@@ -109,7 +109,7 @@ public class MonitoringFileJournal implements MonitoringJournal {
               if (line.length() == 0) {
                 continue;                   // may happens in repaired file
               }
-              MonitoringEvent record = convert(line);
+              MonitoringEvent record = convert(line); //todo Отсюда может вылететь IndexOutOfBoundsException, который не перехватится.
               if (!filter.accept(record)) {
                 continue;
               }
@@ -163,6 +163,7 @@ public class MonitoringFileJournal implements MonitoringJournal {
 
     List<String> es = StringEncoderDecoder.csvSplit(sepChar,ss);
 
+    // todo В одном из этих методов может возникнуть IndexOutOfBoundsException, который не будет перехвачен в методе visit
     String time = es.get(0);
     String source = es.get(1);
     String alarmId = es.get(2);
@@ -175,7 +176,7 @@ public class MonitoringFileJournal implements MonitoringJournal {
     e.setSeverity(MonitoringEvent.Severity.valueOf(severity));
     e.setText(text);
 
-    if(es.size()>5) {
+    if(es.size()>5) { //todo эту проверочку выше поставить надо...
       for(int i=5; i<es.size();i++) {
         String[] ps = es.get(i).split("=",2);
         e.setProperty(ps[0], ps[1]);
@@ -199,8 +200,11 @@ public class MonitoringFileJournal implements MonitoringJournal {
 
     List<File> results = new LinkedList<File>();
 
-    long showFrom = System.currentTimeMillis() - SHOW_PERIOD;
+    long showFrom = System.currentTimeMillis() - SHOW_PERIOD; //todo Зачем это захардкоженое ограничение? Может так:
+                                                              //todo if (fromDate == null) fromDate = new Date(System.currentTimeMillis() - SHOW_PERIOD)
+                                                              //todo Но в идеале это условие надо перенести в Controller, и убрать из модели.
 
+    // todo 4 вложенных цикла(!). Надо упростить (например, разбить на методы).
     for (File y : dir.listFiles()) {
       Date yd = ydf.parse(y.getName());
       if (toDate != null && yd.after(ydf.parse(ydf.format(toDate)))) {

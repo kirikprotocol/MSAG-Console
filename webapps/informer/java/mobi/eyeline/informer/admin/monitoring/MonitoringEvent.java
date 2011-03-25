@@ -26,7 +26,7 @@ public class MonitoringEvent {
     text = e.text;
     source = e.source;
     time = e.time;
-    for(Map.Entry<String, String> ent : props.entrySet()) {
+    for(Map.Entry<String, String> ent : props.entrySet()) { //todo тут явная бага. из props копируется в props :) И надо сократить до props.addAll(e.props); Напиши, пожалуйста тест с проверкой клонирования.
       props.put(ent.getKey(), ent.getValue());
     }
   }

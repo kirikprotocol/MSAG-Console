@@ -20,9 +20,9 @@ class MonitringMemoryJournal implements MonitoringJournal{
 
   @Override
   public void addEvents(MonitoringEvent... events) throws AdminException {
-    List<MonitoringEvent> es = new ArrayList<MonitoringEvent>(events.length);
-    for(MonitoringEvent e : events) {
-      es.add(new MonitoringEvent(e));
+    List<MonitoringEvent> es = new ArrayList<MonitoringEvent>(events.length); // todo На мой взгляд, сомнительная оптимизация по экономии времени под lock-ом.
+    for(MonitoringEvent e : events) {                                         // todo может сразу внутри лока делать клонирование без использования вспомогательного списка?
+      es.add(new MonitoringEvent(e));                                         // todo Будет проще.
     }
     try{
       lock.lock();
@@ -40,7 +40,7 @@ class MonitringMemoryJournal implements MonitoringJournal{
         if(filter != null && !filter.accept(e)) {
           continue;
         }
-        if(!v.visit(e)) {
+        if(!v.visit(e)) { //todo Надо клонировать ивент?
           break;
         }
       }

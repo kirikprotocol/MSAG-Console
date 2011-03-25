@@ -7,7 +7,7 @@ import java.util.Date;
 /**
  * @author Aleksandr Khalitov
  */
-public class MonitoringFilter {
+public class MonitoringFilter { //todo Можно переименовать в EventsFilter?
   
   
   private Date startDate;
