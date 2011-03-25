@@ -85,6 +85,30 @@ public class MBean {
     }
   }
 
+  public void notifyInteractionError(String host, Integer port , String message, String ... atts) {
+    String externalComponent = host;
+    if(port != null) {
+      externalComponent+=":"+port;
+    }
+    Boolean state = interactionState.get(externalComponent);
+    if (state == null || state == Boolean.TRUE) {
+      mbean.interactionError(source, host, port == null ? 0 : port, message, atts);
+      interactionState.put(externalComponent, Boolean.FALSE);
+    }
+  }
+
+  public void notifyInteractionOk(String host, Integer port,  String ... atts) {
+    String externalComponent = host;
+    if(port != null) {
+      externalComponent+=":"+port;
+    }
+    Boolean state = interactionState.get(externalComponent);
+    if (state == null || state == Boolean.FALSE) {
+      mbean.interactionOk(source,  host, port == null ? 0 : port, atts);
+      interactionState.put(externalComponent, Boolean.TRUE);
+    }
+  }
+
   public void notifyInternalError(String errorId, String message, String ... atts) {
     mbean.internalError(source, errorId, message, atts);
   }

@@ -33,8 +33,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   String encoding;
   boolean createReports;
   String host;
-  int port;
+  Integer port;
   UserCPsettings.Protocol protocol;
+  String path;
 
   private static final String DELIVERY_PROC_ERR = "Delivery's processing";
   private static final String UPLOAD_REPORTS_ERR = "Results uploading";
@@ -50,7 +51,8 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     this.createReports = opts.isCreateReports();
     this.protocol = opts.getProtocol();
     this.host = opts.getHost();
-    this.port = opts.getPort() == null ? 0 : opts.getPort();
+    this.port = opts.getPort();
+    path = opts.getPath();
 
     if (!fileSys.exists(workDir))
       fileSys.mkdirs(workDir);
@@ -73,9 +75,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     if (allowDeliveryCreation) {
       try{
         downloadFiles();
-        getMBean().notifyInteractionOk(createResourceUrl(), "type", "downloading");
+        getMBean().notifyInteractionOk(getResourceHost(), port, "type", "downloading");
       }catch (AdminException e) {
-        getMBean().notifyInteractionError(createResourceUrl(), e.getMessage(), "type", "downloading");
+        getMBean().notifyInteractionError(getResourceHost(), port, e.getMessage(), "type", "downloading");
         log.error(e,e);
       }
     }
@@ -94,10 +96,10 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             try {
               resource.open();
               fileProccesed(resource, f.getName());
-              getMBean().notifyInteractionOk(createResourceUrl(), "type", "file proccesed");
+              getMBean().notifyInteractionOk(getResourceHost(), port,"type", "file proccesed");
             }catch (AdminException e){
               log.error(e,e);
-              getMBean().notifyInteractionError(createResourceUrl(), e.getMessage(), "type", "file proccesed");
+              getMBean().notifyInteractionError(getResourceHost(), port, e.getMessage(), "type", "file proccesed");
             } finally {
               resource.close();
             }
@@ -409,8 +411,12 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   }
 
 
-  private String createResourceUrl() {
-    return protocol+"://"+host+':'+port;
+  private String getResourceHost() {
+    switch (protocol) {
+      case file :
+      case localFtp: return protocol+"://"+path;
+      default: return protocol+"://"+host;
+    }
   }
 
   private void uploadDeliveryResults(File f) {
@@ -439,10 +445,10 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
           try{
             uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
             resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
-            getMBean().notifyInteractionOk(createResourceUrl(), "type","uploading");
+            getMBean().notifyInteractionOk(getResourceHost(), port, "type","uploading");
           }catch (AdminException e){
             log.error(e, e);
-            getMBean().notifyInteractionError(createResourceUrl(), "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
+            getMBean().notifyInteractionError(getResourceHost(), port, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
             return;
           }
 
@@ -452,10 +458,10 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         }
         try{
           deliveryFinished(resource, d.getName() + ".csv");
-          getMBean().notifyInteractionOk(createResourceUrl(), "type","finalizing");
+          getMBean().notifyInteractionOk(getResourceHost(), port, "type","finalizing");
         }catch (AdminException e){
           log.error(e, e);
-          getMBean().notifyInteractionError(createResourceUrl(), "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
+          getMBean().notifyInteractionError(getResourceHost(), port, "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
           return;
         }
 

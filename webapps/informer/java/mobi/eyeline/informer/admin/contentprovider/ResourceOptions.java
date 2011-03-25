@@ -20,6 +20,7 @@ class ResourceOptions {
   String host;
   Integer port;
   UserCPsettings.Protocol protocol;
+  String path;
 
 
   ResourceOptions(User u, File workDir, UserCPsettings s) {
@@ -31,6 +32,11 @@ class ResourceOptions {
     this.host = s.getHost();
     this.port = s.getPort();
     this.protocol = s.getProtocol();
+    this.path = s.getDirectory();
+  }
+
+  public String getPath() {
+    return path;
   }
 
   public String getHost() {
