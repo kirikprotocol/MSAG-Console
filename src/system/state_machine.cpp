@@ -1348,6 +1348,18 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(c.rr.info.trafMode==smsc::router::tmNone)
+  {
+    submitResp(t,sms,Status::PROHIBITED);
+    warn2(smsLog, "SBM: prohibited route Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
+      t.msgId,c.dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      AddrPair("da",sms->getDestinationAddress(),"dda",c.dst).c_str(),
+      c.src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
   if(c.rr.info.trafMode==smsc::router::tmSmsOnly && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     submitResp(t,sms,Status::PROHIBITED);
