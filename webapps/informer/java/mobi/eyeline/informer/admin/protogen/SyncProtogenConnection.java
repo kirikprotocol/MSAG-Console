@@ -141,7 +141,9 @@ public abstract class SyncProtogenConnection {
       }
 
       return resp;
-
+    } catch (IOException e) {
+      close();
+      throw new IOException(e);
     } finally {
       sendLock.unlock();
     }
