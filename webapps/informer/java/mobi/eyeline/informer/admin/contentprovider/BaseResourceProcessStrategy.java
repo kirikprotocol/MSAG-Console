@@ -412,6 +412,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
 
   private String getResourceHost() {
+    if(protocol == null) {
+      return "";
+    }
     switch (protocol) {
       case file :
       case localFtp: return protocol+"://"+path;
