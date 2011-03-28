@@ -313,7 +313,7 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
         Convert7BitToSMSC7Bit(user_data+udh_len+1,symbols,&ms,x-(udh_len+1)*8);
         memcpy(b.get(),user_data,udh_len+1);
         memcpy(b.get()+udh_len+1,ms.bytes,ms.len);
-        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(char*)b.get(),udh_len+1+symbols);
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)b.get(),udh_len+1+symbols);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
       }
       else
@@ -321,14 +321,14 @@ void makeSmsToRequest(MtForward* mtf,MTR* req)
       {
         MicroString ms;
         Convert7BitToSMSC7Bit(user_data,user_data_len,&ms,0);
-        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       }
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
     /* encoding =! MAP_OCTET7BIT_ENCODING */
     else{
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)user_data,user_data_len);
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)encoding);
     }
