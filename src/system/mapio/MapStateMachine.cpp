@@ -1852,6 +1852,13 @@ static void DoUSSRUserResponce( MapDialog* dialog)
 
 }
 
+static bool isVlrUssdOp(int serviceOp)
+{
+  return serviceOp==USSD_USSR_REQ_VLR || serviceOp==USSD_USSR_REQ_VLR_LAST ||
+         serviceOp==USSD_USSN_REQ_VLR || serviceOp==USSD_USSN_REQ_VLR_LAST;
+}
+
+
 static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
 {
   dialog->isUSSD = true;
@@ -1982,7 +1989,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
     ET96MAP_IMSI_OR_MSISDN_T destRef;
     memset(&destRef,0,sizeof(destRef));
-    if(dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)>=smsc::sms::USSD_USSR_REQ_VLR && dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)<=smsc::sms::USSD_USSN_REQ_VLR_LAST)
+    if(isVlrUssdOp(serviceOp))
     {
       if( dialog->s_imsi.length() > 0 )
       {
@@ -2027,7 +2034,8 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   }
   dialog->invokeId++;
   ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
-  if( serviceOp == USSD_USSR_REQ || serviceOp==USSD_USSR_REQ_LAST || serviceOp==smsc::sms::USSD_USSR_REQ_VLR || serviceOp==smsc::sms::USSD_USSR_REQ_VLR_LAST)
+  if( serviceOp==USSD_USSR_REQ     || serviceOp==USSD_USSR_REQ_LAST ||
+      serviceOp==USSD_USSR_REQ_VLR || serviceOp==USSD_USSR_REQ_VLR_LAST)
   {
     checkMapReq( Et96MapV2UnstructuredSSRequestReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
   } else
@@ -2051,6 +2059,7 @@ static bool isValidUssdOp(int serviceOp)
       serviceOp == USSD_USSN_REQ_VLR_LAST || serviceOp == USSD_USSREL_REQ ||
       serviceOp == USSD_REDIRECT;
 }
+
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
 {
@@ -2262,6 +2271,14 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               __map_warn__("putCommand: chained command for NIUSSD. Shoudn't happen.");
               SendStatusToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR),true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
               return;
+            }
+            if(isVlrUssdOp(serviceOp) && NetworkProfiles::getInstance().lookup(cmd->get_sms()->getDestinationAddress()).niVlrMethod==asmATI)
+            {
+              __map_trace2__("using ati for niussd from %s to %s",cmd->get_sms()->getOriginatingAddress().toString().c_str(),cmd->get_sms()->getDestinationAddress().toString().c_str());
+              dialog->useAtiAfterSri=true;
+            }else
+            {
+              dialog->useAtiAfterSri=false;
             }
             dialog->lastUssdMessage=serviceOp==USSD_USSR_REQ_LAST || serviceOp==USSD_USSN_REQ_LAST || serviceOp==USSD_USSR_REQ_VLR_LAST || serviceOp==USSD_USSN_REQ_VLR_LAST;
             dialog->dropChain = false;
@@ -2705,6 +2722,7 @@ USHORT_T Et96MapOpenConf (
     case MAPST_WaitOpenConf:
     case MAPST_ImsiWaitOpenConf:
     case MAPST_WaitUssdAtiOpenConf:
+    case MAPST_WaitNIUssdAtiOpenConf:
       if ( openResult == ET96MAP_RESULT_NOT_OK )
       {
         if ( refuseReason_p && *refuseReason_p == ET96MAP_APP_CONTEXT_NOT_SUPP )
@@ -2782,6 +2800,9 @@ USHORT_T Et96MapOpenConf (
         break;
       case MAPST_WaitUssdAtiOpenConf:
         dialog->state = MAPST_WaitUssdAtiConf;
+        break;
+      case MAPST_WaitNIUssdAtiOpenConf:
+        dialog->state = MAPST_WaitNIUssdAtiConf;
         break;
       }
       break;
@@ -3013,6 +3034,7 @@ USHORT_T Et96MapCloseInd(
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
     dialog->id_opened = false;
     switch( dialog->state ){
+    case MAPST_WaitNIUssdAtiClose:
     case MAPST_WaitRInfoClose:
       if ( dialog->isQueryAbonentStatus ){
         int status;
@@ -3028,6 +3050,12 @@ USHORT_T Et96MapCloseInd(
         {
           if( dialog->sms.get()->hasIntProperty( Tag::SMPP_USSD_SERVICE_OP ) )
           {
+            if(dialog->useAtiAfterSri && dialog->state!=MAPST_WaitNIUssdAtiClose)
+            {
+              MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,USSD_SSN,radtOutSRI); // This is for network initiated sessions
+              makeAtiRequest(dialog.get());
+              break;
+            }
             MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,USSD_SSN,radtNIUSSD); // This is for network initiated sessions
             int serviceOp = dialog->sms.get()->getIntProperty( Tag::SMPP_USSD_SERVICE_OP );
             if( serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ ||
@@ -4683,7 +4711,13 @@ void makeAtiRequest(MapDialog* dlg)
     //mkMapAddress( &dialog->m_scAddr, USSD_ADDRESS().c_str(), (unsigned)USSD_ADDRESS().length() );
     //mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, USSD_SSN );
     //mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, HLR_SSN );
-    dialog->state = MAPST_WaitUssdAtiOpenConf;
+    if(dialog->useAtiAfterSri)
+    {
+      dialog->state = MAPST_WaitNIUssdAtiOpenConf;
+    }else
+    {
+      dialog->state = MAPST_WaitUssdAtiOpenConf;
+    }
 
     ET96MAP_APP_CNTX_T appContext;
     appContext.acType = ET96MAP_ANY_TIME_INFO_ENQUIRY_CONTEXT;
@@ -4814,7 +4848,16 @@ USHORT_T Et96MapV3AnyTimeInterrogationConf(
       //SendAbonentStatusToSmsc(dialog.get(),status);
       dialog->QueryAbonentCommand->get_abonentStatus().status=status;
     }
-    dialog->state=MAPST_WaitUssdAtiClose;
+    if(dialog->state==MAPST_WaitUssdAtiConf)
+    {
+      dialog->state=MAPST_WaitUssdAtiClose;
+    }else if(dialog->state==MAPST_WaitNIUssdAtiConf)
+    {
+      dialog->state=MAPST_WaitNIUssdAtiClose;
+    }else
+    {
+      throw Exception("Unexpected state %d in %s",dialog->state,__func__);
+    }
   }MAP_CATCH(dialogid_map,0,localSsn,INSTARG0(rinst));
   return ET96MAP_E_OK;
 }

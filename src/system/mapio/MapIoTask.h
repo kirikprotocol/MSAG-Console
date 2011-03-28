@@ -194,7 +194,11 @@ enum MapState{
   MAPST_WaitUSSDErrorClose = 52,
   MAPST_WaitUssdAtiOpenConf = 53,
   MAPST_WaitUssdAtiConf = 54,
-  MAPST_WaitUssdAtiClose=55
+  MAPST_WaitUssdAtiClose=55,
+  MAPST_WaitNIUssdAtiOpenConf = 56,
+  MAPST_WaitNIUssdAtiConf = 57,
+  MAPST_WaitNIUssdAtiClose=58
+
 };
 
 class hash_func_ET96MAP_DID{
@@ -275,6 +279,7 @@ struct MapDialog{
   bool lastUssdMessage:1;
   bool callbarred:1;
   bool teleservicenotprov:1;
+  bool useAtiAfterSri:1;
   char clevel;
   MapState state;
   int dlgType;
@@ -345,6 +350,7 @@ struct MapDialog{
     ussdProcessing=false;
     noSri=false;
     lastUssdMessage=false;
+    useAtiAfterSri=false;
     state=MAPST_START;
     dialogid_map=dialogid;
     dialogid_smsc=0;
@@ -536,6 +542,7 @@ struct MapDialog{
     mms = false;
     isUSSD = false;
     noSri=false;
+    useAtiAfterSri=false;
     noRespFromPeer=false;
     lastUssdMessage=false;
     s_imsi.clear();

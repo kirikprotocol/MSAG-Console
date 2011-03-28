@@ -27,6 +27,22 @@ void NetworkProfiles::shutdown()
   instance=0;
 }
 
+static AbonentStatusMethod parseAbonentStatusMethod(const smsc::util::xml::XmlStr& val)
+{
+  AbonentStatusMethod rv;
+  if(val=="SRI4SM")
+  {
+    rv=asmSRI4SM;
+  }else if(val=="ATI")
+  {
+    rv=asmATI;
+  }else
+  {
+    throw smsc::util::Exception("Invalid value of 'abonentStatusMethod'='%s'",val.c_str());
+  }
+  return rv;
+}
+
 static void parseParam(NetworkProfile* np,const smsc::util::xml::XmlStr& nm,const smsc::util::xml::XmlStr& val)
 {
   if(nm=="ussdOpenDestRef")
@@ -46,16 +62,10 @@ static void parseParam(NetworkProfile* np,const smsc::util::xml::XmlStr& nm,cons
     }
   }else if(nm=="abonentStatusMethod")
   {
-    if(val=="SRI4SM")
-    {
-      np->asMethod=asmSRI4SM;
-    }else if(val=="ATI")
-    {
-      np->asMethod=asmATI;
-    }else
-    {
-      throw smsc::util::Exception("Invalid value of 'abonentStatusMethod'='%s'",val.c_str());
-    }
+    np->asMethod=parseAbonentStatusMethod(val);
+  }else if(nm=="vlrDetectionMethod")
+  {
+    np->niVlrMethod=parseAbonentStatusMethod(val);
   }
 }
 
@@ -108,7 +118,7 @@ void NetworkProfiles::reload()
       if(msk->getNodeType()!=DOMNode::ELEMENT_NODE)continue;
       DOMNamedNodeMap* attr=msk->getAttributes();
       XmlStr val(attr->getNamedItem(valStr)->getNodeValue());
-      if(NetworkProfile** pptr=profiles.Find(val.c_release()))
+      if(NetworkProfile** pptr=profiles.Find(val.c_str()))
       {
         smsc_log_warn(log,"Duplicate mask %s in network %s (previous in %s)",val.c_str(),np->name.c_str(),(*pptr)->name.c_str());
         continue;
