@@ -10,6 +10,7 @@
     <params>
       <param name="ussdOpenDestRef" value="destIMSI"/> 
       <param name="abonentStatusMethod" value="SRI4SM"/>
+      <param name="vlrDetectionMethod" value="SRI4SM"/>
     </params>
   </network>
   -->
@@ -17,6 +18,7 @@
     <params>
       <param name="ussdOpenDestRef" value="destAddr"/> <!-- destAddr, destIMSI or empty -->
       <param name="abonentStatusMethod" value="SRI4SM"/> <!-- SRI4SM or ATI -->
+      <param name="vlrDetectionMethod" value="SRI4SM"/> <!-- SRI4SM or ATI -->
     </params>
   </default>
 </networks>
