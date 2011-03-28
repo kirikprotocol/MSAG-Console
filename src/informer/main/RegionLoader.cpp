@@ -4,6 +4,7 @@
 #include "util/xml/DOMTreeReader.h"
 #include "util/findConfigFile.h"
 #include "informer/io/InfosmeException.h"
+#include "informer/data/CommonSettings.h"
 
 using namespace smsc::util::xml;
 using namespace xercesc;
@@ -48,6 +49,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             }
             const XmlStr stimezone = region->getAttribute(XmlStr("timezone"));
             int timezone;
+            std::string tzname;
             if ( strlen(stimezone.c_str()) == 0 ) {
                 // empty
                 timezone = getLocalTimezone();
@@ -58,11 +60,29 @@ log_(smsc::logger::Logger::getInstance("regloader"))
                     throw InfosmeException(EXC_CONFIG,"invalid timezone='%s' for region id=%u",
                                            stimezone.c_str(),rid);
                 }
+                const char* p = stimezone.c_str() + shift;
+                while ( *p == ' ' || *p == '\t' ) { ++p; }
+                tzname = p;
+                size_t plen = tzname.size();
+                if ( plen ) {
+                    --plen;
+                    for ( ; tzname[plen] == ' ' ; --plen ) {
+                        tzname.erase(plen);
+                        if ( !plen ) break;
+                    }
+                }
+            }
+            const TimezoneGroup* tzgroup = getCS()->lookupTimezoneGroup(tzname.c_str());
+            if ( !tzgroup ) {
+                throw InfosmeException(EXC_CONFIG,"unknown timezone='%s'",tzname.c_str());
             }
             if ( timezone/3600*3600 != timezone ) {
                 throw InfosmeException(EXC_CONFIG,"invalid timezone=%d, it does not divisable by 3600 w/o remainder");
             }
-            Region* r = new Region(rid,"default",defaultSmscId,bandwidth,timezone,false,0);
+            Region* r = new Region(rid,"default",defaultSmscId,bandwidth,
+                                   timezone,
+                                   tzgroup,
+                                   false,0);
             regions_.push_back(r);
         }
 
@@ -121,10 +141,28 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             } else if ( timezone/3600*3600 != timezone ) {
                 throw InfosmeException(EXC_CONFIG,"invalid timezone=%d, it does not divisable by 3600 w/o remainder");
             }
+            const TimezoneGroup* tzgroup;
+            {
+                const char* p = stimezone.c_str() + shift;
+                while ( *p == ' ' || *p == '\t' ) { ++p; }
+                std::string tzname = p;
+                size_t plen = tzname.size();
+                if ( plen ) {
+                    --plen;
+                    for ( ; tzname[plen] == ' '; --plen ) {
+                        tzname.erase(plen);
+                        if ( !plen ) break;
+                    }
+                }
+                tzgroup = getCS()->lookupTimezoneGroup(tzname.c_str());
+                if (!tzgroup) {
+                    throw InfosmeException(EXC_CONFIG,"unknown timezone='%s'",tzname.c_str());
+                }
+            }
             const XmlStr sdeleted = region->getAttribute(XmlStr("deleted"));
             const bool deleted = ( sdeleted.c_str() == std::string("true") );
 
-            Region* r = new Region(rid,name.c_str(),smscId.c_str(),bandwidth,timezone,deleted,&masks);
+            Region* r = new Region(rid,name.c_str(),smscId.c_str(),bandwidth,timezone,tzgroup,deleted,&masks);
             regions_.push_back(r);
         }
 

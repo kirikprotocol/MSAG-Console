@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "Region.h"
+#include "TimezoneGroup.h"
 
 namespace {
 smsc::logger::Logger* log_ = 0;
@@ -18,10 +19,11 @@ Region::Region( regionid_type regionId,
                 const char* smscId,
                 unsigned bw,
                 int timezone,
+                const TimezoneGroup* tzgroup,
                 bool deleted,
                 std::vector< std::string >* masks ) :
 regionId_(regionId), name_(name), smscId_(smscId), bw_(bw),
-timezone_(timezone), deleted_(deleted), ref_(0)
+timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted), ref_(0)
 {
     getlog();
     if (masks) { masks->swap(masks_); }
@@ -62,6 +64,25 @@ void Region::swap( Region& r )
 bool Region::hasEqualMasks( const Region& r ) const
 {
     return ( r.masks_ == masks_ );
+}
+
+
+int Region::getLocalWeekTime( msgtime_type now ) const
+{
+    // move into local time
+    now += getTimezone();
+    struct tm tmnow;
+    {
+        const time_t tmp = time_t(now);
+        gmtime_r(&tmp,&tmnow);
+    }
+    const int dst = tzgroup_->fixDst(tmnow);
+    static const int daynight = 24*3600;
+    static const int aweek = 7*daynight;
+    int result = int( (tmnow.tm_wday+6)*daynight +
+                      now % daynight +
+                      dst ) % aweek;
+    return result;
 }
 
 }

@@ -1,3 +1,6 @@
+2011-03-28 16:50 bukind
+  timezone fix for daylight saving
+
 2011-03-18 14:40 bukind
   OA limitation per user
 

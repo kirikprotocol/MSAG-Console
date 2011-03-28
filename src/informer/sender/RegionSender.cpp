@@ -74,6 +74,8 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         // smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
         currentTime_ = currentTime;
         const msgtime_type now = msgtime_type(currentTime_ / tuPerSec);
+
+        /*
         struct tm tmnow;
         {
             const time_t tmp = time_t(now);
@@ -87,6 +89,9 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         weekTime_ = int( ((tmnow.tm_wday+6)*daynight +
                           (now % daynight) + 
                           region_->getTimezone()) % aweek );
+         */
+        weekTime_ = region_->getLocalWeekTime(now);
+
         MutexGuard mg(lock_);
         // check speed control
         const usectime_type delay = 

@@ -3,7 +3,12 @@
 #include "informer/io/UTF8.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/ConfigWrapper.h"
+#include "util/config/Config.h"
+#include "TimezoneGroup.h"
 #include "logger/Logger.h"
+
+using smsc::util::config::Config;
+using smsc::util::config::CStrSet;
 
 namespace eyeline {
 namespace informer {
@@ -25,6 +30,11 @@ emergency_(false)
 
 CommonSettings::~CommonSettings()
 {
+    for ( std::vector<TimezoneGroup*>::iterator i = tzgroups_.begin();
+          i != tzgroups_.end(); ++i ) {
+        delete *i;
+    }
+    tzgroups_.clear();
     delete utf8_;
     instance_ = 0;
 }
@@ -76,6 +86,66 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     inputTransferThreadCount_ = conf.getInt("inputTransferThreadCount",30,10,100);
     resendIOThreadCount_ = conf.getInt("resendIOThreadCount",10,10,30);
     validityPeriodDefault_ = conf.getInt("validityPeriodDefault",3600,1000,100000);
+
+    loadTimezones();
+}
+
+
+void CommonSettings::loadTimezones()
+{
+    tzgroups_.push_back( new TimezoneGroup(TimezoneGroup::TZ_UNKNOWN) );
+    tzgroups_.push_back( new TimezoneGroup(TimezoneGroup::TZ_RUSSIA) );
+
+    smsc::logger::Logger* log_ = smsc::logger::Logger::getInstance("config");
+
+    const char* tzfilename = "timezone.xml";
+    try {
+
+        std::auto_ptr<Config> tzcfg( Config::createFromFile("timezone.xml") );
+
+        if ( !tzcfg.get()) {
+            throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",tzfilename);
+        }
+
+        std::auto_ptr< CStrSet > tzset(tzcfg->getRootSectionNames());
+        for ( CStrSet::iterator i = tzset->begin(); i != tzset->end(); ++i ) {
+            std::auto_ptr< Config > sect(tzcfg->getSubConfig(i->c_str(),true) );
+            int tzid = TimezoneGroup::TZ_RUSSIA;
+            try {
+                const char* algo = sect->getString("tzalgo");
+                if ( !algo ||
+                     !strcmp(algo,"Russia") ||
+                     !strcmp(algo,"russia") ) {
+                    tzid = TimezoneGroup::TZ_RUSSIA;
+                } else {
+                    tzid = TimezoneGroup::TZ_UNKNOWN;
+                }
+            } catch ( std::exception ) {
+                smsc_log_warn(log_,"missing param 'tzalgo' in '%s'",i->c_str());
+            }
+            for ( std::vector< TimezoneGroup* >::iterator j = tzgroups_.begin();
+                  j != tzgroups_.end(); ++j ) {
+                if ( (*j)->getId() == tzid ) {
+                    tzmap_.insert(std::make_pair(*i,*j));
+                    break;
+                }
+            }
+        }
+    } catch ( InfosmeException& ) {
+        throw;
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_CONFIG,"exc on tz: %s",e.what());
+    }
+}
+
+
+const TimezoneGroup* CommonSettings::lookupTimezoneGroup( const char* tzname ) const
+{
+    TzMap::const_iterator i = tzmap_.find(tzname);
+    if ( i == tzmap_.end() ) {
+        return 0;
+    }
+    return i->second;
 }
 
 } // informer

@@ -154,7 +154,8 @@ int DeliveryInfo::checkActiveTime( int weekTime ) const
             
     } while (false);
 
-    if (res>0) {
+    if (res>0 && nextDay ) {
+        // forbidden until the end of the day
         for ( unsigned i = weekDay+1; ; ++i ) {
             if ( i >= 7 ) { i -= 7; }
             if ( i == weekDay ) {

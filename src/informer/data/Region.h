@@ -10,17 +10,20 @@
 namespace eyeline {
 namespace informer {
 
+class TimezoneGroup;
+
 /// representation of a region
 class Region
 {
     friend class EmbedRefPtr< Region >;
 public:
-    Region( regionid_type regionId,
-            const char*   name,
-            const char*   smscId,
-            unsigned      bw,
-            int           timezone,
-            bool          deleted,    // may be set to true, disabling the region
+    Region( regionid_type        regionId,
+            const char*          name,
+            const char*          smscId,
+            unsigned             bw,
+            int                  timezone,
+            const TimezoneGroup* tzgroup,
+            bool                 deleted,    // may be set to true, disabling the region
             std::vector<std::string>* masks = 0 );
 
     ~Region();
@@ -39,6 +42,9 @@ public:
     void swap( Region& r );
 
     bool hasEqualMasks( const Region& r ) const;
+
+    /// return local week time since the start of the week (seconds)
+    int getLocalWeekTime( msgtime_type now ) const;
 
 private:
     void ref() {
@@ -65,6 +71,7 @@ private:
     std::string              smscId_;
     unsigned                 bw_;          //  sms/sec
     int                      timezone_;
+    const TimezoneGroup*     tzgroup_;
     bool                     deleted_;
     std::vector<std::string> masks_;       //  sorted masks
     smsc::core::synchronization::Mutex lock_;

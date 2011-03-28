@@ -2,6 +2,8 @@
 #define _INFORMER_COMMONSETTINGS_H
 
 #include <string>
+#include <vector>
+#include <map>
 #include "informer/io/Typedefs.h"
 
 namespace smsc {
@@ -16,6 +18,7 @@ namespace eyeline {
 namespace informer {
 
 class UTF8;
+class TimezoneGroup;
 
 class CommonSettings
 {
@@ -174,6 +177,13 @@ public:
 
     UTF8& getUTF8() const { return *utf8_; }
 
+    /// get timezone group
+    const TimezoneGroup* lookupTimezoneGroup( const char* tzname ) const;
+
+private:
+    void loadTimezones();
+    typedef std::map< std::string, TimezoneGroup* > TzMap;
+
 private:
     std::string path_;
     std::string archivePath_;
@@ -201,6 +211,9 @@ private:
     volatile bool stopping_;
     bool     archive_;
     bool     emergency_;
+
+    std::vector< TimezoneGroup* > tzgroups_;
+    TzMap                         tzmap_;
 };
 
 inline const CommonSettings* getCS() { return CommonSettings::getCS(); }
