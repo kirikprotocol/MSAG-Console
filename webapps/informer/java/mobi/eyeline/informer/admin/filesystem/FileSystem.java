@@ -98,7 +98,7 @@ public abstract class FileSystem {
    * @param file директория
    * @return список имён файлов
    */
-  public String[] list(File file) {
+  public String[] list(File file) throws AdminException {
     return file.list();
   }
 

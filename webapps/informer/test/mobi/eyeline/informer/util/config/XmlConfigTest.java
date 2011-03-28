@@ -20,14 +20,14 @@ public class XmlConfigTest {
   private static final Date date = Functions.truncateTime(new Date());
 
   private void fillSection(XmlConfigSection section) {
-    section.setString("1", "1");
+    section.setString("1", "<>\"&test");
     section.setInt("2", 2);
     section.setBool("3", true);
     section.setDate("4", date, "yyyy-MM-dd");
   }
 
   private void checkSection(XmlConfigSection sec) throws XmlConfigException, ParseException {
-    assertEquals("1", sec.getString("1"));
+    assertEquals("<>\"&test", sec.getString("1"));
     assertEquals(XmlConfigParam.Type.STRING, sec.getParam("1").getType());
     assertEquals(2, sec.getInt("2"));
     assertEquals(XmlConfigParam.Type.INT, sec.getParam("2").getType());
