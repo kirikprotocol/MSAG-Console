@@ -33,7 +33,7 @@ static void DumpSentSms(SMS& sms,Logger* logger)
   using namespace smsc::sms;
   const char* prop = 0;
   unsigned int len = 0;
-  prop = sms.getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
+  prop = sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   char buf[20] = {0};
   memcpy(buf,prop,len); buf[len] = 0;
   smsc_log_info(logger,"sent resp %s",buf);
