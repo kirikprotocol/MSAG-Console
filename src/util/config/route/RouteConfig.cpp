@@ -238,33 +238,37 @@ throw (SubjectNotFoundException)
     routeid.erase(32);
   }
 
-  smsc::router::TrafficMode tm;
+  smsc::router::TrafficMode tm=smsc::router::tmAll;
 
-  if(*enabling.c_str()!=0)
+  if(*trafMode.c_str()!=0)
   {
-    if(strcmp("true", enabling) == 0)
+    if(trafMode == "none")
+    {
+      tm=smsc::router::tmNone;
+    }else if(trafMode == "smsOnly")
+    {
+      tm=smsc::router::tmSmsOnly;
+    }else if(trafMode == "ussdOnly")
+    {
+      tm=smsc::router::tmUssdOnly;
+    }else if(trafMode == "all")
+    {
+      tm=smsc::router::tmAll;
+    }else
+    {
+      __warning2__("unknown traffic mode:%s",trafMode.c_str());
+    }
+  }else if(*enabling.c_str()!=0)
+  {
+    if(enabling == "true")
     {
       tm=smsc::router::tmAll;
     }else
     {
       tm=smsc::router::tmNone;
     }
-  }else
-  {
-    if(strcmp("none", trafMode) == 0)
-    {
-      tm=smsc::router::tmNone;
-    }else if(strcmp("smsOnly", trafMode) == 0)
-    {
-      tm=smsc::router::tmSmsOnly;
-    }else if(strcmp("ussdOnly", trafMode) == 0)
-    {
-      tm=smsc::router::tmUssdOnly;
-    }else if(strcmp("all", trafMode) == 0)
-    {
-      tm=smsc::router::tmAll;
-    }
   }
+
 
   std::auto_ptr<Route> r(new Route(routeid,
                                    priority,
