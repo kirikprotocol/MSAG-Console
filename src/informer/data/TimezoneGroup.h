@@ -1,6 +1,7 @@
 #ifndef _INFORMER_TIMEZONEGROUP_H
 #define _INFORMER_TIMEZONEGROUP_H
 
+#include <time.h>
 #include "informer/io/Typedefs.h"
 
 namespace eyeline {

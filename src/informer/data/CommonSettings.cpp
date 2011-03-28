@@ -139,9 +139,9 @@ void CommonSettings::loadTimezones()
 }
 
 
-const TimezoneGroup* CommonSettings::lookupTimezoneGroup( const char* tzname ) const
+const TimezoneGroup* CommonSettings::lookupTimezoneGroup( const char* name ) const
 {
-    TzMap::const_iterator i = tzmap_.find(tzname);
+    TzMap::const_iterator i = tzmap_.find(name);
     if ( i == tzmap_.end() ) {
         return 0;
     }
