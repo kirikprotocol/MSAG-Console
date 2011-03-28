@@ -19,7 +19,6 @@ import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsProvider;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
 import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
-import mobi.eyeline.informer.admin.restriction.TestRestrictionsManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
 import mobi.eyeline.informer.admin.siebel.SiebelProvider;
@@ -58,7 +57,6 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestArchiveDaemonManager.class.getResourceAsStream("config.xml"), new File(archiveConf, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
-    TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);
   }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {

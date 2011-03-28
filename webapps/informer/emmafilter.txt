@@ -5,3 +5,5 @@
 -mobi.eyeline.informer.admin.infosme.protogen.protocol*
 -*Test*
 -*Exception*
+-*Stub*
+-*Mock*
