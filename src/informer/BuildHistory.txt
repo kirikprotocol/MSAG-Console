@@ -1,6 +1,10 @@
 =====================================================================
 2011-03-29 13:27 bukind informer-build-20110329
 
+2011-03-29 14:30 bukind
+  message_state REJECTED is made final == UNDELIVERABLE
+  (as was requested by Ilnur)
+
 2011-03-28 16:50 bukind
   timezone fix for daylight saving
 
