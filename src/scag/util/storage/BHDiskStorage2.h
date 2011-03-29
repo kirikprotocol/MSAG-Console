@@ -208,8 +208,8 @@ protected:
                         smsc_log_warn(log_,"key mismatch: idx=%llx, key=%s, key_=%s",
                                       uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
                     }
-                    smsc::util::Exception("key mismatch: idx=%llx, key=%s, key_=%s",
-                                          uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
+                    throw smsc::util::Exception("key mismatch: idx=%llx, key=%s, key_=%s",
+                                                uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
                 }
             }
             dsr >> value;
