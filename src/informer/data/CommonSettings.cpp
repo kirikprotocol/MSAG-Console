@@ -16,6 +16,7 @@ namespace informer {
 CommonSettings* CommonSettings::instance_ = 0;
 
 CommonSettings::CommonSettings( unsigned licenseLimit ) :
+log_(smsc::logger::Logger::getInstance("comset")),
 utf8_(0),
 incStatBank_(0),
 licenseLimit_(licenseLimit),
@@ -46,7 +47,7 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     archive_ = archive;
     utf8_ = new UTF8();
 
-    const ConfigWrapper conf(cfg, smsc::logger::Logger::getInstance("config"));
+    const ConfigWrapper conf(cfg,log_);
     emergency_ = conf.getBool("emergency",false);
     if ( emergency_ && archive_ ) {
         throw InfosmeException( EXC_CONFIG, "archive daemon can not have 'emergency' flag");
@@ -94,17 +95,17 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
 void CommonSettings::loadTimezones()
 {
     tzgroups_.push_back( new TimezoneGroup(TimezoneGroup::TZ_UNKNOWN) );
-    tzgroups_.push_back( new TimezoneGroup(TimezoneGroup::TZ_RUSSIA) );
+    TimezoneGroup* tzrussia = new TimezoneGroup(TimezoneGroup::TZ_RUSSIA);
+    tzgroups_.push_back( tzrussia );
+    tzmap_.insert( std::make_pair("",tzrussia) );
 
-    smsc::logger::Logger* log_ = smsc::logger::Logger::getInstance("config");
-
-    const char* tzfilename = "timezone.xml";
+    const char* tzfilename = "timezones.xml";
     try {
 
-        std::auto_ptr<Config> tzcfg( Config::createFromFile("timezone.xml") );
+        std::auto_ptr<Config> tzcfg( Config::createFromFile(tzfilename) );
 
         if ( !tzcfg.get()) {
-            throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",tzfilename);
+            throw InfosmeException(EXC_CONFIG,"config file '%s' is ill-formed",tzfilename);
         }
 
         std::auto_ptr< CStrSet > tzset(tzcfg->getRootSectionNames());
@@ -126,6 +127,7 @@ void CommonSettings::loadTimezones()
             for ( std::vector< TimezoneGroup* >::iterator j = tzgroups_.begin();
                   j != tzgroups_.end(); ++j ) {
                 if ( (*j)->getId() == tzid ) {
+                    smsc_log_debug(log_,"adding tz='%s' to tzgroup=%d",i->c_str(),tzid);
                     tzmap_.insert(std::make_pair(*i,*j));
                     break;
                 }
@@ -141,8 +143,10 @@ void CommonSettings::loadTimezones()
 
 const TimezoneGroup* CommonSettings::lookupTimezoneGroup( const char* name ) const
 {
+    if ( !name ) { name = ""; }
     TzMap::const_iterator i = tzmap_.find(name);
     if ( i == tzmap_.end() ) {
+        smsc_log_debug(log_,"timezone '%s' has not mapping to any tzgroup",name);
         return 0;
     }
     return i->second;

@@ -7,6 +7,9 @@
 #include "informer/io/Typedefs.h"
 
 namespace smsc {
+namespace logger {
+class Logger;
+}
 namespace util {
 namespace config {
 class Config;
@@ -185,6 +188,7 @@ private:
     typedef std::map< std::string, TimezoneGroup* > TzMap;
 
 private:
+    smsc::logger::Logger* log_;
     std::string path_;
     std::string archivePath_;
     std::string statpath_;

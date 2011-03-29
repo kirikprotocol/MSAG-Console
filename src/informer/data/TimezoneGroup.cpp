@@ -14,8 +14,10 @@ int TimezoneGroup::fixDst( struct tm& now ) const
     case TZ_RUSSIA :
         // medvedev cancelled the dst
         result = 3600;
+        break;
     default:
         result = 0;
+        break;
     }
     return result;
 }

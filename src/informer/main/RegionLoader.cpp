@@ -49,7 +49,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             }
             const XmlStr stimezone = region->getAttribute(XmlStr("timezone"));
             int timezone;
-            std::string tzname;
+            std::string zname;
             if ( strlen(stimezone.c_str()) == 0 ) {
                 // empty
                 timezone = getLocalTimezone();
@@ -62,19 +62,19 @@ log_(smsc::logger::Logger::getInstance("regloader"))
                 }
                 const char* p = stimezone.c_str() + shift;
                 while ( *p == ' ' || *p == '\t' ) { ++p; }
-                tzname = p;
-                size_t plen = tzname.size();
+                zname = p;
+                size_t plen = zname.size();
                 if ( plen ) {
                     --plen;
-                    for ( ; tzname[plen] == ' ' ; --plen ) {
-                        tzname.erase(plen);
+                    for ( ; zname[plen] == ' ' ; --plen ) {
+                        zname.erase(plen);
                         if ( !plen ) break;
                     }
                 }
             }
-            const TimezoneGroup* tzgroup = getCS()->lookupTimezoneGroup(tzname.c_str());
+            const TimezoneGroup* tzgroup = getCS()->lookupTimezoneGroup(zname.c_str());
             if ( !tzgroup ) {
-                throw InfosmeException(EXC_CONFIG,"unknown timezone='%s'",tzname.c_str());
+                throw InfosmeException(EXC_CONFIG,"unknown timezone='%s'",zname.c_str());
             }
             if ( timezone/3600*3600 != timezone ) {
                 throw InfosmeException(EXC_CONFIG,"invalid timezone=%d, it does not divisable by 3600 w/o remainder");
@@ -145,18 +145,18 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             {
                 const char* p = stimezone.c_str() + shift;
                 while ( *p == ' ' || *p == '\t' ) { ++p; }
-                std::string tzname = p;
-                size_t plen = tzname.size();
+                std::string zname = p;
+                size_t plen = zname.size();
                 if ( plen ) {
                     --plen;
-                    for ( ; tzname[plen] == ' '; --plen ) {
-                        tzname.erase(plen);
+                    for ( ; zname[plen] == ' '; --plen ) {
+                        zname.erase(plen);
                         if ( !plen ) break;
                     }
                 }
-                tzgroup = getCS()->lookupTimezoneGroup(tzname.c_str());
+                tzgroup = getCS()->lookupTimezoneGroup(zname.c_str());
                 if (!tzgroup) {
-                    throw InfosmeException(EXC_CONFIG,"unknown timezone='%s'",tzname.c_str());
+                    throw InfosmeException(EXC_CONFIG,"unknown timezone='%s'",zname.c_str());
                 }
             }
             const XmlStr sdeleted = region->getAttribute(XmlStr("deleted"));

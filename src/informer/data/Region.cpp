@@ -79,9 +79,16 @@ int Region::getLocalWeekTime( msgtime_type now ) const
     const int dst = tzgroup_->fixDst(tmnow);
     static const int daynight = 24*3600;
     static const int aweek = 7*daynight;
+    const int inday = int(now % daynight);
     int result = int( (tmnow.tm_wday+6)*daynight +
-                      now % daynight +
-                      dst ) % aweek;
+                      inday + dst ) % aweek;
+    /*
+    smsc_log_debug(log_,"R=%u weekTime: tz=%+d tm_wday=%d inday=%u:%u dst=%d result=%u+%u:%u",
+                   regionId_, getTimezone(), tmnow.tm_wday, inday / 3600,
+                   inday / 60 % 60, dst,
+                   result / daynight, result % daynight / 3600,
+                   result % daynight / 60 % 60 );
+     */
     return result;
 }
 
