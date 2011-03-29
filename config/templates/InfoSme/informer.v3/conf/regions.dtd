@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!ELEMENT regions (region*, region_default)>
+<!ELEMENT region (mask*)>
+<!ATTLIST region
+	id CDATA #REQUIRED
+	name CDATA #REQUIRED
+        bandwidth CDATA #REQUIRED
+        email CDATA #IMPLIED
+        timezone CDATA #IMPLIED
+        deleted CDATA #IMPLIED
+        infosme_smsc CDATA ""
+>
+<!ELEMENT mask EMPTY>
+<!ATTLIST mask
+	value CDATA #REQUIRED
+>
+
+<!ELEMENT region_default EMPTY>
+<!ATTLIST region_default
+	bandwidth CDATA #REQUIRED
+        email CDATA #IMPLIED
+        timezone CDATA #IMPLIED
+>

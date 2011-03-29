@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+
+  <section name="Europe/Moscow">
+    <section name="aliases">
+      <param name="ru" type="string">(UTC+3) Москва</param>
+      <param name="en" type="string">(UTC+3) Moscow</param>
+    </section>
+  </section>
+
+  <section name="Asia/Novosibirsk">
+    <section name="aliases">
+      <param name="ru" type="string">(UTC+6) Новосибирск</param>
+      <param name="en" type="string">(UTC+6) Novosibirsk</param>
+    </section>
+  </section>
+
+</config>

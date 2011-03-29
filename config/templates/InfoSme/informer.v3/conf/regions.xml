@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE regions SYSTEM "regions.dtd">
+<regions>
+<region bandwidth="10" id="4" infosme_smsc="MSAG" name="Вся россия" timezone="21600,Asia/Novosibirsk">
+<mask value="+7??????????"/>
+</region>
+<region bandwidth="100" deleted="true" id="2" infosme_smsc="Informer" name="МР Восток" timezone="21600,Asia/Novosibirsk">
+<mask value="+7913000????"/>
+<mask value="+7913001????"/>
+<mask value="+7913???????"/>
+</region>
+<region bandwidth="200" deleted="true" id="3" infosme_smsc="Informer" name="МР Запад" timezone="10800,Europe/Moscow">
+<mask value="+7916000????"/>
+<mask value="+7916001????"/>
+<mask value="+7916???????"/>
+</region>
+<region_default bandwidth="5"/>
+</regions>

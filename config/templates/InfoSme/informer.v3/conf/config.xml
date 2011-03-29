@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+<section name="informer">
+<param name="operationalJournalRollingPeriod" type="int">60</param>
+
+<param name="storePath" type="string">/home/artem/SERVICES/Informer/informer/services/Informer/store</param>
+
+<param name="unrespondedMessagesMax" type="int">100</param>
+<param name="adminHost" type="string">0.0.0.0</param>
+<param name="skippedIdsMinCacheSize" type="int">10</param>
+<param name="dcpHost" type="string">0.0.0.0</param>
+<param name="inputMinQueueSize" type="int">10</param>
+<param name="resendIOThreadCount" type="int">30</param>
+<param name="statPath" type="string">/home/artem/SERVICES/Informer/informer/services/Informer/store/stats</param>
+
+<param name="archivePath" type="string">/home/artem/SERVICES/Informer/informer/services/ArchiveDaemon/store</param>
+
+<param name="receiptExtraWaitTime" type="int">30</param>
+<param name="responseWaitTime" type="int">10</param>
+<param name="inputTransferThreadCount" type="int">30</param>
+
+<param name="dcpPort" type="int">9573</param>
+
+<param name="slicedMessageSize" type="int">160</param>
+<param name="retryMinTimeToLive" type="int">30</param>
+<param name="svcType" type="string">Info</param>
+<param name="dcpHandlers" type="int">3</param>
+<param name="almRequestTimeout" type="int">10</param>
+<param name="skippedIdsChunkSize" type="int">256</param>
+<param name="adminHandlers" type="int">3</param>
+<param name="adminPort" type="int">9572</param>
+<param name="protocolId" type="int">0</param>
+<param name="inputTransferChunkSize" type="int">1000</param>
+<param name="inputJournalRollingPeriod" type="int">60</param>
+</section>
+<section name="pvss">
+<param name="asyncPort" type="int">25404</param>
+<param name="port" type="int">25404</param>
+<param name="enabled" type="bool">true</param>
+<param name="host" type="string">niagara</param>
+<param name="syncPort" type="int">25403</param>
+</section>
+</config>
