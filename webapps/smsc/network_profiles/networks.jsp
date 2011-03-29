@@ -51,6 +51,26 @@
         </td>
     </tr>
     <tr>
+      <td nowrap="true"><%=getLocString("network.vlrDetectionMethod")%>:</td>
+      <td>
+        <div class=select>
+          <select name="defaultVlrDetectionMethod" id="defaultvVlrDetectionMethod">
+            <%
+              {
+                Iterator i = bean.getVlrDetectionMethods().iterator();
+                while(i.hasNext()) {
+                  String o = (String)i.next();
+            %>
+            <option value="<%=o%>" <%=o.equals(bean.getDefaultVlrDetectionMethod()) ? "selected" : ""%>><%=o%></option>
+            <%
+                }
+              }
+            %>
+          </select>
+        </div>
+        </td>
+    </tr>
+    <tr>
       <td nowrap="true"><%=getLocString("network.ussdOpenDestRef")%>:</td>
       <td>
         <div class=select>
@@ -101,6 +121,10 @@
            title="<%=getLocString("common.sortmodes.abonentStatusMethod")%>"><%=getLocString("common.sortmodes.abonentStatusMethod")%></a>
       </th>
       <th>
+        <a href="javascript:setSort('vlrDetectionMethod')" <%=bean.getSort().endsWith("vlrDetectionMethod") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
+           title="<%=getLocString("common.sortmodes.vlrDetectionMethod")%>"><%=getLocString("common.sortmodes.vlrDetectionMethod")%></a>
+      </th>
+      <th>
         <a href="javascript:setSort('ussdOpenDestRef')" <%=bean.getSort().endsWith("ussdOpenDestRef") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
            title="<%=getLocString("common.sortmodes.ussdOpenDestRef")%>"><%=getLocString("common.sortmodes.ussdOpenDestRef")%></a>
       </th>
@@ -115,6 +139,7 @@
         </td>
         <td><a href="javascript:editSomething('<%=StringEncoderDecoder.encode(name)%>')" title="Edit network"><%=StringEncoderDecoder.encode(name)%></a></td>
         <td><%=item.getAbonentStatusMethod()%></td>
+        <td><%=item.getVlrDetectionMethod()%></td>
         <td><%=item.getUssdOpenDestRef()%></td>
       </tr>
     <%}%>

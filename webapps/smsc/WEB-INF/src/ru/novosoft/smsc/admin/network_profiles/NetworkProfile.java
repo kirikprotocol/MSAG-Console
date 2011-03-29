@@ -17,11 +17,14 @@ public class NetworkProfile {
 
   private String abonentStatusMethod;
 
+  private String vlrDetectionMethod;
+
   private String name;
 
   public NetworkProfile(NetworkProfile networkProfile) throws AdminException {
     this.ussdOpenDestRef = networkProfile.ussdOpenDestRef;
     this.abonentStatusMethod = networkProfile.abonentStatusMethod;
+    this.vlrDetectionMethod = networkProfile.vlrDetectionMethod;
     this.name = networkProfile.name;
     Iterator mI = networkProfile.masks.values().iterator();
     while(mI.hasNext()) {
@@ -56,6 +59,14 @@ public class NetworkProfile {
 
   public void setAbonentStatusMethod(String abonentStatusMethod) {
     this.abonentStatusMethod = abonentStatusMethod;
+  }
+
+  public String getVlrDetectionMethod() {
+    return vlrDetectionMethod;
+  }
+
+  public void setVlrDetectionMethod(String vlrDetectionMethod) {
+    this.vlrDetectionMethod = vlrDetectionMethod;
   }
 
   public String getName() {

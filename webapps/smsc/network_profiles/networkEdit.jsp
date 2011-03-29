@@ -60,6 +60,27 @@
       <td>&nbsp;</td>
     </tr>
     <tr class=row<%=rowN++&1%>>
+      <th><%= getLocString("network.vlrDetectionMethod")%></th>
+      <td>
+        <div class="select">
+          <select name="vlrDetectionMethod" id="vlrDetectionMethod">
+            <%
+              {
+                Iterator i = bean.getVlrDetectionMethods().iterator();
+                while(i.hasNext()) {
+                  String o = (String)i.next();
+            %>
+            <option value="<%=o%>" <%=o.equals(bean.getVlrDetectionMethod()) ? "selected" : ""%>><%=o%></option>
+            <%
+                }
+              }
+            %>
+          </select>
+        </div>
+      </td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("network.ussdOpenDestRef")%></th>
       <td>
         <div class="select">

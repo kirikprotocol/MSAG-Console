@@ -33,6 +33,7 @@ public class NetworkProfilesBean extends SmscBean {
   private String edit;
 
   private String defaultAbonentStatusMethod;
+  private String defaultVlrDetectionMethod;
   private String defaultUssdOpenDestRef;
   private QueryResultSet rows = new EmptyResultSet();
   private String sort = "name";
@@ -85,6 +86,8 @@ public class NetworkProfilesBean extends SmscBean {
     }
     if (defaultAbonentStatusMethod == null)
       defaultAbonentStatusMethod = nm.getDefaultAbonentStatusMethod();
+    if (defaultVlrDetectionMethod == null)
+      defaultVlrDetectionMethod = nm.getDefaultVlrDetectionMethod();
     if (defaultUssdOpenDestRef == null)
       defaultUssdOpenDestRef = nm.getDefaultUssdOpenDestRef();
 
@@ -100,6 +103,7 @@ public class NetworkProfilesBean extends SmscBean {
     try {
       nm.reset();
       defaultAbonentStatusMethod = null;
+      defaultVlrDetectionMethod = null;
       defaultUssdOpenDestRef = null;
       journalAppend(SubjectTypes.TYPE_network_profiles, "Network profiles configuration", Actions.ACTION_RESTORE);
     } catch (AdminException e) {
@@ -114,6 +118,8 @@ public class NetworkProfilesBean extends SmscBean {
     try {
 
       nm.setDefaultAbonentStatusMethod(defaultAbonentStatusMethod);
+
+      nm.setDefaultVlrDetectionMethod(defaultVlrDetectionMethod);
 
       nm.setDefaultUssdOpenDestRef(defaultUssdOpenDestRef);
 
@@ -142,6 +148,13 @@ public class NetworkProfilesBean extends SmscBean {
 
 
   public List getAbonentStateMethods() {
+    List list = new ArrayList(2);
+    list.add("SRI4SM");
+    list.add("ATI");
+    return list;
+  }
+
+  public List getVlrDetectionMethods() {
     List list = new ArrayList(2);
     list.add("SRI4SM");
     list.add("ATI");
@@ -186,6 +199,14 @@ public class NetworkProfilesBean extends SmscBean {
 
   public void setDefaultAbonentStatusMethod(String defaultAbonentStatusMethod) {
     this.defaultAbonentStatusMethod = defaultAbonentStatusMethod;
+  }
+
+  public String getDefaultVlrDetectionMethod() {
+    return defaultVlrDetectionMethod;
+  }
+
+  public void setDefaultVlrDetectionMethod(String defaultVlrDetectionMethod) {
+    this.defaultVlrDetectionMethod = defaultVlrDetectionMethod;
   }
 
   public String getDefaultUssdOpenDestRef() {

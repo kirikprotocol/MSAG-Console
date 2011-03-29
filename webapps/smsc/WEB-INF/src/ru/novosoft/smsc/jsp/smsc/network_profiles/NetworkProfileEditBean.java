@@ -25,6 +25,7 @@ public class NetworkProfileEditBean extends SmscBean {
   private String name = null;
   private String oldName = null;
   private String abonentStatusMethod = null;
+  private String vlrDetectionMethod = null;
   private String ussdOpenDestRef = null;
 
   private NetworkProfilesManager nm;
@@ -53,6 +54,7 @@ public class NetworkProfileEditBean extends SmscBean {
         final NetworkProfile network = nm.getProfile(oldName);
         name = network.getName();
         abonentStatusMethod = network.getAbonentStatusMethod();
+        vlrDetectionMethod = network.getVlrDetectionMethod();
         ussdOpenDestRef = network.getUssdOpenDestRef();
         masksHelper.fillMasks(network.getMasks().values());
 
@@ -83,6 +85,13 @@ public class NetworkProfileEditBean extends SmscBean {
     return list;
   }
 
+  public List getVlrDetectionMethods() {
+    List list = new ArrayList(2);
+    list.add("SRI4SM");
+    list.add("ATI");
+    return list;
+  }
+
   public List getUssdOpenDestRefs() {
     List list = new ArrayList(3);
     list.add("");
@@ -103,6 +112,7 @@ public class NetworkProfileEditBean extends SmscBean {
       }
 
       network.setAbonentStatusMethod(abonentStatusMethod);
+      network.setVlrDetectionMethod(vlrDetectionMethod);
       network.setUssdOpenDestRef(ussdOpenDestRef);
 
       Map newMasks = new HashMap();
@@ -170,6 +180,14 @@ public class NetworkProfileEditBean extends SmscBean {
 
   public void setAbonentStatusMethod(String abonentStatusMethod) {
     this.abonentStatusMethod = abonentStatusMethod;
+  }
+
+  public String getVlrDetectionMethod() {
+    return vlrDetectionMethod;
+  }
+
+  public void setVlrDetectionMethod(String vlrDetectionMethod) {
+    this.vlrDetectionMethod = vlrDetectionMethod;
   }
 
   public String getUssdOpenDestRef() {

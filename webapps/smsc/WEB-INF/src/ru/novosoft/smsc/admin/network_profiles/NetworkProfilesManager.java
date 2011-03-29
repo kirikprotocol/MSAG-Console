@@ -24,6 +24,7 @@ public class NetworkProfilesManager {
   private final HashMap profiles = new HashMap();
   private String defaultUssdOpenDestRef;
   private String defaultAbonentStatusMethod;
+  private String defaultVlrDetectionMethod;
 
   private boolean modified = false;
 
@@ -58,6 +59,9 @@ public class NetworkProfilesManager {
   private void saveProfile(NetworkProfile profile) throws AdminException {
     if(profile.getAbonentStatusMethod() == null || profile.getAbonentStatusMethod().length() == 0) {
       throw new AdminException("Abonent status method is empty");
+    }
+    if(profile.getVlrDetectionMethod() == null || profile.getVlrDetectionMethod().length() == 0) {
+      throw new AdminException("Vlr detection method is empty");
     }
     if(profile.getMasks() == null || profile.getMasks().isEmpty()) {
       throw new AdminException("List of masks is empty");
@@ -109,6 +113,8 @@ public class NetworkProfilesManager {
             network.setUssdOpenDestRef(pE.getAttribute("value"));
           }else if("abonentStatusMethod".equals(pE.getAttribute("name"))) {
             network.setAbonentStatusMethod(pE.getAttribute("value"));
+          }else if("vlrDetectionMethod".equals(pE.getAttribute("name"))) {
+            network.setVlrDetectionMethod(pE.getAttribute("value"));
           }
         }
 
@@ -132,6 +138,8 @@ public class NetworkProfilesManager {
             defaultUssdOpenDestRef = pE.getAttribute("value");
           }else if("abonentStatusMethod".equals(pE.getAttribute("name"))) {
             defaultAbonentStatusMethod = pE.getAttribute("value");
+          }else if("vlrDetectionMethod".equals(pE.getAttribute("name"))) {
+            defaultVlrDetectionMethod = pE.getAttribute("value");
           }
         }
       }
@@ -160,6 +168,7 @@ public class NetworkProfilesManager {
         out.println("   </masks>");
         out.println("   <params>");
         out.print("     <param name=\"abonentStatusMethod\" value=\"");out.print(profile.getAbonentStatusMethod());out.println("\"/>");
+        out.print("     <param name=\"vlrDetectionMethod\" value=\"");out.print(profile.getVlrDetectionMethod());out.println("\"/>");
         out.print("     <param name=\"ussdOpenDestRef\" value=\"");out.print(profile.getUssdOpenDestRef());out.println("\"/>");
         out.println("   </params>");
         out.println(" </network>");
@@ -167,6 +176,7 @@ public class NetworkProfilesManager {
       out.println(" <default>");
       out.println("   <params>");
       out.print("     <param name=\"abonentStatusMethod\" value=\"");out.print(defaultAbonentStatusMethod);out.println("\"/>");
+      out.print("     <param name=\"vlrDetectionMethod\" value=\"");out.print(defaultVlrDetectionMethod);out.println("\"/>");
       out.print("     <param name=\"ussdOpenDestRef\" value=\"");if(defaultUssdOpenDestRef != null)out.print(defaultUssdOpenDestRef);out.println("\"/>");
       out.println("   </params>");
       out.println(" </default>");
@@ -226,6 +236,16 @@ public class NetworkProfilesManager {
     modified = modified || (defaultAbonentStatusMethod != null &&  !defaultAbonentStatusMethod.equals(this.defaultAbonentStatusMethod)) ||
         (this.defaultAbonentStatusMethod != null &&  !this.defaultAbonentStatusMethod.equals(defaultAbonentStatusMethod));
     this.defaultAbonentStatusMethod = defaultAbonentStatusMethod;
+  }
+
+  public String getDefaultVlrDetectionMethod() {
+    return defaultVlrDetectionMethod;
+  }
+
+  public void setDefaultVlrDetectionMethod(String defaultVlrDetectionMethod) {       
+    modified = modified || (defaultVlrDetectionMethod != null &&  !defaultVlrDetectionMethod.equals(this.defaultVlrDetectionMethod)) ||
+        (this.defaultVlrDetectionMethod != null &&  !this.defaultVlrDetectionMethod.equals(defaultVlrDetectionMethod));
+    this.defaultVlrDetectionMethod = defaultVlrDetectionMethod;
   }
 
   protected void setModified() {
