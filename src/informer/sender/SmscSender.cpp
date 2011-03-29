@@ -862,10 +862,10 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
     case smsc::smpp::SmppMessageState::ENROUTE:
     case smsc::smpp::SmppMessageState::ACCEPTED:
     case smsc::smpp::SmppMessageState::UNKNOWN:
-    case smsc::smpp::SmppMessageState::REJECTED:
         smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u has intermediate receipt state %d, skipped",
                       smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
         return;
+    case smsc::smpp::SmppMessageState::REJECTED:
     case smsc::smpp::SmppMessageState::UNDELIVERABLE:
         // permanent error
         break;
