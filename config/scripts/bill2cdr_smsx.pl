@@ -254,7 +254,7 @@ sub process{
     last if @$row==0;
     my $infields={};
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
-    next if $infields->{STATUS}!=0;
+    next if $infields->{STATUS}!=0 || $infields->{IN_BILL}!=0;
     my $outfields={};
     %$outfields=%$infields;
 
