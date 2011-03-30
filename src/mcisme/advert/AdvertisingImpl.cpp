@@ -70,7 +70,7 @@ AdvertisingImpl::readFromSocket(char *dataBuf, int bytesToRead, const std::strin
   while (rd<bytesToRead)
   {
     if ( _timeout > 0 ) {
-      res = _socket.canRead(_timeout);
+      res = _socket.canReadMsec(_timeout);
       if ( res < 0 ) {
         _isConnected = false;
         throw NetworkException("AdvertisingImpl::readFromSocket::: read socket error = %d", errno);
@@ -137,7 +137,7 @@ AdvertisingImpl::getBanner(BannerRequest& banReq, BannerResponseTrace* bannerRes
   advertising_item curAdvItem(&banReq);
 
   util::SerializationBuffer req;
-  // заполнение буфера протокольной команды
+  // О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫
   uint32_t len = prepareBannerReqCmd(&req, &banReq);
 
   int rc = sendRequestAndGetResponse(&curAdvItem, &req, len, bannerRespTrace);
