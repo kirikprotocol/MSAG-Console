@@ -39,6 +39,14 @@ class RestrictionsManager extends BaseManager<RestrictionSettings> {
     });
   }
 
+  public List<Restriction> getRestrictions() {
+    return readSettings(new SettingsReader<RestrictionSettings, List<Restriction>>() {
+      public List<Restriction> executeRead(RestrictionSettings settings) {
+        return settings.getRestrictions(new RestrictionsFilter());
+      }
+    });
+  }
+
   public void addRestriction(final Restriction r) throws AdminException {
     updateSettings(new SettingsWriter<RestrictionSettings>() {
       public void changeSettings(RestrictionSettings settings) throws AdminException {
