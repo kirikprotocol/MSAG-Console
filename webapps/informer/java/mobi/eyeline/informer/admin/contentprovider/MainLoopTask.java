@@ -73,11 +73,12 @@ class MainLoopTask implements Runnable {
     try {
       List<User> users = context.getUsers();
       Set<String> checkedUcps = new HashSet<String>();
+      List<String> usersDirs = new ArrayList<String>();
       for(User u : users ) {
         List<UserCPsettings> s = u.getCpSettings();
         if(s != null && s.size()>0) {
           try {
-            processUser(u, checkedUcps);
+            processUser(u, checkedUcps, usersDirs);
           }
           catch (Exception e) {
             getMBean().notifyInternalError(USER_PROC_ERR, e.getMessage());
@@ -85,6 +86,9 @@ class MainLoopTask implements Runnable {
           }
         }
       }
+
+      cleanUpDirs(usersDirs);
+
       Iterator<String> usageIds = lastUpdate.keySet().iterator();
       while(usageIds.hasNext()) {
         String n = usageIds.next();
@@ -120,14 +124,12 @@ class MainLoopTask implements Runnable {
   }
 
   //clean up unused dirs for this user
-  private void cleanUpDirs(String login, List<String> userDirsNames) throws AdminException {
+  private void cleanUpDirs(List<String> userDirsNames) throws AdminException {
     String[] allDirs = fileSys.list(workDir);
     if(allDirs!=null) {
       for(String dirName : allDirs) {
-        if(dirName.startsWith(login+"_")) {
-          if(!userDirsNames.contains(dirName)) {
-            fileSys.recursiveDeleteFolder(new File(workDir,dirName));
-          }
+        if(!userDirsNames.contains(dirName)) {
+          fileSys.recursiveDeleteFolder(new File(workDir,dirName));
         }
       }
     }
@@ -139,8 +141,8 @@ class MainLoopTask implements Runnable {
         ? new SimpleResourceProcessStrategy(context, resource, opts) : new DetailedResourceProcessStrategy(context, resource, opts);
   }
 
-  private void processUser(User u, Collection<String> checkedUcps) throws AdminException {
-    List<String> userDirsNames = new ArrayList<String>();
+  private void processUser(User u, Collection<String> checkedUcps, Collection<String> userDirs) throws AdminException {
+
     if(u.getCpSettings()!=null) {
       for(UserCPsettings ucps : u.getCpSettings()) {
         try{
@@ -158,7 +160,7 @@ class MainLoopTask implements Runnable {
           if(!fileSys.exists(userDir)) {
             fileSys.mkdirs(userDir);
           }
-          userDirsNames.add(userDir.getName());
+          userDirs.add(userDir.getName());
 
           ResourceProcessStrategy strategy = getStrategy(u, userDir, ucps, userDirResolver.getConnection(u, ucps));
 
@@ -188,7 +190,6 @@ class MainLoopTask implements Runnable {
         }
       }
     }
-    cleanUpDirs(u.getLogin(), userDirsNames);
   }
 
 }
