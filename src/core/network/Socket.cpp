@@ -221,25 +221,35 @@ void Socket::Abort()
   Close();
 }
 
+int Socket::canReadMsec(int tomsec)
+{
+  if(!connected || sock==INVALID_SOCKET)return -1;
+  if(bufPos<inBuffer)return 1;
+  pollfd fd;
+  fd.fd = sock;
+  fd.events = POLLIN;
+  fd.revents = 0;
+  return poll(&fd,1,tomsec);
+
+}
+int Socket::canWriteMsec(int tomsec)
+{
+  if(!connected || sock==INVALID_SOCKET) return -1;
+  pollfd fd;
+  fd.fd = sock;
+  fd.events = POLLOUT;
+  fd.revents = 0;
+  return poll(&fd,1,tomsec*1000);
+
+}
+
 int Socket::canRead(int to)
 {
   if(!connected || sock==INVALID_SOCKET)return -1;
   if(bufPos<inBuffer)return 1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
-    /*
-  FD_ZERO(&fd);
-  FD_SET(sock,&fd);
-  tv.tv_sec=to;
-  tv.tv_usec=0;
-  int retval=select(sock+1,&fd,NULL,NULL,&tv);
-  return retval;
-     */
-    pollfd fd;
-    fd.fd = sock;
-    fd.events = POLLIN;
-    fd.revents = 0;
-    return poll(&fd,1,to*1000);
+  return canReadMsec(to*1000);
 }
 
 int Socket::canWrite(int to)
@@ -247,18 +257,7 @@ int Socket::canWrite(int to)
   if(!connected || sock==INVALID_SOCKET) return -1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
-    /*
-  FD_ZERO(&fd);
-  FD_SET(sock,&fd);
-  tv.tv_sec=to;
-  tv.tv_usec=0;
-  return select(sock+1,NULL,&fd,NULL,&tv);
-     */
-    pollfd fd;
-    fd.fd = sock;
-    fd.events = POLLOUT;
-    fd.revents = 0;
-    return poll(&fd,1,to*1000);
+  return canWriteMsec(to*1000);
 }
 
 

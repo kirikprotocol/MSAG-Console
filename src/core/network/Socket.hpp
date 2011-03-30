@@ -97,7 +97,9 @@ public:
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &one, (int)sizeof(int));
   }
   int canRead(int to=0);
+  int canReadMsec(int tomsec);
   int canWrite(int to=0);
+  int canWriteMsec(int tomsec);
   int Read(char *buf,int bufsize);
   int ReadAll(char* buf,int size,int to=0);
   int readChar();
