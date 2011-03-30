@@ -80,7 +80,7 @@ public class WebContext {
       });
       configuration = new Configuration(adminContext);
 
-      webTimezones = new TimezonesConfig(new File(baseDir, "conf" + File.separator + "timezones.xml")).getTimezones();
+      webTimezones = new TimezonesConfig(new File(adminContext.getInformerConfDir(), "timezones.xml")).getTimezones();
 
     } catch (InitException e) {
       throw e;

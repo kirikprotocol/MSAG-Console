@@ -74,6 +74,8 @@ class AdminContextBase {
 
   protected ArchiveDaemonManager archiveDaemonManager;
 
+  protected File informerConfDir;
+
 // delivery ->user ->region->smsc
 
   final private ConcurrentHashMap<Integer, Object> deliveriesLock = new ConcurrentHashMap<Integer, Object>(10);
@@ -158,6 +160,8 @@ class AdminContextBase {
       deliveryManager = new DeliveryManager(is.getDcpHost(), is.getDcpPort());
       statisticsManager = new StatisticsManager(new File(is.getStatDir()), fileSystem);
 
+      informerConfDir = confDir;
+
     } catch (AdminException e) {
       throw new InitException(e);
     } catch (PersonalizationClientException e) {
@@ -184,6 +188,9 @@ class AdminContextBase {
     return archiveDaemonManager!= null;
   }
 
+  public File getInformerConfDir() {
+    return informerConfDir;
+  }
 
   @SuppressWarnings({"EmptyCatchBlock"})
   public void shutdown() {
