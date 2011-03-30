@@ -839,6 +839,12 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
     int err;
     ResponseData rd;
     const char* msgid = parser_->parseSms(sms,rd.rcptId.msgId,msgState,err);
+    // preprocessing err
+    err &= 0xffff;
+    if ( err & 0x8000 ) {
+        static const int completer = -1 & ~0xffff;
+        err |= completer;
+    }
         
     if ( !msgid || *msgid == '\0') {
         // broken msgid
