@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef SCAG_PERS_CLIENT_H
-#define SCAG_PERS_CLIENT_H
+#ifndef SCAG_PERS_UPLOAD_CLIENT_H
+#define SCAG_PERS_UPLOAD_CLIENT_H
  
 #include "core/network/Socket.hpp"
 #include "scag/util/storage/SerialBuffer.h"

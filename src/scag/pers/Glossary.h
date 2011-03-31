@@ -164,7 +164,7 @@ public:
 			smsc_log_debug(logger, "cancel GetKeyByValue - Glossary not opened");
 			return GLOSSARY_CLOSED;
 		}
-		if(value < glossVector.size())
+		if(value < int(glossVector.size()))
 		{
 			key = glossVector[value];
 			smsc_log_debug(logger, "GetKeyByValue. %d - %s", value, key.c_str());

@@ -13,11 +13,9 @@ namespace scag { namespace pers { namespace util {
   using scag::util::storage::SerialBufferOutOfBounds;
   using namespace scag::pers;
   using scag::pers::util::PersClient;
-  using scag::pers::util::PersClientException;
+  using scag2::pvss::perstypes::PersClientException;
   using smsc::core::synchronization::EventMonitor;
   using smsc::core::synchronization::MutexGuard;
-  //using scag::pers::client::PersClient;
-  //using scag::pers::client::PersClientException;
   
   static const int MAX_RESEND_COUNT = 10;
 
@@ -85,13 +83,15 @@ public:
 	typedef templDataBlockHeader<Key> DataBlockHeader;
 
     BlocksHSReader(PersClient& _pc, const string& _dbName, const string& _dbPath, int _blockSize = BLOCK_SIZE,
-                    int _blocksInFile = BLOCKS_IN_FILE): pc(_pc), dbName(_dbName), dbPath(_dbPath),
-                     blockSize(_blockSize), blocksInFile(_blocksInFile) { 
+                    int _blocksInFile = BLOCKS_IN_FILE):
+        pc(_pc), dbName(_dbName), dbPath(_dbPath),
+                     blockSize(_blockSize), blocksInFile(_blocksInFile) {
       logger = smsc::logger::Logger::getInstance("pers.up");
       cmbpmbLogger = smsc::logger::Logger::getInstance("cmbpmb");
       propLogger = smsc::logger::Logger::getInstance("property");
       smsc_log_debug(logger, "dbName='%s' dbPath='%s' blockSize=%d blocksInFile=%d",
                      dbName.c_str(), dbPath.c_str(), blockSize, blocksInFile);
+                         /*
       addresses.push_back(Key(".1.1.5434990229"));
       addresses.push_back(Key(".1.1.21000000022"));
       addresses.push_back(Key(".1.1.21000000823"));
@@ -101,6 +101,7 @@ public:
       addresses.push_back(Key(".1.1.21000001230"));
       addresses.push_back(Key(".1.1.21000001231"));
       addresses.push_back(Key(".1.1.254"));
+                          */
 
       //straddresses.push_back(".1.1.5434990229");
       straddresses.push_back(".1.1.21000000022");
@@ -116,14 +117,16 @@ public:
     ~BlocksHSReader() {
     }
 
+    /*
     bool needProfileKey(const Key& key) {
-        std::vector<Key>::iterator result = addresses.end();
+        typename std::vector<Key>::iterator result = addresses.end();
         result = std::find(addresses.begin(), addresses.end(), key);
         return result == addresses.end() ? false : true;
     }
+     */
 
     bool needProfileKey(const string& key) {
-        std::vector<string>::iterator result = straddresses.end();
+        typename std::vector<string>::iterator result = straddresses.end();
         result = std::find(straddresses.begin(), straddresses.end(), key);
         return result == straddresses.end() ? false : true;
     }
@@ -251,9 +254,10 @@ public:
                                 j, hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
                 continue;
               }
-              if (!needProfileKey(hdr.key.toString())) {
-                  continue;
-              }
+                // FIXME: uncomment the following strings if you need selection by addresss
+                // if (!needProfileKey(hdr.key.toString())) {
+                // continue;
+                // }
               smsc_log_info(logger, "profile key=%s", hdr.key.toString().c_str());
               SerialBuffer data;
               if (!getProfileData(i, &dataFile, hdr, data)) {
@@ -337,7 +341,8 @@ private:
               //smsc_log_debug(cmbpmbLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
               //continue;
             //}
-            if (prop->getType() < PropertyType::INT || prop->getType() > PropertyType::DATE) {
+            if (int(prop->getType()) < int(INT) ||
+                int(prop->getType()) > int(DATE)) {
               smsc_log_warn(logger, "unknown property type: %d, convert to INT. key=%s property=%s", prop->getType(), pf.getKey().c_str(), propkey);
               prop->setIntValue(0);
             }
@@ -472,14 +477,15 @@ private:
   }
 
 private:
-  int blockSize;
-  int blocksInFile;
   smsc::logger::Logger* logger;
   smsc::logger::Logger* cmbpmbLogger;
   smsc::logger::Logger* propLogger;
+
+  PersClient& pc;
   string		dbName;
   string		dbPath;
-  PersClient& pc;
+  int blockSize;
+  int blocksInFile;
 
   // bukind: IT SEEMS THAT THIS CODE IS NEVER USED.
   // it did not have the following declaration!

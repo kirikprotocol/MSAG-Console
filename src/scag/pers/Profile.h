@@ -101,9 +101,9 @@ class Profile : public Serializable
     SerialBuffer dataCopy;
 public:
     Profile( smsc::logger::Logger* logger = NULL ):log(logger), state(OK), changed(false) {};
-    Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL) : state(OK), pkey(_pkey), log(_log) {};
-    Profile(const AbntAddr& address, smsc::logger::Logger* _log = NULL) : state(OK), pkey(address.toString()), log(_log) {};
-    Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log = NULL) : state(OK), pkey(intKey.toString()), log(_log) {};
+    Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL) : log(_log), state(OK), pkey(_pkey) {};
+    Profile(const AbntAddr& address, smsc::logger::Logger* _log = NULL) : log(_log), state(OK), pkey(address.toString()) {};
+    Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log = NULL) : log(_log), state(OK), pkey(intKey.toString()) {};
     ~Profile();
     Profile& operator=(const Profile& pf);
 

@@ -25,7 +25,7 @@ scag/pers_upload                         pers_upload     \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
   $(SSL_LIB) \
-  -lrt -ldl
+  -lpthread -lrt -ldl
 
 scag/pers_flooder                         pers_flooder     \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
@@ -49,7 +49,7 @@ scag/pers_flooder                         pers_flooder     \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
   $(SSL_LIB) \
-  -lrt -ldl
+  -lpthread -lrt -ldl
 
 scag/logger_test                         logger_test     \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional
@@ -76,5 +76,4 @@ scag/upload-inf                         uploadIntStorage     \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
   $(SSL_LIB) \
-  -lrt -ldl
-
+  -lpthread -lrt -ldl
