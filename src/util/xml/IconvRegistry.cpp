@@ -57,26 +57,26 @@ static long iconv_instanceCounter = 0;
 
 /************************* Iconv Registry ****************************/
 
-iconv_t getIconv(const char * const from, const char * const to) throw ()
+iconv_t getIconv(const char * const to, const char * const from) throw ()
 {
   MutexGuard guard(globel_mutex);
-  _IconvInfo info(from, to);
-  if (iconv_reg.find(info) == iconv_reg.end())
+  _IconvInfo info(to, from);
+  _IconvReg::iterator it=iconv_reg.find(info);
+  if ( it == iconv_reg.end())
   {
-    #ifdef SMSC_DEBUG
-    smsc_log_debug(Logger::getInstance("u.x.Iconv"), "try to get new iconv #%ld [\"%s\" -> \"%s\"]", iconv_instanceCounter, from, to);
-    #endif //SMSC_DEBUG
-    iconv_t ih = iconv_open(from, to);
+    smsc_log_debug(Logger::getInstance("u.x.Iconv"), "try to get new iconv #%ld [\"%s\" -> \"%s\"]", from, to);
+    iconv_t ih = iconv_open(to, from);
     if (ih == (iconv_t) -1)
+    {
       return ih;
-    _IconvInfo info_copy(cStringCopy(from), cStringCopy(to));
-    iconv_reg[info_copy] = ih;
-    #ifdef SMSC_DEBUG
-    smsc_log_debug(Logger::getInstance("u.x.Iconv"), "got new iconv #%ld", iconv_instanceCounter++);
-    #endif //SMSC_DEBUG
+    }
+    _IconvInfo info_copy(cStringCopy(to), cStringCopy(from));
+    iconv_reg.insert(_IconvReg::value_type(info_copy,ih));
+    smsc_log_debug(Logger::getInstance("u.x.Iconv"), "got new iconv #%lu",iconv_reg.size() );
     return ih;
-  } else {
-    return iconv_reg[info];
+  } else
+  {
+    return *it;
   }
 }
 
