@@ -936,6 +936,7 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
     else if (encoding == DataCoding::UCS2)
     {
         static const char* dstCodePage=0;
+        static iconv_t cd=-1;
         if(!dstCodePage)
         {
           try{
@@ -945,14 +946,17 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
             __warning__("faield to get ArchiveDaemon.Indexator.textArcEncoding.");
             dstCodePage="WINDOWS-1251";
           }
+          cd=smsc::util::xml::getIconv(dstCodePage,"UCS-2");
+          if(cd==-1)
+          {
+            __warning2__("failed to init iconv ucs-2 -> %s",dstCodePage);
+          }
         }
         TmpBuf<char,512> textGuard(msgLen*4+1);
         char* text = textGuard.get();
-        iconv_t cd=smsc::util::xml::getIconv(dstCodePage,"UCS-2");
         int textLen;
         if(cd==(iconv_t)(-1))
         {
-          __warning2__("failed to init iconv ucs2-2 -> %s",dstCodePage);
           textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_CP1251);
         }else
         {
