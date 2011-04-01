@@ -1,17 +1,23 @@
 <project name="SMS Center" default="help">
-  <property file="build.properties"/>
+  <property file="build.properties" prefix="relative"/>
   <condition property="INIT_FAILED" value="yes" >
     <not>
       <and>
-        <isset property="BUILD_DIR"/>
-        <isset property="SMSC_DIR"/>
-        <isset property="TEMPLATE_PROPS"/>
-        <isset property="CATALINA_HOME"/>
-        <isset property="CATALINA_BASE"/>
-        <isset property="MAKE_ARGS"/>
+        <isset property="relative.BUILD_DIR"/>
+        <isset property="relative.SMSC_DIR"/>
+        <isset property="relative.TEMPLATE_PROPS"/>
+        <isset property="relative.CATALINA_HOME"/>
+        <isset property="relative.CATALINA_BASE"/>
+        <isset property="relative.MAKE_ARGS"/>
       </and>
     </not>
   </condition>
+  <property name="BUILD_DIR" location="${relative.BUILD_DIR}"/>
+  <property name="SMSC_DIR" location="${relative.SMSC_DIR}"/>
+  <property name="TEMPLATE_PROPS" location="${relative.TEMPLATE_PROPS}"/>
+  <property name="CATALINA_HOME" location="${relative.CATALINA_HOME}"/>
+  <property name="CATALINA_BASE" location="${relative.CATALINA_BASE}"/>
+  <property name="MAKE_ARGS" value="${relative.MAKE_ARGS}"/>
   <fail if="INIT_FAILED" message="Please configure build.properties file"/>
   <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
