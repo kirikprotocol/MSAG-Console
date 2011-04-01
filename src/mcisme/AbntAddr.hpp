@@ -3,7 +3,7 @@
 //  Routman Michael, 2005-2006
 //------------------------------------
 //
-//	Файл содержит описание класса AbntAddr.
+//	пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ AbntAddr.
 //
 
 #ifndef ___ABNTADDR_H
@@ -135,12 +135,12 @@ public:
     setValue(addr.length, (char*)&addr.value);
   };
 
-	
+
   AbntAddr& operator=(const AbntAddr& addr)
   {
     if(&addr == this)
       return (*this);
-		
+
     memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
     return (*this);
   };
@@ -192,12 +192,12 @@ public:
   }
 
   /**
-   * Метод копирует значение адреса и возвращает его длинну
+   * пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
    *
-   * @param _value указатель на буфер куда будет скопированно значение адреса
-   *               буфер должен иметь размер не меньше
-   *               MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять любое значение
-   * @return длинна адреса
+   * @param _value пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+   *               пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+   *               MAX_ADDRESS_VALUE_LENGTH+1, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+   * @return пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
    */
   inline uint8_t getSignals(char* _value) const
   {
@@ -219,9 +219,9 @@ public:
   }
 
   /**
-   * Возвращает длинну адреса
+   * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
    *
-   * @return длинна адреса
+   * @return пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
    */
   inline uint8_t getLength() const
   {
@@ -306,7 +306,7 @@ public:
   {
     memset((void*)&value, 0x00, sizeof(value));
   }
-	
+
   uint32_t HashCode(uint32_t attempt)const
   {
     uint32_t res = crc32(0, value.full_addr, sizeof(value.full_addr));
@@ -363,9 +363,9 @@ struct MCEvent
     return *this;
   }
 
-  std::string toString() const {
-    char textString[128];
-    snprintf(textString, sizeof(textString), "id=%d,dt=%d,caller=%s,callCount=%d,missCallFlags=0x%02X", id, dt, AbntAddr(&caller).getText().c_str(), callCount, missCallFlags);
+  const char* toString(char* textString,size_t size) const
+  {
+    snprintf(textString, size, "id=%d,dt=%d,caller=%s,callCount=%d,missCallFlags=0x%02X", id, dt, AbntAddr(&caller).getText().c_str(), callCount, missCallFlags);
 
     return textString;
   }
@@ -379,20 +379,25 @@ struct MCEventOut {
   std::vector<MCEvent> srcEvents;
 
   std::string toString() const {
-    std::ostringstream result;
-    result << "caller=[" << caller
-           << "],msg=[" << msg
-           << "],srcEvents=[";
+    std::string result;
+    result+="caller=[";
+    result+=caller;
+    result+="],msg=[";
+    result+=msg;
+    result+="],srcEvents=[";
 
-    for(std::vector<MCEvent>::const_iterator iter = srcEvents.begin(), end_iter = srcEvents.end();
-        iter != end_iter;) {
-      result << iter->toString();
+    char buf[128];
+    for(std::vector<MCEvent>::const_iterator iter = srcEvents.begin(), end_iter = srcEvents.end(); iter != end_iter;)
+    {
+      result+=iter->toString(buf,sizeof(buf));
       if ( ++iter != end_iter )
-        result << ",";
+      {
+        result += ",";
+      }
     }
-    result << "]";
+    result += "]";
 
-    return result.str();
+    return result;
   }
 };
 

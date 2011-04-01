@@ -921,6 +921,7 @@ int main(void)
       processor.assignMessageSender(0);
 
       sender.waitingForAllOperationsWillComplete();
+      session.close();
     }
     taskProcessor = 0;
   }
