@@ -76,7 +76,7 @@ iconv_t getIconv(const char * const to, const char * const from) throw ()
     return ih;
   } else
   {
-    return *it;
+    return it->second;
   }
 }
 
