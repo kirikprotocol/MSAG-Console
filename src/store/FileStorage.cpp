@@ -948,7 +948,7 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
         }
         TmpBuf<char,512> textGuard(msgLen*4+1);
         char* text = textGuard.get();
-        iconv_t cd=smsc::util::xml::getIconv(dstCodePage,"ucs-2");
+        iconv_t cd=smsc::util::xml::getIconv(dstCodePage,"UCS-2");
         int textLen;
         if(cd==(iconv_t)(-1))
         {
