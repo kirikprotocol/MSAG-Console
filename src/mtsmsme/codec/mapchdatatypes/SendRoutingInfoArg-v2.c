@@ -13,7 +13,7 @@ static asn_TYPE_member_t asn_MBR_SendRoutingInfoArg_v2_1[] = {
 		"msisdn"
 		},
 	{ ATF_POINTER, 3, offsetof(struct SendRoutingInfoArg_v2, cug_CheckInfo),
-		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
+		(ber_tlv_tag_t)(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_CUG_CheckInfo,
 		0,	/* Defer constraints checking to the member type */

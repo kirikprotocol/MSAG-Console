@@ -13,7 +13,7 @@ static asn_TYPE_member_t asn_MBR_SendRoutingInfoRes_1[] = {
 		"imsi"
 		},
 	{ ATF_POINTER, 23, offsetof(struct SendRoutingInfoRes, extendedRoutingInfo),
-		-1 /* Ambiguous tag (CHOICE?) */,
+		(ber_tlv_tag_t)-1 /* Ambiguous tag (CHOICE?) */,
 		0,
 		&asn_DEF_ExtendedRoutingInfo,
 		0,	/* Defer constraints checking to the member type */
