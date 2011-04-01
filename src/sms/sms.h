@@ -1854,7 +1854,7 @@ inline SMSPartInfo getSMSPartInfoBin(const uint8_t* data,int len,int partIdx)
   SMSPartInfo rv;
   uint8_t sz=*data;
   data++;
-  if((unsigned(partIdx)+1)*sz>len)
+  if(int((partIdx+1)*sz)>len)
   {
     throw smsc::util::Exception("sms part info index is out of range (idx=%d, len=%u)",partIdx,len);
   }
