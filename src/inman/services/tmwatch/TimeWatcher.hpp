@@ -651,6 +651,12 @@ public:
     ~TimeoutHDL()
     { }
 
+    bool empty(void) const { return _tw == NULL; }
+
+    void assign(long use_tmo, UnitType_e use_unit = tuSecs)
+    {
+      unitId = use_unit; tmoVal = use_tmo;
+    }
 
     bool Init(TimeWatchersRegistryITF * tw_reg, uint32_t num_tmrs = 0, bool do_start = false)
     {
