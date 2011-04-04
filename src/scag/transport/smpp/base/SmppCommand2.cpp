@@ -542,9 +542,9 @@ void SmppCommand::changeSliceRefNum( SMS& sms, uint32_t sarmr )
         }
         // drop properties
         sms.dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-        sms.dropProperty(Tag::SMSC_RAW_PAYLOAD);
+        // sms.dropProperty(Tag::SMSC_RAW_PAYLOAD);
         sms.dropProperty(Tag::SMPP_SHORT_MESSAGE);
-        sms.dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+        // sms.dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
         // FIXME: find position in udh
         const unsigned char* udhend = udh + udhl;
         uint16_t oldRefNum;

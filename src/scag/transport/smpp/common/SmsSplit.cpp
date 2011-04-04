@@ -31,9 +31,9 @@ uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq
 
   partSms = orgSms;
   partSms.dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-  partSms.dropProperty(Tag::SMSC_RAW_PAYLOAD);
+  // partSms.dropProperty(Tag::SMSC_RAW_PAYLOAD);
   partSms.dropProperty(Tag::SMPP_SHORT_MESSAGE);
-  partSms.dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+  // partSms.dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
 
   uint16_t field = usePayload ? Tag::SMPP_MESSAGE_PAYLOAD : Tag::SMPP_SHORT_MESSAGE;
   if(udh)
