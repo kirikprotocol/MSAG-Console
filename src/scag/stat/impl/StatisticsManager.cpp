@@ -664,6 +664,7 @@ void StatisticsManager::flushCounters(int index)
     }
     catch ( std::exception& e ) {
         smsc_log_error(logger,"Statistics flush failed. Cause: %s", e.what());
+        std::terminate();
     }
 
     resetCounters(index);
@@ -692,8 +693,10 @@ void StatisticsManager::flushHttpCounters(int index)
     catch (Exception& exc)
     {
         smsc_log_error(logger, "Http Statistics flush failed. Cause: %s", exc.what());
+    } catch ( std::exception& e ) {
+        smsc_log_error(logger, "Http Statistics flush failed. Cause: %s", e.what());
+        std::terminate();
     }
-
     resetHttpCounters(index);
 }
 
