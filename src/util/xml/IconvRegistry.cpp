@@ -64,7 +64,7 @@ iconv_t getIconv(const char * const to, const char * const from) throw ()
   _IconvReg::iterator it=iconv_reg.find(info);
   if ( it == iconv_reg.end())
   {
-    smsc_log_debug(Logger::getInstance("u.x.Iconv"), "try to get new iconv #%ld [\"%s\" -> \"%s\"]", from, to);
+    smsc_log_debug(Logger::getInstance("u.x.Iconv"), "try to get new iconv #%ld [\"%s\" -> \"%s\"]", iconv_reg.size(), from, to);
     iconv_t ih = iconv_open(to, from);
     if (ih == (iconv_t) -1)
     {
