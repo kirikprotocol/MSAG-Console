@@ -583,16 +583,18 @@ private:
     PduQueue& queue=dispThreads[idx]->queue;
     EventMonitor& mon=dispThreads[idx]->mon;
 
-    MutexGuard mg(mon);
     while(!isNeedStop())
     {
-      if(queue.Count()==0)
-      {
-        mon.wait(100);
-        continue;
-      }
       SmppHeader* pdu;
-      queue.Pop(pdu);
+      {
+        MutexGuard mg(mon);
+        if(queue.Count()==0)
+        {
+          mon.wait(100);
+          continue;
+        }
+        queue.Pop(pdu);
+      }
       try{
         switch (pdu->get_commandId())
         {
@@ -666,7 +668,7 @@ public:
       dispThreads[lastDispIdx]->queue.Push(pdu);
       dispThreads[lastDispIdx]->mon.notify();
     }
-    lastDispIdx=(lastDispIdx+1)%dispThreads.size();
+    lastDispIdx=(int)((lastDispIdx+1)%dispThreads.size());
   }
 
   void handleError(int errorCode)
