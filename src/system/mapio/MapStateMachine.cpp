@@ -1991,19 +1991,30 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     memset(&destRef,0,sizeof(destRef));
     if(isVlrUssdOp(serviceOp))
     {
-      if( dialog->s_imsi.length() > 0 )
+      ET96MAP_IMSI_OR_MSISDN_T* destRefPtr=&destRef;
+      DestRefValue drv=NetworkProfiles::getInstance().lookup(dialog->sms->getDestinationAddress()).drv;
+      if(drv==drvDestAddr)
       {
-        mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
-      } else
+        mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
+      }else if(drv==drvDestIMSI)
       {
-        SendErrToSmsc(dialog,MAKE_ERRORCODE(CMD_ERR_PERM,Status::SYSERR));
-        dialog->state = MAPST_END;
-        DropMapDialog(dialog);
-        return;
+        if( dialog->s_imsi.length() > 0 )
+        {
+          mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+        } else
+        {
+          SendErrToSmsc(dialog,MAKE_ERRORCODE(CMD_ERR_PERM,Status::SYSERR));
+          dialog->state = MAPST_END;
+          DropMapDialog(dialog);
+          return;
+        }
+      }else
+      {
+        destRefPtr=0;
       }
       ET96MAP_SS7_ADDR_T destAddr=dialog->destMscAddr;
       destAddr.ss7Addr[1]=7;
-      checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &destAddr, GetUSSDAddr(), &destRef, 0/*&origRef*/, 0/*&specificInfo*/ ), __func__);
+      checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &destAddr, GetUSSDAddr(), destRefPtr, 0/*&origRef*/, 0/*&specificInfo*/ ), __func__);
     }else
     {
       ET96MAP_IMSI_OR_MSISDN_T* destRefPtr=&destRef;
