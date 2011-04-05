@@ -179,6 +179,8 @@ void SCFsCfgReader::readSCFParms(const char * nm_sec, XConfigView & cfg_sec,
     } catch (const std::exception & exc) {
       throw ConfigException("RPCList_reject: %s", exc.what());
     }
+    //NOTE: rejectRPC.fromStr() overwrites default RPC, so readd it
+    in_parms._capSms.rejectRPC.push_front(RP_MO_SM_transfer_rejected);
   }
   if ((in_parms._capSms.rejectRPC.size() <= 1)
       || !in_parms._capSms.rejectRPC.toString(cppStr))
