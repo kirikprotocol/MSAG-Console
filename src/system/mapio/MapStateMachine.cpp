@@ -531,7 +531,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     {
       mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), (unsigned)SC_ADDRESS().length() );
       mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
-      mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+      mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, HLR_SSN );
     }
   }
   dialog->state = MAPST_WaitHlrVersion;
@@ -3053,6 +3053,9 @@ USHORT_T Et96MapCloseInd(
             if(dialog->useAtiAfterSri && dialog->state!=MAPST_WaitNIUssdAtiClose)
             {
               MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,USSD_SSN,radtOutSRI); // This is for network initiated sessions
+              mkMapAddress( &dialog->m_scAddr, USSD_ADDRESS().c_str(), (unsigned)USSD_ADDRESS().length() );
+              mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, USSD_SSN );
+              mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, HLR_SSN );
               makeAtiRequest(dialog.get());
               break;
             }
