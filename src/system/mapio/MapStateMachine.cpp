@@ -4825,6 +4825,10 @@ USHORT_T Et96MapV3AnyTimeInterrogationConf(
       }
       if(addr)
       {
+        if(dialog->useAtiAfterSri)
+        {
+          mkSS7GTAddress(&dialog->destMscAddr,addr,USSD_SSN);
+        }
         Address vlr;
         ConvAddrMSISDN2Smc(addr,&vlr);
         dialog->s_msc=vlr.value;
