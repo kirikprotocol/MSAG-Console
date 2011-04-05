@@ -63,7 +63,7 @@ static AbonentsDB * _abonentsReg = 0;
 
 static void utl_multi_charge(const std::vector<std::string> &args, uint32_t delivery = 0)
 {
-  if (_billFacade->isActive())
+  if (!_billFacade->isActive())
     throw ConnectionClosedException();
 
   unsigned int dnum = 10;
