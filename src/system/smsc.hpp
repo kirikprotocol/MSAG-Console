@@ -171,6 +171,7 @@ public:
       throw smsc::util::Exception("Attempt to init second smsc instance:%p (previous:%p)",this,instance);
     }
     instance=this;
+    schedulerFreeBandwidthUsage=50;
   };
   ~Smsc();
 
@@ -694,6 +695,8 @@ protected:
 
   int schedulerSoftLimit;
   int schedulerHardLimit;
+
+  int schedulerFreeBandwidthUsage;
 
   performance::SmePerformanceMonitor smePerfMonitor;
 

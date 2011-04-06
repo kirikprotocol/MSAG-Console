@@ -554,6 +554,12 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
   schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
   schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");
+  try{
+    schedulerFreeBandwidthUsage=cfg.cfgman->getInt("core.schedulerFreeBandwidthUsage");
+  }catch(...)
+  {
+    smsc_log_warn(log,"core.schedulerFreeBandwidthUsage not found, using default %d",schedulerFreeBandwidthUsage);
+  }
 
   try
   {

@@ -180,7 +180,7 @@ void Smsc::mainLoop(int idx)
     do
     {
       st.start();
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled/2);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled*schedulerFreeBandwidthUsage/100);
       st.end();
       if(frame.size()>0)debug2(speedLog,"getFrame time:%lld, size=%d",st.getTime(),frame.size());
       now = time(NULL);
