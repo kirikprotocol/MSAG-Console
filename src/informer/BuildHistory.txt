@@ -1,3 +1,6 @@
+2011-04-06 11:23 bukind
+  DLV_NAME_LENGTH increased upto 256
+
 2011-03-30 11:23 bukind
   network_error_code preprocessing
 

@@ -69,7 +69,7 @@ static const usectime_type flipTimePeriod = 24*3600*tuPerSec;
 static const usectime_type maxSnailDelay = 5*tuPerSec;
 
 /// sizes of buffers
-static const size_t DLV_NAME_LENGTH = 64;
+static const size_t DLV_NAME_LENGTH = 256;
 static const size_t DLV_SVCTYPE_LENGTH = 32;
 static const size_t DLV_USERDATA_LENGTH = 1024;
 
