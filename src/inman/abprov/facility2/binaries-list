@@ -1,0 +1,13 @@
+#
+# $Id$
+#
+# IAPQueries facility v2
+#
+
+# using global setting of service linkage
+switch INMAN_ICS_LINKAGE
+static: #no need for .so loader, module is statically linked into libinman
+default: \
+inman/ldlib/libinman_iap_fclt2.so IAPQueryFacility -linman-abprov-facility2 -lcore-threads $(SHARED_OPT) $(__LIBRARIES) -ldl -lrt
+end switch
+
