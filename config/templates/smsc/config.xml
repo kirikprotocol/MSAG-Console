@@ -28,6 +28,7 @@
     <param name="smartMultipartForward" type="bool">true</param>
     <param name="schedulerSoftLimit" type="int">1800000</param>
     <param name="schedulerHardLimit" type="int">2000000</param>
+    <param name="schedulerFreeBandwidthUsage" type="int">50</param>
     <param name="speedLogFlushPeriodMin" type="int">60</param>
     <param name="noDivertSmes" type="string"></param>
     <section name="performance">
