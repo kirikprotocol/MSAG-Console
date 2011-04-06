@@ -131,8 +131,8 @@ public class DeliveryStatProvider extends StatEntityProvider{
         try {
           CSVTokenizer tokenizer = new CSVTokenizer(line);
 
-          //#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL,CREATED,DELETED
-
+          //#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL,CREATED,DELETED,REGID
+          //   MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID
           if (tokenizer.hasMoreTokens()) {
             String minsec = tokenizer.nextToken();
             int minute = Integer.parseInt(minsec.substring(0, minsec.length() - 2));
@@ -160,10 +160,16 @@ public class DeliveryStatProvider extends StatEntityProvider{
             int deliveredSms = Integer.parseInt(tokenizer.nextToken());
             int failedSms = Integer.parseInt(tokenizer.nextToken());
             int expiredSms = Integer.parseInt(tokenizer.nextToken());
-
+            Integer regionId = null;
+            if(tokenizer.hasMoreTokens()) {
+              tokenizer.nextToken(); //skip KILL
+              if(tokenizer.hasMoreTokens()) {
+                regionId = Integer.parseInt(tokenizer.nextToken());
+              }
+            }
             DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
                 newmessages, processing, delivered, failed, expired,
-                deliveredSms, failedSms, expiredSms
+                deliveredSms, failedSms, expiredSms, regionId
             );
 
             if (!visitor.visit(rec, total, current)) {

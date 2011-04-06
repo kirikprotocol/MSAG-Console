@@ -31,6 +31,8 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   private long failedSms;
   private long expiredMessages;
   private long expiredSms;
+  private String region;
+  private Integer regionId;
 
   private Delivery delivery;
   private User user;
@@ -44,6 +46,23 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.login = login;
     this.deliveryId = deliveryId;
     bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);   //todo make it more cleaver!!
+  }
+
+
+  public Integer getRegionId() {
+    return regionId;
+  }
+
+  public void setRegionId(Integer regionId) {
+    this.regionId = regionId;
+  }
+
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
   }
 
   public String getLogin() {
@@ -191,7 +210,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
 
   public void printCSVheader(PrintWriter writer, boolean fullMode) {
     if (fullMode) {
-      writer.println(StringEncoderDecoder.toCSVString(';',"NAME",
+      writer.println(StringEncoderDecoder.toCSVString(';',"NAME", "REGION",
           "USER",
           "STATUS",
           "STARTDATE",
@@ -202,7 +221,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           "FAILED",
           "EXPIRED"));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString(';',"NAME",
+      writer.println(StringEncoderDecoder.toCSVString(';',"NAME", "REGION",
           "USER",
           "STATUS",
           "STARTDATE",
@@ -214,11 +233,12 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     }
   }
 
-  public void printWithChildrenToCSV(PrintWriter writer, boolean fullMode) {
+  public void printWithChildrenToCSV(PrintWriter writer, boolean fullMode) {   //todo region
 
     String dName = delivery != null ? delivery.getName() : bundle.getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';     //todo make it more cleaver!!
+    String rName = region != null ? region : bundle.getString("stat.page.deletedRegion") +" (id="+regionId+')';
     if (fullMode) {
-      writer.println(StringEncoderDecoder.toCSVString(';',dName,
+      writer.println(StringEncoderDecoder.toCSVString(';',dName, rName,
           login,
           newMessages,
           procMessages,
@@ -226,7 +246,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           failedMessages,
           expiredMessages));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString(';',dName,
+      writer.println(StringEncoderDecoder.toCSVString(';',dName, rName,
           login,
           newMessages,
           deliveredMessages,
@@ -283,13 +303,21 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           return o1.getNewMessages() + o1.getProcMessages() >= o2.getNewMessages() + o2.getProcMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("notdelivered")) {
           return o1.getFailedMessages() + o1.getExpiredMessages() >= o2.getFailedMessages() + o2.getExpiredMessages() ? mul : -mul;
+        }else if (sortOrder.getColumnId().equals("region")) {
+          if(o1.getRegion() == null) {
+            if(o2.getRegion() == null) {
+              return 0;
+            }
+            return -mul;
+          }else {
+            if(o2.getRegion() == null) {
+              return mul;
+            }
+            return mul * o1.getRegion().compareTo(o2.getRegion());
+          }
         }
         return 0;
       }
     };
   }
-
-
-
-
 }

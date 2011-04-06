@@ -29,6 +29,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
+import mobi.eyeline.informer.web.config.TimezonesConfig;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -57,7 +58,8 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestArchiveDaemonManager.class.getResourceAsStream("config.xml"), new File(archiveConf, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
-  }
+    TestUtils.exportResource(TimezonesConfig.class.getResourceAsStream("timezones.xml"), new File(confDir, "timezones.xml"), false);
+   }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
     if(!fileSystem.exists(dstStatDir)) {
@@ -282,6 +284,7 @@ public class TestAdminContext extends AdminContext {
       archiveRequestsManager.createRequest(u.getLogin(), createMessagesPrototype("messages 1 "+System.currentTimeMillis(), new Date(0), "+7913182"));
       archiveRequestsManager.createRequest(u.getLogin(), createMessagesPrototype("messages 2 "+System.currentTimeMillis(), new Date(0), "+7913178"));
 
+      informerConfDir = confDir;
 
     } catch (IOException e) {
       throw new InitException(e);

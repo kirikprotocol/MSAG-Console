@@ -162,6 +162,7 @@ public class Delivery implements Serializable {
   public void validate() throws AdminException {
     vh.checkNotNull("sourceAddress", sourceAddress);
     vh.checkNotEmpty("name", name);
+    vh.checkLen("name", name, 1, 127);
     vh.checkBetween("priority", priority, 1, 1000);
     vh.checkNotNull("startDate", startDate);
     vh.checkNotNull("activePeriodEnd", activePeriodEnd);

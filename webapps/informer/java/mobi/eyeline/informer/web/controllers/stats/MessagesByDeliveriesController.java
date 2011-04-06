@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -33,6 +34,8 @@ public class MessagesByDeliveriesController extends LongOperationController {
   private boolean hideDeleted;
 
   private String nameFilter;
+
+  private String regionId;
 
   public MessagesByDeliveriesController() {
     super();
@@ -76,10 +79,18 @@ public class MessagesByDeliveriesController extends LongOperationController {
     filter.setFromDate(null);
     filter.setTillDate(null);
     nameFilter = null;
+    regionId = null;
     hideDeleted = false;
     fullMode = false;
   }
 
+  public String getRegionId() {
+    return regionId;
+  }
+
+  public void setRegionId(String regionId) {
+    this.regionId = regionId;
+  }
 
   public String getNameFilter() {
     return nameFilter;
@@ -87,6 +98,15 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public void setNameFilter(String nameFilter) {
     this.nameFilter = nameFilter;
+  }
+
+  public List<SelectItem> getRegions() {
+    List<Region> rs = getConfig().getRegions();
+    List<SelectItem> sis = new ArrayList<SelectItem>(rs.size());
+    for(Region r : rs) {
+      sis.add(new SelectItem(Integer.toString(r.getRegionId()), r.getName()));
+    }
+    return sis;
   }
 
   public User getCurrentUser() {
@@ -136,14 +156,15 @@ public class MessagesByDeliveriesController extends LongOperationController {
       deliveryFilter.setUser(filter.getUser());
     }
 
-    final Map<Integer, MessagesByDeliveriesRecord> recsMap = new HashMap<Integer, MessagesByDeliveriesRecord>();
+    final Map<Key, MessagesByDeliveriesRecord> recsMap = new HashMap<Key, MessagesByDeliveriesRecord>();
 
     config.statistics(deliveryFilter, new DeliveryStatVisitor() {
 
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
         setCurrentAndTotal(current, total);
 
-        MessagesByDeliveriesRecord r = recsMap.get(rec.getTaskId());
+        Key key = new Key(rec.getTaskId(), rec.getRegionId());
+        MessagesByDeliveriesRecord r = recsMap.get(key);
         if (r == null) {
           User user = config.getUser(rec.getUser());
 
@@ -159,7 +180,14 @@ public class MessagesByDeliveriesController extends LongOperationController {
           r = new MessagesByDeliveriesRecord(rec.getUser(), rec.getTaskId(), locale);
           r.setDelivery(delivery);
           r.setUser(user);
-          recsMap.put(rec.getTaskId(), r);
+          recsMap.put(key, r);
+        }
+        if(rec.getRegionId() != null) {
+          r.setRegionId(rec.getRegionId());
+          Region region = config.getRegion(rec.getRegionId());
+          if(region != null) {
+            r.setRegion(region.getName());
+          }
         }
         r.incNewMessages(rec.getNewmessages());
         r.incProcMessages(rec.getProcessing());
@@ -180,6 +208,9 @@ public class MessagesByDeliveriesController extends LongOperationController {
         continue;
       if (nameFilter != null && nameFilter.trim().length() > 0 && (r.getDelivery() == null || !r.getDelivery().getName().contains(nameFilter)))
         continue;
+      if(regionId != null && regionId.length()>0 && (r.getRegionId() == null || Integer.parseInt(regionId) != r.getRegionId())) {
+        continue;
+      }
       records.add(r);
       getTotals().add(r);
     }
@@ -233,5 +264,29 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public MessagesByDeliveriesTotals getTotals() {
     return totals;
+  }
+
+  private static class Key {
+    private int deliveryId;
+    private Integer regionId;
+    private Key(int deliveryId, Integer regionId) {
+      this.deliveryId = deliveryId;
+      this.regionId = regionId;
+    }
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (!(o instanceof Key)) return false;
+      Key key = (Key) o;
+      if (deliveryId != key.deliveryId) return false;
+      if (regionId != null ? !regionId.equals(key.regionId) : key.regionId != null) return false;
+      return true;
+    }
+    @Override
+    public int hashCode() {
+      int result = deliveryId;
+      result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
+      return result;
+    }
   }
 }
