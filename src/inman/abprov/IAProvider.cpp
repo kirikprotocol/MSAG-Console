@@ -48,17 +48,8 @@ IAPAbilityStr_t IAPAbility::toString(void) const
 }
 
 /* ************************************************************************** *
- * class IAPType implementation:
+ * class IAPProperty implementation:
  * ************************************************************************** */
-IAPProperty  _knownIAPType[] = {
-    IAPProperty(IAPProperty::iapUnknown, "iapUnknown", 0)
-  , IAPProperty(IAPProperty::iapDB, "iapDB", IAPAbility::abContract)
-  , IAPProperty(IAPProperty::iapCHSRI, "iapCHSRI", IAPAbility::abContract | IAPAbility::abSCF
-                       | IAPAbility::abIMSI | IAPAbility::abVLR)
-  , IAPProperty(IAPProperty::iapATSI, "iapATSI", IAPAbility::abContract | IAPAbility::abSCF | IAPAbility::abODB)
-};
-
-
 IAPTypeStr_t IAPProperty::toString(void) const
 {
   IAPTypeStr_t  rval;

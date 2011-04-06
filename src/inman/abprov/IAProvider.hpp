@@ -13,6 +13,8 @@
 #include "inman/abprov/IAPErrors.hpp"
 #include "inman/abprov/AbonentSubscription.hpp"
 
+#define IAPROVIDER_DFLT_LOGGER "smsc.inman.iap"
+
 namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
@@ -26,7 +28,9 @@ protected:
   { }
 
 public:
-  virtual void onIAPQueried(const AbonentId & ab_number,
+  //Returns false if listener unable to handle query report right now, so
+  //requests query to be rereported.
+  virtual bool onIAPQueried(const AbonentId & ab_number,
                             const AbonentSubscription & ab_info,
                             RCHash qry_status) = 0;
 };
@@ -37,12 +41,18 @@ protected:
   { }
 
 public:
+  // -------------------------------------------------------
+  // -- IAPQueryProcessorITF interface methods
+  // -------------------------------------------------------
   //Starts query and binds listener to it.
   //Returns true if query succesfully started, false otherwise
-  virtual bool startQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb) = 0;
+  virtual bool startQuery(const AbonentId & ab_number, IAPQueryListenerITF & pf_cb) = 0;
   //Unbinds query listener, cancels query if no listeners remain.
-  virtual void cancelQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb) = 0;
-  virtual void cancelAllQueries(void) = 0;
+  //Returns false if listener is already targeted and query waits for its mutex.
+  virtual bool cancelQuery(const AbonentId & ab_number, IAPQueryListenerITF & pf_cb) = 0;
+  //Attempts to cancel all queries.
+  //Returns false if at least one listener is already targeted and query waits for its mutex.
+  virtual bool cancelAllQueries(void) = 0;
 };
 
 
@@ -51,12 +61,10 @@ private:
   const IAPProperty &   _iapProp;
 
 protected:
-  explicit IAProviderAC(IAPType_e iap_type)
-    : _iapProp((iap_type < IAPProperty::iapReserved) ?
-                _knownIAPType[iap_type] : _knownIAPType[IAPProperty::iapUnknown])
+  explicit IAProviderAC(const IAPProperty & iap_prop) : _iapProp(iap_prop)
   { }
   //
-  virtual ~IAProviderAC()  //forbid interface destruction
+  virtual ~IAProviderAC()
   { }
 
 public:

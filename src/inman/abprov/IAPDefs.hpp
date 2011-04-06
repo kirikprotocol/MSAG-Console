@@ -105,9 +105,6 @@ struct IAPProperty {
 typedef IAPProperty::IAPKind_e  IAPType_e;
 typedef IAPProperty::TypeStr_t  IAPTypeStr_t;
 
-//
-extern IAPProperty  _knownIAPType[];
-
 } //iaprvd
 } //inman
 } //smsc
