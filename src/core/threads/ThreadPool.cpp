@@ -2,63 +2,75 @@
 static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
-#include "ThreadPool.hpp"
 #include <exception>
 #include <signal.h>
 #include <time.h>
 
-namespace smsc{
-namespace core{
-namespace threads{
+#include "core/threads/ThreadPool.hpp"
+using smsc::core::synchronization::MutexGuard;
+
+namespace smsc {
+namespace core {
+namespace threads {
+/* ************************************************************************** *
+ * class ThreadPool::PooledThread implementation:
+ * ************************************************************************** */
+ThreadPool::PooledThread::PooledThread(ThreadPool * new_owner, Logger * tp_log/* = NULL*/)
+  : Thread(), _tpLogger(tp_log), owner(new_owner), task(NULL)
+{
+  if (!_tpLogger)
+    _tpLogger = Logger::getInstance(ThreadPool::_dflt_log_category);
+}
 
 int ThreadPool::PooledThread::Execute()
 {
-  sigset_t set;
-  sigemptyset(&set);
-  for (int i=1; i<=37; i++)
+  //establish proper thread signal's handling
   {
-    if ((i != SIGUSR1) && (i != SIGPROF))
-      sigaddset(&set,i);
+    sigset_t sigMask;
+    sigfillset(&sigMask);
+    sigdelset(&sigMask, SIGUSR1);
+    sigdelset(&sigMask, SIGPROF);
+    if (pthread_sigmask(SIG_SETMASK, &sigMask, NULL) != 0) {
+      smsc_log_error(_tpLogger, "Thread[%lu](%p): failed to set thread signal mask!", getThrId(), this);
+    }
   }
 
-  if (pthread_sigmask(SIG_SETMASK,&set,NULL) != 0)
-  {
-    __warning__("failed to set thread signal mask!");
-  }
-
-  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("tp");
-
-  smsc_log_debug(log,"Pooled thread %p ready for tasks",this);
+  smsc_log_debug(_tpLogger, "Thread[%lu](%p): ready for tasks", getThrId(), this);
   if (!task)
       owner->releaseThread(this);
   for(;;)
   {
-    trace2("Thread %p waiting for task",this);
+    smsc_log_debug(_tpLogger, "Thread[%lu](%p): waiting for tasks", getThrId(), this);
     taskEvent.Wait();
-    trace2("Thread %p got a task %s",this,task ? task->taskName() : "NOTASK" );
+    smsc_log_debug(_tpLogger, "Thread[%lu](%p): got a task(%s)", getThrId(), this,
+                   task ? task->taskName() : "NOTASK");
     if (!task)
       return 0;
     try {
       task->Execute();
+    } catch(const std::exception& e) {
+      smsc_log_error(_tpLogger, "Thread[%lu](%p): exception in task(%s): %s", getThrId(), this,
+                     task->taskName(), e.what());
+    } catch(...) {
+      smsc_log_error(_tpLogger, "Thread[%lu](%p): exception in task(%s): <unknown>", getThrId(), this,
+                     task->taskName());
     }
-    catch(std::exception& e)
-    {
-      smsc_log_warn(log,"Exception in task %s:%s",task->taskName(),e.what());
-    }
-    catch(...)
-    {
-      smsc_log_warn(log,"Unknown exception in task:%s",task->taskName());
-    }
-    smsc_log_debug(log,"Execution of task %s on thread %u finished",task->taskName(),unsigned(::pthread_self()));
+    smsc_log_debug(_tpLogger, "Thread[%lu](%p): task(%s) is finished", getThrId(), this,
+                   task->taskName());
     owner->releaseThread(this);
   }
 }
 
+/* ************************************************************************** *
+ * class ThreadPool implementation:
+ * ************************************************************************** */
+const char * ThreadPool::_dflt_log_category = "tp";
 
-ThreadPool::ThreadPool()
+ThreadPool::ThreadPool(Logger * use_log/* = NULL*/)
+  : _tpLogger(use_log), defaultStackSize(4096*1024), maxThreads(256)
 {
-  defaultStackSize=4096*1024;
-  maxThreads=256;
+  if (!_tpLogger)
+    _tpLogger = Logger::getInstance(ThreadPool::_dflt_log_category);
 }
 
 static void disp(int sig)
@@ -69,13 +81,35 @@ static void disp(int sig)
 ThreadPool::~ThreadPool()
 {
   shutdown();
-  __trace__("ThreadPool destroyed");
+  smsc_log_debug(_tpLogger, "ThreadPool(%p) is destroyed", this);
+}
+
+bool ThreadPool::isRunning(void) const
+{
+  MutexGuard grd(lock);
+  return (usedThreads.Count() || freeThreads.Count());
+}
+
+int ThreadPool::getPendingTasksCount() const
+{
+  MutexGuard mg(lock);
+  return pendingTasks.Count();
+}
+
+//Returns number of threads executing tasks currently.
+int ThreadPool::getActiveThreads(void) const
+{
+  MutexGuard mg(lock);
+  return usedThreads.Count();
 }
 
 void ThreadPool::stopNotify()
 {
   MutexGuard  grd(lock);
-  __trace2__("stopping notify tasks, pending:%d, used:%d, free:%d", pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
+  smsc_log_debug(_tpLogger, "ThreadPool(%p): stopping "
+                "pendingTasks: %d, threads: used %d, idle %d", this,
+                 pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
+
   for (int i=0; i<usedThreads.Count(); i++)
   {
     if (!usedThreads[i].destructing)
@@ -88,21 +122,14 @@ extern "C" typedef void (*SignalHandler)(int);
 
 void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
 {
-  sigset(SIGUSR1,(SignalHandler)disp);
   TimeSlice timeout(use_tmo ? use_tmo : 1, use_tmo ? time_unit : TimeSlice::tuSecs);
-
-  TimeSlice firstTmo;
-  if (TimeSlice(10, TimeSlice::tuSecs) < timeout) {
-    firstTmo = TimeSlice(1, TimeSlice::tuSecs);
-  } else if (timeout < TimeSlice(10, TimeSlice::tuMSecs)) {
-    firstTmo = TimeSlice(1, TimeSlice::tuMSecs);
-  } else
-    firstTmo = timeout/10;
-
   struct timespec maxTime = timeout.adjust2Nano();
 
   MutexGuard  grd(lock);
-  __trace2__("stopping tasks, pending:%d, used:%d, free:%d", pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
+  smsc_log_debug(_tpLogger, "ThreadPool(%p): stopping "
+                "pendingTasks: %d, threads: used %d, idle %d", this,
+                 pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
+
   //delete pending task first
   for (int i=0; i<pendingTasks.Count(); ++i)
   {
@@ -122,23 +149,35 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
     if (!usedThreads[i].destructing)
       usedThreads[i].ptr->stopTask();
   }
-  __trace__("all tasks are notified");
+  smsc_log_debug(_tpLogger, "ThreadPool(%p): all tasks are notified", this);
+
   //wait either last released thread signal or first timeout expiration
   if (usedThreads.Count()) {
+    TimeSlice firstTmo;
+    if (TimeSlice(10, TimeSlice::tuSecs) < timeout) {
+      firstTmo = TimeSlice(1, TimeSlice::tuSecs);
+    } else if (timeout < TimeSlice(10, TimeSlice::tuMSecs)) {
+      firstTmo = TimeSlice(1, TimeSlice::tuMSecs);
+    } else
+      firstTmo = timeout/10;
+
     lock.wait(firstTmo);
   }
 
    //check for unexpectedly lasting threads
   if (usedThreads.Count())
   {
+    sigset(SIGUSR1,(SignalHandler)disp);
     do {
+      smsc_log_debug(_tpLogger, "ThreadPool(%p): waiting for %d tasks to complete",
+                     this, usedThreads.Count());
       //send a signal to lasting thread in order to awake it if it's blocked
-      trace2("Waiting when all threads will be finished:%d",usedThreads.Count());
       for (int i=0; i<usedThreads.Count(); ++i)
       {
         if (!usedThreads[i].destructing)
         {
-          __warning2__("Unfinished task:%s",usedThreads[i].ptr->taskName());
+          smsc_log_warn(_tpLogger, "ThreadPool(%p): unfinished tasks(%s)",
+                         this, usedThreads[i].ptr->taskName());
           usedThreads[i].ptr->stopTask();
           usedThreads[i].ptr->Kill(SIGUSR1);
         }
@@ -166,58 +205,66 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
   freeThreads.Clean();
 }
 
-void ThreadPool::preCreateThreads(int count)
+//Returns number of successfully created threads
+int ThreadPool::preCreateThreads(int req_count)
 {
-  trace2("COUNT:%d",count);
-  int n=count-usedThreads.Count()-freeThreads.Count();
+  MutexGuard  grd(lock);
+  int iniCnt = usedThreads.Count() + freeThreads.Count();
+  int n = req_count - iniCnt;
   if (n < 0)
-    return;
-  trace2("Attempting to create %d threads(%d/%d)",n,freeThreads.Count(),usedThreads.Count());
-  {
-    MutexGuard  grd(lock);
-    usedThreads.SetSize(count); //enlarge array of active threads
-    for(int i=0; i<n ; ++i) {
-      trace2("Creating thread:%d",i);
-      usedThreads.Push(ThreadInfo(new PooledThread(this)));
-      usedThreads[-1].ptr->Start(defaultStackSize);
-    }
+    return req_count;
+
+  smsc_log_debug(_tpLogger, "ThreadPool(%p): attempting "
+                 "to create %d threads (idle: %d, used: %d)",
+                 this, n, freeThreads.Count(), usedThreads.Count());
+    
+  usedThreads.SetSize(req_count); //enlarge array of active threads
+  for(int i = 0; i < n ; ++i) {
+    PooledThread * nThr = allcThread();
+    if (!nThr)
+      return (iniCnt += i);
   }
+  return req_count;
 }
 
-void ThreadPool::startTask(ThreadedTask* task)
+bool ThreadPool::startTask(ThreadedTask* task)
 {
   MutexGuard  grd(lock);
   PooledThread* t;
   if (freeThreads.Count() > 0) {
-    __trace__("use free thread for new task");
     freeThreads.Pop(t);
+    smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to idle Thread[%lu](%p)",
+                   this, task->taskName(), t->getThrId(), t);
     t->assignTask(task);
     t->processTask();
     usedThreads.Push(ThreadInfo(t));
   } else {
-    if(usedThreads.Count()==maxThreads) {
-      __trace2__("pending task %s", task->taskName());
+    if (usedThreads.Count() == maxThreads) {
+      smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to pending queue",
+                     this, task->taskName());
       pendingTasks.Push(task);
     } else {
-      __trace__("creating new thread for task");
-      t=new PooledThread(this);
+      if (!(t = allcThread()))
+        return false;
+      smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to new Thread[%lu](%p)",
+                     this, task->taskName(), t->getThrId(), t);
       t->assignTask(task);
-      t->Start(defaultStackSize);
       t->processTask();
-      usedThreads.Push(ThreadInfo(t));
     }
   }
+  return true;
 }
 
-void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion)
+bool ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion)
 {
   task->setDelOnCompletion(delOnCompletion);
-  startTask(task);
+  return startTask(task);
 }
 
-void ThreadPool::releaseThread(PooledThread* thread)
+void ThreadPool::releaseThread(PooledThread * thread)
 {
-  trace2("Releasing thread %8p",thread);
+  smsc_log_debug(_tpLogger, "ThreadPool(%p): releasing Thread[%lu](%p)",
+                 this, thread->getThrId(), thread);
   int   i = 0;
   ThreadedTask * pTask = 0;
   {
@@ -239,15 +286,19 @@ void ThreadPool::releaseThread(PooledThread* thread)
       usedThreads[i].destructing = false;
     }
     //assign next task from queue of pending ones
-    trace2("Pending tasks:%d, used:%d, free:%d",pendingTasks.Count(),usedThreads.Count(),freeThreads.Count());
     if (pendingTasks.Count() > 0) {
       ThreadedTask * t;
       pendingTasks.Shift(t);
+      smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to idle Thread[%lu](%p)",
+                     this, t->taskName(), thread->getThrId(), thread);
       thread->assignTask(t);
       thread->processTask();
     } else {
       usedThreads.Delete(i,1);
       freeThreads.Push(thread);
+      smsc_log_debug(_tpLogger, "ThreadPool(%p): "
+                    "pendingTasks: %d, threads: used %d, idle %d", this,
+                     pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
     }
     if (!usedThreads.Count()) //awake shutdown()
       lock.notify();
@@ -257,12 +308,42 @@ void ThreadPool::releaseThread(PooledThread* thread)
     try {
       pTask->onRelease();
     } catch (const std::exception& e ) {
-      __trace2__("%s::onRelease(): exception: %s", pTask->taskName(), e.what());
+      smsc_log_error(_tpLogger, "ThreadPool(%p): task(%s) onRelease() exception: %s",
+                     this, pTask->taskName(), e.what());
     } catch (...) {
-      __trace2__("%s::onRelease(): unknown exception", pTask->taskName());
+      smsc_log_error(_tpLogger, "ThreadPool(%p): task(%s) onRelease() exception: <unknown>",
+                     this, pTask->taskName());
     }
   }
 }
+
+bool ThreadPool::findUsed(PooledThread * thread, int & idx)
+{
+  for (int i = 0; i < usedThreads.Count(); ++i) {
+    if (usedThreads[i].ptr == thread) {
+      idx = i; return true;
+    }
+  }
+  return false;
+}
+
+ThreadPool::PooledThread * ThreadPool::allcThread(void)
+{
+  PooledThread * res = NULL;
+  std::auto_ptr<PooledThread> nThr(new PooledThread(this, _tpLogger));
+
+  nThr->Start(defaultStackSize);
+  if (nThr->getThrId()) {
+    usedThreads.Push(ThreadInfo(res = nThr.release()));
+    smsc_log_debug(_tpLogger, "ThreadPool(%p): created Thread[%lu](%p)",
+                   this, res->getThrId(), res);
+  } else {
+    smsc_log_error(_tpLogger, "ThreadPool(%p): failed to create thread #%d",
+                   this, usedThreads.Count() + freeThreads.Count() + 1);
+  }
+  return res;
+}
+
 
 
 }//threads
