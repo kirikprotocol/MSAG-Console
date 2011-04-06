@@ -35,20 +35,6 @@ ICServiceAC::RCode ICSIAPManager::_icsInit(void)
             ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
 }
 
-//Stops service
-void  ICSIAPManager::_icsStop(bool do_wait/* = false*/)
-{ //cancel quieries of all controlled IAProviders
-  IAPrvdsRegistry::const_iterator it = _cfg->prvdReg->begin();
-  for (; it != _cfg->prvdReg->end(); ++it) {
-    IAProviderInfo * pInfo = it.pValue();
-    if (pInfo->_iface) {
-      pInfo->_iface->cancelAllQueries();
-      pInfo->_iface = NULL;
-    }
-  }
-  //IAProviders will be finally stopped later by _icsHost
-}
-
 } //iapmgr
 } //inman
 } //smsc

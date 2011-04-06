@@ -22,116 +22,181 @@ using smsc::inman::comp::UnifiedCSI;
 using smsc::inman::iaprvd::CSIRecord;
 
 /* ************************************************************************** *
- * class IAPQuerySRIFactory implementation:
- * ************************************************************************** */
-IAPQuerySRIFactory::IAPQuerySRIFactory(const IAPQuerySRI_CFG & in_cfg,
-                            unsigned timeout_secs, Logger * use_log/* = NULL*/)
-  : _cfg(in_cfg)
-{
-  logger = use_log ? use_log : Logger::getInstance("smsc.inman.iaprvd.sri");
-}
-
-IAPQueryAC * IAPQuerySRIFactory::newQuery(unsigned q_id, IAPQueryManagerITF * owner,
-                                         Logger * use_log)
-{
-  return new IAPQuerySRI(q_id, owner, use_log, _cfg);
-}
-
-/* ************************************************************************** *
  * class IAPQuerySRI implementation:
  * ************************************************************************** */
 const IAPQuerySRI::TypeString_t IAPQuerySRI::_qryType("IAPQuerySRI");
 
-IAPQuerySRI::IAPQuerySRI(unsigned q_id, IAPQueryManagerITF * owner, 
-                        Logger * use_log, const IAPQuerySRI_CFG & use_cfg)
-  : IAPQueryAC(q_id, owner, use_cfg.mapTimeout, use_log), _cfg(use_cfg)
+// -------------------------------------------------------
+// -- IAPQueryAC interface methods
+// -------------------------------------------------------
+//Starts query execution, in case of success switches FSM to qryStarted state,
+//otherwise to qryDone state.
+IAPQStatus::Code
+  IAPQuerySRI::start(Logger * use_log/* = NULL*/) /*throw()*/
 {
-  logger = use_log ? use_log : Logger::getInstance("smsc.inman.iaprvd.sri");
-  mkTaskName();
-}
+  if (use_log)
+    _logger = use_log;
 
-int IAPQuerySRI::Execute(void)
-{ 
-  {
-    MutexGuard tmp(_mutex);
-    if (isStopping || !_owner->hasListeners(abonent)) {
-      //query was cancelled by either QueryManager or ThreadPool
-      return (_qStatus = IAPQStatus::iqCancelled);
-    }
-    //MAP_SRI serves only ISDN International numbers
-    if (!abonent.interISDN())
-      return (_qStatus = IAPQStatus::iqBadArg);
-
-    try {
-      _mapDlg.init().init(*_cfg.mapSess, *this, logger);
-      _mapDlg->reqRoutingInfo(abonent, _cfg.mapTimeout); //throws
-
-      if (_mutex.wait(_cfg.mapTimeout*1000 + 100) != 0) //Unlocks, waits, locks
-          _qStatus = IAPQStatus::iqTimeout;
-    } catch (const std::exception & exc) {
-      smsc_log_error(logger, "%s(%s): %s", taskName(), abonent.getSignals(),
-                     exc.what());
-      _qStatus = IAPQStatus::iqError;
-      _exc = exc.what();
-    }
-    while (_mapDlg.get() && !_mapDlg->unbindUser()) //MAPDlg refers this query
-      _mutex.wait();
+  //MAP_SRI serves only ISDN International numbers
+  if (!_abId.interISDN()) {
+    setStageNotify(qryDone);
+    return (_qStatus = IAPQStatus::iqBadArg);
   }
-  if (_mapDlg.get())
-    _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
-  _mapDlg.clear();
-  return _qStatus;
+
+  try {
+    _mapDlg.init().init(*_cfg._mapSess, *this, _logger);
+    _mapDlg->reqRoutingInfo(_abId, _cfg._tmoSecs); //throws
+    /* - */
+  } catch (const std::exception & exc) {
+    smsc_log_error(_logger, "%s(%s): %s", taskName(), _abId.getSignals(), exc.what());
+    _exc = exc.what();
+    setStage(qryDone);
+    if (_mapDlg.get())
+      _mapDlg->unbindUser();
+    return (_qStatus = IAPQStatus::iqError);
+  }
+  setStage(qryStarted);
+  return (_qStatus = IAPQStatus::iqOk);
 }
 
-void IAPQuerySRI::stop(void)
+//Cancels query execution, switches FSM to qryDone state.
+//Note: Listeners aren't notified.
+//Returns false if listener is already targeted and query
+//waits for its mutex.
+bool IAPQuerySRI::cancel(void) /*throw()*/
 {
-  MutexGuard  grd(_mutex);
-  isStopping = true;
-  _qStatus = IAPQStatus::iqCancelled;
-  _mutex.notify();
+  if (hasListenerAimed())
+    return false;
+
+  if (getStage() < qryStopping)
+    setStage(qryStopping);
+  
+  if (getStage() < qryDone) {
+    while (_mapDlg.get() && !_mapDlg->unbindUser())
+      wait();  //sleep while MAPDlg refers this query
+  
+    if (_mapDlg.get())
+      _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
+  
+    _lsrList.clear();
+    _qStatus = IAPQStatus::iqCancelled;
+    setStageNotify(qryDone);
+  }
+  return true;
 }
-// ****************************************
-// -- CHSRIhandlerITF implementation:
-// ****************************************
+
+//Returns true if query object may be released.
+//Note: should be at least equal to isCompleted()
+bool IAPQuerySRI::isToRelease(void) /*throw()*/
+{
+  return isCompleted() && (!_mapDlg.get() || _mapDlg->unbindUser());
+}
+
+//Releases all used resources. May be called only at qryDone state.
+//Switches FSM to qryIdle state.
+void IAPQuerySRI::cleanup(void) /*throw()*/
+{
+  _mapDlg.clear();
+  _stages.clear();
+}
+
+// -------------------------------------------------------
+// -- CHSRIhandlerITF interface methods
+// -------------------------------------------------------
+//FSM switching:: qryStarted -> qryResulted
 void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes & res)
 {
-  MutexGuard  grd(_mutex);
-  if (!res.getIMSI(abInfo.abImsi)) //abonent is unknown
-    smsc_log_warn(logger, "%s(%s): IMSI not determined.", taskName(), abonent.getSignals());
+  MutexGuard  grd(*this);
+  if (getStage() > qryStarted) {
+    smsc_log_warn(_logger, "%s(%s): onMapResult() at stage %u", taskName(),
+                  _abId.getSignals(), (unsigned)getStage());
+    return;
+  }
+
+  if (!res.getIMSI(_abInfo.abImsi)) //abonent is unknown
+    smsc_log_warn(_logger, "%s(%s): IMSI not determined.", taskName(), _abId.getSignals());
   else {
     //NOTE: CH-SRI returns only O-Bcsm tDP serviceKeys
     if (!res.hasOCSI()) {
-      abInfo.abType = AbonentContractInfo::abtPostpaid;
-      smsc_log_debug(logger, "%s(%s): %s", taskName(), abonent.getSignals(),
-                     abInfo.toString().c_str());
+      _abInfo.abType = AbonentContractInfo::abtPostpaid;
+      smsc_log_debug(_logger, "%s(%s): %s", taskName(), _abId.getSignals(),
+                     _abInfo.toString().c_str());
     } else {
-      abInfo.abType = AbonentContractInfo::abtPrepaid;
-      CSIRecord & csiRec = abInfo.csiSCF[UnifiedCSI::csi_O_BC];
+      _abInfo.abType = AbonentContractInfo::abtPrepaid;
+      CSIRecord & csiRec = _abInfo.csiSCF[UnifiedCSI::csi_O_BC];
       csiRec.iapId = IAPProperty::iapCHSRI;
       csiRec.csiId = UnifiedCSI::csi_O_BC;
       res.getSCFinfo(&csiRec.scfInfo);
-      res.getVLRN(abInfo.vlrNum);
-      smsc_log_debug(logger, "%s(%s): %s", taskName(), abonent.getSignals(),
-                     abInfo.toString().c_str());
+      res.getVLRN(_abInfo.vlrNum);
+      smsc_log_debug(_logger, "%s(%s): %s", taskName(), _abId.getSignals(),
+                     _abInfo.toString().c_str());
     }
   }
+  setStage(qryResulted);
 }
 
+//FSM switching: [qryStarted | qryResulted] -> qryReporting
+//               qryStopping -> qryStopping
 ObjAllcStatus_e
-  IAPQuerySRI::onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash ercode/* = 0*/)
+  IAPQuerySRI::onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash err_code/* = 0*/)
 {
-  MutexGuard  grd(_mutex);
-  if (ercode) {
-    _qStatus = IAPQStatus::iqError;
-    _qError = ercode;
-    _exc = URCRegistry::explainHash(ercode);
-    smsc_log_error(logger, "%s(%s): query failed: code 0x%x, %s",
-                    taskName(), abonent.getSignals(), ercode, _exc.c_str());
-  } else
-    smsc_log_debug(logger, "%s(%s): query succeeded",
-                    taskName(), abonent.getSignals());
-
+  {
+    MutexGuard  grd(*this);
+    if (getStage() > qryReporting) {
+      smsc_log_warn(_logger, "%s(%s): onDialogEnd() at stage %u, code 0x%x(%s)",
+                     taskName(), _abId.getSignals(), (unsigned )getStage(), err_code,
+                     err_code ? URCRegistry::explainHash(err_code).c_str()
+                     : "Ok");
+      return ObjFinalizerIface::objActive;
+    }
+  
+    if (err_code) {
+      _qStatus = IAPQStatus::iqError;
+      _qError = err_code;
+      _exc = URCRegistry::explainHash(err_code);
+      smsc_log_error(_logger, "%s(%s): query failed: code 0x%x(%s)",
+                      taskName(), _abId.getSignals(), err_code, _exc.c_str());
+    } else
+      smsc_log_debug(_logger, "%s(%s): query succeeded",
+                      taskName(), _abId.getSignals());
+  
+    setStage(qryReporting);
+    _owner->onQueryEvent(_abId);
+  }
   return ObjFinalizerIface::objActive;
+}
+
+/* ************************************************************************** *
+ * class IAPQueriesPoolSRI implementation:
+ * ************************************************************************** */
+void IAPQueriesPoolSRI::init(const IAPQuerySRI_CFG & use_cfg)
+{
+  MutexGuard grd(_sync);
+  _cfg = use_cfg;
+}
+
+// ------------------------------------------
+// -- IAPQueriesPoolIface interface methods
+// ------------------------------------------
+void IAPQueriesPoolSRI::reserveObj(IAPQueryId num_obj) /*throw()*/
+{
+  MutexGuard  grd(_sync);
+  return _objPool.reserve(num_obj);
+}
+
+IAPQueryAC * IAPQueriesPoolSRI::allcQuery(void)
+{
+  MutexGuard  grd(_sync);
+  IAPQuerySRI * pQry = _objPool.allcObj();
+  if (pQry)
+    pQry->configure(_cfg);
+  return pQry;
+}
+
+void IAPQueriesPoolSRI::rlseQuery(IAPQueryAC & use_qry)
+{
+  MutexGuard  grd(_sync);
+  _objPool.rlseObj(static_cast<QueriesPool::PooledObj*>(&use_qry));
 }
 
 } //sri

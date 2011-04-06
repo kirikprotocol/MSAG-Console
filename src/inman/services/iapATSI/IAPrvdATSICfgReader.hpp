@@ -39,7 +39,7 @@ public:
 
   IAProviderATSI_XCFG * rlseConfig(void)
   {
-    icsDeps.exportDeps(icsCfg->deps);
+    icsDeps.exportDeps(icsCfg->_deps);
     return icsCfg.release();
   }
 };

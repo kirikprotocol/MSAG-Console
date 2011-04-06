@@ -24,6 +24,19 @@ ICSrvCfgReaderAC::CfgState
   ICSIAPrvdATSICfgReader::parseConfig(void * opaque_arg/* = NULL*/)
     throw(ConfigException)
 {
+  int iTmp = 0;
+  try { iTmp = _topSec.getInt("maxThreads");
+  } catch (const ConfigException & exc) { }
+  if (iTmp > (uint16_t)(-1))
+    throw ConfigException("parameter 'maxThreads' is out of range!");
+
+  icsCfg->_maxThreads = (uint16_t)iTmp;
+  if (iTmp) {
+    smsc_log_info(logger, "  maxThreads: %u", (unsigned)iTmp);
+  } else {
+    smsc_log_info(logger, "  maxThreads: unlimited");
+  }
+
   const char * cstr = NULL;
   try { cstr = _topSec.getString("tcapUser");
   } catch (const ConfigException & exc) { }
@@ -42,7 +55,7 @@ ICSrvCfgReaderAC::CfgState
   XCFConfig * pTCfg = _xmfCfg.getSectionConfig(cstr);
   /**/
   TCAPUsrCfgParser  parser(logger, cstr);
-  parser.readConfig(pTCfg->second, icsCfg.get()->atsiCfg); //throws
+  parser.readConfig(pTCfg->second, icsCfg.get()->_atsiCfg); //throws
   /**/
   return ICSrvCfgReaderAC::cfgComplete;
 }

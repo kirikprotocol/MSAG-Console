@@ -35,7 +35,7 @@ protected:
         return ICServiceAC::icsRcOk;
     }
     //Stops service
-    void  _icsStop(bool do_wait = false);
+    void  _icsStop(bool do_wait = false) { return; }
 
 public:
     ICSIAPManager(std::auto_ptr<IAPManagerCFG> & use_cfg,

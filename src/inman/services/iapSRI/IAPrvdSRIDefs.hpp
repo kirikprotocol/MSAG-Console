@@ -19,10 +19,13 @@ namespace sri {
 using smsc::inman::inap::TCAPUsr_CFG;
 
 struct IAProviderSRI_XCFG {
-    TCAPUsr_CFG     sriCfg;
-    ICSIdsSet       deps;
-};
+  uint16_t        _maxThreads;
+  TCAPUsr_CFG     _sriCfg;
+  ICSIdsSet       _deps;
 
+  IAProviderSRI_XCFG() : _maxThreads(0)
+  { }
+};
 
 } //sri
 } //iaprvd

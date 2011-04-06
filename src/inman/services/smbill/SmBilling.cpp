@@ -315,11 +315,12 @@ bool Billing::startIAPQuery(void)
     if (pPrvd) {
       _curIAPrvd = static_cast<IAPPrio_e>(i);
 
-      if ((providerQueried = pPrvd->_iface->startQuery(abNumber, this))) {
+      if ((providerQueried = pPrvd->_iface->startQuery(abNumber, *this))) {
         if ((providerQueried = StartTimer(_cfg.abtTimeout)))
           return true;
         //problems with timer facility
-        pPrvd->_iface->cancelQuery(abNumber, this);
+        while (pPrvd && !pPrvd->_iface->cancelQuery(abNumber, *this))
+          _sync.wait();
         billErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
         break;
         /* */
@@ -336,8 +337,8 @@ bool Billing::startIAPQuery(void)
 void Billing::cancelIAPQuery(void)
 {
   const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_curIAPrvd);
-  if (pPrvd)
-    pPrvd->_iface->cancelQuery(abNumber, this);
+  while (pPrvd && !pPrvd->_iface->cancelQuery(abNumber, *this))
+    _sync.wait();
   providerQueried = false;
 }
 
@@ -1059,7 +1060,7 @@ TimeWatcherITF::SignalResult
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks _sync !!!
-void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
+bool Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                             RCHash qry_status)
 {
     MutexGuard grd(_sync);
@@ -1067,14 +1068,14 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     providerQueried = false;
     if (state > bilStarted) {
       smsc_log_warn(logger, "%s: abonentQueried at state: %u", _logId, state);
-      return;
+      return true;
     }
     StopTimer(state);
 
     if (qry_status) {
       billErr = qry_status;
       if (startIAPQuery()) //check if next IAProvider may ne requested
-        return;            //keep bilStarted state
+        return true;       //keep bilStarted state
     } else {
 #ifdef SMSEXTRA
       //Special processing in case of SMSX WEB gateway
@@ -1098,14 +1099,14 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
                       abNumber.toString().c_str());
         if (chargeResult(false, _RCS_MAPOpErrors->mkhash(MAPOpErrorId::callBarred)) == Billing::pgEnd)
           doFinalize();
-        return;
+        return true;
       }
 
       //NOTE: Migration to ATSI - in case of postpaid abonent check if secondary
       //      provider able to provide IMSI
       if (abCsi.isPostpaid() && !abCsi.getImsi() && nextIAProviderHas(IAPAbility::abIMSI)) {
         if (startIAPQuery())
-          return;            //keep bilStarted state
+          return true;        //keep bilStarted state
       }
 
       if (_cfg.abCache) {
@@ -1120,7 +1121,7 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
 
     if (ConfigureSCFandCharge() == Billing::pgEnd)
       doFinalize();
-    return;
+    return true;
 }
 
 /* -------------------------------------------------------------------------- *

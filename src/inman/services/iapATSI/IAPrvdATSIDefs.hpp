@@ -19,8 +19,9 @@ namespace atih {
 using smsc::inman::inap::TCAPUsr_CFG;
 
 struct IAProviderATSI_XCFG {
-  TCAPUsr_CFG     atsiCfg;
-  ICSIdsSet       deps;
+  uint16_t        _maxThreads;
+  TCAPUsr_CFG     _atsiCfg;
+  ICSIdsSet       _deps;
 };
 
 

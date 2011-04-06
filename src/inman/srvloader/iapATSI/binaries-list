@@ -9,9 +9,9 @@
 switch INMAN_ICS_LINKAGE
 static: #no need for .so loader, module is statically linked into libinman
 staticSS7:\
-inman/ldlib/libinman_iap_atsi.so IAPrvdATSILoader  $(SHARED_OPT) -linman-services-iapATSI -linman-abprov -linman-inap-xcfg -linman-inap-map_atih -linman-inap-map -linman-comp-map_atih -linman-comp -linman-common -linman-codecs-map_atih -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt @inman/ldlib/libinman_iap_fclt.so -lrt -linman-asn1rt -lutil
+inman/ldlib/libinman_iap_atsi.so IAPrvdATSILoader  $(SHARED_OPT) -linman-services-iapATSI -linman-abprov -linman-abprov-facility2-inc -linman-inap-xcfg -linman-inap-map_atih -linman-inap-map -linman-comp-map_atih -linman-comp -linman-common -linman-codecs-map_atih -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt2 @inman/ldlib/libinman_iap_fclt2.so -lrt -linman-asn1rt -lutil
 default:\
-inman/ldlib/libinman_iap_atsi.so IAPrvdATSILoader  $(SHARED_OPT) -linman-services-iapATSI -linman-abprov -linman-inap-xcfg -linman-inap-map_atih -linman-inap-map -linman-comp-map_atih -linman-comp -linman-common -linman-codecs-map_atih -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt @inman/ldlib/libinman_iap_fclt.so -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so -lrt -linman-asn1rt -lutil
+inman/ldlib/libinman_iap_atsi.so IAPrvdATSILoader  $(SHARED_OPT) -linman-services-iapATSI -linman-abprov -linman-abprov-facility2-inc -linman-inap-xcfg -linman-inap-map_atih -linman-inap-map -linman-comp-map_atih -linman-comp -linman-common -linman-codecs-map_atih -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt2 @inman/ldlib/libinman_iap_fclt2.so -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so -lrt -linman-asn1rt -lutil
 end switch
 
 

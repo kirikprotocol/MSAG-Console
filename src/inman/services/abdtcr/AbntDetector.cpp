@@ -115,7 +115,7 @@ AbonentDetector::AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Log
 
 AbonentDetector::~AbonentDetector()
 {
-    MutexGuard grd(_mutex);
+    MutexGuard grd(_sync);
     doCleanUp();
     smsc_log_debug(logger, "%s: Deleted", _logId);
 }
@@ -136,14 +136,14 @@ const char * AbonentDetector::State2Str(ADState st)
 //Prints some information about worker state/status
 void AbonentDetector::logState(std::string & use_str) const
 {
-    MutexGuard grd(_mutex);
+    MutexGuard grd(_sync);
     format(use_str, "%u{%u}", _wId, _state);
 }
 
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
 void AbonentDetector::handleCommand(INPPacketAC* pck)
 {
-    MutexGuard  grd(_mutex);
+    MutexGuard  grd(_sync);
     //unsigned short cmdId = (pck->pCmd())->Id();
 
     bool wDone = false;
@@ -167,7 +167,7 @@ void AbonentDetector::handleCommand(INPPacketAC* pck)
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
 void AbonentDetector::Abort(const char * reason/* = NULL*/)
 {
-    MutexGuard  grd(_mutex);
+    MutexGuard  grd(_sync);
     if (_state < adCompleted) {
       smsc_log_error(logger, "%s: Aborting at state: %u%s%s", _logId, _state,
                      reason ? ", reason: " : "..", reason ? reason : "");
@@ -247,11 +247,12 @@ bool AbonentDetector::startIAPQuery(void)
     if (pPrvd) {
       _curIAPrvd = static_cast<IAPPrio_e>(i);
 
-      if ((providerQueried = pPrvd->_iface->startQuery(abNumber, this))) {
+      if ((providerQueried = pPrvd->_iface->startQuery(abNumber, *this))) {
         if ((providerQueried = StartTimer()))
           return true;
         //problems with timer facility
-        pPrvd->_iface->cancelQuery(abNumber, this);
+        while (pPrvd && !pPrvd->_iface->cancelQuery(abNumber, *this))
+          _sync.wait();
         _wErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
         break;
         /* */
@@ -270,22 +271,22 @@ bool AbonentDetector::startIAPQuery(void)
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
-void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
+bool AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                     RCHash qry_status)
 {
-  MutexGuard grd(_mutex);
+  MutexGuard grd(_sync);
 
   providerQueried = false;
   if (_state != adIAPQuering) {
     smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
-    return;
+    return true;
   }
   StopTimer();
 
   if (qry_status) {
     _wErr = qry_status;
     if (startIAPQuery()) //check if next IAProvider may ne requested
-      return;            //keep adIAPQuering state
+      return true;       //keep adIAPQuering state
   } else {
     abCsi.Merge(ab_info); //merge known abonent info
     if (_cfg.abCache)
@@ -295,6 +296,7 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
   if (abCsi.isPrepaid())
     ConfigureSCF(); //lookup config.xml for extra SCF parms (serviceKey, ...)
   reportAndExit();
+  return true;
 }
 
 /* -------------------------------------------------------------------------- *
@@ -304,7 +306,7 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
 TimeWatcherITF::SignalResult
     AbonentDetector::onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
 {
-  MutexTryGuard grd(_mutex);
+  MutexTryGuard grd(_sync);
   if (!grd.tgtLocked()) //detector is busy, request resignalling
     return TimeWatcherITF::evtResignal;
 
@@ -318,7 +320,7 @@ TimeWatcherITF::SignalResult
 
   _iapTimer.clear();
   _state = adTimedOut;
-  abCsi.clear(); //abtUnknown
+  //abCsi.clear(); //abtUnknown
   _wErr = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
   reportAndExit();
   return TimeWatcherITF::evtOk;
@@ -443,8 +445,8 @@ void AbonentDetector::doCleanUp(void)
 {
     if (providerQueried) {  //check for pending query to AbonentProvider
       const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_curIAPrvd);
-      if (pPrvd)
-        pPrvd->_iface->cancelQuery(abNumber, this);
+      while (pPrvd && !pPrvd->_iface->cancelQuery(abNumber, *this))
+        _sync.wait();
       providerQueried = false;
     }
     StopTimer();

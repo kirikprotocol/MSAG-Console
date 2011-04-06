@@ -89,7 +89,7 @@ public:
 private:
     typedef std::map<unsigned, TimerHdl> TimersMAP;
 
-    mutable Mutex           _sync;
+    mutable EventMonitor    _sync;
     const SmBillingCFG &    _cfg;
     volatile BillingState   state;
     //prefix for logging info
@@ -147,8 +147,12 @@ protected:
     //-- TaskRefereeITF interface methods: --//
     void onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * task);
 
-    //-- IAPQueryListenerITF interface methods: --//
-    void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
+    // -------------------------------------------------------
+    //-- IAPQueryListenerITF interface methods:
+    // -------------------------------------------------------
+    //Returns false if listener unable to handle query report right now, so
+    //requests query to be rereported.
+    bool onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                                     RCHash qry_status);
     //-- TimerListenerITF interface methods: --//
     TimeWatcherITF::SignalResult

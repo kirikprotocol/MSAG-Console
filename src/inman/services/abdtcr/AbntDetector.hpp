@@ -64,19 +64,23 @@ public:
     void Abort(const char * reason = NULL); //aborts billing due to fatal error
 
 protected:
+    // -------------------------------------------------------
     //-- IAPQueryListenerITF interface methods:
-    void onIAPQueried(const AbonentId & ab_number,
+    // -------------------------------------------------------
+    //Returns false if listener unable to handle query report right now, so
+    //requests query to be rereported.
+    bool onIAPQueried(const AbonentId & ab_number,
                       const AbonentSubscription & ab_info, RCHash qry_status);
     //-- TimerListenerITF interface methods:
     TimeWatcherITF::SignalResult
         onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
 
 private:
-    mutable Mutex   _mutex;
-    ADState         _state;
-    AbonentDetectorCFG  _cfg;
-                    //prefix for logging info
-    char            _logId[sizeof("AbntDet[%u:%u]") + sizeof(unsigned int)*3 + 1];
+    mutable EventMonitor  _sync;
+    ADState               _state;
+    AbonentDetectorCFG    _cfg;
+    //prefix for logging info
+    char                  _logId[sizeof("AbntDet[%u:%u]") + sizeof(unsigned int)*3 + 1];
 
     AbonentSubscription   abCsi;      //
     TonNpiAddress         abNumber;   //calling abonent ISDN number
@@ -103,12 +107,6 @@ private:
 
     bool StartTimer(void);
     void StopTimer(void);
-    void SetState(ADState new_state)
-    {
-        _mutex.Lock();
-        _state = new_state;
-        _mutex.Unlock();
-    }
 };
 
 } //abdtcr

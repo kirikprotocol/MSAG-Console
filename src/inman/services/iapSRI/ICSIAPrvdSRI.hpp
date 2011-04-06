@@ -7,10 +7,10 @@
 #endif
 #define __INMAN_ICS_IAPRVD_SRI_HPP
 
+#include "inman/abprov/facility2/IAPQueryFacility.hpp"
 #include "inman/services/ICSrvDefs.hpp"
 #include "inman/services/iapSRI/IAPrvdSRIDefs.hpp"
 #include "inman/services/iapSRI/IAPQuerySRI.hpp"
-#include "inman/abprov/IAProvider.hpp"
 
 namespace smsc {
 namespace inman {
@@ -18,101 +18,81 @@ namespace iaprvd {
 namespace sri {
 
 using smsc::inman::ICServiceAC_T;
-using smsc::inman::iaprvd::IAPQueryProcessorITF;
 using smsc::inman::iaprvd::IAProviderAC;
 
-
 struct IAPrvdSRI_CFG {
-  unsigned        init_threads;
-  TCAPUsr_CFG     sriCfg;
-  IAPQuerySRI_CFG qryCfg;
+  uint16_t      _maxThreads;
+  TCAPUsr_CFG   _sriCfg;
+  TCSessionMA * _mapSess;
 
-  IAPrvdSRI_CFG() : init_threads(0)
+  IAPrvdSRI_CFG() : _maxThreads(0), _mapSess(0)
   { }
-  IAPrvdSRI_CFG(const TCAPUsr_CFG & use_cfg)
-    : init_threads(0), sriCfg(use_cfg)
-  {
-    qryCfg.mapTimeout = sriCfg.rosTimeout;
-  }
+  explicit IAPrvdSRI_CFG(const IAProviderSRI_XCFG & use_cfg)
+    : _maxThreads(use_cfg._maxThreads), _sriCfg(use_cfg._sriCfg), _mapSess(0)
+  { }
 };
 
 
 class ICSIAPrvdSRI : public ICServiceAC_T<IAProviderSRI_XCFG>,
                       public IAProviderAC {
 private:
-    mutable Mutex   _sync;
-    const char *    _logId; //logging prefix
-
-    IAPrvdSRI_CFG   _cfg;
-    IAPFacilityCFG  _fcltCfg;
-    std::auto_ptr<IAPQuerySRIFactory> _qryPlant;
-    std::auto_ptr<IAPQueryFacility> _prvd;
+  mutable Mutex     _sync;
+  const char *      _logId; //logging prefix
+  IAPrvdSRI_CFG     _cfg;
+  IAPQueriesPoolSRI _qrsPool;
+  IAPQueryFacility  _qrsFclt;
 
 protected:
-    // ---------------------------------
-    // -- ICServiceAC interface methods
-    // --------------------------------- 
-    Mutex & _icsSync(void) const { return _sync; }
-    //Initializes service verifying that all dependent services are inited
-    RCode _icsInit(void);
-    //Starts service verifying that all dependent services are started
-    RCode _icsStart(void);
-    //Stops service
-    void  _icsStop(bool do_wait = false)
-    {
-      if (_prvd.get())
-        _prvd->Stop(do_wait);
-    }
+  // ---------------------------------
+  // -- ICServiceAC interface methods
+  // --------------------------------- 
+  virtual Mutex & _icsSync(void) const { return _sync; }
+  //Initializes service verifying that all dependent services are inited
+  virtual RCode _icsInit(void);
+  //Starts service verifying that all dependent services are started
+  virtual RCode _icsStart(void);
+  //Stops service
+  virtual void  _icsStop(bool do_wait = false);
 
 public:
-    ICSIAPrvdSRI(std::auto_ptr<IAProviderSRI_XCFG> & use_cfg,
-                 const ICServicesHostITF * svc_host, Logger * use_log = NULL)
-        : ICServiceAC_T<IAProviderSRI_XCFG>(ICSIdent::icsIAPrvdSRI, svc_host, use_cfg, use_log)
-        , IAProviderAC(IAPProperty::iapCHSRI)
-        , _logId("iapSRI"), _cfg(use_cfg->sriCfg)
-    {
-      _fcltCfg.initThreads = _cfg.init_threads;
-      _fcltCfg.maxQueries = _cfg.sriCfg.maxDlgId;
-      _fcltCfg.qryMultiRun = true; //MapCHSRI dialogs are reused !!!
-      _fcltCfg.qryPlant = NULL;    //will be inited by _icsInit() later
-      _fcltCfg._iapProp = &IAProviderAC::getProperty();
-      //
-      _icsDeps = use_cfg->deps;
-      _icsState = ICServiceAC::icsStConfig;
-    }
-    ~ICSIAPrvdSRI()
-    {
-      ICSStop(true);
-    }
+  static const IAPProperty  _iapProperty;
 
-    //Returns IAProviderITF
-    void * Interface(void) const { return (IAProviderAC *)this; }
+  ICSIAPrvdSRI(std::auto_ptr<IAProviderSRI_XCFG> & use_cfg,
+               const ICServicesHostITF * svc_host, Logger * use_log = NULL)
+    : ICServiceAC_T<IAProviderSRI_XCFG>(ICSIdent::icsIAPrvdSRI, svc_host, use_cfg, use_log)
+    , IAProviderAC(_iapProperty), _logId("iapSRI"), _cfg(*use_cfg.get())
+    , _qrsFclt("iapSRI", use_log)
+  {
+    _icsDeps = use_cfg->_deps;
+    _icsState = ICServiceAC::icsStConfig;
+  }
+  ~ICSIAPrvdSRI()
+  {
+    ICSStop(true);
+  }
 
-    // ----------------------------------
-    // -- IAPQueryProcessorITF interface methods
-    // ----------------------------------
-    //Starts query and binds listener to it.
-    //Returns true if query succesfully started, false otherwise
-    bool startQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb)
-    {
-      return _prvd.get() ? _prvd->startQuery(ab_number, pf_cb) : false;
-    }
-    //Unbinds query listener, cancels query if no listeners remain.
-    void cancelQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb)
-    {
-      if (_prvd.get())
-        _prvd->cancelQuery(ab_number, pf_cb);
-    }
-    void cancelAllQueries(void)
-    {
-      if (_prvd.get())
-        _prvd->cancelAllQueries();
-    }
+  // ----------------------------------
+  // -- ICServiceAC_T interface methods
+  // ----------------------------------
+  //Returns IAProviderAC
+  virtual void * Interface(void) const { return (IAProviderAC *)this; }
 
-    // ----------------------------------
-    // -- IAProviderAC interface methods
-    // ----------------------------------
-    virtual void  logConfig(Logger * use_log = NULL) const;
+  // ----------------------------------
+  // -- IAProviderAC interface methods
+  // ----------------------------------
+  virtual void  logConfig(Logger * use_log = NULL) const;
+  // -------------------------------------------------------
+  // -- IAPQueryProcessorITF interface methods
+  // -------------------------------------------------------
+  //Starts query and binds listener to it.
+  //Returns true if query succesfully started, false otherwise
+  virtual bool startQuery(const AbonentId & ab_number, IAPQueryListenerITF & pf_cb);
+  //Unbinds query listener, cancels query if no listeners remain.
+  //Returns false if listener is already targeted and query waits for its mutex.
+  virtual bool cancelQuery(const AbonentId & ab_number, IAPQueryListenerITF & pf_cb);
+  //Attempts to cancel all queries.
+  //Returns false if at least one listener is already targeted and query waits for its mutex.
+  virtual bool cancelAllQueries(void);
 };
 
 } //sri
