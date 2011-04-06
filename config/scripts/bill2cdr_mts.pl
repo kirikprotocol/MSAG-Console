@@ -545,16 +545,17 @@ sub process{
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
     next if $infields->{STATUS}!=0;
     my $makeoutrec=1;
-		my $makeinrec=1;
+    my $makeinrec=1;
     if($infields->{SRC_SME_ID} eq 'MCISme')
     {
       $makeoutrec=0;
     }
-    if($infields->{SRC_ADDR}=~/111122(?:2\d|30)$/)
+    if($infields->{SRC_ADDR}=~/(?:^|[.:])(111122(?:2\d|30))$/)
     {
       #Feature Request F-43.1
-      $infields->{DST_ADDR}=$infields->{SRC_ADDR};
+      $infields->{DST_ADDR}='.0.1.'.$1;#$infields->{SRC_ADDR};
       $infields->{SRC_ADDR}='.1.1.79134548051';
+      $infields->{BEARER_TYPE}=0;
     }
     
     if($infields->{CHARGE}==CHARGE_DATACOLLECTED_FOR_SUBMIT)
@@ -643,7 +644,7 @@ sub process{
       #SRC_ADDR     = A
       #DST_ADDR     = B - original delivery addr
       #DIVERTED_FOR = C - real destination
-      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
+      $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DST_ADDR});
       # A -> B
       for(1..$infields->{PARTS_NUM})
       {
@@ -685,7 +686,7 @@ sub process{
       $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
+      $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DST_ADDR});
       # C <- B
       for(1..$infields->{PARTS_NUM})
       {

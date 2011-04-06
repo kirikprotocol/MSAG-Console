@@ -15,8 +15,8 @@ my @OUT_FIELDS;
 {field=>'OTHER_ADDR',width=>31},                # pos=114
 {value=>'',width=>31},                          # pos=145
 {value=>'',width=>17},                          # pos=176
-{value=>'',width=>10},                          # pos=193
-{value=>'',width=>10},                          # pos=203
+{field=>'SRC_SME_ID',width=>10},                # pos=193 inc route
+{field=>'DST_SME_ID',width=>10},                # pos=203 out route
 {value=>'0',width=>5},                          # pos=213
 {value=>'0',width=>10},                         # pos=218
 {field=>'SERVICE_TYPE',width=>5},               # pos=228 service type
