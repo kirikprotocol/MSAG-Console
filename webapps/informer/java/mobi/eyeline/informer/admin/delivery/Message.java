@@ -138,6 +138,7 @@ public class Message {
     m.state = state;
     m.date = date;
     m.errorCode = errorCode;
+    m.properties.putAll(properties);
     return m;
   }
 

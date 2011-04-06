@@ -494,7 +494,11 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       MessageFilter filter = new MessageFilter(d.getId(), d.getStartDate(), new Date());
       context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
         public boolean visit(Message mi) throws AdminException {
-          ReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
+          String abonent = mi.getProperty(ORIGINAL_ADDR);
+          if(abonent == null) {
+            abonent = mi.getAbonent().getSimpleAddress();
+          }
+          ReportFormatter.writeReportLine(psFinal, abonent, mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
           return true;
         }
       });
@@ -523,6 +527,8 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         });
     return infos[0];
   }
+
+  private static final String ORIGINAL_ADDR = "origAddr";
 
   private class CPMessageSource implements DataSource<Message> {
     private BufferedReader reader;
@@ -565,6 +571,9 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       }
 
       Message m = Message.newMessage(ab, decodeText(text));
+      if(!abonent.equals(m.getAbonent().getSimpleAddress())) {
+        m.setProperty(ORIGINAL_ADDR, abonent);
+      }
       if (userData != null)
         m.setProperty("udata", userData);
       return m;
@@ -614,7 +623,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
               continue;
 
             if (!isRegionAllowed(m.getAbonent())) {
-              ReportFormatter.writeReportLine(reportWriter, m.getAbonent(), m.getProperty("udata"), new Date(), MessageState.Failed, 9999);
+              ReportFormatter.writeReportLine(reportWriter, m.getAbonent().getSimpleAddress(), m.getProperty("udata"), new Date(), MessageState.Failed, 9999);
               continue;
             }
 
