@@ -1,10 +1,11 @@
 // #ident "@(#)$Id$"
 
 #include "Socket.hpp"
-#include <string.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <poll.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
@@ -103,7 +104,7 @@ int Socket::BindClient(const char* host)
   return bind(sock,(sockaddr*)&sAddr,(int)sizeof(sAddr)) ? -1 : 0;
 }
 
-int Socket::Connect(bool nb)
+int Socket::Connect(bool non_blocking/* = false*/)
 {
   Close();
   sock=socket(AF_INET,SOCK_STREAM,0);
@@ -113,55 +114,46 @@ int Socket::Connect(bool nb)
     return -1;
   }
 
-  if(nb || connectTimeout)
+  if(non_blocking || connectTimeout)
   {
     setNonBlocking(1);
   }
 
-  int connStatus;
-  if((connStatus=connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr))) && errno != EINPROGRESS)
+  int connStatus = connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr));
+  if (connStatus)
   {
-    closesocket(sock);
-    sock=INVALID_SOCKET;
-    return -1;
-  }
-  //linger l;
-  //l.l_onoff=1;
-  //l.l_linger=0;
-  //setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
-  if(connStatus && connectTimeout)
-  {
-    fd_set wr;
-    //FD_ZERO(&rd);
-    FD_ZERO(&wr);
-    //FD_SET(sock,&rd);
-    FD_SET(sock,&wr);
-    tv.tv_sec=connectTimeout;
-    tv.tv_usec=0;
-    if(select(sock+1,0,&wr,0,&tv)<=0)
+    if (errno != EINPROGRESS)
     {
       closesocket(sock);
       sock=INVALID_SOCKET;
       return -1;
     }
-    if(!FD_ISSET(sock,&wr))
+    if (connectTimeout)
     {
-      closesocket(sock);
-      sock=INVALID_SOCKET;
-      return -1;
+      pollfd fd;
+      fd.fd = sock;
+      fd.events = POLLOUT;
+      fd.revents = 0;
+
+      if ((poll(&fd, 1, connectTimeout*1000) <= 0)
+          || (fd.revents & (POLLNVAL | POLLERR | POLLHUP)))
+      {
+        closesocket(sock);
+        sock=INVALID_SOCKET;
+        return -1;
+      }
     }
   }
 
-  if(!nb && connectTimeout)
+  if(!non_blocking && connectTimeout)
   {
     setNonBlocking(0);
   }
-
   connected=1;
   return 0;
 }
 
-int Socket::ConnectEx(bool nb,const char* bindHost)
+int Socket::ConnectEx(bool non_blocking,const char* bindHost)
 {
   Close();
   sock=socket(AF_INET,SOCK_STREAM,0);
@@ -171,7 +163,7 @@ int Socket::ConnectEx(bool nb,const char* bindHost)
     return -1;
   }
 
-  if(nb) setNonBlocking(1);
+  if(non_blocking) setNonBlocking(1);
   if(bindHost)
   {
     if(BindClient(bindHost)==-1)return -1;
@@ -183,11 +175,6 @@ int Socket::ConnectEx(bool nb,const char* bindHost)
     sock=INVALID_SOCKET;
     return -1;
   }
-  //linger l;
-  //l.l_onoff=1;
-  //l.l_linger=0;
-  //setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
-
   connected=1;
   return 0;
 }
@@ -264,7 +251,7 @@ int Socket::canWrite(int to)
 int Socket::Read(char *buf,int bufsize)
 {
   if(!connected)return -1;
-  //int retval;
+
   if(bufPos<inBuffer)
   {
     int n=inBuffer-bufPos;

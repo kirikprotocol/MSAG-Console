@@ -10,14 +10,10 @@
 typedef int socklen_t;
 #else
 #include <stdio.h>
-#include <sys/time.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+
 #ifdef SOCKET
 #undef SOCKET
 #endif
@@ -37,7 +33,6 @@ namespace network{
 class Socket{
 protected:
   sockaddr_in sockAddr;
-  timeval tv;
   char buffer[256];
   int connected;
   int inBuffer;
@@ -87,8 +82,11 @@ public:
   int Init(const char *host,int port,int timeout);
 
   int BindClient(const char* host);
-  int Connect(bool nb = false);
-  int ConnectEx(bool nb,const char* bindHost);
+  int Connect(bool non_blocking = false);
+  //Note: this method is designed for asynchronous connection.
+  //Either select(3C) or poll(2) may be used later to complete
+  //the connection by selecting the socket for writing.
+  int ConnectEx(bool non_blocking, const char* bindHost);
   void Close();
   void Abort();
   void ReuseAddr()
