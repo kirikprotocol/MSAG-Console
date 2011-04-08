@@ -55,7 +55,7 @@ protected:
     {
       char buf[32];
       std::string rv;
-      sprintf(buf,"[%lu]:",dataSize);
+      sprintf(buf,"[%lu]:",(unsigned long)dataSize);
       rv=buf;
       for(size_t i=0;i<dataSize;i++)
       {

@@ -40,7 +40,7 @@ public:
       {
         sprintf(buf,"%02x ",(unsigned int)(unsigned char)data[i]);
         rv+=buf;
-        if(rv.length()>maxSize)
+        if(rv.length()>size_t(maxSize))
         {
           rv+="...";
           break;

@@ -96,7 +96,7 @@ void ClientBase::ReadLoop()
       continue;
     }
     buf.setSize(packetLen);
-    if(sck.ReadAll(buf.get(),packetLen)!=packetLen)
+    if(unsigned(sck.ReadAll(buf.get(),packetLen))!=packetLen)
     {
       smsc_log_warn(log,"failed to read packet with len %u",packetLen);
       Disconnect();
