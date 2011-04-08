@@ -623,7 +623,11 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
               continue;
 
             if (!isRegionAllowed(m.getAbonent())) {
-              ReportFormatter.writeReportLine(reportWriter, m.getAbonent().getSimpleAddress(), m.getProperty("udata"), new Date(), MessageState.Failed, 9999);
+              String abonent = m.getProperty(ORIGINAL_ADDR);
+              if(abonent == null) {
+                abonent = m.getAbonent().getSimpleAddress();
+              }
+              ReportFormatter.writeReportLine(reportWriter, abonent, m.getProperty("udata"), new Date(), MessageState.Failed, 9999);
               continue;
             }
 
