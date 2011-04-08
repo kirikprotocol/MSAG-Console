@@ -394,7 +394,7 @@ unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, size_t chars,char* 
     case '~': out[k++] = 0x1b; out[k++] = 0x3d; break;
     case '\\':out[k++] = 0x1b; out[k++] = 0x2f; break;
     default:
-      out[k++] = _8bit_2_7bit[in[i]];
+      out[k++] = _8bit_2_7bit[static_cast<unsigned char>(in[i])];
     }
   }
   return (unsigned)k;

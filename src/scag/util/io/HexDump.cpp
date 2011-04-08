@@ -3,9 +3,9 @@
 #include "HexDump.h"
 #include "core/synchronization/Mutex.hpp"
 
+/*
 namespace {
 smsc::core::synchronization::Mutex mtx;
-
 std::auto_ptr<char> getDigits()
 {
     std::auto_ptr<char> res( new char[256*3+1]);
@@ -14,8 +14,8 @@ std::auto_ptr<char> getDigits()
     }
     return res;
 }
-
 }
+ */
 
 namespace scag2 {
 namespace util {

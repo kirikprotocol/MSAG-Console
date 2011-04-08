@@ -183,7 +183,7 @@ void FileGuard::rmdirs( const char* path, bool rmself )
             throw InfosmeException(EXC_LOGICERROR,"rmdirs('%s') should ends with /",path);
         }
         fpath.setSize(pathlen+30);
-        sprintf(fpath.get(),path);
+        strcpy(fpath.get(),path);
         for ( std::vector<std::string>::const_iterator i = contents.begin();
               i != contents.end(); ++i ) {
             fpath.SetPos(pathlen);
@@ -235,7 +235,7 @@ void FileGuard::copydir( const char* from,
             throw InfosmeException(EXC_LOGICERROR,"copydir('%s') should ends with /",from);
         }
         fpath.setSize(fromlen+30);
-        sprintf(fpath.get(),from);
+        strcpy(fpath.get(),from);
         for ( std::vector< std::string >::const_iterator i = contents.begin();
               i != contents.end(); ++i ) {
             fpath.SetPos(fromlen);

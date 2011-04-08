@@ -9,7 +9,7 @@
 namespace eyeline {
 namespace informer {
 
-class Message;
+struct Message;
 
 /// two functionality:
 /// 1. journalling all activity on the working storage;

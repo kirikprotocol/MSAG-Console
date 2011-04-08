@@ -8,7 +8,7 @@
 namespace eyeline {
 namespace informer {
 
-class InputRegionRecord;
+struct InputRegionRecord;
 
 class InputJournal
 {

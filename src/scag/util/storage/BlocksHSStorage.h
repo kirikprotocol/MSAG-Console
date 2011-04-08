@@ -1378,7 +1378,8 @@ private:
                 backupHeader.blocksCount = blocksCount;
                 backupHeader.dataSize = 0;
                 backupHeader.curBlockIndex = oldDescrFile.first_free_block;
-                index_type curBlockIndex = readFreeBlocks(blocksCount);
+                /*index_type curBlockIndex =*/
+                readFreeBlocks(blocksCount);
                 if (saveToFile) {
                     saveBackupToFile(oldDescrFile, NULL ); // profile.getBackupData());
                 }

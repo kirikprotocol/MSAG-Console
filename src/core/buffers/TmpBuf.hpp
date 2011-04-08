@@ -5,6 +5,7 @@
 #define __SMSC_CORE_BUFFERS_HPP__
 
 #include <algorithm>
+#include <string.h>
 #include "util/int.h" // for uint64_t
 
 namespace smsc{

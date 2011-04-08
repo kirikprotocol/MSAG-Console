@@ -345,7 +345,7 @@ void Property::setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt)
     invalidateCache();
     time_policy = policy;
     life_time = lt;
-    final_date = (policy == FIXED && fd != -1) ? fd : final_date = time(NULL) + lt;
+    final_date = (policy == FIXED && fd != -1) ? fd : time(NULL) + lt;
 }
 
 void Property::ReadAccess()

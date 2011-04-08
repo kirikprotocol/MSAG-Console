@@ -7,7 +7,7 @@
 namespace eyeline {
 namespace informer {
 
-class Message;
+struct Message;
 
 /// this class also holds statistics data.
 class FinalLog

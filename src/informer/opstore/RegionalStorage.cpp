@@ -69,8 +69,9 @@ namespace {
 const size_t LENSIZE = 2;
 }
 
-struct RegionalStorage::StopRollingGuard
+class RegionalStorage::StopRollingGuard
 {
+public:
     StopRollingGuard( RelockMutexGuard& rmg, RegionalStorage& rs, bool unlockAfter = true ) :
     rmg_(rmg), rs_(rs) {
         ++rs_.stopRolling_;

@@ -40,7 +40,7 @@ class DcpServer;
 }
 
 class SmscSender;
-class SmscConfig;
+struct SmscConfig;
 class DeliveryMgr;
 class FinalLog;
 

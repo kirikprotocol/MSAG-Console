@@ -11,8 +11,8 @@ class RegionFinder;
 class InputTransferTask;
 class ResendTransferTask;
 class Delivery;
-class BindSignal;
-class Message;
+struct BindSignal;
+struct Message;
 
 /// an interface for applying some activities on deliveries.
 class DeliveryActivator

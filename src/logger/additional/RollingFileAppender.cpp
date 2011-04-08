@@ -158,7 +158,7 @@ void RollingFileAppender::log(timeval tp,const char logLevelName, const char * c
   timeStr[timeStrLength] = 0;
   const size_t desiredLength = strlen(message)+128;
   TmpBuf<char, 4096> buffer(desiredLength+1);
-  const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, msec, thrId, category, message);
+  const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u %10.10s: %s\n", logLevelName, timeStr, unsigned(msec), unsigned(thrId), category, message);
   buffer[desiredLength] = 0;
 
   try

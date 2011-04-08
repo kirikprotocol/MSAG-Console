@@ -17,7 +17,7 @@ public:
         lock_.Lock();
     }
 protected:
-    mutable T& lock_;
+    T& lock_;
 
     UnlockMutexGuardTmpl( const UnlockMutexGuardTmpl<T>& );
     UnlockMutexGuardTmpl< T >& operator = ( const UnlockMutexGuardTmpl<T>& );

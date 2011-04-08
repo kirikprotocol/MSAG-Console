@@ -54,7 +54,7 @@ bool RollingIntervalAppender::findLastFile(time_t dat, size_t suffixSize, std::s
   lastFileName.clear();
   bool result = false;
   tm rtm;
-  while(dp = readdir(dirp))
+  while((dp = readdir(dirp)))
   {
     if (strlen(dp->d_name) != lastFileNameSize) {
       continue;
@@ -95,7 +95,7 @@ void RollingIntervalAppender::clearLogDir(time_t curTime)
   rtm.tm_isdst = -1;
 
   std::string fname_ = fileName + suffixFormat;
-  while(dp = readdir(dirp))
+  while((dp = readdir(dirp)))
   {
     if(sscanf(dp->d_name, fname_.c_str(), &rtm.tm_year, &rtm.tm_mon, &rtm.tm_mday, &rtm.tm_hour, &rtm.tm_min, &rtm.tm_sec) == numFieldsInSuffix)
     {
@@ -113,7 +113,7 @@ void RollingIntervalAppender::clearLogDir(time_t curTime)
 }
 
 RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const Properties & properties, const char* suffix)
-  :Appender(_name), interval(86400), path("."), maxBackupIndex(0), lastIntervalStart(0)
+  :Appender(_name), maxBackupIndex(0), interval(86400), path("."), lastIntervalStart(0)
 {
   if (properties.Exists("maxindex"))
     maxBackupIndex = atoi(properties["maxindex"]);
@@ -206,7 +206,7 @@ void RollingIntervalAppender::log(timeval tp,const char logLevelName, const char
   timeStr[timeStrLength] = 0;
   const size_t desiredLength = strlen(message)+128;
   TmpBuf<char, 4096> buffer(desiredLength+1);
-  const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, msec, thrId, category, message);
+  const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u %10.10s: %s\n", logLevelName, timeStr, unsigned(msec), unsigned(thrId), category, message);
   buffer[desiredLength] = 0;
 
   if(file.isOpened())

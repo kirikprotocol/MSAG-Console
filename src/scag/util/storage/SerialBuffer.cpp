@@ -5,6 +5,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "scag/util/io/HexDump.h"
 
+/*
 namespace {
 
 const unsigned digitlen = 5;
@@ -39,6 +40,7 @@ void bufdump( std::string& out, const char* inbuf, unsigned insize )
 }
 
 }
+ */
 
 namespace scag {
 namespace util {

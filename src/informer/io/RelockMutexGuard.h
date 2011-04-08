@@ -31,7 +31,7 @@ public:
     inline bool isLocked() const { return locked_; }
 
 protected:
-    mutable T& lock_;
+    T&         lock_;
     bool       locked_;
 
     RelockMutexGuardTmpl( const RelockMutexGuardTmpl<T>& );

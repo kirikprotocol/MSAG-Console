@@ -25,7 +25,7 @@ namespace informer {
 
 class ReceiptProcessor;
 class RegionSender;
-class Message;
+struct Message;
 struct CoreSmscStats;
 
 struct SmscConfig

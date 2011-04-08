@@ -28,7 +28,7 @@ void StderrAppender::log(timeval tp,const char logLevelName, const char * const 
   char timeStr[32];
   const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m %H:%M:%S", &lcltm);
   timeStr[timeStrLength] = 0;
-  fprintf(stderr, "%c %s,%03ld %03u % 10.10s: %s\n", logLevelName, timeStr, msec, thrId, category, message);
+  fprintf(stderr, "%c %s,%03ld %03u %10.10s: %s\n", logLevelName, timeStr, msec, unsigned(thrId), category, message);
   ///TODO fflush(stderr);
 }
 

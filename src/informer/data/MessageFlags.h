@@ -6,7 +6,7 @@
 
 namespace smsc {
 namespace sms {
-class Address;
+struct Address;
 }
 }
 

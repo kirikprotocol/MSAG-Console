@@ -212,7 +212,7 @@ public:
       f->SetUnbuffered();
   
       int64_t startBlock = filesCount_ * fileSize_;
-      int64_t endBlock = (filesCount_ + 1) * fileSize_;
+      // int64_t endBlock = (filesCount_ + 1) * fileSize_;
       int blocksCount = writeBlockSize_;
       int lastWriteSize = fileSize_ % blocksCount;
       int writeCount = lastWriteSize > 0 ? fileSize_ / blocksCount : fileSize_ / blocksCount - 1;
@@ -220,7 +220,7 @@ public:
       emptyBlock = new char[blockSize_ * blocksCount];
       memset(emptyBlock, 0x00, blockSize_ * blocksCount);
       int64_t index = startBlock + 1;
-      int overdelay = 0;
+      // int overdelay = 0;
       scag2::util::msectime_type currentTime, startWriteTime;
       currentTime = startWriteTime = scag2::util::currentTimeMillis();
       for (int i = 0; i < writeCount; ++i) {

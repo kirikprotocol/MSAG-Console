@@ -13,7 +13,7 @@
 
 namespace smsc {
 namespace sms {
-class SMS;
+struct SMS;
 }
 }
 
