@@ -34,15 +34,32 @@ table.main_menu div.menudiv {
 }
 
 table.main_menu div.menuitem *,
-table.main_menu div.menuitemover * {
+table.main_menu div.menuitem a.xi,
+table.main_menu div.menuitemover *,
+table.main_menu div.menuitemover a.xi {
   background: #3A5867;
   font-size: 12px;
 }
 
-table.main_menu div.menuitem * {
+table.main_menu div.menuitem *,
+table.main_menu div.menuitem a.xi {
   color: #F2E275;
 }
 
-table.main_menu div.menuitemover * {
+table.main_menu div.menuitemover *,
+table.main_menu div.menuitemover a.xi {
   color: yellow;
+}
+
+table.main_menu div.menubardelimitertop {
+  height: 1px;
+  font-size: 1px;
+  border-bottom:1px outset;
+}
+
+table.main_menu div.menubardelimiterbottom {
+  height: 1px;
+  font-size: 1px;
+  width:1%;
+  border-bottom:0px outset;
 }

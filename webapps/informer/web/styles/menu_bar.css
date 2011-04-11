@@ -48,10 +48,13 @@ div.menubardivover {
 
 div.menubardelimitertop {
   height: 1px;
+  font-size: 1px;
   border-bottom:1px outset;
 }
 
 div.menubardelimiterbottom {
   height: 1px;
-  width:1%
+  font-size: 1px;
+  width:1%;
+  border-bottom:0px outset;
 }
