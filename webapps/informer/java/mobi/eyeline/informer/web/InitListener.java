@@ -53,7 +53,7 @@ public class InitListener implements ServletContextListener {
 
 
       MBean.getInstance(MBean.Source.SYSTEM).notifyConfigurationOk();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       e.printStackTrace();
       logger.error(e, e);
       throw new RuntimeException(e);
