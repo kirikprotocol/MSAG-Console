@@ -494,11 +494,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       MessageFilter filter = new MessageFilter(d.getId(), d.getStartDate(), new Date());
       context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
         public boolean visit(Message mi) throws AdminException {
-          String abonent = mi.getProperty(ORIGINAL_ADDR);
-          if(abonent == null) {
-            abonent = mi.getAbonent().getSimpleAddress();
-          }
-          ReportFormatter.writeReportLine(psFinal, abonent, mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
+          ReportFormatter.writeReportLine(psFinal, getCpAbonent(mi), mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
           return true;
         }
       });
@@ -528,7 +524,33 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     return infos[0];
   }
 
-  private static final String ORIGINAL_ADDR = "origAddr";
+  private static final String ADDR_PREF = "addr_prfx";
+
+  private static final String eight = "8";
+  private static final String seven = "7";
+
+  private static String getCpAbonent(Message mi) {
+    String prefix = mi.getProperty(ADDR_PREF);
+    String abonent;
+    if(prefix != null) {
+      if(prefix.endsWith(eight)) {
+        abonent = eight+mi.getAbonent().getSimpleAddress().substring(2);
+      }else {
+        abonent = mi.getAbonent().getSimpleAddress().substring(1);
+      }
+    }else {
+      abonent = mi.getAbonent().getSimpleAddress();
+    }
+    return abonent;
+  }
+
+  private static void setCpAbonent(Message mi, String abonent) {
+    if(abonent.startsWith(eight)) {
+      mi.setProperty(ADDR_PREF, eight);
+    }else if(abonent.startsWith(seven)) {
+      mi.setProperty(ADDR_PREF, seven);
+    }
+  }
 
   private class CPMessageSource implements DataSource<Message> {
     private BufferedReader reader;
@@ -572,7 +594,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
       Message m = Message.newMessage(ab, decodeText(text));
       if(!abonent.equals(m.getAbonent().getSimpleAddress())) {
-        m.setProperty(ORIGINAL_ADDR, abonent);
+        setCpAbonent(m, abonent);
       }
       if (userData != null)
         m.setProperty("udata", userData);
@@ -623,10 +645,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
               continue;
 
             if (!isRegionAllowed(m.getAbonent())) {
-              String abonent = m.getProperty(ORIGINAL_ADDR);
-              if(abonent == null) {
-                abonent = m.getAbonent().getSimpleAddress();
-              }
+              String abonent = getCpAbonent(m);
               ReportFormatter.writeReportLine(reportWriter, abonent, m.getProperty("udata"), new Date(), MessageState.Failed, 9999);
               continue;
             }
