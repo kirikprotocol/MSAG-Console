@@ -17,7 +17,6 @@
 
     <tr:form id="smsc" rendered="#{!messagesByPeriod.initError}" >
 
-      <eye:set var="longOpState" value="#{messagesByPeriod.state}"/>
 
         <eye:dataTableFilter bean="#{messagesByPeriod}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width,columnTopLeftAlign">
@@ -51,12 +50,12 @@
         </eye:dataTableFilter>
 
 
-        <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
+        <eye:updatableContent updatePeriod="1"  enabled="#{messagesByPeriod.state == 1}">
 
           <eye:delimiter/>
 
 
-          <eye:message level="error" rendered="#{longOpState == 3}">
+          <eye:message level="error" rendered="#{messagesByPeriod.state == 3}">
             <p/>
             <h:outputText value="#{messagesByPeriod.error}"/>
             <p/>
@@ -65,7 +64,7 @@
 
 
 
-          <h:panelGroup rendered="#{longOpState == 1}">
+          <h:panelGroup rendered="#{messagesByPeriod.state == 1}">
             <tr:message id="upload_message"/>
 
             <h:panelGrid columns="2" columnClasses="column50Width">
@@ -83,7 +82,7 @@
             </eye:buttons>
           </h:panelGroup>
 
-          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{longOpState==2 and messagesByPeriod.fullMode and messagesByPeriod.timeAggregation}">
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.state==2 and messagesByPeriod.fullMode and messagesByPeriod.timeAggregation}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -144,7 +143,7 @@
           </eye:dataTable>
 
 
-          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{longOpState==2 and !messagesByPeriod.fullMode and messagesByPeriod.timeAggregation}" >
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.state==2 and !messagesByPeriod.fullMode and messagesByPeriod.timeAggregation}" >
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -188,7 +187,7 @@
             </eye:row>
           </eye:dataTable>
 
-          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{longOpState==2 and messagesByPeriod.fullMode and (!messagesByPeriod.timeAggregation)}">
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.state==2 and messagesByPeriod.fullMode and (!messagesByPeriod.timeAggregation)}">
             <eye:row>
               <eye:column name="region" title="#{msg['stat.page.region']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText rendered="#{row.data.deleted}" value="#{row.data.region}"/>
@@ -233,7 +232,7 @@
             </eye:row>
           </eye:dataTable>
 
-          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{longOpState==2 and !messagesByPeriod.fullMode and (!messagesByPeriod.timeAggregation)}" >
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.state==2 and !messagesByPeriod.fullMode and (!messagesByPeriod.timeAggregation)}" >
             <eye:row>
               <eye:column name="region" title="#{msg['stat.page.region']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText rendered="#{row.data.deleted}" value="#{row.data.region}"/>
@@ -270,7 +269,7 @@
 
           <eye:delimiter/>
 
-          <eye:buttons rendered="#{longOpState == 2}">
+          <eye:buttons rendered="#{messagesByPeriod.state == 2}">
             <eye:space/>
             <eye:button>
               <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">

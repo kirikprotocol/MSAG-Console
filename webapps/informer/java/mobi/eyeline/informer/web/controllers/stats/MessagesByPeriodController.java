@@ -58,6 +58,11 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     }    
   }
 
+  @Override
+  public String start() {
+    clearRecords();
+    return super.start();
+  }
 
   @Override
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
@@ -108,7 +113,6 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
     AggregationType type = getAggregation();
-    System.out.println("Aggregation type: "+type);
     setCurrentAndTotal(current, total);
     AggregatedRecord newRecord = type != AggregationType.REGION ? createWithTimeAggregation(rec) : createWithRegionAggregation(rec);
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
