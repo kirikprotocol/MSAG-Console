@@ -77,18 +77,15 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
   private AggregatedRecord createWithRegionAggregation(DeliveryStatRecord rec) {
-    String region = null;
     if(rec.getRegionId() != null) {
-      String rName = null;
       if(rec.getRegionId() != 0) {
         Region r = getConfig().getRegion(rec.getRegionId());
         if(r != null) {
-          rName = r.getName();
+          return  new MessagesByRegionRecord(rec, r.getName(), false);
         }
       }else {
-        rName = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("region.default");
+        return new MessagesByRegionRecord(rec, ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("region.default"), true);
       }
-      return new MessagesByRegionRecord(rec, rName, rec.getRegionId() == 0);
     }
     return new MessagesByRegionRecord(rec,
         ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedRegion") +" (id="+rec.getRegionId()+")",
