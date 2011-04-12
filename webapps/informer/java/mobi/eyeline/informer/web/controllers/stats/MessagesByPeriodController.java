@@ -107,8 +107,10 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
+    AggregationType type = getAggregation();
+    System.out.println("Aggregation type: "+type);
     setCurrentAndTotal(current, total);
-    AggregatedRecord newRecord = getAggregation() != AggregationType.REGION ? createWithTimeAggregation(rec) : createWithRegionAggregation(rec);
+    AggregatedRecord newRecord = type != AggregationType.REGION ? createWithTimeAggregation(rec) : createWithRegionAggregation(rec);
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
     if (oldRecord == null) {
       putRecord(newRecord);

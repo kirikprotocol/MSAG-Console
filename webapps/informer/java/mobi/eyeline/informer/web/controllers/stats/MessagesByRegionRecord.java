@@ -121,6 +121,12 @@ public class MessagesByRegionRecord extends AggregatedRecord{
           getDeliveredMessages(), getDeliveredMessagesSMS(),
           getFailedMessages(), getFailedMessagesSMS(),
           getExpiredMessages(), getExpiredMessagesSMS()));
+    }else {
+      writer.println(StringEncoderDecoder.toCSVString(';',
+          getRegion(),
+          getNewMessages() + getProcessMessages(),
+          getDeliveredMessages(), getDeliveredMessagesSMS(),
+          getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
     }
   }
 
