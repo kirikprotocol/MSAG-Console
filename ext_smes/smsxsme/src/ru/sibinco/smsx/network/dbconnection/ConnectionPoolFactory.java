@@ -4,7 +4,6 @@ import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.xml.XmlConfigSection;
 import ru.sibinco.smsx.InitializationException;
-import snaq.db.ConnectionPool;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -51,8 +50,8 @@ public class ConnectionPoolFactory {
     } catch (InterruptedException e) {
       return null;
     }
-    final ConnectionPool pool = new ConnectionPool(name, size, size, connectionTimeout, url, login, password);
+    final snaq.db.ConnectionPool pool = new snaq.db.ConnectionPool(name, size, size, connectionTimeout, url, login, password);
     pool.setCaching(false, true, false);
-    return pool;
+    return new ConnectionPool(pool);
   }
 }

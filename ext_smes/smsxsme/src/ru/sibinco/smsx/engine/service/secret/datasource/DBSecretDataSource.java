@@ -3,10 +3,12 @@ package ru.sibinco.smsx.engine.service.secret.datasource;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-import snaq.db.ConnectionPool;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.utils.DataSourceException;
@@ -18,6 +20,7 @@ import ru.sibinco.smsx.utils.DataSourceException;
 
 public class DBSecretDataSource extends DBDataSource implements SecretDataSource {
 
+  private final Lock idLock = new ReentrantLock();
   private AtomicInteger id;
   private final ConnectionPool pool;
   private final Matcher loadUserByAddresses;
@@ -28,9 +31,20 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     pool = ConnectionPoolFactory.createConnectionPool("secret", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
-    id = new AtomicInteger(loadId());
-
     loadUserByAddresses = Pattern.compile("0").matcher(getSql("secret.user.load.by.addresses"));
+  }
+
+  private int getNextId() throws DataSourceException {
+    if (id == null) {
+      try {
+        idLock.lock();
+        id = new AtomicInteger(loadId());
+      } finally {
+        idLock.unlock();
+      }
+    }
+
+    return id.incrementAndGet();
   }
 
   private int loadId() throws DataSourceException {
@@ -47,6 +61,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       return (rs.next()) ? rs.getInt(1) : 0;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -70,6 +85,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         su.setExists(true);
       return su;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(rs, ps, conn);
@@ -100,6 +116,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       secretUser.setExists(true);
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -124,6 +141,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       secretUser.setExists(false);
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -155,6 +173,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       return result;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(rs, ps, conn);
@@ -203,6 +222,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       }
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(rs, ps, conn);
@@ -244,6 +264,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       return null;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(rs, ps, conn);
@@ -269,6 +290,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       return -1;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(rs, ps, conn);
@@ -293,8 +315,9 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
 
   public void saveSecretMessage(SecretMessage secretMessage, DataSourceTransaction tx) throws DataSourceException {
     PreparedStatement ps = null;
+    Connection conn = null;
     try {
-      Connection conn = ((DBDataSourceTransaction)tx).conn;
+      conn = ((DBDataSourceTransaction)tx).conn;
 
       ps = conn.prepareStatement(getSql((!secretMessage.isExists()) ? "secret.message.insert" : "secret.message.update"));
 
@@ -311,13 +334,14 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.setInt(11, secretMessage.isAppendAdvertising() ? 1 : 0);
 
       if (!secretMessage.isExists())
-        secretMessage.setId(id.incrementAndGet());
+        secretMessage.setId(getNextId());
 
       ps.setInt(12, secretMessage.getId());
 
       ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, null);
@@ -339,6 +363,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -361,6 +386,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -381,6 +407,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       return ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -403,6 +430,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -469,6 +497,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       return new SecretUserWithMessages(secretUser, messages);
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(rs, ps, conn);

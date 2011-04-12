@@ -5,8 +5,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import snaq.db.ConnectionPool;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.utils.DataSourceException;
@@ -18,6 +20,7 @@ import ru.sibinco.smsx.utils.DataSourceException;
 
 public class DBSenderDataSource extends DBDataSource implements SenderDataSource {
 
+  private Lock idLock = new ReentrantLock();
   private AtomicInteger id;
   private final ConnectionPool pool;
 
@@ -27,7 +30,18 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     pool = ConnectionPoolFactory.createConnectionPool("sender", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
-    id = new AtomicInteger(loadId());
+  }
+
+  private int getNextId() throws DataSourceException {
+    if (id == null) {
+      try {
+        idLock.lock();
+        id= new AtomicInteger(loadId());
+      } finally {
+        idLock.unlock();
+      }
+    }
+    return id.incrementAndGet();
   }
 
   private int loadId() throws DataSourceException {
@@ -44,6 +58,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
       return (rs.next()) ? rs.getInt(1) : 0;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -71,6 +86,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
       return null;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -88,7 +104,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
       ps = conn.prepareStatement(getSql(msg.isExists() ? "sender.message.update" : "sender.message.insert"));
 
       if (!msg.isExists())
-        msg.setId(id.incrementAndGet());
+        msg.setId(getNextId());
 
       ps.setInt(1, msg.getSmppStatus());
       ps.setInt(2, msg.getStatus());
@@ -98,6 +114,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
       ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -121,6 +138,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
       ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -142,6 +160,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
       return ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -166,6 +185,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
       ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);

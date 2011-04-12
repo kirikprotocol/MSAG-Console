@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import snaq.db.ConnectionPool;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.utils.DataSourceException;
@@ -37,6 +37,7 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -55,6 +56,7 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -76,6 +78,7 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
       return rs.next();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);

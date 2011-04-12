@@ -2,10 +2,10 @@ package ru.sibinco.smsx.engine.service.group.datasource.impl.principal;
 
 import ru.sibinco.smsx.engine.service.group.datasource.Principal;
 import ru.sibinco.smsx.engine.service.group.datasource.PrincipalDataSource;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.utils.DataSourceException;
-import snaq.db.ConnectionPool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -42,6 +42,7 @@ public class DBPrincipalDataSource extends DBDataSource implements PrincipalData
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -59,6 +60,7 @@ public class DBPrincipalDataSource extends DBDataSource implements PrincipalData
 
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -86,6 +88,7 @@ public class DBPrincipalDataSource extends DBDataSource implements PrincipalData
         return null;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -115,6 +118,7 @@ public class DBPrincipalDataSource extends DBDataSource implements PrincipalData
       return result;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -126,6 +130,6 @@ public class DBPrincipalDataSource extends DBDataSource implements PrincipalData
   }
 
   public void close() {
-    pool.close();
+    pool.release();
   }
 }

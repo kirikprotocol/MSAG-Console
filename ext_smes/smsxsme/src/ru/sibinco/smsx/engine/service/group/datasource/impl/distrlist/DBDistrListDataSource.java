@@ -2,6 +2,7 @@ package ru.sibinco.smsx.engine.service.group.datasource.impl.distrlist;
 
 import ru.sibinco.smsx.engine.service.group.datasource.DistrListDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.DistrList;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.utils.DataSourceException;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
@@ -13,8 +14,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import snaq.db.ConnectionPool;
 
 /**
  * User: artem
@@ -23,7 +25,8 @@ import snaq.db.ConnectionPool;
 public class DBDistrListDataSource extends DBDataSource implements DistrListDataSource {
 
   private final ConnectionPool pool;
-  private final AtomicInteger id;
+  private AtomicInteger id;
+  private Lock idLock = new ReentrantLock();
   private final WeakDistrListCache cache;
 
   public DBDistrListDataSource() throws DataSourceException {
@@ -32,9 +35,20 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
     pool = ConnectionPoolFactory.createConnectionPool("groupeditlists", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
-    id = new AtomicInteger(loadId());
-
     cache = new WeakDistrListCache();
+  }
+
+  private int getNextId() throws DataSourceException {
+    if (id == null) {
+      try {
+        idLock.lock();
+        if (id == null)
+          id = new AtomicInteger(loadId());
+      } finally {
+        idLock.unlock();
+      }
+    }
+    return id.incrementAndGet();
   }
 
   private int loadId() throws DataSourceException {
@@ -51,6 +65,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       return (rs.next()) ? rs.getInt(1) : 0;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -58,7 +73,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
   }
   
   public DistrList createDistrList(String name, String owner, int maxElements) throws DataSourceException {
-    int listId =  id.incrementAndGet();
+    int listId =  getNextId();
 
     Connection conn = null;
     PreparedStatement ps = null;
@@ -71,6 +86,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       ps.setInt(4, maxElements);
       ps.execute();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -106,6 +122,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
 
       conn.commit();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps1, null);
@@ -132,6 +149,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       ps.setString(1, owner == null ? "system" : owner);
       ps.execute();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -167,6 +185,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
         return null;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -205,6 +224,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       return result;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -246,6 +266,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
         return null;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -262,6 +283,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       ps.setInt(2, listId);
       ps.execute();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -278,6 +300,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       ps.setString(2, address);
       ps.execute();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -294,6 +317,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       ps.setString(2, address);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -317,6 +341,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
 
       return result;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -336,6 +361,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
 
       return rs.next();            
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -352,6 +378,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       ps.setString(2, address);
       ps.execute();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -368,6 +395,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
       ps.setString(2, address);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -391,6 +419,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
 
       return result;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -410,6 +439,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
 
       return rs.next();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -454,6 +484,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
         ps1.executeBatch();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps1, null);
@@ -477,6 +508,7 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
         return 0;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -484,6 +516,6 @@ public class DBDistrListDataSource extends DBDataSource implements DistrListData
   }
 
   public void close() {
-    pool.close();
+    pool.release();
   }
 }

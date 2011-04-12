@@ -1,11 +1,11 @@
 package ru.sibinco.smsx.engine.service.group.datasource.impl.profile;
 
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.utils.DataSourceException;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.engine.service.group.datasource.GroupEditProfileDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.GroupEditProfile;
-import snaq.db.ConnectionPool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,6 +49,7 @@ public class DBGroupEditProfileDataSource extends DBDataSource implements GroupE
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -68,6 +69,7 @@ public class DBGroupEditProfileDataSource extends DBDataSource implements GroupE
       if (ps.executeUpdate() == 0)
         createProfile(profile);
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -87,6 +89,7 @@ public class DBGroupEditProfileDataSource extends DBDataSource implements GroupE
       if (ps.executeUpdate() == 0)
         createProfile(profile);
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -121,6 +124,7 @@ public class DBGroupEditProfileDataSource extends DBDataSource implements GroupE
       p.setLockGroupEdit(rs.getInt(2) == 1);
       return p;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -128,6 +132,6 @@ public class DBGroupEditProfileDataSource extends DBDataSource implements GroupE
   }
 
   public void shutdown() {
-    pool.close();
+    pool.release();
   }
 }

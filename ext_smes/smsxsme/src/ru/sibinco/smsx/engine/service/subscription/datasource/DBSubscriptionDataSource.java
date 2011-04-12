@@ -1,5 +1,6 @@
 package ru.sibinco.smsx.engine.service.subscription.datasource;
 
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.utils.DataSourceException;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
@@ -9,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import snaq.db.ConnectionPool;
 
 /**
  * User: artem
@@ -40,6 +40,7 @@ public class DBSubscriptionDataSource extends DBDataSource implements Subscripti
       rs = ps.executeQuery();
       return rs.next();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -47,6 +48,6 @@ public class DBSubscriptionDataSource extends DBDataSource implements Subscripti
   }
 
   public void shutdown() {
-    pool.close();
+    pool.release();
   }
 }

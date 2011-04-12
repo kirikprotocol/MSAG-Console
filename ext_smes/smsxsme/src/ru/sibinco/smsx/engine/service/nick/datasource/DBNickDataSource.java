@@ -1,6 +1,6 @@
 package ru.sibinco.smsx.engine.service.nick.datasource;
 
-import snaq.db.ConnectionPool;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.utils.DataSourceException;
@@ -45,6 +45,7 @@ public class DBNickDataSource extends DBDataSource implements NickDataSource{
       }
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -60,6 +61,7 @@ public class DBNickDataSource extends DBDataSource implements NickDataSource{
       ps = conn.prepareStatement(getSql("nick.delete"));
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -83,6 +85,7 @@ public class DBNickDataSource extends DBDataSource implements NickDataSource{
       return new NickNick(rs.getString(1), rs.getString(2));
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);

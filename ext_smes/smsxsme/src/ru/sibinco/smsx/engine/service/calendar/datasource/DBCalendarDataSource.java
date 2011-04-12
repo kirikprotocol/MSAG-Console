@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import snaq.db.ConnectionPool;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.utils.DataSourceException;
@@ -20,14 +22,26 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
 
   private final ConnectionPool pool;
   private AtomicInteger id;
+  private Lock idLock = new ReentrantLock();
 
   public DBCalendarDataSource() throws DataSourceException {
     super(DBCalendarDataSource.class.getResourceAsStream("calendar.properties"), "");
 
     pool = ConnectionPoolFactory.createConnectionPool("calendar", Integer.MAX_VALUE, 60000);
     pool.init(1);
+  }
 
-    this.id = new AtomicInteger(loadId());
+  private int getNextId() throws DataSourceException {
+    if (id == null) {
+      try {
+        idLock.lock();
+        if (id == null)
+          id = new AtomicInteger(loadId());
+      } finally {
+        idLock.unlock();
+      }
+    }
+    return id.incrementAndGet();
   }
 
   private int loadId() throws DataSourceException {
@@ -44,6 +58,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
       return (rs.next()) ? rs.getInt(1) : 0;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -85,6 +100,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
       }
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -124,6 +140,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
       return null;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -143,6 +160,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -169,13 +187,14 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
       ps.setInt(11, calendarMessage.isAppendAdvertising() ? 1 : 0);
 
       if (!calendarMessage.isExists())
-        calendarMessage.setId(id.incrementAndGet());
+        calendarMessage.setId(getNextId());
 
       ps.setInt(12, calendarMessage.getId());
 
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -194,6 +213,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -212,6 +232,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
 
       return ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);
@@ -230,6 +251,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
 
       ps.executeUpdate();
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e.getMessage());
     } finally {
       _close(null, ps, conn);

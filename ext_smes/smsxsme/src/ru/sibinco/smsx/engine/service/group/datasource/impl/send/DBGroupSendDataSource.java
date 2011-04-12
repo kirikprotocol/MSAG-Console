@@ -1,10 +1,10 @@
 package ru.sibinco.smsx.engine.service.group.datasource.impl.send;
 
 import ru.sibinco.smsx.engine.service.group.datasource.GroupSendDataSource;
+import ru.sibinco.smsx.network.dbconnection.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.utils.DBDataSource;
 import ru.sibinco.smsx.utils.DataSourceException;
-import snaq.db.ConnectionPool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * User: artem
@@ -22,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DBGroupSendDataSource extends DBDataSource implements GroupSendDataSource {
 
   private AtomicInteger id;
+  private final Lock idLock = new ReentrantLock();
   private final ConnectionPool pool;
 
   public DBGroupSendDataSource() throws DataSourceException {
@@ -30,7 +33,19 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
     pool = ConnectionPoolFactory.createConnectionPool("groupsend", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
-    id = new AtomicInteger(loadId());
+  }
+
+  private int getNextId() throws DataSourceException {
+    if (id == null) {
+      try {
+        idLock.lock();
+        if (id == null)
+          id = new AtomicInteger(loadId());
+      } finally {
+        idLock.unlock();
+      }
+    }
+    return id.incrementAndGet();
   }
 
   private int loadId() throws DataSourceException {
@@ -47,6 +62,7 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
       return (rs.next()) ? rs.getInt(1) : 0;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -61,7 +77,7 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
       if (conn.getAutoCommit())
         conn.setAutoCommit(false);
 
-      int idValue = id.incrementAndGet();
+      int idValue = getNextId();
 
       for (String address : addresses) {
         ps = conn.prepareStatement(getSql("insert"));
@@ -75,6 +91,7 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
 
       return idValue;
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -101,6 +118,7 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
       return null;
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(rs, ps, conn);
@@ -122,6 +140,7 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
       return ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -144,6 +163,7 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
       return ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
@@ -166,6 +186,7 @@ public class DBGroupSendDataSource extends DBDataSource implements GroupSendData
       return ps.executeUpdate();
 
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     } finally {
       _close(null, ps, conn);
