@@ -53,7 +53,7 @@
               <h:inputText id="hostLabel" maxlength="50" value="#{cpFtpEdit.settings.host}"/>
 
               <h:outputText style="white-space:nowrap;" id="port" value="#{msg['user.edit.import.port']}"/>
-              <h:inputText converterMessage="#{msg['invalid_param_value']}" id="portLabel" maxlength="8" value="#{cpFtpEdit.settings.port}"/>
+              <h:inputText id="portLabel" maxlength="8" value="#{cpFtpEdit.settings.port}"/>
 
               <h:outputText style="white-space:nowrap;" id="login" value="#{msg['user.edit.import.login']}"/>
               <h:inputText id="loginLabel" maxlength="20" value="#{cpFtpEdit.settings.login}"/>
@@ -93,7 +93,7 @@
               </h:panelGroup>
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.updatePeriodInMin']}"/>
-              <h:inputText converterMessage="#{msg['invalid_param_value']}" value="#{cpFtpEdit.settings.periodInMin}" size="10"/>
+              <h:inputText value="#{cpFtpEdit.settings.periodInMin}" size="10"/>
 
             </h:panelGrid>
 
@@ -114,7 +114,7 @@
               </h:selectOneMenu>
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.sourceAddress']}"/>
-              <h:inputText converter="addressConverter"  converterMessage="#{msg['invalid_param_value']}"
+              <h:inputText converter="addressConverter"  converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.sourceAddress']}"
                            value="#{cpFtpEdit.settings.sourceAddress}" maxlength="15"/>
             </h:panelGrid>
 

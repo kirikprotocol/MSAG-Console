@@ -74,7 +74,7 @@
               </h:panelGroup>
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.updatePeriodInMin']}"/>
-              <h:inputText converterMessage="#{msg['invalid_param_value']}" value="#{cpFileEdit.settings.periodInMin}" size="10"/>
+              <h:inputText value="#{cpFileEdit.settings.periodInMin}" size="10"/>
 
             </h:panelGrid>
           </eye:collapsingGroup>
@@ -94,7 +94,7 @@
               </h:selectOneMenu>
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.sourceAddress']}"/>
-              <h:inputText converter="addressConverter"  converterMessage="#{msg['invalid_param_value']}"
+              <h:inputText converter="addressConverter"  converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.sourceAddress']}"
                            value="#{cpFileEdit.settings.sourceAddress}" maxlength="15"/>
 
             </h:panelGrid>
