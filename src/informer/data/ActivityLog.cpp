@@ -230,7 +230,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
-        fd_.fsync();
+        fg_.fsync();
         dlvInfo_->incMsgStats(regId,msg.state,1,fromState,retryCount);
     }
 

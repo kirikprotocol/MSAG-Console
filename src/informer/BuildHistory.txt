@@ -1,5 +1,5 @@
 =====================================================================
-2011-04-12 11:20 bukind informer-build-20110412
+2011-04-12 13:30 bukind informer-build-20110412
 
 2011-04-12 11:12 bukind
   bugfix #5225: fsync() added after critical write's.
