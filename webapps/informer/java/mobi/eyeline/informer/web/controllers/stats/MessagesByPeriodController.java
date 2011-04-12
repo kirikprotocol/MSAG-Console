@@ -79,10 +79,16 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   private AggregatedRecord createWithRegionAggregation(DeliveryStatRecord rec) {
     String region = null;
     if(rec.getRegionId() != null) {
-      Region r = getConfig().getRegion(rec.getRegionId());
-      if(r != null) {
-        return new MessagesByRegionRecord(rec, r.getName(), false);
+      String rName = null;
+      if(rec.getRegionId() != 0) {
+        Region r = getConfig().getRegion(rec.getRegionId());
+        if(r != null) {
+          rName = r.getName();
+        }
+      }else {
+        rName = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("region.default");
       }
+      return new MessagesByRegionRecord(rec, rName, rec.getRegionId() == 0);
     }
     return new MessagesByRegionRecord(rec,
         ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedRegion") +" (id="+rec.getRegionId()+")",
@@ -97,7 +103,8 @@ public class MessagesByPeriodController extends DeliveryStatController implement
         return ((Region)o1).getName().compareTo(((Region)o2).getName());
       }
     });
-    List<SelectItem> sis = new ArrayList<SelectItem>(rs.size());
+    List<SelectItem> sis = new ArrayList<SelectItem>(rs.size()+1);
+    sis.add(new SelectItem("0", ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString("region.default")));
     for(Region r : rs) {
       sis.add(new SelectItem(Integer.toString(r.getRegionId()), r.getName()));
     }

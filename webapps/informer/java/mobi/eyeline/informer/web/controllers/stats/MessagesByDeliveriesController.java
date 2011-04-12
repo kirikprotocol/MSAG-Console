@@ -109,6 +109,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
       }
     });
     List<SelectItem> sis = new ArrayList<SelectItem>(rs.size());
+    sis.add(new SelectItem("0", ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString("region.default")));
     for(Region r : rs) {
       sis.add(new SelectItem(Integer.toString(r.getRegionId()), r.getName()));
     }
@@ -190,9 +191,13 @@ public class MessagesByDeliveriesController extends LongOperationController {
         }
         if(rec.getRegionId() != null) {
           r.setRegionId(rec.getRegionId());
+          if(rec.getRegionId() != 0) {
           Region region = config.getRegion(rec.getRegionId());
           if(region != null) {
             r.setRegion(region.getName());
+          }
+          }else {
+            r.setRegion(ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("region.default"));
           }
         }
         r.incNewMessages(rec.getNewmessages());
