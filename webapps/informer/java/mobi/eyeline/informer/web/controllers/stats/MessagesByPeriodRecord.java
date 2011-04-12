@@ -25,7 +25,7 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
 
-  public MessagesByPeriodRecord(DeliveryStatRecord dsr, TimeAggregationType type, boolean isParent) {
+  public MessagesByPeriodRecord(DeliveryStatRecord dsr, AggregationType type, boolean isParent) {
     super(dsr.getDate(), type, isParent);
     this.newMessages = dsr.getNewmessages();
     this.processMessages = dsr.getProcessing();

@@ -97,6 +97,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
 
     DeliveryStatFilter convertedFilter = new DeliveryStatFilter();
     if(filter != null) {
+      convertedFilter.setRegionId(filter.getRegionId());
       convertedFilter.setUser(filter.getUser());
       convertedFilter.setTaskIds(filter.getTaskIds());
       if (filter.getFromDate() != null)
@@ -131,7 +132,6 @@ public class DeliveryStatProvider extends StatEntityProvider{
         try {
           CSVTokenizer tokenizer = new CSVTokenizer(line);
 
-          //#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL,CREATED,DELETED,REGID
           //   MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID
           if (tokenizer.hasMoreTokens()) {
             String minsec = tokenizer.nextToken();
@@ -166,6 +166,9 @@ public class DeliveryStatProvider extends StatEntityProvider{
               if(tokenizer.hasMoreTokens()) {
                 regionId = Integer.parseInt(tokenizer.nextToken());
               }
+            }
+            if(filter.getRegionId() != null && !filter.getRegionId().equals(regionId)){
+              continue;
             }
             DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
                 newmessages, processing, delivered, failed, expired,

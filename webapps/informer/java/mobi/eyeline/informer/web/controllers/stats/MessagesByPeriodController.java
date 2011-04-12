@@ -4,8 +4,10 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.web.config.Configuration;
 
+import javax.faces.model.SelectItem;
 import java.util.*;
 
 /**
@@ -59,13 +61,54 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   @Override
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
+    this.locale = locale;
     config.statistics(getFilter(), this);
   }
 
+  private Locale locale;
+
+  private AggregatedRecord createWithTimeAggregation(DeliveryStatRecord rec) {
+    return new MessagesByPeriodRecord(rec, getAggregation(), true);
+  }
+
+  private AggregatedRecord createWithRegionAggregation(DeliveryStatRecord rec) {
+    String region = null;
+    if(rec.getRegionId() != null) {
+      Region r = getConfig().getRegion(rec.getRegionId());
+      if(r != null) {
+        return new MessagesByRegionRecord(rec, r.getName(), false);
+      }
+    }
+    return new MessagesByRegionRecord(rec,
+        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedRegion") +" (id="+rec.getRegionId()+")",
+        true);
+  }
+
+  public List<SelectItem> getRegions() {
+    List<Region> rs = getConfig().getRegions();
+    Collections.sort(rs, new Comparator<Object>() {
+      @Override
+      public int compare(Object o1, Object o2) {
+        return ((Region)o1).getName().compareTo(((Region)o2).getName());
+      }
+    });
+    List<SelectItem> sis = new ArrayList<SelectItem>(rs.size());
+    for(Region r : rs) {
+      sis.add(new SelectItem(Integer.toString(r.getRegionId()), r.getName()));
+    }
+    return sis;
+  }
+  public String getRegionId() {
+    return filter.getRegionId() == null ? null : filter.getRegionId().toString();
+  }
+
+  public void setRegionId(String regionId) {
+    filter.setRegionId(regionId == null || regionId.length() == 0 ? null : Integer.parseInt(regionId));
+  }
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
     setCurrentAndTotal(current, total);
-    AggregatedRecord newRecord = new MessagesByPeriodRecord(rec, getAggregation(), true);
+    AggregatedRecord newRecord = getAggregation() != AggregationType.REGION ? createWithTimeAggregation(rec) : createWithRegionAggregation(rec);
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
     if (oldRecord == null) {
       putRecord(newRecord);

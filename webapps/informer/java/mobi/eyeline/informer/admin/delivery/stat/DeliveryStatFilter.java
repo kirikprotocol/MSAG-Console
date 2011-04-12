@@ -16,6 +16,8 @@ public class DeliveryStatFilter {
   private String user;
   private List<Integer> taskIds;
 
+  private Integer regionId;
+
   public DeliveryStatFilter() {
   }
 
@@ -31,6 +33,7 @@ public class DeliveryStatFilter {
     this.tillDate = other.tillDate == null ? null : (Date) other.tillDate.clone();
     this.user = other.user;
     this.taskIds = other.taskIds==null ? null : new ArrayList<Integer>(other.taskIds);
+    this.regionId = other.regionId;
   }
 
   /**
@@ -87,5 +90,11 @@ public class DeliveryStatFilter {
     this.taskIds = taskId;
   }
 
+  public Integer getRegionId() {
+    return regionId;
+  }
 
+  public void setRegionId(Integer regionId) {
+    this.regionId = regionId;
+  }
 }

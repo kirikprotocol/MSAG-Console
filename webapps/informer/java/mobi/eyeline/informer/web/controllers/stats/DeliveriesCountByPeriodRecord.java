@@ -18,7 +18,7 @@ public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
   private int counter;
 
 
-  public DeliveriesCountByPeriodRecord(Calendar periodStart, TimeAggregationType type, int counter, boolean isParent) {
+  public DeliveriesCountByPeriodRecord(Calendar periodStart, AggregationType type, int counter, boolean isParent) {
     super(periodStart, type, isParent);
     this.counter = counter;
     if (getChildAggregationType() != null) {

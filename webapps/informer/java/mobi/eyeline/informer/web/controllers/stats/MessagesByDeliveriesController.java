@@ -102,6 +102,12 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public List<SelectItem> getRegions() {
     List<Region> rs = getConfig().getRegions();
+    Collections.sort(rs, new Comparator<Object>() {
+      @Override
+      public int compare(Object o1, Object o2) {
+        return ((Region)o1).getName().compareTo(((Region)o2).getName());
+      }
+    });
     List<SelectItem> sis = new ArrayList<SelectItem>(rs.size());
     for(Region r : rs) {
       sis.add(new SelectItem(Integer.toString(r.getRegionId()), r.getName()));

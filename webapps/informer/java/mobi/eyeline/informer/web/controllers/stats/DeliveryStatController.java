@@ -24,8 +24,8 @@ import java.util.*;
 public abstract class DeliveryStatController extends LongOperationController {
   private User user;
   private boolean initError = false;
-  private DeliveryStatFilter filter;
-  private TimeAggregationType aggregation;
+  protected DeliveryStatFilter filter;
+  private AggregationType aggregation;
 
 
 
@@ -38,7 +38,7 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   public DeliveryStatController(DeliveryStatTotals totals) {
     super();
-    aggregation = TimeAggregationType.DAY;
+    aggregation = AggregationType.DAY;
     filter = new DeliveryStatFilter();
     initUser();
     this.totals = totals;
@@ -63,8 +63,9 @@ public abstract class DeliveryStatController extends LongOperationController {
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskIds(null);
+    filter.setRegionId(null);
     setFullMode(false);
-    setAggregation(TimeAggregationType.DAY);
+    setAggregation(AggregationType.DAY);
   }
 
 
@@ -92,17 +93,17 @@ public abstract class DeliveryStatController extends LongOperationController {
     this.filter = filter;
   }
 
-  public TimeAggregationType getAggregation() {
+  public AggregationType getAggregation() {
     return aggregation;
   }
 
-  public void setAggregation(TimeAggregationType aggregation) {
+  public void setAggregation(AggregationType aggregation) {
     this.aggregation = aggregation;
   }
 
   public List<SelectItem> getAggregations() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    for (TimeAggregationType a : TimeAggregationType.values()) {
+    for (AggregationType a : AggregationType.values()) {
         ret.add(new SelectItem(a));    
     }
     return ret;
@@ -200,6 +201,10 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   public void setFullMode(boolean fullMode) {
     this.fullMode = fullMode;
+  }
+
+  public boolean isTimeAggregation() {
+    return getAggregation() != AggregationType.REGION;
   }
 
   @Override

@@ -24,7 +24,7 @@ public class StatsSizeRecord extends TimeAggregatedStatRecord {
   private DecimalFormat fmt;
   private static DateFormat idformat = new SimpleDateFormat("yyyyMMddHHmm");
 
-  public StatsSizeRecord(Calendar periodStart, TimeAggregationType type, boolean isParent, int count, long size) {
+  public StatsSizeRecord(Calendar periodStart, AggregationType type, boolean isParent, int count, long size) {
     super(periodStart, type, isParent);
     this.count = count;
     this.size = size;

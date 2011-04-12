@@ -25,7 +25,7 @@ public class StatsSizeController extends DeliveryStatController  {
 
   public StatsSizeController() {
     super(new StatsSizeTotals());
-    setAggregation(TimeAggregationType.MONTH);
+    setAggregation(AggregationType.MONTH);
   }
 
 
@@ -84,10 +84,10 @@ public class StatsSizeController extends DeliveryStatController  {
   @Override
   public List<SelectItem> getAggregations() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    ret.add(new SelectItem(TimeAggregationType.DAY));
-    ret.add(new SelectItem(TimeAggregationType.WEEK));
-    ret.add(new SelectItem(TimeAggregationType.MONTH));
-    ret.add(new SelectItem(TimeAggregationType.YEAR));
+    ret.add(new SelectItem(AggregationType.DAY));
+    ret.add(new SelectItem(AggregationType.WEEK));
+    ret.add(new SelectItem(AggregationType.MONTH));
+    ret.add(new SelectItem(AggregationType.YEAR));
     return ret;
   }
 

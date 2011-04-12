@@ -6,6 +6,6 @@ package mobi.eyeline.informer.web.controllers.stats;
  * Date: 25.10.2010
  * Time: 14:13:05
  */
-enum TimeAggregationType {
-  HOUR, DAY, WEEK, MONTH, YEAR
+enum AggregationType {
+  HOUR, DAY, WEEK, MONTH, YEAR, REGION
 }

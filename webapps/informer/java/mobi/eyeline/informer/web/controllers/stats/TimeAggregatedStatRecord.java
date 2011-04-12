@@ -15,24 +15,24 @@ import java.util.TreeMap;
  */
 public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
 
-  private TimeAggregationType type;
+  private AggregationType type;
   protected Calendar startCalendar;
   protected Calendar endCalendar;
-  private TimeAggregationType childAggreagtionType;
+  private AggregationType childAggreagtionType;
 
 
-  public TimeAggregatedStatRecord(Calendar periodStart, TimeAggregationType type, boolean isParent) {
+  public TimeAggregatedStatRecord(Calendar periodStart, AggregationType type, boolean isParent) {
     init(periodStart, type, isParent);
   }
 
-  public TimeAggregatedStatRecord(Date date, TimeAggregationType type, boolean isParent) {
+  public TimeAggregatedStatRecord(Date date, AggregationType type, boolean isParent) {
     Calendar c = Calendar.getInstance();
     c.setTime(date);
     init(c, type, isParent);
   }
 
 
-  private void init(Calendar periodStart, TimeAggregationType type, boolean isParent) {
+  private void init(Calendar periodStart, AggregationType type, boolean isParent) {
 
     startCalendar = (Calendar) periodStart.clone();
     startCalendar.set(Calendar.MILLISECOND, 0);
@@ -42,22 +42,22 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
     this.type = type;
     this.isParent = isParent;
     childAggreagtionType = null;
-    if (type == TimeAggregationType.YEAR) {
+    if (type == AggregationType.YEAR) {
       startCalendar.set(Calendar.MONTH, 0);
       startCalendar.set(Calendar.DAY_OF_MONTH, 1);
       startCalendar.set(Calendar.HOUR_OF_DAY, 0);
       startCalendar.set(Calendar.MINUTE, 0);
       endCalendar = (Calendar) startCalendar.clone();
       endCalendar.add(Calendar.YEAR, 1);
-      if (isParent) childAggreagtionType = TimeAggregationType.MONTH;
-    } else  if (type == TimeAggregationType.MONTH) {
+      if (isParent) childAggreagtionType = AggregationType.MONTH;
+    } else  if (type == AggregationType.MONTH) {
       startCalendar.set(Calendar.DAY_OF_MONTH, 1);
       startCalendar.set(Calendar.HOUR_OF_DAY, 0);
       startCalendar.set(Calendar.MINUTE, 0);
       endCalendar = (Calendar) startCalendar.clone();
       endCalendar.add(Calendar.MONTH, 1);
-      if (isParent) childAggreagtionType = TimeAggregationType.WEEK;
-    } else if (type == TimeAggregationType.WEEK) {
+      if (isParent) childAggreagtionType = AggregationType.WEEK;
+    } else if (type == AggregationType.WEEK) {
 
       Date curDate = startCalendar.getTime();
       startCalendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
@@ -68,14 +68,14 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
       startCalendar.set(Calendar.MINUTE, 0);
       endCalendar = (Calendar) startCalendar.clone();
       endCalendar.add(Calendar.DATE, 7);
-      if (isParent) childAggreagtionType = TimeAggregationType.DAY;
-    } else if (type == TimeAggregationType.DAY) {
+      if (isParent) childAggreagtionType = AggregationType.DAY;
+    } else if (type == AggregationType.DAY) {
       startCalendar.set(Calendar.HOUR_OF_DAY, 0);
       startCalendar.set(Calendar.MINUTE, 0);
       endCalendar = (Calendar) startCalendar.clone();
       endCalendar.add(Calendar.DATE, 1);
-      if (isParent) childAggreagtionType = TimeAggregationType.HOUR;
-    } else if (type == TimeAggregationType.HOUR) {
+      if (isParent) childAggreagtionType = AggregationType.HOUR;
+    } else if (type == AggregationType.HOUR) {
       startCalendar.set(Calendar.MINUTE, 0);
       endCalendar = (Calendar) startCalendar.clone();
       endCalendar.add(Calendar.HOUR, 1);
@@ -91,7 +91,7 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
   }
 
 
-  public TimeAggregationType getType() {
+  public AggregationType getType() {
     return type;
   }
 
@@ -157,7 +157,7 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
     }
   }
 
-  protected TimeAggregationType getChildAggregationType() {
+  protected AggregationType getChildAggregationType() {
     return childAggreagtionType;
   }
 
