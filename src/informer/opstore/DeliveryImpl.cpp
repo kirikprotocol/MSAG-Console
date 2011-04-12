@@ -303,6 +303,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.killedMessages );
         assert(buflen>0);
         fg.write(buf,buflen);
+        fg.fsync();
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
         source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }

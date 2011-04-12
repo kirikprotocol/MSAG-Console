@@ -1,3 +1,9 @@
+=====================================================================
+2011-04-12 11:20 bukind informer-build-20110412
+
+2011-04-12 11:12 bukind
+  fsync() added after critical write's.
+
 2011-04-06 11:23 bukind
   DLV_NAME_LENGTH increased upto 256
 

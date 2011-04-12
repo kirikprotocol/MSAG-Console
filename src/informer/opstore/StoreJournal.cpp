@@ -213,6 +213,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         smsc_log_debug(log_,"buffer to save(%u): %s",buflen,hd.c_str(dump));
     }
     fg_.write(buf.get(),buflen);
+    fg_.fsync();
     serial = serial_;
     return buflen;
 }

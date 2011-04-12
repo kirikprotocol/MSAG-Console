@@ -1023,6 +1023,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                 tb.setPos(0);
                 tb.set16(uint16_t(buflen-LENSIZE));
                 fg.write(buf.get(),buflen);
+                fg.fsync();
             }
 
         } catch ( std::exception& e ) {

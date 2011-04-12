@@ -54,7 +54,11 @@ public:
     size_t read( void* buf, size_t buflen );
 
     void fsync() {
-        if (fd_!=-1) ::fsync(fd_);
+        if (fd_!=-1) {
+            if ( 0 != ::fsync(fd_) ) {
+                throw ErrnoException(errno,"fsync fd=%d",fd_);
+            }
+        }
     }
 
     /// NOTE: pos is preserved
