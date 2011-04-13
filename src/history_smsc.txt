@@ -644,5 +644,8 @@ B3207: Mar 25, 2011
     SMSC	New mode ATI+SRI for USSD NI imsi and msc detection
 
 B3208: 
-    SMSC	new option core.schedulerFreeBandwidthUsage, how fast scheduler can submit messages in percentatge of free bandwidth, default 50
-    
+    SMSC    new option core.schedulerFreeBandwidthUsage, how fast scheduler can submit messages
+            in percentatge of free bandwidth, default 50
+    INMan   performance optimization (reduced heap usage while maintaining MAP dialogs,
+            drastically reduced thread usage while performing ATSI/CH-SRI requests).
+
