@@ -633,7 +633,22 @@ void DeliveryMgr::init()
                   idlv != dlvs.end();
                   ++idlv ) {
                 // get dlvid
-                const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
+                const char* dlvstr = idlv->c_str();
+                if ( !*dlvstr ) {
+                    // null-length string
+                    smsc_log_warn(log_,"chunk '%s' has empty item, skipped",buf.get());
+                    continue;
+                }
+                char* endptr;
+                const dlvid_type dlvId(dlvid_type(strtoul(dlvstr,&endptr,10)));
+                if ( **endptr ) {
+                    smsc_log_warn(log_,"chunk '%s' has non-valid item '%s', skipped",buf.get(),dlvstr);
+                    continue;
+                }
+                if (dlvId<=0) {
+                    smsc_log_warn(log_,"chunk '%s' has D=%u, which is not valid, skipped",buf.get(),dlvId);
+                    continue;
+                }
                 if (dlvId > lastDlvId_) {
                     lastDlvId_ = dlvId;
                 }

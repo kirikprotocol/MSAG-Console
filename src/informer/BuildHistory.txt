@@ -1,3 +1,7 @@
+2011-04-13 10:30 bukind
+  bugfix #5239: exceptions from InfosmeCoreV1::Execute() were not handled
+  bugfix: better delivery id checking at loading deliveries
+
 =====================================================================
 2011-04-12 13:30 bukind informer-build-20110412
 

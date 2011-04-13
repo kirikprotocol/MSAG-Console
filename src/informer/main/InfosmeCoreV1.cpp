@@ -1133,7 +1133,8 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
                                     dlvid_type      dlvId,
                                     bool            moveToArchive )
 {
-    smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u)",userInfo.getUserId(),dlvId);
+    smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u,move=%d)",userInfo.getUserId(),dlvId,
+                   moveToArchive?1:0);
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
@@ -1230,7 +1231,15 @@ int InfosmeCoreV1::Execute()
         BindSignal bs;
         while ( bindQueue_.Pop(bs) ) {
             if (bs.regIds.empty()) continue;
-            bindDeliveryRegions(bs);
+            try {
+                bindDeliveryRegions(bs);
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"%sbinding D=%u to [%s], exc: %s",
+                              bs.bind ? "" : "un",
+                              unsigned(bs.dlvId),
+                              formatRegionList(bs.regIds.begin(),bs.regIds.end()).c_str(),
+                              e.what());
+            }
         }
         bindQueue_.waitForItem();
 
