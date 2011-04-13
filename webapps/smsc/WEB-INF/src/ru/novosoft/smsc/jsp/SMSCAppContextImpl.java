@@ -1,19 +1,21 @@
 package ru.novosoft.smsc.jsp;
 
+import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
+import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.network_profiles.NetworkProfilesManager;
-import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
-import ru.novosoft.smsc.admin.fraud.FraudConfigManager;
-import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.daemon.DaemonManagerHSImpl;
 import ru.novosoft.smsc.admin.daemon.DaemonManagerImpl;
+import ru.novosoft.smsc.admin.fraud.FraudConfigManager;
 import ru.novosoft.smsc.admin.journal.Journal;
+import ru.novosoft.smsc.admin.network_profiles.NetworkProfilesManager;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
@@ -26,22 +28,18 @@ import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.smsc.util.LocaleMessages;
 import ru.novosoft.smsc.util.WebAppFolders;
-import ru.novosoft.smsc.util.smsxsender.SmsXSenderServiceLocator;
-import ru.novosoft.smsc.util.smsxsender.SmsXSender;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.smsxsender.SmsXSender;
+import ru.novosoft.smsc.util.smsxsender.SmsXSenderServiceLocator;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContextImpl;
 import ru.novosoft.util.menu.TopMenu;
 
+import javax.xml.rpc.ServiceException;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
-
-import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
-import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
-
-import javax.xml.rpc.ServiceException;
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext {
 
@@ -53,6 +51,20 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
           getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
           invoke(null, new Object[]{instance, "InfoSme"});
+    }catch(Throwable e) {
+      e.printStackTrace();
+    }
+    try{
+      Class.forName("ru.sibinco.smsx.stats.SmsxContext").
+          getMethod("init", new Class[]{SMSCAppContext.class, Config.class}).
+          invoke(null, new Object[]{instance, instance.webappConfig});
+    }catch(Throwable e) {
+      e.printStackTrace();
+    }
+    try{
+      Class.forName("ru.sibinco.sponsored.stats.SponsoredContext").
+          getMethod("init", new Class[]{SMSCAppContext.class, Config.class}).
+          invoke(null, new Object[]{instance, instance.webappConfig});
     }catch(Throwable e) {
       e.printStackTrace();
     }
