@@ -9,6 +9,7 @@ public class FtpResourceEditController extends CPResourceEditController{
 
   public FtpResourceEditController() {
     super(UserCPsettings.Protocol.ftp);
+    settings.setPort(21);
   }
 
 }

@@ -9,5 +9,6 @@ public class SftpResourceEditController extends CPResourceEditController{
 
   public SftpResourceEditController() {
     super(UserCPsettings.Protocol.sftp);
+    settings.setPort(22);
   }
 }

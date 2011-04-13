@@ -9,5 +9,6 @@ public class SmbResourceEditController extends CPResourceEditController{
 
   public SmbResourceEditController() {
     super(UserCPsettings.Protocol.smb);
+    settings.setPort(445);
   }
 }
