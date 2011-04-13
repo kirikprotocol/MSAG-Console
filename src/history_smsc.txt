@@ -636,3 +636,13 @@ B3206: Mar 22, 2011
     SMSC	inmancomm fix for limits for svctype and systemid.
     SMSC	dpf tracker now can skip incorrect records on startup
     
+B3207: Mar 25, 2011
+    MCISme	fix for possible crash on write abonent profile change event to events storage
+    SMSC	Do native/network byteorder of UCS2 messages in store, smpp, and map instead of using mix 
+    SMSC	Sms partition optimized
+    SMSC	fix for enabling and trafficMode mix in dtd
+    SMSC	New mode ATI+SRI for USSD NI imsi and msc detection
+
+B3208: 
+    SMSC	new option core.schedulerFreeBandwidthUsage, how fast scheduler can submit messages in percentatge of free bandwidth, default 50
+    
