@@ -1,0 +1,50 @@
+<project name="smsx-stat-script" default="distr">
+
+
+  <property name="distr.dir" value=".distr_script"/>
+  <property name="source.classes" value="${distr.dir}/classes"/>
+  <property name="exploded.dir" value="${distr.dir}/exploded"/>
+
+  <path id="lib">
+    <fileset dir="stat_lib" includes="*.jar"/>
+  </path>
+
+
+
+  <target name="compile.sources">
+    <delete dir="${source.classes}" failonerror="false"/>
+    <mkdir dir="${source.classes}"/>
+    <javac srcdir="stat" destdir="${source.classes}" classpathref="lib" debug="true"/>
+  </target>
+
+
+  <target name="predistr" depends="compile.sources">
+    <delete dir="${exploded.dir}" failonerror="false"/>
+    <jar destfile="${exploded.dir}/smsx_stat_script.jar" basedir="${source.classes}"/>
+  </target>
+
+  <target name="distr" depends="predistr">
+    <mkdir dir="${distr.dir}/script"/>
+
+    <manifest file="${exploded.dir}/manifest.mf">
+      <attribute name="One-Jar-Main-Class" value="ru.sibinco.smsx.stats.Script"/>
+    </manifest>
+
+
+    <taskdef name="one-jar" classname="com.simontuffs.onejar.ant.OneJarTask" classpathref="lib" onerror="report"/>
+    <one-jar destfile="${distr.dir}/script/smsx_stat_script.jar" manifest="${exploded.dir}/manifest.mf">
+      <main jar="${exploded.dir}/smsx_stat_script.jar"/>
+      <lib >
+        <fileset dir="stat_lib"  excludes="one-jar*"/>
+      </lib>
+    </one-jar>
+
+    <copy todir="${distr.dir}/script">
+      <fileset dir="stat_bin"/>
+    </copy>
+
+
+  </target>
+
+
+</project>
