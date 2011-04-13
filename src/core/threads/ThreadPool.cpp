@@ -265,20 +265,32 @@ void ThreadPool::releaseThread(PooledThread * thread)
   smsc_log_debug(_tpLogger, "ThreadPool(%p): releasing Thread[%lu](%p)",
                  this, thread->getThrId(), thread);
   int   i = 0;
-  ThreadedTask * pTask = 0;
   {
     MutexGuard  grd(lock);
     //NOTE: no check for return value, because of in case of
     //findUsed() failure only core dump analyzis will help :)
     findUsed(thread, i);
 
-    //destroy task if necessary
-    pTask = thread->releaseTask();
-    if (pTask && pTask->delOnCompletion()) {
+    ThreadedTask * pTask = thread->releaseTask();
+    if (pTask) {
+      //Destroy or release task. Note: it may takes rather long time,
+      //so keep thread in 'used' state until task finalization is completed.
       usedThreads[i].destructing = true;
       {
         ReverseMutexGuard rgrd(lock);
-        delete pTask; //may lasts rather long time
+        if (pTask->delOnCompletion()) {
+          delete pTask;
+        } else {
+          try {
+            pTask->onRelease();
+          } catch (const std::exception& e ) {
+            smsc_log_error(_tpLogger, "ThreadPool(%p): task(%s) onRelease() exception: %s",
+                           this, pTask->taskName(), e.what());
+          } catch (...) {
+            smsc_log_error(_tpLogger, "ThreadPool(%p): task(%s) onRelease() exception: <unknown>",
+                           this, pTask->taskName());
+          }
+        }
         pTask = 0;
       }
       findUsed(thread, i);
@@ -288,31 +300,18 @@ void ThreadPool::releaseThread(PooledThread * thread)
     if (pendingTasks.Count() > 0) {
       ThreadedTask * t;
       pendingTasks.Shift(t);
-      smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to idle Thread[%lu](%p)",
+      smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to released Thread[%lu](%p)",
                      this, t->taskName(), thread->getThrId(), thread);
       thread->assignTask(t);
       thread->processTask();
     } else {
       usedThreads.Delete(i,1);
       freeThreads.Push(thread);
-      smsc_log_debug(_tpLogger, "ThreadPool(%p): "
-                    "pendingTasks: %d, threads: used %d, idle %d", this,
-                     pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
+      smsc_log_debug(_tpLogger, "ThreadPool(%p): released Thread[%lu](%p)",
+                     this, thread->getThrId(), thread);
     }
     if (!usedThreads.Count()) //awake shutdown()
       lock.notify();
-  }
-
-  if (pTask && !pTask->delOnCompletion()) {
-    try {
-      pTask->onRelease();
-    } catch (const std::exception& e ) {
-      smsc_log_error(_tpLogger, "ThreadPool(%p): task(%s) onRelease() exception: %s",
-                     this, pTask->taskName(), e.what());
-    } catch (...) {
-      smsc_log_error(_tpLogger, "ThreadPool(%p): task(%s) onRelease() exception: <unknown>",
-                     this, pTask->taskName());
-    }
   }
 }
 
