@@ -126,7 +126,7 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
   struct timespec maxTime = timeout.adjust2Nano();
 
   MutexGuard  grd(lock);
-  smsc_log_debug(_tpLogger, "ThreadPool(%p): stopping "
+  smsc_log_debug(_tpLogger, "ThreadPool(%p): shutdowning "
                 "pendingTasks: %d, threads: used %d, idle %d", this,
                  pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
 
@@ -244,11 +244,10 @@ bool ThreadPool::startTask(ThreadedTask* task)
                      this, task->taskName());
       pendingTasks.Push(task);
     } else {
-      if (!(t = allcThread()))
+      if (!(t = allcThread(task)))
         return false;
       smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to new Thread[%lu](%p)",
                      this, task->taskName(), t->getThrId(), t);
-      t->assignTask(task);
       t->processTask();
     }
   }
@@ -327,11 +326,12 @@ bool ThreadPool::findUsed(PooledThread * thread, int & idx)
   return false;
 }
 
-ThreadPool::PooledThread * ThreadPool::allcThread(void)
+ThreadPool::PooledThread * ThreadPool::allcThread(ThreadedTask * use_task/* = NULL*/)
 {
   PooledThread * res = NULL;
   std::auto_ptr<PooledThread> nThr(new PooledThread(this, _tpLogger));
 
+  nThr->assignTask(use_task);
   nThr->Start(defaultStackSize);
   if (nThr->getThrId()) {
     usedThreads.Push(ThreadInfo(res = nThr.release()));

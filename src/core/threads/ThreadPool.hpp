@@ -133,7 +133,7 @@ private:
   TasksArray            pendingTasks;
 
   bool findUsed(PooledThread * thread, int & idx);
-  PooledThread * allcThread(void);
+  PooledThread * allcThread(ThreadedTask * task = NULL);
 
 };//ThreadPool
 
