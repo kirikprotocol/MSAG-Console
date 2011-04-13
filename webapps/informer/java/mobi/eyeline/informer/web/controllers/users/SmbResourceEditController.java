@@ -8,7 +8,6 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 public class SmbResourceEditController extends CPResourceEditController{
 
   public SmbResourceEditController() {
-    super(UserCPsettings.Protocol.smb);
-    settings.setPort(445);
+    super(UserCPsettings.Protocol.smb, 445);
   }
 }

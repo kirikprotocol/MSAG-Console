@@ -8,7 +8,7 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 public class LocalFtpResourceEditController extends CPResourceEditController{
 
   public LocalFtpResourceEditController() {
-    super(UserCPsettings.Protocol.localFtp);
+    super(UserCPsettings.Protocol.localFtp, null);
   }
 
 }

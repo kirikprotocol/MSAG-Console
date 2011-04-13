@@ -32,13 +32,16 @@ public abstract class CPResourceEditController extends CPResourceController{
 
   protected UserCPsettings.Protocol protocol;
 
-  protected CPResourceEditController(UserCPsettings.Protocol protocol) {
+  protected CPResourceEditController(UserCPsettings.Protocol protocol, Integer defaultPort) {
     this.protocol = protocol;
     settings.setProtocol(protocol);
     settings.setActivePeriodStart(new Time(0,0,0));
     settings.setActivePeriodEnd(new Time(23,59,59));
     settings.setPeriodInMin(1);
     settings.setDirectoryMaxSize(10);
+    if(defaultPort != null) {
+      settings.setPort(defaultPort);
+    }
     loadSettings();
   }
 

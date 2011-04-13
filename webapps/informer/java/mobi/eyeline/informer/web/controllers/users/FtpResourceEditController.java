@@ -8,8 +8,7 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 public class FtpResourceEditController extends CPResourceEditController{
 
   public FtpResourceEditController() {
-    super(UserCPsettings.Protocol.ftp);
-    settings.setPort(21);
+    super(UserCPsettings.Protocol.ftp, 21);
   }
 
 }

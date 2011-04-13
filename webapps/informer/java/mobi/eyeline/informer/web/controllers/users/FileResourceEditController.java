@@ -8,6 +8,6 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 public class FileResourceEditController extends CPResourceEditController{
 
   public FileResourceEditController() {
-    super(UserCPsettings.Protocol.file);
+    super(UserCPsettings.Protocol.file, null);
   }
 }

@@ -8,7 +8,6 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 public class SftpResourceEditController extends CPResourceEditController{
 
   public SftpResourceEditController() {
-    super(UserCPsettings.Protocol.sftp);
-    settings.setPort(22);
+    super(UserCPsettings.Protocol.sftp, 22);
   }
 }
