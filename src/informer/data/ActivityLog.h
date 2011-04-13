@@ -34,6 +34,11 @@ public:
     void addDeleteRecords( msgtime_type                   currentTime,
                            const std::vector<msgid_type>& msgIds );
 
+    // flush buffers to the disk.
+    // NOTE: typically is only invoked at delivery state change
+    // to prevent performance degradation.
+    void fsync();
+
     static bool readStatistics( const std::string& filename,
                                 smsc::core::buffers::TmpBuf<char, 8192 >& buf,
                                 DeliveryStats& ods );

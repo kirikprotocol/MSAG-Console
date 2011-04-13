@@ -114,7 +114,7 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
         ::memcpy(buf,"00",2);
     }
     fg_.write(buf,bufsize);
-    fg_.fsync();
+    // fg_.fsync();
 }
 
 

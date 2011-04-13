@@ -1,3 +1,10 @@
+=====================================================================
+2011-04-13 11:00 bukind informer-build-20110413
+
+2011-04-13 11:00 bukind
+  bugfix #5240: performance degradation with fsync().
+  Solved via fsync() invocation after dlv state change only.
+
 2011-04-13 10:30 bukind
   bugfix #5239: exceptions from InfosmeCoreV1::Execute() were not handled
   bugfix: better delivery id checking at loading deliveries

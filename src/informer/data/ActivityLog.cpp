@@ -230,7 +230,6 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
-        fg_.fsync();
         dlvInfo_->incMsgStats(regId,msg.state,1,fromState,retryCount);
     }
 
@@ -278,9 +277,15 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
               i != msgIds.end(); ++i ) {
             const int off = sprintf(buf+shift,"%llu,,,,,,,\n",ulonglong(*i));
             fg_.write(buf,shift+off);
-            fg_.fsync();
         }
     }
+}
+
+
+void ActivityLog::fsync()
+{
+    MutexGuard mg(lock_);
+    fg_.fsync();
 }
 
 

@@ -4,6 +4,7 @@
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/UserInfo.h"
 #include "informer/data/BindSignal.h"
+#include "informer/data/ActivityLog.h"
 #include "util/config/Config.h"
 #include "informer/io/ConfigWrapper.h"
 #include "informer/io/FileGuard.h"
@@ -303,8 +304,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.killedMessages );
         assert(buflen>0);
         fg.write(buf,buflen);
-        fg.fsync();
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
+        activityLog_->fsync();
         source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }
 }

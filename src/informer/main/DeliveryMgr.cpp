@@ -641,7 +641,7 @@ void DeliveryMgr::init()
                 }
                 char* endptr;
                 const dlvid_type dlvId(dlvid_type(strtoul(dlvstr,&endptr,10)));
-                if ( **endptr ) {
+                if ( *endptr ) {
                     smsc_log_warn(log_,"chunk '%s' has non-valid item '%s', skipped",buf.get(),dlvstr);
                     continue;
                 }

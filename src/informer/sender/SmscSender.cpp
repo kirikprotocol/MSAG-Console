@@ -153,7 +153,7 @@ public:
         tb.set16(uint16_t(pos-LENSIZE));
         MutexGuard mg(mon_);
         fg_.write(buf,pos);
-        fg_.fsync();
+        // fg_.fsync();
     }
 
 protected:
