@@ -5,8 +5,6 @@ import jcifs.smb.SmbFile;
 import jcifs.smb.SmbNamedPipe;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderException;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.users.UserCPsettings;
 
 import java.io.*;
 import java.util.LinkedList;
@@ -24,13 +22,15 @@ class SMBResource extends FileResource {
   private final String login;
   private final String password;
   private final String remoteDir;
+  private final String domain;
 
-  SMBResource(String host, Integer port, String login, String password, String remoteDir) {
+  SMBResource(String host, Integer port, String login, String password, String remoteDir, String domain) {
     this.host = host;
     this.port = port;
     this.login = login;
     this.password = password;
     this.remoteDir = remoteDir;
+    this.domain = domain != null && domain.length() == 0 ? null : domain;
   }
 
   @Override
@@ -55,7 +55,7 @@ class SMBResource extends FileResource {
         smb = new SmbNamedPipe(url.toString(), SmbNamedPipe.PIPE_TYPE_RDWR | SmbNamedPipe.PIPE_TYPE_CALL);
       } else {
         smb = new SmbNamedPipe(url.toString(), SmbNamedPipe.PIPE_TYPE_RDWR | SmbNamedPipe.PIPE_TYPE_CALL,
-            new NtlmPasswordAuthentication(null, login, password));
+            new NtlmPasswordAuthentication(domain, login, password));
       }
     } catch (Exception e) {
       throw new ContentProviderException("connectionError", e);

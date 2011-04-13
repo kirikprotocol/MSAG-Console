@@ -30,8 +30,8 @@ public abstract class FileResource {
     return new LogDecorator(new SFTPResource(host, port, login, password, remoteDir));
   }
 
-  public static FileResource createSMB(String host, Integer port, String login, String password, String remoteDir) {
-    return new LogDecorator(new SMBResource(host, port, login, password, remoteDir));
+  public static FileResource createSMB(String host, Integer port, String login, String password, String remoteDir, String domain) {
+    return new LogDecorator(new SMBResource(host, port, login, password, remoteDir, domain));
   }
 
   public static FileResource createEmpty() {

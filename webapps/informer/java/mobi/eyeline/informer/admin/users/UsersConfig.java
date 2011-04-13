@@ -120,6 +120,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
           ucps.setDirectory(s.getString("directory"));
         }
         ucps.setEncoding(s.getString("encoding","UTF-8"));
+        ucps.setWorkGroup(s.getString("workGroup", null));
         ucps.setSourceAddress(new Address(s.getString("sourceAddress")));
         ucps.setCreateReports(s.getBool("createReports", false));
         ucps.setName(s.getString("name"));
@@ -305,6 +306,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         s.setString("directory",ucps.getDirectory());
       }
       s.setString("encoding",ucps.getEncoding());
+      if(ucps.getWorkGroup() != null) {
+        s.setString("workGroup", ucps.getWorkGroup());
+      }
       s.setString("sourceAddress",ucps.getSourceAddress().getSimpleAddress());
       s.setString("name", ucps.getName());
     }

@@ -35,6 +35,8 @@ public class UserCPsettings implements Serializable {
 
   private String name;
 
+  private String workGroup;
+
   public UserCPsettings() {
   }
 
@@ -55,6 +57,15 @@ public class UserCPsettings implements Serializable {
     this.periodInMin = other.periodInMin;
     this.createReports = other.createReports;
     this.directoryMaxSize = other.directoryMaxSize;
+    this.workGroup = other.workGroup;
+  }
+
+  public String getWorkGroup() {
+    return workGroup;
+  }
+
+  public void setWorkGroup(String workGroup) {
+    this.workGroup = workGroup;
   }
 
   public String getName() {
@@ -183,7 +194,8 @@ public class UserCPsettings implements Serializable {
   public void setDirectoryMaxSize(int directoryMaxSize) {
     this.directoryMaxSize = directoryMaxSize;
   }
-
+         
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -199,6 +211,7 @@ public class UserCPsettings implements Serializable {
     if (activePeriodStart != null ? !activePeriodStart.equals(that.activePeriodStart) : that.activePeriodStart != null)
       return false;
     if (directory != null ? !directory.equals(that.directory) : that.directory != null) return false;
+    if (workGroup != null ? !workGroup.equals(that.workGroup) : that.workGroup != null) return false;
     if (encoding != null ? !encoding.equals(that.encoding) : that.encoding != null) return false;
     if (hashId != null ? !hashId.equals(that.hashId) : that.hashId != null) return false;
     if (host != null ? !host.equals(that.host) : that.host != null) return false;
@@ -220,6 +233,7 @@ public class UserCPsettings implements Serializable {
     result = 31 * result + (host != null ? host.hashCode() : 0);
     result = 31 * result + (port != null ? port.hashCode() : 0);
     result = 31 * result + (directory != null ? directory.hashCode() : 0);
+    result = 31 * result + (workGroup != null ? workGroup.hashCode() : 0);
     result = 31 * result + directoryMaxSize;
     result = 31 * result + (encoding != null ? encoding.hashCode() : 0);
     result = 31 * result + (sourceAddress != null ? sourceAddress.hashCode() : 0);

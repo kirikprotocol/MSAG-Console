@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.contentprovider.resources.*;
+import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -91,7 +91,7 @@ public class FileDeliveriesProvider implements UserDirResolver {
     switch (ucps.getProtocol()) {
       case sftp: return FileResource.createSFTP(host , port, login, password, remoteDir);
       case ftp: return FileResource.createFTP(host, port, login, password, remoteDir);
-      case smb: return FileResource.createSMB(host, port, login, password, remoteDir);
+      case smb: return FileResource.createSMB(host, port, login, password, remoteDir, ucps.getWorkGroup());
       case localFtp:
         File homeDir = context.getFtpUserHomeDir(ucps.getLogin());
         return homeDir != null ? FileResource.createLocal(homeDir, fileSys) : FileResource.createEmpty();
