@@ -49,6 +49,7 @@ void Delivery::addNewMessages( MsgIter begin, MsgIter end )
     if ( !source_ ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
     }
+    smsc_log_debug(log_," == addNewMessages(D=%u)", getDlvId());
     source_->addNewMessages(begin,end);
 }
 

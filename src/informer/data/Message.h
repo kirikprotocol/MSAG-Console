@@ -5,6 +5,7 @@
 #include "MessageText.h"
 #include "MessageFlags.h"
 #include "informer/io/Typedefs.h"
+#include "informer/io/InfosmeException.h"
 #include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
@@ -36,6 +37,13 @@ struct Message
         std::swap(retryCount,m.retryCount);
         flags.swap(m.flags);
         std::swap(state,m.state);
+    }
+
+    inline void setUserData( const char* userDataValue ) {
+        if ( strlen(userDataValue) >= USERDATA_LENGTH ) {
+            throw InfosmeException(EXC_BADNAME, "too long userdata '%s'",userDataValue);
+        }
+        userData = userDataValue;
     }
 
     static const uint16_t maxRetryCount = 0xffff;

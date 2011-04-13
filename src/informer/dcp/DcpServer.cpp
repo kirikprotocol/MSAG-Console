@@ -478,7 +478,7 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
     }
     if(it->hasUserData())
     {
-      ml.msg.userData=it->getUserData().c_str();
+      ml.msg.setUserData( it->getUserData().c_str() );
     }
     if(it->hasFlags()) {
         const messages::MessageFlags& mf = it->getFlags();

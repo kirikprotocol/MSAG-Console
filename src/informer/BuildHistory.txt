@@ -1,5 +1,8 @@
 =====================================================================
-2011-04-13 11:00 bukind informer-build-20110413
+2011-04-13 17:20 bukind informer-build-20110413
+
+2011-04-13 17:15 bukind
+  feature: if msg.userData is too long exception is thrown
 
 2011-04-13 11:00 bukind
   bugfix #5240: performance degradation with fsync().
