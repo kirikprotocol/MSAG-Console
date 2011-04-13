@@ -19,13 +19,12 @@ class DataSourceCleaner extends IterativeWorker {
 
   private final CalendarDataSource ds;
   private final int maxAliveDays;
-  private final int cleanInterval;
   private final int maxRecordsToRemoveAtOneIteration;
 
 
   DataSourceCleaner(CalendarDataSource ds, int cleanInterval, int maxRecordsToRemoveAtOneIteration, int maxAliveDays) {
     super(log);
-    this.cleanInterval = cleanInterval;
+    setDelayBetweenIterations(cleanInterval);
     this.maxRecordsToRemoveAtOneIteration = maxRecordsToRemoveAtOneIteration;
     this.ds = ds;
     this.maxAliveDays = maxAliveDays;
@@ -33,12 +32,6 @@ class DataSourceCleaner extends IterativeWorker {
 
   @Override
   protected void iterativeWork() {
-    try {
-      Thread.sleep(cleanInterval);
-    } catch (InterruptedException e) {
-      log.error(e,e);
-    }
-
     Date cleanDate = new Date(System.currentTimeMillis() - DAY_DURATION_IN_MILLIS * maxAliveDays);
     if (log.isDebugEnabled())
       log.debug("Removing calendar records older than: " + cleanDate + ". Limit:" + maxRecordsToRemoveAtOneIteration);

@@ -72,6 +72,7 @@ public class CalendarServiceImpl implements CalendarService {
   }
 
   public void stopService() {
+    dsCleaner.stop();
     engine.stop();
     advClient.close();
     dataSource.release();
