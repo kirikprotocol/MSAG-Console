@@ -25,6 +25,7 @@ public class CalendarServiceImpl implements CalendarService {
   private final CalendarEngine engine;
   private final CalendarDataSource dataSource;
   private final AdvertisingClient advClient;
+  private final DataSourceCleaner dsCleaner;
 
   public CalendarServiceImpl(XmlConfigSection cal, final OutgoingQueue outQueue, int serviceId) {
     try {
@@ -41,6 +42,8 @@ public class CalendarServiceImpl implements CalendarService {
       engine.setAdvService(cal.getString("advertising.service"));
 
       processor = new CalendarProcessor(messagesQueue, dataSource, cal.getInt("send.date.max.year", getCurrentYear() + 1), serviceId);
+
+      dsCleaner = new DataSourceCleaner(dataSource, cal.getInt("ds.clean.interval", 60000), cal.getInt("ds.clean.limit", 100), cal.getInt("ds.clean.maxAliveDays", 30));
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);
@@ -65,6 +68,7 @@ public class CalendarServiceImpl implements CalendarService {
 
   public void startService() {
     engine.start();
+    dsCleaner.start();
   }
 
   public void stopService() {

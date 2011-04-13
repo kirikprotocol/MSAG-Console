@@ -167,6 +167,24 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     }
   }
 
+  public int removeCalendarMessages(Date maxDate, int limit) throws DataSourceException {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("calendar.message.remove.by.date"));
+      ps.setTimestamp(1, new Timestamp(maxDate.getTime()));
+      ps.setInt(2, limit);
+
+      return ps.executeUpdate();
+    } catch (SQLException e) {
+      pool.invalidateConnection(conn);
+      throw new DataSourceException(e);
+    } finally {
+      _close(null, ps, conn);
+    }
+  }
+
   public void saveCalendarMessage(CalendarMessage calendarMessage) throws DataSourceException {
     Connection conn = null;
     PreparedStatement ps = null;
