@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.secret.datasource;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import ru.sibinco.smsx.utils.DataSourceException;
@@ -27,6 +28,7 @@ public interface SecretDataSource {
   public void saveSecretMessage(SecretMessage secretMessage, DataSourceTransaction tx) throws DataSourceException;
 
   public void removeSecretMessage(final SecretMessage secretMessage) throws DataSourceException;
+  public int removeFinalizedSecretMessages(Date maxDate, int limit) throws DataSourceException;
   public void updateMessageStatus(SecretMessage secretMessage) throws DataSourceException;
   public int updateMessageStatus(long id, int status) throws DataSourceException;
   public void updateMessageSmppId(SecretMessage secretMessage) throws DataSourceException;

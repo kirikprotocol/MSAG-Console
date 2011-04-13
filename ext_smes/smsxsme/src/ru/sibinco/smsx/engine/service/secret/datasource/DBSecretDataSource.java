@@ -2,6 +2,7 @@ package ru.sibinco.smsx.engine.service.secret.datasource;
 
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -361,6 +362,26 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.setInt(1, secretMessage.getId());
 
       ps.executeUpdate();
+
+    } catch (SQLException e) {
+      pool.invalidateConnection(conn);
+      throw new DataSourceException(e.getMessage());
+    } finally {
+      _close(null, ps, conn);
+    }
+  }
+
+  public int removeFinalizedSecretMessages(Date maxDate, int limit) throws DataSourceException {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("secret.message.remove.finalized"));
+
+      ps.setTimestamp(1, new Timestamp(maxDate.getTime()));
+      ps.setInt(2, limit);
+
+      return ps.executeUpdate();
 
     } catch (SQLException e) {
       pool.invalidateConnection(conn);

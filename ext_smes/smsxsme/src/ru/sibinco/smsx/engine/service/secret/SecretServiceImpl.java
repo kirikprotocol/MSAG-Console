@@ -24,6 +24,7 @@ public class SecretServiceImpl implements SecretService {
   private final MessageSender messageSender;
   private final AdvertisingClient advClient;
   private final BatchEngine batchEngine;
+  private final DataSourceCleaner dsCleaner;
 
   public SecretServiceImpl(XmlConfigSection sec, OutgoingQueue outQueue, int serviceId) {
 
@@ -50,6 +51,8 @@ public class SecretServiceImpl implements SecretService {
 
       batchEngine = new BatchEngine(dataSource, storeDir, archivesDir);
       processor = new SecretProcessor(dataSource, messageSender, serviceId);
+
+      dsCleaner = new DataSourceCleaner(dataSource, sec.getInt("ds.clean.interval", 60000), sec.getInt("ds.clean.limit", 100), sec.getInt("ds.clean.maxAliveDays", 30));
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);
@@ -85,9 +88,11 @@ public class SecretServiceImpl implements SecretService {
   }
 
   public void startService() {
+    dsCleaner.start();
   }
 
   public void stopService() {
+    dsCleaner.stop();
     messageSender.shutdown();
     dataSource.release();
     advClient.close();
