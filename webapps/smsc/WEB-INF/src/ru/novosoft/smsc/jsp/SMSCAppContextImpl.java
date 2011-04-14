@@ -56,15 +56,15 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     }
     try{
       Class.forName("ru.sibinco.smsx.stats.SmsxContext").
-          getMethod("init", new Class[]{SMSCAppContext.class, Config.class}).
-          invoke(null, new Object[]{instance, instance.webappConfig});
+          getMethod("init", new Class[]{SMSCAppContext.class}).
+          invoke(null, new Object[]{instance});
     }catch(Throwable e) {
       e.printStackTrace();
     }
     try{
       Class.forName("ru.sibinco.sponsored.stats.SponsoredContext").
-          getMethod("init", new Class[]{SMSCAppContext.class, Config.class}).
-          invoke(null, new Object[]{instance, instance.webappConfig});
+          getMethod("init", new Class[]{SMSCAppContext.class}).
+          invoke(null, new Object[]{instance});
     }catch(Throwable e) {
       e.printStackTrace();
     }

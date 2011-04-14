@@ -48,7 +48,6 @@ public class SponsoredRequestsBean extends StatsBean{
     tableHelper.setLocale(sponsoredContext.getUserLocale(request.getUserPrincipal()));
     try {
       tableHelper.processRequest(request);
-      tableHelper.fillTable();
     } catch (TableHelperException e) {
       return error(e.getMessage());
     }
@@ -94,6 +93,8 @@ public class SponsoredRequestsBean extends StatsBean{
   public void download(final JspWriter writer) {
     try{
       writer.clear();
+      writer.write("ADDRESS,BONUS");
+      writer.write(System.getProperty("line.separator"));
       sponsoredContext.getStatRequestManager().getSponsoredResult(selected.intValue(), new Visitor() {
         public boolean visit(Object o) throws StatisticsException {
           SponsoredRecord r = (SponsoredRecord)o;
@@ -102,6 +103,7 @@ public class SponsoredRequestsBean extends StatsBean{
         }
       });
       writer.flush();
+      selected = null;
     } catch (Exception e) {
       logger.error(e,e);
     }

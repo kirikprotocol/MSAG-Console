@@ -97,13 +97,15 @@ public class SponsorResultsBean extends StatsBean{
     try {
       out.clear();
       if(requestId != null) {
-      sponsoredContext.getStatRequestManager().getSponsoredResult(requestId.intValue(), new Visitor() {
-        public boolean visit(Object o) throws StatisticsException {
-          SponsoredRecord r = (SponsoredRecord) o;
-          SponsoredConverter.write(out, r.getAddress(), r.getBonus());
-          return true;
-        }
-      });
+        out.write("ADDRESS,BONUS");
+        out.write(System.getProperty("line.separator"));
+        sponsoredContext.getStatRequestManager().getSponsoredResult(requestId.intValue(), new Visitor() {
+          public boolean visit(Object o) throws StatisticsException {
+            SponsoredRecord r = (SponsoredRecord) o;
+            SponsoredConverter.write(out, r.getAddress(), r.getBonus());
+            return true;
+          }
+        });
       }
     } catch (Exception e) {
       logger.error(e, e);

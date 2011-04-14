@@ -28,31 +28,26 @@ public class SmsxContext {
 
   private File workDir;
 
-  public static void init(SMSCAppContext smscAppContext, Config config) throws AdminException{
-    instance = new SmsxContext(config, smscAppContext);
+  public static void init(SMSCAppContext smscAppContext) throws AdminException{
+    instance = new SmsxContext(smscAppContext);
   }
 
   public static SmsxContext getInstance() {
     return instance;
   }
 
-  private SmsxContext(Config c, SMSCAppContext smscAppContext) throws AdminException {
+  private SmsxContext(SMSCAppContext smscAppContext) throws AdminException {
     this.smscAppContext = smscAppContext;
     try{
-      File reqDir =  new File(c.getString("smsx.stats.requestsDir"));
-      if(!reqDir.exists() && !reqDir.mkdirs()) {
-        throw new StatisticsException("Can't create requests dir: "+reqDir.getAbsolutePath());
+      workDir =  new File(smscAppContext.getConfig().getString("system.work folder"), "smsx");
+      if(!workDir.exists() && !workDir.mkdirs()) {
+        throw new StatisticsException("Can't create work dir: "+workDir.getAbsolutePath());
       }
-      workDir = reqDir;
-      File smsxArtDir = new File(c.getString("smsx.stats.smsxArtefactsDir"));
+      File smsxArtDir = new File(smscAppContext.getConfig().getString("smsx.stats.smsxArtefactsDir"));
       if(!smsxArtDir.exists()) {
         throw new StatisticsException("Artefacts dir doesn't exist: "+smsxArtDir.getAbsolutePath());
       }
-      File sponsArtDir = new File(c.getString("smsx.stats.sponsoredArtefactsDir"));
-      if(!sponsArtDir.exists()) {
-        throw new StatisticsException("Artefacts dir doesn't exist: "+sponsArtDir.getAbsolutePath());
-      }
-      statRequestManager = new StatRequestManager(reqDir, smsxArtDir);
+      statRequestManager = new StatRequestManager(workDir, smsxArtDir);
     }catch (Exception e){
       logger.error(e,e);
       throw new AdminException(e.getMessage());

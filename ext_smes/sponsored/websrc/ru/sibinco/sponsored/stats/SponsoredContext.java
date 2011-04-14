@@ -28,31 +28,32 @@ public class SponsoredContext {
 
   private File workDir;
 
-  public static void init(SMSCAppContext smscAppContext, Config config) throws AdminException{
-    instance = new SponsoredContext(config, smscAppContext);
+  public static void init(SMSCAppContext smscAppContext) throws AdminException{
+    instance = new SponsoredContext(smscAppContext);
   }
 
   public static SponsoredContext getInstance() {
     return instance;
   }
 
-  private SponsoredContext(Config c, SMSCAppContext smscAppContext) throws AdminException {
+  private SponsoredContext(SMSCAppContext smscAppContext) throws AdminException {
     this.smscAppContext = smscAppContext;
     try{
-      File reqDir =  new File(c.getString("smsx.stats.requestsDir"));
-      if(!reqDir.exists() && !reqDir.mkdirs()) {
-        throw new StatisticsException("Can't create requests dir: "+reqDir.getAbsolutePath());
+      workDir =  new File(smscAppContext.getConfig().getString("system.work folder"), "sponsored");
+      if(!workDir.exists() && !workDir.mkdirs()) {
+        throw new StatisticsException("Can't create work dir: "+workDir.getAbsolutePath());
       }
-      workDir = reqDir;
-      File smsxArtDir = new File(c.getString("smsx.stats.smsxArtefactsDir"));
-      if(!smsxArtDir.exists()) {
-        throw new StatisticsException("Artefacts dir doesn't exist: "+smsxArtDir.getAbsolutePath());
-      }
-      File sponsArtDir = new File(c.getString("smsx.stats.sponsoredArtefactsDir"));
+
+      File sponsoredHome = smscAppContext.getHostsManager().getServiceInfo("sponsored").
+          getServiceFolder();
+      System.out.println("sponsored home: "+sponsoredHome.getAbsolutePath());
+      Config sponsoredConfig = new Config(new File(sponsoredHome, "conf"+File.separatorChar+"config.xml"));
+      File sponsArtDir = new File(sponsoredConfig.getString("file_storage.storeDir"));
+      System.out.println("sponsored artefacts: "+sponsArtDir.getAbsolutePath());
       if(!sponsArtDir.exists()) {
         throw new StatisticsException("Artefacts dir doesn't exist: "+sponsArtDir.getAbsolutePath());
       }
-      statRequestManager = new StatRequestManager(reqDir,sponsArtDir);
+      statRequestManager = new StatRequestManager(workDir,sponsArtDir);
     }catch (Exception e){
       logger.error(e,e);
       throw new AdminException(e.getMessage());
