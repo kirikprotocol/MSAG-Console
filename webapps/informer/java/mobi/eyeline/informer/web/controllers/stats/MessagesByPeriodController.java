@@ -96,19 +96,9 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
   private AggregatedRecord createWithSmscAggregation(DeliveryStatRecord rec) {
-    if(rec.getRegionId() != null) {
-      if(rec.getRegionId() != 0) {
-        Region r = getConfig().getRegion(rec.getRegionId());
-        if(r != null) {
-          return  new MessagesBySmscRecord(rec, r.getSmsc(), false);
-        }
-      }else {
-        return new MessagesBySmscRecord(rec, getConfig().getDefaultSmsc(), false);
-      }
-    }
-    return new MessagesBySmscRecord(rec,
-        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.unknownSmsc"),
-        true);
+    String[] name = new String[]{null};
+    boolean exist = getSmscByRegion(rec.getRegionId(), name);
+    return new MessagesBySmscRecord(rec, name[0], !exist);
   }
 
   public List<SelectItem> getRegions() {
@@ -159,18 +149,39 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     this.smscFilter = smscFilter;
   }
 
+  private boolean getSmscByRegion(Integer regId, String[] result) {
+    if(regId != null) {
+      if(regId != 0) {
+        Region r = getConfig().getRegion(regId);
+        if(r != null) {
+          result[0] = r.getSmsc();
+          return true;
+        }
+      }else {
+        result[0] = getConfig().getDefaultSmsc();
+        return true;
+      }
+    }
+    result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.unknownSmsc");
+    return false;
+  }
+
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
     AggregationType type = getAggregation();
     setCurrentAndTotal(current, total);
     AggregatedRecord newRecord;
     switch (type) {
       case REGION: newRecord = createWithRegionAggregation(rec); break;
-      case SMSC:   newRecord = createWithSmscAggregation(rec);
-        if(smscFilter != null && smscFilter.length() >0 && !((MessagesBySmscRecord)newRecord).getSmsc().equals(smscFilter)) {
-          return !isCancelled();
-        }
-        break;
+      case SMSC:   newRecord = createWithSmscAggregation(rec); break;
       default:     newRecord = createWithTimeAggregation(rec); break;
+    }
+
+    if(smscFilter != null && smscFilter.length() > 0) {
+      String[] smsc = new String[]{null};
+      getSmscByRegion(rec.getRegionId(), smsc);
+      if(!smsc[0].equals(smscFilter)) {
+        return !isCancelled();
+      }
     }
 
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
