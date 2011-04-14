@@ -19,7 +19,7 @@
       <eye:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
 
         <eye:dataTableFilter bean="#{deliveryMessagesByPeriod}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="3" columnClasses="column400Width, column400Width, columnTopLeftAlign">
+          <h:panelGrid columns="4" columnClasses="column400Width, column400Width, column400Width, columnTopLeftAlign">
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
               <h:outputText value="#{msg['stat.page.from_date']}"/>
               <eye:inputDate value="#{deliveryMessagesByPeriod.filter.fromDate}" type="both" />
@@ -39,6 +39,11 @@
               <h:selectOneMenu value="#{deliveryMessagesByPeriod.regionId}">
                 <f:selectItem itemLabel="" itemValue=""/>
                 <f:selectItems value="#{deliveryMessagesByPeriod.regions}"/>
+              </h:selectOneMenu>
+              <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}"/>
+              <h:selectOneMenu value="#{deliveryMessagesByPeriod.smscFilter}">
+                <f:selectItem itemLabel="" itemValue=""/>
+                <f:selectItems value="#{deliveryMessagesByPeriod.smscs}"/>
               </h:selectOneMenu>
             </h:panelGrid>
           </h:panelGrid>
