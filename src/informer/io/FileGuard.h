@@ -19,7 +19,13 @@ public:
     }
 
     ~FileGuard() {
-        close();
+        try {
+            close();
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"exc at close: %s",e.what());
+        } catch (...) {
+            smsc_log_error(log_,"exc at closing the file");
+        }
     }
 
     inline bool isOpened() const {
@@ -64,11 +70,7 @@ public:
     /// NOTE: pos is preserved
     void truncate( size_t pos );
 
-    void close() {
-        if (fd_!=-1) ::close(fd_);
-        fd_ = -1;
-        pos_ = 0;
-    }
+    void close( bool dosync = true );
 
     /// unlink a file
     static void unlink( const char* fname );

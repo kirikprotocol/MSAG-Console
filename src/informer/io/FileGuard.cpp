@@ -281,5 +281,20 @@ void FileGuard::truncate( size_t pos )
     }
 }
 
+
+void FileGuard::close( bool dosync )
+{
+    if (fd_!=-1) {
+        if ( dosync && (0 != ::fsync(fd_)) ) {
+            throw ErrnoException(errno,"fsync fd=%d",fd_);
+        }
+        if ( 0 != ::close(fd_) ) {
+            throw ErrnoException(errno,"fsync fd=%d",fd_);
+        }
+    }
+    fd_ = -1;
+    pos_ = 0;
+}
+
 }
 }

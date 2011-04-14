@@ -1,3 +1,6 @@
+2011-04-14 13:35 bukind
+  fsync() added before close() in FileGuard
+
 2011-04-14 12:00 bukind
   fix for archivePeriod > 99:00:00
 
