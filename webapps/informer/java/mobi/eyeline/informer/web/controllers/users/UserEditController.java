@@ -80,9 +80,9 @@ public class UserEditController extends UserController {
       userId = null;
       userToEdit = new User();
       userToEdit.setDeliveryStartTime(new Time(9,0,0));
-      userToEdit.setDeliveryEndTime(new Time(22,0,0));
+      userToEdit.setDeliveryEndTime(new Time(21,0,0));
       userToEdit.setDeliveryDays(Arrays.<Integer>asList(0,1,2,3,4,5,6));
-      userToEdit.setValidityPeriod(new Time(1,0,0));
+      userToEdit.setValidityPeriod(new Time(2,0,0));
       userToEdit.setPriority(1);
       userToEdit.setAllRegionsAllowed(true);
       userToEdit.setDeliveryLifetime(72);
