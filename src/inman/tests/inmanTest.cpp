@@ -472,6 +472,27 @@ void cmd_cdr_charge(Console&, const std::vector<std::string> &args)
 }
 
 
+static const char hlp_set_smsc[] = 
+"%s:  sets SMSC address\n"
+"USAGE: %s [?|help | .Ton.Npi.Address]\n";
+void cmd_set_smsc(Console&, const std::vector<std::string> &args)
+{
+  if ((args.size() < 2)
+      || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+    fprintf(stdout, hlp_set_smsc, args[0].c_str(), args[0].c_str());
+    return;
+  }
+  TonNpiAddress tadr;
+
+  if (!tadr.fromText(args[1].c_str())) {
+    fprintf(stdout, "ERR: invalid SMSC address: %s!", args[1].c_str());
+    return;
+  }
+  _billFacade->getDlgConfig().setSMSC(tadr);
+  _billFacade->printDlgConfig();
+}
+
+
 static const char hlp_set_msc[] = 
 "%s:  sets %s abonent's MSC\n"
 "USAGE: %s [?|help | .Ton.Npi.Address | db|DB]\n"
@@ -647,6 +668,7 @@ int main(int argc, char** argv)
     console.addItem("postpaid",  cmd_postpaid);
     /**/
     console.addItem("use_xsms",  cmd_use_xsms);
+    console.addItem("set_smsc", cmd_set_smsc);
     console.addItem("org_imsi",  cmd_org_imsi);
     console.addItem("dst_imsi",  cmd_dst_imsi);
     /**/

@@ -24,6 +24,8 @@ void CapSmDialogCfg::printConfig(FILE * use_stream/* = stdout*/) const
     fprintf(use_stream,
             "  OrigAbnt[%u]: unknown (unknown), IMSI <none>\n", _orgAbId);
   }
+  fprintf(use_stream, "  SMSC: %s\n", _idpSMSC.toString().c_str());
+
   const TonNpiAddress * adrMSC = getOrgMSC();
   fprintf(use_stream, 
           "  OrigMSC: %s\n", adrMSC ? adrMSC->toString().c_str() : "<none>");

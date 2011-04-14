@@ -40,8 +40,9 @@ protected:
 
   IMSIString          _orgIMSI; //replaces abonent's IMSI from DB
   IMSIString          _dstIMSI; //replaces abonent's IMSI from DB
-  TonNpiAddress       _orgMSC; //replaces abonent's location MSC address from DB
-  TonNpiAddress       _dstMSC; //replaces abonent's location MSC address from DB
+  TonNpiAddress       _orgMSC;  //replaces abonent's location MSC address from DB
+  TonNpiAddress       _dstMSC;  //replaces abonent's location MSC address from DB
+  TonNpiAddress       _idpSMSC; //initiator-SMSC address
 
 public:
   //NOTE: PRE_ABONENTS_NUM >= 2
@@ -55,6 +56,7 @@ public:
       _orgAbId = 0;
     if (!(_dstAb = _abDB->getAbnInfo(_dstAbId)))
       _dstAbId = 0;
+    _idpSMSC.fromText(".1.1.79139869990");
   }
   ~CapSmDialogCfg()
   { }
@@ -64,6 +66,8 @@ public:
   const AbonentInfo * getOrgAbnt(void) const { return _orgAb; }
   const AbonentInfo * getDstAbnt(void) const { return _dstAb; }
 
+  const TonNpiAddress & getSMSC(void) const { return _idpSMSC; }
+  //
   const char * getOrgIMSI(void) const;
   const char * getDstIMSI(void) const;
   //
@@ -90,6 +94,8 @@ public:
   void  setUssdOp(bool is_ussd = true)        { _ussdOp = is_ussd; }
   void  setForcedCDR(bool forced_cdr = true)  { _forcedCDR = forced_cdr; }
   void  setSmsXIds(uint32_t srv_ids)          { _xsmsIds = srv_ids; }
+
+  void setSMSC(const TonNpiAddress & smsc_adr) { _idpSMSC =  smsc_adr; }
 
   void  setOrgIMSI(bool imsi_on, const IMSIString * use_imsi = NULL);
   void  setDstIMSI(bool imsi_on, const IMSIString * use_imsi = NULL);

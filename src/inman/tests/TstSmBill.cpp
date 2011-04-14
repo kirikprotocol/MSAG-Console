@@ -85,7 +85,7 @@ void BillFacade::composeChargeSms(ChargeSms & op, const CapSmDialogCfg & dlg_cfg
   if (dlg_cfg.getOrgMSC())
     op.setLocationInformationMSC(dlg_cfg.getOrgMSC()->toString().c_str());
 
-  op.setSMSCAddress(".1.1.79029869990");
+  op.setSMSCAddress(dlg_cfg.getSMSC().toString().c_str());
 
   op.setSubmitTimeTZ(time(NULL));
   op.setTPShortMessageSpecificInfo(0x11);
@@ -123,7 +123,7 @@ void BillFacade::composeDeliveredSmsData(DeliveredSmsData & op, const CapSmDialo
   if (dlg_cfg.getOrgMSC())
     op.setLocationInformationMSC(dlg_cfg.getOrgMSC()->toString().c_str());
 
-  op.setSMSCAddress(".1.1.79029869990");
+  op.setSMSCAddress(dlg_cfg.getSMSC().toString().c_str());
 
   op.setSubmitTimeTZ(time(NULL));
   op.setTPShortMessageSpecificInfo(0x11);
