@@ -79,6 +79,8 @@
               paramCheck(out, "users.roles.fraud", "roles", "role35", "fraud", bean.isUserInRole("fraud"), null);
             }
             paramCheck(out, "users.roles.smsquiz-admin", "roles", "role36", "smsquiz-admin", bean.isUserInRole("smsquiz-admin"), null);
+            paramCheck(out, "users.roles.smsx_stat", "roles", "role37", "smsx stat", bean.isUserInRole("smsx stat"), null);
+            paramCheck(out, "users.roles.sponsored_stat", "roles", "role38", "sponsored stat", bean.isUserInRole("sponsored stat"), null);
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
                     String roleName = (String) i.next();

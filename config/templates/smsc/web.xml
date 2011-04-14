@@ -167,6 +167,35 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_smsx/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smsx stat</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+  
+    <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_sponsored/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>sponsored stat</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+
+
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
       <url-pattern>/smsc/closed_groups/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
@@ -540,6 +569,15 @@
   </login-config>
 
   <!-- security roles -->
+  
+  
+    <security-role>
+      <role-name>smsx stat</role-name>
+        </security-role>
+
+          <security-role>
+              <role-name>sponsored stat</role-name>
+                </security-role>
 
   <security-role>
     <role-name>apply</role-name>
