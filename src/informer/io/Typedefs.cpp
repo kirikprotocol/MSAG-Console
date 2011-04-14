@@ -135,7 +135,7 @@ timediff_type parseTime( const char* theTime, bool allowMoreThan24Hours )
 {
     int shift = 0;
     unsigned hour, minute, second;
-    sscanf(theTime,"%02u:%02u:%02u%n",&hour,&minute,&second,&shift);
+    sscanf(theTime,"%u:%02u:%02u%n",&hour,&minute,&second,&shift);
     if (!shift) {
         throw InfosmeException(EXC_IOERROR,"invalid time '%s'",theTime);
     }
