@@ -78,8 +78,9 @@
 
           <h:panelGroup rendered="#{longOpState==2}">
 
-            <ui:include src="#{!deliveryMessagesByPeriod.timeAggregation ? 'deliveryMessagesByPeriod_region.xhtml' : ''}"/>
+            <ui:include src="#{deliveryMessagesByPeriod.regionAggregation ? 'deliveryMessagesByPeriod_region.xhtml' : ''}"/>
             <ui:include src="#{deliveryMessagesByPeriod.timeAggregation ? 'deliveryMessagesByPeriod_time.xhtml' : ''}"/>
+            <ui:include src="#{deliveryMessagesByPeriod.smscAggregation ? 'deliveryMessagesByPeriod_smsc.xhtml' : ''}"/>
 
           <eye:delimiter/>
 
