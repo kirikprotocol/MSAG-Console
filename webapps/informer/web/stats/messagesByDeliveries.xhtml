@@ -83,43 +83,40 @@
 
           <eye:dataTable value="#{messagesByDeliveries.records}" var="row" rendered="#{(longOpState == 2) and (messagesByDeliveries.fullMode)}" >
 
-            <eye:row>
-              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+            <eye:row innerRows="#{row.innerRows}">
+              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="15%" align="center">
                 <h:outputText value="#{row.login}" rendered="#{row.user == null}"/>
 
                 <h:outputText value="#{row.login}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin and row.user != null}"/>
-
 
                 <tr:panelGroupLayout shortDesc="#{row.userDetails}" rendered="#{statsMessagesByRec.admin and row.user != null}">
                   <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.login}">#{row.login}</a>
                 </tr:panelGroupLayout>
 
+                <f:facet name="inner">
+                  <h:panelGroup>
+                    <h:outputText value="#{row.region}" rendered="#{row.deletedRegion}" style="color:GREEN"/>
+                    <tr:panelGroupLayout rendered="#{!row.deletedRegion}">
+                      <a class="xi" href="#{facesContext.externalContext.requestContextPath}/regions/edit.faces?REGION_ID=#{row.regionId}">#{row.region}</a>
+                    </tr:panelGroupLayout>
+                  </h:panelGroup>
+                </f:facet>
 
                 <f:facet name="footer">
                   <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
 
-              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{msg['stat.page.deletedDelivery']} (id=#{row.deliveryId})" rendered="#{row.delivery == null}"/>
+              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="15%" align="center">
+                <h:outputText value="#{row.deliveryName}" rendered="#{row.deletedDelviery}"/>
 
-                <tr:panelGroupLayout rendered="#{row.delivery != null}">
+                <tr:panelGroupLayout rendered="#{!row.deletedDelviery}">
                   <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">#{row.deliveryName}</a>
                 </tr:panelGroupLayout>
-
 
                 <f:facet name="footer">
                   <h:outputText value="" style="font-weight:bold;"/>
                 </f:facet>
-              </eye:column>
-
-              <eye:column name="region" title="#{msg['stat.page.region']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{msg['stat.page.deletedRegion']} (id=#{row.regionId})" rendered="#{row.region == null}"/>
-                <h:outputText value="#{msg['region.default']}" rendered="#{row.regionId == 0}"/>
-
-                <tr:panelGroupLayout rendered="#{row.regionId != 0 and row.region != null}">
-                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/regions/edit.faces?REGION_ID=#{row.regionId}">#{row.region}</a>
-                </tr:panelGroupLayout>
               </eye:column>
 
               <eye:column name="startDate" title="#{msg['stat.page.activityStart']}" width="10%" align="center">
@@ -132,30 +129,45 @@
 
               <eye:column name="new" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.newMessages}"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.newMessages}"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.newMessages}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
               <eye:column name="process" title="#{msg['message.state.Process']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.procMessages}"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.procMessages}"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.processMessages}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
               <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.deliveredMessages}(#{messagesByDeliveries.totals.deliveredSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
               <eye:column name="failed" title="#{msg['message.state.Failed']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.failedMessages}(#{row.failedSms})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.failedMessages}(#{row.failedSms})"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.failedMessages}(#{messagesByDeliveries.totals.failedSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
               <eye:column name="expired" title="#{msg['message.state.Expired']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.expiredMessages}(#{row.expiredSms})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.expiredMessages}(#{row.expiredSms})"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.expiredMessages}(#{messagesByDeliveries.totals.expiredSms})" style="font-weight:bold;"/>
                 </f:facet>
@@ -168,8 +180,8 @@
 
           <eye:dataTable value="#{messagesByDeliveries.records}" var="row" rendered="#{(longOpState == 2) and (!messagesByDeliveries.fullMode)}" >
 
-            <eye:row>
-              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+            <eye:row innerRows="#{row.innerRows}">
+              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="15%" align="center">
                 <h:outputText value="#{row.login}" rendered="#{row.user == null}"/>
 
                 <h:outputText value="#{row.login}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin and row.user != null}"/>
@@ -178,30 +190,30 @@
                   <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.login}">#{row.login}</a>
                 </tr:panelGroupLayout>
 
+                <f:facet name="inner">
+                  <h:panelGroup>
+                    <h:outputText value="#{row.region}" rendered="#{row.deletedRegion}" style="color:GREEN"/>
+                    <tr:panelGroupLayout rendered="#{!row.deletedRegion}">
+                      <a class="xi" href="#{facesContext.externalContext.requestContextPath}/regions/edit.faces?REGION_ID=#{row.regionId}">#{row.region}</a>
+                    </tr:panelGroupLayout>
+                  </h:panelGroup>
+                </f:facet>
+
                 <f:facet name="footer">
                   <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
 
-              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{msg['stat.page.deletedDelivery']} (id=#{row.deliveryId})" rendered="#{row.delivery == null}"/>
+              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="15%" align="center">
+                <h:outputText value="#{row.deliveryName}" rendered="#{row.deletedDelviery}"/>
 
-                <tr:panelGroupLayout rendered="#{row.delivery != null}">
+                <tr:panelGroupLayout rendered="#{!row.deletedDelviery}">
                   <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">#{row.deliveryName}</a>
                 </tr:panelGroupLayout>
 
                 <f:facet name="footer">
                   <h:outputText value="" style="font-weight:bold;"/>
                 </f:facet>
-              </eye:column>
-
-              <eye:column name="region" title="#{msg['stat.page.region']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{msg['stat.page.deletedRegion']} (id=#{row.regionId})" rendered="#{row.region == null}"/>
-                <h:outputText value="#{msg['region.default']}" rendered="#{row.regionId == 0}"/>
-
-                <tr:panelGroupLayout rendered="#{row.regionId != 0 and row.region != null}">
-                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/regions/edit.faces?REGION_ID=#{row.regionId}">#{row.region}</a>
-                </tr:panelGroupLayout>
               </eye:column>
 
               <eye:column name="startDate" title="#{msg['stat.page.activityStart']}" width="10%" align="center">
@@ -214,6 +226,9 @@
 
               <eye:column name="wait" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.newMessages}"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.newMessages}"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.newMessages}" style="font-weight:bold;"/>
                 </f:facet>
@@ -221,12 +236,18 @@
               </eye:column>
               <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.deliveredMessages}(#{messagesByDeliveries.totals.deliveredSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
               <eye:column name="failed" title="#{msg['stat.page.notDelivered']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.failedMessages+row.expiredMessages}(#{row.failedSms+row.expiredSms})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.failedMessages+row.expiredMessages}(#{row.failedSms+row.expiredSms})"/>
+                </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.failedMessages+ messagesByDeliveries.totals.expiredMessages}(#{messagesByDeliveries.totals.failedSms+ messagesByDeliveries.totals.expiredSms})" style="font-weight:bold;"/>
                 </f:facet>

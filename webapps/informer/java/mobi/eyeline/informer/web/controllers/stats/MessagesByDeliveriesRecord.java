@@ -1,17 +1,15 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
-import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import org.apache.commons.lang.NotImplementedException;
 
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.TreeMap;
 
 /**
  * Copyright Eyeline.mobi
@@ -31,23 +29,52 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   private long failedSms;
   private long expiredMessages;
   private long expiredSms;
-  private String region;
-  private Integer regionId;
 
-  private Delivery delivery;
-  private User user;
+  private final User user;
 
   private Date minDate;
   private Date maxDate;
 
-  private final ResourceBundle bundle;
+  private String region;
+  private Integer regionId;
+  private final boolean deletedRegion;
 
-  public MessagesByDeliveriesRecord(String login, long deliveryId, Locale locale) {
-    this.login = login;
-    this.deliveryId = deliveryId;
-    bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);   //todo make it more cleaver!!
+  private final boolean deletedDelviery;
+  private final String deliveryName;
+
+  public MessagesByDeliveriesRecord(DeliveryStatRecord rec, User user, String deliveryName, boolean deletedDelivery, String region, boolean deletedRegion, boolean isParent) {
+    this.login = rec.getUser();
+    this.deliveryId = rec.getTaskId();
+    this.isParent = isParent;
+    this.region = region;
+    this.regionId = rec.getRegionId();
+    this.deletedRegion = deletedRegion;
+    this.deletedDelviery = deletedDelivery;
+    this.deliveryName = deliveryName;
+    this.user = user;
+    incNewMessages(rec.getNewmessages());
+    incProcMessages(rec.getProcessing());
+    incDeliveredMessages(rec.getDelivered());
+    incDeliveredSms(rec.getDeliveredSMS());
+    incFailedMessages(rec.getFailed());
+    incFailedSms(rec.getFailedSMS());
+    incExpiredMessages(rec.getExpired());
+    incExpiredSms(rec.getExpiredSMS());
+    if(isParent) {
+      innerRowsMap = new TreeMap<Object, AggregatedRecord>();
+      MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, user, deliveryName, deletedDelivery, region, deletedRegion, false);
+      c.setRegion(region);
+      addChild(c);
+    }
   }
 
+  public boolean isDeletedRegion() {
+    return deletedRegion;
+  }
+
+  public boolean isDeletedDelviery() {
+    return deletedDelviery;
+  }
 
   public Integer getRegionId() {
     return regionId;
@@ -192,20 +219,8 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     return maxDate;
   }
 
-  public Delivery getDelivery() {
-    return delivery;
-  }
-
-  public void setDelivery(Delivery delivery) {
-    this.delivery = delivery;
-  }
-
   public User getUser() {
     return user;
-  }
-
-  public void setUser(User user) {
-    this.user = user;
   }
 
   public void printCSVheader(PrintWriter writer, boolean fullMode) {
@@ -233,24 +248,25 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     }
   }
 
-  public void printWithChildrenToCSV(PrintWriter writer, boolean fullMode) {   //todo region
+  public void printWithChildrenToCSV(PrintWriter writer, boolean fullMode) {
 
-    String dName = delivery != null ? delivery.getName() : bundle.getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';     //todo make it more cleaver!!
-    String rName = region != null ? region : bundle.getString("stat.page.deletedRegion") +" (id="+regionId+')';
-    if (fullMode) {
-      writer.println(StringEncoderDecoder.toCSVString(';',dName, rName,
-          login,
-          newMessages,
-          procMessages,
-          deliveredMessages,
-          failedMessages,
-          expiredMessages));
-    } else {
-      writer.println(StringEncoderDecoder.toCSVString(';',dName, rName,
-          login,
-          newMessages,
-          deliveredMessages,
-          failedMessages + expiredMessages));
+    for(AggregatedRecord r1 : innerRowsMap.values()) {
+      MessagesByDeliveriesRecord r = (MessagesByDeliveriesRecord) r1;
+      if (fullMode) {
+        writer.println(StringEncoderDecoder.toCSVString(';',r.deliveryName, r.region,
+            r.login,
+            r.newMessages,
+            r.procMessages,
+            r.deliveredMessages,
+            r.failedMessages,
+            r.expiredMessages));
+      } else {
+        writer.println(StringEncoderDecoder.toCSVString(';',r.deliveryName, r.region,
+            r.login,
+            r.newMessages,
+            r.deliveredMessages,
+            r.failedMessages + r.expiredMessages));
+      }
     }
   }
 
@@ -264,18 +280,32 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   }
 
   public String getDeliveryName() {
-    return delivery == null ? "" : delivery.getName();
+    return deliveryName;
   }
-
 
   @Override
   Object getAggregationKey() {
-    return deliveryId;
+    if(isParent) {
+      return deliveryId;
+    }else {
+      return regionId;
+    }
   }
 
   @Override
-  void add(AggregatedRecord other) {
-    throw new NotImplementedException();
+  void add(AggregatedRecord r) {
+    MessagesByDeliveriesRecord other = (MessagesByDeliveriesRecord)r;
+    this.newMessages += other.getNewMessages();
+    this.procMessages += other.getProcMessages();
+    this.deliveredMessages += other.getDeliveredMessages();
+    this.failedMessages += other.getFailedMessages();
+    this.expiredMessages += other.getExpiredMessages();
+    this.deliveredSms += other.getDeliveredSms();
+    this.failedSms += other.getFailedSms();
+    this.expiredSms += other.getExpiredSms();
+    if(isParent) {
+      addChild(r);
+    }
   }
 
   Comparator getRecordsComparator(final DataTableSortOrder sortOrder) {

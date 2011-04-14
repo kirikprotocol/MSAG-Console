@@ -35,8 +35,6 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   private String nameFilter;
 
-  private String regionId;
-
   public MessagesByDeliveriesController() {
     super();
     totals = new MessagesByDeliveriesTotals();
@@ -78,18 +76,18 @@ public class MessagesByDeliveriesController extends LongOperationController {
     initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);
+    filter.setRegionId(null);
     nameFilter = null;
-    regionId = null;
     hideDeleted = false;
     fullMode = false;
   }
 
   public String getRegionId() {
-    return regionId;
+    return filter.getRegionId() == null ? null : filter.getRegionId().toString();
   }
 
   public void setRegionId(String regionId) {
-    this.regionId = regionId;
+    filter.setRegionId(regionId == null || regionId.length() == 0 ? null : Integer.parseInt(regionId));
   }
 
   public String getNameFilter() {
@@ -150,6 +148,42 @@ public class MessagesByDeliveriesController extends LongOperationController {
     return ret;
   }
 
+  private boolean getDeliveryName(Configuration config, Locale locale, String userId, int deliveryId, String[] result) {
+    User user = config.getUser(userId);
+    Delivery delivery = null;
+    if (user != null) {
+      try {
+        delivery = config.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+      } catch (AdminException e) {
+        logger.error(e,e);
+      }
+      if(delivery != null) {
+        result[0] = delivery.getName();
+        return true;
+      }
+    }
+    result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';
+    return false;
+  }
+
+
+  private boolean getRegion(Configuration config, Locale locale, Integer regId, String[] result) {
+    if(regId != null) {
+      if(regId != 0) {
+        Region r = config.getRegion(regId);
+        if(r != null) {
+          result[0] = r.getName();
+          return true;
+        }
+      }else {
+        result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("region.default");
+        return true;
+      }
+    }
+    result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedRegion") +" (id="+regId+')';
+    return false;
+  }
+
 
   @Override
   public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
@@ -159,69 +193,46 @@ public class MessagesByDeliveriesController extends LongOperationController {
     DeliveryStatFilter deliveryFilter = new DeliveryStatFilter();
     deliveryFilter.setFromDate(filter.getFromDate());
     deliveryFilter.setTillDate(filter.getTillDate());
+    deliveryFilter.setRegionId(filter.getRegionId());
     if (filter.getUser() != null) {
       deliveryFilter.setUser(filter.getUser());
     }
 
-    final Map<Key, MessagesByDeliveriesRecord> recsMap = new HashMap<Key, MessagesByDeliveriesRecord>();
+    final Map<Integer, MessagesByDeliveriesRecord> recsMap = new HashMap<Integer, MessagesByDeliveriesRecord>();
 
     config.statistics(deliveryFilter, new DeliveryStatVisitor() {
 
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
         setCurrentAndTotal(current, total);
 
-        Key key = new Key(rec.getTaskId(), rec.getRegionId());
-        MessagesByDeliveriesRecord r = recsMap.get(key);
-        if (r == null) {
-          User user = config.getUser(rec.getUser());
-
-          Delivery delivery = null;
-          if (user != null) {
-            try {
-              delivery = config.getDelivery(user.getLogin(), user.getPassword(), rec.getTaskId());
-            } catch (AdminException e) {
-              logger.error(e,e);
-            }
-          }
-
-          r = new MessagesByDeliveriesRecord(rec.getUser(), rec.getTaskId(), locale);
-          r.setDelivery(delivery);
-          r.setUser(user);
-          recsMap.put(key, r);
+        Integer key = rec.getTaskId();
+        MessagesByDeliveriesRecord oldRecord = recsMap.get(key);
+        if (oldRecord == null) {
+          String[] region = new String[1];
+          String[] delivery = new String[1];
+          boolean deletedDelivery = !getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
+          boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
+          oldRecord = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deletedDelivery, region[0], deletedRegion, true);
+          recsMap.put(key, oldRecord);
+        }else {
+          String[] region = new String[1];
+          String[] delivery = new String[1];
+          boolean deletedDelivery = !getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
+          boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
+          MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deletedDelivery, region[0], deletedRegion, false);
+          oldRecord.add(c);
         }
-        if(rec.getRegionId() != null) {
-          r.setRegionId(rec.getRegionId());
-          if(rec.getRegionId() != 0) {
-          Region region = config.getRegion(rec.getRegionId());
-          if(region != null) {
-            r.setRegion(region.getName());
-          }
-          }else {
-            r.setRegion(ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("region.default"));
-          }
-        }
-        r.incNewMessages(rec.getNewmessages());
-        r.incProcMessages(rec.getProcessing());
-        r.incDeliveredMessages(rec.getDelivered());
-        r.incDeliveredSms(rec.getDeliveredSMS());
-        r.incFailedMessages(rec.getFailed());
-        r.incFailedSms(rec.getFailedSMS());
-        r.incExpiredMessages(rec.getExpired());
-        r.incExpiredSms(rec.getExpiredSMS());
-        r.updateTime(rec.getDate());
+        oldRecord.updateTime(rec.getDate());
 
         return !isCancelled();
       }
     });
 
     for (MessagesByDeliveriesRecord r : recsMap.values()) {
-      if (hideDeleted && r.getDelivery() == null)
+      if (hideDeleted && r.isDeletedDelviery())
         continue;
-      if (nameFilter != null && nameFilter.trim().length() > 0 && (r.getDelivery() == null || !r.getDelivery().getName().contains(nameFilter)))
+      if (nameFilter != null && nameFilter.trim().length() > 0 && (r.getDeliveryName().contains(nameFilter)))
         continue;
-      if(regionId != null && regionId.length()>0 && (r.getRegionId() == null || Integer.parseInt(regionId) != r.getRegionId())) {
-        continue;
-      }
       records.add(r);
       getTotals().add(r);
     }
@@ -275,29 +286,5 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public MessagesByDeliveriesTotals getTotals() {
     return totals;
-  }
-
-  private static class Key {
-    private int deliveryId;
-    private Integer regionId;
-    private Key(int deliveryId, Integer regionId) {
-      this.deliveryId = deliveryId;
-      this.regionId = regionId;
-    }
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof Key)) return false;
-      Key key = (Key) o;
-      if (deliveryId != key.deliveryId) return false;
-      if (regionId != null ? !regionId.equals(key.regionId) : key.regionId != null) return false;
-      return true;
-    }
-    @Override
-    public int hashCode() {
-      int result = deliveryId;
-      result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
-      return result;
-    }
   }
 }
