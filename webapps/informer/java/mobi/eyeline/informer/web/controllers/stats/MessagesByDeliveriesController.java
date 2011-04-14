@@ -166,6 +166,22 @@ public class MessagesByDeliveriesController extends LongOperationController {
     return false;
   }
 
+  private String getDeliveryStatus(Configuration config, Locale locale, String userId, int deliveryId) {
+    User user = config.getUser(userId);
+    Delivery delivery = null;
+    if (user != null) {
+      try {
+        delivery = config.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+      } catch (AdminException e) {
+        logger.error(e,e);
+      }
+      if(delivery != null) {
+        return  ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("delivery.status."+delivery.getStatus());
+      }
+    }
+    return "";
+  }
+
 
   private boolean getRegion(Configuration config, Locale locale, Integer regId, String[] result) {
     if(regId != null) {
@@ -177,7 +193,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
         }
       }else {
         result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("region.default");
-        return true;
+        return false;
       }
     }
     result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedRegion") +" (id="+regId+')';
@@ -223,6 +239,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
           oldRecord.add(c);
         }
         oldRecord.updateTime(rec.getDate());
+        oldRecord.setDeliveryStatus(getDeliveryStatus(config, locale, rec.getUser(), rec.getTaskId()));
 
         return !isCancelled();
       }

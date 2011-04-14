@@ -42,6 +42,8 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   private final boolean deletedDelviery;
   private final String deliveryName;
 
+  private String deliveryStatus;
+
   public MessagesByDeliveriesRecord(DeliveryStatRecord rec, User user, String deliveryName, boolean deletedDelivery, String region, boolean deletedRegion, boolean isParent) {
     this.login = rec.getUser();
     this.deliveryId = rec.getTaskId();
@@ -50,7 +52,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.regionId = rec.getRegionId();
     this.deletedRegion = deletedRegion;
     this.deletedDelviery = deletedDelivery;
-    this.deliveryName = deliveryName;
+    this.deliveryName =  deliveryName;
     this.user = user;
     incNewMessages(rec.getNewmessages());
     incProcMessages(rec.getProcessing());
@@ -66,6 +68,14 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
       c.setRegion(region);
       addChild(c);
     }
+  }
+
+  public String getDeliveryStatus() {
+    return deliveryStatus;
+  }
+
+  public void setDeliveryStatus(String deliveryStatus) {
+    this.deliveryStatus = deliveryStatus;
   }
 
   public boolean isDeletedRegion() {
@@ -255,6 +265,9 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
       if (fullMode) {
         writer.println(StringEncoderDecoder.toCSVString(';',r.deliveryName, r.region,
             r.login,
+            deliveryStatus,
+            fmtDate(minDate),
+            fmtDate(maxDate),
             r.newMessages,
             r.procMessages,
             r.deliveredMessages,
@@ -263,6 +276,9 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
       } else {
         writer.println(StringEncoderDecoder.toCSVString(';',r.deliveryName, r.region,
             r.login,
+            deliveryStatus,
+            fmtDate(minDate),
+            fmtDate(maxDate),
             r.newMessages,
             r.deliveredMessages,
             r.failedMessages + r.expiredMessages));
