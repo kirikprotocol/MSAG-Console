@@ -33,18 +33,8 @@ public class MessagesByPeriodTotals implements DeliveryStatTotals {
   }
 
   public void add(AggregatedRecord r) {
-    if(r instanceof MessagesByPeriodRecord){
-      MessagesByPeriodRecord mpr = (MessagesByPeriodRecord) r;
-      this.newMessages+=mpr.getNewMessages();
-      this.processMessages += mpr.getProcessMessages();
-      this.deliveredMessages += mpr.getDeliveredMessages();
-      this.failedMessages += mpr.getFailedMessages();
-      this.expiredMessages += mpr.getExpiredMessages();
-      this.deliveredMessagesSMS += mpr.getDeliveredMessagesSMS();
-      this.failedMessagesSMS += mpr.getFailedMessagesSMS();
-      this.expiredMessagesSMS += mpr.getExpiredMessagesSMS();
-    }else if(r instanceof MessagesByRegionRecord) {
-      MessagesByRegionRecord mpr = (MessagesByRegionRecord) r;
+    if(r instanceof MessagesRecord){
+      MessagesRecord mpr = (MessagesRecord) r;
       this.newMessages+=mpr.getNewMessages();
       this.processMessages += mpr.getProcessMessages();
       this.deliveredMessages += mpr.getDeliveredMessages();

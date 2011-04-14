@@ -10,7 +10,7 @@ import java.util.Comparator;
 /**
  * @author Aleksandr Khalitov
  */
-public class MessagesByRegionRecord extends AggregatedRecord implements MessagesRecord{
+public class MessagesBySmscRecord extends AggregatedRecord implements MessagesRecord{
 
   private long newMessages;
   private long processMessages;
@@ -21,12 +21,11 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
 
-  private String region;
-  private Integer regionId;
+  private String smsc;
 
   private boolean deleted;
 
-  public MessagesByRegionRecord(DeliveryStatRecord dsr, String region, boolean deleted) {
+  public MessagesBySmscRecord(DeliveryStatRecord dsr, String smsc, boolean deleted) {
     this.newMessages = dsr.getNewmessages();
     this.processMessages = dsr.getProcessing();
     this.deliveredMessages = dsr.getDelivered();
@@ -35,8 +34,7 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
     this.deliveredMessagesSMS = dsr.getDeliveredSMS();
     this.failedMessagesSMS = dsr.getFailedSMS();
     this.expiredMessagesSMS = dsr.getExpiredSMS();
-    this.region = region;
-    this.regionId = dsr.getRegionId();
+    this.smsc = smsc;
     this.deleted = deleted;
   }
 
@@ -46,12 +44,12 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
 
   @Override
   Object getAggregationKey() {
-    return region;
+    return smsc;
   }
 
   @Override
   void add(AggregatedRecord r) {
-    MessagesByRegionRecord other = (MessagesByRegionRecord) r;
+    MessagesBySmscRecord other = (MessagesBySmscRecord) r;
     this.newMessages += other.getNewMessages();
     this.processMessages += other.getProcessMessages();
     this.deliveredMessages += other.getDeliveredMessages();
@@ -65,12 +63,11 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
 
   @Override
   Comparator getRecordsComparator(final DataTableSortOrder sortOrder) {
-
-    return new Comparator<MessagesByRegionRecord>() {
-      public int compare(MessagesByRegionRecord o1, MessagesByRegionRecord o2) {
+    return new Comparator<MessagesBySmscRecord>() {
+      public int compare(MessagesBySmscRecord o1, MessagesBySmscRecord o2) {
         final int mul = sortOrder.isAsc() ? 1 : -1;
-        if (sortOrder.getColumnId().equals("region")) {
-          return mul * o1.getRegion().compareTo(o2.getRegion());
+        if (sortOrder.getColumnId().equals("smsc")) {
+          return mul * o1.getSmsc().compareTo(o2.getSmsc());
         } else if (sortOrder.getColumnId().equals("new")) {
           return o1.getNewMessages() >= o2.getNewMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("process")) {
@@ -95,7 +92,7 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
   void printCSVheader(PrintWriter writer, boolean detalized) {
     if (detalized) {
       writer.println(StringEncoderDecoder.toCSVString(';',
-          "REGION",
+          "SMSC",
           "NEW",
           "PROCESS",
           "DELIVERED", "DELIVERED SMS",
@@ -103,7 +100,7 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
           "EXPIRED", "EXPIRED SMS"));
     } else {
       writer.println(StringEncoderDecoder.toCSVString(';',
-          "REGION",
+          "SMSC",
           "WAIT",
           "DELIVERED", "DELIVERED SMS",
           "NOT DELIVERED", "NOT DELIVERED SMS"));
@@ -115,7 +112,7 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
   void printWithChildrenToCSV(PrintWriter writer, boolean detalised) {
     if (detalised) {
       writer.println(StringEncoderDecoder.toCSVString(';',
-          getRegion(),
+          getSmsc(),
           getNewMessages(),
           getProcessMessages(),
           getDeliveredMessages(), getDeliveredMessagesSMS(),
@@ -123,23 +120,15 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
           getExpiredMessages(), getExpiredMessagesSMS()));
     }else {
       writer.println(StringEncoderDecoder.toCSVString(';',
-          getRegion(),
+          getSmsc(),
           getNewMessages() + getProcessMessages(),
           getDeliveredMessages(), getDeliveredMessagesSMS(),
           getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
     }
   }
 
-  public Integer getRegionId() {
-    return regionId;
-  }
-
-  public void setRegionId(Integer regionId) {
-    this.regionId = regionId;
-  }
-
-  public String getRegion() {
-    return region;
+  public String getSmsc() {
+    return smsc;
   }
 
   public long getNewMessages() {

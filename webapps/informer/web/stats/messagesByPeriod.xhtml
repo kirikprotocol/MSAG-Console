@@ -20,7 +20,7 @@
       <eye:set var="longOpState" value="#{messagesByPeriod.state}"/>
 
         <eye:dataTableFilter bean="#{messagesByPeriod}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width,columnTopLeftAlign">
+          <h:panelGrid columns="8" columnClasses="column50Width, column300Width, column50Width, column200Width, column50Width, column400Width, column50Width,columnTopLeftAlign">
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
             <eye:inputDate value="#{messagesByPeriod.filter.fromDate}" type="both" />
@@ -34,6 +34,12 @@
             <h:selectOneMenu value="#{messagesByPeriod.regionId}">
               <f:selectItem itemLabel="" itemValue=""/>
               <f:selectItems value="#{messagesByPeriod.regions}"/>
+            </h:selectOneMenu>
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}"/>
+            <h:selectOneMenu value="#{messagesByPeriod.smscFilter}">
+              <f:selectItem itemLabel="" itemValue=""/>
+              <f:selectItems value="#{messagesByPeriod.smscs}"/>
             </h:selectOneMenu>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
@@ -85,8 +91,9 @@
 
           <h:panelGroup rendered="#{longOpState==2}">
 
-            <ui:include src="#{!messagesByPeriod.timeAggregation ? 'messagesByPeriod_region.xhtml' : ''}"/>
+            <ui:include src="#{messagesByPeriod.regionAggregation ? 'messagesByPeriod_region.xhtml' : ''}"/>
             <ui:include src="#{messagesByPeriod.timeAggregation ? 'messagesByPeriod_time.xhtml' : ''}"/>
+            <ui:include src="#{messagesByPeriod.smscAggregation ? 'messagesByPeriod_smsc.xhtml' : ''}"/>
 
           <eye:delimiter/>
 

@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.model.SelectItem;
@@ -22,6 +23,8 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   private List<Integer> deliveriesIds = null;
 
   private StorageStrategy strategy = new CommonStorageStrategy();
+
+  private String smscFilter;
 
 
   public MessagesByPeriodController() {
@@ -92,6 +95,22 @@ public class MessagesByPeriodController extends DeliveryStatController implement
         true);
   }
 
+  private AggregatedRecord createWithSmscAggregation(DeliveryStatRecord rec) {
+    if(rec.getRegionId() != null) {
+      if(rec.getRegionId() != 0) {
+        Region r = getConfig().getRegion(rec.getRegionId());
+        if(r != null) {
+          return  new MessagesBySmscRecord(rec, r.getSmsc(), false);
+        }
+      }else {
+        return new MessagesBySmscRecord(rec, getConfig().getDefaultSmsc(), false);
+      }
+    }
+    return new MessagesBySmscRecord(rec,
+        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.unknownSmsc"),
+        true);
+  }
+
   public List<SelectItem> getRegions() {
     List<Region> rs = getConfig().getRegions();
     Collections.sort(rs, new Comparator<Object>() {
@@ -107,6 +126,23 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     }
     return sis;
   }
+
+  public List<SelectItem> getSmscs() {
+    List<Smsc> rs = getConfig().getSmscs();
+    Collections.sort(rs, new Comparator<Object>() {
+      @Override
+      public int compare(Object o1, Object o2) {
+        return ((Smsc)o1).getName().compareTo(((Smsc)o2).getName());
+      }
+    });
+    List<SelectItem> sis = new ArrayList<SelectItem>(rs.size());
+    for(Smsc r : rs) {
+      sis.add(new SelectItem(r.getName(), r.getName()));
+    }
+    return sis;
+  }
+
+
   public String getRegionId() {
     return filter.getRegionId() == null ? null : filter.getRegionId().toString();
   }
@@ -115,10 +151,28 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     filter.setRegionId(regionId == null || regionId.length() == 0 ? null : Integer.parseInt(regionId));
   }
 
+  public String getSmscFilter() {
+    return smscFilter;
+  }
+
+  public void setSmscFilter(String smscFilter) {
+    this.smscFilter = smscFilter;
+  }
+
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
     AggregationType type = getAggregation();
     setCurrentAndTotal(current, total);
-    AggregatedRecord newRecord = type != AggregationType.REGION ? createWithTimeAggregation(rec) : createWithRegionAggregation(rec);
+    AggregatedRecord newRecord;
+    switch (type) {
+      case REGION: newRecord = createWithRegionAggregation(rec); break;
+      case SMSC:   newRecord = createWithSmscAggregation(rec);
+        if(smscFilter != null && smscFilter.length() >0 && !((MessagesBySmscRecord)newRecord).getSmsc().equals(smscFilter)) {
+          return !isCancelled();
+        }
+        break;
+      default:     newRecord = createWithTimeAggregation(rec); break;
+    }
+
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
     if (oldRecord == null) {
       putRecord(newRecord);

@@ -13,8 +13,7 @@ import java.util.Comparator;
  * Date: 22.10.2010
  * Time: 16:22:41
  */
-public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
-
+public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements MessagesRecord{
 
   private long newMessages;
   private long processMessages;
@@ -141,44 +140,35 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
     };
   }
 
-
   public long getNewMessages() {
     return newMessages;
   }
-
 
   public long getProcessMessages() {
     return processMessages;
   }
 
-
   public long getDeliveredMessages() {
     return deliveredMessages;
   }
-
 
   public long getFailedMessages() {
     return failedMessages;
   }
 
-
   public long getExpiredMessages() {
     return expiredMessages;
   }
-
 
   public long getDeliveredMessagesSMS() {
     return deliveredMessagesSMS;
   }
 
-
   public long getFailedMessagesSMS() {
     return failedMessagesSMS;
   }
 
-
   public long getExpiredMessagesSMS() {
     return expiredMessagesSMS;
   }
-
 }

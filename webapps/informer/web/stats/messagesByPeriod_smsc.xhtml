@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+
+<ui:composition>
+
+
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.fullMode}">
+            <eye:row>
+              <eye:column name="smsc" title="#{msg['stat.page.smsc']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+                <h:outputText rendered="#{row.data.deleted}" value="#{row.data.smsc}"/>
+                <h:panelGroup rendered="#{!row.data.smsc}">
+                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/smsc/edit.faces?smsc_name=#{row.data.smsc}">#{row.data.smsc}</a>
+                </h:panelGroup>
+                <f:facet name="footer">
+                  <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="new" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.newMessages}"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.newMessages}" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="process" title="#{msg['message.state.Process']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.processMessages}"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.processMessages}" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+
+              <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.deliveredMessages}(#{row.data.deliveredMessagesSMS})"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.deliveredMessages}(#{messagesByPeriod.totals.deliveredMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="failed" title="#{msg['message.state.Failed']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.failedMessages}(#{row.data.failedMessagesSMS})"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.failedMessages}(#{messagesByPeriod.totals.failedMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="expired" title="#{msg['message.state.Expired']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.expiredMessages}(#{row.data.expiredMessagesSMS})"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.expiredMessages}(#{messagesByPeriod.totals.expiredMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+            </eye:row>
+          </eye:dataTable>
+
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{!messagesByPeriod.fullMode}" >
+            <eye:row>
+              <eye:column name="smsc" title="#{msg['stat.page.smsc']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+                <h:outputText rendered="#{row.data.deleted}" value="#{row.data.smsc}"/>
+                <h:panelGroup rendered="#{!row.data.deleted}">
+                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/smsc/edit.faces?smsc_name=#{row.data.smsc}">#{row.data.smsc}</a>
+                </h:panelGroup>
+                <f:facet name="footer">
+                  <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+
+              <eye:column name="wait" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.newMessages}"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.newMessages}" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+
+              <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.deliveredMessages}(#{row.data.deliveredMessagesSMS})"/>
+               <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.deliveredMessages}(#{messagesByPeriod.totals.deliveredMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="notDelivered" title="#{msg['stat.page.notDelivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.failedMessages+row.data.expiredMessages}(#{row.data.failedMessagesSMS+row.data.expiredMessagesSMS})"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.failedMessages+messagesByPeriod.totals.expiredMessages}(#{messagesByPeriod.totals.failedMessagesSMS+messagesByPeriod.totals.expiredMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+
+            </eye:row>
+          </eye:dataTable>
+
+
+</ui:composition>
+
+</html>

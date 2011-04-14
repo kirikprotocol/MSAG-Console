@@ -204,7 +204,15 @@ public abstract class DeliveryStatController extends LongOperationController {
   }
 
   public boolean isTimeAggregation() {
-    return getAggregation() != AggregationType.REGION;
+    return getAggregation() != AggregationType.REGION && getAggregation() != AggregationType.SMSC;
+  }
+
+  public boolean isRegionAggregation() {
+    return getAggregation() == AggregationType.REGION;
+  }
+
+  public boolean isSmscAggregation() {
+    return getAggregation() == AggregationType.SMSC;
   }
 
   @Override
