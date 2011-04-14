@@ -151,7 +151,7 @@ ObjAllcStatus_e
       //non-barred non-prepaid abonent
       _abInfo.abType = AbonentContractInfo::abtPostpaid;
       smsc_log_debug(_logger, "%s(%s): query failed: code 0x%x, %s",
-                      taskName(), _abId.getSignals(), err_code, _exc.c_str());
+                      taskName(), _abId.getSignals(), err_code, URCRegistry::explainHash(err_code).c_str());
     } else {
       _qStatus = IAPQStatus::iqError;
       _qError = err_code;
