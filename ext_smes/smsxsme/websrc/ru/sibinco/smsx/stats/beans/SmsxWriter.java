@@ -63,7 +63,7 @@ class SmsxWriter {
         final String lineSep = System.getProperty("line.separator");
         final ResourceBundle bundle = ResourceBundle.getBundle("locales.messages", locale);
         final String comma = ",";
-        out.write("DATE,REGION,TRAFFIC_TYPE,COUNT");
+        out.write("DATE,REGION,SERVICE,TRAFFIC_TYPE,COUNT");
         out.write(lineSep);
         rs.getWebDaily(new Visitor() {
           public boolean visit(Object o) throws StatisticsException {
@@ -73,6 +73,8 @@ class SmsxWriter {
                 out.write(u.getDate());
                 out.write(comma);
                 out.write(u.getRegion());
+                out.write(comma);
+                out.write(bundle.getString("smsx.service.SMS_SITE"));
                 out.write(comma);
                 out.write(bundle.getString(u.isMsc() ? "smsx.traffic.paid" : "smsx.traffic.free"));
                 out.write(comma);
@@ -98,7 +100,7 @@ class SmsxWriter {
         final String lineSep = System.getProperty("line.separator");
         final ResourceBundle bundle = ResourceBundle.getBundle("locales.messages", locale);
         final String comma = ",";
-        out.write("REGION,TRAFFIC_TYPE,SRC_COUNT,DST_COUNT");
+        out.write("REGION,SERVICE,TRAFFIC_TYPE,SRC_COUNT,DST_COUNT");
         out.write(lineSep);
         rs.getWebRegions(new Visitor() {
           public boolean visit(Object o) throws StatisticsException {
@@ -106,6 +108,8 @@ class SmsxWriter {
             if(filter.isAllowed(u)) {
               try{
                 out.write(u.getRegion());
+                out.write(comma);
+                out.write(bundle.getString("smsx.service.SMS_SITE"));
                 out.write(comma);
                 out.write(bundle.getString(u.isMsc() ? "smsx.traffic.paid" : "smsx.traffic.free"));
                 out.write(comma);

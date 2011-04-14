@@ -51,7 +51,7 @@
       <%String region = bean.getRegion();%>
       <select name="region">
         <option value=""><%=getLocString("smsx.stat.region.ALL")%></option>
-        <option value="Unknown"><%=getLocString("smsx.stat.region.unknown")%></option>
+        <option value="Unknown" <%="Unknown".equals(region)? "SELECTED": ""%>><%=getLocString("smsx.stat.region.unknown")%></option>
         <%Collection regions = bean.getRegions();
           Iterator it = regions.iterator();
         while(it.hasNext()) {
