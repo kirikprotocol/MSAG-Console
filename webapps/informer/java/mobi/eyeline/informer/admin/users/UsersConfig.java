@@ -121,6 +121,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         }
         ucps.setEncoding(s.getString("encoding","UTF-8"));
         ucps.setWorkGroup(s.getString("workGroup", null));
+        ucps.setPassiveMode(s.getBool("passiveMode", false));
         ucps.setSourceAddress(new Address(s.getString("sourceAddress")));
         ucps.setCreateReports(s.getBool("createReports", false));
         ucps.setName(s.getString("name"));
@@ -306,6 +307,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       s.setString("encoding",ucps.getEncoding());
       if(ucps.getWorkGroup() != null) {
         s.setString("workGroup", ucps.getWorkGroup());
+      }
+      if(ucps.isPassiveMode()) {
+        s.setBool("passiveMode", ucps.isPassiveMode());
       }
       s.setString("sourceAddress",ucps.getSourceAddress().getSimpleAddress());
       s.setString("name", ucps.getName());

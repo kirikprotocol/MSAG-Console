@@ -22,8 +22,8 @@ public abstract class FileResource {
     return new LogDecorator(new LocalResource(dir, fs));
   }
 
-  public static FileResource createFTP(String host, Integer port, String login, String password, String remoteDir) {
-    return new LogDecorator(new FTPResource(host, port, login, password, remoteDir));
+  public static FileResource createFTP(String host, Integer port, String login, String password, String remoteDir, boolean passiveMode) {
+    return new LogDecorator(new FTPResource(host, port, login, password, remoteDir, passiveMode));
   }
 
   public static FileResource createSFTP(String host, Integer port, String login, String password, String remoteDir) {

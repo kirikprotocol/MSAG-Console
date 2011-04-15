@@ -90,7 +90,7 @@ public class FileDeliveriesProvider implements UserDirResolver {
 
     switch (ucps.getProtocol()) {
       case sftp: return FileResource.createSFTP(host , port, login, password, remoteDir);
-      case ftp: return FileResource.createFTP(host, port, login, password, remoteDir);
+      case ftp: return FileResource.createFTP(host, port, login, password, remoteDir, ucps.isPassiveMode());
       case smb: return FileResource.createSMB(host, port, login, password, remoteDir, ucps.getWorkGroup());
       case localFtp:
         File homeDir = context.getFtpUserHomeDir(ucps.getLogin());

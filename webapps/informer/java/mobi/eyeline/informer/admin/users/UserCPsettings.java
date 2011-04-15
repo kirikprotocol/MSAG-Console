@@ -36,6 +36,7 @@ public class UserCPsettings implements Serializable {
   private String name;
 
   private String workGroup;
+  private boolean passiveMode;
 
   public UserCPsettings() {
   }
@@ -58,6 +59,7 @@ public class UserCPsettings implements Serializable {
     this.createReports = other.createReports;
     this.directoryMaxSize = other.directoryMaxSize;
     this.workGroup = other.workGroup;
+    this.passiveMode = other.passiveMode;
   }
 
   public String getWorkGroup() {
@@ -66,6 +68,14 @@ public class UserCPsettings implements Serializable {
 
   public void setWorkGroup(String workGroup) {
     this.workGroup = workGroup;
+  }
+
+  public boolean isPassiveMode() {
+    return passiveMode;
+  }
+
+  public void setPassiveMode(boolean passiveMode) {
+    this.passiveMode = passiveMode;
   }
 
   public String getName() {
@@ -212,6 +222,7 @@ public class UserCPsettings implements Serializable {
       return false;
     if (directory != null ? !directory.equals(that.directory) : that.directory != null) return false;
     if (workGroup != null ? !workGroup.equals(that.workGroup) : that.workGroup != null) return false;
+    if(passiveMode != that.passiveMode) return false;
     if (encoding != null ? !encoding.equals(that.encoding) : that.encoding != null) return false;
     if (hashId != null ? !hashId.equals(that.hashId) : that.hashId != null) return false;
     if (host != null ? !host.equals(that.host) : that.host != null) return false;
@@ -234,6 +245,7 @@ public class UserCPsettings implements Serializable {
     result = 31 * result + (port != null ? port.hashCode() : 0);
     result = 31 * result + (directory != null ? directory.hashCode() : 0);
     result = 31 * result + (workGroup != null ? workGroup.hashCode() : 0);
+    result = 31 * result + (passiveMode ? 1 : 0);
     result = 31 * result + directoryMaxSize;
     result = 31 * result + (encoding != null ? encoding.hashCode() : 0);
     result = 31 * result + (sourceAddress != null ? sourceAddress.hashCode() : 0);

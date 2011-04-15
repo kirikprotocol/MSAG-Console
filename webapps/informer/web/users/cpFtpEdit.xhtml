@@ -64,6 +64,9 @@
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.directory']}"/>
               <h:inputText maxlength="1024" value="#{cpFtpEdit.settings.directory}" size="80"/>
 
+              <h:outputText style="white-space:nowrap;" id="passiveMode" value="#{msg['user.edit.import.passiveMode']}"/>
+              <h:selectBooleanCheckbox id="passiveMode" value="#{cpFtpEdit.settings.passiveMode}"/>
+
             </h:panelGrid>
 
           </eye:collapsingGroup>

@@ -22,19 +22,22 @@ class FTPResource extends FileResource {
   private final String login;
   private final String password;
   private final String remoteDir;
+  private final boolean passiveMode;
 
-  FTPResource(String host, Integer port, String login, String password, String remoteDir) {
+  FTPResource(String host, Integer port, String login, String password, String remoteDir, boolean passiveMode) {
     this.host = host;
     this.port = port;
     this.login = login;
     this.password = password;
     this.remoteDir = remoteDir;
+    this.passiveMode = passiveMode;
   }
 
   @Override
   public void open() throws AdminException {
     try{
       ftp = new FTPClient();
+      ftp.setPassive(passiveMode);
       ftp.setType(FTPClient.TYPE_BINARY);
       ftp.setCharset("cp1251"); //todo hardcoded
       if(port == null || port == 0) {
