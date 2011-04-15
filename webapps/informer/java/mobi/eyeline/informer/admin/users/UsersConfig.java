@@ -185,16 +185,15 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     XmlConfigSection users = new XmlConfigSection("USERS");
 
     for (User user : settings.getUsers()) {
-      XmlConfigSection section = createUserSection(user);
-      users.addSection(section);
+      XmlConfigSection userSection = users.getOrCreateSection(user.getLogin());
+      fillUserSection(user, userSection);
     }
 
     config.addSection(users);
     config.save(newFile);
   }
 
-  private XmlConfigSection createUserSection(User user) throws AdminException {
-    XmlConfigSection userSection = new XmlConfigSection(user.getLogin());
+  private void fillUserSection(User user, XmlConfigSection userSection) throws AdminException {
     userSection.setString("password",user.getPassword());
     userSection.setString("status",user.getStatus().toString());
     userSection.setString("firstName",user.getFirstName());
@@ -263,7 +262,6 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       userSection.addSection(createCpSettingsSection(user));
     }
 
-    return userSection;
   }
 
   private XmlConfigSection createRegionsSection(User user) {
