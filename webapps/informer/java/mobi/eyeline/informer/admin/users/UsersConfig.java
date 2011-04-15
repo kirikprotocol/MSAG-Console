@@ -182,7 +182,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     config.load(oldFile);
 
 
-    XmlConfigSection users = new XmlConfigSection("USERS");
+    XmlConfigSection users = config.getOrCreateSection("USERS");
 
     for (User user : settings.getUsers()) {
       XmlConfigSection userSection = users.getOrCreateSection(user.getLogin());
