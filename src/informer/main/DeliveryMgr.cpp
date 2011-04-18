@@ -225,7 +225,7 @@ public:
         DeliveryIList::iterator& iter = mgr_.storeRollingIter_;
         while (! getCS()->isStopping()) { // never ending loop
             bool firstPass = true;
-            const usectime_type startTime = currentTimeMicro()
+            const usectime_type startTime = currentTimeMicro();
             speedControl_.suspend( startTime % flipTimePeriod );
             size_t written = 0;
             smsc_log_debug(log_,"store rolling pass started");
