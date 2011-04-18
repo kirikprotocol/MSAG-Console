@@ -57,7 +57,7 @@ public:
     }
 
     /// slowly dump all regions to storage
-    size_t rollOverStore();
+    size_t rollOverStore( SpeedControl<usectime_type,tuPerSec>& speedControl );
 
     /// slowly dump all input records to storage
     size_t rollOverInput() {

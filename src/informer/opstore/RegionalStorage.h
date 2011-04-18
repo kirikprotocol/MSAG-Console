@@ -9,6 +9,7 @@
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/data/InputMessageSource.h"
+#include "informer/data/SpeedControl.h"
 #include "logger/Logger.h"
 
 namespace smsc {
@@ -100,7 +101,7 @@ public:
 
     /// rolling over the storage
     /// @return number of bytes written
-    size_t rollOver();
+    size_t rollOver( SpeedControl< usectime_type, tuPerSec >& speedControl );
 
     /// invoked at init stage ONLY!
     void setRecordAtInit( Message& msg, regionid_type serial );

@@ -252,9 +252,9 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
-                const unsigned chunk = ptr->rollOverStore();
+                const unsigned chunk = ptr->rollOverStore( speedControl_ );
                 if ( chunk > 0 ) {
-                    speedControl_.consumeQuant( chunk );
+                    // speedControl_.consumeQuant( chunk );
                     smsc_log_debug(log_,"store rolled D=%u size=%u",ptr->getDlvId(),chunk);
                     written += chunk;
                 }

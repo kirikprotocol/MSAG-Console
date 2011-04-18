@@ -625,12 +625,13 @@ void RegionalStorage::stopTransfer()
 }
 
 
-size_t RegionalStorage::rollOver()
+size_t RegionalStorage::rollOver( SpeedControl<usectime_type,tuPerSec>& speedControl )
 {
     const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
     RelockMutexGuard mg(cacheMon_);
     while (stopRolling_) {
+        smsc_log_debug(log_,"stop rolling in effect");
         cacheMon_.wait(100);
     }
 
@@ -644,18 +645,27 @@ size_t RegionalStorage::rollOver()
     while ( true ) {
         MsgIter iter = storingIter_;
         if ( iter == messageList_.end() ) break;
+        usectime_type currentTime = currentTimeMicro() % flipTimePeriod;
+        usectime_type sleepTime = speedControl.isReady(currentTime,maxSnailDelay);
+        if ( sleepTime > 10000 ) {
+            cacheMon_.wait(unsigned(sleepTime/1000));
+        }
+
         ++storingIter_;
         {
             MsgLock ml(iter,this,mg);
-            written += dlv_->storeJournal_->journalMessage(info.getDlvId(),
-                                                           regionId_,iter->msg,ml.serial);
+            const unsigned chunk = 
+                dlv_->storeJournal_->journalMessage(info.getDlvId(),
+                                                    regionId_,iter->msg,ml.serial);
+            if ( chunk ) {
+                speedControl.consumeQuant(chunk);
+                written += chunk;
+            }
         }
         if ( getCS()->isStopping() ) {
             storingIter_ = messageList_.end();
             break;
         }
-        // FIXME: optimize calculate delay based on throughput restriction
-        cacheMon_.wait(30); 
     }
     return written;
 }

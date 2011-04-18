@@ -340,7 +340,7 @@ void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 }
 
 
-size_t DeliveryImpl::rollOverStore()
+size_t DeliveryImpl::rollOverStore( SpeedControl<usectime_type,tuPerSec>& speedControl )
 {
     size_t written = 0;
     smsc_log_debug(log_,"D=%u rolling store",dlvInfo_->getDlvId());
@@ -357,7 +357,7 @@ size_t DeliveryImpl::rollOverStore()
             ptr = *rollingIter_;
             ++rollingIter_;
         }
-        written += ptr->rollOver();
+        written += ptr->rollOver( speedControl );
         if (getCS()->isStopping()) { break; }
     } while ( true );
     smsc_log_debug(log_,"D=%u rolling store done, written=%u",dlvInfo_->getDlvId(),written);
