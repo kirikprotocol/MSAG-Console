@@ -275,6 +275,7 @@ void StoreJournal::rollOver()
 void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
     if (getCS()->isStopping()) return;
+    smsc_log_debug(log_,"reading journal '%s'",jpath.c_str());
     FileGuard fg;
     SJReader sjreader(reader,log_);
     try {

@@ -89,7 +89,7 @@ public:
             if ( !sender_.receiptHash_.GetPtr(rd.rcptId.msgId)) {
                 ++unique_;
                 sender_.receiptHash_.Insert(rd.rcptId.msgId,
-                                            sender_.receiptList_.insert(sender_.receiptList_.end(),rd));
+                                            sender_.receiptList_.insert(sender_.receiptList_.begin(),rd));
                 return true;
             }
             return false;
@@ -102,8 +102,13 @@ public:
 
     SmscJournal( SmscSender& sender ) :
     sender_(sender),
+    log_(0),
     isStopping_(true)
-    {}
+    {
+        char buf[128];
+        ::snprintf(buf,sizeof(buf),"sjr.%s",sender.getSmscId().c_str());
+        log_ = smsc::logger::Logger::getInstance(buf);
+    }
 
     ~SmscJournal() {
         stop();
@@ -151,6 +156,10 @@ public:
         const size_t pos = tb.getPos();
         tb.setPos(0);
         tb.set16(uint16_t(pos-LENSIZE));
+        smsc_log_debug(log_,"S='%s' storing D=%u/R=%u/M=%llu msgId='%s' %u bytes",
+                       sender_.smscId_.c_str(),
+                       rd.drmId.dlvId, rd.drmId.regId, rd.drmId.msgId,
+                       rd.rcptId.msgId, unsigned(pos) );
         MutexGuard mg(mon_);
         fg_.write(buf,pos);
         // fg_.fsync();
@@ -161,7 +170,7 @@ protected:
     void rollOver()
     {
         const std::string jpath(makePath());
-        smsc_log_debug(sender_.log_,"rolling over '%s'",jpath.c_str());
+        smsc_log_debug(log_,"rolling over '%s'",jpath.c_str());
         if (-1 == rename(jpath.c_str(),(jpath+".old").c_str())) {
             throw ErrnoException(errno,"rename('%s')",jpath.c_str());
         }
@@ -171,7 +180,7 @@ protected:
             smsc::core::synchronization::MutexGuard mg(mon_);
             fg_.swap(fg);
         }
-        smsc_log_debug(sender_.log_,"file '%s' rolled",jpath.c_str());
+        smsc_log_debug(log_,"file '%s' rolled",jpath.c_str());
     }
 
 
@@ -182,11 +191,12 @@ protected:
 
     void readRecordsFrom( const std::string& jpath )
     {
+        smsc_log_debug(log_,"reading journal '%s'",jpath.c_str());
         FileGuard fg;
         try {
             fg.ropen(jpath.c_str());
         } catch ( std::exception& e ) {
-            smsc_log_debug(sender_.log_,"cannot read '%s', exc: %s", jpath.c_str(), e.what());
+            smsc_log_debug(log_,"cannot read '%s', exc: %s", jpath.c_str(), e.what());
             return;
         }
         SJReader sjreader(sender_);
@@ -194,20 +204,20 @@ protected:
         FileReader fileReader(fg);
         try {
             const size_t total = fileReader.readRecords(buf,sjreader);
-            smsc_log_info(sender_.log_,"journal '%s' has been read, %u/%u total/unique records",jpath.c_str(),
+            smsc_log_info(log_,"journal '%s' has been read, %u/%u total/unique records",jpath.c_str(),
                           unsigned(total), unsigned(sjreader.unique_) );
         } catch ( FileDataException& e ) {
-            smsc_log_warn(sender_.log_,"file '%s', exc: %s", jpath.c_str(), e.what());
+            smsc_log_warn(log_,"file '%s', (FIXME) exc: %s", jpath.c_str(), e.what());
             // FIXME: the smsc journal is corrupted, should we trunk the file?
         } catch ( std::exception& e ) {
-            smsc_log_error(sender_.log_,"file '%s', exc: %s", jpath.c_str(), e.what());
+            smsc_log_error(log_,"file '%s', exc: %s", jpath.c_str(), e.what());
         }
     }
 
 
     virtual int Execute()
     {
-        smsc_log_debug(sender_.log_,"S='%s' journal roller started", sender_.smscId_.c_str());
+        smsc_log_debug(log_,"S='%s' journal roller started", sender_.smscId_.c_str());
         while ( !isStopping_ ) {
             bool firstPass = true;
             ReceiptData rd;
@@ -223,7 +233,7 @@ protected:
                 MutexGuard mg(mon_);
                 mon_.wait(30);
             } while (true);
-            smsc_log_debug(sender_.log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
+            smsc_log_debug(log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
             if (!isStopping_) {
                 rollOver();
                 MutexGuard mg(mon_);
@@ -234,10 +244,11 @@ protected:
     }
 
 private:
-    SmscSender& sender_;
-    bool        isStopping_;
+    SmscSender&           sender_;
+    smsc::logger::Logger* log_;
+    bool                  isStopping_;
     smsc::core::synchronization::EventMonitor mon_;
-    FileGuard   fg_;
+    FileGuard             fg_;
 };
 
 

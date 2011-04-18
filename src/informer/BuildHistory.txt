@@ -1,5 +1,8 @@
+2011-04-18 17:30 bukind
+  better journal logging
+
 2011-04-18 16:54 bukind
-  smscjournal is truncated at start (should not)
+  smscjournal was truncated at start (should not)
 
 2011-04-18 15:28 bukind
   junk warning about 'receipt has status=OK but not delivered' removed
