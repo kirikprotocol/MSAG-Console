@@ -227,6 +227,7 @@ public:
             bool firstPass = true;
             speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
             size_t written = 0;
+            smsc_log_debug(log_,"store rolling pass started");
             do {
                 DeliveryImplPtr ptr;
 
@@ -251,10 +252,12 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
-                smsc_log_debug(log_,"going to roll D=%u",ptr->getDlvId());
                 const unsigned chunk = ptr->rollOverStore();
-                speedControl_.consumeQuant( chunk );
-                written += chunk;
+                if ( chunk > 0 ) {
+                    speedControl_.consumeQuant( chunk );
+                    smsc_log_debug(log_,"store rolled D=%u size=%u",ptr->getDlvId(),chunk);
+                    written += chunk;
+                }
 
             } while (true);
             smsc_log_debug(log_,"store rolling pass done, written=%llu",ulonglong(written));
