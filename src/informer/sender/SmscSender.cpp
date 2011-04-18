@@ -115,7 +115,7 @@ public:
         std::string jpath(makePath());
         readRecordsFrom(jpath+".old");
         readRecordsFrom(jpath);
-        fg_.create(jpath.c_str(),0666,true,true);
+        fg_.create(jpath.c_str(),0666,true);
         fg_.seek(0,SEEK_END);
     }
 
