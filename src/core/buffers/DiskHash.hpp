@@ -454,7 +454,7 @@ public:
         Iterator( DiskHash& dh ) : dh_(&dh), hc_(0) {}
 
         bool Next( K& key, V& value ) {
-            while ( hc_ < dh_->size ) {
+            while ( hc_ < uint32_t(dh_->size) ) {
                 uint32_t idx = hc_++ * dh_->recsize;
                 dh_->f.Seek(DiskHashHeader::Size()+idx);
                 uint16_t fl = dh_->f.ReadNetInt16();
@@ -479,7 +479,7 @@ public:
     void recalcCount()
     {
         unsigned newCount = 0;
-        for ( uint32_t hc = 0; hc < size; ++hc ) {
+        for ( uint32_t hc = 0; hc < uint32_t(size); ++hc ) {
             const uint32_t idx = hc * recsize;
             f.Seek(DiskHashHeader::Size()+idx);
             const uint16_t fl = f.ReadNetInt16();
