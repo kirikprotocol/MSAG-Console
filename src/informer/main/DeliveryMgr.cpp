@@ -424,7 +424,7 @@ public:
                 ++nbit;
                 value >>= 1;
             }
-            dlvId = dlvid_type(nbit + idx*perval);
+            dlvId = start_ + dlvid_type(nbit + idx*perval);
             return true;
         }
         dlvId = start_ + deliveryChunkSize;
