@@ -20,7 +20,7 @@ namespace util {
 /// time specification for different systems.
 
 struct TimeSourceTime {
-    inline static time_t getSeconds() {
+    inline static time_t getSeconds() throw() {
         return time(0);
     }
 };
@@ -29,17 +29,17 @@ struct TimeSourceGettimeofday {
     typedef int64_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000U;
     typedef int64_t usec_type;
-    inline static time_t getSeconds() {
+    inline static time_t getSeconds() throw() {
         struct timeval tv;
         gettimeofday(&tv,0);
         return tv.tv_sec;
     }
-    inline static usec_type getUSec() {
+    inline static usec_type getUSec() throw() {
         struct timeval tv;
         gettimeofday(&tv,0);
         return usec_type(tv.tv_sec)*1000000U + tv.tv_usec;
     }
-    inline static hrtime_type getHRTime() {
+    inline static hrtime_type getHRTime() throw() {
         struct timeval tv;
         gettimeofday(&tv,0);
         return hrtime_type(tv.tv_sec)*ticksPerSec + tv.tv_usec;
@@ -52,12 +52,12 @@ struct TimeSourceClockGettime {
     typedef int64_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000000U;
     typedef int64_t usec_type;
-    inline static usec_type getUSec() {
+    inline static usec_type getUSec() throw() {
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME,&ts);
         return usec_type(ts.tv_sec)*1000000U + ts.tv_nsec/1000;
     }
-    inline static hrtime_type getHRTime() {
+    inline static hrtime_type getHRTime() throw() {
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC,&ts);
         return hrtime_type(ts.tv_sec)*ticksPerSec + ts.tv_nsec;
@@ -69,7 +69,7 @@ struct TimeSourceClockGettime {
 struct TimeSourceGethrtime {
     typedef hrtime_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000000U;
-    inline static hrtime_type getHRTime() {
+    inline static hrtime_type getHRTime() throw() {
         return gethrtime();
     }
 };
