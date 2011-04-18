@@ -225,7 +225,8 @@ public:
         DeliveryIList::iterator& iter = mgr_.storeRollingIter_;
         while (! getCS()->isStopping()) { // never ending loop
             bool firstPass = true;
-            speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
+            const usectime_type startTime = currentTimeMicro()
+            speedControl_.suspend( startTime % flipTimePeriod );
             size_t written = 0;
             smsc_log_debug(log_,"store rolling pass started");
             do {
@@ -260,7 +261,10 @@ public:
                 }
 
             } while (true);
-            smsc_log_debug(log_,"store rolling pass done, written=%llu",ulonglong(written));
+            const usectime_type elapsedTime = currentTimeMicro() - startTime;
+            smsc_log_debug(log_,"store rolling pass done, written=%llu, time=%llu.%u",
+                           ulonglong(written), elapsedTime / tuPerSec, 
+                           unsigned(elapsedTime % tuPerSec / 1000) );
             MutexGuard mg(mgr_.mon_);
             if (! getCS()->isStopping()) {
                 mgr_.storeJournal_->rollOver(); // change files
