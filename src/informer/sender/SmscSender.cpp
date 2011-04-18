@@ -895,8 +895,8 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
                 } else {
                     rd.status = smsc::system::Status::UNKNOWNERR;
                 }
-                smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
-                              smscId_.c_str(), msgid, pdu->get_sequenceNumber());
+                // smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
+                // smscId_.c_str(), msgid, pdu->get_sequenceNumber());
             }
         }
     

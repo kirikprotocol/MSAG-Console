@@ -167,7 +167,7 @@ void InputStorage::init( ActivityLog& actLog )
     const dlvid_type dlvId = getDlvId();
     {
         char buf[20];
-        sprintf(buf,"in.%u",dlvId % 1000);
+        sprintf(buf,"in.%02u",dlvId % 100);
         log_ = smsc::logger::Logger::getInstance(buf);
     }
     /*

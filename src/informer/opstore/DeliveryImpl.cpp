@@ -38,7 +38,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
 
         std::auto_ptr<Config> cfg(Config::createFromFile((getCS()->getStorePath()+buf).c_str()));
         char logname[20];
-        sprintf(logname,"dlcf.%05u",dlvId % 10000);
+        sprintf(logname,"dlcf.%02u",dlvId % 100);
         const ConfigWrapper config(*cfg.get(),smsc::logger::Logger::getInstance(logname));
 
         data.name = config.getString("name");

@@ -1,3 +1,7 @@
+2011-04-18 15:28 bukind
+  junk warning about 'receipt has status=OK but not delivered' removed
+  a few logger properties cleanup
+
 2011-04-18 15:11 bukind
   bugfix: dlv chunk typo
 

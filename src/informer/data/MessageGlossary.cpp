@@ -58,7 +58,7 @@ void MessageGlossary::init( dlvid_type dlvId )
 
     {
         char buf[10];
-        sprintf(buf,"glos.%u",dlvId_ % 1000);
+        sprintf(buf,"glos.%02u",dlvId_ % 100);
         log_ = smsc::logger::Logger::getInstance(buf);
     }
 

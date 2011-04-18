@@ -163,7 +163,7 @@ private:
 smsc::logger::Logger* makeLogger( dlvid_type dlvId, regionid_type regionId )
 {
     char buf[20];
-    sprintf(buf,"r.%u.%u",dlvId % 1000,regionId);
+    sprintf(buf,"r.%02u.%01u",dlvId % 100,regionId % 10);
     return smsc::logger::Logger::getInstance(buf);
 }
 

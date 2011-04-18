@@ -19,7 +19,7 @@ source_(source),
 ref_(0)
 {
     char buf[20];
-    sprintf(buf,"d.%u",getDlvId() % 1000);
+    sprintf(buf,"d.%02u",getDlvId() % 100);
     log_ = smsc::logger::Logger::getInstance(buf);
     if (source_) {
         try {

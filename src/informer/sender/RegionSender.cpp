@@ -26,7 +26,7 @@ smsc::logger::Logger* makeLogger( const Region* r)
         throw InfosmeException(EXC_LOGICERROR,"NULL region passed");
     }
     char buf[15];
-    sprintf(buf,"rs.%u",r->getRegionId());
+    sprintf(buf,"rs.%02u",r->getRegionId() % 100);
     return smsc::logger::Logger::getInstance(buf);
 }
 
