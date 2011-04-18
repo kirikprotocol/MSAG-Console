@@ -110,7 +110,7 @@ using smsc::core::buffers::TmpBuf;
 
 
 
-Config* Config::createFromFile( const char* xmlfile, time_t ifnewer )
+Config* Config::createFromFile( const char* xmlfile, time_t* ifnewer )
 {
     initXerces();
     if ( !xmlfile || *xmlfile == '\0' ) {
