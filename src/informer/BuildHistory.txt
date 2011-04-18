@@ -1,3 +1,7 @@
+2011-04-18 10:45 bukind
+  bugfix: dcpserver::core initialized to prevent core dump at init
+  max dlv is not limited in some cases
+
 =====================================================================
 2011-04-14 15:00 bukind informer-build-20110414
 

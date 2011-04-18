@@ -79,7 +79,7 @@ isDeleted_(false)
         speedControl_.setSpeed(maxspeed,currentTimeMicro() % flipTimePeriod);
     }
     static const unsigned maxdlv = 1000000;
-    if (maxTotalDeliveries_ > maxdlv) {
+    if (maxTotalDeliveries_ != unsigned(-1) && maxTotalDeliveries_ > maxdlv) {
         smsc_log_warn(log_,"U='%s' too many maxdlvs %u replaced with %u",id,maxTotalDeliveries_,maxdlv);
         maxTotalDeliveries_ = maxdlv;
     }

@@ -44,7 +44,7 @@ protected:
 
 class DcpServer:public eyeline::protogen::ServerBase,public DcpHandler{
 public:
-  DcpServer():ServerBase("dcp.proto")
+  DcpServer():ServerBase("dcp.proto"), core(0)
   {
     proto.assignHandler(this);
     dlvListReqIdSeq=0;
