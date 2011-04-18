@@ -139,17 +139,38 @@ class DeliveryMgr::InputJournalRoller : public smsc::core::threads::Thread
 {
 public:
     InputJournalRoller( DeliveryMgr& mgr ) :
-    mgr_(mgr), log_(smsc::logger::Logger::getInstance("inroller")) {}
+    mgr_(mgr), log_(smsc::logger::Logger::getInstance("inroller")),
+    speedControl_( std::max(getCS()->getInputJournalRollingSpeed(),1U) ) {}
+
     ~InputJournalRoller() { WaitFor(); }
+
+    void stop() {
+        MutexGuard mg(waitmon_);
+        waitmon_.notify();
+    }
+
     virtual int Execute()
     {
         smsc_log_debug(log_,"input journal roller started");
         DeliveryIList::iterator& iter = mgr_.inputRollingIter_;
         while (! getCS()->isStopping() ) {
             bool firstPass = true;
+            speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
             size_t written = 0;
             do {
                 DeliveryImplPtr ptr;
+
+                {
+                    usectime_type sleepTime =
+                        speedControl_.isReady( currentTimeMicro() % flipTimePeriod,
+                                               maxSnailDelay );
+                    if ( sleepTime > 10000 ) {
+                        MutexGuard mg(waitmon_);
+                        waitmon_.wait(unsigned(sleepTime / 1000));
+                    }
+                    if (getCS()->isStopping()) { break; }
+                }
+
                 {
                     smsc::core::synchronization::MutexGuard mg(mgr_.mon_);
                     if (firstPass) {
@@ -160,8 +181,12 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
+
                 smsc_log_debug(log_,"going to roll D=%u",ptr->getDlvId());
-                written += ptr->rollOverInput();
+                const unsigned chunk = ptr->rollOverInput();
+                speedControl_.consumeQuant( chunk );
+                written += chunk;
+                
             } while (true);
             smsc_log_debug(log_,"input rolling pass done, written=%llu",ulonglong(written));
             MutexGuard mg(mgr_.mon_);
@@ -176,6 +201,8 @@ public:
 private:
     DeliveryMgr&          mgr_;
     smsc::logger::Logger* log_;
+    smsc::core::synchronization::EventMonitor waitmon_;
+    SpeedControl<usectime_type,tuPerSec> speedControl_;
 };
 
 
@@ -183,19 +210,38 @@ class DeliveryMgr::StoreJournalRoller : public smsc::core::threads::Thread
 {
 public:
     StoreJournalRoller( DeliveryMgr& mgr ) :
-    mgr_(mgr), log_(smsc::logger::Logger::getInstance("oproller")) {}
+    mgr_(mgr), log_(smsc::logger::Logger::getInstance("oproller")),
+    speedControl_(std::max(getCS()->getOpJournalRollingSpeed(),1U)) {}
     ~StoreJournalRoller() { WaitFor(); }
+
+    void stop() {
+        MutexGuard mg(waitmon_);
+        waitmon_.notify();
+    }
+
     virtual int Execute()
     {
         smsc_log_debug(log_,"store journal roller started");
         DeliveryIList::iterator& iter = mgr_.storeRollingIter_;
         while (! getCS()->isStopping()) { // never ending loop
             bool firstPass = true;
+            speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
             size_t written = 0;
             do {
                 DeliveryImplPtr ptr;
+
                 {
+                    usectime_type sleepTime =
+                        speedControl_.isReady( currentTimeMicro() % flipTimePeriod,
+                                               maxSnailDelay );
+                    if ( sleepTime > 10000 ) {
+                        MutexGuard mg(waitmon_);
+                        waitmon_.wait(unsigned(sleepTime/1000));
+                    }
                     if ( getCS()->isStopping()) { break; }
+                }
+
+                {
                     smsc::core::synchronization::MutexGuard mg(mgr_.mon_);
                     if (firstPass) {
                         iter = mgr_.deliveryList_.begin();
@@ -206,7 +252,10 @@ public:
                     ++iter;
                 }
                 smsc_log_debug(log_,"going to roll D=%u",ptr->getDlvId());
-                written += ptr->rollOverStore();
+                const unsigned chunk = ptr->rollOverStore();
+                speedControl_.consumeQuant( chunk );
+                written += chunk;
+
             } while (true);
             smsc_log_debug(log_,"store rolling pass done, written=%llu",ulonglong(written));
             MutexGuard mg(mgr_.mon_);
@@ -221,6 +270,8 @@ public:
 private:
     DeliveryMgr&          mgr_;
     smsc::logger::Logger* log_;
+    smsc::core::synchronization::EventMonitor waitmon_;
+    SpeedControl<usectime_type,tuPerSec> speedControl_;
 };
 
 

@@ -3,6 +3,7 @@
 #include "SmscSender.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/CoreSmscStats.h"
+#include "informer/data/SpeedControl.h"
 #include "informer/data/DeliveryInfo.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/FileReader.h"
@@ -103,6 +104,7 @@ public:
     SmscJournal( SmscSender& sender ) :
     sender_(sender),
     log_(0),
+    speedControl_(std::max(getCS()->getSmscJournalRollingSpeed(),1U)),
     isStopping_(true)
     {
         char buf[128];
@@ -141,7 +143,7 @@ public:
     }
 
 
-    void journalReceiptData( const ReceiptData& rd )
+    unsigned journalReceiptData( const ReceiptData& rd )
     {
         assert(rd.responded > 0);
         char buf[100];
@@ -162,7 +164,7 @@ public:
                        rd.rcptId.msgId, unsigned(pos) );
         MutexGuard mg(mon_);
         fg_.write(buf,pos);
-        // fg_.fsync();
+        return unsigned(pos);
     }
 
 protected:
@@ -220,6 +222,7 @@ protected:
         smsc_log_debug(log_,"S='%s' journal roller started", sender_.smscId_.c_str());
         while ( !isStopping_ ) {
             bool firstPass = true;
+            speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
             ReceiptData rd;
             do {
                 if (!sender_.getNextRollingData(rd,firstPass)) {
@@ -228,27 +231,32 @@ protected:
                 firstPass = false;
                 if (isStopping_) { break; }
                 if (!rd.responded) { continue; }
-                journalReceiptData(rd);
-                // FIXME: optimize place limit on throughput
-                MutexGuard mg(mon_);
-                mon_.wait(30);
+                speedControl_.consumeQuant( journalReceiptData(rd) );
+                const usectime_type sleepTime = 
+                    speedControl_.isReady( currentTimeMicro() % flipTimePeriod,
+                                           maxSnailDelay );
+                if ( sleepTime > 10000 ) {
+                    MutexGuard mg(mon_);
+                    mon_.wait(unsigned(sleepTime/1000));
+                }
             } while (true);
             smsc_log_debug(log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
             if (!isStopping_) {
                 rollOver();
                 MutexGuard mg(mon_);
-                mon_.wait(10000);
+                mon_.wait(getCS()->getSmscJournalRollingPeriod()*1000);
             }
         }
         return 0;
     }
 
 private:
-    SmscSender&           sender_;
-    smsc::logger::Logger* log_;
-    bool                  isStopping_;
+    SmscSender&                               sender_;
+    smsc::logger::Logger*                     log_;
+    SpeedControl<usectime_type,tuPerSec>      speedControl_;
+    bool                                      isStopping_;
     smsc::core::synchronization::EventMonitor mon_;
-    FileGuard             fg_;
+    FileGuard                                 fg_;
 };
 
 

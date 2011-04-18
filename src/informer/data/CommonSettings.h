@@ -97,6 +97,20 @@ public:
         return operationalJournalRollingPeriod_;
     }
 
+    inline unsigned getSmscJournalRollingPeriod() const {
+        return smscJournalRollingPeriod_;
+    }
+
+    inline unsigned getInputJournalRollingSpeed() const {
+        return inputJournalRollingSpeed_;
+    }
+    inline unsigned getOpJournalRollingSpeed() const {
+        return operationalJournalRollingSpeed_;
+    }
+    inline unsigned getSmscJournalRollingSpeed() const {
+        return smscJournalRollingSpeed_;
+    }
+
     inline unsigned getProtocolId() const { return protocolId_; }
 
     /// how many seconds to keep waiting receipt after its validity period expired.
@@ -202,6 +216,10 @@ private:
     unsigned inputTransferChunkTime_;
     unsigned inputTransferThreadCount_;
     unsigned operationalJournalRollingPeriod_;
+    unsigned smscJournalRollingPeriod_;
+    unsigned inputJournalRollingSpeed_;
+    unsigned operationalJournalRollingSpeed_;
+    unsigned smscJournalRollingSpeed_;
     unsigned protocolId_;
     unsigned receiptExtraWaitTime_;
     unsigned resendIOThreadCount_;

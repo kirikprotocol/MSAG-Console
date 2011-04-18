@@ -84,9 +84,14 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     skippedIdsChunkSize_ = conf.getInt("skippedIdsChunkSize",256,100,10000);
     inputJournalRollingPeriod_ = conf.getInt("inputJournalRollingPeriod",300,30,1200);
     operationalJournalRollingPeriod_ = conf.getInt("operationalJournalRollingPeriod",300,30,1200);
+    smscJournalRollingPeriod_ = conf.getInt("smscJournalRollingPeriod",10,10,1200);
     inputTransferThreadCount_ = conf.getInt("inputTransferThreadCount",30,10,100);
     resendIOThreadCount_ = conf.getInt("resendIOThreadCount",10,10,30);
     validityPeriodDefault_ = conf.getInt("validityPeriodDefault",3600,1000,100000);
+
+    inputJournalRollingSpeed_ = conf.getInt("inputJournalRollingSpeed",30,1,100000);
+    operationalJournalRollingSpeed_ = conf.getInt("operationalJournalRollingSpeed",30,1,100000);
+    smscJournalRollingSpeed_ = conf.getInt("smscJournalRollingSpeed",30,1,100000);
 
     loadTimezones();
 }
