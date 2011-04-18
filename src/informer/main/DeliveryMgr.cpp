@@ -409,6 +409,7 @@ public:
     DeliveryChunk( dlvid_type dlvId ) : start_(getDeliveryChunkStart(dlvId)) {}
     /// get the next chunk
     bool getNextDelivery( dlvid_type& dlvId ) {
+        if (dlvId < start_) { dlvId = start_; }
         const size_t pos = size_t(dlvId - start_);
         size_t idx = pos / perval;
         unsigned nbit = unsigned(pos % perval);
