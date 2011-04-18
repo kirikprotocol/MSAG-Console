@@ -34,7 +34,11 @@ class Config {
 public:
     // friend class Manager;
 
-    static Config* createFromFile( const char* xmlfile ); // throw configexception
+    // @param ifnewer:
+    //    =0 - do not check if the config is newer;
+    //    other values - only load if cfg is newer, filling the config time on return
+    static Config* createFromFile( const char* xmlfile,
+                                   time_t* ifnewer = 0 ); // throw configexception
 
     Config()
     {}

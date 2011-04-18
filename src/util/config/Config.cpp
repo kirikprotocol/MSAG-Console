@@ -110,7 +110,7 @@ using smsc::core::buffers::TmpBuf;
 
 
 
-Config* Config::createFromFile( const char* xmlfile )
+Config* Config::createFromFile( const char* xmlfile, time_t ifnewer )
 {
     initXerces();
     if ( !xmlfile || *xmlfile == '\0' ) {
@@ -146,6 +146,10 @@ Config* Config::createFromFile( const char* xmlfile )
         throw ConfigException("config file '%s' is not found", xmlfile);
     }
 
+    if ( ifnewer && s.st_mtime <= *ifnewer ) {
+        return 0;
+    }
+
     // trying to open the file
     std::auto_ptr< Config > config;
     try {
@@ -160,6 +164,9 @@ Config* Config::createFromFile( const char* xmlfile )
         }
     } catch ( ParseException& e ) {
         throw ConfigException(e.what());
+    }
+    if ( ifnewer ) {
+        *ifnewer = s.st_mtime;
     }
     return config.release();
 }
