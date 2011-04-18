@@ -1147,10 +1147,11 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
          !userInfo.hasRole(USERROLE_ADMIN)) {
         throw InfosmeException(EXC_ACCESSDENIED,"access denied to delivery %u",dlvId);
     }
-    if ( moveToArchive &&
-         ptr->getState() == DLVSTATE_ACTIVE ) {
-        throw InfosmeException(EXC_ACCESSDENIED,"cannot archivate an active delivery %u",dlvId);
-    }
+    // if ( moveToArchive &&
+    // ptr->getState() == DLVSTATE_ACTIVE ) {
+    // throw InfosmeException(EXC_ACCESSDENIED,"cannot archivate an active delivery %u",dlvId);
+    // }
+
     // collect regions to detach
     ptr->getRegionList(bs.regIds);
     bindDeliveryRegions(bs);
