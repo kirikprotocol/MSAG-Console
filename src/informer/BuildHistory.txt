@@ -1,8 +1,11 @@
+=====================================================================
+2011-04-18 14:30 bukind informer-build-20110418
+
+2011-04-18 14:28 bukind
+  bugfix: handling sms parsing exception in handleReceipt  
+
 2011-04-18 13:44 bukind
   active delivery is allowed to be archived
-
-=====================================================================
-2011-04-18 11:50 bukind informer-build-20110418
 
 2011-04-18 11:46 bukind
   bugfix: missed chunk offset typo (unable to list next chunk dlvs)

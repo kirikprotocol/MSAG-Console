@@ -815,98 +815,124 @@ void SmscSender::handleError( int errorCode )
 void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
 {
     assert(pdu);
-    smsc::sms::SMS sms;
-    switch (pdu->get_commandId()) {
-    case smsc::smpp::SmppCommandSet::DELIVERY_SM:
-        fetchSmsFromSmppPdu(reinterpret_cast<smsc::smpp::PduXSm*>(pdu),&sms);
-        break;
-    case smsc::smpp::SmppCommandSet::DATA_SM:
-        fetchSmsFromDataSmPdu(reinterpret_cast<smsc::smpp::PduDataSm*>(pdu),&sms);
-        break;
-    default:
-        return;
-    }
+    try {
 
-    const bool isReceipt = 
-        sms.hasIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS) ?
-        ((sms.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS) & 0x3c) == 0x4) :
-        false;
-    
-    if ( !isReceipt ) {
-        return; 
-    }
-
-    uint8_t msgState;
-    int err;
-    ResponseData rd;
-    const char* msgid = parser_->parseSms(sms,rd.rcptId.msgId,msgState,err);
-    // preprocessing err
-    err &= 0xffff;
-    if ( err & 0x8000 ) {
-        static const int completer = -1 & ~0xffff;
-        err |= completer;
-    }
-        
-    if ( !msgid || *msgid == '\0') {
-        // broken msgid
-        return;
-    }
-
-    // msgid is ok
-    rd.seqNum = 0;    // receipt
-    rd.status = pdu->get_commandStatus();
-
-    bool delivered = false;
-    bool retry = false;
-    switch (msgState) {
-    case smsc::smpp::SmppMessageState::DELIVERED:
-        delivered = true;
-        break;
-    case smsc::smpp::SmppMessageState::EXPIRED:
-    case smsc::smpp::SmppMessageState::DELETED:
-        retry = true;
-        break;
-    case smsc::smpp::SmppMessageState::ENROUTE:
-    case smsc::smpp::SmppMessageState::ACCEPTED:
-    case smsc::smpp::SmppMessageState::UNKNOWN:
-        smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u has intermediate receipt state %d, skipped",
-                      smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
-        return;
-    case smsc::smpp::SmppMessageState::REJECTED:
-    case smsc::smpp::SmppMessageState::UNDELIVERABLE:
-        // permanent error
-        break;
-    default:
-        smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u invalid receipt state=%d",
-                      smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
-        break;
-    } // switch msgState
-    
-    if (!delivered) {
-        if (rd.status == smsc::system::Status::OK) {
-            // replacing with network errcode
-            rd.status = err;
-        }
-        if ( rd.status == smsc::system::Status::OK ) {
-            if (retry) {
-                rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
-            } else {
-                rd.status = smsc::system::Status::UNKNOWNERR;
-            }
-            smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
-                          smscId_.c_str(), msgid, pdu->get_sequenceNumber());
-        }
-    }
-
-    rd.rcptId.setMsgId(msgid);
-    rd.retry = retry;
-
-    if (queueData(rd)) {
+        smsc::sms::SMS sms;
         switch (pdu->get_commandId()) {
+        case smsc::smpp::SmppCommandSet::DELIVERY_SM:
+            fetchSmsFromSmppPdu(reinterpret_cast<smsc::smpp::PduXSm*>(pdu),&sms);
+            break;
+        case smsc::smpp::SmppCommandSet::DATA_SM:
+            fetchSmsFromDataSmPdu(reinterpret_cast<smsc::smpp::PduDataSm*>(pdu),&sms);
+            break;
+        default:
+            return;
+        }
+    
+        const bool isReceipt = 
+            sms.hasIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS) ?
+            ((sms.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS) & 0x3c) == 0x4) :
+            false;
+        
+        if ( !isReceipt ) {
+            return; 
+        }
+    
+        uint8_t msgState;
+        int err;
+        ResponseData rd;
+        const char* msgid = parser_->parseSms(sms,rd.rcptId.msgId,msgState,err);
+        // preprocessing err
+        err &= 0xffff;
+        if ( err & 0x8000 ) {
+            static const int completer = -1 & ~0xffff;
+            err |= completer;
+        }
+            
+        if ( !msgid || *msgid == '\0') {
+            // broken msgid
+            return;
+        }
+    
+        // msgid is ok
+        rd.seqNum = 0;    // receipt
+        rd.status = pdu->get_commandStatus();
+    
+        bool delivered = false;
+        bool retry = false;
+        switch (msgState) {
+        case smsc::smpp::SmppMessageState::DELIVERED:
+            delivered = true;
+            break;
+        case smsc::smpp::SmppMessageState::EXPIRED:
+        case smsc::smpp::SmppMessageState::DELETED:
+            retry = true;
+            break;
+        case smsc::smpp::SmppMessageState::ENROUTE:
+        case smsc::smpp::SmppMessageState::ACCEPTED:
+        case smsc::smpp::SmppMessageState::UNKNOWN:
+            smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u has intermediate receipt state %d, skipped",
+                          smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
+            return;
+        case smsc::smpp::SmppMessageState::REJECTED:
+        case smsc::smpp::SmppMessageState::UNDELIVERABLE:
+            // permanent error
+            break;
+        default:
+            smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u invalid receipt state=%d",
+                          smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
+            break;
+        } // switch msgState
+        
+        if (!delivered) {
+            if (rd.status == smsc::system::Status::OK) {
+                // replacing with network errcode
+                rd.status = err;
+            }
+            if ( rd.status == smsc::system::Status::OK ) {
+                if (retry) {
+                    rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
+                } else {
+                    rd.status = smsc::system::Status::UNKNOWNERR;
+                }
+                smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
+                              smscId_.c_str(), msgid, pdu->get_sequenceNumber());
+            }
+        }
+    
+        rd.rcptId.setMsgId(msgid);
+        rd.retry = retry;
+    
+        if (queueData(rd)) {
+            switch (pdu->get_commandId()) {
+            case smsc::smpp::SmppCommandSet::DELIVERY_SM: {
+                PduDeliverySmResp smResp;
+                smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
+                smResp.set_messageId("");
+                smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+                session_->getAsyncTransmitter()->sendDeliverySmResp(smResp);
+                break;
+            }
+            case smsc::smpp::SmppCommandSet::DATA_SM: {
+                PduDataSmResp smResp;
+                smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM_RESP);
+                smResp.set_messageId("");
+                smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+                session_->getAsyncTransmitter()->sendDataSmResp(smResp);
+                break;
+            }
+            default:
+                break;
+            }
+        }
+    } catch ( std::exception& e ) {
+        smsc_log_error(log_,"S='%s' receipt seq=%u exc: %s", smscId_.c_str(), pdu->get_sequenceNumber(), e.what());
+        switch ( pdu->get_commandId() ) {
         case smsc::smpp::SmppCommandSet::DELIVERY_SM: {
             PduDeliverySmResp smResp;
             smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
             smResp.set_messageId("");
+            smResp.get_header().set_commandStatus(smsc::system::Status::INVDCS);
             smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
             session_->getAsyncTransmitter()->sendDeliverySmResp(smResp);
             break;
@@ -915,6 +941,7 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
             PduDataSmResp smResp;
             smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM_RESP);
             smResp.set_messageId("");
+            smResp.get_header().set_commandStatus(smsc::system::Status::INVDCS);
             smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
             session_->getAsyncTransmitter()->sendDataSmResp(smResp);
             break;
