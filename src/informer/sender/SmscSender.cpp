@@ -104,7 +104,7 @@ public:
     SmscJournal( SmscSender& sender ) :
     sender_(sender),
     log_(0),
-    speedControl_(std::max(getCS()->getSmscJournalRollingSpeed(),1U)),
+    speedControl_(std::max(getCS()->getSmscJournalRollingSpeed(),1U)*1000),
     isStopping_(true)
     {
         char buf[128];

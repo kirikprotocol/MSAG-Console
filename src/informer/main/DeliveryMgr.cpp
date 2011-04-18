@@ -140,7 +140,7 @@ class DeliveryMgr::InputJournalRoller : public smsc::core::threads::Thread
 public:
     InputJournalRoller( DeliveryMgr& mgr ) :
     mgr_(mgr), log_(smsc::logger::Logger::getInstance("inroller")),
-    speedControl_( std::max(getCS()->getInputJournalRollingSpeed(),1U) ) {}
+    speedControl_( std::max(getCS()->getInputJournalRollingSpeed(),1U)*1000 ) {}
 
     ~InputJournalRoller() { WaitFor(); }
 
@@ -211,7 +211,7 @@ class DeliveryMgr::StoreJournalRoller : public smsc::core::threads::Thread
 public:
     StoreJournalRoller( DeliveryMgr& mgr ) :
     mgr_(mgr), log_(smsc::logger::Logger::getInstance("oproller")),
-    speedControl_(std::max(getCS()->getOpJournalRollingSpeed(),1U)) {}
+    speedControl_(std::max(getCS()->getOpJournalRollingSpeed(),1U)*1000) {}
     ~StoreJournalRoller() { WaitFor(); }
 
     void stop() {
