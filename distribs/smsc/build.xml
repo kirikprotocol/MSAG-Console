@@ -18,6 +18,7 @@
   <property name="CATALINA_HOME" location="${relative.CATALINA_HOME}"/>
   <property name="CATALINA_BASE" location="${relative.CATALINA_BASE}"/>
   <property name="MAKE_ARGS" value="${relative.MAKE_ARGS}"/>
+  <property file="build.properties"/>
   <fail if="INIT_FAILED" message="Please configure build.properties file"/>
   <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
