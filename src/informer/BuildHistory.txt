@@ -1,3 +1,9 @@
+=====================================================================
+2011-04-19 15:55 bukind informer-build-20110419
+
+2011-04-19 15:33 bukind
+  expiration of sent messages in case of smsc journal lost (at start)
+
 2011-04-18 18:50 bukind
   better rolling speed control
 
