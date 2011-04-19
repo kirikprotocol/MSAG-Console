@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sysexits.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "core/network/Socket.hpp"
 #include "core/buffers/String.hpp"
