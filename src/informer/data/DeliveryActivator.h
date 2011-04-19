@@ -8,11 +8,13 @@ namespace eyeline {
 namespace informer {
 
 class RegionFinder;
+class Region;
 class InputTransferTask;
 class ResendTransferTask;
 class Delivery;
 struct BindSignal;
 struct Message;
+template <class T> class EmbedRefPtr;
 
 /// an interface for applying some activities on deliveries.
 class DeliveryActivator
@@ -30,6 +32,9 @@ public:
     virtual void deliveryRegions( dlvid_type dlvId,
                                   std::vector<regionid_type>& regs,
                                   bool bind ) = 0;
+
+    /// get region by its id
+    virtual bool getRegion( regionid_type regId, EmbedRefPtr<Region>& ptr ) = 0;
 
     /// start a task transferring messages from inputstore into opstore.
     virtual void startInputTransfer( InputTransferTask* ) = 0;

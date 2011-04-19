@@ -848,6 +848,16 @@ void InfosmeCoreV1::incOutgoing( unsigned nchunks )
 }
 
 
+bool InfosmeCoreV1::getRegion( regionid_type regId, RegionPtr& ptr )
+{
+    MutexGuard mg(startMon_);
+    RegionPtr* r = regions_.GetPtr(regId);
+    if ( ! r ) return false;
+    ptr.reset(r->get());
+    return true;
+}
+
+
 void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
                                      std::vector<regionid_type>& regIds,
                                      bool bind )

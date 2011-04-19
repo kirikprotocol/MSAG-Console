@@ -65,7 +65,7 @@ public:
         if (log_->isDebugEnabled()) {
             HexDump hd;
             HexDump::string_type dump;
-            const size_t buflen = fb.getLen();
+            const size_t buflen = fb.getLen() - fb.getPos();
             const char* buf = fb.getBuf();
             dump.reserve(buflen*5);
             hd.hexdump(dump,buf,buflen);

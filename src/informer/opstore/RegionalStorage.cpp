@@ -4,6 +4,7 @@
 #include "informer/io/FileReader.h"
 #include "informer/io/DirListing.h"
 #include "informer/data/CommonSettings.h"
+#include "informer/data/Region.h"
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/UserInfo.h"
 #include "informer/data/MessageGlossary.h"
@@ -713,15 +714,55 @@ void RegionalStorage::setRecordAtInit( Message& msg, regionid_type serial )
 bool RegionalStorage::postInit()
 {
     int sent = 0;
-    // int retry = 0;
     int process = 0;
     smsc_log_debug(log_,"R=%u/D=%u postInit",regionId_,getDlvId());
-    for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
+    RegionPtr regPtr;
+    dlv_->source_->getDlvActivator().getRegion(regionId_,regPtr);
+
+    const msgtime_type currentTime = currentTimeSeconds();
+    static const msgtime_type daynight = 24*3600;
+    RelockMutexGuard mg(cacheMon_);
+    for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ) {
         Message& m = i->msg;
         // bind to glossary
         if ( !m.text.isUnique()) {
             dlv_->dlvInfo_->getGlossary().fetchText(m.text);
         }
+        if ( regPtr.get() && m.state != MSGSTATE_PROCESS ) {
+            const timediff_type uptonow = currentTime - m.lastTime;
+            if ( m.timeLeft < uptonow ) {
+                // we should check message expiration
+                int weekTime = regPtr->getLocalWeekTime( m.lastTime );
+                bool isexp = dlv_->dlvInfo_->checkExpired(weekTime, m.timeLeft, uptonow);
+                smsc_log_debug(log_,"R=%u/D=%u/M=%llu message is %sexpired, weekTime=%d, ttl=%d, uptonow=%d",
+                               regionId_,getDlvId(),m.msgId,
+                               isexp ? "" : "NOT ",
+                               weekTime, m.timeLeft, uptonow );
+                if (isexp) {
+                    m.lastTime = currentTime;
+                    m.timeLeft = 0;
+                    m.state = 0; // override state to get correct stats
+                    MsgIter iter = i;
+                    ++i;
+                    const int smppState = smsc::system::Status::EXPIREDATSTART;
+                    unsigned nchunks = 0; // unknown
+                    doFinalize(mg,iter,currentTime,MSGSTATE_EXPIRED,smppState,nchunks);
+                    continue;
+                }
+            }
+        }
+        if (log_->isDebugEnabled()) {
+            uint8_t ton, npi, len;
+            const uint64_t addr = subscriberToAddress(m.subscriber,len,ton,npi);
+            smsc_log_debug(log_,"R=%u/D=%u/M=%llu state=%s A=.%u.%u.%*.*llu txtId=%u/'%s' last=%+d ttl=%d",
+                           regionId_, getDlvId(), ulonglong(m.msgId),
+                           msgStateToString(MsgState(m.state)),
+                           ton,npi,len,len,ulonglong(addr),
+                           m.text.getTextId(),
+                           m.text.getText() ? m.text.getText() : "",
+                           int(currentTime - m.lastTime), int(m.timeLeft));
+        }
+
         switch (m.state) {
         case MSGSTATE_INPUT:
             throw InfosmeException(EXC_LOGICERROR,
@@ -747,6 +788,7 @@ bool RegionalStorage::postInit()
                                    "final state D=%u/M=%llu in opstore",
                                    getDlvId(), m.msgId );
         }
+        ++i;
     }
     // syncing stats
     dlv_->dlvInfo_->incMsgStats(regionId_,MSGSTATE_SENT,sent);

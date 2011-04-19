@@ -174,6 +174,42 @@ int DeliveryInfo::checkActiveTime( int weekTime ) const
 }
 
 
+bool DeliveryInfo::checkExpired( int weekTime, timediff_type ttl, timediff_type uptonow ) const
+{
+    if ( ttl <= 0 ) {
+        return true;
+    }
+    static const int weekLen = 7*24*3600;
+    int npass = 0;
+    while ( uptonow > 0 ) {
+        int active = checkActiveTime(weekTime % weekLen);
+        if ( ++npass > 20 ) {
+            smsc_log_warn(log_,"D=%u checkExpired loop weekTime=%d ttl=%d uptonow=%d active=%d",
+                          dlvId_, weekTime, ttl, uptonow, active );
+            return false;
+        }
+        if ( active > 0 ) {
+            // not active, subtract from uptonow, but keep ttl
+            uptonow -= active;
+            weekTime += active;
+            continue;
+        }
+        // active, subtract from both uptonow and ttl
+        active = -active;
+        if ( uptonow < active ) {
+            active = uptonow;
+        }
+        uptonow -= active;
+        ttl -= active;
+        weekTime += active;
+        if (ttl <= 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 unsigned DeliveryInfo::evaluateNchunks( const char*     outText,
                                         size_t          outLen,
                                         smsc::sms::SMS* sms ) const

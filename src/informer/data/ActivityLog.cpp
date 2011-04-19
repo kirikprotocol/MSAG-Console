@@ -183,6 +183,10 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     case MSGSTATE_KILLED:
         if (!retryCount) {
             const char* text = msg.text.getText();
+            if (!text) {
+                throw InfosmeException(EXC_LOGICERROR,"R=%u/D=%u/M=%llu text is NULL",
+                                       regId, getDlvId(), ulonglong(msg.msgId) );
+            }
             retryCount = int(dlvInfo_->evaluateNchunks(text,strlen(text)));
         }
         break;

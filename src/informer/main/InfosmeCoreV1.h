@@ -119,6 +119,8 @@ public:
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
 
+    virtual bool getRegion( regionid_type regId, RegionPtr& ptr );
+
     /// bind regions to delivery
     /// @param bind - true if bind, false if unbind.
     virtual void deliveryRegions( dlvid_type dlvId,
