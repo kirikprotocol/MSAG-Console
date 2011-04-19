@@ -1073,8 +1073,7 @@ void InfosmeCoreV1::updateRegion( regionid_type regionId )
         MutexGuard mg(startMon_);
         RegionPtr* ptr = regions_.GetPtr(regionId);
         if (!ptr || !*ptr ) {
-            throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' not found",
-                                   regionId, (*ptr)->getName().c_str() );
+            throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
         } else if ( (*ptr)->isDeleted() ) {
             throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
                                    regionId, (*ptr)->getName().c_str() );
@@ -1097,8 +1096,7 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
         MutexGuard mg(startMon_);
         RegionPtr* ptr = regions_.GetPtr(regionId);
         if (!ptr || !*ptr ) {
-            throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' not found",
-                                   regionId, (*ptr)->getName().c_str() );
+            throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
         } else if ( (*ptr)->isDeleted() ) {
             throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
                                    regionId, (*ptr)->getName().c_str() );
