@@ -654,11 +654,11 @@ size_t RegionalStorage::rollOver( SpeedControl<usectime_type,tuPerSec>& speedCon
         ++storingIter_;
         {
             MsgLock ml(iter,this,mg);
-            const unsigned chunk = 
+            const size_t chunk =
                 dlv_->storeJournal_->journalMessage(info.getDlvId(),
                                                     regionId_,iter->msg,ml.serial);
             if ( chunk ) {
-                speedControl.consumeQuant(chunk);
+                speedControl.consumeQuant(int(chunk));
                 written += chunk;
             }
         }

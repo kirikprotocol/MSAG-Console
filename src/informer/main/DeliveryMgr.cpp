@@ -155,8 +155,10 @@ public:
         DeliveryIList::iterator& iter = mgr_.inputRollingIter_;
         while (! getCS()->isStopping() ) {
             bool firstPass = true;
-            speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
+            const usectime_type startTime = currentTimeMicro();
+            speedControl_.suspend( startTime % flipTimePeriod );
             size_t written = 0;
+            smsc_log_debug(log_,"input rolling pass started");
             do {
                 DeliveryImplPtr ptr;
 
@@ -182,13 +184,18 @@ public:
                     ++iter;
                 }
 
-                smsc_log_debug(log_,"going to roll D=%u",ptr->getDlvId());
-                const unsigned chunk = ptr->rollOverInput();
-                speedControl_.consumeQuant( chunk );
-                written += chunk;
+                const size_t chunk = ptr->rollOverInput();
+                if ( chunk > 0 ) {
+                    smsc_log_debug(log_,"input rolled D=%u size=%u",ptr->getDlvId(),unsigned(chunk));
+                    speedControl_.consumeQuant( int(chunk) );
+                    written += chunk;
+                }
                 
             } while (true);
-            smsc_log_debug(log_,"input rolling pass done, written=%llu",ulonglong(written));
+            const usectime_type elapsedTime = currentTimeMicro() - startTime;
+            smsc_log_debug(log_,"input rolling pass done, written=%llu, time=%llu.%u",
+                           ulonglong(written), ulonglong(elapsedTime / tuPerSec),
+                           unsigned(elapsedTime % tuPerSec / 1000) );
             MutexGuard mg(mgr_.mon_);
             if (!getCS()->isStopping()) {
                 mgr_.inputJournal_->rollOver(); // change files
@@ -253,10 +260,9 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
-                const unsigned chunk = ptr->rollOverStore( speedControl_ );
+                const size_t chunk = ptr->rollOverStore( speedControl_ );
                 if ( chunk > 0 ) {
-                    // speedControl_.consumeQuant( chunk );
-                    smsc_log_debug(log_,"store rolled D=%u size=%u",ptr->getDlvId(),chunk);
+                    smsc_log_debug(log_,"store rolled D=%u size=%u",ptr->getDlvId(),unsigned(chunk));
                     written += chunk;
                 }
 
