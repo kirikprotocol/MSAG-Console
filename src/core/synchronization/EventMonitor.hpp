@@ -23,7 +23,11 @@ protected:
     void operator=(const EventMonitor &);
 
 public:
+#ifdef CHECKCONTENTION
+    EventMonitor( const char* fl = 0, int ln = 0) : Mutex(fl,ln)
+#else
     EventMonitor()
+#endif
     { }
     ~EventMonitor()
     { }
@@ -103,7 +107,6 @@ public:
 }//synchronization
 }//core
 }//smsc
-
 
 #endif /* __CORE_SYNCHRONIZATION_EVENTMONITOR_HPP__ */
 
