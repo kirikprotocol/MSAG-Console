@@ -184,11 +184,15 @@ public:
                     ++iter;
                 }
 
-                const size_t chunk = ptr->rollOverInput();
-                if ( chunk > 0 ) {
-                    smsc_log_debug(log_,"input rolled D=%u size=%u",ptr->getDlvId(),unsigned(chunk));
-                    speedControl_.consumeQuant( int(chunk) );
-                    written += chunk;
+                try {
+                    const size_t chunk = ptr->rollOverInput();
+                    if ( chunk > 0 ) {
+                        smsc_log_debug(log_,"input rolled D=%u size=%u",ptr->getDlvId(),unsigned(chunk));
+                        speedControl_.consumeQuant( int(chunk) );
+                        written += chunk;
+                    }
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"input roll D=%u exc: %s",ptr->getDlvId(),e.what());
                 }
                 
             } while (true);
@@ -198,8 +202,12 @@ public:
                            unsigned(elapsedTime % tuPerSec / 1000) );
             MutexGuard mg(mgr_.mon_);
             if (!getCS()->isStopping()) {
-                mgr_.inputJournal_->rollOver(); // change files
-                mgr_.mon_.wait(getCS()->getInputJournalRollingPeriod()*1000);
+                try {
+                    mgr_.inputJournal_->rollOver(); // change files
+                    mgr_.mon_.wait(getCS()->getInputJournalRollingPeriod()*1000);
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"input rolling file exc: %s",e.what());
+                }
             }
         }
         smsc_log_debug(log_,"input journal roller stopped");
@@ -260,10 +268,14 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
-                const size_t chunk = ptr->rollOverStore( speedControl_ );
-                if ( chunk > 0 ) {
-                    smsc_log_debug(log_,"store rolled D=%u size=%u",ptr->getDlvId(),unsigned(chunk));
-                    written += chunk;
+                try {
+                    const size_t chunk = ptr->rollOverStore( speedControl_ );
+                    if ( chunk > 0 ) {
+                        smsc_log_debug(log_,"store rolled D=%u size=%u",ptr->getDlvId(),unsigned(chunk));
+                        written += chunk;
+                    }
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"store roll D=%u exc: %s",ptr->getDlvId(),e.what());
                 }
 
             } while (true);
@@ -273,8 +285,12 @@ public:
                            unsigned(elapsedTime % tuPerSec / 1000) );
             MutexGuard mg(mgr_.mon_);
             if (! getCS()->isStopping()) {
-                mgr_.storeJournal_->rollOver(); // change files
-                mgr_.mon_.wait(getCS()->getOpJournalRollingPeriod()*1000);
+                try {
+                    mgr_.storeJournal_->rollOver(); // change files
+                    mgr_.mon_.wait(getCS()->getOpJournalRollingPeriod()*1000);
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"store rolling file exc: %s",e.what());
+                }
             }
         }
         smsc_log_debug(log_,"store journal roller stopped");
@@ -344,7 +360,11 @@ public:
                     continue;
                 }
             }
-            dumpStats( msgtime_type(nextTime / 1000) );
+            try {
+                dumpStats( msgtime_type(nextTime / 1000) );
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"stats dumper exc: %s",e.what());
+            }
             nextTime += msecDelta;
         }
         smsc_log_debug(log_,"stats dumper finished");
@@ -909,7 +929,11 @@ int DeliveryMgr::Execute()
             if (wakeTime>0) { mon_.wait(int(wakeTime)); }
             // check if we have an archive dlvs pending
         }
-        signalArchive(0);
+        try {
+            signalArchive(0);
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"signalling archive, exc: %s", e.what());
+        }
     }
     return 0;
 }

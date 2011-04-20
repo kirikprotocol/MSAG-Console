@@ -304,6 +304,13 @@ void InputStorage::dispatchMessages( MsgIter begin,
     const unsigned fileSize = getCS()->getInputStorageFileSize();
     RegionFinder& rf = core_.getRegionFinder();
     MutexGuard mg(wlock_);
+    /*
+    {
+        struct timespec tmo = { 2, 0 };
+        smsc_log_debug(log_,"D=%u temporary sleep under wlock", getDlvId());
+        ::nanosleep(&tmo,0);
+    }
+     */
     // preprocess
     unsigned total = 0;
     msgid_type minRlast = lastMsgId_;

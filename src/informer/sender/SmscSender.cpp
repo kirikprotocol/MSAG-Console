@@ -225,13 +225,18 @@ protected:
             speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
             ReceiptData rd;
             do {
-                if (!sender_.getNextRollingData(rd,firstPass)) {
-                    break;
+                try {
+                    if (!sender_.getNextRollingData(rd,firstPass)) {
+                        break;
+                    }
+                    firstPass = false;
+                    if (isStopping_) { break; }
+                    if (!rd.responded) { continue; }
+                    speedControl_.consumeQuant( journalReceiptData(rd) );
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"S='%s' journal roller exc: %s",
+                                  sender_.smscId_.c_str(), e.what());
                 }
-                firstPass = false;
-                if (isStopping_) { break; }
-                if (!rd.responded) { continue; }
-                speedControl_.consumeQuant( journalReceiptData(rd) );
                 const usectime_type sleepTime = 
                     speedControl_.isReady( currentTimeMicro() % flipTimePeriod,
                                            maxSnailDelay );
@@ -239,12 +244,18 @@ protected:
                     MutexGuard mg(mon_);
                     mon_.wait(unsigned(sleepTime/1000));
                 }
+
             } while (true);
             smsc_log_debug(log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
             if (!isStopping_) {
-                rollOver();
-                MutexGuard mg(mon_);
-                mon_.wait(getCS()->getSmscJournalRollingPeriod()*1000);
+                try {
+                    rollOver();
+                    MutexGuard mg(mon_);
+                    mon_.wait(getCS()->getSmscJournalRollingPeriod()*1000);
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"S='%s' journal rolling exc: %s",
+                                  sender_.smscId_.c_str(), e.what());
+                }
             }
         }
         return 0;
@@ -1257,7 +1268,12 @@ int SmscSender::Execute()
             smsc_log_warn(log_,"S='%s' connectLoop exc: %s", smscId_.c_str(), e.what());
         }
         if (isStopping_) break;
-        journal_->start();
+        try {
+            journal_->start();
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"S='%s' starting jounrnal exc: %s", smscId_.c_str(), e.what());
+            break;
+        }
         try {
             sendLoop();
         } catch ( std::exception& e ) {
