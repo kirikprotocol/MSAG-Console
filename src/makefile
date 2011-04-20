@@ -206,9 +206,13 @@ ifeq ($(INTHASHUSAGECHECKING),YES)
 CXXFLAGS := $(CXXFLAGS) -DINTHASH_USAGE_CHECKING
 endif
 
+ifeq ($(CHECKCONTENTION),YES)
+CXXFLAGS := $(CXXFLAGS) -DCHECKCONTENTION
+endif
+
 ifeq ($(SNMP),YES)
 ifeq ($(CXX),CC)
-SNMP_LIBS_CORE = -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -ladm -lpicl
+SNMP_LIBS_CORE = -lnetsnmpagent -lnetsnmpmibs -lnetsnmphelpers -lnetsnmp -lkstat -ladm -lpicl
 ifeq ($(SFW),YES)
 SNMP_LIBS_CORE += -lpkcs11
 endif
