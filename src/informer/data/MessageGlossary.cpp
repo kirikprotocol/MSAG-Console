@@ -35,6 +35,7 @@ private:
 
 MessageGlossary::MessageGlossary() :
 log_(0),
+INITMUTEX(lock_),
 dlvId_(0),
 hash_(0),
 lastRealId_(MessageText::uniqueId),

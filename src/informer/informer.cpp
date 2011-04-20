@@ -23,6 +23,16 @@ smsc::logger::Logger* mainlog = 0;
 static sigset_t original_signal_mask;
 static sigset_t blocked_signals;
 
+#ifdef CHECKCONTENTION
+namespace smsc {
+namespace core {
+namespace synchronization {
+unsigned Mutex::contentionLimit = 100000;
+}
+}
+}
+#endif
+
 smsc::core::synchronization::EventMonitor startMon;
 bool isStarted = true;
 

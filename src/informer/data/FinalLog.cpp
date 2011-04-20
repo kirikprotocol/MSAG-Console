@@ -37,6 +37,7 @@ namespace informer {
 FinalLog* FinalLog::instance_ = 0;
 
 FinalLog::FinalLog() :
+INITMUTEX(lock_),
 createTime_(0),
 period_(60)
 {

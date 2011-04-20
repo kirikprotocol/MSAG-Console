@@ -22,7 +22,7 @@ class TransferRequester
 {
     friend class EmbedRefPtr< TransferRequester >;
 public:    
-    TransferRequester() : ref_(0) {}
+    TransferRequester() : INITMUTEX(refLock_), ref_(0) {}
 
     virtual ~TransferRequester() {}
 

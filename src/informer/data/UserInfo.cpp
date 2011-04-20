@@ -38,12 +38,15 @@ UserInfo::UserInfo( const char* id,
                     unsigned    priority,
                     unsigned    speed,
                     unsigned    totaldlv ) :
+INITMUTEX(refLock_),
 ref_(0),
 speedControl_(speed),
+INITMUTEX(dataLock_),
 roles_(0),
 maxTotalDeliveries_(totaldlv),
 priority_(priority),
-isDeleted_(false)
+isDeleted_(false),
+INITMUTEX(statLock_)
 {
     getlog();
     assert(id && pwd);

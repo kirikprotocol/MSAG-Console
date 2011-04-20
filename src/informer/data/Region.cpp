@@ -23,7 +23,9 @@ Region::Region( regionid_type regionId,
                 bool deleted,
                 std::vector< std::string >* masks ) :
 regionId_(regionId), name_(name), smscId_(smscId), bw_(bw),
-timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted), ref_(0)
+timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted),
+INITMUTEX(lock_),
+ref_(0)
 {
     getlog();
     if (masks) { masks->swap(masks_); }

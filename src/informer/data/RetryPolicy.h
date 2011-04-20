@@ -22,7 +22,7 @@ namespace informer {
 class RetryPolicy
 {
 public:
-    RetryPolicy() {}
+    RetryPolicy() : INITMUTEX(lock_) {}
     ~RetryPolicy();
 
     void init( smsc::util::config::Config* cfg );

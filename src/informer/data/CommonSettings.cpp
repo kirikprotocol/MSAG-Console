@@ -93,6 +93,11 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     operationalJournalRollingSpeed_ = conf.getInt("operationalJournalRollingSpeed",30,1,100000);
     smscJournalRollingSpeed_ = conf.getInt("smscJournalRollingSpeed",30,1,100000);
 
+#ifdef CHECKCONTENTION
+    const unsigned cl = conf.getInt("contentionLimit",300000,10000,10000000);
+    smsc::core::synchronization::Mutex::setContentionLimit(cl);
+#endif
+
     loadTimezones();
 }
 

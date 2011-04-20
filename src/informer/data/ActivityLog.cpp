@@ -14,6 +14,7 @@ const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EX
 }
 
 ActivityLog::ActivityLog( DeliveryInfo* info ) :
+INITMUTEX(lock_),
 dlvInfo_(info),
 createTime_(0)
 {

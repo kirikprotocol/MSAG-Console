@@ -64,13 +64,15 @@ DeliveryInfo::DeliveryInfo( dlvid_type              dlvId,
                             UserInfo&               userInfo ) :
 dlvId_(dlvId),
 userInfo_(&userInfo),
+INITMUTEX(lock_),
 startDate_(0),
 endDate_(0),
 activePeriodStart_(-1),
 activePeriodEnd_(-1),
 validityPeriod_(-1),
 archivationTime_(-1),
-activeWeekDays_(-1)
+activeWeekDays_(-1),
+INITMUTEX(statLock_)
 {
     if (!log_) {
         log_ = smsc::logger::Logger::getInstance("dlvinfo");

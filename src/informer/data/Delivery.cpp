@@ -11,11 +11,13 @@ namespace informer {
 Delivery::Delivery( DeliveryInfo*               dlvInfo,
                     InputMessageSource*         source ) :
 log_(0),
+INITMUTEX(stateLock_),
 state_(DlvState(0)),
 planTime_(0),
 dlvInfo_(dlvInfo),
 activityLog_(0),
 source_(source),
+INITMUTEX(lock_),
 ref_(0)
 {
     char buf[20];
