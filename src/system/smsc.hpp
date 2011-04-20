@@ -524,7 +524,7 @@ public:
     inManCom->ChargeSms(id,sms,ctx);
   }
 
-  bool ReportDelivery(int dlgId,const SMS& sms,bool final,int policy)
+  bool ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final,int policy)
   {
     try{
       if(sms.billingRequired() &&
@@ -534,7 +534,7 @@ public:
           )
         )
       {
-        inManCom->Report(dlgId,sms,final);
+        inManCom->Report(id,dlgId,sms,final);
       }
     }catch(std::exception& e)
     {

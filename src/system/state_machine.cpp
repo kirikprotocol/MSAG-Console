@@ -2254,7 +2254,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"failed to create sms with Id=%lld,oa=%s,da=%s",t.msgId,sms->getOriginatingAddress().toString().c_str(),sms->getDestinationAddress().toString().c_str());
       submitResp(t,sms,Status::SYSERR);
-      smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
+      smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
       return ERROR_STATE;
     }
   }else if(createSms==scsReplace)
@@ -2266,13 +2266,13 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"failed to create/replace sms with Id=%lld:%s",t.msgId,e.what());
       submitResp(t,sms,Status::SYSERR);
-      smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
+      smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
       return ERROR_STATE;
     }
   }
 
 
-  smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeOnSubmit);
+  smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,true,Smsc::chargeOnSubmit);
 
   //
   // stored
@@ -2319,7 +2319,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   {
     smsc->getScheduler()->AddScheduledSms(t.msgId,*sms,dest_proxy_index);
     sms->setLastResult(Status::DEFERREDDELIVERY);
-    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,false,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
 
@@ -2390,18 +2390,20 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     INSmsChargeResponse::SubmitContext* cntx;
     bool final;
     bool active;
+    SMSId id;
     DeliveryReportGuard():active(true){}
     ~DeliveryReportGuard()
     {
       if(active)
       {
-        smsc->ReportDelivery(cntx->inDlgId,*sms,final,Smsc::chargeOnDelivery);
+        smsc->ReportDelivery(id,cntx->inDlgId,*sms,final,Smsc::chargeOnDelivery);
       }
     }
   };
   DeliveryReportGuard repGuard;
   repGuard.smsc=smsc;
   repGuard.sms=sms;
+  repGuard.id=t.msgId;
   repGuard.cntx=&resp->cntx;
   repGuard.final=isDatagram || isTransaction;
 
@@ -2754,6 +2756,17 @@ StateType StateMachine::forward(Tuple& t)
     return UNKNOWN_STATE;
   }
 
+  time_t now=time(NULL);
+  if( sms.getNextTime()>now && sms.getAttemptsCount()==0 && (!t.command->is_reschedulingForward() || sms.getLastResult()==0) )
+  {
+    debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
+    SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
+    smsc->getScheduler()->AddScheduledSms(t.msgId,sms,idx);
+    sms.setLastResult(Status::INVSCHED);
+    return sms.getState();
+  }
+
+
   bool firstPart=true;
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
@@ -2828,7 +2841,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_warn(smsLog, "Invalidate of %lld failed",t.msgId);
     smsc->getScheduler()->InvalidSms(t.msgId);
     sms.setLastResult(Status::INVOPTPARAMVAL);
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onDeliveryFail(t.msgId,sms);
     return ERROR_STATE;
   }
@@ -2860,7 +2873,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"failed to change sms state to undeliverable");
     }
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onDeliveryFail(t.msgId,sms);
     return UNDELIVERABLE_STATE;
   }
@@ -2870,22 +2883,10 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_warn(smsLog, "FWD: sms Id=%lld is not in enroute (%d)",t.msgId,sms.getState());
     smsc->getScheduler()->InvalidSms(t.msgId);
     sms.setLastResult(Status::SYSERR);
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onDeliveryFail(t.msgId,sms);
     return sms.getState();
   }
-  time_t now=time(NULL);
-  if( sms.getNextTime()>now && sms.getAttemptsCount()==0 && (!isReschedulingForward || sms.getLastResult()==0) )
-  {
-    debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
-    SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
-    smsc->getScheduler()->AddScheduledSms(t.msgId,sms,idx);
-    sms.setLastResult(Status::SYSERR);
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
-    onDeliveryFail(t.msgId,sms);
-    return sms.getState();
-  }
-
 
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
@@ -2897,7 +2898,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
     smsc->getScheduler()->InvalidSms(t.msgId);
     sms.setLastResult(Status::EXPIRED);
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onUndeliverable(t.msgId,sms);
     return UNDELIVERABLE_STATE;
   }
@@ -2917,7 +2918,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
           t.msgId,sms.getLastTime(),sms.getValidTime(),
           sms.oldResult,sms.getAttemptsCount());
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onUndeliverable(t.msgId,sms);
     return EXPIRED_STATE;
   }
@@ -3019,7 +3020,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       changeSmsStateToEnroute(sms,t.msgId,d,Status::NOROUTE,ntt);
       onDeliveryFail(t.msgId,sms);
     }
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ERROR_STATE;
   }
 
@@ -3049,7 +3050,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sendNotifyReport(sms,t.msgId,"destination unavailable");
     Descriptor d;
     changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
   // create task
@@ -3063,7 +3064,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       debug2(smsLog,"FWD: divert failed - cannot concat, Id=%lld",t.msgId);
       sms.setLastResult(Status::SYSERR);
-      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+      smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
       Descriptor d;
       changeSmsStateToEnroute(sms,t.msgId,d,Status::SYSERR,rescheduleSms(sms));
       return UNKNOWN_STATE;
@@ -3122,7 +3123,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sms.setLastResult(Status::SMENOTCONNECTED);
     changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
     onDeliveryFail(t.msgId,sms);
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
   Address srcOriginal=sms.getOriginatingAddress();
@@ -3159,6 +3160,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
         {
           throw ExtractPartFailedException();
         }
+        sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
       }else
       {
         smsc_log_warn(smsLog,"attempt to forward concatenated message but all parts are delivered!!!");
@@ -3249,7 +3251,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"FORWARD: failed to change state to enroute/undeliverable");
     }
-    smsc->ReportDelivery(inDlgId,sms,Status::isErrorPermanent(errstatus),Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,Status::isErrorPermanent(errstatus),Smsc::chargeOnDelivery);
     return Status::isErrorPermanent(errstatus)?UNDELIVERABLE_STATE:ENROUTE_STATE;
   }
   info2(smsLog, "FWDDLV: deliver ok Id=%lld;seqNum=%d;oa=%s;da=%s;srcSme=%s;dstSme=%s;routeId=%s",t.msgId,dialogId2,
@@ -3404,7 +3406,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           sms.getDestinationAddress().toString().c_str(),
           softLimit?"denied by soft sched limit":"expired",sms.getValidTime(),now,sms.getAttemptsCount());
       sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-      smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
+      smsc->ReportDelivery(t.msgId,t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
       return EXPIRED_STATE;
     }
   }
@@ -3439,11 +3441,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           std::string savedDivert=sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
           sms.getMessageBody().dropProperty(Tag::SMSC_DIVERTED_TO);
-          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+          smsc->ReportDelivery(t.msgId,t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
           sms.setStrProperty(Tag::SMSC_DIVERTED_TO,savedDivert.c_str());
         }else
         {
-          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+          smsc->ReportDelivery(t.msgId,t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
         }
       }catch(std::exception& e)
       {
@@ -3765,7 +3767,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
     unsigned int len;
     ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-    info2(smsLog, "DLVRSP: sms has concatinfo, csn=%d/%d;Id=%lld",sms.getConcatSeqNum(),ci->num,t.msgId);
     if(sms.getConcatSeqNum()<ci->num-1)
     {
       if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
@@ -3945,11 +3946,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
         //
         //
 
-        if(!extractSmsPart(&sms,sms.getConcatSeqNum()))
-        {
-          throw ExtractPartFailedException();
-        }
-
         if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
         {
           uint32_t clen;
@@ -3962,6 +3958,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms.getMessageBody().dropIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND);
           }
         }
+
+        if(!extractSmsPart(&sms,sms.getConcatSeqNum()))
+        {
+          throw ExtractPartFailedException();
+        }
+
         if(rr.info.replyPath==smsc::router::ReplyPathForce)
         {
           sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
@@ -4341,7 +4343,7 @@ StateType StateMachine::alert(Tuple& t)
         sms.getDestinationAddress().toString().c_str(),
         sms.getValidTime(),now,sms.getAttemptsCount());
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-    smsc->ReportDelivery(ad.inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,ad.inDlgId,sms,true,Smsc::chargeOnDelivery);
     onUndeliverable(t.msgId,sms);
     return EXPIRED_STATE;
   }
@@ -4350,7 +4352,7 @@ StateType StateMachine::alert(Tuple& t)
 
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
-    smsc->ReportDelivery(ad.inDlgId,sms,
+    smsc->ReportDelivery(t.msgId,ad.inDlgId,sms,
         dgortr,
         Smsc::chargeOnDelivery
     );
@@ -5039,14 +5041,17 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
   sms.setLastResult(failureCause);
   sms.setNextTime(nextTryTime);
   try{
+    /*
     if(failureCause==Status::RESCHEDULEDNOW)
     {
       smsc->getScheduler()->AddScheduledSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
     }else
     {
-      time_t ntt=smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
-      if(ntt)nextTryTime=ntt;
-    }
+    */
+    //time_t ntt=
+    smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
+    //if(ntt)nextTryTime=ntt;
+    //}
 
 
     debug2(smsLog, "ENROUTE: Id=%lld;oa=%s;da=%s;lr=%d;or=%d;ntt=%u;ac=%d",id,

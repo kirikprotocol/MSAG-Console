@@ -116,7 +116,8 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   }
 
   int dlgId=getNewDlgId();
-  info2(log,"ChargeSms smsid=%lld,dlgid=%d, cp=%d",id,dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
+  info2(log,"ChargeSms: Id=%lld;dda=%s;dlgid=%d;cp=%d",id,sms.getDealiasedDestinationAddress().toString().c_str(),
+      dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
   ctx.inDlgId=dlgId;
 
   smsc::inman::interaction::SPckChargeSms pck;
@@ -154,7 +155,8 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   }
 
   int dlgId=getNewDlgId();
-  info2(log,"ChargeSmsFwd smsid=%lld, dlgid=%d, cp=%d",id,dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
+  info2(log,"ChargeSmsFwd: Id=%lld;dda=%s;dlgid=%d;cp=%d",id,sms.getDealiasedDestinationAddress().toString().c_str(),
+      dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
   ctx.inDlgId=dlgId;
 
   smsc::inman::interaction::SPckChargeSms pck;
@@ -191,7 +193,8 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
   }
   smsc::inman::interaction::SPckDeliveredSmsData pck;
   pck.Hdr().dlgId=getNewDlgId();
-  info2(log,"FullReport: smsId=%lld, dlgId=%d, cp=%d",id,pck.Hdr().dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
+  info2(log,"FullReport: Id=%lld;dda=%s;dlgId=%d;cp=%d",id,sms.getDealiasedDestinationAddress().toString().c_str(),
+      pck.Hdr().dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
   FillChargeOp(id,pck.Cmd(),sms);
   pck.Cmd().setResultValue(sms.lastResult);
   pck.Cmd().setDestIMSI(sms.getDestinationDescriptor().imsi);
@@ -206,9 +209,10 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
 }
 
 
-void INManComm::Report(int dlgId,const SMS& sms,bool final)
+void INManComm::Report(SMSId id,int dlgId,const SMS& sms,bool final)
 {
-  info2(log,"Report:dlgid=%d, lr=%d, cp=%d, final=%s",dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY),final?"Y":"N");
+  info2(log,"Report: Id=%lld;dda=%s;dlgid=%d;lr=%d;cp=%d;final=%s",id,sms.getDealiasedDestinationAddress().toString().c_str(),
+      dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY),final?"Y":"N");
 
   smsc::inman::interaction::SPckDeliverySmsResult pck;
   pck.Hdr().dlgId = dlgId;

@@ -1042,16 +1042,17 @@ public:
         MutexGuard mg(item->mutex);
         if(!item->isDropping)//this dialog is currently processed by dropmapdialog function in map state machine
         {
-          if( item->sms.get() && item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) )
+          if( item->sms.get() && item->sms->getIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND)==1 )
           {
             // check if it's really next part of concatenated message
-            if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) )
+            if( cmd->get_sms()->getIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND)!=1 && cmd->get_sms()->getConcatSeqNum()==0)
             {
               throw NextMMSPartWaiting("Waiting next part of concat message");
             }
-            if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
+            if( item->sms->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() ||
+                item->sms->getOriginatingAddress()!=cmd->get_sms()->getOriginatingAddress())
             {
-              __mapdlg_trace2__("Waiting next part of other concat message: %d != %d",item->sms.get()->getConcatMsgRef(),cmd->get_sms()->getConcatMsgRef());
+              __mapdlg_trace2__("Waiting next part of other concat message: %d != %d",item->sms->getConcatMsgRef(),cmd->get_sms()->getConcatMsgRef());
               throw NextMMSPartWaiting("Waiting next part of other concat message");
             }
             if( item->state == MAPST_WaitNextMMS )

@@ -342,17 +342,19 @@ public:
 
     time_t oldntt=sms.getNextTime();
     bool sethead=false;
-    if(sms.attempts==0 && c->queueSize!=0)
+    /*if(sms.attempts==0 && c->queueSize!=0)
     {
-      ChainPush(c,SchedulerData(id,sms.getValidTime()));
+      ChainPush(c,SchedulerData(id,sms.getValidTime(),true));
       debug2(log,"Resched: push sms %lld to tail (%d), c=%p",id,c->headTime,c);
     }else
     {
       debug2(log,"Resched: set sms %lld as head (%d),c=%p",id,sms.getNextTime(),c);
-      ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime()));
+      ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime(),true));
       sethead=true;
     }
+    */
     //smsCount++;
+    ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime(),true));
 
 
     UpdateChainChedule(c);
