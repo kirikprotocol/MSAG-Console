@@ -670,7 +670,10 @@ size_t RegionalStorage::rollOver( SpeedControl<usectime_type,tuPerSec>& speedCon
             cacheMon_.wait(unsigned(sleepTime/1000));
         }
 
-        ++storingIter_;
+        do {
+            ++storingIter_;
+        } while ( storingIter_ != messageList_.end() && storingIter_->serial == MessageLocker::lockedSerial );
+
         {
             MsgLock ml(iter,this,mg);
             const size_t chunk =

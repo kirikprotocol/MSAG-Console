@@ -1,3 +1,6 @@
+2011-04-21 16:34 bukind
+  bugfix: storingIter_ pointed to locked item (led to coredump)
+
 2011-04-21 15:27 bukind
   bugfix: activity.log must be flushed before status.log
 
