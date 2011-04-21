@@ -317,6 +317,8 @@ public:
         // cleaning the statistics
         mgr_.cs_.flipStatBank();
         mgr_.core_.initUserStats();
+        /*
+         * clearing statistics is not needed here
         DeliveryStats ds;
         MutexGuard mg(mgr_.mon_);
         for ( DeliveryIList::iterator i = mgr_.deliveryList_.begin();
@@ -326,6 +328,7 @@ public:
                   ++regId ) {
             }
         }
+         */
         smsc_log_debug(log_,"stats dumper inited");
     }
 

@@ -1,3 +1,6 @@
+2011-04-21 13:52 bukind
+  bugfix: expired due to smsc.journal lost were not added to stats
+
 2011-04-21 12:47 bukind
   bugfix: response was not sent in case of absent msgid
   bugfix: E/F was interchanged in activity log reading

@@ -160,6 +160,11 @@ public:
         ds = stats_;
     }
 
+    /// invoked at the initialization
+    void initMsgStats( regionid_type regId,
+                       uint8_t state,
+                       int value );
+
     /// increment stats, optionally decrementing fromState
     void incMsgStats( regionid_type regId,
                       uint8_t state,

@@ -808,8 +808,8 @@ bool RegionalStorage::postInit()
         ++i;
     }
     // syncing stats
-    dlv_->dlvInfo_->incMsgStats(regionId_,MSGSTATE_SENT,sent);
-    dlv_->dlvInfo_->incMsgStats(regionId_,MSGSTATE_PROCESS,process);
+    dlv_->dlvInfo_->initMsgStats(regionId_,MSGSTATE_SENT,sent);
+    dlv_->dlvInfo_->initMsgStats(regionId_,MSGSTATE_PROCESS,process);
     return ( !messageList_.empty() || nextResendFile_);
 }
 

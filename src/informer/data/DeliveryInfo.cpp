@@ -268,6 +268,15 @@ unsigned DeliveryInfo::evaluateNchunks( const char*     outText,
 }
 
 
+void DeliveryInfo::initMsgStats( regionid_type regionId,
+                                 uint8_t state,
+                                 int value )
+{
+    MutexGuard mg(statLock_);
+    stats_.incStat(state,value,0);
+}
+
+
 void DeliveryInfo::incMsgStats( regionid_type regionId,
                                 uint8_t state,
                                 int value, uint8_t fromState, int smsValue )
