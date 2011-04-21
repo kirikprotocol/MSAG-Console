@@ -223,7 +223,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     buf.Append("\"\n",2);
 
     {
-        MutexGuard mg(lock_);
+        MutexGuard mg(lock_ MTXWHEREPOST);
         if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
             createFile(currentTime,now);
         }
@@ -267,7 +267,7 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
         throw InfosmeException(EXC_SYSTEM,"cannot printf delrec");
     }
     {
-        MutexGuard mg(lock_);
+        MutexGuard mg(lock_ MTXWHEREPOST);
         if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
             createFile(currentTime,now);
         }
@@ -289,7 +289,7 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
 
 void ActivityLog::fsync()
 {
-    MutexGuard mg(lock_);
+    MutexGuard mg(lock_ MTXWHEREPOST);
     fg_.fsync();
 }
 

@@ -101,73 +101,75 @@ int DeliveryInfo::checkActiveTime( int weekTime ) const
     const timediff_type dayTime = weekTime % daynight;
     int res = 0;
     bool nextDay = false;
-    MutexGuard mg(lock_);
     const char* what = "ok";
-    do {
+    {
+        MutexGuard mg(lock_ MTXWHEREPOST);
+        do {
 
-        if (activeWeekDays_ != -1) {
-            if ( weekDay>= 7 ) {
-                throw InfosmeException(EXC_LOGICERROR,"D=%u wrong weekTime=%d -> day=%u",dlvId_,weekTime,weekDay);
-            }
-            if ( (activeWeekDays_ & weekBits[weekDay]) == 0 ) {
-                what = "bad day";
-                res = daynight - dayTime;
-                nextDay = true;
-                break;
-            }
-        }
-
-        if ( activePeriodStart_ >= 0 ) {
-            if ( activePeriodStart_ < activePeriodEnd_ ) {
-                if (dayTime < activePeriodStart_) {
-                    what = "before start";
-                    res = activePeriodStart_ - dayTime;
-                    break;
-                } else if ( dayTime >= activePeriodEnd_ ) {
-                    what = "after end";
-                    nextDay = true;
+            if (activeWeekDays_ != -1) {
+                if ( weekDay>= 7 ) {
+                    throw InfosmeException(EXC_LOGICERROR,"D=%u wrong weekTime=%d -> day=%u",dlvId_,weekTime,weekDay);
+                }
+                if ( (activeWeekDays_ & weekBits[weekDay]) == 0 ) {
+                    what = "bad day";
                     res = daynight - dayTime;
+                    nextDay = true;
                     break;
                 }
-                res = dayTime - activePeriodEnd_;
-            } else {
-                if (dayTime < activePeriodEnd_) {
-                    res = dayTime - activePeriodEnd_;
-                } else if (dayTime < activePeriodStart_) {
-                    what = "before invstart";
-                    res = activePeriodStart_ - dayTime;
-                    break;
-                }
-                res = dayTime - daynight;
-                nextDay = true;
             }
-        }
-                
-        // allowed, res<0, check nextDay if needed
-        if (nextDay) {
-            if ( (activeWeekDays_ & weekBits[(weekDay+1) % 7]) == 0 ) {
-                // the whole next day forbidden
-                what = "until nextday";
-            } else {
-                what = "until nextday end";
-                res -= activePeriodEnd_;
-            }
-        }
-            
-    } while (false);
 
-    if (res>0 && nextDay ) {
-        // forbidden until the end of the day
-        for ( unsigned i = weekDay+1; ; ++i ) {
-            if ( i >= 7 ) { i -= 7; }
-            if ( i == weekDay ) {
-                throw InfosmeException(EXC_LOGICERROR,"D=%u wrong activeWeekDays=%u",dlvId_,activeWeekDays_);
+            if ( activePeriodStart_ >= 0 ) {
+                if ( activePeriodStart_ < activePeriodEnd_ ) {
+                    if (dayTime < activePeriodStart_) {
+                        what = "before start";
+                        res = activePeriodStart_ - dayTime;
+                        break;
+                    } else if ( dayTime >= activePeriodEnd_ ) {
+                        what = "after end";
+                        nextDay = true;
+                        res = daynight - dayTime;
+                        break;
+                    }
+                    res = dayTime - activePeriodEnd_;
+                } else {
+                    if (dayTime < activePeriodEnd_) {
+                        res = dayTime - activePeriodEnd_;
+                    } else if (dayTime < activePeriodStart_) {
+                        what = "before invstart";
+                        res = activePeriodStart_ - dayTime;
+                        break;
+                    }
+                    res = dayTime - daynight;
+                    nextDay = true;
+                }
             }
-            if ((activeWeekDays_ & weekBits[i]) != 0) { break; }
-            res += daynight; // the whole day forbidden
-        }
-        if ( activePeriodStart_ >= 0 && activePeriodStart_ < activePeriodEnd_ ) {
-            res += activePeriodStart_;
+                
+            // allowed, res<0, check nextDay if needed
+            if (nextDay) {
+                if ( (activeWeekDays_ & weekBits[(weekDay+1) % 7]) == 0 ) {
+                    // the whole next day forbidden
+                    what = "until nextday";
+                } else {
+                    what = "until nextday end";
+                    res -= activePeriodEnd_;
+                }
+            }
+
+        } while (false);
+
+        if (res>0 && nextDay ) {
+            // forbidden until the end of the day
+            for ( unsigned i = weekDay+1; ; ++i ) {
+                if ( i >= 7 ) { i -= 7; }
+                if ( i == weekDay ) {
+                    throw InfosmeException(EXC_LOGICERROR,"D=%u wrong activeWeekDays=%u",dlvId_,activeWeekDays_);
+                }
+                if ((activeWeekDays_ & weekBits[i]) != 0) { break; }
+                res += daynight; // the whole day forbidden
+            }
+            if ( activePeriodStart_ >= 0 && activePeriodStart_ < activePeriodEnd_ ) {
+                res += activePeriodStart_;
+            }
         }
     }
     smsc_log_debug(log_,"D=%u checkActive(%d): day=%u/time=%d res=%d: %s",
@@ -328,7 +330,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
                                dlvId_, data.userData.c_str());
     }
 
-    MutexGuard mg(lock_);
+    MutexGuard mg(lock_ MTXWHEREPOST);
     msgtime_type startDate = startDate_;
     msgtime_type endDate = endDate_;
     timediff_type activePeriodStart = activePeriodStart_;

@@ -180,7 +180,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     size_t buflen = tb.getPos();
     tb.setPos(0);
     tb.set16(uint16_t(buflen-LENSIZE));
-    smsc::core::synchronization::MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
     if (msg.state < uint8_t(MSGSTATE_FINAL) &&
         equalSerials && serial != serial_ ) {
         // oops, the serial has changed while we were preparing the buffer
@@ -264,7 +264,7 @@ void StoreJournal::rollOver()
     tb.set32(serial);
     fg.write(buf,VERSIZE+4);
     {
-        smsc::core::synchronization::MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         fg_.swap(fg);
         serial_ = serial;
         version_ = defaultVersion;
