@@ -227,7 +227,7 @@ public:
 
 
 
-  void DeliveryOk(SMSId id)
+  void DeliveryOk(SMSId id,const smsc::sms::Address& addr)
   {
     MutexGuard guard(mon);
 
@@ -242,16 +242,32 @@ public:
       {
         firstQueueProcessing.erase(it);
       }
-      return;
+      c=GetChain(addr);
+      if(!c)
+      {
+        return;
+      }
+      if(c->inProcMap)
+      {
+        return;
+      }
+      debug2(log,"DeliverOk - chain found by addr %s",addr.toString().c_str());
     }
-    debug2(log,"DeliverOk: id=%lld, c=%p",id,c);
+    debug2(log,"DeliverOk: id=%lld, addr=%s, c=%p",id,addr.toString().c_str(),c);
     if(c->Count()==0)
     {
       debug2(log,"Try to delete chain %p/%s",c,c->addr.toString().c_str());
       DeleteChain(c);
       return;
     }
-    RescheduleChain(c,time(NULL));
+    if(c->queue.empty())
+    {
+      UpdateChainChedule(c);
+    }else
+    {
+      c->headTime=time(NULL);
+    }
+    RescheduleChain(c,c->headTime);
   }
 
   void InvalidSms(SMSId id)

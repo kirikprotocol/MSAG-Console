@@ -4120,7 +4120,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
       store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
 
-      smsc->getScheduler()->DeliveryOk(t.msgId);
+      smsc->getScheduler()->DeliveryOk(t.msgId,sms.getDestinationAddress());
 
     }catch(std::exception& e)
     {
