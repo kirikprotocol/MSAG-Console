@@ -304,9 +304,12 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.expiredSms,
                              ds.killedMessages );
         assert(buflen>0);
+
+        // activity log must be flushed first
+        activityLog_->fsync();
+
         fg.write(buf,buflen);
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
-        activityLog_->fsync();
         source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }
 }
