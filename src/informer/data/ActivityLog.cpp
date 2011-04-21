@@ -119,8 +119,8 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 }
                 switch (cstate) {
                 case 'D': ++ds.dlvdMessages; ds.dlvdSms += nchunks; break;
-                case 'E': ++ds.failedMessages; ds.failedSms += nchunks; break;
-                case 'F': ++ds.expiredMessages; ds.expiredSms += nchunks; break;
+                case 'F': ++ds.failedMessages; ds.failedSms += nchunks; break;
+                case 'E': ++ds.expiredMessages; ds.expiredSms += nchunks; break;
                 case 'K': ++ds.killedMessages; break;
                 default: break;
                 }

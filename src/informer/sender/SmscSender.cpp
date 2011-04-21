@@ -848,6 +848,7 @@ void SmscSender::handleError( int errorCode )
 void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
 {
     assert(pdu);
+    int badstat = smsc::system::Status::INVDCS;
     try {
 
         smsc::sms::SMS sms;
@@ -868,7 +869,8 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
             false;
         
         if ( !isReceipt ) {
-            return; 
+            badstat = smsc::system::Status::INVCMDID;
+            throw InfosmeException(EXC_BADFORMAT,"is not a receipt");
         }
     
         uint8_t msgState;
@@ -884,7 +886,8 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
             
         if ( !msgid || *msgid == '\0') {
             // broken msgid
-            return;
+            badstat = smsc::system::Status::INVMSGID;
+            throw InfosmeException(EXC_BADFORMAT,"msgid is empty");
         }
     
         // msgid is ok
@@ -906,7 +909,8 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
         case smsc::smpp::SmppMessageState::UNKNOWN:
             smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u has intermediate receipt state %d, skipped",
                           smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
-            return;
+            badstat = smsc::system::Status::SYSERR;
+            throw InfosmeException(EXC_BADFORMAT,"has intermediate state");
         case smsc::smpp::SmppMessageState::REJECTED:
         case smsc::smpp::SmppMessageState::UNDELIVERABLE:
             // permanent error
@@ -965,7 +969,7 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
             PduDeliverySmResp smResp;
             smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
             smResp.set_messageId("");
-            smResp.get_header().set_commandStatus(smsc::system::Status::INVDCS);
+            smResp.get_header().set_commandStatus(badstat);
             smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
             session_->getAsyncTransmitter()->sendDeliverySmResp(smResp);
             break;
@@ -974,7 +978,7 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
             PduDataSmResp smResp;
             smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM_RESP);
             smResp.set_messageId("");
-            smResp.get_header().set_commandStatus(smsc::system::Status::INVDCS);
+            smResp.get_header().set_commandStatus(badstat);
             smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
             session_->getAsyncTransmitter()->sendDataSmResp(smResp);
             break;
