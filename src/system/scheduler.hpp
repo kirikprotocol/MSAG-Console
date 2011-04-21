@@ -260,14 +260,16 @@ public:
       DeleteChain(c);
       return;
     }
+    time_t rt;
     if(c->queue.empty())
     {
       UpdateChainChedule(c);
+      rt=c->headTime;
     }else
     {
-      c->headTime=time(NULL);
+      rt=time(NULL);
     }
-    RescheduleChain(c,c->headTime);
+    RescheduleChain(c,rt);
   }
 
   void InvalidSms(SMSId id)
