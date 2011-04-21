@@ -1,8 +1,9 @@
 =====================================================================
-2011-04-21 09:45 bukind informer-build-20110421
+2011-04-21 11:20 bukind informer-build-20110421
 
 2011-04-21 09:41 bukind
   bugfix: for little-endian there was discrepancy in sms text interface
+  it was misfound, actually the bug was in smpp library code.
 
 =====================================================================
 2011-04-19 15:55 bukind informer-build-20110419

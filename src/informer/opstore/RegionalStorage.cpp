@@ -20,6 +20,25 @@ namespace informer {
 class RegionalStorage::MsgLock
 {
 public:
+    /// useful for locking iter before splicing out of the list
+    inline static regionid_type lockIter( RegionalStorage* s, MsgIter iter ) throw()
+    {
+        if (iter->serial == MessageLocker::lockedSerial) {
+            smsc::core::synchronization::Condition& c = s->getCnd(iter);
+            while (iter->serial == MessageLocker::lockedSerial) {
+                c.WaitOn(s->cacheMon_);
+            }
+        }
+        const regionid_type serial = iter->serial;
+        iter->serial = MessageLocker::lockedSerial;
+        // move storing iter after
+        MessageList& l = s->messageList_;
+        while ( s->storingIter_ != l.end() && s->storingIter_->serial == MessageLocker::lockedSerial ) {
+            ++s->storingIter_;
+        }
+        return serial;
+    }
+
     /// it also move iter
     MsgLock(MsgIter iter, RegionalStorage* s, RelockMutexGuard& rmg,
             bool unlock = true ) :
@@ -28,22 +47,10 @@ public:
     rmg_(rmg)
     {
         // rs must be locked
-        if (iter->serial == MessageLocker::lockedSerial) {
-            smsc::core::synchronization::Condition& c = rs_->getCnd(iter);
-            while (iter->serial == MessageLocker::lockedSerial) {
-                c.WaitOn(rs_->cacheMon_);
-            }
-        }
-        serial = iter->serial; // get the previous serial
-        iter->serial = MessageLocker::lockedSerial;
-        MessageList& l = rs_->messageList_;
-        // move storing iter to the first unlocked message
-        while ( rs_->storingIter_ != l.end() &&
-                rs_->storingIter_->serial == MessageLocker::lockedSerial ) {
-            ++rs_->storingIter_;
-        }
-        if (iter != l.begin()) {
+        serial = lockIter(rs_,iter); // get the previous serial
+        if (iter != s->messageList_.begin()) {
             // moving iter before begin
+            MessageList& l = s->messageList_;
             l.splice(l.begin(),l,iter);
         }
         if (unlock) { rmg.Unlock(); }
@@ -190,6 +197,16 @@ nextResendFile_(findNextResendFile())
 
 RegionalStorage::~RegionalStorage()
 {
+    {
+        MutexGuard mg(cacheMon_);
+        // checking the list
+        for ( MsgIter iter = messageList_.begin(); iter != messageList_.end(); ++iter ) {
+            if ( iter->serial == MessageLocker::lockedSerial ) {
+                smsc_log_warn(log_,"R=%u/D=%u/M=%llu is locked in dtor",
+                              regionId_, getDlvId(), iter->msg.msgId );
+            }
+        }
+    }
     smsc_log_debug(log_,"dtor @%p R=%u/D=%u",
                    this, regionId_,getDlvId());
 }
@@ -1030,9 +1047,10 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
         MessageList msgList;
         unsigned count = 0;
         for ( ResendQueue::iterator i = prev; i != next; ++i ) {
-            MsgLock ml(i->second,this,mg,false);
+            const regionid_type serial = MsgLock::lockIter(this,i->second);
             // the iterator is locked here, pop the item from the list
             msgList.splice(msgList.end(),messageList_,i->second);
+            i->second->serial = serial;
             ++count;
         }
         resendQueue_.erase(prev,next);

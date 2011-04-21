@@ -590,6 +590,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 submitSm.get_header().set_sequenceNumber(seqNum);
                 submitSm.get_header().set_commandId(smsc::smpp::SmppCommandSet::SUBMIT_SM);
                 fillSmppPduFromSms(&submitSm, &sms);
+                // if (log_->isDebugEnabled()) {
+                // submitSm.dump(log_,0);
+                // }
                 session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
             }
             smsCounter_.accumulate(currentTime_,nchunks);
@@ -696,15 +699,12 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
         getCS()->getUTF8().convertToUcs2(text,textLen,ucstext);
         const size_t buflen = ucstext.GetPos();
         assert(buflen%2==0);
-        /*
-         * Now, we don't need to convert into network order as it is already there.
         const short* start = reinterpret_cast<short*>(ucstext.get());
         for ( short* end = reinterpret_cast<short*>(ucstext.GetCurPtr());
               end != start; ) {
             --end;
             *end = htons(*end);
         }
-         */
         sbm.get_optional().set_messagePayload(ucstext.get(),int(buflen));
     } else {
         msg.set_dataCoding(DataCoding::LATIN1);
