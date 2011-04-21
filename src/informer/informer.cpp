@@ -28,6 +28,19 @@ namespace smsc {
 namespace core {
 namespace synchronization {
 unsigned Mutex::contentionLimit = 100000;
+
+void Mutex::reportContention( const char* file, int line,
+                              pthread_t wholocked,
+                              unsigned  howlongusec ) throw()
+{
+    static smsc::logger::Logger* log_ = 0;
+    if ( !log_ ) {
+        log_ = smsc::logger::Logger::getInstance("lock");
+    }
+    smsc_log_debug(log_,"%s:%d contented by %u for %u usec",file,line,
+                   unsigned(wholocked),howlongusec);
+}
+
 }
 }
 }

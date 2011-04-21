@@ -696,12 +696,15 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
         getCS()->getUTF8().convertToUcs2(text,textLen,ucstext);
         const size_t buflen = ucstext.GetPos();
         assert(buflen%2==0);
+        /*
+         * Now, we don't need to convert into network order as it is already there.
         const short* start = reinterpret_cast<short*>(ucstext.get());
         for ( short* end = reinterpret_cast<short*>(ucstext.GetCurPtr());
               end != start; ) {
             --end;
             *end = htons(*end);
         }
+         */
         sbm.get_optional().set_messagePayload(ucstext.get(),int(buflen));
     } else {
         msg.set_dataCoding(DataCoding::LATIN1);
