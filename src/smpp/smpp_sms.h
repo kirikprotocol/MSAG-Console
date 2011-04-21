@@ -104,6 +104,7 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
     const char * data = sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
     if(!HSNS_isEqual() && sms->getIntProperty(Tag::SMPP_DATA_CODING)==8)
     {
+      optional.set_messagePayload("",0);
       UCS_htons(optional.messagePayload.alloc(len), data, len, sms->getIntProperty(Tag::SMPP_ESM_CLASS));
     }else
     {
@@ -250,6 +251,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
       {
         if(!HSNS_isEqual() && sms->getIntProperty(Tag::SMPP_DATA_CODING)==8)
         {
+          message.set_shortMessage("",0);
           UCS_htons(message.shortMessage.alloc(len),short_msg,msg_length,sms->getIntProperty(Tag::SMPP_ESM_CLASS));
         }else
         {
