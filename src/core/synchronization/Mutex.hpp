@@ -34,16 +34,20 @@ protected:
     pthread_mutex_t mutex;
     pthread_t       ltid;
 #ifdef CHECKCONTENTION
-    const char*        what;
-    const char*        wasfrom;
-    volatile pthread_t wasid;
+    const char*          what;
+    volatile const char* wasfrom;
+    volatile pthread_t   wasid;
+    volatile unsigned    lockCount;
 
     static unsigned contentionLimit;
-    static void reportContention( const char* what,
-                                  const char* from,
-                                  const char* wasfrom,
-                                  pthread_t   wholocked,
-                                  unsigned  howlongusec ) throw();
+
+    /// a method which is invoked to report contention problems.
+    /// lock is already acquired.
+    ///  @param from is where the Lock() was invoked from (may be NULL);
+    ///  @param howlong is the time the lock was not achievable (usec);
+    ///  @param oldcount is the old value of lockCount.
+    void reportContention( const char* from, unsigned howlong, unsigned oldcount ) const throw();
+
 #endif
 
     Mutex(const Mutex&);
@@ -53,6 +57,7 @@ protected:
     void updateThreadId(const char* from=0) {
         wasid = ltid = pthread_self();
         wasfrom = from;
+        ++lockCount;
     }
 #else
     void updateThreadId(void) { ltid = pthread_self(); }
@@ -64,7 +69,7 @@ public:
         contentionLimit = usec;
     }
 
-    Mutex( const char* fileline = 0) : what(fileline), wasid(pthread_t(-1))
+    Mutex( const char* fileline = 0) : what(fileline), wasfrom(0), wasid(pthread_t(-1)), lockCount(0)
     {
         pthread_mutex_init(&mutex, NULL);
     }
@@ -89,6 +94,7 @@ public:
                 updateThreadId(from);
                 return;
             }
+            const unsigned oldcount = lockCount;
             timeval ts,te;
             gettimeofday(&ts,0);
             pthread_mutex_lock(&mutex);
@@ -97,7 +103,7 @@ public:
                 unsigned(te.tv_sec - ts.tv_sec)*1000000 +
                 unsigned(te.tv_usec) - unsigned(ts.tv_usec);
             if (waslocked > contentionLimit) {
-                reportContention(what,from,wasfrom,wasid,waslocked);
+                reportContention(from,waslocked,oldcount);
                 // fprintf(stderr,"%s contented by %u for %u usec\n",what,was,waslocked);
             }
         } else {
@@ -134,11 +140,11 @@ public:
 #ifdef CHECKCONTENTION
 #define INITMUTEXSTRINGIFY(x) #x
 #define INITMUTEXTOSTRING(x) INITMUTEXSTRINGIFY(x)
-#define WHEREAMI   __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
-#define POSTWHERE , __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
+#define MTXWHEREAMI   __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
+#define MTXWHEREPOST , __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
 #else
-#define WHEREAMI
-#define POSTWHERE
+#define MTXWHEREAMI
+#define MTXWHEREPOST
 #endif
 
 typedef MutexGuardTmpl<Mutex> MutexGuard;
