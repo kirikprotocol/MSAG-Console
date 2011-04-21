@@ -13,7 +13,7 @@ smsc::logger::Logger* log_ = 0;
 }
 
 UTF8::UTF8() :
-INITMUTEX(lock_),
+lock_( MTXWHEREAMI ),
 conv_(iconv_t(-1))
 {
     // NOTE: damn sunos places BOM in ucs2 sequence when converting utf8->ucs2

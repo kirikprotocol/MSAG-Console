@@ -105,7 +105,8 @@ public:
     sender_(sender),
     log_(0),
     speedControl_(std::max(getCS()->getSmscJournalRollingSpeed(),1U)*1000),
-    isStopping_(true)
+    isStopping_(true),
+    mon_(MTXWHEREAMI)
     {
         char buf[128];
         ::snprintf(buf,sizeof(buf),"sjr.%s",sender.getSmscId().c_str());
@@ -301,11 +302,14 @@ rproc_(core),
 parser_(0),
 smscId_(smscId),
 smscConfig_(cfg),
+reconfLock_(MTXWHEREAMI),
 scoredList_(*this, 2*maxScoreIncrement,0/*log_*/),
 connTime_(0),
 maxBandwidth_(0),
 smsCounter_(5*tuPerSec,50),
+receiptMon_( MTXWHEREAMI ),
 journal_(0),
+queueMon_( MTXWHEREAMI ),
 awaken_(false),
 isStopping_(true)
 {

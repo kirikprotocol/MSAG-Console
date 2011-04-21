@@ -109,6 +109,7 @@ DeliveryImpl::DeliveryImpl( DeliveryInfo*               dlvInfo,
                             DlvState                    state,
                             msgtime_type                planTime ) :
 Delivery(dlvInfo,source),
+cacheLock_( MTXWHEREAMI ),
 storeJournal_(journal)
 {
     state_ = state;

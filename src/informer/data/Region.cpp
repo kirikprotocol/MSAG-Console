@@ -24,7 +24,7 @@ Region::Region( regionid_type regionId,
                 std::vector< std::string >* masks ) :
 regionId_(regionId), name_(name), smscId_(smscId), bw_(bw),
 timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted),
-INITMUTEX(lock_),
+lock_( MTXWHEREAMI ),
 ref_(0)
 {
     getlog();

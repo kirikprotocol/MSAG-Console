@@ -141,8 +141,8 @@ flags_(0), flagsize_(0)
         const char vh = uint8_t(*hexdump++);
         if ( vh >= '0' && vh <= '9' ) {
             res = (vh-'0');
-        } else if ( vh >= 'a' && vh <= 'f' ||
-                    vh >= 'A' && vh <= 'f' ) {
+        } else if ( (vh >= 'a' && vh <= 'f') ||
+                    (vh >= 'A' && vh <= 'f') ) {
             res = (vh & 0x7) + 9;
         } else {
             delete flags_;
@@ -154,8 +154,8 @@ flags_(0), flagsize_(0)
         uint8_t vl = uint8_t(*hexdump++);
         if ( vl >= '0' && vl <= '9' ) {
             res += (vl-'0');
-        } else if ( vl >= 'a' && vl <= 'f' ||
-                        vl >= 'A' && vl <= 'F' ) {
+        } else if ( (vl >= 'a' && vl <= 'f') ||
+                    (vl >= 'A' && vl <= 'F') ) {
             res += (vl & 0x7) + 9;
         } else {
             delete flags_;

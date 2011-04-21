@@ -21,8 +21,8 @@ class DeliveryActivator;
 class TransferRequester
 {
     friend class EmbedRefPtr< TransferRequester >;
-public:    
-    TransferRequester() : INITMUTEX(refLock_), ref_(0) {}
+public:
+    TransferRequester() : refLock_(MTXWHEREAMI), ref_(0) {}
 
     virtual ~TransferRequester() {}
 

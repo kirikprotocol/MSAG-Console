@@ -180,6 +180,7 @@ smsc::logger::Logger* makeLogger( dlvid_type dlvId, regionid_type regionId )
 RegionalStorage::RegionalStorage( DeliveryImpl&        dlv,
                                   regionid_type        regionId ) :
 log_(makeLogger(dlv.getDlvId(),regionId)),
+cacheMon_( MTXWHEREAMI ),
 storingIter_(messageList_.end()),
 dlv_(&dlv),
 inputTransferTask_(0),
@@ -737,7 +738,7 @@ bool RegionalStorage::postInit()
     dlv_->source_->getDlvActivator().getRegion(regionId_,regPtr);
 
     const msgtime_type currentTime = currentTimeSeconds();
-    static const msgtime_type daynight = 24*3600;
+    // static const msgtime_type daynight = 24*3600;
     RelockMutexGuard mg(cacheMon_);
     for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ) {
         Message& m = i->msg;

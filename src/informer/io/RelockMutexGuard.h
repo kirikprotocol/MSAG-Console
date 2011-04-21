@@ -31,7 +31,11 @@ public:
     void Lock() {
         if ( !locked_ ) {
             locked_ = true;
+#ifdef CHECKCONTENTION
             lock_.Lock(from_);
+#else
+            lock_.Lock();
+#endif
         }
     }
     inline bool isLocked() const { return locked_; }

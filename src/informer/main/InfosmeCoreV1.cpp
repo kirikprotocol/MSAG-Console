@@ -208,7 +208,9 @@ private:
 InfosmeCoreV1::InfosmeCoreV1( unsigned maxsms ) :
 log_(smsc::logger::Logger::getInstance("core")),
 cs_(maxsms),
+startMon_(MTXWHEREAMI),
 started_(false),
+userLock_(MTXWHEREAMI),
 dlvMgr_(0),
 finalLog_(0),
 adminServer_(0),
@@ -216,6 +218,7 @@ dcpServer_(0),
 alm_(0),
 pvss_(0),
 pvssHandler_(0),
+trafficMon_(MTXWHEREAMI),
 trafficSpeed_(cs_.getLicenseLimit())
 {
 }

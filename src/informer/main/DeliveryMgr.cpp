@@ -493,7 +493,9 @@ class DeliveryChunk
     static const unsigned perval = 64;
 
 public:
-    DeliveryChunk( dlvid_type dlvId ) : start_(getDeliveryChunkStart(dlvId)) {}
+    DeliveryChunk( dlvid_type dlvId ) :
+    start_(getDeliveryChunkStart(dlvId)),
+    lock_(MTXWHEREAMI) {}
     /// get the next chunk
     bool getNextDelivery( dlvid_type& dlvId ) {
         if (dlvId < start_) { dlvId = start_; }
@@ -564,6 +566,8 @@ class DeliveryMgr::DeliveryChunkList
     typedef std::vector<DeliveryChunk*> ChunkList;
 
 public:
+    DeliveryChunkList() : lock_(MTXWHEREAMI) {}
+
     ~DeliveryChunkList() {
         for ( ChunkList::iterator i = chunks_.begin(); i != chunks_.end(); ++i ) {
             delete *i;
@@ -609,6 +613,7 @@ log_(smsc::logger::Logger::getInstance("dlvmgr")),
 core_(core),
 cs_(cs),
 deliveryChunkList_(new DeliveryChunkList),
+mon_(MTXWHEREAMI),
 inputRollingIter_(deliveryList_.end()),
 storeRollingIter_(deliveryList_.end()),
 statsDumpingIter_(deliveryList_.end()),
@@ -617,8 +622,10 @@ inputJournal_(0),
 inputRoller_(0),
 storeRoller_(0),
 statsDumper_(0),
+logStateLock_(MTXWHEREAMI),
 logStateTime_(0),
-lastDlvId_(0)
+lastDlvId_(0),
+archiveLock_(MTXWHEREAMI)
 {
     smsc_log_debug(log_,"ctor");
     if ( getCS()->isArchive() || getCS()->isEmergency() ) { return; }

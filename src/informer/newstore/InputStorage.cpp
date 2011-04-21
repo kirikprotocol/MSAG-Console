@@ -32,6 +32,8 @@ namespace {
 class InputPvssNotifyee : public DeliveryActivator::PvssNotifyee
 {
 public:
+    InputPvssNotifyee() : mon_(MTXWHEREAMI) {}
+
     virtual void notify() {
         MutexGuard mg(mon_);
         mon_.notify();
@@ -145,6 +147,8 @@ InputStorage::InputStorage( DeliveryActivator& core,
                             InputJournal&      jnl ) :
 log_(0),
 core_(core),
+wlock_(MTXWHEREAMI),
+lock_(MTXWHEREAMI),
 rollingIter_(recordList_.end()),
 jnl_(jnl),
 lastfn_(0),

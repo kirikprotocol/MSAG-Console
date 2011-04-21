@@ -34,7 +34,9 @@ smsc::logger::Logger* makeLogger( const Region* r)
 
 RegionSender::RegionSender( SmscSender& conn, const RegionPtr& r ) :
 log_(makeLogger(r.get())),
+reflock_( MTXWHEREAMI ),
 ref_(0),
+lock_( MTXWHEREAMI ),
 conn_(0),
 region_(r),
 taskList_(*this,2*maxScoreIncrement,log_),

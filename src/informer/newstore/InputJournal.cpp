@@ -63,6 +63,7 @@ namespace informer {
 
 InputJournal::InputJournal() :
 log_(smsc::logger::Logger::getInstance("injnl")),
+lock_( MTXWHEREAMI ),
 version_(defaultVersion)
 {
 }

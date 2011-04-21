@@ -118,6 +118,7 @@ namespace informer {
 
 StoreJournal::StoreJournal() :
 log_(smsc::logger::Logger::getInstance("opjnl")),
+lock_( MTXWHEREAMI ),
 version_(defaultVersion),
 serial_(1)
 {
