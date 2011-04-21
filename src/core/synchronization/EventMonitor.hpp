@@ -24,7 +24,7 @@ protected:
 
 public:
 #ifdef CHECKCONTENTION
-    EventMonitor( const char* fl = 0, int ln = 0) : Mutex(fl,ln)
+    EventMonitor( const char* fileline = 0) : Mutex(fileline)
 #else
     EventMonitor()
 #endif

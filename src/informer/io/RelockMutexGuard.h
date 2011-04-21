@@ -10,9 +10,15 @@ template < class T >
 class RelockMutexGuardTmpl 
 {
 public:
+#ifdef CHECKCONTENTION
+    RelockMutexGuardTmpl( T& lock, const char* from=0) : lock_(lock), locked_(false), from_(from) {
+        lock_.Lock(from); locked_ = true;
+    }
+#else
     RelockMutexGuardTmpl( T& lock ) : lock_(lock), locked_(false) {
         lock_.Lock(); locked_ = true;
     }
+#endif
     ~RelockMutexGuardTmpl() {
         if (locked_) lock_.Unlock();
     }
@@ -25,14 +31,17 @@ public:
     void Lock() {
         if ( !locked_ ) {
             locked_ = true;
-            lock_.Lock();
+            lock_.Lock(from_);
         }
     }
     inline bool isLocked() const { return locked_; }
 
 protected:
-    T&         lock_;
-    bool       locked_;
+    T&          lock_;
+    bool        locked_;
+#ifdef CHECKCONTENTION
+    const char* from_;
+#endif
 
     RelockMutexGuardTmpl( const RelockMutexGuardTmpl<T>& );
     RelockMutexGuardTmpl< T >& operator = ( const RelockMutexGuardTmpl<T>& );

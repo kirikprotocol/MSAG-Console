@@ -14,10 +14,17 @@ namespace synchronization {
 template <class T>
 class MutexGuardTmpl{
 public:
+#ifdef CHECKCONTENTION
+  MutexGuardTmpl(T& _lock, const char* from=0):lock(_lock)
+  {
+    lock.Lock(from);
+  }
+#else
   MutexGuardTmpl(T& _lock):lock(_lock)
   {
     lock.Lock();
   }
+#endif
   ~MutexGuardTmpl()
   {
     lock.Unlock();

@@ -20,6 +20,12 @@ namespace synchronization {
 
 class Condition;
 
+/// NOTE: If you want to check contention in you application,
+///   please use CPPFLAGS += -DCHECKCONTENTION and
+///   special macro INITMUTEX(name) to initialize mutex.
+/// Also, you will need to instantiate contentionLimit and
+/// implement reportContention() somewhere, e.g. in main().
+
 class Mutex {
 protected:
     friend class Condition;
@@ -27,18 +33,26 @@ protected:
     pthread_mutex_t mutex;
     pthread_t       ltid;
 #ifdef CHECKCONTENTION
-    const char*        file;
-    const int          line;
+    const char*        what;
+    const char*        wasfrom;
     volatile pthread_t wasid;
 
     static unsigned contentionLimit;
+    static void reportContention( const char* what,
+                                  const char* from,
+                                  const char* wasfrom,
+                                  pthread_t   wholocked,
+                                  unsigned  howlongusec ) throw();
 #endif
 
     Mutex(const Mutex&);
     void operator=(const Mutex&);
 
 #ifdef CHECKCONTENTION
-    void updateThreadId(void) { wasid = ltid = pthread_self(); }
+    void updateThreadId(const char* from=0) {
+        wasid = ltid = pthread_self();
+        wasfrom = from;
+    }
 #else
     void updateThreadId(void) { ltid = pthread_self(); }
 #endif
@@ -49,9 +63,7 @@ public:
         contentionLimit = usec;
     }
 
-    /// NOTE: please use CPPFLAGS += -DCHECKCONTENTION=NUSEC and
-    /// special macro INITMUTEX(name) to have mutex contention check enabled.
-    Mutex( const char* fl = 0, int ln = 0) : file(fl), line(ln), wasid(pthread_t(-1))
+    Mutex( const char* fileline = 0) : what(fileline), wasid(pthread_t(-1))
     {
         pthread_mutex_init(&mutex, NULL);
     }
@@ -68,15 +80,14 @@ public:
 
     // NOTE: even if CHECKCONTENTION is on, it is possible to disable
     // checking by supplying line=0 in ctor.
-    void Lock()
-    {
 #ifdef CHECKCONTENTION
-        if (line && file) {
+    void Lock(const char* from = 0)
+    {
+        if (what) {
             if (!pthread_mutex_trylock(&mutex)) {
-                updateThreadId();
+                updateThreadId(from);
                 return;
             }
-            const unsigned was = unsigned(wasid);
             timeval ts,te;
             gettimeofday(&ts,0);
             pthread_mutex_lock(&mutex);
@@ -85,25 +96,30 @@ public:
                 unsigned(te.tv_sec - ts.tv_sec)*1000000 +
                 unsigned(te.tv_usec) - unsigned(ts.tv_usec);
             if (waslocked > contentionLimit) {
-                fprintf(stderr,"%s:%d contented by %u for %u usec\n",file,line,was,waslocked);
+                reportContention(what,from,wasfrom,wasid,waslocked);
+                // fprintf(stderr,"%s contented by %u for %u usec\n",what,was,waslocked);
             }
         } else {
             pthread_mutex_lock(&mutex);
         }
+        updateThreadId(from);
+    }
 #else
+    void Lock()
+    {
         pthread_mutex_lock(&mutex);
-#endif
         updateThreadId();
     }
+#endif
     void Unlock()
     {
         ltid = (pthread_t)-1;
         pthread_mutex_unlock(&mutex);
     }
-    bool TryLock()
+    bool TryLock(const char* from = 0)
     {
         if (!pthread_mutex_trylock(&mutex)) {
-            updateThreadId();
+            updateThreadId(from);
             return true;
         }
         return false; 
@@ -111,9 +127,13 @@ public:
 };
 
 #ifdef CHECKCONTENTION
-#define INITMUTEX(nm) nm(__FILE__,__LINE__)
+#define INITMUTEXSTRINGIFY(x) #x
+#define INITMUTEXTOSTRING(x) INITMUTEXSTRINGIFY(x)
+#define WHEREAMI   __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
+#define POSTWHERE , __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
 #else
-#define INITMUTEX(nm) nm()
+#define WHEREAMI
+#define POSTWHERE
 #endif
 
 typedef MutexGuardTmpl<Mutex> MutexGuard;
