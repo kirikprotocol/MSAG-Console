@@ -35,6 +35,8 @@ Socket::connect()
     fd_set rd,wr;
     FD_ZERO(&rd); FD_ZERO(&wr);
     FD_SET(sock,&rd); FD_SET(sock,&wr);
+
+    timeval tv;
     tv.tv_sec=connectTimeout;
     tv.tv_usec=0;
     if(select(sock+1,&rd,&wr,0,&tv)<=0)
