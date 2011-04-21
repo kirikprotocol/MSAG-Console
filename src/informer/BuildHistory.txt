@@ -1,3 +1,6 @@
+=====================================================================
+2011-04-21 09:45 bukind informer-build-20110421
+
 2011-04-21 09:41 bukind
   bugfix: for little-endian there was discrepancy in sms text interface
 
