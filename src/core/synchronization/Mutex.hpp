@@ -12,6 +12,7 @@
 
 #ifdef CHECKCONTENTION
 #include <stdio.h>
+#include <sys/time.h>
 #endif
 
 namespace smsc {
@@ -119,7 +120,11 @@ public:
     bool TryLock(const char* from = 0)
     {
         if (!pthread_mutex_trylock(&mutex)) {
+#ifdef CHECKCONTENTION
             updateThreadId(from);
+#else
+            updateThreadId();
+#endif
             return true;
         }
         return false; 
