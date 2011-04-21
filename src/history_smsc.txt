@@ -649,3 +649,7 @@ B3208: Apr 13, 2011
     INMan	performance optimization (reduced heap usage while maintaining MAP dialogs,
 		drastically reduced thread usage while performing ATSI/CH-SRI requests).
 
+B3209: Apr 21, 2011
+    SMSC	changed rechedule now policy for busy for MT, now it will be added to waiting chain
+    SMSC	Submit -> delivery OK, now will check subscriber's chain and force schedule
+    SMSC	multipart delivery on MAP fix for new partitioned scheme
