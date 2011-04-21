@@ -1,5 +1,6 @@
 2011-04-21 12:47 bukind
   bugfix: response was not sent in case of absent msgid
+  bugfix: E/F was interchanged in activity log reading
 
 =====================================================================
 2011-04-21 11:20 bukind informer-build-20110421
