@@ -41,7 +41,7 @@ int ActivityLogMiner::createRequest(dlvid_type dlvId,const ALMRequestFilter& fil
     timeMap.erase(tit);
   }
   int rv=reqIdSeq++;
-  smsc_log_debug(log,"created request with id=%d, from %lld to %lld for delivery %d",rv,msgTimeToYmd(filter.startDate),msgTimeToYmd(filter.endDate));
+  smsc_log_debug(log,"created request with id=%d, from %lld to %lld for delivery %d",rv,msgTimeToYmd(filter.startDate),msgTimeToYmd(filter.endDate),dlvId);
   req->timeIt=timeMap.insert(TimeMap::value_type(now+requestTimeout,rv));
   reqMap.insert(ReqMap::value_type(rv,req));
   return rv;
@@ -181,6 +181,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
         {
           smsc_log_debug(log,"file %s not found",filePath.c_str());
         }
+        req->curDate-=req->curDate%60;
         req->curDate+=60;
         nextFile=false;
         continue;
