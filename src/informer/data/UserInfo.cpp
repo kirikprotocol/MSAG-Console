@@ -112,7 +112,10 @@ usectime_type UserInfo::isReadyAndConsumeQuant( usectime_type currentTime )
 {
     MutexGuard mg(refLock_);
     usectime_type ret = speedControl_.isReady( currentTime % flipTimePeriod, maxSnailDelay );
-    if (ret) return ret;
+    if (ret) {
+        // adding some randomization to have 'a poorman' balancing
+        return ret + currentTime % getCS()->getRegionRandomizationJitter();
+    }
     speedControl_.consumeQuant();
     return 0;
 }

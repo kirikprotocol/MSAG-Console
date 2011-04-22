@@ -293,18 +293,19 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     do { // fake loop
 
         /// what is the period b/w messages [500..100M] microseconds
-        usectime_type requestPeriod;
-        if ( numberOfInputReqGrant_ >= 3 ) {
-            requestPeriod =
-                std::max( std::min( usectime_type(usecTime - inputRequestGrantTime_) /
-                                    numberOfInputReqGrant_,
-                                    usectime_type(100LL*tuPerSec) ),
-                          usectime_type(500LL) );
-            numberOfInputReqGrant_ = 0;
-            inputRequestGrantTime_ = 0;
-        } else {
-            requestPeriod = tuPerSec / 2;  // 2 per second
+        usectime_type requestPeriod = tuPerSec / 2;
+        if ( inputRequestGrantTime_ > 0 ) {
+            const usectime_type rp = usecTime - inputRequestGrantTime_;
+            if ( numberOfInputReqGrant_ > 0 &&
+                 rp > getCS()->getInputRequestAverageTime() * tuPerSec ) {
+                requestPeriod = rp / numberOfInputReqGrant_;
+                if ( requestPeriod < 500LL ) { requestPeriod = 500LL; }
+                else if ( requestPeriod > 100LL*tuPerSec ) { requestPeriod = 100LL*tuPerSec; }
+                numberOfInputReqGrant_ = 0;
+                inputRequestGrantTime_ = 0;
+            }
         }
+
         const unsigned minQueueSize = 2 +
             unsigned(getCS()->getInputMinQueueTime()*tuPerSec / requestPeriod);
 
@@ -317,8 +318,9 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                                            nextResendFile_==0 &&
                                            !resendTransferTask_ );
             try {
-                const unsigned transferChunkSize =
+                unsigned transferChunkSize =
                     unsigned(getCS()->getInputTransferChunkTime()*tuPerSec/requestPeriod) + 3;
+                if ( transferChunkSize > 2000 ) { transferChunkSize = 2000; }
                 smsc_log_debug(log_,"R=%u/D=%u to request input trans, newSz=%u, minSz=%u, reqInt=%llu, chunk=%llu",
                                unsigned(regionId_),
                                dlvId,

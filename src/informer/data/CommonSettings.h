@@ -92,6 +92,10 @@ public:
         return inputTransferThreadCount_;
     }
 
+    inline unsigned getInputRequestAverageTime() const {
+        return inputRequestAverageTime_;
+    }
+
     /// how many seconds to wait between input journal rolling
     inline unsigned getOpJournalRollingPeriod() const {
         return operationalJournalRollingPeriod_;
@@ -107,63 +111,67 @@ public:
     inline unsigned getOpJournalRollingSpeed() const {
         return operationalJournalRollingSpeed_;
     }
-    inline unsigned getSmscJournalRollingSpeed() const {
+    inline unsigned getSmscJournalRollingSpeed() const throw() {
         return smscJournalRollingSpeed_;
     }
 
-    inline unsigned getProtocolId() const { return protocolId_; }
+    inline unsigned getProtocolId() const throw() { return protocolId_; }
 
     /// how many seconds to keep waiting receipt after its validity period expired.
-    inline timediff_type getReceiptExtraWaitTime() const {
+    inline timediff_type getReceiptExtraWaitTime() const throw() {
         return timediff_type(receiptExtraWaitTime_);
     }
 
-    inline unsigned getResponseWaitTime() const {
+    inline unsigned getResponseWaitTime() const throw() {
         return responseWaitTime_;
     }
 
     /// minimal retry interval allowed to 
-    inline timediff_type getRetryMinTimeToLive() const {
+    inline timediff_type getRetryMinTimeToLive() const throw() {
         return timediff_type(retryMinTimeToLive_);
     }
 
-    inline unsigned getSkippedIdsChunkSize() const {
+    inline unsigned getSkippedIdsChunkSize() const throw() {
         return skippedIdsChunkSize_;
     }
 
     /// get minimum black list message count in cache
-    inline unsigned getSkippedIdsMinCacheSize() const {
+    inline unsigned getSkippedIdsMinCacheSize() const throw() {
         return skippedIdsMinCacheSize_;
     }
 
-    inline unsigned getSlicedMessageSize() const {
+    inline unsigned getSlicedMessageSize() const throw() {
         return slicedMessageSize_;
     }
 
     /// maximum number of unresponded messages per SMSC
-    inline unsigned getUnrespondedMessagesMax() const {
+    inline unsigned getUnrespondedMessagesMax() const throw() {
         return unrespondedMessagesMax_; 
     }
 
     /// default validity period for each message (initial TTL)
-    inline timediff_type getValidityPeriodDefault() const {
+    inline timediff_type getValidityPeriodDefault() const throw() {
         return timediff_type(validityPeriodDefault_);
     }
 
-    inline unsigned getLicenseLimit() const {
+    inline unsigned getLicenseLimit() const throw() {
         return licenseLimit_;
     }
 
-    inline unsigned getResendIOThreadCount() const {
+    inline unsigned getResendIOThreadCount() const throw() {
         return resendIOThreadCount_;
     }
 
-    inline unsigned getResendQueueMaxSize() const {
+    inline unsigned getResendQueueMaxSize() const throw() {
         return 100;
     }
 
-    inline unsigned getDlvCacheSize() const {
+    inline unsigned getDlvCacheSize() const throw() {
         return 0;
+    }
+
+    inline unsigned getRegionRandomizationJitter() const throw() {
+        return regionRandomizationJitter_;
     }
 
     // --- non-configurable parameters
@@ -215,6 +223,7 @@ private:
     unsigned inputMinQueueTime_;
     unsigned inputTransferChunkTime_;
     unsigned inputTransferThreadCount_;
+    unsigned inputRequestAverageTime_;
     unsigned operationalJournalRollingPeriod_;
     unsigned smscJournalRollingPeriod_;
     unsigned inputJournalRollingSpeed_;
@@ -223,6 +232,7 @@ private:
     unsigned protocolId_;
     unsigned receiptExtraWaitTime_;
     unsigned resendIOThreadCount_;
+    unsigned regionRandomizationJitter_;
     unsigned responseWaitTime_;
     unsigned retryMinTimeToLive_;
     unsigned skippedIdsChunkSize_;

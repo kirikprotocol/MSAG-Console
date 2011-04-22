@@ -78,6 +78,7 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     slicedMessageSize_ = conf.getInt("slicedMessageSize",160,120,250);
     inputMinQueueTime_ = conf.getInt("inputMinQueueSize",5,0,100);
     inputTransferChunkTime_ = conf.getInt("inputTransferChunkSize",60,10,300);
+    inputRequestAverageTime_ = conf.getInt("inputRequestAverageTime",1,1,30);
     receiptExtraWaitTime_ = conf.getInt("receiptExtraWaitTime",30,5,120);
     retryMinTimeToLive_ = conf.getInt("retryMinTimeToLive",30,10,120);
     skippedIdsMinCacheSize_ = conf.getInt("skippedIdsMinCacheSize",5,0,1000);
@@ -87,6 +88,8 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     smscJournalRollingPeriod_ = conf.getInt("smscJournalRollingPeriod",10,10,1200);
     inputTransferThreadCount_ = conf.getInt("inputTransferThreadCount",30,10,100);
     resendIOThreadCount_ = conf.getInt("resendIOThreadCount",10,10,30);
+    regionRandomizationJitter_ = conf.getInt("regionRandomizationJitter",12451,100,2000000);
+    
     validityPeriodDefault_ = conf.getInt("validityPeriodDefault",3600,1000,100000);
 
     inputJournalRollingSpeed_ = conf.getInt("inputJournalRollingSpeed",30,1,100000);
