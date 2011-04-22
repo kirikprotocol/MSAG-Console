@@ -175,7 +175,10 @@ private:
     unsigned                          stopRolling_;        // wait until 0 to roll
     
     unsigned                           newOrResend_; // if <3 then new, otherwise resend
-    usectime_type                      lastInputRequestGranted_;
+
+    // they are used to average input speed
+    usectime_type                      inputRequestGrantTime_;
+    unsigned                           numberOfInputReqGrant_;
 
     /// the next resend file starting time or 0 (if there is no files).
     msgtime_type                       nextResendFile_;

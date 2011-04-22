@@ -188,7 +188,8 @@ resendTransferTask_(0),
 regionId_(regionId),
 stopRolling_(0),
 newOrResend_(0),
-lastInputRequestGranted_(0),
+inputRequestGrantTime_(0),
+numberOfInputReqGrant_(0),
 nextResendFile_(findNextResendFile())
 {
     smsc_log_debug(log_,"ctor @%p R=%u/D=%u",
@@ -291,12 +292,20 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     msgtime_type uploadNextResend = 0;
     do { // fake loop
 
-        /// what is the period b/w messages [100..100M] microseconds
-        const usectime_type requestPeriod = 
-            std::max( std::min( usectime_type(usecTime - lastInputRequestGranted_),
-                                usectime_type(100LL*tuPerSec) ),
-                      usectime_type(100LL) );
-        const unsigned minQueueSize = 2 + 
+        /// what is the period b/w messages [500..100M] microseconds
+        usectime_type requestPeriod;
+        if ( numberOfInputReqGrant_ >= 3 ) {
+            requestPeriod =
+                std::max( std::min( usectime_type(usecTime - inputRequestGrantTime_) /
+                                    numberOfInputReqGrant_,
+                                    usectime_type(100LL*tuPerSec) ),
+                          usectime_type(500LL) );
+            numberOfInputReqGrant_ = 0;
+            inputRequestGrantTime_ = 0;
+        } else {
+            requestPeriod = tuPerSec / 2;  // 2 per second
+        }
+        const unsigned minQueueSize = 2 +
             unsigned(getCS()->getInputMinQueueTime()*tuPerSec / requestPeriod);
 
         /// check if we need to request new messages
@@ -308,12 +317,15 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                                            nextResendFile_==0 &&
                                            !resendTransferTask_ );
             try {
-                smsc_log_debug(log_,"R=%u/D=%u wants to request input transfer as it has new=%u",
+                const unsigned transferChunkSize =
+                    unsigned(getCS()->getInputTransferChunkTime()*tuPerSec/requestPeriod) + 3;
+                smsc_log_debug(log_,"R=%u/D=%u to request input trans, newSz=%u, minSz=%u, reqInt=%llu, chunk=%llu",
                                unsigned(regionId_),
                                dlvId,
-                               newQueue_.Count());
-                const unsigned transferChunkSize =
-                    unsigned(getCS()->getInputTransferChunkTime()*tuPerSec/requestPeriod) + 1;
+                               unsigned(newQueue_.Count()),
+                               unsigned(minQueueSize),
+                               ulonglong(requestPeriod),
+                               ulonglong(transferChunkSize));
                 InputTransferTask* task = 
                     dlv_->source_->createInputTransferTask(*this,
                                                            transferChunkSize );
@@ -365,7 +377,11 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
         /// checking newQueue
         if ( newQueue_.Pop(iter) ) {
             // success
-            lastInputRequestGranted_ = usecTime;
+            if ( !inputRequestGrantTime_ ) {
+                inputRequestGrantTime_ = usecTime;
+                numberOfInputReqGrant_ = 0;
+            }
+            ++numberOfInputReqGrant_;
             messageHash_.Insert(iter->msg.msgId,iter);
             from = "newQueue";
             break;
