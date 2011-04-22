@@ -352,7 +352,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
       }
 
       cnt++;
-      if((cnt%200)==0)
+      if((cnt%100)==0)
       {
         //smsc::core::threads::Thread::Yield();
         millisleep(10);
@@ -519,6 +519,10 @@ int LocalFileStore::Execute()
             blockStart=getmillis();
           }
         }
+	if(!running)
+	{
+	  break;
+	}
         info2(log,"Rolled %ld messages",i);
         /*
         for(IdSeqPairList::iterator it=snap.begin();it!=snap.end() && running;it++)

@@ -162,16 +162,16 @@ void Smsc::mainLoop(int idx)
       debug2(speedLog,"enqueue time=%lld, size=%d",st.getTime(),sz);
     }
 
-    int maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
+    int64_t maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
     //maxScaled+=maxScaled/4;
-    int totalCnt=getTotalCounter();
-    int schedCnt=getSchedCounter();
-    int freeBandwidthScaled=maxScaled-(totalCnt-schedCnt);
+    int64_t totalCnt=getTotalCounter();
+    int64_t schedCnt=getSchedCounter();
+    int64_t freeBandwidthScaled=maxScaled-(totalCnt-schedCnt);
 
-    debug2(log,"totalCounter=%d, freeBandwidth=%d, schedCounter=%d, schedHasInput=%s",totalCnt,freeBandwidthScaled,schedCnt,scheduler->hasInput()?"Y":"N");
+    debug2(log,"totalCounter=%ld, freeBandwidth=%ld, schedCounter=%ld, schedHasInput=%s",(long)totalCnt,(long)freeBandwidthScaled,(long)schedCnt,scheduler->hasInput()?"Y":"N");
 
     int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounterRes());
-    int fperSlot=(freeBandwidthScaled/shapeTimeFrame)/(2*1000/getTotalCounterRes());
+    int fperSlot=(int)(freeBandwidthScaled/shapeTimeFrame)/(2*1000/getTotalCounterRes());
 
     //perSlot+=perSlot/4;
 
@@ -180,7 +180,7 @@ void Smsc::mainLoop(int idx)
     do
     {
       st.start();
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled*schedulerFreeBandwidthUsage/100);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled*schedulerFreeBandwidthUsage/100l);
       st.end();
       if(frame.size()>0)debug2(speedLog,"getFrame time:%lld, size=%d",st.getTime(),frame.size());
       now = time(NULL);

@@ -261,7 +261,7 @@ public:
       return;
     }
     time_t rt;
-    if(c->queue.empty())
+    if(!c->queue.empty())
     {
       UpdateChainChedule(c);
       rt=c->headTime;
