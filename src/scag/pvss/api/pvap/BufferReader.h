@@ -55,7 +55,7 @@ public:
     }
     std::string readUTFLV() throw (exceptions::IOException) {
         int sz = readLength();
-        int oldpos = pos_;
+        int oldpos = int(pos_);
         pos_ += sz;
         return std::string( buf_.get() + oldpos, sz );
     }
