@@ -275,7 +275,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
     File waitFile, reportFile;
 
-    if(d != null && fileSys.exists(genFile)) {          // gen file exist, only activation is neeed
+    if(d != null && genFile != null && fileSys.exists(genFile)) {   // gen file exist, only activation is neeed
 
       context.activateDelivery(user.getLogin(), d.getId());
       waitFile = buildWaitFile(parentDir, deliveryName, d.getId());
@@ -427,7 +427,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
     String name = f.getName().substring(0, f.getName().length() - ".wait".length());
     Integer deliveryId = Integer.parseInt(name.substring(name.lastIndexOf('.') + 1));
-    String deliveryName = name.substring(0, name.indexOf('.'));
+    String deliveryName = name.substring(0, name.lastIndexOf('.'));
 
     try {
       Delivery d = context.getDelivery(user.getLogin(), deliveryId);
@@ -514,7 +514,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     context.getDeliveries(user.getLogin(), filter,
         new Visitor<mobi.eyeline.informer.admin.delivery.Delivery>() {
           public boolean visit(Delivery value) throws AdminException {
-            if (value.getProperty(UserDataConsts.CP_DELIVERY) != null) {
+            if (value.getName().equals(name) && value.getProperty(UserDataConsts.CP_DELIVERY) != null) {
               infos[0] = value;
               return false;
             }
