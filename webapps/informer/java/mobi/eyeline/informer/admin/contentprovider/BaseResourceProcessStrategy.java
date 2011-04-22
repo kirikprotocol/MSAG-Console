@@ -427,6 +427,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
     String name = f.getName().substring(0, f.getName().length() - ".wait".length());
     Integer deliveryId = Integer.parseInt(name.substring(name.lastIndexOf('.') + 1));
+    name = name.substring(0, name.lastIndexOf('.'));
     String deliveryName = name.substring(0, name.lastIndexOf('.'));
 
     try {
