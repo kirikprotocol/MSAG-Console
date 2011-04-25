@@ -457,7 +457,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     }.visit(visitor);
   }
 
-  private static MessageFilter prepareFilter(MessageFilter original) {
+  private static MessageFilter prepareFilter(MessageFilter original) throws DeliveryException {
     MessageFilter result = new MessageFilter(original);
 
     if (result.getErrorCodes() != null && result.getErrorCodes().length > 0) {
@@ -467,11 +467,9 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
       } else {
         ArrayList<MessageState> states = new ArrayList<MessageState>(Arrays.asList(result.getStates()));
-        states.remove(MessageState.New);
-        states.remove(MessageState.Process);
-        result.setStates(states.toArray(new MessageState[states.size()]));
+        if (states.contains(MessageState.New) || states.contains(MessageState.Process))
+          throw new DeliveryException("error_code_filter_on_not_finalized_messages");
       }
-
     }
     return result;
   }
