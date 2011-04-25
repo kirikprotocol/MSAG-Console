@@ -533,7 +533,7 @@ public class DeliveryListController extends DeliveryController {
     }
 
     public int getTotal() {
-      return (int)(stats.getDeliveredMessages()+stats.getExpiredMessages()+
+      return (int)(stats.getDeliveredMessages()+stats.getExpiredMessages()+stats.getSentMessages()+stats.getRetriedMessages()+
           stats.getProcessMessages()+stats.getNewMessages()+stats.getFailedMessages());
     }
 
@@ -559,6 +559,14 @@ public class DeliveryListController extends DeliveryController {
 
     public long getExpiredMessages() {
       return stats.getExpiredMessages();
+    }
+
+    public long getRetriedMessages() {
+      return stats.getRetriedMessages();
+    }
+
+    public long getSentMessages() {
+      return stats.getSentMessages();
     }
   }
 

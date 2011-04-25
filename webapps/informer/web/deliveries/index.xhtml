@@ -88,7 +88,8 @@
           </eye:column>
           <eye:column name="status" title="#{msg['delivery.status']}" sortable="true" width="19%" align="center">
 
-            <tr:panelBorderLayout shortDesc="#{msg['message.state.New']}: #{m.newMessages}; #{msg['message.state.Process']}: #{m.processMessages}; #{msg['message.state.Delivered']}: #{m.deliveredMessages}; #{msg['message.state.Failed']}: #{m.failedMessages}; #{msg['message.state.Expired']}:  #{m.expiredMessages}">
+            <tr:panelBorderLayout
+                shortDesc="#{msg['message.state.New']}: #{m.newMessages}; #{msg['message.state.Process']}: #{m.processMessages+m.retriedMessages}; #{msg['message.state.Delivered']}: #{m.deliveredMessages}; #{msg['message.state.Failed']}: #{m.failedMessages}; #{msg['message.state.Expired']}:  #{m.expiredMessages}; #{msg['message.state.InSMSC']}:  #{m.sentMessages}">
 
               <eye:status status="#{m.status.stringValue}" rendered="#{!m.renderProgress}"/>
 
