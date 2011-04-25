@@ -248,7 +248,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     for (MessagesByDeliveriesRecord r : recsMap.values()) {
       if (hideDeleted && r.isDeletedDelviery())
         continue;
-      if (nameFilter != null && nameFilter.trim().length() > 0 && (r.getDeliveryName().contains(nameFilter)))
+      if (nameFilter != null && nameFilter.trim().length() > 0 && !(r.getDeliveryName().startsWith(nameFilter)))
         continue;
       records.add(r);
       getTotals().add(r);

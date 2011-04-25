@@ -36,16 +36,11 @@ public class DcpClient extends SyncProtogenConnection {
   }
 
   @Override
-  protected void onConnect() throws IOException {
+  protected void onConnect() throws AdminException{
     UserAuth auth = new UserAuth();
     auth.setUserId(login);
     auth.setPassword(password);
-    try {
-      send(auth);
-    } catch (AdminException e) {
-      log.error(e, e);
-      throw new IOException(e.getMessage());
-    }
+    send(auth);
   }
 
   private static MBean getMBean() {
@@ -68,6 +63,10 @@ public class DcpClient extends SyncProtogenConnection {
           DeliveryException.ErrorStatus e = DeliveryException.ErrorStatus.valueOf(fail.getStatus());
           if(e == null) {
             log.warn("Unknown response status="+fail.getStatus());
+          }else {
+            if(e == DeliveryException.ErrorStatus.CommandHandling && message.equals("Not ready yet")) {
+              throw new DeliveryException("not_ready_yet");
+            }
           }
           throw new DeliveryException(e == null ? DeliveryException.ErrorStatus.Unknown : e, message);
         }
@@ -82,6 +81,7 @@ public class DcpClient extends SyncProtogenConnection {
       getMBean().notifyInteractionError(getHost()+':'+getPort(), "response wait timeout");
       throw new DeliveryException("response_timeout");
     } catch (IOException e) {
+      e.printStackTrace();
       getMBean().notifyInteractionError(getHost()+':'+getPort(), "io error");
       throw new DeliveryException("interaction_error", e, e.getMessage());
     } finally {

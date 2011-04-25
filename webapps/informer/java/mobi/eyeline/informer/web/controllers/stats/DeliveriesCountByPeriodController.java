@@ -7,7 +7,10 @@ import mobi.eyeline.informer.admin.delivery.stat.UserStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
+import javax.faces.model.SelectItem;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -19,12 +22,24 @@ import java.util.Locale;
  */
 public class DeliveriesCountByPeriodController extends DeliveryStatController implements UserStatVisitor {
 
-
   public DeliveriesCountByPeriodController() {
     super(new DeliveriesCountByPeriodTotals());
     Calendar c = getLastWeekStart();
     getFilter().setFromDate(c.getTime());
     start();
+  }
+
+  public List<SelectItem> getAggregations() {
+    List<SelectItem> ret = new ArrayList<SelectItem>();
+    for (AggregationType a : AggregationType.values()) {
+      switch (a) {
+        case SMSC: break;
+        case REGION: break;
+        default:
+          ret.add(new SelectItem(a));
+      }
+    }
+    return ret;
   }
 
 

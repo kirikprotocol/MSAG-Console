@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin.protogen;
 
+import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.protogen.framework.BufferReader;
 import mobi.eyeline.protogen.framework.BufferWriter;
 import mobi.eyeline.protogen.framework.PDU;
@@ -108,7 +109,7 @@ public abstract class SyncProtogenConnection {
     throw new IOException("Unexpected response tag: " + tag + ". Expected tags: " + expectedTags.toString());
   }
 
-  protected <T extends PDU> T request(PDU request, T... expectedResponsesInst) throws IOException {
+  protected <T extends PDU> T request(PDU request, T... expectedResponsesInst) throws IOException, AdminException {
 
     try {
       sendLock.lock();
@@ -149,9 +150,9 @@ public abstract class SyncProtogenConnection {
     }
   }
 
-  protected abstract void onConnect() throws IOException;
+  protected abstract void onConnect() throws IOException, AdminException;
 
-  private void reconnect() throws IOException {
+  private void reconnect() throws IOException, AdminException {
     try {
       close();
 
@@ -179,7 +180,25 @@ public abstract class SyncProtogenConnection {
       throw new ServerOfflineException();
     }
 
-    onConnect();
+    try{
+      onConnect();
+    }catch (AdminException e) {
+      if (socket != null) {
+        try {
+          socket.close();
+        } catch (IOException ignored) {}
+        socket = null;
+      }
+      throw e;
+    }catch (IOException e){
+      if (socket != null) {
+        try {
+          socket.close();
+        } catch (IOException ignored) {}
+        socket = null;
+      }
+      throw e;
+    }
   }
 
   public void close() {
