@@ -22,7 +22,7 @@ class SJReader : public FileReader::RecordReader
 {
 public:
     SJReader( StoreJournal::Reader& reader, smsc::logger::Logger* thelog ) :
-    reader_(reader), log_(thelog), version_(0), serial_(0) {}
+    reader_(reader), log_(thelog), version_(0), serial_(MessageLocker::nullSerial) {}
 
     void readHeader( FileGuard& fg, const std::string& jpath )
     {
@@ -35,7 +35,11 @@ public:
             throw InfosmeException(EXC_BADFILE,"file '%s': version %u is not supported",jpath.c_str(),v);
         }
         regionid_type s = fb.get32();
-        if (s == 0 || serial_ == MessageLocker::lockedSerial) {
+        if (s == MessageLocker::lockedSerial ) {
+            // FIXME: temporary workaround (to be able to read old files)
+            s = MessageLocker::lockedSerial / 2;
+        }
+        if (s == MessageLocker::nullSerial || s >= MessageLocker::lockedSerial) {
             throw InfosmeException(EXC_BADFILE,"file '%s': invalid serial number %u", s);
         }
         version_ = v;
@@ -232,7 +236,7 @@ void StoreJournal::init( Reader& jr )
         version_ = defaultVersion;
         do {
             ++serial_;
-        } while (serial_==0 || serial_==MessageLocker::lockedSerial );
+        } while (serial_== MessageLocker::nullSerial || serial_ >= MessageLocker::lockedSerial );
         char buf[VERSIZE+4];
         ToBuf tb(buf,VERSIZE+4);
         tb.set32(version_);
@@ -257,7 +261,7 @@ void StoreJournal::rollOver()
     unsigned serial = serial_;
     do {
         ++serial;
-    } while (serial==0 || serial==MessageLocker::lockedSerial );
+    } while (serial == MessageLocker::nullSerial || serial>=MessageLocker::lockedSerial );
     char buf[VERSIZE+4];
     ToBuf tb(buf,VERSIZE+4);
     tb.set32(defaultVersion);

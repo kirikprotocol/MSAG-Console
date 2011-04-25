@@ -63,14 +63,18 @@ struct Message
 //    To fulfill the task there are the serial can take the following values:
 //    0 -- not equal to any serial (used at input to guarantee the full write);
 //    regionid_type(-1) -- locked;
-//    any other value -- valid value for the serial number.
+//    values >= regionid_type(-255) -- reserved for future use.
+//    values < regionid_type(-255) -- valid value for the serial number.
 struct MessageLocker
 {
-    static const regionid_type lockedSerial = regionid_type(-1);
-    MessageLocker() : serial(0) {}
+    static const regionid_type nullSerial = regionid_type(0);
+    static const regionid_type lockedDelete = regionid_type(-1);
+    static const regionid_type lockedSerial = regionid_type(-2);
+    MessageLocker() : serial(nullSerial), users(0) {}
     MessageLocker(const MessageLocker& mlk) : msg(mlk.msg), serial(mlk.serial) {}
     Message                msg;
     volatile regionid_type serial;
+    volatile uint8_t       users;  // a number of user thread for this iterator
 };
 
 // a list of messages

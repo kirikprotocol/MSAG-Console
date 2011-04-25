@@ -17,61 +17,77 @@
 namespace eyeline {
 namespace informer {
 
-class RegionalStorage::MsgLock
+struct RegionalStorage::MsgLock
 {
-public:
-    /// useful for locking iter before splicing out of the list
-    inline static regionid_type lockIter( RegionalStorage* s, MsgIter iter ) throw()
+    MsgLock( MsgIter it, RelockMutexGuard& mg,
+             RegionalStorage* regstore,
+             bool exclusive = false ) :
+    rs(regstore), iter(it), rmg(mg),
+    serial(exclusive ? MessageLocker::lockedDelete :
+           MessageLocker::lockedSerial) {}
+
+    inline ~MsgLock() throw() {
+        if (!rs) { return; }
+        if (serial >= MessageLocker::lockedSerial) { return; }
+        rmg.Lock();
+        iter->serial = serial;
+        --(iter->users);
+        rs->getCnd(iter).Signal();
+    }
+
+    bool tryLock() throw()
     {
+        assert(rs && serial >= MessageLocker::lockedSerial);
+        if (iter->serial == MessageLocker::lockedDelete) {
+            return false;
+        }
+        ++iter->users;
         if (iter->serial == MessageLocker::lockedSerial) {
-            smsc::core::synchronization::Condition& c = s->getCnd(iter);
+            smsc::core::synchronization::Condition& c = rs->getCnd(iter);
             while (iter->serial == MessageLocker::lockedSerial) {
-                c.WaitOn(s->cacheMon_);
+                c.WaitOn(rs->cacheMon_);
+            }
+            if (iter->serial == MessageLocker::lockedDelete) {
+                --iter->users;
+                return false;
             }
         }
-        const regionid_type serial = iter->serial;
-        iter->serial = MessageLocker::lockedSerial;
-        // move storing iter after
-        MessageList& l = s->messageList_;
-        while ( s->storingIter_ != l.end() && s->storingIter_->serial == MessageLocker::lockedSerial ) {
-            ++s->storingIter_;
+        {
+            regionid_type s = iter->serial;
+            iter->serial = serial;
+            serial = s;
         }
-        return serial;
-    }
-
-    /// it also move iter
-    MsgLock(MsgIter iter, RegionalStorage* s, RelockMutexGuard& rmg,
-            bool unlock = true ) :
-    iter_(iter),
-    rs_(s),
-    rmg_(rmg)
-    {
-        // rs must be locked
-        serial = lockIter(rs_,iter); // get the previous serial
-        if (iter != s->messageList_.begin()) {
-            // moving iter before begin
-            MessageList& l = s->messageList_;
-            l.splice(l.begin(),l,iter);
+        if (iter->serial == MessageLocker::lockedDelete) {
+            // wait until number of users become 1
+            if (iter->users>1) {
+                smsc::core::synchronization::Condition& c = rs->getCnd(iter);
+                while (iter->users>1) {
+                    c.WaitOn(rs->cacheMon_);
+                }
+            }
         }
-        if (unlock) { rmg.Unlock(); }
+        {
+            // move storing iterator
+            MessageList& l = rs->messageList_;
+            MsgIter& si = rs->storingIter_;
+            while ( si != l.end() && si->serial >= MessageLocker::lockedSerial ) {
+                ++si;
+            }
+            // move to the beginning of the list
+            // if (iter != l.begin()) {
+            // l.splice(l.begin(),l,iter);
+            // }
+        }
+        return true;
     }
 
-    ~MsgLock()
-    {
-        rmg_.Lock();
-        iter_->serial = serial;
-        rs_->getCnd(iter_).Signal();
-    }
 
-private:
-    MsgIter           iter_;
-    RegionalStorage*  rs_;
-    RelockMutexGuard& rmg_;
 public:
-    // used to pass to journal
-    regionid_type    serial;
+    RegionalStorage*  rs;
+    MsgIter           iter;
+    RelockMutexGuard& rmg;
+    regionid_type     serial; // used to be passed to journal
 };
-
 
 namespace {
 const size_t LENSIZE = 2;
@@ -204,13 +220,13 @@ RegionalStorage::~RegionalStorage()
         // checking the list
         for ( MsgIter iter = messageList_.begin(); iter != messageList_.end(); ++iter ) {
             if ( iter->serial == MessageLocker::lockedSerial ) {
-                smsc_log_warn(log_,"R=%u/D=%u/M=%llu is locked in dtor",
-                              regionId_, getDlvId(), iter->msg.msgId );
+                smsc_log_error(log_,"R=%u/D=%u/M=%llu is locked in dtor",
+                               regionId_, getDlvId(), iter->msg.msgId );
             }
         }
     }
     smsc_log_debug(log_,"dtor @%p R=%u/D=%u",
-                   this, regionId_,getDlvId());
+                   this, regionId_, getDlvId());
 }
 
 
@@ -419,8 +435,13 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     }
 
 
-    MsgLock ml(iter,this,mg);
-
+    MsgLock ml(iter,mg,this);
+    if (!ml.tryLock()) {
+        smsc_log_error(log_,"R=%u/D=%u/M=%llu cannot be locked from getNext",
+                       regionId_, dlvId, ulonglong(iter->msg.msgId) );
+        return (tuPerSec/2+15);
+    }
+    mg.Unlock();
     Message& m = iter->msg;
     m.lastTime = currentTime;
     if (!m.timeLeft) {
@@ -455,7 +476,15 @@ void RegionalStorage::messageSent( msgid_type msgId,
                                unsigned(info.getDlvId()),
                                ulonglong(msgId));
     }
-    MsgLock ml(*ptr,this,mg);
+    MsgLock ml(*ptr,mg,this);
+    if (!ml.tryLock()) {
+        smsc_log_error(log_,"R=%u/D=%u/M=%llu cannot be locked from msgSent",
+                       unsigned(regionId_),
+                       unsigned(info.getDlvId()),
+                       ulonglong(msgId));
+        return;
+    }
+    mg.Unlock();
     Message& m = (*ptr)->msg;
     m.lastTime = currentTime;
     const uint8_t prevState = m.state;
@@ -502,6 +531,10 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
     }
 
     Message& m = iter->msg;
+    if (m.state >= MSGSTATE_FINAL) {
+        throw InfosmeException(EXC_NOTFOUND,"msg R=%u/D=%u/M=%llu is already final in retryMessage",
+                               unsigned(regionId_), dlvId, ulonglong(msgId));
+    }
 
     // fixing time left.
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
@@ -554,7 +587,13 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
             dlv_->source_->getDlvActivator().deliveryRegions(dlvId,regs,true);
         }
 
-        MsgLock ml(iter,this,mg,false);
+        MsgLock ml(iter,mg,this);
+        if ( !ml.tryLock() ) {
+            // cannot lock
+            smsc_log_warn(log_,"R=%u/D=%u/M=%llu is final (retryMessage)",
+                          regionId_, dlvId, ulonglong(msgId) );
+            return;
+        }
         if ( m.timeLeft < retryDelay ) retryDelay = m.timeLeft;
         m.timeLeft -= retryDelay;
         m.lastTime = currentTime + retryDelay;
@@ -625,7 +664,14 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
 {
     const dlvid_type dlvId = dlv_->getDlvId();
     MessageList tokill;
-    MsgLock ml(iter,this,mg,false);
+    MsgLock ml(iter,mg,this,true);
+    if ( !ml.tryLock() ) {
+        // cannot lock iter
+        smsc_log_error(log_,"R=%u/D=%u/M=%llu cannot be locked from finalize(st=%u,smpp=%d)",
+                       unsigned(regionId_), unsigned(dlvId), ulonglong(iter->msg.msgId),
+                       state, smppState );
+        return;
+    }
     tokill.splice(tokill.begin(),messageList_,iter);
     const bool checkFinal = messageList_.empty() && !nextResendFile_;
     mg.Unlock();
@@ -690,16 +736,20 @@ size_t RegionalStorage::rollOver( SpeedControl<usectime_type,tuPerSec>& speedCon
 
         do {
             ++storingIter_;
-        } while ( storingIter_ != messageList_.end() && storingIter_->serial == MessageLocker::lockedSerial );
+        } while ( storingIter_ != messageList_.end() && storingIter_->serial >= MessageLocker::lockedSerial );
 
         {
-            MsgLock ml(iter,this,mg);
-            const size_t chunk =
-                dlv_->storeJournal_->journalMessage(info.getDlvId(),
-                                                    regionId_,iter->msg,ml.serial);
-            if ( chunk ) {
-                speedControl.consumeQuant(int(chunk));
-                written += chunk;
+            MsgLock ml(iter,mg,this);
+            if ( ml.tryLock() ) {
+                mg.Unlock();
+                // storing the item
+                const size_t chunk =
+                    dlv_->storeJournal_->journalMessage(info.getDlvId(),
+                                                        regionId_,iter->msg,ml.serial);
+                if ( chunk ) {
+                    speedControl.consumeQuant(int(chunk));
+                    written += chunk;
+                }
             }
         }
         if ( getCS()->isStopping() ) {
@@ -838,6 +888,8 @@ bool RegionalStorage::postInit()
 
 void RegionalStorage::cancelOperativeStorage()
 {
+    smsc_log_info(log_,"R=%u/D=%u cancelling operative storage",
+                  regionId_, getDlvId());
     RelockMutexGuard mg(cacheMon_);
     // cleanup the resend queue and the messageHash_ first
     resendQueue_.clear();
@@ -850,6 +902,10 @@ void RegionalStorage::cancelOperativeStorage()
         doFinalize(mg,iter,currentTime,MSGSTATE_FAILED,smppState,0);
         mg.Lock();
     }
+    // cleanup again
+    resendQueue_.clear();
+    messageHash_.Empty();
+    nextResendFile_ = 0;
 }
 
 
@@ -894,7 +950,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
         smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
                        unsigned(regionId_), dlvId,
                        ulonglong(m.msgId));
-        regionid_type serial = 0;
+        regionid_type serial = MessageLocker::nullSerial;
         dlv_->activityLog_->addRecord(currentTime,regionId_,m,0);
         dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,serial);
         i->serial = serial;
@@ -975,7 +1031,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                 try {
                     // storing into journal, note that cacheMon_ is unlocked here
                     for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
-                        regionid_type serial = 0;
+                        regionid_type serial = MessageLocker::nullSerial;
                         // NOTE: we may avoid locking here, as i is not in msgList_
                         if ( ! i->msg.text.isUnique() ) {
                             dlv_->dlvInfo_->getGlossary().fetchText(i->msg.text);
@@ -1069,11 +1125,12 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
         MessageList msgList;
         unsigned count = 0;
         for ( ResendQueue::iterator i = prev; i != next; ++i ) {
-            const regionid_type serial = MsgLock::lockIter(this,i->second);
-            // the iterator is locked here, pop the item from the list
-            msgList.splice(msgList.end(),messageList_,i->second);
-            i->second->serial = serial;
-            ++count;
+            MsgLock ml(i->second,mg,this,true);
+            if (ml.tryLock()) {
+                // successfully locked
+                msgList.splice(msgList.end(),messageList_,i->second);
+                ++count;
+            }
         }
         resendQueue_.erase(prev,next);
         mg.Unlock();

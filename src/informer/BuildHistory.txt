@@ -1,3 +1,6 @@
+2011-04-25 15:15 bukind
+  bugfix: unsync access to msglist (rare)
+
 2011-04-22 17:52 bukind
   bugfix: incorrect algorithm for input transfer chunk size
   feature: better region senders balancing
