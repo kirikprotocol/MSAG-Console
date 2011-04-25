@@ -53,6 +53,8 @@ public class MessageListController extends InformerController {
 
   private DeliveryStrategy strategy;
 
+  private String error;
+
   public MessageListController() {
     config = getConfig();
 
@@ -84,6 +86,8 @@ public class MessageListController extends InformerController {
       loadDeliveryOptions();
     }
   }
+
+
 
   public boolean isResendAllowed() {
     return strategy.isChangesAllowed();
@@ -126,7 +130,10 @@ public class MessageListController extends InformerController {
         deliveryName = delivery.getName();
         deliveryType = delivery.getType();
       } catch (AdminException e) {
-        addError(e);
+        logger.error(e, e);
+        error = e.getMessage(getLocale());
+        msgFilter.setFromDate(new Date());
+        msgFilter.setTillDate(new Date(System.currentTimeMillis() + (24 * 60 * 60 * 1000)));
       }
     }
   }
@@ -165,8 +172,12 @@ public class MessageListController extends InformerController {
     return state;
   }
 
-  public String getError() {
+  public String getResendError() {
     return thread != null && thread.finished ? thread.error : null;
+  }
+
+  public String getError() {
+    return error;
   }
 
   public boolean isFinished() {
@@ -296,7 +307,8 @@ public class MessageListController extends InformerController {
     try {
       filter = getModelFilter();
     } catch (LocalizedException e) {
-      addError(e);
+      logger.error(e, e);
+      error = e.getMessage(getLocale());
       return new EmptyDataTableModel();
     }
     return new DataTableModel() {
@@ -317,7 +329,8 @@ public class MessageListController extends InformerController {
             }
           }, filter);
         } catch (AdminException e) {
-          addError(e);
+          logger.error(e, e);
+          error = e.getMessage(getLocale());
         }
         return list;
       }
@@ -326,7 +339,8 @@ public class MessageListController extends InformerController {
         try {
           return strategy.countMessages(u.getLogin(), u.getPassword(), getModelFilter());
         } catch (LocalizedException e) {
-          addError(e);
+          logger.error(e, e);
+          error = e.getMessage(getLocale());
         }
         return 0;
       }

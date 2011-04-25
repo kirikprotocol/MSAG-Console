@@ -12,6 +12,9 @@
   <ui:define name="content">
     <tr:form>
 
+      <eye:message level="error" rendered="#{messages.error != null and messages.state != 1}">
+        <tr:outputText value="#{messages.error}"/>
+      </eye:message>
 
       <h:inputHidden id="delivery" value="#{messages.deliveryId}"/>
       <h:inputHidden value="#{messages.init}"/>
@@ -131,8 +134,8 @@
 
         <eye:updatableContent updatePeriod="2" enabled="#{!messages.finished}">
 
-          <eye:message level="warn" rendered="#{messages.error != null}">
-            <tr:outputText value="#{messages.error}"/>
+          <eye:message level="warn" rendered="#{messages.resendError != null}">
+            <tr:outputText value="#{messages.resendError}"/>
           </eye:message>
 
           <eye:pageSubtitle value="#{msg['informer.deliveries.messages.resending']}"/>
