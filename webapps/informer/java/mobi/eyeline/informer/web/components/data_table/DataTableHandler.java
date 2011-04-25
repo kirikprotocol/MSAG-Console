@@ -89,6 +89,12 @@ public class DataTableHandler extends ComponentHandler {
     int startPos = t.getCurrentPage() * t.getPageSize();
     List rows = m.getRows(startPos, t.getPageSize(), s);
 
+    if (rows.isEmpty() && startPos > 0) {
+      t.setCurrentPage(0);
+      startPos = 0;
+      rows = m.getRows(startPos, t.getPageSize(), s);
+    }
+
     // Body
     ctx.getVariableMapper().setVariable(tid + "___var", new ConstantExpression(var.getValue()));
     for (Object row : rows) {
