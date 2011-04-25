@@ -457,6 +457,25 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     }.visit(visitor);
   }
 
+  private static MessageFilter prepareFilter(MessageFilter original) {
+    MessageFilter result = new MessageFilter(original);
+
+    if (result.getErrorCodes() != null && result.getErrorCodes().length > 0) {
+
+      if (result.getStates() == null || result.getStates().length == 0) {
+        result.setStates(MessageState.Delivered, MessageState.Expired, MessageState.Failed);
+
+      } else {
+        ArrayList<MessageState> states = new ArrayList<MessageState>(Arrays.asList(result.getStates()));
+        states.remove(MessageState.New);
+        states.remove(MessageState.Process);
+        result.setStates(states.toArray(new MessageState[states.size()]));
+      }
+
+    }
+    return result;
+  }
+
   private static GetMessagesStrategy selectGetMessagesStrategy(MessageFilter filter) {
     if (filter.getStates() == null)
       return new GetNonFinalMessagesStrategy();
@@ -485,9 +504,11 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       throw new DeliveryException("date_start_end_empty");
     }
 
-    GetMessagesStrategy strategy = selectGetMessagesStrategy(filter);
+    MessageFilter preparedFilter = prepareFilter(filter);
+
+    GetMessagesStrategy strategy = selectGetMessagesStrategy(preparedFilter);
     DcpConnection conn = getDcpConnection(login, password);
-    strategy.getMessages(conn, filter, _pieceSize, visitor);
+    strategy.getMessages(conn, preparedFilter, _pieceSize, visitor);
   }
 
   /**
