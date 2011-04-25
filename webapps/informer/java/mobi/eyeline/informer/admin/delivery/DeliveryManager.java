@@ -522,9 +522,12 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     if (logger.isDebugEnabled()) {
       logger.debug("Count deliveries");
     }
-    GetMessagesStrategy strategy = selectGetMessagesStrategy(messageFilter);
+
+    MessageFilter preparedFilter = prepareFilter(messageFilter);
+
+    GetMessagesStrategy strategy = selectGetMessagesStrategy(preparedFilter);
     DcpConnection conn = getDcpConnection(login, password);
-    return strategy.countMessages(conn, messageFilter);
+    return strategy.countMessages(conn, preparedFilter);
   }
 
   /**
