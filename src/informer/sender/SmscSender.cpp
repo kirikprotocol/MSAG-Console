@@ -183,7 +183,8 @@ protected:
             smsc::core::synchronization::MutexGuard mg(mon_);
             fg_.swap(fg);
         }
-        smsc_log_debug(log_,"file '%s' rolled",jpath.c_str());
+        smsc_log_debug(log_,"file '%s' rolled, pos=%llu",
+                       jpath.c_str(),ulonglong(fg.getPos()));
     }
 
 
@@ -225,6 +226,8 @@ protected:
             bool firstPass = true;
             speedControl_.suspend( currentTimeMicro() % flipTimePeriod );
             ReceiptData rd;
+            smsc_log_debug(log_,"S='%s' rolling pass started",
+                           sender_.smscId_.c_str());
             do {
                 try {
                     if (!sender_.getNextRollingData(rd,firstPass)) {
@@ -247,7 +250,8 @@ protected:
                 }
 
             } while (true);
-            smsc_log_debug(log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
+            smsc_log_debug(log_,"S='%s' rolling pass done, stop=%d",
+                           sender_.smscId_.c_str(), isStopping_ );
             if (!isStopping_) {
                 try {
                     rollOver();
@@ -259,6 +263,7 @@ protected:
                 }
             }
         }
+        smsc_log_debug(log_,"S='%s' journal roller stopped",sender_.smscId_.c_str());
         return 0;
     }
 
@@ -311,13 +316,14 @@ receiptMon_( MTXWHEREAMI ),
 journal_(0),
 queueMon_( MTXWHEREAMI ),
 awaken_(false),
-isStopping_(true)
+isStopping_(false)
 {
     journal_ = new SmscJournal(*this);
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
     wQueue_.reset(new DataQueue());
     journal_->init();
+    isStopping_ = true;
     // restore receipt wait queue
     const msgtime_type curTime = currentTimeSeconds();
     for ( ReceiptList::iterator i = receiptList_.begin();
@@ -1249,6 +1255,8 @@ void SmscSender::start()
 void SmscSender::stop()
 {
     if (isStopping_) return;
+    smsc_log_debug(log_,"S='%s' stop received",smscId_.c_str());
+    journal_->stop();
     {
         MutexGuard mg(queueMon_);
         if (isStopping_) return;
@@ -1256,7 +1264,6 @@ void SmscSender::stop()
         awaken_ = true;
         queueMon_.notifyAll();
     }
-    journal_->stop();
     WaitFor();
 }
 
@@ -1282,7 +1289,7 @@ int SmscSender::Execute()
         try {
             journal_->start();
         } catch ( std::exception& e ) {
-            smsc_log_warn(log_,"S='%s' starting jounrnal exc: %s", smscId_.c_str(), e.what());
+            smsc_log_warn(log_,"S='%s' starting journal exc: %s", smscId_.c_str(), e.what());
             break;
         }
         try {
