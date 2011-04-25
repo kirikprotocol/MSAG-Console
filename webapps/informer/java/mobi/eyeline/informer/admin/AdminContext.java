@@ -650,7 +650,6 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   @Deprecated
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.pauseDelivery(login, password, deliveryId);
     }
   }
