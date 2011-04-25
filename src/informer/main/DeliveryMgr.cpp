@@ -200,11 +200,12 @@ public:
             smsc_log_debug(log_,"input rolling pass done, written=%llu, time=%llu.%u",
                            ulonglong(written), ulonglong(elapsedTime / tuPerSec),
                            unsigned(elapsedTime % tuPerSec / 1000) );
-            MutexGuard mg(mgr_.mon_);
+            // MutexGuard mg(mgr_.mon_);
             if (!getCS()->isStopping()) {
                 try {
                     mgr_.inputJournal_->rollOver(); // change files
-                    mgr_.mon_.wait(getCS()->getInputJournalRollingPeriod()*1000);
+                    MutexGuard mg(waitmon_);
+                    waitmon_.wait(getCS()->getInputJournalRollingPeriod()*1000);
                 } catch ( std::exception& e ) {
                     smsc_log_warn(log_,"input rolling file exc: %s",e.what());
                 }
@@ -283,11 +284,12 @@ public:
             smsc_log_debug(log_,"store rolling pass done, written=%llu, time=%llu.%u",
                            ulonglong(written), elapsedTime / tuPerSec, 
                            unsigned(elapsedTime % tuPerSec / 1000) );
-            MutexGuard mg(mgr_.mon_);
+            // MutexGuard mg(mgr_.mon_);
             if (! getCS()->isStopping()) {
                 try {
                     mgr_.storeJournal_->rollOver(); // change files
-                    mgr_.mon_.wait(getCS()->getOpJournalRollingPeriod()*1000);
+                    MutexGuard mg(waitmon_);
+                    waitmon_.wait(getCS()->getOpJournalRollingPeriod()*1000);
                 } catch ( std::exception& e ) {
                     smsc_log_warn(log_,"store rolling file exc: %s",e.what());
                 }

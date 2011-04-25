@@ -1,5 +1,8 @@
 =====================================================================
-2011-04-25 17:04 bukind informer-build-20110425
+2011-04-25 17:41 bukind informer-build-20110425
+
+2011-04-25 17:41 bukind
+  contention improvement
 
 2011-04-25 16:58 bukind
   bugfix: smsc journal loss at start (wrong flag used)/stop(race cond)
