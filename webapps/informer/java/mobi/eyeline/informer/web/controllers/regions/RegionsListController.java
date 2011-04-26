@@ -23,7 +23,7 @@ public class RegionsListController extends RegionsController {
 
   private List<Region> regions;
 
-  private List<String> toRemove;
+  private List<String> selected;
 
   private String regionPrefix;
 
@@ -50,6 +50,15 @@ public class RegionsListController extends RegionsController {
       addError(e);
     }
     return null;
+  }
+
+  public String editGroup() {
+    if(selected == null || selected.isEmpty()) {
+      return null;
+    }
+    getRequest().put(REGION_IDS_PARAM, selected);
+    selected = null;
+    return "REGION_GROUP_EDIT";
   }
 
   public List<SelectItem> getSmscs() {
@@ -122,16 +131,16 @@ public class RegionsListController extends RegionsController {
   }
 
   @SuppressWarnings({"unchecked"})
-  public void setToRemove(List toRemove) {
-    if (toRemove != null) {
-      this.toRemove = new ArrayList<String>((List<String>) toRemove);
+  public void setSelected(List selected) {
+    if (selected != null) {
+      this.selected = new ArrayList<String>((List<String>) selected);
     }
   }
 
 
   public String remove() {
-    if (toRemove != null) {
-      for (String r : toRemove) {
+    if (selected != null) {
+      for (String r : selected) {
         try {
           getConfig().removeRegion(Integer.parseInt(r), getUserName());
         } catch (AdminException e) {

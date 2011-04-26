@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+<ui:param name="pageTitle" value="#{msg['region.group.edit']}"/>
+
+<ui:define name="content">
+
+<tr:form>
+
+  <h:panelGroup rendered="#{regionEditGroup.ids != null}">
+
+    <eye:buttons>
+      <eye:button>
+        <tr:commandLink text="#{msg['done.button']}" action="#{regionEditGroup.save}" shortDesc="#{msg['region.group.details.save']}"/>
+      </eye:button>
+      <eye:button>
+        <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true" shortDesc="#{msg['region.group.details.cancel']}"/>
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
+
+    <t:saveState value="#{regionEditGroup.ids}"/>
+
+    <eye:delimiter/>
+
+    <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
+
+      <h:selectBooleanCheckbox id="editMaxSmsPerSecond" value="#{regionEditGroup.editMaxSmsPerSecond}" onchange="document.getElementById('maxSmsPerSecond').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{regionBundle.maxSmsPerSecond}"/>
+      <h:inputText converterMessage="#{msg['invalid_param_value']} #{regionBundle.maxSmsPerSecond}"
+                   id="maxSmsPerSecond" value="#{regionEditGroup.maxSmsPerSecond}" size="5"/>
+
+
+      <h:selectBooleanCheckbox id="editTimeZone" value="#{regionEditGroup.editTimeZone}" onchange="document.getElementById('timeZone').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{regionBundle.timeZone}"/>
+      <h:selectOneMenu id="timeZone" value="#{regionEditGroup.timeZone}" converter="timeZoneIdConverter">
+        <f:selectItems value="#{regionEditGroup.timeZones}"/>
+      </h:selectOneMenu>
+
+      <h:selectBooleanCheckbox id="editSmsc" value="#{regionEditGroup.editSmsc}" onchange="document.getElementById('smsc').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{regionBundle.smsc}"/>
+      <h:selectOneMenu id="smsc" value="#{regionEditGroup.smsc}">
+        <f:selectItems value="#{regionEditGroup.smscs}"/>
+      </h:selectOneMenu>
+
+    </h:panelGrid>
+
+    <eye:delimiter/>
+
+    <eye:buttons>
+      <eye:button>
+        <tr:commandLink text="#{msg['done.button']}" action="#{regionEditGroup.save}" shortDesc="#{msg['region.group.details.save']}"/>
+      </eye:button>
+      <eye:button>
+        <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true" shortDesc="#{msg['region.group.details.cancel']}"/>
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
+
+    <script type="text/javascript" language="javascript">
+
+      document.getElementById('maxSmsPerSecond').disabled = !document.getElementById('editMaxSmsPerSecond').checked;
+      document.getElementById('smsc').disabled = !document.getElementById('editSmsc').checked;
+      document.getElementById('timeZone').disabled = !document.getElementById('editTimeZone').checked;
+
+    </script>
+
+  </h:panelGroup>
+
+
+</tr:form>
+
+</ui:define>
+
+</ui:composition>
+
+
+</html>

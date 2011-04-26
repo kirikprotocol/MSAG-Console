@@ -55,9 +55,14 @@
         <eye:button>
           <tr:commandLink text="#{msg['add.button']}" shortDesc="#{msg['region.add.desc']}" action="REGION_EDIT"/>
         </eye:button>
+
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['region.delete.desc']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+          <eye:menubar label="#{msg['region.selected']}...">
+            <eye:menubaritem><tr:commandLink text="#{msg['edit.selected.button']}" shortDesc="#{msg['edit.selected.button']}" action="#{regions.editGroup}"/></eye:menubaritem>
+            <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['region.delete.desc']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:menubaritem>
+          </eye:menubar>
         </eye:button>
+
         <eye:space/>
         <eye:button>
           <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['region.download.desc']}">
@@ -71,7 +76,7 @@
 
       <eye:delimiter/>
 
-      <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="m">
+      <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.selected}" var="m">
         <eye:row rowId="#{m.regionId}" innerData="#{!(empty m.masks)}">
 
           <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
@@ -113,9 +118,14 @@
         <eye:button>
           <tr:commandLink text="#{msg['add.button']}" shortDesc="#{msg['region.add.desc']}" action="REGION_EDIT"/>
         </eye:button>
+
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['region.delete.desc']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+          <eye:menubar label="#{msg['region.selected']}...">
+            <eye:menubaritem><tr:commandLink text="#{msg['edit.selected.button']}" shortDesc="#{msg['edit.selected.button']}" action="#{regions.editGroup}"/></eye:menubaritem>
+            <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['region.delete.desc']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:menubaritem>
+          </eye:menubar>
         </eye:button>
+
         <eye:space/>
         <eye:button>
           <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['region.download.desc']}">

@@ -4,16 +4,16 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.util.Address;
-import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.config.InformerTimezone;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Aleksandr Khalitov
@@ -29,19 +29,11 @@ public class RegionEditController extends RegionsController {
 
   private DynamicTableModel dynamicModel = new DynamicTableModel();
 
-  private final List<SelectItem> timeZones = new LinkedList<SelectItem>();
-
-
-
-  private final Collection<Smsc> ss;
 
   public RegionEditController() {
     super();
 
     String id = getRequestParameter(REGION_ID_PARAMETER);
-
-
-    ss = getConfig().getSmscs();
 
     if (id != null && id.length() > 0) {
       this.id = Integer.parseInt(id);
@@ -52,11 +44,6 @@ public class RegionEditController extends RegionsController {
         region.setSmsc(ss.iterator().next().getName());
       }
     }
-
-
-    Locale l = getLocale();
-    for (InformerTimezone t : WebContext.getInstance().getWebTimezones().getTimezones())
-      timeZones.add(new SelectItem(t.getTimezone(), t.getAlias(l)));
   }
 
   private void reload() {
@@ -115,10 +102,6 @@ public class RegionEditController extends RegionsController {
       return null;
     }
 
-  }
-
-  public List<SelectItem> getTimeZones() {
-    return timeZones;
   }
 
   public List<SelectItem> getSmscs() {
