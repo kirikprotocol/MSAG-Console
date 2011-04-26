@@ -16,6 +16,7 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.monitoring.InformerNotificationListener;
 import mobi.eyeline.informer.admin.monitoring.MonitoringFileJournal;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsProvider;
+import mobi.eyeline.informer.admin.pvss.PVSSManager;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
 import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
@@ -239,6 +240,7 @@ public class TestAdminContext extends AdminContext {
           new File(confDir, "backup"), fileSystem, serviceManager);
       archiveDaemonManager = new TestArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
+      pvssManager = new PVSSManager(serviceManager);
       infosme = new TestInfosme();
       usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 

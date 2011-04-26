@@ -28,6 +28,10 @@ public class InformerStatusController extends InformerController {
   private List<String> archiveDaemonHosts;
   private String archiveDaemonSwitchTo;
 
+  private String pvssOnlineHost;
+  private List<String> pvssHosts;
+  private String pvssSwitchTo;
+
   public InformerStatusController() {
     try {
       reload();
@@ -51,6 +55,12 @@ public class InformerStatusController extends InformerController {
       this.archiveDaemonOnlineHost = c.getArchiveDaemonOnlineHost();
     } else {
       archiveDaemonHosts = Collections.emptyList();
+    }
+    if (c.isPVSSDeployed()) {
+      this.pvssHosts = c.getPVSSHosts();
+      this.pvssOnlineHost = c.getPVSSOnlineHost();
+    } else {
+      pvssHosts = Collections.emptyList();
     }
   }
 
@@ -121,6 +131,10 @@ public class InformerStatusController extends InformerController {
     return getConfig().isArchiveDaemonDeployed();
   }
 
+  public boolean isPvssDeployed() {
+    return getConfig().isPVSSDeployed();
+  }
+
   public String startFtpServer() {
     if (ftpServerOnlineHost == null) {
       try {
@@ -137,6 +151,17 @@ public class InformerStatusController extends InformerController {
     if (archiveDaemonOnlineHost == null) {
       try {
         getConfig().startArchiveDaemon(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
+  public String startPvss() {
+    if (pvssOnlineHost == null) {
+      try {
+        getConfig().startPVSS(getUserName());
         reload();
       } catch (AdminException e) {
         addError(e);
@@ -203,6 +228,17 @@ public class InformerStatusController extends InformerController {
     }
     return null;
   }
+  public String stopPvss() {
+    if (pvssOnlineHost != null) {
+      try {
+        getConfig().stopPvss(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
 
   public String switchArchiveDaemonHost() {
     try {
@@ -213,9 +249,21 @@ public class InformerStatusController extends InformerController {
     }
     return null;
   }
+  public String switchPvssHost() {
+    try {
+      getConfig().switchPvss(pvssSwitchTo, getUserName());
+      reload();
+    } catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
 
   public String getArchiveDaemonOnlineHost() {
     return archiveDaemonOnlineHost;
+  }
+  public String getPvssOnlineHost() {
+    return pvssOnlineHost;
   }
 
   public List<SelectItem> getArchiveDaemonHosts() {
@@ -237,6 +285,26 @@ public class InformerStatusController extends InformerController {
 
   public void setArchiveDaemonSwitchTo(String archiveDaemonSwitchTo) {
     this.archiveDaemonSwitchTo = archiveDaemonSwitchTo;
+  }
+  public List<SelectItem> getPvssHosts() {
+    List<SelectItem> items = new ArrayList<SelectItem>(pvssHosts.size());
+    for (String host : pvssHosts) {
+      if (pvssOnlineHost == null || !host.equals(pvssOnlineHost))
+        items.add(new SelectItem(host, host));
+    }
+    return items;
+  }
+
+  public boolean isPvssSwitchAllowed() {
+    return pvssHosts != null && pvssHosts.size() > 1;
+  }
+
+  public String getPvssSwitchTo() {
+    return pvssSwitchTo;
+  }
+
+  public void setPvssSwitchTo(String pvssSwitchTo) {
+    this.pvssSwitchTo = pvssSwitchTo;
   }
 
 }

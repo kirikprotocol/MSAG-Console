@@ -20,6 +20,7 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.monitoring.InformerNotificationListener;
 import mobi.eyeline.informer.admin.monitoring.MonitoringFileJournal;
 import mobi.eyeline.informer.admin.monitoring.MonitoringJournal;
+import mobi.eyeline.informer.admin.pvss.PVSSManager;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
@@ -76,6 +77,8 @@ class AdminContextBase {
 
   protected File informerConfDir;
 
+  protected PVSSManager pvssManager;
+
 // delivery ->user ->region->smsc
 
   final private ConcurrentHashMap<Integer, Object> deliveriesLock = new ConcurrentHashMap<Integer, Object>(10);
@@ -126,6 +129,9 @@ class AdminContextBase {
 
       if (serviceManager.getService("ftpserver") != null)
         ftpServerManager = new PureFtpServerManager(serviceManager, "ftpserver", fileSystem);
+
+      if (serviceManager.getService(PVSSManager.SERVICE_ID) != null)
+        pvssManager = new PVSSManager(serviceManager);
 
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
       informerManager = new InformerManagerImpl(new File(confDir, "config.xml"),
@@ -182,6 +188,10 @@ class AdminContextBase {
 
   public boolean isFtpServerDeployed() {
     return ftpServerManager != null;
+  }
+
+  public boolean isPVSSDeployed() {
+    return pvssManager != null;
   }
 
   public boolean isArchiveDaemonDeployed() {

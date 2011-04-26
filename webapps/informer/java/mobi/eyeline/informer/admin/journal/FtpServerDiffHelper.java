@@ -23,6 +23,5 @@ class FtpServerDiffHelper extends DiffHelper {
 
   public void logFtpServerSwitch(Journal j, String toHost, String user) throws AdminException {
     j.addRecord(JournalRecord.Type.SERVICE_NODE_SWITCH, subject, user, "ftpserver_switch", toHost);
-
   }
 }

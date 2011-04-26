@@ -44,6 +44,7 @@ public class Journal {
 
   private final FtpServerDiffHelper ftpserver = new FtpServerDiffHelper();
   private final ArchiveDaemonDiffHelper archiveDaemon = new ArchiveDaemonDiffHelper();
+  private final PvssDiffHelper pvss = new PvssDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -291,6 +292,37 @@ public class Journal {
    */
   public void logArchiveDaemonSwitch(String toHost, String user) throws AdminException {
     archiveDaemon.logArchiveDaemonSwitch(this, toHost, user);
+  }
+
+  /**
+   * Добавляет в журнал запись о старте Pvss
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logPvssStart(String user) throws AdminException {
+    pvss.logPvssStart(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об остановке Pvss
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logPvssStop(String user) throws AdminException {
+    pvss.logPvssStop(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись о переключении Pvss на другой хост
+   *
+   * @param toHost новый хост
+   * @param user   пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logPvssSwitch(String toHost, String user) throws AdminException {
+    pvss.logPvssSwitch(this, toHost, user);
   }
 
   /**

@@ -22,6 +22,7 @@ public class TestServiceManagerHA extends ServiceManager {
     services = new HashMap<String, ServiceInfo>();
     services.put("Informer", getInfo("Informer", true));
     services.put("ArchiveDaemon", getInfo("ArchiveDaemon", true));
+    services.put("pvss", getInfo("pvss", true));
   }
 
   private ServiceInfo getInfo(String serviceId, boolean online) {

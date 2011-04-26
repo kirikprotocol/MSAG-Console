@@ -23,7 +23,8 @@ public enum Subject {
   ARCHIVE_DAEMON("subject.archivedaemon"),
   DELIVERIES("subject.deliveries"),
   RESTRICTIONS("subject.restrictions"),
-  WEBCONFIG("subject.webconfig");
+  WEBCONFIG("subject.webconfig"),
+  PVSS("subject.pvss");
 
   private static final Map<String, Subject> map = new HashMap<String, Subject>(values().length) {
     {

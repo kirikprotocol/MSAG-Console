@@ -892,6 +892,33 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return isArchiveDaemonDeployed() ? archiveDaemonManager.getArchiveDaemonHosts() : null;
   }
 
+  
+   public void startPvss() throws AdminException {
+    if(isPVSSDeployed()) {
+      pvssManager.startPVSS();
+    }
+  }
+
+  public void stopPvss() throws AdminException {
+    if(isPVSSDeployed()) {
+      pvssManager.stopPVSS();
+    }
+  }
+  
+  public List<String> getPvssHosts() throws AdminException {
+    return isPVSSDeployed() ? pvssManager.getPVSSHosts() : null;
+  }
+  
+  public String getPvssOnlineHosts() throws AdminException {
+    return isPVSSDeployed() ? pvssManager.getPVSSOnlineHost() : null;
+  }     
+  
+  public void switchPvss(String toHost) throws AdminException {
+    if(isPVSSDeployed()) {
+      pvssManager.switchPVSS(toHost);
+    }
+  }
+
 
   // ARCHIVE REQUESTS =====================================================================================================
 

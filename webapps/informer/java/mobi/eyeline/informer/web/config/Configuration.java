@@ -300,6 +300,10 @@ public class Configuration {
     return context.isArchiveDaemonDeployed();
   }
 
+  public boolean isPVSSDeployed() {
+    return context.isPVSSDeployed();
+  }
+
   public String getFtpServerOnlineHost() throws AdminException {
     return context.getFtpServerOnlineHost();
   }
@@ -351,9 +355,24 @@ public class Configuration {
     journal.logArchiveDaemonStart(user);
   }
 
+  public void startPVSS(String user) throws AdminException {
+    context.startPvss();
+    journal.logPvssStart(user); //todo
+  }
+
   public void stopArchiveDaemon(String user) throws AdminException {
     context.stopArchiveDaemon();
     journal.logArchiveDaemonStop(user);
+  }
+
+  public void stopPvss(String user) throws AdminException {
+    context.stopPvss();
+    journal.logPvssStop(user);  //todo
+  }   
+
+  public void switchPvss(String toHost, String user) throws AdminException {
+    context.switchPvss(toHost);
+    journal.logPvssSwitch(toHost, user); //todo
   }
 
   public void switchArchiveDaemon(String toHost, String user) throws AdminException {
@@ -365,8 +384,16 @@ public class Configuration {
     return context.getArchiveDaemonOnlineHost();
   }
 
+  public String getPVSSOnlineHost() throws AdminException {
+    return context.getPvssOnlineHosts();
+  }
+
   public List<String> getArchiveDaemonHosts() throws AdminException {
     return context.getArchiveDaemonHosts();
+  }
+
+  public List<String> getPVSSHosts() throws AdminException {
+    return context.getPvssHosts();
   }
 
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
