@@ -120,7 +120,7 @@ class RestrictionDaemon {
         Boolean currentRestriction = usersRestrictions.get(u.getLogin());
         if (currentRestriction == null || currentRestriction != shouldBeRestricted) {
 
-          usersRestrictions.put(u.getLogin(), shouldBeRestricted);
+          usersRestrictions.remove(u.getLogin());
 
           DeliveryFilter dFilter = new DeliveryFilter();
           dFilter.setUserIdFilter(u.getLogin());
@@ -140,6 +140,8 @@ class RestrictionDaemon {
           for (Delivery di : deliveries) {
             adjustDeliveryState(u, di, shouldBeRestricted);
           }
+
+          usersRestrictions.put(u.getLogin(), shouldBeRestricted);
         }
       }
       log.debug("applyRestictions->");
