@@ -3,7 +3,7 @@ package ru.sibinco.smsx.stats.backend.datasource;
 /**
  * @author Aleksandr Khalitov
  */
-public class Progress {
+public class Progress {  //todo сделать протектед конструктор
 
   private int progress;
 

@@ -9,7 +9,7 @@ import java.io.Writer;
 /**
  * @author Aleksandr Khalitov
  */
-public class SmsxConverter {
+public class SmsxConverter {  // todo Может перенести этот класс в пакет ru.sibinco.smsx.stats.backend? Вроде используется только оттуда.
 
   private static final Category logger = Category.getInstance(SmsxConverter.class);
 

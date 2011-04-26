@@ -11,7 +11,7 @@ public class Traffic {
   private final boolean msc;
   private final int count;
 
-  public Traffic(String region, int serviceId, boolean msc, int count) {
+  public Traffic(String region, int serviceId, boolean msc, int count) {//todo уменьшить видимость конструктора
     this.region = region;
     this.serviceId = serviceId;
     this.msc = msc;

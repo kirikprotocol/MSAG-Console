@@ -38,7 +38,7 @@ abstract class FileStatsProcessor {
   protected final void process(Visitor v) throws StatisticsException {
     visitFiles(artefactsDir, getFilenameFilter(), getLineVisitor(), new Progress(){
       public void setProgress(int progress) {
-        p.setProgress(3*progress/4);
+        p.setProgress(3*progress/4); //todo не могу понять почему прогресс умножается на 3/4
       }
     });
     try{

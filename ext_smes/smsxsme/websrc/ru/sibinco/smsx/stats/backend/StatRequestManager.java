@@ -93,17 +93,6 @@ public class StatRequestManager {
     return c;
   }
 
-  public List getSponsoreRequests() throws StatisticsException {
-    List c = storage.getSmsxRequests();
-    Iterator i = c.iterator();
-    while(i.hasNext()) {
-      setStatus((SmsxRequest)i.next());
-    }
-    return c;
-  }
-
-
-
   public void removeRequest(int requestId) throws StatisticsException {
     if(logger.isDebugEnabled()) {
       logger.debug("Remove request with id="+requestId);

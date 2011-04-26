@@ -10,6 +10,8 @@ import java.util.*;
 /**
  * @author Aleksandr Khalitov
  */
+//todo По-моему, наследование в данном случае - не лучшее решение. Ты его используешь исключительно для того, чтобы
+//todo переиспользовать функциональность класса FileStatsProcessor. Лучше прибегнуть к делегированию.
 class SmsxFileProcessor extends FileStatsProcessor {
 
   private final Set serviceIds;

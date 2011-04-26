@@ -8,7 +8,7 @@ public class SmsxUsers {
   private final String region;
   private final int count;
 
-  public SmsxUsers(int serviceId, String region, int count) {
+  public SmsxUsers(int serviceId, String region, int count) { //todo уменьшить видимость конструктора
     this.serviceId = serviceId;
     this.region = region;
     this.count = count;

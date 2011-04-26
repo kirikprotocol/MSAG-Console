@@ -6,7 +6,7 @@ import ru.sibinco.smsx.stats.backend.Visitor;
 /**
  * @author Aleksandr Khalitov
  */
-public interface SmsxResults {
+public interface SmsxResults { //todo перенести в backend
 
   public void getSmsxUsers(Visitor visitor) throws StatisticsException;
 

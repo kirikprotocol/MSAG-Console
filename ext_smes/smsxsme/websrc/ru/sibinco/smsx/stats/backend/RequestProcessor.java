@@ -31,7 +31,8 @@ class RequestProcessor {
         resultsManager);
   }
 
-  void execute(final SmsxRequest request) {
+  void execute(final SmsxRequest request) {//todo Сбор статистики требует много памяти. Хорошо бы иметь ограничение на количество одновременно работающих запросов.
+                                           //todo Если запросов много, остальные ждут своей очереди.
     final Integer reqId = new Integer(request.getId());
     final Object t_lock = new Object();
     Thread t = new Thread() {

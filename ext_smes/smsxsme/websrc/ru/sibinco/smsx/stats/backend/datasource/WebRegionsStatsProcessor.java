@@ -13,6 +13,8 @@ import java.util.Map;
 /**
  * @author Aleksandr Khalitov
  */
+//todo По-моему, наследование в данном случае - не лучшее решение. Ты его используешь исключительно для того, чтобы
+//todo переиспользовать функциональность класса FileStatsProcessor. Лучше прибегнуть к делегированию.
 class WebRegionsStatsProcessor extends FileStatsProcessor {
 
   private final String one = "1";

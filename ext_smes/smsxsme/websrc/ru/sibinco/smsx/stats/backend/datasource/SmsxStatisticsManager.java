@@ -21,23 +21,25 @@ public class SmsxStatisticsManager {
     this.artefactsDir = artefactsDir;
   }
 
+  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
   public void smsxUsers(Visitor v, final Date from, final Date till, final Progress _progress, Set serviceId) throws StatisticsException {
     FileStatsProcessor smsxUsers = new SmsxFileProcessor(artefactsDir, from, till, _progress, serviceId);
     smsxUsers.process(v);
   }
 
+  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
   public void webSmsRegions(Visitor v, final Date from, final Date till, final Progress _progress) throws StatisticsException{
     FileStatsProcessor webSmsRegions = new WebRegionsStatsProcessor(artefactsDir, from, till, _progress);
     webSmsRegions.process(v);
   }
 
-
+  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
   public void webSmsDaily(Visitor v, final Date from, final Date till, final Progress _progress) throws StatisticsException{
     FileStatsProcessor webSmsDaily = new DailyFileProcessor(artefactsDir, from, till, _progress);
     webSmsDaily.process(v);
   }
 
-
+  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
   public void traffic(Visitor v, final Date from, final Date till, final Progress _progress, Set serviceId) throws StatisticsException{
     FileStatsProcessor traffic = new TrafficFileProcessor(artefactsDir, from, till, _progress, serviceId);
     traffic.process(v);

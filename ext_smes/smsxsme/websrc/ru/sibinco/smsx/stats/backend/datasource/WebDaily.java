@@ -13,7 +13,7 @@ public class WebDaily {
 
   private final int count;
 
-  public WebDaily(String date, String region, boolean msc, int count) {
+  public WebDaily(String date, String region, boolean msc, int count) { //todo уменьшить видимость конструктора
     this.date = date;
     this.region = region;
     this.msc = msc;

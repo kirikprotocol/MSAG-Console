@@ -13,7 +13,7 @@ public class WebRegion {
 
   private final int dstCount;
 
-  public WebRegion(String region, boolean msc, int srcCount, int dstCount) {
+  public WebRegion(String region, boolean msc, int srcCount, int dstCount) { //todo уменьшить видимость конструктора
     this.region = region;
     this.msc = msc;
     this.srcCount = srcCount;
