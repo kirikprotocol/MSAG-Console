@@ -98,12 +98,12 @@
             </tr:panelBorderLayout>
 
           </eye:column>
-          <eye:column name="startDate" title="#{deliveryBundle.startDate}" sortable="true" width="19%" align="center">
+          <eye:column name="startDate" title="#{deliveryBundle.startDate}" width="19%" align="center">
             <tr:outputText value="#{m.startDate}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </tr:outputText>
           </eye:column>
-          <eye:column name="endDate" title="#{deliveryBundle.endDate}" sortable="true" width="19%" align="center">
+          <eye:column name="endDate" title="#{deliveryBundle.endDate}" width="19%" align="center">
             <tr:outputText value="#{m.endDate}" rendered="#{m.endDate != null}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </tr:outputText>

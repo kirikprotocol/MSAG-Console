@@ -485,14 +485,6 @@ public class DeliveryListController extends DeliveryController {
           return o1.getStatus().toString().compareTo(o2.getStatus().toString()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
-    } else if (sortOrder.getColumnId().equals("startDate")) {
-      return new Comparator<Delivery>() {
-        public int compare(Delivery o1, Delivery o2) {
-          if (o1 == null) return 1;
-          if (o2 == null) return -1;
-          return o1.getStartDate().compareTo(o2.getStartDate()) * (sortOrder.isAsc() ? 1 : -1);
-        }
-      };
     } else if (sortOrder.getColumnId().equals("id")) {
       return new Comparator<Delivery>() {
         public int compare(Delivery o1, Delivery o2) {
