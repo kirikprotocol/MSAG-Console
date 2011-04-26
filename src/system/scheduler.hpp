@@ -261,9 +261,14 @@ public:
       return;
     }
     time_t rt;
-    if(!c->queue.empty())
+    if(c->queue.empty())
     {
+      time_t oldHt=c->headTime;
       UpdateChainChedule(c);
+      if(oldHt==c->headTime)
+      {
+        return;
+      }
       rt=c->headTime;
     }else
     {
