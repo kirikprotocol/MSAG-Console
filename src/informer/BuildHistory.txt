@@ -1,3 +1,6 @@
+2011-04-26 11:58 bukind
+  bugfix: makedirs() incorrectly handled second-level mounts
+
 =====================================================================
 2011-04-25 17:41 bukind informer-build-20110425
 

@@ -139,6 +139,9 @@ void FileGuard::unlink( const char* fname )
 
 void FileGuard::makedirs( const std::string& dir )
 {
+    if ( dir.empty() ) {
+        throw InfosmeException(EXC_LOGICERROR,"mkdir('') is incorrect");
+    }
     getlog();
     // first of all try to make the last dir only
     if ( -1 != mkdir(dir.c_str(),0777)) {
@@ -148,8 +151,9 @@ void FileGuard::makedirs( const std::string& dir )
         // smsc_log_debug(log_,"directory '%s' already exist, ok",dir.c_str());
         return;
     }
+    struct stat dst;
     std::string work;
-    work.reserve(dir.size());
+    work.reserve(dir.size()+1);
     for (size_t nextpos = 1; nextpos != std::string::npos;) {
         nextpos = dir.find('/',nextpos);
         const std::string* wk = &work;
@@ -159,12 +163,21 @@ void FileGuard::makedirs( const std::string& dir )
         } else {
             wk = &dir;
         }
-        if (-1 != mkdir(wk->c_str(),0777)) {
-            smsc_log_debug(log_,"directory '%s' created",wk->c_str());
-        } else if ( errno == EEXIST ) {
-            // smsc_log_debug(log_,"directory '%s' already exist, ok",wk->c_str());
-        } else {
-            throw ErrnoException(errno,"mkdir('%s')",wk->c_str());
+        if ( -1 == stat(wk->c_str(),&dst) ) {
+            if ( errno == ENOENT ) {
+                // not existing
+                if (-1 != mkdir(wk->c_str(),0777)) {
+                    smsc_log_debug(log_,"directory '%s' created",wk->c_str());
+                } else if ( errno == EEXIST ) {
+                    // smsc_log_debug(log_,"directory '%s' already exist, ok",wk->c_str());
+                } else {
+                    throw ErrnoException(errno,"mkdir('%s')",wk->c_str());
+                }
+            } else {
+                throw ErrnoException(errno,"stat('%s')",wk->c_str());
+            }
+        } else if ( !S_ISDIR(dst.st_mode) ) {
+            throw InfosmeException(EXC_LOGICERROR,"path '%s' exist and not a dir",wk->c_str());
         }
     }
 }

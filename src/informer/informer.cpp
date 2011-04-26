@@ -60,7 +60,7 @@ extern "C" void appSignalHandler(int sig)
         if (isStarted) {
             smsc::core::synchronization::MutexGuard mg(startMon);
             if (isStarted) {
-                smsc_log_debug(mainlog,"set flag to leave main loop");
+                smsc_log_warn(mainlog," == STOP RECEIVED, set flag to leave main loop");
                 isStarted = false;
                 startMon.notifyAll();
             }
@@ -71,7 +71,7 @@ extern "C" void appSignalHandler(int sig)
 
 extern "C" void atExitHandler(void)
 {
-    smsc_log_info(mainlog,"at exit handler invoked");
+    smsc_log_info(mainlog,"SUCCESSFULLY REACHED EXIT HANDLER, OK");
     smsc::util::xml::TerminateXerces();
     smsc::logger::Logger::Shutdown();
 }
