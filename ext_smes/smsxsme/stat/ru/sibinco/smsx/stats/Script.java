@@ -14,14 +14,19 @@ public class Script {
 
   //   "./ 20110101 conf output"
   public static void main(String[] args) throws Exception {
-//    Thread.sleep(10000);
+
+//    String[] lines = splitLine("\"1  \",  \"2 \",qwerty,\"qwerty4\",  5  ,\"\",7,8,9,,0", 11);
+//    String[] lines = splitLine("4158452499,0,0,0,31.12.2010 21:01:00,31.12.2010 21:01:09,0,\".1.1.79119272152\",\"\",\"GT SMSCX\",\"webgroup\",\".1.1.79119264311\",\"250011764590410\",\"46707963171\",\"MAP_PROXY\",,\"webgroup > abonents\",4,\"\",4,212,1,16,0,0,3,0", 19);
+//    for (String line : lines)
+//      System.out.println("'" + line + "'");
     long time = System.currentTimeMillis();
     Script s = new Script();
+    System.out.print("Initialization...");
     s.init(args);
+    System.out.println("  OK.");
     s.process();
-    System.out.println("Time: " + (System.currentTimeMillis() - time));
     System.out.println("Done!");
-//    Thread.sleep(20000);
+    System.out.println("Time: " + (System.currentTimeMillis() - time));
     System.out.println("Count:" + s.count.size());
     System.out.println("Src:" + s.dstAddrMap.size());
     System.out.println("Dst:" + s.srcAddrMap.size());
@@ -67,24 +72,37 @@ public class Script {
 
   void process() throws Exception {
 
-    File dir = new File(csvDir, new SimpleDateFormat("yyyy-MMM" + File.separatorChar + "dd", Locale.ENGLISH).format(date));
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MMM" + File.separatorChar + "dd", Locale.ENGLISH);
+    File dir = new File(csvDir, simpleDateFormat.format(date));
+
+    FileFilter dirFilter = new FileFilter() {
+      public boolean accept(File pathname) {
+        return pathname.isDirectory();
+      }
+    };
+
+    FileFilter fileFilter = new FileFilter() {
+      public boolean accept(File pathname) {
+        return pathname.isFile();
+      }
+    };
 
     if (dir.exists()) {
-      String[] buffer = new String[19];
-      for (File h : dir.listFiles(new FileFilter() { //todo listFiles может вернуть null
-        public boolean accept(File pathname) {
-          return pathname.isDirectory();
-        }
-      })) {
-        for (File f : h.listFiles(new FileFilter() { //todo listFiles может вернуть null
-          public boolean accept(File pathname) {
-            return pathname.isFile();
+      File[] childDirectories = dir.listFiles(dirFilter);
+
+      if (childDirectories != null) {
+        for (File h : childDirectories) {
+          System.out.print("Process dir: " + h.getParent() + File.separator + h.getName() + "... ");
+          File[] csvFiles = h.listFiles(fileFilter);
+          if (csvFiles != null) {
+            for (File f : csvFiles)
+              processFile(f);
           }
-        })) {
-          processFile(f, buffer);
+          System.out.println("  OK.");
         }
       }
     }
+
     publishResults();
   }
 
@@ -182,7 +200,7 @@ public class Script {
     return regions;
   }
 
-  private void processFile(File f, String[] buffer) throws Exception {
+  private void processFile(File f) throws Exception {
     BufferedReader reader = null;
     try {
       reader = new BufferedReader(new FileReader(f));
@@ -193,8 +211,9 @@ public class Script {
             continue;
           }
           try {
-            processLine(line, buffer);
+            processLine(line);
           } catch (Exception e) {
+            System.out.println("Invalid file format: " + f.getAbsolutePath());
             System.out.println("Error line: " + line);
             e.printStackTrace();
           }
@@ -212,17 +231,6 @@ public class Script {
   private Map<String, Boolean> dstAddrMap = new HashMap<String, Boolean>(100000);
   private Map<CountKey, Integer> count = new HashMap<CountKey, Integer>(1000);
 
-  private static Pattern p = Pattern.compile(",");
-
-  private static final char quote = '\"';
-
-  private String removeQuotes(String s) {
-    if (s.length() > 0 && s.charAt(0) == quote) {
-      return s.substring(1, s.length() - 1);
-    }
-    return s;
-  }
-
   private static final String websms = "websms";
   private static final String websyssms = "websyssms";
 
@@ -230,21 +238,39 @@ public class Script {
     return srcSmeId.equals(websms) || srcSmeId.equals(websyssms);
   }
 
-  private void processLine(String line, String[] buffer) throws InterruptedException {
+  private static String[] splitLine(String line, int limit) {
+    String[] result = new String[limit];
+    int oldpos = -0, pos;
+    for (int i = 0; i < limit; i++) {
+      pos = line.indexOf(',', oldpos);
+      if (pos < 0)
+        break;
+
+      if (line.charAt(oldpos) == '"')
+        result[i] = line.substring(oldpos+1, pos-1);
+      else
+        result[i] = line.substring(oldpos, pos);
+
+      oldpos = pos+1;
+    }
+    return result;
+  }
+
+  private void processLine(String line) throws InterruptedException {
     //MSG_ID_0,RECORD_TYPE_1,MEDIA_TYPE_2,BEARER_TYPE_3,SUBMIT_4,FINALIZED_5,STATUS_6,SRC_ADDR_7,SRC_IMSI_8,SRC_MSC_9,SRC_SME_ID_10,DST_ADDR_11,DST_IMSI_12,DST_MSC_13,DST_SME_ID_14,DIVERTED_FOR_15,ROUTE_ID_16,SERVICE_ID_17,SERVICE_TYPE_18,USER_MSG_REF_19,DATA_LENGTH_20,PARTS_NUM_21,SMSX_SRV_22,MT_23,CONTRACT_24,CHARGE_25,IN_BILL_26
 
-    buffer = p.split(line, 19);
+    String[] buffer = splitLine(line, 19);
 
-    String route = removeQuotes(buffer[16]).trim();
+    String route = buffer[16].trim();
     if (!routes.contains(route)) {
       System.out.println("Route is not allowed: " + route);
       return;
     }
 
-    String sAddr = removeQuotes(buffer[7]);
-    String dAddr = removeQuotes(buffer[11]);
-    String srcSme = removeQuotes(buffer[10]).trim();
-    boolean srcMsc = !removeQuotes(buffer[9]).trim().isEmpty();
+    String sAddr = buffer[7];
+    String dAddr = buffer[11];
+    String srcSme = buffer[10];
+    boolean srcMsc = !buffer[9].isEmpty();
     int serviceId = Integer.parseInt(buffer[17]);
 
     String dstRegion = getRegionByAddress(dAddr);
@@ -288,7 +314,7 @@ public class Script {
     String srcSmeId;
     boolean isMsc;
     int serviceId;
-    String region;     //todo optimization?
+    String region;
 
     CountKey(String srcSmeId, boolean msc, int serviceId, String region) {
       this.srcSmeId = srcSmeId;

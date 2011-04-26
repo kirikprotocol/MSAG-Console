@@ -16,7 +16,7 @@ class Routes {
 
 
   private static Document parse(File f) throws Exception {
-    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance("com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl", Thread.currentThread().getContextClassLoader());
     factory.setFeature("http://xml.org/sax/features/validation", false);
     DocumentBuilder builder = factory.newDocumentBuilder();
     return builder.parse(f);
