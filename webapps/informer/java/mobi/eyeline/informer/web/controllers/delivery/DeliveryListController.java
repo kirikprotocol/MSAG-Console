@@ -384,7 +384,13 @@ public class DeliveryListController extends DeliveryController {
         public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(1);
           if(delivery[0] != null) {
-            rows.add(new DeliveryRow(delivery[0], stats[0]));
+            DeliveryStatusHistory history = null;
+            try {
+              history = config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), delivery[0].getId());
+              rows.add(new DeliveryRow(delivery[0], stats[0], getStartDate(history), getEndDate(history)));
+            } catch (AdminException e) {
+              addError(e);
+            }
           }
           return rows;
         }
@@ -408,7 +414,8 @@ public class DeliveryListController extends DeliveryController {
             for (Delivery di : list)
               if (di != null) {
                 DeliveryStatistics stats = config.getDeliveryStats(u.getLogin(), u.getPassword(), di.getId());
-                rows.add(new DeliveryRow(di, stats));
+                DeliveryStatusHistory history = config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), di.getId());
+                rows.add(new DeliveryRow(di, stats, getStartDate(history), getEndDate(history)));
               }
             return rows;
 
@@ -429,6 +436,28 @@ public class DeliveryListController extends DeliveryController {
         }
       };
     }
+  }
+
+  private static Date getStartDate(DeliveryStatusHistory statusHistory) {
+    List<DeliveryStatusHistory.Item> items = statusHistory.getHistoryItems();
+    Date startDate = null;
+    for(DeliveryStatusHistory.Item i : items) {
+      if(i.getStatus() == DeliveryStatus.Active && (startDate == null || i.getDate().before(startDate))) {
+        startDate = i.getDate();
+      }
+    }
+    return startDate;
+  }
+
+  private static Date getEndDate(DeliveryStatusHistory statusHistory) {
+    List<DeliveryStatusHistory.Item> items = statusHistory.getHistoryItems();
+    Date endDate = null;
+    for(DeliveryStatusHistory.Item i : items) {
+      if(i.getStatus() == DeliveryStatus.Finished && (endDate == null || i.getDate().after(endDate))) {
+        endDate = i.getDate();
+      }
+    }
+    return endDate;
   }
 
   private static Comparator<Delivery> getComparator(final DataTableSortOrder sortOrder) {
@@ -495,9 +524,13 @@ public class DeliveryListController extends DeliveryController {
 
     private final DeliveryStatistics stats;
 
-    public DeliveryRow(Delivery delivery, DeliveryStatistics stats) {
+    private final Date startDate, endDate;
+
+    public DeliveryRow(Delivery delivery, DeliveryStatistics stats, Date startDate, Date endDate) {
       this.delivery = delivery;
       this.stats = stats;
+      this.startDate = startDate;
+      this.endDate = endDate;
     }
 
     public Integer getId() {
@@ -505,11 +538,11 @@ public class DeliveryListController extends DeliveryController {
     }
 
     public Date getEndDate() {
-      return delivery.getEndDate();
+      return endDate;
     }
 
     public Date getStartDate() {
-      return delivery.getStartDate();
+      return startDate;
     }
 
     public DeliveryStatus getStatus() {
