@@ -1,15 +1,22 @@
-<project name="SMSX build" default="help" basedir=".">
+<project name="SMSX build" basedir=".">
+
   <property name="esme_name" value="smsx"/>
   <property name="esme_bin_path" value="SMSX"/>
   <property name="esme_bin_name" value="SMSX"/>
+
   <property name="SMSC_DIR" value="../.." />
   <property file="${SMSC_DIR}/webapps/build.properties"/>
+
   <property name="java_src" location="src"/>
   <property name="java_test" location="test"/>
+
   <property name="config" location="conf"/>
+
   <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
   <property name="java_lib" location="lib"/>
+
   <property name="libs_path" location="${SMSC_DIR}/webapps/libs"/>
+
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
@@ -44,6 +51,7 @@
     <!-- Copy scripts -->
     <copy file="bin/start.sh" todir="${SME_DISTR_DIR}"/>
     <copy file="bin/stop.sh" todir="${SME_DISTR_DIR}"/>
+    <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
     <copydir src="bin/soap" dest="${SME_DISTR_DIR}/bin/soap"/>
     <copydir src="bin/stat" dest="${SME_DISTR_DIR}/bin/stat"/>
     <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="*.sh"/>
@@ -51,9 +59,31 @@
     <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="**/*.sh"/>
   </target>
 
-  <target name="compile" description="compile sources">
-    <delete dir="${java_out}"/>
-    <mkdir dir="${java_out}"/>
+  <path id="lib">
+    <fileset dir="lib" includes="*.jar"/>
+  </path>
+
+  <target name="compile.web">
+    <delete dir="${java_out}/web"/>
+    <mkdir dir="${java_out}/web"/>
+
+    <javac srcdir="websrc" destdir="${java_out}/web" debug="yes">
+      <classpath>
+        <pathelement path="${BUILD_DIR}/classes/smsc"/>
+        <fileset dir="${libs_path}" includes="*.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="compile.statscript">
+    <delete dir="${java_out}/statscript"/>
+    <mkdir dir="${java_out}/statscript"/>
+    <javac srcdir="stat" destdir="${java_out}/statscript" classpathref="lib" debug="true"/>
+  </target>
+
+  <target name="compile.sme" description="compile sources for sme">
+    <delete dir="${java_out}/sme"/>
+    <mkdir dir="${java_out}/sme"/>
 
     <fileset id="sources" dir="${java_src}" includes="**/*.properties"/>
     <fileset id="project_libs" dir="lib" includes="*.jar"/>
@@ -62,30 +92,60 @@
       <fileset refid="project_libs"/>
     </path>
 
-    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes" >
+    <javac srcdir="${java_src}" destdir="${java_out}/sme" debug="yes" >
       <classpath refid="classpath"/>
     </javac>
 
-    <javac srcdir="${java_test}" destdir="${java_out}" debug="yes" >
+    <javac srcdir="${java_test}" destdir="${java_out}/sme" debug="yes" >
       <classpath refid="classpath"/>
     </javac>
   </target>
 
-  <target name="build" depends="compile, prepare" description="build jar">
+  <target name="build.web" depends="compile.web, prepare">
+    <mkdir dir="${exploded}/lib"/>
+    <jar jarfile="${exploded}/lib/${esme_name}.jar">
+      <fileset dir="${java_out}/web"/>
+    </jar>
+    <mkdir dir="${exploded}/jsp"/>
+    <copy todir="${exploded}/jsp" preservelastmodified="yes">
+      <fileset dir="web" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
+    </copy>
+  </target>
+
+  <target name="build.statscript" depends="compile.statscript, prepare">
+    <mkdir dir="${SME_DISTR_DIR}/bin/stat"/>
+
+    <taskdef name="one-jar" classname="com.simontuffs.onejar.ant.OneJarTask" classpathref="lib" onerror="report"/>
+    <one-jar destfile="${SME_DISTR_DIR}/bin/stat/smsx_stat_script.jar" >
+      <manifest>
+        <attribute name="One-Jar-Main-Class" value="ru.sibinco.smsx.stats.Script"/>
+      </manifest>
+      <main>
+        <fileset dir="${java_out}/statscript"/>
+      </main>
+      <lib >
+        <fileset dir="lib" includes="general_utils.jar"/>
+      </lib>
+    </one-jar>
+  </target>
+
+  <target name="build.sme" depends="compile.sme, prepare" description="build jar">
     <manifest file="manifest.mf">
       <attribute name="Implementation-Version" value="${release.version}"/>
     </manifest>
     <jar jarfile="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib/${esme_name}.jar" manifest="manifest.mf">
-	    <fileset dir="${java_out}"/>
+	    <fileset dir="${java_out}/sme"/>
       <fileset dir="${java_src}" includes="**/*.properties"/>
       <fileset file="history.txt"/>
     </jar>
     <delete file="manifest.mf"/>
   </target>
   
-  <target name="distr" depends="prepare, build, copy_config" description="create new distribution"/>
+  <target name="distr.all" depends="prepare, build.sme, build.statscript, build.web, copy_config" description="create full distribution"/>
 
-  <target name="update" depends="prepare, build" description="update distribution"/>
+  <target name="distr" depends="prepare, build.sme, build.statscript, copy_config" description="create SME distribution"/>
+
+  <target name="update" depends="prepare, build.sme" description="update distribution"/>
 
   <target name="clean" description="clean up">
     <ant antfile="../make_esme.xml" target="clean"/>
