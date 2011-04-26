@@ -6,7 +6,7 @@
   <property name="exploded.dir" value="${distr.dir}/exploded"/>
 
   <path id="lib">
-    <fileset dir="stat_lib" includes="*.jar"/>
+    <fileset dir="lib" includes="*.jar"/>
   </path>
 
 

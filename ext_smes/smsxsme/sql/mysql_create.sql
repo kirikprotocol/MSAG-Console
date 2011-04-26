@@ -15,7 +15,7 @@ CREATE TABLE calendar_messages (
   adv int,
 
   PRIMARY KEY(id),
-  INDEX(send_time)
+  INDEX(smpp_id)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
  CREATE INDEX cld_msg_send_time USING BTREE ON calendar_messages(send_time);
@@ -61,6 +61,7 @@ CREATE TABLE smpp_messages (
   INDEX(smpp_id)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
+46129937
 
 ##TABLES FOR NICKS
 CREATE TABLE nicks (
@@ -117,6 +118,9 @@ CREATE TABLE group_send (
   INDEX(id),
   INDEX (smpp_id)
 ) ENGINE InnoDB;
+
+492844
+4712578036
 
 ##TABLES FOR BLACK LIST
 CREATE TABLE black_list (

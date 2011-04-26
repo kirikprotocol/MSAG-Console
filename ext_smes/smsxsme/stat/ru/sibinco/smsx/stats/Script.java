@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class Script {
 
-   //   "./ 20110101 conf output"
+  //   "./ 20110101 conf output"
   public static void main(String[] args) throws Exception {
 //    Thread.sleep(10000);
     long time = System.currentTimeMillis();
@@ -22,9 +22,9 @@ public class Script {
     System.out.println("Time: " + (System.currentTimeMillis() - time));
     System.out.println("Done!");
 //    Thread.sleep(20000);
-    System.out.println("Count:"+s.count.size());
-    System.out.println("Src:"+s.dstAddrMap.size());
-    System.out.println("Dst:"+s.srcAddrMap.size());
+    System.out.println("Count:" + s.count.size());
+    System.out.println("Src:" + s.dstAddrMap.size());
+    System.out.println("Dst:" + s.srcAddrMap.size());
   }
 
 
@@ -38,45 +38,45 @@ public class Script {
 
   private TemplatesRTree<String> regions;
 
-  void init(String[] args) throws Exception{
-    if(args.length<4) {
+  void init(String[] args) throws Exception {
+    if (args.length < 4) {
       throw new IllegalArgumentException("Use with argument: <csv_dir> <yyyyMMdd> <routes_dir> <output_dir>");
     }
 
     csvDir = new File(args[0]);
-    if(!csvDir.exists()) {
-      throw new IllegalArgumentException("Directory with csv files doesn't exist: "+csvDir.getAbsolutePath());
+    if (!csvDir.exists()) {
+      throw new IllegalArgumentException("Directory with csv files doesn't exist: " + csvDir.getAbsolutePath());
     }
     date = new SimpleDateFormat("yyyyMMdd").parse(args[1]);
     File routesXml = new File(args[2], "routes.xml");
     File routesCsv = new File(args[2], "routes.csv");
-    if(!routesCsv.exists()) {
-      throw new IllegalArgumentException("File doesn't exist: "+ routesCsv.getAbsolutePath());
+    if (!routesCsv.exists()) {
+      throw new IllegalArgumentException("File doesn't exist: " + routesCsv.getAbsolutePath());
     }
-    if(!routesXml.exists()) {
-      throw new IllegalArgumentException("File doesn't exist: "+ routesXml.getAbsolutePath());
+    if (!routesXml.exists()) {
+      throw new IllegalArgumentException("File doesn't exist: " + routesXml.getAbsolutePath());
     }
     outputDir = new File(args[3]);
-    if(!outputDir.exists() && !outputDir.mkdirs()) {
-      System.out.println("Can't create output directory: "+outputDir.getAbsolutePath());
+    if (!outputDir.exists() && !outputDir.mkdirs()) {
+      System.out.println("Can't create output directory: " + outputDir.getAbsolutePath());
     }
 
     routes = Routes.parseRoutes(routesCsv);
     regions = buildTree(routesXml);
   }
 
-  void process() throws Exception{
+  void process() throws Exception {
 
-    File dir = new File(csvDir, new SimpleDateFormat("yyyy-MMM"+File.separatorChar+"dd", Locale.ENGLISH).format(date));
+    File dir = new File(csvDir, new SimpleDateFormat("yyyy-MMM" + File.separatorChar + "dd", Locale.ENGLISH).format(date));
 
-    if(dir.exists()) {
-    String[] buffer = new String[19];
-      for(File h : dir.listFiles(new FileFilter() {
+    if (dir.exists()) {
+      String[] buffer = new String[19];
+      for (File h : dir.listFiles(new FileFilter() { //todo listFiles может вернуть null
         public boolean accept(File pathname) {
           return pathname.isDirectory();
         }
       })) {
-        for(File f : h.listFiles(new FileFilter() {
+        for (File f : h.listFiles(new FileFilter() { //todo listFiles может вернуть null
           public boolean accept(File pathname) {
             return pathname.isFile();
           }
@@ -111,35 +111,35 @@ public class Script {
     websmsWriter.println(region);
   }
 
-  private void  writeSrcDstStats() throws IOException{
+  private void writeSrcDstStats() throws IOException {
     PrintWriter websmsWriter = null;
-    try{
-      websmsWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outputDir, new SimpleDateFormat("yyyyMMdd").format(date)+"-websms-users.csv")), "windows-1251")));
+    try {
+      websmsWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outputDir, new SimpleDateFormat("yyyyMMdd").format(date) + "-websms-users.csv")), "windows-1251")));
       websmsWriter.println("INDEX,MSC,ADDRESS,REGION");
       PrintWriter smsxWriter = null;
-      try{
-        smsxWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outputDir, new SimpleDateFormat("yyyyMMdd").format(date)+"-smsx-users.csv")), "windows-1251")));
+      try {
+        smsxWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outputDir, new SimpleDateFormat("yyyyMMdd").format(date) + "-smsx-users.csv")), "windows-1251")));
         smsxWriter.println("SERVICE_ID,SRC_ADDRESS,REGION");
-        for(Map.Entry<String, SrcAddr> s : srcAddrMap.entrySet()) {
+        for (Map.Entry<String, SrcAddr> s : srcAddrMap.entrySet()) {
           String region = getRegionByAddress(s.getKey());
-          for(Integer serviceId : s.getValue().smsxServices) {
+          for (Integer serviceId : s.getValue().smsxServices) {
             writeSmsx(smsxWriter, serviceId, s.getKey(), region);
           }
-          if(s.getValue().isWebSmsMsc != null) {
+          if (s.getValue().isWebSmsMsc != null) {
             writeWebSms(websmsWriter, 1, s.getValue().isWebSmsMsc, s.getKey(), region);
           }
         }
-      }finally {
-        if(smsxWriter != null) {
+      } finally {
+        if (smsxWriter != null) {
           smsxWriter.close();
         }
       }
-      for(Map.Entry<String, Boolean> s : dstAddrMap.entrySet()) {
+      for (Map.Entry<String, Boolean> s : dstAddrMap.entrySet()) {
         String region = getRegionByAddress(s.getKey());
         writeWebSms(websmsWriter, 2, s.getValue(), s.getKey(), region);
       }
-    }finally {
-      if(websmsWriter != null) {
+    } finally {
+      if (websmsWriter != null) {
         websmsWriter.close();
       }
     }
@@ -147,10 +147,10 @@ public class Script {
 
   private void writeCountStats() throws IOException {
     PrintWriter countWriter = null;
-    try{
-      countWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outputDir, new SimpleDateFormat("yyyyMMdd").format(date)+"-traffic.csv")), "windows-1251")));
+    try {
+      countWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(outputDir, new SimpleDateFormat("yyyyMMdd").format(date) + "-traffic.csv")), "windows-1251")));
       countWriter.println("SERVICE_ID,MSC,REGION,SRC_SME_ID,COUNT");
-      for(Map.Entry<CountKey, Integer> e : count.entrySet()) {
+      for (Map.Entry<CountKey, Integer> e : count.entrySet()) {
         countWriter.print(e.getKey().serviceId);
         countWriter.print(e.getKey().isMsc ? ",1," : ",0,");
         countWriter.print(e.getKey().region);
@@ -159,8 +159,8 @@ public class Script {
         countWriter.print(',');
         countWriter.println(e.getValue());
       }
-    }finally {
-      if(countWriter != null) {
+    } finally {
+      if (countWriter != null) {
         countWriter.close();
       }
     }
@@ -171,11 +171,11 @@ public class Script {
     writeCountStats();
   }
 
-  private TemplatesRTree<String> buildTree(File routesXml) throws Exception {
+  private static TemplatesRTree<String> buildTree(File routesXml) throws Exception {
     Collection<Routes.Region> routes = Routes.parseRegions(routesXml);
     TemplatesRTree<String> regions = new TemplatesRTree<String>();
     for (Routes.Region r : routes) {
-      for(String m : r.getMasks()) {
+      for (String m : r.getMasks()) {
         regions.put(m, r.getId());
       }
     }
@@ -184,29 +184,28 @@ public class Script {
 
   private void processFile(File f, String[] buffer) throws Exception {
     BufferedReader reader = null;
-    try{
+    try {
       reader = new BufferedReader(new FileReader(f));
       String line = reader.readLine();
-      if(line != null) {
-        while((line = reader.readLine()) != null){
-          if(line.isEmpty()) {
+      if (line != null) {
+        while ((line = reader.readLine()) != null) {
+          if (line.isEmpty()) {
             continue;
           }
-          try{
+          try {
             processLine(line, buffer);
-          }catch (Exception e){
-            System.out.println("Error line: "+line);
+          } catch (Exception e) {
+            System.out.println("Error line: " + line);
             e.printStackTrace();
           }
         }
       }
-    }finally {
-      if(reader != null) {
+    } finally {
+      if (reader != null) {
         reader.close();
       }
     }
   }
-
 
 
   private Map<String, SrcAddr> srcAddrMap = new HashMap<String, SrcAddr>(100000);
@@ -218,8 +217,8 @@ public class Script {
   private static final char quote = '\"';
 
   private String removeQuotes(String s) {
-    if(s.length()>0 && s.charAt(0) == quote) {
-      return s.substring(1,s.length()-1);
+    if (s.length() > 0 && s.charAt(0) == quote) {
+      return s.substring(1, s.length() - 1);
     }
     return s;
   }
@@ -237,8 +236,8 @@ public class Script {
     buffer = p.split(line, 19);
 
     String route = removeQuotes(buffer[16]).trim();
-    if(!routes.contains(route)) {
-      System.out.println("Route is not allowed: "+route);
+    if (!routes.contains(route)) {
+      System.out.println("Route is not allowed: " + route);
       return;
     }
 
@@ -250,23 +249,23 @@ public class Script {
 
     String dstRegion = getRegionByAddress(dAddr);
 
-    SrcAddr srcAddr =  srcAddrMap.get(sAddr);
-    if(srcAddr == null) {
+    SrcAddr srcAddr = srcAddrMap.get(sAddr);
+    if (srcAddr == null) {
       srcAddr = new SrcAddr();
       srcAddrMap.put(sAddr, srcAddr);
     }
-    if(isWebSms(srcSme)) {
+    if (isWebSms(srcSme)) {
       srcAddr.isWebSmsMsc = srcMsc;
       dstAddrMap.put(dAddr, srcMsc);
-    }else {
+    } else {
       srcAddr.smsxServices.add(serviceId);
     }
 
     CountKey key = new CountKey(srcSme, srcMsc, serviceId, dstRegion);
     Integer c = count.get(key);
-    if(c == null) {
+    if (c == null) {
       count.put(key, 1);
-    }else {
+    } else {
       count.put(key, c + 1);
     }
 
@@ -274,52 +273,52 @@ public class Script {
 
 
   /**
-* @author Aleksandr Khalitov
-*/
+   * @author Aleksandr Khalitov
+   */
   static class SrcAddr {
-  Set<Integer> smsxServices = new HashSet<Integer>(10);
-  Boolean isWebSmsMsc;
-}
+    Set<Integer> smsxServices = new HashSet<Integer>(10);
+    Boolean isWebSmsMsc;
+  }
 
   /**
-* @author Aleksandr Khalitov
-*/
+   * @author Aleksandr Khalitov
+   */
   private static class CountKey {
 
-  String srcSmeId;
-  boolean isMsc;
-  int serviceId;
-  String region;     //todo optimization?
+    String srcSmeId;
+    boolean isMsc;
+    int serviceId;
+    String region;     //todo optimization?
 
-  CountKey(String srcSmeId, boolean msc, int serviceId, String region) {
-    this.srcSmeId = srcSmeId;
-    isMsc = msc;
-    this.serviceId = serviceId;
-    this.region = region;
+    CountKey(String srcSmeId, boolean msc, int serviceId, String region) {
+      this.srcSmeId = srcSmeId;
+      isMsc = msc;
+      this.serviceId = serviceId;
+      this.region = region;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      CountKey countKey = (CountKey) o;
+
+      if (isMsc != countKey.isMsc) return false;
+      if (serviceId != countKey.serviceId) return false;
+      if (region != null ? !region.equals(countKey.region) : countKey.region != null) return false;
+      if (srcSmeId != null ? !srcSmeId.equals(countKey.srcSmeId) : countKey.srcSmeId != null) return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = srcSmeId != null ? srcSmeId.hashCode() : 0;
+      result = 31 * result + (isMsc ? 1 : 0);
+      result = 31 * result + serviceId;
+      result = 31 * result + (region != null ? region.hashCode() : 0);
+      return result;
+    }
   }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    CountKey countKey = (CountKey) o;
-
-    if (isMsc != countKey.isMsc) return false;
-    if (serviceId != countKey.serviceId) return false;
-    if (region != null ? !region.equals(countKey.region) : countKey.region != null) return false;
-    if (srcSmeId != null ? !srcSmeId.equals(countKey.srcSmeId) : countKey.srcSmeId != null) return false;
-
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = srcSmeId != null ? srcSmeId.hashCode() : 0;
-    result = 31 * result + (isMsc ? 1 : 0);
-    result = 31 * result + serviceId;
-    result = 31 * result + (region != null ? region.hashCode() : 0);
-    return result;
-  }
-}
 }

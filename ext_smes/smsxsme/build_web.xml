@@ -17,7 +17,7 @@
 
 
   <path id="lib">
-    <fileset dir="web_lib" includes="*.jar"/>
+    <fileset dir="lib" includes="*.jar"/>
   </path>
 
   <path id="smsc_lib">
