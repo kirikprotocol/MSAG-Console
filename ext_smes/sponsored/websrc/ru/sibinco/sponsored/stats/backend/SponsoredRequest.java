@@ -60,7 +60,7 @@ public class SponsoredRequest {
   }
 
   void setProgress(int progress) {
-    System.out.println("Set progress to: "+progress); //todo
+    System.out.println("Set progress to: "+progress); //todo убрать
     this.progress = progress;
   }
 

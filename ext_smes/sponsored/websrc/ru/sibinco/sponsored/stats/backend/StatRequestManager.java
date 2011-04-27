@@ -86,7 +86,7 @@ public class StatRequestManager {
 
   }
 
-  public List getRequests() throws StatisticsException {
+  public List getRequests() throws StatisticsException {  //todo убрать
     List c = storage.getRequests();
     Iterator i = c.iterator();
     while(i.hasNext()) {

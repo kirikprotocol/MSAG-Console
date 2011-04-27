@@ -9,7 +9,7 @@ public class SponsoredRecord {
 
   private final float bonus;
 
-  public SponsoredRecord(String address, float bonus) {
+  public SponsoredRecord(String address, float bonus) { //todo убрать public
     this.address = address;
     this.bonus = bonus;
   }

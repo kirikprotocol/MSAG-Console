@@ -3,7 +3,7 @@ package ru.sibinco.sponsored.stats.backend.datasource;
 /**
  * @author Aleksandr Khalitov
  */
-public class DeliveryStat {
+public class DeliveryStat {   //todo сделать package local конструктор
 
   private String subscriberAddress;
   private int delivered = 0;

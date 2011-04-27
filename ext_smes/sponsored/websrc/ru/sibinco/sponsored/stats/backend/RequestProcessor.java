@@ -48,7 +48,7 @@ class RequestProcessor {
             }
           }catch (StatisticsException e){
             logger.error(e, e);
-            if(e.getCode() == StatisticsException.Code.COMMON) {
+            if(e.getCode() == StatisticsException.Code.COMMON) { //todo Почему не обрабатывается код INTERRUPTED ?
               try{
                 requestStorage.changeStatus(request.getId(), SponsoredRequest.Status.ERROR);
                 requestStorage.setError(request.getId(), e.getMessage());

@@ -5,8 +5,8 @@ package ru.sibinco.sponsored.stats.backend;
  */
 public class StatisticsException extends Exception{
 
-  public static final int COMMON = 0;
-  public static final int INTERRUPTED = 1;
+  public static final int COMMON = 0; //todo убрать
+  public static final int INTERRUPTED = 1; //todo убрать
 
   private Code code = Code.COMMON;
 

@@ -9,7 +9,7 @@ import java.io.Writer;
 /**
  * @author Aleksandr Khalitov
  */
-public class SponsoredConverter {
+public class SponsoredConverter { //todo перенести в backend
 
   private static final Category logger = Category.getInstance(SponsoredConverter.class);
 

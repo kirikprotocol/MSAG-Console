@@ -24,7 +24,8 @@ class RequestExecutor {
     ResultSet rs = null;
     Progress p = new Progress() {
       public void setProgress(int progress) {
-        request.setProgress(progress);
+        request.setProgress(progress); //todo Здесь надо progress умножать на 3/4. Иначе выходит, что на выходе их метода aggregateDeliveryStats прогресс уже 100%
+                                       //todo и то, что потом еще формируется файл с отчетом - не учитывается.
       }
     };
     try{
