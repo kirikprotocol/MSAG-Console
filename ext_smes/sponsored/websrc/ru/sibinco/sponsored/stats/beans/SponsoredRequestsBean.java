@@ -2,11 +2,7 @@ package ru.sibinco.sponsored.stats.beans;
 
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
-import ru.sibinco.sponsored.stats.backend.SponsoredRequest;
-import ru.sibinco.sponsored.stats.backend.StatisticsException;
-import ru.sibinco.sponsored.stats.backend.Visitor;
-import ru.sibinco.sponsored.stats.backend.datasource.SponsoredConverter;
-import ru.sibinco.sponsored.stats.backend.datasource.SponsoredRecord;
+import ru.sibinco.sponsored.stats.backend.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -144,11 +140,7 @@ public class SponsoredRequestsBean extends StatsBean{
   public SponsoredRequest getSponsorRequest() {
 
     if(selected != null) {
-      try {
-        return (SponsoredRequest) sponsoredContext.getStatRequestManager().getRequest(selected.intValue());
-      } catch (StatisticsException e) {
-        logger.error(e,e);
-      }
+        return sponsoredContext.getStatRequestManager().getRequest(selected.intValue());
     }
     return null;
   }

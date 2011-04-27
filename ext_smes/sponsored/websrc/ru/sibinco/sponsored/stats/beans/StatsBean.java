@@ -15,18 +15,18 @@ import java.util.List;
  */
 public class StatsBean extends PageBean {
 
-  public static final int VIEW_SMSX_USERS = PageBean.PRIVATE_RESULT;
-  public static final int VIEW_WEB_DAILY = PageBean.PRIVATE_RESULT+1;
-  public static final int VIEW_WEB_REGIONS = PageBean.PRIVATE_RESULT+2;
-  public static final int VIEW_TRAFFIC = PageBean.PRIVATE_RESULT+3;
+  private static final int VIEW_SMSX_USERS = PageBean.PRIVATE_RESULT;
+  private static final int VIEW_WEB_DAILY = PageBean.PRIVATE_RESULT+1;
+  private static final int VIEW_WEB_REGIONS = PageBean.PRIVATE_RESULT+2;
+  private static final int VIEW_TRAFFIC = PageBean.PRIVATE_RESULT+3;
 
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 4;
+  static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 4;
 
   private String mbMenu = null;
 
-  protected Category logger = Category.getInstance(SponsoredContext.class);
+  Category logger = Category.getInstance(SponsoredContext.class);
 
-  protected SponsoredContext sponsoredContext;
+  SponsoredContext sponsoredContext;
 
   protected int init(List errors) {
     int result = super.init(errors);

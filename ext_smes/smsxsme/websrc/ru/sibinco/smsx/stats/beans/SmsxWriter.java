@@ -1,9 +1,13 @@
 package ru.sibinco.smsx.stats.beans;
 
+import ru.sibinco.smsx.stats.backend.SmsxResults;
 import ru.sibinco.smsx.stats.backend.StatRequestManager;
 import ru.sibinco.smsx.stats.backend.StatisticsException;
 import ru.sibinco.smsx.stats.backend.Visitor;
-import ru.sibinco.smsx.stats.backend.datasource.*;
+import ru.sibinco.smsx.stats.backend.datasource.SmsxUsers;
+import ru.sibinco.smsx.stats.backend.datasource.Traffic;
+import ru.sibinco.smsx.stats.backend.datasource.WebDaily;
+import ru.sibinco.smsx.stats.backend.datasource.WebRegion;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -15,7 +19,7 @@ import java.util.ResourceBundle;
  */
 class SmsxWriter {
 
-  private StatRequestManager requestManager;
+  private final StatRequestManager requestManager;
 
   SmsxWriter(StatRequestManager requestManager) {
     this.requestManager = requestManager;

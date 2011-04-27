@@ -1,7 +1,6 @@
 package ru.sibinco.sponsored.stats.backend.datasource;
 
 import org.apache.log4j.Category;
-import ru.sibinco.sponsored.stats.backend.Progress;
 import ru.sibinco.sponsored.stats.backend.StatisticsException;
 
 import java.io.File;
@@ -71,7 +70,8 @@ public class FileDeliveryStatDataSource {
     return res;
   }
 
-  public ResultSet aggregateDeliveryStats(Date startDate, Date endDate, final DeliveryStatsQuery query, final Progress progress) throws StatisticsException {
+  public ResultSet aggregateDeliveryStats(int requestId, Date startDate, Date endDate, final DeliveryStatsQuery query,
+                                          final ProgressListener progressListener, final ShutdownIndicator shutdownIndicator) throws StatisticsException {
     if(startDate == null) {
       startDate = new Date(0);
     }
@@ -80,19 +80,19 @@ public class FileDeliveryStatDataSource {
     }
     ArrayList files = getFiles(startDate, endDate);
 
-    progress.setProgress(10);
-    if(Thread.currentThread().isInterrupted()) {
+    progressListener.setProgress(10);
+    if(shutdownIndicator.isShutdown()) {
       throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
     }
 
     if (files.isEmpty()) {
-      progress.setProgress(100);
+      progressListener.setProgress(100);
       return null;
     }
 
     SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 
-    final File aggregateFile = new File(storeDir, df.format(startDate) + '-' + df.format(endDate) + ".stats");
+    final File aggregateFile = new File(storeDir, requestId + df.format(startDate) + '-' + df.format(endDate) + ".stats");
 
     final DeliveryStatsQuery query1 = new DeliveryStatsQuery() {
       public boolean isAllowed(DeliveryStat stat) {
@@ -116,7 +116,7 @@ public class FileDeliveryStatDataSource {
         StatsFile file = (StatsFile)i.next();
         file.transferTo(fc);
       }
-      progress.setProgress(50);
+      progressListener.setProgress(50);
 
     } catch (IOException e) {
       throw new StatisticsException(e);
@@ -132,7 +132,7 @@ public class FileDeliveryStatDataSource {
       } catch (IOException ignored) {
       }
     }
-    if(Thread.currentThread().isInterrupted()) {
+    if(shutdownIndicator.isShutdown()) {
       throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
     }
 
@@ -142,9 +142,9 @@ public class FileDeliveryStatDataSource {
       impl = new StatsFileImpl(aggregateFile);
       impl.compress(query1);
 
-      progress.setProgress(70);
+      progressListener.setProgress(70);
 
-      if(Thread.currentThread().isInterrupted()) {
+      if(shutdownIndicator.isShutdown()) {
         throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
       }
 
@@ -152,7 +152,7 @@ public class FileDeliveryStatDataSource {
       return new ListResultSet(impl) {
 
         public boolean next() throws StatisticsException {
-          if(Thread.currentThread().isInterrupted()) {
+          if(shutdownIndicator.isShutdown()) {
             throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
           }
           return super.next();
@@ -165,7 +165,7 @@ public class FileDeliveryStatDataSource {
               log.warn("Can't remove: "+aggregateFile.getAbsolutePath());
             }
           }finally {
-            progress.setProgress(100);
+            progressListener.setProgress(100);
           }
         }
       };

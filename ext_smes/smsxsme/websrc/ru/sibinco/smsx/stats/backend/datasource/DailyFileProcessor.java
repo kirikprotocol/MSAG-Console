@@ -1,36 +1,55 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
 import ru.sibinco.smsx.stats.backend.StatisticsException;
-import ru.sibinco.smsx.stats.backend.Visitor;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author Aleksandr Khalitov
  */
-//todo По-моему, наследование в данном случае - не лучшее решение. Ты его используешь исключительно для того, чтобы
-//todo переиспользовать функциональность класса FileStatsProcessor. Лучше прибегнуть к делегированию.
-class DailyFileProcessor extends FileStatsProcessor{
+class DailyFileProcessor {
 
   private final String one = "1";
 
-  private final Map daily = new HashMap(2000);
+  private static final Pattern commaPattern = Pattern.compile(",");
 
-  DailyFileProcessor(File artefactsDir, Date from, Date till, Progress p) {
-    super(artefactsDir, from, till, p);
+  private final FileStatsProcessor fileProcessor;
+
+  private final FileStatsProcessor.StatsFileFilter fileFilter;
+
+  private final ProgressListener progressListener;
+
+  DailyFileProcessor(File artefactsDir, Date from, Date till, ProgressListener p) {
+    this.fileProcessor = new FileStatsProcessor(artefactsDir, from, till);
+    this.fileFilter = new FileStatsProcessor.StatsFileFilter("-traffic.csv", from, till);
+    this.progressListener = p;
   }
 
   private final Set websmsSmes = new HashSet(){{
     add("websms");add("websyssms");
   }};
 
-  protected LineVisitor getLineVisitor() {
-    return new LineVisitor() {
+  protected final Collection process(ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    final Map daily = new HashMap(200);
+    fileProcessor.visitFiles(fileFilter, createLineVisitor(daily, shutdownIndicator), new ProgressListener(){
+      public void setProgress(int _progress) {
+        progressListener.setProgress(3*_progress/4);
+      }
+    });
+    try{
+      return daily.values();
+    }finally {
+      progressListener.setProgress(100);
+    }
+  }
+
+  FileStatsProcessor.LineVisitor createLineVisitor(final Map daily, final ShutdownIndicator shutdownIndicator) {
+    return new FileStatsProcessor.LineVisitor() {
       private final Map dates = new HashMap(10);
       public void visit(String fileName, String line) throws StatisticsException {
-        if(Thread.currentThread().isInterrupted()) {
+        if(shutdownIndicator.isShutdown()) {
           throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
         String date = (String)dates.get(fileName);
@@ -47,27 +66,16 @@ class DailyFileProcessor extends FileStatsProcessor{
         dailyKey.region = ss[2];
         dailyKey.date = date;
         int c = Integer.parseInt(ss[4]);
-        Integer count = (Integer)daily.get(dailyKey);
-        daily.put(dailyKey, new Integer(count == null ? c : count.intValue() + c));
+        WebDaily old = (WebDaily)daily.get(dailyKey);
+        if(old == null) {
+          daily.put(dailyKey, new WebDaily(dailyKey.date, dailyKey.region, dailyKey.msc, c));
+        }else {
+          old.incrementCount(c);
+        }
       }
     };
   }
 
-  protected FilenameFilter getFilenameFilter() {
-    return new StatsFileFilter("-traffic.csv", from, till);
-  }
-
-  protected void getResults(Visitor v) throws StatisticsException{
-    Iterator i = daily.entrySet().iterator();
-    while(i.hasNext()) {
-      Map.Entry e = (Map.Entry)i.next();
-      DailyKey key = (DailyKey)e.getKey();
-      if(!v.visit(new WebDaily(key.date, key.region, key.msc, ((Integer)e.getValue()).intValue()))) {
-        return;
-      }
-      i.remove();
-    }
-  }
 
   private static class DailyKey {
     private String region;

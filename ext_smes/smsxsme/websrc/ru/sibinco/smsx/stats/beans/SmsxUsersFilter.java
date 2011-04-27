@@ -5,7 +5,7 @@ import ru.sibinco.smsx.stats.backend.datasource.SmsxUsers;
 /**
  * @author Aleksandr Khalitov
  */
-public class SmsxUsersFilter{
+class SmsxUsersFilter{
 
   private Integer serviceId;
 

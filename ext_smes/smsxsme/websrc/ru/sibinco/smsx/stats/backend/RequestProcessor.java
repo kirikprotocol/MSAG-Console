@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.stats.backend;
 
 import org.apache.log4j.Category;
+import ru.sibinco.smsx.stats.backend.datasource.ShutdownIndicator;
 import ru.sibinco.smsx.stats.backend.datasource.SmsxStatisticsManager;
 
 import java.io.File;
@@ -23,26 +24,29 @@ class RequestProcessor {
 
   private final Object lock = new Object();
 
+  private final ThreadPoolExecutor executor;
+
   RequestProcessor(RequestStorage requestStorage, File smsxArtefacts,
                    ResultsManager resultsManager) throws StatisticsException {
     this.requestStorage = requestStorage;
     this.requestExecutor = new RequestExecutor(
         new SmsxStatisticsManager(smsxArtefacts),
         resultsManager);
+    executor = new ThreadPoolExecutor(3);
   }
 
-  void execute(final SmsxRequest request) {//todo Сбор статистики требует много памяти. Хорошо бы иметь ограничение на количество одновременно работающих запросов.
-                                           //todo Если запросов много, остальные ждут своей очереди.
+  void execute(final SmsxRequest request) {
     final Integer reqId = new Integer(request.getId());
     final Object t_lock = new Object();
-    Thread t = new Thread() {
+    final ShutdownIndicator shutdownIndicator = new ShutdownIndicator();
+    Runnable t = new Runnable() {
       public void run() {
         synchronized (t_lock) {
           if(logger.isDebugEnabled()) {
             logger.debug("Start to process request: "+request);
           }
           try{
-            request.execute(requestExecutor);
+            request.execute(requestExecutor, shutdownIndicator);
             requestStorage.changeStatus(request.getId(), SmsxRequest.Status.READY);
             if(logger.isDebugEnabled()) {
               logger.debug("Request is processed: "+request);
@@ -72,9 +76,9 @@ class RequestProcessor {
       }
     };
     synchronized (lock) {
-      submited.put(reqId, new SubmitedRequest(t, request, t_lock));
+      submited.put(reqId, new SubmitedRequest(shutdownIndicator, request, t_lock));
     }
-    t.start();
+    executor.execute(t);
   }
 
 
@@ -95,31 +99,32 @@ class RequestProcessor {
       SubmitedRequest t = (SubmitedRequest)i.next();
       t.cancel();
     }
+    executor.shutdown();
   }
 
 
   Integer getProgress(int requestId) {
     SubmitedRequest r = (SubmitedRequest)submited.get(new Integer(requestId));
-    return r == null ? null : new Integer(r.request.getProgress());
+    return r == null ? null : new Integer(r.getCompleted());
   }
 
 
   private class SubmitedRequest {
 
-    private final Thread thread;
+    private final ShutdownIndicator shutdownIndicator;
 
     private final SmsxRequest request;
 
     final private Object lock;
 
-    private SubmitedRequest(Thread thread, SmsxRequest request, Object lock) {
-      this.thread = thread;
+    private SubmitedRequest(ShutdownIndicator shutdownIndicator, SmsxRequest request, Object lock) {
+      this.shutdownIndicator = shutdownIndicator;
       this.request = request;
       this.lock = lock;
     }
 
     private void cancel() {
-      thread.interrupt();
+      shutdownIndicator.shutdown();
       synchronized (lock){}
     }
 

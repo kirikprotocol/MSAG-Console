@@ -27,7 +27,7 @@ public class SmsxUsersBean extends StatsBean{
 
   private SmsxUsersTableHelper tableHelper;
 
-  private SmsxUsersFilter filter = new SmsxUsersFilter();
+  private final SmsxUsersFilter filter = new SmsxUsersFilter();
 
   private String mbBack;
   private String mbDownload;
@@ -44,7 +44,7 @@ public class SmsxUsersBean extends StatsBean{
     }
     SmsxRequest smsxRequest;
     try{
-      smsxRequest= (SmsxRequest)smsxContext.getStatRequestManager().getRequest(requestId.intValue());
+      smsxRequest= smsxContext.getStatRequestManager().getRequest(requestId.intValue());
     }catch (StatisticsException e){
       logger.error(e,e);
       return error(e.getMessage());

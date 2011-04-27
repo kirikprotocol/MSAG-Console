@@ -1,37 +1,55 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
 import ru.sibinco.smsx.stats.backend.StatisticsException;
-import ru.sibinco.smsx.stats.backend.Visitor;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author Aleksandr Khalitov
  */
-//todo По-моему, наследование в данном случае - не лучшее решение. Ты его используешь исключительно для того, чтобы
-//todo переиспользовать функциональность класса FileStatsProcessor. Лучше прибегнуть к делегированию.
-public class TrafficFileProcessor extends FileStatsProcessor{   //todo уменшить видимость
+class TrafficFileProcessor {
 
   private final Set serviceIds;
 
   private final String one = "1";
-  private final String zero = "0";
 
-  private final Map traffic = new HashMap(2000);
+  private final static Pattern commaPattern = Pattern.compile(",");
 
-  public TrafficFileProcessor(File artefactsDir, Date from, Date till, Progress p, Set serviceIds) {
-    super(artefactsDir, from, till, p);
+  private final FileStatsProcessor fileProcessor;
+
+  private final FileStatsProcessor.StatsFileFilter fileFilter;
+
+  private final ProgressListener progressListener;
+
+  TrafficFileProcessor(File artefactsDir, Date from, Date till, ProgressListener p, Set serviceIds) {
+    this.fileProcessor = new FileStatsProcessor(artefactsDir, from, till);
     this.serviceIds = serviceIds;
+    this.fileFilter = new FileStatsProcessor.StatsFileFilter("-traffic.csv", from, till);
+    this.progressListener = p;
   }
 
-  protected LineVisitor getLineVisitor() {
-    return new LineVisitor() {
+  protected final Collection process(ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    final Map traffic = new HashMap(200);
+    fileProcessor.visitFiles(fileFilter, createLineVisitor(traffic, shutdownIndicator), new ProgressListener(){
+      public void setProgress(int _progress) {
+        progressListener.setProgress(3*_progress/4);
+      }
+    });
+    try{
+      return traffic.values();
+    }finally {
+      progressListener.setProgress(100);
+    }
+  }
+
+  FileStatsProcessor.LineVisitor createLineVisitor(final Map traffic, final ShutdownIndicator shutdownIndicator) {
+    return new FileStatsProcessor.LineVisitor() {
       private final Map dates = new HashMap(10);
 
       public void visit(String fileName, String line) throws StatisticsException {
-        if(Thread.currentThread().isInterrupted()) {
+        if(shutdownIndicator.isShutdown()) {
           throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
         String date = (String)dates.get(fileName);
@@ -50,24 +68,14 @@ public class TrafficFileProcessor extends FileStatsProcessor{   //todo умен�
         key.msc = ss[1].equals(one);
         key.region = ss[2];
         int c = Integer.parseInt(ss[4]);
-        Integer count = (Integer)traffic.get(key);
-        traffic.put(key, new Integer(count == null ? c : count.intValue()+c));
+        Traffic old = (Traffic)traffic.get(key);
+        if(old == null) {
+          traffic.put(key, new Traffic(key.region, serviceId, key.msc, c));
+        }else {
+          old.incrementCount(c);
+        }
       }
     };
-  }
-
-  protected FilenameFilter getFilenameFilter() {
-    return new StatsFileFilter("-traffic.csv", from, till);
-  }
-
-  protected void getResults(Visitor v) throws StatisticsException {
-    Iterator i = traffic.entrySet().iterator();
-    while(i.hasNext()) {
-      Map.Entry e = (Map.Entry)i.next();
-      TrafficKey key = (TrafficKey)e.getKey();
-      v.visit(new Traffic(key.region, key.serviceId, key.msc, ((Integer)e.getValue()).intValue()));
-      i.remove();
-    }
   }
 
   private static class TrafficKey {
@@ -75,17 +83,17 @@ public class TrafficFileProcessor extends FileStatsProcessor{   //todo умен�
     private boolean msc;
     private int serviceId;
 
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    TrafficKey that = (TrafficKey) o;
-    return msc == that.msc && serviceId == that.serviceId && !(region != null ? !region.equals(that.region) : that.region != null);
-  }
-  public int hashCode() {
-    int result = region != null ? region.hashCode() : 0;
-    result = 31 * result + serviceId;
-    result = 31 * result + (msc ? 1 : 0);
-    return result;
-  }
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      TrafficKey that = (TrafficKey) o;
+      return msc == that.msc && serviceId == that.serviceId && !(region != null ? !region.equals(that.region) : that.region != null);
+    }
+    public int hashCode() {
+      int result = region != null ? region.hashCode() : 0;
+      result = 31 * result + serviceId;
+      result = 31 * result + (msc ? 1 : 0);
+      return result;
+    }
   }
 }

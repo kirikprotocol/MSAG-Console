@@ -9,15 +9,28 @@ public class WebRegion {
 
   private final boolean msc;
 
-  private final int srcCount;
+  private int srcCount;
 
-  private final int dstCount;
+  private int dstCount;
 
-  public WebRegion(String region, boolean msc, int srcCount, int dstCount) { //todo уменьшить видимость конструктора
+  public WebRegion(String region, boolean msc, int srcCount, int dstCount) {
     this.region = region;
     this.msc = msc;
     this.srcCount = srcCount;
     this.dstCount = dstCount;
+  }
+
+  WebRegion(String region, boolean msc) {
+    this.region = region;
+    this.msc = msc;
+  }
+
+  void incrementSrcCount() {
+    srcCount++;
+  }
+
+  void incrementDstCount() {
+    dstCount++;
   }
 
   public String getRegion() {

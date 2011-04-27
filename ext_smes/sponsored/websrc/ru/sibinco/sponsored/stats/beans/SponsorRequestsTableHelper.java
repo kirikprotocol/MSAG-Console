@@ -12,7 +12,7 @@ public class SponsorRequestsTableHelper extends RequestsTableHelper{
 
   private final StatRequestManager requestManager;
 
-  protected SponsorRequestsTableHelper(String uid, StatRequestManager requestManager, RequestFilter filter) {
+  SponsorRequestsTableHelper(String uid, StatRequestManager requestManager, RequestFilter filter) {
     super(uid, filter);
     this.requestManager = requestManager;
   }

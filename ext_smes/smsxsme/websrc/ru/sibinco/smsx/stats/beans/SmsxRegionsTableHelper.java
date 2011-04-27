@@ -4,10 +4,10 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.jsp.util.helper.statictable.*;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.sibinco.smsx.stats.backend.SmsxResults;
 import ru.sibinco.smsx.stats.backend.StatRequestManager;
 import ru.sibinco.smsx.stats.backend.StatisticsException;
 import ru.sibinco.smsx.stats.backend.Visitor;
-import ru.sibinco.smsx.stats.backend.datasource.SmsxResults;
 import ru.sibinco.smsx.stats.backend.datasource.WebRegion;
 
 import java.util.*;
@@ -19,9 +19,9 @@ public class SmsxRegionsTableHelper extends PagedStaticTableHelper{
 
   private static final Category logger = Category.getInstance(SmsxRegionsTableHelper.class);
 
-  private StatRequestManager requestManager;
+  private final StatRequestManager requestManager;
 
-  private SmsxWebFilter filter;
+  private final SmsxWebFilter filter;
 
   private Locale locale;
 
@@ -32,7 +32,7 @@ public class SmsxRegionsTableHelper extends PagedStaticTableHelper{
   private final TextColumn recsColumn = new TextColumn("recs", "smsx.stat.unigueRecs", true,40);
   private ResourceBundle bundle;
 
-  private int reqId;
+  private final int reqId;
 
 
   SmsxRegionsTableHelper(String uid, StatRequestManager requestManager, SmsxWebFilter filter, int reqId) {
@@ -153,7 +153,7 @@ public class SmsxRegionsTableHelper extends PagedStaticTableHelper{
   }
 
 
-  public Comparator getComparator(final SortOrderElement sortOrder) {
+  Comparator getComparator(final SortOrderElement sortOrder) {
     return new Comparator() {
       public int compare(Object o1, Object o2) {
         if (o1 == null) return 1;

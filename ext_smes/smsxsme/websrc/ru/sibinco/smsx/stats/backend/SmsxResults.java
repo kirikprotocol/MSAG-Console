@@ -1,12 +1,9 @@
-package ru.sibinco.smsx.stats.backend.datasource;
-
-import ru.sibinco.smsx.stats.backend.StatisticsException;
-import ru.sibinco.smsx.stats.backend.Visitor;
+package ru.sibinco.smsx.stats.backend;
 
 /**
  * @author Aleksandr Khalitov
  */
-public interface SmsxResults { //todo перенести в backend
+public interface SmsxResults {
 
   public void getSmsxUsers(Visitor visitor) throws StatisticsException;
 

@@ -3,8 +3,6 @@ package ru.sibinco.smsx.stats.backend;
 import junit.framework.TestCase;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import ru.sibinco.smsx.stats.backend.SmsxRequest;
-import ru.sibinco.smsx.stats.backend.StatisticsException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;

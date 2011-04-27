@@ -2,6 +2,7 @@ package ru.sibinco.smsx.stats.backend;
 
 import ru.sibinco.smsx.stats.backend.datasource.*;
 
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -19,98 +20,102 @@ class RequestExecutor {
   }
 
 
-  void execute(final SmsxRequest request) throws StatisticsException {
+  void execute(final SmsxRequest request, ShutdownIndicator shutdownIndicator) throws StatisticsException {
     Set reports = request.getReportTypesFilter();
     final int totalReports = reports == null ? 4 : reports.size();
     final int[] countReport = new int[]{0};
     final int[] previousProgress = new int[]{0};
-    class ProgressImpl extends Progress{
+    class ProgressListenerImpl implements ProgressListener {
       public void setProgress(int progress) {
         request.setProgress(previousProgress[0]+ (progress*countReport[0]/totalReports));
       }
     }
-    Progress p = new ProgressImpl();
+    ProgressListener p = new ProgressListenerImpl();
     if(reports == null || reports.contains(SmsxRequest.ReportType.WEB_DAILY)) {
-      processWebDaily(request, p);
+      processWebDaily(request, p, shutdownIndicator);
       previousProgress[0] = request.getProgress();
     }
     if(reports == null || reports.contains(SmsxRequest.ReportType.SMSX_USERS)) {
-      processSmsxUsers(request, p);
+      processSmsxUsers(request, p, shutdownIndicator);
       previousProgress[0] = request.getProgress();
     }
     if(reports == null || reports.contains(SmsxRequest.ReportType.WEB_REGIONS)) {
-      processWebRegions(request, p);
+      processWebRegions(request, p, shutdownIndicator);
       previousProgress[0] = request.getProgress();
     }
     if(reports == null || reports.contains(SmsxRequest.ReportType.TRAFFIC)) {
-      processTraffic(request, p);
+      processTraffic(request, p, shutdownIndicator);
     }
   }
 
-  private void processWebDaily(SmsxRequest request, Progress p) throws StatisticsException{
-    final ResultsManager.WebDailyResults[] res = new ResultsManager.WebDailyResults[]{null};
+  private void processWebDaily(SmsxRequest request, ProgressListener p, ShutdownIndicator shutdownIndicator) throws StatisticsException{
+    ResultsManager.WebDailyResults res = null;
     try{
-      res[0] = resultsManager.createWebDailyResult(request.getId());
-      statisticsManager.webSmsDaily(new Visitor() {
-        public boolean visit(Object o) throws StatisticsException {
-          res[0].write((WebDaily)o);
-          return true;
+      res = resultsManager.createWebDailyResult(request.getId());
+      Iterator i = statisticsManager.webSmsDaily(request.getFrom(), request.getTill(), p, shutdownIndicator).iterator();
+      while(i.hasNext()) {
+        if(shutdownIndicator.isShutdown()) {
+          throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
-      }, request.getFrom(), request.getTill(), p);
+        res.write((WebDaily)i.next());
+      }
     }finally {
-      if(res[0] != null) {
-        res[0].close();
+      if(res != null) {
+        res.close();
       }
     }
   }
 
-  private void processSmsxUsers(SmsxRequest request, Progress p) throws StatisticsException {
-    final ResultsManager.SmsxUserResults[] res = new ResultsManager.SmsxUserResults[]{null};
+  private void processSmsxUsers(SmsxRequest request, ProgressListener p, ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    ResultsManager.SmsxUserResults res = null;
     try{
-      res[0] = resultsManager.createSmsxUsersResult(request.getId());
-      statisticsManager.smsxUsers(new Visitor() {
-        public boolean visit(Object o) throws StatisticsException {
-          res[0].write((SmsxUsers) o);
-          return true;
+      res = resultsManager.createSmsxUsersResult(request.getId());
+      Iterator i = statisticsManager.smsxUsers(request.getFrom(), request.getTill(), p, request.getServiceIdFilter(), shutdownIndicator).iterator();
+      while(i.hasNext()) {
+        if(shutdownIndicator.isShutdown()) {
+          throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
-      }, request.getFrom(), request.getTill(), p, request.getServiceIdFilter());
+        res.write((SmsxUsers) i.next());
+      }
     }finally {
-      if(res[0] != null) {
-        res[0].close();
+      if(res != null) {
+        res.close();
       }
     }
   }
 
-  private void processTraffic(SmsxRequest request, Progress p) throws StatisticsException {
-    final ResultsManager.TrafficResults[] res = new ResultsManager.TrafficResults[]{null};
+  private void processTraffic(SmsxRequest request, ProgressListener p, ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    ResultsManager.TrafficResults res = null;
     try{
-      res[0] = resultsManager.createTrafficResult(request.getId());
-      statisticsManager.traffic(new Visitor() {
-        public boolean visit(Object o) throws StatisticsException {
-          res[0].write((Traffic) o);
-          return true;
+      res = resultsManager.createTrafficResult(request.getId());
+      Iterator i = statisticsManager.traffic(request.getFrom(), request.getTill(), p, request.getServiceIdFilter(), shutdownIndicator).iterator();
+      while(i.hasNext()) {
+        if(shutdownIndicator.isShutdown()) {
+          throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
-      }, request.getFrom(), request.getTill(), p, request.getServiceIdFilter());
+        res.write((Traffic) i.next());
+      }
     }finally {
-      if(res[0] != null) {
-        res[0].close();
+      if(res != null) {
+        res.close();
       }
     }
   }
 
-  private void processWebRegions(SmsxRequest request, Progress p) throws StatisticsException {
-    final ResultsManager.WebRegionsResults[] res = new ResultsManager.WebRegionsResults[]{null};
+  private void processWebRegions(SmsxRequest request, ProgressListener p, ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    ResultsManager.WebRegionsResults res = null;
     try{
-      res[0] = resultsManager.createWebRegionsResult(request.getId());
-      statisticsManager.webSmsRegions(new Visitor() {
-        public boolean visit(Object o) throws StatisticsException {
-          res[0].write((WebRegion) o);
-          return true;
+      res = resultsManager.createWebRegionsResult(request.getId());
+      Iterator i = statisticsManager.webSmsRegions(request.getFrom(), request.getTill(), p, shutdownIndicator).iterator();
+      while(i.hasNext()) {
+        if(shutdownIndicator.isShutdown()) {
+          throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
-      }, request.getFrom(), request.getTill(), p);
+        res.write((WebRegion) i.next());
+      }
     }finally {
-      if(res[0] != null) {
-        res[0].close();
+      if(res != null) {
+        res.close();
       }
     }
   }

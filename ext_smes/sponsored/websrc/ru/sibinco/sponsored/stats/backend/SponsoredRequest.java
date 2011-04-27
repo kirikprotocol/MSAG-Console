@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import ru.sibinco.sponsored.stats.backend.datasource.ShutdownIndicator;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,17 +17,17 @@ import java.util.Map;
  */
 public class SponsoredRequest {
 
-  int id;
+  private int id;
 
-  int progress;
+  private int progress;
 
-  String error;
+  private String error;
 
-  Date from;
+  private Date from;
 
-  Date till;
+  private Date till;
 
-  Status status = Status.IN_PROCESS;
+  private Status status = Status.IN_PROCESS;
 
   private float cost;
 
@@ -60,7 +61,6 @@ public class SponsoredRequest {
   }
 
   void setProgress(int progress) {
-    System.out.println("Set progress to: "+progress); //todo убрать
     this.progress = progress;
   }
 
@@ -91,7 +91,7 @@ public class SponsoredRequest {
     this.cost = cost;
   }
 
-  protected SponsoredRequest copy() {
+  SponsoredRequest copy() {
     SponsoredRequest r = new SponsoredRequest();
     r.id = id;
     r.from = from == null ? null : new Date(from.getTime());
@@ -103,7 +103,7 @@ public class SponsoredRequest {
     return r;
   }
 
-  protected void validate() throws StatisticsException {
+  void validate() throws StatisticsException {
     if(from == null) {
       throw new StatisticsException("From date is null");
     }
@@ -115,8 +115,8 @@ public class SponsoredRequest {
     }
   }
 
-  protected void execute(RequestExecutor executor) throws StatisticsException {
-    executor.execute(this);
+  void execute(RequestExecutor executor, ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    executor.execute(this, shutdownIndicator);
   }
 
   void copyFrom(SponsoredRequestPrototype prototype) {
@@ -174,7 +174,7 @@ public class SponsoredRequest {
     return sb.toString();
   }
 
-  protected void load(Element element) throws StatisticsException {
+  void load(Element element) throws StatisticsException {
 
     final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
     {
@@ -210,7 +210,7 @@ public class SponsoredRequest {
     }
   }
 
-  protected void save(Element element, Document document) throws StatisticsException {
+  void save(Element element, Document document) {
     {
       final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 

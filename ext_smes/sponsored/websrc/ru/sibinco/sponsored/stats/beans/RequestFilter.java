@@ -5,7 +5,7 @@ import ru.sibinco.sponsored.stats.backend.SponsoredRequest;
 /**
  * @author Aleksandr Khalitov
  */
-public class RequestFilter {
+class RequestFilter {
 
   private SponsoredRequest.Status status;
 

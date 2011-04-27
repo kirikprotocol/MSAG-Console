@@ -1,56 +1,36 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
 import ru.sibinco.smsx.stats.backend.StatisticsException;
-import ru.sibinco.smsx.stats.backend.Visitor;
 
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.regex.Pattern;
 
 /**
  * @author Aleksandr Khalitov
  */
-abstract class FileStatsProcessor {
-
-  static final Pattern commaPattern = Pattern.compile(",");
-  protected static char comma = ',';
+class FileStatsProcessor {
 
   private final File artefactsDir;
   final Date from;
   final Date till;
-  private final Progress p;
 
-  FileStatsProcessor(File artefactsDir, Date from, Date till, Progress p) {
+  FileStatsProcessor(File artefactsDir, Date from, Date till) {
     this.artefactsDir = artefactsDir;
     this.from = from;
     this.till = till;
-    this.p = p;
   }
-
-  protected abstract LineVisitor getLineVisitor();
-  protected abstract FilenameFilter getFilenameFilter();
-  protected abstract void getResults(Visitor v) throws StatisticsException;
-
-
-
-  protected final void process(Visitor v) throws StatisticsException {
-    visitFiles(artefactsDir, getFilenameFilter(), getLineVisitor(), new Progress(){
-      public void setProgress(int progress) {
-        p.setProgress(3*progress/4); //todo не могу понять почему прогресс умножается на 3/4
-      }
-    });
-    try{
-      getResults(v);
-    }finally {
-      p.setProgress(100);
-    }
-  }
+//
+//  protected abstract LineVisitor getLineVisitor();
+//  protected abstract FilenameFilter getFilenameFilter();
+//  protected abstract void getResults(Visitor v) throws StatisticsException;
 
 
-  final void visitFiles(File d, FilenameFilter filter, LineVisitor visitor, Progress p) throws StatisticsException {
-    File[] fs = d.listFiles(filter);
+
+
+  final void visitFiles(FilenameFilter filter, LineVisitor visitor, ProgressListener p) throws StatisticsException {
+    File[] fs = artefactsDir.listFiles(filter);
     int count = 0;
     for(int i=0; i<fs.length;i++) {
       File f = fs[i];
@@ -85,13 +65,14 @@ abstract class FileStatsProcessor {
     void visit(String fileName, String line) throws StatisticsException;
   }
 
-  class StatsFileFilter implements FilenameFilter{
+
+  public static class StatsFileFilter implements FilenameFilter{
     private final String suffix;
     private final Date from;
     private final Date till;
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 
-    StatsFileFilter(String suffix, Date from, Date till) {
+    public StatsFileFilter(String suffix, Date from, Date till) {
       this.suffix = suffix;
       this.from = from;
       this.till = till;

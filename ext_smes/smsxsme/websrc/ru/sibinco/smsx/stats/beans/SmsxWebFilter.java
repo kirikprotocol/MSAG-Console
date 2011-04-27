@@ -6,7 +6,7 @@ import ru.sibinco.smsx.stats.backend.datasource.WebRegion;
 /**
  * @author Aleksandr Khalitov
  */
-public class SmsxWebFilter {
+class SmsxWebFilter {
 
   private String region;
 

@@ -2,6 +2,7 @@ package ru.sibinco.sponsored.stats.backend;
 
 import org.apache.log4j.Category;
 import ru.sibinco.sponsored.stats.backend.datasource.FileDeliveryStatDataSource;
+import ru.sibinco.sponsored.stats.backend.datasource.ShutdownIndicator;
 
 import java.io.File;
 import java.util.HashMap;
@@ -23,32 +24,36 @@ class RequestProcessor {
 
   private final Object lock = new Object();
 
+  private final ThreadPoolExecutor executor;
+
   RequestProcessor(RequestStorage requestStorage, File sponsoredArtefacts,
-                   ResultsManager resultsManager) throws StatisticsException {
+                   ResultsManager resultsManager) {
     this.requestStorage = requestStorage;
     this.requestExecutor = new RequestExecutor(
         new FileDeliveryStatDataSource(sponsoredArtefacts),
         resultsManager);
+    executor = new ThreadPoolExecutor(3);
   }
 
   void execute(final SponsoredRequest request) {
     final Integer reqId = new Integer(request.getId());
     final Object t_lock = new Object();
-    Thread t = new Thread() {
+    final ShutdownIndicator shutdownIndicator = new ShutdownIndicator();
+    Runnable t = new Runnable() {
       public void run() {
         synchronized (t_lock) {
           if(logger.isDebugEnabled()) {
             logger.debug("Start to process request: "+request);
           }
           try{
-            request.execute(requestExecutor);
+            request.execute(requestExecutor, shutdownIndicator);
             requestStorage.changeStatus(request.getId(), SponsoredRequest.Status.READY);
             if(logger.isDebugEnabled()) {
               logger.debug("Request is processed: "+request);
             }
           }catch (StatisticsException e){
             logger.error(e, e);
-            if(e.getCode() == StatisticsException.Code.COMMON) { //todo Почему не обрабатывается код INTERRUPTED ?
+            if(e.getCode() == StatisticsException.Code.COMMON) {
               try{
                 requestStorage.changeStatus(request.getId(), SponsoredRequest.Status.ERROR);
                 requestStorage.setError(request.getId(), e.getMessage());
@@ -71,9 +76,9 @@ class RequestProcessor {
       }
     };
     synchronized (lock) {
-      submited.put(reqId, new SubmitedRequest(t, request, t_lock));
+      submited.put(reqId, new SubmitedRequest(shutdownIndicator, request, t_lock));
     }
-    t.start();
+    executor.execute(t);
   }
 
 
@@ -94,6 +99,7 @@ class RequestProcessor {
       SubmitedRequest t = (SubmitedRequest)i.next();
       t.cancel();
     }
+    executor.shutdown();
   }
 
 
@@ -105,20 +111,20 @@ class RequestProcessor {
 
   private class SubmitedRequest {
 
-    private final Thread thread;
-
     private final SponsoredRequest request;
 
-    final private Object lock;
+    private final Object lock;
 
-    private SubmitedRequest(Thread thread, SponsoredRequest request, Object lock) {
-      this.thread = thread;
+    private final ShutdownIndicator shutdownIndicator;
+
+    private SubmitedRequest(ShutdownIndicator shutdownIndicator, SponsoredRequest request, Object lock) {
       this.request = request;
       this.lock = lock;
+      this.shutdownIndicator = shutdownIndicator;
     }
 
     private void cancel() {
-      thread.interrupt();
+      shutdownIndicator.shutdown();
       synchronized (lock){}
     }
 

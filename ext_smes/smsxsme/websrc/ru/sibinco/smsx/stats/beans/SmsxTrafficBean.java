@@ -27,7 +27,7 @@ public class SmsxTrafficBean extends StatsBean{
 
   private SmsxTrafficTableHelper tableHelper;
 
-  private SmsxTrafficFilter filter = new SmsxTrafficFilter();
+  private final SmsxTrafficFilter filter = new SmsxTrafficFilter();
 
   private String mbBack;
   private String mbDownload;
@@ -44,7 +44,7 @@ public class SmsxTrafficBean extends StatsBean{
     }
     SmsxRequest smsxRequest;
     try{
-      smsxRequest= (SmsxRequest)smsxContext.getStatRequestManager().getRequest(requestId.intValue());
+      smsxRequest= smsxContext.getStatRequestManager().getRequest(requestId.intValue());
     }catch (StatisticsException e){
       logger.error(e,e);
       return error(e.getMessage());

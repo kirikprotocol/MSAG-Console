@@ -1,7 +1,5 @@
 package ru.sibinco.sponsored.stats.backend;
 
-import ru.sibinco.sponsored.stats.backend.datasource.SponsoredConverter;
-
 import java.io.*;
 
 /**

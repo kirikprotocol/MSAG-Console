@@ -1,9 +1,9 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
 import ru.sibinco.smsx.stats.backend.StatisticsException;
-import ru.sibinco.smsx.stats.backend.Visitor;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
 
@@ -21,29 +21,28 @@ public class SmsxStatisticsManager {
     this.artefactsDir = artefactsDir;
   }
 
-  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
-  public void smsxUsers(Visitor v, final Date from, final Date till, final Progress _progress, Set serviceId) throws StatisticsException {
-    FileStatsProcessor smsxUsers = new SmsxFileProcessor(artefactsDir, from, till, _progress, serviceId);
-    smsxUsers.process(v);
+  public Collection smsxUsers(final Date from, final Date till, final ProgressListener _progressListener, Set serviceId,
+                              ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    SmsxFileProcessor smsxUsers = new SmsxFileProcessor(artefactsDir, from, till, _progressListener, serviceId);
+    return smsxUsers.process(shutdownIndicator);
   }
 
-  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
-  public void webSmsRegions(Visitor v, final Date from, final Date till, final Progress _progress) throws StatisticsException{
-    FileStatsProcessor webSmsRegions = new WebRegionsStatsProcessor(artefactsDir, from, till, _progress);
-    webSmsRegions.process(v);
+  public Collection webSmsRegions(final Date from, final Date till, final ProgressListener _progressListener,
+                                  ShutdownIndicator shutdownIndicator) throws StatisticsException{
+    WebRegionsStatsProcessor webSmsRegions = new WebRegionsStatsProcessor(artefactsDir, from, till, _progressListener);
+    return webSmsRegions.process(shutdownIndicator);
   }
 
-  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
-  public void webSmsDaily(Visitor v, final Date from, final Date till, final Progress _progress) throws StatisticsException{
-    FileStatsProcessor webSmsDaily = new DailyFileProcessor(artefactsDir, from, till, _progress);
-    webSmsDaily.process(v);
+  public Collection webSmsDaily(final Date from, final Date till, final ProgressListener _progressListener,
+                                ShutdownIndicator shutdownIndicator) throws StatisticsException{
+    DailyFileProcessor webSmsDaily = new DailyFileProcessor(artefactsDir, from, till, _progressListener);
+    return webSmsDaily.process(shutdownIndicator);
   }
 
-  // todo Безсмысленное использование шаблона Visitor. Реализация процессора такова, что данный метод может запросто возвращать коллекцию объектов
-  public void traffic(Visitor v, final Date from, final Date till, final Progress _progress, Set serviceId) throws StatisticsException{
-    FileStatsProcessor traffic = new TrafficFileProcessor(artefactsDir, from, till, _progress, serviceId);
-    traffic.process(v);
+  public Collection traffic(final Date from, final Date till, final ProgressListener _progressListener,
+                            Set serviceId, ShutdownIndicator shutdownIndicator) throws StatisticsException{
+    TrafficFileProcessor traffic = new TrafficFileProcessor(artefactsDir, from, till, _progressListener, serviceId);
+    return traffic.process(shutdownIndicator);
   }
-
 
 }

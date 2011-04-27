@@ -5,7 +5,7 @@ import ru.sibinco.smsx.stats.backend.SmsxRequest;
 /**
  * @author Aleksandr Khalitov
  */
-public class RequestFilter {
+class RequestFilter {
 
   private SmsxRequest.Status status;
 

@@ -1,7 +1,6 @@
 package ru.sibinco.sponsored.stats.backend.datasource;
 
 import junit.framework.TestCase;
-import ru.sibinco.sponsored.stats.backend.Progress;
 import ru.sibinco.sponsored.stats.backend.TestUtils;
 
 import java.io.File;
@@ -53,11 +52,13 @@ public class FileDeliveryStatDataSourceTest extends TestCase {
     createArtefacts();
     ResultSet rs = null;
     try{
-      rs = ds.aggregateDeliveryStats(new Date(0), new Date(), new DeliveryStatsQuery() {
+      rs = ds.aggregateDeliveryStats(1, new Date(0), new Date(), new DeliveryStatsQuery() {
         public boolean isAllowed(DeliveryStat stat) {
           return true;
         }
-      }, new Progress());
+      }, new ProgressListener(){
+        public void setProgress(int progress) {}
+      }, new ShutdownIndicator());
       assertTrue(rs.next());
       DeliveryStat stat = (DeliveryStat)rs.get();
       assertFalse(rs.next());

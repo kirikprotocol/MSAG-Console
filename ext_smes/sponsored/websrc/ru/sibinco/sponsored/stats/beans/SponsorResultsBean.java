@@ -1,11 +1,7 @@
 package ru.sibinco.sponsored.stats.beans;
 
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
-import ru.sibinco.sponsored.stats.backend.SponsoredRequest;
-import ru.sibinco.sponsored.stats.backend.StatisticsException;
-import ru.sibinco.sponsored.stats.backend.Visitor;
-import ru.sibinco.sponsored.stats.backend.datasource.SponsoredConverter;
-import ru.sibinco.sponsored.stats.backend.datasource.SponsoredRecord;
+import ru.sibinco.sponsored.stats.backend.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -45,13 +41,7 @@ public class SponsorResultsBean extends StatsBean{
     if(requestId == null) {
       return error("Request is not found: id=null");
     }
-    SponsoredRequest sponsoredRequest;
-    try{
-      sponsoredRequest= (SponsoredRequest) sponsoredContext.getStatRequestManager().getRequest(requestId.intValue());
-    }catch (StatisticsException e){
-      logger.error(e,e);
-      return error(e.getMessage());
-    }
+    SponsoredRequest sponsoredRequest = sponsoredContext.getStatRequestManager().getRequest(requestId.intValue());
     if(sponsoredRequest == null) {
       return error("Request is not found: id="+requestId);
     }

@@ -21,7 +21,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class SmsxRequestsBean extends StatsBean{
 
-  private RequestFilter filter = new RequestFilter();
+  private final RequestFilter filter = new RequestFilter();
 
   public static final int RESULT_RESULTS = StatsBean.PRIVATE_RESULT;
   public static final int RESULT_ADD = StatsBean.PRIVATE_RESULT + 1;
@@ -155,7 +155,7 @@ public class SmsxRequestsBean extends StatsBean{
   }
 
   private void createZip(HttpServletRequest servletRequest, OutputStream os, Locale locale) throws IOException, StatisticsException {
-    SmsxRequest r = (SmsxRequest)smsxContext.getStatRequestManager().getRequest(selected.intValue());
+    SmsxRequest r = smsxContext.getStatRequestManager().getRequest(selected.intValue());
     Principal p = servletRequest.getUserPrincipal();
     String user = p == null ? "" : p.getName();
     List files = new ArrayList(4);
@@ -263,7 +263,7 @@ public class SmsxRequestsBean extends StatsBean{
 
     if(selected != null) {
       try {
-        return (SmsxRequest)smsxContext.getStatRequestManager().getRequest(selected.intValue());
+        return smsxContext.getStatRequestManager().getRequest(selected.intValue());
       } catch (StatisticsException e) {
         logger.error(e,e);
       }

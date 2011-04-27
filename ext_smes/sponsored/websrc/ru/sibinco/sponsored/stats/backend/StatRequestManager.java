@@ -62,7 +62,7 @@ public class StatRequestManager {
 
 
 
-  public SponsoredRequest getRequest(int requestId) throws StatisticsException {
+  public SponsoredRequest getRequest(int requestId) {
     SponsoredRequest q = storage.getRequest(requestId);
     if(q == null) {
       return null;
@@ -83,20 +83,10 @@ public class StatRequestManager {
     }else {
       q.setProgress(100);
     }
-
-  }
-
-  public List getRequests() throws StatisticsException {  //todo убрать
-    List c = storage.getRequests();
-    Iterator i = c.iterator();
-    while(i.hasNext()) {
-      setStatus((SponsoredRequest)i.next());
-    }
-    return c;
   }
 
 
-  public List getSponsoreRequests() throws StatisticsException {
+  public List getSponsoreRequests() {
     List c = storage.getSponsoredRequests();
     Iterator i = c.iterator();
     while(i.hasNext()) {

@@ -20,13 +20,13 @@ public class StatsBean extends PageBean {
   public static final int VIEW_WEB_REGIONS = PageBean.PRIVATE_RESULT+2;
   public static final int VIEW_TRAFFIC = PageBean.PRIVATE_RESULT+3;
 
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 4;
+  static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 4;
 
   private String mbMenu = null;
 
-  protected Category logger = Category.getInstance(SmsxContext.class);
+  final Category logger = Category.getInstance(SmsxContext.class);
 
-  protected SmsxContext smsxContext;
+  SmsxContext smsxContext;
 
   protected int init(List errors) {
     int result = super.init(errors);

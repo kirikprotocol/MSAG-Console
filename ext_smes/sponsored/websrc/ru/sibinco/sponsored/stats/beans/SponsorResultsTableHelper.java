@@ -4,10 +4,10 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.jsp.util.helper.statictable.*;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.sibinco.sponsored.stats.backend.SponsoredRecord;
 import ru.sibinco.sponsored.stats.backend.StatRequestManager;
 import ru.sibinco.sponsored.stats.backend.StatisticsException;
 import ru.sibinco.sponsored.stats.backend.Visitor;
-import ru.sibinco.sponsored.stats.backend.datasource.SponsoredRecord;
 
 import java.util.*;
 
@@ -149,7 +149,7 @@ public class SponsorResultsTableHelper extends PagedStaticTableHelper{
   }
 
 
-  public Comparator getComparator(final SortOrderElement sortOrder) {
+  Comparator getComparator(final SortOrderElement sortOrder) {
     return new Comparator() {
       public int compare(Object o1, Object o2) {
         if (o1 == null) return 1;

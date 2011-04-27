@@ -1,42 +1,53 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
 import ru.sibinco.smsx.stats.backend.StatisticsException;
-import ru.sibinco.smsx.stats.backend.Visitor;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author Aleksandr Khalitov
  */
-//todo По-моему, наследование в данном случае - не лучшее решение. Ты его используешь исключительно для того, чтобы
-//todo переиспользовать функциональность класса FileStatsProcessor. Лучше прибегнуть к делегированию.
-class SmsxFileProcessor extends FileStatsProcessor {
+
+class SmsxFileProcessor {
+
+  private static final Pattern commaPattern = Pattern.compile(",");
 
   private final Set serviceIds;
 
-  private  final Map smsxUsers = new HashMap(1000);
+  private final ProgressListener progressListener;
 
-  SmsxFileProcessor(File artefactsDir, Date from, Date till, Progress p, Set serviceIds) {
-    super(artefactsDir, from, till, p);
+  private final FileStatsProcessor fileProcessor;
+
+  private final FileStatsProcessor.StatsFileFilter filter;
+
+  SmsxFileProcessor(File artefactsDir, Date from, Date till, ProgressListener p, Set serviceIds) {
+    this.fileProcessor = new FileStatsProcessor(artefactsDir, from, till);
     this.serviceIds = serviceIds;
+    this.progressListener = p;
+    this.filter = new FileStatsProcessor.StatsFileFilter("-smsx-users.csv", from, till);
   }
 
-  protected void getResults(Visitor v) throws StatisticsException {
-    Iterator i = smsxUsers.entrySet().iterator();
-    while(i.hasNext()) {
-      Map.Entry e = (Map.Entry)i.next();
-      SmsxUserKey key = (SmsxUserKey)e.getKey();
-      v.visit(new SmsxUsers(key.service_id, key.region, ((Integer)e.getValue()).intValue()));
-      i.remove();
+
+  protected final Collection process(ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    final Map smsxUsers = new HashMap(1000);
+    fileProcessor.visitFiles(filter, createLineVisitor(smsxUsers, shutdownIndicator), new ProgressListener(){
+      public void setProgress(int _progress) {
+        progressListener.setProgress(3*_progress/4);
+      }
+    });
+    try{
+      return smsxUsers.values();
+    }finally {
+      progressListener.setProgress(100);
     }
   }
 
-  protected LineVisitor getLineVisitor() {
-    return new LineVisitor() {
+  FileStatsProcessor.LineVisitor createLineVisitor(final Map smsxUsers, final ShutdownIndicator shutdownIndicator) {
+    return new  FileStatsProcessor.LineVisitor() {
       public void visit(String fileName, String line) throws StatisticsException {
-        if(Thread.currentThread().isInterrupted()) {
+        if(shutdownIndicator.isShutdown()) {
           throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
         String[] ss = commaPattern.split(line, 3);     //SERVICE_ID,SRC_ADDRESS,REGION
@@ -47,15 +58,14 @@ class SmsxFileProcessor extends FileStatsProcessor {
         SmsxUserKey key = new SmsxUserKey();
         key.region = ss[2];
         key.service_id = serviceId;
-        Integer count = (Integer)smsxUsers.get(key);
-        smsxUsers.put(key, new Integer(count == null ?  1 : count.intValue()+1));
+        SmsxUsers old = (SmsxUsers)smsxUsers.get(key);
+        if(old == null) {
+          smsxUsers.put(key, new SmsxUsers(key.service_id, key.region, 1));
+        }else {
+          old.incrementCount();
+        }
       }
-
     };
-  }
-
-  protected FilenameFilter getFilenameFilter() {
-    return new StatsFileFilter("-smsx-users.csv", from, till);
   }
 
   private class SmsxUserKey {
@@ -69,7 +79,6 @@ class SmsxFileProcessor extends FileStatsProcessor {
       SmsxUserKey that = (SmsxUserKey) o;
 
       return service_id == that.service_id && !(region != null ? !region.equals(that.region) : that.region != null);
-
     }
 
     public int hashCode() {

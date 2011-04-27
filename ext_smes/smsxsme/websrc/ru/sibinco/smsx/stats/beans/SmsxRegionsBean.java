@@ -27,7 +27,7 @@ public class SmsxRegionsBean extends StatsBean{
 
   private SmsxRegionsTableHelper tableHelper;
 
-  private SmsxWebFilter filter = new SmsxWebFilter();
+  private final SmsxWebFilter filter = new SmsxWebFilter();
 
   private String mbBack;
   private String mbDownload;
@@ -44,7 +44,7 @@ public class SmsxRegionsBean extends StatsBean{
     }
     SmsxRequest smsxRequest;
     try{
-      smsxRequest= (SmsxRequest)smsxContext.getStatRequestManager().getRequest(requestId.intValue());
+      smsxRequest= smsxContext.getStatRequestManager().getRequest(requestId.intValue());
     }catch (StatisticsException e){
       logger.error(e,e);
       return error(e.getMessage());

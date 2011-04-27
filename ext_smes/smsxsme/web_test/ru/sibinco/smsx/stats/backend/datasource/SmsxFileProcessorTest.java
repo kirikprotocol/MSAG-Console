@@ -1,14 +1,13 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
 import junit.framework.TestCase;
-import ru.sibinco.smsx.stats.backend.StatisticsException;
 import ru.sibinco.smsx.stats.backend.TestUtils;
-import ru.sibinco.smsx.stats.backend.Visitor;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -41,19 +40,18 @@ public class SmsxFileProcessorTest extends TestCase {
     expected.add(new SmsxUsers(0,"МР Сибирь-Новосибирск", 2));
     expected.add(new SmsxUsers(1,"МР Сибирь-Новосибирск", 1));
     expected.add(new SmsxUsers(0,"Unknown", 1));
-    Progress p = new Progress();
+    ProgressImpl p = new ProgressImpl();
     processor = new SmsxFileProcessor(artefactsDir, null, null, p, null);
-    processor.process(new Visitor() {
-      public boolean visit(Object o) throws StatisticsException {
-        assertTrue(expected.remove(o));
-        return true;
-      }
-    });
+
+    Iterator i = processor.process(new ShutdownIndicator()).iterator();
+    while(i.hasNext()) {
+      assertTrue(expected.remove(i.next()));
+    }
     assertEquals(expected.size(), 0);
   }
 
   public void testProcessService() throws Exception {
-    Progress p = new Progress();
+    ProgressImpl p = new ProgressImpl();
 
     final Set expected = new HashSet();
     expected.add(new SmsxUsers(0,"МР Сибирь-Новосибирск",2));
@@ -61,66 +59,39 @@ public class SmsxFileProcessorTest extends TestCase {
 
     processor = new SmsxFileProcessor(artefactsDir, new Date(System.currentTimeMillis() - 1212212121212l),
         new Date(System.currentTimeMillis() + 12121212l), p, new HashSet(1){{add(new Integer(0));}});
-    processor.process(new Visitor() {
-      public boolean visit(Object o) throws StatisticsException {
-        assertTrue(expected.remove(o));
-        return true;
-      }
-    });
+
+    Iterator i = processor.process(new ShutdownIndicator()).iterator();
+    while(i.hasNext()) {
+      assertTrue(expected.remove(i.next()));
+    }
 
     assertEquals(expected.size(), 0);
   }
 
   public void testProcessEmptyService() throws Exception {
-    Progress p = new Progress();
+    ProgressImpl p = new ProgressImpl();
     processor = new SmsxFileProcessor(artefactsDir, null, null, p, new HashSet(1){{add(new Integer(2));}});
-    final boolean[] ok = new boolean[]{true};
-    processor.process(new Visitor() {
-      public boolean visit(Object o) throws StatisticsException {
-        ok[0] = false;
-        return false;
-      }
-    });
-    assertTrue(ok[0]);
+    assertTrue(processor.process(new ShutdownIndicator()).isEmpty());
   }
 
 
   public void testProcessEmptyDateFrom() throws Exception {
-    Progress p = new Progress();
+    ProgressImpl p = new ProgressImpl();
     processor = new SmsxFileProcessor(artefactsDir, new Date(System.currentTimeMillis()+1212121l), null, p, null);
-    final boolean[] ok = new boolean[]{true};
-    processor.process(new Visitor() {
-      public boolean visit(Object o) throws StatisticsException {
-        ok[0] = false;
-        return false;
-      }
-    });
-    assertTrue(ok[0]);
+    assertTrue(processor.process(new ShutdownIndicator()).isEmpty());
   }
 
   public void testProcessEmptyDateTill() throws Exception {
-    Progress p = new Progress();
+    ProgressImpl p = new ProgressImpl();
     processor = new SmsxFileProcessor(artefactsDir, new Date(System.currentTimeMillis()-1212121l), null, p, null);
-    final boolean[] ok = new boolean[]{true};
-    processor.process(new Visitor() {
-      public boolean visit(Object o) throws StatisticsException {
-        ok[0] = false;
-        return false;
-      }
-    });
-    assertTrue(ok[0]);
+    assertTrue(processor.process(new ShutdownIndicator()).isEmpty());
   }
 
 
   public void testProggress() throws Exception{
-    Progress p = new Progress();
+    ProgressImpl p = new ProgressImpl();
     processor = new SmsxFileProcessor(artefactsDir, null, null, p, null);
-
-    processor.process(new Visitor() {
-      public boolean visit(Object o) throws StatisticsException {
-        return true;
-      }
-    });
+    processor.process(new ShutdownIndicator());
     assertEquals(p.getProgress(), 100);
   }
 

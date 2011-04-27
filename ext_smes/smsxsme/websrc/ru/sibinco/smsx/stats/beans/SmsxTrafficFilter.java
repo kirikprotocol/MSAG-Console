@@ -5,7 +5,7 @@ import ru.sibinco.smsx.stats.backend.datasource.Traffic;
 /**
  * @author Aleksandr Khalitov
  */
-public class SmsxTrafficFilter {
+class SmsxTrafficFilter {
 
   private Integer serviceId;
 

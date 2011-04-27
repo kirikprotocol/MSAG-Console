@@ -1,35 +1,54 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
 import ru.sibinco.smsx.stats.backend.StatisticsException;
-import ru.sibinco.smsx.stats.backend.Visitor;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * @author Aleksandr Khalitov
  */
-//todo По-моему, наследование в данном случае - не лучшее решение. Ты его используешь исключительно для того, чтобы
-//todo переиспользовать функциональность класса FileStatsProcessor. Лучше прибегнуть к делегированию.
-class WebRegionsStatsProcessor extends FileStatsProcessor {
+
+class WebRegionsStatsProcessor {
 
   private final String one = "1";
-  private final String zero = "0";
 
-  private final Map webSmsUsers = new HashMap(200);
+  private static final Pattern commaPattern = Pattern.compile(",");
 
-  WebRegionsStatsProcessor(File artefactsDir, Date from, Date till, Progress p) {
-    super(artefactsDir, from, till, p);
+  private final FileStatsProcessor fileProcessor;
+
+  private final FileStatsProcessor.StatsFileFilter statsFileFilter;
+
+  private final ProgressListener progressListener;
+
+  WebRegionsStatsProcessor(File artefactsDir, Date from, Date till, ProgressListener p) {
+    fileProcessor = new FileStatsProcessor(artefactsDir, from, till);
+    statsFileFilter = new FileStatsProcessor.StatsFileFilter("-websms-users.csv", from, till);
+    this.progressListener = p;
   }
 
-  protected LineVisitor getLineVisitor() {
-    return new LineVisitor() {
+  protected final Collection process(ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    final Map regions = new HashMap(200);
+    fileProcessor.visitFiles(statsFileFilter, createLineVisitor(regions, shutdownIndicator), new ProgressListener(){
+      public void setProgress(int _progress) {
+        progressListener.setProgress(3*_progress/4);
+      }
+    });
+    try{
+      return regions.values();
+    }finally {
+      progressListener.setProgress(100);
+    }
+  }
+
+  FileStatsProcessor.LineVisitor createLineVisitor(final Map regions, final ShutdownIndicator shutdownIndicator) {
+    return new FileStatsProcessor.LineVisitor() {
       public void visit(String fileName, String line) throws StatisticsException {
-        if(Thread.currentThread().isInterrupted()) {
+        if(shutdownIndicator.isShutdown()) {
           throw new StatisticsException(StatisticsException.Code.INTERRUPTED);
         }
         String[] ss = commaPattern.split(line, 4);   //INDEX,MSC,ADDRESS,REGION
@@ -38,35 +57,18 @@ class WebRegionsStatsProcessor extends FileStatsProcessor {
         String msc = ss[1];
         key.msc = msc.equals(one);
         key.region = ss[3];
-        WebSmsValue count = (WebSmsValue)webSmsUsers.get(key);
-        if(count == null) {
-          count = new WebSmsValue();
-          webSmsUsers.put(key, count);
+        WebRegion old = (WebRegion)regions.get(key);
+        if(old == null) {
+          old = new WebRegion(key.region, key.msc);
+          regions.put(key, old);
         }
         if(index.equals(one)) {
-          count.src++;
+          old.incrementSrcCount();
         }else {
-          count.dst++;
+          old.incrementDstCount();
         }
       }
-
     };
-  }
-
-  protected FilenameFilter getFilenameFilter() {
-    return new StatsFileFilter("-websms-users.csv", from, till);
-  }
-
-  protected void getResults(Visitor v) throws StatisticsException{
-
-    Iterator i = webSmsUsers.entrySet().iterator();
-    while(i.hasNext()) {
-      Map.Entry e = (Map.Entry)i.next();
-      WebSmsKey key = (WebSmsKey)e.getKey();
-      WebSmsValue value = (WebSmsValue)e.getValue();
-      v.visit(new WebRegion(key.region, key.msc, value.src, value.dst));
-      i.remove();
-    }
   }
 
   private class WebSmsKey {
@@ -90,10 +92,5 @@ class WebRegionsStatsProcessor extends FileStatsProcessor {
       result = 31 * result + (msc ? 1 : 0);
       return result;
     }
-  }
-
-  private class WebSmsValue {
-    private int src;
-    private int dst;
   }
 }

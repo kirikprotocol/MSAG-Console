@@ -29,10 +29,6 @@ public class CreateSmsxRequestBean extends StatsBean{
   private String[] reports;
 
 
-  protected int init(List errors) {
-    return super.init(errors);
-  }
-
   public int process(HttpServletRequest request) {
     int result = super.process(request);
     if(result != RESULT_OK) {

@@ -1,9 +1,6 @@
 package ru.sibinco.sponsored.stats.backend;
 
-import ru.sibinco.sponsored.stats.backend.datasource.DeliveryStat;
-import ru.sibinco.sponsored.stats.backend.datasource.FileDeliveryStatDataSource;
-import ru.sibinco.sponsored.stats.backend.datasource.ResultSet;
-import ru.sibinco.sponsored.stats.backend.datasource.DeliveryStatsQuery;
+import ru.sibinco.sponsored.stats.backend.datasource.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -20,20 +17,19 @@ class RequestExecutor {
   }
 
 
-  void execute(final SponsoredRequest request) throws StatisticsException {
+  void execute(final SponsoredRequest request, ShutdownIndicator shutdownIndicator) throws StatisticsException {
     ResultSet rs = null;
-    Progress p = new Progress() {
+    ProgressListener p = new ProgressListener() {
       public void setProgress(int progress) {
-        request.setProgress(progress); //todo Здесь надо progress умножать на 3/4. Иначе выходит, что на выходе их метода aggregateDeliveryStats прогресс уже 100%
-                                       //todo и то, что потом еще формируется файл с отчетом - не учитывается.
+        request.setProgress(3*progress/4);
       }
     };
     try{
-      rs = deliveryStatDataSource.aggregateDeliveryStats(request.getFrom(), request.getTill(), new DeliveryStatsQuery() {
+      rs = deliveryStatDataSource.aggregateDeliveryStats(request.getId(), request.getFrom(), request.getTill(), new DeliveryStatsQuery() {
         public boolean isAllowed(DeliveryStat stat) {
           return true;
         }
-      }, p);
+      }, p, shutdownIndicator);
       if(rs == null) {
         p.setProgress(100);
         return;

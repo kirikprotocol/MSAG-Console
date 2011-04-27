@@ -1,4 +1,4 @@
-package ru.sibinco.sponsored.stats.backend.datasource;
+package ru.sibinco.sponsored.stats.backend;
 
 /**
  * @author Aleksandr Khalitov
@@ -9,7 +9,7 @@ public class SponsoredRecord {
 
   private final float bonus;
 
-  public SponsoredRecord(String address, float bonus) { //todo убрать public
+  SponsoredRecord(String address, float bonus) {
     this.address = address;
     this.bonus = bonus;
   }

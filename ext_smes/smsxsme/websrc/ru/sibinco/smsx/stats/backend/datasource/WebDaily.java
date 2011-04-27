@@ -11,13 +11,17 @@ public class WebDaily {
 
   private final boolean msc;
 
-  private final int count;
+  private int count;
 
-  public WebDaily(String date, String region, boolean msc, int count) { //todo уменьшить видимость конструктора
+  public WebDaily(String date, String region, boolean msc, int count) {
     this.date = date;
     this.region = region;
     this.msc = msc;
     this.count = count;
+  }
+
+  void incrementCount(int c) {
+    count+=c;
   }
 
   public String getDate() {

@@ -6,9 +6,9 @@ package ru.sibinco.smsx.stats.backend.datasource;
 public class SmsxUsers {
   private final int serviceId;
   private final String region;
-  private final int count;
+  private int count;
 
-  public SmsxUsers(int serviceId, String region, int count) { //todo уменьшить видимость конструктора
+  public SmsxUsers(int serviceId, String region, int count) {
     this.serviceId = serviceId;
     this.region = region;
     this.count = count;
@@ -24,6 +24,10 @@ public class SmsxUsers {
 
   public int getCount() {
     return count;
+  }
+
+  void incrementCount() {
+    count++;
   }
 
   public boolean equals(Object o) {

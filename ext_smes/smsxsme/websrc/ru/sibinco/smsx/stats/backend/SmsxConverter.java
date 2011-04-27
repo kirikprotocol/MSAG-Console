@@ -1,7 +1,10 @@
-package ru.sibinco.smsx.stats.backend.datasource;
+package ru.sibinco.smsx.stats.backend;
 
 import org.apache.log4j.Category;
-import ru.sibinco.smsx.stats.backend.StatisticsException;
+import ru.sibinco.smsx.stats.backend.datasource.SmsxUsers;
+import ru.sibinco.smsx.stats.backend.datasource.Traffic;
+import ru.sibinco.smsx.stats.backend.datasource.WebDaily;
+import ru.sibinco.smsx.stats.backend.datasource.WebRegion;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -9,7 +12,7 @@ import java.io.Writer;
 /**
  * @author Aleksandr Khalitov
  */
-public class SmsxConverter {  // todo Может перенести этот класс в пакет ru.sibinco.smsx.stats.backend? Вроде используется только оттуда.
+class SmsxConverter {
 
   private static final Category logger = Category.getInstance(SmsxConverter.class);
 
@@ -19,7 +22,7 @@ public class SmsxConverter {  // todo Может перенести этот к�
 
   private static final String zero = "0";
 
-  private static String lineSeparator = System.getProperty("line.separator");
+  private static final String lineSeparator = System.getProperty("line.separator");
 
   public static void write(Writer writer, SmsxUsers users) throws StatisticsException {
     try{

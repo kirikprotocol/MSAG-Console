@@ -3,12 +3,15 @@ package ru.sibinco.sponsored.stats.backend.datasource;
 /**
  * @author Aleksandr Khalitov
  */
-public class DeliveryStat {   //todo сделать package local конструктор
+public class DeliveryStat {
 
   private String subscriberAddress;
   private int delivered = 0;
   private int advertiserId = -1;
   private int sended = 0;
+
+  DeliveryStat() {
+  }
 
   public String getSubscriberAddress() {
     return subscriberAddress;

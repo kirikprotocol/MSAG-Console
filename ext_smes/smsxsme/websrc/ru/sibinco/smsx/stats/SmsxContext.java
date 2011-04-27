@@ -4,7 +4,6 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.util.config.Config;
 import ru.sibinco.smsx.stats.backend.StatRequestManager;
 import ru.sibinco.smsx.stats.backend.StatisticsException;
 

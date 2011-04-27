@@ -1,11 +1,11 @@
 package ru.sibinco.sponsored.stats.beans;
 
-import ru.sibinco.sponsored.stats.backend.datasource.SponsoredRecord;
+import ru.sibinco.sponsored.stats.backend.SponsoredRecord;
 
 /**
  * @author Aleksandr Khalitov
  */
-public class SponsoredResultFilter {
+class SponsoredResultFilter {
 
   private String addressPrefix;
 

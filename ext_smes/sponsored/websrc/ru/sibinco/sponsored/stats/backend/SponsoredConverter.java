@@ -1,7 +1,6 @@
-package ru.sibinco.sponsored.stats.backend.datasource;
+package ru.sibinco.sponsored.stats.backend;
 
 import org.apache.log4j.Category;
-import ru.sibinco.sponsored.stats.backend.StatisticsException;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -9,7 +8,7 @@ import java.io.Writer;
 /**
  * @author Aleksandr Khalitov
  */
-public class SponsoredConverter { //todo перенести в backend
+public class SponsoredConverter {
 
   private static final Category logger = Category.getInstance(SponsoredConverter.class);
 

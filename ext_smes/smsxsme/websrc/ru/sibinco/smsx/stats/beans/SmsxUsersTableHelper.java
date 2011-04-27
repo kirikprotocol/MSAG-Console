@@ -4,10 +4,10 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.jsp.util.helper.statictable.*;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.sibinco.smsx.stats.backend.SmsxResults;
 import ru.sibinco.smsx.stats.backend.StatRequestManager;
 import ru.sibinco.smsx.stats.backend.StatisticsException;
 import ru.sibinco.smsx.stats.backend.Visitor;
-import ru.sibinco.smsx.stats.backend.datasource.SmsxResults;
 import ru.sibinco.smsx.stats.backend.datasource.SmsxUsers;
 
 import java.util.*;
@@ -19,9 +19,9 @@ public class SmsxUsersTableHelper extends PagedStaticTableHelper {
 
   private static final Category logger = Category.getInstance(SmsxUsersTableHelper.class);
 
-  private StatRequestManager requestManager;
+  private final StatRequestManager requestManager;
 
-  private SmsxUsersFilter filter;
+  private final SmsxUsersFilter filter;
 
   private Locale locale;
 
@@ -32,7 +32,7 @@ public class SmsxUsersTableHelper extends PagedStaticTableHelper {
 
   private ResourceBundle bundle;
 
-  private int reqId;
+  private final int reqId;
 
 
   SmsxUsersTableHelper(String uid, StatRequestManager requestManager, SmsxUsersFilter filter, int reqId) {
@@ -154,7 +154,7 @@ public class SmsxUsersTableHelper extends PagedStaticTableHelper {
   }
 
 
-  public Comparator getComparator(final SortOrderElement sortOrder) {
+  Comparator getComparator(final SortOrderElement sortOrder) {
     return new Comparator() {
       public int compare(Object o1, Object o2) {
         if (o1 == null) return 1;

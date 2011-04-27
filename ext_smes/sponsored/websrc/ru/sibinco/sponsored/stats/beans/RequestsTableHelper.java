@@ -33,7 +33,7 @@ public abstract class RequestsTableHelper extends PagedStaticTableHelper {
 
   private final RequestFilter requestFilter;
 
-  protected RequestsTableHelper(String uid, RequestFilter requestFilter) {
+  RequestsTableHelper(String uid, RequestFilter requestFilter) {
     super(uid, false);
     this.requestFilter = requestFilter;
     setPageSize(20);
@@ -75,7 +75,7 @@ public abstract class RequestsTableHelper extends PagedStaticTableHelper {
 
   protected abstract List loadRequests() throws StatisticsException;
 
-  protected boolean isAllowed(SponsoredRequest r) {
+  boolean isAllowed(SponsoredRequest r) {
     return requestFilter == null || requestFilter.isAllowed(r);
   }
 

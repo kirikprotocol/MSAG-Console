@@ -9,9 +9,9 @@ public class Traffic {
   private final String region;
   private final int serviceId;
   private final boolean msc;
-  private final int count;
+  private int count;
 
-  public Traffic(String region, int serviceId, boolean msc, int count) {//todo уменьшить видимость конструктора
+  public Traffic(String region, int serviceId, boolean msc, int count) {
     this.region = region;
     this.serviceId = serviceId;
     this.msc = msc;
@@ -32,6 +32,10 @@ public class Traffic {
 
   public int getCount() {
     return count;
+  }
+
+  void incrementCount(int c) {
+    count+=c;
   }
 
   public boolean equals(Object o) {

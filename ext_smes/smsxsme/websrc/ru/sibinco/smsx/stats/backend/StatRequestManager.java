@@ -1,7 +1,6 @@
 package ru.sibinco.smsx.stats.backend;
 
 import org.apache.log4j.Category;
-import ru.sibinco.smsx.stats.backend.datasource.SmsxResults;
 
 import java.io.File;
 import java.util.Iterator;

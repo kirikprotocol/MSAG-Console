@@ -5,9 +5,6 @@ package ru.sibinco.smsx.stats.backend;
  */
 public class StatisticsException extends Exception{
 
-  public static final int COMMON = 0;//todo Удалить?
-  public static final int INTERRUPTED = 1;
-
   private Code code = Code.COMMON;
 
   public StatisticsException(Code code) {

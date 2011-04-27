@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import ru.sibinco.smsx.stats.backend.datasource.ShutdownIndicator;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -15,17 +16,17 @@ public class SmsxRequest {
 
   private Set serviceIdFilter;
 
-  private Set reportTypesFilter;  int id;
+  private Set reportTypesFilter;  private int id;
 
-  int progress;
+  private int progress;
 
-  String error;
+  private String error;
 
-  Date from;
+  private Date from;
 
-  Date till;
+  private Date till;
 
-  Status status = Status.IN_PROCESS;
+  private Status status = Status.IN_PROCESS;
 
   public Date getFrom() {
     return from;
@@ -56,7 +57,6 @@ public class SmsxRequest {
   }
 
   void setProgress(int progress) {
-    System.out.println("Set progress to: "+progress); //todo
     this.progress = progress;
   }
 
@@ -123,11 +123,11 @@ public class SmsxRequest {
   }
 
 
-  protected void execute(RequestExecutor executor) throws StatisticsException {
-    executor.execute(this);
+  void execute(RequestExecutor executor, ShutdownIndicator shutdownIndicator) throws StatisticsException {
+    executor.execute(this, shutdownIndicator);
   }
 
-  protected void save(Element element, Document document) throws StatisticsException {
+  protected void save(Element element, Document document) {
     {
       final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
