@@ -36,7 +36,7 @@ CREATE TABLE deliveries (
   distribution_name varchar(10) not null,  
   start_date timestamp not null,
   send_date timestamp not null,
-  end_date timestamp not null,
+  end_date timestamp not null,                                      
   total smallint not null default 0,
   sended smallint not null default 0,
   timezone varchar(50) not null,

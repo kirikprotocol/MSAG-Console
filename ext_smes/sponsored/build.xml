@@ -7,8 +7,13 @@
   <property file="${SMSC_DIR}/webapps/build.properties"/>
   <property name="java_src" location="src"/>
   <property name="config" location="conf"/>
+
   <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
   <property name="java_lib" location="lib"/>
+  <property name="libs_path" location="${SMSC_DIR}/webapps/libs"/>
+
+  <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
+
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
@@ -16,23 +21,40 @@
   <property name="TOMCAT_HOME" value="tomcat"/>
   <property name="SME_DISTR_DIR" value="${DISTR_DIR}/services/${esme_name}"/>
 
-  <target name="compile">
-    <mkdir dir="${java_out}"/>
+  <target name="compile.web">
+    <delete dir="${java_out}/web"/>
+    <mkdir dir="${java_out}/web"/>
 
-    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
+    <javac srcdir="websrc" destdir="${java_out}/web" debug="yes">
+      <classpath>
+        <pathelement path="${BUILD_DIR}/classes/smsc"/>
+        <fileset dir="${libs_path}" includes="*.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="compile.sme">
+    <mkdir dir="${java_out}/sme"/>
+
+    <javac srcdir="${java_src}" destdir="${java_out}/sme" debug="yes">
       <classpath >
         <fileset dir="${java_lib}" includes="*.jar"/>
       </classpath>
     </javac>
   </target>
 
-  <target name="build" depends="compile">
-    <jar jarfile="${java_out}/${esme_name}.jar" manifest="MANIFEST.MF">
-      <fileset dir="${java_out}" excludes="*.jar" />
+  <target name="build.web" depends="compile.web">
+    <mkdir dir="${exploded}/lib"/>
+    <jar jarfile="${exploded}/lib/${esme_name}.jar">
+      <fileset dir="${java_out}/web"/>
     </jar>
+    <mkdir dir="${exploded}/jsp"/>
+    <copy todir="${exploded}/jsp" preservelastmodified="yes">
+      <fileset dir="web" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
+    </copy>
   </target>
 
-  <target name="install" depends="build">
+  <target name="build.sme" depends="compile.sme">
     <mkdir dir="${SME_DISTR_DIR}/bin"/>
     <mkdir dir="${SME_DISTR_DIR}/conf"/>
     <mkdir dir="${SME_DISTR_DIR}/lib"/>
@@ -41,24 +63,28 @@
 
     <copydir src="${java_lib}" dest="${SME_DISTR_DIR}/lib"/>
 
-    <copy todir="${SME_DISTR_DIR}/lib">
-      <fileset dir="${java_out}" includes="*.jar"/>
-    </copy>
+    <jar jarfile="${SME_DISTR_DIR}/lib/${esme_name}.jar" manifest="MANIFEST.MF">
+      <fileset dir="${java_out}/sme" excludes="*.jar" />
+    </jar>
 
     <copy todir="${SME_DISTR_DIR}/bin">
       <fileset dir="bin"/>
     </copy>
 
     <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="*"/>
+
+
   </target>
 
-  <target name="conf" depends="install">
+  <target name="conf" depends="build.sme">
     <copydir src="${config}" dest="${SME_DISTR_DIR}/conf"/>
   </target>
 
-  <target name="distr" depends="install, conf"/>
+  <target name="distr" depends="build.sme, conf"/>
 
-  <target name="update" depends="install"/>
+  <target name="distr.all" depends="build.sme, build.web, conf"/>
+
+  <target name="update" depends="build.sme"/>
 
   <target name="clean" description="clean up">
     <ant antfile="../make_esme.xml" target="clean"/>
