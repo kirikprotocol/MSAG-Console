@@ -6,6 +6,7 @@
 #include "scag/util/storage/Glossary.h"
 #include "scag/pvss/profile/Profile.h"
 #include "scag/pvss/profile/ProfileBackup.h"
+#include "scag/pvss/profile/ProfileLog.h"
 #include "scag/pvss/data/Property.h"
 #include "scag/pvss/data/ProfileKey.h"
 #include "scag/util/storage/StorageIface.h"
@@ -32,6 +33,8 @@ void extractPageFile( smsc::logger::Logger* logger,
     File::offset_type pageIndex = 0;
     std::vector< unsigned char > data;
     File::offset_type realIndex;
+    ProfileLog plogger("pvss.backup");
+    plogger.init(smsc::logger::Logger::LEVEL_INFO,0,true);
     try {
         while ( true ) {
 
@@ -56,7 +59,7 @@ void extractPageFile( smsc::logger::Logger* logger,
                 break;
             }
 
-            ProfileBackup profBackup(logger);
+            ProfileBackup profBackup(&plogger);
             Profile prof(&profBackup);
             uint32_t pkey;
             IntProfileKey profileKey;

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "ProfileBackup.h"
+#include "ProfileLog.h"
 #include "util/PtrDestroy.h"
 #include "scag/pvss/profile/Profile.h"
 #include "logger/Logger.h"
@@ -13,13 +14,20 @@ namespace pvss {
 
 smsc::logger::Logger* ProfileBackup::log_ = 0;
 
-ProfileBackup::ProfileBackup( smsc::logger::Logger* dblog ) :
+ProfileBackup::ProfileBackup( ProfileLog* dblog ) :
 dblog_(dblog)
 {
     if (!log_) {
         MutexGuard mg(mtx);
         if (!log_) log_ = smsc::logger::Logger::getInstance("pvss.pbck");
     }
+}
+
+
+ProfileBackup::~ProfileBackup() {
+    cleanup();
+    // not needed, destroyed from profilelogroller
+    // delete dblog_;
 }
 
 

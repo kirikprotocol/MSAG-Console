@@ -36,6 +36,7 @@ struct NodeConfig {
 };
 
 class Request;
+class ProfileLogRoller;
 
 class PvssDispatcher : public core::server::SyncDispatcher {
 public:
@@ -55,6 +56,9 @@ public:
                        const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
 
     void init();
+
+    ProfileLogRoller& getLogRoller() const { return *logRoller_; }
+
     void rebuildIndex( unsigned maxSpeed = 0 );
 
     /// dump the storage -1 -- infrastruct, >= 0 -- abonent
@@ -86,6 +90,7 @@ private:
     std::vector< DiskManager* > diskManagers_;  // owned
     DiskFlusher*  infraFlusher_;
     counter::CounterPtrAny cntAbonents_;
+    ProfileLogRoller* logRoller_;
 };
 
 }//pvss

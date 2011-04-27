@@ -108,6 +108,24 @@ Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
 
 
 // === abonent logic
+AbonentLogic::AbonentLogic( PvssDispatcher& dispatcher,
+                            unsigned locationNumber,
+                            const AbonentStorageConfig& cfg,
+                            DataFileManager& manager,
+                            DiskFlusher&     diskFlusher ) :
+PvssLogic(dispatcher),
+#ifdef INTHASH_USAGE_CHECKING
+elementStorages_(SMSCFILELINE),
+#endif
+locationNumber_(locationNumber),
+config_(cfg),
+dataFileManager_(manager),
+diskFlusher_(&diskFlusher),
+profileBackup_(dispatcher.getLogRoller().getLogger("pvss.abnt")),
+commandProcessor_(profileBackup_) {
+}
+
+
 AbonentLogic::~AbonentLogic() {
     shutdownStorages();
     smsc_log_debug(logger_, "storage processor %d deleted", locationNumber_);
@@ -487,9 +505,10 @@ private:
     typedef CachedDelayedThreadedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator< MemStorage::key_type, LockableProfile > > InfrastructStorage;
 
 public:
-    InfraLogic( const char* name, const char* dblogName, DiskFlusher& flusher ) :
+    InfraLogic( const char* name, const char* dblogName,
+                DiskFlusher& flusher, PvssDispatcher& dispatcher ) :
     name_(name),
-    profileBackup_(smsc::logger::Logger::getInstance(dblogName)),
+    profileBackup_(dispatcher.getLogRoller().getLogger(dblogName)),
     commandProcessor_(profileBackup_),
     log_(0),
     storage_(0),
@@ -819,11 +838,11 @@ void InfrastructLogic::keepAlive()
 void InfrastructLogic::init( bool /*checkAtStart*/ )
 {
     initGlossary(config_.dbPath,glossary_);
-    provider_ = new InfraLogic("prv", "pvss.prov",*diskFlusher_);
+    provider_ = new InfraLogic("prv", "pvss.prov",*diskFlusher_,dispatcher_);
     provider_->init("provider",config_,glossary_);
-    service_ = new InfraLogic("svc", "pvss.serv",*diskFlusher_);
+    service_ = new InfraLogic("svc", "pvss.serv",*diskFlusher_,dispatcher_);
     service_->init("service",config_,glossary_);
-    operator_ = new InfraLogic("opr", "pvss.oper",*diskFlusher_);
+    operator_ = new InfraLogic("opr", "pvss.oper",*diskFlusher_,dispatcher_);
     operator_->init("operator",config_,glossary_);
     smsc_log_info(logger_,"infrastructure storages are inited, good nodes: %s",
                   reportStatistics().c_str());

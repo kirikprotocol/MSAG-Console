@@ -32,6 +32,7 @@
 #include "scag/pvss/api/core/server/Server.h"
 #include "ProfileCommandProcessor.h"
 #include "scag/pvss/profile/ProfileBackup.h"
+#include "scag/pvss/profile/ProfileLog.h"
 #include "scag/util/io/Serializer.h"
 #include "scag/util/storage/DiskFlusher.h"
 
@@ -181,17 +182,7 @@ public:
                   unsigned locationNumber,
                   const AbonentStorageConfig& cfg,
                   DataFileManager& manager,
-                  DiskFlusher&     diskFlusher ) :
-    PvssLogic(dispatcher),
-#ifdef INTHASH_USAGE_CHECKING
-    elementStorages_(SMSCFILELINE),
-#endif
-    locationNumber_(locationNumber),
-    config_(cfg),
-    dataFileManager_(manager),
-    diskFlusher_(&diskFlusher),
-    profileBackup_(smsc::logger::Logger::getInstance("pvss.abnt")),
-    commandProcessor_(profileBackup_) {}
+                  DiskFlusher&     diskFlusher );
 
     virtual ~AbonentLogic();
 

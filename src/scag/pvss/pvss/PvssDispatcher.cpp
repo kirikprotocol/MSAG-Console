@@ -1,4 +1,5 @@
 #include "PvssDispatcher.h"
+#include "ProfileLogRollerHardcoded.h"
 #include "scag/util/storage/StorageNumbering.h"
 #include "scag/pvss/data/ProfileKey.h"
 // #include "scag/pvss/api/packets/Request.h"
@@ -98,7 +99,8 @@ PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
                                const InfrastructStorageConfig* infCfg) :
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp")),
-infraFlusher_(0)
+infraFlusher_(0),
+logRoller_( new ProfileLogRollerHardcoded() )
 {
     StorageNumbering::setInstance(nodeCfg.nodesCount);
     unsigned addSpeed = nodeCfg_.expectedSpeed / nodeCfg_.disksCount;
@@ -281,6 +283,9 @@ void PvssDispatcher::init()
 
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
 
+    // starting log roller
+    logRoller_->start();
+
     // starting flushers
     for ( std::vector<DiskManager*>::const_iterator i = diskManagers_.begin();
           i != diskManagers_.end();
@@ -352,6 +357,8 @@ void PvssDispatcher::shutdown() {
     smsc_log_info(logger_,"shutting down a pvss dispatcher");
     uint16_t created = createdLocations_;
 
+    logRoller_->stop();
+
     // stopping all disk managers
     for ( std::vector< DiskManager* >::const_iterator i = diskManagers_.begin();
           i != diskManagers_.end();
@@ -369,6 +376,7 @@ void PvssDispatcher::shutdown() {
         delete abonentLogics_[i];
         --createdLocations_;
     }
+
     for_each(diskManagers_.begin(), diskManagers_.end(), smsc::util::PtrDestroy());
     diskManagers_.clear();
 }
@@ -376,6 +384,7 @@ void PvssDispatcher::shutdown() {
 
 PvssDispatcher::~PvssDispatcher() {
     shutdown();
+    delete logRoller_; logRoller_ = 0;
     smsc_log_info(logger_,"dtor pvss dispatcher");
 }
 

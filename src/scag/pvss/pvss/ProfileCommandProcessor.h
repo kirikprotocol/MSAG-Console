@@ -52,8 +52,6 @@ private:
     smsc::logger::Logger* log_;
     ProfileBackup*        backup_;
     bool                  rollback_;
-    // DBLog                 dblog_;
-    // std::vector<std::string> batchLogs_;
     Profile*              profile_;
     std::auto_ptr<CommandResponse> response_;
 };

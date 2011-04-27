@@ -24,6 +24,7 @@ endswitch
 	-lscag-util-multiplexer \
         -lscag-util-io \
 	-lscag-util \
+        -linformer-io \
         -llicense-check \
         -lcore-network $(SOCKETLIB) -lnsl \
         -lcore-threads \
@@ -71,7 +72,6 @@ scag/pvss-repairIntStorage repairIntStorage \
         -lscag-util-io \
 	-lscag-util \
         -lcore-threads \
-        -lutil-config \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
@@ -86,7 +86,6 @@ scag/tests/pvss-testBackupProcessor testBackupProcessor \
         -lscag-util-io \
 	-lscag-util \
         -lcore-threads \
-        -lutil-config \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \

@@ -10,6 +10,7 @@ namespace scag2 {
 namespace pvss {
 
 class Profile;
+class ProfileLog;
 
 class ProfileBackup
 {
@@ -48,11 +49,10 @@ private:
 
 public:
 
-    ProfileBackup( smsc::logger::Logger* dblog );
+    // ProfileBackup( smsc::logger::Logger* dblog );
+    ProfileBackup( ProfileLog* dblog );
 
-    ~ProfileBackup() {
-        cleanup(); 
-    }
+    ~ProfileBackup();
 
     /// add property.
     void addProperty( const Property& prop, bool logOnly = false );
@@ -98,7 +98,8 @@ private:
     }
 
 private:
-    smsc::logger::Logger*      dblog_;
+    // smsc::logger::Logger*      dblog_;
+    ProfileLog*                dblog_;
     std::vector< PvssOp >      operationList_;
     std::vector< Property* >   deletedProperties_;  // delete
     std::vector< Property >    modifiedProperties_; // modify
