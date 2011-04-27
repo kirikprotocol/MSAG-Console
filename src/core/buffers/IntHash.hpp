@@ -197,7 +197,7 @@ public:
 
   bool Delete(int key)
   {
-    int valIdx;
+    unsigned int valIdx;
     if (!unmarkVal(key, valIdx))
       return false;
     values[valIdx] = T();
@@ -206,7 +206,7 @@ public:
 
   bool Pop(int key,T& value)
   {
-    int valIdx;
+    unsigned int valIdx;
     if (!unmarkVal(key, valIdx))
       return false;
     value = values[valIdx];
