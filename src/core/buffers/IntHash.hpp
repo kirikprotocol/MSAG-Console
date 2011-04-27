@@ -1,4 +1,7 @@
 #ifndef __INTHASH_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __INTHASH_HPP__
 
 #define INTHASH_MAX_CHAIN_LENGTH 16
@@ -17,7 +20,9 @@ namespace smsc{
 namespace core{
 namespace buffers{
 
-template <class T>
+template <
+  class T //required: T(); and operator=(const T&);
+>
 class IntHash{
 public:
 #ifdef INTHASH_USAGE_CHECKING
@@ -149,146 +154,68 @@ public:
 
   const T& Get(int key)const
   {
-    if(!size || !count)throw std::runtime_error("get on empty inthash");
-    unsigned int idx;
-    int attempt=0;
-    do{
-      idx=Index(key,attempt);
-      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
-      {
-        throw std::runtime_error("IntHash::Get - item not found");
-      }
-      attempt++;
-    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
-    return values[idx];
+    unsigned int valIdx;
+    if(!findVal(key, valIdx))
+    {
+      throw std::runtime_error((!size || !count) ? "IntHash::Get - empty inthash"
+                                                 : "IntHash::Get - item not found");
+    }
+    return values[valIdx];
   }
 
   T& Get(int key)
   {
-    if(!size || !count)throw std::runtime_error("get on empty inthash");
-    unsigned int idx;
-    int attempt=0;
-    do{
-      idx=Index(key,attempt);
-      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
-      {
-        throw std::runtime_error("IntHash::Get - item not found");
-      }
-      attempt++;
-    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
-    return values[idx];
+    unsigned int valIdx;
+    if(!findVal(key, valIdx))
+    {
+      throw std::runtime_error((!size || !count) ? "IntHash::Get - empty inthash"
+                                                 : "IntHash::Get - item not found");
+    }
+    return values[valIdx];
   }
 
   T* GetPtr(int key)const
   {
-    if(!size || !count)
-    {
-      return 0;
-    }
-    unsigned int idx;
-    int attempt=0;
-    do{
-      idx=Index(key,attempt);
-      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)return 0;
-      attempt++;
-    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
-    return &values[idx];
+    unsigned int valIdx;
+    return findVal(key, valIdx) ? &values[valIdx] : NULL;
   }
 
   bool Get(int key,T& value)const
   {
-//    printf("get:%d\n",key);fflush(stdout);
-    if(!size || !count)
-    {
+    unsigned int valIdx;
+    if(!findVal(key, valIdx))
       return false;
-    }
-    unsigned int idx;
-    int attempt=0;
-    do{
-      idx=Index(key,attempt);
-      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)return false;
-      attempt++;
-    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
-    value=values[idx];
-//    printf("get:ok\n");fflush(stdout);
+    value = values[valIdx];
     return true;
   }
 
   bool Exist(int key)const
   {
-    if(!count)
-    {
-      return false;
-    }
-    unsigned int idx;
-    int attempt=0;
-    do{
-      idx=Index(key,attempt);
-      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)return 0;
-      attempt++;
-    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
-    return true;
+    unsigned int valIdx;
+    return findVal(key, valIdx);
   }
 
   bool Delete(int key)
   {
-    //printf("del:%d\n",key);fflush(stdout);
-    if(size==0)
-    {
+    int valIdx;
+    if (!unmarkVal(key, valIdx))
       return false;
-    }
-    unsigned int idx;
-    int attempt=0;
-    do{
-      idx=Index(key,attempt);
-      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
-      {
-        //printf("del:not found\n");fflush(stdout);
-        return false;
-      }
-      AddRef(idx,attempt);
-    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
-    //printf("del:ok\n");fflush(stdout);
-    refcounts[idx]&=0x7fffffff;
-    for(int i=0;i<attempt;i++)
-    {
-      //printf("dele:%d\n",reflist[i]);fflush(stdout);
-      refcounts[reflist[i]]--;
-    }
-    count--;
+    values[valIdx] = T();
     return true;
   }
 
   bool Pop(int key,T& value)
   {
-    //printf("del:%d\n",key);fflush(stdout);
-    if(size==0)
-    {
+    int valIdx;
+    if (!unmarkVal(key, valIdx))
       return false;
-    }
-    unsigned int idx;
-    int attempt=0;
-    do{
-      idx=Index(key,attempt);
-      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
-      {
-        //printf("del:not found\n");fflush(stdout);
-        return false;
-      }
-      AddRef(idx,attempt);
-    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
-    //printf("del:ok\n");fflush(stdout);
-    value = values[idx];
-    refcounts[idx]&=0x7fffffff;
-    for(int i=0;i<attempt;i++)
-    {
-      //printf("dele:%d\n",reflist[i]);fflush(stdout);
-      refcounts[reflist[i]]--;
-    }
-    count--;
+    value = values[valIdx];
+    values[valIdx] = T();
     return true;
   }
 
+  //Note: it's not recommended to modify cache while accessing its elements
+  //via iterators. Iterator may become invalid due to insertion of new elements.
   class Iterator{
   public:
     Iterator(const IntHash& owner):idx(0),h(&owner){}
@@ -301,16 +228,6 @@ public:
       return *this;
     }
 
-    bool Next(int& k,T& v)
-    {
-      if(idx>=h->size || h->count==0)return false;
-      while(idx<h->size && (h->refcounts[idx]&0x80000000)==0)idx++;
-      if(idx>=h->size)return false;
-      k=h->keys[idx];
-      v=h->values[idx];
-      idx++;
-      return true;
-    }
     bool Next(int& k,T*& v)
     {
       if(idx>=h->size || h->count==0)return false;
@@ -321,6 +238,16 @@ public:
       idx++;
       return true;
     }
+
+    bool Next(int& k,T & v)
+    {
+      T * pVal = NULL;
+      if(!Next(k, pVal))
+        return false;
+      v = *pVal;
+      return true;
+    }
+
     void First()
     {
       idx=0;
@@ -337,7 +264,7 @@ public:
   }
 
   int Count() const {return count;}
-    int Size() const {return size;}
+  int Size() const {return size;}
 
   void Empty()
   {
@@ -354,7 +281,6 @@ public:
 
     reflist=0;
     reflistsize=0;
-
   }
 
 
@@ -375,6 +301,54 @@ protected:
   inline unsigned int Index(int key,int attempt)const
   {
     return HashKey(key,attempt)%size;
+  }
+
+  //Searches for value associated with given key.
+  //Returns true if value is found, false - otherwise.
+  bool findVal(int use_key, unsigned int & val_idx) const
+  {
+    if(!size || !count)
+      return false;
+
+    int attempt=0;
+    do{
+      val_idx=Index(use_key,attempt);
+      if(refcounts[val_idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
+        return false;
+      ++attempt;
+    }while((refcounts[val_idx]&0x80000000)==0 || keys[val_idx]!=use_key);
+    return true;
+  }
+
+  //Searches for value associated with given key,
+  //marks it as deleted. Additionally composes
+  //intermediate array of traversed nodes refs and
+  //adjusts it accordingly.
+  //Returns true if value is found, false - otherwise.
+  bool unmarkVal(int use_key, unsigned int & val_idx)
+  {
+    //printf("del:%d\n",key);fflush(stdout);
+    if(!size)
+      return false;
+
+    int attempt=0;
+    do{
+      val_idx=Index(use_key,attempt);
+      if(refcounts[val_idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
+        return false;
+
+      AddRef(val_idx, attempt);
+    }while((refcounts[val_idx]&0x80000000)==0 || keys[val_idx]!=use_key);
+
+    //printf("del:ok\n");fflush(stdout);
+    refcounts[val_idx] &= 0x7fffffff;
+    for(int i=0;i<attempt;i++)
+    {
+      //printf("dele:%d\n",reflist[i]);fflush(stdout);
+      refcounts[reflist[i]]--;
+    }
+    count--;
+    return true;
   }
 
   void AddRef(unsigned int refidx,int& idx)
