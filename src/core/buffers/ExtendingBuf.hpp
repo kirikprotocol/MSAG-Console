@@ -24,8 +24,8 @@ namespace buffers {
 // 
 
 template <
-  class _TArg                       //must have default & copying constructors
-, typename _SizeTypeArg = unsigned  //must be an integer type
+  class _TArg                       //must have default constructor & operator=() defined
+, typename _SizeTypeArg = unsigned  //must be an unsigned integer type
 >
 class BufferExtension_T {
 protected:
@@ -37,27 +37,30 @@ protected:
   _SizeTypeArg  _pos;        //current position within buffer for reading/writing data
   _SizeTypeArg  _dataSz;     //effective size of data in buffer (stack or heap), starting from pos = 0
 
-public:
-  BufferExtension_T(_TArg * org_buf, _SizeTypeArg org_max_sz, _SizeTypeArg initial_sz = 0)
+  BufferExtension_T(_TArg * org_buf, _SizeTypeArg org_max_sz,
+                    _SizeTypeArg org_data_sz, _SizeTypeArg org_pos)
     : _orgSz(org_max_sz), _dataBuf(org_buf)
-    , _heapBuf(0), _heapBufSz(0), _pos(0), _dataSz(0)
-  {
-    if (initial_sz > org_max_sz) {
-      _dataBuf = _heapBuf = new _TArg[_heapBufSz = initial_sz];
-    }
-  }
-  ~BufferExtension_T()
+    , _heapBuf(0), _heapBufSz(0), _pos(org_pos), _dataSz(org_data_sz)
+  { }
+
+public:
+  typedef _SizeTypeArg  size_type;
+
+  virtual ~BufferExtension_T()
   {
     if (_heapBuf)
       delete [] _heapBuf;
+    //else keep original buffer intact, it's a successor responsibility to cleanup it.
   }
+
+  static const size_type MAX_POS = (size_type)(-1);
 
   _TArg *   get(void)         const { return _dataBuf; }
   _TArg *   getCurPtr(void)   const { return _dataBuf + _pos; }
 
-  _SizeTypeArg  getPos(void)      const { return _pos; }
-  _SizeTypeArg  getDataSize(void) const { return _dataSz; }
-  _SizeTypeArg  getMaxSize(void)  const { return _heapBufSz ? _heapBufSz : _orgSz; }
+  size_type  getPos(void)      const { return _pos; }
+  size_type  getDataSize(void) const { return _dataSz; }
+  size_type  getMaxSize(void)  const { return _heapBufSz ? _heapBufSz : _orgSz; }
 
   //resets buffer, destroys all previously set data
   _TArg * reset(void)
@@ -66,7 +69,7 @@ public:
     return _dataBuf;
   }
   //resets buffer, resizing it if needed, destroys all previously set data
-  _TArg * reset(_SizeTypeArg size)
+  _TArg * reset(size_type size)
   {
     if (_heapBuf) {
       if (size > _heapBufSz) { //reallocate heap buffer
@@ -82,7 +85,7 @@ public:
 
   //Extends buffer size to hold at least the given number of elements
   //Returns true on buffer resizing
-  bool extend(_SizeTypeArg new_size)
+  bool extend(size_type new_size)
   {
     if (_heapBuf) {
       if (new_size > _heapBufSz) { //reallocate heap buffer
@@ -102,12 +105,12 @@ public:
   }
 
   //resizes buffer preserving current data, truncates data in buffer if needed
-  _TArg * resize(_SizeTypeArg new_size)
+  _TArg * resize(size_type new_size)
   {
     if (_dataSz > new_size) { //truncate effective data size and position
       _dataSz = new_size;
       if (_pos > new_size)
-          _pos = new_size;
+        _pos = new_size;
     } else 
       extend(new_size);
     return _dataBuf;
@@ -115,7 +118,7 @@ public:
 
   //Sets current position for Read/Append operations, extending buffer
   //and effective data size if necessary
-  void setPos(_SizeTypeArg new_pos)
+  void setPos(size_type new_pos)
   { 
     if (new_pos > getMaxSize())
       extend(new_pos + 1);
@@ -124,7 +127,7 @@ public:
     _pos = new_pos;
   }
   //Sets effective buffer data size, extending buffer if necessary
-  void setDataSize(_SizeTypeArg new_dsz)
+  void setDataSize(size_type new_dsz)
   { 
     if (new_dsz > getMaxSize())
       extend(new_dsz);
@@ -134,7 +137,7 @@ public:
   //Reads requested number of elements at current position
   //and adjusts it if requested.
   //Checks for ABR, returns number of objects have been read.
-  _SizeTypeArg Read(_TArg * dst_buf, _SizeTypeArg use_count, bool adjust_pos = true)
+  size_type Read(_TArg * dst_buf, size_type use_count, bool adjust_pos = true)
   {
     if ((_pos + use_count) >= _dataSz)
       use_count = _dataSz - _pos;
@@ -148,7 +151,7 @@ public:
 
   //Copies requested number of elements at specified position.
   //Checks for ABR, returns number of objects have been read.
-  _SizeTypeArg Copy(_TArg * dst, _SizeTypeArg pos_at, _SizeTypeArg use_count) const
+  size_type Copy(_TArg * dst_buf, size_type pos_at, size_type use_count) const
   {
     if (pos_at >= _dataSz)
       return 0;
@@ -157,33 +160,36 @@ public:
     if (pos_end >= _dataSz)
       use_count = _dataSz - pos_at;
     if (use_count)
-      std::copy(_dataBuf + pos_at, _dataBuf + pos_at + use_count, dst);
+      std::copy(_dataBuf + pos_at, _dataBuf + pos_at + use_count, dst_buf);
     return use_count;
   }
 
   //Writes data to buffer at given position, extending buffer and 
   //effective data size if necessary. Doesn't change current position!!!
-  void Write(_SizeTypeArg use_pos, const _TArg * data, _SizeTypeArg use_count)
+  //Returns number of elements written (may be less than specified).
+  size_type Write(size_type use_pos, const _TArg * data, size_type use_count)
   {
-    if (!use_count)
-      return;
+    size_type newSz = use_pos + use_count;
+    if (newSz < use_pos) //check size_type overloading
+      use_count = MAX_POS - use_pos;
 
-    _SizeTypeArg newSz = use_pos + use_count;
-    if (newSz > getMaxSize()) {
-      extend(newSz);
-      _dataSz = newSz;
-    } else if (newSz > _dataSz)
-      _dataSz = newSz;
-    std::copy(data, data + use_count, _dataBuf + use_pos);
+    if (use_count) {
+      if (newSz > getMaxSize()) {
+        extend(newSz);
+        _dataSz = newSz;
+      } else if (newSz > _dataSz)
+        _dataSz = newSz;
+      std::copy(data, data + use_count, _dataBuf + use_pos);
+    }
+    return use_count;
   }
 
   //Writes/Appends data to buffer starting from current position and adjusts it.
   //NOTE: if position is set within existing data, it's overwritten.
-  //Returns adjusted position.
-  _SizeTypeArg Append(const _TArg * data, _SizeTypeArg use_count)
+  //Returns number of elements appended (may be less than specified).
+  size_type Append(const _TArg * data, size_type use_count)
   {
-    Write(_pos, data, use_count);
-    return (_pos += use_count);
+    return Write(_pos, data, use_count);
   }
 
   operator _TArg * () { return _dataBuf; }
@@ -214,17 +220,20 @@ class ExtendingBuffer_T : public BufferExtension_T<_TArg, _SizeTypeArg> {
 protected:
   union {
     _TArg     buf[_STACK_SZ];
-    uint64_t  alignerInt;
+//    uint64_t  alignerInt;
     void *    alignerPtr;
   } _stack;
 
 public:
   typedef BufferExtension_T<_TArg, _SizeTypeArg>  BaseT;
+  using BufferExtension_T<_TArg, _SizeTypeArg>::size_type;
 
   explicit ExtendingBuffer_T(_SizeTypeArg initial_size = _STACK_SZ)
-    : BufferExtension_T<_TArg, _SizeTypeArg>(_stack.buf, _STACK_SZ, initial_size)
+    : BufferExtension_T<_TArg, _SizeTypeArg>(_stack.buf, _STACK_SZ, 0, 0)
   {
     _stack.alignerPtr = 0;
+    if (initial_size > _STACK_SZ)
+      this->extend(initial_size);
   }
   ~ExtendingBuffer_T()
   { }
