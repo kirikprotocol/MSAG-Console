@@ -84,20 +84,21 @@ void BillProcessor::commit(int BillId)
         return;
     }
 
-
     Account * account = AccountsHash.GetPtr(*abonent);
-    BillIdDataHash.Delete(BillId);
 
     if (!account)
     {
-         smsc_log_error(logger, "Cannot commit billId %d. Details: Cannot find billing account for abonent '%s'", BillId, abonent->toString().c_str());
-         return;
+         smsc_log_error(logger, "Cannot commit billId %d. Details: Cannot find billing account for abonent '%s'",
+                        BillId, abonent->toString().c_str());
+    } else
+    {
+      account->amount = account->amount - account->charged;
+  
+      smsc_log_error(logger, "%d commited for %s abonent (money = %d)",
+                     account->charged, abonent->toString().c_str(), account->amount);
+      account->charged = 0;
     }
-
-    account->amount = account->amount - account->charged;
-
-    smsc_log_error(logger, "%d commited for %s abonent (money = %d)",account->charged, abonent->toString().c_str(), account->amount);
-    account->charged = 0;
+    BillIdDataHash.Delete(BillId);
 }
 
 void BillProcessor::rollback(int BillId)
@@ -110,16 +111,18 @@ void BillProcessor::rollback(int BillId)
     }
 
     Account * account = AccountsHash.GetPtr(*abonent);
-    BillIdDataHash.Delete(BillId);
 
     if (!account)
     {
-         smsc_log_error(logger, "Cannot rollback billId %d. Details: Cannot find billing account for abonent '%s'", BillId, abonent->toString().c_str());
-         return;
+      smsc_log_error(logger, "Cannot rollback billId %d. Details: Cannot find billing account for abonent '%s'",
+                     BillId, abonent->toString().c_str());
+    } else
+    {
+      smsc_log_error(logger, "Rollback %d for %s abonent (money = %d)",
+                     account->charged, abonent->toString().c_str(), account->amount);
+      account->charged = 0;
     }
-
-    smsc_log_error(logger, "Rollback %d for %s abonent (money = %d)",account->charged, abonent->toString().c_str(), account->amount);
-    account->charged = 0;
+    BillIdDataHash.Delete(BillId);
 }
 
 
@@ -128,29 +131,34 @@ bool BillProcessor::charge(MatrixKey& key, Address& abonent, int BillId)
     int * pricePtr = BillRecordsHash.GetPtr(key);
     if (!pricePtr) 
     {
-        smsc_log_error(logger, "Cannot charge billId %d. Details: Cannot find billing record for service number '%d'", BillId, key.serviceNumber);
+        smsc_log_error(logger, "Cannot charge billId %d. Details: Cannot find billing record for service number '%d'",
+                       BillId, key.serviceNumber);
         return false;
     }
 
     Account * account = AccountsHash.GetPtr(abonent);
     if (!account)
     {
-         smsc_log_error(logger, "Cannot charge billId %d. Details: Cannot find billing account for abonent '%s'", BillId, abonent.toString().c_str());
+         smsc_log_error(logger, "Cannot charge billId %d. Details: Cannot find billing account for abonent '%s'",
+                        BillId, abonent.toString().c_str());
          return false;
     }
 
-    if (BillIdDataHash.GetPtr(BillId)) BillIdDataHash.Delete(BillId);
+    if (BillIdDataHash.GetPtr(BillId))
+      BillIdDataHash.Delete(BillId);
     BillIdDataHash.Insert(BillId, abonent);
 
 
     if (account->amount < (*pricePtr)) 
     {
-        smsc_log_error(logger, "Cannot charge %d for %s abonent (money = %d). Delails - not enough money",(*pricePtr),  abonent.toString().c_str(), account->amount);
+        smsc_log_error(logger, "Cannot charge %d for %s abonent (money = %d). Delails - not enough money",
+                       (*pricePtr),  abonent.toString().c_str(), account->amount);
         return false;
     } 
 
     account->charged = (*pricePtr);
-    smsc_log_error(logger, "%d successfully charged for %s abonent (money = %d, Bill=%d)",(*pricePtr), abonent.toString().c_str(), account->amount, BillId);
+    smsc_log_error(logger, "%d successfully charged for %s abonent (money = %d, Bill=%d)",
+                   (*pricePtr), abonent.toString().c_str(), account->amount, BillId);
     return true;
 }
 
