@@ -227,6 +227,7 @@ protected:
 public:
   typedef BufferExtension_T<_TArg, _SizeTypeArg>  BaseT;
   using BufferExtension_T<_TArg, _SizeTypeArg>::size_type;
+  using BufferExtension_T<_TArg, _SizeTypeArg>::operator+=;
 
   explicit ExtendingBuffer_T(_SizeTypeArg initial_size = _STACK_SZ)
     : BufferExtension_T<_TArg, _SizeTypeArg>(_stack.buf, _STACK_SZ, 0, 0)
