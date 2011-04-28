@@ -34,7 +34,7 @@ using smsc::mtsmsme::processor::util::dump;
 using smsc::sms::Address;
 using std::string;
 
-static char msca[] = "791398699924"; // MSC address
+static char msca[] = "791398699874"; // MSC address
 static char vlra[] = "79139860004"; //VLR address
 static char hlra[] = "79139860004"; //HLR address
 
