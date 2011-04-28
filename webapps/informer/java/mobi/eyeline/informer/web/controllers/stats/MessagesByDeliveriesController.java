@@ -102,7 +102,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     List<Region> rs = getConfig().getRegions();
     User u = getConfig().getUser(getUserName());
     if(u == null || u.getRegions() == null) {
-      return null;
+      return Collections.emptyList();
     }
     if(!u.isAllRegionsAllowed()) {
       Set<Integer> available = new HashSet<Integer>(u.getRegions());
