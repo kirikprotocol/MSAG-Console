@@ -75,8 +75,10 @@ public:
     Context* pop( const Ctx& ptr ) {
         Context* ret = ptr.getContext();
         if (ret) {
-            map_.Delete(ret->getSeqNum());
-            list_.erase(*ptr.i);
+            ProcessingList::iterator i;
+            if ( map_.Pop(ret->getSeqNum(),i) ) {
+                list_.erase(i);
+            }
         }
         ptr.i = 0;
         if ( list_.empty() ) mon_.notify();
