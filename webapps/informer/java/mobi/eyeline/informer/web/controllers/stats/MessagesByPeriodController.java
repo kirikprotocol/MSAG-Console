@@ -116,7 +116,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   public List<SelectItem> getRegions() {
     List<Region> rs = getConfig().getRegions();
     User u = getConfig().getUser(getUserName());
-    if(u == null || u.getRegions() == null) {
+    if(u == null || (!u.isAllRegionsAllowed() && u.getRegions() == null)) {
       return Collections.emptyList();
     }
     if(!u.isAllRegionsAllowed()) {
