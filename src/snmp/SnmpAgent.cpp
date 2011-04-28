@@ -308,7 +308,7 @@ static char const ident[] = "$Id$";
         rec.status=newstatus;
         smsc::core::synchronization::MutexGuard mg(trapsQueueMon);
         trapsQueue.Push(rec);
-        //status = newstatus;
+        status = newstatus;
         /*int *statusSave;
         memdup((uchar_t **) &statusSave,(uchar_t *) &status,sizeof(status));
         struct timeval t;t.tv_sec=0,t.tv_usec=10;
