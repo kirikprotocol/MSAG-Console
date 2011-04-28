@@ -36,11 +36,14 @@
               <f:selectItems value="#{messagesByPeriod.regions}"/>
             </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}"/>
-            <h:selectOneMenu value="#{messagesByPeriod.smscFilter}">
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{messagesByPeriod.userInAdminRole}"/>
+            <h:selectOneMenu value="#{messagesByPeriod.smscFilter}" rendered="#{messagesByPeriod.userInAdminRole}">
               <f:selectItem itemLabel="" itemValue=""/>
               <f:selectItems value="#{messagesByPeriod.smscs}"/>
             </h:selectOneMenu>
+
+            <h:outputText value="" rendered="#{!messagesByPeriod.userInAdminRole}"/>
+            <h:outputText value="" rendered="#{!messagesByPeriod.userInAdminRole}"/>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
             <eye:inputDate value="#{messagesByPeriod.filter.tillDate}" type="both"/>

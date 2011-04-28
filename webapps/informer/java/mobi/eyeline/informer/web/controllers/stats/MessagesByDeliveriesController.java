@@ -100,6 +100,20 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public List<SelectItem> getRegions() {
     List<Region> rs = getConfig().getRegions();
+    User u = getConfig().getUser(getUserName());
+    if(u == null) {
+      return null;
+    }
+    if(!u.isAllRegionsAllowed()) {
+      Set<Integer> available = new HashSet<Integer>(u.getRegions());
+      Iterator<Region> i = rs.iterator();
+      while(i.hasNext()) {
+        Region r = i.next();
+        if(!available.contains(r.getRegionId())) {
+          i.remove();
+        }
+      }
+    }
     Collections.sort(rs, new Comparator<Object>() {
       @Override
       public int compare(Object o1, Object o2) {
@@ -107,7 +121,9 @@ public class MessagesByDeliveriesController extends LongOperationController {
       }
     });
     List<SelectItem> sis = new ArrayList<SelectItem>(rs.size());
-    sis.add(new SelectItem("0", ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString("region.default")));
+    if(u.isAllRegionsAllowed()) {
+      sis.add(new SelectItem("0", ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString("region.default")));
+    }
     for(Region r : rs) {
       sis.add(new SelectItem(Integer.toString(r.getRegionId()), r.getName()));
     }

@@ -40,8 +40,8 @@
                 <f:selectItem itemLabel="" itemValue=""/>
                 <f:selectItems value="#{deliveryMessagesByPeriod.regions}"/>
               </h:selectOneMenu>
-              <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}"/>
-              <h:selectOneMenu value="#{deliveryMessagesByPeriod.smscFilter}">
+              <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}"/>
+              <h:selectOneMenu value="#{deliveryMessagesByPeriod.smscFilter}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}">
                 <f:selectItem itemLabel="" itemValue=""/>
                 <f:selectItems value="#{deliveryMessagesByPeriod.smscs}"/>
               </h:selectOneMenu>
