@@ -1,4 +1,4 @@
-static char const ident[] = "$Id";
+static char const ident[] = "$Id:";
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
