@@ -91,7 +91,7 @@ class GopotaListener: public SuaProcessor, public Thread {
       smsc_log_error(logger,"SccpListener exit with code: %d", result);
       return result;
     }
-  };
+};
 int randint(int min, int max)
 {
   return min+int((max-min+1)*rand()/(RAND_MAX+1.0));
@@ -99,17 +99,19 @@ int randint(int min, int max)
 static uint64_t invokation_count;
 class StatFlusher: public Thread {
   private:
+    bool going;
     uint64_t temp_counter;
     TSMSTAT stat;
   public:
-    StatFlusher(): temp_counter(invokation_count)
+    StatFlusher(): temp_counter(invokation_count),going(true)
     {
       TSM::getCounters(stat);
     }
+    void Stop() {going = false;}
     virtual int Execute()
     {
       struct timespec delay = {0, 995000000}; // 955ms
-      while (true)
+      while (going)
       {
         nanosleep(&delay,0);
 
@@ -179,7 +181,7 @@ class Phone {
         case phoneWait:
           break;
       }
-      smsc_log_debug(logger,"phone[%d].state=%s MPN=%d MID=%d MR=%d",
+      smsc_log_debug(logger,"phone[%04d].state=%s MPN=%d MID=%d MR=%d",
           phoneIndex,getStateDescription(state).c_str(),MPN,MID,MR);
     }
   public:
@@ -259,18 +261,21 @@ class Phone {
 };
 uint8_t Phone::MP=partsNumber; //Maximum number of short messages in the concatenated short message
 
-class Flooder : public MOFTSMListener{
+class Flooder : public MOFTSMListener, public Thread{
   private:
+    bool going;
     Mutex lock;
     SccpSender& shaper;
+    TCO& mtsms;
     uint32_t smscount;
     Phone* phones;
     list<uint16_t> idxqueue;
     // fill SCCP addresses for SMS sending, FROM = MSC GT, TO = SMSC GT
     uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
   public:
-    Flooder(SccpSender& _shaper): shaper(_shaper)
+    Flooder(SccpSender& _shaper, TCO& _mtsms): shaper(_shaper),mtsms(_mtsms)
     {
+      going = true;
       smscount = 0;
       cdlen = packSCCPAddress(cd, 1 /* E.164 */, sca /* SMSC E.164 */, 8 /* SMSC SSN */);
       cllen = packSCCPAddress(cl, 1 /* E.164 */, msca /* MSC E.164 */, 8 /* MSC SSN */);
@@ -300,6 +305,9 @@ class Flooder : public MOFTSMListener{
       shaper.send(0,0,0,0,0,0);
       smsc_log_debug(logger,"sent %010d",smscount);
     }
+    // listener method
+    // if sent part is not last in sequence
+    // place phone in wait list
     virtual void end(MOFTSM* tsm,uint16_t idx)
     {
       phones[idx].end(tsm);
@@ -312,6 +320,25 @@ class Flooder : public MOFTSMListener{
     void cont(MOFTSM* tsm,uint16_t phoneIndex)
     {
       phones[phoneIndex].cont(tsm);
+    }
+    void Stop() { going = false;}
+    virtual int Execute()
+    {
+      while (going)
+      {
+        MOFTSM* tsm = 0;
+        tsm = (MOFTSM*) mtsms.TC_BEGIN(shortMsgMoRelayContext_v2);
+        if (tsm)
+        {
+          sendpart(tsm); // get random phone
+        }
+        else
+        {
+          struct timespec delay = { 0, 500000000 }; // Nanoseconds
+          nanosleep(&delay, 0);
+        }
+      }
+      return 0;
     }
 };
 class ToolConfig {
@@ -357,7 +384,6 @@ int main(int argc, char** argv)
 
     srand(time(NULL)); // set seed
     StatFlusher trener;
-    trener.Start();
     EmptyRequestSender fakeSender;
     TCO mtsms(100000);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
@@ -370,29 +396,20 @@ int main(int argc, char** argv)
     listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
         Address((uint8_t)strlen(vlra), 1, 1, vlra),
         Address((uint8_t)strlen(hlra), 1, 1, hlra));
-    listener.Start();
-    sleep(10);
 
     //inject traffic shaper
     InvokationCount shapecounter;
     TrafficShaper shaper(&shapecounter, speed,slowstartperiod);
-    Flooder flood(shaper);
-    while(true)
-    {
+    Flooder flood(shaper,mtsms);
 
-      MOFTSM* tsm = 0;
-      tsm = (MOFTSM*)mtsms.TC_BEGIN(shortMsgMoRelayContext_v2);
-      if (tsm)
-      {
-        flood.sendpart(tsm); // get random phone
-      }
-      else
-      {
-      struct timespec delay = { 0, 500000000}; // Nanoseconds
-      nanosleep(&delay, 0);
-      }
-    }
+
+    listener.Start();
+    trener.Start();
+    sleep(10);
+    flood.Start();
+    flood.WaitFor();
     listener.Stop();
+    trener.Stop();
   } catch (std::exception& ex)
   {
     smsc_log_error(logger, " cought unexpected exception [%s]", ex.what());
