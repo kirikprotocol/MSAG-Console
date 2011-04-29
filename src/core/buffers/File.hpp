@@ -410,6 +410,10 @@ public:
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
     if(eventHandler)eventHandler->onOpen(FileEventHandler::openRead,fn);
   }
+  void ROpen(const std::string& fn)
+  {
+    ROpen(fn.c_str());
+  }
   void WOpen(const char* fn)
   {
     Close();
@@ -417,6 +421,10 @@ public:
     fd=open(fn,O_WRONLY|O_LARGEFILE|O_CREAT,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
     if(eventHandler)eventHandler->onOpen(FileEventHandler::openWrite,fn);
+  }
+  void WOpen(const std::string& fn)
+  {
+    WOpen(fn.c_str());
   }
   void RWOpen(const char* fn)
   {
@@ -426,6 +434,10 @@ public:
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
     if(eventHandler)eventHandler->onOpen(FileEventHandler::openRW,fn);
   }
+  void RWOpen(const std::string& fn)
+  {
+    RWOpen(fn.c_str());
+  }
   void RWCreate(const char* fn)
   {
     Close();
@@ -433,6 +445,10 @@ public:
     fd=open(fn,O_CREAT|O_RDWR|O_TRUNC|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
     if(eventHandler)eventHandler->onOpen(FileEventHandler::openCreate,fn);
+  }
+  void RWCreate(const std::string& fn)
+  {
+    RWCreate(fn.c_str());
   }
   void Append(const char* fn)
   {
@@ -442,6 +458,10 @@ public:
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
     if(eventHandler)eventHandler->onOpen(FileEventHandler::openAppend,fn);
     SeekEnd(0);
+  }
+  void Append(const std::string& fn)
+  {
+    Append(fn.c_str());
   }
 
   void SetUnbuffered()
@@ -946,14 +966,46 @@ public:
     }else
     {
       str="";
-      char c;
-      offset_type pos=Pos();
-      offset_type sz=Size();
-      while(pos<sz)
+      if(flags&FLG_RDBUF)
       {
-        pos+=Read(&c,1);
-        if(c==0x0a)return true;
-        str+=c;
+        while(bufferPosition<bufferUsed)
+        {
+          int i=0;
+          while(bufferPosition+i<bufferUsed && buffer[bufferPosition+i]!=0x0a)i++;
+          if(bufferPosition+i<bufferUsed)
+          {
+            str.append(buffer+bufferPosition,i);
+            bufferPosition+=i;
+            char c;
+            Read(&c,1);
+            return true;
+          }else
+          {
+            str.append(buffer+bufferPosition,i);
+            bufferPosition+=i;
+            Read(0,0);
+          }
+        }
+        return !str.empty();
+      }else
+      {
+        char c;
+        offset_type pos=Pos();
+        offset_type sz=Size();
+        if(pos==sz)
+        {
+          return false;
+        }
+        while(pos<sz)
+        {
+          pos+=Read(&c,1);
+          if(c==0x0a)return true;
+          str+=c;
+        }
+        if(!str.empty())
+        {
+          return true;
+        }
       }
       return false;
     }
@@ -1002,6 +1054,12 @@ public:
     }
   }
 
+  void Rename(const std::string& newname)
+  {
+    Rename(newname.c_str());
+  }
+
+
   static bool Exists(const char* file)
   {
 #ifdef _WIN32
@@ -1016,6 +1074,12 @@ public:
     return ::stat(file,&st)==0;
 #endif
   }
+
+  static bool Exists(const std::string& file)
+  {
+    return Exists(file.c_str());
+  }
+
 
     static bool IsDir( const char* file ) {
 #ifdef _WIN32
@@ -1039,6 +1103,12 @@ public:
     }
   }
 
+  static void Rename(const std::string& oldname,const std::string& newname)
+  {
+    Rename(oldname.c_str(),newname.c_str());
+  }
+
+
   void RenameExt(const char* newext)
   {
     std::string newFileName=filename;
@@ -1059,6 +1129,11 @@ public:
     {
       GlobalFileEventHandler::getGlobalFileEventHandler()->onUnlink(fn);
     }
+  }
+
+  static void Unlink(const std::string& fn)
+  {
+    Unlink(fn.c_str());
   }
 
   static void MkDir(const char* dirName,int mode=0755)
