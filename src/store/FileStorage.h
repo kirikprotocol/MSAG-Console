@@ -145,8 +145,8 @@ namespace smsc { namespace store
         ArchiveStorage() : RollingStorage() {};
         virtual ~ArchiveStorage() {};
 
-        using RollingStorage::init;
-        void init(const char* argStorePath,int argRollInterval)  { RollingStorage::init(argStorePath,argRollInterval); };
+        //using RollingStorage::init;
+        //void init(const char* argStorePath,int argRollInterval)  { RollingStorage::init(argStorePath,argRollInterval); };
         void roll();
 
         void createRecord(SMSId id, SMS& sms);
