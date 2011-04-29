@@ -46,7 +46,7 @@ public class TestDcpConnection extends DcpConnection{
           e.printStackTrace();
         }
       }
-    }, 60, 60, TimeUnit.SECONDS);
+    }, 30, 30, TimeUnit.SECONDS);
   }
 
   public boolean isConnected() {

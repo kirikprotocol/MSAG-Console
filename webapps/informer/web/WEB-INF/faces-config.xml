@@ -387,6 +387,12 @@
   </managed-bean>
 
   <managed-bean>
+      <managed-bean-name>messErrors</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.ErrorStatsController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
       <managed-bean-name>messagesByDeliveries</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByDeliveriesController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
@@ -768,6 +774,11 @@
     <navigation-case>
       <from-outcome>RESULT_DELIVERY</from-outcome>
       <to-view-id>/archive/delivery.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>MESS_ERRORS</from-outcome>
+      <to-view-id>/stats/messErrors.xhtml</to-view-id>
     </navigation-case>
 
   </navigation-rule>

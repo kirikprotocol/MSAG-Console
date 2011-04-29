@@ -10,9 +10,11 @@ import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
+import mobi.eyeline.informer.web.controllers.stats.ErrorStatsController;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
 
 import javax.faces.application.FacesMessage;
+import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +66,9 @@ public class DeliveryController extends InformerController{
     String id = getRequestParameter("deliveryId");
     if(id == null || id.length() == 0) {            // come back
       String p = getRequestParameter(UserEditController.COME_BACK_PARAMS);
+      if(p == null || p.length() == 0) {
+        p = getRequestParameter(ErrorStatsController.COME_BACK_PARAMS);
+      }
       if(p != null && p.length()>0) {
         String[] ss = p.split(",");
         reqId = ss[0];
@@ -214,5 +219,9 @@ public class DeliveryController extends InformerController{
 
   public String getDeliveryMode() {
     return delivery.getDeliveryMode().toString();
+  }
+
+  public void statForSelected(ActionEvent e) {
+    getRequest().put("delivery", delivery.getId());
   }
 }

@@ -23,9 +23,19 @@
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
-            <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
-          </tr:commandLink>
+          <eye:menubar label="#{msg['informer.deliveries.stats']} ...">
+            <eye:menubaritem>
+              <tr:commandLink text="#{msg['informer.stats.by.messages']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats.mess']}">
+                <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+              </tr:commandLink>
+            </eye:menubaritem>
+            <eye:menubaritem>
+              <tr:commandLink text="#{msg['informer.stats.by.error']}" action="#{messErrors.setDeliveryParam}" actionListener="#{deliveryEdit.statForSelected}" shortDesc="#{msg['delivery.details.stats.errors']}">
+                <f:param name="errors_stats_come_back" value="DELIVERY_EDIT"/>
+                <f:param name="errors_stats_come_back_params" value="#{deliveryEdit.delivery.id}"/>
+              </tr:commandLink>
+            </eye:menubaritem>
+          </eye:menubar>
         </eye:button>
         <eye:button>
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
@@ -236,9 +246,19 @@
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
-            <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
-          </tr:commandLink>
+          <eye:menubar label="#{msg['informer.deliveries.stats']} ...">
+            <eye:menubaritem>
+              <tr:commandLink text="#{msg['informer.stats.by.messages']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats.mess']}">
+                <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+              </tr:commandLink>
+            </eye:menubaritem>
+            <eye:menubaritem>
+              <tr:commandLink text="#{msg['informer.stats.by.error']}" action="#{messErrors.setDeliveryParam}" actionListener="#{deliveryEdit.statForSelected}" shortDesc="#{msg['delivery.details.stats.errors']}">
+                <f:param name="errors_stats_come_back" value="DELIVERY_EDIT"/>
+                <f:param name="errors_stats_come_back_params" value="#{deliveryEdit.delivery.id}"/>
+              </tr:commandLink>
+            </eye:menubaritem>
+          </eye:menubar>
         </eye:button>
         <eye:button>
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">

@@ -7,14 +7,19 @@ import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatusHistory;
 import mobi.eyeline.informer.admin.infosme.TestSms;
+import mobi.eyeline.informer.admin.infosme.TestSmsException;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
+import mobi.eyeline.informer.web.controllers.stats.ErrorStatsController;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
+import javax.faces.event.ActionEvent;
 import java.util.Date;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * @author Aleksandr Khalitov
@@ -44,6 +49,9 @@ public class DeliveryEditController extends DeliveryController {
     super();
 
     String p = getRequestParameter(DELIVERY_PARAM);
+    if(p == null || p.length() == 0) {
+      p = getRequestParameter(ErrorStatsController.COME_BACK_PARAMS);
+    }
     id = p == null || (p = p.trim()).length() == 0 ? null : Integer.parseInt(p);
 
     if(id == null) {
@@ -242,10 +250,23 @@ public class DeliveryEditController extends DeliveryController {
       }
       config.sendTestSms(sms);
       addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", user.getPhone());
+    } catch (TestSmsException e) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", user.getPhone().getSimpleAddress(),
+          Integer.toString(e.getSmppStatus()), getSmppCodeDescription(e.getSmppStatus()));
     } catch (AdminException e) {
       addError(e);
     }
     return null;
+  }
+
+
+  private String getSmppCodeDescription(int smppCode) {
+    ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", getLocale());
+    try {
+      return bundle.getString("informer.errcode." + smppCode);
+    } catch (MissingResourceException e) {
+      return bundle.getString("informer.errcode.unknown");
+    }
   }
 
   public boolean isSmsMode() {
@@ -343,5 +364,9 @@ public class DeliveryEditController extends DeliveryController {
 
   public void setUseDataSm(boolean useDataSm) {
     delivery.setUseDataSm(useDataSm);
+  }
+
+  public void statForSelected(ActionEvent e) {
+    getRequest().put("delivery", delivery.getId());
   }
 }

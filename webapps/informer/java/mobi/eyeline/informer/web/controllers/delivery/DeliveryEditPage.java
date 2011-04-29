@@ -11,7 +11,6 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.controllers.ErrorCodeConverter;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
@@ -346,7 +345,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
         config.sendTestSms(sms);
         addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
       } catch (TestSmsException e) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", u.getPhone(), e.getSmppStatus(), getSmppCodeDescription(e.getSmppStatus()));
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", u.getPhone().getSimpleAddress(), Integer.toString(e.getSmppStatus()), getSmppCodeDescription(e.getSmppStatus()));
       }
     } catch (AdminException e) {
       addError(e);
