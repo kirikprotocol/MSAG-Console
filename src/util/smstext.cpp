@@ -662,7 +662,7 @@ bool extractSmsPart(SMS* sms,int partnum)
     }
     if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
     {
-      if(dstdc==DataCoding::UCS2|DataCoding::LATIN1)dstdc=DataCoding::LATIN1;
+      //if(dstdc==DataCoding::UCS2|DataCoding::LATIN1)dstdc=DataCoding::LATIN1;
       sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);
       if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
       {
