@@ -3,7 +3,6 @@
 
 # include <util/BufferSerialization.hpp>
 # include <mcisme/advert/Advertising.h>
-# include <mcisme/Socket.hpp>
 
 namespace smsc {
 namespace mcisme {
