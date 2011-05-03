@@ -1,4 +1,6 @@
+static char const ident[] = "$Id$";
 #include <string>
+#include "util/Exception.hpp"
 #include "mtsmsme/processor/Processor.h"
 #include "mtsmsme/processor/HLRImpl.hpp"
 #include "core/threads/Thread.hpp"
@@ -7,6 +9,7 @@
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include "sms/sms.h"
 
+using smsc::util::Exception;
 using smsc::mtsmsme::processor::RequestProcessor;
 using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
