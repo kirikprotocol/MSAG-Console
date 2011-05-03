@@ -138,7 +138,7 @@ public:
 
   int getNewDlgId()
   {
-    MutexGuard mg(dlgIdMtx);
+    sync::MutexGuard mg(dlgIdMtx);
     return ++dlgIdSeq;
   }
 

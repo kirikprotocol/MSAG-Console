@@ -188,7 +188,7 @@ protected:
     while(!isStopping)
     {
       {
-        MutexGuard qmg(queueMon);
+        sync::MutexGuard qmg(queueMon);
         if(cntQueue.Count()==0)
         {
           queueMon.wait(1000);
