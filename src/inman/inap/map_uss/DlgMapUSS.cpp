@@ -299,7 +299,7 @@ void MapUSSDlg::onDialogNotice(UCHAR_T reportCause,
         dlgState.s.ctrAborted = 1;
         std::string dstr;
         if (comp_kind != TcapEntity::tceNone) {
-            format(dstr, "Invoke[%u]", invId);
+            smsc::util::format(dstr, "Invoke[%u]", invId);
             switch (comp_kind) {
             case TcapEntity::tceError:      dstr += ".Error"; break;
             case TcapEntity::tceResult:     dstr += ".Result"; break;

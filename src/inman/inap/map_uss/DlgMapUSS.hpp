@@ -27,6 +27,8 @@ namespace inman {
 namespace inap {
 namespace uss {
 
+using smsc::util::CustomException;
+
 //USS Dialog Handler
 class USSDhandlerITF { //  <- gsmSCF */
 protected:

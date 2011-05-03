@@ -16,6 +16,7 @@ namespace inman {
 namespace inap {
 namespace atih {
 
+using smsc::util::CustomException;
 using smsc::inman::inap::TCSessionMA;
 
 using smsc::inman::comp::atih::RequestedSubscription;
