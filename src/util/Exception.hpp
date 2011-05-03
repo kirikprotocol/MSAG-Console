@@ -1,4 +1,7 @@
 #ifndef __UTIL_EXCEPTION_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __UTIL_EXCEPTION_HPP__
 
 #include <exception>
