@@ -6,6 +6,9 @@ namespace mtsmsme {
 namespace processor {
 
 using smsc::mtsmsme::processor::RequestProcessor;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+
 static RequestProcessorFactory* factory = 0;
 Mutex flock;
 class RequestProcessorFactoryImpl: public RequestProcessorFactory {
