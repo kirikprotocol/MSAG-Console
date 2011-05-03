@@ -688,7 +688,7 @@ void DeliveryMgr::init()
 
     smsc_log_debug(log_,"--- loading deliveries ---");
 
-    smsc::core::buffers::TmpBuf<char,250> buf;
+    TmpBuf<char,300> buf;
     buf.setSize(path.size()+100);
     strcpy(buf.get(),path.c_str());
     strcat(buf.get(),"deliveries/");

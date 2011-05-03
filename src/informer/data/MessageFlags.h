@@ -2,7 +2,7 @@
 #define _INFORMER_MESSAGEFLAGS_H
 
 #include "informer/io/Typedefs.h"
-#include "core/buffers/TmpBuf.hpp"
+#include "informer/io/TmpBuf.h"
 
 namespace smsc {
 namespace sms {
@@ -55,7 +55,7 @@ protected:
     void cutField(uint16_t tag);
 
 private:
-    smsc::core::buffers::TmpBuf<char,256> buf_;
+    TmpBuf<char,256> buf_;
 };
 
 

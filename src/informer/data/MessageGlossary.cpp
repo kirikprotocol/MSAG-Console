@@ -65,7 +65,7 @@ void MessageGlossary::init( dlvid_type dlvId )
 
     smsc_log_debug(log_,"D=%u reading glossary at init",dlvId_);
     smsc::core::synchronization::MutexGuard mg(lock_);
-    smsc::core::buffers::TmpBuf<char,8192> buf;
+    TmpBuf<char,8192> buf;
     strcat(makeDeliveryPath(buf.get(),dlvId_),"glossary.txt");
     FileGuard fg;
     try {
@@ -200,7 +200,7 @@ void MessageGlossary::setTexts( const std::vector< std::string >& texts )
         }
     }
 
-    smsc::core::buffers::TmpBuf<char,2048> textbuf;
+    TmpBuf<char,2048> textbuf;
     int32_t inputId = MessageText::uniqueId + 1;
     for ( std::vector<std::string>::const_iterator i = texts.begin();
           i != texts.end(); ++i ) {

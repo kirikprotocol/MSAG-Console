@@ -12,7 +12,7 @@
 #include "informer/io/FileReader.h"
 #include "informer/io/IOConverter.h"
 #include "informer/io/HexDump.h"
-#include "core/buffers/TmpBuf.hpp"
+#include "informer/io/TmpBuf.h"
 #include "core/buffers/IntHash64.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
@@ -355,7 +355,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
                    formatRegionList(regs.begin(),regs.end()).c_str());
     // writing regions
     // FIXME: optimize (write regions via big buffer)
-    smsc::core::buffers::TmpBuf<unsigned char,200> msgbuf;
+    TmpBuf<unsigned char,200> msgbuf;
     for ( std::vector<regionid_type>::const_iterator ir = regs.begin();
           ir != regs.end(); ++ir ) {
         const regionid_type regId = *ir;
@@ -443,7 +443,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
     if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
     FileGuard fg;
     MessageList msglist;
-    smsc::core::buffers::TmpBuf<char,8192> buf;
+    TmpBuf<char,8192> buf;
     InputPvssNotifyee ipn;
     while (reqCount>0) {
 

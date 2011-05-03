@@ -2,7 +2,7 @@
 #define _INFORMER_UTF8_H
 
 #include <iconv.h>
-#include "core/buffers/TmpBuf.hpp"
+#include "TmpBuf.h"
 #include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
@@ -11,7 +11,7 @@ namespace informer {
 class UTF8
 {
 public:
-    typedef smsc::core::buffers::TmpBuf<char,2048> BufType;
+    typedef TmpBufBase<char> BufType;
 
     UTF8();
     ~UTF8();

@@ -987,7 +987,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             fg.ropen( (getCS()->getStorePath() + fpath).c_str() );
 
             // reading the whole file
-            smsc::core::buffers::TmpBuf<char,8192> buf;
+            TmpBuf<char,8192> buf;
             MessageList msgList;
             ResendReader resendReader(msgList,stopFlag);
             FileReader fileReader(fg);
@@ -1110,7 +1110,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
     smsc_log_debug(log_,"R=%u/D=%u resend-out curTime=%u startTime=%+d period=%u",
                    regionId_, dlvId, currentTime, int(startTime-currentTime), period);
 
-    smsc::core::buffers::TmpBuf<char,8192> buf;
+    TmpBuf<char,8192> buf;
     RelockMutexGuard mg(cacheMon_);
     StopRollingGuard srg(mg,*this,false);
     for ( ResendQueue::iterator prev = resendQueue_.lower_bound(startTime);

@@ -2,7 +2,7 @@
 #include "InputJournal.h"
 #include "informer/io/IOConverter.h"
 #include "logger/Logger.h"
-#include "core/buffers/TmpBuf.hpp"
+#include "informer/io/TmpBuf.h"
 #include "informer/io/FileReader.h"
 #include "informer/data/InputRegionRecord.h"
 
@@ -172,7 +172,7 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
     }
 
     // reading old journal
-    smsc::core::buffers::TmpBuf<char,8192> buf;
+    TmpBuf<char,8192> buf;
     FileReader fileReader(fg);
     IJReader ijreader(reader,version_);
     try {

@@ -7,7 +7,7 @@
 #include "informer/io/FileGuard.h"
 #include "informer/io/EmbedRefPtr.h"
 #include "DeliveryInfo.h"
-#include "core/buffers/TmpBuf.hpp"
+#include "informer/io/TmpBuf.h"
 
 namespace eyeline {
 namespace informer {
@@ -40,7 +40,7 @@ public:
     void fsync();
 
     static bool readStatistics( const std::string& filename,
-                                smsc::core::buffers::TmpBuf<char, 8192 >& buf,
+                                TmpBufBase<char>& buf,
                                 DeliveryStats& ods );
 
 private:

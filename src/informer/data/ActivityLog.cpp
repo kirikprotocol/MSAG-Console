@@ -35,7 +35,7 @@ createTime_(0)
 
 
 bool ActivityLog::readStatistics( const std::string& filename,
-                                  smsc::core::buffers::TmpBuf<char, 8192>& buf,
+                                  TmpBufBase<char>& buf,
                                   DeliveryStats& ods )
 {
     FileGuard fg;
@@ -200,7 +200,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     char caddr[30];
     printSubscriber(caddr,msg.subscriber);
 
-    smsc::core::buffers::TmpBuf<char,1024> buf;
+    TmpBuf<char,1024> buf;
     int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,",
                       unsigned(now.tm_sec), cstate, regId,
                       msg.msgId, retryCount, planTime, 

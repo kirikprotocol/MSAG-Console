@@ -21,6 +21,7 @@
 #include "util/config/Config.h"
 
 using namespace smsc::util::config;
+using namespace smsc::core::buffers;
 
 namespace {
 

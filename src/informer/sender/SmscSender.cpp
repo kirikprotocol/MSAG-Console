@@ -204,7 +204,7 @@ protected:
             return;
         }
         SJReader sjreader(sender_);
-        smsc::core::buffers::TmpBuf<char,8192> buf;
+        TmpBuf<char,8192> buf;
         FileReader fileReader(fg);
         try {
             const size_t total = fileReader.readRecords(buf,sjreader);
@@ -590,13 +590,13 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                            da.type, da.plan, da.length, da.length, da.value );
             if (useDataSm) {
                 sms.setIntProperty( smsc::sms::Tag::SMPP_QOS_TIME_TO_LIVE, validityTime );
-                PduDataSm dataSm;
+                smsc::smpp::PduDataSm dataSm;
                 dataSm.get_header().set_sequenceNumber(seqNum);
                 dataSm.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM);
                 fillDataSmFromSms(&dataSm,&sms);
                 session_->getAsyncTransmitter()->sendPdu(&(dataSm.get_header()));
             } else {
-                PduSubmitSm submitSm;
+                smsc::smpp::PduSubmitSm submitSm;
                 submitSm.get_header().set_sequenceNumber(seqNum);
                 submitSm.get_header().set_commandId(smsc::smpp::SmppCommandSet::SUBMIT_SM);
                 fillSmppPduFromSms(&submitSm, &sms);
@@ -693,8 +693,8 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
                       text );
     }
 
-    PduSubmitSm sbm;
-    PduPartSm& msg = sbm.get_message();
+    smsc::smpp::PduSubmitSm sbm;
+    smsc::smpp::PduPartSm& msg = sbm.get_message();
     msg.set_source(smsc::smpp::Address2PduAddress(oa));
     msg.set_dest(smsc::smpp::Address2PduAddress(da));
     msg.set_esmClass(2); // transactional
@@ -704,8 +704,8 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
     
     const size_t textLen = strlen(text);
     if ( smsc::util::hasHighBit(text,textLen) ) {
-        msg.set_dataCoding( DataCoding::UCS2 );
-        UTF8::BufType ucstext;
+        msg.set_dataCoding( smsc::util::DataCoding::UCS2 );
+        TmpBuf<char,2048> ucstext;
         getCS()->getUTF8().convertToUcs2(text,textLen,ucstext);
         const size_t buflen = ucstext.GetPos();
         assert(buflen%2==0);
@@ -717,10 +717,10 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
         }
         sbm.get_optional().set_messagePayload(ucstext.get(),int(buflen));
     } else {
-        msg.set_dataCoding(DataCoding::LATIN1);
+        msg.set_dataCoding(smsc::util::DataCoding::LATIN1);
         sbm.get_optional().set_messagePayload(text,int(textLen));
     }
-    sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    sbm.get_header().set_commandId(smsc::smpp::SmppCommandSet::SUBMIT_SM);
 
     MutexGuard mg(reconfLock_);
     
@@ -739,12 +739,12 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
 
     sbm.get_header().set_sequenceNumber(session_->getNextSeq());
 
-    PduSubmitSmResp* resp = session_->getSyncTransmitter()->submit(sbm);
+    smsc::smpp::PduSubmitSmResp* resp = session_->getSyncTransmitter()->submit(sbm);
     if ( !resp ) {
         throw InfosmeException(EXC_EXPIRED, "no resp");
     }
     const int ret = resp->get_header().get_commandStatus();
-    disposePdu((SmppHeader*)resp);
+    disposePdu((smsc::smpp::SmppHeader*)resp);
     return ret;
 }
 
@@ -953,7 +953,7 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
         if (queueData(rd)) {
             switch (pdu->get_commandId()) {
             case smsc::smpp::SmppCommandSet::DELIVERY_SM: {
-                PduDeliverySmResp smResp;
+                smsc::smpp::PduDeliverySmResp smResp;
                 smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
                 smResp.set_messageId("");
                 smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
@@ -961,7 +961,7 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
                 break;
             }
             case smsc::smpp::SmppCommandSet::DATA_SM: {
-                PduDataSmResp smResp;
+                smsc::smpp::PduDataSmResp smResp;
                 smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM_RESP);
                 smResp.set_messageId("");
                 smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
@@ -976,7 +976,7 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
         smsc_log_error(log_,"S='%s' receipt seq=%u exc: %s", smscId_.c_str(), pdu->get_sequenceNumber(), e.what());
         switch ( pdu->get_commandId() ) {
         case smsc::smpp::SmppCommandSet::DELIVERY_SM: {
-            PduDeliverySmResp smResp;
+            smsc::smpp::PduDeliverySmResp smResp;
             smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
             smResp.set_messageId("");
             smResp.get_header().set_commandStatus(badstat);
@@ -985,7 +985,7 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
             break;
         }
         case smsc::smpp::SmppCommandSet::DATA_SM: {
-            PduDataSmResp smResp;
+            smsc::smpp::PduDataSmResp smResp;
             smResp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM_RESP);
             smResp.set_messageId("");
             smResp.get_header().set_commandStatus(badstat);

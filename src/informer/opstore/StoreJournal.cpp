@@ -1,7 +1,7 @@
 #include "StoreJournal.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/Message.h"
-#include "core/buffers/TmpBuf.hpp"
+#include "informer/io/TmpBuf.h"
 #include "informer/io/HexDump.h"
 #include "informer/io/IOConverter.h"
 #include "informer/io/FileReader.h"
@@ -134,7 +134,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
                                      const Message& msg,
                                      regionid_type& serial )
 {
-    smsc::core::buffers::TmpBuf<unsigned char,200> buf;
+    TmpBuf<unsigned char,200> buf;
     // NOTE: it is a prediction (NOT under lock!)
     const bool equalSerials = (serial == serial_);
     if (!equalSerials) {
@@ -289,7 +289,7 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
         smsc_log_debug(log_,"cannot read '%s', exc: %s",jpath.c_str(),e.what());
         return;
     }
-    smsc::core::buffers::TmpBuf<char,8192> buf;
+    TmpBuf<char,8192> buf;
     FileReader fileReader(fg);
     try {
         const size_t total = fileReader.readRecords(buf,sjreader);

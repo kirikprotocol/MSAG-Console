@@ -9,7 +9,7 @@
 #include <string>
 #include <cerrno>
 #include "InfosmeException.h"
-#include "core/buffers/TmpBuf.hpp"
+#include "TmpBuf.h"
 
 namespace eyeline {
 namespace informer {
@@ -45,7 +45,7 @@ public:
             DIR* dir;
         } guard(dir);
         static const size_t bufsize = 512;
-        smsc::core::buffers::TmpBuf<char,bufsize>
+        TmpBuf<char,bufsize>
             buf(sizeof(dirent) +
                 pathconf(const_cast<char*>(path),_PC_NAME_MAX)+1 );
         dirent* de = (dirent*)buf.get();

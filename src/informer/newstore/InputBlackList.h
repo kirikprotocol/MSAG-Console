@@ -29,7 +29,7 @@ public:
 
 private:
     typedef smsc::core::buffers::IntHash64<uint64_t> DropMsgHash;
-    typedef smsc::core::buffers::TmpBuf<char, 2048> Buf;
+    typedef TmpBuf<char,2048> Buf;
 
     /// open black list file and position it after given message id.
     /// @param minRlast - msgid after which file should be seeked.
@@ -39,11 +39,11 @@ private:
 
     /// read a chunk of items into buffer.
     /// @param return the number of bytes read.
-    size_t readBuf( FileGuard& fg, Buf& buf );
+    size_t readBuf( FileGuard& fg, TmpBufBase<char>& buf );
 
     /// read the next chunk from the file and fills the hash.
     /// @return true if the chunk has been read.
-    bool readChunk( FileGuard& fg, Buf& buf );
+    bool readChunk( FileGuard& fg, TmpBufBase<char>& buf );
 
     /// writing activity log 'skip' records
     void writeActLog( unsigned sleepTime );

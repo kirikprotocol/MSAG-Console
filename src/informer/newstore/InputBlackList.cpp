@@ -456,7 +456,7 @@ size_t InputStorage::BlackList::openFile( FileGuard& fg,
 }
 
 
-size_t InputStorage::BlackList::readBuf( FileGuard& fg, Buf& buf )
+size_t InputStorage::BlackList::readBuf( FileGuard& fg, TmpBufBase<char>& buf )
 {
     const size_t requested = itemsize * getCS()->getSkippedIdsChunkSize();
     buf.setSize( requested );
@@ -470,7 +470,7 @@ size_t InputStorage::BlackList::readBuf( FileGuard& fg, Buf& buf )
 
 
 /// read the next chunk from blacklist file
-bool InputStorage::BlackList::readChunk( FileGuard& fg, Buf& buf )
+bool InputStorage::BlackList::readChunk( FileGuard& fg, TmpBufBase<char>& buf )
 {
     const size_t wasread = readBuf(fg,buf);
     smsc_log_debug(is_.log_,"D=%u read blklist chunk at pos %llu, size=%u",
@@ -517,7 +517,7 @@ void InputStorage::BlackList::writeActLog( unsigned sleepTime )
     fg.ropen((getCS()->getStorePath()+fname + ".new").c_str());
     smsc_log_debug(is_.log_,"D=%u writing delete records to actlog by reading '%s'",
                    is_.getDlvId(), fname);
-    smsc::core::buffers::TmpBuf<char,2048> buf;
+    TmpBuf<char,2048> buf;
     std::vector<msgid_type> msgIds;
     while (true) {
         if ( getCS()->isStopping()) { break; }

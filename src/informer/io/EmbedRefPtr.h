@@ -7,6 +7,7 @@
 namespace eyeline {
 namespace informer {
 
+/*
 extern smsc::logger::Logger* erplog_;
 inline void erpgetlog()
 {
@@ -14,18 +15,19 @@ inline void erpgetlog()
         erplog_ = smsc::logger::Logger::getInstance("erp");
     }
 }
+ */
 
 template <class T> class EmbedRefPtr
 {
 public:
     explicit EmbedRefPtr( T* x = 0 ) : x_(x) {
         if (x_) x_->ref();
-        erpgetlog();
+        // erpgetlog();
         // if (x_) { smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_); }
     }
     EmbedRefPtr( const EmbedRefPtr& p ) : x_(p.x_) {
         if (x_) x_->ref();
-        erpgetlog();
+        // erpgetlog();
         // if (x_) { smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_); }
     }
     EmbedRefPtr& operator = ( const EmbedRefPtr& p ) {
@@ -37,7 +39,7 @@ public:
     template <class U>
     EmbedRefPtr( const EmbedRefPtr<U>& p ) : x_(const_cast<U*>(p.get())) {
         if (x_) x_->ref();
-        erpgetlog();
+        // erpgetlog();
         // if (x_) { smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_); }
     }
     template <class U>

@@ -22,7 +22,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
     try {
         initXerces();
         DOMTreeReader reader;
-        const std::string cfgfile(findConfigFile(xmlfile));
+        const std::string cfgfile(smsc::util::findConfigFile(xmlfile));
         DOMDocument* document = reader.read(cfgfile.c_str());
         if (!document) throw InfosmeException(EXC_CONFIG,"parse result is null");
         DOMElement* root = document->getDocumentElement();

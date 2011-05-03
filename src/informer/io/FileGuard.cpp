@@ -190,7 +190,7 @@ void FileGuard::rmdirs( const char* path, bool rmself )
     std::vector< std::string > contents;
     makeDirListing( NoDotsNameFilter() ).list( path, contents );
     if ( !contents.empty() ) {
-        smsc::core::buffers::TmpBuf<char,256> fpath;
+        TmpBuf<char,256> fpath;
         const size_t pathlen = strlen(path);
         if (path[pathlen-1] != '/') {
             throw InfosmeException(EXC_LOGICERROR,"rmdirs('%s') should ends with /",path);
@@ -242,7 +242,7 @@ void FileGuard::copydir( const char* from,
     makeDirListing( NoDotsNameFilter() ).list(from,contents);
     if ( ! contents.empty() && maxdepth > 0 ) {
         // copying contents
-        smsc::core::buffers::TmpBuf<char,256> fpath;
+        TmpBuf<char,256> fpath;
         const size_t fromlen = strlen(from);
         if ( from[fromlen-1] != '/' ) {
             throw InfosmeException(EXC_LOGICERROR,"copydir('%s') should ends with /",from);

@@ -10,7 +10,7 @@
 #include "ActivityLog.h"
 #include "UserInfo.h"
 #include "informer/io/DirListing.h"
-#include "core/buffers/TmpBuf.hpp"
+#include "informer/io/TmpBuf.h"
 
 namespace eyeline {
 namespace informer {
@@ -220,15 +220,17 @@ unsigned DeliveryInfo::evaluateNchunks( const char*     outText,
 {
     try {
         const char* out = outText;
-        UTF8::BufType ucstext;
+        TmpBuf<char,1024> ucstext;
         const bool hasHighBit = smsc::util::hasHighBit(out,outLen);
         if (hasHighBit) {
             getCS()->getUTF8().convertToUcs2(out,outLen,ucstext);
             outLen = ucstext.GetPos();
             out = ucstext.get();
-            if (sms) sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+            if (sms) sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,
+                                         smsc::util::DataCoding::UCS2);
         } else if (sms) {
-            sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
+            sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,
+                                smsc::util::DataCoding::LATIN1);
         }
 
         if ( outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !this->useDataSm() ) {
@@ -441,7 +443,7 @@ void DeliveryInfo::readStats()
         std::sort( dirs.begin(), dirs.end() );
         std::vector< std::string > subdirs;
         subdirs.reserve(24);
-        smsc::core::buffers::TmpBuf<char,8192> buf;
+        TmpBuf<char,8192> buf;
         for ( std::vector<std::string>::reverse_iterator i = dirs.rbegin();
               i != dirs.rend(); ++i ) {
             subdirs.clear();
