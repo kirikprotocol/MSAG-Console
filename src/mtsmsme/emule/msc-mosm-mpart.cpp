@@ -3,6 +3,7 @@ static char const ident[] = "$Id$";
 #include <vector>
 #include <list>
 #include "core/threads/Thread.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
@@ -23,6 +24,8 @@ using std::vector;
 using std::string;
 using std::list;
 using smsc::core::threads::Thread;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigView;
