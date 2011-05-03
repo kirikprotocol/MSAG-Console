@@ -2,8 +2,8 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-dbsme/DBDriverTest   DBDriverTest	 -ldl -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lthread -lxerces-c -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc -lrt -L$(SMSC_BUILDDIR)/bin -llogger
+dbsme/DBDriverTest   DBDriverTest	 -ldl -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lthread -lxerces-c -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc -lrt -L$(SMSC_BUILDDIR)/bin -llogger  @db/exceptions/libdb_exc.so
 #dbsme/ComProcTest    CommandProcessorTest -ldl -lutil-templates -ldbsme-jobs -lutil-templates -ldbsme -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lthread -lxerces-c $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger
 #dbsme/LobTest        LobTest		 -ldl  $(SOCKETLIB) $(__OCI_LIB_SO__) -lrt
-dbsme/DBSme   	     DBSme		 -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin $(SOCKETLIB) -lcore-network -lutil-templates -ldbsme-jobs -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -ldbsme -ldb -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lpthread $(XERCES_LIB) -lsms -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl -lutil-mirrorfile
+dbsme/DBSme   	     DBSme		 -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin $(SOCKETLIB) -lcore-network -lutil-templates -ldbsme-jobs -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -ldbsme -ldb -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lpthread $(XERCES_LIB) -lsms -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl -lutil-mirrorfile @db/exceptions/libdb_exc.so
 #dbsme/OCITest        OCITest		 -ldl  $(SOCKETLIB) $(__OCI_LIB_SO__) -lrt
