@@ -22,6 +22,8 @@ namespace threads {
 
 using smsc::logger::Logger;
 using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::TimeSlice;
 
 class ThreadPool {
 protected:

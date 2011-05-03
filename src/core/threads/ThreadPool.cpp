@@ -277,7 +277,7 @@ void ThreadPool::releaseThread(PooledThread * thread)
       //so keep thread in 'used' state until task finalization is completed.
       usedThreads[i].destructing = true;
       {
-        ReverseMutexGuard rgrd(lock);
+        smsc::core::synchronization::ReverseMutexGuard rgrd(lock);
         if (pTask->delOnCompletion()) {
           delete pTask;
         } else {

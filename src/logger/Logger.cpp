@@ -25,6 +25,7 @@ namespace logger {
 using namespace smsc::util;
 using namespace smsc::core::buffers;
 using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::Mutex;
 
 ////////////////////// internal helpers
 const char logChars[] = {'*', 'D', 'I', 'W', 'E', 'F'};

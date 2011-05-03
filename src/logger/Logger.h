@@ -24,7 +24,7 @@
 #endif
 
 // using namespace smsc::core::buffers;
-using namespace smsc::core::synchronization;
+// using namespace smsc::core::synchronization;
 // using namespace smsc::util;
 
 namespace smsc {
