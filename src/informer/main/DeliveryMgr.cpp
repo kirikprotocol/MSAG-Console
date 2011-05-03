@@ -8,6 +8,8 @@
 #include "informer/data/FinalLog.h"
 #include "system/status.h"
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace {
 
 struct NumericNameFilter {

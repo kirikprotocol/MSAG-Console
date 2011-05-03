@@ -122,7 +122,7 @@ void InputStorage::BlackList::init( msgid_type minRlast )
 /// NOTE: the method should be invoked only once for given msgid
 bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
 {
-    MutexGuard mg(dropMon_);
+    smsc::core::synchronization::MutexGuard mg(dropMon_);
     bool res = true;
     const char* what = "";
     do {
@@ -260,7 +260,7 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
     };
     ChangeGuard cg;
     while (!getCS()->isStopping()) {
-        MutexGuard mg(dropMon_);
+        smsc::core::synchronization::MutexGuard mg(dropMon_);
         if (!changing_) {
             cg.ref_ = &changing_;
             changing_ = true;
@@ -378,7 +378,7 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
 
     {
         smsc_log_debug(is_.log_,"D=%u new blklist file is written, renaming",is_.getDlvId());
-        MutexGuard mg(dropMon_);
+        smsc::core::synchronization::MutexGuard mg(dropMon_);
         if ( -1 == rename( (getCS()->getStorePath() + fname + ".tmp").c_str(),
                            (getCS()->getStorePath() + fname + ".new").c_str() ) ) {
             throw ErrnoException(errno,"rename(%s)",fname);
@@ -524,7 +524,7 @@ void InputStorage::BlackList::writeActLog( unsigned sleepTime )
         const size_t wasread = fg.read(buf.get(),buf.getSize());
         if (wasread == 0) {
             // eof
-            MutexGuard mg(dropMon_);
+            smsc::core::synchronization::MutexGuard mg(dropMon_);
             if ( -1 == rename((getCS()->getStorePath() + fname + ".new").c_str(),
                               (getCS()->getStorePath() + fname).c_str())) {
                 throw ErrnoException(errno,"rename(%s)",fname);
@@ -538,7 +538,7 @@ void InputStorage::BlackList::writeActLog( unsigned sleepTime )
         is_.activityLog_->addDeleteRecords(currentTimeSeconds(),msgIds);
         msgIds.clear();
         if (sleepTime>9) {
-            MutexGuard mg(dropMon_);
+            smsc::core::synchronization::MutexGuard mg(dropMon_);
             dropMon_.wait(sleepTime);
         }
     }

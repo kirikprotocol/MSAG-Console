@@ -35,13 +35,13 @@ public:
     InputPvssNotifyee() : mon_(MTXWHEREAMI) {}
 
     virtual void notify() {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         mon_.notify();
     }
 
     void waitOn( Message& msg ) {
         if (msg.timeLeft != -1) return;
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         while (msg.timeLeft == -1) {
             mon_.wait(20);
         }
@@ -307,7 +307,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
 {
     const unsigned fileSize = getCS()->getInputStorageFileSize();
     RegionFinder& rf = core_.getRegionFinder();
-    MutexGuard mg(wlock_);
+    smsc::core::synchronization::MutexGuard mg(wlock_);
     /*
     {
         struct timespec tmo = { 2, 0 };
@@ -675,7 +675,7 @@ std::string InputStorage::makeFilePath( regionid_type regId, uint32_t fn ) const
 
 msgid_type InputStorage::getMinRlast()
 {
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     int regId;
     RecordList::iterator iter;
     size_t minRlast = size_t(-1);

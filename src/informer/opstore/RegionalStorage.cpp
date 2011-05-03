@@ -216,7 +216,7 @@ nextResendFile_(findNextResendFile())
 RegionalStorage::~RegionalStorage()
 {
     {
-        MutexGuard mg(cacheMon_);
+        smsc::core::synchronization::MutexGuard mg(cacheMon_);
         // checking the list
         for ( MsgIter iter = messageList_.begin(); iter != messageList_.end(); ++iter ) {
             if ( iter->serial == MessageLocker::lockedSerial ) {
@@ -249,7 +249,7 @@ DlvState RegionalStorage::getState() const {
 
 bool RegionalStorage::isFinished()
 {
-    MutexGuard mg(cacheMon_);
+    smsc::core::synchronization::MutexGuard mg(cacheMon_);
     smsc_log_debug( log_,"R=%u/D=%u list.empty=%d tasks=%d/%d next=%u",
                     regionId_, getDlvId(), messageList_.empty(),
                     inputTransferTask_ != 0,
@@ -695,7 +695,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
 
 void RegionalStorage::stopTransfer()
 {
-    MutexGuard mg(cacheMon_);
+    smsc::core::synchronization::MutexGuard mg(cacheMon_);
     if ( inputTransferTask_ ) {
         inputTransferTask_->stop();
     }
@@ -911,7 +911,7 @@ void RegionalStorage::cancelOperativeStorage()
 
 void RegionalStorage::transferFinished( InputTransferTask* task )
 {
-    MutexGuard mg(cacheMon_);
+    smsc::core::synchronization::MutexGuard mg(cacheMon_);
     if ( task == inputTransferTask_ ) {
         inputTransferTask_ = 0;
     }
@@ -922,7 +922,7 @@ void RegionalStorage::transferFinished( InputTransferTask* task )
 
 void RegionalStorage::transferFinished( ResendTransferTask* task )
 {
-    MutexGuard mg(cacheMon_);
+    smsc::core::synchronization::MutexGuard mg(cacheMon_);
     if ( task == resendTransferTask_ ) {
         resendTransferTask_ = 0;
     }
@@ -998,7 +998,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                           regionId_, dlvId, ymdTime, unsigned(total));
             {
                 // checking
-                MutexGuard mg(cacheMon_);
+                smsc::core::synchronization::MutexGuard mg(cacheMon_);
                 for ( MsgIter i = msgList.begin(); i != msgList.end(); ) {
                     // check that this element is not in the resendQueue
                     bool found = false;

@@ -101,7 +101,7 @@ UserInfo::~UserInfo()
 bool UserInfo::hasRole( UserRole role ) const
 {
     if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
-        MutexGuard mg(dataLock_);
+        smsc::core::synchronization::MutexGuard mg(dataLock_);
         throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
     }
     return (roles_ & userroles[unsigned(role)]) != 0;
@@ -110,7 +110,7 @@ bool UserInfo::hasRole( UserRole role ) const
 
 usectime_type UserInfo::isReadyAndConsumeQuant( usectime_type currentTime )
 {
-    MutexGuard mg(refLock_);
+    smsc::core::synchronization::MutexGuard mg(refLock_);
     usectime_type ret = speedControl_.isReady( currentTime % flipTimePeriod, maxSnailDelay );
     if (ret) {
         // adding some randomization to have 'a poorman' balancing
@@ -123,7 +123,7 @@ usectime_type UserInfo::isReadyAndConsumeQuant( usectime_type currentTime )
 
 void UserInfo::addRole( UserRole role )
 {
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
         throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
     }
@@ -136,11 +136,11 @@ void UserInfo::addRole( UserRole role )
 void UserInfo::update( const UserInfo& user )
 {
     {
-        MutexGuard mg(refLock_);
+        smsc::core::synchronization::MutexGuard mg(refLock_);
         speedControl_.setSpeed( user.speedControl_.getSpeed(),
                                 currentTimeMicro() % flipTimePeriod );
     }
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     password_ = user.password_;
     roles_ = user.roles_;
     maxTotalDeliveries_ = user.maxTotalDeliveries_;
@@ -154,14 +154,14 @@ void UserInfo::update( const UserInfo& user )
 
 void UserInfo::setAllowedAddresses( const std::vector< smsc::sms::Address>& oas )
 {
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     allowedAddresses_ = oas;
 }
 
 
 bool UserInfo::checkSourceAddress( const smsc::sms::Address& oa )
 {
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     if ( allowedAddresses_.empty() ) return true;
     std::vector< smsc::sms::Address >::const_iterator it =
         std::find( allowedAddresses_.begin(),
@@ -174,7 +174,7 @@ bool UserInfo::checkSourceAddress( const smsc::sms::Address& oa )
 
 void UserInfo::getDeliveries( DeliveryList& dlvs ) const
 {
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     dlvs = deliveries_;
 }
 
@@ -186,7 +186,7 @@ void UserInfo::incDlvStats( uint8_t state,
     if (state == fromState ) return;
     unsigned total;
     {
-        MutexGuard mg(statLock_);
+        smsc::core::synchronization::MutexGuard mg(statLock_);
         if (fromState) stats_.incStat(fromState,-1);
         stats_.incStat(state,1);
         total = stats_.getTotal();
@@ -198,7 +198,7 @@ void UserInfo::incDlvStats( uint8_t state,
         stats_.incStat(state,-1);
         if (fromState) stats_.incStat(fromState,1);
     }
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     throw InfosmeException(EXC_DLVLIMITEXCEED,
                            "U='%s' add delivery state='%s' failed: count=%u limit=%u",
                            userId_.c_str(), 
@@ -210,7 +210,7 @@ void UserInfo::incDlvStats( uint8_t state,
 
 void UserInfo::popDlvStats( UserDlvStats& ds )
 {
-    MutexGuard mg(statLock_);
+    smsc::core::synchronization::MutexGuard mg(statLock_);
     const unsigned idx = 1 - getCS()->getStatBankIndex();
     ds = incstats_[idx];
     incstats_[idx].clear();
@@ -220,7 +220,7 @@ void UserInfo::popDlvStats( UserDlvStats& ds )
 void UserInfo::attachDelivery( const DeliveryPtr& dlv )
 {
     assert(&dlv->getUserInfo() == this);
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     DeliveryList::iterator i = 
         std::lower_bound( deliveries_.begin(),
                           deliveries_.end(),
@@ -239,7 +239,7 @@ void UserInfo::attachDelivery( const DeliveryPtr& dlv )
 
 void UserInfo::detachDelivery( dlvid_type dlvId )
 {
-    MutexGuard mg(dataLock_);
+    smsc::core::synchronization::MutexGuard mg(dataLock_);
     DeliveryList::iterator i =
         std::lower_bound( deliveries_.begin(),
                           deliveries_.end(),

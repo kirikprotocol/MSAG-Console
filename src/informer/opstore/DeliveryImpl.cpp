@@ -212,7 +212,7 @@ void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     // should we unbind first?
-    MutexGuard mg(stateLock_);
+    smsc::core::synchronization::MutexGuard mg(stateLock_);
     dlvInfo_->update( data );
     writeDeliveryInfoData();
 }
@@ -228,7 +228,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     msgtime_type now;
     ulonglong ymd;
     {
-        MutexGuard mg(stateLock_);
+        smsc::core::synchronization::MutexGuard mg(stateLock_);
         const DlvState oldState = state_;
         if (oldState == newState) return;
         smsc_log_debug(log_,"D=%u setState: %s into %s",dlvId,
@@ -263,7 +263,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         case DLVSTATE_PAUSED:
         case DLVSTATE_FINISHED:
         case DLVSTATE_CANCELLED: {
-            MutexGuard cmg(cacheLock_);
+            smsc::core::synchronization::MutexGuard cmg(cacheLock_);
             for ( StoreList::iterator i = storeList_.begin(); i != storeList_.end(); ++i ) {
                 (*i)->stopTransfer();
             }
@@ -317,7 +317,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 
 RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool create )
 {
-    MutexGuard mg(cacheLock_);
+    smsc::core::synchronization::MutexGuard mg(cacheLock_);
     StoreList::iterator* ptr = storeHash_.GetPtr(regId);
     if (!ptr) {
         if (!create) {
@@ -334,7 +334,7 @@ void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
-    MutexGuard mg(cacheLock_);
+    smsc::core::synchronization::MutexGuard mg(cacheLock_);
     regIds.reserve(storeHash_.Count());
     int regId;
     StoreList::iterator ptr;
@@ -352,7 +352,7 @@ size_t DeliveryImpl::rollOverStore( SpeedControl<usectime_type,tuPerSec>& speedC
     do {
         RegionalStoragePtr ptr;
         {
-            MutexGuard mg(cacheLock_);
+            smsc::core::synchronization::MutexGuard mg(cacheLock_);
             if ( firstPass ) {
                 rollingIter_ = storeList_.begin();
                 firstPass = false;
@@ -423,7 +423,7 @@ void DeliveryImpl::detachEverything( bool cleanDirectory,
     smsc_log_debug(log_,"D=%u detaching everything",dlvId);
     {
         dlvInfo_->getUserInfo().detachDelivery(dlvId);
-        MutexGuard mg(cacheLock_);
+        smsc::core::synchronization::MutexGuard mg(cacheLock_);
         storeHash_.Empty();
         storeList_.clear();
         rollingIter_ = storeList_.end();
@@ -458,7 +458,7 @@ void DeliveryImpl::checkFinalize()
     DeliveryStats ds;
     bool finalize = true;
     {
-        MutexGuard mg(cacheLock_);
+        smsc::core::synchronization::MutexGuard mg(cacheLock_);
         int regId;
         StoreList::iterator ptr;
         for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {

@@ -16,6 +16,8 @@
 #include "sms/sms.h"
 #include "system/status.h"
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace {
 
 using namespace eyeline::informer;

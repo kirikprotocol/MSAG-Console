@@ -15,14 +15,14 @@ class MessageGlossary::ChangeGuard
 public:
     ChangeGuard( const MessageGlossary& g ) : mg_(g) {
         while (true) {
-            MutexGuard mg(mg_.lock_);
+            smsc::core::synchronization::MutexGuard mg(mg_.lock_);
             if (!mg_.changing_) { break; }
             mg_.lock_.wait(100);
         }
     }
 
     ~ChangeGuard() {
-        MutexGuard mg(mg_.lock_);
+        smsc::core::synchronization::MutexGuard mg(mg_.lock_);
         mg_.changing_ = false;
         mg_.lock_.notify();
     }
@@ -153,7 +153,7 @@ void MessageGlossary::fetchText( MessageText& p, bool returnRealId )
     }
     {
         // smsc_log_debug(log_,"D=%u fetch text id=%d", dlvId_, id);
-        MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(lock_);
         if (!hash_) {
             throw InfosmeException(EXC_LOGICERROR,"D=%u glossary is not loaded",dlvId_);
         }
@@ -235,7 +235,7 @@ void MessageGlossary::setTexts( const std::vector< std::string >& texts )
             cleanList( newlist );
             throw InfosmeException(EXC_SYSTEM,"D=%u rename('%s')",dlvId_,fname);
         }
-        MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(lock_);
         list_.splice(list_.begin(),newlist,newlist.begin(),newlist.end());
         TextHash* tmp = hash_;
         hash_ = newhash.release();

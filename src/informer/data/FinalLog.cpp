@@ -108,7 +108,7 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
     if (bufsize < 0) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf to final.log: %d",bufsize);
     }
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     doCheckRollFile(currentTime,true);
     if ( currentTime < createTime_ ) {
         // fix for delayed write
@@ -137,7 +137,7 @@ void FinalLog::addDlvRecord( msgtime_type         currentTime,
     if (bufsize<0) {
         throw InfosmeException(EXC_SYSTEM, "cannot printf to final.log: %d",bufsize);
     }
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     doCheckRollFile(currentTime,true);
     if (currentTime < createTime_) {
         ::memcpy(buf,"00",2);
@@ -149,7 +149,7 @@ void FinalLog::addDlvRecord( msgtime_type         currentTime,
 
 void FinalLog::checkRollFile( msgtime_type currentTime )
 {
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     doCheckRollFile(currentTime,false);
 }
 

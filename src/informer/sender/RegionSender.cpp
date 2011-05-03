@@ -94,7 +94,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
          */
         weekTime_ = region_->getLocalWeekTime(now);
 
-        MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(lock_);
         // check speed control
         const usectime_type delay = 
             speedControl_.isReady( currentTime % flipTimePeriod,
@@ -128,7 +128,7 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
     const dlvid_type dlvId = ptr.getDlvId();
     smsc_log_debug(log_,"add delivery D=%u",dlvId);
     {
-        MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(lock_);
         DlvMap::iterator iter = dlvList_.lower_bound(dlvId);
         if (iter != dlvList_.end() && iter->first == dlvId ) {
             // already added
@@ -149,7 +149,7 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
 {
     smsc_log_debug(log_,"remove delivery D=%u",dlvId);
     {
-        MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(lock_);
         DlvMap::iterator iter = dlvList_.lower_bound(dlvId);
         if (iter == dlvList_.end() || iter->first != dlvId ) {
             // not found
