@@ -18,6 +18,7 @@ namespace smsc{namespace mtsmsme{namespace processor{
 using namespace smsc::mtsmsme::processor::encode;
 using smsc::core::synchronization::Mutex;
 using smsc::mtsmsme::processor::SccpSender;
+using smsc::core::buffers::XHash;
 using std::list;
 
 class TSM;
