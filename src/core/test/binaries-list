@@ -13,3 +13,4 @@
 -core/test/qtest qtest -lcore-threads -lthread
 -core/test/fixedrecord fixedrecord
 core/test/diskxtree diskxtree $(__LIBRARIES) -lutil -lsms -lrt
+core/test/inthash IntHashT $(__LIBRARIES)
