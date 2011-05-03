@@ -9,6 +9,8 @@ namespace m3ua_gw {
 namespace mtp3 {
 namespace msu_processor {
 
+using smsc::core::synchronization::MutexGuard;
+
 void
 RoutingTable::addRoute(common::point_code_t dpc, const common::LinkId& dst_link_id)
 {
