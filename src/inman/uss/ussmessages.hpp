@@ -9,20 +9,21 @@
 
 #include <logger/Logger.h>
 #include "util/Factory.hpp"
-using smsc::util::FactoryT;
-
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
 
 #include "inman/interaction/serializer.hpp"
-using smsc::inman::interaction::ObjectBuffer;
-using smsc::inman::interaction::SerializableObjectAC;
-using smsc::inman::interaction::SerializerITF;
-
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
+using smsc::util::TonNpiAddress;
+using smsc::util::CustomException;
+
+using smsc::inman::interaction::ObjectBuffer;
+using smsc::inman::interaction::SerializableObjectAC;
+using smsc::inman::interaction::SerializerITF;
+
 
 // 1. USSRequest         ( client --> USSMAN )
 // 2. USSRequestResult   ( client <-- USSMAN )
@@ -42,7 +43,7 @@ struct USS2CMD {
 //DeSerializer for USSman commands, transferred over TCP socket
 //NOTE: SerializerUSS doesn't provide partial deserialization of packets
 class SerializerUSS : public SerializerITF, 
-                    public FactoryT<unsigned short, SerializableObjectAC> {
+                    public smsc::util::FactoryT<unsigned short, SerializableObjectAC> {
 public:
   virtual ~SerializerUSS() { }
 

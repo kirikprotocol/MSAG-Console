@@ -8,7 +8,9 @@ static char const ident[] = "@(#)$Id$";
 
 #include "util/vformat.hpp"
 using smsc::util::format;
+
 #include "util/BinDump.hpp"
+using smsc::util::DumpHex;
 
 #include "inman/uss/ussmessages.hpp"
 #include "inman/common/cvtutil.hpp"

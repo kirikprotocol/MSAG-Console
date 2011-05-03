@@ -16,6 +16,8 @@ namespace smsc  {
 namespace inman {
 namespace iapmgr {
 
+using smsc::util::MAPConst;
+
 class ISDNAddressMask : public smsc::core::buffers::FixedLengthString<MAPConst::MAX_ISDN_AddressValueLength> {
 public:
   //static const NumberingParms _numberingParms(5, 15, "0-9");

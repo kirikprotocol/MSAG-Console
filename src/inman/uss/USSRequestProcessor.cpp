@@ -15,6 +15,7 @@ using smsc::inman::comp::_ac_map_networkUnstructuredSs_v2;
 using smsc::inman::inap::SSNBinding;
 
 #include "inman/uss/USSRequestProcessor.hpp"
+using smsc::util::URCRegistry;
 
 namespace smsc {
 namespace inman {

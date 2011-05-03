@@ -10,14 +10,16 @@
 # include <memory>
 # include <set>
 
-# include <inman/interaction/connect.hpp>
-# include <inman/interaction/serializer.hpp>
-# include <inman/uss/emulator/MessageHandler.hpp>
-# include <util/Singleton.hpp>
+# include "inman/interaction/connect.hpp"
+# include "inman/interaction/serializer.hpp"
+# include "inman/uss/emulator/MessageHandler.hpp"
+# include "util/Singleton.hpp"
 
 namespace smsc {
 namespace inman {
 namespace uss {
+
+using smsc::util::CustomException;
 
 class USSManEmulConnect : public interaction::ConnectListenerITF {
 public:

@@ -23,6 +23,8 @@ namespace smsc {
 namespace inman {
 namespace uss {
 
+using smsc::util::TonNpiAddress;
+using smsc::util::CustomException;
 using smsc::logger::Logger;
 using smsc::inman::interaction::Connect;
 
