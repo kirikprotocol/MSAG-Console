@@ -12,7 +12,7 @@
 #define SMSC_UTIL_EX_FILL(fmt) \
     va_list arglist;\
     va_start(arglist,fmt);\
-    fill(fmt,arglist);\
+    Exception::fill(fmt,arglist);\
     va_end(arglist);
 
 
@@ -44,20 +44,13 @@ protected:
     std::string exId;
 
 public:
-    CustomException() : Exception(), errCode(0), exId("")
+    CustomException() : Exception(), errCode(0), exId("CustomException")
     { }
     CustomException(int32_t err_code, const char * msg, const char * err_desc = NULL)
         : Exception(), errCode(err_code), exId("CustomException")
     {
-        if (msg)
-            message += msg;
-        if (errCode)
-            format(message, "%scode %d", msg ? ", " : "", errCode);
-        if (err_desc) {
-            if (!message.empty())
-                message += ": ";
-            message += err_desc;
-        }
+        if (msg || err_desc)
+            fill(err_code, msg, err_desc);
     }
     CustomException(const char * fmt, ...)
         : Exception(), errCode(-1), exId("CustomException")
@@ -73,6 +66,24 @@ public:
     ~CustomException() throw()
     {}
 
+    void fill(int32_t err_code, const char * const fmt, ...)
+    {
+        errCode = err_code;
+        SMSC_UTIL_EX_FILL(fmt);
+    }
+
+    void fill(const char * msg, int32_t err_code, const char * err_desc = NULL)
+    {
+        message = msg ? msg : "";
+        if ((errCode = err_code))
+            smsc::util::format(message, "%scode %d", msg ? ", " : "", errCode);
+        if (err_desc && err_desc[0]) {
+            if (!message.empty())
+                message += ": ";
+            message += err_desc;
+        }
+    }
+
     int32_t errorCode(void) const { return errCode; }
     const char * excId(void) const { return exId.c_str(); }
     void setExcId(const char * ids) { exId = ids ? ids : ""; }
@@ -84,10 +95,14 @@ public:
     SystemError(const char * msg, int err_code = errno)
         : CustomException(err_code, msg, err_code ? strerror(err_code) : NULL)
     { setExcId("SystemError"); }
-
-    SystemError(std::string & msg, int err_code = errno)
-        : CustomException(err_code, msg.c_str(), err_code ? strerror(err_code) : NULL)
-    { setExcId("SystemError"); }
+    //
+    SystemError(int32_t err_code, const char * const fmt, ...)
+      : CustomException()
+    {
+      setExcId("SystemError");
+      errCode = err_code;
+      SMSC_UTIL_EX_FILL(fmt);
+    }
 };
 
 
