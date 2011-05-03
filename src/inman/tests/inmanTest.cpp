@@ -35,7 +35,8 @@ using smsc::inman::cdr::CDRRecord;
 using smsc::inman::test::_knownAbonents;
 using smsc::inman::test::_knownAbonentsNum;
 
-
+using smsc::util::TonNpiAddress;
+using smsc::util::IMSIString;
 using smsc::logger::Logger;
 /* ************************************************************************** *
  * 

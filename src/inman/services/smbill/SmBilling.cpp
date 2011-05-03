@@ -21,6 +21,8 @@ using smsc::inman::interaction::CsBillingHdr_dlg;
 using smsc::core::synchronization::MutexTryGuard;
 //using smsc::core::synchronization::TimeSlice;
 using smsc::util::URCRegistry;
+using smsc::util::format;
+using smsc::util::CustomException;
 
 using smsc::inman::smbill::_SMSubmitOK;
 using smsc::inman::smbill::_SMSubmitNO;

@@ -4,6 +4,7 @@ static const char ident[] = "@(#)$Id$";
 
 #include "inman/abprov/facility2/inc/IAPQuery.hpp"
 
+using smsc::util::URCRegistry;
 using smsc::core::synchronization::ReverseMutexGuard;
 
 namespace smsc {

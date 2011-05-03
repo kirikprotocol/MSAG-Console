@@ -3,7 +3,8 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/abdtcr/AbntDetector.hpp"
-
+using smsc::util::format;
+using smsc::util::URCRegistry;
 using smsc::inman::iaprvd::IAPProperty;
 using smsc::inman::iaprvd::IAProviderAC;
 using smsc::inman::iaprvd::CSIRecord;

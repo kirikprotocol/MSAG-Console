@@ -20,6 +20,7 @@ namespace inman {
 namespace abdtcr {
 
 using smsc::util::OptionalObj_T;
+using smsc::util::RCHash;
 
 using smsc::inman::tcpsrv::WorkerAC;
 
