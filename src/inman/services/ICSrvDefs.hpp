@@ -10,10 +10,12 @@
 #include "inman/services/ICSrvIDs.hpp"
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
 
 namespace smsc  {
 namespace inman {
+
+using smsc::logger::Logger;
+using smsc::core::synchronization::Mutex;
 
 //Inman Configurable Services Host interface
 class ICServicesHostITF;

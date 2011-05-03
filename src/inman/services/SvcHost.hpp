@@ -58,12 +58,12 @@ public:
     // -------------------------------------
     ICServiceAC * getICService(ICSUId srv_id) const
     {
-        MutexGuard  grd(_sync);
+        smsc::core::synchronization::MutexGuard  grd(_sync);
         return _cfg->srvReg.find(srv_id);
     }
     void * getInterface(ICSUId srv_id) const
     {
-        MutexGuard  grd(_sync);
+        smsc::core::synchronization::MutexGuard  grd(_sync);
         ICServiceAC * pSrv = _cfg->srvReg.find(srv_id);
         return pSrv ? pSrv->Interface() : NULL;
     }
