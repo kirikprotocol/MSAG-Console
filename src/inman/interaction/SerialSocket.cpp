@@ -10,6 +10,8 @@ using smsc::util::DumpHex;
 #include "inman/interaction/SerialSocket.hpp"
 using smsc::inman::interaction::ObjectBuffer;
 
+using namespace smsc::util;
+
 namespace smsc  {
 namespace inman {
 namespace interaction {

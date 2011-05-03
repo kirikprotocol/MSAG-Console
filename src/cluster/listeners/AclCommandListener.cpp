@@ -4,6 +4,9 @@
 namespace smsc {
 namespace cluster {
 
+using namespace smsc::util;
+using namespace smsc::core::buffers;
+
 using smsc::acls::AclPhoneNumber;
 using smsc::acls::AclCacheType;
 

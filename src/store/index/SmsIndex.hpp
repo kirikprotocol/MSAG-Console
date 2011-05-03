@@ -62,12 +62,13 @@ struct QueryResult{
   uint64_t offset;
 };
 
+using namespace smsc::core::buffers;
+
 typedef Array<Param> ParamArray;
 typedef Array<QueryResult> ResultArray;
 
 
 using namespace std;
-using namespace smsc::core::buffers;
 using smsc::util::crc32;
 
 #include "SmsKeys.hpp"

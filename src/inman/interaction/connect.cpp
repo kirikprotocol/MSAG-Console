@@ -11,6 +11,8 @@ using smsc::util::DumpHex;
 #include "inman/interaction/connect.hpp"
 using smsc::inman::interaction::ObjectBuffer;
 
+using namespace smsc::util;
+
 namespace smsc  {
 namespace inman {
 namespace interaction {

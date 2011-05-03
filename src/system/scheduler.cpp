@@ -18,6 +18,9 @@ smsc::logger::Logger* Scheduler::log;
 using namespace smsc::core::buffers;
 using namespace std;
 
+using namespace smsc::util;
+using namespace std;
+
 const char LocalFileStore::storeSig[10]="SMSCSTORE";
 const uint32_t LocalFileStore::storeVer=0x10001;
 

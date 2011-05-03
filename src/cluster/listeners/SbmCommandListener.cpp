@@ -16,6 +16,9 @@
     throw Exception("%s failed: Unknown exception",__func__);\
   }
 
+using namespace smsc::util;
+using namespace smsc::core::buffers;
+
 namespace smsc {
 namespace cluster {
 

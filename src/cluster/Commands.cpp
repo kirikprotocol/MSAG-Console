@@ -10,6 +10,9 @@
 
 #include "Commands.h"
 
+using namespace smsc::util;
+using namespace smsc::core::buffers;
+
 namespace smsc { namespace cluster
 {
     using namespace smsc::core::synchronization;

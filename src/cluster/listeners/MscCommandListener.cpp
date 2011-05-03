@@ -5,6 +5,8 @@ namespace smsc {
 namespace cluster {
 
 using smsc::mscman::MscManager;
+using namespace smsc::util;
+using namespace smsc::core::buffers;
 
 void MscCommandListener::handle(const Command& command)
 {

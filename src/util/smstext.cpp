@@ -12,6 +12,7 @@
 namespace smsc{
 namespace util{
 
+using namespace smsc::core::buffers;
 using namespace std;
 using std::auto_ptr;
 

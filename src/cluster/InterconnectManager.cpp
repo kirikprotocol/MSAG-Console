@@ -695,7 +695,7 @@ void InterconnectManager::flushCommands()
       while( attachedSocket.Connect()!=0 && !isStopping)
       {
         smsc_log_warn(logger, "Connect to attahced smsc failed");
-        millisleep(1000);
+        smsc::util::millisleep(1000);
       }
     }
   }

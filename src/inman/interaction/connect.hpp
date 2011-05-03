@@ -33,7 +33,7 @@ public:
     enum PckState { pckIdle = 0, pckLength, pckBody };
 
     std::auto_ptr<ObjectBuffer>     objBuf;
-    std::auto_ptr<CustomException>  exc;
+    std::auto_ptr<smsc::util::CustomException>  exc;
 
 private:
     using SocketAcquirerAC::Reset; //hide it to avoid annoying CC warnings
@@ -102,7 +102,7 @@ public:
     virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
                      /*throw(std::exception) */= 0;
     //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
-    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc) = 0;
+    virtual void onConnectError(Connect* conn, std::auto_ptr<smsc::util::CustomException>& p_exc) = 0;
 };
 
 
@@ -141,7 +141,7 @@ public:
     int     sendPck(SerializablePacketAC* pck);
 
     //returns last connect exception
-    CustomException* hasException(void) const { return _exc.get(); }
+    smsc::util::CustomException* hasException(void) const { return _exc.get(); }
     void             resetException(void) { _exc.reset(NULL); }
 
 protected:
@@ -152,7 +152,7 @@ protected:
     ConnectParms    _parms;
     SerializerITF * _objSerializer;
     PckAcquirer     pckAcq;
-    std::auto_ptr<CustomException> _exc;   //last connect exception
+    std::auto_ptr<smsc::util::CustomException> _exc;   //last connect exception
     char            _logId[sizeof("Connect[%u]") + sizeof(unsigned)*3 + 1];
     Logger*         logger;
 };

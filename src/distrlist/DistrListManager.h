@@ -31,7 +31,7 @@ namespace smsc { namespace distrlist
 
     struct PrincipalRecord:Principal{
         int lstCount;
-        File::offset_type offset;
+        smsc::core::buffers::File::offset_type offset;
 
         PrincipalRecord():lstCount(0),Principal()
         {
@@ -61,7 +61,7 @@ namespace smsc { namespace distrlist
     struct MemberRecord{
       char list[32];
       Address addr;
-      File::offset_type offset;
+      smsc::core::buffers::File::offset_type offset;
 
       MemberRecord()
       {
@@ -90,12 +90,12 @@ namespace smsc { namespace distrlist
         return addr<rhs.addr;
       }
 
-      void Read(File& f)
+      void Read(smsc::core::buffers::File& f)
       {
         f.ReadFixedString(list);
         ReadAddress(f,addr);
       }
-      void Write(File& f)const
+      void Write(smsc::core::buffers::File& f)const
       {
         f.WriteFixedString(list);
         WriteAddress(f,addr);
@@ -109,7 +109,7 @@ namespace smsc { namespace distrlist
     typedef MemberRecord SubmitterRecord;
 
     struct DistrListRecord:DistrList{
-      File::offset_type offset;
+      smsc::core::buffers::File::offset_type offset;
       typedef std::set<MemberRecord> MembersContainer;
       MembersContainer members;
       typedef std::set<SubmitterRecord> SubmittersContainer;
@@ -160,8 +160,8 @@ namespace smsc { namespace distrlist
 
         smsc::logger::Logger *logger;
 
-        Hash<DistrListRecord*> lists;
-        Hash<PrincipalRecord> principals;
+        smsc::core::buffers::Hash<DistrListRecord*> lists;
+        smsc::core::buffers::Hash<PrincipalRecord> principals;
 
         smsc::core::buffers::FixedRecordFile<DistrListRecord> lstFile;
         smsc::core::buffers::FixedRecordFile<PrincipalRecord> prcFile;

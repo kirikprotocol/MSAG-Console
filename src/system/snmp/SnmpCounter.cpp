@@ -7,6 +7,8 @@ namespace system{
 
 using namespace xercesc;
 using namespace smsc::util::xml;
+using namespace smsc::util;
+using namespace smsc::core::buffers;
 
 SnmpCounter* SnmpCounter::instance=0;
 

@@ -12,6 +12,8 @@
 #include "core/buffers/TmpBuf.hpp"
 #include "core/buffers/File.hpp"
 
+using namespace smsc::core::buffers;
+
 namespace {
 
 class FileStreamBuf : public std::basic_streambuf<char>

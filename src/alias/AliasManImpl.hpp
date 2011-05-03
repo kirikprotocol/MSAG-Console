@@ -139,7 +139,7 @@ public:
     smsc_log_info(log,"Loading aliases from file:%s",fileName.c_str());
     store.Open(fileName.c_str());
     Record r;
-    File::offset_type off;
+    smsc::core::buffers::File::offset_type off;
     int cnt=0;
     while(off=store.Read(r))
     {
@@ -163,7 +163,7 @@ protected:
     smsc::sms::Address addr;
     smsc::sms::Address alias;
     bool hide;
-    buf::File::offset_type offset;
+    smsc::core::buffers::File::offset_type offset;
     Record():hide(false),offset(0){}
     Record(const smsc::sms::Address& argAddr,const smsc::sms::Address& argAlias,bool argHide):addr(argAddr),alias(argAlias),hide(argHide),offset(0){}
 
@@ -208,9 +208,9 @@ protected:
     return addr;
   }
 
-  XTree<Record*,HeapAllocator,false> addr2alias;
-  XTree<Record*,HeapAllocator,false> alias2addr;
-  buf::FixedRecordFile<Record> store;
+  smsc::core::buffers::XTree<Record*,smsc::core::buffers::HeapAllocator,false> addr2alias;
+  smsc::core::buffers::XTree<Record*,smsc::core::buffers::HeapAllocator,false> alias2addr;
+  smsc::core::buffers::FixedRecordFile<Record> store;
   sync::Mutex mtx;
   std::string fileName;
   smsc::logger::Logger* log;

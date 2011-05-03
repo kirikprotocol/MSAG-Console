@@ -12,6 +12,7 @@ namespace system{
 namespace cluster {
 
 using smsc::core::network::Socket;
+using namespace smsc::util;
 
 void AgentListener::Start()
 {

@@ -26,6 +26,7 @@ static StaticCheck< sizeof(off_t)==8 > staticCheck;
 namespace smsc { namespace store
 {
 
+using namespace smsc::util;
 using namespace smsc::util::csv;
 using namespace smsc::smpp::DataCoding;
 

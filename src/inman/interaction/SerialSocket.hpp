@@ -64,7 +64,7 @@ public:
     SerializablePacketAC* recvPck(void);
 
     //returns exception created on connect error
-    CustomException* hasException(void) const { return _exc.get(); }
+    smsc::util::CustomException* hasException(void) const { return _exc.get(); }
     void             resetException(void) { _exc.reset(NULL); }
 
 protected:
@@ -75,7 +75,7 @@ protected:
     ConnectFormat   _frm;
     SocketParms    _parms;
     SerializerITF * _objSerializer;
-    std::auto_ptr<CustomException> _exc;   //last connect exception
+    std::auto_ptr<smsc::util::CustomException> _exc;   //last connect exception
     char            _logId[sizeof("Connect[%u]") + sizeof(unsigned)*3 + 1];
     Logger*         logger;
 };

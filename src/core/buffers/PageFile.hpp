@@ -19,7 +19,7 @@ namespace smsc{
 namespace core{
 namespace buffers{
 
-using namespace smsc::core::buffers;
+// using namespace smsc::core::buffers;
 
 /// This exception provides some means to recover corrupted PageFile.
 /// It could be triggered in case the page chain in the file is

@@ -361,13 +361,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     smsc::snmp::smestattable::SmeStatTableSubagent::Init(&smeman,&smeStats);
     tp2.startTask(snmpAgent);
     snmpAgent->statusChange(SnmpAgent::INIT);
-    SnmpCounter::Init(findConfigFile("snmp.xml"));
+    SnmpCounter::Init(smsc::util::findConfigFile("snmp.xml"));
   }
 #endif
 
   {
-    std::string tzCfg=findConfigFile("timezones.xml");
-    std::string rtCfg=findConfigFile("routes.xml");
+    std::string tzCfg=smsc::util::findConfigFile("timezones.xml");
+    std::string rtCfg=smsc::util::findConfigFile("routes.xml");
     common::TimeZoneManager::Init(tzCfg.c_str(),rtCfg.c_str());
   }
 
@@ -495,9 +495,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 #ifdef USE_MAP
   if(!ishs)
   {
-    mapio::FraudControl::Init(findConfigFile("fraud.xml"));
-    mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
-    mapio::NetworkProfiles::init(findConfigFile("network-profiles.xml"));
+    mapio::FraudControl::Init(smsc::util::findConfigFile("fraud.xml"));
+    mapio::MapLimits::Init(smsc::util::findConfigFile("maplimits.xml"));
+    mapio::NetworkProfiles::init(smsc::util::findConfigFile("network-profiles.xml"));
   }
 #endif
 
@@ -638,7 +638,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   smsc::closedgroups::ClosedGroupsManager::Init();
-  smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(findConfigFile("ClosedGroups.xml"));
+  smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(smsc::util::findConfigFile("ClosedGroups.xml"));
 
   {
 #ifdef SMSEXTRA
@@ -674,7 +674,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
   //RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
   try{
-      RescheduleCalculator::init(findConfigFile("schedule.xml"));
+      RescheduleCalculator::init(smsc::util::findConfigFile("schedule.xml"));
   }catch(std::exception& e)
   {
       smsc_log_warn(log, "Exception during reading 'schedule.xml':%s" ,e.what());
@@ -1411,9 +1411,9 @@ void Smsc::run()
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
 
 #ifdef USE_MAP
-    mapio::FraudControl::Init(findConfigFile("fraud.xml"));
-    mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
-    mapio::NetworkProfiles::init(findConfigFile("network-profiles.xml"));
+    mapio::FraudControl::Init(smsc::util::findConfigFile("fraud.xml"));
+    mapio::MapLimits::Init(smsc::util::findConfigFile("maplimits.xml"));
+    mapio::NetworkProfiles::init(smsc::util::findConfigFile("network-profiles.xml"));
 #endif
 
     aliaser->Load();
@@ -1710,7 +1710,7 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
 
 void Smsc::reloadReschedule(){
     //RescheduleCalculator::reset();
-    RescheduleCalculator::init(findConfigFile("schedule.xml"));
+    RescheduleCalculator::init(smsc::util::findConfigFile("schedule.xml"));
 }
 
 void Smsc::abortSmsc()
@@ -1836,8 +1836,8 @@ void Smsc::InitLicense()
   Hash<string> lic;
   if(licenseFile.length()==0)
   {
-    licenseFile=findConfigFile("license.ini");
-    licenseSigFile=findConfigFile("license.sig");
+      licenseFile=smsc::util::findConfigFile("license.ini");
+      licenseSigFile=smsc::util::findConfigFile("license.sig");
   }
 
   struct ::stat st;

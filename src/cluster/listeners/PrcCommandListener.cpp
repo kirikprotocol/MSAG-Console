@@ -17,6 +17,8 @@
   }
 
 using smsc::distrlist::Principal;
+using namespace smsc::util;
+using namespace smsc::core::buffers;
 
 namespace smsc {
 namespace cluster {

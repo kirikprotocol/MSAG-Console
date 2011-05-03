@@ -20,6 +20,8 @@ using smsc::system::Smsc;
 
 using smsc::system::loadRoutes;
 using smsc::util::Exception;
+using namespace smsc::util;
+using namespace smsc::core::buffers;
 
 ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *configs_, /*smsc::smeman::SmeManager *smeman_,*/
                                            smsc::system::Smsc* app_)

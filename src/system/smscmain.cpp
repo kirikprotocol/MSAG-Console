@@ -82,7 +82,7 @@ int main(int argc,char* argv[])
     smsc_log_info(logger,"\n==========================\nStarting Smsc.\n==========================");
 
     smsc::system::SmscConfigs cfgs;
-    smsc::util::config::Manager::init(findConfigFile("config.xml"));
+    smsc::util::config::Manager::init(smsc::util::findConfigFile("config.xml"));
     cfgs.cfgman=&cfgs.cfgman->getInstance();
 
 
@@ -92,7 +92,7 @@ int main(int argc,char* argv[])
     smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
     smsc_log_info(logger,  "Locale resources loaded" );
     smsc::util::config::smeman::SmeManConfig smemancfg;
-    smemancfg.load(findConfigFile("sme.xml"));
+    smemancfg.load(smsc::util::findConfigFile("sme.xml"));
     cfgs.smemanconfig=&smemancfg;
     smsc_log_info(logger,  "SME configuration loaded" );
     //smsc::util::config::alias::AliasConfig aliascfg;
@@ -100,7 +100,7 @@ int main(int argc,char* argv[])
     //cfgs.aliasconfig=&aliascfg;
     //smsc_log_info(logger,  "Alias configuration loaded" );
     smsc::util::config::route::RouteConfig rc;
-    rc.load(findConfigFile("routes.xml"));
+    rc.load(smsc::util::findConfigFile("routes.xml"));
     cfgs.routesconfig=&rc;
     smsc_log_info(logger,  "Route configuration loaded" );
 

@@ -9,13 +9,11 @@ namespace smsc{
 namespace core{
 namespace network{
 
-using smsc::core::buffers::Array;
-
 class Multiplexer{
 protected:
   enum{STATE_MODE_READ=0,STATE_MODE_WRITE=1};
 public:
-  typedef Array<Socket*> SockArray;
+  typedef smsc::core::buffers::Array<Socket*> SockArray;
   Multiplexer(){}
   virtual ~Multiplexer(){}
 
@@ -69,7 +67,7 @@ public:
 
 protected:
   SockArray sockets;
-  Array<pollfd> fds;
+  smsc::core::buffers::Array<pollfd> fds;
 
   int checkState(int mode,SockArray& ready,SockArray& error,int timeout);
 };

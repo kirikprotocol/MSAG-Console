@@ -6,6 +6,7 @@ namespace smsc {
 namespace cluster {
 
 using smsc::core::network::Socket;
+using namespace smsc::util;
 
 void CommandReader::Start()
 {

@@ -5,7 +5,7 @@
 #define __SMSC_CORE_BUFFERS_HPP__
 
 #include <algorithm>
-#include <string.h>
+// #include <string.h>
 #include "util/int.h" // for uint64_t
 
 namespace smsc{
@@ -86,7 +86,7 @@ public:
       if ( sz > heapSize )
       {
         T* newbuf = new T[sz];
-        memcpy( newbuf, realBuf, pos );
+        std::copy(realBuf,realBuf+pos,newbuf);
         if (heapBuf) delete [] heapBuf;
         heapBuf = newbuf;
         heapSize = sz;

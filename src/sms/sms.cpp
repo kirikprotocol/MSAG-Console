@@ -5,6 +5,9 @@
 #include "util/smstext.h"
 #include "core/buffers/TmpBuf.hpp"
 
+using namespace smsc::core::buffers;
+using namespace smsc::util;
+
 namespace smsc {
 namespace sms{
 

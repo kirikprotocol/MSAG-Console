@@ -14,6 +14,7 @@ using namespace smsc::sms;
 using namespace std;
 using namespace smsc::router;
 using namespace smsc::smeman;
+using namespace smsc::core::buffers;
 
 namespace smsc {
 namespace system {

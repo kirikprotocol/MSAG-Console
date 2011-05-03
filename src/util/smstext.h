@@ -13,7 +13,7 @@ namespace util{
 
 using namespace smsc::sms;
 using namespace smsc::smpp;
-using namespace smsc::core::buffers;
+// using namespace smsc::core::buffers;
 
 inline int getSmsText(SMS* sms,char* buf,size_t bufsize,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
 {
@@ -162,7 +162,7 @@ static inline bool hasHighBit(const char* buf,size_t len)
 }
 
 int splitSms(SMS* tmplSms,const char *text,size_t length,ConvEncodingEnum encoding,int datacoding,
-             Array<SMS*>& dest);
+             smsc::core::buffers::Array<SMS*>& dest);
 
 size_t fillSms(SMS* sms,const char *text,size_t length,ConvEncodingEnum encoding,int datacoding,int trimLen=65535);
 
