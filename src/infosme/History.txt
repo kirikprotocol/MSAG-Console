@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2011-04-14 14:28 bukind
+  bugfix: unsync access to CsvStore in method Delete (v1,v2)
+
 ----------------------------------------------------
 infosme-build-20101229 11:20 bukind (v2)
 

@@ -56,6 +56,7 @@ CsvStore::~CsvStore()
 
 void CsvStore::Init()
 {
+  sync::MutexGuard mg(mtx);
   typedef std::vector<std::string> StrVector;
   StrVector dirNames;
   using namespace smsc::core::buffers;
@@ -107,6 +108,7 @@ void CsvStore::Init()
 
 uint32_t CsvStore::Delete(bool onlynew)
 {
+  sync::MutexGuard mg(mtx);
   uint32_t cnt=0;
   DirMap::iterator dend=dirs.end();
   for(DirMap::iterator dit=dirs.begin();dit!=dend;dit++)

@@ -110,6 +110,7 @@ void CsvStore::Init()
 
 uint32_t CsvStore::Delete(bool onlynew)
 {
+  sync::MutexGuard mg(mtx);
   uint32_t cnt=0;
   DirMap::iterator dend=dirs.end();
   for(DirMap::iterator dit=dirs.begin();dit!=dend;dit++)
