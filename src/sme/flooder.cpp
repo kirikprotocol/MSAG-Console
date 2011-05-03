@@ -12,6 +12,11 @@
 #include "logger/Logger.h"
 #include <vector>
 #include "util/sleep.h"
+#include <stdlib.h>
+#include <signal.h>
+#include <map>
+#include <string.h>
+#include <errno.h>
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -25,12 +30,54 @@ using namespace std;
 
 
 int stopped=0;
+int disconnected=0;
 
 Mutex cntMutex;
 
 int sokcnt=0;
 int serrcnt=0;
 int reccnt=0;
+
+int tempErrProb=0;
+bool trackingMode=false;
+FILE* sentFile=0;
+FILE* receivedFile=0;
+
+typedef map<int,string> SeqToStrMap;
+
+SeqToStrMap seqToStr;
+
+Mutex seqMtx;
+
+void addSeqStr(int seq, const string& str)
+{
+  MutexGuard mg(seqMtx);
+  seqToStr[seq]=str;
+}
+
+string getSeqStr(int seq)
+{
+  MutexGuard mg(seqMtx);
+  SeqToStrMap::iterator it=seqToStr.find(seq);
+  if(it==seqToStr.end())
+  {
+    return "";
+  }
+  string rv=it->second;
+  seqToStr.erase(it);
+  return rv;
+}
+
+
+int rnd(int mx)
+{
+  return mx*drand48();
+}
+
+bool chance(int prc)
+{
+  return rnd(100)<prc;
+}
 
 TimeSlotCounter<> sok_time_cnt(30,100);
 
@@ -47,8 +94,30 @@ public:
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-      resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
+      if(chance(tempErrProb))
+      {
+        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RX_T_APPN);
+      }else
+      {
+        resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
+      }
       trans->sendDeliverySmResp(resp);
+      if(trackingMode && receivedFile && resp.get_header().get_commandStatus()==SmppStatusSet::ESME_ROK)
+      {
+        PduDeliverySm* dlv=(PduDeliverySm*)pdu;
+        const char* body;
+        int len;
+        if(dlv->get_optional().has_messagePayload())
+        {
+          body=dlv->get_optional().get_messagePayload();
+          len=dlv->get_optional().size_messagePayload();
+        }else
+        {
+          body=dlv->get_message().get_shortMessage();
+          len=dlv->get_message().size_shortMessage();
+        }
+        fprintf(receivedFile,"%.*s\n",len,body);
+      }
       {
         MutexGuard g(cntMutex);
         reccnt++;
@@ -59,6 +128,17 @@ public:
       __trace2__("received submit sm resp:%x, seq=%d",pdu->get_commandStatus(),pdu->get_sequenceNumber());
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
       MutexGuard g(cntMutex);
+
+      if(pdu->get_commandStatus()==SmppStatusSet::ESME_ROK && trackingMode && sentFile)
+      {
+        string msg=getSeqStr(pdu->get_sequenceNumber());
+        if(!msg.empty())
+        {
+          //fwrite(msg.c_str(),msg.length(),1,sentFile);
+          PduSubmitSmResp* resp=(PduSubmitSmResp*)pdu;
+          fprintf(sentFile,"%s:%s\n",msg.c_str(),resp->get_messageId());
+        }
+      }
 
       if(pdu->get_commandStatus()==SmppStatusSet::ESME_ROK)
       {
@@ -75,8 +155,26 @@ public:
       resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-      resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
+      if(chance(tempErrProb))
+      {
+        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RX_T_APPN);
+      }else
+      {
+        resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
+      }
       trans->sendDataSmResp(resp);
+      if(trackingMode && receivedFile && resp.get_header().get_commandStatus()==SmppStatusSet::ESME_ROK)
+      {
+        PduDataSm* dlv=(PduDataSm*)pdu;
+        const char* body;
+        int len;
+        if(dlv->get_optional().has_messagePayload())
+        {
+          body=dlv->get_optional().get_messagePayload();
+          len=dlv->get_optional().size_messagePayload();
+        }
+        fprintf(receivedFile,"%.*s\n",len,body);
+      }
       {
         MutexGuard g(cntMutex);
         reccnt++;
@@ -86,8 +184,8 @@ public:
   }
   void handleError(int errorCode)
   {
-    printf("error!\n");
-    stopped=1;
+    printf("Error handled:%d!\n",errorCode);
+    disconnected=1;
   }
 
   void setTrans(SmppTransmitter *t)
@@ -114,6 +212,7 @@ string password;
 int timeOut=60;
 int speed=10;
 int maxCount=0;
+int sleepOnExit=0;
 int maxTime=0;
 string source;
 string sourcesFile;
@@ -123,6 +222,9 @@ string destinationsRange;
 string message;
 string messagesFile;
 string wordsFile;
+
+string receivedFileName;
+string sentFileName;
 
 int minLength=0;
 int maxLength=0;
@@ -140,6 +242,7 @@ int probForward=0;
 int probStoreAndForward=0;
 int replaceIfPresent=0;
 int maxSimultaneousMultipart=5;
+bool autoReconnect=false;
 
 int setDpf=-1;
 
@@ -179,13 +282,19 @@ Option options[]=
   {"replaceIfPresent",'i',&replaceIfPresent},
   {"partitionSms",'b',&doPartitionSms},
   {"maxSimultaneousMultipart",'i',&maxSimultaneousMultipart},
+  {"trackingMode",'b',&trackingMode},
+  {"probTempErr",'i',&tempErrProb},
+  {"receivedFileName",'s',&receivedFileName},
+  {"sentFileName",'s',&sentFileName},
+  {"autoReconnect",'b',&autoReconnect},
+  {"sleepOnExit",'i',&sleepOnExit},
 };
 
 int optionsCount=sizeof(options)/sizeof(options[0]);
 
 bool atob(const char* val)
 {
-  return !strcmp(val,"1") || !strcmp(val,"yes") || !strcmp(val,"on");
+  return !strcmp(val,"1") || !strcmp(val,"yes") || !strcmp(val,"on") || !strcmp(val,"true");
 }
 
 void ProcessOption(const char* name,const char* val)
@@ -256,6 +365,11 @@ void LoadConfig(const char* filename)
   }
 }
 
+extern "C" void onSigInt(int)
+{
+  stopped=1;
+}
+
 int main(int argc,char* argv[])
 {
   srand((int)time(NULL));
@@ -264,6 +378,7 @@ int main(int argc,char* argv[])
     printf("usage: %s inifile [param=arg ...]\n",argv[0]);
     return -1;
   }
+  sigset(SIGINT,onSigInt);
   char var[]="SMSC_LOGGER_PROPERTIES=flooder.properties";
   putenv(var);
   Logger::Init();
@@ -388,15 +503,75 @@ int main(int argc,char* argv[])
       int mr=0;
       string wordsTemp;
 
+      if(trackingMode)
+      {
+        s.setOriginatingAddress(source.c_str());
+        if(!destination.empty())
+        {
+          s.setDestinationAddress(destination.c_str());
+        }
+        if(!receivedFileName.empty())
+        {
+          receivedFile=fopen(receivedFileName.c_str(),"w+");
+          if(!receivedFile)
+          {
+            printf("failed to open %s:%s\n",receivedFileName.c_str(),strerror(errno));
+          }
+        }
+        if(!sentFileName.empty())
+        {
+          sentFile=fopen(sentFileName.c_str(),"w+");
+          if(!sentFile)
+          {
+            printf("failed to open %s:%s\n",sentFileName.c_str(),strerror(errno));
+          }
+        }
+      }
+
+      char strbuf[32];
+
       int overdelay=0;
       while(!stopped)
       {
+        if(disconnected)
+        {
+          if(!autoReconnect)
+          {
+            break;
+          }
+          sleep(1);
+          ss.close();
+          try{
+            ss.connect();
+            disconnected=0;
+          }catch(...)
+          {
+            continue;
+          }
+        }
         hrtime_t msgstart=gethrtime();
         s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
         s.dropProperty(Tag::SMPP_SHORT_MESSAGE);
         s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
 
-        if(!doPartitionSms || mpartsSize<maxSimultaneousMultipart)
+        if(trackingMode)
+        {
+          int len=sprintf(strbuf,"%09d",cnt);
+          s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,strbuf,(unsigned)len);
+          if(destination.empty())
+          {
+            if(curAddr==endAddr)
+            {
+              curAddr=startAddr;
+            }
+            s.setDestinationAddress(curAddr);
+            uint64_t addrVal;
+            sscanf(curAddr.value,"%llu",&addrVal);
+            addrVal++;
+            sprintf(curAddr.value,"%0*llu",(int)strlen(curAddr.value),addrVal);
+          }
+        }else if(!doPartitionSms || mpartsSize<maxSimultaneousMultipart)
         {
           if(!dests.empty())
           {
@@ -537,8 +712,13 @@ int main(int argc,char* argv[])
           }
           PduSubmitSm sm;
           sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+          sm.get_header().set_sequenceNumber(ss.getNextSeq());
           fillSmppPduFromSms(&sm,&s,0);
           atr->submit(sm);
+          if(trackingMode)
+          {
+            addSeqStr(sm.get_header().get_sequenceNumber(),strbuf);
+          }
           msgidx++;
         }
 
@@ -592,6 +772,31 @@ int main(int argc,char* argv[])
         }
 
       }
+      while(trackingMode && !stopped)
+      {
+        tempErrProb=0;
+        sleep(10);
+        if(disconnected)
+        {
+          if(!autoReconnect)
+          {
+            break;
+          }
+          sleep(1);
+          ss.close();
+          try{
+            ss.connect();
+            disconnected=0;
+          }catch(...)
+          {
+            continue;
+          }
+        }
+      }
+      if(sleepOnExit)
+      {
+        sleep(sleepOnExit);
+      }
     }
     catch(std::exception& e)
     {
@@ -602,6 +807,17 @@ int main(int argc,char* argv[])
       printf("unknown exception\n");
     }
     ss.close();
+    if(trackingMode)
+    {
+      if(receivedFile)
+      {
+        fclose(receivedFile);
+      }
+      if(sentFile)
+      {
+        fclose(sentFile);
+      }
+    }
   }catch(exception& e)
   {
     printf("Exception: %s\n",e.what());

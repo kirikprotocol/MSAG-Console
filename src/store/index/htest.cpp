@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include "core/buffers/DiskHash.hpp"
-#include "SmsKeys.hpp"
 #include "logger/Logger.h"
 
 using namespace smsc::core::buffers;
+using namespace smsc::util;
+
+#include "SmsKeys.hpp"
 
 typedef DiskHash<Int64Key,IdLttKey> SmsIdDiskHash;
 

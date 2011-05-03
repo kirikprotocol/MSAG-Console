@@ -1,7 +1,6 @@
 #include "core/buffers/DiskXTree.hpp"
 #include <sms/sms.h>
 #include "util/crc32.h"
-#include "SmsKeys.hpp"
 #include "store/FileStorage.h"
 #include "core/buffers/File.hpp"
 #include "logger/Logger.h"
@@ -11,6 +10,10 @@ using namespace smsc::core::buffers;
 using namespace smsc::sms;
 using namespace smsc::util;
 using namespace smsc::store;
+
+#include "SmsKeys.hpp"
+
+
 typedef DiskXTree<OffsetLtt> OffsetXTree;
 
 

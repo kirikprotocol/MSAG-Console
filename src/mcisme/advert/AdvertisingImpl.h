@@ -1,22 +1,23 @@
 #ifndef __MCISME_ADVERT_ADVERTISINGIMPL_HPP__
 # define __MCISME_ADVERT_ADVERTISINGIMPL_HPP__
 
-# include <util/BufferSerialization.hpp>
-# include <mcisme/advert/Advertising.h>
+#include <util/BufferSerialization.hpp>
+#include <mcisme/advert/Advertising.h>
+#include "core/network/Socket.hpp"
 
 namespace smsc {
 namespace mcisme {
 
-// типы транспортов
-enum 
+// О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
+enum
 {
   TRANSPORT_TYPE_SMS = 1,
   TRANSPORT_TYPE_USSD,
   TRANSPORT_TYPE_HTTP,
   TRANSPORT_TYPE_MMS
 };
-// максимальные длины пакетов транспортов
-enum 
+// О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
+enum
 {
   TRANSPORT_LEN_SMS  =  140,
   TRANSPORT_LEN_USSD =  160,
@@ -24,20 +25,20 @@ enum
   TRANSPORT_LEN_MMS  = 1024
 };
 
-#define ERR_INFO_LEN 16             // общая длинаstd::vector <char > buf; фиксированных параметров в errInfo
+#define ERR_INFO_LEN 16             // О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫std::vector <char > buf; О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫ errInfo
 
-static int CommonTransactID = 0;    // общий счетчик транзакций
-static Mutex CommTransId_mtx;       // мьютекс для доступа к счетчику
+static int CommonTransactID = 0;    // О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
+static Mutex CommTransId_mtx;       // О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
 
-#define BANNER_LEN 1024                     // max len баннера
-#define MAX_PACKET_LEN 1048                 // максимальная длина всего пакета
+#define BANNER_LEN 1024                     // max len О©╫О©╫О©╫О©╫О©╫О©╫О©╫
+#define MAX_PACKET_LEN 1048                 // О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫
 
-#define MAX_WAIT_TIME 120000// (~2 мин) максимальныйе промежуток между восстановлением соединения
+#define MAX_WAIT_TIME 120000// (~2 О©╫О©╫О©╫) О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
 #define MIN_WAIT_TIME 500
 
 struct advertising_item
 {
-  uint32_t TransactID;     // номер транзакции
+  uint32_t TransactID;     // О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
   BannerRequest* banReq;
 
   explicit advertising_item(BannerRequest* aBanReq)
@@ -70,7 +71,7 @@ protected:
   in_port_t _port;
   uint32_t _timeout;
   bool _isConnected;
-  Socket _socket;
+  smsc::core::network::Socket _socket;
   static const unsigned int CMD_HEADER_SIZE = sizeof(uint32_t) + sizeof(uint32_t);
 
   AdvertisingImpl(const std::string& host, int port, int timeout)
@@ -93,8 +94,8 @@ protected:
 
   virtual uint32_t prepareHeader(uint32_t cmndType, uint32_t reqBodyLen, util::SerializationBuffer* req);
 
-  virtual uint32_t prepareBannerReqCmd(util::SerializationBuffer* req /* буфер*/,
-                                       BannerRequest* par /*параметры запроса банера*/) = 0;
+  virtual uint32_t prepareBannerReqCmd(util::SerializationBuffer* req /* О©╫О©╫О©╫О©╫О©╫*/,
+                                       BannerRequest* par /*О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫*/) = 0;
 
   virtual void sendErrorInfo(const BannerRequest& banReq,
                              int rc,

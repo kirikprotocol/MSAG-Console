@@ -31,10 +31,9 @@ MCAEventsFileStorage::findMatchedFiles(const std::string& dirName,
 {
   errno = 0;
   DIR* dir = opendir(dirName.c_str());
-  if (!dir) {
-    std::string errMsg = "moveMatchedFiles::: can't open directory=[";
-    errMsg += dirName + "]";
-    throw util::SystemError(errMsg);
+  if (!dir)
+  {
+    throw util::SystemError(errno,"moveMatchedFiles::: can't open directory='%s'",dirName.c_str());
   }
 
   struct dirent dirEntry, *realDirEntry=NULL;
@@ -63,10 +62,9 @@ MCAEventsFileStorage::moveFiles(const std::string& dirName,
     std::string oldFullFileName = dirName + ((dirName[dirName.length()-1] == '/') ? "" : std::string("/")) + (*i);
     std::string newFullFileName = oldFullFileName.substr(0, oldFullFileName.length() - oldSuffix.length()) + newSuffix;
     smsc_log_debug(_logger, "MCAEventsFileStorage::moveFiles::: rename %s to %s", oldFullFileName.c_str(), newFullFileName.c_str());
-    if ( rename(oldFullFileName.c_str(), newFullFileName.c_str()) ) {
-      std::string errMsg("moveFiles::: can't rename file ");
-      errMsg += oldFullFileName + "to " + newFullFileName;
-      throw SystemError(errMsg);
+    if ( rename(oldFullFileName.c_str(), newFullFileName.c_str()) )
+    {
+      throw smsc::util::SystemError(errno,"moveFiles::: can't rename file '%s' to '%s'",oldFullFileName.c_str(),newFullFileName.c_str());
     }
   }
 }

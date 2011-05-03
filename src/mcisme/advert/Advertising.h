@@ -6,15 +6,15 @@
 #include <core/synchronization/Mutex.hpp>
 #include <logger/Logger.h>
 
-using namespace smsc::core::synchronization;
-
 namespace smsc {
 namespace mcisme {
 
-#define MAX_ASYNCS_COUNT 1024   // max count оf asynchronic requests in queue
+using namespace smsc::core::synchronization;
 
-// типы кодировок
-enum 
+#define MAX_ASYNCS_COUNT 1024   // max count О©╫f asynchronic requests in queue
+
+// О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
+enum
   {
     UTF16BE = 1,
     GSMSMS,
@@ -86,7 +86,7 @@ protected:
 struct BannerResponseTrace {
   BannerResponseTrace()
     : transactionId(0), bannerId(0), ownerId(0), rotatorId(0), bannerIdIsNotUsed(false) {}
-    
+
   uint32_t transactionId, bannerId, ownerId, rotatorId;
   bool bannerIdIsNotUsed;
 

@@ -11,6 +11,8 @@
 namespace smsc{
 namespace emailsme{
 
+using namespace smsc::core::buffers;
+
 enum LimitType{ltDay,ltWeek,ltMonth};
 
 template <class T>

@@ -24,6 +24,7 @@ namespace mcisme {
 using std::string;
 using sms::Address;
 using sms::AddressValue;
+using smsc::util::crc32;
 
 std::string
 hexdmp(const uchar_t* buf, size_t bufSz);

@@ -3,6 +3,8 @@
 #include "AbonentProfile.hpp"
 #include <vector>
 
+using namespace smsc::util;
+
 int main(int argc,char* argv[])
 {
   using namespace smsc::core::buffers;

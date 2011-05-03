@@ -752,7 +752,7 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
   msg.caller_abonent = _originatingAddressIsMCIAddress ? getAddress() : mcEventOut.caller;
 
   size_t messageSize = msg.message.size();
-  bool needBannerInTranslit = !hasHighBit(msg.message.c_str(), messageSize);
+  bool needBannerInTranslit = !smsc::util::hasHighBit(msg.message.c_str(), messageSize);
   BannerResponseTrace bannerRespTrace;
   if(bannerEngineProxy)
     addBanner(msg, bannerEngineProxy->getBanner(abnt, &bannerRespTrace, needBannerInTranslit,
@@ -1062,7 +1062,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
     msg.notification = true;
 
     size_t messageSize = msg.message.size();
-    bool needBannerInTranslit = !hasHighBit(msg.message.c_str(), messageSize);
+    bool needBannerInTranslit = !smsc::util::hasHighBit(msg.message.c_str(), messageSize);
 
     BannerResponseTrace bannerRespTrace;
     if(bannerEngineProxy)

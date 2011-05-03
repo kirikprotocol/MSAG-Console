@@ -24,7 +24,7 @@ public:
   const smsc::util::config::region::Region* getRegionById(const std::string& regionId);
     const smsc::util::config::region::RegionDefault* getDefaultRegion() { return _regionDefault; }
 private:
-  smsc::core::buffers::XTree<const smsc::util::config::region::Region*,HeapAllocator,false> _wildcardSearchTree;
+  smsc::core::buffers::XTree<const smsc::util::config::region::Region*,smsc::core::buffers::HeapAllocator,false> _wildcardSearchTree;
   const smsc::util::config::region::RegionDefault* _regionDefault;
   typedef std::map<std::string, const smsc::util::config::region::Region*> regions_hash_t;
   regions_hash_t _regionsHash;

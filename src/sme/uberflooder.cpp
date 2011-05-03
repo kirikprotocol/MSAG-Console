@@ -9,6 +9,7 @@
 
 using namespace smsc::core::network;
 using namespace smsc::smpp;
+using namespace smsc::core::buffers;
 
 struct FlooderCfg{
   std::string host;

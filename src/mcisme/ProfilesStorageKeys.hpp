@@ -7,6 +7,16 @@
 #ifndef ___PROFILESSTORAGEKEYS_H
 #define ___PROFILESSTORAGEKEYS_H
 
+#include "util/int.h"
+#include "core/buffers/File.hpp"
+#include "util/crc32.h"
+
+namespace smsc{
+namespace mcisme{
+
+using smsc::core::buffers::File;
+using smsc::util::crc32;
+
 union AbntProf
 {
   int32_t prof;
@@ -182,4 +192,9 @@ struct IdLttKey{
     return key<cmp.key?true:ltt<cmp.ltt;
   }
 };
+
+}
+}
+
 #endif
+

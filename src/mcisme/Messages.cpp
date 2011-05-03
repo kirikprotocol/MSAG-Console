@@ -22,6 +22,8 @@ const unsigned int MAX_MSG_LATIN_LEN = 600; //160;
 const unsigned int MAX_MSG_RUS_LEN = 256;
 const unsigned int MAX_MSG_LENS[2] = {MAX_MSG_LATIN_LEN, MAX_MSG_RUS_LEN};
 
+using smsc::util::templates::AdapterException;
+
 void keyIsNotSupported(const char* key) throw(AdapterException) {
   throw AdapterException(Exception("Argument '%s' is not supported by message formatter", key));
 }
@@ -71,7 +73,7 @@ void MessageFormatter::addEvent(const MissedCallEvent& event)
   int eventsCount = events.Count();
   if (eventsCount > 0)
   {
-    for (int i=0; i<eventsCount; i++) 
+    for (int i=0; i<eventsCount; i++)
       if (event.time < events[i].time) { events.Insert(i, event); break; }
   }
   if (events.Count() == eventsCount) events.Push(event);
@@ -136,7 +138,7 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
 
     std::string fromAbnt = (from.getText().empty() ? unknownCaller : from.getText());
     if( mc_events[i].missCallFlags & misscall::ANTI_AON_FOR_CALLER ) fromAbnt = unknownCaller;
-    
+
     uint16_t callCount = mc_events[i].callCount;
 
     InformGetAdapter info_adapter(toAbnt, fromAbnt, callCount, mc_events[i].dt + timeOffset);
@@ -151,7 +153,7 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
     std::string report_msg_for_client;
     formatter->getMessageFormatter()->format(report_msg_for_client, msg_adapter, ctx);
 
-    unsigned int hibit = hasHighBit(report_msg_for_client.c_str(), report_msg_for_client.length());
+    unsigned int hibit = smsc::util::hasHighBit(report_msg_for_client.c_str(), report_msg_for_client.length())?1:0;
     if ( report_msg_for_client.size() > MAX_MSG_LENS[hibit] ) {
       return true;
     }

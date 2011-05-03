@@ -275,6 +275,7 @@ void MissedCallProcessor::setRedirectionAddress(const char* address)
   }
 }
 
+using namespace smsc::core::buffers;
 static IntHash<Connection> connections;
 
 void MissedCallProcessor::setCircuits(Hash<Circuits>& circuits)
@@ -743,6 +744,7 @@ using smsc::misscall::NON_ANTI_AON_FOR_CALLER;
 using smsc::misscall::ANTI_AON_FOR_CALLER;
 
 using namespace smsc::misscall::util;
+using namespace smsc::core::buffers;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
 
 USHORT_T EINSS7_I97IsupIndError(USHORT_T errorCode,MSG_T *message)
@@ -822,7 +824,7 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   pack_addr(addr,r,static_cast<int>(strlen(r)));
   redirectionNumber.addrSign_p = addr;
   smsc_log_debug(missedCallProcessorLogger,"IsupReleaseReq %s cause=%u",getHeadDescription(isupHead_sp).c_str(),cause.causeValue);
-  res = EINSS7_I97IsupReleaseReq(isupHead_sp, /*to do может ли он быть нулевой*/
+  res = EINSS7_I97IsupReleaseReq(isupHead_sp, /*to do пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ*/
                                   &cause,
                                   0, /* autoCongestLevel_p  */
                                   0, /* &redirectionNumber, */

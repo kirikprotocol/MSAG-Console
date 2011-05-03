@@ -24,7 +24,7 @@ AdvertisingImpl::init(int connectTimeout)
 
   _socket.setConnectTimeout(connectTimeout);
 
-  if ( _socket.connect() )
+  if ( _socket.Connect() )
     throw util::Exception("AdvertisingImpl::init::: can't establish connection to %s - '%s'", toString().c_str(), strerror(errno));
 
   _isConnected = true;
@@ -35,7 +35,7 @@ AdvertisingImpl::reinit(int connectTimeout)
 {
   _socket.setConnectTimeout(connectTimeout);
 
-  if ( _socket.connect() ) {
+  if ( _socket.Connect() ) {
     smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to %s - %s", toString().c_str(), strerror(errno));
     return false;
   }

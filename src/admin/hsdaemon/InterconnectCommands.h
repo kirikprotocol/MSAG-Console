@@ -33,7 +33,7 @@ inline uint32_t readUInt32(net::Socket* sck)
 inline std::string readString(net::Socket* sck)
 {
   uint16_t len=readUInt16(sck);
-  TmpBuf<char,64> buf(len);
+  buf::TmpBuf<char,64> buf(len);
   if(sck->ReadAll(buf.get(),len,60)==-1)throw Exception("Failed to read string of length %d from socket",len);
   std::string rv;
   return std::string(buf.get(),len);

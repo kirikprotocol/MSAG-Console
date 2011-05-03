@@ -70,6 +70,7 @@ typedef Array<QueryResult> ResultArray;
 
 using namespace std;
 using smsc::util::crc32;
+using smsc::core::buffers::File;
 
 #include "SmsKeys.hpp"
 

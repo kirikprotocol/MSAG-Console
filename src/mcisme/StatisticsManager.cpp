@@ -1,6 +1,6 @@
 #include <dirent.h>
 #include <unistd.h>
-#include <errno.h>  
+#include <errno.h>
 #include <vector>
 
 #include "StatisticsManager.h"
@@ -18,8 +18,8 @@ const uint16_t SMSC_MCISME_STAT_VERSION_INFO = 0x0001;
 const uint16_t SMSC_MCISME_STAT_DUMP_INTERVAL = 60;
 
 StatisticsManager::StatisticsManager(const std::string& loc)
-    : Statistics(), Thread(), logger(0), processLog(0), 
-            currentIndex(0), bExternalFlush(false), bStarted(false), 
+    : Statistics(), Thread(), logger(0), processLog(0),
+            currentIndex(0), bExternalFlush(false), bStarted(false),
             bNeedExit(false), location(loc)
 {
   logger = Logger::getInstance("mci.statmgr");
@@ -251,7 +251,7 @@ bool StatisticsManager::createStorageDir(const std::string loc)
 
     DIR* dirp = opendir( (*it).c_str() );
     if(dirp){
-      closedir(dirp);            
+      closedir(dirp);
     }else{
       try{
         createDir(std::string( (*it).c_str() ));
@@ -266,7 +266,7 @@ bool StatisticsManager::createStorageDir(const std::string loc)
 
 void StatisticsManager::dumpCounters(const uint8_t* buff, uint32_t buffLen, const tm& flushTM)
 {
-  smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
+  smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT",
                  flushTM.tm_hour, flushTM.tm_min);
 
   try {
@@ -284,18 +284,18 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, uint32_t buffLen, cons
 
     if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
     {
-      char fileName[128]; 
+      char fileName[128];
       std::string fullPath = location;
       if (!hasDir) sprintf(dirName, SMSC_MCISME_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
       sprintf(fileName, SMSC_MCISME_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
-      fullPath += '/'; fullPath += (const char*)dirName; 
-      fullPath += '/'; fullPath += (const char*)fileName; 
+      fullPath += '/'; fullPath += (const char*)dirName;
+      fullPath += '/'; fullPath += (const char*)fileName;
       const char* fullPathStr = fullPath.c_str();
 
       if (file.isOpened()) file.Close();
-            
+
       bool needHeader = true;
-      if (File::Exists(fullPathStr)) { 
+      if (File::Exists(fullPathStr)) {
         needHeader = false;
         file.WOpen(fullPathStr);
         file.SeekEnd(0);
@@ -313,12 +313,12 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, uint32_t buffLen, cons
       smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
                      fileName, (needHeader) ? "created":"opened");
     }
-    
+
     smsc_log_debug(logger, "Statistics data dump...");
     uint32_t value32 = htonl(buffLen);
     //    file.Write((const void *)&value32, sizeof(value32));
     file.Write((const void *)buff, buffLen); // write dump to it
-    //    file.Write((const void *)&value32, sizeof(value32));		// íà õóÿ??????
+    //    file.Write((const void *)&value32, sizeof(value32));		// ï¿½ï¿½ ï¿½ï¿½ï¿½??????
     file.Flush();
     smsc_log_debug(logger, "Statistics data dumped.");
 
@@ -333,7 +333,7 @@ bool StatisticsManager::createDir(const std::string& dir)
 {
   if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
     if (errno == EEXIST) return false;
-    throw Exception("Failed to create directory '%s'. Details: %s", 
+    throw smsc::util::Exception("Failed to create directory '%s'. Details: %s",
                     dir.c_str(), strerror(errno));
   }
   return true;
@@ -346,4 +346,4 @@ void StatisticsManager::calculateTime(tm& flushTM)
   localtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0; flushTM.tm_min = 0;
 }
 
-}}                                                            
+}}
