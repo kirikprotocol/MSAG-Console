@@ -92,7 +92,7 @@ smsc::logger::Logger* Property::log_ = 0;
 void Property::initLog()
 {
     if (!log_) {
-        MutexGuard mg(logMtx);
+        smsc::core::synchronization::MutexGuard mg(logMtx);
         if (!log_) log_ = smsc::logger::Logger::getInstance("prop.alloc");
     }
 }

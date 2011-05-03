@@ -69,12 +69,12 @@ private:
     int processScoredObj( unsigned unused, ScoredPtrType& dlv, unsigned& objSleep );
 
     inline void ref() {
-        MutexGuard mg(reflock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(reflock_ MTXWHEREPOST);
         ++ref_;
     }
     inline void unref() {
         {
-            MutexGuard mg(reflock_ MTXWHEREPOST);
+            smsc::core::synchronization::MutexGuard mg(reflock_ MTXWHEREPOST);
             if (ref_>1) {
                 --ref_;
                 return;

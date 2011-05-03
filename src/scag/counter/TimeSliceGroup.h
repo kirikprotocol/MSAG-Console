@@ -17,7 +17,7 @@ protected:
     TimeSliceGroup( usec_type slice ) :
     slice_(slice) {
         if (!log_) {
-            MutexGuard mg(lock_);
+            smsc::core::synchronization::MutexGuard mg(lock_);
             if (!log_) log_ = smsc::logger::Logger::getInstance("cnt.tgrp");
         }
         smsc_log_debug(log_,"ctor %p, slice=%llu",this,slice);

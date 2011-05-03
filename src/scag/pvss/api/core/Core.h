@@ -51,7 +51,7 @@ protected:
     {
         if ( !logger ) {
             static smsc::core::synchronization::Mutex mtx;
-            MutexGuard mg(mtx);
+            smsc::core::synchronization::MutexGuard mg(mtx);
             if ( !logger ) logger = smsc::logger::Logger::getInstance("pvss.core");
         }
     }
@@ -137,12 +137,12 @@ protected:
     void shutdownIO( bool writePending )
     {
         {
-            MutexGuard mg(readersMutex);
+            smsc::core::synchronization::MutexGuard mg(readersMutex);
             stopReaders();
         }
         stopCoreLogic();
         {
-            MutexGuard mg(writersMutex);
+            smsc::core::synchronization::MutexGuard mg(writersMutex);
             stopWriters( writePending );
         }
         inactivityTracker->shutdown();
@@ -168,7 +168,7 @@ private:
               ++i ) {
             (*i)->shutdown();
         }
-        MutexGuard mg(deadMutex);
+        smsc::core::synchronization::MutexGuard mg(deadMutex);
         std::copy(readers.begin(),readers.end(),std::back_inserter(deadTasks));
         readers.clear();
     }
@@ -181,7 +181,7 @@ private:
             if (writePending) (*i)->writePending();
             (*i)->shutdown();
         }
-        MutexGuard mg(deadMutex);
+        smsc::core::synchronization::MutexGuard mg(deadMutex);
         std::copy(writers.begin(),writers.end(),std::back_inserter(deadTasks));
         writers.clear();
     }
@@ -190,7 +190,7 @@ private:
     {
         std::vector<SockTask*> aCopy;
         {
-            MutexGuard mg(deadMutex);
+            smsc::core::synchronization::MutexGuard mg(deadMutex);
             aCopy = deadTasks;
             deadTasks.clear();
         }

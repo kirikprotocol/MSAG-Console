@@ -18,7 +18,7 @@ smsc::core::synchronization::Mutex staticMutex;
 void makeStaticData()
 {
     if ( staticDone ) return;
-    MutexGuard mg(staticMutex);
+    smsc::core::synchronization::MutexGuard mg(staticMutex);
     if ( staticDone ) return;
     journalRecordMark = "TrAnSaCt";
     journalRecordTrailer = "EnDoFtRaNsAcTiOnS";

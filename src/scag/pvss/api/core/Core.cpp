@@ -44,7 +44,7 @@ void Core::registerForWrite( PvssSocket& channel ) /* throw (PvssException) */
 {
     PacketWriter* writer = 0;
     {
-        MutexGuard mg(writersMutex);
+        smsc::core::synchronization::MutexGuard mg(writersMutex);
         if ( !writers.empty() ) {
             // select busyless Writer
             std::sort( writers.begin(), writers.end(), ChannelCountComparator() );
@@ -64,7 +64,7 @@ void Core::registerForRead( PvssSocket& channel ) /* throw(PvssException) */
 {
     PacketReader* reader = 0;
     {
-        MutexGuard mg(readersMutex);
+        smsc::core::synchronization::MutexGuard mg(readersMutex);
         if ( !readers.empty() ) {
             std::sort( readers.begin(), readers.end(), ChannelCountComparator() );
             reader = readers.front();
@@ -83,7 +83,7 @@ void Core::startupIO() /* throw(PvssException) */
 {
     smsc_log_info( logger, "Starting up IO tasks...");
     {
-        MutexGuard mg(readersMutex);
+        smsc::core::synchronization::MutexGuard mg(readersMutex);
         stopReaders();
         for ( int i=0; i < config->getReadersCount(); i++) {
             try {
@@ -98,7 +98,7 @@ void Core::startupIO() /* throw(PvssException) */
     }
 
     {
-        MutexGuard mg(writersMutex);
+        smsc::core::synchronization::MutexGuard mg(writersMutex);
         stopWriters(false);
         for (int i=0; i<config->getWritersCount(); i++) {
             try {
@@ -107,7 +107,7 @@ void Core::startupIO() /* throw(PvssException) */
                 threadPool_.startTask(writer,false);
             } catch (exceptions::IOException& init_exc) {
                 {
-                    MutexGuard mgr(readersMutex);
+                    smsc::core::synchronization::MutexGuard mgr(readersMutex);
                     stopReaders();
                 }
                 stopWriters(false);

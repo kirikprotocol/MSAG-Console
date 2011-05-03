@@ -267,7 +267,7 @@ int main( int argc, const char** argv )
             }
 
             while ( isStarted && !getCS()->isStopping() ) {
-                MutexGuard mg(startMon);
+                smsc::core::synchronization::MutexGuard mg(startMon);
                 startMon.wait(1000);
             }
             smsc_log_error(mainlog,"leaving main loop, stopping core");

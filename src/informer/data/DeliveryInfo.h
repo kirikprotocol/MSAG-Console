@@ -62,7 +62,7 @@ public:
     UserInfo& getUserInfo() { return *userInfo_; }
 
     inline void getDeliveryData( DeliveryInfoData& data ) const {
-        MutexGuard mg(lock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         data = data_;
     }
 
@@ -70,7 +70,7 @@ public:
 
     /// get the name of the delivery
     inline void getName( char* name ) const {
-        MutexGuard mg(lock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         strcpy(name,data_.name.c_str());
     }
 
@@ -129,25 +129,25 @@ public:
     // if retry on fail is requested.
     inline bool wantRetryOnFail() const { return data_.retryOnFail; }
     timediff_type getRetryInterval( uint16_t retryCount ) const {
-        MutexGuard mg(lock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         return retryPolicy_.getRetryInterval(retryCount);
     }
 
     inline bool isReplaceIfPresent() const { return data_.replaceMessage; }
 
     void getSvcType( char* svcType ) const {
-        MutexGuard mg(lock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         strcpy(svcType,data_.svcType.c_str());
     }
 
     // const char* getUserData() const { return data_.userData.c_str(); }
     void getUserData( std::string& userData ) const {
-        MutexGuard mg(lock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         userData = data_.userData;
     }
 
     void getSourceAddress( smsc::sms::Address& oa ) const {
-        MutexGuard mg(lock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         oa = sourceAddress_;
     }
 
@@ -156,7 +156,7 @@ public:
     // --- stats
     void getMsgStats( DeliveryStats& ds ) const
     {
-        MutexGuard mg(statLock_);
+        smsc::core::synchronization::MutexGuard mg(statLock_);
         ds = stats_;
     }
 

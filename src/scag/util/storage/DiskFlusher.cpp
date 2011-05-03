@@ -4,6 +4,8 @@
 #include "scag/util/Time.h"
 #include "util/PtrDestroy.h"
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace scag2 {
 namespace util {
 namespace storage {

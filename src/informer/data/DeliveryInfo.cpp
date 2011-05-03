@@ -103,7 +103,7 @@ int DeliveryInfo::checkActiveTime( int weekTime ) const
     bool nextDay = false;
     const char* what = "ok";
     {
-        MutexGuard mg(lock_ MTXWHEREPOST);
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         do {
 
             if (activeWeekDays_ != -1) {
@@ -276,7 +276,7 @@ void DeliveryInfo::initMsgStats( regionid_type regionId,
                                  uint8_t state,
                                  int value )
 {
-    MutexGuard mg(statLock_);
+    smsc::core::synchronization::MutexGuard mg(statLock_);
     stats_.incStat(state,value,0);
 }
 
@@ -285,7 +285,7 @@ void DeliveryInfo::incMsgStats( regionid_type regionId,
                                 uint8_t state,
                                 int value, uint8_t fromState, int smsValue )
 {
-    MutexGuard mg(statLock_);
+    smsc::core::synchronization::MutexGuard mg(statLock_);
     stats_.incStat(state,value,smsValue);
     if (fromState) {stats_.incStat(fromState,-value,0);}
     const unsigned idx = getCS()->getStatBankIndex();
@@ -302,7 +302,7 @@ void DeliveryInfo::incMsgStats( regionid_type regionId,
 
 regionid_type DeliveryInfo::popMsgStats( regionid_type regionId, DeliveryStats& ds )
 {
-    MutexGuard mg(statLock_);
+    smsc::core::synchronization::MutexGuard mg(statLock_);
     StatMap::iterator iter = 
         ( regionId == anyRegionId ?
           statmap_.begin() :
@@ -332,7 +332,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
                                dlvId_, data.userData.c_str());
     }
 
-    MutexGuard mg(lock_ MTXWHEREPOST);
+    smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
     msgtime_type startDate = startDate_;
     msgtime_type endDate = endDate_;
     timediff_type activePeriodStart = activePeriodStart_;

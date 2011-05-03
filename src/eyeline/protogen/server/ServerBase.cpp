@@ -94,7 +94,7 @@ void ServerBase::readPackets()
         try{
           if(ps->Read())
           {
-            MutexGuard hmg(handlers[hIdx].mon);
+            smsc::core::synchronization::MutexGuard hmg(handlers[hIdx].mon);
             ProtocolSocketBase::Packet pck=ps->getPacket();
             if(log->isDebugEnabled())
             {

@@ -79,7 +79,7 @@ public:
 
     virtual bool registerChannel( PvssSocket& channel, util::msectime_type utime ) {
         {
-            MutexGuard mg(channelMutex_);
+            smsc::core::synchronization::MutexGuard mg(channelMutex_);
             activeChannels_.push_back(&channel);
         }
         return Core::registerChannel(channel,utime);
@@ -154,7 +154,7 @@ private:
     }
 
     int getNextSeqNum() {
-        MutexGuard mg(seqNumMutex_);
+        smsc::core::synchronization::MutexGuard mg(seqNumMutex_);
         return (++lastUsedSeqNum_ > 0) ? lastUsedSeqNum_ : (lastUsedSeqNum_ = 1);
     }
 

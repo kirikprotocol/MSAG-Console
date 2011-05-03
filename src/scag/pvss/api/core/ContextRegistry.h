@@ -194,7 +194,7 @@ public:
 
     /// create a context registry for key
     void create( key_type key ) {
-        MutexGuard mg(createMon_);
+        smsc::core::synchronization::MutexGuard mg(createMon_);
         if ( ! set_.Exists(key) ) {
             ContextRegistry* reg = new ContextRegistry;
             set_.Insert(key,reg);
@@ -206,7 +206,7 @@ public:
     /// get context registry (locked)
     Ptr get( key_type key ) {
         {
-            MutexGuard mg(createMon_);
+            smsc::core::synchronization::MutexGuard mg(createMon_);
             ContextRegistry** regptr = set_.GetPtr(key);
             if (regptr) return Ptr(*regptr);
         }
@@ -219,7 +219,7 @@ public:
     {
         ContextRegistry* value;
         {
-            MutexGuard mg(createMon_);
+            smsc::core::synchronization::MutexGuard mg(createMon_);
             HashType::Iterator i( set_.getIterator() );
             key_type         key;
             if ( ! i.Next(key,value) ) return false;
@@ -267,7 +267,7 @@ public:
     void destroy( key_type key ) {
         ContextRegistry::ProcessingList pl;
         {
-            MutexGuard mg(createMon_);
+            smsc::core::synchronization::MutexGuard mg(createMon_);
             ContextRegistry** regptr = set_.GetPtr(key);
             if ( regptr ) {
                 {

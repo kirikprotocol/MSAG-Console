@@ -14,7 +14,7 @@ smsc::logger::Logger* CommandResponse::log_ = 0;
 void CommandResponse::initLog()
 {
     if (!log_) {
-        MutexGuard mg(::logMtx);
+        smsc::core::synchronization::MutexGuard mg(::logMtx);
         if (!log_) log_ = smsc::logger::Logger::getInstance("pvss.cmd");
     }
     smsc_log_debug(log_,"ctor: %p %s",this,this->toString().c_str());

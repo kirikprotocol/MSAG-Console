@@ -15,7 +15,7 @@ smsc::logger::Logger* Packet::logtm_ = 0;
 void Packet::initLog()
 {
     if (!log_) {
-        MutexGuard mg(::logMtx);
+        smsc::core::synchronization::MutexGuard mg(::logMtx);
         if (!log_) {
             log_ = smsc::logger::Logger::getInstance("pvss.pck");
             logtm_ = smsc::logger::Logger::getInstance("pvss.pcktm");

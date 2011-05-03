@@ -934,7 +934,7 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
       // resp.getInfoRef();
   } else {
       resp.setMoreDeliveries(true);
-      MutexGuard mg(dlvReqMtx);
+      smsc::core::synchronization::MutexGuard mg(dlvReqMtx);
       req->timeMapIt = 
           dlvListReqTimeMap.insert(DlvListReqTimeMap::value_type
                                    (time(0)+dlvListReqExpirationTime,

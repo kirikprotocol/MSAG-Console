@@ -17,7 +17,7 @@ creationTime_( util::currentTimeMillis() ),
 seqNum_( req ? req->getSeqNum() : uint32_t(-1) ),
 request_( req ) {
     if ( ! log_ ) {
-        MutexGuard mg(mtx);
+        smsc::core::synchronization::MutexGuard mg(mtx);
         if ( ! log_ ) log_ = smsc::logger::Logger::getInstance("pvss.ctx");
     }
     smsc_log_debug(log_,"ctor: context %p: seqnum=%d",this,getSeqNum());

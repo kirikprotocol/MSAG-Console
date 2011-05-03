@@ -58,7 +58,7 @@ public:
     void start() 
     {
         if (started_) return;
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         started_ = true;
         Start();
     }
@@ -66,7 +66,7 @@ public:
     void stop() {
         if (!started_) return;
         {
-            MutexGuard mg(mon_);
+            smsc::core::synchronization::MutexGuard mg(mon_);
             started_ = false;
             mon_.notifyAll();
         }
@@ -74,13 +74,13 @@ public:
     }
 
     void wakeup() {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         mon_.notify();
     }
 
     template < class DiskStorage > void add( DiskStorage*       store ) {
         if ( !store ) return;
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         if ( started_ ) return;
         items_.push_back( new DiskFlusherItem<DiskStorage>(store) );
     }

@@ -23,7 +23,7 @@ void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) /
 void PacketWriter::writePending()
 {
     if ( writePending_ ) return;
-    MutexGuard mg(mon_);
+    smsc::core::synchronization::MutexGuard mg(mon_);
     if ( writePending_ ) return;
     writePending_ = true;
     mon_.notify();

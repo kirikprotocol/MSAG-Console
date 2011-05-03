@@ -92,7 +92,7 @@ public:
 
     // buffer must has at least PASSWORD_LENGTH chars
     inline char* getPassword( char* pwd ) const {
-        MutexGuard mg(dataLock_);
+        smsc::core::synchronization::MutexGuard mg(dataLock_);
         strcpy(pwd,password_.c_str());
         return pwd;
     }
@@ -125,13 +125,13 @@ public:
 
     // mark the user as deleted
     void setDeleted( bool del ) {
-        MutexGuard mg(dataLock_);
+        smsc::core::synchronization::MutexGuard mg(dataLock_);
         isDeleted_ = del;
     }
 
     /// get current stats
     inline void getDlvStats( UserDlvStats& stats ) {
-        MutexGuard mg(statLock_);
+        smsc::core::synchronization::MutexGuard mg(statLock_);
         stats = stats_;
     }
 

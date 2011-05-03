@@ -54,7 +54,7 @@ public:
 
     /// waking up
     virtual void wakeup() {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         mon_.notify();
     }
 

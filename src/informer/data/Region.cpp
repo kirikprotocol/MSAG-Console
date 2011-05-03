@@ -45,14 +45,14 @@ Region::~Region()
 
 void Region::setSmscId( const char* smscId )
 {
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     smscId_ = smscId;
 }
 
 
 void Region::swap( Region& r )
 {
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     std::swap(regionId_,r.regionId_);
     name_.swap(r.name_);
     smscId_.swap(r.smscId_);

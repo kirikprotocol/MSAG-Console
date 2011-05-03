@@ -84,7 +84,7 @@ protected:
     {
         if ( !c || c->usage_ ) return false;
         {
-            MutexGuard mg(c->usageMutex_);
+            smsc::core::synchronization::MutexGuard mg(c->usageMutex_);
             if ( c->usage_ || c->disposeTime_ > now ) return false;
         }
         return true;

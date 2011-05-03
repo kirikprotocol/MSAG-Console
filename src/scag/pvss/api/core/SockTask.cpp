@@ -16,7 +16,7 @@ int SockTask::doExecute()
             wakeupTime_ = currentTime + 200;
             bool ok = false;
             {
-                MutexGuard mg(mon_);
+                smsc::core::synchronization::MutexGuard mg(mon_);
                 ok = setupSockets(currentTime);
                 if ( ! ok ) setupFailed(currentTime);
             }
@@ -31,7 +31,7 @@ int SockTask::doExecute()
     }
     smsc_log_info(log_, "%s left the main loop", taskName() );
     {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         while ( sockets_.Count() > 0 ) {
             PvssSocket& channel = *sockets_[0];
             sockets_.Delete(0);
@@ -47,7 +47,7 @@ void SockTask::registerChannel( PvssSocket& con )
 {
     smsc_log_debug(log_,"registering channel %p",&con);
     {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         for ( int i = 0; i < sockets_.Count(); ++i ) {
             if ( sockets_[i] == &con ) return;
         }
@@ -62,7 +62,7 @@ void SockTask::unregisterChannel( PvssSocket& sock )
 {
     bool found = false;
     {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         for ( int i = 0; i < sockets_.Count(); ++i ) {
             if ( sockets_[i] == &sock ) {
                 sockets_.Delete(i);

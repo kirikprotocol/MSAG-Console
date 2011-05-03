@@ -37,13 +37,13 @@ public:
 
     bool removeChannel( smsc::core::network::Socket& channel )
     {
-        MutexGuard mg(activityTimesMutex);
+        smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
         return activityTimes.Delete(&channel);
     }
 
     void registerChannel( PvssSocket& channel, util::msectime_type tmo )
     {
-        MutexGuard mg(activityTimesMutex);
+        smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
         util::msectime_type* ptr = activityTimes.GetPtr(channel.socket());
         if ( ptr ) *ptr = tmo;
         else activityTimes.Insert( channel.socket(), tmo );
@@ -51,7 +51,7 @@ public:
 
     void updateChannel( PvssSocket& channel, util::msectime_type tmo )
     {
-        MutexGuard mg(activityTimesMutex);
+        smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
         util::msectime_type* ptr = activityTimes.GetPtr(channel.socket());
         if ( ptr ) *ptr = tmo;
         // else activityTimes.Insert( channel.socket(), tmo );
@@ -61,7 +61,7 @@ public:
     {
         if (!started) return;
         {
-            MutexGuard mg(activityTimesMutex);
+            smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
             started = false;
             activityTimesMutex.notify();
         }
@@ -83,7 +83,7 @@ public:
 
             std::list< smsc::core::network::Socket* > expiredList;
             {
-                MutexGuard mg(activityTimesMutex);
+                smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
                 // try {
                 activityTimesMutex.wait( int((timeToSleep < minTimeToSleep) ? minTimeToSleep : timeToSleep) );
                 // }
