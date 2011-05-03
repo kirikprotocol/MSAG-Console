@@ -31,7 +31,7 @@ AbonentCacheMTR::AbonentHashKey::AbonentHashKey(const AbonentId & ab_num) _THROW
 {
   bcdSz = packNumString2BCD(bcd, signals, length);
   if (bcdSz > _maxSize)
-    throw Exception("AbonentHashKey(): invalid length %u", length);
+    throw smsc::util::Exception("AbonentHashKey(): invalid length %u", length);
 }
 
 uint32_t AbonentCacheMTR::AbonentHashKey::Read(File & fh, uint32_t max_octs/* = 0*/)
@@ -44,7 +44,7 @@ uint32_t AbonentCacheMTR::AbonentHashKey::Read(File & fh, uint32_t max_octs/* = 
   length = unpackBCD2NumString(bcd, signals, bcdSz);
   signals[length] = 0;
   if (!length)
-    throw Exception("AbonentHashKey::Read(): zero length");
+    throw smsc::util::Exception("AbonentHashKey::Read(): zero length");
 
   //isdn international address only
   numPlanInd = typeOfNumber = 1;

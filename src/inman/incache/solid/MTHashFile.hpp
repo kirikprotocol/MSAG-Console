@@ -19,24 +19,14 @@
 #endif /* HFREHASH_LOG_DBG */
 
 #include "util/crc32.h"
-using smsc::util::crc32;
-
 #include "util/vformat.hpp"
 #include "core/buffers/File.hpp"
-using smsc::core::buffers::File;
-
 #include "core/buffers/ExtendingBuf.hpp"
-
 #include "core/synchronization/Mutex.hpp"
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
-
 #include "core/threads/Thread.hpp"
-using smsc::core::threads::Thread;
 
 #ifdef HFREHASH_LOG_ON
 #include "logger/Logger.h"
-using smsc::logger::Logger;
 #endif /* HFREHASH_LOG_ON */
 
 #define _THROWS_HFE  /* throw(FileException,Exception,std::runtime_error) */
@@ -45,6 +35,17 @@ using smsc::logger::Logger;
 namespace smsc {
 namespace inman {
 namespace cache {
+
+using smsc::util::crc32;
+using smsc::core::buffers::File;
+using smsc::core::buffers::FileException;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+using smsc::core::threads::Thread;
+
+#ifdef HFREHASH_LOG_ON
+using smsc::logger::Logger;
+#endif /* HFREHASH_LOG_ON */
 
 class HashFileEntityITF {
 protected:
@@ -132,7 +133,7 @@ struct HashFileHeader : public HashFileCFG {
     {
         hdrSz = f.ReadByte();
         if (hdrSz != _HF_HDR_SZO)
-            throw Exception("HashFile header length mismath: %u vs %u",
+            throw smsc::util::Exception("HashFile header length mismath: %u vs %u",
                             (unsigned)hdrSz, (unsigned)_HF_HDR_SZO);
 
         magic = f.ReadNetInt32();
@@ -219,7 +220,7 @@ public:
     uint32_t Write(File & fh) const _THROWS_HFE
     {
         if (keySz > _maxKeySzTA)
-            throw Exception("Illegal key size: %u", keySz);
+            throw smsc::util::Exception("Illegal key size: %u", keySz);
 
         uint32_t    rv = 5; // 1+4 [+1]
         uint8_t     fb = (uint8_t)rType + ((keySz < 0x3F) ? (uint8_t)keySz : 0x3F);
@@ -263,7 +264,7 @@ protected:
             rv++; valSz = (uint16_t)fh.ReadByte() + 0xFE;
         }
         if (valSz > maxValSzTA)
-            throw Exception("HFRcd<%u,%u>: Illegal value size: %u",
+            throw smsc::util::Exception("HFRcd<%u,%u>: Illegal value size: %u",
                             maxKeySzTA, maxValSzTA, valSz);
         return rv;
     }
@@ -271,7 +272,7 @@ protected:
     uint16_t writeValSz(File& fh, uint16_t valSz) const _THROWS_HFE
     {
         if (valSz > maxValSzTA)
-            throw Exception("HFRcd<%u,%u>: Illegal value size: %u",
+            throw smsc::util::Exception("HFRcd<%u,%u>: Illegal value size: %u",
                             maxKeySzTA, maxValSzTA, valSz);
 
         if (valSz >= 0xFF) {
@@ -317,7 +318,7 @@ public:
         uint32_t rv = hdr.Read(fh);
         if (hdr.rType != HFRecordHdrAC::rcdEmpty) {
             if (!hdr.keySz || (hdr.keySz > maxKeySzTA))
-                throw Exception("HFRcd<%u,%u>: Illegal key size: %u",
+                throw smsc::util::Exception("HFRcd<%u,%u>: Illegal key size: %u",
                             maxKeySzTA, maxValSzTA, hdr.keySz);
             key.Read(fh, hdr.keySz);
             rv += hdr.keySz;
@@ -360,7 +361,7 @@ public:
     uint32_t    Write(File& fh, const HashFileValueITF *p_val) const _THROWS_HFE
     {
         if (!hdr.keySz || (hdr.keySz > HFRecordHdrAC::_maxKeySzTA))
-            throw Exception("HFRcd<%u,%u>: Illegal key size: %u",
+            throw smsc::util::Exception("HFRcd<%u,%u>: Illegal key size: %u",
                         maxKeySzTA, maxValSzTA, hdr.keySz);
 
         uint32_t rv = hdr.Write(fh);
@@ -415,7 +416,7 @@ protected:
     void    SeekRcd(const uint32_t & r_num) _THROWS_HFE
     {
         if (!r_num || (r_num > hfHdr.size))
-            throw Exception("Invalid record number: %u", r_num);
+            throw smsc::util::Exception("Invalid record number: %u", r_num);
         fHdl.Seek(HashFileHeader::_HF_HDR_SZO + (r_num-1)*rcdSz);
     }
 
@@ -559,11 +560,11 @@ public:
     {
         MutexGuard  grd(_fSync);
         if (!nm_file || !nm_file[0])
-            throw Exception("Hash file name is not specified");
+            throw smsc::util::Exception("Hash file name is not specified");
 
         bool alive = File::Exists(nm_file);
         if (read_only && !alive)
-            throw Exception("Hash file not found: '%s'", nm_file);
+            throw smsc::util::Exception("Hash file not found: '%s'", nm_file);
 
         if (read_only)
             fHdl.ROpen(nm_file);
@@ -586,17 +587,17 @@ public:
                 hdr.Read(fHdl);
                 if (hdr.crcSumm != hdr.HdrCrc()) {
                     fHdl.Close();
-                    throw Exception("Hash file header CRC error: '%s'", nm_file);
+                    throw smsc::util::Exception("Hash file header CRC error: '%s'", nm_file);
                 }
                 if (!hfHdr.equalCFG(hdr)) {
                     fHdl.Close();
-                    throw Exception("Hash file incompatible, header '%s' vs '%s'",
+                    throw smsc::util::Exception("Hash file incompatible, header '%s' vs '%s'",
                                     hdr.PrintCfg().c_str(), hfHdr.PrintCfg().c_str());
                 }
                 hfHdr = hdr;
             } else {
                 fHdl.Close();
-                throw Exception("Hash file incompatible, header size: '%u'", (unsigned)fSz);
+                throw smsc::util::Exception("Hash file incompatible, header size: '%u'", (unsigned)fSz);
             }
         }
         readOnly = read_only;
@@ -736,7 +737,7 @@ public:
         {
             if (hfHdr.size == maxSize) {
                 if (hfHdr.curColl == hfHdr.maxColl)
-                    throw Exception("HFRH: hash file size limit reached");
+                    throw smsc::util::Exception("HFRH: hash file size limit reached");
                 hfHdr.curColl = hfHdr.maxColl;
             } else {
                 hfHdr.size += orgSize;

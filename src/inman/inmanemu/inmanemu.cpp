@@ -62,7 +62,7 @@ int main(int argc,char* argv[])
   {
       cfg.Init();
       billingServer->Init(cfg.host, cfg.port, cfg.cdr_dir);
-  } catch (Exception& e)
+  } catch (const smsc::util::Exception& e)
   {
       smsc_log_error(logger, "Cannot init Inmanemu server. Details: ", e.what());
       
