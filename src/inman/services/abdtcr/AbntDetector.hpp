@@ -24,6 +24,8 @@ using smsc::util::RCHash;
 
 using smsc::inman::tcpsrv::WorkerAC;
 
+using smsc::core::synchronization::EventMonitor;
+
 using smsc::core::timers::TimerListenerITF;
 using smsc::core::timers::TimeWatcherITF;
 using smsc::core::timers::TimerHdl;

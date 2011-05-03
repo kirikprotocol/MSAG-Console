@@ -34,6 +34,7 @@ using smsc::logger::Logger;
 using smsc::core::threads::Thread;
 using smsc::util::Exception;
 using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::TimeSlice;
 

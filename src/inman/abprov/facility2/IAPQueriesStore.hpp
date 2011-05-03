@@ -14,6 +14,8 @@ namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
 
+using smsc::core::synchronization::Mutex;
+
 /* ************************************************************************** *
  * 
  * ************************************************************************** */

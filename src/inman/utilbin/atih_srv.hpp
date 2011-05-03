@@ -24,6 +24,8 @@ using smsc::util::RCHash;
 using smsc::util::TonNpiAddress;
 using smsc::inman::test::AbonentInfo;
 
+using smsc::core::synchronization::EventMonitor;
+
 using smsc::inman::comp::atih::RequestedSubscription;
 using smsc::inman::comp::atih::ATSIRes;
 

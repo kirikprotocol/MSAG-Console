@@ -15,6 +15,7 @@ namespace smsc {
 namespace inman {
 namespace tcpsrv {
 
+using smsc::core::synchronization::ReverseMutexGuard;
 using smsc::logger::Logger;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::ConnectListenerITF;

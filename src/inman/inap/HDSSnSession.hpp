@@ -28,7 +28,8 @@ namespace inap {
 using smsc::logger::Logger;
 using smsc::util::TonNpiAddress;
 using smsc::core::synchronization::Event;
-
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
 class Dialog;
 

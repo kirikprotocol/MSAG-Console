@@ -15,6 +15,9 @@ namespace smsc {
 namespace inman {
 namespace iapmgr {
 
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+
 //Abonent Providers control service
 class ICSIAPManager : public ICServiceAC_T<IAPManagerCFG>,
                      public IAPManagerITF {

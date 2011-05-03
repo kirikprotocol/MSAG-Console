@@ -3,6 +3,7 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/ICSrvDefs.hpp"
+using smsc::core::synchronization::MutexGuard;
 
 namespace smsc  {
 namespace inman {

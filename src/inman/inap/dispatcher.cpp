@@ -6,6 +6,7 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/inap/ACRegistry.hpp"
 #include "inman/inap/TCAPErrors.hpp"
 #include "inman/inap/TCCallbacks.hpp"
+using smsc::core::synchronization::ReverseMutexGuard;
 
 namespace smsc  {
 namespace inman {

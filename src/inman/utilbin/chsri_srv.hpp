@@ -22,8 +22,9 @@ namespace inman {
 
 using smsc::util::RCHash;
 using smsc::util::IMSIString;
-using smsc::inman::test::AbonentInfo;
+using smsc::core::synchronization::EventMonitor;
 
+using smsc::inman::test::AbonentInfo;
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 
 using smsc::inman::inap::ObjFinalizerIface;

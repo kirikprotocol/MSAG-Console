@@ -3,6 +3,7 @@ static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/abprov/facility2/IAPQueriesStore.hpp"
+using smsc::core::synchronization::MutexGuard;
 
 namespace smsc {
 namespace inman {

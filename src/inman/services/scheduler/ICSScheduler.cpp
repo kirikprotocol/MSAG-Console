@@ -3,6 +3,7 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/scheduler/ICSScheduler.hpp"
+using smsc::core::synchronization::MutexGuard;
 
 namespace smsc {
 namespace inman {

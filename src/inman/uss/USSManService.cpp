@@ -12,6 +12,7 @@ using smsc::inman::comp::_ac_map_networkUnstructuredSs_v2;
 using smsc::inman::comp::uss::initMAPUSS2Components;
 
 using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::ReverseMutexGuard;
 
 namespace smsc  {
 namespace inman {

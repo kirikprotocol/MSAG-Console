@@ -13,6 +13,10 @@
 namespace smsc {
 namespace inman {
 
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::TimeSlice;
+
 using smsc::core::timers::TimeWatchersRegistry;
 using smsc::core::timers::TimeWatchersRegistryITF;
 using smsc::core::timers::TimeWatcher;

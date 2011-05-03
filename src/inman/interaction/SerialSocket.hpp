@@ -19,6 +19,7 @@ namespace interaction {
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
+using smsc::core::synchronization::Mutex;
 using smsc::inman::interaction::SerializablePacketAC;
 
 typedef struct {

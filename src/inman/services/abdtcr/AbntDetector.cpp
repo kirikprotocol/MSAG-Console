@@ -5,6 +5,8 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/services/abdtcr/AbntDetector.hpp"
 using smsc::util::format;
 using smsc::util::URCRegistry;
+using smsc::core::synchronization::MutexTryGuard;
+
 using smsc::inman::iaprvd::IAPProperty;
 using smsc::inman::iaprvd::IAProviderAC;
 using smsc::inman::iaprvd::CSIRecord;
