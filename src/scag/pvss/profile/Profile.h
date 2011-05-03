@@ -25,7 +25,7 @@ namespace scag2 {
 namespace pvss {
 
 using namespace std;
-using namespace smsc::core::buffers;
+// using namespace smsc::core::buffers;
 using smsc::logger::Logger;
 using std::vector;
 using scag::util::storage::SerialBuffer;
@@ -35,7 +35,7 @@ using scag::util::io::GlossaryBase;
 using scag::util::storage::BlocksHSBackupData;
 using smsc::core::buffers::File;
 
-typedef Hash<Property*> PropertyHash;
+typedef smsc::core::buffers::Hash<Property*> PropertyHash;
 
 extern const uint8_t PROPERTIES_COUNT_SIZE;
 extern const uint16_t MAX_PROPERTIES_COUNT; 

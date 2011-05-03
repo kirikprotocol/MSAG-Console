@@ -1,18 +1,51 @@
 #include <cassert>
 #include "RollingFileStream.h"
 #include "util/crc32.h"
+#include "informer/io/FileGuard.h"
+#include "informer/io/FileReader.h"
+#include "informer/io/TmpBuf.h"
 
 namespace {
 
-const char* STDEXT = ".log";
-const size_t STDEXTLEN = 4;
-const char* FILEFORMAT = "%04u-%02u-%02u-%02u-%02u-%02u.log%n";
+const char* FILEFORMAT = "%04u-%02u-%02u-%02u-%02u-%02u%n";
 const char* FILEHEADER = "# VERSION 0001\n";
+
+struct RFR : public eyeline::informer::FileReader::RecordReader {
+    RFR() : lines(0), crc32(0) {}
+    virtual bool isStopping() { return false; }
+    virtual size_t recordLengthSize() const { return 0; }
+    virtual size_t readRecordLength( size_t filePos,
+                                     eyeline::informer::FromBuf& fb ) {
+        size_t buflen = fb.getLen() - fb.getPos();
+        const char* found = 
+            static_cast<const char*>(memchr( fb.getBuf(), '\n', buflen));
+        if (!found) {
+            // request extra bytes
+            return buflen + 1;
+        }
+        return found - fb.getBuf() + 1;
+    }
+    virtual bool readRecordData( size_t filePos,
+                                 eyeline::informer::FromBuf& fb )
+    {
+        if ( fb.getBuf()[0] != '#' ) {
+            ++lines;
+            crc32 = smsc::util::crc32(crc32,fb.getBuf(),fb.getLen()-fb.getPos());
+            return true;
+        }
+        return false;
+    }
+public:
+    uint32_t lines;
+    uint32_t crc32;
+};
 
 }
 
 namespace scag2 {
 namespace pvss {
+
+smsc::logger::Logger* RollingFileStream::log_ = 0;
 
 RollingFileStream::RollingFileStream( const char* name,
                                       const char* prefix,
@@ -22,20 +55,24 @@ ProfileLogStream(name),
 prefix_(prefix), finalSuffix_(finalSuffix),
 interval_(interval)
 {
+    if (!log_) { log_ = smsc::logger::Logger::getInstance("rollfile"); }
 }
 
 
-size_t RollingFileStream::formatPrefix( char* buf, size_t bufsize ) const throw()
+size_t RollingFileStream::formatPrefix( char* buf, size_t bufsize, const char* catname ) const throw()
 {
     timeval tv;
     gettimeofday(&tv,0);
     tm rtm;
     localtime_r(&tv.tv_sec,&rtm);
     const unsigned msec = tv.tv_usec / 1000;
-    size_t written = size_t(::snprintf(buf,bufsize,"%02u-%02u %02u:%02u:%02u,%03u ",
+    size_t written = size_t(::snprintf(buf,bufsize,"%02u-%02u %02u:%02u:%02u,%03u %10.10s: ",
                                        rtm.tm_mon+1, rtm.tm_mday,
-                                       rtm.tm_hour, rtm.tm_min, rtm.tm_sec, msec ));
-    if ( written >= bufsize ) { written = bufsize-1; }
+                                       rtm.tm_hour, rtm.tm_min, rtm.tm_sec, msec,
+                                       catname ));
+    if ( written >= bufsize ) {
+        written = bufsize-1; 
+    }
     return written;
 }
 
@@ -78,7 +115,7 @@ void RollingFileStream::init()
         }
         if ( st.st_size <= strlen(FILEHEADER) ) {
             // file is ok, use it
-            needPostfix_ = false;
+            needPostfix_ = ( badlogs.size() > 1 );
             filestamp = badlogs.back();
         }
     } else {
@@ -93,7 +130,10 @@ void RollingFileStream::init()
     if ( filestamp == now ) {
         file_.Write( FILEHEADER, strlen(FILEHEADER) );
     }
-    startTime_ = now;
+    smsc_log_info(log_,"RollFileStream(%s) init unfinished=%u needfix=%d usingLast=%d",
+                  prefix_.c_str(), unsigned(badlogs.size()), needPostfix_,
+                  filestamp != now );
+    startTime_ = filestamp;
     crc32_ = 0;
     lines_ = 0;
 }
@@ -101,6 +141,7 @@ void RollingFileStream::init()
 
 void RollingFileStream::update( ProfileLogStream& ps )
 {
+    smsc_log_info(log_,"RollFileStream(%s) update");
     RollingFileStream& rfs = dynamic_cast<RollingFileStream&>(ps);
     interval_ = rfs.interval_;
     if ( prefix_ != rfs.prefix_ ) {
@@ -120,6 +161,8 @@ void RollingFileStream::postInitFix( bool& isStopping )
     BadLogs badlogs;
     collectUnfinishedLogs( prefix_.c_str(), badlogs );
     if ( badlogs.empty() ) return;
+    smsc_log_info(log_,"RollFileStream(%s) postInitFix unfinished=%u",
+                  prefix_.c_str(), unsigned(badlogs.size()) );
     
     for ( BadLogs::iterator j = badlogs.begin(); ; ) {
         time_t currentLogTime = *j;
@@ -137,8 +180,8 @@ void RollingFileStream::postInitFix( bool& isStopping )
             makeFileSuffix(buf,sizeof(buf),currentLogTime);
             filename.append(buf);
         }
-        smsc::core::buffers::File oldf;
-        oldf.RWOpen( filename.c_str() );
+        smsc_log_debug(log_,"scanning the file '%s'",filename.c_str());
+        readTheFile( filename.c_str(), lines, crc32 );
 
         std::string newname(prefix_);
         {
@@ -149,10 +192,18 @@ void RollingFileStream::postInitFix( bool& isStopping )
             char buf[50];
             makeFileSuffix(buf,sizeof(buf),nextLogTime);
             newname.append(buf);
-            newname.erase(newname.size()-STDEXTLEN);
             newname.append(finalSuffix_);
         }
+        smsc_log_info(log_,"fixing file '%s', lines=%u crc32=%x next: %s",
+                      filename.c_str(), lines, crc32, newname.c_str() );
+
+        smsc::core::buffers::File oldf;
+        oldf.Append(filename.c_str());
         finishFile( oldf, crc32, lines, newname.c_str() );
+        if ( -1 == rename( filename.c_str(), (filename + finalSuffix_).c_str() ) ) {
+            smsc_log_warn(log_,"cannot rename '%s', errno=%d", filename.c_str(), errno);
+            throw smsc::util::Exception("rename('%s') exc: errno=%d",filename.c_str(),errno);
+        }
     }
 }
 
@@ -169,7 +220,7 @@ time_t RollingFileStream::tryToRoll( time_t now )
 
 
 void RollingFileStream::collectUnfinishedLogs( const char* prefix,
-                                               std::vector< time_t >& list )
+                                               std::vector< time_t >& list ) const
 {
     std::string dirname(prefix);
     std::string filename;
@@ -194,12 +245,6 @@ void RollingFileStream::collectUnfinishedLogs( const char* prefix,
 
         const size_t isize = i->size();
         if ( isize < 5 ) continue;
-
-        // first of all check the extension
-        if ( strcmp(i->c_str() + isize - STDEXTLEN, STDEXT) ) {
-            // not equal
-            continue;
-        }
 
         // good extension is found
         ::tm ltm;
@@ -230,25 +275,46 @@ void RollingFileStream::collectUnfinishedLogs( const char* prefix,
 void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
 {
     assert(file_.isOpened());
-    TmpBuf<char,1024> buf;
+    eyeline::informer::TmpBuf<char,1024> buf;
     makeFileSuffix( buf.get(), buf.getSize(), now);
     std::string newfileName(pathPrefix);
     newfileName.append( buf.get() );
 
-    File newf;
+    smsc::core::buffers::File newf;
     newf.Append( newfileName.c_str() );
     newf.Write( FILEHEADER, strlen(FILEHEADER) );
 
-    MutexGuard mg(lock_);
-    finishFile( file_, crc32_, lines_, newfileName.c_str() );
-    file_.Swap( newf );
-    startTime_ = now;
-    crc32_ = 0;
-    lines_ = 0;
+    // strip directory
+    std::string nextfile;
+    size_t slash = newfileName.rfind('/');
+    if ( slash == std::string::npos ) {
+        nextfile = newfileName;
+    } else {
+        std::string(newfileName,slash+1).swap(nextfile);
+    }
+    nextfile.append(finalSuffix_);
+
+    std::string oldname(pathPrefix);
+    {
+        char suff[128];
+        makeFileSuffix(suff,sizeof(suff),startTime_);
+        oldname.append(suff);
+    }
+    {
+        MutexGuard mg(lock_);
+        finishFile( file_, crc32_, lines_, nextfile.c_str() );
+        file_.Swap( newf );
+        startTime_ = now;
+        crc32_ = 0;
+        lines_ = 0;
+    }
+    if ( -1 == rename(oldname.c_str(),(oldname+finalSuffix_).c_str()) ) {
+        smsc_log_warn(log_,"rename('%s') exc: errno=%d",oldname.c_str(),errno);
+    }
 }
 
 
-void RollingFileStream::makeFileSuffix( char* buf, size_t bufsize, time_t now ) throw()
+void RollingFileStream::makeFileSuffix( char* buf, size_t bufsize, time_t now ) const throw()
 {
     ::tm ltm;
     ::localtime_r(&now,&ltm);
@@ -261,10 +327,12 @@ void RollingFileStream::makeFileSuffix( char* buf, size_t bufsize, time_t now ) 
 
 void RollingFileStream::finishFile( smsc::core::buffers::File& oldf,
                                     uint32_t crc32, uint32_t lines,
-                                    const char* newname )
+                                    const char* newname ) const
 {
+    smsc_log_debug(log_,"finishing current file: lines=%u crc32=%x next=%s",
+                   lines, crc32, newname );
     char buf[80];
-    ::snprintf(buf, sizeof(buf), "# SUMMARY: lines: %u, crc32: %u, next: ",
+    ::snprintf(buf, sizeof(buf), "# SUMMARY: lines: %u, crc32: %x, next: ",
                lines, crc32 );
     std::string line(buf);
     line.append(newname);
@@ -272,6 +340,25 @@ void RollingFileStream::finishFile( smsc::core::buffers::File& oldf,
     oldf.Write(line.c_str(),line.size());
 }
 
+
+void RollingFileStream::readTheFile( const char* filename,
+                                     uint32_t& lines,
+                                     uint32_t& crc32 )
+{
+    if (!log_) {
+        log_ = smsc::logger::Logger::getInstance("rollfile");
+    }
+
+    eyeline::informer::FileGuard fg;
+    fg.ropen(filename);
+    eyeline::informer::FileReader fr(fg);
+    RFR reader;
+    eyeline::informer::TmpBuf<char,8192> buf;
+    fr.readRecords(buf,reader);
+
+    crc32 = reader.crc32;
+    lines = reader.lines;
+}
 
 }
 }

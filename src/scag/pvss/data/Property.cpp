@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "Property.h"
+#include "informer/io/TextEscaper.h"
 
 namespace {
 
@@ -171,27 +172,31 @@ const std::string& Property::toString() const
     propertyStr_.append("\" ");
     switch(type)
     {
-        case INT:
-            snprintf(strBuf, STRBUF_SIZE, "%s%lld", INT_PREF, static_cast<long long int>(i_val));
-            propertyStr_.append(strBuf);
-            break;
-        case STRING:
-            propertyStr_.append(STRING_PREF);
-            propertyStr_.append(s_val);
-            propertyStr_.push_back('"');
-            break;
-        case BOOL:
-            propertyStr_.append(b_val ? BOOL_TRUE : BOOL_FALSE);
-            break;
-        case DATE:
-            propertyStr_.append(DATE_PREF);
-            struct tm res;
-            if ( 0 == strftime(strBuf, STRBUF_SIZE, TIMEFORMAT, gmtime_r(&d_val,&res)) ) {
-                // failure
-                snprintf(strBuf,STRBUF_SIZE,"not fit");
-            }
-            propertyStr_.append(strBuf);
-            break;
+    case INT:
+        snprintf(strBuf, STRBUF_SIZE, "%s%lld", INT_PREF, static_cast<long long int>(i_val));
+        propertyStr_.append(strBuf);
+        break;
+    case STRING: {
+        propertyStr_.append(STRING_PREF);
+        // escaping the property
+        eyeline::informer::TmpBuf<char,512> propbuf;
+        eyeline::informer::escapeText(propbuf,s_val.c_str(),strlen(s_val.c_str()),true);
+        propertyStr_.append(propbuf.get());
+        propertyStr_.push_back('"');
+        break;
+    }
+    case BOOL:
+        propertyStr_.append(b_val ? BOOL_TRUE : BOOL_FALSE);
+        break;
+    case DATE:
+        propertyStr_.append(DATE_PREF);
+        struct tm res;
+        if ( 0 == strftime(strBuf, STRBUF_SIZE, TIMEFORMAT, gmtime_r(&d_val,&res)) ) {
+            // failure
+            snprintf(strBuf,STRBUF_SIZE,"not fit");
+        }
+        propertyStr_.append(strBuf);
+        break;
     }
 
     // propertyStr_.append(" ");
@@ -246,10 +251,24 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
     } else if ( from.substr(0,strlen(STRING_PREF)) == STRING_PREF ) {
         // string
         from.erase(0,strlen(STRING_PREF));
-        size_t quote = from.find("\"");
-        if ( quote == std::string::npos ) throw exceptions::IOException("closing quote on string value is not found");
+        size_t quote = 0;
+        do {
+            quote = from.find(quote,'"');
+            if ( quote == std::string::npos ) throw exceptions::IOException("closing quote on string value is not found");
+            if ( quote+1 >= from.size() ) throw exceptions::IOException("closing quote is the last symbol in the string");
+            if ( from[quote+1] == '"' ) {
+                // there is another quote, treat them as a single one
+                quote += 2;
+                continue;
+            }
+            break;
+        } while (true);
         type = STRING;
-        s_val = from.substr(0,quote);
+        eyeline::informer::TmpBuf<char,512> propbuf;
+        propbuf.reserve(quote+1);
+        s_val = eyeline::informer::unescapeText(propbuf.get(),from.c_str(),
+                                                quote,true);
+        // s_val = from.substr(0,quote);
         from.erase(0,quote+1);
     } else if ( from.substr(0,strlen(BOOL_TRUE)) == BOOL_TRUE ) {
         // bool: true

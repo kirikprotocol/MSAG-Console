@@ -45,6 +45,7 @@ scag/pvss-flooder2  flooder2 \
     -lcore-network $(SOCKETLIB) -lnsl \
     -lcore-threads \
     @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    -lutil \
     $(__LIBRARIES) \
     $(SSL_LIB) \
     -lpthread -lrt -ldl \
@@ -63,6 +64,7 @@ scag/pvss-getProfile  testGetProfile \
     -lcore-network $(SOCKETLIB) -lnsl \
     -lcore-threads \
     @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    -lutil \
     $(__LIBRARIES) \
     $(SSL_LIB) \
     -lpthread -lrt -ldl \

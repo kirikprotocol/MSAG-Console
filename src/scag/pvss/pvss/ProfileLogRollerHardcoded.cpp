@@ -54,7 +54,7 @@ bool ProfileLogRollerHardcoded::readConfiguration()
         if ( reloadInterval > 0 && reloadInterval < 30 ) {
             throw smsc::util::Exception("configReloadInterval is too small (%u)",reloadInterval);
         }
-        const std::string prefix = cwrap1.getString("backupSuffix");
+        const std::string prefix = cwrap1.getString("backupPrefix");
         const std::string finalSuffix = cwrap1.getString("finalSuffix",".pvss");
         if ( finalSuffix.empty() || finalSuffix == ".log" ) {
             throw smsc::util::Exception("finalSuffix is not correct ('%s')",finalSuffix.c_str());

@@ -27,7 +27,8 @@ name_(name),
 level_(smsc::logger::Logger::LEVEL_FATAL),
 uselog_(false),
 stream_(0),
-toset_(0)
+toset_(0),
+llog_(smsc::logger::Logger::getInstance(name))
 {
 }
 
@@ -71,7 +72,7 @@ void ProfileLog::logva( int level, const char* const format, va_list args ) thro
         std::terminate();
     }
 
-    const size_t prefixLength = stream_->formatPrefix( buf, sizeof(buf) );
+    const size_t prefixLength = stream_->formatPrefix( buf, sizeof(buf), name_.c_str() );
 
     char* buffer = buf;
     size_t bufsize = sizeof(buf) - prefixLength;
@@ -98,7 +99,9 @@ void ProfileLog::logva( int level, const char* const format, va_list args ) thro
         return;
     }
 
-    stream_->write( buffer, bufsize );
+    // replace trailing \0 with \n
+    buffer[bufsize] = '\n';
+    stream_->write( buffer, ++bufsize );
 }
 
 
@@ -624,9 +627,9 @@ void ProfileLogRoller::addLogStream( EmbedRefPtr<ProfileLogStream>& pls )
         }
     }
     if ( !found ) {
-        found->update(*pls);
-    } else {
         pls->init();
+    } else {
+        found->update(*pls);
     }
 }
 

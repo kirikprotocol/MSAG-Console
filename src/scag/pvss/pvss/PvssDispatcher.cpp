@@ -114,6 +114,8 @@ logRoller_( new ProfileLogRollerHardcoded() )
         ( new counter::Accumulator("sys.profiles.abn.total") );
     smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
                   nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);
+
+    logRoller_->start();
 }
 
 unsigned PvssDispatcher::getIndex(Request& request) const 
@@ -384,6 +386,7 @@ void PvssDispatcher::shutdown() {
 
 PvssDispatcher::~PvssDispatcher() {
     shutdown();
+    logRoller_->stop();
     delete logRoller_; logRoller_ = 0;
     smsc_log_info(logger_,"dtor pvss dispatcher");
 }

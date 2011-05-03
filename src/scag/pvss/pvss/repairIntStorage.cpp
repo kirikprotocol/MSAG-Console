@@ -18,6 +18,7 @@
 using namespace scag2::util::storage;
 using namespace scag2::util;
 using namespace scag2::pvss;
+using namespace smsc::core::buffers;
 
 typedef PageFileDiskStorage< IntProfileKey, Profile, PageFile > DiskDataStorage;
 typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;

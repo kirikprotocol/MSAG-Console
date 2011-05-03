@@ -32,7 +32,7 @@ public:
     
     inline const char* getName() const throw() { return name_.c_str(); }
 
-    virtual size_t formatPrefix( char* buf, size_t bufsize ) const throw() = 0;
+    virtual size_t formatPrefix( char* buf, size_t bufsize, const char* catname ) const throw() = 0;
     virtual void write( const char* buf, size_t bufsize ) = 0;
 
 protected:
@@ -88,19 +88,35 @@ public:
 
     inline void log_( int level, const char* const format, ... ) throw()
     {
-        if ( isLogLevelEnabled(level) && stream_.get() ) { /* fast check w/o locking */
+        if ( isLogLevelEnabled(level) && (stream_.get() || toset_.get()) ) { /* fast check w/o locking */
             va_list args;
             va_start(args,format);
             logva(level,format,args);
             va_end(args);
         }
+        if (uselog_ && llog_->isLogLevelEnabled(smsc::logger::Logger::LogLevel(level)) ) {
+            va_list args;
+            va_start(args,format);
+            timeval tv;
+            gettimeofday(&tv,0);
+            llog_->logva_(tv,smsc::logger::Logger::LogLevel(level),format,args);
+            va_end(args);
+        }
     }
     inline void log( int level, const char* const format, ... ) throw()
     {
-        if ( isLogLevelEnabled(level) && stream_.get() ) {
+        if ( isLogLevelEnabled(level) && (stream_.get() || toset_.get()) ) {
             va_list args;
             va_start(args,format);
             logva(level,format,args);
+            va_end(args);
+        }
+        if (uselog_ && llog_->isLogLevelEnabled(smsc::logger::Logger::LogLevel(level)) ) {
+            va_list args;
+            va_start(args,format);
+            timeval tv;
+            gettimeofday(&tv,0);
+            llog_->logva_(tv,smsc::logger::Logger::LogLevel(level),format,args);
             va_end(args);
         }
     }
@@ -121,6 +137,7 @@ protected:
     bool                                             uselog_;
     eyeline::informer::EmbedRefPtr<ProfileLogStream> stream_;
     eyeline::informer::EmbedRefPtr<ProfileLogStream> toset_;
+    smsc::logger::Logger*                            llog_;
 };
 
 

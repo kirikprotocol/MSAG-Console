@@ -47,6 +47,7 @@ scag/tests/pvss-read-abonent-entry readEntry \
         -lscag-util-storage \
         -lscag-util-io \
 	-lscag-util \
+        -linformer-io \
         -lcore-threads \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
@@ -57,6 +58,7 @@ scag/tests/pvss-collect-storage-stats collectStorageStats \
         -lscag-util-storage \
         -lscag-util-io \
 	-lscag-util \
+        -linformer-io \
         -lcore-threads \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
@@ -71,6 +73,7 @@ scag/pvss-repairIntStorage repairIntStorage \
         -lscag-util-storage \
         -lscag-util-io \
 	-lscag-util \
+        -linformer-io \
         -lcore-threads \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
@@ -85,6 +88,7 @@ scag/tests/pvss-testBackupProcessor testBackupProcessor \
         -lscag-util-storage \
         -lscag-util-io \
 	-lscag-util \
+        -linformer-io \
         -lcore-threads \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \

@@ -14,6 +14,8 @@
 #include "scag/counter/Accumulator.h"
 #include "scag/counter/Manager.h"
 
+using namespace smsc::core::buffers;
+
 namespace {
 
 using namespace scag2::pvss;
