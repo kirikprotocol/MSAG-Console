@@ -1,4 +1,5 @@
 static char const ident[] = "$Id$";
+#include "util/Exception.hpp"
 #include "mtsmsme/processor/Processor.h"
 #include "mtsmsme/processor/HLRImpl.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -12,6 +13,7 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <vector>
 
+using smsc::util::Exception;
 using smsc::mtsmsme::processor::RequestProcessor;
 using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
