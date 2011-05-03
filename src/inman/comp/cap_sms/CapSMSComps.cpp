@@ -4,6 +4,8 @@ static char const ident[] = "@(#)$Id$";
 
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
 
+using namespace smsc::util;
+
 namespace smsc {
 namespace inman {
 namespace comp {

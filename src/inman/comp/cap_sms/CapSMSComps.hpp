@@ -151,25 +151,25 @@ public:
     void setCallingPartyNumber(const char * text);
 
     //imsi contains sequence of ASCII digits
-    void setIMSI(const IMSIString & imsi) throw(CustomException);
+    void setIMSI(const smsc::util::IMSIString & imsi) throw(smsc::util::CustomException);
 
-    void setSMSCAddress(const TonNpiAddress& addr);
+    void setSMSCAddress(const smsc::util::TonNpiAddress& addr);
     void setSMSCAddress(const char * text);
 
     //NOTE: requires the preceeding call of tzset()
-    void setTimeAndTimezone(time_t tmVal) throw(CustomException);
-    void setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) throw(CustomException);
+    void setTimeAndTimezone(time_t tmVal) throw(smsc::util::CustomException);
+    void setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) throw(smsc::util::CustomException);
 
     void setTPShortMessageSpecificInfo(unsigned char );
     void setTPProtocolIdentifier(unsigned char );
     void setTPDataCodingScheme(unsigned char );
 
-    void setLocationInformationMSC(const TonNpiAddress& addr) throw(CustomException);
-    void setLocationInformationMSC(const char* text) throw(CustomException);
+    void setLocationInformationMSC(const smsc::util::TonNpiAddress& addr) throw(smsc::util::CustomException);
+    void setLocationInformationMSC(const char* text) throw(smsc::util::CustomException);
 
-    void setCellGlobalId(const CellGlobalId & cell_gid) throw(CustomException);
+    void setCellGlobalId(const CellGlobalId & cell_gid) throw(smsc::util::CustomException);
 
-    virtual void encode(std::vector<unsigned char>& buf) const throw(CustomException);
+    virtual void encode(std::vector<unsigned char>& buf) const throw(smsc::util::CustomException);
 
 private:
     uint32_t    servKey;
@@ -195,7 +195,7 @@ public:
     }
     std::string & print(std::string & dump) const;
 
-    virtual void encode(std::vector<unsigned char>& buf) const throw(CustomException);
+    virtual void encode(std::vector<unsigned char>& buf) const throw(smsc::util::CustomException);
 
 private:
     EventTypeSMS_e  eventType;
@@ -219,7 +219,7 @@ public:
     const SMSEventDPs& SMSEvents(void) const { return events; }
     std::string & printEvents(std::string & dump) { return events.print(dump); }
 
-    virtual void  decode(const std::vector<unsigned char>& buf) throw(CustomException);
+    virtual void  decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
 
 private:
     SMSEventDPs events;
@@ -245,7 +245,7 @@ public:
     const TonNpiAddress&	callingPartyNumber(void) const { return clngPN; }
     const TonNpiAddress&	SMSCAddress(void) const { return sMSCAdr; }
 
-    virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+    virtual void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
 
 protected:
     TonNpiAddress   dstSN, clngPN, sMSCAdr;
@@ -267,7 +267,7 @@ public:
     ~SMSFurnishChargingInformationArg()
     { }
 
-    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
 
 private:
     Logger* compLogger;
@@ -291,7 +291,7 @@ public:
 
   unsigned char rPCause(void) const { return _rPCause; }
 
-  virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+  virtual void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
 };
 
 // Direction: gsmSCF -> smsSSF, Timer: Trtsms 
@@ -313,7 +313,7 @@ public:
 
   time_t timerValue(void) const { return tmrValue; }
 
-  virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+  virtual void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
 };
 
 }//namespace comp

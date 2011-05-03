@@ -135,7 +135,7 @@ public:
 
     unsigned cmId(void) const { return _cmId; }
 
-    CustomException * connectError(void) const
+    smsc::util::CustomException * connectError(void) const
     {
       return _conn ? _conn->hasException() : NULL;
     }
@@ -203,7 +203,7 @@ public:
     //virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
     //                     /*throw(std::exception)*/ = 0;
     //Stops all Workers due to error condition pending on socket
-    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
+    virtual void onConnectError(Connect* conn, std::auto_ptr<smsc::util::CustomException>& p_exc)
     {
         Abort(p_exc->what());
     }

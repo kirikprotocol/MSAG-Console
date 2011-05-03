@@ -4,6 +4,8 @@ static char const ident[] = "@(#)$Id$";
 
 #include "inman/services/tcpsrv/ICSTcpSrv.hpp"
 
+using namespace smsc::util;
+
 namespace smsc  {
 namespace inman {
 namespace tcpsrv {

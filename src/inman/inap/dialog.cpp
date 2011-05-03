@@ -14,6 +14,8 @@ using smsc::util::DumpHex;
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/TCAPErrors.hpp"
 
+using namespace smsc::util;
+
 namespace smsc  {
 namespace inman {
 namespace inap  {

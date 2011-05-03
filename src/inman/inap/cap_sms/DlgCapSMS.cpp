@@ -29,6 +29,8 @@ using smsc::inman::inap::TC_UAbortCause;
 using smsc::inman::inap::_RCS_TC_UAbort;
 using smsc::inman::inap::_RCS_TC_Report;
 
+using namespace smsc::util;
+
 namespace smsc {
 namespace inman {
 namespace inap {

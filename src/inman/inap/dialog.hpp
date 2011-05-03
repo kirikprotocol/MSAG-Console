@@ -92,7 +92,7 @@ private:
 
     void clearInvokes(void);
     //
-    void checkSS7res(const char * descr, uint16_t result) throw(CustomException);
+    void checkSS7res(const char * descr, uint16_t result) throw(smsc::util::CustomException);
     //
     uint8_t  getNextInvokeId(void)
     {
@@ -214,18 +214,18 @@ public:
     //Invoke timer being set to the Dialog default timeout value,
     //doesn't take ownership of Component
     uint8_t /*inv_id*/ sendInvoke(uint8_t opcode, const Component *p_arg, uint16_t timeout = 0)
-                        throw(CustomException);
-    void    sendResultLast(TcapEntity* res) throw(CustomException);
-    void    sendResultNotLast(TcapEntity* res) throw(CustomException);
-    void    sendResultError(TcapEntity* res) throw(CustomException);
+                        throw(smsc::util::CustomException);
+    void    sendResultLast(TcapEntity* res) throw(smsc::util::CustomException);
+    void    sendResultNotLast(TcapEntity* res) throw(smsc::util::CustomException);
+    void    sendResultError(TcapEntity* res) throw(smsc::util::CustomException);
 
     // Transaction layer requests
-    void beginDialog(uint8_t* ui = NULL, uint16_t uilen = 0) throw(CustomException);
+    void beginDialog(uint8_t* ui = NULL, uint16_t uilen = 0) throw(smsc::util::CustomException);
     //start dialog with new remote address
     void beginDialog(const SCCP_ADDRESS_T& remote_addr,
-                     uint8_t* ui = NULL, uint16_t uilen = 0) throw(CustomException);
-    void continueDialog(void) throw(CustomException);
-    void endDialog(Dialog::Ending type = endBasic) throw(CustomException);
+                     uint8_t* ui = NULL, uint16_t uilen = 0) throw(smsc::util::CustomException);
+    void continueDialog(void) throw(smsc::util::CustomException);
+    void endDialog(Dialog::Ending type = endBasic) throw(smsc::util::CustomException);
 
     // Transaction layer callbacks (indications)
     // uint16_t handleBeginDialog(); //NOTE: Unimplemented yet!

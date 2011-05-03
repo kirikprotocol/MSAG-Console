@@ -71,11 +71,11 @@ protected:
 
 public:
     // initiates capSMS dialog
-    virtual void initialDPSMS(SMSInitialDPArg* arg) throw(CustomException) = 0;
+    virtual void initialDPSMS(SMSInitialDPArg* arg) throw(smsc::util::CustomException) = 0;
     // reports SMS delivery status (continues) and ends capSMS dialog
-    virtual void reportSubmission(bool submitted) throw(CustomException) = 0;
+    virtual void reportSubmission(bool submitted) throw(smsc::util::CustomException) = 0;
     // aborts capSMS dialog (
-    virtual void abortSMS(void) throw(CustomException) = 0;
+    virtual void abortSMS(void) throw(smsc::util::CustomException) = 0;
 };
 
 

@@ -42,7 +42,7 @@ public:
   void        ownParam(Component * p)  { _param = p; _ownComp = true; }
 
   //throws CustomException
-  void encode(RawBuffer & operation, RawBuffer & params) const throw(CustomException)
+  void encode(RawBuffer & operation, RawBuffer & params) const throw(smsc::util::CustomException)
   {
     operation.clear(); params.clear();
     operation.push_back(_opCode);

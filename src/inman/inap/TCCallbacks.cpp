@@ -23,6 +23,8 @@ using smsc::inman::inap::rc2Txt_TC_BindResult;
 #include "inman/inap/TCCallbacks.hpp"
 #include "inman/inap/EINTCLink.hpp"
 
+using namespace smsc::util;
+
 namespace smsc {
 namespace inman {
 namespace inap {

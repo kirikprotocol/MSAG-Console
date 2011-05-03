@@ -10,6 +10,7 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/common/cvtutil.hpp"
 
 using smsc::util::MAPConst;
+using namespace smsc::util;
 
 using smsc::cvtutil::packTimeT2BCD7;
 using smsc::cvtutil::packTimeT2BCD8;

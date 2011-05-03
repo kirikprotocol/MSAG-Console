@@ -113,7 +113,7 @@ protected:
     // -- ConnectListenerITF interface mthods
     // -------------------------------------
     //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
-    void onConnectError(Connect *conn, std::auto_ptr<CustomException> &p_exc);
+    void onConnectError(Connect *conn, std::auto_ptr<smsc::util::CustomException> &p_exc);
     //NOTE: if listener takes ownership of packet, remaining listeners will not be notified.
     void onPacketReceived(Connect *conn, std::auto_ptr<SerializablePacketAC> &recv_cmd);
 
