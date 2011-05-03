@@ -17,6 +17,7 @@ namespace smsc  {
 namespace inman {
 namespace test {
 
+using smsc::util::CustomException;
 using smsc::logger::Logger;
 
 using smsc::core::synchronization::Mutex;

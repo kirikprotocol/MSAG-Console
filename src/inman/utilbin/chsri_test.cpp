@@ -11,7 +11,11 @@ using smsc::inman::common::Console;
 
 #include "inman/utilbin/URCInitMAP.hpp"
 #include "inman/utilbin/chsri_srv.hpp"
-using smsc::inman::SRI_CSIListenerIface;
+using smsc::util::RCHash;
+using smsc::util::URCRegistry;
+using smsc::util::format;
+using smsc::util::TonNpiAddress;
+
 using smsc::inman::ServiceCHSRI;
 using smsc::inman::ServiceCHSRI_CFG;
 using smsc::inman::inap::MAPUsrCfgReader;
@@ -55,7 +59,7 @@ static const AbonentPreset  _abonents[] = {
 #define PRE_ABONENTS_NUM (sizeof(_abonents)/sizeof(AbonentPreset))
 
 
-class CHSRIClient: public SRI_CSIListenerIface {
+class CHSRIClient: public smsc::inman::SRI_CSIListenerIface {
 private:
   AbonentsDB &  _abnDb;
   FILE *        _outStream;

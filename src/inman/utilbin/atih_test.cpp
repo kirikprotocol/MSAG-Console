@@ -13,6 +13,11 @@ using smsc::inman::common::Console;
 
 #include "inman/utilbin/URCInitMAP.hpp"
 #include "inman/utilbin/atih_srv.hpp"
+using smsc::util::RCHash;
+using smsc::util::URCRegistry;
+using smsc::util::format;
+using smsc::util::TonNpiAddress;
+
 using smsc::inman::comp::CSIUid_e;
 using smsc::inman::comp::UnifiedCSI;
 using smsc::inman::comp::atih::RequestedSubscription;
@@ -60,7 +65,7 @@ static const AbonentPreset  _abonents[] = {
 #define PRE_ABONENTS_NUM (sizeof(_abonents)/sizeof(AbonentPreset))
 
 
-class ATIHClient: public AT_CSIListenerIface {
+class ATIHClient: public smsc::inman::AT_CSIListenerIface {
 private:
   AbonentsDB &  _abnDb;
   FILE *        _outStream;

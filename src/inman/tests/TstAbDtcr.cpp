@@ -4,6 +4,7 @@ static char const ident[] = "@(#)$Id$";
 
 #include "inman/tests/TstAbDtcr.hpp"
 using smsc::util::CAPConst;
+using smsc::util::format;
 
 using smsc::inman::interaction::INPSerializer;
 using smsc::inman::interaction::INPCSAbntContract;

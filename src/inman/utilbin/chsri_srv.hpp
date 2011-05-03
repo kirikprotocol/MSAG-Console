@@ -20,6 +20,7 @@
 namespace smsc  {
 namespace inman {
 
+using smsc::util::RCHash;
 using smsc::util::IMSIString;
 using smsc::inman::test::AbonentInfo;
 

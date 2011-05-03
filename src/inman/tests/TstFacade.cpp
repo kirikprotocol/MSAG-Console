@@ -3,7 +3,7 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/tests/TstFacade.hpp"
-
+using smsc::util::format;
 using smsc::core::network::Socket;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::INPSerializer;

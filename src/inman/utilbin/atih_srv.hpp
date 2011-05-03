@@ -20,6 +20,8 @@
 namespace smsc  {
 namespace inman {
 
+using smsc::util::RCHash;
+using smsc::util::TonNpiAddress;
 using smsc::inman::test::AbonentInfo;
 
 using smsc::inman::comp::atih::RequestedSubscription;
