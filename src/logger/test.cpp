@@ -16,6 +16,29 @@ unsigned long counterAll = 0;
 unsigned long counterLogged = 0;
 Mutex countersMutex;
 
+#ifdef CHECKCONTENTION
+namespace smsc {
+namespace core {
+namespace synchronization {
+unsigned Mutex::contentionLimit = 200000;
+
+void Mutex::reportContention( const char* from,
+                              unsigned    howlong,
+                              unsigned    oldcount ) const throw()
+{
+    fprintf(stderr,"%s @%s contented by %u@%s for %u usec count=%u/%+d\n",
+            what, from ? from:"unk",
+            unsigned(wasid),
+            wasfrom?wasfrom:"unk",
+            howlong,lockCount,
+            int(lockCount-oldcount));
+}
+
+}
+}
+}
+#endif
+
 void mySleep(int millisecs)
 {
   struct timespec s;
