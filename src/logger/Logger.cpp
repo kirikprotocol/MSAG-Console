@@ -23,6 +23,7 @@ namespace smsc {
 namespace logger {
 
 using namespace smsc::util;
+using namespace smsc::core::buffers;
 using smsc::core::synchronization::MutexGuard;
 
 ////////////////////// internal helpers

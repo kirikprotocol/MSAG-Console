@@ -23,9 +23,9 @@
 #define smsc_log_debug(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isDebugEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_DEBUG, __VA_ARGS__)
 #endif
 
-using namespace smsc::core::buffers;
+// using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
-using namespace smsc::util;
+// using namespace smsc::util;
 
 namespace smsc {
 namespace logger {
@@ -42,7 +42,7 @@ public:
     LEVEL_NOTSET = 0
   } LogLevel;
 
-  typedef Hash<LogLevel> LogLevels;
+  typedef smsc::core::buffers::Hash<LogLevel> LogLevels;
 
   //////////////////////////  static //////////////////////////
 
@@ -53,7 +53,7 @@ public:
 
   static inline bool isInitialized()
   {
-    MutexGuard guard(static_mutex);
+    smsc::core::synchronization::MutexGuard guard(static_mutex);
     return initialized;
   }
 
@@ -89,12 +89,12 @@ public:
   }
 
   inline void setAppender(Appender * newAppender) {
-    MutexGuard guard(mutex);
+    smsc::core::synchronization::MutexGuard guard(mutex);
     appender = newAppender;
   }
 
   inline bool isLogLevelEnabled(const LogLevel _logLevel) throw() {
-    //MutexGuard guard(mutex);
+    //smsc::core::synchronization::MutexGuard guard(mutex);
     return this->logLevel <= _logLevel;
   }
 
@@ -125,7 +125,7 @@ public:
 
   inline const LogLevel getLogLevel() throw()
   {
-    //MutexGuard guard(mutex);
+    //smsc::core::synchronization::MutexGuard guard(mutex);
     return logLevel;
   }
 
@@ -216,8 +216,8 @@ private:
   static LoggersHash loggers;
   static AppendersHash appenders;
   static LogLevels logLevels;
-  static Properties cats2appenders;
-  static Mutex static_mutex;
+  static smsc::util::Properties cats2appenders;
+  static smsc::core::synchronization::Mutex static_mutex;
   static ConfigReader configReader;
 
   static Logger * getInstanceInternal(const char * const logCategoryName);
@@ -242,7 +242,7 @@ private:
   {
     if(reloadConfigInterval && time_t(lastReloadConfigCheck + reloadConfigInterval) < now)
     {
-        MutexGuard guard(static_mutex);
+        smsc::core::synchronization::MutexGuard guard(static_mutex);
         if(time_t(lastReloadConfigCheck + reloadConfigInterval) >= time(NULL)) return;
         struct ::stat st;
         const char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
@@ -261,7 +261,7 @@ private:
   LogLevel logLevel;
   const char* const name;
   Appender * appender;
-  Mutex mutex;
+  smsc::core::synchronization::Mutex mutex;
 
   // disable copying
   Logger(const Logger & copy);
@@ -269,7 +269,7 @@ private:
   Logger & operator=(const Logger & other);
   inline void setLogLevel(const LogLevel level) throw()
   {
-    MutexGuard guard(mutex);
+    smsc::core::synchronization::MutexGuard guard(mutex);
     logLevel = level;
   }
 };
