@@ -171,7 +171,7 @@ flags_(0), flagsize_(0)
 void MessageFlags::reset( const MessageFlagBuilder& mfb )
 {
     if (flags_) { delete flags_; }
-    flagsize_ = mfb.getSize();
+    flagsize_ = unsigned(mfb.getSize());
     if ( !flagsize_ ) {
         flags_ = 0;
         return;
