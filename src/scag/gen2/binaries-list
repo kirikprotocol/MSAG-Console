@@ -57,6 +57,7 @@ endswitch
   -lscag-util-io \
   -lscag-util \
   -lscag-exc \
+  -linformer-io \
   \
   $(MSAG_INMAN_LIBS) \
   \

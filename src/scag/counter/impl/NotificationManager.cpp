@@ -136,7 +136,7 @@ NotificationManager::TrapData* NotificationManager::findTrapData( const char* cn
             return 0;
         }
         assert(*p==delim);
-        TmpBuf<char,100> temp;
+        smsc::core::buffers::TmpBuf<char,100> temp;
         const size_t pfxlen = p-cname;
         memcpy(temp.setSize(pfxlen+1),cname,pfxlen);
         temp.get()[pfxlen] = '\0';

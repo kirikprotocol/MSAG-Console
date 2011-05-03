@@ -27,7 +27,7 @@ public:
 protected:
   virtual int getCommandIdByName(const char * const command_name);
   virtual Command * createCommand(int id, const DOMDocument *data);
-  Hash<int> commandlist;  
+    smsc::core::buffers::Hash<int> commandlist;  
 };
 
 }
