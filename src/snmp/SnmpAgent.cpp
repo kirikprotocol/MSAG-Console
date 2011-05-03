@@ -21,6 +21,9 @@
 #include "snmp/smestattable/SmeStatTableSubAgent.hpp"
 #include "snmp/smeerrtable/smeErrTable_subagent.hpp"
 
+using namespace smsc::util;
+using namespace smsc::core::buffers;
+
 static char const ident[] = "$Id$";
 
   extern "C" {
