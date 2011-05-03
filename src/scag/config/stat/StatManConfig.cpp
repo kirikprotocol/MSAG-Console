@@ -190,7 +190,7 @@ int StatManConfig::getMaxQueueLength()const {return queue_length;}
  
 int StatManConfig::getSaccPort() const{return saccPort;}
 std::string StatManConfig::getSaccHost()const{return saccHost;}
-IntHash<std::string> StatManConfig::getEventFiler()const{return eventFilter;}
+smsc::core::buffers::IntHash<std::string> StatManConfig::getEventFiler()const{return eventFilter;}
 
 std::string StatManConfig::getSaaDir() const { return saaDir; }
 std::string StatManConfig::getFilesPrefix() const { return filesPrefix; }

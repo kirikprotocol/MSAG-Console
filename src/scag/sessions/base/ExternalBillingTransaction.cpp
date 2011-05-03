@@ -22,7 +22,7 @@ Deserializer& ExternalBillingTransaction::deserialize( Deserializer& s ) /* thro
     uint32_t i;
     s >> i;
     if ( i != id ) {
-        throw Exception("billtrans: ids are not equal: i=%u id=%u",i,id);
+        throw smsc::util::Exception("billtrans: ids are not equal: i=%u id=%u",i,id);
     }
     uint64_t ib;
     s >> ib;

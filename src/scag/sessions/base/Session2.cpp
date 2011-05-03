@@ -13,6 +13,7 @@
 #include "scag/transport/CommandOperation.h"
 
 using namespace scag2::util::io;
+using namespace smsc::util;
 
 namespace {
 

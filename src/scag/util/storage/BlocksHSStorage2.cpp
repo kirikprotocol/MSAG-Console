@@ -6,6 +6,8 @@
 #include "scag/util/Time.h"
 #include "util/PtrDestroy.h"
 
+using namespace smsc::core::buffers;
+
 namespace {
 
 bool staticDone = false;

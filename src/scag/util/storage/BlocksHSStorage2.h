@@ -250,7 +250,7 @@ private:
         return rv;
     }
 
-    inline File* getFile( offset_type pos ) {
+    inline smsc::core::buffers::File* getFile( offset_type pos ) {
         unsigned fn = unsigned(pos / fileSizeBytes_);
         if ( fn >= files_.size() ) {
             if (log_) {
@@ -327,7 +327,7 @@ private:
     std::vector< offset_type > posAndSize_;
 
     // the state of the storage
-    std::vector< File* >  files_;
+    std::vector< smsc::core::buffers::File* >  files_;
     size_t                freeCount_;  // how many free cells in storage
     std::deque<unsigned>  freeChain_;  // indices (not offsets!)
 

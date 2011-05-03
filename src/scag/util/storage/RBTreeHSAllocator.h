@@ -736,7 +736,7 @@ private:
             rbtree_f.RWCreate(rbtree_file.c_str());
             rbtree_f.SetUnbuffered();
         }
-        catch(FileException ex)
+        catch(smsc::core::buffers::FileException ex)
         {
             if (logger) {
                 smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
@@ -750,7 +750,7 @@ private:
             // trans_f.RWCreate(trans_file.c_str());
             // trans_f.SetUnbuffered();
         }
-        catch(FileException ex)
+        catch(smsc::core::buffers::FileException ex)
         {
             if (logger) {
                 smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
@@ -776,13 +776,13 @@ private:
             rbtree_f.RWOpen(rbtree_file.c_str());
             rbtree_f.SetUnbuffered();
         }
-        catch(FileException ex)
+        catch(smsc::core::buffers::FileException ex)
         {
             return CANNOT_OPEN_RBTREE_FILE;
         }
         try
         {
-            if ( File::Exists(journalFileName().c_str()) ) {
+            if ( smsc::core::buffers::File::Exists(journalFileName().c_str()) ) {
                 journalFile_.open();
             } else {
                 // VM on 2009-04-28: it's ok if journalFile_ is absent, just create it
@@ -791,7 +791,7 @@ private:
             // trans_f.RWOpen(trans_file.c_str());
             // trans_f.SetUnbuffered();
         }
-        catch(FileException ex)
+        catch(smsc::core::buffers::FileException ex)
         {
             rbtree_f.Close();
             return CANNOT_OPEN_TRANS_FILE;
@@ -1267,7 +1267,7 @@ private:
 private:
     string			rbtree_file;
     // string			trans_file;
-    File			rbtree_f;
+    smsc::core::buffers::File   rbtree_f;
     // File			trans_f;
 
     off_t			growth;

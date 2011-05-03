@@ -59,7 +59,7 @@ namespace sacc {
 class EventSender: public Thread 
 {
 private:
-    typedef CyclicQueue< SaccEvent* > QueueType;
+    typedef smsc::core::buffers::CyclicQueue< SaccEvent* > QueueType;
 
 
 public:

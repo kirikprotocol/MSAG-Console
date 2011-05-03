@@ -15,6 +15,7 @@ namespace scag { namespace util { namespace storage {
 using std::string;
 using std::vector;
 using smsc::core::buffers::Hash;
+using smsc::core::buffers::File;
 using smsc::logger::Logger;
 
 class Glossary: public io::GlossaryBase {

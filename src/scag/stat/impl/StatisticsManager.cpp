@@ -25,6 +25,7 @@
 // using namespace util::properties;
 
 using namespace scag::stat::sacc;
+using namespace smsc::core::buffers;
 
 namespace scag2 {
 namespace stat {

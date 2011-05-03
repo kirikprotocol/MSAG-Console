@@ -15,13 +15,13 @@ namespace infrastruct {
 
 class InfrastructureImpl : public Infrastructure
 {
-    IntHash<uint32_t>* service_hash;
-    Hash<uint32_t>* mask_hash;
-    IntHash<uint32_t>* category_hash;
-    IntHash<uint32_t>* media_type_hash;
-    Hash<uint32_t>* category_str_hash;
-    Hash<uint32_t>* media_type_str_hash;
-    IntHash<TariffRec>* tariff_hash;
+    smsc::core::buffers::IntHash<uint32_t>* service_hash;
+    smsc::core::buffers::Hash<uint32_t>* mask_hash;
+    smsc::core::buffers::IntHash<uint32_t>* category_hash;
+    smsc::core::buffers::IntHash<uint32_t>* media_type_hash;
+    smsc::core::buffers::Hash<uint32_t>* category_str_hash;
+    smsc::core::buffers::Hash<uint32_t>* media_type_str_hash;
+    smsc::core::buffers::IntHash<TariffRec>* tariff_hash;
     std::string ProviderFile, OperatorFile, TariffMatrixFile;
     smsc::logger::Logger * logger;
     Mutex ProviderReloadMutex, ProviderMapMutex;

@@ -2,6 +2,8 @@
 
 namespace scag { namespace util { namespace storage {
 	
+using namespace smsc::core::buffers;
+
 int Glossary::Open(const string& glossFileName) {
   if (opened) {
     return ALREADY_OPENED;

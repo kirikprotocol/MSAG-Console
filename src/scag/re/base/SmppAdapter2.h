@@ -5,8 +5,7 @@
 #include "scag/transport/smpp/base/SmppCommand2.h"
 #include "ActionContext2.h"
 #include "CommandBridge.h"
-
-#include <core/buffers/IntHash.hpp>
+#include "core/buffers/IntHash.hpp"
 
 namespace scag2 {
 namespace re {
@@ -15,6 +14,7 @@ namespace smpp {
 using namespace util::properties;
 using namespace transport::smpp;
 using smsc::core::buffers::IntHash;
+using smsc::core::buffers::Hash;
 using bill::infrastruct::TariffRec;
 using re::actions::CommandAccessor;
 

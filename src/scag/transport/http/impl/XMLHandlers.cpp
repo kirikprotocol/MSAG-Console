@@ -11,6 +11,7 @@ namespace transport {
 namespace http {
 
 using namespace smsc::util;
+using namespace smsc::core::buffers;
 
 XMLBasicHandler::XMLBasicHandler(RouteArray* r, PlacementKindArray* inap, PlacementKindArray* outap)
 {

@@ -203,8 +203,8 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         if ( session.getLongCallContext().continueExec ) {
             // take rule from action context
             if ( !session.getLongCallContext().getActionContext() ) {
-                throw Exception("process(continue): session has no action context %s",
-                                session.sessionKey().toString().c_str() );
+                throw smsc::util::Exception("process(continue): session has no action context %s",
+                                            session.sessionKey().toString().c_str() );
             }
             smsc_log_debug(logger,"taking rule from actionContext");
             rulePtr = session.getLongCallContext().getActionContext()->getRule();
@@ -298,8 +298,8 @@ void RuleEngineImpl::finalizeSession(Session& session, RuleStatus& rs)
 
         if ( session.getLongCallContext().continueExec ) {
             if ( !session.getLongCallContext().getActionContext() ) {
-                throw Exception("processSession(continue): session has no action context %s",
-                                session.sessionKey().toString().c_str() );
+                throw smsc::util::Exception("processSession(continue): session has no action context %s",
+                                            session.sessionKey().toString().c_str() );
             }
             smsc_log_debug(logger,"taking rule from actionContext");
             rulePtr = session.getLongCallContext().getActionContext()->getRule();

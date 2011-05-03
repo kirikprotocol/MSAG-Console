@@ -94,11 +94,11 @@ private:
     void writeHeader(std::ostream &out);
     void writeFooter(std::ostream &out);
     void reload( smsc::core::buffers::Array<int>& changedConfigs ) throw(ConfigException);
-    IntHash<ConfigListener*> listeners;
+    smsc::core::buffers::IntHash<ConfigListener*> listeners;
     Mutex listenerLock;
     smsc::logger::Logger* logger;
 
-    static Hash<std::string> licconfig;
+    static smsc::core::buffers::Hash<std::string> licconfig;
     static LicenseInfo license;
     static time_t licenseFileMTime;
     static std::string licenseFile;

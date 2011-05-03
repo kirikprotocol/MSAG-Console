@@ -30,7 +30,7 @@ currentTime_(time(0)),
 log_(logger)
 {
     if ( !cmd_.get() || !session_.get() ) {
-        throw Exception("cmd or session is NULL");
+        throw smsc::util::Exception("cmd or session is NULL");
     }
     SMS* sms = cmd_->get_sms();
     if ( !sms ) {

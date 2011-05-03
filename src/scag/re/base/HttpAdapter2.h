@@ -10,6 +10,7 @@ namespace re {
 namespace http {
 
 using smsc::core::buffers::IntHash;
+using smsc::core::buffers::Hash;
 using bill::infrastruct::TariffRec;
 
 class HttpCommandAdapter : public re::actions::CommandAccessor

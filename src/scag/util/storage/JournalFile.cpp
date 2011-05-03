@@ -7,6 +7,8 @@
 #include "util/PtrDestroy.h"
 #include "scag/util/io/EndianConverter.h"
 
+using namespace smsc::core::buffers;
+
 namespace {
 using namespace scag2::util::storage;
 struct Applier : public std::unary_function< const JournalRecord*, void >

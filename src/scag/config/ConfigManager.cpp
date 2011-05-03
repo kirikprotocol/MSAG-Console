@@ -30,6 +30,7 @@ namespace config {
 
 using namespace std;
 using namespace xercesc;
+using namespace smsc::util;
 using namespace smsc::util::xml;
 using smsc::core::buffers::IntHash;
 using smsc::core::buffers::Array;

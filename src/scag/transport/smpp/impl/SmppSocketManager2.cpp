@@ -1,5 +1,6 @@
 #include "scag/util/RelockMutexGuard.h"
 #include "SmppSocketManager2.h"
+#include <arpa/inet.h>
 
 namespace {
 

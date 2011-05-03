@@ -8,6 +8,8 @@
 #include "scag/util/lltostr.h"
 #include "scag/util/singleton/XercesSingleton.h"
 
+using namespace smsc::core::buffers;
+
 namespace scag2 {
 namespace transport {
 namespace http {

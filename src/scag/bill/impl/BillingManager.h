@@ -79,7 +79,7 @@ public EwalletCallParams::TransactionRegistrator
     Logger *logger;
 
     // by trans number
-    IntHash64<BillTransaction *> BillTransactionHash;
+    smsc::core::buffers::IntHash64<BillTransaction *> BillTransactionHash;
 
     Event connectEvent;
     Mutex stopLock;
@@ -167,7 +167,8 @@ public EwalletCallParams::TransactionRegistrator
         BillTransaction *value;
         MutexGuard mg(inUseLock);
         billid_type key;
-        for (IntHash64<BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
+        for (smsc::core::buffers::IntHash64<BillTransaction *>::Iterator it = BillTransactionHash.First();
+             it.Next(key, value);)
             delete value;
 
         BillTransactionHash.Empty();

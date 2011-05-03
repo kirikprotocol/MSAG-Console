@@ -92,7 +92,7 @@ struct StateMachine::ResponseRegistry
         if ( cmdid != SUBMIT &&
              cmdid != DELIVERY &&
              cmdid != DATASM ) {
-            throw Exception("command is not submit/delivery/datasm");
+            throw smsc::util::Exception("command is not submit/delivery/datasm");
         }
 
         RegKey key(uid, seq);

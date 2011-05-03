@@ -56,7 +56,7 @@ protected:
     IOTaskManager &iomanager;
     Logger *logger;    
     int connectionTimeout;
-    Array<Socket*> waitingAdd;
+    smsc::core::buffers::Array<Socket*> waitingAdd;
     inline void addSocket(Socket* s, bool connected);
 };
 
@@ -78,7 +78,7 @@ public:
     virtual void registerContext(HttpContext* cx);
 
 protected:
-    Array<Socket*> waitingConnect;
+    smsc::core::buffers::Array<Socket*> waitingConnect;
 };
 
 }}}

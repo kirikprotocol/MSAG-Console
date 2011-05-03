@@ -26,6 +26,7 @@ namespace transport {
 namespace smpp {
 
 using namespace xercesc;
+using namespace smsc::util;
 using namespace smsc::util::xml;
 using namespace exceptions;
 using namespace config;

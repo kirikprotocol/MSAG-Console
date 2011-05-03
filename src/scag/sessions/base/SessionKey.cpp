@@ -142,7 +142,7 @@ void SessionPrimaryKey::setBornTime( const timeval& tv )
     borntime_ = tv;
     const char* p = strrchr( key_.c_str(), '/' );
     if (!p) {
-        throw Exception("born time has no '/'");
+        throw smsc::util::Exception("born time has no '/'");
     }
     key_.erase( p - key_.c_str() );
     addtokey();

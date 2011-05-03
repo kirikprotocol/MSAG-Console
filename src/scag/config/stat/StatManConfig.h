@@ -45,14 +45,14 @@ protected:
 public:
 		int getSaccPort() const;
 		std::string getSaccHost() const;
-		IntHash<std::string> getEventFiler() const;
+    smsc::core::buffers::IntHash<std::string> getEventFiler() const;
 		int getReconnectTimeout()const;
 		int getMaxQueueLength()const;
 
 protected:
 		std::string saccHost;
 		int saccPort;
-		IntHash<std::string> eventFilter;
+    smsc::core::buffers::IntHash<std::string> eventFilter;
 
         std::string saaDir;
         std::string filesPrefix;
