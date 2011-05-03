@@ -1,4 +1,5 @@
 static char const ident[] = "$Id$";
+#include "util/Exception.hpp"
 #include "mtsmsme/processor/Processor.h"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
@@ -17,6 +18,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 #define ENC_SCHEME 0x01
 #define NATURE_OF_ADDR 0x04
 
+using smsc::util::Exception;
 using smsc::mtsmsme::processor::RequestProcessor;
 using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::RequestSender;
