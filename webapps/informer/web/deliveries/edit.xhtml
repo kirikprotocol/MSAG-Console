@@ -27,6 +27,8 @@
             <eye:menubaritem>
               <tr:commandLink text="#{msg['informer.stats.by.messages']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats.mess']}">
                 <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+                <f:param name="stats_come_back" value="DELIVERY_EDIT"/>
+                <f:param name="stats_come_back_params" value="#{deliveryEdit.delivery.id}"/>
               </tr:commandLink>
             </eye:menubaritem>
             <eye:menubaritem>
@@ -250,6 +252,8 @@
             <eye:menubaritem>
               <tr:commandLink text="#{msg['informer.stats.by.messages']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats.mess']}">
                 <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+                <f:param name="stats_come_back" value="DELIVERY_EDIT"/>
+                <f:param name="stats_come_back_params" value="#{deliveryEdit.delivery.id}"/>
               </tr:commandLink>
             </eye:menubaritem>
             <eye:menubaritem>

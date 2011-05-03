@@ -27,6 +27,8 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   private String smscFilter;
 
+  public static final String COME_BACK_PARAMS = "stats_come_back_params";
+  public static final String COME_BACK = "stats_come_back";
 
   public MessagesByPeriodController() {
     super(new MessagesByPeriodTotals());
@@ -222,8 +224,34 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     return !isCancelled();
   }
 
+  private String backParams;
+  private String backAction;
+
+  public String getBackParams() {
+    return backParams;
+  }
+
+  public String backAction() {
+    return getBackAction();
+  }
+
+  public void setBackParams(String backParams) {
+    this.backParams = backParams;
+  }
+
+  public String getBackAction() {
+    return backAction;
+  }
+
+  public void setBackAction(String backAction) {
+    this.backAction = backAction;
+  }
 
   public String setDeliveryParam() {
+
+    backParams = getRequestParameter(COME_BACK_PARAMS);
+    backAction = getRequestParameter(COME_BACK);
+
     if(Boolean.valueOf(getRequestParameter("archive")) || Boolean.valueOf((String)getRequest().get("archive"))) {
       strategy = new ArchiveStorageStrategy();
     }else {

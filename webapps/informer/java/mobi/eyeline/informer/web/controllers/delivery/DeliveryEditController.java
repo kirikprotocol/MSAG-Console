@@ -12,6 +12,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.controllers.stats.ErrorStatsController;
+import mobi.eyeline.informer.web.controllers.stats.MessagesByPeriodController;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
 import org.apache.log4j.Logger;
 
@@ -51,6 +52,9 @@ public class DeliveryEditController extends DeliveryController {
     String p = getRequestParameter(DELIVERY_PARAM);
     if(p == null || p.length() == 0) {
       p = getRequestParameter(ErrorStatsController.COME_BACK_PARAMS);
+    }
+    if(p == null || p.length() == 0) {
+      p = getRequestParameter(MessagesByPeriodController.COME_BACK_PARAMS);
     }
     id = p == null || (p = p.trim()).length() == 0 ? null : Integer.parseInt(p);
 

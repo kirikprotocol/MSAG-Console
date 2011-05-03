@@ -16,6 +16,10 @@
   <ui:define name="content">
 
     <tr:form id="smsc" rendered="#{!deliveryMessagesByPeriod.initError and deliveryMessagesByPeriod.deliveriesIds!=null}">
+
+      <h:inputHidden id="stats_come_back_params" value="#{deliveryMessagesByPeriod.backParams}"/>
+      <h:inputHidden id="stats_come_back" value="#{deliveryMessagesByPeriod.backAction}"/>
+
       <eye:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
 
         <eye:dataTableFilter bean="#{deliveryMessagesByPeriod}" clearAction="clearFilter" applyAction="start">
@@ -90,6 +94,11 @@
           <eye:delimiter/>
 
           <eye:buttons>
+            <eye:button rendered="#{messagesByPeriod.backAction != null}">
+              <tr:commandLink text="#{msg['messages.stats.back']}" shortDesc="#{msg['messages.stats.back']}" action="#{messagesByPeriod.backAction}">
+                <f:param name="stats_come_back_params" value="#{messagesByPeriod.backParams}"/>
+              </tr:commandLink>
+            </eye:button>
             <eye:space/>
             <eye:button >
               <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
