@@ -177,6 +177,9 @@ struct FixedLengthString{
 template< size_t N >
 const size_t FixedLengthString< N >::npos;
 
+template< size_t N >
+const size_t FixedLengthString< N >::MAX_SZ;
+
 }//namespace buffers
 }//namespace core
 }//namespace smsc

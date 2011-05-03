@@ -210,6 +210,12 @@ public:
   }
 };
 
+template <
+  class _TArg            //must have default constructor & operator=() defined
+, typename _SizeTypeArg  //must be an unsigned integer type
+>
+const _SizeTypeArg BufferExtension_T<_TArg, _SizeTypeArg>::MAX_POS;
+
 
 template <
   class _TArg           //must have default & copying constructors
@@ -268,6 +274,7 @@ public:
     return (*this);
   }
 };
+
 
 }//namespace buffers
 }//namespace core

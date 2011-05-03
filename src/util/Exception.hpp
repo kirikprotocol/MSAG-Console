@@ -47,6 +47,8 @@ protected:
     std::string exId;
 
 public:
+    using Exception::fill;
+
     CustomException() : Exception(), errCode(0), exId("CustomException")
     { }
     CustomException(int32_t err_code, const char * msg, const char * err_desc = NULL)
