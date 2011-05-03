@@ -216,7 +216,7 @@ namespace scag { namespace sessions {
         friend class Comparator;
 
         static Logger * logger;
-        static Mutex loggerMutex;
+        static smsc::core::synchronization::Mutex loggerMutex;
 
         Operation(const Operation& operation);
         bool m_hasBill;
@@ -277,7 +277,7 @@ namespace scag { namespace sessions {
         {
             if(!logger)
             {
-                MutexGuard mt(loggerMutex);
+                smsc::core::synchronization::MutexGuard mt(loggerMutex);
                 if(!logger) logger = Logger::getInstance("sess.op");
             }
         };
@@ -313,7 +313,7 @@ namespace scag { namespace sessions {
 
 
         static uint32_t sessionCounter; // for debugging
-        static Mutex    cntMutex;
+        static smsc::core::synchronization::Mutex    cntMutex;
         static uint32_t stuid;
         uint32_t uid;
         
@@ -345,7 +345,7 @@ namespace scag { namespace sessions {
         RuleKey ruleKey;
 
         static Logger * logger;
-        static Mutex loggerMutex;
+        static smsc::core::synchronization::Mutex loggerMutex;
 
         std::list<PendingOperation> PendingOperationList;
         std::list<PendingOperation> PrePendingOperationList;

@@ -64,12 +64,12 @@ public:
     }
 
     util::msectime_type getLastActivity() const {
-        MutexGuard mg(activityMutex_);
+        smsc::core::synchronization::MutexGuard mg(activityMutex_);
         return lastActivity_; 
     }
     void updateActivity( util::msectime_type la = 0 ) {
         if (!la) la = util::currentTimeMillis();
-        MutexGuard mg(activityMutex_);
+        smsc::core::synchronization::MutexGuard mg(activityMutex_);
         lastActivity_ = la;
     }
 

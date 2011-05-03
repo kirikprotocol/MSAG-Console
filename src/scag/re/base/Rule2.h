@@ -39,7 +39,7 @@ class Rule : public IParserHandler
 {
     Rule(const Rule &);
     IntHash <EventHandler *> Handlers;
-    Mutex ruleLock;
+    smsc::core::synchronization::Mutex ruleLock;
     int useCounter;
     TransportType transportType;
     Logger * logger;
@@ -53,14 +53,14 @@ public:
     TransportType getTransportType() const {return transportType;};
 
     void ref() {
-        MutexGuard mg(ruleLock);
+        smsc::core::synchronization::MutexGuard mg(ruleLock);
         useCounter++;
     }
     void unref() 
     {
         bool del = false;
         {
-            MutexGuard mg(ruleLock);
+            smsc::core::synchronization::MutexGuard mg(ruleLock);
             del = (--useCounter == 0);
         }
         if (del) delete this;

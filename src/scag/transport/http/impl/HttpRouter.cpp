@@ -9,6 +9,7 @@
 #include "scag/util/singleton/XercesSingleton.h"
 
 using namespace smsc::core::buffers;
+using smsc::core::synchronization::MutexGuard;
 
 namespace scag2 {
 namespace transport {

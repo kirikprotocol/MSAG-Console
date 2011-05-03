@@ -61,6 +61,7 @@
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   $(XERCES_LIB) \
   $(__LIBRARIES) \
+  $(SOCKETLIB) -lnsl \
   -lpthread -lrt -ldl $(LIBMALLOC)
 
 scag/tests/test34  test34

@@ -9,7 +9,7 @@ namespace server {
 
 void ServerContext::setResponse(Response* response) /* throw (PvssException) */ 
 {
-    MutexGuard mg(setRespMutex_);
+    smsc::core::synchronization::MutexGuard mg(setRespMutex_);
     if ( state_ == NEW && response != 0 ) {
         state_ = PROCESSED;
         response->setSeqNum(getSeqNum());

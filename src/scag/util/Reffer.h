@@ -7,7 +7,7 @@ namespace util {
 template<class T>
 class Reffer
 {
-  Mutex sync_;
+  smsc::core::synchronization::Mutex sync_;
   T* manager_;
   unsigned refCounter_;
 public:
@@ -21,7 +21,7 @@ public:
   {
     unsigned counter;
     {
-      MutexGuard g(sync_);
+      smsc::core::synchronization::MutexGuard g(sync_);
       counter = --refCounter_;
     }
     if ( counter == 0 )
@@ -30,7 +30,7 @@ public:
     }
   }
   Reffer* AddRef(){
-    MutexGuard g(sync_);
+    smsc::core::synchronization::MutexGuard g(sync_);
     ++refCounter_;
     return this;
   }

@@ -27,7 +27,7 @@ smsc::core::synchronization::Mutex sessionopidmutex;
 
 inline void getlog() {
     if ( !log_ ) {
-        MutexGuard mg(sessionloggermutex);
+        smsc::core::synchronization::MutexGuard mg(sessionloggermutex);
         if ( !log_ ) {
             log_ = smsc::logger::Logger::getInstance("session");
             logc_ = smsc::logger::Logger::getInstance("sess.alloc");

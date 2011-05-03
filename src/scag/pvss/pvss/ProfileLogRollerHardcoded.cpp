@@ -20,7 +20,7 @@ bool ProfileLogRollerHardcoded::readConfiguration()
 
     time_t now = time(0);
     {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         do {
             if ( lastConfigTime_ == 0 ) break;
             // consecutive (not the first) attempt

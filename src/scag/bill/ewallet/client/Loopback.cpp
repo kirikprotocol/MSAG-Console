@@ -16,6 +16,8 @@
 #include "scag/bill/ewallet/TransferResp.h"
 #include "scag/bill/ewallet/InfoResp.h"
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace {
 using namespace scag2::bill::ewallet;
 

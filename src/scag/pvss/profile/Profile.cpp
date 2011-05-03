@@ -86,7 +86,7 @@ void Profile::deserialize(const char* data, uint32_t dataSize, GlossaryBase* glo
 void Profile::initLog()
 {
     if (!loga_) {
-        MutexGuard mg(logamutex);
+        smsc::core::synchronization::MutexGuard mg(logamutex);
         if (!loga_) loga_ = smsc::logger::Logger::getInstance("prof.alloc");
     }
     smsc_log_debug(loga_,"ctor %p key=%s",this,pkey.c_str());

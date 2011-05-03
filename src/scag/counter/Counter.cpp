@@ -23,7 +23,7 @@ disposeDelayTime_(disposeDelayTime),
 usage_(0)
 {
     if (!log_) {
-        MutexGuard mg(logMutex);
+        smsc::core::synchronization::MutexGuard mg(logMutex);
         if (!log_) log_ = smsc::logger::Logger::getInstance("cnt.cntr");
         if (!loga_) loga_ = smsc::logger::Logger::getInstance("cnt.alloc");
     }

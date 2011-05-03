@@ -24,9 +24,9 @@ class InfrastructureImpl : public Infrastructure
     smsc::core::buffers::IntHash<TariffRec>* tariff_hash;
     std::string ProviderFile, OperatorFile, TariffMatrixFile;
     smsc::logger::Logger * logger;
-    Mutex ProviderReloadMutex, ProviderMapMutex;
-    Mutex OperatorReloadMutex, OperatorMapMutex;
-    Mutex TariffMatrixReloadMutex, TariffMatrixMapMutex;
+    smsc::core::synchronization::Mutex ProviderReloadMutex, ProviderMapMutex;
+    smsc::core::synchronization::Mutex OperatorReloadMutex, OperatorMapMutex;
+    smsc::core::synchronization::Mutex TariffMatrixReloadMutex, TariffMatrixMapMutex;
 
     void ParseFile(const char *, HandlerBase*);
     void SetFileNames(const std::string&);

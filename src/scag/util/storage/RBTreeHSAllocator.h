@@ -392,7 +392,7 @@ public:
         currentTime = startTime = util::currentTimeMillis();
         uint64_t writtenSize = 0;
         smsc::core::synchronization::EventMonitor evm;
-        MutexGuard mg(evm);
+        smsc::core::synchronization::MutexGuard mg(evm);
         for ( std::vector< caddr_t >::iterator i = chunks_.begin();
               i != chunks_.end();
               ++i ) {
@@ -1216,7 +1216,7 @@ private:
     }
     void makeJournalMarks() {
         if ( mark_.get() ) return;
-        MutexGuard mg(initMutex_);
+        smsc::core::synchronization::MutexGuard mg(initMutex_);
         if ( mark_.get() ) return;
         mark_.reset( new std::string("TrAnSaCt") );
         trail_.reset( new std::string("EnDoFtRaNsAcTiOnS") );

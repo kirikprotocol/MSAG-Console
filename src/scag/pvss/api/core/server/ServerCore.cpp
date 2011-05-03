@@ -15,6 +15,7 @@
 #include "scag/counter/Manager.h"
 
 using namespace smsc::core::buffers;
+using smsc::core::synchronization::MutexGuard;
 
 namespace {
 

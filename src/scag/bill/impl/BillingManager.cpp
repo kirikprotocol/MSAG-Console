@@ -68,6 +68,7 @@ using namespace smsc::inman::interaction;
 #endif
 
 using namespace scag::exceptions;
+using smsc::core::synchronization::MutexGuard;
 
 
 void BillingManagerImpl::init( config::ConfigManager& mgr )

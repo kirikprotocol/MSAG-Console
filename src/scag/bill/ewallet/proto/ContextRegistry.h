@@ -191,7 +191,7 @@ public:
         ContextList pl;
         while ( true ) {
             {
-                MutexGuard mg(createMon_);
+                smsc::core::synchronization::MutexGuard mg(createMon_);
                 typename HashType::Iterator i = set_.getIterator();
                 key_type key;
                 Registry* reg;

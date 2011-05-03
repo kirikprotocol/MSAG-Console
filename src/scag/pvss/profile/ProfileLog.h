@@ -17,6 +17,15 @@ template <class T> class EmbedRefPtr;
 namespace scag2 {
 namespace pvss {
 
+/// interface for reading stream records
+class ProfileLogStreamRecordParser
+{
+public:
+    virtual ~ProfileLogStreamRecordParser() {}
+    virtual void parseRecord( const char* record, size_t reclen ) = 0;
+};
+
+
 class ProfileLogRoller;
 
 class ProfileLogStream

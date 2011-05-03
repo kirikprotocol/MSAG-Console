@@ -20,7 +20,7 @@ using namespace scag::exceptions;
 using namespace scag2::config;
 using bill::BillOpenCallParams;
 using bill::BillCloseCallParams;
-
+using smsc::core::synchronization::MutexGuard;
 
 class LongCallTask : public ThreadedTask
 {

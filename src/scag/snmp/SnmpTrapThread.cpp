@@ -45,7 +45,7 @@ int SnmpTrapThread::Execute()
         snmp_->sendTrap(*tr);
     }
     smsc_log_info( log_, "snmp trap thread is stopped" );
-    MutexGuard mg(stopMon_);
+    smsc::core::synchronization::MutexGuard mg(stopMon_);
     stopped_ = true;
     stopMon_.notify();
     return 0;
@@ -54,7 +54,7 @@ int SnmpTrapThread::Execute()
 
 void SnmpTrapThread::waitStop()
 {
-    MutexGuard mg(stopMon_);
+    smsc::core::synchronization::MutexGuard mg(stopMon_);
     while ( ! stopped_ ) {
         stopMon_.wait(500);
     }

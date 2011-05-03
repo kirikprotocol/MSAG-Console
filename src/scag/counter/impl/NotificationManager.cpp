@@ -34,7 +34,7 @@ NotificationManager::~NotificationManager()
 void NotificationManager::advanceTime( usec_type curTime )
 {
     smsc_log_debug(log_,"advanceTime %lld", curTime);
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     char* c;
     SendData* s;
     for ( SendDataHash::Iterator i(&sendDataHash_); i.Next(c,s); ) {
@@ -77,7 +77,7 @@ void NotificationManager::notifyOnLimit( const char* c, CntSeverity& sev,
                    c, value, opTypeToString(limit.optype),
                    limit.limit, severityToString(limit.severity));
     SendData* ptr;
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     ptr = sendDataHash_.GetPtr(c);
     if ( !ptr ) {
         // inserting

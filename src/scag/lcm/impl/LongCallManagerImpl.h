@@ -44,7 +44,7 @@ protected:
 
     bool stopped;
     smsc::logger::Logger* logger;
-    EventMonitor mtx;
+    smsc::core::synchronization::EventMonitor mtx;
     uint32_t maxThreads;
     smsc::core::threads::ThreadPool pool;
     LongCallContextBase *headContext, *tailContext;

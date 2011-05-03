@@ -38,7 +38,7 @@ private:
     typedef std::vector< TimeSliceGroup* > GroupVector;
     
 private:
-    EventMonitor              mon_;
+    smsc::core::synchronization::EventMonitor mon_;
     smsc::logger::Logger*     log_;
     TimeSliceItem*            observer_;
     GroupHash                 groupHash_;

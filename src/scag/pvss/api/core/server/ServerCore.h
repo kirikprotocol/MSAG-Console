@@ -253,7 +253,7 @@ public:
 
     /// notification sent when worker thread is stopped
     void workerThreadIsStopped() {
-        MutexGuard mg(logicMon_);
+        smsc::core::synchronization::MutexGuard mg(logicMon_);
         logicMon_.notify();
     }
 

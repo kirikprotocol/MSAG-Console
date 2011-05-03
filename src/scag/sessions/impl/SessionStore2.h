@@ -109,7 +109,7 @@ private:
     SessionExpirationQueue*     expiration_;
     SCAGCommandQueue*           queue_;
 
-    mutable EventMonitor        cacheLock_;
+    mutable smsc::core::synchronization::EventMonitor        cacheLock_;
     bool                        stopping_;
 
     SessionAllocator*           allocator_;    // not owned

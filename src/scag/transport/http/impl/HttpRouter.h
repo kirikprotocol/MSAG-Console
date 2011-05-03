@@ -90,7 +90,7 @@ protected:
     bool getTraceRouteById(const std::string& addr, const std::string& path, uint32_t rid, uint32_t sid, std::vector<std::string>& trace);
 
 protected:
-    Mutex ReloadMutex, GetRouteMutex;
+    smsc::core::synchronization::Mutex ReloadMutex, GetRouteMutex;
 
     std::string route_cfg_file;
 

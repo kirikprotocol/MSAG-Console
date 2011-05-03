@@ -95,7 +95,7 @@ private:
     void writeFooter(std::ostream &out);
     void reload( smsc::core::buffers::Array<int>& changedConfigs ) throw(ConfigException);
     smsc::core::buffers::IntHash<ConfigListener*> listeners;
-    Mutex listenerLock;
+    smsc::core::synchronization::Mutex listenerLock;
     smsc::logger::Logger* logger;
 
     static smsc::core::buffers::Hash<std::string> licconfig;

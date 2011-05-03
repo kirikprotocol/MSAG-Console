@@ -19,7 +19,7 @@ scope_(ScopeType(-1)),
 status_(*this,"status",false,false)
 {
     if (!log_) {
-        MutexGuard mg(logMutex);
+        smsc::core::synchronization::MutexGuard mg(logMutex);
         if (!log_) log_ = smsc::logger::Logger::getInstance("re.counter");
     }
 }

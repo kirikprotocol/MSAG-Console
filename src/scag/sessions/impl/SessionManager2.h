@@ -156,7 +156,7 @@ private:
     unsigned          activeSessions_;
     SCAGCommandQueue* cmdqueue_;
 
-    EventMonitor      expireMonitor_;
+    smsc::core::synchronization::EventMonitor      expireMonitor_;
 
     // unsigned          inputCount_;    // count of items in the inputList_
     ExpireList*       inputList_;     // this one is used to pick input from scheduleExpire()
@@ -166,7 +166,7 @@ private:
 
     Logger*           log_;
 
-    Mutex             stopLock_;
+    smsc::core::synchronization::Mutex             stopLock_;
     bool              started_;
     time_t            oldestsession_;
 

@@ -10,10 +10,25 @@ namespace {
 const char* FILEFORMAT = "%04u-%02u-%02u-%02u-%02u-%02u%n";
 const char* FILEHEADER = "# VERSION 0001\n";
 
-struct RFR : public eyeline::informer::FileReader::RecordReader {
-    RFR() : lines(0), crc32(0) {}
-    virtual bool isStopping() { return false; }
+}
+
+namespace scag2 {
+namespace pvss {
+
+
+smsc::logger::Logger* RollingFileStream::log_ = 0;
+
+/// =================================================================
+
+struct RollingFileStreamReader::RFR : public eyeline::informer::FileReader::RecordReader 
+{
+    RFR( bool& stopping, ProfileLogStreamRecordParser* rp ) :
+    stopping_(stopping), rp_(rp), lines(0), crc32(0), nextFile() {}
+
+    virtual bool isStopping() { return stopping_; }
+    /// NOTE: terminated by \n
     virtual size_t recordLengthSize() const { return 0; }
+
     virtual size_t readRecordLength( size_t filePos,
                                      eyeline::informer::FromBuf& fb ) {
         size_t buflen = fb.getLen() - fb.getPos();
@@ -25,27 +40,60 @@ struct RFR : public eyeline::informer::FileReader::RecordReader {
         }
         return found - fb.getBuf() + 1;
     }
+
     virtual bool readRecordData( size_t filePos,
                                  eyeline::informer::FromBuf& fb )
     {
-        if ( fb.getBuf()[0] != '#' ) {
+        size_t buflen = fb.getLen() - fb.getPos();
+        const char* buf = fb.getBuf();
+        if ( buf[0] != '#' ) {
             ++lines;
-            crc32 = smsc::util::crc32(crc32,fb.getBuf(),fb.getLen()-fb.getPos());
-            return true;
+            crc32 = smsc::util::crc32(crc32,buf,buflen);
+        } else {
+            // processing meta comments, i.e. version, crc, etc.
         }
-        return false;
+        if ( rp_ ) {
+            if ( buf[buflen-1] != '\n' ) {
+                throw eyeline::informer::FileDataException(filePos,"not terminated by \\n");
+            }
+            rp_->parseRecord(buf,--buflen);
+        }
+        return true;
     }
 public:
-    uint32_t lines;
-    uint32_t crc32;
+    bool&       stopping_;
+    ProfileLogStreamRecordParser* rp_;
+    uint32_t    lines;
+    uint32_t    crc32;
+    std::string nextFile;
 };
 
+
+RollingFileStreamReader::RollingFileStreamReader() :
+lines_(0),
+crc32_(0),
+nextFile_()
+{
 }
 
-namespace scag2 {
-namespace pvss {
 
-smsc::logger::Logger* RollingFileStream::log_ = 0;
+void RollingFileStreamReader::read( const char* fullName,
+                                    bool&       stopping,
+                                    ProfileLogStreamRecordParser* rp )
+{
+    eyeline::informer::FileGuard fg;
+    fg.ropen(fullName);
+    eyeline::informer::FileReader fr(fg);
+    RFR reader(stopping,rp);
+    eyeline::informer::TmpBuf<char,8192> buf;
+    fr.readRecords( buf, reader );
+    lines_ = reader.lines;
+    crc32_ = reader.crc32;
+    nextFile_ = reader.nextFile;
+}
+
+
+/// =================================================================
 
 RollingFileStream::RollingFileStream( const char* name,
                                       const char* prefix,
@@ -65,7 +113,7 @@ size_t RollingFileStream::formatPrefix( char* buf, size_t bufsize, const char* c
     gettimeofday(&tv,0);
     tm rtm;
     localtime_r(&tv.tv_sec,&rtm);
-    const unsigned msec = tv.tv_usec / 1000;
+    const unsigned msec = unsigned(tv.tv_usec / 1000);
     size_t written = size_t(::snprintf(buf,bufsize,"%02u-%02u %02u:%02u:%02u,%03u %10.10s: ",
                                        rtm.tm_mon+1, rtm.tm_mday,
                                        rtm.tm_hour, rtm.tm_min, rtm.tm_sec, msec,
@@ -80,7 +128,7 @@ size_t RollingFileStream::formatPrefix( char* buf, size_t bufsize, const char* c
 void RollingFileStream::write( const char* buf, size_t bufsize )
 {
     // count crc32 and lines
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     if ( !file_.isOpened() ) {
         fprintf(stderr,"logic problem in ProfileLog: file is not opened");
         std::terminate();
@@ -94,7 +142,7 @@ void RollingFileStream::write( const char* buf, size_t bufsize )
 
 void RollingFileStream::init()
 {
-    MutexGuard mg(lock_);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     // open all necessary files, set needpostfix flag if needed
     std::vector< time_t > badlogs;
     collectUnfinishedLogs( prefix_.c_str(), badlogs );
@@ -181,7 +229,13 @@ void RollingFileStream::postInitFix( bool& isStopping )
             filename.append(buf);
         }
         smsc_log_debug(log_,"scanning the file '%s'",filename.c_str());
-        readTheFile( filename.c_str(), lines, crc32 );
+        RollingFileStreamReader rfsr;
+        rfsr.read( filename.c_str(), isStopping, 0 );
+        lines = rfsr.getLines();
+        crc32 = rfsr.getCrc32();
+        if ( rfsr.isFinished() ) {
+            throw smsc::util::Exception("file '%s' is already finished?",filename.c_str());
+        }
 
         std::string newname(prefix_);
         {
@@ -301,7 +355,7 @@ void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
         oldname.append(suff);
     }
     {
-        MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(lock_);
         finishFile( file_, crc32_, lines_, nextfile.c_str() );
         file_.Swap( newf );
         startTime_ = now;
@@ -338,26 +392,6 @@ void RollingFileStream::finishFile( smsc::core::buffers::File& oldf,
     line.append(newname);
     line.push_back('\n');
     oldf.Write(line.c_str(),line.size());
-}
-
-
-void RollingFileStream::readTheFile( const char* filename,
-                                     uint32_t& lines,
-                                     uint32_t& crc32 )
-{
-    if (!log_) {
-        log_ = smsc::logger::Logger::getInstance("rollfile");
-    }
-
-    eyeline::informer::FileGuard fg;
-    fg.ropen(filename);
-    eyeline::informer::FileReader fr(fg);
-    RFR reader;
-    eyeline::informer::TmpBuf<char,8192> buf;
-    fr.readRecords(buf,reader);
-
-    crc32 = reader.crc32;
-    lines = reader.lines;
 }
 
 }

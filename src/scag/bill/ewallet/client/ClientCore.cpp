@@ -8,6 +8,8 @@
 #include "scag/util/RelockMutexGuard.h"
 // #include "scag/bill/ewallet/Ping.h"
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace {
 
 using namespace scag2::bill::ewallet;

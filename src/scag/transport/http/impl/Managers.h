@@ -69,9 +69,9 @@ public:
     
 protected:
     ThreadPool pool;
-    Mutex procMut;
-    EventMonitor queMon;
-    EventMonitor taskMon;
+    smsc::core::synchronization::Mutex procMut;
+    smsc::core::synchronization::EventMonitor queMon;
+    smsc::core::synchronization::EventMonitor taskMon;
     HttpManagerImpl &manager;
     Logger *logger;    
     

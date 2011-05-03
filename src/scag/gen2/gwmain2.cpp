@@ -180,8 +180,8 @@ int main( int argc, char* argv[] )
         if ( ! usesignals ) {
             sigset_t oldmask;
             sigprocmask( SIG_SETMASK, &st, &oldmask );
-            EventMonitor mon;
-            MutexGuard mg(mon);
+            smsc::core::synchronization::EventMonitor mon;
+            smsc::core::synchronization::MutexGuard mg(mon);
             while(!shutdownFlag) {
                 mon.wait(1000);
                 // smsc_log_debug(logger,"main rolling");

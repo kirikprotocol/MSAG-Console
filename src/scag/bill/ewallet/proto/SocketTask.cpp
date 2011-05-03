@@ -1,5 +1,7 @@
 #include "SocketTask.h"
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace scag2 {
 namespace bill {
 namespace ewallet {

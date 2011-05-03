@@ -6,6 +6,7 @@
 #include "informer/io/InfosmeException.h"
 
 using eyeline::informer::EmbedRefPtr;
+using smsc::core::synchronization::MutexGuard;
 
 namespace scag2 {
 namespace pvss {

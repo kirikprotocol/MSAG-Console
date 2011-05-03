@@ -2,6 +2,8 @@
 #include "SocketReader.h"
 #include "SocketWriter.h"
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace {
 using namespace scag2::bill::ewallet::proto;
 

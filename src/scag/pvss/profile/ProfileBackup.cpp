@@ -18,7 +18,7 @@ ProfileBackup::ProfileBackup( ProfileLog* dblog ) :
 dblog_(dblog)
 {
     if (!log_) {
-        MutexGuard mg(mtx);
+        smsc::core::synchronization::MutexGuard mg(mtx);
         if (!log_) log_ = smsc::logger::Logger::getInstance("pvss.pbck");
     }
 }

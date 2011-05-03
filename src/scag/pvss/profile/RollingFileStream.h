@@ -10,8 +10,23 @@ namespace pvss {
 
 class RollingFileStreamReader
 {
-    RollingFileStreamReader( const char* fullName );
-    bool read( RollingFileStream... )
+    struct RFR;
+public:
+    RollingFileStreamReader();
+    
+    void read( const char* fullName,
+               bool&       isStopping,
+               ProfileLogStreamRecordParser* rp );
+
+    uint32_t getLines() const { return lines_; }
+    uint32_t getCrc32() const { return crc32_; }
+    bool isFinished() const { return !nextFile_.empty(); }
+    const std::string& getNextFile() const { return nextFile_; }
+
+private:
+    uint32_t    lines_;     // counted
+    uint32_t    crc32_;     // counted
+    std::string nextFile_;  // read from the stream
 };
 
 

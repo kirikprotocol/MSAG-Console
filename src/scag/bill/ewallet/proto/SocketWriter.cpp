@@ -10,7 +10,7 @@ namespace proto {
 void SocketWriter::writePending()
 {
     if (writePending_) return;
-    MutexGuard mg(mon_);
+    smsc::core::synchronization::MutexGuard mg(mon_);
     if (writePending_) return;
     writePending_ = true;
     mon_.notify();

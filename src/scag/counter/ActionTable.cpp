@@ -5,6 +5,8 @@ namespace {
 smsc::core::synchronization::Mutex logMutex;
 }
 
+using smsc::core::synchronization::MutexGuard;
+
 namespace scag2 {
 namespace counter {
 

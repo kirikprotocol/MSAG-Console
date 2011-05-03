@@ -44,6 +44,7 @@ using namespace re;
 
 using scag2::config::SessionManagerConfig;
 using scag::util::UnlockMutexGuard;
+using smsc::core::synchronization::MutexGuard;
 
 using smsc::logger::Logger;
 

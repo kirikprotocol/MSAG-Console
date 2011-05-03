@@ -6,6 +6,8 @@ namespace scag2 {
 namespace counter {
 namespace impl {
 
+using smsc::core::synchronization::MutexGuard;
+
 TimeSliceManagerImpl::TimeSliceManagerImpl( smsc::logger::Logger* logger,
                                             TimeSliceItem*        observer,
                                             unsigned              slices ) :

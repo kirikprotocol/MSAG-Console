@@ -10,7 +10,7 @@ namespace transport {
 
 uint32_t SCAGCommand::makeSerial()
 {
-    MutexGuard mg(mtx);
+    smsc::core::synchronization::MutexGuard mg(mtx);
     if ( ++serial < 10 ) serial = 10;
     return serial;
 }

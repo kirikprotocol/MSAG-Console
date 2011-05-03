@@ -11,6 +11,7 @@ namespace sessions {
 
 using namespace util::storage;
 using smsc::core::threads::Thread;
+using smsc::core::synchronization::MutexGuard;
 
 CompositeSessionStore::CompositeSessionStore( smsc::logger::Logger* thelog,
                                               SessionFinalizer&       fin,
