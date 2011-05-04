@@ -376,7 +376,8 @@ int main(int argc, char** argv)
         ui.insert(ui.end(),dest.buf,dest.buf+dest.size); //TP-Destination-Address
         ui.push_back(0); //TP-Protocol-Identifier
         ui.push_back(0x00); //TP-Data_Coding-Scheme
-        ui.push_back(0xFF); //TP-Validity-Period
+        ui.push_back(0x03); //TP-Validity-Period = 20 minutes
+        //ui.push_back(0xFF); //TP-Validity-Period = 63 weeks
         ui.push_back(escaped_len); //TP-User-Data-Length
         ui.insert(ui.end(), smstext, smstext + _newbuflen); // TP-User-Data
         MoForwardSmReq mosms(sca,msfrom,ui);
