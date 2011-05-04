@@ -242,7 +242,7 @@ class SccpConfig {
 
       try {
         tmp_str = sccpConfig.getString("msc_gt");
-        tmp_addr = Address(msc_str);
+        tmp_addr = Address(tmp_str);
         tmp_addr.getValue(msca);
       } catch (ConfigException& exc) {
         throw ConfigException("\'msc_gt\' is unknown or missing");
