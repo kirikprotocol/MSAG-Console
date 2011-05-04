@@ -223,6 +223,7 @@ class SccpConfig {
     void read(Manager& manager)
     {
       char* tmp_str;
+      Address tmp_addr;
 
       if (!manager.findSection("sccp"))
         throw ConfigException("\'sccp\' section is missed");
@@ -239,20 +240,26 @@ class SccpConfig {
         throw ConfigException("\'user_ssn\' is unknown or missing");
       }
 
-      try { tmp_str = sccpConfig.getString("msc_gt");
-            strcpy(msca,tmp_str);
+      try {
+        tmp_str = sccpConfig.getString("msc_gt");
+        tmp_addr = Address(msc_str);
+        tmp_addr.getValue(msca);
       } catch (ConfigException& exc) {
         throw ConfigException("\'msc_gt\' is unknown or missing");
       }
 
-      try { tmp_str = sccpConfig.getString("vlr_gt");
-            strcpy(vlra,tmp_str);
+      try {
+        tmp_str = sccpConfig.getString("vlr_gt");
+        tmp_addr = Address(tmp_str);
+        tmp_addr.getValue(vlra);
       } catch (ConfigException& exc) {
         throw ConfigException("\'vlr_gt\' is unknown or missing");
       }
 
-      try { tmp_str = sccpConfig.getString("hlr_gt");
-            strcpy(hlra,tmp_str);
+      try {
+        tmp_str = sccpConfig.getString("hlr_gt");
+        tmp_addr = Address(tmp_str);
+        tmp_addr.getValue(hlra);
       } catch (ConfigException& exc) {
         throw ConfigException("\'hlr_gt\' is unknown or missing");
       }
