@@ -189,7 +189,9 @@ public:
   //Returns number of elements appended (may be less than specified).
   size_type Append(const _TArg * data, size_type use_count)
   {
-    return Write(_pos, data, use_count);
+    size_type n = Write(_pos, data, use_count);
+    pos += n;
+    return n;
   }
 
   operator _TArg * () { return _dataBuf; }
