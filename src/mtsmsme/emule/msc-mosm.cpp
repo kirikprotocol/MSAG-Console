@@ -35,11 +35,13 @@ using smsc::mtsmsme::processor::BeginMsg;
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
 using smsc::mtsmsme::processor::util::dump;
 
-static char msca[] = "791398699873"; // MSC address
-static char vlra[] = "79139860004"; //VLR address
-static char hlra[] = "79139860004"; //HLR address
+static char msca[20] = "791398699873"; // MSC address
+static char vlra[20] = "79139860004"; //VLR address
+static char hlra[20] = "79139860004"; //HLR address
+static int  ssn = 191; //SSN
+static int  userid = 43; //common part user id
 //static char sca[]  = "791398699876"; // service center address SCS HD
-static char sca[]  = "79139869990"; // service center address
+static char sca[20]  = "79139869990"; // service center address
 static char rndmsto_pattern[]   = "791398699872%04d";
 static char rndmsfrom_pattern[] = "791398699871%04d";
 static int speed = 1450;
@@ -176,6 +178,80 @@ class StatFlusher: public Thread {
       return 0;
     }
 };
+class ToolConfig {
+  private:
+    int cfgdelay;
+    Logger* logger;
+  public:
+    ToolConfig(Logger* _logger):logger(_logger){}
+    void read(Manager& manager)
+    {
+      char* tmp_str;
+      if (!manager.findSection("msc-mosm"))
+        throw ConfigException("\'msc-mosm\' section is missed");
+
+      ConfigView view(manager, "msc-mosm");
+
+      try { tmp_str = sccpConfig.getString("sca");
+            strcpy(sca,tmp_str);
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'sca\' is unknown or missing");
+      }
+
+      try { speed = view.getInt("speed");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'speed\' is unknown or missing");
+      }
+
+      try { slowstartperiod = view.getInt("slowstartperiod");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'slowstartperiod\' is unknown or missing");
+      }
+    }
+};
+class SccpConfig {
+  private:
+    Logger* logger;
+  public:
+    SccpConfig(Logger* _logger):logger(_logger){}
+    void read(Manager& manager)
+    {
+      char* tmp_str;
+
+      if (!manager.findSection("sccp"))
+        throw ConfigException("\'sccp\' section is missed");
+
+      ConfigView sccpConfig(manager, "sccp");
+
+      try { userid = sccpConfig.getInt("user_id");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'user_id\' is unknown or missing");
+      }
+
+      try { ssn = sccpConfig.getInt("user_ssn");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'user_ssn\' is unknown or missing");
+      }
+
+      try { tmp_str = sccpConfig.getString("msc_gt");
+            strcpy(msca,tmp_str);
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'msc_gt\' is unknown or missing");
+      }
+
+      try { tmp_str = sccpConfig.getString("vlr_gt");
+            strcpy(vlra,tmp_str);
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'vlr_gt\' is unknown or missing");
+      }
+
+      try { tmp_str = sccpConfig.getString("hlr_gt");
+            strcpy(hlra,tmp_str);
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'hlr_gt\' is unknown or missing");
+      }
+    }
+};
 int main(int argc, char** argv)
 {
   try
@@ -184,6 +260,15 @@ int main(int argc, char** argv)
     logger = smsc::logger::Logger::getInstance("mosmgen");
     smsc_log_info(logger, "MO SMS generator");
     smsc_log_error(logger,"sizeof(MoForwardSmReq)=%d",sizeof(MoForwardSmReq));
+
+    Manager::init("config.xml");
+    Manager& manager = Manager::getInstance();
+    ToolConfig config(logger);
+    config.read(manager);
+    SccpConfig sccpcfg(logger);
+    sccpcfg.read(manager);
+
+
     StatFlusher trener;
     trener.Start();
     EmptyRequestSender fakeSender;
@@ -196,7 +281,7 @@ int main(int argc, char** argv)
     TrafficShaper shaper((SccpSender*)&listener, speed,slowstartperiod);
     mtsms.setSccpSender((SccpSender*)&shaper);
 
-    listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
+    listener.configure(userid, ssn, Address((uint8_t)strlen(msca), 1, 1, msca),
         Address((uint8_t)strlen(vlra), 1, 1, vlra),
         Address((uint8_t)strlen(hlra), 1, 1, hlra));
     listener.Start();
