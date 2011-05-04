@@ -2,6 +2,9 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <vector>
 #include "core/threads/Thread.hpp"
+#include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
+#include "util/config/ConfigException.h"
 #include "logger/Logger.h"
 #include "util/sleep.h"
 #include "mtsmsme/sua/SuaProcessor.hpp"
@@ -16,6 +19,9 @@ static char const ident[] = "$Id$";
 using std::vector;
 using std::string;
 using smsc::core::threads::Thread;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigView;
+using smsc::util::config::ConfigException;
 using smsc::logger::Logger;
 using smsc::sms::Address;
 using smsc::util::millisleep;
