@@ -44,7 +44,10 @@ class SerializerException : public std::exception
 {
 public:
     SerializerException( const char* fmt, ... ) {
-        SMSC_UTIL_EX_FILL(fmt);
+        va_list args;
+        va_start(args,fmt);
+        fill(fmt,args);
+        va_end(args);
     }
     virtual ~SerializerException() throw () {}
     virtual const char* what() const throw () { return message_.c_str(); }
