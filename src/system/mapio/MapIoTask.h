@@ -50,8 +50,11 @@ using namespace smsc::util;
 using smsc::system::mapio::MapProxy;
 
 using smsc::core::buffers::XHash;
+using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::RecursiveMutex;
 using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::RecursiveMutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
