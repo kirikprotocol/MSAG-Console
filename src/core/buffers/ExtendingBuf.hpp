@@ -190,7 +190,7 @@ public:
   size_type Append(const _TArg * data, size_type use_count)
   {
     size_type n = Write(_pos, data, use_count);
-    pos += n;
+    _pos += n;
     return n;
   }
 
