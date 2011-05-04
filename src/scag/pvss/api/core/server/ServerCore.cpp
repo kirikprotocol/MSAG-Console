@@ -45,7 +45,8 @@ namespace pvss {
 namespace core {
 namespace server {
 
-ServerCore::ServerCore( ServerConfig* config, Protocol* protocol ) :
+ServerCore::ServerCore( ServerConfig* config,
+                        Protocol* protocol ) :
 Core(config,protocol), Server(),
 log_(smsc::logger::Logger::getInstance(taskName())),
 loge_(smsc::logger::Logger::getInstance("pvssEsrv")),

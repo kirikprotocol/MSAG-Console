@@ -31,6 +31,7 @@
 #include "scag/counter/impl/HashCountManager.h"
 #include "scag/counter/impl/TemplateManagerImpl.h"
 #include "scag/counter/impl/ConfigReader.h"
+#include "informer/io/ConfigWrapper.h"
 
 #ifdef SNMP
 #include "scag/snmp/SnmpWrapper.h"
@@ -46,8 +47,7 @@ using smsc::util::Exception;
 
 // EventMonitor waitObj;
 std::auto_ptr<PersServer> persServer;
-std::auto_ptr<BackupProcessor> backupProcessor;
-
+// std::auto_ptr<BackupProcessor> backupProcessor;
 
 #ifdef SNMP
 
@@ -74,7 +74,7 @@ extern "C" void appSignalHandler(int sig)
     if (sig==SIGTERM || sig==SIGINT)
     {
         if (persServer.get()) persServer->stop();
-        if (backupProcessor.get()) backupProcessor->stop();
+        // if (backupProcessor.get()) backupProcessor->stop();
         // {
         // MutexGuard mg(waitObj);
         // waitObj.notify();
@@ -387,41 +387,21 @@ int main(int argc, char* argv[]) {
             smsc_log_warn(logger,"Parameter <PVSS.timingSeriesSize> is missed, using default %u", timingSeriesSize);
         }
 
-        std::string abonentBackup, serviceBackup, operatorBackup, providerBackup;
-        std::string backupJournalDir;
+        // std::string abonentBackup, serviceBackup, operatorBackup, providerBackup;
+        std::string backupArchiveDir, backupPrefix, backupSuffix;
         size_t propPerSec = 10;
         if ( backup ) {
-            ConfigView backupConfig(manager,"PVSS.backup");
-            try {
-                backupJournalDir = backupConfig.getString("journalDir");
-            } catch (...) {
-                smsc_log_error(logger,"PVSS.backup.journalDir is required");
-                fprintf(stderr,"PVSS.backup.journalDir is required\n");
-                exit(-1);
+            std::auto_ptr<smsc::util::config::Config> 
+                backupConfig(manager.getConfig().getSubConfig("PVSS.backup",false));
+            eyeline::informer::ConfigWrapper wrap(*backupConfig,logger);
+
+            backupArchiveDir = wrap.getString("archiveDir");
+            backupPrefix = wrap.getString("backupPrefix");
+            backupSuffix = wrap.getString("finalSuffix",".pvss");
+            if ( backupSuffix.empty() || backupSuffix == ".log" ) {
+                throw smsc::util::Exception("finalSuffix is not correct ('%s')",backupSuffix.c_str());
             }
-            try {
-                abonentBackup = backupConfig.getString("abonent");
-            } catch (...) {}
-            try {
-                serviceBackup = backupConfig.getString("service");
-            } catch (...) {}
-            try {
-                operatorBackup = backupConfig.getString("operator");
-            } catch (...) {}
-            try {
-                providerBackup = backupConfig.getString("provider");
-            } catch (...) {}
-            try {
-                propPerSec = backupConfig.getInt("propertiesPerSecond");
-            } catch (...) {}
-            if ( abonentBackup.empty() &&
-                 serviceBackup.empty() &&
-                 operatorBackup.empty() &&
-                 providerBackup.empty() ) {
-                smsc_log_error(logger,"Section <PVSS.backup> is not properly configured, going to exit" );
-                fprintf(stderr,"Section <PVSS.backup> is not properly configured, going to exit\n");
-                exit(-1);
-            }
+            propPerSec = wrap.getInt("propertiesPerSecond",10,1,10000000);
         }
 
         NodeConfig nodeCfg = getNodeConfig(persConfig, logger);
@@ -456,10 +436,10 @@ int main(int argc, char* argv[]) {
         }
 
         std::auto_ptr< scag::util::Inst > inst;
-        if ( ! backup ) {
+        {
             // check instance, only if not backup
-            char filename[40];
-            sprintf(filename,"/tmp/pvss.%d",serverConfig.getPort());
+            char filename[60];
+            sprintf(filename,"/tmp/pvss%s.%d", backup ? "-backup" : "", serverConfig.getPort());
             inst.reset( new scag::util::Inst(filename) );
             if ( !inst->run()) {
                 fprintf( stderr, "Instance is running already.\n");
@@ -505,7 +485,10 @@ int main(int argc, char* argv[]) {
         }
 #endif
 
-        PvssDispatcher pvssDispatcher(nodeCfg,abntCfg,infCfg.get());
+        PvssDispatcher pvssDispatcher(nodeCfg,
+                                      abntCfg,
+                                      infCfg.get(),
+                                      backup );
 
         try {
             const bool makedirs = !(recovery || (dodump>=-1));
@@ -527,25 +510,22 @@ int main(int argc, char* argv[]) {
             exit(-1);
         }
 
-        if ( backup ) {
-            // working in backup mode
-            smsc_log_info(logger,"switching to backup mode");
-            backupProcessor.reset(new BackupProcessor(pvssDispatcher,
-                                                      backupJournalDir,
-                                                      propPerSec,
-                                                      backupSkipOnce ));
-            backupProcessor->startTask( SCOPE_ABONENT, abonentBackup );
-            backupProcessor->startTask( SCOPE_SERVICE, serviceBackup );
-            backupProcessor->startTask( SCOPE_PROVIDER, providerBackup );
-            backupProcessor->startTask( SCOPE_OPERATOR, operatorBackup );
-            backupProcessor->process();
-            backupProcessor.reset(0);
-            return 0;            
-        }
-
         std::auto_ptr< ServerCore > server
             ( new ServerCore( new ServerConfig(serverConfig),
                               new scag2::pvss::pvap::PvapProtocol ));
+
+        // backup processor must be here
+        std::auto_ptr< BackupProcessor > backupProcessor;
+        if ( backup ) {
+            // working in backup mode
+            smsc_log_info(logger,"working in backup mode");
+            backupProcessor.reset(new BackupProcessor(pvssDispatcher,
+                                                      backupArchiveDir,
+                                                      propPerSec,
+                                                      backupPrefix,
+                                                      backupSuffix ));
+            backupProcessor->start();
+        }
 
         try {
             // server->init();
@@ -559,12 +539,17 @@ int main(int argc, char* argv[]) {
         ReaderTaskManager readers(syncConfig);
         WriterTaskManager writers(syncConfig);
 
-        persServer.reset(new PersServer(static_cast<ServerCore&>(*server.get()), readers, writers, persProtocol,
-                                        syncConfig.getPerfCounterOn(), syncConfig.getPerfCounterPeriod()));
+        persServer.reset(new PersServer(static_cast<ServerCore&>(*server.get()),
+                                        readers, writers, persProtocol,
+                                        syncConfig.getPerfCounterOn(),
+                                        syncConfig.getPerfCounterPeriod()));
         persServer->init(host.c_str(), syncConfig.getPort());
         persServer->Execute();
 
         smsc_log_info(logger,"going to shutdown");
+        if (backupProcessor.get()) {
+            backupProcessor->stop();
+        }
         server->shutdown();
 
         readers.shutdown();

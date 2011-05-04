@@ -22,10 +22,10 @@ smsc::logger::Logger* RollingFileStream::log_ = 0;
 
 struct RollingFileStreamReader::RFR : public eyeline::informer::FileReader::RecordReader 
 {
-    RFR( bool& stopping, ProfileLogStreamRecordParser* rp ) :
+    RFR( volatile bool* stopping, ProfileLogStreamRecordParser* rp ) :
     stopping_(stopping), rp_(rp), lines(0), crc32(0), nextFile() {}
 
-    virtual bool isStopping() { return stopping_; }
+    virtual bool isStopping() { return stopping_ ? *stopping_ : false; }
     /// NOTE: terminated by \n
     virtual size_t recordLengthSize() const { return 0; }
 
@@ -61,7 +61,7 @@ struct RollingFileStreamReader::RFR : public eyeline::informer::FileReader::Reco
         return true;
     }
 public:
-    bool&       stopping_;
+    volatile bool*       stopping_;
     ProfileLogStreamRecordParser* rp_;
     uint32_t    lines;
     uint32_t    crc32;
@@ -78,7 +78,7 @@ nextFile_()
 
 
 void RollingFileStreamReader::read( const char* fullName,
-                                    bool&       stopping,
+                                    volatile bool*       stopping,
                                     ProfileLogStreamRecordParser* rp )
 {
     eyeline::informer::FileGuard fg;
@@ -105,6 +105,31 @@ interval_(interval)
 {
     if (!log_) { log_ = smsc::logger::Logger::getInstance("rollfile"); }
 }
+
+
+
+time_t RollingFileStream::extractTime( const char* filename,
+                                       const char* prefix,
+                                       const char* suffix )
+{
+    if ( !filename || !prefix || !suffix ) return 0;
+    const size_t fl = strlen(filename), pl = strlen(prefix), sl = strlen(suffix);
+    if ( fl <= pl+sl ) return 0;
+    if ( memcmp(filename,prefix,pl) ) return 0;
+    if ( memcmp(filename+fl-sl,suffix,sl) ) return 0;
+    int pos = 0;
+    ::tm ltm;
+    sscanf( filename+pl, FILEFORMAT,
+            &ltm.tm_year, &ltm.tm_mon, &ltm.tm_mday,
+            &ltm.tm_hour, &ltm.tm_min, &ltm.tm_sec, &pos );
+    if ( pos == 0 ) return 0;
+    if ( pl+pos+sl != fl ) return 0;
+    ltm.tm_year -= 1900;
+    --ltm.tm_mon;
+    ltm.tm_isdst = -1;
+    return mktime(&ltm);
+}
+
 
 
 size_t RollingFileStream::formatPrefix( char* buf, size_t bufsize, const char* catname ) const throw()
@@ -201,7 +226,7 @@ void RollingFileStream::update( ProfileLogStream& ps )
 }
 
 
-void RollingFileStream::postInitFix( bool& isStopping )
+void RollingFileStream::postInitFix( volatile bool& isStopping )
 {
     if ( !needPostfix_ ) return;
 
@@ -230,7 +255,7 @@ void RollingFileStream::postInitFix( bool& isStopping )
         }
         smsc_log_debug(log_,"scanning the file '%s'",filename.c_str());
         RollingFileStreamReader rfsr;
-        rfsr.read( filename.c_str(), isStopping, 0 );
+        rfsr.read( filename.c_str(), &isStopping, 0 );
         lines = rfsr.getLines();
         crc32 = rfsr.getCrc32();
         if ( rfsr.isFinished() ) {
@@ -287,7 +312,6 @@ void RollingFileStream::collectUnfinishedLogs( const char* prefix,
             filename = dirname;
             dirname = ".";
         }
-        filename.append( ::FILEFORMAT );
     }
     std::vector< std::string > entries;
     smsc::core::buffers::File::ReadDir( dirname.c_str(), entries,
@@ -297,30 +321,9 @@ void RollingFileStream::collectUnfinishedLogs( const char* prefix,
     for ( std::vector<std::string>::const_iterator i = entries.begin();
           i != entries.end(); ++i ) {
 
-        const size_t isize = i->size();
-        if ( isize < 5 ) continue;
+        const time_t res = extractTime( i->c_str(), filename.c_str(), "");
+        if ( res ) { list.push_back(res); }
 
-        // good extension is found
-        ::tm ltm;
-        memset(&ltm,0,sizeof(ltm));
-        int pos = 0;
-        sscanf( i->c_str(), filename.c_str(),
-                &ltm.tm_year, &ltm.tm_mon, &ltm.tm_mday,
-                &ltm.tm_hour, &ltm.tm_min, &ltm.tm_sec, &pos );
-        if ( pos == 0 ) {
-            // invalid name
-            continue;
-        }
-        if ( size_t(pos) != isize ) {
-            // not all chars read
-            continue;
-        }
-
-        ltm.tm_year -= 1900;
-        --ltm.tm_mon;
-        ltm.tm_isdst = -1;
-        time_t thetime = mktime(&ltm);
-        list.push_back(thetime);
     }
     std::sort(list.begin(),list.end());
 }

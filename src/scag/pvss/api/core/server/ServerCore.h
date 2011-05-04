@@ -32,7 +32,8 @@ public:
      * @param config        Server configuration parameters
      * @param protocol      PVAP protocol serializer/deserializer
      */
-    ServerCore( ServerConfig* config, Protocol* protocol );
+    ServerCore( ServerConfig* config,
+                Protocol*     protocol );
 
     virtual ~ServerCore();
 

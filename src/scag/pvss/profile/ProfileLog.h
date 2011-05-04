@@ -51,7 +51,7 @@ protected:
     /// update of configuration based on the other instance.
     virtual void update( ProfileLogStream& ps ) = 0;
 
-    virtual void postInitFix( bool& isStopping ) = 0;
+    virtual void postInitFix( volatile bool& isStopping ) = 0;
     virtual time_t tryToRoll( time_t now ) = 0;
 
 private:

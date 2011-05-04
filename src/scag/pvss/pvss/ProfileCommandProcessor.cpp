@@ -101,7 +101,7 @@ void ProfileCommandProcessor::resetProfile(Profile *pf)
 
 
 bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {
-    ProfileCommandProcessor proc(*backup_,profile_);
+    ProfileCommandProcessor proc(*backup_,readonly_,profile_);
     BatchResponse* resp = new BatchResponse(StatusType::OK);
     response_.reset(resp);
     std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
@@ -146,6 +146,9 @@ bool ProfileCommandProcessor::visitGetProfileCommand(GetProfileCommand& cmd)
 
 
 bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
+    if (readonly_) {
+        throw smsc::util::Exception("in readonly mode");
+    }
     response_.reset(new DelResponse());    
     std::auto_ptr<Property> holder;
     if (!profile_ || !profile_->DeleteProperty(cmd.getVarName().c_str(),&holder)) {
@@ -172,6 +175,9 @@ bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapExce
     }
     backup_->getProperty(*p);
     if(p->getTimePolicy() == R_ACCESS) {
+        if (readonly_) {
+            throw smsc::util::Exception("in readonly mode");
+        }
         backup_->fixTimePolicy(*p);
         p->ReadAccess();
         profile_->setChanged(true);
@@ -183,6 +189,9 @@ bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapExce
 }
 
 bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
+    if (readonly_) {
+        throw smsc::util::Exception("in readonly mode");
+    }
     uint32_t result = 0;
     uint8_t status = incModProperty(cmd.getProperty(), 0, result);
     IncResponse *incResp = new IncResponse(status);
@@ -196,6 +205,9 @@ bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) /* throw(PvapExce
 }
 
 bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */  {
+    if (readonly_) {
+        throw smsc::util::Exception("in readonly mode");
+    }
     uint32_t result = 0;
     response_.reset( new IncResponse());
     if (!profile_) {
@@ -212,6 +224,9 @@ bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) /* throw(Pv
 }
 
 bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapException) */  {
+    if (readonly_) {
+        throw smsc::util::Exception("in readonly mode");
+    }
     const Property& prop = cmd.getProperty();
     response_.reset( new SetResponse() );
     if (!profile_) {

@@ -18,18 +18,21 @@ class BackupProcessor
 {
 private:
     class BackupProcessingTask;
+    struct FileNameFilter;
+    struct BackupParser;
 
 public:
     BackupProcessor( PvssDispatcher& dispatcher,
-                     const std::string& journalDir,
+                     const std::string& archiveDir,
                      size_t propertiesPerSec,
-                     bool backupSkipOnce );
+                     const std::string& backupPrefix,
+                     const std::string& backupSuffix );
     virtual ~BackupProcessor();
 
     /// start processor and lock until exited
-    void process();
+    void start();
     void stop();
-    void startTask( ScopeType scope, const std::string& backup );
+    // void startTask( ScopeType scope, const std::string& backup );
 
 private:
     // void setFileProcessed( ScopeType scope, const char* fname );
@@ -40,6 +43,15 @@ private:
     // time_t getLastTime( ScopeType scope ) const;
     // time_t readTime( ScopeType scope, const char* fname ) const;
 
+    /// read the name of the next file from the last file
+    /// in the archive dir.
+    /// If there is no files, return empty string.
+    /// May throw exception.
+    std::string readTheNextFile( const std::string& dir );
+
+    /// extract the date and time, if it is impossible return 0.
+    time_t extractDateTime( const std::string& fn ) const;
+
 private:
     PvssDispatcher*                           dispatcher_; // not owned
     bool                                      stopping_;
@@ -47,8 +59,10 @@ private:
     smsc::logger::Logger*                     log_;
     smsc::core::threads::ThreadPool           threadPool_;
     smsc::core::synchronization::EventMonitor stopMon_;
-    std::string                               journalDir_;
-    bool                                      backupSkipOnce_;
+    std::string                               archiveDir_;
+    std::string                               inputDir_;
+    std::string                               backupPrefix_;
+    std::string                               backupSuffix_;
 };
 
 } // namespace pvss

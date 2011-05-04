@@ -19,7 +19,9 @@ class BatchResponseComponent;
 class ProfileCommandProcessor : public ProfileCommandVisitor 
 {
 public:
-    ProfileCommandProcessor( ProfileBackup& backup, Profile* prof = 0 ) :
+    ProfileCommandProcessor( ProfileBackup& backup,
+                             bool readonly,
+                             Profile* prof = 0 ) :
     log_(smsc::logger::Logger::getInstance("pvss.proc")),
     backup_(&backup), rollback_(false), profile_(prof), response_(0) {}
 
@@ -54,6 +56,7 @@ private:
     bool                  rollback_;
     Profile*              profile_;
     std::auto_ptr<CommandResponse> response_;
+    bool                  readonly_;
 };
 
 }//pvss

@@ -122,7 +122,7 @@ config_(cfg),
 dataFileManager_(manager),
 diskFlusher_(&diskFlusher),
 profileBackup_(dispatcher.getLogRoller().getLogger("pvss.abnt")),
-commandProcessor_(profileBackup_) {
+commandProcessor_(profileBackup_, dispatcher.isReadonly()) {
 }
 
 
@@ -398,6 +398,9 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
   ElementStorage* elstorage = *elstoragePtr;
 
     const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
+    if ( createProfile && dispatcher_.isReadonly() ) {
+        throw smsc::util::Exception("pvss in readonly mode");
+    }
     Profile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
     /// FIXME: temporary
     if (pf) pf->setKey( profkey );
@@ -509,7 +512,7 @@ public:
                 DiskFlusher& flusher, PvssDispatcher& dispatcher ) :
     name_(name),
     profileBackup_(dispatcher.getLogRoller().getLogger(dblogName)),
-    commandProcessor_(profileBackup_),
+    commandProcessor_(profileBackup_,dispatcher.isReadonly()),
     log_(0),
     storage_(0),
     diskFlusher_(&flusher)

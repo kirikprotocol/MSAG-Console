@@ -96,11 +96,13 @@ private:
 
 PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
                                const AbonentStorageConfig& abntCfg,
-                               const InfrastructStorageConfig* infCfg) :
+                               const InfrastructStorageConfig* infCfg,
+                               bool readonly ) :
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp")),
 infraFlusher_(0),
-logRoller_( new ProfileLogRollerHardcoded() )
+logRoller_( new ProfileLogRollerHardcoded()),
+readonly_(readonly)
 {
     StorageNumbering::setInstance(nodeCfg.nodesCount);
     unsigned addSpeed = nodeCfg_.expectedSpeed / nodeCfg_.disksCount;

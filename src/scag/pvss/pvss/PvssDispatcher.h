@@ -42,7 +42,8 @@ class PvssDispatcher : public core::server::SyncDispatcher {
 public:
   PvssDispatcher( const NodeConfig& nodeCfg,
                   const AbonentStorageConfig& abntCfg,
-                  const InfrastructStorageConfig* infCfg );
+                  const InfrastructStorageConfig* infCfg,
+                  bool  readonly );
   virtual ~PvssDispatcher();
 
   virtual unsigned getIndex(Request& request) const;
@@ -56,6 +57,10 @@ public:
                        const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
 
     void init();
+
+    bool isReadonly() const {
+        return readonly_;
+    }
 
     ProfileLogRoller& getLogRoller() const { return *logRoller_; }
 
@@ -91,6 +96,7 @@ private:
     DiskFlusher*  infraFlusher_;
     counter::CounterPtrAny cntAbonents_;
     ProfileLogRoller* logRoller_;
+    bool readonly_;
 };
 
 }//pvss
