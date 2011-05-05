@@ -41,7 +41,7 @@ public:
         batchContent_.insert( batchContent_.end(), comps.begin(), comps.end() );
     }
 
-    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
         return visitor.visitBatchCommand(*this);
     }

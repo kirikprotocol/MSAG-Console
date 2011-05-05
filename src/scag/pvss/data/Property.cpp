@@ -253,7 +253,7 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
         from.erase(0,strlen(STRING_PREF));
         size_t quote = 0;
         do {
-            quote = from.find(quote,'"');
+            quote = from.find('"',quote);
             if ( quote == std::string::npos ) throw exceptions::IOException("closing quote on string value is not found");
             if ( quote+1 >= from.size() ) throw exceptions::IOException("closing quote is the last symbol in the string");
             if ( from[quote+1] == '"' ) {

@@ -19,39 +19,39 @@ private:
     public:
         BufferWriterVisitor( Buffer& buf ) : writer(buf) {}
 
-        virtual bool visitPingRequest( PingRequest& req ) throw(PvapException) {
+        virtual bool visitPingRequest( PingRequest& req ) /*throw(PvapException)*/ {
             PC_PING msg(&req);
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitAuthRequest( AuthRequest& req ) throw(PvapException) {
+        virtual bool visitAuthRequest( AuthRequest& req ) /*throw(PvapException)*/ {
             PC_AUTH msg(&req);
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitProfileRequest( ProfileRequest& req ) throw(PvapException) {
+        virtual bool visitProfileRequest( ProfileRequest& req ) /* throw(PvapException) */ {
             PC_PROFILE msg(&req);
             pvap.encodeMessage(msg,writer);
             return true;
         }
 
 
-        virtual bool visitErrResponse( ErrorResponse& resp ) throw (PvapException) {
+        virtual bool visitErrResponse( ErrorResponse& resp ) /*throw (PvapException)*/ {
             PC_ERR_RESP msg(&resp);
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitPingResponse( PingResponse& resp ) throw (PvapException) {
+        virtual bool visitPingResponse( PingResponse& resp ) /*throw (PvapException)*/ {
             PC_PING_RESP msg(&resp);
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitAuthResponse( AuthResponse& resp ) throw (PvapException) {
+        virtual bool visitAuthResponse( AuthResponse& resp ) /*throw (PvapException)*/ {
             PC_AUTH_RESP msg(&resp);
             pvap.encodeMessage(msg,writer);
             return true;
         }
-        virtual bool visitProfileResponse( ProfileResponse& resp ) throw (PvapException) {
+        virtual bool visitProfileResponse( ProfileResponse& resp ) /*throw (PvapException)*/ {
             PC_PROFILE_RESP msg(&resp);
             pvap.encodeMessage(msg,writer);
             return true;
@@ -134,7 +134,7 @@ private:
             if (packet) delete packet;
         }
 
-        Packet* decode( Buffer& buf ) throw(PvapException)
+        Packet* decode( Buffer& buf ) /*throw(PvapException)*/
         {
             BufferReader reader(buf);
             pvap.decodeMessage(reader);
@@ -177,7 +177,7 @@ public:
     /**
      * Serialize packet into the buffer.
      */
-    virtual void serialize( const Packet& pack, Buffer& buf ) throw(PvapException) {
+    virtual void serialize( const Packet& pack, Buffer& buf ) /*throw(PvapException)*/ {
         BufferWriterVisitor visitor(buf);
         Packet& packet = const_cast<Packet&>(pack);
         if ( packet.isRequest() ) {
@@ -190,7 +190,7 @@ public:
     /**
      * NOTE: buf will be used only for reading, so it is safe to pass an extBuf.
      */
-    virtual Packet* deserialize( Buffer& buf ) throw(PvapException) {
+    virtual Packet* deserialize( Buffer& buf ) /*throw(PvapException)*/ {
         Handler h(pvap);
         return h.decode(buf);
     }

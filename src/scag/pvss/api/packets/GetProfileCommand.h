@@ -35,7 +35,7 @@ public:
     void setVarName( const std::string& varName ) { varName_ = varName; }
      */
 
-    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
         return visitor.visitGetProfileCommand(*this);
     }

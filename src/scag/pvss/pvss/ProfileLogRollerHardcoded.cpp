@@ -6,9 +6,10 @@
 namespace scag2 {
 namespace pvss {
 
-ProfileLogRollerHardcoded::ProfileLogRollerHardcoded() :
+ProfileLogRollerHardcoded::ProfileLogRollerHardcoded( bool backupMode ) :
 ProfileLogRoller(),
-lastConfigTime_(0), oldmtime_(0) {}
+lastConfigTime_(0), oldmtime_(0),
+backupMode_(backupMode) {}
     
 bool ProfileLogRollerHardcoded::readConfiguration()
 {
@@ -63,20 +64,31 @@ bool ProfileLogRollerHardcoded::readConfiguration()
 
         // adding streams
         const char* streamName = "pvss.bks";
-        EmbedRefPtr< ProfileLogStream > pls( new RollingFileStream( streamName,
-                                                                    prefix.c_str(),
-                                                                    finalSuffix.c_str(), 
-                                                                    rollingInterval) );
-        addLogStream(pls);
-        if ( !getLogStream(streamName,pls) ) {
-            throw smsc::util::Exception("cannot find log stream '%s'",streamName);
+        EmbedRefPtr< ProfileLogStream > pls;
+        if ( !backupMode_ ) {
+            pls.reset( new RollingFileStream( streamName,
+                                              prefix.c_str(),
+                                              finalSuffix.c_str(), 
+                                              rollingInterval) );
+            addLogStream(pls);
+            if ( !getLogStream(streamName,pls) ) {
+                throw smsc::util::Exception("cannot find log stream '%s'",streamName);
+            }
         }
 
         // adding loggers
-        addLogger("pvss.abnt", Logger::LEVEL_INFO, pls, true);
-        addLogger("pvss.oper", Logger::LEVEL_INFO, pls, true);
-        addLogger("pvss.serv", Logger::LEVEL_INFO, pls, true);
-        addLogger("pvss.prov", Logger::LEVEL_INFO, pls, true);
+        addLogger("pvss.abnt",
+                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  pls, true);
+        addLogger("pvss.oper",
+                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  pls, true);
+        addLogger("pvss.serv",
+                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  pls, true);
+        addLogger("pvss.prov",
+                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  pls, true);
 
         configReloadInterval_ = reloadInterval;
 

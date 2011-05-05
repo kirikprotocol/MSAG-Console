@@ -21,7 +21,7 @@ namespace pvss {
 class ProfileLogRollerHardcoded : public ProfileLogRoller
 {
 public:
-    ProfileLogRollerHardcoded();
+    ProfileLogRollerHardcoded( bool backupMode );
     virtual ~ProfileLogRollerHardcoded() {
         stop();
         WaitFor();
@@ -31,6 +31,7 @@ public:
 private:
     time_t                              lastConfigTime_;
     time_t                              oldmtime_; // previous mtime of config
+    bool                                backupMode_;
 };
 
 }

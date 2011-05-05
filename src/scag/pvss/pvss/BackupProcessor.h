@@ -7,6 +7,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "scag/pvss/common/ScopeType.h"
 #include "core/synchronization/EventMonitor.hpp"
+#include "informer/io/SpeedControl.h"
 // #include "scag/util/WatchedThreadedTask.h"
 
 namespace scag2 {
@@ -52,6 +53,9 @@ private:
     /// extract the date and time, if it is impossible return 0.
     time_t extractDateTime( const std::string& fn ) const;
 
+    /// invoked to control the speed of processing
+    void controlSpeed();
+
 private:
     PvssDispatcher*                           dispatcher_; // not owned
     bool                                      stopping_;
@@ -63,6 +67,10 @@ private:
     std::string                               inputDir_;
     std::string                               backupPrefix_;
     std::string                               backupSuffix_;
+
+    // speed control
+    eyeline::informer::SpeedControl<>         speedControl_;
+    unsigned                                  speedCounter_;
 };
 
 } // namespace pvss

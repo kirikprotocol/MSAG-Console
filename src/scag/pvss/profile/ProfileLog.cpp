@@ -543,11 +543,18 @@ int ProfileLogRoller::Execute()
 
         time_t nextRollTry = time(0);
         time_t nextConfigTry = nextRollTry + configReloadInterval_;
+        if ( ! configReloadInterval_ ) {
+            nextConfigTry = nextRollTry + 3600*24*365*10;
+        }
         const int sleepTime = 60;
         while ( ! isStopping_ ) {
 
+            time_t now = time(0);
+            smsc_log_debug(log_,"pass at %llu",uint64_t(now));
+
             if ( needPostfix ) {
                 // fix all unfinished streams
+                needPostfix = false;
                 char* streamName;
                 EmbedRefPtr<ProfileLogStream> stream;
                 for ( LogStreams::Iterator it(&logStreams_);
@@ -562,10 +569,9 @@ int ProfileLogRoller::Execute()
                     }
                     if ( isStopping_ ) { break; }
                 }
-                needPostfix = false;
+                continue;
             }
 
-            time_t now = time(0);
             time_t nextTry = std::min(nextRollTry, nextConfigTry);
             if ( now < nextTry ) {
                 // not reached yet

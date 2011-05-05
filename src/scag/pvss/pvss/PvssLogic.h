@@ -125,7 +125,7 @@ public:
     dispatcher_(dispatcher), logger_(Logger::getInstance("pvss.proc"))
     {}
   virtual ~PvssLogic() {};
-  Response* process(Request& request) /* throw(PvssException) */ ;
+    virtual Response* process(Request& request, bool overrideReadonly = false) /* throw(PvssException) */ ;
   void responseSent(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
   void responseFail(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
 
@@ -146,7 +146,8 @@ protected:
     virtual void init( bool checkAtStart = false ) = 0;
     virtual void rebuildIndex(unsigned maxSpeed = 0) = 0;
 
-    virtual CommandResponse* processProfileRequest(ProfileRequest& request) = 0;
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
+                                                   bool overrideReadonly ) = 0;
 
     template < class Key, class Prof = Profile > struct ProfileHeapAllocator
     {
@@ -215,7 +216,8 @@ protected:
     unsigned long rebuildElementStorage(unsigned index,unsigned maxSpeed);
     void dumpElementStorage( unsigned index );
 
-    virtual CommandResponse* processProfileRequest(ProfileRequest& request);
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
+                                                   bool overrideReadonly );
 
 private:
     
@@ -357,7 +359,8 @@ public:
 protected:
     virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0 );
-    virtual CommandResponse* processProfileRequest(ProfileRequest& request);
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
+                                                   bool overrideReadonly );
 
 private:
     DiskFlusher* diskFlusher_;   // not owned

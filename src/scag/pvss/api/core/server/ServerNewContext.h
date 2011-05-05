@@ -17,7 +17,7 @@ public:
 
     virtual smsc::core::network::Socket* getSocket() const { return socket_.socket(); }
 
-    virtual void sendResponse() throw (PvssException) { socket_.send(getResponse().get(),false,true); }
+    virtual void sendResponse() /*throw (PvssException)*/ { socket_.send(getResponse().get(),false,true); }
 
 private:
     PvssSocket& socket_;

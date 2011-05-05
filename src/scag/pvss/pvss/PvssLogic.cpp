@@ -85,10 +85,10 @@ void PvssLogic::initGlossary(const string& path, Glossary& glossary) {
     }
 }
 
-Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
+Response* PvssLogic::process(Request& request, bool overrideReadonly) /* throw(PvssException) */  {
   try {
       ProfileRequest& preq(static_cast<ProfileRequest&>(request));
-      CommandResponse* r = processProfileRequest(preq);
+      CommandResponse* r = processProfileRequest(preq,overrideReadonly);
       return r ? new ProfileResponse(preq.getSeqNum(),r) : 0;
   } catch (const PvapException& e) {
     smsc_log_warn(logger_, "%p: %p processing error: PvapException", this, &request);
@@ -122,7 +122,7 @@ config_(cfg),
 dataFileManager_(manager),
 diskFlusher_(&diskFlusher),
 profileBackup_(dispatcher.getLogRoller().getLogger("pvss.abnt")),
-commandProcessor_(profileBackup_, dispatcher.isReadonly()) {
+commandProcessor_(profileBackup_) {
 }
 
 
@@ -381,7 +381,8 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
 }
 
 
-CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest)
+CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest,
+                                                     bool overrideReadonly )
 {
   const ProfileKey &profileKey = profileRequest.getProfileKey();
   const std::string& profkey = profileKey.getAddress().toString();
@@ -398,13 +399,16 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
   ElementStorage* elstorage = *elstoragePtr;
 
     const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
-    if ( createProfile && dispatcher_.isReadonly() ) {
+    if ( createProfile && dispatcher_.isReadonly() && !overrideReadonly ) {
         throw smsc::util::Exception("pvss in readonly mode");
     }
     Profile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
     /// FIXME: temporary
     if (pf) pf->setKey( profkey );
-    if ( commandProcessor_.applyCommonLogic(profkey, profileRequest, pf, createProfile )) {
+    ProfileCommandProcessor::ReadonlyFilter rf(commandProcessor_,
+                                               dispatcher_.isReadonly() && !overrideReadonly );
+
+    if ( rf.applyCommonLogic(profkey, profileRequest, pf, createProfile) ) {
         if ( pf->isChanged() ) {
             bool ok;
             {
@@ -512,10 +516,11 @@ public:
                 DiskFlusher& flusher, PvssDispatcher& dispatcher ) :
     name_(name),
     profileBackup_(dispatcher.getLogRoller().getLogger(dblogName)),
-    commandProcessor_(profileBackup_,dispatcher.isReadonly()),
+    commandProcessor_(profileBackup_),
     log_(0),
     storage_(0),
-    diskFlusher_(&flusher)
+    diskFlusher_(&flusher),
+    readonly_(dispatcher.isReadonly())
     {
         counter::Manager& mgr = counter::Manager::getInstance();
         cntpfr_ = mgr.registerAnyCounter(new counter::Accumulator("sys.profiles." + name_ + ".r"));
@@ -589,7 +594,8 @@ public:
     void rebuildIndex( unsigned maxSpeed = 0 );
 
     CommandResponse* process( const IntProfileKey& intKey,
-                              ProfileRequest& request );
+                              ProfileRequest& request,
+                              bool readonlyOverride );
 
     void flushIOStatistics( std::string& rv,
                             unsigned scale,
@@ -620,6 +626,7 @@ private:
     counter::CounterPtrAny  cntkbr_;
     counter::CounterPtrAny  cntkbw_;
     counter::CounterPtrAny  cntTotal_;
+    bool                    readonly_;
 };
 
 
@@ -714,15 +721,22 @@ void InfrastructLogic::InfraLogic::resizePageSize( std::auto_ptr< DiskDataStorag
 
 
 CommandResponse* InfrastructLogic::InfraLogic::process( const IntProfileKey& intKey,
-                                                        ProfileRequest& profileRequest )
+                                                        ProfileRequest& profileRequest,
+                                                        bool overrideReadonly )
 {
-    const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor); 
+    const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
+    if ( createProfile && readonly_ && !overrideReadonly ) {
+        throw smsc::util::Exception("pvss in readonly mode");
+    }
+
     LockableProfile* pf = storage_->get(intKey, createProfile);
     const std::string profkey = intKey.toString();
     bool ok;
     {
+        ProfileCommandProcessor::ReadonlyFilter rf(commandProcessor_,
+                                                   readonly_ && !overrideReadonly);
         smsc::core::synchronization::MutexGuardTmpl< LockableProfile > mg(pf?*pf:dummyProfile_);
-        ok = commandProcessor_.applyCommonLogic(profkey,profileRequest,pf,createProfile);
+        ok = rf.applyCommonLogic(profkey,profileRequest,pf,createProfile );
     }
     if (ok) {
         if ( pf->isChanged() ) {
@@ -763,7 +777,8 @@ void InfrastructLogic::InfraLogic::flushIOStatistics( std::string& rv,
 
 
 
-CommandResponse* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest)
+CommandResponse* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest,
+                                                         bool overrideReadonly )
 {
     uint32_t key = 0;
     InfraLogic* logic = 0;
@@ -781,7 +796,7 @@ CommandResponse* InfrastructLogic::processProfileRequest(ProfileRequest& profile
         throw smsc::util::Exception("unknown profile key %s", profileKey.toString().c_str());
     }
     IntProfileKey intKey(key);
-    return logic->process(key,profileRequest);
+    return logic->process(key,profileRequest,overrideReadonly);
 }
 
 

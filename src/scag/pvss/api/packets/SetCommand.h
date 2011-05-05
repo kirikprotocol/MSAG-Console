@@ -13,7 +13,7 @@ public:
     // SetCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
     virtual ~SetCommand() { logDtor(); }
     
-    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
         return visitor.visitSetCommand(*this);
     }

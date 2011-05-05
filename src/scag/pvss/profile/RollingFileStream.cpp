@@ -5,10 +5,20 @@
 #include "informer/io/FileReader.h"
 #include "informer/io/TmpBuf.h"
 
+using eyeline::informer::InfosmeException;
+using eyeline::informer::FileDataException;
+using eyeline::informer::FileGuard;
+using eyeline::informer::FileReader;
+using eyeline::informer::TmpBuf;
+using eyeline::informer::EXC_IOERROR;
+
 namespace {
 
 const char* FILEFORMAT = "%04u-%02u-%02u-%02u-%02u-%02u%n";
 const char* FILEHEADER = "# VERSION 0001\n";
+const char* FILETRAILER = "# SUMMARY: lines: %u, crc32: %08x, next: %n";
+const char* PREFIXFORMAT = "%02u-%02u %02u:%02u:%02u,%03u %10.10s: %n";
+const char* PREFIXFORMATIN = "%02u-%02u %02u:%02u:%02u,%03u %10[^:]: %n";
 
 }
 
@@ -20,7 +30,7 @@ smsc::logger::Logger* RollingFileStream::log_ = 0;
 
 /// =================================================================
 
-struct RollingFileStreamReader::RFR : public eyeline::informer::FileReader::RecordReader 
+struct RollingFileStreamReader::RFR : public eyeline::informer::FileReader::RecordReader
 {
     RFR( volatile bool* stopping, ProfileLogStreamRecordParser* rp ) :
     stopping_(stopping), rp_(rp), lines(0), crc32(0), nextFile() {}
@@ -30,36 +40,18 @@ struct RollingFileStreamReader::RFR : public eyeline::informer::FileReader::Reco
     virtual size_t recordLengthSize() const { return 0; }
 
     virtual size_t readRecordLength( size_t filePos,
-                                     eyeline::informer::FromBuf& fb ) {
-        size_t buflen = fb.getLen() - fb.getPos();
+                                     char* buf, size_t buflen ) 
+    {
         const char* found = 
-            static_cast<const char*>(memchr( fb.getBuf(), '\n', buflen));
+            static_cast<const char*>(memchr(buf,'\n',buflen));
         if (!found) {
             // request extra bytes
             return buflen + 1;
         }
-        return found - fb.getBuf() + 1;
+        return found - buf + 1;
     }
 
-    virtual bool readRecordData( size_t filePos,
-                                 eyeline::informer::FromBuf& fb )
-    {
-        size_t buflen = fb.getLen() - fb.getPos();
-        const char* buf = fb.getBuf();
-        if ( buf[0] != '#' ) {
-            ++lines;
-            crc32 = smsc::util::crc32(crc32,buf,buflen);
-        } else {
-            // processing meta comments, i.e. version, crc, etc.
-        }
-        if ( rp_ ) {
-            if ( buf[buflen-1] != '\n' ) {
-                throw eyeline::informer::FileDataException(filePos,"not terminated by \\n");
-            }
-            rp_->parseRecord(buf,--buflen);
-        }
-        return true;
-    }
+    virtual bool readRecordData( size_t filePos, char* buf, size_t buflen );
 public:
     volatile bool*       stopping_;
     ProfileLogStreamRecordParser* rp_;
@@ -67,6 +59,46 @@ public:
     uint32_t    crc32;
     std::string nextFile;
 };
+
+
+bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
+                                                   char* buf,
+                                                   size_t buflen )
+{
+    char cr = '\0';
+    const bool res = (buf[0] != '#');
+    if ( res ) {
+        ++lines;
+        crc32 = smsc::util::crc32(crc32,buf,buflen);
+        std::swap(buf[buflen-1],cr);
+    } else {
+        // processing meta comments, i.e. version, crc, etc.
+        std::swap(buf[buflen-1],cr);
+        int pos = 0;
+        // trying to read trailer
+        unsigned linesRead, crcRead;
+        sscanf(buf,FILETRAILER,&linesRead,&crcRead,&pos);
+        if ( pos != 0 ) {
+            // it is a trailer
+            if ( lines != linesRead ) {
+                throw FileDataException(filePos,"not matched: linesRead=%u lines=%u",
+                                        linesRead, lines );
+            } else if ( crcRead != crc32 ) {
+                throw FileDataException(filePos,"not matched: crcRead=%08x crc32=%08x",
+                                        crcRead, crc32 );
+            }
+            // get the next file name
+            nextFile = buf+pos;
+        }
+    }
+    if (cr!='\n') {
+        throw FileDataException(filePos,"not terminated by \\n");
+    }
+    if ( rp_ ) {
+        rp_->parseRecord(buf,--buflen);
+    }
+    return res;
+}
 
 
 RollingFileStreamReader::RollingFileStreamReader() :
@@ -77,19 +109,56 @@ nextFile_()
 }
 
 
-void RollingFileStreamReader::read( const char* fullName,
-                                    volatile bool*       stopping,
+void RollingFileStreamReader::read( const char*    fullName,
+                                    volatile bool* stopping,
                                     ProfileLogStreamRecordParser* rp )
 {
-    eyeline::informer::FileGuard fg;
+    FileGuard fg;
     fg.ropen(fullName);
-    eyeline::informer::FileReader fr(fg);
+    FileReader fr(fg);
     RFR reader(stopping,rp);
-    eyeline::informer::TmpBuf<char,8192> buf;
+    TmpBuf<char,8192> buf;
     fr.readRecords( buf, reader );
     lines_ = reader.lines;
     crc32_ = reader.crc32;
     nextFile_ = reader.nextFile;
+}
+
+
+std::string RollingFileStreamReader::readNextFile( const char* fullName )
+{
+    FileGuard fg;
+    fg.ropen(fullName);
+    struct stat st;
+    TmpBuf<char,1024> tailbuf;
+    size_t pos = 0;
+    if ( fg.getStat(st).st_size > tailbuf.getSize() ) {
+        pos = st.st_size - tailbuf.getSize();
+    }
+    fg.seek(pos);
+    size_t wasread = fg.read(tailbuf.get(),tailbuf.getSize());
+    RFR rfr(0,0);
+    char* ptr = tailbuf.get();
+    if ( pos > 0 ) {
+        ptr = static_cast<char*>(memchr(ptr,'\n',wasread));
+        if ( !ptr ) {
+            throw InfosmeException(EXC_IOERROR,"linefeed is not found");
+        }
+        const size_t offset = ptr - tailbuf.get();
+        wasread -= offset;
+        pos += offset;
+    }
+    while ( wasread > 0 ) {
+        size_t reclen = rfr.readRecordLength(pos,ptr,wasread);
+        if ( reclen > wasread ) {
+            throw FileDataException(pos,"file '%s' is garbled",fullName);
+        }
+        rfr.readRecordData(pos,ptr,reclen);
+        wasread -= reclen;
+        pos += reclen;
+        ptr += reclen;
+    }
+    return rfr.nextFile;
 }
 
 
@@ -139,14 +208,40 @@ size_t RollingFileStream::formatPrefix( char* buf, size_t bufsize, const char* c
     tm rtm;
     localtime_r(&tv.tv_sec,&rtm);
     const unsigned msec = unsigned(tv.tv_usec / 1000);
-    size_t written = size_t(::snprintf(buf,bufsize,"%02u-%02u %02u:%02u:%02u,%03u %10.10s: ",
+    int pos;
+    size_t written = size_t(::snprintf(buf,bufsize,
+                                       ::PREFIXFORMAT,
                                        rtm.tm_mon+1, rtm.tm_mday,
-                                       rtm.tm_hour, rtm.tm_min, rtm.tm_sec, msec,
-                                       catname ));
+                                       rtm.tm_hour, rtm.tm_min,
+                                       rtm.tm_sec, msec,
+                                       catname, &pos ));
     if ( written >= bufsize ) {
         written = bufsize-1; 
     }
     return written;
+}
+
+
+size_t RollingFileStream::scanPrefix( const char* buf,
+                                      size_t bufsize,
+                                      tm& ltm, std::string& cat )
+{
+    memset(&ltm,0,sizeof(tm));
+    char catname[20];
+    unsigned msec;
+    int pos = 0;
+    sscanf( buf, ::PREFIXFORMATIN,
+            &ltm.tm_mon, &ltm.tm_mday,
+            &ltm.tm_hour, &ltm.tm_min,
+            &ltm.tm_sec, &msec,
+            catname, &pos );
+    if ( pos <= 0 || size_t(pos) > bufsize ) {
+        throw InfosmeException( EXC_IOERROR,
+                                "invalid prefix in line '%.*s'",
+                                int(bufsize), buf );
+    }
+    cat = catname;
+    return size_t(pos);
 }
 
 
@@ -332,7 +427,7 @@ void RollingFileStream::collectUnfinishedLogs( const char* prefix,
 void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
 {
     assert(file_.isOpened());
-    eyeline::informer::TmpBuf<char,1024> buf;
+    TmpBuf<char,1024> buf;
     makeFileSuffix( buf.get(), buf.getSize(), now);
     std::string newfileName(pathPrefix);
     newfileName.append( buf.get() );
@@ -389,8 +484,8 @@ void RollingFileStream::finishFile( smsc::core::buffers::File& oldf,
     smsc_log_debug(log_,"finishing current file: lines=%u crc32=%x next=%s",
                    lines, crc32, newname );
     char buf[80];
-    ::snprintf(buf, sizeof(buf), "# SUMMARY: lines: %u, crc32: %x, next: ",
-               lines, crc32 );
+    int pos;
+    ::snprintf(buf, sizeof(buf), ::FILETRAILER, lines, crc32, &pos );
     std::string line(buf);
     line.append(newname);
     line.push_back('\n');

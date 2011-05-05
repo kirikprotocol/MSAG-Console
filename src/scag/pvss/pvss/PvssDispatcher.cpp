@@ -101,7 +101,7 @@ PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp")),
 infraFlusher_(0),
-logRoller_( new ProfileLogRollerHardcoded()),
+logRoller_( new ProfileLogRollerHardcoded(readonly)),
 readonly_(readonly)
 {
     StorageNumbering::setInstance(nodeCfg.nodesCount);

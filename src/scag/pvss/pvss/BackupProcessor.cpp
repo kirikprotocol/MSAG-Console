@@ -16,9 +16,12 @@
 #include "scag/pvss/profile/RollingFileStream.h"
 
 using eyeline::informer::makeDirListing;
+using eyeline::informer::InfosmeException;
 using eyeline::informer::ErrnoException;
+using eyeline::informer::FileDataException;
 using eyeline::informer::FileGuard;
 using eyeline::informer::NoDotsNameFilter;
+using eyeline::informer::EXC_IOERROR;
 
 namespace scag2 {
 namespace pvss {
@@ -58,11 +61,129 @@ struct BackupProcessor::BackupParser : public ProfileLogStreamRecordParser
     BackupParser( BackupProcessor& proc ) : proc_(proc) {}
     virtual void parseRecord( const char* record, size_t reclen )
     {
+        if ( record[0] == '#' ) {
+            // FIXME: impl read version
+            return;
+        }
+
         // parsing the record
+        ::tm ltm;
+        const char* ptr = record;
+        size_t ptrlen = reclen;
+        const size_t pfxlen = RollingFileStream::scanPrefix( ptr,
+                                                             ptrlen,
+                                                             ltm,
+                                                             catname_ );
+        assert( ptrlen > pfxlen );
+
+        // determine the scope using fast switch
+        if ( catname_.size() != 9 ) {
+            throw InfosmeException(EXC_IOERROR,"bad category in '%.*s'",reclen,record);
+        }
+        ScopeType scope = ScopeType(0);
+        switch (catname_[5]) {
+        case 'a' :
+            if ( !strcmp(catname_.c_str(),"pvss.abnt") ) { scope = SCOPE_ABONENT; }
+            break;
+        case 'o' :
+            if ( !strcmp(catname_.c_str(),"pvss.oper") ) { scope = SCOPE_OPERATOR; }
+            break;
+        case 'p' :
+            if ( !strcmp(catname_.c_str(),"pvss.prov") ) { scope = SCOPE_PROVIDER; }
+            break;
+        case 's' :
+            if ( !strcmp(catname_.c_str(),"pvss.serv") ) { scope = SCOPE_SERVICE; }
+            break;
+        default:
+            break;
+        }
+        if ( scope == ScopeType(0) ) {
+            throw InfosmeException(EXC_IOERROR,"invalid category in '%.*s'",reclen,record);
+        }
+
+        ptr += pfxlen;
+        ptrlen -= pfxlen;
+
+        // reading the operation type and key
+        int pos = 0;
+        char act;
+        ProfileKey profileKey;
+        if ( scope == SCOPE_ABONENT ) {
+            char skey[60];
+            sscanf( ptr, "%c key=%59s %n", &act, skey, &pos );
+            if ( pos <= 0 || pos > int(ptrlen) ) {
+                throw InfosmeException(EXC_IOERROR,"invalid act/key in '%.*s'",reclen,record);
+            }
+            profileKey.setAbonentKey( skey );
+        } else {
+            unsigned ikey;
+            sscanf( ptr, "%c key=%u %n", &act, &ikey, &pos );
+            if ( pos <= 0 || pos > int(ptrlen) ) {
+                throw InfosmeException(EXC_IOERROR,"invalid act/key in '%.*s'",reclen,record);
+            }
+            switch (scope) {
+            case SCOPE_SERVICE : profileKey.setServiceKey(ikey); break;
+            case SCOPE_OPERATOR : profileKey.setOperatorKey(ikey); break;
+            case SCOPE_PROVIDER : profileKey.setProviderKey(ikey); break;
+            default: abort();
+            }
+        }
+        std::auto_ptr<ProfileCommand> cmd;
+
+        // reading property
+        ptr += size_t(pos);
+        ptrlen -= size_t(pos);
+        pos = 0;
+        switch (act) {
+        case 'A':
+        case 'U' : {
+            sscanf(ptr,"property=%n",&pos);
+            if ( pos <= 0 || pos >= int(ptrlen) ) {
+                throw InfosmeException(EXC_IOERROR,"invalid property in '%.*s'",reclen,record);
+            }
+            Property property;
+            try {
+                property.fromString(ptr+pos);
+            } catch ( std::exception& e ) {
+                throw InfosmeException(EXC_IOERROR,"cannot parse property in '%.*s'",reclen,record);
+            }
+            SetCommand* kmd = new SetCommand();
+            cmd.reset(kmd);
+            kmd->setProperty(property);
+            break;
+        }
+        case 'E' :
+        case 'D' : {
+            sscanf(ptr,"name=%n",&pos);
+            if ( pos <= 0 || pos >= int(ptrlen) ) {
+                throw InfosmeException(EXC_IOERROR,"invalid property in '%.*s'",reclen,record);
+            }
+            DelCommand* kmd = new DelCommand();
+            cmd.reset(kmd);
+            kmd->setVarName( ptr + pos );
+            break;
+        }
+        case 'G' : {
+            break;
+        }
+        default:
+            throw InfosmeException(EXC_IOERROR,"unknown action '%c' in '%.*s'",act,reclen,record);
+        }
+        
+        ProfileRequest request(profileKey,cmd.release());
+        core::server::Server::SyncLogic* logic =
+            proc_.dispatcher_->getSyncLogic(proc_.dispatcher_->getIndex(request));
+        if (!logic) {
+            smsc_log_warn(proc_.log_,"cannot obtain logic on key=%s",profileKey.toString().c_str());
+            return;
+        }
+        delete logic->process(request,true);
+        proc_.controlSpeed();
     }
 
 private:
     BackupProcessor& proc_;
+    std::string catname_;   // working buffer for catname
 };
 
 // ==================================================================
@@ -141,7 +262,8 @@ log_(0),
 archiveDir_(archiveDir),
 inputDir_(backupPrefix),
 backupPrefix_(backupPrefix),
-backupSuffix_(backupSuffix)
+backupSuffix_(backupSuffix),
+speedControl_(propertiesPerSec)
 {
     log_ = smsc::logger::Logger::getInstance("bck.proc");
 
@@ -221,7 +343,15 @@ std::string BackupProcessor::readTheNextFile( const std::string& dir )
               i != entries.rend();
               ++i ) {
             if ( extractDateTime(*i) ) {
-                return *i;
+                // good file found, we have to parse its trail
+                RollingFileStreamReader rfsr;
+                std::string filename(dir);
+                filename.append(*i);
+                const std::string res = rfsr.readNextFile(filename.c_str());
+                if (res.empty()) {
+                    throw InfosmeException(EXC_IOERROR,"invalid file '%s' in archive",i->c_str());
+                }
+                return res;
             }
         }
     }
@@ -246,6 +376,20 @@ time_t BackupProcessor::extractDateTime( const std::string& fn ) const
     return RollingFileStream::extractTime( fn.c_str(),
                                            backupPrefix_.c_str(),
                                            backupSuffix_.c_str() );
+}
+
+
+void BackupProcessor::controlSpeed()
+{
+    ++speedCounter_;
+    speedControl_.consumeQuant();
+    const util::msectime_type now = util::currentTimeMillis();
+    static util::msectime_type maxDelay = 5000;
+    util::msectime_type towait = speedControl_.isReady( now, maxDelay );
+    if ( towait > 10 && !stopping_ ) {
+        MutexGuard mg(stopMon_);
+        stopMon_.wait(towait);
+    }
 }
 
 
@@ -366,9 +510,7 @@ time_t BackupProcessor::BackupProcessingTask::readTime( const char* fname ) cons
 
 int BackupProcessor::BackupProcessingTask::Execute()
 {
-    const static time_t interval = 3600;
-    // bool backupSkipOnce = processor_.backupSkipOnce_;
-
+    const int failureSleep = 3000;
     smsc_log_info(log_,"starting backup processing task");
 
     try {
@@ -385,6 +527,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
         // then in the loop
 
         bool wasnotthere = false;
+        size_t badFilePos = size_t(-1);
         while ( ! isStopping ) {
 
             time_t fileDateTime = 0;
@@ -406,12 +549,12 @@ int BackupProcessor::BackupProcessingTask::Execute()
                             break;
                         }
                     } catch ( std::exception& e ) {
-                        smsc_log_warn(log_,"file '%s' has invalid format",i->c_str());
+                        smsc_log_debug(log_,"file '%s' has invalid format, skipped",i->c_str());
                     }
                 }
                 if ( !fileDateTime ) {
                     MutexGuard mg(mon_);
-                    mon_.wait(10000);
+                    mon_.wait(failureSleep);
                     continue;
                 }
             } else {
@@ -427,7 +570,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
                 if ( errno == ENOENT ) {
                     // not present yet
                     MutexGuard mg(mon_);
-                    mon_.wait(1000);
+                    mon_.wait(failureSleep);
                     wasnotthere = true;
                     continue;
                 }
@@ -440,7 +583,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
                 // wait one additional second to allow file to settle
                 wasnotthere = false;
                 MutexGuard mg(mon_);
-                mon_.wait(1000);
+                mon_.wait(failureSleep);
                 if ( isStopping ) { break; }
             }
 
@@ -449,14 +592,29 @@ int BackupProcessor::BackupProcessingTask::Execute()
             try {
                 BackupParser bp(processor_);
                 rfsr.read( filename.c_str(), &isStopping, &bp);
-            } catch ( std::exception& e ) {
-                smsc_log_warn(log_,"file '%s' parsing exc: %s",
-                              filename.c_str(), e.what() );
+            } catch ( FileDataException& e ) {
+                smsc_log_warn(log_,"file '%s' parsing exc at pos=%llu: %s",
+                              filename.c_str(),
+                              static_cast<unsigned long long>(e.getPos()),
+                              e.what() );
+                if ( badFilePos == e.getPos() ) {
+                    throw FileDataException(e.getPos(),
+                                            "file '%s' persistent parsing exc: %s",
+                                            filename.c_str(), e.what());
+                }
+                badFilePos = e.getPos();
+                MutexGuard mg(mon_);
+                mon_.wait(failureSleep);
                 continue;
-            }
+            } // other exceptions are not handled
+
+            badFilePos = size_t(-1); // reset bad file pos
+
             if ( ! rfsr.isFinished() ) {
                 smsc_log_warn(log_,"file '%s' is not yet finished",
                               filename.c_str());
+                MutexGuard mg(mon_);
+                mon_.wait(failureSleep);
                 continue;
             }
 
@@ -489,7 +647,8 @@ int BackupProcessor::BackupProcessingTask::Execute()
         }
     } catch ( std::exception& e ) {
         smsc_log_error(log_,"backup proc exc: %s",e.what());
-        return 1;
+        fprintf(stderr,"backup proc exc: %s\n",e.what());
+        std::exit(1);
     }
     return 0;
 }

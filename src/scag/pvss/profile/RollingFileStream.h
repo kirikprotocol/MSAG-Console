@@ -17,6 +17,8 @@ public:
     void read( const char*                   fullName,
                volatile bool*                isStopping,
                ProfileLogStreamRecordParser* rp );
+    
+    std::string readNextFile( const char* fullName );
 
     uint32_t getLines() const { return lines_; }
     uint32_t getCrc32() const { return crc32_; }
@@ -43,6 +45,12 @@ public:
     static time_t extractTime( const char* filename,
                                const char* prefix,
                                const char* suffix );
+    /// scan the prefix of the record, filling ltm and catname
+    /// @return the number of chars consumed by prefix.
+    /// NOTE: may throw exception on invalid prefix.
+    static size_t scanPrefix( const char* buf,
+                              size_t bufsize,
+                              ::tm& ltm, std::string& catname );
 
 protected:
     virtual size_t formatPrefix( char* buf, size_t bufsize, const char* catname ) const throw();

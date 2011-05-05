@@ -30,7 +30,7 @@ public:
     uint32_t getModulus() const { return modulus_; }
     void setModulus( uint32_t mod ) { modulus_ = mod; }
 
-    virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )
+    virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
         return visitor.visitIncModCommand( *this );
     }

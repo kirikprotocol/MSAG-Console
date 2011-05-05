@@ -22,44 +22,44 @@
 namespace scag2 {
 namespace pvss  {
 
-bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
-                                                ProfileRequest&    profileRequest,
-                                                Profile*           pf,
-                                                bool               createProfile )
+bool ProfileCommandProcessor::ReadonlyFilter
+    ::applyCommonLogic( const std::string& profkey,
+                        ProfileRequest&    profileRequest,
+                        Profile*           pf,
+                        bool               createProfile )
 {
     if (pf) {
         if (profileRequest.hasTiming()) { profileRequest.timingMark("pfgot"); }
         // smsc_log_debug(log_,"FIXME(pre): prof=%s",pf->toString().c_str());
         if ( pf->getKey() != profkey ) {
-            smsc_log_warn(log_,"key mismatch: pf=%p pf.key=%s req.key=%s",
+            smsc_log_warn(proc_.log_,"key mismatch: pf=%p pf.key=%s req.key=%s",
                           pf,pf->getKey().c_str(),profkey.c_str());
             pf->setKey(profkey);
         }
     }
 
     // full cleanup
-    resetProfile(pf);
-
+    proc_.resetProfile(pf);
     profileRequest.getCommand()->visit(*this);
     if (!pf) {
         if (createProfile) {
-            smsc_log_warn(log_, "%p: req=%p can't create profile %s", this, &profileRequest, profkey.c_str());
+            smsc_log_warn(proc_.log_, "%p: req=%p can't create profile %s", this, &profileRequest, profkey.c_str());
         }
         return false;
     }
 
     bool ret;
-    if (rollback_) {
-        smsc_log_debug(log_, "%p: %p rollback profile %s changes", this, &profileRequest, profkey.c_str());
-        backup_->rollback(*profile_);
-        profile_->setChanged(false);
+    if (proc_.rollback_) {
+        smsc_log_debug(proc_.log_, "%p: %p rollback profile %s changes", this, &profileRequest, profkey.c_str());
+        proc_.backup_->rollback(*proc_.profile_);
+        proc_.profile_->setChanged(false);
         ret = false;
         if (profileRequest.hasTiming()) { profileRequest.timingMark("rollback"); }
     } else {
         // NOTE: flush logs has been moved outside this method to be able to rollback.
         // backup_->flushLogs(*profile_);
         if (pf->isChanged()) {
-            smsc_log_debug(log_,"profile %s needs flush",profkey.c_str());
+            smsc_log_debug(proc_.log_,"profile %s needs flush",profkey.c_str());
         }
         ret = true;
         if (profileRequest.hasTiming()) { profileRequest.timingMark("proc_ok"); }
@@ -73,7 +73,6 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
     }
     // smsc_log_debug(log_,"FIXME(post): prof=%s",pf->toString().c_str());
     return ret;
-    
 }
 
 
@@ -100,24 +99,26 @@ void ProfileCommandProcessor::resetProfile(Profile *pf)
 }
 
 
-bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {
-    ProfileCommandProcessor proc(*backup_,readonly_,profile_);
+bool ProfileCommandProcessor::ReadonlyFilter::visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  
+{
+    ProfileCommandProcessor proc(*proc_.backup_,proc_.profile_);
     BatchResponse* resp = new BatchResponse(StatusType::OK);
-    response_.reset(resp);
+    proc_.response_.reset(resp);
     std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
     typedef std::vector<BatchRequestComponent*>::iterator BatchIterator;
+    ReadonlyFilter rf(proc,readonly_);
     if (cmd.isTransactional()) {
         for (BatchIterator i = content.begin(); i != content.end(); ++i) {
-            bool result = (*i)->visit(proc);
+            bool result = (*i)->visit(rf);
             resp->addComponent(static_cast<BatchResponseComponent*>(proc.getResponse()));
             if (!result) {
-                rollback_ = true;
+                proc_.rollback_ = true;
                 return false;
             }
         }
     } else {
         for (BatchIterator i = content.begin(); i != content.end(); ++i) {
-            (*i)->visit(proc);
+            (*i)->visit(rf);
             resp->addComponent(static_cast<BatchResponseComponent*>(proc.getResponse()));
         }
     }
@@ -125,15 +126,15 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
 }
 
 
-bool ProfileCommandProcessor::visitGetProfileCommand(GetProfileCommand& cmd)
+bool ProfileCommandProcessor::ReadonlyFilter::visitGetProfileCommand(GetProfileCommand& cmd)
 {
     GetProfileResponse* resp = new GetProfileResponse(StatusType::OK);
-    response_.reset(resp);
-    if ( !profile_ ) {
-        response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
+    proc_.response_.reset(resp);
+    if ( !proc_.profile_ ) {
+        proc_.response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
         return false;
     }
-    const PropertyHash& ph = profile_->getProperties();
+    const PropertyHash& ph = proc_.profile_->getProperties();
     char* pk;
     Property* prop;
     for ( PropertyHash::Iterator i(&ph); i.Next(pk,prop); ) {
@@ -145,115 +146,115 @@ bool ProfileCommandProcessor::visitGetProfileCommand(GetProfileCommand& cmd)
 }
 
 
-bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
+bool ProfileCommandProcessor::ReadonlyFilter::visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
     if (readonly_) {
         throw smsc::util::Exception("in readonly mode");
     }
-    response_.reset(new DelResponse());    
+    proc_.response_.reset(new DelResponse());    
     std::auto_ptr<Property> holder;
-    if (!profile_ || !profile_->DeleteProperty(cmd.getVarName().c_str(),&holder)) {
-        response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
+    if (!proc_.profile_ || !proc_.profile_->DeleteProperty(cmd.getVarName().c_str(),&holder)) {
+        proc_.response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
         return false;
     }
-    backup_->delProperty(holder.release());
-    response_->setStatus(StatusType::OK);
-    profile_->setChanged(true);
+    proc_.backup_->delProperty(holder.release());
+    proc_.response_->setStatus(StatusType::OK);
+    proc_.profile_->setChanged(true);
     return true;
 }
 
 
-bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapException) */  {
-    response_.reset(new GetResponse());
-    if (!profile_) {
-        response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
+bool ProfileCommandProcessor::ReadonlyFilter::visitGetCommand(GetCommand &cmd) /* throw(PvapException) */  {
+    proc_.response_.reset(new GetResponse());
+    if (!proc_.profile_) {
+        proc_.response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
         return false;
     }
-    Property* p = profile_->GetProperty(cmd.getVarName().c_str());
+    Property* p = proc_.profile_->GetProperty(cmd.getVarName().c_str());
     if (!p) {
-        response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
+        proc_.response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
         return false;
     }
-    backup_->getProperty(*p);
+    proc_.backup_->getProperty(*p);
     if(p->getTimePolicy() == R_ACCESS) {
         if (readonly_) {
             throw smsc::util::Exception("in readonly mode");
         }
-        backup_->fixTimePolicy(*p);
+        proc_.backup_->fixTimePolicy(*p);
         p->ReadAccess();
-        profile_->setChanged(true);
+        proc_.profile_->setChanged(true);
     }
 
-    response_->setStatus(StatusType::OK);
-    static_cast<GetResponse*>(response_.get())->setProperty(*p);
+    proc_.response_->setStatus(StatusType::OK);
+    static_cast<GetResponse*>(proc_.response_.get())->setProperty(*p);
     return true;
 }
 
-bool ProfileCommandProcessor::visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
+bool ProfileCommandProcessor::ReadonlyFilter::visitIncCommand(IncCommand &cmd) /* throw(PvapException) */  {
     if (readonly_) {
         throw smsc::util::Exception("in readonly mode");
     }
     uint32_t result = 0;
-    uint8_t status = incModProperty(cmd.getProperty(), 0, result);
+    uint8_t status = proc_.incModProperty(cmd.getProperty(), 0, result);
     IncResponse *incResp = new IncResponse(status);
     incResp->setIncResult(cmd.isIncResult());
-    response_.reset( incResp );
+    proc_.response_.reset( incResp );
     if (status != StatusType::OK) {
         return false;
     }
-    static_cast<IncResponse*>(response_.get())->setResult(result);
+    static_cast<IncResponse*>(proc_.response_.get())->setResult(result);
     return true;
 }
 
-bool ProfileCommandProcessor::visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */  {
+bool ProfileCommandProcessor::ReadonlyFilter::visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */  {
     if (readonly_) {
         throw smsc::util::Exception("in readonly mode");
     }
     uint32_t result = 0;
-    response_.reset( new IncResponse());
-    if (!profile_) {
-        response_->setStatus(StatusType::IO_ERROR);
+    proc_.response_.reset( new IncResponse());
+    if (!proc_.profile_) {
+        proc_.response_->setStatus(StatusType::IO_ERROR);
         return false;
     }
-    uint8_t status = incModProperty(cmd.getProperty(), cmd.getModulus(), result);
-    response_->setStatus(status);
+    uint8_t status = proc_.incModProperty(cmd.getProperty(), cmd.getModulus(), result);
+    proc_.response_->setStatus(status);
     if (status != StatusType::OK) {
         return false;
     }
-    static_cast<IncResponse*>(response_.get())->setResult(result);
+    static_cast<IncResponse*>(proc_.response_.get())->setResult(result);
     return true;
 }
 
-bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapException) */  {
+bool ProfileCommandProcessor::ReadonlyFilter::visitSetCommand(SetCommand &cmd) /* throw(PvapException) */  {
     if (readonly_) {
         throw smsc::util::Exception("in readonly mode");
     }
     const Property& prop = cmd.getProperty();
-    response_.reset( new SetResponse() );
-    if (!profile_) {
-        response_->setStatus(StatusType::IO_ERROR);
+    proc_.response_.reset( new SetResponse() );
+    if (!proc_.profile_) {
+        proc_.response_->setStatus(StatusType::IO_ERROR);
         return false;
     }
     if (prop.isExpired()) {
-        response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
+        proc_.response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
         return false;
     }
-    Property* p = profile_->GetProperty(prop.getName());
+    Property* p = proc_.profile_->GetProperty(prop.getName());
     if (p != NULL) {
-        backup_->fixProperty(*p);
+        proc_.backup_->fixProperty(*p);
         p->setValue(prop);
         // FIXED by bukind on 20100209, now timepolicy is also updated!
         p->setTimePolicy(prop.getTimePolicy(),prop.getFinalDate(),prop.getLifeTime());
         p->WriteAccess();
-        backup_->propertyUpdated(*p);
+        proc_.backup_->propertyUpdated(*p);
     } else {
-        if (!profile_->AddProperty(prop)) {
-            response_->setStatus(StatusType::BAD_REQUEST);
+        if (!proc_.profile_->AddProperty(prop)) {
+            proc_.response_->setStatus(StatusType::BAD_REQUEST);
             return false;
         }
-        backup_->addProperty(prop);
+        proc_.backup_->addProperty(prop);
     }
-    profile_->setChanged(true);
-    response_->setStatus(StatusType::OK);
+    proc_.profile_->setChanged(true);
+    proc_.response_->setStatus(StatusType::OK);
     return true;
 }
 
