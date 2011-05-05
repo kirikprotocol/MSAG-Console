@@ -51,7 +51,8 @@ bool ProfileLogRollerHardcoded::readConfiguration()
     try {
 
         // 1. reading common params
-        const unsigned reloadInterval = cwrap1.getInt("configReloadInterval",60,0,10000);
+        const unsigned reloadInterval = backupMode_ ? 0 :
+            cwrap1.getInt("configReloadInterval",60,0,10000);
         if ( reloadInterval > 0 && reloadInterval < 30 ) {
             throw smsc::util::Exception("configReloadInterval is too small (%u)",reloadInterval);
         }
@@ -60,7 +61,8 @@ bool ProfileLogRollerHardcoded::readConfiguration()
         if ( finalSuffix.empty() || finalSuffix == ".log" ) {
             throw smsc::util::Exception("finalSuffix is not correct ('%s')",finalSuffix.c_str());
         }
-        unsigned rollingInterval = cwrap1.getInt("rollingInterval",300,60,3600);
+        const unsigned rollingInterval = backupMode_ ? 300 :
+            cwrap1.getInt("rollingInterval",300,60,3600);
 
         // adding streams
         const char* streamName = "pvss.bks";
