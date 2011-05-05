@@ -28,8 +28,8 @@ public:
     /// return the size of record length in octets.
     virtual size_t recordLengthSize() const { return LENSIZE; }
     /// read record length from fb and checks its validity.
-    virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
-        const size_t rl(fb.get16());
+    virtual size_t readRecordLength( size_t filePos, char* buf, size_t buflen ) {
+        const size_t rl(FromBuf(buf,buflen).get16());
         if ( rl > 100 ) {
             throw InfosmeException(EXC_BADFILE,"record at %llu has invalid len: %u",
                                    ulonglong(filePos), unsigned(rl));
@@ -37,7 +37,9 @@ public:
         return rl;
     }
     /// read the record data (w/o length)
-    virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
+    virtual bool readRecordData( size_t filePos, char* buf, size_t buflen ) 
+    {
+        FromBuf fb(buf,buflen);
         const dlvid_type dlvId = fb.get32();
         InputRegionRecord rec;
         rec.regionId = fb.get32();

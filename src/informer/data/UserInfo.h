@@ -8,8 +8,8 @@
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/io/Typedefs.h"
 #include "informer/io/InfosmeException.h"
+#include "informer/io/SpeedControl.h"
 #include "Delivery.h"
-#include "SpeedControl.h"
 
 namespace eyeline {
 namespace informer {

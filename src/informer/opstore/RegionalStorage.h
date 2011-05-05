@@ -8,8 +8,8 @@
 #include "core/synchronization/Condition.hpp"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/io/RelockMutexGuard.h"
+#include "informer/io/SpeedControl.h"
 #include "informer/data/InputMessageSource.h"
-#include "informer/data/SpeedControl.h"
 #include "logger/Logger.h"
 
 namespace smsc {

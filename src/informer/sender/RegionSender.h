@@ -4,9 +4,9 @@
 #include <map>
 #include "informer/data/Region.h"
 #include "informer/io/EmbedRefPtr.h"
+#include "informer/io/SpeedControl.h"
 #include "informer/opstore/RegionalStorage.h"
 #include "ScoredPtrList.h"
-#include "informer/data/SpeedControl.h"
 #include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {

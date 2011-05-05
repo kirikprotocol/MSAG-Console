@@ -74,8 +74,9 @@ public:
     virtual size_t recordLengthSize() const { return LENSIZE; }
 
     /// read record length from fb and checks its validity.
-    virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
-        const size_t rl(fb.get16());
+    virtual size_t readRecordLength( size_t filePos, char* buf, size_t buflen )
+    {
+        const size_t rl(FromBuf(buf,buflen).get16());
         if (rl>10000) {
             throw InfosmeException(EXC_BADFILE,"reclen=%u is too big",unsigned(rl));
         }
@@ -83,8 +84,10 @@ public:
     }
 
     /// read the record data (w/o length)
-    virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
-        ro_.roff += fb.getLen();
+    virtual bool readRecordData( size_t filePos, char* buf, size_t buflen )
+    {
+        FromBuf fb(buf,buflen);
+        ro_.roff += buflen;
         const uint16_t version = fb.get16();
         if (version!=1 && version!=2) {
             throw InfosmeException(EXC_BADFILE,"unsupported version %u at %llu",

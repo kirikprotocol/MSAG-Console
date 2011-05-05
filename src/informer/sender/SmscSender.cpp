@@ -3,12 +3,12 @@
 #include "SmscSender.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/CoreSmscStats.h"
-#include "informer/data/SpeedControl.h"
 #include "informer/data/DeliveryInfo.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/FileReader.h"
 #include "informer/io/IOConverter.h"
 #include "informer/io/InfosmeException.h"
+#include "informer/io/SpeedControl.h"
 #include "informer/io/Typedefs.h"
 #include "informer/io/UTF8.h"
 #include "smpp/smpp_structures.h"
@@ -70,8 +70,9 @@ public:
             return LENSIZE;
         }
 
-        virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
-            size_t rl(fb.get16());
+        virtual size_t readRecordLength( size_t filePos, char* buf, size_t buflen )
+        {
+            size_t rl(FromBuf(buf,buflen).get16());
             if (rl>100) {
                 throw InfosmeException(EXC_BADFILE,"record at %llu has invalid len: %u",
                                        ulonglong(filePos), unsigned(rl));
@@ -79,7 +80,9 @@ public:
             return rl;
         }
 
-        virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
+        virtual bool readRecordData( size_t filePos, char* buf, size_t buflen )
+        {
+            FromBuf fb(buf,buflen);
             ReceiptData rd;
             rd.drmId.dlvId = fb.get32();
             rd.drmId.regId = fb.get32();

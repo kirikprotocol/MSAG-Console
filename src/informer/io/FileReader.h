@@ -5,7 +5,7 @@
 #include "InfosmeException.h"
 #include "FileGuard.h"
 #include "Typedefs.h"
-#include "IOConverter.h"
+// #include "IOConverter.h"
 
 namespace eyeline {
 namespace informer {
@@ -25,11 +25,16 @@ public:
 
         /// read record length from fb and checks its validity.
         /// for special-char-terminated records please find out it from the stream.
-        virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) = 0;
+        virtual size_t readRecordLength( size_t filePos,
+                                         char* buf,
+                                         size_t buflen ) = 0;
 
         /// read the record data (w/o length)
         /// @return false if the record is filtered.
-        virtual bool readRecordData( size_t filePos, FromBuf& fb ) = 0;
+        /// @param filePos -- is the position of the beginning of the record (including length)
+        virtual bool readRecordData( size_t filePos,
+                                     char* buf,
+                                     size_t buflen ) = 0;
     };
 
     FileReader( FileGuard& fg ) : fg_(fg) {}

@@ -5,7 +5,7 @@
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "informer/data/DeliveryInfo.h"
-#include "informer/data/SpeedControl.h"
+#include "informer/io/SpeedControl.h"
 #include "informer/io/Typedefs.h"
 #include "informer/newstore/InputJournal.h"
 #include "informer/opstore/DeliveryImpl.h"

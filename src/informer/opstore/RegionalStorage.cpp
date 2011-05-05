@@ -3,6 +3,7 @@
 #include "informer/io/UnlockMutexGuard.h"
 #include "informer/io/FileReader.h"
 #include "informer/io/DirListing.h"
+#include "informer/io/IOConverter.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/Region.h"
 #include "informer/data/DeliveryActivator.h"
@@ -133,9 +134,10 @@ public:
         return LENSIZE;
     }
 
-    virtual size_t readRecordLength( size_t filePos, FromBuf& fb )
+    virtual size_t readRecordLength( size_t filePos, char* buf, size_t buflen )
     {
-        size_t rl(fb.get16());
+        assert(buflen>=LENSIZE);
+        size_t rl( FromBuf(buf,buflen).get16() );
         if (rl > 10000) {
             throw InfosmeException(EXC_BADFILE,"record at %llu has invalid len: %u",
                                    ulonglong(filePos), unsigned(rl));
@@ -143,8 +145,9 @@ public:
         return rl;
     }
 
-    virtual bool readRecordData( size_t filePos, FromBuf& fb )
+    virtual bool readRecordData( size_t filePos, char* buf, size_t buflen )
     {
+        FromBuf fb(buf,buflen);
         try {
             msgList_.push_back(MessageLocker());
             Message& msg = msgList_.rbegin()->msg;

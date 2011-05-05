@@ -56,8 +56,8 @@ public:
         return LENSIZE;
     }
     /// read record length from fb and checks its validity.
-    virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
-        size_t rl(fb.get16());
+    virtual size_t readRecordLength( size_t filePos, char* buf, size_t buflen ) {
+        size_t rl(FromBuf(buf,buflen).get16());
         if ( rl > 10000 ) {
             throw InfosmeException(EXC_BADFILE,"record at %llu has invalid len: %u",
                                    ulonglong(filePos), unsigned(rl));
@@ -65,12 +65,12 @@ public:
         return rl;
     }
     /// read the record data (w/o length)
-    virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
+    virtual bool readRecordData( size_t filePos, char* buf, size_t buflen )
+    {
+        FromBuf fb(buf,buflen);
         if (log_->isDebugEnabled()) {
             HexDump hd;
             HexDump::string_type dump;
-            const size_t buflen = fb.getLen() - fb.getPos();
-            const char* buf = fb.getBuf();
             dump.reserve(buflen*5);
             hd.hexdump(dump,buf,buflen);
             hd.strdump(dump,buf,buflen);

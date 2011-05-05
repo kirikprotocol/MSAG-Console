@@ -47,10 +47,13 @@ size_t FileReader::readRecords( TmpBufBase<char>& buf,
             if (ptr + lensize > buf.getCurPtr()) {
                 break; // need more data
             }
-            FromBuf fb(ptr,lensize ? lensize : buf.getCurPtr()-ptr);
-            const size_t reclen = reader.readRecordLength(filePos,fb) + lensize;
+            const size_t reclen = lensize +
+                reader.readRecordLength(filePos,
+                                        ptr,
+                                        lensize ? lensize :
+                                        buf.getCurPtr()-ptr );
             smsc_log_debug(log_,"reclen=%u",unsigned(reclen));
-            if (ptr+reclen > buf.getCurPtr()) {
+            if (ptr + reclen > buf.getCurPtr()) {
                 break; // need more data
             }
             smsc_log_debug(log_,"processing record=%u len=%u at pos=%u, fpos=%llu",
@@ -58,8 +61,10 @@ size_t FileReader::readRecords( TmpBufBase<char>& buf,
                            unsigned(reclen),
                            unsigned(ptr-buf.get()),
                            ulonglong(filePos));
-            fb.setLen(reclen);
-            if (reader.readRecordData(filePos,fb)) {
+            // fb.setLen(reclen);
+            if (reader.readRecordData(filePos,
+                                      ptr+lensize,
+                                      reclen-lensize)) {
                 ++total;
             }
             ptr += reclen;
