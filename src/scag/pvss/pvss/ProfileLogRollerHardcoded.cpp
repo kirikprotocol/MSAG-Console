@@ -25,7 +25,7 @@ bool ProfileLogRollerHardcoded::readConfiguration()
         do {
             if ( lastConfigTime_ == 0 ) break;
             // consecutive (not the first) attempt
-            if ( configReloadInterval_ == 0 ) return false;
+            if ( configReloadInterval_ == 0 || backupMode_ ) return false;
             if ( time_t(lastConfigTime_ + configReloadInterval_) > now ) return false;
         } while (false);
         lastConfigTime_ = now;
