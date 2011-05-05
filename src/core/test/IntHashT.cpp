@@ -34,7 +34,7 @@ public:
   TstElement_T(const TstElement_T & cp_obj)
     : _instId(cp_obj._instId + 1)
   {
-    _val = cp_obj.use_val;
+    _val = cp_obj._val;
 #ifdef VAL_INSTANCES_DEBUG
     fprintf(stderr, "TstElement_T(inst=%u): %s copied\n",  _instId,
             smsc::util::csv::CSValueTraits_T<_TArg>::val2str(_val).c_str());
@@ -89,8 +89,9 @@ struct HashTester_T {
 
   typedef TstElement_T<_KeyArg>
     CachedValue;
-  typedef smsc::core::buffers::IntHash_T<CachedValue, _KeyArg, _IHKeyTraitsArg>
-    TstCache_t;
+  typedef smsc::core::buffers::IntHash_T<
+    CachedValue, _KeyArg, smsc::core::buffers::IHashSlot_T, _IHKeyTraitsArg
+  > TstCache_t;
 
   const char *    _hashId;
 
