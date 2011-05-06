@@ -152,11 +152,11 @@ public:
   //to rehashing enforced by insertion.
   class iterator {
   protected:
-    size_type         _hIdx;
-    const IntHash_T * _pHash;
+    size_type     _hIdx;
+    IntHash_T *   _pHash;
 
     friend class IntHash_T;
-    iterator(const IntHash_T & use_owner, size_type use_idx)
+    iterator(IntHash_T & use_owner, size_type use_idx)
       : _hIdx(use_idx), _pHash(&use_owner)
     {
       searchNext();
@@ -189,25 +189,25 @@ public:
     //
     bool isEnd(void) const { return (_hIdx == _pHash->_hArr.size()); }
 
-/*    value_type * get(void)
+    value_type * get(void)
     {
       return ((_hIdx < _pHash->_hArr.size()) && _pHash->_hArr.hasValueAt(_hIdx)) ?
             &_pHash->_hArr.at(_hIdx) : NULL;
-    }*/
+    }
     //
-    //const 
-    value_type * get(void) const
+    const value_type * get(void) const
     {
       return ((_hIdx < _pHash->_hArr.size()) && _pHash->_hArr.hasValueAt(_hIdx)) ?
             &_pHash->_hArr.at(_hIdx) : NULL;
     }
 
     //
-    //const value_type * operator->(void) const { return get(); }
+    const value_type * operator->(void) const { return get(); }
     //
-    value_type * operator->(void) const { return get(); }
+    value_type * operator->(void) { return get(); }
 
-    value_type & operator*(void) const { return *get(); }
+    const value_type & operator*(void) const { return *get(); }
+    value_type & operator*(void) { return *get(); }
 
     bool operator==(const iterator & cmp_obj) const
     {
@@ -240,14 +240,108 @@ public:
     }
   };
 
-  iterator begin(void) const
+
+  class const_iterator {
+  protected:
+    size_type         _hIdx;
+    const IntHash_T * _pHash;
+
+    friend class IntHash_T;
+    const_iterator(const IntHash_T & use_owner, size_type use_idx)
+      : _hIdx(use_idx), _pHash(&use_owner)
+    {
+      searchNext();
+    }
+
+    void searchNext(void)
+    {
+      while ((_hIdx < _pHash->_hArr.size()) && !_pHash->_hArr.hasValueAt(_hIdx))
+        ++_hIdx;
+    }
+
+  public:
+    const_iterator() : _hIdx(0), _pHash(NULL)
+    { }
+    const_iterator(const const_iterator & src)
+      : _hIdx(src._hIdx), _pHash(src._pHash)
+    { }
+    const_iterator(const iterator & src)
+      : _hIdx(src._hIdx), _pHash(src._pHash)
+    { }
+    //
+    ~const_iterator()
+    { }
+
+    const_iterator & operator=(const const_iterator & src)
+    {
+      _hIdx = src._hIdx;
+      _pHash = src._pHash;
+      return *this;
+    }
+    //
+    void seekEnd(void) { _hIdx = _pHash->_hArr.size(); }
+    //
+    bool isEnd(void) const { return (_hIdx == _pHash->_hArr.size()); }
+
+    //
+    const value_type * get(void) const
+    {
+      return ((_hIdx < _pHash->_hArr.size()) && _pHash->_hArr.hasValueAt(_hIdx)) ?
+            &_pHash->_hArr.at(_hIdx) : NULL;
+    }
+    //
+    const value_type * operator->(void) const { return get(); }
+    //
+    const value_type & operator*(void) const { return *get(); }
+
+    bool operator==(const const_iterator & cmp_obj) const
+    {
+      return (_pHash == cmp_obj._pHash) && (_hIdx == cmp_obj._hIdx);
+    }
+    bool operator!=(const const_iterator & cmp_obj) const
+    {
+      return !(*this == cmp_obj);
+    }
+
+    const_iterator & operator++() //preincrement
+    {
+      if (!_pHash->_valCount)
+        _hIdx = _pHash->_hArr.size();
+      else {
+        if (_hIdx >= _pHash->_hArr.size())
+          _hIdx = 0;
+        else 
+          ++_hIdx;
+        searchNext();
+      }
+      return *this;
+    }
+    //
+    const_iterator operator++(int) //postincrement
+    {
+      const_iterator  tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+  };
+
+  iterator begin(void)
   {
     return iterator(*this, 0);
   }
-  iterator end(void) const
+  iterator end(void)
   {
     return iterator(*this, _hArr.size());
   }
+  const_iterator begin(void) const
+  {
+    return iterator(*this, 0);
+  }
+  const_iterator end(void) const
+  {
+    return iterator(*this, _hArr.size());
+  }
+
   //
   void erase(const iterator & use_it)
   {
@@ -329,7 +423,13 @@ public:
   }
 
   //Returns end() if no value associated with given key is found.
-  iterator getIterator(_KeyArg use_key) const
+  iterator getIterator(_KeyArg use_key)
+  {
+    size_type atIdx = _hArr.size();
+    findVal(use_key, atIdx);
+    return iterator(*this, atIdx);
+  }
+  const_iterator getIterator(_KeyArg use_key) const
   {
     size_type atIdx = _hArr.size();
     findVal(use_key, atIdx);
@@ -339,11 +439,11 @@ public:
   //AdHoc method: returns a iterator associated with value stored in hash table.
   //Note: value reference MUST BE previously obtained by GetPtr() call.
   //Returns end() if given value doesn't contained in hash.
-  iterator getIterator(const _TArg & hashed_val) const
+  const_iterator getIterator(const _TArg & hashed_val) const
   {
     size_type atIdx = _hArr.size();
     _hArr.detectIdx(hashed_val, atIdx);
-    return iterator(*this, atIdx);
+    return const_iterator(*this, atIdx);
   }
 
   //AdHoc method: returns a key associated with value stored in hash table.
