@@ -288,7 +288,7 @@ namespace {
     
 smsc::logger::Logger* checkSmscName( const std::string& smscId )
 {
-    if ( smscId.size() > 64 ) {
+    if ( smscId.size() >= SMSC_ID_LENGTH ) {
         throw InfosmeException(EXC_BADNAME,
                                "SMSC id '%s' is too long", smscId.c_str());
     }

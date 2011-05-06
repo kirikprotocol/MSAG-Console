@@ -9,6 +9,15 @@
 namespace eyeline {
 namespace informer {
 
+/// sizes of buffers, names, etc
+static const size_t DLV_NAME_LENGTH = 256;
+static const size_t DLV_SVCTYPE_LENGTH = 32;
+static const size_t DLV_USERDATA_LENGTH = 1024;
+static const size_t REGION_NAME_LENGTH = 64;
+static const size_t SMSC_ID_LENGTH = 64;
+static const size_t USER_ID_LENGTH = 64;
+static const size_t USER_PASSWORD_LENGTH = 32;
+
 typedef unsigned long long ulonglong;
 
 typedef uint32_t dlvid_type;
@@ -67,11 +76,6 @@ static const usectime_type flipTimePeriod = 24*3600*tuPerSec;
 
 /// maximum difference between high-freq and low-freq items in scoredlist
 static const usectime_type maxSnailDelay = 5*tuPerSec;
-
-/// sizes of buffers
-static const size_t DLV_NAME_LENGTH = 256;
-static const size_t DLV_SVCTYPE_LENGTH = 32;
-static const size_t DLV_USERDATA_LENGTH = 1024;
 
 inline msgtime_type currentTimeSeconds() { return msgtime_type(currentTimeMicro()/tuPerSec); }
 

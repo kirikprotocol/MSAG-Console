@@ -301,7 +301,7 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
   dumpMsg(inmsg);
   UserInfoPtr ui=getCore()->getUserInfo(inmsg.getUserId().c_str());
   int connId=inmsg.messageGetConnId();
-  char pwd[UserInfo::PASSWORD_LENGTH];
+  char pwd[USER_PASSWORD_LENGTH];
   if(!ui.get() || inmsg.getPassword()!=ui->getPassword(pwd))
   {
     if(!ui.get())

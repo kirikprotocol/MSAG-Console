@@ -22,9 +22,10 @@ Region::Region( regionid_type regionId,
                 const TimezoneGroup* tzgroup,
                 bool deleted,
                 std::vector< std::string >* masks ) :
+lock_( MTXWHEREAMI ),
 regionId_(regionId), name_(name), smscId_(smscId), bw_(bw),
 timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted),
-lock_( MTXWHEREAMI ),
+reflock_( MTXWHEREAMI ),
 ref_(0)
 {
     getlog();
@@ -40,6 +41,20 @@ ref_(0)
 Region::~Region()
 {
     smsc_log_debug(log_,"R=%u @%p dtor",regionId_,this);
+}
+
+
+void Region::getSmscId( char* smscId ) const
+{
+    smsc::core::synchronization::MutexGuard mg(lock_);
+    strcpy(smscId,smscId_.c_str());
+}
+
+
+void Region::getName( char* name ) const
+{
+    smsc::core::synchronization::MutexGuard mg(lock_);
+    strcpy(name,name_.c_str());
 }
 
 
@@ -65,6 +80,7 @@ void Region::swap( Region& r )
 
 bool Region::hasEqualMasks( const Region& r ) const
 {
+    smsc::core::synchronization::MutexGuard mg(lock_);
     return ( r.masks_ == masks_ );
 }
 

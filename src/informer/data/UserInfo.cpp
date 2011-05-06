@@ -50,9 +50,9 @@ statLock_( MTXWHEREAMI )
 {
     getlog();
     assert(id && pwd);
-    if ( strlen(id) >= USERID_LENGTH ) {
+    if ( strlen(id) >= USER_ID_LENGTH ) {
         throw InfosmeException(EXC_BADNAME,"U='%s' too long name, must be less than %u",
-                               id, unsigned(USERID_LENGTH) );
+                               id, unsigned(USER_ID_LENGTH) );
     }
     // check symbols
     {
@@ -61,9 +61,9 @@ statLock_( MTXWHEREAMI )
             throw InfosmeException(EXC_BADNAME,"U='%s' has forbidden char='%c'", id, c);
         }
     }
-    if ( strlen(pwd) >= PASSWORD_LENGTH ) {
+    if ( strlen(pwd) >= USER_PASSWORD_LENGTH ) {
         throw InfosmeException(EXC_BADNAME,"U='%s' too long password, must be less than %u",
-                               id, unsigned(PASSWORD_LENGTH) );
+                               id, unsigned(USER_PASSWORD_LENGTH) );
     }
 
     userId_ = id;

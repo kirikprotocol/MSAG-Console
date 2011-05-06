@@ -14,7 +14,7 @@
 namespace eyeline {
 namespace informer {
 
-typedef smsc::core::buffers::FixedLengthString<64> userid_type;
+typedef smsc::core::buffers::FixedLengthString< USER_ID_LENGTH > userid_type;
 
 typedef enum
 {
@@ -74,8 +74,8 @@ class UserInfo
     friend class DeliveryImpl;
 
 public:
-    static const size_t USERID_LENGTH = userid_type::MAX_SZ;
-    static const size_t PASSWORD_LENGTH = 32;
+    // static const size_t USERID_LENGTH = userid_type::MAX_SZ;
+    // static const size_t PASSWORD_LENGTH = 32;
 
     UserInfo( const char* id,
               const char* pwd,

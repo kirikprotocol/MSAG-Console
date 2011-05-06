@@ -710,10 +710,11 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         const regionid_type regionId = r->getRegionId();
 
         // find smscconn
-        const std::string& smscId = r->getSmscId();
-        SmscSender** smsc = smscs_.GetPtr(smscId.c_str());
+        char smscId[SMSC_ID_LENGTH];
+        r->getSmscId(smscId);
+        SmscSender** smsc = smscs_.GetPtr(smscId);
         if (!smsc || !*smsc) {
-            throw InfosmeException(EXC_CONFIG,"S='%s' is not found for R=%u",smscId.c_str(),regionId);
+            throw InfosmeException(EXC_CONFIG,"S='%s' is not found for R=%u",smscId,regionId);
         }
 
         RegionPtr* ptr = regions_.GetPtr(regionId);
@@ -722,10 +723,10 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         rf_.updateMasks(ptr ? ptr->get() : 0, *r.get());
 
         if (!ptr) {
-            smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId.c_str());
+            smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId);
             ptr = &regions_.Insert(regionId,RegionPtr(r.release()));
         } else {
-            smsc_log_debug(log_,"updating R=%u for S='%s'",regionId,smscId.c_str());
+            smsc_log_debug(log_,"updating R=%u for S='%s'",regionId,smscId);
             (*ptr)->swap( *r.get() );
         }
 
@@ -1055,8 +1056,10 @@ void InfosmeCoreV1::addRegion( regionid_type regionId )
         MutexGuard mg(startMon_);
         RegionPtr* ptr = regions_.GetPtr( regionId );
         if (ptr) {
-            throw InfosmeException(EXC_ALREADYEXIST,"region %u/'%s' already exist",
-                                   regionId, (*ptr)->getName().c_str() );
+            char regName[REGION_NAME_LENGTH];
+            (*ptr)->getName(regName);
+            throw InfosmeException(EXC_ALREADYEXIST,"region %u/'%s' already exists",
+                                   regionId, regName);
         }
     }
     loadRegions( regionId );
@@ -1079,8 +1082,10 @@ void InfosmeCoreV1::updateRegion( regionid_type regionId )
         if (!ptr || !*ptr ) {
             throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
         } else if ( (*ptr)->isDeleted() ) {
+            char regName[REGION_NAME_LENGTH];
+            (*ptr)->getName(regName);
             throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
-                                   regionId, (*ptr)->getName().c_str() );
+                                   regionId, regName );
         }
     }
     loadRegions(regionId);
@@ -1102,8 +1107,10 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
         if (!ptr || !*ptr ) {
             throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
         } else if ( (*ptr)->isDeleted() ) {
+            char regName[REGION_NAME_LENGTH];
+            (*ptr)->getName(regName);
             throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
-                                   regionId, (*ptr)->getName().c_str() );
+                                   regionId, regName );
         }
         (*ptr)->setDeleted(true);
         rf_.updateMasks( ptr->get(), **ptr );
@@ -1216,11 +1223,12 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
         throw InfosmeException(EXC_NOTFOUND,"Region %u corresponding to .%u.%u.%*.*llu is not found",
                                rId, ton, npi, len, len, ulonglong(addr));
     }
-    const std::string smscId = region->get()->getSmscId();
-    smsc_log_debug(log_,"R=%u is connected to S='%s'", rId, smscId.c_str());
-    SmscSender** sender = smscs_.GetPtr(smscId.c_str());
+    char smscId[SMSC_ID_LENGTH];
+    region->get()->getSmscId(smscId);
+    smsc_log_debug(log_,"R=%u is connected to S='%s'", rId, smscId);
+    SmscSender** sender = smscs_.GetPtr(smscId);
     if ( !sender ) {
-        throw InfosmeException(EXC_NOTFOUND,"Smsc '%s' is not found",smscId.c_str());
+        throw InfosmeException(EXC_NOTFOUND,"Smsc '%s' is not found",smscId);
     }
     const int result = (*sender)->sendTestSms( sourceAddr,
                                                subscriber,
