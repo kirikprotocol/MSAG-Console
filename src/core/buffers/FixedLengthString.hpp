@@ -172,6 +172,18 @@ struct FixedLengthString{
     return !str[0];
   }
   size_t capacity() const { return N; }
+
+  template <size_t M> void swap( FixedLengthString<M>& s ) {
+      if ( &s == this ) return;
+      char tmpbuf[M];
+      size_t minlen = std::min(M,N);
+      memcpy(tmpbuf,str,minlen);
+      memcpy(str,s.str,minlen);
+      memcpy(s.str,tmpbuf,minlen);
+      s.str[--minlen] = '\0';
+      str[minlen] = '\0';
+  }
+
 };
 
 template< size_t N >
