@@ -12,6 +12,8 @@
 namespace eyeline {
 namespace informer {
 
+class Region;
+
 /// this class also holds statistics data.
 class ActivityLog
 {
@@ -25,7 +27,7 @@ public:
 
     /// this will automatically increment stats
     void addRecord( msgtime_type         currentTime,
-                    regionid_type        regId,
+                    const Region&        region,
                     const Message&       msg,
                     int                  smppStatus,
                     uint8_t              fromState = 0 );

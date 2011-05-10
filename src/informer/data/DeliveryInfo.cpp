@@ -9,6 +9,7 @@
 #include "informer/data/MessageText.h"
 #include "ActivityLog.h"
 #include "UserInfo.h"
+#include "Region.h"
 #include "informer/io/DirListing.h"
 #include "informer/io/TmpBuf.h"
 
@@ -281,37 +282,71 @@ void DeliveryInfo::initMsgStats( regionid_type regionId,
 }
 
 
-void DeliveryInfo::incMsgStats( regionid_type regionId,
+void DeliveryInfo::incMsgStats( const Region& region,
                                 uint8_t state,
                                 int value, uint8_t fromState, int smsValue )
 {
+    const regionid_type regionId = region.getRegionId();
+    char smscId[SMSC_ID_LENGTH];
+    region.getSmscId(smscId);
     smsc::core::synchronization::MutexGuard mg(statLock_);
     stats_.incStat(state,value,smsValue);
     if (fromState) {stats_.incStat(fromState,-value,0);}
+    // aggregation stats
     const unsigned idx = getCS()->getStatBankIndex();
     // search for the position in the map
-    StatMap::iterator iter = statmap_.lower_bound(regionId);
-    if ( iter == statmap_.end() || iter->first != regionId ) {
-        iter = statmap_.insert( iter, std::make_pair(regionId,IncStat()) );
-        iter->second.clear();
+    StatList& sm = statlist_[idx];
+    StatList::iterator iter = std::find(sm.begin(),sm.end(),regionId);
+    IncStat* ptr;
+    if ( iter == sm.end() ) {
+        // not found
+        iter = sm.insert(sm.begin(),new StatNode);
+        ptr = &*iter;
+        ptr->smscId = smscId;
+        ptr->stats.clear();
+        ptr->regionId = regionId;
+        ptr->next = 0;
+    } else {
+        // looking for the correct smscId
+        ptr = &*iter;
+        do {
+            if ( ptr->smscId == smscId ) { break; }
+            if (!ptr->next) {
+                // not found, insert new smscId
+                ptr = (ptr->next = new IncStat);
+                ptr->smscId = smscId;
+                ptr->stats.clear();
+                ptr->regionId = regionId;
+                ptr->next = 0;
+                break;
+            }
+            ptr = ptr->next;
+        } while (true);
     }
-    iter->second.s[idx].incStat(state,value,smsValue);
-    // incstats_[idx].incStat(state,value,smsValue);
+    ptr->stats.incStat(state,value,smsValue);
 }
 
 
-regionid_type DeliveryInfo::popMsgStats( regionid_type regionId, DeliveryStats& ds )
+bool DeliveryInfo::popMsgStats(IncStat& stats)
 {
-    smsc::core::synchronization::MutexGuard mg(statLock_);
-    StatMap::iterator iter = 
-        ( regionId == anyRegionId ?
-          statmap_.begin() :
-          statmap_.lower_bound(regionId) );
-    if (iter == statmap_.end()) return anyRegionId;
-    const unsigned idx = 1 - getCS()->getStatBankIndex();
-    ds = iter->second.s[idx];
-    iter->second.s[idx].clear();
-    return iter->first;
+    if (stats.next != 0) {
+        throw InfosmeException(EXC_LOGICERROR,"input incstat with next");
+    }
+    StatNode* ptr;
+    {
+        smsc::core::synchronization::MutexGuard mg(statLock_);
+        const unsigned idx = 1 - getCS()->getStatBankIndex();
+        StatList& sm = statlist_[idx];
+        ptr = sm.front();
+        if (!ptr) return false;
+        sm.pop_front();
+    }
+    std::swap(stats.next,ptr->next);
+    stats.smscId = ptr->smscId;
+    stats.regionId = ptr->regionId;
+    stats.stats = ptr->stats;
+    delete ptr;
+    return true;
 }
 
 

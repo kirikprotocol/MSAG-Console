@@ -14,7 +14,7 @@ class ResendTransferTask;
 // class MessageGlossary;
 struct InputRegionRecord;
 class ActivityLog;
-class DeliveryActivator;
+class Region;
 
 /// a class requesting transfer of input messages
 /// from instore into opstore.
@@ -28,7 +28,7 @@ public:
 
     // identification
     // virtual dlvid_type getDlvId() const = 0;
-    virtual regionid_type getRegionId() const = 0;
+    virtual const Region& getRegion() const = 0;
 
     /// notify that current upload is finished
     virtual void transferFinished( InputTransferTask* task ) = 0;
@@ -136,7 +136,7 @@ public:
     /// make records about new messages.
     virtual void init( ActivityLog& actlog ) = 0;
 
-    virtual DeliveryActivator& getDlvActivator() = 0;
+    // virtual DeliveryActivator& getDlvActivator() = 0;
 
     /// add new messages, the list of messages is modified
     /// and will contain msgids.

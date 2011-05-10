@@ -319,7 +319,7 @@ public:
     void init()
     {
         // cleaning the statistics
-        mgr_.cs_.flipStatBank();
+        mgr_.cs_.flipStatBankIndex();
         mgr_.core_.initUserStats();
         /*
          * clearing statistics is not needed here
@@ -381,7 +381,7 @@ public:
 
     void dumpStats( msgtime_type currentTime )
     {
-        mgr_.cs_.flipStatBank();
+        mgr_.cs_.flipStatBankIndex();
         FinalLog::getFinalLog()->checkRollFile( currentTime );
         mgr_.core_.dumpUserStats( currentTime );
         FileGuard fg;
@@ -424,16 +424,15 @@ public:
             }
             const userid_type userId = info.getUserInfo().getUserId();
 
-            DeliveryStats ds;
-            for ( regionid_type regId = anyRegionId; 
-                  (regId = dlv->popMsgStats(regId,ds)) != anyRegionId;
-                  ++regId ) {
+            DeliveryInfo::IncStat dis;
+            DeliveryInfo& dinfo = dlv->getDlvInfo();
+            while ( dinfo.popMsgStats(dis) ) {
 
-                if ( ds.isEmpty() ) { continue; }
+                if ( dis.stats.isEmpty() ) { continue; }
 
                 if (!fg.isOpened()) {
                     // open file
-                    char fpath[200];
+                    char fpath[200 + SMSC_ID_LENGTH];
                     const unsigned dayhour = unsigned(ymd/10000);
                     sprintf(fpath,"%04u.%02u.%02u/msg%02u.log",
                             dayhour / 1000000,
@@ -447,20 +446,27 @@ public:
                         fg.write(header,strlen(header));
                     }
                 }
-                char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
-                                           dlvId, userId.c_str(),
-                                           ds.totalMessages,
-                                           ds.procMessages,
-                                           ds.dlvdMessages,
-                                           ds.failedMessages,
-                                           ds.expiredMessages,
-                                           ds.dlvdSms,
-                                           ds.failedSms,
-                                           ds.expiredSms,
-                                           ds.killedMessages,
-                                           unsigned(regId) );
-                fg.write(buf,p-buf);
-            } // for regionid
+                DeliveryInfo::IncStat* is = &dis;
+                do {
+                    DeliveryStats& ds = is->stats;
+                    char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s\n",
+                                               dlvId, userId.c_str(),
+                                               ds.totalMessages,
+                                               ds.procMessages,
+                                               ds.dlvdMessages,
+                                               ds.failedMessages,
+                                               ds.expiredMessages,
+                                               ds.dlvdSms,
+                                               ds.failedSms,
+                                               ds.expiredSms,
+                                               ds.killedMessages,
+                                               is->regionId,
+                                               is->smscId.c_str());
+                    fg.write(buf,p-buf);
+                    is = is->next;
+                } while ( is );
+                dis.clear();
+            } // while there are incremental stat records
         } while (true);
     }
 
@@ -1133,7 +1139,7 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
     }
     InputMessageSource* ims = 0;
     if (!getCS()->isArchive() && !getCS()->isEmergency() ) {
-        ims = new InputStorage(core_,*inputJournal_);
+        ims = new InputStorage(*inputJournal_);
     }
     ptr->reset( new DeliveryImpl(infoptr.release(),
                                  storeJournal_,

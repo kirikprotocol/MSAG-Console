@@ -1,3 +1,7 @@
+2011-05-10 12:35 bukind
+  feature: printing smscid in stats.  This required to keep region
+  in dlvInfo, etc.
+
 2011-04-26 11:58 bukind
   bugfix: makedirs() incorrectly handled second-level mounts
 

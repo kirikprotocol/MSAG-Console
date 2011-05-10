@@ -10,6 +10,7 @@
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/io/SpeedControl.h"
 #include "informer/data/InputMessageSource.h"
+#include "informer/data/Region.h"
 #include "logger/Logger.h"
 
 namespace smsc {
@@ -48,12 +49,14 @@ private:
 public:
 
     RegionalStorage( DeliveryImpl&       dlv,
-                     regionid_type       regionId );
+                     const RegionPtr&    region );
 
     virtual ~RegionalStorage();
     dlvid_type getDlvId() const;
-    virtual regionid_type getRegionId() const { return regionId_; }
+    regionid_type getRegionId() const { return region_->getRegionId(); }
     const DeliveryInfo& getDlvInfo() const;
+    const Region& getRegion() const { return *region_; }
+
     DlvState getState() const;
 
     /// return true if there is no messages in new and resend
@@ -171,7 +174,7 @@ private:
     EmbedRefPtr<DeliveryImpl>         dlv_;
     InputTransferTask*                inputTransferTask_;  // owned
     ResendTransferTask*               resendTransferTask_; // owned
-    regionid_type                     regionId_;
+    RegionPtr                         region_;
     unsigned                          stopRolling_;        // wait until 0 to roll
     
     unsigned                           newOrResend_; // if <3 then new, otherwise resend

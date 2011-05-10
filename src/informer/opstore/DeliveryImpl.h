@@ -43,6 +43,9 @@ public:
 
     virtual void updateDlvInfo( const DeliveryInfoData& info );
 
+    inline const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
+    inline DeliveryInfo& getDlvInfo() { return *dlvInfo_; }
+
     /// set delivery state.
     /// NOTE: must be invoked from core, with proper preparation.
     virtual void setState( DlvState state, msgtime_type planTime = 0 );
@@ -51,10 +54,6 @@ public:
     RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false);
 
     virtual void getRegionList( std::vector<regionid_type>& regIds ) const;
-
-    inline regionid_type popMsgStats( regionid_type regId, DeliveryStats& ds ) {
-        return dlvInfo_->popMsgStats(regId,ds);
-    }
 
     /// slowly dump all regions to storage
     size_t rollOverStore( SpeedControl<usectime_type,tuPerSec>& speedControl );

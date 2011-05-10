@@ -1469,7 +1469,8 @@ void InfosmeCoreV1::loadUsers( const char* userId )
             const unsigned speed = cwrap.getInt("smsPerSec",1,1,1000);
             const unsigned totaldlv = unsigned(cwrap.getInt("totalDeliveries",-1,-1,100000));
             const std::string password = cwrap.getString("password");
-            uservec.push_back(UserInfoPtr(new UserInfo(i->c_str(),
+            uservec.push_back(UserInfoPtr(new UserInfo(*this,
+                                                       i->c_str(),
                                                        password.c_str(),
                                                        priority,
                                                        speed,

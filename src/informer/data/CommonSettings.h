@@ -196,7 +196,7 @@ public:
     inline unsigned getStatBankIndex() const { return incStatBank_; }
 
     /// flip statistics bank, no locking here
-    void flipStatBank() {
+    void flipStatBankIndex() {
         incStatBank_ = 1 - incStatBank_;
     }
 

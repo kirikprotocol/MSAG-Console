@@ -310,7 +310,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 
         fg.write(buf,buflen);
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
-        source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
+        dlvInfo_->getUserInfo().getDA().finishStateChange(now, ymd, bs, *this );
     }
 }
 
@@ -323,7 +323,7 @@ RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool c
         if (!create) {
             return RegionalStoragePtr();
         }
-        ptr = createRegionalStorage( regId );
+        ptr = createRegionalStorage(regId);
     }
     return **ptr;
 }
@@ -588,9 +588,13 @@ void DeliveryImpl::writeDeliveryInfoData()
 DeliveryImpl::StoreList::iterator* 
     DeliveryImpl::createRegionalStorage( regionid_type regId )
 {
+    RegionPtr regPtr;
+    if (!dlvInfo_->getUserInfo().getDA().getRegion(regId,regPtr)) {
+        throw InfosmeException(EXC_NOTFOUND,"region R=%u is not found",regId);
+    }
     StoreList::iterator iter = 
         storeList_.insert( storeList_.begin(),
-                           RegionalStoragePtr( new RegionalStorage(*this,regId)) );
+                           RegionalStoragePtr( new RegionalStorage(*this,regPtr)) );
     return &storeHash_.Insert(regId,iter);
 }
 

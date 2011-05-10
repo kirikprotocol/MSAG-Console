@@ -57,13 +57,13 @@ private:
 class InputStorage::IReader : public FileReader::RecordReader
 {
 public:
-    IReader( InputStorage& is,
+    IReader( ActivityLog& al,
+             BlackList&   bl,
              MessageList& ml,
              InputRegionRecord& iro,
-             regionid_type regId,
+             const Region& reg,
              InputPvssNotifyee& ipn ) :
-    is_(is), msglist_(ml), ro_(iro),
-    regId_(regId),
+    al_(al), bl_(bl), msglist_(ml), ro_(iro), reg_(reg),
     currentTime_(currentTimeSeconds()), ipn_(ipn) {}
 
     virtual bool isStopping() {
@@ -96,7 +96,7 @@ public:
         const uint64_t msgId = fb.get64();
         const uint8_t  state = fb.get8();
         if (msgId>ro_.rlast) ro_.rlast = msgId;
-        const bool isDropped = is_.blackList_->isMessageDropped(msgId);
+        const bool isDropped = bl_.isMessageDropped(msgId);
         MessageLocker* mlk;
         MessageLocker mlk2;
         if ( isDropped ) {
@@ -127,17 +127,18 @@ public:
             msg.lastTime = currentTime_;
             msg.timeLeft = 0;
             // we have to add kill record in activity log
-            is_.activityLog_->addRecord(currentTime_,regId_,msg,0,MSGSTATE_INPUT);
+            al_.addRecord(currentTime_,reg_,msg,0,MSGSTATE_INPUT);
         } else {
-            is_.core_.startPvssCheck(ipn_,msg);
+            al_.getDlvInfo().getUserInfo().getDA().startPvssCheck(ipn_,msg);
         }
         return true;
     }
 private:
-    InputStorage&      is_;
+    ActivityLog&       al_;
+    BlackList&         bl_;
     MessageList&       msglist_;
     InputRegionRecord& ro_;
-    regionid_type      regId_;
+    const Region&      reg_;
     msgtime_type       currentTime_;
     InputPvssNotifyee& ipn_;
 };
@@ -146,10 +147,8 @@ private:
 // =============================================================================
 
 
-InputStorage::InputStorage( DeliveryActivator& core,
-                            InputJournal&      jnl ) :
+InputStorage::InputStorage( InputJournal& jnl ) :
 log_(0),
-core_(core),
 wlock_(MTXWHEREAMI),
 lock_(MTXWHEREAMI),
 rollingIter_(recordList_.end()),
@@ -197,6 +196,18 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     regs.reserve(32);
     dispatchMessages(begin, end, regs);
     msgtime_type currentTime(currentTimeSeconds());
+    // fetch all regions
+    smsc::core::buffers::IntHash< RegionPtr > regptrs(regs.size());
+    RegionPtr ptr;
+    DeliveryActivator& da = activityLog_->getDlvInfo().getUserInfo().getDA();
+    for ( std::vector<regionid_type>::const_iterator i = regs.begin();
+          i != regs.end(); ++i ) {
+        if ( ! da.getRegion(*i,ptr) ) {
+            throw InfosmeException(EXC_NOTFOUND,"Region %u is not found",*i);
+        }
+        regptrs.Insert(*i,ptr);
+    }
+
     // binding to glossary (necessary to write texts to activity log)
     MessageGlossary& glossary = getDlvInfo().getGlossary();
     for ( MsgIter i = begin; i != end; ++i ) {
@@ -204,9 +215,13 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
             // necessary to replace text ids with real texts
             glossary.fetchText(i->msg.text);
         }
-        activityLog_->addRecord(currentTime,i->serial,i->msg,0);
+        RegionPtr* p = regptrs.GetPtr(i->serial);
+        if ( !p ) {
+            throw InfosmeException(EXC_NOTFOUND,"Region %u is not found",i->serial);
+        }
+        activityLog_->addRecord(currentTime,**p,i->msg,0);
     }
-    core_.deliveryRegions( getDlvId(), regs, true );
+    da.deliveryRegions( getDlvId(), regs, true );
 }
 
 
@@ -224,7 +239,7 @@ InputTransferTask*
                                            unsigned           count )
 {
     InputRegionRecord ro;
-    ro.regionId = req.getRegionId();
+    ro.regionId = req.getRegion().getRegionId();
     getRecord(ro);
     if ( ro.rfn < ro.wfn || (ro.rfn==ro.wfn && ro.roff<ro.woff) ) {
         // may create
@@ -309,7 +324,8 @@ void InputStorage::dispatchMessages( MsgIter begin,
                                      std::vector< regionid_type >& regs )
 {
     const unsigned fileSize = getCS()->getInputStorageFileSize();
-    RegionFinder& rf = core_.getRegionFinder();
+    DeliveryActivator& da = activityLog_->getDlvInfo().getUserInfo().getDA();
+    RegionFinder& rf = da.getRegionFinder();
     smsc::core::synchronization::MutexGuard mg(wlock_);
     /*
     {
@@ -436,7 +452,8 @@ void InputStorage::dispatchMessages( MsgIter begin,
 
 void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
 {
-    const regionid_type regId = req.getRegionId();
+    const Region& region = req.getRegion();
+    const regionid_type regId = region.getRegionId();
     smsc_log_debug(log_,"transfer R=%u/D=%u started, reqCount=%u", regId, getDlvId(), reqCount);
     bool ok = false;
 
@@ -488,7 +505,11 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
 
             try {
                 FileReader fileReader(fg);
-                IReader recordReader(*this,msglist,ro,regId,ipn);
+                IReader recordReader(*activityLog_,
+                                     *blackList_,
+                                     msglist,ro,
+                                     region,
+                                     ipn);
                 reqCount -= fileReader.readRecords(buf,recordReader,reqCount);
                 fg.close();
                 if (reqCount>0 && ro.rfn<ro.wfn) {
@@ -548,7 +569,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                                       ton,npi,len,len,ulonglong(addr));
                         i->msg.state = MSGSTATE_FAILED;
                         const int smppState = smsc::system::Status::DENIEDBYGLOBALBL;
-                        activityLog_->addRecord(currentTime,regId,i->msg,
+                        activityLog_->addRecord(currentTime,region,i->msg,
                                                 smppState,
                                                 MSGSTATE_INPUT);
                         i = msglist.erase(i);
@@ -592,7 +613,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
     if ( ok ) {
         std::vector< regionid_type > regs;
         regs.push_back(regId);
-        core_.deliveryRegions( getDlvId(), regs, true );
+        activityLog_->getDlvInfo().getUserInfo().getDA().deliveryRegions( getDlvId(), regs, true );
     }
 }
 

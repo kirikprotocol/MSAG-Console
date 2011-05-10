@@ -7,6 +7,8 @@
 #include "informer/io/EmbedRefPtr.h"
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
+#include "core/buffers/IntrList.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 #include "RetryString.h"
 #include "MessageGlossary.h"
 #include "DeliveryStats.h"
@@ -16,6 +18,8 @@ namespace eyeline {
 namespace informer {
 
 class UserInfo;
+class Region;
+class DeliveryActivator;
 
 /// the structure holding data from dcp protocol.
 struct DeliveryInfoData
@@ -49,6 +53,23 @@ struct DeliveryInfoData
 class DeliveryInfo
 {
 public:
+    struct IncStat {
+        smsc::core::buffers::FixedLengthString< SMSC_ID_LENGTH > smscId;
+        DeliveryStats stats;
+        regionid_type regionId;
+        IncStat*      next;
+        IncStat() : next(0) {}
+        ~IncStat() {
+            clear();
+        }
+        inline void clear() {
+            if (next) { delete next; next = 0; }
+        }
+        inline bool operator == ( regionid_type r ) const {
+            return regionId == r;
+        }
+    };
+
     // constructor from file system
     DeliveryInfo( dlvid_type              dlvId,
                   const DeliveryInfoData& data,
@@ -166,17 +187,15 @@ public:
                        int value );
 
     /// increment stats, optionally decrementing fromState
-    void incMsgStats( regionid_type regId,
+    void incMsgStats( const Region& region,
                       uint8_t state,
                       int     value = 1,
                       uint8_t fromState = 0,
                       int     smsValue = 0 );
 
-    /// the method pops released incremental stats and then clears it.
-    /// @param prevRegId - previous regionid, (anyRegionId before the first iteration);
-    /// @return current regionId or anyRegionId when the iteration is stopped.
-    regionid_type popMsgStats( regionid_type prevRegId,
-                               DeliveryStats& ds );
+    /// the method pops released incremental stats.
+    /// @return true if stats is filled.
+    bool popMsgStats( IncStat& stats );
 
     /// glossary
     MessageGlossary& getGlossary() { return glossary_; }
@@ -214,12 +233,19 @@ private:
 
     mutable smsc::core::synchronization::Mutex statLock_;
     DeliveryStats                      stats_;
+
+    struct StatNode : public smsc::core::buffers::IntrListNodeBase<StatNode, IncStat> {};
+    typedef smsc::core::buffers::IntrList< StatNode > StatList;
+    StatList statlist_[2];
+
+    /*
     struct IncStat {
         DeliveryStats s[2];
         inline void clear() { s[0].clear(); s[1].clear(); }
     };
     typedef std::map< regionid_type, IncStat > StatMap;
     StatMap                            statmap_;
+     */
 };
 
 } // informer

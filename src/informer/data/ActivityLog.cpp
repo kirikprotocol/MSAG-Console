@@ -5,6 +5,7 @@
 #include "informer/io/HexDump.h"
 #include "UserInfo.h"
 #include "FinalLog.h"
+#include "Region.h"
 
 namespace eyeline {
 namespace informer {
@@ -158,11 +159,12 @@ bool ActivityLog::readStatistics( const std::string& filename,
 
 
 void ActivityLog::addRecord( msgtime_type currentTime,
-                             regionid_type regId,
+                             const Region& region,
                              const Message& msg,
                              int smppStatus,
                              uint8_t fromState )
 {
+    const regionid_type regId = region.getRegionId();
     struct ::tm now;
     {
         const time_t tmnow(currentTime);
@@ -235,7 +237,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
-        dlvInfo_->incMsgStats(regId,msg.state,1,fromState,retryCount);
+        dlvInfo_->incMsgStats(region,msg.state,1,fromState,retryCount);
     }
 
     // writing final log

@@ -33,7 +33,8 @@ struct OrderByDlvId
 namespace eyeline {
 namespace informer {
 
-UserInfo::UserInfo( const char* id,
+UserInfo::UserInfo( DeliveryActivator& da,
+                    const char* id,
                     const char* pwd,
                     unsigned    priority,
                     unsigned    speed,
@@ -41,6 +42,7 @@ UserInfo::UserInfo( const char* id,
 refLock_( MTXWHEREAMI ),
 ref_(0),
 speedControl_(speed),
+da_(da),
 dataLock_( MTXWHEREAMI ),
 roles_(0),
 maxTotalDeliveries_(totaldlv),

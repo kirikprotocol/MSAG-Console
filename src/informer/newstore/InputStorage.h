@@ -41,14 +41,13 @@ class InputStorage : public InputMessageSource
     };
 
 public:
-    InputStorage( DeliveryActivator&  core,
-                  InputJournal&       journal );
+    InputStorage( InputJournal&       journal );
 
     virtual ~InputStorage();
 
     virtual void init( ActivityLog& actLog );
 
-    virtual DeliveryActivator& getDlvActivator() { return core_; }
+    // virtual DeliveryActivator& getDlvActivator() { return core_; }
 
     virtual void addNewMessages( MsgIter begin, MsgIter end );
 
@@ -82,7 +81,7 @@ private:
 
 private:
     smsc::logger::Logger*                      log_;
-    DeliveryActivator&                         core_;
+    // DeliveryActivator&                         core_;
     smsc::core::synchronization::Mutex         wlock_;
     smsc::core::synchronization::Mutex         lock_;  // to add new regions
     RecordList                                 recordList_;

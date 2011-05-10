@@ -15,6 +15,7 @@ namespace eyeline {
 namespace informer {
 
 typedef smsc::core::buffers::FixedLengthString< USER_ID_LENGTH > userid_type;
+class DeliveryActivator;
 
 typedef enum
 {
@@ -77,12 +78,15 @@ public:
     // static const size_t USERID_LENGTH = userid_type::MAX_SZ;
     // static const size_t PASSWORD_LENGTH = 32;
 
-    UserInfo( const char* id,
+    UserInfo( DeliveryActivator& da,
+              const char* id,
               const char* pwd,
               unsigned    priority = 1,
               unsigned    speed = 1,
               unsigned    totaldlv = 10 );
               
+    inline DeliveryActivator& getDA() const { return da_; }
+
     ~UserInfo();
 
     // NOTE: userId never changes!
@@ -159,6 +163,8 @@ private:
     mutable smsc::core::synchronization::Mutex refLock_;
     unsigned    ref_;
     SpeedControl<usectime_type,tuPerSec> speedControl_;
+
+    DeliveryActivator& da_;
 
     mutable smsc::core::synchronization::Mutex dataLock_;
     userid_type userId_;
