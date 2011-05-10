@@ -211,6 +211,7 @@ log_(smsc::logger::Logger::getInstance("core")),
 cs_(maxsms),
 startMon_(MTXWHEREAMI),
 started_(false),
+regMtx_(MTXWHEREAMI),
 userLock_(MTXWHEREAMI),
 dlvMgr_(0),
 finalLog_(0),
@@ -717,22 +718,28 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
             throw InfosmeException(EXC_CONFIG,"S='%s' is not found for R=%u",smscId,regionId);
         }
 
-        RegionPtr* ptr = regions_.GetPtr(regionId);
+        RegionPtr regPtr;
+        {
+            MutexGuard rmg(regMtx_);
+            RegionPtr* ptr;
+            ptr = regions_.GetPtr(regionId);
 
-        // update masks
-        rf_.updateMasks(ptr ? ptr->get() : 0, *r.get());
+            // update masks
+            rf_.updateMasks(ptr ? ptr->get() : 0, *r.get());
 
-        if (!ptr) {
-            smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId);
-            ptr = &regions_.Insert(regionId,RegionPtr(r.release()));
-        } else {
-            smsc_log_debug(log_,"updating R=%u for S='%s'",regionId,smscId);
-            (*ptr)->swap( *r.get() );
+            if (!ptr) {
+                smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId);
+                ptr = &regions_.Insert(regionId,RegionPtr(r.release()));
+            } else {
+                smsc_log_debug(log_,"updating R=%u for S='%s'",regionId,smscId);
+                (*ptr)->swap( *r.get() );
+            }
+            regPtr = *ptr;
         }
 
         RegionSenderPtr* rs = regSends_.GetPtr(regionId);
         if (!rs) {
-            rs = &regSends_.Insert(regionId,RegionSenderPtr(new RegionSender(**smsc,*ptr)));
+            rs = &regSends_.Insert(regionId,RegionSenderPtr(new RegionSender(**smsc,regPtr)));
         } else {
             (*rs)->assignSender(*smsc);
         }
@@ -855,7 +862,7 @@ void InfosmeCoreV1::incOutgoing( unsigned nchunks )
 
 bool InfosmeCoreV1::getRegion( regionid_type regId, RegionPtr& ptr )
 {
-    MutexGuard mg(startMon_);
+    MutexGuard mg(regMtx_);
     RegionPtr* r = regions_.GetPtr(regId);
     if ( ! r ) return false;
     ptr.reset(r->get());
@@ -1028,8 +1035,8 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
     if (!ptr) {
         throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
     }
-    RegionPtr* rptr = regions_.GetPtr(0);
-    if (!rptr) {
+    RegionPtr rptr;
+    if (! getRegion(defaultRegionId,rptr) ) {
         throw InfosmeException(EXC_NOTFOUND,"default region is not found");
     }
     RegionSenderPtr* regptr = regSends_.GetPtr(0);
@@ -1037,7 +1044,7 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
         throw InfosmeException(EXC_LOGICERROR,"default RS is not found");
     }
     defaultSmscId_ = smscId;
-    (*rptr)->setSmscId(smscId);
+    rptr->setSmscId(smscId);
     (*regptr)->assignSender(*ptr);
 }
 
@@ -1052,15 +1059,12 @@ void InfosmeCoreV1::addRegion( regionid_type regionId )
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
     }
     // check if region does not exist
-    {
-        MutexGuard mg(startMon_);
-        RegionPtr* ptr = regions_.GetPtr( regionId );
-        if (ptr) {
-            char regName[REGION_NAME_LENGTH];
-            (*ptr)->getName(regName);
-            throw InfosmeException(EXC_ALREADYEXIST,"region %u/'%s' already exists",
-                                   regionId, regName);
-        }
+    RegionPtr regPtr;
+    if ( getRegion(regionId,regPtr) ) {
+        char regName[REGION_NAME_LENGTH];
+        regPtr->getName(regName);
+        throw InfosmeException(EXC_ALREADYEXIST,"region %u/'%s' already exists",
+                               regionId, regName);
     }
     loadRegions( regionId );
 }
@@ -1076,17 +1080,14 @@ void InfosmeCoreV1::updateRegion( regionid_type regionId )
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
     }
     // check if region exists
-    {
-        MutexGuard mg(startMon_);
-        RegionPtr* ptr = regions_.GetPtr(regionId);
-        if (!ptr || !*ptr ) {
-            throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
-        } else if ( (*ptr)->isDeleted() ) {
-            char regName[REGION_NAME_LENGTH];
-            (*ptr)->getName(regName);
-            throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
-                                   regionId, regName );
-        }
+    RegionPtr regPtr;
+    if ( !getRegion(regionId,regPtr) ) {
+        throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
+    } else if ( regPtr->isDeleted() ) {
+        char regName[REGION_NAME_LENGTH];
+        regPtr->getName(regName);
+        throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
+                               regionId, regName );
     }
     loadRegions(regionId);
 }
@@ -1101,20 +1102,18 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
     if (regionId == anyRegionId || regionId == defaultRegionId ) {
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
     }
-    {
-        MutexGuard mg(startMon_);
-        RegionPtr* ptr = regions_.GetPtr(regionId);
-        if (!ptr || !*ptr ) {
-            throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
-        } else if ( (*ptr)->isDeleted() ) {
-            char regName[REGION_NAME_LENGTH];
-            (*ptr)->getName(regName);
-            throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
-                                   regionId, regName );
-        }
-        (*ptr)->setDeleted(true);
-        rf_.updateMasks( ptr->get(), **ptr );
+    RegionPtr regPtr;
+    if ( ! getRegion(regionId,regPtr) ) {
+        throw InfosmeException(EXC_NOTFOUND,"region %u not found",regionId);
+    } else if ( regPtr->isDeleted() ) {
+        char regName[REGION_NAME_LENGTH];
+        regPtr->getName(regName);
+        throw InfosmeException(EXC_NOTFOUND,"region %u/'%s' is already deleted",
+                               regionId, regName );
     }
+    regPtr->setDeleted(true);
+    MutexGuard rmg(regMtx_);
+    rf_.updateMasks( regPtr.get(), *regPtr );
 }
 
 
@@ -1214,17 +1213,16 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
-    MutexGuard mg(startMon_);
     const regionid_type rId = rf_.findRegion(subscriber);
-    RegionPtr* region = regions_.GetPtr(rId);
-    if (!region) {
+    RegionPtr region;
+    if ( !getRegion(rId,region) || region->isDeleted() ) {
         uint8_t len, ton, npi;
         const uint64_t addr = subscriberToAddress(subscriber,len,ton,npi);
-        throw InfosmeException(EXC_NOTFOUND,"Region %u corresponding to .%u.%u.%*.*llu is not found",
+        throw InfosmeException(EXC_NOTFOUND,"Region %u corresponding to .%u.%u.%*.*llu is not found/deleted",
                                rId, ton, npi, len, len, ulonglong(addr));
     }
     char smscId[SMSC_ID_LENGTH];
-    region->get()->getSmscId(smscId);
+    region->getSmscId(smscId);
     smsc_log_debug(log_,"R=%u is connected to S='%s'", rId, smscId);
     SmscSender** sender = smscs_.GetPtr(smscId);
     if ( !sender ) {
@@ -1326,13 +1324,13 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
     rsp.reserve(bs.regIds.size());
     for ( regIdVector::const_iterator i = bs.regIds.begin();
           i != bs.regIds.end(); ++i ) {
-        MutexGuard mg(startMon_);
-        RegionPtr* ptr = regions_.GetPtr(*i);
-        if (!ptr || !ptr->get()) {
-            // no such region
-            smsc_log_warn(log_,"R=%u is not found",unsigned(*i));
+        RegionPtr regPtr;
+        if ( !getRegion(*i,regPtr) || regPtr->isDeleted() ) {
+            smsc_log_warn(log_,"R=%u is not found/deleted",unsigned(*i));
             continue;
         }
+
+        MutexGuard mg(startMon_);
         RegionSenderPtr* rs = regSends_.GetPtr(*i);
         if (!rs || !rs->get()) {
             // no such region sender

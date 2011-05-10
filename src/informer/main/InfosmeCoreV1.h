@@ -180,8 +180,11 @@ private:
     bool                                       started_;
     std::string                                     defaultSmscId_;
     smsc::core::buffers::Hash< SmscSender* >        smscs_;        // owned
-    smsc::core::buffers::IntHash< RegionPtr >       regions_;      // owned
     smsc::core::buffers::IntHash< RegionSenderPtr > regSends_;   // owned
+
+    smsc::core::synchronization::Mutex              regMtx_;
+    smsc::core::buffers::IntHash< RegionPtr >       regions_;      // owned
+
     RegionFinderV1                                  rf_;
 
     smsc::core::threads::ThreadPool            itp_;        // input transfer pool

@@ -4,6 +4,7 @@
 #include "logger/Logger.h"
 #include "informer/data/Region.h"
 #include "core/buffers/XTree.hpp"
+#include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -16,6 +17,7 @@ public:
     void updateMasks( Region* oldReg, const Region& regNew );
 private:
     smsc::logger::Logger* log_;
+    smsc::core::synchronization::Mutex        lock_;
     smsc::core::buffers::XTree<regionid_type> tree_;
 };
 

@@ -9,6 +9,7 @@ log_(smsc::logger::Logger::getInstance("regfinder")) {}
 
 regionid_type RegionFinderV1::findRegion( personid_type subscriber )
 {
+    smsc::core::synchronization::MutexGuard mg(lock_);
     char buf[30];
     regionid_type rid;
     if (!tree_.Find(printSubscriber(buf,subscriber),rid)) {
@@ -21,6 +22,7 @@ regionid_type RegionFinderV1::findRegion( personid_type subscriber )
 
 void RegionFinderV1::updateMasks( Region* regOld, const Region& regNew )
 {
+    smsc::core::synchronization::MutexGuard mg(lock_);
     // default region does not have masks
     if ( regNew.getRegionId() == defaultRegionId ) return;
 
