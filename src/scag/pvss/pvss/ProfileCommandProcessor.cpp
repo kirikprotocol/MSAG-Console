@@ -176,12 +176,12 @@ bool ProfileCommandProcessor::ReadonlyFilter::visitGetCommand(GetCommand &cmd) /
     }
     proc_.backup_->getProperty(*p);
     if(p->getTimePolicy() == R_ACCESS) {
-        if (readonly_) {
-            throw smsc::util::Exception("in readonly mode");
+        if (!readonly_) {
+            // throw smsc::util::Exception("in readonly mode");
+            proc_.backup_->fixTimePolicy(*p);
+            p->ReadAccess();
+            proc_.profile_->setChanged(true);
         }
-        proc_.backup_->fixTimePolicy(*p);
-        p->ReadAccess();
-        proc_.profile_->setChanged(true);
     }
 
     proc_.response_->setStatus(StatusType::OK);
