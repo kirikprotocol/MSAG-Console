@@ -1126,6 +1126,7 @@ bool SmscSender::processQueue( DataQueue& queue )
 
                 // finalize message, ignoring resp status
                 smsc_log_info(log_,"S='%s' R=%u/D=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
+                              smscId_.c_str(),
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId),

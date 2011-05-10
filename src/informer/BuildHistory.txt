@@ -1,3 +1,9 @@
+=====================================================================
+2011-05-10 14:08 bukind informer-build-20110510
+
+2011-05-10 14:00 bukind
+  bugfix: typo in logging in sender
+
 2011-05-10 12:35 bukind
   feature: printing smscid in stats.  This required to keep region
   in dlvInfo, etc.

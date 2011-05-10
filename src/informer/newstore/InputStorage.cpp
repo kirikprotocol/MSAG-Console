@@ -87,7 +87,7 @@ public:
     virtual bool readRecordData( size_t filePos, char* buf, size_t buflen )
     {
         FromBuf fb(buf,buflen);
-        ro_.roff += buflen;
+        ro_.roff += buflen + LENSIZE;
         const uint16_t version = fb.get16();
         if (version!=1 && version!=2) {
             throw InfosmeException(EXC_BADFILE,"unsupported version %u at %llu",
@@ -197,7 +197,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     dispatchMessages(begin, end, regs);
     msgtime_type currentTime(currentTimeSeconds());
     // fetch all regions
-    smsc::core::buffers::IntHash< RegionPtr > regptrs(regs.size());
+    smsc::core::buffers::IntHash< RegionPtr > regptrs(int(regs.size()));
     RegionPtr ptr;
     DeliveryActivator& da = activityLog_->getDlvInfo().getUserInfo().getDA();
     for ( std::vector<regionid_type>::const_iterator i = regs.begin();

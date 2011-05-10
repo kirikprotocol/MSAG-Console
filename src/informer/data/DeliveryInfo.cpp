@@ -337,6 +337,7 @@ bool DeliveryInfo::popMsgStats(IncStat& stats)
         smsc::core::synchronization::MutexGuard mg(statLock_);
         const unsigned idx = 1 - getCS()->getStatBankIndex();
         StatList& sm = statlist_[idx];
+        if ( sm.empty() ) return false;
         ptr = sm.front();
         if (!ptr) return false;
         sm.pop_front();
