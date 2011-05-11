@@ -11,13 +11,11 @@ namespace informer {
 class UTF8
 {
 public:
-    typedef TmpBufBase<char> BufType;
-
     UTF8();
     ~UTF8();
 
     /// convert input utf8 message into ucs2.
-    void convertToUcs2( const char* in, size_t inlen, BufType& buf );
+    void convertToUcs2( const char* in, size_t inlen, TmpBufBase<char>& buf );
 
 private:
     smsc::core::synchronization::Mutex lock_;

@@ -192,21 +192,9 @@ void InputStorage::init( ActivityLog& actLog )
 
 void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
 {
-    std::vector< regionid_type > regs;
-    regs.reserve(32);
+    smsc::core::buffers::IntHash< RegionPtr > regs(10);
     dispatchMessages(begin, end, regs);
     msgtime_type currentTime(currentTimeSeconds());
-    // fetch all regions
-    smsc::core::buffers::IntHash< RegionPtr > regptrs(int(regs.size()));
-    RegionPtr ptr;
-    DeliveryActivator& da = activityLog_->getDlvInfo().getUserInfo().getDA();
-    for ( std::vector<regionid_type>::const_iterator i = regs.begin();
-          i != regs.end(); ++i ) {
-        if ( ! da.getRegion(*i,ptr) ) {
-            throw InfosmeException(EXC_NOTFOUND,"Region %u is not found",*i);
-        }
-        regptrs.Insert(*i,ptr);
-    }
 
     // binding to glossary (necessary to write texts to activity log)
     MessageGlossary& glossary = getDlvInfo().getGlossary();
@@ -215,13 +203,18 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
             // necessary to replace text ids with real texts
             glossary.fetchText(i->msg.text);
         }
-        RegionPtr* p = regptrs.GetPtr(i->serial);
+        RegionPtr* p = regs.GetPtr(i->serial);
         if ( !p ) {
-            throw InfosmeException(EXC_NOTFOUND,"Region %u is not found",i->serial);
+            throw InfosmeException(EXC_LOGICERROR,"Region %u is not found in just fetched hash",i->serial);
         }
         activityLog_->addRecord(currentTime,**p,i->msg,0);
     }
-    da.deliveryRegions( getDlvId(), regs, true );
+    // save regions in vector
+    std::vector< regionid_type > regv;
+    regv.reserve( regs.Count() );
+    regs.collectKeys(regv);
+    activityLog_->getDlvInfo().getUserInfo().getDA()
+        .deliveryRegions( getDlvId(), regv, true );
 }
 
 
@@ -321,7 +314,7 @@ size_t InputStorage::rollOver()
 
 void InputStorage::dispatchMessages( MsgIter begin,
                                      MsgIter end,
-                                     std::vector< regionid_type >& regs )
+                                     smsc::core::buffers::IntHash< RegionPtr >& regs )
 {
     const unsigned fileSize = getCS()->getInputStorageFileSize();
     DeliveryActivator& da = activityLog_->getDlvInfo().getUserInfo().getDA();
@@ -337,8 +330,9 @@ void InputStorage::dispatchMessages( MsgIter begin,
     // preprocess
     unsigned total = 0;
     msgid_type minRlast = lastMsgId_;
+    RegionPtr regPtr;
     for ( MsgIter i = begin; i != end; ++i ) {
-        const regionid_type regId = rf.findRegion( i->msg.subscriber );
+        rf.findRegion(i->msg.subscriber,regPtr);
         Message& msg = i->msg;
         if ( msg.text.getTextId() < MessageText::uniqueId ) {
             throw InfosmeException(EXC_IOERROR,"invalid input glossary index %d",msg.text.getTextId());
@@ -356,27 +350,31 @@ void InputStorage::dispatchMessages( MsgIter begin,
         msg.timeLeft = 0;
         msg.retryCount = 0;
         msg.state = MSGSTATE_INPUT;
-        i->serial = regId;
+        i->serial = regPtr->getRegionId();
         if (log_->isDebugEnabled()) {
             uint8_t len, ton, npi;
             uint64_t addr = subscriberToAddress(i->msg.subscriber,len,ton,npi);
             smsc_log_debug(log_,"adding D=%u/M=%llu for .%u.%u.%0*.*llu -> R=%u",
                            unsigned(getDlvId()), ulonglong(i->msg.msgId),
-                           ton,npi,len,len,ulonglong(addr),unsigned(regId));
+                           ton,npi,len,len,ulonglong(addr),unsigned(i->serial));
         }
-        if ( std::find(regs.begin(),regs.end(),regId) == regs.end() ) {
-            regs.push_back(regId);
-        }
+        regs.Insert(i->serial, regPtr);
         ++total;
     }
-    smsc_log_debug(log_,"D=%u add %u new messages, regions: [%s]",
-                   unsigned(getDlvId()),total,
-                   formatRegionList(regs.begin(),regs.end()).c_str());
+    std::vector< regionid_type > regv;
+    regv.reserve(regs.Count());
+    regs.collectKeys(regv);
+    if ( log_->isDebugEnabled() ) {
+        std::sort(regv.begin(),regv.end());
+        smsc_log_debug(log_,"D=%u add %u new messages, regions: [%s]",
+                       unsigned(getDlvId()), total,
+                       formatRegionList(regv.begin(),regv.end()).c_str() );
+    }
     // writing regions
     // FIXME: optimize (write regions via big buffer)
     TmpBuf<unsigned char,200> msgbuf;
-    for ( std::vector<regionid_type>::const_iterator ir = regs.begin();
-          ir != regs.end(); ++ir ) {
+    for ( std::vector< regionid_type >::const_iterator ir = regv.begin();
+          ir != regv.end(); ++ir ) {
         const regionid_type regId = *ir;
         smsc_log_debug(log_,"processing R=%u",unsigned(regId));
         InputRegionRecord ro;

@@ -2,8 +2,8 @@
 #define _INFORMER_INPUTSTORAGE_H
 
 #include "informer/data/InputMessageSource.h"
-// #include "informer/data/MessageGlossary.h"
 #include "informer/data/ActivityLog.h"
+#include "informer/data/Region.h"
 #include "InputJournal.h"
 #include "logger/Logger.h"
 #include "core/buffers/IntHash.hpp"
@@ -11,8 +11,6 @@
 
 namespace eyeline {
 namespace informer {
-
-class InfosmeCore;
 
 /// persistent input storage.
 class InputStorage : public InputMessageSource
@@ -47,8 +45,6 @@ public:
 
     virtual void init( ActivityLog& actLog );
 
-    // virtual DeliveryActivator& getDlvActivator() { return core_; }
-
     virtual void addNewMessages( MsgIter begin, MsgIter end );
 
     virtual void dropMessages( const std::vector<msgid_type>& msgids );
@@ -65,7 +61,8 @@ public:
     virtual size_t rollOver();
 
 private:
-    void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);
+    void dispatchMessages( MsgIter begin, MsgIter end,
+                           smsc::core::buffers::IntHash< RegionPtr >& regs);
 
     /// invoked from transfertask
     void doTransfer( TransferRequester& req, size_t count );
@@ -81,7 +78,6 @@ private:
 
 private:
     smsc::logger::Logger*                      log_;
-    // DeliveryActivator&                         core_;
     smsc::core::synchronization::Mutex         wlock_;
     smsc::core::synchronization::Mutex         lock_;  // to add new regions
     RecordList                                 recordList_;
@@ -91,13 +87,8 @@ private:
     uint32_t                                   lastfn_;
     ActivityLog*                               activityLog_; // not owned
     msgid_type                                 lastMsgId_;
-    // MessageGlossary                            glossary_;
 
     BlackList*                                 blackList_; // owned
-    // smsc::core::synchronization::Mutex         dropLock_;
-    // DropMsgHash                                dropMsgHash_;
-    // drop file offset: -1 - no file, 0 - at start.
-    // size_t                                     dropFileOffset_;
 };
 
 } // informer

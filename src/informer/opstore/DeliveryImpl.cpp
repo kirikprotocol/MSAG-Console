@@ -588,10 +588,12 @@ void DeliveryImpl::writeDeliveryInfoData()
 DeliveryImpl::StoreList::iterator* 
     DeliveryImpl::createRegionalStorage( regionid_type regId )
 {
+    RegionFinder& rf = dlvInfo_->getUserInfo().getDA().getRegionFinder();
     RegionPtr regPtr;
-    if (!dlvInfo_->getUserInfo().getDA().getRegion(regId,regPtr)) {
-        throw InfosmeException(EXC_NOTFOUND,"region R=%u is not found",regId);
+    if (!rf.getRegion(regId,regPtr)) {
+        throw InfosmeException(EXC_NOTFOUND,"region R=%u is not found/deleted",regId);
     }
+    // FIXME: should we check if region is deleted?
     StoreList::iterator iter = 
         storeList_.insert( storeList_.begin(),
                            RegionalStoragePtr( new RegionalStorage(*this,regPtr)) );

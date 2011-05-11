@@ -40,7 +40,7 @@ UTF8::~UTF8()
 }
 
 
-void UTF8::convertToUcs2( const char* inptr, size_t inlen, BufType& buf )
+void UTF8::convertToUcs2( const char* inptr, size_t inlen, TmpBufBase<char>& buf )
 {
     static const size_t maxBytesPerChar = 4;
     int error = 0;

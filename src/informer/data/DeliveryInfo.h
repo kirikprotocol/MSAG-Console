@@ -237,15 +237,6 @@ private:
     struct StatNode : public smsc::core::buffers::IntrListNodeBase<StatNode, IncStat> {};
     typedef smsc::core::buffers::IntrList< StatNode > StatList;
     StatList statlist_[2];
-
-    /*
-    struct IncStat {
-        DeliveryStats s[2];
-        inline void clear() { s[0].clear(); s[1].clear(); }
-    };
-    typedef std::map< regionid_type, IncStat > StatMap;
-    StatMap                            statmap_;
-     */
 };
 
 } // informer

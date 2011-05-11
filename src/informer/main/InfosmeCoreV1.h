@@ -119,8 +119,6 @@ public:
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
 
-    virtual bool getRegion( regionid_type regId, RegionPtr& ptr );
-
     /// bind regions to delivery
     /// @param bind - true if bind, false if unbind.
     virtual void deliveryRegions( dlvid_type dlvId,
@@ -181,9 +179,6 @@ private:
     std::string                                     defaultSmscId_;
     smsc::core::buffers::Hash< SmscSender* >        smscs_;        // owned
     smsc::core::buffers::IntHash< RegionSenderPtr > regSends_;   // owned
-
-    smsc::core::synchronization::Mutex              regMtx_;
-    smsc::core::buffers::IntHash< RegionPtr >       regions_;      // owned
 
     RegionFinderV1                                  rf_;
 

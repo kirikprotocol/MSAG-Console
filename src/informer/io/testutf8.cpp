@@ -12,7 +12,7 @@ int main()
     smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
 
     UTF8 utf;
-    UTF8::BufType buf;
+    TmpBuf<char,8192> buf;
     utf.convertToUcs2( text, strlen(text), buf);
 
     FileGuard f;

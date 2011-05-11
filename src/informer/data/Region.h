@@ -33,6 +33,8 @@ public:
     unsigned      getBandwidth() const { return bw_; }
     int getTimezone() const { return timezone_; }
     bool isDeleted() const { return deleted_; }
+
+    /// NOTE: this method is not under lock!
     const std::vector<std::string>& getMasks() const { return masks_; }
 
     void setDeleted( bool del ) { deleted_ = del; }
@@ -69,6 +71,8 @@ private:
     Region& operator = ( const Region& );
 
 private:
+    smsc::core::synchronization::Mutex reflock_;
+    unsigned                           ref_;
 
     mutable smsc::core::synchronization::Mutex lock_;
     regionid_type            regionId_;
@@ -79,9 +83,6 @@ private:
     const TimezoneGroup*     tzgroup_;
     bool                     deleted_;
     std::vector<std::string> masks_;       //  sorted masks
-
-    smsc::core::synchronization::Mutex reflock_;
-    unsigned                           ref_;
 };
 
 typedef EmbedRefPtr< Region >  RegionPtr;
@@ -90,7 +91,10 @@ class RegionFinder
 {
 public:
     virtual ~RegionFinder() {}
-    virtual regionid_type findRegion( personid_type subscriber ) = 0;
+    virtual void findRegion( personid_type subscriber,
+                             RegionPtr& ptr ) = 0;
+    virtual bool getRegion( regionid_type regionId,
+                            RegionPtr& ptr ) = 0;
 };
 
 } // informer

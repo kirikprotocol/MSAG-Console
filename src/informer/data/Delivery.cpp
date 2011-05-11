@@ -17,7 +17,7 @@ planTime_(0),
 dlvInfo_(dlvInfo),
 activityLog_(0),
 source_(source),
-lock_( MTXWHEREAMI ),
+reflock_( MTXWHEREAMI ),
 ref_(0)
 {
     char buf[20];

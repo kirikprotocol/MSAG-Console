@@ -48,13 +48,13 @@ public:
 
 protected:
     void ref() {
-        smsc::core::synchronization::MutexGuard mg(lock_);
+        smsc::core::synchronization::MutexGuard mg(reflock_);
         // smsc_log_debug(log_,"D=%u ref=%u +1",getDlvId(),ref_);
         ++ref_;
     }
     void unref() {
         {
-            smsc::core::synchronization::MutexGuard mg(lock_);
+            smsc::core::synchronization::MutexGuard mg(reflock_);
             // smsc_log_debug(log_,"D=%u ref=%u -1",getDlvId(),ref_);
             if (ref_>1) {
                 --ref_;
@@ -75,9 +75,8 @@ protected:
     ActivityLog*                                       activityLog_;
     InputMessageSource*                                source_;       // owned
 
-    smsc::core::synchronization::Mutex                 lock_;
+    smsc::core::synchronization::Mutex                 reflock_;
     unsigned                                           ref_;
-
 };
 
 

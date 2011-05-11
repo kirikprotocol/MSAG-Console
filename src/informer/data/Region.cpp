@@ -22,11 +22,11 @@ Region::Region( regionid_type regionId,
                 const TimezoneGroup* tzgroup,
                 bool deleted,
                 std::vector< std::string >* masks ) :
+reflock_(),
+ref_(0),
 lock_( MTXWHEREAMI ),
 regionId_(regionId), name_(name), smscId_(smscId), bw_(bw),
-timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted),
-reflock_( MTXWHEREAMI ),
-ref_(0)
+timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted)
 {
     getlog();
     if (masks) { masks->swap(masks_); }
