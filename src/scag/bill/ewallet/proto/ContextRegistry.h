@@ -212,7 +212,7 @@ public:
 
 
     void create( key_type key ) {
-        MutexGuard mg(createMon_);
+        smsc::core::synchronization::MutexGuard mg(createMon_);
         if ( ! set_.Exists(key) ) {
             key->attach("ewall.reg");
             Registry* reg = new Registry;
@@ -224,7 +224,7 @@ public:
 
     Ptr get( key_type key ) {
         {
-            MutexGuard mg(createMon_);
+            smsc::core::synchronization::MutexGuard mg(createMon_);
             Registry** regptr = set_.GetPtr(key);
             if (regptr) return Ptr(*regptr);
         }
@@ -237,7 +237,7 @@ public:
         smsc_log_debug(log_,"destroy %p invoked", key);
         ContextList pl;
         {
-            MutexGuard mg(createMon_);
+            smsc::core::synchronization::MutexGuard mg(createMon_);
             Registry** regptr = set_.GetPtr(key);
             if ( regptr ) {
                 {

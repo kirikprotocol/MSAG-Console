@@ -66,7 +66,7 @@ public:
   int Execute() {
     while (!stopped_) {
       {
-        MutexGuard mg(monitor_);
+        smsc::core::synchronization::MutexGuard mg(monitor_);
         monitor_.wait(interval_);
       }
       if (statlog_) {
@@ -79,7 +79,7 @@ public:
     if (stopped_) {
       return stopped_;
     }
-    MutexGuard mg(monitor_);
+    smsc::core::synchronization::MutexGuard mg(monitor_);
     stopped_ = true;
     monitor_.notify();
     return stopped_;
@@ -94,7 +94,7 @@ private:
   StatisticsLogger<Event, Buffer>* statlog_;
   int interval_;
   bool stopped_;
-  EventMonitor monitor_;
+  smsc::core::synchronization::EventMonitor monitor_;
 };
 
 }
