@@ -214,6 +214,16 @@ public:
     return true;
   }
 
+  template <class BackInsCont>
+  void collectKeys( BackInsCont& c ) {
+      if (count==0) return;
+      for ( int idx = 0; idx < size; ++idx ) {
+          if ( (refcounts[idx]&0x80000000) != 0 ) {
+              c.push_back(keys[idx]);
+          }
+      }
+  }
+
   //Note: it's not recommended to modify cache while accessing its elements
   //via iterators. Iterator may become invalid due to insertion of new elements.
   class Iterator{
