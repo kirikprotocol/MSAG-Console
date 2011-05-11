@@ -789,10 +789,17 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss feature: backup into chained files
   pvss feature: allow readonly access in backup mode
 
+2011-05-05 18:23 bukind
+  pvss features: chained backup and readonly access are working now
+
 =================================================================================================================
 2011-05-11 12:09 bukind msag-build-20110511
 
 2011-03-29 14:40 bukind
   msag fix: unhandled exception in stats led to coredump
+
+=================================================================================================================
+2011-05-11 17:41 bukind pvss-build-20110511
+  pvss bugfix: typo in RollingFileStream resulting in coredump
 
 --- current fixes ---

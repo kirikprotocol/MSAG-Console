@@ -299,7 +299,7 @@ void RollingFileStream::init()
         file_.Write( FILEHEADER, strlen(FILEHEADER) );
     }
     smsc_log_info(log_,"RollFileStream(%s) init unfinished=%u needfix=%d usingLast=%d",
-                  prefix_.c_str(), unsigned(badlogs.size()), needPostfix_,
+                  getName(), unsigned(badlogs.size()), needPostfix_,
                   filestamp != now );
     startTime_ = filestamp;
     crc32_ = 0;
@@ -309,7 +309,7 @@ void RollingFileStream::init()
 
 void RollingFileStream::update( ProfileLogStream& ps )
 {
-    smsc_log_info(log_,"RollFileStream(%s) update");
+    smsc_log_info(log_,"RollFileStream(%s) update",getName());
     RollingFileStream& rfs = dynamic_cast<RollingFileStream&>(ps);
     interval_ = rfs.interval_;
     if ( prefix_ != rfs.prefix_ ) {
@@ -330,7 +330,7 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
     collectUnfinishedLogs( prefix_.c_str(), badlogs );
     if ( badlogs.empty() ) return;
     smsc_log_info(log_,"RollFileStream(%s) postInitFix unfinished=%u",
-                  prefix_.c_str(), unsigned(badlogs.size()) );
+                  getName(), unsigned(badlogs.size()) );
     
     for ( BadLogs::iterator j = badlogs.begin(); ; ) {
         time_t currentLogTime = *j;
