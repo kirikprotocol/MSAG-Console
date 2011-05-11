@@ -453,8 +453,8 @@ public class DeliveryListController extends DeliveryController {
     List<DeliveryStatusHistory.Item> items = statusHistory.getHistoryItems();
     Date endDate = null;
     for(DeliveryStatusHistory.Item i : items) {
-      if(i.getStatus() == DeliveryStatus.Finished && (endDate == null || i.getDate().after(endDate))) {
-        endDate = i.getDate();
+      if((endDate == null || i.getDate().after(endDate))) {
+        endDate = i.getStatus() == DeliveryStatus.Finished ? i.getDate() : null;
       }
     }
     return endDate;
