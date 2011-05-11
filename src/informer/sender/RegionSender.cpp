@@ -32,31 +32,34 @@ smsc::logger::Logger* makeLogger( const Region* r)
 
 }
 
-RegionSender::RegionSender( SmscSender& conn, const RegionPtr& r ) :
+RegionSender::RegionSender( const SmscSenderPtr& conn, const RegionPtr& r ) :
 log_(makeLogger(r.get())),
 reflock_( MTXWHEREAMI ),
 ref_(0),
 lock_( MTXWHEREAMI ),
-conn_(0),
+conn_(),
 region_(r),
 taskList_(*this,2*maxScoreIncrement,log_),
 speedControl_(std::max(region_->getBandwidth(),1U))
 {
-    smsc_log_debug(log_,"ctor S='%s' R=%u",conn.getSmscId().c_str(),unsigned(r->getRegionId()));
-    assignSender(&conn);
+    if (!conn) {
+        throw InfosmeException(EXC_LOGICERROR,"conn is null");
+    }
+    smsc_log_debug(log_,"ctor S='%s' R=%u",conn->getSmscId().c_str(),unsigned(r->getRegionId()));
+    assignSender(conn);
 }
 
 
-void RegionSender::assignSender( SmscSender* conn )
+void RegionSender::assignSender( const SmscSenderPtr& conn )
 {
     // reset speed control
     speedControl_.setSpeed(std::max(region_->getBandwidth(),1U),
                            currentTimeMicro() % flipTimePeriod );
     if ( conn_ != conn ) {
-        if (conn_) conn_->detachRegionSender(*this);
+        if (conn_.get()) { conn_->detachRegionSender(*this); }
         conn_ = conn;
-        if (conn_) conn_->attachRegionSender(*this);
-    } else {
+        if (conn_.get()) { conn_->attachRegionSender(*this); }
+    } else if (conn_.get()) {
         conn_->updateBandwidth();
     }
 }
@@ -129,19 +132,19 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
     smsc_log_debug(log_,"add delivery D=%u",dlvId);
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
-        DlvMap::iterator iter = dlvList_.lower_bound(dlvId);
-        if (iter != dlvList_.end() && iter->first == dlvId ) {
+        RegionalStoragePtr* iter = dlvList_.GetPtr(dlvId);
+        if (iter) {
             // already added
             return;
         }
-        dlvList_.insert(iter,std::make_pair(dlvId,RegionalStoragePtr(&ptr)));
+        dlvList_.Insert(dlvId,RegionalStoragePtr(&ptr));
         taskList_.add(&ptr);
         usectime_type currentTime = (currentTimeMicro() + 1000) % flipTimePeriod;
         if ( speedControl_.getNextTime() > currentTime ) {
             speedControl_.suspend( currentTime );
         }
     }
-    if (conn_) conn_->wakeUp();
+    if (conn_.get()) { conn_->wakeUp(); }
 }
 
 
@@ -149,14 +152,13 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
 {
     smsc_log_debug(log_,"remove delivery D=%u",dlvId);
     {
+        RegionalStoragePtr iter;
         smsc::core::synchronization::MutexGuard mg(lock_);
-        DlvMap::iterator iter = dlvList_.lower_bound(dlvId);
-        if (iter == dlvList_.end() || iter->first != dlvId ) {
+        if (!dlvList_.Pop(dlvId,iter)) {
             // not found
             return;
         }
         taskList_.remove(EqualById(dlvId));
-        dlvList_.erase(iter);
     }
 }
 
@@ -207,7 +209,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr, unsigned& objSl
     assert(!ptr == false);
     try {
 
-        assert(conn_);
+        assert(conn_.get());
         res = conn_->send(*ptr, msg_, untilActiveEnd_, nchunks);
         if ( res == smsc::system::Status::OK && nchunks > 0 ) {
             // message has been put into output queue

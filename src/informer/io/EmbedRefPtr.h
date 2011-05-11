@@ -57,6 +57,7 @@ public:
     // to test the validity of the ptr
     inline bool operator ! () const { return !x_; }
     inline bool operator == ( const EmbedRefPtr& p ) const { return x_ == p.x_; }
+    inline bool operator != ( const EmbedRefPtr& p ) const { return x_ != p.x_; }
 
     inline const T* get() const { return x_; }
     inline T* get() { return x_; }

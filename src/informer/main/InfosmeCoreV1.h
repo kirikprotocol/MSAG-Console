@@ -11,11 +11,13 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
+#include "informer/io/EmbedRefPtr.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/BindSignal.h"
-#include "informer/sender/RegionSender.h"
+// #include "informer/sender/RegionSender.h"
+// #include "informer/sender/SmscSender.h"
 #include "informer/sender/ReceiptProcessor.h"
 #include "logger/Logger.h"
 
@@ -39,10 +41,11 @@ namespace dcp {
 class DcpServer;
 }
 
-class SmscSender;
 struct SmscConfig;
 class DeliveryMgr;
 class FinalLog;
+class RegionSender;
+class SmscSender;
 
 class InfosmeCoreV1 : public InfosmeCore,
 public DeliveryActivator,
@@ -177,8 +180,8 @@ private:
     smsc::core::synchronization::EventMonitor  startMon_;
     bool                                       started_;
     std::string                                     defaultSmscId_;
-    smsc::core::buffers::Hash< SmscSender* >        smscs_;        // owned
-    smsc::core::buffers::IntHash< RegionSenderPtr > regSends_;   // owned
+    smsc::core::buffers::Hash< EmbedRefPtr<SmscSender> >      smscs_;        // owned
+    smsc::core::buffers::IntHash< EmbedRefPtr<RegionSender> > regSends_;   // owned
 
     RegionFinderV1                                  rf_;
 

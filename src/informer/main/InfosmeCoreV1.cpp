@@ -254,20 +254,27 @@ InfosmeCoreV1::~InfosmeCoreV1()
 
     // detaching region senders
     smsc_log_info(log_,"--- destroying region senders ---");
-    int regId;
-    RegionSenderPtr* regsend;
-    for ( IntHash< RegionSenderPtr >::Iterator i(regSends_); i.Next(regId,regsend); ) {
-        smsc_log_debug(log_,"detaching regsend RS=%u", regionid_type(regId));
-        (*regsend)->assignSender(0);
+    {
+        int regId;
+        RegionSenderPtr* regsend;
+        SmscSenderPtr sender;
+        for ( IntHash< RegionSenderPtr >::Iterator i(regSends_); i.Next(regId,regsend); ) {
+            smsc_log_debug(log_,"detaching regsend RS=%u", regionid_type(regId));
+            (*regsend)->assignSender(sender);
+            regsend->reset(0);
+        }
+        regSends_.Empty();
     }
-    regSends_.Empty();
 
     smsc_log_info(log_,"--- destroying smscs ---");
-    char* smscId;
-    SmscSender* sender;
-    for ( Hash< SmscSender* >::Iterator i(&smscs_); i.Next(smscId,sender); ) {
-        smsc_log_debug(log_,"destroying smsc '%s'",smscId);
-        delete sender;
+    {
+        char* smscId;
+        SmscSenderPtr* sender;
+        for ( Hash< SmscSenderPtr >::Iterator i(&smscs_); i.Next(smscId,sender); ) {
+            smsc_log_debug(log_,"destroying S='%s'",smscId);
+            sender->reset(0);
+        }
+        smscs_.Empty();
     }
 
     smsc_log_info(log_,"--- destroying delivery mgr ---");
@@ -433,8 +440,8 @@ void InfosmeCoreV1::start()
     Start();
     // start all smsc
     char* smscId;
-    SmscSender* ptr;
-    for ( smsc::core::buffers::Hash<SmscSender*>::Iterator i(&smscs_);
+    SmscSenderPtr ptr;
+    for ( smsc::core::buffers::Hash<SmscSenderPtr>::Iterator i(&smscs_);
           i.Next(smscId,ptr);) {
         ptr->start();
     }
@@ -476,8 +483,8 @@ void InfosmeCoreV1::stop()
 
         // stop all smscs
         char* smscId;
-        SmscSender* sender;
-        for (Hash< SmscSender* >::Iterator i(&smscs_); i.Next(smscId,sender);) {
+        SmscSenderPtr sender;
+        for (Hash< SmscSenderPtr >::Iterator i(&smscs_); i.Next(smscId,sender);) {
             sender->stop();
         }
         smsc_log_debug(log_,"--- waiting for self thread ---");
@@ -714,7 +721,7 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         // find smscconn
         char smscId[SMSC_ID_LENGTH];
         regPtr->getSmscId(smscId);
-        SmscSender** smsc = smscs_.GetPtr(smscId);
+        SmscSenderPtr* smsc = smscs_.GetPtr(smscId);
         if (!smsc || !*smsc) {
             throw InfosmeException(EXC_CONFIG,"S='%s' is not found for R=%u",smscId,regionId);
         }
@@ -723,33 +730,10 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         smsc_log_debug(log_,"%s R=%u for S='%s'",
                        created ? "created" : "updated",
                        regionId, smscId );
-        /*
-        {
-            if ( rf_.getRegion(regionId,regPtr) ) {
-                // found
-                
-
-            MutexGuard rmg(regMtx_);
-            RegionPtr* ptr;
-            ptr = regions_.GetPtr(regionId);
-
-            // update masks
-            rf_.updateMasks(ptr ? ptr->get() : 0, *r.get());
-
-            if (!ptr) {
-                smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId);
-                ptr = &regions_.Insert(regionId,RegionPtr(r.release()));
-            } else {
-                smsc_log_debug(log_,"updating R=%u for S='%s'",regionId,smscId);
-                (*ptr)->swap( *r.get() );
-            }
-            regPtr = *ptr;
-        }
-         */
 
         RegionSenderPtr* rs = regSends_.GetPtr(regionId);
         if (!rs) {
-            rs = &regSends_.Insert(regionId,RegionSenderPtr(new RegionSender(**smsc,regPtr)));
+            rs = &regSends_.Insert(regionId,RegionSenderPtr(new RegionSender(*smsc,regPtr)));
         } else {
             (*rs)->assignSender(*smsc);
         }
@@ -991,7 +975,7 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
     }
     {
         MutexGuard mg(startMon_);
-        SmscSender** ptr = smscs_.GetPtr(smscId);
+        SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
         if (ptr) {
             throw InfosmeException(EXC_ALREADYEXIST,"smsc '%s' already exists",smscId);
         }
@@ -1012,7 +996,7 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
     {
         MutexGuard mg(startMon_);
-        SmscSender** ptr = smscs_.GetPtr(smscId);
+        SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
         if (!ptr) {
             throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
         }
@@ -1045,7 +1029,7 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
         throw InfosmeException(EXC_BADNAME,"invalid default smsc name '%s'",smscId ? smscId : "");
     }
     if (smscId == defaultSmscId_) return;
-    SmscSender** ptr = smscs_.GetPtr(smscId);
+    SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
     if (!ptr) {
         throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
     }
@@ -1053,7 +1037,7 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
     if (! rf_.getRegion(defaultRegionId,rptr) ) {
         throw InfosmeException(EXC_NOTFOUND,"default region is not found");
     }
-    RegionSenderPtr* regptr = regSends_.GetPtr(0);
+    RegionSenderPtr* regptr = regSends_.GetPtr(defaultRegionId);
     if (!regptr) {
         throw InfosmeException(EXC_LOGICERROR,"default RS is not found");
     }
@@ -1140,9 +1124,9 @@ void InfosmeCoreV1::getSmscStats( std::vector< CoreSmscStats >& css )
     MutexGuard mg(startMon_);
     css.reserve( smscs_.GetCount() );
     char* smscId;
-    SmscSender* ptr;
+    SmscSenderPtr ptr;
     const usectime_type currentTime = currentTimeMicro();
-    for ( smsc::core::buffers::Hash< SmscSender* >::Iterator iter(&smscs_);
+    for ( smsc::core::buffers::Hash< SmscSenderPtr >::Iterator iter(&smscs_);
           iter.Next(smscId,ptr); ) {
         if ( !ptr ) continue;
         css.push_back( CoreSmscStats() );
@@ -1236,7 +1220,7 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
     char smscId[SMSC_ID_LENGTH];
     region->getSmscId(smscId);
     smsc_log_debug(log_,"R=%u is connected to S='%s'", rId, smscId);
-    SmscSender** sender = smscs_.GetPtr(smscId);
+    SmscSenderPtr* sender = smscs_.GetPtr(smscId);
     if ( !sender ) {
         throw InfosmeException(EXC_NOTFOUND,"Smsc '%s' is not found",smscId);
     }
@@ -1611,24 +1595,24 @@ void InfosmeCoreV1::updateSmsc( const char*       smscId,
     if (cfg) {
         // create/update
         MutexGuard mg(startMon_);
-        SmscSender** ptr = smscs_.GetPtr(smscId);
+        SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
         if (!ptr) {
             ptr = smscs_.SetItem(smscId,
-                                 new SmscSender(*this,smscId,
-                                                *cfg,
-                                                retryConfig));
-        } else if (*ptr) {
+                                 SmscSenderPtr(new SmscSender(*this,smscId,
+                                                              *cfg,
+                                                              retryConfig)));
+        } else if ( !*ptr ) {
+            ptr->reset(new SmscSender(*this,smscId,*cfg,retryConfig));
+        } else {
             (*ptr)->updateConfig(*cfg,retryConfig);
             // (*ptr)->waitUntilReleased();
-        } else {
-            *ptr = new SmscSender(*this,smscId,*cfg,retryConfig);
         }
-        if (ptr && *ptr && started_) {
+        if (ptr && ptr->get() && started_) {
             (*ptr)->start();
         }
     } else {
         // delete the smsc
-        SmscSender* ptr = 0;
+        SmscSenderPtr ptr;
         {
             MutexGuard mg(startMon_);
             if (!smscs_.Pop(smscId,ptr)) {
@@ -1640,10 +1624,13 @@ void InfosmeCoreV1::updateSmsc( const char*       smscId,
             for ( std::vector< regionid_type >::const_iterator i = regIds.begin();
                   i != regIds.end(); ++i ) {
                 smsc_log_debug(log_,"removing RS=%u for S='%s' from core", *i, smscId);
-                regSends_.Delete(*i);
+                RegionSenderPtr rptr;
+                if ( regSends_.Pop(*i,rptr) ) {
+                    rptr->assignSender(SmscSenderPtr());
+                }
             }
         }
-        delete ptr;
+        // delete ptr;
     }
 }
 

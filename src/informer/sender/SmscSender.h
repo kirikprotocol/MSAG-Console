@@ -8,8 +8,9 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "informer/data/RetryPolicy.h"
-#include "informer/io/Typedefs.h"
+#include "informer/io/EmbedRefPtr.h"
 #include "informer/io/SnapshotCounter.h"
+#include "informer/io/Typedefs.h"
 #include "informer/opstore/RegionalStorage.h"
 #include "logger/Logger.h"
 #include "sme/SmppBase.hpp"
@@ -43,6 +44,8 @@ struct SmscConfig
 class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPduEventListener
 {
     friend class ScoredPtrList< SmscSender >;
+    friend class EmbedRefPtr< SmscSender >;
+
     typedef smsc::core::buffers::CyclicQueue< ResponseData > DataQueue;
     typedef std::list< ReceiptData > ReceiptList;
     class SmscJournal;
@@ -127,7 +130,7 @@ private:
     void connectLoop();
     void sendLoop();
 
-    typedef RegionSender* ScoredPtrType;
+    typedef RegionSenderPtr ScoredPtrType;
 
     unsigned scoredObjIsReady( unsigned unused, ScoredPtrType regionSender );
     int processScoredObj( unsigned unused, ScoredPtrType regionSender, unsigned& objSleep );
@@ -138,8 +141,26 @@ private:
 
     bool getNextRollingData( ReceiptData& rd, bool firstPass );
 
+    inline void ref() {
+        smsc::core::synchronization::MutexGuard mg(reflock_ MTXWHEREPOST);
+        ++ref_;
+    }
+    inline void unref() {
+        {
+            smsc::core::synchronization::MutexGuard mg(reflock_ MTXWHEREPOST);
+            if (ref_>1) {
+                --ref_;
+                return;
+            }
+        }
+        delete this;
+    }
+    
 private:
     smsc::logger::Logger*                     log_;
+    smsc::core::synchronization::Mutex        reflock_;
+    unsigned                                  ref_;
+
     ReceiptProcessor&                         rproc_;
     RetryPolicy                               retryPolicy_;
     smsc::sms::IllFormedReceiptParser*        parser_;
@@ -173,6 +194,8 @@ private:
     bool                                               awaken_;
     bool                                               isStopping_;
 };
+
+typedef EmbedRefPtr< SmscSender >  SmscSenderPtr;
 
 } // informer
 } // smsc

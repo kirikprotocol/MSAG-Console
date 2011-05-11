@@ -8,6 +8,7 @@
 #include "informer/opstore/RegionalStorage.h"
 #include "ScoredPtrList.h"
 #include "core/synchronization/Mutex.hpp"
+#include "core/buffers/IntHash.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -21,15 +22,15 @@ class RegionSender
     friend class EmbedRefPtr< RegionSender >;
 
 public:
-    RegionSender( SmscSender& conn, const RegionPtr& r );
+    RegionSender( const EmbedRefPtr<SmscSender>& conn, const RegionPtr& r );
 
     ~RegionSender() {}
 
-    inline const SmscSender* getConn() const { return conn_; }
+    inline const SmscSender* getConn() const { return conn_.get(); }
     
     // used to switch senders
     // NOTE: this method should be invoked from locked state.
-    void assignSender( SmscSender* conn );
+    void assignSender( const EmbedRefPtr<SmscSender>& conn );
 
     inline regionid_type getRegionId() const {
         return region_.get() ? region_->getRegionId() : 0;
@@ -84,7 +85,7 @@ private:
     }
     
 private:
-    typedef std::map< dlvid_type, RegionalStoragePtr > DlvMap;
+    typedef smsc::core::buffers::IntHash<RegionalStoragePtr> DlvMap;
 
     smsc::logger::Logger*              log_;
 
@@ -92,7 +93,7 @@ private:
     unsigned                           ref_;
 
     smsc::core::synchronization::Mutex lock_;
-    SmscSender*                        conn_;     // not owned
+    EmbedRefPtr<SmscSender>            conn_;     // not owned
     RegionPtr                          region_;   // shared ownership
     DlvMap                             dlvList_;
     ScoredPtrList< RegionSender >      taskList_; // dlvs are not owned

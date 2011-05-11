@@ -25,8 +25,8 @@ using namespace eyeline::informer;
 struct RSScan
 {
     RSScan( std::vector< regionid_type >& r ) : regions(r) {}
-    bool operator () ( const RegionSender* rs ) {
-        if (rs) { regions.push_back(rs->getRegionId()); }
+    bool operator () ( const RegionSenderPtr rs ) {
+        if (rs.get()) { regions.push_back(rs->getRegionId()); }
         return false;
     }
     std::vector< regionid_type >& regions;
@@ -35,8 +35,8 @@ struct RSScan
 struct RSBandwidth
 {
     RSBandwidth() : bandwidth(0) {}
-    bool operator () ( const RegionSender* rs ) {
-        if (rs) { bandwidth += rs->getBandwidth(); }
+    bool operator () ( const RegionSenderPtr rs ) {
+        if (rs.get()) { bandwidth += rs->getBandwidth(); }
         return false;
     }
     unsigned bandwidth;
@@ -308,6 +308,8 @@ SmscSender::SmscSender( ReceiptProcessor&  core,
                         const SmscConfig&  cfg,
                         smsc::util::config::Config* retryConfig ) :
 log_(checkSmscName(smscId)),
+reflock_(MTXWHEREAMI),
+ref_(0),
 rproc_(core),
 parser_(0),
 smscId_(smscId),
@@ -769,8 +771,9 @@ void SmscSender::detachRegionSender( RegionSender& rs )
 {
     smsc_log_debug(log_,"S='%s' detaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
     {
+        RegionSenderPtr rp(&rs);
         MutexGuard mg(reconfLock_);
-        scoredList_.remove(ScoredPtrList<SmscSender>::isEqual(&rs));
+        scoredList_.remove(ScoredPtrList<SmscSender>::isEqual(rp));
     }
     updateBandwidth();
 }
@@ -780,11 +783,12 @@ void SmscSender::attachRegionSender( RegionSender& rs )
 {
     smsc_log_debug(log_,"S='%s' attaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
     {
+        RegionSenderPtr rp(&rs);
         MutexGuard mg(reconfLock_);
-        if ( scoredList_.has(ScoredPtrList<SmscSender>::isEqual(&rs)) ) {
+        if ( scoredList_.has(ScoredPtrList<SmscSender>::isEqual(rp)) ) {
             return;
         }
-        scoredList_.add(&rs);
+        scoredList_.add(rp);
     }
     updateBandwidth();
     wakeUp();
