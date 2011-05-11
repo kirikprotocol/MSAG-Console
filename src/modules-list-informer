@@ -1,0 +1,7 @@
+?logger
+?core  "SMSC core implementation"
+?util  "Utility classes"
+?sms   "SMS declaration"
+?smpp
+?sme
+?informer
