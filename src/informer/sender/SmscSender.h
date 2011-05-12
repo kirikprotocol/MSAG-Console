@@ -35,6 +35,7 @@ struct SmscConfig
     int interConnectPeriod;
     int ussdPushOp;
     int ussdPushVlrOp;
+    unsigned unrespondedMessagesMax;
     timediff_type minValidityTime;
     timediff_type maxValidityTime;
 };

@@ -390,7 +390,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         }
 
         // check the number of seqnums
-        if ( unsigned(seqnumHash_.Count()) > getCS()->getUnrespondedMessagesMax() ) {
+        if ( unsigned(seqnumHash_.Count()) > smscConfig_.unrespondedMessagesMax ) {
             what = "too many unresp msgs";
             res = smsc::system::Status::MSGQFUL;
             break;
@@ -1429,7 +1429,7 @@ void SmscSender::sendLoop()
         if ( throttled ) {
             nextWakeTime = currentTime_ + 1000;
             continue;
-        } else if ( unsigned(seqnumHash_.Count()) > getCS()->getUnrespondedMessagesMax() ) {
+        } else if ( unsigned(seqnumHash_.Count()) > smscConfig_.unrespondedMessagesMax ) {
             // too many unresponded, wait one millisec
             nextWakeTime = currentTime_ + 1000;
             continue;

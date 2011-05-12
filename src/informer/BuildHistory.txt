@@ -1,3 +1,6 @@
+2011-05-12 16:22 bukind
+  feature: unrespondedMessagesMas is per SmscSender
+
 =====================================================================
 2011-05-12 14:42 bukind informer-build-20110512
 
