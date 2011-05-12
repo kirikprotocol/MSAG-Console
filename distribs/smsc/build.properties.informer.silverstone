@@ -1,0 +1,22 @@
+TEMPLATE_PROPS=informer.properties
+
+BUILD_DIR=/home/msag/info_build
+SMSC_DIR=/home/msag/info_build/smsc
+
+; for 64 bit build set B64 property to yes and put B64=YES to makeargs
+; also specify apporpriate xtarget values in makeargs like:
+; sparc: XTARGET="-DEIN_HD=101 -DEIN_SS7_LINKAGE_static -m64 -xtarget=ultraT1 -xmemalign=8i -xcode=pic32"
+; x64:   XTARGET="-DEIN_HD=101 -DEIN_SS7_LINKAGE_static -m64 -KPIC -xmodel=medium"
+; TE stack includes and libs path: SS7_STACK_HOME=/opt/ss7repo/binver/dcs1001025v101  
+; TE stack linking scheme: EIN_SS7_LINKAGE=static
+B64=YES
+MAKE_ARGS=CXX=CC USECOLORS=YES DEBUG=YES VERBOSE=YES TRACE=YES DISABLE_SMPP_CHECKS=YES UNICODE=NO XTARGET="-m64 -xmodel=medium -KPIC" NOMAPPROXY=YES B64=YES CHECKCONTENTION=YES
+
+DISTR_DIR=/home/msag/info_distr
+CATALINA_BASE=/home/msag/info_distr
+CATALINA_HOME=/home/msag/info_distr/tomcat
+; set SNMP_MOD_NAME to snmp if SNMP=YES
+SNMP_MOD_NAME=
+; for 64 bit set to lib64
+; ORACLE_HOME=/opt/oracle/oracle/product/10.2.0
+; ORALIB_SUBDIR=lib64
