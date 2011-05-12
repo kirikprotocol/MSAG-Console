@@ -2,7 +2,9 @@
 ?core  "SMSC core implementation"
 ?util  "Utility classes"
 ?sms   "SMS declaration"
+?license
 ?smpp
 ?sme
 ?informer
+?eyeline
 ?scag
