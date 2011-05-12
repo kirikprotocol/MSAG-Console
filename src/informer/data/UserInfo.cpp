@@ -112,14 +112,26 @@ bool UserInfo::hasRole( UserRole role ) const
 
 usectime_type UserInfo::isReadyAndConsumeQuant( usectime_type currentTime )
 {
-    smsc::core::synchronization::MutexGuard mg(refLock_);
-    usectime_type ret = speedControl_.isReady( currentTime % flipTimePeriod, maxSnailDelay );
-    if (ret) {
-        // adding some randomization to have 'a poorman' balancing
-        return ret + currentTime % getCS()->getRegionRandomizationJitter();
-    }
-    speedControl_.consumeQuant();
-    return 0;
+    usectime_type ret, random = 0;
+    const usectime_type curTime = currentTime % flipTimePeriod;
+    usectime_type nextTime, speed;
+    do {
+        smsc::core::synchronization::MutexGuard mg(refLock_);
+        nextTime = speedControl_.getNextTime();
+        speed = speedControl_.getSpeed();
+        ret = speedControl_.isReady( curTime, maxSnailDelay );
+        if (ret) {
+            // adding some randomization to have 'a poorman' balancing
+            random = curTime % getCS()->getRegionRandomizationJitter();
+            ret += random;
+            break;
+        }
+        speedControl_.consumeQuant();
+    } while (false);
+    smsc_log_debug(log_,"U='%s' spd=%u next=%llu isReady(cur=%llu) = %llu(+%llu)%s",
+                   userId_.c_str(), unsigned(speed), nextTime,
+                   curTime, ret, random, ret ? "" : " quant consumed");
+    return ret;
 }
 
 
