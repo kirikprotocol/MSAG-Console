@@ -818,9 +818,22 @@ void DeliveryMgr::stop()
         mon_.notifyAll();
     }
     ctp_.stopNotify();
-    if (inputRoller_) { inputRoller_->WaitFor(); }
-    if (storeRoller_) { storeRoller_->WaitFor(); }
-    if (statsDumper_) { statsDumper_->WaitFor(); }
+    smsc_log_debug(log_,"ctp is stopped");
+    if (inputRoller_) {
+        smsc_log_debug(log_,"waiting for inputRoller to stop");
+        inputRoller_->stop();
+        inputRoller_->WaitFor(); 
+    }
+    if (storeRoller_) {
+        smsc_log_debug(log_,"waiting for storeRoller to stop");
+        storeRoller_->stop();
+        storeRoller_->WaitFor();
+    }
+    if (statsDumper_) {
+        smsc_log_debug(log_,"waiting for statsDumper to stop");
+        statsDumper_->stop();
+        statsDumper_->WaitFor();
+    }
 
     WaitFor();
     ctp_.shutdown(0);
