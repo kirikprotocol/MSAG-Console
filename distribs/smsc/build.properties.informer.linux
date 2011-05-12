@@ -1,0 +1,7 @@
+BUILD_DIR=/home/bukind/info_build
+DISTR_DIR=/home/bukind/info_distr
+SMSC_DIR=/home/bukind/info_build/smsc
+MAKE_ARGS=USECOLORS=YES DEBUG=YES VERBOSE=YES TRACE=YES DISABLE_SMPP_CHECKS=YES UNICODE=YES NOMAP=YES NOMAPPROXY=YES INFOSMEDB=NO CHECKCONTENTION=YES
+CATALINA_HOME=/home/bukind/info_distr/tomcat
+CATALINA_BASE=/home/bukind/info_distr
+TEMPLATE_PROPS=informer.properties
