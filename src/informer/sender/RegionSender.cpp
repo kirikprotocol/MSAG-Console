@@ -95,9 +95,10 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
                           (now % daynight) + 
                           region_->getTimezone()) % aweek );
          */
-        weekTime_ = region_->getLocalWeekTime(now);
 
         smsc::core::synchronization::MutexGuard mg(lock_);
+        weekTime_ = region_->getLocalWeekTime(now);
+
         // check speed control
         const usectime_type delay = 
             speedControl_.isReady( currentTime % flipTimePeriod,
@@ -118,6 +119,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
             return 0;
         }
     } catch ( std::exception& e ) {
+        smsc::core::synchronization::MutexGuard mg(lock_);
         smsc_log_debug(log_,"R=%u send exc: %s",getRegionId(),e.what());
         speedControl_.suspend( (currentTime + tuPerSec) % flipTimePeriod);
     }
@@ -209,15 +211,11 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr, unsigned& objSl
     int res;
     const int inc = maxScoreIncrement / ptr->getDlvInfo().getPriority();
     assert(!ptr == false);
-    SmscSenderPtr conn;
-    {
-        smsc::core::synchronization::MutexGuard mg(lock_);
-        conn = conn_;
-    }
+    // we may use conn_ here as lock_ is locked in processRegion()
     try {
 
-        assert(conn.get());
-        res = conn->send(*ptr, msg_, untilActiveEnd_, nchunks);
+        assert(conn_.get());
+        res = conn_->send(*ptr, msg_, untilActiveEnd_, nchunks);
         if ( res == smsc::system::Status::OK && nchunks > 0 ) {
             // message has been put into output queue
             smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",
@@ -240,7 +238,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr, unsigned& objSl
                       ulonglong(msg_.msgId), e.what());
         res = smsc::system::Status::UNKNOWNERR;
     }
-    ptr->retryMessage( msg_.msgId, conn->getRetryPolicy(),
+    ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(),
                        msgtime_type(currentTime_/tuPerSec),
                        res, nchunks);
     objSleep = 0;
