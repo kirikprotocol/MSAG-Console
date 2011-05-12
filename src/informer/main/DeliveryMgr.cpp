@@ -831,7 +831,7 @@ void DeliveryMgr::stop()
     }
     if (statsDumper_) {
         smsc_log_debug(log_,"waiting for statsDumper to stop");
-        statsDumper_->stop();
+        // statsDumper_->stop();
         statsDumper_->WaitFor();
     }
 
