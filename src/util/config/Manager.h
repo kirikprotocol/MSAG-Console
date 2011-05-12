@@ -9,7 +9,6 @@
 
 #include <xercesc/dom/DOM.hpp>
 
-#include "store/StoreConfig.h"
 #include "core/buffers/Hash.hpp"
 #include "util/cstrings.h"
 #include "util/config/ConfigException.h"
@@ -20,7 +19,6 @@ namespace util   {
 namespace config {
 
 XERCES_CPP_NAMESPACE_USE
-using smsc::store::StoreConfig;
 using smsc::core::buffers::Hash;
 using smsc::util::cStringCopy;
 
