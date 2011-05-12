@@ -140,6 +140,7 @@ public:
 
     void stop() {
         if (isStopping_) return;
+        smsc_log_info(log_,"S='%s' stop received by journal",sender_.smscId_.c_str());
         isStopping_ = true;
         {
             MutexGuard mg(mon_);
