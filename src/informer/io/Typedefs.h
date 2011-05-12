@@ -72,10 +72,10 @@ static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;
 
 /// the period of time-wrap
-static const usectime_type flipTimePeriod = 24*3600*tuPerSec;
+static const usectime_type flipTimePeriod = 24ULL*3600ULL*tuPerSec;
 
 /// maximum difference between high-freq and low-freq items in scoredlist
-static const usectime_type maxSnailDelay = 5*tuPerSec;
+static const usectime_type maxSnailDelay = 5ULL*tuPerSec;
 
 inline msgtime_type currentTimeSeconds() { return msgtime_type(currentTimeMicro()/tuPerSec); }
 
