@@ -1,4 +1,14 @@
 =====================================================================
+2011-05-12 11:56 bukind informer-build-20110512
+
+2011-05-12 11:54 bukind
+  bugfix in core/buffers/File::Readline
+  better lock granularity in core
+  since now there is a new tagging schema in CVS:
+  each devel version is tagged by informer-build-YYYYMMDD,
+  and also by moving informer-head tag.
+
+=====================================================================
 2011-05-10 14:08 bukind informer-build-20110510
 
 2011-05-10 14:00 bukind
