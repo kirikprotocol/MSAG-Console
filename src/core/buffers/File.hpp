@@ -968,6 +968,10 @@ public:
       str="";
       if(flags&FLG_RDBUF)
       {
+        if(bufferPosition==bufferUsed)
+        {
+          Read(0,0);
+        }
         while(bufferPosition<bufferUsed)
         {
           int i=0;
@@ -1305,6 +1309,7 @@ protected:
     bufferSize=sizeof(initBuffer);
     bufferPosition=0;
     bufferUsed=0;
+    flags&=~(FLG_RDBUF|FLG_WRBUF);
   }
 
   void ResizeBuffer(size_t newsz)
