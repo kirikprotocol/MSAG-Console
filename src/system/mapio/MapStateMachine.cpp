@@ -4014,9 +4014,10 @@ static String32 GetUSSDSubsystemUCS2(
 static unsigned GetUSSDRequestStringUCS2(
   const char* text,
   unsigned length,
-  char* out)
+  char* out,
+  UssdParsingMode upm)
 {
-  if(getNextUcs2Char(text)=='#')
+  if(upm==upmNever || (upm==upmOnlyStar && getNextUcs2Char(text)=='#'))
   {
     memcpy(out,text,length);
     return length;
@@ -4065,9 +4066,10 @@ static unsigned GetUSSDRequestStringUCS2(
 static unsigned GetUSSDRequestString(
   const char* text,
   unsigned length,
-  char* out)
+  char* out,
+  UssdParsingMode upm)
 {
-  if(*text=='#')
+  if(upm==upmNever || (upm==upmOnlyStar && *text=='#'))
   {
     memcpy(out,text,length);
     return length;
@@ -4147,7 +4149,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       unsigned chars = ussdString_s.ussdStrLen*8/7;
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
-      unsigned outLen = GetUSSDRequestString(ms.bytes, ms.len,outStr);
+      unsigned outLen = GetUSSDRequestString(ms.bytes, ms.len,outStr,MapLimits::getInstance().getUssdParsing(subsystem.c_str()));
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
       sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,outStr,outLen);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);
@@ -4155,7 +4157,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     {
       char outStr[256];
       subsystem = GetUSSDSubsystemUCS2((char*)ussdString_s.ussdStr,ussdString_s.ussdStrLen);
-      unsigned outLen = GetUSSDRequestStringUCS2((char*)ussdString_s.ussdStr,ussdString_s.ussdStrLen,outStr);
+      unsigned outLen = GetUSSDRequestStringUCS2((char*)ussdString_s.ussdStr,ussdString_s.ussdStrLen,outStr,MapLimits::getInstance().getUssdParsing(subsystem.c_str()));
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
       if(!HSNS_isEqual())
       {
@@ -4691,7 +4693,7 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     String32 subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
     char outStr[256];
-    unsigned outLen = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen,outStr);
+    unsigned outLen = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen,outStr,MapLimits::getInstance().getUssdParsing(subsystem.c_str()));
     sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
     sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,outStr,outLen);
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);

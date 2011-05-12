@@ -3,6 +3,7 @@
 
 #include <string>
 #include <set>
+#include <map>
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
 
@@ -11,6 +12,12 @@ namespace system{
 namespace mapio{
 
 namespace sync=smsc::core::synchronization;
+
+enum UssdParsingMode{
+  upmAlways,
+  upmOnlyStar,
+  upmNever
+};
 
 class MapLimits{
 public:
@@ -89,6 +96,26 @@ public:
     }
     return openRespRealAddr.find(ussd)!=openRespRealAddr.end();
   }
+
+  UssdParsingMode getUssdParsing(const std::string& ussd)
+  {
+    sync::MutexGuard mg(mtx);
+    std::string::size_type pos=ussd.find(':');
+    StrModeMap::iterator it;
+    if(pos!=std::string::npos)
+    {
+      it=ussdParseMode.find(ussd.substr(pos+1));
+    }else
+    {
+      it=ussdParseMode.find(ussd);
+    }
+    if(it==ussdParseMode.end())
+    {
+      return defaultUPM;
+    }
+    return it->second;
+  }
+
 
   static void Init(const char* fn);
   static void Shutdown()
@@ -205,6 +232,11 @@ protected:
 
   StringSet openRespRealAddr;
   sync::Mutex mtxOpenResp;
+
+  typedef std::map<std::string,UssdParsingMode> StrModeMap;
+  StrModeMap ussdParseMode;
+  UssdParsingMode defaultUPM;
+  sync::Mutex mtxUpm;
 
 
   int limitIn;

@@ -86,11 +86,72 @@ void MapLimits::Reinit()
       sync::MutexGuard mg(mtxOpenResp);
       openRespRealAddr.clear();
       std::string orUssdStr=config.getString("ussd.openRespRealAddr");
-      smsc_log_debug(log,"ussd.ati_codes=%s",orUssdStr.c_str());
+      smsc_log_debug(log,"ussd.openRespRealAddr=%s",orUssdStr.c_str());
       parseUssdCodes("open resp real addr",orUssdStr,openRespRealAddr);
     }catch(...)
     {
       smsc_log_info(log,"ussd.openRespRealAddr not found and disabled");
+    }
+    defaultUPM=upmOnlyStar;
+    try {
+      std::string mode=config.getString("ussd.defaultParsingMode");
+      if(mode=="always")
+      {
+        defaultUPM=upmAlways;
+      }else if(mode=="never")
+      {
+        defaultUPM=upmNever;
+      }else if(mode=="onlyStar")
+      {
+        defaultUPM=upmOnlyStar;
+      }else
+      {
+        smsc_log_warn(log,"parsing mode '%s' is invalid. using default: onlyStar");
+      }
+    } catch (std::exception& e)
+    {
+      smsc_log_info(log,"ussd.defaultParsingMode not found, default is onlyStar");
+    }
+    try{
+      sync::MutexGuard mg(mtxUpm);
+      ussdParseMode.clear();
+      StringSet ss;
+      std::string str=config.getString("ussd.parseAlways");
+      smsc_log_debug(log,"ussd.parseAlways=%s",str.c_str());
+      parseUssdCodes("parse always",str,ss);
+      for(StringSet::iterator it=ss.begin(),end=ss.end();it!=end;++it)
+      {
+        ussdParseMode.insert(StrModeMap::value_type(*it,upmAlways));
+      }
+      try{
+        ss.clear();
+        str=config.getString("ussd.parseOnlyStar");
+        smsc_log_debug(log,"ussd.parseOnlyStar=%s",str.c_str());
+        parseUssdCodes("parse only star",str,ss);
+        for(StringSet::iterator it=ss.begin(),end=ss.end();it!=end;++it)
+        {
+          ussdParseMode.insert(StrModeMap::value_type(*it,upmOnlyStar));
+        }
+      }catch(...)
+      {
+        smsc_log_info(log,"ussd.parseOnlyStar not found and disabled");
+      }
+      try{
+        ss.clear();
+        str=config.getString("ussd.parseNever");
+        smsc_log_debug(log,"ussd.parseNever=%s",str.c_str());
+        parseUssdCodes("parse never",str,ss);
+        for(StringSet::iterator it=ss.begin(),end=ss.end();it!=end;++it)
+        {
+          ussdParseMode.insert(StrModeMap::value_type(*it,upmNever));
+        }
+      }catch(...)
+      {
+        smsc_log_info(log,"ussd.parseNever not found and disabled");
+      }
+    }catch(...)
+    {
+      smsc_log_info(log,"ussd.parseAlways not found and disabled");
     }
     char buf[64];
     for(int i=0;i<maxCLevels;i++)
