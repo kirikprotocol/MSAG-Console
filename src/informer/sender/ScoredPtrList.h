@@ -51,7 +51,7 @@ public:
     };
 
 private:
-    typedef std::set< Item, ItemComp > PtrSet;
+    typedef std::multiset< Item, ItemComp > PtrSet;
 
 public:
     typedef typename std::vector< Ptr > PtrList;
