@@ -167,7 +167,7 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
 }
 
 
-unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
+unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
 {
     static const unsigned sleepTimeException = unsigned(4*tuPerSec);
     if (!ptr) return sleepTimeException;
@@ -205,7 +205,7 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
 }
 
 
-int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr, unsigned& objSleep)
+int RegionSender::processScoredObj(unsigned, ScoredPtrType ptr, unsigned& objSleep)
 {
     int nchunks = 0;
     int res;

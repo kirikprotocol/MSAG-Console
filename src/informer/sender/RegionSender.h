@@ -1,7 +1,7 @@
 #ifndef _INFORMER_REGIONSENDER_H
 #define _INFORMER_REGIONSENDER_H
 
-#include <map>
+// #include <map>
 #include "informer/data/Region.h"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/io/SpeedControl.h"
@@ -56,7 +56,7 @@ public:
 private:
     typedef RegionalStorage* ScoredPtrType;
 
-    void scoredObjToString( std::string& s, const ScoredPtrType& dlv )
+    void scoredObjToString( std::string& s, const ScoredPtrType dlv )
     {
         if (!dlv) return;
         char buf[20];
@@ -64,8 +64,8 @@ private:
         s.append(buf);
     }
 
-    unsigned scoredObjIsReady( unsigned unused, ScoredPtrType& dlv );
-    int processScoredObj( unsigned unused, ScoredPtrType& dlv, unsigned& objSleep );
+    unsigned scoredObjIsReady( unsigned unused, ScoredPtrType dlv );
+    int processScoredObj( unsigned unused, ScoredPtrType dlv, unsigned& objSleep );
 
     inline void ref() {
         smsc::core::synchronization::MutexGuard mg(reflock_ MTXWHEREPOST);

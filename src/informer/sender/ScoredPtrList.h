@@ -2,11 +2,21 @@
 #define _SMSC_INFOSME2_SCOREDPTRLIST_H
 
 #include <vector>
-#include <map>
+#include <set>
 #include <algorithm>
 
 namespace eyeline {
 namespace informer {
+
+struct ScoredPtrListDefaultComp
+{
+    // comparison is only by score
+    template <class T>
+        inline bool operator () ( const T& a, const T& b ) {
+            return a.score < b.score;
+        }
+};
+
 
 /// a templated ScoredPtrList
 /// @param Proc is a class that should define the following:
@@ -27,15 +37,21 @@ namespace informer {
 /// 4. dump obj into string
 /// void scoredObjToString( std::string& s, Proc::ScoredPtrType& o );
 ///
-template < class Proc, typename TU = unsigned > class ScoredPtrList
+template < class Proc, typename TU = unsigned, class ItemComp = ScoredPtrListDefaultComp > class ScoredPtrList
 {
 public:
     typedef typename Proc::ScoredPtrType Ptr;
     typedef unsigned ScoreUnit;   // score units
     typedef TU       TimeUnit;    // time units
 
+    struct Item {
+        ScoreUnit score;
+        Ptr       ptr;
+        Item( ScoreUnit s, Ptr p ) : score(s), ptr(p) {}
+    };
+
 private:
-    typedef std::multimap< ScoreUnit, Ptr >  PtrMap;
+    typedef std::set< Item, ItemComp > PtrSet;
 
 public:
     typedef typename std::vector< Ptr > PtrList;
@@ -64,54 +80,54 @@ public:
         // movedObjects_.clear();
         // bool needsClean = false;
         unsigned position = 0;
-        PtrMap movedObjects;
+        PtrSet movedObjects;
         try {
-            for ( typename PtrMap::iterator j = objects_.begin();
+            for ( typename PtrSet::iterator j = objects_.begin();
                   j != objects_.end(); ) {
 
-                typename PtrMap::iterator i = j;
+                typename PtrSet::iterator i = j;
                 ++j;
                 ++position;
 
-                TimeUnit objSleep = proc_.scoredObjIsReady( deltaTime, i->second );
+                TimeUnit objSleep = proc_.scoredObjIsReady( deltaTime, i->ptr );
 
                 if ( objSleep > 0 ) {
                     // object is not ready
                     if ( objSleep < wantToSleep ) wantToSleep = objSleep;
                     if (log_ && log_->isDebugEnabled()) {
                         std::string s;
-                        proc_.scoredObjToString(s,i->second);
+                        proc_.scoredObjToString(s,i->ptr);
                         smsc_log_debug(log_,"obj #%u (%s) score=%u is not ready, objSleep=%u, wantSleep=%u",
-                                       position, s.c_str(), unsigned(i->first),
+                                       position, s.c_str(), unsigned(i->score),
                                        unsigned(objSleep), unsigned(wantToSleep) );
                     }
                     continue;
                 }
                 if (log_ && log_->isDebugEnabled()) {
                     std::string s;
-                    proc_.scoredObjToString(s,i->second);
+                    proc_.scoredObjToString(s,i->ptr);
                     smsc_log_debug(log_,"obj #%u (%s) score=%u is ready",
-                                   position, s.c_str(), unsigned(i->first) );
+                                   position, s.c_str(), unsigned(i->score) );
                 }
 
                 // object is ready
-                const int increment = proc_.processScoredObj( deltaTime, i->second, objSleep );
+                const int increment = proc_.processScoredObj( deltaTime, i->ptr, objSleep );
                 if ( objSleep < wantToSleep ) {
                     // taking actual sleeping time of the object
                     wantToSleep = objSleep;
                 }
                 ScoreUnit score;
                 if ( increment < 0 ) {
-                    score = i->first + ScoreUnit(-increment);
+                    score = i->score + ScoreUnit(-increment);
                 } else if ( increment > 0 ) {
-                    score = i->first + ScoreUnit(increment);
+                    score = i->score + ScoreUnit(increment);
                 } else {
-                    score = i->first + 1;
+                    score = i->score + 1;
                 }
                 
                 if (log_ && log_->isDebugEnabled()) {
                     std::string s;
-                    proc_.scoredObjToString(s,i->second);
+                    proc_.scoredObjToString(s,i->ptr);
                     smsc_log_debug(log_,"obj #%u (%s) score=%u is %sprocessed, inc=%d",
                                    position,
                                    s.c_str(), unsigned(score),
@@ -119,7 +135,7 @@ public:
                                    increment );
                 }
 
-                movedObjects.insert(std::make_pair(score,i->second));
+                movedObjects.insert(Item(score,i->ptr));
                 objects_.erase(i);
 
                 if ( increment > 0 ) {
@@ -142,15 +158,15 @@ public:
     void dump( std::string& s ) const {
         char buf[30];
         unsigned position = 0;
-        for ( typename PtrMap::const_iterator i = objects_.begin();
+        for ( typename PtrSet::const_iterator i = objects_.begin();
               i != objects_.end();
               ++i ) {
             ++position;
-            if ( !i->second ) continue;
+            if ( !i->ptr ) continue;
             sprintf(buf,"\n %3u. sco=%6u ",
-                    position, unsigned(i->first) );
+                    position, unsigned(i->score) );
             s.append(buf);
-            proc_.scoredObjToString(s,i->second);
+            proc_.scoredObjToString(s,i->ptr);
         }
     }
 
@@ -160,17 +176,17 @@ public:
     void add( const Ptr& object ) {
         // add an object to the end of the list
         if ( ! object ) return;
-        objects_.insert(std::make_pair(objects_.empty() ? 0 :
-                                       objects_.rbegin()->first,
-                                       object));
+        objects_.insert(Item(objects_.empty() ? 0 :
+                             objects_.rbegin()->score,
+                             object));
     }
 
 
     template < class Pred > bool has( Pred pred )
     {
-        for ( typename PtrMap::const_iterator i = objects_.begin();
+        for ( typename PtrSet::const_iterator i = objects_.begin();
               i != objects_.end(); ++i ) {
-            if ( pred(i->second) ) { return true; }
+            if ( pred(i->ptr) ) { return true; }
         }
         return false;
     }
@@ -178,12 +194,12 @@ public:
 
     template < class Pred > void remove( Pred pred, PtrList* res = 0 )
     {
-        for ( typename PtrMap::iterator i = objects_.begin();
+        for ( typename PtrSet::iterator i = objects_.begin();
               i != objects_.end();
               ) {
-            if ( pred(i->second) ) {
-                if (res) res->push_back(i->second);
-                typename PtrMap::iterator j = i;
+            if ( pred(i->ptr) ) {
+                if (res) res->push_back(i->ptr);
+                typename PtrSet::iterator j = i;
                 ++i;
                 objects_.erase(j);
                 continue;
@@ -200,12 +216,12 @@ public:
 
 protected:
 
-    void postProcess( PtrMap& movedObjects ) {
+    void postProcess( PtrSet& movedObjects ) {
         if ( movedObjects.empty() ) { return; }
         objects_.insert( movedObjects.begin(), movedObjects.end() );
         bool needfix = false;
-        const ScoreUnit a = objects_.begin()->first;
-        const ScoreUnit b = objects_.rbegin()->first;
+        const ScoreUnit a = objects_.begin()->score;
+        const ScoreUnit b = objects_.rbegin()->score;
         const ScoreUnit diff = b - a;
         const ScoreUnit medi = (b + a)/2;
         if ( diff > maxdiff_*2 ) {
@@ -225,17 +241,17 @@ protected:
             movedObjects.clear();
             const ScoreUnit minscore = medi > maxdiff_/2 ? medi - maxdiff_/2 : 0;
             const ScoreUnit maxscore = minscore + maxdiff_;
-            for ( typename PtrMap::iterator i = objects_.begin();
+            for ( typename PtrSet::iterator i = objects_.begin();
                   i != objects_.end(); ++i ) {
                 ScoreUnit score;
-                if ( i->first < minscore ) {
+                if ( i->score < minscore ) {
                     score = 0;
-                } else if ( i->first > maxscore ) {
+                } else if ( i->score > maxscore ) {
                     score = maxdiff_;
                 } else {
-                    score = i->first - minscore;
+                    score = i->score - minscore;
                 }
-                movedObjects.insert( std::make_pair(score,i->second) );
+                movedObjects.insert(Item(score,i->ptr));
             }
             objects_.swap(movedObjects);
         }
@@ -244,7 +260,7 @@ protected:
 
 private:
     Proc&                 proc_;
-    PtrMap                objects_;
+    PtrSet                objects_;
     // PtrSet                movedObjects_; // temporary vector is here to hold allocated space
     ScoreUnit             maxdiff_;
     smsc::logger::Logger* log_;
