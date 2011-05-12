@@ -16,8 +16,6 @@
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/BindSignal.h"
-// #include "informer/sender/RegionSender.h"
-// #include "informer/sender/SmscSender.h"
 #include "informer/sender/ReceiptProcessor.h"
 #include "logger/Logger.h"
 
@@ -173,13 +171,21 @@ protected:
                      const SmscConfig* cfg,
                      smsc::util::config::Config* retryConfig );
 
+    bool getRegionSender( regionid_type regionId,
+                          EmbedRefPtr< RegionSender >& regPtr );
+
+    bool getSmscSender( const char* smscId,
+                        EmbedRefPtr< SmscSender >& smscPtr );
+
 private:
     smsc::logger::Logger*                      log_;
     CommonSettings                             cs_;
 
     smsc::core::synchronization::EventMonitor  startMon_;
     bool                                       started_;
-    std::string                                     defaultSmscId_;
+
+    smsc::core::synchronization::Mutex                        regLock_;
+    std::string                                               defaultSmscId_;
     smsc::core::buffers::Hash< EmbedRefPtr<SmscSender> >      smscs_;        // owned
     smsc::core::buffers::IntHash< EmbedRefPtr<RegionSender> > regSends_;   // owned
 

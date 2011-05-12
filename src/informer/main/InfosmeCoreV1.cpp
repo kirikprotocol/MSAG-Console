@@ -211,6 +211,7 @@ log_(smsc::logger::Logger::getInstance("core")),
 cs_(maxsms),
 startMon_(MTXWHEREAMI),
 started_(false),
+regLock_(MTXWHEREAMI),
 userLock_(MTXWHEREAMI),
 dlvMgr_(0),
 finalLog_(0),
@@ -257,10 +258,9 @@ InfosmeCoreV1::~InfosmeCoreV1()
     {
         int regId;
         RegionSenderPtr* regsend;
-        SmscSenderPtr sender;
         for ( IntHash< RegionSenderPtr >::Iterator i(regSends_); i.Next(regId,regsend); ) {
             smsc_log_debug(log_,"detaching regsend RS=%u", regionid_type(regId));
-            (*regsend)->assignSender(sender);
+            (*regsend)->assignSender(SmscSenderPtr());
             regsend->reset(0);
         }
         regSends_.Empty();
@@ -432,13 +432,16 @@ void InfosmeCoreV1::init( bool archive )
 void InfosmeCoreV1::start()
 {
     if (started_) return;
-    MutexGuard mg(startMon_);
-    if (started_) return;
-    if (pvssHandler_) { pvssHandler_->start(); }
-    if (pvss_) { pvss_->startup(); }
-    dlvMgr_->start();
-    Start();
+    {
+        MutexGuard mg(startMon_);
+        if (started_) return;
+        if (pvssHandler_) { pvssHandler_->start(); }
+        if (pvss_) { pvss_->startup(); }
+        dlvMgr_->start();
+        Start();
+    }
     // start all smsc
+    MutexGuard mg(regLock_);
     char* smscId;
     SmscSenderPtr ptr;
     for ( smsc::core::buffers::Hash<SmscSenderPtr>::Iterator i(&smscs_);
@@ -481,11 +484,14 @@ void InfosmeCoreV1::stop()
             pvssHandler_->stop();
         }
 
-        // stop all smscs
-        char* smscId;
-        SmscSenderPtr sender;
-        for (Hash< SmscSenderPtr >::Iterator i(&smscs_); i.Next(smscId,sender);) {
-            sender->stop();
+        {
+            // stop all smscs
+            MutexGuard mg(regLock_);
+            char* smscId;
+            SmscSenderPtr sender;
+            for (Hash< SmscSenderPtr >::Iterator i(&smscs_); i.Next(smscId,sender);) {
+                sender->stop();
+            }
         }
         smsc_log_debug(log_,"--- waiting for self thread ---");
         WaitFor();
@@ -710,7 +716,6 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
     // reading region file
     RegionLoader rl("regions.xml", defaultSmscId_.c_str(), regId );
 
-    MutexGuard mg(startMon_); // guaranteed that there is no sending
     do {
         RegionPtr regPtr(rl.popNext());
         // std::auto_ptr<Region> r(rl.popNext());
@@ -721,8 +726,8 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         // find smscconn
         char smscId[SMSC_ID_LENGTH];
         regPtr->getSmscId(smscId);
-        SmscSenderPtr* smsc = smscs_.GetPtr(smscId);
-        if (!smsc || !*smsc) {
+        SmscSenderPtr smsc;
+        if ( !getSmscSender(smscId,smsc) ) {
             throw InfosmeException(EXC_CONFIG,"S='%s' is not found for R=%u",smscId,regionId);
         }
 
@@ -731,11 +736,18 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
                        created ? "created" : "updated",
                        regionId, smscId );
 
-        RegionSenderPtr* rs = regSends_.GetPtr(regionId);
-        if (!rs) {
-            rs = &regSends_.Insert(regionId,RegionSenderPtr(new RegionSender(*smsc,regPtr)));
-        } else {
-            (*rs)->assignSender(*smsc);
+        RegionSenderPtr rs;
+        {
+            MutexGuard rmg(regLock_);
+            RegionSenderPtr* rsptr = regSends_.GetPtr(regionId);
+            if (!rsptr) {
+                regSends_.Insert(regionId,RegionSenderPtr(new RegionSender(smsc,regPtr)));
+            } else {
+                rs = *rsptr;
+            }
+        }
+        if (rs.get()) {
+            rs->assignSender(smsc);
         }
 
     } while (true);
@@ -973,12 +985,9 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
-    {
-        MutexGuard mg(startMon_);
-        SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
-        if (ptr) {
-            throw InfosmeException(EXC_ALREADYEXIST,"smsc '%s' already exists",smscId);
-        }
+    SmscSenderPtr smsc;
+    if ( getSmscSender(smscId,smsc) ) {
+        throw InfosmeException(EXC_ALREADYEXIST,"smsc '%s' already exists",smscId);
     }
     if (!isGoodAsciiName(smscId)) {
         throw InfosmeException(EXC_BADNAME,"bad smsc name '%s'",smscId);
@@ -994,12 +1003,9 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
-    {
-        MutexGuard mg(startMon_);
-        SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
-        if (!ptr) {
-            throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
-        }
+    SmscSenderPtr smsc;
+    if ( !getSmscSender(smscId,smsc) ) {
+        throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
     }
     if (!isGoodAsciiName(smscId)) {
         throw InfosmeException(EXC_BADNAME,"bad smsc name '%s'",smscId);
@@ -1024,26 +1030,28 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
-    MutexGuard mg(startMon_);
     if (!smscId || !smscId[0] || !isGoodAsciiName(smscId)) {
         throw InfosmeException(EXC_BADNAME,"invalid default smsc name '%s'",smscId ? smscId : "");
     }
-    if (smscId == defaultSmscId_) return;
-    SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
-    if (!ptr) {
+    SmscSenderPtr smsc;
+    if (!getSmscSender(smscId,smsc)) {
         throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
     }
     RegionPtr rptr;
     if (! rf_.getRegion(defaultRegionId,rptr) ) {
         throw InfosmeException(EXC_NOTFOUND,"default region is not found");
     }
-    RegionSenderPtr* regptr = regSends_.GetPtr(defaultRegionId);
-    if (!regptr) {
+    RegionSenderPtr regptr;
+    if (!getRegionSender(defaultRegionId,regptr)) {
         throw InfosmeException(EXC_LOGICERROR,"default RS is not found");
     }
-    defaultSmscId_ = smscId;
+    {
+        MutexGuard mg(regLock_);
+        if (smscId == defaultSmscId_) return;
+        defaultSmscId_ = smscId;
+    }
     rptr->setSmscId(smscId);
-    (*regptr)->assignSender(*ptr);
+    regptr->assignSender(smsc);
 }
 
 
@@ -1121,11 +1129,11 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 void InfosmeCoreV1::getSmscStats( std::vector< CoreSmscStats >& css )
 {
     css.clear();
-    MutexGuard mg(startMon_);
-    css.reserve( smscs_.GetCount() );
     char* smscId;
     SmscSenderPtr ptr;
     const usectime_type currentTime = currentTimeMicro();
+    MutexGuard mg(regLock_);
+    css.reserve( smscs_.GetCount() );
     for ( smsc::core::buffers::Hash< SmscSenderPtr >::Iterator iter(&smscs_);
           iter.Next(smscId,ptr); ) {
         if ( !ptr ) continue;
@@ -1220,15 +1228,15 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
     char smscId[SMSC_ID_LENGTH];
     region->getSmscId(smscId);
     smsc_log_debug(log_,"R=%u is connected to S='%s'", rId, smscId);
-    SmscSenderPtr* sender = smscs_.GetPtr(smscId);
-    if ( !sender ) {
+    SmscSenderPtr sender;
+    if ( !getSmscSender(smscId,sender)) {
         throw InfosmeException(EXC_NOTFOUND,"Smsc '%s' is not found",smscId);
     }
-    const int result = (*sender)->sendTestSms( sourceAddr,
-                                               subscriber,
-                                               text,
-                                               isFlash,
-                                               deliveryMode );
+    const int result = sender->sendTestSms( sourceAddr,
+                                            subscriber,
+                                            text,
+                                            isFlash,
+                                            deliveryMode );
     smsc_log_debug(log_,"R=%u sendTestSms result=%u", rId, result);
     return result;
 }
@@ -1275,25 +1283,16 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
                    bs.bind ? "" : "un", unsigned(bs.dlvId),
                    formatRegionList(bs.regIds.begin(),bs.regIds.end()).c_str());
 
-    std::vector< RegionSenderPtr > rsp;
     if (! bs.bind) {
         // unbind from senders
-        rsp.reserve(bs.regIds.size());
-        {
-            MutexGuard mg(startMon_);
-            for (regIdVector::const_iterator i = bs.regIds.begin();
-                 i != bs.regIds.end(); ++i) {
-                RegionSenderPtr* rs = regSends_.GetPtr(*i);
-                if (!rs || !rs->get()) {
-                    smsc_log_warn(log_,"RS=%u is not found",unsigned(*i));
-                    continue;
-                }
-                rsp.push_back(*rs);
+        for (regIdVector::const_iterator i = bs.regIds.begin();
+             i != bs.regIds.end(); ++i) {
+            RegionSenderPtr rs;
+            if ( !getRegionSender(*i,rs) ) {
+                smsc_log_warn(log_,"RS=%u is not found",unsigned(*i));
+                continue;
             }
-        }
-        for ( std::vector<RegionSenderPtr>::iterator i = rsp.begin();
-              i != rsp.end(); ++i ) {
-            (*i)->removeDelivery(bs.dlvId);
+            rs->removeDelivery(bs.dlvId);
         }
 
         // get the delivery
@@ -1317,34 +1316,29 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
         return;
     }
 
-    rsp.reserve(bs.regIds.size());
     for ( regIdVector::const_iterator i = bs.regIds.begin();
           i != bs.regIds.end(); ++i ) {
+        const regionid_type regId = *i;
         RegionPtr regPtr;
-        if ( !rf_.getRegion(*i,regPtr) || regPtr->isDeleted() ) {
-            smsc_log_warn(log_,"R=%u is not found/deleted",unsigned(*i));
+        if ( !rf_.getRegion(regId,regPtr) || regPtr->isDeleted() ) {
+            smsc_log_warn(log_,"R=%u is not found/deleted",regId);
             continue;
         }
 
-        MutexGuard mg(startMon_);
-        RegionSenderPtr* rs = regSends_.GetPtr(*i);
-        if (!rs || !rs->get()) {
+        RegionSenderPtr rs;
+        if (!getRegionSender(regId,rs)) {
             // no such region sender
-            smsc_log_warn(log_,"RS=%u is not found",unsigned(*i));
+            smsc_log_warn(log_,"RS=%u is not found",regId);
             continue;
         }
-        rsp.push_back(*rs);
-    }
 
-    for ( std::vector< RegionSenderPtr >::iterator i = rsp.begin();
-          i != rsp.end(); ++i ) {
-        const regionid_type regId = (*i)->getRegionId();
         RegionalStoragePtr rptr = dlv->getRegionalStorage(regId,true);
-        if (!rptr.get()) {
-            smsc_log_warn(log_,"D=%u cannot create R=%u",unsigned(bs.dlvId),unsigned(regId));
+        if (!rptr) {
+            smsc_log_warn(log_,"D=%u cannot create R=%u",unsigned(bs.dlvId),regId);
             continue;
         }
-        (*i)->addDelivery(*rptr.get());
+
+        rs->addDelivery(*rptr.get());
     }
 }
 
@@ -1594,46 +1588,82 @@ void InfosmeCoreV1::updateSmsc( const char*       smscId,
 {
     if (cfg) {
         // create/update
-        MutexGuard mg(startMon_);
-        SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
-        if (!ptr) {
-            ptr = smscs_.SetItem(smscId,
-                                 SmscSenderPtr(new SmscSender(*this,smscId,
-                                                              *cfg,
-                                                              retryConfig)));
-        } else if ( !*ptr ) {
-            ptr->reset(new SmscSender(*this,smscId,*cfg,retryConfig));
-        } else {
-            (*ptr)->updateConfig(*cfg,retryConfig);
+        SmscSenderPtr smsc;
+        {
+            bool updateConfig = false;
+            {
+                MutexGuard mg(regLock_);
+                SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
+                if (!ptr) {
+                    smsc.reset(new SmscSender(*this,smscId,
+                                              *cfg,
+                                              retryConfig));
+                    smscs_.SetItem(smscId,smsc);
+                } else if ( !*ptr ) {
+                    smsc.reset(new SmscSender(*this,smscId,*cfg,retryConfig));
+                    *ptr = smsc;
+                } else {
+                    updateConfig = true;
+                    smsc = *ptr;
+                }
+            }
+            if (updateConfig) {
+                smsc->updateConfig(*cfg,retryConfig);
+            }
             // (*ptr)->waitUntilReleased();
         }
-        if (ptr && ptr->get() && started_) {
-            (*ptr)->start();
+        if (smsc.get() && started_) {
+            smsc->start();
         }
     } else {
         // delete the smsc
         SmscSenderPtr ptr;
         {
-            MutexGuard mg(startMon_);
+            MutexGuard mg(regLock_);
             if (!smscs_.Pop(smscId,ptr)) {
                 throw InfosmeException(EXC_NOTFOUND,"smsc '%s' is not found",smscId);
             }
-            ptr->stop();
-            std::vector< regionid_type > regIds;
-            ptr->getRegionList(regIds);
-            for ( std::vector< regionid_type >::const_iterator i = regIds.begin();
-                  i != regIds.end(); ++i ) {
-                smsc_log_debug(log_,"removing RS=%u for S='%s' from core", *i, smscId);
-                RegionSenderPtr rptr;
-                if ( regSends_.Pop(*i,rptr) ) {
-                    rptr->assignSender(SmscSenderPtr());
-                }
+        }
+        ptr->stop();
+        std::vector< regionid_type > regIds;
+        ptr->getRegionList(regIds);
+        MutexGuard rmg(regLock_);
+        for ( std::vector< regionid_type >::const_iterator i = regIds.begin();
+              i != regIds.end(); ++i ) {
+            smsc_log_debug(log_,"removing RS=%u for S='%s' from core", *i, smscId);
+            RegionSenderPtr rptr;
+            if ( regSends_.Pop(*i,rptr) ) {
+                rptr->assignSender(SmscSenderPtr());
             }
         }
         // delete ptr;
     }
 }
 
+
+bool InfosmeCoreV1::getRegionSender( regionid_type regionId,
+                                     RegionSenderPtr& regPtr )
+{
+    regPtr.reset(0); // to call dtor, if needed
+    MutexGuard mg(regLock_);
+    RegionSenderPtr* ptr = regSends_.GetPtr(regionId);
+    if (!ptr) { return false; }
+    regPtr = *ptr;
+    return true;
+}
+
+
+bool InfosmeCoreV1::getSmscSender( const char* smscId,
+                                   SmscSenderPtr& regPtr )
+{
+    regPtr.reset(0); // to call dtor, if needed
+    if (!smscId || !smscId[0]) return false;
+    MutexGuard mg(regLock_);
+    SmscSenderPtr* ptr = smscs_.GetPtr(smscId);
+    if (!ptr) { return false; }
+    regPtr = *ptr;
+    return true;
+}
 
 }
 }
