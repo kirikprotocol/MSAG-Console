@@ -130,6 +130,7 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
 {
     const dlvid_type dlvId = ptr.getDlvId();
     smsc_log_debug(log_,"add delivery D=%u",dlvId);
+    SmscSenderPtr conn;
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
         RegionalStoragePtr* iter = dlvList_.GetPtr(dlvId);
@@ -143,8 +144,9 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
         if ( speedControl_.getNextTime() > currentTime ) {
             speedControl_.suspend( currentTime );
         }
+        conn = conn_;
     }
-    if (conn_.get()) { conn_->wakeUp(); }
+    if (conn.get()) { conn->wakeUp(); }
 }
 
 
@@ -207,10 +209,15 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr, unsigned& objSl
     int res;
     const int inc = maxScoreIncrement / ptr->getDlvInfo().getPriority();
     assert(!ptr == false);
+    SmscSenderPtr conn;
+    {
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        conn = conn_;
+    }
     try {
 
-        assert(conn_.get());
-        res = conn_->send(*ptr, msg_, untilActiveEnd_, nchunks);
+        assert(conn.get());
+        res = conn->send(*ptr, msg_, untilActiveEnd_, nchunks);
         if ( res == smsc::system::Status::OK && nchunks > 0 ) {
             // message has been put into output queue
             smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",
@@ -233,7 +240,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr, unsigned& objSl
                       ulonglong(msg_.msgId), e.what());
         res = smsc::system::Status::UNKNOWNERR;
     }
-    ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(),
+    ptr->retryMessage( msg_.msgId, conn->getRetryPolicy(),
                        msgtime_type(currentTime_/tuPerSec),
                        res, nchunks);
     objSleep = 0;

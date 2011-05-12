@@ -26,8 +26,6 @@ public:
 
     ~RegionSender() {}
 
-    inline const SmscSender* getConn() const { return conn_.get(); }
-    
     // used to switch senders
     // NOTE: this method should be invoked from locked state.
     void assignSender( const EmbedRefPtr<SmscSender>& conn );
