@@ -45,13 +45,14 @@ speedControl_(std::max(region_->getBandwidth(),1U))
     if (!conn) {
         throw InfosmeException(EXC_LOGICERROR,"conn is null");
     }
-    smsc_log_debug(log_,"ctor S='%s' R=%u",conn->getSmscId().c_str(),unsigned(r->getRegionId()));
+    smsc_log_debug(log_,"ctor S='%s' R=%u @%p",conn->getSmscId().c_str(),unsigned(r->getRegionId()),this);
     assignSender(conn);
 }
 
 
 void RegionSender::assignSender( const SmscSenderPtr& conn )
 {
+    smsc::core::synchronization::MutexGuard mg(lock_);
     // reset speed control
     speedControl_.setSpeed(std::max(region_->getBandwidth(),1U),
                            currentTimeMicro() % flipTimePeriod );
