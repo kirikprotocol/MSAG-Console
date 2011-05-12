@@ -1,5 +1,5 @@
 =====================================================================
-2011-05-12 12:40 bukind informer-build-20110512
+2011-05-12 14:32 bukind informer-build-20110512
 
 2011-05-12 12:40 bukind
   bugfix in core/buffers/File::Readline
