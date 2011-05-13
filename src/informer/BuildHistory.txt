@@ -1,5 +1,11 @@
+=====================================================================
+2011-05-13 14:33 bukind informer-build-20110513
+
+2011-05-13 14:30 bukind
+  bugfix: bad lock in protogen
+
 2011-05-12 16:22 bukind
-  feature: unrespondedMessagesMas is per SmscSender
+  feature: unrespondedMessagesMax is per SmscSender
 
 =====================================================================
 2011-05-12 14:42 bukind informer-build-20110512
