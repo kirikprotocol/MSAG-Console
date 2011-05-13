@@ -1,4 +1,5 @@
 static char const ident[] = "$Id$";
+#include "core/synchronization/EventMonitor.hpp"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
@@ -20,6 +21,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 #define ENC_SCHEME 0x01
 #define NATURE_OF_ADDR 0x04
 
+using smsc::core::synchronization::EventMonitor;
 using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
@@ -48,15 +50,6 @@ static int  userid = 43; //common part user id
 static int  delay = 8; // MT SMS time processing
 
 static Logger *logger = 0;
-class EmptyRequestSender: public RequestSender {
-  virtual bool send(Request* request)
-  {
-    Request& req = *request;
-    req.setSendResult(0);
-    //req.dstmsc;
-    return true;
-  }
-};
 class EmptySubscriberRegistrator: public SubscriberRegistrator {
   public:
     EmptySubscriberRegistrator(TCO* _tco) : SubscriberRegistrator(_tco) {}
@@ -96,6 +89,50 @@ class DialogueStat: public Thread {
       return 0;
     }
   };
+class mtresptimer {
+  public:
+    time_t deadline; Request* req;
+    mtresptimer(int delay, Request* _req):
+      deadline(time(0)+delay),req(_req){}
+};
+class DelayedRequestSender: public RequestSender, public Thread
+{
+  private:
+    int delay;
+    Logger* logger;
+    EventMonitor mon;
+    std::list<mtresptimer> queue;
+  public:
+    DelayedRequestSender(int _delay, Logger* _logger) : delay(_delay),
+      logger(_logger)
+    {
+    }
+    virtual bool send(Request* req)
+    {
+      if (delay == 0) { req->setSendResult(0); return true; }
+      //if delay > 0 place request to queue and ACK
+      queue.push_back(mtresptimer(delay,req));
+      return true;
+    }
+    virtual int Execute()
+    {
+      while (1)
+      {
+        MutexGuard guard(mon);
+        time_t now; time(&now);
+        while (!queue.empty())
+        {
+          mtresptimer timer = queue.front();
+          if (now < timer.deadline)
+            break;
+          queue.pop_front();
+          timer.req->setSendResult(0);
+        }
+        mon.wait(100);
+      }
+      return 0;
+    }
+};
 class ToolConfig {
   private:
     int cfgdelay;
@@ -124,6 +161,7 @@ class SccpConfig {
     void read(Manager& manager)
     {
       char* tmp_str;
+      Address tmp_addr;
 
       if (!manager.findSection("sccp"))
         throw ConfigException("\'sccp\' section is missed");
@@ -140,20 +178,26 @@ class SccpConfig {
         throw ConfigException("\'user_ssn\' is unknown or missing");
       }
 
-      try { tmp_str = sccpConfig.getString("msc_gt");
-            strcpy(msca,tmp_str);
+      try {
+        tmp_str = sccpConfig.getString("msc_gt");
+        tmp_addr = Address(tmp_str);
+        tmp_addr.getValue(msca);
       } catch (ConfigException& exc) {
         throw ConfigException("\'msc_gt\' is unknown or missing");
       }
 
-      try { tmp_str = sccpConfig.getString("vlr_gt");
-            strcpy(vlra,tmp_str);
+      try {
+        tmp_str = sccpConfig.getString("vlr_gt");
+        tmp_addr = Address(tmp_str);
+        tmp_addr.getValue(vlra);
       } catch (ConfigException& exc) {
         throw ConfigException("\'vlr_gt\' is unknown or missing");
       }
 
-      try { tmp_str = sccpConfig.getString("hlr_gt");
-            strcpy(hlra,tmp_str);
+      try {
+        tmp_str = sccpConfig.getString("hlr_gt");
+        tmp_addr = Address(tmp_str);
+        tmp_addr.getValue(hlra);
       } catch (ConfigException& exc) {
         throw ConfigException("\'hlr_gt\' is unknown or missing");
       }
@@ -173,7 +217,7 @@ int main(int argc, char** argv)
     config.read(manager);
 
     using smsc::core::threads::Thread;
-    EmptyRequestSender fakeSender;
+    DelayedRequestSender fakeSender(delay,logger); // or EmptyRequestSender
     TCO mtsms(10000);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     mtsms.setRequestSender(&fakeSender);
@@ -182,6 +226,7 @@ int main(int argc, char** argv)
     listener.configure(ssn, userid, Address((uint8_t)strlen(msca), 1, 1, msca),
         Address((uint8_t)strlen(vlra), 1, 1, vlra),
         Address((uint8_t)strlen(hlra), 1, 1, hlra));
+    fakeSender.Start();
     listener.Start();
     stat.Start();
     int8_t invoke_id = 0;
