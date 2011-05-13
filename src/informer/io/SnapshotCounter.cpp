@@ -5,6 +5,7 @@ namespace informer {
 
 SnapshotCounter::SnapshotCounter( usectime_type interval,
                                   unsigned nbins ) :
+lock_(MTXWHEREAMI),
 resolution_(interval/nbins),
 lastTime_(0),
 integral_(0),

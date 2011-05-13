@@ -13,7 +13,7 @@ namespace informer {
 
 namespace {
 int locoffset = -100000;
-smsc::core::synchronization::Mutex offsetLock_;
+smsc::core::synchronization::Mutex offsetLock_(MTXWHEREAMI);
 }
 
 int getLocalTimezone()

@@ -22,9 +22,9 @@ Region::Region( regionid_type regionId,
                 const TimezoneGroup* tzgroup,
                 bool deleted,
                 std::vector< std::string >* masks ) :
-reflock_(),
+reflock_(MTXWHEREAMI),
 ref_(0),
-lock_( MTXWHEREAMI ),
+lock_(MTXWHEREAMI),
 regionId_(regionId), name_(name), smscId_(smscId), bw_(bw),
 timezone_(timezone), tzgroup_(tzgroup), deleted_(deleted)
 {

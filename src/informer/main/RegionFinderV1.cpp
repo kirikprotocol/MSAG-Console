@@ -6,8 +6,8 @@ namespace informer {
 
 RegionFinderV1::RegionFinderV1() :
 log_(smsc::logger::Logger::getInstance("regfinder")),
-treelock_(),
-hashlock_()
+treelock_(MTXWHEREAMI),
+hashlock_(MTXWHEREAMI)
 {}
 
 
