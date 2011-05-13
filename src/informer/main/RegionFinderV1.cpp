@@ -47,6 +47,13 @@ bool RegionFinderV1::updateRegion( RegionPtr& ptr )
     }
     const regionid_type regionId = ptr->getRegionId();
 
+    char smscId[SMSC_ID_LENGTH];
+    smsc_log_debug(log_,"updating R=%u with bw=%u tz=%d %s S='%s'",
+                   regionId, ptr->getBandwidth(),
+                   ptr->getTimezone(),
+                   ptr->isDeleted() ? "DELETED" : "",
+                   ptr->getSmscId(smscId) );
+
     // find/update the old region
     RegionPtr old;
     {

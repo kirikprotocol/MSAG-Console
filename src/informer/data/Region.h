@@ -41,9 +41,9 @@ public:
 
     // synchronized access
     // NOTE: the buf must be at least of SMSC_ID_LENGTH
-    void getSmscId( char* buf ) const;
+    const char* getSmscId( char* buf ) const;
     // NOTE: the buf must be at least of REGION_NAME_LENGTH
-    void getName( char* buf ) const;
+    const char* getName( char* buf ) const;
     void setSmscId( const char* smscId );
     void swap( Region& r );
     bool hasEqualMasks( const Region& r ) const;

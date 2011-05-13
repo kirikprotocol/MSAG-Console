@@ -44,17 +44,19 @@ Region::~Region()
 }
 
 
-void Region::getSmscId( char* smscId ) const
+const char* Region::getSmscId( char* smscId ) const
 {
     smsc::core::synchronization::MutexGuard mg(lock_);
     strcpy(smscId,smscId_.c_str());
+    return smscId;
 }
 
 
-void Region::getName( char* name ) const
+const char* Region::getName( char* name ) const
 {
     smsc::core::synchronization::MutexGuard mg(lock_);
     strcpy(name,name_.c_str());
+    return name;
 }
 
 
