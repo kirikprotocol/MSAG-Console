@@ -91,6 +91,7 @@ protected:
     buf::CyclicQueue<ProtocolSocketBase::Packet> queue;
     sync::EventMonitor mon;
     int idx;
+    volatile bool isFree; // for spinlocking
   };
   HandlerThread handlers[32];
   int handlersCount;

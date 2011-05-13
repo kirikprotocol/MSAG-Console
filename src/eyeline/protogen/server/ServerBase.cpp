@@ -34,6 +34,7 @@ void ServerBase::Init(const char* host,int port,int hndCnt)
   for(int i=0;i<handlersCount;i++)
   {
     handlers[i].idx=i;
+    handlers[i].isFree=true;
     handlers[i].assignProto(this);
     handlers[i].Start();
   }
@@ -94,6 +95,12 @@ void ServerBase::readPackets()
         try{
           if(ps->Read())
           {
+            int startIdx = hIdx;
+            do {
+                if ( handlers[hIdx].isFree ) break;
+                ++hIdx;
+                hIdx %= handlersCount;
+            } while ( hIdx != startIdx );
             smsc::core::synchronization::MutexGuard hmg(handlers[hIdx].mon);
             ProtocolSocketBase::Packet pck=ps->getPacket();
             if(log->isDebugEnabled())
@@ -101,6 +108,7 @@ void ServerBase::readPackets()
               smsc_log_debug(log,"read packet connId=%d:%s",pck.connId,pck.getDump().c_str());
             }
             handlers[hIdx].queue.Push(pck);
+            handlers[hIdx].isFree = false;
             handlers[hIdx].mon.notify();
             ps->resetPacket();
             hIdx++;
@@ -262,19 +270,22 @@ void ServerBase::closeConnId(int connId)
 void ServerBase::handleCommands(int idx)
 {
   smsc_log_info(log,"Starting handler[%d] thread",idx);
-  sync::MutexGuard mg(handlers[idx].mon);
   while(!isStopping)
   {
-    while(!isStopping && handlers[idx].queue.Count()==0)
-    {
-      handlers[idx].mon.wait(200);
-    }
-    if(handlers[idx].queue.Count()==0)
-    {
-      continue;
-    }
     ProtocolSocketBase::Packet p;
-    handlers[idx].queue.Pop(p);
+    {
+      sync::MutexGuard mg(handlers[idx].mon);
+      while(!isStopping && handlers[idx].queue.Count()==0)
+      {
+        handlers[idx].isFree = true;
+        handlers[idx].mon.wait(200);
+      }
+      if(handlers[idx].queue.Count()==0)
+      {
+        continue;
+      }
+      handlers[idx].queue.Pop(p);
+    }
     try{
       onHandleCommand(p);
     }catch(std::exception& e)
