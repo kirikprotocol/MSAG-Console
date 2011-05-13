@@ -74,7 +74,11 @@ Logger::LoggersHash   Logger::loggers;
 Logger::AppendersHash Logger::appenders;
 Logger::LogLevels     Logger::logLevels;
 Properties            Logger::cats2appenders;
+#ifdef CHECKCONTENTION
 Mutex                 Logger::static_mutex(MTXFORCENOCHECK);
+#else
+Mutex                 Logger::static_mutex;
+#endif
 uint32_t              Logger::reloadConfigInterval = 0;
 time_t                Logger::lastReloadConfigCheck = time(NULL);
 time_t                Logger::lastConfigMTime = 0;
