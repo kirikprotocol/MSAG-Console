@@ -74,7 +74,7 @@ Logger::LoggersHash   Logger::loggers;
 Logger::AppendersHash Logger::appenders;
 Logger::LogLevels     Logger::logLevels;
 Properties            Logger::cats2appenders;
-Mutex                 Logger::static_mutex;
+Mutex                 Logger::static_mutex(MTXFORCENOCHECK);
 uint32_t              Logger::reloadConfigInterval = 0;
 time_t                Logger::lastReloadConfigCheck = time(NULL);
 time_t                Logger::lastConfigMTime = 0;
@@ -534,7 +534,7 @@ Appender* Logger::findAppenderByCat(const char * const name)
 
 ////////////////////// constructors
 Logger::Logger(const char * const logCategoryName, const LogLevel logLevel, Appender * const appender)
-  :logLevel(logLevel), name(cStringCopy(logCategoryName)), appender(appender)
+  :logLevel(logLevel), name(cStringCopy(logCategoryName)), appender(appender), mutex(MTXFORCENOCHECK)
 {
 }
 

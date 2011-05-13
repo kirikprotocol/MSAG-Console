@@ -13,7 +13,7 @@ namespace smsc {
 namespace logger {
 
 StderrAppender::StderrAppender(const char * const name)
-  :Appender(name)
+  :Appender(name), mutex(MTXFORCENOCHECK)
 {
 }
 

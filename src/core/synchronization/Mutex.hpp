@@ -69,7 +69,13 @@ public:
         contentionLimit = usec;
     }
 
-    Mutex( const char* fileline = 0) : what(fileline), wasfrom(0), wasid(pthread_t(-1)), lockCount(0)
+    Mutex( const char* fileline = 
+#if CHECKCONTENTION > 1
+           "unk"
+#else
+           0
+#endif
+         ) : what(fileline), wasfrom(0), wasid(pthread_t(-1)), lockCount(0)
     {
         pthread_mutex_init(&mutex, NULL);
     }
@@ -142,9 +148,11 @@ public:
 #define INITMUTEXTOSTRING(x) INITMUTEXSTRINGIFY(x)
 #define MTXWHEREAMI   __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
 #define MTXWHEREPOST , __FILE__ ":" INITMUTEXTOSTRING(__LINE__)
+#define MTXFORCENOCHECK NULL
 #else
 #define MTXWHEREAMI
 #define MTXWHEREPOST
+#define MTXFORCENOCHECK
 #endif
 
 typedef MutexGuardTmpl<Mutex> MutexGuard;

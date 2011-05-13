@@ -43,7 +43,7 @@ void rolloverFiles(const char * const filename, unsigned int maxBackupIndex)
 
 
 RollingFileAppender::RollingFileAppender(const char * const _name, const Properties & properties)
-  :Appender(_name)
+  :Appender(_name), mutex(MTXFORCENOCHECK)
 {
   try{
     maxFileSize = 1*1024*1024;
