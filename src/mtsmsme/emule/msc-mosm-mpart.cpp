@@ -18,7 +18,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/Message.hpp"
 #include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/processor/ACRepo.hpp"
-#include "mtsmsme/emule/TrafficShaper.hpp"
+#include "mtsmsme/processor/TrafficShaper.hpp"
 
 using std::vector;
 using std::string;

@@ -1,6 +1,6 @@
 static char const ident[] = "$Id$";
 
-#include "mtsmsme/emule/TrafficShaper.hpp"
+#include "mtsmsme/processor/TrafficShaper.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
