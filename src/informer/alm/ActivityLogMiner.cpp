@@ -105,17 +105,24 @@ bool ActivityLogMiner::getNext(int reqId,ALMResult& result)
       throw InfosmeException(EXC_EXPIRED,"request with id=%d expired or doesn't exists",reqId);
     }
     req=it->second;
+    if(req->busy)
+    {
+      throw InfosmeException(EXC_LOGICERROR,"request with id=%d is processing at the moment",reqId);
+    }
+    req->busy=true;
     req->ref();
   }
   try {
     bool rv=parseRecord(req,result);
     sync::MutexGuard mg(mtx);
     req->unref();
+    req->busy=false;
     return rv;
   } catch (std::exception& e)
   {
     sync::MutexGuard mg(mtx);
     req->unref();
+    req->busy=false;
     throw;
   }
 }

@@ -42,6 +42,7 @@ protected:
     uint64_t offset;
     TimeMap::iterator timeIt;
     int refCount;
+    bool busy;
 
     Request()
     {
@@ -51,6 +52,7 @@ protected:
       hour=-1;
       version=0;
       refCount=0;
+      busy=false;
     }
 
     void ref()
