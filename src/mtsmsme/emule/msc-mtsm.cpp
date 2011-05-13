@@ -218,7 +218,7 @@ int main(int argc, char** argv)
 
     using smsc::core::threads::Thread;
     DelayedRequestSender fakeSender(delay,logger); // or EmptyRequestSender
-    TCO mtsms(10000);
+    TCO mtsms(60000);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms,&fakeHLR);
