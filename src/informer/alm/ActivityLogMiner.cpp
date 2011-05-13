@@ -23,6 +23,7 @@ void ActivityLogMiner::init(const std::string& argPath,time_t argRequestTimeout)
 int ActivityLogMiner::createRequest(dlvid_type dlvId,const ALMRequestFilter& filter)
 {
   Request* req=new Request;
+  req->ref();
   req->dlvId=dlvId;
   req->filter=filter;
   req->curDate=filter.startDate;
@@ -35,7 +36,7 @@ int ActivityLogMiner::createRequest(dlvid_type dlvId,const ALMRequestFilter& fil
     ReqMap::iterator it=reqMap.find(tit->second);
     if(it!=reqMap.end())
     {
-      delete it->second;
+      it->second->unref();
       reqMap.erase(it);
     }
     timeMap.erase(tit);
@@ -95,13 +96,28 @@ std::string::size_type skipField(const std::string& str,std::string::size_type p
 
 bool ActivityLogMiner::getNext(int reqId,ALMResult& result)
 {
-  sync::MutexGuard mg(mtx);
-  ReqMap::iterator it=reqMap.find(reqId);
-  if(it==reqMap.end())
+  Request* req;
   {
-    throw InfosmeException(EXC_EXPIRED,"request with id=%d expired or doesn't exists",reqId);
+    sync::MutexGuard mg(mtx);
+    ReqMap::iterator it=reqMap.find(reqId);
+    if(it==reqMap.end())
+    {
+      throw InfosmeException(EXC_EXPIRED,"request with id=%d expired or doesn't exists",reqId);
+    }
+    req=it->second;
+    req->ref();
   }
-  return parseRecord(it->second,result);
+  try {
+    bool rv=parseRecord(req,result);
+    sync::MutexGuard mg(mtx);
+    req->unref();
+    return rv;
+  } catch (std::exception& e)
+  {
+    sync::MutexGuard mg(mtx);
+    req->unref();
+    throw;
+  }
 }
 
 int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filter)

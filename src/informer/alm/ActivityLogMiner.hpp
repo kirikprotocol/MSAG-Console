@@ -41,6 +41,7 @@ protected:
     msgtime_type curDate;
     uint64_t offset;
     TimeMap::iterator timeIt;
+    int refCount;
 
     Request()
     {
@@ -49,6 +50,21 @@ protected:
       day=-1;
       hour=-1;
       version=0;
+      refCount=0;
+    }
+
+    void ref()
+    {
+      refCount++;
+    }
+
+    void unref()
+    {
+      refCount--;
+      if(refCount==0)
+      {
+        delete this;
+      }
     }
 
     smsc::core::buffers::File f;
