@@ -15,6 +15,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/Message.hpp"
 #include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/processor/ACRepo.hpp"
+#include "mtsmsme/emule/TrafficShaper.hpp"
 
 using std::vector;
 using std::string;
@@ -25,6 +26,7 @@ using smsc::util::config::ConfigException;
 using smsc::logger::Logger;
 using smsc::sms::Address;
 using smsc::util::millisleep;
+using smsc::mtsmsme::processor::TrafficShaper;
 using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
@@ -86,69 +88,6 @@ class GopotaListener: public SuaProcessor, public Thread {
       return result;
     }
   };
-class TrafficShaper: public SccpSender {
-  private:
-    SccpSender* adaptee;
-    int delay;
-    int overdelay;
-    hrtime_t msgstart;
-    bool slowstartmode;
-    int slowstartperiod; //in seconds
-    int speed;
-    struct timeval slow_start;
-    void adjustdelay()
-    {
-      if (slowstartmode)
-      {
-        timeval now;
-        if (!slow_start.tv_sec)
-          gettimeofday(&slow_start,NULL);
-        gettimeofday(&now,NULL);
-        if (slow_start.tv_sec + slowstartperiod < now.tv_sec)
-        {
-          slowstartmode = false;
-          delay = 1000000/speed;
-        }
-        else
-        {
-          delay = 1000000/(1+(speed-1)*(now.tv_sec-slow_start.tv_sec)/slowstartperiod);
-        }
-      }
-    }
-    void shape()
-    {
-      adjustdelay();
-      hrtime_t msgproc=gethrtime()-msgstart;
-      msgproc/=1000;
-      if(delay>msgproc+overdelay)
-      {
-        int toSleep=delay-msgproc-overdelay;
-        msgstart=gethrtime();
-        millisleep(toSleep/1000);
-        overdelay=(gethrtime()-msgstart)/1000-toSleep;
-      }else
-      {
-        overdelay-=delay-(int)msgproc;
-      }
-    }
-  public:
-    TrafficShaper(SccpSender* _adaptee, int _speed,int _slowstartperiod) :
-      adaptee(_adaptee),slowstartmode(false),slowstartperiod(_slowstartperiod),
-      overdelay(0)
-    {
-      if (slowstartperiod) slowstartmode = true;
-      slow_start.tv_sec = 0;
-      delay = 1000000/_speed;
-      speed = _speed;
-    }
-    void send(uint8_t cdlen, uint8_t *cd, uint8_t cllen, uint8_t *cl,
-        uint16_t ulen, uint8_t *udp)
-    {
-      msgstart=gethrtime();
-      adaptee->send(cdlen,cd,cllen,cl,ulen,udp);
-      shape();
-    }
-};
 int randint(int min, int max)
 {
   return min+int((max-min+1)*rand()/(RAND_MAX+1.0));
