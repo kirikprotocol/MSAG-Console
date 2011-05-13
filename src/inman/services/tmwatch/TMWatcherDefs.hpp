@@ -55,42 +55,65 @@ protected:
     uint32_t          _timerId;
     TimeWatcherITF *  _watcher;
 
+    void setRef(void)
+    {
+      if (_watcher && _watcher->RefTimer(_timerId)) {
+        _watcher = 0; _timerId = 0;
+      }
+    }
+    void unRef(void)
+    {
+      if (_watcher) {
+        _watcher->UnRefTimer(_timerId);
+        _watcher = 0; _timerId = 0;
+      }
+    }
+
 public:
     TimerHdl(uint32_t tmr_id = 0, TimeWatcherITF *  use_watcher = NULL)
         : _timerId(tmr_id), _watcher(use_watcher)
     {
-        if (_watcher && _watcher->RefTimer(_timerId)) {
-          _watcher = 0; _timerId = 0;
-        }
+      setRef();
     }
     TimerHdl(const TimerHdl & use_hdl)
         : _timerId(use_hdl._timerId), _watcher(use_hdl._watcher)
     {
-        if (_watcher && _watcher->RefTimer(_timerId)) {
-          _watcher = 0; _timerId = 0;
-        }
+      setRef();
     }
     ~TimerHdl()
-    { 
-        if (_watcher)
-            _watcher->UnRefTimer(_timerId);
+    {
+      unRef(); 
     }
 
+    bool empty(void) const { return (_watcher == 0); }
+    //
+    void clear(void) { unRef(); }
+    //
     uint32_t Id(void) const { return _timerId; }
+    //
     const char * IdStr(void) const
     {
-        return _watcher ? _watcher->IdStr(_timerId) : "unknown";
+      return _watcher ? _watcher->IdStr(_timerId) : "unknown";
     }
-    //
+    //starts timer expiration monitoring
     TMError Start(void) const
     {
-        return _watcher ? _watcher->StartTimer(_timerId) : TimeWatcherITF::errBadTimer;
+      return _watcher ? _watcher->StartTimer(_timerId) : TimeWatcherITF::errBadTimer;
     }
-    //releases timer
+    //cancels timer expiration monitoring
     void Stop(void) const
     {
-        if (_watcher)
-            _watcher->StopTimer(_timerId);
+      if (_watcher)
+        _watcher->StopTimer(_timerId);
+    }
+
+    TimerHdl & operator=(const TimerHdl & use_hdl)
+    {
+      unRef();
+      _watcher = use_hdl._watcher;
+      _timerId = use_hdl._timerId;
+      setRef();
+      return *this;
     }
 };
 
