@@ -12,31 +12,35 @@ struct DeliveryStats
 {
 public:
     uint32_t     totalMessages;
+    uint32_t     newMessages;     // the length of resend queue
     uint32_t     procMessages;    // a number of messages in opstore proc
     uint32_t     sentMessages;    // a number of messages in sent state
-    uint32_t     retryMessages;   // the length of resend queue
     uint32_t     dlvdMessages;
     uint32_t     failedMessages;
     uint32_t     expiredMessages;
+
     uint32_t     dlvdSms;
     uint32_t     failedSms;
     uint32_t     expiredSms;
+
     uint32_t     killedMessages;
 
     void clear() {
         memset(this,0,sizeof(*this));
     }
 
+    /*
     int32_t getNewMessagesCount()const{
         return totalMessages-procMessages-sentMessages-retryMessages-dlvdMessages-failedMessages-expiredMessages-killedMessages;
     }
+     */
 
     bool isEmpty() const {
         return
             totalMessages == 0 &&
+            newMessages == 0 &&
             procMessages == 0 &&
             sentMessages == 0 &&
-            retryMessages == 0 &&
             dlvdMessages == 0 &&
             failedMessages == 0 &&
             expiredMessages == 0 &&
@@ -50,6 +54,7 @@ public:
         return totalMessages == dlvdMessages + failedMessages + expiredMessages + killedMessages;
     }
 
+    /*
     bool operator != ( const DeliveryStats& ds ) const {
         return
             ( totalMessages   != ds.totalMessages   ) ||
@@ -65,14 +70,18 @@ public:
             ( killedMessages  != ds.killedMessages  );
             
     }
+     */
 
     void incStat( uint8_t state, int value, int smsValue ) {
         if (!value) return;
         switch (MsgState(state)) {
+        case MSGSTATE_INPUT    :
+            if (value>0) { totalMessages += value; }
+            newMessages += value;
+            break;
         case MSGSTATE_PROCESS  : procMessages += value;  break;
         case MSGSTATE_SENT     : sentMessages += value;  break;
-        case MSGSTATE_RETRY    : retryMessages += value; break;
-        case MSGSTATE_INPUT    : if (value>0) { totalMessages += value; } break;
+        case MSGSTATE_RETRY    : break; // retryMessages += value; break;
         default :
             if (value<0) {
                 throw InfosmeException(EXC_LOGICERROR,"cannot decrement final state %d",state);

@@ -11,7 +11,8 @@ namespace eyeline {
 namespace informer {
 
 namespace {
-const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
+const char* statsFormat2 = "# TOTAL=%u,PROC=%u,SENT=%u,RETRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
+const char* statsFormat3 = "# TOTAL=%u,PROC=%u,SENT=%u,NEW=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
 }
 
 ActivityLog::ActivityLog( DeliveryInfo* info ) :
@@ -43,6 +44,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
     fg.ropen( filename.c_str() );
     buf.SetPos(0);
     bool statLineHasBeenRead = false;
+    int version = 0;
     DeliveryStats ds;
     ds.clear();
     do {
@@ -68,16 +70,30 @@ bool ActivityLog::readStatistics( const std::string& filename,
             const char* line = ptr;
             ptr = end+1;
             if ( *line == '#' ) {
-                // head comment, trying to read statline
+                // head comment
+                if ( version == 0 ) {
+                    // reading the version
+                    int shift = 0;
+                    sscanf(line,"#%u SEC,%n",&version,&shift);
+                    if (shift == 0 || version <= 0 || version >= 3) {
+                        throw InfosmeException(EXC_BADFILE,"version cannot be read/is not supported (%s)",line);
+                    }
+                    continue;
+                }
+                // trying to read statline, version must be already defined
                 int shift = 0;
-                sscanf(line, statsFormat,
+                sscanf(line, version == 2 ? statsFormat2 : statsFormat3,
                        &ds.totalMessages, &ds.procMessages,
-                       &ds.sentMessages, &ds.retryMessages,
+                       &ds.sentMessages, &ds.newMessages,
                        &ds.dlvdMessages, &ds.failedMessages,
                        &ds.expiredMessages, &ds.dlvdSms,
                        &ds.failedSms, &ds.expiredSms,
                        &ds.killedMessages,
                        &shift );
+                if ( version == 2 ) {
+                    // we cannot recreate new messages count
+                    ds.newMessages = 0;
+                }
                 if (shift==0) {
                     // not a stat line
                     continue;
@@ -102,9 +118,9 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 throw InfosmeException(EXC_BADFILE,"wrong record: '%s'",line);
             }
             switch (cstate) {
-            case 'N' : ++ds.totalMessages;   break;
-            case 'P' : ++ds.procMessages;    break;
-            case 'R' : ++ds.retryMessages;   break;
+            case 'N' : ++ds.totalMessages; ++ds.newMessages;  break;
+            case 'P' : /*++ds.procMessages;*/ --ds.newMessages;  break;
+            case 'R' : /*++ds.retryMessages; */  break;
             case 'B' : break; // skip record - do nothing
             case 'D' :
             case 'E' :
@@ -310,7 +326,7 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
     createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
     fg_.seek(0, SEEK_END);
     if (fg_.getPos() == 0) {
-        const char* header = "#2 SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,FLAGS,TEXT\n";
+        const char* header = "#3 SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,FLAGS,TEXT\n";
         fg_.write(header,strlen(header));
         char headbuf[200];
         int headlen;
@@ -319,9 +335,9 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
             dlvInfo_->getMsgStats(ds);
             int shift;
             headlen = sprintf(headbuf,
-                              statsFormat,
+                              statsFormat3,
                               ds.totalMessages, ds.procMessages,
-                              ds.sentMessages, ds.retryMessages,
+                              ds.sentMessages, ds.newMessages,
                               ds.dlvdMessages, ds.failedMessages,
                               ds.expiredMessages, ds.dlvdSms,
                               ds.failedSms, ds.expiredSms,
