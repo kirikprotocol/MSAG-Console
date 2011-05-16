@@ -963,7 +963,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                        unsigned(getRegionId()), dlvId,
                        ulonglong(m.msgId));
         regionid_type serial = MessageLocker::nullSerial;
-        dlv_->activityLog_->addRecord(currentTime,*region_,m,0);
+        dlv_->activityLog_->addRecord(currentTime,*region_,m,0,MSGSTATE_INPUT);
         dlv_->storeJournal_->journalMessage(dlvId,getRegionId(),m,serial);
         i->serial = serial;
     }
