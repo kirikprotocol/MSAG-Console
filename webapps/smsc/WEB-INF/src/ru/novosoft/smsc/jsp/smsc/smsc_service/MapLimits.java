@@ -9,10 +9,7 @@ import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Enumeration;
+import java.util.*;
 
 /**
  * User: artem
@@ -198,7 +195,6 @@ public class MapLimits extends SmscBean {
   {
     params.put(paramName, paramValue);
   }
-
 
   public String getMbSave()
   {

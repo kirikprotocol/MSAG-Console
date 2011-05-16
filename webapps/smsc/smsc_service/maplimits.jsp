@@ -1,3 +1,4 @@
+<%@ page import="java.util.*" %>
 <%@ include file="/WEB-INF/inc/code_header.jsp" %>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.MapLimits"/>
 <jsp:setProperty name="bean" property="*"/>
@@ -39,10 +40,19 @@
     startSection(out, "ussd", "maplimits.ussd", true);
     startParams(out);
 
+    java.util.List parseModes = new ArrayList();
+    parseModes.add(getLocString("maplimits.ussd.defaultParseMode.onlyStar"));
+    parseModes.add(getLocString("maplimits.ussd.defaultParseMode.always"));
+    parseModes.add(getLocString("maplimits.ussd.defaultParseMode.newer"));
+
     param(out, "maplimits.ussd.no_sri_codes", "ussd.no_sri_codes", bean.getStringParam("ussd.no_sri_codes"));
     param(out, "maplimits.ussd.cond_sri_codes", "ussd.cond_sri_codes", bean.getStringParam("ussd.cond_sri_codes"));
     param(out, "maplimits.ussd.ati_codes", "ussd.ati_codes", bean.getStringParam("ussd.ati_codes"));
     param(out, "maplimits.ussd.openRespRealAddr", "ussd.openRespRealAddr", bean.getStringParam("ussd.openRespRealAddr"));
+    param(out, "maplimits.ussd.parseAlways", "ussd.parseAlways", bean.getStringParam("ussd.parseAlways"));
+    param(out, "maplimits.ussd.parseOnlyStar", "ussd.parseOnlyStar", bean.getStringParam("ussd.parseOnlyStar"));
+    param(out, "maplimits.ussd.newerParse", "ussd.parseNever", bean.getStringParam("ussd.parseNever"));
+    paramSelect(out, "maplimits.ussd.defaultParseMode", "ussd.defaultParsingMode", parseModes, bean.getStringParam("ussd.defaultParseingMode"));
 
     finishParams(out);
     finishSection(out);
