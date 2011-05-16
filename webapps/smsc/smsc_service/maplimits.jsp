@@ -43,7 +43,7 @@
     java.util.List parseModes = new ArrayList();
     parseModes.add("onlyStar");
     parseModes.add("always");
-    parseModes.add("newer");
+    parseModes.add("never");
 
     param(out, "maplimits.ussd.no_sri_codes", "ussd.no_sri_codes", bean.getStringParam("ussd.no_sri_codes"));
     param(out, "maplimits.ussd.cond_sri_codes", "ussd.cond_sri_codes", bean.getStringParam("ussd.cond_sri_codes"));
