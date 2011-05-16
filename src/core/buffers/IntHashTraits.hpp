@@ -38,6 +38,20 @@ public:
   }
 };
 
+template <
+  typename  _KeyArg
+, uint8_t   _CollMaxNumArg
+, uint8_t   _CollPercentagePwrArg
+>
+const uint8_t  IntHashKeyTraitsDflt_T<_KeyArg, _CollMaxNumArg, _CollPercentagePwrArg>::_MAX_COLL_NUM;
+
+template <
+  typename  _KeyArg
+, uint8_t   _CollMaxNumArg
+, uint8_t   _CollPercentagePwrArg
+>
+const uint8_t  IntHashKeyTraitsDflt_T<_KeyArg, _CollMaxNumArg, _CollPercentagePwrArg>::_TGT_COLL_PERCENTAGE_PWR;
+
 // -----------------------------------------------------------------
 // 
 // -----------------------------------------------------------------
