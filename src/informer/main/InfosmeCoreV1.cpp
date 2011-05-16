@@ -164,7 +164,7 @@ public:
                 return;
             }
             if (resp->getStatus() != scag2::pvss::StatusType::OK ) {
-                smsc_log_warn(log_,"resp has bad status=%u (to be retried)",resp->getStatus());
+                smsc_log_debug(log_,"resp has bad status=%u (to be retried)",resp->getStatus());
                 break;
             }
 

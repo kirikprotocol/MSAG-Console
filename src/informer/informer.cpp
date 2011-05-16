@@ -37,11 +37,12 @@ void Mutex::reportContention( const char* from,
     if ( !log_ ) {
         log_ = smsc::logger::Logger::getInstance("lock");
     }
-    smsc_log_debug(log_,"%s(%p) @%s contented by %u@%s for %u usec count=%u/%+d",
+    smsc_log_debug(log_,"%s(%p) @%s contented for %u usec by %u@%s for count=%u/%+d",
                    what, this, from ? from:"unk",
+                   howlong,
                    unsigned(wasid),
                    wasfrom?wasfrom:"unk",
-                   howlong,lockCount,
+                   lockCount,
                    int(lockCount-oldcount));
 }
 
