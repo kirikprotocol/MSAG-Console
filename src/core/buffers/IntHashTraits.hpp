@@ -230,7 +230,7 @@ public:
   void clear(void)
   {
     if (_refs & 0x8000) {
-      get().~IKeyValue_T();
+      get().~IKeyValue_T<_KeyArg, _TArg>();
       _refs &= 0x7fff;
     }
   }
