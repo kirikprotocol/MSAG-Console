@@ -52,18 +52,18 @@ speedControl_(std::max(region_->getBandwidth(),1U))
 
 void RegionSender::assignSender( const SmscSenderPtr& conn )
 {
-    SmscSenderPtr oldconn;
+    SmscSenderPtr oldconn, newconn;
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
         oldconn = conn_;
         // reset speed control
         speedControl_.setSpeed(std::max(region_->getBandwidth(),1U),
                                currentTimeMicro() % flipTimePeriod );
-        conn_ = conn;
+        newconn = conn_ = conn;
     }
     if ( oldconn != conn ) {
         if (oldconn.get()) { oldconn->detachRegionSender(*this); }
-        if (conn.get()) { conn->attachRegionSender(*this); }
+        if (newconn.get()) { newconn->attachRegionSender(*this); }
     } else if (oldconn.get()) {
         oldconn->updateBandwidth();
     }

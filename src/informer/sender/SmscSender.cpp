@@ -1153,6 +1153,8 @@ bool SmscSender::processQueue( DataQueue& queue )
 
             // receipt hash has not been received, adding one
             iter = rcptList.insert(rcptList.begin(),ReceiptData());
+            // smsc_log_debug(log_,"S='%s' FIXME: intentionally set immediate timer",smscId_.c_str());
+            // drm.endTime = now;
             iter->drmId = drm;
             iter->endTime = drm.endTime;
             iter->rcptId = rd.rcptId;
