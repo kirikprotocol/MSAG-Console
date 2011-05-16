@@ -1,3 +1,5 @@
+2011-05-16 11:40 bukind
+  bugfix: now pvss is stopped first
 2011-05-16 11:16 bukind
   bugfix: expired sent message was not removed
     from messageHash_ leading to coredump on incoming receipt

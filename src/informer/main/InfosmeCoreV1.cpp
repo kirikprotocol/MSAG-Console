@@ -458,6 +458,11 @@ void InfosmeCoreV1::stop()
 {
     {
         if (getCS()->isStopping()) return;
+
+        if (pvss_) {
+            smsc_log_debug(log_,"--- stopping pvss ---");
+            pvss_->shutdown();
+        }
         {
             MutexGuard mg(startMon_);
             if (getCS()->isStopping()) return;
@@ -478,15 +483,10 @@ void InfosmeCoreV1::stop()
         if (dcpServer_) dcpServer_->Stop();
         if (adminServer_) adminServer_->Stop();
         if (dlvMgr_) dlvMgr_->stop();
-        if (pvss_) {
-            smsc_log_debug(log_,"--- stopping pvss ---");
-            pvss_->shutdown();
-        }
         if (pvssHandler_) {
             smsc_log_debug(log_,"--- stopping pvss handler ---");
             pvssHandler_->stop();
         }
-
         {
             // stop all smscs
             MutexGuard mg(regLock_);
