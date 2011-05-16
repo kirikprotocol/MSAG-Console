@@ -517,21 +517,27 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 
     timediff_type retryDelay = -1;
     if ( info.wantRetryOnFail() ) {
-        retryDelay = info.getRetryInterval(iter->msg.retryCount);
+        const timediff_type ownRetryDelay = info.getRetryInterval(iter->msg.retryCount);
+        retryDelay = ownRetryDelay;
+        timediff_type smscrd = -1;
+        bool trans = false;
         if (retryDelay!=-1) {
-            bool trans;
             if ( !iter->msg.flags.hasTransactional(trans) ) {
                 trans = info.isTransactional();
             }
-            timediff_type smscrd = policy.getRetryInterval( trans,
-                                                            smppState,
-                                                            iter->msg.retryCount );
+            smscrd = policy.getRetryInterval( trans,
+                                              smppState,
+                                              iter->msg.retryCount );
             if (smscrd==-1) {
                 retryDelay = smscrd;
             } else if (smscrd > retryDelay) {
                 retryDelay = smscrd;
             }
         }
+        smsc_log_debug(log_,"R=%u/D=%u/M=%llu ownRetry=%+d attempt=%d trans=%d smppState=%d -> retryDelay=%+d",
+                       getRegionId(), dlvId, ulonglong(msgId),
+                       ownRetryDelay, iter->msg.retryCount, trans,
+                       smppState, retryDelay );
     }
 
     Message& m = iter->msg;
@@ -628,9 +634,10 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         mg.Unlock();
         const uint8_t prevState = m.state;
         m.state = MSGSTATE_RETRY;
-        smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu",
+        smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu/%+u",
                        getRegionId(), dlvId, ulonglong(msgId),
-                       msgTimeToYmd(m.lastTime) );
+                       msgTimeToYmd(m.lastTime),
+                       int(m.lastTime - currentTime) );
         dlv_->storeJournal_->journalMessage(info.getDlvId(),getRegionId(),m,ml.serial);
         dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
         return;

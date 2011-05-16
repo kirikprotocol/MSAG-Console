@@ -67,13 +67,12 @@ void RetryString::init( const char* line )
     items_ = new RetryItem[itemsize_];
     try {
         unsigned idx = 0;
-        timediff_type res = 0;
-        unsigned attempts = 0;
-        unsigned repetition;
         bool lastfound = false;
+        unsigned attempts = 0;
         for ( const char* p = line; ; ) {
 
-            repetition = 1;
+            timediff_type res = 0;
+            unsigned repetition = 1;
             int shift = 0;
             char type;
             unsigned val;
