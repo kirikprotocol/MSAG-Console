@@ -653,3 +653,6 @@ B3209: Apr 21, 2011
     SMSC	changed rechedule now policy for busy for MT, now it will be added to waiting chain
     SMSC	Submit -> delivery OK, now will check subscriber's chain and force schedule
     SMSC	multipart delivery on MAP fix for new partitioned scheme
+
+B3210: May 16, 2011
+    SMSC	ussd string parsing logic now configurable in map limits
