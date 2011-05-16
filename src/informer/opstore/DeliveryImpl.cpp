@@ -184,7 +184,7 @@ DlvState DeliveryImpl::readState( dlvid_type            dlvId,
            &ymdTime, &cstate,
            &offset,
            &ds.totalMessages, &ds.procMessages, &ds.sentMessages,
-           &ds.retryMessages, &ds.dlvdMessages, &ds.failedMessages,
+           &ds.newMessages, &ds.dlvdMessages, &ds.failedMessages,
            &ds.expiredMessages, &ds.dlvdSms, &ds.failedSms,
            &ds.expiredSms, &ds.killedMessages, &shift );
     if (!shift) {
@@ -284,7 +284,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         fg.create((getCS()->getStorePath() + buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
-            const char* header = "#1 TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL\n";
+            const char* header = "#2 TIME,STATE,PLANTIME,TOTAL,PROC,SENT,NEW,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL\n";
             fg.write(header,strlen(header));
         }
         DeliveryStats ds;
@@ -296,7 +296,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.totalMessages,
                              ds.procMessages,
                              ds.sentMessages,
-                             ds.retryMessages,
+                             ds.newMessages,
                              ds.dlvdMessages,
                              ds.failedMessages,
                              ds.expiredMessages,
@@ -408,10 +408,10 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
     }
     DeliveryStats ds;
     dlvInfo_->getMsgStats(ds);
-    smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u retry=%u dlvd=%u fail=%u expd=%u kill=%u",
+    smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u new=%u dlvd=%u fail=%u expd=%u kill=%u",
                   dlvInfo_->getDlvId(),
                   ds.totalMessages, ds.procMessages,
-                  ds.sentMessages, ds.retryMessages,
+                  ds.sentMessages, ds.newMessages,
                   ds.dlvdMessages, ds.failedMessages,
                   ds.expiredMessages, ds.killedMessages );
 }
