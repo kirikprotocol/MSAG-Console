@@ -50,7 +50,7 @@ void FifoLink::unlink(FifoLink * & fifo_head, FifoLink * & fifo_tail)
 /* ************************************************************************** *
  * FifoQueue implementation
  * ************************************************************************** */
-FifoLink * FifoQueue::pop_front(void)
+FifoLink * FifoList::pop_front(void)
 {
   FifoLink * pNode = _head;
   if (_head)
@@ -60,7 +60,7 @@ FifoLink * FifoQueue::pop_front(void)
   return pNode;
 }
 
-void FifoQueue::push_back(FifoLink * use_node)
+void FifoList::push_back(FifoLink * use_node)
 {
   if (_tail)
     use_node->push(_head, _tail);

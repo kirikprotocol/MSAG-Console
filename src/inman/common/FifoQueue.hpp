@@ -31,14 +31,20 @@ public:
   void unlink(FifoLink * & fifo_head, FifoLink * & fifo_tail);
 };
 
-class FifoQueue {
+// ------------------------------------------------------------
+// Generic list of FIFO-linked elements:
+// elements may be added to tail only and removed either from
+// head or any intermediate position.
+// ------------------------------------------------------------
+class FifoList {
+protected:
   FifoLink * _head;
   FifoLink * _tail;
 
 public:
-  FifoQueue() : _head(0), _tail(0)
+  FifoList() : _head(0), _tail(0)
   { }
-  ~FifoQueue()
+  ~FifoList()
   { }
 
   bool empty(void) const { return _head == 0; }
@@ -48,14 +54,74 @@ public:
     return p_node->isLinked() || ((const FifoLink *)_head == p_node);
   }
 
+  //Takes element at head of queue.
   FifoLink *  pop_front(void);
+
+  //Appends element at to tail of queue.
   void        push_back(FifoLink * use_node);
 
+  //Excludes element from queue.
+  //NOTE: element MUST belong to this queue
   void unlink(FifoLink * p_node)
   {
     p_node->unlink(_head, _tail);
   }
 };
+
+// ------------------------------------------------------------
+// Pure FIFO queue:  elements may be added to tail only
+// and removed from head only. Additionally size of queue is
+// maintained.
+// ------------------------------------------------------------
+template <
+  class _TArg // : public FifoLink
+, typename _SizeTypeArg = unsigned //MUST be an unsigned integer type,
+                                   //implicitily restricts capacity of queue
+>
+class FifoQueue_T : protected FifoList {
+protected:
+  _SizeTypeArg _size;
+
+public:
+  typedef _SizeTypeArg size_type;
+
+  FifoQueue_T() : FifoList(), _size(0)
+  { }
+  ~FifoQueue_T()
+  { }
+
+  bool empty(void) const { return FifoList::empty(); }
+
+  bool isLinked(const _TArg * p_node) const
+  {
+    return FifoList::isLinked(p_node);
+  }
+
+  size_type size(void) const { return _size; }
+
+  //Returns head element? or NULL if queue is empty
+  _TArg *  pop_front(void)
+  {
+    if (_size) {
+      --_size;
+      return static_cast<_TArg*>(FifoList::pop_front());
+    }
+    return 0;
+  }
+
+  //Appends element to tail of queue.
+  //Returns false if queue capacity is already exceeded.
+  bool push_back(_TArg * use_node)
+  {
+    if (!(++_size)) {
+      --_size;
+      return false;
+    }
+    FifoList::push_back(use_node);
+    return true;
+  }
+};
+
 
 } //util
 } //smsc

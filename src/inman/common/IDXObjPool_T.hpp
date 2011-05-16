@@ -1,6 +1,6 @@
 /* ************************************************************************** *
- * Accumulative pool of indexed objects, which are allowed to have no copying 
- * constructor defined. Memory for pooled objects is allocated once on heap 
+ * Accumulative pool of indexed objects, which are allowed to have no copying
+ * constructor defined. Memory for pooled objects is allocated once on heap
  * and then just reused.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_INDEXED_OBJ_POOL
@@ -135,7 +135,7 @@ protected:
   /* -- DATA members: -- */
   const bool  _doErase; //object release mode: destroy or just mark as unused
   NodeArray   _store;   //store of all allocated nodes.
-  FifoQueue   _pool;    //queue of unused nodes
+  FifoList    _pool;    //queue of unused nodes
 
   //Releases (marks as unused) a node with given unique index
   void rlseNode(size_type obj_idx)
