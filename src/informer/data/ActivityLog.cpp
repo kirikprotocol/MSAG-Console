@@ -75,7 +75,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                     // reading the version
                     int shift = 0;
                     sscanf(line,"#%u SEC,%n",&version,&shift);
-                    if (shift == 0 || version <= 0 || version >= 3) {
+                    if (shift == 0 || version <= 0 || version > 3) {
                         throw InfosmeException(EXC_BADFILE,"version cannot be read/is not supported (%s)",line);
                     }
                     continue;
