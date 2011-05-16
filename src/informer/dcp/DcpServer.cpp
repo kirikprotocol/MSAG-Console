@@ -579,12 +579,13 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
 
   DeliveryStats ds;
   dlv->getDlvInfo().getMsgStats(ds);
+  // calculating the number of retried messages
   respStats.setDeliveredMessages(ds.dlvdMessages);
   respStats.setExpiredMessages(ds.expiredMessages);
   respStats.setFailedMessage(ds.failedMessages);
   respStats.setNewMessages(ds.newMessages);
   respStats.setProcessMessage(ds.procMessages);
-  respStats.setRetriedMessages(0/*ds.retryMessages*/);
+  respStats.setRetriedMessages(ds.getRetryMessagesCount());
   respStats.setSentMessages(ds.sentMessages);
 
   enqueueResp(resp,inmsg);

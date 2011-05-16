@@ -29,6 +29,12 @@ public:
         memset(this,0,sizeof(*this));
     }
 
+    int32_t getRetryMessagesCount() const {
+        return totalMessages - 
+            newMessages - procMessages - sentMessages - dlvdMessages -
+            failedMessages - expiredMessages - killedMessages;
+    }
+
     /*
     int32_t getNewMessagesCount()const{
         return totalMessages-procMessages-sentMessages-retryMessages-dlvdMessages-failedMessages-expiredMessages-killedMessages;
