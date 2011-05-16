@@ -71,6 +71,7 @@ endDate_(0),
 activePeriodStart_(-1),
 activePeriodEnd_(-1),
 validityPeriod_(-1),
+messageTimeToLive_(-1),
 archivationTime_(-1),
 activeWeekDays_(-1),
 statLock_( MTXWHEREAMI )
@@ -374,6 +375,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     timediff_type activePeriodStart = activePeriodStart_;
     timediff_type activePeriodEnd = activePeriodEnd_;
     timediff_type validityPeriod = validityPeriod_;
+    timediff_type messageTimeToLive = messageTimeToLive_;
     timediff_type archivationPeriod = archivationTime_;
 
     int activeWeekDays = activeWeekDays_;
@@ -398,6 +400,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     }
     if ((!old || old->validityPeriod != data.validityPeriod) && !data.validityPeriod.empty() ) {
         validityPeriod = parseTime(data.validityPeriod.c_str(), true);
+    }
+    if ((!old || old->messageTimeToLive != data.messageTimeToLive) && !data.messageTimeToLive.empty() ) {
+        messageTimeToLive = parseTime(data.messageTimeToLive.c_str(), true);
     }
     if ((!old || old->archivationPeriod != data.archivationPeriod) && !data.archivationPeriod.empty() ) {
         archivationPeriod = parseTime(data.archivationPeriod.c_str(), true);
@@ -456,7 +461,16 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (endDate != 0) { endDate_ = endDate; }
     if (activePeriodStart != -1) { activePeriodStart_ = activePeriodStart; }
     if (activePeriodEnd != -1) { activePeriodEnd_ = activePeriodEnd; }
-    if (validityPeriod != -1) { validityPeriod_ = validityPeriod; }
+    if (validityPeriod != -1) {
+        validityPeriod_ = validityPeriod;
+    } else {
+        validityPeriod_ = getCS()->getValidityPeriodDefault();
+    }
+    if (messageTimeToLive != -1) {
+        messageTimeToLive_ = messageTimeToLive;
+    } else {
+        messageTimeToLive_ = getCS()->getMessageTimeToLiveDefault();
+    }
     if (archivationPeriod != -1) { archivationTime_ = archivationPeriod; }
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
     if (sourceAddressChanged) { sourceAddress_ = sourceAddress; }

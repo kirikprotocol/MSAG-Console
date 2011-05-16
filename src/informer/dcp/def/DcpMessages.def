@@ -91,6 +91,7 @@ message DeliveryInfo
   
   //hh:mm:ss
   string archivationPeriod 27 opt
+  string messageTimeToLive 28 opt
 end
 
 enum byte MessageType

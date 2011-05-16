@@ -1,3 +1,5 @@
+2011-05-16 12:45 bukind
+  feature: messageTimeToLive introduced
 2011-05-16 11:40 bukind
   bugfix: now pvss is stopped first
 2011-05-16 11:16 bukind

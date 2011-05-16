@@ -400,7 +400,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         const msgtime_type now = msg.lastTime;
 
         // calculate the validityTime of the message
-        timediff_type validityTime = msg.timeLeft;
+        timediff_type validityTime = std::min(msg.timeLeft,info.getValidityPeriod());
 
         if ( validityTime > smscConfig_.maxValidityTime ) {
             validityTime = smscConfig_.maxValidityTime;
@@ -409,12 +409,13 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
             validityTime = untilAE;
         }
 
-        smsc_log_debug(log_,"R=%u/D=%u/M=%llu S.minVT=%d S.maxVT=%d msg.TTL=%d untilAE=%d -> VT=%u",
+        smsc_log_debug(log_,"R=%u/D=%u/M=%llu S.minVT=%d S.maxVT=%d msg.TTL=%d d.validty=%d untilAE=%d -> VT=%u",
                        ptr.getRegionId(), info.getDlvId(),
                        ulonglong(msg.msgId),
                        smscConfig_.minValidityTime,
                        smscConfig_.maxValidityTime,
                        msg.timeLeft,
+                       info.getValidityPeriod(),
                        untilAE, validityTime );
 
         if (validityTime < smscConfig_.minValidityTime) {
@@ -423,9 +424,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
             break;
         }
 
-        if (validityTime < 30) {
+        if (validityTime < 20) {
             // less than half a minute, cannot send
-            what = "validity time is less than half a minute";
+            what = "validity time is less than 20 sec";
             res = smsc::system::Status::DELIVERYTIMEDOUT;
             break;
         }

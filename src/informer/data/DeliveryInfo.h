@@ -34,6 +34,7 @@ struct DeliveryInfoData
   std::string activePeriodEnd;   // local time! HH:MM:SS or empty
   std::vector<std::string> activeWeekDays; // local time!
   std::string validityPeriod;
+  std::string messageTimeToLive;
   std::string archivationPeriod; // HH:MM:SS or empty
   bool flash;
   bool useDataSm;
@@ -135,6 +136,8 @@ public:
     /// get validity period or -1
     inline timediff_type getValidityPeriod() const { return validityPeriod_; }
 
+    inline timediff_type getMessageTimeToLive() const { return messageTimeToLive_; }
+
     /// return the archivation time or <=0.
     /// the actual date is calculated from startDate.
     inline timediff_type getArchivationTime() const {
@@ -224,6 +227,7 @@ private:
     timediff_type         activePeriodStart_;
     timediff_type         activePeriodEnd_;
     timediff_type         validityPeriod_;
+    timediff_type         messageTimeToLive_;
     timediff_type         archivationTime_;
     int                   activeWeekDays_;
     smsc::sms::Address    sourceAddress_;

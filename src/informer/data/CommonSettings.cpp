@@ -90,7 +90,8 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     resendIOThreadCount_ = conf.getInt("resendIOThreadCount",10,10,30);
     regionRandomizationJitter_ = conf.getInt("regionRandomizationJitter",12451,100,2000000);
     
-    validityPeriodDefault_ = conf.getInt("validityPeriodDefault",3600,1000,100000);
+    validityPeriodDefault_ = conf.getInt("validityPeriodDefault",3600,300,100000);
+    messageTimeToLiveDefault_ = conf.getInt("messageTimeToLiveDefault",3600,300,100000);
 
     inputJournalRollingSpeed_ = conf.getInt("inputJournalRollingSpeed",30,1,100000);
     operationalJournalRollingSpeed_ = conf.getInt("operationalJournalRollingSpeed",30,1,100000);

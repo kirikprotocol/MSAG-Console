@@ -154,6 +154,11 @@ public:
         return timediff_type(validityPeriodDefault_);
     }
 
+    /// default validity period for each message (initial TTL)
+    inline timediff_type getMessageTimeToLiveDefault() const throw() {
+        return timediff_type(messageTimeToLiveDefault_);
+    }
+
     inline unsigned getLicenseLimit() const throw() {
         return licenseLimit_;
     }
@@ -240,6 +245,7 @@ private:
     unsigned slicedMessageSize_;
     unsigned unrespondedMessagesMax_;
     unsigned validityPeriodDefault_;
+    unsigned messageTimeToLiveDefault_;
     volatile bool stopping_;
     bool     archive_;
     bool     emergency_;

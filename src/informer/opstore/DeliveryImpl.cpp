@@ -74,6 +74,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         }
 
         data.validityPeriod = config.getString("validityPeriod","");
+        data.messageTimeToLive = config.getString("messageTimeToLive","");
         data.archivationPeriod = config.getString("archivationPeriod","");
         data.flash = config.getBool("flash",false);
         data.useDataSm = config.getBool("useDataSm",false);
@@ -531,6 +532,9 @@ void DeliveryImpl::writeDeliveryInfoData()
     }
     if (!data.validityPeriod.empty()) {
         config.setString("validityPeriod",data.validityPeriod.c_str());
+    }
+    if (!data.messageTimeToLive.empty()) {
+        config.setString("messageTimeToLive",data.messageTimeToLive.c_str());
     }
     if (!data.archivationPeriod.empty()) {
         config.setString("archivationPeriod",data.archivationPeriod.c_str());

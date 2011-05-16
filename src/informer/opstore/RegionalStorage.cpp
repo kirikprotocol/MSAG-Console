@@ -450,8 +450,8 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     m.lastTime = currentTime;
     if (!m.timeLeft) {
         /// this one is a new message, set its TTL initially
-        m.timeLeft  = info.getValidityPeriod();
-        if (m.timeLeft <= 0) m.timeLeft = getCS()->getValidityPeriodDefault();
+        m.timeLeft  = info.getMessageTimeToLive();
+        // if (m.timeLeft <= 0) m.timeLeft = getCS()->getValidityPeriodDefault();
     }
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_PROCESS;

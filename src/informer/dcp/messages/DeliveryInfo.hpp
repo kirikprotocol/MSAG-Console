@@ -50,6 +50,7 @@ public:
     finalDlvRecordsFlag=false;
     finalMsgRecordsFlag=false;
     archivationPeriodFlag=false;
+    messageTimeToLiveFlag=false;
   }
  
 
@@ -283,6 +284,15 @@ public:
       rv+="archivationPeriod=";
       rv+=archivationPeriod;
     }
+    if(messageTimeToLiveFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="messageTimeToLive=";
+      rv+=messageTimeToLive;
+    }
     return rv;
   }
 
@@ -428,6 +438,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(archivationPeriod);
+    }
+    if(messageTimeToLiveFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(messageTimeToLive);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -938,6 +954,28 @@ public:
   {
     return archivationPeriodFlag;
   }
+  const std::string& getMessageTimeToLive()const
+  {
+    if(!messageTimeToLiveFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("messageTimeToLive");
+    }
+    return messageTimeToLive;
+  }
+  void setMessageTimeToLive(const std::string& argValue)
+  {
+    messageTimeToLive=argValue;
+    messageTimeToLiveFlag=true;
+  }
+  std::string& getMessageTimeToLiveRef()
+  {
+    messageTimeToLiveFlag=true;
+    return messageTimeToLive;
+  }
+  bool hasMessageTimeToLive()const
+  {
+    return messageTimeToLiveFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -1078,6 +1116,11 @@ public:
     {
       ds.writeTag(archivationPeriodTag);
     ds.writeStrLV(archivationPeriod); 
+    }
+    if(messageTimeToLiveFlag)
+    {
+      ds.writeTag(messageTimeToLiveTag);
+    ds.writeStrLV(messageTimeToLive); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -1312,6 +1355,15 @@ public:
           archivationPeriod=ds.readStrLV();
           archivationPeriodFlag=true;
         }break;
+        case messageTimeToLiveTag:
+        {
+          if(messageTimeToLiveFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("messageTimeToLive");
+          }
+          messageTimeToLive=ds.readStrLV();
+          messageTimeToLiveFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -1425,6 +1477,7 @@ protected:
   static const int32_t finalDlvRecordsTag=25;
   static const int32_t finalMsgRecordsTag=26;
   static const int32_t archivationPeriodTag=27;
+  static const int32_t messageTimeToLiveTag=28;
 
   int connId;
 
@@ -1451,6 +1504,7 @@ protected:
   bool finalDlvRecords;
   bool finalMsgRecords;
   std::string archivationPeriod;
+  std::string messageTimeToLive;
 
   bool nameFlag;
   bool userIdFlag;
@@ -1475,6 +1529,7 @@ protected:
   bool finalDlvRecordsFlag;
   bool finalMsgRecordsFlag;
   bool archivationPeriodFlag;
+  bool messageTimeToLiveFlag;
 };
 
 }
