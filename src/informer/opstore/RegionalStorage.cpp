@@ -839,6 +839,7 @@ bool RegionalStorage::postInit()
                     ++i;
                     const int smppState = smsc::system::Status::EXPIREDATSTART;
                     unsigned nchunks = 0; // unknown
+                    messageHash_.Delete(m.msgId);
                     doFinalize(mg,iter,currentTime,MSGSTATE_EXPIRED,smppState,nchunks);
                     continue;
                 }
