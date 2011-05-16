@@ -514,4 +514,10 @@ Targets:
     <ant dir="${SMSC_DIR}/ext_smes" target="smsquiz_distr"/>
   </target>
 
+  <target name="sponsored_update" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="sponsored_update"/>
+  </target>
+  <target name="sponsored_distr" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="sponsored_distr"/>
+  </target>
 </project>

@@ -66,10 +66,10 @@ Modules:
     <ant dir="InManSme" antfile="build.xml" target="update"/>
   </target>
   <target name="smsx_distr">
-    <ant dir="SmsX" antfile="build.xml" target="distr"/>
+    <ant dir="smsxsme" antfile="build.xml" target="distr.all"/>
   </target>
   <target name="smsx_update">
-    <ant dir="SmsX" antfile="build.xml" target="update"/>
+    <ant dir="smsxsme" antfile="build.xml" target="update"/>
   </target>
   <target name="subscription_distr">
     <property name="TEMPLATES_CSV_FILE" value="SMSExtraSubscriptionSME/docs/msisdn2smsc.csv"/>
@@ -96,5 +96,11 @@ Modules:
   </target>
   <target name="unibalance_update">
     <ant dir="unibalance" antfile="build.xml" target="update"/>
+  </target>
+  <target name="sponsored_distr">
+    <ant dir="sponsored" antfile="build.xml" target="distr.all"/>
+  </target>
+  <target name="sponsored_update">
+    <ant dir="sponsored" antfile="build.xml" target="update"/>
   </target>
 </project>
