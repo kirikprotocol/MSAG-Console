@@ -86,10 +86,8 @@ public:
   {
     defaultStackSize=size;
   }
-  void setMaxThreads(int count)
-  {
-    maxThreads=count;
-  }
+  //Note: (maxThreads == 0) means no limit!
+  void setMaxThreads(unsigned int max_count);
 
   //Returns false if task cann't be started due to resource limitation
   bool startTask(ThreadedTask* task);
@@ -129,7 +127,7 @@ private:
   mutable EventMonitor  lock;
   Logger *              _tpLogger; //threadPool logger
   int                   defaultStackSize;
-  int                   maxThreads;
+  unsigned int          maxThreads;
   ThreadsArray          freeThreads;
   ThreadInfoArray       usedThreads;
   TasksArray            pendingTasks;

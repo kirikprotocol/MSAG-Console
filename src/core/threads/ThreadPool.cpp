@@ -103,6 +103,13 @@ int ThreadPool::getActiveThreads(void) const
   return usedThreads.Count();
 }
 
+//Note: (maxThreads == 0) means no limit!
+void ThreadPool::setMaxThreads(unsigned int max_count)
+{
+  MutexGuard mg(lock);
+  maxThreads = max_count;
+}
+
 void ThreadPool::stopNotify()
 {
   MutexGuard  grd(lock);
@@ -239,7 +246,7 @@ bool ThreadPool::startTask(ThreadedTask* task)
     t->processTask();
     usedThreads.Push(ThreadInfo(t));
   } else {
-    if (usedThreads.Count() == maxThreads) {
+    if (maxThreads && ((unsigned)usedThreads.Count() >= maxThreads)) {
       smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to pending queue",
                      this, task->taskName());
       pendingTasks.Push(task);
@@ -272,11 +279,11 @@ void ThreadPool::releaseThread(PooledThread * thread)
     findUsed(thread, i);
 
     ThreadedTask * pTask = thread->releaseTask();
-    if (pTask) {
+    if (pTask || (maxThreads && ((unsigned)usedThreads.Count() > maxThreads))) {
       //Destroy or release task. Note: it may takes rather long time,
       //so keep thread in 'used' state until task finalization is completed.
       usedThreads[i].destructing = true;
-      {
+      if (pTask) {
         smsc::core::synchronization::ReverseMutexGuard rgrd(lock);
         if (pTask->delOnCompletion()) {
           delete pTask;
@@ -293,9 +300,25 @@ void ThreadPool::releaseThread(PooledThread * thread)
         }
         pTask = 0;
       }
+      if (maxThreads && ((unsigned)usedThreads.Count() > maxThreads)) {
+        //maxThreads limit was changed, release excessive thread
+        {
+          smsc::core::synchronization::ReverseMutexGuard rgrd(lock);
+          thread->assignTask(NULL);
+          thread->processTask();
+          thread->WaitFor();
+          delete thread;
+        }
+        findUsed(thread, i);
+        usedThreads.Delete(i, 1);
+        if (!usedThreads.Count()) //awake shutdown()
+          lock.notify();
+        return;
+      }
       findUsed(thread, i);
       usedThreads[i].destructing = false;
     }
+
     //assign next task from queue of pending ones
     if (pendingTasks.Count() > 0) {
       ThreadedTask * t;
