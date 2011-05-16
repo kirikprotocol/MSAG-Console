@@ -534,10 +534,10 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                 retryDelay = smscrd;
             }
         }
-        smsc_log_debug(log_,"R=%u/D=%u/M=%llu ownRetry=%+d attempt=%d trans=%d smppState=%d -> retryDelay=%+d",
+        smsc_log_debug(log_,"R=%u/D=%u/M=%llu ownRetry=%d attempt=%d trans=%d smppState=%d smscrd=%d -> retryDelay=%d",
                        getRegionId(), dlvId, ulonglong(msgId),
                        ownRetryDelay, iter->msg.retryCount, trans,
-                       smppState, retryDelay );
+                       smppState, smscrd, retryDelay );
     }
 
     Message& m = iter->msg;
