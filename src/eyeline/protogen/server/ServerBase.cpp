@@ -4,6 +4,16 @@
 namespace eyeline{
 namespace protogen{
 
+ServerBase::ServerBase(const char* logName) :
+clntsMon(MTXWHEREAMI),
+outQueueMon(MTXWHEREAMI)
+{
+    lastId=0;
+    log=smsc::logger::Logger::getInstance(logName);
+    outSeqId=0;
+    isStopping=false;
+}
+
 void ServerBase::Init(const char* host,int port,int hndCnt)
 {
 

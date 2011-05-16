@@ -24,13 +24,7 @@ namespace buf=smsc::core::buffers;
 
 class ServerBase{
 public:
-  ServerBase(const char* logName)
-  {
-    lastId=0;
-    log=smsc::logger::Logger::getInstance(logName);
-    outSeqId=0;
-    isStopping=false;
-  }
+  ServerBase(const char* logName);
   virtual ~ServerBase();
   void Init(const char* host,int port,int hndCnt);
   void Stop();
@@ -87,6 +81,7 @@ protected:
   }wrThread;
   class HandlerThread:public MethodRunnerThread{
   public:
+    inline HandlerThread() : mon(MTXWHEREAMI) {}
     int Execute();
     buf::CyclicQueue<ProtocolSocketBase::Packet> queue;
     sync::EventMonitor mon;
