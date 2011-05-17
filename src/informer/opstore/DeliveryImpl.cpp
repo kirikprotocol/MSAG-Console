@@ -642,7 +642,8 @@ void DeliveryImpl::makeResendFilePath( char* fpath,
                                        regionid_type regionId,
                                        ulonglong ymdTime ) const
 {
-    int len = sprintf(makeDeliveryPath(fpath,getDlvId()),"resend/");
+    fpath = makeDeliveryPath(fpath,getDlvId());
+    int len = sprintf(fpath,"resend/");
     if (regionId == anyRegionId) { return; }
     fpath += len;
     len = sprintf(fpath,"%u/",regionId);
