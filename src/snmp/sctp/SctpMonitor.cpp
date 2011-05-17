@@ -5,10 +5,12 @@ static char const ident[] = "$Id$";
 #include "ss7cp.h"
 #include "mgmtapi.h"
 
+
 namespace smsc{
 namespace snmp{
 namespace sctp{
 
+using namespace smsc::core::synchronization;
 using smsc::logger::Logger;
 
 AssociationChangeListener* listener;

@@ -27,6 +27,7 @@ using smsc::snmp::sctp::AssociationChangeListener;
 using smsc::snmp::sctp::AssociationChangeEvent;
 using smsc::snmp::sctp::getAssociationStateDescription;
 using smsc::logger::Logger;
+using smsc::util::findConfigFile;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigView;
 using smsc::util::config::ConfigException;
