@@ -236,12 +236,12 @@ static std::string AltConcat(const char* prefix,Hash<std::list<std::string> >& h
 
 StateMachine::StateMachine(EventQueue& q,
                smsc::store::MessageStore* st,
-               smsc::system::Smsc *app):
+               int argIdx):
                eq(q),
                store(st),
-               smsc(app)
-
+               smIdx(argIdx)
 {
+  smsc=&Smsc::getInstance();
   using namespace smsc::util::regexp;
   smsLog=smsc::logger::Logger::getInstance("sms.trace");
   perfLog=smsc::logger::Logger::getInstance("sm.perf");

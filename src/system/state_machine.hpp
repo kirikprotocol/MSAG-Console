@@ -31,9 +31,7 @@ public:
 
 class StateMachine:public smsc::core::threads::ThreadedTask{
 public:
-  StateMachine(EventQueue& q,
-               smsc::store::MessageStore* st,
-               smsc::system::Smsc *app);
+  StateMachine(EventQueue& q,smsc::store::MessageStore* st,int idx);
   virtual ~StateMachine()
   {
   }
@@ -100,6 +98,7 @@ protected:
   EventQueue& eq;
   smsc::store::MessageStore* store;
   smsc::system::Smsc *smsc;
+  int smIdx;
 
   smsc::logger::Logger* smsLog;
   smsc::logger::Logger* perfLog;
