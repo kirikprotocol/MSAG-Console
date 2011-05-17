@@ -137,28 +137,28 @@ public:
       iterator():m_node(0){}
       iterator operator++(int)
       {
-         DataNode* rv=m_node;
          m_node=m_node->m_next;
-         return iterator(rv);
+         return *this;
       }
 
       iterator operator++()
       {
+         DataNode* rv=m_node;
          m_node=m_node->m_next;
-         return *this;
+         return iterator(rv);
       }
 
       iterator operator--(int)
       {
-         DataNode* rv=m_node;
          m_node=m_node->m_prev;
-         return iterator(rv);
+         return *this;
       }
 
       iterator operator--()
       {
+         DataNode* rv=m_node;
          m_node=m_node->m_prev;
-         return *this;
+         return iterator(rv);
       }
 
       iterator& operator=(const iterator& a_other)
@@ -204,28 +204,28 @@ public:
       const_iterator():m_node(0){}
       const_iterator operator++(int)
       {
-         const DataNode* rv=m_node;
          m_node=m_node->m_next;
-         return const_iterator(rv);
+         return *this;
       }
 
       const_iterator operator++()
       {
+         const DataNode* rv=m_node;
          m_node=m_node->m_next;
-         return *this;
+         return const_iterator(rv);
       }
 
       const_iterator operator--(int)const
       {
-         const DataNode* rv=m_node;
          m_node=m_node->m_prev;
-         return const_iterator(rv);
+         return *this;
       }
 
       const_iterator operator--()
       {
+         const DataNode* rv=m_node;
          m_node=m_node->m_prev;
-         return *this;
+         return const_iterator(rv);
       }
 
       const_iterator& operator=(const const_iterator& a_other)
@@ -292,6 +292,7 @@ public:
             m_apool=new MemPool<DataArrayNode>;
          }
          m_root=m_npool->newNode();
+         m_root->m_nodeType=ntInnerNode;
          m_root->m_ch[3]=m_root->m_ch[2]=m_root->m_ch[1]=m_root->m_ch[0]=0;
       }
       Node* ptr=m_root;
@@ -301,7 +302,66 @@ public:
       for(;;)
       {
          idx=hashCode&3;
-         if(ptr->m_nodeType==ntSingleValue)
+         if(ptr->m_nodeType==ntInnerNode)
+         {
+           if(ptr->m_ch[idx])
+           {
+             parent=ptr;
+             parentIdx=idx;
+             ptr=ptr->m_ch[idx];
+             hashCode>>=2;
+             bitIndex+=2;
+             continue;
+           }else
+           {
+             DataNode& n=*(DataNode*)(ptr->m_ch[idx]=(Node*)m_dpool->newNode());
+             n.constructKeyVal(value_type(a_key,a_value));
+             n.m_next=(DataNode*)&m_end;
+             n.m_prev=m_end.m_prev;
+             if(m_end.m_prev)
+             {
+               m_end.m_prev->m_next=&n;
+             }else
+             {
+               m_begin=&n;
+             }
+             m_end.m_prev=&n;
+             m_count++;
+             return iterator(&n);
+           }
+         }
+
+         if(ptr->m_nodeType==ntValuesArray)
+         {
+            DataArrayNode& va=ptr->asArray();
+            for(size_t i=0;i<va.m_count;i++)
+            {
+               if(va.m_array[i]->keyval().m_key==a_key)
+               {
+                  va.m_array[i]->keyval().m_value=a_value;
+                  return iterator(va.m_array[i]);
+               }
+            }
+            DataNode** newArr=new DataNode*[va.m_count+1];
+            memcpy(newArr,va.m_array,sizeof(DataNode*)*va.m_count);
+            delete [] va.m_array;
+            va.m_array=newArr;
+            DataNode& n=*m_dpool->newNode();
+            n.constructKeyVal(value_type(a_key,a_value));
+            n.m_next=(DataNode*)&m_end;
+            n.m_prev=m_end.m_prev;
+            if(m_end.m_prev)
+            {
+               m_end.m_prev->m_next=&n;
+            }else
+            {
+               m_begin=&n;
+            }
+            m_end.m_prev=&n;
+            va.m_array[va.m_count++]=&n;
+            m_count++;
+            return iterator(&n);
+         }else
          {
             DataNode* dptr=ptr->asDataPtr();
             if(dptr->keyval().m_key==a_key)
@@ -316,6 +376,7 @@ public:
                do
                {
                   Node* newNode=parent->m_ch[parentIdx]=m_npool->newNode();
+                  newNode->m_nodeType=ntInnerNode;
                   newNode->m_ch[3]=newNode->m_ch[2]=newNode->m_ch[1]=newNode->m_ch[0]=0;
                   if((oldHashCode&3)!=idx)
                   {
@@ -325,7 +386,6 @@ public:
                      n.constructKeyVal(value_type(a_key,a_value));
                      n.m_next=(DataNode*)&m_end;
                      n.m_prev=m_end.m_prev;
-                     n.m_nodeType=ntSingleValue;
                      if(m_end.m_prev)
                      {
                         m_end.m_prev->m_next=dptr;
@@ -366,63 +426,6 @@ public:
             m_count++;
             return iterator(&n);
          }
-         if(ptr->m_nodeType==ntValuesArray)
-         {
-            DataArrayNode& va=ptr->asArray();
-            for(size_t i=0;i<va.m_count;i++)
-            {
-               if(va.m_array[i]->keyval().m_key==a_key)
-               {
-                  va.m_array[i]->keyval().m_value=a_value;
-                  return iterator(va.m_array[i]);
-               }
-            }
-            DataNode** newArr=new DataNode*[va.m_count+1];
-            memcpy(newArr,va.m_array,sizeof(DataNode*)*va.m_count);
-            delete [] va.m_array;
-            va.m_array=newArr;
-            DataNode& n=*m_dpool->newNode();
-            n.constructKeyVal(value_type(a_key,a_value));
-            n.m_next=(DataNode*)&m_end;
-            n.m_prev=m_end.m_prev;
-            if(m_end.m_prev)
-            {
-               m_end.m_prev->m_next=&n;
-            }else
-            {
-               m_begin=&n;
-            }
-            m_end.m_prev=&n;
-            va.m_array[va.m_count++]=&n;
-            m_count++;
-            return iterator(&n);
-         }
-         if(ptr->m_ch[idx])
-         {
-            parent=ptr;
-            parentIdx=idx;
-            ptr=ptr->m_ch[idx];
-            hashCode>>=2;
-            bitIndex+=2;
-            continue;
-         }else
-         {
-            DataNode& n=*(DataNode*)(ptr->m_ch[idx]=(Node*)m_dpool->newNode());
-            n.constructKeyVal(value_type(a_key,a_value));
-            n.m_next=(DataNode*)&m_end;
-            n.m_prev=m_end.m_prev;
-            n.m_nodeType=ntSingleValue;
-            if(m_end.m_prev)
-            {
-               m_end.m_prev->m_next=&n;
-            }else
-            {
-               m_begin=&n;
-            }
-            m_end.m_prev=&n;
-            m_count++;
-            return iterator(&n);
-         }
       }
       return end();
    }
@@ -442,13 +445,11 @@ public:
       Node* ptr=m_root;
       while(ptr)
       {
-         if(ptr->m_nodeType==ntSingleValue)
+         if(ptr->m_nodeType==ntInnerNode)
          {
-            if(ptr->asData().keyval().m_key==a_key)
-            {
-               return iterator(ptr->asDataPtr());
-            }
-            return end();
+           ptr=ptr->m_ch[hashCode&3];
+           hashCode>>=2;
+           continue;
          }
          if(ptr->m_nodeType==ntValuesArray)
          {
@@ -462,8 +463,11 @@ public:
             }
             return end();
          }
-         ptr=ptr->m_ch[hashCode&3];
-         hashCode>>=2;
+         if(ptr->asData().keyval().m_key==a_key)
+         {
+            return iterator(ptr->asDataPtr());
+         }
+         return end();
       }
       return end();
    }
@@ -478,13 +482,11 @@ public:
       Node* ptr=m_root;
       while(ptr)
       {
-         if(ptr->m_nodeType==ntSingleValue)
+         if(ptr->m_nodeType==ntInnerNode)
          {
-            if(ptr->asData().keyval().m_key==a_key)
-            {
-               return const_iterator(ptr->asDataPtr());
-            }
-            return end();
+           ptr=ptr->m_ch[hashCode&3];
+           hashCode>>=2;
+           continue;
          }
          if(ptr->m_nodeType==ntValuesArray)
          {
@@ -498,8 +500,11 @@ public:
             }
             return end();
          }
-         ptr=ptr->m_ch[hashCode&3];
-         hashCode>>=2;
+         if(ptr->asData().keyval().m_key==a_key)
+         {
+            return const_iterator(ptr->asDataPtr());
+         }
+         return end();
       }
       return end();
    }
@@ -530,7 +535,7 @@ public:
       while(ptr)
       {
          unsigned char idx=hashCode&3;
-         if(ptr->m_nodeType!=ntSingleValue && ptr->m_nodeType!=ntValuesArray)
+         if(ptr->m_nodeType==ntInnerNode)
          {
             path[pathCount]=ptr;
             pathIdx[pathCount++]=idx;
@@ -538,26 +543,6 @@ public:
             hashCode>>=2;
             continue;
          }
-         if(ptr->m_nodeType==ntSingleValue)
-         {
-            DataNode* dptr=ptr->asDataPtr();
-            if(!(dptr->keyval().m_key==a_key))
-            {
-               return;
-            }
-            if(dptr->m_prev)
-            {
-               dptr->m_prev->m_next=dptr->m_next;
-               dptr->m_next->m_prev=dptr->m_prev;
-            }else
-            {
-               m_begin=dptr->m_next;
-               m_begin->m_prev=0;
-            }
-            dptr->destroyKeyVal();
-            m_dpool->freeNode(dptr);
-            m_count--;
-         }else
          if(ptr->m_nodeType==ntValuesArray)
          {
             DataArrayNode& va=ptr->asArray();
@@ -608,6 +593,25 @@ public:
             {
                return;
             }
+         }else
+         {
+            DataNode* dptr=ptr->asDataPtr();
+            if(!(dptr->keyval().m_key==a_key))
+            {
+               return;
+            }
+            if(dptr->m_prev)
+            {
+               dptr->m_prev->m_next=dptr->m_next;
+               dptr->m_next->m_prev=dptr->m_prev;
+            }else
+            {
+               m_begin=dptr->m_next;
+               m_begin->m_prev=0;
+            }
+            dptr->destroyKeyVal();
+            m_dpool->freeNode(dptr);
+            m_count--;
          }
 
          while(pathCount>0)
@@ -713,12 +717,11 @@ protected:
    friend class iterator;
    friend class const_iterator;
 
-   static const intptr_t ntSingleValue=intptr_t(-1);//0xffffffff,
+   static const intptr_t ntInnerNode=intptr_t(-1);//0xffffffff,
    static const intptr_t ntValuesArray=intptr_t(-2);//0xfffffffe
 
    struct DataNode;
    struct DataNodeBase{
-     intptr_t m_nodeType;
      DataNode* m_prev;
      DataNode* m_next;
    };
@@ -753,8 +756,8 @@ protected:
 
 
    struct Node{
+      intptr_t m_nodeType;
       union{
-         intptr_t m_nodeType;
          Node* m_next;
          Node* m_ch[4];
       };
@@ -832,10 +835,13 @@ protected:
 
    void recClear(Node* a_ptr)
    {
-      if(a_ptr->m_nodeType==ntSingleValue)
+      if(a_ptr->m_nodeType==ntInnerNode)
       {
-         a_ptr->asData().destroyKeyVal();
-         m_dpool->freeNode(a_ptr->asDataPtr());
+         if(a_ptr->m_ch[0])recClear(a_ptr->m_ch[0]);
+         if(a_ptr->m_ch[1])recClear(a_ptr->m_ch[1]);
+         if(a_ptr->m_ch[2])recClear(a_ptr->m_ch[2]);
+         if(a_ptr->m_ch[3])recClear(a_ptr->m_ch[3]);
+         m_npool->freeNode(a_ptr);
          return;
       }else if(a_ptr->m_nodeType==ntValuesArray)
       {
@@ -848,17 +854,16 @@ protected:
          delete [] va.m_array;
          m_apool->freeNode(&va);
          return;
+      }else
+      {
+         a_ptr->asData().destroyKeyVal();
+         m_dpool->freeNode(a_ptr->asDataPtr());
       }
-      if(a_ptr->m_ch[0])recClear(a_ptr->m_ch[0]);
-      if(a_ptr->m_ch[1])recClear(a_ptr->m_ch[1]);
-      if(a_ptr->m_ch[2])recClear(a_ptr->m_ch[2]);
-      if(a_ptr->m_ch[3])recClear(a_ptr->m_ch[3]);
-      m_npool->freeNode(a_ptr);
    }
 };
 
 template <class K,class V,typename HF>
-const intptr_t HashTree<K,V,HF>::ntSingleValue;
+const intptr_t HashTree<K,V,HF>::ntInnerNode;
 template <class K,class V,typename HF>
 const intptr_t HashTree<K,V,HF>::ntValuesArray;
 
