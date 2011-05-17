@@ -396,7 +396,7 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
                                       std::vector<regionid_type>& emptyRegs )
 {
     smsc_log_debug(log_,"D=%u postInitOperative",getDlvId());
-    {
+    try {
         // scanning if there are resend files
         char path[100];
         makeResendFilePath(path,anyRegionId,0);
@@ -421,6 +421,8 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
                 smsc_log_warn(log_,"cannot create R=%u/D=%u: %s",regId,getDlvId(),e.what());
             }
         }
+    } catch ( std::exception& e ) {
+        smsc_log_debug(log_,"D=%u resend scan exc: %s",getDlvId(),e.what());
     }
 
     int regId;
