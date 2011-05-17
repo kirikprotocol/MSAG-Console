@@ -8,9 +8,7 @@ import mobi.eyeline.informer.admin.delivery.MessageState;
 public enum MsgState {
 
   Finalized(MessageState.Delivered, MessageState.Failed, MessageState.Expired),
-  Indelivery(MessageState.New, MessageState.Process),
-  New(MessageState.New),
-  Process(MessageState.Process),
+  New(MessageState.New, MessageState.Process),
   Delivered(MessageState.Delivered),
   Failed(MessageState.Failed),
   Expired(MessageState.Expired);

@@ -23,7 +23,13 @@ public class InputTimeRenderer extends Renderer {
 
   static void decodeTime(FacesContext context, InputTime cg) {
     String hours = context.getExternalContext().getRequestParameterMap().get(cg.getId()+".hours");
+    if (hours != null && hours.trim().length() == 0)
+      hours = null;
+
     String minutes = context.getExternalContext().getRequestParameterMap().get(cg.getId()+".minutes");
+    if (minutes != null && minutes.trim().length() == 0)
+      minutes = null;
+
     if (hours != null && minutes != null) {
       try {
         cg.setValue(new Time(hours + ':' + minutes));

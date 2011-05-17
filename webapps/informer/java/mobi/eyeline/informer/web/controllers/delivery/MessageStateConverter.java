@@ -36,8 +36,17 @@ public class MessageStateConverter implements Converter {
 
   public static String getAsString(Locale locale, MessageState state) {
     ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);
+    String stateName;
+    switch (state) {
+      case New:
+      case Process:
+        stateName="New";
+        break;
+      default:
+        stateName = state.toString();
+    }
     try {
-      return bundle.getString("message.state." + state.toString());
+      return bundle.getString("message.state." + stateName);
     } catch (MissingResourceException e) {
       return state.toString();
     }
