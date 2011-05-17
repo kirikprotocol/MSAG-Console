@@ -89,7 +89,7 @@ public class TopMenu extends ArrayList {
             add(new MenuItem("menu.options", "", optionItems, Constants.INST_MODE_SMSC));
 
             Collection helpItems = new ArrayList();
-            helpItems.add(new MenuItem("menu.help.adminguide", "/admin_guide.jsp", MenuItem.VISIBLE_IN_ALL, Constants.INST_MODE_SMSC | Constants.INST_MODE_INFO_SME));
+            helpItems.add(new MenuItem("menu.help.adminguide", "/doc/SMSC_Administration_Guide.pdf", MenuItem.VISIBLE_IN_ALL, Constants.INST_MODE_SMSC | Constants.INST_MODE_INFO_SME));
             add(new MenuItem("menu.help", "", helpItems, Constants.INST_MODE_SMSC | Constants.INST_MODE_INFO_SME));
         } catch (Exception e) {
             category.error(e.getMessage());
