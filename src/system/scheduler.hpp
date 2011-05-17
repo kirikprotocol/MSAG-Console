@@ -141,6 +141,7 @@ public:
     rolling=false;
     curFile=0;
     rollFile=0;
+    curFile=new StoreFileData;
   }
   virtual ~Scheduler()
   {
@@ -173,7 +174,6 @@ public:
   void setStoresCount(int argStoresCount)
   {
     maxStoreFiles=argStoresCount;
-    curFile=new StoreFileData;
   }
 
   size_t getStoresCount()const
