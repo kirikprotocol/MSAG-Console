@@ -1036,8 +1036,8 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                         // NOTE: we have to insert into resendQueue here to make sure
                         // that we don't have duplicate entries in the file.
                         resendQueue_.insert( std::make_pair(i->msg.lastTime,i));
-                        smsc_log_debug(log_,"R=%u/D=%u/M=%llu resend-in added to resend queue",
-                                       getRegionId(), dlvId, ulonglong(i->msg.msgId));
+                        // smsc_log_debug(log_,"R=%u/D=%u/M=%llu resend-in added to resend queue",
+                        // getRegionId(), dlvId, ulonglong(i->msg.msgId));
                         ++i;
                     }
                 }

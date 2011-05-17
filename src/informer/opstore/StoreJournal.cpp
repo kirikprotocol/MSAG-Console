@@ -184,30 +184,35 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     size_t buflen = tb.getPos();
     tb.setPos(0);
     tb.set16(uint16_t(buflen-LENSIZE));
-    smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
-    if (msg.state < uint8_t(MSGSTATE_FINAL) &&
-        equalSerials && serial != serial_ ) {
-        // oops, the serial has changed while we were preparing the buffer
-        if (msg.text.isUnique()) {
-            buf.reserve(90+2*msg.flags.bufsize()+strlen(msg.text.getText()));
-        } else {
-            buf.reserve(90+2*msg.flags.bufsize());
+    {
+        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
+        if (msg.state < uint8_t(MSGSTATE_FINAL) &&
+            equalSerials && serial != serial_ ) {
+            // oops, the serial has changed while we were preparing the buffer
+            if (msg.text.isUnique()) {
+                buf.reserve(90+2*msg.flags.bufsize()+strlen(msg.text.getText()));
+            } else {
+                buf.reserve(90+2*msg.flags.bufsize());
+            }
+            tb.setBuf(buf.get(),buf.getSize());
+            tb.setPos(buflen);
+            tb.set64(msg.subscriber);
+            tb.setCString(msg.userData.c_str());
+            if (version_==2) {
+                tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
+            }
+            if (msg.text.isUnique()) {
+                tb.setCString(msg.text.getText());
+            } else {
+                tb.set32(msg.text.getTextId());
+            }
+            buflen = tb.getPos();
+            tb.setPos(0);
+            tb.set16(uint16_t(buflen-LENSIZE));
         }
-        tb.setBuf(buf.get(),buf.getSize());
-        tb.setPos(buflen);
-        tb.set64(msg.subscriber);
-        tb.setCString(msg.userData.c_str());
-        if (version_==2) {
-            tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
-        }
-        if (msg.text.isUnique()) {
-            tb.setCString(msg.text.getText());
-        } else {
-            tb.set32(msg.text.getTextId());
-        }
-        buflen = tb.getPos();
-        tb.setPos(0);
-        tb.set16(uint16_t(buflen-LENSIZE));
+        fg_.write(buf.get(),buflen);
+        // fg_.fsync();
+        serial = serial_;
     }
     if (log_->isDebugEnabled()) {
         HexDump hd;
@@ -215,11 +220,8 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         dump.reserve(buflen*5);
         hd.hexdump(dump,buf.get(),buflen);
         hd.strdump(dump,buf.get(),buflen);
-        smsc_log_debug(log_,"buffer to save(%u): %s",buflen,hd.c_str(dump));
+        smsc_log_debug(log_,"buffer saved(%u): %s",buflen,hd.c_str(dump));
     }
-    fg_.write(buf.get(),buflen);
-    // fg_.fsync();
-    serial = serial_;
     return buflen;
 }
 
