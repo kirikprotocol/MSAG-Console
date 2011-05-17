@@ -13,6 +13,7 @@
 #include "messages/ApplyTimeZonesResp.hpp"
 #include "messages/ApplyFraudControlResp.hpp"
 #include "messages/ApplyMapLimitsResp.hpp"
+#include "messages/ApplyNetProfilesResp.hpp"
 #include "messages/ApplySnmpResp.hpp"
 #include "messages/UpdateProfileResp.hpp"
 #include "messages/DeleteProfileResp.hpp"
@@ -57,6 +58,7 @@ public:
     tag_ApplyTimeZones=4,
     tag_ApplyFraudControl=5,
     tag_ApplyMapLimits=6,
+    tag_ApplyNetProfiles=43,
     tag_ApplySnmp=7,
     tag_UpdateProfile=12,
     tag_DeleteProfile=14,
@@ -96,6 +98,7 @@ public:
     tag_ApplyTimeZonesResp=1004,
     tag_ApplyFraudControlResp=1005,
     tag_ApplyMapLimitsResp=1006,
+    tag_ApplyNetProfilesResp=1043,
     tag_ApplySnmpResp=1007,
     tag_UpdateProfileResp=1012,
     tag_DeleteProfileResp=1014,

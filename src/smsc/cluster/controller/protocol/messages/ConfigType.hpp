@@ -72,6 +72,7 @@ public:
   static const type TimeZones=11;
   static const type Fraud=12;
   static const type Acl=13;
+  static const type NetProfiles=14;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
@@ -145,6 +146,8 @@ protected:
       valueByName.insert(std::map<std::string,type>::value_type("Fraud",12));
       nameByValue.insert(std::map<type,std::string>::value_type(13,"Acl"));
       valueByName.insert(std::map<std::string,type>::value_type("Acl",13));
+      nameByValue.insert(std::map<type,std::string>::value_type(14,"NetProfiles"));
+      valueByName.insert(std::map<std::string,type>::value_type("NetProfiles",14));
     }
   };
   static StaticInitializer staticInitializer;

@@ -52,6 +52,7 @@ static const int MISSINGOPTPARAM=195; //Expected Optional Parameter missing
 static const int INVOPTPARAMVAL=196; //Invalid Optional Parameter Value
 static const int DELIVERYFAILURE=254; //Delivery Failure (used for data_sm_resp)
 static const int UNKNOWNERR=255; //Unknown Error
+static const int PROHIBITED=257; //Prohibited
 static const int INVDCS=260; //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.
 
 static const int SMSC_ERR_BASE=1024;
@@ -79,7 +80,9 @@ static const int MAPINTERNALFAILURE=1045;  // map internal exception
 static const int SCHEDULERLIMIT=1046;     //either soft or hard scheduler limit reached
 static const int DPFSMENOTCONNECTED=1047; //failed to send alert notification, sme not connected. pseudoerror.
 static const int BACKUPSMERESCHEDULE=1048; //(noresp|blockedmsc)+(backupsme on route)=>this error
-
+static const int MISSINGIMSIINNIUSSD=1049; //dest number requires imsi as dest ref, but imsi is empty
+static const int DENIEDBYGLOBALBL=1050; // denied by global black list (informer)
+static const int DENIEDBYLOCALBL=1051;  // denied by local black list (informer)
 
 static const int MAP_UR_NO_REASON=1109;
 static const int MAP_USER_REASON_BASE=1110;
@@ -145,6 +148,7 @@ static const int MSGWLISTFULL=1185; //
 static const int SYSFAILURE=1186; // 34 - System Failure
 static const int DATAMISSING=1187; // 35 - Data Missing !
 static const int UNEXPDATA=1188; // 36 - Unexpected Data value
+static const int USSDSESSIONTERMABN=1217;// smpp+ error
 static const int UNKALPHABET=1223; // 71 - Unknown alphabet !
 static const int USSDBUSY=1224; // 72 - USSD busy
 static const int INVPRBRESLIM=1258; // 106 - Invoke problem. Resource limitation
@@ -408,7 +412,7 @@ static const bool errorStatus[1280] = {
 1, //Delivery Failure (used for data_sm_resp)
 1, //Unknown Error
 1, //reserved
-1, //reserved
+1, //Prohibited
 1, //reserved
 1, //reserved
 1, //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.
@@ -1200,7 +1204,7 @@ static const bool errorStatus[1280] = {
 1, // SCHEDULERLIMIT=1046
 0, // DPFSMENOTCONNECTED=1047
 0, // BACKUPSMERESCHEDULE=1048
-1,
+1, // MISSINGIMSIINNIUSSD=1049
 1,
 1,
 1,
@@ -1368,7 +1372,7 @@ static const bool errorStatus[1280] = {
 1, // reserved
 1, // reserved
 1, // reserved
-1, // reserved
+1, // 1217 USSDSESSIONTERMABN
 1, // reserved
 1, // reserved
 1, // reserved

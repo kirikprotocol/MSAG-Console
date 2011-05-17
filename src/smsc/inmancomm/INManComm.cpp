@@ -64,8 +64,8 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   op.setUserMsgRef(sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0xffff:-1);
   op.setMsgId(id);
   op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
-  op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
   op.setServiceType(sms.getEServiceType());
+  bool chargeOnSubmit=false;
   if(sms.getBillingRecord()==BILLING_MT)
   {
     op.setMTcharge();
@@ -74,11 +74,21 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   {
     op.setForcedCDR();
     op.setChargeOnSubmit();
+    chargeOnSubmit=true;
   }
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
   {
     op.setChargeOnSubmit();
+    chargeOnSubmit=true;
   }
+  if(chargeOnSubmit)
+  {
+    op.setPartsNum(1);
+  }else
+  {
+    op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
+  }
+
   if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
   {
     unsigned len;

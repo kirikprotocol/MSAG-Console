@@ -150,6 +150,24 @@ int AbonentInfoSme::Execute()
 
       getSmsText(sms,body,(unsigned)sizeof(body));
       try{
+        char* comma=strchr(body,',');
+        AbonentStatus::StatusRequestMode srm=AbonentStatus::srmDefault;
+        bool isError=false;
+        if(comma)
+        {
+          *comma=0;
+          comma++;
+          if(strcmp(comma,"ATI")==0)
+          {
+            srm=AbonentStatus::srmATI;
+          }else if(strcmp(comma,"SRI4SM")==0)
+          {
+            srm=AbonentStatus::srmSRI4SM;
+          }else
+          {
+            isError=true;
+          }
+        }
         Address a(body);
         Address d;
         if(!smsc->AliasToAddress(a,d))
@@ -175,6 +193,7 @@ int AbonentInfoSme::Execute()
         cmd->get_abonentStatus().destAddr=da;
         cmd->get_abonentStatus().userMessageReference=umr;
         cmd->get_abonentStatus().isMobileRequest=(da==hrSrc);
+        cmd->get_abonentStatus().srm=srm;
 
         int status=AbonentStatus::UNKNOWNVALUE;
         if(!has_route || !dest_proxy)
@@ -196,7 +215,7 @@ int AbonentInfoSme::Execute()
         if(status!=AbonentStatus::UNKNOWNVALUE)
         {
           __trace__("AbonentInfo: request for sme address.");
-          cmd=SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),status,"","");
+          cmd=SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),status,0,"","");
           __trace2__("AbonentInfo: cmdid=%d, QAS_RESP=%d",cmd->cmdid,smsc::smeman::QUERYABONENTSTATUS_RESP);
         }
         else
@@ -248,6 +267,7 @@ int AbonentInfoSme::Execute()
           ContextEnvironment ce;
           ce.exportStr("abonent",as.originalAddr.c_str());
           ce.exportInt("status",as.status);
+          ce.exportInt("code",as.code);
           ce.exportInt("encoding",p.codepage);
           ce.exportStr("msc",as.msc.length()?("+"+as.msc).c_str():"");
           ce.exportStr("imsi",as.imsi.length()?as.imsi.c_str():"");

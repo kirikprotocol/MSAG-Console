@@ -67,7 +67,7 @@ extern "C" {
   {
     __map_warn2__("%s: confirmation received ssn=%d rinst=%d status=%d",__func__,lssn,INSTARG0(rinst),status);
     bool isBound=false;
-    if( status == 0  || status==1)
+    if( status == 0  /*|| status==1*/)//already bound is error
     {
       for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
       {
@@ -142,7 +142,7 @@ extern "C" {
             break;
           }
         }
-      } else {
+      } /*else {
         for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
         {
           if( MapDialogContainer::localSSNs[i] == affectedSSN )
@@ -151,7 +151,7 @@ extern "C" {
             break;
           }
         }
-      }
+      }*/
     }
     return ET96MAP_E_OK;
   }
@@ -236,6 +236,7 @@ bool MapIoTask::ReconnectThread::connect()
     {
       for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
       {
+        MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]] &= ~((uint64_t)1<<i);
         result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
         if (result!=ET96MAP_E_OK)
         {
@@ -427,6 +428,7 @@ int MapIoTask::ReconnectThread::Execute()
       bool bindOk=true;
       {
         MutexTempUnlock mung(reconnectMon);
+        MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]]=0;
         result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
         if(result != RETURN_OK)
         {
@@ -460,6 +462,10 @@ int MapIoTask::ReconnectThread::Execute()
       }
     }
     __map_warn2__("Reconnect: MAP_connectedInstCount=%d",MAP_connectedInstCount);
+    if(MAP_connectedInstCount!=MapDialogContainer::remInstCount)
+    {
+      sleep(3);
+    }
   }
   return 0;
 }
@@ -980,8 +986,10 @@ int MapIoTask::Execute()
       continue;
     }
     didx=255;
-    if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
-       message.primitive!=MAP_GET_AC_VERSION_CONF)
+    if(message.primitive==MAP_BIND_CONF && message.primitive==MAP_STATE_IND)
+    {
+      didx=0;
+    }else if(message.primitive!=MAP_GET_AC_VERSION_CONF)
     {
       ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
         //(message.msg_p[2]<<8)| message.msg_p[3];

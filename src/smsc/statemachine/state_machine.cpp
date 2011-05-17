@@ -86,7 +86,6 @@ TaskGuard::~TaskGuard()
     Task t;
     if(smsc->tasks.findAndRemoveTask(uniqueId,dialogId,&t))
     {
-      __trace2__("TG: killing sms of task %u/%u",dialogId,uniqueId);
       delete t.sms;
     }
   }
@@ -391,6 +390,7 @@ int StateMachine::Execute()
     eq.selectAndDequeue(t,&isStopping);
     if(isStopping)break;
     try{
+      smsc_log_debug(smsLog,"id=%lld, cmd=%d",t.msgId,t.command->cmdid);
       const char* op="unknown";
       hrtime_t opStart;
       if(perfLog->isInfoEnabled())
@@ -886,6 +886,77 @@ static time_t parseReceiptTime(const std::string& txt,SMatch* m,int idx)
   return mktime(&t);
 }
 
+void StateMachine::prepareSmsDc(SMS& sms,bool defaultDcLatin1)
+{
+  using namespace smsc::profiler::ProfileCharsetOptions;
+  if(
+     (
+       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
+        sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
+       )
+       && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
+     ) ||
+     (
+       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
+       sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
+     )
+    )
+  {
+    try{
+      transLiterateSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+      if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+      {
+        int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
+        int olddc=dc;
+        if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+        {
+          dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+        }else if((dc&0xf0)==0xe0)
+        {
+          dc=0xd0 | (dc&0x0f);
+        }
+        sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+        smsc_log_debug(smsLog,"SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
+      }
+    }catch(exception& e)
+    {
+      smsc_log_warn(smsLog,"SUBMIT:Failed to transliterate: %s",e.what());
+    }
+  }
+  if(defaultDcLatin1 && sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
+  {
+    const char* body;
+    unsigned len;
+    bool payload=false;
+    if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      body=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      payload=true;
+    }else
+    {
+      body=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+    }
+    TmpBuf<char,2048> buf(len+1);
+    unsigned msgstart=0;
+    if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+    {
+      msgstart=1+*((unsigned char*)body);
+      memcpy(buf.get(),body,msgstart);
+    }
+    unsigned newlen=ConvertSMSC7BitToLatin1(body+msgstart,len-msgstart,buf.get()+msgstart)+msgstart;
+    if(payload)
+    {
+      sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),newlen);
+    }else
+    {
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf.get(),newlen);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+    }
+  }
+
+}
+
 
 
 
@@ -965,10 +1036,20 @@ void StateMachine::fullReport(SMSId msgId,SMS& sms)
       smsc_log_debug(smsLog,"sending fullreport for msgId=%lld, concatSeq=%d, ci->num=%d, orgparts=%d, repstosend=%d",
           msgId,sms.getConcatSeqNum(),(int)ci->num,sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM),reportsToSend);
     }
+    time_t stime=sms.getSubmitTime();
     for(int i=0;i<reportsToSend;i++)
     {
+      if(sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO) && getSMSPartsCount(sms)>sms.getConcatSeqNum()+i)
+      {
+        SMSPartInfo spi=getSMSPartInfo(sms,sms.getConcatSeqNum()+i);
+        if(spi.stime)
+        {
+          sms.setSubmitTime(spi.stime);
+        }
+      }
       smsc->FullReportDelivery(msgId,sms);
     }
+    sms.setSubmitTime(stime);
   }
 }
 
@@ -1400,10 +1481,34 @@ StateType StateMachine::cancel(Tuple& t)
       //cancel timed out merged messages.
       if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT) && sms.getIntProperty(Tag::SMSC_MERGE_CONCAT)!=3)
       {
-        Descriptor d;
-        sms.setLastResult(Status::INCOMPLETECONCATMSG);
-        store->changeSmsStateToUndeliverable(t.msgId,d,Status::INCOMPLETECONCATMSG);
-        sendFailureReport(sms,t.msgId,UNDELIVERABLE,"");
+        if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+        {
+          smsc_log_info(smsLog,"CANCEL: msgId=%lld, incomplete multipart sms enqueued in scheduler",t.msgId);
+          sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3);
+          bool ok=false;
+          try{
+            store->replaceSms(t.msgId,sms);
+            ok=true;
+          }catch(...)
+          {
+            Descriptor d;
+            sms.setLastResult(Status::INCOMPLETECONCATMSG);
+            store->changeSmsStateToUndeliverable(t.msgId,d,Status::INCOMPLETECONCATMSG);
+            sendFailureReport(sms,t.msgId,UNDELIVERABLE,"");
+          }
+          if(ok)
+          {
+            sms.setNextTime(time(0));
+            smsc->getScheduler()->RescheduleSms(t.msgId,sms,smsc->getSmeIndex(sms.getSourceSmeId()));
+            return ENROUTE_STATE;
+          }
+        }else
+        {
+          Descriptor d;
+          sms.setLastResult(Status::INCOMPLETECONCATMSG);
+          store->changeSmsStateToUndeliverable(t.msgId,d,Status::INCOMPLETECONCATMSG);
+          sendFailureReport(sms,t.msgId,UNDELIVERABLE,"");
+        }
       }else
       {
         return t.state;
@@ -1448,6 +1553,25 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   if(!(sms.getDeliveryReport() || regdel))return;
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
+
+  unsigned char umrList[256];
+  umrList[0]=sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  time_t stimeList[256];
+  stimeList[0]=sms.getSubmitTime();
+  int umrListSize=0;
+  if(sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+  {
+    int cnt=getSMSPartsCount(sms);
+    for(int i=0;i<cnt;i++)
+    {
+      SMSPartInfo spi=getSMSPartInfo(sms,i);
+      if(spi.fl&SMSPartInfo::flHasSRR)
+      {
+        stimeList[umrListSize]=spi.stime?spi.stime:sms.getSubmitTime();
+        umrList[umrListSize++]=spi.mr;
+      }
+    }
+  }
   SMS rpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="";
@@ -1464,6 +1588,10 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
     ?4:0);
   rpt.setDestinationAddress(sms.getOriginatingAddress());
   rpt.setMessageReference(sms.getMessageReference());
+  if(umrListSize)
+  {
+    rpt.setMessageReference(umrList[0]);
+  }
   rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
     sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
   switch(state)
@@ -1479,6 +1607,8 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
   rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
+
+  rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)stimeList[0]);
 
   SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
   if(si.hasFlag(sfForceReceiptToSme))
@@ -1528,6 +1658,13 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   //smsc->submitSms(prpt);
   submitReceipt(rpt,0x4);
+  for(int i=1;i<umrListSize;i++)
+  {
+    rpt.setMessageReference(umrList[i]);
+    rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)stimeList[i]);
+    rpt.setIntProperty(Tag::SMSC_RECEIPT_MR,umrList[i]);
+    submitReceipt(rpt,0x4);
+  }
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
   {
@@ -1569,6 +1706,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     sms.getDestinationAddress().getText(addr,sizeof(addr));
     rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
     rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
+    rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)sms.getSubmitTime());
 
     SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
     if(si.hasFlag(sfForceReceiptToSme))
@@ -1725,6 +1863,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
 
       sms.setEServiceType(serviceType.c_str());
       sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
+      sms.setIntProperty(Tag::SMSC_ORIGINALPARTSNUM,1);
 
       Profile profile=smsc->getProfiler()->lookup(dst);
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
@@ -1958,6 +2097,7 @@ bool StateMachine::processMerge(SbmContext& c)
   uint16_t mr;
   uint8_t idx,num;
   bool havemoreudh;
+  c.rvstate=ENROUTE_STATE;
   smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
 
   int dc=c.sms->getIntProperty(Tag::SMPP_DATA_CODING);
@@ -1967,10 +2107,10 @@ bool StateMachine::processMerge(SbmContext& c)
 
   if(firstPiece) //first piece
   {
-    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s, first part arrived(%u/%u),mr=%d,dc=%d",c.t.msgId,
+    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s, first part (%u/%u),mr=%d,dc=%d,srr=%d",c.t.msgId,
         c.sms->getOriginatingAddress().toString().c_str(),
         c.sms->getDestinationAddress().toString().c_str(),
-        idx,num,(int)mr,dc);
+        idx,num,(int)mr,dc,c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
     c.sms->setIntProperty(Tag::SMPP_ESM_CLASS,c.sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
     TmpBuf<char,2048> tmp(0);
     if(!c.isForwardTo)
@@ -2009,6 +2149,17 @@ bool StateMachine::processMerge(SbmContext& c)
     c.sms->setBinProperty(Tag::SMSC_CONCATINFO,(char*)ci,1+2*num);
     c.generateDeliver=false;
 
+    SMSPartInfo spi;
+    spi.fl=SMSPartInfo::flPartPresent;
+    if(c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+    {
+      spi.fl|=SMSPartInfo::flHasSRR;
+      spi.mr=c.sms->getMessageReference();
+    }
+    spi.dc=dc;
+    spi.stime=(uint32_t)c.sms->getSubmitTime();
+    fillSMSPartInfo(*c.sms,num,idx-1,spi);
+    /*
     char dc_list[256];
     memset(dc_list,0,num);
     smsc_log_debug(smsLog,"dc_list[%d]=%d",idx-1,dc);
@@ -2026,6 +2177,7 @@ bool StateMachine::processMerge(SbmContext& c)
       buf[idx-1]=1;
       c.sms->setBinProperty(Tag::SMSC_UMR_LIST_MASK,buf,num);
     }
+    */
 
     char buf[64];
     sprintf(buf,"%lld",c.t.msgId);
@@ -2052,10 +2204,10 @@ bool StateMachine::processMerge(SbmContext& c)
     c.createSms=scsCreate;
   }else
   {
-    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s next part arrived(%u/%u), mr=%d,dc=%d",c.t.msgId,
+    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s next part (%u/%u), mr=%d,dc=%d,srr=%d",c.t.msgId,
         c.sms->getOriginatingAddress().toString().c_str(),
         c.sms->getDestinationAddress().toString().c_str(),
-        idx,num,(int)mr,dc);
+        idx,num,(int)mr,dc,c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
     SMS newsms;
     try{
       store->retriveSms(c.t.msgId,newsms);
@@ -2121,6 +2273,18 @@ bool StateMachine::processMerge(SbmContext& c)
       }
     }else
     {
+      if(newsms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+      {
+        int oldNum=getSMSPartsCount(newsms);
+        if(oldNum!=num)
+        {
+          warn2(smsLog, "Id=%lld: different number of parts detected %d!=%d.",c.t.msgId,oldNum,num);
+          submitResp(c.t,c.sms,Status::INVOPTPARAMVAL);
+          c.rvstate=ERROR_STATE;
+          return false;
+        }
+      }
+      /*
       if(newsms.hasBinProperty(Tag::SMSC_DC_LIST))
       {
         unsigned dclen;
@@ -2133,10 +2297,24 @@ bool StateMachine::processMerge(SbmContext& c)
           return false;
         }
       }
+      */
       body=(unsigned char*)c.sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
       dc=DataCoding::BINARY;
     }
 
+    {
+      SMSPartInfo spi;
+      spi.dc=dc;
+      spi.stime=c.sms->getSubmitTime();
+      if(c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+      {
+        spi.fl|=SMSPartInfo::flHasSRR;
+        spi.mr=c.sms->getMessageReference();
+      }
+      fillSMSPartInfo(newsms,num,idx-1,spi);
+    }
+
+    /*
     if(newsms.hasBinProperty(Tag::SMSC_UMR_LIST))
     {
       unsigned ulen;
@@ -2170,6 +2348,12 @@ bool StateMachine::processMerge(SbmContext& c)
         newsms.setBinProperty(Tag::SMSC_DC_LIST,(const char*)dcList,dclen);
       }
     }
+    */
+
+    if(c.sms->hasIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) && c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)!=0)
+    {
+      newsms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
+    }
 
     TmpBuf<char,2048> tmp(newlen+len);
     tmp.Append((const char*)newbody,newlen);
@@ -2192,6 +2376,7 @@ bool StateMachine::processMerge(SbmContext& c)
 
       if(!c.isForwardTo)
       {
+        /*
         unsigned char* dcList=0;
         unsigned dcListLen=0;
 
@@ -2199,6 +2384,7 @@ bool StateMachine::processMerge(SbmContext& c)
         {
           dcList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_DC_LIST,&dcListLen);
         }
+        */
 
         for(int i=0;i<ci->num;i++)
         {
@@ -2211,6 +2397,20 @@ bool StateMachine::processMerge(SbmContext& c)
           order.push_back(idx0);
           rightOrder=rightOrder && idx0==i+1;
 
+          SMSPartInfo spi=getSMSPartInfo(newsms,i);
+          if(i>0)
+          {
+            SMSPartInfo spi0=getSMSPartInfo(newsms,i-1);
+            if(spi0.dc!=spi.dc)
+            {
+              differentDc=true;
+            }
+          }
+          if(spi.dc==DataCoding::BINARY)
+          {
+            haveBinDc=true;
+          }
+          /*
           if(dcList)
           {
             if(i>0)
@@ -2219,6 +2419,7 @@ bool StateMachine::processMerge(SbmContext& c)
             }
             haveBinDc=haveBinDc || dcList[i]==DataCoding::BINARY;
           }
+          */
         }
         if(!rightOrder)
         {
@@ -2227,6 +2428,7 @@ bool StateMachine::processMerge(SbmContext& c)
           //maximum is 255.  65025 comparisons. not very good, but not so bad too.
           TmpBuf<char,2048> newtmp(0);
           uint16_t newci[256];
+          SMSPartInfo spi[256];
 
           for(unsigned i=1;i<=num;i++)
           {
@@ -2234,6 +2436,7 @@ bool StateMachine::processMerge(SbmContext& c)
             {
               if(order[j]==i)
               {
+                spi[i-1]=getSMSPartInfo(newsms,i-1);
                 int partlen=j==num-1?(int)tmp.GetPos()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
                 newci[i-1]=(uint16_t)newtmp.GetPos();
                 newtmp.Append(tmp.get()+ci->getOff(j),partlen);
@@ -2245,6 +2448,7 @@ bool StateMachine::processMerge(SbmContext& c)
           for(int i=0;i<ci->num;i++)
           {
             ci->setOff(i,newci[i]);
+            fillSMSPartInfo(newsms,num,i,spi[i]);
           }
           tmp.SetPos(0);
           tmp.Append(newtmp.get(),newtmp.GetPos());
@@ -2406,7 +2610,6 @@ void StateMachine::onForwardOk(SMSId id,SMS& sms)
 void StateMachine::onDeliveryOk(SMSId id,SMS& sms)
 {
   bool msuOnly=false;
-  bool ignoreEvent=false;
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
@@ -2414,18 +2617,8 @@ void StateMachine::onDeliveryOk(SMSId id,SMS& sms)
     {
       msuOnly=true;
     }
-    if(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM)==1 &&
-      strcmp(sms.getSourceSmeId(),"MAP_PROXY")!=0 &&
-      strcmp(sms.getDestinationSmeId(),"MAP_PROXY")==0 &&
-      msuOnly)
-    {
-      ignoreEvent=true;
-    }
   }
-  if(!ignoreEvent)
-  {
-    smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms,msuOnly);
-  }
+  smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms,msuOnly);
 #ifdef SNMP
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntDelivered,sms.getDestinationSmeId());
 #endif
@@ -2447,10 +2640,26 @@ void StateMachine::onDeliveryFail(SMSId id,SMS& sms)
 
 void StateMachine::onUndeliverable(SMSId id,SMS& sms)
 {
-  smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+  {
+    unsigned len;
+    ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
+    int i=sms.getConcatSeqNum();
+    int mx=ci->num;
+    for(;i<mx;i++)
+    {
+      smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms,i!=mx-1);
 #ifdef SNMP
-  SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
+      SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
 #endif
+    }
+  }else
+  {
+    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+#ifdef SNMP
+    SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
+#endif
+  }
 }
 
 }//system

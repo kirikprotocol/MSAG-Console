@@ -10,8 +10,11 @@
 #include "smsc/router/route_types.h"
 #include "smsc/profiler/profiler-types.hpp"
 #include "smsc/common/TimeZoneMan.hpp"
+#ifdef USE_MAP
 #include "smsc/mapio/FraudControl.hpp"
 #include "smsc/mapio/MapLimits.hpp"
+#include "smsc/mapio/NetworkProfiles.hpp"
+#endif
 #include "smsc/mscman/MscManager.h"
 #include "smsc/alias/AliasMan.hpp"
 
@@ -105,7 +108,9 @@ void ControllerHandler::handle(const messages::ApplyFraudControl& msg)
   smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
   int status=0;
   try{
+#ifdef USE_MAP
     smsc::mapio::FraudControl::getInstance()->Reload();
+#endif
     smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctFraud);
   }catch(std::exception& e)
   {
@@ -121,7 +126,9 @@ void ControllerHandler::handle(const messages::ApplyMapLimits& msg)
   smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
   int status=0;
   try{
+#ifdef USE_MAP
     smsc::mapio::MapLimits::getInstance().Reinit();
+#endif
     smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMapLimits);
   }catch(std::exception& e)
   {
@@ -129,6 +136,24 @@ void ControllerHandler::handle(const messages::ApplyMapLimits& msg)
     status=1;
   }
   messages::ApplyMapLimitsResp resp;
+  prepareMultiResp(msg,resp,status);
+  NetworkDispatcher::getInstance().enqueueMessage(resp);
+}
+void ControllerHandler::handle(const messages::ApplyNetProfiles& msg)
+{
+  smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
+  int status=0;
+  try{
+#ifdef USE_MAP
+    smsc::mapio::NetworkProfiles::getInstance().reload();
+#endif
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctNetProfiles);
+  }catch(std::exception& e)
+  {
+    smsc_log_info(log,"apply net profiles failed:%s",e.what());
+    status=1;
+  }
+  messages::ApplyNetProfilesResp resp;
   prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }

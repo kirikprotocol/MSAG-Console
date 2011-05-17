@@ -400,7 +400,7 @@ int SmppInputThread::Execute()
                 PduBindTRX *bindpdu=
                   reinterpret_cast<smsc::smpp::PduBindTRX*>(pdu);
 
-                std::string sid=bindpdu->get_systemId()?bindpdu->get_systemId():"";
+                SmeSystemId sid=bindpdu->get_systemId()?bindpdu->get_systemId():"";
 
                 SmppProxy *proxy=NULL;
                 bool err=false;
@@ -467,7 +467,7 @@ int SmppInputThread::Execute()
                 SmeIndex proxyIndex;
 
                 try{
-                  proxyIndex=smeManager->lookup(sid.c_str());
+                  proxyIndex=smeManager->lookup(sid);
                 }catch(...)
                 {
                   warn2(log,"smeMan->lookup failed for %s",sid.c_str());

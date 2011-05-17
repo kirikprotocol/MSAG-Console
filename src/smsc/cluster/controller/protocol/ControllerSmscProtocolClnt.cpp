@@ -5,6 +5,7 @@
 #include "messages/ApplyTimeZones.hpp"
 #include "messages/ApplyFraudControl.hpp"
 #include "messages/ApplyMapLimits.hpp"
+#include "messages/ApplyNetProfiles.hpp"
 #include "messages/ApplySnmp.hpp"
 #include "messages/UpdateProfile.hpp"
 #include "messages/DeleteProfile.hpp"
@@ -98,6 +99,13 @@ void ControllerSmscProtocol::decodeAndHandleMessage(eyeline::protogen::framework
     case tag_ApplyMapLimits:
     {
       messages::ApplyMapLimits msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_ApplyNetProfiles:
+    {
+      messages::ApplyNetProfiles msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
       handler->handle(msg);

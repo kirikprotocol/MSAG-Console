@@ -100,6 +100,7 @@ public:
     mapioptr=0;
     speedLogFlushPeriod=60;
     nextSpeedLogFlush=0;
+    ansiGt=false;
     if(instance!=0)
     {
       throw smsc::util::Exception("Attempt to init second smsc instance:%p (previous:%p)",this,instance);
@@ -206,7 +207,7 @@ public:
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
 
-  void RejectSms(const SmscCommand&);
+  void RejectSms(const SmscCommand&,bool isLicenseLimit);
 
   void incRejected()
   {
@@ -215,7 +216,7 @@ public:
     submitErrCounter++;
   }
 
-  void registerMsuStatEvent(int eventType,const SMS* sms)
+  /*void registerMsuStatEvent(int eventType,const SMS* sms)
   {
     using namespace smsc::stat;
     using namespace StatEvents;
@@ -253,6 +254,7 @@ public:
       }break;
     }
   }
+  */
 
   void registerStatisticalEvent(int eventType,const SMS* sms,bool msuOnly=false);
 
@@ -467,11 +469,21 @@ public:
     return nodivertSmes.find(smeId)!=nodivertSmes.end();
   }
 
+  static int getLicenseMax()
+  {
+    return license.maxsms;
+  }
+
+  bool isAnsiGt()const
+  {
+    return ansiGt;
+  }
+
 protected:
 
   void processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv);
 
-  void generateAlert(SMSId id,SMS* sms,int);
+  void generateAlert(SMSId id,SMS* sms,int,bool);
 
   smsc::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
@@ -479,6 +491,7 @@ protected:
 
   AliasManager* aliaser;
 
+  void enqueueEx(EventQueue::EnqueueVector& ev);
   EventQueue eventqueue;
   smsc::store::MessageStore *store;
   scheduler::Scheduler *scheduler;
@@ -616,6 +629,8 @@ protected:
   Mutex mergeCacheMtx;
 
   friend class smsc::agents::StatusSme;
+
+  bool ansiGt;
 
   EventMonitor idleMon;
 

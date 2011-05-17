@@ -18,9 +18,6 @@
 #include "common/rescheduler.hpp"
 #include "abonentinfo/AbonentInfo.hpp"
 #include "smscsme/smscsme.hpp"
-#ifdef USE_MAP
-#include "mapio/MapIoTask.h"
-#endif
 #include "smsc/mscman/MscManager.h"
 #include "smsc/resourcemanager/ResourceManager.hpp"
 #include "agents/status_sme.hpp"
@@ -28,8 +25,14 @@
 #include "closedgroups/ClosedGroupsManager.hpp"
 #include "common/TimeZoneMan.hpp"
 #include "smsc/alias/AliasManImpl.hpp"
+
+#ifdef USE_MAP
+#include "mapio/MapIoTask.h"
 #include "mapio/FraudControl.hpp"
 #include "mapio/MapLimits.hpp"
+#include "mapio/NetworkProfiles.hpp"
+#endif
+
 #include "license/check/license.hpp"
 #include "cluster/controller/NetworkDispatcher.hpp"
 #ifdef SMSEXTRA
@@ -341,6 +344,14 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       smsc_log_warn(log,"noDivertSme init exception:%s",e.what());
     }
 
+  try{
+    const char* gtFmt=cfg.cfgman->getString("core.gtformat");
+    ansiGt=strcmp(gtFmt,"ansi")==0;
+  }catch(...)
+  {
+
+  }
+
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctAliases);
       aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
@@ -353,17 +364,25 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     reloadRoutes();
     smsc_log_info(log, "Routes loaded" );
 
+#ifdef USE_MAP
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctFraud);
       mapio::FraudControl::Init(findConfigFile("fraud.xml"));
       smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctFraud);
     }
+
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMapLimits);
       mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
       smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMapLimits);
     }
 
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctNetProfiles);
+      mapio::NetworkProfiles::init(findConfigFile("network-profiles.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctNetProfiles);
+    }
+#endif
 
     scheduler=new scheduler::Scheduler();
 
@@ -1164,9 +1183,11 @@ void Smsc::shutdown()
     MapIoTask *mapio=(MapIoTask*)mapioptr;
     delete mapio;
   }
-#endif
+  mapio::MapLimits::Shutdown();
+  mapio::NetworkProfiles::shutdown();
 
   mapio::MapLimits::Shutdown();
+#endif
 
 
   smsc::closedgroups::ClosedGroupsManager::Shutdown();

@@ -117,6 +117,8 @@ public:
   {
     localFileStore.Stop();
     localFileStore.WaitFor();
+    // do NOT delete these to speed-up shutdown
+    /*
     for(std::vector<StoreData*>::iterator it=storeDataPool.begin();it!=storeDataPool.end();it++)
     {
       delete *it;
@@ -137,6 +139,7 @@ public:
       it->second->Clear();
       delete it->second;
     }
+    */
   }
   int Execute();
   const char* taskName(){return "scheduler";}
@@ -208,7 +211,7 @@ public:
     Chain* c=GetChain(addr);
     if(!c)
     {
-      warn2(log,"CancelSms: chain for %s not found",addr.toString().c_str());
+      debug2(log,"CancelSms: chain for %s not found",addr.toString().c_str());
       return;
     }
     debug2(log,"CancelSms: id=%lld, c=%p, addr=%s",id,c,addr.toString().c_str());
@@ -262,7 +265,7 @@ public:
       IdToTimeMap::iterator it=firstQueueProcessing.find(id);
       if(it==firstQueueProcessing.end())
       {
-        warn2(log,"InvalidSms: processing chain for %lld not found!",id);
+        debug2(log,"InvalidSms: processing chain for %lld not found!",id);
         return;
       }
       firstQueueProcessing.erase(it);
@@ -340,7 +343,7 @@ public:
 
     time_t oldntt=sms.getNextTime();
     bool sethead=false;
-    if(sms.attempts==0  && c->queueSize!=0)
+    if(sms.attempts==0 && c->queueSize!=0)
     {
       ChainPush(c,SchedulerData(id,sms.getValidTime()));
       debug2(log,"Resched: push sms %lld to tail (%d), c=%p",id,c->headTime,c);
@@ -355,7 +358,7 @@ public:
 
     UpdateChainChedule(c);
     RescheduleChain(c,c->headTime);
-    info2(log,"Resched: smsId=%lld,oa=%s,oldntt=%lu,newntt=%lu,hdt=%lu,sethead=%s",id,sms.getOriginatingAddress().toString().c_str(),oldntt,sms.getNextTime(),c->headTime,sethead?"true":"false");
+    debug2(log,"Resched: smsId=%lld,oa=%s,oldntt=%lu,newntt=%lu,hdt=%lu,sethead=%s",id,sms.getOriginatingAddress().toString().c_str(),oldntt,sms.getNextTime(),c->headTime,sethead?"true":"false");
 
     if(c->timedQueue.size()>0)
       return c->headTime;
@@ -491,7 +494,7 @@ public:
     ReplaceIfPresentKey(const SMS& argSms)
     {
       org=argSms.getOriginatingAddress();
-      dst=argSms.getDealiasedDestinationAddress();
+      dst=argSms.getDestinationAddress();
       esvctype=argSms.getEServiceType();
     }
     string dump()const
@@ -801,6 +804,7 @@ public:
         void doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc=Descriptor());
 
 
+        /*
         void getMassCancelIds(const SMS& sms,Array<SMSId>& ids)
         {
           MutexGuard mg(storeMtx);
@@ -818,6 +822,7 @@ public:
             debug2(log,"getMassCancelIds nothing found:%s",ReplaceIfPresentKey(sms).dump().c_str());
           }
         }
+        */
 
         void InitDpfTracker(const char* storeLocation,int to1179,int to1044,int mxch,int mxt)
         {
@@ -837,6 +842,19 @@ public:
         void stopDpfTracker()
         {
           dpfTracker.stop();
+        }
+
+        uint64_t getReplaceIfPresentId(const SMS& sms)
+        {
+          MutexGuard mg(storeMtx);
+          ReplaceIfPresentMap::iterator it=replMap.find(sms);
+          if(it!=replMap.end())
+          {
+            return it->second;
+          }else
+          {
+            return 0;
+          }
         }
 
 public:
@@ -1378,7 +1396,7 @@ public:
 
   };
 
-  smsc::core::buffers::CyclicQueue<SchedulerData> firstQueue;
+  CyclicQueue<SchedulerData> firstQueue;
   TimeLine timeLine;
   typedef std::map<SMSId,time_t> IdToTimeMap;
   IdToTimeMap firstQueueProcessing;
@@ -1473,7 +1491,7 @@ public:
 
   //smsc::store::BillingStorage  billingStorage;
   smsc::store::ArchiveStorage  archiveStorage;
-  smsc::dpf::DpfTracker dpfTracker;
+  dpf::DpfTracker dpfTracker;
 
   time_t lastRejectTime;
   time_t lastRejectReschedule;

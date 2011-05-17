@@ -232,29 +232,62 @@ struct MAP_TIMESTAMP{
   uint8_t tz;
 };
 
-inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
-  addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
-  addr->ss7Addr[0] = 0x12; // SSN & GT
-  addr->ss7Addr[1] = ssn;
-  addr->ss7Addr[2] = 0;
-  addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
-  addr->ss7Addr[4] = 0x04; // | (saddr->addressLength%2==0?0x80:0x00); high bit always 0 see 15517-CAA901437, 3.3.8
-  memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
-  if( saddr->addressLength%2!=0 ) {
-    addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;
+inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn)
+{
+  if(smsc::Smsc::getInstance().isAnsiGt())
+  {
+    addr->ss7AddrLen = 3+(saddr->addressLength+1)/2;
+    addr->ss7Addr[0] = 0x89; // GTI=2, SSN & GT
+    addr->ss7Addr[1] = ssn;
+    addr->ss7Addr[2] = 0x0A; // TT=10 E.164
+    memcpy( addr->ss7Addr+3, saddr->address, (saddr->addressLength+1)/2 );
+    if( saddr->addressLength%2!=0 )
+    {
+      addr->ss7Addr[3+(saddr->addressLength+1)/2-1] &= 0x0f;
+    }
+  }else
+  {
+    addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
+    addr->ss7Addr[0] = 0x12; // SSN & GT
+    addr->ss7Addr[1] = ssn;
+    addr->ss7Addr[2] = 0;
+    addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
+    addr->ss7Addr[4] = 0x04; // | (saddr->addressLength%2==0?0x80:0x00); high bit always 0 see 15517-CAA901437, 3.3.8
+    memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
+    if( saddr->addressLength%2!=0 )
+    {
+      addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;
+    }
+
   }
 }
 
-inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_LOCATION_INFO_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
-  addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
-  addr->ss7Addr[0] = 0x12; // SSN & GT
-  addr->ss7Addr[1] = ssn;
-  addr->ss7Addr[2] = 0;
-  addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
-  addr->ss7Addr[4] = 0x04; // | (saddr->addressLength%2==0?0x80:0x00); high bit always 0 see 15517-CAA901437, 3.3.8
-  memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
-  if( saddr->addressLength%2!=0 ) {
-    addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;
+inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_LOCATION_INFO_T *saddr, ET96MAP_LOCAL_SSN_T ssn)
+{
+  if(smsc::Smsc::getInstance().isAnsiGt())
+  {
+    addr->ss7AddrLen = 3+(saddr->addressLength+1)/2;
+    addr->ss7Addr[0] = 0x89; // GTI=2, SSN & GT
+    addr->ss7Addr[1] = ssn;
+    addr->ss7Addr[2] = 0x0A; // TT=10 E.164
+    memcpy( addr->ss7Addr+3, saddr->address, (saddr->addressLength+1)/2 );
+    if( saddr->addressLength%2!=0 )
+    {
+      addr->ss7Addr[3+(saddr->addressLength+1)/2-1] &= 0x0f;
+    }
+  }else
+  {
+    addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
+    addr->ss7Addr[0] = 0x12; // SSN & GT
+    addr->ss7Addr[1] = ssn;
+    addr->ss7Addr[2] = 0;
+    addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
+    addr->ss7Addr[4] = 0x04; // | (saddr->addressLength%2==0?0x80:0x00); high bit always 0 see 15517-CAA901437, 3.3.8
+    memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
+    if( saddr->addressLength%2!=0 )
+    {
+      addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;
+    }
   }
 }
 
@@ -288,18 +321,19 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
 inline void mkIMSIOrMSISDNFromIMSI( ET96MAP_IMSI_OR_MSISDN_T *addr, const string &s_imsi ) {
   size_t len = s_imsi.length();
   size_t sz = (len+1)/2;
-  addr->imsiOrMsisdnLen = (UCHAR_T)sz;
+  addr->imsiOrMsisdnLen = (UCHAR_T)(sz+1);
+  addr->imsiOrMsisdn[0]=0x96;
   const char *value = s_imsi.c_str();
   for( size_t i = 0; i < len; i++ ) {
     UCHAR_T bi = (UCHAR_T)i/2;
     if( i%2 == 1 ) {
-      addr->imsiOrMsisdn[bi] |= ((value[i]-'0')<<4); // fill high octet
+      addr->imsiOrMsisdn[1+bi] |= ((value[i]-'0')<<4); // fill high octet
     } else {
-      addr->imsiOrMsisdn[bi] = (value[i]-'0')&0x0F; // fill low octet
+      addr->imsiOrMsisdn[1+bi] = (value[i]-'0')&0x0F; // fill low octet
     }
   }
   if( len%2 != 0 ) {
-    addr->imsiOrMsisdn[sz-1] |= 0xF0;
+    addr->imsiOrMsisdn[sz] |= 0xF0;
   }
 }
 
@@ -493,7 +527,7 @@ uint8_t convertCBSDatacoding2SMSC( UCHAR_T dcs, UCHAR_T *udhPresent, UCHAR_T *ms
   *udhPresent = 0;
   *msgClassMean = 0;
   *msgClass = 0;
-  int codingGroup = (dcs>>4) & 0xf0;
+  int codingGroup = (dcs>>4) & 0x0f;
   int codingScheme = dcs & 0x0f;
   if( codingGroup == 0 || codingGroup == 2 || codingGroup == 3 ) {
     return smsc::smpp::DataCoding::SMSC7BIT;

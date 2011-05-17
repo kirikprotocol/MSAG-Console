@@ -6,6 +6,7 @@
 #include "messages/ApplyTimeZones.hpp"
 #include "messages/ApplyFraudControl.hpp"
 #include "messages/ApplyMapLimits.hpp"
+#include "messages/ApplyNetProfiles.hpp"
 #include "messages/ApplySnmp.hpp"
 #include "messages/UpdateProfile.hpp"
 #include "messages/DeleteProfile.hpp"
@@ -159,6 +160,7 @@ public:
   void handle(const messages::ApplyTimeZones& msg);
   void handle(const messages::ApplyFraudControl& msg);
   void handle(const messages::ApplyMapLimits& msg);
+  void handle(const messages::ApplyNetProfiles& msg);
   void handle(const messages::ApplySnmp& msg);
   /*void handle(const messages::TraceRoute& msg);
   void handle(const messages::LoadRoutes& msg);
