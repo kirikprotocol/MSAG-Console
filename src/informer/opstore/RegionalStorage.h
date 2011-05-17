@@ -49,7 +49,8 @@ private:
 public:
 
     RegionalStorage( DeliveryImpl&       dlv,
-                     const RegionPtr&    region );
+                     const RegionPtr&    region,
+                     msgtime_type        nextResendFile = 0 );
 
     virtual ~RegionalStorage();
     dlvid_type getDlvId() const;
@@ -140,11 +141,11 @@ protected:
 
     virtual void resendIO( bool isInputDirection, volatile bool& stopFlag );
 
-    void makeResendFilePath( char*     fpath,
-                             ulonglong nextTime );
+    // void makeResendFilePath( char*     fpath,
+    // ulonglong nextTime );
 
-    /// return the next resend file or 0
-    msgtime_type findNextResendFile();
+    // return the next resend file or 0
+    // msgtime_type findNextResendFile();
 
 private:
     // message cleanup

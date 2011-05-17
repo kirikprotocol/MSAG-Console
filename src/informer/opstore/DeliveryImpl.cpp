@@ -8,6 +8,7 @@
 #include "util/config/Config.h"
 #include "informer/io/ConfigWrapper.h"
 #include "informer/io/FileGuard.h"
+#include "informer/io/DirListing.h"
 
 using smsc::util::config::Config;
 
@@ -394,9 +395,36 @@ void DeliveryImpl::setRecordAtInit( regionid_type            regionId,
 void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
                                       std::vector<regionid_type>& emptyRegs )
 {
+    smsc_log_debug(log_,"D=%u postInitOperative",getDlvId());
+    {
+        // scanning if there are resend files
+        char path[100];
+        makeResendFilePath(path,anyRegionId,0);
+        std::vector<std::string> reglist;
+        makeDirListing(NoDotsNameFilter(), S_IFDIR)
+            .list( (getCS()->getStorePath() + path).c_str(), reglist);
+        for ( std::vector<std::string>::const_iterator i = reglist.begin();
+              i != reglist.end(); ++i ) {
+            char* endptr;
+            const regionid_type regId = 
+                regionid_type(strtoul( i->c_str(), &endptr, 10));
+            if ( *endptr ) {
+                smsc_log_debug(log_,"path resend/%s is not region",i->c_str());
+                continue;
+            }
+            if ( storeHash_.Exist(regId) ) continue;
+            const msgtime_type nextFile = findNextResendFile( regId );
+            if ( !nextFile ) continue;
+            try {
+                createRegionalStorage(regId,nextFile);
+            } catch (std::exception& e) {
+                smsc_log_warn(log_,"cannot create R=%u/D=%u: %s",regId,getDlvId(),e.what());
+            }
+        }
+    }
+
     int regId;
     StoreList::iterator ptr;
-    smsc_log_debug(log_,"D=%u postInitOperative",getDlvId());
     for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
         const bool res = (*ptr)->postInit();
         if (res) {
@@ -592,18 +620,65 @@ void DeliveryImpl::writeDeliveryInfoData()
 
 
 DeliveryImpl::StoreList::iterator* 
-    DeliveryImpl::createRegionalStorage( regionid_type regId )
+    DeliveryImpl::createRegionalStorage( regionid_type regId,
+                                         msgtime_type  nextTime )
 {
     RegionFinder& rf = dlvInfo_->getUserInfo().getDA().getRegionFinder();
     RegionPtr regPtr;
     if (!rf.getRegion(regId,regPtr)) {
-        throw InfosmeException(EXC_NOTFOUND,"region R=%u is not found/deleted",regId);
+        throw InfosmeException(EXC_NOTFOUND,"region R=%u/D=%u is not found/deleted",regId,getDlvId());
     }
     // FIXME: should we check if region is deleted?
     StoreList::iterator iter = 
         storeList_.insert( storeList_.begin(),
-                           RegionalStoragePtr( new RegionalStorage(*this,regPtr)) );
+                           RegionalStoragePtr( new RegionalStorage(*this,regPtr,nextTime)) );
     return &storeHash_.Insert(regId,iter);
+}
+
+
+void DeliveryImpl::makeResendFilePath( char* fpath,
+                                       regionid_type regionId,
+                                       ulonglong ymdTime ) const
+{
+    int len = sprintf(makeDeliveryPath(fpath,getDlvId()),"resend/");
+    if (regionId == anyRegionId) { return; }
+    fpath += len;
+    len = sprintf(fpath,"%u/",regionId);
+    if ( ymdTime ) {
+        fpath += len;
+        sprintf(fpath,"%llu.jnl",ymdTime);
+    }
+}
+
+
+msgtime_type DeliveryImpl::findNextResendFile( regionid_type regionId ) const
+{
+    char buf[100];
+    makeResendFilePath(buf,regionId,0);
+    try {
+        std::vector< std::string > list;
+        makeDirListing( NoDotsNameFilter(),S_IFREG)
+            .list( (getCS()->getStorePath() + buf).c_str(), list );
+        std::sort(list.begin(), list.end());
+        for ( std::vector<std::string>::iterator i = list.begin();
+              i != list.end(); ++i ) {
+            int shift = 0;
+            ulonglong ymd;
+            sscanf(i->c_str(),"%llu.jnl%n",&ymd,&shift);
+            if (!shift) {
+                smsc_log_debug(log_,"R=%u/D=%u file '%s' is not resend file",
+                               regionId, getDlvId(),i->c_str());
+                continue;
+            }
+            smsc_log_debug(log_,"R=%u/D=%u next resend file is %llu",
+                           regionId,getDlvId(),ymd);
+            return ymdToMsgTime(ymd);
+        }
+    } catch ( std::exception& e ) {
+        smsc_log_debug(log_,"R=%u/D=%u next resend file is not found",
+                       regionId, getDlvId());
+    }
+    return 0;
 }
 
 }

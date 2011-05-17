@@ -102,7 +102,13 @@ private:
     void writeDeliveryInfoData();
 
     /// cacheLock must be locked
-    StoreList::iterator* createRegionalStorage(regionid_type regId);
+    StoreList::iterator* createRegionalStorage(regionid_type regId,
+                                               msgtime_type next = 0 );
+
+    void makeResendFilePath( char* fpath,
+                             regionid_type regionId,
+                             ulonglong ymdTime ) const;
+    msgtime_type findNextResendFile( regionid_type regionId ) const;
 
 private:
     mutable smsc::core::synchronization::Mutex         cacheLock_;

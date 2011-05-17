@@ -1,3 +1,5 @@
+2011-05-17 13:11 bukind
+  bugfix: resend files were not scanned at start
 2011-05-17 09:40 bukind
   bugfix: resend files must be per region
 

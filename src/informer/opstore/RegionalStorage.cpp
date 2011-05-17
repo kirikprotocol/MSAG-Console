@@ -197,7 +197,8 @@ smsc::logger::Logger* makeLogger( dlvid_type dlvId, regionid_type regionId )
 }
 
 RegionalStorage::RegionalStorage( DeliveryImpl&     dlv,
-                                  const RegionPtr&  region ) :
+                                  const RegionPtr&  region,
+                                  msgtime_type      nextResendTime ) :
 log_(makeLogger(dlv.getDlvId(),region->getRegionId())),
 cacheMon_( MTXWHEREAMI ),
 storingIter_(messageList_.end()),
@@ -209,7 +210,7 @@ stopRolling_(0),
 newOrResend_(0),
 inputRequestGrantTime_(0),
 numberOfInputReqGrant_(0),
-nextResendFile_(findNextResendFile())
+nextResendFile_(nextResendTime ? nextResendTime : dlv.findNextResendFile(region->getRegionId()))
 {
     assert(region_.get());
     smsc_log_debug(log_,"ctor @%p R=%u/D=%u",
@@ -993,7 +994,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             // reading just one file
             char fpath[100];
             const ulonglong ymdTime = msgTimeToYmd(nextResendFile_);
-            makeResendFilePath(fpath,ymdTime);
+            dlv_->makeResendFilePath(fpath,getRegionId(),ymdTime);
 
             FileGuard fg;
             fg.ropen( (getCS()->getStorePath() + fpath).c_str() );
@@ -1091,7 +1092,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                     smsc_log_warn(log_,"R=%u/D=%u exc: %s",
                                   getRegionId(),dlvId,e.what());
                 }
-                const msgtime_type nexttime = findNextResendFile();
+                const msgtime_type nexttime = dlv_->findNextResendFile(getRegionId());
                 smsc_log_debug(log_,"R=%u/D=%u resend-in set nextResend=%u",
                                getRegionId(), dlvId, nexttime);
                 mg.Lock();
@@ -1150,7 +1151,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
         resendQueue_.erase(prev,next);
         mg.Unlock();
         char fpath[100];
-        makeResendFilePath(fpath,msgTimeToYmd(startTime));
+        dlv_->makeResendFilePath(fpath,getRegionId(),msgTimeToYmd(startTime));
         smsc_log_info(log_,"R=%u/D=%u resend-out writing %u records in '%s'",
                       getRegionId(), dlvId, count, fpath );
         FileGuard fg;
@@ -1231,16 +1232,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
 }
 
 
-void RegionalStorage::makeResendFilePath( char*     fpath,
-                                          ulonglong nextTime )
-{
-    sprintf(makeDeliveryPath(fpath,getDlvId()),"resend/");
-    if ( nextTime ) {
-        sprintf(fpath + strlen(fpath),"%u/%llu.jnl",getRegionId(),nextTime);
-    }
-}
-
-
+/*
 msgtime_type RegionalStorage::findNextResendFile()
 {
     char buf[100];
@@ -1270,6 +1262,7 @@ msgtime_type RegionalStorage::findNextResendFile()
     }
     return 0;
 }
+ */
 
 }
 }
