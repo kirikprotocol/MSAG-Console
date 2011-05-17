@@ -4,6 +4,7 @@
 #include <vector>
 
 using namespace smsc::sms;
+using namespace smsc::core::buffers;
 
 struct LoadUpInfo;
 typedef std::vector<LoadUpInfo*> LoadUpVector;
