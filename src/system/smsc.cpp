@@ -76,6 +76,8 @@ using namespace smsc::core::synchronization;
 using util::Exception;
 using smsc::acls::AclAbstractMgr;
 
+using namespace smsc::util::config;
+
 using smsc::cluster::InterconnectManager;
 using smsc::cluster::Interconnect;
 using smsc::cluster::ApplyCommandListener;
@@ -272,8 +274,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   try {
       smsc_log_info(log, "InterconnectManager initialization ..." );
 
-      using smsc::util::config::ConfigView;
-      std::auto_ptr<ConfigView> imConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "cluster"));
+      std::auto_ptr<ConfigView> imConfig(new ConfigView(*cfg.cfgman, "cluster"));
 
       char * mode = imConfig.get()->getString("mode");
       nodesCount = 1;
@@ -624,7 +625,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   {
-    using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildStrParamNames("directives");
     CStrSet::iterator i=params->begin();
     string da;
@@ -651,11 +651,11 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
 #endif
     smsc_log_info(log, "Starting statemachines" );
-    int cnt=cfg.cfgman->getInt("core.state_machines_count");
+    stateMachinesCount=cfg.cfgman->getInt("core.state_machines_count");
     time_t maxValidTime=cfg.cfgman->getInt("sms.max_valid_time");
-    for(int i=0;i<cnt;i++)
+    for(int i=0;i<stateMachinesCount;i++)
     {
-      StateMachine *m=new StateMachine(eventqueue,store,this);
+      StateMachine *m=new StateMachine(eventqueue,store,i);
       m->maxValidTime=maxValidTime;
 #ifdef SMSEXTRA
       m->createCopyOnNickUsage=createCopyOnNickUsage;
@@ -668,6 +668,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
         cfg.cfgman->getString("core.systemId")
       );
       tp.startTask(m);
+      stateMachines.push_back(m);
     }
     smsc_log_info(log, "Statemachines started" );
   }
@@ -739,8 +740,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   */
   {
     smsc_log_info(log, "Statistics manager starting..." );
-    using smsc::util::config::ConfigView;
-    std::auto_ptr<ConfigView> msConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "MessageStore"));
+    std::auto_ptr<ConfigView> msConfig(new ConfigView(*cfg.cfgman, "MessageStore"));
     const char* statisticsLocation = msConfig.get()->getString("statisticsDir");
     statMan=new smsc::stat::StatisticsManager(statisticsLocation);
     if(!ishs)
@@ -838,13 +838,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
     try {
       defProfile.accessMaskIn = cfg.cfgman->getInt("profiler.defaultAccessMaskIn");
-    } catch(smsc::util::config::ConfigException& ex){
+    } catch(ConfigException& ex){
       smsc_log_warn(log, "profiler.defaultAccessMaskIn not found, using hardcoded default(%d)",defProfile.accessMaskIn);
     }
 
     try {
       defProfile.accessMaskOut = cfg.cfgman->getInt("profiler.defaultAccessMaskOut");
-    } catch(smsc::util::config::ConfigException& ex){
+    } catch(ConfigException& ex){
       smsc_log_warn(log, "profiler.defaultAccessMaskOut not found, using hardcoded default(%d)",defProfile.accessMaskOut);
     }
 
@@ -868,7 +868,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
     profiler->setAliasManager(aliaser);
 
-    using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildIntParamNames("profiler.ussdOpsMapping");
     CStrSet::iterator i=params->begin();
     for(;i!=params->end();i++)
@@ -1004,7 +1003,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     __warning__("smpp.standardErrorCodes not found in config");
   }
   {
-    using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildIntParamNames("smpp.connectionsLimitsForIps");
     CStrSet::iterator i=params->begin();
     for(;i!=params->end();i++)
@@ -1260,6 +1258,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
   */
 
+  Manager::getInstance().registerConfigChangeWatcher(&cfgWatch);
 
 
   try {
@@ -1906,6 +1905,82 @@ void Smsc::InitLicense()
     throw runtime_error(s);
   }
 }
+
+smsc::util::config::ConfigParamWatchType Smsc::SmscConfigWatcher::getWatchedParams(smsc::util::config::ParamsVector& argParams)
+{
+  using namespace smsc::util::config;
+  argParams.push_back(std::make_pair(cvtInt,"core.schedulerSoftLimit"));
+  argParams.push_back(std::make_pair(cvtInt,"core.schedulerHardLimit"));
+  argParams.push_back(std::make_pair(cvtInt,"core.schedulerFreeBandwidthUsage"));
+  argParams.push_back(std::make_pair(cvtInt,"sms.max_valid_time"));
+  argParams.push_back(std::make_pair(cvtInt,"core.eventQueueLimit"));
+  argParams.push_back(std::make_pair(cvtInt,"core.speedLogFlushPeriodMin"));
+  argParams.push_back(std::make_pair(cvtBool,"core.smartMultipartForward"));
+  argParams.push_back(std::make_pair(cvtInt,"core.mergeTimeout"));
+  argParams.push_back(std::make_pair(cvtInt,"MessageStore.LocalStore.storeFilesCount"));
+  argParams.push_back(std::make_pair(cvtInt,"map.busyMTDelay"));
+  argParams.push_back(std::make_pair(cvtInt,"map.lockedByMODelay"));
+  return cpwtIndividual;
+}
+void Smsc::SmscConfigWatcher::paramsChanged()
+{
+}
+void Smsc::SmscConfigWatcher::paramChanged(smsc::util::config::ConfigValueType cvt,const std::string& paramName)
+{
+  smsc::util::config::Config& cfg=smsc::util::config::Manager::getInstance().getConfig();
+  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("cfg.reload");
+  Smsc& smsc=Smsc::getInstance();
+  if(paramName=="core.schedulerSoftLimit")
+  {
+    smsc.schedulerSoftLimit=cfg.getInt(paramName.c_str());
+  }else if(paramName=="core.schedulerHardLimit")
+  {
+    smsc.schedulerHardLimit=cfg.getInt(paramName.c_str());
+  }else if(paramName=="core.schedulerFreeBandwidthUsage")
+  {
+    smsc.schedulerFreeBandwidthUsage=cfg.getInt(paramName.c_str());
+  }else if(paramName=="core.speedLogFlushPeriodMin")
+  {
+    smsc.speedLogFlushPeriod=cfg.getInt(paramName.c_str());
+  }else if(paramName=="sms.max_valid_time")
+  {
+    time_t maxValidTime=cfg.getInt(paramName.c_str());
+    for(std::vector<StateMachine*>::iterator it=smsc.stateMachines.begin(),end=smsc.stateMachines.end();it!=end;++it)
+    {
+      (*it)->maxValidTime=maxValidTime;
+    }
+  }else if(paramName=="core.eventQueueLimit")
+  {
+    smsc.eventQueueLimit=cfg.getInt(paramName.c_str());
+  }else if (paramName=="core.speedLogFlushPeriodMin")
+  {
+    smsc.speedLogFlushPeriod=cfg.getInt(paramName.c_str());
+    if((60%smsc.speedLogFlushPeriod)!=0)
+    {
+      smsc_log_warn(log,"60 isn't multiple of core.speedLogFlushPeriodMin. using default value");
+      smsc.speedLogFlushPeriod=60;
+    }
+    time_t now=time(NULL)/60;
+    smsc.nextSpeedLogFlush=now+(smsc.speedLogFlushPeriod-(now%smsc.speedLogFlushPeriod));
+  }else if(paramName=="core.smartMultipartForward")
+  {
+    smsc.smartMultipartForward=cfg.getBool(paramName.c_str());
+  }else if(paramName=="core.mergeTimeout")
+  {
+    smsc.mergeConcatTimeout=cfg.getInt(paramName.c_str());
+  }else if(paramName=="MessageStore.LocalStore.storeFilesCount")
+  {
+    smsc.scheduler->setStoresCount(cfg.getInt(paramName.c_str()));
+  }else if(paramName=="map.busyMTDelay")
+  {
+    MapDialogContainer::setBusyMTDelay(cfg.getInt(paramName.c_str()));
+  }else if(paramName=="map.lockedByMODelay")
+  {
+    MapDialogContainer::setLockedByMoDelay(cfg.getInt(paramName.c_str()));
+
+  }
+}
+
 
 
 }//system

@@ -129,6 +129,8 @@ struct SmscConfigs{
   smsc::util::config::route::RouteConfig* routesconfig;
 };
 
+class StateMachine;
+
 class Smsc
 {
 public:
@@ -769,6 +771,16 @@ protected:
   int mainLoopsCount;
   int mapIOTasksCount;
   void* mapioptr;
+
+  class SmscConfigWatcher:public smsc::util::config::IConfigChangeNotifier{
+    virtual smsc::util::config::ConfigParamWatchType getWatchedParams(smsc::util::config::ParamsVector& argParams);
+    virtual void paramsChanged();
+    virtual void paramChanged(smsc::util::config::ConfigValueType cvt,const std::string& paramName);
+  };
+  SmscConfigWatcher cfgWatch;
+
+  int stateMachinesCount;
+  std::vector<StateMachine*> stateMachines;
 
   const SmscConfigs* configs;
 
