@@ -1039,9 +1039,10 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             {
                 RelockMutexGuard mg(cacheMon_);
                 StopRollingGuard srg(mg,*this);
+                // NOTE: cacheMon_ is unlocked here!
 
                 try {
-                    // storing into journal, note that cacheMon_ is unlocked here
+                    // storing into journal
                     for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
                         regionid_type serial = MessageLocker::nullSerial;
                         // NOTE: we may avoid locking here, as i is not in msgList_
@@ -1058,6 +1059,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                     // failed, we have to clean up the resendQueue_
                     smsc_log_warn(log_,"R=%u/D=%u resend-in failed to journal: %s",
                                   getRegionId(), dlvId, e.what());
+                    mg.Lock();
                     for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
                         std::pair< ResendQueue::iterator, ResendQueue::iterator > ab =
                             resendQueue_.equal_range( i->msg.lastTime );
@@ -1125,6 +1127,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
     TmpBuf<char,8192> buf;
     RelockMutexGuard mg(cacheMon_);
     StopRollingGuard srg(mg,*this,false);
+    // cacheMon_ is locked
     for ( ResendQueue::iterator prev = resendQueue_.lower_bound(startTime);
           prev != resendQueue_.end(); ) {
         msgtime_type nextTime = startTime + period;
