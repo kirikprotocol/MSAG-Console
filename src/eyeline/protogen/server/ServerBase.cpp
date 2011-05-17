@@ -1,5 +1,6 @@
 #include "ServerBase.hpp"
 #include "util/Exception.hpp"
+#include "util/TimeSource.h"
 
 namespace eyeline{
 namespace protogen{
@@ -115,6 +116,7 @@ void ServerBase::readPackets()
             ProtocolSocketBase::Packet pck=ps->getPacket();
             if(log->isDebugEnabled())
             {
+              pck.timestamp = smsc::util::TimeSourceSetup::AbsUSec::getUSec();
               smsc_log_debug(log,"read packet connId=%d:%s",pck.connId,pck.getDump().c_str());
             }
             handlers[hIdx].queue.Push(pck);
@@ -296,11 +298,20 @@ void ServerBase::handleCommands(int idx)
       }
       handlers[idx].queue.Pop(p);
     }
+    int64_t timeInQueue;
+    if (log->isDebugEnabled()) {
+        timeInQueue = smsc::util::TimeSourceSetup::AbsUSec::getUSec() - p.timestamp;
+    }
     try{
       onHandleCommand(p);
     }catch(std::exception& e)
     {
       smsc_log_warn(log,"Exception during command handling:%s",e.what());
+    }
+    if (log->isDebugEnabled()) {
+        const int64_t timeInProcess = smsc::util::TimeSourceSetup::AbsUSec::getUSec() - p.timestamp;
+        smsc_log_debug(log,"connId=%d packet processed, queueTime=%llu, procTime=%llu",
+                       p.connId, timeInQueue/1000, timeInProcess/1000);
     }
     p.dispose();
   }

@@ -20,6 +20,7 @@ public:
     const char* data;
     size_t dataSize;
     int connId;
+    int64_t timestamp;
     Packet():data(0)
     {
     }
