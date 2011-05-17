@@ -16,7 +16,7 @@ import java.util.List;
  * @author Aleksandr Khalitov
  */
 @SuppressWarnings({"unchecked"})
-public class DeliveryEditGroupController extends DeliveryController{
+public class DeliveryEditGroupController extends DeliveryController {
 
   private List<String> ids;
 
@@ -75,42 +75,44 @@ public class DeliveryEditGroupController extends DeliveryController{
   public DeliveryEditGroupController() {
     super();
     Object o = getRequest().get(DELIVERY_IDS_PARAM);
-    if(o != null) {
-      ids =  (List<String>)o;
+    if (o != null) {
+      ids = (List<String>) o;
     }
   }
 
   public String save() {
-    try{
-      for(String i : ids) {
+
+    boolean hasErrors = false;
+    for (String i : ids) {
+      try {
         Delivery d = config.getDelivery(user.getLogin(), user.getPassword(), Integer.parseInt(i));
-        if(d == null) {
+        if (d == null) {
           addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.deliveries.delivery.not.found", i);
         } else {
-          if(editSourceAddress) {
+          if (editSourceAddress) {
             d.setSourceAddress(sourceAddress);
           }
-          if(editPriority) {
+          if (editPriority) {
             d.setPriority(priority);
           }
-          if(editEndDate) {
+          if (editEndDate) {
             d.setEndDate(endDate);
           }
-          if(editActivePeriodStart) {
-            if(activePeriodStart != null) {
+          if (editActivePeriodStart) {
+            if (activePeriodStart != null) {
               d.setActivePeriodStart(new Time(activePeriodStart));
-            }else {
+            } else {
               d.setActivePeriodStart(null);
             }
           }
-          if(editActivePeriodEnd) {
-            if(activePeriodEnd != null) {
+          if (editActivePeriodEnd) {
+            if (activePeriodEnd != null) {
               d.setActivePeriodEnd(new Time(activePeriodEnd));
-            }else {
+            } else {
               d.setActivePeriodEnd(null);
             }
           }
-          if(editActiveWeekDays) {
+          if (editActiveWeekDays) {
             d.setActiveWeekDays(activeWeekDays);
           }
 
@@ -118,27 +120,27 @@ public class DeliveryEditGroupController extends DeliveryController{
             d.setUseDataSm(useDataSm);
           }
 
-          if(editDeliveryMode) {
+          if (editDeliveryMode) {
             d.setDeliveryMode(deliveryMode);
           }
 
-          if(editFlash) {
+          if (editFlash) {
             d.setFlash(flash);
           }
 
-          if(editTransactionMode) {
+          if (editTransactionMode) {
             d.setTransactionMode(transactionMode);
           }
 
-          if(editValidityPeriod) {
-            if(validityPeriod != null ) {
+          if (editValidityPeriod) {
+            if (validityPeriod != null) {
               d.setValidityPeriod(new Time(validityPeriod));
-            }else {
+            } else {
               d.setValidityPeriod(null);
             }
           }
 
-          if(editRetryPolicy) {
+          if (editRetryPolicy) {
             if (retryOnFail.equals("off")) {
               d.setRetryPolicy(null);
               d.setRetryOnFail(false);
@@ -150,37 +152,38 @@ public class DeliveryEditGroupController extends DeliveryController{
               d.setRetryPolicy(retryPolicy);
             }
           }
-          if(editSmsNotification) {
-            if(smsNotification != null) {
+          if (editSmsNotification) {
+            if (smsNotification != null) {
               d.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotification.getSimpleAddress());
-            }else{
+            } else {
               d.removeProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
             }
           }
-          if(editEmailNotification) {
-            if(emailNotification != null && (emailNotification = emailNotification.trim()).length() != 0) {
+          if (editEmailNotification) {
+            if (emailNotification != null && (emailNotification = emailNotification.trim()).length() != 0) {
               d.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotification);
-            }else {
+            } else {
               d.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
             }
           }
-          if(editArchiveTime) {
-            if(archiveTime != null && (archiveTime = archiveTime.trim()).length() != 0) {
+          if (editArchiveTime) {
+            if (archiveTime != null && (archiveTime = archiveTime.trim()).length() != 0) {
               d.setArchiveTime(Integer.parseInt(archiveTime));
-            }else {
+            } else {
               d.setArchiveTime(null);
             }
           }
           if (editMessageTimeToLive)
             d.setMessageTimeToLive(messageTimeToLive);
+
           config.modifyDelivery(user.getLogin(), user.getPassword(), d);
         }
+      } catch (AdminException e) {
+        addError(new DeliveryControllerException("delivery.edit.error", e, i));
+        hasErrors=true;
       }
-      return "DELIVERIES";
-    }catch (AdminException e){
-      addError(e);
     }
-    return null;
+    return hasErrors ? null :  "DELIVERIES";
   }
 
   public boolean isEditArchiveTime() {
