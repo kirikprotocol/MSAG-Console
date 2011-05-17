@@ -48,10 +48,7 @@ const char * const findConfigFile(const char * const file_to_find)
       }
     }
   }
-  //char message[strlen(file_to_find) + 64];
-  TmpBuf<char,1024> message(strlen(file_to_find) + 64);
-  sprintf(message, "File \"%s\" not found", file_to_find);
-  throw smsc::util::Exception(message);
+  throw smsc::util::Exception("File \"%s\" not found", file_to_find);
 }
 
 }
