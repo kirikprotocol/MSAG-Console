@@ -91,7 +91,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         }
         data.owner = config.getString("owner");
         data.retryOnFail = config.getBool("retryOnFail",true);
-        data.retryPolicy = config.getString("retryPolicy","1s:*");
+        data.retryPolicy = config.getString("retryPolicy","");
         data.replaceMessage = config.getBool("replaceMessage",false,false);
         data.svcType = config.getString("svcType","");
         data.userData = config.getString("userData","");
@@ -117,7 +117,7 @@ storeJournal_(journal)
     state_ = state;
     planTime_ = planTime;
     const dlvid_type dlvId = dlvInfo_->getDlvId();
-    writeDeliveryInfoData();
+    // writeDeliveryInfoData();
     smsc_log_debug(log_,"ctor D=%u done",dlvId);
 }
 

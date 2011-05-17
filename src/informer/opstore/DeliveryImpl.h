@@ -92,14 +92,14 @@ public:
     /// invoked to cancel all messages from operative storage
     void cancelOperativeStorage();
 
+    void writeDeliveryInfoData();
+
 private:
     typedef std::list< RegionalStoragePtr >            StoreList;
     typedef smsc::core::buffers::IntHash< StoreList::iterator > StoreHash;
 
     // inline DeliveryInfo* getDlvInfo() { return &activityLog_.getDlvInfo(); }
     // inline const DeliveryInfo* getDlvInfo() const { return &activityLog_.getDlvInfo(); }
-
-    void writeDeliveryInfoData();
 
     /// cacheLock must be locked
     StoreList::iterator* createRegionalStorage(regionid_type regId,

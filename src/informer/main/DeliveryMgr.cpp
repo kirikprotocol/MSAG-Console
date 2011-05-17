@@ -870,7 +870,9 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
         planTime = info->getStartDate();
         // }
     }
-    addDelivery(info,state,planTime,true);
+    DeliveryImplPtr dlvPtr;
+    addDelivery(info,state,planTime,true,&dlvPtr);
+    if (dlvPtr.get()) { dlvPtr->writeDeliveryInfoData(); }
     userInfo.incDlvStats(DLVSTATE_CREATED);
     char buf[30];
     MutexGuard mg(archiveLock_);

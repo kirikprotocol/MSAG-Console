@@ -407,8 +407,16 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if ((!old || old->archivationPeriod != data.archivationPeriod) && !data.archivationPeriod.empty() ) {
         archivationPeriod = parseTime(data.archivationPeriod.c_str(), true);
     }
-    if (!old || old->retryPolicy != data.retryPolicy) {
-        retryPolicy.init(data.retryPolicy.c_str());
+    if (!old || ( old->retryPolicy != data.retryPolicy ||
+                  old->retryOnFail != data.retryOnFail ) ) {
+        if (!data.retryOnFail) {
+            retryPolicy.init("");
+        } else if (data.retryPolicy.empty()) {
+            // should be replaced
+            retryPolicy.init("1s:*");
+        } else {
+            retryPolicy.init(data.retryPolicy.c_str());
+        }
         newRetryPolicy = true;
     }
     bool sourceAddressChanged = false;

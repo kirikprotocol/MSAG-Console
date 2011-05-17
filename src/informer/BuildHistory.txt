@@ -1,3 +1,6 @@
+2011-05-17 15:33 bukind
+  bugfix: retryPolicy was not initialized in default case
+  bugfix: delivery always rewrited config.xml in ctor
 2011-05-17 13:11 bukind
   bugfix: resend files were not scanned at start
 2011-05-17 09:40 bukind
