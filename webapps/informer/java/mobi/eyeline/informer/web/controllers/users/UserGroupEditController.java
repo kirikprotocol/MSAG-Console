@@ -100,15 +100,15 @@ public class UserGroupEditController extends UserController {
     if (session != null) {
       userIds = (List<String>) session.getAttribute("userIds");
     }
-    deliveryStartTime = new Time(9,0,0).getTimeDate();
-    deliveryEndTime = new Time(22,0,0).getTimeDate();
-    deliveryType=User.DeliveryType.SMS;
-    validityPeriod=new Time(1,0,0);
-    messageTimeToLive=new Time(2,0,0);
-    smsPerSec=10;
-    priority=1;
-    deliveryLifetime=72;
-    deliveryDays=Arrays.asList(0,1,2,3,4,5,6);
+    deliveryStartTime = new Time(9, 0, 0).getTimeDate();
+    deliveryEndTime = new Time(22, 0, 0).getTimeDate();
+    deliveryType = User.DeliveryType.SMS;
+    validityPeriod = new Time(1, 0, 0);
+    messageTimeToLive = new Time(2, 0, 0);
+    smsPerSec = 10;
+    priority = 1;
+    deliveryLifetime = 72;
+    deliveryDays = Arrays.asList(0, 1, 2, 3, 4, 5, 6);
     smsPerSec = 10;
     priority = 1;
     deliveryLifetime = 72;
@@ -121,119 +121,120 @@ public class UserGroupEditController extends UserController {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "retry_policy_incorrect");
       return null;
     }
-    if(editCreateCdr && createCdr) {
-      if(cdrDestination == null || cdrDestination.length() == 0 || cdrOriginator == null || cdrOriginator.length() == 0) {
+    if (editCreateCdr && createCdr) {
+      if (cdrDestination == null || cdrDestination.length() == 0 || cdrOriginator == null || cdrOriginator.length() == 0) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "user.edit.cdr.props.required");
         return null;
       }
-    }else {
+    } else {
       cdrDestination = null;
       cdrOriginator = null;
     }
     Configuration config = getConfig();
-    try {
-      List<User> users = new ArrayList<User>();
-      for (String id : userIds) {
-        User u = config.getUser(id);
 
-        if (editOrganization)
-          u.setOrganization(organization);
+    List<User> users = new ArrayList<User>();
+    for (String id : userIds) {
+      User u = config.getUser(id);
 
-        if (editAdmin) {
-          if (admin && !u.hasRole(User.INFORMER_ADMIN_ROLE))
-            u.getRoles().add(User.INFORMER_ADMIN_ROLE);
-          if (!admin && u.hasRole(User.INFORMER_ADMIN_ROLE))
-            u.getRoles().remove(User.INFORMER_ADMIN_ROLE);
-        }
+      if (editOrganization)
+        u.setOrganization(organization);
 
-        if (editBlocked)
-          u.setStatus(blocked ? User.Status.DISABLED : User.Status.ENABLED);
-
-        if (editSourceAddr)
-          u.setSourceAddr(sourceAddr);
-
-        if (editDeliveryDays)
-          u.setDeliveryDays(new ArrayList<Integer>(deliveryDays));
-
-        if (editDeliveryStartTime) {
-          if (deliveryStartTime == null) u.setDeliveryStartTime(null);
-          else u.setDeliveryStartTime(new Time(deliveryStartTime));
-        }
-
-        if (editDeliveryEndTime) {
-          if (deliveryEndTime == null) u.setDeliveryEndTime(null);
-          else u.setDeliveryEndTime(new Time(deliveryEndTime));
-        }
-
-        if (editPriority)
-          u.setPriority(priority);
-
-        if (editRetryPolicy) {
-          if (retryOnFail.equals("off")) {
-            u.setRetryOnFail(false);
-            u.setPolicyId(null);
-          } else if (retryOnFail.equals("default")) {
-            u.setRetryOnFail(true);
-            u.setPolicyId("");
-          } else {
-            u.setRetryOnFail(true);
-            u.setPolicyId(policyId);
-          }
-        }
-
-        if (editUseDataSm)
-          u.setUseDataSm(useDataSm);
-
-        if (editDeliveryType)
-          u.setDeliveryType(deliveryType);
-
-        if (editTransactionMode)
-          u.setTransactionMode(transactionMode);
-
-        if (editValidityPeriod)
-          u.setValidityPeriod(new Time(validityPeriod));
-
-        if (editSmsPerSec)
-          u.setSmsPerSec(smsPerSec);
-
-        if (editAllowedRegions) {
-          u.setAllRegionsAllowed(allRegionsAllowed);
-          u.setRegions(new ArrayList<Integer>(regions));
-        }
-
-        if (editSmsNotification)
-          u.setSmsNotification(smsNotification);
-
-        if (editEmailNotification)
-          u.setEmailNotification(emailNotification);
-
-        if (editArchivateDeliveries) {
-          u.setCreateArchive(createArchive);
-          u.setDeliveryLifetime(deliveryLifetime);
-        }
-
-        if (editCreateCdr) {
-          u.setCreateCDR(createCdr);
-          u.setCdrDestination(cdrDestination);
-          u.setCdrOriginator(cdrOriginator);
-        }
-
-        if (editMessageTimeToLive) {
-          u.setMessageTimeToLive(messageTimeToLive);
-        }
-
-        users.add(u);
+      if (editAdmin) {
+        if (admin && !u.hasRole(User.INFORMER_ADMIN_ROLE))
+          u.getRoles().add(User.INFORMER_ADMIN_ROLE);
+        if (!admin && u.hasRole(User.INFORMER_ADMIN_ROLE))
+          u.getRoles().remove(User.INFORMER_ADMIN_ROLE);
       }
 
-      for (User u : users) {
+      if (editBlocked)
+        u.setStatus(blocked ? User.Status.DISABLED : User.Status.ENABLED);
+
+      if (editSourceAddr)
+        u.setSourceAddr(sourceAddr);
+
+      if (editDeliveryDays)
+        u.setDeliveryDays(new ArrayList<Integer>(deliveryDays));
+
+      if (editDeliveryStartTime) {
+        if (deliveryStartTime == null) u.setDeliveryStartTime(null);
+        else u.setDeliveryStartTime(new Time(deliveryStartTime));
+      }
+
+      if (editDeliveryEndTime) {
+        if (deliveryEndTime == null) u.setDeliveryEndTime(null);
+        else u.setDeliveryEndTime(new Time(deliveryEndTime));
+      }
+
+      if (editPriority)
+        u.setPriority(priority);
+
+      if (editRetryPolicy) {
+        if (retryOnFail.equals("off")) {
+          u.setRetryOnFail(false);
+          u.setPolicyId(null);
+        } else if (retryOnFail.equals("default")) {
+          u.setRetryOnFail(true);
+          u.setPolicyId("");
+        } else {
+          u.setRetryOnFail(true);
+          u.setPolicyId(policyId);
+        }
+      }
+
+      if (editUseDataSm)
+        u.setUseDataSm(useDataSm);
+
+      if (editDeliveryType)
+        u.setDeliveryType(deliveryType);
+
+      if (editTransactionMode)
+        u.setTransactionMode(transactionMode);
+
+      if (editValidityPeriod)
+        u.setValidityPeriod(new Time(validityPeriod));
+
+      if (editSmsPerSec)
+        u.setSmsPerSec(smsPerSec);
+
+      if (editAllowedRegions) {
+        u.setAllRegionsAllowed(allRegionsAllowed);
+        u.setRegions(new ArrayList<Integer>(regions));
+      }
+
+      if (editSmsNotification)
+        u.setSmsNotification(smsNotification);
+
+      if (editEmailNotification)
+        u.setEmailNotification(emailNotification);
+
+      if (editArchivateDeliveries) {
+        u.setCreateArchive(createArchive);
+        u.setDeliveryLifetime(deliveryLifetime);
+      }
+
+      if (editCreateCdr) {
+        u.setCreateCDR(createCdr);
+        u.setCdrDestination(cdrDestination);
+        u.setCdrOriginator(cdrOriginator);
+      }
+
+      if (editMessageTimeToLive) {
+        u.setMessageTimeToLive(messageTimeToLive);
+      }
+
+      users.add(u);
+    }
+
+    boolean hasErrors = false;
+    for (User u : users) {
+      try {
         config.updateUser(u, getUserName());
+      } catch (AdminException e) {
+        addError(new UserEditException("edit_user_error", e, u.getLogin()));
+        hasErrors = true;
       }
-      return "USERS";
     }
-    catch (AdminException e) {
-      addError(e);
-    }
-    return null;
+    return hasErrors ? null : "USERS";
   }
 
   public String getCdrDestination() {
@@ -285,7 +286,7 @@ public class UserGroupEditController extends UserController {
   }
 
   public void setSourceAddr(Address sourceAddr) {
-      this.sourceAddr = sourceAddr;
+    this.sourceAddr = sourceAddr;
   }
 
   public Address getSourceAddr() {
