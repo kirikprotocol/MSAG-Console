@@ -64,6 +64,8 @@ public class DcpConverterTest {
     d.setStartDate(new Date());
     d.setSvcType("svc1");
     d.setValidityPeriod(new Time(1,0,0));
+    d.setMessageTimeToLive(new Time(2,0,0));
+
     d.setProperty(UserDataConsts.RESTRICTION, "true");
     assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d)));
   }

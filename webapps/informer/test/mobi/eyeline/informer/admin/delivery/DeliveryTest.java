@@ -190,6 +190,14 @@ public class DeliveryTest {
     d.validate();
     d.setRetryOnFail(true);
     d.setRetryPolicy("");
+
+    try {
+      d.validate(); // Should fail because messageTimeToLive is null
+      fail("Retry on fail is true but messageTimeToLive is null");
+    } catch (AdminException expected) {
+    }
+    d.setMessageTimeToLive(new Time(1,0,0));
+
     d.validate();
     d.setRetryPolicy(null);
     d.setRetryPolicy("1m");

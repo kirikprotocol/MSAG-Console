@@ -224,6 +224,7 @@ public class ArchiveRequestsManagerTest {
     d.setRetryPolicy("1h");
     d.setSvcType("svc1");
     d.setValidityPeriod(new Time(1, 0, 0));
+    d.setMessageTimeToLive(new Time(2, 0, 0));
     d.setSourceAddress(new Address("+79123942341"));
     d.setSingleText("text_text");
     d.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, "dsada@dsadas.das");
