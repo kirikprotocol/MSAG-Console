@@ -14,7 +14,7 @@ static char const ident[] = "$Id$";
 #include <string>
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
-#include <util/findConfigFile.h>
+#include "util/findConfigFile.h"
 #include "core/buffers/XHash.hpp"
 
 using smsc::core::buffers::XHash;
