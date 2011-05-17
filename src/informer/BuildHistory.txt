@@ -1,3 +1,6 @@
+2011-05-17 09:40 bukind
+  bugfix: resend files must be per region
+
 2011-05-16 17:16 bukind
   bugfix: we cannot provide retryMessages count (removed),
   instead newMessages is counted.

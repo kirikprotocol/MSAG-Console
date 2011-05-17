@@ -1030,7 +1030,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                         // NOTE: we have to insert into resendQueue here to make sure
                         // that we don't have duplicate entries in the file.
                         resendQueue_.insert( std::make_pair(i->msg.lastTime,i));
-                        smsc_log_debug(log_,"R=%u/D=%u/M=%llu added to resend queue",
+                        smsc_log_debug(log_,"R=%u/D=%u/M=%llu resend-in added to resend queue",
                                        getRegionId(), dlvId, ulonglong(i->msg.msgId));
                         ++i;
                     }
@@ -1184,7 +1184,9 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                 tb.setPos(0);
                 tb.set16(uint16_t(buflen-LENSIZE));
                 fg.write(buf.get(),buflen);
-                fg.fsync();
+                smsc_log_debug(log_,"R=%u/D=%u/M=%llu resend-out written to file",
+                               getRegionId(), dlvId, ulonglong(msg.msgId));
+                // fg.fsync();
             }
 
         } catch ( std::exception& e ) {
@@ -1231,7 +1233,7 @@ void RegionalStorage::makeResendFilePath( char*     fpath,
 {
     sprintf(makeDeliveryPath(fpath,getDlvId()),"resend/");
     if ( nextTime ) {
-        sprintf(fpath + strlen(fpath),"%llu.jnl",nextTime);
+        sprintf(fpath + strlen(fpath),"%u/%llu.jnl",getRegionId(),nextTime);
     }
 }
 
