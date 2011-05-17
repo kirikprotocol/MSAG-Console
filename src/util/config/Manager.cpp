@@ -1,15 +1,11 @@
 #include "Manager.h"
-
 #include <xercesc/dom/DOM.hpp>
-#include <fstream>
-#include <sys/stat.h>
-
 #include "logger/Logger.h"
 #include "util/xml/init.h"
 #include "util/xml/utilFunctions.h"
 #include "util/debug.h"
 #include "util/xml/DOMTreeReader.h"
-#include "core/buffers/File.hpp"
+#include "util/findConfigFile.h"
 
 namespace smsc   {
 namespace util   {
@@ -19,11 +15,14 @@ using namespace std;
 using namespace xercesc;
 using namespace smsc::util::xml;
 
-std::auto_ptr<char> Manager::config_filename;
 std::auto_ptr<Manager> Manager::manager;
 
-Manager::Manager()
-  throw(ConfigException)
+Manager::Manager(const char* argFileName)throw(ConfigException):config_filename(argFileName)
+{
+  readConfig();
+}
+
+void Manager::readConfig()
 {
   initXerces();
   findConfigFile();
@@ -31,7 +30,7 @@ Manager::Manager()
   {
     __trace__("reading config...");
     DOMTreeReader reader;
-    DOMDocument *document = reader.read(config_filename.get());
+    DOMDocument *document = reader.read(config_filename.c_str());
     if (document && document->getDocumentElement())
     {
       DOMElement *elem = document->getDocumentElement();
@@ -41,153 +40,102 @@ Manager::Manager()
                  config.intParams.GetCount(),
                  config.boolParams.GetCount(),
                  config.strParams.GetCount());
-    } else {
+    } else
+    {
       throw ConfigException("Parse result is null");
     }
 
   } catch (ParseException &e) {
-    throw ConfigException(e.what());
+    throw ConfigException("%s",e.what());
   }
+
 }
-
-/**
- * Create our parser, then attach an error handler to the parser.
- * The parser will call back to methods of the ErrorHandler if it
- * discovers errors during the course of parsing the XML document.
- *
- * @return created parser
- *//*
-DOMParser * Manager::createParser() {
-  //logger.debug("Entering createParser()");
-  DOMParser *parser = new DOMParser;
-  parser->setValidationScheme(DOMParser::Val_Always);
-  parser->setDoNamespaces(false);
-  parser->setDoSchema(false);
-  parser->setValidationSchemaFullChecking(false);
-  //logger.debug("  Creating ErrorReporter");
-  DOMErrorLogger *errReporter = new DOMErrorLogger();
-  parser->setErrorHandler(errReporter);
-  parser->setCreateEntityReferenceNodes(false);
-  parser->setToCreateXMLDeclTypeNode(false);
-  parser->setEntityResolver(new DtdResolver());
-  //logger.debug("Leaving createParser()");
-
-  return parser;
-}
-*/
-
-/*!
- * Parse the XML file, catching any XML exceptions that might propogate
- * out of it.
- */
-/*
-DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
-  throw (ConfigException)
-{
-  try
-  {
-    parser->parse(filename);
-    int errorCount = parser->getErrorCount();
-    if (errorCount > 0) {
-      char exceptionMsg[1024];
-      snprintf(exceptionMsg, sizeof(exceptionMsg), "An %d errors occured during parsing \"%s\"", errorCount, filename);
-      throw ConfigException(exceptionMsg);
-    }
-  }
-  catch (const XMLException& e)
-  {
-    std::auto_ptr<char> message = XMLString::transcode(e.getMessage());
-    XMLExcepts::Codes code = e.getCode();
-    const char *srcFile = e.getSrcFile();
-    unsigned int line = e.getSrcLine();
-    char exceptionMsg[1024];
-    snprintf(exceptionMsg, sizeof(exceptionMsg), "An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message.get());
-    throw ConfigException(exceptionMsg);
-  }
-  catch (const DOM_DOMException& e)
-  {
-    char msg[1024];
-    snprintf(msg, sizeof(msg), "A DOM error occured during parsing\"%s\". DOMException code: %i", filename, e.code);
-    throw ConfigException(msg);
-  }
-  catch (...)
-  {
-    char msg[1024];
-    snprintf(msg, sizeof(msg), "An error occured during parsing \"%s\"", filename);
-    throw ConfigException(msg);
-  }
-
-  return parser->getDocument();
-}
-
-
-std::ostream & operator << (std::ostream & out, const XMLCh * const string)
-{
-  std::auto_ptr<char> p(XMLString::transcode(string));
-  out << p.get();
-  return out;
-}
-*/
-/**
- * ���������� ������������ �������.
- */
 
 
 void Manager::save()
 {
-    config.saveToFile( config_filename.get() );
-    /*
-  FileStreamBuf buf;
-  buf.Open(config_filename.get());
-  std::ofstream out;
-  ((std::basic_ios<char>&)out).rdbuf(&buf);
-  writeHeader(out);
-  config.save(out);
-  writeFooter(out);
-  buf.sync();
-     */
+  config.saveToFile( config_filename.c_str() );
 }
 
-/*
-void Manager::writeHeader(std::ostream &out)
-{
-  out << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << std::endl;
-  out << "<!DOCTYPE config SYSTEM \"configuration.dtd\">" << std::endl;
-  out << "<config>" << std::endl;
-}
 
-void Manager::writeFooter(std::ostream &out)
-{
-  out << "</config>" << std::endl;
-}
- */
 
 void Manager::findConfigFile()
 {
-  if (config_filename.get() == 0)
-    return;
-
-  struct stat s;
-  std::auto_ptr<char> tmp_name(new char[strlen(config_filename.get())+10]);
-
-  strcpy(tmp_name.get(), config_filename.get());
-  if (stat(tmp_name.get(), &s) == 0)
-    return;
-
-  strcpy(tmp_name.get(), "conf/");
-  strcat(tmp_name.get(), config_filename.get());
-  if (stat(tmp_name.get(), &s) == 0)
+  if (config_filename.empty())
   {
-    config_filename = tmp_name;
     return;
   }
+  config_filename=smsc::util::findConfigFile(config_filename.c_str());
+}
 
-  strcpy(tmp_name.get(), "../conf/");
-  strcat(tmp_name.get(), config_filename.get());
-  if (stat(tmp_name.get(), &s) == 0)
+void Manager::reinit()
+{
+  std::auto_ptr<Manager> oldMng(manager);
+  manager.reset(new Manager(oldMng->config_filename.c_str()));
+  manager->watchers.swap(oldMng->watchers);
+  ParamsVector pv;
+  for(WatchersVector::iterator it=manager->watchers.begin(),end=manager->watchers.end();it!=end;++it)
   {
-    config_filename = tmp_name;
-    return;
+    pv.clear();
+    ConfigParamWatchType cpwt=(*it)->getWatchedParams(pv);
+    bool needNotify=false;
+    for(ParamsVector::iterator pit=pv.begin(),pend=pv.end();pit!=pend;++pit)
+    {
+      try{
+        switch(pit->first)
+        {
+          case cvtInt:
+          {
+            if(oldMng->config.getInt(pit->second.c_str())!=manager->config.getInt(pit->second.c_str()))
+            {
+              if(cpwt==cpwtIndividual)
+              {
+                (*it)->paramChanged(pit->first,pit->second);
+              }else
+              {
+                needNotify=true;
+                break;
+              }
+            }
+          }break;
+          case cvtString:
+          {
+            if(strcmp(oldMng->config.getString(pit->second.c_str()),manager->config.getString(pit->second.c_str()))!=0)
+            {
+              if(cpwt==cpwtIndividual)
+              {
+                (*it)->paramChanged(pit->first,pit->second);
+              }else
+              {
+                needNotify=true;
+                break;
+              }
+            }
+          }break;
+          case cvtBool:
+          {
+            if(oldMng->config.getInt(pit->second.c_str())!=manager->config.getInt(pit->second.c_str()))
+            {
+              if(cpwt==cpwtIndividual)
+              {
+                (*it)->paramChanged(pit->first,pit->second);
+              }else
+              {
+                needNotify=true;
+                break;
+              }
+            }
+          }break;
+        }
+      }catch(...)
+      {
+        __warning2__("watch parameter '%s' not found",pit->second.c_str());
+      }
+    }
+    if(needNotify)
+    {
+      (*it)->paramsChanged();
+    }
   }
 }
 

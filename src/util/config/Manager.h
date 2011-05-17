@@ -5,63 +5,59 @@
 #ident "$Id$"
 #endif
 
-#include <iostream>
-
 #include <xercesc/dom/DOM.hpp>
 
 #include "core/buffers/Hash.hpp"
-#include "util/cstrings.h"
 #include "util/config/ConfigException.h"
 #include "util/config/Config.h"
+#include "core/synchronization/Mutex.hpp"
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace smsc   {
 namespace util   {
 namespace config {
 
-XERCES_CPP_NAMESPACE_USE
-using smsc::core::buffers::Hash;
-using smsc::util::cStringCopy;
+enum ConfigValueType{
+  cvtInt,
+  cvtString,
+  cvtBool
+};
 
-/**
-* Класс, отвечающий за чтение и запись конфигурации системы.
-* Чтение производится в конструкторе, запись - методом save()
-*
-* @author igork
-* @see Db
-* @see Map
-* @see Log
-* @see save()
-*/
+enum ConfigParamWatchType{
+  cpwtIndividual,
+  cpwtAll
+};
+
+typedef std::vector<std::pair<ConfigValueType,std::string> > ParamsVector;
+
+class IConfigChangeNotifier{
+public:
+  virtual ConfigParamWatchType getWatchedParams(ParamsVector& argParams)=0;
+  virtual void paramsChanged()=0;
+  virtual void paramChanged(ConfigValueType cvt,const std::string& paramName)=0;
+};
+
 class Manager
 {
 public:
-  static void init(const char * const configurationFileName)
-    throw (ConfigException)
+  static void init(const char * configurationFileName)
   {
     if (manager.get() != 0)
+    {
       throw ConfigException("Configuration manager already initialized");
-    config_filename.reset(cStringCopy(configurationFileName));
-    manager.reset(new Manager());
+    }
+    manager.reset(new Manager(configurationFileName));
   }
 
   static void deinit()
   {
     manager.reset();
-    config_filename.reset();
   }
 
-  static void reinit()
-    throw (ConfigException)
-  {
-    std::auto_ptr<char> filename;
-    filename = config_filename;
-    deinit();
-    init(filename.get());
-  }
+  static void reinit();
 
-  /**
-  * Возвращает проинициализированный Manager
-  */
   static Manager & getInstance()
   {
     return *manager;
@@ -72,15 +68,6 @@ public:
     return config;
   }
 
-  /**
-  *
-  * @param paramName имя параметра
-  * @return значение параметра типа int
-  * @exception HashInvalidKeyException
-  *                   if parameter not found
-  * @see getString()
-  * @see getBool()
-  */
   int32_t getInt(const char * const paramName)
     throw (ConfigException)
   {
@@ -89,22 +76,10 @@ public:
     }
     catch (HashInvalidKeyException &e)
     {
-      std::string s("Int key \"");
-      s += paramName;
-      s += "\" not found";
-      throw ConfigException(s.c_str());
+      throw ConfigException("Int key '%s' not found",paramName);
     }
   }
 
-  /**
-  *
-  * @param paramName имя параметра
-  * @return значение параметра типа String
-  * @exception HashInvalidKeyException
-  *                   if parameter not found
-  * @see getInt()
-  * @see getBool()
-  */
   char * getString(const char * const paramName)
     throw (ConfigException)
   {
@@ -113,22 +88,10 @@ public:
     }
     catch (HashInvalidKeyException &e)
     {
-      std::string s("String key \"");
-      s += paramName;
-      s += "\" not found";
-      throw ConfigException(s.c_str());
+      throw ConfigException("String key '%s' not found",paramName);
     }
   }
 
-  /**
-  *
-  * @param paramName имя параметра
-  * @return значение параметра типа Bool
-  * @exception HashInvalidKeyException
-  *                   if parameter not found
-  * @see getInt()
-  * @see getString()
-  */
   bool getBool(const char * const paramName) const
     throw (ConfigException)
   {
@@ -137,10 +100,7 @@ public:
     }
     catch (HashInvalidKeyException &e)
     {
-      std::string s("Bool key \"");
-      s += paramName;
-      s += "\" not found";
-      throw ConfigException(s.c_str());
+      throw ConfigException("Bool key '%s' not found",paramName);
     }
   }
 
@@ -159,9 +119,6 @@ public:
     config.setBool(paramName, value);
   }
 
-  /**
-  * Запись конфигурации
-  */
   void save();
 
   void removeSection(const char * const sectionName)
@@ -172,7 +129,7 @@ public:
   //checks does the section with given absolute name exist having parameters defined
   bool    findSection(const char * const sectionName)
   {
-      return config.findSection(sectionName);
+    return config.findSection(sectionName);
   }
   CStrSet *getRootSectionNames(void)
   {
@@ -200,24 +157,22 @@ public:
     return config.getChildStrParamNames(sectionName);
   }
 
+  void registerConfigChangeWatcher(IConfigChangeNotifier* ccn)
+  {
+    watchers.push_back(ccn);
+  }
+
 protected:
   void findConfigFile();
-  /**
-  * Читает конфигурацию.
-  *
-  * @param config_filename
-  *               Имя файла, в котором хранится конфигурация.
-  */
-  Manager() throw(ConfigException);
+  Manager(const char* ) throw(ConfigException);
+  void readConfig();
   static std::auto_ptr<Manager> manager;
   Config config;
+  std::string config_filename;
+  static smsc::core::synchronization::Mutex reinitMutex;
 
-private:
-  static std::auto_ptr<char> config_filename;
-  // void writeHeader(std::ostream &out);
-  // void writeFooter(std::ostream &out);
-
-  DOMDocument * parse(const char * const filename) throw (ConfigException);
+  typedef std::vector<IConfigChangeNotifier*> WatchersVector;
+  WatchersVector watchers;
 };
 
 }
