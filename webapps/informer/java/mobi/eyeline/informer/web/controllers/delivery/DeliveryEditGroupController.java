@@ -65,10 +65,10 @@ public class DeliveryEditGroupController extends DeliveryController{
   private Address sourceAddress;
   private boolean editSourceAddress;
 
-
+  private boolean editMessageTimeToLive;
+  private Time messageTimeToLive;
 
   private boolean editArchiveTime;
-
   private String archiveTime;
 
 
@@ -171,6 +171,8 @@ public class DeliveryEditGroupController extends DeliveryController{
               d.setArchiveTime(null);
             }
           }
+          if (editMessageTimeToLive)
+            d.setMessageTimeToLive(messageTimeToLive);
           config.modifyDelivery(user.getLogin(), user.getPassword(), d);
         }
       }
@@ -435,6 +437,22 @@ public class DeliveryEditGroupController extends DeliveryController{
 
   public void setEditUseDataSm(boolean editUseDataSm) {
     this.editUseDataSm = editUseDataSm;
+  }
+
+  public boolean isEditMessageTimeToLive() {
+    return editMessageTimeToLive;
+  }
+
+  public void setEditMessageTimeToLive(boolean editMessageTimeToLive) {
+    this.editMessageTimeToLive = editMessageTimeToLive;
+  }
+
+  public Time getMessageTimeToLive() {
+    return messageTimeToLive;
+  }
+
+  public void setMessageTimeToLive(Time messageTimeToLive) {
+    this.messageTimeToLive = messageTimeToLive;
   }
 
   public List<String> getIds() {

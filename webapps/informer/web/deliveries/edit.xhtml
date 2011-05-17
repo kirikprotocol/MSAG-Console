@@ -79,7 +79,7 @@
         </tr:panelGroupLayout>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
-        <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}" converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}"/>
+        <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}" converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" disabled="#{not createDelivery.activePage.userInAdminRole}"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
         <tr:outputText value="#{deliveryEdit.delivery.startDate}">
@@ -120,8 +120,11 @@
             <h:inputText value="#{deliveryEdit.delivery.retryPolicy}" id="retryPolicy1"/>
           </h:panelGroup>
 
+        <h:outputText rendered="#{deliveryEdit.userInAdminRole}"  id="messageTimeToLiveLabel" style="white-space:nowrap;" value="#{deliveryBundle.messageTimeToLive}"/>
+        <eye:inputTime rendered="#{deliveryEdit.userInAdminRole}" id="messageTimeToLive" value="#{deliveryEdit.delivery.messageTimeToLive}" />
+
         <h:outputText rendered="#{deliveryEdit.userInAdminRole}"  id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-        <eye:inputTime rendered="#{deliveryEdit.userInAdminRole}" id="vPeriod" value="#{deliveryEdit.validityPeriod}" />
+        <eye:inputTime rendered="#{deliveryEdit.userInAdminRole}" id="vPeriod" value="#{deliveryEdit.delivery.validityPeriod}" />
 
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
@@ -288,7 +291,10 @@
           var e = document.getElementById('retryOnFail');
           if(e != null) {
             var d = e.options[2].selected ? '' : 'none';
+            var d1 = (e.options[0].selected) ? 'none' : '';
             document.getElementById('retryPolicy1').style.display=d;
+            document.getElementById("messageTimeToLiveLabel").style.display=d1;
+            document.getElementById("messageTimeToLive").style.display=d1;
           }
         }
 

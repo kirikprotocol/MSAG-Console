@@ -32,9 +32,9 @@
 
     <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
-      <h:selectBooleanCheckbox id="editSourceAddr" value="#{deliveryGroupEdit.editSourceAddress}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
-      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}"
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editSourceAddr" value="#{deliveryGroupEdit.editSourceAddress}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
+      <h:inputText rendered="#{deliveryGroupEdit.userInAdminRole}" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}"
                    id="sourceAddr" value="#{deliveryGroupEdit.sourceAddress}" size="15" converter="addressConverter"/>
 
       <h:selectBooleanCheckbox id="editDeliveryDays" value="#{deliveryGroupEdit.editActiveWeekDays}" onchange="
@@ -89,6 +89,14 @@
         <h:outputText value=" "/>
         <h:inputText id="retryPolicy" value="#{deliveryGroupEdit.retryPolicy}" />
       </h:panelGroup>
+
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editMessageTimeToLive" value="#{deliveryGroupEdit.editMessageTimeToLive}"
+                               onchange="
+                                   document.getElementById('messageTimeToLive.hours').disabled=!this.checked;
+                                   document.getElementById('messageTimeToLive.minutes').disabled=!this.checked;
+                                   "/>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" id="messageTimeToLiveLabel" style="white-space:nowrap;" value="#{deliveryBundle.messageTimeToLive}"/>
+      <eye:inputTime rendered="#{deliveryGroupEdit.userInAdminRole}" id="messageTimeToLive" value="#{deliveryGroupEdit.messageTimeToLive}"/>
 
       <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editValidHours" value="#{deliveryGroupEdit.editValidityPeriod}"
                                onchange="
@@ -242,13 +250,12 @@
         e.disabled=!document.getElementById('editValidHours').checked;
         document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
       }
-      e = document.getElementById('transactionMode');
+      e = document.getElementById('messageTimeToLive.hours');
       if(e != null) {
-        var d = e.checked ? 'none' : '';
-        document.getElementById('editValidHours').style.display=d;
-        document.getElementById('validHoursLabel').style.display=d;
-        document.getElementById('validityPeriod').style.display=d;
+        e.disabled=!document.getElementById('editMessageTimeToLive').checked;
+        document.getElementById('messageTimeToLive.minutes').disabled=!document.getElementById('editMessageTimeToLive').checked;
       }
+      e = document.getElementById('transactionMode');
       var dt = document.getElementById('deliveryType');
       var disp = dt.options[0].selected ? '' : 'none';
       displaySmsSettings(disp);

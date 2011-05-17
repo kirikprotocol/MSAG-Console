@@ -20,10 +20,10 @@
     <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width, columnTopLeftAlign">
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.name}"/>
-      <tr:inputText value="#{createDelivery.activePage.delivery.name}" simple="true"/>
+      <tr:inputText value="#{createDelivery.activePage.delivery.name}" simple="true" />
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.sourceAddress}"/>
-      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}" converter="addressConverter" value="#{createDelivery.activePage.delivery.sourceAddress}"/>
+      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}" converter="addressConverter" value="#{createDelivery.activePage.delivery.sourceAddress}" disabled="#{not createDelivery.activePage.userInAdminRole}"/>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.startDate}"/>
       <eye:inputDate value="#{createDelivery.activePage.delivery.startDate}" type="both"/>
@@ -62,8 +62,12 @@
         <h:inputText value="#{createDelivery.activePage.delivery.retryPolicy}" id="retryPolicy1"/>
       </h:panelGroup>
 
+      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" id="messageTimeToLiveLabel" style="white-space: nowrap;" value="#{deliveryBundle.messageTimeToLive}"/>
+      <eye:inputTime rendered="#{createDelivery.activePage.userInAdminRole}" id="messageTimeToLive" value="#{createDelivery.activePage.delivery.messageTimeToLive}"/>
+
+
       <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <eye:inputTime rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriod" value="#{createDelivery.activePage.validityPeriod}"/>
+      <eye:inputTime rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}"/>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
       <h:panelGroup>
@@ -136,10 +140,13 @@
       function retryOnFailChanged() {
         var e = document.getElementById('retryOnFail');
         var d = (e != null &amp;&amp; e.options[2].selected) ? '' : 'none';
+        var d1 = (e != null &amp;&amp; e.options[0].selected) ? 'none' : '';
         e =  document.getElementById('retryPolicy1');
         if(e != null) {
           e.style.display=d;
         }
+        document.getElementById("messageTimeToLiveLabel").style.display=d1;
+        document.getElementById("messageTimeToLive").style.display=d1;
       }
 
       function archivateChanged() {
