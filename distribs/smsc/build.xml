@@ -88,6 +88,9 @@ Targets:
       <fileset dir="${TEMPL_DIR}/smsc" includes="web.xml localization.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy todir="${DISTR_DIR}/webapps/smsc/doc">
+       <fileset dir="${SMSC_DIR}/docs" includes="SMSC_Administration_Guide.pdf"/>
+    </copy>
   </target>
 
   <target name="updateweb">
