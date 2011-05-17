@@ -398,13 +398,15 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
     StoreList::iterator ptr;
     smsc_log_debug(log_,"D=%u postInitOperative",getDlvId());
     for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
-        if ( (*ptr)->postInit() ) {
+        const bool res = (*ptr)->postInit();
+        if (res) {
             filledRegs.push_back(regionid_type(regId));
         } else {
             emptyRegs.push_back(regionid_type(regId));
             storeList_.erase(ptr);
             storeHash_.Delete(regId);
         }
+        smsc_log_debug(log_,"R=%u/D=%u postInit res=%d",regId,getDlvId(),res);
     }
     DeliveryStats ds;
     dlvInfo_->getMsgStats(ds);
