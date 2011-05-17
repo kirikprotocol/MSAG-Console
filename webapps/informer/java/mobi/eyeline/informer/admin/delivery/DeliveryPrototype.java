@@ -15,8 +15,6 @@ import java.util.Properties;
  */
 public class DeliveryPrototype {
 
-  private static final ValidationHelper vh = new ValidationHelper(Delivery.class);
-
   protected String name;
   protected int priority;
   protected boolean transactionMode;
@@ -50,6 +48,7 @@ public class DeliveryPrototype {
   protected boolean enableStateChangeLogging;
 
   protected Integer archiveTime;
+  protected Time messageTimeToLive;
 
   public void setProperty(String name, String value) {
     properties.setProperty(name, value);
@@ -251,5 +250,13 @@ public class DeliveryPrototype {
 
   public void setEnableStateChangeLogging(boolean enableStateChangeLogging) {
     this.enableStateChangeLogging = enableStateChangeLogging;
+  }
+
+  public Time getMessageTimeToLive() {
+    return messageTimeToLive;
+  }
+
+  public void setMessageTimeToLive(Time messageTimeToLive) {
+    this.messageTimeToLive = messageTimeToLive;
   }
 }

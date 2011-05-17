@@ -91,6 +91,7 @@ public class Delivery implements Serializable {
   private String password;
   
   private Integer archiveTime;
+  private Time messageTimeToLive;
 
   Delivery() {
   }
@@ -185,6 +186,9 @@ public class Delivery implements Serializable {
     }
     if(validityPeriod != null) {
       vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
+    }
+    if(messageTimeToLive != null) {
+      vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,59));
     }
   }
 
@@ -409,6 +413,15 @@ public class Delivery implements Serializable {
     this.status = status;
   }
 
+  public Time getMessageTimeToLive() {
+    loadDelivery();
+    return messageTimeToLive;
+  }
+
+  public void setMessageTimeToLive(Time messageTimeToLive) {
+    this.messageTimeToLive = messageTimeToLive;
+  }
+
   @SuppressWarnings({"RedundantIfStatement"})
   @Override
   public boolean equals(Object o) {
@@ -441,6 +454,8 @@ public class Delivery implements Serializable {
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
     if (archiveTime != null ? !archiveTime.equals(delivery.archiveTime) : delivery.archiveTime != null) return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
+      return false;
+    if (messageTimeToLive != null ? !messageTimeToLive.equals(delivery.messageTimeToLive) : delivery.messageTimeToLive != null)
       return false;
     if (singleText != null ? !singleText.equals(delivery.singleText) : delivery.singleText != null)
       return false;
@@ -491,6 +506,7 @@ public class Delivery implements Serializable {
     d.activeWeekDays = new Day[activeWeekDays.length];
     System.arraycopy(activeWeekDays, 0, d.activeWeekDays, 0, activeWeekDays.length);
     d.validityPeriod = validityPeriod;
+    d.messageTimeToLive = messageTimeToLive;
 
     d.flash = flash;
     d.useDataSm = useDataSm;
@@ -529,6 +545,7 @@ public class Delivery implements Serializable {
     activeWeekDays = new Day[d.activeWeekDays.length];
     System.arraycopy(d.activeWeekDays, 0, activeWeekDays, 0, d.activeWeekDays.length);
     validityPeriod = d.validityPeriod;
+    messageTimeToLive = d.messageTimeToLive;
 
     flash = d.flash;
     useDataSm = d.useDataSm;
@@ -563,6 +580,7 @@ public class Delivery implements Serializable {
     activeWeekDays = new Day[d.activeWeekDays.length];
     System.arraycopy(d.activeWeekDays, 0, activeWeekDays, 0, d.activeWeekDays.length);
     validityPeriod = d.validityPeriod;
+    messageTimeToLive = d.messageTimeToLive;
 
     flash = d.flash;
     useDataSm = d.useDataSm;

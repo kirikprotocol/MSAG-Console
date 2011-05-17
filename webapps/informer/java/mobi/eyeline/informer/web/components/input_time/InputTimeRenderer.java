@@ -52,7 +52,7 @@ public class InputTimeRenderer extends Renderer {
     if (minVal.length() == 1)
       minVal = '0' + minVal;
 
-    w.append("<div>");
+    w.append("<div ").append(" id=\"").append(t.getId()).append("\">");
     w.append("<input type=\"text\" id=").append(hoursId).append("\" name=").append(hoursId).append(" value=\"").append(hoursVal).append("\" maxlength=\"3\" size=\"2\">");
     w.append(":");
     w.append("<input type=\"text\" id=").append(minId).append("\" name=").append(minId).append(" value=\"").append(minVal).append("\" maxlength=\"2\" size=\"2\">");

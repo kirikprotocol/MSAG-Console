@@ -38,6 +38,7 @@ public class User implements Serializable {
   private Time deliveryEndTime;
   private List<Integer> deliveryDays = new ArrayList<Integer>();
   private Time validityPeriod;
+  private Time messageTimeToLive;
   private DeliveryType deliveryType;
   private boolean transactionMode;
   private boolean allRegionsAllowed;
@@ -84,6 +85,7 @@ public class User implements Serializable {
     this.deliveryEndTime = user.deliveryEndTime == null ? null : new Time(user.getDeliveryEndTime());
     this.deliveryDays = new ArrayList<Integer>(user.getDeliveryDays());
     this.validityPeriod = user.validityPeriod;
+    this.messageTimeToLive = user.messageTimeToLive;
     this.deliveryType = user.deliveryType;
     this.transactionMode = user.transactionMode;
     this.policyId = user.policyId;
@@ -348,6 +350,14 @@ public class User implements Serializable {
     this.deliveryLifetime = deliveryLifetime;
   }
 
+  public Time getMessageTimeToLive() {
+    return messageTimeToLive;
+  }
+
+  public void setMessageTimeToLive(Time messageTimeToLive) {
+    this.messageTimeToLive = messageTimeToLive;
+  }
+
   public boolean isUseDataSm() {
     return useDataSm;
   }
@@ -415,6 +425,8 @@ public class User implements Serializable {
     vh.checkLessThan("deliveryEndTime", deliveryEndTime, new Time(24,0,0));
     if (validityPeriod != null)
       vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
+    if (messageTimeToLive != null)
+      vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,59));
 
     if (deliveryDays != null) {
       for (Integer day1 : deliveryDays) {

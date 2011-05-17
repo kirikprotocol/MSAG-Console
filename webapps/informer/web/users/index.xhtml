@@ -50,11 +50,10 @@
           <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT" shortDesc="#{msg['user.details.add']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}"  shortDesc="#{msg['user.details.delete.selected']}"
-                          action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['edit.selected.button']}"  shortDesc="#{msg['user.details.edit.selected']}" action="#{usersList.editSelected}"/>
+          <eye:menubar label="#{msg['user.selected']}...">
+            <eye:menubaritem><tr:commandLink text="#{msg['edit.button']}"  shortDesc="#{msg['user.details.edit.selected']}" action="#{usersList.editSelected}"/></eye:menubaritem>
+            <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}"  shortDesc="#{msg['user.details.delete.selected']}" action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" /></eye:menubaritem>
+          </eye:menubar>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -92,11 +91,10 @@
           <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT" shortDesc="#{msg['user.details.add']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}"  shortDesc="#{msg['user.details.delete.selected']}"
-                          action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['edit.selected.button']}"  shortDesc="#{msg['user.details.edit.selected']}" action="#{usersList.editSelected}"/>
+          <eye:menubar label="#{msg['user.selected']}...">
+            <eye:menubaritem><tr:commandLink text="#{msg['edit.button']}"  shortDesc="#{msg['user.details.edit.selected']}" action="#{usersList.editSelected}"/></eye:menubaritem>
+            <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}"  shortDesc="#{msg['user.details.delete.selected']}" action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" /></eye:menubaritem>
+          </eye:menubar>
         </eye:button>
         <eye:space/>
       </eye:buttons>

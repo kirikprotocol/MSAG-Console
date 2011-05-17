@@ -271,6 +271,19 @@ public class UserEditController extends UserController {
     return userToEdit.getValidityPeriod();
   }
 
+  public void setMessageTimeToLive(Time period) throws AdminException {
+    if (period == null)
+      userToEdit.setMessageTimeToLive(null);
+    else
+      userToEdit.setMessageTimeToLive(period);
+  }
+
+  public Time getMessageTimeToLive() {
+    if (userToEdit.getMessageTimeToLive() == null)
+      return null;
+    return userToEdit.getMessageTimeToLive();
+  }
+
   public boolean isBlocked() {
     return userToEdit.getStatus() == User.Status.DISABLED;
   }

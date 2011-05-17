@@ -110,9 +110,11 @@
     </h:panelGroup>
 
 
+    <h:outputText id="messageTimeToLiveLabel" style="white-space:nowrap;" value="#{userBundle.messageTimeToLive}"/>
+    <eye:inputTime id="messageTimeToLive"  value="#{userEdit.userToEdit.messageTimeToLive}"/>
 
     <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
-    <eye:inputTime id="validityPeriod" value="#{userEdit.validityPeriod}"/>
+    <eye:inputTime id="validityPeriod" value="#{userEdit.userToEdit.validityPeriod}"/>
 
     <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
     <h:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" style="position: relative;  left: -3px;"/>
@@ -213,7 +215,10 @@
 <script type="text/javascript" language="javascript">
   function retryOnFailChanged() {
     var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
+    var d1 = document.getElementById('retryOnFail').options[0].selected ? 'none' : '';
     document.getElementById('retryPolicy').style.display=d;
+    document.getElementById('messageTimeToLiveLabel').style.display=d1;
+    document.getElementById('messageTimeToLive').style.display=d1;
   }
 
   function deliveryTypeChanged() {

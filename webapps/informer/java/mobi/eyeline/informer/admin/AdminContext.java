@@ -759,6 +759,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       }
       delivery.setActiveWeekDays(days.toArray(new Day[days.size()]));
     }
+
+    delivery.setMessageTimeToLive(u.getMessageTimeToLive());
   }
 
   public void copyUserSettingsToDeliveryPrototype(String user, DeliveryPrototype delivery) throws AdminException {

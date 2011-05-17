@@ -52,6 +52,9 @@ public class UserGroupEditController extends UserController {
   private String retryOnFail = "off";
   private String policyId;
 
+  private boolean editMessageTimeToLive;
+  private Time messageTimeToLive;
+
   private boolean editUseDataSm;
   private boolean useDataSm;
 
@@ -101,6 +104,7 @@ public class UserGroupEditController extends UserController {
     deliveryEndTime = new Time(22,0,0).getTimeDate();
     deliveryType=User.DeliveryType.SMS;
     validityPeriod=new Time(1,0,0);
+    messageTimeToLive=new Time(2,0,0);
     smsPerSec=10;
     priority=1;
     deliveryLifetime=72;
@@ -212,6 +216,10 @@ public class UserGroupEditController extends UserController {
           u.setCreateCDR(createCdr);
           u.setCdrDestination(cdrDestination);
           u.setCdrOriginator(cdrOriginator);
+        }
+
+        if (editMessageTimeToLive) {
+          u.setMessageTimeToLive(messageTimeToLive);
         }
 
         users.add(u);
@@ -575,5 +583,21 @@ public class UserGroupEditController extends UserController {
 
   public void setUseDataSm(boolean useDataSm) {
     this.useDataSm = useDataSm;
+  }
+
+  public boolean isEditMessageTimeToLive() {
+    return editMessageTimeToLive;
+  }
+
+  public void setEditMessageTimeToLive(boolean editMessageTimeToLive) {
+    this.editMessageTimeToLive = editMessageTimeToLive;
+  }
+
+  public Time getMessageTimeToLive() {
+    return messageTimeToLive;
+  }
+
+  public void setMessageTimeToLive(Time messageTimeToLive) {
+    this.messageTimeToLive = messageTimeToLive;
   }
 }

@@ -42,7 +42,7 @@ class DcpConverter {
 //    return format.format(time);
 //  }
 
-  public static String convertTimeToDcpFormat(Time time) { //todo
+  public static String convertTimeToDcpFormat(Time time) {
     String hoursStr = String.valueOf(time.getHour());
     if (hoursStr.length() == 1)
       hoursStr = '0' + hoursStr;
@@ -157,6 +157,9 @@ class DcpConverter {
 
     if (di.hasValidityPeriod()) {
       delivery.setValidityPeriod(new Time(convertTimeFromDcpFormat(di.getValidityPeriod())));
+    }
+    if (di.hasMessageTimeToLive()) {
+      delivery.setMessageTimeToLive(new Time(convertTimeFromDcpFormat(di.getMessageTimeToLive())));
     }
 
     delivery.setEnableMsgFinalizationLogging(di.getFinalMsgRecords());
@@ -334,6 +337,8 @@ class DcpConverter {
 
     if (di.getValidityPeriod() != null)
       delivery.setValidityPeriod(convertTimeToDcpFormat(di.getValidityPeriod()));
+    if (di.getMessageTimeToLive() != null)
+      delivery.setMessageTimeToLive(convertTimeToDcpFormat(di.getMessageTimeToLive()));
 
     delivery.setFinalDlvRecords(di.isEnableStateChangeLogging());
     delivery.setFinalMsgRecords(di.isEnableMsgFinalizationLogging());

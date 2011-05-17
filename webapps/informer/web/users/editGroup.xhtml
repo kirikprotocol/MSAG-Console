@@ -92,6 +92,13 @@
             <h:inputText id="retryPolicy" value="#{userGroupEdit.policyId}" />
           </h:panelGroup>
 
+          <h:selectBooleanCheckbox id="editMessageTimeToLive" value="#{userGroupEdit.editMessageTimeToLive}" onchange="
+          document.getElementById('messageTimeToLive.hours').disabled=!this.checked;
+          document.getElementById('messageTimeToLive.minutes').disabled=!this.checked;
+          "/>
+          <h:outputText id="messageTimeToLiveLabel" style="white-space:nowrap;" value="#{userBundle.messageTimeToLive}"/>
+          <eye:inputTime id="messageTimeToLive" value="#{userGroupEdit.messageTimeToLive}"/>
+
           <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="
           document.getElementById('validityPeriod.hours').disabled=!this.checked;
           document.getElementById('validityPeriod.minutes').disabled=!this.checked;
@@ -266,6 +273,8 @@
         document.getElementById('useDataSm').disabled=!document.getElementById('editUseDataSm').checked;
         document.getElementById('deliveryType').disabled=!document.getElementById('editDeliveryType').checked;
         document.getElementById('transactionMode').disabled=!document.getElementById('editTransactionMode').checked;
+        document.getElementById('messageTimeToLive.hours').disabled=!document.getElementById('editMessageTimeToLive').checked;
+        document.getElementById('messageTimeToLive.minutes').disabled=!document.getElementById('editMessageTimeToLive').checked;
         document.getElementById('validityPeriod.hours').disabled=!document.getElementById('editValidHours').checked;
         document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
         document.getElementById('smsPerSec').disabled=!document.getElementById('editSmsPerSec').checked;

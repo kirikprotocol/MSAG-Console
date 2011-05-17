@@ -64,6 +64,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setSmsPerSec(section.getInt("smsPerSec", u.getSmsPerSec()));
     u.setSourceAddr(new Address(section.getString("sourceAddr")));
     u.setValidityPeriod(new Time(section.getString("validityPeriod", "01:00:00")));
+    u.setMessageTimeToLive(new Time(section.getString("messageTimeToLive", "02:00:00")));
     u.setRoles(loadUserRoles(section));
     if (u.getRoles().isEmpty())
       u.getRoles().add(User.INFORMER_USER_ROLE);
@@ -218,6 +219,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     userSection.setString("sourceAddr",user.getSourceAddr().getSimpleAddress());
     if(user.getValidityPeriod() != null) {
       userSection.setString("validityPeriod",user.getValidityPeriod().getTimeString());
+    }
+    if(user.getMessageTimeToLive() != null) {
+      userSection.setString("messageTimeToLive",user.getMessageTimeToLive().getTimeString());
     }
     userSection.setString("deliveryType",user.getDeliveryType().toString());
     if(user.isTransactionMode())  {
