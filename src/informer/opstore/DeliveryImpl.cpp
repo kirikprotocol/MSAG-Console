@@ -659,6 +659,7 @@ msgtime_type DeliveryImpl::findNextResendFile( regionid_type regionId ) const
     makeResendFilePath(buf,regionId,0);
     try {
         std::vector< std::string > list;
+        smsc_log_debug(log_,"scanning '%s' for next resend",buf);
         makeDirListing( NoDotsNameFilter(),S_IFREG)
             .list( (getCS()->getStorePath() + buf).c_str(), list );
         std::sort(list.begin(), list.end());
