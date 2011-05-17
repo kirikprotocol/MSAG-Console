@@ -733,7 +733,8 @@ void SmscComponent::applySmscConfig()
 throw (AdminException)
 {
   smsc_log_info(logger, "applying new configs...");
-  reloadConfigsAndRestart();
+  //reloadConfigsAndRestart();
+  Manager::getInstance().reinit();
   smsc_log_info(logger, "new config applied.");
 }
 
