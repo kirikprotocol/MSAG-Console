@@ -160,6 +160,8 @@ class DcpConverter {
     }
     if (di.hasMessageTimeToLive()) {
       delivery.setMessageTimeToLive(new Time(convertTimeFromDcpFormat(di.getMessageTimeToLive())));
+    } else if (di.getRetryOnFail() && di.hasValidityPeriod()) { // convert old deliveries without messageTimeToLive
+      delivery.setMessageTimeToLive(new Time(convertTimeFromDcpFormat(di.getValidityPeriod())));
     }
 
     delivery.setEnableMsgFinalizationLogging(di.getFinalMsgRecords());

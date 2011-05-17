@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
+import org.omg.CORBA.*;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -16,6 +17,10 @@ import java.util.regex.Pattern;
  * @author Aleksandr Khalitov
  */
 public class User implements Serializable {
+
+  private static final String LAST = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}|:\\*))";
+  private static final String MEDIUM = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}))";
+  public static final Pattern RETRY_POLICY_PATTERN = Pattern.compile("(" + LAST + "|" + MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
 
   private String login;
   private String password;
@@ -427,6 +432,14 @@ public class User implements Serializable {
       vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
     if (messageTimeToLive != null)
       vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,59));
+    if (retryOnFail) {
+      vh.checkNotNull("messageTimeToLive", messageTimeToLive);
+      if (validityPeriod != null && validityPeriod.compareTo(messageTimeToLive) > 0)
+        throw new UserException("validityPeriod_greater_than_messageTimeToLive");
+      if(policyId != null &&  policyId.length()>0) {
+        vh.checkMatches("retryPolicy", policyId, RETRY_POLICY_PATTERN);
+      }
+    }
 
     if (deliveryDays != null) {
       for (Integer day1 : deliveryDays) {

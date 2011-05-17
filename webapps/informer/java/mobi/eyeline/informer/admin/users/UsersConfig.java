@@ -64,7 +64,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setSmsPerSec(section.getInt("smsPerSec", u.getSmsPerSec()));
     u.setSourceAddr(new Address(section.getString("sourceAddr")));
     u.setValidityPeriod(new Time(section.getString("validityPeriod", "01:00:00")));
-    u.setMessageTimeToLive(new Time(section.getString("messageTimeToLive", "02:00:00")));
+    u.setMessageTimeToLive(new Time(section.getString("messageTimeToLive", u.getValidityPeriod().getTimeString())));
     u.setRoles(loadUserRoles(section));
     if (u.getRoles().isEmpty())
       u.getRoles().add(User.INFORMER_USER_ROLE);

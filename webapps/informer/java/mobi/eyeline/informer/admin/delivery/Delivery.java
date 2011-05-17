@@ -179,16 +179,19 @@ public class Delivery implements Serializable {
     if (isReplaceMessage() && (svcType == null || svcType.length() == 0)) {
       throw new DeliveryException("replace_illegal");
     }
-    if(retryOnFail) {
-      if(retryPolicy != null &&  retryPolicy.length()>0) {
-        vh.checkMatches("retryPolicy", retryPolicy, RETRY_POLICY_PATTERN);
-      }
-    }
     if(validityPeriod != null) {
       vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
     }
     if(messageTimeToLive != null) {
       vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,59));
+    }
+    if(retryOnFail) {
+      if(retryPolicy != null &&  retryPolicy.length()>0) {
+        vh.checkMatches("retryPolicy", retryPolicy, RETRY_POLICY_PATTERN);
+      }
+      vh.checkNotNull("messageTimeToLive", messageTimeToLive);
+      if (validityPeriod != null && validityPeriod.compareTo(messageTimeToLive) > 0)
+        throw new DeliveryException("validityPeriod_greater_than_messageTimeToLive");
     }
   }
 
