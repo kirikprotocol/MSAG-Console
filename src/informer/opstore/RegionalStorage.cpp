@@ -614,14 +614,19 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
             const msgtime_type queueStartTime = std::min(currentTime,resendQueue_.begin()->first);
             msgtime_type queueLastChunk = resendQueue_.rbegin()->first;
             queueLastChunk -= queueLastChunk % getCS()->getResendUploadPeriod();
-            if ( queueLastChunk > queueStartTime +
-                 getCS()->getResendMinTimeToUpload() + getCS()->getResendUploadPeriod() ) {
+            const msgtime_type limitTime = queueStartTime +
+                getCS()->getResendMinTimeToUpload() + 
+                getCS()->getResendUploadPeriod();
+            if ( queueLastChunk > limitTime ) {
                 try {
-                    smsc_log_debug(log_,"R=%u/D=%u wants resend-out as qSize=%u start=%+d last=+%d",
+                    smsc_log_debug(log_,"R=%u/D=%u wants resend-out as qSize/max=%u/%u start=%+d last/limit=+%d/%+d chunk=%u",
                                    getRegionId(), dlvId,
                                    unsigned(resendQueue_.size()),
+                                   unsigned(getCS()->getResendQueueMaxSize()),
                                    int(queueStartTime-currentTime),
-                                   int(queueLastChunk-queueStartTime));
+                                   int(queueLastChunk-queueStartTime),
+                                   int(limitTime-queueStartTime),
+                                   unsigned(getCS()->getResendUploadPeriod()));
                     ResendTransferTask* task = new ResendTransferTask(*this,false);
                     info.getUserInfo().getDA().startResendTransfer(task);
                     resendTransferTask_ = task;
@@ -1218,6 +1223,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             throw;
         }
 
+        fg.close(); // to fsync
         mg.Lock();
         if ( nextResendFile_ == 0 || nextResendFile_ > startTime ) {
             smsc_log_debug(log_,"R=%u/D=%u resend-out set nextResend=%u",
