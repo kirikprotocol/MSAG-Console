@@ -382,7 +382,13 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman)
           sched.storeMtx.Unlock();
         }
         try{
-          sched.AddScheduledSms(sd->id,sms,smeIndex);
+          if(sms.lastResult==0)
+          {
+            sched.AddScheduledSms(sd->id,sms,smeIndex);
+          }else
+          {
+            sched.RescheduleSms(sd->id,sms,smeIndex);
+          }
         }catch(std::exception& e)
         {
           smsc_log_error(log,"Exception in AddScheduledSms:'%s'",e.what());
