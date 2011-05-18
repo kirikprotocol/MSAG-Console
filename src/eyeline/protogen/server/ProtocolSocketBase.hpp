@@ -31,21 +31,22 @@ public:
     }
 
 
-    std::string getDump(int maxSize=512)
+    std::string getDump(size_t maxSize=512)
     {
       char buf[32];
       std::string rv;
       sprintf(buf,"[%lu]:",static_cast<unsigned long>(dataSize));
       rv=buf;
-      for(size_t i=0;i<dataSize;i++)
+      size_t dumpSize = std::min(dataSize*3,maxSize);
+      rv.reserve(rv.size()+dumpSize+10);
+      for(size_t i=0;i<dumpSize;i++)
       {
         sprintf(buf,"%02x ",(unsigned int)(unsigned char)data[i]);
         rv+=buf;
-        if(rv.length()>size_t(maxSize))
-        {
-          rv+="...";
-          break;
-        }
+      }
+      if(rv.length()>maxSize)
+      {
+        rv+="...";
       }
       return rv;
     }

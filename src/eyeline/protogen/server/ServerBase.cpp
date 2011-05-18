@@ -396,12 +396,16 @@ bool ProtocolSocketBase::Write()
   wrDataWritten+=wr;
   if(wrBufferSize==wrDataWritten)
   {
+    if (log->isDebugEnabled()) {
+       ProtocolSocketBase::Packet p(wrBuffer,wrBufferSize,connId);
+       smsc_log_debug(log,"packet written to connId=%d:%s",connId,p.getDump(256).c_str());
+    }
     delete [] wrBuffer;
     if(outQueue.Count())
     {
       ProtocolSocketBase::Packet p;
-      smsc_log_debug(log,"writing to connId=%d:%s",connId,p.getDump(256).c_str());
       outQueue.Pop(p);
+      // smsc_log_debug(log,"writing to connId=%d:%s",connId,p.getDump(256).c_str());
       wrBuffer=p.data;
       wrBufferSize=p.dataSize;
       wrDataWritten=0;
