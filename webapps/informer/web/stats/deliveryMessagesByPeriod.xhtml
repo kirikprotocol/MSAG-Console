@@ -23,33 +23,30 @@
       <eye:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
 
         <eye:dataTableFilter bean="#{deliveryMessagesByPeriod}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="4" columnClasses="column400Width, column400Width, column400Width, columnTopLeftAlign">
-            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
-              <h:outputText value="#{msg['stat.page.from_date']}"/>
-              <eye:inputDate value="#{deliveryMessagesByPeriod.filter.fromDate}" type="both" />
-              <h:outputText value="#{msg['stat.page.till_date']}"/>
-              <eye:inputDate value="#{deliveryMessagesByPeriod.filter.tillDate}"  type="both"/>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
-              <h:outputText value="#{msg['stat.page.aggregation']}"/>
-              <h:selectOneMenu value="#{deliveryMessagesByPeriod.aggregation}" >
-                <f:selectItems value="#{deliveryMessagesByPeriod.aggregations}"/>
-              </h:selectOneMenu>
-              <h:outputText value="#{msg['stat.page.detalised']}"/>
-              <h:selectBooleanCheckbox value="#{deliveryMessagesByPeriod.fullMode}"/>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
-              <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
-              <h:selectOneMenu value="#{deliveryMessagesByPeriod.regionId}">
-                <f:selectItem itemLabel="" itemValue=""/>
-                <f:selectItems value="#{deliveryMessagesByPeriod.regions}"/>
-              </h:selectOneMenu>
-              <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}"/>
-              <h:selectOneMenu value="#{deliveryMessagesByPeriod.smscFilter}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}">
-                <f:selectItem itemLabel="" itemValue=""/>
-                <f:selectItems value="#{deliveryMessagesByPeriod.smscs}"/>
-              </h:selectOneMenu>
-            </h:panelGrid>
+          <h:panelGrid columns="6" columnClasses="column100Width, column300Width, column100Width, column200Width, column100Width, columnTopLeftAlign">
+            <h:outputText value="#{msg['stat.page.from_date']}"/>
+            <eye:inputDate value="#{deliveryMessagesByPeriod.filter.fromDate}" type="both" />
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
+            <h:selectOneMenu value="#{deliveryMessagesByPeriod.regionId}">
+              <f:selectItem itemLabel="" itemValue=""/>
+              <f:selectItems value="#{deliveryMessagesByPeriod.regions}"/>
+            </h:selectOneMenu>
+
+            <h:outputText value="#{msg['stat.page.aggregation']}"/>
+            <h:selectOneMenu value="#{deliveryMessagesByPeriod.aggregation}" >
+              <f:selectItems value="#{deliveryMessagesByPeriod.aggregations}"/>
+            </h:selectOneMenu>
+
+            <h:outputText value="#{msg['stat.page.till_date']}"/>
+            <eye:inputDate value="#{deliveryMessagesByPeriod.filter.tillDate}"  type="both"/>
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}"/>
+            <h:selectOneMenu value="#{deliveryMessagesByPeriod.smscFilter}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}">
+              <f:selectItem itemLabel="" itemValue=""/>
+              <f:selectItems value="#{deliveryMessagesByPeriod.smscs}"/>
+            </h:selectOneMenu>
+
           </h:panelGrid>
         </eye:dataTableFilter>
 

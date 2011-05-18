@@ -34,8 +34,6 @@ public abstract class DeliveryStatController extends LongOperationController {
   private final List<AggregatedRecord> records;
 
 
-  boolean fullMode = false;
-
   public DeliveryStatController(DeliveryStatTotals totals) {
     super();
     aggregation = AggregationType.DAY;
@@ -64,7 +62,6 @@ public abstract class DeliveryStatController extends LongOperationController {
     filter.setTillDate(null);
     filter.setTaskIds(null);
     filter.setRegionId(null);
-    setFullMode(false);
     setAggregation(AggregationType.DAY);
   }
 
@@ -195,14 +192,6 @@ public abstract class DeliveryStatController extends LongOperationController {
     };
   }
 
-  public boolean isFullMode() {
-    return fullMode;
-  }
-
-  public void setFullMode(boolean fullMode) {
-    this.fullMode = fullMode;
-  }
-
   public boolean isTimeAggregation() {
     return getAggregation() != AggregationType.REGION && getAggregation() != AggregationType.SMSC;
   }
@@ -220,9 +209,9 @@ public abstract class DeliveryStatController extends LongOperationController {
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       AggregatedRecord r = records.get(i);
       if (i == 0) {
-        r.printCSVheader(writer, fullMode);
+        r.printCSVheader(writer, true);
       }
-      r.printWithChildrenToCSV(writer, fullMode);
+      r.printWithChildrenToCSV(writer, true);
     }
   }
 
