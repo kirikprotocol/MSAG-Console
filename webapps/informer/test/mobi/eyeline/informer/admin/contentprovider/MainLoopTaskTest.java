@@ -303,7 +303,7 @@ public class MainLoopTaskTest {
 
     @Override
     public Delivery createDeliveryWithSingleTextWithData(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-      return deliveryManager.createDeliveryWithIndividualTexts(login, "", delivery, msDataSource);
+      return deliveryManager.createDeliveryWithSingleTextWithData(login, "", delivery, msDataSource);
     }
 
     @Override
