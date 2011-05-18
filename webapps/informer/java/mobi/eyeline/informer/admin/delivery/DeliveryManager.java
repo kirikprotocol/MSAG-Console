@@ -170,7 +170,9 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     try {
       if (delivery.getType() == Delivery.Type.SingleText)
         conn.modifyDeliveryGlossary(id, delivery.getSingleText());
+      try{
         conn.modifyDeliveryGlossary(1024, delivery.getSingleText());     //todo!
+      }catch (Exception e){}
 
       if (msDataSource != null) {
         addMessages(msDataSource, conn, id);
