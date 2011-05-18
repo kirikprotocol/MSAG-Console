@@ -167,22 +167,22 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 //    conn.changeDeliveryState(id, state);
 
     delivery.setId(id);
-    if (msDataSource != null) {
-      try {
-        if (delivery.getType() == Delivery.Type.SingleText)
-          conn.modifyDeliveryGlossary(id, delivery.getSingleText());
+    try {
+      if (delivery.getType() == Delivery.Type.SingleText)
+        conn.modifyDeliveryGlossary(id, delivery.getSingleText());
 
+      if (msDataSource != null) {
         addMessages(msDataSource, conn, id);
-      } catch (AdminException e) {
-        logger.error("Delivery creation failed.", e);
-        silentDropDelivery(conn, id);
-        throw e;
-
-      } catch (Exception e) {
-        logger.error("Delivery creation failed.", e);
-        silentDropDelivery(conn, id);
-        throw new DeliveryException("internal_error");
       }
+    } catch (AdminException e) {
+      logger.error("Delivery creation failed.", e);
+      silentDropDelivery(conn, id);
+      throw e;
+
+    } catch (Exception e) {
+      logger.error("Delivery creation failed.", e);
+      silentDropDelivery(conn, id);
+      throw new DeliveryException("internal_error");
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Delivery created: " + id);
