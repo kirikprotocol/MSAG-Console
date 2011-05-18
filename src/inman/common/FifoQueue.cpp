@@ -27,6 +27,8 @@ void FifoLink::pop(FifoLink * & fifo_head, FifoLink * & fifo_tail)
   _prev = 0;
   if (!fifo_head)
     fifo_tail = 0;
+  else
+    fifo_head->_next = 0;
 }
 //excludes this node from queue
 void FifoLink::unlink(FifoLink * & fifo_head, FifoLink * & fifo_tail)
