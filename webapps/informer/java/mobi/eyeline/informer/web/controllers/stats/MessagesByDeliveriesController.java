@@ -312,8 +312,8 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       MessagesByDeliveriesRecord r = records.get(i);
-      if (i == 0) r.printCSVheader(writer, fullMode);
-      r.printWithChildrenToCSV(writer, fullMode);
+      if (i == 0) r.printCSVheader(writer, true);
+      r.printWithChildrenToCSV(writer, true);
     }
   }
 
