@@ -585,18 +585,10 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
   }
 
-  private static void pause() {      // todo !!!!!!!!!!
-    try {
-      Thread.sleep(20000);
-    } catch (InterruptedException e) {
-    }
-  }
-
   private void createReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
     File reportTmp = new File(reportFile.getAbsolutePath()+".tmp."+System.currentTimeMillis());
     try{
       copyFile(reportFile, reportTmp);
-      pause();
       PrintStream ps = null;
       try {
         if (encoding == null) encoding = "UTF-8";
@@ -609,10 +601,8 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             return true;
           }
         });
-        pause();
         fileSys.delete(reportFile);
         fileSys.rename(reportTmp, reportFile);
-        pause();
       } finally {
         if (ps != null) try {
           ps.close();
@@ -620,17 +610,13 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         }
       }
     } catch (AdminException e){
-      pause();
       try{
         fileSys.delete(reportTmp);
-      pause();
       }catch (AdminException ignored){}
       throw e;
     } catch (UnsupportedEncodingException e){
-      pause();
       try{
         fileSys.delete(reportTmp);
-      pause();
       }catch (AdminException ignored){}
       throw e;
     }
