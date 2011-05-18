@@ -40,7 +40,9 @@ struct RegionalStorage::MsgLock
     bool tryLock()
     {
         assert(rs &&
+#ifdef CHECKCONTENTION
                rs->cacheMon_.isLocked() &&
+#endif
                serial >= MessageLocker::lockedSerial);
         if (iter->serial == MessageLocker::lockedDelete) {
             return false;
