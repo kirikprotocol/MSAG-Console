@@ -112,16 +112,18 @@ void ServerBase::readPackets()
                 ++hIdx;
                 hIdx %= handlersCount;
             } while ( hIdx != startIdx );
-            smsc::core::synchronization::MutexGuard hmg(handlers[hIdx].mon);
             ProtocolSocketBase::Packet pck=ps->getPacket();
             if(log->isDebugEnabled())
             {
               pck.timestamp = smsc::util::TimeSourceSetup::AbsUSec::getUSec();
               smsc_log_debug(log,"read packet connId=%d:%s",pck.connId,pck.getDump().c_str());
             }
-            handlers[hIdx].queue.Push(pck);
-            handlers[hIdx].isFree = false;
-            handlers[hIdx].mon.notify();
+            {
+              smsc::core::synchronization::MutexGuard hmg(handlers[hIdx].mon MTXWHEREPOST);
+              handlers[hIdx].queue.Push(pck);
+              handlers[hIdx].isFree = false;
+              handlers[hIdx].mon.notify();
+            }
             ps->resetPacket();
             hIdx++;
             hIdx%=handlersCount;
