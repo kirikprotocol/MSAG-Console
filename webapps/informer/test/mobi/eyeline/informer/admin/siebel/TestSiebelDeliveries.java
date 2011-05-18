@@ -39,6 +39,11 @@ class TestSiebelDeliveries implements SiebelContext {
     return deliveryManager.createDeliveryWithIndividualTexts(login, siebelUser.getPassword(), delivery, msDataSource);
   }
 
+  @Override
+  public void dropSiebelDelivery(String login, int deliveryId) throws AdminException {
+    dropDelivery(login, deliveryId);
+  }
+
   public void dropDelivery(String login, int deliveryId) throws AdminException {
     deliveryManager.dropDelivery(login, siebelUser.getPassword(), deliveryId);
   }

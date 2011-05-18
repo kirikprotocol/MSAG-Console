@@ -68,6 +68,18 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     addMessages(login, password, new Address2MessageDataSourceAdapter(msDataSource), deliveryId, Delivery.Type.SingleText);
   }
 
+  /**
+   * Добавляет сообщения в рассылку с одним текстом
+   * @param login логин
+   * @param password пароль
+   * @param msDataSource список адресов
+   * @param deliveryId идентификатор рассылки
+   * @throws AdminException если произошла ошибка
+   */
+  public void addSingleTextMessagesWithData(String login, String password, final DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+    addMessages(login, password, new Message2MessageDataSourceAdapter(msDataSource), deliveryId, Delivery.Type.SingleText);
+  }
+
   private void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId, Delivery.Type expectedDeliveryType) throws AdminException {
     Delivery d = getDelivery(login, password, deliveryId);
     if (d == null) {
@@ -214,7 +226,26 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     d.setType(Delivery.Type.SingleText);
     d.setLoaded(true);
     d.copyFrom(delivery);
-    createDelivery(login, password, d, new Address2MessageDataSourceAdapter(dataSource));
+    createDelivery(login, password, d, dataSource == null ? null : new Address2MessageDataSourceAdapter(dataSource));
+    return d;
+  }
+
+  /**
+   * Создает рассылку с одним текстом для всех сообщений.
+   *
+   * @param login      логин
+   * @param password   пароль
+   * @param delivery   рассылка
+   * @param dataSource сообщения рассылки (или null)
+   * @return созданную рассылку
+   * @throws AdminException ошибка выполнения команды
+   */
+  public Delivery createDeliveryWithSingleTextWithData(String login, String password, DeliveryPrototype delivery, DataSource<Message> dataSource) throws AdminException {
+    Delivery d = new Delivery();
+    d.setType(Delivery.Type.SingleText);
+    d.setLoaded(true);
+    d.copyFrom(delivery);
+    createDelivery(login, password, d, dataSource == null ? null : new Message2MessageDataSourceAdapter(dataSource));
     return d;
   }
 
@@ -583,6 +614,30 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       Message m = new Message();
       m.setAbonent(addr);
       m.setGlossaryIndex(0);
+      return m;
+    }
+  }
+
+  /**
+   * Адаптер для преобразования DataSource&lt;Message&gt; в DataSource%lt;Message&gt;
+   */
+  private static class Message2MessageDataSourceAdapter implements DataSource<Message> {
+    private final DataSource<Message> addrDs;
+
+    private Message2MessageDataSourceAdapter(DataSource<Message> addrDs) {
+      this.addrDs = addrDs;
+    }
+
+    public Message next() throws AdminException {
+      Message addr = addrDs.next();
+      if (addr == null)
+        return null;
+      Message m = new Message();
+      m.setAbonent(addr.getAbonent());
+      m.setGlossaryIndex(0);
+      for(Map.Entry entry : m.getProperties().entrySet()) {
+        m.setProperty((String)entry.getKey(), (String)entry.getValue());
+      }
       return m;
     }
   }

@@ -31,6 +31,8 @@ public interface ContentProviderContext {
 
   Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
 
+  Delivery createDeliveryWithSingleTextWithData(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
+
   Delivery getDelivery(String login,  int deliveryId) throws AdminException;
 
   void activateDelivery(String login,  int deliveryId) throws AdminException;
@@ -39,9 +41,9 @@ public interface ContentProviderContext {
 
   void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException;
 
-
-
   void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException;
+
+  void addSingleMessagesWithData(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException;
 
   void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
 

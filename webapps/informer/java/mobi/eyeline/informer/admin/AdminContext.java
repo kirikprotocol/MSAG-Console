@@ -498,6 +498,20 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return createDeliveryWithSingleText(login, u.getPassword(), delivery, msDataSource);
   }
 
+  public Delivery createDeliveryWithSingleTextWithData(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+    User u = getUser(login);
+    checkHasNotRestriction("creation_restricted", login);
+
+    delivery2UserDep.checkDelivery(delivery);
+
+    if(u.isCreateCDR()) {
+      delivery.setEnableMsgFinalizationLogging(true);
+    }
+    if (delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS) != null || delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS) != null)
+      delivery.setEnableStateChangeLogging(true);
+    return deliveryManager.createDeliveryWithSingleTextWithData(login, u.getPassword(), delivery, msDataSource);
+  }
+
   @Deprecated
   public synchronized Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
     checkHasNotRestriction("creation_restricted", login);
@@ -570,12 +584,22 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Deprecated
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
+    dropDelivery(login, password, deliveryId, true);
+  }
+
+  @Override
+  public void dropSiebelDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    dropDelivery(login, u.getPassword(), deliveryId, false);
+  }
+
+  private void dropDelivery(String login, String password, int deliveryId, boolean checkSiebel) throws AdminException {
     synchronized (getLock(deliveryId)) {
       Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
       if(d == null) {
         return;
       }
-      if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
+      if(checkSiebel && d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
         throw new IntegrityException("siebel.delivery.remove");
       }
       setDeliveryRestriction(login, password, deliveryId, false);
@@ -587,6 +611,18 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   public void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
     User u = getUser(login);
     addMessages(login, u.getPassword(), messageSource, deliveryId);
+  }
+
+  public void addSingleMessages(String login, DataSource<Address> messageSource, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    addSingleTextMessages(login, u.getPassword(), messageSource, deliveryId);
+  }
+
+  public void addSingleMessagesWithData(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    synchronized (getLock(deliveryId)) {
+      deliveryManager.addSingleTextMessagesWithData(login, u.getPassword(), messageSource, deliveryId);
+    }
   }
 
   @Override

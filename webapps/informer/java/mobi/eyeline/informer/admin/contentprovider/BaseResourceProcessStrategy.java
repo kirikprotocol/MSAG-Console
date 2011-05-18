@@ -199,7 +199,70 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     return delivery;
   }
 
-  private void addMessagesToDelivery(Delivery d, File f, File reportFile) throws AdminException, UnsupportedEncodingException {
+
+  private String isSingleText(File f) throws AdminException {
+    BufferedReader is = null;
+    try {
+      if (encoding == null) encoding = "UTF-8";
+      is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f), encoding));
+      String line;
+      String first = null;
+      while ((line = is.readLine()) != null) {
+        try{
+          String[] data = parseData(line);
+          if(first == null) {
+            first = data[1];
+          }else {
+            if(!first.equals(data[1])) {
+              if(log.isDebugEnabled()) {
+                log.debug("File contains multitext messages: "+f.getName());
+              }
+              return null;
+            }
+          }
+
+        } catch (IllegalArgumentException e) {
+          log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.",e);
+        }
+      }
+      if(log.isDebugEnabled()) {
+        log.debug("File contains singletext messages: "+f.getName());
+      }
+      return first;
+    } catch (IOException ioe) {
+      throw new ContentProviderException("ioerror", ioe);
+    } finally {
+      if (is != null) try {
+        is.close();
+      } catch (Exception ignored) {
+      }
+    }
+
+  }
+
+  private static String[] parseData(String line) {
+    int inx = line.indexOf('|');
+    if (inx < 0)
+      throw new IllegalArgumentException("INVALID LINE FORMAT");
+
+    String abonent = line.substring(0, inx).trim();
+
+    String text, userData = null;
+    int nextInx = line.indexOf('|', inx + 1);
+    if (nextInx < 0)
+      text = line.substring(inx + 1).trim();
+    else {
+      userData = line.substring(inx + 1, nextInx);
+      text = line.substring(nextInx + 1).trim();
+    }
+
+    return new String[]{abonent, text, userData};
+  }
+
+
+
+
+  private void addMessagesToDelivery(Delivery d, File f, File reportFile, CreateStrategy strategy) throws AdminException, UnsupportedEncodingException {
     log("add messages to delivery: id=" + d.getId() + "; file=" + f.getName() + " ...");
     BufferedReader is = null;
     PrintStream reportWriter = null;
@@ -207,11 +270,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (encoding == null) encoding = "UTF-8";
       is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f), encoding));
       reportWriter = new PrintStream(fileSys.getOutputStream(reportFile, true), true, encoding);
-      context.addMessages(user.getLogin(), new CPMessageSource(
-          user.isAllRegionsAllowed() ? null : user.getRegions(),
-          is,
-          reportWriter
-      ), d.getId());
+      strategy.addMessages(user, d, is, reportWriter);
     } finally {
       if (is != null) try {
         is.close();
@@ -297,9 +356,20 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
       silentRename(f, notGenerated);
 
+      String sigleText = isSingleText(notGenerated);
+
       DeliveryPrototype proto = createDelivery(deliveryName);
+
+      CreateStrategy strategy;
+      if(sigleText == null) {
+        strategy = new InvidualStrategy();
+      }else {
+        proto.setSingleText(sigleText);
+        strategy = new SingleStrategy();
+      }
+
       try{
-        d = context.createDeliveryWithIndividualTexts(user.getLogin(), proto, null);
+        d = strategy.createDelivery(user,  proto);
       }catch (Exception e){
         log.error(e,e);
         try{
@@ -316,7 +386,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
       try{
 
-        addMessagesToDelivery(d, notGenerated, reportFile);
+        addMessagesToDelivery(d, notGenerated, reportFile, strategy);
 
         silentRename(notGenerated, genFile);
 
@@ -484,27 +554,85 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
   }
 
-  private void createReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
-
-    PrintStream ps = null;
+  private void copyFile(File source, File destination) throws AdminException {
+    BufferedInputStream src = null;
+    BufferedOutputStream dest = null;
     try {
-      if (encoding == null) encoding = "UTF-8";
+      src = new BufferedInputStream(fileSys.getInputStream(source));
+      dest = new BufferedOutputStream(fileSys.getOutputStream(destination, false));
 
-      ps = new PrintStream(context.getFileSystem().getOutputStream(reportFile, true), true, encoding);
-      final PrintStream psFinal = ps;
-      MessageFilter filter = new MessageFilter(d.getId(), d.getStartDate(), new Date());
-      context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
-        public boolean visit(Message mi) throws AdminException {
-          ReportFormatter.writeReportLine(psFinal, getCpAbonent(mi), mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
-          return true;
-        }
-      });
-
-    } finally {
-      if (ps != null) try {
-        ps.close();
-      } catch (Exception ignored) {
+      byte[] buf = new byte[1024];
+      int len;
+      while ((len = src.read(buf)) > 0){
+        dest.write(buf, 0, len);
       }
+    } catch (IOException e){
+      log.error(e,e);
+      throw new ContentProviderException("ioerror");
+    }finally {
+      if (src != null) {
+        try {
+          src.close();
+        } catch (IOException ignored) {
+        }
+      }
+      if (dest != null) {
+        try {
+          dest.close();
+        } catch (IOException ignored) {
+        }
+      }
+    }
+  }
+
+  private static void pause() {      // todo !!!!!!!!!!
+    try {
+      Thread.sleep(20000);
+    } catch (InterruptedException e) {
+    }
+  }
+
+  private void createReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
+    File reportTmp = new File(reportFile.getAbsolutePath()+".tmp."+System.currentTimeMillis());
+    try{
+      copyFile(reportFile, reportTmp);
+      pause();
+      PrintStream ps = null;
+      try {
+        if (encoding == null) encoding = "UTF-8";
+        ps = new PrintStream(context.getFileSystem().getOutputStream(reportTmp, true), true, encoding);
+        final PrintStream psFinal = ps;
+        MessageFilter filter = new MessageFilter(d.getId(), d.getStartDate(), new Date());
+        context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
+          public boolean visit(Message mi) throws AdminException {
+            ReportFormatter.writeReportLine(psFinal, getCpAbonent(mi), mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
+            return true;
+          }
+        });
+        pause();
+        fileSys.delete(reportFile);
+        fileSys.rename(reportTmp, reportFile);
+        pause();
+      } finally {
+        if (ps != null) try {
+          ps.close();
+        } catch (Exception ignored) {
+        }
+      }
+    } catch (AdminException e){
+      pause();
+      try{
+        fileSys.delete(reportTmp);
+      pause();
+      }catch (AdminException ignored){}
+      throw e;
+    } catch (UnsupportedEncodingException e){
+      pause();
+      try{
+        fileSys.delete(reportTmp);
+      pause();
+      }catch (AdminException ignored){}
+      throw e;
     }
   }
 
@@ -557,11 +685,13 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     private BufferedReader reader;
     List<Integer> regions;
     PrintStream reportWriter;
+    private boolean isSingleText;
 
-    public CPMessageSource(List<Integer> regions, BufferedReader reader, PrintStream reportWriter) {
+    public CPMessageSource(List<Integer> regions, BufferedReader reader, PrintStream reportWriter, boolean isSingleText) {
       this.regions = regions;
       this.reader = reader;
       this.reportWriter = reportWriter;
+      this.isSingleText = isSingleText;
     }
 
     /**
@@ -584,16 +714,17 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         throw new IllegalArgumentException("INVALID ABONENT");
       }
 
-      String text, userData = null;
+      String userData = null;
       int nextInx = line.indexOf('|', inx + 1);
-      if (nextInx < 0)
-        text = line.substring(inx + 1).trim();
-      else {
+      if (nextInx >= 0){
         userData = line.substring(inx + 1, nextInx);
-        text = line.substring(nextInx + 1).trim();
       }
 
-      Message m = Message.newMessage(ab, decodeText(text));
+      Message m = Message.newMessage(ab, isSingleText ? null :
+          decodeText(
+              nextInx<0 ? line.substring(inx + 1).trim() : line.substring(nextInx + 1).trim()
+          )
+      );
       if(!abonent.equals(m.getAbonent().getSimpleAddress())) {
         setCpAbonent(m, abonent);
       }
@@ -663,5 +794,48 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       }
       return null;
     }
+  }
+
+  private class InvidualStrategy implements CreateStrategy{
+    @Override
+    public Delivery createDelivery(User u, DeliveryPrototype proto) throws AdminException {
+      return context.createDeliveryWithIndividualTexts(user.getLogin(), proto, null);
+    }
+
+    public void addMessages(User user, Delivery d, BufferedReader is, PrintStream reportWriter) throws AdminException {
+      context.addMessages(user.getLogin(),
+          new CPMessageSource(
+              user.isAllRegionsAllowed() ? null : user.getRegions(),
+              is,
+              reportWriter, false
+          ),
+          d.getId());
+    }
+  }
+
+  private class SingleStrategy implements CreateStrategy{
+    @Override
+    public Delivery createDelivery(User u, DeliveryPrototype proto) throws AdminException {
+      return context.createDeliveryWithSingleTextWithData(user.getLogin(), proto, null);
+    }
+
+    public void addMessages(User user, Delivery d, BufferedReader is, PrintStream reportWriter) throws AdminException {
+      context.addSingleMessagesWithData(user.getLogin(),
+          new CPMessageSource(
+              user.isAllRegionsAllowed() ? null : user.getRegions(),
+              is,
+              reportWriter, true
+          ),
+          d.getId());
+    }
+  }
+
+
+  static interface CreateStrategy {
+
+    Delivery createDelivery(User u, DeliveryPrototype proto) throws AdminException;
+
+    public void addMessages(User user, Delivery d, BufferedReader is, PrintStream reportWriter) throws AdminException;
+
   }
 }

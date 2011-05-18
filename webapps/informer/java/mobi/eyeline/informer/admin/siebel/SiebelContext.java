@@ -15,7 +15,7 @@ public interface SiebelContext {
 
   public Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
 
-  public void dropDelivery(String login, int deliveryId) throws AdminException;
+  public void dropSiebelDelivery(String login, int deliveryId) throws AdminException;
 
   public void addMessages(String login, DataSource<Message> msDataSource, int deliveryId) throws AdminException;
 

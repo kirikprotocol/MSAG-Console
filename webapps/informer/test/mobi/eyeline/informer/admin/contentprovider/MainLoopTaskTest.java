@@ -302,6 +302,11 @@ public class MainLoopTaskTest {
     }
 
     @Override
+    public Delivery createDeliveryWithSingleTextWithData(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+      return deliveryManager.createDeliveryWithIndividualTexts(login, "", delivery, msDataSource);
+    }
+
+    @Override
     public Delivery getDelivery(String login, int deliveryId) throws AdminException {
       return deliveryManager.getDelivery(login, "", deliveryId);
     }
@@ -357,6 +362,11 @@ public class MainLoopTaskTest {
     @Override
     public void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
       deliveryManager.addIndividualMessages(login, "", messageSource, deliveryId);
+    }
+
+    @Override
+    public void addSingleMessagesWithData(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
+      deliveryManager.addSingleTextMessagesWithData(login, "", messageSource, deliveryId);
     }
 
     @Override
