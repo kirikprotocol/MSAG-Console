@@ -200,7 +200,8 @@ void DcpServer::mkOkResponse(int connId,int seqNum)
 {
   messages::OkResponse resp;
   resp.messageSetSeqNum(seqNum);
-  dumpMsg(resp);
+  resp.messageSetConnId(connId);
+  dumpMsg(resp,"out");
   enqueueCommand(connId,resp,proto,false);
 }
 
@@ -209,8 +210,9 @@ void DcpServer::mkFailResponse(int connId,int seq,int status,const std::string& 
   messages::FailResponse resp;
   resp.setStatus(status);
   resp.setStatusMessage(msg);
+  resp.messageSetConnId(connId);
   resp.messageSetSeqNum(seq);
-  dumpMsg(resp);
+  dumpMsg(resp,"out");
   enqueueCommand(connId,resp,proto,false);
 }
 
