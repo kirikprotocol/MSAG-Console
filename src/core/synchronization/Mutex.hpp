@@ -65,6 +65,11 @@ protected:
 
 public:
 #ifdef CHECKCONTENTION
+    bool isLocked() const throw() {
+        return ltid == pthread_self();
+    }
+
+
     static void setContentionLimit( unsigned usec ) throw() {
         contentionLimit = usec;
     }
