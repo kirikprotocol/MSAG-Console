@@ -30,15 +30,18 @@ struct RegionalStorage::MsgLock
     inline ~MsgLock() throw() {
         if (!rs) { return; }
         if (serial >= MessageLocker::lockedSerial) { return; }
+        // assert(rs->cacheMon_->isLocked());
         rmg.Lock();
         iter->serial = serial;
         --(iter->users);
         rs->getCnd(iter).Signal();
     }
 
-    bool tryLock() throw()
+    bool tryLock()
     {
-        assert(rs && serial >= MessageLocker::lockedSerial);
+        assert(rs &&
+               rs->cacheMon_.isLocked() &&
+               serial >= MessageLocker::lockedSerial);
         if (iter->serial == MessageLocker::lockedDelete) {
             return false;
         }
