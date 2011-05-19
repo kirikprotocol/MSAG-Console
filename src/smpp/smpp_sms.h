@@ -146,7 +146,7 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
     optional.set_sccp_da(sms->getStrProperty(Tag::SMSC_SCCP_DA).c_str());
   }
 
-  if(smeFlags&sfSmppPlus && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  if((smeFlags&sfSmppPlus) && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     optional.set_ussd_session_id(sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
     if(sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
