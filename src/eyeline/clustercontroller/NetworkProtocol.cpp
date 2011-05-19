@@ -15,7 +15,7 @@ void NetworkProtocol::Init()
 {
   if(instance)
   {
-    throw Exception("Duplicate NetworkProtocol Init invocation.");
+    throw smsc::util::Exception("Duplicate NetworkProtocol Init invocation.");
   }
   instance=new NetworkProtocol();
   instance->innerInit();
@@ -168,7 +168,7 @@ void NetworkProtocol::readPackets()
         try{
           if(ps->Read())
           {
-            MutexGuard hmg(handlers[hIdx].mon);
+            sync::MutexGuard hmg(handlers[hIdx].mon);
             Packet pck=ps->getPacket();
             smsc_log_debug(log,"read packet:%s",pck.getDump().c_str());
             handlers[hIdx].queue.Push(pck);
