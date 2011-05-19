@@ -6,11 +6,13 @@ using smsc::db::DataSource;
 namespace smsc {
 namespace infosme {
 
+using namespace smsc::core::synchronization;
+
 DataProvider::~DataProvider()
 {
 #ifndef INFOSME_NO_DATAPROVIDER
     MutexGuard guard(dssLock);
-    
+
     char* key = 0; DataSource* ds = 0; dss.First();
     while (dss.Next(key, ds))
         if (ds) delete ds;
@@ -21,7 +23,7 @@ DataSource* DataProvider::createDataSource(ConfigView* config)
 {
     DataSource* ds   = 0;
 #ifndef INFOSME_NO_DATAPROVIDER
-    try 
+    try
     {
         std::auto_ptr<char> dsIdentity(config->getString("type"));
         const char* dsIdentityStr = dsIdentity.get();
@@ -43,10 +45,10 @@ void DataProvider::init(ConfigView* config)
 {
 #ifndef INFOSME_NO_DATAPROVIDER
     MutexGuard guard(dssLock);
-    
+
     std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
     std::set<std::string>* set = setGuard.get();
-    
+
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         try
@@ -55,7 +57,7 @@ void DataProvider::init(ConfigView* config)
             if (!dsName)
                 throw ConfigException("DataSource name missed!");
             smsc_log_info(logger, "Loading DataSource '%s'.", dsName);
-            
+
             std::auto_ptr<ConfigView> dsConfigGuard(config->getSubConfig(dsName));
             ConfigView* dsConfig = dsConfigGuard.get();
             if (dss.Exists(dsName))

@@ -10,6 +10,9 @@ namespace {
 
 using namespace smsc::infosme;
 using namespace smsc::util::config;
+using namespace smsc::core::synchronization;
+using namespace smsc::core::buffers;
+using namespace smsc::util;
 
 std::string cgetString( ConfigView& cv, const char* tag, const char* what )
 {
@@ -34,7 +37,7 @@ inline size_t WriteRecord( smsc::core::buffers::File& f,
     uint8_t keySize = uint8_t(WriteKey(f, key));
     f.WriteNetInt64(val.msgId);
     f.WriteNetInt32(val.taskId);
-    return keySize+8+4; 
+    return keySize+8+4;
 }
 
 inline size_t ReadRecord( smsc::core::buffers::File& f,
@@ -100,12 +103,12 @@ public:
     method(method), processor(proc), rd(argRd) {
         ++processor.usage_; // externally locked
     }
-    
+
     virtual ~EventRunner() {
         MutexGuard mg(processor.destroyMonitor_);
         if ( --processor.usage_ == 0 ) processor.destroyMonitor_.notifyAll();
     }
-    
+
     virtual int Execute()
     {
         switch (method)
@@ -133,7 +136,7 @@ private:
 };
 
 
-struct SmscConnector::JStoreWrapper 
+struct SmscConnector::JStoreWrapper
 {
     smsc::core::buffers::JStore< ReceiptId, TaskMsgId, ReceiptId > jstore;
     JStoreWrapper( const std::string& storeLocation,
@@ -367,11 +370,11 @@ bool SmscConnector::isStopped() const {
     return stopped_;
 }
 
-int SmscConnector::Execute() { 
+int SmscConnector::Execute() {
 
     while (!isStopped()) {
         // after call to isNeedStop() was completed all signals is locked.
-        // any thread being started from this point has signal mask with all signals locked 
+        // any thread being started from this point has signal mask with all signals locked
         smsc_log_info(log_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
         try
         {
@@ -415,7 +418,7 @@ int SmscConnector::Execute() {
         } // if exception occured
     } // while is not stopped
     smsc_log_info(log_, "SMSC Connector '%s' stopped", smscId_.c_str());
-    return 1; 
+    return 1;
 }
 
 int SmscConnector::getSeqNum() {
@@ -450,7 +453,7 @@ uint32_t SmscConnector::sendSms(const std::string& org,const std::string& dst,co
     for(int i=0;i<len;i++)
     {
       tmp.get()[i]=htons(tmp.get()[i]);
-    }        
+    }
     sbm.get_optional().set_messagePayload((char*)tmp.get(),len);
   }else
   {
@@ -582,7 +585,7 @@ bool SmscConnector::send( Task* task, Message& message,
             smsc_log_error(log_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
             break;
         }
-    
+
         Address oa, da;
         const char* oaStr = info.address.c_str();
         if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
@@ -591,16 +594,16 @@ bool SmscConnector::send( Task* task, Message& message,
             msguard.failed(smsc::system::Status::INVSRCADR);
             break;
         }
-    
+
         const char* daStr = abonent.c_str();
         if (!daStr || !info.convertMSISDNStringToAddress(daStr, da)) {
             smsc_log_error(log_, "Invalid destination address '%s'", daStr ? daStr:"-");
             msguard.failed(smsc::system::Status::INVDSTADR);
             break;
         }
-    
+
         time_t now = time(NULL);
-      
+
         SMS sms;
         sms.setOriginatingAddress(oa);
         sms.setDestinationAddress(da);
@@ -608,22 +611,22 @@ bool SmscConnector::send( Task* task, Message& message,
         sms.setDeliveryReport(1);
         sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
                           now+info.validityPeriod : info.validityDate );
-        
+
         sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                            (info.replaceIfPresent) ? 1:0);
         sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
                              info.svcType.c_str():processor_.getSvcType() );
-    
+
         sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
         sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
         sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
         sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
-    
+
         if(info.flash)
         {
             sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
         }
-      
+
         const char* out = msgtext.c_str();
         size_t outLen = msgtext.length();
         char* msgBuf = 0;
@@ -638,7 +641,7 @@ bool SmscConnector::send( Task* task, Message& message,
         } else {
             sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
         }
-      
+
         try {
 
             if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
@@ -672,7 +675,7 @@ bool SmscConnector::send( Task* task, Message& message,
         }
 
         if (msgBuf) delete msgBuf;
-      
+
         if (info.deliveryMode != DLVMODE_SMS) {
             // ussdpush
             const int ussdop = ( info.deliveryMode == DLVMODE_USSDPUSH ?
@@ -696,7 +699,7 @@ bool SmscConnector::send( Task* task, Message& message,
         try {
             if (info.useDataSm) {
                 smsc_log_debug(log_, "Send DATA_SM");
-                
+
                 uint32_t validityDate = info.validityDate <= now ? 0 : static_cast<uint32_t>(info.validityDate - now);
                 sms.setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE, (info.validityDate <= 0 || info.validityPeriod > 0) ?
                                                                 static_cast<uint32_t>(info.validityPeriod) : validityDate);
@@ -712,7 +715,7 @@ bool SmscConnector::send( Task* task, Message& message,
                 }
             } else {
                 smsc_log_debug(log_, "Send SUBMIT_SM");
-    
+
                 PduSubmitSm submitSm;
                 submitSm.get_header().set_sequenceNumber(seqNum);
                 submitSm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -783,7 +786,7 @@ void SmscConnector::processWaitingEvents( time_t tm )
             processResponse(rd, true);
         }
     } while ( ! processor_.bNeedExit );
-        
+
     // process receipts
     do {
         ReceiptTimer timer;
@@ -799,7 +802,7 @@ void SmscConnector::processWaitingEvents( time_t tm )
         {
             MutexGuard guard(receiptsLock);
             ReceiptData* receiptPtr = receipts.GetPtr(timer.receiptId);
-            if (receiptPtr) { 
+            if (receiptPtr) {
                 smsc_log_warn(log_, "%s for smscMsgId='%s' smscConnectorId='%s' wasn't received and timed out!",
                               ((receiptPtr->receipted) ? "Receipt": "Response"),
                               timer.receiptId.getMessageId(), smscId_.c_str());
@@ -927,12 +930,12 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
                       smscId_.c_str(),
                       receiptId.getMessageId());
     }
-    
+
     if (!internal) {
         MutexGuard guard(receiptsLock);
         ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
         if (receiptPtr) // attach & return;
-        {   
+        {
             receiptPtr->receipted = true;
             receiptPtr->delivered = rd.accepted;
             receiptPtr->retry     = rd.retry;
@@ -943,7 +946,7 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
         MutexGuard recptGuard(receiptWaitQueueLock);
         receiptWaitQueue.Push(ReceiptTimer(time(NULL)+processor_.getReceiptWaitTime(), receiptId));
     }
-    
+
     try
     {
 
@@ -954,19 +957,19 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
         MutexGuard guard(receiptsLock);
         ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
         if (receiptPtr)
-        { 
+        {
           receipts.Delete(receiptId);
           needProcess = true;
         }
       }
-      
+
       if (needProcess)
       {
-      
+
         jstore_->jstore.Delete(receiptId);
         processor_.processMessage(tmIds,rd);
       }
-      
+
     }
     catch (std::exception& exc)
     {

@@ -2,24 +2,24 @@
 #define _SACC_EVENT_SENDER_H_
 /*****************************************************************************
  *****************************************************************************
- *                    
- * Module Name:                  
+ *
+ * Module Name:
  * ============
  *
  *   SACC_EventSender.h
  *
- * Purpose:   
+ * Purpose:
  * ========
  *
  *                      Header File for SACC_EventSender.cpp
- *    Perform and send messages to WHOISD SACC part 
- *   (format described on "WHIOSD ¢§ ¨¬®¤¥©áâ¢¨¥ ¬®¤ã«¥©.doc" )
- *   
- * Author(s) & Creation Date: 
+ *    Perform and send messages to WHOISD SACC part
+ *   (format described on "WHIOSD ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â¢¨ï¿½ ï¿½ï¿½ï¿½ã«¥ï¿½.doc" )
+ *
+ * Author(s) & Creation Date:
  * ==========================
  *
  *   Gregory Panin, 2006/03/03
- *  Copyright (c): 
+ *  Copyright (c):
  *  =============
  *    EyeLine Communications
  *    All rights reserved.
@@ -40,9 +40,13 @@
 #include <core/buffers/FastMTQueue.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
+#include <core/buffers/CyclicQueue.hpp>
 
 
 #include <string>
+
+namespace scag{ namespace stat{ namespace sacc{
+
 using namespace smsc::core::threads;
 using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
@@ -51,11 +55,9 @@ using smsc::util::Exception;
 using smsc::util::SerializationBuffer;
 using namespace scag::stat;
 using namespace smsc::core::synchronization;
+using namespace smsc::core::buffers;
 
-namespace scag{ namespace stat{ namespace sacc{
-
-
-class EventSender: public Thread 
+class EventSender: public Thread
 {
 private:
     typedef CyclicQueue< SaccEvent* > QueueType;

@@ -8,8 +8,8 @@ int64_t messageId = 0;
 smsc::core::synchronization::Mutex lock;
 
 int64_t getNextMessageId() {
-    MutexGuard mg(lock);
-    return ++messageId;
+  smsc::core::synchronization::MutexGuard mg(lock);
+  return ++messageId;
 }
 
 }

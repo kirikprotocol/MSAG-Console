@@ -13,6 +13,8 @@ const std::string rollingExtension(".csv");
 namespace smsc {
 namespace infosme {
 
+using namespace smsc::core::synchronization;
+
 FinalStateSaver::FinalStateSaver( const std::string& path,
                                   unsigned           rollingInterval ) :
 log_(smsc::logger::Logger::getInstance("fs2csv")),

@@ -60,7 +60,7 @@ int main(int argc,char* argv[])
     if(strcmp(fileSig,sig))
     {
       __warning2__("Invalid or corrupted store file:%s",filename);
-      throw Exception("Invalid or corrupted store file:%s",filename);
+      throw smsc::util::Exception("Invalid or corrupted store file:%s",filename);
     }
 
     uint32_t fileVer;
@@ -69,7 +69,7 @@ int main(int argc,char* argv[])
     if(ver!=fileVer)
     {
       __warning2__("Incompatible version of profiler store file(%x!=%x):%s",fileVer,ver,filename);
-      throw Exception("Incompatible version of profiler store file(%x!=%x):%s",fileVer,ver,filename);
+      throw smsc::util::Exception("Incompatible version of profiler store file(%x!=%x):%s",fileVer,ver,filename);
     }
 
     File::offset_type sz=storeFile.Size();

@@ -33,6 +33,9 @@ inline smsc::core::buffers::File::offset_type getOffset( uint64_t msgId )
 namespace smsc{
 namespace infosme{
 
+using namespace smsc::core::buffers;
+using namespace smsc::core::synchronization;
+
 
 static void MsgId2Info(uint64_t msgId,uint64_t& off,int& date,int& hour)
 {
@@ -173,7 +176,7 @@ bool CsvStore::isProcessed()
             if ( !f || f->processed ) continue;
             if ( f->readAll && f->openMessages == 0 ) {
                 // smsc_log_debug(log,"isProc: file %s finished",f->fileName().c_str());
-                continue; 
+                continue;
             }
             // smsc_log_debug(log,"isProc: file %s readAll=%u openMess=%u",f->fileName().c_str(),unsigned(f->readAll),unsigned(f->openMessages));
             return false;
@@ -216,7 +219,7 @@ bool CsvStore::getNextMessage(Message &message)
         while ( curFile == curDir->second->files.end() ) {
             curDir++;
             if ( curDir == dirs.end() ) {
-                return false; 
+                return false;
             }
             curFile = curDir->second->files.begin();
         }

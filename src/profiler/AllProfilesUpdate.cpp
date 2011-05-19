@@ -10,6 +10,7 @@
 using namespace smsc::sms;
 using namespace smsc::core::buffers;
 using namespace smsc::profiler;
+using namespace smsc::util;
 
 const char sig[]="SMSCPROF";
 #ifdef SMSEXTRA
@@ -374,7 +375,7 @@ int main(int argc,char* argv[])
             inFile.SeekCur(8+AddressSize()+Profile::Size());
           }else
           {
-  
+
             ProfilesMap::iterator it=pmap.find(addr);
             if(it!=pmap.end())
             {
