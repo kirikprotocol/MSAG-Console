@@ -266,7 +266,7 @@ protected:
     void startCompacting();
     bool isCompacting()
     {
-      MutexGuard mg(mon);
+      sync::MutexGuard mg(mon);
       return compacting || needCompacting;
     }
   protected:

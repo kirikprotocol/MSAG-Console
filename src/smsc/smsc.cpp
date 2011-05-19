@@ -36,8 +36,8 @@
 #include "license/check/license.hpp"
 #include "cluster/controller/NetworkDispatcher.hpp"
 #ifdef SMSEXTRA
-#include "Extra.hpp"
-#include "ExtraBits.hpp"
+#include "extra/Extra.hpp"
+#include "extra/ExtraBits.hpp"
 #endif
 
 #include "smsc.hpp"
@@ -58,7 +58,7 @@ using namespace smsc::router;
 using namespace smsc::snmp;
 using namespace smsc::core::synchronization;
 using namespace smsc::profiler;
-using util::Exception;
+using namespace smsc::util;
 
 
 Smsc* Smsc::instance=0;
@@ -394,8 +394,14 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
                               cfg.cfgman->getInt("dpf.maxChanges"),
                               cfg.cfgman->getInt("dpf.maxTime"));
 
-    schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
-    schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");
+  schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
+  schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");
+  try{
+    schedulerFreeBandwidthUsage=cfg.cfgman->getInt("core.schedulerFreeBandwidthUsage");
+  }catch(...)
+  {
+    smsc_log_warn(log,"core.schedulerFreeBandwidthUsage not found, using default %d",schedulerFreeBandwidthUsage);
+  }
 
     try
     {
@@ -415,7 +421,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
 
     store=scheduler;
     smsc_log_info(log, "Initializing scheduler" );
-    scheduler->DelayInit(this,cfg.cfgman);
+    scheduler->DelayInit(cfg.cfgman);
 
     smeman.registerInternallSmeProxy("scheduler",scheduler);
     try{
@@ -473,11 +479,11 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       }
 #endif
       smsc_log_info(log, "Starting statemachines" );
-      int cnt=cfg.cfgman->getInt("core.state_machines_count");
+      stateMachinesCount=cfg.cfgman->getInt("core.state_machines_count");
       time_t maxValidTime=cfg.cfgman->getInt("sms.max_valid_time");
-      for(int i=0;i<cnt;i++)
+      for(int i=0;i<stateMachinesCount;i++)
       {
-        statemachine::StateMachine *m=new statemachine::StateMachine(eventqueue,store,this);
+        statemachine::StateMachine *m=new statemachine::StateMachine(eventqueue,store,i);
         m->maxValidTime=maxValidTime;
 #ifdef SMSEXTRA
         m->createCopyOnNickUsage=createCopyOnNickUsage;
@@ -490,6 +496,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
             cfg.cfgman->getString("core.systemId")
         );
         tp.startTask(m);
+        stateMachines.push_back(m);
       }
       smsc_log_info(log, "Statemachines started" );
     }
@@ -1067,7 +1074,7 @@ void Smsc::run()
       __trace__("SMPPIO started");
 #if defined(USE_MAP) && !defined(NOMAPPROXY)
       Event mapiostarted;
-      MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,addUssdSSN,
+      mapio::MapIoTask* mapio = new mapio::MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,addUssdSSN,
           busyMTDelay,lockedByMODelay,MOLockTimeout,
           allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber,nodeIndex,nodesCount);
       mapioptr=mapio;
@@ -1087,12 +1094,12 @@ void Smsc::run()
         throw Exception("Failed to start SMPP or MAP acceptor");
       }
 #ifndef NOMAPPROXY
-      MapDialogContainer::getInstance()->registerSelf(&smeman);
+      mapio::MapDialogContainer::getInstance()->registerSelf(&smeman);
 #ifdef USE_MAP
-      mapProxy=MapDialogContainer::getInstance()->getProxy();
+      mapProxy=mapio::MapDialogContainer::getInstance()->getProxy();
       SmeInfo si=smeman.getSmeInfo(smeman.lookup("MAP_PROXY"));
       mapProxy->updateSmeInfo( si );
-      MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
+      mapio::MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
 #endif
 #endif
     }
@@ -1161,7 +1168,7 @@ void Smsc::shutdown()
 #if defined(USE_MAP)
   if(mapioptr)
   {
-    MapIoTask *mapio=(MapIoTask*)mapioptr;
+    mapio::MapIoTask *mapio=(mapio::MapIoTask*)mapioptr;
     mapio->Stop();
   }
 #endif
@@ -1180,13 +1187,11 @@ void Smsc::shutdown()
 #if defined(USE_MAP)
   if(mapioptr)
   {
-    MapIoTask *mapio=(MapIoTask*)mapioptr;
+    mapio::MapIoTask *mapio=(mapio::MapIoTask*)mapioptr;
     delete mapio;
   }
   mapio::MapLimits::Shutdown();
   mapio::NetworkProfiles::shutdown();
-
-  mapio::MapLimits::Shutdown();
 #endif
 
 
@@ -1209,7 +1214,7 @@ void Smsc::shutdown()
   }
 
 #ifdef SMSEXTRA
-  ExtraInfo::Shutdown();
+  extra::ExtraInfo::Shutdown();
 #endif
 
 #ifdef SNMP
@@ -1235,7 +1240,7 @@ void Smsc::abortSmsc()
   SaveStats();
   statMan->flushStatistics();
 #ifdef USE_MAP
-  MapDialogContainer::getInstance()->abort();
+  mapio::MapDialogContainer::getInstance()->abort();
 #endif
   kill(getpid(),9);
 }
@@ -1243,7 +1248,7 @@ void Smsc::abortSmsc()
 void Smsc::dumpSmsc()
 {
 #ifdef USE_MAP
-  MapDialogContainer::getInstance()->abort();
+  mapio::MapDialogContainer::getInstance()->abort();
 #endif
   abort();
 }
@@ -1269,7 +1274,6 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms,bool msuOnly)
       msu_submitOkCounter++;
       smePerfMonitor.incAccepted(sms->getSourceSmeId());
 #ifdef SNMP
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
       int smeIdx=smeman.lookup(sms->getSourceSmeId());
       smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntAccepted);
 #endif
@@ -1282,7 +1286,6 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms,bool msuOnly)
       msu_submitErrCounter++;
       smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
 #ifdef SNMP
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
       int smeIdx=smeman.lookup(sms->getSourceSmeId());
       smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntRejected);
       smeStats.incError(smeIdx,sms->getLastResult());
@@ -1426,5 +1429,78 @@ void Smsc::InitLicense()
   }
 }
 
+smsc::util::config::ConfigParamWatchType Smsc::SmscConfigWatcher::getWatchedParams(smsc::util::config::ParamsVector& argParams)
+{
+  using namespace smsc::util::config;
+  argParams.push_back(std::make_pair(cvtInt,"core.schedulerSoftLimit"));
+  argParams.push_back(std::make_pair(cvtInt,"core.schedulerHardLimit"));
+  argParams.push_back(std::make_pair(cvtInt,"core.schedulerFreeBandwidthUsage"));
+  argParams.push_back(std::make_pair(cvtInt,"sms.max_valid_time"));
+  argParams.push_back(std::make_pair(cvtInt,"core.eventQueueLimit"));
+  argParams.push_back(std::make_pair(cvtInt,"core.speedLogFlushPeriodMin"));
+  argParams.push_back(std::make_pair(cvtBool,"core.smartMultipartForward"));
+  argParams.push_back(std::make_pair(cvtInt,"core.mergeTimeout"));
+  argParams.push_back(std::make_pair(cvtInt,"MessageStore.LocalStore.storeFilesCount"));
+  argParams.push_back(std::make_pair(cvtInt,"map.busyMTDelay"));
+  argParams.push_back(std::make_pair(cvtInt,"map.lockedByMODelay"));
+  return cpwtIndividual;
+}
+void Smsc::SmscConfigWatcher::paramsChanged()
+{
+}
+void Smsc::SmscConfigWatcher::paramChanged(smsc::util::config::ConfigValueType cvt,const std::string& paramName)
+{
+  smsc::util::config::Config& cfg=smsc::util::config::Manager::getInstance().getConfig();
+  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("cfg.reload");
+  Smsc& smsc=Smsc::getInstance();
+  if(paramName=="core.schedulerSoftLimit")
+  {
+    smsc.schedulerSoftLimit=cfg.getInt(paramName.c_str());
+  }else if(paramName=="core.schedulerHardLimit")
+  {
+    smsc.schedulerHardLimit=cfg.getInt(paramName.c_str());
+  }else if(paramName=="core.schedulerFreeBandwidthUsage")
+  {
+    smsc.schedulerFreeBandwidthUsage=cfg.getInt(paramName.c_str());
+  }else if(paramName=="core.speedLogFlushPeriodMin")
+  {
+    smsc.speedLogFlushPeriod=cfg.getInt(paramName.c_str());
+  }else if(paramName=="sms.max_valid_time")
+  {
+    time_t maxValidTime=cfg.getInt(paramName.c_str());
+    for(std::vector<StateMachine*>::iterator it=smsc.stateMachines.begin(),end=smsc.stateMachines.end();it!=end;++it)
+    {
+      (*it)->maxValidTime=maxValidTime;
+    }
+  }else if(paramName=="core.eventQueueLimit")
+  {
+    smsc.eventQueueLimit=cfg.getInt(paramName.c_str());
+  }else if (paramName=="core.speedLogFlushPeriodMin")
+  {
+    smsc.speedLogFlushPeriod=cfg.getInt(paramName.c_str());
+    if((60%smsc.speedLogFlushPeriod)!=0)
+    {
+      smsc_log_warn(log,"60 isn't multiple of core.speedLogFlushPeriodMin. using default value");
+      smsc.speedLogFlushPeriod=60;
+    }
+    time_t now=time(NULL)/60;
+    smsc.nextSpeedLogFlush=now+(smsc.speedLogFlushPeriod-(now%smsc.speedLogFlushPeriod));
+  }else if(paramName=="core.smartMultipartForward")
+  {
+    smsc.smartMultipartForward=cfg.getBool(paramName.c_str());
+  }else if(paramName=="core.mergeTimeout")
+  {
+    smsc.mergeConcatTimeout=cfg.getInt(paramName.c_str());
+  }else if(paramName=="MessageStore.LocalStore.storeFilesCount")
+  {
+    smsc.scheduler->setStoresCount(cfg.getInt(paramName.c_str()));
+  }else if(paramName=="map.busyMTDelay")
+  {
+    mapio::MapDialogContainer::setBusyMTDelay(cfg.getInt(paramName.c_str()));
+  }else if(paramName=="map.lockedByMODelay")
+  {
+    mapio::MapDialogContainer::setLockedByMoDelay(cfg.getInt(paramName.c_str()));
+  }
+}
 
 }//smsc

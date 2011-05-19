@@ -98,10 +98,18 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
     optional.set_networkErrorCode((uint8_t*)&nec + 1);
   }
 
-  if ( sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD) ){
+  if ( sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) )
+  {
     unsigned len;
-    const char * data = sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
-    optional.set_messagePayload(data,len);
+    const char * data = sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    if(!HSNS_isEqual() && sms->getIntProperty(Tag::SMPP_DATA_CODING)==8)
+    {
+      optional.set_messagePayload("",0);
+      UCS_htons(optional.messagePayload.alloc(len), data, len, sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+    }else
+    {
+      optional.set_messagePayload(data,len);
+    }
   }
   if(!(smeFlags&sfForceGsmDatacoding))
   {
@@ -190,6 +198,13 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
     const char* opt=sms->getBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,&len);
     optional.set_unknownFields(opt,len);
   }
+
+  if(sms->hasBinProperty(Tag::SMPP_CALLBACK_NUM))
+  {
+    unsigned len;
+    const char* val=sms->getBinProperty(Tag::SMPP_CALLBACK_NUM,&len);
+    optional.set_callbackNum(val,len);
+  }
 }
 
 inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
@@ -229,10 +244,19 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
       //char msg[256];
       //const smsc::sms::Body& sms_body = sms->getMessageBody();
       unsigned len = 0;
-      const char* short_msg = sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
+      const char* short_msg = sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
       unsigned msg_length = sms->getIntProperty(Tag::SMPP_SM_LENGTH);
       __require__(msg_length <= len);
-      message.set_shortMessage(short_msg,msg_length);
+      if(msg_length>0)
+      {
+        if(!HSNS_isEqual() && sms->getIntProperty(Tag::SMPP_DATA_CODING)==8)
+        {
+          UCS_htons(message.shortMessage.alloc(len),short_msg,msg_length,sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+        }else
+        {
+          message.set_shortMessage(short_msg,msg_length);
+        }
+      }
       //message.set_smLength((uint8_t)msg_length);
       //message.set_dataCoding((uint8_t)sms_body.getCodingScheme());
       if((smeFlags&sfForceGsmDatacoding) && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
@@ -380,14 +404,18 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
 
   if ( optional.has_messagePayload() )
   {
-    sms->setBinProperty(Tag::SMSC_RAW_PAYLOAD,
-                               optional.get_messagePayload(),
-                               optional.size_messagePayload());
+    sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,optional.get_messagePayload(),optional.size_messagePayload());
+    if(!HSNS_isEqual() && sms->getIntProperty(Tag::SMPP_DATA_CODING)==8)
+    {
+      unsigned len;
+      char* msg=(char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      UCS_ntohs(msg,msg,len,sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+    }
   }else
   {
-    if(!sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
+    if(!sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
     {
-      sms->setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,"",0);
+      sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,"",0);
     }
   }
 
@@ -448,6 +476,10 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
   {
     sms->setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,optional.get_unknownFields(),optional.size_unknownFields());
   }
+  if(optional.has_callbackNum())
+  {
+    sms->setBinProperty(Tag::SMPP_CALLBACK_NUM,optional.get_callbackNum(),optional.size_callbackNum());
+  }
 //  if ( optional.has_protocol_id() )
 //    sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)optional.get_protocol_id());
 }
@@ -493,9 +525,15 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
     //sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
     if(message.shortMessage.length)
     {
-      sms->setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,
+      sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,
                           message.shortMessage.cstr()?message.shortMessage.cstr():"",message.shortMessage.length);
       sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
+      if(!HSNS_isEqual() && message.dataCoding==8)
+      {
+        unsigned len;
+        char* msg=(char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        UCS_ntohs(msg,msg,len,message.get_esmClass());
+      }
     }
     int dc=(uint32_t)message.dataCoding;
     if(smeFlags&sfForceGsmDatacoding)

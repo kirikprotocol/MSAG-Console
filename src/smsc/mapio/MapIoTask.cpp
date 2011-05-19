@@ -21,11 +21,19 @@ USHORT_T MY_USER_ID=USER01_ID;//!!
 
 using namespace std;
 
+namespace smsc{
+namespace mapio{
+
 volatile bool MAP_connectedInst[10]={
 false,
 };
 
 volatile int MAP_connectedInstCount=0;
+
+}
+}
+
+void warnMapReq(USHORT_T result, const char* func);
 
 #ifdef USE_MAP
 
@@ -65,6 +73,7 @@ extern "C" {
 
   USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn INSTANCEIDARGDEF(rinst), ET96MAP_BIND_STAT_T status)
   {
+    using namespace smsc::mapio;
     __map_warn2__("%s: confirmation received ssn=%d rinst=%d status=%d",__func__,lssn,INSTARG0(rinst),status);
     bool isBound=false;
     if( status == 0  /*|| status==1*/)//already bound is error
@@ -117,6 +126,7 @@ extern "C" {
                            ULONG_T affectedSPC,
                            ULONG_T localSPC)
   {
+    using namespace smsc::mapio;
     __map_warn2__("%s: received ssn=%d rinst=%d user state=%d affected SSN=%d affected SPC=%d local SPC=%d",__func__,lssn,INSTARG0(rinst),userState,affectedSSN,affectedSPC,localSPC);
     if( affectedSPC == localSPC )
     {
@@ -171,6 +181,7 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
                         uint16_t toID,
                         uint8_t inst)
 {
+  using namespace smsc::mapio;
   __map_warn2__("broken conn:%d->%d,%d",fromID,toID,inst);
   MapIoTask::ReconnectThread::reportDisconnect(inst,false);
   /*MutexGuard mg(reconnectMon);
@@ -183,6 +194,9 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
   reconnectMon.notify();*/
   return RETURN_OK;
 }
+
+namespace smsc{
+namespace mapio{
 
 MapDialogContainer::MapDialogContainer()
 {
@@ -604,8 +618,6 @@ void MapIoTask::deinit()
     active=false;
   }
 };*/
-
-void warnMapReq(USHORT_T result, const char* func);
 
 void MapIoTask::killOverflow()
 {
@@ -1414,4 +1426,7 @@ bool isMapBound() {
   //return memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ;
 #endif
   return false;
+}
+
+}
 }

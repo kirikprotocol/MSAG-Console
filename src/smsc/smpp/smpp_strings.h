@@ -7,7 +7,6 @@
 #define  __Cxx_Header__smpp_strings_h__
 
 #include "util/debug.h"
-//#include "smpp_memory.h"
 #include <string.h>
 //#include "smpp_stream.h"
 
@@ -16,7 +15,6 @@ namespace smpp{
 
 /**
   Octet String
-           !
 */
 struct OStr //: public MemoryManagerUnit
 {
@@ -25,6 +23,12 @@ struct OStr //: public MemoryManagerUnit
   uint16_t length;
   OStr() : text(0),length(0) {};
   //void dispose() {if ( text ) smartFree(text);}
+  char* alloc(int sz)
+  {
+    text=new char[sz];
+    length=sz;
+    return text;
+  }
   void dispose() {if ( text ) delete [] text; text = 0; length = 0;}
   ~OStr() {/*__trace__(__PRETTY_FUNCTION__); __watch__(text);*/ dispose();}
   operator const char*(){__require__ (length==0 || text!=NULL); return text;}
@@ -75,7 +79,7 @@ struct OStr //: public MemoryManagerUnit
 
 /**
   C Octet String
-           !
+  ����� ����� �������������� � ����������� ��� ������ �������� ���� ���!
 */
 struct COStr //: public MemoryManagerUnit
 {

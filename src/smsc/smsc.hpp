@@ -2,6 +2,7 @@
 #define __SYSTEM_SMSC_HPP__
 
 #include <sys/types.h>
+#include <vector>
 
 #include "core/threads/ThreadPool.hpp"
 #include "core/buffers/XHash.hpp"
@@ -46,6 +47,10 @@ using smsc::smeman::SmeProxy;
 using smsc::alias::AliasManager;
 using smsc::router::RouteInfo;
 using smsc::config::route::RouteConfig;
+
+namespace statemachine{
+class StateMachine;
+}
 
 
 namespace StatEvents{
@@ -106,6 +111,7 @@ public:
       throw smsc::util::Exception("Attempt to init second smsc instance:%p (previous:%p)",this,instance);
     }
     instance=this;
+    schedulerFreeBandwidthUsage=50;
   };
   ~Smsc();
 
@@ -416,7 +422,7 @@ public:
     inManCom->ChargeSms(id,sms,ctx);
   }
 
-  bool ReportDelivery(int dlgId,const SMS& sms,bool final,int policy)
+  bool ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final,int policy)
   {
     try{
       if(sms.billingRequired() &&
@@ -426,7 +432,7 @@ public:
           )
         )
       {
-        inManCom->Report(dlgId,sms,final);
+        inManCom->Report(id,dlgId,sms,final);
       }
     }catch(std::exception& e)
     {
@@ -578,6 +584,8 @@ protected:
   int schedulerSoftLimit;
   int schedulerHardLimit;
 
+  int schedulerFreeBandwidthUsage;
+
   SmePerformanceMonitor smePerfMonitor;
 
   int eventQueueLimit;
@@ -645,6 +653,17 @@ protected:
   int mainLoopsCount;
   int mapIOTasksCount;
   void* mapioptr;
+
+  class SmscConfigWatcher:public smsc::util::config::IConfigChangeNotifier{
+    virtual smsc::util::config::ConfigParamWatchType getWatchedParams(smsc::util::config::ParamsVector& argParams);
+    virtual void paramsChanged();
+    virtual void paramChanged(smsc::util::config::ConfigValueType cvt,const std::string& paramName);
+  };
+  SmscConfigWatcher cfgWatch;
+
+  int stateMachinesCount;
+  std::vector<StateMachine*> stateMachines;
+
 
   const SmscConfigs* configs;
 

@@ -213,12 +213,12 @@ static std::string AltConcat(const char* prefix,Hash<std::list<std::string> >& h
 
 StateMachine::StateMachine(EventQueue& q,
                smsc::store::MessageStore* st,
-               smsc::Smsc *app):
+               int argIdx):
                eq(q),
                store(st),
-               smsc(app)
-
+               smIdx(argIdx)
 {
+  smsc=&Smsc::getInstance();
   using namespace smsc::util::regexp;
   smsLog=smsc::logger::Logger::getInstance("sms.trace");
   perfLog=smsc::logger::Logger::getInstance("sm.perf");
@@ -856,7 +856,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   if(newlen>255)
   {
     sms.getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
-    sms.getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+    //sms.getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,0);
     sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,(unsigned)newlen);
   }else
@@ -1095,7 +1095,7 @@ StateType StateMachine::alert(Tuple& t)
         sms.getDestinationAddress().toString().c_str(),
         sms.getValidTime(),now,sms.getAttemptsCount());
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-    smsc->ReportDelivery(ad.inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,ad.inDlgId,sms,true,Smsc::chargeOnDelivery);
     onUndeliverable(t.msgId,sms);
     return EXPIRED_STATE;
   }
@@ -1104,7 +1104,7 @@ StateType StateMachine::alert(Tuple& t)
 
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
-    smsc->ReportDelivery(ad.inDlgId,sms,
+    smsc->ReportDelivery(t.msgId,ad.inDlgId,sms,
         dgortr,
         Smsc::chargeOnDelivery
     );
@@ -1208,7 +1208,7 @@ StateType StateMachine::replace(Tuple& t)
   {
     smsc_log_debug(smsLog,"REPLACE: dropping payload");
     sms.getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-    sms.getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+    //sms.getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
   }
 
   try{
@@ -1239,7 +1239,7 @@ StateType StateMachine::replace(Tuple& t)
 
   sms.setBinProperty
   (
-    Tag::SMSC_RAW_SHORTMESSAGE,
+    Tag::SMPP_SHORT_MESSAGE,
     t.command->get_replaceSm().shortMessage.get(),
     t.command->get_replaceSm().smLength
   );
@@ -1859,7 +1859,13 @@ void StateMachine::submitReceipt(SMS& sms,int type)
       sms.setDestinationSmeId(rr.info.destSmeSystemId.c_str());
       sms.setServiceId(rr.info.serviceId);
       sms.setArchivationRequested(rr.info.archived);
-      sms.setBillingRecord(rr.info.billing);
+      if(rr.info.billing==BILLING_CDR)
+      {
+        sms.setBillingRecord(rr.info.billing);
+      }else
+      {
+        sms.setBillingRecord(BILLING_NONE);
+      }
 
       sms.setEServiceType(serviceType.c_str());
       sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
@@ -1938,13 +1944,13 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 {
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
-    if(sms.lastResult!=0)
+/*    if(sms.lastResult!=0)
     {
       if(sms.hasIntProperty(Tag::SMPP_SET_DPF))
       {
         smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
       }
-    }
+    }*/
     //smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
     //smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
     SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
@@ -1983,6 +1989,7 @@ bool StateMachine::ExtraProcessing(SbmContext& c)
 {
   bool toSmsx=c.rr.destProxy && !strcmp(c.rr.destProxy->getSystemId(),"smsx");
   bool isMultipart=c.sms->hasBinProperty(Tag::SMSC_CONCATINFO) || c.sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT);
+  using namespace smsc::extra;
 
   if((((c.fromMap || c.fromDistrList) && c.toMap) || (c.fromMap && toSmsx))&& !isMultipart)
   {
@@ -2111,7 +2118,7 @@ bool StateMachine::processMerge(SbmContext& c)
         c.sms->getOriginatingAddress().toString().c_str(),
         c.sms->getDestinationAddress().toString().c_str(),
         idx,num,(int)mr,dc,c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
-    c.sms->setIntProperty(Tag::SMPP_ESM_CLASS,c.sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
+    //c.sms->setIntProperty(Tag::SMPP_ESM_CLASS,c.sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
     TmpBuf<char,2048> tmp(0);
     if(!c.isForwardTo)
     {
@@ -2130,7 +2137,7 @@ bool StateMachine::processMerge(SbmContext& c)
     }
     c.sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(unsigned)tmp.GetPos());
     c.sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
-    c.sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+    //c.sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     c.sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
     c.sms->setIntProperty(Tag::SMSC_ORIGINALPARTSNUM,num);
 
@@ -2470,6 +2477,7 @@ bool StateMachine::processMerge(SbmContext& c)
         tmp.Append(newtmp.get(),newtmp.GetPos());
         newsms.messageBody.dropProperty(Tag::SMSC_CONCATINFO);
         newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+        newsms.setIntProperty(Tag::SMPP_ESM_CLASS,newsms.getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
         newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(int)tmp.GetPos());
         try{
           processDirectives(newsms,c.profile,c.srcprof);

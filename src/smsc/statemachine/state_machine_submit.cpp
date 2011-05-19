@@ -33,6 +33,9 @@
 namespace smsc{
 namespace statemachine{
 
+#ifdef SMSEXTRA
+using namespace smsc::extra;
+#endif
 using namespace smsc::smeman;
 using namespace smsc::sms;
 using namespace StateTypeValue;
@@ -200,13 +203,13 @@ StateType StateMachine::submit(Tuple& t)
   {
     unsigned len;
     const unsigned char* msg;
-    if(sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD))
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
-      msg=(const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
     }
     else
     {
-      msg=(const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
     }
     if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
@@ -1376,7 +1379,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"failed to create sms with Id=%lld,oa=%s,da=%s",t.msgId,sms->getOriginatingAddress().toString().c_str(),sms->getDestinationAddress().toString().c_str());
       submitResp(t,sms,Status::SYSERR);
-      smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
+      smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
       return ERROR_STATE;
     }
   }else if(createSms==scsReplace)
@@ -1388,13 +1391,13 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"failed to create/replace sms with Id=%lld:%s",t.msgId,e.what());
       submitResp(t,sms,Status::SYSERR);
-      smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
+      smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
       return ERROR_STATE;
     }
   }
 
 
-  smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeOnSubmit);
+  smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,true,Smsc::chargeOnSubmit);
 
   //
   // stored
@@ -1417,14 +1420,15 @@ StateType StateMachine::submitChargeResp(Tuple& t)
                          );
     try{
       src_proxy->putCommand(response);
-    }catch(...)
+    }catch(std::exception& e)
     {
-      warn2(smsLog, "SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      warn2(smsLog, "SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s - %s",
         t.msgId,dialogId,
         sms->getOriginatingAddress().toString().c_str(),
         sms->getDestinationAddress().toString().c_str(),
         src_proxy->getSystemId(),
-        sms->getDestinationSmeId()
+        sms->getDestinationSmeId(),
+        e.what()
       );
     }
   }
@@ -1440,7 +1444,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   {
     smsc->getScheduler()->AddScheduledSms(t.msgId,*sms,dest_proxy_index);
     sms->setLastResult(Status::DEFERREDDELIVERY);
-    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,false,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
 
@@ -1494,9 +1498,9 @@ StateType StateMachine::submitChargeResp(Tuple& t)
               );
           try{
             prx->putCommand(resp);
-          }catch(...)
+          }catch(std::exception& e)
           {
-            warn1(sm->smsLog,"SUBMIT: failed to put response command");
+            warn2(sm->smsLog,"SUBMIT: failed to put response command - '%s'",e.what());
           }
         }
       }
@@ -1511,18 +1515,20 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     INSmsChargeResponse::SubmitContext* cntx;
     bool final;
     bool active;
+    SMSId id;
     DeliveryReportGuard():active(true){}
     ~DeliveryReportGuard()
     {
       if(active)
       {
-        smsc->ReportDelivery(cntx->inDlgId,*sms,final,Smsc::chargeOnDelivery);
+        smsc->ReportDelivery(id,cntx->inDlgId,*sms,final,Smsc::chargeOnDelivery);
       }
     }
   };
   DeliveryReportGuard repGuard;
   repGuard.smsc=smsc;
   repGuard.sms=sms;
+  repGuard.id=t.msgId;
   repGuard.cntx=&resp->cntx;
   repGuard.final=isDatagram || isTransaction;
 

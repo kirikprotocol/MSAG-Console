@@ -9,6 +9,7 @@
 using namespace smsc::core::buffers;
 using namespace smsc::profiler;
 using namespace smsc::sms;
+using namespace smsc::util;
 
 static char profileMagic[]="SmScPrOf";
 

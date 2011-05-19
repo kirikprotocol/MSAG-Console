@@ -19,42 +19,12 @@
 #include "MapLimits.hpp"
 #include "smsc/status.h"
 #include "core/buffers/FixedLengthString.hpp"
-
-using namespace std;
-using namespace smsc::sms;
-using namespace smsc::smeman;
-
-namespace smsc{
-namespace logger{
-extern smsc::logger::Logger* _map_cat;
-extern smsc::logger::Logger* _mapmsg_cat;
-extern smsc::logger::Logger* _mapdlg_cat;
-}
-}
-
-using namespace smsc::util;
-#define __map_trace2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, format,__VA_ARGS__)
-#define __map_trace__(text) __debug__(smsc::logger::_map_cat,text)
-#define __map_warn2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
-#define __map_warn__(text) __warn__(smsc::logger::_map_cat,text)
-#define __mapdlg_trace2__(format,...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
-#define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
-
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/threads/ThreadedTask.hpp"
 
 #include "MapProxy.h"
-
-using smsc::mapio::MapProxy;
-
-using smsc::core::buffers::XHash;
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
-using smsc::core::threads::ThreadedTask;
-using smsc::core::synchronization::Event;
-
 
 extern "C" {
 #include <ss7cp.h>
@@ -74,6 +44,24 @@ extern "C" {
 #include <et96map_mobility.h>
 #endif
 }
+
+
+namespace smsc{
+namespace logger{
+extern smsc::logger::Logger* _map_cat;
+extern smsc::logger::Logger* _mapmsg_cat;
+extern smsc::logger::Logger* _mapdlg_cat;
+}
+namespace mapio{
+
+#define __map_trace2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, format,__VA_ARGS__)
+#define __map_trace__(text) __debug__(smsc::logger::_map_cat,text)
+#define __map_warn2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
+#define __map_warn__(text) __warn__(smsc::logger::_map_cat,text)
+#define __mapdlg_trace2__(format,...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
+#define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
+
+
 
 #define SSN 8
 #define USSD_SSN (MapDialogContainer::GetUSSDSSN())
@@ -194,7 +182,11 @@ enum MapState{
   MAPST_WaitUSSDErrorClose = 52,
   MAPST_WaitUssdAtiOpenConf = 53,
   MAPST_WaitUssdAtiConf = 54,
-  MAPST_WaitUssdAtiClose=55
+  MAPST_WaitUssdAtiClose=55,
+  MAPST_WaitNIUssdAtiOpenConf = 56,
+  MAPST_WaitNIUssdAtiConf = 57,
+  MAPST_WaitNIUssdAtiClose=58
+
 };
 
 class hash_func_ET96MAP_DID{
@@ -209,10 +201,10 @@ public:
 struct MAPDIALOG_ERROR : public std::runtime_error
 {
   unsigned code;
-  MAPDIALOG_ERROR(unsigned code,const string& s) :
+  MAPDIALOG_ERROR(unsigned code,const std::string& s) :
     runtime_error(s),code(code){}
-  MAPDIALOG_ERROR(const string& s) :
-    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::Status::MAPINTERNALFAILURE)){}
+  MAPDIALOG_ERROR(const std::string& s) :
+    runtime_error(s),code(MAKE_ERRORCODE(smsc::smeman::CMD_ERR_TEMP,smsc::Status::MAPINTERNALFAILURE)){}
 };
 
 
@@ -253,7 +245,7 @@ typedef smsc::core::buffers::FixedLengthString<32> String32;
   \class MapDialog
 */
 struct MapDialog{
-  Mutex mutex;
+  smsc::core::synchronization::Mutex mutex;
   bool isUSSD:1;
   bool mms:1;
   bool hasIndAddress:1;
@@ -275,6 +267,7 @@ struct MapDialog{
   bool lastUssdMessage:1;
   bool callbarred:1;
   bool teleservicenotprov:1;
+  bool useAtiAfterSri:1;
   char clevel;
   MapState state;
   int dlgType;
@@ -287,7 +280,7 @@ struct MapDialog{
   std::string subsystem;
   std::string origAddress;
   std::string destAddress;
-  std::auto_ptr<SMS> sms;
+  std::auto_ptr<smsc::sms::SMS> sms;
   std::auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
   ET96MAP_ADDRESS_T m_msAddr;
   ET96MAP_ADDRESS_T m_scAddr;
@@ -296,7 +289,7 @@ struct MapDialog{
   ET96MAP_SS7_ADDR_T mshlrAddr;
   ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
-  list<SmscCommand> chain;
+  std::list<smsc::smeman::SmscCommand> chain;
   unsigned version;
   unsigned hlrVersion;
   String32 s_imsi;
@@ -307,7 +300,7 @@ struct MapDialog{
   unsigned ussdMrRef;
   ET96MAP_MWD_STATUS_T mwdStatus;
   unsigned routeErr;
-  SmscCommand QueryAbonentCommand;
+  smsc::smeman::SmscCommand QueryAbonentCommand;
   unsigned udhiRef;
   unsigned udhiMsgNum;
   unsigned udhiMsgCount;
@@ -345,6 +338,7 @@ struct MapDialog{
     ussdProcessing=false;
     noSri=false;
     lastUssdMessage=false;
+    useAtiAfterSri=false;
     state=MAPST_START;
     dialogid_map=dialogid;
     dialogid_smsc=0;
@@ -380,8 +374,8 @@ struct MapDialog{
     maked_at_mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
     __require__(cmdQueue.Count()==0);
     chain.clear();
-    sms = auto_ptr<SMS>(0);
-    auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
+    sms = std::auto_ptr<smsc::sms::SMS>(0);
+    auto_ui = std::auto_ptr<ET96MAP_SM_RP_UI_T>(0);
     pthread_cond_init(&condVar,0);
   }
 /*
@@ -461,8 +455,8 @@ struct MapDialog{
       inst=instanceId;
       associate = 0;
       MAPSTATS_DumpDialogLC(this);
-      sms = auto_ptr<SMS>(0);
-      auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
+      sms = std::auto_ptr<smsc::sms::SMS>(0);
+      auto_ui = std::auto_ptr<ET96MAP_SM_RP_UI_T>(0);
       chain.clear();
       s_imsi.clear();
       s_msc.clear();
@@ -487,7 +481,7 @@ struct MapDialog{
   }
 
   MapDialog* AddRef(){
-    MutexGuard g(mutex);
+    smsc::core::synchronization::MutexGuard g(mutex);
     ++ref_count;
     //__map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
     return this;
@@ -502,16 +496,16 @@ struct MapDialog{
 
   MapDialog* AddRefIfAllocated()
   {
-    MutexGuard g(mutex);
+    smsc::core::synchronization::MutexGuard g(mutex);
     if(!isAllocated)return 0;
     ++ref_count;
     //__map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
     return this;
   }
 
-  void AssignSms(SMS* argSms)
+  void AssignSms(smsc::sms::SMS* argSms)
   {
-    MutexGuard g(mutex);
+    smsc::core::synchronization::MutexGuard g(mutex);
     sms.reset(argSms);
   }
 
@@ -522,8 +516,8 @@ struct MapDialog{
     //dialogid_smsc;
     invokeId = 0;
     //string abonent;
-    sms = auto_ptr<SMS>(0);
-    auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
+    sms = std::auto_ptr<smsc::sms::SMS>(0);
+    auto_ui = std::auto_ptr<ET96MAP_SM_RP_UI_T>(0);
     //ET96MAP_ADDRESS_T m_msAddr;
     //ET96MAP_ADDRESS_T m_scAddr;
     //ET96MAP_SS7_ADDR_T scAddr;
@@ -536,6 +530,7 @@ struct MapDialog{
     mms = false;
     isUSSD = false;
     noSri=false;
+    useAtiAfterSri=false;
     noRespFromPeer=false;
     lastUssdMessage=false;
     s_imsi.clear();
@@ -577,7 +572,7 @@ enum ReAssignDialogType{
 */
 class MapDialogContainer{
   struct StringHashFunc{
-    static inline int CalcHash(const string& key){
+    static inline int CalcHash(const std::string& key){
       const unsigned char* curr = (const unsigned char*)key.c_str();
       unsigned count = *curr;
       while(*curr){count += 37 * count + *curr;curr++;}
@@ -586,18 +581,18 @@ class MapDialogContainer{
     }
   };
   static MapDialogContainer* container;
-  RecursiveMutex sync;
+  smsc::core::synchronization::RecursiveMutex sync;
   static MapProxy* proxy;
   time_t last_dump_time;
 
   MapDialog** dlgPool[256][10];
   uint32_t dialogsCount;
 
-  XHash<const string,MapDialog*,StringHashFunc> lock_map;
-  list<unsigned> dialogId_pool[256][10];
+  smsc::core::buffers::XHash<const std::string,MapDialog*,StringHashFunc> lock_map;
+  std::list<unsigned> dialogId_pool[256][10];
   friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
-  static string SC_ADRESS_VALUE;
-  static string USSD_ADRESS_VALUE;
+  static std::string SC_ADRESS_VALUE;
+  static std::string USSD_ADRESS_VALUE;
   static ET96MAP_LOCAL_SSN_T ussdSSN;
   static int busyMTDelay;
   static int lockedByMoDelay;
@@ -696,7 +691,7 @@ public:
    **/
   void restartStatistics()
   {
-    MutexGuard g(sync);
+    smsc::core::synchronization::MutexGuard g(sync);
     MAPSTATS_Restart();
   }
 
@@ -711,7 +706,7 @@ public:
 
   void DropAllDialogs(int rinst)
   {
-    MutexGuard g(sync);
+    smsc::core::synchronization::MutexGuard g(sync);
     __mapdlg_trace2__("%s: dropping all dialogs for rinst=%d",__func__,rinst);
     for(int j=0;j<numLocalSSNs;j++)
     {
@@ -745,12 +740,12 @@ public:
   static void SetNodeNumber(const int n) { nodeNumber = n; }
   static int GetNodesCount() { return nodesCount; }
   static void SetNodesCount(const int n) { nodesCount = n; }
-  static const string& GetSCAdress() { return SC_ADRESS_VALUE; }
-  static void SetSCAdress(const string& scAddr) { SC_ADRESS_VALUE = scAddr; }
-  static const string& GetUSSDAdress() { return USSD_ADRESS_VALUE; }
-  static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
+  static const std::string& GetSCAdress() { return SC_ADRESS_VALUE; }
+  static void SetSCAdress(const std::string& scAddr) { SC_ADRESS_VALUE = scAddr; }
+  static const std::string& GetUSSDAdress() { return USSD_ADRESS_VALUE; }
+  static void SetUSSDAdress(const std::string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
   static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
-  static void SetUSSDSSN(int ssn, const string& addUssdSSN)
+  static void SetUSSDSSN(int ssn, const std::string& addUssdSSN)
   {
     ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn;
     int addssns = 0;
@@ -805,7 +800,7 @@ public:
 
   unsigned getNumberOfDialogs()
   {
-    MutexGuard g(sync);
+    smsc::core::synchronization::MutexGuard g(sync);
     return lock_map.Count();
   }
 
@@ -823,13 +818,13 @@ public:
   {
     if(inst>9 || !dlgPool[lssn][inst])
     {
-      throw Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
+      throw smsc::util::Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
     }
     MapDialog* dlg=dlgPool[lssn][inst][dialogueid];
-    MutexGuard mg(dlg->mutex);
+    smsc::core::synchronization::MutexGuard mg(dlg->mutex);
     if(dlg->isAllocated)
     {
-      throw Exception("DialogContainer: attempt to allocate already allocated dialog:%d/%d",dialogueid,lssn);
+      throw smsc::util::Exception("DialogContainer: attempt to allocate already allocated dialog:%d/%d",dialogueid,lssn);
     }
     __map_trace2__("new dlg:dlgId=%d,lssn=%d,inst=%d",dialogueid,lssn,inst);
     dlg->InitDialog(dialogueid,lssn,inst,version);
@@ -841,13 +836,13 @@ public:
   {
     if(inst>9 || !dlgPool[lssn][inst])
     {
-      throw Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
+      throw smsc::util::Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
     }
     MapDialog* dlg=dlgPool[lssn][inst][dialogueid];
-    MutexGuard mg(dlg->mutex);
+    smsc::core::synchronization::MutexGuard mg(dlg->mutex);
     if(dlg->isAllocated)
     {
-      throw Exception("DialogContainer: attempt to allocate already allocated dialog:%d/%d",dialogueid,lssn);
+      throw smsc::util::Exception("DialogContainer: attempt to allocate already allocated dialog:%d/%d",dialogueid,lssn);
     }
     __map_trace2__("new dlg:dlgId=%d,lssn=%d,inst=%d",dialogueid,lssn,inst);
     dlg->InitDialog(dialogueid,lssn,inst,version);
@@ -861,7 +856,7 @@ public:
   {
     if(inst>9 || dlgPool[lssn][inst]==0)
     {
-      throw Exception("getDialog: unsupported ssn/inst:%d,%d",lssn,inst);
+      throw smsc::util::Exception("getDialog: unsupported ssn/inst:%d,%d",lssn,inst);
     }
     return dlgPool[lssn][inst][dialogueid]->AddRefIfAllocated();
   }
@@ -869,16 +864,16 @@ public:
   MapDialog* getLockedDialogOrEnqueue(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,EINSS7INSTANCE_T inst,MSG_T& msg)
   {
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       MAPSTATS_Update(MAPSTATS_GSMRECV);
     }
     if(inst>9 || dlgPool[lssn][inst]==0)
     {
       EINSS7CpReleaseMsgBuffer(&msg);
-      throw Exception("getLockedDialogOrEnqueue: unsupported ssn/inst:%d,%d",lssn,inst);
+      throw smsc::util::Exception("getLockedDialogOrEnqueue: unsupported ssn/inst:%d,%d",lssn,inst);
     }
     MapDialog* dlg=dlgPool[lssn][inst][dialogueid];
-    MutexGuard mg(dlg->mutex);
+    smsc::core::synchronization::MutexGuard mg(dlg->mutex);
     if(!dlg->isAllocated)
     {
       __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u,inst=%u",(unsigned int)msg.primitive,(unsigned int)dialogueid,(unsigned int)lssn,(unsigned)inst);
@@ -906,26 +901,26 @@ public:
     {
       if( MAPSTATS_dialogs[MAPSTAT_DLGUSSD] >= MapLimits::getInstance().getLimitUSSD() )
       {
-        MutexGuard g(sync);
+        smsc::core::synchronization::MutexGuard g(sync);
         Dump();
-        throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGUSSD] , MapLimits::getInstance().getLimitUSSD());
+        throw smsc::smeman::ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGUSSD] , MapLimits::getInstance().getLimitUSSD());
       }
     }else
     {
       if( MAPSTATS_dialogs[MAPSTAT_DLGIN] >= MapLimits::getInstance().getLimitIn() )
       {
-        MutexGuard g(sync);
+        smsc::core::synchronization::MutexGuard g(sync);
         Dump();
-        throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGIN] , MapLimits::getInstance().getLimitIn());
+        throw smsc::smeman::ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGIN] , MapLimits::getInstance().getLimitIn());
       }
     }
     if( dialogueid <= MAX_DIALOGID_POOLED )
     {
       __warn2__(smsc::logger::_mapdlg_cat,"Dialog form SS7 network has too low ID 0x%x.",dialogueid);
-      throw ProxyQueueLimitException(dialogueid , MAX_DIALOGID_POOLED);
+      throw smsc::smeman::ProxyQueueLimitException(dialogueid , MAX_DIALOGID_POOLED);
     }
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       MAPSTATS_Update(isUSSD?MAPSTATS_NEWDIALOG_USSD:MAPSTATS_NEWDIALOG_IN);
       MAPSTATS_Update(MAPSTATS_GSMRECV);
     }
@@ -935,7 +930,7 @@ public:
       return newLockedDialogAndRef(dialogueid,lssn,rinst,version,isUSSD?MAPSTAT_DLGUSSD:MAPSTAT_DLGIN);
     } catch(std::exception& e)
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       MAPSTATS_Update(isUSSD?MAPSTATS_DISPOSEDIALOG_USSD:MAPSTATS_DISPOSEDIALOG_IN);
       throw;
     }
@@ -946,11 +941,11 @@ public:
     using smsc::mapio::MapLimits;
     if(MAPSTATS_dialogs[MAPSTAT_DLGINSRI]>=MapLimits::getInstance().getLimitInSRI())
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       Dump();
       throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGINSRI],MapLimits::getInstance().getLimitInSRI());
     }
-    MutexGuard g(sync);
+    smsc::core::synchronization::MutexGuard g(sync);
     int rinst=getNextRInst();
     if ( dialogId_pool[lssn][rinst].empty() ) {
       Dump();
@@ -978,11 +973,11 @@ public:
     using smsc::mapio::MapLimits;
     if(MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI]>=MapLimits::getInstance().getLimitOutSRI())
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       Dump();
       throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI],MapLimits::getInstance().getLimitOutSRI());
     }
-    MutexGuard g(sync);
+    smsc::core::synchronization::MutexGuard g(sync);
     int rinst=getNextRInst();
     if ( dialogId_pool[lssn][rinst].empty() ) {
       Dump();
@@ -1009,7 +1004,7 @@ public:
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)
   {
     MapDialog* item=0;
-    MutexGuard g(sync);
+    smsc::core::synchronization::MutexGuard g(sync);
     __mapdlg_trace2__("try to create SMSC dialog on abonent %s",abonent.c_str());
     if (abonent.length() != 0)
     {
@@ -1035,16 +1030,17 @@ public:
         MutexGuard mg(item->mutex);
         if(!item->isDropping)//this dialog is currently processed by dropmapdialog function in map state machine
         {
-          if( item->sms.get() && item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) )
+          if( item->sms.get() && item->sms->getIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND)==1 )
           {
             // check if it's really next part of concatenated message
-            if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) )
+            if( cmd->get_sms()->getIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND)!=1 && cmd->get_sms()->getConcatSeqNum()==0)
             {
               throw NextMMSPartWaiting("Waiting next part of concat message");
             }
-            if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
+            if( item->sms->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() ||
+                item->sms->getOriginatingAddress()!=cmd->get_sms()->getOriginatingAddress())
             {
-              __mapdlg_trace2__("Waiting next part of other concat message: %d != %d",item->sms.get()->getConcatMsgRef(),cmd->get_sms()->getConcatMsgRef());
+              __mapdlg_trace2__("Waiting next part of other concat message: %d != %d",item->sms->getConcatMsgRef(),cmd->get_sms()->getConcatMsgRef());
               throw NextMMSPartWaiting("Waiting next part of other concat message");
             }
             if( item->state == MAPST_WaitNextMMS )
@@ -1117,7 +1113,7 @@ public:
     ET96MAP_DIALOGUE_ID_T map_dialog;
     int rinst=getNextRInst();
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       if ( dialogId_pool[lssn][rinst].empty() )
       {
         smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
@@ -1144,7 +1140,7 @@ public:
       __mapdlg_trace2__("new USSD dialog 0x%p for dialogid 0x%x/0x%x",dlg,smsc_did,map_dialog);
     }catch(...)
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       dialogId_pool[lssn][rinst].push_back(map_dialog);
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUTSRI);
       throw;
@@ -1177,7 +1173,7 @@ public:
     }
     ET96MAP_DIALOGUE_ID_T dialogid_map;
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       MAPSTATS_DumpDialogLC(dlg);
       int newCLevel=-1;
       if(dlgType==radtOut)
@@ -1286,14 +1282,14 @@ public:
 
   void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId,ET96MAP_LOCAL_SSN_T ssn,EINSS7INSTANCE_T inst)
   {
-    MutexGuard g(sync);
+    smsc::core::synchronization::MutexGuard g(sync);
     dialogId_pool[ssn][inst].push_back(dialogueId);
   }
 
   void dropDialog(MapDialog* item)
   {
     {
-      MutexGuard g(sync);
+      smsc::core::synchronization::MutexGuard g(sync);
       dropDialogUnlocked(item);
     }
     item->Release();
@@ -1636,7 +1632,7 @@ public:
   protected:
     bool isStopping;
     bool firstConnect;
-    static EventMonitor reconnectMon;
+    static smsc::core::synchronization::EventMonitor reconnectMon;
   };
 
 private:
@@ -1647,8 +1643,8 @@ private:
   smsc::core::synchronization::EventMonitor monitors[MAXIOTASKS];
   unsigned char* widxMap[10][256];
   smsc::core::threads::ThreadPool tp;
-  Event* startevent;
-  EventMonitor receiveMon;
+  smsc::core::synchronization::Event* startevent;
+  smsc::core::synchronization::EventMonitor receiveMon;
   bool isStopping;
   bool is_started;
   void dispatcher(int idx);
@@ -1658,5 +1654,8 @@ private:
 
   void handleMessage(MSG_T& message);
 };
+
+}
+}
 
 #endif // __header_MAPIO_h__

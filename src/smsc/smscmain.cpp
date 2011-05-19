@@ -30,6 +30,7 @@ extern "C" void atExitHandler(void)
 int main(int argc,char* argv[])
 {
   smsc::logger::Logger::Init();
+  using smsc::util::findConfigFile;
   tzset();
   if(setlocale(LC_CTYPE,"")==0)
   {
@@ -86,7 +87,7 @@ int main(int argc,char* argv[])
     smsc::SmscConfigs cfgs;
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMainConfig);
-      smsc::util::config::Manager::init(findConfigFile("config.xml"));
+      smsc::util::config::Manager::init(smsc::util::findConfigFile("config.xml"));
 
       smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMainConfig);
     }

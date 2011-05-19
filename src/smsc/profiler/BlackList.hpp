@@ -38,7 +38,7 @@ public:
     mtime=st.st_mtime;
     lastCheck=time(NULL);
   }
-  bool check(const string& word)
+  bool check(const std::string& word)
   {
     time_t now=time(NULL);
     if(now-lastCheck>checkInterval)

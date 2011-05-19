@@ -138,7 +138,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           sms.getDestinationAddress().toString().c_str(),
           softLimit?"denied by soft sched limit":"expired",sms.getValidTime(),now,sms.getAttemptsCount());
       sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-      smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
+      smsc->ReportDelivery(t.msgId,t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
       return EXPIRED_STATE;
     }
   }
@@ -173,11 +173,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           std::string savedDivert=sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
           sms.getMessageBody().dropProperty(Tag::SMSC_DIVERTED_TO);
-          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+          smsc->ReportDelivery(t.msgId,t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
           sms.setStrProperty(Tag::SMSC_DIVERTED_TO,savedDivert.c_str());
         }else
         {
-          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+          smsc->ReportDelivery(t.msgId,t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
         }
       }catch(std::exception& e)
       {
@@ -391,10 +391,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
   if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO) ||
      (sms.hasBinProperty(Tag::SMSC_CONCATINFO) && sms.getConcatSeqNum()==0))
   {
-    if(createCopyOnNickUsage && sms.getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK)
+    if(createCopyOnNickUsage && sms.getIntProperty(Tag::SMSC_EXTRAFLAGS)&smsc::extra::EXTRA_NICK)
     {
       SMS newsms=sms;
-      newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,EXTRA_FAKE);
+      newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,smsc::extra::EXTRA_FAKE);
       try{
         SMSId msgId=store->getNextId();
         newsms.setSourceSmeId(smscSmeId.c_str());
@@ -490,16 +490,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
                          );
         try{
           src_proxy->putCommand(resp);
-        }catch(...)
+        }catch(std::exception& e)
         {
-          smsc_log_warn(smsLog,"DELIVERYRESP: failed to put transaction response command");
+          smsc_log_warn(smsLog,"DELIVERYRESP: failed to put transaction response command - %s",e.what());
         }
       }
     }
 
     unsigned int len;
     ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-    info2(smsLog, "DLVRSP: sms has concatinfo, csn=%d/%d;Id=%lld",sms.getConcatSeqNum(),ci->num,t.msgId);
     if(sms.getConcatSeqNum()<ci->num-1)
     {
       if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
@@ -679,11 +678,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
         //
         //
 
-        if(!extractSmsPart(&sms,sms.getConcatSeqNum()))
-        {
-          throw ExtractPartFailedException();
-        }
-
         if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
         {
           uint32_t clen;
@@ -696,6 +690,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms.getMessageBody().dropIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND);
           }
         }
+
+        if(!extractSmsPart(&sms,sms.getConcatSeqNum()))
+        {
+          throw ExtractPartFailedException();
+        }
+
         if(rr.info.replyPath==smsc::router::ReplyPathForce)
         {
           sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
@@ -852,7 +852,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
       store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
 
-      smsc->getScheduler()->DeliveryOk(t.msgId);
+      smsc->getScheduler()->DeliveryOk(t.msgId,sms.getDestinationAddress());
 
     }catch(std::exception& e)
     {

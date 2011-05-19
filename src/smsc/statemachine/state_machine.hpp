@@ -55,7 +55,7 @@ class StateMachine:public smsc::core::threads::ThreadedTask{
 public:
   StateMachine(EventQueue& q,
                smsc::store::MessageStore* st,
-               smsc::Smsc *app);
+               int argIdx);
   virtual ~StateMachine()
   {
   }
@@ -129,6 +129,7 @@ protected:
   std::string serviceType;
   int protocolId;
   SmeSystemId smscSmeId;
+  int smIdx;
 
   static bool StateMachine::checkSourceAddress(const std::string& pattern,const Address& src);
 

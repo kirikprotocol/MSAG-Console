@@ -49,7 +49,7 @@ public:
 
   void ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeResponse::SubmitContext& ctx);
   void ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeResponse::ForwardContext& contex);
-  void Report(int dlgId,const SMS& sms,bool final);
+  void Report(SMSId id,int dlgId,const SMS& sms,bool final);
   void FullReport(SMSId id,const SMS& sms);
 
   //////////
@@ -137,7 +137,7 @@ public:
 
   int getNewDlgId()
   {
-    MutexGuard mg(dlgIdMtx);
+    sync::MutexGuard mg(dlgIdMtx);
     return ++dlgIdSeq;
   }
 

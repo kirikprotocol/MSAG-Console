@@ -14,7 +14,7 @@ ClosedGroupsInterface* ClosedGroupsInterface::instance;
 
 void ClosedGroupsManager::Load(const char* filename)
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
 
   using namespace smsc::util::xml;
   DOMTreeReader reader;

@@ -9,6 +9,7 @@
 #include "util/findConfigFile.h"
 
 using namespace smsc::sms;
+using namespace smsc::util;
 using namespace smsc::core::buffers;
 using namespace smsc::profiler;
 
@@ -375,7 +376,7 @@ int main(int argc,char* argv[])
             inFile.SeekCur(8+AddressSize()+Profile::Size());
           }else
           {
-  
+
             ProfilesMap::iterator it=pmap.find(addr);
             if(it!=pmap.end())
             {

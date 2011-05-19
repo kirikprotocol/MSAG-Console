@@ -59,6 +59,17 @@ StateType StateMachine::forward(Tuple& t)
     return UNKNOWN_STATE;
   }
 
+  time_t now=time(NULL);
+  if( sms.getNextTime()>now && sms.getAttemptsCount()==0 && (!t.command->is_reschedulingForward() || sms.getLastResult()==0) )
+  {
+    debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
+    SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
+    smsc->getScheduler()->AddScheduledSms(t.msgId,sms,idx);
+    sms.setLastResult(Status::INVSCHED);
+    return sms.getState();
+  }
+
+
   bool firstPart=true;
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
@@ -133,7 +144,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_warn(smsLog, "Invalidate of %lld failed",t.msgId);
     smsc->getScheduler()->InvalidSms(t.msgId);
     sms.setLastResult(Status::INVOPTPARAMVAL);
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onDeliveryFail(t.msgId,sms);
     return ERROR_STATE;
   }
@@ -165,7 +176,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"failed to change sms state to undeliverable");
     }
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onDeliveryFail(t.msgId,sms);
     return UNDELIVERABLE_STATE;
   }
@@ -175,22 +186,10 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_warn(smsLog, "FWD: sms Id=%lld is not in enroute (%d)",t.msgId,sms.getState());
     smsc->getScheduler()->InvalidSms(t.msgId);
     sms.setLastResult(Status::SYSERR);
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onDeliveryFail(t.msgId,sms);
     return sms.getState();
   }
-  time_t now=time(NULL);
-  if( sms.getNextTime()>now && sms.getAttemptsCount()==0 && (!isReschedulingForward || sms.getLastResult()==0) )
-  {
-    debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
-    SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
-    smsc->getScheduler()->AddScheduledSms(t.msgId,sms,idx);
-    sms.setLastResult(Status::SYSERR);
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
-    onDeliveryFail(t.msgId,sms);
-    return sms.getState();
-  }
-
 
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
@@ -202,7 +201,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
     smsc->getScheduler()->InvalidSms(t.msgId);
     sms.setLastResult(Status::EXPIRED);
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onUndeliverable(t.msgId,sms);
     return UNDELIVERABLE_STATE;
   }
@@ -222,7 +221,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
           t.msgId,sms.getLastTime(),sms.getValidTime(),
           sms.oldResult,sms.getAttemptsCount());
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-    smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
     onUndeliverable(t.msgId,sms);
     return EXPIRED_STATE;
   }
@@ -324,7 +323,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       changeSmsStateToEnroute(sms,t.msgId,d,Status::NOROUTE,ntt);
       onDeliveryFail(t.msgId,sms);
     }
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ERROR_STATE;
   }
 
@@ -348,13 +347,13 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     char bufsrc[64],bufdst[64];
     sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
     sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
-    smsc_log_warn(smsLog, "FWD: sme is not connected Id=%lld;oa=%s;da=%s;dstSme=%s",t.msgId,bufsrc,bufdst,rr.info.destSmeSystemId.c_str());
+    smsc_log_warn(smsLog, "FWD: sme is not connected Id=%lld;oa=%s;da=%s;dstSme=%s",t.msgId,bufsrc,bufdst,rr.info.srcSmeSystemId.c_str());
     sms.setLastResult(Status::SMENOTCONNECTED);
     onDeliveryFail(t.msgId,sms);
     sendNotifyReport(sms,t.msgId,"destination unavailable");
     Descriptor d;
     changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
   // create task
@@ -368,7 +367,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       debug2(smsLog,"FWD: divert failed - cannot concat, Id=%lld",t.msgId);
       sms.setLastResult(Status::SYSERR);
-      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+      smsc->ReportDelivery(t.msgId,inDlgId,sms,true,Smsc::chargeOnDelivery);
       Descriptor d;
       changeSmsStateToEnroute(sms,t.msgId,d,Status::SYSERR,rescheduleSms(sms));
       return UNKNOWN_STATE;
@@ -427,7 +426,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sms.setLastResult(Status::SMENOTCONNECTED);
     changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
     onDeliveryFail(t.msgId,sms);
-    smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
   Address srcOriginal=sms.getOriginatingAddress();
@@ -464,6 +463,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
         {
           throw ExtractPartFailedException();
         }
+        sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
       }else
       {
         smsc_log_warn(smsLog,"attempt to forward concatenated message but all parts are delivered!!!");
@@ -554,7 +554,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       smsc_log_warn(smsLog,"FORWARD: failed to change state to enroute/undeliverable");
     }
-    smsc->ReportDelivery(inDlgId,sms,Status::isErrorPermanent(errstatus),Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(t.msgId,inDlgId,sms,Status::isErrorPermanent(errstatus),Smsc::chargeOnDelivery);
     return Status::isErrorPermanent(errstatus)?UNDELIVERABLE_STATE:ENROUTE_STATE;
   }
   info2(smsLog, "FWDDLV: deliver ok Id=%lld;seqNum=%d;oa=%s;da=%s;srcSme=%s;dstSme=%s;routeId=%s",t.msgId,dialogId2,

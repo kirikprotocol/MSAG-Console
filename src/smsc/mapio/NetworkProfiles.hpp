@@ -22,10 +22,11 @@ enum AbonentStatusMethod{
 };
 
 struct NetworkProfile{
-  NetworkProfile():drv(drvDestAddr),asMethod(asmSRI4SM){}
+  NetworkProfile():drv(drvDestAddr),asMethod(asmSRI4SM),niVlrMethod(asmSRI4SM){}
   std::string name;
   DestRefValue drv;
   AbonentStatusMethod asMethod;
+  AbonentStatusMethod niVlrMethod;
 };
 
 class NetworkProfiles{

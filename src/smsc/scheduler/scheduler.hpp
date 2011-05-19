@@ -17,6 +17,7 @@
 #include "core/threads/Thread.hpp"
 #include "core/buffers/FixedLengthString.hpp"
 #include "core/buffers/CyclicQueue.hpp"
+#include "core/buffers/IntrList.hpp"
 #include "logger/Logger.h"
 #include "store/MessageStore.h"
 #include "store/FileStorage.h"
@@ -40,7 +41,8 @@ using smsc::core::buffers::Array;
 using smsc::core::buffers::IntHash;
 using smsc::core::synchronization::Event;
 using smsc::core::synchronization::MutexGuard;
-
+namespace sync=smsc::core::synchronization;
+namespace buf=smsc::core::buffers;
 
 class Scheduler;
 
@@ -50,11 +52,9 @@ public:
   static const char storeSig[10];
   static const uint32_t storeVer;
 
-  typedef std::pair<SMSId,uint32_t> IdSeqPair;
-  typedef std::list<IdSeqPair> IdSeqPairList;
-
-  LocalFileStore(Scheduler& sc):sched(sc),loadup(true),running(true),rolling(false)
+  LocalFileStore(Scheduler& argSched):sched(argSched),loadup(true),running(true),rolling(false)
   {
+    wrLog=smsc::logger::Logger::getInstance("wrspeed");
   }
 
   void Stop()
@@ -67,32 +67,59 @@ public:
 
   int Execute();
 
-  void InitPrimaryFile(const std::string& fn)
+  void InitPrimaryFile()
   {
     primaryFile.SetUnbuffered();
-    primaryFile.WOpen(fn.c_str());
+    primaryFile.WOpen(primaryFileName.c_str());
     primaryFile.Write(storeSig,sizeof(storeSig)-1);
     primaryFile.WriteNetInt32(storeVer);
     fileSize=0;
   }
 
-  void Init(smsc::util::config::Manager* cfgman,Smsc* smsc);
-  bool Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBuf,int smsBufSize,bool final=false);
-  bool StartRoll(const IdSeqPairList& argSnap);
+  void Init(smsc::util::config::Manager* cfgman);
+  void Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBuf,int smsBufSize,bool final=false);
+  void StartRoll();
 
 protected:
+
+
+  std::string mkTSFileName(const std::string& ts)
+  {
+    std::string rv=primaryFileName;
+    string::size_type pos=rv.rfind('.');
+    if(pos!=std::string::npos)
+    {
+      rv.insert(pos,".");
+      rv.insert(pos+1,ts);
+    }else
+    {
+      rv+=".";
+      rv+=ts;
+    }
+    return rv;
+  }
+
+  std::string mkBakIdxFileName(size_t idx,bool bad=false)
+  {
+    std::string rv=primaryFileName;
+    char buf[32];
+    sprintf(buf,"%s.%03lu",bad?".bad":"",idx);
+    rv+=buf;
+    return rv;
+  }
+
+  std::string primaryFileName;
   smsc::core::buffers::File primaryFile;
   uint64_t fileSize;
-  Mutex mtx;
+  sync::Mutex mtx;
   Scheduler& sched;
   bool running;
   bool loadup;
   bool rolling;
   uint64_t maxStoreSize;
   time_t minRollTime,lastRollTime;
-  IdSeqPairList snap;
-  std::string rolFile;
-  EventMonitor mon;
+  sync::EventMonitor mon;
+  smsc::logger::Logger* wrLog;
 };
 
 class Scheduler:public smsc::core::threads::ThreadedTask, public SmeProxy,public MessageStore
@@ -112,6 +139,10 @@ public:
     lastRejectTime=0;
     lastRejectReschedule=0;
     delayInit=false;
+    rolling=false;
+    curFile=0;
+    rollFile=0;
+    curFile=new StoreFileData;
   }
   virtual ~Scheduler()
   {
@@ -141,7 +172,18 @@ public:
     }
     */
   }
+  void setStoresCount(int argStoresCount)
+  {
+    maxStoreFiles=argStoresCount;
+  }
+
+  size_t getStoresCount()const
+  {
+    return maxStoreFiles;
+  }
+
   int Execute();
+
   const char* taskName(){return "scheduler";}
 
   void InitMsgId(smsc::util::config::Manager* cfgman,int nodeIdx)
@@ -149,7 +191,7 @@ public:
     char msgIdCfg[64];
     sprintf(msgIdCfg,"MessageStore.LocalStore.msgidfile%d",nodeIdx);
     const char* idFileName=cfgman->getString(msgIdCfg);
-    if(File::Exists(idFileName))
+    if(buf::File::Exists(idFileName))
     {
       idFile.RWOpen(idFileName);
       idSeq=idFile.ReadNetInt64();
@@ -166,12 +208,12 @@ public:
     }
     idFile.SetUnbuffered();
   }
-  void Init(Smsc* psmsc,smsc::util::config::Manager* cfgman);
-  void DelayInit(Smsc* psmsc,smsc::util::config::Manager* cfgman);
+  void Init(smsc::util::config::Manager* cfgman);
+  void DelayInit(smsc::util::config::Manager* cfgman);
 
   void AddScheduledSms(SMSId id,const SMS& sms,SmeIndex idx)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
 
     Chain* c=GetProcessingChain(id);
 
@@ -189,7 +231,7 @@ public:
 
   void UpdateSmsSchedule(SMSId id,const SMS& sms)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
 
     Chain* c=GetChain(sms.getDealiasedDestinationAddress());
     if(!c)
@@ -206,7 +248,7 @@ public:
 
   void CancelSms(SMSId id,const Address& addr)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
 
     Chain* c=GetChain(addr);
     if(!c)
@@ -228,9 +270,9 @@ public:
 
 
 
-  void DeliveryOk(SMSId id)
+  void DeliveryOk(SMSId id,const smsc::sms::Address& addr)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
 
 
     Chain* c=GetProcessingChain(id);
@@ -243,21 +285,44 @@ public:
       {
         firstQueueProcessing.erase(it);
       }
-      return;
+      c=GetChain(addr);
+      if(!c)
+      {
+        return;
+      }
+      if(c->inProcMap)
+      {
+        return;
+      }
+      debug2(log,"DeliverOk - chain found by addr %s",addr.toString().c_str());
     }
-    debug2(log,"DeliverOk: id=%lld, c=%p",id,c);
+    debug2(log,"DeliverOk: id=%lld, addr=%s, c=%p",id,addr.toString().c_str(),c);
     if(c->Count()==0)
     {
       debug2(log,"Try to delete chain %p/%s",c,c->addr.toString().c_str());
       DeleteChain(c);
       return;
     }
-    RescheduleChain(c,time(NULL));
+    time_t rt;
+    if(c->queue.empty())
+    {
+      time_t oldHt=c->headTime;
+      UpdateChainChedule(c);
+      if(oldHt==c->headTime)
+      {
+        return;
+      }
+      rt=c->headTime;
+    }else
+    {
+      rt=time(NULL);
+    }
+    RescheduleChain(c,rt);
   }
 
   void InvalidSms(SMSId id)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
 
     Chain* c=GetProcessingChain(id);
     if(!c)
@@ -284,13 +349,13 @@ public:
 
   void AddFirstTimeForward(SMSId id,const SMS& sms)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
     firstQueue.Push(SchedulerData(id,sms.getValidTime()));
   }
 
   void RejectForward(SMSId id)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
 
     Chain* c=GetProcessingChain(id);
 
@@ -323,7 +388,7 @@ public:
 
   time_t RescheduleSms(SMSId id,SMS& sms,int smeIndex)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
 
     Chain* c=GetProcessingChain(id);
 
@@ -343,17 +408,19 @@ public:
 
     time_t oldntt=sms.getNextTime();
     bool sethead=false;
-    if(sms.attempts==0 && c->queueSize!=0)
+    /*if(sms.attempts==0 && c->queueSize!=0)
     {
-      ChainPush(c,SchedulerData(id,sms.getValidTime()));
+      ChainPush(c,SchedulerData(id,sms.getValidTime(),true));
       debug2(log,"Resched: push sms %lld to tail (%d), c=%p",id,c->headTime,c);
     }else
     {
       debug2(log,"Resched: set sms %lld as head (%d),c=%p",id,sms.getNextTime(),c);
-      ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime()));
+      ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime(),true));
       sethead=true;
     }
+    */
     //smsCount++;
+    ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime(),true));
 
 
     UpdateChainChedule(c);
@@ -368,7 +435,7 @@ public:
 
   int getSmeCount(SmeIndex idx,time_t time)
   {
-    MutexGuard g(mon);
+    sync::MutexGuard g(mon);
     SmeStatMap::iterator it=smeStatMap.find(idx);
     if(it!=smeStatMap.end())
       return it->second.count;
@@ -386,7 +453,7 @@ public:
 
   void getCounts(SchedulerCounts& scCnt)
   {
-    MutexGuard g(mon);
+    sync::MutexGuard g(mon);
 
     scCnt.timeLineCount=smsCount;
     scCnt.timeLineSize=(int)timeLine.size();
@@ -398,7 +465,7 @@ public:
   virtual void close(){}
   virtual void putCommand(const SmscCommand& command)
   {
-    MutexGuard g(mon);
+    sync::MutexGuard g(mon);
     outQueue.Push(command);
     mon.notify();
 
@@ -407,7 +474,7 @@ public:
 
   virtual bool getCommand(SmscCommand& cmd)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
     SchedulerData sd;
     if(queueOrder==qoFirstTime && ftPop(sd))
     {
@@ -426,7 +493,7 @@ public:
 
   virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
     int cnt=0;
     bool order=true;
     SchedulerData sd;
@@ -456,7 +523,7 @@ public:
   virtual void init(){};
   virtual bool hasInput()const
   {
-    MutexGuard guard(mon);
+    sync::MutexGuard guard(mon);
     return timeLine.size()>0 && timeLine.headTime()<=time(NULL);
   }
   virtual void attachMonitor(ProxyMonitor* monitor)
@@ -470,7 +537,7 @@ public:
   }
   virtual uint32_t getNextSequenceNumber()
   {
-    MutexGuard g(seqMtx);
+    sync::MutexGuard g(seqMtx);
     return smeSeq++;
   }
   virtual const char * getSystemId()const
@@ -480,7 +547,7 @@ public:
 
   time_t getScheduleByAddr(const Address& addr)
   {
-    MutexGuard g(mon);
+    sync::MutexGuard g(mon);
     Chain *c=GetChain(addr);
     if(!c)return 0;
     return c->headTime;
@@ -490,7 +557,7 @@ public:
   struct ReplaceIfPresentKey{
     Address org;
     Address dst;
-    FixedLengthString<6> esvctype;
+    buf::FixedLengthString<6> esvctype;
     ReplaceIfPresentKey(const SMS& argSms)
     {
       org=argSms.getOriginatingAddress();
@@ -524,23 +591,22 @@ public:
   ReplaceIfPresentMap replMap;
 
 
-  struct StoreData
-  {
+  struct StoreFileData;
+
+  struct StoreData:public smsc::core::buffers::IntrListNodeBase<StoreData>{
+    SMSId id;
     char* smsBuf;
     int smsBufSize;
-    int seq;
-    ReplaceIfPresentMap::iterator rit;
-    LocalFileStore::IdSeqPairList::iterator it;
-    smsc::core::synchronization::Condition cnd;
+    short seq;
     bool locked;
+    bool final;
+    ReplaceIfPresentMap::iterator rit;
+    StoreFileData* storeFile;
+    smsc::core::synchronization::Condition cnd;
 
     void SaveSms(const SMS& argSms)
     {
-      if(smsBuf!=0)
-      {
-        delete [] smsBuf;
-        smsBuf=0;
-      }
+      Clear();
       BufOps::SmsBuffer buf(0);
       Serialize(argSms,buf);
       smsBufSize=(int)buf.GetPos();
@@ -550,13 +616,12 @@ public:
 
     void CopyBuf(BufOps::SmsBuffer& buf)
     {
-      if(smsBuf)
+      if(smsBufSize!=buf.GetPos())
       {
-        delete [] smsBuf;
-        smsBuf=0;
+        Clear();
+        smsBufSize=(int)buf.GetPos();
+        smsBuf=new char[smsBufSize];
       }
-      smsBufSize=(int)buf.GetPos();
-      smsBuf=new char[smsBufSize];
       memcpy(smsBuf,buf.get(),smsBufSize);
     }
 
@@ -566,38 +631,61 @@ public:
       Deserialize(buf,sms,LocalFileStore::storeVer);
     }
 
-    StoreData(char* argBuf,int argBufSize,int argSeq=0):seq(argSeq)
+    StoreData(SMSId argId,StoreFileData* argStore,char* argBuf,int argBufSize,int argSeq=0):seq(argSeq)
     {
+      id=argId;
+      storeFile=argStore;
       smsBuf=argBuf;
       smsBufSize=argBufSize;
       locked=false;
+      final=false;
     }
 
-    StoreData(BufOps::SmsBuffer& buf,int argSeq=0):seq(argSeq)
+    StoreData(SMSId argId,StoreFileData* argStore,BufOps::SmsBuffer& buf,int argSeq=0):seq(argSeq)
     {
+      id=argId;
+      storeFile=argStore;
       smsBufSize=(int)buf.GetPos();
       smsBuf=new char[smsBufSize];
       memcpy(smsBuf,buf.get(),smsBufSize);
       locked=false;
+      final=false;
     }
 
-    StoreData(const SMS& argSms,int argSeq=0):seq(argSeq)
+    StoreData(SMSId argId,StoreFileData* argStore,const SMS& argSms,int argSeq=0):seq(argSeq)
     {
+      id=argId;
+      storeFile=argStore;
       smsBuf=0;
       smsBufSize=0;
       SaveSms(argSms);
       locked=false;
+      final=false;
     }
-    ~StoreData()
+    void Clear()
     {
       if(smsBuf)
       {
         delete [] smsBuf;
+        smsBuf=0;
+        smsBufSize=0;
       }
+    }
+    ~StoreData()
+    {
+      Clear();
     }
     protected:
       StoreData(const StoreData&){}
   };
+
+  typedef smsc::core::buffers::IntrList<StoreData> SMSList;
+
+  struct StoreFileData:public smsc::core::buffers::IntrListNodeBase<StoreFileData>{
+    SMSList smsList;
+    std::string timestamp;
+  };
+
 
   struct SDLockGuard{
     Mutex& mtx;
@@ -633,7 +721,7 @@ public:
     }
   };
   smsc::core::buffers::XHash<SMSId,StoreData*,SMSIdHashFunc> store;
-  Mutex storeMtx;
+  sync::Mutex storeMtx;
   std::vector<StoreData*> storeDataPool;
 
   int getStoreSize()
@@ -641,15 +729,17 @@ public:
     return store.Count();
   }
 
-  StoreData* newStoreData(BufOps::SmsBuffer& argBuf,int argSeq=0)
+  StoreData* newStoreData(SMSId argId,StoreFileData* argStore,BufOps::SmsBuffer& argBuf,int argSeq=0)
   {
     if(storeDataPool.empty())
     {
-      return new StoreData(argBuf,argSeq);
+      return new StoreData(argId,argStore,argBuf,argSeq);
     }else
     {
       StoreData* sd=storeDataPool.back();
       storeDataPool.pop_back();
+      sd->id=argId;
+      sd->storeFile=argStore;
       sd->CopyBuf(argBuf);
       sd->seq=argSeq;
       return sd;
@@ -659,6 +749,7 @@ public:
   {
     if(storeDataPool.size()<10000)
     {
+      sd->Clear();
       storeDataPool.push_back(sd);
     }else
     {
@@ -669,207 +760,269 @@ public:
   enum{MessageIdSequenceExtent=1000};
   SMSId idSeq;
   int   lastIdSeqFlush;
-  File  idFile;
+  buf::File  idFile;
   Mutex idMtx;
-  LocalFileStore::IdSeqPairList currentSnap;
+
+  typedef smsc::core::buffers::IntrList<StoreFileData> StoreFileList;
+  StoreFileList storeFiles;
+  size_t maxStoreFiles;
+  StoreFileData* curFile;
+  StoreFileData* rollFile;
+
+  bool rolling;
+
 
 
   friend class LocalFileStore;
   LocalFileStore localFileStore;
 
+  bool rollStoreNext()
+  {
+    SDLockGuard lg(storeMtx);
+    StoreData* sd=0;
+    {
+      MutexGuard mg(storeMtx);
+
+      if(rollFile->smsList.empty())
+      {
+        smsc_log_debug(log,"Rolling finished.");
+        rolling=false;
+        rollFile=0;
+        return false;
+      }
+      sd=rollFile->smsList.front();
+      lg.Lock(sd);
+      sd->seq++;
+      rollFile->smsList.erase(sd);
+      sd->storeFile=curFile;
+      curFile->smsList.push_back(sd);
+    }
+    if(sd)
+    {
+      LocalFileStoreSave(sd->id,sd,false);
+    }
+    return true;
+  }
+
+  void updateInSnap(StoreData* sd)
+  {
+    if(sd->storeFile!=curFile)
+    {
+      sd->storeFile->smsList.erase(sd);
+      curFile->smsList.push_back(sd);
+      sd->storeFile=curFile;
+    }
+  }
+  void removeFromSnap(StoreData* sd)
+  {
+    sd->storeFile->smsList.erase(sd);
+  }
+
+  /*
+   * called from localFileStore.StartRoll under storeMtx
+   */
+
+  std::string selectRollFile()
+  {
+    MutexGuard mg(storeMtx);
+    if(storeFiles.size()<maxStoreFiles)
+    {
+      return "";
+    }
+    rollFile=storeFiles.front();
+    return rollFile->timestamp;
+  }
+
+  void rollCurrent(const std::string& ts)
+  {
+    MutexGuard mg(storeMtx);
+    curFile->timestamp=ts;
+    storeFiles.push_back(curFile);
+    curFile=new StoreFileData;
+  }
+
+  void clearStores(std::vector<std::string>& timeStamps)
+  {
+    timeStamps.clear();
+    MutexGuard mg(storeMtx);
+    StoreFileList::iterator it=storeFiles.begin();
+    while(it->smsList.empty() && !storeFiles.empty())
+    {
+      timeStamps.push_back(it->timestamp);
+      StoreFileData* sfd=&*it;
+      storeFiles.erase(it);
+      delete sfd;
+      it=storeFiles.begin();
+    }
+  }
+
   void LocalFileStoreSave(smsc::sms::SMSId id,StoreData* sd,bool final=false)
   {
     while(delayInit)
     {
+      usleep(10000);
       sched_yield();
     }
-    if(localFileStore.Save(id,sd->seq,sd->smsBuf,sd->smsBufSize,final))
-    {
-      MutexGuard mg(storeMtx);
-      localFileStore.StartRoll(currentSnap);
-    }
+    localFileStore.Save(id,sd->seq,sd->smsBuf,sd->smsBufSize,final);
   }
 
-  void StoreSms(smsc::sms::SMSId id,uint32_t seq)
+  /* store interface */
+
+  virtual SMSId getNextId();
+
+  virtual SMSId createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag = smsc::store::CREATE_NEW)
+  throw(StorageException, DuplicateMessageException);
+
+  virtual void retriveSms(SMSId id, SMS &sms)
+  throw(StorageException, NoSuchMessageException);
+
+  virtual void replaceSms(SMSId id, const Address& oa,
+      const uint8_t* newMsg, uint8_t newMsgLen,
+      uint8_t deliveryReport, time_t validTime = 0, time_t nextTime = 0)
+  throw(StorageException, NoSuchMessageException)
   {
-    SDLockGuard lg(storeMtx);
-    StoreData* sd;
-    {
-      MutexGuard mg(storeMtx);
-      StoreData** ptr=store.GetPtr(id);
-      if(!ptr)return;
-      if((*ptr)->seq!=seq)return;
-      sd=*ptr;
-      lg.Lock(sd);
-    }
+    __warning__("replaceSms unimplemented");
+    fprintf(stderr,"replaceSms unimplemented");
+  }
+  virtual void replaceSms(SMSId id, SMS& sms)
+  throw(StorageException, NoSuchMessageException);
 
-    localFileStore.Save(id,(sd)->seq,(sd)->smsBuf,(sd)->smsBufSize);
+  virtual void changeSmsStateToEnroute(SMSId id,
+      const Descriptor& dst, uint32_t failureCause,
+      time_t nextTryTime, uint32_t attempts)
+  throw(StorageException, NoSuchMessageException);
+
+
+  virtual void changeSmsStateToDelivered(SMSId id,
+      const Descriptor& dst)
+  throw(StorageException, NoSuchMessageException);
+
+  virtual void changeSmsStateToUndeliverable(SMSId id,
+      const Descriptor& dst, uint32_t failureCause)
+  throw(StorageException, NoSuchMessageException);
+
+
+  virtual void changeSmsStateToExpired(SMSId id)
+  throw(StorageException, NoSuchMessageException);
+
+  virtual void changeSmsStateToDeleted(SMSId id)
+  throw(StorageException, NoSuchMessageException);
+
+  virtual void createFinalizedSms(SMSId id, SMS& sms)
+  throw(StorageException, DuplicateMessageException)
+  {
+    sms.lastTime = time(NULL);
+    if (sms.needArchivate) archiveStorage.createRecord(id, sms);
+    //if (sms.billingRecord) billingStorage.createRecord(id, sms);
   }
 
-
-        virtual SMSId getNextId();
-
-        virtual SMSId createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag = smsc::store::CREATE_NEW)
-                throw(StorageException, DuplicateMessageException);
-
-        virtual void retriveSms(SMSId id, SMS &sms)
-                throw(StorageException, NoSuchMessageException);
-
-        virtual void replaceSms(SMSId id, const Address& oa,
-            const uint8_t* newMsg, uint8_t newMsgLen,
-            uint8_t deliveryReport, time_t validTime = 0, time_t nextTime = 0)
-                throw(StorageException, NoSuchMessageException)
-        {
-          __warning__("replaceSms unimplemented");
-          fprintf(stderr,"replaceSms unimplemented");
-        }
-        virtual void replaceSms(SMSId id, SMS& sms)
-                throw(StorageException, NoSuchMessageException);
-
-        virtual void changeSmsStateToEnroute(SMSId id,
-            const Descriptor& dst, uint32_t failureCause,
-            time_t nextTryTime, uint32_t attempts)
-                throw(StorageException, NoSuchMessageException);
+  virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1)
+  throw(StorageException, NoSuchMessageException);
 
 
-        virtual void changeSmsStateToDelivered(SMSId id,
-            const Descriptor& dst)
-                throw(StorageException, NoSuchMessageException);
+  virtual int getConcatMessageReference(const Address& dda)
+  throw(StorageException)
+  {
+    return 0;
+  }
+  virtual void destroySms(SMSId id)
+  throw(StorageException, NoSuchMessageException)
+  {
+    __warning__("destroySms unimplemented");
+    fprintf(stderr,"destroySms unimplemented");
 
-        virtual void changeSmsStateToUndeliverable(SMSId id,
-            const Descriptor& dst, uint32_t failureCause)
-                throw(StorageException, NoSuchMessageException);
+  }
+  virtual smsc::store::IdIterator* getReadyForDelivery(const Address& da)
+  throw(StorageException)
+  {
+    __warning__("getReadyForDelivery unimplemented");
+    fprintf(stderr,"getReadyForDelivery unimplemented");
+    return 0;
+  }
+  virtual smsc::store::IdIterator* getReadyForCancel(const Address& oa,
+      const Address& da, const char* svcType = 0)
+  throw(StorageException)
+  {
+    __warning__("getReadyForCancel unimplemented");
+    fprintf(stderr,"getReadyForCancel unimplemented");
+    return 0;
+  }
+  virtual smsc::store::TimeIdIterator* getReadyForRetry(time_t retryTime, bool immediate=false)
+  throw(StorageException)
+  {
+    __warning__("getReadyForRetry unimplemented");
+    fprintf(stderr,"getReadyForRetry unimplemented");
+    return 0;
+  }
+  virtual time_t getNextRetryTime()
+  throw(StorageException)
+  {
+    __warning__("getNextRetryTime unimplemented");
+    fprintf(stderr,"getNextRetryTime unimplemented");
+    return 0;
+  }
 
-
-        virtual void changeSmsStateToExpired(SMSId id)
-                throw(StorageException, NoSuchMessageException);
-
-        virtual void changeSmsStateToDeleted(SMSId id)
-                throw(StorageException, NoSuchMessageException);
-
-        virtual void createFinalizedSms(SMSId id, SMS& sms)
-                throw(StorageException, DuplicateMessageException)
-        {
-          sms.lastTime = time(NULL);
-          if (sms.needArchivate) archiveStorage.createRecord(id, sms);
-          //if (sms.billingRecord) billingStorage.createRecord(id, sms);
-        }
-
-        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1)
-                throw(StorageException, NoSuchMessageException);
-
-
-        virtual int getConcatMessageReference(const Address& dda)
-                throw(StorageException)
-        {
-          return 0;
-        }
-        virtual void destroySms(SMSId id)
-                throw(StorageException, NoSuchMessageException)
-        {
-          __warning__("destroySms unimplemented");
-          fprintf(stderr,"destroySms unimplemented");
-
-        }
-        virtual smsc::store::IdIterator* getReadyForDelivery(const Address& da)
-                throw(StorageException)
-        {
-          __warning__("getReadyForDelivery unimplemented");
-          fprintf(stderr,"getReadyForDelivery unimplemented");
-          return 0;
-        }
-        virtual smsc::store::IdIterator* getReadyForCancel(const Address& oa,
-            const Address& da, const char* svcType = 0)
-                throw(StorageException)
-        {
-          __warning__("getReadyForCancel unimplemented");
-          fprintf(stderr,"getReadyForCancel unimplemented");
-          return 0;
-        }
-        virtual smsc::store::TimeIdIterator* getReadyForRetry(time_t retryTime, bool immediate=false)
-                throw(StorageException)
-        {
-          __warning__("getReadyForRetry unimplemented");
-          fprintf(stderr,"getReadyForRetry unimplemented");
-          return 0;
-        }
-        virtual time_t getNextRetryTime()
-                throw(StorageException)
-        {
-          __warning__("getNextRetryTime unimplemented");
-          fprintf(stderr,"getNextRetryTime unimplemented");
-          return 0;
-        }
-
-        void doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc=Descriptor());
+  void doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc=Descriptor());
 
 
-        /*
-        void getMassCancelIds(const SMS& sms,Array<SMSId>& ids)
-        {
-          MutexGuard mg(storeMtx);
-          ReplaceIfPresentMap::iterator from=replMap.lower_bound(sms);
-          if(from!=replMap.end())
-          {
-            ReplaceIfPresentMap::iterator to=replMap.upper_bound(sms);
-            for(;from!=to;from++)
-            {
-              debug2(log,"id for cancel:%lld",from->second);
-              ids.Push(from->second);
-            }
-          }else
-          {
-            debug2(log,"getMassCancelIds nothing found:%s",ReplaceIfPresentKey(sms).dump().c_str());
-          }
-        }
-        */
+  /*
+  void getMassCancelIds(const SMS& sms,Array<SMSId>& ids)
+  {
+    MutexGuard mg(storeMtx);
+    ReplaceIfPresentMap::iterator from=replMap.lower_bound(sms);
+    if(from!=replMap.end())
+    {
+      ReplaceIfPresentMap::iterator to=replMap.upper_bound(sms);
+      for(;from!=to;from++)
+      {
+        debug2(log,"id for cancel:%lld",from->second);
+        ids.Push(from->second);
+      }
+    }else
+    {
+      debug2(log,"getMassCancelIds nothing found:%s",ReplaceIfPresentKey(sms).dump().c_str());
+    }
+  }
+   */
 
-        void InitDpfTracker(const char* storeLocation,int to1179,int to1044,int mxch,int mxt)
-        {
-          dpfTracker.Init(storeLocation,to1179,to1044,mxch,mxt);
-        }
+  void InitDpfTracker(const char* storeLocation,int to1179,int to1044,int mxch,int mxt)
+  {
+    dpfTracker.Init(storeLocation,to1179,to1044,mxch,mxt);
+  }
 
-        bool registerSetDpf(const smsc::sms::Address& abonent,const smsc::sms::Address &smeAddr,int errCode,time_t expTime,const char* smeId)
-        {
-          return dpfTracker.registerSetDpf(abonent,smeAddr,errCode,expTime,smeId);
-        }
+  bool registerSetDpf(const smsc::sms::Address& abonent,const smsc::sms::Address &smeAddr,int errCode,time_t expTime,const char* smeId)
+  {
+    return dpfTracker.registerSetDpf(abonent,smeAddr,errCode,expTime,smeId);
+  }
 
-        int getDpfCount()
-        {
-          return dpfTracker.getCount();
-        }
+  int getDpfCount()
+  {
+    return dpfTracker.getCount();
+  }
 
-        void stopDpfTracker()
-        {
-          dpfTracker.stop();
-        }
+  void stopDpfTracker()
+  {
+    dpfTracker.stop();
+  }
 
-        uint64_t getReplaceIfPresentId(const SMS& sms)
-        {
-          MutexGuard mg(storeMtx);
-          ReplaceIfPresentMap::iterator it=replMap.find(sms);
-          if(it!=replMap.end())
-          {
-            return it->second;
-          }else
-          {
-            return 0;
-          }
-        }
+  uint64_t getReplaceIfPresentId(const SMS& sms)
+  {
+    MutexGuard mg(storeMtx);
+    ReplaceIfPresentMap::iterator it=replMap.find(sms);
+    if(it!=replMap.end())
+    {
+      return it->second;
+    }else
+    {
+      return 0;
+    }
+  }
 
 public:
-  struct StartupItem{
-    SMSId id;
-    time_t schedTime;
-    int attCount;
-    Address addr;
-    time_t validTime;
-    char smeId[32];
-  };
 
   Smsc* smsc;
 
-  mutable EventMonitor mon;
+  mutable sync::EventMonitor mon;
   Array<SmscCommand> outQueue;
 
   struct SchedulerData{
@@ -1396,7 +1549,7 @@ public:
 
   };
 
-  CyclicQueue<SchedulerData> firstQueue;
+  buf::CyclicQueue<SchedulerData> firstQueue;
   TimeLine timeLine;
   typedef std::map<SMSId,time_t> IdToTimeMap;
   IdToTimeMap firstQueueProcessing;
@@ -1473,7 +1626,7 @@ public:
 
   time_t tlHeadTime()
   {
-    MutexGuard mg(mon);
+    sync::MutexGuard mg(mon);
     return timeLine.headTime();
   }
 
@@ -1485,7 +1638,7 @@ public:
   QueueOrder queueOrder;
 
 
-  Mutex seqMtx;
+  sync::Mutex seqMtx;
   int smeSeq;
   ProxyMonitor* prxmon;
 
@@ -1500,7 +1653,7 @@ public:
   public:
   bool getChainInfo(const Address& addr,Chain& out)
   {
-    MutexGuard g(mon);
+    sync::MutexGuard g(mon);
     Chain *c=GetChain(addr);
     if(!c)return false;
     out=*c;

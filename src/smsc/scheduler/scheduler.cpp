@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 
-#include "core/buffers/XHash.hpp"
+#include "core/buffers/HashTree.hpp"
 #include "core/threads/Thread.hpp"
 #include "smsc/smsc.hpp"
 #include "util/Exception.hpp"
@@ -14,39 +14,43 @@ namespace scheduler{
 
 smsc::logger::Logger* Scheduler::log;
 
-/*
-static EventMonitor* schedulerMon=0;
-static Mutex* storeMtx=0;
-static bool* delayInitPtr=0;
-*/
+using namespace smsc::core::synchronization;
 
+using namespace smsc::util;
 using namespace std;
-
-struct LoadUpInfo;
-typedef vector<LoadUpInfo*> LoadUpVector;
-
-struct LoadUpInfo{
-  SMSId id;
-  uint32_t seq;
-  bool final;
-  char* smsBuf;
-  int smsBufSize;
-  void assignBuf(const char* argBuf,int argBufSize)
-  {
-    smsBuf=new char[argBufSize];
-    smsBufSize=argBufSize;
-    memcpy(smsBuf,argBuf,smsBufSize);
-  }
-};
-
-typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
 
 const char LocalFileStore::storeSig[10]="SMSCSTORE";
 const uint32_t LocalFileStore::storeVer=0x10001;
 
+struct LoadFileInfo{
+  LoadFileInfo(const string& argFileName,const string& argTimeStamp):
+    fileName(argFileName),timeStamp(argTimeStamp),badFile(false),store(0){}
+  string fileName;
+  string timeStamp;
+  bool badFile;
+  Scheduler::StoreFileData* store;
 
-void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
+  bool operator<(const LoadFileInfo& other)const
+  {
+    return timeStamp<other.timeStamp;
+  }
+
+};
+
+static std::string mkTimeStamp(time_t val=0)
 {
+  char buf[64];
+  time_t now=val?val:time(0);
+  tm t;
+  localtime_r(&now,&t);
+  sprintf(buf,"%04d%02d%02d%02d%02d%02d",t.tm_year+1900,t.tm_mon+1,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec);
+  return buf;
+}
+
+
+void LocalFileStore::Init(smsc::util::config::Manager* cfgman)
+{
+  Smsc* smsc=&Smsc::getInstance();
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("store.init");
   using namespace std;
   bool haveSz=false;
@@ -86,37 +90,13 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   }
   minRollTime=cfgman->getInt("MessageStore.LocalStore.minRollTime");
 
-  char localStoreCfg[64];
-  sprintf(localStoreCfg,"MessageStore.LocalStore.filename%d",smsc->nodeIndex);
-  string mainFileName=cfgman->getString(localStoreCfg);
-  string rolFileName=mainFileName;
-  string::size_type pos=rolFileName.rfind('.');
-  if(pos!=string::npos)
-  {
-    rolFileName.erase(pos);
-  }
-  rolFileName+=".rol";
+  primaryFileName=cfgman->getString("MessageStore.LocalStore.filename");
 
-  LoadUpHash luHash;
-  LoadUpVector luVector;
-  vector<string> toDelete;
-  vector<string> badFiles;
-  /*
-  if(File::Exists((mainFileName+".bak").c_str()) ||
-     File::Exists((rolFileName+".bak").c_str()))
-  {
-    __warning2__
-    (
-      "store %s file found! Previous startup attempt failed! Rename bak files and try again",
-      File::Exists((mainFileName+".bak").c_str())?
-         (mainFileName+".bak").c_str():
-         (rolFileName+".bak").c_str()
-    );
-    //abort();
-    smsc->stop();
-    return;
-  }
-  */
+  typedef vector<LoadFileInfo> LoadFileVector;
+  LoadFileVector files;
+
+  typedef buf::HashTree<SMSId,Scheduler::StoreData*> StoreHT;
+  StoreHT ht;
 
   bool delayInit=sched.delayInit;
 
@@ -125,299 +105,341 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     sched.mon.Unlock();
   }
   uint32_t fileVer;
+
+  uint64_t totalCount=0;
+
   try{
-    if(File::Exists(mainFileName.c_str()))
+    string bakFn;
+
+    if(File::Exists(primaryFileName))
     {
-      vector<File*> files;
-      int mainIdx=0;
-      File *f;
-      for(;;)
+      string ts=mkTimeStamp();
+      bakFn=mkTSFileName(ts);
+      files.push_back(LoadFileInfo(bakFn,ts));
+      File::Rename(primaryFileName,bakFn);
+    }
+
+    InitPrimaryFile();
+    if(sched.delayInit)sched.delayInit=false;
+
+
+    string storeDir=primaryFileName;
+    string storeFileName;
+    string::size_type slashPos=primaryFileName.rfind('/');
+    if(slashPos!=string::npos)
+    {
+      storeFileName=storeDir.substr(slashPos+1);
+      string::size_type dotPos=storeFileName.find('.');
+      if(dotPos!=string::npos)
       {
-        std::string backFile=mainFileName+format(".%03d",mainIdx);
-
-        if(!File::Exists(backFile.c_str()))
-        {
-          break;
-        }
-        f=new File();
-        f->ROpen(backFile.c_str());
-        files.push_back(f);
-        mainIdx++;
+        storeFileName.erase(dotPos);
       }
-
-      f=new File();
-      f->ROpen(mainFileName.c_str());
-      f->Rename((mainFileName+format(".%03d",mainIdx)).c_str());
-      files.push_back(f);
-
-      int rolIdx=0;
-      for(;;)
-      {
-        std::string backFile=rolFileName+format(".%03d",rolIdx);
-        if(!File::Exists(backFile.c_str()))
-        {
-          break;
-        }
-        f=new File();
-        f->ROpen(backFile.c_str());
-        files.push_back(f);
-        rolIdx++;
-      }
-
-      if(File::Exists(rolFileName.c_str()))
-      {
-        f=new File();
-        f->ROpen(rolFileName.c_str());
-        f->Rename((rolFileName+format(".%03d",rolIdx)).c_str());
-        files.push_back(f);
-      }
-
-      InitPrimaryFile(mainFileName);
-      if(sched.delayInit)sched.delayInit=false;
-
-      for(vector<File*>::iterator it=files.begin();it!=files.end();it++)
-      {
-        File* pf=*it;
-        char sigBuf[sizeof(storeSig)];
-        LoadUpInfo item;
-        item.smsBuf=0;
-        BufOps::SmsBuffer smsBuf(0);
-        uint32_t sz,sz2;
-        LoadUpInfo* itemPtr;
-        File::offset_type fSize=pf->Size();
-        File::offset_type fPos=0;
-        try{
-          fPos+=pf->Read(sigBuf,sizeof(storeSig)-1);
-          sigBuf[sizeof(storeSig)-1]=0;
-          if(strcmp(sigBuf,storeSig))
-          {
-            throw smsc::util::Exception("Storage file signature mismatch");
-          }
-          fileVer=pf->ReadNetInt32();
-          fPos+=4;
-          if(fileVer>storeVer)
-          {
-            throw smsc::util::Exception("File version doesn't match current version:%d<%d",storeVer,fileVer);
-          }
-          while(fPos<fSize)
-          {
-            sz=pf->ReadNetInt32();
-            fPos+=4;
-            if(fPos+sz>fSize)
-            {
-              throw smsc::util::Exception("Incomplete record detected, fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz);
-            }
-            if(sz<=8+4+1)
-            {
-              throw smsc::util::Exception("Store broken at fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz);
-            }
-            item.id=pf->ReadNetInt64();
-            fPos+=8;
-            item.seq=pf->ReadNetInt32();
-            fPos+=4;
-            item.final=pf->ReadByte();
-            fPos+=1;
-            int bufSz=sz-8-4-1;
-            smsBuf.setSize(bufSz);
-            pf->Read(smsBuf.get(),bufSz);
-            fPos+=bufSz;
-            sz2=pf->ReadNetInt32();
-            fPos+=4;
-
-            smsc_log_debug(log,"StoreInit: msgId=%lld, seq=%d, final=%s",item.id,item.seq,item.final?"true":"false");
-            if(sz!=sz2)
-            {
-              throw Exception("Corrupted store file %s, record size mismatch:%u!=%u",pf->getFileName().c_str(),sz,sz2);
-            }
-            itemPtr=luHash.GetPtr(item.id);
-            if(itemPtr!=0)
-            {
-              if(itemPtr->final || itemPtr->seq>item.seq)
-              {
-                continue;
-              }
-              if(item.final)
-              {
-                if(itemPtr->smsBuf)
-                {
-                  delete [] itemPtr->smsBuf;
-                  itemPtr->smsBuf=0;
-                }
-                itemPtr->final=true;
-                continue;
-              }
-            }
-
-            if(!item.final)
-            {
-              item.assignBuf(smsBuf.get(),bufSz);
-              smsc_log_debug(log,"allocated smsbuf=%p(%d) for id=%lld",item.smsBuf,item.smsBufSize,item.id);
-            }else
-            {
-              item.smsBuf=0;
-            }
-
-            if(itemPtr)
-            {
-              if(itemPtr->smsBuf)
-              {
-                smsc_log_debug(log,"delete (before assign) smsbuf=%p for id=%lld",itemPtr->smsBuf,itemPtr->id);
-                delete [] itemPtr->smsBuf;
-              }
-              *itemPtr=item;
-            }else
-            {
-              luHash.Insert(item.id,item);
-              itemPtr=luHash.GetPtr(item.id);
-              smsc_log_debug(log,"insert smsBuf=%p(%d) %lld",item.smsBuf,item.smsBufSize,item.id);
-              luVector.push_back(itemPtr);
-            }
-          };
-          smsc_log_debug(log,"getfn=%s",pf->getFileName().c_str());
-          toDelete.push_back(pf->getFileName());
-        }catch(exception& e)
-        {
-          smsc_log_error(log,"Operative storage read failed %s:%s",pf->getFileName().c_str(),e.what());
-          badFiles.push_back(pf->getFileName());
-        }
-        pf->Close();
-        delete pf;
-      }
+      storeDir.erase(slashPos+1);
     }else
     {
-      InitPrimaryFile(mainFileName);
+      storeDir="./";
+    }
+    vector<string> fileNames;
+    File::ReadDir(storeDir.c_str(),fileNames,File::rdfFilesOnly);
+    for(size_t i=0;i<fileNames.size();i++)
+    {
+      string& fn=fileNames[i];
+      string ffn=storeDir+fn;
+      if(ffn==primaryFileName || ffn==bakFn)
+      {
+        continue;
+      }
+      string::size_type dotPos=storeFileName.length();
+      if(fn.compare(0,dotPos,storeFileName)!=0)
+      {
+        continue;
+      }
+      if(fn[dotPos]!='.')
+      {
+        smsc_log_warn(log,"file '%s' starts with the same prefix as store file",fn.c_str());
+        continue;
+      }
+      string ts;
+      string::size_type dotPos2=fn.find('.',dotPos+1);
+      if(dotPos2!=string::npos)
+      {
+        ts=fn.substr(dotPos+1,dotPos2-dotPos-1);
+      }else
+      {
+        ts=fn.substr(dotPos+1);
+      }
+      if(ts.length()!=14)
+      {
+        smsc_log_warn(log,"file '%s' contains invalid time stamp(%s)",fn.c_str(),ts.c_str());
+        continue;
+      }
+      files.push_back(LoadFileInfo(ffn,ts));
+    }
+
+    std::sort(files.begin(),files.end());
+
+
+    char sigBuf[sizeof(storeSig)];
+    BufOps::SmsBuffer smsBuf(0);
+    uint32_t sz1,sz2;
+    SMSId id;
+    int seq;
+    bool final;
+    Scheduler::StoreData* itemPtr=0;
+    Scheduler::StoreFileData* store;
+    for(LoadFileVector::iterator it=files.begin();it!=files.end();it++)
+    {
+      try{
+        smsc_log_info(log,"Reading store file %s",it->fileName.c_str());
+        store=new Scheduler::StoreFileData;
+        store->timestamp=it->timeStamp;
+        it->store=store;
+        sched.storeFiles.push_back(store);
+        File f;
+        f.ROpen(it->fileName.c_str());
+        File::offset_type fSize=f.Size();
+        File::offset_type fPos=0;
+        fPos+=f.Read(sigBuf,sizeof(storeSig)-1);
+        sigBuf[sizeof(storeSig)-1]=0;
+        if(strcmp(sigBuf,storeSig))
+        {
+          throw smsc::util::Exception("Storage file signature mismatch");
+        }
+        fileVer=f.ReadNetInt32();
+        fPos+=4;
+        if(fileVer>storeVer)
+        {
+          throw smsc::util::Exception("File version doesn't match current version:%d<%d",storeVer,fileVer);
+        }
+        while(fPos<fSize)
+        {
+          if(!running)
+          {
+            return;
+          }
+          sz1=f.ReadNetInt32();
+          fPos+=4;
+          if(fPos+sz1>fSize)
+          {
+            throw smsc::util::Exception("Incomplete record detected, fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz1);
+          }
+          if(sz1<=8+4+1)
+          {
+            throw smsc::util::Exception("Store broken at fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz1);
+          }
+          id=f.ReadNetInt64();
+          fPos+=8;
+          seq=f.ReadNetInt32();
+          fPos+=4;
+          final=f.ReadByte();
+          fPos+=1;
+          int bufSz=sz1-8-4-1;
+          smsBuf.setSize(bufSz);
+          f.Read(smsBuf.get(),bufSz);
+          smsBuf.SetPos(bufSz);
+          fPos+=bufSz;
+          sz2=f.ReadNetInt32();
+          fPos+=4;
+
+          smsc_log_debug(log,"StoreInit: msgId=%lld, seq=%d, final=%s",id,seq,final?"true":"false");
+          if(sz1!=sz2)
+          {
+            throw Exception("Corrupted store file %s, record size mismatch:%u!=%u",f.getFileName().c_str(),sz1,sz2);
+          }
+
+          if(ht.find(id,itemPtr))
+          {
+            if(itemPtr->final || itemPtr->seq>seq)
+            {
+              continue;
+            }
+            if(final)
+            {
+              totalCount--;
+              itemPtr->Clear();
+              itemPtr->final=true;
+              itemPtr->storeFile->smsList.erase(itemPtr);
+              itemPtr->storeFile=0;
+              continue;
+            }
+            if(itemPtr->storeFile!=store)
+            {
+              itemPtr->storeFile->smsList.erase(itemPtr);
+              store->smsList.push_back(itemPtr);
+              itemPtr->storeFile=store;
+            }
+            itemPtr->seq=seq;
+            itemPtr->CopyBuf(smsBuf);
+          }else
+          {
+            if(final)
+            {
+              itemPtr=new Scheduler::StoreData(id,0,0,0,seq);
+              itemPtr->final=true;
+            }else
+            {
+              itemPtr=new Scheduler::StoreData(id,store,smsBuf,seq);
+              store->smsList.push_back(itemPtr);
+              totalCount++;
+            }
+            ht.insert(id,itemPtr);
+          }
+        };
+        smsc_log_debug(log,"finished loading file=%s",f.getFileName().c_str());
+      }catch(exception& e)
+      {
+        smsc_log_error(log,"Operative storage read failed %s:%s",it->fileName.c_str(),e.what());
+        it->badFile=true;
+      }
     }
   }catch(std::exception& e)
   {
     smsc_log_error(log,"Exception during storage init %s",e.what());
   }
+
+  /* validate */
+
   if(delayInit)
   {
     sched.mon.Lock();
   }
 
-  smsc_log_warn(log,"Local store loaded. %d messages found.",luVector.size());
+  smsc_log_warn(log,"Local store loaded. %llu messages found.",totalCount);
 
   int cnt=0;
-  for(LoadUpVector::iterator it=luVector.begin();it!=luVector.end();it++)
+  SMS sms;
+  int storeIdx=0;
+  int killIdx=files.size()>=sched.getStoresCount()?(int)files.size()-(int)sched.getStoresCount()+1:-1;
+  smsc_log_info(log,"files.count=%d, maxCount=%d, toKillIdx=%d",(int)files.size(),(int)sched.getStoresCount(),killIdx);
+  for(LoadFileVector::iterator fit=files.begin(),fend=files.end();fit!=fend;++fit,++storeIdx)
   {
-    LoadUpInfo& item=**it;
-    if(item.final)continue;
-    if(!item.smsBuf)
+    MutexGuard mg(sched.storeMtx);
+    smsc_log_info(log,"processing store file no %d - %s",storeIdx,fit->fileName.c_str());
+    Scheduler::StoreFileData* store=fit->store;
+    bool toKill=storeIdx<=killIdx;
+    smsc_log_info(log,"Store file contains %d short messages.",(int)store->smsList.size());
+    for(Scheduler::SMSList::iterator it=store->smsList.begin(),end=store->smsList.end();it!=end;)
     {
-      smsc_log_error(log,"Loading error!!! Sms point==NULL!!! msgId=%lld",(*it)->id);
-      continue;
-    }
-    {
-      MutexGuard mg(sched.storeMtx);
-      try{
-        Save(item.id,item.seq,item.smsBuf,item.smsBufSize);
-      }catch(std::exception& e)
+      if(!running)
       {
-        smsc_log_error(log,"Failed to save sms with Id=%lld:%s",e.what(),item.id);
+        return;
+      }
+      if(toKill)
+      {
+        try{
+          Save(it->id,++it->seq,it->smsBuf,it->smsBufSize);
+        }catch(std::exception& e)
+        {
+          smsc_log_error(log,"Failed to save sms with Id=%lld:%s",it->id,e.what());
+          store->smsList.erase(it++);
+          continue;
+        }
+      }
+      BufOps::SmsBuffer buf(it->smsBuf,it->smsBufSize);
+
+      try {
+        Deserialize(buf,sms,fileVer);
+      } catch (std::exception& e)
+      {
+        smsc_log_error(log,"Failed to deserialize sms with Id=%lld:%s",it->id,e.what());
+        store->smsList.erase(it++);
         continue;
       }
-    }
-    SMS sms;
-    smsc_log_debug(log,"init smsbuf from %p(%d) for id=%lld",item.smsBuf,item.smsBufSize,item.id);
-    BufOps::SmsBuffer buf(item.smsBuf,item.smsBufSize);
 
-    try {
-      Deserialize(buf,sms,fileVer);
-    } catch (std::exception& e)
-    {
-      smsc_log_error(log,"Failed to deserialize sms with Id=%lld:%s",e.what(),item.id);
-      continue;
-    }
-
-    if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x02)//forward mode sms!
-    {
-      if(item.smsBuf)
+      if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x02)//forward mode sms!
       {
-        delete [] item.smsBuf;
-        item.smsBuf=0;
+        store->smsList.erase(it++);
+        continue;
       }
-      continue;
-    }
 
-    try{
-      int smeIndex=smsc->getSmeIndex(sms.getDestinationSmeId());
-      if(delayInit)
-      {
-        sched.mon.Unlock();
-      }
+      bool added=false;
       try{
-        sched.AddScheduledSms((*it)->id,sms,smeIndex);
-      }catch(std::exception& e)
-      {
-        smsc_log_error(log,"Exception in AddScheduledSms:'%s'",e.what());
-      }
-
-      cnt++;
-      if((cnt%200)==0)
-      {
-        //smsc::core::threads::Thread::Yield();
-        millisleep(10);
-      }
-
-      Scheduler::StoreData* sd=new Scheduler::StoreData(item.smsBuf,item.smsBufSize,item.seq);
-      smsc_log_debug(log,"init sd from %p(%d) for id=%lld",item.smsBuf,item.smsBufSize,item.id);
-      item.smsBuf=0;
-      item.smsBufSize=0;
-      if(delayInit)
-      {
-        sched.mon.Lock();
-      }
-
-      {
-        MutexGuard mg(sched.storeMtx);
-        sched.store.Insert(item.id,sd);
+        int smeIndex=smsc->getSmeIndex(sms.getDestinationSmeId());
+        Scheduler::StoreData* sd=&*it;
+        sched.store.Insert(sd->id,sd);
+        ht.erase(sd->id);
         if(sms.getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG))
         {
-          sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(sms,item.id));
+          sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(sms,sd->id));
         }else
         {
           sd->rit=sched.replMap.end();
         }
-        sd->it=sched.currentSnap.insert(sched.currentSnap.begin(),IdSeqPair(item.id,item.seq));
+        if(toKill)
+        {
+          store->smsList.erase(it--);
+          sd->storeFile=sched.curFile;
+          sched.curFile->smsList.push_back(sd);
+        }
+        added=true;
+
+        if(delayInit)
+        {
+          ++it;
+          sched.mon.Unlock();
+          sched.storeMtx.Unlock();
+        }
+        try{
+          if(sms.lastResult==0)
+          {
+            sched.AddScheduledSms(sd->id,sms,smeIndex);
+          }else
+          {
+            sched.RescheduleSms(sd->id,sms,smeIndex);
+          }
+        }catch(std::exception& e)
+        {
+          smsc_log_error(log,"Exception in AddScheduledSms:'%s'",e.what());
+        }
+
+        cnt++;
+        if((cnt%200)==0)
+        {
+          millisleep(10);
+        }
+
+        if(delayInit)
+        {
+          sched.storeMtx.Lock();
+          sched.mon.Lock();
+        }
+
+      }catch(std::exception& e)
+      {
+        smsc_log_error(log,"Sms init error id=%lld:%s",it->id,e.what());
+        if(!added)
+        {
+          store->smsList.erase(it++);
+        }
       }
-    }catch(std::exception& e)
-    {
-      smsc_log_error(log,"Sms init error id=%lld:%s",(*it)->id,e.what());
     }
-    if(item.smsBuf)
+    if(toKill || store->smsList.empty())
     {
-      delete [] item.smsBuf;
-      item.smsBuf=0;
+      try{
+        if(!fit->badFile)
+        {
+          smsc_log_info(log,"Removing file file %s",fit->fileName.c_str());
+          File::Unlink(fit->fileName);
+        }else
+        {
+          smsc_log_info(log,"Renaming bad file file %s",fit->fileName.c_str());
+          File::Rename(fit->fileName,"bad-"+fit->fileName);
+        }
+      }catch(exception& e)
+      {
+        smsc_log_error(log,"Failed to rename/remove file '%s':%s",fit->fileName.c_str(),e.what());
+        fit->badFile=true;
+      }
+      sched.storeFiles.erase(store);
+      delete store;
     }
   }
 
+  smsc_log_info(log,"store init completed.");
 
-  for(vector<string>::iterator it=toDelete.begin();it!=toDelete.end();it++)
+  for(StoreHT::iterator it=ht.begin(),end=ht.end();it!=end;++it)
   {
-    try{
-      File::Unlink(it->c_str());
-    }catch(std::exception& e)
-    {
-      smsc_log_error(log,"Failed to unlink file '%s':%s",it->c_str(),e.what());
-      badFiles.push_back(*it);
-    }
-  }
-  for(vector<string>::iterator it=badFiles.begin();it!=badFiles.end();it++)
-  {
-    string newName=*it;
-    newName+=".bad";
-    int idx=0;
-    while(File::Exists(newName.c_str()))
-    {
-      newName=smsc::util::format("%s.%d.bad",it->c_str(),idx++);
-    }
-    try{
-      File::Rename(it->c_str(),newName.c_str());
-    }catch(std::exception& e)
-    {
-      smsc_log_error(log,"Failed to rename file '%s':%s",it->c_str(),e.what());
-    }
+    delete it->value();
   }
 
 
@@ -428,34 +450,16 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   Start();
 }
 
-bool LocalFileStore::StartRoll(const IdSeqPairList& argSnap)
+void LocalFileStore::StartRoll()
 {
-  MutexGuard mg1(mtx);
   MutexGuard mg2(mon);
-  if(rolling)return false;
-  info1(Scheduler::log,"Preparing rolling");
+  info1(sched.log,"Notify rolling");
   rolling=true;
-  snap=argSnap;
-  string pfn=primaryFile.getFileName();
-  string rfn=pfn;
-  string::size_type pos=rfn.rfind('.');
-  if(pos!=string::npos)
-  {
-    rfn.erase(pos);
-  }
-  rfn+=".rol";
-  primaryFile.Rename(rfn.c_str());
-  rolFile=rfn.c_str();
-  primaryFile.Close();
-  InitPrimaryFile(pfn);
-  lastRollTime=time(NULL);
   mon.notify();
-  info1(Scheduler::log,"Rolling prepared");
-  return true;
 }
 
 
-bool LocalFileStore::Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBufPtr,int smsBufSize,bool final)
+void LocalFileStore::Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBufPtr,int smsBufSize,bool final)
 {
   using namespace smsc::sms;
   using namespace smsc::sms::BufOps;
@@ -465,24 +469,22 @@ bool LocalFileStore::Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBufPtr
 
   smsbuf<<sz<<id<<seq<<fin;
   smsbuf.Append(smsBufPtr,smsBufSize);
-
-  //Serialize(sms,smsbuf);
-  //sz=(uint32_t)(smsbuf.GetPos()-sizeof(sz));
-  //smsbuf.SetPos(0);
-  //smsbuf<<sz;
-  //smsbuf.SetPos(sz+sizeof(sz));
   smsbuf<<sz;
+
   MutexGuard mg(mtx);
   hrtime_t writeStart=gethrtime();
   primaryFile.Write(smsbuf.get(),smsbuf.GetPos());
   hrtime_t writeEnd=gethrtime();
   int writeTime=(int)((writeEnd-writeStart)/1000000);
-  if(writeTime>50)
+  if(writeTime>100)
   {
-    warn2(Scheduler::log,"disk write takes %d msec!",writeTime);
+    info2(wrLog,"disk write takes %d msec!",writeTime);
   }
   fileSize+=smsbuf.GetPos();
-  return !loadup && fileSize>maxStoreSize && time(NULL)-lastRollTime>minRollTime;
+  if(!loadup && !rolling && fileSize>maxStoreSize)
+  {
+    StartRoll();
+  }
 }
 
 
@@ -490,26 +492,69 @@ int LocalFileStore::Execute()
 {
   MutexGuard mg(mon);
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("store.roll");
+  std::vector<std::string> indexes;
+  indexes.reserve(sched.getStoresCount());
   while(running)
   {
-    mon.wait();
-    if(running && rolling)
+    if(!rolling)
     {
-      info1(log,"Rolling strated");
-      mon.Unlock();
-      bool ok=true;
-      try{
-        int i=0;
-        uint64_t blockStart=getmillis();
-        //Target: 2Mb/sec
-        //Estimation: 512b/sms
-        //4000 sms/sec =~ 2Mb/sec
-        //interval 10ms -> 40/10ms
+      mon.wait();
+    }
+    if(!running)
+    {
+      break;
+    }
+    if(!rolling)
+    {
+      continue;
+    }
 
-        for(IdSeqPairList::iterator it=snap.begin();it!=snap.end() && running;it++)
+    // last roll check
+    time_t now=time(0);
+
+    while(running && now-lastRollTime<minRollTime)
+    {
+      int tosleep=1000*((int)(minRollTime-(now-lastRollTime)));
+      smsc_log_info(log,"Rolling notify too early, sleeping %d msec",tosleep);
+      mon.wait(tosleep);
+      now=time(0);
+    }
+
+    if(!running)
+    {
+      break;
+    }
+
+    string timeStamp=mkTimeStamp(now);
+    string rfn=mkTSFileName(timeStamp);
+    {
+      MutexGuard smg(mtx);
+      sched.rollCurrent(timeStamp);
+      primaryFile.Close();
+      primaryFile.Rename(rfn);
+      InitPrimaryFile();
+    }
+
+
+    info1(log,"Rolling started");
+    mon.Unlock();
+    bool ok=true;
+    bool haveRollFile=false;
+    std::string rollFileTS;
+    try{
+      long i=0;
+      uint64_t blockStart=getmillis();
+      //Target: 2Mb/sec
+      //Estimation: 512b/sms
+      //4000 sms/sec =~ 2Mb/sec
+      //interval 10ms -> 40/10ms
+
+      rollFileTS=sched.selectRollFile();
+      if(!rollFileTS.empty())
+      {
+        haveRollFile=true;
+        while(sched.rollStoreNext() && running)
         {
-          smsc_log_debug(log,"roll:id=%lld, seq=%d",it->first,it->second);
-          sched.StoreSms(it->first,it->second);
           i++;
           if((i%40)==0)
           {
@@ -523,58 +568,67 @@ int LocalFileStore::Execute()
             blockStart=getmillis();
           }
         }
-      }catch(exception& e)
-      {
-        warn2(log,"Exception during rolling:%s\n",e.what());
-        ok=false;
-      }
-      mon.Lock();
-      //delete snapPtr;
-      //snapPtr=0;
-      IdSeqPairList().swap(snap);
-      rolling=false;
-      if(ok)
-      {
-        info1(log,"Rolling finished ok");
-        try{
-          File::Unlink(rolFile.c_str());
-        }catch(std::exception& e)
-        {
-          smsc_log_error(log,"Failed to unlink rol file:%s",e.what());
-        }
+        info2(log,"Rolled %ld messages",i);
       }else
       {
-        try{
-          File::Rename(rolFile.c_str(),(rolFile+".bad").c_str());
-        }catch(std::exception& e)
-        {
-          smsc_log_error(log,"Failed to rename rol file:%s",e.what());
-        }
-        warn1(log,"Rolling finished with error");
+        info1(log,"Rolling is not necessary");
+      }
+    }catch(exception& e)
+    {
+      warn2(log,"Exception during rolling:%s",e.what());
+      ok=false;
+    }
+    if(!running)
+    {
+      break;
+    }
+    if(haveRollFile && !ok)
+    {
+      rfn=mkTSFileName(rollFileTS);
+      try{
+        File::Rename(rfn,"bad-"+rfn);
+      }catch(std::exception& e)
+      {
+        smsc_log_error(log,"Failed to rename rol file:%s",e.what());
+      }
+      warn1(log,"Rolling finished with error");
+    }
+    sched.clearStores(indexes);
+    for(size_t i=0;i<indexes.size();i++)
+    {
+      std::string& ts=indexes[i];
+      if(haveRollFile && !ok && ts==rollFileTS)
+      {
+        continue;
+      }
+      rfn=mkTSFileName(ts);
+      try{
+        File::Unlink(rfn);
+      }catch(std::exception& e)
+      {
+        smsc_log_error(log,"Failed to unlink file '%s':%s",rfn.c_str(),e.what());
       }
     }
+    mon.Lock();
+    lastRollTime=time(NULL);
+    rolling=false;
   }
   return 0;
 }
 
-void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
+void Scheduler::Init(smsc::util::config::Manager* cfgman)
 {
-  smsc=psmsc;
-  localFileStore.Init(cfgman,psmsc);
-  //billingStorage.init(*cfgman);
-  char archiveStorePathCfg[64];
-  sprintf(archiveStorePathCfg,"MessageStore.archiveDir%d",psmsc->nodeIndex);
-  archiveStorage.init(cfgman->getString(archiveStorePathCfg),cfgman->getInt("MessageStore.archiveInterval"));
+  smsc=&Smsc::getInstance();
+  localFileStore.Init(cfgman);
+  archiveStorage.init(cfgman->getString("MessageStore.archiveDir"),cfgman->getInt("MessageStore.archiveInterval"));
 
 }
 
 
-void Scheduler::DelayInit(Smsc* psmsc,smsc::util::config::Manager* cfgman)
+void Scheduler::DelayInit(smsc::util::config::Manager* cfgman)
 {
-  char archiveStorePathCfg[64];
-  sprintf(archiveStorePathCfg,"MessageStore.archiveDir%d",psmsc->nodeIndex);
-  archiveStorage.init(cfgman->getString(archiveStorePathCfg),cfgman->getInt("MessageStore.archiveInterval"));
-  smsc=psmsc;
+  archiveStorage.init(cfgman->getString("MessageStore.archiveDir"),cfgman->getInt("MessageStore.archiveInterval"));
+  smsc=&Smsc::getInstance();
   delayInit=true;
 }
 
@@ -589,7 +643,7 @@ int Scheduler::Execute()
       MutexGuard guard(mon);
       //schedulerMon=&mon;
       //delayInitPtr=&delayInit;
-      Init(smsc,&smsc::util::config::Manager::getInstance());
+      Init(&smsc::util::config::Manager::getInstance());
     }catch(std::exception& e)
     {
       smsc_log_error(log,"Exception during delayed Scheduler init:%s",e.what());
@@ -598,8 +652,6 @@ int Scheduler::Execute()
   }
 
   time_t t=time(NULL);
-
-  //time_t lastBillRoll=t;
   time_t lastArcRoll=t;
 
   while(!isStopping)
@@ -677,13 +729,6 @@ int Scheduler::Execute()
     }
 
     try{
-      /*
-      if(t-lastBillRoll>billingStorage.getStorageInterval())
-      {
-        billingStorage.roll();
-        lastBillRoll=t;
-      }
-      */
       if(t-lastArcRoll>archiveStorage.getStorageInterval())
       {
         archiveStorage.roll();
@@ -704,9 +749,7 @@ int Scheduler::Execute()
     }
   }
   warn1(log,"Scheduler exited");
-  //billingStorage.roll();
   archiveStorage.roll();
-  //billingStorage.close();
   archiveStorage.close();
   return 0;
 }
@@ -754,20 +797,14 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
         sd=store.Get(it->second);
         ripFound=true;
         sd->CopyBuf(buf);
-        sd->it->second=++(sd->seq);
+        updateInSnap(sd);
+        sd->seq++;
         CancelSms(id,sms.getDealiasedDestinationAddress());
-        //StoreData *ptr=store.Get(it->second);
-        //ptr->it->second=++(ptr->seq);
-        //LocalFileStoreSave(it->second,ptr,true);
-        //currentSnap.erase(ptr->it);
-        //replMap.erase(it);
-        //store.Delete(it->second);
-        //delStoreData(ptr);
       }
     }
     if(!sd)
     {
-      sd=newStoreData(buf);
+      sd=newStoreData(id,curFile,buf);
       store.Insert(id,sd);
     }
     lg.Lock(sd);
@@ -783,7 +820,8 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
     }
     if(!ripFound)
     {
-      sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
+      smsc_log_debug(log,"insert into snap");
+      curFile->smsList.push_back(sd);
     }
   }
 
@@ -841,6 +879,7 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
     if(!ptr)throw NoSuchMessageException(id);
     sd=*ptr;
     lg.Lock(sd);
+    updateInSnap(sd);
   }
   //SMS& sms=(*ptr)->sms;
   SMS sms;
@@ -858,7 +897,7 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
   sms.setLastResult(failureCause);
   sms.setNextTime(nextTryTime);
   sms.setAttemptsCount(attempts);
-  sd->it->second=++sd->seq;
+  sd->seq++;
   sd->SaveSms(sms);
   LocalFileStoreSave(id,sd);
 }
@@ -904,6 +943,7 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
     if(!ptr)throw NoSuchMessageException(id);
     sd=*ptr;
     lg.Lock(sd);
+    updateInSnap(sd);
   }
   SMS sms;
   sd->LoadSms(sms);
@@ -915,7 +955,7 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
   sprintf(buf,"P%02d%02d%02d%02d\n",tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
   addHistoryItem(sms,buf);
 
-  sd->it->second=++sd->seq;
+  sd->seq++;
   sd->SaveSms(sms);
   LocalFileStoreSave(id,sd);
 }
@@ -927,9 +967,9 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,con
     MutexGuard mg(storeMtx);
     StoreData** ptr=store.GetPtr(id);
     if(!ptr)throw NoSuchMessageException(id);
-    currentSnap.erase((*ptr)->it);
     sd=*ptr;
     store.Delete(id);
+    removeFromSnap(sd);
     if(sd->rit!=replMap.end())
     {
       replMap.erase(sd->rit);
@@ -973,41 +1013,12 @@ void Scheduler::replaceSms(SMSId id, SMS& sms)
     if(!ptr)throw NoSuchMessageException(id);
     sd=*ptr;
     lg.Lock(sd);
+    updateInSnap(sd);
   }
   sd->SaveSms(sms);
-  sd->it->second=++sd->seq;
+  sd->seq++;
   LocalFileStoreSave(id,sd);
 }
-
-/*
-void Scheduler::sendAlertNotification(SMSId id,int status)
-{
-  SMS sms;
-  try{
-    retriveSms(id,sms);
-    SmeProxy* proxy=smsc->getSmeProxy(sms.srcSmeId);
-    debug2(log,"Sending AlertNotification to '%s'",sms.srcSmeId);
-    if(proxy!=0)
-    {
-      proxy->putCommand(
-        SmscCommand::makeAlertNotificationCommand
-        (
-          proxy->getNextSequenceNumber(),
-          sms.getDestinationAddress(),
-          sms.getOriginatingAddress(),
-          status
-        )
-      );
-    }else
-    {
-      warn2(log,"Sme %s requested dpf, but not connected at the moment",sms.srcSmeId);
-    }
-  }catch(std::exception& e)
-  {
-    warn2(log,"Failed to send AlertNotification to sme %s:'%s'",sms.srcSmeId,e.what());
-  }
-}
-*/
 
 }//system
 }//smsc
