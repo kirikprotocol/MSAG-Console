@@ -51,6 +51,8 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private final Configuration config;
 
+  private String testAddress;
+
   public DeliveryEditPage(DeliveryBuilder fact, boolean singleText, Configuration config, String user) throws AdminException {
     this.delivery = new DeliveryPrototype();
     this.delivery.setStartDate(new Date());
@@ -92,6 +94,9 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
     secretFlash = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
+    if(delivery.getSourceAddress() !=null) {
+      testAddress = delivery.getSourceAddress().getSimpleAddress();
+    }
   }
 
   public boolean isArchiveDaemonDeployed() {
@@ -128,6 +133,15 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   public void setEmailNotificationAddress(String emailNotificationAddress) {
     this.emailNotificationAddress = emailNotificationAddress;
+  }
+
+
+  public String getTestAddress() {
+    return testAddress;
+  }
+
+  public void setTestAddress(String testAddress) {
+    this.testAddress = testAddress;
   }
 
   public boolean isSecret() {
@@ -312,6 +326,10 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     if (!singleText) {
       return null;
     }
+    if(testAddress == null || !Address.validate(testAddress)) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.address.illegal", testAddress);
+      return null;
+    }
     try {
       User u = config.getUser(getUserName());
       TestSms sms;
@@ -326,13 +344,13 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
           sms = TestSms.ussdPushViaVlr();
       }
       sms.setDestAddr(new Address(u.getPhone()));
-      sms.setSourceAddr(delivery.getSourceAddress());
+      sms.setSourceAddr(new Address(testAddress));
       sms.setText(delivery.getSingleText());
       try {
         config.sendTestSms(sms);
-        addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
+        addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", testAddress);
       } catch (TestSmsException e) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", u.getPhone().getSimpleAddress(), Integer.toString(e.getSmppStatus()), getSmppCodeDescription(e.getSmppStatus()));
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", testAddress, Integer.toString(e.getSmppStatus()), getSmppCodeDescription(e.getSmppStatus()));
       }
     } catch (AdminException e) {
       addError(e);
