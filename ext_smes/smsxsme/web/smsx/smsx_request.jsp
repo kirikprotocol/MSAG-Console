@@ -26,8 +26,8 @@
 <div class=content>
 
   <table class=properties_list>
-    <col width="30%">
-    <col width="70%">
+    <col width="40%">
+    <col width="60%">
     <tr>
       <td>
         <div class=page_subtitle><%=getLocString("smsx.stats.period")%></div>
