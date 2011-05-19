@@ -51,7 +51,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
 #ifdef MSAG_INMAN_BILL
         if ( tr.billType == bill::infrastruct::INMAN )
         {
-            bill::InmanCloseCallParams* bp = new bill::InmanCloseCallParams(trans->billId());
+            bill::InmanCloseCallParams* bp = new bill::InmanCloseCallParams(trans->billId(), true); //GVR: verify timeout arg!
             // bp->BillId = trans->billId();
             LongCallContext& lcmCtx = context.getSession().getLongCallContext();
             lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
