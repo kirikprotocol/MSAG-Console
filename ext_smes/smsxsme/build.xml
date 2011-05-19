@@ -67,7 +67,7 @@
     <delete dir="${java_out}/web"/>
     <mkdir dir="${java_out}/web"/>
 
-    <javac srcdir="websrc" destdir="${java_out}/web" debug="yes">
+    <javac srcdir="websrc" destdir="${java_out}/web" debug="yes" source="1.4">
       <classpath>
         <pathelement path="${BUILD_DIR}/classes/smsc"/>
         <fileset dir="${libs_path}" includes="*.jar"/>
@@ -78,7 +78,7 @@
   <target name="compile.statscript">
     <delete dir="${java_out}/statscript"/>
     <mkdir dir="${java_out}/statscript"/>
-    <javac srcdir="stat" destdir="${java_out}/statscript" classpathref="lib" debug="true"/>
+    <javac srcdir="stat" destdir="${java_out}/statscript" classpathref="lib" debug="true" source="1.5"/>
   </target>
 
   <target name="compile.sme" description="compile sources for sme">
@@ -142,6 +142,8 @@
   </target>
   
   <target name="distr.all" depends="prepare, build.sme, build.statscript, build.web, copy_config" description="create full distribution"/>
+
+  <target name="distr.web" depends="prepare, build.web, copy_config" description="create full distribution"/>
 
   <target name="distr" depends="prepare, build.sme, build.statscript, copy_config" description="create SME distribution"/>
 
