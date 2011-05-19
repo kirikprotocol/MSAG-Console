@@ -1,12 +1,11 @@
 /*
   $Id$
 */
-
 #if !defined __Cpp_Header_smeman_smetypes_h__
 #define __Cpp_Header_smeman_smetypes_h__
 
 #include <string>
-#include <inttypes.h>
+#include "util/int.h"
 #include <exception>
 #include "core/buffers/FixedLengthString.hpp"
 #include "sms/sms_const.h"
