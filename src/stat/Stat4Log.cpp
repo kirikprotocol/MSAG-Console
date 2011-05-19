@@ -605,16 +605,17 @@ int main(int argc, char* argv[])
                 //printf("SUBMIT >>%s msgId=%lld, seq=%ld, oa='%s', da='%s'\n", msgId, seqNum, oaBuff, daBuff);
                 try
                 {
-                    RouteInfo routeInfo; int tmpIdx = 0; SmeProxy* tmpSmeProxy = 0;
+                    RouteInfo routeInfo; //int tmpIdx = 0; SmeProxy* tmpSmeProxy = 0;
                     int srcPrxIdx = smeManager.lookup(srcPrxBuff);
                     Address oaAddress(oaBuff); Address doaAddress;
                     Address daAddress(daBuff); Address ddaAddress;
                     bool oaAliasFound = aliasManager.AliasToAddress(oaAddress, doaAddress);
                     bool daAliasFound = aliasManager.AliasToAddress(daAddress, ddaAddress);
+                    RouteResult rr;
                     bool routeFound = routeManager.lookup(srcPrxIdx,
                                                           oaAliasFound ? doaAddress:oaAddress,
                                                           daAliasFound ? ddaAddress:daAddress,
-                                                          tmpSmeProxy, &tmpIdx, &routeInfo);
+                                                          rr);
                     if (!routeFound) {
                         smsc_log_warn(logger, "SBM: msgId=%lld No route for oa=%s, da=%s, srcprx=%s (%d)",
                                       msgId, oaBuff, daBuff, srcPrxBuff, srcPrxIdx);
@@ -624,6 +625,7 @@ int main(int argc, char* argv[])
                         }
                         return -5;*/
                     }
+                    routeInfo=rr.info;
 
                     SubmitData sd(routeInfo.smeSystemId, routeInfo.routeId,
                                   routeInfo.providerId, routeInfo.categoryId);
