@@ -1,3 +1,6 @@
+=====================================================================
+2011-05-19 09:15 bukind informer-build-20110519
+
 2011-05-18 15:44 bukind
   feature: MAX_ALLOWED_MESSAGE_LENGTH changed to 158
 
