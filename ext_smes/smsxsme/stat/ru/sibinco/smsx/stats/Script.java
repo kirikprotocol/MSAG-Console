@@ -92,7 +92,7 @@ public class Script {
 
       if (childDirectories != null) {
         for (File h : childDirectories) {
-          System.out.print("Process dir: " + h.getParent() + File.separator + h.getName() + "... ");
+          System.out.println("Process dir: " + h.getParent() + File.separator + h.getName() + "... ");
           File[] csvFiles = h.listFiles(fileFilter);
           if (csvFiles != null) {
             for (File f : csvFiles)
@@ -201,13 +201,14 @@ public class Script {
   }
 
   private void processFile(File f) throws Exception {
+    System.out.println("Process file: " + f.getName());
     BufferedReader reader = null;
     try {
       reader = new BufferedReader(new FileReader(f));
       String line = reader.readLine();
       if (line != null) {
         while ((line = reader.readLine()) != null) {
-          if (line.isEmpty()) {
+          if (line.length() == 0) {
             continue;
           }
           try {
@@ -263,14 +264,13 @@ public class Script {
 
     String route = buffer[16].trim();
     if (!routes.contains(route)) {
-      System.out.println("Route is not allowed: " + route);
       return;
     }
 
     String sAddr = buffer[7];
     String dAddr = buffer[11];
     String srcSme = buffer[10];
-    boolean srcMsc = !buffer[9].isEmpty();
+    boolean srcMsc = buffer[9].length() > 0;
     int serviceId = Integer.parseInt(buffer[17]);
 
     String dstRegion = getRegionByAddress(dAddr);

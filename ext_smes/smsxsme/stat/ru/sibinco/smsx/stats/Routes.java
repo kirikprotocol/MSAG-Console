@@ -16,8 +16,9 @@ class Routes {
 
 
   private static Document parse(File f) throws Exception {
-    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance("com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl", Thread.currentThread().getContextClassLoader());
-    factory.setFeature("http://xml.org/sax/features/validation", false);
+//    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance("com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl", Thread.currentThread().getContextClassLoader());
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+//    factory.setFeature("http://xml.org/sax/features/validation", false);
     DocumentBuilder builder = factory.newDocumentBuilder();
     return builder.parse(f);
   }
@@ -58,7 +59,7 @@ class Routes {
       r = new BufferedReader(new InputStreamReader(new FileInputStream(f), "cp1251"));
       String line;
       while((line = r.readLine()) != null) {
-        if(line.isEmpty()) {
+        if(line.length() == 0) {
           continue;
         }
         result.add(line.trim());
