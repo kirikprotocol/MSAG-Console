@@ -215,7 +215,7 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
       unpackSccpDigits(req.dstmsc,laddr,laddrlen);
       makeSmsToRequest(&mtf,&req);
     } catch (exception& exc) {
-        smsc_log_debug(logger,
+        smsc_log_error(logger,
                        "tsm otid=%s receive CONTINUE with MALFORMED(%s) component, mms=%d, END sent, ",
                        ltrid.toString().c_str(),exc.what(),req.mms);
 
