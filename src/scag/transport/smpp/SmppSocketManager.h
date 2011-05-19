@@ -43,8 +43,8 @@ public:
   void shutdown();
 protected:
   enum{MaxSocketsPerThread=16};
-  Array<SmppReader*> readers;
-  Array<SmppWriter*> writers;
+  smsc::core::buffers::Array<SmppReader*> readers;
+  smsc::core::buffers::Array<SmppWriter*> writers;
   sync::Mutex mtx;
 
   SmeAcceptor* acc;

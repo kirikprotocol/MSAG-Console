@@ -6,6 +6,8 @@
 
 #include <memory>
 #include "core/buffers/PageFile.hpp"
+using smsc::core::buffers::File;
+
 #include "logger/Logger.h"
 
 int main( int argc, char** argv )
@@ -19,7 +21,7 @@ int main( int argc, char** argv )
     }
     
     // opening a pagefile
-    std::auto_ptr< PageFile > pf( new PageFile );
+    std::auto_ptr< smsc::core::buffers::PageFile > pf( new smsc::core::buffers::PageFile );
 
     pf->Open( argv[1] );
     
