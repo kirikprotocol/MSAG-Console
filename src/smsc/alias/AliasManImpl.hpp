@@ -140,7 +140,8 @@ public:
   void clear()
   {
     sync::MutexGuard mg(mtx);
-    alias2addr.ForEach(Deleter());
+    Deleter d;
+    alias2addr.ForEach(d);
     alias2addr.Clear();
     addr2alias.Clear();
   }
