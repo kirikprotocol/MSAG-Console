@@ -75,6 +75,9 @@ using namespace smsc::snmp;
 using namespace smsc::core::synchronization;
 using util::Exception;
 using smsc::acls::AclAbstractMgr;
+#ifdef USE_MAP
+using namespace smsc::system::mapio;
+#endif
 
 using namespace smsc::util::config;
 

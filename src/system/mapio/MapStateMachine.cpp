@@ -15,6 +15,7 @@
 #include "system/smsc.hpp"
 
 using namespace std;
+using namespace smsc::system::mapio;
 
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
@@ -31,7 +32,6 @@ using namespace std;
 using namespace smsc::mscman;
 
 using namespace smsc::system;
-using namespace smsc::system::mapio;
 using namespace smsc::util;
 using namespace smsc::resourcemanager;
 using smsc::util::templates::DummyGetAdapter;
@@ -191,12 +191,21 @@ void warnMapReq(USHORT_T result, const char* func) {
   }
 }
 
+namespace smsc{
+namespace system{
+namespace mapio{
+
 void AbortMapDialog(unsigned dialogid,unsigned ssn, EINSS7INSTANCE_T rinst)
 {
   if ( dialogid == 0 ) return;
   __map_trace2__("%s: dlg 0x%x",__func__,dialogid);
   warnMapReq( Et96MapUAbortReq(ssn INSTARG(rinst),dialogid,0,0,0,0), __func__);
 }
+
+}
+}
+}
+
 
 String32 ImsiToString(const ET96MAP_IMSI_T* imsi)
 {

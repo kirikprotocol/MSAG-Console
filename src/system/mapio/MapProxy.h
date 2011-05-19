@@ -14,7 +14,6 @@
 
 //#if defined USE_MAP
 extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
-extern void setMapProxyLimits(int timeout, int limit);
 //#endif
 
 namespace smsc{
@@ -30,6 +29,8 @@ extern smsc::logger::Logger* _mapproxy_cat;
 namespace smsc{
 namespace system{
 namespace mapio{
+
+extern void setMapProxyLimits(int timeout, int limit);
 
 #define MAP_PROXY_QUEUE_LIMIT 512
 

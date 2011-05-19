@@ -18,13 +18,22 @@
 
 USHORT_T MY_USER_ID=USER01_ID;//!!
 
-using namespace std;
+namespace smsc{
+namespace system{
+namespace mapio{
 
 volatile bool MAP_connectedInst[10]={
 false,
 };
 
 volatile int MAP_connectedInstCount=0;
+
+}
+}
+}
+
+void warnMapReq(USHORT_T result, const char* func);
+
 
 #ifdef USE_MAP
 
@@ -50,6 +59,7 @@ static bool MAP_aborting = false;
 #define MAX_BIND_TIMEOUT 15
 
 
+using namespace smsc::system::mapio;
 
 /*
  void MAPIO_TaskACVersionNotifier()
@@ -182,6 +192,10 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
   reconnectMon.notify();*/
   return RETURN_OK;
 }
+
+namespace smsc{
+namespace system{
+namespace mapio{
 
 MapDialogContainer::MapDialogContainer()
 {
@@ -604,7 +618,6 @@ void MapIoTask::deinit()
   }
 };*/
 
-void warnMapReq(USHORT_T result, const char* func);
 
 void MapIoTask::killOverflow()
 {
@@ -1374,33 +1387,6 @@ void MAPSTATS_DumpDialog(MapDialog* dlg, time_t now, bool expired)
   }
 }
 
-void MapProxy::checkLogging() {
-#ifdef USE_MAP
-/*  if ( smsc::logger::Logger::getInstance("map.trace.user1")->isDebugEnabled() ) {
-    __map_trace__("Enable trace for system USER01");
-    MsgTraceOn( USER01_ID );
-  } else {
-    __map_trace__("Disable trace for system USER01");
-    MsgTraceOff( USER01_ID );
-  }
-  if ( smsc::logger::Logger::getInstance("map.trace.etsimap")->isDebugEnabled() ) {
-    __map_trace__("Enable trace for system ETSIMAP_ID");
-    MsgTraceOn( ETSIMAP_ID );
-  } else {
-    __map_trace__("Disable trace for system ETSIMAP_ID");
-    MsgTraceOff( ETSIMAP_ID );
-  }
-  if ( smsc::logger::Logger::getInstance("map.trace.tcap")->isDebugEnabled() ) {
-    __map_trace__("Enable trace for system TCAP_ID");
-    MsgTraceOn( TCAP_ID );
-  } else {
-    __map_trace__("Disable trace for system TCAP_ID");
-    MsgTraceOff( TCAP_ID );
-  }
-*/
-#endif
-}
-
 bool isMapBound() {
 #ifdef USE_MAP
   for(int n=0;n<MapDialogContainer::remInstCount;n++)
@@ -1413,4 +1399,8 @@ bool isMapBound() {
   //return memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ;
 #endif
   return false;
+}
+
+}
+}
 }

@@ -19,45 +19,12 @@
 #include "system/status.h"
 #include "smeman/smsccmd.h"
 #include "core/buffers/FixedLengthString.hpp"
-
-using namespace std;
-using namespace smsc::sms;
-using namespace smsc::smeman;
-
-namespace smsc{
-namespace logger{
-extern smsc::logger::Logger* _map_cat;
-extern smsc::logger::Logger* _mapmsg_cat;
-extern smsc::logger::Logger* _mapdlg_cat;
-}
-}
-
-using namespace smsc::util;
-#define __map_trace2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, format,__VA_ARGS__)
-#define __map_trace__(text) __debug__(smsc::logger::_map_cat,text)
-#define __map_warn2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
-#define __map_warn__(text) __warn__(smsc::logger::_map_cat,text)
-#define __mapdlg_trace2__(format,...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
-#define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
-
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/threads/ThreadedTask.hpp"
 
 #include "MapProxy.h"
-
-using smsc::system::mapio::MapProxy;
-
-using smsc::core::buffers::XHash;
-using smsc::core::synchronization::EventMonitor;
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::RecursiveMutex;
-using smsc::core::synchronization::MutexGuard;
-using smsc::core::synchronization::RecursiveMutexGuard;
-using smsc::core::threads::ThreadedTask;
-using smsc::core::synchronization::Event;
-
 
 extern "C" {
 #include <ss7cp.h>
@@ -77,6 +44,42 @@ extern "C" {
 #include <et96map_mobility.h>
 #endif
 }
+
+
+namespace smsc{
+namespace logger{
+extern smsc::logger::Logger* _map_cat;
+extern smsc::logger::Logger* _mapmsg_cat;
+extern smsc::logger::Logger* _mapdlg_cat;
+}
+}
+
+#define __map_trace2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, format,__VA_ARGS__)
+#define __map_trace__(text) __debug__(smsc::logger::_map_cat,text)
+#define __map_warn2__(format,...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN,format,__VA_ARGS__)
+#define __map_warn__(text) __warn__(smsc::logger::_map_cat,text)
+#define __mapdlg_trace2__(format,...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
+#define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
+
+namespace smsc{
+namespace system{
+namespace mapio{
+
+using smsc::system::mapio::MapProxy;
+using namespace std;
+using namespace smsc::sms;
+using namespace smsc::smeman;
+
+using smsc::core::buffers::XHash;
+using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::RecursiveMutex;
+using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::RecursiveMutexGuard;
+using smsc::core::threads::ThreadedTask;
+using smsc::core::synchronization::Event;
+using namespace smsc::util;
+
 
 #define SSN 8
 #define USSD_SSN (MapDialogContainer::GetUSSDSSN())
@@ -1669,5 +1672,9 @@ private:
 
   void handleMessage(MSG_T& message);
 };
+
+}
+}
+}
 
 #endif // __header_MAPIO_h__
