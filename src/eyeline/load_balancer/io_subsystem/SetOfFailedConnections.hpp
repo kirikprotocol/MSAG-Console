@@ -22,7 +22,7 @@ public:
                          const LinkId& link_set_id);
   ~SetOfFailedConnections();
 
-  void addLink(LinkRefPtr& link);
+  void addLink(const LinkRefPtr& link);
   SetOfNotBindedConnections* reestablishConnections();
   bool isEmpty() const;
   const LinkId& getLinkSetId() const;

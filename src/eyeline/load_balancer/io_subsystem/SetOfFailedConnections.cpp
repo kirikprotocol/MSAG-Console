@@ -22,7 +22,7 @@ SetOfFailedConnections::~SetOfFailedConnections()
 }
 
 void
-SetOfFailedConnections::addLink(LinkRefPtr& link)
+SetOfFailedConnections::addLink(const LinkRefPtr& link)
 {
   _failedConnections.push_back(link);
 }
