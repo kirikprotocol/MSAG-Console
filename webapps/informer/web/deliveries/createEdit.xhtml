@@ -93,7 +93,11 @@
       <h:panelGrid rendered="#{createDelivery.activePage.deliveryWithSingleText}" columns="2">
         <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" simple="true"/>
         <tr:outputText value="&#160;"/>
-        <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
+        <h:panelGroup>
+          <h:inputText value="#{createDelivery.activePage.testAddress}" size="21"/>
+          <tr:outputText value="&#160;"/>
+          <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
+        </h:panelGroup>
       </h:panelGrid>
 
       <h:outputText style="white-space:nowrap; display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}" value="#{deliveryBundle.useDataSm}"/>
