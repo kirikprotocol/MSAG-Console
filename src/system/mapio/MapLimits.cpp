@@ -153,6 +153,12 @@ void MapLimits::Reinit()
     {
       smsc_log_info(log,"ussd.parseAlways not found and disabled");
     }
+    try {
+      smsOpenRespRealAddr=config.getBool("sms.openRespRealAddr");
+    } catch (std::exception& e)
+    {
+      smsc_log_info(log,"sms.openRespRealAddr not found, disabled by default");
+    }
     char buf[64];
     for(int i=0;i<maxCLevels;i++)
     {
