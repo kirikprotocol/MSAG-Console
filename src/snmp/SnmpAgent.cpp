@@ -579,7 +579,7 @@ using smsc::snmp::SnmpAgent;
 
     int mapDlgStat[6]={0,};
 #ifdef USE_MAP
-    MapDialogContainer::getInstance()->getDlgStats(mapDlgStat);
+    smsc::system::mapio::MapDialogContainer::getInstance()->getDlgStats(mapDlgStat);
 #endif
 
     const int perfBase=6;
