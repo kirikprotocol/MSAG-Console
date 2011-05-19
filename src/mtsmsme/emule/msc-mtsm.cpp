@@ -91,15 +91,22 @@ class DialogueStat: public Thread {
   };
 class mtresptimer {
   public:
-    time_t deadline; Request* req;
+    //time_t deadline; Request* req;
+    struct timeval deadline; Request* req;
     mtresptimer(int delay, Request* _req):
-      deadline(time(0)+delay),req(_req){}
+      //deadline(time(0)+delay),req(_req){}
+      req(_req)
+    {
+      gettimeofday(&deadline,NULL);
+      deadline.tv_sec += delay;
+    }
 };
 class DelayedRequestSender: public RequestSender, public Thread
 {
   private:
     int delay;
     Logger* logger;
+    Mutex lock;
     EventMonitor mon;
     std::list<mtresptimer> queue;
   public:
@@ -111,7 +118,10 @@ class DelayedRequestSender: public RequestSender, public Thread
     {
       if (delay == 0) { req->setSendResult(0); return true; }
       //if delay > 0 place request to queue and ACK
-      queue.push_back(mtresptimer(delay,req));
+      {
+        MutexGuard g(lock);
+        queue.push_back(mtresptimer(delay, req));
+      }
       return true;
     }
     virtual int Execute()
@@ -119,13 +129,19 @@ class DelayedRequestSender: public RequestSender, public Thread
       while (1)
       {
         MutexGuard guard(mon);
-        time_t now; time(&now);
+        //time_t now; time(&now);
+        struct timeval now;
+        gettimeofday(&now,NULL);
         while (!queue.empty())
         {
           mtresptimer timer = queue.front();
-          if (now < timer.deadline)
+          //if (now < timer.deadline)
+          if ( timercmp(&now,&timer.deadline,<))
             break;
-          queue.pop_front();
+          {
+            MutexGuard g(lock);
+            queue.pop_front();
+          }
           timer.req->setSendResult(0);
         }
         mon.wait(100);
