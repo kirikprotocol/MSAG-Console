@@ -364,7 +364,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if(sigleText == null) {
         strategy = new InvidualStrategy();
       }else {
-        proto.setSingleText(sigleText);
+        proto.setSingleText(decodeText(sigleText));
         strategy = new SingleStrategy();
       }
 
@@ -667,6 +667,31 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
   }
 
+  private static String decodeText(String text) {
+    StringBuilder sb = new StringBuilder();
+    boolean screeningCharBefore = false;
+    for (char c : text.toCharArray()) {
+
+      if (screeningCharBefore) {
+        if (c == '\\')
+          sb.append('\\');
+        else if (c == 'n')
+          sb.append('\n');
+        else
+          sb.append('\\').append(c);
+
+        screeningCharBefore = false;
+      } else {
+        if (c == '\\')
+          screeningCharBefore = true;
+        else
+          sb.append(c);
+      }
+    }
+
+    return sb.toString();
+  }
+
   private class CPMessageSource implements DataSource<Message> {
     private BufferedReader reader;
     List<Integer> regions;
@@ -717,31 +742,6 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (userData != null)
         m.setProperty("udata", userData);
       return m;
-    }
-
-    private String decodeText(String text) {
-      StringBuilder sb = new StringBuilder();
-      boolean screeningCharBefore = false;
-      for (char c : text.toCharArray()) {
-
-        if (screeningCharBefore) {
-          if (c == '\\')
-            sb.append('\\');
-          else if (c == 'n')
-            sb.append('\n');
-          else
-            sb.append('\\').append(c);
-
-          screeningCharBefore = false;
-        } else {
-          if (c == '\\')
-            screeningCharBefore = true;
-          else
-            sb.append(c);
-        }
-      }
-
-      return sb.toString();
     }
 
     private boolean isRegionAllowed(Address addr) {
