@@ -1,3 +1,6 @@
+2011-05-19 17:15 bukind
+  feature: conversion for activity_log v2->v3 added
+
 =====================================================================
 2011-05-19 09:15 bukind informer-build-20110519
 

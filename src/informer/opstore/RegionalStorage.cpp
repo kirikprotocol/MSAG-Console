@@ -839,7 +839,7 @@ bool RegionalStorage::postInit()
         if ( !m.text.isUnique()) {
             dlv_->dlvInfo_->getGlossary().fetchText(m.text);
         }
-        if ( region_.get() && m.state != MSGSTATE_PROCESS ) {
+        if ( region_.get() && m.state == MSGSTATE_SENT ) {
             const timediff_type uptonow = currentTime - m.lastTime;
             if ( m.timeLeft < uptonow ) {
                 // we should check message expiration

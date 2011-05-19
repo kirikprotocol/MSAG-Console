@@ -24,7 +24,7 @@ public:
                                       regionid_type  regionId,
                                       Message&       msg,
                                       regionid_type  serial ) = 0;
-        virtual void postInit() = 0;
+        virtual msgtime_type postInit(msgtime_type currentTime) = 0;
     };
 
     /// @a path -- a path to the storage root.
@@ -39,7 +39,9 @@ public:
                            const Message& msg,
                            regionid_type& serial );
 
-    void init( Reader& jr );
+    /// init the journal
+    /// @return fixTime>0 if there were old version of deliveries
+    msgtime_type init( Reader& jr, msgtime_type currentTime );
 
     void rollOver();
 

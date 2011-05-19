@@ -392,8 +392,9 @@ void DeliveryImpl::setRecordAtInit( regionid_type            regionId,
 }
 
 
-void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
-                                      std::vector<regionid_type>& emptyRegs )
+msgtime_type DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
+                                              std::vector<regionid_type>& emptyRegs,
+                                              msgtime_type currentTime )
 {
     smsc_log_debug(log_,"D=%u postInitOperative",getDlvId());
     try {
@@ -438,14 +439,20 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
         }
         smsc_log_debug(log_,"R=%u/D=%u postInit res=%d",regId,getDlvId(),res);
     }
+
+    const msgtime_type fixTime = dlvInfo_->fixActLogFormat(currentTime);
+
     DeliveryStats ds;
     dlvInfo_->getMsgStats(ds);
-    smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u new=%u dlvd=%u fail=%u expd=%u kill=%u",
+    smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u new=%u dlvd=%u fail=%u expd=%u kill=%u fixTime=%+d",
                   dlvInfo_->getDlvId(),
                   ds.totalMessages, ds.procMessages,
                   ds.sentMessages, ds.newMessages,
                   ds.dlvdMessages, ds.failedMessages,
-                  ds.expiredMessages, ds.killedMessages );
+                  ds.expiredMessages, ds.killedMessages,
+                  fixTime ? int(fixTime-currentTime) : 0);
+    // FIXME: may be removed after all dlv converted
+    return fixTime;
 }
 
 

@@ -74,7 +74,8 @@ validityPeriod_(-1),
 messageTimeToLive_(-1),
 archivationTime_(-1),
 activeWeekDays_(-1),
-statLock_( MTXWHEREAMI )
+statLock_( MTXWHEREAMI ),
+isOldActLog_(false)
 {
     if (!log_) {
         log_ = smsc::logger::Logger::getInstance("dlvinfo");
@@ -274,7 +275,7 @@ unsigned DeliveryInfo::evaluateNchunks( const char*     outText,
 }
 
 
-void DeliveryInfo::initMsgStats( regionid_type regionId,
+void DeliveryInfo::initMsgStats( regionid_type,
                                  uint8_t state,
                                  int value )
 {
@@ -349,6 +350,15 @@ bool DeliveryInfo::popMsgStats(IncStat& stats)
     stats.stats = ptr->stats;
     delete ptr;
     return true;
+}
+
+
+msgtime_type DeliveryInfo::fixActLogFormat( msgtime_type currentTime )
+{
+    if ( !isOldActLog_ ) return 0;
+    smsc_log_debug(log_,"D=%u fixing old activity log",getDlvId());
+    ActivityLog al(this);
+    return al.fixActLogFormat(currentTime);
 }
 
 
@@ -522,8 +532,13 @@ void DeliveryInfo::readStats()
                     try {
                         if ( ActivityLog::readStatistics( filename,
                                                           buf,
-                                                          stats_ ) ) {
+                                                          stats_,
+                                                          isOldActLog_ )) {
                             statsLoaded = true;
+                            if (isOldActLog_) {
+                                smsc_log_warn(log_,"D=%u has old activity_log, will be fixed later",
+                                              getDlvId());
+                            }
                             break;
                         }
                     } catch ( std::exception& e ) {

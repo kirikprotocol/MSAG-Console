@@ -203,6 +203,10 @@ public:
     /// glossary
     MessageGlossary& getGlossary() { return glossary_; }
 
+    // FIXME: may be removed after all dlv converted
+    // @return >0 if activity log format was fixed
+    msgtime_type fixActLogFormat( msgtime_type currentTime );
+
 protected:
     /// update cached fields from data
     void updateData( const DeliveryInfoData& data,
@@ -241,6 +245,9 @@ private:
     struct StatNode : public smsc::core::buffers::IntrListNodeBase<StatNode, IncStat> {};
     typedef smsc::core::buffers::IntrList< StatNode > StatList;
     StatList statlist_[2];
+
+    // FIXME: may be removed after all dlv converted
+    bool                  isOldActLog_;
 };
 
 } // informer

@@ -41,9 +41,14 @@ public:
     // to prevent performance degradation.
     void fsync();
 
+    /// FIXME: @param isOldVersion may be removed after all dlv converted
     static bool readStatistics( const std::string& filename,
                                 TmpBufBase<char>& buf,
-                                DeliveryStats& ods );
+                                DeliveryStats& ods,
+                                bool& isOldVersion );
+
+    /// FIXME: may be removed after all dlv converted
+    msgtime_type fixActLogFormat( msgtime_type currentTime );
 
 private:
     void createFile( msgtime_type currentTime, struct tm& now );

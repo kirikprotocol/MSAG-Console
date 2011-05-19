@@ -38,7 +38,8 @@ createTime_(0)
 
 bool ActivityLog::readStatistics( const std::string& filename,
                                   TmpBufBase<char>& buf,
-                                  DeliveryStats& ods )
+                                  DeliveryStats& ods,
+                                  bool& isOldVersion )
 {
     FileGuard fg;
     fg.ropen( filename.c_str() );
@@ -74,9 +75,15 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 if ( version == 0 ) {
                     // reading the version
                     int shift = 0;
-                    sscanf(line,"#%u SEC,%n",&version,&shift);
-                    if (shift == 0 || version <= 0 || version > 3) {
+                    int v;
+                    sscanf(line,"#%u SEC,%n",&v,&shift);
+                    if (shift == 0 || v <= 0 || v > 3) {
                         throw InfosmeException(EXC_BADFILE,"version cannot be read/is not supported (%s)",line);
+                    }
+                    version = v;
+                    if ( version <= 2 ) {
+                        isOldVersion = true;
+                        // smsc_log_warn(log_,"D=%u has old version=%u: will be fixed later",getDlvId(),version);
                     }
                     continue;
                 }
@@ -90,10 +97,6 @@ bool ActivityLog::readStatistics( const std::string& filename,
                        &ds.failedSms, &ds.expiredSms,
                        &ds.killedMessages,
                        &shift );
-                if ( version == 2 ) {
-                    // we cannot recreate new messages count
-                    ds.newMessages = 0;
-                }
                 if (shift==0) {
                     // not a stat line
                     continue;
@@ -350,6 +353,39 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
         }
         fg_.write(headbuf,size_t(headlen));
     }
+}
+
+
+msgtime_type ActivityLog::fixActLogFormat( msgtime_type currentTime )
+{
+    currentTime += period_;
+    const time_t tmnow(currentTime);
+    struct ::tm now;
+    if ( !gmtime_r(&tmnow,&now) ) {
+        throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",getDlvId());
+    }
+
+    // swap retry and new messages count
+    DeliveryStats ds;
+    dlvInfo_->getMsgStats(ds);
+    uint32_t realNewStat = ds.getRetryMessagesCount();
+    if ( ds.newMessages != realNewStat ) {
+        smsc_log_info(log_,"D=%u fixing newMsg=%u -> %u",
+                      getDlvId(), ds.newMessages, realNewStat);
+        dlvInfo_->initMsgStats(anyRegionId,MSGSTATE_INPUT,realNewStat-ds.newMessages);
+        // check
+        dlvInfo_->getMsgStats(ds);
+        if (ds.newMessages != realNewStat) {
+            throw InfosmeException(EXC_LOGICERROR,
+                                   "D=%u WRONG NUMBER of newMsg=%u, must be %u",
+                                   getDlvId(),
+                                   ds.newMessages,
+                                   realNewStat );
+        }
+    }
+    smsc::core::synchronization::MutexGuard mg(lock_);
+    createFile(currentTime, now);
+    return createTime_;
 }
 
 }

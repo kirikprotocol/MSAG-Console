@@ -113,6 +113,7 @@ public:
     /// invoked after opstore is loaded.
     /// messages accumulated in messageHash_ will be partly moved according to their state
     /// into newQueue and resendQueue.
+    /// @return true if there are messages to send.
     bool postInit();
 
     /// cancel operative storage messages.

@@ -105,7 +105,7 @@ public:
     }
 
 
-    virtual void postInit()
+    virtual msgtime_type postInit( msgtime_type currentTime )
     {
         BindSignal bsEmpty, bsFilled;
         bsEmpty.bind = false;
@@ -113,11 +113,15 @@ public:
         int dlvId;
         DeliveryIList::iterator iter;
         smsc_log_debug(log_,"invoking postInit to bind/unbind regions");
+        msgtime_type result = 0;
         for ( DeliveryHash::Iterator i(mgr_.deliveryHash_); i.Next(dlvId,iter); ) {
             if (getCS()->isStopping()) { break; }
             bsEmpty.regIds.clear();
             bsFilled.regIds.clear();
-            (*iter)->postInitOperative(bsFilled.regIds,bsEmpty.regIds);
+            const msgtime_type fixTime = (*iter)->postInitOperative(bsFilled.regIds,
+                                                                    bsEmpty.regIds,
+                                                                    currentTime);
+            if (fixTime > result) { result = fixTime; }
             if (!bsEmpty.regIds.empty()) {
                 bsEmpty.dlvId = (*iter)->getDlvId();
                 // we may not lock here
@@ -129,6 +133,7 @@ public:
                 mgr_.core_.bindDeliveryRegions(bsFilled);
             }
         }
+        return result;
     }
 
 private:
@@ -678,6 +683,8 @@ void DeliveryMgr::init()
 {
     const std::string& path = cs_.getStorePath();
 
+    const msgtime_type currentTime = currentTimeSeconds();
+
     // loading deliveries
     do {
         smsc_log_debug(log_,"--- loading last dlvid ---");
@@ -787,7 +794,20 @@ void DeliveryMgr::init()
 
             smsc_log_info(log_,"--- reading journals ---");
             StoreJournalReader sjr(*this);
-            storeJournal_->init(sjr);
+            const msgtime_type fixTime = storeJournal_->init(sjr,currentTime);
+            if ( fixTime ) {
+                smsc_log_error(log_,"ATTENTION: there were files with old format...");
+                do {
+                    const msgtime_type now = currentTimeSeconds();
+                    if ( now < fixTime ) {
+                        smsc_log_error(log_,"ATTENTION: I am going to wait %u seconds",fixTime-now);
+                        MutexGuard mg(mon_);
+                        mon_.wait((fixTime-now)*1000);
+                    } else {
+                        break;
+                    }
+                } while ( true );
+            }
             InputJournalReader ijr(*this);
             inputJournal_->init(ijr);
             inputRoller_ = new InputJournalRoller(*this);
@@ -872,7 +892,10 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
     }
     DeliveryImplPtr dlvPtr;
     addDelivery(info,state,planTime,true,&dlvPtr);
-    if (dlvPtr.get()) { dlvPtr->writeDeliveryInfoData(); }
+    if (!dlvPtr) {
+        throw InfosmeException(EXC_LOGICERROR,"D=%u cannot be created",dlvId);
+    }
+    dlvPtr->writeDeliveryInfoData();
     userInfo.incDlvStats(DLVSTATE_CREATED);
     char buf[30];
     MutexGuard mg(archiveLock_);

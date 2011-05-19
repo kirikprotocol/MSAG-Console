@@ -226,12 +226,12 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
 }
 
 
-void StoreJournal::init( Reader& jr )
+msgtime_type StoreJournal::init( Reader& jr, msgtime_type currentTime )
 {
     std::string jpath = makePath(getCS()->getStorePath());
     readRecordsFrom(jpath+".old",jr);
     readRecordsFrom(jpath,jr);
-    if (getCS()->isStopping()) return;
+    if (getCS()->isStopping()) return 0;
     fg_.create(jpath.c_str(),0666,true);
     if ( 0 == fg_.seek(0,SEEK_END) ) {
         // new file
@@ -245,7 +245,7 @@ void StoreJournal::init( Reader& jr )
         tb.set32(serial_);
         fg_.write(buf,VERSIZE+4);
     }
-    jr.postInit();
+    return jr.postInit(currentTime);
 }
 
 

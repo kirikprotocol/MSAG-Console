@@ -79,8 +79,9 @@ public:
         source_->postInit(filledRegs);
     }
 
-    void postInitOperative( std::vector<regionid_type>& filledRegs,
-                            std::vector<regionid_type>& emptyRegs );
+    msgtime_type postInitOperative( std::vector<regionid_type>& filledRegs,
+                                    std::vector<regionid_type>& emptyRegs,
+                                    msgtime_type currentTime );
 
 
     void detachEverything( bool cleanDirectory = false,
