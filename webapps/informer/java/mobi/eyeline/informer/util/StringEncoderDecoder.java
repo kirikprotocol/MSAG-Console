@@ -249,21 +249,34 @@ public class StringEncoderDecoder {
   public static String csvEscape(char sep, Object obj) {
     if (obj == null) return "";
     String s = obj.toString();
-    if (s.indexOf(sep) != -1 || s.indexOf("\"") != -1) {
-      s = s.replace("\"", "\"\"");
+    String lineSep = System.getProperty("line.separator");
+    boolean containsSep = s.contains(sep+"");
+    boolean containsQuotes = s.contains("\"");
+    boolean containsLineSep = s.contains(lineSep);
+    if (containsSep || containsQuotes || containsLineSep) {
+      if (containsLineSep)
+        s = s.replace(lineSep, "\\n");
+      if (containsQuotes)
+        s = s.replace("\"", "\"\"");
       s = "\"" + s + "\"";
     }
     return s;
   }
 
+  public static String csvDecode(String line) {
+    String lineSep = System.getProperty("line.separator");
+    if (line.charAt(0) == '"') {
+      line = line.substring(1, line.length() - 1);
+      line = line.replace("\\n", lineSep);
+      return line.replace("\"\"", "\"");
+    } else
+      return line;
+  }
 
   public static List<String> csvDecode(char sep, String line) {
     List<String> out = csvSplit(sep, line);
     for (int i = 0; i < out.size(); i++) {
-      String s = out.get(i);
-      if (s.startsWith("\"") && s.endsWith("\""))
-        s = s.substring(1, s.length() - 1);
-      s = s.replace("\"\"", "\"");
+      String s = csvDecode(out.get(i));
       out.set(i, s);
     }
     return out;

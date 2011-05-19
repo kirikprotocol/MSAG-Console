@@ -30,4 +30,13 @@ public class StringEncoderDecoderTest {
       assertEquals(str, decoded);
     }
   }
+
+  @Test
+  public void testCsvEncodeDecode() {
+    String lineSep = System.getProperty("line.separator");
+    String line = "Hello , world " + lineSep + " test";
+    String encoded = StringEncoderDecoder.csvEscape(',', line);
+    String decoded = StringEncoderDecoder.csvDecode(encoded);
+    assertEquals(line, decoded);
+  }
 }

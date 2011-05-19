@@ -417,7 +417,7 @@ public class MessageListController extends InformerController {
                 if (!isSingleText) {
                   w[0].print(value.getAbonent());
                   w[0].print(',');
-                  w[0].println(value.getText());
+                  w[0].println(StringEncoderDecoder.csvEscape(',',value.getText()));
                 } else {
                   w[0].println(value.getAbonent());
                 }
@@ -453,7 +453,7 @@ public class MessageListController extends InformerController {
                 String[] s = line.split(",", 2);
                 resended++;
                 resendCurrent++;
-                return Message.newMessage(new Address(s[0]), s[1]);
+                return Message.newMessage(new Address(s[0]), StringEncoderDecoder.csvDecode(s[1]));
               } catch (IOException e) {
                 e.printStackTrace();
                 return null;
