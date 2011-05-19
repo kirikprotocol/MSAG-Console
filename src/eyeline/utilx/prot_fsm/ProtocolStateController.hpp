@@ -25,8 +25,11 @@ public:
   void doStateTransition(const MESSAGE& message);
   void doStateTransition(const NETWORK_INDICATION& indication);
 private:
-  void setState(ProtocolState<MESSAGE, NETWORK_INDICATION>* newState);
-  friend void ProtocolState<MESSAGE, NETWORK_INDICATION>::updateProtocolState(typename ProtocolStateController<MESSAGE, NETWORK_INDICATION>* protocolStateController, typename ProtocolState<MESSAGE, NETWORK_INDICATION>* newState);
+  typedef ProtocolState<MESSAGE, NETWORK_INDICATION> PState;
+  typedef ProtocolStateController<MESSAGE, NETWORK_INDICATION> PStateCon;
+  void setState(PState* newState);
+  friend void PState::updateProtocolState(PStateCon* protocolStateController, PState* newState);
+  //(typename ProtocolStateController<MESSAGE, NETWORK_INDICATION>* protocolStateController, typename ProtocolState<MESSAGE, NETWORK_INDICATION>* newState);
 
   ProtocolState<MESSAGE, NETWORK_INDICATION>* _protocolState;
 };

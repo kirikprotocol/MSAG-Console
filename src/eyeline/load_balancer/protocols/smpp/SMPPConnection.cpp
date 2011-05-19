@@ -79,8 +79,8 @@ SMPPConnection::establish()
     throw;
   }
   _socket = socket;
-
-  checkProtocolState(utilx::prot_fsm::TcpEstablishInd());
+  utilx::prot_fsm::TcpEstablishInd state;
+  checkProtocolState(state);
   setLinkId(io_subsystem::LinkId(_socket->toString()));
   _socket->setId(_socket->toString());
 }
@@ -89,7 +89,8 @@ void
 SMPPConnection::close()
 {
   try {
-    checkProtocolState(utilx::prot_fsm::TcpReleaseInd());
+    utilx::prot_fsm::TcpReleaseInd state;
+    checkProtocolState(state);
   } catch (utilx::ProtocolException& ex) {}
   _socket->close();
   resetLinkId();
@@ -113,7 +114,8 @@ SMPPConnection::receive()
 
     return packet.release();
   } catch (corex::io::EOFException& ex) {
-    checkProtocolState(utilx::prot_fsm::TcpReleaseInd());
+    utilx::prot_fsm::TcpReleaseInd state;
+    checkProtocolState(state);
     throw;
   }
 }
