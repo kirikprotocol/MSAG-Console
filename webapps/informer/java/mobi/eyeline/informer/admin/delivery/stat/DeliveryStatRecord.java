@@ -21,9 +21,10 @@ public class DeliveryStatRecord {
   private final long expiredSMS;
   private final String user;
   private final Integer regionId;
+  private final String smsc;
 
 
-  public DeliveryStatRecord(String user, Date date, int taskId, int newmessages, int processing, int delivered, int failed, int expired, int deliveredSMS, int failedSMS, int expiredSMS, Integer regionId) {
+  public DeliveryStatRecord(String user, Date date, int taskId, int newmessages, int processing, int delivered, int failed, int expired, int deliveredSMS, int failedSMS, int expiredSMS, Integer regionId, String smsc) {
     this.user = user;
     this.date = date;
     this.taskId = taskId;
@@ -36,6 +37,7 @@ public class DeliveryStatRecord {
     this.failedSMS = failedSMS;
     this.expiredSMS = expiredSMS;
     this.regionId = regionId;
+    this.smsc = smsc;
   }
 
   public Date getDate() {
@@ -84,5 +86,9 @@ public class DeliveryStatRecord {
 
   public Integer getRegionId() {
     return regionId;
+  }
+
+  public String getSmsc() {
+    return smsc;
   }
 }

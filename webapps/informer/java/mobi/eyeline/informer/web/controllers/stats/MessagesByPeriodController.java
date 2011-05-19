@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.model.SelectItem;
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -111,7 +112,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   private AggregatedRecord createWithSmscAggregation(DeliveryStatRecord rec) {
     String[] name = new String[]{null};
-    boolean exist = getSmscByRegion(rec.getRegionId(), name);
+    boolean exist = getSmsc(rec, name);
     return new MessagesBySmscRecord(rec, name[0], !exist);
   }
 
@@ -179,10 +180,20 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     this.smscFilter = smscFilter;
   }
 
-  private boolean getSmscByRegion(Integer regId, String[] result) {
-    if(regId != null) {
-      if(regId != 0) {
-        Region r = getConfig().getRegion(regId);
+  private boolean getSmsc(DeliveryStatRecord record, String[] result) {
+    if(record.getSmsc() != null) {
+      boolean exist = getConfig().getSmsc(record.getSmsc()) != null;
+      result[0] = exist ? record.getSmsc() :
+          MessageFormat.format
+              (
+                  ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedSmsc"),
+                  record.getSmsc()
+              );
+      return exist;
+    }
+    if(record.getRegionId() != null) {
+      if(record.getRegionId() != 0) {
+        Region r = getConfig().getRegion(record.getRegionId());
         if(r != null) {
           result[0] = r.getSmsc();
           return true;
@@ -208,7 +219,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
     if(smscFilter != null && smscFilter.length() > 0) {
       String[] smsc = new String[]{null};
-      getSmscByRegion(rec.getRegionId(), smsc);
+      getSmsc(rec, smsc);
       if(!smsc[0].equals(smscFilter)) {
         return !isCancelled();
       }

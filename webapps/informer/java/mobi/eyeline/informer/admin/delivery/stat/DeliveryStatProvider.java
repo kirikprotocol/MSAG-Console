@@ -167,12 +167,16 @@ public class DeliveryStatProvider extends StatEntityProvider{
                 regionId = Integer.parseInt(tokenizer.nextToken());
               }
             }
+            String smsc = null;
+            if(tokenizer.hasMoreTokens()) {
+              smsc = tokenizer.nextToken();
+            }
             if(filter.getRegionId() != null && !filter.getRegionId().equals(regionId)){
               continue;
             }
             DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
                 newmessages, processing, delivered, failed, expired,
-                deliveredSms, failedSms, expiredSms, regionId
+                deliveredSms, failedSms, expiredSms, regionId, smsc
             );
 
             if (!visitor.visit(rec, total, current)) {
