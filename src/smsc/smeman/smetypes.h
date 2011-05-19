@@ -6,7 +6,7 @@
 #define __SMSC_SMEMAN_SMETYPES_H__
 
 #include <string>
-#include <inttypes.h>
+#include "util/int.h"
 #include <exception>
 #include "core/buffers/FixedLengthString.hpp"
 #include "sms/sms_const.h"

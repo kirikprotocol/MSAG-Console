@@ -151,7 +151,7 @@ public:
     smsc_log_info(log,"Loading aliases from file:%s",fileName.c_str());
     store.Open(fileName.c_str());
     Record r;
-    File::offset_type off;
+    buf::File::offset_type off;
     int cnt=0;
     while(off=store.Read(r))
     {
@@ -220,8 +220,8 @@ protected:
     return addr;
   }
 
-  XTree<Record*,HeapAllocator,false> addr2alias;
-  XTree<Record*,HeapAllocator,false> alias2addr;
+  buf::XTree<Record*,buf::HeapAllocator,false> addr2alias;
+  buf::XTree<Record*,buf::HeapAllocator,false> alias2addr;
   buf::FixedRecordFile<Record> store;
   sync::Mutex mtx;
   std::string fileName;
