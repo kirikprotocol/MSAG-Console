@@ -4898,7 +4898,7 @@ USHORT_T Et96MapV3AnyTimeInterrogationConf(
 #else
 
 //#include "MapDialog_spcific.cxx"
-#include "smeman/smsccmd.h"
+#include "smsc/smeman/smsccmd.h"
 #include "MapIoTask.h"
 using namespace smsc::smeman;
 void MAPIO_PutCommand(const SmscCommand& cmd )
