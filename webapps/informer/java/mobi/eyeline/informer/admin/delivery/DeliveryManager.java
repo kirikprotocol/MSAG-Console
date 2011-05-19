@@ -635,7 +635,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       Message m = new Message();
       m.setAbonent(addr.getAbonent());
       m.setGlossaryIndex(0);
-      for(Map.Entry entry : m.getProperties().entrySet()) {
+      for(Map.Entry entry : addr.getProperties().entrySet()) {
         m.setProperty((String)entry.getKey(), (String)entry.getValue());
       }
       return m;
