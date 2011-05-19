@@ -5,4 +5,4 @@ eyeline/ClusterController ccmain -leyeline-clustercontroller -leyeline-clusterco
 -leyeline-clustercontroller-router -lsmsc-router -lsmsc-config-route -lsmsc-config-smeman -lsmsc-common -lutil \
 -leyeline-clustercontroller-alias -leyeline-clustercontroller-protocol-messages -leyeline-clustercontroller-acl \
 -lsmsc-acls -lutil -leyeline-clustercontroller-configregistry \
--llogger @liblogger.so
+-llogger -lrt @liblogger.so
