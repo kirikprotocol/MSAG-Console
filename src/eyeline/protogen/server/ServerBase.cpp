@@ -5,7 +5,7 @@
 namespace eyeline{
 namespace protogen{
 
-ServerBase::ServerBase(const char* logName) :
+ServerBase::ServerBase(const char* logName,bool argCountSize) :
 clntsMon(MTXWHEREAMI),
 outQueueMon(MTXWHEREAMI)
 {
@@ -13,6 +13,7 @@ outQueueMon(MTXWHEREAMI)
     log=smsc::logger::Logger::getInstance(logName);
     outSeqId=0;
     isStopping=false;
+    countSize=argCountSize;
 }
 
 void ServerBase::Init(const char* host,int port,int hndCnt)
@@ -95,6 +96,7 @@ void ServerBase::readPackets()
               delete clnt;
               continue;
             }
+            ps->setCountSize(countSize);
             smsc_log_info(log,"Accepted connect from %s, new connId=%d",buf,ps->getConnId());
             sync::MutexGuard mg(clntsMon);
             clnts.insert(SocketsMap::value_type(ps->getConnId(),ps));
@@ -354,7 +356,13 @@ bool ProtocolSocketBase::Read()
       memcpy(&pckSz,rdBuffer,4);
       pckSz=ntohl(pckSz);
       smsc_log_debug(log,"received packet with size %d",pckSz);
-      rdPacketSize=pckSz;
+      if(countSize)
+      {
+        rdPacketSize=pckSz-4;
+      }else
+      {
+        rdPacketSize=pckSz;
+      }
       if(rdBufferSize<rdPacketSize)
       {
         delete [] rdBuffer;
@@ -405,7 +413,7 @@ bool ProtocolSocketBase::Write()
     {
       ProtocolSocketBase::Packet p;
       outQueue.Pop(p);
-      // smsc_log_debug(log,"writing to connId=%d:%s",connId,p.getDump(256).c_str());
+      smsc_log_debug(log,"writing to connId=%d:%s",connId,p.getDump(256).c_str());
       wrBuffer=p.data;
       wrBufferSize=p.dataSize;
       wrDataWritten=0;

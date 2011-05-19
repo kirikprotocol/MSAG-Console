@@ -61,7 +61,7 @@ public:
 
 
   ProtocolSocketBase(net::Socket* argSck,int argConnId):
-  sck(argSck),connId(argConnId),havePacketSize(false)
+  sck(argSck),connId(argConnId),havePacketSize(false),countSize(false)
   {
     sck->setData(0,this);
     rdBuffer=new char[128];
@@ -88,6 +88,11 @@ public:
   int getConnId()const
   {
     return connId;
+  }
+
+  void setCountSize(bool argCountSize)
+  {
+    countSize=argCountSize;
   }
 
   bool Read();
@@ -152,6 +157,7 @@ protected:
   bool havePacketSize;
   bool inOutMul;
   bool dead;
+  bool countSize;
 };
 
 

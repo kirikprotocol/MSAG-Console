@@ -24,10 +24,11 @@ namespace buf=smsc::core::buffers;
 
 class ServerBase{
 public:
-  ServerBase(const char* logName);
+  ServerBase(const char* logName,bool argCountSize=false);
   virtual ~ServerBase();
   void Init(const char* host,int port,int hndCnt);
   void Stop();
+
 
   template <class CommandType,class ProtocolType>
   void enqueueCommand(int connId,CommandType& cmd,ProtocolType& proto,bool fillSeq=true)
@@ -98,6 +99,8 @@ protected:
   SocketsMap clnts;
   bool isStopping;
   int outSeqId;
+
+  bool countSize;
 
   smsc::logger::Logger* log;
 
