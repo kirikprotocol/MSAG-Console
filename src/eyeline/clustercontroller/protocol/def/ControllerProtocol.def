@@ -8,6 +8,7 @@ protocol ControllerProtocol
   ApplyTimeZones inoutmsg
   ApplyFraudControl inoutmsg
   ApplyMapLimits inoutmsg
+  ApplyNetProfiles inoutmsg
   ApplySnmp inoutmsg
   TraceRoute inmsg
   CheckRoutes inmsg
@@ -67,6 +68,7 @@ protocol ControllerProtocol
   ApplyTimeZonesResp inoutmsg
   ApplyFraudControlResp inoutmsg
   ApplyMapLimitsResp inoutmsg
+  ApplyNetProfilesResp inoutmsg
   ApplySnmpResp inoutmsg
   TraceRouteResp
   CheckRoutesResp

@@ -19,6 +19,7 @@ const int8_t ConfigType::Snmp;
 const int8_t ConfigType::TimeZones;
 const int8_t ConfigType::Fraud;
 const int8_t ConfigType::Acl;
+const int8_t ConfigType::NetProfiles;
 std::map<ConfigType::type,std::string> ConfigType::nameByValue;
 std::map<std::string,ConfigType::type> ConfigType::valueByName;
 ConfigType::StaticInitializer ConfigType::staticInitializer;

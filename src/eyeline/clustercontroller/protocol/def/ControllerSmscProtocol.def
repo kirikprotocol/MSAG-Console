@@ -9,6 +9,7 @@ protocol ControllerSmscProtocol
   ApplyTimeZones  inmsg
   ApplyFraudControl  inmsg
   ApplyMapLimits  inmsg
+  ApplyNetProfiles  inmsg
   ApplySnmp  inmsg
   UpdateProfile  inmsg
   DeleteProfile  inmsg
@@ -58,6 +59,7 @@ protocol ControllerSmscProtocol
   ApplyTimeZonesResp
   ApplyFraudControlResp
   ApplyMapLimitsResp
+  ApplyNetProfilesResp
   ApplySnmpResp
   UpdateProfileResp
   DeleteProfileResp

@@ -9,6 +9,7 @@
 #include "messages/ApplyTimeZones.hpp"
 #include "messages/ApplyFraudControl.hpp"
 #include "messages/ApplyMapLimits.hpp"
+#include "messages/ApplyNetProfiles.hpp"
 #include "messages/ApplySnmp.hpp"
 #include "messages/UpdateProfile.hpp"
 #include "messages/DeleteProfile.hpp"
@@ -44,6 +45,7 @@
 #include "messages/ApplyTimeZonesResp.hpp"
 #include "messages/ApplyFraudControlResp.hpp"
 #include "messages/ApplyMapLimitsResp.hpp"
+#include "messages/ApplyNetProfilesResp.hpp"
 #include "messages/ApplySnmpResp.hpp"
 #include "messages/TraceRouteResp.hpp"
 #include "messages/CheckRoutesResp.hpp"
@@ -96,6 +98,7 @@ public:
     tag_ApplyTimeZones=4,
     tag_ApplyFraudControl=5,
     tag_ApplyMapLimits=6,
+    tag_ApplyNetProfiles=43,
     tag_ApplySnmp=7,
     tag_TraceRoute=8,
     tag_CheckRoutes=9,
@@ -146,6 +149,7 @@ public:
     tag_ApplyTimeZonesResp=1004,
     tag_ApplyFraudControlResp=1005,
     tag_ApplyMapLimitsResp=1006,
+    tag_ApplyNetProfilesResp=1043,
     tag_ApplySnmpResp=1007,
     tag_TraceRouteResp=1008,
     tag_CheckRoutesResp=1009,

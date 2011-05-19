@@ -63,6 +63,13 @@ void ControllerProtocolHandler::handle(messages::ApplyMapLimits& msg)
   NetworkProtocol::getInstance()->
       enqueueMultirespCommand<messages::ApplyMapLimits,messages::ApplyMapLimitsResp>(connId,msg,ctMapLimits);
 }
+void ControllerProtocolHandler::handle(messages::ApplyNetProfiles& msg)
+{
+  smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
+  configregistry::ConfigRegistry::getInstance()->update(ctNetProfiles);
+  NetworkProtocol::getInstance()->
+      enqueueMultirespCommand<messages::ApplyNetProfiles,messages::ApplyNetProfilesResp>(connId,msg,ctNetProfiles);
+}
 void ControllerProtocolHandler::handle(messages::ApplySnmp& msg)
 {
   smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
@@ -729,6 +736,7 @@ static ConfigType convertConfigType(const messages::ConfigType& configType)
     case messages::ConfigType::TimeZones: return ctTimeZones;
     case messages::ConfigType::Fraud: return ctFraud;
     case messages::ConfigType::Acl: return ctAcl;
+    case messages::ConfigType::NetProfiles: return ctNetProfiles;
   }
   return ctMainConfig;
 }
@@ -824,6 +832,11 @@ void ControllerProtocolHandler::handle(const messages::ApplyFraudControlResp& ms
   NetworkProtocol::getInstance()->registerMultiResp(connId,msg);
 }
 void ControllerProtocolHandler::handle(const messages::ApplyMapLimitsResp& msg)
+{
+  smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
+  NetworkProtocol::getInstance()->registerMultiResp(connId,msg);
+}
+void ControllerProtocolHandler::handle(const messages::ApplyNetProfilesResp& msg)
 {
   smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
   NetworkProtocol::getInstance()->registerMultiResp(connId,msg);

@@ -26,6 +26,7 @@ enum ConfigType{
   ctTimeZones,//+
   ctFraud,//+
   ctAcl,//+
+  ctNetProfiles,//+
 
   ctConfigsCount
 };

@@ -81,6 +81,13 @@ void ControllerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Se
       msg.messageSetSeqNum(seq);
       handler->handle(msg);
     }break;
+    case tag_ApplyNetProfiles:
+    {
+      messages::ApplyNetProfiles msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
+    }break;
     case tag_ApplySnmp:
     {
       messages::ApplySnmp msg;
@@ -413,6 +420,13 @@ void ControllerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Se
     case tag_ApplyMapLimitsResp:
     {
       messages::ApplyMapLimitsResp msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_ApplyNetProfilesResp:
+    {
+      messages::ApplyNetProfilesResp msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
       handler->handle(msg);

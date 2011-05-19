@@ -55,6 +55,15 @@ message ApplyMapLimitsResp 1006
   MultiResponse resp 1
 end
 
+message ApplyNetProfiles 43
+end
+
+
+message ApplyNetProfilesResp 1043
+  MultiResponse resp 1
+end
+
+
 message ApplySnmp 7
 end
 
@@ -532,6 +541,7 @@ enum byte ConfigType
   TimeZones 11
   Fraud 12
   Acl 13
+  NetProfiles 14
 end
 
 message LockConfig 201

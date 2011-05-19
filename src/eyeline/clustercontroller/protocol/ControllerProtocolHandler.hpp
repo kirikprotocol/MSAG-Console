@@ -6,6 +6,7 @@
 #include "messages/ApplyTimeZones.hpp"
 #include "messages/ApplyFraudControl.hpp"
 #include "messages/ApplyMapLimits.hpp"
+#include "messages/ApplyNetProfiles.hpp"
 #include "messages/ApplySnmp.hpp"
 #include "messages/TraceRoute.hpp"
 #include "messages/LookupProfile.hpp"
@@ -52,6 +53,7 @@
 #include "messages/ApplyTimeZonesResp.hpp"
 #include "messages/ApplyFraudControlResp.hpp"
 #include "messages/ApplyMapLimitsResp.hpp"
+#include "messages/ApplyNetProfilesResp.hpp"
 #include "messages/ApplySnmpResp.hpp"
 #include "messages/UpdateProfileResp.hpp"
 #include "messages/DeleteProfileResp.hpp"
@@ -104,6 +106,7 @@ public:
   void handle(messages::ApplyTimeZones& msg);
   void handle(messages::ApplyFraudControl& msg);
   void handle(messages::ApplyMapLimits& msg);
+  void handle(messages::ApplyNetProfiles& msg);
   void handle(messages::ApplySnmp& msg);
   void handle(const messages::TraceRoute& msg);
   void handle(const messages::CheckRoutes& msg);
@@ -152,6 +155,7 @@ public:
   void handle(const messages::ApplyTimeZonesResp& msg);
   void handle(const messages::ApplyFraudControlResp& msg);
   void handle(const messages::ApplyMapLimitsResp& msg);
+  void handle(const messages::ApplyNetProfilesResp& msg);
   void handle(const messages::ApplySnmpResp& msg);
   void handle(const messages::UpdateProfileResp& msg);
   void handle(const messages::DeleteProfileResp& msg);

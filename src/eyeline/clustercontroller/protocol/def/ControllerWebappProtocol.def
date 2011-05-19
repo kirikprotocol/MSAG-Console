@@ -7,7 +7,8 @@ protocol ControllerProtocol
   ApplyLocaleResource 
   ApplyTimeZones 
   ApplyFraudControl 
-  ApplyMapLimits 
+  ApplyMapLimits
+  ApplyNetProfiles 
   ApplySnmp 
   TraceRoute
   CheckRoute 
@@ -58,6 +59,7 @@ protocol ControllerProtocol
   ApplyTimeZonesResp inmsg
   ApplyFraudControlResp inmsg
   ApplyMapLimitsResp inmsg
+  ApplyNetProfilesResp inmsg
   ApplySnmpResp inmsg
   TraceRouteResp inmsg
   CheckRoutesResp inmsg
