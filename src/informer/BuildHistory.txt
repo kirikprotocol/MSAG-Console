@@ -1,3 +1,6 @@
+=====================================================================
+2011-05-20 14:00 bukind informer-build-20110520
+
 2011-05-20 13:35 bukind
   feature: msgXX.log is now v2: field PROC replaced with SENT
 
