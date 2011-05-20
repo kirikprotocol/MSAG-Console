@@ -1,5 +1,12 @@
+tag informer-20110520-actlog-conversion-post
+
+2011-05-20 13:30 bukind
+  feature: automatic conversion for activity_log v2->v3 (tested)
+
 2011-05-19 17:15 bukind
-  feature: conversion for activity_log v2->v3 added
+  feature: conversion for activity_log v2->v3 added (not tested)
+
+tag informer-20110519-actlog-conversion-pre
 
 =====================================================================
 2011-05-19 09:15 bukind informer-build-20110519
