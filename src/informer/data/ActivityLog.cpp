@@ -82,7 +82,6 @@ bool ActivityLog::readStatistics( const std::string& filename,
                     version = v;
                     if ( version <= 2 ) {
                         isOldVersion = true;
-                        // smsc_log_warn(log_,"D=%u has old version=%u: will be fixed later",getDlvId(),version);
                     }
                     continue;
                 }
@@ -126,9 +125,9 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 throw InfosmeException(EXC_BADFILE,"wrong record: '%s'",line);
             }
             switch (cstate) {
-            case 'N' : ++ds.totalMessages; ++ds.newMessages;  break;
-            case 'P' : /*++ds.procMessages;*/ --ds.newMessages;  break;
-            case 'R' : /*++ds.retryMessages; */  break;
+            case 'N' : ++ods.totalMessages; ++ods.newMessages;  break;
+            case 'P' : /*++ods.procMessages;*/ --ods.newMessages;  break;
+            case 'R' : /*++ods.retryMessages; */  break;
             case 'B' : break; // skip record - do nothing
             case 'D' :
             case 'E' :
@@ -143,10 +142,10 @@ bool ActivityLog::readStatistics( const std::string& filename,
                     throw InfosmeException(EXC_BADFILE,"cannot parse the number of sms in '%s'",line);
                 }
                 switch (cstate) {
-                case 'D': ++ds.dlvdMessages; ds.dlvdSms += nchunks; break;
-                case 'F': ++ds.failedMessages; ds.failedSms += nchunks; break;
-                case 'E': ++ds.expiredMessages; ds.expiredSms += nchunks; break;
-                case 'K': ++ds.killedMessages; break;
+                case 'D': ++ods.dlvdMessages; ods.dlvdSms += nchunks; break;
+                case 'F': ++ods.failedMessages; ods.failedSms += nchunks; break;
+                case 'E': ++ods.expiredMessages; ods.expiredSms += nchunks; break;
+                case 'K': ++ods.killedMessages; break;
                 default: break;
                 }
                 break;
