@@ -47,7 +47,6 @@ bool ActivityLog::readStatistics( const std::string& filename,
     bool statLineHasBeenRead = false;
     int version = 0;
     DeliveryStats ds;
-    ds.clear();
     do {
         char* ptr = buf.get();
         const size_t wasread = fg.read( buf.GetCurPtr(), buf.getSize() - buf.GetPos() );
@@ -89,6 +88,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 }
                 // trying to read statline, version must be already defined
                 int shift = 0;
+                ds.clear();
                 sscanf(line, version == 2 ? statsFormat2 : statsFormat3,
                        &ds.totalMessages, &ds.procMessages,
                        &ds.sentMessages, &ds.newMessages,
@@ -109,6 +109,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                     ds.newMessages = ds.getRetryMessagesCount();
                 }
                 statLineHasBeenRead = true;
+                ods = ds;
                 continue;
 
             }
@@ -174,7 +175,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
         }
     } while (true);
     if (statLineHasBeenRead) {
-        ods = ds;
+        // they are to be set from StoreJournal
         ods.sentMessages = ods.procMessages = 0;
     }
     return statLineHasBeenRead;
