@@ -94,8 +94,8 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
     secretFlash = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
-    if(delivery.getSourceAddress() !=null) {
-      testAddress = delivery.getSourceAddress().getSimpleAddress();
+    if(u.getPhone() !=null) {
+      testAddress = u.getPhone().getSimpleAddress();
     }
   }
 
@@ -343,8 +343,8 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
         default:
           sms = TestSms.ussdPushViaVlr();
       }
-      sms.setDestAddr(new Address(u.getPhone()));
-      sms.setSourceAddr(new Address(testAddress));
+      sms.setDestAddr(new Address(testAddress));
+      sms.setSourceAddr(new Address(delivery.getSourceAddress()));
       sms.setText(delivery.getSingleText());
       try {
         config.sendTestSms(sms);

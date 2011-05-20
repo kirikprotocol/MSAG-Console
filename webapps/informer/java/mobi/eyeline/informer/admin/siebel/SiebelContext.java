@@ -15,9 +15,7 @@ public interface SiebelContext {
 
   public Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
 
-  // todo Не очень красиво получается. Предлагаю другой вариант: в методе AdminContext.dropDelivery разрешить удалять рассылки
-  // todo Siebel тому пользователю из под которого создаются рассылки Siebel.
-  public void dropSiebelDelivery(String login, int deliveryId) throws AdminException;
+  public void dropDelivery(String login, int deliveryId) throws AdminException;
 
   public void addMessages(String login, DataSource<Message> msDataSource, int deliveryId) throws AdminException;
 

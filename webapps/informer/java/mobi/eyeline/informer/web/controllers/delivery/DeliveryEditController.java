@@ -46,6 +46,8 @@ public class DeliveryEditController extends DeliveryController {
 
   private String archiveTime;
 
+  private String testAddress;
+
   public DeliveryEditController() {
     super();
 
@@ -78,6 +80,14 @@ public class DeliveryEditController extends DeliveryController {
     } catch (AdminException e) {
       addError(e);
     }
+  }
+
+  public String getTestAddress() {
+    return testAddress;
+  }
+
+  public void setTestAddress(String testAddress) {
+    this.testAddress = testAddress;
   }
 
   public boolean isArchiveDaemonDeployed() {
@@ -132,6 +142,9 @@ public class DeliveryEditController extends DeliveryController {
     User u = getConfig().getUser(delivery.getOwner());
     archiveTime = delivery.getArchiveTime() == null ? null : Integer.toString(delivery.getArchiveTime());
     archivateCheck = delivery.getArchiveTime() != null;
+    if(u.getPhone() != null) {
+      testAddress = u.getPhone().getSimpleAddress();
+    }
   }
 
   private String emailNotificationAddress;
@@ -235,9 +248,13 @@ public class DeliveryEditController extends DeliveryController {
     if (delivery.getType() != Delivery.Type.SingleText) {
       return null;
     }
+    if(testAddress == null || !Address.validate(testAddress)) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.address.illegal", testAddress);
+      return null;
+    }
     try {
       Address src = delivery.getSourceAddress();
-      Address dst = new Address(user.getPhone());
+      Address dst = new Address(testAddress);
       boolean flash = delivery.isFlash();
       String text = delivery.getSingleText();
 
@@ -253,9 +270,9 @@ public class DeliveryEditController extends DeliveryController {
           sms = TestSms.ussdPushViaVlr(src, dst, text);
       }
       config.sendTestSms(sms);
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", user.getPhone());
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", testAddress);
     } catch (TestSmsException e) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", user.getPhone().getSimpleAddress(),
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.test.sms.error", testAddress,
           Integer.toString(e.getSmppStatus()), getSmppCodeDescription(e.getSmppStatus()));
     } catch (AdminException e) {
       addError(e);

@@ -150,7 +150,11 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.singleText}" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}"/>
         <h:panelGrid columns="1" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
           <tr:inputText value="#{deliveryEdit.delivery.singleText}" rows="3" simple="true"/>
-          <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}" shortDesc="#{msg['delivery.details.test.sms']}"/>
+          <h:panelGroup>
+            <h:inputText value="#{deliveryEdit.testAddress}" size="21"/>
+            <tr:outputText value="&#160;"/>
+            <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}" shortDesc="#{msg['delivery.details.test.sms']}"/>
+          </h:panelGroup>
         </h:panelGrid>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretMessage}" rendered="#{deliveryEdit.secret}"/>

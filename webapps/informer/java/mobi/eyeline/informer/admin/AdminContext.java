@@ -593,23 +593,13 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Deprecated
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
-    dropDelivery(login, password, deliveryId, true);
-  }
-
-  @Override
-  public void dropSiebelDelivery(String login, int deliveryId) throws AdminException {
-    User u = getUser(login);
-    dropDelivery(login, u.getPassword(), deliveryId, false);
-  }
-
-  private void dropDelivery(String login, String password, int deliveryId, boolean checkSiebel) throws AdminException {
     try {
       lockDelivery(deliveryId);
       Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
       if(d == null) {
         return;
       }
-      if(checkSiebel && d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
+      if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null && !d.getOwner().equals(login)) {
         throw new IntegrityException("siebel.delivery.remove");
       }
       setDeliveryRestriction(login, password, deliveryId, false);

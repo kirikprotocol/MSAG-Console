@@ -351,7 +351,7 @@ class SiebelManager {
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery is damaged. Recreate it. WaveId=" + st.getWaveId());
         }
-        context.dropSiebelDelivery(siebelUser, delivery.getId());
+        context.dropDelivery(siebelUser, delivery.getId());
       }
     }
 
@@ -406,7 +406,7 @@ class SiebelManager {
 
     try {
       if (remove) {
-        context.dropSiebelDelivery(siebelUser, delivery.getId());
+        context.dropDelivery(siebelUser, delivery.getId());
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery has been removed name=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getId());
         }
@@ -615,7 +615,7 @@ class SiebelManager {
         logger.debug("Error during adding messages. Drop delivery: " + delivery.getName());
       }
       try {
-        context.dropSiebelDelivery(siebelUser, delivery.getId());
+        context.dropDelivery(siebelUser, delivery.getId());
       } catch (Exception ex) {
         logger.error(ex, ex);
       }
