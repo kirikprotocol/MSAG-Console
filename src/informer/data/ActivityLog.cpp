@@ -176,6 +176,10 @@ bool ActivityLog::readStatistics( const std::string& filename,
     if (statLineHasBeenRead) {
         // they are to be set from StoreJournal
         ods.sentMessages = ods.procMessages = 0;
+        // fixing negative newMessages
+        if ( int(ods.newMessages) < 0 ) {
+            ods.newMessages = 0;
+        }
     }
     return statLineHasBeenRead;
 }
