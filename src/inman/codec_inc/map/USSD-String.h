@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_USSD_String_H_
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define	_USSD_String_H_
 
 

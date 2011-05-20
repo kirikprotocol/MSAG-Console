@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_AddressString_H_
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define	_AddressString_H_
 
 

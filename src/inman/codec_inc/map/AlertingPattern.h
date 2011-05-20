@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_AlertingPattern_H_
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define	_AlertingPattern_H_
 
 

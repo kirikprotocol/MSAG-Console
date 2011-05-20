@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ISDN_AddressString_H_
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define	_ISDN_AddressString_H_
 
 

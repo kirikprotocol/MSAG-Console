@@ -1,8 +1,8 @@
-#ident "$Id$"
-
 #ifndef	_USSD_Arg_H_
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define	_USSD_Arg_H_
-
 
 #include <asn_application.h>
 
