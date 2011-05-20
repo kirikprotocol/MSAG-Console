@@ -104,6 +104,10 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 if (statLineHasBeenRead) {
                     throw InfosmeException(EXC_BADFILE,"duplicate stat line");
                 }
+                if (version<=2) {
+                    // swapping new and retry messages
+                    ds.newMessages = ds.getRetryMessagesCount();
+                }
                 statLineHasBeenRead = true;
                 continue;
 
@@ -365,24 +369,6 @@ msgtime_type ActivityLog::fixActLogFormat( msgtime_type currentTime )
         throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",getDlvId());
     }
 
-    // swap retry and new messages count
-    DeliveryStats ds;
-    dlvInfo_->getMsgStats(ds);
-    uint32_t realNewStat = ds.getRetryMessagesCount();
-    if ( ds.newMessages != realNewStat ) {
-        smsc_log_info(log_,"D=%u fixing newMsg=%u -> %u",
-                      getDlvId(), ds.newMessages, realNewStat);
-        dlvInfo_->initMsgStats(anyRegionId,MSGSTATE_INPUT,realNewStat-ds.newMessages);
-        // check
-        dlvInfo_->getMsgStats(ds);
-        if (ds.newMessages != realNewStat) {
-            throw InfosmeException(EXC_LOGICERROR,
-                                   "D=%u WRONG NUMBER of newMsg=%u, must be %u",
-                                   getDlvId(),
-                                   ds.newMessages,
-                                   realNewStat );
-        }
-    }
     smsc::core::synchronization::MutexGuard mg(lock_);
     createFile(currentTime, now);
     return createTime_;
