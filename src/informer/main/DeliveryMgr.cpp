@@ -449,7 +449,7 @@ public:
                     fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
                     fg.seek(0,SEEK_END);
                     if (fg.getPos() == 0) {
-                        const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID\n";
+                        const char* header = "#2 MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID\n";
                         fg.write(header,strlen(header));
                     }
                 }
@@ -459,7 +459,7 @@ public:
                     char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s\n",
                                                dlvId, userId.c_str(),
                                                ds.totalMessages,
-                                               ds.procMessages,
+                                               ds.sentMessages,
                                                ds.dlvdMessages,
                                                ds.failedMessages,
                                                ds.expiredMessages,
