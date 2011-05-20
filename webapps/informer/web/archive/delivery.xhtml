@@ -168,11 +168,14 @@
           <eye:delimiter/>
 
           <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100WidthTopLeft, columnTopLeftAlign">
-            <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.edit.messages.delivered']}"/>
+            <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['message.state.Delivered']}"/>
             <h:outputText style="white-space:nowrap;" value="#{archiveDelivery.status.deliveredMessages}"/>
 
-            <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.edit.messages.failed']}"/>
-            <h:outputText style="white-space:nowrap;" value="#{archiveDelivery.status.failedMessages + archiveDelivery.status.expiredMessages}"/>
+            <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['message.state.Failed']}"/>
+            <h:outputText style="white-space:nowrap;" value="#{archiveDelivery.status.failedMessages}"/>
+
+            <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['message.state.Expired']}"/>
+            <h:outputText style="white-space:nowrap;" value="#{archiveDelivery.status.expiredMessages}"/>
 
             <h:outputText style="white-space:nowrap; font-weight: bold; border-bottom: 1px solid BLACK;" value="#{msg['delivery.messages.total']}"/>
             <h:outputText style="white-space:nowrap; font-weight: bold; border-bottom: 1px solid BLACK;" value="#{archiveDelivery.status.deliveredMessages + archiveDelivery.status.failedMessages + archiveDelivery.status.expiredMessages}"/>

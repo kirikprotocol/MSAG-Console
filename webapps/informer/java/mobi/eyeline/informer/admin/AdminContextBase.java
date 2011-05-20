@@ -28,8 +28,12 @@ import mobi.eyeline.informer.admin.users.UsersManager;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Artem Snopkov
@@ -81,7 +85,12 @@ class AdminContextBase {
 
 // delivery ->user ->region->smsc
 
-  final private ConcurrentHashMap<Integer, Object> deliveriesLock = new ConcurrentHashMap<Integer, Object>(10);
+  final private Set<Integer> lockedDeliveries = new HashSet<Integer>(10);
+  final private ThreadLocal<Set<Integer>> deliveriesLockedByThisThread = new ThreadLocal<Set<Integer>>();
+
+  private final Lock deliveryLock = new ReentrantLock();
+
+  private final Condition deliveryIsFree = deliveryLock.newCondition();
 
 
   protected AdminContextBase() {
@@ -175,15 +184,38 @@ class AdminContextBase {
     }
   }
 
-  protected Object getLock(int deliveryId) {
-    Object lock = deliveriesLock.get(deliveryId);
-    if (lock == null) {
-      Object l = deliveriesLock.putIfAbsent(deliveryId, lock = new Object());
-      if (l != null) {
-        lock = l;
+  private Set<Integer> getDeliveriesLockedByThisThread() {
+    Set<Integer> set = deliveriesLockedByThisThread.get();
+    if (set == null)
+      deliveriesLockedByThisThread.set(set);
+    return set;
+  }
+
+  protected void lockDelivery(int deliveryId) {
+    try {
+      deliveryLock.lock();
+      Set<Integer> deliveriesLockedByThisThread = getDeliveriesLockedByThisThread();
+      if (!deliveriesLockedByThisThread.contains(deliveryId)) {
+        while(lockedDeliveries.contains(deliveryId))
+          deliveryIsFree.await();
+        lockedDeliveries.add(deliveryId);
+        deliveriesLockedByThisThread.add(deliveryId);
       }
+    } catch (InterruptedException ignored) {
+    } finally {
+      deliveryLock.unlock();
     }
-    return lock;
+  }
+
+  protected void unlockDelivery(int deliveryId) {
+    try {
+      deliveryLock.lock();
+      lockedDeliveries.remove(deliveryId);
+      getDeliveriesLockedByThisThread().remove(deliveryId);
+      deliveryIsFree.notify();
+    } finally {
+      deliveryLock.unlock();
+    }
   }
 
   public boolean isFtpServerDeployed() {

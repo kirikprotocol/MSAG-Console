@@ -479,7 +479,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
 
   @Deprecated
-  public synchronized Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+  public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
     checkHasNotRestriction("creation_restricted", login);
 
     delivery2UserDep.checkDelivery(delivery);
@@ -513,7 +513,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   @Deprecated
-  public synchronized Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
+  public Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
     checkHasNotRestriction("creation_restricted", login);
 
     delivery2UserDep.checkDelivery(delivery);
@@ -527,7 +527,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryManager.createDeliveryWithSingleText(login, password, delivery, msDataSource);
   }
 
-  public synchronized void modifyDelivery(String login, Delivery delivery) throws AdminException {
+  public void modifyDelivery(String login, Delivery delivery) throws AdminException {
     User user = getUser(login);
     modifyDelivery(login, user.getPassword(), delivery);
   }
@@ -538,11 +538,14 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   @Deprecated
-  public synchronized void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
+  public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
     delivery2UserDep.checkDelivery(delivery);
 
-    synchronized (getLock(delivery.getId())) {
+    try {
+      lockDelivery(delivery.getId());
       deliveryManager.modifyDelivery(login, password, delivery);
+    } finally {
+      unlockDelivery(delivery.getId());
     }
   }
 
@@ -553,11 +556,14 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Deprecated
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
       d.setProperty(UserDataConsts.RESTRICTION, Boolean.toString(restriction));
       deliveryManager.modifyDelivery(login, password, d);
       return d;
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -572,13 +578,16 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       throw new IntegrityException("archiveDaemon.undeployed");
     }
     User u = getUser(login);
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       Delivery d = deliveryManager.getDelivery(login, u.getPassword(), deliveryId);
       if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
         throw new IntegrityException("siebel.delivery.remove");
       }
       setDeliveryRestriction(login, u.getPassword(), deliveryId, false);
       deliveryManager.archivateDelivery(login, u.getPassword(), deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -594,7 +603,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   private void dropDelivery(String login, String password, int deliveryId, boolean checkSiebel) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
       if(d == null) {
         return;
@@ -604,6 +614,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       }
       setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.dropDelivery(login, password, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -620,8 +632,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   public void addSingleMessagesWithData(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
     User u = getUser(login);
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       deliveryManager.addSingleTextMessagesWithData(login, u.getPassword(), messageSource, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -632,21 +647,29 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       deliveryManager.addIndividualMessages(login, password, msDataSource, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
   public void addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       deliveryManager.addSingleTextMessages(login, password, msDataSource, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
   public void dropMessages(String login, String password, int deliveryId, Collection<Long> messageIds) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       deliveryManager.dropMessages(login, password, deliveryId, messageIds);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -672,9 +695,12 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Deprecated
   public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.cancelDelivery(login, password, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -685,8 +711,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Deprecated
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       deliveryManager.pauseDelivery(login, password, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -698,15 +727,21 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Deprecated
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       checkHasNotRestriction("activation_restricted", login);
       deliveryManager.activateDelivery(login, password, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
   public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
-    synchronized (getLock(deliveryId)) {
+    try {
+      lockDelivery(deliveryId);
       return deliveryManager.getDeliveryStats(login, password, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
@@ -721,20 +756,29 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
-    synchronized (getLock(filter.getDeliveryId())) {
+    try {
+      lockDelivery(filter.getDeliveryId());
       deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
+    } finally {
+      unlockDelivery(filter.getDeliveryId());
     }
   }
 
   public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
-    synchronized (getLock(messageFilter.getDeliveryId())) {
+    try {
+      lockDelivery(messageFilter.getDeliveryId());
       return deliveryManager.countMessages(login, password, messageFilter);
+    } finally {
+      unlockDelivery(messageFilter.getDeliveryId());
     }
   }
 
-  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliverId) throws AdminException {
-    synchronized (getLock(deliverId)) {
-      return deliveryManager.getDeliveryStatusHistory(login, password, deliverId);
+  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
+    try {
+      lockDelivery(deliveryId);
+      return deliveryManager.getDeliveryStatusHistory(login, password, deliveryId);
+    } finally {
+      unlockDelivery(deliveryId);
     }
   }
 
