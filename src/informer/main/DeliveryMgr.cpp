@@ -1360,7 +1360,7 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
 
         DeliveryImpl::readDeliveryInfoData(dlvId, data);
 
-        user = core_.getUserInfo(data.owner.c_str());
+        user = core_.innerGetUserInfo(data.owner.c_str());
         if (!user.get()) {
             throw InfosmeException(EXC_CONFIG,"D=%u has unknown user: '%s'",
                                    dlvId,data.owner.c_str());

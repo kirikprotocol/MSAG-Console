@@ -65,6 +65,7 @@ public:
     virtual void addUser( const char* user );
     virtual void deleteUser( const char* login );
     virtual UserInfoPtr getUserInfo( const char* login );
+    UserInfoPtr innerGetUserInfo( const char* login );
     virtual void updateUserInfo( const char* login );
 
     virtual void addSmsc( const char* smscId );
@@ -117,6 +118,8 @@ public:
     // --- end of receipt processor iface
 
     // --- delivery activator iface
+
+    virtual bool isStarted() const { return started_; }
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
 

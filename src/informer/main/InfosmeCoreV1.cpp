@@ -506,7 +506,10 @@ void InfosmeCoreV1::stop()
 void InfosmeCoreV1::addUser( const char* user )
 {
     smsc_log_debug(log_,"== addUser(%s)",user ? user : "");
-    UserInfoPtr ptr = getUserInfo(user);
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
+    UserInfoPtr ptr = innerGetUserInfo(user);
     if (ptr.get()) {
         throw InfosmeException(EXC_ALREADYEXIST,"user '%s' already exists",user);
     }
@@ -517,6 +520,9 @@ void InfosmeCoreV1::addUser( const char* user )
 void InfosmeCoreV1::deleteUser( const char* login )
 {
     smsc_log_debug(log_,"== deleteUser(%s)",login ? login : "");
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if (!login) throw InfosmeException(EXC_LOGICERROR,"deluser NULL passed");
     if ( getCS()->isArchive() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
@@ -544,7 +550,15 @@ void InfosmeCoreV1::deleteUser( const char* login )
 UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 {
     smsc_log_debug(log_,"== getUserInfo(%s)",login ? login : "");
-    if (!login) throw InfosmeException(EXC_LOGICERROR,"userid NULL passed");
+    return innerGetUserInfo(login);
+}
+
+
+UserInfoPtr InfosmeCoreV1::innerGetUserInfo( const char* login )
+{
+    if (!login) {
+        throw InfosmeException(EXC_LOGICERROR,"userid NULL passed");
+    }
     UserInfoPtr* ptr = 0;
     {
         MutexGuard mg(userLock_);
@@ -585,8 +599,11 @@ void InfosmeCoreV1::getUsers( std::vector< UserInfoPtr >& users )
 void InfosmeCoreV1::updateUserInfo( const char* login )
 {
     smsc_log_debug(log_,"== updateUserInfo(%s)",login ? login : "");
-    UserInfoPtr ptr = getUserInfo(login);
-    if (!ptr.get()) throw InfosmeException(EXC_NOTFOUND,"user '%s' is not found",login);
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
+    UserInfoPtr ptr = innerGetUserInfo(login);
+    if (!ptr) throw InfosmeException(EXC_NOTFOUND,"user '%s' is not found",login);
     loadUsers(login);
 }
 
@@ -603,8 +620,8 @@ void InfosmeCoreV1::selfTest()
 
         const char* userId = "selftestuser";
         smsc_log_debug(log_,"--- getting user '%s' ---",userId);
-        UserInfoPtr user = getUserInfo(userId);
-        if (!user.get()) {
+        UserInfoPtr user = innerGetUserInfo(userId);
+        if (!user) {
             throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
         }
 
@@ -985,6 +1002,9 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== addSmsc(%s)",smscId ? smscId : "");
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
@@ -1002,6 +1022,9 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
 void InfosmeCoreV1::updateSmsc(const char* smscId)
 {
     smsc_log_debug(log_,"== updateSmsc(%s)",smscId ? smscId : "");
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
@@ -1019,10 +1042,13 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
 
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
+    smsc_log_debug(log_,"== deleteSmsc(%s)",smscId ? smscId : "");
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
-    smsc_log_debug(log_,"== deleteSmsc(%s)",smscId ? smscId : "");
     updateSmsc(smscId,0,0);
 }
 
@@ -1030,6 +1056,9 @@ void InfosmeCoreV1::deleteSmsc( const char* smscId )
 void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== updateDefaultSmsc(%s)",smscId ? smscId : "");
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
@@ -1061,6 +1090,9 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 void InfosmeCoreV1::addRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== addRegion(R=%u)",regionId);
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
@@ -1082,6 +1114,9 @@ void InfosmeCoreV1::addRegion( regionid_type regionId )
 void InfosmeCoreV1::updateRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== updateRegion(R=%u)",regionId);
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
@@ -1105,6 +1140,9 @@ void InfosmeCoreV1::updateRegion( regionid_type regionId )
 void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== deleteRegion(R=%u)",regionId);
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
@@ -1152,6 +1190,9 @@ dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
                                        const DeliveryInfoData& info )
 {
     smsc_log_debug(log_,"== addDelivery(U='%s')",userInfo.getUserId());
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
@@ -1165,6 +1206,9 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
 {
     smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u,move=%d)",userInfo.getUserId(),dlvId,
                    moveToArchive?1:0);
+    if (!started_) {
+        throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
@@ -1667,6 +1711,7 @@ bool InfosmeCoreV1::getSmscSender( const char* smscId,
     regPtr = *ptr;
     return true;
 }
+
 
 }
 }

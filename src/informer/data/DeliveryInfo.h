@@ -19,7 +19,6 @@ namespace informer {
 
 class UserInfo;
 class Region;
-class DeliveryActivator;
 
 /// the structure holding data from dcp protocol.
 struct DeliveryInfoData

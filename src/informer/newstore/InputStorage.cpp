@@ -192,6 +192,10 @@ void InputStorage::init( ActivityLog& actLog )
 
 void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
 {
+    if ( !activityLog_->getDlvInfo().getUserInfo().getDA().isStarted() ) {
+        throw InfosmeException( EXC_SYSTEM, "Not ready yet");
+    }
+
     smsc::core::buffers::IntHash< RegionPtr > regs(10);
     dispatchMessages(begin, end, regs);
     msgtime_type currentTime(currentTimeSeconds());
@@ -221,6 +225,9 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
 void InputStorage::dropMessages( const std::vector<msgid_type>& msgids )
 {
     // FIXME: optimize (skv) sort the vector outside please
+    if ( !activityLog_->getDlvInfo().getUserInfo().getDA().isStarted() ) {
+        throw InfosmeException( EXC_SYSTEM, "Not ready yet");
+    }
     std::vector<msgid_type> msgIds(msgids);
     std::sort(msgIds.begin(),msgIds.end());
     blackList_->addMessages(msgIds);
