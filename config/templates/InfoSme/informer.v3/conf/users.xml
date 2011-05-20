@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+  <section name="USERS">
+    <section name="vasyapupkin">
+      <param name="password"  type="string">pwd</param>
+      <param name="status"    type="string">ENABLED</param>
+      <param name="firstName" type="string">Vasya</param>
+      <param name="lastName"  type="string">Pupkin</param>
+      <param name="phone"     type="string">+1</param>
+      <param name="email"     type="string">vasya@nowhere.com</param>
+      <param name="organization"  type="string">eyeline inc.</param>
+      <param name="locale"        type="string">en</param>
+      <param name="createCDR"     type="bool">false</param>
+      <param name="smsPerSec"     type="int">1</param>
+      <param name="sourceAddr"     type="int">10000</param>
+      <param name="validHours"     type="int">2</param>
+      <param name="deliveryType"   type="string">SMS</param>
+      <param name="transactionMode" type="bool">false</param>
+      <param name="policyId"        type="string">1h</param>
+      <param name="priority"        type="int">5</param>
+      <param name="deliveryLifetime"  type="int">1000</param>
+      <param name="directory"         type="string">homedir</param>
+      <param name="directoryPoolPeriod" type="int">1001</param>
+      <param name="reportsLifetime" type="int">1002</param>
+      <section name="ROLES">
+        <param name="informer-admin" type="bool">false</param>
+        <param name="informer-user"  type="bool">true</param>
+      </section>
+      <section name="REGIONS">        
+        <param name="0"  type="bool">true</param>
+        <param name="1"  type="bool">true</param>
+      </section>
+    </section>
+  </section>
+</config>

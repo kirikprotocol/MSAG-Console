@@ -1,13 +1,12 @@
-The text file contains message statistics for deliveries collected
-during periods.
+The text file contains periodic message statistics by deliveries.
 
-The file location is statistics/YYYY.MM.DD/HH.log
+The file location is statistics/YYYY.MM.DD/msgHH.log
 and so it contains records written during one hour.
 
 The head of the file contains comment record prefixed with '#'
 character:
 
-# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,DLVDSMS,FAILSMS,EXPDSMS
+# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD
 
 The following lines are records one per line, containing the folliwing
 fields:
@@ -23,12 +22,12 @@ fields:
   DLVD    - a number of delivered messages;
   FAIL    - a number of failed messages;
   EXPD    - a number of expired messages;
-  DLVDSMS - a number of delivered sms (approximate); 
-  FAILSMS - a number of failed sms (approximate);
-  EXPDSMS - a number of expired sms (approximate);
+  SMSDLVD - a number of delivered sms (approximate); 
+  SMSFAIL - a number of failed sms (approximate);
+  SMSEXPD - a number of expired sms (approximate);
 
 Example:
-# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,DLVDSMS,FAILSMS,EXPDSMS
+# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD
 5000,22,bukind,2,0,0,1,0,0,1,0
 5014,22,bukind,2,2,1,0,0,3,0,0
 

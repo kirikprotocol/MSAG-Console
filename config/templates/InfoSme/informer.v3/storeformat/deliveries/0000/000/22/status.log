@@ -1,0 +1,28 @@
+Text file contains delivery status change records.
+
+The format of the file: one line per state change
+(no spaces between fields).
+
+#V TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL
+where
+  V        - numeric version of the file format
+  TIME     - the datetime of state change in YYYYMMDDHHMMSS form
+  STATE    - the state char, one of 'S', 'P', 'A', 'F', 'C' for
+             paused(stopped), planned, active, finished, cancelled respectively
+  PLANTIME - the number of seconds to wait until activation, or 0
+  TOTAL    - the total number of messages
+  PROC     - the number of messages awaiting in input proc cache
+  SENT     - the number of messages waiting for receipts
+  RETRY    - the number of messages awaiting in retry proc cache
+  DLVD     - the number of delivered message
+  FAIL     - the number of failed messages
+  EXPD     - the number of expired messages
+  SMSDLVD  - the number of delivered sms (evaluation)
+  SMSFAIL  - the number of failed sms (evaluation)
+  SMSEXPR  - the number of expired sms (evaluation)
+  KILL     - the number of killed messages
+
+Example:
+#1 TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL
+20101206104254,A,0,1000,0,0,0,0,0,0,0,0,0,0
+20101206104435,F,0,5000,0,0,0,5000,0,0,5000,0,0,0

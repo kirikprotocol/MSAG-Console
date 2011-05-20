@@ -1,0 +1,44 @@
+The text file contains activity log for given delivery.
+
+The file location relative to the delivery directory is 
+activity_log/YYYY.MM.DD/HH/MM.log
+and so it contains records written during one minute.
+
+The head of the file contains the names of the fields, along with
+statistics pseudo-comment record.
+These lines are prefixed with '#' character:
+
+#V SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT
+# TOTAL=0,PROC=0,SENT=0,RTRY=0,DLVD=0,FAIL=0,EXPD=0,SMSDLVD=0,SMSFAIL=0,SMSEXPR=0,KILL=0
+
+Here V will be the version number of the file format.
+
+The following lines are records one per line, containing the fields
+according to their names:
+  SEC      - the number of seconds in the format SS, [00..59];
+  STATE    - message state, a char one of 'N', 'P', 'R', 'D', 'F', 'E',
+             'B', 'K' for new, proc, retry, dlvd, fail, expired,
+             banned (marked to be killed), killed respectively;
+  REGID    - region id, positive integer [0..];
+  MSGID    - message id, positive integer [1..];
+  RETRY    - retry count for retry record (R), or
+  NSMS     - the number of sms chunks for final records (DFEK);
+  PLAN     - how much time to wait until next retry, seconds;
+  SUBSCRIBER - the ISDN of the subscriber;
+  TTL      - time to live of the message, seconds [0..];
+  SMPP     - the smpp code;
+  USERDATA - user data ASCII string;
+  TEXT     - the escaped text of the message.
+
+NOTE: banned record (B) is only a mark for removal of the message,
+so it won't contain much information about the message.
+
+Example:
+#1 SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT
+# TOTAL=5000,PROC=737,SENT=10,RTRY=0,DLVD=253,FAIL=0,EXPD=0,SMSDLVD=253,SMSFAIL=0,SMSEXPD=0,KILL=0
+13,N,0,1,0,0,+79137654079,0,0,myfirstmsg,"my \"f\" msg\nsee\\later"
+13,N,0,2,0,0,+79537699490,44,0,thesecondone,"the unbound message"
+13,P,0,1,0,0,+79137654079,3600,0,myfirstmsg,"my \"f\" msg\nsee\\later"
+13,P,0,2,0,0,+79537699490,3600,0,thesecondone,"the unbound message"
+14,F,0,2,1,0,+79537699490,0,1025,thesecondone,"the unbound message"
+14,D,0,1,1,0,+79137654079,0,0,myfirstmsg,"my \"f\" msg\nsee\\later"

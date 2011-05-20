@@ -1,0 +1,17 @@
+This binary file is an input storage file containing input messages
+for given delivery+region.
+
+The format of the file:
+    records one by one
+
+The format of the record (version 1):
+    uint16  length of the record in octets not including this field
+    uint16  version of the record
+    uint64  message id
+    uint8   state (see main README), optionally ORed with 0x80 (embed_text_flag)
+    uint64  subscriber (see main README)
+    cstring userdata
+ if embed_text_flag set (see state field above):
+    cstring message text
+ else:
+    uint32  message text id in glossary

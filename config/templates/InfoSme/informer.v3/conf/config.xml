@@ -1,44 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
-<section name="informer">
-<param name="operationalJournalRollingPeriod" type="int">60</param>
+    <section name="informer">
 
-<param name="storePath" type="string">/home/artem/SERVICES/Informer/informer/services/Informer/store</param>
+        <!-- mandatory, the path to storage -->
+        <param name="storePath" type="string">store</param>
 
-<param name="unrespondedMessagesMax" type="int">100</param>
-<param name="adminHost" type="string">0.0.0.0</param>
-<param name="skippedIdsMinCacheSize" type="int">10</param>
-<param name="dcpHost" type="string">0.0.0.0</param>
-<param name="inputMinQueueSize" type="int">10</param>
-<param name="resendIOThreadCount" type="int">30</param>
-<param name="statPath" type="string">/home/artem/SERVICES/Informer/informer/services/Informer/store/stats</param>
+        <!-- mandatory, the path to statistics -->
+        <param name="statPath" type="string">store/stats</param>
 
-<param name="archivePath" type="string">/home/artem/SERVICES/Informer/informer/services/ArchiveDaemon/store</param>
+        <!-- mandatory, the path to archive -->
+        <param name="archivePath" type="string">../ArchiveDaemon/store</param>
 
-<param name="receiptExtraWaitTime" type="int">30</param>
-<param name="responseWaitTime" type="int">10</param>
-<param name="inputTransferThreadCount" type="int">30</param>
+        <!-- optional, the host for admin socket (localhost) -->
+        <param name="adminHost" type="string">localhost</param>
+        <!-- mandatory, the port for admin socket -->
+        <param name="adminPort" type="int">9672</param>
+        <!-- optional, the number of admin handler threads -->
+        <param name="adminHandlers" type="int">3</param>
 
-<param name="dcpPort" type="int">9573</param>
+        <!-- optional, the host for dcp socket (localhost) -->
+        <param name="dcpHost" type="string">localhost</param>
+        <!-- mandatory, the port for dcp socket -->
+        <param name="dcpPort" type="int">9673</param>
+        <!-- optional, the number of dcp handler threads -->
+        <param name="dcpHandlers" type="int">3</param>
 
-<param name="slicedMessageSize" type="int">160</param>
-<param name="retryMinTimeToLive" type="int">30</param>
-<param name="svcType" type="string">Info</param>
-<param name="dcpHandlers" type="int">3</param>
-<param name="almRequestTimeout" type="int">10</param>
-<param name="skippedIdsChunkSize" type="int">256</param>
-<param name="adminHandlers" type="int">3</param>
-<param name="adminPort" type="int">9572</param>
-<param name="protocolId" type="int">0</param>
-<param name="inputTransferChunkSize" type="int">1000</param>
-<param name="inputJournalRollingPeriod" type="int">60</param>
-</section>
-<section name="pvss">
-<param name="asyncPort" type="int">25404</param>
-<param name="port" type="int">25404</param>
-<param name="enabled" type="bool">true</param>
-<param name="host" type="string">niagara</param>
-<param name="syncPort" type="int">25403</param>
-</section>
+        <!-- optional, the flag to switch to emergency mode -->
+        <param name="emergency" type="bool">false</param>
+
+        <!-- optional, how many seconds to wait until alm request finished -->
+        <param name="almRequestTimeout" type="int">10</param>
+
+        <!-- optional max number of unresponded messages per smsc -->
+        <param name="unrespondedMessagesMax" type="int">100</param>
+
+        <!-- optional, how many seconds to wait for response -->
+        <param name="responseWaitTime" type="int">70</param>
+
+        <!-- optional, service type (if not overriden by delivery) -->
+        <param name="svcType" type="string">Info</param>
+
+        <!-- optional, the value of SMPP_PROTOCOL_ID sms field -->
+        <param name="protocolId" type="int">0</param>
+        
+        <!-- optional, maximum size of sms slice (needed for number of sms evaluation) -->
+        <param name="slicedMessageSize" type="int">160</param>
+
+        <!-- optional, minimum input queue size (when transfer from input to operational storage requested) -->
+        <param name="inputMinQueueSize" type="int">5</param>
+
+        <!-- optional, input transfer chunk size (how many messages to upload in one transfer)-->
+        <param name="inputTransferChunkSize" type="int">60</param>
+
+        <!-- optional, the period to average input requests, sec -->
+        <param name="inputRequestAverageTime" type="int">1</param>
+
+        <!-- optional, how many seconds to keep waiting for receipt after its validity time expires -->
+        <param name="receiptExtraWaitTime" type="int">30</param>
+        
+        <!-- optional, minimum message TTL allowed for retry -->
+        <param name="retryMinTimeToLive" type="int">30</param>
+
+        <!-- optional, how many skipped msg ids are in cache when cache upload need to be started -->
+        <param name="skippedIdsMinCacheSize" type="int">10</param>
+
+        <!-- optional, how many skipped msg ids to upload in cache in one transfer -->
+        <param name="skippedIdsChunkSize" type="int">256</param>
+
+        <!-- optional, how many seconds between input journal rollings -->
+        <param name="inputJournalRollingPeriod" type="int">300</param>
+
+        <!-- optional, how many seconds between operational journal rollings -->
+        <param name="operationalJournalRollingPeriod" type="int">300</param>
+
+        <!-- optional, how many seconds between smsc journal rollings -->
+        <param name="smscJournalRollingPeriod" type="int">10</param>
+
+        <!-- optional, how many input-to-operational transfer threads -->
+        <param name="inputTransferThreadCount" type="int">30</param>
+
+        <!-- optional, how many resend-io threads -->
+        <param name="resendIOThreadCount" type="int">30</param>
+
+        <!-- optional, the width of random microsecond jitter to improve balancing, usec -->
+        <param name="regionRandomizationJitter" type="int">12451</param>
+
+        <!-- optional, the default value of validity period, sec -->
+        <param name="validityPeriodDefault" type="int">3600</param>
+
+        <!-- optional, the default value of message time-to-live, sec -->
+        <param name="messageTimeToLiveDefault" type="int">3600</param>
+
+        <!-- optional, the speed of input journal rolling, kb/s -->
+        <param name="inputJournalRollingSpeed" type="int">30</param>
+
+        <!-- optional, the speed of operational journal rolling, kb/s -->
+        <param name="operationalJournalRollingSpeed" type="int">30</param>
+
+        <!-- optional, the speed of smsc journal rolling, kb/s -->
+        <param name="smscJournalRollingSpeed" type="int">30</param>
+
+        <!-- optional, the contention check limit, usec -->
+        <param name="contentionLimit" type="int">300000</param>
+
+    </section>
+
+    <section name="pvss">
+        <param name="asyncPort" type="int">25404</param>
+        <param name="port" type="int">25404</param>
+        <param name="enabled" type="bool">true</param>
+        <param name="host" type="string">niagara</param>
+        <param name="syncPort" type="int">25403</param>
+    </section>
+
 </config>

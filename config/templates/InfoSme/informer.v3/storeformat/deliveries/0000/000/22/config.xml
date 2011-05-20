@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+  <param name="deliveryMode" type="string">sms</param>
+  <param name="owner" type="string">selftestuser</param>
+  <param name="retryPolicy" type="string">1s:*</param>
+  <param name="name" type="string">Моя рассылка</param>
+  <param name="svcType" type="string">info</param>
+  <param name="validityPeriod" type="string">01:00:00</param>
+  <param name="userData" type="string">0xdeadbeef</param>
+  <param name="sourceAddress" type="string">10000</param>
+  <param name="priority" type="int">1</param>
+  <param name="replaceMessage" type="bool">false</param>
+  <param name="flash" type="bool">false</param>
+  <param name="finalMsgRecords" type="bool">true</param>
+  <param name="transactionMode" type="bool">false</param>
+  <param name="finalDlvRecords" type="bool">true</param>
+  <param name="useDataSm" type="bool">false</param>
+  <param name="retryOnFail" type="bool">true</param>
+</config>

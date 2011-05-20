@@ -1,0 +1,16 @@
+This optional text file contains message text glossary for the delivery.
+
+The format of the file: one line per glossary item
+(no spaces between fields):
+ID,TEXT
+where
+  ID     - the id of the text (>0);
+  TEXT   - escaped UTF8 text. The following symbols are escaped:
+           '\' (backslash), '\n' (linefeed), '"' (quote).
+
+NOTE: The later record with the same ID overrides the previous one.
+
+Example:
+1,my \"f\" msg\nlook at c:\\data please
+2,the second text
+1,the first text is overriden by this one

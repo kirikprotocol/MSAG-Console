@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+
+<config>
+    <section name="SMSCConnectors">
+
+        <!-- mandatory, the id of the default smsc -->
+        <param name="default" type="string">selftestsmsc</param>
+
+        <section name="selftestsmsc">
+
+            <!-- optional, the host of smsc (localhost) -->
+            <param name="host" type="string">phoenix</param>
+
+            <!-- mandatory, the system id to connect -->
+            <param name="sid" type="string">InfoSme</param>
+
+            <!-- mandatory, the password to connect -->
+            <param name="password" type="string">infosme</param>
+
+            <!-- mandatory, the port of the smsc -->
+            <param name="port" type="int">34830</param>
+
+            <!-- optional, the connection timeout, sec -->
+            <param name="timeout" type="int">3</param>
+
+            <!-- optional, the period between connection attempts, sec -->
+            <param name="interConnectPeriod" type="int">30</param>
+
+            <!-- optional, the version of the interface (0x34) -->
+            <param name="interfaceVersion" type="int">89</param>
+
+            <!-- optional, the system type ? -->
+            <param name="systemType" type="string"></param>
+
+            <!-- optional, the range of addresses -->
+            <param name="rangeOfAddress" type="string"></param>
+
+            <!-- optional, the tag to use with ussdpush -->
+            <param name="ussdPushTag" type="int">-1</param>
+
+            <!-- optional, the tag to use with ussdpushvlr -->
+            <param name="ussdPushVlrTag" type="int">-1</param>
+
+            <!-- optional, the minimum validity time of the center, sec -->
+            <param name="minValidityTime" type="int">120</param>
+
+            <!-- optional, the maximum validity time of the center, sec -->
+            <param name="maxValidityTime" type="int">120</param>
+
+            <!-- optional section for retry policies -->
+            <!-- section name="retryPolicies">
+                <param name="permanent" type="string">1028,1029</param>
+                <param name="immediate" type="string">1030,1031</param>
+                <section name="temporary">
+                    <param name="10s,20s:4,5m:*" type="string">1032</param>
+                </section>
+            </section -->
+
+        </section>
+    </section>
+</config>
