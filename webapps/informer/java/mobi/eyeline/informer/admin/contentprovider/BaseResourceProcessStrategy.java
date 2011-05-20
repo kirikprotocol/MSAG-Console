@@ -514,8 +514,8 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
         if (createReports) {
           log("create report for: " + f.getName());
-          File reportTmpFile = new File(f.getParent(), deliveryName + ".rep." + deliveryId);
-          createReport(reportTmpFile, d);
+          File reportTmpFile = new File(f.getParent(), deliveryName + ".rep." + deliveryId); //todo Имя конструируется в методе buildRepFile. Надо его использовать.
+          createReport(reportTmpFile, d);     //todo Отчет пишется долго. Надо формировать его до вызова метода resource.open().
           try{
             uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
             resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
