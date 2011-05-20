@@ -214,7 +214,7 @@ class AdminContextBase {
       deliveryLock.lock();
       lockedDeliveries.remove(deliveryId);
       getDeliveriesLockedByThisThread().remove(deliveryId);
-      deliveryIsFree.notify();
+      deliveryIsFree.signal();
     } finally {
       deliveryLock.unlock();
     }
