@@ -22,12 +22,19 @@
 
 <!ELEMENT sites (site|site_subject|placement)*>
 
-<!ELEMENT placement (address_place|route_id_place|service_id_place)*>
+<!ELEMENT placement (usr_place|address_place|route_id_place|service_id_place)*>
 
 <!ELEMENT address_prefix EMPTY>
 <!ATTLIST address_prefix
     ton CDATA #REQUIRED
     npi CDATA #REQUIRED
+>
+
+<!ELEMENT usr_place EMPTY>
+<!ATTLIST usr_place
+    type (url|param|header|cookie) #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #IMPLIED
 >
 
 <!ELEMENT address_place EMPTY>
