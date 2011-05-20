@@ -845,14 +845,14 @@ IntHash<AccessType> SmppCommandAdapter::initFieldsAccess( EventHandlerType eh )
 
     switch (eh) {
     case EH_SUBMIT_SM_RESP:
-    case EH_DELIVER_SM_RESP:
     case EH_DATA_SM_RESP:
+        hs.Insert(MESSAGE_ID,atReadWrite);
+    case EH_DELIVER_SM_RESP:
         hs.Insert(OA,atRead);
         hs.Insert(DA,atRead);
         hs.Insert(STATUS_OK,atRead);
         hs.Insert(STATUS_PERM_ERROR,atRead);
         hs.Insert(STATUS_TEMP_ERROR,atRead);
-        hs.Insert(MESSAGE_ID,atRead);
         hs.Insert(USSD_DIALOG,atRead);
         break;
         
@@ -897,7 +897,7 @@ IntHash<AccessType> SmppCommandAdapter::initFieldsAccess( EventHandlerType eh )
         hs.Insert(ST_ACCEPTED     ,atRead);
         hs.Insert(ST_UNKNOWN      ,atRead);
         hs.Insert(ST_REJECTED     ,atRead);
-        hs.Insert(smsc::sms::Tag::SMPP_RECEIPTED_MESSAGE_ID,atRead);
+        // hs.Insert(smsc::sms::Tag::SMPP_RECEIPTED_MESSAGE_ID,atRead);
         hs.Insert(USSD_DIALOG   ,atRead);
         hs.Insert(USSD_PSSD_IND ,atRead);
         hs.Insert(USSD_PSSR_IND ,atRead);
@@ -914,6 +914,11 @@ IntHash<AccessType> SmppCommandAdapter::initFieldsAccess( EventHandlerType eh )
 
     default:
         break;
+    }
+
+    // additional fields
+    if ( eh == EH_DELIVER_SM_RESP ) {
+        hs.Insert(MESSAGE_ID,atNoAccess);
     }
     return hs;
 }
