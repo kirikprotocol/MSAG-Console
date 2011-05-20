@@ -20,6 +20,9 @@
     <param name="parseOnlyStar" type="string"></param>
     <param name="parseNever" type="string"></param>
   </section>
+  <section name="sms">
+    <param name="openRespRealAddr" type="bool">false</param>
+  </section>
   <section name="clevels">
     <section name="level1">
       <param name="dialogsLimit" type="int">4000</param>
