@@ -3,11 +3,13 @@ package ru.sibinco.smsx.stats;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.jsp.SMEAppContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.sibinco.smsx.stats.backend.StatRequestManager;
 import ru.sibinco.smsx.stats.backend.StatisticsException;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Locale;
@@ -15,7 +17,7 @@ import java.util.Locale;
 /**
  * @author Aleksandr Khalitov
  */
-public class SmsxContext {
+public class SmsxContext  implements SMEAppContext {
 
   private static final Category logger = Category.getInstance(SmsxContext.class);
 
@@ -29,6 +31,7 @@ public class SmsxContext {
 
   public static void init(SMSCAppContext smscAppContext) throws AdminException{
     instance = new SmsxContext(smscAppContext);
+    smscAppContext.registerSMEContext(instance);
   }
 
   public static SmsxContext getInstance() {
@@ -68,5 +71,11 @@ public class SmsxContext {
 
   public File getWorkDir() {
     return workDir;
+  }
+
+  public void shutdown() throws IOException {
+    if(statRequestManager != null) {
+      statRequestManager.shutdown();
+    }
   }
 }

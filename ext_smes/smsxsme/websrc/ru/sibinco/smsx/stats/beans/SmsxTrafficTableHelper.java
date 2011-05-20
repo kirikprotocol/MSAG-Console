@@ -35,7 +35,6 @@ public class SmsxTrafficTableHelper extends PagedStaticTableHelper{
 
   private final int reqId;
 
-
   SmsxTrafficTableHelper(String uid, StatRequestManager requestManager, SmsxTrafficFilter filter, int reqId) {
     super(uid, false);
     setPageSize(20);
@@ -76,8 +75,6 @@ public class SmsxTrafficTableHelper extends PagedStaticTableHelper{
     }
   }
 
-
-
   protected void fillTable(int start, int size) throws TableHelperException {
     initResources();
     clear();
@@ -89,7 +86,7 @@ public class SmsxTrafficTableHelper extends PagedStaticTableHelper{
     List results = new ArrayList(size);
 
     try {
-      setTotalSize(getSortedRecords(start, size, sortOrder, results));
+      setTotalSize(getSortedRecords(start, size, sortOrder, results, regions = new TreeSet()));
     } catch (StatisticsException e) {
       logger.error(e,e);
       throw new TableHelperException(e);
@@ -123,7 +120,13 @@ public class SmsxTrafficTableHelper extends PagedStaticTableHelper{
   }
 
 
-  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs) throws StatisticsException {
+  private Set regions;
+
+  public Set getRegions() {
+    return regions;
+  }
+
+  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs, final Set regions) throws StatisticsException {
     final Comparator comparator = getComparator(sortOrder);
 
     final Traffic infos[] = new Traffic[startPos + count];
@@ -134,12 +137,14 @@ public class SmsxTrafficTableHelper extends PagedStaticTableHelper{
     if(results != null) {
       results.getTraffic(new Visitor() {
         public boolean visit(Object value) throws StatisticsException {
-          if(filter != null && !filter.isAllowed((Traffic)value)) {
+          Traffic t = (Traffic)value;
+          regions.add(t.getRegion());
+          if(filter != null && !filter.isAllowed(t)) {
             return true;
           }
           ++total[0];
-          if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
-            insert(infos, value, comparator);
+          if (infos[lastIdx] == null || comparator.compare(t, infos[lastIdx]) < 0)
+            insert(infos, t, comparator);
           return true;
         }
       });

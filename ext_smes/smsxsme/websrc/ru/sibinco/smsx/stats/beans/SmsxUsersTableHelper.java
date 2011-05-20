@@ -34,6 +34,12 @@ public class SmsxUsersTableHelper extends PagedStaticTableHelper {
 
   private final int reqId;
 
+  private Set regions;
+
+  public Set getRegions() {
+    return regions;
+  }
+
 
   SmsxUsersTableHelper(String uid, StatRequestManager requestManager, SmsxUsersFilter filter, int reqId) {
     super(uid, false);
@@ -87,7 +93,7 @@ public class SmsxUsersTableHelper extends PagedStaticTableHelper {
     List results = new ArrayList(size);
 
     try {
-      setTotalSize(getSortedRecords(start, size, sortOrder, results));
+      setTotalSize(getSortedRecords(start, size, sortOrder, results, regions = new TreeSet()));
     } catch (StatisticsException e) {
       logger.error(e,e);
       throw new TableHelperException(e);
@@ -123,7 +129,7 @@ public class SmsxUsersTableHelper extends PagedStaticTableHelper {
   }
 
 
-  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs) throws StatisticsException {
+  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs, final Set regions) throws StatisticsException {
     final Comparator comparator = getComparator(sortOrder);
 
     final SmsxUsers infos[] = new SmsxUsers[startPos + count];
@@ -134,12 +140,14 @@ public class SmsxUsersTableHelper extends PagedStaticTableHelper {
     if(results != null) {
       results.getSmsxUsers(new Visitor() {
         public boolean visit(Object value) throws StatisticsException {
-          if(filter != null && !filter.isAllowed((SmsxUsers)value)) {
+          SmsxUsers u = (SmsxUsers)value;
+          regions.add(u.getRegion());
+          if(filter != null && !filter.isAllowed(u)) {
             return true;
           }
           ++total[0];
-          if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
-            insert(infos, value, comparator);
+          if (infos[lastIdx] == null || comparator.compare(u, infos[lastIdx]) < 0)
+            insert(infos, u, comparator);
           return true;
         }
       });

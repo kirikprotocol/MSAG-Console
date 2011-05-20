@@ -68,7 +68,11 @@
         <%Collection regions = bean.getRegions();
           Iterator it = regions.iterator();
         while(it.hasNext()) {
-          String r = ((Region)it.next()).getName();%>
+          String r = (String)it.next();
+          if(r.equals("Unknown")) {
+            continue;
+          }
+        %>
         <option value="<%=r%>" <%=r.equals(region)? "SELECTED": ""%>><%=r%></option>
         <%}%>
       </select>

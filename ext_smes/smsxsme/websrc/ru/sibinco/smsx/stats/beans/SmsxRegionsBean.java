@@ -75,7 +75,8 @@ public class SmsxRegionsBean extends StatsBean{
     try {
       tableHelper.processRequest(request);
       tableHelper.fillTable();
-    } catch (TableHelperException e) {
+    } catch (Exception e) {
+      e.printStackTrace();
       return error(e.getMessage());
     }
     if (mbDownload != null) {
@@ -127,7 +128,10 @@ public class SmsxRegionsBean extends StatsBean{
   }
 
   public Collection getRegions() {
-    return smsxContext.getRegions();
+    if(requestId == null || tableHelper == null) {
+      return Collections.EMPTY_LIST;
+    }
+    return tableHelper.getRegions();
   }
 
   public String getRegion() {

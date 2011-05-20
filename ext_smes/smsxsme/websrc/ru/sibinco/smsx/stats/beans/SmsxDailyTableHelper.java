@@ -36,6 +36,11 @@ public class SmsxDailyTableHelper extends PagedStaticTableHelper{
 
   private final int reqId;
 
+  private Set regions;
+
+  public Set getRegions() {
+    return regions;
+  }
 
   SmsxDailyTableHelper(String uid, StatRequestManager requestManager, SmsxWebFilter filter, int reqId) {
     super(uid, false);
@@ -90,7 +95,7 @@ public class SmsxDailyTableHelper extends PagedStaticTableHelper{
     List results = new ArrayList(size);
 
     try {
-      setTotalSize(getSortedRecords(start, size, sortOrder, results));
+      setTotalSize(getSortedRecords(start, size, sortOrder, results, regions = new TreeSet()));
     } catch (StatisticsException e) {
       logger.error(e,e);
       throw new TableHelperException(e);
@@ -124,7 +129,7 @@ public class SmsxDailyTableHelper extends PagedStaticTableHelper{
   }
 
 
-  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs) throws StatisticsException {
+  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs, final Set regions) throws StatisticsException {
     final Comparator comparator = getComparator(sortOrder);
 
     final WebDaily infos[] = new WebDaily[startPos + count];
@@ -135,12 +140,14 @@ public class SmsxDailyTableHelper extends PagedStaticTableHelper{
     if(results != null) {
       results.getWebDaily(new Visitor() {
         public boolean visit(Object value) throws StatisticsException {
-          if(filter != null && !filter.isAllowed((WebDaily)value)) {
+          WebDaily d = (WebDaily)value;
+          regions.add(d.getRegion());
+          if(filter != null && !filter.isAllowed(d)) {
             return true;
           }
           ++total[0];
-          if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
-            insert(infos, value, comparator);
+          if (infos[lastIdx] == null || comparator.compare(d, infos[lastIdx]) < 0)
+            insert(infos, d, comparator);
           return true;
         }
       });

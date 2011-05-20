@@ -54,8 +54,11 @@
         <option value="Unknown" <%="Unknown".equals(region)? "SELECTED": ""%>><%=getLocString("smsx.stat.region.unknown")%></option>
         <%Collection regions = bean.getRegions();
           Iterator it = regions.iterator();
-        while(it.hasNext()) {
-          String r = ((Region)it.next()).getName();%>
+          while(it.hasNext()) {
+            String r = (String)it.next();
+            if(r.equals("Unknown")) {
+              continue;
+            }%>
         <option value="<%=r%>" <%=r.equals(region)? "SELECTED": ""%>><%=r%></option>
         <%}%>
       </select>

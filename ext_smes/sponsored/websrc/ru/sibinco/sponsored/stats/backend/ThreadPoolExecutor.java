@@ -46,30 +46,25 @@ class ThreadPoolExecutor {
 
     private boolean started = true;
 
-    private final Object shutdownLock = new Object();
-
     public void run() {
-      synchronized (shutdownLock) {
-        do {
-          Runnable task = getTask();
-          if(task != null) {
-            try{
-              task.run();
-            }catch (Exception e){
-              logger.error(e, e);
-            }
+      do {
+        Runnable task = getTask();
+        if(task != null) {
+          try{
+            task.run();
+          }catch (Exception e){
+            logger.error(e, e);
           }
-          try {
-            Thread.sleep(2000);
-          } catch (InterruptedException ignored) {}
-        } while (started);
-      }
+        }
+        try {
+          Thread.sleep(2000);
+        } catch (InterruptedException ignored) {}
+      } while (started);
     }
 
     public void shutdown() {
       started = false;
       interrupt();
-      synchronized (shutdownLock){}
     }
 
   }

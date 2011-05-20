@@ -3,12 +3,14 @@ package ru.sibinco.sponsored.stats;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.jsp.SMEAppContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.sibinco.sponsored.stats.backend.StatRequestManager;
 import ru.sibinco.sponsored.stats.backend.StatisticsException;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Locale;
@@ -16,7 +18,7 @@ import java.util.Locale;
 /**
  * @author Aleksandr Khalitov
  */
-public class SponsoredContext {
+public class SponsoredContext implements SMEAppContext {
 
   private static final Category logger = Category.getInstance(SponsoredContext.class);
 
@@ -30,6 +32,7 @@ public class SponsoredContext {
 
   public static void init(SMSCAppContext smscAppContext) throws AdminException{
     instance = new SponsoredContext(smscAppContext);
+    smscAppContext.registerSMEContext(instance);
   }
 
   public static SponsoredContext getInstance() {
@@ -75,5 +78,11 @@ public class SponsoredContext {
 
   public File getWorkDir() {
     return workDir;
+  }
+
+  public void shutdown() throws IOException {
+    if(statRequestManager != null) {
+      statRequestManager.shutdown();
+    }
   }
 }

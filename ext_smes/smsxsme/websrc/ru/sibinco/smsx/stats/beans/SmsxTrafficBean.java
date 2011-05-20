@@ -2,7 +2,9 @@ package ru.sibinco.smsx.stats.beans;
 
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.sibinco.smsx.stats.backend.SmsxRequest;
+import ru.sibinco.smsx.stats.backend.SmsxResults;
 import ru.sibinco.smsx.stats.backend.StatisticsException;
+import ru.sibinco.smsx.stats.backend.Visitor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -126,10 +128,6 @@ public class SmsxTrafficBean extends StatsBean{
     return till == null ? "" : sdf.format(till);
   }
 
-  public Collection getRegions() {
-    return smsxContext.getRegions();
-  }
-
 
   public String getServiceId() {
     return filter.getServiceId() == null ? null : filter.getServiceId().toString();
@@ -169,5 +167,14 @@ public class SmsxTrafficBean extends StatsBean{
 
   public String getMsc() {
     return filter.getMsc() == null ? null : filter.getMsc().toString();
+  }
+
+
+
+  public Collection getRegions() {
+    if(requestId == null || tableHelper == null) {
+      return Collections.EMPTY_LIST;
+    }
+    return tableHelper.getRegions();
   }
 }

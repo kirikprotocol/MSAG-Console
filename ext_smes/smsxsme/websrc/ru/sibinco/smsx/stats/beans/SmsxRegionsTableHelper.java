@@ -34,6 +34,12 @@ public class SmsxRegionsTableHelper extends PagedStaticTableHelper{
 
   private final int reqId;
 
+  private Set regions;
+
+  public Set getRegions() {
+    return regions;
+  }
+
 
   SmsxRegionsTableHelper(String uid, StatRequestManager requestManager, SmsxWebFilter filter, int reqId) {
     super(uid, false);
@@ -88,7 +94,7 @@ public class SmsxRegionsTableHelper extends PagedStaticTableHelper{
     List results = new ArrayList(size);
 
     try {
-      setTotalSize(getSortedRecords(start, size, sortOrder, results));
+      setTotalSize(getSortedRecords(start, size, sortOrder, results, regions = new TreeSet()));
     } catch (StatisticsException e) {
       logger.error(e,e);
       throw new TableHelperException(e);
@@ -122,7 +128,7 @@ public class SmsxRegionsTableHelper extends PagedStaticTableHelper{
   }
 
 
-  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs) throws StatisticsException {
+  private int getSortedRecords(final int startPos, final int count, SortOrderElement sortOrder, List rs, final Set regions) throws StatisticsException {
     final Comparator comparator = getComparator(sortOrder);
 
     final WebRegion infos[] = new WebRegion[startPos + count];
@@ -133,12 +139,14 @@ public class SmsxRegionsTableHelper extends PagedStaticTableHelper{
     if(results != null) {
       results.getWebRegions(new Visitor() {
         public boolean visit(Object value) throws StatisticsException {
-          if(filter != null && !filter.isAllowed((WebRegion)value)) {
+          WebRegion r = (WebRegion)value;
+          regions.add(r.getRegion());
+          if(filter != null && !filter.isAllowed(r)) {
             return true;
           }
           ++total[0];
-          if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
-            insert(infos, value, comparator);
+          if (infos[lastIdx] == null || comparator.compare(r, infos[lastIdx]) < 0)
+            insert(infos, r, comparator);
           return true;
         }
       });

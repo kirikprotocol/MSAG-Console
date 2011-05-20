@@ -126,7 +126,10 @@ public class SmsxDailyBean extends StatsBean{
   }
 
   public Collection getRegions() {
-    return smsxContext.getRegions();
+    if(requestId == null || tableHelper == null) {
+      return Collections.EMPTY_LIST;
+    }
+    return tableHelper.getRegions();
   }
 
   public String getRegion() {
