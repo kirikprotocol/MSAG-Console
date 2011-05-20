@@ -22,6 +22,7 @@
 #include "ActionMatch2.h"
 #include "ActionReplace2.h"
 #include "ActionSubstr2.h"
+#include "ActionGenReceiptId.h"
 
 #include "BatchAction2.h"
 #include "PersAction2.h"
@@ -127,6 +128,7 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if (name=="smpp:del_tlv") return new ActionTLV(TLV_DEL);    
             if (name=="smpp:exist_tlv") return new ActionTLV(TLV_EXIST);
             if (name=="smpp:receipt") return new ActionReceipt();
+            if (name=="smpp:gen_receipt_id") return new ActionGenReceiptId();
             break;
         }
 

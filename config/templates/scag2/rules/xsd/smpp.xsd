@@ -90,6 +90,12 @@
                     <attribute name="network_error_code" type="scag:Value" use="optional"/>
                 </complexType>
             </element>
+
+            <element name="gen_receipt_id">
+                <complexType>
+                    <attribute name="var" type="scag:Var" use="required"/>
+                </complexType>
+            </element>
         </choice>    
     
     </group>
