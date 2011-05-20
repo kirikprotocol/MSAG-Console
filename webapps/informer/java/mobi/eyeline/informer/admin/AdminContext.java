@@ -737,12 +737,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
-    try {
-      lockDelivery(deliveryId);
-      return deliveryManager.getDeliveryStats(login, password, deliveryId);
-    } finally {
-      unlockDelivery(deliveryId);
-    }
+    return deliveryManager.getDeliveryStats(login, password, deliveryId);
   }
 
   public void getDeliveries(String login, DeliveryFilter deliveryFilter, Visitor<Delivery> visitor) throws AdminException {
@@ -756,30 +751,15 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
-    try {
-      lockDelivery(filter.getDeliveryId());
-      deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
-    } finally {
-      unlockDelivery(filter.getDeliveryId());
-    }
+    deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
   }
 
   public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
-    try {
-      lockDelivery(messageFilter.getDeliveryId());
       return deliveryManager.countMessages(login, password, messageFilter);
-    } finally {
-      unlockDelivery(messageFilter.getDeliveryId());
-    }
   }
 
   public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
-    try {
-      lockDelivery(deliveryId);
-      return deliveryManager.getDeliveryStatusHistory(login, password, deliveryId);
-    } finally {
-      unlockDelivery(deliveryId);
-    }
+    return deliveryManager.getDeliveryStatusHistory(login, password, deliveryId);
   }
 
   public void getDefaultDelivery(User u, DeliveryPrototype delivery) throws AdminException {
