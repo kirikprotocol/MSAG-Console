@@ -1,4 +1,6 @@
 static char const ident[] = "$Id$";
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/MutexGuard.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "core/threads/Thread.hpp"
@@ -22,6 +24,8 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 #define NATURE_OF_ADDR 0x04
 
 using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
