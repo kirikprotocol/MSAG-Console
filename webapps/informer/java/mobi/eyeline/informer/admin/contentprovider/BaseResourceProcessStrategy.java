@@ -510,13 +510,12 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (d.getStatus() == DeliveryStatus.Finished) {
         log("delivery finished for: " + f.getName());
 
-        resource.open();
-
         if (createReports) {
           log("create report for: " + f.getName());
-          File reportTmpFile = new File(f.getParent(), deliveryName + ".rep." + deliveryId); //todo Имя конструируется в методе buildRepFile. Надо его использовать.
-          createReport(reportTmpFile, d);     //todo Отчет пишется долго. Надо формировать его до вызова метода resource.open().
+          File reportTmpFile = buildRepFile(f.getParentFile(), deliveryName , deliveryId);
+          createReport(reportTmpFile, d);
           try{
+            resource.open();
             uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
             resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
             getMBean().notifyInteractionOk(getResourceHost(), port, "type","uploading");
@@ -524,6 +523,11 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             log.error(e, e);
             getMBean().notifyInteractionError(getResourceHost(), port, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
             return;
+          }finally {
+            try {
+              resource.close();
+            } catch (AdminException ignored) {
+            }
           }
 
           fileSys.delete(reportTmpFile);
@@ -546,11 +550,6 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     } catch (Exception e) {
       log.error(e, e);
       getMBean().notifyInternalError(UPLOAD_REPORTS_ERR, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type", "unknown");
-    } finally {
-      try {
-        resource.close();
-      } catch (AdminException ignored) {
-      }
     }
   }
 
