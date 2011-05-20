@@ -14,7 +14,7 @@
 #   buildId_file_shortname - relative to SMSC_SRCDIR name of .hpp file with preprocessor defines
 #
 # VARIABLES:  SMSC_SRCDIR, SMSC_BUILDDIR, SMSC_BUILD_TAG_FORMAT
-#
+#             OMIT_GENVERSION - if equal to YES, no attempt is made to refresh buildId_file
 
 #echo SRCDIR: $SMSC_SRCDIR >&2
 #echo ARGS: $1 $2 $3 $4 >&2
@@ -57,8 +57,23 @@ then
 fi
 
 BUILD_PATH=$SMSC_BUILDDIR/deps/$PACKAGE_NAME
+DO_GEN="NO"
 
-if [ ! -f $SMSC_SRCDIR/$PACKAGE_NAME/$BUILDID_FILE ] || [ ! -f $BUILD_PATH/$BUILDID_FILE ]
+if [ ! -f $SMSC_SRCDIR/$PACKAGE_NAME/$BUILDID_FILE ]
+then
+#  echo "$0: missed $PACKAGE_NAME/$BUILDID_FILE"  >&2
+  DO_GEN="YES"
+else
+  if [ ! -f $BUILD_PATH/$BUILDID_FILE ] && [ "x$OMIT_GENVERSION" != "xYES" ]
+  then
+#    echo "$0: missed deps/$PACKAGE_NAME/$BUILDID_FILE"  >&2
+    DO_GEN="YES"
+  else
+    echo Using $BUILDID_FILE >&2
+  fi
+fi
+
+if [ $DO_GEN = "YES" ]
 then # Regenerate BuildId file
   echo Generating $BUILDID_FILE from $VERSION_FILE  >&2
   BUILD_DATE=`LANG=C; date '+%b %e %Y'`
@@ -73,8 +88,6 @@ then # Regenerate BuildId file
   echo "#define $2_BUILD_NUM   $BUILD_NUM" > $BUILD_PATH/$BUILDID_FILE
   echo "#define $2_BUILD_DATE  \"$BUILD_DATE\"" >> $BUILD_PATH/$BUILDID_FILE
   cp $BUILD_PATH/$BUILDID_FILE $SMSC_SRCDIR/$PACKAGE_NAME/$BUILDID_FILE
-else
-  echo Using $BUILDID_FILE >&2
 fi
 
 cat $SMSC_SRCDIR/$PACKAGE_NAME/$BUILDID_FILE >&2
