@@ -358,7 +358,9 @@ msgtime_type DeliveryInfo::fixActLogFormat( msgtime_type currentTime )
     if ( !isOldActLog_ ) return 0;
     smsc_log_debug(log_,"D=%u fixing old activity log",getDlvId());
     ActivityLog al(this);
-    return al.fixActLogFormat(currentTime);
+    const msgtime_type res = al.fixActLogFormat(currentTime);
+    isOldActLog_ = false;
+    return res;
 }
 
 

@@ -1379,6 +1379,10 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
     }
 
     DeliveryInfo* info = new DeliveryInfo(dlvId, data, *user.get());
+    if ( getCS()->isArchive() ) {
+        // fixing old activity log
+        info->fixActLogFormat( currentTimeSeconds() );
+    }
     addDelivery(info, state, planTime, false, ptr);
     if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() &&
          !getCS()->isEmergency() ) {
