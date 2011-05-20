@@ -402,8 +402,8 @@ Property* ActionContext::getInfrastructConstant( const char* pname )
                 } else if ((ret = infrastructConstants_->GetPtr(pname))) {
                     break;
                 }
-                (*infrastructConstants_)[pname] = commandProperty_->routeId;
-                ret = infrastructConstants_->GetPtr(pname);
+                ret = infrastructConstants_->SetItem(pname,
+                                                     commandProperty_->routeId);
             }
             pname = 0;
             break;
@@ -424,7 +424,7 @@ Property* ActionContext::getInfrastructConstant( const char* pname )
             if ( ! ret ) {
                 Property p;
                 p.setInt( propval );
-                (*infrastructConstants_)[pname] = p;
+                ret = infrastructConstants_->SetItem(pname,p);
             }
         }
     } // if pname
