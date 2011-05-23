@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 public class Address implements Serializable {
 
-  private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";          //todo test 15
+  private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
   private static final Pattern pattern1 = Pattern.compile(pattern_header + "\\d{0,15}\\?{0,15}$");
   private static final Pattern pattern2 = Pattern.compile(pattern_header + "(\\d|\\?){1,15}$");
   private static final String special_pattern_header = "^\\.5\\.[0-6]\\.";
