@@ -58,6 +58,9 @@ public class DeliveryEditController extends DeliveryController {
     if(p == null || p.length() == 0) {
       p = getRequestParameter(MessagesByPeriodController.COME_BACK_PARAMS);
     }
+    if(p == null || p.length() == 0) {
+      p = getRequestParameter(MessageListController.COME_BACK_PARAMS);
+    }
     id = p == null || (p = p.trim()).length() == 0 ? null : Integer.parseInt(p);
 
     if(id == null) {
@@ -378,5 +381,13 @@ public class DeliveryEditController extends DeliveryController {
 
   public void statForSelected(ActionEvent e) {
     getRequest().put("delivery", delivery.getId());
+  }
+
+  public String getMessagesComeBackName() {
+    return MessageListController.COME_BACK;
+  }
+
+  public String getMessagesComeBackParamsName() {
+    return MessageListController.COME_BACK_PARAMS;
   }
 }

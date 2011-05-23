@@ -10,6 +10,7 @@ import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
+import mobi.eyeline.informer.web.controllers.delivery.MessageListController;
 import mobi.eyeline.informer.web.controllers.stats.ErrorStatsController;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
 
@@ -68,6 +69,9 @@ public class DeliveryController extends InformerController{
       String p = getRequestParameter(UserEditController.COME_BACK_PARAMS);
       if(p == null || p.length() == 0) {
         p = getRequestParameter(ErrorStatsController.COME_BACK_PARAMS);
+      }
+      if(p == null || p.length() == 0) {
+        p = getRequestParameter(MessageListController.COME_BACK_PARAMS);
       }
       if(p != null && p.length()>0) {
         String[] ss = p.split(",");
@@ -223,5 +227,13 @@ public class DeliveryController extends InformerController{
 
   public void statForSelected(ActionEvent e) {
     getRequest().put("delivery", delivery.getId());
+  }
+
+  public String getMessagesComeBackName() {
+    return MessageListController.COME_BACK;
+  }
+
+  public String getMessagesComeBackParamsName() {
+    return MessageListController.COME_BACK_PARAMS;
   }
 }

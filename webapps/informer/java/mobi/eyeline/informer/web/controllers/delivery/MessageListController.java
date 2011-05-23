@@ -55,6 +55,14 @@ public class MessageListController extends InformerController {
 
   private String error;
 
+  private String comeBackAction;
+
+  private String comeBackParams;
+
+  public static final String COME_BACK = "MESSAGES_COME_BACK" ;
+  public static final String COME_BACK_PARAMS = "MESSAGES_COME_BACK_PARAMS";
+
+
   public MessageListController() {
     config = getConfig();
 
@@ -67,6 +75,9 @@ public class MessageListController extends InformerController {
 
     HttpSession session = getSession(false);
     thread = (ResendThread) session.getAttribute(THREAD_NAME);
+
+    comeBackParams = getRequestParameter(COME_BACK_PARAMS);
+    comeBackAction = getRequestParameter(COME_BACK);
 
     if (s != null && s.length() > 0) {
       deliveryId = Integer.parseInt(s);
@@ -87,7 +98,30 @@ public class MessageListController extends InformerController {
     }
   }
 
+  public String getComeBackName() {
+    return COME_BACK_PARAMS;
+  }
 
+  public String getComeBackAction() {
+    return comeBackAction;
+  }
+
+
+  public String comeBackAction() {
+    return comeBackAction;
+  }
+
+  public void setComeBackAction(String comeBackAction) {
+    this.comeBackAction = comeBackAction;
+  }
+
+  public String getComeBackParams() {
+    return comeBackParams;
+  }
+
+  public void setComeBackParams(String comeBackParams) {
+    this.comeBackParams = comeBackParams;
+  }
 
   public boolean isResendAllowed() {
     return strategy.isChangesAllowed();

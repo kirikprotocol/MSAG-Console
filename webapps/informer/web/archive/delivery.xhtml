@@ -51,6 +51,8 @@
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
             <f:param name="archive" value="true"/>
+            <f:param name="#{archiveDelivery.messagesComeBackParamsName}" value="#{archiveDelivery.reqId},#{archiveDelivery.deliveryId},#{archiveDelivery.comeBackAction}"/>
+            <f:param name="#{archiveDelivery.messagesComeBackName}" value="RESULT_DELIVERY"/>
           </tr:commandLink>
         </eye:button>
       </eye:buttons>
@@ -240,6 +242,8 @@
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
             <f:param name="archive" value="true"/>
+            <f:param name="#{archiveDelivery.messagesComeBackParamsName}" value="#{archiveDelivery.reqId},#{archiveDelivery.deliveryId},#{archiveDelivery.comeBackAction}"/>
+            <f:param name="#{archiveDelivery.messagesComeBackName}" value="RESULT_DELIVERY"/>
           </tr:commandLink>
         </eye:button>
       </eye:buttons>

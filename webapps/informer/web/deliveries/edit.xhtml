@@ -42,6 +42,8 @@
         <eye:button>
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+            <f:param name="#{deliveryEdit.messagesComeBackParamsName}" value="#{deliveryEdit.delivery.id}"/>
+            <f:param name="#{deliveryEdit.messagesComeBackName}" value="DELIVERY_EDIT"/>
           </tr:commandLink>
         </eye:button>
       </eye:buttons>
@@ -274,6 +276,8 @@
         <eye:button>
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+            <f:param name="#{deliveryEdit.messagesComeBackParamsName}" value="#{deliveryEdit.delivery.id}"/>
+            <f:param name="#{deliveryEdit.messagesComeBackName}" value="DELIVERY_EDIT"/>
           </tr:commandLink>
         </eye:button>
       </eye:buttons>
