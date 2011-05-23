@@ -135,8 +135,13 @@ int Socket::Connect(bool non_blocking/* = false*/)
       fd.events = POLLOUT;
       fd.revents = 0;
 
+      sockaddr addr;
+      socklen_t len=sizeof(addr);
       if ((poll(&fd, 1, connectTimeout*1000) <= 0)
-          || (fd.revents & (POLLNVAL | POLLERR | POLLHUP)))
+          || (fd.revents & (POLLNVAL | POLLERR | POLLHUP))
+          || getpeername(sock,&addr,&len)!=0
+//          || ((fd.revents & (POLLOUT|POLLIN))==(POLLOUT|POLLIN))
+          )
       {
         closesocket(sock);
         sock=INVALID_SOCKET;
