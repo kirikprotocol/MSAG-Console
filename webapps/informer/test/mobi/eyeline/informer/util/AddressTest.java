@@ -2,9 +2,7 @@ package mobi.eyeline.informer.util;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author Artem Snopkov
@@ -40,7 +38,7 @@ public class AddressTest {
     // Длина менее 11 знаков
     assertAddressParamsEquals(new Address("713"), 0, 1, "713");
     // Длина более 11 знаков
-    assertAddressParamsEquals(new Address("7131212121212121212"), 0, 1, "7131212121212121212");
+    assertAddressParamsEquals(new Address("71312121212121"), 0, 1, "71312121212121");
   }
 
   @Test
@@ -50,7 +48,7 @@ public class AddressTest {
     // Длина менее 11 знаков
     assertAddressParamsEquals(new Address("813"), 0, 1, "813");
     // Длина более 11 знаков
-    assertAddressParamsEquals(new Address("8131212121212121212"), 0, 1, "8131212121212121212");
+    assertAddressParamsEquals(new Address("81312121212121"), 0, 1, "81312121212121");
   }
 
   @Test
@@ -84,11 +82,47 @@ public class AddressTest {
   }
 
   @Test
+  public void testValidLength() {
+    new Address("+79139489906"); //11
+    new Address("+791394899061234"); //15
+    new Address("791394899061234"); //15
+    new Address("891394899061234"); //15
+    new Address(".5.0.MTCMTCMTCMT"); //11
+  }
+  @Test
+  public void testInvalidLength() {
+    try{
+      new Address(""); //0
+      fail();
+    }catch (Exception e){}
+    try{
+      new Address("+"); //0
+      fail();
+    }catch (Exception e){}
+    try{
+      new Address("+7913948990612341"); //16
+      fail();
+    }catch (Exception e){}
+    try{
+      new Address("7913948990612341"); //16
+      fail();
+    }catch (Exception e){}
+    try{
+      new Address("8913948990612341"); //16
+      fail();
+    }catch (Exception e){}
+    try{
+      new Address(".5.0.MTCMTCMTCMTC"); //12
+      fail();
+    }catch (Exception e){}
+  }
+
+  @Test
   public void testEquals() {
     assertEquals(new Address("+79139495113"), new Address("79139495113"));
     assertEquals(new Address("+79139495113"), new Address("89139495113"));
-    assertFalse(new Address("+7123231239139495113").equals(new Address("7123231239139495113")));
-    assertFalse(new Address("+7123231239139495113").equals(new Address("8123231239139495113")));
+    assertFalse(new Address("+71232312391394").equals(new Address("71232312391394")));
+    assertFalse(new Address("+71232312391394").equals(new Address("81232312391394")));
     assertFalse(new Address("+69139495113").equals(new Address("69139495113")));
     assertFalse(new Address("+69139495113").equals(new Address("89139495113")));
     assertFalse(new Address("+79139495113").equals(new String("+79139495113")));
