@@ -706,6 +706,9 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
         case smsc::sms::Tag::SMPP_DESTINATION_PORT:
             data.setIntProperty(fieldId, unsigned(property.getInt()));
             break;
+        case smsc::sms::Tag::SMPP_RECEIPTED_MESSAGE_ID:
+            data.setStrProperty(fieldId, property.getStr().c_str());
+            break;
         case SMS_SVC_TYPE: {
             const Property::string_type& str = property.getStr();
             size_t len = 0;
@@ -792,6 +795,9 @@ void SmppCommandAdapter::writeRespField(int fieldId, AdapterProperty& property) 
         break;
     case SMPP_NETWORK_ERROR_CODE:
         resp->setNetworkErrorCode(unsigned(property.getInt()));
+        break;
+    case MESSAGE_ID:
+        resp->set_messageId(property.getStr().c_str());
         break;
     default: {
         smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
