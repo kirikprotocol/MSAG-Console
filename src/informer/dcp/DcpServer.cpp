@@ -944,6 +944,7 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
       resp.setMoreDeliveries(false);
       // resp.getInfoRef();
   } else {
+      req->last = nextId;
       resp.setMoreDeliveries(true);
       smsc::core::synchronization::MutexGuard mg(dlvReqMtx);
       req->timeMapIt = 
