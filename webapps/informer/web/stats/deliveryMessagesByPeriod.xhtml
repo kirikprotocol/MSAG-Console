@@ -93,7 +93,7 @@
           <eye:buttons>
             <eye:button rendered="#{messagesByPeriod.backAction != null}">
               <tr:commandLink text="#{msg['messages.stats.back']}" shortDesc="#{msg['messages.stats.back']}" action="#{messagesByPeriod.backAction}">
-                <f:param name="stats_come_back_params" value="#{messagesByPeriod.backParams}"/>
+                <f:param name="stats_come_back_params" value="#{deliveryMessagesByPeriod.backParams}"/>
               </tr:commandLink>
             </eye:button>
             <eye:space/>
