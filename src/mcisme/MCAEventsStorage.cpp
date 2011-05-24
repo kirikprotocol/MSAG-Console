@@ -13,6 +13,8 @@
 namespace smsc {
 namespace mcisme {
 
+using smsc::util::SystemError;
+
 static void time2string(const timeval& tp,char* timeStr,size_t size)
 {
   tm lcltm;
