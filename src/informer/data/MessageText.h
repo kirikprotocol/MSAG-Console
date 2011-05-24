@@ -7,7 +7,7 @@
 namespace eyeline {
 namespace informer {
 
-static const unsigned MAX_ALLOWED_MESSAGE_LENGTH = 158;
+static const unsigned MAX_ALLOWED_MESSAGE_LENGTH = 140;
 static const unsigned MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 /// message text.

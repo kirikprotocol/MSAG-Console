@@ -65,12 +65,14 @@ public:
                                      dlvid_type       dlvId ) = 0;
 
     /// get the list of deliveries, starting from lastid,
-    /// @param count  -- max number of deliveries in result (or 0 if unlimited);
-    /// @param df     -- filter to apply;
-    /// @param result -- the result to be filled (may be null);
+    /// @param count   -- max number of deliveries in result (or 0 if unlimited);
+    /// @param timeout -- max number of seconds for processing the request, seconds;
+    /// @param df      -- filter to apply;
+    /// @param result  -- the result to be filled (may be null);
     /// @param startId -- the id to start list from.
     /// @return the dlvid for the next invokation of getDeliveries or 0.
     virtual dlvid_type getDeliveries( unsigned count,
+                                      unsigned timeout,
                                       DeliveryFilter& df,
                                       DeliveryList* result,
                                       dlvid_type startId = 0 ) = 0;

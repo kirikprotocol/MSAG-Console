@@ -1,4 +1,9 @@
 =====================================================================
+2011-05-24 10:21 bukind informer-build-20110524
+2011-05-24 10:20 bukind
+  feature: MAX_ALLOWED_MESSAGE_LENGTH changed to 140
+
+=====================================================================
 2011-05-23 12:25 bukind informer-build-20110523
 2011-05-23 11:55 bukind
   bugfix: GetDeliveryListNext req->last was not set
