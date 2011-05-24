@@ -21,9 +21,12 @@ namespace synchronization {
 
 class Condition;
 
-/// NOTE: If you want to check contention in you application,
-///   please use CPPFLAGS += -DCHECKCONTENTION and
-///   special macro INITMUTEX(name) to initialize mutex.
+/// NOTE: To check contention in you application, you have two options
+/// 1. CHECKCONTENTION=YES on make command line;
+/// 2. CHECKCONTENTION=FORCE on make command line.
+/// Then you may initialize the mutex/eventmonitor under question
+/// via special macro MTXWHEREAMI, see the example:
+///  Mutex problematicLock( MTXWHEREAMI );
 /// Also, you will need to instantiate contentionLimit and
 /// implement reportContention() somewhere, e.g. in main().
 
