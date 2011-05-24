@@ -1976,11 +1976,14 @@ void Smsc::SmscConfigWatcher::paramChanged(smsc::util::config::ConfigValueType c
     smsc.scheduler->setStoresCount(cfg.getInt(paramName.c_str()));
   }else if(paramName=="map.busyMTDelay")
   {
+#ifdef USE_MAP
     MapDialogContainer::setBusyMTDelay(cfg.getInt(paramName.c_str()));
+#endif
   }else if(paramName=="map.lockedByMODelay")
   {
+#ifdef USE_MAP
     MapDialogContainer::setLockedByMoDelay(cfg.getInt(paramName.c_str()));
-
+#endif
   }
 }
 
