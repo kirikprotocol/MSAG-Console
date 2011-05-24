@@ -112,9 +112,11 @@ protected:
   void handle(const messages::GetDeliveriesList& inmsg);
   void handle(const messages::GetDeliveriesListNext& inmsg);
   void handle(const messages::CountDeliveries& inmsg);
+  void handle(const messages::CountDeliveriesNext& inmsg);
   void handle(const messages::RequestMessagesState& inmsg);
   void handle(const messages::GetNextMessagesPack& inmsg);
   void handle(const messages::CountMessages& inmsg);
+  void handle(const messages::CountMessagesPack& inmsg);
   void handle(const messages::GetDeliveryHistory& inmsg);
 
 
@@ -207,6 +209,15 @@ protected:
   }
 */
 
+  struct DlvListRequest;
+  DlvListRequest* getDlvListRequest( int connId, int seq, int32_t reqId );
+  bool doHandleDlvListRequest( DlvListRequest* req,
+                               int32_t count, int32_t timeout,
+                               int32_t* counter,
+                               std::vector<messages::DeliveryListInfo>* info );
+  bool doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t timeout,
+                              std::vector<messages::MessageInfo>* miv );
+
   DcpClientSocket* getSocketByConnId(int connId);
 
   typedef std::multimap<time_t,int> DlvListReqTimeMap;
@@ -224,6 +235,7 @@ protected:
     messages::DeliveriesFilter  filter;
     DlvListReqTimeMap::iterator timeMapIt;
   };
+
   sync::Mutex dlvReqMtx;
   typedef std::map<int,DlvListRequest*> DlvListReqMap;
   DlvListReqMap dlvListReqMap;

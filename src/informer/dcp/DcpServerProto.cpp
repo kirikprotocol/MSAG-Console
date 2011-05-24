@@ -14,10 +14,12 @@
 #include "messages/GetDeliveriesList.hpp"
 #include "messages/GetDeliveriesListNext.hpp"
 #include "messages/CountDeliveries.hpp"
+#include "messages/CountDeliveriesNext.hpp"
 #include "messages/GetDeliveryHistory.hpp"
 #include "messages/RequestMessagesState.hpp"
 #include "messages/GetNextMessagesPack.hpp"
 #include "messages/CountMessages.hpp"
+#include "messages/CountMessagesPack.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -161,6 +163,14 @@ void DcpServerProto::decodeAndHandleMessage(eyeline::protogen::framework::Serial
       msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
+    case tag_CountDeliveriesNext:
+    {
+      messages::CountDeliveriesNext msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
+      handler->handle(msg);
+    }break;
     case tag_GetDeliveryHistory:
     {
       messages::GetDeliveryHistory msg;
@@ -188,6 +198,14 @@ void DcpServerProto::decodeAndHandleMessage(eyeline::protogen::framework::Serial
     case tag_CountMessages:
     {
       messages::CountMessages msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
+      handler->handle(msg);
+    }break;
+    case tag_CountMessagesPack:
+    {
+      messages::CountMessagesPack msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
       msg.messageSetConnId(connId);

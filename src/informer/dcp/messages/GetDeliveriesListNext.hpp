@@ -28,6 +28,7 @@ public:
     seqNum=0;
     reqIdFlag=false;
     countFlag=false;
+    timeoutFlag=false;
   }
  
   static int32_t messageGetTag()
@@ -66,6 +67,16 @@ public:
       sprintf(buf,"%d",count);
       rv+=buf;
     }
+    if(timeoutFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="timeout=";
+      sprintf(buf,"%d",timeout);
+      rv+=buf;
+    }
     return rv;
   }
 
@@ -84,6 +95,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(count);
+    }
+    if(timeoutFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(timeout);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -132,6 +149,28 @@ public:
   {
     return countFlag;
   }
+  int32_t getTimeout()const
+  {
+    if(!timeoutFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("timeout");
+    }
+    return timeout;
+  }
+  void setTimeout(int32_t argValue)
+  {
+    timeout=argValue;
+    timeoutFlag=true;
+  }
+  int32_t& getTimeoutRef()
+  {
+    timeoutFlag=true;
+    return timeout;
+  }
+  bool hasTimeout()const
+  {
+    return timeoutFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -143,6 +182,10 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("count");
     }
+    if(!timeoutFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
+    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
@@ -150,6 +193,8 @@ public:
     ds.writeInt32LV(reqId); 
     ds.writeTag(countTag);
     ds.writeInt32LV(count); 
+    ds.writeTag(timeoutTag);
+    ds.writeInt32LV(timeout); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -188,6 +233,15 @@ public:
           count=ds.readInt32LV();
           countFlag=true;
         }break;
+        case timeoutTag:
+        {
+          if(timeoutFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("timeout");
+          }
+          timeout=ds.readInt32LV();
+          timeoutFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -206,6 +260,10 @@ public:
     if(!countFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("count");
+    }
+    if(!timeoutFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
     }
 
   }
@@ -237,15 +295,18 @@ protected:
 
   static const int32_t reqIdTag=1;
   static const int32_t countTag=2;
+  static const int32_t timeoutTag=3;
 
   int32_t seqNum;
   int connId;
 
   int32_t reqId;
   int32_t count;
+  int32_t timeout;
 
   bool reqIdFlag;
   bool countFlag;
+  bool timeoutFlag;
 };
 
 }

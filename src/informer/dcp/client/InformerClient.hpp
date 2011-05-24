@@ -29,7 +29,7 @@ namespace sync=smsc::core::synchronization;
 
 class FailedRequestException:public std::exception{
 public:
-  FailedRequestException(const std::string& cmd,int32_t argCode,const std::string& argMsg):code(argCode),msg(argMsg)
+  FailedRequestException(const std::string& cmd,int32_t argCode,const std::string& argMsg):msg(argMsg),code(argCode)
   {
     msg=cmd+":"+msg;
   }
@@ -86,8 +86,10 @@ protected:
 
   enum RequestType{
     rtBase,rtGetUserStats, rtGetDeliveryInfo, rtGetDeliveryState,
-    rtGetDeliveriesListNext, rtAddDeliveryMessages, rtGetDeliveryGlossary,
-    rtGetNextMessagesPack, rtGetDeliveryHistory
+    rtGetDeliveriesListNext, rtCountDeliveriesNext, 
+    rtAddDeliveryMessages, rtGetDeliveryGlossary,
+    rtGetNextMessagesPack, rtCountMessagesPack,
+    rtGetDeliveryHistory
   };
   struct RequestBase{
     typedef RequestBase base;
@@ -111,7 +113,7 @@ protected:
 
     void processResponse(const messages::CountDeliveriesResp& resp)
     {
-      resultData=resp.getResult();
+      resultData=resp.getReqId();
     }
 
     void processResponse(const messages::GetDeliveriesListResp& resp)
@@ -126,7 +128,7 @@ protected:
 
     void processResponse(const messages::CountMessagesResp& resp)
     {
-      resultData=resp.getCount();
+      resultData=resp.getReqId();
     }
 
   };
@@ -229,6 +231,23 @@ protected:
     std::vector<messages::DeliveryListInfo>& result;
   };
 
+
+  struct RequestCountDeliveriesNext:protected RequestBase {
+    RequestCountDeliveriesNext() : RequestBase(rtCountDeliveriesNext)
+    {
+    }
+
+    template <class T> void processResponse(const T&){abort();}
+
+    void processResponse(const messages::CountDeliveriesNextResp& resp)
+    {
+      resultData=resp.getCount();
+      mms=resp.getMoreDeliveries();
+    }
+
+    bool mms;
+  };
+
   struct RequestAddDeliveryMessages:RequestBase{
     RequestAddDeliveryMessages(std::vector<int64_t>& argResult):
       RequestBase(rtAddDeliveryMessages),result(argResult)
@@ -263,6 +282,22 @@ protected:
 
     bool mms;
     std::vector<messages::MessageInfo>& result;
+  };
+
+  struct RequestCountMessagesPack:protected RequestBase {
+    RequestCountMessagesPack() : RequestBase(rtCountMessagesPack)
+    {
+    }
+
+    template <class T> void processResponse(const T&){abort();}
+
+    void processResponse(const messages::CountMessagesPackResp& resp)
+    {
+      resultData=resp.getCount();
+      mms=resp.getMoreMessages();
+    }
+
+    bool mms;
   };
 
 
@@ -315,9 +350,11 @@ protected:
       case rtGetDeliveryInfo:((RequestGetDeliveryInfo*)req)->processResponse(msg);break;
       case rtGetDeliveryState:((RequestGetDeliveryState*)req)->processResponse(msg);break;
       case rtGetDeliveriesListNext:((RequestGetDeliveriesListNext*)req)->processResponse(msg);break;
+      case rtCountDeliveriesNext:((RequestCountDeliveriesNext*)req)->processResponse(msg);break;
       case rtAddDeliveryMessages:((RequestAddDeliveryMessages*)req)->processResponse(msg);break;
       case rtGetDeliveryGlossary:((RequestGetDeliveryGlossary*)req)->processResponse(msg);break;
       case rtGetNextMessagesPack:((RequestGetNextMessagesPack*)req)->processResponse(msg);break;
+      case rtCountMessagesPack:((RequestCountMessagesPack*)req)->processResponse(msg);break;
       case rtGetDeliveryHistory:((RequestGetDeliveryHistory*)req)->processResponse(msg);break;
     }
     it->second->cnd.Signal();
@@ -341,10 +378,12 @@ protected:
   void handle(const messages::GetDeliveriesListResp& msg);
   void handle(const messages::GetDeliveriesListNextResp& msg);
   void handle(const messages::CountDeliveriesResp& msg);
+  void handle(const messages::CountDeliveriesNextResp& msg);
   void handle(const messages::GetDeliveryHistoryResp& msg);
   void handle(const messages::RequestMessagesStateResp& msg);
   void handle(const messages::GetNextMessagesPackResp& msg);
   void handle(const messages::CountMessagesResp& msg);
+  void handle(const messages::CountMessagesPackResp& msg);
 
   static const char* getRequestName(RequestType rt)
   {
@@ -355,11 +394,14 @@ protected:
       case rtGetDeliveryInfo:return "GetDeliveryInfo";
       case rtGetDeliveryState:return "GetDeliveryState";
       case rtGetDeliveriesListNext:return "GetDeliveriesListNext";
+      case rtCountDeliveriesNext:return "CountDeliveriesNext";
       case rtAddDeliveryMessages:return "AddDeliveryMessages";
       case rtGetDeliveryGlossary:return "GetDeliveryGlossary";
       case rtGetNextMessagesPack:return "GetNextMessagesPack";
+      case rtCountMessagesPack:return "CountMessagesPack";
       case rtGetDeliveryHistory:return "GetDeliveryHistory";
     }
+    return "Unknown?";
   }
 
 };

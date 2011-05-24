@@ -16,11 +16,13 @@
 #include "messages/GetDeliveriesList.hpp"
 #include "messages/GetDeliveriesListNext.hpp"
 #include "messages/CountDeliveries.hpp"
+#include "messages/CountDeliveriesNext.hpp"
 
 #include "messages/RequestMessagesState.hpp"
 #include "messages/GetNextMessagesPack.hpp"
 #include "messages/GetDeliveryHistory.hpp"
 #include "messages/CountMessages.hpp"
+#include "messages/CountMessagesPack.hpp"
 
 
 namespace eyeline{
@@ -45,9 +47,11 @@ public:
   virtual void handle(const messages::GetDeliveriesList& inmsg)=0;
   virtual void handle(const messages::GetDeliveriesListNext& inmsg)=0;
   virtual void handle(const messages::CountDeliveries& inmsg)=0;
+  virtual void handle(const messages::CountDeliveriesNext& inmsg)=0;
   virtual void handle(const messages::RequestMessagesState& inmsg)=0;
   virtual void handle(const messages::GetNextMessagesPack& inmsg)=0;
   virtual void handle(const messages::CountMessages& inmsg)=0;
+  virtual void handle(const messages::CountMessagesPack& inmsg)=0;
 
 };
 

@@ -8,6 +8,8 @@ extern "C" void sigint(int sig)
   interrupted=true;
 }
 
+#include "core/synchronization/MutexReportContentionRealization.h"
+
 int main( int argc, char** argv )
 {
   sigset(SIGINT,sigint);
@@ -129,7 +131,7 @@ int main( int argc, char** argv )
       allMsgids.insert(allMsgids.end(),msgids.begin(),msgids.end());
     }
     time_t tend=time(0);
-    printf("upload time=%llu\n",tend-tstart);
+    printf("upload time=%llu\n",static_cast<unsigned long long>(tend-tstart));
     //for(std::vector<int64_t>::iterator it=msgids.begin(),end=msgids.end();it!=end;++it)
     //{
     //printf("msgid=%lld\n",*it);

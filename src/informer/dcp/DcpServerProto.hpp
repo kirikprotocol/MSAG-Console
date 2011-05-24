@@ -14,10 +14,12 @@
 #include "messages/GetDeliveriesListResp.hpp"
 #include "messages/GetDeliveriesListNextResp.hpp"
 #include "messages/CountDeliveriesResp.hpp"
+#include "messages/CountDeliveriesNextResp.hpp"
 #include "messages/GetDeliveryHistoryResp.hpp"
 #include "messages/RequestMessagesStateResp.hpp"
 #include "messages/GetNextMessagesPackResp.hpp"
 #include "messages/CountMessagesResp.hpp"
+#include "messages/CountMessagesPackResp.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -52,6 +54,8 @@ public:
     tag_GetDeliveriesListNextResp=53,
     tag_CountDeliveries=54,
     tag_CountDeliveriesResp=55,
+    tag_CountDeliveriesNext=60,
+    tag_CountDeliveriesNextResp=61,
     tag_GetDeliveryHistory=58,
     tag_GetDeliveryHistoryResp=59,
     tag_RequestMessagesState=43,
@@ -59,7 +63,9 @@ public:
     tag_GetNextMessagesPack=45,
     tag_GetNextMessagesPackResp=46,
     tag_CountMessages=56,
-    tag_CountMessagesResp=57
+    tag_CountMessagesResp=57,
+    tag_CountMessagesPack=62,
+    tag_CountMessagesPackResp=63
   };
  
   DcpServerProto():handler(0)

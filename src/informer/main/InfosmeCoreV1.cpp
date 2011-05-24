@@ -1251,11 +1251,12 @@ DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
 
 
 dlvid_type InfosmeCoreV1::getDeliveries( unsigned        count,
+                                         unsigned        timeout,
                                          DeliveryFilter& filter,
                                          DeliveryList*   result,
                                          dlvid_type      startId )
 {
-    return dlvMgr_->getDeliveries(count,filter,result,startId);
+    return dlvMgr_->getDeliveries(count,timeout,filter,result,startId);
 }
 
 

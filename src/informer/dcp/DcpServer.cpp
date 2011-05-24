@@ -684,6 +684,10 @@ void DcpServer::handle(const messages::GetDeliveriesList& inmsg)
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   std::vector<UserInfoPtr> users;
+  if(inmsg.getResultFields().empty()) {
+    mkFailResponse(inmsg,DcpError::CommandHandlingError,"result fields set is empty");
+    return;
+  }
   if(!ui->hasRole(USERROLE_ADMIN))
   {
     if(inmsg.getFilter().hasUserIdFilter() && !inmsg.getFilter().getUserIdFilter().empty() &&
@@ -709,21 +713,6 @@ void DcpServer::handle(const messages::GetDeliveriesList& inmsg)
       getCore()->getUsers(users);
     }
   }
-  /*
-  std::vector<DeliveryPtr> dlvLst;
-  VECLOOP(it,UserInfoPtr,users)
-  {
-    UserInfo::DeliveryList lst;
-    (*it)->getDeliveries(lst);
-    for(UserInfo::DeliveryList::iterator dit=lst.begin(),dend=lst.end();dit!=dend;++dit)
-    {
-      if(isDeliveryMatchFilter(dit->get(),inmsg.getFilter()))
-      {
-        dlvLst.push_back(*dit);
-      }
-    }
-  }
-   */
   messages::GetDeliveriesListResp resp;
   {
     sync::MutexGuard mg(dlvReqMtx);
@@ -844,120 +833,92 @@ private:
 
 }
 
+
+DcpServer::DlvListRequest* DcpServer::getDlvListRequest( int connId, int seqNum, int32_t reqId )
+{
+    DlvListRequest* req;
+    sync::MutexGuard mg(dlvReqMtx);
+    DlvListReqMap::iterator it=dlvListReqMap.find(reqId);
+    if(it==dlvListReqMap.end())
+    {
+      mkFailResponse(connId,seqNum,DcpError::RequestNotFound,"request for given id not found");
+      return 0;
+    }
+    req=it->second;
+    if(req->connId!=connId)
+    {
+      mkFailResponse(connId,seqNum,DcpError::RequestNotFound,"request for given id do not belong to this connection");
+      return 0;
+    }
+    // grab request temporary to free mutex
+    dlvListReqTimeMap.erase(req->timeMapIt);
+    // holder.reset(req);
+    dlvListReqMap.erase(it);
+    return req;
+}
+
+
+
 void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   messages::GetDeliveriesListNextResp resp;
-  std::auto_ptr<DlvListRequest> holder;
-  DlvListRequest* req;
-  {
-    sync::MutexGuard mg(dlvReqMtx);
-    DlvListReqMap::iterator it=dlvListReqMap.find(inmsg.getReqId());
-    if(it==dlvListReqMap.end())
-    {
-      mkFailResponse(inmsg,DcpError::RequestNotFound,"request for given id not found");
-      return;
-    }
-    req=it->second;
-    if(req->connId!=inmsg.messageGetConnId())
-    {
-      mkFailResponse(inmsg,DcpError::RequestNotFound,"request for given id do not belong to this connection");
-      return;
-    }
-    // grab request temporary to free mutex
-    dlvListReqTimeMap.erase(req->timeMapIt);
-    holder.reset(req);
-    dlvListReqMap.erase(it);
-  }
-  // FIXME: collect the next list
-  const dlvid_type prevId = req->last;
-  // DeliveryList lst;
   std::vector<messages::DeliveryListInfo>& info=resp.getInfoRef();
-  DcpServerDeliveryFilter dsdf(req->userLst,req->filter,&req->fields,&info);
-  const dlvid_type nextId = getCore()->getDeliveries( inmsg.getCount(),
+  DlvListRequest* req = getDlvListRequest(inmsg.messageGetConnId(),
+                                          inmsg.messageGetSeqNum(),
+                                          inmsg.getReqId());
+  if (!req) { return; }
+  const bool hasMore = doHandleDlvListRequest( req,
+                                               inmsg.getCount(),
+                                               inmsg.getTimeout(),
+                                               0,
+                                               &info );
+  // req may be invalidated here
+  resp.setMoreDeliveries(hasMore);
+  enqueueResp(resp,inmsg);
+}
+
+
+bool DcpServer::doHandleDlvListRequest( DlvListRequest* req,
+                                        int32_t count,
+                                        int32_t timeout,
+                                        int32_t* counter,
+                                        std::vector<messages::DeliveryListInfo>* info )
+{
+  std::auto_ptr<DlvListRequest> holder(req);
+  // collect the next list part, starting from prevId
+  const dlvid_type prevId = req->last;
+  DcpServerDeliveryFilter dsdf(req->userLst,req->filter,&req->fields,info);
+  const dlvid_type nextId = getCore()->getDeliveries( count,
+                                                      timeout,
                                                       dsdf,
                                                       0,
                                                       prevId );
-  // const dlvid_type lastId = nextId - 1;
-  /*
-  VECLOOP(it,UserInfoPtr,req->userLst) {
-      (*it)->getDeliveries(lst);
-      DeliveryList::iterator dbeg =
-          std::lower_bound(lst.begin(),lst.end(),prevId);
-      DeliveryList::iterator dend =
-          std::lower_bound(lst.begin(),lst.end(),lastId);
-      for (DeliveryList::iterator dit = dbeg;
-           dit!=dend;++dit) {
-          Delivery* dlv = dit->get();
-          const dlvid_type dlvId = dlv->getDlvId();
-          if (!isDeliveryMatchFilter(dlv,req->filter)) continue;
-          info.push_back(messages::DeliveryListInfo());
-          messages::DeliveryListInfo& dli=info.back();
-          const DeliveryInfo& di=dlv->getDlvInfo();
-          dli.setDeliveryId(dlvId);
-          VECLOOP(fit,messages::DeliveryFields,req->fields) {
-              switch(fit->getValue())
-              {
-              case messages::DeliveryFields::ActivityPeriod:
-                  if(di.getActivePeriodStart()!=-1)
-                  {
-                      dli.setActivityPeriodStart(msgTimeToTimeStr(di.getActivePeriodStart()));
-                  }
-                  if(di.getActivePeriodEnd()!=-1)
-                  {
-                      dli.setActivityPeriodEnd(msgTimeToTimeStr(di.getActivePeriodEnd()));
-                  }
-                  break;
-              case messages::DeliveryFields::EndDate:
-                  if(di.getEndDate()!=0)
-                  {
-                      dli.setEndDate(msgTimeToDateTimeStr(di.getEndDate()));
-                  }
-                  break;
-              case messages::DeliveryFields::Name: {
-                  char nm[DLV_NAME_LENGTH];
-                  di.getName(nm);
-                  dli.setName(nm);
-                  break;
-              }
-              case messages::DeliveryFields::StartDate:
-                  if(di.getStartDate()!=0)
-                  {
-                      dli.setStartDate(msgTimeToDateTimeStr(di.getStartDate()));
-                  }
-                  break;
-              case messages::DeliveryFields::Status:dli.setStatus(dlvStateToDeliveryStatus(dlv->getState(0)));break;
-              case messages::DeliveryFields::UserData: {
-                  std::string userData;
-                  di.getUserData(userData);
-                  dli.setUserData(userData);
-                  break;
-              }
-              case messages::DeliveryFields::UserId:dli.setUserId(dlv->getUserInfo().getUserId());break;
-              }
-          } // loop over fields
-      }
-  } // loop over users
-   */
-  if (nextId == 0) {
-      resp.setMoreDeliveries(false);
-      // resp.getInfoRef();
-  } else {
+  int reqId, connId;
+  if (log->isDebugEnabled()) {
+      reqId = req->reqId;
+      connId = req->connId;
+  }
+  if (nextId != 0) {
+      // has more deliveries
       req->last = nextId;
-      resp.setMoreDeliveries(true);
       smsc::core::synchronization::MutexGuard mg(dlvReqMtx);
       req->timeMapIt = 
           dlvListReqTimeMap.insert(DlvListReqTimeMap::value_type
-                                   (time(0)+dlvListReqExpirationTime,
-                                       inmsg.getReqId()));
-      dlvListReqMap.insert(DlvListReqMap::value_type(inmsg.getReqId(),
+                                   (time(0)+dlvListReqExpirationTime,req->reqId));
+      dlvListReqMap.insert(DlvListReqMap::value_type(req->reqId,
                                                      holder.release()));
   }
-  smsc_log_info(log,"next portion of deliveries list for reqId=%d for connId=%d - %lu records, mms=%s)",
-      inmsg.getReqId(),inmsg.messageGetConnId(),resp.getInfo().size(),resp.getMoreDeliveries()?"true":"false");
-  enqueueResp(resp,inmsg);
+  if (counter) {
+      *counter = dsdf.getCount(); 
+  }
+  smsc_log_debug(log,"next portion of deliveries list for reqId=%d for connId=%d - %lu records, mms=%s",
+                 reqId, connId, dsdf.getCount(),
+                 nextId!=0 ? "true":"false" );
+  return nextId != 0;
 }
+
 
 void DcpServer::handle(const messages::CountDeliveries& inmsg)
 {
@@ -989,27 +950,60 @@ void DcpServer::handle(const messages::CountDeliveries& inmsg)
       getCore()->getUsers(users);
     }
   }
-  DcpServerDeliveryFilter dsdf(users,inmsg.getFilter());
-  getCore()->getDeliveries(0,dsdf,0);
-  /*
-  int result=0;
-  VECLOOP(it,UserInfoPtr,users)
-  {
-    DeliveryList lst;
-    (*it)->getDeliveries(lst);
-    for(DeliveryList::iterator dit=lst.begin(),dend=lst.end();dit!=dend;++dit)
-    {
-      if(isDeliveryMatchFilter(dit->get(),inmsg.getFilter()))
-      {
-        result++;
-      }
-    }
-  }
-   */
   messages::CountDeliveriesResp resp;
-  resp.setResult(dsdf.getCount());
+  {
+    sync::MutexGuard mg(dlvReqMtx);
+    time_t now=time(0);
+    while(!dlvListReqTimeMap.empty() && dlvListReqTimeMap.begin()->first<now)
+    {
+      int reqId=dlvListReqTimeMap.begin()->second;
+      DlvListReqMap::iterator it=dlvListReqMap.find(reqId);
+      if(it!=dlvListReqMap.end())
+      {
+        smsc_log_info(log,"deliveries list request with reqId=%d expired",reqId);
+        delete it->second;
+        dlvListReqMap.erase(it);
+      }
+      dlvListReqTimeMap.erase(dlvListReqTimeMap.begin());
+    }
+    int reqId=dlvListReqIdSeq++;
+    smsc_log_info(log,"created deliveries list reqId=%d for connId=%d (%lu total users)",reqId,inmsg.messageGetConnId(),users.size());
+    resp.setReqId(reqId);
+    DlvListRequest* req=new DlvListRequest(inmsg.messageGetConnId(),reqId);
+    req->userLst.swap(users);
+    req->last=0; // req->dlvLst.begin();
+    req->connId=inmsg.messageGetConnId();
+    req->timeMapIt=dlvListReqTimeMap.insert(DlvListReqTimeMap::value_type(time(0)+dlvListReqExpirationTime,reqId));
+    req->filter=inmsg.getFilter();
+    // req->fields=inmsg.getResultFields();
+    dlvListReqMap.insert(DlvListReqMap::value_type(reqId,req));
+  }
   enqueueResp(resp,inmsg);
 }
+
+
+void DcpServer::handle(const messages::CountDeliveriesNext& inmsg)
+{
+  dumpMsg(inmsg);
+  UserInfoPtr ui=getUserInfo(inmsg);
+  messages::CountDeliveriesNextResp resp;
+  // std::vector<messages::DeliveryListInfo>& info=resp.getInfoRef();
+  DlvListRequest* req = getDlvListRequest(inmsg.messageGetConnId(),
+                                          inmsg.messageGetSeqNum(),
+                                          inmsg.getReqId());
+  if (!req) { return; }
+  int counter;
+  const bool hasMore = doHandleDlvListRequest( req,
+                                               inmsg.getCount(),
+                                               inmsg.getTimeout(),
+                                               &counter,
+                                               0 );
+  // req may be invalidated here
+  resp.setMoreDeliveries(hasMore);
+  resp.setCount(counter);
+  enqueueResp(resp,inmsg);
+}
+
 
 namespace {
 
@@ -1083,18 +1077,31 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   messages::GetNextMessagesPackResp resp;
+  std::vector<messages::MessageInfo>& miv=resp.getInfoRef();
+  const bool more = doHandleAlmMsgRequest(inmsg.getReqId(),
+                                          inmsg.getCount(),
+                                          inmsg.getTimeout(),
+                                          &miv);
+  resp.setMoreMessages(more);
+  enqueueResp(resp,inmsg);
+}
+
+bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t timeout,
+                                       std::vector<messages::MessageInfo>* miv )
+{
   alm::IActivityLogMiner& alm=getCore()->getALM();
 
-  //resp.setMoreMessages(.getNext(inmsg.getReqId(),result));
-  std::vector<messages::MessageInfo>& miv=resp.getInfoRef();
+  bool more=false;
   int cnt=0;
   int sz=0;
   alm::ALMResult res;
-  bool more=false;
-  while(cnt<inmsg.getCount() && sz<65536 && (more=alm.getNext(inmsg.getReqId(),res)))
+  alm::ALMResult* resPtr = miv ? &res : 0;
+  const msgtime_type endTime = currentTimeSeconds() + (timeout ? timeout : 3600*24);
+  while(cnt<count && sz<65536 && (more=alm.getNext(reqId,endTime,resPtr)))
   {
-    miv.push_back(messages::MessageInfo());
-    messages::MessageInfo& mi=miv.back();
+    if (!miv) continue;
+    miv->push_back(messages::MessageInfo());
+    messages::MessageInfo& mi=miv->back();
     mi.setId(res.id);
     if(res.resultFields&alm::rfAbonent)
     {
@@ -1133,9 +1140,8 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
     cnt++;
     sz+=mi.length<eyeline::protogen::framework::SerializerBuffer>();
   }
-  alm.pauseReq(inmsg.getReqId());
-  resp.setMoreMessages(more);
-  enqueueResp(resp,inmsg);
+  alm.pauseReq(reqId);
+  return more;
 }
 
 void DcpServer::handle(const messages::CountMessages& inmsg)
@@ -1146,7 +1152,19 @@ void DcpServer::handle(const messages::CountMessages& inmsg)
   alm::ALMRequestFilter filter;
   fillFilter(inmsg,filter);
   messages::CountMessagesResp resp;
-  resp.setCount(getCore()->getALM().countRecords(inmsg.getDeliveryId(),filter));
+  resp.setReqId(getCore()->getALM().createRequest(inmsg.getDeliveryId(),filter));
+  enqueueResp(resp,inmsg);
+}
+
+void DcpServer::handle(const messages::CountMessagesPack& inmsg)
+{
+  dumpMsg(inmsg);
+  UserInfoPtr ui=getUserInfo(inmsg);
+  messages::CountMessagesPackResp resp;
+  const bool more = doHandleAlmMsgRequest(inmsg.getReqId(),
+                                          inmsg.getCount(),
+                                          inmsg.getTimeout(), 0);
+  resp.setMoreMessages(more);
   enqueueResp(resp,inmsg);
 }
 

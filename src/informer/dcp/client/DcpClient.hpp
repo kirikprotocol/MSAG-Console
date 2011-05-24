@@ -18,10 +18,12 @@
 #include "../messages/GetDeliveriesList.hpp"
 #include "../messages/GetDeliveriesListNext.hpp"
 #include "../messages/CountDeliveries.hpp"
+#include "../messages/CountDeliveriesNext.hpp"
 #include "../messages/GetDeliveryHistory.hpp"
 #include "../messages/RequestMessagesState.hpp"
 #include "../messages/GetNextMessagesPack.hpp"
 #include "../messages/CountMessages.hpp"
+#include "../messages/CountMessagesPack.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -57,6 +59,8 @@ public:
     tag_GetDeliveriesListNextResp=53,
     tag_CountDeliveries=54,
     tag_CountDeliveriesResp=55,
+    tag_CountDeliveriesNext=60,
+    tag_CountDeliveriesNextResp=61,
     tag_GetDeliveryHistory=58,
     tag_GetDeliveryHistoryResp=59,
     tag_RequestMessagesState=43,
@@ -64,7 +68,9 @@ public:
     tag_GetNextMessagesPack=45,
     tag_GetNextMessagesPackResp=46,
     tag_CountMessages=56,
-    tag_CountMessagesResp=57
+    tag_CountMessagesResp=57,
+    tag_CountMessagesPack=62,
+    tag_CountMessagesPackResp=63
   };
  
   DcpClient():handler(0)

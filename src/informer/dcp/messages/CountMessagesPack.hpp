@@ -1,5 +1,5 @@
-#ifndef __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_GETNEXTMESSAGESPACK_HPP__
-#define __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_GETNEXTMESSAGESPACK_HPP__
+#ifndef __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_COUNTMESSAGESPACK_HPP__
+#define __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_COUNTMESSAGESPACK_HPP__
 
 #include <inttypes.h>
 #include <string>
@@ -7,7 +7,7 @@
 #include "eyeline/protogen/framework/Exceptions.hpp"
 
 
-#ident "@(#) GetNextMessagesPack version 1.0"
+#ident "@(#) CountMessagesPack version 1.0"
 
 
 
@@ -17,9 +17,9 @@ namespace dcp{
 namespace messages{
 
 
-class GetNextMessagesPack{
+class CountMessagesPack{
 public:
-  GetNextMessagesPack()
+  CountMessagesPack()
   {
     Clear();
   }
@@ -33,12 +33,12 @@ public:
  
   static int32_t messageGetTag()
   {
-    return 45;
+    return 62;
   }
 
   static std::string messageGetName()
   {
-    return "GetNextMessagesPack";
+    return "CountMessagesPack";
   }
 
   std::string toString()const
@@ -207,7 +207,7 @@ public:
     //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
-    //  throw protogen::framework::IncompatibleVersionException("GetNextMessagesPack");
+    //  throw protogen::framework::IncompatibleVersionException("CountMessagesPack");
     //}
     //seqNum=ds.readInt32();
     while(!endOfMessage)
@@ -248,7 +248,7 @@ public:
         default:
           //if(rdVersionMinor==versionMinor)
           //{
-          //  throw protogen::framework::UnexpectedTag("GetNextMessagesPack",tag);
+          //  throw protogen::framework::UnexpectedTag("CountMessagesPack",tag);
           //}
           ds.skip(ds.readLength());
       }

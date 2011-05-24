@@ -28,6 +28,8 @@ protocol DcpClient
   GetDeliveriesListNextResp inmsg
   CountDeliveries outmsg
   CountDeliveriesResp inmsg
+  CountDeliveriesNext outmsg
+  CountDeliveriesNextResp inmsg
   GetDeliveryHistory outmsg
   GetDeliveryHistoryResp inmsg
 
@@ -37,6 +39,8 @@ protocol DcpClient
   GetNextMessagesPackResp inmsg
   CountMessages outmsg
   CountMessagesResp inmsg
+  CountMessagesPack outmsg
+  CountMessagesPackResp inmsg
   
 //  CancelRequest outmsg
 end

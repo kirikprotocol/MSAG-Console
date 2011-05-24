@@ -94,7 +94,7 @@ std::string::size_type skipField(const std::string& str,std::string::size_type p
 }
 
 
-bool ActivityLogMiner::getNext(int reqId,ALMResult& result)
+bool ActivityLogMiner::getNext(int reqId, msgtime_type endTime, ALMResult* result)
 {
   Request* req;
   {
@@ -113,7 +113,7 @@ bool ActivityLogMiner::getNext(int reqId,ALMResult& result)
     req->ref();
   }
   try {
-    bool rv=parseRecord(req,result);
+    bool rv=parseRecord(req,endTime,result);
     sync::MutexGuard mg(mtx);
     req->unref();
     req->busy=false;
@@ -127,6 +127,7 @@ bool ActivityLogMiner::getNext(int reqId,ALMResult& result)
   }
 }
 
+/*
 int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filter)
 {
   Request req;
@@ -142,9 +143,10 @@ int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filt
   }
   return rv;
 }
+ */
 
 
-bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
+bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime, ALMResult* result)
 {
   using smsc::core::buffers::File;
   File& f=req->f;
@@ -216,6 +218,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
         f.Close();
         req->offset=0;
         nextFile=true;
+        if (endTimeReached(endTime)) return true;
         continue;
       }
       {
@@ -226,10 +229,15 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
           f.Close();
           req->offset=0;
           nextFile=true;
+          if (endTimeReached(endTime)) return true;
           continue;
         }
       }
       f.Seek(req->offset);
+    }
+
+    if ( ++req->linesRead % 10000 == 0 ) {
+        if (endTimeReached(endTime)) return true;
     }
 
     if(!f.ReadLine(line))
@@ -245,8 +253,8 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     }
 
     //parse and push
-    ALMResult& rec=result;
-    rec.resultFields=req->filter.resultFields;
+    ALMResult* rec=result;
+    if (rec) { rec->resultFields=req->filter.resultFields; }
     int n;
     pos=0;
     if(req->filter.resultFields&rfDate)
@@ -258,7 +266,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
         throw InfosmeException(EXC_BADFORMAT,"failed to parse seconds in line '%s'",line.c_str());
       }
       pos=n;
-      rec.date=req->curDate+sec;
+      if (rec) { rec->date=req->curDate+sec; }
     }else
     {
       pos=skipField(line,pos);
@@ -270,37 +278,43 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     }
     if((req->filter.resultFields&rfState) || !req->filter.stateFilter.empty())
     {
+      MsgState state;
       switch(st)
       {
-        case 'N': rec.state=MSGSTATE_INPUT;break;
-        case 'P': rec.state=MSGSTATE_PROCESS;break;
-        case 'R': rec.state=MSGSTATE_RETRY;break;
-        case 'D': rec.state=MSGSTATE_DELIVERED;break;
-        case 'F': rec.state=MSGSTATE_FAILED;break;
-        case 'E': rec.state=MSGSTATE_EXPIRED;break;
-        case 'K': rec.state=MSGSTATE_KILLED;break;
+        case 'N': state=MSGSTATE_INPUT;break;
+        case 'P': state=MSGSTATE_PROCESS;break;
+        case 'R': state=MSGSTATE_RETRY;break;
+        case 'D': state=MSGSTATE_DELIVERED;break;
+        case 'F': state=MSGSTATE_FAILED;break;
+        case 'E': state=MSGSTATE_EXPIRED;break;
+        case 'K': state=MSGSTATE_KILLED;break;
       }
-      if(!req->filter.stateFilter.empty() && req->filter.stateFilter.find(rec.state)==req->filter.stateFilter.end())
+      if(!req->filter.stateFilter.empty() && req->filter.stateFilter.find(state)==req->filter.stateFilter.end())
       {
         continue;
       }
+      if (rec) { rec->state = state; }
     }
     pos=skipField(line,pos);//skip state
     pos=skipField(line,pos);//skip regionId
     n=0;
-    sscanf(line.c_str()+pos,"%lld,%n",&rec.id,&n);
+    msgid_type msgId;
+    sscanf(line.c_str()+pos,"%lld,%n",&msgId,&n);
     if(!n)
     {
       throw InfosmeException(EXC_BADFORMAT,"failed to parse msgid in line '%s'",line.c_str());
     }
+    if (rec) {rec->id = msgId;}
     pos+=n;
     pos=skipField(line,pos);//skip retry
     pos=skipField(line,pos);//skip plan
     if((req->filter.resultFields&rfAbonent) || req->filter.abonentFilter.Count())
     {
       std::string::size_type np=line.find(',',pos);
-      rec.abonent.assign(line.c_str()+pos,np-pos);
-      if(req->filter.abonentFilter.Count() && !req->filter.abonentFilter.Find(rec.abonent.c_str()))
+      smsc::core::buffers::FixedLengthString<32> abonent, *abptr;
+      abptr = rec ? &(rec->abonent) : &abonent;
+      abptr->assign(line.c_str()+pos,np-pos);
+      if(req->filter.abonentFilter.Count() && !req->filter.abonentFilter.Find(abptr->c_str()))
       {
         continue;
       }
@@ -313,15 +327,17 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     if((req->filter.resultFields&rfErrorCode) || !req->filter.codeFilter.empty())
     {
       n=0;
-      sscanf(line.c_str()+pos,"%d,%n",&rec.code,&n);
+      int code;
+      sscanf(line.c_str()+pos,"%d,%n",&code,&n);
       if(!n)
       {
         throw InfosmeException(EXC_BADFORMAT,"failed to parse smpp error code in line '%s'",line.c_str());
       }
-      if(!req->filter.codeFilter.empty() && req->filter.codeFilter.find(rec.code)==req->filter.codeFilter.end())
+      if(!req->filter.codeFilter.empty() && req->filter.codeFilter.find(code)==req->filter.codeFilter.end())
       {
         continue;
       }
+      if (rec) { rec->code = code; }
       pos+=n;
     }else
     {
@@ -330,7 +346,9 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     if(req->filter.resultFields&rfUserData)
     {
       std::string::size_type np=line.find(',',pos);
-      rec.userData.assign(line.c_str()+pos,np-pos);
+      smsc::core::buffers::FixedLengthString<Message::USERDATA_LENGTH> userData, *uptr;
+      uptr = rec ? &(rec->userData) : &userData;
+      uptr->assign(line.c_str()+pos,np-pos);
       pos=np+1;
     }else
     {
@@ -350,8 +368,10 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
       {
         throw InfosmeException(EXC_BADFORMAT,"expected message text in line '%s' (%d)",line.c_str(),pos);
       }
-      rec.text.clear();
-      rec.text.reserve(line.length()-pos);
+      std::string text, *tptr;
+      tptr = rec ? &(rec->text) : &text;
+      tptr->clear();
+      tptr->reserve(line.length()-pos);
       for(;;pos++)
       {
         if(pos>=line.length())
@@ -367,13 +387,13 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
           }
           if(line[pos]=='n')
           {
-            rec.text+='\n';
+            *tptr += '\n';
           }else if(line[pos]=='\\')
           {
-            rec.text+='\\';
+            *tptr += '\\';
           }else if(line[pos]=='"')
           {
-            rec.text+='"';
+            *tptr +='"';
           }else
           {
             throw InfosmeException(EXC_BADFORMAT,"unexpected escape symbol in msg text '%s' at pos %lu",line.c_str(),pos);
@@ -383,7 +403,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
           break;
         }else
         {
-          rec.text+=line[pos];
+          *tptr+=line[pos];
         }
       }
     }

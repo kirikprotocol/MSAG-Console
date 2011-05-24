@@ -183,6 +183,7 @@ end
 message GetDeliveriesListNext 52
   int32 reqId 1
   int32 count 2
+  int32 timeout 3
 end
 
 message DeliveryListInfo
@@ -207,8 +208,20 @@ message CountDeliveries 54
   DeliveriesFilter filter 1
 end
 
+// NOTE: reqId is 2 to be incompatible with previous protocol version
 message CountDeliveriesResp 55
-  int32 result 1
+  int32 reqId 2
+end
+
+message CountDeliveriesNext 60
+  int32 reqId 1
+  int32 count 2
+  int32 timeout 3
+end
+
+message CountDeliveriesNextResp 61
+  bool moreDeliveries 1
+  int32 count 2
 end
 
 message DropDelivery 33
@@ -332,6 +345,7 @@ end
 message GetNextMessagesPack 45
   int32 reqId 1
   int32 count 2
+  int32 timeout 3
 end
 
 
@@ -363,6 +377,18 @@ message CountMessages 56
   string endDate 5
 end
 
+// NOTE: reqId is 2 to be incompatible with previous protocol version
 message CountMessagesResp 57
-  int32 count 1
+  int32 reqId 2
+end
+
+message CountMessagesPack 62
+  int32 reqId 1
+  int32 count 2
+  int32 timeout 3
+end
+
+message CountMessagesPackResp 63
+  bool  moreMessages 1
+  int32 count 2
 end

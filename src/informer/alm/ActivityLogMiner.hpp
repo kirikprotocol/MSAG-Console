@@ -22,10 +22,10 @@ public:
   void init(const std::string& argPath,time_t argRequestTimeout);
 
   int createRequest(dlvid_type dlvId,const ALMRequestFilter& filter);
-  bool getNext(int reqId,ALMResult& result);
+  bool getNext(int reqId, msgtime_type endTime, ALMResult* result);
   void pauseReq(int reqId);
 
-  int countRecords(dlvid_type dlvId,const ALMRequestFilter& filter);
+  // int countRecords(dlvid_type dlvId,const ALMRequestFilter& filter);
 
 protected:
 
@@ -50,6 +50,7 @@ protected:
       hourChecked=false;
       day=-1;
       hour=-1;
+      linesRead = 0;
       version=0;
       refCount=0;
       busy=false;
@@ -75,6 +76,7 @@ protected:
     bool hourChecked;
     int day;
     int hour;
+    int linesRead;
   };
 
   typedef std::map<int,Request*> ReqMap;
@@ -87,8 +89,10 @@ protected:
   std::string mkDatePath(dlvid_type dlvId,const ::tm& date);
   std::string mkHourPath(dlvid_type dlvId,const ::tm& date);
 
-  bool parseRecord(Request* req,ALMResult& result);
-
+  bool parseRecord(Request* req, msgtime_type endTime, ALMResult* result);
+    inline bool endTimeReached( msgtime_type endTime ) const {
+        return ( currentTimeSeconds() > endTime );
+    }
 };
 
 }

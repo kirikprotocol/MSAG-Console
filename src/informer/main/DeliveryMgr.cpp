@@ -1023,17 +1023,20 @@ bool DeliveryMgr::getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
 
 
 dlvid_type DeliveryMgr::getDeliveries( unsigned        count,
+                                       unsigned        timeout,
                                        DeliveryFilter& filter,
                                        DeliveryList*   result,
                                        dlvid_type      startId )
 {
+    const msgtime_type endTime = currentTimeSeconds() + (timeout ? timeout : 3600*24);
     do {
 
         DeliveryChunk* chunk = deliveryChunkList_->getNextChunk(startId);
         if (!chunk) {
             // no more chunks and deliveries
             smsc_log_debug(log_,"no more chunks found for startId=%u",startId);
-            return 0;
+            startId = 0;
+            break;
         }
         
         // processing the chunk
@@ -1058,10 +1061,13 @@ dlvid_type DeliveryMgr::getDeliveries( unsigned        count,
             }
             ++startId;
         }
+        if ( currentTimeSeconds() >= endTime ) {
+            smsc_log_debug(log_,"timeout reached");
+            break;
+        }
 
     } while (true);
-    throw InfosmeException(EXC_LOGICERROR,"I should never be here, nextId=%u",startId);
-    return 0;
+    return startId;
 }
 
 

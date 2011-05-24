@@ -26,7 +26,7 @@ public:
   void Clear()
   {
     seqNum=0;
-    countFlag=false;
+    reqIdFlag=false;
   }
  
   static int32_t messageGetTag()
@@ -45,14 +45,14 @@ public:
     char buf[32];
     sprintf(buf,"seqNum=%d",seqNum);
     rv+=buf;
-    if(countFlag)
+    if(reqIdFlag)
     {
       if(rv.length()>0)
       {
         rv+=";";
       }
-      rv+="count=";
-      sprintf(buf,"%d",count);
+      rv+="reqId=";
+      sprintf(buf,"%d",reqId);
       rv+=buf;
     }
     return rv;
@@ -62,49 +62,49 @@ public:
   int32_t length()const
   {
     int32_t rv=0;
-    if(countFlag)
+    if(reqIdFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(count);
+      rv+=DataStream::fieldSize(reqId);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  int32_t getCount()const
+  int32_t getReqId()const
   {
-    if(!countFlag)
+    if(!reqIdFlag)
     {
-      throw eyeline::protogen::framework::FieldIsNullException("count");
+      throw eyeline::protogen::framework::FieldIsNullException("reqId");
     }
-    return count;
+    return reqId;
   }
-  void setCount(int32_t argValue)
+  void setReqId(int32_t argValue)
   {
-    count=argValue;
-    countFlag=true;
+    reqId=argValue;
+    reqIdFlag=true;
   }
-  int32_t& getCountRef()
+  int32_t& getReqIdRef()
   {
-    countFlag=true;
-    return count;
+    reqIdFlag=true;
+    return reqId;
   }
-  bool hasCount()const
+  bool hasReqId()const
   {
-    return countFlag;
+    return reqIdFlag;
   }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
-    if(!countFlag)
+    if(!reqIdFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("count");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("reqId");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
-    ds.writeTag(countTag);
-    ds.writeInt32LV(count); 
+    ds.writeTag(reqIdTag);
+    ds.writeInt32LV(reqId); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -125,14 +125,14 @@ public:
       typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
-        case countTag:
+        case reqIdTag:
         {
-          if(countFlag)
+          if(reqIdFlag)
           {
-            throw eyeline::protogen::framework::DuplicateFieldException("count");
+            throw eyeline::protogen::framework::DuplicateFieldException("reqId");
           }
-          count=ds.readInt32LV();
-          countFlag=true;
+          reqId=ds.readInt32LV();
+          reqIdFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -145,9 +145,9 @@ public:
           ds.skip(ds.readLength());
       }
     }
-    if(!countFlag)
+    if(!reqIdFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("count");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("reqId");
     }
 
   }
@@ -177,14 +177,14 @@ protected:
   //static const int8_t versionMajor=1;
   //static const int8_t versionMinor=0;
 
-  static const int32_t countTag=1;
+  static const int32_t reqIdTag=2;
 
   int32_t seqNum;
   int connId;
 
-  int32_t count;
+  int32_t reqId;
 
-  bool countFlag;
+  bool reqIdFlag;
 };
 
 }

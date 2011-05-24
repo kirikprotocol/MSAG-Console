@@ -87,7 +87,8 @@ public:
                                  bool            moveToArchive = false );
     virtual DeliveryPtr getDelivery( const UserInfo& userInfo,
                                      dlvid_type   dlvId );
-    virtual dlvid_type getDeliveries( unsigned count, 
+    virtual dlvid_type getDeliveries( unsigned count,
+                                      unsigned timeout,   // sec
                                       DeliveryFilter& filter,
                                       DeliveryList* result,
                                       dlvid_type startId = 0 );

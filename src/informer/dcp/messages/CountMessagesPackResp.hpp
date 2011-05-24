@@ -1,5 +1,5 @@
-#ifndef __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_GETNEXTMESSAGESPACK_HPP__
-#define __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_GETNEXTMESSAGESPACK_HPP__
+#ifndef __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_COUNTMESSAGESPACKRESP_HPP__
+#define __GENERATED_MESSAGE_EYELINE_INFORMER_DCP_MESSAGES_COUNTMESSAGESPACKRESP_HPP__
 
 #include <inttypes.h>
 #include <string>
@@ -7,7 +7,7 @@
 #include "eyeline/protogen/framework/Exceptions.hpp"
 
 
-#ident "@(#) GetNextMessagesPack version 1.0"
+#ident "@(#) CountMessagesPackResp version 1.0"
 
 
 
@@ -17,28 +17,27 @@ namespace dcp{
 namespace messages{
 
 
-class GetNextMessagesPack{
+class CountMessagesPackResp{
 public:
-  GetNextMessagesPack()
+  CountMessagesPackResp()
   {
     Clear();
   }
   void Clear()
   {
     seqNum=0;
-    reqIdFlag=false;
+    moreMessagesFlag=false;
     countFlag=false;
-    timeoutFlag=false;
   }
  
   static int32_t messageGetTag()
   {
-    return 45;
+    return 63;
   }
 
   static std::string messageGetName()
   {
-    return "GetNextMessagesPack";
+    return "CountMessagesPackResp";
   }
 
   std::string toString()const
@@ -47,15 +46,14 @@ public:
     char buf[32];
     sprintf(buf,"seqNum=%d",seqNum);
     rv+=buf;
-    if(reqIdFlag)
+    if(moreMessagesFlag)
     {
       if(rv.length()>0)
       {
         rv+=";";
       }
-      rv+="reqId=";
-      sprintf(buf,"%d",reqId);
-      rv+=buf;
+      rv+="moreMessages=";
+      rv+=moreMessages?"true":"false";
     }
     if(countFlag)
     {
@@ -67,16 +65,6 @@ public:
       sprintf(buf,"%d",count);
       rv+=buf;
     }
-    if(timeoutFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="timeout=";
-      sprintf(buf,"%d",timeout);
-      rv+=buf;
-    }
     return rv;
   }
 
@@ -84,11 +72,11 @@ public:
   int32_t length()const
   {
     int32_t rv=0;
-    if(reqIdFlag)
+    if(moreMessagesFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(reqId);
+      rv+=DataStream::fieldSize(moreMessages);
     }
     if(countFlag)
     {
@@ -96,36 +84,30 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(count);
     }
-    if(timeoutFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(timeout);
-    }
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  int32_t getReqId()const
+  bool getMoreMessages()const
   {
-    if(!reqIdFlag)
+    if(!moreMessagesFlag)
     {
-      throw eyeline::protogen::framework::FieldIsNullException("reqId");
+      throw eyeline::protogen::framework::FieldIsNullException("moreMessages");
     }
-    return reqId;
+    return moreMessages;
   }
-  void setReqId(int32_t argValue)
+  void setMoreMessages(bool argValue)
   {
-    reqId=argValue;
-    reqIdFlag=true;
+    moreMessages=argValue;
+    moreMessagesFlag=true;
   }
-  int32_t& getReqIdRef()
+  bool& getMoreMessagesRef()
   {
-    reqIdFlag=true;
-    return reqId;
+    moreMessagesFlag=true;
+    return moreMessages;
   }
-  bool hasReqId()const
+  bool hasMoreMessages()const
   {
-    return reqIdFlag;
+    return moreMessagesFlag;
   }
   int32_t getCount()const
   {
@@ -149,52 +131,24 @@ public:
   {
     return countFlag;
   }
-  int32_t getTimeout()const
-  {
-    if(!timeoutFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("timeout");
-    }
-    return timeout;
-  }
-  void setTimeout(int32_t argValue)
-  {
-    timeout=argValue;
-    timeoutFlag=true;
-  }
-  int32_t& getTimeoutRef()
-  {
-    timeoutFlag=true;
-    return timeout;
-  }
-  bool hasTimeout()const
-  {
-    return timeoutFlag;
-  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
-    if(!reqIdFlag)
+    if(!moreMessagesFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("reqId");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("moreMessages");
     }
     if(!countFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("count");
     }
-    if(!timeoutFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
-    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
-    ds.writeTag(reqIdTag);
-    ds.writeInt32LV(reqId); 
+    ds.writeTag(moreMessagesTag);
+    ds.writeBoolLV(moreMessages); 
     ds.writeTag(countTag);
     ds.writeInt32LV(count); 
-    ds.writeTag(timeoutTag);
-    ds.writeInt32LV(timeout); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -207,7 +161,7 @@ public:
     //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
-    //  throw protogen::framework::IncompatibleVersionException("GetNextMessagesPack");
+    //  throw protogen::framework::IncompatibleVersionException("CountMessagesPackResp");
     //}
     //seqNum=ds.readInt32();
     while(!endOfMessage)
@@ -215,14 +169,14 @@ public:
       typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
-        case reqIdTag:
+        case moreMessagesTag:
         {
-          if(reqIdFlag)
+          if(moreMessagesFlag)
           {
-            throw eyeline::protogen::framework::DuplicateFieldException("reqId");
+            throw eyeline::protogen::framework::DuplicateFieldException("moreMessages");
           }
-          reqId=ds.readInt32LV();
-          reqIdFlag=true;
+          moreMessages=ds.readBoolLV();
+          moreMessagesFlag=true;
         }break;
         case countTag:
         {
@@ -233,37 +187,24 @@ public:
           count=ds.readInt32LV();
           countFlag=true;
         }break;
-        case timeoutTag:
-        {
-          if(timeoutFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("timeout");
-          }
-          timeout=ds.readInt32LV();
-          timeoutFlag=true;
-        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
         default:
           //if(rdVersionMinor==versionMinor)
           //{
-          //  throw protogen::framework::UnexpectedTag("GetNextMessagesPack",tag);
+          //  throw protogen::framework::UnexpectedTag("CountMessagesPackResp",tag);
           //}
           ds.skip(ds.readLength());
       }
     }
-    if(!reqIdFlag)
+    if(!moreMessagesFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("reqId");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("moreMessages");
     }
     if(!countFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("count");
-    }
-    if(!timeoutFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
     }
 
   }
@@ -293,20 +234,17 @@ protected:
   //static const int8_t versionMajor=1;
   //static const int8_t versionMinor=0;
 
-  static const int32_t reqIdTag=1;
+  static const int32_t moreMessagesTag=1;
   static const int32_t countTag=2;
-  static const int32_t timeoutTag=3;
 
   int32_t seqNum;
   int connId;
 
-  int32_t reqId;
+  bool moreMessages;
   int32_t count;
-  int32_t timeout;
 
-  bool reqIdFlag;
+  bool moreMessagesFlag;
   bool countFlag;
-  bool timeoutFlag;
 };
 
 }

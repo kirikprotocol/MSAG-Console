@@ -47,6 +47,7 @@ public:
     bool getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr );
 
     dlvid_type getDeliveries( unsigned        count,
+                              unsigned        timeout,
                               DeliveryFilter& filter,
                               DeliveryList*   result,
                               dlvid_type      startId );

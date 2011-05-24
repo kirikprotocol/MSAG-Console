@@ -12,9 +12,11 @@
 #include "../messages/GetDeliveriesListResp.hpp"
 #include "../messages/GetDeliveriesListNextResp.hpp"
 #include "../messages/CountDeliveriesResp.hpp"
+#include "../messages/CountDeliveriesNextResp.hpp"
 #include "../messages/RequestMessagesStateResp.hpp"
 #include "../messages/GetNextMessagesPackResp.hpp"
 #include "../messages/CountMessagesResp.hpp"
+#include "../messages/CountMessagesPackResp.hpp"
 #include "../messages/GetDeliveryHistoryResp.hpp"
 
 
@@ -36,10 +38,12 @@ public:
   virtual void handle(const messages::GetDeliveriesListResp& msg)=0;
   virtual void handle(const messages::GetDeliveriesListNextResp& msg)=0;
   virtual void handle(const messages::CountDeliveriesResp& msg)=0;
+  virtual void handle(const messages::CountDeliveriesNextResp& msg)=0;
   virtual void handle(const messages::GetDeliveryHistoryResp& msg)=0;
   virtual void handle(const messages::RequestMessagesStateResp& msg)=0;
   virtual void handle(const messages::GetNextMessagesPackResp& msg)=0;
   virtual void handle(const messages::CountMessagesResp& msg)=0;
+  virtual void handle(const messages::CountMessagesPackResp& msg)=0;
 };
 
 }

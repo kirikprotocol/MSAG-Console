@@ -296,6 +296,11 @@ void InformerClient::handle(const messages::CountDeliveriesResp& msg)
   handleResponse(msg,rtBase);
 }
 
+void InformerClient::handle(const messages::CountDeliveriesNextResp& msg)
+{
+  handleResponse(msg,rtBase);
+}
+
 void InformerClient::handle(const messages::GetDeliveryHistoryResp& msg)
 {
   handleResponse(msg,rtGetDeliveryHistory);
@@ -315,6 +320,11 @@ void InformerClient::handle(const messages::GetNextMessagesPackResp& msg)
 void InformerClient::handle(const messages::CountMessagesResp& msg)
 {
   handleResponse(msg,rtBase);
+}
+
+void InformerClient::handle(const messages::CountMessagesPackResp& msg)
+{
+  handleResponse(msg,rtCountMessagesPack);
 }
 
 
