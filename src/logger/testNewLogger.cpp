@@ -13,7 +13,7 @@ void testFun1( smsc::logger::Logger* thelog, TestThread& )
     smsc_log_debug(thelog,"simple call");
 }
 
-typedef typeof(testFun1) testFunType;
+typedef void (testFunType) ( smsc::logger::Logger* thelog, TestThread& );
 
 class TestThread : public smsc::core::threads::Thread
 {
