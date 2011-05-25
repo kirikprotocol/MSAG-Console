@@ -216,6 +216,7 @@ protected:
                                int32_t* counter,
                                std::vector<messages::DeliveryListInfo>* info );
   bool doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t timeout,
+                              int32_t* counter,
                               std::vector<messages::MessageInfo>* miv );
 
   DcpClientSocket* getSocketByConnId(int connId);

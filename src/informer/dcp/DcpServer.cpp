@@ -1081,12 +1081,14 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
   const bool more = doHandleAlmMsgRequest(inmsg.getReqId(),
                                           inmsg.getCount(),
                                           inmsg.getTimeout(),
+                                          0,
                                           &miv);
   resp.setMoreMessages(more);
   enqueueResp(resp,inmsg);
 }
 
 bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t timeout,
+                                       int32_t* counter,
                                        std::vector<messages::MessageInfo>* miv )
 {
   alm::IActivityLogMiner& alm=getCore()->getALM();
@@ -1099,6 +1101,7 @@ bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t tim
   const msgtime_type endTime = currentTimeSeconds() + (timeout ? timeout : 3600*24);
   while(cnt<count && sz<65536 && (more=alm.getNext(reqId,endTime,resPtr)))
   {
+    ++cnt;
     if (!miv) continue;
     miv->push_back(messages::MessageInfo());
     messages::MessageInfo& mi=miv->back();
@@ -1137,9 +1140,9 @@ bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t tim
     {
       mi.setUserData(res.userData);
     }
-    cnt++;
     sz+=mi.length<eyeline::protogen::framework::SerializerBuffer>();
   }
+  if ( counter ) { *counter = cnt; }
   alm.pauseReq(reqId);
   return more;
 }
@@ -1161,10 +1164,14 @@ void DcpServer::handle(const messages::CountMessagesPack& inmsg)
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   messages::CountMessagesPackResp resp;
+  int32_t counter;
   const bool more = doHandleAlmMsgRequest(inmsg.getReqId(),
                                           inmsg.getCount(),
-                                          inmsg.getTimeout(), 0);
+                                          inmsg.getTimeout(),
+                                          &counter,
+                                          0);
   resp.setMoreMessages(more);
+  resp.setCount(counter);
   enqueueResp(resp,inmsg);
 }
 
