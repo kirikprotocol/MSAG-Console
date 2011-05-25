@@ -1,3 +1,5 @@
+=====================================================================
+2011-05-25 14:26 bukind informer-build-20110525
 2011-05-24 12:33 bukind
   feature: List/Count Dlv/Msg requests are now chunked by time/count
 
