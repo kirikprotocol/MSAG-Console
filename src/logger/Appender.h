@@ -14,7 +14,16 @@ protected:
 public:
   Appender(const char * const name);
   virtual ~Appender() {};
+#ifdef NEWLOGGER
+  virtual size_t logPrefix(char* buf, size_t bufsize, timeval tv, const char logLevelName, const char* category) throw() = 0;
+  // write the formatted message into appender;
+  // @param buf -- the formatted message;
+  // @param bufsize -- the length of the message not including the trailing '\0'.
+  // NOTE: that buf[bufsize] is '\0' initially but appender may change it freely.
+  virtual void write(timeval tv,char* buf, size_t bufsize) throw() = 0;
+#else
   virtual void log(timeval tv,const char logLevelName, const char * const category, const char * const message) throw() = 0;
+#endif
 
   inline const char * const getName() const throw() { return name.get(); }
 };

@@ -4,4 +4,9 @@
 # binary name source name libraries         
 liblogger.so  Logger $(SHARED_OPT) -ldl $(__LIBRARIES) -lrt $(LOGGER_LIBRARY) -llogger-additional $(SOCKETLIB) -lnsl -lutil
 logger/test	test	-L$(SMSC_BUILDDIR)/bin -llogger -lcore-threads -lutil -llogger-additional -lnsl -lrt -lpthread @liblogger.so
-
+logger/testNewLogger testNewLogger \
+  -lcore-threads \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil \
+  -lnsl \
+  -lpthread -lrt -ldl

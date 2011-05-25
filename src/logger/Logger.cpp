@@ -566,6 +566,9 @@ Logger & Logger::operator = (const Logger & other)
 ////////////////////// public methods
 void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
 {
+#ifdef NEWLOGGER
+  log_(_logLevel,"%s",message.c_str());
+#else
   timeval tv;
   gettimeofday(&tv,0);
   timedConfigReload(tv.tv_sec);
@@ -579,6 +582,7 @@ void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
     __loggerError("log_: Logger not initialized");
     fprintf(stderr, "%c %s: %s", logChars[_logLevel], this->name, message.c_str());
   }
+#endif
 }
 
 void Logger::log_(const LogLevel _logLevel, const char * const stringFormat, ...) throw()
@@ -596,6 +600,61 @@ void Logger::log_(const LogLevel _logLevel, const char * const stringFormat, ...
 
 void Logger::logva_(timeval tv,const LogLevel _logLevel, const char * const stringFormat, va_list args) throw()
 {
+#ifdef NEWLOGGER
+    class BufferGuard {
+    public:
+        BufferGuard() : buf_(0) {}
+        ~BufferGuard() { if (buf_) { delete [] buf_; } }
+        void setBuf( char* buf ) {
+            if (buf_) {
+                delete [] buf_;
+            }
+            buf_ = buf;
+        }
+    private:
+        char* buf_;
+    };
+
+    if (isInitialized()) {
+
+        char buf[2048];
+        BufferGuard bufguard;
+
+        try {
+
+            size_t bufsize = sizeof(buf);
+            char* buffer = buf;
+            const size_t prefixLength = appender->logPrefix(buf,bufsize,tv,logChars[_logLevel],this->name);
+            bufsize -= prefixLength;
+            while (true) {
+                int n = ::vsnprintf(buffer+prefixLength, bufsize, stringFormat, args);
+                if ( (n>=0) && size_t(n)+2 < bufsize ) {
+                    bufsize = size_t(n) + prefixLength; // final size
+                    break;
+                }
+                bufsize = (n>-1) ?
+                    size_t(n+5) : // ISO/IEC 9899:1999, and reserve some space at the end
+                    bufsize*2;    // twice the old size
+                bufguard.setBuf(buffer = new char[bufsize + prefixLength]);
+                memcpy(buffer,buf,prefixLength);
+            }
+            appender->write(tv,buffer,bufsize);
+
+        } catch (...) {
+            fprintf(stderr,"out of memory");
+            return;
+        }
+
+    } else {
+        __loggerError("logva_: Logger not initialized");
+        char buf[2048];
+        int n = ::snprintf(buf,sizeof(buf),"%c %s: ",logChars[_logLevel],this->name);
+        ::vsnprintf(buf+n,sizeof(buf)-n-2,stringFormat,args);
+        buf[sizeof(buf)-2] = '\0';
+        strcat(buf,"\n");
+        fputs(buf,stderr);
+    }
+#else
   char buf[2048];
   char* msg=vform(stringFormat, args,buf,sizeof(buf));
   std::auto_ptr<char> messageBuf(msg==buf?0:msg);
@@ -611,6 +670,7 @@ void Logger::logva_(timeval tv,const LogLevel _logLevel, const char * const stri
     __loggerError("logva_: Logger not initialized");
     fprintf(stderr, "%c %s: %s", logChars[_logLevel], this->name, msg);
   }
+#endif
 }
 
 #ifdef SMSC_DEBUG

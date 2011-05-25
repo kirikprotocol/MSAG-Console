@@ -214,6 +214,10 @@ CXXFLAGS := $(CXXFLAGS) -DCHECKCONTENTION=2
 endif
 endif
 
+ifeq ($(NEWLOGGER),YES)
+CXXFLAGS := $(CXXFLAGS) -DNEWLOGGER
+endif
+
 ifeq ($(SNMP),YES)
 ifeq ($(CXX),CC)
 SNMP_LIBS_CORE = -lnetsnmpagent -lnetsnmpmibs -lnetsnmphelpers -lnetsnmp -lkstat -ladm -lpicl
