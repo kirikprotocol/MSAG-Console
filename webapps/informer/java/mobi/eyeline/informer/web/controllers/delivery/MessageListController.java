@@ -159,7 +159,7 @@ public class MessageListController extends InformerController {
     if (deliveryId != null) {
       try {
         Delivery delivery = strategy.getDelivery(u.getLogin(), u.getPassword(), deliveryId);
-        msgFilter.setFromDate(delivery.getStartDate());
+        msgFilter.setFromDate(new Date(delivery.getStartDate().getTime()-60000));
         msgFilter.setTillDate(delivery.getEndDate() == null ? new Date(System.currentTimeMillis() + (24 * 60 * 60 * 1000)) : delivery.getEndDate());
         deliveryName = delivery.getName();
         deliveryType = delivery.getType();
@@ -371,7 +371,7 @@ public class MessageListController extends InformerController {
 
       public int getRowsCount() {
         try {
-          return strategy.countMessages(u.getLogin(), u.getPassword(), getModelFilter());
+          return strategy.countMessages(u.getLogin(), u.getPassword(), filter);
         } catch (LocalizedException e) {
           logger.error(e, e);
           error = e.getMessage(getLocale());
