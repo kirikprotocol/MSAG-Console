@@ -107,6 +107,14 @@ public class DcpClient extends SyncProtogenConnection {
     return sendPdu(req, new CountMessagesResp());
   }
 
+  public CountMessagesPackResp send(CountMessagesPack req) throws AdminException {
+    return sendPdu(req, new CountMessagesPackResp());
+  }
+
+  public CountDeliveriesNextResp send(CountDeliveriesNext req) throws AdminException {
+    return sendPdu(req, new CountDeliveriesNextResp());
+  }
+
   void send(UserAuth req) throws AdminException {
     sendPdu(req, new OkResponse());
   }

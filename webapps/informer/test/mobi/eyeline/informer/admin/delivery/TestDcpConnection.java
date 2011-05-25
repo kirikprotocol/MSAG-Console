@@ -216,28 +216,15 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   public synchronized int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
-    int count = 0;
-    for(Delivery d : deliveries.values()) {
-      if(deliveryFilter != null && !accept(d, deliveryFilter)) {
-        continue;
-      }
-      count++;
-    }
-    return count;
+    int r = reqIds++;
+    deliveryReqs.put(r, new DeliveryRequest(deliveryFilter));
+    return r;
   }
 
   public synchronized int countMessages(MessageFilter messageFilter) throws AdminException {
-    int count = 0;
-    for(Map.Entry<Integer,List<Message>> e : messages.entrySet()) {
-      int deliveryId = e.getKey();
-      for(Message m : e.getValue()) {
-        if(messageFilter != null && !accept(deliveryId, m, messageFilter)) {
-          continue;
-        }
-        count++;
-      }
-    }
-    return count;
+    int r = reqIds++;
+    messReqs.put(r, new MessageRequest(messageFilter));
+    return r;
   }
 
   public DeliveryStatusHistory getDeliveryHistory(int deliveryId) throws AdminException {
@@ -348,13 +335,63 @@ public class TestDcpConnection extends DcpConnection{
     return stats;
   }
 
+  @Override
+  public boolean getNextDeliveriesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+     if(!deliveryReqs.containsKey(reqId) || pieceSize == 0) {
+      throw new DeliveryException("interaction_error","");
+    }
+    DeliveryRequest r = deliveryReqs.get(reqId);
+    int count = 0;
+    int _result = 0;
+    for(Delivery d : this.deliveries.values()) {
+      if(accept(d, r.filter) && ++count > r.position) {
+        _result++;
+        if(_result == pieceSize) {
+          break;
+        }
+      }
+    }
+    r.position+=_result;
+    result[0] = _result;
+    return _result == pieceSize;
+  }
+
+  @Override
+  public boolean getNextMessagesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+    MessageRequest req = messReqs.get(reqId);
+    if(req == null || pieceSize == 0) {
+      throw new DeliveryException("interaction_error","");
+    }
+    MessageRequest r = messReqs.get(reqId);
+    int count = 0;
+    int _result = 0;
+    int deliveryId = req.filter.getDeliveryId();
+
+    if(this.messages.get(deliveryId) == null) {
+      return false;
+    }
+
+    for(Message m : this.messages.get(deliveryId)) {
+      if(accept(deliveryId, m, r.filter) && ++count > r.position) {
+        _result++;
+        if(_result == pieceSize) {
+          break;
+        }
+      }
+    }
+
+    r.position+=_result;
+    result[0] = _result;
+    return _result == pieceSize;
+  }
+
   public synchronized int getDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
     int r = reqIds++;
     deliveryReqs.put(r, new DeliveryRequest(deliveryFilter));
     return r;
   }
 
-  public synchronized boolean getNextDeliveries(int reqId, int pieceSize, Collection<Delivery> deliveries) throws AdminException {
+  public synchronized boolean getNextDeliveries(int reqId, int pieceSize, int timeoutSec, Collection<Delivery> deliveries) throws AdminException {
     if(!deliveryReqs.containsKey(reqId) || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
@@ -394,7 +431,7 @@ public class TestDcpConnection extends DcpConnection{
     return r;
   }
 
-  public synchronized boolean getNextMessages(int reqId, int pieceSize, Collection<Message> messages) throws AdminException {
+  public synchronized boolean getNextMessages(int reqId, int pieceSize, int timeoutSec, Collection<Message> messages) throws AdminException {
     MessageRequest req = messReqs.get(reqId);
     if(req == null || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");

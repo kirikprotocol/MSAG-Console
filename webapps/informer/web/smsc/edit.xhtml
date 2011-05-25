@@ -85,11 +85,6 @@
           <h:outputText style="white-space:nowrap;" value="#{smscBundle.vlrUssdServiceOp}" rendered="#{smscEdit.allowUssdPush}"/>
           <h:inputText converterMessage="#{msg['invalid_param_value']} #{smscBundle.vlrUssdServiceOp}" value="#{smscEdit.smsc.vlrUssdServiceOp}" size="6" rendered="#{smscEdit.allowUssdPush}"/>
 
-
-          <h:outputText style="white-space:nowrap;" value="#{smscBundle.defaultValidityPeriod}"/>
-          <h:inputText converterMessage="#{msg['invalid_param_value']} #{smscBundle.defaultValidityPeriod}" value="#{smscEdit.smsc.defaultValidityPeriod}" size="6"/>
-
-
           <h:outputText style="white-space:nowrap;" value="#{smscBundle.minValidityPeriod}"/>
           <h:inputText converterMessage="#{msg['invalid_param_value']} #{smscBundle.minValidityPeriod}" value="#{smscEdit.smsc.minValidityPeriod}" size="6"/>
 

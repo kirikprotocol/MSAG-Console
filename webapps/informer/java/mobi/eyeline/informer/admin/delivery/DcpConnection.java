@@ -124,7 +124,7 @@ class DcpConnection {
    * Подсчёт кол-ва рассылок
    *
    * @param deliveryFilter фильтр
-   * @return кол-во рассылок
+   * @return id запроса
    * @throws AdminException ошибка выполнения команды
    */
   public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
@@ -155,7 +155,7 @@ class DcpConnection {
     }
     req.setFilter(f);
     CountDeliveriesResp resp = client.send(req);
-    return resp.getResult();
+    return resp.getReqId();
   }
 
   /**
@@ -278,14 +278,16 @@ class DcpConnection {
    *
    * @param reqId      идентификатор запроса
    * @param pieceSize  максимальное кол-во извлекаемых рассылок
+   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
    * @param deliveries куда следуют сложить рассылки
    * @return есть ли ещё рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextDeliveries(int reqId, int pieceSize, Collection<Delivery> deliveries) throws AdminException {
+  public boolean getNextDeliveries(int reqId, int pieceSize, int timeoutSec, Collection<Delivery> deliveries) throws AdminException {
     GetDeliveriesListNext req = new GetDeliveriesListNext();
     req.setReqId(reqId);
     req.setCount(pieceSize);
+    req.setTimeout(timeoutSec);
     GetDeliveriesListNextResp resp;
     resp = client.send(req);
     if (resp.getInfo() != null) {
@@ -339,14 +341,16 @@ class DcpConnection {
    *
    * @param reqId     идентификатор запроса
    * @param pieceSize максимальное кол-во извлекаемых сообщений
+   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
    * @param messages  куда следуют сложить сообщения
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextMessages(int reqId, int pieceSize, Collection<Message> messages) throws AdminException {
+  public boolean getNextMessages(int reqId, int pieceSize, int timeoutSec,  Collection<Message> messages) throws AdminException {
     GetNextMessagesPack req = new GetNextMessagesPack();
     req.setReqId(reqId);
     req.setCount(pieceSize);
+    req.setTimeout(timeoutSec);
     GetNextMessagesPackResp resp = client.send(req);
     if (resp.getInfo() != null) {
       for (mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
@@ -361,7 +365,7 @@ class DcpConnection {
    * Подсчёт кол-ва сообщений
    *
    * @param filter фильтр
-   * @return кол-во сообщений
+   * @return id запроса
    * @throws AdminException ошибка выполнения команды
    */
   public int countMessages(MessageFilter filter) throws AdminException {
@@ -386,7 +390,47 @@ class DcpConnection {
       }
     }
     CountMessagesResp resp = client.send(req);
-    return resp.getCount();
+    return resp.getReqId();
+  }
+
+  /**
+   * Возвращает следующую часть кол-ва сообщений по идентификатору запроса
+   *
+   * @param reqId     идентификатор запроса
+   * @param pieceSize максимальное кол-во извлекаемых сообщений
+   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
+   * @param result  куда следуют сложить результат
+   * @return есть ли ещё сообщения
+   * @throws AdminException ошибка выполнения команды
+   */
+  public boolean getNextMessagesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+    CountMessagesPack count = new CountMessagesPack();
+    count.setCount(pieceSize);
+    count.setReqId(reqId);
+    count.setTimeout(timeoutSec);
+    CountMessagesPackResp resp = client.send(count);
+    result[0] = resp.hasCount() ? resp.getCount() : 0;
+    return resp.getMoreMessages();
+  }
+
+  /**
+   * Возвращает следующую часть кол-ва сообщений по идентификатору запроса
+   *
+   * @param reqId     идентификатор запроса
+   * @param pieceSize максимальное кол-во извлекаемых рассылок
+   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
+   * @param result  куда следуют сложить результат
+   * @return есть ли ещё сообщения
+   * @throws AdminException ошибка выполнения команды
+   */
+  public boolean getNextDeliveriesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+    CountDeliveriesNext count = new CountDeliveriesNext();
+    count.setCount(pieceSize);
+    count.setReqId(reqId);
+    count.setTimeout(timeoutSec);
+    CountDeliveriesNextResp resp = client.send(count);
+    result[0] = resp.hasCount() ? resp.getCount() : 0;
+    return resp.getMoreDeliveries();
   }
 
   /**

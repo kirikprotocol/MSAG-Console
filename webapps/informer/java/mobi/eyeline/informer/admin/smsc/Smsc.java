@@ -48,8 +48,6 @@ public class Smsc {
 
   private Map<String, Collection<Integer>> temporaryErrors = new HashMap<String, Collection<Integer>>();
 
-  private int defaultValidityPeriod;
-
   private int minValidityPeriod;
 
   private int maxValidityPeriod;
@@ -75,7 +73,6 @@ public class Smsc {
     vlrUssdServiceOp = s.getInt("ussdPushVlrTag");
     timeout = s.getInt("timeout");
     rangeOfAddress = s.getInt("rangeOfAddress");
-    defaultValidityPeriod = s.getInt("defaultValidityPeriod");
     maxValidityPeriod = s.getInt("maxValidityPeriod");
     minValidityPeriod = s.getInt("minValidityPeriod");
     interConnectTimeout = s.getInt("interConnectPeriod", 60);
@@ -108,7 +105,6 @@ public class Smsc {
     s.setInt("ussdPushVlrTag", vlrUssdServiceOp);
     s.setInt("timeout", timeout);
     s.setInt("rangeOfAddress", rangeOfAddress);
-    s.setInt("defaultValidityPeriod", defaultValidityPeriod);
     s.setInt("maxValidityPeriod", maxValidityPeriod);
     s.setInt("minValidityPeriod", minValidityPeriod);
     s.setInt("interConnectPeriod", interConnectTimeout);
@@ -124,7 +120,6 @@ public class Smsc {
 
   void validate() throws AdminException {
     vh.checkGreaterOrEqualsTo("maxValidityPeriod", maxValidityPeriod, 0);
-    vh.checkGreaterOrEqualsTo("defaultValidityPeriod", defaultValidityPeriod, 0);
     vh.checkGreaterOrEqualsTo("minValidityPeriod", minValidityPeriod, 0);
     vh.checkGreaterThan("timeout", timeout, 0);
     vh.checkNotEmpty("host", host);
@@ -171,14 +166,6 @@ public class Smsc {
 
   public void setMaxValidityPeriod(int maxValidityPeriod)  {
     this.maxValidityPeriod = maxValidityPeriod;
-  }
-
-  public int getDefaultValidityPeriod() {
-    return defaultValidityPeriod;
-  }
-
-  public void setDefaultValidityPeriod(int defaultValidityPeriod) {
-    this.defaultValidityPeriod = defaultValidityPeriod;
   }
 
   public int getMinValidityPeriod() {
@@ -344,7 +331,6 @@ public class Smsc {
 
     Smsc smsc = (Smsc) o;
 
-    if (defaultValidityPeriod != smsc.defaultValidityPeriod) return false;
     if (interfaceVersion != smsc.interfaceVersion) return false;
     if (maxValidityPeriod != smsc.maxValidityPeriod) return false;
     if (minValidityPeriod != smsc.minValidityPeriod) return false;
@@ -434,7 +420,6 @@ public class Smsc {
     s.vlrUssdServiceOp = vlrUssdServiceOp;
     s.timeout = timeout;
     s.rangeOfAddress = rangeOfAddress;
-    s.defaultValidityPeriod = defaultValidityPeriod;
     s.maxValidityPeriod = maxValidityPeriod;
     s.minValidityPeriod = minValidityPeriod;
     s.immediateErrors.addAll(immediateErrors);

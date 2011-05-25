@@ -31,7 +31,6 @@ public class SmscTest {
     smsc.setVlrUssdServiceOp(562);
     smsc.setTimeout(12);
     smsc.setRangeOfAddress(34);
-    smsc.setDefaultValidityPeriod(1);
     smsc.setMaxValidityPeriod(2);
     smsc.setMinValidityPeriod(3);
     smsc.addImmediateError(1254);
@@ -39,18 +38,6 @@ public class SmscTest {
     smsc.addTempError("1m", new HashSet<Integer>(){{add(1453);}});
   }
 
-
-  @SuppressWarnings({"UnusedAssignment"})
-  @Test
-  public void testDefaultValidity() throws AdminException{
-    try{
-      smsc.setDefaultValidityPeriod(-1);
-      smsc.validate(); assertTrue(false);
-    }catch (AdminException e){}
-    smsc.setDefaultValidityPeriod(0);
-    smsc.setDefaultValidityPeriod(234);
-    assertEquals(234, smsc.getDefaultValidityPeriod());
-  }
 
   @SuppressWarnings({"UnusedAssignment"})
   @Test
@@ -306,7 +293,6 @@ public class SmscTest {
     smsc.setVlrUssdServiceOp(562);
     smsc.setTimeout(12);
     smsc.setRangeOfAddress(34);
-    smsc.setDefaultValidityPeriod(1);
     smsc.setMaxValidityPeriod(2);
     smsc.setMinValidityPeriod(3);
     smsc.addImmediateError(1254);

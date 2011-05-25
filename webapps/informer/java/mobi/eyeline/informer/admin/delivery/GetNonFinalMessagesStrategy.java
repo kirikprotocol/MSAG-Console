@@ -25,6 +25,14 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
   int failedMsgs = 0;
   int expMsgs = 0;
 
+  private int timeoutSec;
+  private int messagesCountPiece;
+
+  GetNonFinalMessagesStrategy(int timeoutSec, int messagesCountPiece) {
+    this.timeoutSec = timeoutSec;
+    this.messagesCountPiece = messagesCountPiece;
+  }
+
   private boolean[] extendArray(boolean[] arr, int toSize) {
     boolean[] newArr = new boolean[toSize];
     System.arraycopy(arr, 0, newArr, 0, arr.length);
@@ -143,7 +151,15 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     if (hasNewStatus) {
       MessageFilter f = new MessageFilter(messageFilter);
       f.setStates(MessageState.New);
-      newMsgs = conn.countMessages(f);
+      int reqId = conn.countMessages(f);
+      int[] tmpRes = new int[]{0};
+      int res = 0;
+      boolean more;
+      do {
+        more= conn.getNextMessagesCount(reqId, messagesCountPiece, timeoutSec, tmpRes);
+        res+=tmpRes[0];
+      }while (more);
+      newMsgs = res;
     }
 
     MessageFilter f = new MessageFilter(messageFilter);
@@ -202,7 +218,7 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     }
 
     protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Message> result) throws AdminException {
-      return connection.getNextMessages(reqId, pieceSize, result);
+      return connection.getNextMessages(reqId, pieceSize, timeoutSec, result);
     }
   }
 }
