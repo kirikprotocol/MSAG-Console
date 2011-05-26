@@ -146,29 +146,13 @@ void RollingFileAppender::rollover() throw()
   currentFilePos = 0;
 }
 
-#ifdef NEWLOGGER
-size_t RollingFileAppender::logPrefix(char* buf, size_t bufsize, timeval tp, const char logLevelName, const char* category) throw()
-#else
 void RollingFileAppender::log(timeval tp,const char logLevelName, const char * const category, const char * const message) throw()
-#endif
 {
   //D dd-mm hh:mm:ss,sss TTT CatLast___:message
   ::tm lcltm;
   ::localtime_r(&tp.tv_sec, &lcltm);
   pthread_t thrId=::pthread_self();
   long msec=tp.tv_usec/1000;
-#ifdef NEWLOGGER
-  int res = sprintf(buf,"%c %02d-%02d %02d:%02d:%02d,%03d %03u %10.10s: ",
-                    logLevelName, lcltm.tm_mday, lcltm.tm_mon+1, lcltm.tm_hour,
-                    lcltm.tm_min, lcltm.tm_sec, int(msec), unsigned(thrId), category);
-  return size_t(res);
-}
-
-void RollingFileAppender::write(timeval /*tp*/, char* buffer, size_t length) throw()
-{
-  buffer[length++] = '\n';
-  const size_t desiredLength = length;
-#else
   char timeStr[32];
   const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m %H:%M:%S", &lcltm);
   timeStr[timeStrLength] = 0;
@@ -176,7 +160,6 @@ void RollingFileAppender::write(timeval /*tp*/, char* buffer, size_t length) thr
   TmpBuf<char, 4096> buffer(desiredLength+1);
   const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u %10.10s: %s\n", logLevelName, timeStr, unsigned(msec), unsigned(thrId), category, message);
   buffer[desiredLength] = 0;
-#endif
 
   try
   {

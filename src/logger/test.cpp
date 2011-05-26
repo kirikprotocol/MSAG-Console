@@ -56,7 +56,7 @@ unsigned long getMillisec()
 
 void testLoggers(Logger** loggers, const size_t count, const Logger::LogLevel & logLevel)
 {
-  // std::cerr << "***" << std::endl;
+  std::cerr << "***" << std::endl;
   for (int i = 0; i < count; i++) {
     loggers[i]->log_(logLevel, "/// %s, %s\\\\\\", Logger::getLogLevel(logLevel), loggers[i]->getName());
     MutexGuard guard(countersMutex);
@@ -68,7 +68,7 @@ void testLoggers(Logger** loggers, const size_t count, const Logger::LogLevel & 
 
 void testLoggers(Logger** loggers, const size_t count, const Logger::LogLevel & logLevel, int num)
 {
-  // std::cerr << "***" << std::endl;
+  std::cerr << "***" << std::endl;
   for (int i = 0; i < count; i++) {
     loggers[i]->log(logLevel, "/// #%6.6u | %s, %s\\\\\\", num, Logger::getLogLevel(logLevel), loggers[i]->getName());
     MutexGuard guard(countersMutex);
@@ -103,7 +103,7 @@ public:
         if (isStopping)
           return 0;
       }
-      // std::cerr << "*********************" << std::endl;
+      std::cerr << "*********************" << std::endl;
       testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_DEBUG, i);
       testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_INFO, i);
       testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_WARN, i);
