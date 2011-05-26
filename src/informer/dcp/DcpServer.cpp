@@ -1093,13 +1093,13 @@ bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t tim
 {
   alm::IActivityLogMiner& alm=getCore()->getALM();
 
-  bool more=false;
+  bool hasMore=false;
   int cnt=0;
   int sz=0;
   alm::ALMResult res;
   alm::ALMResult* resPtr = miv ? &res : 0;
   const msgtime_type endTime = currentTimeSeconds() + (timeout ? timeout : 3600*24);
-  while(cnt<count && sz<65536 && (more=alm.getNext(reqId,endTime,resPtr)))
+  while(cnt<count && sz<65536 && alm.getNext(reqId,endTime,resPtr,hasMore))
   {
     ++cnt;
     if (!miv) continue;
@@ -1144,7 +1144,7 @@ bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t tim
   }
   if ( counter ) { *counter = cnt; }
   alm.pauseReq(reqId);
-  return more;
+  return hasMore;
 }
 
 void DcpServer::handle(const messages::CountMessages& inmsg)

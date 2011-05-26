@@ -65,7 +65,8 @@ struct ALMResult{
 class IActivityLogMiner{
 public:
   virtual int createRequest(dlvid_type dlvId,const ALMRequestFilter& filter)=0;
-  virtual bool getNext(int reqId, msgtime_type endTime, ALMResult* result)=0;
+  virtual bool getNext(int reqId, msgtime_type endTime,
+                       ALMResult* result, bool& hasMore )=0;
   virtual void pauseReq(int reqId)=0;
   // virtual int countRecords(dlvid_type dlvId,const ALMRequestFilter& filter)=0;
 };

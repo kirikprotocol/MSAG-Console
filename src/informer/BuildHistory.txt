@@ -1,3 +1,6 @@
+2011-05-26 09:43 bukind
+  bugfix: ALM returned NULL record in result array on timeout
+
 =====================================================================
 2011-05-25 14:26 bukind informer-build-20110525
 2011-05-24 12:33 bukind

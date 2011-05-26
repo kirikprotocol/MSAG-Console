@@ -94,8 +94,10 @@ std::string::size_type skipField(const std::string& str,std::string::size_type p
 }
 
 
-bool ActivityLogMiner::getNext(int reqId, msgtime_type endTime, ALMResult* result)
+bool ActivityLogMiner::getNext(int reqId, msgtime_type endTime,
+                               ALMResult* result, bool& hasMore)
 {
+  hasMore = false;
   Request* req;
   {
     sync::MutexGuard mg(mtx);
@@ -113,7 +115,7 @@ bool ActivityLogMiner::getNext(int reqId, msgtime_type endTime, ALMResult* resul
     req->ref();
   }
   try {
-    bool rv=parseRecord(req,endTime,result);
+    bool rv=parseRecord(req,endTime,result,hasMore);
     sync::MutexGuard mg(mtx);
     req->unref();
     req->busy=false;
@@ -146,7 +148,8 @@ int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filt
  */
 
 
-bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime, ALMResult* result)
+bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime,
+                                   ALMResult* result, bool& hasMore )
 {
   using smsc::core::buffers::File;
   File& f=req->f;
@@ -218,7 +221,10 @@ bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime, ALMResult
         f.Close();
         req->offset=0;
         nextFile=true;
-        if (endTimeReached(endTime)) return true;
+        if (endTimeReached(endTime)) {
+            hasMore = true;
+            return false;
+        }
         continue;
       }
       {
@@ -229,7 +235,10 @@ bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime, ALMResult
           f.Close();
           req->offset=0;
           nextFile=true;
-          if (endTimeReached(endTime)) return true;
+          if (endTimeReached(endTime)) {
+              hasMore = true;
+              return false;
+          }
           continue;
         }
       }
@@ -237,7 +246,10 @@ bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime, ALMResult
     }
 
     if ( ++req->linesRead % 10000 == 0 ) {
-        if (endTimeReached(endTime)) return true;
+        if (endTimeReached(endTime)) {
+            hasMore = true;
+            return false;
+        }
     }
 
     if(!f.ReadLine(line))
@@ -410,6 +422,7 @@ bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime, ALMResult
     break;
   }
   req->offset=f.Pos();
+  hasMore = true;
   return true;
 }
 
