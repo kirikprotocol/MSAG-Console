@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.LongOperationController;
 
@@ -155,6 +156,9 @@ public class MessagesByRecController extends LongOperationController {
 
 
   public synchronized DataTableModel getRecords() {
+
+    if (getState() != 2)
+      return new EmptyDataTableModel();
 
     return new DataTableModel() {
 
