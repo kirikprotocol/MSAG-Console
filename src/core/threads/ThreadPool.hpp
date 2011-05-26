@@ -86,6 +86,10 @@ public:
   {
     defaultStackSize=size;
   }
+
+  //Returns threads number limitation.
+  //Note: Zero means no limit is set.
+  unsigned int getMaxThreads(void) const;
   //Note: (maxThreads == 0) means no limit!
   void setMaxThreads(unsigned int max_count);
 

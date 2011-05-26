@@ -103,6 +103,14 @@ int ThreadPool::getActiveThreads(void) const
   return usedThreads.Count();
 }
 
+//Returns threads number limitation.
+//Note: Zero means no limit is set.
+unsigned int ThreadPool::getMaxThreads(void) const
+{
+  MutexGuard mg(lock);
+  return maxThreads;
+}
+
 //Note: (maxThreads == 0) means no limit!
 void ThreadPool::setMaxThreads(unsigned int max_count)
 {
