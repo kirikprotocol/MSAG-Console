@@ -13,6 +13,8 @@ import javax.faces.model.SelectItem;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -50,7 +52,12 @@ public class MessagesByRecController extends LongOperationController {
 
   public void clearFilter() {
     reset();
-    records.clear();
+    try{
+      lock.lock();
+      records.clear();
+    }finally {
+      lock.unlock();
+    }
     initUser();
     setFromDate(null);
     setTillDate(null);
@@ -89,10 +96,10 @@ public class MessagesByRecController extends LongOperationController {
     return ret;
   }
 
+  private Lock lock = new ReentrantLock();
 
   @Override
   public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
-    records.clear();
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
     deliveryFilter.setStartDateFrom(fromDate);
@@ -102,43 +109,48 @@ public class MessagesByRecController extends LongOperationController {
     }
 
     setCurrentAndTotal(0, config.countDeliveries(getUser().getLogin(), deliveryFilter));
+    try{
+      lock.lock();
+      records.clear();
+      config.getDeliveries(getUser().getLogin(), deliveryFilter, 1000,
+          new Visitor<Delivery>() {
+            public boolean visit(Delivery Delivery) throws AdminException {
+              final int deliveryId = Delivery.getId();
+              final String name = Delivery.getName();
+              final String userId = Delivery.getOwner();
+              final User owner = config.getUser(userId);
 
-    config.getDeliveries(getUser().getLogin(), deliveryFilter, 1000,
-        new Visitor<Delivery>() {
-          public boolean visit(Delivery Delivery) throws AdminException {
-            final int deliveryId = Delivery.getId();
-            final String name = Delivery.getName();
-            final String userId = Delivery.getOwner();
-            final User owner = config.getUser(userId);
+              MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? Delivery.getStartDate() : fromDate,
+                  tillDate != null ? tillDate : Delivery.getEndDate() != null ? Delivery.getEndDate() : new Date());
+              messageFilter.setMsisdnFilter(msisdn.getSimpleAddress());
 
-            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? Delivery.getStartDate() : fromDate,
-                tillDate != null ? tillDate : Delivery.getEndDate() != null ? Delivery.getEndDate() : new Date());
-            messageFilter.setMsisdnFilter(msisdn.getSimpleAddress());
-
-            config.getMessagesStates(getUser().getLogin(), messageFilter, 1000,
-                new Visitor<Message>() {
-                  public boolean visit(Message message) throws AdminException {
-                    String errString = null;
-                    Integer errCode = message.getErrorCode();
-                    if (errCode != null) {
-                      try {
-                        errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode." + errCode);
+              config.getMessagesStates(getUser().getLogin(), messageFilter, 1000,
+                  new Visitor<Message>() {
+                    public boolean visit(Message message) throws AdminException {
+                      String errString = null;
+                      Integer errCode = message.getErrorCode();
+                      if (errCode != null) {
+                        try {
+                          errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode." + errCode);
+                        }
+                        catch (MissingResourceException ex) {
+                          errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode.unknown");
+                        }
                       }
-                      catch (MissingResourceException ex) {
-                        errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode.unknown");
-                      }
+                      MessagesByRecRecord rec = new MessagesByRecRecord(message.getAbonent().getSimpleAddress(), deliveryId, userId, owner, name, message.getText(), message.getDate(), message.getState(), errString);
+                      records.add(rec);
+                      return !isCancelled();
                     }
-                    MessagesByRecRecord rec = new MessagesByRecRecord(message.getAbonent().getSimpleAddress(), deliveryId, userId, owner, name, message.getText(), message.getDate(), message.getState(), errString);
-                    records.add(rec);
-                    return !isCancelled();
                   }
-                }
-            );
-            setCurrent(getCurrent() + 1);
-            return !isCancelled();
+              );
+              setCurrent(getCurrent() + 1);
+              return !isCancelled();
+            }
           }
-        }
-    );
+      );
+    }finally {
+      lock.unlock();
+    }
   }
 
 
@@ -147,61 +159,74 @@ public class MessagesByRecController extends LongOperationController {
     return new DataTableModel() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+        try{
+          lock.lock();
+          // Сортируем записи
+          if (sortOrder != null && !records.isEmpty()) {
+            Collections.sort(records, new Comparator<MessagesByRecRecord>() {
 
-        // Сортируем записи
-        if (sortOrder != null && !records.isEmpty()) {
-          Collections.sort(records, new Comparator<MessagesByRecRecord>() {
+              public int compare(MessagesByRecRecord o1, MessagesByRecRecord o2) {
 
-            public int compare(MessagesByRecRecord o1, MessagesByRecRecord o2) {
-
-              final int mul = sortOrder.isAsc() ? 1 : -1;
-              if (sortOrder.getColumnId().equals("name")) {
-                return mul * o1.getName().compareTo(o2.getName());
+                final int mul = sortOrder.isAsc() ? 1 : -1;
+                if (sortOrder.getColumnId().equals("name")) {
+                  return mul * o1.getName().compareTo(o2.getName());
+                }
+                if (sortOrder.getColumnId().equals("userId")) {
+                  return mul * o1.getUserId().compareTo(o2.getUserId());
+                }
+                if (sortOrder.getColumnId().equals("text")) {
+                  if (o1.getText() == null && o1.getText() == null) return 0;
+                  if (o1.getText() == null) return mul;
+                  return mul * o1.getText().compareTo(o2.getText());
+                }
+                if (sortOrder.getColumnId().equals("deliveryDate")) {
+                  return mul * o1.getDeliveryDate().compareTo(o2.getDeliveryDate());
+                }
+                if (sortOrder.getColumnId().equals("state")) {
+                  return mul * o1.getState().compareTo(o2.getState());
+                }
+                if (sortOrder.getColumnId().equals("errorString")) {
+                  return mul * o1.getErrorString().compareTo(o2.getErrorString());
+                }
+                return 0;
               }
-              if (sortOrder.getColumnId().equals("userId")) {
-                return mul * o1.getUserId().compareTo(o2.getUserId());
-              }
-              if (sortOrder.getColumnId().equals("text")) {
-                if (o1.getText() == null && o1.getText() == null) return 0;
-                if (o1.getText() == null) return mul;
-                return mul * o1.getText().compareTo(o2.getText());
-              }
-              if (sortOrder.getColumnId().equals("deliveryDate")) {
-                return mul * o1.getDeliveryDate().compareTo(o2.getDeliveryDate());
-              }
-              if (sortOrder.getColumnId().equals("state")) {
-                return mul * o1.getState().compareTo(o2.getState());
-              }
-              if (sortOrder.getColumnId().equals("errorString")) {
-                return mul * o1.getErrorString().compareTo(o2.getErrorString());
-              }
-              return 0;
-            }
-          });
-        }
-
-        List<MessagesByRecRecord> result = new LinkedList<MessagesByRecRecord>();
-        for (Iterator<MessagesByRecRecord> i = records.iterator(); i.hasNext() && count > 0;) {
-          MessagesByRecRecord r = i.next();
-          if (--startPos < 0) {
-            result.add(r);
-            count--;
+            });
           }
+
+          List<MessagesByRecRecord> result = new LinkedList<MessagesByRecRecord>();
+          for (Iterator<MessagesByRecRecord> i = records.iterator(); i.hasNext() && count > 0;) {
+            MessagesByRecRecord r = i.next();
+            if (--startPos < 0) {
+              result.add(r);
+              count--;
+            }
+          }
+          return result;
+        }finally {
+          lock.unlock();
         }
-        return result;
       }
 
       public int getRowsCount() {
-        return records.size();
+        try{
+          lock.lock();
+          return records.size();
+        }finally {
+          lock.unlock();
+        }
       }
     };
   }
 
   @Override
   protected void _download(PrintWriter writer) throws IOException {
-
-    for (MessagesByRecRecord r : records) {
-      r.printCSV(writer);
+    try{
+      lock.lock();
+      for (MessagesByRecRecord r : records) {
+        r.printCSV(writer);
+      }
+    }finally {
+      lock.unlock();
     }
   }
 
