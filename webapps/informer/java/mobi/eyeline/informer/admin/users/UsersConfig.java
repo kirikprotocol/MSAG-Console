@@ -96,7 +96,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         UserCPsettings.Protocol protocol = UserCPsettings.Protocol.valueOf(s.getString("protocol","sftp"));
         ucps.setProtocol(protocol);
         if(protocol!=UserCPsettings.Protocol.file) {
-          if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {        //todo refactoring (maybe strategy)
+          if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {        
             ucps.setHost(s.getString("host"));
             if(s.containsParam("port")) {ucps.setPort(s.getInt("port"));}
           }else {
@@ -117,7 +117,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         period = s.getString("periodInMin", null);
         ucps.setPeriodInMin(period == null || period.length() == 0 ? 5 : Long.parseLong(period));
 
-        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       //todo refactoring (maybe strategy)
+        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       
           ucps.setDirectory(s.getString("directory"));
         }
         ucps.setEncoding(s.getString("encoding","UTF-8"));
@@ -287,7 +287,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       section.addSection(s);
       s.setString("protocol",ucps.getProtocol().toString());
       if(ucps.getProtocol() != UserCPsettings.Protocol.file) {
-        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       //todo refactoring (maybe strategy)
+        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       
           s.setString("host",ucps.getHost());
           if(ucps.getPort()!=null && ucps.getPort()!=0){
             s.setInt("port",ucps.getPort());
@@ -305,7 +305,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       s.setString("periodInMin", ucps.getPeriodInMin() == 0 ? "" : Long.toString(ucps.getPeriodInMin()));
       s.setString("activePeriodStart", ucps.getActivePeriodStart() == null ? "" : ucps.getActivePeriodStart().toString());
       s.setString("activePeriodEnd", ucps.getActivePeriodEnd() == null ? "" : ucps.getActivePeriodEnd().toString());
-      if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {               //todo refactoring (maybe strategy)
+      if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {               
         s.setString("directory",ucps.getDirectory());
       }
       s.setString("encoding",ucps.getEncoding());

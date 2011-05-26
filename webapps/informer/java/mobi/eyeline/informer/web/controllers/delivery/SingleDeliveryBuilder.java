@@ -47,7 +47,7 @@ class SingleDeliveryBuilder implements DeliveryBuilder {
   }
 
   private Delivery createSingleTextDelivery(DeliveryPrototype delivery, final BufferedReader r) throws AdminException {
-    return config.createSingleTextDelivery(owner.getLogin(), owner.getPassword(), delivery, new DataSource<Address>() {
+    return config.createSingleTextDelivery(owner.getLogin(), delivery, new DataSource<Address>() {
       public Address next() throws AdminException {
         if (canceled) {
           return null;
@@ -71,7 +71,7 @@ class SingleDeliveryBuilder implements DeliveryBuilder {
   }
 
   private Delivery createMultiTextDelivery(DeliveryPrototype delivery, final BufferedReader r) throws AdminException {
-    return config.createDelivery(owner.getLogin(), owner.getPassword(), delivery, new DataSource<Message>() {
+    return config.createDelivery(owner.getLogin(), delivery, new DataSource<Message>() {
       public Message next() throws AdminException {
         if (canceled) {
           return null;
@@ -116,9 +116,9 @@ class SingleDeliveryBuilder implements DeliveryBuilder {
       deliveryId = d.getId();
 
       if (!canceled) {
-        config.activateDelivery(owner.getLogin(), owner.getPassword(), d.getId());
+        config.activateDelivery(owner.getLogin(), d.getId());
       } else {
-        config.dropDelivery(owner.getLogin(), owner.getPassword(), d.getId());
+        config.dropDelivery(owner.getLogin(), d.getId());
       }
 
       current = maximum;
@@ -165,7 +165,7 @@ class SingleDeliveryBuilder implements DeliveryBuilder {
 
   public void removeDelivery() throws AdminException {
     if (deliveryId != null)
-      config.dropDelivery(owner.getLogin(), owner.getPassword(), deliveryId);
+      config.dropDelivery(owner.getLogin(), deliveryId);
   }
 
   public void shutdown() throws AdminException {

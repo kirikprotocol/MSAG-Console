@@ -74,7 +74,7 @@ public class ErrorStatsController extends LongOperationController{
       return null;
     }
     try {
-      delivery = informerStrategy.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+      delivery = informerStrategy.getDelivery(user.getLogin(), deliveryId);
     } catch (AdminException e) {
       addError(e);
       return null;
@@ -211,17 +211,17 @@ public class ErrorStatsController extends LongOperationController{
     }
 
     @Override
-    public int countMessages(String user, String password, MessageFilter filter) throws AdminException{
+    public int countMessages(String user, MessageFilter filter) throws AdminException{
       return config.countArchiveMessages(user, filter);
     }
 
     @Override
-    public void getMessagesStates(String user, String password, MessageFilter filter, int pieceSize, Visitor<Message> visitor) throws AdminException{
+    public void getMessagesStates(String user, MessageFilter filter, int pieceSize, Visitor<Message> visitor) throws AdminException{
       config.getArchiveMessages(user, filter, pieceSize, visitor);
     }
 
     @Override
-    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
+    public Delivery getDelivery(String login, int deliveryId) throws AdminException {
       return config.getArchiveDelivery(login, deliveryId);
     }
   }
@@ -235,18 +235,18 @@ public class ErrorStatsController extends LongOperationController{
     }
 
     @Override
-    public int countMessages(String user, String password, MessageFilter filter) throws AdminException{
-      return config.countMessages(user, password, filter);
+    public int countMessages(String user, MessageFilter filter) throws AdminException{
+      return config.countMessages(user, filter);
     }
 
     @Override
-    public void getMessagesStates(String user, String password, MessageFilter filter, int pieceSize, Visitor<Message> visitor) throws AdminException{
-      config.getMessagesStates(user, password, filter, pieceSize, visitor);
+    public void getMessagesStates(String user,  MessageFilter filter, int pieceSize, Visitor<Message> visitor) throws AdminException{
+      config.getMessagesStates(user, filter, pieceSize, visitor);
     }
 
     @Override
-    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
-      return config.getDelivery(login, password, deliveryId);
+    public Delivery getDelivery(String login, int deliveryId) throws AdminException {
+      return config.getDelivery(login, deliveryId);
     }
   }
 

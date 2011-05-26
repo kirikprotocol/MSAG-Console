@@ -137,7 +137,7 @@ public class RegionsUploadController extends UploadController {
       current = 1;
 
       if (!isStoped())
-        getConfig().updateRegionsConfiguration(regions);
+        getConfig().updateRegionsConfiguration(regions, user);
 
       uploaded = regions.size();
 

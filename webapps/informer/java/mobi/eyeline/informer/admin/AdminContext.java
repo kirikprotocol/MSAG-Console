@@ -454,15 +454,6 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   // DELIVERIES ====================================================================================================================
 
-  //todo Надо бы убрать пароль из всех методов по работе с рассылками.
-
-  @Override
-  public Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-    User u = getUser(login);
-    return createDeliveryWithIndividualTexts(u.getLogin(), u.getPassword(), delivery, msDataSource);
-  }
-
-
   private void checkHasNotRestriction(String errorMessage, String login) throws AdminException {
     RestrictionsFilter filter = new RestrictionsFilter();
     Date startDate = new Date();
@@ -478,31 +469,27 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
 
-  @Deprecated
-  public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+  public Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
     checkHasNotRestriction("creation_restricted", login);
 
     delivery2UserDep.checkDelivery(delivery);
 
-    User u = usersManager.getUser(delivery.getOwner());
+    User u = getUser(delivery.getOwner());
     if(u.isCreateCDR()) {
       delivery.setEnableMsgFinalizationLogging(true);
     }
     if (delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS) != null || delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS) != null)
       delivery.setEnableStateChangeLogging(true);
-    return deliveryManager.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
+    return deliveryManager.createDeliveryWithIndividualTexts(login, u.getPassword(), delivery, msDataSource);
   }
 
-  public Delivery createDeliveryWithSingleText(String login, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
-    User u = getUser(login);
-    return createDeliveryWithSingleText(login, u.getPassword(), delivery, msDataSource);
-  }
 
   public Delivery createDeliveryWithSingleTextWithData(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-    User u = getUser(login);
     checkHasNotRestriction("creation_restricted", login);
 
     delivery2UserDep.checkDelivery(delivery);
+
+    User u = getUser(login);
 
     if(u.isCreateCDR()) {
       delivery.setEnableMsgFinalizationLogging(true);
@@ -512,8 +499,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryManager.createDeliveryWithSingleTextWithData(login, u.getPassword(), delivery, msDataSource);
   }
 
-  @Deprecated
-  public Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
+  public Delivery createDeliveryWithSingleText(String login, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
     checkHasNotRestriction("creation_restricted", login);
 
     delivery2UserDep.checkDelivery(delivery);
@@ -524,12 +510,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
     if (delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS) != null || delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS) != null)
       delivery.setEnableStateChangeLogging(true);
-    return deliveryManager.createDeliveryWithSingleText(login, password, delivery, msDataSource);
-  }
-
-  public void modifyDelivery(String login, Delivery delivery) throws AdminException {
-    User user = getUser(login);
-    modifyDelivery(login, user.getPassword(), delivery);
+    return deliveryManager.createDeliveryWithSingleText(login, u.getPassword(), delivery, msDataSource);
   }
 
   @Override
@@ -537,13 +518,14 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     checkHasNotRestriction("creation_restricted", login);
   }
 
-  @Deprecated
-  public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
+  public void modifyDelivery(String login, Delivery delivery) throws AdminException {
     delivery2UserDep.checkDelivery(delivery);
+
+    User u =  usersManager.getUser(login);
 
     try {
       lockDelivery(delivery.getId());
-      deliveryManager.modifyDelivery(login, password, delivery);
+      deliveryManager.modifyDelivery(login, u.getPassword(), delivery);
     } finally {
       unlockDelivery(delivery.getId());
     }
@@ -551,26 +533,15 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   public Delivery setDeliveryRestriction(String login, int deliveryId, boolean restriction) throws AdminException {
     User user = getUser(login);
-    return setDeliveryRestriction(login, user.getPassword(), deliveryId, restriction);
-  }
-
-  @Deprecated
-  public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
     try {
       lockDelivery(deliveryId);
-      Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
+      Delivery d = deliveryManager.getDelivery(login, user.getPassword(), deliveryId);
       d.setProperty(UserDataConsts.RESTRICTION, Boolean.toString(restriction));
-      deliveryManager.modifyDelivery(login, password, d);
+      deliveryManager.modifyDelivery(login, user.getPassword(), d);
       return d;
     } finally {
       unlockDelivery(deliveryId);
     }
-  }
-
-  @Override
-  public void dropDelivery(String login, int deliveryId) throws AdminException {
-    User u = getUser(login);
-    dropDelivery(login, u.getPassword(), deliveryId);
   }
 
   public void archivateDelivery(String login, int deliveryId) throws AdminException {
@@ -584,26 +555,26 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
         throw new IntegrityException("siebel.delivery.remove");
       }
-      setDeliveryRestriction(login, u.getPassword(), deliveryId, false);
+      setDeliveryRestriction(login, deliveryId, false);
       deliveryManager.archivateDelivery(login, u.getPassword(), deliveryId);
     } finally {
       unlockDelivery(deliveryId);
     }
   }
 
-  @Deprecated
-  public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
+  public void dropDelivery(String login, int deliveryId) throws AdminException {
+    User user = getUser(login);
     try {
       lockDelivery(deliveryId);
-      Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
+      Delivery d = deliveryManager.getDelivery(login, user.getPassword(), deliveryId);
       if(d == null) {
         return;
       }
       if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null && !d.getOwner().equals(login)) {
         throw new IntegrityException("siebel.delivery.remove");
       }
-      setDeliveryRestriction(login, password, deliveryId, false);
-      deliveryManager.dropDelivery(login, password, deliveryId);
+      setDeliveryRestriction(login, deliveryId, false);
+      deliveryManager.dropDelivery(login, user.getPassword(), deliveryId);
     } finally {
       unlockDelivery(deliveryId);
     }
@@ -613,11 +584,6 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   public void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
     User u = getUser(login);
     addMessages(login, u.getPassword(), messageSource, deliveryId);
-  }
-
-  public void addSingleMessages(String login, DataSource<Address> messageSource, int deliveryId) throws AdminException {
-    User u = getUser(login);
-    addSingleTextMessages(login, u.getPassword(), messageSource, deliveryId);
   }
 
   public void addSingleMessagesWithData(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
@@ -630,12 +596,6 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
-  @Override
-  public void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException {
-    User u = getUser(login);
-    getMessagesStates(login, u.getPassword(), filter, deliveryId, visitor);
-  }
-
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
     try {
       lockDelivery(deliveryId);
@@ -645,50 +605,32 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
-  public void addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+  public void addSingleTextMessages(String login, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+    User u = getUser(login);
     try {
       lockDelivery(deliveryId);
-      deliveryManager.addSingleTextMessages(login, password, msDataSource, deliveryId);
+      deliveryManager.addSingleTextMessages(login, u.getPassword(), msDataSource, deliveryId);
     } finally {
       unlockDelivery(deliveryId);
     }
   }
 
-  public void dropMessages(String login, String password, int deliveryId, Collection<Long> messageIds) throws AdminException {
-    try {
-      lockDelivery(deliveryId);
-      deliveryManager.dropMessages(login, password, deliveryId, messageIds);
-    } finally {
-      unlockDelivery(deliveryId);
-    }
+  public int countDeliveries(String login, DeliveryFilter deliveryFilter) throws AdminException {
+    User u = getUser(login);
+    return deliveryManager.countDeliveries(login, u.getPassword(), deliveryFilter);
   }
 
-  public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {
-    return deliveryManager.countDeliveries(login, password, deliveryFilter);
-  }
-
-  @Override
-  public Delivery getDelivery(String user, int deliveryId) throws AdminException {
-    User u = usersManager.getUser(user);
-    return getDelivery(user, u.getPassword(), deliveryId);
-  }
-
-  @Deprecated
-  public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
-    return deliveryManager.getDelivery(login, password, deliveryId);
+  public Delivery getDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    return deliveryManager.getDelivery(login, u.getPassword(), deliveryId);
   }
 
   public void cancelDelivery(String login, int deliveryId) throws AdminException {
     User u = getUser(login);
-    cancelDelivery(login, u.getPassword(), deliveryId);
-  }
-
-  @Deprecated
-  public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
     try {
       lockDelivery(deliveryId);
-      setDeliveryRestriction(login, password, deliveryId, false);
-      deliveryManager.cancelDelivery(login, password, deliveryId);
+      setDeliveryRestriction(login, deliveryId, false);
+      deliveryManager.cancelDelivery(login, u.getPassword(), deliveryId);
     } finally {
       unlockDelivery(deliveryId);
     }
@@ -696,60 +638,53 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   public void pauseDelivery(String login, int deliveryId) throws AdminException {
     User u = getUser(login);
-    pauseDelivery(login, u.getPassword(), deliveryId);
-  }
-
-  @Deprecated
-  public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
     try {
       lockDelivery(deliveryId);
-      deliveryManager.pauseDelivery(login, password, deliveryId);
+      deliveryManager.pauseDelivery(login, u.getPassword(), deliveryId);
     } finally {
       unlockDelivery(deliveryId);
     }
   }
 
-  @Override
+
   public void activateDelivery(String login, int deliveryId) throws AdminException {
     User u = getUser(login);
-    activateDelivery(login, u.getPassword(), deliveryId);
-  }
-
-  @Deprecated
-  public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
     try {
       lockDelivery(deliveryId);
       checkHasNotRestriction("activation_restricted", login);
-      deliveryManager.activateDelivery(login, password, deliveryId);
+      deliveryManager.activateDelivery(login, u.getPassword(), deliveryId);
     } finally {
       unlockDelivery(deliveryId);
     }
   }
 
-  public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
-    return deliveryManager.getDeliveryStats(login, password, deliveryId);
+  public DeliveryStatistics getDeliveryStats(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    return deliveryManager.getDeliveryStats(login, u.getPassword(), deliveryId);
   }
 
   public void getDeliveries(String login, DeliveryFilter deliveryFilter, Visitor<Delivery> visitor) throws AdminException {
+    getDeliveries(login, deliveryFilter, 1000, visitor);
+  }
+
+  public void getDeliveries(String login, DeliveryFilter deliveryFilter, int pieceSize, Visitor<Delivery> visitor) throws AdminException {
     User u = getUser(login);
-    getDeliveries(login, u.getPassword(), deliveryFilter, 1000, visitor);
+    deliveryManager.getDeliveries(login, u.getPassword(), deliveryFilter, pieceSize, visitor);
   }
 
-  @Deprecated
-  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
-    deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
+  public void getMessagesStates(String login, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+    User u = getUser(login);
+    deliveryManager.getMessages(login, u.getPassword(), filter, _pieceSize, visitor);
   }
 
-  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
-    deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
+  public int countMessages(String login, MessageFilter messageFilter) throws AdminException {
+    User u = getUser(login);
+    return deliveryManager.countMessages(login, u.getPassword(), messageFilter);
   }
 
-  public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
-      return deliveryManager.countMessages(login, password, messageFilter);
-  }
-
-  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
-    return deliveryManager.getDeliveryStatusHistory(login, password, deliveryId);
+  public DeliveryStatusHistory getDeliveryStatusHistory(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    return deliveryManager.getDeliveryStatusHistory(login, u.getPassword(), deliveryId);
   }
 
   public void getDefaultDelivery(User u, DeliveryPrototype delivery) throws AdminException {

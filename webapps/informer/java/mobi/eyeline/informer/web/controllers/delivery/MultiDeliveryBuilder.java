@@ -53,7 +53,7 @@ class MultiDeliveryBuilder implements DeliveryBuilder {
   }
 
   private Delivery createSingleTextDelivery(DeliveryPrototype delivery, final BufferedReader r) throws AdminException {
-    return config.createSingleTextDelivery(deliveriesOwner.getLogin(), deliveriesOwner.getPassword(), delivery, new DataSource<Address>() {
+    return config.createSingleTextDelivery(deliveriesOwner.getLogin(), delivery, new DataSource<Address>() {
       public Address next() throws AdminException {
         if (canceled) {
           return null;
@@ -77,7 +77,7 @@ class MultiDeliveryBuilder implements DeliveryBuilder {
   }
 
   private Delivery createMultiTextDelivery(DeliveryPrototype delivery, final BufferedReader r) throws AdminException {
-    return config.createDelivery(deliveriesOwner.getLogin(), deliveriesOwner.getPassword(), delivery, new DataSource<Message>() {
+    return config.createDelivery(deliveriesOwner.getLogin(), delivery, new DataSource<Message>() {
       public Message next() throws AdminException {
         if (canceled) {
           return null;
@@ -136,7 +136,7 @@ class MultiDeliveryBuilder implements DeliveryBuilder {
           if (canceled)
             break;
 
-          config.activateDelivery(deliveriesOwner.getLogin(), deliveriesOwner.getPassword(), d.getId());
+          config.activateDelivery(deliveriesOwner.getLogin(), d.getId());
 
         } catch (Exception e) {
           try {
@@ -196,7 +196,7 @@ class MultiDeliveryBuilder implements DeliveryBuilder {
 
   public void removeDelivery() throws AdminException {
     for (int deliveryId : deliveryIds)
-      config.dropDelivery(deliveriesOwner.getLogin(), deliveriesOwner.getPassword(), deliveryId);
+      config.dropDelivery(deliveriesOwner.getLogin(), deliveryId);
   }
 
   public void shutdown() throws AdminException {

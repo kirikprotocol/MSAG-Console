@@ -27,8 +27,8 @@ class SimpleErrorStatsStrategy implements ErrorStatsStrategy{
     rowsMap.clear();
     MessageFilter filter = new MessageFilter(delivery.getId(), delivery.getStartDate(), delivery.getEndDate() == null ? new Date() : delivery.getEndDate());
     filter.setStates(MessageState.Delivered, MessageState.Expired, MessageState.Failed);
-    progressListener.setTotal(informerStrategy.countMessages(user.getLogin(), user.getPassword(), filter)+1);
-    informerStrategy.getMessagesStates(user.getLogin(), user.getPassword(), filter, 2000, new Visitor<Message>() {
+    progressListener.setTotal(informerStrategy.countMessages(user.getLogin(), filter)+1);
+    informerStrategy.getMessagesStates(user.getLogin(), filter, 2000, new Visitor<Message>() {
       @Override
       public boolean visit(Message value) throws AdminException {
         progressListener.incrementCurrent();

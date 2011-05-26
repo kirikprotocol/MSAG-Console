@@ -131,7 +131,6 @@ public class DeliveryStatProvider extends StatEntityProvider{
       while ((line = reader.readLine()) != null) {
         try {
           CSVTokenizer tokenizer = new CSVTokenizer(line);
-
           //   MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID
           if (tokenizer.hasMoreTokens()) {
             String minsec = tokenizer.nextToken();

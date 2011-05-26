@@ -85,7 +85,7 @@ public class DeliveryEditGroupController extends DeliveryController {
     boolean hasErrors = false;
     for (String i : ids) {
       try {
-        Delivery d = config.getDelivery(user.getLogin(), user.getPassword(), Integer.parseInt(i));
+        Delivery d = config.getDelivery(user.getLogin(), Integer.parseInt(i));
         if (d == null) {
           addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.deliveries.delivery.not.found", i);
         } else {
@@ -176,7 +176,7 @@ public class DeliveryEditGroupController extends DeliveryController {
           if (editMessageTimeToLive)
             d.setMessageTimeToLive(messageTimeToLive);
 
-          config.modifyDelivery(user.getLogin(), user.getPassword(), d);
+          config.modifyDelivery(user.getLogin(), d);
         }
       } catch (AdminException e) {
         addError(new DeliveryControllerException("delivery.edit.error", e, i));

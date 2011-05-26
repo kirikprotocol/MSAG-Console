@@ -158,7 +158,7 @@ public class MessageListController extends InformerController {
   private void loadDeliveryOptions() {
     if (deliveryId != null) {
       try {
-        Delivery delivery = strategy.getDelivery(u.getLogin(), u.getPassword(), deliveryId);
+        Delivery delivery = strategy.getDelivery(u.getLogin(), deliveryId);
         msgFilter.setFromDate(new Date(delivery.getStartDate().getTime()-60000));
         msgFilter.setTillDate(delivery.getEndDate() == null ? new Date(System.currentTimeMillis() + (24 * 60 * 60 * 1000)) : delivery.getEndDate());
         deliveryName = delivery.getName();
@@ -260,7 +260,7 @@ public class MessageListController extends InformerController {
     return DELIVERY_PARAM;
   }
 
-  private static final int MEMORY_LIMIT = 1000;
+  private static final int MEMORY_LIMIT = 10000;
 
   public String resendAll() {
     try {
@@ -329,7 +329,7 @@ public class MessageListController extends InformerController {
   }
 
   private void visit(Visitor<Message> visitor, MessageFilter filter) throws AdminException {
-    strategy.getMessagesStates(u.getLogin(), u.getPassword(), filter, visitor);
+    strategy.getMessagesStates(u.getLogin(), filter, visitor);
   }
 
   public DataTableModel getMessages() {
@@ -371,7 +371,7 @@ public class MessageListController extends InformerController {
 
       public int getRowsCount() {
         try {
-          return strategy.countMessages(u.getLogin(), u.getPassword(), filter);
+          return strategy.countMessages(u.getLogin(), filter);
         } catch (LocalizedException e) {
           logger.error(e, e);
           error = e.getMessage(getLocale());
@@ -435,7 +435,7 @@ public class MessageListController extends InformerController {
 
         final int[] count = new int[]{0};
 
-        strategy.getMessagesStates(u.getLogin(), u.getPassword(), filter, new Visitor<Message>() {
+        strategy.getMessagesStates(u.getLogin(), filter, new Visitor<Message>() {
           public boolean visit(Message value) throws AdminException {
             if (stop) {
               return false;
@@ -474,7 +474,7 @@ public class MessageListController extends InformerController {
       try {
         r[0] = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(workFile)));
         if (!isSingleText) {
-          strategy.addMessages(u.getLogin(), u.getPassword(), new DataSource<Message>() {
+          strategy.addMessages(u.getLogin(), new DataSource<Message>() {
             public Message next() throws AdminException {
               if (stop) {
                 return null;
@@ -495,7 +495,7 @@ public class MessageListController extends InformerController {
             }
           }, filter.getDeliveryId());
         } else {
-          strategy.addSingleTextMessages(u.getLogin(), u.getPassword(), new DataSource<Address>() {
+          strategy.addSingleTextMessages(u.getLogin(), new DataSource<Address>() {
             public Address next() throws AdminException {
               if (stop) {
                 return null;
@@ -547,7 +547,7 @@ public class MessageListController extends InformerController {
           }
           if (!stop) {
             resendCurrent = resendTotal;
-            strategy.activateDelivery(u.getLogin(), u.getPassword(), filter.getDeliveryId());
+            strategy.activateDelivery(u.getLogin(), filter.getDeliveryId());
           }
         } finally {
           try {
@@ -573,17 +573,17 @@ public class MessageListController extends InformerController {
 
     boolean isChangesAllowed();
 
-    Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
+    Delivery getDelivery(String login, int deliveryId) throws AdminException;
 
-    void getMessagesStates(String login, String password, MessageFilter filter, Visitor<Message> visitor) throws AdminException;
+    void getMessagesStates(String login, MessageFilter filter, Visitor<Message> visitor) throws AdminException;
 
-    int countMessages(String login, String password, MessageFilter filter) throws AdminException;
+    int countMessages(String login, MessageFilter filter) throws AdminException;
 
-    void addMessages(String login, String password, DataSource<Message> ds, int deliveryId) throws AdminException;
+    void addMessages(String login, DataSource<Message> ds, int deliveryId) throws AdminException;
 
-    void addSingleTextMessages(String login, String password, DataSource<Address> ds, int deliveryId) throws AdminException;
+    void addSingleTextMessages(String login, DataSource<Address> ds, int deliveryId) throws AdminException;
 
-    void activateDelivery(String login, String password, int deliveryId) throws AdminException;
+    void activateDelivery(String login, int deliveryId) throws AdminException;
 
   }
 
@@ -601,31 +601,31 @@ public class MessageListController extends InformerController {
     }
 
     @Override
-    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
-      return config.getDelivery(login, password, deliveryId);
+    public Delivery getDelivery(String login, int deliveryId) throws AdminException {
+      return config.getDelivery(login, deliveryId);
     }
 
     @Override
-    public void getMessagesStates(String login, String password, MessageFilter filter, Visitor<Message> visitor) throws AdminException {
-      config.getMessagesStates(login, password, filter, MEMORY_LIMIT, visitor);
+    public void getMessagesStates(String login, MessageFilter filter, Visitor<Message> visitor) throws AdminException {
+      config.getMessagesStates(login, filter, MEMORY_LIMIT, visitor);
     }
 
     @Override
-    public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
-      return config.countMessages(login, password, messageFilter);
+    public int countMessages(String login, MessageFilter messageFilter) throws AdminException {
+      return config.countMessages(login, messageFilter);
     }
 
-    public void addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-      config.addSingleTextMessages(login, password, msDataSource, deliveryId);
+    public void addSingleTextMessages(String login, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+      config.addSingleTextMessages(login, msDataSource, deliveryId);
     }
 
-    public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-      config.addMessages(login, password, msDataSource, deliveryId);
+    public void addMessages(String login, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+      config.addMessages(login, msDataSource, deliveryId);
     }
 
     @Override
-    public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
-      config.activateDelivery(login, password, deliveryId);
+    public void activateDelivery(String login, int deliveryId) throws AdminException {
+      config.activateDelivery(login, deliveryId);
     }
   }
 
@@ -643,32 +643,32 @@ public class MessageListController extends InformerController {
     }
 
     @Override
-    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
+    public Delivery getDelivery(String login, int deliveryId) throws AdminException {
       return config.getArchiveDelivery(login, deliveryId);
     }
 
     @Override
-    public void getMessagesStates(String login, String password, MessageFilter filter, Visitor<Message> visitor) throws AdminException {
+    public void getMessagesStates(String login, MessageFilter filter, Visitor<Message> visitor) throws AdminException {
       config.getArchiveMessages(login, filter, MEMORY_LIMIT, visitor);
     }
 
     @Override
-    public int countMessages(String login, String password, MessageFilter filter) throws AdminException {
+    public int countMessages(String login, MessageFilter filter) throws AdminException {
       return config.countArchiveMessages(login, filter);
     }
 
     @Override
-    public void addMessages(String login, String password, DataSource<Message> ds, int deliveryId) throws AdminException {
+    public void addMessages(String login, DataSource<Message> ds, int deliveryId) throws AdminException {
       throw new IllegalAccessError();
     }
 
     @Override
-    public void addSingleTextMessages(String login, String password, DataSource<Address> ds, int deliveryId) throws AdminException {
+    public void addSingleTextMessages(String login, DataSource<Address> ds, int deliveryId) throws AdminException {
       throw new IllegalAccessError();
     }
 
     @Override
-    public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
+    public void activateDelivery(String login, int deliveryId) throws AdminException {
       throw new IllegalAccessError();
     }
   }

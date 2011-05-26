@@ -60,6 +60,9 @@ class RegionsDiffHelper extends DiffHelper {
   void logAddRegion(String newRegion, Journal journal, String userName) throws AdminException {
     journal.addRecord(JournalRecord.Type.ADD, subject, userName, "region_added", newRegion);
   }
+  void logUpdateAll(Journal journal, String userName) throws AdminException {
+    journal.addRecord(JournalRecord.Type.CHANGE, subject, userName, "config_update");
+  }
 
   void logRemoveRegion(String regionName, Journal journal, String userName) throws AdminException {
     journal.addRecord(JournalRecord.Type.REMOVE, subject, userName, "region_removed", regionName);

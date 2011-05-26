@@ -11,10 +11,10 @@ import mobi.eyeline.informer.admin.delivery.Visitor;
 */
 interface InformerStrategy {
 
-  int countMessages(String user, String password, MessageFilter filter) throws AdminException;
+  int countMessages(String user, MessageFilter filter) throws AdminException;
 
-  void getMessagesStates(String user, String password, MessageFilter filter, int pieceSize, Visitor<Message> visitor) throws AdminException;
+  void getMessagesStates(String user, MessageFilter filter, int pieceSize, Visitor<Message> visitor) throws AdminException;
 
-  Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
+  Delivery getDelivery(String login, int deliveryId) throws AdminException;
 
 }

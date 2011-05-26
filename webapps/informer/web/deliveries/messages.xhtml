@@ -84,7 +84,7 @@
           </eye:row>
         </eye:dataTable>
 
-        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and!messages.resendAllowed}">
+        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and !messages.resendAllowed}">
           <eye:row rowId="#{m.id}">
             <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
               <h:outputText value="#{m.abonent.simpleAddress}"/>

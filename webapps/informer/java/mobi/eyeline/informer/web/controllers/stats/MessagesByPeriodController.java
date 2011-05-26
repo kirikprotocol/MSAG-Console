@@ -54,7 +54,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     if(deliveriesIds==null) return null;
     if(deliveriesIds.size()!=1) return ""; //empty or multiple;
     try {
-      return strategy.getDelivery(getUser().getLogin(), getUser().getPassword(), deliveriesIds.get(0)).getName();
+      return strategy.getDelivery(getUser().getLogin(), deliveriesIds.get(0)).getName();
     }
     catch (AdminException e) {
       addError(e);
@@ -303,7 +303,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
           getFilter().setTaskIds(taskIds);
           Date from = new Date();
           for(Integer id : deliveriesIds) {
-            Delivery d = strategy.getDelivery(getUser().getLogin(), getUser().getPassword(), id);
+            Delivery d = strategy.getDelivery(getUser().getLogin(), id);
             Date startDate = d.getStartDate();
             if(from.after(startDate)) {
               from = startDate;
@@ -324,19 +324,19 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
   private interface StorageStrategy {
-    Delivery getDelivery(String login, String password, int id) throws AdminException;
+    Delivery getDelivery(String login, int id) throws AdminException;
   }
 
   private class CommonStorageStrategy implements StorageStrategy {
     @Override
-    public Delivery getDelivery(String login, String password, int id) throws AdminException {
-      return getConfig().getDelivery(login, password, id);
+    public Delivery getDelivery(String login, int id) throws AdminException {
+      return getConfig().getDelivery(login, id);
     }
   }
 
   private class ArchiveStorageStrategy implements StorageStrategy {
     @Override
-    public Delivery getDelivery(String login, String password, int id) throws AdminException {
+    public Delivery getDelivery(String login, int id) throws AdminException {
       return getConfig().getArchiveDelivery(login, id);
     }
   }

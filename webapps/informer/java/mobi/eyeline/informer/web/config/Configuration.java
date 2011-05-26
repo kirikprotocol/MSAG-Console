@@ -179,9 +179,9 @@ public class Configuration {
     journal.logAddUser(u.getLogin(), user);
   }
 
-  public void updateRegionsConfiguration(Collection<Region> regions) throws AdminException {
+  public void updateRegionsConfiguration(Collection<Region> regions, String user) throws AdminException {
     context.updateRegionsConfiguration(regions);
-    //todo addrecord to journal
+    journal.logUpdateAllRegions(user);
   }
 
   public void removeRegion(Integer regionId, String user) throws AdminException {
@@ -228,66 +228,66 @@ public class Configuration {
     }
   }
 
-  public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
-    return context.countMessages(login, password, messageFilter);
+  public int countMessages(String login, MessageFilter messageFilter) throws AdminException {
+    return context.countMessages(login, messageFilter);
   }
 
-  public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
-    return context.getDelivery(login, password, deliveryId);
+  public Delivery getDelivery(String login, int deliveryId) throws AdminException {
+    return context.getDelivery(login, deliveryId);
   }
 
-  public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
-    context.pauseDelivery(login, password, deliveryId);
+  public void pauseDelivery(String login, int deliveryId) throws AdminException {
+    context.pauseDelivery(login, deliveryId);
     journal.logDeliveryPaused(login, deliveryId);
   }
 
-  public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
-    context.activateDelivery(login, password, deliveryId);
+  public void activateDelivery(String login, int deliveryId) throws AdminException {
+    context.activateDelivery(login, deliveryId);
     journal.logDeliveryActivated(login, deliveryId);
   }
 
-  public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
-    return context.getDeliveryStats(login, password, deliveryId);
+  public DeliveryStatistics getDeliveryStats(String login, int deliveryId) throws AdminException {
+    return context.getDeliveryStats(login, deliveryId);
   }
 
-  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
-    context.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
+  public void getDeliveries(String login, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
+    context.getDeliveries(login, deliveryFilter, _pieceSize, visitor);
   }
 
-  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
-    context.getMessagesStates(login, password, filter, _pieceSize, visitor);
+  public void getMessagesStates(String login, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+    context.getMessagesStates(login, filter, _pieceSize, visitor);
   }
 
-  public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {
-    return context.countDeliveries(login, password, deliveryFilter);
+  public int countDeliveries(String login, DeliveryFilter deliveryFilter) throws AdminException {
+    return context.countDeliveries(login, deliveryFilter);
   }
 
-  public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
-    Delivery oldD = context.getDelivery(login, password, deliveryId);
+  public void dropDelivery(String login, int deliveryId) throws AdminException {
+    Delivery oldD = context.getDelivery(login, deliveryId);
     if (oldD == null) {
       throw new DeliveryException("delivery_not_found");
     }
-    context.dropDelivery(login, password, deliveryId);
+    context.dropDelivery(login, deliveryId);
     journal.logDeliveryDroped(login, oldD);
   }
 
-  public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
-    Delivery oldD = context.getDelivery(login, password, delivery.getId());
+  public void modifyDelivery(String login, Delivery delivery) throws AdminException {
+    Delivery oldD = context.getDelivery(login, delivery.getId());
     if (oldD == null) {
       throw new DeliveryException("delivery_not_found");
     }
-    context.modifyDelivery(login, password, delivery);
+    context.modifyDelivery(login, delivery);
     journal.logDeliveriesChanges(login, oldD, delivery);
   }
 
-  public Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-    Delivery d = context.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
+  public Delivery createDelivery(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+    Delivery d = context.createDeliveryWithIndividualTexts(login, delivery, msDataSource);
     journal.logDeliveryCreated(login, d);
     return d;
   }
 
-  public Delivery createSingleTextDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
-    Delivery d = context.createDeliveryWithSingleText(login, password, delivery, msDataSource);
+  public Delivery createSingleTextDelivery(String login, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
+    Delivery d = context.createDeliveryWithSingleText(login, delivery, msDataSource);
     journal.logDeliveryCreated(login, d);
     return d;
   }
@@ -357,7 +357,7 @@ public class Configuration {
 
   public void startPVSS(String user) throws AdminException {
     context.startPvss();
-    journal.logPvssStart(user); //todo
+    journal.logPvssStart(user);
   }
 
   public void stopArchiveDaemon(String user) throws AdminException {
@@ -367,12 +367,12 @@ public class Configuration {
 
   public void stopPvss(String user) throws AdminException {
     context.stopPvss();
-    journal.logPvssStop(user);  //todo
+    journal.logPvssStop(user);
   }   
 
   public void switchPvss(String toHost, String user) throws AdminException {
     context.switchPvss(toHost);
-    journal.logPvssSwitch(toHost, user); //todo
+    journal.logPvssSwitch(toHost, user);
   }
 
   public void switchArchiveDaemon(String toHost, String user) throws AdminException {
@@ -417,8 +417,8 @@ public class Configuration {
   }
 
 
-  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
-    return context.getDeliveryStatusHistory(login, password, deliveryId);
+  public DeliveryStatusHistory getDeliveryStatusHistory(String login, int deliveryId) throws AdminException {
+    return context.getDeliveryStatusHistory(login, deliveryId);
   }
 
   public Restriction getRestriction(int id) {
@@ -447,12 +447,12 @@ public class Configuration {
     journal.logDeleteRestriction(oldr, user);
   }
 
-  public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-    context.addMessages(login, password, msDataSource, deliveryId);
+  public void addMessages(String login, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+    context.addMessages(login, msDataSource, deliveryId);
   }
 
-  public void addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-    context.addSingleTextMessages(login, password, msDataSource, deliveryId);
+  public void addSingleTextMessages(String login, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+    context.addSingleTextMessages(login, msDataSource, deliveryId);
   }
 
   public void copyUserSettingsToDeliveryPrototype(String user, DeliveryPrototype delivery) throws AdminException {

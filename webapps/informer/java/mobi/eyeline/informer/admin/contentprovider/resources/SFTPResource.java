@@ -81,7 +81,7 @@ class SFTPResource extends FileResource {
       session.connect();
       channel = (ChannelSftp)session.openChannel("sftp");
       channel.connect();
-      channel.setFilenameEncoding("cp1251"); //todo hardcoded
+      channel.setFilenameEncoding("cp1251");
     }
     catch (Exception e) {
       throw new ContentProviderException("connectionError",e);

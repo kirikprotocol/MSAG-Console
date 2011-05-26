@@ -108,15 +108,11 @@ class MainLoopTask implements Runnable {
     Time now = new Time(currentMillis);
 
     if(!now.isInInterval(ucps.getActivePeriodStart(), ucps.getActivePeriodEnd())) {
-      if (log.isDebugEnabled())
-        log.debug("Active period doesn't become: '" + ucps); //todo remove
       return false;
     }
 
     Long lastUs = lastUpdate.get(mapKey);
     if(lastUs != null && lastUs + (60L*ucps.getPeriodInMin()*1000) > currentMillis) {
-      if (log.isDebugEnabled())
-        log.debug("Timeout for updating: '" + ucps);         //todo remove
       return false;
     }
 

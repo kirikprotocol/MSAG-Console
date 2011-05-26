@@ -169,7 +169,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     Delivery delivery = null;
     if (user != null) {
       try {
-        delivery = config.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+        delivery = config.getDelivery(user.getLogin(), deliveryId);
       } catch (AdminException e) {
         logger.error(e,e);
       }
@@ -187,7 +187,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     Delivery delivery = null;
     if (user != null) {
       try {
-        delivery = config.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+        delivery = config.getDelivery(user.getLogin(), deliveryId);
       } catch (AdminException e) {
         logger.error(e,e);
       }

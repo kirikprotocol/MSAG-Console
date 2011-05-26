@@ -139,7 +139,7 @@ public class DeliveryListController extends DeliveryController {
       for (String r : selected) {
         try {
           int id = Integer.parseInt(r);
-          config.activateDelivery(u.getLogin(), u.getPassword(), id);
+          config.activateDelivery(u.getLogin(), id);
         } catch (AdminException e) {
           addError(e);
         }
@@ -155,7 +155,7 @@ public class DeliveryListController extends DeliveryController {
       for (String r : selected) {
         try {
           int id = Integer.parseInt(r);
-          config.dropDelivery(u.getLogin(), u.getPassword(), id);
+          config.dropDelivery(u.getLogin(), id);
         } catch (AdminException e) {
           addError(e);
         }
@@ -207,7 +207,7 @@ public class DeliveryListController extends DeliveryController {
       for (String r : selected) {
         try {
           int id = Integer.parseInt(r);
-          config.pauseDelivery(u.getLogin(), u.getPassword(), id);
+          config.pauseDelivery(u.getLogin(), id);
         } catch (AdminException e) {
           addError(e);
         }
@@ -270,7 +270,7 @@ public class DeliveryListController extends DeliveryController {
     final Delivery infos[] = new Delivery[startPos + count];
     final int lastIdx = infos.length - 1;
 
-    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
+    config.getDeliveries(u.getLogin(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
       public boolean visit(Delivery value) throws AdminException {
         if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
           insert(infos, value, comparator);
@@ -284,7 +284,7 @@ public class DeliveryListController extends DeliveryController {
 
   private List<Delivery> getUnsortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count) throws AdminException {
     final Delivery infos[] = new Delivery[count];
-    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
+    config.getDeliveries(u.getLogin(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
       int pos = 0;
 
       public boolean visit(Delivery value) throws AdminException {
@@ -368,10 +368,10 @@ public class DeliveryListController extends DeliveryController {
       final Delivery[] delivery = new Delivery[]{null};
       final DeliveryStatistics[] stats = new DeliveryStatistics[]{null};
       try {
-        Delivery d = config.getDelivery(u.getLogin(), u.getPassword(), id);
+        Delivery d = config.getDelivery(u.getLogin(), id);
         if(accept(d, filter)) {
           delivery[0] = d;
-          stats[0] = config.getDeliveryStats(u.getLogin(), u.getPassword(), delivery[0].getId());
+          stats[0] = config.getDeliveryStats(u.getLogin(), delivery[0].getId());
         }
       } catch (DeliveryException e){
         if(e.getErrorStatus() != DeliveryException.ErrorStatus.NoSuchEntry) {
@@ -386,7 +386,7 @@ public class DeliveryListController extends DeliveryController {
           if(delivery[0] != null) {
             DeliveryStatusHistory history = null;
             try {
-              history = config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), delivery[0].getId());
+              history = config.getDeliveryStatusHistory(u.getLogin(), delivery[0].getId());
               rows.add(new DeliveryRow(delivery[0], stats[0], getStartDate(history), getEndDate(history)));
             } catch (AdminException e) {
               addError(e);
@@ -413,8 +413,8 @@ public class DeliveryListController extends DeliveryController {
             List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
             for (Delivery di : list)
               if (di != null) {
-                DeliveryStatistics stats = config.getDeliveryStats(u.getLogin(), u.getPassword(), di.getId());
-                DeliveryStatusHistory history = config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), di.getId());
+                DeliveryStatistics stats = config.getDeliveryStats(u.getLogin(), di.getId());
+                DeliveryStatusHistory history = config.getDeliveryStatusHistory(u.getLogin(), di.getId());
                 rows.add(new DeliveryRow(di, stats, getStartDate(history), getEndDate(history)));
               }
             return rows;
@@ -428,7 +428,7 @@ public class DeliveryListController extends DeliveryController {
 
         public int getRowsCount() {
           try {
-            return config.countDeliveries(u.getLogin(), u.getPassword(), filter);
+            return config.countDeliveries(u.getLogin(), filter);
           } catch (AdminException e) {
             addError(e);
             return 0;

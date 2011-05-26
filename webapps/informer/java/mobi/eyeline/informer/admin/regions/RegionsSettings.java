@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 class RegionsSettings {
 
   private final Map<String, Region> regionsByMasks = new HashMap<String, Region>();
-  private final Map<Integer, Region> regions = new LinkedHashMap<Integer, Region>(); // todo Почему здесь используется LinkedHashMap а не HashMap ?
+  private final Map<Integer, Region> regions = new HashMap<Integer, Region>();
 
   private int defaultMaxPerSecond;
 

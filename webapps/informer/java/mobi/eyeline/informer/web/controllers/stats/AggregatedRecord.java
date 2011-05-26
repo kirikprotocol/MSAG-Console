@@ -30,7 +30,7 @@ public abstract class AggregatedRecord implements DataTableRow {
 
   protected void addChild(AggregatedRecord newChild) {
     Object key = newChild.getAggregationKey();
-    AggregatedRecord oldChild = innerRowsMap.get(newChild.getAggregationKey());
+    AggregatedRecord oldChild = innerRowsMap.get(key);
     if (oldChild == null) {
       innerRowsMap.put(key, newChild);
     } else {

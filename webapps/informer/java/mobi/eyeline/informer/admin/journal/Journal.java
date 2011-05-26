@@ -153,6 +153,16 @@ public class Journal {
   }
 
   /**
+   * Добавляет в журнал запись об обновлении конфигурации регионов
+   *
+   * @param user   пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logUpdateAllRegions(String user) throws AdminException {
+    this.regions.logUpdateAll(this, user);
+  }
+
+  /**
    * Добавляет в журнал запись об удалении региона
    *
    * @param region регион
@@ -355,29 +365,6 @@ public class Journal {
   public void logInformerSwitch(String toHost, String user) throws AdminException {
     informer.logInformerSwitch(this, toHost, user);
   }
-
-  /**
-   * Добавляет в журнал запись о старте демона
-   *
-   * @param name имя демона
-   * @param user пользователь, от имени которого надо формировать записи
-   * @throws AdminException ошибка сохранения записи
-   */
-  public void logDaemonrStart(String name, String user) throws AdminException {
-    addRecord(JournalRecord.Type.SERVICE_START, Subject.DAEMONS, user, "daemon_start", name);
-  }
-
-  /**
-   * Добавляет в журнал запись об остановке демона
-   *
-   * @param name имя демона
-   * @param user пользователь, от имени которого надо формировать записи
-   * @throws AdminException ошибка сохранения записи
-   */
-  public void logDaemonStop(String name, String user) throws AdminException {
-    addRecord(JournalRecord.Type.SERVICE_STOP, Subject.DAEMONS, user, "daemon_stop", name);
-  }
-
 
   /**
    * Добавляет в журнал запись о новом пользователе

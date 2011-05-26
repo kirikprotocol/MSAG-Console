@@ -101,9 +101,9 @@ public class MessagesByRecController extends LongOperationController {
       deliveryFilter.setUserIdFilter(allowedUser);
     }
 
-    setCurrentAndTotal(0, config.countDeliveries(getUser().getLogin(), getUser().getPassword(), deliveryFilter));
+    setCurrentAndTotal(0, config.countDeliveries(getUser().getLogin(), deliveryFilter));
 
-    config.getDeliveries(getUser().getLogin(), getUser().getPassword(), deliveryFilter, 1000,
+    config.getDeliveries(getUser().getLogin(), deliveryFilter, 1000,
         new Visitor<Delivery>() {
           public boolean visit(Delivery Delivery) throws AdminException {
             final int deliveryId = Delivery.getId();
@@ -115,7 +115,7 @@ public class MessagesByRecController extends LongOperationController {
                 tillDate != null ? tillDate : Delivery.getEndDate() != null ? Delivery.getEndDate() : new Date());
             messageFilter.setMsisdnFilter(msisdn.getSimpleAddress());
 
-            config.getMessagesStates(getUser().getLogin(), getUser().getPassword(), messageFilter, 1000,
+            config.getMessagesStates(getUser().getLogin(), messageFilter, 1000,
                 new Visitor<Message>() {
                   public boolean visit(Message message) throws AdminException {
                     String errString = null;

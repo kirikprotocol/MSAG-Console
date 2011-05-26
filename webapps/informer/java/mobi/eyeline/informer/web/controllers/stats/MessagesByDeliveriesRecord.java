@@ -304,7 +304,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     if(isParent) {
       return deliveryId;
     }else {
-      return regionId;
+      return regionId == null ? -1 : regionId;
     }
   }
 

@@ -60,7 +60,7 @@ public class MessagesRequestController extends InformerController{
           ResourceBundle bundle = ResourceBundle.getBundle(DeliveryException.class.getName(), getLocale());
         if(request.getError() != null) {
           String pattern = bundle.getString(request.getError());
-          requestError = request.getErrorArgs() == null ? pattern : MessageFormat.format(pattern, request.getErrorArgs());
+          requestError = request.getErrorArgs() == null ? pattern : (new MessageFormat(pattern)).format(request.getErrorArgs(), new StringBuffer(), null).toString();
         }else {
           requestError = bundle.getString("internal_error");
         }

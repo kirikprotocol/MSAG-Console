@@ -20,7 +20,6 @@ public interface ContentProviderContext {
 
   FileSystem getFileSystem();
 
-  // todo зависимость от юзеров надо убрать
   List<User> getUsers();
 
   User getUser(String login);

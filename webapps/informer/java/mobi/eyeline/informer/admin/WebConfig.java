@@ -56,11 +56,7 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     config.addSection(siebel);
 
     XmlConfigSection cdr = config.getOrCreateSection("cdr");
-    props = settings.getCdrSettings().getAllProperties();
-    for (Object s : props.keySet()) {
-      cdr.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
-    }
-    config.addSection(cdr);
+    settings.getCdrSettings().save(cdr);
 
     XmlConfigSection deliveries = config.getOrCreateSection("deliveries");
     deliveries.setBool("allowUssdPush", settings.isAllowUssdPushDeliveries());
@@ -134,7 +130,9 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       settings.setSiebelSettings(new SiebelSettings(siebel.toProperties("", null)));
 
       XmlConfigSection cdr = webconfig.getSection("cdr");
-      settings.setCdrSettings(new CdrSettings(cdr.toProperties("", null)));
+      CdrSettings cdrSettings = new CdrSettings();
+      cdrSettings.load(cdr);
+      settings.setCdrSettings(cdrSettings);
 
       XmlConfigSection deliveries = webconfig.getSection("deliveries");
       settings.setAllowUssdPushDeliveries(deliveries.getBool("allowUssdPush", false));

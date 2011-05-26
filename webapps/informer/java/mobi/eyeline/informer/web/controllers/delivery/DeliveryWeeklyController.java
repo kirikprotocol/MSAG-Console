@@ -1,7 +1,10 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
 
@@ -43,7 +46,7 @@ public class DeliveryWeeklyController extends DeliveryController {
     }
     filter.setStartDateFrom(start);
     filter.setStartDateTo(end);
-    config.getDeliveries(logined.getLogin(), logined.getPassword(), filter, 1000, new Visitor<Delivery>() {
+    config.getDeliveries(logined.getLogin(), filter, 1000, new Visitor<Delivery>() {
       public boolean visit(Delivery value) throws AdminException {
         result.add(value);
         return true;

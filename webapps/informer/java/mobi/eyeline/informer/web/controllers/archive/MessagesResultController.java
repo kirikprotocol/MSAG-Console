@@ -139,7 +139,7 @@ public class MessagesResultController extends InformerController{
         }
       }
 
-      public int getRowsCount() {      //todo optimize?
+      public int getRowsCount() {
         try {
           final int[] count = new int[]{0};
           getConfig().getMessagesResult(reqId, new Visitor<ArchiveMessage>() {

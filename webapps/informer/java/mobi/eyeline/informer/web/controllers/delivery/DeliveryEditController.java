@@ -118,7 +118,7 @@ public class DeliveryEditController extends DeliveryController {
   }
 
   private void reload() throws AdminException {
-    if (id == null || (delivery = config.getDelivery(user.getLogin(), user.getPassword(), id)) == null) {
+    if (id == null || (delivery = config.getDelivery(user.getLogin(), id)) == null) {
       logger.error("Delivery is not found with id=" + id);
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found", id);
       return;
@@ -139,8 +139,8 @@ public class DeliveryEditController extends DeliveryController {
     } else
       retryOnFail = "off";
 
-    status = getConfig().getDeliveryStats(user.getLogin(), user.getPassword(), id);
-    statusHistory = getConfig().getDeliveryStatusHistory(user.getLogin(), user.getPassword(), id);
+    status = getConfig().getDeliveryStats(user.getLogin(), id);
+    statusHistory = getConfig().getDeliveryStatusHistory(user.getLogin(), id);
 
     User u = getConfig().getUser(delivery.getOwner());
     archiveTime = delivery.getArchiveTime() == null ? null : Integer.toString(delivery.getArchiveTime());
@@ -233,7 +233,7 @@ public class DeliveryEditController extends DeliveryController {
     }
 
     try {
-      config.modifyDelivery(user.getLogin(), user.getPassword(), delivery);
+      config.modifyDelivery(user.getLogin(), delivery);
     } catch (AdminException e) {
       addError(e);
       return null;
