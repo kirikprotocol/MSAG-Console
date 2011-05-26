@@ -510,37 +510,40 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (d.getStatus() == DeliveryStatus.Finished) {
         log("delivery finished for: " + f.getName());
 
+
+        File reportTmpFile = null;
         if (createReports) {
           log("create report for: " + f.getName());
-          File reportTmpFile = buildRepFile(f.getParentFile(), deliveryName , deliveryId);
+          reportTmpFile = buildRepFile(f.getParentFile(), deliveryName , deliveryId);
           createReport(reportTmpFile, d);
-          try{
-            resource.open();
-            uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
-            resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
-            getMBean().notifyInteractionOk(getResourceHost(), port, "type","uploading");
-          }catch (AdminException e){
-            log.error(e, e);
-            getMBean().notifyInteractionError(getResourceHost(), port, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
-            return;
-          }finally {
-            try {
-              resource.close();
-            } catch (AdminException ignored) {
-            }
-          }
-
-          fileSys.delete(reportTmpFile);
-        } else {
-          log("no report needed for: " + f.getName());
         }
         try{
-          deliveryFinished(resource, d.getName() + ".csv");
-          getMBean().notifyInteractionOk(getResourceHost(), port, "type","finalizing");
-        }catch (AdminException e){
-          log.error(e, e);
-          getMBean().notifyInteractionError(getResourceHost(), port, "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
-          return;
+          resource.open();
+          if(reportTmpFile != null) {
+            try{
+              uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
+              resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
+              getMBean().notifyInteractionOk(getResourceHost(), port, "type","uploading");
+            }catch (AdminException e){
+              log.error(e, e);
+              getMBean().notifyInteractionError(getResourceHost(), port, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
+              return;
+            }
+            fileSys.delete(reportTmpFile);
+          }
+          try{
+            deliveryFinished(resource, d.getName() + ".csv");
+            getMBean().notifyInteractionOk(getResourceHost(), port, "type","finalizing");
+          }catch (AdminException e){
+            log.error(e, e);
+            getMBean().notifyInteractionError(getResourceHost(), port, "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
+            return;
+          }
+        }finally {
+          try {
+            resource.close();
+          } catch (AdminException ignored) {
+          }
         }
 
         fileSys.delete(f);
