@@ -606,9 +606,7 @@ void Logger::logva_(timeval tv,const LogLevel _logLevel, const char * const stri
         BufferGuard() : buf_(0) {}
         ~BufferGuard() { if (buf_) { delete [] buf_; } }
         void setBuf( char* buf ) {
-            if (buf_) {
-                delete [] buf_;
-            }
+            if (buf_) { delete [] buf_; }
             buf_ = buf;
         }
     private:
@@ -634,7 +632,7 @@ void Logger::logva_(timeval tv,const LogLevel _logLevel, const char * const stri
                 }
                 bufsize = (n>-1) ?
                     size_t(n+5) : // ISO/IEC 9899:1999, and reserve some space at the end
-                    bufsize*2;    // twice the old size
+                    bufsize*2+32; // twice the old size
                 bufguard.setBuf(buffer = new char[bufsize + prefixLength]);
                 memcpy(buffer,buf,prefixLength);
             }

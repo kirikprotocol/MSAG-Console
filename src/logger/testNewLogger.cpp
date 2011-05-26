@@ -61,11 +61,13 @@ void testFun3( smsc::logger::Logger* thelog, TestThread& t )
                    thelog,thelog->getName(),&t,t.getCount());
 }
 
+namespace {
 smsc::core::buffers::TmpBuf<char,1024> verylongdump;
+}
 
 void testFun4( smsc::logger::Logger* thelog, TestThread& t )
 {
-    smsc_log_debug(thelog,"log@p thread@p count=%u dump:%s",thelog,&t,t.getCount(),verylongdump.get());
+    smsc_log_debug(thelog,"log@%p thread@%p count=%u dump:%s",thelog,&t,t.getCount(),verylongdump.get());
 }
 
 
@@ -87,7 +89,8 @@ typedef smsc::util::TimeSourceSetup::AbsUSec USec;
 
 int main( int argc, char** argv)
 {
-    smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
+    // smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
+    smsc::logger::Logger::Init();
 
     char** arg = argv;
     int threads = 10;
@@ -124,10 +127,12 @@ int main( int argc, char** argv)
         // preparing a dump
         for ( int i = 0; i < 1000; ++i ) {
             const USec::usec_type t = USec::getUSec();
-            char buf[10];
+            char buf[20];
             sprintf(buf," %02x %02x",int(t>>8)&255,int(t)&255);
             verylongdump.Append(buf,strlen(buf));
         }
+        verylongdump.Append("",1);
+        // printf("dump: %s\n",verylongdump.get());
     }
 
     typedef std::vector<TestThread*> TList;
