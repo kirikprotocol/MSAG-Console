@@ -24,6 +24,13 @@ endif
 
 export WARNINGS
 
+override OSNAME := $(shell uname)
+
+ifeq (Darwin,$(OSNAME))
+SHLIBEXT := .dylib
+SHARED_OPT := -dynamiclib -undefined dynamic_lookup
+else
+SHLIBEXT := .so
 ifeq ($(CXX),CC)
 AR:=/usr/ccs/bin/ar
 export AR
@@ -31,10 +38,13 @@ SHARED_OPT:=-G
 else
 SHARED_OPT:=-shared
 endif
+endif
 
-USRLOCLIB := /usr/local/lib
+
 ifeq ($(B64),YES)
-USRLOCLIB := /usr/local/lib/64
+override USRLOCLIB := $(foreach DIR,$(wildcard /usr/local/lib/64),-L$(DIR))
+else
+override USRLOCLIB := $(foreach DIR,$(wildcard /usr/local/lib),-L$(DIR))
 endif
 
 ifdef ORACLE_HOME
@@ -110,11 +120,19 @@ $(warning set SMSC_BUILDDIR = $(SMSC_BUILDDIR))
 export SMSC_BUILDDIR
 endif
 
-OS=$(shell uname)
+ifneq ($(filter-out Darwin,$(OSNAME)),)
+override LIBRT := -lrt
+endif
 
-ifeq ($(OS),Linux)
-export SOCKETLIB=
-else
+ifneq ($(filter-out Darwin,$(OSNAME)),)
+override LIBNSL := -lnsl
+endif
+
+ifeq ($(filter-out Darwin,$(OSNAME)),)
+override LIBICONV := -liconv
+endif
+
+ifneq ($(filter-out linux Linux Darwin,$(OSNAME)),)
 export SOCKETLIB=-lsocket
 endif
 
@@ -158,12 +176,12 @@ endif
 CFLAGS := $(CFLAGS) $(XTARGET)
 endif
 ifeq ($(CXX),CC)
-LDFLAGS := $(LDFLAGS) $(XTARGET) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR) -L$(NETSNMP_LIB_DIR)
+LDFLAGS := $(LDFLAGS) $(XTARGET) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib $(USRLOCLIB) -L$(SSL_LIB_DIR) -L$(NETSNMP_LIB_DIR)
 ifeq ($(STDCXX),YES)
 LDFLAGS := $(LDFLAGS) -L/opt/stdcxx/lib -lstd -lthread
 endif
 else
-LDFLAGS := $(LD_FLAGS) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR)
+LDFLAGS := $(LD_FLAGS) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib $(USRLOCLIB) -L$(SSL_LIB_DIR)
 CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 

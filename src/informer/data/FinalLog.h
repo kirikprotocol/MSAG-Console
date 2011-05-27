@@ -12,6 +12,7 @@ struct Message;
 /// this class also holds statistics data.
 class FinalLog
 {
+    struct LogFileFilter;
     static FinalLog* instance_;
 public:
     /// pseudo singleton.

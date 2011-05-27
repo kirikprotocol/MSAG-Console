@@ -36,6 +36,9 @@
 #define lseek _lseek
 #define O_LARGEFILE 0
 #else
+#ifdef __MACH__
+#define O_LARGEFILE 0
+#endif
 # include <netinet/in.h>
 # include <inttypes.h>
 # include <unistd.h>

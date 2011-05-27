@@ -3,7 +3,6 @@
 ?util  "Utility classes"
 ?sms   "SMS declaration"
 ?license
-?smpp
 ?sme
 ?informer
 ?eyeline

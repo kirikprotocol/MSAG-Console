@@ -35,6 +35,16 @@ inline hrtime_t gethrtime()
   return hrtime_t(ts.tv_sec)*1000000000+ts.tv_nsec;
 }
 #endif
+#ifdef __MACH__
+typedef long long hrtime_t;
+
+inline hrtime_t gethrtime()
+{
+    timeval tv = {0,0};
+    gettimeofday(&tv,0);
+    return hrtime_t(tv.tv_sec)*1000000000+tv.tv_usec*1000;
+}
+#endif
 
 namespace smsc{
 namespace util{

@@ -5,11 +5,11 @@
 #include "Message.h"
 #include "CommonSettings.h"
 
-namespace {
 
-using namespace eyeline::informer;
+namespace eyeline {
+namespace informer {
 
-struct LogFileFilter
+struct FinalLog::LogFileFilter
 {
     LogFileFilter( std::vector<ulonglong>& logfiles ) :
     logfiles_(logfiles)
@@ -28,11 +28,6 @@ private:
     std::vector<ulonglong>& logfiles_;
 };
 
-}
-
-
-namespace eyeline {
-namespace informer {
 
 FinalLog* FinalLog::instance_ = 0;
 
@@ -47,7 +42,7 @@ period_(60)
     // check if we have unrolled old files
     std::vector< ulonglong > logfiles;
     std::vector< std::string > dummy;
-    ::LogFileFilter lff(logfiles);
+    LogFileFilter lff(logfiles);
     try {
         makeDirListing( lff, S_IFREG ).list( (getCS()->getStorePath() + "final_log").c_str(),
                                              dummy );

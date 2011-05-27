@@ -57,10 +57,10 @@ CCXX:=$(CXX)
 CCC:=$(CC)
 
 ifeq ($(USECOLORS),YES)
-CXXCLR=\033[01;36m
-LIBCLR=\033[01;34m
-LNKCLR=\033[01;35m
-CLREND=\033[00m
+CXXCLR='.chr(27).'[01;36m
+LIBCLR='.chr(27).'[01;34m
+LNKCLR='.chr(27).'[01;35m
+CLREND='.chr(27).'[00m
 override CCXX:=conf/colorederr $(CXX)
 override CCC:=conf/colorederr $(CC)
 endif

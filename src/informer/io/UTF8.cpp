@@ -59,11 +59,11 @@ void UTF8::convertToUcs2( const char* inptr, size_t inlen, TmpBufBase<char>& buf
         while (true) {
             size_t outbytesleft = buf.getSize() - buf.GetPos();
             char* out = buf.GetCurPtr();
-#ifdef linux
+#if defined(linux) || defined(__MACH__)
             char* in = const_cast<char*>(inptr); // fix for GNUC
 #endif
             const size_t iconv_res = iconv(conv_,
-#ifdef linux
+#if defined(linux) || defined(__MACH__)
                                            &in, 
 #else
                                            &inptr,

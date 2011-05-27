@@ -2,6 +2,6 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-liblogger.so  Logger $(SHARED_OPT) -ldl $(__LIBRARIES) -lrt $(LOGGER_LIBRARY) -llogger-additional $(SOCKETLIB) -lnsl -lutil
-logger/test	test	-L$(SMSC_BUILDDIR)/bin -llogger -lcore-threads -lutil -llogger-additional -lnsl -lrt -lpthread @liblogger.so
+liblogger$(SHLIBEXT)  Logger $(SHARED_OPT) -ldl $(__LIBRARIES) $(LIBRT) $(LOGGER_LIBRARY) -llogger-additional $(SOCKETLIB) $(LIBNSL) -lutil
+logger/test	test	-L$(SMSC_BUILDDIR)/bin -llogger -lcore-threads -lutil -llogger-additional $(LIBNSL) $(LIBRT) -lpthread @liblogger$(SHLIBEXT)
 

@@ -12,7 +12,7 @@
 
 using smsc::util::config::Config;
 
-#ifdef sun
+#if defined(sun) || defined(__MACH__)
 namespace {
 void* memrchr(const void* s, int c, size_t n)
 {

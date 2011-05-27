@@ -477,24 +477,37 @@ void InfosmeCoreV1::stop()
         }
 
         bindQueue_.notify();  // wake up bind queue
+        smsc_log_info(log_,"--- stopping input trans threadpool ---");
         itp_.stopNotify();
+        smsc_log_info(log_,"--- stopping resend trans threadpool ---");
         rtp_.stopNotify();
 
-        if (dcpServer_) dcpServer_->Stop();
-        if (adminServer_) adminServer_->Stop();
-        if (dlvMgr_) dlvMgr_->stop();
-        if (pvssHandler_) {
-            smsc_log_debug(log_,"--- stopping pvss handler ---");
-            pvssHandler_->stop();
+        if (dcpServer_) {
+            smsc_log_info(log_,"--- stopping dcp server ---");
+            dcpServer_->Stop();
         }
+        if (adminServer_) {
+            smsc_log_info(log_,"--- stopping admin server ---");
+            adminServer_->Stop();
+        }
+
         {
-            // stop all smscs
+            smsc_log_info(log_,"--- stopping all smscs ---");
             MutexGuard mg(regLock_);
             char* smscId;
             SmscSenderPtr sender;
             for (Hash< SmscSenderPtr >::Iterator i(&smscs_); i.Next(smscId,sender);) {
                 sender->stop();
             }
+        }
+
+        if (dlvMgr_) {
+            smsc_log_info(log_,"--- stopping dlv mgr ---");
+            dlvMgr_->stop();
+        }
+        if (pvssHandler_) {
+            smsc_log_debug(log_,"--- stopping pvss handler ---");
+            pvssHandler_->stop();
         }
         smsc_log_debug(log_,"--- waiting for self thread ---");
         WaitFor();

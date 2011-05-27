@@ -41,6 +41,9 @@ protected:
   int connectTimeout;
   SOCKET sock;
   void *data[SOCKET_MAX_KEY];
+    
+  bool fillInetAddr( const char* host, sockaddr_in& sock ) const;
+
 public:
 
   Socket()

@@ -19,7 +19,7 @@ const char * const ucs2("UCS-2BE");
 const char * const ucs2("UCS-2LE");
 #endif
 
-#ifdef linux
+#if defined(linux) || defined(__MACH__)
 typedef char** iconvinputarg_t;
 #else
 typedef const char** iconvinputarg_t;

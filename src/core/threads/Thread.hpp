@@ -31,7 +31,7 @@ public:
     return pthread_kill(thread,sig);
   }
 #endif
-  unsigned long getThrId(void) const { return thread; }
+  unsigned long getThrId(void) const { return reinterpret_cast<unsigned long>(thread); }
   int getRetCode(){return retcode;}
   void setRetCode(int rc){retcode=rc;}
 

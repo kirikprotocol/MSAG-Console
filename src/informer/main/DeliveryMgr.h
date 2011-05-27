@@ -19,6 +19,7 @@ class CommonSettings;
 
 class DeliveryMgr : public smsc::core::threads::Thread
 {
+    struct NumericNameFilter;
     class InputJournalReader;
     class StoreJournalReader;
     class InputJournalRoller;

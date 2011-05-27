@@ -12,7 +12,6 @@ informer/informer  informer \
  -linformer-alm \
  -leyeline-protogen-server \
  -llicense-check \
- -lsmpp \
  -lsms \
  -lscag-pvss-api-core-client-impl \
  -lscag-pvss-api-core \
@@ -29,9 +28,11 @@ informer/informer  informer \
  -lutil-regexp \
  -lutil-xml \
  -lutil-config \
- @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+ @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
  -lutil \
  $(XERCES_LIB) \
- $(SOCKETLIB) -lnsl \
+ $(SOCKETLIB) \
+ $(LIBICONV) \
+ $(LIBNSL) \
  $(SSL_LIB) \
- -lpthread -lrt -ldl
+ -lpthread $(LIBRT) -ldl

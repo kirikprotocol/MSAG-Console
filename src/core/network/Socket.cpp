@@ -17,15 +17,46 @@
 #include <sys/filio.h>
 #endif
 #endif
+// #ifdef __MACH__
+// #include "core/synchronization/Mutex.hpp"
+// #endif
 
 namespace smsc{
 namespace core{
 namespace network{
 
+bool Socket::fillInetAddr( const char* host, sockaddr_in& sock ) const
+{
+    hostent* lpHostEnt;
+#ifndef _REENTRANT
+    lpHostEnt=gethostbyname(host);
+#else
+#ifdef __MACH__
+    // skv said: gethostbyname() is thread-safe on mac...
+    // static smsc::core::synchronization::Mutex lock;
+    // smsc::core::synchronization::MutexGuard mg(lock);
+    lpHostEnt = gethostbyname(host);
+#else
+    char buf[1024];
+    int h_err;
+    hostent he;
+#ifdef linux
+    gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
+#else
+    lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
+#endif // linux
+#endif // mach
+#endif
+    if(lpHostEnt==NULL)
+    {
+      return false;
+    }
+    memcpy(&sock.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
+    return true;
+}
 
 int Socket::Init(const char *host,int port,int timeout)
 {
-  hostent* lpHostEnt;
   in_addr_t ulINAddr;
 
   timeOut=timeout;
@@ -40,25 +71,10 @@ int Socket::Init(const char *host,int port,int timeout)
 #endif
   {
     memcpy(&sockAddr.sin_addr,&ulINAddr,sizeof(ulINAddr));
-  } else
-  {
-#ifndef _REENTRANT
-    lpHostEnt=gethostbyname(host);
-#else
-    char buf[1024];
-    int h_err;
-    hostent he;
-#ifdef linux
-      gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
-#else
-      lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
-#endif // __GNUC__
-#endif
-    if(lpHostEnt==NULL)
-    {
-      return -1;
-    }
-    memcpy(&sockAddr.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
+  } else {
+      if (!fillInetAddr(host,sockAddr)) {
+          return -1;
+      }
   }
   sockAddr.sin_port=htons(port);
   return 0;
@@ -67,7 +83,6 @@ int Socket::Init(const char *host,int port,int timeout)
 int Socket::BindClient(const char* host)
 {
   sockaddr_in sAddr;
-  hostent *   lpHostEnt;
   in_addr_t   ulINAddr;
 
   memset(&ulINAddr,0,sizeof(ulINAddr));
@@ -81,25 +96,7 @@ int Socket::BindClient(const char* host)
   {
     memcpy(&sAddr.sin_addr,&ulINAddr,sizeof(ulINAddr));
   } else
-  {
-#ifndef _REENTRANT
-    lpHostEnt=gethostbyname(host);
-#else
-    char buf[1024];
-    int h_err;
-    hostent he;
-#ifdef linux
-    gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
-#else
-    lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
-#endif // __GNUC__
-#endif // _REENTRANT
-    if(lpHostEnt==NULL)
-    {
-      return -1;
-    }
-    memcpy(&sAddr.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
-  }
+  if ( ! fillInetAddr(host,sAddr) ) { return -1; }
   sAddr.sin_port=0;
   return bind(sock,(sockaddr*)&sAddr,(int)sizeof(sAddr)) ? -1 : 0;
 }

@@ -12,14 +12,6 @@ using smsc::core::synchronization::MutexGuard;
 
 namespace {
 
-struct NumericNameFilter {
-    inline bool operator()( const char* fn ) const {
-        char* endptr;
-        strtoul(fn,&endptr,10);
-        return (*endptr=='\0');
-    }
-};
-
 const char* archiveName = "deliveries/incoming.txt";
 const char* archiveExt = ".new";
 const char* lastidpath = "deliveries/lastid";
@@ -28,6 +20,15 @@ const char* lastidpath = "deliveries/lastid";
 
 namespace eyeline {
 namespace informer {
+
+struct DeliveryMgr::NumericNameFilter 
+{
+    inline bool operator()( const char* fn ) const {
+        char* endptr;
+        strtoul(fn,&endptr,10);
+        return (*endptr=='\0');
+    }
+};
 
 
 class DeliveryMgr::InputJournalReader : public InputJournal::Reader
