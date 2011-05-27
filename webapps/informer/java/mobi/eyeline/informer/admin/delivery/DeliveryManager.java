@@ -21,7 +21,8 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   private int port;
 
-  private static final int TIMEOUT_SEC = 20;
+  private static final int TIMEOUT_SEC = 20;  //todo таймаут реально зависит от того, какой RESPONSE_TIMEOUT стоит в DcpClient.
+                                              //todo Надо, чтобы эта зависимость прослеживалась. Предлагаю устанавливать таймаут автоматически в DcpConnection как 2/3 от RESPONSE_TIMEOUT/1000 .
   private static final int COUNT_MESSAGES_PIECE = 100000;
   private static final int COUNT_DELIVERIES_PIECE = 10000;
 
