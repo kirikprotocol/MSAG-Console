@@ -3,7 +3,9 @@ package mobi.eyeline.informer.admin.filesystem;
 import mobi.eyeline.informer.admin.AdminException;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Реализация FileSystem, все данные которой хранятся в памяти.
@@ -182,6 +184,25 @@ public class MemoryFileSystem extends FileSystem {
     }
     String[] res = new String[result.size()];
     return result.toArray(res);
+  }
+
+  public File[] listFiles(File file) {
+    byte[] bytes = files.get(file.getAbsolutePath());
+    if (bytes == null || bytes != DIRECTORY)
+      throw new IllegalArgumentException(file.getAbsolutePath() + " is not a directory");
+
+    ArrayList<String> result = new ArrayList<String>();
+    for (Map.Entry<String, byte[]> e : files.entrySet()) {
+      if (e.getKey().startsWith(file.getAbsolutePath()) && !e.getKey().equals(file.getAbsolutePath()))
+        result.add(e.getKey());
+    }
+    File[] res = new File[result.size()];
+    int i = 0;
+    for(String s : result) {
+      res[i] = new File(s);
+      i++;
+    }
+    return res;
   }
 
 }

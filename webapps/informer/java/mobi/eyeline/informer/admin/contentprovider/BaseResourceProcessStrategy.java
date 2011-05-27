@@ -655,7 +655,6 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       fileSys.rename(reportTmp, reportFile);
 
     } catch (AdminException e){
-      e.printStackTrace();//todo
       try{
         fileSys.delete(reportTmp);
       }catch (AdminException ignored){}
