@@ -4,17 +4,15 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
+import mobi.eyeline.informer.admin.filesystem.MemoryFileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import testutils.TestUtils;
 
 import java.io.*;
 import java.util.*;
@@ -36,6 +34,8 @@ public class MainLoopTaskTest {
 
   private User u;
 
+  private FileSystem fileSystem;
+
   private static User prepareUser() {
     User u = new User();
     u.setLogin("a");
@@ -47,7 +47,8 @@ public class MainLoopTaskTest {
   @Before
   public void init() throws Exception{
     u = prepareUser();
-    workDir = TestUtils.createRandomDir("-cpt");
+    fileSystem = new MemoryFileSystem();
+    fileSystem.createNewFile(workDir = new File("cpt-test-"+System.currentTimeMillis()));;
     resource = new SingleFileResource();
     deliveryManager = new TestDeliveryManager();
     ContentProviderContext context = new SingleUserContentPContext(u, deliveryManager);
@@ -229,10 +230,14 @@ public class MainLoopTaskTest {
   @Test
   public void cleanAfterCrash() throws Exception{
     File parent = new File(workDir.getAbsolutePath() + File.separatorChar + u.getLogin());
-    assertTrue("Can't create dir", parent.exists() || parent.mkdirs());
+    if(!fileSystem.exists(parent)) {
+      fileSystem.mkdirs(parent);
+    }
     File f1 = new File(parent, "test1.1111.gen");
     File f2 = new File(parent, "test2.1111.not.generated");
-    assertTrue("Can't create files", f1.createNewFile() && f2.createNewFile());
+
+    fileSystem.createNewFile(f1);
+    fileSystem.createNewFile(f2);
 
     UserCPsettings settings = prepareSettings(UserCPsettings.WorkType.simple);
     ResourceProcessStrategy strategy = task.getStrategy(u, new File(workDir, u.getLogin()), settings, resource);
@@ -244,15 +249,6 @@ public class MainLoopTaskTest {
     assertEquals(deliveryManager.countDeliveries(u.getLogin(), "", new DeliveryFilter()), 0);
 
   }
-
-
-  @After
-  public void shutdown() {
-    if(workDir != null) {
-      TestUtils.recursiveDeleteFolder(workDir);
-    }
-  }
-
 
   private static class SingleFileResource extends FileResource {
 
@@ -353,7 +349,7 @@ public class MainLoopTaskTest {
     }
   }
 
-  private static class SingleUserContentPContext implements ContentProviderContext {
+  private class SingleUserContentPContext implements ContentProviderContext {
 
     private final User user;
 
@@ -367,7 +363,7 @@ public class MainLoopTaskTest {
 
     @Override
     public FileSystem getFileSystem() {
-      return new TestFileSystem();
+      return fileSystem;
     }
 
     @Override

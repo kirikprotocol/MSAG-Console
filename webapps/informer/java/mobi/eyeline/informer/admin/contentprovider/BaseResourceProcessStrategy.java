@@ -305,7 +305,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
   private File lookupFile(File parentDir, FileFilter filter) {
     File[] fs = fileSys.listFiles(parentDir, filter);
-    if(fs.length>0) {
+    if(fs != null && fs.length>0) {
       return fs[0];
     }
     return null;
@@ -655,6 +655,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       fileSys.rename(reportTmp, reportFile);
 
     } catch (AdminException e){
+      e.printStackTrace();//todo
       try{
         fileSys.delete(reportTmp);
       }catch (AdminException ignored){}
