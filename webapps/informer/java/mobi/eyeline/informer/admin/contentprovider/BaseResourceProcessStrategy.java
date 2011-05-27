@@ -645,14 +645,15 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             return true;
           }
         });
-        fileSys.delete(reportFile);
-        fileSys.rename(reportTmp, reportFile);
       } finally {
         if (ps != null) try {
           ps.close();
         } catch (Exception ignored) {
         }
       }
+      fileSys.delete(reportFile);
+      fileSys.rename(reportTmp, reportFile);
+
     } catch (AdminException e){
       try{
         fileSys.delete(reportTmp);
