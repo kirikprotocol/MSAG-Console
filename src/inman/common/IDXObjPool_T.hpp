@@ -127,7 +127,7 @@ protected:
     {
       typename std::vector<IndexedNode *>::size_type i = 0;
       for (; i < this->size(); ++i) {
-        delete at(i); at(i) = 0;
+        delete this->at(i); this->at(i) = 0;
       }
     }
   };
