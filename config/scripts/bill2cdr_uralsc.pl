@@ -42,8 +42,8 @@ my $eoln="\x0d\x0a";
 {field=>'OTHER_ADDR',width=>31},                 #10 114
 {value=>'',width=>31},                           #11 145
 {value=>'',width=>17},                           #12 176
-{value=>'',width=>10},                           #13 193
-{value=>'',width=>10},                           #14 203
+{field=>'SRC_SME_ID',maxwidth=>10,width=>10},    #13 193
+{field=>'DST_SME_ID',maxwidth=>10,width=>10},    #14 203
 {value=>'0',width=>5},                           #15 213
 {value=>'0',width=>10},                          #16 218
 {value=>'0',width=>5},                           #17 228
@@ -171,7 +171,14 @@ sub outrow{
     {
       $v=$f->{value};
     }
-    $v=substr($v,-$f->{maxlength}) if length($v)>$f->{maxlength};
+    if(defined($f->{maxlength}))
+    {
+      $v=substr($v,-$f->{maxlength}) if length($v)>$f->{maxlength};
+    }
+    if(defined($f->{maxwidth}))
+    {
+      $v=substr($v,$f->{maxwidth});
+    }
 
     if($f->{align} eq 'R')
     {
