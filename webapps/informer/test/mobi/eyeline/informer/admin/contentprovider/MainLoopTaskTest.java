@@ -11,31 +11,30 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import testutils.TestUtils;
 
 import java.io.*;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Aleksandr Khalitov
  */
 public class MainLoopTaskTest {
 
-  private static MainLoopTask task;
+  private MainLoopTask task;
 
-  private static File workFile;
+  private File workDir;
 
-  private static ContentProviderContext context;
+  private SingleFileResource resource;
 
-  private static SingleFileResource resource;
+  private TestDeliveryManager deliveryManager;
 
-  private static TestDeliveryManager deliveryManager;
+  private User u;
 
   private static User prepareUser() {
     User u = new User();
@@ -45,23 +44,24 @@ public class MainLoopTaskTest {
     return u;
   }
 
-  @BeforeClass
-  public static void init() throws Exception{
-    workFile = TestUtils.createRandomDir("-cpt");
+  @Before
+  public void init() throws Exception{
+    u = prepareUser();
+    workDir = TestUtils.createRandomDir("-cpt");
     resource = new SingleFileResource();
     deliveryManager = new TestDeliveryManager();
-    context = new SingleUserContentPContext(prepareUser(), deliveryManager);
+    ContentProviderContext context = new SingleUserContentPContext(u, deliveryManager);
     task = new MainLoopTask(context, new UserDirResolver() {
       @Override
       public File getUserLocalDir(String login, UserCPsettings ucps) throws AdminException {
-        return new File(workFile, login);
+        return new File(workDir, login);
       }
 
       @Override
       public FileResource getConnection(User user, UserCPsettings ucps) throws AdminException {
         return resource;
       }
-    }, workFile);
+    }, workDir);
 
   }
 
@@ -107,79 +107,149 @@ public class MainLoopTaskTest {
     return count[0];
   }
 
-  @Test
-  public void testSimple() throws Exception {
+  private void _testSimple() throws Exception {
 
     resource.setDeliveryFile("test-cp-simple-" + System.currentTimeMillis() + ".csv");
-
-    User u = prepareUser();
     UserCPsettings settings = prepareSettings(UserCPsettings.WorkType.simple);
 
-    ResourceProcessStrategy strategy = task.getStrategy(u, new File(workFile, u.getLogin()), settings, resource);
+    ResourceProcessStrategy strategy = task.getStrategy(u, new File(workDir, u.getLogin()), settings, resource);
 
     strategy.process(true);
 
-    assertEquals(resource.listCSVFiles().size(), 0);
-
+    try{
+      resource.open();
+      assertEquals(resource.listCSVFiles().size(), 0);
+    }finally {
+      resource.close();
+    }
     int id = testCreated(u.getLogin());
 
-    assertEquals(countMessages(u.getLogin(), id), 1);
+    assertEquals(countMessages(u.getLogin(), id), 3);
 
 
     deliveryManager.dropDelivery(u.getLogin(),"", id);
 
   }
 
-
-  @Test
-  public void testDetailed() throws Exception {
+  private void _testDetailed(boolean createReports) throws Exception {
     String deliveryName = "test-cp-detailed"+System.currentTimeMillis();
     String remoteFile = deliveryName + ".csv";
     resource.setDeliveryFile(remoteFile);
 
-    User u = prepareUser();
     UserCPsettings settings = prepareSettings(UserCPsettings.WorkType.detailed);
+    settings.setCreateReports(createReports);
 
-    ResourceProcessStrategy strategy = task.getStrategy(u, new File(workFile, u.getLogin()), settings, resource);
+    ResourceProcessStrategy strategy = task.getStrategy(u, new File(workDir, u.getLogin()), settings, resource);
 
     strategy.process(true);
 
-    assertEquals(resource.listCSVFiles().size(), 0);
+    try{
+      resource.open();
+      assertEquals(resource.listCSVFiles().size(), 0);
+    }finally {
+      resource.close();
+    }
+
     assertEquals(resource.deliveryFile, remoteFile+".active");
 
     int id = testCreated(u.getLogin());
 
-    assertEquals(countMessages(u.getLogin(), id), 1);
+    assertEquals(countMessages(u.getLogin(), id), 3);
 
-    deliveryManager.forceModifyDeliveries();
+    int tried = 0;
+    do{
+      Thread.sleep(500);
+      deliveryManager.forceModifyDeliveries();
+      tried ++;
+      if(tried==100) {
+        break;
+      }
+    }while (deliveryManager.getDelivery("","", id).getStatus() !=  DeliveryStatus.Finished);
 
-//    File finished = new File(workFile, u.getLogin()+File.separatorChar+deliveryName+".fin");
-//    File report = new File(workFile, u.getLogin()+File.separatorChar+deliveryName+".report");
-//
-//
-//    finished.createNewFile();
-//    report.createNewFile();
-//
-//
-//    strategy.process(u, new File(workFile, u.getLogin()), settings, true);
-//
-//
-//    assertEquals(resource.listCSVFiles().size(),0);
-//    assertEquals(resource.deliveryFile, remoteFile+".finished");
-//
-//    assertEquals(resource.uploaded.size(), 1);
+    if(tried == 100) {
+      fail("Something is wrong, delivery is not finished");
+    }
 
+    strategy.process(false);
 
-
-    deliveryManager.dropDelivery(u.getLogin(),"", id);
+    try{
+      resource.open();
+      assertEquals(resource.listCSVFiles().size(), 0);
+    }finally {
+      resource.close();
+    }
+    assertEquals(resource.deliveryFile, remoteFile+".finished");
   }
 
 
+  @Test
+  public void testDetailedNoReport() throws Exception {
+    _testDetailed(false);
+    assertEquals(resource.uploaded.size(), 0);
+  }
 
-  @AfterClass
-  public static void shutdown() {
-    if(workFile != null) {
-      TestUtils.recursiveDeleteFolder(workFile);
+  @Test
+  public void testDetailedReport() throws Exception {
+    _testDetailed(true);
+    assertEquals(resource.uploaded.size(), 1);
+  }
+
+
+  @Test
+  public void testSimple() throws Exception {
+    _testSimple();
+  }
+  @Test
+  public void testSingleTextDetailedNoReport() throws Exception {
+    resource.singleText = true;
+    _testDetailed(false);
+    assertEquals(resource.uploaded.size(), 0);
+  }
+
+  @Test
+  public void testSingleTextDetailedReport() throws Exception {
+    resource.singleText = true;
+    _testDetailed(true);
+    assertEquals(resource.uploaded.size(), 1);
+  }
+
+
+  @Test
+  public void testSingleTextSimple() throws Exception {
+    resource.singleText = true;
+    _testSimple();
+  }
+
+
+  @Test(expected = IllegalStateException.class)
+  public void testOpenError() throws AdminException {
+    resource.listCSVFiles();
+  }
+
+  @Test
+  public void cleanAfterCrash() throws Exception{
+    File parent = new File(workDir.getAbsolutePath() + File.separatorChar + u.getLogin());
+    assertTrue("Can't create dir", parent.exists() || parent.mkdirs());
+    File f1 = new File(parent, "test1.1111.gen");
+    File f2 = new File(parent, "test2.1111.not.generated");
+    assertTrue("Can't create files", f1.createNewFile() && f2.createNewFile());
+
+    UserCPsettings settings = prepareSettings(UserCPsettings.WorkType.simple);
+    ResourceProcessStrategy strategy = task.getStrategy(u, new File(workDir, u.getLogin()), settings, resource);
+    strategy.process(true);
+
+    assertFalse("File is not deleted", f1.exists());
+    assertFalse("File is not deleted", f2.exists());
+
+    assertEquals(deliveryManager.countDeliveries(u.getLogin(), "", new DeliveryFilter()), 0);
+
+  }
+
+
+  @After
+  public void shutdown() {
+    if(workDir != null) {
+      TestUtils.recursiveDeleteFolder(workDir);
     }
   }
 
@@ -189,6 +259,10 @@ public class MainLoopTaskTest {
     private String deliveryFile;
 
     private Set<String> uploaded = new HashSet<String>(5);
+
+    private boolean opened;
+
+    private boolean singleText = false;
 
 
     public String getDeliveryFile() {
@@ -200,10 +274,16 @@ public class MainLoopTaskTest {
     }
 
     @Override
-    public void open() throws AdminException {}
+    public void open() throws AdminException {
+      if(opened) {
+        throw new IllegalStateException("Resource is already opened!");
+      }
+      opened = true;
+    }
 
     @Override
     public List<String> listCSVFiles() throws AdminException {
+      checkOpened();
       if(deliveryFile == null || !deliveryFile.endsWith(".csv")) {
         return Collections.emptyList();
       }
@@ -214,6 +294,7 @@ public class MainLoopTaskTest {
 
     @Override
     public void get(String path, OutputStream os) throws AdminException {
+      checkOpened();
       if(deliveryFile == null || !deliveryFile.equals(path)) {
         return;
       }
@@ -224,7 +305,9 @@ public class MainLoopTaskTest {
       PrintWriter wr = null;
       try{
         wr = new PrintWriter(new OutputStreamWriter(os));
-        wr.println("+79139489906|Hello, world!");
+        wr.print("+79139489906|Hello \\n world!");wr.println(singleText ? "" : "1");
+        wr.print("89139489907|Hello \\n world!");wr.println(singleText ? "" : "2");
+        wr.print("79139489906|Hello \\n world!");wr.println(singleText ? "" : "3");
       }
       finally {
         if(wr != null) {
@@ -235,6 +318,7 @@ public class MainLoopTaskTest {
 
     @Override
     public void rename(String fromPath, String toPath) throws AdminException {
+      checkOpened();
       if(deliveryFile == null || !deliveryFile.equals(fromPath)) {
         return;
       }
@@ -243,6 +327,7 @@ public class MainLoopTaskTest {
 
     @Override
     public void remove(String path) throws AdminException {
+      checkOpened();
       if(deliveryFile == null || !deliveryFile.equals(path)) {
         return;
       }
@@ -251,11 +336,20 @@ public class MainLoopTaskTest {
 
     @Override
     public void put(InputStream is, String toPath) throws AdminException {
+      checkOpened();
       uploaded.add(toPath);
     }
 
     @Override
     public void close() throws AdminException {
+      checkOpened();
+      opened = false;
+    }
+
+    private void checkOpened() {
+      if(!opened) {
+        throw new IllegalStateException("Resource is closed!");
+      }
     }
   }
 
@@ -349,7 +443,7 @@ public class MainLoopTaskTest {
 
       delivery.setActivePeriodStart(new Time(0,0,0));
 
-      delivery.setActivePeriodEnd(new Time(0,0,0));
+      delivery.setActivePeriodEnd(new Time(23,59,59));
 
       List<Day> days = new ArrayList<Day>(7);
       for (int i=1; i<8;i++) {
@@ -370,9 +464,8 @@ public class MainLoopTaskTest {
     }
 
     @Override
-    public void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException {
-      filter.setDeliveryId(deliveryId);
-      deliveryManager.getMessages(login, "", filter, 1000, visitor);
+    public void getMessagesStates(String login, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+      deliveryManager.getMessages(login, "", filter, _pieceSize, visitor);
     }
 
     @Override

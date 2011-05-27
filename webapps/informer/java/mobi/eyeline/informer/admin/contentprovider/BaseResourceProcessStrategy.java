@@ -24,18 +24,18 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
   private static final Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
-  ContentProviderContext context;
-  FileSystem fileSys;
-  User user;
-  FileResource resource;
-  File workDir;
-  Address sourceAddr;
-  String encoding;
-  boolean createReports;
-  String host;
-  Integer port;
-  UserCPsettings.Protocol protocol;
-  String path;
+  private ContentProviderContext context;
+  private FileSystem fileSys;
+  private User user;
+  private FileResource resource;
+  private File workDir;
+  private Address sourceAddr;
+  private String encoding;
+  private boolean createReports;
+  private String host;
+  private Integer port;
+  private UserCPsettings.Protocol protocol;
+  private String path;
 
   private static final String DELIVERY_PROC_ERR = "Delivery's processing";
   private static final String UPLOAD_REPORTS_ERR = "Results uploading";
@@ -73,13 +73,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   public final void process(boolean allowDeliveryCreation) {
 
     if (allowDeliveryCreation) {
-      try{
-        downloadFiles();
-        getMBean().notifyInteractionOk(getResourceHost(), port, "type", "downloading");
-      }catch (AdminException e) {
-        getMBean().notifyInteractionError(getResourceHost(), port, e.getMessage(), "type", "downloading");
-        log.error(e,e);
-      }
+      downloadForProcess();
     }
 
     File[] files = fileSys.listFiles(workDir);
@@ -90,38 +84,10 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
     for (File f : files) {
       try{
-        if (f.getName().endsWith(".csv")) {
-          try {
-            createDeliveryFromFile(f);
-            try {
-              resource.open();
-              fileProccesed(resource, f.getName());
-              getMBean().notifyInteractionOk(getResourceHost(), port,"type", "file proccesed");
-            }catch (AdminException e){
-              log.error(e,e);
-              getMBean().notifyInteractionError(getResourceHost(), port, e.getMessage(), "type", "file proccesed");
-            } finally {
-              resource.close();
-            }
-          } catch (DeliveryException e) {
-            log.error(e,e);
-            getMBean().notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
-            try{
-              fileSys.delete(f);
-            }catch (AdminException ignored){}
-            if(e.getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline) {   // informer is offline ?
-              deliveryCreationError(resource, e, f.getName());                         // other problems, notify cp
-            }
-          } catch (Exception e){
-            log.error(e,e);
-            getMBean().notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
-            try{
-              fileSys.delete(f);
-            }catch (AdminException ignored){}
-            deliveryCreationError(resource, e, f.getName());                           // other problems, notify cp
-          }
-        } else if (f.getName().endsWith(".wait")) {
-          uploadDeliveryResults(f);
+        if (isFileNew(f)) {
+          processNewFile(f);
+        } else if (isFileForFinish(f)) {
+          finishDelivery(f);
         }
       }catch (Exception e) {
         log.error(e,e);
@@ -131,16 +97,53 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
     for(File f : files) {
       try{
-        if(f.getName().endsWith(".not.generated")) {       // haven't analogs on resource
+        if(isCrashedBeforeGen(f)) {       // haven't analogs on resource (server crashed on create->file is removed on resource->server started)
           cleanNotGenerated(f);
-        } else if(f.getName().endsWith(".gen")) {          // haven't analogs on resource
+        } else if(isCrashedAfterGen(f)) { // haven't analogs on resource (server crashed on create->file is removed on resource->server started)
           cleanGenerated(f);
         }
       }catch (Exception e){
         log.error(e,e);
       }
     }
+  }
 
+  private void downloadForProcess() {
+    try{
+      downloadFiles();
+      getMBean().notifyInteractionOk(getResourceHost(), port, "type", "downloading");
+    }catch (AdminException e) {
+      getMBean().notifyInteractionError(getResourceHost(), port, e.getMessage(), "type", "downloading");
+      log.error(e,e);
+    }
+  }
+
+  private void processNewFile(File f) {
+    try {
+      createDeliveryFromFile(f);
+      try {
+        openResource();
+        fileProccesed(resource, f.getName());
+        getMBean().notifyInteractionOk(getResourceHost(), port,"type", "file proccesed");
+      }catch (AdminException e){
+        log.error(e,e);
+        getMBean().notifyInteractionError(getResourceHost(), port, e.getMessage(), "type", "file proccesed");
+      } finally {
+        closeResource();
+      }
+    } catch (DeliveryException e) {
+      log.error(e,e);
+      getMBean().notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
+      silentDelete(f);
+      if(e.getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline) {   // informer is offline ?
+        deliveryCreationError(resource, e, f.getName());                         // other problems, notify cp
+      }
+    } catch (Exception e){
+      log.error(e,e);
+      getMBean().notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
+      silentDelete(f);
+      deliveryCreationError(resource, e, f.getName());                           // other problems, notify cp
+    }
   }
 
   private void log(String text) {
@@ -151,7 +154,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   private void downloadFiles() throws AdminException {
     log("downloading csv files ...");
     try {
-      resource.open();
+      openResource();
 
       List<String> remoteFiles = resource.listCSVFiles();
       for (String remoteFile : remoteFiles) {
@@ -165,10 +168,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         fileSys.rename(localTmpFile, new File(workDir, remoteFile));
       }
     } finally {
-      try {
-        resource.close();
-      } catch (AdminException ignored) {
-      }
+      closeResource();
     }
     log("downloaded.");
   }
@@ -188,7 +188,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
   }
 
-  private DeliveryPrototype createDelivery(String deliveryName) throws AdminException {
+  private DeliveryPrototype createProto(String deliveryName) throws AdminException {
     log("create empty delivery: " + deliveryName);
     DeliveryPrototype delivery = new DeliveryPrototype();
     delivery.setStartDate(new Date());
@@ -197,6 +197,15 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     delivery.setName(deliveryName);
     delivery.setProperty(UserDataConsts.CP_DELIVERY, "true");
     return delivery;
+  }
+
+  private void openResource() throws AdminException {
+    resource.open();
+  }
+  private void closeResource() {
+    try {
+      resource.close();
+    } catch (AdminException ignored) {}
   }
 
 
@@ -322,106 +331,124 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     fileSys.rename(from, to);
   }
 
+  private void activateAfterCrash(File existedGenFile, File fileFromResource, Delivery d)  throws AdminException{
+    File parentDir = fileFromResource.getParentFile();
+    context.activateDelivery(user.getLogin(), d.getId());
+    File waitFile = buildWaitFile(parentDir, d.getName(), d.getId());
+    fileSys.rename(existedGenFile, waitFile);
+
+    if(!createReports) {
+      File reportFile = buildRepFile(parentDir, d.getName(), d.getId());
+      fileSys.delete(reportFile);
+    }
+    fileSys.delete(fileFromResource);
+  }
+
+  private void createNewDelivery(String deliveryName, Delivery d, File fromResource)  throws Exception{
+
+    if(d != null) {
+      context.dropDelivery(user.getLogin(), d.getId());
+    }
+
+    File parentDir = fromResource.getParentFile();
+
+    File notGenerated = buildNotGeneratedFile(parentDir, deliveryName);
+
+    silentRename(fromResource, notGenerated);
+
+    String sigleText = isSingleText(notGenerated);
+
+    DeliveryPrototype proto = createProto(deliveryName);
+
+    CreateStrategy strategy;
+    if(sigleText == null) {
+      strategy = new InvidualStrategy();
+    }else {
+      proto.setSingleText(decodeText(sigleText));
+      strategy = new SingleStrategy();
+    }
+
+    try{
+      d = strategy.createDelivery(user,  proto);
+    }catch (Exception e){
+      log.error(e,e);
+      silentDelete(notGenerated);
+      throw e;
+    }
+
+    File waitFile =  buildWaitFile(parentDir, deliveryName, d.getId());
+    File genFile = buildGeneratedFile(parentDir, deliveryName, d.getId());
+    File reportFile = buildRepFile(parentDir, deliveryName, d.getId());
+
+    fileSys.delete(reportFile);
+
+    try{
+
+      addMessagesToDelivery(d, notGenerated, reportFile, strategy);
+
+      silentRename(notGenerated, genFile);
+
+      context.activateDelivery(user.getLogin(), d.getId());
+
+      silentRename(genFile, waitFile);
+
+      if(!createReports) {
+        fileSys.delete(reportFile);
+      }
+
+    }catch (Exception e) {
+      log.error(e,e);
+      if(!(e instanceof DeliveryException) || (((DeliveryException)e).getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline)) {
+        try{
+          context.dropDelivery(user.getLogin(), d.getId());
+          silentDelete(notGenerated, genFile, waitFile, reportFile);
+        }catch (Exception ex){
+          log.error(ex,ex);
+        }
+      }
+      throw e;
+    }
+  }
+
   private void createDeliveryFromFile(File f) throws Exception {
     String fileName = f.getName();
     final String deliveryName = fileName.substring(0, fileName.length() - 4);
 
     Delivery d = getExistingDelivery(deliveryName);
 
-    File parentDir = f.getParentFile();
-
-    File genFile = lookupGenFile(deliveryName, parentDir);
-
-    File waitFile, reportFile;
+    File genFile = lookupGenFile(deliveryName, f.getParentFile());
 
     if(d != null && genFile != null && fileSys.exists(genFile)) {   // gen file exist, only activation is neeed
-
-      context.activateDelivery(user.getLogin(), d.getId());
-      waitFile = buildWaitFile(parentDir, deliveryName, d.getId());
-      fileSys.rename(genFile, waitFile);
-
-      if(!createReports) {
-        reportFile = buildRepFile(parentDir, deliveryName, d.getId());
-        fileSys.delete(reportFile);
-      }
-      fileSys.delete(f);
-
+      activateAfterCrash(genFile, f, d);
     }else {
-
-      if(d != null) {
-        context.dropDelivery(user.getLogin(), d.getId());
-      }
-
-      File notGenerated = buildNotGeneratedFile(parentDir, deliveryName);
-
-      silentRename(f, notGenerated);
-
-      String sigleText = isSingleText(notGenerated);
-
-      DeliveryPrototype proto = createDelivery(deliveryName);
-
-      CreateStrategy strategy;
-      if(sigleText == null) {
-        strategy = new InvidualStrategy();
-      }else {
-        proto.setSingleText(decodeText(sigleText));
-        strategy = new SingleStrategy();
-      }
-
-      try{
-        d = strategy.createDelivery(user,  proto);
-      }catch (Exception e){
-        log.error(e,e);
-        try{
-          fileSys.delete(notGenerated);
-        }catch (Exception ignored){}
-        throw e;
-      }
-
-      waitFile =  buildWaitFile(parentDir, deliveryName, d.getId());
-      genFile = buildGeneratedFile(parentDir, deliveryName, d.getId());
-      reportFile = buildRepFile(parentDir, deliveryName, d.getId());
-
-      fileSys.delete(reportFile);
-
-      try{
-
-        addMessagesToDelivery(d, notGenerated, reportFile, strategy);
-
-        silentRename(notGenerated, genFile);
-
-        context.activateDelivery(user.getLogin(), d.getId());
-
-        silentRename(genFile, waitFile);
-
-        if(!createReports) {
-          fileSys.delete(reportFile);
-        }
-
-      }catch (Exception e) {
-        log.error(e,e);
-        if(!(e instanceof DeliveryException) || (((DeliveryException)e).getErrorStatus() != DeliveryException.ErrorStatus.ServiceOffline)) {
-          try{
-            context.dropDelivery(user.getLogin(), d.getId());
-            try{
-              fileSys.delete(notGenerated);
-            }catch (AdminException ignored){}
-            try{
-              fileSys.delete(genFile);
-            }catch (AdminException ignored){}
-            try{
-              fileSys.delete(waitFile);
-            }catch (AdminException ignored){}
-            try{
-              fileSys.delete(reportFile);
-            }catch (AdminException ignored){}
-          }catch (Exception ex){
-            log.error(ex,ex);
-          }
-        }
-        throw e;
-      }
+      createNewDelivery(deliveryName, d, f);
     }
+  }
+
+  private void silentDelete(File ... fs) {
+    if(fs != null) {
+      try{
+        for(File f : fs) {
+          fileSys.delete(f);
+        }
+      }catch (AdminException ignored){}
+    }
+  }
+
+  private static boolean isFileNew(File f) {
+    return f != null && f.getName().endsWith(".csv");
+  }
+
+  private static boolean isFileForFinish(File f) {
+    return f != null && f.getName().endsWith(".wait");
+  }
+
+  private static boolean isCrashedBeforeGen(File f) {
+    return f != null && f.getName().endsWith(".not.generated");
+  }
+
+  private static boolean isCrashedAfterGen(File f) {
+    return f != null && f.getName().endsWith(".gen");
   }
 
   protected void uploadFile(FileResource resource, File file, String toFile) throws AdminException {
@@ -455,9 +482,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }catch (AdminException e){
       log.error(e,e);
     } finally {
-      try {
-        fileSys.delete(f);
-      } catch (AdminException ignored) {}
+      silentDelete(f);
     }
   }
   private void cleanGenerated(File f) {
@@ -492,13 +517,46 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
   }
 
-  private void uploadDeliveryResults(File f) {
+  private boolean uploadReport(File f, String deliveryName) {
+    try{
+      uploadFile(resource, f, deliveryName + ".csv.rep.part");
+      resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
+      getMBean().notifyInteractionOk(getResourceHost(), port, "type","uploading");
+      return true;
+    }catch (AdminException e){
+      log.error(e, e);
+      getMBean().notifyInteractionError(getResourceHost(), port, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
+      return false;
+    }
+  }
+  private boolean _finishDelivery(String deliveryName) {
+    try{
+      deliveryFinished(resource, deliveryName + ".csv");
+      getMBean().notifyInteractionOk(getResourceHost(), port, "type","finalizing");
+      return true;
+    }catch (AdminException e){
+      log.error(e, e);
+      getMBean().notifyInteractionError(getResourceHost(), port, "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
+      return false;
+    }
+  }
+
+  private static String getDeliveryNameFromWait(File f) {
+    String name = f.getName().substring(0, f.getName().length() - ".wait".length());
+    name = name.substring(0, name.lastIndexOf('.'));
+    return name.substring(0, name.lastIndexOf('.'));
+  }
+
+  private static int getDeliveryIdFromWait(File f) {
+    String name = f.getName().substring(0, f.getName().length() - ".wait".length());
+    return Integer.parseInt(name.substring(name.lastIndexOf('.') + 1));
+  }
+
+  private void finishDelivery(File f) {
     log("wait file: " + f.getName());
 
-    String name = f.getName().substring(0, f.getName().length() - ".wait".length());
-    Integer deliveryId = Integer.parseInt(name.substring(name.lastIndexOf('.') + 1));
-    name = name.substring(0, name.lastIndexOf('.'));
-    String deliveryName = name.substring(0, name.lastIndexOf('.'));
+    int deliveryId = getDeliveryIdFromWait(f);
+    String deliveryName = getDeliveryNameFromWait(f);
 
     try {
       Delivery d = context.getDelivery(user.getLogin(), deliveryId);
@@ -510,42 +568,26 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (d.getStatus() == DeliveryStatus.Finished) {
         log("delivery finished for: " + f.getName());
 
-
         File reportTmpFile = null;
         if (createReports) {
           log("create report for: " + f.getName());
           reportTmpFile = buildRepFile(f.getParentFile(), deliveryName , deliveryId);
-          createReport(reportTmpFile, d);
+          buildReport(reportTmpFile, d);
         }
         try{
-          resource.open();
+          openResource();
           if(reportTmpFile != null) {
-            try{
-              uploadFile(resource, reportTmpFile, deliveryName + ".csv.rep.part");
-              resource.rename(deliveryName + ".csv.rep.part", deliveryName + ".csv.report");
-              getMBean().notifyInteractionOk(getResourceHost(), port, "type","uploading");
-            }catch (AdminException e){
-              log.error(e, e);
-              getMBean().notifyInteractionError(getResourceHost(), port, "Can't upload results for delivery="+deliveryName+" user="+user.getLogin(), "type","uploading");
+            if(!uploadReport(reportTmpFile, deliveryName)) {
               return;
             }
             fileSys.delete(reportTmpFile);
           }
-          try{
-            deliveryFinished(resource, d.getName() + ".csv");
-            getMBean().notifyInteractionOk(getResourceHost(), port, "type","finalizing");
-          }catch (AdminException e){
-            log.error(e, e);
-            getMBean().notifyInteractionError(getResourceHost(), port, "Can't finalize delivery="+deliveryName+" user="+user.getLogin(), "type","finalizing");
+          if(!_finishDelivery(deliveryName)) {
             return;
           }
         }finally {
-          try {
-            resource.close();
-          } catch (AdminException ignored) {
-          }
+          closeResource();
         }
-
         fileSys.delete(f);
       } else {
         log("delivery in status " + d.getStatus() + " for: " + f.getName());
@@ -587,7 +629,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     }
   }
 
-  private void createReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
+  private void buildReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
     File reportTmp = new File(reportFile.getAbsolutePath()+".tmp."+System.currentTimeMillis());
     try{
       copyFile(reportFile, reportTmp);
