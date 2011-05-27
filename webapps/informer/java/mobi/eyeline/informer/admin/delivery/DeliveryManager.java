@@ -21,8 +21,6 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   private int port;
 
-  private static final int TIMEOUT_SEC = 20;  //todo таймаут реально зависит от того, какой RESPONSE_TIMEOUT стоит в DcpClient.
-                                              //todo Надо, чтобы эта зависимость прослеживалась. Предлагаю устанавливать таймаут автоматически в DcpConnection как 2/3 от RESPONSE_TIMEOUT/1000 .
   private static final int COUNT_MESSAGES_PIECE = 100000;
   private static final int COUNT_DELIVERIES_PIECE = 10000;
 
@@ -326,7 +324,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     int res = 0;
     boolean more;
     do {
-      more= conn.getNextDeliveriesCount(reqId, COUNT_DELIVERIES_PIECE, TIMEOUT_SEC, tmpRes);
+      more= conn.getNextDeliveriesCount(reqId, COUNT_DELIVERIES_PIECE, tmpRes);
       res+=tmpRes[0];
     }while (more);
     return res;
@@ -341,6 +339,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
    * @param messageIds идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
+  @SuppressWarnings({"UnusedDeclaration"})
   public void dropMessages(String login, String password, int deliveryId, Collection<Long> messageIds) throws AdminException {
     DcpConnection conn = getDcpConnection(login, password);
     if (logger.isDebugEnabled()) {
@@ -483,7 +482,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     int _reqId = conn.getDeliveries(deliveryFilter);
     new VisitorHelper<Delivery>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Delivery> result) throws AdminException {
-        boolean res = connection.getNextDeliveries(reqId, pieceSize, TIMEOUT_SEC, result);
+        boolean res = connection.getNextDeliveries(reqId, pieceSize, result);
         for (Delivery d : result) {
           d.setDeliveryManager(DeliveryManager.this);
           d.setLogin(login);
@@ -520,12 +519,12 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   private static GetMessagesStrategy selectGetMessagesStrategy(MessageFilter filter) {
     if (filter.getStates() == null)
-      return new GetNonFinalMessagesStrategy(TIMEOUT_SEC, COUNT_MESSAGES_PIECE);
+      return new GetNonFinalMessagesStrategy(COUNT_MESSAGES_PIECE);
     for (MessageState s : filter.getStates())
       if (s == MessageState.New || s == MessageState.Process)
-        return new GetNonFinalMessagesStrategy(TIMEOUT_SEC, COUNT_MESSAGES_PIECE);
+        return new GetNonFinalMessagesStrategy(COUNT_MESSAGES_PIECE);
 
-    return new GetFinalizedMessagesStrategy(TIMEOUT_SEC, COUNT_MESSAGES_PIECE);
+    return new GetFinalizedMessagesStrategy(COUNT_MESSAGES_PIECE);
   }
 
   /**

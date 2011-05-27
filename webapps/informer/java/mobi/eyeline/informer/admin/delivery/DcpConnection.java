@@ -19,6 +19,11 @@ class DcpConnection {
 
   private DcpClient client;
 
+  /**
+   * Nаймаут в секундах. Информер будет собирать следующий кусок списка либо подсчёта сообщений или рассылок до тех пор, пока не наберет pieceSize или пока не истечет timeout
+   */
+  private int timeoutSec = 2*DcpClient.RESPONSE_TIMEOUT/3/1000;
+
   public DcpConnection(String host, int port, final String login, String password) throws AdminException {
     this.client = new DcpClient(host, port, login, password);
   }
@@ -278,12 +283,11 @@ class DcpConnection {
    *
    * @param reqId      идентификатор запроса
    * @param pieceSize  максимальное кол-во извлекаемых рассылок
-   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
    * @param deliveries куда следуют сложить рассылки
    * @return есть ли ещё рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextDeliveries(int reqId, int pieceSize, int timeoutSec, Collection<Delivery> deliveries) throws AdminException {
+  public boolean getNextDeliveries(int reqId, int pieceSize, Collection<Delivery> deliveries) throws AdminException {
     GetDeliveriesListNext req = new GetDeliveriesListNext();
     req.setReqId(reqId);
     req.setCount(pieceSize);
@@ -341,12 +345,11 @@ class DcpConnection {
    *
    * @param reqId     идентификатор запроса
    * @param pieceSize максимальное кол-во извлекаемых сообщений
-   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
    * @param messages  куда следуют сложить сообщения
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextMessages(int reqId, int pieceSize, int timeoutSec,  Collection<Message> messages) throws AdminException {
+  public boolean getNextMessages(int reqId, int pieceSize, Collection<Message> messages) throws AdminException {
     GetNextMessagesPack req = new GetNextMessagesPack();
     req.setReqId(reqId);
     req.setCount(pieceSize);
@@ -398,12 +401,11 @@ class DcpConnection {
    *
    * @param reqId     идентификатор запроса
    * @param pieceSize максимальное кол-во извлекаемых сообщений
-   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
    * @param result  куда следуют сложить результат
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextMessagesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+  public boolean getNextMessagesCount(int reqId, int pieceSize, int[] result) throws AdminException {
     CountMessagesPack count = new CountMessagesPack();
     count.setCount(pieceSize);
     count.setReqId(reqId);
@@ -418,12 +420,11 @@ class DcpConnection {
    *
    * @param reqId     идентификатор запроса
    * @param pieceSize максимальное кол-во извлекаемых рассылок
-   * @param timeoutSec таймаут в секундах. Информер будет собирать следующий кусок списка до тех пор, пока не наберет pieceSize рассылок или пока не истечет timeout
    * @param result  куда следуют сложить результат
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextDeliveriesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+  public boolean getNextDeliveriesCount(int reqId, int pieceSize, int[] result) throws AdminException {
     CountDeliveriesNext count = new CountDeliveriesNext();
     count.setCount(pieceSize);
     count.setReqId(reqId);

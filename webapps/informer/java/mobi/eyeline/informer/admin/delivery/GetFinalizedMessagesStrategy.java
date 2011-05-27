@@ -13,11 +13,9 @@ import java.util.Collection;
  */
 class GetFinalizedMessagesStrategy  implements GetMessagesStrategy {
 
-  private int timeoutSec;
   private int messagesCountPiece;
 
-  GetFinalizedMessagesStrategy(int timeoutSec, int messagesCountPiece) {
-    this.timeoutSec = timeoutSec;
+  GetFinalizedMessagesStrategy(int messagesCountPiece) {
     this.messagesCountPiece = messagesCountPiece;
   }
 
@@ -27,7 +25,7 @@ class GetFinalizedMessagesStrategy  implements GetMessagesStrategy {
 
     new VisitorHelper<Message>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Message> result) throws AdminException {
-        return connection.getNextMessages(reqId, pieceSize, timeoutSec, result);
+        return connection.getNextMessages(reqId, pieceSize, result);
       }
     }.visit(visitor);
 
@@ -39,7 +37,7 @@ class GetFinalizedMessagesStrategy  implements GetMessagesStrategy {
     int res = 0;
     boolean more;
     do {
-      more= conn.getNextMessagesCount(reqId, messagesCountPiece, timeoutSec, tmpRes);
+      more= conn.getNextMessagesCount(reqId, messagesCountPiece, tmpRes);
       res+=tmpRes[0];
     }while (more);
     return res;

@@ -25,11 +25,9 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
   int failedMsgs = 0;
   int expMsgs = 0;
 
-  private int timeoutSec;
   private int messagesCountPiece;
 
-  GetNonFinalMessagesStrategy(int timeoutSec, int messagesCountPiece) {
-    this.timeoutSec = timeoutSec;
+  GetNonFinalMessagesStrategy(int messagesCountPiece) {
     this.messagesCountPiece = messagesCountPiece;
   }
 
@@ -156,7 +154,7 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
       int res = 0;
       boolean more;
       do {
-        more= conn.getNextMessagesCount(reqId, messagesCountPiece, timeoutSec, tmpRes);
+        more= conn.getNextMessagesCount(reqId, messagesCountPiece, tmpRes);
         res+=tmpRes[0];
       }while (more);
       newMsgs = res;
@@ -218,7 +216,7 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     }
 
     protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Message> result) throws AdminException {
-      return connection.getNextMessages(reqId, pieceSize, timeoutSec, result);
+      return connection.getNextMessages(reqId, pieceSize, result);
     }
   }
 }

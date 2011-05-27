@@ -336,7 +336,7 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   @Override
-  public boolean getNextDeliveriesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+  public boolean getNextDeliveriesCount(int reqId, int pieceSize, int[] result) throws AdminException {
      if(!deliveryReqs.containsKey(reqId) || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
@@ -357,7 +357,7 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   @Override
-  public boolean getNextMessagesCount(int reqId, int pieceSize, int timeoutSec, int[] result) throws AdminException {
+  public boolean getNextMessagesCount(int reqId, int pieceSize, int[] result) throws AdminException {
     MessageRequest req = messReqs.get(reqId);
     if(req == null || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
@@ -391,7 +391,7 @@ public class TestDcpConnection extends DcpConnection{
     return r;
   }
 
-  public synchronized boolean getNextDeliveries(int reqId, int pieceSize, int timeoutSec, Collection<Delivery> deliveries) throws AdminException {
+  public synchronized boolean getNextDeliveries(int reqId, int pieceSize, Collection<Delivery> deliveries) throws AdminException {
     if(!deliveryReqs.containsKey(reqId) || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
@@ -431,7 +431,7 @@ public class TestDcpConnection extends DcpConnection{
     return r;
   }
 
-  public synchronized boolean getNextMessages(int reqId, int pieceSize, int timeoutSec, Collection<Message> messages) throws AdminException {
+  public synchronized boolean getNextMessages(int reqId, int pieceSize, Collection<Message> messages) throws AdminException {
     MessageRequest req = messReqs.get(reqId);
     if(req == null || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
@@ -518,7 +518,7 @@ public class TestDcpConnection extends DcpConnection{
       if(d.getActivePeriodStart().getTimeDate().after(now)) {
         continue;
       }
-      if(d.getActivePeriodEnd().getTimeDate().before(now)) {
+      if(d.getActivePeriodEnd().getTimeDate().before(now) && !(new SimpleDateFormat("HH:mm:ss").format(now).equals("23:59:59") && d.getActivePeriodEnd().getTimeString().equals("23:59:59"))) {
         continue;
       }
       List<Message> copy = null;
