@@ -44,7 +44,7 @@ public interface ContentProviderContext {
 
   void addSingleMessagesWithData(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException;
 
-  void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
+  void getMessagesStates(String login, MessageFilter filter, int pieceSize, Visitor<Message> visitor) throws AdminException;
 
   File getFtpUserHomeDir(String login) throws AdminException;
 
