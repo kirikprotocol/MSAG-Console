@@ -31,7 +31,11 @@ public:
     return pthread_kill(thread,sig);
   }
 #endif
+#ifdef __MACH__
   unsigned long getThrId(void) const { return reinterpret_cast<unsigned long>(thread); }
+#else
+  unsigned long getThrId(void) const { return thread; }
+#endif
   int getRetCode(){return retcode;}
   void setRetCode(int rc){retcode=rc;}
 

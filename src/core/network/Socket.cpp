@@ -25,7 +25,7 @@ namespace smsc{
 namespace core{
 namespace network{
 
-bool Socket::fillInetAddr( const char* host, sockaddr_in& sock ) const
+bool Socket::fillInetAddr( const char* host, sockaddr_in& sk ) const
 {
     hostent* lpHostEnt;
 #ifndef _REENTRANT
@@ -51,7 +51,7 @@ bool Socket::fillInetAddr( const char* host, sockaddr_in& sock ) const
     {
       return false;
     }
-    memcpy(&sock.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
+    memcpy(&sk.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
     return true;
 }
 
