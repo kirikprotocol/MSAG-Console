@@ -26,19 +26,19 @@ endswitch
 	-lscag-util \
         -linformer-io \
         -llicense-check \
-        -lcore-network $(SOCKETLIB) -lnsl \
+        -lcore-network $(SOCKETLIB) $(LIBNSL) \
         -lcore-threads \
         -lutil-mirrorfile \
         -lutil-config \
         -lutil-xml $(XERCES_LIB) \
-        @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+        @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
 switch SNMP
 YES: $(SNMP_LIBS_CORE) \
 endswitch
-        $(SSL_LIB) \
-        -lpthread -lrt -ldl \
+        $(SSL_LIB) $(LIBICONV) \
+        -lpthread $(LIBRT) -ldl \
         $(LIBMALLOC)
 
 scag/tests/pvss-read-abonent-entry readEntry \
@@ -49,10 +49,10 @@ scag/tests/pvss-read-abonent-entry readEntry \
 	-lscag-util \
         -linformer-io \
         -lcore-threads \
-        @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+        @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
-        -lpthread -lrt -ldl
+        -lpthread $(LIBRT) -ldl
 
 scag/tests/pvss-collect-storage-stats collectStorageStats \
         -lscag-util-storage \
@@ -60,10 +60,10 @@ scag/tests/pvss-collect-storage-stats collectStorageStats \
 	-lscag-util \
         -linformer-io \
         -lcore-threads \
-        @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+        @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
-        -lpthread -lrt -ldl
+        -lpthread $(LIBRT) -ldl
 
 scag/pvss-repairIntStorage repairIntStorage \
         -lscag-pvss-base \
@@ -75,10 +75,10 @@ scag/pvss-repairIntStorage repairIntStorage \
 	-lscag-util \
         -linformer-io \
         -lcore-threads \
-        @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+        @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
-        -lpthread -lrt -ldl
+        -lpthread $(LIBRT) -ldl
 
 scag/tests/pvss-testBackupProcessor testBackupProcessor \
         -lscag-pvss-base \
@@ -90,7 +90,7 @@ scag/tests/pvss-testBackupProcessor testBackupProcessor \
 	-lscag-util \
         -linformer-io \
         -lcore-threads \
-        @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+        @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
-        -lpthread -lrt -ldl
+        -lpthread $(LIBRT) -ldl
