@@ -94,6 +94,7 @@
                                onchange="
                                    document.getElementById('messageTimeToLive.hours').disabled=!this.checked;
                                    document.getElementById('messageTimeToLive.minutes').disabled=!this.checked;
+                                   document.getElementById('messageTimeToLive.seconds').disabled=!this.checked;
                                    "/>
       <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" id="messageTimeToLiveLabel" style="white-space:nowrap;" value="#{deliveryBundle.messageTimeToLive}"/>
       <eye:inputTime rendered="#{deliveryGroupEdit.userInAdminRole}" id="messageTimeToLive" value="#{deliveryGroupEdit.messageTimeToLive}"/>
@@ -102,6 +103,7 @@
                                onchange="
                                    document.getElementById('validityPeriod.hours').disabled=!this.checked;
                                    document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+                                   document.getElementById('validityPeriod.seconds').disabled=!this.checked;
                                    "/>
       <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
       <eye:inputTime rendered="#{deliveryGroupEdit.userInAdminRole}" id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}"/>
@@ -249,11 +251,13 @@
       if(e != null) {
         e.disabled=!document.getElementById('editValidHours').checked;
         document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
+        document.getElementById('validityPeriod.seconds').disabled=!document.getElementById('editValidHours').checked;
       }
       e = document.getElementById('messageTimeToLive.hours');
       if(e != null) {
         e.disabled=!document.getElementById('editMessageTimeToLive').checked;
         document.getElementById('messageTimeToLive.minutes').disabled=!document.getElementById('editMessageTimeToLive').checked;
+        document.getElementById('messageTimeToLive.seconds').disabled=!document.getElementById('editMessageTimeToLive').checked;
       }
       e = document.getElementById('transactionMode');
       var dt = document.getElementById('deliveryType');

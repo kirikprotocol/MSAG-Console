@@ -176,6 +176,10 @@ public class DeliveryEditGroupController extends DeliveryController {
           if (editMessageTimeToLive)
             d.setMessageTimeToLive(messageTimeToLive);
 
+          if(!d.isRetryOnFail() && d.getValidityPeriod() != null) {
+            d.setMessageTimeToLive(d.getValidityPeriod());
+          }
+
           config.modifyDelivery(user.getLogin(), d);
         }
       } catch (AdminException e) {

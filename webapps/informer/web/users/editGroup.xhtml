@@ -95,6 +95,7 @@
           <h:selectBooleanCheckbox id="editMessageTimeToLive" value="#{userGroupEdit.editMessageTimeToLive}" onchange="
           document.getElementById('messageTimeToLive.hours').disabled=!this.checked;
           document.getElementById('messageTimeToLive.minutes').disabled=!this.checked;
+          document.getElementById('messageTimeToLive.seconds').disabled=!this.checked;
           "/>
           <h:outputText id="messageTimeToLiveLabel" style="white-space:nowrap;" value="#{userBundle.messageTimeToLive}"/>
           <eye:inputTime id="messageTimeToLive" value="#{userGroupEdit.messageTimeToLive}"/>
@@ -102,6 +103,7 @@
           <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="
           document.getElementById('validityPeriod.hours').disabled=!this.checked;
           document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+          document.getElementById('validityPeriod.seconds').disabled=!this.checked;
           "/>
           <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
           <eye:inputTime id="validityPeriod" value="#{userGroupEdit.validityPeriod}"/>
@@ -275,8 +277,10 @@
         document.getElementById('transactionMode').disabled=!document.getElementById('editTransactionMode').checked;
         document.getElementById('messageTimeToLive.hours').disabled=!document.getElementById('editMessageTimeToLive').checked;
         document.getElementById('messageTimeToLive.minutes').disabled=!document.getElementById('editMessageTimeToLive').checked;
+        document.getElementById('messageTimeToLive.seconds').disabled=!document.getElementById('editMessageTimeToLive').checked;
         document.getElementById('validityPeriod.hours').disabled=!document.getElementById('editValidHours').checked;
         document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
+        document.getElementById('validityPeriod.seconds').disabled=!document.getElementById('editValidHours').checked;
         document.getElementById('smsPerSec').disabled=!document.getElementById('editSmsPerSec').checked;
 
         var allowedRegionsDisabled=!document.getElementById('editAllowedRegions').checked;

@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web.components.input_time;
 
 import mobi.eyeline.informer.util.Time;
-import mobi.eyeline.informer.web.components.collapsing_group.CollapsingGroup;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
@@ -29,10 +28,14 @@ public class InputTimeRenderer extends Renderer {
     String minutes = context.getExternalContext().getRequestParameterMap().get(cg.getId()+".minutes");
     if (minutes != null && minutes.trim().length() == 0)
       minutes = null;
+    
+    String seconds = context.getExternalContext().getRequestParameterMap().get(cg.getId()+".seconds");
+    if (seconds != null && seconds.trim().length() == 0)
+      seconds = null;
 
-    if (hours != null && minutes != null) {
+    if (hours != null && minutes != null && seconds != null) {
       try {
-        cg.setValue(new Time(hours + ':' + minutes));
+        cg.setValue(new Time(hours + ':' + minutes + ':' + seconds));
       } catch (IllegalArgumentException e) {
         if (context.getMessages("inputTime_" + cg.getId()) == null || !context.getMessages("inputTime_" + cg.getId()).hasNext()) {
           String errMsg = cg.getErrorMessage();
@@ -58,10 +61,17 @@ public class InputTimeRenderer extends Renderer {
     if (minVal.length() == 1)
       minVal = '0' + minVal;
 
+    String secId = "\"" + t.getId() + ".seconds\"";
+    String secVal = t.getValue() == null ? "" : String.valueOf(t.getValue().getSec());
+    if (secVal.length() == 1)
+      secVal = '0' + secVal;
+
     w.append("<div ").append(" id=\"").append(t.getId()).append("\">");
     w.append("<input type=\"text\" id=").append(hoursId).append("\" name=").append(hoursId).append(" value=\"").append(hoursVal).append("\" maxlength=\"3\" size=\"2\">");
     w.append(":");
     w.append("<input type=\"text\" id=").append(minId).append("\" name=").append(minId).append(" value=\"").append(minVal).append("\" maxlength=\"2\" size=\"2\">");
+    w.append(":");
+    w.append("<input type=\"text\" id=").append(secId).append("\" name=").append(secId).append(" value=\"").append(secVal).append("\" maxlength=\"2\" size=\"2\">");
     w.append("</div>");
   }
 
