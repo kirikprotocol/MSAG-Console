@@ -238,16 +238,17 @@ template <
 >
 class UNQObjPool_T : public IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg> {
 public:
-  using typename IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::size_type;
-  using typename IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::PooledObj;
+  typedef IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg> BaseT;
+  typedef typename BaseT::size_type size_type;
+  typedef typename BaseT::PooledObj PooledObj;
 
   //NOTE: by default pooled objects are destroyed upon release.
   //      Set 'erase_on_rlse' to false if pooled objects are reusable.
   explicit UNQObjPool_T(bool erase_on_rlse = true)
-    : IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>(erase_on_rlse)
+    : BaseT(erase_on_rlse)
   { }
   explicit UNQObjPool_T(_SizeTypeArg num_to_reserve, bool erase_on_rlse = true)
-    : IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>(num_to_reserve, erase_on_rlse)
+    : BaseT(num_to_reserve, erase_on_rlse)
   { }
   //
   ~UNQObjPool_T()

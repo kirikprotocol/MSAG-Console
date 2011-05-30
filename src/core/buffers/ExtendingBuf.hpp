@@ -228,13 +228,12 @@ class ExtendingBuffer_T : public BufferExtension_T<_TArg, _SizeTypeArg> {
 protected:
   union {
     _TArg     buf[_STACK_SZ];
-//    uint64_t  alignerInt;
     void *    alignerPtr;
   } _stack;
 
 public:
   typedef BufferExtension_T<_TArg, _SizeTypeArg>  BaseT;
-  using typename BufferExtension_T<_TArg, _SizeTypeArg>::size_type;
+  typedef typename BaseT::size_type  size_type;
   using BaseT::operator+=;
 
   explicit ExtendingBuffer_T(_SizeTypeArg initial_size = _STACK_SZ)
