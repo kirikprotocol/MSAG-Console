@@ -238,8 +238,8 @@ template <
 >
 class UNQObjPool_T : public IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg> {
 public:
-  using IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::size_type;
-  using IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::PooledObj;
+  using typename IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::size_type;
+  using typename IDXObjPool_T<IndexedObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::PooledObj;
 
   //NOTE: by default pooled objects are destroyed upon release.
   //      Set 'erase_on_rlse' to false if pooled objects are reusable.

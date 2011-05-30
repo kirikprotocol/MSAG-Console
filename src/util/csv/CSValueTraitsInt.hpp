@@ -154,7 +154,7 @@ struct CSValueTraits_T<int64_t> {
   static std::string val2str(const int64_t & use_val) /*throw()*/
   {
     char buf[sizeof(long long)*3 + 2];
-    snprintf(buf, sizeof(buf), "%Ld", (long long)use_val);
+    snprintf(buf, sizeof(buf), "%lld", (long long)use_val);
     return std::string(buf);
   }
 };
@@ -174,7 +174,7 @@ struct CSValueTraits_T<uint64_t> {
   static std::string val2str(const uint64_t & use_val) /*throw()*/
   {
     char buf[sizeof(unsigned long long)*3 + 2];
-    snprintf(buf, sizeof(buf), "%Lu", (unsigned long long)use_val);
+    snprintf(buf, sizeof(buf), "%llu", (unsigned long long)use_val);
     return std::string(buf);
   }
 };
