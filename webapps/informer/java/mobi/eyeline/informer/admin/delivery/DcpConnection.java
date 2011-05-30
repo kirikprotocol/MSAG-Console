@@ -148,6 +148,12 @@ class DcpConnection {
       if (deliveryFilter.getStartDateTo() != null) {
         f.setStartDateTo(convertDateToDcpFormat(deliveryFilter.getStartDateTo()));
       }
+      if (deliveryFilter.getCreateDateFrom() != null) {
+        f.setCreationDateFrom(convertDateToDcpFormat(deliveryFilter.getCreateDateFrom()));
+      }
+      if (deliveryFilter.getCreateDateTo() != null) {
+        f.setCreationDateTo(convertDateToDcpFormat(deliveryFilter.getCreateDateTo()));
+      }
       if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
         f.setNameFilter(deliveryFilter.getNameFilter());
       }
@@ -240,6 +246,9 @@ class DcpConnection {
     if (deliveryFilter.getStartDateFrom() != null) {
       f.setStartDateFrom(convertDateToDcpFormat(deliveryFilter.getStartDateFrom()));
     }
+    if (deliveryFilter.getCreateDateFrom() != null) {
+      f.setCreationDateFrom(convertDateToDcpFormat(deliveryFilter.getCreateDateFrom()));
+    }
     if (deliveryFilter.getEndDateTo() != null) {
       f.setEndDateTo(convertDateToDcpFormat(deliveryFilter.getEndDateTo()));
     }
@@ -251,6 +260,9 @@ class DcpConnection {
     }
     if (deliveryFilter.getEndDateTo() != null) {
       f.setEndDateTo(convertDateToDcpFormat(deliveryFilter.getEndDateTo()));
+    }  
+    if (deliveryFilter.getCreateDateTo() != null) {
+      f.setCreationDateTo(convertDateToDcpFormat(deliveryFilter.getCreateDateTo()));
     }
     if (deliveryFilter.getStartDateFrom() != null) {
       f.setStartDateFrom(convertDateToDcpFormat(deliveryFilter.getStartDateFrom()));
@@ -267,10 +279,7 @@ class DcpConnection {
     if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
       f.setStatusFilter(convert(deliveryFilter.getStatusFilter()));
     }
-    DeliveryFields[] fieldses = DeliveryFields.values();
-    DeliveryFields[] fs = new DeliveryFields[fieldses.length + 1];
-    fs[0] = DeliveryFields.UserData;
-    System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
+    DeliveryFields[] fs = DeliveryFields.values();
     req.setResultFields(fs);
     req.setFilter(f);
 

@@ -56,6 +56,7 @@ public class TestDcpConnection extends DcpConnection{
   public synchronized int createDelivery(Delivery delivery) throws AdminException {
     int id = dIdCounter++;
     delivery.setId(id);
+    delivery.setCreateDate(new Date());
     deliveries.put(id, delivery.cloneDelivery());
     histories.put(id, new DeliveryStatusHistory(id,
         new LinkedList<DeliveryStatusHistory.Item>(){{add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Planned));}}));
@@ -417,6 +418,7 @@ public class TestDcpConnection extends DcpConnection{
       info.setStartDate(d.getStartDate());
       info.setStatus(d.getStatus());
       info.setOwner(d.getOwner());
+      info.setCreateDate(d.getCreateDate());
       for(Map.Entry e : d.getProperties().entrySet()) {
         info.setProperty(e.getKey().toString(), e.getValue().toString());
       }

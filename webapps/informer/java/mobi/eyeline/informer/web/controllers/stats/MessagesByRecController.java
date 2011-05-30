@@ -103,7 +103,7 @@ public class MessagesByRecController extends LongOperationController {
   public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
-    deliveryFilter.setStartDateFrom(fromDate);
+    deliveryFilter.setCreateDateFrom(fromDate);
     deliveryFilter.setEndDateTo(tillDate);
     if (allowedUser != null) {
       deliveryFilter.setUserIdFilter(allowedUser);
@@ -115,14 +115,14 @@ public class MessagesByRecController extends LongOperationController {
       records.clear();
       config.getDeliveries(getUser().getLogin(), deliveryFilter, 1000,
           new Visitor<Delivery>() {
-            public boolean visit(Delivery Delivery) throws AdminException {
-              final int deliveryId = Delivery.getId();
-              final String name = Delivery.getName();
-              final String userId = Delivery.getOwner();
+            public boolean visit(Delivery delivery) throws AdminException {
+              final int deliveryId = delivery.getId();
+              final String name = delivery.getName();
+              final String userId = delivery.getOwner();
               final User owner = config.getUser(userId);
 
-              MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? Delivery.getStartDate() : fromDate,
-                  tillDate != null ? tillDate : Delivery.getEndDate() != null ? Delivery.getEndDate() : new Date());
+              MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate != null ? fromDate : delivery.getCreateDate() != null ? delivery.getCreateDate() : delivery.getStartDate(),
+                  tillDate != null ? tillDate : delivery.getEndDate() != null ? delivery.getEndDate() : new Date());
               messageFilter.setMsisdnFilter(msisdn.getSimpleAddress());
 
               config.getMessagesStates(getUser().getLogin(), messageFilter, 1000,

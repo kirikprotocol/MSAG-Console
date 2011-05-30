@@ -92,6 +92,9 @@ message DeliveryInfo
   //hh:mm:ss
   string archivationPeriod 27 opt
   string messageTimeToLive 28 opt
+  
+  // DD.MM.YY hh:mm:ss, ignored on input
+  string creationDate 29 opt
 end
 
 enum byte MessageType
@@ -158,6 +161,7 @@ enum byte DeliveryFields
   EndDate 5
   ActivityPeriod 6
   UserData 7
+  CreationDate 8
 end
 
 message DeliveriesFilter
@@ -169,6 +173,8 @@ message DeliveriesFilter
   string startDateTo 5 opt
   string endDateFrom 6 opt
   string endDateTo 7 opt
+  string creationDateFrom 8 opt
+  string creationDateTo 9 opt
 end
 
 message GetDeliveriesList 50
@@ -197,6 +203,7 @@ message DeliveryListInfo
   string activityPeriodStart 7 opt
   string activityPeriodEnd 8 opt
   string userData 9 opt
+  string creationDate 10 opt
 end
 
 message GetDeliveriesListNextResp 53
@@ -208,7 +215,7 @@ message CountDeliveries 54
   DeliveriesFilter filter 1
 end
 
-
+// NOTE: reqId is 2 to be incompatible with previous protocol version
 message CountDeliveriesResp 55
   int32 reqId 2
 end
@@ -377,7 +384,7 @@ message CountMessages 56
   string endDate 5
 end
 
-
+// NOTE: reqId is 2 to be incompatible with previous protocol version
 message CountMessagesResp 57
   int32 reqId 2
 end

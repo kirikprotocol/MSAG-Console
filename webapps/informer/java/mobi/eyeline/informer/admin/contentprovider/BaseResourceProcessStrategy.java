@@ -638,7 +638,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         if (encoding == null) encoding = "UTF-8";
         ps = new PrintStream(context.getFileSystem().getOutputStream(reportTmp, true), true, encoding);
         final PrintStream psFinal = ps;
-        MessageFilter filter = new MessageFilter(d.getId(), d.getStartDate(), new Date());
+        MessageFilter filter = new MessageFilter(d.getId(), d.getCreateDate() == null ? d.getStartDate() : d.getCreateDate(), new Date());
         context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
           public boolean visit(Message mi) throws AdminException {
             ReportFormatter.writeReportLine(psFinal, getCpAbonent(mi), mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());

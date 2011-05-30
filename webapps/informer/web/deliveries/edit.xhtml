@@ -83,6 +83,11 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
         <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}" converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" disabled="#{not createDelivery.activePage.userInAdminRole}"/>
 
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.createDate}"/>
+        <tr:outputText value="#{deliveryEdit.delivery.createDate}">
+          <f:convertDateTime dateStyle="short" type="both"/>
+        </tr:outputText>
+
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
         <tr:outputText value="#{deliveryEdit.delivery.startDate}">
           <f:convertDateTime dateStyle="short" type="both"/>

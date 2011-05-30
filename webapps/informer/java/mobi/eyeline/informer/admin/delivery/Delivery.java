@@ -92,6 +92,8 @@ public class Delivery implements Serializable {
   
   private Integer archiveTime;
   private Time messageTimeToLive;
+  
+  private Date createDate;
 
   Delivery() {
   }
@@ -254,6 +256,14 @@ public class Delivery implements Serializable {
 
   public void setStartDate(Date startDate) {
     this.startDate = startDate;
+  }
+
+  public Date getCreateDate() {
+    return createDate;
+  }
+
+  void setCreateDate(Date createDate) {
+    this.createDate = createDate;
   }
 
   public Date getEndDate() {
@@ -454,6 +464,8 @@ public class Delivery implements Serializable {
     if (retryPolicy != null ? !retryPolicy.equals(delivery.retryPolicy) : delivery.retryPolicy != null) return false;
     if (startDate != null ? !dateFormat.format(startDate).equals(delivery.startDate == null ? null : dateFormat.format(delivery.startDate)) : delivery.startDate != null)
       return false;
+    if (createDate != null ? !dateFormat.format(createDate).equals(delivery.createDate == null ? null : dateFormat.format(delivery.createDate)) : delivery.createDate != null)
+      return false;
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
     if (archiveTime != null ? !archiveTime.equals(delivery.archiveTime) : delivery.archiveTime != null) return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
@@ -503,6 +515,7 @@ public class Delivery implements Serializable {
     d.transactionMode = transactionMode;
 
     d.startDate = startDate == null ? null : new Date(startDate.getTime());
+    d.createDate = createDate == null ? null : new Date(createDate.getTime());
     d.endDate = endDate == null ? null : new Date(endDate.getTime());
     d.activePeriodEnd = activePeriodEnd == null ? null : new Time(activePeriodEnd);
     d.activePeriodStart = activePeriodStart == null ? null : new Time(activePeriodStart);
@@ -542,6 +555,7 @@ public class Delivery implements Serializable {
     transactionMode = d.transactionMode;
 
     startDate = d.startDate == null ? null : new Date(d.startDate.getTime());
+    createDate = d.createDate == null ? null : new Date(d.createDate.getTime());
     endDate = d.endDate == null ? null : new Date(d.endDate.getTime());
     activePeriodEnd = d.activePeriodEnd == null ? null : new Time(d.activePeriodEnd);
     activePeriodStart = d.activePeriodStart == null ? null : new Time(d.activePeriodStart);

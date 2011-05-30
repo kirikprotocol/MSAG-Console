@@ -35,7 +35,7 @@ public class AggregatedErrorStatsStrategy implements ErrorStatsStrategy{
 
   public void execute(Delivery delivery, User user, final ProgressListener progressListener) throws Exception {
     rowMap.clear();
-    MessageFilter filter = new MessageFilter(delivery.getId(), delivery.getStartDate(), delivery.getEndDate() == null ? new java.util.Date() : delivery.getEndDate());
+    MessageFilter filter = new MessageFilter(delivery.getId(), delivery.getCreateDate() == null ? delivery.getStartDate() : delivery.getCreateDate(), delivery.getEndDate() == null ? new java.util.Date() : delivery.getEndDate());
     filter.setStates(MessageState.Delivered, MessageState.Expired, MessageState.Failed);
     progressListener.setTotal(informerStrategy.countMessages(user.getLogin(), filter)+1);
     informerStrategy.getMessagesStates(user.getLogin(), filter, 2000, new Visitor<Message>() {

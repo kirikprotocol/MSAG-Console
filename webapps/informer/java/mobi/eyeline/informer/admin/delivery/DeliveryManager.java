@@ -177,6 +177,9 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       if (msDataSource != null) {
         addMessages(msDataSource, conn, id);
       }
+      Delivery created = conn.getDelivery(id);
+      delivery.setCreateDate(created.getCreateDate());
+
     } catch (AdminException e) {
       logger.error("Delivery creation failed.", e);
       silentDropDelivery(conn, id);

@@ -15,6 +15,8 @@ public class DeliveryFilter {
   private DeliveryStatus[] statusFilter;
   private Date startDateFrom;
   private Date startDateTo;
+  private Date createDateFrom;
+  private Date createDateTo;
   private Date endDateFrom;
   private Date endDateTo;
 
@@ -48,6 +50,22 @@ public class DeliveryFilter {
 
   public void setStartDateFrom(Date startDateFrom) {
     this.startDateFrom = startDateFrom;
+  }
+
+  public Date getCreateDateFrom() {
+    return createDateFrom;
+  }
+
+  public void setCreateDateFrom(Date createDateFrom) {
+    this.createDateFrom = createDateFrom;
+  }
+
+  public Date getCreateDateTo() {
+    return createDateTo;
+  }
+
+  public void setCreateDateTo(Date createDateTo) {
+    this.createDateTo = createDateTo;
   }
 
   public Date getStartDateTo() {

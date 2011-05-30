@@ -159,7 +159,7 @@ public class MessageListController extends InformerController {
     if (deliveryId != null) {
       try {
         Delivery delivery = strategy.getDelivery(u.getLogin(), deliveryId);
-        msgFilter.setFromDate(new Date(delivery.getStartDate().getTime()-60000));
+        msgFilter.setFromDate(new Date(delivery.getCreateDate() == null ? delivery.getStartDate().getTime() : delivery.getCreateDate().getTime()));
         msgFilter.setTillDate(delivery.getEndDate() == null ? new Date(System.currentTimeMillis() + (24 * 60 * 60 * 1000)) : delivery.getEndDate());
         deliveryName = delivery.getName();
         deliveryType = delivery.getType();

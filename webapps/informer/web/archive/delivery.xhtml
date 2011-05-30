@@ -82,6 +82,11 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
         <h:outputText converter="addressConverter" value="#{archiveDelivery.delivery.sourceAddress}"/>
 
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.createDate}"/>
+        <h:outputText value="#{archiveDelivery.delivery.createDate}">
+          <f:convertDateTime dateStyle="short" type="both" pattern="dd.MM.yyyy HH:mm"/>
+        </h:outputText>
+
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
         <h:outputText value="#{archiveDelivery.delivery.startDate}">
           <f:convertDateTime dateStyle="short" type="both" pattern="dd.MM.yyyy HH:mm"/>

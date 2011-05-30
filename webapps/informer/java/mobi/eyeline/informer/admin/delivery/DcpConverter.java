@@ -25,8 +25,6 @@ class DcpConverter {
 
   private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
 
-  private static final String TIME_FORMAT = "HH:mm:ss";
-
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
   private static final String DATE_FORMAT_YY = "dd.MM.yy HH:mm:ss";
@@ -163,6 +161,9 @@ class DcpConverter {
     } else if (di.getRetryOnFail() && di.hasValidityPeriod()) { // convert old deliveries without messageTimeToLive
       delivery.setMessageTimeToLive(new Time(convertTimeFromDcpFormat(di.getValidityPeriod())));
     }
+    if(di.hasCreationDate()) {
+      delivery.setCreateDate(convertDateFromDcpFormat(di.getCreationDate()));
+    }
 
     delivery.setEnableMsgFinalizationLogging(di.getFinalMsgRecords());
     delivery.setEnableStateChangeLogging(di.getFinalDlvRecords());
@@ -296,6 +297,9 @@ class DcpConverter {
       if (uD != null)
         result.addProperties(uD);
     }
+    if(di.hasCreationDate()) {
+      result.setCreateDate(convertDateYYFromDcpFormat(di.getCreationDate()));
+    }
     return result;
   }
 
@@ -323,6 +327,9 @@ class DcpConverter {
     if (di.getProperties() != null)
       delivery.setUserData(convertUserData(di.getProperties()));
     delivery.setStartDate(convertDateToDcpFormat(di.getStartDate()));
+    if(di.getCreateDate() != null) {
+      delivery.setCreationDate(convertDateToDcpFormat(di.getCreateDate()));
+    }
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());
     }
