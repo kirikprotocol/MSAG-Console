@@ -639,12 +639,16 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <chmod file="${DISTR_DIR}/bin/setupnodes.py" perm="755"/ -->
         <mkdir dir="${DISTR_DIR}/lib"/>
         <mkdir dir="${DISTR_DIR}/services"/>
-        <copy file="${BUILD_DIR}/bin/liblogger.so" todir="${DISTR_DIR}/lib"/>
-        <copy file="${BUILD_DIR}/bin/db/exceptions/libdb_exc.so"
-              todir="${DISTR_DIR}/lib"
-              failonerror="false"/>
+        <copy todir="${DISTR_DIR}/lib">
+            <fileset dir="${BUILD_DIR}/bin/" includes="liblogger.*"/>
+        </copy>
+        <!-- copy file="${BUILD_DIR}/bin/liblogger.*" todir="${DISTR_DIR}/lib"/ -->
+        <copy todir="${DISTR_DIR}/lib" failonerror="false">
+            <fileset dir="${BUILD_DIR}/bin/db/exceptions" includes="libdb_exc.*"/>
+        </copy>
         <chmod perm="755">
             <fileset dir="${DISTR_DIR}/lib" includes="*.so*"/>
+            <fileset dir="${DISTR_DIR}/lib" includes="*.dylib*"/>
         </chmod>
         <copy todir="${DISTR_DIR}/conf"
               preservelastmodified="yes"
@@ -875,6 +879,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
         <chmod perm="755">
             <fileset dir="${DISTR_DIR}/lib" includes="*.so*"/>
+            <fileset dir="${DISTR_DIR}/lib" includes="*.dylib*"/>
         </chmod>
         <!-- property name="INSTALL_EXTRALIBS" value="true"/ -->
     </target>
