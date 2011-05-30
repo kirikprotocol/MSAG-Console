@@ -579,10 +579,12 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
                     ltm.tm_hour, ltm.tm_min, ltm.tm_sec );
             creationDate = buf;
         }
+    } else {
+        creationDate = data_.creationDate;
     }
     data_ = data;
+    data_.creationDate = creationDate;
     if (!creationDate_) {
-        data_.creationDate = creationDate;
         creationDate_ = parseDateTime(creationDate.c_str());
     }
 }
