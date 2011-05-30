@@ -1,3 +1,5 @@
+2011-05-30 12:38 bukind
+  bugfix: stopping smsc centers via CS
 2011-05-30 12:03 bukind
   feature: not setting state PLANNED at creation time
 2011-05-30 11:55 bukind
