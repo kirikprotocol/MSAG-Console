@@ -2,4 +2,10 @@
 # this file contains binaries definitions
 
 # binary name			source name			libraries																		description
-admin/service/smsc_dumb_service	ServiceSocketListenerTest 	-ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin -lutil-config -lutil-xml -lutil -lcore-threads -lcore-buffers -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lpthread -L$(SMSC_BUILDDIR)/bin -llogger -lnsl -lrt
+admin/service/smsc_dumb_service	ServiceSocketListenerTest \
+ -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util \
+ -ladmin-protocol -ladmin -lutil-config -lutil-xml -lutil \
+ -lcore-threads -lcore-buffers -lcore-network $(XERCES_LIB) \
+ $(SOCKETLIB) $(LIBICONV) -lpthread \
+ @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+ $(LIBNSL) $(LIBRT)
