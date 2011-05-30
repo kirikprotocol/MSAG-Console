@@ -564,12 +564,11 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
     if (sourceAddressChanged) { sourceAddress_ = sourceAddress; }
     if (newRetryPolicy) { retryPolicy_ = retryPolicy; }
-    data_ = data;
+    std::string creationDate;
     if (!creationDate_) {
-        std::string  creationDate;
         if (old) {
             creationDate = old->creationDate;
-        } else if (!data.creationDate.empty()) {
+        } else if ( !data.creationDate.empty() ) {
             creationDate = data.creationDate;
         } else {
             tm ltm;
@@ -580,6 +579,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
                     ltm.tm_hour, ltm.tm_min, ltm.tm_sec );
             creationDate = buf;
         }
+    }
+    data_ = data;
+    if (!creationDate_) {
         data_.creationDate = creationDate;
         creationDate_ = parseDateTime(creationDate.c_str());
     }
