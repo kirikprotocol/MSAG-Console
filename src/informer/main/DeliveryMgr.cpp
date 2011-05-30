@@ -1060,10 +1060,10 @@ dlvid_type DeliveryMgr::getDeliveries( unsigned        count,
                 }
             }
             ++startId;
-        }
-        if ( currentTimeSeconds() >= endTime ) {
-            smsc_log_debug(log_,"timeout reached");
-            break;
+            if ( currentTimeSeconds() >= endTime ) {
+                smsc_log_debug(log_,"timeout reached");
+                return startId;
+            }
         }
 
     } while (true);
