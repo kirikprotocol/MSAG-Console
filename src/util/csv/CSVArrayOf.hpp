@@ -26,7 +26,7 @@ protected:
   virtual void processValue(const std::string & use_val)
     /*throw(std::exception)*/
   {
-    push_back(CSValueTraits_T<_TArg>::str2val(use_val));
+    this->push_back(CSValueTraits_T<_TArg>::str2val(use_val));
   }
 
 public:
