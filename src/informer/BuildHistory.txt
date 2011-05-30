@@ -1,11 +1,11 @@
+2011-05-30 14:43 bukind
+  feature: creationDate field added
 2011-05-30 12:52 bukind
   bugfix: checking timeout while processing dlv list was at wrong place
 2011-05-30 12:38 bukind
   bugfix: stopping smsc centers via CS
 2011-05-30 12:03 bukind
   feature: not setting state PLANNED at creation time
-2011-05-30 11:55 bukind
-  feature: creationDate field added
 
 =====================================================================
 2011-05-27 11:04 bukind informer-build-20110527

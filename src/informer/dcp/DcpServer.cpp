@@ -94,6 +94,10 @@ void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoDa
   {
     di.setEndDate(did.endDate);
   }
+  if(!did.creationDate.empty())
+  {
+    di.setCreationDate(did.creationDate);
+  }
   di.setActivePeriodStart(did.activePeriodStart);
   di.setActivePeriodEnd(did.activePeriodEnd);
   di.setActiveWeekDays(did.activeWeekDays);
