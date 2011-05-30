@@ -35,6 +35,7 @@ public:
     activityPeriodStartFlag=false;
     activityPeriodEndFlag=false;
     userDataFlag=false;
+    creationDateFlag=false;
   }
  
 
@@ -129,6 +130,15 @@ public:
       rv+="userData=";
       rv+=userData;
     }
+    if(creationDateFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="creationDate=";
+      rv+=creationDate;
+    }
     return rv;
   }
 
@@ -190,6 +200,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(userData);
+    }
+    if(creationDateFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(creationDate);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -392,6 +408,28 @@ public:
   {
     return userDataFlag;
   }
+  const std::string& getCreationDate()const
+  {
+    if(!creationDateFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("creationDate");
+    }
+    return creationDate;
+  }
+  void setCreationDate(const std::string& argValue)
+  {
+    creationDate=argValue;
+    creationDateFlag=true;
+  }
+  std::string& getCreationDateRef()
+  {
+    creationDateFlag=true;
+    return creationDate;
+  }
+  bool hasCreationDate()const
+  {
+    return creationDateFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -444,6 +482,11 @@ public:
     {
       ds.writeTag(userDataTag);
     ds.writeStrLV(userData); 
+    }
+    if(creationDateFlag)
+    {
+      ds.writeTag(creationDateTag);
+    ds.writeStrLV(creationDate); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -546,6 +589,15 @@ public:
           userData=ds.readStrLV();
           userDataFlag=true;
         }break;
+        case creationDateTag:
+        {
+          if(creationDateFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("creationDate");
+          }
+          creationDate=ds.readStrLV();
+          creationDateFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -589,6 +641,7 @@ protected:
   static const int32_t activityPeriodStartTag=7;
   static const int32_t activityPeriodEndTag=8;
   static const int32_t userDataTag=9;
+  static const int32_t creationDateTag=10;
 
   int connId;
 
@@ -601,6 +654,7 @@ protected:
   std::string activityPeriodStart;
   std::string activityPeriodEnd;
   std::string userData;
+  std::string creationDate;
 
   bool deliveryIdFlag;
   bool userIdFlag;
@@ -611,6 +665,7 @@ protected:
   bool activityPeriodStartFlag;
   bool activityPeriodEndFlag;
   bool userDataFlag;
+  bool creationDateFlag;
 };
 
 }

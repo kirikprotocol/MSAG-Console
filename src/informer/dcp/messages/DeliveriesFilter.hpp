@@ -36,6 +36,8 @@ public:
     startDateToFlag=false;
     endDateFromFlag=false;
     endDateToFlag=false;
+    creationDateFromFlag=false;
+    creationDateToFlag=false;
   }
  
 
@@ -148,6 +150,24 @@ public:
       rv+="endDateTo=";
       rv+=endDateTo;
     }
+    if(creationDateFromFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="creationDateFrom=";
+      rv+=creationDateFrom;
+    }
+    if(creationDateToFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="creationDateTo=";
+      rv+=creationDateTo;
+    }
     return rv;
   }
 
@@ -197,6 +217,18 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(endDateTo);
+    }
+    if(creationDateFromFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(creationDateFrom);
+    }
+    if(creationDateToFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(creationDateTo);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -355,6 +387,50 @@ public:
   {
     return endDateToFlag;
   }
+  const std::string& getCreationDateFrom()const
+  {
+    if(!creationDateFromFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("creationDateFrom");
+    }
+    return creationDateFrom;
+  }
+  void setCreationDateFrom(const std::string& argValue)
+  {
+    creationDateFrom=argValue;
+    creationDateFromFlag=true;
+  }
+  std::string& getCreationDateFromRef()
+  {
+    creationDateFromFlag=true;
+    return creationDateFrom;
+  }
+  bool hasCreationDateFrom()const
+  {
+    return creationDateFromFlag;
+  }
+  const std::string& getCreationDateTo()const
+  {
+    if(!creationDateToFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("creationDateTo");
+    }
+    return creationDateTo;
+  }
+  void setCreationDateTo(const std::string& argValue)
+  {
+    creationDateTo=argValue;
+    creationDateToFlag=true;
+  }
+  std::string& getCreationDateToRef()
+  {
+    creationDateToFlag=true;
+    return creationDateTo;
+  }
+  bool hasCreationDateTo()const
+  {
+    return creationDateToFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -408,6 +484,16 @@ public:
     {
       ds.writeTag(endDateToTag);
     ds.writeStrLV(endDateTo); 
+    }
+    if(creationDateFromFlag)
+    {
+      ds.writeTag(creationDateFromTag);
+    ds.writeStrLV(creationDateFrom); 
+    }
+    if(creationDateToFlag)
+    {
+      ds.writeTag(creationDateToTag);
+    ds.writeStrLV(creationDateTo); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -509,6 +595,24 @@ public:
           endDateTo=ds.readStrLV();
           endDateToFlag=true;
         }break;
+        case creationDateFromTag:
+        {
+          if(creationDateFromFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("creationDateFrom");
+          }
+          creationDateFrom=ds.readStrLV();
+          creationDateFromFlag=true;
+        }break;
+        case creationDateToTag:
+        {
+          if(creationDateToFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("creationDateTo");
+          }
+          creationDateTo=ds.readStrLV();
+          creationDateToFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -546,6 +650,8 @@ protected:
   static const int32_t startDateToTag=5;
   static const int32_t endDateFromTag=6;
   static const int32_t endDateToTag=7;
+  static const int32_t creationDateFromTag=8;
+  static const int32_t creationDateToTag=9;
 
   int connId;
 
@@ -556,6 +662,8 @@ protected:
   std::string startDateTo;
   std::string endDateFrom;
   std::string endDateTo;
+  std::string creationDateFrom;
+  std::string creationDateTo;
 
   bool userIdFilterFlag;
   bool nameFilterFlag;
@@ -564,6 +672,8 @@ protected:
   bool startDateToFlag;
   bool endDateFromFlag;
   bool endDateToFlag;
+  bool creationDateFromFlag;
+  bool creationDateToFlag;
 };
 
 }

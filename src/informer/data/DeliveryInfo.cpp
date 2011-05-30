@@ -68,6 +68,7 @@ userInfo_(&userInfo),
 lock_( MTXWHEREAMI ),
 startDate_(0),
 endDate_(0),
+creationDate_(0),
 activePeriodStart_(-1),
 activePeriodEnd_(-1),
 validityPeriod_(-1),
@@ -364,6 +365,73 @@ msgtime_type DeliveryInfo::fixActLogFormat( msgtime_type currentTime )
 }
 
 
+ulonglong DeliveryInfo::fixCreationDate( dlvid_type dlvId )
+{
+    DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
+    std::vector< std::string > dirs;
+    char fnbuf[150];
+    makeDeliveryPath(fnbuf,dlvId);
+    const std::string actpath = getCS()->getStorePath() + fnbuf + "activity_log/";
+    try {
+        dl.list( actpath.c_str(), dirs );
+        std::sort( dirs.begin(), dirs.end() );
+        std::vector< std::string > subdirs;
+        subdirs.reserve(24);
+        TmpBuf<char,8192> buf;
+        for ( std::vector<std::string>::iterator i = dirs.begin();
+              i != dirs.end(); ++i ) {
+            // YYYY.MM.DD
+            subdirs.clear();
+            int pos = 0;
+            unsigned year, month, mday;
+            sscanf(i->c_str(),"%04u.%02u.%02u%n",&year, &month, &mday, &pos);
+            if ( pos != int(i->size()) ) {
+                continue;
+            }
+            const std::string daypath = actpath + *i;
+            dl.list( daypath.c_str(), subdirs );
+            std::sort( subdirs.begin(), subdirs.end() );
+            for ( std::vector<std::string>::iterator j = subdirs.begin();
+                  j != subdirs.end(); ++j ) {
+                // HH
+                pos = 0;
+                unsigned hour;
+                sscanf(j->c_str(),"%02u%n",&hour,&pos);
+                if ( pos != int(j->size()) ) {
+                    continue;
+                }
+                std::vector< std::string > logfiles;
+                logfiles.reserve(60);
+                const std::string hourpath = daypath + "/" + *j;
+                makeDirListing( NoDotsNameFilter(), S_IFREG ).list( hourpath.c_str(), logfiles );
+                std::sort(logfiles.begin(), logfiles.end());
+                for ( std::vector< std::string >::iterator k = logfiles.begin();
+                      k != logfiles.end(); ++k ) {
+                    // MM.log
+                    pos = 0;
+                    unsigned min;
+                    sscanf(k->c_str(),"%02u.log%n",&min,&pos);
+                    if ( pos != int(k->size()) ) {
+                        continue;
+                    }
+                    const std::string filename = hourpath + "/" + *k;
+                    try {
+                        unsigned sec;
+                        if ( !ActivityLog::readFirstRecordSeconds(filename,buf,sec) ) continue;
+                        return ((((ulonglong(year)*100+month)*
+                                  100+mday)*100+hour)*100+min)*100+sec;
+                    } catch (...) {
+                        // ignore
+                    }
+                }
+            }
+        }
+    } catch (...) {
+    }
+    return 0;
+}
+
+
 void DeliveryInfo::updateData( const DeliveryInfoData& data,
                                const DeliveryInfoData* old )
 {
@@ -472,11 +540,12 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     }
 
     // filling
+    const msgtime_type now = currentTimeSeconds();
     if (startDate != 0) {
         startDate_ = startDate;
     } else {
         // treat it as now
-        startDate_ = currentTimeSeconds();
+        startDate_ = now;
     }
     if (endDate != 0) { endDate_ = endDate; }
     if (activePeriodStart != -1) { activePeriodStart_ = activePeriodStart; }
@@ -496,6 +565,24 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (sourceAddressChanged) { sourceAddress_ = sourceAddress; }
     if (newRetryPolicy) { retryPolicy_ = retryPolicy; }
     data_ = data;
+    if (!creationDate_) {
+        std::string  creationDate;
+        if (old) {
+            creationDate = old->creationDate;
+        } else if (!data.creationDate.empty()) {
+            creationDate = data.creationDate;
+        } else {
+            tm ltm;
+            msgTimeToYmd(now,&ltm);
+            char buf[30];
+            sprintf(buf,"%02u.%02u.%04u %02u:%02u:%02u",
+                    ltm.tm_mday, ltm.tm_mon+1, ltm.tm_year+1900,
+                    ltm.tm_hour, ltm.tm_min, ltm.tm_sec );
+            creationDate = buf;
+        }
+        data_.creationDate = creationDate;
+        creationDate_ = parseDateTime(creationDate.c_str());
+    }
 }
 
 

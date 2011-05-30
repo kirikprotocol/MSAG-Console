@@ -47,6 +47,10 @@ public:
                                 DeliveryStats& ods,
                                 bool& isOldVersion );
 
+    static bool readFirstRecordSeconds( const std::string& filename,
+                                        TmpBufBase<char>& buf,
+                                        unsigned& seconds );
+
     /// FIXME: may be removed after all dlv converted
     msgtime_type fixActLogFormat( msgtime_type currentTime );
 

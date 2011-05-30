@@ -2,6 +2,7 @@ source=DcpServer.def
 
 search.path=/Users/skv/Documents/cpp/protogen/tmpl
 search.path=/home/bukind/cvs/protogen/tmpl
+search.path=/Users/bukind/msag_build/protogen/tmpl
 search.path=def/
 
 out.message.dir=./messages

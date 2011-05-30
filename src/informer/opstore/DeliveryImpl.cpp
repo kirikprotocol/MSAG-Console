@@ -47,6 +47,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         data.transactionMode = config.getBool("transactionMode",false);
         data.startDate = config.getString("startDate","");
         data.endDate = config.getString("endDate","");
+        data.creationDate = config.getString("creationDate","");
         data.activePeriodStart = config.getString("activePeriodStart","");
         data.activePeriodEnd = config.getString("activePeriodEnd","");
         data.activeWeekDays.clear();
@@ -550,6 +551,11 @@ void DeliveryImpl::writeDeliveryInfoData()
     config.setString("name",data.name.c_str());
     config.setInt("priority",data.priority);
     config.setBool("transactionMode",data.transactionMode);
+    if (data.creationDate.empty()) {
+        throw InfosmeException(EXC_LOGICERROR,"creationDate must not be empty");
+    } else {
+        config.setString("creationDate",data.creationDate.c_str());
+    }
     if (!data.startDate.empty()) {
         config.setString("startDate",data.startDate.c_str());
     }

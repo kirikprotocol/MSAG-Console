@@ -27,6 +27,10 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   {
     did.endDate=di.getEndDate();
   }
+  if (di.hasCreationDate()) {
+      // should be ignored
+      // did.creationDate = di.getCreationDate();
+  }
   did.activePeriodStart=di.getActivePeriodStart();
   did.activePeriodEnd=di.getActivePeriodEnd();
   did.activeWeekDays=di.getActiveWeekDays();
@@ -675,6 +679,22 @@ static bool isDeliveryMatchFilter(const Delivery* dlv,const messages::Deliveries
       return false;
     }
   }
+  if(flt.hasCreationDateFrom())
+  {
+    msgtime_type t=parseDateTime(flt.getCreationDateFrom().c_str());
+    if(dlv->getDlvInfo().getCreationDate()<t)
+    {
+      return false;
+    }
+  }
+  if(flt.hasCreationDateTo())
+  {
+    msgtime_type t=parseDateTime(flt.getCreationDateTo().c_str());
+    if(dlv->getDlvInfo().getCreationDate()>t)
+    {
+      return false;
+    }
+  }
 
   return true;
 }
@@ -815,6 +835,11 @@ public:
                 }
                 case messages::DeliveryFields::UserId:
                     dli.setUserId(dlv.getUserInfo().getUserId());
+                    break;
+                case messages::DeliveryFields::CreationDate:
+                    if(di.getCreationDate()!=0) {
+                        dli.setCreationDate(msgTimeToDateTimeStr(di.getCreationDate()));
+                    }
                     break;
                 }
             } // loop over fields

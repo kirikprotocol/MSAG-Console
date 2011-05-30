@@ -51,6 +51,7 @@ public:
     finalMsgRecordsFlag=false;
     archivationPeriodFlag=false;
     messageTimeToLiveFlag=false;
+    creationDateFlag=false;
   }
  
 
@@ -293,6 +294,15 @@ public:
       rv+="messageTimeToLive=";
       rv+=messageTimeToLive;
     }
+    if(creationDateFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="creationDate=";
+      rv+=creationDate;
+    }
     return rv;
   }
 
@@ -444,6 +454,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(messageTimeToLive);
+    }
+    if(creationDateFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(creationDate);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -976,6 +992,28 @@ public:
   {
     return messageTimeToLiveFlag;
   }
+  const std::string& getCreationDate()const
+  {
+    if(!creationDateFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("creationDate");
+    }
+    return creationDate;
+  }
+  void setCreationDate(const std::string& argValue)
+  {
+    creationDate=argValue;
+    creationDateFlag=true;
+  }
+  std::string& getCreationDateRef()
+  {
+    creationDateFlag=true;
+    return creationDate;
+  }
+  bool hasCreationDate()const
+  {
+    return creationDateFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -1121,6 +1159,11 @@ public:
     {
       ds.writeTag(messageTimeToLiveTag);
     ds.writeStrLV(messageTimeToLive); 
+    }
+    if(creationDateFlag)
+    {
+      ds.writeTag(creationDateTag);
+    ds.writeStrLV(creationDate); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -1364,6 +1407,15 @@ public:
           messageTimeToLive=ds.readStrLV();
           messageTimeToLiveFlag=true;
         }break;
+        case creationDateTag:
+        {
+          if(creationDateFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("creationDate");
+          }
+          creationDate=ds.readStrLV();
+          creationDateFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -1478,6 +1530,7 @@ protected:
   static const int32_t finalMsgRecordsTag=26;
   static const int32_t archivationPeriodTag=27;
   static const int32_t messageTimeToLiveTag=28;
+  static const int32_t creationDateTag=29;
 
   int connId;
 
@@ -1505,6 +1558,7 @@ protected:
   bool finalMsgRecords;
   std::string archivationPeriod;
   std::string messageTimeToLive;
+  std::string creationDate;
 
   bool nameFlag;
   bool userIdFlag;
@@ -1530,6 +1584,7 @@ protected:
   bool finalMsgRecordsFlag;
   bool archivationPeriodFlag;
   bool messageTimeToLiveFlag;
+  bool creationDateFlag;
 };
 
 }

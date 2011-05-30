@@ -1365,12 +1365,13 @@ void DeliveryMgr::readFromArchive()
 void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
 {
     bool isChunked = false;
-    // FIXME: check delivery chunk index
+    // FIXME: optimization: check delivery chunk index
 
     DeliveryInfoData data;
     UserInfoPtr user;
     msgtime_type planTime = 0;
     DlvState state;
+    bool fixCreationDate = false;
 
     if ( ! isChunked ) {
 
@@ -1380,6 +1381,25 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
         if (!user.get()) {
             throw InfosmeException(EXC_CONFIG,"D=%u has unknown user: '%s'",
                                    dlvId,data.owner.c_str());
+        }
+
+        fixCreationDate = data.creationDate.empty();
+        if ( fixCreationDate ) {
+            // we have to reconstruct creationDate from activityLog
+            smsc_log_debug(log_,"D=%u we have to reconstruct creationDate from activityLog",dlvId);
+            ulonglong ymd = DeliveryInfo::fixCreationDate(dlvId);
+            if ( ymd == 0 ) {
+                smsc_log_warn(log_,"D=% cannot reconstruct creationDate, using currentTime",dlvId);
+                ymd = msgTimeToYmd(currentTimeSeconds());
+            }
+            char buf[30];
+            unsigned hms = unsigned(ymd % 1000000);
+            ymd /= 1000000;
+            sprintf(buf,"%02u.%02u.%04u %02u:%02u:%02u",
+                    unsigned(ymd%100), unsigned(ymd%10000/100),
+                    unsigned(ymd/10000),
+                    hms/10000, hms%10000/100, hms%100);
+            data.creationDate = buf;
         }
 
         // read state
@@ -1400,6 +1420,12 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
         info->fixActLogFormat( currentTimeSeconds() );
     }
     addDelivery(info, state, planTime, false, ptr);
+    if ( fixCreationDate ) {
+        DeliveryImplPtr dlvPtr;
+        if ( innerGetDelivery(dlvId,dlvPtr) ) {
+            dlvPtr->writeDeliveryInfoData();
+        }
+    }
     if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() &&
          !getCS()->isEmergency() ) {
         startCancelThread(dlvId);

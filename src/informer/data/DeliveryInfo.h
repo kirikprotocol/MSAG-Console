@@ -29,6 +29,7 @@ struct DeliveryInfoData
   // DD.MM.YY hh:mm:ss (gmt)
   std::string startDate;
   std::string endDate;
+  std::string creationDate;
   std::string activePeriodStart; // local time! HH:MM:SS or empty
   std::string activePeriodEnd;   // local time! HH:MM:SS or empty
   std::vector<std::string> activeWeekDays; // local time!
@@ -107,6 +108,9 @@ public:
 
     /// return end date or 0
     inline msgtime_type getEndDate() const { return endDate_; }
+
+    /// return creation date or 0
+    inline msgtime_type getCreationDate() const { return creationDate_; }
 
     /// return active period start in seconds since midnight (localtime) or -1
     inline timediff_type getActivePeriodStart() const { return activePeriodStart_; }
@@ -206,6 +210,10 @@ public:
     // @return >0 if activity log format was fixed
     msgtime_type fixActLogFormat( msgtime_type currentTime );
 
+    // FIXME: may be removed after all dlv fix their config.xml
+    // @return >0 if creation date is reconstructed from activity log.
+    static ulonglong fixCreationDate( dlvid_type dlvId );
+
 protected:
     /// update cached fields from data
     void updateData( const DeliveryInfoData& data,
@@ -227,6 +235,7 @@ private:
     // cached things updated from data_
     msgtime_type          startDate_;
     msgtime_type          endDate_;
+    msgtime_type          creationDate_;
     timediff_type         activePeriodStart_;
     timediff_type         activePeriodEnd_;
     timediff_type         validityPeriod_;

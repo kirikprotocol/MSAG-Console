@@ -185,6 +185,71 @@ bool ActivityLog::readStatistics( const std::string& filename,
 }
 
 
+bool ActivityLog::readFirstRecordSeconds( const std::string& filename,
+                                          TmpBufBase<char>& buf,
+                                          unsigned& seconds )
+{
+    FileGuard fg;
+    fg.ropen( filename.c_str() );
+    buf.SetPos(0);
+    do {
+        char* ptr = buf.get();
+        const size_t wasread = fg.read( buf.GetCurPtr(), buf.getSize() - buf.GetPos() );
+        if (wasread ==0) {
+            // EOF
+            if (ptr < buf.GetCurPtr()) {
+                throw InfosmeException(EXC_BADFILE,"file '%s' is not terminated with LF",filename.c_str());
+            }
+            break;
+        }
+        buf.SetPos(buf.GetPos()+wasread);
+        while ( ptr < buf.GetCurPtr() ) {
+            char* end = const_cast<char*>
+                (reinterpret_cast<const char*>
+                    (memchr(ptr,'\n',buf.GetCurPtr()-ptr)));
+            if (!end) break; // EOL not found yet
+
+            // EOL found
+            *end = '\0';
+            const char* line = ptr;
+            ptr = end+1;
+            if ( *line == '#' ) {
+                // comment, skip it
+                continue;
+            }
+
+            // record line
+            int shift = 0;
+            char cstate;
+            sscanf(line,"%02u,%c,%n",&seconds,&cstate,&shift);
+            if (!shift) {
+                throw InfosmeException(EXC_BADFILE,"wrong record: '%s'",line);
+            }
+            return true;
+
+        } // while there is LF in buffer
+
+        if (ptr > buf.get()) {
+            // shifting buffer
+            char* o = buf.get();
+            const char* i = ptr;
+            const char* e = buf.GetCurPtr();
+            for ( ; i < e; ) {
+                *o++ = *i++;
+            }
+            buf.SetPos(o-buf.get());
+        } else {
+            // buffer is too small
+            if (buf.getSize() > 100000) {
+                throw InfosmeException(EXC_BADFILE,"too big record in '%s'",filename.c_str());
+            }
+            buf.reserve(buf.getSize()+buf.getSize()/2+100);
+        }
+    } while (true);
+    return false;
+}
+
+
 void ActivityLog::addRecord( msgtime_type currentTime,
                              const Region& region,
                              const Message& msg,

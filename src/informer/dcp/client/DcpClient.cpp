@@ -16,8 +16,6 @@
 #include "../messages/GetNextMessagesPackResp.hpp"
 #include "../messages/CountMessagesResp.hpp"
 #include "../messages/CountMessagesPackResp.hpp"
-#include "../messages/CountMessagesResp.hpp"
-#include "../messages/CountMessagesPackResp.hpp"
 
 namespace eyeline {
 namespace informer {
