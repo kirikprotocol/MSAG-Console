@@ -1,13 +1,13 @@
 logger
-db
+?db
 smpp  "SMPP protocol implementation"
 core  "SMSC core implementation"
 util  "Utility classes"
 sms   "SMS declaration"
 admin   "Administration subsystem"
-smeman
-router
-system.common
-license
-scag
+?smeman
+?router
+?system.common
+?license
+?scag
 ?informer

@@ -98,10 +98,35 @@ struct TimeSourceSetup {
 #endif
 #endif
 #endif
+
+#ifdef __MACH__
+    static int clock_gettime(int,timespec* ts)
+    {
+        if (!ts) {
+            errno = EINVAL;
+            return -1;
+        }
+        timeval tv;
+        const int res = gettimeofday(&tv,0);
+        if (res) return res;
+        ts->tv_sec = tv.tv_sec;
+        ts->tv_nsec = tv.tv_usec*1000;
+        return 0;
+    }
+#endif
+
 };
 
 
 }
 }
+
+#ifdef __MACH__
+const int CLOCK_REALTIME = 0;
+inline int clock_gettime(int, timespec* ts)
+{
+    return smsc::util::TimeSourceSetup::clock_gettime(0,ts);
+}
+#endif
 
 #endif

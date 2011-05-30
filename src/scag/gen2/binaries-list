@@ -65,7 +65,7 @@ endswitch
   -lrouter -ladmin-protocol -ladmin-service \
   -lsystem-common -lsystem-smppio \
   -lcore-buffers \
-  -lsms -lcore-network $(SOCKETLIB) -lnsl \
+  -lsms -lcore-network $(SOCKETLIB) $(LIBNSL) \
   -lcore-threads \
   \
   -lutil-mirrorfile \
@@ -75,12 +75,12 @@ endswitch
   -lutil-recoder-recode_dll \
   -lutil-regexp \
   $(XERCES_LIB) \
-  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
 switch SNMP
 YES: $(SNMP_LIBS_CORE) \
 endswitch
-  $(SSL_LIB) \
-  -lpthread -lrt -ldl \
+  $(SSL_LIB) $(LIBICONV) \
+  -lpthread $(LIBRT) -ldl \
   $(LIBMALLOC)  

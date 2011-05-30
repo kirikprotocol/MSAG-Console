@@ -2,7 +2,7 @@
 # define __UTIL_STRLCPY_H 1
 
 #include <string.h>
-# ifdef __GNUC__
+# ifdef linux
 namespace {
 
   size_t strlcpy( char* dst, const char* src, size_t dstsize )

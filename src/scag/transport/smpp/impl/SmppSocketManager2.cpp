@@ -6,7 +6,7 @@ namespace {
 
 uint32_t getNetworkAddress( const struct in_addr& addr )
 {
-#ifdef linux
+#if defined(linux) || defined(__MACH__)
     return addr.s_addr;
 #else
     return addr.S_un.S_addr;
