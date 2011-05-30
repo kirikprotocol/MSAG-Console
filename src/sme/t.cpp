@@ -19,7 +19,7 @@
 #include "util/sleep.h"
 #include "core/buffers/File.hpp"
 
-#ifdef linux
+#if defined(linux) || defined(__MACH__)
 typedef timespec timestruc_t;
 #endif
 

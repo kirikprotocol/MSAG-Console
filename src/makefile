@@ -150,7 +150,7 @@ export SS7_LIBRARY_NAME
 
 COMMON_INCLUDES := -I$(SMSC_SRCDIR)
 ifeq ($(USEHOME),YES)
-COMMON_INCLUDES := $(COMMON_INCLUDES) -I$(HOME)/include
+COMMON_INCLUDES := -I$(HOME)/include $(COMMON_INCLUDES)
 endif
 
 ifeq ($(SNMP),YES)
@@ -186,7 +186,7 @@ CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 
 ifeq ($(USEHOME),YES)
-LDFLAGS := $(LDFLAGS) -L$(HOME)/lib
+LDFLAGS := -L$(HOME)/lib $(LDFLAGS)
 endif
 
 ifneq ($(TRACE),YES)

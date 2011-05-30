@@ -1,11 +1,28 @@
 -sme/testsme testsme -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lpthread 
 -sme/testsme2 testsme2 -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lpthread
 -sme/testsme3 testsme3 -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lpthread
-sme/t t -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lreadline -ltermcap -lnsl
-sme/flooder flooder -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
-sme/multisme multisme -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
-sme/txrx txrx -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
-#sme/t2 t2 -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
+sme/t t \
+  -lcore-network -lutil -lsms -lutil \
+  $(SOCKETLIB) -lcore-threads \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lpthread $(LIBRT) -lutil-recoder-recode_dll \
+  $(__LIBRARIES) -lreadline -ltermcap $(LIBNSL)
+sme/flooder flooder \
+  -lcore-network -lutil -lsms -lutil \
+  $(SOCKETLIB) -lcore-threads \
+  -lpthread $(LIBRT) -lutil-recoder-recode_dll \
+  $(__LIBRARIES) $(LIBNSL)
+sme/multisme multisme \
+  -lcore-network -lutil -lsms -lutil \
+  $(SOCKETLIB) -lcore-threads \
+  -lpthread $(LIBRT) -lutil-recoder-recode_dll \
+  $(__LIBRARIES) $(LIBNSL)
+sme/txrx txrx \
+  -lcore-network -lutil -lsms -lutil \
+  $(SOCKETLIB) -lcore-threads \
+  -lpthread $(LIBRT) -lutil-recoder-recode_dll \
+  $(__LIBRARIES) $(LIBNSL)
+#sme/t2 t2 -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread $(LIBRT) -lutil-recoder-recode_dll
 -sme/pingpong pingpong -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/replacetest replacetest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/querytest querytest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
@@ -13,5 +30,11 @@ sme/txrx txrx -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lp
 -sme/payload payload  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/datasmtest datasmtest -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/sme sme
-sme/uberflooder uberflooder -lcore-threads $(__LIBRARIES) -llogger
-sme/realloadsim realloadsim -lcore-threads -lsms -lcore-network -lutil $(__LIBRARIES) -llogger $(SOCKETLIB) -lrt -lnsl -lpthread -lreadline -ltermcap
+sme/uberflooder uberflooder \
+  -lcore-threads $(__LIBRARIES) \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger
+sme/realloadsim realloadsim \
+  -lcore-threads -lsms -lcore-network -lutil \
+  $(__LIBRARIES) \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(SOCKETLIB) $(LIBRT) $(LIBNSL) -lpthread -lreadline -ltermcap
