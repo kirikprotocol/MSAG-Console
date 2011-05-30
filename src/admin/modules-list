@@ -3,4 +3,4 @@ service		"service api"
 util		"some util classes for admin subsystem"
 daemon		"service start/stop daemon"
 ?smsc_service	"SMSC starter"
-?hsdaemon
+hsdaemon

@@ -2,5 +2,13 @@
 # this file contains binaries definitions
 
 # binary name			source name			libraries																		description
-admin/daemon/hs_smsc_ssdaemon	main				-ladmin-hsdaemon -ladmin-util -ladmin -ladmin-protocol -ladmin-service	-lutil-config -lutil-xml -lutil 	-lcore-threads -lcore-buffers -lcore-network 	$(XERCES_LIB) $(SOCKETLIB) -lpthread -L$(SMSC_BUILDDIR)/bin -llogger -lnsl -lrt -lutil-mirrorfile
-admin/daemon/hsadmin hsadmin -lcore-network $(SOCKETLIB) -lnsl -lrt -lutil -lutil-xml -lxerces-c
+admin/daemon/hs_smsc_ssdaemon	main \
+  -ladmin-hsdaemon -ladmin-util -ladmin \
+  -ladmin-protocol -ladmin-service \
+  -lutil-config -lutil-xml -lutil \
+  -lcore-threads -lcore-buffers -lcore-network \
+  $(XERCES_LIB) $(SOCKETLIB) $(LIBICONV) -lpthread \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(LIBNSL) $(LIBRT) -lutil-mirrorfile
+admin/daemon/hsadmin hsadmin \
+  -lcore-network $(SOCKETLIB) $(LIBNSL) $(LIBRT) -lutil -lutil-xml $(XERCES_LIB)

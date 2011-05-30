@@ -786,10 +786,18 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <mkdir dir="${DISTR_DIR}/daemon/conf"/>
         <copy file="${BUILD_DIR}/bin/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
         <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
-        <copy file="${BUILD_DIR}/bin/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
-        <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
-        <copy file="${BUILD_DIR}/bin/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
-        <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
+        <copy file="${BUILD_DIR}/bin/admin/daemon/hs_smsc_ssdaemon"
+              todir="${DISTR_DIR}/daemon/bin"
+              failonerror="false"/>
+        <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon"
+               perm="755"
+               failonerror="false"/>
+        <copy file="${BUILD_DIR}/bin/admin/daemon/hsadmin"
+              todir="${DISTR_DIR}/daemon/bin"
+              failonerror="false"/>
+        <chmod file="${DISTR_DIR}/daemon/bin/hsadmin"
+               perm="755"
+               failonerror="false"/>
     </target>
 
     <target name="-update.webapp" depends="-install.tomcat" if="SETUP_MAKE_WEBAPP">
@@ -1077,8 +1085,12 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
 
         <!-- additional actions -->
         <copy file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/smsc_ssdaemon.cur"/>
-        <copy file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon.cur"/>
-        <copy file="${DISTR_DIR}/daemon/bin/hsadmin" tofile="${DISTR_DIR}/daemon/bin/hsadmin.cur"/>
+        <copy file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon"
+              tofile="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon.cur"
+              failonerror="false"/>
+        <copy file="${DISTR_DIR}/daemon/bin/hsadmin"
+              tofile="${DISTR_DIR}/daemon/bin/hsadmin.cur"
+              failonerror="false"/>
         <copy file="${TEMPL_DIR}/update_daemon.sh" tofile="${DISTR_DIR}/daemon/update_daemon.sh" >
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
