@@ -884,13 +884,12 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
     DeliveryInfo* info = new DeliveryInfo(dlvId,infoData,userInfo);
     DlvState state = DLVSTATE_PAUSED;
     msgtime_type planTime = 0;
-    if (info->getStartDate()) {
-        // msgtime_type now = currentTimeSeconds();
-        // if (info->getStartDate() > now + 5) {
-        state = DLVSTATE_PLANNED;
-        planTime = info->getStartDate();
-        // }
-    }
+    // NOTE: since 2011-05-30 we ignore start date at creation time
+    // if (info->getStartDate()) {
+    // state = DLVSTATE_PLANNED;
+    // planTime = info->getStartDate();
+    // }
+
     DeliveryImplPtr dlvPtr;
     addDelivery(info,state,planTime,true,&dlvPtr);
     if (!dlvPtr) {
