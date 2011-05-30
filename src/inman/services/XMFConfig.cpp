@@ -59,7 +59,7 @@ const XCFConfig *
   StrPrefix newPfx(prefix_str);
 
   if (hasPrefix(newPfx)) //check prefix uniqueness
-    return false;
+    return NULL;
 
   std::string nmFile;
   if (!_fMgr.findFile(nm_file, &nmFile))
@@ -86,7 +86,7 @@ const XCFConfig *
   StrPrefix newPfx(prefix_str);
 
   if (hasPrefix(newPfx)) //check prefix uniqueness
-    return false;
+    return NULL;
 
   std::string nmFile;
   if (!_fMgr.findFile(nm_file, &nmFile))
