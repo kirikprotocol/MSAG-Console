@@ -176,17 +176,17 @@ endif
 CFLAGS := $(CFLAGS) $(XTARGET)
 endif
 ifeq ($(CXX),CC)
-LDFLAGS := $(LDFLAGS) $(XTARGET) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib $(USRLOCLIB) -L$(SSL_LIB_DIR) -L$(NETSNMP_LIB_DIR)
+override LDFLAGS := $(LDFLAGS) $(XTARGET) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib $(USRLOCLIB) -L$(SSL_LIB_DIR) -L$(NETSNMP_LIB_DIR)
 ifeq ($(STDCXX),YES)
-LDFLAGS := $(LDFLAGS) -L/opt/stdcxx/lib -lstd -lthread
+override LDFLAGS := $(LDFLAGS) -L/opt/stdcxx/lib -lstd -lthread
 endif
 else
-LDFLAGS := $(LDFLAGS) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib $(USRLOCLIB) -L$(SSL_LIB_DIR)
+override LDFLAGS := $(LDFLAGS) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib $(USRLOCLIB) -L$(SSL_LIB_DIR)
 override CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 
 ifeq ($(USEHOME),YES)
-LDFLAGS := -L$(HOME)/lib $(LDFLAGS)
+override LDFLAGS := -L$(HOME)/lib $(LDFLAGS)
 endif
 
 ifneq ($(TRACE),YES)
@@ -201,7 +201,7 @@ endif
 
 ifeq ($(LEAKTRACE),YES)
 override CXXFLAGS:= $(CXXFLAGS) -DLEAKTRACE
-LDFLAGS := $(LDFLAGS) -lutil-leaktracing
+override LDFLAGS := $(LDFLAGS) -lutil-leaktracing
 EXTRADEPS:= $(SMSC_BUILDDIR)/lib/libutil-leaktracing.a
 export EXTRADEPS
 DEBUG := YES
@@ -212,7 +212,7 @@ override CXXFLAGS := $(CXXFLAGS) -DDISABLE_SMPP_CHECKS
 endif
 
 ifeq ($(LEAKTRACE),SIMPLE)
-LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing-simple -lcore-threads
+override LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing-simple -lcore-threads
 DEBUG := YES
 endif
 
