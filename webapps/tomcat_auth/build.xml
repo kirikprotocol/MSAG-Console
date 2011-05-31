@@ -36,9 +36,18 @@
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
-    <javac srcdir="common/src" destdir="${java_out}common/classes" classpath="${jmx_jar}:${catalina_jar}"/>
-    <javac srcdir="server/src" destdir="${java_out}server/classes" classpath="${jmx_jar}:${catalina_jar}:${java_out}common/classes"/>
-    <javac srcdir="webapp/src" destdir="${java_out}webapp/classes" classpath="${jmx_jar}:${catalina_jar}:${java_out}common/classes:${java_out}server/classes"/>
+    <javac srcdir="common/src"
+           destdir="${java_out}common/classes"
+           classpath="${jmx_jar}:${catalina_jar}"
+           includeantruntime="false"/>
+    <javac srcdir="server/src"
+           destdir="${java_out}server/classes"
+           classpath="${jmx_jar}:${catalina_jar}:${java_out}common/classes"
+           includeantruntime="false"/>
+    <javac srcdir="webapp/src"
+           destdir="${java_out}webapp/classes"
+           classpath="${jmx_jar}:${catalina_jar}:${java_out}common/classes:${java_out}server/classes"
+           includeantruntime="false"/>
   </target>
 
   <target name="build" depends="compile" description="generate the distribution">

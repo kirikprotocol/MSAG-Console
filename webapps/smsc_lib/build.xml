@@ -17,7 +17,12 @@
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
-    <javac srcdir="${java_src}" destdir="${java_out}" classpath="${log4j_jar}" debug="yes"/>
+    <javac srcdir="${java_src}"
+           destdir="${java_out}"
+           classpath="${log4j_jar}"
+           target="1.5"
+           source="1.5"
+           includeantruntime="false"/>
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">

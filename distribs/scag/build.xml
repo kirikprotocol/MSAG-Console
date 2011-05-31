@@ -510,6 +510,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <javac   srcdir="${JEDIT_DIR}/src"
                  destdir="${WEBBUILD_DIR}/jedit"
                  deprecation="on"
+                 includeantruntime="false"
                  includeJavaRuntime="no"
                  debug="yes" 
                  encoding="UTF8"
