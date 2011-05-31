@@ -719,9 +719,10 @@ function disableCtrlKeyCombination(evt, id) {
 }
 
 function assignOpener() {
-  if (opener && !opener.closed)
-    opener.childW = window;
-  else return;
+  // commented by bukind on 2011-05-31 as childW is unaccessible via firefox@macos
+  // if (opener && !opener.closed)
+  // opener.childW = window;
+  // else return;
   setTimeout("assignOpener()",1000);
 }
 
