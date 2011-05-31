@@ -73,7 +73,7 @@ public class AdminMode {${line.separator}
       <inpath location="${smsc.test.classes.preweaved}"/>
     </iajc>
     <copy todir="${smsc.test.classes}">
-      <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml"/>
+      <fileset dir="test" excludes="**/*.java"/>
     </copy>
     <native2ascii src="java" dest="${smsc.test.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
