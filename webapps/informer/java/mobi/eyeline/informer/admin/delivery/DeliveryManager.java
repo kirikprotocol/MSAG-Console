@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -149,6 +150,12 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     }
   }
 
+  private void checkMessageTimeLimit(Delivery delivery) {
+    if(!delivery.isRetryOnFail() && delivery.getValidityPeriod() != null) {
+      delivery.setMessageTimeToLive(new Time(delivery.getValidityPeriod()));
+    }
+  }
+
   private int createDelivery(final String login, final String password, final Delivery delivery, final DataSource<Message> msDataSource) throws AdminException {
     if (logger.isDebugEnabled()) {
       logger.debug("Create delivery: " + delivery.getName());
@@ -159,6 +166,8 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
     if (delivery.getStartDate().getTime() <= System.currentTimeMillis() + 10)
       delivery.setStartDate(new Date(System.currentTimeMillis() + 60000));
+
+    checkMessageTimeLimit(delivery);
 
     delivery.validate();
     final DcpConnection conn = getDcpConnection(login, password);
@@ -267,6 +276,8 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     if (logger.isDebugEnabled()) {
       logger.debug("Modify delivery: " + delivery.getName());
     }
+
+    checkMessageTimeLimit(delivery);
 
     delivery.validate();
     DcpConnection conn = getDcpConnection(login, password);

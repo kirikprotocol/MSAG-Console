@@ -163,6 +163,8 @@ class DcpConverter {
     }
     if(di.hasCreationDate()) {
       delivery.setCreateDate(convertDateFromDcpFormat(di.getCreationDate()));
+    }else {
+      delivery.setCreateDate(convertDateFromDcpFormat(di.getStartDate()));
     }
 
     delivery.setEnableMsgFinalizationLogging(di.getFinalMsgRecords());
@@ -299,6 +301,8 @@ class DcpConverter {
     }
     if(di.hasCreationDate()) {
       result.setCreateDate(convertDateYYFromDcpFormat(di.getCreationDate()));
+    }else {
+      result.setCreateDate(convertDateYYFromDcpFormat(di.getStartDate()));
     }
     return result;
   }
@@ -329,6 +333,8 @@ class DcpConverter {
     delivery.setStartDate(convertDateToDcpFormat(di.getStartDate()));
     if(di.getCreateDate() != null) {
       delivery.setCreationDate(convertDateToDcpFormat(di.getCreateDate()));
+    }else {
+      delivery.setCreationDate(convertDateToDcpFormat(di.getStartDate()));
     }
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());

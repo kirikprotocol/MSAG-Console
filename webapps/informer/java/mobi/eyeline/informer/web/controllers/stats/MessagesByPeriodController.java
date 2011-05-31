@@ -304,7 +304,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
           Date from = new Date();
           for(Integer id : deliveriesIds) {
             Delivery d = strategy.getDelivery(getUser().getLogin(), id);
-            Date date = d.getCreateDate() == null ? d.getStartDate() : d.getCreateDate();
+            Date date = d.getCreateDate();
             if(from.after( date)) {
               from =  date;
             }

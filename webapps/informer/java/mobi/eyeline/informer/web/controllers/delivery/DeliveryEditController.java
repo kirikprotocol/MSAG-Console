@@ -205,9 +205,6 @@ public class DeliveryEditController extends DeliveryController {
     if (retryOnFail.equals("off")) {
       delivery.setRetryOnFail(false);
       delivery.setRetryPolicy(null);
-      if(delivery.getValidityPeriod() != null) {
-        delivery.setMessageTimeToLive(new Time(delivery.getValidityPeriod()));
-      }
     } else if (retryOnFail.equals("default")) {
       delivery.setRetryOnFail(true);
       delivery.setRetryPolicy("");
