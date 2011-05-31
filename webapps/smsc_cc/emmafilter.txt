@@ -1,0 +1,7 @@
++ru.novosoft.smsc.admin*
++ru.novosoft.smsc.util*
+-*Test*
+-*Mock*
+-*FileSystemUsageAspect*
+-*Version*
+-*Exception*

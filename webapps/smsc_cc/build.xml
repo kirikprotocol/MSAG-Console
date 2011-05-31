@@ -16,6 +16,8 @@
     <fileset dir="lib" includes="*.jar"/>
   </path>
 
+  <taskdef resource='emma_ant.properties' classpathref="lib" />
+
   <target name="gen_cc_protocol">
     <protogen language="java" msgPackage="ru.novosoft.smsc.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java"
               tempDir="java/ru/novosoft/smsc/admin/cluster_controller/tmp">
@@ -80,14 +82,35 @@ public class AdminMode {${line.separator}
     <delete dir="${smsc.tests.dir}" failonerror="false"/>
     <mkdir dir="${smsc.tests.dir}"/>
 
-    <junit showoutput="true" printsummary="yes">
+    <emma>
+      <instr instrpath="${smsc.test.classes}" mode="overwrite" merge="true" metadatafile="${smsc.tests.dir}/metadata.emma">
+        <filter file="emmafilter.txt" />
+      </instr>
+    </emma>
+
+    <junit showoutput="true" printsummary="yes" fork="true" forkmode="once">
       <classpath path="${smsc.test.classes}"/>
       <classpath refid="lib"/>
+
+      <jvmarg value="-Demma.coverage.out.file=${smsc.tests.dir}/coverage.emma" />
+      <jvmarg value="-Demma.coverage.out.merge=false" />
+
       <formatter type="xml" usefile="true"/>
       <batchtest todir="${smsc.tests.dir}">
         <fileset dir="${smsc.test.classes}" includes="**/*Test.class"/>
       </batchtest>
     </junit>
+
+    <emma>
+      <report sourcepath="java">
+        <infileset dir="${smsc.tests.dir}" includes="*.emma" />
+
+        <xml outfile="${smsc.tests.dir}/coverage.xml" depth="method" />
+        <html outfile="${smsc.tests.dir}/coverage.html" depth="method" />
+
+      </report>
+    </emma>
+
   </target>
 
   <target name="exploded">
