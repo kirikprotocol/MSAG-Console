@@ -41,10 +41,13 @@ endif
 endif
 
 
+ifneq (Darwin,$(OSNAME))
 ifeq ($(B64),YES)
 override USRLOCLIB := $(foreach DIR,$(wildcard /usr/local/lib/64),-L$(DIR))
 else
 override USRLOCLIB := $(foreach DIR,$(wildcard /usr/local/lib),-L$(DIR))
+endif
+override USRLOCINC := $(foreach DIR,$(wildcard /usr/local/include,-I$(DIR))
 endif
 
 ifdef ORACLE_HOME
@@ -158,9 +161,9 @@ COMMON_INCLUDES := -I$(SNMP_BASE)/include $(COMMON_INCLUDES)
 endif
 
 ifeq ($(SFW),YES)
-COMMON_INCLUDES := $(COMMON_INCLUDES) -I/usr/sfw/include -I/usr/local/include
+COMMON_INCLUDES := $(COMMON_INCLUDES) -I/usr/sfw/include $(USRLOCINC)
 else
-COMMON_INCLUDES := $(COMMON_INCLUDES) -I/usr/local/include
+COMMON_INCLUDES := $(COMMON_INCLUDES) $(USRLOCINC)
 endif
 COMMON_INCLUDES := $(COMMON_INCLUDES) -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__ -I/usr/local/ssl/include
 
