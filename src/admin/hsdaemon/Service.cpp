@@ -123,7 +123,7 @@ pid_t Service::start()
         // close all (parent) streams
         struct rlimit flim;
         getrlimit(RLIMIT_NOFILE, &flim);
-        for (rlim_t i=0; i<flim.rlim_max; i++) {
+        for (rlim_t i=0; i<flim.rlim_cur; i++) {
           close((int)i);
         }
 

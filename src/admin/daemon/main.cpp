@@ -46,7 +46,8 @@ void daemonInit()
 	}
 	struct rlimit flim;
 	getrlimit(RLIMIT_NOFILE, &flim);
-	for (rlim_t i=0; i<flim.rlim_max; i++)
+        // rlim_max replaced with rlim_cur to handle macos
+	for (rlim_t i=0; i<flim.rlim_cur; i++)
 	{
 		close(i);
 	}
