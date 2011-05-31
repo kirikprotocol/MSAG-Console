@@ -44,8 +44,7 @@ public class DcpConverterTest {
     }
   }
 
-  @Test
-  public void testConvertDelivery() throws AdminException {
+  private static Delivery createDelivery() {
     Delivery d = new Delivery();
 //    d.setType(Delivery.Type.IndividualTexts);
     d.setSourceAddress(new Address("+791394"));
@@ -65,9 +64,24 @@ public class DcpConverterTest {
     d.setSvcType("svc1");
     d.setValidityPeriod(new Time(1,0,0));
     d.setMessageTimeToLive(new Time(2,0,0));
-
+    d.setCreateDate(new Date(121212));
     d.setProperty(UserDataConsts.RESTRICTION, "true");
+    return d;
+  }
+
+  @Test
+  public void testConvertDelivery() throws AdminException {
+    Delivery d = createDelivery();
     assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d)));
+  }
+  @Test
+  public void testConvertDeliveryWNullCreateDate() throws AdminException {
+    Delivery d = createDelivery();
+    d.setCreateDate(null);
+    Delivery d2 = DcpConverter.convert(d.getId(), DcpConverter.convert(d));
+    assertEquals(d2.getCreateDate().getTime()/1000, d.getStartDate().getTime()/1000);
+    d.setCreateDate(d2.getCreateDate());
+    assertEquals(d, d2);
   }
 
 
