@@ -1,12 +1,18 @@
+/* "@(#)$Id$" */
+
 #include <stdio.h>
 #define NOLOGGERPLEASE 1
+
 #include "util/int.h"
 #include "util/Timer.hpp"
 #include "core/buffers/DiskXTree.hpp"
 #include "sms/sms.h"
 #include "core/buffers/TmpBuf.hpp"
 #include "util/Uint64Converter.h"
+
+#ifndef NOLOGGERPLEASE
 #include "logger/Logger.h"
+#endif
 
 using namespace smsc::core::buffers;
 using namespace smsc::sms;
@@ -156,7 +162,8 @@ bool sload(SMSId& id, SMS& sms)
     int8_t odMscSize = 0; int8_t odImsiSize = 0;
     int8_t ddMscSize = 0; int8_t ddImsiSize = 0;
     int8_t routeSize = 0; int8_t srcSmeSize = 0; int8_t dstSmeSize = 0;
-    int32_t textLen  = 0; int32_t bodyBufferLen = 0;
+    //int32_t textLen  = 0; 
+    int32_t bodyBufferLen = 0;
 
         if (!sread(&recordSize1, (uint32_t)sizeof(recordSize1))) return false;
         else recordSize1 = ntohl(recordSize1);
@@ -218,7 +225,7 @@ bool sload(SMSId& id, SMS& sms)
 
         memcpy(&svcSize, position, sizeof(svcSize)); position+=sizeof(svcSize);
         if (svcSize > 0) {
-            if (svcSize <= sizeof(sms.eServiceType)) {
+            if ((unsigned)svcSize <= sizeof(sms.eServiceType)) {
                 memcpy(strBuff, position, svcSize); strBuff[svcSize] = '\0';
                 sms.setEServiceType(strBuff);
                 position+=svcSize;
@@ -419,7 +426,9 @@ void operator delete[](void* ptr)throw()
 
 int main()
 {
+#ifndef NOLOGGERPLEASE
   smsc::logger::Logger::Init();
+#endif
 
   /*
   uint8_t* memstart=(uint8_t*)sbrk(0);
@@ -494,7 +503,7 @@ int main()
   f.ROpen("test.bin");
   std::vector<IdLtt> rv;
   xt.Lookup(f,"world",rv);
-  printf("rv.size=%lld\n",rv.size());
+  printf("rv.size=%lld\n",(long long int)rv.size());
   f.Seek(0);
   xt.ReadFromFile(f);
   xt.Dump();

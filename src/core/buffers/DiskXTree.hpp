@@ -1,4 +1,7 @@
 #ifndef __SMSC_CORE_BUFFERS_DISKXTREE_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_CORE_BUFFERS_DISKXTREE_HPP__
 
 #include "core/buffers/File.hpp"
@@ -375,7 +378,7 @@ protected:
       DataArrayList* ptr=this;
       while(ptr)
       {
-        for(int i=0;i<ptr->dataCount;i++)
+        for(unsigned int i=0;i<ptr->dataCount;i++)
         {
           XTWriteData(f,ptr->data[i]);
         }
@@ -427,7 +430,7 @@ protected:
     bool real:1;
     bool heapStr:1;
 
-    Node():children(0),childrenArr(0),data(0),chSize(0),nodeType(ntCollapsed),real(true),heapStr(false),dataType(dtSingleValue)
+    Node():children(0),childrenArr(0),data(0),chSize(0),nodeType(ntCollapsed),dataType(dtSingleValue),real(true),heapStr(false)
     {
 
     }
@@ -993,11 +996,11 @@ protected:
     }else//dtArrayList
     {
       DataArrayList* ptr=node->dataArray;
-      int initValue=1;
+      unsigned int initValue=1;
       XTPrintData(ptr->data[0]);
       while(ptr)
       {
-        for(int i=initValue;i<ptr->dataCount;i++)
+        for(unsigned int i=initValue;i<ptr->dataCount;i++)
         {
           printf(",");
           XTPrintData(ptr->data[i]);
