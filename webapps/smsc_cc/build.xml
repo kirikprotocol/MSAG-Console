@@ -106,7 +106,7 @@ public class AdminMode {${line.separator}
         <infileset dir="${smsc.tests.dir}" includes="*.emma" />
 
         <xml outfile="${smsc.tests.dir}/coverage.xml" depth="method" />
-        <html outfile="${smsc.tests.dir}/coverage.html" depth="method" />
+        <html outfile="${smsc.tests.dir}/coverage.html" depth="method" encoding="utf-8"/>
 
       </report>
     </emma>
