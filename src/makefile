@@ -47,7 +47,7 @@ override USRLOCLIB := $(foreach DIR,$(wildcard /usr/local/lib/64),-L$(DIR))
 else
 override USRLOCLIB := $(foreach DIR,$(wildcard /usr/local/lib),-L$(DIR))
 endif
-override USRLOCINC := $(foreach DIR,$(wildcard /usr/local/include,-I$(DIR))
+override USRLOCINC := $(foreach DIR,$(wildcard /usr/local/include),-I$(DIR))
 endif
 
 ifdef ORACLE_HOME
