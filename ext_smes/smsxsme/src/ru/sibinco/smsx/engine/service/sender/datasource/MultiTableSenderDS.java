@@ -66,7 +66,7 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
   }
 
   private static String formatByDate(String pattern, String ... values) {
-    return MessageFormat.format(pattern, values);
+    return (new MessageFormat(pattern)).format(values, new StringBuffer(), null).toString();
   }
 
 
@@ -229,10 +229,10 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
         tables.put(_newTable, nT);
         currentTable = _newTable;
         if(tables.size() > MAX_PREVIOUS_PERIODS + 1 ) {
-          Map.Entry<String, Table> e = tables.lastEntry();  // самая старая таблица
-          Table toRemove = e.getValue();
+          String key = tables.lastKey();
+          Table toRemove  = tables.get(key);  // самая старая таблица
           toRemove.drop(conn);
-          tables.remove(e.getKey());
+          tables.remove(key);
           if(logger.isDebugEnabled()) {
             logger.debug("Sender DS: old table is removed: "+toRemove.nameSuffix);
           }
