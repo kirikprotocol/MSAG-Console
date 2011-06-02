@@ -18,7 +18,7 @@
         FORM_URI = CPATH + request.getParameter("jsp");
 
     bean.setWantAlias(request.getParameter("wantAlias") != null);
-    bean.setForceDC(request.getParameter("forceDC") != null);
+    bean.setForceGsmDataCoding(request.getParameter("forceDC") != null);
 
     switch (bean.process(request)) {
         case ServiceAddExternalAdm.RESULT_DONE:
