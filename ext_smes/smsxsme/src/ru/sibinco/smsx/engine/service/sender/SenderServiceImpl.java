@@ -8,6 +8,7 @@ import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.service.sender.datasource.DBSenderDataSource;
+import ru.sibinco.smsx.engine.service.sender.datasource.MultiTableSenderDS;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 
 /**
@@ -23,7 +24,8 @@ public class SenderServiceImpl implements SenderService{
 
   public SenderServiceImpl(XmlConfigSection config, OutgoingQueue outQueue, int serviceId) {
     try {
-      dataSource = new DBSenderDataSource();
+      String type = config.getString("dataSourceType", "singleTable");
+      dataSource = type.equals("multiTable") ? new MultiTableSenderDS() : new DBSenderDataSource();
 
       senderMessage = new MessageSender(outQueue, dataSource, serviceId);
 

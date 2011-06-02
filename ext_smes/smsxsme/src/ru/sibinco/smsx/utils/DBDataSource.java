@@ -7,6 +7,10 @@ import java.sql.SQLException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * User: artem
@@ -53,6 +57,14 @@ public class DBDataSource {
     } catch (ConfigException e) {
       throw new DataSourceException("Can't find sql: " + prefix + string);
     }
+  }
+
+  protected Map<String, String> getSqls() {
+    Map<String, String> result = new HashMap<String, String> (sql.size());
+    for(Map.Entry e : sql.entrySet()) {
+      result.put(((String)e.getKey()).substring(prefix.length()), (String)e.getValue());
+    }
+    return result;
   }
 
   protected static void _close(java.sql.ResultSet rs, java.sql.PreparedStatement ps, java.sql.Connection conn) {

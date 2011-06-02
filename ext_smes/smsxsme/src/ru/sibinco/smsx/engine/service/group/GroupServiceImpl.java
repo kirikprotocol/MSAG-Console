@@ -14,6 +14,7 @@ import ru.sibinco.smsx.engine.service.group.datasource.impl.principal.DBPrincipa
 import ru.sibinco.smsx.engine.service.group.datasource.impl.profile.DBGroupEditProfileDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.send.DBGroupSendDataSource;
 import ru.sibinco.smsx.Context;
+import ru.sibinco.smsx.engine.service.group.datasource.impl.send.MultiTableGroupSendDS;
 
 import java.io.File;
 import java.util.Collection;
@@ -48,7 +49,8 @@ public class GroupServiceImpl implements Service, GroupService {
       }
 
       this.groupEditDSProfile = new DBGroupEditProfileDataSource();
-      this.sendDS = new DBGroupSendDataSource();
+      String dataSourceType = g.getString("dataSourceType", "singleTable");
+      this.sendDS = dataSourceType.equals("multiTable") ? new MultiTableGroupSendDS() : new DBGroupSendDataSource();
 
       this.replies = new RepliesMap(new File(storeDir, "groupreplies.bin"), g.getInt("replies.cache.size", 10000));
       this.sendProcessor = new GroupSendProcessor(g, outQueue, listsDS, replies, Context.getInstance().getOperators(), sendDS, serviceId);
