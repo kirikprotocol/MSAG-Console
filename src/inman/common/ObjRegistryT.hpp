@@ -106,6 +106,17 @@ public:
     return res.second;
   }
 
+  _TArg * extract(const _KeyTArg & use_key)
+  {
+    _TArg * rval = NULL;
+    typename TRegistry::iterator it = registry.find(use_key);
+    if (it != registry.end()) {
+      rval = it->second;
+      registry.erase(it);
+    }
+    return rval;
+  }
+
   void reset(const _KeyTArg & use_key, _TArg * p_obj)
   {
     typename TRegistry::iterator it = registry.find(use_key);
