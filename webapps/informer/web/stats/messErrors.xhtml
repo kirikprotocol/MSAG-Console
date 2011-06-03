@@ -60,15 +60,14 @@
           <ui:include src="#{!messErrors.aggregated ? 'messErrors_simple.xhtml' : ''}"/>
         </h:panelGroup>
 
-        <eye:buttons rendered="#{longOpState == 2}">
-
+        <eye:buttons rendered="#{longOpState == 2 || longOpState == 3}">
           <eye:button >
             <tr:commandLink text="#{msg['informer.stats.by.errors.back']}" action="#{messErrors.backAction}" immediate="true">
               <f:param value="#{messErrors.backParams}" name="errors_stats_come_back_params"/>
             </tr:commandLink>
           </eye:button>
           <eye:space/>
-          <eye:button>
+          <eye:button rendered="#{longOpState == 2}" >
             <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['informer.stats.by.errors.download']}">
               <tr:fileDownloadActionListener method="#{messErrors.download}" contentType="application/csv" filename="errors.csv"/>
             </tr:commandLink>

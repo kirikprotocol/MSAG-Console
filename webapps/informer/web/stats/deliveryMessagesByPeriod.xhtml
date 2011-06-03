@@ -85,23 +85,27 @@
             <ui:include src="#{deliveryMessagesByPeriod.timeAggregation ? 'deliveryMessagesByPeriod_time.xhtml' : ''}"/>
             <ui:include src="#{deliveryMessagesByPeriod.smscAggregation ? 'deliveryMessagesByPeriod_smsc.xhtml' : ''}"/>
 
+
+            </h:panelGroup>
           <eye:delimiter/>
-
-          <eye:buttons>
-            <eye:button rendered="#{messagesByPeriod.backAction != null}">
-              <tr:commandLink text="#{msg['messages.stats.back']}" shortDesc="#{msg['messages.stats.back']}" action="#{deliveryMessagesByPeriod.backAction}">
-                <f:param name="stats_come_back_params" value="#{deliveryMessagesByPeriod.backParams}"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:space/>
-            <eye:button >
-              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
-                <tr:fileDownloadActionListener method="#{deliveryMessagesByPeriod.download}" contentType="application/csv" filename="deliveryCommonStat.csv"/>
-              </tr:commandLink>
-            </eye:button>
-          </eye:buttons>
-
-         </h:panelGroup>
+          <h:panelGroup rendered="#{longOpState==2 or (longOpState==3 and messagesByPeriod.backAction != null) or messagesByPeriod.fromDeliveriesList}">
+            <eye:buttons>
+              <eye:button rendered="#{deliveryMessagesByPeriod.backAction != null}">
+                <tr:commandLink text="#{msg['messages.stats.back']}" shortDesc="#{msg['messages.stats.back']}" action="#{deliveryMessagesByPeriod.backAction}">
+                  <f:param name="stats_come_back_params" value="#{deliveryMessagesByPeriod.backParams}"/>
+                </tr:commandLink>
+              </eye:button>
+              <eye:button rendered="#{deliveryMessagesByPeriod.fromDeliveriesList}">
+                <tr:commandLink text="#{msg['stats.by.period.to.list']}" shortDesc="#{msg['stats.by.period.to.list']}" action="DELIVERIES"/>
+              </eye:button>
+              <eye:space/>
+              <eye:button rendered="#{longOpState==2}">
+                <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
+                  <tr:fileDownloadActionListener method="#{deliveryMessagesByPeriod.download}" contentType="application/csv" filename="deliveryCommonStat.csv"/>
+                </tr:commandLink>
+              </eye:button>
+            </eye:buttons>
+          </h:panelGroup>
 
         </eye:updatableContent>
 

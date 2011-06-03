@@ -288,9 +288,13 @@ public class MessagesByPeriodController extends DeliveryStatController implement
           firstTime = true;
         }
         else {
-          for(int id : newIds) {
-            if(!deliveriesIds.contains(id)) {
-              firstTime = true;
+          if(deliveriesIds.size() != newIds.size()) {
+            firstTime = true;
+          }else {
+            for(int id : newIds) {
+              if(!deliveriesIds.contains(id)) {
+                firstTime = true;
+              }
             }
           }
         }
@@ -320,6 +324,11 @@ public class MessagesByPeriodController extends DeliveryStatController implement
       }
     }
     return "STATS_DELIVERY_MESSAGES_BY_PERIOD";
+  }
+
+
+  public boolean isFromDeliveriesList() {
+    return deliveriesIds != null && backAction == null;
   }
 
 

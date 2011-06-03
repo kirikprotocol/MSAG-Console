@@ -31,7 +31,6 @@ public abstract class LongOperationController extends InformerController {
   public String getError() throws Throwable {
     if (fatalError != null) {
       Throwable t = fatalError;
-      fatalError = null;
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
       t.printStackTrace(pw);
@@ -40,7 +39,6 @@ public abstract class LongOperationController extends InformerController {
     }
     if (error != null) {
       AdminException ex = error;
-      error = null;
       return ex.getMessage(getLocale());
     }
     return null;
