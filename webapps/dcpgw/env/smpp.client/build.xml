@@ -1,0 +1,51 @@
+<project name="smpp client" default="build" basedir=".">
+    <property file="build.properties" />
+    <property name="src.dir" location="${SOURCE_DIR}/src"/>
+    <property name="conf.dir" location="${SOURCE_DIR}/conf"/>
+    <property name="dist.dir" location="${DISTR_DIR}"/>
+    <property name="lib.dir" location="${SOURCE_DIR}/lib"/>
+
+    <path id="project.classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <target name="clean" description="Remove build and distribs directory.">
+        <delete dir="${BUILD_DIR}"/>
+        <delete dir="${DISTR_DIR}"/>
+    </target>
+
+    <target name="compile" depends="clean">
+        <mkdir dir="${BUILD_DIR}"/>
+        <mkdir dir="${DISTR_DIR}"/>
+        <mkdir dir="${BUILD_DIR}/classes"/>
+        <javac srcdir="${src.dir}" destdir="${BUILD_DIR}/classes" classpathref="project.classpath"/>
+    </target>
+
+    <target name="build" depends="compile">
+
+        <mkdir dir="${DISTR_DIR}/lib"/>
+        <jar jarfile="${DISTR_DIR}/lib/smpp.client.jar"
+             basedir="${BUILD_DIR}/classes"
+             index="true">
+        </jar>
+
+        <copy file="${SOURCE_DIR}/setenv.sh" todir="${DISTR_DIR}"/>
+        <chmod file="${DISTR_DIR}/setenv.sh" perm="u+x"/>
+
+        <copy file="startup.sh" todir="${DISTR_DIR}"/>
+        <chmod file="${DISTR_DIR}/startup.sh" perm="u+x"/>
+
+        <copy file="stop.sh" todir="${DISTR_DIR}"/>
+        <chmod file="${DISTR_DIR}/stop.sh" perm="u+x"/>
+
+        <copy file="${SOURCE_DIR}/mv_logs.sh" todir="${DISTR_DIR}"/>
+        <chmod file="${DISTR_DIR}/mv_logs.sh" perm="u+x"/>
+
+        <mkdir dir="${DISTR_DIR}/logs"/>
+
+        <copydir src="${lib.dir}" dest="${DISTR_DIR}/lib"/>
+        <chmod file="${DISTR_DIR}/smpp.client.jar" perm="u+x"/>
+        <native2ascii encoding="UTF-8" src="${conf.dir}" dest="${DISTR_DIR}/conf"/>
+    </target>
+
+</project>
