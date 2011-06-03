@@ -251,7 +251,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
   public String getBackAction() {
-    return backAction;
+    return backAction == null  || backAction.length() == 0 ? null : backAction;
   }
 
   public void setBackAction(String backAction) {
@@ -328,7 +328,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
   public boolean isFromDeliveriesList() {
-    return deliveriesIds != null && backAction == null;
+    return deliveriesIds != null && (backAction == null || backAction.length() == 0);
   }
 
 

@@ -19,95 +19,92 @@
 
       <eye:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
 
-        <eye:dataTableFilter bean="#{deliveryMessagesByPeriod}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="6" columnClasses="column100Width, column300Width, column100Width, column200Width, column100Width, columnTopLeftAlign">
-            <h:outputText value="#{msg['stat.page.from_date']}"/>
-            <eye:inputDate value="#{deliveryMessagesByPeriod.filter.fromDate}" type="both" />
+      <eye:dataTableFilter bean="#{deliveryMessagesByPeriod}" clearAction="clearFilter" applyAction="start">
+        <h:panelGrid columns="6" columnClasses="column100Width, column300Width, column100Width, column200Width, column100Width, columnTopLeftAlign">
+          <h:outputText value="#{msg['stat.page.from_date']}"/>
+          <eye:inputDate value="#{deliveryMessagesByPeriod.filter.fromDate}" type="both" />
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
-            <h:selectOneMenu value="#{deliveryMessagesByPeriod.regionId}">
-              <f:selectItem itemLabel="" itemValue=""/>
-              <f:selectItems value="#{deliveryMessagesByPeriod.regions}"/>
-            </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
+          <h:selectOneMenu value="#{deliveryMessagesByPeriod.regionId}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{deliveryMessagesByPeriod.regions}"/>
+          </h:selectOneMenu>
 
-            <h:outputText value="#{msg['stat.page.aggregation']}"/>
-            <h:selectOneMenu value="#{deliveryMessagesByPeriod.aggregation}" >
-              <f:selectItems value="#{deliveryMessagesByPeriod.aggregations}"/>
-            </h:selectOneMenu>
+          <h:outputText value="#{msg['stat.page.aggregation']}"/>
+          <h:selectOneMenu value="#{deliveryMessagesByPeriod.aggregation}" >
+            <f:selectItems value="#{deliveryMessagesByPeriod.aggregations}"/>
+          </h:selectOneMenu>
 
-            <h:outputText value="#{msg['stat.page.till_date']}"/>
-            <eye:inputDate value="#{deliveryMessagesByPeriod.filter.tillDate}"  type="both"/>
+          <h:outputText value="#{msg['stat.page.till_date']}"/>
+          <eye:inputDate value="#{deliveryMessagesByPeriod.filter.tillDate}"  type="both"/>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}"/>
-            <h:selectOneMenu value="#{deliveryMessagesByPeriod.smscFilter}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}">
-              <f:selectItem itemLabel="" itemValue=""/>
-              <f:selectItems value="#{deliveryMessagesByPeriod.smscs}"/>
-            </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}"/>
+          <h:selectOneMenu value="#{deliveryMessagesByPeriod.smscFilter}" rendered="#{deliveryMessagesByPeriod.userInAdminRole}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{deliveryMessagesByPeriod.smscs}"/>
+          </h:selectOneMenu>
 
-          </h:panelGrid>
-        </eye:dataTableFilter>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
       <eye:delimiter/>
 
 
-        <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
+      <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
 
 
 
-          <eye:message level="error" rendered="#{longOpState == 3}">
-            <h:outputText value="#{deliveryMessagesByPeriod.error}"/>
-          </eye:message>
+        <eye:message level="error" rendered="#{longOpState == 3}">
+          <h:outputText value="#{deliveryMessagesByPeriod.error}"/>
+        </eye:message>
 
 
 
 
-          <h:panelGroup rendered="#{longOpState == 1}">
-            <tr:message id="upload_message"/>
+        <h:panelGroup rendered="#{longOpState == 1}">
+          <tr:message id="upload_message"/>
 
-            <eye:delimiter/>
-
-            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-              <h:outputText value="#{msg['processing.label']}  #{deliveryMessagesByPeriod.current}"/>
-              <eye:progressBar current="#{deliveryMessagesByPeriod.current}" maximum="#{deliveryMessagesByPeriod.total}" width="500" height="20" />
-            </h:panelGrid>
-
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{deliveryMessagesByPeriod.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
-          </h:panelGroup>
-
-          <h:panelGroup rendered="#{longOpState==2}">
-
-            <ui:include src="#{deliveryMessagesByPeriod.regionAggregation ? 'deliveryMessagesByPeriod_region.xhtml' : ''}"/>
-            <ui:include src="#{deliveryMessagesByPeriod.timeAggregation ? 'deliveryMessagesByPeriod_time.xhtml' : ''}"/>
-            <ui:include src="#{deliveryMessagesByPeriod.smscAggregation ? 'deliveryMessagesByPeriod_smsc.xhtml' : ''}"/>
-
-
-            </h:panelGroup>
           <eye:delimiter/>
-          <h:panelGroup rendered="#{longOpState==2 or (longOpState==3 and messagesByPeriod.backAction != null) or messagesByPeriod.fromDeliveriesList}">
-            <eye:buttons>
-              <eye:button rendered="#{deliveryMessagesByPeriod.backAction != null}">
-                <tr:commandLink text="#{msg['messages.stats.back']}" shortDesc="#{msg['messages.stats.back']}" action="#{deliveryMessagesByPeriod.backAction}">
-                  <f:param name="stats_come_back_params" value="#{deliveryMessagesByPeriod.backParams}"/>
-                </tr:commandLink>
-              </eye:button>
-              <eye:button rendered="#{deliveryMessagesByPeriod.fromDeliveriesList}">
-                <tr:commandLink text="#{msg['stats.by.period.to.list']}" shortDesc="#{msg['stats.by.period.to.list']}" action="DELIVERIES"/>
-              </eye:button>
-              <eye:space/>
-              <eye:button rendered="#{longOpState==2}">
-                <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
-                  <tr:fileDownloadActionListener method="#{deliveryMessagesByPeriod.download}" contentType="application/csv" filename="deliveryCommonStat.csv"/>
-                </tr:commandLink>
-              </eye:button>
-            </eye:buttons>
-          </h:panelGroup>
 
-        </eye:updatableContent>
+          <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+            <h:outputText value="#{msg['processing.label']}  #{deliveryMessagesByPeriod.current}"/>
+            <eye:progressBar current="#{deliveryMessagesByPeriod.current}" maximum="#{deliveryMessagesByPeriod.total}" width="500" height="20" />
+          </h:panelGrid>
+
+        </h:panelGroup>
+
+        <h:panelGroup rendered="#{longOpState==2}">
+
+          <ui:include src="#{deliveryMessagesByPeriod.regionAggregation ? 'deliveryMessagesByPeriod_region.xhtml' : ''}"/>
+          <ui:include src="#{deliveryMessagesByPeriod.timeAggregation ? 'deliveryMessagesByPeriod_time.xhtml' : ''}"/>
+          <ui:include src="#{deliveryMessagesByPeriod.smscAggregation ? 'deliveryMessagesByPeriod_smsc.xhtml' : ''}"/>
+
+        </h:panelGroup>
+
+        <eye:delimiter/>
+        <h:panelGroup rendered="#{longOpState==1 or longOpState==2 or deliveryMessagesByPeriod.backAction != null or deliveryMessagesByPeriod.fromDeliveriesList}">
+          <eye:buttons>
+            <eye:button rendered="#{longOpState==1}">
+              <tr:commandLink text="#{msg['stop.button']}" action="#{deliveryMessagesByPeriod.cancel}"/>
+            </eye:button>
+            <eye:button rendered="#{deliveryMessagesByPeriod.backAction != null}">
+              <tr:commandLink text="#{msg['messages.stats.back']}" shortDesc="#{msg['messages.stats.back']}" action="#{deliveryMessagesByPeriod.backAction}">
+                <f:param name="stats_come_back_params" value="#{deliveryMessagesByPeriod.backParams}"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button rendered="#{deliveryMessagesByPeriod.fromDeliveriesList}">
+              <tr:commandLink text="#{msg['stats.by.period.to.list']}" shortDesc="#{msg['stats.by.period.to.list']}" action="DELIVERIES"/>
+            </eye:button>
+            <eye:space/>
+            <eye:button rendered="#{longOpState==2}">
+              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
+                <tr:fileDownloadActionListener method="#{deliveryMessagesByPeriod.download}" contentType="application/csv" filename="deliveryCommonStat.csv"/>
+              </tr:commandLink>
+            </eye:button>
+          </eye:buttons>
+        </h:panelGroup>
+
+      </eye:updatableContent>
 
     </tr:form>
 
