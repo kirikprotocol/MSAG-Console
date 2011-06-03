@@ -561,51 +561,51 @@ namespace cbs {
 #define BIT_SET(x) (1 << (x))
 
 const ISO_LANG  GSM7_Language::_langCG0[16] = {
-/* 0000 German       */ "DE",
-/* 0001 English      */ "EN",
-/* 0010 Italian      */ "IT",
-/* 0011 French       */ "FR",
-/* 0100 Spanish      */ "ES",
-/* 0101 Dutch        */ "NL",
-/* 0110 Swedish      */ "SV",
-/* 0111 Danish       */ "DA",
-/* 1000 Portuguese   */ "PT",
-/* 1001 Finnish      */ "FI",
-/* 1010 Norwegian    */ "NO",
-/* 1011 Greek        */ "EL",
-/* 1100 Turkish      */ "TR",
-/* 1101 Hungarian    */ "HU",
-/* 1110 Polish       */ "PL",
-/* 1111 unspecified  */ ""
+/* 0000 German       */ ISO_LANG("DE"),
+/* 0001 English      */ ISO_LANG("EN"),
+/* 0010 Italian      */ ISO_LANG("IT"),
+/* 0011 French       */ ISO_LANG("FR"),
+/* 0100 Spanish      */ ISO_LANG("ES"),
+/* 0101 Dutch        */ ISO_LANG("NL"),
+/* 0110 Swedish      */ ISO_LANG("SV"),
+/* 0111 Danish       */ ISO_LANG("DA"),
+/* 1000 Portuguese   */ ISO_LANG("PT"),
+/* 1001 Finnish      */ ISO_LANG("FI"),
+/* 1010 Norwegian    */ ISO_LANG("NO"),
+/* 1011 Greek        */ ISO_LANG("EL"),
+/* 1100 Turkish      */ ISO_LANG("TR"),
+/* 1101 Hungarian    */ ISO_LANG("HU"),
+/* 1110 Polish       */ ISO_LANG("PL"),
+/* 1111 unspecified  */ ISO_LANG()
 };
 
 const ISO_LANG  GSM7_Language::_langCG2[16] = {
-/* 0000 Czech       */ "CS",
-/* 0001 Hebrew      */ "HE",
-/* 0010 Arabic      */ "AR",
-/* 0011 Russian     */ "RU",
-/* 0100 Icelandic   */ "IS",
-/* 0101 unspecified */ "",
-/* 0110 unspecified */ "",
-/* 0111 unspecified */ "",
-/* 1000 unspecified */ "",
-/* 1001 unspecified */ "",
-/* 1010 unspecified */ "",
-/* 1011 unspecified */ "",
-/* 1100 unspecified */ "",
-/* 1101 unspecified */ "",
-/* 1110 unspecified */ "",
-/* 1111 unspecified */ ""
+/* 0000 Czech       */ ISO_LANG("CS"),
+/* 0001 Hebrew      */ ISO_LANG("HE"),
+/* 0010 Arabic      */ ISO_LANG("AR"),
+/* 0011 Russian     */ ISO_LANG("RU"),
+/* 0100 Icelandic   */ ISO_LANG("IS"),
+/* 0101 unspecified */ ISO_LANG(),
+/* 0110 unspecified */ ISO_LANG(),
+/* 0111 unspecified */ ISO_LANG(),
+/* 1000 unspecified */ ISO_LANG(),
+/* 1001 unspecified */ ISO_LANG(),
+/* 1010 unspecified */ ISO_LANG(),
+/* 1011 unspecified */ ISO_LANG(),
+/* 1100 unspecified */ ISO_LANG(),
+/* 1101 unspecified */ ISO_LANG(),
+/* 1110 unspecified */ ISO_LANG(),
+/* 1111 unspecified */ ISO_LANG()
 };
 
 GSM7LanguageUId_e GSM7_Language::str2isoId(const char * lang_str)
 {
   for (unsigned short i = 0; i < cg0Unspecified; ++i) {
-    if ((_langCG0[i][0] == lang_str[0]) && (_langCG0[i][1] == lang_str[1]))
+    if ((_langCG0[i]._id[0] == lang_str[0]) && (_langCG0[i]._id[1] == lang_str[1]))
       return static_cast<ISOLanguageUId_e>(i);
   }
   for (unsigned short i = 0; i <= cg2Icelandic; ++i) {
-    if ((_langCG2[i][0] == lang_str[0]) && (_langCG2[i][1] == lang_str[1]))
+    if ((_langCG2[i]._id[0] == lang_str[0]) && (_langCG2[i]._id[1] == lang_str[1]))
       return static_cast<ISOLanguageUId_e>(i + 0x0F);
   }
   return isoUnspecified;
@@ -620,7 +620,7 @@ CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs, CBS_DCS & res)
 {
     res.UDHind = res.msgClassDefined = res.compressed = false;
     res.lngPrefix = CBS_DCS::lngNone;
-    res.language[0] = res.language[2] = 0;
+    res.language.clear();
 
     uint8_t codingGroup = (dcs >> 4) & 0x0F;
     uint8_t codingScheme = dcs & 0x0F;
@@ -628,8 +628,7 @@ CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs, CBS_DCS & res)
     switch (codingGroup) {
     case 0x00: {
         res.encoding = CBS_DCS::dcGSM7Bit;
-        res.language[0] = GSM7_Language::_langCG0[codingScheme][0];
-        res.language[1] = GSM7_Language::_langCG0[codingScheme][1];
+        res.language = GSM7_Language::_langCG0[codingScheme];
     } break;
     case 0x01: {
         if (!codingScheme) {
@@ -643,8 +642,7 @@ CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs, CBS_DCS & res)
     } break;
     case 0x02: {
         res.encoding = CBS_DCS::dcGSM7Bit;
-        res.language[0] = GSM7_Language::_langCG2[codingScheme][0];
-        res.language[1] = GSM7_Language::_langCG2[codingScheme][1];
+        res.language = GSM7_Language::_langCG2[codingScheme];
     } break;
     case 0x03: { //Reserved, GSM 7 bit default
         res.encoding = CBS_DCS::dcGSM7Bit;

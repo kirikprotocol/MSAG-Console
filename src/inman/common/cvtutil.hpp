@@ -234,7 +234,27 @@ extern time_t unpackTP_VP_Relative(unsigned char tpVp);
  * ************************************************************************** */
 namespace cbs {
 
-typedef char   ISO_LANG[3]; //ISO 639, 2 letters
+struct ISO_LANG {
+  char  _id[3]; //ISO 639, 2 letters
+
+  ISO_LANG()
+  {
+    _id[0] = 0;
+  }
+  ISO_LANG(const char * use_id)
+  {
+    if ((_id[0] = use_id[0]) != 0) {
+      _id[1] = use_id[1];
+      _id[2] = 0;
+    }
+  }
+
+  void clear(void)
+  {
+    _id[0] = _id[1] = _id[2] = 0;
+  }
+};
+
 
 struct GSM7_Language {
   enum CodingGroupId_e {
