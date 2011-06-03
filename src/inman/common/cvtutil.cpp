@@ -560,7 +560,7 @@ time_t unpackTP_VP_Relative(unsigned char tpVp)
 namespace cbs {
 #define BIT_SET(x) (1 << (x))
 
-static ISO_LANG  _langCG0[16] = {
+const ISO_LANG  GSM7_Language::_langCG0[16] = {
 /* 0000 German       */ "DE",
 /* 0001 English      */ "EN",
 /* 0010 Italian      */ "IT",
@@ -579,7 +579,7 @@ static ISO_LANG  _langCG0[16] = {
 /* 1111 unspecified  */ ""
 };
 
-static ISO_LANG  _langCG2[16] = {
+const ISO_LANG  GSM7_Language::_langCG2[16] = {
 /* 0000 Czech       */ "CS",
 /* 0001 Hebrew      */ "HE",
 /* 0010 Arabic      */ "AR",
@@ -598,6 +598,20 @@ static ISO_LANG  _langCG2[16] = {
 /* 1111 unspecified */ ""
 };
 
+GSM7LanguageUId_e GSM7_Language::str2isoId(const char * lang_str)
+{
+  for (unsigned short i = 0; i < cg0Unspecified; ++i) {
+    if ((_langCG0[i][0] == lang_str[0]) && (_langCG0[i][1] == lang_str[1]))
+      return static_cast<ISOLanguageUId_e>(i);
+  }
+  for (unsigned short i = 0; i <= cg2Icelandic; ++i) {
+    if ((_langCG2[i][0] == lang_str[0]) && (_langCG2[i][1] == lang_str[1]))
+      return static_cast<ISOLanguageUId_e>(i + 0x0F);
+  }
+  return isoUnspecified;
+}
+
+
 static CBS_DCS::TextEncoding  _enc_enm[4] = {
     CBS_DCS::dcGSM7Bit, CBS_DCS::dcBINARY8, CBS_DCS::dcUCS2, CBS_DCS::dcReserved
 };
@@ -614,8 +628,8 @@ CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs, CBS_DCS & res)
     switch (codingGroup) {
     case 0x00: {
         res.encoding = CBS_DCS::dcGSM7Bit;
-        res.language[0] = _langCG0[codingScheme][0];
-        res.language[1] = _langCG0[codingScheme][1];
+        res.language[0] = GSM7_Language::_langCG0[codingScheme][0];
+        res.language[1] = GSM7_Language::_langCG0[codingScheme][1];
     } break;
     case 0x01: {
         if (!codingScheme) {
@@ -629,8 +643,8 @@ CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs, CBS_DCS & res)
     } break;
     case 0x02: {
         res.encoding = CBS_DCS::dcGSM7Bit;
-        res.language[0] = _langCG2[codingScheme][0];
-        res.language[1] = _langCG2[codingScheme][1];
+        res.language[0] = GSM7_Language::_langCG2[codingScheme][0];
+        res.language[1] = GSM7_Language::_langCG2[codingScheme][1];
     } break;
     case 0x03: { //Reserved, GSM 7 bit default
         res.encoding = CBS_DCS::dcGSM7Bit;
