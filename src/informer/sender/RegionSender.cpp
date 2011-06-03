@@ -40,7 +40,8 @@ lock_( MTXWHEREAMI ),
 conn_(),
 region_(r),
 taskList_(*this,2*maxScoreIncrement,log_),
-speedControl_(std::max(region_->getBandwidth(),1U))
+speedControl_(std::max(region_->getBandwidth(),1U)),
+speedLimiter_(std::max(region_->getBandwidth(),1U))
 {
     if (!conn) {
         throw InfosmeException(EXC_LOGICERROR,"conn is null");
@@ -59,6 +60,7 @@ void RegionSender::assignSender( const SmscSenderPtr& conn )
         // reset speed control
         speedControl_.setSpeed(std::max(region_->getBandwidth(),1U),
                                currentTimeMicro() % flipTimePeriod );
+        speedLimiter_.setSpeed(std::max(region_->getBandwidth(),1U));
         newconn = conn_ = conn;
     }
     if ( oldconn != conn ) {
@@ -111,11 +113,17 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         weekTime_ = region_->getLocalWeekTime(now);
 
         // check speed control
-        const usectime_type delay = 
-            speedControl_.isReady( currentTime % flipTimePeriod,
-                                   maxSnailDelay );
-        if ( delay > 0 ) {
-            return unsigned(delay);
+        {
+            const usectime_type delay = 
+                speedControl_.isReady( currentTime % flipTimePeriod,
+                                       maxSnailDelay );
+            if ( delay > 0 ) {
+                return unsigned(delay);
+            }
+        }
+        {
+            const usectime_type delay = speedLimiter_.isReady( currentTime );
+            if ( delay > 0 ) return unsigned(delay);
         }
         
         nchunks_ = 0;
@@ -128,6 +136,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         } else {
             // smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
             speedControl_.consumeQuant(nchunks_);
+            speedControl_.consumeQuant(currentTimeMicro(),nchunks_);
             return 0;
         }
     } catch ( std::exception& e ) {

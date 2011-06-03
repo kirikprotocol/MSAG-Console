@@ -1,0 +1,89 @@
+#ifndef _INFORMER_ABSSPEEDLIMITER_H
+#define _INFORMER_ABSSPEEDLIMITER_H
+
+namespace eyeline {
+namespace informer {
+
+// limiting speed ala timeslotcounter
+class AbsSpeedLimiter
+{
+public:
+    AbsSpeedLimiter( unsigned speed,
+                     unsigned nbins = 20,
+                     usectime_type interval = 1000000ULL ) :
+        nbins_(nbins), bins_(new int[nbins]), 
+        first_(0), last_(0), count_(0),
+        bwid_(interval/nbins),
+        maxCount_(speed*nbins*bwid_/tuPerSec)
+        {
+            bins_[0] = 0;
+        }
+        
+        
+    ~AbsSpeedLimiter() {
+        delete[] bins_;
+    }
+
+
+    void setSpeed( unsigned speed ) {
+        maxCount_ = speed*nbins*bwid_/tuPerSec;
+    }
+
+
+    // return a number of usec to wait until limit removed
+    unsigned isReady(usectime_type currentTime)
+    {
+        consumeQuant(currentTime,0);
+        if ( count < maxCount_ ) return 0;
+        if ( currentTime < lastTime_ ) {
+            return unsigned(lastTime_ - currentTime + bwid_/2);
+        }
+        int res = int(bwid_/2 - (currentTime - lastTime_));
+        if ( res > 0 ) return unsigned(res);
+        return bwid_/2;
+    }
+
+
+    void consumeQuant(usectime_type currentTime, int inc)
+    {
+        usectime_type udiff = (currentTime-lastTime_);
+        unsigned diff = unsigned((udiff+bwid_/2)/bwid_);
+        if (diff==0) {
+            bins_[last_] += inc;
+            count_ += inc;
+            return;
+        }
+        lastTime_ = lastTime_ + diff*bwid_;
+        if (diff>nbins_) {
+            first_ = 0;
+            last_ = 0;
+            bins_[0] = inc;
+            count_ = inc;
+        } else {
+            while (diff--) {
+                ++last_;
+                if (last_>=nbins_) last_ = 0;
+                if (first_ == last_) {
+                    count_ -= bins_[first_];
+                    ++first_;
+                    if (first>=nbins_) first_=0;
+                }
+                bins_[last_] = 0;
+            }
+            count_ += inc;
+            bins_[last_] += inc;
+        }
+    }
+
+private:
+    unsigned      nbins_;
+    int*          bins_;
+    unsigned      first_, last_;
+    unsigned      count_;
+    usectime_type bwid_;
+};
+
+} // informer
+} // smsc
+
+#endif
