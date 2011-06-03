@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_MS_Classmark2_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_MS_Classmark2_H_
 
 

@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ForwardingViolationParam_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ForwardingViolationParam_H_
 
 

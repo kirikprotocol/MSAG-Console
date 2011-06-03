@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_MSRadioAccessCapability_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_MSRadioAccessCapability_H_
 
 

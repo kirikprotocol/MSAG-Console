@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_QoS_Subscribed_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_QoS_Subscribed_H_
 
 

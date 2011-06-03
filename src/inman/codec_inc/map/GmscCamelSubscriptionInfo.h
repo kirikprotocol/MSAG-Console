@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_GmscCamelSubscriptionInfo_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_GmscCamelSubscriptionInfo_H_
 
 

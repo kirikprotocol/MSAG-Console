@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_GeodeticInformation_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_GeodeticInformation_H_
 
 

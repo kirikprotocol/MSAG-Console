@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_NotReachableReason_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_NotReachableReason_H_
 
 

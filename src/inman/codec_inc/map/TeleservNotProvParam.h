@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_TeleservNotProvParam_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_TeleservNotProvParam_H_
 
 

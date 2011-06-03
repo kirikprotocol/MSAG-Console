@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_UnavailabilityCause_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_UnavailabilityCause_H_
 
 

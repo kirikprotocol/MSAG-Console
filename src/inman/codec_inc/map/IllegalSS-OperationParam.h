@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_IllegalSS_OperationParam_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_IllegalSS_OperationParam_H_
 
 

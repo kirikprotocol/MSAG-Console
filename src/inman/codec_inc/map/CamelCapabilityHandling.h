@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CamelCapabilityHandling_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CamelCapabilityHandling_H_
 
 

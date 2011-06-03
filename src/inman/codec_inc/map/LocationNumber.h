@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_LocationNumber_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_LocationNumber_H_
 
 

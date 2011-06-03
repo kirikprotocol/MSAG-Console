@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_SubscriberState_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_SubscriberState_H_
 
 

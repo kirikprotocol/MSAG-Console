@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ExtensionContainer_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ExtensionContainer_H_
 
 

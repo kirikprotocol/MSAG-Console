@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_SS_List_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_SS_List_H_
 
 

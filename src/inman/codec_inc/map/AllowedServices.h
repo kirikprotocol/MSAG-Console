@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_AllowedServices_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_AllowedServices_H_
 
 

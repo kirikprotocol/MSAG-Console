@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_DP_AnalysedInfoCriterium_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_DP_AnalysedInfoCriterium_H_
 
 

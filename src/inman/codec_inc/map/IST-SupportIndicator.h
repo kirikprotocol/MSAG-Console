@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_IST_SupportIndicator_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_IST_SupportIndicator_H_
 
 

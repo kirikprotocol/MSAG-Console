@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_AdditionalNetworkResource_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_AdditionalNetworkResource_H_
 
 

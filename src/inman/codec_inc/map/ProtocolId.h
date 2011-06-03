@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ProtocolId_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ProtocolId_H_
 
 

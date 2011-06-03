@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_GPRSChargingID_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_GPRSChargingID_H_
 
 

@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_IST_AlertTimerValue_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_IST_AlertTimerValue_H_
 
 

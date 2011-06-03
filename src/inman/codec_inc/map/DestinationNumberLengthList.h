@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_DestinationNumberLengthList_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_DestinationNumberLengthList_H_
 
 

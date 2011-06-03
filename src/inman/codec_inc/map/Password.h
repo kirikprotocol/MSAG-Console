@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_Password_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_Password_H_
 
 

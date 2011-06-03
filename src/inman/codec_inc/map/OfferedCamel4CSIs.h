@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_OfferedCamel4CSIs_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_OfferedCamel4CSIs_H_
 
 

@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_RouteingNumber_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_RouteingNumber_H_
 
 

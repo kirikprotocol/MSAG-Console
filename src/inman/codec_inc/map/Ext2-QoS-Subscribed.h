@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_Ext2_QoS_Subscribed_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_Ext2_QoS_Subscribed_H_
 
 

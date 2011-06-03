@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_TransactionId_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_TransactionId_H_
 
 

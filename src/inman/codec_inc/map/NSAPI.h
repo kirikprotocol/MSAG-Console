@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_NSAPI_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_NSAPI_H_
 
 

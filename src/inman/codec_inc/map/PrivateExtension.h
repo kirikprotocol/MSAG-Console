@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_PrivateExtension_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_PrivateExtension_H_
 
 

@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CCBS_Indicators_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CCBS_Indicators_H_
 
 

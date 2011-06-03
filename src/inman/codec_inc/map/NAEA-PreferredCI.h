@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_NAEA_PreferredCI_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_NAEA_PreferredCI_H_
 
 

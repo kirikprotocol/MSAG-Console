@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_MNPInfoRes_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_MNPInfoRes_H_
 
 

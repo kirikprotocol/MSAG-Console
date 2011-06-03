@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_NumberChangedParam_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_NumberChangedParam_H_
 
 

@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_RAIdentity_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_RAIdentity_H_
 
 

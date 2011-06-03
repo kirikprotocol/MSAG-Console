@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_Ext_BasicServiceCode_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_Ext_BasicServiceCode_H_
 
 

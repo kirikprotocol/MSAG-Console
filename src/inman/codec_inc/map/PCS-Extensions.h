@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_PCS_Extensions_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_PCS_Extensions_H_
 
 

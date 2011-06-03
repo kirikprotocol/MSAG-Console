@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_MSNetworkCapability_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_MSNetworkCapability_H_
 
 

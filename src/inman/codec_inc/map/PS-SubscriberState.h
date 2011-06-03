@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_PS_SubscriberState_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_PS_SubscriberState_H_
 
 

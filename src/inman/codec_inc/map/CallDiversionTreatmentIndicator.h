@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CallDiversionTreatmentIndicator_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CallDiversionTreatmentIndicator_H_
 
 

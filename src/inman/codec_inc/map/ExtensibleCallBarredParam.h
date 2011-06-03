@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ExtensibleCallBarredParam_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ExtensibleCallBarredParam_H_
 
 

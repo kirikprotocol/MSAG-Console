@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_TBCD_STRING_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_TBCD_STRING_H_
 
 

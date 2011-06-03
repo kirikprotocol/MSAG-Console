@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CellGlobalIdOrServiceAreaIdFixedLength_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CellGlobalIdOrServiceAreaIdFixedLength_H_
 
 

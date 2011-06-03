@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CallReferenceNumber_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CallReferenceNumber_H_
 
 

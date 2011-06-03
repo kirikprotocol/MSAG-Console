@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_InterrogationType_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_InterrogationType_H_
 
 

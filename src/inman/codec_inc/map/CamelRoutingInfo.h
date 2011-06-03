@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CamelRoutingInfo_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CamelRoutingInfo_H_
 
 

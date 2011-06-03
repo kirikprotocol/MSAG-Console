@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_T_CauseValueCriteria_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_T_CauseValueCriteria_H_
 
 

@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CUG_Interlock_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CUG_Interlock_H_
 
 

@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_SendRoutingInfoArg_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_SendRoutingInfoArg_H_
 
 

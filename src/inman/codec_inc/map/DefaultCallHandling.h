@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_DefaultCallHandling_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_DefaultCallHandling_H_
 
 

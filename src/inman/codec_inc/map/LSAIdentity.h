@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_LSAIdentity_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_LSAIdentity_H_
 
 

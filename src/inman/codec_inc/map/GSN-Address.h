@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_GSN_Address_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_GSN_Address_H_
 
 

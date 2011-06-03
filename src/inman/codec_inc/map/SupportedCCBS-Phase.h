@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_SupportedCCBS_Phase_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_SupportedCCBS_Phase_H_
 
 

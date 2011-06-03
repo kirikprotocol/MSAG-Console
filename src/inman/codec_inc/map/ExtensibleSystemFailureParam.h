@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ExtensibleSystemFailureParam_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ExtensibleSystemFailureParam_H_
 
 

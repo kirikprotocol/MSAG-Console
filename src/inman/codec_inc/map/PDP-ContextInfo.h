@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_PDP_ContextInfo_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_PDP_ContextInfo_H_
 
 

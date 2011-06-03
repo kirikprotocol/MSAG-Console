@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_GPRSMSClass_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_GPRSMSClass_H_
 
 

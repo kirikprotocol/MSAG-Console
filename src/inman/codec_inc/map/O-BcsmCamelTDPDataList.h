@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_O_BcsmCamelTDPDataList_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_O_BcsmCamelTDPDataList_H_
 
 

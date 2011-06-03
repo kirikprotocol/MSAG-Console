@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ForwardingReason_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ForwardingReason_H_
 
 

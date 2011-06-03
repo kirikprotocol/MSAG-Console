@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_BearerServiceCode_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_BearerServiceCode_H_
 
 

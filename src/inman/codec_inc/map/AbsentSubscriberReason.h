@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_AbsentSubscriberReason_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_AbsentSubscriberReason_H_
 
 

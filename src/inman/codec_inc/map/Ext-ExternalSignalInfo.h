@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_Ext_ExternalSignalInfo_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_Ext_ExternalSignalInfo_H_
 
 

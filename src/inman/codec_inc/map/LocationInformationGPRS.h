@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_LocationInformationGPRS_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_LocationInformationGPRS_H_
 
 

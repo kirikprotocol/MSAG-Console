@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ContextId_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ContextId_H_
 
 

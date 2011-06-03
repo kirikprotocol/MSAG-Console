@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_NumberPortabilityStatus_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_NumberPortabilityStatus_H_
 
 

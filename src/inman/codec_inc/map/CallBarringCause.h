@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_CallBarringCause_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_CallBarringCause_H_
 
 

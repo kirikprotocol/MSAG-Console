@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_T_BCSM_CAMEL_TDP_Criteria_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_T_BCSM_CAMEL_TDP_Criteria_H_
 
 

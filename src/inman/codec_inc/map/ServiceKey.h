@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_ServiceKey_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_ServiceKey_H_
 
 
