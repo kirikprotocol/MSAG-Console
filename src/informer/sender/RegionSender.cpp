@@ -78,6 +78,12 @@ std::string RegionSender::toString() const
 }
 
 
+void RegionSender::resetSpeedControl( usectime_type currentTime )
+{
+    speedControl_.suspend(currentTime);
+}
+
+
 unsigned RegionSender::processRegion( usectime_type currentTime )
 {
     try {
@@ -112,6 +118,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
             return unsigned(delay);
         }
         
+        nchunks_ = 0;
         const unsigned toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
         if (toSleep>0) {
             // smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
@@ -120,7 +127,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
             return toSleep;
         } else {
             // smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
-            speedControl_.consumeQuant();
+            speedControl_.consumeQuant(nchunks_);
             return 0;
         }
     } catch ( std::exception& e ) {
@@ -212,7 +219,7 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
 
 int RegionSender::processScoredObj(unsigned, ScoredPtrType ptr, unsigned& objSleep)
 {
-    int nchunks = 0;
+    nchunks_ = 0;
     int res;
     const int inc = maxScoreIncrement / ptr->getDlvInfo().getPriority();
     assert(!ptr == false);
@@ -220,20 +227,20 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType ptr, unsigned& objSle
     try {
 
         assert(conn_.get());
-        res = conn_->send(*ptr, msg_, untilActiveEnd_, nchunks);
-        if ( res == smsc::system::Status::OK && nchunks > 0 ) {
+        res = conn_->send(*ptr, msg_, untilActiveEnd_, nchunks_);
+        if ( res == smsc::system::Status::OK && nchunks_ > 0 ) {
             // message has been put into output queue
             smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",
                            unsigned(getRegionId()),
                            unsigned(ptr->getDlvId()),
-                           ulonglong(msg_.msgId), nchunks);
+                           ulonglong(msg_.msgId), nchunks_);
             objSleep = 0;
-            return inc * nchunks;
+            return inc * nchunks_;
         } else {
             smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed, res=%d, nchunks=%d",
                           unsigned(getRegionId()),
                           unsigned(ptr->getDlvId()),
-                          ulonglong(msg_.msgId), res, nchunks);
+                          ulonglong(msg_.msgId), res, nchunks_);
         }
 
     } catch ( std::exception& e ) {
@@ -245,7 +252,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType ptr, unsigned& objSle
     }
     ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(),
                        msgtime_type(currentTime_/tuPerSec),
-                       res, nchunks);
+                       res, nchunks_);
     objSleep = 0;
     return -inc;
 }

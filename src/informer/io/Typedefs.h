@@ -75,7 +75,7 @@ static const unsigned maxScoreIncrement = 10000U;
 static const usectime_type flipTimePeriod = 24ULL*3600ULL*tuPerSec;
 
 /// maximum difference between high-freq and low-freq items in scoredlist
-static const usectime_type maxSnailDelay = 5ULL*tuPerSec;
+static const usectime_type maxSnailDelay = 2ULL*tuPerSec;
 
 inline msgtime_type currentTimeSeconds() { return msgtime_type(currentTimeMicro()/tuPerSec); }
 

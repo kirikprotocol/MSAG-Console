@@ -42,6 +42,16 @@ struct RSBandwidth
     unsigned bandwidth;
 };
 
+struct ResetSpeed
+{
+    ResetSpeed( usectime_type cur ) : now(cur) {}
+    bool operator () ( const RegionSenderPtr& rs ) {
+        if (rs.get()) { const_cast<RegionSender&>(*rs).resetSpeedControl(now); }
+        return false;
+    }
+    usectime_type now;
+};
+
 }
 
 
@@ -1389,6 +1399,12 @@ void SmscSender::sendLoop()
     const unsigned sleepTime = 5000000U; // 5 sec
 
     currentTime_ = currentTimeMicro();
+    {
+        // reset speed limits on all RS using SpeedReset predicate
+        MutexGuard mg(reconfLock_);
+        scoredList_.remove( ResetSpeed(currentTime_) );
+    }
+
     usectime_type nextWakeTime = currentTime_;
     std::auto_ptr<DataQueue> rQueue(new DataQueue);
     while ( !getCS()->isStopping() ) {

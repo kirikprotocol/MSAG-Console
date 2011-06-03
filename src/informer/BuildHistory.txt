@@ -1,3 +1,10 @@
+2011-06-03 10:46 bukind
+  added RolledList (to be tested).
+  maxSnailDelay set to 2sec to improve speed jumps after slowdowns.
+  just a note: license limit is in PDUs.
+  all RS speed control is reset after SMSC reconnection.
+  RS bandwidth is in SMS from now on.
+
 =====================================================================
 2011-05-31 14:25 bukind informer-build-20110531
 2011-05-30 15:24 bukind

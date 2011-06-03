@@ -880,10 +880,11 @@ void InfosmeCoreV1::incIncoming()
 }
 
 
-void InfosmeCoreV1::incOutgoing( unsigned nchunks )
+void InfosmeCoreV1::incOutgoing( unsigned /* nchunks */ )
 {
     // NOTE: this code is taked from infosme v2
-    smsc_log_debug(log_,"incOutgoing(%u)",nchunks);
+    // NOTE: we counting license in PDUs
+    smsc_log_debug(log_,"incOutgoing(unused)"); // ,nchunks);
     MutexGuard mg(trafficMon_);
     trafficSpeed_.consumeQuant();
     do {

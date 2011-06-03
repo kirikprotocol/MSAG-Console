@@ -461,7 +461,7 @@ void DeliveryImpl::detachEverything( bool cleanDirectory,
                                      bool moveToArchive )
 {
     const dlvid_type dlvId = dlvInfo_->getDlvId();
-    smsc_log_debug(log_,"D=%u detaching everything",dlvId);
+    smsc_log_info(log_,"D=%u detaching everything",dlvId);
     {
         dlvInfo_->getUserInfo().detachDelivery(dlvId);
         smsc::core::synchronization::MutexGuard mg(cacheLock_);

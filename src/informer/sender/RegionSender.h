@@ -46,6 +46,8 @@ public:
         return unsigned(speedControl_.isReady(currentTime % flipTimePeriod, maxSnailDelay));
     }
 
+    void resetSpeedControl( usectime_type currentTime );
+
     /// process region and return the number of seconds to wait until
     /// the region is ready (or 0 if the next attept should be immediate).
     unsigned processRegion(usectime_type currentTime);
@@ -102,6 +104,7 @@ private:
     usectime_type                      currentTime_;
     int                                weekTime_;  // local weektime (seconds since monday midnight)
     int                                untilActiveEnd_; // number of seconds until AE
+    int                                nchunks_;   // used to pass nchunks from send
 };
 
 typedef EmbedRefPtr< RegionSender > RegionSenderPtr;
