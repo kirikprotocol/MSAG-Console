@@ -1,6 +1,7 @@
-#ident "$Id$"
-
 #ifndef	_APN_H_
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 #define	_APN_H_
 
 
