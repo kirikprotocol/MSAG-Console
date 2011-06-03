@@ -840,8 +840,13 @@ bool RegionalStorage::postInit()
             dlv_->dlvInfo_->getGlossary().fetchText(m.text);
         }
         if (!m.text.getText()) {
-            throw InfosmeException(EXC_LOGICERROR,"R=%u/D=%u/M=%llu message text is null",
-                                   getRegionId(),getDlvId(),m.msgId);
+            smsc_log_error(log_,"R=%u/D=%u/M=%llu message text is null in postInit, erasing",
+                           getRegionId(),getDlvId(),m.msgId);
+            messageHash_.Delete(m.msgId);
+            MsgIter iter = i;
+            ++i;
+            messageList_.erase(iter);
+            continue;
         }
         if ( region_.get() && m.state == MSGSTATE_SENT ) {
             const timediff_type uptonow = currentTime - m.lastTime;
