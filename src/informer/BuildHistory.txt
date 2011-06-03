@@ -1,5 +1,7 @@
+=====================================================================
+2011-06-03 17:56 bukind informer-build-20110603
 2011-06-03 16:44 bukind
-  bugfix: checking for msg.text
+  bugfix: checking for msg.text==null
 
 2011-06-03 15:10 bukind
   bugfix: SMSC isStopping_ is needed to stop separately
