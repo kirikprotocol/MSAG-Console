@@ -25,11 +25,16 @@ int main()
     l.insert(l.end(),10);
     showend("inserted one elt at end",l);
 
+    l.clear();
+    showend("cleared",l);
+
     intlist other;
     other.insert(other.end(),20);
     other.insert(other.end(),30);
     l.splice(l.begin(),other);
     showend("spliced list at begin",l);
+
+    l.clear();
 
     other.insert(other.end(),20);
     other.insert(other.end(),30);
