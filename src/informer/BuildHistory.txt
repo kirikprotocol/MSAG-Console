@@ -1,3 +1,7 @@
+2011-06-03 15:10 bukind
+  bugfix: SMSC isStopping_ is needed to stop separately
+  bugfix: checking msg.text in send()
+
 2011-06-03 10:46 bukind
   added RolledList (to be tested).
   maxSnailDelay set to 2sec to improve speed jumps after slowdowns.

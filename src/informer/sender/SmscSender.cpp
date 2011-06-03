@@ -334,15 +334,15 @@ smsCounter_(5*tuPerSec,50),
 receiptMon_( MTXWHEREAMI ),
 journal_(0),
 queueMon_( MTXWHEREAMI ),
-awaken_(false)
-// isStopping_(false)
+awaken_(false),
+isStopping_(false)
 {
     journal_ = new SmscJournal(*this);
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
     wQueue_.reset(new DataQueue());
     journal_->init();
-    // isStopping_ = true;
+    isStopping_ = true;
     // restore receipt wait queue
     const msgtime_type curTime = currentTimeSeconds();
     for ( ReceiptList::iterator i = receiptList_.begin();
@@ -388,7 +388,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
     nchunks = 0;
     do {
 
-        if (getCS()->isStopping()) {
+        if (getCS()->isStopping() || isStopping_) {
             what = "stopped";
             res = smsc::system::Status::SMENOTCONNECTED;
             break;
@@ -1063,13 +1063,13 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
 
 bool SmscSender::queueData( const ResponseData& rd )
 {
-    // if (getCS()->isStopping()) return false;
+    // if (getCS()->isStopping() || isStopping_ ) return false;
     smsc_log_debug(log_,"S='%s' %s pending seq=%u status=%d msgid='%s'",
                    smscId_.c_str(),
                    rd.seqNum ? "response" : "receipt",
                    rd.seqNum, rd.status, rd.rcptId.msgId );
     MutexGuard mg(queueMon_);
-    if (getCS()->isStopping()) return false;
+    if (getCS()->isStopping() || isStopping_ ) return false;
     wQueue_->Push(rd);
     queueMon_.notify();
     return true;
@@ -1273,7 +1273,7 @@ void SmscSender::start()
         MutexGuard mg(queueMon_);
         if ( getCS()->isStopping()) return;
         // if (!isStopping_) return;
-        // isStopping_ = false;
+        isStopping_ = false;
     }
     {
         MutexGuard rmg(reconfLock_);
@@ -1291,7 +1291,7 @@ void SmscSender::stop()
     {
         MutexGuard mg(queueMon_);
         // if (isStopping_) return;
-        // isStopping_ = true;
+        isStopping_ = true;
         awaken_ = true;
         queueMon_.notifyAll();
     }
@@ -1310,13 +1310,13 @@ void SmscSender::wakeUp()
 
 int SmscSender::Execute()
 {
-    while ( !getCS()->isStopping() ) {
+    while ( !getCS()->isStopping() && !isStopping_ ) {
         try {
             connectLoop();
         } catch ( std::exception& e ) {
             smsc_log_warn(log_,"S='%s' connectLoop exc: %s", smscId_.c_str(), e.what());
         }
-        if (getCS()->isStopping()) break;
+        if (getCS()->isStopping() || isStopping_ ) break;
         try {
             journal_->start();
         } catch ( std::exception& e ) {
@@ -1332,7 +1332,7 @@ int SmscSender::Execute()
         // unless we are in stopping state.
         std::multimap<msgtime_type, ResponseTimer>::iterator iter = respWaitQueue_.begin();
         for ( ; iter != respWaitQueue_.end(); ++iter ) {
-            if (getCS()->isStopping()) break;
+            if (getCS()->isStopping() || isStopping_) break;
             ResponseData rd;
             ResponseTimer& rt = iter->second;
             rd.seqNum = rt.seqNum;
@@ -1358,7 +1358,7 @@ int SmscSender::Execute()
 
 void SmscSender::connectLoop()
 {
-    while ( !getCS()->isStopping()) {
+    while ( !getCS()->isStopping() && !isStopping_) {
 
         const usectime_type startingConn = currentTimeMicro();
         msgtime_type interConnect;
@@ -1386,7 +1386,7 @@ void SmscSender::connectLoop()
         }
         // connection failed, waiting
         MutexGuard mg(queueMon_);
-        if (getCS()->isStopping()) break;
+        if (getCS()->isStopping() || isStopping_) break;
         const usectime_type now = currentTimeMicro();
         const int waitTime = int(usectime_type(interConnect)*1000 -
                                  (now - startingConn)/1000);
@@ -1412,7 +1412,7 @@ void SmscSender::sendLoop()
 
     usectime_type nextWakeTime = currentTime_;
     std::auto_ptr<DataQueue> rQueue(new DataQueue);
-    while ( !getCS()->isStopping() ) {
+    while ( !getCS()->isStopping() && !isStopping_ ) {
 
         currentTime_ = currentTimeMicro();
         if (rQueue->Count() == 0) {
@@ -1510,13 +1510,13 @@ void SmscSender::processExpiredTimers()
 {
     // NOTE: i'm too lazy to implement the same code here, so calling queueData
     const msgtime_type now = msgtime_type(currentTime_/tuPerSec);
-    if ( getCS()->isStopping() ) return;
+    if ( getCS()->isStopping() || isStopping_ ) return;
     {
         std::multimap<msgtime_type, ResponseTimer>::iterator iter, upto;
         iter = respWaitQueue_.begin();
         upto = respWaitQueue_.lower_bound(now);
         for ( ; iter != upto; ++iter ) {
-            if (getCS()->isStopping()) { break; }
+            if (getCS()->isStopping() || isStopping_ ) { break; }
             ResponseData rd;
             ResponseTimer& rt = iter->second;
             rd.seqNum = rt.seqNum;
@@ -1537,13 +1537,13 @@ void SmscSender::processExpiredTimers()
         respWaitQueue_.erase(respWaitQueue_.begin(),iter);
     }
 
-    if (getCS()->isStopping()) return;
+    if (getCS()->isStopping() || isStopping_ ) return;
     {
         std::multimap<msgtime_type, ReceiptId>::iterator iter, upto;
         iter = rcptWaitQueue_.begin();
         upto = rcptWaitQueue_.lower_bound(now);
         for ( ; iter != upto; ++iter ) {
-            if (getCS()->isStopping()) { break; }
+            if (getCS()->isStopping() || isStopping_ ) { break; }
             ResponseData rd;
             rd.seqNum = 0; // receipt
             rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
@@ -1568,7 +1568,7 @@ bool SmscSender::getNextRollingData( ReceiptData& rd, bool firstPass )
     while ( rollingIter_ != receiptList_.end() ) {
         if ( !rollingIter_->responded ) {
             ++rollingIter_;
-            if (getCS()->isStopping()) { return false; }
+            if (getCS()->isStopping() || isStopping_) { return false; }
             continue;
         }
         rd = *rollingIter_;

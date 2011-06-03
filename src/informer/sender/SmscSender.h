@@ -193,7 +193,7 @@ private:
     smsc::core::synchronization::EventMonitor          queueMon_;
     std::auto_ptr<DataQueue>                           wQueue_;
     bool                                               awaken_;
-    // bool                                               isStopping_;
+    bool                                               isStopping_;
 };
 
 typedef EmbedRefPtr< SmscSender >  SmscSenderPtr;
