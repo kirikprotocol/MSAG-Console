@@ -451,8 +451,8 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                        getRegionId(), dlvId, ulonglong(iter->msg.msgId) );
         return (tuPerSec/2+15);
     }
-    mg.Unlock();
     Message& m = iter->msg;
+    mg.Unlock();
     m.lastTime = currentTime;
     if (!m.timeLeft) {
         /// this one is a new message, set its TTL initially
@@ -839,6 +839,10 @@ bool RegionalStorage::postInit()
         if ( !m.text.isUnique()) {
             dlv_->dlvInfo_->getGlossary().fetchText(m.text);
         }
+        if (!m.text.getText()) {
+            throw InfosmeException(EXC_LOGICERROR,"R=%u/D=%u/M=%llu message text is null",
+                                   getRegionId(),getDlvId(),m.msgId);
+        }
         if ( region_.get() && m.state == MSGSTATE_SENT ) {
             const timediff_type uptonow = currentTime - m.lastTime;
             if ( m.timeLeft < uptonow ) {
@@ -1059,6 +1063,10 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                         // NOTE: we may avoid locking here, as i is not in msgList_
                         if ( ! i->msg.text.isUnique() ) {
                             dlv_->dlvInfo_->getGlossary().fetchText(i->msg.text);
+                        }
+                        if (!i->msg.text.getText()) {
+                            throw InfosmeException(EXC_LOGICERROR,"D=%u/M=%llu message text is null",
+                                                   dlvId,ulonglong(i->msg.msgId));
                         }
                         dlv_->storeJournal_->journalMessage(dlvId,getRegionId(),i->msg,serial);
                         i->serial = serial;

@@ -207,6 +207,10 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
             // necessary to replace text ids with real texts
             glossary.fetchText(i->msg.text);
         }
+        if (!i->msg.text.getText()) {
+            throw InfosmeException(EXC_LOGICERROR,"D=%u/M=%llu message text is null, uniq=%d",
+                                   getDlvId(), i->msg.msgId, i->msg.text.isUnique());
+        }
         RegionPtr* p = regs.GetPtr(i->serial);
         if ( !p ) {
             throw InfosmeException(EXC_LOGICERROR,"Region %u is not found in just fetched hash",i->serial);
@@ -555,6 +559,11 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                         if (!i->msg.text.isUnique()) {
                             // NOTE: replacing input ids with real ids here!
                             glossary.fetchText(i->msg.text,true);
+                        }
+                        if (!i->msg.text.getText()) {
+                            throw InfosmeException(EXC_LOGICERROR,"D=%u/M=%llu text is null, uniq=%d",
+                                                   getDlvId(), ulonglong(i->msg.msgId),
+                                                   i->msg.text.isUnique());
                         }
                     }
                 }

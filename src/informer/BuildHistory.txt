@@ -1,3 +1,6 @@
+2011-06-03 16:44 bukind
+  bugfix: checking for msg.text
+
 2011-06-03 15:10 bukind
   bugfix: SMSC isStopping_ is needed to stop separately
   bugfix: checking msg.text in send()
