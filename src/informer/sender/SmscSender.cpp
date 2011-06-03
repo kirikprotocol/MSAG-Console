@@ -551,6 +551,11 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
             }
 
             const char* out = msg.text.getText();
+            if (!out) {
+                what = "text is null";
+                res = smsc::system::Status::SYSERR;
+                break;
+            }
             try {
                 nchunks = info.evaluateNchunks(out,strlen(out),&sms);
             } catch ( std::exception& e ) {
