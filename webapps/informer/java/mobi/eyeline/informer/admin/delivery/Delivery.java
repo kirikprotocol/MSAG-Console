@@ -182,7 +182,7 @@ public class Delivery implements Serializable {
       throw new DeliveryException("replace_illegal");
     }
     if(validityPeriod != null) {
-      vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
+      vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,20));
     }
     if(messageTimeToLive != null) {
       vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,59));

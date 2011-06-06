@@ -75,6 +75,15 @@
         </eye:buttons>
       </eye:updatableContent>
 
+      <eye:buttons rendered="#{longOpState == 0 }">
+        <eye:button >
+          <tr:commandLink text="#{msg['informer.stats.by.errors.back']}" action="#{messErrors.backAction}" immediate="true">
+            <f:param value="#{messErrors.backParams}" name="errors_stats_come_back_params"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
     </tr:form>
 
   </ui:define>

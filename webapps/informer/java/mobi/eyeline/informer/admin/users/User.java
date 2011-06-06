@@ -429,7 +429,7 @@ public class User implements Serializable {
     vh.checkNotNull("deliveryEndTime",deliveryEndTime);
     vh.checkLessThan("deliveryEndTime", deliveryEndTime, new Time(24,0,0));
     if (validityPeriod != null)
-      vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
+      vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,20));
     if (messageTimeToLive != null)
       vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,59));
     if (retryOnFail) {
