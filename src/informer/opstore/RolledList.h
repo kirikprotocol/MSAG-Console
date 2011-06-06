@@ -53,18 +53,12 @@ public:
     ~RolledList()
     {
         smsc_log_debug(log_,"dtor");
-        if (!container_.empty()) {
-            std::terminate();
-        }
         delete [] conds_;
     }
 
 
-    /// this method should be used only in dtor to cleanup elements
-    container_type& getContainer() {
-        return container_;
-    }
-
+    /// unsynchronized access, use with caution
+    container_type& getContainer() { return container_; }
 
     /// a helper class which is used to lock item prior to rolling/destruction
     class ItemLock
@@ -89,41 +83,30 @@ public:
         // lock item for rolling
         bool lock( iterator_type iter )
         {
+            if (it_ == iter) {
+                std::terminate(); // cannot lock the same iter twice
+            }
             smsc::core::synchronization::MutexGuard mg(rl_.lock_);
             return lockUnsync(iter);
         }
 
+
         // lock item for removal, and place it into container
+        // You have to make sure that there is no other pointers to
+        // given iter outside of this class.
         bool pop( iterator_type iter, container_type& holder )
         {
-            smsc_log_debug(rl_.log_,"popping %p",&*iter);
+            // smsc_log_debug(rl_.log_,"popping %p",&*iter);
             {
                 smsc::core::synchronization::MutexGuard mg(rl_.lock_);
-                if (!commonLocking(iter)) return false;
-                // wait until number of users become 1
-                register unsigned nol = iter->numberOfLocks | deleteMask;
-                iter->numberOfLocks = nol;
-                smsc_log_debug(rl_.log_,"dlocked %p nl=%x",&*iter,nol);
-                while ((nol & usersMask) > 1) {
-                    smsc_log_debug(rl_.log_,"signalling all %p nl=%x",&*iter,nol);
-                    smsc::core::synchronization::Condition& c(rl_.getCnd(iter));
-                    c.SignalAll();
-                    smsc_log_debug(rl_.log_,"waiting on %p nl=%x",&*iter,nol);
-                    c.WaitOn(rl_.lock_);
-                    nol = iter->numberOfLocks;
-                }
-                rl_.moveRollingIterator();
-                // pop element
-                holder.splice(holder.begin(),rl_.container_,iter);
+                if (!popUnsync(iter,holder)) return false;
             }
-            smsc_log_debug(rl_.log_,"popped %p",&*iter);
-            // detach element from myself
             iter->numberOfLocks = 0;
             it_ = rl_.container_.end();
             return true;
         }
 
-
+            
         // the method is useful for creation of new elements into container
         // which are to be rolled after insertion.
         iterator_type createElement( const T& elt )
@@ -145,17 +128,77 @@ public:
         }
 
 
+        bool isValid() const {
+            return (it_ != rl_.container().end());
+        }
+
+
+        bool lockAny() {
+            while (true) {
+                smsc::core::synchronization::MutexGuard mg(rl_.lock_);
+                if (it_ != rl_.container_.end()) { return true; }
+                iterator_type iter = rl_.container_.begin();
+                if (iter == rl_.container_.end()) { break;}
+                do {
+                    if (!iter->numberOfLocks) {
+                        if (lockUnsync(iter)) return true;
+                        break;
+                    }
+                    ++iter;
+                } while (iter != rl_.container_.end());
+            }
+            return false;
+        }
+
     private:
+        // must be locked
+        bool popUnsync( iterator_type iter, container_type& holder )
+        {
+            register unsigned nol;
+            if (it_ == iter) {
+                // upgrading to exclusive
+                it_ = rl_.container_.end();
+                nol = (iter->numberOfLocks | ~rolledMask) - 1;
+                if (nol & deleteMask) {
+                    // cannot lock
+                    smsc_log_debug(rl_.log_,"cannot lock %p nl=%x",&*iter,nol);
+                    rl_.getCnd(iter).Signal();
+                    return false;
+                }
+                ++nol;
+            } else if (commonLocking(iter) != iter) {
+                return false;
+            }
+
+            // wait until number of users become 1
+            nol = iter->numberOfLocks | deleteMask;
+            iter->numberOfLocks = nol;
+            smsc_log_debug(rl_.log_,"dlocked %p nl=%x",&*iter,nol);
+            while ((nol & usersMask) > 1) {
+                smsc_log_debug(rl_.log_,"signalling all %p nl=%x",&*iter,nol);
+                smsc::core::synchronization::Condition& c(rl_.getCnd(iter));
+                c.SignalAll();
+                smsc_log_debug(rl_.log_,"waiting on %p nl=%x",&*iter,nol);
+                c.WaitOn(rl_.lock_);
+                nol = iter->numberOfLocks;
+            }
+            // rl_.moveRollingIterator();
+            // pop element
+            holder.splice(holder.begin(),rl_.container_,iter);
+            return true;
+        }
+
+
         // must be locked
         bool lockUnsync( iterator_type iter )
         {
             smsc_log_debug(rl_.log_,"locking %p",&*iter);
-            if (!commonLocking(iter)) return false;
+            if (commonLocking(iter) != iter) return false;
             unsigned nol = iter->numberOfLocks | rolledMask;
             iter->numberOfLocks = nol;
             smsc_log_debug(rl_.log_,"locked %p nl=%x",&*iter,nol);
             // move rolling iterator
-            rl_.moveRollingIterator();
+            // rl_.moveRollingIterator();
             return true;
         }
 
@@ -175,8 +218,8 @@ public:
         }
 
 
-        // must be locked
-        bool commonLocking(iterator_type iter)
+        // must be locked, will return next iterator if cannot lock
+        iterator_type commonLocking(iterator_type iter)
         {
             if (it_ != rl_.container_.end()) {
                 unlock();
@@ -185,9 +228,10 @@ public:
             if (nol & deleteMask) {
                 // iter to become invalid
                 smsc_log_debug(rl_.log_,"cannot lock %p nl=%x",&*iter,nol);
-                return false;
+                return ++iter;
             }
             iter->numberOfLocks = ++nol;
+            rl_.moveRollingIterator();
             if (nol & rolledMask) {
                 // the item is locked, wait until it gets unlocked
                 smsc::core::synchronization::Condition& c(rl_.getCnd(iter));
@@ -204,12 +248,12 @@ public:
                     if ( (nol & usersMask) > 1 ) {
                         c.SignalAll();
                     }
-                    return false;
+                    return ++iter;
                 }
             }
             // is free to be used
             it_ = iter;
-            return true;
+            return iter;
         }
 
 
@@ -249,6 +293,7 @@ public:
             smsc::core::synchronization::MutexGuard mg(rl_.lock_);
             rl_.container_.splice(rl_.container_.begin(),from);
         }
+
 
         ~StopRollLock() {
             smsc::core::synchronization::MutexGuard mg(rl_.lock_);
@@ -294,6 +339,11 @@ public:
         return false;
     }
 
+    bool empty() {
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        return container_.empty();
+    }
+
 private:
 
     // must be locked
@@ -301,7 +351,8 @@ private:
     {
         while ( rolling_ != container_.end() ) {
             unsigned nol = rolling_->numberOfLocks;
-            if ( !(nol & lockedMask) ) break;
+            // if ( !(nol & lockedMask) ) break;
+            if (!nol) break;
             iterator_type prev = rolling_;
             ++rolling_;
             smsc_log_debug(log_,"move rolliter %p nl=%x into %p",

@@ -36,9 +36,7 @@ public:
 
     /// add new messages
     virtual void addNewMessages( msgtime_type currentTime,
-                                 MessageList& listFrom,
-                                 MsgIter iter1,
-                                 MsgIter iter2 ) = 0;
+                                 MessageList& listFrom ) = 0;
 
     /// resend file input/output
     virtual void resendIO( bool isInputDirection, volatile bool& stopFlag ) = 0;

@@ -599,10 +599,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                     break;
                 }
 
-                req.addNewMessages( currentTime,
-                                    msglist,
-                                    msglist.begin(),
-                                    msglist.end() );
+                req.addNewMessages( currentTime, msglist );
                 ok = true;
             }
             setRecord(ro,0);

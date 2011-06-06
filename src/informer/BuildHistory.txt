@@ -1,3 +1,5 @@
+2011-06-06 14:36 bukind
+  feature: messageList rewritten
 2011-06-06 10:18 bukind
   feature: speed limiter
 

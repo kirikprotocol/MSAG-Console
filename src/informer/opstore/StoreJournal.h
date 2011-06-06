@@ -10,6 +10,7 @@ namespace eyeline {
 namespace informer {
 
 struct Message;
+struct MessageLocker;
 
 /// two functionality:
 /// 1. journalling all activity on the working storage;
@@ -31,13 +32,12 @@ public:
     StoreJournal();
 
     /// journal messages.
-    /// @a serial: input -- the serial number of the journal file at previous write,
+    /// @a msglock.serial: input -- the serial number of the journal file at previous write,
     ///            at exit -- the serial number of the journal file.
     /// @return the number of bytes written
     size_t journalMessage( dlvid_type     dlvId,
                            regionid_type  regionId,
-                           const Message& msg,
-                           regionid_type& serial );
+                           MessageLocker& msglock );
 
     /// init the journal
     /// @return fixTime>0 if there were old version of deliveries

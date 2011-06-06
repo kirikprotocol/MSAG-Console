@@ -131,12 +131,12 @@ serial_(1)
 
 size_t StoreJournal::journalMessage( dlvid_type     dlvId,
                                      regionid_type  regionId,
-                                     const Message& msg,
-                                     regionid_type& serial )
+                                     MessageLocker& ml )
 {
     TmpBuf<unsigned char,200> buf;
     // NOTE: it is a prediction (NOT under lock!)
-    const bool equalSerials = (serial == serial_);
+    const bool equalSerials = (ml.serial == serial_);
+    const Message& msg = ml.msg;
     if (!equalSerials) {
         if (msg.text.isUnique()) {
             // need to write text
@@ -187,7 +187,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     {
         smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
         if (msg.state < uint8_t(MSGSTATE_FINAL) &&
-            equalSerials && serial != serial_ ) {
+            equalSerials && ml.serial != serial_ ) {
             // oops, the serial has changed while we were preparing the buffer
             if (msg.text.isUnique()) {
                 buf.reserve(90+2*msg.flags.bufsize()+strlen(msg.text.getText()));
@@ -212,7 +212,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         }
         fg_.write(buf.get(),buflen);
         // fg_.fsync();
-        serial = serial_;
+        ml.serial = serial_;
     }
     if (log_->isDebugEnabled()) {
         HexDump hd;

@@ -70,12 +70,12 @@ struct MessageLocker
     static const regionid_type nullSerial = regionid_type(0);
     static const regionid_type lockedDelete = regionid_type(-1);
     static const regionid_type lockedSerial = regionid_type(-2);
-    MessageLocker() : serial(nullSerial), users(0) {}
+    MessageLocker() : serial(nullSerial), numberOfLocks(0) {}
     MessageLocker(const MessageLocker& mlk) :
-    msg(mlk.msg), serial(mlk.serial), users(mlk.users) {}
+    msg(mlk.msg), serial(mlk.serial), numberOfLocks(mlk.numberOfLocks) {}
     Message                msg;
     volatile regionid_type serial;
-    volatile uint8_t       users;  // a number of user thread for this iterator
+    volatile unsigned      numberOfLocks;
 };
 
 // a list of messages

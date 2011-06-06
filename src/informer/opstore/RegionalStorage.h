@@ -12,6 +12,7 @@
 #include "informer/data/InputMessageSource.h"
 #include "informer/data/Region.h"
 #include "logger/Logger.h"
+#include "RolledList.h"
 
 namespace smsc {
 namespace sms {
@@ -38,13 +39,16 @@ private:
 
     /// ALL messages are kept in this list
     /// The message may be locked from modification for the time of serialization.
+    typedef RolledList< MessageLocker, MessageList >    MsgList;
+    // typedef MsgList::RollIter                           MsgIter;
+    typedef MsgList::ItemLock                           MsgLock;
     typedef std::multimap< msgtime_type, MsgIter >      ResendQueue;
     typedef smsc::core::buffers::IntHash64< MsgIter >   MessageHash;
     typedef smsc::core::buffers::CyclicQueue< MsgIter > NewQueue;
 
-    /// message locking guard fwd decl
-    class MsgLock;
-    class StopRollingGuard;
+    // message locking guard fwd decl
+    // class MsgLock;
+    // class StopRollingGuard;
 
 public:
 
@@ -128,13 +132,12 @@ protected:
 
     /// add new messages to processing.
     virtual void addNewMessages( msgtime_type currentTime,
-                                 MessageList& listFrom,
-                                 MsgIter      iter1,
-                                 MsgIter      iter2 );
+                                 MessageList& listFrom );
+    // MsgIter      iter1,
+    // MsgIter      iter2 );
 
     /// NOTE: mg must be locked!
-    void doFinalize( RelockMutexGuard& mg,
-                     MsgIter           iter,
+    void doFinalize( MsgLock&          ml,
                      msgtime_type      currentTime,
                      uint8_t           state,
                      int               smppState,
@@ -152,19 +155,16 @@ private:
     // message cleanup
     // void destroy( Message& msg );
 
-    inline smsc::core::synchronization::Condition& getCnd( MsgIter iter ) {
-        return conds_[unsigned(reinterpret_cast<uint64_t>(reinterpret_cast<const void*>(&(*iter))) / 7) % CONDITION_COUNT];
-    }
-
 private:
     smsc::logger::Logger*                     log_;
+
     smsc::core::synchronization::EventMonitor cacheMon_;
 
     // the list of all messages
-    MessageList                               messageList_;
+    MsgList                                   messageList_;
 
     // iterator that points to item that will be stored automatically from rollOver()
-    MsgIter                                   storingIter_;
+    // MsgIter                                   storingIter_;
 
     /// The message which is stored in the message list
     /// is pointed to from ONLY ONE of messageHash, resendQueue or newQueue!
@@ -177,7 +177,7 @@ private:
     InputTransferTask*                inputTransferTask_;  // owned
     ResendTransferTask*               resendTransferTask_; // owned
     RegionPtr                         region_;
-    unsigned                          stopRolling_;        // wait until 0 to roll
+    // unsigned                          stopRolling_;        // wait until 0 to roll
     
     unsigned                           newOrResend_; // if <3 then new, otherwise resend
 
@@ -188,7 +188,7 @@ private:
     /// the next resend file starting time or 0 (if there is no files).
     msgtime_type                       nextResendFile_;
 
-    smsc::core::synchronization::Condition conds_[CONDITION_COUNT];
+    // smsc::core::synchronization::Condition conds_[CONDITION_COUNT];
 };
 
 typedef EmbedRefPtr< RegionalStorage > RegionalStoragePtr;
