@@ -149,35 +149,43 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
     pool.release();
   }
 
+  private TreeSet<String> getTableNames(Connection conn) throws DataSourceException, SQLException {
+      TreeSet<String> _tables = new TreeSet<String>(new Comparator<String>() {
+        public int compare(String o1, String o2) {
+          return o2.compareTo(o1);
+        }
+      });
+      PreparedStatement st = null;
+      ResultSet rs = null;
+      try{
+        st = conn.prepareStatement(getSql("get.tables"));
+        rs = st.executeQuery();
+        while(rs.next()) {
+          _tables.add(rs.getString(1));
+        }
+      }finally {
+        _close(rs, st, null);
+      }
+    return _tables;
+  }
+
   private void initTables() throws DataSourceException {
-    Calendar c = Calendar.getInstance();
     Connection conn = null;
     try{
       conn = pool.getConnection();
-      String current = sdf.format(c.getTime());
-      addTable(current, conn, false);
-
-      String nameSuffix;
-
-      for(int i=0; i < MAX_PREVIOUS_PERIODS;i++) {
-        c.add(PERIOD, -1);
-        nameSuffix = sdf.format(c.getTime());
-        addTable(nameSuffix, conn, true);
-      }
-
-      for(int i=0; i < 12 - MAX_PREVIOUS_PERIODS;i++) {   // удаление более старых
-        c.add(PERIOD, -1);
-        nameSuffix = sdf.format(c.getTime());
-        new Table(nameSuffix).drop(conn);
-      }
 
       int max = 0;
-      for(Table t : tables) {
-        if(t.table_maxId > max) {
-          max = t.table_maxId;
+      String prefix = getSql("table.prefix");
+      for(String t : getTableNames(conn)) {
+        Table table = new Table(t.substring(prefix.length()), conn, false);
+        tables.add(table);
+        if(table.table_maxId > max) {
+          max = table.table_maxId;
         }
       }
       maxId = new AtomicInteger(max);
+
+      removeOldTable(conn);
 
     } catch (SQLException e) {
       pool.invalidateConnection(conn);
@@ -188,7 +196,7 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
   }
 
   private void removeOldTable(Connection conn) throws SQLException {
-    if(tables.size() > MAX_PREVIOUS_PERIODS + 1 ) {
+    while(tables.size() > MAX_PREVIOUS_PERIODS + 1 ) {
       Table toRemove  = tables.getLast();  // самая старая таблица
       toRemove.drop(conn);
       tables.removeLast();
@@ -196,15 +204,6 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
         logger.debug("Sender DS: old table is removed: "+toRemove.date);
       }
     }
-  }
-
-  private void addTable(String nameSuffix, Connection conn, boolean doNotAddIfNotExist) throws SQLException {
-    Table t = new Table(nameSuffix);
-    if(doNotAddIfNotExist && !t.isExist(conn)) {
-      return;
-    }
-    t.initTable(conn);
-    tables.add(t);
   }
 
 
@@ -265,10 +264,9 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
       }
 
       Connection conn = null;
-      table =  new Table(sDate);
       try{
         conn = pool.getConnection();
-        table.initTable(conn);
+        table =  new Table(sDate, conn, true);
         table.table_maxId = maxId.get();
         tables.addFirst(table);
         removeOldTable(conn);
@@ -322,9 +320,10 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
 
     private int table_maxId;
 
-    private Table(String date) {
+    private Table(String date, Connection conn, boolean create) throws SQLException{
       this.date = date;
       prepareStatements();
+      initTable(conn, create);
     }
 
     private int loadMaxId(Connection conn) throws SQLException {
@@ -339,25 +338,15 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
       }
     }
 
-    private boolean isExist(Connection conn) throws SQLException {
-      PreparedStatement st = null;
-      ResultSet rs = null;
-      try{
-        st = conn.prepareStatement(statements.get("sender.message.check.exist"));
-        rs = st.executeQuery();
-        return rs.next();
-      }finally {
-        _close(rs, st, null);
-      }
-    }
-
-    private void initTable(Connection conn) throws SQLException {
-      PreparedStatement st = null;
-      try{
-        st = conn.prepareStatement(statements.get("sender.message.create.table"));
-        st.executeUpdate();
-      }finally {
-        _close(null, st, null);
+    private void initTable(Connection conn, boolean create) throws SQLException {
+      if (create) {
+        PreparedStatement st = null;
+        try{
+          st = conn.prepareStatement(statements.get("sender.message.create.table"));
+          st.executeUpdate();
+        }finally {
+          _close(null, st, null);
+        }
       }
       table_maxId = loadMaxId(conn);
     }
