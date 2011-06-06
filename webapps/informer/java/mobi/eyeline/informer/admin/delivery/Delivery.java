@@ -185,7 +185,7 @@ public class Delivery implements Serializable {
       vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,20));
     }
     if(messageTimeToLive != null) {
-      vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,59));
+      vh.checkGreaterThan("messageTimeToLive", messageTimeToLive, new Time(0,0,20));
     }
     if(retryOnFail) {
       if(retryPolicy != null &&  retryPolicy.length()>0) {
