@@ -73,6 +73,7 @@
     param(out, "smsc.core.ussdAddr", "core.ussd_center_address", bean.getStringParam("core.ussd_center_address"));
     param(out, "smsc.core.ussdSSN", "core.ussd_ssn", bean.getIntParam("core.ussd_ssn"));
     param(out, "smsc.core.addUssdSSN", "core.add_ussd_ssn", bean.getStringParam("core.add_ussd_ssn"));
+    param(out, "smsc.core.receiptOrigAddress", "core.receipt_orig_address", bean.getStringParam("core.receipt_orig_address"));
     param(out, "smsc.core.systemId", "core.systemId", bean.getStringParam("core.systemId"));
     param(out, "smsc.core.servType", "core.service_type", bean.getStringParam("core.service_type"));
     param(out, "smsc.core.protId", "core.protocol_id", bean.getIntParam("core.protocol_id"));
