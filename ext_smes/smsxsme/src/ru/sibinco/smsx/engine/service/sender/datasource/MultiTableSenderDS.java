@@ -257,7 +257,7 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
 
     Table table = null;
 
-    if (tables.getFirst().date.compareTo(sDate) < 0) {
+    if (tables.isEmpty() || tables.getFirst().date.compareTo(sDate) < 0) {
 
       if(logger.isDebugEnabled()) {
         logger.debug("Sender DS: new month became. Create table: "+sDate);

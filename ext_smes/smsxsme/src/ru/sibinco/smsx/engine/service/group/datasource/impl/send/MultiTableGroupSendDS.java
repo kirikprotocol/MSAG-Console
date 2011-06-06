@@ -247,7 +247,7 @@ public class MultiTableGroupSendDS extends DBDataSource implements GroupSendData
 
     Table table = null;
 
-    if (tables.getFirst().date.compareTo(sDate) < 0) {
+    if (tables.isEmpty() || tables.getFirst().date.compareTo(sDate) < 0) {
 
       if(logger.isDebugEnabled()) {
         logger.debug("Sender DS: new month became. Create table: "+sDate);
