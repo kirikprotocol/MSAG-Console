@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsview.archive.Message;
 import ru.novosoft.smsc.admin.smsview.operative.LazySmsRow;
-import ru.novosoft.smsc.admin.smsview.operative.RsFileMessage;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
@@ -69,115 +68,21 @@ public class SmsOperativeSource extends SmsSource
     return getRows(query, true);
   }
 
-
-  private SmsSet getRows1(SmsQuery query, boolean calcExactCount) {
-    InputStream input = null;
-    SmsSet set = new SmsSet();
-    set.setHasMore(true);
+  private void parseFile(String storeFilePath, SmsQuery query, boolean calcExactCount, HashMap msgs, HashSet finishedMsgs, HashSet totalCounter, int delay) {
     int rowsMaximum = query.getRowsMaximum();
-    if (rowsMaximum == 0) return set;
-    boolean haveArc=false;
-    HashMap msgs = new HashMap(5000);
-    System.out.println("start reading File in: " + new Date());
-    long tm = System.currentTimeMillis();
-    try {
-      input = new FileInputStream(smsstorePath);  //todo Buffered OutputStream
-
-      Message.readString(input, 9);
-      long version = Message.readUInt32(input);
-      if ( version> 0x010000 ) haveArc=true;
-//      HashSet msgIds = new HashSet(5000);
-      int totalCount = 0;
-      try {
-        RsFileMessage resp = new RsFileMessage();
-        byte message[] = new byte[256*1024];
-        while(true) {
-          int msgSize1 = (int) Message.readUInt32(input);
-          Functions.readBuffer(input, message, msgSize1);
-          int msgSize2 = (int) Message.readUInt32(input);
-          if (msgSize1 != msgSize2) throw new IOException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
-          InputStream bis = new ByteArrayInputStream(message, 0, msgSize1); // todo do not use ArrayInputStream
-          long msgId=Message.readInt64(bis);
-          Long lmsgId = new Long(msgId);   // todo Create lmsgId in if statement near  -
-          totalCount++;                                                         //      |
-          if( resp.receive(bis, query, message, msgId, false, haveArc) ) {       //     |
-                                                                                //    <-
-            if( resp.getSms().getStatusInt() == SmsRow.MSG_STATE_ENROUTE ) {
-              msgs.put(lmsgId, resp.getSms());
-            } else {
-              msgs.remove(lmsgId);   // todo do not read all message if status != ENROUTE
-            }
-          }
-        }
-      } catch (EOFException e) {
-      }
-      logger.info("Operative store read "+totalCount+" records. "+msgs.size()+" messages matches filter");
-      if( query.isFilterLastResult || query.isFilterStatus ) {   // todo move this into previous circle ???
-        Map.Entry entry = null;
-        SmsRow row = null;
-        for( Iterator it = msgs.entrySet().iterator(); it.hasNext(); ) {
-          entry = (Map.Entry)it.next();
-          row = (SmsRow) entry.getValue();
-          if( query.isFilterStatus && row.getStatusInt() != query.getStatus() ) {
-            it.remove();
-            continue;
-          }
-          if( query.isFilterLastResult && row.getLastResult() != query.getLastResult() ) {
-            it.remove();
-          }
-        }
-        logger.info("Operative store "+totalCount+" records. LastResult and Status filters processed "+msgs.size()+" messages matches filter");
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.error("Unexpected exception occured reading operative store file", e);
-    } finally {
-      if( input != null )
-        try {
-          input.close();
-        } catch (IOException e) {
-          logger.warn("can't close file");
-        }
-      System.out.println("end reading File in: " + new Date()+" spent: "+(System.currentTimeMillis()-tm)/1000);
-      set.addAll(msgs.values());  // todo DO NOT COPY. USE set from the beginning!!!
-    }
-    set.setSmesRows(msgs.size());
-    return set;
-  }
-
-  private SmsSet getRows(SmsQuery query, boolean calcExactCount) {
-    SmsSet set = new SmsSet();
-    set.setHasMore(true);
-    int rowsMaximum = query.getRowsMaximum();
-    if (rowsMaximum == 0) return set;
-    boolean haveArc=false;
-
-    // Check .row file does not exists
-    String rowFile = smsstorePath.substring(0, smsstorePath.lastIndexOf('.')) + ".row";
-    while (new File(rowFile).exists()) {
-      logger.error("It seems that SMSC is making operative storage rolling. Wait one second before next try...");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        return set;
-      }
-    }
-
-    HashMap msgs = new HashMap();
-    HashSet finishedMsgs = new HashSet();
-    HashSet totalCounter = new HashSet();
-
     int msgsSize;
     boolean outOfSize = false;
+    boolean haveArc=false;
+
+    System.out.println("Start reading file: " + storeFilePath);
 
     do {
       msgsSize = msgs.size();
-      
+
       long tm = System.currentTimeMillis();
       InputStream input = null;
       try {
-        input = new BufferedInputStream(new FileInputStream(smsstorePath));
+        input = new BufferedInputStream(new FileInputStream(storeFilePath));
 
         Message.readString(input, 9);
         long version = Message.readUInt32(input);
@@ -185,6 +90,9 @@ public class SmsOperativeSource extends SmsSource
 
         try {
           while(true) {
+            if (delay > 0)
+              Thread.sleep(delay);
+
             int msgSize1 = (int) Message.readUInt32(input);
             long msgId = Message.readInt64(input);  // 8 bytes
 
@@ -243,13 +151,49 @@ public class SmsOperativeSource extends SmsSource
           } catch (IOException e) {
             logger.warn("can't close file");
           }
-        System.out.println("end reading File in: " + new Date()+" spent: "+(System.currentTimeMillis()-tm)/1000);
+        System.out.println("End reading file: " + storeFilePath + " in: " + new Date()+" spent: "+(System.currentTimeMillis()-tm)/1000);
       }
 
       if (rowsMaximum == Integer.MAX_VALUE || (msgs.size() < rowsMaximum == !outOfSize))
         break;
 
     } while (msgsSize != msgs.size());
+
+  }
+
+  private List listStoreFiles() {
+    String filenamePrefix = new File(smsstorePath).getName();
+    int i = filenamePrefix.lastIndexOf('.');
+    if (i>0)
+      filenamePrefix = filenamePrefix.substring(0, i);
+
+    File[] files = new File(smsstorePath).getParentFile().listFiles();
+    if (files == null)
+      return new ArrayList();
+
+    List result = new ArrayList();
+    for (int j=0; j<files.length; j++) {
+      if (files[j].getName().startsWith(filenamePrefix))
+        result.add(files[j].getAbsolutePath());
+    }
+    return result;
+  }
+
+  private SmsSet getRows(SmsQuery query, boolean calcExactCount) {
+    SmsSet set = new SmsSet();
+    set.setHasMore(true);
+
+    HashMap msgs = new HashMap();
+    HashSet finishedMsgs = new HashSet();
+    HashSet totalCounter = new HashSet();
+
+    List files = listStoreFiles();
+    Collections.sort(files);
+
+    for (Iterator iter = files.iterator(); iter.hasNext();) {
+      int delay = iter.hasNext() ? 0 : 10;
+      parseFile((String) iter.next(), query, calcExactCount, msgs, finishedMsgs, totalCounter, delay);
+    }
 
     set.addAll(msgs.values());
     set.setSmesRows(calcExactCount ? totalCounter.size() : msgs.size());
