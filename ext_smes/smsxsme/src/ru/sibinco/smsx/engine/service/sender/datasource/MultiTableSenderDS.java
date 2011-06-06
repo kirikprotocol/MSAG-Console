@@ -33,17 +33,11 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
 
   private final static int PERIOD = Calendar.MONTH;
 
-  private AtomicInteger maxId; // todo Убрать. В таблице сделать метод getNextId()
+  private AtomicInteger maxId;
 
   private final SimpleDateFormat sdf;
 
-  private final TreeMap<String, Table> tables = new TreeMap<String, Table>(new Comparator<String>() { //todo Заменить на LinkedList, отсортированный по дате
-    public int compare(String o1, String o2) {
-      return o2.compareTo(o1);
-    }
-  });
-
-  private String currentTable; // todo Убрать. В голове списка будет лежать текущая таблица.
+  private final LinkedList<Table> tables = new LinkedList<Table>();
 
 
   public MultiTableSenderDS() throws DataSourceException {
@@ -74,19 +68,15 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
     if(logger.isDebugEnabled()) {
       logger.debug("Sender DS: Load message: id="+id);
     }
-    try{
-      Table t = getTable(id);
-      if(t == null) {
-        return null;
-      }
-      SenderMessage r =  t.loadSenderMessageById(id);
-      if(logger.isDebugEnabled()) {
-        logger.debug("Sender DS: Load message resp: "+r);
-      }
-      return r;
-    }catch (SQLException e){
-      throw new DataSourceException(e);
+    Table t = getTableByMsgId(id);
+    if(t == null) {
+      return null;
     }
+    SenderMessage r =  t.loadSenderMessageById(id);
+    if(logger.isDebugEnabled()) {
+      logger.debug("Sender DS: Load message resp: "+r);
+    }
+    return r;
   }
 
   private final Lock createLock = new ReentrantLock();
@@ -95,28 +85,24 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
     if(logger.isDebugEnabled()) {
       logger.debug("Sender DS: Save/Update message id="+(msg.isExists() ? msg.getId() : null)+" dest="+msg.getDestinationAddress());
     }
-    try{
-      Table t;
-      if(msg.isExists()) {
-        t = getTable(msg.getId());
-        if(t == null) {
-          return;
-        }
-        t.saveSenderMessage(msg, true);
-      }else {
-        Date date;
-        try{
-          createLock.lock();
-          date = new Date();
-          msg.setId(maxId.incrementAndGet());
-        }finally {
-          createLock.unlock();
-        }
-        t = getTableByDate(date);
-        t.saveSenderMessage(msg, false);
+    Table t;
+    if(msg.isExists()) {
+      t = getTableByMsgId(msg.getId());
+      if(t == null) {
+        return;
       }
-    }catch (SQLException e){
-      throw new DataSourceException(e);
+      t.saveSenderMessage(msg, true);
+    }else {
+      Date date;
+      try{
+        createLock.lock();
+        date = new Date();
+        msg.setId(maxId.incrementAndGet());
+      }finally {
+        createLock.unlock();
+      }
+      t = getTableByDate(date);
+      t.saveSenderMessage(msg, false);
     }
   }
 
@@ -124,50 +110,39 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
     if(logger.isDebugEnabled()) {
       logger.debug("Sender DS: Remove message: id="+msg.getId());
     }
-    try{
-      Table t = getTable(msg.getId());
-      if(t == null) {
-        return;
-      }
-      t.removeSenderMessage(msg);
-    }catch (SQLException e){
-      throw new DataSourceException(e);
+    Table t = getTableByMsgId(msg.getId());
+    if(t == null) {
+      return;
     }
+    t.removeSenderMessage(msg);
   }
 
   public int updateMessageStatus(final long smppId, final int status) throws DataSourceException {
     if(logger.isDebugEnabled()) {
       logger.debug("Sender DS: Update status: smppId="+smppId+" status="+status);
     }
-    try{
-      Table t = getTable(null);
-      if(t == null) {
-        return 0;
-      }
-      int res = t.updateMessageStatus(smppId, status);
-      if(res < 1) {  //record not fount
-        t = getTableAfter(t.nameSuffix);
-        res = (t == null) ? 0 : t.updateMessageStatus(smppId, status);
-      }
-      return res;
-    }catch (SQLException e){
-      throw new DataSourceException(e);
+
+    Table t = getCurrentTable();
+    if(t == null) {
+      return 0;
     }
+    int res = t.updateMessageStatus(smppId, status);
+    if(res < 1) {  //record not fount
+      t = getTableAfter(t.date);
+      res = (t == null) ? 0 : t.updateMessageStatus(smppId, status);
+    }
+    return res;
   }
 
   public void updateMessageSmppId(final SenderMessage msg) throws DataSourceException {
     if(logger.isDebugEnabled()) {
       logger.debug("Sender DS: Update smppId="+msg.getSmppId()+" id="+msg.getId());
     }
-    try{
-      Table t = getTable(msg.getId());
-      if(t == null) {
-        return;
-      }
-      t.updateMessageSmppId(msg);
-    }catch (SQLException e){
-      throw new DataSourceException(e);
+    Table t = getTableByMsgId(msg.getId());
+    if(t == null) {
+      return;
     }
+    t.updateMessageSmppId(msg);
   }
 
   public void release() {
@@ -179,8 +154,8 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
     Connection conn = null;
     try{
       conn = pool.getConnection();
-      currentTable = sdf.format(c.getTime());
-      addTable(currentTable, conn, false);
+      String current = sdf.format(c.getTime());
+      addTable(current, conn, false);
 
       String nameSuffix;
 
@@ -197,60 +172,39 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
       }
 
       int max = 0;
-      for(Table t : tables.values()) {
+      for(Table t : tables) {
         if(t.table_maxId > max) {
           max = t.table_maxId;
         }
       }
       maxId = new AtomicInteger(max);
 
-    } catch (SQLException e) {   //todo pool.invalidateConnection(conn)
+    } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     }finally {
       _close(null, null, conn);
     }
   }
 
-  private void switchTables() throws SQLException { //todo кидать DataSourceException
-    Calendar c = Calendar.getInstance();
-    String _newTable = sdf.format(c.getTime());
-
-    if(!_newTable.equals(currentTable)) { //todo упростить. Оставить только удаление старых таблиц. Этот метод надо дергать только из getTableByDate() т.к только там создается новая таблица.
+  private void removeOldTable(Connection conn) throws SQLException {
+    if(tables.size() > MAX_PREVIOUS_PERIODS + 1 ) {
+      Table toRemove  = tables.getLast();  // самая старая таблица
+      toRemove.drop(conn);
+      tables.removeLast();
       if(logger.isDebugEnabled()) {
-        logger.debug("Sender DS: new month became. Create table: "+_newTable);
-      }
-
-      Connection conn = null;
-      Table nT =  new Table(_newTable);
-      try{
-        conn = pool.getConnection();
-        nT.initTable(conn);
-        nT.table_maxId = maxId.get();
-        tables.put(_newTable, nT);
-        currentTable = _newTable;
-        if(tables.size() > MAX_PREVIOUS_PERIODS + 1 ) {
-          String key = tables.lastKey();
-          Table toRemove  = tables.get(key);  // самая старая таблица
-          toRemove.drop(conn);
-          tables.remove(key);
-          if(logger.isDebugEnabled()) {
-            logger.debug("Sender DS: old table is removed: "+toRemove.nameSuffix);
-          }
-        }
-        // todo catch (SQLException) в котором делать pool.invalidateConnection() и кидать DataSourceException()
-      }finally {
-        _close(null, null, conn);
+        logger.debug("Sender DS: old table is removed: "+toRemove.date);
       }
     }
   }
 
-  private void addTable(String nameSuffix, Connection conn, boolean checkExist) throws SQLException {
+  private void addTable(String nameSuffix, Connection conn, boolean doNotAddIfNotExist) throws SQLException {
     Table t = new Table(nameSuffix);
-    if(checkExist && !t.isExist(conn)) {
+    if(doNotAddIfNotExist && !t.isExist(conn)) {
       return;
     }
     t.initTable(conn);
-    tables.put(nameSuffix, t);
+    tables.add(t);
   }
 
 
@@ -259,22 +213,33 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
    * Возвращает таблицу, где может находиться запись с recordId.
    * Если recordId == null, вернёт текущую таблицу.
    * При необходимости создаёт новые таблицы и чистит устаревшие
-   * @param recordId идентификатор записи
+   * @param msgId идентификатор записи
    * @return таблица
-   * @throws SQLException ошибка при создании или удалении таблиц
    */
-  private synchronized Table getTable(Integer recordId) throws SQLException { //todo Разбить на 3: getTableByMsgId(), getTableByDate(), getCurrentTable()
-
-    switchTables();
-
-    Table table;
-    if(recordId == null) {
-      table = tables.get(currentTable);
-    }else {
-      table = getTableByid(recordId);
+  private synchronized Table getTableByMsgId(Integer msgId) {
+    Table cand = null;
+    for(Table t : tables) {       // (список отсортирован по убыванию даты)
+      int m = t.table_maxId;
+      if(msgId > m) {
+        break;
+      }else {
+        cand = t;
+      }
     }
     if(logger.isDebugEnabled()) {
-      logger.debug("Sender DS: Get table.Table for id="+recordId+": "+(table == null ? null : table.nameSuffix));
+      logger.debug("Sender DS: Get table.Table for id="+msgId+": "+(cand == null ? null : cand.date));
+    }
+    return cand;
+  }
+
+  /**
+   * Возвращает текущую таблицу
+   * @return таблица
+   */
+  private synchronized Table getCurrentTable() {
+    Table table = tables.getFirst();
+    if(logger.isDebugEnabled()) {
+      logger.debug("Sender DS: Get current table. Table: "+(table == null ? null : table.date));
     }
     return table;
   }
@@ -285,16 +250,45 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
    * При необходимости создаёт новые таблицы и чистит устаревшие
    * @param date дата
    * @return таблица
-   * @throws SQLException ошибка при создании или удалении таблиц
+   * @throws DataSourceException ошибка при создании или удалении таблиц
    */
-  private synchronized Table getTableByDate(Date date) throws SQLException {
+  private synchronized Table getTableByDate(Date date) throws DataSourceException {
 
-    switchTables();
+    String sDate = sdf.format(date);
 
-    String sDate = date == null ? null : sdf.format(date);
-    Table table = sDate == null ? tables.get(currentTable) : tables.get(sDate);
+    Table table = null;
+
+    if (tables.getFirst().date.compareTo(sDate) < 0) {
+
+      if(logger.isDebugEnabled()) {
+        logger.debug("Sender DS: new month became. Create table: "+sDate);
+      }
+
+      Connection conn = null;
+      table =  new Table(sDate);
+      try{
+        conn = pool.getConnection();
+        table.initTable(conn);
+        table.table_maxId = maxId.get();
+        tables.addFirst(table);
+        removeOldTable(conn);
+      }catch (SQLException e){
+        pool.invalidateConnection(conn);
+        throw new DataSourceException(e);
+      } finally {
+        _close(null, null, conn);
+      }
+    } else {
+      for(Table t : tables) {
+        if(t.date.equals(sDate)) {
+          table =  t;
+          break;
+        }
+      }
+    }
+
     if(logger.isDebugEnabled()) {
-      logger.debug("Sender DS: Get table by date="+sDate+".Table is "+(table == null ? null : table.nameSuffix));
+      logger.debug("Sender DS: Get table by date="+sDate+".Table is "+(table == null ? null : table.date));
     }
     return table;
   }
@@ -304,41 +298,16 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
    * При необходимости создаёт новые таблицы и чистит устаревшие
    * @param tableBefore данная таблица
    * @return таблица
-   * @throws SQLException ошибка при создании или удалении таблиц
    */
-  private synchronized Table getTableAfter(String tableBefore) throws SQLException {
+  private synchronized Table getTableAfter(String tableBefore) {
 
-    switchTables();
-
-    boolean foundBefore = false;
-    Table result = null;
-    for(Map.Entry<String, Table> e : tables.entrySet()) {
-      if(foundBefore) {
-        result = e.getValue();
-        break;
-      }
-      if(e.getKey().equals(tableBefore)) {
-        foundBefore = true;
-      }
+    for (Table t : tables) {
+      if (t.date.compareTo(tableBefore) < 0)
+        return t;
     }
-    if(logger.isDebugEnabled()) {
-      logger.debug("Sender DS: Table after "+tableBefore+" is "+(result == null ? null : result.nameSuffix));
-    }
-    return result;
-  }
 
 
-  private Table getTableByid(int id) {
-    Table cand = null;
-    for(Table t : tables.values()) {       // (список отсортирован по убыванию даты)
-      int m = t.table_maxId;
-      if(id > m) {
-        return cand;
-      }else {
-        cand = t;
-      }
-    }
-    return cand;
+    return null;
   }
 
 
@@ -348,13 +317,13 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
    */
   @SuppressWarnings({"NullableProblems"})
   private class Table {
-    private final String nameSuffix;
+    private final String date;
     private final Map<String, String> statements = new HashMap<String, String>(10);
 
     private int table_maxId;
 
-    private Table(String nameSuffix) {
-      this.nameSuffix = nameSuffix;
+    private Table(String date) {
+      this.date = date;
       prepareStatements();
     }
 
@@ -378,9 +347,7 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
         rs = st.executeQuery();
         return rs.next();
       }finally {
-        if(st != null) {
-          _close(rs, st, null);
-        }
+        _close(rs, st, null);
       }
     }
 
@@ -390,16 +357,14 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
         st = conn.prepareStatement(statements.get("sender.message.create.table"));
         st.executeUpdate();
       }finally {
-        if(st != null) {
-          _close(null, st, null);
-        }
+        _close(null, st, null);
       }
       table_maxId = loadMaxId(conn);
     }
 
     private void prepareStatements() {
       for (Map.Entry<String, String> e : getSqls().entrySet()) {
-        statements.put(e.getKey(), formatByDate(e.getValue(), nameSuffix));
+        statements.put(e.getKey(), formatByDate(e.getValue(), date));
       }
     }
 
