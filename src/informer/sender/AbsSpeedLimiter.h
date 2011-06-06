@@ -27,7 +27,7 @@ public:
 
 
     void setSpeed( unsigned speed ) {
-        maxCount_ = speed*(((nbins+1)*bwid_-1)/tuPerSec);
+        maxCount_ = speed*unsigned(((nbins_+1)*bwid_-1)/tuPerSec);
     }
 
 
