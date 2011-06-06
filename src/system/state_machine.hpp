@@ -68,7 +68,7 @@ public:
   const char *taskName(){return "StateMachine";}
 
   time_t maxValidTime;
-  Address scAddress;
+  Address receiptAddress;
 #ifdef SMSEXTRA
   bool createCopyOnNickUsage;
 #endif

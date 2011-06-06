@@ -663,8 +663,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 #ifdef SMSEXTRA
       m->createCopyOnNickUsage=createCopyOnNickUsage;
 #endif
-      Address addr(cfg.cfgman->getString("core.service_center_address"));
-      m->scAddress=addr;
+      Address raddr;
+      try{
+        raddr=cfg.cfgman->getString("core.receipt_orig_address");
+      }catch(...)
+      {
+        raddr=cfg.cfgman->getString("core.service_center_address");
+      }
+      m->receiptAddress=raddr;
       m->setReceiptInfo(
         cfg.cfgman->getString("core.service_type"),
         cfg.cfgman->getInt("core.protocol_id"),

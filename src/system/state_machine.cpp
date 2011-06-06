@@ -4164,7 +4164,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       )
     {
       SMS rpt;
-      rpt.setOriginatingAddress(scAddress);
+      rpt.setOriginatingAddress(receiptAddress);
       char msc[]="";
       char imsi[]="";
       rpt.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
@@ -4821,7 +4821,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
     }
   }
   SMS rpt;
-  rpt.setOriginatingAddress(scAddress);
+  rpt.setOriginatingAddress(receiptAddress);
   char msc[]="";
   char imsi[]="";
   rpt.lastResult=sms.lastResult;
@@ -4936,7 +4936,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
        (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
     SMS rpt;
-    rpt.setOriginatingAddress(scAddress);
+    rpt.setOriginatingAddress(receiptAddress);
     char msc[]="";
     char imsi[]="";
     rpt.lastResult=sms.lastResult;
