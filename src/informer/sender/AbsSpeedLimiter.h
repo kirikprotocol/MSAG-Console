@@ -11,13 +11,14 @@ public:
     AbsSpeedLimiter( unsigned speed,
                      unsigned nbins = 20,
                      usectime_type interval = 1000000ULL ) :
-        nbins_(nbins), bins_(new int[nbins]), 
-        first_(0), last_(0), count_(0),
-        bwid_(interval/nbins),
-        maxCount_(speed*nbins*bwid_/tuPerSec)
-        {
-            bins_[0] = 0;
-        }
+    nbins_(nbins), bins_(new int[nbins]), 
+    first_(0), last_(0), count_(0),
+    bwid_(interval/nbins),
+    maxCount_(unsigned(speed*nbins*bwid_/tuPerSec))
+    {
+        bins_[0] = 0;
+        lastTime_ = currentTimeMicro();
+    }
         
         
     ~AbsSpeedLimiter() {
@@ -26,7 +27,7 @@ public:
 
 
     void setSpeed( unsigned speed ) {
-        maxCount_ = speed*nbins*bwid_/tuPerSec;
+        maxCount_ = unsigned(speed*nbins_*bwid_/tuPerSec);
     }
 
 
@@ -34,13 +35,13 @@ public:
     unsigned isReady(usectime_type currentTime)
     {
         consumeQuant(currentTime,0);
-        if ( count < maxCount_ ) return 0;
+        if ( count_ < maxCount_ ) return 0;
         if ( currentTime < lastTime_ ) {
             return unsigned(lastTime_ - currentTime + bwid_/2);
         }
         int res = int(bwid_/2 - (currentTime - lastTime_));
         if ( res > 0 ) return unsigned(res);
-        return bwid_/2;
+        return unsigned(bwid_/2);
     }
 
 
@@ -66,7 +67,7 @@ public:
                 if (first_ == last_) {
                     count_ -= bins_[first_];
                     ++first_;
-                    if (first>=nbins_) first_=0;
+                    if (first_>=nbins_) first_=0;
                 }
                 bins_[last_] = 0;
             }
@@ -81,6 +82,8 @@ private:
     unsigned      first_, last_;
     unsigned      count_;
     usectime_type bwid_;
+    usectime_type lastTime_;
+    unsigned      maxCount_;
 };
 
 } // informer

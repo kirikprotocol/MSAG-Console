@@ -136,7 +136,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         } else {
             // smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
             speedControl_.consumeQuant(nchunks_);
-            speedControl_.consumeQuant(currentTimeMicro(),nchunks_);
+            speedLimiter_.consumeQuant(currentTimeMicro(),nchunks_);
             return 0;
         }
     } catch ( std::exception& e ) {

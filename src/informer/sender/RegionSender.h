@@ -9,7 +9,7 @@
 #include "ScoredPtrList.h"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/IntHash.hpp"
-#include "SpeedLimiter.h"
+#include "AbsSpeedLimiter.h"
 
 namespace eyeline {
 namespace informer {
@@ -100,7 +100,7 @@ private:
     ScoredPtrList< RegionSender >      taskList_; // dlvs are not owned
 
     SpeedControl<usectime_type,tuPerSec> speedControl_; // lock is not needed
-    AbsSpeedLimiter                      speedLimit_;
+    AbsSpeedLimiter                      speedLimiter_;
     
     Message                              msg_;    // a cache
 
