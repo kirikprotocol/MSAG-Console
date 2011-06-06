@@ -4,6 +4,11 @@
   feature: speed limiter
 
 =====================================================================
+2011-06-06 16:18 bukind informer-build-20110606
+2011-06-06 16:18 bukind
+  feature: minValidityTime minval is 1 sec
+
+=====================================================================
 2011-06-03 17:56 bukind informer-build-20110603
 2011-06-03 16:44 bukind
   bugfix: checking for msg.text==null
