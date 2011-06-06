@@ -36,14 +36,7 @@ public class MultiTableGroupSendDS extends DBDataSource implements GroupSendData
 
   private final SimpleDateFormat sdf;
 
-  private final TreeMap<String, Table> tables = new TreeMap<String, Table>(new Comparator<String>() {
-    public int compare(String o1, String o2) {
-      return o2.compareTo(o1);
-    }
-  });
-
-  private String currentTable;
-
+  private final LinkedList<Table> tables = new LinkedList<Table>();
 
 
   public MultiTableGroupSendDS() throws DataSourceException {
@@ -77,197 +70,168 @@ public class MultiTableGroupSendDS extends DBDataSource implements GroupSendData
     if(logger.isDebugEnabled()) {
       logger.debug("Sender Group DS: Insert message size="+addresses.size());
     }
+    Table t;
+    Date date;
+    int id;
     try{
-      Table t;
-      Date date;
-      int id;
-      try{
-        createLock.lock();
-        date = new Date();
-        id = maxId.incrementAndGet();
-      }finally {
-        createLock.unlock();
-      }
-      t = getTableByDate(date);
-      t.insert(addresses, id);
-      return id;
-    }catch (SQLException e){
-      throw new DataSourceException(e);
+      createLock.lock();
+      date = new Date();
+      id = maxId.incrementAndGet();
+    }finally {
+      createLock.unlock();
     }
+    t = getTableByDate(date);
+    t.insert(addresses, id);
+    return id;
   }
 
   public Map<String, Integer> statuses(int id) throws DataSourceException {
     if(logger.isDebugEnabled()) {
       logger.debug("Sender Group DS: get statuses for id="+id);
     }
-    try{
-      Table t = getTable(id);
-      if(t == null) {
-        return null;
-      }
-      return t.statuses(id);
-    }catch (SQLException e) {
-      throw new DataSourceException(e);
+    Table t = getTableByMsgId(id);
+    if(t == null) {
+      return null;
     }
+    return t.statuses(id);
   }
 
   public int updateStatus(long smppId, int status) throws DataSourceException {
     if(logger.isDebugEnabled()) {
       logger.debug("Sender Group DS: Update status: smppId="+smppId+" status="+status);
     }
-    try{
-      Table t = getTable(null);
-      if(t == null) {
-        return 0;
-      }
-      int res = t.updateStatus(smppId, status);
-      if(res < 1) {  //record not fount
-        t = getTableAfter(t.nameSuffix);
-        res = (t == null) ? 0 : t.updateStatus(smppId, status);
-      }
-      return res;
-    }catch (SQLException e){
-      throw new DataSourceException(e);
+    Table t = getCurrentTable();
+    if(t == null) {
+      return 0;
     }
+    int res = t.updateStatus(smppId, status);
+    if(res < 1) {  //record not fount
+      t = getTableAfter(t.date);
+      res = (t == null) ? 0 : t.updateStatus(smppId, status);
+    }
+    return res;
   }
 
   public int updateStatus(int id, String address, int status) throws DataSourceException {
     if(logger.isDebugEnabled()) {
       logger.debug("Sender Group DS: update status by address="+address+" for id="+id+". Status="+status);
     }
-    try{
-      Table t = getTable(id);
-      if(t == null) {
-        return 0;
-      }
-      return t.updateStatus(id, address, status);
-    }catch (SQLException e) {
-      throw new DataSourceException(e);
+    Table t = getTableByMsgId(id);
+    if(t == null) {
+      return 0;
     }
+    return t.updateStatus(id, address, status);
   }
 
   public int updateSmppId(int id, String address, long smppId) throws DataSourceException {
     if(logger.isDebugEnabled()) {
       logger.debug("Sender Group DS: update smppId by address="+address+" for id="+id+". SmppId="+smppId);
     }
-    try{
-      Table t = getTable(id);
-      if(t == null) {
-        return 0;
-      }
-      return t.updateSmppId(id, address, smppId);
-    }catch (SQLException e) {
-      throw new DataSourceException(e);
+    Table t = getTableByMsgId(id);
+    if(t == null) {
+      return 0;
     }
+    return t.updateSmppId(id, address, smppId);
   }
 
   private static String formatByDate(String pattern, String ... values) {
     return (new MessageFormat(pattern)).format(values, new StringBuffer(), null).toString();
   }
 
+
+  private TreeSet<String> getTableNames(Connection conn) throws DataSourceException, SQLException {
+    TreeSet<String> _tables = new TreeSet<String>(new Comparator<String>() {
+      public int compare(String o1, String o2) {
+        return o2.compareTo(o1);
+      }
+    });
+    PreparedStatement st = null;
+    ResultSet rs = null;
+    try{
+      st = conn.prepareStatement(getSql("get.tables"));
+      rs = st.executeQuery();
+      while(rs.next()) {
+        _tables.add(rs.getString(1));
+      }
+    }finally {
+      _close(rs, st, null);
+    }
+    return _tables;
+  }
+
   private void initTables() throws DataSourceException {
-    Calendar c = Calendar.getInstance();
     Connection conn = null;
     try{
       conn = pool.getConnection();
-      currentTable = sdf.format(c.getTime());
-      addTable(currentTable, conn, false);
-
-      String nameSuffix;
-
-      for(int i=0; i < MAX_PREVIOUS_PERIODS;i++) {
-        c.add(PERIOD, -1);
-        nameSuffix = sdf.format(c.getTime());
-        addTable(nameSuffix, conn, true);
-      }
-
-      for(int i=0; i < 12 - MAX_PREVIOUS_PERIODS;i++) {   // удаление более старых
-        c.add(PERIOD, -1);
-        nameSuffix = sdf.format(c.getTime());
-        new Table(nameSuffix).drop(conn);
-      }
 
       int max = 0;
-      for(Table t : tables.values()) {
-        if(t.table_maxId > max) {
-          max = t.table_maxId;
+      String prefix = getSql("table.prefix");
+      for(String t : getTableNames(conn)) {
+        Table table = new Table(t.substring(prefix.length()), conn, false);
+        tables.add(table);
+        if(table.table_maxId > max) {
+          max = table.table_maxId;
         }
       }
       maxId = new AtomicInteger(max);
 
+      removeOldTable(conn);
+
     } catch (SQLException e) {
+      pool.invalidateConnection(conn);
       throw new DataSourceException(e);
     }finally {
       _close(null, null, conn);
     }
   }
 
-  private void switchTables() throws SQLException {
-    Calendar c = Calendar.getInstance();
-    String _newTable = sdf.format(c.getTime());
-
-    if(!_newTable.equals(currentTable)) {
+  private void removeOldTable(Connection conn) throws SQLException {
+    while(tables.size() > MAX_PREVIOUS_PERIODS + 1 ) {
+      Table toRemove  = tables.getLast();  // самая старая таблица
+      toRemove.drop(conn);
+      tables.removeLast();
       if(logger.isDebugEnabled()) {
-        logger.debug("Sender Group DS: new month became. Create table: "+_newTable);
-      }
-
-      Connection conn = null;
-      Table nT =  new Table(_newTable);
-      try{
-        conn = pool.getConnection();
-        nT.initTable(conn);
-        nT.table_maxId = maxId.get();
-        tables.put(_newTable, nT);
-        currentTable = _newTable;
-        if(tables.size() > MAX_PREVIOUS_PERIODS + 1 ) {
-          String key = tables.lastKey();
-          Table toRemove  = tables.get(key);  // самая старая таблица
-          toRemove.drop(conn);
-          tables.remove(key);
-          if(logger.isDebugEnabled()) {
-            logger.debug("Sender Group DS: old table is removed: "+toRemove.nameSuffix);
-          }
-        }
-      }finally {
-        _close(null, null, conn);
+        logger.debug("Sender DS: old table is removed: "+toRemove.date);
       }
     }
   }
 
-  private void addTable(String nameSuffix, Connection conn, boolean checkExist) throws SQLException {
-    Table t = new Table(nameSuffix);
-    if(checkExist && !t.isExist(conn)) {
-      return;
-    }
-    t.initTable(conn);
-    tables.put(nameSuffix, t);
-  }
 
 
   /**
    * Возвращает таблицу, где может находиться запись с recordId.
    * Если recordId == null, вернёт текущую таблицу.
    * При необходимости создаёт новые таблицы и чистит устаревшие
-   * @param recordId идентификатор записи
+   * @param msgId идентификатор записи
    * @return таблица
-   * @throws SQLException ошибка при создании или удалении таблиц
    */
-  private synchronized Table getTable(Integer recordId) throws SQLException {
-
-    switchTables();
-
-    Table table;
-    if(recordId == null) {
-      table = tables.get(currentTable);
-    }else {
-      table = _getTableById(recordId);
+  private synchronized Table getTableByMsgId(Integer msgId) {
+    Table cand = null;
+    for(Table t : tables) {       // (список отсортирован по убыванию даты)
+      int m = t.table_maxId;
+      if(msgId > m) {
+        break;
+      }else {
+        cand = t;
+      }
     }
     if(logger.isDebugEnabled()) {
-      logger.debug("Sender Group DS: Get table.Table for id="+recordId+": "+(table == null ? null : table.nameSuffix));
+      logger.debug("Sender DS: Get table.Table for id="+msgId+": "+(cand == null ? null : cand.date));
+    }
+    return cand;
+  }
+
+  /**
+   * Возвращает текущую таблицу
+   * @return таблица
+   */
+  private synchronized Table getCurrentTable() {
+    Table table = tables.getFirst();
+    if(logger.isDebugEnabled()) {
+      logger.debug("Sender DS: Get current table. Table: "+(table == null ? null : table.date));
     }
     return table;
   }
-
 
   /**
    * Возвращает таблицу по дате.
@@ -275,16 +239,44 @@ public class MultiTableGroupSendDS extends DBDataSource implements GroupSendData
    * При необходимости создаёт новые таблицы и чистит устаревшие
    * @param date дата
    * @return таблица
-   * @throws SQLException ошибка при создании или удалении таблиц
+   * @throws DataSourceException ошибка при создании или удалении таблиц
    */
-  private synchronized Table getTableByDate(Date date) throws SQLException {
+  private synchronized Table getTableByDate(Date date) throws DataSourceException {
 
-    switchTables();
+    String sDate = sdf.format(date);
 
-    String sDate = date == null ? null : sdf.format(date);
-    Table table = sDate == null ? tables.get(currentTable) : tables.get(sDate);
+    Table table = null;
+
+    if (tables.getFirst().date.compareTo(sDate) < 0) {
+
+      if(logger.isDebugEnabled()) {
+        logger.debug("Sender DS: new month became. Create table: "+sDate);
+      }
+
+      Connection conn = null;
+      try{
+        conn = pool.getConnection();
+        table =  new Table(sDate, conn, true);
+        table.table_maxId = maxId.get();
+        tables.addFirst(table);
+        removeOldTable(conn);
+      }catch (SQLException e){
+        pool.invalidateConnection(conn);
+        throw new DataSourceException(e);
+      } finally {
+        _close(null, null, conn);
+      }
+    } else {
+      for(Table t : tables) {
+        if(t.date.equals(sDate)) {
+          table =  t;
+          break;
+        }
+      }
+    }
+
     if(logger.isDebugEnabled()) {
-      logger.debug("Sender Group DS: Get table by date="+sDate+".Table is "+(table == null ? null : table.nameSuffix));
+      logger.debug("Sender DS: Get table by date="+sDate+".Table is "+(table == null ? null : table.date));
     }
     return table;
   }
@@ -294,54 +286,30 @@ public class MultiTableGroupSendDS extends DBDataSource implements GroupSendData
    * При необходимости создаёт новые таблицы и чистит устаревшие
    * @param tableBefore данная таблица
    * @return таблица
-   * @throws SQLException ошибка при создании или удалении таблиц
    */
-  private synchronized Table getTableAfter(String tableBefore) throws SQLException {
+  private synchronized Table getTableAfter(String tableBefore) {
 
-    switchTables();
-
-    boolean foundBefore = false;
-    Table result = null;
-    for(Map.Entry<String, Table> e : tables.entrySet()) {
-      if(foundBefore) {
-        result = e.getValue();
-        break;
-      }
-      if(e.getKey().equals(tableBefore)) {
-        foundBefore = true;
-      }
+    for (Table t : tables) {
+      if (t.date.compareTo(tableBefore) < 0)
+        return t;
     }
-    if(logger.isDebugEnabled()) {
-      logger.debug("Sender Group DS: Table after "+tableBefore+" is "+(result == null ? null : result.nameSuffix));
-    }
-    return result;
-  }
 
 
-  private Table _getTableById(int id) {
-    Table cand = null;
-    for(Table t : tables.values()) {       // (список отсортирован по убыванию даты)
-      int m = t.table_maxId;
-      if(id > m) {
-        return cand;
-      }else {
-        cand = t;
-      }
-    }
-    return cand;
+    return null;
   }
 
 
   private class Table {
 
-    private final String nameSuffix;
+    private final String date;
     private final Map<String, String> statements = new HashMap<String, String>(10);
 
     private int table_maxId;
 
-    private Table(String nameSuffix) {
-      this.nameSuffix = nameSuffix;
+    private Table(String date, Connection conn, boolean create) throws SQLException{
+      this.date = date;
       prepareStatements();
+      initTable(conn, create);
     }
 
     private int loadMaxId(Connection conn) throws SQLException {
@@ -356,28 +324,16 @@ public class MultiTableGroupSendDS extends DBDataSource implements GroupSendData
       }
     }
 
-    private boolean isExist(Connection conn) throws SQLException {
-      PreparedStatement st = null;
-      ResultSet rs = null;
-      try{
-        st = conn.prepareStatement(statements.get("check.exist"));
-        rs = st.executeQuery();
-        return rs.next();
-      }finally {
-        if(st != null) {
-          _close(rs, st, null);
-        }
-      }
-    }
-
-    private void initTable(Connection conn) throws SQLException {
-      PreparedStatement st = null;
-      try{
-        st = conn.prepareStatement(statements.get("create.table"));
-        st.executeUpdate();
-      }finally {
-        if(st != null) {
-          _close(null, st, null);
+    private void initTable(Connection conn, boolean create) throws SQLException {
+      if(create) {
+        PreparedStatement st = null;
+        try{
+          st = conn.prepareStatement(statements.get("create.table"));
+          st.executeUpdate();
+        }finally {
+          if(st != null) {
+            _close(null, st, null);
+          }
         }
       }
       table_maxId = loadMaxId(conn);
@@ -386,7 +342,7 @@ public class MultiTableGroupSendDS extends DBDataSource implements GroupSendData
 
     private void prepareStatements() {
       for (Map.Entry<String, String> e : getSqls().entrySet()) {
-        statements.put(e.getKey(), formatByDate(e.getValue(), nameSuffix));
+        statements.put(e.getKey(), formatByDate(e.getValue(), date));
       }
     }
 

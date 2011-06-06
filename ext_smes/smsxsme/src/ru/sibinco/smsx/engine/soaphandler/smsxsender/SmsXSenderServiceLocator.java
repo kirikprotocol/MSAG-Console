@@ -156,7 +156,7 @@ public class SmsXSenderServiceLocator extends org.apache.axis.client.Service imp
   }
 
   private static void sendSms(SmsXSender client) throws Exception {
-    Date endDate = new SimpleDateFormat("yyyyMMddHHmm").parse("201106021601");
+    Date endDate = new SimpleDateFormat("yyyyMMddHHmm").parse("201106061701");
     PrintWriter writer = null;
     try{
       writer = new PrintWriter(new BufferedWriter(new FileWriter("test_sms_sender."+System.currentTimeMillis()+".csv")));

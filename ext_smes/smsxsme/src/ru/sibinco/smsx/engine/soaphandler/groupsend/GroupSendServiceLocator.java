@@ -156,7 +156,7 @@ if ("GroupSend".equals(portName)) {
   }
 
   private static void sendGroupSms(GroupSend client) throws Exception {
-    Date endDate = new SimpleDateFormat("yyyyMMddHHmm").parse("201106021601");
+    Date endDate = new SimpleDateFormat("yyyyMMddHHmm").parse("201106061701");
     PrintWriter writer = null;
     try{
       writer = new PrintWriter(new BufferedWriter(new FileWriter("test_sender."+System.currentTimeMillis()+".csv")));
