@@ -10,11 +10,11 @@ class AbsSpeedLimiter
 public:
     AbsSpeedLimiter( unsigned speed,
                      unsigned nbins = 20,
-                     usectime_type interval = 1000000ULL ) :
+                     unsigned interval = 1 ) :
     nbins_(nbins), bins_(new int[nbins]), 
     first_(0), last_(0), count_(0),
-    bwid_(interval/nbins),
-    maxCount_(unsigned(speed*nbins*bwid_/tuPerSec))
+    bwid_(interval*tuPerSec/nbins),
+    maxCount_(speed*interval)
     {
         bins_[0] = 0;
         lastTime_ = currentTimeMicro();
@@ -27,7 +27,7 @@ public:
 
 
     void setSpeed( unsigned speed ) {
-        maxCount_ = unsigned(speed*nbins_*bwid_/tuPerSec);
+        maxCount_ = speed*(((nbins+1)*bwid_-1)/tuPerSec);
     }
 
 
