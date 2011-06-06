@@ -148,6 +148,7 @@ public class DeliveryTest {
       d.validate(); fail();
     }catch (AdminException e){}
 
+    d.setValidityPeriod(new Time(0,0,20));
     d.setValidityPeriod(new Time(23,0,0));
     d.setValidityPeriod(new Time(25,0,0));
     d.setValidityPeriod(new Time(0,1,0));
