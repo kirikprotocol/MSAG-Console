@@ -33,17 +33,17 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
 
   private final static int PERIOD = Calendar.MONTH;
 
-  private AtomicInteger maxId;
+  private AtomicInteger maxId; // todo Убрать. В таблице сделать метод getNextId()
 
   private final SimpleDateFormat sdf;
 
-  private final TreeMap<String, Table> tables = new TreeMap<String, Table>(new Comparator<String>() {
+  private final TreeMap<String, Table> tables = new TreeMap<String, Table>(new Comparator<String>() { //todo Заменить на LinkedList, отсортированный по дате
     public int compare(String o1, String o2) {
       return o2.compareTo(o1);
     }
   });
 
-  private String currentTable;
+  private String currentTable; // todo Убрать. В голове списка будет лежать текущая таблица.
 
 
   public MultiTableSenderDS() throws DataSourceException {
@@ -204,18 +204,18 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
       }
       maxId = new AtomicInteger(max);
 
-    } catch (SQLException e) {
+    } catch (SQLException e) {   //todo pool.invalidateConnection(conn)
       throw new DataSourceException(e);
     }finally {
       _close(null, null, conn);
     }
   }
 
-  private void switchTables() throws SQLException {
+  private void switchTables() throws SQLException { //todo кидать DataSourceException
     Calendar c = Calendar.getInstance();
     String _newTable = sdf.format(c.getTime());
 
-    if(!_newTable.equals(currentTable)) {
+    if(!_newTable.equals(currentTable)) { //todo упростить. Оставить только удаление старых таблиц. Этот метод надо дергать только из getTableByDate() т.к только там создается новая таблица.
       if(logger.isDebugEnabled()) {
         logger.debug("Sender DS: new month became. Create table: "+_newTable);
       }
@@ -237,6 +237,7 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
             logger.debug("Sender DS: old table is removed: "+toRemove.nameSuffix);
           }
         }
+        // todo catch (SQLException) в котором делать pool.invalidateConnection() и кидать DataSourceException()
       }finally {
         _close(null, null, conn);
       }
@@ -262,7 +263,7 @@ public class MultiTableSenderDS extends DBDataSource implements SenderDataSource
    * @return таблица
    * @throws SQLException ошибка при создании или удалении таблиц
    */
-  private synchronized Table getTable(Integer recordId) throws SQLException {
+  private synchronized Table getTable(Integer recordId) throws SQLException { //todo Разбить на 3: getTableByMsgId(), getTableByDate(), getCurrentTable()
 
     switchTables();
 
