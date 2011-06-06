@@ -218,11 +218,12 @@ public class UserTest {
   public void testValidHours() throws AdminException {
     User o = createUser();
     try {
-      o.setValidityPeriod(new Time(0,0,30));
+      o.setValidityPeriod(new Time(0,0,10));
       o.validate(); fail();
     }
     catch (AdminException e){}
 
+    o.setValidityPeriod(new Time(0,0,21));
     o.setValidityPeriod(new Time(0,1,0));
     o.setValidityPeriod(new Time(25,0,0));
   }
