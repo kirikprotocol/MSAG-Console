@@ -16,6 +16,7 @@
     <param name="reschedule_config" type="string">schedule.xml</param>
     <param name="service_center_address" type="string">@smsc.sc.address@</param>
     <param name="ussd_center_address" type="string">@smsc.ussd.address@</param>
+    <!--param name="receipt_orig_address" type="string"></param-->
     <param name="ussd_ssn" type="int">@smsc.ussd.ssn@</param>
     <param name="add_ussd_ssn" type="string"></param>
     <param name="systemId" type="string">smscsme</param>
@@ -84,6 +85,7 @@
       <!--param name="maxStoreSize" type="string">3Gb</param-->
       <param name="minRollTime" type="int">@localstore.minrolltime@</param>
       <param name="msgidfile" type="string">@localstore.dir@/msgid.bin</param>
+      <param name="storeFilesCount" type="int">@localstore.storefilescount@</param>
     </section>
 
   </section>
