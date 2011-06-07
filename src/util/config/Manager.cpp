@@ -114,7 +114,7 @@ void Manager::reinit()
           }break;
           case cvtBool:
           {
-            if(oldMng->config.getInt(pit->second.c_str())!=manager->config.getInt(pit->second.c_str()))
+            if(oldMng->config.getBool(pit->second.c_str())!=manager->config.getInt(pit->second.c_str()))
             {
               if(cpwt==cpwtIndividual)
               {
