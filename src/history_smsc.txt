@@ -656,3 +656,9 @@ B3209: Apr 21, 2011
 
 B3210: May 16, 2011
     SMSC	ussd string parsing logic now configurable in map limits
+
+B3211: Jun 06, 2011
+    SMSC	New operative store logic, several files instead of one. Only oldest store will be rolled.
+    SMSC	Orig address for receipts separated form smsc address. See config.xml - core.receipt_orig_address
+    SMSC	Set smsc address in case of TCAP continue on MO SMS, see maplimits.xml - sms.openRespRealAddr
+    SMSC	Some config parameters can be changed in run time. See Administration Guide

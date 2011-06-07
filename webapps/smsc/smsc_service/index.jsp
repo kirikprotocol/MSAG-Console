@@ -68,7 +68,6 @@
     param(out, "smsc.core.stateCount", "core.state_machines_count", bean.getIntParam("core.state_machines_count"));
     param(out, "smsc.core.mainLoopsCount", "core.mainLoopsCount", bean.getIntParam("core.mainLoopsCount"));
     param(out, "smsc.core.queueLimit", "core.eventQueueLimit", bean.getIntParam("core.eventQueueLimit"));
-    param(out, "smsc.core.schedConfig", "core.reschedule_config", bean.getStringParam("core.reschedule_config"));
     param(out, "smsc.core.servAddr", "core.service_center_address", bean.getStringParam("core.service_center_address"));
     param(out, "smsc.core.ussdAddr", "core.ussd_center_address", bean.getStringParam("core.ussd_center_address"));
     param(out, "smsc.core.ussdSSN", "core.ussd_ssn", bean.getIntParam("core.ussd_ssn"));
@@ -83,9 +82,11 @@
     param(out, "smsc.core.tzConfig", "core.timezones_config", bean.getStringParam("core.timezones_config"));
     param(out, "smsc.core.smartMultipart", "core.smartMultipartForward", bean.getBoolParam("core.smartMultipartForward"));
     param(out, "smsc.core.srcSmeSeparateRouting", "core.srcSmeSeparateRouting", bean.getBoolParam("core.srcSmeSeparateRouting"));
+    param(out, "smsc.core.schedConfig", "core.reschedule_config", bean.getStringParam("core.reschedule_config"));
+    param(out, "smsc.core.schedulerFreeBandwidthUsage", "core.schedulerFreeBandwidthUsage", bean.getIntParam("core.schedulerFreeBandwidthUsage"));
     param(out, "smsc.core.schedulerSoftLimit", "core.schedulerSoftLimit", bean.getIntParam("core.schedulerSoftLimit"));
     param(out, "smsc.core.schedulerHardLimit", "core.schedulerHardLimit", bean.getIntParam("core.schedulerHardLimit"));
-    
+    param(out, "smsc.core.speedLogFlushPeriodMin", "core.speedLogFlushPeriodMin", bean.getIntParam("core.speedLogFlushPeriodMin"));
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ core.perfomance ~~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "core.performance", "smsc.core.perfmon", false);
@@ -146,6 +147,7 @@
     }
     param(out, "smsc.mesStor.localStore.minRollTime", "MessageStore.LocalStore.minRollTime", bean.getIntParam("MessageStore.LocalStore.minRollTime"));
     param(out, "smsc.mesStor.localStore.msgidfile", "MessageStore.LocalStore.msgidfile", bean.getStringParam("MessageStore.LocalStore.msgidfile"));
+    param(out, "smsc.mesStor.localStore.storeFilesCount", "MessageStore.LocalStore.storeFilesCount", bean.getIntParam("MessageStore.LocalStore.storeFilesCount"));
     finishParams(out);
     finishSection(out);
     finishSection(out);
