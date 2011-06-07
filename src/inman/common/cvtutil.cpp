@@ -330,25 +330,23 @@ unsigned unpack7Bit2TextSafe(const unsigned char* b7buf, unsigned b7len,
 unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
 							unsigned char* text)
 {
-    unsigned	num7ch = 0;
-    unsigned	tlen = unpack7Bit2Text(b7buf, b7len, text, &num7ch);
+    unsigned    num7ch = 0;
+    unsigned    tlen = unpack7Bit2Text(b7buf, b7len, text, &num7ch);
 
-    if ((text[tlen] == '\r') && (b7len*8 - num7ch*7 == 7))
-
+    if ((text[tlen - 1] == '\r') && (b7len*8 == num7ch*7))
     /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
-	text[tlen--] = 0;
+        text[--tlen] = 0;
     return tlen;
 }
 unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
                                                         std::string & str)
 {
-    unsigned	num7ch = 0;
-    unsigned	tlen = unpack7Bit2Text(b7buf, b7len, str, &num7ch);
-
-    if ((str[tlen] == '\r') && (b7len*8 - num7ch*7 == 7))
-
+    unsigned    num7ch = 0;
+    unsigned    tlen = unpack7Bit2Text(b7buf, b7len, str, &num7ch);
+    
+    if ((str[tlen - 1] == '\r') && (b7len*8 == num7ch*7))
     /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
-	str[tlen--] = 0;
+        str[--tlen] = 0;
     return tlen;
 }
 
@@ -357,13 +355,12 @@ unsigned unpack7BitPadded2TextSafe(const unsigned char* b7buf, unsigned b7len,
 						unsigned char* text, unsigned maxtlen)
                                     throw(std::runtime_error)
 {
-    unsigned	num7ch = 0;
-    unsigned	tlen = unpack7Bit2TextSafe(b7buf, b7len, text, maxtlen, &num7ch);
+    unsigned    num7ch = 0;
+    unsigned    tlen = unpack7Bit2TextSafe(b7buf, b7len, text, maxtlen, &num7ch);
 
-    if ((text[tlen] == '\r') && (b7len*8 - num7ch*7 == 7))
-
+    if ((text[tlen - 1] == '\r') && (b7len*8 == num7ch*7))
     /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
-	text[tlen--] = 0;
+        text[--tlen] = 0;
     return tlen;
 }
 
