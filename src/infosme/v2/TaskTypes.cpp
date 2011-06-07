@@ -71,7 +71,7 @@ messagesCacheSleep(0)
 void TaskInfo::init( ConfigView* config )
 {
     if ( !log_ ) {
-        MutexGuard mg(logMtx);
+        smsc::core::synchronization::MutexGuard mg(logMtx);
         if (!log_) log_ = smsc::logger::Logger::getInstance("is2.info");
     }
 

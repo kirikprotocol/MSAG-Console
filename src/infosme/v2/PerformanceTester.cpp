@@ -8,7 +8,7 @@ int64_t messageId = 0;
 smsc::core::synchronization::Mutex lock;
 
 int64_t getNextMessageId() {
-    MutexGuard mg(lock);
+    smsc::core::synchronization::MutexGuard mg(lock);
     return ++messageId;
 }
 
@@ -25,7 +25,7 @@ smsc::logger::Logger* PerformanceTester::log_ = 0;
 void PerformanceTester::initLog()
 {
     if (!log_) {
-        MutexGuard mg(lock);
+        smsc::core::synchronization::MutexGuard mg(lock);
         if (!log_) log_ = smsc::logger::Logger::getInstance("perftest");
     }
 }
@@ -121,7 +121,7 @@ void PerformanceTester::sendDataSmResp( PduDataSmResp& resp )
 void PerformanceTester::start()
 {
     if (started_) return;
-    MutexGuard mg(mon_);
+    smsc::core::synchronization::MutexGuard mg(mon_);
     if (started_) return;
     started_ = true;
     sent_ = resp_ = recp_ = 0;
@@ -133,7 +133,7 @@ void PerformanceTester::stop()
 {
     if (!started_) return;
     {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         if (!started_) return;
         started_ = false;
         mon_.notifyAll();
@@ -144,7 +144,7 @@ void PerformanceTester::stop()
 
 int32_t PerformanceTester::getNextSeqNum()
 {
-    MutexGuard mg(seqLock_);
+    smsc::core::synchronization::MutexGuard mg(seqLock_);
     return ++seqNum_;
 }
 
@@ -163,7 +163,7 @@ int PerformanceTester::Execute()
         const msectime_type now = currentTimeMillis();
         bool isStopping = false;
         {
-            MutexGuard mg(mon_);
+            smsc::core::synchronization::MutexGuard mg(mon_);
 
             const msectime_type interval = now - startTime;
             if ( interval >= statInterval ) {
@@ -231,7 +231,7 @@ int PerformanceTester::Execute()
 void PerformanceTester::pushEvents( SmppHeader* submit, PduXSmResp* resp, PduXSm* recp )
 {
     {
-        MutexGuard mg(mon_);
+        smsc::core::synchronization::MutexGuard mg(mon_);
         if (!started_) {
             delete resp;
             delete recp;

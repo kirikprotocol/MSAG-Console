@@ -86,7 +86,7 @@ void FinalStateSaver::save( time_t          now,
 void FinalStateSaver::checkRoll( time_t now )
 {
     if ( now < nextOpen_ ) return;
-    MutexGuard mg(mtx_);
+    core::synchronization::MutexGuard mg(mtx_);
     checkRollUnsync(now);
 }
 

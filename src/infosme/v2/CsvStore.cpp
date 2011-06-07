@@ -3,6 +3,9 @@
 #include <memory>
 #include <algorithm>
 
+using smsc::core::buffers::File;
+using smsc::core::buffers::TmpBuf;
+
 namespace {
 
 inline int dec2hex(int decval)
