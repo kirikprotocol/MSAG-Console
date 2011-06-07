@@ -38,13 +38,7 @@ using namespace smsc::core::buffers;
 using namespace smsc::util::config;
 using namespace smsc::util::config::route;
 using namespace smsc::acls;
-using smsc::cluster::ApplyRoutesCommand;
-using smsc::cluster::ApplyAliasesCommand;
-using smsc::cluster::ApplyRescheduleCommand;
-using smsc::cluster::ApplyLocaleResourceCommand;
-using smsc::cluster::SmeAddCommand;
-using smsc::cluster::SmeRemoveCommand;
-using smsc::cluster::SmeUpdateCommand;
+using namespace smsc::cluster;
 
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
@@ -736,6 +730,17 @@ throw (AdminException)
   //reloadConfigsAndRestart();
   Manager::getInstance().reinit();
   smsc_log_info(logger, "new config applied.");
+  if(smsc_app_runner->getApp()->isHs())
+  {
+    Interconnect * iconn = Interconnect::getInstance();
+    if(!iconn)
+    {
+      smsc_log_warn(logger, "InterconnectManager undefined, can't send applyConfig command");
+      return;
+    }
+    ApplyConfigCommand* cmd = new ApplyConfigCommand();
+    iconn->sendCommand(cmd);
+  }
 }
 
 void SmscComponent::reloadConfigsAndRestart()
