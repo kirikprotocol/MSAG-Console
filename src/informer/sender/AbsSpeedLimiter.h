@@ -22,8 +22,8 @@ public:
     // bwid_(interval*tuPerSec/nbins),
     // maxCountPerBin_(0),
     dtmin_(0),
-    speedup_(speedup),
-    lastTime_(0)
+    lastTime_(0),
+    speedup_(speedup)
     // basespeed_(basespeed)
     {
         assert(speedup_>0);

@@ -1,3 +1,6 @@
+2011-06-07 15:50 bukind
+  feature: SMSC journal has new records for deletion of receipts
+  NOTE: the format of SMSC journal is changed
 2011-06-07 12:04 bukind
   feature: typecheck on Message, disabled by default
 2011-06-07 12:04 bukind

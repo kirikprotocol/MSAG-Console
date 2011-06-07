@@ -96,17 +96,32 @@ public:
             ReceiptData rd;
             rd.drmId.dlvId = fb.get32();
             rd.drmId.regId = fb.get32();
-            rd.drmId.msgId = fb.get64();
-            rd.endTime     = fb.get32();
-            rd.responded   = fb.get16();
-            rd.status = smsc::system::Status::OK;
-            rd.retry = false;
+            bool insert;
+            if ( rd.drmId.regId == anyRegionId ) {
+                // remove record
+                insert = false;
+            } else {
+                insert = true;
+                rd.drmId.msgId = fb.get64();
+                rd.endTime     = fb.get32();
+                rd.responded   = fb.get16();
+                rd.status = smsc::system::Status::OK;
+                rd.retry = false;
+            }
             rd.rcptId.setMsgId(fb.getCString());
-            if ( !sender_.receiptHash_.GetPtr(rd.rcptId.msgId)) {
-                ++unique_;
-                sender_.receiptHash_.Insert(rd.rcptId.msgId,
-                                            sender_.receiptList_.insert(sender_.receiptList_.begin(),rd));
-                return true;
+            if ( !insert ) {
+                ReceiptList::iterator iter;
+                if ( sender_.receiptHash_.Pop(rd.rcptId.msgId,iter) ) {
+                    --unique_;
+                    sender_.receiptList_.erase(iter);
+                }
+            } else {
+                if ( !sender_.receiptHash_.GetPtr(rd.rcptId.msgId)) {
+                    ++unique_;
+                    sender_.receiptHash_.Insert(rd.rcptId.msgId,
+                                                sender_.receiptList_.insert(sender_.receiptList_.begin(),rd));
+                    return true;
+                }
             }
             return false;
         }
@@ -160,23 +175,28 @@ public:
     }
 
 
-    unsigned journalReceiptData( const ReceiptData& rd )
+    unsigned journalReceiptData( const ReceiptData& rd, bool insert )
     {
         assert(rd.responded > 0);
         char buf[100];
         ToBuf tb(buf,sizeof(buf));
         tb.skip(LENSIZE);
         tb.set32(rd.drmId.dlvId);
-        tb.set32(rd.drmId.regId);
-        tb.set64(rd.drmId.msgId);
-        tb.set32(rd.endTime);
-        tb.set16(rd.responded);
+        if (!insert) {
+            tb.set32(anyRegionId);
+        } else {
+            tb.set32(rd.drmId.regId);
+            tb.set64(rd.drmId.msgId);
+            tb.set32(rd.endTime);
+            tb.set16(rd.responded);
+        }
         tb.setCString(rd.rcptId.msgId);
         const size_t pos = tb.getPos();
         tb.setPos(0);
         tb.set16(uint16_t(pos-LENSIZE));
-        smsc_log_debug(log_,"S='%s' storing D=%u/R=%u/M=%llu msgId='%s' %u bytes",
+        smsc_log_debug(log_,"S='%s' %s D=%u/R=%u/M=%llu msgId='%s' %u bytes",
                        sender_.smscId_.c_str(),
+                       insert ? "storing" : "removing",
                        rd.drmId.dlvId, rd.drmId.regId, rd.drmId.msgId,
                        rd.rcptId.msgId, unsigned(pos) );
         MutexGuard mg(mon_);
@@ -252,7 +272,7 @@ protected:
                     firstPass = false;
                     if (getCS()->isStopping() || isStopping_) { break; }
                     if (!rd.responded) { continue; }
-                    speedControl_.consumeQuant( journalReceiptData(rd) );
+                    speedControl_.consumeQuant( journalReceiptData(rd,true) );
                 } catch ( std::exception& e ) {
                     smsc_log_warn(log_,"S='%s' journal roller exc: %s",
                                   sender_.smscId_.c_str(), e.what());
@@ -1179,7 +1199,7 @@ bool SmscSender::processQueue( DataQueue& queue )
             iter->responded = drm.nchunks;
             iter->retry = rd.retry;
             receiptHash_.Insert(rd.rcptId.msgId,iter);
-            journal_->journalReceiptData(*iter);
+            journal_->journalReceiptData(*iter,true);
             {
                 smsc::core::synchronization::MutexGuard mg(receiptMon_);
                 receiptList_.splice(receiptList_.begin(),rcptList,iter);
@@ -1229,6 +1249,8 @@ bool SmscSender::processQueue( DataQueue& queue )
                         }
                     }
 
+                    // remove an entry from journal
+                    journal_->journalReceiptData(*iter,false);
                     receiptHash_.Delete(rd.rcptId.msgId);
                     {
                         smsc::core::synchronization::MutexGuard mg(receiptMon_);
