@@ -34,20 +34,28 @@ ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *conf
 void ApplyCommandListener::handle(const Command& command)
 {
   switch( command.getType() ){
-  case APPLYROUTES_CMD:
-    applyRoutes();
-    break;
+    case APPLYROUTES_CMD:
+      applyRoutes();
+      break;
     case APPLYALIASES_CMD:
-        applyAliases();
-    break;
+      applyAliases();
+      break;
     case APPLYRESCHEDULE_CMD:
-        applyReschedule();
-    break;
+      applyReschedule();
+      break;
     case APPLYLOCALERESOURCE_CMD:
-        applyLocalResource();
-    break;
+      applyLocalResource();
+      break;
+    case APPLYCONFIG_CMD:
+      applyConfig();
   }
 }
+
+void ApplyCommandListener::applyConfig()
+{
+  smsc::util::config::Manager::reinit();
+}
+
 
 void ApplyCommandListener::applyRoutes()
 {

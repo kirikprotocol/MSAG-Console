@@ -31,6 +31,7 @@ namespace smsc { namespace cluster
         APPLYALIASES_CMD =          0x00000001,
         APPLYRESCHEDULE_CMD =       0x00000002,
         APPLYLOCALERESOURCE_CMD =   0x00000003,
+        APPLYCONFIG_CMD =           0x00000004,
         PROFILEUPDATE_CMD =         0x00010000,
         PROFILEDELETE_CMD =         0x00010001,
         MSCREGISTRATE_CMD =         0x00020000,
@@ -142,6 +143,18 @@ namespace smsc { namespace cluster
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
+
+    class ApplyConfigCommand : public Command
+    {
+    public:
+      ApplyConfigCommand() : Command(APPLYCONFIG_CMD) {};
+
+      virtual ~ApplyConfigCommand() {};
+
+      virtual void* serialize(uint32_t &len);
+      virtual bool deserialize(void *buffer, uint32_t len);
+    };
+
 
     //=========== Profile commans ===========
 

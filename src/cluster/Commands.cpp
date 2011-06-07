@@ -146,6 +146,15 @@ namespace smsc { namespace cluster
         virtual ~ApplyLocaleResourceCommandFactory() {};
     };
 
+    class ApplyConfigCommandFactory : public CommandFactory
+    {
+    protected:
+        virtual Command* create() { return new ApplyConfigCommand(); };
+    public:
+        ApplyConfigCommandFactory() : CommandFactory(APPLYCONFIG_CMD) {};
+        virtual ~ApplyConfigCommandFactory() {};
+    };
+
     //========== profileUpdate =======================
 
     class ProfileUpdateCommandFactory : public CommandFactory
@@ -464,6 +473,7 @@ void CommandFactory::initFactories()
         static ApplyAliasesCommandFactory           _applyAliasesCommandFactory;
         static ApplyRescheduleCommandFactory        _applyRescheduleCommandFactory;
         static ApplyLocaleResourceCommandFactory    _applyLocaleResourceCommandFactory;
+        static ApplyConfigCommandFactory            _applyConfigCommandFactory;
 
         static ProfileUpdateCommandFactory      _profileUpdateCommandFactory;
         static ProfileDeleteCommandFactory      _profileDeleteCommandFactory;
@@ -587,6 +597,22 @@ bool ApplyLocaleResourceCommand::deserialize(void *buffer, uint32_t len)
     return true;
 }
 
+
+
+void* ApplyConfigCommand::serialize(uint32_t &len)
+{
+    len = 0;
+    return 0;
+}
+bool ApplyConfigCommand::deserialize(void *buffer, uint32_t len)
+{
+    if(len!=0)
+    {
+      smsc_log_warn(smsc::logger::Logger::getInstance("im.cmd"),"len>0 for empty command ApplyConfigCommand (len=%d)",len);
+    }
+
+    return true;
+}
 
 //========== profileUpdate ==========================
 

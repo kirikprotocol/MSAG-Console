@@ -25,10 +25,11 @@ class ApplyCommandListener : public CommandListener
 public:
     ApplyCommandListener(const smsc::system::SmscConfigs *configs_, /*smsc::smeman::SmeManager *smeman_, */smsc::system::Smsc * app_);
 protected:
-  void applyRoutes();
+    void applyRoutes();
     void applyAliases();
     void applyReschedule();
     void applyLocalResource();
+    void applyConfig();
     const smsc::system::SmscConfigs *configs;
     //smsc::smeman::SmeManager *smeman;
 
