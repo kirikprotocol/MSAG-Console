@@ -170,6 +170,12 @@
                     printOptionsString(out, request, bean.getJournalRoutes(), rowN++, "routes", bean.isRoutesChanged(),
                             "users.roles.routes");
                 }
+                
+                if (request.isUserInRole("smsc_service")) {
+                    printOptionsString(out, request, bean.getJournalSmsc(), rowN++, "smsc", bean.isSmscChanged(),
+                            "users.roles.smscServ");
+                }
+                
 
                 if (request.isUserInRole("subjects")) {
                     printOptionsString(out, request, bean.getJournalSubjects(), rowN++, "subjects", bean.isSubjectsChanged(),

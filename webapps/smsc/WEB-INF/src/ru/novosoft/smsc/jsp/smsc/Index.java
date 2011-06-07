@@ -84,15 +84,15 @@ public class Index extends SmscBean {
     }
 
     private int applySmsc() {
-/*    try {
+    try {
       appContext.getSmscList().applyConfig();
       statuses.setSmscChanged(false);
-      journal.clear(smscSubjectTypes);*/
-        return RESULT_OK;
-/*    } catch (AdminException e) {
+      journal.clear(smscSubjectTypes);
+      return RESULT_OK;
+    } catch (Throwable e) {
       logger.error("Couldn't apply new SMSC config", e);
       return error(SMSCErrors.error.smsc.couldntApply, e);
-    }*/
+    }
     }
 
     private int applyReschedule() {

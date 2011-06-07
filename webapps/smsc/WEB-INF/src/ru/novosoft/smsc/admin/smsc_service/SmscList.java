@@ -95,6 +95,7 @@ public final class SmscList {
     public final void applyConfig() throws AdminException {
         try {
             getSmsc().getSmscConfig().save();
+	    getSmsc().applyConfig();
         }
         catch (Exception e) {
             e.printStackTrace();
