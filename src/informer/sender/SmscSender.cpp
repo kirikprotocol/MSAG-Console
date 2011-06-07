@@ -175,33 +175,46 @@ public:
     }
 
 
-    unsigned journalReceiptData( const ReceiptData& rd, bool insert )
+    unsigned journalReceiptData( const ReceiptData& rd )
     {
-        assert(rd.responded > 0);
+        // assert(rd.responded > 0);
         char buf[100];
         ToBuf tb(buf,sizeof(buf));
         tb.skip(LENSIZE);
         tb.set32(rd.drmId.dlvId);
-        if (!insert) {
-            tb.set32(anyRegionId);
-        } else {
-            tb.set32(rd.drmId.regId);
-            tb.set64(rd.drmId.msgId);
-            tb.set32(rd.endTime);
-            tb.set16(rd.responded);
-        }
+        tb.set32(rd.drmId.regId);
+        tb.set64(rd.drmId.msgId);
+        tb.set32(rd.endTime);
+        tb.set16(rd.responded);
         tb.setCString(rd.rcptId.msgId);
         const size_t pos = tb.getPos();
         tb.setPos(0);
         tb.set16(uint16_t(pos-LENSIZE));
-        smsc_log_debug(log_,"S='%s' %s D=%u/R=%u/M=%llu msgId='%s' %u bytes",
+        smsc_log_debug(log_,"S='%s' storing D=%u/R=%u/M=%llu msgId='%s' %u bytes",
                        sender_.smscId_.c_str(),
-                       insert ? "storing" : "removing",
                        rd.drmId.dlvId, rd.drmId.regId, rd.drmId.msgId,
                        rd.rcptId.msgId, unsigned(pos) );
         MutexGuard mg(mon_);
         fg_.write(buf,pos);
         return unsigned(pos);
+    }
+
+    void deleteReceiptData( const ResponseData& rd )
+    {
+        char buf[100];
+        ToBuf tb(buf,sizeof(buf));
+        tb.skip(LENSIZE);
+        tb.set32(0);           // unused
+        tb.set32(anyRegionId); // delete record
+        tb.setCString(rd.rcptId.msgId);
+        const size_t pos = tb.getPos();
+        tb.setPos(0);
+        tb.set16(uint16_t(pos-LENSIZE));
+        smsc_log_debug(log_,"S='%s' removing msgId='%s' %u bytes",
+                       sender_.smscId_.c_str(),
+                       rd.rcptId.msgId, unsigned(pos) );
+        MutexGuard mg(mon_);
+        fg_.write(buf,pos);
     }
 
 protected:
@@ -272,7 +285,7 @@ protected:
                     firstPass = false;
                     if (getCS()->isStopping() || isStopping_) { break; }
                     if (!rd.responded) { continue; }
-                    speedControl_.consumeQuant( journalReceiptData(rd,true) );
+                    speedControl_.consumeQuant( journalReceiptData(rd) );
                 } catch ( std::exception& e ) {
                     smsc_log_warn(log_,"S='%s' journal roller exc: %s",
                                   sender_.smscId_.c_str(), e.what());
@@ -1199,7 +1212,7 @@ bool SmscSender::processQueue( DataQueue& queue )
             iter->responded = drm.nchunks;
             iter->retry = rd.retry;
             receiptHash_.Insert(rd.rcptId.msgId,iter);
-            journal_->journalReceiptData(*iter,true);
+            journal_->journalReceiptData(*iter);
             {
                 smsc::core::synchronization::MutexGuard mg(receiptMon_);
                 receiptList_.splice(receiptList_.begin(),rcptList,iter);
@@ -1250,7 +1263,6 @@ bool SmscSender::processQueue( DataQueue& queue )
                     }
 
                     // remove an entry from journal
-                    journal_->journalReceiptData(*iter,false);
                     receiptHash_.Delete(rd.rcptId.msgId);
                     {
                         smsc::core::synchronization::MutexGuard mg(receiptMon_);
@@ -1258,6 +1270,8 @@ bool SmscSender::processQueue( DataQueue& queue )
                         rcptList.splice(rcptList.begin(),receiptList_,iter);
                     }
                     rproc_.receiveReceipt(iter->drmId, retryPolicy_, rd.status, rd.retry, iter->responded );
+                    // delete smsc record only after successful processing in core
+                    journal_->deleteReceiptData(rd);
 
                 } else {
                     // still not responded, modify receipt status
