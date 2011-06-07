@@ -4,7 +4,8 @@ static char const ident[] = "$Id$";
 #include <stdio.h>
 #include "inman/common/cvtutil.hpp"
 
-static char _tstr[] = "*100*1#";
+static char _tstr[] = "Your Subscriber Id is not valid";
+//"*100*1#";
 //"*100#";
 
 /*
@@ -55,7 +56,9 @@ int main (void)
 
     memset(_buffer, 0, sizeof(_buffer));
 
-    printf("Initial ASCII Text: <%s>\n", _tstr);
+    printf("Initial ASCII Text(%u bytes): <", (unsigned)strlen(_tstr));
+    printAscii(_tstr, (unsigned)strlen(_tstr));
+    printf(">\n");
 
     len = smsc::cvtutil::packTextAs7BitPadded(_tstr, (unsigned)sizeof(_tstr)-1, _buffer);
     printf("Packed 7-Bit GSM text (%d bytes): ", len);
