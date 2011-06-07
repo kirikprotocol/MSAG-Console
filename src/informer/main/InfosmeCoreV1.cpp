@@ -438,6 +438,7 @@ void InfosmeCoreV1::start()
     {
         MutexGuard mg(startMon_);
         if (started_) return;
+        smsc_log_info(log_,"--- starting informer core ---");
         if (pvssHandler_) { pvssHandler_->start(); }
         if (pvss_) { pvss_->startup(); }
         dlvMgr_->start();
@@ -451,6 +452,7 @@ void InfosmeCoreV1::start()
           i.Next(smscId,ptr);) {
         ptr->start();
     }
+    smsc_log_info(log_,"--- informer core started ---");
 }
 
 

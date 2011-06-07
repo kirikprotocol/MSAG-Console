@@ -2,6 +2,7 @@
 #define _INFORMER_MESSAGE_H
 
 #include <list>
+#include "util/TypeInfo.h"
 #include "MessageText.h"
 #include "MessageFlags.h"
 #include "informer/io/Typedefs.h"
@@ -73,6 +74,11 @@ struct MessageLocker
     MessageLocker() : serial(nullSerial), numberOfLocks(0) {}
     MessageLocker(const MessageLocker& mlk) :
     msg(mlk.msg), serial(mlk.serial), numberOfLocks(mlk.numberOfLocks) {}
+
+#ifdef MAGICTYPECHECK
+    inline void ticheck() const { CHECKMAGTC; }
+    DECLMAGTC(MessageLocker);
+#endif
     Message                msg;
     volatile regionid_type serial;
     volatile unsigned      numberOfLocks;

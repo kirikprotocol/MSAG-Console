@@ -234,8 +234,6 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         smsc::core::synchronization::MutexGuard mg(stateLock_);
         const DlvState oldState = state_;
         if (oldState == newState) return;
-        smsc_log_debug(log_,"D=%u setState: %s into %s",dlvId,
-                       dlvStateToString(oldState), dlvStateToString(newState));
         if (oldState == DLVSTATE_CANCELLED) {
             throw InfosmeException(EXC_LOGICERROR,
                                   "D=%u is cancelled",dlvId);
@@ -257,6 +255,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             smsc_log_debug(log_,"D=%u has no regions, switch to finish",dlvId);
             newState = DLVSTATE_FINISHED;
         }
+        smsc_log_info(log_,"D=%u setState: %s into %s",dlvId,
+                      dlvStateToString(oldState), dlvStateToString(newState));
         bs.bind = (newState == DLVSTATE_ACTIVE);
         dlvInfo_->getUserInfo().incDlvStats(newState,state_); // may NOT throw
         state_ = newState;

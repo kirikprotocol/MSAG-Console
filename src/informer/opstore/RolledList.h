@@ -150,7 +150,7 @@ public:
             return false;
         }
 
-    private:
+    protected:
         // must be locked
         bool popUnsync( iterator_type iter, container_type& holder )
         {
@@ -158,7 +158,7 @@ public:
             if (it_ == iter) {
                 // upgrading to exclusive
                 it_ = rl_.container_.end();
-                nol = (iter->numberOfLocks | ~rolledMask) - 1;
+                nol = (iter->numberOfLocks & ~rolledMask) - 1;
                 if (nol & deleteMask) {
                     // cannot lock
                     smsc_log_debug(rl_.log_,"cannot lock %p nl=%x",&*iter,nol);
@@ -168,10 +168,12 @@ public:
                 ++nol;
             } else if (commonLocking(iter) != iter) {
                 return false;
+            } else {
+                nol = iter->numberOfLocks;
             }
 
             // wait until number of users become 1
-            nol = iter->numberOfLocks | deleteMask;
+            nol |= deleteMask;
             iter->numberOfLocks = nol;
             smsc_log_debug(rl_.log_,"dlocked %p nl=%x",&*iter,nol);
             while ((nol & usersMask) > 1) {
@@ -257,11 +259,11 @@ public:
         }
 
 
-    private:
+    protected:
         ItemLock( const ItemLock& it );
         ItemLock& operator = ( const ItemLock& i );
 
-    private:
+    protected:
         RolledList&   rl_;
         iterator_type it_;
     };
@@ -301,7 +303,7 @@ public:
             smsc_log_debug(rl_.log_,"stoproll dtor block=%u",rl_.rollBlockers_);
         }
 
-    private:
+    protected:
         RolledList& rl_;
     };
 

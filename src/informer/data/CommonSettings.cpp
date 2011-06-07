@@ -20,6 +20,10 @@ log_(smsc::logger::Logger::getInstance("comset")),
 utf8_(0),
 incStatBank_(0),
 licenseLimit_(licenseLimit),
+// regionSpeedLimitNBins_(25),
+// regionSpeedLimitInterval_(5),
+regionSpeedLimitSpeedup_(10),
+// regionSpeedLimitBaseSpeed_(1),
 stopping_(false),
 archive_(false),
 emergency_(false)
@@ -96,6 +100,11 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     inputJournalRollingSpeed_ = conf.getInt("inputJournalRollingSpeed",30,1,100000);
     operationalJournalRollingSpeed_ = conf.getInt("operationalJournalRollingSpeed",30,1,100000);
     smscJournalRollingSpeed_ = conf.getInt("smscJournalRollingSpeed",30,1,100000);
+
+    // regionSpeedLimitNBins_ = conf.getInt("regionSpeedLimitNBins",25,10,100);
+    // regionSpeedLimitInterval_ = conf.getInt("regionSpeedLimitInterval",5,1,10);
+    regionSpeedLimitSpeedup_ = conf.getInt("regionSpeedLimitSpeedup",10,5,200);
+    // regionSpeedLimitBaseSpeed_ = conf.getInt("regionSpeedLimitBaseSpeed",1,1,200);
 
 #ifdef CHECKCONTENTION
     const unsigned cl = conf.getInt("contentionLimit",300000,10000,10000000);

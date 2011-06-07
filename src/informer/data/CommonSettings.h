@@ -179,6 +179,21 @@ public:
         return regionRandomizationJitter_;
     }
 
+    // inline unsigned getRegionSpeedLimitNBins() const throw() {
+    // return regionSpeedLimitNBins_;
+    // }
+    // inline unsigned getRegionSpeedLimitInterval() const throw() {
+    // return regionSpeedLimitInterval_;
+    // }
+
+    inline unsigned getRegionSpeedLimitSpeedup() const throw() {
+        return regionSpeedLimitSpeedup_;
+    }
+
+    // inline unsigned getRegionSpeedLimitBaseSpeed() const throw() {
+    // return regionSpeedLimitBaseSpeed_;
+    // }
+
     // --- non-configurable parameters
 
     /// return a length of period (second) to split resend messages into.
@@ -246,6 +261,11 @@ private:
     unsigned unrespondedMessagesMax_;
     unsigned validityPeriodDefault_;
     unsigned messageTimeToLiveDefault_;
+    // unsigned regionSpeedLimitNBins_;
+    // unsigned regionSpeedLimitInterval_;
+    unsigned regionSpeedLimitSpeedup_;
+    // unsigned regionSpeedLimitBaseSpeed_;
+
     volatile bool stopping_;
     bool     archive_;
     bool     emergency_;

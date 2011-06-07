@@ -825,11 +825,13 @@ void DeliveryMgr::init()
 
 void DeliveryMgr::start()
 {
+    smsc_log_info(log_,"--- starting delivery manager ---");
     MutexGuard mg(mon_);
     if (inputRoller_) { inputRoller_->Start(); }
     if (storeRoller_) { storeRoller_->Start(); }
     if (statsDumper_) { statsDumper_->Start(); }
     Start();
+    smsc_log_info(log_,"--- delivery manager started ---");
 }
 
 

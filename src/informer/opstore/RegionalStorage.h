@@ -41,13 +41,16 @@ private:
     /// The message may be locked from modification for the time of serialization.
     typedef RolledList< MessageLocker, MessageList >    MsgList;
     // typedef MsgList::RollIter                           MsgIter;
+#ifdef MAGICTYPECHECK
+    struct                                              MsgLock;
+#else
     typedef MsgList::ItemLock                           MsgLock;
+#endif
     typedef std::multimap< msgtime_type, MsgIter >      ResendQueue;
     typedef smsc::core::buffers::IntHash64< MsgIter >   MessageHash;
     typedef smsc::core::buffers::CyclicQueue< MsgIter > NewQueue;
 
     // message locking guard fwd decl
-    // class MsgLock;
     // class StopRollingGuard;
 
 public:

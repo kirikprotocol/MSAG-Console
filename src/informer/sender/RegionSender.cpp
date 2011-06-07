@@ -1,6 +1,7 @@
 #include "RegionSender.h"
 #include "SmscSender.h"
 #include "system/status.h"
+#include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryInfo.h"
 #include "informer/io/InfosmeException.h"
 
@@ -41,7 +42,11 @@ conn_(),
 region_(r),
 taskList_(*this,2*maxScoreIncrement,log_),
 speedControl_(std::max(region_->getBandwidth(),1U)),
-speedLimiter_(std::max(region_->getBandwidth(),1U))
+speedLimiter_(std::max(region_->getBandwidth(),1U),
+              // getCS()->getRegionSpeedLimitNBins(),
+              // getCS()->getRegionSpeedLimitInterval(),
+              getCS()->getRegionSpeedLimitSpeedup())
+              // getCS()->getRegionSpeedLimitBaseSpeed())
 {
     if (!conn) {
         throw InfosmeException(EXC_LOGICERROR,"conn is null");
@@ -136,7 +141,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         } else {
             // smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
             speedControl_.consumeQuant(nchunks_);
-            speedLimiter_.consumeQuant(currentTimeMicro(),nchunks_);
+            speedLimiter_.consumeQuant(currentTime,nchunks_);
             return 0;
         }
     } catch ( std::exception& e ) {
