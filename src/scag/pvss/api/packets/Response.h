@@ -4,6 +4,7 @@
 #include "scag/pvss/common/StatusType.h"
 #include "Packet.h"
 #include "Request.h"
+#include "util/TypeInfo.h"
 
 namespace scag2 {
 namespace pvss {
@@ -24,12 +25,16 @@ public:
     virtual ~Response() {}
     virtual bool isRequest() const { return false; }
     virtual uint32_t getSeqNum() const { return seqNum_; }
-    virtual void setSeqNum( uint32_t seqNum ) { seqNum_ = seqNum; }
+    virtual void setSeqNum( uint32_t seqNum ) {
+        CHECKMAGTC;
+        seqNum_ = seqNum;
+    }
 
     virtual uint8_t getStatus() const = 0;
     // void setStatus( uint8_t status ) = 0;
 
     virtual std::string toString() const {
+        CHECKMAGTC;
         char buf[64];
         snprintf( buf, sizeof(buf), "seqNum=%d %s ", seqNum_, typeToString());
         // , statusHolderToString().c_str() );
@@ -62,6 +67,7 @@ protected:
     virtual const char* typeToString() const = 0;
 
 protected:
+    DECLMAGTC(Response);
     uint32_t   seqNum_;
     // uint8_t    status_;
 };

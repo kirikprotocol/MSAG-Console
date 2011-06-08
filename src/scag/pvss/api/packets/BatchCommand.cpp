@@ -22,6 +22,7 @@ namespace pvss {
 
 bool BatchCommand::isValid( PvssException* exc ) const
 {
+    CHECKMAGTC;
     if ( batchContent_.empty() ) {
         if ( exc ) { *exc = PvssException("batch has no commands", PvssException::BAD_REQUEST); }
         return false;
@@ -36,6 +37,7 @@ bool BatchCommand::isValid( PvssException* exc ) const
 
 std::string BatchCommand::toString() const 
 {
+    CHECKMAGTC;
     char buf[12];
     snprintf(buf,sizeof(buf)," trans=%d [",transactional_ ? 1 : 0);
     std::string rv(ProfileCommand::toString() + buf);
@@ -53,6 +55,7 @@ std::string BatchCommand::toString() const
 
 void BatchCommand::clear() 
 {
+    CHECKMAGTC;
     for ( std::vector< BatchRequestComponent* >::iterator i = batchContent_.begin();
           i != batchContent_.end();
           ++i ) {

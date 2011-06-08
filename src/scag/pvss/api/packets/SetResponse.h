@@ -14,10 +14,14 @@ public:
     virtual ~SetResponse() { logDtor(); }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
+        CHECKMAGTC;
         return visitor.visitSetResponse(*this);
     }
 
-    virtual SetResponse* clone() const { return new SetResponse(*this); }
+    virtual SetResponse* clone() const {
+        CHECKMAGTC;
+        return new SetResponse(*this);
+    }
 
 protected:
     virtual const char* typeToString() const { return "set_resp"; }

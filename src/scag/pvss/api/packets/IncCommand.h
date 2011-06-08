@@ -18,6 +18,7 @@ public:
     virtual ~IncCommand() { if (!inherited_) logDtor(); }
     
     virtual bool isValid( PvssException* exc = 0 ) const {
+        CHECKMAGTC;
         if ( ! AbstractPropertyCommand::isValid(exc) ) { return false; }
         if ( !hasIntValue() ) {
             if (exc) { *exc = PvssException("inc has wrong type",PvssException::TYPE_INCONSISTENCE); }
@@ -28,10 +29,14 @@ public:
 
     virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
+        CHECKMAGTC;
         return visitor.visitIncCommand( *this );
     }
 
-    virtual IncCommand* clone() const { return new IncCommand(*this); }
+    virtual IncCommand* clone() const {
+        CHECKMAGTC;
+        return new IncCommand(*this);
+    }
 
     bool isIncResult() const { return incResult_; }
 

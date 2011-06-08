@@ -16,25 +16,35 @@ public:
     virtual ~BatchResponse() { logDtor(); clear(); }
 
     virtual bool isValid( PvssException* exc = 0 ) const {
+        CHECKMAGTC;
         return CommandResponse::isValid(exc);
     }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
+        CHECKMAGTC;
         return visitor.visitBatchResponse(*this);
     }
 
-    virtual BatchResponse* clone() const { return new BatchResponse(*this); }
+    virtual BatchResponse* clone() const {
+        CHECKMAGTC;
+        return new BatchResponse(*this);
+    }
 
     void addComponent( BatchResponseComponent* resp ) {
+        CHECKMAGTC;
         if ( batchContent_.empty() || getStatus() == OK ) {
             setStatus( resp->getStatus() );
         }
         batchContent_.push_back( resp );
     }
 
-    const std::vector< BatchResponseComponent* >& getBatchContent() const { return batchContent_; }
+    const std::vector< BatchResponseComponent* >& getBatchContent() const {
+        CHECKMAGTC;
+        return batchContent_;
+    }
 
     std::string toString() const {
+        CHECKMAGTC;
         std::string rv(CommandResponse::toString());
         rv.reserve(200);
         rv += " [";
@@ -51,6 +61,7 @@ public:
     }
 
     void clear() {
+        CHECKMAGTC;
         CommandResponse::clear();
         for ( std::vector< BatchResponseComponent* >::iterator i = batchContent_.begin();
               i != batchContent_.end();

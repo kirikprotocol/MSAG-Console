@@ -14,12 +14,17 @@ public:
     virtual ~IncResponse() { logDtor(); }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
+        CHECKMAGTC;
         return visitor.visitIncResponse(*this);
     }
 
-    virtual IncResponse* clone() const { return new IncResponse(*this); }
+    virtual IncResponse* clone() const {
+        CHECKMAGTC;
+        return new IncResponse(*this);
+    }
 
     virtual std::string toString() const {
+        CHECKMAGTC;
         char buf[48];
         snprintf(buf,sizeof(buf)," result=%u",unsigned(result_));
         return BatchResponseComponent::toString() + buf;

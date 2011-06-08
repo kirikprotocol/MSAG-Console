@@ -34,21 +34,30 @@ public:
     void clear();
 
     void addComponent( BatchRequestComponent* req ) {
+        CHECKMAGTC;
         batchContent_.push_back( req );
         // req->setSeqNum(int(batchContent_.size()));
     }
     void addComponents( std::vector< BatchRequestComponent* >& comps ) {
+        CHECKMAGTC;
         batchContent_.insert( batchContent_.end(), comps.begin(), comps.end() );
     }
 
     virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
+        CHECKMAGTC;
         return visitor.visitBatchCommand(*this);
     }
 
-    const std::vector< BatchRequestComponent* >&  getBatchContent() const { return batchContent_; }
+    const std::vector< BatchRequestComponent* >&  getBatchContent() const {
+        CHECKMAGTC;
+        return batchContent_;
+    }
 
-    virtual BatchCommand* clone() const { return new BatchCommand(*this); }
+    virtual BatchCommand* clone() const {
+        CHECKMAGTC;
+        return new BatchCommand(*this);
+    }
 
     virtual const char* typeToString() const { return "batch"; }
 

@@ -24,16 +24,20 @@ public:
     }
 
     const Property& getProperty() const {
+        CHECKMAGTC;
         return property_;
     }
     Property& getProperty() {
+        CHECKMAGTC;
         return property_;
     }
     void setProperty( const Property& prop ) {
+        CHECKMAGTC;
         // if ( property_ ) delete property_;
         property_ = prop;
     }
     bool isValid( PvssException* exc = 0 ) const {
+        CHECKMAGTC;
         if ( ! property_.isValid() ) {
             if ( exc ) *exc = PvssException(PvssException::BAD_REQUEST,
                                             "property %s is invalid", property_.toString().c_str() );
@@ -42,6 +46,7 @@ public:
         return true;
     }
     void clear() {
+        CHECKMAGTC;
         property_ = Property();
         /*
         if ( property_ ) {
@@ -52,6 +57,7 @@ public:
     }
 
     std::string toString() const {
+        CHECKMAGTC;
         return BatchRequestComponent::toString() + " " + property_.toString();
     }
 
@@ -110,6 +116,7 @@ public:
 
 private:
     Property& createProperty() {
+        CHECKMAGTC;
         // if ( property_ == 0 ) property_ = new Property();
         return property_;
     }

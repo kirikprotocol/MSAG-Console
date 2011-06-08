@@ -17,27 +17,37 @@ public:
     virtual const Property& getProperty() const { return property_; }
     virtual Property& getProperty() { return property_; }
     void setProperty( const Property& prop ) {
+        CHECKMAGTC;
         property_ = prop;
     }
 
     virtual std::string toString() const {
+        CHECKMAGTC;
         return BatchResponseComponent::toString() + " " + property_.toString();
     }
 
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
+        CHECKMAGTC;
         return visitor.visitGetResponse(*this);
     }
 
-    virtual GetResponse* clone() const { return new GetResponse(*this); }
+    virtual GetResponse* clone() const {
+        CHECKMAGTC;
+        return new GetResponse(*this); 
+    }
 
     void clear() {
+        CHECKMAGTC;
         BatchResponseComponent::clear();
         property_ = Property();
     }
 
     /// disambiguation
-    virtual bool isRequest() const { return BatchResponseComponent::isRequest(); }
+    virtual bool isRequest() const {
+        CHECKMAGTC;
+        return BatchResponseComponent::isRequest(); 
+    }
 
     // --- for serialization
     

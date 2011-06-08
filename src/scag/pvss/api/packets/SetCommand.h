@@ -15,10 +15,14 @@ public:
     
     virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
+        CHECKMAGTC;
         return visitor.visitSetCommand(*this);
     }
 
-    virtual SetCommand* clone() const { return new SetCommand(*this); }
+    virtual SetCommand* clone() const {
+        CHECKMAGTC;
+        return new SetCommand(*this);
+    }
 
 protected:
     virtual const char* typeToString() const { return "set"; }

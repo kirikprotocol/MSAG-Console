@@ -59,7 +59,7 @@ protected:
 private:
     ProfileCommand& operator = ( const ProfileCommand& );
 
-private:
+protected:
     DECLMAGTC(ProfileCommand);
 };
 

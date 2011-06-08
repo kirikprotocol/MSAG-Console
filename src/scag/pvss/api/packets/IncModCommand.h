@@ -14,6 +14,7 @@ public:
     virtual ~IncModCommand() { logDtor(); }
     
     virtual bool isValid( PvssException* exc = 0 ) const {
+        CHECKMAGTC;
         if ( !IncCommand::isValid(exc) ) {return false;}
         //if ( modulus_ == 0 ) {
           //  if (exc) { *exc = PvssException("incmod has mod=0",PvssException::BAD_REQUEST); }
@@ -22,6 +23,7 @@ public:
         return true;
     }
     virtual std::string toString() const {
+        CHECKMAGTC;
         char buf[32];
         sprintf(buf, " mod=%u", modulus_ );
         return IncCommand::toString() + buf;
@@ -32,10 +34,14 @@ public:
 
     virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
+        CHECKMAGTC;
         return visitor.visitIncModCommand( *this );
     }
 
-    virtual IncModCommand* clone() const { return new IncModCommand(*this); }
+    virtual IncModCommand* clone() const {
+        CHECKMAGTC;
+        return new IncModCommand(*this); 
+    }
 
 protected:
     virtual const char* typeToString() const { return "incmod"; }

@@ -15,6 +15,7 @@ public:
     virtual ~GetCommand() { logDtor(); }
 
     virtual bool isValid( PvssException* exc = 0 ) const {
+        CHECKMAGTC;
         if ( varName_.empty() ) {
             if (exc) { *exc = PvssException("del has no name",PvssException::BAD_REQUEST); }
             return false;
@@ -22,6 +23,7 @@ public:
         return true;
     }
     virtual std::string toString() const {
+        CHECKMAGTC;
         return BatchRequestComponent::toString() + " var=\"" + varName_ + "\"";
     }
     virtual void clear() { varName_.clear(); }
@@ -31,10 +33,14 @@ public:
 
     virtual bool visit( ProfileCommandVisitor& visitor ) // throw ( PvapException )
     {
+        CHECKMAGTC;
         return visitor.visitGetCommand(*this);
     }
 
-    virtual GetCommand* clone() const { return new GetCommand(*this); }
+    virtual GetCommand* clone() const {
+        CHECKMAGTC;
+        return new GetCommand(*this); 
+    }
 
 protected:
     virtual const char* typeToString() const { return "get"; }

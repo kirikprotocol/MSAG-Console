@@ -18,12 +18,19 @@ public:
         clear();
     }
 
-    virtual uint8_t getStatus() const { return cmd_ ? cmd_->getStatus() : UNKNOWN; }
+    virtual uint8_t getStatus() const {
+        CHECKMAGTC;
+        return cmd_ ? cmd_->getStatus() : UNKNOWN;
+    }
 
     virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  {
+        CHECKMAGTC;
         return visitor.visitProfileResponse(*this);
     }
-    virtual ProfileResponse* clone() const { return new ProfileResponse(*this); }
+    virtual ProfileResponse* clone() const {
+        CHECKMAGTC;
+        return new ProfileResponse(*this);
+    }
     virtual bool isPing() const { return false; }
     virtual void clear() {
         if (timing_) {
@@ -33,9 +40,18 @@ public:
         delete cmd_; cmd_ = 0; 
     }
 
-    inline CommandResponse* getResponse() { return cmd_; }
-    inline const CommandResponse* getResponse() const { return cmd_; }
-    inline void setResponse( CommandResponse* resp ) { clear(); cmd_ = resp; }
+    inline CommandResponse* getResponse() {
+        CHECKMAGTC;
+        return cmd_;
+    }
+    inline const CommandResponse* getResponse() const {
+        CHECKMAGTC;
+        return cmd_;
+    }
+    inline void setResponse( CommandResponse* resp ) {
+        CHECKMAGTC;
+        clear(); cmd_ = resp;
+    }
 
     // --- timing
     virtual void startTiming( const Request& req ) {
@@ -69,6 +85,7 @@ private:
     ProfileResponse& operator = ( const ProfileResponse& other );
 
 private:
+    DECLMAGTC(ProfileResponse);
     CommandResponse* cmd_;
     mutable Timing*  timing_;
 };

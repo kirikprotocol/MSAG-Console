@@ -22,6 +22,7 @@ void CommandResponse::initLog()
 
 void CommandResponse::logDtor()
 {
+    CHECKMAGTC;
     smsc_log_debug(log_,"dtor: %p %s",this,this->toString().c_str());
 }
 

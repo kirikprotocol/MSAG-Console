@@ -14,10 +14,14 @@ public:
     virtual ~DelResponse() { logDtor(); }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
+        CHECKMAGTC;
         return visitor.visitDelResponse(*this);
     }
 
-    virtual DelResponse* clone() const { return new DelResponse(*this); }
+    virtual DelResponse* clone() const {
+        CHECKMAGTC;
+        return new DelResponse(*this);
+    }
 
 protected:
     virtual const char* typeToString() const { return "del_resp"; }
