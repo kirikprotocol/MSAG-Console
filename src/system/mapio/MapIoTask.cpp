@@ -709,8 +709,8 @@ void MapIoTask::dispatcher(int idx)
       __map_trace__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
-    /*
-    else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
+#ifdef STACK_CRASH_WORKAROUND    
+    if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
     {
       __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
       message.msg_p[5] = 0x24;
@@ -719,7 +719,7 @@ void MapIoTask::dispatcher(int idx)
       __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
       message.msg_p[8] = 0x24;
     }
-    */
+#endif    
 
     if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
        message.primitive!=MAP_GET_AC_VERSION_CONF)
