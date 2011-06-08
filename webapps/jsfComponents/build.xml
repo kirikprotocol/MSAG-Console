@@ -52,6 +52,10 @@
     <mkdir dir="${components.distr.dir}"/>
     <jar destfile="${components.distr.dir}/jsf-components.jar" basedir="${components.source.classes}" manifest="${manifest.file}"/>
 
+    <mkdir dir="${build.dir}/styles"/>
+    <copy todir="${build.dir}/styles">
+      <fileset dir="${styles.dir}"/>
+    </copy>
   </target>
 
   <target name="compile.sample" depends="distr.components">
