@@ -359,7 +359,7 @@ class ToolConfig {
 
       ConfigView sccpConfig(manager, "msc-mosm-mpart");
 
-      try { tmp_str = view.getString("sca");
+      try { tmp_str = sccpConfig.getString("sca");
             strcpy(sca,tmp_str);
       } catch (ConfigException& exc) {
         throw ConfigException("\'sca\' is unknown or missing");
