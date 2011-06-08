@@ -1,0 +1,4 @@
+informer/tests/testSpeedLimiter testSpeedLimiter \
+  -lcore-threads \
+  -linformer-io \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILD)/bin -llogger
