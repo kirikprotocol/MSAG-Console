@@ -14,7 +14,7 @@ my $silent=$ENV{SILENT} eq 'YES';
 if($ENV{VERBOSE} eq 'YES')
 {
   $cmdprefix='';
-  $verboseflags='-v -v -v'
+#  $verboseflags='-v -v -v'
 }
 
 sub readmodules{
