@@ -358,6 +358,12 @@ class ToolConfig {
 
       ConfigView sccpConfig(manager, "msc-mosm-mpart");
 
+      try { tmp_str = view.getString("sca");
+            strcpy(sca,tmp_str);
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'sca\' is unknown or missing");
+      }
+
       try { cfgspeed = sccpConfig.getInt("speed");
       } catch (ConfigException& exc) {
         throw ConfigException("\'speed\' is unknown or missing");
