@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!DOCTYPE faces-config PUBLIC
+    "-//Sun Microsystems, Inc.//DTD JavaServer Faces Config 1.2//EN"
+    "http://java.sun.com/dtd/web-facesconfig_1_1.dtd" >
+<faces-config xmlns="http://java.sun.com/xml/ns/javaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd"
+              version="2.0">
+
+  <application>
+    <default-render-kit-id>
+      org.apache.myfaces.trinidad.core
+    </default-render-kit-id>
+
+    <locale-config>
+      <default-locale>ru</default-locale>
+      <supported-locale>en</supported-locale>
+    </locale-config>
+
+  </application>
+
+
+
+  <managed-bean>
+    <managed-bean-name>index</managed-bean-name>
+    <managed-bean-class>IndexController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <navigation-rule>
+    <navigation-case>
+      <from-outcome>BUTTONS</from-outcome>
+      <to-view-id>/buttons.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>COLLAPSING_GROUP</from-outcome>
+      <to-view-id>/collapsingGroup.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>DATA_TABLE</from-outcome>
+      <to-view-id>/dataTable.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>DYNAMIC_TABLE</from-outcome>
+      <to-view-id>/dynamicTable.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>INPUT_TIME</from-outcome>
+      <to-view-id>/inputTime.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>LINES</from-outcome>
+      <to-view-id>/lines.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>MENU_BAR</from-outcome>
+      <to-view-id>/menuBar.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>PAGE_CALENDAR</from-outcome>
+      <to-view-id>/pageCalendar.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>UPDATABLE_CONTENT</from-outcome>
+      <to-view-id>/updatableContent.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>INDEX</from-outcome>
+      <to-view-id>/index.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>MESSAGES</from-outcome>
+      <to-view-id>/message.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>INPUT_DATE</from-outcome>
+      <to-view-id>/inputDate.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>PROGRESS_BAR</from-outcome>
+      <to-view-id>/progressBar.xhtml</to-view-id>
+    </navigation-case>
+  </navigation-rule>
+
+</faces-config>

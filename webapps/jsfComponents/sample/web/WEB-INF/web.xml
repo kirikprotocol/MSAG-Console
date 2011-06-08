@@ -1,0 +1,173 @@
+<?xml version = '1.0' encoding = 'utf-8'?>
+
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+         version="2.4">
+
+
+  <context-param>
+    <param-name>facelets.DEVELOPMENT</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+  <!--<context-param>-->
+    <!--<param-name>facelets.REFRESH_PERIOD</param-name>-->
+    <!--<param-value>-1</param-value>-->
+  <!--</context-param>-->
+
+
+  <!-- Trinidad file uploading 
+
+  Because MyFaces Trinidad will temporarily store incoming files (either on disk or in memory),
+  by default it limits the size of acceptable incoming requests to avoid denial-of-service attacks that might attempt
+  to fill a hard drive or flood memory with uploaded files.
+  By default, only the first 100 kilobytes in any one request will be stored in memory.
+  Once that has been filled, disk space will be used. A
+  gain, by default, that is limited to 2,000 kilobytes of disk storage for any one request for all files combined.
+  Once these limits are exceeded, the filter will throw an EOFException.
+
+  Trinidad filter ensures that the uploaded file's content is cleaned up after the request is complete.
+  -->
+  <context-param>
+    <!-- Maximum memory per request (in bytes) -->
+    <param-name>org.apache.myfaces.trinidad.UPLOAD_MAX_MEMORY</param-name>
+    <!-- Use 5000K -->
+    <param-value>5120000</param-value>
+  </context-param>
+  <context-param>
+    <!-- Maximum disk space per request (in bytes) -->
+    <param-name>org.apache.myfaces.trinidad.UPLOAD_MAX_DISK_SPACE</param-name>
+    <!-- Use 100,000K -->
+    <param-value>102400000</param-value>
+  </context-param>
+
+
+  <!-- FaceletViewHandler configuration -->
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.ALTERNATE_VIEW_HANDLER</param-name>
+    <param-value>mobi.eyeline.util.jsf.components.AjaxViewHandler</param-value>
+  </context-param>
+
+  <!-- Use documents saved as *.xhtml for Facelets -->
+  <context-param>
+    <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
+    <param-value>.xhtml</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.VIEW_MAPPINGS</param-name>
+    <param-value>*.xhtml</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.BUILD_BEFORE_RESTORE</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.RECREATE_VALUE_EXPRESSION_ON_BUILD_BEFORE_RESTORE</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.CACHE_VIEW_ROOT</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+
+  <!-- Use client-side state saving.  In Trinidad, it is an
+       optimized, token-based mechanism that is almost always a
+       better choice than the standard JSF server-side state saving. -->
+  <context-param>
+    <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+    <param-value>client</param-value>
+    <!--<param-value>server</param-value>-->
+  </context-param>
+
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.USE_APPLICATION_VIEW_CACHE</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+  <!-- If this parameter is enabled, Trinidad will automatically
+       check the modification date of your JSPs, and discard saved
+       state when they change;  this makes development easier,
+       but adds overhead that should be avoided when your application
+       is deployed -->
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.CHECK_FILE_MODIFICATION</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.CHANGE_PERSISTENCE</param-name>
+    <param-value>request</param-value>
+  </context-param>
+
+  <filter>
+    <filter-name>trinidad</filter-name>
+    <filter-class>org.apache.myfaces.trinidad.webapp.TrinidadFilter</filter-class>
+  </filter>
+
+  <filter>
+    <filter-name>extensionsFilter</filter-name>
+    <filter-class>org.apache.myfaces.webapp.filter.ExtensionsFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>trinidad</filter-name>
+    <servlet-name>faces</servlet-name>
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>extensionsFilter</filter-name>
+    <servlet-name>faces</servlet-name>
+  </filter-mapping>
+
+  <!-- Faces Servlet -->
+  <servlet>
+    <servlet-name>faces</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+  </servlet>
+
+  <!-- resource loader servlet -->
+  <servlet>
+    <servlet-name>resources</servlet-name>
+    <servlet-class>org.apache.myfaces.trinidad.webapp.ResourceServlet</servlet-class>
+  </servlet>
+
+  <!-- Faces Servlet Mappings -->
+  <servlet-mapping>
+    <servlet-name>faces</servlet-name>
+    <url-pattern>*.faces</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>faces</servlet-name>
+    <url-pattern>/faces/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>resources</servlet-name>
+    <url-pattern>/adf/*</url-pattern>
+  </servlet-mapping>
+
+  <filter-mapping>
+    <filter-name>extensionsFilter</filter-name>
+    <url-pattern>/faces/myFacesExtensionResource/*</url-pattern>
+  </filter-mapping>
+
+
+  <welcome-file-list>
+
+    <welcome-file>/index.html</welcome-file>
+  </welcome-file-list>
+
+
+
+</web-app>

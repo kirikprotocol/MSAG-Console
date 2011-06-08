@@ -1,0 +1,27 @@
+<f:view xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:eye="http://taglib.eyeline.mobi" xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<ui:composition template="/main.xhtml">
+
+  <ui:define name="content">
+
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/collapsing_group.css"/>
+
+    <h:form>
+
+      <eye:collapsingGroup  label="group" opened="false">
+        <h:panelGrid columns="1">
+          <h:outputText value="hi1"/>
+          <h:outputText value="hi2"/>
+          <h:outputText value="hi3"/>
+        </h:panelGrid>
+      </eye:collapsingGroup>
+
+    </h:form>
+
+  </ui:define>
+  </ui:composition>
+</f:view>

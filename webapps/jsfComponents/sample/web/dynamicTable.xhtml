@@ -1,0 +1,26 @@
+<f:view xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:eye="http://taglib.eyeline.mobi" xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+  <ui:composition template="/main.xhtml">
+
+    <ui:define name="content">
+
+
+      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/common.css"/>
+      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/dynamic_table.css"/>
+
+      <h:form>
+
+        <eye:dynamicTable value="#{index.dynamicTableModel}">
+          <eye:textColumn name="field1" allowEditAfterAdd="true"/>
+          <eye:textColumn name="field2" allowEditAfterAdd="true"/>
+        </eye:dynamicTable>
+
+      </h:form>
+
+    </ui:define>
+  </ui:composition>
+</f:view>

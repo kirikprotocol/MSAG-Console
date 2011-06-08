@@ -1,0 +1,42 @@
+<f:view xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<ui:composition template="/main.xhtml">
+
+  <ui:define name="content">
+
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/common.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/dataTable.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/data_table_filter.css"/>
+
+    <h:form>
+
+      <eye:dataTableFilter bean="#{index}" applyAction="query" clearAction="clear">
+
+        <h:panelGrid columns="2" width="400px">
+          <h:outputText value="Some field"/>
+          <h:inputText/>
+        </h:panelGrid>
+
+      </eye:dataTableFilter>
+
+      <eye:dataTable value="#{index.model}" var="r" selectedRows="#{index.selected}">
+        <eye:row rowId="#{r.field1}">
+          <eye:column name="field1" title="field1" sortable="true" width="30%" align="center">
+            <h:outputText value="#{r.field1}"/>
+          </eye:column>
+          <eye:column name="field2" title="field2" sortable="true" width="70%" align="center">
+            <h:outputText value="#{r.field2}"/>
+          </eye:column>                                  <!-- need common -->
+        </eye:row>
+      </eye:dataTable>
+
+    </h:form>
+  </ui:define>
+
+</ui:composition>
+
+</f:view>

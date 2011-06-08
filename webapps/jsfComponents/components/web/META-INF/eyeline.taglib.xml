@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE facelet-taglib PUBLIC
+    "-//Sun Microsystems, Inc.//DTD Facelet Taglib 1.0//EN"
+    "http://java.sun.com/dtd/facelet-taglib_1_0.dtd">
+
+<facelet-taglib>
+  <!--<library-class>mobi.eyeline.informer.web.components.EyelineTagLib</library-class>-->
+
+  <namespace>http://taglib.eyeline.mobi</namespace>
+
+  <tag>
+    <tag-name>delimiter</tag-name>
+    <source>tags/delimiter.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>inputTime</tag-name>
+    <component>
+      <component-type>inputTime</component-type>
+      <renderer-type>inputTime</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.input_time.InputTimeHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>progressBar</tag-name>
+    <source>tags/progressBar.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>inputDate</tag-name>
+    <source>tags/inputDate.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>message</tag-name>
+    <source>tags/message.xhtml</source>
+  </tag>
+
+
+  <tag>
+    <tag-name>collapsingGroup</tag-name>
+    <component>
+      <component-type>collapsingGroup</component-type>
+      <renderer-type>collapsingGroup</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.collapsing_group.CollapsingGroupHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>dynamicTable</tag-name>
+    <component>
+      <component-type>dynamicTable</component-type>
+      <renderer-type>dynamicTable</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTableHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>textColumn</tag-name>
+    <handler-class>mobi.eyeline.util.jsf.components.dynamic_table.TextColumnTagHandler</handler-class>
+  </tag>
+
+  <tag>
+    <tag-name>selectColumn</tag-name>
+    <handler-class>mobi.eyeline.util.jsf.components.dynamic_table.SelectColumnTagHandler</handler-class>
+  </tag>
+
+  <tag>
+    <tag-name>dataTableFilter</tag-name>
+    <source>tags/data_table_filter.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>buttons</tag-name>
+    <component>
+      <component-type>buttonsPanel</component-type>
+      <renderer-type>buttonsPanel</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.buttons_panel.ButtonsPanelHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>button</tag-name>
+    <component>
+      <component-type>button</component-type>
+      <renderer-type>buttonsPanel</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.buttons_panel.ButtonHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>space</tag-name>
+    <component>
+      <component-type>space</component-type>
+      <renderer-type>buttonsPanel</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.buttons_panel.SpaceHandler</handler-class>
+    </component>
+  </tag>
+  
+  <tag>
+    <tag-name>dataTable</tag-name>
+     <component>
+      <component-type>dataTable</component-type>
+      <renderer-type>dataTable</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.data_table.DataTableHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>column</tag-name>
+     <component>
+      <component-type>column</component-type>
+      <renderer-type>dataTableColumn</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.data_table.ColumnHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>row</tag-name>
+     <component>
+      <component-type>row</component-type>
+      <renderer-type>dataTableRow</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.data_table.RowHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>updatableContent</tag-name>
+    <component>
+      <component-type>updatableContent</component-type>
+      <renderer-type>updatableContent</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.updatable_content.UpdatableContentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>pageCalendar</tag-name>
+    <component>
+      <component-type>pageCalendar</component-type>
+      <renderer-type>pageCalendar</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.page_calendar.PageCalendarHandler</handler-class>
+    </component>
+  </tag>
+
+
+  <tag>
+    <tag-name>menubar</tag-name>
+     <component>
+      <component-type>menubar</component-type>
+      <renderer-type>menuBar</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.menubar.MenuBarHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>menubaritem</tag-name>
+     <component>
+      <component-type>menubaritem</component-type>
+      <renderer-type>menuBar</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.menubar.MenuBarItemHandler</handler-class>
+    </component>
+  </tag>
+
+   <tag>
+    <tag-name>menubardelimiter</tag-name>
+     <component>
+      <component-type>menubardelimiter</component-type>
+      <renderer-type>menuBar</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.menubar.MenuBarDelimiterHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>set</tag-name>
+     <component>
+      <component-type>set</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.set.SetHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>lines</tag-name>
+     <component>
+      <component-type>lines</component-type>
+      <renderer-type>lines</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.graph.LinesHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>lineChart</tag-name>
+     <component>
+      <component-type>lineChart</component-type>
+      <renderer-type>lineChart</renderer-type>
+      <handler-class>mobi.eyeline.util.jsf.components.graph.LineChartHandler</handler-class>
+    </component>
+  </tag>
+
+</facelet-taglib>

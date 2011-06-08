@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="/main.xhtml">
+
+  <ui:define name="content">
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/common.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/buttons.css"/>
+
+    <style type="text/css">
+      a, a:visited, a:hover{
+        border: 0 none;
+        color: #161E49;
+        cursor: pointer;
+        font-family: Verdana,Arial,Tahoma,Helvetica,sans,sans-serif;
+        font-size: 11px;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+    </style>
+
+    <h:form>
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink value="Button1"/>
+        </eye:button>
+        <eye:button>
+          <h:commandLink value="Button2"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <h:commandLink value="Button3"/>
+        </eye:button>
+      </eye:buttons>
+    </h:form>
+
+  </ui:define>
+</ui:composition>
+
+</html>

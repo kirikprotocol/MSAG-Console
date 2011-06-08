@@ -1,0 +1,27 @@
+<f:view xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:tr="http://myfaces.apache.org/trinidad" xmlns:eye="http://taglib.eyeline.mobi"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:f="http://java.sun.com/jsf/core">
+
+
+<ui:composition template="/main.xhtml">
+
+  <ui:define name="content">
+
+    <h:form>
+
+      <eye:message level="warn">
+        Warning!!!!
+      </eye:message>
+
+      <eye:message level="error">
+        Error!!!!
+      </eye:message>
+
+    </h:form>
+
+  </ui:define>
+</ui:composition>
+
+</f:view>

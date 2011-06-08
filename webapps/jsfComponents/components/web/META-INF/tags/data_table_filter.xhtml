@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+<ui:composition>
+
+  <script type="text/javascript" src="#{componentsResource.url['/js/data_table_filter.js']}"></script>
+
+  <div class="eyeline_data_table_filter" style="#{style == null ? '' : style}">
+  <table class="eyeline_data_table_filter" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="left" width="10%">
+        <h:outputText styleClass="eyeline_filter" value="#{eyelineComponentsMsg['filter.by']}"/>
+      </td>
+      <td align="left" width="80%">&#160;</td>
+      <td width="10%" align="right">
+        <h:commandLink value="#{eyelineComponentsMsg['apply.button']}" action="#{bean[applyAction]}" rendered="#{bean != null and applyAction != null}"/>
+        <h:commandLink id="data_table_filter" value="#{eyelineComponentsMsg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" rendered="#{bean == null or applyAction == null}"/>
+        <h:outputText value=" | " rendered="#{bean != null and clearAction != null}"/>
+        <h:commandLink value="#{eyelineComponentsMsg['clear.button']}" action="#{bean[clearAction]}" rendered="#{bean != null and clearAction != null}"/>
+      </td>
+    </tr>
+  </table>
+
+  <ui:insert/>
+  </div>
+
+</ui:composition>
+
+</html>

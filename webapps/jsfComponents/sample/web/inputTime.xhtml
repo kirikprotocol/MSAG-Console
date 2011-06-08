@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+<ui:composition template="/main.xhtml">
+
+  <ui:define name="content">
+
+    <h:form>
+
+      <h:messages/>
+
+      <h:panelGrid columns="2">
+        <eye:inputTime value="#{index.time}"/><h:commandButton value="Submit"/>
+      </h:panelGrid>
+      <br/>
+
+      <h:outputText value="Time string: #{index.timeString}"/>
+    </h:form>
+
+  </ui:define>
+</ui:composition>
+
+</html>

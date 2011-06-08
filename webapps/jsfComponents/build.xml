@@ -1,0 +1,114 @@
+<project name="jsf-components" default="distr">
+
+  <property file="build.properties"/>
+
+  <property name="components.source.classes" value="${build.dir}/.classes/components"/>
+  <property name="sample.source.classes" value="${build.dir}/.classes/sample"/>
+  <property name="sample.exploded.dir" value="${build.dir}/.exploded/sample"/>
+
+  <property name="components.distr.dir" value="${build.dir}/components"/>
+  <property name="sample.distr.dir" value="${build.dir}/sample"/>
+
+
+  <path id="components.lib">
+    <fileset dir="components/lib" includes="*.jar"/>
+  </path>
+
+  <path id="sample.lib">
+    <fileset dir="sample/lib" includes="*.jar"/>
+  </path>
+
+  <target name="clean">
+    <delete dir="${build.dir}" failonerror="false"/>
+  </target>
+
+
+  <target name="compile.components" depends="clean">
+    <mkdir dir="${components.source.classes}"/>
+    <javac srcdir="components/java" destdir="${components.source.classes}" classpathref="components.lib" debug="true"/>
+  </target>
+
+
+  <target name="distr.components" depends="compile.components">
+
+    <property name="manifest.file" value="${build.dir}/components_manifest.mf"/>
+
+    <manifest file="${manifest.file}">
+      <attribute name="Implementation-Title" value="${implementation.components.title}"/>
+      <attribute name="Implementation-Version" value="${implementation.version}"/>
+      <attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
+    </manifest>
+
+    <copy todir="${components.source.classes}">
+      <fileset dir="components/java" includes="**/*.js"/>
+    </copy>
+    <native2ascii src="components/java" dest="${components.source.classes}" ext=".properties" includes="**/*.properties"/>
+
+    <mkdir dir="${components.source.classes}/META-INF"/>
+    <copy todir="${components.source.classes}/META-INF">
+      <fileset dir="components/web/META-INF"/>
+    </copy>
+
+    <mkdir dir="${components.distr.dir}"/>
+    <jar destfile="${components.distr.dir}/jsf-components.jar" basedir="${components.source.classes}" manifest="${manifest.file}"/>
+
+  </target>
+
+  <target name="compile.sample" depends="distr.components">
+    <mkdir dir="${sample.source.classes}"/>
+    <path id="components.lib">
+      <fileset dir="${components.distr.dir}" includes="*.jar"/>
+    </path>
+    <javac srcdir="sample/java" destdir="${sample.source.classes}" debug="true">
+      <classpath refid="sample.lib"/>
+      <classpath refid="components.lib"/>
+    </javac>
+  </target>
+
+
+  <target name="explode.sample" depends="compile.sample">
+
+    <property name="manifest.file" value="${build.dir}/sample_manifest.mf"/>
+
+    <manifest file="${manifest.file}">
+      <attribute name="Implementation-Title" value="${implementation.sample.title}"/>
+      <attribute name="Implementation-Version" value="${implementation.version}"/>
+      <attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
+    </manifest>
+
+
+    <mkdir dir="${sample.exploded.dir}"/>
+    <mkdir dir="${sample.exploded.dir}/WEB-INF"/>
+
+    <copy todir="${sample.exploded.dir}">
+      <fileset dir="sample/web"/>
+    </copy>
+
+    <mkdir dir="${sample.exploded.dir}/WEB-INF/lib"/>
+    <copy todir="${sample.exploded.dir}/WEB-INF/lib">
+      <fileset dir="sample/lib"/>
+      <fileset dir="${components.distr.dir}" includes="*.jar"/>
+    </copy>
+
+    <jar destfile="${sample.exploded.dir}/WEB-INF/lib/jsf-sample.jar"
+         basedir="${sample.source.classes}" manifest="${manifest.file}"/>
+
+  </target>
+
+
+  <target name="distr.eyeline.sample" depends="explode.sample">
+
+    <copy todir="${sample.exploded.dir}">
+      <fileset dir="${styles.dir}/eyeline"/>
+    </copy>
+
+    <mkdir dir="${sample.distr.dir}"/>
+    <war basedir="${sample.exploded.dir}" destfile="${sample.distr.dir}/jsf-sample.war" manifest="${manifest.file}"/>
+  </target>
+
+
+  <target name="distr" depends="distr.eyeline.sample">
+  </target>
+
+
+</project>

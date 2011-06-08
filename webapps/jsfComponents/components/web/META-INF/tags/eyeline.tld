@@ -1,0 +1,688 @@
+<taglib>
+  <tlib-version>1.0</tlib-version>
+  <jsp-version>1.2</jsp-version>
+  <short-name>eye</short-name>
+  <uri>http://taglib.eyeline.mobi</uri>
+  <description>
+  </description>
+
+  <!-- INPUT DATE -->
+
+  <tag>
+    <name>inputDate</name>
+    <description>Ввод даты</description>
+
+    <attribute>
+      <name>type</name>
+      <description>Тип (date | time | short_time | both | full)</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>value</name>
+      <description>Значение</description>
+      <type>java.util.Date</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>id</name>
+      <description>id</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <name>popupCalendar</name>
+      <description>Всплывающий календарь (по умолчанию: true)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>required</name>
+      <description>Обязательный параметр (по умолчанию: false)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>readonly</name>
+      <description>По умолчанию: false</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>disabled</name>
+      <description>Компонент отключен (по умолчанию: false)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>autocomplete</name>
+      <description>Автозаполнение (по умолчанию: false)</description>
+      <type>boolean</type>
+    </attribute>
+
+  </tag>
+
+  <tag>
+    <name>inputTime</name>
+    <description>Ввод времени</description>
+
+    <attribute>
+      <name>id</name>
+      <description>id</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <name>value</name>
+      <description>Значение</description>
+      <type>mobi.eyeline.informer.util.Time</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>errorMessage</name>
+      <description>Сообщение об ошибке в случае некорректно введенного значения</description>
+      <type>String</type>
+    </attribute>
+
+  </tag>
+
+
+  <!-- STATUS -->
+  <tag>
+    <name>status</name>
+    <description>Значок статуса</description>
+
+    <attribute>
+      <name>status</name>
+      <description>Статус ('Planned',  'Active', 'Paused', 'Cancelled' либо 'Finished')</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать или нет (по умолчанию: да)</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+  </tag>
+
+  <!-- DELIMITER -->
+  <tag>
+    <name>delimiter</name>
+    <description>Вертикальный разделитель, замена &lt;p/&gt;</description>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+  </tag>
+
+  <!-- MENU BAR -->
+
+  <tag>
+    <name>menubar</name>
+    <description>Элемент с выпадающим меню</description>
+    <attribute>
+      <name>label</name>
+      <required>true</required>
+      <description>Заголовок</description>
+    </attribute>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+      <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>menubaritem</name>
+    <description>Элемент menubar</description>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+      <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>menubardelimiter</name>
+    <description>Разделитель в меню</description>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+      <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
+  </tag>
+
+
+  <!-- PROGRESS BAR -->
+
+  <tag>
+    <name>progressBar</name>
+    <description>Шкала отображения динамики процесса</description>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <name>current</name>
+      <description>Текущее значение</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>maximum</name>
+      <description>Максимальное значение</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>width</name>
+      <description>Ширина шкалы в пикселях</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>height</name>
+      <description>Высота шкалы в пикселях</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать элемент или нет (по умолчанию: да)</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>percents</name>
+      <description>Показывать проценты или нет</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>bgcolor</name>
+      <description>Цвет шкалы</description>
+      <type>java.lang.String</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>fontColor</name>
+      <description>Цвет шрифта</description>
+      <type>java.lang.String</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>fontSize</name>
+      <description>Размер шрифта</description>
+      <type>int</type>
+      <required>false</required>
+    </attribute>
+
+  </tag>
+
+  <!-- UPDATABLE CONTENT -->
+
+  <tag>
+    <name>updatableContent</name>
+    <description>Блок с обновляющимся содержимым</description>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <name>updatePeriod</name>
+      <description>Период обновления</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>enabled</name>
+      <description>Вкл/выкл обновления</description>
+      <type>boolean</type>
+    </attribute>
+
+  </tag>
+
+  <!-- COLLAPSING GROUP -->
+
+  <tag>
+    <name>collapsingGroup</name>
+    <description>Группа элементов с возможностью скрытия</description>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>label</name>
+      <description>Название (заголовок) группы, отображаемый на странице</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>opened</name>
+      <description>Флаг, определяющий будет ли группа открыта по-умолчанию, или нет.</description>
+      <type>boolean</type>
+    </attribute>
+  </tag>
+
+  <!-- DYNAMIC TABLE -->
+
+  <tag>
+    <name>dynamicTable</name>
+    <description>Таблица с возможностью добавления и удаления строк</description>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>value</name>
+      <description>
+        Экземпляр класса DynamicTableModel, из которого будут браться данные для таблицы при её отображении
+        и куда будут записываться данные после модификации таблицы
+      </description>
+      <type>mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>textColumn</name>
+    <description>Колонка в dynamicTable, содержащая текстовые поля ввода</description>
+
+    <attribute>
+      <name>name</name>
+      <description>Название колонки. Служит ключем при чтении/записи данных в DynamicTableRow</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>allowEditAfterAdd</name>
+      <description>Флаг, разрешающий или запрещающий редактирование поля, после добавления его в таблицу</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>maxLength</name>
+      <description>Максимальное количество символов</description>
+      <type>int</type>
+    </attribute>
+
+    <attribute>
+      <name>width</name>
+      <description>Ширина колонки в пикселях или процентах</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <name>title</name>
+      <description>заголовок колонки</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+  </tag>
+
+  <tag>
+    <name>selectColumn</name>
+    <description>Колонка в dynamicTable, содержащая поля с select</description>
+    <attribute>
+      <name>name</name>
+      <description>Название колонки. Служит ключем при чтении/записи данных в DynamicTableRow</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>allowEditAfterAdd</name>
+      <description>Флаг, разрешающий или запрещающий редактирование поля, после добавления его в таблицу</description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>values</name>
+      <description>Список значений, которые можно выбрать в select</description>
+      <type>java.util.List</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>uniqueValues</name>
+      <description>Флаг, разрешающий или запрещающий установку одинаковых значений в столбец таблицы.</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>width</name>
+      <description>Ширина колонки в пикселях или процентах</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <name>title</name>
+      <description>заголовок колонки</description>
+      <type>java.lang.String</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>pageSubtitle</name>
+    <description>Подзаголовок на странице</description>
+    <attribute>
+      <name>value</name>
+      <description>Текст подзаголовка</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>buttons</name>
+    <description>Строка с кнопками</description>
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, означающий отображать или нет таблицу</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>space</name>
+    <description>Разделитель типа "горизонтальная пружина" в buttons</description>
+  </tag>
+
+  <tag>
+    <name>button</name>
+    <description>Кнопка в buttons</description>
+  </tag>
+
+  <tag>
+    <name>dataTable</name>
+    <description>Многостраничная таблица</description>
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, означающий отображать или нет таблицу</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+    <attribute>
+      <name>value</name>
+      <description>Атрибут, описывающий откуда брать модель для таблицы</description>
+      <type>mobi.eyeline.informer.web.components.data_table.model.DataTableModel</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>autoUpdate</name>
+      <description>Период обновления таблицы в секундах. При наличии этого атрибута содержимое таблицы автоматически обновляется.</description>
+      <type>int</type>
+    </attribute>
+    <attribute>
+      <name>pageSize</name>
+      <description>Количество строк на одной странице по-умолчанию</description>
+      <type>int</type>
+    </attribute>
+    <attribute>
+      <name>pageSizeRendered</name>
+      <description>Можно ли изменять кол-во строк на странице с веб-интерфейса (по умолчанию: можно)</description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>selectedRows</name>
+      <description>Тег, описывающий куда передать список идентификаторов выделенных строк таблицы</description>
+      <type>java.util.List</type>
+    </attribute>
+    <attribute>
+      <name>updateUsingSubmit</name>
+      <description>
+        Флаг, описывающий способ обновления собержимого таблицы. Если флаг равен true, то содержимое таблицы (при сортировке, перемещении по страницам)
+        будет обновляться петем сабмита формы. В противном случае таблица будет обновляться через Ajax.
+      </description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>var</name>
+      <description>Название переменной на странице, в которую будет записываться текущая строка или внутренняя строка</description>
+      <type>java.lang.String</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>column</name>
+    <description>Колонка в dataTable</description>
+    <attribute>
+      <name>name</name>
+      <description>Название колонки. Используется при получении данных из модели</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>title</name>
+      <description>Заголовок колонки</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>sortable</name>
+      <description>Флаг, разрешающий или запрещающий сортировку по данной колонке</description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>width</name>
+      <description>Ширина колонки в процентах или пикселях</description>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>align</name>
+      <description>Выравнивание содержимого колонки</description>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>defaultSortOrder</name>
+      <description>Сортировка по-умолчанию. Возможные значения: asc, desc. Атрибут может быть установлен только для одной колонки в таблице.</description>
+      <type>java.lang.String</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>row</name>
+    <description>Строка в dataTable.</description>
+    <attribute>
+      <name>rowId</name>
+      <description>Идентификатор текущей строки.</description>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>opened</name>
+      <description>Флаг, разрешающий или запрещающий раскрытие содержимого строки</description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>innerData</name>
+      <description>Флаг, сообщающий есть ли внутри строки значение или нет</description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>innerRows</name>
+      <description>Атрибут, описывающий как можно получить внутренние строки для данной строки</description>
+      <type>java.util.List</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>dataTableFilter</name>
+    <description>
+      Секция с фильтрами для dataTable. Может содержать одну кнопку "Применить" или две кнопки: "Применить" и "Очистить".
+      Если заданы атрибуты bean и applyAction, то по нажатию на кнопку "Применить" вызывается указанный метод у бина.
+      В противном случае при нажатии кнопки "Применить" сабмитается форма, в которой находится dataTableFilter.
+      Если заданы атрибуьы bean и clearAction, то отображается кнопка "Очистить" при нажатии на которую вызывается соответствующий метод бина.
+    </description>
+    <attribute>
+      <name>bean</name>
+      <description>Бин, экшены которого будут вызываться</description>
+    </attribute>
+    <attribute>
+      <name>applyAction</name>
+      <description>Название метода бина, который надо вызвать при нажатии кнопки "Применить"</description>
+    </attribute>
+    <attribute>
+      <name>clearAction</name>
+      <description>Название метода бина, который надо вызвать при нажатии кнопки "Очистить"</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>validatePort</name>
+    <description>Проверка принадлежности введенного значения диапозону портов</description>
+  </tag>
+
+  <tag>
+    <name>validatePositive</name>
+    <description>Проверка принадлежности введенного значения интервалу положительных чисел</description>
+  </tag>
+
+  <tag>
+    <name>validateEmail</name>
+    <description>Проверка корректности адреса электронной почты</description>
+  </tag>
+
+  <tag>
+    <name>validatePhone</name>
+    <description>Проверка корректности номера телефона</description>
+  </tag>
+
+  <tag>
+    <name>validateMask</name>
+    <description>Проверка корректности маски телефона</description>
+  </tag>
+
+  <tag>
+    <name>message</name>
+    <description>Вывод сообщения на экран</description>
+    <attribute>
+      <name>level</name>
+      <required>true</required>
+      <description>Уровень сообщения: информация, предупреждение или ошибка.
+        Значение: либо 'info', либо 'warn', либо 'error'</description>
+    </attribute>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+      <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>pageCalendar</name>
+    <description>Календарь, отображаемый на странице</description>
+    <attribute>
+      <name>var</name>
+      <description>Название переменной на странице, в которую будет записываться текущий объект календаря, полученный из модели</description>
+      <required>true</required>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>value</name>
+      <description>Модель календаря</description>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>set</name>
+    <description>Задает значение переменной</description>
+    <attribute>
+      <name>var</name>
+      <description>Название переменной на странице, в которую будет записываться значение</description>
+      <required>true</required>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>value</name>
+      <description>Значение</description>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>lines</name>
+    <attribute>
+      <name>labels</name>
+      <type>java.util.List</type>
+      <required>true</required>
+      <description>Названия для точек оси Х</description>
+    </attribute>
+    <attribute>
+      <name>height</name>
+      <type>int</type>
+      <required>true</required>
+      <description>Высота графика</description>
+    </attribute>
+    <attribute>
+      <name>width</name>
+      <type>int</type>
+      <required>true</required>
+      <description>Ширина графика</description>
+    </attribute>
+    <attribute>
+      <name>updatePeriod</name>
+      <type>int</type>
+      <description>Период обновления в секундах. Если период равен нулю, то компонент не обновляется</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>lineChart</name>
+    <attribute>
+      <name>values</name>
+      <required>true</required>
+      <description>Массив координат точек графика (двумерный)</description>
+    </attribute>
+    <attribute>
+      <name>color</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+      <description>Цвет линии (к примеру: #F44)</description>
+    </attribute>
+    <attribute>
+      <name>shade</name>
+      <type>boolean</type>
+      <description>Закрашивать или нет область подграфика</description>
+    </attribute>
+  </tag>
+
+</taglib>
