@@ -1,0 +1,31 @@
+td.eyeline_collapsing_group_opened,
+td.eyeline_collapsing_group_closed {
+  background-repeat: no-repeat;
+  padding-left: 5px;
+  height: 17px;
+}
+
+td.eyeline_collapsing_group_opened {
+  border-bottom: 1px solid #161E49;
+
+}
+
+
+
+td.eyeline_collapsing_group_flag_opened,
+td.eyeline_collapsing_group_flag_closed {
+  background: no-repeat left;
+/*padding-left: 18px;*/
+  width: 15px;
+  height: 17px;
+  cursor: pointer;
+}
+
+td.eyeline_collapsing_group_flag_closed {
+  background-image: url(../images/list_closed.gif);
+}
+
+td.eyeline_collapsing_group_flag_opened {
+  background-image: url(../images/list_opened.gif);
+  /*border-bottom: 1px solid #161E49;*/
+}
