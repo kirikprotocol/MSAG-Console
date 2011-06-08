@@ -53,8 +53,8 @@ public:
 
   static inline bool isInitialized()
   {
-    smsc::core::synchronization::MutexGuard guard(static_mutex);
-    return initialized;
+      // smsc::core::synchronization::MutexGuard guard(static_mutex);
+      return initialized;
   }
 
   static void Init();
@@ -88,10 +88,11 @@ public:
     return name;
   }
 
-  inline void setAppender(Appender * newAppender) {
-    smsc::core::synchronization::MutexGuard guard(mutex);
-    appender = newAppender;
-  }
+  // NOTE: this method is not safe
+  // inline void setAppender(Appender * newAppender) {
+  // smsc::core::synchronization::MutexGuard guard(mutex);
+  // appender = newAppender;
+  // }
 
   inline bool isLogLevelEnabled(const LogLevel _logLevel) throw() {
     //smsc::core::synchronization::MutexGuard guard(mutex);
@@ -258,10 +259,13 @@ private:
   }
   
   Logger(const char * const logCategoryName, const LogLevel logLevel, Appender * const appender);
+#ifdef NEWLOGGER
+  unsigned prefixLength; // a length required by appender (including trailing \0)
+#endif
   LogLevel logLevel;
   const char* const name;
-  Appender * appender;
-  smsc::core::synchronization::Mutex mutex;
+  Appender * appender;   // NOTE: appender cannot be changed!
+  // smsc::core::synchronization::Mutex mutex;
 
   // disable copying
   Logger(const Logger & copy);
@@ -269,7 +273,7 @@ private:
   Logger & operator=(const Logger & other);
   inline void setLogLevel(const LogLevel level) throw()
   {
-    smsc::core::synchronization::MutexGuard guard(mutex);
+    // smsc::core::synchronization::MutexGuard guard(mutex);
     logLevel = level;
   }
 };

@@ -187,7 +187,23 @@ void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
   }
 }
 
+#ifdef NEWLOGGER
+unsigned RollingIntervalAppender::getPrefixLength() throw()
+{
+    static unsigned pl = 0;
+    if (!pl) {
+        char buf[200];
+        timeval tp;
+        gettimeofday(&tp,0);
+        pl = logPrefix(buf,tp,'I',"hello");
+    }
+    return pl;
+}
+
+unsigned RollingIntervalAppender::logPrefix(char* buf, timeval tp, const char logLevelName, const char* category) throw()
+#else
 void RollingIntervalAppender::log(timeval tp,const char logLevelName, const char * const category, const char * const message) throw()
+#endif
 {
   //D dd-mm hh:mm:ss,sss TTT CatLast___:message
   ::tm ltm;
@@ -195,12 +211,27 @@ void RollingIntervalAppender::log(timeval tp,const char logLevelName, const char
   ::localtime_r(&tp.tv_sec, &ltm);
   pthread_t thrId=::pthread_self();
   long msec=tp.tv_usec/1000;
+#ifdef NEWLOGGER
+  int res = sprintf(buf,"%c %02d-%02d-%04d %02d:%02d:%02d,%03d %03u %10.10s:",
+                    logLevelName, ltm.tm_mday, ltm.tm_mon+1, ltm.tm_year+1900,
+                    ltm.tm_hour, ltm.tm_min, ltm.tm_sec,
+                    int(msec), unsigned(thrId), category);
+  return unsigned(res);
+}
 
+void RollingIntervalAppender::write(timeval tp, const char logLevelName, const char* category, char* buffer, size_t length) throw()
+{
+  time_t dat = tp.tv_sec;
+  buffer[logPrefix(buffer,tp,logLevelName,category)] = ' ';
+  buffer[length++] = '\n';
+  const size_t desiredLength = length;
+#endif
   smsc::core::synchronization::MutexGuard guard(mutex);
 
   if((dat - lastIntervalStart) / interval > 0)
       rollover(dat);
 
+#ifndef NEWLOGGER
   char timeStr[32];
   const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m-%Y %H:%M:%S", &ltm);
   timeStr[timeStrLength] = 0;
@@ -208,13 +239,19 @@ void RollingIntervalAppender::log(timeval tp,const char logLevelName, const char
   TmpBuf<char, 4096> buffer(desiredLength+1);
   const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u %10.10s: %s\n", logLevelName, timeStr, unsigned(msec), unsigned(thrId), category, message);
   buffer[desiredLength] = 0;
+#endif
 
-  if(file.isOpened())
-  {
-    file.Write(buffer, length < desiredLength ? length : desiredLength);
-    file.Flush();
-  }else
-    fwrite(buffer, length < desiredLength ? length : desiredLength, 1, stderr);
+  try {
+      if(file.isOpened())
+      {
+          file.Write(buffer, length < desiredLength ? length : desiredLength);
+          file.Flush();
+      }else {
+          fwrite(buffer, length < desiredLength ? length : desiredLength, 1, stderr);
+      }
+  } catch (std::exception& e) {
+      fprintf(stderr,"EXCEPTION IN LOGGER:%s\n",e.what());
+  }
 }
 
 }}
