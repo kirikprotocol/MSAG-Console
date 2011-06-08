@@ -15,6 +15,7 @@ public:
   Appender(const char * const name);
   virtual ~Appender() {};
 #ifdef NEWLOGGER
+  // returns the length required for the prefix including trailing \0
   virtual unsigned getPrefixLength() throw() = 0;
 
   // write the formatted message into appender;

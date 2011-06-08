@@ -147,19 +147,27 @@ void RollingFileAppender::rollover() throw()
 }
 
 #ifdef NEWLOGGER
-unsigned RollingFileAppender::getPrefixLength() throw()
-{
-    static unsigned pl = 0;
-    if (!pl) {
-        char buf[200];
-        timeval tp;
-        gettimeofday(&tp,0);
-        pl = logPrefix(buf,tp,'I',"hello");
-    }
-    return pl;
+namespace {
+unsigned PREFIXLENGTH = 0;
+const char* PREFIXFORMAT = "%c %s,%03d %03u %10.10s:";
 }
 
-unsigned RollingFileAppender::logPrefix(char* buf, timeval tp, const char logLevelName, const char* category) throw()
+unsigned RollingFileAppender::getPrefixLength() throw()
+{
+    if (!PREFIXLENGTH) {
+        char buf[200];
+        ::tm lcltm;
+        time_t t = time(0);
+        localtime_r(&t,&lcltm);
+        char timestr[128];
+        strftime(timestr,sizeof(timestr)/sizeof(timestr[0]),"%d-%m %H:%M:%S",&lcltm);
+        PREFIXLENGTH = unsigned(sprintf(buf,PREFIXFORMAT,'I',timestr,1,unsigned(::pthread_self()),"hello")) + 1;
+    }
+    return PREFIXLENGTH;
+}
+
+// unsigned RollingFileAppender::logPrefix(char* buf, timeval tp, const char logLevelName, const char* category) throw()
+void RollingFileAppender::write(timeval tp, const char logLevelName, const char* category, char* buffer, size_t length) throw()
 #else
 void RollingFileAppender::log(timeval tp,const char logLevelName, const char * const category, const char * const message) throw()
 #endif
@@ -170,15 +178,11 @@ void RollingFileAppender::log(timeval tp,const char logLevelName, const char * c
   pthread_t thrId=::pthread_self();
   long msec=tp.tv_usec/1000;
 #ifdef NEWLOGGER
-  int res = sprintf(buf,"%c %02d-%02d %02d:%02d:%02d,%03d %03u %10.10s:",
-                    logLevelName, lcltm.tm_mday, lcltm.tm_mon+1, lcltm.tm_hour,
-                    lcltm.tm_min, lcltm.tm_sec, int(msec), unsigned(thrId), category);
-  return unsigned(res);
-}
-
-void RollingFileAppender::write(timeval tp, const char logLevelName, const char* category, char* buffer, size_t length) throw()
-{
-  buffer[logPrefix(buffer,tp,logLevelName,category)] = ' ';
+    char timestr[128];
+    strftime(timestr,sizeof(timestr)/sizeof(timestr[0]),"%d-%m %H:%M:%S",&lcltm);
+    buffer[snprintf(buffer,PREFIXLENGTH,PREFIXFORMAT,
+                    logLevelName, timestr, int(msec), unsigned(thrId), category)] = ' ';
+    // buffer[PREFIXLENGTH] = ' ';
   buffer[length++] = '\n';
   const size_t desiredLength = length;
 #else

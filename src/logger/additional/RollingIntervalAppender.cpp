@@ -195,7 +195,7 @@ unsigned RollingIntervalAppender::getPrefixLength() throw()
         char buf[200];
         timeval tp;
         gettimeofday(&tp,0);
-        pl = logPrefix(buf,tp,'I',"hello");
+        pl = logPrefix(buf,tp,'I',"hello") + 1;
     }
     return pl;
 }
