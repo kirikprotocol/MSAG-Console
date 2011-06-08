@@ -1,0 +1,8 @@
+scag/tests/testUCS2UTF testUCS2UTF \
+  -lscag-util-encodings \
+  -lscag-util-singleton \
+  -lutil-recoder-recode_dll \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil \
+  -lscag-exc \
+  $(LIBICONV)
