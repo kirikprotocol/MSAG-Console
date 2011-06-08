@@ -353,6 +353,7 @@ class ToolConfig {
     ToolConfig(Logger* _logger):logger(_logger){}
     void read(Manager& manager)
     {
+      char* tmp_str;
       if (!manager.findSection("msc-mosm-mpart"))
         throw ConfigException("\'msc-mosm-mpart\' section is missed");
 
