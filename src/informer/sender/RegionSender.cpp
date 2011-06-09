@@ -3,6 +3,8 @@
 #include "system/status.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryInfo.h"
+#include "informer/data/DeliveryActivator.h"
+#include "informer/data/UserInfo.h"
 #include "informer/io/InfosmeException.h"
 
 namespace {
@@ -200,6 +202,23 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
     try {
         if ( ptr->getState() == DLVSTATE_ACTIVE ) {
             // delivery is active
+            const DeliveryInfo& info = ptr->getDlvInfo();
+            const msgtime_type activeTime = 
+                info.isBoundToLocalTime() ? localTime_ :
+                msgtime_type(currentTime_ / tuPerSec);
+            // compare start/end date
+            if ( activeTime < info.getStartDate() ) {
+                // too early
+                return std::min(info.getStartDate()-activeTime,sleepTimeException);
+            } else if ( activeTime > info.getEndDate() ) {
+                // too late, request detach
+                std::vector<regionid_type> regs(1,getRegionId());
+                DeliveryActivator& da = info.getUserInfo().getDA();
+                da.startCancelThread(info.getDlvId(),getRegionId());
+                da.deliveryRegions(info.getDlvId(),regs,false);
+                return sleepTimeException;
+            }
+
             const int sleepTimeNotReady = ptr->getNextMessage(currentTime_,
                                                               weekTime_,
                                                               msg_);

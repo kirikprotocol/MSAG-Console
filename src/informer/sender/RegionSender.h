@@ -105,7 +105,8 @@ private:
     Message                              msg_;    // a cache
 
     usectime_type                      currentTime_;
-    int                                weekTime_;  // local weektime (seconds since monday midnight)
+    msgtime_type                       localTime_;  // local time
+    int                                weekTime_;   // local weektime (seconds since monday midnight)
     int                                untilActiveEnd_; // number of seconds until AE
     int                                nchunks_;   // used to pass nchunks from send
 };

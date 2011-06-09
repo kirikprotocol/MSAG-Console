@@ -91,7 +91,7 @@ public:
     void checkFinalize();
 
     /// invoked to cancel all messages from operative storage
-    void cancelOperativeStorage();
+    void cancelOperativeStorage( regionid_type regionId );
 
     void writeDeliveryInfoData();
 

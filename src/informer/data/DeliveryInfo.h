@@ -48,6 +48,7 @@ struct DeliveryInfoData
   std::string sourceAddress;
   bool finalDlvRecords;
   bool finalMsgRecords;
+  bool boundToLocalTime;
 };
 
 
@@ -99,6 +100,8 @@ public:
     inline unsigned getPriority() const { return data_.priority; }
 
     inline bool isTransactional() const { return data_.transactionMode; }
+
+    inline bool isBoundToLocalTime() const { return data_.boundToLocalTime; }
 
     inline bool wantFinalMsgRecords() const { return data_.finalMsgRecords; }
     inline bool wantFinalDlvRecords() const { return data_.finalDlvRecords; }

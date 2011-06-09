@@ -79,6 +79,7 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   did.sourceAddress=di.getSourceAddress();
   did.finalDlvRecords=di.getFinalDlvRecords();
   did.finalMsgRecords=di.getFinalMsgRecords();
+  did.boundToLocalTime=di.getBoundToLocalTime();
 }
 
 void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoData& did)
@@ -146,7 +147,7 @@ void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoDa
   di.setSourceAddress(did.sourceAddress);
   di.setFinalDlvRecords(did.finalDlvRecords);
   di.setFinalMsgRecords(did.finalMsgRecords);
-
+  di.setBoundToLocalTime(did.boundToLocalTime);
 }
 
 std::string msgTimeToDateStr(msgtime_type t)

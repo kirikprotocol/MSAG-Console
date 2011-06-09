@@ -99,6 +99,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         data.sourceAddress = config.getString("sourceAddress");
         data.finalDlvRecords = config.getBool("finalDlvRecords",false);
         data.finalMsgRecords = config.getBool("finalMsgRecords",false);
+        data.boundToLocalTime = config.getBool("boundToLocalTime",false);
 
     } catch (std::exception& e) {
         throw InfosmeException(EXC_CONFIG,"D=%u config, exc: %s",dlvId,e.what());
@@ -527,19 +528,25 @@ void DeliveryImpl::checkFinalize()
 }
 
 
-void DeliveryImpl::cancelOperativeStorage()
+void DeliveryImpl::cancelOperativeStorage( regionid_type regionId )
 {
     dlvid_type dlvId = getDlvId();
-    smsc_log_debug(log_,"D=%u cancellation of operative storage started",dlvId);
+    smsc_log_debug(log_,"R=%d/D=%u cancellation of operative storage started",
+                   regionId, dlvId);
     std::vector< regionid_type > regIds;
-    getRegionList(regIds);
+    if (regionId == anyRegionId ) {
+        getRegionList(regIds);
+    } else {
+        regIds.push_back(regionId);
+    }
     for ( std::vector<regionid_type>::const_iterator i = regIds.begin();
           i != regIds.end(); ++i ) {
         RegionalStoragePtr ptr = getRegionalStorage(*i,false);
         if (ptr.get()) { ptr->cancelOperativeStorage(); }
         if (getCS()->isStopping()) { break; }
     }
-    smsc_log_debug(log_,"D=%u cancellation of operative storage finished",dlvId);
+    smsc_log_debug(log_,"R=%d/D=%u cancellation of operative storage finished",
+                   regionId,dlvId);
 }
 
 
@@ -613,6 +620,7 @@ void DeliveryImpl::writeDeliveryInfoData()
     }
     config.setBool("finalDlvRecords",data.finalDlvRecords);
     config.setBool("finalMsgRecords",data.finalMsgRecords);
+    config.setBool("boundToLocalTime",data.boundToLocalTime);
 
     char buf[100];
     const dlvid_type dlvId = getDlvId();

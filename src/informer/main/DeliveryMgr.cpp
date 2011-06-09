@@ -487,21 +487,22 @@ private:
 class DeliveryMgr::CancelTask : public smsc::core::threads::ThreadedTask
 {
 public:
-    CancelTask( dlvid_type dlvId, DeliveryMgr& mgr ) :
-    dlvId_(dlvId), mgr_(mgr) {}
+    CancelTask( dlvid_type dlvId, regionid_type regionId, DeliveryMgr& mgr ) :
+    dlvId_(dlvId), regId_(regionId), mgr_(mgr) {}
 
     virtual ~CancelTask() {}
     virtual const char* taskName() { return "cancel"; }
     virtual int Execute() {
         DeliveryImplPtr ptr;
         if (!mgr_.innerGetDelivery(dlvId_,ptr) || !ptr ) { return 1; }
-        ptr->cancelOperativeStorage();
+        ptr->cancelOperativeStorage(regId_);
         return 0;
     }
 
 private:
-    dlvid_type   dlvId_;
-    DeliveryMgr& mgr_;
+    dlvid_type    dlvId_;
+    regionid_type regId_;
+    DeliveryMgr&  mgr_;
 };
 
 
@@ -1142,7 +1143,7 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         mon_.notify();
     } else if (newState == DLVSTATE_CANCELLED) {
-        startCancelThread(dlvId);
+        startCancelThread(dlvId,anyRegionId);
     }
     // return true if we need to activate delivery regions
     return newState == DLVSTATE_ACTIVE;
@@ -1230,10 +1231,10 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
 }
 
 
-void DeliveryMgr::startCancelThread( dlvid_type dlvId )
+void DeliveryMgr::startCancelThread( dlvid_type dlvId, regionid_type regionId )
 {
-    smsc_log_info(log_,"D=%u start cancellation task",dlvId);
-    ctp_.startTask( new CancelTask(dlvId,*this) );
+    smsc_log_info(log_,"R=%d/D=%u start cancellation task",regionId,dlvId);
+    ctp_.startTask( new CancelTask(dlvId,regionId,*this) );
 }
 
 
@@ -1427,9 +1428,10 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
             dlvPtr->writeDeliveryInfoData();
         }
     }
-    if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() &&
+    if ( state == DLVSTATE_CANCELLED && 
+         !getCS()->isArchive() &&
          !getCS()->isEmergency() ) {
-        startCancelThread(dlvId);
+        startCancelThread(dlvId,anyRegionId);
     }
 }
 

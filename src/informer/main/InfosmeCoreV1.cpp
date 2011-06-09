@@ -932,9 +932,9 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
 }
 
 
-void InfosmeCoreV1::startCancelThread( dlvid_type dlvId )
+void InfosmeCoreV1::startCancelThread( dlvid_type dlvId, regionid_type regionId )
 {
-    dlvMgr_->startCancelThread(dlvId);
+    dlvMgr_->startCancelThread(dlvId,regionId);
 }
 
 

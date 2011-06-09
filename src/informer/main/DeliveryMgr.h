@@ -59,8 +59,8 @@ public:
                             const Delivery& dlv );
 
     /// this methods adds a threaded task which is going to cancel
-    /// all messages in the delivery.
-    void startCancelThread( dlvid_type dlvId );
+    /// all messages in the regionId storage (or all if anyRegionId).
+    void startCancelThread( dlvid_type dlvId, regionid_type regionId );
 
 protected:
     /// get delivery w/o automatic reading from disk

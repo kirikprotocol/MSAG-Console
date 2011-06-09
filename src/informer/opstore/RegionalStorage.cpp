@@ -338,7 +338,9 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     }
 
     const msgtime_type currentTime(msgtime_type(usecTime/tuPerSec));
+    /*
     {
+        // NOTE: this check is moved into RegionSender.
         const msgtime_type ed = info.getEndDate();
         if ( ed != 0 && currentTime > ed ) {
             // the dlv should be stopped
@@ -348,6 +350,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
             return 10*tuPerSec;
         }
     }
+     */
 
     msgtime_type uploadNextResend = 0;
     do { // fake loop

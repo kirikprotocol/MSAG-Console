@@ -87,7 +87,7 @@ bool Region::hasEqualMasks( const Region& r ) const
 }
 
 
-int Region::getLocalWeekTime( msgtime_type now ) const
+int Region::getLocalWeekTime( msgtime_type now, msgtime_type* local ) const
 {
     // move into local time
     now += getTimezone();
@@ -109,6 +109,7 @@ int Region::getLocalWeekTime( msgtime_type now ) const
                    result / daynight, result % daynight / 3600,
                    result % daynight / 60 % 60 );
      */
+    if (local) { *local = now + dst; }
     return result;
 }
 

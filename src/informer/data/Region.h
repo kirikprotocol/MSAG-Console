@@ -48,8 +48,9 @@ public:
     void swap( Region& r );
     bool hasEqualMasks( const Region& r ) const;
 
-    /// return local week time since the start of the week (seconds)
-    int getLocalWeekTime( msgtime_type now ) const;
+    /// return local week time since the start of the week (seconds).
+    /// Also, optionally returns the local time.
+    int getLocalWeekTime( msgtime_type now, msgtime_type* local = 0 ) const;
 
 private:
     inline void ref() {
