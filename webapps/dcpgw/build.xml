@@ -48,9 +48,7 @@
         <chmod file="${DISTR_DIR}/${ant.project.name}.jar" perm="u+x"/>
 
         <copy todir="${DISTR_DIR}/config">
-          <fileset dir="${conf.dir}">
-            <include name="**/*.properties"/>
-          </fileset>
+          <fileset dir="${conf.dir}"/>
         </copy>
 
     </target>

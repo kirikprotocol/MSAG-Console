@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<Deliveries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:noNamespaceSchemaLocation="mapping.xsd">
+    <Users>
+        <User login="stepanovd" password="stepanovd"/>
+    </Users>
+    <Delivery id="1" user="stepanovd">
+        <Sns>
+            <Sn>12345</Sn>
+            <Sn>23456</Sn>
+        </Sns>
+    </Delivery>
+</Deliveries>

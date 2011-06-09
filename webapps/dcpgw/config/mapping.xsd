@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:element name="Deliveries" type="DeliveriesType"/>
+
+    <xsd:complexType name="DeliveriesType">
+        <xsd:sequence>
+            <xsd:element name="Users" type="UsersType" minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="Delivery" type="DeliveryType" minOccurs="1" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="UsersType">
+        <xsd:sequence>
+            <xsd:element name="User" type="UserType" minOccurs="1" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="DeliveryType">
+        <xsd:sequence>
+            <xsd:element name="Sns" type="SnsType" minOccurs="1" maxOccurs="1"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="IntType"/>
+        <xsd:attribute name="user" type="StringType"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="SnsType">
+        <xsd:sequence>
+            <xsd:element name="Sn" type="SnType" minOccurs="1" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:simpleType name="StringType">
+        <xsd:restriction base="xsd:string">
+            <xsd:minLength value="1"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="LoginType">
+        <xsd:restriction base="xsd:string">
+            <xsd:minLength value="1"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="SnType">
+        <xsd:restriction base="xsd:int"/>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="IntType">
+        <xsd:restriction base="xsd:int"/>
+    </xsd:simpleType>
+
+    <xsd:complexType name="UserType">
+        <xsd:attribute name="password" type="StringType"/>
+        <xsd:attribute name="login" type="StringType"/>
+    </xsd:complexType>
+
+
+
+</xsd:schema>
