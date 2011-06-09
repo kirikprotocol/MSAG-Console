@@ -3618,7 +3618,6 @@ USHORT_T Et96MapDelimiterInd(
       case MAPST_WaitSms:
       {
         dialog->state = MAPST_WaitSmsMOInd;
-        reason = ET96MAP_NO_REASON;
         smsc::system::mapio::MapLimits& ml=smsc::system::mapio::MapLimits::getInstance();
         reason = ET96MAP_NO_REASON;
         ET96MAP_SS7_ADDR_T* addrPtr=0;

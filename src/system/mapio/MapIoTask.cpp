@@ -688,7 +688,7 @@ void MapIoTask::dispatcher(int idx)
       q.Pop(message);
     }
 
-    __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
+    //__map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
     if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 2048)
     {
       char text[8193];
@@ -698,7 +698,7 @@ void MapIoTask::dispatcher(int idx)
         k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
       }
       text[k]=0;
-      __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv[inst=%d] msg: %s",INSTARG0(message.remoteInstance), text);
+      __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv[inst=%d,prim=%d,size=%d] msg: %s",INSTARG0(message.remoteInstance), message.primitive, message.size, text);
     }
     if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 )
     {
@@ -709,7 +709,7 @@ void MapIoTask::dispatcher(int idx)
       __map_trace__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
-#ifdef STACK_CRASH_WORKAROUND    
+#ifdef STACK_CRASH_WORKAROUND
     if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
     {
       __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
@@ -719,7 +719,7 @@ void MapIoTask::dispatcher(int idx)
       __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
       message.msg_p[8] = 0x24;
     }
-#endif    
+#endif
 
     if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
        message.primitive!=MAP_GET_AC_VERSION_CONF)
@@ -789,18 +789,17 @@ void MapIoTask::dispatcher(int idx)
 void MapIoTask::handleMessage(MSG_T& message)
 {
   //__map_trace2__("MAPIO::Handled msg:p=%d,sz=%d,buf=%p",message.primitive,message.size,message.msg_p);
-  /*
-  if(smsc::logger::_map_cat->isDebugEnabled())
+  static smsc::logger::Logger* logHnd=smsc::logger::Logger::getInstance("map.hnd");
+  if(logHnd->isDebugEnabled())
   {
-    smsc::core::buffers::TmpBuf<char,1024> text(message.size*4+1);
+    smsc::core::buffers::TmpBuf<char,2048> text(message.size*4+1);
     int k = 0;
     for ( int i=0; i<message.size; i++)
     {
       k+=sprintf(text.get()+k,"%02x ",(unsigned)message.msg_p[i]);
     }
-    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "MAPIO:LMessage dump: %s",text.get());
+    __log2__(logHnd,smsc::logger::Logger::LEVEL_DEBUG, "handle msg [prim=%d, size=%d]: %s",message.primitive, message.size, text.get());
   }
-  */
   USHORT_T map_result;
   __require__(message.size!=0);
   try {
