@@ -117,6 +117,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                         case SubmitSM: {
 
+
                             Message request = (Message) pdu;
                             Address source_address = request.getSourceAddress();
                             long service_number = Long.parseLong(source_address.getAddress());
@@ -127,7 +128,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                             Address smpp_destination_address = request.getDestinationAddress();
                             String destination_address_str = smpp_destination_address.getAddress();
-                            log.debug("destination adress: "+destination_address_str);
+                            log.debug("destination address: "+destination_address_str);
 
                             String text = request.getMessage();
                             log.debug("text: "+text);
@@ -153,6 +154,15 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                                 log.debug(e);
                                 // todo ?
                             }
+
+
+                            try {
+                                smppServer.send(request.getResponse(Status.OK));
+                            } catch (SmppException e) {
+                                log.error("Could not send response to client", e);
+                            }
+
+
                         }
 
                         case DataSM:
