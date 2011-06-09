@@ -164,7 +164,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     return ret;
   }
 
-  private boolean getDeliveryName(Configuration config, Locale locale, String userId, int deliveryId, String[] result) {
+  private int getDeliveryName(Configuration config, Locale locale, String userId, int deliveryId, String[] result) {
     User user = config.getUser(userId);
     Delivery delivery = null;
     if (user != null) {
@@ -175,11 +175,23 @@ public class MessagesByDeliveriesController extends LongOperationController {
       }
       if(delivery != null) {
         result[0] = delivery.getName();
-        return true;
+        return 1;
+      }else {
+        if(config.isArchiveDaemonDeployed()) {
+          try {
+            delivery = config.getArchiveDelivery(user.getLogin(), deliveryId);
+          } catch (AdminException e) {
+            logger.error(e,e);
+          }
+        }
+        if(delivery != null) {
+          result[0] = delivery.getName();
+          return 0;
+        }
       }
     }
     result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';
-    return false;
+    return -1;
   }
 
   private String getDeliveryStatus(Configuration config, Locale locale, String userId, int deliveryId) {
@@ -239,19 +251,17 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
         Integer key = rec.getTaskId();
         MessagesByDeliveriesRecord oldRecord = recsMap.get(key);
+        String[] region = new String[1];
+        String[] delivery = new String[1];
+        int state = getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
+        boolean archivated = state == 0;
+        boolean deleted = state == -1;
+        boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
         if (oldRecord == null) {
-          String[] region = new String[1];
-          String[] delivery = new String[1];
-          boolean deletedDelivery = !getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
-          boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
-          oldRecord = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deletedDelivery, region[0], deletedRegion, true);
+          oldRecord = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, true);
           recsMap.put(key, oldRecord);
         }else {
-          String[] region = new String[1];
-          String[] delivery = new String[1];
-          boolean deletedDelivery = !getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
-          boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
-          MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deletedDelivery, region[0], deletedRegion, false);
+          MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, false);
           oldRecord.add(c);
         }
         oldRecord.updateTime(rec.getDate());

@@ -31,7 +31,7 @@ public class StatUtilsTest {
 
     List<StatFile> files = StatUtils.lookupFiles(new TestFileSystem(), baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), null, null);
 
-    assertEquals(2, files.size());
+    assertEquals(3, files.size());
   }
 
   @Test
@@ -65,7 +65,7 @@ public class StatUtilsTest {
 
     List<StatFile> files = StatUtils.lookupFiles(new TestFileSystem(), baseDir, new SimpleDateFormat("'p'yyyyMMdd" + File.separator + "'dlv'HH'.log'"), null, c.getTime());
 
-    assertEquals(1, files.size());
+    assertEquals(2, files.size());
   }
 
 }

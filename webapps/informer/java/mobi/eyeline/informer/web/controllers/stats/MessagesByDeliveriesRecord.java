@@ -40,11 +40,12 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   private final boolean deletedRegion;
 
   private final boolean deletedDelviery;
+  private final boolean archivated;
   private final String deliveryName;
 
   private String deliveryStatus;
 
-  public MessagesByDeliveriesRecord(DeliveryStatRecord rec, User user, String deliveryName, boolean deletedDelivery, String region, boolean deletedRegion, boolean isParent) {
+  public MessagesByDeliveriesRecord(DeliveryStatRecord rec, User user, String deliveryName, boolean deletedDelivery, boolean archivated, String region, boolean deletedRegion, boolean isParent) {
     this.login = rec.getUser();
     this.deliveryId = rec.getTaskId();
     this.isParent = isParent;
@@ -52,6 +53,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.regionId = rec.getRegionId();
     this.deletedRegion = deletedRegion;
     this.deletedDelviery = deletedDelivery;
+    this.archivated = archivated;
     this.deliveryName =  deliveryName;
     this.user = user;
     incNewMessages(rec.getNewmessages());
@@ -64,7 +66,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     incExpiredSms(rec.getExpiredSMS());
     if(isParent) {
       innerRowsMap = new TreeMap<Object, AggregatedRecord>();
-      MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, user, deliveryName, deletedDelivery, region, deletedRegion, false);
+      MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, user, deliveryName, deletedDelivery, archivated, region, deletedRegion, false);
       c.setRegion(region);
       addChild(c);
     }
@@ -84,6 +86,10 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
 
   public boolean isDeletedDelviery() {
     return deletedDelviery;
+  }
+
+  public boolean isDeletedOrArchivatedDelviery() {
+    return deletedDelviery || archivated;
   }
 
   public Integer getRegionId() {

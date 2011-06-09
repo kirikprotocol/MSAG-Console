@@ -4,7 +4,6 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
       xmlns:eye="http://taglib.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
@@ -80,9 +79,9 @@
             <eye:row innerRows="#{row.innerRows}">
 
               <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="20%" align="center">
-                <h:outputText value="#{row.deliveryName}" rendered="#{row.deletedDelviery}"/>
+                <h:outputText value="#{row.deliveryName}" rendered="#{row.deletedOrArchivatedDelviery}"/>
 
-                <tr:panelGroupLayout rendered="#{!row.deletedDelviery}">
+                <tr:panelGroupLayout rendered="#{!row.deletedOrArchivatedDelviery}">
                   <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">#{row.deliveryName}</a>
                 </tr:panelGroupLayout>
 

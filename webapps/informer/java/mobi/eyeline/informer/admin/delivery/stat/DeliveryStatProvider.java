@@ -90,7 +90,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
   public void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
 
     Date fromDate = filter == null ? null : prepareDateForFilesLookup(filter.getFromDate());
-    Date tillDate = filter == null ? null : prepareDateForFilesLookup(filter.getTillDate());
+    Date tillDate = filter == null ? null : prepareDateForFilesLookup(filter.getTillDate() == null ? null : new Date(filter.getTillDate().getTime()+(60*60*1000))); //+1 час (файл с часом n+1 может содержать записи с часом n)
 
     List<mobi.eyeline.informer.admin.delivery.stat.StatFile> files = StatUtils.lookupFiles(fileSys, baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
     int total = files.size();
@@ -100,10 +100,14 @@ public class DeliveryStatProvider extends StatEntityProvider{
       convertedFilter.setRegionId(filter.getRegionId());
       convertedFilter.setUser(filter.getUser());
       convertedFilter.setTaskIds(filter.getTaskIds());
-      if (filter.getFromDate() != null)
-        convertedFilter.setFromDate(Functions.convertTime(filter.getFromDate(), LOCAL_TIMEZONE, STAT_TIMEZONE));
-      if (filter.getTillDate() != null)
-        convertedFilter.setTillDate(Functions.convertTime(filter.getTillDate(), LOCAL_TIMEZONE, STAT_TIMEZONE));
+      if (filter.getFromDate() != null)   {
+        long date = Functions.convertTime(filter.getFromDate(), LOCAL_TIMEZONE, STAT_TIMEZONE).getTime();
+        convertedFilter.setFromDate(new Date(date-(date%60000))); //skip seconds
+      }
+      if (filter.getTillDate() != null) {
+        long date = Functions.convertTime(filter.getTillDate(), LOCAL_TIMEZONE, STAT_TIMEZONE).getTime();
+        convertedFilter.setTillDate(new Date(date-(date%60000))); //skip seconds
+      }
     }
 
     try {
@@ -136,9 +140,9 @@ public class DeliveryStatProvider extends StatEntityProvider{
             String minsec = tokenizer.nextToken();
             int minute = Integer.parseInt(minsec.substring(0, minsec.length() - 2));
             c.set(Calendar.MINUTE, minute);
-            c.set(Calendar.SECOND, 59);
+            c.set(Calendar.SECOND, 0);
 
-            Date date = c.getTime();
+            Date date = new Date(c.getTimeInMillis()-60000);           // запись за minute минуту содержит статистику с minute-1 по minute минуты
             if (filter.getFromDate() != null && date.before(filter.getFromDate()))
               continue;
 
@@ -173,7 +177,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
             if(filter.getRegionId() != null && !filter.getRegionId().equals(regionId)){
               continue;
             }
-            DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
+            DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
                 newmessages, processing, delivered, failed, expired,
                 deliveredSms, failedSms, expiredSms, regionId, smsc
             );

@@ -87,17 +87,21 @@ public class UserStatProvider extends StatEntityProvider{
   public void accept(UserStatFilter filter, UserStatVisitor visitor) throws AdminException {
 
     Date fromDate = prepareDateForFilesLookup(filter.getFromDate());
-    Date tillDate = prepareDateForFilesLookup(filter.getTillDate());
+    Date tillDate = prepareDateForFilesLookup(filter.getTillDate() == null ? null : new Date(filter.getTillDate().getTime()+(60*60*1000)));  //+1 час (файл с часом n+1 может содержать записи с часом n)
 
     List<StatFile> files = StatUtils.lookupFiles(fileSys, baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
     int total = files.size();
 
     UserStatFilter convertedFilter = new UserStatFilter();
     convertedFilter.setUser(filter.getUser());
-    if (filter.getFromDate() != null)
-      convertedFilter.setFromDate(Functions.convertTime(filter.getFromDate(), LOCAL_TIMEZONE, STAT_TIMEZONE));
-    if (filter.getTillDate() != null)
-      convertedFilter.setTillDate(Functions.convertTime(filter.getTillDate(), LOCAL_TIMEZONE, STAT_TIMEZONE));
+    if (filter.getFromDate() != null)   {
+      long date = Functions.convertTime(filter.getFromDate(), LOCAL_TIMEZONE, STAT_TIMEZONE).getTime();
+      convertedFilter.setFromDate(new Date(date-(date%60000))); //skip seconds
+    }
+    if (filter.getTillDate() != null) {
+      long date = Functions.convertTime(filter.getTillDate(), LOCAL_TIMEZONE, STAT_TIMEZONE).getTime();
+      convertedFilter.setTillDate(new Date(date-(date%60000))); //skip seconds
+    }
 
     try {
       for (int i=0; i<files.size(); i++)
@@ -107,7 +111,7 @@ public class UserStatProvider extends StatEntityProvider{
     }
   }
 
-  public boolean processFile(UserStatFilter filter, UserStatVisitor visitor, int total, int current, String f) throws AdminException, IOException {
+  private boolean processFile(UserStatFilter filter, UserStatVisitor visitor, int total, int current, String f) throws AdminException, IOException {
 
     BufferedReader reader = null;
 
@@ -133,7 +137,7 @@ public class UserStatProvider extends StatEntityProvider{
             c.set(Calendar.MINUTE, minute);
             c.set(Calendar.SECOND, 0);
 
-            Date date = c.getTime();
+            Date date = new Date(c.getTimeInMillis()-60000);           // запись за minute минуту содержит статистику с minute-1 по minute минуты
             if (filter.getFromDate() != null && date.before(filter.getFromDate()))
               continue;
 
@@ -146,7 +150,7 @@ public class UserStatProvider extends StatEntityProvider{
 
             UserStatRecord rec = new UserStatRecord();
             rec.setUser(user);
-            rec.setDate(Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
+            rec.setDate(Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE));
 
             rec.setPaused(Integer.parseInt(tokenizer.nextToken()));
             rec.setPlanned(Integer.parseInt(tokenizer.nextToken()));
