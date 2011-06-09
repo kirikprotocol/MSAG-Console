@@ -113,6 +113,9 @@ bool ActivityLogMiner::getNext(int reqId, msgtime_type endTime,
     }
     req->busy=true;
     req->ref();
+    // moving an expiration
+    timeMap.erase(req->timeIt);
+    req->timeIt = timeMap.insert(TimeMap::value_type(time(0)+requestTimeout,reqId));
   }
   try {
     bool rv=parseRecord(req,endTime,result,hasMore);
