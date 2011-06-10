@@ -11,6 +11,8 @@ import mobi.eyeline.informer.admin.infosme.TestSmsException;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
+import mobi.eyeline.informer.web.WebContext;
+import mobi.eyeline.informer.web.config.InformerTimezone;
 import mobi.eyeline.informer.web.controllers.stats.ErrorStatsController;
 import mobi.eyeline.informer.web.controllers.stats.MessagesByPeriodController;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
@@ -21,6 +23,7 @@ import javax.faces.event.ActionEvent;
 import java.util.Date;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.TimeZone;
 
 /**
  * @author Aleksandr Khalitov
@@ -83,6 +86,16 @@ public class DeliveryEditController extends DeliveryController {
     } catch (AdminException e) {
       addError(e);
     }
+  }
+
+  public boolean isBoundToLocalTIme() {
+    return delivery != null && delivery.isBoundToLocalTime();
+  }
+
+  public String getServerTimezone() {
+    String defId = TimeZone.getDefault().getID();
+    InformerTimezone timezone = WebContext.getInstance().getWebTimezones().getTimezoneByID(defId) ;
+    return timezone == null ? null : timezone.getAlias(getLocale());
   }
 
   public String getTestAddress() {

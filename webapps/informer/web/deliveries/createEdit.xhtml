@@ -6,9 +6,7 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:tr="http://myfaces.apache.org/trinidad"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:t="http://myfaces.apache.org/tomahawk">
+      xmlns:eye="http://taglib.eyeline.mobi">
 
 
 <ui:composition>
@@ -30,6 +28,9 @@
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.endDate}"/>
       <eye:inputDate value="#{createDelivery.activePage.delivery.endDate}" type="both" />
+
+      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.boundToLocalTime}"/>
+      <h:selectBooleanCheckbox value="#{createDelivery.activePage.delivery.boundToLocalTime}"/>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
       <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">

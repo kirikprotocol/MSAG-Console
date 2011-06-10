@@ -166,6 +166,9 @@ class DcpConverter {
     }else {
       delivery.setCreateDate(convertDateFromDcpFormat(di.getStartDate()));
     }
+    if(di.hasBoundToLocalTime()) {
+      delivery.setBoundToLocalTime(di.getBoundToLocalTime());
+    }
 
     delivery.setEnableMsgFinalizationLogging(di.getFinalMsgRecords());
     delivery.setEnableStateChangeLogging(di.getFinalDlvRecords());
@@ -336,6 +339,7 @@ class DcpConverter {
     }else {
       delivery.setCreationDate(convertDateToDcpFormat(di.getStartDate()));
     }
+    delivery.setBoundToLocalTime(di.isBoundToLocalTime());
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());
     }

@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.admin.delivery;
 
-import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
@@ -50,6 +49,8 @@ public class DeliveryPrototype {
   protected Integer archiveTime;
   protected Time messageTimeToLive;
 
+  protected boolean boundToLocalTime;
+
   public void setProperty(String name, String value) {
     properties.setProperty(name, value);
   }
@@ -82,6 +83,14 @@ public class DeliveryPrototype {
 
   public void setSourceAddress(Address sourceAddress) {
     this.sourceAddress = sourceAddress;
+  }
+
+  public boolean isBoundToLocalTime() {
+    return boundToLocalTime;
+  }
+
+  public void setBoundToLocalTime(boolean boundToLocalTime) {
+    this.boundToLocalTime = boundToLocalTime;
   }
 
   public Integer getArchiveTime() {

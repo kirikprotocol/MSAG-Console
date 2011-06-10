@@ -419,6 +419,7 @@ public class TestDcpConnection extends DcpConnection{
       info.setStatus(d.getStatus());
       info.setOwner(d.getOwner());
       info.setCreateDate(d.getCreateDate());
+      info.setBoundToLocalTime(d.isBoundToLocalTime());
       for(Map.Entry e : d.getProperties().entrySet()) {
         info.setProperty(e.getKey().toString(), e.getValue().toString());
       }

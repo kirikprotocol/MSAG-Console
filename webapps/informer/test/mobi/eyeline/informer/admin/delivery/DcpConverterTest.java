@@ -66,6 +66,7 @@ public class DcpConverterTest {
     d.setMessageTimeToLive(new Time(2,0,0));
     d.setCreateDate(new Date(121212));
     d.setProperty(UserDataConsts.RESTRICTION, "true");
+    d.setBoundToLocalTime(true);
     return d;
   }
 
