@@ -117,7 +117,7 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
          */
 
         smsc::core::synchronization::MutexGuard mg(lock_);
-        weekTime_ = region_->getLocalWeekTime(now);
+        weekTime_ = region_->getLocalWeekTime(now,&localTime_);
 
         // check speed control
         {
@@ -134,6 +134,10 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         }
         
         nchunks_ = 0;
+        smsc_log_debug(log_,"R=%u processing weekTime=%u curTime=%llu locTime=%+d",
+                       getRegionId(),weekTime_,
+                       msgTimeToYmd(msgtime_type(currentTime_/tuPerSec)),
+                       int(localTime_ - msgtime_type(currentTime_/tuPerSec)));
         const unsigned toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
         if (toSleep>0) {
             // smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
@@ -207,11 +211,25 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
                 info.isBoundToLocalTime() ? localTime_ :
                 msgtime_type(currentTime_ / tuPerSec);
             // compare start/end date
+            // smsc_log_debug(log_,"R=%u/D=%u actTime=%llu startDate=%llu endDate=%llu regTime=%d",
+            // getRegionId(), info.getDlvId(),
+            // msgTimeToYmd(activeTime),
+            // msgTimeToYmd(info.getStartDate()),
+            // msgTimeToYmd(info.getEndDate()),
+            // info.isBoundToLocalTime());
             if ( info.getStartDate() && activeTime < info.getStartDate() ) {
                 // too early
-                return std::min(info.getStartDate()-activeTime,sleepTimeException);
+                // smsc_log_debug(log_,"R=%u/D=%u early than startDate=%llu actTime=%llu",
+                // getRegionId(), info.getDlvId(),
+                // msgTimeToYmd(info.getStartDate()),
+                // msgTimeToYmd(activeTime));
+                return unsigned(std::min(info.getStartDate()-activeTime,4U)*tuPerSec);
             } else if ( info.getEndDate() && activeTime > info.getEndDate() ) {
                 // too late, request detach
+                // smsc_log_debug(log_,"R=%u/D=%u later than endDate=%llu actTime=%llu",
+                // getRegionId(), info.getDlvId(),
+                // msgTimeToYmd(info.getEndDate()),
+                // msgTimeToYmd(activeTime));
                 std::vector<regionid_type> regs(1,getRegionId());
                 DeliveryActivator& da = info.getUserInfo().getDA();
                 da.startCancelThread(info.getDlvId(),getRegionId());
