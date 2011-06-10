@@ -89,10 +89,11 @@ public:
   }
 
   // NOTE: this method is not safe
-  // inline void setAppender(Appender * newAppender) {
-  // smsc::core::synchronization::MutexGuard guard(mutex);
-  // appender = newAppender;
-  // }
+  inline void setAppender(Appender * newAppender) {
+     // NOTE: we don't need mutex to change a pointer
+     // smsc::core::synchronization::MutexGuard guard(mutex);
+     appender = newAppender;
+  }
 
   inline bool isLogLevelEnabled(const LogLevel _logLevel) throw() {
     //smsc::core::synchronization::MutexGuard guard(mutex);
@@ -264,7 +265,7 @@ private:
 #endif
   LogLevel logLevel;
   const char* const name;
-  Appender * appender;   // NOTE: appender cannot be changed!
+  Appender * appender;   // NOTE: appender is not safe to be changed!
   // smsc::core::synchronization::Mutex mutex;
 
   // disable copying

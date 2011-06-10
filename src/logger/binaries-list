@@ -3,7 +3,9 @@
 
 # binary name source name libraries         
 liblogger$(SHLIBEXT)  Logger $(SHARED_OPT) -ldl $(__LIBRARIES) $(LIBRT) $(LOGGER_LIBRARY) -llogger-additional $(SOCKETLIB) $(LIBNSL) -lutil
-logger/test	test	-L$(SMSC_BUILDDIR)/bin -llogger -lcore-threads -lutil -llogger-additional $(LIBNSL) $(LIBRT) -lpthread @liblogger$(SHLIBEXT)
+logger/test	test \
+  -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lcore-threads -lutil -llogger-additional $(LIBNSL) $(LIBRT) -lpthread @liblogger$(SHLIBEXT)
 logger/testNewLogger testNewLogger \
   -lcore-threads \
   @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
