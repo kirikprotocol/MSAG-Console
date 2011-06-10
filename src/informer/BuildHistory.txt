@@ -1,4 +1,4 @@
-2011-06-09 17:57 bukind
+2011-06-10 14:50 bukind
   feature: boundToLocalTime flag added to delivery (dcp changed)
 2011-06-09 16:34 bukind
   ALM timeouts are updated each time the request is processing
