@@ -207,10 +207,10 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
                 info.isBoundToLocalTime() ? localTime_ :
                 msgtime_type(currentTime_ / tuPerSec);
             // compare start/end date
-            if ( activeTime < info.getStartDate() ) {
+            if ( info.getStartDate() && activeTime < info.getStartDate() ) {
                 // too early
                 return std::min(info.getStartDate()-activeTime,sleepTimeException);
-            } else if ( activeTime > info.getEndDate() ) {
+            } else if ( info.getEndDate() && activeTime > info.getEndDate() ) {
                 // too late, request detach
                 std::vector<regionid_type> regs(1,getRegionId());
                 DeliveryActivator& da = info.getUserInfo().getDA();
