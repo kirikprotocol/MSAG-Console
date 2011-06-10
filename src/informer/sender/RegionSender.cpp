@@ -134,10 +134,10 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         }
         
         nchunks_ = 0;
-        smsc_log_debug(log_,"R=%u processing weekTime=%u curTime=%llu locTime=%+d",
-                       getRegionId(),weekTime_,
-                       msgTimeToYmd(msgtime_type(currentTime_/tuPerSec)),
-                       int(localTime_ - msgtime_type(currentTime_/tuPerSec)));
+        // smsc_log_debug(log_,"R=%u processing weekTime=%u curTime=%llu locTime=%+d",
+        // getRegionId(),weekTime_,
+        // msgTimeToYmd(msgtime_type(currentTime_/tuPerSec)),
+        // int(localTime_ - msgtime_type(currentTime_/tuPerSec)));
         const unsigned toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
         if (toSleep>0) {
             // smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
