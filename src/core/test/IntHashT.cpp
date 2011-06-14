@@ -4,7 +4,9 @@
 
 //#define INTHASH_USAGE_DEBUG
 #define INTHASH_USAGE_CHECKING
-#include "core/buffers/IntHashT.hpp"
+//#include "core/buffers/IntHashT.hpp"
+#include "core/buffers/DAHashT.hpp"
+#include "core/buffers/DAHashFuncInts.hpp"
 #include "util/csv/CSValueTraitsInt.hpp"
 
 
@@ -81,16 +83,14 @@ public:
 
 template <
   typename _KeyArg      //must be an integer type (signed or unsigned)
-, class _IHKeyTraitsArg //required IntHashKeyTraitsDflt_T<> interface
-                    = smsc::core::buffers::IntHashKeyTraitsDflt_T<_KeyArg, 16, 3>
 >
 struct HashTester_T {
-  typedef uint32_t size_type; //IntHash_T<>::size_type
+  typedef uint32_t size_type; //DAHash_T<>::size_type
 
   typedef TstElement_T<_KeyArg>
     CachedValue;
-  typedef smsc::core::buffers::IntHash_T<
-    CachedValue, _KeyArg, smsc::core::buffers::IHashSlot_T, _IHKeyTraitsArg
+  typedef smsc::core::buffers::DAHash_T<
+    _KeyArg, CachedValue, smsc::core::buffers::DAHashSlot_T, 16, 3
   > TstCache_t;
 
   const char *    _hashId;
@@ -281,11 +281,13 @@ int main(void)
   if (!hashi32_16.testHash_plain(0, 3650))
     --rval;
 */
-//  HashTester_T<uint64_t>  hash64_16("ku64c16");
+  HashTester_T<uint64_t>  hash64_16("ku64c16");
 /*
   if (!hash64_16.testHash_plain(0, 70000000))
+    --rval;*/
+   if (!hash64_16.testHash_rand_del(0, 100000000, 8192))
     --rval;
-*/
+
 /*  
   HashTester_T<int64_t>  hashi64_16("ki64c16");
   if (!hashi64_16.testHash_plain(0, 3650))
