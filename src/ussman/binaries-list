@@ -1,0 +1,9 @@
+#
+# $Id$
+#
+
+ussman/test_ussbalance test_ussbalance -L$(SS7_STACK_HOME)/lib -L$(SMSC_BUILDDIR)/bin -lussman-interaction -linman-interaction-serializer -lussman-comp -linman-common -lutil -lutil-config -lutil-xml -lutil-csv  -lcore-threads -lpthread -llogger -lcore-network $(XERCES_LIB) $(__LIBRARIES) $(SOCKETLIB) -lrt -lnsl -ldl
+
+ussman/ussbalance ussman -L$(SMSC_BUILDDIR)/lib -L$(SS7_STACK_HOME)/lib -L$(SMSC_BUILDDIR)/bin -lussman -lussman-service -linman-inap-xcfg -linman-interaction-tcpserver -linman-interaction-asyncmgr -linman-interaction-asynconn -lussman-interaction -linman-interaction-serializer -lussman-inap-map_uss -linman-inap-map -linman-inap -l$(SS7_LIBRARY_NAME) -lussman-comp-map_uss -lussman-comp -linman-codec_inc-map -linman-asn1rt    -linman-comp -linman-common -lutil -lutil-URCdb -lutil-config -lutil-xml -lutil-csv -lcore-threads -lpthread -llogger -lcore-network $(XERCES_LIB) $(__LIBRARIES) $(SOCKETLIB) -lrt -lnsl -ldl
+
+
