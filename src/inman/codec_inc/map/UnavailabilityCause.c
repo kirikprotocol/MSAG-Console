@@ -1,4 +1,4 @@
-#ident "$Id$"
+/* #ident "$Id$" */
 
 #include <asn_internal.h>
 
