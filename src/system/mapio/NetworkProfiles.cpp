@@ -118,7 +118,7 @@ void NetworkProfiles::reload()
       if(msk->getNodeType()!=DOMNode::ELEMENT_NODE)continue;
       DOMNamedNodeMap* attr=msk->getAttributes();
       XmlStr val(attr->getNamedItem(valStr)->getNodeValue());
-      if(NetworkProfile** pptr=profiles.Find(val.c_str()))
+      if(NetworkProfile*const* pptr=profiles.Find(val.c_str()))
       {
         smsc_log_warn(log,"Duplicate mask %s in network %s (previous in %s)",val.c_str(),np->name.c_str(),(*pptr)->name.c_str());
         continue;
@@ -164,7 +164,7 @@ void NetworkProfiles::reload()
 const NetworkProfile& NetworkProfiles::lookup(const smsc::sms::Address& addr)
 {
   smsc::core::synchronization::MutexGuard mg(mtx);
-  NetworkProfile** pptr=profiles.Find(addr.value);
+  NetworkProfile*const* pptr=profiles.Find(addr.value);
   if(pptr)
   {
     return **pptr;
