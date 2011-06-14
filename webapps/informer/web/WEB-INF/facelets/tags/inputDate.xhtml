@@ -11,33 +11,42 @@
 
 <ui:composition>
 
-  <c:choose>
-    <c:when test="#{id != null}">
-      <t:inputDate popupCalendar="#{popupCalendar == null ? true : popupCalendar}"
-                   id="#{id}"
-                   value="#{value}"
-                   type="#{type}"
-                   rendered="#{rendered == null ? true : rendered}"
-                   required="#{required == null ? false : required}"
-                   disabled="#{disabled ? false : disabled}"
-                   autocomplete="#{autocomplete == null ? false : autocomplete}"
-                   readonly="#{readonly == null ? false : readonly}"
-                   requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
-          />
-    </c:when>
-    <c:otherwise>
-      <t:inputDate popupCalendar="#{popupCalendar == null ? true : popupCalendar}"
-                   value="#{value}"
-                   type="#{type}"
-                   rendered="#{rendered == null ? true : rendered}"
-                   required="#{required == null ? false : required}"
-                   disabled="#{disabled ? false : disabled}"
-                   autocomplete="#{autocomplete == null ? false : autocomplete}"
-                   readonly="#{readonly == null ? false : readonly}"
-                   requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
-          />
-    </c:otherwise>
-  </c:choose>
+  <h:panelGroup>
+
+    <c:choose>
+      <c:when test="#{id != null}">
+        <t:inputDate popupCalendar="#{popupCalendar == null ? true : popupCalendar}"
+                     id="#{id}"
+                     value="#{value}"
+                     type="#{type}"
+                     rendered="#{rendered == null ? true : rendered}"
+                     required="#{required == null ? false : required}"
+                     disabled="#{disabled ? false : disabled}"
+                     autocomplete="#{autocomplete == null ? false : autocomplete}"
+                     readonly="#{readonly == null ? false : readonly}"
+                     requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
+            />
+        <h:panelGroup rendered="#{readonly == null ? false : readonly}">
+          <script language="JavaScript" type="text/javascript">
+            document.getElementById('#{id}.month').disabled=true;
+          </script>
+        </h:panelGroup>
+      </c:when>
+      <c:otherwise>
+        <t:inputDate popupCalendar="#{popupCalendar == null ? true : popupCalendar}"
+                     value="#{value}"
+                     type="#{type}"
+                     rendered="#{rendered == null ? true : rendered}"
+                     required="#{required == null ? false : required}"
+                     disabled="#{disabled ? false : disabled}"
+                     autocomplete="#{autocomplete == null ? false : autocomplete}"
+                     readonly="#{readonly == null ? false : readonly}"
+                     requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
+            />
+      </c:otherwise>
+    </c:choose>
+
+  </h:panelGroup>
 
 </ui:composition>
 

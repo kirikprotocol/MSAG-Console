@@ -84,16 +84,16 @@
         <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}" converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" disabled="#{not createDelivery.activePage.userInAdminRole}"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.createDate}"/>
-        <tr:outputText value="#{deliveryEdit.delivery.createDate}">
-          <f:convertDateTime dateStyle="short" type="both"/>
-        </tr:outputText>
+        <eye:inputDate id="createDate" readonly="true" value="#{deliveryEdit.createDate}" type="both"/>
+
+        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
+        <eye:inputDate id="startDate" readonly="true" value="#{deliveryEdit.startDate}" type="both"/>
+
+        <h:outputText value="&#160;"/>
         <h:panelGroup>
-          <tr:outputText value="#{deliveryEdit.delivery.startDate}">
-            <f:convertDateTime dateStyle="short" type="both"/>
-          </tr:outputText>
-          <h:outputText value="&#160;"/>
           <h:outputText rendered="#{deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.local.time']})"/>
           <h:outputText rendered="#{!deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
         </h:panelGroup>
@@ -102,8 +102,10 @@
         <eye:inputDate value="#{deliveryEdit.delivery.endDate}" type="both"/>
 
         <h:outputText value="&#160;"/>
-        <h:outputText rendered="#{deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.local.time']})"/>
-        <h:outputText rendered="#{!deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
+        <h:panelGroup>
+          <h:outputText rendered="#{deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.local.time']})"/>
+          <h:outputText rendered="#{!deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
+        </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">

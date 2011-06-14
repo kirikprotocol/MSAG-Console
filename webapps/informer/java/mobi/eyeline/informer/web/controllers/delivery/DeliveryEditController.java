@@ -52,6 +52,7 @@ public class DeliveryEditController extends DeliveryController {
   private String testAddress;
 
   private Date createDate;
+  private Date startDate;
 
   public DeliveryEditController() {
     super();
@@ -164,6 +165,7 @@ public class DeliveryEditController extends DeliveryController {
       testAddress = u.getPhone().getSimpleAddress();
     }
     createDate = delivery.getCreateDate();
+    startDate = delivery.getStartDate();
   }
 
 
@@ -173,6 +175,14 @@ public class DeliveryEditController extends DeliveryController {
 
   public void setCreateDate(Date createDate) {
     this.createDate = createDate;
+  }
+
+  public Date getStartDate() {
+    return startDate;
+  }
+
+  public void setStartDate(Date startDate) {
+    this.startDate = startDate;
   }
 
   private String emailNotificationAddress;
