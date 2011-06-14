@@ -3,12 +3,10 @@ package mobi.eyeline.dcpgw;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.exeptions.UpdateConfigurationException;
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DeliveryManager;
-import mobi.eyeline.informer.admin.delivery.DataSource;
+import mobi.eyeline.informer.admin.delivery.DcpConnection;
 import mobi.eyeline.smpp.api.pdu.Request;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
-import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -20,7 +18,6 @@ import mobi.eyeline.smpp.api.SmppServer;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.PDUListener;
 import mobi.eyeline.smpp.api.types.Status;
-import mobi.eyeline.smpp.api.types.EsmMessageType;
 import mobi.eyeline.smpp.api.pdu.PDU;
 import mobi.eyeline.smpp.api.pdu.Message;
 import mobi.eyeline.smpp.api.pdu.data.Address;
@@ -51,8 +48,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
     private SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
     private ProcessingQueue procQueue;
 
-    private DeliveryManager deliveryManager;
-
     private HashMap<String, String> user_password_map;
     private HashMap<Integer, String> delivery_id_user_map;
     private HashMap<Long, Integer> service_number_delivery_id_map;
@@ -64,6 +59,11 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
     private mobi.eyeline.informer.admin.delivery.Message informer_message;
 
     private LinkedList<mobi.eyeline.informer.admin.delivery.Message> informer_messages_list;
+
+    private AtomicLong gateway_mgsId = new AtomicLong(0);
+
+    private final String informer_host;
+    private final int informer_port;
 
     public SMPP2DCPGateway() throws SmppException, InitializationException{
 
@@ -82,7 +82,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
         }
 
         String s = config.getProperty("informer.host");
-        String informer_host;
         if (s != null && !s.isEmpty()){
             informer_host = s;
             log.debug("Set informer host: "+ informer_host);
@@ -92,7 +91,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
         }
 
         s = config.getProperty("informer.port");
-        int informer_port;
         if (s != null && !s.isEmpty()){
             informer_port = Integer.parseInt(s);
             log.debug("Set informer port: "+ informer_port);
@@ -100,10 +98,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
             log.error("informer.port property is invalid or not specified in config");
             throw new InitializationException("informer.port property is invalid or not specified in config");
         }
-
-        log.debug("Try to initialize delivery manager ...");
-        deliveryManager = new DeliveryManager(informer_host, informer_port);
-        log.debug("Successfully initialize delivery manager.");
 
         Runtime.getRuntime().addShutdownHook(this);
 
@@ -113,10 +107,56 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                 public boolean handlePDU(PDU pdu) {
                     log.debug("Handle pdu with type "+pdu.getType());
+
+                    Long gId = System.currentTimeMillis() + gateway_mgsId.incrementAndGet();
+
                     switch (pdu.getType()) {
 
                         case SubmitSM: {
 
+                            Message request = (Message) pdu;
+                            Address source_address = request.getSourceAddress();
+                            long service_number = Long.parseLong(source_address.getAddress());
+                            int delivery_id = service_number_delivery_id_map.get(service_number);
+                            String login = delivery_id_user_map.get(delivery_id);
+                            String password = user_password_map.get(login);
+                            log.debug("service_number: "+service_number+", delivery_id: "+delivery_id+", user: "+login+", password: "+password);
+
+                            Address smpp_destination_address = request.getDestinationAddress();
+                            String destination_address_str = smpp_destination_address.getAddress();
+                            log.debug("destination address: "+destination_address_str);
+
+                            String text = request.getMessage();
+                            log.debug("text: "+text);
+
+                            mobi.eyeline.informer.util.Address informer_destination_address
+                                    = new mobi.eyeline.informer.util.Address(destination_address_str);
+
+                            informer_message = mobi.eyeline.informer.admin.delivery.Message.newMessage(informer_destination_address, text);
+
+                            informer_messages_list.add(informer_message);
+
+                            DcpConnection dcpConnection = null;
+                            try {
+                                dcpConnection = new DcpConnection(informer_host, informer_port, login, password);
+                            } catch (AdminException e) {
+                                log.error(e);
+                            }
+
+                            LinkedList<mobi.eyeline.informer.admin.delivery.Message> informer_messages_list =
+                                    new LinkedList<mobi.eyeline.informer.admin.delivery.Message>();
+                            informer_messages_list.add(informer_message);
+                            try {
+                                dcpConnection.addDeliveryMessages(delivery_id, informer_messages_list);
+
+                            } catch (AdminException e) {
+                                log.error(e);
+                            }
+
+
+                        }
+
+                        case DataSM:
 
                             Message request = (Message) pdu;
                             Address source_address = request.getSourceAddress();
@@ -135,60 +175,12 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                             mobi.eyeline.informer.util.Address informer_destination_address = new mobi.eyeline.informer.util.Address(destination_address_str);
 
-                            informer_message = mobi.eyeline.informer.admin.delivery.Message.newMessage(informer_destination_address, text);
+                            mobi.eyeline.informer.admin.delivery.Message informer_message =
+                                    mobi.eyeline.informer.admin.delivery.Message.newMessage(informer_destination_address, text);
 
                             informer_messages_list.add(informer_message);
 
-                            try {
-                                deliveryManager.addIndividualMessages(login, password, new DataSource<mobi.eyeline.informer.admin.delivery.Message>() {
 
-                                    public mobi.eyeline.informer.admin.delivery.Message next() throws AdminException {
-                                        if(informer_messages_list.isEmpty()) {
-                                            return null;
-                                        }
-                                        return informer_messages_list.removeFirst();
-                                    }
-
-                                } , delivery_id);
-                            } catch (AdminException e) {
-                                log.debug(e);
-                                // todo ?
-                            }
-
-
-                            try {
-                                smppServer.send(request.getResponse(Status.OK));
-                            } catch (SmppException e) {
-                                log.error("Could not send response to client", e);
-                            }
-
-
-                        }
-
-                        case DataSM:
-
-                            try {
-                                Message request = (Message) pdu;
-                                Message msg = request.revert();
-                                try {
-                                  smppServer.send(msg); // send message to destination
-                                } catch (SmppException e) {
-                                  log.error("Could not process message "+e.getMessage());
-                                  smppServer.send(request.getResponse(e.getStatus()));
-                                  return true;
-                                }
-                                smppServer.send(request.getResponse(Status.OK));
-                                if( request.getRegDeliveryReceipt() != RegDeliveryReceipt.None ) {
-                                  Message rcpt = request.getAnswer();
-                                  rcpt.setEsmMessageType(EsmMessageType.DeliveryReceipt);
-                                  String dt = sdf.format(new Date());
-                                  rcpt.setMessage("id:" + msgid.incrementAndGet() + " sub:001 dlvrd:001 submit date:" + dt + " done date:" + dt + " stat:DELIVRD err:000 Text:");
-                                  smppServer.send(rcpt);
-                                }
-                                return true;
-                            } catch (SmppException e) {
-                                log.error("Could not send response to client", e);
-                            }
 
                     }
 

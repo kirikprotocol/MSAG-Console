@@ -2,7 +2,6 @@
 
 CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:config
 
-CLASSPATH=$CLASSPATH:lib/dcp.jar
 CLASSPATH=$CLASSPATH:lib/dcpgw.jar
 CLASSPATH=$CLASSPATH:lib/smppapi.jar
 CLASSPATH=$CLASSPATH:lib/smppcharsets.jar
