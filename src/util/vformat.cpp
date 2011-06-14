@@ -21,7 +21,7 @@ unsigned vpformat(const char* fmt, va_list arg_list, char ** p_buf,
 {
     char * vbuf = new char[buf_sz];
     int n = VSNPRINTF(vbuf, buf_sz - 1, fmt, arg_list);
-    if (n >= buf_sz) {
+    if ((n > 0) && ((unsigned)n >= buf_sz)) {
         buf_sz = n + 2; // + '\0'
         delete [] vbuf;
         vbuf = new char[buf_sz];
@@ -36,13 +36,15 @@ std::string & vformat(std::string & fstr, const char* fmt, va_list arg_list)
 {
     char abuf[1024]; abuf[0] = 0;
     int n = VSNPRINTF(abuf, sizeof(abuf) - 1, fmt, arg_list);
-    if (n >= sizeof(abuf)) {
+    if (n > 0) {
+      if ((unsigned)n >= sizeof(abuf)) {
         char * vbuf = NULL;
         n = vpformat(fmt, arg_list, &vbuf, n + 2);
         fstr += vbuf;
         delete [] vbuf;
-    } else if (n > 0)
+      } else
         fstr += abuf;
+    }
     return fstr;
 }
 #undef VSNPRINTF
