@@ -1,11 +1,14 @@
 #ifndef _SCAG_BILL_IMPL_BILLINGMANAGER_H
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define _SCAG_BILL_IMPL_BILLINGMANAGER_H
 
 #include "scag/bill/base/BillingManager.h"
 
-#include <core/synchronization/Mutex.hpp>
-#include <core/synchronization/Event.hpp>
-#include <core/threads/Thread.hpp>
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
+#include "core/threads/Thread.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/IntHash64.hpp"
 #include "core/network/Socket.hpp"
@@ -16,7 +19,7 @@
 #include "scag/bill/ewallet/Client.h"
 
 #ifdef MSAG_INMAN_BILL
-#include "inman/interaction/connect.hpp"
+#include "inman/interaction/asynconn/Connect.hpp"
 #include "inman/interaction/msgbill/MsgBilling.hpp"
 #endif
 
@@ -31,6 +34,9 @@ using smsc::logger::Logger;
 
 #ifdef MSAG_INMAN_BILL
 using smsc::core::network::Socket;
+using smsc::inman::interaction::INPBilling;
+using smsc::inman::interaction::PacketBufferAC;
+using smsc::inman::interaction::PckAccumulatorIface;
 #endif
 
 class BillingManagerImplTester;
@@ -42,7 +48,7 @@ public config::ConfigListener,
 public EwalletCallParams::TransactionRegistrator
 #ifdef MSAG_INMAN_BILL
     , public smsc::inman::interaction::SMSCBillingHandlerITF
-    , public smsc::inman::interaction::ConnectListenerITF
+    , public smsc::inman::interaction::PacketListenerIface
 #endif
 {
     friend class BillingManagerImplTester;
@@ -106,21 +112,43 @@ public EwalletCallParams::TransactionRegistrator
 
 
     #ifdef MSAG_INMAN_BILL
-    Socket * socket;
-    smsc::inman::interaction::Connect * pipe;
-    virtual void onPacketReceived( smsc::inman::interaction::Connect* conn,
-                                   std::auto_ptr<SerializablePacketAC>& recv_cmd );
-    virtual void onConnectError( smsc::inman::interaction::Connect* conn,
-                                 std::auto_ptr<CustomException>& p_exc);
-    void sendCommand( smsc::inman::interaction::INPPacketAC& op ) {
-        pipe->sendPck(&op); 
-    }
+    static const INPBilling             _protoDef; //Sms/USSd billing protocol definition
+
+    std::auto_ptr<Socket>               socket;
+    smsc::inman::interaction::Connect   pipe;
+    smsc::inman::interaction::PckBuffersPool_T<2048>  _pckPool;
+
+    // ------------------------------------------------------------
+    // -- PacketListenerIface interface methods:
+    // ------------------------------------------------------------
+    //Returns true if listener has utilized packet so no more listeners
+    //should be notified, false - otherwise (in that case packet will be
+    //reported to other listeners).
+    virtual bool onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
+      /*throw(std::exception) */;
+
+    //Returns true if listener has processed connect exception so no more
+    //listeners should be notified, false - otherwise (in that case exception
+    //will be reported to other listeners).
+    virtual bool onConnectError(unsigned conn_id,
+                                PckAccumulatorIface::Status_e err_status,
+                                const smsc::util::CustomException * p_exc = NULL)
+      /*throw(std::exception) */;
+
+    //Serializes and sends INPBilling packet.
+    //Returns false in case of failure.
+    bool sendCommand( smsc::inman::interaction::INPPacketIface & use_op );
+
     TransactionStatus sendCommandAndWaitAnswer( smsc::inman::interaction::SPckChargeSms& op );
 
     void fillChargeSms( smsc::inman::interaction::ChargeSms& op,
                         BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec );
+
+    // ------------------------------------------------------------
+    // -- SMSCBillingHandlerITF interface methods:
+    // ------------------------------------------------------------
     virtual void onChargeSmsResult( smsc::inman::interaction::ChargeSmsResult* result,
-                                    smsc::inman::interaction::CsBillingHdr_dlg * hdr );
+                                    smsc::inman::interaction::INPBillingHdr_dlg * hdr );
     bool Reconnect();
     void InitConnection(std::string& host, int port)
     {
@@ -143,36 +171,7 @@ public EwalletCallParams::TransactionRegistrator
     billid_type genBillId();
     BillTransaction* getBillTransaction(billid_type billId);
     void putBillTransaction(billid_type billId, BillTransaction* p);
-    void ClearTransactions()
-    {
-
-#ifdef MSAG_INMAN_BILL
-        {
-            MutexGuard mg1(sendLock);
-            int key;
-            SendTransaction *st;
-            for(IntHash<SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
-            {
-                if(st->lcmCtx)
-                {
-                    st->lcmCtx->initiator->continueExecution(st->lcmCtx, true);
-                    delete st;
-                }
-                else
-                    st->responseEvent.Signal();
-            }
-        }
-#endif
-
-        BillTransaction *value;
-        smsc::core::synchronization::MutexGuard mg(inUseLock);
-        billid_type key;
-        for (smsc::core::buffers::IntHash64<BillTransaction *>::Iterator it = BillTransactionHash.First();
-             it.Next(key, value);)
-            delete value;
-
-        BillTransactionHash.Empty();
-    }
+    void ClearTransactions();
     void logEvent(const char *type, bool success, BillingInfoStruct& b, billid_type billID);
 
     int makeInmanId( billid_type billid );
@@ -212,26 +211,28 @@ public:
     m_bStarted(false),
     m_lastBillId(util::currentTimeMillis()),
     lastDlgId(0)
-#ifdef MSAG_INMAN_BILL
-        , socket(0), pipe(0)
-#endif
+    #ifdef MSAG_INMAN_BILL
+        , socket(new Socket())//, pipe(0)
+    #endif
     {
         logger = Logger::getInstance("bill.man");
         max_t = 0, min_t = 1000000000, billcount = 0, start_t = time(NULL);
         #ifdef MSAG_INMAN_BILL
-        socket = new Socket();
-        smsc::inman::interaction::INPSerializer::getInstance()
-            ->registerCmdSet(smsc::inman::interaction::INPCSBilling::getInstance());
-        pipe = new smsc::inman::interaction::Connect
-            ( socket, smsc::inman::interaction::INPSerializer::getInstance(), logger);
-        pipe->addListener(this);
+        //socket = new Socket();
+        //smsc::inman::interaction::INPSerializer::getInstance()
+        //    ->registerCmdSet(smsc::inman::interaction::INPCSBilling::getInstance());
+        //pipe = new smsc::inman::interaction::Connect
+        //    ( socket, smsc::inman::interaction::INPSerializer::getInstance(), logger);
+        pipe.init(_pckPool, 1); //Set consequitive mode of incoming packet procoessing
+        pipe.addListener(*this);
         #endif
     }
 
     ~BillingManagerImpl()
     {
         #ifdef MSAG_INMAN_BILL
-        if(pipe) delete pipe;
+        pipe.clearListeners();
+        //if(pipe) delete pipe;
         #endif
     }
 

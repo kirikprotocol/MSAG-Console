@@ -1,5 +1,5 @@
 /* "$Id$" */
-#include "BillingManager.h"
+#include "scag/bill/impl/BillingManager.h"
 
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/config/base/ConfigManager2.h"
@@ -17,7 +17,7 @@
 #include "util/config/ConfString.h"
 
 #ifdef MSAG_INMAN_BILL
-#include "inman/services/smbill/SmBillDefs.hpp"
+#include "inman/services/smbill/SmsExtraSrvMask.hpp"
 #endif
 
 #ifdef MSAG_BILL_TESTRELOADER
@@ -64,7 +64,10 @@ namespace scag2 {
 namespace bill {
 
 #ifdef MSAG_INMAN_BILL
-using namespace smsc::inman::interaction;
+using smsc::inman::interaction::SPckDeliverySmsResult;
+using smsc::inman::interaction::ChargeSmsResult;
+
+const INPBilling BillingManagerImpl::_protoDef;
 #endif
 
 using namespace scag::exceptions;
@@ -262,17 +265,17 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     if( st->status == TRANSACTION_VALID )
     {
         SPckDeliverySmsResult opRes;
-        opRes.Hdr().dlgId = bt->billId;
+        opRes._Hdr.dlgId = bt->billId;
         if( lcmCtx->callCommandId == lcm::BILL_OPEN )
         {
             BillOpenCallParams* bp = (BillOpenCallParams*)lcmCtx->getParams();
             bp->setBillId(bt->billId);
 
-            opRes.Cmd().setResultValue(1);
-            opRes.Cmd().setFinal(false); // To skip CDR creation
+            opRes._Cmd.setResultValue(1);
+            opRes._Cmd.setFinal(false); // To skip CDR creation
         }
         else if(lcmCtx->callCommandId == lcm::BILL_ROLLBACK)
-            opRes.Cmd().setResultValue(2);
+            opRes._Cmd.setResultValue(2);
         sendCommand(opRes);
 
         i = COMMAND_SUCCESSFULL;
@@ -450,6 +453,37 @@ void BillingManagerImpl::putBillTransaction(billid_type billId, BillTransaction*
     BillTransactionHash.Insert(billId, p);
 }
 
+void BillingManagerImpl::ClearTransactions()
+{
+#ifdef MSAG_INMAN_BILL
+    {
+        MutexGuard mg1(sendLock);
+        int key;
+        SendTransaction *st;
+        for(IntHash<SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
+        {
+            if(st->lcmCtx)
+            {
+                st->lcmCtx->initiator->continueExecution(st->lcmCtx, true);
+                delete st;
+            }
+            else
+                st->responseEvent.Signal();
+        }
+    }
+#endif
+
+    BillTransaction *value;
+    smsc::core::synchronization::MutexGuard mg(inUseLock);
+    billid_type key;
+    for (smsc::core::buffers::IntHash64<BillTransaction *>::Iterator it = BillTransactionHash.First();
+         it.Next(key, value);)
+        delete value;
+
+    BillTransactionHash.Empty();
+}
+
+
 billid_type BillingManagerImpl::genBillId()
 {
     billid_type ret = util::currentTimeMillis();
@@ -486,9 +520,9 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
         p->tariffRec = tariffRec;
         p->billingInfoStruct = billingInfoStruct;
 
-        fillChargeSms(p->ChargeOperation.Cmd(), billingInfoStruct, tariffRec);
+        fillChargeSms(p->ChargeOperation._Cmd, billingInfoStruct, tariffRec);
         const uint32_t dlgId = makeInmanId(billId);
-        p->ChargeOperation.Hdr().dlgId = dlgId;
+        p->ChargeOperation._Hdr.dlgId = dlgId;
 
         if(lcmCtx)
         {
@@ -502,9 +536,9 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
         if(p->status == TRANSACTION_VALID)
         {
             SPckDeliverySmsResult opRes;
-            opRes.Hdr().dlgId = p->ChargeOperation.Hdr().dlgId;
-            opRes.Cmd().setResultValue(1);
-            opRes.Cmd().setFinal(false); // To skip CDR creation
+            opRes._Hdr.dlgId = p->ChargeOperation._Hdr.dlgId;
+            opRes._Cmd.setResultValue(1);
+            opRes._Cmd.setFinal(false); // To skip CDR creation
             sendCommand(opRes);
         }
     } else
@@ -581,7 +615,7 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
         if(p->status == TRANSACTION_VALID)
         {
             SPckDeliverySmsResult op;
-            op.Hdr().dlgId = p->ChargeOperation.Hdr().dlgId;
+            op._Hdr.dlgId = p->ChargeOperation._Hdr.dlgId;
             sendCommand(op);
         }
     }
@@ -634,8 +668,8 @@ void BillingManagerImpl::Rollback(billid_type billId, bool timeout, lcm::LongCal
     if (p->status == TRANSACTION_VALID && p->tariffRec.billType == bill::infrastruct::INMAN)
     {
         SPckDeliverySmsResult op;
-        op.Hdr().dlgId = billId;
-        op.Cmd().setResultValue(2);
+        op._Hdr.dlgId = billId;
+        op._Cmd.setResultValue(2);
         sendCommand(op);
     }
     #endif
@@ -843,16 +877,17 @@ void BillingManagerImpl::makeBillEvent( BillingTransactionEvent billCommand,
 #ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
-    op.setDestinationSubscriberNumber(tariffRec.ServiceNumber);
-    op.setCallingPartyNumber(billingInfoStruct.AbonentNumber);
+    op.setDestinationSubscriberNumber(tariffRec.ServiceNumber.c_str());
+    op.setCallingPartyNumber(billingInfoStruct.AbonentNumber.c_str());
     op.setServiceId(billingInfoStruct.serviceId);
     op.setUserMsgRef(billingInfoStruct.msgRef);
-    op.setSmsXSrvs(SMSX_INCHARGE_SRV);
+    op.setSmsXSrvs(smsc::inman::smbill::SMSX_INCHARGE_SRV);
 
     smsc_log_debug(logger, "***** SN=%s, CPN=%s, SID=%d", tariffRec.ServiceNumber.c_str(), billingInfoStruct.AbonentNumber.c_str(), billingInfoStruct.serviceId);
 }
 
-void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)
+void BillingManagerImpl::onChargeSmsResult( ChargeSmsResult* result,
+                                            smsc::inman::interaction::INPBillingHdr_dlg * hdr )
 {
     if (!result) return;
 
@@ -879,7 +914,8 @@ bool BillingManagerImpl::Reconnect()
     if(!socket->Connect()) 
     {
 //        socket->SetNoDelay(true);
-        pipe->Reset();
+        pipe.bind(socket, logger);
+        pipe.reset();
         smsc_log_warn(logger, "Connected socket to BillingServer on host '%s', port '%d'", m_Host.c_str(), m_Port);
         return true;
     }
@@ -899,6 +935,35 @@ void BillingManagerImpl::deleteSendTransaction(int dlgId)
     SendTransactionHash.Delete(dlgId);
 }
 
+//Serializes and sends INPBilling packet.
+//Returns false in case of failure.
+bool BillingManagerImpl::sendCommand( smsc::inman::interaction::INPPacketIface & use_op )
+{
+  bool srlzRes = true;
+  smsc::inman::interaction::PacketBuffer_T<2048>  pckBuf;
+
+  INPBilling::CommandTag_e
+    cmdId = static_cast<INPBilling::CommandTag_e>(use_op.pCmd()->Id());
+  try {
+    use_op.serialize(pckBuf);
+    pckBuf.setPos(0);
+  } catch (const std::exception & exc) {
+    smsc_log_fatal(logger, "BillingManager: %s serialization exception - %s",
+                   INPBilling::nameOfCmd(cmdId), exc.what());
+    srlzRes = false;
+  }
+  if (srlzRes) {
+    if (pipe.sendPck(pckBuf))
+      return true;
+
+    smsc::util::CustomException sndExc;
+    srlzRes = pipe.hasExceptionOnSend(&sndExc);
+    smsc_log_error(logger, "BillingManager: %s sending failure: %s",
+                   INPBilling::nameOfCmd(cmdId), srlzRes ? sndExc.what() : "");
+  }
+  return false;
+}
+
 void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, lcm::LongCallContext* lcmCtx)
 {
     SendTransaction* s = new SendTransaction();
@@ -906,27 +971,27 @@ void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, lcm::LongCallCont
 
     st->lcmCtx = lcmCtx;
     st->billTransaction = bt;
-    insertSendTransaction(bt->ChargeOperation.Hdr().dlgId, st.release());
-    if(pipe->sendPck(&bt->ChargeOperation) <= 0)
+    insertSendTransaction(bt->ChargeOperation._Hdr.dlgId, st.release());
+    if(!sendCommand(bt->ChargeOperation))
     {
         MutexGuard mg(sendLock);
         processAsyncResult(s);
     }
 }
 
-TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op)
+TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(smsc::inman::interaction::SPckChargeSms& op)
 {
     if(!m_Connected)
         return TRANSACTION_WAIT_ANSWER;
 
     SendTransaction st;
 
-    insertSendTransaction(op.Hdr().dlgId, &st);
+    insertSendTransaction(op._Hdr.dlgId, &st);
 
     struct timeval tv, tv1;
     gettimeofday(&tv, NULL);
 
-    pipe->sendPck(&op);
+    sendCommand(op);
     st.responseEvent.Wait(m_Timeout);
 
     gettimeofday(&tv1, NULL);
@@ -937,43 +1002,64 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
         if(t < min_t) min_t = t;
         int total_t = int(time(NULL) - start_t);
         billcount++;
-        smsc_log_debug(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t);
+        smsc_log_debug(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d", op._Hdr.dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t);
     }
 
-    deleteSendTransaction(op.Hdr().dlgId);
+    deleteSendTransaction(op._Hdr.dlgId);
 
     return st.status;
 }
 
-void BillingManagerImpl::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& pck)
+// ------------------------------------------------------------
+// -- PacketListenerIface interface methods:
+// ------------------------------------------------------------
+bool BillingManagerImpl::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
+  /*throw(std::exception) */
 {
-    INPPacketAC* c = static_cast<INPPacketAC *>(pck.get());
-    CsBillingHdr_dlg* hdr = static_cast<CsBillingHdr_dlg*>(c->pHdr());
-    ChargeSmsResult* cmd = static_cast<ChargeSmsResult*>(c->pCmd());
+    INPBilling::PduId pduId = _protoDef.isKnownPacket(recv_pck);
+    if (!pduId) {
+      smsc_log_error(logger, "BillingManager: Unsupported packet recieved");
+      return true;
+    }
+    INPBilling::CommandTag_e
+      cmdId = static_cast<INPBilling::CommandTag_e>( _protoDef.getCmdId(pduId) );
 
-     if(hdr->Id() != INPCSBilling::HDR_DIALOG)
-        throw SCAGException("unsupported Inman packet header: %u", hdr->Id());
+    if (cmdId != INPBilling::CHARGE_SMS_RESULT_TAG) {
+      smsc_log_error(logger, "BillingManager: illegal INMan command received: %s",
+                     INPBilling::nameOfCmd(cmdId));
+      return true;
+    }
 
-     if(cmd->Id() == INPCSBilling::CHARGE_SMS_RESULT_TAG)
-     {
-         try { 
-             cmd->loadDataBuf();
-             this->onChargeSmsResult(cmd, hdr);
-         } catch (SerializerException& exc)
-         {
-             throw SCAGException("Corrupted cmd %u (dlgId: %u): %s",
-                                 cmd->Id(), hdr->dlgId, exc.what());
-         }
-     } else throw SCAGException("Unknown command recieved: %u", cmd->Id());
+    smsc::inman::interaction::SPckChargeSmsResult iPck;
+    try { iPck.deserialize(recv_pck, smsc::inman::interaction::SerializablePacketIface::dsmComplete);
+    } catch (const std::exception & exc) {
+      smsc_log_error(logger, "BillingManager: corrupted %s received - %s",
+                     INPBilling::nameOfCmd(cmdId), exc.what());
+      return true;
+    }
+    this->onChargeSmsResult(&iPck._Cmd, &iPck._Hdr);
+    return true;
 }
 
-void BillingManagerImpl::onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
+//Returns true if listener has processed connect exception so no more
+//listeners should be notified, false - otherwise (in that case exception
+//will be reported to other listeners).
+bool BillingManagerImpl::onConnectError(unsigned conn_id,
+                            PckAccumulatorIface::Status_e err_status,
+                            const smsc::util::CustomException * p_exc/* = NULL*/)
+  /*throw(std::exception)*/
 {
-    smsc_log_error(logger, "BillingManager error: Cannot receive command. Details: %s", p_exc->what());
-    m_Connected = false;
-    socket->Close();
+  if ((err_status == PckAccumulatorIface::accEOF) && !p_exc) {
+    smsc_log_info(logger, "BillingManager: Connect[%u] is closed", conn_id);
+  } else {
+    smsc_log_error(logger, "BillingManager: Connect[%u] error status(%s): %s", conn_id,
+                   PckAccumulatorIface::nmStatus(err_status), p_exc ? p_exc->what() : "");
+  }
+  m_Connected = false;
+  socket->Close();
+  return true;
 }
-#endif
+#endif /* MSAG_INMAN_BILL */
 
 void BillingManagerImpl::Start()
 {
@@ -983,6 +1069,7 @@ void BillingManagerImpl::Start()
     {
         m_bStarted = true;
         Thread::Start();
+        pipe.start();
     }
     #endif
     if (ewalletClient_.get()) { ewalletClient_->startup(); }
@@ -1015,6 +1102,7 @@ void BillingManagerImpl::Stop()
         smsc_log_debug(logger,"connectEvent signal sent, waiting on exitEvent");
         exitEvent.Wait();
     }
+    pipe.stop();
     #endif
     smsc_log_info(logger,"BillingManager::stop");
 }
@@ -1038,7 +1126,7 @@ int BillingManagerImpl::Execute()
                 tv.tv_sec = 10; 
                 tv.tv_usec = 500;
                 int n = select(socket->getSocket() + 1, &read, 0, 0, &tv);
-                if(n < 0 || (n > 0 && pipe->onReadEvent()))
+                if(n < 0 || (n > 0 && pipe.onReadEvent()))
                     m_Connected = false;
             }
             else

@@ -1,12 +1,15 @@
-/* "$Id$" */
-#include "inman/interaction/msgbill/MsgBilling.hpp"
-#include "util/Exception.hpp"
-#include "smsc/smsc.hpp"
+/* "@(#)$Id$" */
 
-#include "INManComm.hpp"
+#include "util/Exception.hpp"
+//#include "inmancomm/INManComm.hpp"
+#include "smsc/smsc.hpp"
+#include "inman/interaction/msgbill/MsgBilling.hpp"
+using smsc::inman::interaction::INPBilling;
 
 namespace smsc{
 namespace inmancomm{
+
+static const INPBilling  _protoDef; //Sms/USSd billing protocol definition
 
 Address INManComm::scAddr;
 
@@ -28,10 +31,6 @@ void INManComm::Init(const char* argHost,int argPort)
 {
   host=argHost;
   port=argPort;
-
-  smsc::inman::interaction::INPSerializer::getInstance()->
-      registerCmdSet(smsc::inman::interaction::INPCSBilling::getInstance());
-
   if(socket->Init(host.c_str(),port,0)==-1)
   {
     throw smsc::util::Exception("Failed to resolve %s:%d",host.c_str(),port);
@@ -122,12 +121,11 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   ctx.inDlgId=dlgId;
 
   smsc::inman::interaction::SPckChargeSms pck;
-  pck.Hdr().dlgId = dlgId;
-  FillChargeOp(id, pck.Cmd(), sms);
+  pck._Hdr.dlgId = dlgId;
+  FillChargeOp(id, pck._Cmd, sms);
 
-  smsc::inman::interaction::ObjectBuffer buf(400);
-  pck.serialize(buf);
-
+  smsc::inman::interaction::PacketBuffer_T<400> buf;
+  pck.serialize(buf); //throws
 
   debug2(log,"Buffer size:%d",buf.getDataSize());
   {
@@ -162,10 +160,11 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
 
   smsc::inman::interaction::SPckChargeSms pck;
 //  pck.Cmd().setForwarded();
-  pck.Hdr().dlgId = dlgId;
-  FillChargeOp(id, pck.Cmd(), sms);
-  smsc::inman::interaction::ObjectBuffer buf(400);
-  pck.serialize(buf);
+  pck._Hdr.dlgId = dlgId;
+  FillChargeOp(id, pck._Cmd, sms);
+
+  smsc::inman::interaction::PacketBuffer_T<400> buf;
+  pck.serialize(buf); //throws
   {
     ReqData* rd=new ReqData;
     rd->id=id;
@@ -193,18 +192,19 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
     throw smsc::util::Exception("Communication with inman failed");
   }
   smsc::inman::interaction::SPckDeliveredSmsData pck;
-  pck.Hdr().dlgId=getNewDlgId();
+  pck._Hdr.dlgId=getNewDlgId();
   info2(log,"FullReport: Id=%lld;dda=%s;dlgId=%d;cp=%d",id,sms.getDealiasedDestinationAddress().toString().c_str(),
-      pck.Hdr().dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
-  FillChargeOp(id,pck.Cmd(),sms);
-  pck.Cmd().setResultValue(sms.lastResult);
-  pck.Cmd().setDestIMSI(sms.getDestinationDescriptor().imsi);
-  pck.Cmd().setDestMSC(sms.getDestinationDescriptor().msc);
-  pck.Cmd().setDestSMEid(sms.getDestinationSmeId());
-  pck.Cmd().setDeliveryTime(time(NULL));
+      pck._Hdr.dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
+  FillChargeOp(id,pck._Cmd,sms);
+  pck._Cmd.setResultValue(sms.lastResult);
+  pck._Cmd.setDestIMSI(sms.getDestinationDescriptor().imsi);
+  pck._Cmd.setDestMSC(sms.getDestinationDescriptor().msc);
+  pck._Cmd.setDestSMEid(sms.getDestinationSmeId());
+  pck._Cmd.setDeliveryTime(time(NULL));
   if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
-    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-  smsc::inman::interaction::ObjectBuffer buf(200);
+    pck._Cmd.setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+
+  smsc::inman::interaction::PacketBuffer_T<400> buf;
   pck.serialize(buf);
   packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
 }
@@ -216,17 +216,17 @@ void INManComm::Report(SMSId id,int dlgId,const SMS& sms,bool final)
       dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY),final?"Y":"N");
 
   smsc::inman::interaction::SPckDeliverySmsResult pck;
-  pck.Hdr().dlgId = dlgId;
-  pck.Cmd().setResultValue(sms.lastResult);
-  pck.Cmd().setDestIMSI(sms.getDestinationDescriptor().imsi);
-  pck.Cmd().setDestMSC(sms.getDestinationDescriptor().msc);
-  pck.Cmd().setDestSMEid(sms.getDestinationSmeId());
-  pck.Cmd().setDeliveryTime(time(NULL));
-  pck.Cmd().setFinal(final);
+  pck._Hdr.dlgId = dlgId;
+  pck._Cmd.setResultValue(sms.lastResult);
+  pck._Cmd.setDestIMSI(sms.getDestinationDescriptor().imsi);
+  pck._Cmd.setDestMSC(sms.getDestinationDescriptor().msc);
+  pck._Cmd.setDestSMEid(sms.getDestinationSmeId());
+  pck._Cmd.setDeliveryTime(time(NULL));
+  pck._Cmd.setFinal(final);
   if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
-    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+    pck._Cmd.setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
 
-  smsc::inman::interaction::ObjectBuffer buf(200);
+  smsc::inman::interaction::PacketBuffer_T<200> buf;
   pck.serialize(buf);
 
   packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
@@ -274,7 +274,8 @@ void INManComm::ProcessExpiration()
 
 int INManComm::Execute()
 {
-  smsc::inman::interaction::ObjectBuffer buf(0);
+  smsc::inman::interaction::PacketBuffer_T<200> buf;
+
   time_t lastExpire=time(NULL);
   while(!isStopping)
   {
@@ -334,31 +335,32 @@ int INManComm::Execute()
     }
     buf.setDataSize(packetSize);
     buf.setPos(0);
-    std::auto_ptr<smsc::inman::interaction::INPPacketAC> pck;
-    try {
-        pck.reset(smsc::inman::interaction::INPSerializer::getInstance()->deserialize(buf));
-        if ((pck->pHdr())->Id() != smsc::inman::interaction::INPCSBilling::HDR_DIALOG)
-            throw smsc::util::Exception("unsupported Inman packet header");
-        (pck->pCmd())->loadDataBuf();
-    }catch(std::exception& e)
+    //check PDUid and deserialize buffer
+    smsc::inman::interaction::SPckChargeSmsResult pck;
+    try
     {
-      warn2(log,"Failed to deserialize buffer:%s",e.what());
+      INPBilling::PduId pduId = _protoDef.isKnownPacket(buf);
+      if (!pduId)
+        throw smsc::util::Exception("unsupported INMan packet recieved");
+
+      INPBilling::CommandTag_e
+        cmdId = static_cast<INPBilling::CommandTag_e>(_protoDef.getCmdId(pduId));
+
+      if (cmdId != INPBilling::CHARGE_SMS_RESULT_TAG) {
+        smsc_log_warn(log, "illegal INMan command received: %s", INPBilling::nameOfCmd(cmdId));
+        continue;
+      }
+      pck.deserialize(buf, smsc::inman::interaction::SerializablePacketIface::dsmComplete); //throws
+    } catch(const std::exception & exc)
+    {
+      smsc_log_warn(log, "Failed to deserialize buffer: %s", exc.what());
       socket->Close();
-      socketOk=false;
+      socketOk = false;
       sleep(2);
       continue;
     }
-
-    if ((pck->pCmd())->Id() != smsc::inman::interaction::INPCSBilling::CHARGE_SMS_RESULT_TAG)
-    {
-      info2(log,"Unknown object id:%d", (pck->pCmd())->Id());
-      continue;
-    }
-
-    smsc::inman::interaction::CsBillingHdr_dlg * hdr =
-        static_cast<smsc::inman::interaction::CsBillingHdr_dlg*>(pck->pHdr());
-    smsc::inman::interaction::ChargeSmsResult* result =
-        static_cast<smsc::inman::interaction::ChargeSmsResult*>(pck->pCmd());
+    smsc::inman::interaction::INPBillingHdr_dlg * hdr = &pck._Hdr;
+    smsc::inman::interaction::ChargeSmsResult * result = &pck._Cmd;
 
     smsc::smeman::SmscCommand cmd;
     std::auto_ptr<ReqData> rd;

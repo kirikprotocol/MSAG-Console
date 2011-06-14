@@ -1,4 +1,7 @@
 #ifndef __SMSC_SYSTEM_INMANCOMM_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_SYSTEM_INMANCOMM_HPP__
 
 #include "smeman/smeproxy.h"
@@ -16,14 +19,6 @@
 
 
 namespace smsc{
-
-
-namespace inman{
-namespace interaction{
-  class SerializerITF;
-}
-}
-
 namespace system{
 
 namespace sync=smsc::core::synchronization;

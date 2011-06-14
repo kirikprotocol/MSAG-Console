@@ -9,7 +9,7 @@ $(XERCES_LIB) -lutil -lutil-xml -lsmsc-smeman -lsmsc-config-smeman -lrt \
 switch SNMP
 YES:-lsmsc-snmp -lsmsc-snmp-smestattable -lsmsc-snmp-smeerrtable \
 end switch
--lsmsc-inmancomm -linman-interaction-msgbill -linman-interaction -linman-common -lutil-mirrorfile -lsmsc-closedgroups \
+-lsmsc-inmancomm -linman-interaction-msgbill -linman-interaction-serializer -linman-common -lutil-mirrorfile -lsmsc-closedgroups \
 -lsmsc-statemachine -lsmsc-scheduler -lsmsc-agents -lsmsc-common -lsmsc-abonentinfo -lsmsc-smscsme \
 -lsmsc-dpf -linman-storage -lsmsc-snmp -lsmsc-cluster-controller \
 -lsmsc-interconnect -lsmsc-configregistry \

@@ -21,7 +21,7 @@ endswitch
 switch SNMP
 YES: -lsnmp -lsnmp-smestattable -lsnmp-smeerrtable \
 endswitch
- -linman-interaction-msgbill -linman-interaction -linman-common \
+ -linman-interaction-msgbill -linman-interaction-serializer -linman-common \
  -lutil-mirrorfile -lclosedgroups \
  -linman-storage \
 switch SNMP

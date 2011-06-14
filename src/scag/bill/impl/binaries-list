@@ -21,6 +21,10 @@ scag/tests/testBillId testBillId \
   -lscag-config-lcm \
   -lscag-config-base \
   \
+  -linman-interaction-msgbill \
+  -linman-interaction-serializer \
+  -linman-interaction-asynconn \
+  -linman-common \
   -lscag-util-io \
   -lscag-util-singleton \
   -lscag-util \
