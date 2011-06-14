@@ -80,8 +80,8 @@ std::string ConfigWrapper::getString( const char* name, const char* def, bool st
     size_t len = strlen(val);
     if (strip) {
         for ( const char* p = val+len; len>0; ) {
-            const char* v = p-1;
-            if ( *v == ' ' || *v == '\t' || *v == '\n' ) {
+            const char v = *--p;
+            if ( v == ' ' || v == '\t' || v == '\n' ) {
                 --len;
                 continue;
             }
