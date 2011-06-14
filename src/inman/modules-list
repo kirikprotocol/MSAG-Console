@@ -1,5 +1,5 @@
 #
-# $Id$
+# @(#)$Id$
 #
 asn1rt
 codec_inc
@@ -12,7 +12,7 @@ interaction
 inmanemu
 storage
 utilbin
-uss
+#uss
 services
 srvloader
 abprov
