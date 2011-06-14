@@ -51,6 +51,8 @@ public class DeliveryEditController extends DeliveryController {
 
   private String testAddress;
 
+  private Date createDate;
+
   public DeliveryEditController() {
     super();
 
@@ -161,6 +163,16 @@ public class DeliveryEditController extends DeliveryController {
     if(u.getPhone() != null) {
       testAddress = u.getPhone().getSimpleAddress();
     }
+    createDate = delivery.getCreateDate();
+  }
+
+
+  public Date getCreateDate() {
+    return createDate;
+  }
+
+  public void setCreateDate(Date createDate) {
+    this.createDate = createDate;
   }
 
   private String emailNotificationAddress;
