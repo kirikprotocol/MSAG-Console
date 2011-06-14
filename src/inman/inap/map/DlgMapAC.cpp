@@ -88,6 +88,31 @@ bool MapDialogAC::unbindUser(void)
   return false;
 }
 
+//Unlocks reference to MAP User, notifies it aboud dialog end if required
+//and destroys this object if it's released.
+//Note: _sync MUST be unlocked upon entry!
+void MapDialogAC::unRefUserNotify(bool do_end, RCHash end_rc)
+{
+  if (!do_end) {
+    MutexGuard  grd(_sync);
+    doUnrefUser();
+  } else {
+    unRefUserAndDie(end_rc);
+  }
+}
+
+//Unrefs and unlocks result handler and destroys this object if it's released
+//Note: _sync MUST be unlocked upon entry!
+void MapDialogAC::unRefUserAndDie(RCHash end_rc)
+{
+  //may call releaseThis()/finalizeObj()
+  if (_resHdl->onDialogEnd(*this, end_rc) != ObjFinalizerIface::objDestroyed) {
+    if ((finalizeObj() == ObjFinalizerIface::objFinalized)
+        && _delThis && !_thisRefs.hasRefs()) //die if requested(
+      delete this;
+  }
+}
+
 /* ------------------------------------------------------------------------ *
  * ObjFinalizerIface interface methods
  * ------------------------------------------------------------------------ */
@@ -98,14 +123,6 @@ ObjAllcStatus_e MapDialogAC::finalizeObj(void)
   doUnrefUser();
   return _thisRefs.hasRefsExcept(MapDialogAC::refIdItself) ?
             ObjFinalizerIface::objActive : ObjFinalizerIface::objFinalized;
-}
-
-//Unrefs and unlocks result handler and destroys this object if it's released
-void MapDialogAC::unRefAndDie(void)
-{
-  if ((finalizeObj() == ObjFinalizerIface::objFinalized)
-      && _delThis && !_thisRefs.hasRefs())
-    delete this;
 }
 
 /* ------------------------------------------------------------------------ *
@@ -218,10 +235,7 @@ void MapDialogAC::onDialogPAbort(uint8_t abortCause)
     if (!doRefUser())
       return;
   }
-  //may call releaseThis()/finalizeObj()
-  if (_resHdl->onDialogEnd(*this, _RCS_TC_PAbort->mkhash(abortCause))
-      != ObjFinalizerIface::objDestroyed)
-    unRefAndDie(); //die if requested(
+  unRefUserAndDie(_RCS_TC_PAbort->mkhash(abortCause)); //die if requested(
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -239,10 +253,7 @@ void MapDialogAC::onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
     if (!doRefUser())
       return;
   }
-  //may call releaseThis()/finalizeObj()
-  if (_resHdl->onDialogEnd(*this, _RCS_TC_UAbort->mkhash(abortCause))
-      != ObjFinalizerIface::objDestroyed)
-    unRefAndDie(); //die if requested(
+  unRefUserAndDie(_RCS_TC_UAbort->mkhash(abortCause)); //die if requested(
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -271,10 +282,7 @@ void MapDialogAC::onDialogNotice(uint8_t reportCause,
     if (!doRefUser())
       return;
   }
-  //may call releaseThis()/finalizeObj()
-  if (_resHdl->onDialogEnd(*this, _RCS_TC_Report->mkhash(reportCause))
-      != ObjFinalizerIface::objDestroyed)
-    unRefAndDie(); //die if requested(
+  unRefUserAndDie(_RCS_TC_Report->mkhash(reportCause)); //die if requested(
 }
 
 
@@ -297,9 +305,7 @@ void MapDialogAC::onDialogREnd(bool compPresent)
     if (!doRefUser())
       return;
   }
-  //may call releaseThis()/finalizeObj()
-  if (_resHdl->onDialogEnd(*this, errcode) != ObjFinalizerIface::objDestroyed)
-    unRefAndDie(); //die if requested(
+  unRefUserAndDie(errcode); //die if requested(
 }
 
 /* ------------------------------------------------------------------------ *
@@ -319,10 +325,7 @@ void MapDialogAC::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
     if (!doRefUser())
       return;
   }
-  //may call releaseThis()/finalizeObj()
-  if (_resHdl->onDialogEnd(*this, _RCS_MAPOpErrors->mkhash(resE->getOpcode()))
-      != ObjFinalizerIface::objDestroyed)
-    unRefAndDie(); //die if requested(
+  unRefUserAndDie(_RCS_MAPOpErrors->mkhash(resE->getOpcode())); //die if requested(
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -336,10 +339,7 @@ void MapDialogAC::onInvokeLCancel(InvokeRFP pInv)
     if (!doRefUser())
       return;
   }
-  //may call releaseThis()/finalizeObj()
-  if (_resHdl->onDialogEnd(*this, _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse))
-      != ObjFinalizerIface::objDestroyed)
-    unRefAndDie(); //die if requested(
+  unRefUserAndDie(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse)); //die if requested(
 }
 
 

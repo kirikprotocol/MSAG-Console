@@ -165,8 +165,11 @@ protected:
   bool doRefUser(void);
   //Unlocks reference to MAP user.
   void doUnrefUser(void);
+  //Unlocks reference to MAP User, notifies it aboud dialog end if required
+  //and destroys this object if it's released.
+  void unRefUserNotify(bool do_end, RCHash end_rc = 0);
   //Unrefs and unlocks result handler and destroys this object if it's released
-  void unRefAndDie(void);
+  void unRefUserAndDie(RCHash end_rc);
 };
 
 } //inap

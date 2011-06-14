@@ -80,7 +80,7 @@ void MapCHSRIDlg::onInvokeResultNL(InvokeRFP pInv, TcapEntity* res)
 
 void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity * res)
 {
-  unsigned do_end = 0;
+  bool do_end = false;
   CHSendRoutingInfoRes * resComp = static_cast<CHSendRoutingInfoRes *>(res->getParam());
   {
     MutexGuard  grd(_sync);
@@ -93,24 +93,16 @@ void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity * res)
 
     _ctrState.s.ctrInited = _ctrState.s.ctrResulted = MapDialogAC::operDone;
     try { _reqRes.mergeSegment(res->getParam());
-    } catch (const CustomException & exc) {
+    } catch (const std::exception & exc) {
       smsc_log_error(_logger, "%s: %s", _logId, exc.what());
     }
-    if ((do_end = _ctrState.s.ctrFinished) != 0)
+    if ((do_end = (_ctrState.s.ctrFinished != 0)))
       unbindTCDialog();
     if (!doRefUser())
       return;
   }
   sriHdl()->onMapResult(_reqRes);
-
-  if (!do_end) {
-    MutexGuard  grd(_sync);
-    doUnrefUser();
-  } else {
-    //may call releaseThis()/finalizeObj();
-    if (_resHdl->onDialogEnd(*this) != ObjFinalizerIface::objDestroyed)
-      unRefAndDie(); //die if requested
-  }
+  unRefUserNotify(do_end, 0);
 }
 
 } //chsri

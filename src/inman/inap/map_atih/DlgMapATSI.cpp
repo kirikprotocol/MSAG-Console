@@ -68,7 +68,7 @@ void MapATSIDlg::onInvokeResultNL(InvokeRFP pInv, TcapEntity* res)
 
 void MapATSIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity * res)
 {
-  unsigned do_end = 0;
+  bool do_end = false;
   ATSIRes * resComp = static_cast<ATSIRes *>(res->getParam());
   {
     MutexGuard  grd(_sync);
@@ -81,22 +81,14 @@ void MapATSIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity * res)
 
     _ctrState.s.ctrResulted = 1;
     _ctrState.s.ctrInited = MapDialogAC::operDone;
-    if ((do_end = _ctrState.s.ctrFinished) != 0)
+    if ((do_end = (_ctrState.s.ctrFinished != 0)))
       unbindTCDialog();
     if (!doRefUser())
       return;
   }
   if (resComp)
     atsiHdl()->onATSIResult(*resComp);
-
-  if (!do_end) {
-    MutexGuard  grd(_sync);
-    doUnrefUser();
-  } else {
-    //may call releaseThis()/finalizeObj();
-    if (_resHdl->onDialogEnd(*this) != ObjFinalizerIface::objDestroyed)
-      unRefAndDie(); //die if requested
-  }
+  unRefUserNotify(do_end, 0);
 }
 
 } //atih
