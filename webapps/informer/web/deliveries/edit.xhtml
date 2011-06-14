@@ -89,13 +89,14 @@
         </tr:outputText>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
-        <tr:outputText value="#{deliveryEdit.delivery.startDate}">
-          <f:convertDateTime dateStyle="short" type="both"/>
-        </tr:outputText>
-
-        <h:outputText value="&#160;"/>
-        <h:outputText rendered="#{deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.local.time']})"/>
-        <h:outputText rendered="#{!deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
+        <h:panelGroup>
+          <tr:outputText value="#{deliveryEdit.delivery.startDate}">
+            <f:convertDateTime dateStyle="short" type="both"/>
+          </tr:outputText>
+          <h:outputText value="&#160;"/>
+          <h:outputText rendered="#{deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.local.time']})"/>
+          <h:outputText rendered="#{!deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
+        </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
         <eye:inputDate value="#{deliveryEdit.delivery.endDate}" type="both"/>
