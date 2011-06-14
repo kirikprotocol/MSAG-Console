@@ -19,6 +19,7 @@ import java.util.*;
  */
 class UsersConfig implements ManagedConfigFile<UsersSettings> {
 
+  private static final String CP_SETTINGS_SECTION = "CPSETTINGS";
 
   public UsersSettings load(InputStream is) throws Exception {
     UsersSettings us = new UsersSettings();
@@ -88,9 +89,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
   }
 
   private List<UserCPsettings> loadUserCpSettings(XmlConfigSection section) throws XmlConfigException, AdminException {
-    if (section.containsSection("CPSETTINGS")) {
+    if (section.containsSection(CP_SETTINGS_SECTION)) {
       List<UserCPsettings> ucpsList = new ArrayList<UserCPsettings>();
-      XmlConfigSection cpSectionsRoot = section.getSection("CPSETTINGS");
+      XmlConfigSection cpSectionsRoot = section.getSection(CP_SETTINGS_SECTION);
       for(XmlConfigSection s : cpSectionsRoot.sections()) {
         UserCPsettings ucps = new UserCPsettings();
         UserCPsettings.Protocol protocol = UserCPsettings.Protocol.valueOf(s.getString("protocol","sftp"));
@@ -263,6 +264,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     userSection.setInt("deliveryLifetime", user.getDeliveryLifetime());
 
 
+    userSection.removeSection(CP_SETTINGS_SECTION);
     if (user.getCpSettings() != null && !user.getCpSettings().isEmpty()) {
       userSection.addSection(createCpSettingsSection(user));
     }
@@ -279,7 +281,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
   }
 
   private XmlConfigSection createCpSettingsSection(User user) throws AdminException {
-    XmlConfigSection section = new XmlConfigSection("CPSETTINGS");
+    XmlConfigSection section = new XmlConfigSection(CP_SETTINGS_SECTION);
     List<UserCPsettings> cpSettings = user.getCpSettings();
     for (int i = 0, cpSettingsSize = cpSettings.size(); i < cpSettingsSize; i++) {
       UserCPsettings ucps = cpSettings.get(i);
