@@ -7,7 +7,6 @@
 #endif
 #define __SMSC_INMAN_TEST_BILLING_HPP
 
-//#include "inman/tests/AbonentsDB.hpp"
 #include "inman/tests/TstSmDialog.hpp"
 #include "inman/tests/TstFacade.hpp"
 
@@ -17,17 +16,17 @@ namespace smsc  {
 namespace inman {
 namespace test {
 
+using smsc::inman::interaction::INPBilling;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
 using smsc::inman::interaction::DeliveredSmsData;
-using smsc::inman::interaction::SMSCBillingHandlerITF;
-using smsc::inman::interaction::CsBillingHdr_dlg;
+using smsc::inman::interaction::INPBillingHdr_dlg;
 
 /* ************************************************************************** *
  * class BillFacade: 
  * ************************************************************************** */
-class BillFacade : public TSTFacadeAC, SMSCBillingHandlerITF {
+class BillFacade : public TSTFacadeAC, smsc::inman::interaction::SMSCBillingHandlerITF {
 protected:
   typedef std::map<unsigned int, CapSmDialog*> INDialogsMap;
 
@@ -48,10 +47,12 @@ protected:
   // ---------------------------------------------------
   // -- SMSCBillingHandlerITF interface implementation
   // ---------------------------------------------------
-  void onChargeSmsResult(ChargeSmsResult * result, CsBillingHdr_dlg * hdr);
+  void onChargeSmsResult(ChargeSmsResult * result, INPBillingHdr_dlg * hdr);
 
 public:
-  BillFacade(AbonentsDB & use_db, ConnectSrv * conn_srv, Logger * use_log = NULL);
+  static const INPBilling  _protoDef; //provided protocol definition
+
+  BillFacade(AbonentsDB & use_db, TcpServerIface & conn_srv, Logger * use_log = NULL);
   //
   virtual ~BillFacade();
 
@@ -76,10 +77,13 @@ public:
   void sendDeliveredSmsData(unsigned int dlg_id, uint32_t num_bytes = 0);
   void sendDeliverySmsResult(unsigned int dlg_id, uint32_t delivery_status, uint32_t num_bytes = 0);
 
-  // ---------------------------------------------------
-  // -- ConnectListenerITF interface implementation
-  // ---------------------------------------------------
-  virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+  // ------------------------------------------------------------
+  // -- PacketListenerIface interface methods:
+  // ------------------------------------------------------------
+  //Returns true if listener has utilized packet so no more listeners
+  //should be notified, false - otherwise (in that case packet will be
+  //reported to other listeners).
+  virtual bool onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
     /*throw(std::exception) */;
 };
 

@@ -3,17 +3,13 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/tests/TstSmBill.hpp"
-
-using smsc::core::network::Socket;
-using smsc::inman::interaction::ObjectBuffer;
-using smsc::inman::interaction::INPSerializer;
-using smsc::inman::interaction::INPCSBilling;
-
+using smsc::inman::interaction::SerializablePacketIface;
 using smsc::inman::interaction::SPckChargeSms;
 using smsc::inman::interaction::SPckChargeSmsResult;
 using smsc::inman::interaction::SPckDeliverySmsResult;
 using smsc::inman::interaction::SPckDeliveredSmsData;
 
+using smsc::core::synchronization::MutexGuard;
 using smsc::util::format;
 
 namespace smsc  {
@@ -23,13 +19,13 @@ namespace test {
 /* ************************************************************************** *
  * class BillFacade implementation:
  * ************************************************************************** */
-BillFacade::BillFacade(AbonentsDB & use_db, ConnectSrv * conn_srv, Logger * use_log/* = NULL*/)
-  : TSTFacadeAC(conn_srv, use_log)
-  , _abDB(use_db), _msg_ref(0x0100), _msg_id(0x010203040000ULL), _maxDlgId(0)
-  , _dlgCfg(use_db)
+const INPBilling  BillFacade::_protoDef; //provided protocol definition
+
+BillFacade::BillFacade(AbonentsDB & use_db, TcpServerIface & conn_srv, Logger * use_log/* = NULL*/)
+  : TSTFacadeAC(conn_srv, use_log), _abDB(use_db)
+  , _msg_ref(0x0100), _msg_id(0x010203040000ULL), _maxDlgId(0), _dlgCfg(use_db)
 { 
   strcpy(_logId, "TFBill");
-  INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
 }
 
 BillFacade::~BillFacade()
@@ -190,9 +186,9 @@ void BillFacade::sendChargeSms(unsigned int dlg_id, uint32_t num_bytes/* = 0*/)
   CDRRecord       cdr;
   SPckChargeSms   pck;
 
-  pck.Hdr().dlgId = dlg_id;
-  composeChargeSms(pck.Cmd(), dlgCfg);
-  pck.Cmd().export2CDR(cdr);
+  pck._Hdr.dlgId = dlg_id;
+  composeChargeSms(pck._Cmd, dlgCfg);
+  pck._Cmd.export2CDR(cdr);
 
   char tbuf[sizeof("%u bytes of ") + 4*3 + 1];
   int n = 0;
@@ -205,7 +201,7 @@ void BillFacade::sendChargeSms(unsigned int dlg_id, uint32_t num_bytes/* = 0*/)
                cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
                cdr.nmPolicy());
   Prompt(Logger::LEVEL_DEBUG, msg);
-  if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
+  if (!sendPckPart(&pck, num_bytes) && dlg) { // num_bytes == 0 - forces sending whole packet
     if (dlg->isState(CapSmDialog::dIdle))
       dlg->setState(CapSmDialog::dCharged);
     else {
@@ -231,10 +227,10 @@ void BillFacade::sendDeliveredSmsData(unsigned int dlg_id, uint32_t num_bytes/* 
   CDRRecord       cdr;
   SPckDeliveredSmsData   pck;
 
-  pck.Hdr().dlgId = dlg_id;
-  composeDeliveredSmsData(pck.Cmd(), dlgCfg);
-  pck.Cmd().setResultValue(dlg->getDlvrResult());
-  pck.Cmd().export2CDR(cdr);
+  pck._Hdr.dlgId = dlg_id;
+  composeDeliveredSmsData(pck._Cmd, dlgCfg);
+  pck._Cmd.setResultValue(dlg->getDlvrResult());
+  pck._Cmd.export2CDR(cdr);
 
   char tbuf[sizeof("%u bytes of ") + 4*3 + 1];
   int n = 0;
@@ -273,9 +269,9 @@ void BillFacade::sendDeliverySmsResult(unsigned int dlg_id, uint32_t delivery_st
   }
   //compose DeliverySmsResult
   SPckDeliverySmsResult   pck;
-  pck.Hdr().dlgId = dlg_id;
-  pck.Cmd().setResultValue(delivery_status);
-  composeDeliverySmsResult(pck.Cmd(), dlgCfg);
+  pck._Hdr.dlgId = dlg_id;
+  pck._Cmd.setResultValue(delivery_status);
+  composeDeliverySmsResult(pck._Cmd, dlgCfg);
 
   char tbuf[sizeof("%u bytes of ") + 4*3 + 1];
   int n = 0;
@@ -301,45 +297,47 @@ void BillFacade::sendDeliverySmsResult(unsigned int dlg_id, uint32_t delivery_st
 // ---------------------------------------------------
 // -- ConnectListenerITF interface implementation
 // ---------------------------------------------------
-void BillFacade::onPacketReceived(Connect * conn,
-                                  std::auto_ptr<SerializablePacketAC>& recv_cmd)
+bool BillFacade::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
 /*throw(std::exception) */
 {
-  //check service header
-  INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
-  //check for header
-  if (!pck->pHdr() || ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG)) {
-    std::string msg;
-    format(msg, "ERR: unknown cmd header: %u", (pck->pHdr())->Id());
-    Prompt(Logger::LEVEL_ERROR, msg);
-  } else {
-    if ((pck->pCmd())->Id() == INPCSBilling::CHARGE_SMS_RESULT_TAG) {
-      ChargeSmsResult * cmd = static_cast<ChargeSmsResult*>(pck->pCmd());
-      CsBillingHdr_dlg * hdr = static_cast<CsBillingHdr_dlg*>(pck->pHdr());
-
-      bool goon = true;
-      try { cmd->loadDataBuf(); }
-      catch (const SerializerException & exc) {
-        std::string msg;
-        format(msg, "ERR: corrupted cmd %u (dlgId: %u): %s",
-                cmd->Id(), hdr->Id(), exc.what());
-        Prompt(Logger::LEVEL_ERROR, msg);
-        goon = false;
-      }
-      if (goon)
-        onChargeSmsResult(cmd, hdr);
-    } else {
-      std::string msg;
-      format(msg, "ERR: unknown command recieved: %u", (pck->pCmd())->Id());
-      Prompt(Logger::LEVEL_ERROR, msg);
-    }
+  INPBilling::PduId pduId = _protoDef.isKnownPacket(recv_pck);
+  if (!pduId) {
+    Prompt(Logger::LEVEL_ERROR, "unsupported Pdu received");
+    return true;
   }
+  uint16_t cmdId = _protoDef.getCmdId(pduId);
+  if (cmdId != INPBilling::CHARGE_SMS_RESULT_TAG) {
+    std::string msg;
+    format(msg, "illegal Cmd[%u] received", (unsigned)cmdId);
+    Prompt(Logger::LEVEL_ERROR, msg.c_str());
+    return true;
+  }
+
+  SPckChargeSmsResult iPck;
+  try { iPck.deserialize(recv_pck, SerializablePacketIface::dsmPartial);
+  } catch (const std::exception & exc) {
+    std::string msg;
+    format(msg, "corrupted Pdu[%u] received - %s", (unsigned)pduId, exc.what());
+    Prompt(Logger::LEVEL_ERROR, msg.c_str());
+    return true;
+  }
+  //complete deserialization
+  try { iPck._Cmd.load(recv_pck);
+  } catch (const std::exception & exc) {
+    std::string msg;
+    format(msg, "corrupted cmd %u (dlgId: %u) received: %s",
+            iPck._Cmd._cmdTAG, iPck._Hdr.dlgId, exc.what());
+    Prompt(Logger::LEVEL_ERROR, msg.c_str());
+    return true;
+  }
+  onChargeSmsResult(&iPck._Cmd, &iPck._Hdr);
+  return true;
 }
 
 // ---------------------------------------------------
 // -- SMSCBillingHandlerITF interface implementation
 // ---------------------------------------------------
-void BillFacade::onChargeSmsResult(ChargeSmsResult * result, CsBillingHdr_dlg * hdr)
+void BillFacade::onChargeSmsResult(ChargeSmsResult * result, INPBillingHdr_dlg * hdr)
 {
   std::string msg;
 

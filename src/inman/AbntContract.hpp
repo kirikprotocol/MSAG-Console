@@ -64,6 +64,10 @@ struct AbonentContractInfo {
 
 typedef AbonentContractInfo::ContractType_e AbonentContract_e;
 
+//
+typedef smsc::core::buffers::FixedLengthString<64 + 1> AbonentPolicyName_t;
+
+
 } //inman
 } //smsc
 #endif /* SMSC_INMAN_SUBSCR_CONTRACT_HPP */

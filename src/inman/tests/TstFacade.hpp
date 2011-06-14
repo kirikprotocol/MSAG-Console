@@ -9,60 +9,59 @@
 
 #include "core/synchronization/Event.hpp"
 
-#include "inman/interaction/ConnSrv.hpp"
-#include "inman/interaction/connect.hpp"
-#include "inman/interaction/messages.hpp"
+#include "inman/interaction/PckListenerDefs.hpp"
+#include "inman/interaction/asynconn/Connect.hpp"
+#include "inman/interaction/asynconn/PckBufferStore.hpp"
+#include "inman/interaction/tcpserver/TcpServerDefs.hpp"
+#include "inman/interaction/serializer/IMessages.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace test {
 
-using smsc::util::CustomException;
 using smsc::logger::Logger;
+using smsc::core::network::Socket;
+using smsc::util::CustomException;
 
 using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
 
-using smsc::inman::interaction::ConnectSrv;
-using smsc::inman::interaction::ConnectSupervisorITF;
+using smsc::inman::interaction::PacketBufferAC;
+using smsc::inman::interaction::PckAccumulatorIface;
+using smsc::inman::interaction::INPPacketIface;
+using smsc::inman::interaction::SocketListenerIface;
 using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::ConnectAC;
-using smsc::inman::interaction::ConnectListenerITF;
-
-using smsc::inman::interaction::SerializablePacketAC;
-using smsc::inman::interaction::SerializerException;
-using smsc::inman::interaction::INPPacketAC;
-
+using smsc::inman::interaction::TcpServerIface;
 
 /* ************************************************************************** *
  * class TSTFacadeAC: 
  * ************************************************************************** */
 #define MAX_FACADE_NAME 50
-class TSTFacadeAC : public ConnectSupervisorITF, public ConnectListenerITF {
+class TSTFacadeAC : public smsc::inman::interaction::TcpServerListenerIface
+                  , public smsc::inman::interaction::PacketListenerIface {
 protected:
-  mutable Mutex   _sync;
-  Connect *       _pipe;
-  ConnectSrv *    _connSrv;
-  Logger *        logger;
+  typedef smsc::inman::interaction::PckBuffersPool_T<2048> PacketsPool;
+
+  mutable Mutex     _sync;
+  PacketsPool       _pckPool;
+  Connect           _pipe;
+  TcpServerIface *  _tcpSrv;
+  Logger *          logger;
     //logging prefix, f.ex: "TSTFacadeAC[%u]"
-  char            _logId[MAX_FACADE_NAME + sizeof("[%u]") + sizeof(unsigned)*3 + 1];
+  char              _logId[MAX_FACADE_NAME + sizeof("[%u]") + sizeof(unsigned)*3 + 1];
 
   void do_disconnect(void);
 
-  bool is_active(void) const
-  {
-    return (bool)(_pipe && (_pipe->getId() != (unsigned)(INVALID_SOCKET)));
-  }
-
 public:
-  explicit TSTFacadeAC(ConnectSrv * conn_srv, Logger * use_log = NULL)
-    : _pipe(NULL), _connSrv(conn_srv)
+  explicit TSTFacadeAC(TcpServerIface & conn_srv, Logger * use_log = NULL)
+    : _tcpSrv(&conn_srv), logger(use_log ? use_log : Logger::getInstance("smsc.InTST"))
   {
-    logger = use_log ? use_log : Logger::getInstance("smsc.InTST");
+#ifdef __GRD_POOL_DEBUG__
+    _pckPool.debugInit("InTST", logger);
+#endif /* __GRD_POOL_DEBUG__ */
   }
   virtual ~TSTFacadeAC()
   {
-    Disconnect();
+    disconnect();
   }
 
   void Prompt(Logger::LogLevel dlvl, const char * zstr);
@@ -71,29 +70,49 @@ public:
     Prompt(dlvl,str.c_str());
   }
 
-  void Disconnect(void);
+  void disconnect(void);
 
   bool isActive(void) const;
 
   unsigned initConnect(const char* use_host, int use_port);
 
   //Customized variant of Connect::sendPck(): it sends specified
-  //number of bytes from ObjectBuffer
-  int  sendPckPart(INPPacketAC * pck, uint32_t num_bytes = 0);
+  //number of bytes from PacketBuffer
+  //Returns zero on success, negative value in case of socket error,
+  //positive value in case of invalid buffer data arrangement.
+  int  sendPckPart(INPPacketIface * snd_pck, uint32_t num_bytes = 0);
 
-  // ---------------------------------------------------
-  // -- ConnectSupervisorITF interface implementation
-  // ---------------------------------------------------
-  virtual bool onConnectClosed(ConnectAC * conn);
 
-  // ---------------------------------------------------
-  // -- ConnectListenerITF interface implementation
-  // ---------------------------------------------------
-  //virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd) = 0;
-  virtual void onConnectError(Connect * conn,
-                              std::auto_ptr<CustomException> & p_exc);
+  // ----------------------------------------------
+  // -- TcpServerListenerIface interface methods:
+  // ----------------------------------------------
+  //Notifies that incoming connection with remote peer is accepted on given
+  //socket.  If listener isn't interested in connection, the 'use_sock' must
+  //be kept intact and NULL must be returned.
+  virtual SocketListenerIface *
+    onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock);
+  //Notifies that connection is to be closed on given soket, no more events will be reported.
+  virtual void onConnectClosing(TcpServerIface & p_srv, unsigned conn_id);
+  //notifies that TcpServer is shutdowned, no more events on any connect will be reported.
+  virtual void onServerShutdown(TcpServerIface & p_srv, TcpServerIface::RCode_e down_reason);
+
+  // ------------------------------------------------------------
+  // -- PacketListenerIface interface methods:
+  // ------------------------------------------------------------
+  //Returns true if listener has utilized packet so no more listeners
+  //should be notified, false - otherwise (in that case packet will be
+  //reported to other listeners).
+  virtual bool onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
+    /*throw(std::exception) */= 0;
+
+  //Returns true if listener has processed connect exception so no more
+  //listeners should be notified, false - otherwise (in that case exception
+  //will be reported to other listeners).
+  virtual bool onConnectError(unsigned conn_id,
+                              PckAccumulatorIface::Status_e err_status,
+                              const CustomException * p_exc = NULL)
+    /*throw(std::exception) */;
 };
-
 
 } // namespace test
 } // namespace inman

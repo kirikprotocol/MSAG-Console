@@ -1,5 +1,5 @@
-#include "BillProcessor.h"
-#include "XMLHandlers.h"
+#include "inman/inmanemu/BillProcessor.h"
+#include "inman/inmanemu/XMLHandlers.h"
 
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/TransService.hpp>

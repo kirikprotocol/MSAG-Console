@@ -3,13 +3,13 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/tests/TstAbDtcr.hpp"
+using smsc::core::synchronization::MutexGuard;
 using smsc::util::CAPConst;
 using smsc::util::format;
 
-using smsc::inman::interaction::INPSerializer;
-using smsc::inman::interaction::INPCSAbntContract;
-
-using smsc::inman::interaction::CSAbntContractHdr_dlg;
+using smsc::inman::interaction::SerializablePacketIface;
+using smsc::inman::interaction::INPAbntContract;
+using smsc::inman::interaction::INPAbntContractHdr_dlg;
 using smsc::inman::interaction::SPckContractRequest;
 using smsc::inman::interaction::SPckContractResult;
 
@@ -22,13 +22,19 @@ namespace test {
 /* ************************************************************************** *
  * class DtcrDialog implementation
  * ************************************************************************** */
+DtcrDialog::DtcrDialog(DtcrFacade * use_mgr, unsigned dlg_id, unsigned ab_id, bool use_cache/* = true*/)
+  : _mgr(use_mgr), dId(dlg_id), abId(ab_id), state(dIdle), useCache(use_cache)
+{ 
+  abInfo = _mgr->getAbntDb().getAbnInfo(ab_id);
+}
+
 //Composes and sends request, num_bytes == 0 forces sending whole packet
 bool DtcrDialog::sendRequest(unsigned num_bytes/* = 0*/)
 {
   SPckContractRequest  pck;
-  pck.Hdr().dlgId = dId;
-  pck.Cmd().setSubscrNumber(abInfo->msIsdn.toString().c_str());
-  pck.Cmd().allowCache(useCache);
+  pck._Hdr.dlgId = dId;
+  pck._Cmd.setSubscrNumber(abInfo->msIsdn.toString().c_str());
+  pck._Cmd.allowCache(useCache);
 
   char tbuf[sizeof("%u bytes of ") + 4*3 + 1];
   int n = 0;
@@ -38,9 +44,9 @@ bool DtcrDialog::sendRequest(unsigned num_bytes/* = 0*/)
 
   std::string msg;
   format(msg, "--> %sRequest[%u](%s) : cache(%s) ..", tbuf, dId,
-         pck.Cmd().subscrAddr().c_str(), useCache ? "true" : "false");
+         pck._Cmd.subscrAddr().c_str(), useCache ? "true" : "false");
   _mgr->Prompt(Logger::LEVEL_INFO, msg);
-  if (_mgr->sendPckPart(&pck, num_bytes) > 0) {
+  if (!_mgr->sendPckPart(&pck, num_bytes)) {
     state = dRequested;
     return true;
   }
@@ -76,12 +82,13 @@ void DtcrDialog::onResult(AbntContractResult * res)
 /* ************************************************************************** *
  * class DtcrFacade implementation:
  * ************************************************************************** */
-DtcrFacade::DtcrFacade(ConnectSrv * conn_srv, Logger * use_log/* = NULL*/)
-  : TSTFacadeAC(conn_srv, use_log), _maxDlgId(0)
-  , _abDB(AbonentsDB::getInstance())
+const INPAbntContract  DtcrFacade::_protoDef; //provided protocol definition
+
+DtcrFacade::DtcrFacade(AbonentsDB & use_db, TcpServerIface & conn_srv, Logger * use_log/* = NULL*/)
+  : TSTFacadeAC(conn_srv, use_log), _abDB(use_db)
+  , _maxDlgId(0)
 {
   strcpy(_logId, "TFDtcr");
-  INPSerializer::getInstance()->registerCmdSet(INPCSAbntContract::getInstance());
 }
 
 DtcrFacade::~DtcrFacade()
@@ -157,10 +164,10 @@ bool DtcrFacade::detectAbn(unsigned ab_id, bool use_cache/* = true*/)
 
 bool DtcrFacade::detectAbn(const TonNpiAddress & sbscr, bool use_cache/* = true*/)
 {
-  unsigned ab_id = _abDB->searchAbn(sbscr);
+  unsigned ab_id = _abDB.searchAbn(sbscr);
   if (!ab_id) {
     AbonentInfo ab_info(sbscr);
-    ab_id = _abDB->setAbnInfo(ab_info);
+    ab_id = _abDB.setAbnInfo(ab_info);
   }
   return ab_id ? detectAbn(ab_id, use_cache) : false;
 }
@@ -186,10 +193,10 @@ unsigned DtcrFacade::detectAbnMlt(const TonNpiAddress & sbscr, unsigned range,
   unsigned rval = 0;
   TonNpiAddress msIsdn = sbscr;
   for (; range > 0; --range) {
-    unsigned ab_id = _abDB->searchAbn(msIsdn);
+    unsigned ab_id = _abDB.searchAbn(msIsdn);
     if (!ab_id) {
       AbonentInfo ab_info(msIsdn);
-      ab_id = _abDB->setAbnInfo(ab_info);
+      ab_id = _abDB.setAbnInfo(ab_info);
     }
     if (detectAbn(ab_id, use_cache))
       ++rval;
@@ -199,42 +206,48 @@ unsigned DtcrFacade::detectAbnMlt(const TonNpiAddress & sbscr, unsigned range,
   return rval;
 }
 
-
-// ---------------------------------------------------
-// -- ConnectListenerITF interface implementation
-// ---------------------------------------------------
-void DtcrFacade::onPacketReceived(Connect * conn, std::auto_ptr<SerializablePacketAC> & recv_cmd)
+// ------------------------------------------------------------
+// -- PacketListenerIface interface methods:
+// ------------------------------------------------------------
+//Returns true if listener has utilized packet so no more listeners
+//should be notified, false - otherwise (in that case packet will be
+//reported to other listeners).
+bool DtcrFacade::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
   /*throw(std::exception) */
 {
-  //check service header
-  INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
-  //check for header
-  if (!pck->pHdr() || ((pck->pHdr())->Id() != INPCSAbntContract::HDR_DIALOG)) {
-    std::string msg;
-    format(msg, "ERR: unknown cmd header: %u", (pck->pHdr())->Id());
-    Prompt(Logger::LEVEL_ERROR, msg);
-  } else {
-    if ((pck->pCmd())->Id() == INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG) {
-      AbntContractResult * cmd = static_cast<AbntContractResult*>(pck->pCmd());
-      CSAbntContractHdr_dlg * hdr = static_cast<CSAbntContractHdr_dlg*>(pck->pHdr());
-
-      bool goon = true;
-      try { cmd->loadDataBuf(); }
-      catch (SerializerException& exc) {
-        std::string msg;
-        format(msg, "ERR: corrupted cmd %u (dlgId: %u): %s",
-                cmd->Id(), hdr->Id(), exc.what());
-        Prompt(Logger::LEVEL_ERROR, msg);
-        goon = false;
-      }
-      if (goon)
-        onContractResult(cmd, hdr->dlgId);
-    } else {
-      std::string msg;
-      format(msg, "ERR: unknown command recieved: %u", (pck->pCmd())->Id());
-      Prompt(Logger::LEVEL_ERROR, msg);
-    }
+  INPAbntContract::PduId pduId = _protoDef.isKnownPacket(recv_pck);
+  if (!pduId) {
+    Prompt(Logger::LEVEL_ERROR, "unsupported Pdu received");
+    return true;
   }
+  if (pduId != SPckContractResult::getPduId()) {
+    std::string msg;
+    format(msg, "illegal Cmd[%u] received", (unsigned)_protoDef.getCmdId(pduId));
+    Prompt(Logger::LEVEL_ERROR, msg);
+    return true;
+  }
+
+  SPckContractResult iPck;
+  try {
+    iPck.deserialize(recv_pck, SerializablePacketIface::dsmPartial);
+  } catch (const std::exception & exc) {
+    std::string msg;
+    format(msg, "corrupted Pdu[%u] received - %s", (unsigned)pduId, exc.what());
+    Prompt(Logger::LEVEL_ERROR, msg);
+    return true;
+  }
+
+  //complete deserialization
+  try { iPck._Cmd.load(recv_pck); 
+  } catch (const std::exception & exc) {
+    std::string msg;
+    format(msg, "corrupted cmd %u (dlgId: %u) received: %s",
+            iPck._Cmd._cmdTAG, iPck._Hdr.dlgId, exc.what());
+    Prompt(Logger::LEVEL_ERROR, msg.c_str());
+    return true;
+  }
+  onContractResult(&iPck._Cmd, iPck._Hdr.dlgId);
+  return true;
 }
 
 // ---------------------------------------------------

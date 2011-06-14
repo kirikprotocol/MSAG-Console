@@ -28,7 +28,7 @@ using smsc::inman::test::AbonentPreset;
 using smsc::inman::test::AbonentInfo;
 using smsc::inman::test::AbonentsDB;
 
-using smsc::inman::interaction::ConnectSrv;
+//using smsc::inman::interaction::ConnectSrv;
 using smsc::inman::cdr::CDRRecord;
 
 #include "inman/tests/AbonentsPreset.hpp"
@@ -38,6 +38,10 @@ using smsc::inman::test::_knownAbonentsNum;
 using smsc::util::TonNpiAddress;
 using smsc::util::IMSIString;
 using smsc::logger::Logger;
+
+#include "inman/interaction/tcpserver/TcpServer.hpp"
+using smsc::inman::interaction::TcpServer;
+
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
@@ -54,9 +58,88 @@ public:
   }
 };
 
+struct HostCfg {
+  const char * _host;
+  int          _port;
+
+  HostCfg() : _host(0), _port(0)
+  { }
+};
+
+static HostCfg      _inmanIP;
 static BillFacade * _billFacade = 0;
 static DtcrFacade * _dtcrFacade = 0;
 static AbonentsDB * _abonentsReg = 0;
+/* ************************************************************************** *
+ * TCP connection commands
+ * ************************************************************************** */
+static const char hlp_connect[] = "USAGE: connect [?|help | bill | dtcr]\n";
+static void cmd_connect(Console&, const std::vector<std::string> &args)
+{
+  if ((args.size() < 2)
+      || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+    fprintf(stdout, hlp_connect, args[0].c_str());
+    fprintf(stdout, "  BillFacade connected: %s\n  DtcrFacade connected: %s\n",
+            _billFacade->isActive() ? "YES" : "NO",
+            _dtcrFacade->isActive() ? "YES" : "NO");
+    return;
+  }
+
+  if (!strcmp("bill", args[1].c_str())) {
+    if (_billFacade->isActive()) {
+      fprintf(stdout, "  BillFacade: disconnecting ..\n");
+      _billFacade->disconnect();
+    }
+    fprintf(stdout, "  BillFacade: connecting ..\n");
+    _billFacade->initConnect(_inmanIP._host, _inmanIP._port);
+    /* */
+  } else if (!strcmp("dtcr", args[1].c_str())) {
+    if (_dtcrFacade->isActive()) {
+      fprintf(stdout, "  DtcrFacade: disconnecting ..\n");
+      _dtcrFacade->disconnect();
+    }
+    fprintf(stdout, "  DtcrFacade: connecting ..\n");
+    _dtcrFacade->initConnect(_inmanIP._host, _inmanIP._port);
+    /* */
+  } else {
+    fprintf(stdout, hlp_connect, args[0].c_str());
+  }
+  fprintf(stdout, "  BillFacade connected: %s\n  DtcrFacade connected: %s\n",
+          _billFacade->isActive() ? "YES" : "NO",
+          _dtcrFacade->isActive() ? "YES" : "NO");
+}
+
+static const char hlp_disconnect[] = "USAGE: disconnect [?|help | bill | dtcr]\n";
+static void cmd_disconnect(Console&, const std::vector<std::string> &args)
+{
+  if ((args.size() < 2)
+      || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+    fprintf(stdout, hlp_connect, args[0].c_str());
+    fprintf(stdout, "  BillFacade connected: %s\n  DtcrFacade connected: %s\n",
+            _billFacade->isActive() ? "YES" : "NO",
+            _dtcrFacade->isActive() ? "YES" : "NO");
+    return;
+  }
+
+  if (!strcmp("bill", args[1].c_str())) {
+    if (_billFacade->isActive()) {
+      fprintf(stdout, "  BillFacade: disconnecting ..\n");
+      _billFacade->disconnect();
+    }
+    /* */
+  } else if (!strcmp("dtcr", args[1].c_str())) {
+    if (_dtcrFacade->isActive()) {
+      fprintf(stdout, "  DtcrFacade: disconnecting ..\n");
+      _dtcrFacade->disconnect();
+    }
+    /* */
+  } else {
+    fprintf(stdout, hlp_connect, args[0].c_str());
+  }
+  fprintf(stdout, "  BillFacade connected: %s\n  DtcrFacade connected: %s\n",
+          _billFacade->isActive() ? "YES" : "NO",
+          _dtcrFacade->isActive() ? "YES" : "NO");
+}
 
 /* ************************************************************************** *
  * Console commands: sending INMan commands
@@ -620,12 +703,12 @@ int main(int argc, char** argv)
     fprintf(stderr, "Usage: %s <host> <port>\n", argv[0]);
     exit(1);
   }
-  int port = atoi(argv[2]);
-  if (!port) {
+  _inmanIP._port = atoi(argv[2]);
+  if (!_inmanIP._port) {
     fprintf(stderr, "ERR: bad port specified (%s) !", argv[2]);
     exit(1);
   }
-  const char* host = argv[1];
+  _inmanIP._host = argv[1];
 
   Logger::Init();
   Logger * _logger = Logger::getInstance("smsc.InTST");
@@ -636,11 +719,18 @@ int main(int argc, char** argv)
 
   _abonentsReg = AbonentsDB::Init(smsc::inman::test::_knownAbonentsNum, smsc::inman::test::_knownAbonents);
 
-  std::auto_ptr<ConnectSrv> _connServ(new ConnectSrv(ConnectSrv::POLL_TIMEOUT_ms, _logger));
+  smsc::inman::interaction::TcpListenerCFG tcpCfg(200, 300);
+
+  std::auto_ptr<TcpServer> _connServ(new TcpServer(TcpServer::_DFLT_IDENT, _logger));
   try {
-    _billFacade = new BillFacade(*_abonentsReg, _connServ.get(), _logger);
-    _dtcrFacade = new DtcrFacade(_connServ.get(), _logger);
+    _billFacade = new BillFacade(*_abonentsReg, *_connServ.get(), _logger);
+    _dtcrFacade = new DtcrFacade(*_abonentsReg, *_connServ.get(), _logger);
     Console console;
+/* ************************************************************************** *
+ * TCP connection commands
+ * ************************************************************************** */
+    console.addItem("connect", cmd_connect);
+    console.addItem("disconnect", cmd_disconnect);
 /* ************************************************************************** *
  * Console commands: sending Billing commands to INMan
  * ************************************************************************** */
@@ -688,15 +778,15 @@ int main(int argc, char** argv)
     if (!_connServ->Start()) {
       smsc_log_fatal(_logger, "TCP server failed to start");
     } else {
-      _billFacade->initConnect(host, port);
-      _dtcrFacade->initConnect(host, port);
+      _billFacade->initConnect(_inmanIP._host, _inmanIP._port);
+      _dtcrFacade->initConnect(_inmanIP._host, _inmanIP._port);
       console.run("console>"); //cycles
     }
   } catch (const std::exception& error) {
     fprintf(stderr, "%s", error.what());
   }
-  _billFacade->Disconnect();
-  _dtcrFacade->Disconnect();
+  _billFacade->disconnect();
+  _dtcrFacade->disconnect();
   _connServ->Stop();
   delete _billFacade;
   delete _dtcrFacade;

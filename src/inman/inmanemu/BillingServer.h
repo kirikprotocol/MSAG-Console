@@ -1,41 +1,38 @@
 #ifndef _INMANEMU_BILL_BILLING_SERVER_
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _INMANEMU_BILL_BILLING_SERVER_
 
-#include <logger/Logger.h>
-#include "BillProcessor.h"
-//#include <inman/storage/CDRStorage.hpp>
+#include "logger/Logger.h"
 #include "core/network/Socket.hpp"
-#include "inman/interaction/msgbill/MsgBilling.hpp"
+#include "inman/inmanemu/BillProcessor.h"
+//#include "inman/interaction/msgbill/MsgBilling.hpp"
+#include "inman/interaction/msgbill/SmBillRequestMsg.hpp"
 
-namespace inmanemu { namespace server {
+namespace inmanemu {
+namespace server {
 
+using smsc::logger::Logger;
 using namespace smsc::inman::interaction;
 using namespace smsc::core::network;
 using namespace inmanemu::processor;
-//using smsc::inman::filestore::InBillingFileStorage;
 
-using smsc::logger::Logger;
+
 
 class BillingServer
 {
-    Logger * logger;
-    bool needToStop;
-    ObjectBuffer buff;
-
+    volatile bool needToStop;
+    PacketBuffer_T<2048> buff;
     Socket socket;
     BillProcessor processor;
     bool m_ClientConnected;
-    //InBillingFileStorage * fileStorage;
+    Socket * clnt;
+    Logger * logger;
 
-    Socket* clnt;
+    bool isStarted(void) const { return !needToStop; }
 
-    bool isStarted()
-    {
-        return !needToStop;
-    }
-
-    INPPacketAC * ReadCommand(); //throws
+    SmBillRequestMsg * ReadCommand(); //throws
     SPckChargeSmsResult * CreateRespOnCharge(SPckChargeSms * pck);
     void SendResp(SPckChargeSmsResult * pck);
     bool ClientConnected();
@@ -43,11 +40,18 @@ class BillingServer
 
 
 public:
+  static const INPBilling  _protoDef; //provided protocol definition
+
    void Init(const std::string& host, int port, const std::string& cdr_dir);
    void Run();
    void Stop();
-   BillingServer();
-   ~BillingServer();
+
+   BillingServer() : needToStop(false), m_ClientConnected(false), clnt(0)
+    , logger(smsc::logger::Logger::getInstance("BillingServer"))
+   { }
+   //
+   ~BillingServer()
+   { }
 };
 
 

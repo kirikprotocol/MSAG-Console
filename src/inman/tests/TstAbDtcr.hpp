@@ -19,20 +19,22 @@ namespace test {
 using smsc::inman::test::TSTFacadeAC;
 using smsc::inman::test::AbonentsDB;
 
+using smsc::inman::interaction::INPAbntContract;
 using smsc::inman::interaction::AbntContractRequest;
 using smsc::inman::interaction::AbntContractResult;
-using smsc::inman::interaction::AbntContractResHandlerITF;
-
 
 /* ************************************************************************** *
  * class DtcrDialog: INMan AbonentContract detection dialog params and result
  * ************************************************************************** */
+
+class DtcrFacade; //forward declaration
+
 class DtcrDialog {
 public:
   enum DlgState { dIdle = 0, dRequested, dReported };
 
 protected:
-  TSTFacadeAC *   _mgr;
+  DtcrFacade *    _mgr;
   unsigned        dId;
   unsigned        abId;   //abonent's id from AbonentsDB
   AbonentInfo *   abInfo;
@@ -40,11 +42,7 @@ protected:
   bool            useCache;
 
 public:
-  DtcrDialog(TSTFacadeAC * use_mgr, unsigned dlg_id, unsigned ab_id, bool use_cache = true)
-    : _mgr(use_mgr), dId(dlg_id), abId(ab_id), state(dIdle), useCache(use_cache)
-  { 
-    abInfo = AbonentsDB::getInstance()->getAbnInfo(ab_id);
-  }
+  DtcrDialog(DtcrFacade * use_mgr, unsigned dlg_id, unsigned ab_id, bool use_cache = true);
   ~DtcrDialog()
   { }
 
@@ -62,13 +60,13 @@ public:
 /* ************************************************************************** *
  * class DtcrFacade: INMan AbonentContract detection dialogs controlling registry
  * ************************************************************************** */
-class DtcrFacade : public TSTFacadeAC, AbntContractResHandlerITF {
+class DtcrFacade : public TSTFacadeAC, smsc::inman::interaction::AbntContractResHandlerITF {
 protected:
   typedef std::map<unsigned, DtcrDialog*> DtcrDialogsMap;
 
+  AbonentsDB &        _abDB;
   unsigned            _maxDlgId;
   DtcrDialogsMap      _Dialogs;
-  AbonentsDB *        _abDB;
 
   unsigned      nextDialogId(void) { return ++_maxDlgId; }
   DtcrDialog *  findDialog(unsigned did) const;
@@ -83,8 +81,13 @@ protected:
   void onContractResult(AbntContractResult * res, uint32_t req_id);
 
 public:
-  explicit DtcrFacade(ConnectSrv * conn_srv, Logger * use_log = NULL);
+  static const INPAbntContract  _protoDef; //provided protocol definition
+
+  DtcrFacade(AbonentsDB & use_db, TcpServerIface & conn_srv, Logger * use_log = NULL);
   virtual ~DtcrFacade();
+
+  AbonentsDB & getAbntDb(void) { return _abDB; }
+
 
   bool detectAbn(unsigned ab_id, bool use_cache = true);
   bool detectAbn(const TonNpiAddress & sbscr, bool use_cache = true);
@@ -94,10 +97,13 @@ public:
   //detects contract for number of abonents starting from given ISDN address
   unsigned detectAbnMlt(const TonNpiAddress & sbscr, unsigned range, bool use_cache = true);
 
-  // ---------------------------------------------------
-  // -- ConnectListenerITF interface implementation
-  // ---------------------------------------------------
-  virtual void onPacketReceived(Connect * conn, std::auto_ptr<SerializablePacketAC> & recv_cmd)
+  // ------------------------------------------------------------
+  // -- PacketListenerIface interface methods:
+  // ------------------------------------------------------------
+  //Returns true if listener has utilized packet so no more listeners
+  //should be notified, false - otherwise (in that case packet will be
+  //reported to other listeners).
+  virtual bool onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
     /*throw(std::exception) */;
 };
 

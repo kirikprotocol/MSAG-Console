@@ -2,10 +2,9 @@
 static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
-#include "BillingServer.h"
-#include <util/Exception.hpp>
-
 #include <string>
+//#include "util/Exception.hpp"
+#include "inman/inmanemu/BillingServer.h"
 
 //#include "util/BinDump.hpp"
 //using smsc::util::DumpHex;
@@ -15,28 +14,24 @@ namespace inmanemu { namespace server {
 using inmanemu::MatrixKey;
 using namespace smsc::util;
 
-BillingServer::BillingServer() : buff(0), clnt(0)
-{
-    needToStop = false;
-    INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
-}
+const INPBilling  BillingServer::_protoDef; //provided protocol definition
 
-BillingServer::~BillingServer()
-{
+//BillingServer::BillingServer() : needToStop(false), m_ClientConnected(false), clnt(0)
+//, logger(smsc::logger::Logger::getInstance("BillingServer"))
+//{
+//INPSerializer::getInstance()->registerCmdSet(INPBilling::getInstance());
+//}
+
+//BillingServer::~BillingServer()
+//{
     //socket.Abort();
     //if (clnt) clnt->Abort();
     //if (fileStorage) delete fileStorage;
-}
+//}
 
 void BillingServer::Init(const std::string& host, int port, const std::string& cdr_dir)
 {
-    logger = smsc::logger::Logger::getInstance("BillingServer");
-
     processor.init();
-
-    //delete new char;
-
-    //"localhost",10021,0
     if (socket.InitServer(host.c_str(), port ,0)==-1)
         throw Exception("Failed to initialize socket on host '%s', port '%d'", host.c_str(), port);
 
@@ -50,13 +45,7 @@ void BillingServer::Init(const std::string& host, int port, const std::string& c
     else m_ClientConnected = true;
 
 */
-
-    //ObjectBuffer buf(0);
-
-    //fileStorage = new InBillingFileStorage(cdr_dir, 0, logger);
-
     smsc_log_debug(logger, "Server initialized of host '%s', port '%d'", host.c_str(), port);
-
 }
 
 
@@ -70,8 +59,6 @@ bool BillingServer::ClientConnected()
         m_ClientConnected = true;
         smsc_log_debug(logger,"Client accepted\n");
     }
-
-    
     return m_ClientConnected;
 }
 
@@ -84,7 +71,7 @@ void BillingServer::Stop()
 }
 
 
-INPPacketAC * BillingServer::ReadCommand()
+SmBillRequestMsg * BillingServer::ReadCommand()
 {
     int len;
 
@@ -108,16 +95,26 @@ INPPacketAC * BillingServer::ReadCommand()
 
     //smsc_log_debug(logger,"received: 0x%s", DumpHex(len, (unsigned char*)(buff)).c_str());
 
-    auto_ptr<INPPacketAC> pck(INPSerializer::getInstance()->deserialize(buff)); //throws
-
-    if ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG) {
-        smsc_log_error(logger, "received cmd %u: unknown header: %u",
-                       (pck->pCmd())->Id(), (pck->pHdr())->Id());
-        return 0;
+    INPBilling::PduId pduId = _protoDef.isKnownPacket(buff);
+    if (!pduId) {
+      smsc_log_error(logger, "unsupported Cmd received");
+      return 0;
     }
-    CsBillingHdr_dlg * srvHdr = static_cast<CsBillingHdr_dlg*>(pck->pHdr());
-    smsc_log_debug(logger, "received cmd %u, dialogId = %u\n", (pck->pCmd())->Id(), srvHdr->dlgId);
+    uint16_t cmdId = _protoDef.getCmdId(pduId);
+    if (cmdId == INPBilling::CHARGE_SMS_RESULT_TAG) {
+      smsc_log_error(logger, "illegal Cmd[%u] received", (unsigned)cmdId);
+      return 0;
+    }
+    auto_ptr<SmBillRequestMsg> pck( new SmBillRequestMsg(static_cast<INPBilling::CommandTag_e>(cmdId)));
 
+    try { pck->u._ptr->deserialize(buff, SerializablePacketIface::dsmComplete);
+    } catch (const std::exception & exc) {
+      smsc_log_error(logger, "corrupted Cmd[%u] received - %s", 
+                     (unsigned)pck->_cmdId, exc.what());
+      return 0;
+    }
+
+    smsc_log_debug(logger, "received cmd[%u], dialogId = %u\n", (unsigned)pck->_cmdId, pck->getDlgId());
     return pck.release();
 }
 
@@ -131,7 +128,7 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
     }
 
     CDRRecord cdr;
-    pck->Cmd().export2CDR(cdr);
+    pck->_Cmd.export2CDR(cdr);
     //fileStorage->bill(cdr);
     
 
@@ -142,7 +139,7 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
     smsc_log_debug(logger, "abonent %s\n", cdr._srcAdr.c_str());
     smsc_log_debug(logger, "--------------\n\n");
 
-    int charge=1;
+//    int charge=1;
   /*if(argc>1)
   {
     printf("Allow charge[0,1]?:");fflush(stdout);
@@ -160,12 +157,12 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
     SPckChargeSmsResult * res = new SPckChargeSmsResult();
 
     //std::auto_ptr<SPckChargeSmsResult> res(new SPckChargeSmsResult()); //dflt: CHARGING_POSSIBLE
-    res->Hdr().dlgId = pck->Hdr().dlgId;
+    res->_Hdr.dlgId = pck->_Hdr.dlgId;
 
     smsc_log_debug(logger, "Start charging \n\n");
 
-    if (!processor.charge(key, addr, pck->Hdr().dlgId))
-        res->Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+    if (!processor.charge(key, addr, pck->_Hdr.dlgId))
+        res->_Cmd.setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
 
     smsc_log_debug(logger, "Finish charging \n\n");
     return res;
@@ -173,22 +170,22 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
 
 void BillingServer::ProcessResultCommand(SPckDeliverySmsResult * pck)
 {
-    int result = pck->Cmd().GetValue();
+    int result = pck->_Cmd.GetValue();
     smsc_log_debug(logger, "DeliverySmsResult: %u\n", result);
-    smsc_log_debug(logger, "BillId = %u\n", pck->Hdr().dlgId);
+    smsc_log_debug(logger, "BillId = %u\n", pck->_Hdr.dlgId);
 
     CDRRecord cdr;
-    pck->Cmd().export2CDR(cdr);
+    pck->_Cmd.export2CDR(cdr);
     //fileStorage->bill(cdr);
 
     if (result) 
     {
         smsc_log_debug(logger, "rollback processing...\n");
-        processor.rollback(pck->Hdr().dlgId);
+        processor.rollback(pck->_Hdr.dlgId);
     }
     else
     {
-        processor.commit(pck->Hdr().dlgId);
+        processor.commit(pck->_Hdr.dlgId);
         smsc_log_debug(logger, "commit processing...\n");
     }
     smsc_log_debug(logger, "--------------\n\n");
@@ -229,7 +226,7 @@ void BillingServer::Run()
     {
         if (m_ClientConnected) 
         {
-            std::auto_ptr<INPPacketAC> pck;
+            std::auto_ptr<SmBillRequestMsg> pck;
             try { pck.reset(ReadCommand());
             } catch (std::exception & exc) {
                 smsc_log_error(logger, "Run(): %s", exc.what());
@@ -237,17 +234,18 @@ void BillingServer::Run()
 
             if (pck.get())
             {
-                switch ((pck->pCmd())->Id())
+                switch (pck->_cmdId)
                 {
-                case INPCSBilling::CHARGE_SMS_TAG: {
-                    std::auto_ptr<SPckChargeSmsResult> resp(CreateRespOnCharge(static_cast<SPckChargeSms*>(pck.get())));
+                case INPBilling::CHARGE_SMS_TAG: {
+                    std::auto_ptr<SPckChargeSmsResult> resp(CreateRespOnCharge(pck->u._chgSms));
                     if (resp.get()) 
                         SendResp(resp.get());
                 } break;
 
-                case INPCSBilling::DELIVERY_SMS_RESULT_TAG:
-                    ProcessResultCommand(static_cast<SPckDeliverySmsResult*>(pck.get()));
-                    break;
+                case INPBilling::DELIVERY_SMS_RESULT_TAG: {
+                    ProcessResultCommand(pck->u._dlvrRes);
+                }    break;
+                default:;
                 }
             } else
             {

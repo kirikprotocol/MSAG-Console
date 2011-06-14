@@ -1,9 +1,6 @@
 #ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
-/* ************************************************************************* *
- * INMan SMS/USSD messages charging protocol PDUs definition.
- * ************************************************************************* */
 
 #include "inman/interaction/msgbill/MsgBilling.hpp"
 
@@ -15,335 +12,272 @@ namespace smsc  {
 namespace inman {
 namespace interaction {
 /* ************************************************************************** *
- * Billing CommandSet:
- * ************************************************************************** */
-INPCSBilling::INPCSBilling() : INPCommandSetAC(INProtocol::csBilling)
-{
-  _pckFct.registerProduct(mkPckIdx(CHARGE_SMS_TAG, HDR_DIALOG), 
-                         new PckFactory::ProducerT< SPckChargeSms >());
-  _pckFct.registerProduct(mkPckIdx(CHARGE_SMS_RESULT_TAG, HDR_DIALOG), 
-                         new PckFactory::ProducerT< SPckChargeSmsResult >());
-  _pckFct.registerProduct(mkPckIdx(DELIVERY_SMS_RESULT_TAG, HDR_DIALOG), 
-                         new PckFactory::ProducerT< SPckDeliverySmsResult >());
-  _pckFct.registerProduct(mkPckIdx(DELIVERED_SMS_DATA_TAG, HDR_DIALOG), 
-                         new PckFactory::ProducerT< SPckDeliveredSmsData >());
-}
-//
-INPCSBilling * INPCSBilling::getInstance(void)
-{
-  static INPCSBilling  cmdSet;
-  return &cmdSet;
-}
-
-/* ************************************************************************** *
- * Billing command headers:
- * ************************************************************************** */
-CsBillingHdr_dlg::CsBillingHdr_dlg()
-  : SerializableObjectAC(INPCSBilling::HDR_DIALOG)
-{ }
-CsBillingHdr_sess::CsBillingHdr_sess()
-  : SerializableObjectAC(INPCSBilling::HDR_SESSIONED_DLG)
-{ }
-
-/* ************************************************************************** *
  * class ChargeSms implementation:
  * ************************************************************************** */
-ChargeSms::ChargeSms()
-  : INPBillingCmd(INPCSBilling::CHARGE_SMS_TAG)
-  , chrgPolicy(CDRRecord::ON_DELIVERY), partsNum(1), smsXSrvsId(0)
-  , chrgFlags(0)
-{ }
-
-void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
+void ChargeSms::load(PacketBufferAC & in_buf) throw(SerializerException)
 {
-    //service fields
-    in >> chrgFlags;
-    in >> smsXSrvsId;
-    //data for IN interaction
-    in >> dstSubscriberNumber;
-    in >> callingPartyNumber;
-    in >> callingImsi;
-    in >> csInfo.smscAddress;
-    in >> submitTimeTZ;
-    in >> csInfo.tpShortMessageSpecificInfo;
-    in >> csInfo.tpProtocolIdentifier;
-    in >> csInfo.tpDataCodingScheme;
-    in >> csInfo.tpValidityPeriod;
-    in >> locationInformationMSC;
+  //service fields
+  in_buf >> chrgFlags;
+  in_buf >> smsXSrvsId;
+  //data for IN interaction
+  in_buf >> dstSubscriberNumber;
+  in_buf >> callingPartyNumber;
+  in_buf >> callingImsi;
+  in_buf >> csInfo.smscAddress;
+  in_buf >> submitTimeTZ;
+  in_buf >> csInfo.tpShortMessageSpecificInfo;
+  in_buf >> csInfo.tpProtocolIdentifier;
+  in_buf >> csInfo.tpDataCodingScheme;
+  in_buf >> csInfo.tpValidityPeriod;
+  in_buf >> locationInformationMSC;
     //data for CDR generation
-    in >> callingSMEid;
-    in >> routeId;
-    in >> serviceId;
-    in >> userMsgRef;
-    in >> msgId;
-    in >> ussdServiceOp;
-    in >> partsNum;
-    in >> msgLen;
-    unsigned char cm;
-    in >> cm;
-    chrgPolicy = static_cast<CDRRecord::ChargingPolicy>(cm);
-    in >> dsmSrvType;
+  in_buf >> callingSMEid;
+  in_buf >> routeId;
+  in_buf >> serviceId;
+  in_buf >> userMsgRef;
+  in_buf >> msgId;
+  in_buf >> ussdServiceOp;
+  in_buf >> partsNum;
+  in_buf >> msgLen;
+  unsigned char cm;
+  in_buf >> cm;
+  chrgPolicy = static_cast<CDRRecord::ChargingPolicy>(cm);
+  in_buf >> dsmSrvType;
 }
 
-void ChargeSms::save(ObjectBuffer& out) const
+void ChargeSms::save(PacketBufferAC & out_buf) const  throw(SerializerException)
 {
-    //service fields
-    out << chrgFlags;
-    out << smsXSrvsId;
-    //data for IN interaction
-    out << dstSubscriberNumber;
-    out << callingPartyNumber;
-    out << callingImsi;
-    out << csInfo.smscAddress;
-    out << submitTimeTZ;
-    out << csInfo.tpShortMessageSpecificInfo;
-    out << csInfo.tpProtocolIdentifier;
-    out << csInfo.tpDataCodingScheme;
-    out << csInfo.tpValidityPeriod;
-    out << locationInformationMSC;
-    //data for CDR generation
-    out << callingSMEid;
-    out << routeId;
-    out << serviceId;
-    out << userMsgRef;
-    out << msgId;
-    out << ussdServiceOp;
-    out << partsNum;
-    out << msgLen;
-    out << ((unsigned char)chrgPolicy);
-    out << dsmSrvType;
+  //service fields
+  out_buf << chrgFlags;
+  out_buf << smsXSrvsId;
+  //data for IN interaction
+  out_buf << dstSubscriberNumber;
+  out_buf << callingPartyNumber;
+  out_buf << callingImsi;
+  out_buf << csInfo.smscAddress;
+  out_buf << submitTimeTZ;
+  out_buf << csInfo.tpShortMessageSpecificInfo;
+  out_buf << csInfo.tpProtocolIdentifier;
+  out_buf << csInfo.tpDataCodingScheme;
+  out_buf << csInfo.tpValidityPeriod;
+  out_buf << locationInformationMSC;
+  //data for CDR generation
+  out_buf << callingSMEid;
+  out_buf << routeId;
+  out_buf << serviceId;
+  out_buf << userMsgRef;
+  out_buf << msgId;
+  out_buf << ussdServiceOp;
+  out_buf << partsNum;
+  out_buf << msgLen;
+  out_buf << ((unsigned char)chrgPolicy);
+  out_buf << dsmSrvType;
 }
 
 void ChargeSms::export2CDR(CDRRecord & cdr) const
 {
-    cdr._msgId = msgId;
-    cdr._mediaType = (parseCBS_DCS(csInfo.tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
-                        CDRRecord::dpBinary : CDRRecord::dpText ;
-    cdr._bearer = (ussdServiceOp < 0) ? CDRRecord::dpSMS : CDRRecord::dpUSSD;
-    cdr._submitTime = submitTimeTZ;
-    cdr._partsNum = partsNum;
+  cdr._msgId = msgId;
+  cdr._mediaType = (parseCBS_DCS(csInfo.tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
+                      CDRRecord::dpBinary : CDRRecord::dpText ;
+  cdr._bearer = (ussdServiceOp < 0) ? CDRRecord::dpSMS : CDRRecord::dpUSSD;
+  cdr._submitTime = submitTimeTZ;
+  cdr._partsNum = partsNum;
 
-    cdr._srcAdr = callingPartyNumber;
-    cdr._srcIMSI = callingImsi;
-    cdr._srcMSC = locationInformationMSC;
-    cdr._srcSMEid = callingSMEid;
+  cdr._srcAdr = callingPartyNumber;
+  cdr._srcIMSI = callingImsi;
+  cdr._srcMSC = locationInformationMSC;
+  cdr._srcSMEid = callingSMEid;
 
-    cdr._routeId = routeId;
-    cdr._serviceId = serviceId;
-    cdr._dsmSrvType = dsmSrvType;
-    cdr._userMsgRef = userMsgRef;
+  cdr._routeId = routeId;
+  cdr._serviceId = serviceId;
+  cdr._dsmSrvType = dsmSrvType;
+  cdr._userMsgRef = userMsgRef;
 
-    cdr._dstAdr = dstSubscriberNumber;
-    cdr._dpLength = (uint32_t)msgLen;
-    cdr._smsXMask = smsXSrvsId;
-    cdr._chargePolicy = chrgPolicy;
-    cdr._chargeType = (chrgFlags & chrgMT) ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
-    cdr._finalized = CDRRecord::dpSubmitted;
+  cdr._dstAdr = dstSubscriberNumber;
+  cdr._dpLength = (uint32_t)msgLen;
+  cdr._smsXMask = smsXSrvsId;
+  cdr._chargePolicy = chrgPolicy;
+  cdr._chargeType = (chrgFlags & chrgMT) ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
+  cdr._finalized = CDRRecord::dpSubmitted;
 }
 
 //-----------------------------------------------
 // ChargeSmsResult impl
 //-----------------------------------------------
-ChargeSmsResult::ChargeSmsResult()
-  : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
-  , value(CHARGING_POSSIBLE), errCode(0)
-{ }
-
-ChargeSmsResult::ChargeSmsResult(ChargeSmsResult_e res/* = CHARGING_NOT_POSSIBLE*/,
-                                uint32_t err_code/* = 0*/, const char * err_msg/* = NULL*/)
-    : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
-    , value(res), errCode(err_code)
+void ChargeSmsResult::load(PacketBufferAC & in_buf) throw(SerializerException)
 {
-    if (err_msg)
-        errMsg = err_msg;
+  unsigned short v;
+  in_buf >> v;
+  value = static_cast<ChargeSmsResult_e>(v);
+  in_buf >> errCode;
+  in_buf >> errMsg;
+
+  unsigned char tmp;
+  in_buf >> tmp;
+  contract = static_cast<CDRRecord::ContractType>(tmp);
 }
 
-
-void ChargeSmsResult::load(ObjectBuffer& in) throw(SerializerException)
+void ChargeSmsResult::save(PacketBufferAC & out_buf) const  throw(SerializerException)
 {
-    unsigned short v;
-    in >> v;
-    value = static_cast<ChargeSmsResult_e>(v);
-    in >> errCode;
-    in >> errMsg;
-
-    unsigned char tmp;
-    in >> tmp;
-    contract = static_cast<CDRRecord::ContractType>(tmp);
-}
-
-void ChargeSmsResult::save(ObjectBuffer& out) const
-{
-    out << (unsigned short)value;
-    out << errCode;
-    out << errMsg;
-    out << (unsigned char)contract;
+  out_buf << (unsigned short)value;
+  out_buf << errCode;
+  out_buf << errMsg;
+  out_buf << (unsigned char)contract;
 }
 
 /* ************************************************************************** *
  * class DeliveredSmsData implementation:
  * ************************************************************************** */
-DeliveredSmsData::DeliveredSmsData(uint32_t res/* = 0*/)
-    : INPBillingCmd(INPCSBilling::DELIVERED_SMS_DATA_TAG)
-    , chrgPolicy(CDRRecord::ON_DATA_COLLECTED)
-    , partsNum(1), smsXSrvsId(0), chrgFlags(0), dlvrRes(res)
-{ }
-
-void DeliveredSmsData::load(ObjectBuffer& in) throw(SerializerException)
+void DeliveredSmsData::load(PacketBufferAC & in_buf) throw(SerializerException)
 {
-    //service fields
-    in >> chrgFlags;
-    in >> smsXSrvsId;
-    //Charging request data ..
-    in >> dstSubscriberNumber;
-    in >> callingPartyNumber;
-    in >> callingImsi;
-    in >> csInfo.smscAddress;
-    in >> submitTimeTZ;
-    in >> csInfo.tpShortMessageSpecificInfo;
-    in >> csInfo.tpProtocolIdentifier;
-    in >> csInfo.tpDataCodingScheme;
-    in >> csInfo.tpValidityPeriod;
-    in >> locationInformationMSC;
-    //data for CDR generation
-    in >> callingSMEid;
-    in >> routeId;
-    in >> serviceId;
-    in >> userMsgRef;
-    in >> msgId;
-    in >> ussdServiceOp;
-    in >> partsNum;
-    in >> msgLen;
-    unsigned char cm;
-    in >> cm;
-    chrgPolicy = static_cast<CDRRecord::ChargingPolicy>(cm);
-    in >> dsmSrvType;
+  //service fields
+  in_buf >> chrgFlags;
+  in_buf >> smsXSrvsId;
+  //Charging request data ..
+  in_buf >> dstSubscriberNumber;
+  in_buf >> callingPartyNumber;
+  in_buf >> callingImsi;
+  in_buf >> csInfo.smscAddress;
+  in_buf >> submitTimeTZ;
+  in_buf >> csInfo.tpShortMessageSpecificInfo;
+  in_buf >> csInfo.tpProtocolIdentifier;
+  in_buf >> csInfo.tpDataCodingScheme;
+  in_buf >> csInfo.tpValidityPeriod;
+  in_buf >> locationInformationMSC;
+  //data for CDR generation
+  in_buf >> callingSMEid;
+  in_buf >> routeId;
+  in_buf >> serviceId;
+  in_buf >> userMsgRef;
+  in_buf >> msgId;
+  in_buf >> ussdServiceOp;
+  in_buf >> partsNum;
+  in_buf >> msgLen;
+  unsigned char cm;
+  in_buf >> cm;
+  chrgPolicy = static_cast<CDRRecord::ChargingPolicy>(cm);
+  in_buf >> dsmSrvType;
 
-    //Delivery report data ..
-    in >> dlvrRes;
-    in >> destImsi;
-    in >> destMSC;
-    in >> destSMEid;
-    in >> divertedAdr;
-    in >> finalTimeTZ;
+  //Delivery report data ..
+  in_buf >> dlvrRes;
+  in_buf >> destImsi;
+  in_buf >> destMSC;
+  in_buf >> destSMEid;
+  in_buf >> divertedAdr;
+  in_buf >> finalTimeTZ;
 }
 
-void DeliveredSmsData::save(ObjectBuffer& out) const
+void DeliveredSmsData::save(PacketBufferAC & out_buf) const  throw(SerializerException)
 {
-    //service fields
-    out << chrgFlags;
-    out << smsXSrvsId;
-    //Charging request data ..
-    out << dstSubscriberNumber;
-    out << callingPartyNumber;
-    out << callingImsi;
-    out << csInfo.smscAddress;
-    out << submitTimeTZ;
-    out << csInfo.tpShortMessageSpecificInfo;
-    out << csInfo.tpProtocolIdentifier;
-    out << csInfo.tpDataCodingScheme;
-    out << csInfo.tpValidityPeriod;
-    out << locationInformationMSC;
-    //data for CDR generation
-    out << callingSMEid;
-    out << routeId;
-    out << serviceId;
-    out << userMsgRef;
-    out << msgId;
-    out << ussdServiceOp;
-    out << partsNum;
-    out << msgLen;
-    out << ((unsigned char)chrgPolicy);
-    out << dsmSrvType;
+  //service fields
+  out_buf << chrgFlags;
+  out_buf << smsXSrvsId;
+  //Charging request data ..
+  out_buf << dstSubscriberNumber;
+  out_buf << callingPartyNumber;
+  out_buf << callingImsi;
+  out_buf << csInfo.smscAddress;
+  out_buf << submitTimeTZ;
+  out_buf << csInfo.tpShortMessageSpecificInfo;
+  out_buf << csInfo.tpProtocolIdentifier;
+  out_buf << csInfo.tpDataCodingScheme;
+  out_buf << csInfo.tpValidityPeriod;
+  out_buf << locationInformationMSC;
+  //data for CDR generation
+  out_buf << callingSMEid;
+  out_buf << routeId;
+  out_buf << serviceId;
+  out_buf << userMsgRef;
+  out_buf << msgId;
+  out_buf << ussdServiceOp;
+  out_buf << partsNum;
+  out_buf << msgLen;
+  out_buf << ((unsigned char)chrgPolicy);
+  out_buf << dsmSrvType;
 
-    //Delivery report data ..
-    out << dlvrRes;
-    out << destImsi;
-    out << destMSC;
-    out << destSMEid;
-    out << divertedAdr;
-    out << finalTimeTZ;
+  //Delivery report data ..
+  out_buf << dlvrRes;
+  out_buf << destImsi;
+  out_buf << destMSC;
+  out_buf << destSMEid;
+  out_buf << divertedAdr;
+  out_buf << finalTimeTZ;
 }
 
 void DeliveredSmsData::export2CDR(CDRRecord & cdr) const
 {
-    cdr._msgId = msgId;
-    cdr._mediaType = (parseCBS_DCS(csInfo.tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
-                        CDRRecord::dpBinary : CDRRecord::dpText ;
-    cdr._bearer = (ussdServiceOp < 0) ? CDRRecord::dpSMS : CDRRecord::dpUSSD;
-    cdr._submitTime = submitTimeTZ;
-    cdr._partsNum = partsNum;
+  cdr._msgId = msgId;
+  cdr._mediaType = (parseCBS_DCS(csInfo.tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
+                      CDRRecord::dpBinary : CDRRecord::dpText ;
+  cdr._bearer = (ussdServiceOp < 0) ? CDRRecord::dpSMS : CDRRecord::dpUSSD;
+  cdr._submitTime = submitTimeTZ;
+  cdr._partsNum = partsNum;
 
-    cdr._srcAdr = callingPartyNumber;
-    cdr._srcIMSI = callingImsi;
-    cdr._srcMSC = locationInformationMSC;
-    cdr._srcSMEid = callingSMEid;
+  cdr._srcAdr = callingPartyNumber;
+  cdr._srcIMSI = callingImsi;
+  cdr._srcMSC = locationInformationMSC;
+  cdr._srcSMEid = callingSMEid;
 
-    cdr._routeId = routeId;
-    cdr._serviceId = serviceId;
-    cdr._dsmSrvType = dsmSrvType;
-    cdr._userMsgRef = userMsgRef;
+  cdr._routeId = routeId;
+  cdr._serviceId = serviceId;
+  cdr._dsmSrvType = dsmSrvType;
+  cdr._userMsgRef = userMsgRef;
 
-    cdr._dstAdr = dstSubscriberNumber;
-    cdr._dpLength = (uint32_t)msgLen;
-    cdr._smsXMask = smsXSrvsId;
-    cdr._chargePolicy = chrgPolicy;
-    cdr._chargeType = (chrgFlags & ChargeSms::chrgMT) ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
+  cdr._dstAdr = dstSubscriberNumber;
+  cdr._dpLength = (uint32_t)msgLen;
+  cdr._smsXMask = smsXSrvsId;
+  cdr._chargePolicy = chrgPolicy;
+  cdr._chargeType = (chrgFlags & ChargeSms::chrgMT) ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
 
-    //Delivery report data ..
-    cdr._dlvrRes = dlvrRes;
-    cdr._dstIMSI = destImsi;
-    cdr._dstMSC = destMSC;
-    cdr._dstSMEid = destSMEid;
-    cdr._finalTime = finalTimeTZ;
-    cdr._divertedAdr = divertedAdr;
-    cdr._cdrType = !divertedAdr.empty() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
-    cdr._finalized = CDRRecord::dpCollected;
+  //Delivery report data ..
+  cdr._dlvrRes = dlvrRes;
+  cdr._dstIMSI = destImsi;
+  cdr._dstMSC = destMSC;
+  cdr._dstSMEid = destSMEid;
+  cdr._finalTime = finalTimeTZ;
+  cdr._divertedAdr = divertedAdr;
+  cdr._cdrType = !divertedAdr.empty() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
+  cdr._finalized = CDRRecord::dpCollected;
 }
 
 
 /* ************************************************************************** *
  * class DeliverySmsResult implementation:
  * ************************************************************************** */
-DeliverySmsResult::DeliverySmsResult(uint32_t res/* = 0*/, bool finalAttemp /*= true*/)
-    : INPBillingCmd(INPCSBilling::DELIVERY_SMS_RESULT_TAG)
-    , value(res), final(finalAttemp)
-{ }
-
-void DeliverySmsResult::load(ObjectBuffer& in) throw(SerializerException)
+void DeliverySmsResult::load(PacketBufferAC & in_buf) throw(SerializerException)
 {
-    in >> value;
-    in >> final;
-    //optional data for CDR generation (on successfull delivery)
-    in >> destImsi;
-    in >> destMSC;
-    in >> destSMEid;
-    in >> divertedAdr;
-    in >> finalTimeTZ;
+  in_buf >> value;
+  in_buf >> final;
+  //optional data for CDR generation (on successfull delivery)
+  in_buf >> destImsi;
+  in_buf >> destMSC;
+  in_buf >> destSMEid;
+  in_buf >> divertedAdr;
+  in_buf >> finalTimeTZ;
 }
 
-void DeliverySmsResult::save(ObjectBuffer& out) const
+void DeliverySmsResult::save(PacketBufferAC & out_buf) const throw(SerializerException)
 {
-    out << value;
-    out << final;
+  out_buf << value;
+  out_buf << final;
     //optional data for CDR generation (on successfull delivery)
-    out << destImsi;
-    out << destMSC;
-    out << destSMEid;
-    out << divertedAdr;
-    out << finalTimeTZ;
+  out_buf << destImsi;
+  out_buf << destMSC;
+  out_buf << destSMEid;
+  out_buf << divertedAdr;
+  out_buf << finalTimeTZ;
 }
 
 void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
 {
-    cdr._dlvrRes = value;
-    cdr._dstIMSI = destImsi;
-    cdr._dstMSC = destMSC;
-    cdr._dstSMEid = destSMEid;
-    cdr._finalTime = finalTimeTZ;
-    cdr._divertedAdr = divertedAdr;
-    cdr._cdrType = !divertedAdr.empty() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
-    cdr._finalized = final ? CDRRecord::dpCollected : CDRRecord::dpDelivered;
+  cdr._dlvrRes = value;
+  cdr._dstIMSI = destImsi;
+  cdr._dstMSC = destMSC;
+  cdr._dstSMEid = destSMEid;
+  cdr._finalTime = finalTimeTZ;
+  cdr._divertedAdr = divertedAdr;
+  cdr._cdrType = !divertedAdr.empty() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
+  cdr._finalized = final ? CDRRecord::dpCollected : CDRRecord::dpDelivered;
 }
 
 } //interaction

@@ -1,19 +1,22 @@
 #ifndef _INMANEMU_BILL_PROCESSOR_
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define _INMANEMU_BILL_PROCESSOR_
 
-#include <logger/Logger.h>
-#include <core/buffers/XHash.hpp>
-#include <core/buffers/IntHash.hpp>
+#include "logger/Logger.h"
+#include "core/buffers/XHash.hpp"
+#include "core/buffers/IntHash.hpp"
+#include "scag/util/sms/HashUtil.h"
 
-#include <scag/util/sms/HashUtil.h>
-
-#include "IBillParserHandler.h"
+#include "inman/inmanemu/IBillParserHandler.h"
 
 
-namespace inmanemu { namespace processor {
+namespace inmanemu {
+namespace processor {
 
-using namespace smsc::sms;
 using smsc::logger::Logger;
+using namespace smsc::sms;
 using namespace smsc::core::buffers;
 
 
@@ -26,8 +29,9 @@ struct HashFunc {
 
 struct Account
 {
-    int amount;
     int charged;
+    int amount;
+
     Account(int money) : charged(0), amount(money) {};
     Account() : charged(0), amount(0) {};
 };

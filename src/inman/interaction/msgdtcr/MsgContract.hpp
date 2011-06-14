@@ -8,9 +8,15 @@
 #endif
 #define SMSC_INMAN_ABNT_CONTRACT_MESSAGES_HPP
 
-#include "inman/interaction/messages.hpp"
 #include "inman/AbntContract.hpp"
 #include "inman/GsmSCFInfo.hpp"
+
+#include "inman/interaction/serializer/IMessages.hpp"
+#include "inman/interaction/serializer/SerializeIntegers.hpp"
+#include "inman/interaction/serializer/SerializeStdString.hpp"
+#include "inman/interaction/serializer/SerializeFxdLenStringT.hpp"
+
+#include "inman/interaction/msgdtcr/IProtoContract.hpp"
 
 namespace smsc  {
 namespace inman {
@@ -18,98 +24,75 @@ namespace interaction {
 
 using smsc::inman::AbonentContractInfo;
 using smsc::inman::AbonentContract_e;
+using smsc::inman::AbonentPolicyName_t;
 using smsc::inman::GsmSCFinfo;
 using smsc::util::TonNpiAddressString;
 
-// -------------------------------------------------------------------- //
-// Abonent Contract detection CommandSet: 
-// -------------------------------------------------------------------- //
-class INPCSAbntContract : public INPCommandSetAC { //singleton
+// --------------------------------------------------------- //
+// Abonent Contract detection PDU's command objects:
+// --------------------------------------------------------- // 
+template <INPAbntContract::CommandTag_e _TagArg>
+class INPAbntContractCmd_T : public SerializableObjIface {
 protected:
-  INPCSAbntContract();
-  ~INPCSAbntContract()
+  explicit INPAbntContractCmd_T() : SerializableObjIface(_TagArg)
   { }
 
 public:
-  enum CommandTag {
-    ABNT_CONTRACT_REQUEST_TAG  = 6,    // AbntContractRequest  ( SMSC --> INMAN )
-    ABNT_CONTRACT_RESULT_TAG   = 7     // AbntContractResult   ( SMSC <-- INMAN )
-  };
+  static const INPAbntContract::CommandTag_e _cmdTAG = _TagArg;
 
-  enum HeaderFrm { HDR_DIALOG = 1 };
-
-  static INPCSAbntContract * getInstance(void);
-
-  // ----------------------------------------
-  // -- INPCommandSetAC interface methods
-  // ----------------------------------------
-  virtual INPLoadMode loadMode(unsigned short obj_id) const
-  {
-    return INPCommandSetAC::lmHeader;
-  }
-};
-
-class INPAbntContractCmd : public INPCommandAC {
-protected:
-  INPAbntContractCmd(INPCSAbntContract::CommandTag cmd_tag)
-    : INPCommandAC(cmd_tag)
+  virtual ~INPAbntContractCmd_T()
   { }
 
-public:
-  virtual ~INPAbntContractCmd()
-  { }
-
-  // ----------------------------------
-  // -- INPCommandAC interface methods
-  // ----------------------------------
-  virtual const INPCommandSetAC * commandSet(void) const
-  {
-    return INPCSAbntContract::getInstance();
-  }
+  // --------------------------------------------
+  // -- SerializableObjIface interface methods
+  // --------------------------------------------
+  //virtual void load(PacketBufferAC & in_buf) throw(SerializerException) = 0;
+  //virtual void save(PacketBufferAC & out_buf) const throw(SerializerException) = 0;
 };
+
+template < INPAbntContract::CommandTag_e _TagArg >
+const INPAbntContract::CommandTag_e INPAbntContractCmd_T<_TagArg>::_cmdTAG;
+
 
 // --------------------------------------------------------- //
-// Abonent Contract detection commands headers: 
+// Abonent Contract detection PDU's headers:
 // --------------------------------------------------------- // 
-class CSAbntContractHdr_dlg : public INPHeaderAC {
+class INPAbntContractHdr_dlg : public SerializableObjIface {
 public:
-    uint32_t dlgId;
+  uint32_t dlgId;
 
-    CSAbntContractHdr_dlg() : SerializableObjectAC(INPCSAbntContract::HDR_DIALOG)
-    { }
+  INPAbntContractHdr_dlg()
+    : SerializableObjIface(INPAbntContract::HDR_DIALOG)
+  { }
+  virtual ~INPAbntContractHdr_dlg()
+  { }
 
-    void load(ObjectBuffer &in) throw(SerializerException)  { in >> dlgId; }
-    void save(ObjectBuffer &out) const                      { out << dlgId; }
+  // --------------------------------------------
+  // -- SerializableObjIface interface methods
+  // --------------------------------------------
+  virtual void load(PacketBufferAC & in_buf) throw(SerializerException)
+  {
+    in_buf >> dlgId;
+  }
+  virtual void save(PacketBufferAC & out_buf) const throw(SerializerException)
+  {
+    out_buf << dlgId;
+  }
 };
 
 
 // --------------------------------------------------------- //
 // Abonent Contract detection commands: 
 // --------------------------------------------------------- // 
-class AbntContractRequest : public INPAbntContractCmd {
+class AbntContractRequest : public
+  INPAbntContractCmd_T<INPAbntContract::ABNT_CONTRACT_REQUEST_TAG> {
 protected:
   bool                useCache;
   TonNpiAddressString subscrNum;
 
-  // -----------------------------------------
-  // -- SerializableObjectAC interface methods
-  // -----------------------------------------
-  virtual void load(ObjectBuffer& in) throw(SerializerException)
-  {
-      in >> useCache;
-      in >> subscrNum;
-  }
-  virtual void save(ObjectBuffer& out) const
-  {
-      out << useCache;
-      out << subscrNum;
-  }
-
 public:
-  static const INPCSAbntContract::CommandTag
-    _cmdTAG = INPCSAbntContract::ABNT_CONTRACT_REQUEST_TAG;
-
-  AbntContractRequest() : INPAbntContractCmd(_cmdTAG), useCache(true)
+  AbntContractRequest(): INPAbntContractCmd_T<INPAbntContract::ABNT_CONTRACT_REQUEST_TAG>()
+    , useCache(true)
   { }
   ~AbntContractRequest()
   { }
@@ -121,29 +104,35 @@ public:
   //--Getters
   bool cacheMode(void) const                    { return useCache; }
   const TonNpiAddressString & subscrAddr(void) const { return subscrNum; }
-};
-
-
-class AbntContractResult : public INPAbntContractCmd {
-protected:
-  AbonentContract_e cntrType;
-  uint32_t        errCode;
-  IMSIString      abImsi;
-  GsmSCFinfo      gsmSCF;
-  std::string     nmPolicy;
-  std::string     errMsg;
 
   // -----------------------------------------
   // -- SerializableObjectAC interface methods
   // -----------------------------------------
-  virtual void load(ObjectBuffer& in) throw(SerializerException);
-  virtual void save(ObjectBuffer& out) const;
+  virtual void load(PacketBufferAC & in_buf) throw(SerializerException)
+  {
+    in_buf >> useCache;
+    in_buf >> subscrNum;
+  }
+  virtual void save(PacketBufferAC & out_buf) const throw(SerializerException)
+  {
+    out_buf << useCache;
+    out_buf << subscrNum;
+  }
+};
+
+
+class AbntContractResult : public 
+  INPAbntContractCmd_T<INPAbntContract::ABNT_CONTRACT_RESULT_TAG> {
+protected:
+  AbonentContract_e   cntrType;
+  uint32_t            errCode;
+  IMSIString          abImsi;
+  GsmSCFinfo          gsmSCF;
+  AbonentPolicyName_t nmPolicy;
+  std::string         errMsg;
 
 public:
-  static const INPCSAbntContract::CommandTag
-    _cmdTAG = INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG;
-
-  AbntContractResult() : INPAbntContractCmd(_cmdTAG)
+  AbntContractResult() : INPAbntContractCmd_T<INPAbntContract::ABNT_CONTRACT_RESULT_TAG>()
     , cntrType(AbonentContractInfo::abtUnknown), errCode(0)
   { }
   ~AbntContractResult()
@@ -164,33 +153,53 @@ public:
   AbonentContract_e contractType(void) const { return cntrType; }
   const char * getSubscrImsi(void) const { return abImsi.empty() ? NULL : abImsi.c_str(); }
   const GsmSCFinfo * getGsmSCF(void) const { return gsmSCF.empty() ? NULL : &gsmSCF; }
+
+  // -----------------------------------------
+  // -- SerializableObjectAC interface methods
+  // -----------------------------------------
+  virtual void load(PacketBufferAC & in_buf) throw(SerializerException);
+  virtual void save(PacketBufferAC & out_buf) const throw(SerializerException);
 };
 
 // --------------------------------------------------------- //
-// Solid instances of packets:
+// Template class for PDU packets:
 // --------------------------------------------------------- //
-typedef INPSolidPacketT<CSAbntContractHdr_dlg, AbntContractRequest>  SPckContractRequest;
-typedef INPSolidPacketT<CSAbntContractHdr_dlg, AbntContractResult>   SPckContractResult;
+template <
+  class _Command /* : public INPAbntContractCmd_T<_TagArg> */
+>
+class SPckAbntContract_T : public INPPacket_T<INPAbntContractHdr_dlg, _Command> {
+public:
+  static IProtocolAC::PduId getPduId(void)
+  {
+    return INPAbntContract::mkPduId(_Command::_cmdTAG, INPAbntContract::HDR_DIALOG);
+  }
+};
+
+// --------------------------------------------------------- //
+// Solid instances of PDU packets:
+// --------------------------------------------------------- //
+typedef SPckAbntContract_T<AbntContractRequest>  SPckContractRequest;
+typedef SPckAbntContract_T<AbntContractResult>   SPckContractResult;
 
 // --------------------------------------------------------- //
 // Abonent Contract detection command handlers:
 // --------------------------------------------------------- //
 class AbntContractReqHandlerITF {
 protected:
-    virtual ~AbntContractReqHandlerITF() //forbid interface destruction
-    { }
+  virtual ~AbntContractReqHandlerITF() //forbid interface destruction
+  { }
 
 public:
-    virtual bool onContractReq(AbntContractRequest* req, uint32_t req_id) = 0;
+  virtual bool onContractReq(const AbntContractRequest * p_req, uint32_t req_id) = 0;
 };
 
 class AbntContractResHandlerITF {
 protected:
-    virtual ~AbntContractResHandlerITF() //forbid interface destruction
-    { }
+  virtual ~AbntContractResHandlerITF() //forbid interface destruction
+  { }
 
 public:
-    virtual void onContractResult(AbntContractResult* res, uint32_t req_id) = 0;
+  virtual void onContractResult(AbntContractResult * res, uint32_t req_id) = 0;
 };
 
 } //interaction
