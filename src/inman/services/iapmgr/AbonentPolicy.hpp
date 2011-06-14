@@ -9,6 +9,7 @@
 
 #include <list>
 
+#include "inman/AbntContract.hpp"
 #include "inman/services/iapmgr/SCFRegistry.hpp"
 #include "inman/services/iapmgr/IAPrvdsRegistry.hpp"
 
@@ -59,14 +60,14 @@ typedef std::pair<IAProviderInfo, IAProviderInfo> IAPrvdsPrio;
 
 
 struct AbonentPolicy {
-  static const size_t _maxPolicyNameSZ = 64;
-  typedef smsc::core::buffers::FixedLengthString<_maxPolicyNameSZ+1> NameString_t;
+  static const size_t _maxPolicyNameSZ = AbonentPolicyName_t::MAX_SZ - 1;
+//  typedef smsc::core::buffers::FixedLengthString<_maxPolicyNameSZ+1> NameString_t;
 
   enum IAPrvdPrio_e  {
     iapNone = 0, iapPrimary, iapSecondary
   };
 
-  NameString_t      _ident;
+  AbonentPolicyName_t  _ident;
   IAPrvdsPrio       _prvdPrio; //prioritized pair of allowed IAProviders
   SCFParmsMap       _scfMap;
   AddressPoolsSet   _poolsSet;
@@ -93,7 +94,7 @@ struct AbonentPolicy {
   //Returns initialized IAProvider with given priority
   const IAProviderInfo * getIAProvider(IAPrvdPrio_e prvd_prio) const;
 };
-typedef AbonentPolicy::NameString_t  AbonentPolicyName_t;
+//typedef AbonentPolicy::NameString_t  AbonentPolicyName_t;
 typedef AbonentPolicy::IAPrvdPrio_e  IAPPrio_e;
 
 
