@@ -4,11 +4,8 @@ static char const ident[] = "$Id$";
 
 #include "inman/services/smbill/ICSSmBilling.hpp"
 using smsc::core::timers::TimeWatchersRegistryITF;
-using smsc::inman::tcpsrv::TCPServerITF;
+using smsc::inman::tcpsrv::ICSTcpServerIface;
 using smsc::inman::iapmgr::IAPManagerITF;
-
-#include "inman/interaction/msgbill/MsgBilling.hpp"
-using smsc::inman::interaction::INPCSBilling;
 
 #include "inman/comp/cap_sms/CapSMSFactory.hpp"
 using smsc::inman::comp::_ac_cap3_sms;
@@ -20,6 +17,18 @@ namespace smbill {
 /* ************************************************************************** *
  * class ICSSmBilling implementation.
  * ************************************************************************** */
+const INPBilling  ICSSmBilling::_iProtoDef; //provided protocol definition
+
+ICSSmBilling::~ICSSmBilling()
+{
+  ICSStop(true);
+  {
+    MutexGuard grd(_sync);
+    ICSTcpServerIface * tcpSrv = (ICSTcpServerIface *)_icsHost->getInterface(ICSIdent::icsIdTCPServer);
+    while (tcpSrv && !tcpSrv->unregisterProtocol(_iProtoDef._protoId))
+      _sync.wait();
+  }
+}
 
 // -------------------------------------
 // ICServiceAC interface methods:
@@ -27,125 +36,144 @@ namespace smbill {
 //Initializes service verifying that all dependent services are inited
 ICServiceAC::RCode ICSSmBilling::_icsInit(void)
 {
-    if (wCfg.prm->useCache) {
-        wCfg.abCache = (AbonentCacheITF*)_icsHost->getInterface(ICSIdent::icsIdAbntCache);
-        if (!wCfg.abCache) {
-            smsc_log_warn(logger, "Abonents Cache service required but not loaded!");
-            wCfg.prm->useCache = false;
-        }
+  if (_wCfg.prm->useCache) {
+    _wCfg.abCache = (AbonentCacheITF*)_icsHost->getInterface(ICSIdent::icsIdAbntCache);
+    if (!_wCfg.abCache) {
+      smsc_log_warn(logger, "Abonents Cache service required but not loaded!");
+      _wCfg.prm->useCache = false;
     }
+  }
 
-    //Initialize CAP3Sms components factory
-    if (wCfg.prm->capSms.get()) {
-        wCfg.tcDisp = (TCAPDispatcherITF *)_icsHost->getInterface(ICSIdent::icsIdTCAPDisp);
-        if (!wCfg.tcDisp->acRegistry()->getFactory(_ac_cap3_sms)
-            && !wCfg.tcDisp->acRegistry()->regFactory(initCAP3SMSComponents)) {
-            smsc_log_fatal(logger, "ROS factory registration failed: %s!",
-                            _ac_cap3_sms.nick());
-            return ICServiceAC::icsRcError;
-        }
-        wCfg.schedMgr = (TaskSchedulerFactoryITF*)_icsHost->getInterface(ICSIdent::icsIdScheduler);
+  //Initialize CAP3Sms components factory
+  if (_wCfg.prm->capSms.get()) {
+    _wCfg.tcDisp = (TCAPDispatcherITF *)_icsHost->getInterface(ICSIdent::icsIdTCAPDisp);
+    if (!_wCfg.tcDisp->acRegistry()->getFactory(_ac_cap3_sms)
+        && !_wCfg.tcDisp->acRegistry()->regFactory(initCAP3SMSComponents)) {
+      smsc_log_fatal(logger, "ROS factory registration failed: %s!", _ac_cap3_sms.nick());
+      return ICServiceAC::icsRcError;
     }
-    //initialize CDR storage
-    if (wCfg.prm->cdrMode) {
-        wCfg.bfs.reset(new InBillingFileStorage(wCfg.prm->cdrDir, 0, logger));
-        int oldfs = wCfg.bfs->RFSOpen(true);
-        if (oldfs < 0)
-            return ICServiceAC::icsRcError;
-        smsc_log_debug(logger, "%s: CDR storage opened%s", _logId,
-                       oldfs > 0 ? ", old files rolled": "");
-         //initialize external storage roller
-        if (wCfg.prm->cdrInterval) {
-            roller.reset(new InFileStorageRoller(wCfg.bfs.get(),
-                                (unsigned long)wCfg.prm->cdrInterval));
-            smsc_log_debug(logger, "%s: CDR storage roller inited", _logId);
-        }
+    _wCfg.schedMgr = (TaskSchedulerFactoryITF*)_icsHost->getInterface(ICSIdent::icsIdScheduler);
+  }
+  //initialize CDR storage
+  if (_wCfg.prm->cdrMode) {
+    _wCfg.bfs.reset(new InBillingFileStorage(_wCfg.prm->cdrDir, 0, logger));
+    int oldfs = _wCfg.bfs->RFSOpen(true);
+    if (oldfs < 0)
+      return ICServiceAC::icsRcError;
+
+    smsc_log_debug(logger, "%s: CDR storage opened%s", _logId,
+                   oldfs > 0 ? ", old files rolled": "");
+     //initialize external storage roller
+    if (_wCfg.prm->cdrInterval) {
+      _roller.reset(new InFileStorageRoller(_wCfg.bfs.get(),
+                          (unsigned long)_wCfg.prm->cdrInterval));
+      smsc_log_debug(logger, "%s: CDR storage roller inited", _logId);
     }
+  }
 
-    if (wCfg.prm->needIAProvider()) {
-      wCfg.iapMgr = (const IAPManagerITF *)
-                    _icsHost->getInterface(ICSIdent::icsIdIAPManager);
-      //check that default policy is configured
-      const AbonentPolicy * dfltPol = wCfg.iapMgr->getPolicy(wCfg.policyNm);
-      if (!dfltPol) {
-          smsc_log_fatal(logger, "%s: IAPolicy %s is not configured!", _logId,
-                         wCfg.policyNm.c_str());
-          return ICServiceAC::icsRcError;
-      }
+  if (_wCfg.prm->needIAProvider()) {
+    _wCfg.iapMgr = (const IAPManagerITF *)
+                  _icsHost->getInterface(ICSIdent::icsIdIAPManager);
+    //check that default policy is configured
+    const AbonentPolicy * dfltPol = _wCfg.iapMgr->getPolicy(_wCfg.policyNm);
+    if (!dfltPol) {
+      smsc_log_fatal(logger, "%s: IAPolicy %s is not configured!", _logId,
+                     _wCfg.policyNm.c_str());
+      return ICServiceAC::icsRcError;
     }
+  }
 
-    //Smbilling uses up to two timeout values.
-    TimeWatchersRegistryITF * icsTW = (TimeWatchersRegistryITF *)
-                                    _icsHost->getInterface(ICSIdent::icsIdTimeWatcher);
-    if (wCfg.iapMgr)
-      wCfg.abtTimeout.Init(icsTW, wCfg.prm->maxBilling);
-    wCfg.maxTimeout.Init(icsTW, wCfg.prm->maxBilling);
+  //Smbilling uses up to two timeout values.
+  TimeWatchersRegistryITF * icsTW = (TimeWatchersRegistryITF *)
+                                  _icsHost->getInterface(ICSIdent::icsIdTimeWatcher);
+  if (_wCfg.iapMgr)
+    _wCfg.abtTimeout.Init(icsTW, _wCfg.prm->maxBilling);
+  _wCfg.maxTimeout.Init(icsTW, _wCfg.prm->maxBilling);
 
-    TCPServerITF * tcpSrv = (TCPServerITF *)_icsHost->getInterface(ICSIdent::icsIdTCPServer);
-    tcpSrv->registerProtocol(INPCSBilling::getInstance(), this);
-
-    return ICServiceAC::icsRcOk;
+  ICSTcpServerIface * tcpSrv = (ICSTcpServerIface *)_icsHost->getInterface(ICSIdent::icsIdTCPServer);
+  tcpSrv->registerProtocol(*this);
+  return ICServiceAC::icsRcOk;
 }
 
 ICServiceAC::RCode ICSSmBilling::_icsStart(void)
 {
-    if (roller.get())
-        roller->Start();
-    if (wCfg.abtTimeout.Value() && !wCfg.abtTimeout.Start()) {
-        smsc_log_fatal(logger, "%s: TimeWatcher[abt] startup failure!", _logId);
-        return ICServiceAC::icsRcError;
-    }
-    if (!wCfg.maxTimeout.Start()) {
-        smsc_log_fatal(logger, "%s: TimeWatcher[max] startup failure!", _logId);
-        return ICServiceAC::icsRcError;
-    }
-    return ICServiceAC::icsRcOk;
+  if (_roller.get())
+    _roller->Start();
+  if (_wCfg.abtTimeout.Value() && !_wCfg.abtTimeout.Start()) {
+    smsc_log_fatal(logger, "%s: TimeWatcher[abt] startup failure!", _logId);
+    return ICServiceAC::icsRcError;
+  }
+  if (!_wCfg.maxTimeout.Start()) {
+    smsc_log_fatal(logger, "%s: TimeWatcher[max] startup failure!", _logId);
+    return ICServiceAC::icsRcError;
+  }
+  return ICServiceAC::icsRcOk;
 }
 
 //Stops service
 void  ICSSmBilling::_icsStop(bool do_wait/* = false*/)
 {
-    if (roller.get())
-        roller->Stop(do_wait);
-    if (do_wait) {
-        //abort all sessions
-        SessionsRegistry::const_iterator it = sesMgrs.begin();
-        for (; it != sesMgrs.end(); ++it)
-            it->second->Abort();
-    }
+  bool waitMode = false;
+  do {
+    if (_roller.get())
+      _roller->Stop(do_wait);
+
+    SessionsRegistry::const_iterator it = _sessReg.begin();
+    for (; it != _sessReg.end(); ++it)
+      it->second->stop(waitMode);
+  } while (waitMode++ < do_wait);
 }
 
 // -------------------------------------
-// ConnServiceITF interface methods:
+// ICSConnServiceIface interface methods:
 // -------------------------------------
-ConnectManagerAC * ICSSmBilling::getConnManager(uint32_t sess_id, Connect * use_conn)
+//Creates a connect listener serving given connect.
+//Returns true on success, false -  otherwise.
+//Note: upon entry the referenced Connect is configured 
+//  to process in consequitive mode, so it's recommended
+//  to reconfigure Connect within this call.
+bool ICSSmBilling::setConnListener(const ConnectGuard & use_conn) /*throw()*/
 {
-    MutexGuard  grd(_sync);
-    if (_icsState != ICServiceAC::icsStStarted) {
-        smsc_log_error(logger, "%s: still not started", _logId);
-        return NULL;
-    }
+  MutexGuard  grd(_sync);
+  if (_icsState != ICServiceAC::icsStStarted) {
+    _sync.notify();
+    return false;
+  }
 
-    SmBillManager * pMgr = sesMgrs.find(sess_id);
-    if (!pMgr) { //create new connect manager
-        std::auto_ptr<SmBillManager> mgr
-                (new SmBillManager(wCfg, sess_id, use_conn, logger));
-        sesMgrs.insert(sess_id, mgr.get());
-        return mgr.release();
-    }
-    //rebind existing one
-    pMgr->Bind(use_conn);
-    return pMgr;
+  SmBillManager * pMgr = _sessReg.find(use_conn->getId());
+  if (pMgr) {
+    smsc_log_warn(logger, "%s: session[%s] is already opened on Connect[%u]",
+                  _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
+    _sync.notify();
+    return false;
+  }
+  //create new connect manager
+  pMgr = new SmBillManager(_wCfg, _iProtoDef, ++_lastSessId, logger);
+  _sessReg.insert(use_conn->getId(), pMgr);
+  pMgr->bind(&use_conn);
+  pMgr->start(); //switches Connect to asynchronous mode
+  _sync.notify();
+  return true;
 }
 
-void ICSSmBilling::rlseConnManager(uint32_t sess_id)
+//Notifies that given connection is to be closed, no more socket events will be reported.
+void ICSSmBilling::onDisconnect(const ConnectGuard & use_conn) /*throw()*/
 {
+  std::auto_ptr<SmBillManager> pMgr;
+  {
     MutexGuard  grd(_sync);
-    if (!sesMgrs.erase(sess_id)) {
-        smsc_log_error(logger, "%s: SmBillManager[%u] is "
-                                "unknown/already released",
-                                _logId, sess_id);
+    pMgr.reset(_sessReg.extract(use_conn->getId()));
+    if (!pMgr.get()) {
+      _sync.notify();
+      return;
     }
+  }
+  pMgr->bind(NULL);
+  pMgr->stop(false);
+  smsc_log_debug(logger, "%s: closing session[%s] on Connect[%u]",
+                _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
+  _sync.notify();
+  //pMgr.reset(); //SmBillManager is destroyed at this point
 }
 
 } //smbill

@@ -18,19 +18,19 @@ ICSrvCfgReaderAC::CfgState
   const char * cstr = NULL;
   try {
     cstr = _topSec.getString("host");
-    icsCfg->port = _topSec.getInt("port");
+    icsCfg->_port = _topSec.getInt("port");
   } catch (const ConfigException & exc) {
     throw ConfigException("TCPSrv host or port missing");
   }
-  icsCfg->host = cstr;
+  icsCfg->_host = cstr;
 
   uint32_t tmo = 0;
   try { tmo = (uint32_t)_topSec.getInt("maxClients");
   } catch (const ConfigException & exc) { }
-  icsCfg->maxConn = tmo ? tmo : _DFLT_CLIENT_CONNS;
+  icsCfg->_maxConn = tmo ? tmo : _DFLT_CLIENT_CONNS;
 
-  smsc_log_info(logger, "  TCPSrv: %s:%d, maxConn %u%s", icsCfg->host.c_str(),
-                icsCfg->port, icsCfg->maxConn, !tmo ? " (default)":"");
+  smsc_log_info(logger, "  TCPSrv: %s:%d, maxConn %u%s", icsCfg->_host.c_str(),
+                icsCfg->_port, icsCfg->_maxConn, !tmo ? " (default)":"");
   /**/
   return ICSrvCfgReaderAC::cfgComplete;
 }

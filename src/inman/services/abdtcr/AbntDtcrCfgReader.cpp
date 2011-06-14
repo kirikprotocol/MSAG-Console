@@ -42,13 +42,27 @@ ICSrvCfgReaderAC::CfgState
 
   tmo = 0;    //maxRequests
   try { tmo = (uint32_t)_topSec.getInt("maxRequests");
-  } catch (const ConfigException & exc) { tmo = _MAX_REQUESTS_NUM; }
-  if (tmo >= _MAX_REQUESTS_NUM)
+  } catch (const ConfigException & exc) { tmo = _MAX_REQUESTS_NUM + 1; }
+  if (tmo > _MAX_REQUESTS_NUM)
     throw ConfigException("'maxRequests' is invalid or missing,"
                             " allowed range [1..%u)", _MAX_REQUESTS_NUM);
-  icsCfg->maxRequests = tmo ? (uint16_t)tmo : _DFLT_REQUESTS_NUM;
+  icsCfg->maxRequests = tmo ? tmo : _DFLT_REQUESTS_NUM;
   smsc_log_info(logger, "  maxRequests: %u per connect%s", icsCfg->maxRequests,
                 !tmo ? " (default)":"");
+
+  tmo = 0;
+  try { tmo = (uint32_t)_topSec.getInt("maxThreads");
+  } catch (const ConfigException & exc) { tmo = _DFLT_THREADS_NUM; }
+  if (tmo > _MAX_THREADS_NUM)
+    throw ConfigException("maxThreads is out of range [0 ..65535]");
+
+  icsCfg->maxThreads = (uint16_t)tmo;
+  if (!tmo) {
+    smsc_log_info(logger, "  maxThreads: unlimited per connect");
+  } else {
+    smsc_log_info(logger, "  maxThreads: %u per connect%s", (unsigned)icsCfg->maxThreads,
+                  (tmo == _DFLT_THREADS_NUM) ? " (default)":"");
+  }
 
   //cache parameters
   {

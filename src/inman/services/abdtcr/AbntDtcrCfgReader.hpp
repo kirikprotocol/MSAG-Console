@@ -21,8 +21,11 @@ using smsc::inman::XMFConfig;
 
 class ICSAbntDetectorCfgReader : public ICSrvCfgReaderAC_T<AbntDetectorXCFG> {
 protected:
-  static const uint16_t   _MAX_REQUESTS_NUM = 0xFFFF;
-  static const uint16_t   _DFLT_REQUESTS_NUM = 1000;
+  static const uint32_t   _MAX_THREADS_NUM = 0xFFFF;
+  static const uint16_t   _DFLT_THREADS_NUM = 64;
+
+  static const uint32_t   _MAX_REQUESTS_NUM = 0x7FFFFFFF;
+  static const uint32_t   _DFLT_REQUESTS_NUM = 1000;
   static const uint16_t   _MAX_ABTYPE_TIMEOUT = 0xFFFF;   //units: seconds
   static const uint16_t   _DFLT_ABTYPE_TIMEOUT = 8;       //units: seconds
 

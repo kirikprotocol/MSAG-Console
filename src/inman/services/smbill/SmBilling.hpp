@@ -26,10 +26,12 @@ ChargeSmsResult     <-   | bilProcessed ]
 ]
 */
 
-#include "inman/interaction/msgbill/MsgBilling.hpp"
-#include "inman/services/smbill/SmBillManager.hpp"
+#include "inman/interaction/asyncmgr/AsynWorkerDefs.hpp"
+#include "inman/interaction/msgbill/SmBillRequestMsg.hpp"
+#include "inman/services/smbill/SmBillDefs.hpp"
 #include "inman/services/smbill/CAPSmTask.hpp"
 
+#include "inman/INManErrors.hpp"
 
 namespace smsc {
 namespace inman {
@@ -37,163 +39,276 @@ namespace smbill {
 
 using smsc::core::synchronization::Condition;
 using smsc::core::timers::TimeWatcherITF;
-using smsc::core::timers::TimerListenerITF;
+
 using smsc::core::timers::TimerHdl;
 using smsc::core::timers::OPAQUE_OBJ;
-using smsc::inman::TaskRefereeITF;
+
+using smsc::inman::INManErrorId;
+
 using smsc::inman::ScheduledTaskAC;
 
 using smsc::inman::iaprvd::IAPAbility;
 using smsc::inman::iaprvd::AbonentId;
-using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
+
 using smsc::inman::iapmgr::IAPRule;
 using smsc::inman::iapmgr::IAPPrio_e;
+using smsc::inman::iapmgr::AbonentPolicy;
+
 using smsc::inman::comp::CSIUid_e;
 
-using smsc::inman::tcpsrv::WorkerAC;
-using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::SMCAPSpecificInfo;
+using smsc::inman::interaction::WorkerGuard;
+
+using smsc::inman::interaction::PacketBufferAC;
+using smsc::inman::interaction::SmBillRequestMsg;
+using smsc::inman::interaction::SPckChargeSmsResult;
+
 using smsc::inman::cdr::CDRRecord;
 
 
-class Billing : public WorkerAC, TaskRefereeITF,
-                IAPQueryListenerITF, TimerListenerITF {
+class Billing : public smsc::inman::interaction::WorkerIface
+                      , smsc::inman::iaprvd::IAPQueryListenerITF
+                      , smsc::core::timers::TimerListenerITF
+                      , smsc::inman::TaskRefereeITF {
 public:
-    enum BillingState {
-        bilIdle = 0,
-        bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
-                        //   [Timer] SSF -> IAProvider
-        bilQueried,     // SSF <- IAProvider: query result
-        bilInited,      // [Timer] SSF -> SCF : InitialDPSMS
-        bilReleased,    // SSF <- SCF : ReleaseSMS
-                        //   SSF -> SMSC : CHARGE_SMS_RESULT_TAG(No)
-        bilContinued,   // SSF <- SCF : ContinueSMS
-                        //   [Timer] SSF -> SMSC : CHARGE_SMS_RESULT_TAG(Ok)
-        bilAborted,     // SSF <- SMSC/Billing : Abort
-        bilSubmitted,   // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
-                        //   [Timer] SSF -> SCF : EventReportSMS
-        bilReported,    // SSF <- SCF: T_END{OK|NO}
-        bilComplete     // 
-    };
+  enum BillingState {
+    bilIdle = 0,
+    bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
+                    //   [Timer] SSF -> IAProvider
+    bilQueried,     // SSF <- IAProvider: query result
+    bilInited,      // [Timer] SSF -> SCF : InitialDPSMS
+    bilReleased,    // SSF <- SCF : ReleaseSMS
+                    //   SSF -> SMSC : CHARGE_SMS_RESULT_TAG(No)
+    bilContinued,   // SSF <- SCF : ContinueSMS
+                    //   [Timer] SSF -> SMSC : CHARGE_SMS_RESULT_TAG(Ok)
+    bilAborted,     // SSF <- SMSC/Billing : Abort
+    bilSubmitted,   // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
+                    //   [Timer] SSF -> SCF : EventReportSMS
+    bilReported,    // SSF <- SCF: T_END{OK|NO}
+    bilComplete     // 
+  };
 
-    enum PGraphState {  //billing processing graph state
-        pgAbort = -1,   //processing has aborted (worker aborted itself)
-        pgCont = 0,     //processing continues (negotiation with
-                        //client or external module is expected)
-        pgEnd = 1       //processing has been finished (worker may be released)
-    };
+  enum PGraphState {  //billing processing graph state
+    //pgAbort = -1,   //processing has aborted (worker aborted itself)
+    pgCont = 0,     //processing continues (negotiation with
+                    //client or external module is expected)
+    pgEnd = 1       //processing has been finished (worker may be released)
+  };
 
-    static const char * nmBState(BillingState bil_state);
+  static const char * state2Str(BillingState bil_state);
+
+  Billing() : smsc::inman::interaction::WorkerIface()
+    , _cfg(0), _pState(bilIdle), _chrgFlags(0), _billPrio(0)
+    , _msgType(ChargeParm::msgUnknown), _billMode(ChargeParm::billOFF)
+    , _curIAPrvd(AbonentPolicy::iapNone)
+    , _cfgScf(0), _xsmsSrv(0), _billErr(0), _capTask(0), _capSched(0)
+  { }
+  //
+  virtual ~Billing();
+
+  void configure(const SmBillingCFG & use_cfg, const char * id_pfx);
+  //Note: presence of 'pck_buf' means input PDU is only partially deserialized
+  void wrkHandlePacket(SmBillRequestMsg & recv_pck, PacketBufferAC * pck_buf = NULL) /*throw()*/;
+
+  // ------------------------------------------
+  // -- WorkerIface interface methods:
+  // ------------------------------------------
+  //Initializes worker as it's got from pool.
+  virtual void wrkInit(smsc::inman::interaction::WorkerID w_id,
+                       smsc::inman::interaction::WorkerManagerIface * use_mgr,
+                       Logger * use_log = NULL);
+  //Prints some information about worker state/status
+  virtual void wrkLogState(std::string & use_str) const;
+  //
+  virtual void wrkAbort(const char * reason = NULL);
 
 private:
-    typedef std::map<unsigned, TimerHdl> TimersMAP;
+  //Ids of external entities, which may refer this object
+  //Note: references by TimerWatcher facility is handled in specific way!
+  enum RefEntities_e {
+    refIdItself = 0x0
+    , refIdIAProvider = 0x01
+    , refIdCapSmTask = 0x02
+    , refIdMAX = 0x03 //just a max cap
+  };
 
-    mutable EventMonitor    _sync;
-    const SmBillingCFG &    _cfg;
-    volatile BillingState   state;
-    //prefix for logging info
-    char _logId[sizeof("Billing[%u:%u]") + sizeof(unsigned int)*3 + 1];
+  struct TimerInfo {
+    BillingState  _fsmState;
+    TimerHdl      _hdl;
+    WorkerGuard   _wrkGrd;
 
-    CDRRecord           cdr;        //data for CDR record creation & CAP3 interaction
-    SMCAPSpecificInfo   csInfo;     //data for CAP3 interaction
-    uint8_t             chrgFlags;  //flags which customize billing settings
-    const BModesPrio *  billPrio;   //billing modes priority 
-    ChargeParm::MSG_TYPE  msgType;  //
-    ChargeParm::BILL_MODE billMode; //current billing mode
+    TimerInfo() : _fsmState(bilIdle)
+    { }
+    //
+    bool empty(void) const { return _hdl.empty() && (_fsmState == bilIdle); }
+    //
+    void clear(void) { _fsmState = bilIdle; _hdl.clear(); _wrkGrd.release(); }
+  };
 
-    TimersMAP           timers;     //active timers
-    AbonentSubscription abCsi;      //CAMEL subscription info of abonent is to charge
-    TonNpiAddress       abNumber;   //ISDN number of abonent is to charge
-    IAPRule             _iapRule;   //abonent policy rule
-    IAPPrio_e           _curIAPrvd;  //UId of last IAProvider asked
-    volatile bool       providerQueried;
-    // ...
-    const INScfCFG *    _cfgScf;    //serving gsmSCF(IN-point) configuration
-    const XSmsService * xsmsSrv;    //optional SMS Extra service config.
-    RCHash              billErr;    //global error code made by URCRegistry
-    // ...
-    TaskId              capTask;    //id of started CapSMS task
-    TaskSchedulerITF *  capSched;   //CapSMS task scheduler
-    std::string         capName;    //CapSMS task name for logging
-    Condition           capEvent;
+  class TimersRegistry {
+  protected:
+    static const unsigned _MAX_TIMERS = 4;
 
-    uint32_t getServiceKey(CSIUid_e csi_id) const;
+    TimerInfo   _reg[_MAX_TIMERS];
 
-    //Returns false if PDU contains invalid data preventing request processing
-    bool verifyChargeSms(void);
-    //Returns true if next configured IAProvider has specified ability.
-    bool nextIAProviderHas(IAPAbility::Option_e op_val) const;
-    //Returns true if qyery is started, so execution will continue in another thread.
-    bool startIAPQuery(void);
-    void cancelIAPQuery(void);
-    void doCleanUp(void);
-    unsigned writeCDR(void);
-    void doFinalize(void);
-    void abortThis(const char * reason = NULL);
-    RCHash startCAPSmTask(void);
-    bool unrefCAPSmTask(bool wait_report = true);
-    void abortCAPSmTask(void);
-    bool StartTimer(const TimeoutHDL & tmo_hdl);
-    void StopTimer(BillingState bilState);
-    PGraphState chargeResult(bool do_charge, RCHash last_err = 0);
-    const AbonentPolicy * determinePolicy(void);
-    void configureMOSM(void);
-    INManErrorId::Code_e configureSCF(void);
-    PGraphState ConfigureSCFandCharge(void);
-    PGraphState onSubmitReport(RCHash scf_err, bool in_billed = false);
+  public:
+    TimersRegistry()
+    { }
+    ~TimersRegistry()
+    { }
+
+    unsigned size(void) const { return _MAX_TIMERS; }
+
+    //returns null if no timer at given FSM state exists 
+    TimerInfo * find(BillingState fsm_state)
+    {
+      for (unsigned i = 0; i < _MAX_TIMERS; ++i) {
+        if (_reg[i]._fsmState == fsm_state)
+          return &_reg[i];
+      }
+      return NULL;
+    }
+
+    //returns false if a timer at given FSM state already/still exists
+    bool alloc(BillingState fsm_state, TimerInfo * & p_inf)
+    {
+      if ((p_inf = find(fsm_state))) //check uniqueness
+        return false;
+
+      if ((p_inf = find(bilIdle)))
+        p_inf->_fsmState = fsm_state;
+      return true;
+    }
+    //
+    void erase(BillingState fsm_state)
+    {
+      TimerInfo * pInf = find(fsm_state);
+      if (pInf)
+        pInf->clear();
+    }
+
+    TimerInfo & operator[](unsigned use_idx) { return _reg[use_idx]; }
+  };
+
+  struct ThisGuard {
+    WorkerGuard _wrkGrd;
+    uint16_t    _refCnt;
+
+    ThisGuard() : _refCnt(0)
+    { }
+  };
+
+  /* - */
+  mutable EventMonitor    _sync;
+  const SmBillingCFG *    _cfg;     //
+  volatile BillingState   _pState;
+  //prefix for logging info
+  char _logId[sizeof("Billing[%u:%u]") + sizeof(smsc::inman::interaction::WorkerID)*3 + 1];
+
+  CDRRecord             _cdr;       //data for CDR record creation & CAP3 interaction
+  SMCAPSpecificInfo     _csInfo;    //data for CAP3 interaction
+  uint8_t               _chrgFlags; //flags which customize billing settings
+  const BModesPrio *    _billPrio;  //billing modes priority 
+  ChargeParm::MSG_TYPE  _msgType;   //
+  ChargeParm::BILL_MODE _billMode;  //current billing mode
+  // ..
+  ThisGuard             _wrkRefs[refIdMAX];
+  TimersRegistry        _timers;    //active timers
+  AbonentSubscription   _abCsi;     //CAMEL subscription info of abonent is to charge
+  TonNpiAddress         _abNumber;  //ISDN number of abonent is to charge
+  IAPRule               _iapRule;   //abonent policy rule
+  IAPPrio_e             _curIAPrvd;  //UId of last IAProvider asked
+  // ...
+  const INScfCFG *      _cfgScf;    //serving gsmSCF(IN-point) configuration
+  const XSmsService *   _xsmsSrv;   //optional SMS Extra service config.
+  RCHash                _billErr;   //global error code made by URCRegistry
+  // ...
+  TaskId                _capTask;   //id of started CapSMS task
+  TaskSchedulerITF *    _capSched;  //CapSMS task scheduler
+  std::string           _capName;   //CapSMS task name for logging
+  Condition             _capEvent;
+
+  /* - */
+  const char * state2Str(void) { return state2Str(_pState); }
+
+  bool hasRef(RefEntities_e ref_id) const
+  {
+    return _wrkRefs[ref_id]._wrkGrd.get() != NULL;
+  }
+  void addRef(RefEntities_e ref_id)
+  {
+    if (!_wrkRefs[ref_id]._refCnt)
+      _wrkRefs[ref_id]._wrkGrd = _wrkMgr->getWorkerGuard(*this);
+    ++_wrkRefs[ref_id]._refCnt;
+  }
+  void unRef(RefEntities_e ref_id)
+  {
+    if (_wrkRefs[ref_id]._refCnt) {
+      if (!(--_wrkRefs[ref_id]._refCnt))
+        _wrkRefs[ref_id]._wrkGrd.release();
+    }
+  }
+
+  uint32_t getServiceKey(CSIUid_e csi_id) const;
+
+  //Returns true if next configured IAProvider has specified ability.
+  bool nextIAProviderHas(IAPAbility::Option_e op_val) const;
+  //Returns true if qyery is started, so execution will continue in another thread.
+  bool startIAPQuery(void);
+  void cancelIAPQuery(void);
+  //
+  RCHash startCAPSmTask(void);
+  bool unrefCAPSmTask(bool wait_report = true);
+  void abortCAPSmTask(bool wait_report = true);
+  //
+  bool startTimer(const TimeoutHDL & tmo_hdl);
+  void stopTimer(BillingState bilState);
+
+  //Returns false if PDU contains invalid data preventing request processing
+  bool verifyChargeSms(void);
+  PGraphState chargeResult(bool do_charge, RCHash last_err = 0);
+  const AbonentPolicy * determinePolicy(void);
+  void configureMOSM(void);
+  INManErrorId::Code_e configureSCF(void);
+  PGraphState configureSCFandCharge(void);
+  void onSubmitReport(RCHash scf_err, bool in_billed = false);
+  //
+  bool sendCmd(const SPckChargeSmsResult & use_res) const;
+  //
+  unsigned writeCDR(void);
+  //returns true if required CDR data fullfilled
+  bool     isCDRComplete(void) const;
+  //returns true if all billing stages are completed
+  bool     isBillComplete(void) const;
+
+  void doCleanUp(void);
+  //returns true if this worker finalized and relaased all resources
+  bool doFinalize(void);
+  void abortThis(const char * reason = NULL);
 
 protected:
-    //-- TaskRefereeITF interface methods: --//
-    void onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * task);
-
-    // -------------------------------------------------------
-    //-- IAPQueryListenerITF interface methods:
-    // -------------------------------------------------------
-    //Returns false if listener unable to handle query report right now, so
-    //requests query to be rereported.
-    bool onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
-                                                    RCHash qry_status);
-    //-- TimerListenerITF interface methods: --//
-    TimeWatcherITF::SignalResult
-        onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
-
-    //-- INPBillingHandlerITF analogous methods:
-    PGraphState onChargeSms(void);
-    PGraphState onDeliverySmsResult(void);
-
-public:
-    Billing(unsigned b_id, SmBillManager * owner, Logger * uselog = NULL)
-        : WorkerAC(b_id, owner, uselog), _cfg(owner->getConfig())
-        , state(bilIdle), chrgFlags(0), billPrio(0)
-        , msgType(ChargeParm::msgUnknown), billMode(ChargeParm::billOFF)
-        , _curIAPrvd(AbonentPolicy::iapNone), providerQueried(false)
-        , _cfgScf(0), xsmsSrv(0), billErr(0), capTask(0), capSched(0)
-    {
-        logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
-        snprintf(_logId, sizeof(_logId)-1, "Billing[%u:%u]", _mgr->cmId(), _wId);
-    }
-
-    virtual ~Billing();
-
-    const char * nmBState(void) const
-    {
-        return nmBState(state);
-    }
-    BillingState getState(void) const
-    {
-        MutexGuard grd(_sync);
-        return state;
-    }
-    //returns true if required CDR data fullfilled
-    bool     CDRComplete(void) const;
-    //returns true if all billing stages are completed
-    bool     BillComplete(void) const;
-
-    //-- WorkerAC interface methods
-    void     logState(std::string & use_str) const;
-    void     handleCommand(INPPacketAC* cmd);
-    void     Abort(const char * reason = NULL); //aborts billing due to fatal error
+  // -------------------------------------------------------
+  // -- IAPQueryListenerITF interface methods:
+  // -------------------------------------------------------
+  //Returns false if listener unable to handle query report right now, so
+  //requests query to be rereported.
+  virtual bool onIAPQueried(const AbonentId & ab_number,
+                            const AbonentSubscription & ab_info, RCHash qry_status);
+  // -------------------------------------------------------
+  // -- TimerListenerITF interface methods:
+  // -------------------------------------------------------
+  virtual TimeWatcherITF::SignalResult
+      onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
+  // -------------------------------------------------------
+  // -- TaskRefereeITF interface methods:
+  // -------------------------------------------------------
+  virtual void onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * task);
+  // -------------------------------------------------------
+  // -- INPBillingHandlerITF analogous methods:
+  // -------------------------------------------------------
+  PGraphState onChargeSms(void);
+  PGraphState onDeliverySmsResult(void);
 };
 
 } //smbill

@@ -3,8 +3,8 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/tcpsrv/ICSTcpSrv.hpp"
-
-using namespace smsc::util;
+using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::ReverseMutexGuard;
 
 namespace smsc  {
 namespace inman {
@@ -12,118 +12,245 @@ namespace tcpsrv {
 /* ************************************************************************** *
  * class ICSTcpServer implementation:
  * ************************************************************************** */
-
-// --------------------------------------------------------------------------
-// -- TCPServerITF interface mthods
-// --------------------------------------------------------------------------
-bool ICSTcpServer::registerProtocol(const INPCommandSetAC * cmd_set, ConnServiceITF * conn_srv)
+ICSTcpServer::~ICSTcpServer()
 {
-    MutexGuard  grd(_sync);
-    INPSerializer::getInstance()->registerCmdSet(cmd_set);
-    std::pair<ProtocolsMap::iterator, bool> res =
-        csSrv.insert(ProtocolsMap::value_type(cmd_set->CsId(), conn_srv));
-    return res.second;
+  ICSStop(true);
+  {
+    MutexGuard grd(_sync);
+    //cleanUp died connects
+    while (!_corpses.empty())
+      _corpses.pop_front();
+  }
 }
 
-
-// --------------------------------------------------------------------------
-// -- ServerListenerITF interface mthods
-// --------------------------------------------------------------------------
-ConnectAC * ICSTcpServer::onConnectOpening(Server* srv, Socket* sock)
+// ---------------------------------------------
+// -- ICServiceAC interface methods
+// --------------------------------------------- 
+//NOTE: all methods are called with _sync locked!
+ICServiceAC::RCode ICSTcpServer::_icsInit(void)
 {
-    MutexGuard  grd(_sync);
-    Connect * conn = new Connect(sock, INPSerializer::getInstance());
-    conn->addListener(this);
-    return conn;
+  //initialize Service socket, set TCP server listener 
+  if (_tcpSrv.Init(*_cfg.get()) == TcpServer::rcOk) {
+    _tcpSrv.addListener(*this);
+    return ICServiceAC::icsRcOk;
+  }
+  return ICServiceAC::icsRcError;
 }
 
-//Remote point ends connection
-void ICSTcpServer::onConnectClosing(Server* srv, ConnectAC* conn)
+ICServiceAC::RCode ICSTcpServer::_icsStart(void)
 {
-    closeSession(conn->getId());
+  //ReverseMutexGuard rGrd(_sync);
+  return (_tcpSrv.Start() == TcpServerIface::rcOk) ? ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
 }
 
-//throws CustomException
-void ICSTcpServer::onServerShutdown(Server* srv, Server::ShutdownReason reason)
+void ICSTcpServer::_icsStop(bool do_wait/* = false*/)
 {
-    tcpSrv->removeListener(this);
-    MutexGuard  grd(_sync);
+  TcpServer::State_e res = TcpServer::srvIdle;
+  {
+    ReverseMutexGuard rGrd(_sync);
+    res = _tcpSrv.Stop(do_wait);
+  }
+  if (res <= TcpServer::srvInited)
     _icsState = ICServiceAC::icsStInited;
-    smsc_log_debug(logger, "%s: TCP server shutdowning, reason %d", _logId, reason);
+  //else _tcpSrv doesn't stoppped
 }
 
 // --------------------------------------------------------------------------
-// -- ConnectListenerITF interface mthods
+// -- ICSTcpServerIface interface mthods
 // --------------------------------------------------------------------------
-//Creates/Restores session (creates/rebinds ConnectManager)
-void ICSTcpServer::onPacketReceived(Connect* conn, 
-                                    std::auto_ptr<SerializablePacketAC>& recv_cmd)
-        /*throw(std::exception)*/
+//Registers an ICService providing specified protocol functionality.
+//Returns false if given protocol is already provided by registered ICService.
+bool ICSTcpServer::registerProtocol(ICSConnServiceIface & conn_srv)
 {
-    INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
-    SessionInfo  newSess(conn);
-    ConnectManagerAC * hdl = NULL;
+  MutexGuard  grd(_sync);
+  const IProtocolId_t & protoId = conn_srv.protoDef().ident();
+  ProtocolsMap::const_iterator cit = _protoReg.find(protoId);
+  if (cit != _protoReg.end()) {
+    smsc_log_warn(logger, "%s: secondary attempt to register protocol %s",
+                  _logId, protoId.c_str());
+    return false;
+  }
+  _protoReg.insert(ProtocolsMap::value_type(protoId, ProtocolInfo(&conn_srv)));
+  return true;
+}
+
+//Unregisters an ICService providing specified protocol functionality.
+//Returns false if ICSTcpServer has set a reference to given ICService, 
+//so it cann't be unregistered right now.
+bool ICSTcpServer::unregisterProtocol(const IProtocolId_t & proto_id)
+{
+  MutexGuard  grd(_sync);
+  ProtocolsMap::iterator it = _protoReg.find(proto_id);
+  if (it == _protoReg.end()) {
+    smsc_log_warn(logger, "%s: attempt to unregister unknown protocol %s",
+                  _logId, proto_id.c_str());
+  } else {
+    if (it->second._refs)
+      return false;
+    _protoReg.erase(it);
+  }
+  return true;
+}
+
+// --------------------------------------------------------------------------
+// -- TcpServerListenerIface interface mthods
+// --------------------------------------------------------------------------
+SocketListenerIface *
+    ICSTcpServer::onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock)
+{
+  MutexGuard  grd(_sync);
+  //cleanUp died connects first
+  while (!_corpses.empty())
+    _corpses.pop_front();
+
+  ConnectInfo newConn;
+  newConn._grd = _connPool.allcObj();
+  newConn._grd->bind(use_sock, logger);
+  //set consequtive processing of incoming packets
+  newConn._grd->init(_pckPool, 1);
+  //listen for 1st incoming packet in order to detect required protocol
+  newConn._grd->addListener(*this);
+  if (newConn._grd->start()) {
+    _connMap.insert(ConnectsMap::value_type(newConn._grd->getId(), newConn));
+    return newConn._grd.get();
+  }
+  smsc_log_fatal(logger, "%s: failed to start %s", _logId, newConn._grd->logId());
+  return NULL;
+}
+
+//Notifies that connection is to be closed on given soket, no more events will be reported.
+void ICSTcpServer::onConnectClosing(TcpServerIface & p_srv, unsigned conn_id)
+{
+  MutexGuard grd(_sync);
+
+  //cleanUp died connects first
+  while (!_corpses.empty())
+    _corpses.pop_front();
+
+  ConnectsMap::iterator it = _connMap.find(conn_id);
+  if (it == _connMap.end()) //Connect already unregistered by onConnectError()
+    return;
+  if (it->second._protoId.empty()) //no protocol was assigned
+    return; //Connect will be unregistered by onConnectError()
+
+  ConnectInfo rConn = it->second;
+  _connMap.erase(it);
+  smsc_log_info(logger, "%s: unregistered Connect[%u], protocol %s",
+                _logId, conn_id, rConn._protoId.c_str());
+
+  //Check if registered services should be notified
+  ProtocolsMap::iterator cit = _protoReg.find(rConn._protoId);
+  if (cit != _protoReg.end()) {
+    ++(cit->second._refs);
     {
-        MutexGuard tmp(_sync);
-        newSess.pCs = INPSerializer::getInstance()->commandSet(pck->pCmd()->Id());
-        if (!newSess.pCs)
-            throw CustomException("%s: unsupported INPPacket: %u", _logId,
-                                  pck->pCmd()->Id());
-
-        ProtocolsMap::iterator it = csSrv.find(newSess.pCs->CsId());
-        newSess.connSrv = (it != csSrv.end()) ? it->second : NULL;
-        if (!newSess.connSrv)
-            throw CustomException("%s: unregistered protocol: %s", _logId,
-                                  newSess.pCs->CsName());
-
-        //NOTE: session restoration is not supported for now, so
-        //      just create new session.
-        //NOTE: only commands with HDR_DIALOG is supported for now
-        //      (bindSockId session type)
-        newSess.sId = ++lastSessId;
-        if (!(hdl = newSess.connSrv->getConnManager(newSess.sId, conn)))
-            throw CustomException("%s: failed to get ConnManager for: %s", _logId,
-                                  newSess.pCs->CsName());
-        sockets.insert(SocketsMap::value_type(conn->getId(), newSess.sId));
-        sessions.insert(SessionsMap::value_type(newSess.sId, newSess));
-        smsc_log_info(logger, "%s: New %s session[%u] on Connect[%u] created", _logId,
-                      newSess.pCs->CsName(), newSess.sId, conn->getId());
+      ReverseMutexGuard rGrd(_sync);
+      cit->second._srv->onDisconnect(rConn._grd);
     }
-    conn->folowUp(this, hdl);
-    conn->removeListener(this);
+    --(cit->second._refs);
+  }
 }
 
-//NOTE: session restoration is not supported for now, so just delete session
-void ICSTcpServer::onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
+//notifies that TcpServer is shutdowned, no more events on any connect will be reported.
+void ICSTcpServer::onServerShutdown(TcpServerIface & p_srv, TcpServerIface::RCode_e down_reason)
 {
-    conn->removeListener(this);
-    closeSession(conn->getId());
+  _tcpSrv.removeListener(*this);
+  MutexGuard  grd(_sync);
+  //cleanUp died connects first
+  while (!_corpses.empty())
+    _corpses.pop_front();
+
+  _icsState = ICServiceAC::icsStInited;
+  smsc_log_debug(logger, "%s: TCP server shutdowned, reason %d", _logId, down_reason);
+}
+
+// --------------------------------------------------------------------------
+// -- PacketListenerIface interface mthods
+// --------------------------------------------------------------------------
+//Returns true if listener has utilized packet so no more listeners
+//should be notified, false - otherwise (in that case packet will be
+//reported to other listeners).
+bool ICSTcpServer::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
+  /*throw(std::exception) */
+{
+  MutexGuard  grd(_sync);
+  ConnectsMap::iterator it = _connMap.find(conn_id);
+  if (it == _connMap.end()) { //internal inconsistency
+    smsc_log_warn(logger, "%s: packet is received on unregistered Connect[%u]",
+                  _logId, conn_id);
+    return true;
+  }
+  ConnectInfo & rConn = it->second;
+  rConn._grd->removeListener(*this);
+
+  ProtocolsMap::iterator pIt;
+  if (!detectProto(recv_pck, pIt)) {
+    smsc_log_warn(logger, "%s: unknown packet is received on Connect[%u]",
+                  _logId, conn_id);
+    _tcpSrv.rlseConnectionNotify(conn_id, true);
+    return true;
+  }
+
+  ICSConnServiceIface * connSrv = pIt->second._srv;
+  bool isAccepted = false;
+  ++(pIt->second._refs);
+  {
+    ReverseMutexGuard rGrd(_sync);
+    isAccepted = connSrv->setConnListener(rConn._grd);
+  }
+  --(pIt->second._refs);
+
+  if (!isAccepted) {
+    smsc_log_warn(logger, "%s: %s service provider denied Connect[%u]",
+                  _logId, connSrv->protoDef().ident().c_str(), conn_id);
+    _tcpSrv.rlseConnectionNotify(conn_id, true);
+  } else {
+    rConn._protoId = connSrv->protoDef().ident();
+    smsc_log_info(logger, "%s: %s service provider accepted Connect[%u]",
+                  _logId, connSrv->protoDef().ident().c_str(), conn_id);
+  }
+  return !isAccepted; //if ok, report packet to newly created connect listener
+}
+
+//Returns true if listener has processed connect exception so no more
+//listeners should be notified, false - otherwise (in that case exception
+//will be reported to other listeners).
+bool ICSTcpServer::onConnectError(unsigned conn_id,
+                                  PckAccumulatorIface::Status_e err_status,
+                                  const CustomException * p_exc/* = NULL*/)
+  /*throw(std::exception) */
+{
+  if ((err_status != PckAccumulatorIface::accEOF) || p_exc) {
+    smsc_log_error(logger, "%s: Connect[%u] error status(%u): %s", _logId, conn_id,
+                   (unsigned)err_status, p_exc ? p_exc->what() : "");
+  }
+  MutexGuard  grd(_sync);
+  ConnectsMap::iterator it = _connMap.find(conn_id);
+  if (it == _connMap.end()) //Connect already unregistered by onConnectClosing()
+    return true;
+
+  it->second._grd->removeListener(*this);
+  //Note: Connect object MUST not be destroyed inside this method,
+  //so postpone its destruction.
+  _corpses.push_back(it->second._grd);
+  _connMap.erase(it);
+  smsc_log_info(logger, "%s: unregistered Connect[%u], protocol <unknown>",
+                _logId, conn_id);
+  return true;
 }
 
 // --------------------------------------------------------------------------
 // -- Private mthods
 // --------------------------------------------------------------------------
-//NOTE: must be called with _sync being unlocked
-void ICSTcpServer::closeSession(unsigned sockId)
+//Attempts to detect protocol the received packet belongs to.
+//Return false in case of failure.
+bool ICSTcpServer::detectProto(const PacketBufferAC & recv_pck,
+                               ProtocolsMap::iterator & out_cit)
 {
-     {
-        MutexGuard grd(_sync);
-        SocketsMap::iterator it = sockets.find(sockId);
-        if (it == sockets.end() || !it->second)
-            return;
-        unsigned sesId = it->second;
-        sockets.erase(it);
-
-        SessionsMap::iterator sit = sessions.find(sesId);
-        if (sit != sessions.end()) {
-            SessionInfo & sess = sit->second;
-            smsc_log_info(logger, "%s: closing %s session[%u] on Connect[%u]", _logId,
-                            sess.pCs->CsName(), sess.sId, sockId);
-            sess.rlseConnManager();
-            sessions.erase(sit);
-        }
-    }
-    return;
+  for (out_cit = _protoReg.begin(); out_cit != _protoReg.end(); ++out_cit) {
+    if (out_cit->second._srv->protoDef().isKnownPacket(recv_pck))
+      return true;
+  }
+  return false;
 }
 
 } //tcpsrv

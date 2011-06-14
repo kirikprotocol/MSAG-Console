@@ -56,9 +56,12 @@ private:
   TCAPUsr_CFG * readCAP3Sms(XConfigView & cfg_sec) throw(ConfigException);
 
 protected:
+  static const uint32_t   _MAX_THREADS_NUM = 0xFFFF;
+  static const uint16_t   _DFLT_THREADS_NUM = 64;
+
   static const uint32_t   _MIN_CDR_ROLL_INTERVAL = 10;    //units: seconds
   static const uint32_t   _DFLT_CDR_ROLL_INTERVAL = 60;   //units: seconds
-  static const uint32_t   _MAX_BILLINGS_NUM = 0xFFFF;
+  static const uint32_t   _MAX_BILLINGS_NUM = 0x7FFFFFFF;
   static const uint32_t   _DFLT_BILLINGS_NUM = 1000;
   static const uint16_t   _MAX_ABTYPE_TIMEOUT = 0xFFFF;   //units: seconds
   static const uint16_t   _DFLT_ABTYPE_TIMEOUT = 8;       //units: seconds

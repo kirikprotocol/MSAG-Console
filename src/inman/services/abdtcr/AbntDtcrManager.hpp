@@ -8,11 +8,11 @@
 #endif
 #define __INMAN_ABNT_DETECTOR_MGR_HPP
 
-#include "inman/incache/AbCacheDefs.hpp"
-#include "inman/services/iapmgr/IAPMgrDefs.hpp"
-#include "inman/services/tcpsrv/TCPSrvDefs.hpp"
-#include "inman/services/tmwatch/TimeWatcher.hpp"
-#include "inman/services/abdtcr/AbntDtcrDefs.hpp"
+#include "inman/common/GrdObjPool_T.hpp"
+
+#include "inman/interaction/asyncmgr/ConnManager.hpp"
+#include "inman/services/abdtcr/AbntDetector.hpp"
+
 #include "inman/INManErrors.hpp"
 
 namespace smsc {
@@ -20,59 +20,62 @@ namespace inman {
 namespace abdtcr {
 
 using smsc::inman::INManErrorId;
-using smsc::inman::cache::AbonentCacheITF;
 
-using smsc::inman::iapmgr::IAPManagerITF;
-using smsc::inman::iapmgr::AbonentPolicy;
-using smsc::inman::iapmgr::AbonentPolicyName_t;
+using smsc::inman::interaction::PacketBufferAC;
+using smsc::inman::interaction::PckAccumulatorIface;
+using smsc::inman::interaction::INPAbntContract; //protocol definition
 
-using smsc::inman::tcpsrv::ConnectManagerT;
-using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::SerializablePacketAC;
-using smsc::core::timers::TimeoutHDL;
+using smsc::inman::interaction::ConnectManagerID;
+using smsc::inman::interaction::WorkerID;
 
-struct AbonentDetectorCFG {
-    bool                useCache;       //use abonents contract data cache
-    AbonentCacheITF *   abCache;
-    const IAPManagerITF * iapMgr;
+class AbntDetectorManager : protected smsc::inman::interaction::ConnectManagerAC {
+private:
+  typedef smsc::util::GrdIfaceImplPool_T <
+    smsc::inman::interaction::WorkerIface, AbonentDetector, WorkerID
+  > WorkerPool;
 
-    AbonentPolicyName_t policyNm;       //name of default AbonenPolicy
-    TimeoutHDL          abtTimeout;     //maximum timeout on abonent type requests,
-                                        //(Abonentprovider interaction)
-    uint16_t            maxRequests;    //maximum number of requests per connect
-    uint32_t            cacheTmo;       //abonent cache data expiration timeout in secs
-
-    AbonentDetectorCFG()
-        : useCache(false), abCache(0), iapMgr(0)
-        , abtTimeout(0), maxRequests(0), cacheTmo(0)
-    { }
-    AbonentDetectorCFG(const AbntDetectorXCFG & use_xcfg)
-        : useCache(use_xcfg.useCache), abCache(0), iapMgr(0), policyNm(use_xcfg.policyNm.c_str())
-        , abtTimeout(use_xcfg.abtTimeout), maxRequests(use_xcfg.maxRequests)
-        , cacheTmo(use_xcfg.cacheTmo)
-    { }
-};
-
-class AbntDetectorManager: public ConnectManagerT<AbonentDetectorCFG> {
-protected:
-    //Composes and sends ContractResult packet
-    //returns -1 on error, or number of total bytes sent
-    int denyRequest(unsigned dlg_id, INManErrorId::Code_e use_error);
+  const AbonentDetectorCFG &  _cfg;
+  const INPAbntContract &     _protoDef;
+  WorkerPool                  _wrkPool;
+  WorkerID                    _denyCnt;
 
 public: 
-    AbntDetectorManager(const AbonentDetectorCFG & cfg, uint32_t cm_id,
-                        Connect* use_conn, Logger * uselog)
-    : ConnectManagerT<AbonentDetectorCFG>(cfg, cm_id, use_conn, uselog)
-    {
-        logger = uselog ? uselog : Logger::getInstance("smsc.inman");
-        snprintf(_logId, sizeof(_logId)-1, "AbntMgr[%u]", _cmId);
-    }
-    ~AbntDetectorManager()
-    { }
+  AbntDetectorManager(const AbonentDetectorCFG & use_cfg,
+                      const INPAbntContract & proto_def,
+                      ConnectManagerID cm_id, Logger * use_log = NULL)
+    : smsc::inman::interaction::ConnectManagerAC(cm_id, use_log)
+    , _cfg(use_cfg), _protoDef(proto_def), _denyCnt(0)
+  {
+    if (!_logger)
+      _logger = Logger::getInstance("smsc.inman.abdtcr");
+    snprintf(_logId, sizeof(_logId)-1, "AbntMgr[%s]", mgrId());
+#ifdef __GRD_POOL_DEBUG__
+    _wrkPool.debugInit(_logId, _logger);
+#endif /* __GRD_POOL_DEBUG__ */
+  }
+  virtual ~AbntDetectorManager();
 
-    //-- ConnectListenerITF interface
-    void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-            /*throw(std::exception)*/;
+  using smsc::inman::interaction::ConnectManagerAC::mgrId;
+  using smsc::inman::interaction::ConnectManagerAC::bind;
+  using smsc::inman::interaction::ConnectManagerAC::stop;
+
+  //Starts acquisition and processing of incoming packets.
+  void start(void);
+
+protected:
+  //Composes and sends ContractResult packet (negative)
+  //returns zero on success, negative value in case of socket error,
+  //positive value in case of serialization error.
+  int denyRequest(unsigned dlg_id, INManErrorId::Code_e use_error);
+
+  // -------------------------------------------
+  // -- PacketListenerIface interface methods
+  // -------------------------------------------
+  //Returns true if listener has utilized packet so no more listeners
+  //should be notified, false - otherwise (in that case packet will be
+  //reported to other listeners).
+  virtual bool onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
+    /*throw(std::exception)*/;
 };
 
 } //abdtcr

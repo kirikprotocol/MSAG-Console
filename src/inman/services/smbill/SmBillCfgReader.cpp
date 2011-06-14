@@ -170,13 +170,27 @@ ICSrvCfgReaderAC::CfgState
 
   tmo = 0;    //maxBillings
   try { tmo = (uint32_t)_topSec.getInt("maxBillings");
-  } catch (const ConfigException & exc) { tmo = _MAX_BILLINGS_NUM; }
-  if (tmo >= _MAX_BILLINGS_NUM)
+  } catch (const ConfigException & exc) { tmo = _MAX_BILLINGS_NUM + 1; }
+  if (tmo > _MAX_BILLINGS_NUM)
     throw ConfigException("'maxBilling' is invalid or missing,"
                             " allowed range [1..%u)", _MAX_BILLINGS_NUM);
-  icsCfg->prm->maxBilling = tmo ? (uint16_t)tmo : _DFLT_BILLINGS_NUM;
+  icsCfg->prm->maxBilling = tmo ? tmo : _DFLT_BILLINGS_NUM;
   smsc_log_info(logger, "  maxBilling: %u per connect%s", icsCfg->prm->maxBilling,
                 !tmo ? " (default)":"");
+
+  tmo = 0;
+  try { tmo = (uint32_t)_topSec.getInt("maxThreads");
+  } catch (const ConfigException & exc) { tmo = _DFLT_THREADS_NUM; }
+  if (tmo > _MAX_THREADS_NUM)
+    throw ConfigException("maxThreads is out of range [0 ..65535]");
+
+  icsCfg->prm->maxThreads = (uint16_t)tmo;
+  if (!tmo) {
+    smsc_log_info(logger, "  maxThreads: unlimited per connect");
+  } else {
+    smsc_log_info(logger, "  maxThreads: %u per connect%s", (unsigned)icsCfg->prm->maxThreads,
+                  (tmo == _DFLT_THREADS_NUM) ? " (default)":"");
+  }
 
   tmo = 0;    //maxTimeout
   try { tmo = (uint32_t)_topSec.getInt("maxTimeout");

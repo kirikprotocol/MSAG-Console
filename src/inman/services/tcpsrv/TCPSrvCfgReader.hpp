@@ -7,7 +7,7 @@
 #endif
 #define __INMAN_TCPSERVER_CONFIG_PARSING__
 
-#include "inman/interaction/server.hpp"
+#include "inman/interaction/tcpserver/TcpServerCfg.hpp"
 
 #include "inman/services/ICSCfgReader.hpp"
 
@@ -15,12 +15,10 @@ namespace smsc {
 namespace inman {
 namespace tcpsrv {
 
-using smsc::inman::ICSrvCfgReaderAC_T;
 using smsc::inman::XMFConfig;
+using smsc::inman::interaction::TcpServerCFG;
 
-using smsc::inman::interaction::ServSocketCFG;
-
-class ICSTcpSrvCfgReader : public ICSrvCfgReaderAC_T<ServSocketCFG> {
+class ICSTcpSrvCfgReader : public smsc::inman::ICSrvCfgReaderAC_T<TcpServerCFG> {
 protected:
   static const unsigned int _DFLT_CLIENT_CONNS = 3;
 
@@ -33,7 +31,7 @@ protected:
 
 public:
   ICSTcpSrvCfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec = NULL)
-      : ICSrvCfgReaderAC_T<ServSocketCFG>(xmf_cfg, use_log, ics_sec ? ics_sec : "Host")
+      : smsc::inman::ICSrvCfgReaderAC_T<TcpServerCFG>(xmf_cfg, use_log, ics_sec ? ics_sec : "Host")
   { }
   ~ICSTcpSrvCfgReader()
   { }

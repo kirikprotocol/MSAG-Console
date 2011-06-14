@@ -17,10 +17,10 @@ namespace tcpsrv {
 
 //TCP server service producer.
 class ICSProdTcpServer : public 
-    ICSProducerXcfAC_T<ICSTcpServer, ICSTcpSrvCfgReader, ServSocketCFG> {
+    ICSProducerXcfAC_T<ICSTcpServer, ICSTcpSrvCfgReader, TcpServerCFG> {
 public:
     ICSProdTcpServer()
-        : ICSProducerXcfAC_T<ICSTcpServer, ICSTcpSrvCfgReader, ServSocketCFG>
+        : ICSProducerXcfAC_T<ICSTcpServer, ICSTcpSrvCfgReader, TcpServerCFG>
             (ICSIdent::icsIdTCPServer)
     { }
     ~ICSProdTcpServer()

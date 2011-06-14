@@ -8,86 +8,65 @@
 #endif
 #define __INMAN_BILLING_MANAGER_HPP
 
-#include "inman/INManErrors.hpp"
-#include "inman/storage/CDRStorage.hpp"
-#include "inman/incache/AbCacheDefs.hpp"
-#include "inman/services/iapmgr/IAPMgrDefs.hpp"
-#include "inman/services/tcpsrv/TCPSrvDefs.hpp"
-#include "inman/services/tmwatch/TimeWatcher.hpp"
-#include "inman/services/scheduler/TaskSchedulerDefs.hpp"
-#include "inman/services/smbill/SmBillDefs.hpp"
-#include "inman/inap/TCDspIface.hpp"
+#include "inman/common/GrdObjPool_T.hpp"
+#include "inman/interaction/asyncmgr/ConnManager.hpp"
+#include "inman/services/smbill/SmBilling.hpp"
 
 namespace smsc   {
 namespace inman  {
 namespace smbill {
 
-using smsc::inman::INManErrorId;
-using smsc::inman::filestore::InBillingFileStorage;
-using smsc::inman::cache::AbonentCacheITF;
+using smsc::inman::interaction::INPBilling;
+using smsc::inman::interaction::ConnectManagerID;
+using smsc::inman::interaction::WorkerID;
 
-using smsc::inman::iapmgr::AbonentPolicy;
-using smsc::inman::iapmgr::AbonentPolicyName_t;
-using smsc::inman::iapmgr::IAPManagerITF;
+//
+class SmBillManager : protected smsc::inman::interaction::ConnectManagerAC {
+private:
+  typedef smsc::util::GrdIfaceImplPool_T <
+    smsc::inman::interaction::WorkerIface, Billing, WorkerID
+  > WorkerPool;
 
-using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::SerializablePacketAC;
-using smsc::inman::tcpsrv::ConnectManagerT;
-
-using smsc::core::timers::TimeoutHDL;
-using smsc::inman::TaskSchedulerFactoryITF;
-
-using smsc::inman::inap::TCAPDispatcherITF;
-
-
-struct SmBillingCFG {
-    std::auto_ptr<SmBillParams> prm; //core SM billing parameters
-    TimeoutHDL      maxTimeout;     //maximum timeout for TCP operations,
-                                    //billing aborts on its expiration
-    TimeoutHDL      abtTimeout;     //maximum timeout on abonent type requets,
-                                    //(HLR & DB interaction), on expiration billing
-                                    //continues in CDR mode 
-    AbonentPolicyName_t     policyNm;   //name of default AbonenPolicy
-    const IAPManagerITF *   iapMgr;
-    AbonentCacheITF *       abCache;
-    TCAPDispatcherITF *     tcDisp;
-    TaskSchedulerFactoryITF * schedMgr;
-    std::auto_ptr<InBillingFileStorage> bfs; //CDR files rolling storage
-
-    SmBillingCFG() : prm(new SmBillParams())
-      , iapMgr(NULL), abCache(NULL), tcDisp(NULL), schedMgr(NULL)
-    { }
-
-    SmBillingCFG(SmBillingXCFG & use_xcfg)
-      : prm(use_xcfg.prm.release())
-      , maxTimeout(use_xcfg.maxTimeout), abtTimeout(use_xcfg.abtTimeout)
-      , policyNm(use_xcfg.policyNm.c_str())
-      , iapMgr(NULL), abCache(NULL), tcDisp(NULL), schedMgr(NULL)
-    { }
-};
-
-class SmBillManager: public ConnectManagerT<SmBillingCFG> {
-protected:
-    unsigned _denyCnt;
-    //Composes and sends ChargeSmsResult packet
-    //returns -1 on error, or number of total bytes sent
-    int denyCharging(unsigned dlg_id, INManErrorId::Code_e use_error);
+  const SmBillingCFG &  _cfg;
+  const INPBilling &    _protoDef;
+  WorkerID              _denyCnt;
+  WorkerPool            _wrkPool;
 
 public: 
-    SmBillManager(const SmBillingCFG & cfg, unsigned cm_id,
-                            Connect* conn, Logger * uselog = NULL)
-        : ConnectManagerT<SmBillingCFG>(cfg, cm_id, conn, uselog)
-        , _denyCnt(0)
-    {
-        logger = uselog ? uselog : Logger::getInstance("smsc.inman");
-        snprintf(_logId, sizeof(_logId)-1, "BillMgr[%u]", _cmId);
-    }
-    ~SmBillManager()
-    { }
+  SmBillManager(const SmBillingCFG & use_cfg, const INPBilling & proto_def,
+                ConnectManagerID cm_id, Logger * use_log = NULL)
+      : smsc::inman::interaction::ConnectManagerAC(cm_id, use_log)
+    , _cfg(use_cfg), _protoDef(proto_def), _denyCnt(0)
+  {
+    if (!_logger)
+      _logger = Logger::getInstance("smsc.inman.smbill");
+    snprintf(_logId, sizeof(_logId)-1, "BillMgr[%s]", mgrId());
+#ifdef __GRD_POOL_DEBUG__
+    _wrkPool.debugInit(_logId, _logger);
+#endif /* __GRD_POOL_DEBUG__ */
+  }
+  virtual ~SmBillManager();
 
-    //-- ConnectListenerITF interface
-    void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-            /*throw(std::exception)*/;
+  using smsc::inman::interaction::ConnectManagerAC::mgrId;
+  using smsc::inman::interaction::ConnectManagerAC::bind;
+  using smsc::inman::interaction::ConnectManagerAC::stop;
+
+  //Starts acquisition and processing of incoming packets.
+  void start(void);
+
+protected:
+  //Composes and sends ChargeSmsResult packet (negative)
+  //returns -1 on error, or number of total bytes sent
+  int denyRequest(unsigned dlg_id, INManErrorId::Code_e use_error);
+
+  // -------------------------------------------
+  // -- PacketListenerIface interface methods
+  // -------------------------------------------
+  //Returns true if listener has utilized packet so no more listeners
+  //should be notified, false - otherwise (in that case packet will be
+  //reported to other listeners).
+  virtual bool onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
+    /*throw(std::exception)*/;
 };
 
 } //smbill
