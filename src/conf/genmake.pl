@@ -1,4 +1,7 @@
 #! /usr/bin/perl
+#
+# "@(#)$Id$"
+#
 use strict;
 
 open(my $mkf,'>makefile.inc') || die "Failed to open makefile.inc for writing:'$!'";
@@ -271,6 +274,9 @@ sub generate{
         }
       }
       system('conf/gen_build_id.sh',$dirname,$vars->{PROD_PREFIX}, $vars->{PROD_VER_FILE},$vars->{BUILDID_HEADER});
+      print $mkf "$modname.genbuildId:\n";
+      print $mkf "\t".'@$(SMSC_SRCDIR)/conf/gen_build_id.sh '.
+        join(' ',($dirname,$vars->{PROD_PREFIX},$vars->{PROD_VER_FILE},$vars->{BUILDID_HEADER}))." NO\n\n";
       print $mkf "$modname.check.buildId:\n";
       print $mkf "\t".'@$(SMSC_SRCDIR)/conf/gen_build_id.sh '.
         join(' ',($dirname,$vars->{PROD_PREFIX},$vars->{PROD_VER_FILE},$vars->{BUILDID_HEADER}))."\n\n";

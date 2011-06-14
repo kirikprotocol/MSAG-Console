@@ -7,11 +7,13 @@
 #   #define $(PRODUCT_PREFIX)_BUILD_NUM
 #   #define $(PRODUCT_PREFIX)_BUILD_DATE
 #
-# USAGE: gen_build_id.sh  package_name PRODUCT_PREFIX version_file_shortname  buildId_file_shortname
+# USAGE: gen_build_id.sh  package_name PRODUCT_PREFIX version_file_shortname  buildId_file_shortname [OMIT_GENVERSION_ARG]
 #
 #   package_name - relative to SMSC_SRCDIR name of package(CVS module)
 #   version_file_shortname - relative to SMSC_SRCDIR name of .cpp file with CVS tag
 #   buildId_file_shortname - relative to SMSC_SRCDIR name of .hpp file with preprocessor defines
+#   OMIT_GENVERSION_ARG    - if present, overrides value of environment variable OMIT_GENVERSION,
+#                            allowed values: YES | NO
 #
 # VARIABLES:  SMSC_SRCDIR, SMSC_BUILDDIR, SMSC_BUILD_TAG_FORMAT
 #             OMIT_GENVERSION - if equal to YES, no attempt is made to refresh buildId_file
@@ -45,6 +47,27 @@ then
 fi
 BUILDID_FILE=$4
 
+OMIT_GEN=$OMIT_GENVERSION
+if [ ! -z "$OMIT_GENVERSION" ]
+then
+  if [ "x$OMIT_GENVERSION" != "xYES" ] && [ "x$OMIT_GENVERSION" != "xNO" ]
+  then
+    echo "$0: OMIT_GENVERSION environment variable value is invalid"
+    exit 1
+  fi
+fi
+
+if [ ! -z "$5" ]
+then
+  if [ "x$5" != "xYES" ] && [ "x$5" != "xNO" ]
+  then
+    echo "$0: OMIT_GENVERSION argument is invalid"
+    exit 1
+  else
+    OMIT_GEN=$5
+  fi
+fi
+
 if [ -z "$SMSC_BUILD_TAG_FORMAT" ]
 then
   SMSC_BUILD_TAG_FORMAT='B[0-9]*'
@@ -64,7 +87,7 @@ then
 #  echo "$0: missed $PACKAGE_NAME/$BUILDID_FILE"  >&2
   DO_GEN="YES"
 else
-  if [ ! -f $BUILD_PATH/$BUILDID_FILE ] && [ "x$OMIT_GENVERSION" != "xYES" ]
+  if [ ! -f $BUILD_PATH/$BUILDID_FILE ] && [ "x$OMIT_GEN" != "xYES" ]
   then
 #    echo "$0: missed deps/$PACKAGE_NAME/$BUILDID_FILE"  >&2
     DO_GEN="YES"
