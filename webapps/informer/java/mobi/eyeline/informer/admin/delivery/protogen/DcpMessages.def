@@ -163,6 +163,7 @@ enum byte DeliveryFields
   ActivityPeriod 6
   UserData 7
   CreationDate 8
+  BoundToLocalTime 9
 end
 
 message DeliveriesFilter
@@ -205,6 +206,7 @@ message DeliveryListInfo
   string activityPeriodEnd 8 opt
   string userData 9 opt
   string creationDate 10 opt
+  bool   boundToLocalTime 11 opt
 end
 
 message GetDeliveriesListNextResp 53

@@ -55,26 +55,40 @@ class DcpConverter {
   }
 
   public static Date convertDateFromDcpFormat(String date) throws AdminException {
+    return convertDateFromDcpFormat(date, true);
+  }
+
+  public static Date convertDateFromDcpFormat(String date, boolean convertTimezone) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
     try {
-      return Functions.convertTime(format.parse(date), DCP_TIMEZONE, LOCAL_TIMEZONE);
+      Date d = format.parse(date);
+      return convertTimezone ? Functions.convertTime(d, DCP_TIMEZONE, LOCAL_TIMEZONE) : d;
     } catch (ParseException e) {
       throw new DeliveryException("unparsable_date", date);
     }
   }
 
   public static Date convertDateYYFromDcpFormat(String date) throws AdminException {
+    return convertDateYYFromDcpFormat(date, true);
+  }
+
+  public static Date convertDateYYFromDcpFormat(String date, boolean convertTimezone) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT_YY);
     try {
-      return Functions.convertTime(format.parse(date), DCP_TIMEZONE, LOCAL_TIMEZONE);
+      Date d = format.parse(date);
+      return convertTimezone ? Functions.convertTime(d, DCP_TIMEZONE, LOCAL_TIMEZONE) : d;
     } catch (ParseException e) {
       throw new DeliveryException("unparsable_date", date);
     }
   }
 
   public static String convertDateToDcpFormat(Date date) {
+    return convertDateToDcpFormat(date, true);
+  }
+
+  public static String convertDateToDcpFormat(Date date, boolean convertTimezone) {
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
-    return format.format(Functions.convertTime(date, LOCAL_TIMEZONE, DCP_TIMEZONE));
+    return format.format(convertTimezone ? Functions.convertTime(date, LOCAL_TIMEZONE, DCP_TIMEZONE) : date);
   }
 
   static Day[] convertDays(String[] days) {
@@ -124,7 +138,7 @@ class DcpConverter {
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
     if (di.hasEndDate()) {
-      delivery.setEndDate(convertDateFromDcpFormat(di.getEndDate()));
+      delivery.setEndDate(convertDateFromDcpFormat(di.getEndDate(), di.hasBoundToLocalTime() && !di.getBoundToLocalTime()));
     }
     delivery.setFlash(di.getFlash());
     delivery.setName(di.getName());
@@ -140,7 +154,7 @@ class DcpConverter {
       Map<String, String> uD = convertUserData(di.getUserData());
       delivery.addProperties(uD);
     }
-    delivery.setStartDate(convertDateFromDcpFormat(di.getStartDate()));
+    delivery.setStartDate(convertDateFromDcpFormat(di.getStartDate(), di.hasBoundToLocalTime() && !di.getBoundToLocalTime()));
     if (di.hasSvcType()) {
       delivery.setSvcType(di.getSvcType());
     }
@@ -283,13 +297,13 @@ class DcpConverter {
       result.setActivePeriodStart(new Time(convertTimeFromDcpFormat(di.getActivityPeriodStart())));
     }
     if (di.hasEndDate()) {
-      result.setEndDate(convertDateYYFromDcpFormat(di.getEndDate()));
+      result.setEndDate(convertDateYYFromDcpFormat(di.getEndDate(), di.hasBoundToLocalTime() && !di.getBoundToLocalTime()));
     }
     if (di.hasName()) {
       result.setName(di.getName());
     }
     if (di.hasStartDate()) {
-      result.setStartDate(convertDateYYFromDcpFormat(di.getStartDate()));
+      result.setStartDate(convertDateYYFromDcpFormat(di.getStartDate(), di.hasBoundToLocalTime() && !di.getBoundToLocalTime()));
     }
     if (di.hasStatus()) {
       result.setStatus(convert(di.getStatus()));
@@ -307,6 +321,9 @@ class DcpConverter {
     }else {
       result.setCreateDate(convertDateYYFromDcpFormat(di.getStartDate()));
     }
+    if(di.hasBoundToLocalTime()) {
+      result.setBoundToLocalTime(di.getBoundToLocalTime());
+    }
     return result;
   }
 
@@ -320,7 +337,7 @@ class DcpConverter {
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
     if (di.getEndDate() != null) {
-      delivery.setEndDate(convertDateToDcpFormat(di.getEndDate()));
+      delivery.setEndDate(convertDateToDcpFormat(di.getEndDate(), !di.isBoundToLocalTime()));
     }
     delivery.setFlash(di.isFlash());
     delivery.setName(di.getName());
@@ -333,7 +350,7 @@ class DcpConverter {
     delivery.setSourceAddress(di.getSourceAddress().getSimpleAddress());
     if (di.getProperties() != null)
       delivery.setUserData(convertUserData(di.getProperties()));
-    delivery.setStartDate(convertDateToDcpFormat(di.getStartDate()));
+    delivery.setStartDate(convertDateToDcpFormat(di.getStartDate(), !di.isBoundToLocalTime()));
     if(di.getCreateDate() != null) {
       delivery.setCreationDate(convertDateToDcpFormat(di.getCreateDate()));
     }else {
