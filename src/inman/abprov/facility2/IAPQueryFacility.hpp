@@ -41,7 +41,8 @@ public:
     cancelAllQueries();
   }
 
-  void init(IAPQueriesPoolIface & use_pool, uint16_t max_threads)
+  //NOTE: setting max_threads to 0 turns off threads number limitation!
+  void init(IAPQueriesPoolIface & use_pool, uint16_t max_threads = 0)
   {
     _qrsStore.init(use_pool, _iapNtfr);
     _iapNtfr.init(1, max_threads);

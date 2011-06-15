@@ -24,11 +24,12 @@ IAPNotifier::IAPNotifier(const char * use_ident, IAPQueriesStore & qrs_store,
 
 void IAPNotifier::init(uint16_t ini_threads, uint16_t max_threads/* = 0*/)
 {
+  setMaxThreads(max_threads);
+  if (max_threads && (ini_threads > max_threads))
+    ini_threads = max_threads;
   if (ini_threads > _iniThreads)
     _iniThreads = ini_threads;
   _taskPool.reserveTasks(_iniThreads);
-  if (max_threads)
-    setMaxThreads(max_threads);
 }
 
 void IAPNotifier::stop(const TimeSlice * use_tmo/* = NULL*/)
