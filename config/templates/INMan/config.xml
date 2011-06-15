@@ -49,6 +49,10 @@
     maximum allowed time for determining abonent contract type,   default 8
      -->
     <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxThreads" type="int">32</param> <!--
+     max threads handling requests per client connection, [0..65535], default: 64
+     Note: 0 - turns off limitation
+     -->
     <param name="useCache" type="bool">true</param>    <!--
     switches abonents cache usage, default: true  -->
     <param name="cacheExpiration" type="int">20</param>   <!--
@@ -116,6 +120,10 @@
       billMode: write CDR according to billMode setting (default)
     -->
     <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxThreads" type="int">64</param> <!--
+     max threads handling requests per client connection, [0..65535], default: 64
+     Note: 0 - turns off limitation
+     -->
     <param name="useCache" type="bool">true</param>    <!--
     switches abonents cache usage, default: true  -->
     <param name="cacheExpiration" type="int">10</param>   <!--
