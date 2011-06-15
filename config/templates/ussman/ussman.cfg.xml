@@ -6,9 +6,18 @@
     <param name="host" type="string">0.0.0.0</param>
     <param name="port" type="int">9687</param> 
     <param name="maxConn" type="int">10</param>
+    <param name="maxRequests" type="int">1000</param> <!--
+     max simultaneous requests per connection,   [1..2147483647], default: 1000 -->
     <param name="tcapUser" type="string">TCAPUserUSS</param>  <!--
     section name for TCAP user configuration this USS service uses
     -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxThreads" type="int">12</param> <!--
+     max threads handling requests per client connection, [0..65535], default: 64
+     Note: 0 - turns off limitation
+     -->
+    <param name="denyDupRequest" type="bool">true</param> <!--
+     deny or ignore duplicate USS requests, default: false (old behavior) -->
   </section>
 
   <section name="SS7"> <!-- SS7 stack interaction parameters -->
