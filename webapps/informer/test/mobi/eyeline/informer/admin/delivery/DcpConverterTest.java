@@ -146,6 +146,7 @@ public class DcpConverterTest {
     di.setStartDate(DcpConverter.convertDateToDcpFormat(new Date()));
     di.setStatus(DcpConverter.convert(DeliveryStatus.Cancelled));
     di.setUserId("user2");
+    di.setBoundToLocalTime(false);
     Delivery info = DcpConverter.convert(di);
     assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodEnd()), di.getActivityPeriodEnd());
     assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodStart()), di.getActivityPeriodStart());
@@ -155,6 +156,7 @@ public class DcpConverterTest {
     assertEquals(info.getId().intValue(), di.getDeliveryId());
     assertEquals(info.getName(), di.getName());
     assertEquals(info.getOwner(), di.getUserId());
+    assertEquals(info.isBoundToLocalTime(), di.getBoundToLocalTime());
   }
 
   @Test
