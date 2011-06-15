@@ -2,8 +2,6 @@ package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.exeptions.UpdateConfigurationException;
-import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DcpConnection;
 import mobi.eyeline.smpp.api.pdu.Request;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
@@ -17,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import mobi.eyeline.smpp.api.SmppServer;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.PDUListener;
-import mobi.eyeline.smpp.api.types.Status;
 import mobi.eyeline.smpp.api.pdu.PDU;
 import mobi.eyeline.smpp.api.pdu.Message;
 import mobi.eyeline.smpp.api.pdu.data.Address;
@@ -62,8 +59,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
     private AtomicLong gateway_mgsId = new AtomicLong(0);
 
-    private final String informer_host;
-    private final int informer_port;
+
 
     public SMPP2DCPGateway() throws SmppException, InitializationException{
 
@@ -81,23 +77,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        String s = config.getProperty("informer.host");
-        if (s != null && !s.isEmpty()){
-            informer_host = s;
-            log.debug("Set informer host: "+ informer_host);
-        } else {
-            log.error("informer.host property is invalid or not specified in config");
-            throw new InitializationException("informer.host property is invalid or not specified in config");
-        }
 
-        s = config.getProperty("informer.port");
-        if (s != null && !s.isEmpty()){
-            informer_port = Integer.parseInt(s);
-            log.debug("Set informer port: "+ informer_port);
-        } else {
-            log.error("informer.port property is invalid or not specified in config");
-            throw new InitializationException("informer.port property is invalid or not specified in config");
-        }
 
         Runtime.getRuntime().addShutdownHook(this);
 
@@ -134,7 +114,9 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                             informer_message = mobi.eyeline.informer.admin.delivery.Message.newMessage(informer_destination_address, text);
 
-                            informer_messages_list.add(informer_message);
+                            Manager.getInstance().addMessage(login, delivery_id, informer_message);
+
+                            /*informer_messages_list.add(informer_message);
 
                             DcpConnection dcpConnection = null;
                             try {
@@ -151,7 +133,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                             } catch (AdminException e) {
                                 log.error(e);
-                            }
+                            }*/
 
 
                         }
@@ -180,7 +162,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                             informer_messages_list.add(informer_message);
 
-
+                            Manager.getInstance().addMessage(login, delivery_id, informer_message);
 
                     }
 
@@ -275,6 +257,10 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                 }
 
             }
+
+            Manager.getInstance().setDeliveryIdUserMap(delivery_id_user_map);
+            Manager.getInstance().setUserPasswordMap(user_password_map);
+            Manager.getInstance().setServiceNumberDeliveryIdMap(service_number_delivery_id_map);
 
         } catch(JDOMException e) {
             throw new UpdateConfigurationException(e);
