@@ -846,6 +846,9 @@ public:
                         dli.setCreationDate(msgTimeToDateTimeStr(di.getCreationDate()));
                     }
                     break;
+                case messages::DeliveryFields::BoundToLocalTime:
+                    dli.setBoundToLocalTime(di.isBoundToLocalTime());
+                    break;
                 }
             } // loop over fields
         }

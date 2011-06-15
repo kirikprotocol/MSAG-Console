@@ -65,6 +65,7 @@ public:
   static const type ActivityPeriod=6;
   static const type UserData=7;
   static const type CreationDate=8;
+  static const type BoundToLocalTime=9;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
@@ -126,6 +127,8 @@ protected:
       valueByName.insert(std::map<std::string,type>::value_type("UserData",7));
       nameByValue.insert(std::map<type,std::string>::value_type(8,"CreationDate"));
       valueByName.insert(std::map<std::string,type>::value_type("CreationDate",8));
+      nameByValue.insert(std::map<type,std::string>::value_type(9,"BoundToLocalTime"));
+      valueByName.insert(std::map<std::string,type>::value_type("BoundToLocalTime",9));
     }
   };
   static StaticInitializer staticInitializer;

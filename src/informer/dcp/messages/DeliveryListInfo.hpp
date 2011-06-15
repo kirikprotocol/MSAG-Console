@@ -36,6 +36,7 @@ public:
     activityPeriodEndFlag=false;
     userDataFlag=false;
     creationDateFlag=false;
+    boundToLocalTimeFlag=false;
   }
  
 
@@ -139,6 +140,15 @@ public:
       rv+="creationDate=";
       rv+=creationDate;
     }
+    if(boundToLocalTimeFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="boundToLocalTime=";
+      rv+=boundToLocalTime?"true":"false";
+    }
     return rv;
   }
 
@@ -206,6 +216,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(creationDate);
+    }
+    if(boundToLocalTimeFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(boundToLocalTime);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -430,6 +446,28 @@ public:
   {
     return creationDateFlag;
   }
+  bool getBoundToLocalTime()const
+  {
+    if(!boundToLocalTimeFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("boundToLocalTime");
+    }
+    return boundToLocalTime;
+  }
+  void setBoundToLocalTime(bool argValue)
+  {
+    boundToLocalTime=argValue;
+    boundToLocalTimeFlag=true;
+  }
+  bool& getBoundToLocalTimeRef()
+  {
+    boundToLocalTimeFlag=true;
+    return boundToLocalTime;
+  }
+  bool hasBoundToLocalTime()const
+  {
+    return boundToLocalTimeFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -487,6 +525,11 @@ public:
     {
       ds.writeTag(creationDateTag);
     ds.writeStrLV(creationDate); 
+    }
+    if(boundToLocalTimeFlag)
+    {
+      ds.writeTag(boundToLocalTimeTag);
+    ds.writeBoolLV(boundToLocalTime); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -598,6 +641,15 @@ public:
           creationDate=ds.readStrLV();
           creationDateFlag=true;
         }break;
+        case boundToLocalTimeTag:
+        {
+          if(boundToLocalTimeFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("boundToLocalTime");
+          }
+          boundToLocalTime=ds.readBoolLV();
+          boundToLocalTimeFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -642,6 +694,7 @@ protected:
   static const int32_t activityPeriodEndTag=8;
   static const int32_t userDataTag=9;
   static const int32_t creationDateTag=10;
+  static const int32_t boundToLocalTimeTag=11;
 
   int connId;
 
@@ -655,6 +708,7 @@ protected:
   std::string activityPeriodEnd;
   std::string userData;
   std::string creationDate;
+  bool boundToLocalTime;
 
   bool deliveryIdFlag;
   bool userIdFlag;
@@ -666,6 +720,7 @@ protected:
   bool activityPeriodEndFlag;
   bool userDataFlag;
   bool creationDateFlag;
+  bool boundToLocalTimeFlag;
 };
 
 }
