@@ -185,7 +185,8 @@ public class MessagesByDeliveriesController extends LongOperationController {
           }
         }
         if(delivery != null) {
-          result[0] = delivery.getName();
+          result[0] = delivery.getName()+" (" +
+              ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.archivedDelivery") +", id="+deliveryId+')';
           return 0;
         }
       }
