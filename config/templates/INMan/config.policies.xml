@@ -15,7 +15,7 @@
        NOTE: * is a substitute symbol, matching all defined IN-platforms
   -->
     <section name="MTC_Default">
-      <param name="policy" type="string">HLR_CH_SRI : *</param> <!-- get contract from gsmSCF, No provider at all !!!  -->
+      <param name="policy" type="string">HLR_CH_SRI : *</param> <!-- get contract from HLR via SRI  -->
       <section name="AddressPools">
         <param name="pool_RU" type="string">79?????????</param>  <!-- address pool mask -->
       </section>
@@ -66,9 +66,11 @@
           <param name="tcapUser" type="string">TCAPUserSRI</param> <!--
           section name for TCAP user configuration this provider uses
           -->
-          <param name="iniThreads" type="int">5</param>  <!--
-          initial number of threads serving IAPQUeries
-          -->
+      <!-- OPTIONAL PARAMETERS follow:: -->
+          <param name="maxThreads" type="int">15</param> <!-- [0 .. 65535]
+           maximum number of threads serving IAPQUeries, default: 32,
+           Note: 0 - turns off limitation
+           -->
         </section>
       </section>
 
@@ -78,9 +80,11 @@
           <param name="tcapUser" type="string">TCAPUserATSI</param> <!--
           section name for TCAP user configuration this provider uses
           -->
-          <param name="iniThreads" type="int">5</param>  <!--
-          initial number of threads serving IAPQUeries
-          -->
+      <!-- OPTIONAL PARAMETERS follow:: -->
+          <param name="maxThreads" type="int">15</param> <!-- [0 .. 65535]
+           maximum number of threads serving IAPQUeries, default: 32,
+           Note: 0 - turns off limitation
+           -->
         </section>
       </section>
 
