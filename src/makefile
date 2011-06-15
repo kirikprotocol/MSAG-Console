@@ -311,7 +311,6 @@ ifeq ($(MSAG_INMAN_BILL),YES)
 CFLAGS := $(CFLAGS) -DMSAG_INMAN_BILL
 override CXXFLAGS := $(CXXFLAGS) -DMSAG_INMAN_BILL
 export MSAG_INMAN_BILL
-MSAG_INMAN_LIBS := -linman-interaction-msgbill -linman-interaction -linman-common
 endif
 
 ifdef ASSERT

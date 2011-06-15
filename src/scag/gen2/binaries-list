@@ -58,9 +58,9 @@ endswitch
   -lscag-util \
   -lscag-exc \
   -linformer-io \
-  \
-  $(MSAG_INMAN_LIBS) \
-  \
+switch MSAG_INMAN_BILL
+YES: -linman-interaction-msgbill -linman-interaction-serializer -linman-interaction-asynconn -linman-interaction -linman-common \
+endswitch
   -llicense-check \
   -lrouter -ladmin-protocol -ladmin-service \
   -lsystem-common -lsystem-smppio \
