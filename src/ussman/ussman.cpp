@@ -16,7 +16,7 @@ using smsc::ussman::USSGateway_XCFG;
 using smsc::ussman::USSGCfgReader;
 
 #include "ussman/service/USSGService.hpp"
-#include "inman/uss/UssURCRegInit.hpp"
+#include "ussman/USSGURCRegInit.hpp"
 #include "ussman/ussgversion.hpp"
 
 using smsc::logger::Logger;
