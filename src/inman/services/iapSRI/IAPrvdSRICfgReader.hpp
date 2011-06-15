@@ -28,6 +28,9 @@ protected:
   virtual CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException);
 
 public:
+  static const int32_t    _MAX_THREADS_NUM = 0xFFFF;
+  static const uint16_t   _DFLT_THREADS_NUM = 32;
+
   ICSIAPrvdSRICfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec)
     : ICSrvCfgReaderAC_T<IAProviderSRI_XCFG>(xmf_cfg, use_log, ics_sec)
   {

@@ -26,9 +26,9 @@ ICSrvCfgReaderAC::CfgState
 {
   int iTmp = 0;
   try { iTmp = _topSec.getInt("maxThreads");
-  } catch (const ConfigException & exc) { }
-  if (iTmp > (uint16_t)(-1))
-    throw ConfigException("parameter 'maxThreads' is out of range!");
+  } catch (const ConfigException & exc) { iTmp = _DFLT_THREADS_NUM; }
+  if ((iTmp > _MAX_THREADS_NUM) || (iTmp < 0))
+    throw ConfigException("parameter 'maxThreads' is out of range [0..%d]", _MAX_THREADS_NUM);
 
   icsCfg->_maxThreads = (uint16_t)iTmp;
   if (iTmp) {
