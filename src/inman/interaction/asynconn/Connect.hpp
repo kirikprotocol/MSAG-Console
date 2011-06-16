@@ -52,12 +52,7 @@ public:
   }
   explicit Connect(std::auto_ptr<Socket> & use_sock, Logger * use_log = NULL);
   //
-  virtual ~Connect()
-  {
-    stop();
-    if (isOpened())
-      getSocket()->Abort();
-  }
+  virtual ~Connect();
 
   //Returns threads number limitation.
   //Note: Zero means no limit is set.

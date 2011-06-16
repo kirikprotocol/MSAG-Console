@@ -24,6 +24,17 @@ Connect::Connect(std::auto_ptr<Socket> & use_sock, Logger * use_log/* = NULL*/)
   _pckNtfr.init(_logId, _logger);
 }
 
+//
+Connect::~Connect()
+{
+  stop();
+  if (isOpened())
+    getSocket()->Abort();
+  if (_logger) {
+    smsc_log_debug(_logger, "%s: destroyed", _logId);
+  }
+}
+
 //Binds asynchronous Connect to given socket, initializes ident string.
 void Connect::bind(std::auto_ptr<Socket> & use_sock, Logger * use_log/* = NULL*/)
 {
