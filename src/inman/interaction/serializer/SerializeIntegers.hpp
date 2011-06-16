@@ -1,13 +1,12 @@
 /* ************************************************************************** *
- * Definition of serializer operators ('<<' and'>>') for Integer and bool types.
+ * Definition of serializer operators ('<<' and'>>') for native C99 integer 
+ * and bool types.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_INTERACTION_SERIALIZER_INTS_BOOL
 #ifndef __GNUC__
 #ident "@(#)$Id$"
 #endif
 #define __SMSC_INMAN_INTERACTION_SERIALIZER_INTS_BOOL
-
-#include <inttypes.h>
 
 #include "inman/interaction/serializer/SerializerDefs.hpp"
 
@@ -18,83 +17,109 @@ namespace interaction {
  * unsigned ints serialization
  * -------------------------------------------------------------------------- */
 PacketBufferAC &
-  operator<<(PacketBufferAC & out_buf, const uint64_t & in_val) throw(SerializerException);
+  operator<<(PacketBufferAC & out_buf, const unsigned long long & in_val) throw(SerializerException);
 //
 PacketBufferAC &
-  operator>>(PacketBufferAC & in_buf, uint64_t & out_val) throw(SerializerException);
+  operator>>(PacketBufferAC & in_buf, unsigned long long & out_val) throw(SerializerException);
 //
 PacketBufferAC::size_type
-  operator>>(const PacketBufferAC & in_buf, uint64_t & out_val) throw(SerializerException);
+  operator>>(const PacketBufferAC & in_buf, unsigned long long & out_val) throw(SerializerException);
 //
 template <> PacketBufferCursor &
-  PacketBufferCursor::operator>> <uint64_t > (uint64_t & out_val) throw(SerializerException);
+  PacketBufferCursor::operator>> <unsigned long long > (unsigned long long & out_val) throw(SerializerException);
 
 /* -------------------------------------------------------------------------- */
 PacketBufferAC &
-  operator<<(PacketBufferAC & out_buf, const uint32_t & in_val) throw(SerializerException);
+  operator<<(PacketBufferAC & out_buf, const unsigned long & in_val) throw(SerializerException);
 //
 PacketBufferAC &
-  operator>>(PacketBufferAC & in_buf, uint32_t & out_val) throw(SerializerException);
+  operator>>(PacketBufferAC & in_buf, unsigned long & out_val) throw(SerializerException);
 //
 PacketBufferAC::size_type
-  operator>>(const PacketBufferAC & in_buf, uint32_t & out_val) throw(SerializerException);
+  operator>>(const PacketBufferAC & in_buf, unsigned long & out_val) throw(SerializerException);
 //
 template <> PacketBufferCursor &
-  PacketBufferCursor::operator>> <uint32_t > (uint32_t & out_val) throw(SerializerException);
+  PacketBufferCursor::operator>> <unsigned long > (unsigned long & out_val) throw(SerializerException);
 
 /* -------------------------------------------------------------------------- */
 PacketBufferAC &
-  operator<<(PacketBufferAC & out_buf, const uint16_t & in_val) throw(SerializerException);
+  operator<<(PacketBufferAC & out_buf, const unsigned int & in_val) throw(SerializerException);
 //
 PacketBufferAC &
-  operator>>(PacketBufferAC & in_buf, uint16_t & out_val) throw(SerializerException);
+  operator>>(PacketBufferAC & in_buf, unsigned int & out_val) throw(SerializerException);
 //
 PacketBufferAC::size_type
-  operator>>(const PacketBufferAC & in_buf, uint16_t & out_val) throw(SerializerException);
+  operator>>(const PacketBufferAC & in_buf, unsigned int & out_val) throw(SerializerException);
 //
 template <> PacketBufferCursor &
-  PacketBufferCursor::operator>> <uint16_t > (uint16_t & out_val) throw(SerializerException);
+  PacketBufferCursor::operator>> <unsigned int > (unsigned int & out_val) throw(SerializerException);
+
+/* -------------------------------------------------------------------------- */
+PacketBufferAC &
+  operator<<(PacketBufferAC & out_buf, const unsigned short & in_val) throw(SerializerException);
+//
+PacketBufferAC &
+  operator>>(PacketBufferAC & in_buf, unsigned short & out_val) throw(SerializerException);
+//
+PacketBufferAC::size_type
+  operator>>(const PacketBufferAC & in_buf, unsigned short & out_val) throw(SerializerException);
+//
+template <> PacketBufferCursor &
+  PacketBufferCursor::operator>> <unsigned short > (unsigned short & out_val) throw(SerializerException);
 
 /* -------------------------------------------------------------------------- *
  * signed ints serialization
  * -------------------------------------------------------------------------- */
 PacketBufferAC &
-  operator<<(PacketBufferAC & out_buf, const int64_t & in_val) throw(SerializerException);
+  operator<<(PacketBufferAC & out_buf, const long long & in_val) throw(SerializerException);
 //
 PacketBufferAC &
-  operator>>(PacketBufferAC & in_buf, int64_t & out_val) throw(SerializerException);
+  operator>>(PacketBufferAC & in_buf, long long & out_val) throw(SerializerException);
 //
 PacketBufferAC::size_type
-  operator>>(const PacketBufferAC & in_buf, int64_t & out_val) throw(SerializerException);
+  operator>>(const PacketBufferAC & in_buf, long long & out_val) throw(SerializerException);
 //
 template <> PacketBufferCursor &
-  PacketBufferCursor::operator>> <int64_t > (int64_t & out_val) throw(SerializerException);
+  PacketBufferCursor::operator>> <long long > (long long & out_val) throw(SerializerException);
 
 /* -------------------------------------------------------------------------- */
 PacketBufferAC &
-  operator<<(PacketBufferAC & out_buf, const int32_t & in_val) throw(SerializerException);
+  operator<<(PacketBufferAC & out_buf, const long & in_val) throw(SerializerException);
 //
 PacketBufferAC &
-  operator>>(PacketBufferAC & in_buf, int32_t & out_val) throw(SerializerException);
+  operator>>(PacketBufferAC & in_buf, long & out_val) throw(SerializerException);
 //
 PacketBufferAC::size_type
-  operator>>(const PacketBufferAC & in_buf, int32_t & out_val) throw(SerializerException);
+  operator>>(const PacketBufferAC & in_buf, long & out_val) throw(SerializerException);
 //
 template <> PacketBufferCursor &
-  PacketBufferCursor::operator>> <int32_t > (int32_t & out_val) throw(SerializerException);
+  PacketBufferCursor::operator>> <long > (long & out_val) throw(SerializerException);
 
 /* -------------------------------------------------------------------------- */
 PacketBufferAC &
-  operator<<(PacketBufferAC & out_buf, const int16_t & in_val) throw(SerializerException);
+  operator<<(PacketBufferAC & out_buf, const int & in_val) throw(SerializerException);
 //
 PacketBufferAC &
-  operator>>(PacketBufferAC & in_buf, int16_t & out_val) throw(SerializerException);
+  operator>>(PacketBufferAC & in_buf, int & out_val) throw(SerializerException);
 //
 PacketBufferAC::size_type
-  operator>>(const PacketBufferAC & in_buf, int16_t & out_val) throw(SerializerException);
+  operator>>(const PacketBufferAC & in_buf, int & out_val) throw(SerializerException);
 //
 template <> PacketBufferCursor &
-  PacketBufferCursor::operator>> <int16_t > (int16_t & out_val) throw(SerializerException);
+  PacketBufferCursor::operator>> <int > (int & out_val) throw(SerializerException);
+
+/* -------------------------------------------------------------------------- */
+PacketBufferAC &
+  operator<<(PacketBufferAC & out_buf, const short & in_val) throw(SerializerException);
+//
+PacketBufferAC &
+  operator>>(PacketBufferAC & in_buf, short & out_val) throw(SerializerException);
+//
+PacketBufferAC::size_type
+  operator>>(const PacketBufferAC & in_buf, short & out_val) throw(SerializerException);
+//
+template <> PacketBufferCursor &
+  PacketBufferCursor::operator>> <short > (short & out_val) throw(SerializerException);
 
 /* -------------------------------------------------------------------------- *
  * char serialization
