@@ -7,15 +7,13 @@
 #endif
 #define __SMSC_INMAN_BILLING_MESSAGES__
 
+#include <time.h>
+
 #include "inman/storage/cdrutil.hpp"
 
-#include "inman/interaction/serializer/IMessages.hpp"
-#include "inman/interaction/serializer/SerializeIntegers.hpp"
-#include "inman/interaction/serializer/SerializeStdString.hpp"
-#include "inman/interaction/serializer/SerializeFxdLenStringT.hpp"
-#include "inman/interaction/serializer/SerializeTime.hpp"
-
 #include "inman/interaction/msgbill/IProtoBilling.hpp"
+#include "inman/interaction/serializer/IMessages.hpp"
+
 
 namespace smsc  {
 namespace inman {
@@ -71,14 +69,8 @@ public:
   // --------------------------------------------
   // -- SerializableObjIface interface methods
   // --------------------------------------------
-  virtual void load(PacketBufferAC & in_buf) throw(SerializerException)
-  {
-    in_buf >> dlgId;
-  }
-  virtual void save(PacketBufferAC & out_buf) const throw(SerializerException)
-  {
-    out_buf << dlgId;
-  }
+  virtual void load(PacketBufferAC & in_buf) throw(SerializerException);
+  virtual void save(PacketBufferAC & out_buf) const throw(SerializerException);
 };
 
 // --------------------------------------------------------- //

@@ -3,6 +3,9 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/interaction/msgbill/MsgBilling.hpp"
+#include "inman/interaction/serializer/SerializeIntegers.hpp"
+#include "inman/interaction/serializer/SerializeStdString.hpp"
+#include "inman/interaction/serializer/SerializeFxdLenStringT.hpp"
 
 #include "inman/common/cvtutil.hpp"
 using smsc::cbs::parseCBS_DCS;
@@ -11,6 +14,19 @@ using smsc::cbs::CBS_DCS;
 namespace smsc  {
 namespace inman {
 namespace interaction {
+/* ************************************************************************** *
+ * class INPBillingHdr_dlg implementation:
+ * ************************************************************************** */
+void INPBillingHdr_dlg::load(PacketBufferAC & in_buf) throw(SerializerException)
+{
+  in_buf >> dlgId;
+}
+
+void INPBillingHdr_dlg::save(PacketBufferAC & out_buf) const throw(SerializerException)
+{
+  out_buf << dlgId;
+}
+
 /* ************************************************************************** *
  * class ChargeSms implementation:
  * ************************************************************************** */
