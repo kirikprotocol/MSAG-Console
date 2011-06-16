@@ -7,7 +7,7 @@
 #endif
 #define __SMSC_INMAN_INTERACTION_MESSAGES__
 
-#include "inman/interaction/IProtocol.hpp"
+#include "inman/interaction/PacketBuffer.hpp"
 #include "inman/interaction/serializer/SerializableObj.hpp"
 
 namespace smsc  {
