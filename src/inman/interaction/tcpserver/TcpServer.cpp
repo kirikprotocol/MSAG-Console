@@ -320,7 +320,6 @@ void TcpServer::_notifyOnClose(const SocketInfo & conn_inf) /*throw()*/
   if (conn_inf.needNotify() && conn_inf.isMonitored()) {
     unsigned sockId = conn_inf.sockHandler()->getId();
     try {
-      ReverseMutexGuard rGrd(_sync);
       for (ListenersList::iterator it = _lsrList.begin(); !it.isEnd(); ++it) {
         it->onConnectClosing(*this, sockId);
       }
@@ -337,13 +336,13 @@ void TcpServer::_notifyOnClose(const SocketInfo & conn_inf) /*throw()*/
 void TcpServer::_closeConnection(SocketsRegistry::iterator use_it) /*throw()*/
 {
   SocketInfo connInf = use_it->second;
-  _notifyOnClose(connInf);
   _connReg.erase(use_it);
   {
     ReverseMutexGuard rGrd(_sync);
     smsc_log_info(_logger, "%s: %s Socket[%u]", getIdent(), 
                   connInf.needAbort() ? "aborting" : "closing", connInf.getId());
     connInf.closeSocket();
+    _notifyOnClose(connInf);
   }
   _connEvent.SignalAll();
 }

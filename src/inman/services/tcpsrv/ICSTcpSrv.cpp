@@ -130,11 +130,16 @@ void ICSTcpServer::onConnectClosing(TcpServerIface & p_srv, unsigned conn_id)
   ConnectsMap::iterator it = _connMap.find(conn_id);
   if (it == _connMap.end()) //Connect already unregistered by onConnectError()
     return;
-  if (it->second._protoId.empty()) //no protocol was assigned
-    return; //Connect will be unregistered by onConnectError()
 
   ConnectInfo rConn = it->second;
   _connMap.erase(it);
+
+  if (rConn._protoId.empty()) { //no protocol was assigned
+    smsc_log_info(logger, "%s: unregistered Connect[%u], protocol <not assigned>",
+                  _logId, conn_id);
+    return;
+  }
+
   smsc_log_info(logger, "%s: unregistered Connect[%u], protocol %s",
                 _logId, conn_id, rConn._protoId.c_str());
 
