@@ -76,6 +76,7 @@ void NetworkProfiles::Clear()
   {
     delete *it;
   }
+  netList.clear();
 }
 
 void NetworkProfiles::reload()
