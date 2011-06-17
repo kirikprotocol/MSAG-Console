@@ -172,6 +172,7 @@ private:
     /// The message which is stored in the message list
     /// is pointed to from ONLY ONE of messageHash, resendQueue or newQueue!
     /// e.g. they are exclusive.
+    bool                              cancelling_;
     MessageHash                       messageHash_;
     ResendQueue                       resendQueue_;
     NewQueue                          newQueue_;

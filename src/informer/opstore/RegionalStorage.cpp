@@ -315,6 +315,9 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     if ( dlv_->getState() != DLVSTATE_ACTIVE ) {
         smsc_log_debug(log_,"R=%u/D=%u is not active",getRegionId(),dlvId);
         return 6*tuPerSec;
+    } else if ( cancelling_ ) {
+        smsc_log_debug(log_,"R=%u/D=%u is cancelling",getRegionId(),dlvId);
+        return 5*tuPerSec;
     }
 
     // how many seconds to wait until activeStart / activeEnd.
@@ -618,6 +621,12 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         mg.Unlock();
         doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,nchunks);
         return;
+    } else if (cancelling_) {
+        mg.Unlock();
+        smsc_log_warn(log_,"R=%u/D=%u/M=%llu is trying to retry=%d but cancelled",
+                      getRegionId(),dlvId,ulonglong(msgId),
+                      retryDelay );
+        doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,nchunks);
     }
 
     if (retryDelay == 0) {
@@ -1022,9 +1031,25 @@ void RegionalStorage::cancelOperativeStorage()
                   getRegionId(), getDlvId());
     {
         smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
-        // cleanup the resend queue and the messageHash_ first
+        cancelling_ = true;
+    }
+    stopTransfer(); // make sure that there is no transfer
+    {
+        smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+        // cleanup the queues
         resendQueue_.clear();
         messageHash_.Empty();
+        newQueue_.Clear();
+        char fpath[100];
+        dlv_->makeResendFilePath(fpath,getRegionId(),0);
+        if ( nextResendFile_ ) {
+            try {
+                FileGuard::rmdirs( (getCS()->getStorePath() + fpath).c_str() );
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"R=%u/D=%u resend dir cancel exc: %s",
+                              getRegionId(), getDlvId(), e.what());
+            }
+        }
         nextResendFile_ = 0;
     }
     const msgtime_type currentTime = currentTimeSeconds();
@@ -1034,11 +1059,16 @@ void RegionalStorage::cancelOperativeStorage()
     while ( ml.lockAny() ) {
         doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,0);
     }
-    // cleanup again
-    smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
-    resendQueue_.clear();
-    messageHash_.Empty();
-    nextResendFile_ = 0;
+    {
+        // post check
+        smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+        if ( !resendQueue_.empty() || messageHash_.Count() || newQueue_.Count() ) {
+            smsc_log_error(log_,"R=%u/D=%u has non-empty store after cancel: resend.empty=%d hash=%u new=%u",
+                           getRegionId(), getDlvId(), resendQueue_.empty(),
+                           unsigned(messageHash_.Count()), unsigned(newQueue_.Count()));
+        }
+    }
+    dlv_->checkFinalize();
 }
 
 
@@ -1068,31 +1098,53 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                                       MessageList& listFrom )
 {
     const dlvid_type dlvId = dlv_->getDlvId();
+    const regionid_type regionId = getRegionId();
     smsc_log_debug(log_,"adding new messages to storage R=%u/D=%u",
-                   unsigned(getRegionId()), dlvId );
-    MsgList::StopRollLock srg(messageList_);
-    MsgIter ib = listFrom.begin(), ie = listFrom.end();
-    for ( MsgIter i = ib; i != ie; ++i ) {
+                   unsigned(regionId), dlvId );
+    do {
+        if (cancelling_) break;
+        MsgList::StopRollLock srg(messageList_);
+        MsgIter ib = listFrom.begin(), ie = listFrom.end();
+        for ( MsgIter i = ib; i != ie; ++i ) {
+            Message& m = i->msg;
+            m.lastTime = currentTime;
+            m.timeLeft = 0;
+            m.state = MSGSTATE_PROCESS;
+            m.retryCount = 0;
+            smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
+                           unsigned(regionId), dlvId,
+                           ulonglong(m.msgId));
+            regionid_type serial = MessageLocker::nullSerial;
+            dlv_->activityLog_->addRecord(currentTime,*region_,m,0,MSGSTATE_INPUT);
+            dlv_->storeJournal_->journalMessage(dlvId,regionId,*i);
+            i->serial = serial;
+        }
+        RelockMutexGuard mg(cacheMon_ MTXWHEREPOST);
+        if (cancelling_) break;
+        for ( MsgIter i = ib; i != ie; ++i ) {
+            newQueue_.Push(i);
+        }
+        srg.insert( listFrom );
+        // messageList_.splice( messageList_.begin(), listFrom, iter1, iter2 );
+        cacheMon_.notify();
+        return;
+    } while (false);
+    // finalizing all messages on cancellation
+    const int smppState = smsc::system::Status::CANCELFAIL;
+    for ( MsgIter i = listFrom.begin(), ie = listFrom.end(); i != ie; ++i ) {
         Message& m = i->msg;
         m.lastTime = currentTime;
         m.timeLeft = 0;
-        m.state = MSGSTATE_PROCESS;
-        m.retryCount = 0;
-        smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
-                       unsigned(getRegionId()), dlvId,
-                       ulonglong(m.msgId));
-        regionid_type serial = MessageLocker::nullSerial;
-        dlv_->activityLog_->addRecord(currentTime,*region_,m,0,MSGSTATE_INPUT);
-        dlv_->storeJournal_->journalMessage(dlvId,getRegionId(),*i);
-        i->serial = serial;
+        m.retryCount = 0; // nchunks
+        const uint8_t prevState = m.state;
+        m.state = MSGSTATE_EXPIRED;
+        smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is cancelled, state=%u, smpp=%u",
+                       unsigned(regionId),
+                       unsigned(dlvId),
+                       ulonglong(m.msgId),m.state,smppState );
+        dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,prevState);
+        dlv_->storeJournal_->journalMessage(dlvId,regionId,*i);
     }
-    RelockMutexGuard mg(cacheMon_ MTXWHEREPOST);
-    for ( MsgIter i = ib; i != ie; ++i ) {
-        newQueue_.Push(i);
-    }
-    srg.insert( listFrom );
-    // messageList_.splice( messageList_.begin(), listFrom, iter1, iter2 );
-    cacheMon_.notify();
 }
 
 
@@ -1105,16 +1157,18 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
 
     if ( isInputDirection ) {
 
-        // need to input
-        if (!nextResendFile_) return;
-
         try {
 
             // reading just one file
             char fpath[100];
-            const ulonglong ymdTime = msgTimeToYmd(nextResendFile_);
-            dlv_->makeResendFilePath(fpath,getRegionId(),ymdTime);
-
+            // need to input
+            ulonglong ymdTime;
+            {
+                smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+                if (!nextResendFile_ || cancelling_) return;
+                ymdTime = msgTimeToYmd(nextResendFile_);
+                dlv_->makeResendFilePath(fpath,getRegionId(),ymdTime);
+            }
             FileGuard fg;
             fg.ropen( (getCS()->getStorePath() + fpath).c_str() );
 
@@ -1131,6 +1185,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             {
                 // checking
                 smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+                if (cancelling_) return;
                 for ( MsgIter i = msgList.begin(); i != msgList.end(); ) {
                     // check that this element is not in the resendQueue
                     bool found = false;
@@ -1244,6 +1299,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
     msgtime_type startTime;
     {
         smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+        if (cancelling_) return;
         startTime =
             std::min(currentTime, resendQueue_.begin()->first) +
             getCS()->getResendMinTimeToUpload() + period*2 - 1;
@@ -1261,6 +1317,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
         unsigned count = 0;
         {
             smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+            if (cancelling_) return;
             ResendQueue::iterator prev = resendQueue_.lower_bound(startTime);
             if ( prev == resendQueue_.end() ) { break; }
             if (stopFlag) { break; }
@@ -1340,6 +1397,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             }
 
             smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+            if (cancelling_) return;
             // restoring resend queue from msgList
             for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
                 resendQueue_.insert(std::make_pair(i->msg.lastTime,i));
