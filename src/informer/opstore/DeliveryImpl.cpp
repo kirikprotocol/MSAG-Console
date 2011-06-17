@@ -505,20 +505,15 @@ void DeliveryImpl::checkFinalize()
         int regId;
         StoreList::iterator ptr;
         for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
-            if (! (*ptr)->isFinished()) {
+            if (finalize && !(*ptr)->isFinished()) {
                 finalize = false;
                 smsc_log_debug(log_,"R=%u/D=%u is still active",regId,dlvId);
-                break;
+                if (!endReached) {break;}
             }
-        }
-        if (!finalize) {
-            const msgtime_type currentTime = currentTimeSeconds();
-            for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
-                if ( !(*ptr)->isEndDateReached(currentTime) ) {
-                    endReached = false;
-                    smsc_log_debug(log_,"R=%u/D=%u is still below enddate",regId,dlvId);
-                    break;
-                }
+            if (endReached && !(*ptr)->isEndDateReached(currentTime)) {
+                endReached = false;
+                smsc_log_debug(log_,"R=%u/D=%u is still below enddate",regId,dlvId);
+                if (!finalize) {break;}
             }
         }
         dlvInfo_->getMsgStats(ds);
@@ -534,8 +529,10 @@ void DeliveryImpl::checkFinalize()
                           ds.totalMessages, ds.dlvdMessages,
                           ds.failedMessages, ds.expiredMessages,
                           ds.killedMessages );
+            finalize = false;
         }
-    } else if (endReached) {
+    }
+    if (!finalize && endReached) {
         smsc_log_debug(log_,"D=%u all regions reached end date",dlvId);
         setState(DLVSTATE_PAUSED);
     }
