@@ -58,11 +58,12 @@ int parseWeekDays( const std::vector< std::string >& wd )
 // const size_t DeliveryInfoData::SVCTYPE_LENGTH;
 // const size_t DeliveryInfoData::USERDATA_LENGTH;
 
-smsc::logger::Logger* DeliveryInfo::log_ = 0;
+// smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
 DeliveryInfo::DeliveryInfo( dlvid_type              dlvId,
                             const DeliveryInfoData& data,
                             UserInfo&               userInfo ) :
+log_(0),
 dlvId_(dlvId),
 userInfo_(&userInfo),
 lock_( MTXWHEREAMI ),
@@ -78,9 +79,9 @@ activeWeekDays_(-1),
 statLock_( MTXWHEREAMI ),
 isOldActLog_(false)
 {
-    if (!log_) {
-        log_ = smsc::logger::Logger::getInstance("dlvinfo");
-    }
+    char buf[30];
+    sprintf(buf,"d.%03u",dlvId);
+    log_ = smsc::logger::Logger::getInstance(buf);
     updateData( data, 0 );
 
     // stats

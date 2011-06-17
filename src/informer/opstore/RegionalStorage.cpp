@@ -734,8 +734,9 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                    getRegionId(), dlvId, ulonglong(msgId),
                    msgTimeToYmd(m.lastTime),
                    int(m.lastTime - currentTime) );
+    dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,prevState);
     dlv_->storeJournal_->journalMessage(info.getDlvId(),getRegionId(),*iter);
-    dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
+    // dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
 }
 
 

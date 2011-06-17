@@ -226,9 +226,10 @@ protected:
     void readStats();
 
 private:
-    static smsc::logger::Logger* log_;
+    // static smsc::logger::Logger* log_;
 
 private:
+    smsc::logger::Logger*    log_;
     dlvid_type               dlvId_;
     EmbedRefPtr< UserInfo >  userInfo_;
 
