@@ -60,10 +60,10 @@ class SmsxFileProcessor {
         key.service_id = serviceId;
         SmsxUsers old = (SmsxUsers)smsxUsers.get(key);
         if(old == null) {
-          smsxUsers.put(key, new SmsxUsers(key.service_id, key.region, 1));
-        }else {
-          old.incrementCount();
+          old = new SmsxUsers(key.service_id, key.region,0);
+          smsxUsers.put(key, old);
         }
+        old.addMsisdn(ss[1]);
       }
     };
   }
@@ -78,7 +78,7 @@ class SmsxFileProcessor {
 
       SmsxUserKey that = (SmsxUserKey) o;
 
-      return service_id == that.service_id && !(region != null ? !region.equals(that.region) : that.region != null);
+      return service_id == that.service_id && (region != null ? region.equals(that.region) : that.region == null);
     }
 
     public int hashCode() {

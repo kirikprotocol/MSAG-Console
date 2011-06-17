@@ -1,11 +1,15 @@
 package ru.sibinco.smsx.stats.backend.datasource;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
 * @author Aleksandr Khalitov
 */
 public class SmsxUsers {
   private final int serviceId;
   private final String region;
+  private Set msisdns = new HashSet();
   private int count;
 
   public SmsxUsers(int serviceId, String region, int count) {
@@ -26,8 +30,9 @@ public class SmsxUsers {
     return count;
   }
 
-  void incrementCount() {
-    count++;
+  void addMsisdn(String msisdn) {
+    if (msisdns.add(msisdn))
+      count++;
   }
 
   public boolean equals(Object o) {
