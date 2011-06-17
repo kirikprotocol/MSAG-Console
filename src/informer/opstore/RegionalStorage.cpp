@@ -303,6 +303,19 @@ bool RegionalStorage::isFinished()
 }
 
 
+bool RegionalStorage::isEndDateReached( msgtime_type currentTime )
+{
+    msgtime_type activeTime = currentTime;
+    const DeliveryInfo& info = getDlvInfo();
+    if ( info.isBoundToLocalTime() ) {
+        region_->getLocalWeekTime(currentTime, &activeTime);
+    }
+    const msgtime_type endDate = info.getEndDate();
+    return ( endDate && endDate < activeTime );
+}
+
+
+
 int RegionalStorage::getNextMessage( usectime_type usecTime,
                                      int weekTime, Message& msg )
 {

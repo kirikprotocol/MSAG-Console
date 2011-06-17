@@ -499,6 +499,7 @@ void DeliveryImpl::checkFinalize()
     smsc_log_debug(log_,"D=%u check finalize invoked",dlvId);
     DeliveryStats ds;
     bool finalize = true;
+    bool endReached = true;
     {
         smsc::core::synchronization::MutexGuard mg(cacheLock_);
         int regId;
@@ -508,6 +509,16 @@ void DeliveryImpl::checkFinalize()
                 finalize = false;
                 smsc_log_debug(log_,"R=%u/D=%u is still active",regId,dlvId);
                 break;
+            }
+        }
+        if (!finalize) {
+            const msgtime_type currentTime = currentTimeSeconds();
+            for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
+                if ( !(*ptr)->isEndDateReached(currentTime) ) {
+                    endReached = false;
+                    smsc_log_debug(log_,"R=%u/D=%u is still below enddate",regId,dlvId);
+                    break;
+                }
             }
         }
         dlvInfo_->getMsgStats(ds);
@@ -524,6 +535,9 @@ void DeliveryImpl::checkFinalize()
                           ds.failedMessages, ds.expiredMessages,
                           ds.killedMessages );
         }
+    } else if (endReached) {
+        smsc_log_debug(log_,"D=%u all regions reached end date",dlvId);
+        setState(DLVSTATE_PAUSED);
     }
 }
 

@@ -70,6 +70,8 @@ public:
     /// return true if there is no messages in new and resend
     bool isFinished();
 
+    bool isEndDateReached( msgtime_type currentTime );
+
     // get the message with given messageid.
     // this method accesses active messages only.
     // bool getMessage( msgid_type msgId, Message& msg );
