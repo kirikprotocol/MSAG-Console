@@ -183,10 +183,10 @@ int DeliveryInfo::checkActiveTime( int weekTime ) const
 }
 
 
-bool DeliveryInfo::checkExpired( int weekTime, timediff_type ttl, timediff_type uptonow ) const
+timediff_type DeliveryInfo::recalcTTL( int weekTime, timediff_type ttl, timediff_type uptonow ) const
 {
     if ( ttl <= 0 ) {
-        return true;
+        return ttl;
     }
     static const int weekLen = 7*24*3600;
     int npass = 0;
@@ -195,7 +195,7 @@ bool DeliveryInfo::checkExpired( int weekTime, timediff_type ttl, timediff_type 
         if ( ++npass > 20 ) {
             smsc_log_warn(log_,"D=%u checkExpired loop weekTime=%d ttl=%d uptonow=%d active=%d",
                           dlvId_, weekTime, ttl, uptonow, active );
-            return false;
+            return -1;
         }
         if ( active > 0 ) {
             // not active, subtract from uptonow, but keep ttl
@@ -212,10 +212,10 @@ bool DeliveryInfo::checkExpired( int weekTime, timediff_type ttl, timediff_type 
         ttl -= active;
         weekTime += active;
         if (ttl <= 0) {
-            return true;
+            return ttl;
         }
     }
-    return false;
+    return ttl;
 }
 
 

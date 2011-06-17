@@ -127,12 +127,12 @@ public:
     ///  <=0 -- how many seconds left until activeEnd.
     int checkActiveTime( int weekTime ) const;
 
-    /// check if message is expired taking into account periods of task inactivity.
-    /// @return true if message is expired.
+    /// recalculate TTL taking into account periods of task inactivity.
+    /// @return actual value of TTL (>0 message is ok, <=0 message is expired).
     /// @param weekTime - week time of message last access (in local time);
     /// @param ttl - message ttl as it was at last access;
     /// @param uptonow - a number of seconds until now.
-    bool checkExpired( int weekTime, timediff_type ttl, timediff_type uptonow ) const;
+    timediff_type recalcTTL( int weekTime, timediff_type ttl, timediff_type uptonow ) const;
 
     /// evaluate the number of chunks in sms, fills sms fields (optional)
     unsigned evaluateNchunks( const char*     text,

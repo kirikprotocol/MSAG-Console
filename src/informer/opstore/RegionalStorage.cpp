@@ -327,7 +327,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 {
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_ MTXWHEREPOST);
-    const char* from;
+    // const char* from;
     const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
@@ -375,6 +375,11 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
      */
 
     msgtime_type uploadNextResend = 0;
+    enum {
+        FROMNONE = 0,
+        FROMNEW = 1,
+        FROMRESEND = 2
+    } from = FROMNONE;
     do { // fake loop
 
         /// what is the period b/w messages [500..100M] microseconds
@@ -453,9 +458,9 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                     // cannot take from resend queue until we load it
                 } else if ( v->first <= currentTime ) {
                     iter = v->second;
-                    from = "resendQueue";
-                    messageHash_.Insert(iter->msg.msgId,iter);
+                    from = FROMRESEND;
                     resendQueue_.erase(resendQueue_.begin());
+                    messageHash_.Insert(iter->msg.msgId,iter);
                     break;
                 }
             }
@@ -470,11 +475,11 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
             }
             ++numberOfInputReqGrant_;
             messageHash_.Insert(iter->msg.msgId,iter);
-            from = "newQueue";
+            from = FROMNEW;
             break;
         }
 
-        from = "";
+        from = FROMNONE;
 
     } while ( false );
 
@@ -493,7 +498,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
         }
     }
 
-    if ( !from[0] ) {
+    if ( from == FROMNONE ) {
         // message is not found, please try in a second
         smsc_log_debug(log_,"R=%u/D=%u fail: newSize=0, reSize=%u (first=%+d) nextFile=%+d",
                        getRegionId(), dlvId, unsigned(resendQueue_.size()),
@@ -512,20 +517,41 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
         return (tuPerSec/2+15);
     }
     Message& m = iter->msg;
+    if ( from == FROMRESEND ) {
+        const timediff_type uptonow = timediff_type(currentTime - m.lastTime);
+        if ( uptonow > 0 ) {
+            int oldWeekTime = region_->getLocalWeekTime( m.lastTime );
+            const timediff_type actualTTL = 
+                info.recalcTTL( oldWeekTime, m.timeLeft, uptonow);
+            if ( actualTTL <= 0 ) {
+                smsc_log_debug(log_,"R=%u/D=%u/M=%llu retry msg is expired, weekTime=%d, ttl=%d, uptonow=%d -> actTTL=%d",
+                               getRegionId(), dlvId, m.msgId,
+                               oldWeekTime, m.timeLeft, uptonow, actualTTL );
+                const int smppState = smsc::system::Status::DELIVERYTIMEDOUT;
+                m.timeLeft = 0;
+                messageHash_.Delete(m.msgId);
+                mg.Unlock();
+                dlv_->dlvInfo_->getUserInfo().restoreQuant();
+                doFinalize(ml,currentTime,MSGSTATE_EXPIRED,smppState,0);
+                return 10;
+            }
+        }
+    }
     mg.Unlock();
-    m.lastTime = currentTime;
-    if (!m.timeLeft) {
+    if ( from == FROMNEW && !m.timeLeft ) {
         /// this one is a new message, set its TTL initially
         m.timeLeft  = info.getMessageTimeToLive();
         // if (m.timeLeft <= 0) m.timeLeft = getCS()->getValidityPeriodDefault();
     }
+    m.lastTime = currentTime;
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_PROCESS;
     msg = m;
     smsc_log_debug(log_,"taking message R=%u/D=%u/M=%llu from %s",
                    unsigned(getRegionId()),
                    dlvId,
-                   ulonglong(msgId),from);
+                   ulonglong(msgId),
+                   (from == FROMNEW )? "newQueue" : "resendQueue");
     if (prevState != m.state) {
         dlv_->storeJournal_->journalMessage(dlvId,getRegionId(),*iter);
         dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
@@ -648,7 +674,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,nchunks);
     }
 
-    if (retryDelay == 0) {
+    if (retryDelay == 0 && m.timeLeft>0) {
         // immediate retry
         // putting the message to the new queue
         assert( m.state == MSGSTATE_PROCESS );
@@ -668,7 +694,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 
 
     if ( (m.retryCount++ >= Message::maxRetryCount) ||
-         (m.timeLeft < getCS()->getRetryMinTimeToLive()) ) {
+         (m.timeLeft <= getCS()->getRetryMinTimeToLive()) ) {
 
         mg.Unlock();
         doFinalize(ml,currentTime,MSGSTATE_EXPIRED,smppState,nchunks);
@@ -695,7 +721,9 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
      }
      */
 
-    if ( m.timeLeft < retryDelay ) retryDelay = m.timeLeft;
+    if ( m.timeLeft < retryDelay + getCS()->getRetryMinTimeToLive() ) {
+        retryDelay = m.timeLeft - getCS()->getRetryMinTimeToLive();
+    }
     m.timeLeft -= retryDelay;
     m.lastTime = currentTime + retryDelay;
     resendQueue_.insert( std::make_pair(m.lastTime,iter) );
@@ -974,12 +1002,12 @@ bool RegionalStorage::postInit()
             if ( m.timeLeft < uptonow ) {
                 // we should check message expiration
                 int weekTime = region_->getLocalWeekTime( m.lastTime );
-                bool isexp = dlv_->dlvInfo_->checkExpired(weekTime, m.timeLeft, uptonow);
-                smsc_log_debug(log_,"R=%u/D=%u/M=%llu message is %sexpired, weekTime=%d, ttl=%d, uptonow=%d",
-                               getRegionId(),getDlvId(),msgId,
-                               isexp ? "" : "NOT ",
-                               weekTime, m.timeLeft, uptonow );
-                if (isexp) {
+                const timediff_type actualTTL =
+                    dlv_->dlvInfo_->recalcTTL(weekTime, m.timeLeft, uptonow);
+                if (actualTTL<=0) {
+                    smsc_log_debug(log_,"R=%u/D=%u/M=%llu message is expired, weekTime=%d, ttl=%d, uptonow=%d -> actTTL=%d",
+                                   getRegionId(),getDlvId(),msgId,
+                                   weekTime, m.timeLeft, uptonow, actualTTL );
                     m.lastTime = currentTime;
                     m.timeLeft = 0;
                     m.state = 0; // override state to get correct stats

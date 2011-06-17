@@ -135,6 +135,13 @@ usectime_type UserInfo::isReadyAndConsumeQuant( usectime_type currentTime )
 }
 
 
+void UserInfo::restoreQuant()
+{
+    smsc::core::synchronization::MutexGuard mg(refLock_);
+    speedControl_.consumeQuant(-1);
+}
+
+
 void UserInfo::addRole( UserRole role )
 {
     smsc::core::synchronization::MutexGuard mg(dataLock_);

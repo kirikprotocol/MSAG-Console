@@ -109,6 +109,7 @@ public:
     /// return the number of microsecond to sleep.
     /// if ready return 0 and consume a quant of time.
     usectime_type isReadyAndConsumeQuant( usectime_type currentTime );
+    void restoreQuant();
 
     // a limit of sms per second
     unsigned getSpeed() const { return unsigned(speedControl_.getSpeed()); }
