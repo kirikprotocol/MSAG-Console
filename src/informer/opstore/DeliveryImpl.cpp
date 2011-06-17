@@ -500,6 +500,7 @@ void DeliveryImpl::checkFinalize()
     DeliveryStats ds;
     bool finalize = true;
     bool endReached = true;
+    const msgtime_type currentTime = currentTimeSeconds();
     {
         smsc::core::synchronization::MutexGuard mg(cacheLock_);
         int regId;
