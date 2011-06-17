@@ -241,18 +241,18 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
                                                               weekTime_,
                                                               msg_);
             if (sleepTimeNotReady <= 0) {
-                smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
-                               unsigned(getRegionId()),
-                               unsigned(ptr->getDlvId()),
-                               ulonglong(msg_.msgId));
+                // smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
+                // unsigned(getRegionId()),
+                // unsigned(ptr->getDlvId()),
+                // ulonglong(msg_.msgId));
                 untilActiveEnd_ = -sleepTimeNotReady;
                 return 0;
             } else {
-                smsc_log_debug(log_,"R=%u/D=%u: is not ready, going to sleep %u usec",
-                               unsigned(getRegionId()),
-                               unsigned(ptr->getDlvId()),
-                               ulonglong(sleepTimeNotReady));
-                return sleepTimeNotReady; // wait one second
+                // smsc_log_debug(log_,"R=%u/D=%u: is not ready, going to sleep %u usec",
+                // unsigned(getRegionId()),
+                // unsigned(ptr->getDlvId()),
+                // ulonglong(sleepTimeNotReady));
+                return sleepTimeNotReady; // wait
             }
         } else {
             smsc_log_debug(log_,"R=%u/D=%u: is not active",

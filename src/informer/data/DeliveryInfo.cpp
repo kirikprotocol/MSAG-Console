@@ -80,7 +80,7 @@ statLock_( MTXWHEREAMI ),
 isOldActLog_(false)
 {
     char buf[30];
-    sprintf(buf,"d.%03u",dlvId);
+    sprintf(buf,"d.%03u",dlvId % 1000);
     log_ = smsc::logger::Logger::getInstance(buf);
     updateData( data, 0 );
 

@@ -352,8 +352,8 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     {
         usectime_type ret = dlv_->dlvInfo_->getUserInfo().isReadyAndConsumeQuant(usecTime);
         if (ret>0) {
-            smsc_log_debug(log_,"R=%u/D=%u not ready by user limit, wait=%lluus",
-                           getRegionId(), dlvId, ret);
+            // smsc_log_debug(log_,"R=%u/D=%u not ready by user limit, wait=%lluus",
+            // getRegionId(), dlvId, ret);
             if (ret > 3*tuPerSec) ret = 3*tuPerSec;
             return int(ret);
         }
