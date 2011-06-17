@@ -201,7 +201,7 @@ public:
             }
             msg.subscriber = fb.get64();
             msg.userData = fb.getCString();
-            if ( version == 2 ) {
+            if ( version >= 2 ) {
                 MessageFlags(fb.getCString()).swap(msg.flags);
             } else if ( version != 1 ) {
                 throw InfosmeException(EXC_BADFILE,"record at %llu has wrong version",
