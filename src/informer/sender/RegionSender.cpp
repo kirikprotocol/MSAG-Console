@@ -42,7 +42,7 @@ ref_(0),
 lock_( MTXWHEREAMI ),
 conn_(),
 region_(r),
-taskList_(*this,2*maxScoreIncrement,log_),
+taskList_(*this,2*maxScoreIncrement,0),
 speedControl_(std::max(region_->getBandwidth(),1U)),
 speedLimiter_(std::max(region_->getBandwidth(),1U),
               // getCS()->getRegionSpeedLimitNBins(),
@@ -255,9 +255,9 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
                 return sleepTimeNotReady; // wait
             }
         } else {
-            smsc_log_debug(log_,"R=%u/D=%u: is not active",
-                           getRegionId(),
-                           ptr->getDlvId());
+            // smsc_log_debug(log_,"R=%u/D=%u: is not active",
+            // getRegionId(),
+            // ptr->getDlvId());
         }
     } catch ( std::exception& e ) {
         smsc_log_warn(log_,"R=%u/D=%u isReady exc: %s",
