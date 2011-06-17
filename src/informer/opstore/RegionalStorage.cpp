@@ -524,14 +524,14 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
             const timediff_type actualTTL = 
                 info.recalcTTL( oldWeekTime, m.timeLeft, uptonow);
             if ( actualTTL <= 0 ) {
+                messageHash_.Delete(m.msgId);
+                mg.Unlock();
+                dlv_->dlvInfo_->getUserInfo().restoreQuant();
                 smsc_log_debug(log_,"R=%u/D=%u/M=%llu retry msg is expired, weekTime=%d, ttl=%d, uptonow=%d -> actTTL=%d",
                                getRegionId(), dlvId, m.msgId,
                                oldWeekTime, m.timeLeft, uptonow, actualTTL );
                 const int smppState = smsc::system::Status::DELIVERYTIMEDOUT;
                 m.timeLeft = 0;
-                messageHash_.Delete(m.msgId);
-                mg.Unlock();
-                dlv_->dlvInfo_->getUserInfo().restoreQuant();
                 doFinalize(ml,currentTime,MSGSTATE_EXPIRED,smppState,0);
                 return 10;
             }
