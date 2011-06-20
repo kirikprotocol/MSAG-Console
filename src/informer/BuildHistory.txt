@@ -1,3 +1,5 @@
+2011-06-20 09:54 bukind
+  bugfix: incorrect checkActiveTime() behaviour when only one weekday allowed
 2011-06-17 19:09 bukind
   feature: recalc TTL in getNextMessage, skip sending if TTL is over
 2011-06-17 17:48 bukind

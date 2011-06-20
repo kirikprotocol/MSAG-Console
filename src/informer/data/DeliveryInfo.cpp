@@ -164,12 +164,15 @@ int DeliveryInfo::checkActiveTime( int weekTime ) const
 
         if (res>0 && nextDay ) {
             // forbidden until the end of the day
+            if ( (activeWeekDays_ & 0x7f) == 0 ) {
+                throw InfosmeException(EXC_LOGICERROR,"D=%u wrong activeWeekDays=%u",dlvId_,activeWeekDays_);
+            }
             for ( unsigned i = weekDay+1; ; ++i ) {
                 if ( i >= 7 ) { i -= 7; }
-                if ( i == weekDay ) {
-                    throw InfosmeException(EXC_LOGICERROR,"D=%u wrong activeWeekDays=%u",dlvId_,activeWeekDays_);
+                if ((activeWeekDays_ & weekBits[i]) != 0) {
+                    // the first allowed day found
+                    break;
                 }
-                if ((activeWeekDays_ & weekBits[i]) != 0) { break; }
                 res += daynight; // the whole day forbidden
             }
             if ( activePeriodStart_ >= 0 && activePeriodStart_ < activePeriodEnd_ ) {
