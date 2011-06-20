@@ -12,8 +12,11 @@ class Info : public Request
 {
 public:
     Info() : agentId_(0) {}
-    virtual ~Info() {}
+    virtual ~Info() {
+        CHECKMAGTC;
+    }
     virtual std::string toString() const {
+        CHECKMAGTC;
         std::string res;
         res.reserve(100);
         res.append( Request::toString() );
@@ -28,6 +31,7 @@ public:
     }
     virtual const char* typeToString() const { return "info"; }
     virtual bool isValid() const {
+        CHECKMAGTC;
         return ( agentId_ != 0 ) && !userId_.empty();
     }
 
@@ -40,6 +44,7 @@ public:
     void setWalletType( const std::string& wt ) { walletType_ = wt; }
 
     virtual bool visit( RequestVisitor& visitor ) {
+        CHECKMAGTC;
         return visitor.visitInfo(*this);
     }
 

@@ -184,7 +184,9 @@ void ClientCore::receivePacket( proto::SocketBase& socket, std::auto_ptr<Packet>
     try {
         if ( packet.get() == 0 ) {
             throw Exception( "null packet received", Status::BAD_RESPONSE );
-        } else if ( packet->isRequest() ) {
+        }
+        CHECKMAGVT(*packet.get());
+        if ( packet->isRequest() ) {
             throw Exception( "not a response received", Status::BAD_RESPONSE );
         }
 

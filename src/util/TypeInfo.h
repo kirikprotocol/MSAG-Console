@@ -90,11 +90,18 @@ private:
 
 /// macros to ease typecheck
 #ifdef MAGICTYPECHECK
-#define DECLMAGTC(x) smsc::util::MagicTICheck< x >  magicticheck_
-#define CHECKMAGTC   magicticheck_.check()
+template < class T > void magicticheck( const T& x ) {
+    x.magicticheck_.check();
+}
+
+#define DECLMAGTC(x)  friend void smsc::util::magicticheck< x >( const x& ); \
+                      smsc::util::MagicTICheck< x >  magicticheck_
+#define CHECKMAGTC    magicticheck_.check()
+#define CHECKMAGVT(x) smsc::util::magicticheck(x)
 #else
 #define DECLMAGTC(x) static void magicticheck_()
 #define CHECKMAGTC
+#define CHECKMAGVT(x)
 #endif
 
 }

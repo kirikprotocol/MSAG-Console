@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "util/int.h"
+#include "util/TypeInfo.h"
 #include "logger/Logger.h"
 #include "scag/util/Time.h"
 #include "scag/bill/ewallet/Request.h"
@@ -43,16 +44,20 @@ public:
         }
     }
 
-    virtual ~Context() {}
+    virtual ~Context() {
+        CHECKMAGTC;
+    }
 
     uint32_t getSeqNum() const { return seqnum_; }
     void setSeqNum( uint32_t seqnum ) {
+        CHECKMAGTC;
         seqnum_ = seqnum;
         if ( getRequest().get() ) getRequest()->setSeqNum( seqnum );
         if ( getResponse().get() ) getResponse()->setSeqNum( seqnum );
     }
 
     util::msectime_type getCreationTime() const {
+        CHECKMAGTC;
         return creationTime_;
     }
 
@@ -60,9 +65,13 @@ public:
     std::auto_ptr<Response>&  getResponse() { return resp_; }
 
     ContextState getState() const { return state_; }
-    virtual void setState( ContextState state ) { state_ = state; }
+    virtual void setState( ContextState state ) {
+        CHECKMAGTC;
+        state_ = state;
+    }
 
 protected:
+    DECLMAGTC(Context);
     util::msectime_type       creationTime_;
 private:
     std::auto_ptr< Request >  req_;

@@ -13,8 +13,11 @@ class Rollback: public Request
 public:
     Rollback() : agentId_(0), transId_(0) {}
 
-    virtual ~Rollback() {}
+    virtual ~Rollback() {
+        CHECKMAGTC;
+    }
     virtual std::string toString() const {
+        CHECKMAGTC;
         std::string res;
         res.reserve(100);
         res.append( Request::toString() );
@@ -37,6 +40,7 @@ public:
     }
     virtual const char* typeToString() const { return "rollback"; }
     virtual bool isValid() const {
+        CHECKMAGTC;
         return ( agentId_ != 0 ) && !userId_.empty();
     }
 
@@ -55,6 +59,7 @@ public:
     void setTransId( int32_t ti ) { transId_ = ti; }
 
     virtual bool visit( RequestVisitor& visitor ) {
+        CHECKMAGTC;
         return visitor.visitRollback(*this);
     }
 

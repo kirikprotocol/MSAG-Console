@@ -13,8 +13,11 @@ class CheckResp: public Response
 public:
     CheckResp( uint8_t status = Status::UNKNOWN ) : Response(status),
     transStatus_(0), amount_(0), enddate_(0) {}
-    virtual ~CheckResp() {}
+    virtual ~CheckResp() {
+        CHECKMAGTC;
+    }
     virtual std::string toString() const {
+        CHECKMAGTC;
         std::string res;
         res.reserve(100);
         res.append(Response::toString());
@@ -44,7 +47,10 @@ public:
     }
     virtual const char* typeToString() const { return "checkresp"; }
     virtual bool isValid() const { return true; }
-    virtual bool visit( ResponseVisitor& visitor ) { return visitor.visitCheckResp(*this); }
+    virtual bool visit( ResponseVisitor& visitor ) {
+        CHECKMAGTC;
+        return visitor.visitCheckResp(*this); 
+    }
 
     int32_t getTransStatus() const { return transStatus_; }
     const std::string& getSourceId() const { return sourceId_; }

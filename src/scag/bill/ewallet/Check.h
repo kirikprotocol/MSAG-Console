@@ -13,8 +13,11 @@ class Check: public Request
 public:
     Check() : agentId_(0), amount_(0), transId_(0) {}
 
-    virtual ~Check() {}
+    virtual ~Check() {
+        CHECKMAGTC;
+    }
     virtual std::string toString() const {
+        CHECKMAGTC;
         std::string res;
         res.reserve(100);
         res.append( Request::toString() );
@@ -37,6 +40,7 @@ public:
     }
     virtual const char* typeToString() const { return "check"; }
     virtual bool isValid() const {
+        CHECKMAGTC;
         return ( agentId_ != 0 ) && !userId_.empty();
     }
 
@@ -53,6 +57,7 @@ public:
     void setTransId( int32_t ti ) { transId_ = ti; }
 
     virtual bool visit( RequestVisitor& visitor ) {
+        CHECKMAGTC;
         return visitor.visitCheck(*this);
     }
 

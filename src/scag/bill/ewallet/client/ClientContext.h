@@ -2,6 +2,7 @@
 #define SCAG_BILL_EWALLET_CLIENT_CLIENTCONTEXT_H
 
 #include "scag/bill/ewallet/proto/Context.h"
+#include "util/TypeInfo.h"
 
 namespace scag2 {
 namespace bill {
@@ -15,9 +16,13 @@ public:
     ClientContext( Request* request, Client::ResponseHandler* handler ) :
     proto::Context(request,0), handler_(handler) {}
 
-    Client::ResponseHandler* getHandler() { return handler_; }
+    Client::ResponseHandler* getHandler() {
+        CHECKMAGTC;
+        return handler_;
+    }
 
     virtual void setError( const Exception& e ) {
+        CHECKMAGTC;
         if ( handler_ && getRequest().get() ) {
             handler_->handleError( getRequest(), e );
             getResponse().reset(0);
@@ -25,6 +30,7 @@ public:
     }
 
     virtual void setState( ContextState state ) {
+        CHECKMAGTC;
         Context::setState(state);
         if ( handler_ && getRequest().get() ) {
             if ( state == DONE ) {
@@ -38,10 +44,12 @@ public:
     }
 
     void makeNonExpirable() {
+        CHECKMAGTC;
         creationTime_ = 0;
     }
 
 private:
+    DECLMAGTC(ClientContext);
     Client::ResponseHandler* handler_;
 };
 

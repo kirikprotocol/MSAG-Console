@@ -13,8 +13,11 @@ class Open: public Request
 public:
     Open() : agentId_(0), amount_(0), timeout_(0) {}
 
-    virtual ~Open() {}
+    virtual ~Open() {
+        CHECKMAGTC;
+    }
     virtual std::string toString() const {
+        CHECKMAGTC;
         std::string res;
         res.reserve(100);
         res.append( Request::toString() );
@@ -43,6 +46,7 @@ public:
     }
     virtual const char* typeToString() const { return "open"; }
     virtual bool isValid() const {
+        CHECKMAGTC;
         return ( agentId_ != 0 ) && !userId_.empty();
     }
 
@@ -65,6 +69,7 @@ public:
     void setTimeout( int32_t tmo ) { timeout_ = tmo; }
 
     virtual bool visit( RequestVisitor& visitor ) {
+        CHECKMAGTC;
         return visitor.visitOpen(*this);
     }
 
