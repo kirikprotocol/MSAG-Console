@@ -519,7 +519,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     Message& m = iter->msg;
     if ( from == FROMRESEND ) {
         const timediff_type uptonow = timediff_type(currentTime - m.lastTime);
-        if ( uptonow > 0 ) {
+        if ( uptonow > 0 && getCS()->isRecalcTTLRequested() ) {
             int oldWeekTime = region_->getLocalWeekTime( m.lastTime );
             const timediff_type actualTTL = 
                 info.recalcTTL( oldWeekTime, m.timeLeft, uptonow);

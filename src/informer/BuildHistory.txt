@@ -1,3 +1,5 @@
+2011-06-20 10:06 bukind
+  feature: 'recalcTTLRequested' optional param in config.xml (default=true)
 2011-06-20 09:54 bukind
   bugfix: incorrect checkActiveTime() behaviour when only one weekday allowed
 2011-06-17 19:09 bukind

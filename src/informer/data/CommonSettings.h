@@ -194,6 +194,10 @@ public:
     // return regionSpeedLimitBaseSpeed_;
     // }
 
+    inline bool isRecalcTTLRequested() const {
+        return recalcTTLRequested_;
+    }
+
     // --- non-configurable parameters
 
     /// return a length of period (second) to split resend messages into.
@@ -265,6 +269,7 @@ private:
     // unsigned regionSpeedLimitInterval_;
     unsigned regionSpeedLimitSpeedup_;
     // unsigned regionSpeedLimitBaseSpeed_;
+    bool     recalcTTLRequested_;
 
     volatile bool stopping_;
     bool     archive_;

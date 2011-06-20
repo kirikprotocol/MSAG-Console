@@ -106,6 +106,8 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     regionSpeedLimitSpeedup_ = conf.getInt("regionSpeedLimitSpeedup",10,5,200);
     // regionSpeedLimitBaseSpeed_ = conf.getInt("regionSpeedLimitBaseSpeed",1,1,200);
 
+    recalcTTLRequested_ = conf.getBool("recalcTTLRequested",true);
+
 #ifdef CHECKCONTENTION
     const unsigned cl = conf.getInt("contentionLimit",300000,10000,10000000);
     smsc::core::synchronization::Mutex::setContentionLimit(cl);
