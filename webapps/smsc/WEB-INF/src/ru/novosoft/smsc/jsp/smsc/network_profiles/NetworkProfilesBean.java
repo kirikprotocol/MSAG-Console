@@ -163,7 +163,7 @@ public class NetworkProfilesBean extends SmscBean {
 
   public List getUssdOpenDestRefs() {
     List list = new ArrayList(3);
-    list.add("");
+    list.add("empty");
     list.add("destAddr");
     list.add("destIMSI");
     return list;
