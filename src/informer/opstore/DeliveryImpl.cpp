@@ -316,6 +316,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
         dlvInfo_->getUserInfo().getDA().finishStateChange(now, ymd, bs, *this );
     }
+    if (state_ == DLVSTATE_ACTIVE) checkFinalize();
 }
 
 

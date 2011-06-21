@@ -1,3 +1,6 @@
+2011-06-21 15:52 bukind
+  feature: checkFinalize() invoked once after setState(ACTIVE)
+
 =====================================================================
 2011-06-20 11:11 bukind informer-build-20110620
 2011-06-20 10:06 bukind
