@@ -448,12 +448,12 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
     }
     Delivery d = getDelivery(login, password, deliveryId);
     if (d != null) {
-      Date planDate = d.getStartDate();
-      if (planDate.getTime() < System.currentTimeMillis())
-        planDate = new Date();
+//      Date planDate = d.getStartDate();
+//      if (planDate.getTime() < System.currentTimeMillis())
+//        planDate = new Date();
       DeliveryState state = new DeliveryState();
       state.setStatus(DeliveryStatus.Planned);
-      state.setDate(planDate);
+      state.setDate(new Date());
       changeDeliveryState(login, password, deliveryId, state);
     } else
       throw new DeliveryException("delivery_not_found");
