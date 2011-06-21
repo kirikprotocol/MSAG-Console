@@ -181,6 +181,11 @@ public class DeliveriesResultController extends InformerController{
         }
       }
 
+      @Override
+      public String getId(Object value) {
+        return ((DeliveryRow)value).getId().toString();
+      }
+
       public int getRowsCount() {
         try {
           final int[] count = new int[]{0};

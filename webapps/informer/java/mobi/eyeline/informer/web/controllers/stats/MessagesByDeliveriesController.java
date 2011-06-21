@@ -286,6 +286,11 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
     return new DataTableModel() {
 
+      @Override
+      public String getId(Object value) {
+        return null;
+      }
+
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         // Сортируем записи

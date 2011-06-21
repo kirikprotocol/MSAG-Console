@@ -9,20 +9,21 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 
 import javax.el.ValueExpression;
 import javax.faces.component.UIComponent;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Artem Snopkov
  */
 public class DataTableHandler extends ComponentHandler {
-
   private final TagAttribute value;
   private final TagAttribute autoUpdate;
+
   private final TagAttribute pageSize;
   private final TagAttribute pageSizeRendered;
   private final TagAttribute selectedRows;
   private final TagAttribute updateUsingSubmit;
   private final TagAttribute var;
+  private final TagAttribute disallowSelectAll;
 
   public DataTableHandler(ComponentConfig config) {
     super(config);
@@ -33,6 +34,7 @@ public class DataTableHandler extends ComponentHandler {
     pageSizeRendered = getAttribute("pageSizeRendered");
     selectedRows = getAttribute("selectedRows");
     updateUsingSubmit = getAttribute("updateUsingSubmit");
+    disallowSelectAll = getAttribute("disallowSelectAll");
     var = getAttribute("var");
   }
 
@@ -48,13 +50,43 @@ public class DataTableHandler extends ComponentHandler {
       t.setSelectedRowsExpression(selectedRows.getValueExpression(ctx, List.class));
     if (updateUsingSubmit != null)
       t.setUpdateUsingSubmit(updateUsingSubmit.getBoolean(ctx));
-
+    if(value != null) {
+      t.setModelExpression(value.getValueExpression(ctx, DataTableModel.class));
+    }
+    if(disallowSelectAll != null) {
+      t.setDisallowSelectAll(disallowSelectAll.getBoolean(ctx));
+    }
     return t;
   }
 
+  @SuppressWarnings({"unchecked"})
+  private void loadSelectedRows(int startPos, DataTable t, DataTableSortOrder s, List rows) throws Exception{
+    Set<String> ids = new HashSet<String>(t.getSelectedRows());
+    int i = 0;
+    List _rows;
+    int c = 0;
+    do{
+      _rows = t.getModel().getRows(i*1000, 1000, s);
+      Iterator iter = _rows.iterator();
+      while(iter.hasNext()) {
+        Object r = iter.next();
+        String id = t.getModel().getId(r);
+        if((t.isSelectAll() && !ids.contains(id)) || (!t.isSelectAll() && ids.contains(id))) {
+          c++;
+          if(c>startPos) {
+            rows.add(r);
+            if(rows.size() == t.getPageSize()) {
+              break;
+            }
+          }
+        }
+      }
+      i++;
+    } while(_rows.size() == 1000 && rows.size() < t.getPageSize() && rows.size() < ids.size());
+
+  }
+
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
-
-
     DataTable t = (DataTable) c;
     String tid = t.getId();
 
@@ -62,6 +94,12 @@ public class DataTableHandler extends ComponentHandler {
 
     DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
     t.setModel(m);
+
+    if(!t.isInternalUpdate()) {
+      t.setSelectAll(false);
+      t.setSelectedRows(Collections.<String>emptyList());
+      t.setShowSelectedOnly(false);
+    }
 
     // Header
     nextHandler.apply(ctx, c);
@@ -87,16 +125,44 @@ public class DataTableHandler extends ComponentHandler {
     }
 
     int startPos = t.getCurrentPage() * t.getPageSize();
-    List rows = m.getRows(startPos, t.getPageSize(), s);
 
-    if (rows.isEmpty() && startPos > 0) {
-      t.setCurrentPage(0);
-      startPos = 0;
+    List rows;
+
+    if(!t.isShowSelectedOnly()) {
       rows = m.getRows(startPos, t.getPageSize(), s);
+      if (rows.isEmpty() && startPos > 0) {
+        t.setCurrentPage(0);
+        startPos = 0;
+        rows = m.getRows(startPos, t.getPageSize(), s);
+      }
+
+    }else {
+      rows = new LinkedList();
+      try{
+        loadSelectedRows(startPos, t, s, rows);
+
+        if (rows.isEmpty() && startPos > 0) {
+          startPos = 0;
+          t.setCurrentPage(0);
+          loadSelectedRows(startPos, t, s, rows);
+        }
+
+      }catch (Exception e) {
+        e.printStackTrace();
+      }
     }
 
     // Body
+//    if(selectedRows != null && selectedRows.getValueExpression(ctx, List.class) != null ) {
+//      try{
+//        t.setSelectedRows((List)selectedRows.getValueExpression(ctx, List.class).getValue(ctx));
+//      }catch (Exception e){}
+//    }
+
     ctx.getVariableMapper().setVariable(tid + "___var", new ConstantExpression(var.getValue()));
+    ctx.getVariableMapper().setVariable(tid + "___dataTableModel", new ConstantExpression(m));
+
+
     for (Object row : rows) {
       ctx.getVariableMapper().setVariable(tid + "___currentRow", new ConstantExpression(row));
 

@@ -58,6 +58,12 @@ public class UserListController extends InformerController {
     }
 
     return new DataTableModel() {
+
+      @Override
+      public String getId(Object value) {
+        return ((User)value).getLogin();
+      }
+
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         if (sortOrder != null) {

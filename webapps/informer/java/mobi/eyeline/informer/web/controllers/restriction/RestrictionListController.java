@@ -85,6 +85,11 @@ public class RestrictionListController extends RestrictionController {
         return result;
       }
 
+      @Override
+      public String getId(Object value) {
+        return ((Restriction)value).getId().toString();
+      }
+
       public int getRowsCount() {
         return restrictions.size();
       }

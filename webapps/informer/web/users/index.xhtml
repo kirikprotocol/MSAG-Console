@@ -61,7 +61,7 @@
       <eye:delimiter/>
         
       <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
-        <eye:row rowId="#{u.login}">
+        <eye:row>
           <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
             <tr:commandLink text="#{u.login}" action="USER_EDIT" shortDesc="#{msg['user.details.show']}">
               <f:param name="userId" value="#{u.login}"/>

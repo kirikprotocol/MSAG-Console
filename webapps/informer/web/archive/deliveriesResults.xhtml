@@ -48,7 +48,7 @@
       <eye:delimiter/>
 
       <eye:dataTable value="#{deliveriesResults.deliveries}" selectedRows="#{deliveriesResults.selected}" var="m">
-        <eye:row rowId="#{m.id}">
+        <eye:row>
           <eye:column name="id" title="#{deliveryBundle.id}" sortable="true" width="10%" align="left">
             <h:outputText value="#{m.id}"/>
           </eye:column>

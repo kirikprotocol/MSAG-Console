@@ -60,6 +60,18 @@ public class CPResourceListController extends CPResourceController {
     final List<Row> rows = load();
 
     return new DataTableModel() {
+
+      @Override
+      public String getId(Object value) {
+        Row r = (Row)value;
+        try {
+          return r.getUser()+'|'+r.getHashId();
+        } catch (AdminException e) {
+          addError(e);
+          return null;
+        }
+      }
+
       @Override
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         if(sortOrder == null || sortOrder.getColumnId().equals("user")) {

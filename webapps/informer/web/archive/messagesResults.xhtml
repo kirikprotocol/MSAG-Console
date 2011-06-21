@@ -39,7 +39,7 @@
       <eye:delimiter/>
 
       <eye:dataTable value="#{messagesResults.messages}" selectedRows="#{messagesResults.selected}" var="m">
-        <eye:row rowId="#{m.id}">
+        <eye:row>
           <eye:column name="abonent" title="#{msg['informer.deliveries.message.abonent']}" sortable="true" width="14%" align="left">
             <h:outputText value="#{m.abonent}" converter="addressConverter"/>
           </eye:column>

@@ -8,6 +8,7 @@ function DataTable(tableId, updateUsingSubmit) {
   var columnElement = document.getElementById(tableId + '_column');
   var pageElement = document.getElementById(tableId + '_page');
   var pageSizeElement = document.getElementById(tableId + '_pageSize');
+  var selectedOnly = document.getElementById(tableId+"_showSelected");
   var previousPageSizeElement = document.getElementById(tableId + '_previousPageSize');
   var bodyElement = document.getElementById(tableId);
   var overlay = document.getElementById(tableId+"_overlay");
@@ -137,6 +138,12 @@ function DataTable(tableId, updateUsingSubmit) {
     this.updateTable();
   };
 
+  this.onlySelected = function() {
+    var selected = selectedOnly.value == "true";
+    selectedOnly.value = !selected;
+    this.updateTable();
+  };
+
   /**
    * Устанавливает новый размер страницы и обновляет таблицу
    * @param pageSize размер страницы
@@ -233,6 +240,133 @@ function DataTable(tableId, updateUsingSubmit) {
   }
 
 }
+
+function changeSelectAll(tableId, checked) {
+  if(document.getElementById(tableId+"_showSelected").value == "true") {
+    return;
+  }
+  var selectAll = document.getElementById(tableId+"_selectAll");
+
+  var inputs = document.getElementsByTagName("input");
+  var prefix = tableId + '_rowCheck';
+  for (i = 0; i < inputs.length; i++) {
+    c = inputs[i];
+    if (c.id != null && c.id.indexOf(prefix) == 0) {
+      c.checked = checked;
+    }
+  }
+
+  selectAll.value = checked;
+  document.getElementById(tableId+"_select").value = "[]";
+
+  var select = document.getElementById(tableId+"_select");
+  var selectObject = !(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
+          select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
+          eval('(' + select.value + ')');
+  updateSelectCount(tableId, selectObject);
+
+}
+
+function isAllChecked(tableId, checked) {
+  var inputs = document.getElementsByTagName("input");
+  var prefix = tableId + '_rowCheck';
+  for (var i = 0; i < inputs.length; i++) {
+    var c = inputs[i];
+    if (c.id != null && c.id.indexOf(prefix) == 0) {
+      if(c.checked == checked) {
+        continue
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+function changeSelectAllPage(el, tableId) {
+  if(document.getElementById(tableId+"_showSelected").value == "true") {
+    return;
+  }
+  var checked = el.getAttribute("selectpage") != "true";
+  var inputs = document.getElementsByTagName("input");
+  var prefix = tableId + '_rowCheck';
+  var allChecked = isAllChecked(tableId, checked);
+  if(allChecked) {
+    checked = !checked;
+  }
+  for (var i = 0; i < inputs.length; i++) {
+    var c = inputs[i];
+    if (c.id != null && c.id.indexOf(prefix) == 0) {
+      c.checked = checked;
+      c.onclick();
+    }
+  }
+  el.setAttribute("selectpage", checked);
+  el.className=(checked ? 'select_page_checked' : 'select_page');
+}
+
+
+function changeSelect(checked, rowId, tableId) {
+  var increment = checked ? 1 : -1;
+  if(document.getElementById(tableId+"_selectAll").value == "true") {
+    checked = !checked;
+  }
+  var select = document.getElementById(tableId+"_select");
+  var selectObject = !(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
+          select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
+          eval('(' + select.value + ')');
+  if(checked) {
+    for(var i1=0; i1<selectObject.length; i1++) {
+      if(selectObject[i1] == rowId) {
+        return;
+      }
+    }
+    selectObject[selectObject.length] = rowId;
+  }else {
+    var k = -1;
+    for(var i=0; i<selectObject.length; i++) {
+      if(selectObject[i] == rowId) {
+        k = i;
+        break;
+      }
+    }
+    if(k != -1) {
+      selectObject.splice(k,1);
+    }
+  }
+  select.value = arrayToJson(selectObject);
+  updateSelectCount(tableId, selectObject);
+  if(!checked) {
+    document.getElementById(tableId+"_check").className = 'select_page';
+  }
+}
+
+function arrayToJson(arr) {
+  var res = "[";
+  var first = 1;
+  for(var i=0; i<arr.length; i++) {
+    if(first == 0) {
+      res+=","
+    }else {
+      first = 0;
+    }
+    res+="\""+arr[i]+"\"";
+  }
+  return res+"]"
+}
+
+
+function updateSelectCount(tableId, selectObject) {
+  var selectAll = document.getElementById(tableId+"_selectAll").value == "true";
+
+  var count = document.getElementById(tableId+"_selectedCount");
+  if(selectAll) {
+    count.innerHTML = parseInt(document.getElementById(tableId+'_totalCount').innerHTML) - selectObject.length;
+  }else {
+    count.innerHTML = selectObject.length;
+  }
+}
+
+
 
 
 

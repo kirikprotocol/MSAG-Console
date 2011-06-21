@@ -186,6 +186,11 @@ public abstract class DeliveryStatController extends LongOperationController {
         return result;
       }
 
+      @Override
+      public String getId(Object value) {
+        return null;
+      }
+
       public int getRowsCount() {
         return records.size();
       }

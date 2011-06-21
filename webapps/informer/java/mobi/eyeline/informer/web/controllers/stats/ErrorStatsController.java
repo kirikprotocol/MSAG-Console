@@ -141,6 +141,11 @@ public class ErrorStatsController extends LongOperationController{
         return statsStrategy.getRows(startPos, count, sortOrder);
       }
 
+      @Override
+      public String getId(Object value) {
+        return null;
+      }
+
       public int getRowsCount() {
         return statsStrategy.getRowsCount();
       }

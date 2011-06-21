@@ -17,6 +17,16 @@ public class Index1Controller {
 
   private Date date = new Date();
 
+  private List selected = new ArrayList(0);
+
+  public String getSelectedStr() {
+    return selected == null ? null : selected.toString();
+  }
+
+  public void setSelected(List selected) {
+    System.out.println("Setter");
+    this.selected = selected;
+  }
 
   public int[][] getValues() {
     Random r = new Random();
@@ -46,6 +56,9 @@ public class Index1Controller {
   }
 
   public String printDate() {
+    if(selected != null) {
+//      selected.clear();
+    }
     System.out.println(date);
     current = 0;
     return null;
@@ -85,50 +98,57 @@ public class Index1Controller {
     };
   }
 
-  public void setSelected(List selected) {
 
-  }
-
-  public DataTableModel getModel() {
-
-    System.out.println("GET MODEL CALLED");
+  public  DataTableModel getModel() {
 
     final ArrayList<Integer> list = new ArrayList<Integer>();
 
     for (int i = 0; i < 100; i++)
       list.add(i);
 
-    return new DataTableModel() {
-
-      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-        System.out.println("START: " + startPos);
-        if (sortOrder != null && sortOrder.getColumnId().equals("mycolumn")) {
-          Collections.sort(list, new Comparator<Integer>() {
-
-            public int compare(Integer o1, Integer o2) {
-              if (sortOrder.isAsc())
-                return o1.compareTo(o2);
-              else
-                return -o1.compareTo(o2);
-            }
-          });
-        }
-
-        ArrayList<Integer> res = new ArrayList<Integer>();
-        for (int i = startPos; i < Math.min(startPos + count, list.size()); i++)
-          res.add(list.get(i));
-
-        return res;
-      }
-
-      public int getRowsCount() {
-        return list.size();
-      }
-    };
+    return new MyDataTableModel(list);
   }
 
   public String clear() {
     current = 0;
     return null;
+  }
+
+  public static class MyDataTableModel implements DataTableModel {
+
+    private final ArrayList<Integer> list;
+
+    public MyDataTableModel(ArrayList<Integer> list) {
+      this.list = list;
+    }
+
+    public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+      if (sortOrder != null && sortOrder.getColumnId().equals("mycolumn")) {
+        Collections.sort(list, new Comparator<Integer>() {
+
+          public int compare(Integer o1, Integer o2) {
+            if (sortOrder.isAsc())
+              return o1.compareTo(o2);
+            else
+              return -o1.compareTo(o2);
+          }
+        });
+      }
+
+      ArrayList<Integer> res = new ArrayList<Integer>();
+      for (int i = startPos; i < Math.min(startPos + count, list.size()); i++)
+        res.add(list.get(i));
+
+      return res;
+    }
+
+    public int getRowsCount() {
+      return list.size();
+    }
+
+    public String getId(Object value) {
+      return value != null ? value.toString() : null;
+    }
+
   }
 }

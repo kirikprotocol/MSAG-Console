@@ -1,0 +1,43 @@
+div.select_page  {
+  background: url(../images/ico16_checked_sa.gif);
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+div.select_page_checked  {
+  background: url(../images/ico16_checked_sa_checked.gif);
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+div.select_all_content {
+  margin-left: 0px;
+  background-color:#F3F0E3;
+  overflow: auto;
+  position: absolute;
+  margin-top : 1px;
+  text-align:left;
+  font-size:10px;
+  z-index: 10;
+  border: 1px solid #cd853f;
+  border-radius: 4px;
+  visibility: hidden;
+}
+
+table.select_all_button {
+  border: 1px solid #cd853f;
+  border-radius:4px;
+  background-color:#F3F0E3
+}
+
+table.select_all_button_selected {
+  border: 1px solid #cd853f;
+  border-radius:4px;
+  background-color:#DFD4AF;
+}

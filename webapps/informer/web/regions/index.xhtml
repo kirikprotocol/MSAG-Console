@@ -77,7 +77,7 @@
       <eye:delimiter/>
 
       <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.selected}" var="m">
-        <eye:row rowId="#{m.regionId}" innerData="#{!(empty m.masks)}">
+        <eye:row innerData="#{!(empty m.masks)}">
 
           <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
             <h:commandLink value="#{m.name}" action="REGION_EDIT" title="#{msg['region.details']}">

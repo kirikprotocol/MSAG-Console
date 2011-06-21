@@ -55,7 +55,7 @@
       <eye:delimiter/>
 
       <eye:dataTable value="#{cpList.model}" var="m" selectedRows="#{cpList.selectedRows}">
-        <eye:row rowId="#{m.user}|#{m.hashId}">
+        <eye:row>
           <eye:column name="name" title="#{msg['user.edit.import.name']}" width="20%" align="center" sortable="true">
             <tr:commandLink action="#{m.editAction}" text="#{m.name}" shortDesc="#{msg['cp.resource.edit.desc']}">
               <f:param name="user_ID" value="#{m.user}"/>

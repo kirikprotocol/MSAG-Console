@@ -4,6 +4,7 @@ import com.sun.facelets.FaceletContext;
 import com.sun.facelets.tag.TagAttribute;
 import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
+import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 
 import javax.el.ELException;
 import javax.faces.FacesException;
@@ -15,8 +16,6 @@ import java.util.List;
  * @author Artem Snopkov
  */
 public class RowHandler extends ComponentHandler {
-
-  private final TagAttribute rowId;
   private final TagAttribute data;
   private final TagAttribute innerData;
   private final TagAttribute innerRows;
@@ -25,7 +24,6 @@ public class RowHandler extends ComponentHandler {
   public RowHandler(ComponentConfig config) {
     super(config);
 
-    rowId = getAttribute("rowId");
     data = getAttribute("data");
     innerData = getAttribute("innerData");
     innerRows = getAttribute("innerRows");
@@ -56,10 +54,9 @@ public class RowHandler extends ComponentHandler {
 
       ctx.getVariableMapper().setVariable(var, r.getVarExpr());
       if (!r.isInner()) {
-        if (rowId != null)
-          r.setRowId(rowId.getValue(ctx));
-        else
-          r.setRowId(getId(ctx));
+        DataTableModel dt = (DataTableModel) ctx.getVariableMapper().resolveVariable(tid + "___dataTableModel").getValue(ctx);
+        String rowId = dt.getId(r.getVarExpr().getValue(ctx));
+        r.setRowId(rowId != null ? rowId : getId(ctx));
         if (innerData != null)
           r.setHasInnerData(innerData.getBoolean(ctx));
         if (opened != null)

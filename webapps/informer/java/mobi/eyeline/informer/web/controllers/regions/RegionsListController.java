@@ -204,6 +204,11 @@ public class RegionsListController extends RegionsController {
         return result;
       }
 
+      @Override
+      public String getId(Object value) {
+        return ((Region)value).getRegionId().toString();
+      }
+
       public int getRowsCount() {
         return getRegions().size();
       }

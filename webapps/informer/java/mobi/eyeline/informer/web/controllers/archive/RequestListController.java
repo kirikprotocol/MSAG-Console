@@ -97,6 +97,11 @@ public class RequestListController extends InformerController{
       }
 
       @Override
+      public String getId(Object value) {
+        return Integer.toString(((RequestWrapper)value).getId());
+      }
+
+      @Override
       public int getRowsCount() {
         return requests.size();
       }

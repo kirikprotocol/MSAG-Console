@@ -31,15 +31,18 @@ public class RowRenderer extends Renderer {
     if (r.isInner()) {
 
       w.append("\n<tr class=\"inner\" name=\"innerData" + t.getId() + rowId + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
-      if (t.isRowSelection())
+      if (t.isSelection())
         w.append("\n<td>&nbsp;</td>");
       w.append("\n<td>&nbsp;</td>");
 
     } else {
 
       w.append("\n<tr class=\"row" + (rowNumber & 1) + "\" id=\"" + t.getId() + rowId + "\">");
-      if (t.isRowSelection())
-        w.append("\n  <td><input class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");
+      if (t.isSelection())
+        w.append("\n  <td align=\"center\"><input "+ (
+            (t.isSelectAll() && !t.isSelected(rowId)) || (!t.isSelectAll() && t.isSelected(rowId)) ? "CHECKED" : "") +
+            ((t.isShowSelectedOnly()) ? " disabled=\"true\"" : "") +
+            " onclick=\"changeSelect(this.checked, '"+rowId+"', '"+t.getId()+"')\" class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");
 
       if (r.hasInnerData() || r.hasInnerRows())
         w.append("\n  <td class=\"clickable\" onclick=\"pagedTable" + t.getId() + ".expandRow('" + t.getId() + rowId + "')\"><div id=\"innerDataHeader" + t.getId() + rowId + "\" class=\"" + (r.isOpened() ? "inner_data_opened" : "inner_data_closed") + "\">&nbsp;</div></td>");

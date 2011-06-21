@@ -369,6 +369,11 @@ public class MessageListController extends InformerController {
         return list;
       }
 
+      @Override
+      public String getId(Object value) {
+        return ((Message)value).getId().toString();
+      }
+
       public int getRowsCount() {
         try {
           return strategy.countMessages(u.getLogin(), filter);

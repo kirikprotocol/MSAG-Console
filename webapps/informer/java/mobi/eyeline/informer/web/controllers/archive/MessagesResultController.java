@@ -139,6 +139,11 @@ public class MessagesResultController extends InformerController{
         }
       }
 
+      @Override
+      public String getId(Object value) {
+        return Long.toString(((MessageRow)value).getId());
+      }
+
       public int getRowsCount() {
         try {
           final int[] count = new int[]{0};

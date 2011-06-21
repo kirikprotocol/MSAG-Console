@@ -60,8 +60,8 @@
 
         <eye:delimiter/>
 
-        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and messages.resendAllowed}" selectedRows="#{messages.selected}">
-          <eye:row rowId="#{m.id}">
+        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and messages.resendAllowed}" selectedRows="#{messages.selected}" disallowSelectAll="true">
+          <eye:row>
             <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
               <h:outputText value="#{m.abonent.simpleAddress}"/>
             </eye:column>
@@ -85,7 +85,7 @@
         </eye:dataTable>
 
         <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and !messages.resendAllowed}">
-          <eye:row rowId="#{m.id}">
+          <eye:row>
             <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
               <h:outputText value="#{m.abonent.simpleAddress}"/>
             </eye:column>

@@ -33,7 +33,7 @@
       <eye:delimiter/>
 
       <eye:dataTable value="#{requests.requests}" selectedRows="#{requests.selectedRows}" var="m">
-        <eye:row rowId="#{m.id}">
+        <eye:row>
           <eye:column name="name" title="#{msg['archive.request.name']}" sortable="true" width="24%" align="left" defaultSortOrder="asc">
             <tr:commandLink text="#{m.name}" action="DELIVERIES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{m.deliveriesSearch}">
               <f:param name="reqId" value="#{m.id}"/>

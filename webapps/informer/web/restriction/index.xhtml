@@ -52,7 +52,7 @@
       <eye:delimiter/>
 
       <eye:dataTable value="#{restrictionsList.restrictionsModel}" selectedRows="#{restrictionsList.selectedRows}" var="m">
-        <eye:row rowId="#{m.id}" innerData="#{!m.allUsers}">
+        <eye:row innerData="#{!m.allUsers}">
           <eye:column name="name" title="#{msg['restriction.page.name']}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
             <tr:commandLink text="#{m.name}" action="RESTRICTION_EDIT" shortDesc="#{msg['restriction.details.show']}">
               <f:param name="restrictionId" value="#{m.id}"/>

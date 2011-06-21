@@ -394,6 +394,12 @@ public class DeliveryListController extends DeliveryController {
           }
           return rows;
         }
+
+        @Override
+        public String getId(Object value) {
+          return ((DeliveryRow)value).getId().toString();
+        }
+
         public int getRowsCount() {
           return delivery[0] == null ? 0 : 1;
         }
@@ -424,6 +430,11 @@ public class DeliveryListController extends DeliveryController {
           }
 
           return Collections.emptyList();
+        }
+
+        @Override
+        public String getId(Object value) {
+          return ((DeliveryRow)value).getId().toString();
         }
 
         public int getRowsCount() {
