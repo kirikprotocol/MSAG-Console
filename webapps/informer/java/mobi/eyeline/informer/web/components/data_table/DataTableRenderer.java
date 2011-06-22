@@ -93,7 +93,6 @@ public class DataTableRenderer extends Renderer {
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_select" + "\" name=\"" + t.getId() + "_select\" value=\""+toJson(t.getSelectedRows())+"\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_selectAll" + "\" name=\"" + t.getId() + "_selectAll\" value=\""+t.isSelectAll()+"\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_showSelected" + "\" name=\"" + t.getId() + "_showSelected\" value=\""+t.isShowSelectedOnly()+"\">");
@@ -122,9 +121,6 @@ public class DataTableRenderer extends Renderer {
     if (t.isSelection()) {
       w.append("\n<th class=\"ico\" width=\"1px\">");
       if(!t.isDisallowSelectAll() && !t.isShowSelectedOnly()) {
-        w.append(
-            "<div id=\"clicked"+t.getId()+"\" clicked=\"0\"></div>"+
-            "<div id=\"select_all_"+t.getId()+"\">");
         w.append("<table id=\"select_all_button_"+t.getId()+"\" class=\"select_all_button\"><tr><td>");
       }
 
@@ -134,30 +130,29 @@ public class DataTableRenderer extends Renderer {
 
       if(!t.isDisallowSelectAll() && !t.isShowSelectedOnly()) {
         w.append("</td><td>");
-        w.append("<img style=\"cursor: pointer;\" id=\"" + t.getId() + "_check_all\" src=\"" + ctxPath + "/images/list_opened_center.gif\" class=\"ico16\" onclick=\"" +
+        w.append("<img clicked=\"0\" style=\"cursor: pointer;\" id=\"" + t.getId() + "_check_all\" src=\"" + ctxPath + "/images/list_opened_center.gif\" class=\"ico16\" onclick=\"" +
             "    var itemsElm = document.getElementById('select_all_content"+t.getId()+"');" +
-            "    var clicked = document.getElementById('clicked"+t.getId()+"');" +
             "    var main = document.getElementById('select_all_"+t.getId()+"');" +
             "    var button = document.getElementById('select_all_button_"+t.getId()+"');" +
-            "if(clicked.getAttribute('clicked') == '0') {"+
+            "if(this.getAttribute('clicked') == '0') {"+
             "    itemsElm.style.visibility = 'visible';\n" +
-            "    clicked.setAttribute('clicked', '1');" +
+            "    this.setAttribute('clicked', '1');" +
             "    button.className='select_all_button_selected';" +
             "}else {"+
             "    itemsElm.style.visibility = 'hidden';\n" +
-            "    clicked.setAttribute('clicked', '0');" +
+            "    this.setAttribute('clicked', '0');" +
             "    button.className='select_all_button';" +
-            "}"+"\"></img>");
+            "}"+"\"/>");
         w.append("</td></tr></table>");
-        w.append("</div>" +
+        w.append(
             "<div id=\"select_all_content"+t.getId()+"\" class=\"select_all_content\"" +
-            " onclick=\"document.getElementById('"+t.getId()+"_check_all').onclick();\">"+
-            "<div style=\"margin: 4px 4px 4px 4px\"/>" +
-            "         <a id=\"select_item_1"+t.getId()+"\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('"+t.getId()+"', true);\">"+ b.getString("page.select.all")+"</a>\n" +
-            "         <br/>" +
-            "         <a id=\"unselect_item_1"+t.getId()+"\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('"+t.getId()+"', false);\">"+b.getString("page.unselect.all")+"</a>\n" +
-            "</div>"+
-            "     </div>\n");
+                " onclick=\"document.getElementById('"+t.getId()+"_check_all').onclick();\">"+
+                "   <div style=\"margin: 4px 4px 4px 4px\">" +
+                "         <a id=\"select_item_1"+t.getId()+"\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('"+t.getId()+"', true);\">"+ b.getString("page.select.all")+"</a>\n" +
+                "         <br/>" +
+                "         <a id=\"unselect_item_1"+t.getId()+"\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('"+t.getId()+"', false);\">"+b.getString("page.unselect.all")+"</a>\n" +
+                "   </div>"+
+                "</div>\n");
       }
       w.append("</th>");
 
@@ -249,6 +244,7 @@ public class DataTableRenderer extends Renderer {
     w.append("\n</table>");
 
 
+
     DataTableModel m = t.getModel();
 
     w.append("<table class=\"navbar\" cellspacing=\"1\" cellpadding=\"0\">");
@@ -298,7 +294,7 @@ public class DataTableRenderer extends Renderer {
           +(t.isShowSelectedOnly() ? "" : selected)+
           "</span></span>"+
           "</a>&nbsp;|&nbsp;"
-          );
+      );
     }
     if (t.isPageSizeRendered()) {
       w.append(b.getString("page") + ": ");
@@ -314,6 +310,7 @@ public class DataTableRenderer extends Renderer {
     w.append("</tr>");
     w.append("</table>");
 
+
     if (!ajax) {
       w.append("\n</div>");
       w.append("<table id=\""+t.getId()+"_overlay\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
@@ -327,12 +324,17 @@ public class DataTableRenderer extends Renderer {
         w.append("\nvar updateUsingSubmit" + t.getId() + "= " + t.isUpdateUsingSubmit() + ";");
 
       w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "',updateUsingSubmit" + t.getId() + ");");
-      if (t.getAutoUpdate() != null && !t.isUpdateUsingSubmit()) {
+      if (t.getAutoUpdate() != null && (t.isUpdateUsingSubmit() == null || !t.isUpdateUsingSubmit())) {
         w.append("\nfunction autoUpdate" + t.getId() + "(){");
         w.append("\n  pagedTable" + t.getId() + ".updateTable();");
         w.append("\n  window.setTimeout(autoUpdate" + t.getId() + "," + t.getAutoUpdate() * 1000 + ");");
         w.append("\n};");
         w.append("\nautoUpdate" + t.getId() + "();");
+//      }else {
+//        w.append("\nfunction load" + t.getId() + "(){");
+//        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
+//        w.append("\n};");
+//        w.append("\n  window.onload =load" + t.getId() +";");
       }
       w.append("\n</script>");
     }

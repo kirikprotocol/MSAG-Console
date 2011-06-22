@@ -264,6 +264,9 @@ function changeSelectAll(tableId, checked) {
           select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
           eval('(' + select.value + ')');
   updateSelectCount(tableId, selectObject);
+  if(!checked) {
+    document.getElementById(tableId+"_check").className = 'select_page';
+  }
 
 }
 

@@ -19,83 +19,63 @@
 
     <h:form>
 
-      <eye:inputDate value="#{index1.date}" type="full"/>
+      <!--<eye:inputDate value="#{index1.date}" type="full"/>-->
 
-      <tr:commandLink text="Submit date" action="#{index1.printDate}"/>
+      <tr:commandLink id="id1" text="Submit date" action="#{index1.printDate}"/>
 
-      <p/>
-      <h:outputText value="Selected on submit: #{index1.selectedStr}"/>
+      <!--<p/>-->
+      <!--<h:outputText value="Selected on submit: #{index1.selectedStr}"/>-->
 
-      <c:set var="i" value="1"/>
+      <c:if test="#{index1.date != null}">
+        <tr:commandLink id="id2" text="Submit date" action="#{index1.print}"/>
+      </c:if>
 
+      <!--<c:set var="i" value="1"/>-->
 
-      <table class="page_menu">
-        <tr><td width="1px">
-          <div id="menubarj_id820" class="menubardiv">
-            <img title="Select or unselect records on all pages" id="j_id75_check" src="/informer/images/ico16_checked_sa-1.gif" class="ico16"/>
-          </div>
-          <div id="menubarcontentj_id820" class="menudiv" style="visibility: hidden;">
-            <script type="text/javascript">
-              var menubarj_id39 = new MenuBar('menubarj_id820', 'menubarcontentj_id820');
-            </script>
-            <div id="j_id821" class="menuitem">
-              <a class="xi" href="#">Activate</a>
-            </div>
-            <script type="text/javascript">
-              menubarj_id39.addMenuItem(new MenuItem('j_id821'));
-            </script>
-          </div>
-        </td><td></td></tr>
-      </table>
+      <!--<eye:dataTable value="#{index1.model}" var="m" selectedRows="#{index1.selected}">-->
+        <!--<eye:row innerData="#{i == 15}">-->
 
-      <eye:dataTable value="#{index1.model}" var="m" selectedRows="#{index1.selected}">
-        <eye:row innerData="#{i == 15}">
-
-          <c:set var="i" value="#{i+1}"/>
+          <!--<c:set var="i" value="#{i+1}"/>-->
 
 
-          <eye:column name="mycolumn" title="e1" width="33%" sortable="true" align="center">
+          <!--<eye:column name="mycolumn" title="e1" width="33%" sortable="true" align="center">-->
 
-            <h:outputText value="#{m}"/>
+            <!--<h:outputText value="#{m}"/>-->
 
-            <f:facet name="footer">
-              <h:outputText value="e1 footer"/>
-            </f:facet>
+            <!--<f:facet name="footer">-->
+              <!--<h:outputText value="e1 footer"/>-->
+            <!--</f:facet>-->
 
-          </eye:column>
+          <!--</eye:column>-->
 
-          <eye:column name="e2" title="e2" width="33%" sortable="true">
-            <h:outputText value="#{m%2}"/>
-          </eye:column>
-
-
-          <eye:column name="e3" title="e3" width="33%" sortable="true">
-
-            <h:outputText value="#{m%3}"/>
-
-            <f:facet name="footer">
-              <h:outputText value="e3 footer"/>
-            </f:facet>
-
-          </eye:column>
-
-        </eye:row>
-
-        <f:facet name="footer">
-          <h:outputText value="sdfgjkadfgdsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasadasdasdasadsadsadasdadasdsaddddddddddsssssssadsdsaasdasd"/>
-        </f:facet>
-
-        <f:facet name="innerData">
-          <h:outputText value="inner data"/>
-        </f:facet>
+          <!--<eye:column name="e2" title="e2" width="33%" sortable="true">-->
+            <!--<h:outputText value="#{m%2}"/>-->
+          <!--</eye:column>-->
 
 
-      </eye:dataTable>
+          <!--<eye:column name="e3" title="e3" width="33%" sortable="true">-->
 
-      <eye:lines labels="#{index1.labels}" updatePeriod="3" height="340" width="640">
-        <eye:lineChart values="#{index1.values}" shade="true" color="#F44"/>
-        <eye:lineChart values="#{index1.values}" color="#44F"/>
-      </eye:lines>
+            <!--<h:outputText value="#{m%3}"/>-->
+
+            <!--<f:facet name="footer">-->
+              <!--<h:outputText value="e3 footer"/>-->
+            <!--</f:facet>-->
+
+          <!--</eye:column>-->
+
+        <!--</eye:row>-->
+
+        <!--<f:facet name="footer">-->
+          <!--<h:outputText value="sdfgjkadfgdsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasadasdasdasadsadsadasdadasdsaddddddddddsssssssadsdsaasdasd"/>-->
+        <!--</f:facet>-->
+
+        <!--<f:facet name="innerData">-->
+          <!--<h:outputText value="inner data"/>-->
+        <!--</f:facet>-->
+
+      <!--</eye:dataTable>-->
+
+
 
 
     </h:form>

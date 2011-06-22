@@ -24,8 +24,8 @@ public class MenuBarRenderer extends Renderer {
 
       w.append("<div id=\"" + component.getId() + "\" class=\"menuitem\">");
     } else if (component instanceof MenuBarDelimiter) {
-      w.append("<div id=\"" + component.getId() + "\" class=\"menubardelimitertop\"></div>");
-      w.append("<div id=\"" + component.getId() + "\" class=\"menubardelimiterbottom\"></div>");
+      w.append("<div id=\"t_" + component.getId() + "\" class=\"menubardelimitertop\"></div>");
+      w.append("<div id=\"b_" + component.getId() + "\" class=\"menubardelimiterbottom\"></div>");
     }
   }
 

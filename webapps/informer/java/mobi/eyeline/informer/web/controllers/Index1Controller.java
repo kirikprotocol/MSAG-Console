@@ -15,7 +15,7 @@ public class Index1Controller {
 
   private static int current = 0;
 
-  private Date date = new Date();
+  private Date date;
 
   private List selected = new ArrayList(0);
 
@@ -56,11 +56,17 @@ public class Index1Controller {
   }
 
   public String printDate() {
+    date = new Date();
     if(selected != null) {
 //      selected.clear();
     }
     System.out.println(date);
     current = 0;
+    return null;
+  }
+
+  public String print() {
+    System.out.println("Print");
     return null;
   }
 

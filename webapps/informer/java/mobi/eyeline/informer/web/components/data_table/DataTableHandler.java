@@ -128,29 +128,33 @@ public class DataTableHandler extends ComponentHandler {
 
     List rows;
 
-    if(!t.isShowSelectedOnly()) {
-      rows = m.getRows(startPos, t.getPageSize(), s);
-      if (rows.isEmpty() && startPos > 0) {
-        t.setCurrentPage(0);
-        startPos = 0;
+//    if(t.isInternalUpdate()) {
+      if(!t.isShowSelectedOnly()) {
         rows = m.getRows(startPos, t.getPageSize(), s);
-      }
-
-    }else {
-      rows = new LinkedList();
-      try{
-        loadSelectedRows(startPos, t, s, rows);
-
         if (rows.isEmpty() && startPos > 0) {
-          startPos = 0;
           t.setCurrentPage(0);
-          loadSelectedRows(startPos, t, s, rows);
+          startPos = 0;
+          rows = m.getRows(startPos, t.getPageSize(), s);
         }
 
-      }catch (Exception e) {
-        e.printStackTrace();
+      }else {
+        rows = new LinkedList();
+        try{
+          loadSelectedRows(startPos, t, s, rows);
+
+          if (rows.isEmpty() && startPos > 0) {
+            startPos = 0;
+            t.setCurrentPage(0);
+            loadSelectedRows(startPos, t, s, rows);
+          }
+
+        }catch (Exception e) {
+          e.printStackTrace();
+        }
       }
-    }
+//    }else {
+//      rows = Collections.emptyList();
+//    }
 
     // Body
 //    if(selectedRows != null && selectedRows.getValueExpression(ctx, List.class) != null ) {
