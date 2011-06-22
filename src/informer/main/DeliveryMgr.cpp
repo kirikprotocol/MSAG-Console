@@ -966,6 +966,10 @@ int DeliveryMgr::Execute()
                 }
                 if (!planTime) {
                     planTime = dlv->getLocalStartDateInUTC();
+                    smsc_log_debug(log_,"D=%u using startDate=%+d, wake=%+d",
+                                   dlv->getDlvId(),
+                                   timediff_type(planTime-now),
+                                   timediff_type(i->first-now));
                 }
                 if (planTime != i->first) {
                     // no match
@@ -1151,6 +1155,8 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
         if (!planTime) {
             planTime = dlv.getLocalStartDateInUTC();
         }
+        smsc_log_debug(log_,"D=%u inserting into wakeQueue=%+d",
+                       dlvId,timediff_type(planTime-currentTime));
         MutexGuard mg(mon_);
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         mon_.notify();
@@ -1226,6 +1232,8 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
             if (!planTime) {
                 planTime = (*ptr)->getLocalStartDateInUTC();
             }
+            smsc_log_debug(log_,"D=%u inserting into wakeQueue=%+d",
+                           dlvId,timediff_type(planTime-currentTimeSeconds()));
             deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         }
         /// FIXME: limit the number of total deliveries
@@ -1270,6 +1278,8 @@ void DeliveryMgr::fixPlanTime()
         if (planTime) continue; // explicitly
         if (!ptr->getDlvInfo().isBoundToLocalTime()) continue;
         planTime = ptr->getLocalStartDateInUTC();
+        smsc_log_debug(log_,"D=%u inserting (fix) into wakeQueue=%+d",
+                       ptr->getDlvId(),timediff_type(planTime-currentTimeSeconds()));
         deliveryWakeQueue_.insert(std::make_pair(planTime,ptr->getDlvId()));
         changed = true;
     }

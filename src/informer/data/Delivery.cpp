@@ -89,8 +89,10 @@ msgtime_type Delivery::getLocalStartDateInUTC() const
     if ( !actualStartDate ) {
         throw InfosmeException(EXC_LOGICERROR,"startDate must not be 0");
     }
-    if (!dlvInfo_->isBoundToLocalTime()) return actualStartDate;
-    return msgtime_type(actualStartDate + getMaximalRegionalOffset());
+    if (dlvInfo_->isBoundToLocalTime()) {
+        actualStartDate -= getMaximalRegionalOffset();
+    }
+    return actualStartDate;
 }
 
 }
