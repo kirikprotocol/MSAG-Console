@@ -453,7 +453,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 //        planDate = new Date();
       DeliveryState state = new DeliveryState();
       state.setStatus(DeliveryStatus.Planned);
-      state.setDate(new Date());
+//      state.setDate(new Date());
       changeDeliveryState(login, password, deliveryId, state);
     } else
       throw new DeliveryException("delivery_not_found");
