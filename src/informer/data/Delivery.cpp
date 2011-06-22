@@ -82,5 +82,16 @@ void Delivery::setGlossary( const std::vector< std::string >& texts )
     dlvInfo_->getGlossary().setTexts( texts );
 }
 
+
+msgtime_type Delivery::getLocalStartDateInUTC() const
+{
+    msgtime_type actualStartDate = dlvInfo_->getStartDate();
+    if ( !actualStartDate ) {
+        throw InfosmeException(EXC_LOGICERROR,"startDate must not be 0");
+    }
+    if (!dlvInfo_->isBoundToLocalTime()) return actualStartDate;
+    return msgtime_type(actualStartDate + getMaximalRegionalOffset());
+}
+
 }
 }

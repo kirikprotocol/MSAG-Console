@@ -47,7 +47,6 @@ public:
     inline DeliveryInfo& getDlvInfo() { return *dlvInfo_; }
 
     /// set delivery state.
-    /// NOTE: must be invoked from core, with proper preparation.
     virtual void setState( DlvState state, msgtime_type planTime = 0 );
 
     /// get regional storage
@@ -96,6 +95,9 @@ public:
     void writeDeliveryInfoData();
 
 private:
+    /// calculate the maximal offset of regional timezone
+    virtual timediff_type getMaximalRegionalOffset() const;
+
     typedef std::list< RegionalStoragePtr >            StoreList;
     typedef smsc::core::buffers::IntHash< StoreList::iterator > StoreHash;
 

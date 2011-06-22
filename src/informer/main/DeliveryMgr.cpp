@@ -817,6 +817,8 @@ void DeliveryMgr::init()
             statsDumper_ = new StatsDumper(*this);
             statsDumper_->init();
 
+            // just in case regions have been changed while in down time
+            fixPlanTime();
         }
 
     }
@@ -959,10 +961,17 @@ int DeliveryMgr::Execute()
                 DeliveryImplPtr dlv;
                 if (!innerGetDelivery(i->second,dlv)) {continue;}
                 msgtime_type planTime;
-                if ( DLVSTATE_PLANNED == dlv->getState(&planTime) &&
-                     planTime == i->first ) {
-                    dlv->setState( DLVSTATE_ACTIVE );
+                if ( DLVSTATE_PLANNED != dlv->getState(&planTime) ) {
+                    continue;
                 }
+                if (!planTime) {
+                    planTime = dlv->getLocalStartDateInUTC();
+                }
+                if (planTime != i->first) {
+                    // no match
+                    continue;
+                }
+                dlv->setState( DLVSTATE_ACTIVE );
             }
             wakeList.clear();
         }
@@ -1139,6 +1148,9 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
 
     // put into plan queue
     if (newState == DLVSTATE_PLANNED) {
+        if (!planTime) {
+            planTime = dlv.getLocalStartDateInUTC();
+        }
         MutexGuard mg(mon_);
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         mon_.notify();
@@ -1209,8 +1221,11 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
     {
         MutexGuard mg(mon_);
         deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), *ptr));
-        if (state == DLVSTATE_PLANNED && planTime &&
+        if (state == DLVSTATE_PLANNED &&
             !getCS()->isArchive() && !getCS()->isEmergency() ) {
+            if (!planTime) {
+                planTime = (*ptr)->getLocalStartDateInUTC();
+            }
             deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         }
         /// FIXME: limit the number of total deliveries
@@ -1235,6 +1250,30 @@ void DeliveryMgr::startCancelThread( dlvid_type dlvId, regionid_type regionId )
 {
     smsc_log_info(log_,"R=%d/D=%u start cancellation task",regionId,dlvId);
     ctp_.startTask( new CancelTask(dlvId,regionId,*this) );
+}
+
+
+void DeliveryMgr::fixPlanTime()
+{
+    if (getCS()->isArchive() || getCS()->isEmergency() ) {
+        return;
+    }
+    bool changed = false;
+    MutexGuard mg(mon_);
+    for ( DeliveryIList::iterator i = deliveryList_.begin();
+          i != deliveryList_.end(); ++i ) {
+        if ( !*i ) continue;
+        DeliveryImplPtr& ptr = *i;
+        msgtime_type planTime;
+        DlvState state = ptr->getState(&planTime);
+        if (state != DLVSTATE_PLANNED ) continue;
+        if (planTime) continue; // explicitly
+        if (!ptr->getDlvInfo().isBoundToLocalTime()) continue;
+        planTime = ptr->getLocalStartDateInUTC();
+        deliveryWakeQueue_.insert(std::make_pair(planTime,ptr->getDlvId()));
+        changed = true;
+    }
+    if (changed) { mon_.notify(); }
 }
 
 

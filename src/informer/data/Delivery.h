@@ -31,6 +31,9 @@ public:
 
     virtual void updateDlvInfo( const DeliveryInfoData& data ) = 0;
 
+    /// get the state of the delivery and optional planTime
+    /// planTime is used only for DLVSTATE_PLANNED.
+    /// if it is 0 than start delivery at startDate or now (what is later).
     inline DlvState getState( msgtime_type* planTime = 0 ) const {
         if (planTime) *planTime = planTime_;
         return state_;
@@ -46,7 +49,11 @@ public:
     void getGlossary( std::vector< std::string >& texts ) const;
     void setGlossary( const std::vector< std::string >& texts );
 
+    msgtime_type getLocalStartDateInUTC() const;
+
 protected:
+    virtual timediff_type getMaximalRegionalOffset() const = 0;
+
     void ref() {
         smsc::core::synchronization::MutexGuard mg(reflock_);
         // smsc_log_debug(log_,"D=%u ref=%u +1",getDlvId(),ref_);

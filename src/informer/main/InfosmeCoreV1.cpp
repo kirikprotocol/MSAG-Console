@@ -751,6 +751,7 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
     // reading region file
     RegionLoader rl("regions.xml", defaultSmscId_.c_str(), regId );
 
+    bool wasUpdated = false;
     do {
         RegionPtr regPtr(rl.popNext());
         // std::auto_ptr<Region> r(rl.popNext());
@@ -770,6 +771,7 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         smsc_log_debug(log_,"%s R=%u for S='%s'",
                        created ? "created" : "updated",
                        regionId, smscId );
+        if (!created) { wasUpdated = true; }
 
         RegionSenderPtr rs;
         {
@@ -786,6 +788,12 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         }
 
     } while (true);
+
+    if ( wasUpdated ) {
+        // at least one region was updated, so
+        // we have to check plantime of all planned deliveries
+        dlvMgr_->fixPlanTime();
+    }
 }
 
 

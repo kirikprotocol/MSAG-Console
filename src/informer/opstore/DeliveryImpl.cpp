@@ -232,23 +232,34 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     msgtime_type now;
     ulonglong ymd;
     {
-        smsc::core::synchronization::MutexGuard mg(stateLock_);
-        const DlvState oldState = state_;
-        if (oldState == newState) return;
-        if (oldState == DLVSTATE_CANCELLED) {
-            throw InfosmeException(EXC_LOGICERROR,
-                                  "D=%u is cancelled",dlvId);
-        }
         now = currentTimeSeconds();
-        struct tm tmnow;
-        ymd = msgTimeToYmd(now,&tmnow);
-        if (newState == DLVSTATE_PLANNED) {
-            if (planTime <= now) {
-                planTime = now+1;
+        if (newState == DLVSTATE_PLANNED ) {
+            if (!planTime) {
+                const msgtime_type actualStartDate = getLocalStartDateInUTC();
+                if (actualStartDate <= now) {
+                    // it must be already started 
+                    planTime = now+1;
+                }
+            } else {
+                // NOTE: planTime was specified explicitly
+                // so, let's start at that time w/o respect to startDate.
+                if (planTime <= now) {
+                    planTime = now+1;
+                }
             }
         } else {
             planTime = 0;
         }
+
+        smsc::core::synchronization::MutexGuard mg(stateLock_);
+        const DlvState oldState = state_;
+        if (oldState == newState && planTime_ == planTime ) return;
+        if (oldState == DLVSTATE_CANCELLED) {
+            throw InfosmeException(EXC_LOGICERROR,
+                                  "D=%u is cancelled",dlvId);
+        }
+        struct tm tmnow;
+        ymd = msgTimeToYmd(now,&tmnow);
 
         bs.dlvId = dlvId;
         getRegionList(bs.regIds);
@@ -256,8 +267,10 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             smsc_log_debug(log_,"D=%u has no regions, switch to finish",dlvId);
             newState = DLVSTATE_FINISHED;
         }
-        smsc_log_info(log_,"D=%u setState: %s into %s",dlvId,
-                      dlvStateToString(oldState), dlvStateToString(newState));
+        smsc_log_info(log_,"D=%u setState: %s into %s planTime=%+d",dlvId,
+                      dlvStateToString(oldState),
+                      dlvStateToString(newState),
+                      planTime ? int(planTime - now) : 0 );
         bs.bind = (newState == DLVSTATE_ACTIVE);
         dlvInfo_->getUserInfo().incDlvStats(newState,state_); // may NOT throw
         state_ = newState;
@@ -655,6 +668,24 @@ void DeliveryImpl::writeDeliveryInfoData()
 }
 
 
+/*
+void DeliveryImpl::fixPlanTime( msgtime_type currentTime )
+{
+    if (state_ != DLVSTATE_PLANNED) return;
+    if (planTime_ <= currentTime ) return;
+    if (!dlvInfo_->isBoundToLocalTime()) return;
+    msgtime_type actualStartDate = getLocalStartDateInUTC();
+    if (!actualStartDate) return;
+    if ( actualStartDate <= currentTime ) {
+        actualStartDate = currentTime+1;
+    }
+    if (planTime_ < actualStartDate) {
+        setState(DLVSTATE_PLANNED,actualStartDate);
+    }
+}
+ */
+
+
 DeliveryImpl::StoreList::iterator* 
     DeliveryImpl::createRegionalStorage( regionid_type regId,
                                          msgtime_type  nextTime )
@@ -718,6 +749,32 @@ msgtime_type DeliveryImpl::findNextResendFile( regionid_type regionId ) const
     }
     return 0;
 }
+
+
+timediff_type DeliveryImpl::getMaximalRegionalOffset() const
+{
+    static const timediff_type initOffset = -100*3600;
+    const msgtime_type dummy = dlvInfo_->getStartDate();
+    timediff_type offset = initOffset; // we take large negative initial offset
+    {
+        smsc::core::synchronization::MutexGuard cmg(cacheLock_);
+        for ( StoreList::const_iterator i = storeList_.begin();
+              i != storeList_.end(); ++i ) {
+            msgtime_type localTime;
+            (*i)->getRegion().getLocalWeekTime(dummy,&localTime);
+            timediff_type localOffset = timediff_type(localTime - dummy);
+            if (localOffset > offset) {
+                offset = localOffset;
+            }
+        }
+    }
+    if ( offset == initOffset ) {
+        // no regions, use UTC
+        offset = 0;
+    }
+    return offset;
+}
+
 
 }
 }

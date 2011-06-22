@@ -62,6 +62,10 @@ public:
     /// all messages in the regionId storage (or all if anyRegionId).
     void startCancelThread( dlvid_type dlvId, regionid_type regionId );
 
+
+    /// check and fix planTime of all deliveries in case regions were updated
+    void fixPlanTime();
+
 protected:
     /// get delivery w/o automatic reading from disk
     bool innerGetDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr );
