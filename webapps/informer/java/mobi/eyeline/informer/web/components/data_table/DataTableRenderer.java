@@ -243,7 +243,7 @@ public class DataTableRenderer extends Renderer {
     w.append("\n</tbody>");
     w.append("\n</table>");
 
-
+    if(ajax) {
 
     DataTableModel m = t.getModel();
 
@@ -310,8 +310,7 @@ public class DataTableRenderer extends Renderer {
     w.append("</tr>");
     w.append("</table>");
 
-
-    if (!ajax) {
+    }else {
       w.append("\n</div>");
       w.append("<table id=\""+t.getId()+"_overlay\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
           .append("<img src=\"" + ctxPath + "/images/loading.gif\" alt=\"\" style=\"margin-top:auto;margin-bottom:auto;\"/>")
