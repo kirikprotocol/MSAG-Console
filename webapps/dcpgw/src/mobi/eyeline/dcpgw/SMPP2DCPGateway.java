@@ -8,7 +8,6 @@ import mobi.eyeline.smpp.api.processing.QueueException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,8 +40,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
     private static Logger log = Logger.getLogger(SMPP2DCPGateway.class);
 
     private SmppServer smppServer;
-    private AtomicLong msgid = new AtomicLong(0);
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
     private ProcessingQueue procQueue;
 
     private HashMap<String, String> user_password_map;
@@ -53,13 +50,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
     private Schema schema;
 
-    private mobi.eyeline.informer.admin.delivery.Message informer_message;
-
-    private LinkedList<mobi.eyeline.informer.admin.delivery.Message> informer_messages_list;
-
     private AtomicLong gateway_mgsId = new AtomicLong(0);
-
-
 
     public SMPP2DCPGateway() throws SmppException, InitializationException{
 
@@ -77,8 +68,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-
-
         Runtime.getRuntime().addShutdownHook(this);
 
         procQueue = new ProcessingQueue(config,
@@ -95,6 +84,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                         case SubmitSM: {
 
                             Message request = (Message) pdu;
+
                             Address source_address = request.getSourceAddress();
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
@@ -102,45 +92,13 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                             String password = user_password_map.get(login);
                             log.debug("service_number: "+service_number+", delivery_id: "+delivery_id+", user: "+login+", password: "+password);
 
-                            Address smpp_destination_address = request.getDestinationAddress();
-                            String destination_address_str = smpp_destination_address.getAddress();
-                            log.debug("destination address: "+destination_address_str);
-
-                            String text = request.getMessage();
-                            log.debug("text: "+text);
-
-                            mobi.eyeline.informer.util.Address informer_destination_address
-                                    = new mobi.eyeline.informer.util.Address(destination_address_str);
-
-                            informer_message = mobi.eyeline.informer.admin.delivery.Message.newMessage(informer_destination_address, text);
-
-                            Manager.getInstance().addMessage(login, delivery_id, informer_message);
-
-                            /*informer_messages_list.add(informer_message);
-
-                            DcpConnection dcpConnection = null;
-                            try {
-                                dcpConnection = new DcpConnection(informer_host, informer_port, login, password);
-                            } catch (AdminException e) {
-                                log.error(e);
-                            }
-
-                            LinkedList<mobi.eyeline.informer.admin.delivery.Message> informer_messages_list =
-                                    new LinkedList<mobi.eyeline.informer.admin.delivery.Message>();
-                            informer_messages_list.add(informer_message);
-                            try {
-                                dcpConnection.addDeliveryMessages(delivery_id, informer_messages_list);
-
-                            } catch (AdminException e) {
-                                log.error(e);
-                            }*/
-
-
+                            Manager.getInstance().getSender(login).addMessage(delivery_id, gId ,request);
                         }
 
-                        case DataSM:
+                        case DataSM: {
 
                             Message request = (Message) pdu;
+
                             Address source_address = request.getSourceAddress();
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
@@ -148,21 +106,8 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                             String password = user_password_map.get(login);
                             log.debug("service_number: "+service_number+", delivery_id: "+delivery_id+", user: "+login+", password: "+password);
 
-                            Address smpp_destination_address = request.getDestinationAddress();
-                            String destination_address_str = smpp_destination_address.getAddress();
-                            log.debug("destination address: "+destination_address_str);
-
-                            String text = request.getMessage();
-                            log.debug("text: "+text);
-
-                            mobi.eyeline.informer.util.Address informer_destination_address = new mobi.eyeline.informer.util.Address(destination_address_str);
-
-                            mobi.eyeline.informer.admin.delivery.Message informer_message =
-                                    mobi.eyeline.informer.admin.delivery.Message.newMessage(informer_destination_address, text);
-
-                            informer_messages_list.add(informer_message);
-
-                            Manager.getInstance().addMessage(login, delivery_id, informer_message);
+                            Manager.getInstance().getSender(login).addMessage(delivery_id, gId,  request);
+                        }
 
                     }
 
@@ -173,6 +118,8 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
         , null);
 
         smppServer = new SmppServer(config, this);
+
+        Manager.getInstance().setSmppServer(smppServer);
 
         user_password_map = new HashMap<String, String>();
         delivery_id_user_map = new HashMap<Integer, String>();
@@ -200,7 +147,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        informer_messages_list = new LinkedList<mobi.eyeline.informer.admin.delivery.Message>();
     }
 
     private void validateXMLSchema11(Document document) throws SAXException, IOException {
@@ -258,9 +204,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
             }
 
-            Manager.getInstance().setDeliveryIdUserMap(delivery_id_user_map);
             Manager.getInstance().setUserPasswordMap(user_password_map);
-            Manager.getInstance().setServiceNumberDeliveryIdMap(service_number_delivery_id_map);
 
         } catch(JDOMException e) {
             throw new UpdateConfigurationException(e);

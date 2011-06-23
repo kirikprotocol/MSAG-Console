@@ -1,12 +1,13 @@
 package mobi.eyeline.dcpgw;
 
+import mobi.eyeline.smpp.api.SmppServer;
+import mobi.eyeline.smpp.api.pdu.Message;
+import mobi.eyeline.smpp.api.pdu.Request;
 import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.concurrent.LinkedBlockingQueue;
-import mobi.eyeline.informer.admin.delivery.Message;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,15 +19,19 @@ public class Manager {
 
     private static Logger log = Logger.getLogger(Manager.class);
 
-    private static Manager instance;
+    // Use Bill Pugh's singleton - thread-safe singleton with lazy initialization.
 
-    /*  BlockingQueue implementations are thread-safe. All queuing methods achieve their effects atomically
-        using internal locks or other forms of concurrency control. However, the bulk Collection operations
-        addAll, containsAll, retainAll and removeAll are not necessarily performed atomically unless specified
-        otherwise in an implementation. So it is possible, for example, for addAll(c) to fail (throwing an exception)
-        after adding only some of the elements in c."
-     */
-    private LinkedBlockingQueue<Message> queue;
+    /**
+    * SingletonHolder is loaded on the first execution of Singleton.getInstance()
+    * or the first access to SingletonHolder.INSTANCE, not before.
+    */
+    private static class LazyManagerHolder {
+        public static Manager singletonInstance = new Manager();
+    }
+
+    public static Manager getInstance(){
+        return LazyManagerHolder.singletonInstance ;
+    }
 
     private int capacity;
 
@@ -35,12 +40,15 @@ public class Manager {
     private HashMap<String, Sender> user_senders_map;
 
     private HashMap<String, String> user_password_map;
-    private HashMap<Integer, String> delivery_id_user_map;
-    private HashMap<Long, Integer> service_number_delivery_id_map;
 
     private String informer_host;
     private int informer_port;
 
+    private SmppServer smppServer;
+
+    private HashMap<Long, Request> gId_request_map;
+
+    // Private constructor prevents instantiation from other classes
     private Manager(){
         String userDir = System.getProperty("user.dir");
         String filename = userDir+"/config/dcpgw.properties";
@@ -91,133 +99,34 @@ public class Manager {
         }
 
         user_senders_map = new HashMap<String, Sender>();
+
+        gId_request_map = new HashMap<Long, Request>();
+    }
+
+    public void setSmppServer(SmppServer smppServer){
+        this.smppServer = smppServer;
     }
 
     public void setUserPasswordMap(HashMap<String, String> user_password_map){
         this.user_password_map = user_password_map;
     }
 
-    public void setDeliveryIdUserMap(HashMap<Integer, String> delivery_id_user_map){
-        this.delivery_id_user_map = delivery_id_user_map;
-    }
-
-    public void setServiceNumberDeliveryIdMap(HashMap<Long, Integer> service_number_delivery_id_map){
-        this.service_number_delivery_id_map = service_number_delivery_id_map;
-    }
-
-    public static synchronized Manager getInstance(){
-        if (instance == null){
-            instance = new Manager();
-        }
-        return instance;
-    }
-
-    synchronized public void addMessage(String user, int delivery_id, Message message){
-        log.debug("Try to add message to informer messages queue ...");
+    synchronized public Sender getSender(String user){
+        log.debug("Try to get sender for user '"+user+"' ...");
 
         Sender sender;
         if (user_senders_map.containsKey(user)){
             sender = user_senders_map.get(user);
-        } else{
-            sender = new Sender(informer_host, informer_port, user, user_password_map.get(user), capacity, timeout);
+        } else {
+            log.debug("Try to initialize sender for user '"+user+"'.");
+            sender = new Sender(informer_host, informer_port, user, user_password_map.get(user), capacity, timeout, smppServer);
             user_senders_map.put(user, sender);
             sender.start();
         }
 
-        sender.addMessage(delivery_id, message);
+        return sender;
     }
 
-/*    public Data poll(){
-        log.debug("Manager.poll() ...");
-        *//*
-           E = LinkedBlockingQueue<E>.pool()
-           Retrieves and removes the head of this queue, or returns null if this queue is empty.
-        *//*
-        return queue.poll();
-    }
-
-    public Data peek(){
-        //log.debug("Manager.peek() ...");
-        *//*
-            E = LinkedBlockingQueue<E>.pool()
-            Retrieves, but does not remove, the head of this queue, or returns null if this queue is empty.
-         *//*
-        return queue.peek();
-    }
-
-    public boolean isEmpty(){
-        //log.debug("Manager.isEmpty() ...");
-        return queue.isEmpty();
-    }
-
-    public boolean remove(Data data){
-        log.debug("Manager.remove() ...");
-        return queue.remove(data);
-    }
-
-    synchronized public boolean sendMail(){
-        log.debug("Check whether the message queue ...");
-
-        while(com.eyeline.services.sombel.rtasks.Manager.getInstance().isEmpty()){
-            try {
-                log.debug("Mail queue is empty, wait ...");
-                wait();
-            } catch (InterruptedException e) {
-                log.error(e);
-            }
-        }
-
-        if (!com.eyeline.services.sombel.rtasks.Manager.getInstance().isEmpty()){
-
-            log.debug("Mail queue is not empty, try to send mail ...");
-            Data data = com.eyeline.services.sombel.rtasks.Manager.getInstance().poll();
-
-            if (data != null){
-                try{
-                    String msisdn = data.getMsisdn();
-                    Date date = data.getDate();
-
-                    Properties props = new Properties();
-                    Session session = Session.getDefaultInstance(props, null);
-                    MimeMessage message = new MimeMessage(session);
-                    message.setSubject(email_subject);
-
-                    SimpleDateFormat email_sdf = new SimpleDateFormat("dd.MM.yy HH:mm");
-                    String email_date = email_sdf.format(date);
-                    log.debug("Formatted email date: "+email_date);
-                    String a = msisdn.startsWith("+")? msisdn : "+"+msisdn;
-                    String[] args = {a, email_date};
-                    MessageFormat form = new MessageFormat(email_message_format);
-                    String email_text = form.format(args);
-                    log.debug("Formatted email text: "+email_text);
-                    message.setText(email_text);
-
-                    Address sender = new InternetAddress(email_sender, email_sender_name);
-                    for(String s: email_recipients){
-                        log.debug("Recipient: "+s.trim());
-                        Address recipient = new InternetAddress(s.trim());
-                        message.addRecipient(Message.RecipientType.TO, recipient);
-                    }
-                    message.setFrom(sender);
-
-                    Transport.send(message);
-                    log.debug("Successfully send mail!");
-
-                } catch (MessagingException e){
-                    log.error(e);
-                } catch (UnsupportedEncodingException e){
-                    log.error(e);
-                }
-
-            } else {
-                log.warn("Poll method return null from not empty queue.");
-            }
-        } else {
-            log.warn("Mail queue is empty ...");
-        }
-
-        return com.eyeline.services.sombel.rtasks.Manager.getInstance().isEmpty();
-    }*/
 
 
 }
