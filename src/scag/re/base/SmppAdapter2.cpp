@@ -151,9 +151,9 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         SmsResp* resp = command.get_resp();
         if (!resp) return 0;
         const DataSmDirection dir = resp->get_dir();
-        if ( dir == dsdSc2Srv ) {
+        if ( dir == dsdSrv2Sc ) {
             accessHash = &DeliverRespFieldsAccess;
-        } else if (dir == dsdSrv2Sc) {
+        } else if (dir == dsdSc2Srv) {
             accessHash = &SubmitRespFieldsAccess;
         } else {
             return 0;
@@ -924,7 +924,7 @@ IntHash<AccessType> SmppCommandAdapter::initFieldsAccess( EventHandlerType eh )
 
     // additional fields
     if ( eh == EH_DELIVER_SM_RESP ) {
-        hs.Insert(MESSAGE_ID,atNoAccess);
+        hs.Insert(MESSAGE_ID,atRead);
     }
     return hs;
 }

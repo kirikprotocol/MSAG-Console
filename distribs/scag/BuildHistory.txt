@@ -814,5 +814,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2011-06-23 12:20 bukind msag-build-20110623
 2011-06-23 12:12 bukind
   msag bugfix: incorrect usage of IntHash in ewallet (may be rehashed)
+2011-06-23 16:45 bukind
+  msag bugfix: message_id was inaccessible in data_sm_resp
 
 --- current fixes ---
