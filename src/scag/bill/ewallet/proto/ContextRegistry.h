@@ -34,16 +34,39 @@ public:
     class Ctx {
         friend class ContextRegistry;
     public:
-        Ctx() : i(0) {}
-        Ctx( const Ctx& o ) : i(o.i) { o.i = 0; }
-        Ctx& operator = ( Ctx& o ) { if ( &o != this ) {i=o.i; o.i=0;} return *this;}
-        Context* getContext() const { return i ? **i : 0; }
-        bool operator!() const { return !i;}
-        Context* operator -> () { return i ? **i : 0; }
+        Ctx() : valid(false) {
+            // smsc_log_debug(log_,"ctx@%p created",this);
+        }
+        Ctx( const Ctx& o ) : i(o.i), valid(o.valid) {
+            // smsc_log_debug(log_,"ctx@%p(o@%p) created i=%p, o.i=0",this,&o,i);
+            o.valid = false;
+        }
+        Ctx& operator = ( Ctx& o ) {
+            if ( &o != this ) {
+                i=o.i; valid=o.valid; o.valid=0;
+                // smsc_log_debug(log_,"ctx@%p = %p, i=%p",this,&o,i);
+            }
+            return *this;
+        }
+        ~Ctx() {
+            // smsc_log_debug(log_,"~ctx@%p i=%p",this,i);
+        }
+        inline Context* getContext() const {
+            // smsc_log_debug(log_,"ctx.getContext()@%p i=%p -> res=%p",this,i,i?**i:0);
+            return valid ? *i : 0;
+        }
+        inline bool operator!() const { return !valid;}
+        inline Context* operator -> () {
+            // smsc_log_debug(log_,"ctx.op-> @%p i=%p -> res=%p",this,i,i?**i:0);
+            return getContext();
+        }
     private:
-        Ctx(typename ContextList::iterator* it ) : i(it) {}
+        Ctx(typename ContextList::iterator it) : i(it), valid(true) {
+            // smsc_log_debug(log_,"ctx@%p( i=%p ) created",this,i);
+        }
     private:
-        mutable typename ContextList::iterator *i;
+        mutable typename ContextList::iterator i;
+        mutable bool valid;
     };
 
 
@@ -98,42 +121,56 @@ public:
 public:
 
     bool exists( uint32_t seqNum ) const {
-        return map_.Exist(seqNum);
+        bool res = map_.Exist(seqNum);
+        // smsc_log_debug(log_,"reg.exists(seq=%u) -> %d",seqNum,res);
+        return res;
     }
 
     bool empty() const {
-        return list_.empty() && list0_.empty();
+        bool res = list_.empty() && list0_.empty();
+        // smsc_log_debug(log_,"reg.empty() -> %d",res);
+        return res;
     }
 
     void push( Context* ctx ) {
         typename ContextList::iterator i = 
             ( ctx->getCreationTime() == 0 ?
               list0_.insert(list0_.end(),ctx) :
-              list_.insert( list_.end(), ctx) );
-        map_.Insert( ctx->getSeqNum(), i );
+              list_.insert( list_.end(),ctx) );
+        // typename ContextList::iterator* ip = 
+        map_.Insert(ctx->getSeqNum(), i);
+        // smsc_log_debug(log_,"reg.push(cont=%p,seq=%u,ct=%ld) -> i@%p MAPINVALIDATED!",
+        // ctx,ctx->getSeqNum(),long(ctx->getCreationTime()),ip);
     }
 
     Ctx get( uint32_t seqNum ) {
         typename ContextList::iterator* i = map_.GetPtr(seqNum);
-        return i;
+        if (!i) return Ctx();
+        // smsc_log_debug(log_,"reg.get(seq=%u) -> i=%p",seqNum,i);
+        return Ctx(*i);
     }
     
     Context* pop( const Ctx& ptr ) {
         Context* ret = ptr.getContext();
         if ( ret ) {
+            // smsc_log_debug(log_,"reg.pop(seq=%u) => ret=%p, ctx@%p to be cleared",
+            // ret->getSeqNum(),ret,&ptr);
             map_.Delete(ret->getSeqNum());
             if (ret->getCreationTime()==0) {
-                list0_.erase(*ptr.i);
+                list0_.erase(ptr.i);
             } else {
-                list_.erase(*ptr.i);
+                list_.erase(ptr.i);
             }
+            // } else {
+            // smsc_log_debug(log_,"reg.pop(NULL) => ret=%p, ctx@%p to be cleared",ret,&ptr);
         }
-        ptr.i = 0;
+        ptr.valid = false;
         return ret;
     }
 
     /// pop all contexts
     void popAll( ContextList& rv ) {
+        // smsc_log_debug(log_,"popAll, map cleared");
         rv.clear();
         rv.swap(list_);
         rv.splice(rv.end(), list0_);
@@ -153,6 +190,7 @@ public:
             util::msectime_type expireTime = (*i)->getCreationTime() + timeToSleep;
             if ( currentTime >= expireTime ) {
                 int seqNum = (*i)->getSeqNum();
+                // smsc_log_debug(log_,"reg.popExp -> seq=%u i=%p",seqNum,&i);
                 map_.Delete(seqNum);
                 rv.push_back(*i);
                 i = list_.erase(i);
@@ -163,6 +201,17 @@ public:
         return currentTime+timeToSleep;
     }
 
+    /*
+    ContextRegistry() {
+        if (!log_) {
+            log_ = smsc::logger::Logger::getInstance("ewall.rg");
+        }
+    }
+     */
+
+// private:
+//     static smsc::logger::Logger*              log_;
+
 private:
     ContextList                               list_;
     ContextList                               list0_; // those w/o expiration
@@ -170,7 +219,7 @@ private:
     smsc::core::synchronization::EventMonitor mon_;
 };
 
-
+// template < class Context > smsc::logger::Logger* ContextRegistry<Context>::log_ = 0;
 
 template < class Context > class ContextRegistrySet 
 {
@@ -185,7 +234,7 @@ private:
     typedef smsc::core::buffers::XHash<key_type,Registry*,util::XHashPtrFunc > HashType;
 
 public:
-    ContextRegistrySet() : log_(smsc::logger::Logger::getInstance("ewall.reg")) {}
+    ContextRegistrySet() : log_(smsc::logger::Logger::getInstance("ewall.rset")) {}
 
     ~ContextRegistrySet() {
         ContextList pl;

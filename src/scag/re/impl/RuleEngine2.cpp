@@ -196,6 +196,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
     RuleKey key;
     key.serviceId = command.getServiceId();
     key.transport = command.getType();
+    smsc_log_debug(logger,"rule key transport=%d serviceId=%d",key.transport,key.serviceId);
 
     Rule* rulePtr;
     do { // fake loop
