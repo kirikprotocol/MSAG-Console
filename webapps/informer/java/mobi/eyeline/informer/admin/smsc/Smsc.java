@@ -48,10 +48,6 @@ public class Smsc {
 
   private Map<String, Collection<Integer>> temporaryErrors = new HashMap<String, Collection<Integer>>();
 
-  private int minValidityPeriod;
-
-  private int maxValidityPeriod;
-
   private int interConnectTimeout;
 
   private Smsc() {
@@ -73,8 +69,6 @@ public class Smsc {
     vlrUssdServiceOp = s.getInt("ussdPushVlrTag");
     timeout = s.getInt("timeout");
     rangeOfAddress = s.getInt("rangeOfAddress");
-    maxValidityPeriod = s.getInt("maxValidityPeriod");
-    minValidityPeriod = s.getInt("minValidityPeriod");
     interConnectTimeout = s.getInt("interConnectPeriod", 60);
     s = s.getSection("retryPolicies");
     for (String e : s.getStringList("immediate", ",")) {
@@ -105,8 +99,8 @@ public class Smsc {
     s.setInt("ussdPushVlrTag", vlrUssdServiceOp);
     s.setInt("timeout", timeout);
     s.setInt("rangeOfAddress", rangeOfAddress);
-    s.setInt("maxValidityPeriod", maxValidityPeriod);
-    s.setInt("minValidityPeriod", minValidityPeriod);
+    s.setInt("maxValidityPeriod", 3600 * 24 * 3);
+    s.setInt("minValidityPeriod", 20);
     s.setInt("interConnectPeriod", interConnectTimeout);
     s = s.getOrCreateSection("retryPolicies");
     s.setStringList("immediate", immediateErrors, ",");
@@ -119,8 +113,6 @@ public class Smsc {
   }
 
   void validate() throws AdminException {
-    vh.checkGreaterOrEqualsTo("maxValidityPeriod", maxValidityPeriod, 0);
-    vh.checkGreaterOrEqualsTo("minValidityPeriod", minValidityPeriod, 0);
     vh.checkGreaterThan("timeout", timeout, 0);
     vh.checkNotEmpty("host", host);
     vh.checkNotNull("password", password);
@@ -160,21 +152,6 @@ public class Smsc {
 
   }
 
-  public int getMaxValidityPeriod() {
-    return maxValidityPeriod;
-  }
-
-  public void setMaxValidityPeriod(int maxValidityPeriod)  {
-    this.maxValidityPeriod = maxValidityPeriod;
-  }
-
-  public int getMinValidityPeriod() {
-    return minValidityPeriod;
-  }
-
-  public void setMinValidityPeriod(int minValidityPeriod) {
-    this.minValidityPeriod = minValidityPeriod;
-  }
 
   public Collection<Integer> getImmediateErrors() {
     return new ArrayList<Integer>(immediateErrors);
@@ -332,8 +309,6 @@ public class Smsc {
     Smsc smsc = (Smsc) o;
 
     if (interfaceVersion != smsc.interfaceVersion) return false;
-    if (maxValidityPeriod != smsc.maxValidityPeriod) return false;
-    if (minValidityPeriod != smsc.minValidityPeriod) return false;
     if (port != smsc.port) return false;
     if (rangeOfAddress != smsc.rangeOfAddress) return false;
     if (timeout != smsc.timeout) return false;
@@ -420,8 +395,6 @@ public class Smsc {
     s.vlrUssdServiceOp = vlrUssdServiceOp;
     s.timeout = timeout;
     s.rangeOfAddress = rangeOfAddress;
-    s.maxValidityPeriod = maxValidityPeriod;
-    s.minValidityPeriod = minValidityPeriod;
     s.immediateErrors.addAll(immediateErrors);
     s.permanentErrors.addAll(permanentErrors);
     s.interConnectTimeout = interConnectTimeout;

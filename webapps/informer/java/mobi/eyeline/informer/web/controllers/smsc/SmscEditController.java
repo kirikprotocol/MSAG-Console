@@ -41,8 +41,6 @@ public class SmscEditController extends SmscController {
       smsc.setVlrUssdServiceOp(153);
       smsc.setUssdServiceOp(131);
       smsc.setInterfaceVersion(34);
-      smsc.setMaxValidityPeriod(10);
-      smsc.setMinValidityPeriod(1);
       smsc.setInterConnectTimeout(60);
       smsc.setTimeout(10);
     }
@@ -105,8 +103,6 @@ public class SmscEditController extends SmscController {
     smsc.rangeOfAddress = s.getRangeOfAddress();
     smsc.immedErrors = convertToCSV(s.getImmediateErrors());
     smsc.permErrors = convertToCSV(s.getPermanentErrors());
-    smsc.maxValidityPeriod = s.getMaxValidityPeriod();
-    smsc.minValidityPeriod = s.getMinValidityPeriod();
     smsc.interConnectTimeout = s.getInterConnectTimeout();
     return s;
   }
@@ -124,8 +120,6 @@ public class SmscEditController extends SmscController {
     s.setVlrUssdServiceOp(smsc.vlrUssdServiceOp);
     s.setTimeout(smsc.timeout);
     s.setRangeOfAddress(smsc.rangeOfAddress);
-    s.setMaxValidityPeriod(smsc.maxValidityPeriod);
-    s.setMinValidityPeriod(smsc.minValidityPeriod);
     s.setInterConnectTimeout(smsc.interConnectTimeout);
     if(smsc.immedErrors != null && (smsc.immedErrors = smsc.immedErrors.trim()).length() != 0) {
       for(Integer i : parseFromCSV(smsc.immedErrors)) {
@@ -229,27 +223,7 @@ public class SmscEditController extends SmscController {
 
     private String permErrors;
 
-    private int minValidityPeriod;
-
-    private int maxValidityPeriod;
-
     private int interConnectTimeout;
-
-    public int getMinValidityPeriod() {
-      return minValidityPeriod;
-    }
-
-    public void setMinValidityPeriod(int minValidityPeriod) {
-      this.minValidityPeriod = minValidityPeriod;
-    }
-
-    public int getMaxValidityPeriod() {
-      return maxValidityPeriod;
-    }
-
-    public void setMaxValidityPeriod(int maxValidityPeriod) {
-      this.maxValidityPeriod = maxValidityPeriod;
-    }
 
     public String getImmedErrors() {
       return immedErrors;
