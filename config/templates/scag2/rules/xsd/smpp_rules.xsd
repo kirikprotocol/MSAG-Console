@@ -163,6 +163,8 @@
 		<enumeration value="#network_error_code"/>
 		<enumeration value="#additional_status_info_text"/>
 		<enumeration value="#dpf_result"/>
+
+		<enumeration value="#message_id"/>
             </restriction>    
         </simpleType>
         
