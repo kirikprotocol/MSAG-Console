@@ -23,21 +23,32 @@ div.select_all_content {
   position: absolute;
   margin-top : 1px;
   text-align:left;
-  font-size:10px;
+  font-family: Verdana,Arial,Tahoma,Helvetica,sans,sans-serif;
+  font-size: 11px;
   z-index: 10;
   border: 1px solid #cd853f;
-  border-radius: 4px;
   visibility: hidden;
+}
+
+div.select_all_content a.xi{
+  font-family: Verdana,Arial,Tahoma,Helvetica,sans,sans-serif;
+  font-size: 11px;
 }
 
 table.select_all_button {
   border: 1px solid #cd853f;
-  border-radius:4px;
   background-color:#F3F0E3
+}
+
+table.select_all_button td {
+  padding: 0px
 }
 
 table.select_all_button_selected {
   border: 1px solid #cd853f;
-  border-radius:4px;
   background-color:#DFD4AF;
+}
+
+table.select_all_button_selected td {
+  padding: 0px
 }

@@ -330,11 +330,11 @@ public class DataTableRenderer extends Renderer {
         w.append("\n  window.setTimeout(autoUpdate" + t.getId() + "," + t.getAutoUpdate() * 1000 + ");");
         w.append("\n};");
         w.append("\nautoUpdate" + t.getId() + "();");
-//      }else {
-//        w.append("\nfunction load" + t.getId() + "(){");
-//        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
-//        w.append("\n};");
-//        w.append("\n  window.onload =load" + t.getId() +";");
+      } else {
+        w.append("\nfunction load" + t.getId() + "(){");
+        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
+        w.append("\n};");
+        w.append("\n  window.onload =load" + t.getId() +";");
       }
       w.append("\n</script>");
     }

@@ -60,7 +60,7 @@ public class DataTableHandler extends ComponentHandler {
   }
 
   @SuppressWarnings({"unchecked"})
-  private void loadSelectedRows(int startPos, DataTable t, DataTableSortOrder s, List rows) throws Exception{
+  private void loadSelectedRows(int startPos, DataTable t, DataTableSortOrder s, List rows) {
     Set<String> ids = new HashSet<String>(t.getSelectedRows());
     int i = 0;
     List _rows;
@@ -128,7 +128,7 @@ public class DataTableHandler extends ComponentHandler {
 
     List rows;
 
-//    if(t.isInternalUpdate()) {
+    if(t.isInternalUpdate()) {
       if(!t.isShowSelectedOnly()) {
         rows = m.getRows(startPos, t.getPageSize(), s);
         if (rows.isEmpty() && startPos > 0) {
@@ -137,35 +137,22 @@ public class DataTableHandler extends ComponentHandler {
           rows = m.getRows(startPos, t.getPageSize(), s);
         }
 
-      }else {
+      } else {
         rows = new LinkedList();
-        try{
+        loadSelectedRows(startPos, t, s, rows);
+
+        if (rows.isEmpty() && startPos > 0) {
+          startPos = 0;
+          t.setCurrentPage(0);
           loadSelectedRows(startPos, t, s, rows);
-
-          if (rows.isEmpty() && startPos > 0) {
-            startPos = 0;
-            t.setCurrentPage(0);
-            loadSelectedRows(startPos, t, s, rows);
-          }
-
-        }catch (Exception e) {
-          e.printStackTrace();
         }
       }
-//    }else {
-//      rows = Collections.emptyList();
-//    }
-
-    // Body
-//    if(selectedRows != null && selectedRows.getValueExpression(ctx, List.class) != null ) {
-//      try{
-//        t.setSelectedRows((List)selectedRows.getValueExpression(ctx, List.class).getValue(ctx));
-//      }catch (Exception e){}
-//    }
+    } else {
+      rows = Collections.emptyList();
+    }
 
     ctx.getVariableMapper().setVariable(tid + "___var", new ConstantExpression(var.getValue()));
     ctx.getVariableMapper().setVariable(tid + "___dataTableModel", new ConstantExpression(m));
-
 
     for (Object row : rows) {
       ctx.getVariableMapper().setVariable(tid + "___currentRow", new ConstantExpression(row));
