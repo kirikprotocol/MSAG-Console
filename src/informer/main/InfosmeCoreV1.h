@@ -101,6 +101,9 @@ public:
 
     virtual alm::IActivityLogMiner& getALM() { return *alm_; }
 
+    /// may be absent if snmp is disabled
+    virtual SnmpManager* getSnmpMgr() { return snmp_; }
+
     // --- end of infosme core iface
 
     // --- receiptprocessor iface
@@ -209,6 +212,7 @@ private:
     admin::AdminServer*                           adminServer_;  // owned
     dcp::DcpServer*                               dcpServer_;    // owned
     alm::IActivityLogMiner*                       alm_;          // owned
+    SnmpManager*                                  snmp_;         // owned
 
     scag2::pvss::core::client::Client*            pvss_;         // owned
     PvssRespHandler*                              pvssHandler_;  // owned

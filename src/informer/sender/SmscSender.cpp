@@ -15,6 +15,7 @@
 #include "sms/IllFormedReceiptParser.h"
 #include "sms/sms.h"
 #include "system/status.h"
+#include "informer/snmp/SnmpManager.h"
 
 using smsc::core::synchronization::MutexGuard;
 
@@ -1353,6 +1354,14 @@ int SmscSender::Execute()
             smsc_log_warn(log_,"S='%s' connectLoop exc: %s", smscId_.c_str(), e.what());
         }
         if (getCS()->isStopping() || isStopping_ ) break;
+        // we are connected
+        if ( getCS()->getSnmp() ) {
+            getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_CONNECT,
+                                          SnmpTrap::SEV_CLEAR,
+                                          "SMSC",
+                                          smscId_.c_str(),
+                                          "connected" );
+        }
         try {
             journal_->start();
         } catch ( std::exception& e ) {
@@ -1364,6 +1373,14 @@ int SmscSender::Execute()
         } catch ( std::exception& e ) {
             smsc_log_warn(log_,"S='%s' sendLoop exc: %s", smscId_.c_str(), e.what());
         }
+        if (!getCS()->isStopping() && !isStopping_ && getCS()->getSnmp() ) {
+            getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_CONNECT,
+                                          SnmpTrap::SEV_MINOR,
+                                          "SMSC",
+                                          smscId_.c_str(),
+                                          "disconnected" );
+        }
+
         // we have broken connection here, so we have to report all waiting resps
         // unless we are in stopping state.
         std::multimap<msgtime_type, ResponseTimer>::iterator iter = respWaitQueue_.begin();
@@ -1479,7 +1496,7 @@ void SmscSender::sendLoop()
         }
 
         MutexGuard mg(reconfLock_);  // prevent reconfiguration
-        if ( !session_.get() || session_->isClosed() ) break;
+        if ( !session_.get() || session_->isClosed() ) { break; }
         bool throttled = false;
         if (rQueue->Count() > 0) {
             throttled = processQueue(*rQueue.get());

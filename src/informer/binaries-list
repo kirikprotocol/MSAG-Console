@@ -30,6 +30,9 @@ informer/informer  informer \
  -lutil-config \
  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
  -lutil \
+switch SNMP
+YES: $(SNMP_LIBS_CORE) \
+endswitch
  $(XERCES_LIB) \
  $(SOCKETLIB) \
  $(LIBICONV) \

@@ -22,6 +22,7 @@ namespace informer {
 
 class UTF8;
 class TimezoneGroup;
+class SnmpManager;
 
 class CommonSettings
 {
@@ -32,7 +33,9 @@ public:
     CommonSettings( unsigned licenseLimit );
     ~CommonSettings();
 
-    void init( smsc::util::config::Config& cfg, bool archive );
+    void init( smsc::util::config::Config& cfg,
+               SnmpManager*                snmp,       // not owned
+               bool                        archive );
 
     inline bool isArchive() const {
         return archive_;
@@ -229,6 +232,8 @@ public:
     /// get timezone group
     const TimezoneGroup* lookupTimezoneGroup( const char* tzname ) const;
 
+    inline SnmpManager* getSnmp() const { return snmp_; }
+
 private:
     void loadTimezones();
     typedef std::map< std::string, TimezoneGroup* > TzMap;
@@ -239,6 +244,7 @@ private:
     std::string archivePath_;
     std::string statpath_;
     UTF8*       utf8_;        // owned converter
+    SnmpManager* snmp_;
     unsigned    incStatBank_;
 
     std::string svcType_;

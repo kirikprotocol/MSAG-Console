@@ -2,6 +2,9 @@
 #include "DeliveryMgr.h"
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
+#ifdef SNMP
+#include "SnmpManagerImpl.h"
+#endif
 #include "core/buffers/FastMTQueue.hpp"
 #include "informer/admin/AdminServer.hpp"
 #include "informer/alm/ActivityLogMiner.hpp"
@@ -221,6 +224,7 @@ finalLog_(0),
 adminServer_(0),
 dcpServer_(0),
 alm_(0),
+snmp_(0),
 pvss_(0),
 pvssHandler_(0),
 trafficMon_(MTXWHEREAMI),
@@ -293,6 +297,11 @@ InfosmeCoreV1::~InfosmeCoreV1()
     smsc_log_info(log_,"--- destroying users ---");
     users_.Empty();
 
+    if (snmp_) {
+        smsc_log_info(log_,"--- destroying snmp ---");
+        delete snmp_;
+    }
+
     smsc_log_info(log_,"--- core destroyed ---");
 }
 
@@ -315,7 +324,26 @@ void InfosmeCoreV1::init( bool archive )
         section = "informer";
         std::auto_ptr<Config> cfg(maincfg->getSubConfig(section,true));
 
-        cs_.init( *cfg, archive );
+#ifdef SNMP
+        if (cfg->findSection("snmp")) {
+            try {
+                // initing snmp if enabled
+                std::auto_ptr<Config> snmpCfg(cfg->getSubConfig("snmp",true));
+                ConfigWrapper cwrap(*snmpCfg.get(),log_);
+                if ( cwrap.getBool("enabled",true) ) {
+                    SnmpManagerImpl* snmp = new SnmpManagerImpl();
+                    snmp_ = snmp;
+                    snmp->init( cwrap.getString("socket","") );
+                    // NOTE: we have to start snmp earlier, to be able to send snmp traps
+                    snmp->start();
+                }
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"snmp initialization exc: %s",e.what());
+            }
+        }
+#endif
+
+        cs_.init( *cfg, snmp_, archive );
 
         itp_.setMaxThreads(cs_.getInputTransferThreadCount());
         rtp_.setMaxThreads(cs_.getResendIOThreadCount());

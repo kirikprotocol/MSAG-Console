@@ -1,0 +1,85 @@
+-- Copyright 2011 Sibinco. All Rights Reserved
+-- HISTORY
+-- 2011-06-23  Dmitry Bukin     created
+
+    EYELINE-INFORMER-MIB DEFINITIONS ::= BEGIN
+    IMPORTS
+        sibinco 
+    FROM SIBINCO-SMSC-MIB
+        DisplayString
+    FROM SNMPv2-TC;
+
+    -- sibinco is 1.3.6.1.4.1.26757
+    -- sibinco is iso.org.dod.internet.private.enterprises.sibinco
+
+    -- 1.3.6.1.4.1.26757.4
+    informer OBJECT IDENTIFIER ::= { sibinco 4 }
+
+    -- 1.3.6.1.4.1.26757.4.0
+    informerNotifications OBJECT IDENTIFIER ::= { informer 0 }
+
+    -- 1.3.6.1.4.1.26757.4.1
+    informerDescr OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "Version string"
+    ::= { informer 1 }
+
+-- trap section
+
+    -- 1.3.6.1.4.1.26757.4.5
+    alertMessage OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS accessible-for-notify
+    STATUS current
+    DESCRIPTION
+    "The string object containing textual description of alert."
+    ::= { informer 5 }
+
+    -- 1.3.6.1.4.1.26757.4.7
+    alertSeverity OBJECT-TYPE
+    SYNTAX  INTEGER {
+    normal(1),
+    warning(2),
+    minor(3),
+    major(4),
+    critical(5)
+    }
+    MAX-ACCESS not-accessible
+    STATUS      current
+    DESCRIPTION "Severity of alert"
+    ::= { informer 7 }
+
+    -- 1.3.6.1.4.1.26757.4.8
+    alertId OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Identifier of alert (e.g. object id)"
+    ::= { informer 8 }
+
+    -- 1.3.6.1.4.1.26757.4.9
+    alertObjCategory OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Object category."
+    ::= { informer 9 }
+
+-- Compound trap objects
+
+    -- 1.3.6.1.4.1.26757.4.0.1
+    -- trap is sent when an connection to SMSC/PVSS is opened/closed
+    -- category will be one of "SMSC", "PVSS"
+    -- alertId  will be the id of the object, i.e. name of SMSCid, or PVSS 'host:port'
+    -- severity will be CLEAR/MINOR for connection/disconnection
+    informerConnectAlert NOTIFICATION-TYPE
+    OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
+    STATUS current
+    DESCRIPTION
+    "Notify about connections and disconnections"
+    ::= { informerNotifications 1 }
+
+    END

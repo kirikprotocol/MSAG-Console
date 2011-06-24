@@ -18,6 +18,7 @@ CommonSettings* CommonSettings::instance_ = 0;
 CommonSettings::CommonSettings( unsigned licenseLimit ) :
 log_(smsc::logger::Logger::getInstance("comset")),
 utf8_(0),
+snmp_(0),
 incStatBank_(0),
 licenseLimit_(licenseLimit),
 // regionSpeedLimitNBins_(25),
@@ -46,8 +47,11 @@ CommonSettings::~CommonSettings()
 
 
 // void CommonSettings::init( const std::string& path, const std::string& statpath )
-void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
+void CommonSettings::init( smsc::util::config::Config& cfg,
+                           SnmpManager*                snmp,
+                           bool                        archive )
 {
+    snmp_ = snmp;
     archive_ = archive;
     utf8_ = new UTF8();
 

@@ -1,3 +1,5 @@
+2011-06-24 16:17 bukind
+  feature: initial snmp support (SMSC connect/disconnect only)
 2011-06-24 13:28 bukind
   feature: restoring a quant in case send has failed
 2011-06-24 12:56 bukind
