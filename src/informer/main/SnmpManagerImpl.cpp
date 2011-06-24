@@ -118,40 +118,46 @@ int SnmpManagerImpl::Execute()
 #define TRAPTCASE(x,y) case (x) : { typeoid = y; typeoidlen = OID_LENGTH(y); break; }
                 TRAPTCASE(SnmpTrap::TYPE_CONNECT,informerConnectAlert_oid);
 #undef TRAPTCASE
-            default: continue; // cant be here
+            default: break; // cant be here
             }
+            if (!typeoid) continue;
 
             // --- fill other fields
             netsnmp_variable_list  *var_list = NULL;
 
             uint32_t nsev = htonl(uint32_t(trap->severity));
+            u_char* buf; size_t buflen;
+            buf = (u_char*)&nsev;
+            buflen = sizeof(nsev);
             snmp_varlist_add_variable(&var_list,
                                       alertSeverity_oid,
                                       OID_LENGTH(alertSeverity_oid),
                                       ASN_INTEGER,
-                                      (u_char*)nsev,
-                                      size_t(sizeof(nsev)));
+                                      buf, buflen );
 
+            buf = (u_char*)trap->category.c_str();
+            buflen = trap->category.size();
             snmp_varlist_add_variable(&var_list,
                                       alertObjCategory_oid,
                                       OID_LENGTH(alertObjCategory_oid),
                                       ASN_OCTET_STR,
-                                      (u_char*)trap->category.c_str(),
-                                      size_t(trap->category.size()));
+                                      buf, buflen );
 
+            buf = (u_char*)trap->objid.c_str();
+            buflen = trap->objid.size();
             snmp_varlist_add_variable(&var_list,
                                       alertId_oid,
                                       OID_LENGTH(alertId_oid),
                                       ASN_OCTET_STR,
-                                      (u_char*)trap->objid.c_str(),
-                                      size_t(trap->objid.size()));
+                                      buf, buflen );
 
+            buf = (u_char*)trap->message.c_str();
+            buflen = trap->message.size();
             snmp_varlist_add_variable(&var_list,
                                       alertMessage_oid,
                                       OID_LENGTH(alertMessage_oid),
                                       ASN_OCTET_STR,
-                                      (u_char*) trap->message.c_str(),
-                                      size_t(trap->message.size()));
+                                      buf, buflen );
 
             char logbuf[100];
             smsc_log_debug(log_,"sending trap %s",trap->toString(logbuf,sizeof(logbuf)));
