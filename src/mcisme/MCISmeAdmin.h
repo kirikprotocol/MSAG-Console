@@ -15,19 +15,10 @@ namespace mcisme {
 
 struct RuntimeStat
 {
-  int activeTasks, inQueueSize, outQueueSize, inSpeed, outSpeed;
+  unsigned activeTasks, inQueueSize, outQueueSize, inSpeed, outSpeed;
         
-  RuntimeStat(int at=0, int inQS=0, int outQS=0, int inS=0, int outS=0)
+  RuntimeStat(unsigned at=0, unsigned inQS=0, unsigned outQS=0, unsigned inS=0, unsigned outS=0)
     : activeTasks(at), inQueueSize(inQS), outQueueSize(outQS), inSpeed(inS), outSpeed(outS) {};
-  RuntimeStat(const RuntimeStat& stat)
-    : activeTasks(stat.activeTasks), inQueueSize(stat.inQueueSize), outQueueSize(stat.outQueueSize),
-      inSpeed(stat.inSpeed), outSpeed(stat.outSpeed) {};
-  RuntimeStat& operator=(const RuntimeStat& stat) {
-    activeTasks = stat.activeTasks;
-    inQueueSize = stat.inQueueSize; outQueueSize = stat.outQueueSize;
-    inSpeed     = stat.inSpeed;     outSpeed     = stat.outSpeed;
-    return (*this);
-  };
 };
 
 struct AdminInterface
@@ -35,9 +26,9 @@ struct AdminInterface
   virtual void flushStatistics() = 0;
   virtual EventsStat getStatistics() const = 0;
 
-  virtual int getActiveTasksCount() const = 0;
-  virtual int getInQueueSize() const = 0;
-  virtual int getOutQueueSize() const = 0;
+  virtual unsigned getActiveTasksCount() const = 0;
+  virtual unsigned getInQueueSize() const = 0;
+  virtual unsigned getOutQueueSize() const = 0;
   virtual std::string getSchedItem(const std::string& Abonent) = 0;
   virtual std::string getSchedItems(void) = 0;
 
