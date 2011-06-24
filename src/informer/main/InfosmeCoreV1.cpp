@@ -325,21 +325,25 @@ void InfosmeCoreV1::init( bool archive )
         std::auto_ptr<Config> cfg(maincfg->getSubConfig(section,true));
 
 #ifdef SNMP
-        if (cfg->findSection("snmp")) {
-            try {
+        try {
+            bool enabled = true;
+            std::string socket;
+            if (cfg->findSection("snmp")) {
                 // initing snmp if enabled
                 std::auto_ptr<Config> snmpCfg(cfg->getSubConfig("snmp",true));
                 ConfigWrapper cwrap(*snmpCfg.get(),log_);
-                if ( cwrap.getBool("enabled",true) ) {
-                    SnmpManagerImpl* snmp = new SnmpManagerImpl();
-                    snmp_ = snmp;
-                    snmp->init( cwrap.getString("socket","") );
-                    // NOTE: we have to start snmp earlier, to be able to send snmp traps
-                    snmp->start();
-                }
-            } catch ( std::exception& e ) {
-                smsc_log_warn(log_,"snmp initialization exc: %s",e.what());
+                enabled = cwrap.getBool("enabled",true);
+                socket = cwrap.getString("socket","");
             }
+            if (enabled) {
+                SnmpManagerImpl* snmp = new SnmpManagerImpl();
+                snmp_ = snmp;
+                snmp->init( socket );
+                // NOTE: we have to start snmp earlier, to be able to send snmp traps
+                snmp->start();
+            }
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"snmp initialization exc: %s",e.what());
         }
 #endif
 
