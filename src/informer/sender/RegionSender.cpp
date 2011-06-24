@@ -292,6 +292,8 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType ptr, unsigned& objSle
                           unsigned(getRegionId()),
                           unsigned(ptr->getDlvId()),
                           ulonglong(msg_.msgId), res, nchunks_);
+            // restore quant
+            ptr->getDlvInfo().getUserInfo().restoreQuant();
         }
 
     } catch ( std::exception& e ) {
@@ -299,6 +301,8 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType ptr, unsigned& objSle
                       unsigned(getRegionId()),
                       unsigned(ptr->getDlvId()),
                       ulonglong(msg_.msgId), e.what());
+        // restore quant
+        ptr->getDlvInfo().getUserInfo().restoreQuant();
         res = smsc::system::Status::UNKNOWNERR;
     }
     ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(),
