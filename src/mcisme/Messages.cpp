@@ -1,8 +1,8 @@
-
 #include "Messages.h"
-#include <sms/sms_const.h>
-#include <util/smstext.h>
+#include "sms/sms_const.h"
+#include "util/smstext.h"
 #include "misscall/callproc.hpp"
+#include "TaskProcessor.h"
 
 namespace smsc {
 namespace mcisme {
@@ -55,10 +55,10 @@ const char* findMessageTemplateKey(const char* key) throw(AdapterException)
   return 0;
 }
 
-void addBanner(Message& message, const string& banner)
+void addBanner(std::string& message, const string& banner)
 {
   if ( banner.empty() ) return;
-  message.message += " " + banner;
+  message += " " + banner;
 }
 
 bool MessageFormatter::canAdd(const MissedCallEvent& event)
@@ -114,7 +114,7 @@ bool MessageFormatter::isLastFromCaller(int index)
 }
 
 bool
-MessageFormatter::formatMessage(const AbntAddr& abnt,
+MessageFormatter::formatMessage(const AbntAddr& called_abnt,
                                 const vector<MCEvent>& mc_events,
                                 MCEventOut* for_send,
                                 const std::string& mciSmeAddress,
@@ -123,7 +123,7 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
 {
   if (mc_events.size() == 0) return false;
 
-  const std::string& toAbnt = abnt.getText();
+  const std::string& toAbnt = called_abnt.getText();
   ContextEnvironment ctx;
   std::string unknownCaller = formatter->getUnknownCaller();
   size_t mc_events_count = mc_events.size();
@@ -159,13 +159,16 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
     }
     formattedEvents += formattedEventInfo;
     total += callCount;
-    for_send->msg = report_msg_for_client;
+    for_send->msg.message = report_msg_for_client;
     for_send->srcEvents.push_back(mc_events[i]);
 
     if ( !originatingAddressIsMciSmeAddress ) {
-      for_send->caller = (fromAbnt == unknownCaller ? mciSmeAddress : fromAbnt);
+      // in this case MCISme doesn't group messages in order to send
+      // result message on behalf of MCISme (i.e. original address is MCISme address)
+      for_send->msg.calling_abonent = (fromAbnt == unknownCaller ? mciSmeAddress : fromAbnt);
       return true;
-    }
+    } else
+      for_send->msg.calling_abonent = _taskProcessor.getAddress();
   }
 
   return true;
