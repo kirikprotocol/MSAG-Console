@@ -129,13 +129,14 @@
 
 	<section name="Advertising">
             <param name="BEProtocolVersion" type="int">2</param>
-	    <param name="useAdvert" type="bool">false</param>
-	    <param name="server" type="string">@mcisme.Advertising.server@</param>
-	    <param name="port" type="int">@mcisme.Advertising.port@</param>
-	    <param name="timeout" type="int">@mcisme.Advertising.timeout@</param><!-- milliseconds -->
-	    <param name="connectTimeout" type="int">@mcisme.Advertising.timeout@</param> <!-- seconds -->
-	    <param name="reconnectionAttemptPeriod" type="int">5</param>
-	    <param name="proxyCount" type="int">10</param>
+            <param name="useAdvert" type="bool">false</param>
+            <param name="server" type="string">@mcisme.Advertising.server@</param>
+            <param name="port" type="int">@mcisme.Advertising.port@</param>
+            <param name="timeout" type="int">@mcisme.Advertising.timeout@</param><!-- milliseconds -->
+            <param name="connectTimeout" type="int">@mcisme.Advertising.timeout@</param> <!-- seconds -->
+            <param name="reconnectionAttemptPeriod" type="int">5</param>
+            <param name="proxyCount" type="int">10</param>
+            <param name="responseHandlersCount" type="int">10</param>
             <param name="SvcTypeForBe" type="string">MCA</param>
 	</section>
 
