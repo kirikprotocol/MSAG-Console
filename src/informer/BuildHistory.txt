@@ -1,3 +1,5 @@
+2011-06-24 12:56 bukind
+  bugfix: a typo in recalcTTL algorithm
 2011-06-22 12:13 bukind
   feature: planTime=0 is allowed for PLANNED, and it means to
     start delivery at startDate or now (what is later)

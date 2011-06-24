@@ -517,6 +517,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
         return (tuPerSec/2+15);
     }
     Message& m = iter->msg;
+    bool needsave = false;
     if ( from == FROMRESEND ) {
         const timediff_type uptonow = timediff_type(currentTime - m.lastTime);
         if ( uptonow > 0 && getCS()->isRecalcTTLRequested() ) {
@@ -535,6 +536,8 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                 doFinalize(ml,currentTime,MSGSTATE_EXPIRED,smppState,0);
                 return 10;
             }
+            m.timeLeft = actualTTL;
+            needsave = true;
         }
     }
     mg.Unlock();
@@ -542,6 +545,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
         /// this one is a new message, set its TTL initially
         m.timeLeft  = info.getMessageTimeToLive();
         // if (m.timeLeft <= 0) m.timeLeft = getCS()->getValidityPeriodDefault();
+        needsave = true;
     }
     m.lastTime = currentTime;
     const uint8_t prevState = m.state;
@@ -553,6 +557,9 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                    ulonglong(msgId),
                    (from == FROMNEW )? "newQueue" : "resendQueue");
     if (prevState != m.state) {
+        needsave = true;
+    }
+    if (needsave) {
         dlv_->storeJournal_->journalMessage(dlvId,getRegionId(),*iter);
         dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
     }
