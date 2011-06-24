@@ -80,7 +80,7 @@ public:
     connectTimeout=to;
   }
 
-  SOCKET getSocket(){return sock;}
+  SOCKET getSocket() const {return sock;}
 
   int Init(const char *host,int port,int timeout);
 
