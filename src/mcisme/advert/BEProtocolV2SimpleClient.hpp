@@ -11,13 +11,16 @@ namespace mcisme {
 
 class BEProtocolV2SimpleClient : public AdvertisingImpl {
 public:
-  BEProtocolV2SimpleClient(const std::string& host, int port, int timeout);
+  BEProtocolV2SimpleClient(const std::string& host, int port);
 
   static const unsigned int PROTOCOL_VERSION = 2;
-protected:
-  virtual uint32_t readAdvert(advertising_item* advItem,
-                              BannerResponseTrace* bannerRespTrace);
 
+  virtual banner_read_stat readAdvert(std::string* banner, BannerResponseTrace* banner_resp_trace);
+
+  virtual void sendErrorInfo(const BannerRequest& banReq,
+                             int rc);
+
+protected:
   virtual uint32_t prepareBannerReqCmd(util::SerializationBuffer* req /* буфер*/,
                                        BannerRequest* par /*параметры запроса банера*/);
 
@@ -25,7 +28,7 @@ protected:
                                const BannerRequest& par /*параметры запроса банера*/,
                                uint32_t errCode);
 
-  uint32_t readPacket(char* buf, size_t bufSize);
+  uint32_t readPacket();
 
   int extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_LEN>& incomingPacketBuf,
                     std::string* banner);
@@ -45,11 +48,6 @@ protected:
                               uint32_t restSizeOfBuff,
                               uint32_t* tag,
                               uint32_t* len);
-
-
-  virtual void sendErrorInfo(const BannerRequest& banReq,
-                             int rc,
-                             const std::string& where);
 
   static const unsigned int PARAM_HDR_SZ = sizeof(uint32_t) + sizeof(uint32_t);
   // общая длина фиксированных параметров в getBannerReq
@@ -99,6 +97,11 @@ protected:
   class ProtocolError : public smsc::util::Exception {
   public:
   };
+
+private:
+  char _buf[MAX_PACKET_LEN];
+  int _pos;
+  uint32_t _totalPacketLen;
 };
 
 }}
