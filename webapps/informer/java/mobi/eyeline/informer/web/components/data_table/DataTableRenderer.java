@@ -243,7 +243,7 @@ public class DataTableRenderer extends Renderer {
     w.append("\n</tbody>");
     w.append("\n</table>");
 
-    if(ajax) {
+
 
     DataTableModel m = t.getModel();
 
@@ -251,15 +251,17 @@ public class DataTableRenderer extends Renderer {
     w.append("<tr>");
 
 
-    int rowsCount = m.getRowsCount();
-    int selected = t.getSelectedRows().size();
-    if(t.isSelectAll()) {
-      selected = rowsCount - selected;
+    int rowsCount = 0 , selected = 0;
+    if(ajax) {
+      rowsCount = m.getRowsCount();
+      selected = t.getSelectedRows().size();
+      if(t.isSelectAll()) {
+        selected = rowsCount - selected;
+      }
+      if(t.isShowSelectedOnly()) {
+        rowsCount = selected;
+      }
     }
-    if(t.isShowSelectedOnly()) {
-      rowsCount = selected;
-    }
-
 
     if (rowsCount > t.getPageSize()) {
 
@@ -310,7 +312,7 @@ public class DataTableRenderer extends Renderer {
     w.append("</tr>");
     w.append("</table>");
 
-    }else {
+    if(!ajax) {
       w.append("\n</div>");
       w.append("<table id=\""+t.getId()+"_overlay\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
           .append("<img src=\"" + ctxPath + "/images/loading.gif\" alt=\"\" style=\"margin-top:auto;margin-bottom:auto;\"/>")
