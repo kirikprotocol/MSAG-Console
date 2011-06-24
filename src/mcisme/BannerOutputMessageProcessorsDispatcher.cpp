@@ -6,15 +6,15 @@
 namespace smsc {
 namespace mcisme {
 
-BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher(TaskProcessor& taskProcessor,
-                                                                                 util::config::ConfigView* advertCfg)
+BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher(TaskProcessor& task_processor,
+                                                                                 util::config::ConfigView* advert_cfg)
   : _logger(logger::Logger::getInstance("outputprc"))
 {
-  if (!advertCfg->getBool("useAdvert"))
+  if (!advert_cfg->getBool("useAdvert"))
     throw smsc::util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: Fatal! Advertising.useAdvert = false");
 
   try {
-    _proxyCount = advertCfg->getInt("proxyCount");
+    _proxyCount = advert_cfg->getInt("proxyCount");
     if ( _proxyCount == 0 )
       throw smsc::util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: Fatal! Advertising.proxyCount = 0");
   } catch (util::config::ConfigException& ex) {
@@ -23,7 +23,7 @@ BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher
 
   int connectTimeout;
   try {
-    connectTimeout = advertCfg->getInt("connectTimeout");
+    connectTimeout = advert_cfg->getInt("connectTimeout");
     if ( connectTimeout < 0 )
       throw util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: invalid Advertising.connectTimeout value < 0");
   } catch (...) {
@@ -33,7 +33,7 @@ BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher
 
   int reconnectionAttemptPeriod;
   try {
-    reconnectionAttemptPeriod = advertCfg->getInt("reconnectionAttemptPeriod");
+    reconnectionAttemptPeriod = advert_cfg->getInt("reconnectionAttemptPeriod");
     if ( reconnectionAttemptPeriod < 0 )
       throw util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: invalid Advertising.reconnectionAttemptPeriod value < 0");
   } catch (...) {
@@ -41,18 +41,44 @@ BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.reconnectionAttemptPeriod> missed. Default value is '1'.");
   }
 
+  int responseHandlersCount;
+  try {
+    responseHandlersCount = advert_cfg->getInt("responseHandlersCount");
+    if ( responseHandlersCount < 0 )
+      throw util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: invalid Advertising.responseHandlersCount value < 0");
+  } catch (...) {
+    responseHandlersCount = 10;
+    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.responseHandlersCount> missed. Default value is '10'.");
+  }
+
+  int responseTimeoutInMsecs;
+  try {
+    responseTimeoutInMsecs = advert_cfg->getInt("timeout");
+    if ( responseTimeoutInMsecs < 0 )
+      throw util::Exception("BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: invalid Advertising.timeout value < 0");
+  } catch (...) {
+    responseTimeoutInMsecs = 1000;
+    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.timeout> missed. Default value is 1000 msec");
+  }
+
   _reconnectorThread = new BEReconnector(connectTimeout, reconnectionAttemptPeriod);
   _reconnectorThread->Start();
 
+  _bannerListener = new BannerResponseListener(task_processor, responseHandlersCount);
+  _bannerReader = new BannerReader(*_bannerListener, *_reconnectorThread, responseTimeoutInMsecs);
+  _reconnectorThread ->setListener(_bannerReader);
+
   for(unsigned i=0; i < _proxyCount; ++i) {
     try {
-      OutputMessageProcessor* outputMsgProc = new OutputMessageProcessor(taskProcessor, advertCfg, *this, *_reconnectorThread);
+      OutputMessageProcessor* outputMsgProc = new OutputMessageProcessor(task_processor, advert_cfg, *this, *_reconnectorThread, *_bannerReader);
       outputMsgProc->Start();
       _freeMsgProcessors.insert(outputMsgProc);
     } catch(util::Exception& ex) {
-      smsc_log_error(_logger, "BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: catched exception [%s]", ex.what());
+      smsc_log_error(_logger, "BannerOutputMessageProcessorsDispatcher::BannerOutputMessageProcessorsDispatcher::: caught exception [%s]", ex.what());
     }
   }
+  _bannerReader->Start();
+  _bannerListener->start();
 }
 
 BannerOutputMessageProcessorsDispatcher::~BannerOutputMessageProcessorsDispatcher()
