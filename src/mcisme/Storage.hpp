@@ -12,14 +12,13 @@
 #include <vector>
 #include <string>
 
-#include <core/buffers/Array.hpp>
-//#include <sms/sms.h>
-//#include <sms/sms_const.h>
-#include <mcisme/AbntAddr.hpp>
-#include <mcisme/DeliveryQueue.hpp>
+#include "core/buffers/Array.hpp"
+#include "mcisme/AbntAddr.hpp"
+#include "mcisme/DeliveryQueue.hpp"
+#include "mcisme/Messages.h"
 
-#include <util/config/ConfigView.h>
-#include <util/config/ConfigException.h>
+#include "util/config/ConfigView.h"
+#include "util/config/ConfigException.h"
 
 namespace smsc {
 namespace mcisme {
