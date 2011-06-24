@@ -2,13 +2,15 @@
 # define __SMSC_MCISME_BANNEROUTPUTMESSAGEPROCESSORSDISPATCHER_HPP__
 
 # include <set>
-# include <logger/Logger.h>
-# include <core/threads/Thread.hpp>
-# include <core/synchronization/EventMonitor.hpp>
-# include <util/config/ConfigView.h>
-# include <mcisme/TaskProcessor.h>
-# include <mcisme/OutputMessageProcessorsDispatcher.hpp>
-# include <mcisme/advert/BEReconnector.hpp>
+
+# include "logger/Logger.h"
+# include "core/threads/Thread.hpp"
+# include "core/synchronization/EventMonitor.hpp"
+# include "util/config/ConfigView.h"
+# include "mcisme/TaskProcessor.h"
+# include "mcisme/OutputMessageProcessorsDispatcher.hpp"
+# include "mcisme/advert/BEReconnector.hpp"
+# include "mcisme/advert/BannerReader.hpp"
 
 namespace smsc {
 namespace mcisme {
@@ -35,6 +37,8 @@ private:
   core::synchronization::EventMonitor _dispatchMonitor;
   logger::Logger* _logger;
   BEReconnector* _reconnectorThread;
+  BannerResponseListener* _bannerListener;
+  BannerReader* _bannerReader;
 };
 
 }}
