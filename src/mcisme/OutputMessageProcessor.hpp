@@ -1,40 +1,41 @@
 #ifndef __SMSC_MCISME_OUTPUTMESSAGEPROCESSOR_HPP__
 # define __SMSC_MCISME_OUTPUTMESSAGEPROCESSOR_HPP__
 
-# include <logger/Logger.h>
-# include <util/config/ConfigView.h>
-# include <core/threads/Thread.hpp>
-# include <core/synchronization/EventMonitor.hpp>
-# include <core/buffers/RefPtr.hpp>
-# include <mcisme/Profiler.h>
-# include <mcisme/AbntAddr.hpp>
-# include <mcisme/TaskProcessor.h>
-# include <mcisme/advert/AdvertisingImpl.h>
-# include <mcisme/advert/BEReconnector.hpp>
-# include <mcisme/OutputMessageProcessorsDispatcher.hpp>
+# include "logger/Logger.h"
+# include "util/config/ConfigView.h"
+# include "core/threads/Thread.hpp"
+# include "core/synchronization/EventMonitor.hpp"
+# include "mcisme/Profiler.h"
+# include "mcisme/AbntAddr.hpp"
+# include "mcisme/TaskProcessor.h"
+# include "mcisme/advert/AdvertisingImpl.h"
+# include "mcisme/advert/BEReconnector.hpp"
+# include "mcisme/OutputMessageProcessorsDispatcher.hpp"
 
 namespace smsc {
 namespace mcisme {
 
 struct sms_info;
+class BannerReader;
 
 class SendMessageEventHandler {
 public:
   SendMessageEventHandler(TaskProcessor& taskProcessor, BEReconnector& reconnectorThread,
-                          core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising)
+                          AdvertImplRefPtr& advertising)
     : _taskProcessor(taskProcessor), _reconnectorThread(reconnectorThread),
       _advertising(advertising), _logger(logger::Logger::getInstance("outputprc")) {}
   virtual ~SendMessageEventHandler() {}
   virtual void handle() = 0;
-  std::string getBanner(const AbntAddr& abnt,
-                        BannerResponseTrace* banner_resp_trace,
-                        bool need_banner_in_translit,
-                        uint32_t max_banner_size);
+  // return false if banner request was sent successfully, else return true.
+  bool sendBannerRequest(const AbntAddr& abnt,
+                         bool need_banner_in_translit,
+                         MCEventOut* mc_event_out,
+                         uint32_t max_banner_size);
   void rollbackBanner(const BannerResponseTrace& bannerRespTrace);
 protected:
   TaskProcessor& _taskProcessor;
   BEReconnector& _reconnectorThread;
-  core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex> _advertising;
+  AdvertImplRefPtr _advertising;
   logger::Logger* _logger;
 };
 
@@ -42,7 +43,7 @@ class SendAbonentOnlineNotificationEventHandler : public SendMessageEventHandler
 public:
   SendAbonentOnlineNotificationEventHandler(TaskProcessor& taskProcessor,
                                             BEReconnector& reconnectorThread,
-                                            core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising,
+                                            AdvertImplRefPtr& advertising,
                                             const sms_info* pInfo,
                                             const AbonentProfile& abntProfile)
     : SendMessageEventHandler(taskProcessor, reconnectorThread, advertising),
@@ -58,7 +59,7 @@ class SendMissedCallMessageEventHandler : public SendMessageEventHandler {
 public:
   SendMissedCallMessageEventHandler(TaskProcessor& taskProcessor,
                                     BEReconnector& reconnectorThread,
-                                    core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising,
+                                    AdvertImplRefPtr& advertising,
                                     const AbntAddr& calledAbnt)
     : SendMessageEventHandler(taskProcessor, reconnectorThread, advertising), _calledAbnt(calledAbnt) {}
   virtual void handle();
@@ -72,7 +73,7 @@ class RollbackBERequestHandler : public SendMessageEventHandler {
 public:
   RollbackBERequestHandler(TaskProcessor& taskProcessor,
                            BEReconnector& reconnectorThread,
-                           core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& advertising,
+                           AdvertImplRefPtr& advertising,
                            const BannerResponseTrace& bannerRespTrace)
     : SendMessageEventHandler(taskProcessor, reconnectorThread, advertising),
       _bannerRespTrace(bannerRespTrace)
@@ -84,10 +85,11 @@ private:
 
 class OutputMessageProcessor : public core::threads::Thread {
 public:
-  OutputMessageProcessor(TaskProcessor& taskProcessor,
-                         util::config::ConfigView* advertCfg,
+  OutputMessageProcessor(TaskProcessor& task_processor,
+                         util::config::ConfigView* advert_cfg,
                          OutputMessageProcessorsDispatcher& dispatcher,
-                         BEReconnector& reconnectorThread);
+                         BEReconnector& reconnector_thread,
+                         BannerReader& banner_reader);
   virtual int Execute();
 
   void assignMessageOutputWork(const AbntAddr& calledAbnt);
@@ -102,7 +104,7 @@ private:
 
   bool _isStopped, _eventWasSignalled;
   core::synchronization::EventMonitor _outputEventMonitor;
-  core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex> _advertising;
+  AdvertImplRefPtr _advertising;
   logger::Logger* _logger;
   SendMessageEventHandler* _handler;
   OutputMessageProcessorsDispatcher& _messagesProcessorsDispatcher;

@@ -1,53 +1,45 @@
 #include "OutputMessageProcessor.hpp"
-#include <scag/util/encodings/Encodings.h>
-#include <scag/exc/SCAGExceptions.h>
+#include "scag/util/encodings/Encodings.h"
+#include "scag/exc/SCAGExceptions.h"
 
 #include "Exceptions.hpp"
-#include "advert/BEProtocolV1SimpleClient.hpp"
 #include "advert/BEProtocolV2SimpleClient.hpp"
 #include "advert/BEReconnector.hpp"
+#include "advert/BannerReader.hpp"
 
 namespace smsc {
 namespace mcisme {
 
-OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
-                                               util::config::ConfigView* advertCfg,
+OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& task_processor,
+                                               util::config::ConfigView* advert_cfg,
                                                OutputMessageProcessorsDispatcher& dispatcher,
-                                               BEReconnector& reconnectorThread)
-  : _taskProcessor(taskProcessor), _isStopped(false), _eventWasSignalled(false),
+                                               BEReconnector& reconnector_thread,
+                                               BannerReader& banner_reader)
+  : _taskProcessor(task_processor), _isStopped(false), _eventWasSignalled(false),
     _logger(logger::Logger::getInstance("omsgprc")), _handler(NULL),
-    _messagesProcessorsDispatcher(dispatcher), _reconnectorThread(reconnectorThread)
+    _messagesProcessorsDispatcher(dispatcher), _reconnectorThread(reconnector_thread)
 {
-  if(!advertCfg->getBool("useAdvert"))
+  if(!advert_cfg->getBool("useAdvert"))
     throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: Fatal! Advertising.useAdvert = false");
 
   string advertServer;
   try {
-    advertServer = advertCfg->getString("server");
+    advertServer = advert_cfg->getString("server");
   } catch (...) {
     advertServer = "0.0.0.0";
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.server> missed. Default value is '0.0.0.0'.");
   }
   int advertPort;
   try {
-    advertPort = advertCfg->getInt("port");
+    advertPort = advert_cfg->getInt("port");
   } catch (...){
     advertPort = 25000;
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.port> missed. Default value is '25000'.");
   }
-  int advertTimeout;
-  try {
-    advertTimeout = advertCfg->getInt("timeout");
-    if ( advertTimeout < 0 )
-      throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.timeout value < 0");
-  } catch (...) {
-    advertTimeout = 15;
-    smsc_log_warn(_logger, "Parameter <MCISme.Advertising.timeout> missed. Default value is '15'.");
-  }
 
   int connectTimeout;
   try {
-    connectTimeout = advertCfg->getInt("connectTimeout");
+    connectTimeout = advert_cfg->getInt("connectTimeout");
     if ( connectTimeout < 0 )
       throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.connectTimeout value < 0");
   } catch (...) {
@@ -55,23 +47,13 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
     smsc_log_warn(_logger, "Parameter <MCISme.Advertising.connectTimeout> missed. Default value is '15'.");
   }
 
-  try {
-    int bannerEngineProtocolVersion = advertCfg->getInt("BEProtocolVersion");
-    switch (bannerEngineProtocolVersion) {
-    case BEProtocolV1SimpleClient::OLD_PROTOCOL_VERSION:
-      _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout, false);
-      break;
-    case BEProtocolV1SimpleClient::PROTOCOL_VERSION:
-      _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout);
-      break;
-    case BEProtocolV2SimpleClient::PROTOCOL_VERSION:
-      _advertising = new BEProtocolV2SimpleClient(advertServer, advertPort, advertTimeout);
-      break;
-    default:
-      throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.BEProtocolVersion value [%d]", bannerEngineProtocolVersion);
-    }
-  } catch (ConfigException& ex) {
-    _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout, false);
+  int bannerEngineProtocolVersion = advert_cfg->getInt("BEProtocolVersion");
+  switch (bannerEngineProtocolVersion) {
+  case BEProtocolV2SimpleClient::PROTOCOL_VERSION:
+    _advertising = new BEProtocolV2SimpleClient(advertServer, advertPort);
+    break;
+  default:
+    throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.BEProtocolVersion value [%d]", bannerEngineProtocolVersion);
   }
 
   try {
@@ -80,6 +62,7 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
     smsc_log_error(_logger, "OutputMessageProcessor::OutputMessageProcessor::: advertising client can't be initialized - caught exception '%s'", ex.what());
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   }
+  banner_reader.addClientConnect(_advertising);
 }
 
 void
@@ -177,66 +160,38 @@ SendMissedCallMessageEventHandler::handle() {
 void
 SendMissedCallMessageEventHandler::formOutputMessageAndSendIt(const AbntAddr& abnt)
 {
-  smsc_log_debug(_logger, "SendMissedCallMessageEventHandler::formOutputMessageAndSendIt::: format message for abonent '%s'", abnt.getText().c_str());
+  smsc_log_debug(_logger, "SendMissedCallMessageEventHandler::formOutputMessageAndSendIt::: format message for subscriber '%s'", abnt.getText().c_str());
   _taskProcessor.ProcessAbntEvents(abnt, this);
 }
 
-string
-SendMessageEventHandler::getBanner(const AbntAddr& abnt,
-                                   BannerResponseTrace* banner_resp_trace,
-                                   bool need_banner_in_translit,
-                                   uint32_t max_banner_size)
+bool
+SendMessageEventHandler::sendBannerRequest(const AbntAddr& abnt,
+                                           bool need_banner_in_translit,
+                                           MCEventOut* mc_event_out,
+                                           uint32_t max_banner_size)
 {
-  string banner, ret, ret1;
-
-  if ( !max_banner_size ) {
-    smsc_log_info(_logger, "SendMessageEventHandler::getBanner::: max_banner_size=0 for abonent '%s', won't call BE", abnt.getText().c_str());
-    return "";
-  }
-
-  smsc_log_debug(_logger, "SendMessageEventHandler::getBanner::: call to BE for abonent '%s'", abnt.getText().c_str());
+  smsc_log_info(_logger, "send BannerRequest to BERotator for subscriber '%s'", abnt.getText().c_str());
   try {
-    uint32_t bannerCharSet = UTF16BE;
-    if ( need_banner_in_translit )
-      bannerCharSet = ASCII_TRANSLIT;
-    int rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, bannerCharSet, &ret, banner_resp_trace, max_banner_size);
-    if(rc == 0)
-    {
-      if ( bannerCharSet == UTF16BE ) {
-        try {
-          scag::util::encodings::Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), ret1);
-        } catch(scag::exceptions::SCAGException e) {
-          smsc_log_error(_logger, "Exc: %s", e.what());
-          return banner="";
-        }
-        try {
-          scag::util::encodings::Convertor::convert("UTF-8", "CP1251", ret1.c_str(), ret1.length(), banner);
-        } catch(scag::exceptions::SCAGException e) {
-          smsc_log_error(_logger, "Exc: %s", e.what());
-          return banner="";
-        }
-      } else 
-        banner = ret;
-    }
-    else
-      smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
+    return _advertising->sendBannerRequest(abnt.toString(), _taskProcessor.getSvcTypeForBE(),
+                                           SMPP_SMS, (need_banner_in_translit ? ASCII_TRANSLIT : UTF16BE),
+                                           max_banner_size, mc_event_out);
   } catch (NetworkException& ex) {
-    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: caught NetworkException '%s'", ex.what());
+    smsc_log_error(_logger, "SendMessageEventHandler::sendBannerRequest::: caught NetworkException '%s'", ex.what());
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   } catch (UnrecoveredProtocolError& ex) {
-    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: caught UnrecoveredProtocolError");
+    smsc_log_error(_logger, "SendMessageEventHandler::sendBannerRequest::: caught UnrecoveredProtocolError");
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   } catch (BE_v0_UnsupportedCharsetException& ex) {
-    smsc_log_info(_logger, "SendMessageEventHandler::getBanner::: caught BE_v0_UnsupportedCharsetException: [%s]", ex.what());
+    smsc_log_info(_logger, "SendMessageEventHandler::sendBannerRequest::: caught BE_v0_UnsupportedCharsetException: [%s]", ex.what());
   }
 
-  return banner;
+  return true;
 }
 
 void
 SendMessageEventHandler::rollbackBanner(const BannerResponseTrace& bannerRespTrace)
 {
-  smsc_log_debug(_logger, "SendMessageEventHandler::rollbackBanner::: rollback banner [transactionId=%d,bannerId=%d,ownerId=%d,rotatorId=%d]", bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
+  smsc_log_info(_logger, "rollback banner [transactionId=%d,bannerId=%d,ownerId=%d,rotatorId=%d]", bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
   try {
     _advertising->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
   } catch (NetworkException& ex) {
@@ -253,7 +208,6 @@ void
 SendAbonentOnlineNotificationEventHandler::handle()
 {
   _taskProcessor.SendAbntOnlineNotifications(_pInfo, _abntProfile, this);
-  _taskProcessor.commitMissedCallEvents(_pInfo, _abntProfile);
 }
 
 void
