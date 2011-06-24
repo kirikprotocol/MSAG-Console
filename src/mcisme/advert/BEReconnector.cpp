@@ -5,9 +5,10 @@
 namespace smsc {
 namespace mcisme {
 
-BEReconnector::BEReconnector(int connectTimeout, int reconnectionAttemptPeriod)
-  : _logger(logger::Logger::getInstance("advert")), _connectTimeout(connectTimeout),
-    _isStopped(false), _reconnectionAttemptPeriodInMSec(reconnectionAttemptPeriod*1000)
+BEReconnector::BEReconnector(int connect_timeout, int reconnection_attempt_period)
+  : _logger(logger::Logger::getInstance("advert")), _connectTimeout(connect_timeout),
+    _isStopped(false), _reconnectionAttemptPeriodInMSec(reconnection_attempt_period*1000),
+    _restoredConnNotifier(NULL)
 {}
 
 void
@@ -22,8 +23,12 @@ BEReconnector::waitForPeriodAndGetNewBrokenConnections(bool needSleepInfinity)
       break;
     }
   }
-  if ( !_setOfUnregsteredBrokenConnections.empty() )
-    _setOfBrokenConnections.splice(_setOfBrokenConnections.end(), _setOfUnregsteredBrokenConnections);
+  while ( !_setOfUnregsteredBrokenConnections.empty() ) {
+    AdvertImplRefPtr& brokenConn = _setOfUnregsteredBrokenConnections.front();
+    if ( _setOfBrokenConnections.find(brokenConn.Get()) == _setOfBrokenConnections.end() )
+      _setOfBrokenConnections.insert(std::make_pair(brokenConn.Get(), brokenConn));
+    _setOfUnregsteredBrokenConnections.pop_front();
+  }
 }
 
 int
@@ -34,10 +39,13 @@ BEReconnector::Execute()
     try {
       for (connections_set_t::iterator iter = _setOfBrokenConnections.begin(), end_iter = _setOfBrokenConnections.end();
            iter != end_iter;) {
-        core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& brokenConnectionToBE = *iter;
+        AdvertisingImpl* brokenConnectionToBE = iter->first;
         if ( brokenConnectionToBE->reinit(_connectTimeout) ) {
           smsc_log_info(_logger, "BEReconnector::Execute::: connection  to [%s] established successful", brokenConnectionToBE->toString().c_str());
+          const AdvertImplRefPtr& restoredConnection=iter->second;
           _setOfBrokenConnections.erase(iter++);
+          if (_restoredConnNotifier)
+            _restoredConnNotifier->connectionRestored(restoredConnection);
         } else
           iter++;
       }
@@ -48,7 +56,7 @@ BEReconnector::Execute()
 
       waitForPeriodAndGetNewBrokenConnections(needSleepInfinity);
     } catch (std::exception& ex) {
-      smsc_log_error(_logger, "BEReconnector::Execute::: catched unexpected exception [%s]. Thread terminated.", ex.what());
+      smsc_log_error(_logger, "BEReconnector::Execute::: caught unexpected exception [%s]", ex.what());
     }
   }
   smsc_log_info(_logger, "BEReconnector has finished");
@@ -62,7 +70,7 @@ BEReconnector::stop()
 }
 
 void
-BEReconnector::scheduleBrokenConnectionToReestablishing(core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex>& brokenConnectionToBE)
+BEReconnector::scheduleBrokenConnectionToReestablishing(AdvertImplRefPtr& brokenConnectionToBE)
 {
   core::synchronization::MutexGuard synchronize(_monitor);
   _setOfUnregsteredBrokenConnections.push_back(brokenConnectionToBE);
