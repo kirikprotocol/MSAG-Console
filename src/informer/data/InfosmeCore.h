@@ -14,7 +14,6 @@ namespace informer {
 class RegionFinder;
 class InputTransferTask;
 class ResendTransferTask;
-class SnmpManager;
 struct CoreSmscStats;
 
 namespace alm {
@@ -86,9 +85,6 @@ public:
                              DlvMode            deliveryMode ) = 0;
 
     virtual alm::IActivityLogMiner& getALM() = 0;
-
-    /// may be absent if snmp is disabled
-    virtual SnmpManager* getSnmpMgr() = 0;
 };
 
 } // informer

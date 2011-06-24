@@ -101,9 +101,6 @@ public:
 
     virtual alm::IActivityLogMiner& getALM() { return *alm_; }
 
-    /// may be absent if snmp is disabled
-    virtual SnmpManager* getSnmpMgr() { return snmp_; }
-
     // --- end of infosme core iface
 
     // --- receiptprocessor iface
