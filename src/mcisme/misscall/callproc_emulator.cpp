@@ -105,7 +105,7 @@ stringParser(const std::string& inputStr)
     smsc::misscall::MissedCallEvent event = smsc::misscall::stringParser(too_long_buf);
       printf("generated event=[%s,%s,%x]\n", event.from.c_str(), event.to.c_str(), event.cause);
     } catch (std::exception& ex) {
-      smsc_log_error(logger, "Error: catched exception [%s]", ex.what());
+      smsc_log_error(logger, "Error: caught exception [%s]", ex.what());
     }
   }
   }*/
@@ -159,7 +159,7 @@ int MissedCallProcessorEmulator::run()
       }
     }
   } catch (std::exception &ex) {
-    smsc_log_error(_logger, "MissedCallProcessorEmulator::run::: catched exception [%s]", ex.what());
+    smsc_log_error(_logger, "MissedCallProcessorEmulator::run::: caught exception [%s]", ex.what());
   }
   return 0;
 }
