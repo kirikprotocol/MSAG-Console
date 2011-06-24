@@ -10,11 +10,11 @@
 #define ___ABNTADDR_H
 
 #include <string>
-#include <sms/sms.h>
-#include <sms/sms_const.h>
-#include <util/crc32.h>
 #include <vector>
-#include <sstream>
+
+#include "sms/sms.h"
+#include "sms/sms_const.h"
+#include "util/crc32.h"
 
 #include "util/Exception.hpp"
 
@@ -326,79 +326,6 @@ public:
       if ( (sig1 > 9 && sig1 != 0x0f) || (sig2 > 9 && sig2 != 0x0f) )
         throw BadAddrException("AbntAddr::checkAddrValueValidity::: invalid input address value [%s]", hexdmp(addr_signals, addr_signals_sz).c_str());
     }
-  }
-};
-
-struct MCEvent
-{
-  uint8_t       id;
-  time_t        dt;
-  AbntAddrValue	caller;
-  uint16_t      callCount;
-  uint8_t       missCallFlags;
-
-  MCEvent(const uint8_t& _id):id(_id), dt(0), callCount(0), missCallFlags(0) {}
-  MCEvent():id(0), dt(0), callCount(0), missCallFlags(0)
-  {
-    memset((void*)&(caller.full_addr), 0xFF, sizeof(caller.full_addr));
-  }
-
-  MCEvent(const MCEvent& e): id(e.id), dt(e.dt), callCount(e.callCount), missCallFlags(e.missCallFlags)
-  {
-    memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
-  }
-  MCEvent& operator=(const AbntAddr& addr)
-  {
-    id = 0; dt = 0; callCount = 1; missCallFlags = 0;
-    memcpy((void*)&(caller.full_addr), (void*)addr.getAddrSig(), sizeof(caller.full_addr));
-    return *this;
-  }
-
-  MCEvent& operator=(const MCEvent& e)
-  {
-    if(&e == this)
-      return *this;
-
-    id = e.id; dt = e.dt; callCount = e.callCount; missCallFlags = e.missCallFlags;
-    memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
-    return *this;
-  }
-
-  const char* toString(char* textString,size_t size) const
-  {
-    snprintf(textString, size, "id=%d,dt=%d,caller=%s,callCount=%d,missCallFlags=0x%02X", id, dt, AbntAddr(&caller).getText().c_str(), callCount, missCallFlags);
-
-    return textString;
-  }
-};
-
-struct MCEventOut {
-  MCEventOut(const std::string& aCaller, const std::string& aMsg) : caller(aCaller), msg(aMsg) {}
-
-  std::string caller;
-  std::string msg;
-  std::vector<MCEvent> srcEvents;
-
-  std::string toString() const {
-    std::string result;
-    result+="caller=[";
-    result+=caller;
-    result+="],msg=[";
-    result+=msg;
-    result+="],srcEvents=[";
-
-    char buf[128];
-    for(std::vector<MCEvent>::const_iterator iter = srcEvents.begin(), end_iter = srcEvents.end(); iter != end_iter;)
-    {
-      result+=iter->toString(buf,sizeof(buf));
-      if ( ++iter != end_iter )
-      {
-        result += ",";
-      }
-    }
-    result += "]";
-
-    return result;
   }
 };
 
