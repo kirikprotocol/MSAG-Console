@@ -90,9 +90,9 @@ public class MessagesByRecController extends LongOperationController {
 
   public List<SelectItem> getUsers() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    ret.add(new SelectItem(""));
+    ret.add(new SelectItem("",""));
     for (User u : getConfig().getUsers()) {
-      ret.add(new SelectItem(u.getLogin()));
+      ret.add(new SelectItem(u.getLogin(),u.getLogin()));
     }
     Collections.sort(ret, new Comparator<SelectItem>() {
       @Override

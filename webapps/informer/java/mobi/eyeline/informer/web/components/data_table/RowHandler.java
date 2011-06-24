@@ -55,7 +55,8 @@ public class RowHandler extends ComponentHandler {
       ctx.getVariableMapper().setVariable(var, r.getVarExpr());
       if (!r.isInner()) {
         DataTableModel dt = (DataTableModel) ctx.getVariableMapper().resolveVariable(tid + "___dataTableModel").getValue(ctx);
-        r.setRowId((dt instanceof Identificator) ? ((Identificator)dt).getId(r.getVarExpr().getValue(ctx)) : getId(ctx));
+        String rowId = (dt instanceof Identificator) ? ((Identificator)dt).getId(r.getVarExpr().getValue(ctx)) : null;
+        r.setRowId(rowId != null ? rowId :  getId(ctx));
         if (innerData != null)
           r.setHasInnerData(innerData.getBoolean(ctx));
         if (opened != null)

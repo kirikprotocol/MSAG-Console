@@ -229,7 +229,7 @@ public class DataTable extends EyelineComponent {
         if(model instanceof Identificator) {
           selected = new LazySelectedList(model, selectedRows == null ? null : new HashSet<String>(selectedRows));
         }else {
-          selected = Collections.emptyList();
+          throw new IllegalAccessError("Model has to implement Identifictor!!");
         }
       }else {
         selected = new ArrayList<String>(selectedRows);

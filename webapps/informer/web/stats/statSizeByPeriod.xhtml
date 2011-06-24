@@ -67,7 +67,7 @@
 
 
             <eye:dataTable value="#{statsSize.records}" var="row" rendered="#{longOpState == 2}" selectedRows="#{statsSize.selectedRows}">
-              <eye:row rowId="#{row.periodId}" innerRows="#{row.innerRows}">
+              <eye:row innerRows="#{row.innerRows}">
                 <eye:column name="date" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="30%" align="center">
                   <h:outputText value="#{row.data.periodString}"/>
                   <f:facet name="inner">

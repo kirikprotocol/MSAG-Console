@@ -31,7 +31,7 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   protected final DeliveryStatTotals totals;
   private final Map<Object, AggregatedRecord> recordsMap;
-  private final List<AggregatedRecord> records;
+  protected final List<AggregatedRecord> records;
 
 
   public DeliveryStatController(DeliveryStatTotals totals) {

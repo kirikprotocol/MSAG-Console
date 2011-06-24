@@ -148,7 +148,7 @@ public class DataTableHandler extends ComponentHandler {
           loadSelectedRows(startPos, t, s, rows);
         }
       } else {
-        rows = Collections.emptyList();
+        throw new IllegalAccessError("Model has to implement Identifictor!!");
       }
     } else {
       rows = Collections.emptyList();

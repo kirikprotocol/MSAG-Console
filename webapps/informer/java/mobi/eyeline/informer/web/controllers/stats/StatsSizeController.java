@@ -6,6 +6,10 @@ import mobi.eyeline.informer.admin.delivery.stat.StatEntity;
 import mobi.eyeline.informer.admin.delivery.stat.StatEntityProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.DateAndFile;
+import mobi.eyeline.informer.web.components.data_table.Identificator;
+import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.application.FacesMessage;
@@ -28,7 +32,46 @@ public class StatsSizeController extends DeliveryStatController  {
     setAggregation(AggregationType.MONTH);
   }
 
+  public DataTableModel getRecords() {
 
+    if (getState() != 2)
+      return new EmptyDataTableModel();
+
+    class DataTableModelImpl implements DataTableModel, Identificator{
+
+      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+
+        // Сортируем записи
+        if (sortOrder != null && !records.isEmpty()) {
+          Collections.sort(records, records.get(0).getRecordsComparator(sortOrder));
+        }
+
+        List<AggregatedRecord> result = new LinkedList<AggregatedRecord>();
+        for (Iterator<AggregatedRecord> i = records.iterator(); i.hasNext() && count > 0;) {
+          AggregatedRecord r = i.next();
+          if (--startPos < 0) {
+            result.add(r);
+            List<AggregatedRecord> innerRecords = r.getInnerRows();
+            if (innerRecords != null && !innerRecords.isEmpty() && sortOrder != null) {
+              Collections.sort(r.getInnerRows(), innerRecords.get(0).getRecordsComparator(sortOrder));
+            }
+            count--;
+          }
+        }
+        return result;
+      }
+
+      public int getRowsCount() {
+        return records.size();
+      }
+
+      @Override
+      public String getId(Object o) {
+        return ((StatsSizeRecord)o).getPeriodId();
+      }
+    };
+    return new DataTableModelImpl();
+  }
 
 
   @Override
