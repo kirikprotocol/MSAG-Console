@@ -10,18 +10,19 @@
 
 #include <string>
 
-#include <core/buffers/TmpBuf.hpp>
-#include <core/buffers/Array.hpp>
-#include <core/buffers/Hash.hpp>
+#include "core/buffers/TmpBuf.hpp"
+#include "core/buffers/Array.hpp"
+#include "core/buffers/Hash.hpp"
 
-#include <core/synchronization/Mutex.hpp>
-#include <core/synchronization/Event.hpp>
-#include <core/synchronization/EventMonitor.hpp>
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 
 #include "Templates.h"
 #include "misscall/callproc.hpp"
-#include <mcisme/AbntAddr.hpp>
-#include <logger/Logger.h>
+#include "mcisme/AbntAddr.hpp"
+#include "logger/Logger.h"
+#include "mcisme/Profiler.h"
 
 namespace smsc {
 namespace mcisme {
@@ -31,101 +32,105 @@ using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 using smsc::logger::Logger;
 
-
-namespace UDPattern {
-// User Data
-static const char UDHL = 0x02;
-static const char IEI = 0x70;
-static const char IEIDL = 0x00;
-// Secured Data
-static const char CPI = 0x70;
-static const char CPL1 = 0x00;
-static const char CPL2 = 0x00;
-static const char CHI = 0x00;
-static const char CHL = 0x0D;
-static const char SPI1 = 0x00;
-static const char SPI2 = 0x00;
-static const char KIc = 0x00;
-static const char KID = 0x00;
-static const char TAR1 = 0x7F;
-static const char TAR2 = 0x00;
-static const char TAR3 = 0x10;
-static const char CNTR12345 = 0x00;
-static const char PCNTR = 0x00;
-
-static const int indexCPL = 0x04;
-static const int user_data_pattern_len = 19;
-static const char user_data_pattern[19] = {UDHL, CPI, IEIDL, CPL1, CPL2, CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2, TAR3, 0,0,0,0,0, 0};//, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-};
-
-using namespace UDPattern;
-
 struct Message
 {
-  std::string abonent, caller_abonent, message, smsc_id;
-  bool        cancel, notification, skip, data_sm, secured_data;
+  AbntAddr called_abonent;
+  std::string calling_abonent, message, smsc_id;
+  bool        notification, skip, data_sm;
   static int  maxRowsPerMessage;
 
-private:
-  mutable char* user_data;
-
-  inline void reset(const std::string& _abonent="") {
-    abonent = _abonent; caller_abonent = "";
-    message = ""; smsc_id = ""; skip = false;
-    cancel = false; notification = false; data_sm = false;
-    data_sm = false; secured_data = false;
-    //rowsCount = 0; eventsCount = 0; 
-    if(user_data) delete[] user_data;
-  }
-
-public:        
-  Message(): user_data(0), data_sm(false), secured_data(false)  { reset(); };
-  ~Message(){if(user_data) delete[] user_data;};
-  Message(const Message& msg) 
-    : abonent(msg.abonent), caller_abonent(msg.caller_abonent), message(msg.message),
-      smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),  
-      skip(msg.skip), data_sm(msg.data_sm), secured_data(msg.secured_data),
-      user_data(0)
-  {
-    user_data = new char[sizeof(msg.user_data)];
-    memcpy(user_data, msg.user_data, sizeof(msg.user_data));
-  }
-
-  Message& operator=(const Message& msg) {
-    if (this != &msg) {
-      abonent = msg.abonent; caller_abonent = msg.caller_abonent;
-      message = msg.message; smsc_id = msg.smsc_id; 
-      cancel = msg.cancel; notification = msg.notification; skip = msg.skip;
-      data_sm = msg.data_sm; secured_data = msg.secured_data;
-      if(user_data) delete[] user_data;
-      if(msg.user_data)
-      {
-        user_data = new char[sizeof(msg.user_data)];
-        memcpy(user_data, msg.user_data, sizeof(msg.user_data));
-      }
-    }
-    return (*this);
-  }
+public:
+  Message()
+  : notification(false), skip(false), data_sm(false)
+  {}
 
   const char* GetMsg(void) const
   {
-    if(!secured_data)
-      return message.c_str();
-
-    if(user_data) delete[] user_data;
-    size_t secured_data_len = message.length();
-    user_data = new char[user_data_pattern_len + secured_data_len];
-    memcpy(user_data, user_data_pattern, user_data_pattern_len);
-    memcpy(user_data + user_data_pattern_len, message.c_str(), secured_data_len);
-    user_data[indexCPL] = static_cast<uint8_t>(CHL + secured_data_len + 1);
-    return user_data;
+    return message.c_str();
   }
 
   int GetMsgLen(void) const
   {
-    int len = static_cast<int>(message.length());
-    if(secured_data) len += user_data_pattern_len;
-    return len;
+    return static_cast<int>(message.length());
+  }
+
+  std::string toString() const {
+    char msgBuf[1024];
+    snprintf(msgBuf, sizeof(msgBuf), "called_abonent=%s,calling_abonent=%s,message=%s,smsc_id=%s,notification=%d,skip=%d,data_sm=%d",
+             called_abonent.getText().c_str(), calling_abonent.c_str(), message.c_str(), smsc_id.c_str(),
+             notification, skip, data_sm);
+    return msgBuf;
+  }
+};
+
+struct MCEvent
+{
+  uint8_t       id;
+  time_t        dt;
+  AbntAddrValue caller;
+  uint16_t      callCount;
+  uint8_t       missCallFlags;
+
+  MCEvent(const uint8_t& _id):id(_id), dt(0), callCount(0), missCallFlags(0) {}
+  MCEvent():id(0), dt(0), callCount(0), missCallFlags(0)
+  {
+    memset((void*)&(caller.full_addr), 0xFF, sizeof(caller.full_addr));
+  }
+
+  MCEvent(const MCEvent& e): id(e.id), dt(e.dt), callCount(e.callCount), missCallFlags(e.missCallFlags)
+  {
+    memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
+  }
+  MCEvent& operator=(const AbntAddr& addr)
+  {
+    id = 0; dt = 0; callCount = 1; missCallFlags = 0;
+    memcpy((void*)&(caller.full_addr), (void*)addr.getAddrSig(), sizeof(caller.full_addr));
+    return *this;
+  }
+
+  MCEvent& operator=(const MCEvent& e)
+  {
+    if(&e == this)
+      return *this;
+
+    id = e.id; dt = e.dt; callCount = e.callCount; missCallFlags = e.missCallFlags;
+    memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
+    return *this;
+  }
+
+  const char* toString(char* textString,size_t size) const
+  {
+    snprintf(textString, size, "id=%d,dt=%d,caller=%s,callCount=%d,missCallFlags=0x%02X", id, dt, AbntAddr(&caller).getText().c_str(), callCount, missCallFlags);
+
+    return textString;
+  }
+};
+
+struct sms_info;
+
+struct MCEventOut {
+  std::vector<MCEvent> srcEvents;
+  Message msg;
+  AbonentProfile abonentA_profile;
+
+  std::string toString() const {
+    std::string result;
+    result="msg=[";
+    result+=msg.toString();
+    result+="],srcEvents=[";
+
+    char buf[128];
+    for(std::vector<MCEvent>::const_iterator iter = srcEvents.begin(), end_iter = srcEvents.end(); iter != end_iter;)
+    {
+      result+=iter->toString(buf,sizeof(buf));
+      if ( ++iter != end_iter )
+      {
+        result += ",";
+      }
+    }
+    result += "]";
+
+    return result;
   }
 };
 
@@ -138,12 +143,15 @@ extern const char* MSG_TEMPLATE_PARAM_ROWS;    // строки сообщения          (i)
 extern const char* MSG_TEMPLATE_PARAM_CALLER;  // номер звонившего абонента (i)
 extern const char* MSG_TEMPLATE_PARAM_COUNT;   // количество звонков от абонента, if (single) => 1 (i)
 extern const char* MSG_TEMPLATE_PARAM_DATE;    // дата звонка/дата последнего звонка (i)
-    
+
+class TaskProcessor;
+
 class MessageFormatter
 {
 private:
   smsc::logger::Logger *logger;
   InformTemplateFormatter*    formatter;
+  TaskProcessor& _taskProcessor;
 
   Hash <uint32_t>             counters;
   Array<MissedCallEvent>      events;
@@ -151,7 +159,9 @@ private:
   bool isLastFromCaller(int index);
 public:
 
-  MessageFormatter(InformTemplateFormatter* _formatter) : formatter(_formatter), logger(Logger::getInstance("mci.msgfmt")) {};
+  MessageFormatter(InformTemplateFormatter* _formatter,
+                   TaskProcessor& task_processor)
+  : logger(Logger::getInstance("mci.msgfmt")), formatter(_formatter), _taskProcessor(task_processor) {};
 
   bool canAdd(const MissedCallEvent& event);
   void addEvent(const MissedCallEvent& event);
@@ -165,7 +175,7 @@ public:
                      bool originatingAddressIsSmscAddress);
 };
 
-void addBanner(Message& message, const string& banner);
+void addBanner(std::string& message, const string& banner);
 
 void keyIsNotSupported(const char* type) throw(AdapterException);
 void typeIsNotSupported(const char* type) throw(AdapterException);
@@ -177,7 +187,7 @@ protected:
 
   std::string abonent, caller;
 
-public:    
+public:
 
   NotifyGetAdapter(const std::string& _abonent="", const std::string& _caller="")
     : GetAdapter(), abonent(_abonent), caller(_caller) {}
@@ -230,7 +240,7 @@ public:
     : NotifyGetAdapter(abonent, ""), rows(_rows), total(_total) {}
   virtual ~MessageGetAdapter() {}
 
-  virtual bool isNull(const char* key) 
+  virtual bool isNull(const char* key)
     throw(AdapterException)
   {
     const char* param = findMessageTemplateKey(key);
@@ -292,7 +302,7 @@ public:
     keyIsNotSupported(key);
     return true;
   }
-  virtual const char* getString(const char* key) 
+  virtual const char* getString(const char* key)
     throw(AdapterException)
   {
     const char* param = findMessageTemplateKey(key);
@@ -302,18 +312,18 @@ public:
     return 0;
   }
   virtual int32_t  getInt32 (const char* key) throw(AdapterException)
-  { 
+  {
     const char* param = findMessageTemplateKey(key);
     if (param == MSG_TEMPLATE_PARAM_COUNT)  return count;
     keyIsNotSupported(key);
     return 0;
   }
   virtual time_t   getDateTime(const char* key) throw(AdapterException)
-  { 
+  {
     const char* param = findMessageTemplateKey(key);
     if (param == MSG_TEMPLATE_PARAM_DATE)   return date;
     keyIsNotSupported(key);
-    return 0; 
+    return 0;
   }
 
   virtual int8_t   getInt8  (const char* key) throw(AdapterException) { return (int8_t  )getInt32(key); }
