@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers.users;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
+import mobi.eyeline.informer.web.components.data_table.Identificator;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 
@@ -59,7 +60,7 @@ public class CPResourceListController extends CPResourceController {
 
     final List<Row> rows = load();
 
-    return new DataTableModel() {
+    class DataTableModelImpl implements DataTableModel, Identificator {
 
       @Override
       public String getId(Object value) {
@@ -109,6 +110,7 @@ public class CPResourceListController extends CPResourceController {
         return rows.size();
       }
     };
+    return new DataTableModelImpl();
   }
 
 

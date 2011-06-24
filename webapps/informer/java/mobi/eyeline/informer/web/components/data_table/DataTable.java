@@ -226,7 +226,11 @@ public class DataTable extends EyelineComponent {
       List<String> selected;
       if(selectAll && !disallowSelectAll) {
         DataTableModel model = (DataTableModel)modelExpression.getValue(context.getELContext());
-        selected = new LazySelectedList(model, selectedRows == null ? null : new HashSet<String>(selectedRows));
+        if(model instanceof Identificator) {
+          selected = new LazySelectedList(model, selectedRows == null ? null : new HashSet<String>(selectedRows));
+        }else {
+          selected = Collections.emptyList();
+        }
       }else {
         selected = new ArrayList<String>(selectedRows);
       }
@@ -273,9 +277,10 @@ public class DataTable extends EyelineComponent {
       List<String> selected = new LinkedList<String>();
       int i = 0;
       List rows;
+      Identificator ident = (Identificator)model;
       while(!(rows =  model.getRows(10000*i, 10000, null)).isEmpty()) {
         for (Object o : rows) {
-          String id = model.getId(o);
+          String id = ident.getId(o);
           if(unselected == null || !unselected.contains(id)) {
             selected.add(id);
           }

@@ -236,11 +236,6 @@ public class MonitoringController extends InformerController {
         return result;
       }
 
-      @Override
-      public String getId(Object value) {
-        return null;
-      }
-
       public int getRowsCount() {
         return records.size();
       }

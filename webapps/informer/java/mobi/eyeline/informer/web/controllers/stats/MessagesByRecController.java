@@ -211,11 +211,6 @@ public class MessagesByRecController extends LongOperationController {
         }
       }
 
-      @Override
-      public String getId(Object value) {
-        return null;
-      }
-
       public int getRowsCount() {
         try{
           lock.lock();

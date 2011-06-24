@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.archive;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.archive.Request;
+import mobi.eyeline.informer.web.components.data_table.Identificator;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
@@ -56,7 +57,7 @@ public class RequestListController extends InformerController{
       addError(e);
       return new EmptyDataTableModel();
     }
-    return new DataTableModel() {
+    class DataTableModelImpl implements DataTableModel, Identificator {
       @Override
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         List<RequestWrapper> result = new ArrayList<RequestWrapper>(count);
@@ -106,6 +107,7 @@ public class RequestListController extends InformerController{
         return requests.size();
       }
     };
+    return new DataTableModelImpl();
   }
 
   public String cancel() {

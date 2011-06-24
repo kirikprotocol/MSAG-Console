@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers.restriction;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
+import mobi.eyeline.informer.web.components.data_table.Identificator;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 
@@ -51,7 +52,7 @@ public class RestrictionListController extends RestrictionController {
     final List<Restriction> restrictions = getConfig().getRestrictions(filter);
 
 
-    return new DataTableModel() {
+    class DataTableModelImpl implements DataTableModel, Identificator {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         if (sortOrder != null) {
@@ -94,6 +95,7 @@ public class RestrictionListController extends RestrictionController {
         return restrictions.size();
       }
     };
+    return new DataTableModelImpl();
 
   }
 

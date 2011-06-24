@@ -19,8 +19,6 @@ public interface DataTableModel {
    */
   List getRows(int startPos, int count, DataTableSortOrder sortOrder);
 
-  String getId(Object value);
-
   /**
    * Возвращает общее число элементов в таблице
    *

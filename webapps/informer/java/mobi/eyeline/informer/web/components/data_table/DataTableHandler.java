@@ -65,12 +65,13 @@ public class DataTableHandler extends ComponentHandler {
     int i = 0;
     List _rows;
     int c = 0;
+    Identificator ident = (Identificator)t.getModel();
     do{
       _rows = t.getModel().getRows(i*1000, 1000, s);
       Iterator iter = _rows.iterator();
       while(iter.hasNext()) {
         Object r = iter.next();
-        String id = t.getModel().getId(r);
+        String id = ident.getId(r);
         if((t.isSelectAll() && !ids.contains(id)) || (!t.isSelectAll() && ids.contains(id))) {
           c++;
           if(c>startPos) {
@@ -129,7 +130,7 @@ public class DataTableHandler extends ComponentHandler {
     List rows;
 
     if(t.isInternalUpdate()) {
-      if(!t.isShowSelectedOnly()) {
+      if(!t.isShowSelectedOnly() && (m instanceof Identificator)) {
         rows = m.getRows(startPos, t.getPageSize(), s);
         if (rows.isEmpty() && startPos > 0) {
           t.setCurrentPage(0);

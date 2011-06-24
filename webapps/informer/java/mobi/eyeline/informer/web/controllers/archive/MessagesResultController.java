@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
+import mobi.eyeline.informer.web.components.data_table.Identificator;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
@@ -122,7 +123,7 @@ public class MessagesResultController extends InformerController{
       existUsers.add(u.getLogin());
     }
 
-    return new DataTableModel() {
+    class DataTableModelImpl implements DataTableModel, Identificator {
       public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
         try {
           List<ArchiveMessage> messages = getMessages(startPos, count, sortOrder);
@@ -163,6 +164,7 @@ public class MessagesResultController extends InformerController{
         }
       }
     };
+    return new DataTableModelImpl();
   }
 
   public static class MessageRow {

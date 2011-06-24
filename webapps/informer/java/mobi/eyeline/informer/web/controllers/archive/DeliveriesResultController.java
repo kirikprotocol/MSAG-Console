@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.archive.ArchiveDelivery;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.web.components.data_table.Identificator;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
@@ -164,7 +165,7 @@ public class DeliveriesResultController extends InformerController{
       existUsers.add(u.getLogin());
     }
 
-    return new DataTableModel() {
+    class DataTableModelImpl implements DataTableModel, Identificator{
       public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
         try {
           List<ArchiveDelivery> deliveries = getDeliveries(startPos, count, sortOrder);
@@ -205,6 +206,7 @@ public class DeliveriesResultController extends InformerController{
         }
       }
     };
+    return new DataTableModelImpl();
   }
 
   public static class DeliveryRow {

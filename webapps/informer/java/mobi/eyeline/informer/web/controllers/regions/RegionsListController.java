@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.WebContext;
+import mobi.eyeline.informer.web.components.data_table.Identificator;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.config.InformerTimezone;
@@ -153,7 +154,7 @@ public class RegionsListController extends RegionsController {
 
   public DataTableModel getRegionsModel() {
 
-    return new DataTableModel() {
+    class DataTableModelImpl implements DataTableModel, Identificator {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
@@ -213,6 +214,7 @@ public class RegionsListController extends RegionsController {
         return getRegions().size();
       }
     };
+    return new DataTableModelImpl();
   }
 
   protected void _download(PrintWriter writer) {
