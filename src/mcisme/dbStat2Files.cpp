@@ -82,7 +82,7 @@ bool StatisticsWriter::createStorageDir(const std::string loc)
 {
   const char * dir_ = loc.c_str();
 
-  int len = strlen(dir_);
+  unsigned len = strlen(dir_);
   if(len == 0)
     return false;
 
@@ -109,7 +109,6 @@ bool StatisticsWriter::createStorageDir(const std::string loc)
   char* p1 = buff+1;
   int dirlen = 0;
   char* p2 = strchr(p1, '/');
-  int pos = p2 - buff;
   while(p2){
     int len = p2 - p1;
     dirlen += len + 1;
