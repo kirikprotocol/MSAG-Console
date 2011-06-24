@@ -113,15 +113,16 @@ MissedCallProcessorEmulator::setPort(int port)
 }
 
 MissedCallProcessorEmulator::MissedCallProcessorEmulator()
+  : _logger(smsc::logger::Logger::getInstance("smsc.misscall"))
 {
-  _logger = smsc::logger::Logger::getInstance("smsc.misscall");
-
-  char errString[128];
-  sprintf(errString, "MissedCallProcessorEmulator:: Failed to init server socket %s:%u", _host.c_str(), _port);
-  if (_serverSocket.InitServer(_host.c_str(), _port, 0, 0, 1) != 0)
+  smsc_log_info(_logger, "Initializing MissedCallProcessorEmulator");
+  if (_serverSocket.InitServer(_host.c_str(), _port, 0, 0, 1) ||
+      _serverSocket.StartServer())
+  {
+    char errString[128];
+    sprintf(errString, "MissedCallProcessorEmulator:: Failed to init server socket %s:%u", _host.c_str(), _port);
     throw smsc::util::SystemError(errString);
-  if (_serverSocket.StartServer() != 0)
-    throw smsc::util::SystemError(errString);
+  }
 }
 
 int MissedCallProcessorEmulator::run()
