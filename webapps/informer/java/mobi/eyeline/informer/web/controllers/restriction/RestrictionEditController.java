@@ -5,8 +5,7 @@ import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.users.User;
 
 import javax.faces.model.SelectItem;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Copyright Eyeline.mobi
@@ -81,7 +80,7 @@ public class RestrictionEditController extends RestrictionController {
 
   public List<String> getSelectedUsers() {
     if (restriction.getUserIds() == null) restriction.setUserIds(new ArrayList<String>());
-    return restriction.getUserIds();
+    return new ArrayList<String>(new TreeSet<String>(restriction.getUserIds()));
   }
 
   public List<SelectItem> getUsers() {
@@ -89,6 +88,12 @@ public class RestrictionEditController extends RestrictionController {
     for (User u : getConfig().getUsers()) {
       ret.add(new SelectItem(u.getLogin()));
     }
+    Collections.sort(ret, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return ret;
   }
 }

@@ -2,7 +2,6 @@ package mobi.eyeline.informer.web.controllers.regions;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
@@ -10,8 +9,6 @@ import mobi.eyeline.informer.web.config.Configuration;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.model.SelectItem;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -104,13 +101,6 @@ public class RegionEditController extends RegionsController {
 
   }
 
-  public List<SelectItem> getSmscs() {
-    List<SelectItem> smscs = new ArrayList<SelectItem>(ss.size());
-    for (Smsc s : ss) {
-      smscs.add(new SelectItem(s.getName(), s.getName()));
-    }
-    return smscs;
-  }
 
   public DynamicTableModel getDynamicModel() {
     return dynamicModel;

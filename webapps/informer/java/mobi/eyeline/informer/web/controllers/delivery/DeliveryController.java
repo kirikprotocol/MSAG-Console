@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
-import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.users.User;
@@ -9,10 +8,7 @@ import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -45,10 +41,16 @@ public class DeliveryController extends InformerController {
   public List<SelectItem> getUniqueStatuses() {
     ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
     List<SelectItem> result = new ArrayList<SelectItem>();
-    result.add(new SelectItem(null));
+    result.add(new SelectItem("",""));
     for (DeliveryStatus s : DeliveryStatus.values()) {
       result.add(new SelectItem(s.toString(), bundle.getString("delivery.status." + s)));
     }
+    Collections.sort(result, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return result;
   }
 
@@ -58,6 +60,12 @@ public class DeliveryController extends InformerController {
     for(User u : config.getUsers()) {
       ss.add(new SelectItem(u.getLogin(), u.getLogin()));
     }
+    Collections.sort(ss, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return ss;
   }
 
@@ -80,6 +88,12 @@ public class DeliveryController extends InformerController {
     for (DeliveryMode m : DeliveryMode.values()) {
       sIs.add(new SelectItem(m, m.toString()));
     }
+    Collections.sort(sIs, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return sIs;
   }
 

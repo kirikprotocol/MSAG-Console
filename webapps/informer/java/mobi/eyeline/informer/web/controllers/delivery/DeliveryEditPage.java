@@ -244,6 +244,12 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     for (DeliveryMode m : DeliveryMode.values()) {
       sIs.add(new SelectItem(m, m.toString()));
     }
+    Collections.sort(sIs, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return sIs;
   }
 

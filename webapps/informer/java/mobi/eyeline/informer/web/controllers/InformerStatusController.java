@@ -6,6 +6,7 @@ import mobi.eyeline.informer.web.config.Configuration;
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -108,6 +109,12 @@ public class InformerStatusController extends InformerController {
       if (informerOnlineHost == null || !host.equals(informerOnlineHost))
         items.add(new SelectItem(host, host));
     }
+    Collections.sort(items, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return items;
   }
 
@@ -202,6 +209,12 @@ public class InformerStatusController extends InformerController {
       if (ftpServerOnlineHost == null || !host.equals(ftpServerOnlineHost))
         items.add(new SelectItem(host, host));
     }
+    Collections.sort(items, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return items;
   }
 
@@ -272,6 +285,12 @@ public class InformerStatusController extends InformerController {
       if (archiveDaemonOnlineHost == null || !host.equals(archiveDaemonOnlineHost))
         items.add(new SelectItem(host, host));
     }
+    Collections.sort(items, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return items;
   }
 
@@ -292,6 +311,12 @@ public class InformerStatusController extends InformerController {
       if (pvssOnlineHost == null || !host.equals(pvssOnlineHost))
         items.add(new SelectItem(host, host));
     }
+    Collections.sort(items, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return items;
   }
 

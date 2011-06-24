@@ -130,7 +130,7 @@ public class DataTableHandler extends ComponentHandler {
     List rows;
 
     if(t.isInternalUpdate()) {
-      if(!t.isShowSelectedOnly() && (m instanceof Identificator)) {
+      if(!t.isShowSelectedOnly()) {
         rows = m.getRows(startPos, t.getPageSize(), s);
         if (rows.isEmpty() && startPos > 0) {
           t.setCurrentPage(0);
@@ -138,7 +138,7 @@ public class DataTableHandler extends ComponentHandler {
           rows = m.getRows(startPos, t.getPageSize(), s);
         }
 
-      } else {
+      } else if (m instanceof Identificator) {
         rows = new LinkedList();
         loadSelectedRows(startPos, t, s, rows);
 
@@ -147,6 +147,8 @@ public class DataTableHandler extends ComponentHandler {
           t.setCurrentPage(0);
           loadSelectedRows(startPos, t, s, rows);
         }
+      } else {
+        rows = Collections.emptyList();
       }
     } else {
       rows = Collections.emptyList();

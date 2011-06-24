@@ -27,6 +27,13 @@ class RegionsController extends InformerController {
     Locale l = getLocale();
     for (InformerTimezone t : WebContext.getInstance().getWebTimezones().getTimezones())
       timeZones.add(new SelectItem(t.getTimezone(), t.getAlias(l)));
+
+    Collections.sort(timeZones, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
   }
 
   public List<SelectItem> getSmscs() {
@@ -34,6 +41,12 @@ class RegionsController extends InformerController {
     for (Smsc s : ss) {
       smscs.add(new SelectItem(s.getName(), s.getName()));
     }
+    Collections.sort(smscs, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return smscs;
   }
 

@@ -78,10 +78,16 @@ public class MonitoringController extends InformerController {
 
   public List<SelectItem> getUniqueSources() {
     List<SelectItem> result = new ArrayList<SelectItem>();
-    result.add(new SelectItem(null));
+    result.add(new SelectItem("",""));
     for (MBean.Source s : MBean.Source.values()) {
       result.add(new SelectItem(s.toString(), s.toString()));
     }
+    Collections.sort(result, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return result;
   }
 

@@ -41,6 +41,12 @@ public class RegionsListController extends RegionsController {
     for (Smsc s : getConfig().getSmscs()) {
       smscs.add(new SelectItem(s.getName(), s.getName()));
     }
+    Collections.sort(smscs, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     defaultMax = getConfig().getDefaultMaxPerSecond();
   }
 

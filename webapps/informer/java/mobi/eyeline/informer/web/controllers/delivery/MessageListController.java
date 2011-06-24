@@ -235,6 +235,12 @@ public class MessageListController extends InformerController {
     for (MsgState st : MsgState.values()) {
       result.add(new SelectItem(st, MsgStateConverter.getAsString(getLocale(), st)));
     }
+    Collections.sort(result, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return result;
   }
 

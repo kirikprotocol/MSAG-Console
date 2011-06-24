@@ -131,10 +131,16 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   public List<SelectItem> getUsers() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    ret.add(new SelectItem(""));
+    ret.add(new SelectItem("",""));
     for (User u : getConfig().getUsers()) {
-      ret.add(new SelectItem(u.getLogin()));
+      ret.add(new SelectItem(u.getLogin(),u.getLogin()));
     }
+    Collections.sort(ret, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return ret;
   }
 

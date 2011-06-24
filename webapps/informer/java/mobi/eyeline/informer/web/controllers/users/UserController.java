@@ -6,6 +6,8 @@ import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -25,6 +27,12 @@ public class UserController extends InformerController {
     for (User.Status s : User.Status.values()) {
       ret.add(new SelectItem(s));
     }
+    Collections.sort(ret, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return ret;
   }
 
@@ -50,6 +58,12 @@ public class UserController extends InformerController {
     for (Region r : getConfig().getRegions()) {
       regions.add(new SelectItem(r.getRegionId(), r.getName()));
     }
+    Collections.sort(regions, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return regions;
   }
 

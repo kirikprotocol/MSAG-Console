@@ -91,17 +91,29 @@ public class JournalController extends InformerController {
     for(User u : getConfig().getUsers()) {
       ss.add(new SelectItem(u.getLogin(), u.getLogin()));
     }
+    Collections.sort(ss, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return ss;
   }
 
   public List<SelectItem> getUniqueSubjectNamesFromJournal() {
     List<SelectItem> result = new ArrayList<SelectItem>();
-    result.add(new SelectItem(null));
+    result.add(new SelectItem("",""));
     for (Subject s : journal.getSubjects()) {
       if (s == Subject.FTPSERVER && !getConfig().isFtpServerDeployed())
         continue;
       result.add(new SelectItem(s.getKey(), s.getSubject(getLocale())));
     }
+    Collections.sort(result, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return result;
   }
 
