@@ -474,6 +474,14 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     svcTypeForBe = "";
   }
 
+  std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
+  pStorage = new FSStorage();
+  int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue);
+  if (ret) {
+    smsc_log_error(logger, "storage initialization failed: ret = %d", ret);
+    throw ConfigException("Can't initialize events storage");
+  }
+
   try {
     if (advertCfg->getBool("useAdvert"))
       _outputMessageProcessorsDispatcher = new BannerOutputMessageProcessorsDispatcher(*this, advertCfg);
@@ -484,13 +492,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     _outputMessageProcessorsDispatcher = new BannerlessOutputMessageProcessorsDispatcher(*this);
   }
 
-  std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
-  pStorage = new FSStorage();
-  int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue);
-  if (ret) {
-    smsc_log_error(logger, "storage initialization failed: ret = %d", ret);
-    throw ConfigException("Can't initialize events storage");
-  }
   string sResponseWaitTime;
   try {
     sResponseWaitTime = config->getString("responceWaitTime");
