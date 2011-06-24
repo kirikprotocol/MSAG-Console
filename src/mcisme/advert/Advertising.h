@@ -3,15 +3,12 @@
 
 #include <string>
 
-#include <core/synchronization/Mutex.hpp>
-#include <logger/Logger.h>
+#include "core/synchronization/Mutex.hpp"
+#include "logger/Logger.h"
+#include "mcisme/Messages.h"
 
 namespace smsc {
 namespace mcisme {
-
-using namespace smsc::core::synchronization;
-
-#define MAX_ASYNCS_COUNT 1024   // max count �f asynchronic requests in queue
 
 // ���� ���������
 enum
@@ -38,7 +35,15 @@ struct BannerRequest
   int         transportType;
   uint32_t    maxBannerSize;
   uint32_t    charSet;
-  uint32_t bannerId, ownerId, rotatorId;
+  uint32_t    bannerId, ownerId, rotatorId;
+  /*
+     fd value that used to send banner request.
+     this value will be also used to send rollback request
+     if request's timeout is expired
+  */
+  int         fd;
+  MCEventOut* mcEventOut;
+
   /**
    *  constructor
    *
@@ -50,15 +55,25 @@ struct BannerRequest
    *
    */
   BannerRequest(const std::string& an_abonent, const std::string& service_name,
-                int transport_type, uint32_t char_set, uint32_t max_banner_size)
+                int transport_type, uint32_t char_set, uint32_t max_banner_size,
+                MCEventOut* mc_event_out)
     : abonent(an_abonent), serviceName(service_name), banner(""),
       transportType(transport_type), maxBannerSize(max_banner_size), charSet(char_set),
-      bannerId(-1), ownerId(0), rotatorId(0),
-      id(getNextId()) {}
+      bannerId(-1), ownerId(0), rotatorId(0), fd(-1), mcEventOut(mc_event_out), id(getNextId())
+  {}
 
+  // banner rollback request
   BannerRequest(uint32_t aTransactionId, uint32_t aBannerId, uint32_t anOwnerId, uint32_t aRotatorId)
     : id(aTransactionId), bannerId(aBannerId),
-      ownerId(anOwnerId), rotatorId(aRotatorId) {}
+      ownerId(anOwnerId), rotatorId(aRotatorId), fd(-1), mcEventOut(NULL)
+  {}
+
+  ~BannerRequest() {
+    delete mcEventOut;
+  }
+
+  void resetMCEventOut() { mcEventOut = NULL; }
+
   /**
    *  return value of Id
    */
@@ -70,7 +85,7 @@ protected:
   uint32_t    id; // increment on creation
 
   static uint32_t lastId;
-  static Mutex	lastIdMutex;
+  static core::synchronization::Mutex lastIdMutex;
 
   /**
    *  return the lastest value of BannerRequests Id
@@ -85,17 +100,15 @@ protected:
 
 struct BannerResponseTrace {
   BannerResponseTrace()
-    : transactionId(0), bannerId(0), ownerId(0), rotatorId(0), bannerIdIsNotUsed(false) {}
+    : transactionId(0), bannerId(0), ownerId(0), rotatorId(0) {}
 
   uint32_t transactionId, bannerId, ownerId, rotatorId;
-  bool bannerIdIsNotUsed;
 
   bool operator != (const BannerResponseTrace& rhs) {
     if ( transactionId != rhs.transactionId ||
          bannerId != rhs.bannerId ||
          ownerId != rhs.ownerId ||
-         rotatorId != rhs.rotatorId ||
-         bannerIdIsNotUsed != rhs.bannerIdIsNotUsed)
+         rotatorId != rhs.rotatorId )
       return true;
     else
       return false;
@@ -109,20 +122,18 @@ public:
   /**
    * Returns 0 - if OK  or  error code (see AdvertErrors.h)
    *
-   * @param abonent         abonent address in format .ton.npi.value
-   * @param serviceName     name of service
-   * @param transportType   type of transport (smpp/sms=1, smpp/ussd=2, wap/http=3, mms=4)
-   * @param charSet
-   * @param banner          text banner to show, empty if no banner
-   *
+   * @param abonent          abonent address in format .ton.npi.value
+   * @param service_name     name of service
+   * @param transport_type   type of transport (smpp/sms=1, smpp/ussd=2, wap/http=3, mms=4)
+   * @param char_set
+   * @param max_banner_size  max banner size that could be formed
+   * @param mc_event_out     event that should be sent
    * @return int            0 (if success) or error code
    */
-  virtual uint32_t getBanner(const std::string& abonent,
-                             const std::string& service_name,
-                             uint32_t transport_type, uint32_t char_set,
-                             std::string* banner,
-                             BannerResponseTrace* banner_resp_trace,
-                             size_t max_banner_size) = 0;
+  virtual uint32_t sendBannerRequest(const std::string& abonent,
+                                     const std::string& service_name,
+                                     uint32_t transport_type, uint32_t char_set,
+                                     uint32_t max_banner_size, MCEventOut* mc_event_out) = 0;
 
   virtual void rollbackBanner(uint32_t transactionId,
                               uint32_t bannerId,
