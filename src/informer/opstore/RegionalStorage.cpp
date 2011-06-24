@@ -292,6 +292,12 @@ const DeliveryInfo& RegionalStorage::getDlvInfo() const
 }
 
 
+DeliveryInfo& RegionalStorage::getDlvInfo()
+{
+    return dlv_->getDlvInfo();
+}
+
+
 DlvState RegionalStorage::getState() const {
     return dlv_->getState();
 }

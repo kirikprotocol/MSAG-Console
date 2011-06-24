@@ -63,6 +63,7 @@ public:
     dlvid_type getDlvId() const;
     regionid_type getRegionId() const { return region_->getRegionId(); }
     const DeliveryInfo& getDlvInfo() const;
+    DeliveryInfo& getDlvInfo();
     const Region& getRegion() const { return *region_; }
 
     DlvState getState() const;
