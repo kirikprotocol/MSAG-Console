@@ -1,5 +1,6 @@
 #include <exception>
 #include <algorithm>
+#include <memory>
 #include <iconv.h>
 #include <string>
 #include <time.h>
@@ -37,8 +38,6 @@ extern char* cTime(const time_t* clock, char* buff, size_t bufSz);
 
 using namespace scag::util::encodings;
 using namespace std;
-
-const uint8_t	STK_PROFILE_ID = 0;
 
 static time_t parseDateTime(const char* str)
 {
@@ -423,16 +422,21 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     sResendingPeriod = schedulingCfg->getString("resendingPeriod");
   } catch (...) {
     sResendingPeriod = "00:30:00";
-    smsc_log_warn(logger, "Parameter <MCISme.ResendingPeriod> missed. Default value is '00:30:00'.");
+    smsc_log_warn(logger, "Parameter <MCISme.resendingPeriod> missed. Default value is '00:30:00'.");
   }
   time_t resendingPeriod = parseTime(sResendingPeriod.c_str());
 
   string sSchedOnBusy;
   try { sSchedOnBusy = schedulingCfg->getString("schedOnBusy"); } catch (...){sSchedOnBusy = "00:05:00";
-    smsc_log_warn(logger, "Parameter <MCISme.ResendingPeriod> missed. Default value is '00:05:00'.");}
+    smsc_log_warn(logger, "Parameter <MCISme.schedOnBusy> missed. Default value is '00:05:00'.");}
   time_t schedOnBusy = parseTime(sSchedOnBusy.c_str());
 
-  pDeliveryQueue = new DeliveryQueue(resendingPeriod, schedOnBusy);
+  string sSchedDelay;
+  try { sSchedDelay = schedulingCfg->getString("schedDelay"); } catch (...){sSchedDelay = "00:00:00";
+    smsc_log_warn(logger, "Parameter <MCISme.schedDelay> missed. Default value is '00:00:00'.");}
+  time_t schedDelay = parseTime(sSchedDelay.c_str());
+
+  pDeliveryQueue = new DeliveryQueue(resendingPeriod, schedOnBusy, schedDelay);
 
   std::auto_ptr<ConfigView> schedCfgGuard(schedulingCfg->getSubConfig("schedule"));
   ConfigView* schedCfg = schedCfgGuard.get();
@@ -650,7 +654,7 @@ int TaskProcessor::Execute()
       profileStorage->Get(to, profile);
 
       if(!forceInform && !profile.inform)
-        smsc_log_debug(logger, "Event %s->%s skipped because inform disabled for abonent %s and forceInform is false.", event.from.c_str(), event.to.c_str(), to.toString().c_str());
+        smsc_log_debug(logger, "Event %s->%s skipped because inform disabled for Subscriber %s and forceInform is false.", event.from.c_str(), event.to.c_str(), to.toString().c_str());
       else if (checkEventMask(profile.eventMask, event.cause))
       {
         if ( _iasmeProxy && _iasmeProxy->isConnected() &&
@@ -661,7 +665,7 @@ int TaskProcessor::Execute()
           processLocally(from, to, event, profile);
       }
       else
-        smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X)", to.getText().c_str(), profile.eventMask, event.cause);
+        smsc_log_debug(logger, "Event: for Subscriber %s skipped (userMask=%02X, eventCause=%02X)", to.getText().c_str(), profile.eventMask, event.cause);
     } catch (BadAddrException& ex) {
       smsc_log_error(logger, "TaskProcessor::Execute::: caught BadAddrException [%s]", ex.what());
     } catch (...) {
@@ -691,7 +695,7 @@ TaskProcessor::processLocally(const AbntAddr& from, const AbntAddr& to,
 
   store_A_Event_in_logstore(from, to, profile, callerProfile);
   statistics->incMissed();
-  smsc_log_debug(logger, "Abonent %s (cause = 0x%02X) was added to Scheduled Delivery Queue",
+  smsc_log_debug(logger, "Subscriber %s (cause = 0x%02X) was added to Scheduled Delivery Queue",
                  to.toString().c_str(), event.cause);
 }
 
@@ -702,7 +706,7 @@ TaskProcessor::forwardEventToIASME(const MissedCallEvent &event)
 }
 
 void
-TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
+TaskProcessor::ProcessAbntEvents(const AbntAddr& called_abnt,
                                  SendMessageEventHandler* bannerEngineProxy)
 {
   static time_t start = time(0);
@@ -711,89 +715,89 @@ TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt,
 
   vector<MCEvent> events;
 
-  if(!GetAbntEvents(abnt, events))
+  if(!GetAbntEvents(called_abnt, events))
   {
-    smsc_log_info(logger, "No more events for Abonent %s ", abnt.toString().c_str());
-    pDeliveryQueue->Remove(abnt);
+    smsc_log_info(logger, "No more events for Subscriber %s ", called_abnt.toString().c_str());
+    pDeliveryQueue->Remove(called_abnt);
     return;
   }
-  smsc_log_info(logger, "Attempt to send SMS to Abonent %s ", abnt.toString().c_str());
+  smsc_log_info(logger, "Attempt to send SMS to Subscriber %s ", called_abnt.toString().c_str());
 
   AbonentProfile profile;
-  profileStorage->Get(abnt, profile);
+  profileStorage->Get(called_abnt, profile);
 
   if(!forceInform && !profile.inform)
   {
-    smsc_log_info(logger, "Inform is off for Abonent %s - cancel sending", abnt.toString().c_str());
-    pStorage->deleteEvents(abnt, events);
+    smsc_log_info(logger, "Inform is off for Subscriber %s - cancel sending", called_abnt.toString().c_str());
+    pStorage->deleteEvents(called_abnt, events);
     return;
   }
 
-  MessageFormatter formatter(templateManager->getInformFormatter(profile.informTemplateId));
+  MessageFormatter formatter(templateManager->getInformFormatter(profile.informTemplateId), *this);
 
-  int timeOffset = static_cast<int>(smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone);
+  int timeOffset = static_cast<int>(smsc::system::common::TimeZoneManager::getInstance().getTimeZone(called_abnt.getAddress())+timezone);
 
-  MCEventOut mcEventOut("", "");
-  if ( !formatter.formatMessage(abnt, events, &mcEventOut, getAddress(), timeOffset, _originatingAddressIsMCIAddress) ) {
-    smsc_log_debug(logger, "TaskProcessor::ProcessAbntEvents::: no more events for abonent '%s', formatter.formatMessage retuned false", abnt.toString().c_str());
+  std::auto_ptr<MCEventOut> mcEventOut(new MCEventOut());
+  if ( !formatter.formatMessage(called_abnt, events, mcEventOut.get(), getAddress(), timeOffset, _originatingAddressIsMCIAddress) ) {
+    smsc_log_debug(logger, "TaskProcessor::ProcessAbntEvents::: no more events for Subscriber '%s', formatter.formatMessage retuned false", called_abnt.toString().c_str());
     return;
   }
 
-  smsc_log_debug(logger, "TaskProcessor::ProcessAbntEvents::: next out event=[%s]", mcEventOut.toString().c_str());
-  Message msg;
+  mcEventOut->msg.data_sm = true;
+  mcEventOut->msg.called_abonent = called_abnt;
 
-  if(profile.informTemplateId == STK_PROFILE_ID)
-    msg.secured_data = true;
-  else
-    msg.data_sm = true;
+  smsc_log_debug(logger, "TaskProcessor::ProcessAbntEvents::: next out event=[%s]", mcEventOut->toString().c_str());
 
-  msg.abonent = abnt.getText();
-  msg.message = mcEventOut.msg;
-  msg.caller_abonent = _originatingAddressIsMCIAddress ? getAddress() : mcEventOut.caller;
+  size_t messageSize = mcEventOut->msg.message.size();
+  bool needBannerInTranslit = !util::hasHighBit(mcEventOut->msg.message.c_str(), messageSize);
+  // if we have a connection to Banner Engine, there is some message to send to BE
+  // and this message was sent successfully, then return from ProcessAbntEvents().
+  // In this case we send sms to Subscriber about missed call event when response contained banner
+  // will be gotten from BE
+  if(bannerEngineProxy && _maxMessageSize - messageSize > 0 &&
+      !bannerEngineProxy->sendBannerRequest(called_abnt, needBannerInTranslit, mcEventOut.get(),
+                                            static_cast<uint32_t>(_maxMessageSize - messageSize))) {
+    mcEventOut.release();
+    return;
+  }
+  // send sms to Subscriber about missed call event.
+  // this is the case when we doesn't need to call Banner Engine to get banner
+  // or when call to Banner Engine was failed because connection to BE is broken
 
-  size_t messageSize = msg.message.size();
-  bool needBannerInTranslit = !smsc::util::hasHighBit(msg.message.c_str(), messageSize);
-  BannerResponseTrace bannerRespTrace;
-  if(bannerEngineProxy)
-    addBanner(msg, bannerEngineProxy->getBanner(abnt, &bannerRespTrace, needBannerInTranslit,
-                                                static_cast<uint32_t>(_maxMessageSize - messageSize)));
-
-  smsc_log_info(logger, "ProcessAbntEvents: prepared message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
-
-  sendMessage(abnt, msg, mcEventOut, bannerRespTrace);
+  BannerResponseTrace emptyBannerRespTrace;
+  sendMessage(*mcEventOut, emptyBannerRespTrace);
 }
 
 bool
-TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg,
-                           const MCEventOut& outEvent, const BannerResponseTrace& bannerRespTrace)
+TaskProcessor::sendMessage(const MCEventOut& out_event, const BannerResponseTrace& banner_resp_trace)
 {
   int seqNum;
   try {
     seqNum = getMessageSender()->getSequenceNumber();
   } catch (RetryException& ex) {
-    pDeliveryQueue->Reschedule(abnt);
+    pDeliveryQueue->Reschedule(out_event.msg.called_abonent);
     throw;
   }
 
   sms_info* pInfo = new sms_info;
 
   pInfo->sending_time = time(0);
-  pInfo->abnt = abnt;
-  pInfo->events = outEvent.srcEvents;
-  pInfo->bannerRespTrace = bannerRespTrace;
+  pInfo->abnt = out_event.msg.called_abonent;
+  pInfo->events = out_event.srcEvents;
+  pInfo->bannerRespTrace = banner_resp_trace;
   insertSmsInfo(seqNum, pInfo);
 
   try {
-    if(!getMessageSender()->send(seqNum, msg))
+    if(!getMessageSender()->send(seqNum, out_event.msg))
     {
-      smsc_log_error(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
-      pDeliveryQueue->Reschedule(pInfo->abnt);
+      smsc_log_error(logger, "Send DATA_SM for Subscriber %s failed", pInfo->abnt.toString().c_str());
+      pDeliveryQueue->Reschedule(out_event.msg.called_abonent);
       deleteSmsInfo(seqNum);
       delete pInfo;
       return false;
     }
   } catch (RetryException& ex) {
-    pDeliveryQueue->Reschedule(abnt);
+    pDeliveryQueue->Reschedule(out_event.msg.called_abonent);
     deleteSmsInfo(seqNum);
     delete pInfo;
     throw;
@@ -804,7 +808,7 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg,
 void
 TaskProcessor::store_D_Event_in_logstore(const AbntAddr& abnt,
                                          const vector<MCEvent>& events,
-                                         const AbonentProfile& abntProfile )
+                                         const AbonentProfile& abntProfile)
 {
   const std::string& calledAbonent = abnt.getText();
   for(vector<MCEvent>::const_iterator iter = events.begin(), end_iter = events.end();
@@ -861,18 +865,21 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
     toList.erase(pInfo->timeoutIter);
   }
 
-  smsc_log_info(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num=%d, status=%d", pInfo->abnt.toString().c_str(), seqNum, status);
+  smsc_log_info(logger, "Received a DATA_SM_RESP for Subscriber %s seq_num=%d, status=%d", pInfo->abnt.toString().c_str(), seqNum, status);
 
   if(status == smsc::system::Status::OK)
   {
     AbonentProfile abntProfile;
     profileStorage->Get(pInfo->abnt, abntProfile);
 
+    commitMissedCallEvents(pInfo->abnt,
+                           pInfo->events,
+                           abntProfile);
+
     _outputMessageProcessorsDispatcher->dispatchSendAbntOnlineNotifications(pInfo.release(), abntProfile);
   } else {
     BannerResponseTrace emptyBannerRespTrace;
-    if ( pInfo->bannerRespTrace != emptyBannerRespTrace &&
-         pInfo->bannerRespTrace.bannerIdIsNotUsed  == false )
+    if (pInfo->bannerRespTrace != emptyBannerRespTrace)
       _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(pInfo->bannerRespTrace);
 
     statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
@@ -892,30 +899,30 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 bool
 TaskProcessor::invokeProcessSubmitSmResp(int cmdId, int status, int seqNum)
 {
-  smsc_log_debug(logger, "Recieve a SUBMIT_SM_RESP seq_num=%d, status=%d", seqNum);
+  smsc_log_debug(logger, "Received a SUBMIT_SM_RESP seq_num=%d, status=%d", seqNum);
 
   BannerResponseTrace bannerRespTrace = deleteBannerInfo(seqNum);
   BannerResponseTrace emptyBannerRespTrace;
 
   if (status != smsc::system::Status::OK &&
-      bannerRespTrace != emptyBannerRespTrace &&
-      bannerRespTrace.bannerIdIsNotUsed  == false)
-  {
+      bannerRespTrace != emptyBannerRespTrace)
     _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(bannerRespTrace);
-  }
+
   return true;
 }
 
 void
-TaskProcessor::commitMissedCallEvents(const sms_info* pInfo, const AbonentProfile& abntProfile )
+TaskProcessor::commitMissedCallEvents(const AbntAddr& abonent,
+                                      const std::vector<MCEvent>& src_events,
+                                      const AbonentProfile& abnt_profile)
 {
-  statistics->incDelivered(static_cast<unsigned>(pInfo->events.size()));
-  pStorage->deleteEvents(pInfo->abnt, pInfo->events);
+  statistics->incDelivered(static_cast<unsigned>(src_events.size()));
+  pStorage->deleteEvents(abonent, src_events);
 
-  store_D_Event_in_logstore(pInfo->abnt, pInfo->events, abntProfile );
+  store_D_Event_in_logstore(abonent, src_events, abnt_profile);
 
-  time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, smsc::system::Status::OK);
-  pStorage->setSchedParams(pInfo->abnt, schedTime, smsc::system::Status::OK);
+  time_t schedTime = pDeliveryQueue->Reschedule(abonent, smsc::system::Status::OK);
+  pStorage->setSchedParams(abonent, schedTime, smsc::system::Status::OK);
 }
 
 void TaskProcessor::invokeProcessDataSmTimeout(void)
@@ -937,20 +944,7 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
       smsInfo.Delete(it->seqNum);
       toList.erase(it);
     }
-    /*
-    smsc::core::buffers::IntHash<sms_info*>::Iterator It(smsInfo.First());
 
-    while (It.Next(seqNum, pInfo)) {
-      if(curTime > (pInfo->sending_time + responseWaitTime)) {
-        smsc_log_info(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
-
-        statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
-        smsInfoCache.push_back(std::make_pair(seqNum, pInfo));
-        smsInfo.Delete(seqNum);
-        count++;
-      }
-    }
-    */
     int count_new = smsInfo.Count();
     smsc_log_debug(logger, "Complete searching unresponded DATA_SM. Total SMS in Hash is %d, removed %d (%d)", count_new, count_old - count_new, count);
 
@@ -961,19 +955,18 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
   {
     seqNum = (*iter).first;
     pInfo = (*iter).second;
-    smsc_log_info(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
+    smsc_log_info(logger, "SMS for Subscriber %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
     statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
     try {
       BannerResponseTrace emptyBannerRespTrace;
-      if ( pInfo->bannerRespTrace != emptyBannerRespTrace &&
-           pInfo->bannerRespTrace.bannerIdIsNotUsed  == false )
+      if (pInfo->bannerRespTrace != emptyBannerRespTrace)
         _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(pInfo->bannerRespTrace);
 
       time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
       pStorage->setSchedParams(pInfo->abnt, schedTime, -1);
 
     } catch (std::exception& ex) {
-      smsc_log_error(logger, "TaskProcessor::invokeProcessDataSmTimeout::: catched unexpected exception [%s]", ex.what());
+      smsc_log_error(logger, "TaskProcessor::invokeProcessDataSmTimeout::: caught unexpected exception [%s]", ex.what());
     }
     delete pInfo;
   }
@@ -981,7 +974,7 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
 
 bool TaskProcessor::invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt)
 {
-  smsc_log_debug(logger, "Recieve an ALERT_NOTIFICATION for Abonent %s status = %d", abnt.toString().c_str(), status);
+  smsc_log_debug(logger, "Recieve an ALERT_NOTIFICATION for Subscriber %s status = %d", abnt.toString().c_str(), status);
   if(cmdId == smsc::smpp::SmppCommandSet::ALERT_NOTIFICATION)
   {
     time_t schedTime = pDeliveryQueue->RegisterAlert(abnt);
@@ -1006,32 +999,31 @@ TaskProcessor::needNotify(const AbonentProfile& profile, const sms_info* pInfo) 
   if(forceNotify || profile.notify)
     return true;
   else
-    smsc_log_info(logger, "Notify is off for Abonent %s", pInfo->abnt.toString().c_str());
+    smsc_log_info(logger, "Notify is off for Subscriber %s", pInfo->abnt.toString().c_str());
   return false;
 }
 
 void
-TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
+TaskProcessor::SendAbntOnlineNotifications(const sms_info* p_info,
                                            const AbonentProfile& profile,
                                            SendMessageEventHandler* bannerEngineProxy)
 {
-  if ( !needNotify(profile, pInfo) ) return;
+  if ( !needNotify(profile, p_info) ) return;
 
-  size_t events_count = pInfo->events.size();
+  size_t events_count = p_info->events.size();
 
   NotifyTemplateFormatter* formatter = templateManager->getNotifyFormatter(profile.notifyTemplateId);
   OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
   ContextEnvironment ctx;
-  string abnt = pInfo->abnt.getText();
+  const string& abnt = p_info->abnt.getText();
 
   for(int i = 0; i < events_count; i++)
   {
-    Message msg;
-    AbntAddr caller(&pInfo->events[i].caller);
-    if ( time(0) - pInfo->events[i].dt > _sendAbntOnlineNotificationPeriod ) {
+    AbntAddr caller(&p_info->events[i].caller);
+    if ( time(0) - p_info->events[i].dt > _sendAbntOnlineNotificationPeriod ) {
       char lastCallingTimeStr[32];
-      smsc_log_info(logger, "SendAbntOnlineNotifications: last calling time=[%s] for caller '%s' to '%s', notificationPeriod was expired. Cancel sending online notification to calling abonents",
-                    cTime(&pInfo->events[i].dt, lastCallingTimeStr, sizeof(lastCallingTimeStr)),
+      smsc_log_info(logger, "SendAbntOnlineNotifications: last calling time=[%s] for caller '%s' to '%s', notificationPeriod was expired. Cancel sending online notification to calling Subscribers",
+                    cTime(&p_info->events[i].dt, lastCallingTimeStr, sizeof(lastCallingTimeStr)),
                     caller.getText().c_str(), abnt.c_str());
       return;
     }
@@ -1040,43 +1032,68 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
       AbonentProfile callerProfile;
       profileStorage->Get(caller, callerProfile);
       if ( !callerProfile.wantNotifyMe ) {
-        smsc_log_info(logger, "SendAbntOnlineNotifications: useWantNotifyPolicy=true, profile's wantNotifyMe flag=false for abonent=%s, won't send notification to abonent",
+        smsc_log_info(logger, "SendAbntOnlineNotifications: useWantNotifyPolicy=true, profile's wantNotifyMe flag=false for Subscriber=%s, won't send notification to Subscriber",
                       caller.getText().c_str());
         continue;
       }
     }
 
-    msg.abonent = caller.getText();
+    std::auto_ptr<MCEventOut> mcEventOut(new MCEventOut());
 
-    NotifyGetAdapter adapter(abnt, msg.abonent);
-    messageFormatter->format(msg.message, adapter, ctx);
+    mcEventOut->msg.called_abonent = caller;
+    mcEventOut->msg.calling_abonent = _originatingAddressIsMCIAddress ? getAddress() : abnt;
+    mcEventOut->msg.notification = true;
+    mcEventOut->abonentA_profile = profile;
+    mcEventOut->srcEvents = p_info->events;
+
+    NotifyGetAdapter adapter(abnt, mcEventOut->msg.called_abonent.getText());
+    messageFormatter->format(mcEventOut->msg.message, adapter, ctx);
 
     try {
-      checkAddress(msg.abonent.c_str());
+      checkAddress(mcEventOut->msg.called_abonent.getText().c_str());
     } catch(Exception e) {
       smsc_log_error(logger, "Skip notification message - bad address %s", e.what());
       continue;
     }
 
-    msg.caller_abonent = _originatingAddressIsMCIAddress ? getAddress() : abnt;
-    msg.notification = true;
+    size_t messageSize = mcEventOut->msg.message.size();
+    bool needBannerInTranslit = !util::hasHighBit(mcEventOut->msg.message.c_str(), messageSize);
 
-    size_t messageSize = msg.message.size();
-    bool needBannerInTranslit = !smsc::util::hasHighBit(msg.message.c_str(), messageSize);
+    // if we have a connection to Banner Engine, there is some message to send to BE
+    // and this message was sent successfully, then return from ProcessAbntEvents().
+    // In this case we send sms to Subscriber about missed call event when response contained banner
+    // will be gotten from BE
+    if(bannerEngineProxy && _maxMessageSize - messageSize > 0 &&
+        !bannerEngineProxy->sendBannerRequest(caller, needBannerInTranslit, mcEventOut.get(),
+                                              static_cast<uint32_t>(_maxMessageSize - messageSize))) {
+      mcEventOut.release();
+      continue;
+    }
 
-    BannerResponseTrace bannerRespTrace;
-    if(bannerEngineProxy)
-      addBanner(msg, bannerEngineProxy->getBanner(caller, &bannerRespTrace, needBannerInTranslit,
-                                                  static_cast<uint32_t>(_maxMessageSize - messageSize)));
-
-    smsc_log_info(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
-
-    int seqNum = getMessageSender()->getSequenceNumber();
-    insertBannerInfo(seqNum, bannerRespTrace);
-    statistics->incNotified();
-    getMessageSender()->send(seqNum, msg);
-    store_N_Event_in_logstore(abnt, caller.getText());
+    // send sms to Subscriber about missed call event.
+    // this is the case when we doesn't need call to Banner Engine to get banner
+    // or when call to Banner Engine was failed because connection to BE is broken
+    processNotificationMessage(mcEventOut->msg);
   }
+}
+
+void
+TaskProcessor::processNotificationMessage(const BannerResponseTrace& banner_resp_trace,
+                                          const Message& msg)
+{
+  int seqNum = processNotificationMessage(msg);
+  insertBannerInfo(seqNum, banner_resp_trace);
+}
+
+int
+TaskProcessor::processNotificationMessage(const Message& msg)
+{
+  int seqNum = getMessageSender()->getSequenceNumber();
+  statistics->incNotified();
+  getMessageSender()->send(seqNum, msg);
+  store_N_Event_in_logstore(msg.calling_abonent, msg.called_abonent.getText());
+
+  return seqNum;
 }
 
 void TaskProcessor::openInQueue() {
@@ -1124,7 +1141,7 @@ bool TaskProcessor::getFromInQueue(MissedCallEvent& event)
 // Admin Interface
 string TaskProcessor::getSchedItem(const string& Abonent)
 {
-  smsc_log_info(logger, "Received schedule query for abonent %s", Abonent.c_str());
+  smsc_log_info(logger, "Received schedule query for Subscriber %s", Abonent.c_str());
   string result;
 
   try{checkAddress(Abonent.c_str());}catch(Exception e)
@@ -1138,7 +1155,7 @@ string TaskProcessor::getSchedItem(const string& Abonent)
 
   if(!pDeliveryQueue->Get(abnt, item))
   {
-    smsc_log_info(logger, "Abonent %s don't exists in Delivery Queue", Abonent.c_str());
+    smsc_log_info(logger, "Subscriber %s don't exists in Delivery Queue", Abonent.c_str());
     return result;
   }
 
@@ -1160,7 +1177,7 @@ string TaskProcessor::getSchedItem(const string& Abonent)
 
 string TaskProcessor::getSchedItems(void)
 {
-  smsc_log_info(logger, "Received schedule query for first 50 abonents ");
+  smsc_log_info(logger, "Received schedule query for first 50 Subscribers ");
   string				result;
   vector<SchedItem>	items;
 

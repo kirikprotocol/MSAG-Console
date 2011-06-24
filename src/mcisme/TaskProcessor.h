@@ -193,10 +193,6 @@ class TaskProcessor : public Thread, public MissedCallListener,
 
   bool needNotify(const AbonentProfile& profile, const sms_info* pInfo) const;
 
-  bool sendMessage(const AbntAddr& abnt, const Message& msg,
-                   const MCEventOut& outEvent,
-                   const BannerResponseTrace& bannerRespTrace);
-
   void store_D_Event_in_logstore(const AbntAddr& abnt,
                                  const vector<MCEvent>& events,
                                  const AbonentProfile& abntProfile);
@@ -245,6 +241,12 @@ public:
   void SendAbntOnlineNotifications(const sms_info* pInfo,
                                    const AbonentProfile& profile,
                                    SendMessageEventHandler* bannerEngineProxy=NULL);
+  int processNotificationMessage(const Message& msg);
+  void processNotificationMessage(const BannerResponseTrace& banner_resp_trace,
+                                  const Message& msg);
+
+  bool sendMessage(const MCEventOut& outEvent,
+                   const BannerResponseTrace& bannerRespTrace);
 
   int getDaysValid() const { return daysValid;  }
   int getProtocolId() const { return protocolId; }
@@ -283,7 +285,9 @@ public:
   void invokeProcessDataSmTimeout(void);
   bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
 
-  void commitMissedCallEvents(const sms_info* pInfo, const AbonentProfile& abntProfile);
+  void commitMissedCallEvents(const AbntAddr& abonent,
+                              const std::vector<MCEvent>& src_events,
+                              const AbonentProfile& abntProfile);
   /* ------------------------ Admin interface ------------------------ */
 
   virtual void flushStatistics() {
@@ -293,16 +297,16 @@ public:
     return (statistics) ? statistics->getStatistics():EventsStat(0,0,0,0);
   }
 
-  virtual int getActiveTasksCount() const {
+  virtual unsigned getActiveTasksCount() const {
     if(pDeliveryQueue)
       return pDeliveryQueue->GetAbntCount();
     return 0;
   }
-  virtual int getInQueueSize() const {
+  virtual unsigned getInQueueSize() const {
     MutexGuard guard(inQueueMonitor);
     return inQueue.Count();
   }
-  virtual int getOutQueueSize() const {
+  virtual unsigned getOutQueueSize() const {
     if(pDeliveryQueue)
       return pDeliveryQueue->GetQueueSize();
     return 0;
