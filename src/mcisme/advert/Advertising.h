@@ -93,7 +93,7 @@ protected:
    * @return uint64_t
    */
   static uint32_t getNextId() {
-    MutexGuard mg(lastIdMutex);
+    core::synchronization::MutexGuard mg(lastIdMutex);
     return ++lastId;
   }
 };
