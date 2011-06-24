@@ -97,16 +97,15 @@ class DeliveryQueue
   time_t   dt;
   uint32_t total;
   bool     isQueueOpen;
-  time_t   responseWaitTime;
+  time_t   responseWaitTime, schedDelay;
 
   smsc::logger::Logger *logger;
 
 public:
 
-  DeliveryQueue(time_t _dt = 5, time_t onBusy = 300):
+  DeliveryQueue(time_t _dt, time_t onBusy, time_t sched_delay):
     dt(_dt), schedTimeOnBusy(onBusy), total(0), isQueueOpen(false), responseWaitTime(60),
-    logger(smsc::logger::Logger::getInstance("mci.DlvQueue")){}
-  DeliveryQueue(const DeliveryQueue& addr){}
+    schedDelay(sched_delay), logger(smsc::logger::Logger::getInstance("mci.DlvQueue")){}
   virtual ~DeliveryQueue(){Erase();}
 
   void AddScheduleRow(int error, time_t wait);
@@ -116,8 +115,8 @@ public:
   void OpenQueue(void);
   void CloseQueue(void);
   bool isQueueOpened(void);
-  int GetAbntCount(void);
-  int GetQueueSize(void);
+  unsigned GetAbntCount(void);
+  unsigned GetQueueSize(void);
 
   time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1);
   time_t Reschedule(const AbntAddr& abnt, int resp_status = smsc::system::Status::OK); // bool toHead = false

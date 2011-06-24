@@ -71,16 +71,16 @@ bool DeliveryQueue::isQueueOpened(void)
   return isQueueOpen;
 }
 
-int DeliveryQueue::GetAbntCount(void)
+unsigned DeliveryQueue::GetAbntCount(void)
 {
   MutexGuard lock(deliveryQueueMonitor);
   return AbntsStatus.GetCount();
 }
 
-int DeliveryQueue::GetQueueSize(void)
+unsigned DeliveryQueue::GetQueueSize(void)
 {
   MutexGuard lock(deliveryQueueMonitor);
-  return deliveryQueue.size();
+  return static_cast<unsigned>(deliveryQueue.size());
 }
 
 time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTime, uint16_t lastError)
@@ -94,25 +94,26 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
     SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
     time_t curSchedTime = schedParam->schedTime;
     time_t curTime = time(0);
-    smsc_log_info(logger, "Abonent %s already scheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curSchedTime, curSchedTimeStr, sizeof(curSchedTimeStr)), total, deliveryQueue.size());
+    smsc_log_info(logger, "Subscriber %s already scheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curSchedTime, curSchedTimeStr, sizeof(curSchedTimeStr)), total, deliveryQueue.size());
+    // sanity check for forgotten events
     if( (curTime - curSchedTime) > 900)
     {
       Resched(abnt, curSchedTime, curTime);
       schedParam->abntStatus = Idle;
       schedParam->schedTime = curTime;
       deliveryQueueMonitor.notify();
-      smsc_log_info(logger, "Abonent %s rescheduled on %s. Status = %d, lastAttempt = %s, total = %d (%d)", strAbnt.c_str(), cTime(&curTime, curSchedTimeStr, sizeof(curSchedTimeStr)), schedParam->abntStatus, cTime(&schedParam->lastAttempt, lastAttemptTimeStr, sizeof(lastAttemptTimeStr)), total, deliveryQueue.size());
+      smsc_log_info(logger, "Subscriber %s rescheduled on %s. Status = %d, lastAttempt = %s, total = %d (%d)", strAbnt.c_str(), cTime(&curTime, curSchedTimeStr, sizeof(curSchedTimeStr)), schedParam->abntStatus, cTime(&schedParam->lastAttempt, lastAttemptTimeStr, sizeof(lastAttemptTimeStr)), total, deliveryQueue.size());
     }
     return schedParam->schedTime;
   }
   if(-1 != schedTime)
   {
-    smsc_log_info(logger, "Abonent %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
+    smsc_log_info(logger, "Subscriber %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
   }
   else
   {
     schedTime = calculateSchedTime(onBusy);
-    smsc_log_info(logger, "Abonent %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
+    smsc_log_info(logger, "Subscriber %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime, curSchedTimeStr, sizeof(curSchedTimeStr)));
   }
 
   deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
@@ -142,13 +143,13 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
   MutexGuard lock(deliveryQueueMonitor);
   if(!AbntsStatus.Exists(strAbnt.c_str()))
   {
-    smsc_log_debug(logger, "Rescheduling %s canceled (abonent is not in hash).", strAbnt.c_str());
+    smsc_log_debug(logger, "Rescheduling %s canceled (Subscriber is not in hash).", strAbnt.c_str());
     return 0;
   }
 
   if(resp_status == smsc::system::Status::OK)
   {
-    smsc_log_debug(logger, "Previous SMS for Abonent %s was delivered normally or no DATA_SM_RESP.", strAbnt.c_str());
+    smsc_log_debug(logger, "Previous SMS for Subscriber %s was delivered normally or no DATA_SM_RESP.", strAbnt.c_str());
     toHead = true;
   }
 
@@ -185,13 +186,12 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
 time_t DeliveryQueue::RegisterAlert(const AbntAddr& abnt)
 {
   string strAbnt = abnt.toString();
-  smsc_log_debug(logger, "RegisterAlert for %s", strAbnt.c_str());
+  smsc_log_debug(logger, "RegisterAlert for %s, schedDelay=%u", strAbnt.c_str(), schedDelay);
   MutexGuard lock(deliveryQueueMonitor);
-  time_t newSchedTime = time(0);
 
   if(!AbntsStatus.Exists(strAbnt.c_str()))
   {
-    smsc_log_warn(logger, "Registration alert for %s canceled (abonent is not in hash).", strAbnt.c_str());
+    smsc_log_warn(logger, "Registration alert for %s canceled (Subscriber is not in hash).", strAbnt.c_str());
     return -1;
   }
 
@@ -199,18 +199,22 @@ time_t DeliveryQueue::RegisterAlert(const AbntAddr& abnt)
 
   if(schedParam->abntStatus == Idle)
   {
+    char newSchedTimeStr[128];
+    time_t newSchedTime = time(0) + schedDelay;
     Resched(abnt, schedParam->schedTime, newSchedTime);
     schedParam->schedTime = newSchedTime;
     schedParam->lastError = -1;
-    smsc_log_info(logger, "Registering Alert and rescheduling %s to Head ", strAbnt.c_str());
+    smsc_log_info(logger, "Registering Alert and rescheduling %s on %s",
+                  strAbnt.c_str(), cTime(&newSchedTime, newSchedTimeStr, sizeof(newSchedTimeStr)));
     deliveryQueueMonitor.notify();
+    return newSchedTime;
   }
   else
   {
     schedParam->abntStatus = AlertHandled;
-    smsc_log_info(logger, "Registering Alert for %s", strAbnt.c_str());
+    smsc_log_info(logger, "Alert received and subscriber %s is already in process", strAbnt.c_str());
+    return schedParam->schedTime;
   }
-  return newSchedTime;
 }
 
 bool DeliveryQueue::Get(AbntAddr& abnt)
@@ -260,12 +264,12 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
         schedParam->abntStatus = InProcess;
         schedParam->schedTime = 0;
         schedParam->lastAttempt = curTime;
-        smsc_log_info(logger, "Abonent %s ready to delivery.", strAbnt.c_str());
+        smsc_log_info(logger, "Subscriber %s ready to delivery.", strAbnt.c_str());
         return true;
       }
       else
       {
-        smsc_log_info(logger, "Abonent %s already in delivery.", strAbnt.c_str());
+        smsc_log_info(logger, "Subscriber %s already in delivery.", strAbnt.c_str());
         return false;
       }
       return true;
@@ -334,7 +338,7 @@ void DeliveryQueue::Remove(const AbntAddr& abnt)
     smsc_log_info(logger, "Remove %s total = %d (%d, %d)", strAbnt.c_str(), total, deliveryQueue.size(), AbntsStatus.GetCount());
   }
   else
-    smsc_log_debug(logger, "Remove %s canceled (abonent is not in hash).", strAbnt.c_str());
+    smsc_log_debug(logger, "Remove %s canceled (Subscriber is not in hash).", strAbnt.c_str());
 }
 void DeliveryQueue::Erase(void)
 {
