@@ -10,24 +10,10 @@
 // for test
 #include <sys/types.h>
 #include <string>
-#include <sstream>
-#include <iomanip>
 //
 
 namespace smsc{
 namespace misscall{
-
-std::string
-hexdmp(const char* buf, uint32_t bufSz)
-{
-  std::ostringstream hexBuf;
-  hexBuf.fill('0');
-  hexBuf << std::hex;
-  for (size_t i=0; i<bufSz; ++i)
-    hexBuf << std::setw(2) << (uint32_t) buf[i];
-
-  return hexBuf.str();
-}
 
 static int caseInsensitiveCompare(const std::string& l, const std::string r)
 {
@@ -68,9 +54,8 @@ stringParser(const std::string& inputStr)
   {
     eventType.erase(eventType.length()-1);
   }
-  printf("eventType=[%s] eventType=[%s]\n", hexdmp(eventType.c_str(), eventType.size()).c_str(), eventType.c_str());
+  printf("eventType=[%s]\n", eventType.c_str());
   //eventType.erase(eventType.size()-2);
-  //printf("eventType=[%s] eventType=[%s]\n", hexdmp(eventType.c_str(), eventType.size()).c_str(), eventType.c_str());
 
   if ( !caseInsensitiveCompare(eventType, "ABSENT") )
     event.cause = ABSENT;
