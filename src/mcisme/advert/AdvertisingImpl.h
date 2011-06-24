@@ -1,9 +1,13 @@
 #ifndef __MCISME_ADVERT_ADVERTISINGIMPL_HPP__
 # define __MCISME_ADVERT_ADVERTISINGIMPL_HPP__
 
-#include <util/BufferSerialization.hpp>
-#include <mcisme/advert/Advertising.h>
-#include "core/network/Socket.hpp"
+# include "util/BufferSerialization.hpp"
+# include "core/buffers/RefPtr.hpp"
+# include "core/network/Socket.hpp"
+# include "core/synchronization/Mutex.hpp"
+# include "mcisme/AbntAddr.hpp"
+# include "mcisme/advert/Advertising.h"
+# include "mcisme/advert/AdvertErrors.h"
 
 namespace smsc {
 namespace mcisme {
@@ -53,12 +57,10 @@ public:
   virtual void init(int connectTimeout=0);
   virtual bool reinit(int connectTimeout=0);
 
-  virtual uint32_t getBanner(const std::string& abonent,
-                             const std::string& service_name,
-                             uint32_t transport_type, uint32_t char_set,
-                             std::string* banner,
-                             BannerResponseTrace* banner_resp_trace,
-                             size_t max_banner_size);
+  virtual uint32_t sendBannerRequest(const std::string& abonent,
+                                     const std::string& service_name,
+                                     uint32_t transport_type, uint32_t char_set,
+                                     uint32_t max_banner_size, MCEventOut* mc_event_out);
 
   virtual void rollbackBanner(uint32_t transactionId,
                               uint32_t bannerId,
@@ -66,43 +68,43 @@ public:
                               uint32_t rotatorId);
 
   std::string toString() const;
+
+  virtual banner_read_stat readAdvert(std::string* banner, BannerResponseTrace* banner_resp_trace) = 0;
+
+  virtual void sendErrorInfo(const BannerRequest& banReq,
+                             int rc) = 0;
+
+  int getSocketFd() const {
+    return _socket.getSocket();
+  }
+
 protected:
   std::string _host;
   in_port_t _port;
-  uint32_t _timeout;
   bool _isConnected;
-  smsc::core::network::Socket _socket;
+  core::network::Socket _socket;
   static const unsigned int CMD_HEADER_SIZE = sizeof(uint32_t) + sizeof(uint32_t);
 
-  AdvertisingImpl(const std::string& host, int port, int timeout)
-    : _host(host), _port(port), _timeout(timeout), _isConnected(false)
+  AdvertisingImpl(const std::string& host, int port)
+    : _host(host), _port(port), _isConnected(false)
   {}
 
   void writeErrorToLog(char* where, int errCode);
 
-  void readFromSocket(char *dataBuf, int bytesToRead, const std::string& where);
+  int readFromSocket(char *dataBuf, int bytesToRead, const std::string& where);
   void writeToSocket(const void* buf, int bufSize, const std::string& where);
 
-  uint32_t getBanner(BannerRequest& banReq, BannerResponseTrace* bannerRespTrace);
-
-  int sendRequestAndGetResponse(advertising_item* advItem,
-                                util::SerializationBuffer* req,
-                                uint32_t req_len,
-                                BannerResponseTrace* bannerRespTrace);
-
-  virtual uint32_t readAdvert(advertising_item* advItem, BannerResponseTrace* bannerRespTrace) = 0;
+  void sendBannerRequest(BannerRequest* banReq);
 
   virtual uint32_t prepareHeader(uint32_t cmndType, uint32_t reqBodyLen, util::SerializationBuffer* req);
 
   virtual uint32_t prepareBannerReqCmd(util::SerializationBuffer* req /* �����*/,
                                        BannerRequest* par /*��������� ������� ������*/) = 0;
 
-  virtual void sendErrorInfo(const BannerRequest& banReq,
-                             int rc,
-                             const std::string& where) = 0;
-
   void generateUnrecoveredProtocolError();
 };
+
+typedef core::buffers::RefPtr<AdvertisingImpl, core::synchronization::Mutex> AdvertImplRefPtr;
 
 }}
 

@@ -1,14 +1,16 @@
-#include "AdvertisingImpl.h"
-#include "AdvertErrors.h"
 #include <string.h>
-#include <util/Exception.hpp>
-#include <util/debug.h>
 
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <inttypes.h>
 
-#include <mcisme/Exceptions.hpp>
+#include "AdvertisingImpl.h"
+#include "AdvertErrors.h"
+#include "util/Exception.hpp"
+#include "util/debug.h"
+
+#include "mcisme/Exceptions.hpp"
+#include "SendBannerIdRegistry.hpp"
 
 namespace smsc {
 namespace mcisme {
@@ -19,9 +21,11 @@ hexdmp(const uchar_t* buf, size_t bufSz);
 void
 AdvertisingImpl::init(int connectTimeout)
 {
-  if ( _socket.Init(_host.c_str(), _port, _timeout) )
+  smsc_log_debug(_logger, "AdvertisingImpl::init::: try connect to BannerEngine (host%s,port=%d)", _host.c_str(), _port);
+  if ( _socket.Init(_host.c_str(), _port, 0) )
     throw util::Exception("AdvertisingImpl::init::: can't init socket to connect to %s - '%s'", toString().c_str(), strerror(errno));
 
+  smsc_log_info(_logger, "AdvertisingImpl::init::: connect to BannerEngine (host%s,port=%d) has been established", _host.c_str(), _port);
   _socket.setConnectTimeout(connectTimeout);
 
   if ( _socket.Connect() )
@@ -62,34 +66,22 @@ AdvertisingImpl::writeToSocket(const void* dataBuf, int dataSz, const std::strin
   }
 }
 
-void
+int
 AdvertisingImpl::readFromSocket(char *dataBuf, int bytesToRead, const std::string& where)
 {
-  int rd = 0, res;
-  smsc_log_debug(_logger, "AdvertisingImpl::readFromSocket: _timeout=%d, bytesToRead=%d", _timeout, bytesToRead);
-  while (rd<bytesToRead)
-  {
-    if ( _timeout > 0 ) {
-      res = _socket.canReadMsec(_timeout);
-      if ( res < 0 ) {
-        _isConnected = false;
-        throw NetworkException("AdvertisingImpl::readFromSocket::: read socket error = %d", errno);
-      } else if ( !res )
-        throw TimeoutException("AdvertisingImpl::readFromSocket::: read timeout was expired (timeout value=%d)", _timeout);
-    }
-    res = _socket.Read(dataBuf+rd,bytesToRead-rd);
-    if (res<0) {
-      _isConnected = false;
-      throw NetworkException("AdvertisingImpl::readFromSocket::: read socket error = %d", errno);
-    } else if (!res) {
-      _isConnected = false;
-      throw NetworkException("AdvertisingImpl::readFromSocket::: connection closed by remote side");
-    }
-    smsc_log_debug(_logger, "AdvertisingImpl::readFromSocket: _socket.read returned %d",res);
-    rd+=res;
+  int res;
+  smsc_log_debug(_logger, "AdvertisingImpl::readFromSocket: bytesToRead=%d", bytesToRead);
+  res = _socket.Read(dataBuf,bytesToRead);
+  if (res<0) {
+    _isConnected = false;
+    throw NetworkException("AdvertisingImpl::readFromSocket::: read socket error = %d", errno);
+  } else if (!res) {
+    _isConnected = false;
+    throw NetworkException("AdvertisingImpl::readFromSocket::: connection closed by remote side");
   }
   smsc_log_debug(_logger, "AdvertisingImpl::readFromSocket: dump of data gotten from socket %s",
-                 hexdmp((uint8_t*)dataBuf, bytesToRead).c_str());
+                 hexdmp((uchar_t*)dataBuf, res).c_str());
+  return res;
 }
 
 uint32_t
@@ -106,19 +98,17 @@ AdvertisingImpl::prepareHeader(uint32_t cmndType, uint32_t reqBodyLen, util::Ser
 }
 
 uint32_t
-AdvertisingImpl::getBanner(const std::string& abonent,
-                           const std::string& service_name,
-                           uint32_t transport_type, uint32_t char_set,
-                           std::string* banner,
-                           BannerResponseTrace* banner_resp_trace,
-                           size_t max_banner_size)
+AdvertisingImpl::sendBannerRequest(const std::string& abonent,
+                                   const std::string& service_name,
+                                   uint32_t transport_type, uint32_t char_set,
+                                   uint32_t max_banner_size, MCEventOut* mc_event_out)
 {
   if ( !_isConnected ) return ERR_ADV_NOT_CONNECTED;
 
-  BannerRequest req(abonent, service_name, transport_type, char_set, max_banner_size);
-  uint32_t rc = getBanner(req, banner_resp_trace);
-  *banner = req.banner;
-  return  rc;
+  BannerRequest* req = new BannerRequest(abonent, service_name, transport_type, char_set, max_banner_size, mc_event_out);
+  sendBannerRequest(req);
+
+  return BANNER_OK;
 }
 
 void
@@ -128,34 +118,19 @@ AdvertisingImpl::rollbackBanner(uint32_t transactionId,
                                 uint32_t rotatorId)
 {
   BannerRequest banReqInfo(transactionId, bannerId, ownerId, rotatorId);
-  sendErrorInfo(banReqInfo, ERR_ADV_OTHER, "AdvertisingImpl::rollbackBanner:::");
+  sendErrorInfo(banReqInfo, ERR_ADV_OTHER);
 }
 
-uint32_t
-AdvertisingImpl::getBanner(BannerRequest& banReq, BannerResponseTrace* bannerRespTrace)
+void
+AdvertisingImpl::sendBannerRequest(BannerRequest* banReq)
 {
-  advertising_item curAdvItem(&banReq);
-
   util::SerializationBuffer req;
   // ���������� ������ ������������ �������
-  uint32_t len = prepareBannerReqCmd(&req, &banReq);
+  uint32_t len = prepareBannerReqCmd(&req, banReq);
 
-  int rc = sendRequestAndGetResponse(&curAdvItem, &req, len, bannerRespTrace);
-  if (rc != 0)
-  {
-    writeErrorToLog((char*)"AdvertisingImpl::getBanner", rc);
-    sendErrorInfo(banReq, rc, "AdvertisingImpl::getBanner:::");
-  }
-
-  return rc;
-}
-
-int
-AdvertisingImpl::sendRequestAndGetResponse(advertising_item* advItem, util::SerializationBuffer* req, uint32_t req_len, BannerResponseTrace* bannerRespTrace)
-{
-  writeToSocket(req->getBuffer(), req_len, "AdvertisingImpl::sendRequestAndGetResponse");
-
-  return readAdvert(advItem, bannerRespTrace);
+  writeToSocket(req.getBuffer(), len, "AdvertisingImpl::sendBannerRequest");
+  banReq->fd = _socket.getSocket();
+  SendBannerIdRegistry::getInstance().saveSentBannerInfo(banReq);
 }
 
 void
