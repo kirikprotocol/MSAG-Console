@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.web.controllers;
 
-import mobi.eyeline.informer.web.components.data_table.Identificator;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
@@ -121,7 +121,7 @@ public class Index1Controller {
     return null;
   }
 
-  public static class MyDataTableModel implements DataTableModel, Identificator {
+  public static class MyDataTableModel implements ModelWithObjectIds {
 
     private final ArrayList<Integer> list;
 

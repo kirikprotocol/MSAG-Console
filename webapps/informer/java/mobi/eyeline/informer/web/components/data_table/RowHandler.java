@@ -5,6 +5,7 @@ import com.sun.facelets.tag.TagAttribute;
 import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 
 import javax.el.ELException;
 import javax.faces.FacesException;
@@ -55,7 +56,7 @@ public class RowHandler extends ComponentHandler {
       ctx.getVariableMapper().setVariable(var, r.getVarExpr());
       if (!r.isInner()) {
         DataTableModel dt = (DataTableModel) ctx.getVariableMapper().resolveVariable(tid + "___dataTableModel").getValue(ctx);
-        String rowId = (dt instanceof Identificator) ? ((Identificator)dt).getId(r.getVarExpr().getValue(ctx)) : null;
+        String rowId = (dt instanceof ModelWithObjectIds) ? ((ModelWithObjectIds)dt).getId(r.getVarExpr().getValue(ctx)) : null;
         r.setRowId(rowId != null ? rowId :  getId(ctx));
         if (innerData != null)
           r.setHasInnerData(innerData.getBoolean(ctx));

@@ -3,7 +3,7 @@ package mobi.eyeline.informer.web.controllers.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.components.data_table.Identificator;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
@@ -363,13 +363,6 @@ public class DeliveryListController extends DeliveryController {
 
     final DeliveryFilter filter = createFilter(u);
 
-    class IdentificatorImpl implements Identificator{
-        @Override
-        public String getId(Object value) {
-          return ((DeliveryRow)value).getId().toString();
-        }
-    }
-
     if(idFilter != null && idFilter.length()>0) {
 
       Integer id = Integer.parseInt(idFilter);
@@ -388,7 +381,8 @@ public class DeliveryListController extends DeliveryController {
       } catch (AdminException e) {
         addError(e);
       }
-      class DataTableModelImpl extends IdentificatorImpl implements DataTableModel {
+
+      return new ModelWithObjectIds() {
         public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(1);
           if(delivery[0] != null) {
@@ -403,14 +397,20 @@ public class DeliveryListController extends DeliveryController {
           return rows;
         }
 
+        @Override
+        public String getId(Object value) {
+          return ((DeliveryRow)value).getId().toString();
+        }
+
         public int getRowsCount() {
           return delivery[0] == null ? 0 : 1;
         }
-      }
-      return new DataTableModelImpl();
+      };
 
-    }else {
-      class DataTableModelImpl extends IdentificatorImpl implements DataTableModel {
+
+    } else {
+
+      return new ModelWithObjectIds() {
         public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
           try {
             List<Delivery> list;
@@ -434,6 +434,12 @@ public class DeliveryListController extends DeliveryController {
 
           return Collections.emptyList();
         }
+
+        @Override
+        public String getId(Object value) {
+          return ((DeliveryRow)value).getId().toString();
+        }
+
         public int getRowsCount() {
           try {
             return config.countDeliveries(u.getLogin(), filter);
@@ -442,8 +448,8 @@ public class DeliveryListController extends DeliveryController {
             return 0;
           }
         }
-      }
-      return new DataTableModelImpl();
+      };
+
     }
   }
 

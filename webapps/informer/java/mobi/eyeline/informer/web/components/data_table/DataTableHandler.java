@@ -6,8 +6,10 @@ import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 
 import javax.el.ValueExpression;
+import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import java.util.*;
 
@@ -63,28 +65,38 @@ public class DataTableHandler extends ComponentHandler {
   private void loadSelectedRows(int startPos, DataTable t, DataTableSortOrder s, List rows) {
     Set<String> ids = new HashSet<String>(t.getSelectedRows());
     int i = 0;
-    List _rows;
     int c = 0;
-    Identificator ident = (Identificator)t.getModel();
+    ModelWithObjectIds ident = (ModelWithObjectIds)t.getModel();
+    List _rows;
     do{
       _rows = t.getModel().getRows(i*1000, 1000, s);
-      Iterator iter = _rows.iterator();
-      while(iter.hasNext()) {
-        Object r = iter.next();
+      for (Object r : _rows) {
         String id = ident.getId(r);
-        if((t.isSelectAll() && !ids.contains(id)) || (!t.isSelectAll() && ids.contains(id))) {
+        if ((t.isSelectAll() && !ids.contains(id)) || (!t.isSelectAll() && ids.contains(id))) {
           c++;
-          if(c>startPos) {
+          if (c > startPos) {
             rows.add(r);
-            if(rows.size() == t.getPageSize()) {
-              break;
+            if (rows.size() == t.getPageSize()) {
+              return;
             }
           }
         }
       }
       i++;
-    } while(_rows.size() == 1000 && rows.size() < t.getPageSize() && rows.size() < ids.size());
+    } while(_rows.size() == 1000 && (t.isSelectAll() || rows.size() < ids.size()));
 
+  }
+
+  private List getRows(DataTable t, DataTableSortOrder s) {
+    int startPos = t.getCurrentPage() * t.getPageSize();
+    List rows;
+    if(!t.isShowSelectedOnly()) {
+      rows = t.getModel().getRows(startPos, t.getPageSize(), s);
+    } else {
+      rows = new LinkedList();
+      loadSelectedRows(startPos, t, s, rows);
+    }
+    return rows;
   }
 
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
@@ -92,15 +104,6 @@ public class DataTableHandler extends ComponentHandler {
     String tid = t.getId();
 
     ctx.getVariableMapper().setVariable("___tid", new ConstantExpression(tid));
-
-    DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
-    t.setModel(m);
-
-    if(!t.isInternalUpdate()) {
-      t.setSelectAll(false);
-      t.setSelectedRows(Collections.<String>emptyList());
-      t.setShowSelectedOnly(false);
-    }
 
     // Header
     nextHandler.apply(ctx, c);
@@ -119,39 +122,29 @@ public class DataTableHandler extends ComponentHandler {
       }
     }
 
+    if(!t.isInternalUpdate()) {
+      t.setSelectAll(false);
+      t.setSelectedRows(Collections.<String>emptyList());
+      t.setShowSelectedOnly(false);
+      return;
+    }
+
+    DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
+    if (t.getSelectedRowsExpression() != null && !(m instanceof ModelWithObjectIds))
+      throw new FacesException("Model should implement ModelWithObjectIds interface.");
+
+    t.setModel(m);
+
     DataTableSortOrder s = null;
     if (t.getSortOrder() != null) {
       boolean asc = t.getSortOrder().charAt(0) == '-';
       s = (asc) ? new DataTableSortOrder(t.getSortOrder().substring(1), true) : new DataTableSortOrder(t.getSortOrder().substring(0), false);
     }
 
-    int startPos = t.getCurrentPage() * t.getPageSize();
-
-    List rows;
-
-    if(t.isInternalUpdate()) {
-      if(!t.isShowSelectedOnly()) {
-        rows = m.getRows(startPos, t.getPageSize(), s);
-        if (rows.isEmpty() && startPos > 0) {
-          t.setCurrentPage(0);
-          startPos = 0;
-          rows = m.getRows(startPos, t.getPageSize(), s);
-        }
-
-      } else if (m instanceof Identificator) {
-        rows = new LinkedList();
-        loadSelectedRows(startPos, t, s, rows);
-
-        if (rows.isEmpty() && startPos > 0) {
-          startPos = 0;
-          t.setCurrentPage(0);
-          loadSelectedRows(startPos, t, s, rows);
-        }
-      } else {
-        throw new IllegalAccessError("Model has to implement Identifictor!!");
-      }
-    } else {
-      rows = Collections.emptyList();
+    List rows = getRows(t,s);
+    if (rows.isEmpty() && t.getCurrentPage() > 0) {
+      t.setCurrentPage(0);
+      rows = getRows(t,s);
     }
 
     ctx.getVariableMapper().setVariable(tid + "___var", new ConstantExpression(var.getValue()));

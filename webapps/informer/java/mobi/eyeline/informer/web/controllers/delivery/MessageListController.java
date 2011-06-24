@@ -6,7 +6,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
-import mobi.eyeline.informer.web.components.data_table.Identificator;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
@@ -352,7 +352,8 @@ public class MessageListController extends InformerController {
       error = e.getMessage(getLocale());
       return new EmptyDataTableModel();
     }
-    class DataTableModelImpl implements DataTableModel, Identificator{
+
+    return new ModelWithObjectIds() {
       public List getRows(final int startPos, final int count, final DataTableSortOrder sortOrder) {
         if (!init || state == 1) {
           return Collections.emptyList();
@@ -391,7 +392,6 @@ public class MessageListController extends InformerController {
         return 0;
       }
     };
-    return new DataTableModelImpl();
   }
 
   public boolean isShowTexts() {

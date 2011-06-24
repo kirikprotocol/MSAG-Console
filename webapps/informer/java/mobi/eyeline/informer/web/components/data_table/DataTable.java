@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.components.data_table;
 
 import mobi.eyeline.informer.web.components.EyelineComponent;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 
 import javax.el.ValueExpression;
 import javax.faces.component.UIComponent;
@@ -226,11 +227,7 @@ public class DataTable extends EyelineComponent {
       List<String> selected;
       if(selectAll && !disallowSelectAll) {
         DataTableModel model = (DataTableModel)modelExpression.getValue(context.getELContext());
-        if(model instanceof Identificator) {
-          selected = new LazySelectedList(model, selectedRows == null ? null : new HashSet<String>(selectedRows));
-        }else {
-          throw new IllegalAccessError("Model has to implement Identifictor!!");
-        }
+        selected = new LazySelectedList(model, selectedRows == null ? null : new HashSet<String>(selectedRows));
       }else {
         selected = new ArrayList<String>(selectedRows);
       }
@@ -277,7 +274,7 @@ public class DataTable extends EyelineComponent {
       List<String> selected = new LinkedList<String>();
       int i = 0;
       List rows;
-      Identificator ident = (Identificator)model;
+      ModelWithObjectIds ident = (ModelWithObjectIds)model;
       while(!(rows =  model.getRows(10000*i, 10000, null)).isEmpty()) {
         for (Object o : rows) {
           String id = ident.getId(o);
