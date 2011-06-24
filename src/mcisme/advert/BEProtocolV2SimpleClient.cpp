@@ -8,30 +8,54 @@ namespace mcisme {
 std::string
 hexdmp(const uchar_t* buf, size_t bufSz);
 
-BEProtocolV2SimpleClient::BEProtocolV2SimpleClient(const std::string& host, int port, int timeout)
-  : AdvertisingImpl(host, port, timeout)
+BEProtocolV2SimpleClient::BEProtocolV2SimpleClient(const std::string& host, int port)
+  : AdvertisingImpl(host, port), _pos(0), _totalPacketLen(0)
 {}
 
 uint32_t
-BEProtocolV2SimpleClient::readPacket(char* buf, size_t bufSize)
+BEProtocolV2SimpleClient::readPacket()
 {
-  uint32_t *s = (uint32_t*)buf;
-
-  readFromSocket(buf, CMD_HEADER_SIZE, "BEProtocolV2SimpleClient::readPacket");
-
-  buf += CMD_HEADER_SIZE;
-
-  uint32_t packetLen = ntohl(s[1]);
-
-  if (packetLen > bufSize - CMD_HEADER_SIZE)
+  try
   {
-    smsc_log_warn(_logger, "BEProtocolV2SimpleClient::readPacket::: got too long packet, packetLen==%d", packetLen);
-    generateUnrecoveredProtocolError();
+    int bytes_to_read;
+    if (!_totalPacketLen)
+      bytes_to_read = CMD_HEADER_SIZE - _pos;
+    else
+      bytes_to_read = _totalPacketLen - _pos;
+
+    int read_sz = readFromSocket(_buf + _pos, bytes_to_read, "BEProtocolV2SimpleClient::readPacket");
+    _pos += read_sz;
+    if (!_totalPacketLen)
+    {
+      if (_pos < CMD_HEADER_SIZE)
+        return 0;
+
+      uint32_t *s = (uint32_t*)_buf;
+      _totalPacketLen = ntohl(s[1]) + CMD_HEADER_SIZE;
+
+      if (_totalPacketLen > sizeof(_buf))
+      {
+        smsc_log_warn(_logger, "BEProtocolV2SimpleClient::readPacket::: got too long packet, totalPacketLen==%d", _totalPacketLen);
+        _totalPacketLen = 0; _pos = 0;
+        generateUnrecoveredProtocolError();
+      }
+
+      return 0;
+    }
+
+    if (_pos == _totalPacketLen)
+    {
+      // we have read total packet
+      uint32_t totalPacketLen = _totalPacketLen;
+      _pos=0; _totalPacketLen = 0;
+      return totalPacketLen;
+    }
+
+    return 0;
+  } catch (NetworkException& ex) {
+    _pos=0; _totalPacketLen = 0;
+    throw;
   }
-
-  readFromSocket(buf, packetLen, "BEProtocolV2SimpleClient::readPacket");
-
-  return packetLen + CMD_HEADER_SIZE;
 }
 
 void
@@ -140,46 +164,40 @@ BEProtocolV2SimpleClient::extractParamHeader(const char* curPtrInBuf,
   return PARAM_HDR_SZ;
 }
 
-uint32_t
-BEProtocolV2SimpleClient::readAdvert(advertising_item* advItem,
-                                     BannerResponseTrace* bannerRespTrace)
+banner_read_stat
+BEProtocolV2SimpleClient::readAdvert(std::string* banner,
+                                     BannerResponseTrace* banner_resp_trace)
 {
   smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert");
 
-  BannerResponseTrace emptyBannerResponseTrace;
+  static BannerResponseTrace emptyBannerResponseTrace;
   try {
-    while (true) {
-      char incomingPacketBuf[MAX_PACKET_LEN];
+    uint32_t totalPacketLen = readPacket();
+    if (!totalPacketLen)
+      return CONTINUE_READ_PACKET;
 
-      uint32_t totalPacketLen = readPacket(incomingPacketBuf, sizeof(incomingPacketBuf));
+    smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert::: got packet from BE: [%s]", hexdmp((uchar_t*)_buf, totalPacketLen).c_str());
+    BannerResponseTrace gotBannerRespTrace;
+    std::string gotBannerString;
+    parseBannerResponse(_buf, totalPacketLen, &gotBannerRespTrace.transactionId,
+                        &gotBannerString, &gotBannerRespTrace.bannerId, &gotBannerRespTrace.ownerId,
+                        &gotBannerRespTrace.rotatorId);
 
-      smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert::: got packet from BE: [%s]", hexdmp((uint8_t*)incomingPacketBuf, totalPacketLen).c_str());
-      BannerResponseTrace gotBannerRespTrace;
-      std::string gotBannerString;
-      parseBannerResponse(incomingPacketBuf, totalPacketLen, &gotBannerRespTrace.transactionId,
-                          &gotBannerString, &gotBannerRespTrace.bannerId, &gotBannerRespTrace.ownerId,
-                          &gotBannerRespTrace.rotatorId);
-
-      smsc_log_info(_logger, "got BannerResponse: transactionId=%d, bannerId=%d, ownerId=%d, rotatorId=%d", gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId);
-      if ( gotBannerRespTrace.transactionId == advItem->TransactID ) {
-        *bannerRespTrace = gotBannerRespTrace;
-        advItem->banReq->banner = gotBannerString;
-        break;
-      } else {
-        smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: wrong transactionId value=[%d], expected value=[%d], send rollback message for this response", gotBannerRespTrace.transactionId, advItem->TransactID);
-
-        sendErrorInfo(BannerRequest(gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId), ERR_ADV_TIMEOUT, "BEProtocolV2SimpleClient::readAdvert");
-      }
-    }
+    smsc_log_info(_logger, "got BannerResponse: transactionId=%d, bannerId=%d, ownerId=%d, rotatorId=%d",
+                  gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId);
+    *banner_resp_trace = gotBannerRespTrace;
+    *banner = gotBannerString;
   } catch (TimeoutException& ex) {
-    smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: catched TimeoutException [%s]", ex.what());
-    *bannerRespTrace = emptyBannerResponseTrace;
+    smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: caught TimeoutException [%s]", ex.what());
+    *banner_resp_trace = emptyBannerResponseTrace;
+    return ERR_ADV_TIMEOUT;
   } catch (ProtocolError& ex) {
-    smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: catched ProtocolError exception");
-    *bannerRespTrace = emptyBannerResponseTrace;
+    smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: caught ProtocolError exception");
+    *banner_resp_trace = emptyBannerResponseTrace;
+    return ERR_ADV_OTHER;
   }
 
-  return 0;
+  return BANNER_OK;
 }
 
 uint32_t
@@ -284,8 +302,7 @@ BEProtocolV2SimpleClient::prepareErrorInfoCmd(util::SerializationBuffer* req /* 
 
 void
 BEProtocolV2SimpleClient::sendErrorInfo(const BannerRequest& banReq,
-                                        int rc,
-                                        const std::string& where)
+                                        int rc)
 {
   util::SerializationBuffer req;
   int len;
@@ -294,7 +311,7 @@ BEProtocolV2SimpleClient::sendErrorInfo(const BannerRequest& banReq,
   else
     len = prepareErrorInfoCmd(&req, banReq, BANNER_OTHER_ERROR);
 
-  writeToSocket(req.getBuffer(), len, where);
+  writeToSocket(req.getBuffer(), len, "BEProtocolV2SimpleClient::sendErrorInfo");
 }
 
 }}
