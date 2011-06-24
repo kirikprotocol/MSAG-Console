@@ -410,7 +410,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
 {
     const DeliveryInfo& info = ptr.getDlvInfo();
 
-    smsc_log_debug(log_,"send(R=%u/D=%u/M=%llu)",
+    smsc_log_debug(log_,"send(R=%u/D=%u/M=%llu )",
                    unsigned(ptr.getRegionId()),
                    unsigned(info.getDlvId()),
                    ulonglong(msg.msgId));
@@ -511,7 +511,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
             drm->trans = info.isTransactional();
         }
         drm->endTime = now + validityTime + getCS()->getReceiptExtraWaitTime();
-        smsc_log_debug(log_,"S='%s' add resp timer=%+d seq=%u R=%u/D=%u/M=%llu, rcpt.endTime=%+d",
+        smsc_log_debug(log_,"S='%s' add resp timer=%+d seq=%u R=%u/D=%u/M=%llu rcpt.endTime=%+d",
                        smscId_.c_str(),
                        int(drm->respTimer->first - now),
                        seqNum,
@@ -693,7 +693,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         DRMTrans drm;
         if (seqnumHash_.Pop(seqNum,drm)) {
             if (drm.respTimer != respWaitQueue_.end()) {
-                smsc_log_debug(log_,"S='%s' on fail remove resp timer seq=%u R=%u/D=%u/M=%llu",
+                smsc_log_debug(log_,"S='%s' on fail remove resp timer seq=%u R=%u/D=%u/M=%llu ",
                                smscId_.c_str(), seqNum,
                                drm.regId, drm.dlvId, drm.msgId );
                 respWaitQueue_.erase(drm.respTimer);

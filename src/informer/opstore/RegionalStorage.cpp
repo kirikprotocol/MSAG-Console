@@ -1166,7 +1166,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
             m.timeLeft = 0;
             m.state = MSGSTATE_PROCESS;
             m.retryCount = 0;
-            smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
+            smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu ",
                            unsigned(regionId), dlvId,
                            ulonglong(m.msgId));
             regionid_type serial = MessageLocker::nullSerial;
