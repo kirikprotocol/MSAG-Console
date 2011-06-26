@@ -58,7 +58,7 @@ protected:
                       b_info->bannerRespTrace.ownerId, b_info->bannerRespTrace.rotatorId,
                       b_info->mcEventOut->msg.notification);
 
-      if ( b_info->charSet == UTF16BE ) {
+      if ( b_info->charSet == UTF16BE && !b_info->bannerString.empty()) {
         std::string banner, tmpBanner;
         try {
           scag::util::encodings::Convertor::convert("UTF-16BE", "UTF-8", b_info->bannerString.c_str(), b_info->bannerString.length(), tmpBanner);
