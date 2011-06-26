@@ -36,7 +36,7 @@ class Storage
 {
 public:
   Storage(){}
-  ~Storage(){}
+  virtual ~Storage(){}
   virtual int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue) = 0;
   virtual int Init(const string& location, time_t eventLifeTime, uint8_t maxEvents, DeliveryQueue* pDeliveryQueue) = 0;
   virtual void addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime) = 0;
