@@ -123,25 +123,23 @@ BannerReader::handleResponses(unsigned num_of_ready_fd, unsigned count, struct p
           banner_read_stat status = bannerEngineProxy->readAdvert(&banner, &bannerRespTrace);
           if (status == CONTINUE_READ_PACKET)
             continue;
-          else if (status == BANNER_OK)
-          {
-            BannerRequest* ackedBannerRequest = SendBannerIdRegistry::getInstance().ackReceivedBanner(bannerRespTrace.transactionId);
-            if ( !ackedBannerRequest ) {
-              // If we got response for unknown banner request then rollback received banner.
-              // bannerId == -1 if we received banner response packet that doesn't include banner.
-              // Skip such response w/o sending of rollback message.
-              if (bannerRespTrace.bannerId > -1)
-                bannerEngineProxy->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId,
-                                                  bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
 
-            } else {
-              BannerInfo*  bannerInfo = new BannerInfo(bannerRespTrace, banner, ackedBannerRequest->mcEventOut, ackedBannerRequest->charSet);
-              ackedBannerRequest->resetMCEventOut(); // in order to avoid destroying of MCEventOut object at BannerRequest's destructor.
-              _bannerResponseListener.handleEvent(bannerInfo);
-              delete ackedBannerRequest;
-            }
-          } else
-            smsc_log_error(_logger, "BannerReader::handleResponses::: got error while reading banner, errcode=%d", status);
+          BannerRequest* ackedBannerRequest = NULL;
+          ackedBannerRequest = SendBannerIdRegistry::getInstance().ackReceivedBanner(bannerRespTrace.transactionId);
+
+          if (!ackedBannerRequest) {
+            // If we got response for unknown banner request then rollback received banner.
+            // bannerId == -1 if we received banner response packet that doesn't include banner.
+            // Skip such response w/o sending of rollback message.
+            if (status == BANNER_OK && bannerRespTrace.bannerId > -1)
+              bannerEngineProxy->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId,
+                                                bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
+          } else {
+            BannerInfo*  bannerInfo = new BannerInfo(bannerRespTrace, banner, ackedBannerRequest->mcEventOut, ackedBannerRequest->charSet);
+            ackedBannerRequest->resetMCEventOut(); // in order to avoid destroying of MCEventOut object at BannerRequest's destructor.
+            _bannerResponseListener.handleEvent(bannerInfo);
+            delete ackedBannerRequest;
+          }
         } catch (NetworkException& ex) {
           smsc_log_error(_logger, "BannerReader::handleResponses::: caught NetworkException '%s'", ex.what());
           _reconnector.scheduleBrokenConnectionToReestablishing(bannerEngineProxy);
