@@ -171,29 +171,24 @@ BEProtocolV2SimpleClient::readAdvert(std::string* banner,
   smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert");
 
   static BannerResponseTrace emptyBannerResponseTrace;
+  *banner_resp_trace = emptyBannerResponseTrace;
   try {
     uint32_t totalPacketLen = readPacket();
     if (!totalPacketLen)
       return CONTINUE_READ_PACKET;
 
     smsc_log_debug(_logger, "BEProtocolV2SimpleClient::readAdvert::: got packet from BE: [%s]", hexdmp((uchar_t*)_buf, totalPacketLen).c_str());
-    BannerResponseTrace gotBannerRespTrace;
-    std::string gotBannerString;
-    parseBannerResponse(_buf, totalPacketLen, &gotBannerRespTrace.transactionId,
-                        &gotBannerString, &gotBannerRespTrace.bannerId, &gotBannerRespTrace.ownerId,
-                        &gotBannerRespTrace.rotatorId);
+    parseBannerResponse(_buf, totalPacketLen, &banner_resp_trace->transactionId,
+                        banner, &banner_resp_trace->bannerId, &banner_resp_trace->ownerId,
+                        &banner_resp_trace->rotatorId);
 
-    smsc_log_info(_logger, "got BannerResponse: transactionId=%d, bannerId=%d, ownerId=%d, rotatorId=%d",
-                  gotBannerRespTrace.transactionId, gotBannerRespTrace.bannerId, gotBannerRespTrace.ownerId, gotBannerRespTrace.rotatorId);
-    *banner_resp_trace = gotBannerRespTrace;
-    *banner = gotBannerString;
+    smsc_log_info(_logger, "got BannerResponse: transactionId=%u, bannerId=%u, ownerId=%u, rotatorId=%u",
+                  banner_resp_trace->transactionId, banner_resp_trace->bannerId, banner_resp_trace->ownerId, banner_resp_trace->rotatorId);
   } catch (TimeoutException& ex) {
     smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: caught TimeoutException [%s]", ex.what());
-    *banner_resp_trace = emptyBannerResponseTrace;
     return ERR_ADV_TIMEOUT;
   } catch (ProtocolError& ex) {
     smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: caught ProtocolError exception");
-    *banner_resp_trace = emptyBannerResponseTrace;
     return ERR_ADV_OTHER;
   }
 
