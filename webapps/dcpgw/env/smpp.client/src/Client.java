@@ -35,7 +35,7 @@ public class Client extends Thread implements PDUListener {
     Properties config;
     SmppClient smppClient;
 
-    private static String source_address, dest_address;
+    private static String dest_address;
     private static long validity_period;
     private static String message;
 
@@ -56,7 +56,7 @@ public class Client extends Thread implements PDUListener {
         logger.debug("Try to start smpp client ...");
         smppClient.start();
 
-        source_address = config.getProperty("source.address");
+        String source_address = config.getProperty("source.address");
         dest_address = config.getProperty("dest.address");
         validity_period = Long.parseLong(config.getProperty("validity.period"));
 
@@ -94,7 +94,24 @@ public class Client extends Thread implements PDUListener {
                 submitSM.setConnectionName("env.client");
 
                 submitSM.setMessage(message+" "+i);
-                submitSM.setSourceAddress(source_address);
+                submitSM.setSourceAddress("10001");
+                submitSM.setDestinationAddress(dest_address);
+                //submitSM.setTLV(new TLVByte(((short) 0x4901), Charging.YES));
+                //submitSM.setTLV(new TLVByte(((short)0x4902), TransportType.SMS));
+                //submitSM.setTLV(new TLVString(((short)0x4903),"1"));
+                //submitSM.setTLV(new TLVString(((short)0x4905),"1"));
+                submitSM.setValidityPeriod(1000*validity_period);
+                logger.debug("Try send submitSM ...");
+                client.handlePDU(submitSM);
+            }
+
+            for(int i=5; i<10; i++){
+                SubmitSM submitSM = new SubmitSM();
+                submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
+                submitSM.setConnectionName("env.client");
+
+                submitSM.setMessage(message+" "+i);
+                submitSM.setSourceAddress("10003");
                 submitSM.setDestinationAddress(dest_address);
                 //submitSM.setTLV(new TLVByte(((short) 0x4901), Charging.YES));
                 //submitSM.setTLV(new TLVByte(((short)0x4902), TransportType.SMS));

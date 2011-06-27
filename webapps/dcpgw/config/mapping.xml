@@ -6,8 +6,14 @@
     </Users>
     <Delivery id="1190" user="stepanovd">
         <Sns>
-            <Sn>12345</Sn>
-            <Sn>23456</Sn>
+            <Sn>10001</Sn>
+            <Sn>10002</Sn>
+        </Sns>
+    </Delivery>
+    <Delivery id="1196" user="stepanovd">
+        <Sns>
+            <Sn>10003</Sn>
+            <Sn>10004</Sn>
         </Sns>
     </Delivery>
 </Deliveries>
