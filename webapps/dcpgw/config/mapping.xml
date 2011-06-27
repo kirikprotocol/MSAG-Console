@@ -4,7 +4,7 @@
     <Users>
         <User login="stepanovd" password="stepanovd"/>
     </Users>
-    <Delivery id="1154" user="stepanovd">
+    <Delivery id="1190" user="stepanovd">
         <Sns>
             <Sn>12345</Sn>
             <Sn>23456</Sn>

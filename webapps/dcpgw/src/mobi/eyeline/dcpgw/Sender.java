@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.delivery.DcpConnection;
 import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.SmppServer;
-import mobi.eyeline.smpp.api.pdu.Request;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
@@ -42,7 +41,6 @@ public class Sender extends Thread{
     private SmppServer smppServer;
 
     public Sender(String host, int port, final String login, String password, int capacity, long timeout, SmppServer smppServer){
-
         this.host = host;
         this.port = port;
         this.login = login;
@@ -61,20 +59,21 @@ public class Sender extends Thread{
     public void addMessage(int delivery_id, long gId, mobi.eyeline.smpp.api.pdu.Message request){
         log.debug("Try to put message with gateway identifier '"+gId+"' to the queue for delivery with identifier "+delivery_id+" ...");
 
-        LinkedBlockingQueue<Message> queue = delivery_id_queue_map.get(delivery_id);
-        if (queue == null){
-            log.debug("Appropriate queue not found.");
-            queue = new LinkedBlockingQueue<Message>(capacity);
-            delivery_id_queue_map.put(delivery_id, queue);
-            log.debug("Initialize new queue for delivery with identifier "+delivery_id+".");
+        LinkedBlockingQueue<Message> queue;
+        synchronized (delivery_id_queue_map){
+            queue = delivery_id_queue_map.get(delivery_id);
+            if (queue == null){
+                log.debug("Appropriate queue not found.");
+                queue = new LinkedBlockingQueue<Message>(capacity);
+                delivery_id_queue_map.put(delivery_id, queue);
+                log.debug("Initialize new queue for delivery with identifier "+delivery_id+".");
+            }
         }
 
         Address smpp_destination_address = request.getDestinationAddress();
         String destination_address_str = smpp_destination_address.getAddress();
-        log.debug("destination address: "+destination_address_str);
-
         String text = request.getMessage();
-        log.debug("text: "+text);
+        log.debug("Added message parameters: gId '"+gId+"' destination address '"+destination_address_str+"', text '"+text+"'.");
 
         mobi.eyeline.informer.util.Address informer_destination_address = new mobi.eyeline.informer.util.Address(destination_address_str);
 
@@ -93,13 +92,19 @@ public class Sender extends Thread{
         messages_requests_map.put(informer_message, request);
 
         int size = queue.size();
-        //log.debug("Queue size has increased to "+size+".");
+        log.debug("Queue size has increased to "+size+".");
 
         if (size == capacity) {
-            notify();
+            synchronized (this){
+                log.debug("Try to notify all waited threads ...");
+                notifyAll();
+            }
             log.debug("Queue is full, try to notify the waiting thread to add messages to informer's deliveries ...");
-        } else {
+        } else if (size < capacity) {
             log.debug("Queue size less than capacity, do nothing.");
+        } else if (size > capacity) {
+            log.error("Queue size '"+size+"' more than capacity '"+capacity+".");
+            System.exit(1);
         }
     }
 
@@ -107,13 +112,13 @@ public class Sender extends Thread{
         log.debug("Start sender for user '"+login+"'.");
         while(!interrupt){
 
-            log.debug("Check lists for user "+login+".");
+            log.debug("Iterate lists for user "+login+".");
             for (Map.Entry<Integer, LinkedBlockingQueue<Message>> entry : delivery_id_queue_map.entrySet()) {
 
                 int delivery_id = entry.getKey();
                 LinkedBlockingQueue<Message> queue = entry.getValue();
 
-                log.debug("Detected what queue for delivery with id '"+delivery_id+"' is full.");
+                log.debug("Check queue with delivery id '"+delivery_id+"'.");
                 if (connection == null){
                     try{
                         log.debug("Try to create new dcp connection for user '"+login+"' ...");
@@ -125,8 +130,10 @@ public class Sender extends Thread{
                     }
                 }
 
+                log.debug("Queue size before conversion to array is "+queue.size());
                 Message[] ar = new Message[queue.size()];
                 List<Message> list = Arrays.asList(queue.toArray(ar));
+                log.debug("Queue size after conversion to array is " + queue.size());
 
                 try {
                     log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
@@ -134,17 +141,23 @@ public class Sender extends Thread{
                     log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
 
                     for(Message m: list){
-                        mobi.eyeline.smpp.api.pdu.Message request = messages_requests_map.get(m);
 
+                        mobi.eyeline.smpp.api.pdu.Message request = messages_requests_map.get(m);
+                        log.debug("map size = "+messages_requests_map.size());
                         try{
+
                             smppServer.send(request.getResponse(Status.OK));
                             messages_requests_map.remove(m);
-                            queue.clear();
+
+                            log.debug("Send smpp response with status 'OK'." );
                         } catch (SmppException e) {
                             log.error("Could not send response to client", e);
                         }
 
                     }
+
+                    queue.clear();
+                    log.debug("Clean queue.");
 
                 } catch (AdminException e) {
                     log.error("Couldn't add list with messages to delivery with id '"+delivery_id+"'.",e);
@@ -153,23 +166,29 @@ public class Sender extends Thread{
                         mobi.eyeline.smpp.api.pdu.Message request = messages_requests_map.get(m);
 
                         try{
+
                             smppServer.send(request.getResponse(Status.SYSERR));
                             messages_requests_map.remove(m);
-                            queue.clear();
+
                         } catch (SmppException e2) {
                             log.error("Could not send response to client", e);
                         }
 
                     }
+
+                    queue.clear();
+                    log.debug("Clean queue.");
                 }
             }
 
-            try {
-                log.debug("Sender for user '"+login+"' wait "+timeout+" mls.");
-                wait(timeout);
-            } catch (InterruptedException e) {
-                log.error(e);
-                // todo ?
+            synchronized (this){
+                try {
+                    log.debug("Sender for user '"+login+"' wait "+timeout+" mls.");
+                    wait(timeout);
+                } catch (InterruptedException e) {
+                    log.error(e);
+                    // todo ?
+                }
             }
         }
 

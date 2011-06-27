@@ -88,20 +88,22 @@ public class Client extends Thread implements PDUListener {
         logger.debug("Start smpp client.");
         try{
             Client client = new Client();
-            SubmitSM submitSM = new SubmitSM();
-            submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
-            submitSM.setConnectionName("env.client");
+            for(int i=0; i<5; i++){
+                SubmitSM submitSM = new SubmitSM();
+                submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
+                submitSM.setConnectionName("env.client");
 
-            submitSM.setMessage(message);
-            submitSM.setSourceAddress(source_address);
-            submitSM.setDestinationAddress(dest_address);
-            //submitSM.setTLV(new TLVByte(((short) 0x4901), Charging.YES));
-            //submitSM.setTLV(new TLVByte(((short)0x4902), TransportType.SMS));
-            //submitSM.setTLV(new TLVString(((short)0x4903),"1"));
-            //submitSM.setTLV(new TLVString(((short)0x4905),"1"));
-            submitSM.setValidityPeriod(1000*validity_period);
-            logger.debug("Try send submitSM ...");
-            client.handlePDU(submitSM);
+                submitSM.setMessage(message+" "+i);
+                submitSM.setSourceAddress(source_address);
+                submitSM.setDestinationAddress(dest_address);
+                //submitSM.setTLV(new TLVByte(((short) 0x4901), Charging.YES));
+                //submitSM.setTLV(new TLVByte(((short)0x4902), TransportType.SMS));
+                //submitSM.setTLV(new TLVString(((short)0x4903),"1"));
+                //submitSM.setTLV(new TLVString(((short)0x4905),"1"));
+                submitSM.setValidityPeriod(1000*validity_period);
+                logger.debug("Try send submitSM ...");
+                client.handlePDU(submitSM);
+            }
         } catch (SmppException e) {
             logger.error("", e);
         }

@@ -75,13 +75,11 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
             new PDUListener() {
 
                 public boolean handlePDU(PDU pdu) {
-                    log.debug("Handle pdu with type "+pdu.getType());
-
                     Long gId = System.currentTimeMillis() + gateway_mgsId.incrementAndGet();
-
+                    log.debug("Handle pdu with type "+pdu.getType()+", set gId '"+gId+"'.");
                     switch (pdu.getType()) {
 
-                        case SubmitSM: {
+                        case SubmitSM:{
 
                             Message request = (Message) pdu;
 
@@ -89,12 +87,11 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
                             String login = delivery_id_user_map.get(delivery_id);
-                            String password = user_password_map.get(login);
-                            log.debug("service_number: "+service_number+", delivery_id: "+delivery_id+", user: "+login+", password: "+password);
+                            log.debug("SubmitSM with gId '"+gId+"' has: service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
                             Manager.getInstance().getSender(login).addMessage(delivery_id, gId ,request);
+                            break;
                         }
-
                         case DataSM: {
 
                             Message request = (Message) pdu;
@@ -103,15 +100,15 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
                             String login = delivery_id_user_map.get(delivery_id);
-                            String password = user_password_map.get(login);
-                            log.debug("service_number: "+service_number+", delivery_id: "+delivery_id+", user: "+login+", password: "+password);
+                            log.debug("DataSM gId '"+gId+"', service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
                             Manager.getInstance().getSender(login).addMessage(delivery_id, gId,  request);
+                            break;
                         }
 
                     }
 
-                    return false;
+                    return true;
                 }
             }
 
