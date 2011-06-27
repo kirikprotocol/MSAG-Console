@@ -100,6 +100,7 @@ public class TestDcpConnection extends DcpConnection{
     Delivery d = delivery.cloneDelivery();
     d.setDeliveryManager(null);
     d.setStatus(deliveries.get(delivery.getId()).getStatus());
+    addHistoryItem(d, d.getStatus());
     deliveries.put(delivery.getId(), d);
   }
 
@@ -286,9 +287,7 @@ public class TestDcpConnection extends DcpConnection{
 //        }
 //    }
     delivery.setStatus(status);
-    histories.put(deliveryId, new DeliveryStatusHistory(deliveryId, new LinkedList<DeliveryStatusHistory.Item>(){{
-      addAll(oldHistory.getHistoryItems());
-      add(new DeliveryStatusHistory.Item(new Date(), status));}}));
+    addHistoryItem(delivery,  status);
   }
 
   public synchronized DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
@@ -484,6 +483,7 @@ public class TestDcpConnection extends DcpConnection{
     for(Delivery d : deliveries.values()) {
       if(d.getStatus() == DeliveryStatus.Planned || d.getStatus() == null) {
         d.setStatus(DeliveryStatus.Active);
+        addHistoryItem(d, DeliveryStatus.Active);
       }
     }
   }
@@ -497,6 +497,7 @@ public class TestDcpConnection extends DcpConnection{
     for(Delivery d : deliveries.values()) {
       if(d.getStatus() == DeliveryStatus.Planned || d.getStatus() == null) {
         d.setStatus(DeliveryStatus.Active);
+        addHistoryItem(d, DeliveryStatus.Active);
       }else if(d.getStatus() != DeliveryStatus.Active) {
         continue;
       }
@@ -505,6 +506,7 @@ public class TestDcpConnection extends DcpConnection{
       }
       if(d.getEndDate() != null && d.getEndDate().before(now)) {
         d.setStatus(DeliveryStatus.Finished);
+        addHistoryItem(d, DeliveryStatus.Finished);
         continue;
       }
       int today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
@@ -554,12 +556,8 @@ public class TestDcpConnection extends DcpConnection{
         if(logger.isDebugEnabled()) {
           logger.debug("Delivery is finished: "+d.getName());
         }
-        final DeliveryStatusHistory oldHistory = histories.get(d.getId());
         d.setStatus(DeliveryStatus.Finished);
-        histories.put(d.getId(), new DeliveryStatusHistory(d.getId(), new LinkedList<DeliveryStatusHistory.Item>(){{
-          addAll(oldHistory.getHistoryItems());
-          add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Finished));
-        }}));
+        addHistoryItem(d, DeliveryStatus.Finished);
       }
 
     }
@@ -571,6 +569,14 @@ public class TestDcpConnection extends DcpConnection{
     }
   }
 
+
+  private void addHistoryItem(Delivery d, final DeliveryStatus status) {
+    final DeliveryStatusHistory oldHistory = histories.get(d.getId());
+    histories.put(d.getId(), new DeliveryStatusHistory(d.getId(), new LinkedList<DeliveryStatusHistory.Item>(){{
+      addAll(oldHistory.getHistoryItems());
+      add(new DeliveryStatusHistory.Item(new Date(), status));
+    }}));
+  }
 
 
 
