@@ -267,6 +267,13 @@ public class DeliveryEditController extends DeliveryController {
       delivery.setArchiveTime(null);
     }
 
+    if(!isUserInAdminRole()) {
+      if((delivery.getActivePeriodStart() != null && !delivery.getActivePeriodStart().isInInterval(user.getDeliveryStartTime(), user.getDeliveryEndTime())) ||
+          (delivery.getActivePeriodEnd() != null && !delivery.getActivePeriodEnd().isInInterval(user.getDeliveryStartTime(), user.getDeliveryEndTime()))) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "illegal.period", user.getDeliveryStartTime().getTimeString(), user.getDeliveryEndTime().getTimeString());
+        return null;
+      }
+    }
     try {
       config.modifyDelivery(user.getLogin(), delivery);
     } catch (AdminException e) {

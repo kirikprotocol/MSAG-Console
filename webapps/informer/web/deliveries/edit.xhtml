@@ -117,8 +117,8 @@
         </h:panelGrid>
 
 
-          <h:outputText rendered="#{deliveryEdit.userInAdminRole}" style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
-          <h:panelGroup rendered="#{deliveryEdit.userInAdminRole}" >
+          <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
+          <h:panelGroup>
             <eye:inputDate value="#{deliveryEdit.activePeriodStart}" type="short_time"/>
             <h:outputText value=" - "/>
             <eye:inputDate value="#{deliveryEdit.activePeriodEnd}" type="short_time"/>

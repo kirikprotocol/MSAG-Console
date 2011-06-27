@@ -57,19 +57,19 @@
       <eye:inputDate id="endDate" value="#{deliveryGroupEdit.endDate}" type="both"/>
 
 
-      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editDeliveryStartTime" value="#{deliveryGroupEdit.editActivePeriodStart}" onchange="
+      <h:selectBooleanCheckbox id="editDeliveryStartTime" value="#{deliveryGroupEdit.editActivePeriodStart}" onchange="
           document.getElementById('deliveryStartTime.hours').disabled=!this.checked;
           document.getElementById('deliveryStartTime.minutes').disabled=!this.checked"
           />
-      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.activePeriodStart}"/>
-      <eye:inputDate rendered="#{deliveryGroupEdit.userInAdminRole}" id="deliveryStartTime" value="#{deliveryGroupEdit.activePeriodStart}" type="short_time"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodStart}"/>
+      <eye:inputDate id="deliveryStartTime" value="#{deliveryGroupEdit.activePeriodStart}" type="short_time"/>
 
-      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editDeliveryEndTime" value="#{deliveryGroupEdit.editActivePeriodEnd}" onchange="
+      <h:selectBooleanCheckbox id="editDeliveryEndTime" value="#{deliveryGroupEdit.editActivePeriodEnd}" onchange="
           document.getElementById('deliveryEndTime.hours').disabled=!this.checked;
           document.getElementById('deliveryEndTime.minutes').disabled=!this.checked;
           "/>
-      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.activePeriodEnd}"/>
-      <eye:inputDate rendered="#{deliveryGroupEdit.userInAdminRole}" id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" type="short_time"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodEnd}"/>
+      <eye:inputDate id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" type="short_time"/>
 
       <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editPriority" value="#{deliveryGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
       <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
@@ -199,7 +199,9 @@
 
       retryOnFailChanged();
 
-      document.getElementById('sourceAddr').disabled = !document.getElementById('editSourceAddr').checked;
+      if(document.getElementById('editSourceAddr') != null) {
+        document.getElementById('sourceAddr').disabled = !document.getElementById('editSourceAddr').checked;
+      }
 
       var deliveryDaysDisabled = !document.getElementById('editDeliveryDays').checked;
       for (var i = 0; i&lt;7; i++)

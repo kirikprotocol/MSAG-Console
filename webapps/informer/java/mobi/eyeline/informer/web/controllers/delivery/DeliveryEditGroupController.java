@@ -176,6 +176,15 @@ public class DeliveryEditGroupController extends DeliveryController {
           if (editMessageTimeToLive)
             d.setMessageTimeToLive(messageTimeToLive);
 
+
+          if(!isUserInAdminRole()) {
+            if((d.getActivePeriodStart() != null && !d.getActivePeriodStart().isInInterval(user.getDeliveryStartTime(), user.getDeliveryEndTime())) ||
+                (d.getActivePeriodEnd() != null && !d.getActivePeriodEnd().isInInterval(user.getDeliveryStartTime(), user.getDeliveryEndTime()))) {
+              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "illegal.period", user.getDeliveryStartTime().getTimeString(), user.getDeliveryEndTime().getTimeString());
+              return null;
+            }
+          }
+
           config.modifyDelivery(user.getLogin(), d);
         }
       } catch (AdminException e) {

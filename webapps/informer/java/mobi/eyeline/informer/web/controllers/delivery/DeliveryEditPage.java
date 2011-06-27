@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
 import mobi.eyeline.informer.admin.infosme.TestSms;
@@ -221,6 +222,15 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       config.validateDeliveryWithSingleText(delivery);
     }else {
       config.validateDeliveryWithIndividualTexts(delivery);
+    }
+
+
+    User u =  config.getUser(user);
+    if(!u.getRoles().contains("informer-admin")) {
+      if((delivery.getActivePeriodStart() != null && !delivery.getActivePeriodStart().isInInterval(u.getDeliveryStartTime(), u.getDeliveryEndTime())) ||
+          (delivery.getActivePeriodEnd() != null && !delivery.getActivePeriodEnd().isInInterval(u.getDeliveryStartTime(), u.getDeliveryEndTime()))) {
+        throw new DeliveryException("illegal.period", u.getDeliveryStartTime().getTimeString(), u.getDeliveryEndTime().getTimeString());
+      }
     }
 
     delivery.setProperty(UserDataConsts.SECRET, Boolean.toString(secret));

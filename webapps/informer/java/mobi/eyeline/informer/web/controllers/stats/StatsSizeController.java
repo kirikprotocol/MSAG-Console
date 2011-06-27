@@ -6,10 +6,10 @@ import mobi.eyeline.informer.admin.delivery.stat.StatEntity;
 import mobi.eyeline.informer.admin.delivery.stat.StatEntityProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.DateAndFile;
-import mobi.eyeline.informer.web.components.data_table.Identificator;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.application.FacesMessage;
@@ -37,7 +37,7 @@ public class StatsSizeController extends DeliveryStatController  {
     if (getState() != 2)
       return new EmptyDataTableModel();
 
-    class DataTableModelImpl implements DataTableModel, Identificator{
+    class DataTableModelImpl implements DataTableModel, ModelWithObjectIds {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 

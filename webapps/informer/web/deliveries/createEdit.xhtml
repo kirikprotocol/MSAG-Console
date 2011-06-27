@@ -41,8 +41,8 @@
       </h:panelGrid>
 
 
-      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" style="white-space: nowrap;" value="#{msg['informer.deliveries.create.activePeriod']}"/>
-      <h:panelGroup rendered="#{createDelivery.activePage.userInAdminRole}">
+      <h:outputText style="white-space: nowrap;" value="#{msg['informer.deliveries.create.activePeriod']}"/>
+      <h:panelGroup>
         <eye:inputDate value="#{createDelivery.activePage.activePeriodStart}" type="short_time"/>
         <h:outputText style="white-space: nowrap;" value=" - "/>
         <eye:inputDate value="#{createDelivery.activePage.activePeriodEnd}" type="short_time"/>
