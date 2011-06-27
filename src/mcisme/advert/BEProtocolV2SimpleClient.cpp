@@ -184,9 +184,6 @@ BEProtocolV2SimpleClient::readAdvert(std::string* banner,
 
     smsc_log_info(_logger, "got BannerResponse: transactionId=%u, bannerId=%u, ownerId=%u, rotatorId=%u",
                   banner_resp_trace->transactionId, banner_resp_trace->bannerId, banner_resp_trace->ownerId, banner_resp_trace->rotatorId);
-  } catch (TimeoutException& ex) {
-    smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: caught TimeoutException [%s]", ex.what());
-    return ERR_ADV_TIMEOUT;
   } catch (ProtocolError& ex) {
     smsc_log_error(_logger, "BEProtocolV2SimpleClient::readAdvert::: caught ProtocolError exception");
     return ERR_ADV_OTHER;
