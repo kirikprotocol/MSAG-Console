@@ -868,8 +868,17 @@ SCAGCommand(), _SmppCommand()
         set_dialogId( pdu->get_sequenceNumber() );
         postfix();
 
-    } catch (...) {
+    } catch ( std::exception& e ) {
 
+        smsc_log_warn(log_,"exc in SmppCommand (pdu follows): %s", e.what());
+        scag_plog_warn(plog,log_);
+        pdu->dump(&plog,2);
+        dispose();
+
+    } catch ( ... ) {
+        smsc_log_warn(log_,"unknown exc in SmppCommand (pdu follows):");
+        scag_plog_warn(plog,log_);
+        pdu->dump(&plog,2);
         dispose();
 
     }
@@ -1342,6 +1351,7 @@ void SmppCommand::dispose()
     default:
         __warning2__("~SmppCommand:unprocessed cmdid %d",cmdid_);
     }
+    dta_ = 0;
 }
 
 
