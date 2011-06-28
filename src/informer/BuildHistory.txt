@@ -1,3 +1,5 @@
+=====================================================================
+2011-06-28 15:52 bukind informer-build-20110628
 2011-06-28 14:35 bukind
   bugfix: potential race in SmppSession::close()
 2011-06-24 16:17 bukind
