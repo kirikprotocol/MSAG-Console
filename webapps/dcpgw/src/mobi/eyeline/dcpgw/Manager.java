@@ -46,8 +46,6 @@ public class Manager {
 
     private SmppServer smppServer;
 
-    private HashMap<Long, Request> gId_request_map;
-
     // Private constructor prevents instantiation from other classes
     private Manager(){
         String userDir = System.getProperty("user.dir");
@@ -100,7 +98,7 @@ public class Manager {
 
         user_senders_map = new HashMap<String, Sender>();
 
-        gId_request_map = new HashMap<Long, Request>();
+        HashMap<Long, Request> gId_request_map = new HashMap<Long, Request>();
     }
 
     public void setSmppServer(SmppServer smppServer){
@@ -112,7 +110,7 @@ public class Manager {
     }
 
     synchronized public Sender getSender(String user){
-        log.debug("Try to get sender for user '"+user+"' ...");
+        //log.debug("Try to get sender for user '"+user+"' ...");
 
         Sender sender;
         if (user_senders_map.containsKey(user)){

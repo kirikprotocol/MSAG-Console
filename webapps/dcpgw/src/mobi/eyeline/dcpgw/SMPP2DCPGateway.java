@@ -87,9 +87,10 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
                             String login = delivery_id_user_map.get(delivery_id);
-                            log.debug("SubmitSM with gId '"+gId+"' has: service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
+                            log.debug("Try to add SubmitSM with gId '"+gId+"' has: service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
                             Manager.getInstance().getSender(login).addMessage(delivery_id, gId ,request);
+
                             break;
                         }
                         case DataSM: {
@@ -100,9 +101,10 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
                             String login = delivery_id_user_map.get(delivery_id);
-                            log.debug("DataSM gId '"+gId+"', service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
+                            log.debug("Try to add DataSM with gId '"+gId+"', service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
                             Manager.getInstance().getSender(login).addMessage(delivery_id, gId,  request);
+
                             break;
                         }
 

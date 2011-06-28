@@ -4,13 +4,13 @@
     <Users>
         <User login="stepanovd" password="stepanovd"/>
     </Users>
-    <Delivery id="1190" user="stepanovd">
+    <Delivery id="1198" user="stepanovd">
         <Sns>
             <Sn>10001</Sn>
             <Sn>10002</Sn>
         </Sns>
     </Delivery>
-    <Delivery id="1196" user="stepanovd">
+    <Delivery id="1199" user="stepanovd">
         <Sns>
             <Sn>10003</Sn>
             <Sn>10004</Sn>

@@ -10,7 +10,8 @@ import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,7 +23,10 @@ public class Sender extends Thread{
 
     private static Logger log = Logger.getLogger(Sender.class);
 
-    public final Object monitor = new Object();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    // Use à lock to control the addition of messages in the queues.
+    private final ReentrantLock lock = new ReentrantLock();
 
     private DcpConnection connection;
     private String host;
@@ -42,7 +46,8 @@ public class Sender extends Thread{
 
     private SmppServer smppServer;
 
-    private boolean queues_blocked;
+    private Map<LinkedBlockingQueue<Message>, ScheduledFuture> queue_task_map;
+    private LinkedBlockingQueue<SendTask> sendTaskQueue;
 
     public Sender(String host, int port, final String login, String password, int capacity, long timeout, SmppServer smppServer){
         this.host = host;
@@ -56,14 +61,15 @@ public class Sender extends Thread{
         this.smppServer = smppServer;
 
         delivery_id_queue_map = Collections.synchronizedMap(new HashMap<Integer, LinkedBlockingQueue<Message>>());
+        queue_task_map = Collections.synchronizedMap(new HashMap<LinkedBlockingQueue<Message>, ScheduledFuture>());
 
         messages_requests_map = new HashMap<Message, mobi.eyeline.smpp.api.pdu.Message>();
+
+        sendTaskQueue = new LinkedBlockingQueue<SendTask>();
     }
 
     public void addMessage(int delivery_id, long gId, mobi.eyeline.smpp.api.pdu.Message request){
         log.debug("Try to put '"+gId+"' message to the "+delivery_id+"_queue ...");
-
-
 
         LinkedBlockingQueue<Message> queue;
         synchronized (delivery_id_queue_map){
@@ -72,7 +78,7 @@ public class Sender extends Thread{
                 log.debug(delivery_id+"_queue not found.");
                 queue = new LinkedBlockingQueue<Message>(capacity);
                 delivery_id_queue_map.put(delivery_id, queue);
-                log.debug("Initialize new "+delivery_id+" queue.");
+                log.debug("Initialize new "+delivery_id+"_queue.");
             }
         }
 
@@ -87,32 +93,58 @@ public class Sender extends Thread{
 
         informer_message.setProperty("gId", Long.toString(gId));
 
-        synchronized (monitor){
+        synchronized (queue){
             try {
-                log.debug(delivery_id+"_queue size before putting new message "+queue.size()+".");
+                log.debug(delivery_id + "_queue size before putting new message " + queue.size() + ".");
                 queue.put(informer_message);
                 log.debug("Successfully put "+gId+" message to "+delivery_id+"_queue.");
             } catch (InterruptedException e) {
                 log.error(e);
                 // todo ?
             }
-        }
 
-        messages_requests_map.put(informer_message, request);
+            int size = queue.size();
+            log.debug(delivery_id+"_queue size has increased to "+size+".");
 
-        int size = queue.size();
-        log.debug(delivery_id+"_queue size has increased to "+size+".");
+            if (queue.size() == 1){
 
-        if (size == capacity) {
-            synchronized (this){
-                log.debug("Try to notify all waited threads ...");
-                notifyAll();
+                if (connection == null){
+                    try{
+                        log.debug("Try to create new dcp connection for user '"+login+"' ...");
+                        connection = new DcpConnection(host, port, login, password);
+                        log.debug("Successfully create new dcp connection for user '"+login+"'.");
+                    } catch (AdminException e) {
+                        log.error("Couldn't create new dcp connection for user '"+login+"'.",e);
+                        // todo ?
+                    }
+                }
+
+                SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
+                ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, timeout, TimeUnit.MILLISECONDS);
+                queue_task_map.put(queue, scheduledFuture);
             }
-            log.debug(delivery_id+"_queue is full, try to notify the waiting thread to add messages to informer's deliveries ...");
-        } else if (size < capacity) {
-            log.debug(delivery_id+"_queue size less than capacity, do nothing.");
-        } else if (size > capacity) {
-            log.error(delivery_id+"_queue size '"+size+"' more than capacity '"+capacity+".");
+
+            messages_requests_map.put(informer_message, request);
+
+            if (size == capacity) {
+                ScheduledFuture scheduledFuture = queue_task_map.get(queue);
+                scheduledFuture.cancel(true);
+                queue_task_map.remove(queue);
+
+                SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
+                sendTaskQueue.add(sendTask);
+
+                synchronized (this){
+                    log.debug("Try to notify all waited threads ...");
+                    notifyAll();
+                }
+                log.debug(delivery_id+"_queue is full, try to notify the waiting thread to add messages to informer's deliveries ...");
+
+            } else if (size < capacity) {
+                log.debug(delivery_id+"_queue size "+size+" less than capacity "+capacity+", do nothing.");
+            } else if (size > capacity) {
+                log.error(delivery_id+"_queue size '"+size+"' more than capacity '"+capacity+".");
+            }
         }
     }
 
@@ -120,95 +152,24 @@ public class Sender extends Thread{
         log.debug("Start sender for user '"+login+"'.");
         while(!interrupt){
 
-            synchronized (monitor){
+            log.debug("Iterate queues for user "+login+".");
 
-                log.debug("Iterate queues for user "+login+".");
-                for (Map.Entry<Integer, LinkedBlockingQueue<Message>> entry : delivery_id_queue_map.entrySet()) {
+            while(!sendTaskQueue.isEmpty()){
+                SendTask sendTask = sendTaskQueue.poll();
+                sendTask.run();
+            }
 
-                    int delivery_id = entry.getKey();
-                    LinkedBlockingQueue<Message> queue = entry.getValue();
-
-                    if (!queue.isEmpty()){
-                        log.debug(delivery_id+"_queue is not empty.");
-                        if (connection == null){
-                            try{
-                                log.debug("Try to create new dcp connection for user '"+login+"' ...");
-                                connection = new DcpConnection(host, port, login, password);
-                                log.debug("Successfully create new dcp connection for user '"+login+"'.");
-                            } catch (AdminException e) {
-                                log.error("Couldn't create new dcp connection for user '"+login+"'.",e);
-                                // todo ?
-                            }
-                        }
-
-                        //log.debug(delivery_id+"_queue size before conversion to array is "+queue.size());
-                        Message[] ar = new Message[queue.size()];
-                        List<Message> list = Arrays.asList(queue.toArray(ar));
-                        //log.debug(delivery_id+"_queue size after conversion to array is " + queue.size());
-
-                        try {
-                            log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
-                            connection.addDeliveryMessages(delivery_id, list);
-                            log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
-
-                            for(Message m: list){
-
-                                mobi.eyeline.smpp.api.pdu.Message request = messages_requests_map.get(m);
-                                log.debug("map size = "+messages_requests_map.size());
-                                try{
-
-                                    smppServer.send(request.getResponse(Status.OK));
-                                    messages_requests_map.remove(m);
-
-
-                                    log.debug("Send smpp response with status 'OK' for "+m.getProperties().getProperty("gId")+" message from "+delivery_id+" delivery." );
-                                } catch (SmppException e) {
-                                    log.error("Could not send response to client", e);
-                                }
-
-                            }
-
-                            queue.clear();
-                            log.debug("Clean queue for delivery with '"+delivery_id+"'.");
-
-                        } catch (AdminException e) {
-                            log.error("Couldn't add list with messages to delivery with id '"+delivery_id+"'.",e);
-
-                            for(Message m: list){
-                                mobi.eyeline.smpp.api.pdu.Message request = messages_requests_map.get(m);
-
-                                try{
-
-                                    smppServer.send(request.getResponse(Status.SYSERR));
-                                    messages_requests_map.remove(m);
-
-                                } catch (SmppException e2) {
-                                    log.error("Could not send response to client", e);
-                                }
-
-                            }
-
-                            queue.clear();
-                            log.debug("Clean queue for delivery with '"+delivery_id+"'.");
-                        }
-
-                    } else {
-                        log.debug(delivery_id+"_queue is empty.");
-                    }
-                }
-
-                synchronized (this){
-                    try {
-                        log.debug("Sender for user '"+login+"' wait "+timeout+" mls.");
-                        wait(timeout);
-                    } catch (InterruptedException e) {
-                        log.error(e);
-                        // todo ?
-                    }
+            synchronized (this){
+                try{
+                    log.debug("Sender for user '"+login+"' wait.");
+                    wait();
+                } catch (InterruptedException e) {
+                    log.error(e);
+                    // todo ?
                 }
             }
         }
-
+        log.debug("Sender for user '"+login+"' has finished.");
     }
 
     public void interrupt(){

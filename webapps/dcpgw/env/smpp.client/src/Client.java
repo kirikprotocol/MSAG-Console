@@ -96,10 +96,6 @@ public class Client extends Thread implements PDUListener {
                 submitSM.setMessage(message+" "+i);
                 submitSM.setSourceAddress("10001");
                 submitSM.setDestinationAddress(dest_address);
-                //submitSM.setTLV(new TLVByte(((short) 0x4901), Charging.YES));
-                //submitSM.setTLV(new TLVByte(((short)0x4902), TransportType.SMS));
-                //submitSM.setTLV(new TLVString(((short)0x4903),"1"));
-                //submitSM.setTLV(new TLVString(((short)0x4905),"1"));
                 submitSM.setValidityPeriod(1000*validity_period);
                 logger.debug("Try send submitSM ...");
                 client.handlePDU(submitSM);
@@ -113,10 +109,6 @@ public class Client extends Thread implements PDUListener {
                 submitSM.setMessage(message+" "+i);
                 submitSM.setSourceAddress("10003");
                 submitSM.setDestinationAddress(dest_address);
-                //submitSM.setTLV(new TLVByte(((short) 0x4901), Charging.YES));
-                //submitSM.setTLV(new TLVByte(((short)0x4902), TransportType.SMS));
-                //submitSM.setTLV(new TLVString(((short)0x4903),"1"));
-                //submitSM.setTLV(new TLVString(((short)0x4905),"1"));
                 submitSM.setValidityPeriod(1000*validity_period);
                 logger.debug("Try send submitSM ...");
                 client.handlePDU(submitSM);
