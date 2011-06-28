@@ -328,9 +328,9 @@ void InfosmeCoreV1::init( bool archive )
         try {
             bool enabled = true;
             std::string socket;
-            if (cfg->findSection("snmp")) {
+            if (maincfg->findSection("snmp")) {
                 // initing snmp if enabled
-                std::auto_ptr<Config> snmpCfg(cfg->getSubConfig("snmp",true));
+                std::auto_ptr<Config> snmpCfg(maincfg->getSubConfig("snmp",true));
                 ConfigWrapper cwrap(*snmpCfg.get(),log_);
                 enabled = cwrap.getBool("enabled",true);
                 socket = cwrap.getString("socket","");

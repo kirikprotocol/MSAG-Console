@@ -34,7 +34,7 @@ SnmpManagerImpl::~SnmpManagerImpl()
 
 void SnmpManagerImpl::init( const std::string& snmpSock )
 {
-    smsc_log_info(log_,"snmp initialization");
+    smsc_log_info(log_,"snmp initialization, socket='%s'",snmpSock.c_str() );
     // snmp_disable_stderrlog();
     netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
                             NETSNMP_DS_AGENT_ROLE, 1 ); // we are a subagent
@@ -42,7 +42,6 @@ void SnmpManagerImpl::init( const std::string& snmpSock )
         netsnmp_ds_set_string( NETSNMP_DS_APPLICATION_ID,
                                NETSNMP_DS_AGENT_X_SOCKET, snmpSock.c_str() ); // setting a connection
     }
-    
     init_agent( informerNamed ); // initialize agent library
     init_snmp( informerName );   // read the conf file
 }
