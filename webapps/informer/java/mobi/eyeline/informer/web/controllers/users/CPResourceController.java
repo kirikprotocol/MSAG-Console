@@ -39,12 +39,6 @@ public class CPResourceController extends InformerController{
     for(UserCPsettings.Protocol p : protocols) {
       ret.add(new SelectItem(p, getLocalizedString("cp.resource.protocol."+p.toString())));
     }
-    Collections.sort(ret, new Comparator<SelectItem>() {
-      @Override
-      public int compare(SelectItem o1, SelectItem o2) {
-        return o1.getLabel().compareTo(o2.getLabel());
-      }
-    });
     return ret;
   }
 
@@ -54,12 +48,6 @@ public class CPResourceController extends InformerController{
     for(UserCPsettings.WorkType p : workTypes) {
       ret.add(new SelectItem(p, getLocalizedString("cp.resource.workType." + p.toString())));
     }
-    Collections.sort(ret, new Comparator<SelectItem>() {
-      @Override
-      public int compare(SelectItem o1, SelectItem o2) {
-        return o1.getLabel().compareTo(o2.getLabel());
-      }
-    });
     return ret;
   }
 
