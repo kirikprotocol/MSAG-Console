@@ -862,9 +862,10 @@ public:
     reader.Kill(16);
 #endif
     if(reader.isRunning())reader.WaitFor();
-    if(reader.isRunning())writer.WaitFor();
+    if(writer.isRunning())writer.WaitFor();
     closed=true;
     abortWaits();
+    MutexGuard mg(lockMutex);
     lock.Empty();
   }
 

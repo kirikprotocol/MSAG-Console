@@ -1,3 +1,5 @@
+2011-06-28 14:35 bukind
+  bugfix: potential race in SmppSession::close()
 2011-06-24 16:17 bukind
   feature: initial snmp support (SMSC connect/disconnect only)
 2011-06-24 13:28 bukind
