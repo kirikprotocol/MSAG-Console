@@ -34,13 +34,11 @@ BannerReader::Execute()
     for(activeBEConns_t::const_iterator iter=_activeBEConns.begin(), end_iter=_activeBEConns.end();
         iter != end_iter; ++iter, ++count)
     {
-      smsc_log_debug(_logger, "BannerReader::Execute::: add fd=%d into poll set at position=%d", iter->second->getSocketFd(), count);
       fds[count].fd = iter->second->getSocketFd();
       fds[count].revents = 0;
       fds[count].events = POLLRDNORM;
     }
     _lock.Unlock();
-    smsc_log_debug(_logger, "BannerReader::Execute::: add signalled_read fd=%d into poll set at position=%d", _readSignalEnd, count);
     fds[count].fd = _readSignalEnd;
     fds[count].revents = 0;
     fds[count].events = POLLRDNORM;
@@ -80,12 +78,13 @@ BannerReader::handleTimedOutRequests(unsigned req_exp_period)
       if (iter != _activeBEConns.end())
       {
         AdvertImplRefPtr& bannerEngineProxy = iter->second;
-        smsc_log_info(_logger, "BannerReader::handleTimedOutRequests::: send rollback request for trnId=%u,bannerId=%u,ownerId=%u,rotatorId=%u",
-            expiredBannerReq.trnId, expiredBannerReq.origBannerReq->bannerId,
-            expiredBannerReq.origBannerReq->ownerId, expiredBannerReq.origBannerReq->rotatorId);
+        smsc_log_info(_logger, "BannerReader::handleTimedOutRequests::: send rollback request for trnId=%u,bannerId=%u,ownerId=%u,rotatorId=%u,serviceName='%s'",
+                      expiredBannerReq.trnId, expiredBannerReq.origBannerReq->bannerId, expiredBannerReq.origBannerReq->ownerId,
+                      expiredBannerReq.origBannerReq->rotatorId, expiredBannerReq.origBannerReq->serviceName.c_str());
         try {
           bannerEngineProxy->sendErrorInfo(BannerRequest(expiredBannerReq.trnId, expiredBannerReq.origBannerReq->bannerId,
-                                                         expiredBannerReq.origBannerReq->ownerId, expiredBannerReq.origBannerReq->rotatorId),
+                                                         expiredBannerReq.origBannerReq->ownerId, expiredBannerReq.origBannerReq->rotatorId,
+                                                         expiredBannerReq.origBannerReq->serviceName),
                                                          ERR_ADV_TIMEOUT);
         } catch (NetworkException& ex) {
           smsc_log_error(_logger, "BannerReader::handleTimedOutRequests::: caught NetworkException '%s'", ex.what());
@@ -132,8 +131,8 @@ BannerReader::handleResponses(unsigned num_of_ready_fd, unsigned count, struct p
             // bannerId == -1 if we received banner response packet that doesn't include banner.
             // Skip such response w/o sending of rollback message.
             if (status == BANNER_OK && bannerRespTrace.bannerId > -1)
-              bannerEngineProxy->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId,
-                                                bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
+              bannerEngineProxy->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId,
+                                                bannerRespTrace.rotatorId, bannerRespTrace.serviceName);
           } else {
             BannerInfo*  bannerInfo = new BannerInfo(bannerRespTrace, banner, ackedBannerRequest->mcEventOut, ackedBannerRequest->charSet);
             ackedBannerRequest->resetMCEventOut(); // in order to avoid destroying of MCEventOut object at BannerRequest's destructor.
