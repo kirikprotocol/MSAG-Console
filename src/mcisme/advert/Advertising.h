@@ -63,9 +63,10 @@ struct BannerRequest
   {}
 
   // banner rollback request
-  BannerRequest(uint32_t aTransactionId, uint32_t aBannerId, uint32_t anOwnerId, uint32_t aRotatorId)
-    : id(aTransactionId), bannerId(aBannerId),
-      ownerId(anOwnerId), rotatorId(aRotatorId), fd(-1), mcEventOut(NULL)
+  BannerRequest(uint32_t transaction_id, uint32_t banner_id, uint32_t owner_id,
+                uint32_t rotator_id, const std::string& service_name)
+    : serviceName(service_name), id(transaction_id), bannerId(banner_id),
+      ownerId(owner_id), rotatorId(rotator_id), fd(-1), mcEventOut(NULL)
   {}
 
   ~BannerRequest() {
@@ -100,15 +101,18 @@ protected:
 
 struct BannerResponseTrace {
   BannerResponseTrace()
-    : transactionId(0), bannerId(0), ownerId(0), rotatorId(0) {}
+    : transactionId(0), ownerId(0), rotatorId(0), bannerId(0) {}
 
-  uint32_t transactionId, bannerId, ownerId, rotatorId;
+  uint32_t transactionId, ownerId, rotatorId;
+  int32_t bannerId;
+  std::string serviceName;
 
   bool operator != (const BannerResponseTrace& rhs) {
     if ( transactionId != rhs.transactionId ||
          bannerId != rhs.bannerId ||
          ownerId != rhs.ownerId ||
-         rotatorId != rhs.rotatorId )
+         rotatorId != rhs.rotatorId ||
+         serviceName != rhs.serviceName )
       return true;
     else
       return false;
@@ -138,7 +142,8 @@ public:
   virtual void rollbackBanner(uint32_t transactionId,
                               uint32_t bannerId,
                               uint32_t ownerId,
-                              uint32_t rotatorId) = 0;
+                              uint32_t rotatorId,
+                              const std::string& service_name) = 0;
 
   virtual ~Advertising() {}
 

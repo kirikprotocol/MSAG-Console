@@ -4,6 +4,7 @@
 
 #include "Exceptions.hpp"
 #include "advert/BEProtocolV2SimpleClient.hpp"
+#include "advert/BEProtocolV3SimpleClient.hpp"
 #include "advert/BEReconnector.hpp"
 #include "advert/BannerReader.hpp"
 
@@ -51,6 +52,9 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& task_processor,
   switch (bannerEngineProtocolVersion) {
   case BEProtocolV2SimpleClient::PROTOCOL_VERSION:
     _advertising = new BEProtocolV2SimpleClient(advertServer, advertPort);
+    break;
+  case BEProtocolV3SimpleClient::PROTOCOL_VERSION:
+    _advertising = new BEProtocolV3SimpleClient(advertServer, advertPort);
     break;
   default:
     throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.BEProtocolVersion value [%d]", bannerEngineProtocolVersion);
@@ -191,9 +195,12 @@ SendMessageEventHandler::sendBannerRequest(const AbntAddr& abnt,
 void
 SendMessageEventHandler::rollbackBanner(const BannerResponseTrace& bannerRespTrace)
 {
-  smsc_log_info(_logger, "rollback banner [transactionId=%d,bannerId=%d,ownerId=%d,rotatorId=%d]", bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
+  smsc_log_info(_logger, "rollback banner [transactionId=%u,bannerId=%d,ownerId=%u,rotatorId=%u,service_name='%s']",
+                bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId,
+                bannerRespTrace.rotatorId, bannerRespTrace.serviceName.c_str());
   try {
-    _advertising->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
+    _advertising->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId,
+                                 bannerRespTrace.rotatorId, bannerRespTrace.serviceName);
   } catch (NetworkException& ex) {
     smsc_log_error(_logger, "SendMessageEventHandler::rollbackBanner::: caught NetworkException '%s'", ex.what());
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
