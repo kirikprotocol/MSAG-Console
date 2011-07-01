@@ -484,7 +484,7 @@ public class DeliveryListController extends DeliveryController {
   }
 
   private static Comparator<Delivery> getComparator(final DataTableSortOrder sortOrder) {
-    if (sortOrder == null || sortOrder.getColumnId().equals("id")) {
+    if (sortOrder.getColumnId().equals("id")) {
       return new Comparator<Delivery>() {
         public int compare(Delivery o1, Delivery o2) {
           if (o1 == null) return 1;
