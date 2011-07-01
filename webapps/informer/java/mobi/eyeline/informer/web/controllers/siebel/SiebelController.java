@@ -8,10 +8,7 @@ import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -87,6 +84,12 @@ public class SiebelController extends InformerController {
         res.add(new SelectItem(u.getLogin(), u.getLogin()));
       }
     }
+    Collections.sort(res, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
     return res;
   }
 

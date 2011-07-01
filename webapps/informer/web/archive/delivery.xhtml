@@ -94,7 +94,7 @@
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
         <h:outputText value="#{archiveDelivery.delivery.endDate}" rendered="#{archiveDelivery.delivery.endDate != null}">
-          <f:convertDateTime dateStyle="short" type="both"/>
+          <f:convertDateTime dateStyle="short" type="both" pattern="dd.MM.yyyy HH:mm"/>
         </h:outputText>
         <h:outputText value="-" rendered="#{archiveDelivery.delivery.endDate == null}"/>
 
@@ -108,8 +108,8 @@
         </h:panelGrid>
 
 
-        <h:outputText rendered="#{archiveDelivery.userInAdminRole}" style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
-        <h:panelGroup rendered="#{archiveDelivery.userInAdminRole}">
+        <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
+        <h:panelGroup>
           <h:outputText value="#{archiveDelivery.activePeriodStart}"/>
           <h:outputText value=" - "/>
           <h:outputText value="#{archiveDelivery.activePeriodEnd}"/>

@@ -74,7 +74,7 @@
 
       <eye:dataTable value="#{deliveries.deliviries}" var="m" rendered="#{deliveries.init}" selectedRows="#{deliveries.selected}">
         <eye:row>
-          <eye:column name="id" title="#{deliveryBundle.id}" sortable="true" width="5%" align="center">
+          <eye:column name="id" title="#{deliveryBundle.id}"  defaultSortOrder="desc" sortable="true" width="5%" align="center">
             <h:outputText value="#{m.id}"/>
           </eye:column>
           <eye:column name="name" title="#{deliveryBundle.name}" sortable="true" width="19%">

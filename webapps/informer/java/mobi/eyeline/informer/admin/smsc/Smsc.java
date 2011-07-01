@@ -99,8 +99,8 @@ public class Smsc {
     s.setInt("ussdPushVlrTag", vlrUssdServiceOp);
     s.setInt("timeout", timeout);
     s.setInt("rangeOfAddress", rangeOfAddress);
-    s.setInt("maxValidityPeriod", 3600 * 24 * 3);
-    s.setInt("minValidityPeriod", 20);
+    s.setInt("maxValidityTime", 3600 * 24 * 3);
+    s.setInt("minValidityTime", 20);
     s.setInt("interConnectPeriod", interConnectTimeout);
     s = s.getOrCreateSection("retryPolicies");
     s.setStringList("immediate", immediateErrors, ",");
