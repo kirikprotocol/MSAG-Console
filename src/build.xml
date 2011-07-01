@@ -87,6 +87,12 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
   
+  <target name="ussman" depends="logger" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="ussman"/>
+    </ant>
+  </target>
+
   <target name="util" depends="logger" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="util"/>
