@@ -489,7 +489,7 @@ public class DeliveryListController extends DeliveryController {
         public int compare(Delivery o1, Delivery o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
-          return o1.getId().compareTo(o2.getId()) * (sortOrder == null || !sortOrder.isAsc() ? -1 : 1);
+          return o1.getId().compareTo(o2.getId()) * ( sortOrder.isAsc() ? 1 : -1);
         }
       };
     } else if (sortOrder.getColumnId().equals("name")) {
