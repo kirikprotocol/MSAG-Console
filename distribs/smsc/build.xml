@@ -65,7 +65,6 @@ Targets:
     <ant dir="${SRC_DIR}" target="system"/>
     <ant dir="${SRC_DIR}" target="admin"/>
     <ant dir="${SRC_DIR}" target="inman"/>
-    <ant dir="${SRC_DIR}" target="ussman"/>
     <ant dir="${SRC_DIR}" target="cluster"/>
     <ant dir="${SRC_DIR}" target="util"/>
   </target>
@@ -194,8 +193,6 @@ Targets:
     <chmod file="${DISTR_DIR}/services/SMSC/bin/agent" perm="755"/>
     <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
     <chmod file="${DISTR_DIR}/services/INMan/bin/inman" perm="755"/>
-    <copy file="${BUILD_BIN}/ussman/ussman" todir="${DISTR_DIR}/services/INMan/bin"/>
-    <chmod file="${DISTR_DIR}/services/INMan/bin/ussman" perm="755"/>
     <copy todir="${DISTR_DIR}/services/INMan/bin">
       <fileset dir="${BUILD_BIN}/inman/ldlib" includes="*.so"/>
     </copy>
@@ -428,10 +425,12 @@ Targets:
     </ant>
   </target>
   <target name="ussman_update" depends="ussman_build" >
-    <ant dir="${SMSC_DIR}/ext_smes" target="ussman_update"/>
+    <mkdir dir="${DISTR_DIR}/services/ussman"/>
+    <mkdir dir="${DISTR_DIR}/services/ussman/bin"/>
+    <copy file="${BUILD_BIN}/ussman/ussman" todir="${DISTR_DIR}/services/ussman/bin"/>
+    <chmod file="${DISTR_DIR}/services/ussman/bin/ussman" perm="755"/>
   </target>
-  <target name="ussman_distr" depends="ussman_build" >
-    <ant dir="${SMSC_DIR}/ext_smes" target="ussman_distr"/>
+  <target name="ussman_distr" depends="ussman_build, ussman_update" >
   </target>
 
   <target name="infosme_web">
