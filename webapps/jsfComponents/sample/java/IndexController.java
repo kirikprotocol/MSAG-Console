@@ -1,6 +1,7 @@
 import mobi.eyeline.util.Time;
 import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
 import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import mobi.eyeline.util.jsf.components.page_calendar.PageCalendarModel;
@@ -100,32 +101,7 @@ public class IndexController {
       rows.add(new Row(Integer.toString(i), Integer.toString(100+i)));
     }
 
-    return new DataTableModel() {
-
-      public List getRows(int i, int i1, final DataTableSortOrder dataTableSortOrder) {
-
-        if(dataTableSortOrder == null || dataTableSortOrder.getColumnId().equals("field1")) {
-          Collections.sort(rows, new Comparator<Row>() {
-            public int compare(Row o1, Row o2) {
-              return (dataTableSortOrder == null || dataTableSortOrder.isAsc() ? 1 : -1) * o1.getField1().compareTo(o2.field2);
-            }
-          });
-        }else {
-
-        Collections.sort(rows, new Comparator<Row>() {
-            public int compare(Row o1, Row o2) {
-              return (dataTableSortOrder.isAsc() ? 1 : -1) * o1.getField1().compareTo(o2.field2);
-            }
-          });
-        }
-
-        return rows.subList(i, i+i1 > rows.size() ? rows.size() : i+i1);
-      }
-
-      public int getRowsCount() {
-        return 50;
-      }
-    };
+    return new MyDataTableModel(rows);
   }
 
   public void setSelected(List selected) {
@@ -180,5 +156,42 @@ public class IndexController {
   }
 
 
+  private static class MyDataTableModel implements DataTableModel, ModelWithObjectIds {
 
+    private final List<Row> rows;
+
+    public MyDataTableModel(List<Row> rows) {
+      this.rows = rows;
+    }
+
+    public List getRows(int i, int i1, final DataTableSortOrder dataTableSortOrder) {
+
+      if(dataTableSortOrder == null || dataTableSortOrder.getColumnId().equals("field1")) {
+        Collections.sort(rows, new Comparator<Row>() {
+          public int compare(Row o1, Row o2) {
+            return (dataTableSortOrder == null || dataTableSortOrder.isAsc() ? 1 : -1) * o1.getField1().compareTo(o2.field2);
+          }
+        });
+      }else {
+
+      Collections.sort(rows, new Comparator<Row>() {
+          public int compare(Row o1, Row o2) {
+            return (dataTableSortOrder.isAsc() ? 1 : -1) * o1.getField1().compareTo(o2.field2);
+          }
+        });
+      }
+
+      return rows.subList(i, i+i1 > rows.size() ? rows.size() : i+i1);
+    }
+
+
+    public int getRowsCount() {
+      return 50;
+    }
+
+    @Override
+    public String getId(Object o) {
+      return ((Row)o).field1;
+    }
+  }
 }

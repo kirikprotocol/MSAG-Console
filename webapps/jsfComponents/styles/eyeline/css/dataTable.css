@@ -80,7 +80,7 @@ table.eyeline_navbar {
 }
 
 table.eyeline_navbar td {
-/*	border-right: 1px solid #161E49;*/
+  /*	border-right: 1px solid #161E49;*/
   white-space: nowrap;
   text-align: center;
   padding-left: 3px;
@@ -187,4 +187,68 @@ div.eyeline_loading {
   background-image: url("../images/loading.gif");
   background-position: center;
   background-repeat: no-repeat;
+}
+div.select_page  {
+  background: url(../images/ico16_checked_sa.gif);
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+div.select_all_button {
+  cursor: pointer;
+  background-image: url("../images/list_opened_center.gif");
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 15px;
+  height: 15px;
+}
+
+
+div.select_page_checked  {
+  background: url(../images/ico16_checked_sa_checked.gif);
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+div.select_all_content {
+  margin-left: 0px;
+  background-color:#F3F0E3;
+  overflow: auto;
+  position: absolute;
+  margin-top : 1px;
+  text-align:left;
+  font-family: Verdana,Arial,Tahoma,Helvetica,sans,sans-serif;
+  font-size: 11px;
+  z-index: 10;
+  border: 1px solid #cd853f;
+  visibility: hidden;
+}
+
+div.select_all_content a.xi{
+  font-family: Verdana,Arial,Tahoma,Helvetica,sans,sans-serif;
+  font-size: 11px;
+}
+
+table.select_all_button {
+  border: 1px solid #cd853f;
+  background-color:#F3F0E3
+}
+
+table.select_all_button td {
+  padding: 0px
+}
+
+table.select_all_button_selected {
+  border: 1px solid #cd853f;
+  background-color:#DFD4AF;
+}
+
+table.select_all_button_selected td {
+  padding: 0px
 }

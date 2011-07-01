@@ -6,23 +6,26 @@ import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
 import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
 import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 
 import javax.el.ValueExpression;
+import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Artem Snopkov
  */
 public class DataTableHandler extends ComponentHandler {
-
   private final TagAttribute value;
   private final TagAttribute autoUpdate;
+
   private final TagAttribute pageSize;
   private final TagAttribute pageSizeRendered;
   private final TagAttribute selectedRows;
   private final TagAttribute updateUsingSubmit;
   private final TagAttribute var;
+  private final TagAttribute disallowSelectAll;
 
   public DataTableHandler(ComponentConfig config) {
     super(config);
@@ -33,6 +36,7 @@ public class DataTableHandler extends ComponentHandler {
     pageSizeRendered = getAttribute("pageSizeRendered");
     selectedRows = getAttribute("selectedRows");
     updateUsingSubmit = getAttribute("updateUsingSubmit");
+    disallowSelectAll = getAttribute("disallowSelectAll");
     var = getAttribute("var");
   }
 
@@ -48,19 +52,58 @@ public class DataTableHandler extends ComponentHandler {
       t.setSelectedRowsExpression(selectedRows.getValueExpression(ctx, List.class));
     if (updateUsingSubmit != null)
       t.setUpdateUsingSubmit(updateUsingSubmit.getBoolean(ctx));
+    if(value != null) {
+      t.setModelExpression(value.getValueExpression(ctx, DataTableModel.class));
+    }
+    if(disallowSelectAll != null) {
+      t.setDisallowSelectAll(disallowSelectAll.getBoolean(ctx));
+    }
     return t;
   }
 
+  @SuppressWarnings({"unchecked"})
+  private void loadSelectedRows(int startPos, DataTable t, DataTableSortOrder s, List rows) {
+    Set<String> ids = new HashSet<String>(t.getSelectedRows());
+    int i = 0;
+    int c = 0;
+    ModelWithObjectIds ident = (ModelWithObjectIds)t.getModel();
+    List _rows;
+    do{
+      _rows = t.getModel().getRows(i*1000, 1000, s);
+      for (Object r : _rows) {
+        String id = ident.getId(r);
+        if ((t.isSelectAll() && !ids.contains(id)) || (!t.isSelectAll() && ids.contains(id))) {
+          c++;
+          if (c > startPos) {
+            rows.add(r);
+            if (rows.size() == t.getPageSize()) {
+              return;
+            }
+          }
+        }
+      }
+      i++;
+    } while(_rows.size() == 1000 && (t.isSelectAll() || rows.size() < ids.size()));
+
+  }
+
+  private List getRows(DataTable t, DataTableSortOrder s) {
+    int startPos = t.getCurrentPage() * t.getPageSize();
+    List rows;
+    if(!t.isShowSelectedOnly()) {
+      rows = t.getModel().getRows(startPos, t.getPageSize(), s);
+    } else {
+      rows = new LinkedList();
+      loadSelectedRows(startPos, t, s, rows);
+    }
+    return rows;
+  }
+
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
-
-
     DataTable t = (DataTable) c;
     String tid = t.getId();
 
     ctx.getVariableMapper().setVariable("___tid", new ConstantExpression(tid));
-
-    DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
-    t.setModel(m);
 
     // Header
     nextHandler.apply(ctx, c);
@@ -79,23 +122,34 @@ public class DataTableHandler extends ComponentHandler {
       }
     }
 
+    if(!t.isInternalUpdate()) {
+      t.setSelectAll(false);
+      t.setSelectedRows(Collections.<String>emptyList());
+      t.setShowSelectedOnly(false);
+      return;
+    }
+
+    DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
+    if (t.getSelectedRowsExpression() != null && !(m instanceof ModelWithObjectIds))
+      throw new FacesException("Model should implement ModelWithObjectIds interface.");
+
+    t.setModel(m);
+
     DataTableSortOrder s = null;
     if (t.getSortOrder() != null) {
       boolean asc = t.getSortOrder().charAt(0) == '-';
       s = (asc) ? new DataTableSortOrder(t.getSortOrder().substring(1), true) : new DataTableSortOrder(t.getSortOrder().substring(0), false);
     }
 
-    int startPos = t.getCurrentPage() * t.getPageSize();
-    List rows = m.getRows(startPos, t.getPageSize(), s);
-
-    if (rows.isEmpty() && startPos > 0) {
+    List rows = getRows(t,s);
+    if (rows.isEmpty() && t.getCurrentPage() > 0) {
       t.setCurrentPage(0);
-      startPos = 0;
-      rows = m.getRows(startPos, t.getPageSize(), s);
+      rows = getRows(t,s);
     }
 
-    // Body
     ctx.getVariableMapper().setVariable(tid + "___var", new ConstantExpression(var.getValue()));
+    ctx.getVariableMapper().setVariable(tid + "___dataTableModel", new ConstantExpression(m));
+
     for (Object row : rows) {
       ctx.getVariableMapper().setVariable(tid + "___currentRow", new ConstantExpression(row));
 

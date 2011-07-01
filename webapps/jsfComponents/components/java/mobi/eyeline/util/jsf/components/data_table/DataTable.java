@@ -2,14 +2,12 @@ package mobi.eyeline.util.jsf.components.data_table;
 
 import mobi.eyeline.util.jsf.components.EyelineComponent;
 import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 
 import javax.el.ValueExpression;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Artem Snopkov
@@ -24,10 +22,45 @@ public class DataTable extends EyelineComponent {
   private Boolean updateUsingSubmit;
   private Map<Integer, ValueExpression> rows = new HashMap<Integer, ValueExpression>();
 
-  private List<String> selectedRows = new ArrayList<String>();
   private ValueExpression selectedRowsExpression;
 
+  private ValueExpression modelExpression;
+
   private boolean pageSizeRendered = true;
+
+  private List<String> selectedRows = new LinkedList<String>();
+
+  private boolean selectAll;
+
+  private boolean internalUpdate;
+
+  private boolean showSelectedOnly;
+
+  private boolean disallowSelectAll;
+
+  public boolean isShowSelectedOnly() {
+    return showSelectedOnly;
+  }
+
+  public void setShowSelectedOnly(boolean showSelectedOnly) {
+    this.showSelectedOnly = showSelectedOnly;
+  }
+
+  boolean isInternalUpdate() {
+    return internalUpdate;
+  }
+
+  void setInternalUpdate(boolean internalUpdate) {
+    this.internalUpdate = internalUpdate;
+  }
+
+  public boolean isSelectAll() {
+    return selectAll;
+  }
+
+  public void setSelectAll(boolean selectAll) {
+    this.selectAll = selectAll;
+  }
 
   public DataTableModel getModel() {
     return model;
@@ -83,20 +116,8 @@ public class DataTable extends EyelineComponent {
     this.pageSizeRendered = pageSizeRendered;
   }
 
-  public boolean isRowSelection() {
-    return selectedRowsExpression != null;
-  }
-
   public void clearSelectedRows() {
     selectedRows.clear();
-  }
-
-  public void addSelectedRow(String rowId) {
-    selectedRows.add(rowId);
-  }
-
-  public List<String> getSelectedRows() {
-    return selectedRows;
   }
 
   public Boolean isUpdateUsingSubmit() {
@@ -135,14 +156,12 @@ public class DataTable extends EyelineComponent {
     return e;
   }
 
-  public void setSelectedRowsExpression(ValueExpression selectedRowsExpression) {
-    this.selectedRowsExpression = selectedRowsExpression;
+  public ValueExpression getModelExpression() {
+    return modelExpression;
   }
 
-  public void processUpdates(javax.faces.context.FacesContext context) {
-    if (selectedRowsExpression != null && selectedRows != null && !selectedRows.isEmpty())
-      selectedRowsExpression.setValue(context.getELContext(), new ArrayList<String>(selectedRows));
-    super.processUpdates(context);
+  public void setModelExpression(ValueExpression modelExpression) {
+    this.modelExpression = modelExpression;
   }
 
   public void processDecodes(javax.faces.context.FacesContext context) {
@@ -151,28 +170,334 @@ public class DataTable extends EyelineComponent {
   }
 
   public Object saveState(FacesContext context) {
-    Object[] values = new Object[16];
+    Object[] values = new Object[12];
     values[0] = super.saveState(context);
     values[1] = updateUsingSubmit;
-    values[2] = selectedRowsExpression;
-    values[3] = autoUpdate;
-    values[4] = currentPage;
-    values[5] = pageSize;
-    values[9] = sortOrder;
-    values[10] = pageSizeRendered;
+    values[2] = autoUpdate;
+    values[3] = currentPage;
+    values[4] = pageSize;
+    values[5] = sortOrder;
+    values[6] = pageSizeRendered;
+    values[7] = selectedRows;
+    values[8] = selectedRowsExpression;
+    values[9] = modelExpression;
+    values[10] = selectAll;
+    values[11] = disallowSelectAll;
     return (values);
+  }
+
+  public void updateSelected(String[] select) {
+    if(select != null) {
+      Collections.addAll(this.selectedRows, select);
+    }else {
+      selectedRows.clear();
+    }
+  }
+
+  public boolean isSelection() {
+    return selectedRowsExpression != null;
   }
 
   public void restoreState(FacesContext context, Object state) {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
     updateUsingSubmit = (Boolean) values[1];
-    selectedRowsExpression = (ValueExpression) values[2];
-    autoUpdate = (Integer) values[3];
-    currentPage = (Integer) values[4];
-    pageSize = (Integer) values[5];
-    sortOrder = (String) values[9];
-    pageSizeRendered = (Boolean) values[10];
+    autoUpdate = (Integer) values[2];
+    currentPage = (Integer) values[3];
+    pageSize = (Integer) values[4];
+    sortOrder = (String) values[5];
+    pageSizeRendered = (Boolean) values[6];
+    selectedRows = (List<String>) values[7];
+    selectedRowsExpression = (ValueExpression) values[8];
+    modelExpression = (ValueExpression)values[9];
+    selectAll = (Boolean)values[10];
+    disallowSelectAll = (Boolean)values[11];
   }
+
+  public List<String> getSelectedRows() {
+    return selectedRows;
+  }
+
+  public void setSelectedRows(List<String> selectedRows) {
+    this.selectedRows = selectedRows == null ? null : new ArrayList<String>(selectedRows);
+  }
+
+  public void processUpdates(javax.faces.context.FacesContext context) {
+    if (selectedRowsExpression != null && !internalUpdate) {
+      List<String> selected;
+      if(selectAll && !disallowSelectAll) {
+        DataTableModel model = (DataTableModel)modelExpression.getValue(context.getELContext());
+        selected = new LazySelectedList(model, selectedRows == null ? null : new HashSet<String>(selectedRows));
+      }else {
+        selected = new ArrayList<String>(selectedRows);
+      }
+      selectedRowsExpression.setValue(context.getELContext(), selected);
+    }
+    super.processUpdates(context);
+  }
+
+
+  public boolean isSelected(String s) {
+    return selectedRows.contains(s);
+  }
+
+  public ValueExpression getSelectedRowsExpression() {
+    return selectedRowsExpression;
+  }
+
+  public void setSelectedRowsExpression(ValueExpression selectedRowsExpression) {
+    this.selectedRowsExpression = selectedRowsExpression;
+  }
+
+  public boolean isDisallowSelectAll() {
+    return disallowSelectAll;
+  }
+
+  public void setDisallowSelectAll(boolean disallowSelectAll) {
+    this.disallowSelectAll = disallowSelectAll;
+  }
+
+  private static class LazySelectedList implements List<String>{
+
+    private final DataTableModel model;
+
+    private List<String> selected;
+
+    private final Set<String> unselected;
+
+    private LazySelectedList(DataTableModel model, Set<String> unselected) {
+      this.model = model;
+      this.unselected = unselected;
+    }
+
+    private void load() {
+      List<String> selected = new LinkedList<String>();
+      int i = 0;
+      List rows;
+      ModelWithObjectIds ident = (ModelWithObjectIds)model;
+      while(!(rows =  model.getRows(10000*i, 10000, null)).isEmpty()) {
+        for (Object o : rows) {
+          String id = ident.getId(o);
+          if(unselected == null || !unselected.contains(id)) {
+            selected.add(id);
+          }
+        }
+        if(rows.size()<10000) {
+          break;
+        }
+        i++;
+      }
+      this.selected = selected;
+    }
+
+    @Override
+    public int size() {
+      if(selected == null) {
+        load();
+      }
+      return selected.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+      if(selected == null) {
+        load();
+      }
+      return selected.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+      if(selected == null) {
+        load();
+      }
+      return selected.contains(o);
+    }
+
+    @Override
+    public Iterator<String> iterator() {
+      if(selected == null) {
+        load();
+      }
+      return selected.iterator();
+    }
+
+    @Override
+    public Object[] toArray() {
+      if(selected == null) {
+        load();
+      }
+      return selected.toArray();
+    }
+
+    @Override
+    public <T> T[] toArray(T[] a) {
+      if(selected == null) {
+        load();
+      }
+      return selected.toArray(a);
+    }
+
+    @Override
+    public boolean add(String s) {
+      if(selected == null) {
+        load();
+      }
+      return selected.add(s);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+      if(selected == null) {
+        load();
+      }
+      return selected.remove(o);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c) {
+      if(selected == null) {
+        load();
+      }
+      return selected.containsAll(c);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends String> c) {
+      if(selected == null) {
+        load();
+      }
+      return selected.addAll(c);
+    }
+
+    @Override
+    public boolean addAll(int index, Collection<? extends String> c) {
+      if(selected == null) {
+        load();
+      }
+      return selected.addAll(index, c);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+      if(selected == null) {
+        load();
+      }
+      return selected.removeAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+      if(selected == null) {
+        load();
+      }
+      return selected.retainAll(c);
+    }
+
+    @Override
+    public void clear() {
+      if(selected == null) {
+        load();
+      }
+      selected.clear();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if(selected == null) {
+        load();
+      }
+      return selected.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+      if(selected == null) {
+        load();
+      }
+      return selected.hashCode();
+    }
+
+    @Override
+    public String get(int index) {
+      if(selected == null) {
+        load();
+      }
+      return selected.get(index);
+    }
+
+    @Override
+    public String set(int index, String element) {
+      if(selected == null) {
+        load();
+      }
+      return selected.set(index, element);
+    }
+
+    @Override
+    public void add(int index, String element) {
+      if(selected == null) {
+        load();
+      }
+      selected.add(index, element);
+    }
+
+    @Override
+    public String remove(int index) {
+      if(selected == null) {
+        load();
+      }
+      return selected.remove(index);
+    }
+
+    @Override
+    public int indexOf(Object o) {
+      if(selected == null) {
+        load();
+      }
+      return selected.indexOf(o);
+    }
+
+    @Override
+    public int lastIndexOf(Object o) {
+      if(selected == null) {
+        load();
+      }
+      return selected.lastIndexOf(o);
+    }
+
+    @Override
+    public ListIterator<String> listIterator() {
+      if(selected == null) {
+        load();
+      }
+      return selected.listIterator();
+    }
+
+    @Override
+    public ListIterator<String> listIterator(int index) {
+      if(selected == null) {
+        load();
+      }
+      return selected.listIterator(index);
+    }
+
+    @Override
+    public List<String> subList(int fromIndex, int toIndex) {
+      if(selected == null) {
+        load();
+      }
+      return selected.subList(fromIndex, toIndex);
+    }
+
+    @Override
+    public String toString() {
+      if(selected == null) {
+        load();
+      }
+      return selected.toString();
+    }
+  }
+
 
 }

@@ -478,6 +478,11 @@
       <description>Название переменной на странице, в которую будет записываться текущая строка или внутренняя строка</description>
       <type>java.lang.String</type>
     </attribute>
+    <attribute>
+      <name>disallowSelectAll</name>
+      <description>Отключает возможность выделить все записи (по умолчанию: false)</description>
+      <type>boolean</type>
+    </attribute>
   </tag>
 
   <tag>
@@ -520,11 +525,6 @@
   <tag>
     <name>row</name>
     <description>Строка в dataTable.</description>
-    <attribute>
-      <name>rowId</name>
-      <description>Идентификатор текущей строки.</description>
-      <type>java.lang.String</type>
-    </attribute>
     <attribute>
       <name>opened</name>
       <description>Флаг, разрешающий или запрещающий раскрытие содержимого строки</description>
