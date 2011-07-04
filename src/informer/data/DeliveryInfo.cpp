@@ -330,6 +330,8 @@ void DeliveryInfo::incMsgStats( const Region& region,
             ptr = ptr->next;
         } while (true);
     }
+    smsc_log_debug(log_,"R=%u/D=%u S='%s' inc %s %+u",
+                   regionId, dlvId_, smscId.c_str(), msgStateToString(state), value);
     ptr->stats.incStat(state,value,smsValue);
 }
 
