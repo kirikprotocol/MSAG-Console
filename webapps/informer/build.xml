@@ -118,6 +118,9 @@ public class Mode {${line.separator}
     <copy todir="${informer.exploded.dir}/WEB-INF/classes/dtds">
       <fileset dir="." includes="*.dtd"/>
     </copy>
+    <copy todir="${informer.exploded.dir}">
+      <fileset dir="${informer.docs}" includes="*.pdf"/>
+    </copy>
   </target>
 
   <condition property="is.dev">

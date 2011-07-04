@@ -69,6 +69,11 @@ class LocalResource extends FileResource {
     }
   }
 
+  @Override
+  public boolean contains(String path) throws AdminException {
+    return fileSys.exists(new File(dir, path));
+  }
+
 
   public void rename(String fromFileName, String toFileName) throws AdminException {
     fileSys.rename(new File(dir,fromFileName),new File(dir,toFileName));

@@ -70,6 +70,21 @@ class FTPResource extends FileResource {
   }
 
   @Override
+  public boolean contains(String path) throws AdminException {
+    try{
+      String[] ss = ftp.listNames();
+      for(String s : ss) {
+        if(s.equals(path)) {
+          return true;
+        }
+      }
+      return false;
+    } catch (Exception e) {
+      throw new ContentProviderException("connectionError",e);
+    }
+  }
+
+  @Override
   public void get(String path, OutputStream os) throws AdminException {
     try{
       ftp.download(path, os, 0, null);

@@ -12,7 +12,6 @@ import java.io.OutputStream;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * User: artem
@@ -103,7 +102,7 @@ public class ConfigFileManagerTest {
     assertTrue(fs.exists(backupDir));
     assertTrue(fs.list(backupDir).length == 1);
 
-    File backupFile = new File(fs.list(backupDir)[0]);
+    File backupFile = new File(backupDir, fs.list(backupDir)[0]);
 
     assertEquals(fs.length(configFile), fs.length(backupFile));
 

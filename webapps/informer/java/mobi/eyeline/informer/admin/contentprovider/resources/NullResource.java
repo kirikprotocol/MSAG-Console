@@ -2,7 +2,6 @@ package mobi.eyeline.informer.admin.contentprovider.resources;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -20,6 +19,11 @@ class NullResource extends FileResource {
   @Override
   public List<String> listCSVFiles() throws AdminException {
     return Collections.emptyList();
+  }
+
+  @Override
+  public boolean contains(String path) throws AdminException {
+    return false;
   }
 
   @Override

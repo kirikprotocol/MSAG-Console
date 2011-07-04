@@ -133,8 +133,13 @@ class MainLoopTask implements Runnable {
 
   ResourceProcessStrategy getStrategy(User u, File workDir, UserCPsettings ucps, FileResource resource) throws AdminException {
     ResourceOptions opts = new ResourceOptions(u, workDir, ucps);
-    return ucps.getWorkType() == UserCPsettings.WorkType.simple
-        ? new SimpleResourceProcessStrategy(context, resource, opts) : new DetailedResourceProcessStrategy(context, resource, opts);
+//    return ucps.getWorkType() == UserCPsettings.WorkType.simple
+//        ? new SimpleResourceProcessStrategy(context, resource, opts) : new DetailedResourceProcessStrategy(context, resource, opts);
+//    return ucps.getWorkType() == UserCPsettings.WorkType.simple
+//        ? new SimpleResourceProcessStrategy(context, resource, opts) : new DetailedResourceProcessStrategy(context, resource, opts);
+
+    return ucps.getWorkType() == UserCPsettings.WorkType.simple ? new SimpleSaveStrategy(context, resource, opts)
+        : new DetailedSaveStrategy(context, resource, opts);
   }
 
   private void processUser(User u, Collection<String> checkedUcps, Collection<String> userDirs) throws AdminException {

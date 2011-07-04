@@ -31,7 +31,7 @@
             <eye:menubardelimiter/>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.journal']}" action="JOURNAL"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['monitor.page.title']}" action="MONITORING"/></eye:menubaritem>
-           </eye:menubar>
+          </eye:menubar>
         </td>
         <td width="1%">
           <eye:menubar label="#{msg['informer.deliveries']}" rendered="#{userSession.logined}">
@@ -54,10 +54,27 @@
         </td>
         <td width="100%">&#160;</td>
         <td style="white-space:nowrap">
-          <div>
-          <tr:commandLink id="MENU0_LOGOUT" rendered="#{userSession.userName != null}" shortDesc="#{msg['informer.main.details.logout']}" 
-                          text="#{msg['informer.logout']} &quot;#{userSession.userName}&quot;" action="#{userSession.logout}" onmouseout="this.style.color = '#F2E275'" onmouseover="this.style.color = 'yellow';"/>
-          </div>
+          <table><tr><td style="white-space:nowrap; background-image: none;">
+            <tr:commandLink rendered="#{userSession.logined and !userSession.userInAdminRole}"
+                            text="#{msg['informer.admin.help']}" onmouseout="this.style.color = '#F2E275'" onmouseover="this.style.color = 'yellow';">
+              <tr:fileDownloadActionListener method="#{userSession.userGuide}" contentType="application/pdf" filename="Informer-UserQuide.pdf"/>
+            </tr:commandLink>
+            <eye:menubar label="#{msg['informer.admin.help']}" rendered="#{userSession.logined and userSession.userInAdminRole}">
+              <eye:menubaritem>
+                <tr:commandLink text="#{msg['informer.admin.help.admin']}">
+                  <tr:fileDownloadActionListener method="#{userSession.adminGuide}" contentType="application/pdf" filename="Informer-AdminGuide.pdf"/>
+                </tr:commandLink>
+              </eye:menubaritem>
+              <eye:menubaritem>
+                <tr:commandLink text="#{msg['informer.admin.help.user']}">
+                  <tr:fileDownloadActionListener method="#{userSession.userGuide}" contentType="application/pdf" filename="Informer-UserGuide.pdf"/>
+                </tr:commandLink>
+              </eye:menubaritem>
+            </eye:menubar>
+          </td><td style="white-space:nowrap; background-image: none;">
+            <tr:commandLink id="MENU0_LOGOUT" rendered="#{userSession.userName != null}" shortDesc="#{msg['informer.main.details.logout']}"
+                            text="#{msg['informer.logout']}" action="#{userSession.logout}" onmouseout="this.style.color = '#F2E275'" onmouseover="this.style.color = 'yellow';"/>
+          </td></tr></table>
         </td>
         <td width="52">&#160;</td>
       </tr>

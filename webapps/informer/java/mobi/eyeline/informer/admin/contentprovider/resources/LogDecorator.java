@@ -1,10 +1,8 @@
 package mobi.eyeline.informer.admin.contentprovider.resources;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
@@ -85,6 +83,17 @@ class LogDecorator extends FileResource {
     log("closing ...");
     wrapped.close();
     log("OK");
+  }
+
+
+  @Override
+  public boolean contains(String path) throws AdminException {
+    try{
+      log("contains ...");
+      return wrapped.contains(path);
+    }finally {
+      log("OK");
+    }
   }
 
   @Override

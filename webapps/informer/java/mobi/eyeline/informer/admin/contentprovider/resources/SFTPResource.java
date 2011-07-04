@@ -138,6 +138,20 @@ class SFTPResource extends FileResource {
     }
   }
 
+  @Override
+  public boolean contains(String path) throws AdminException {
+    try {
+      for(Object o : channel.ls(remoteDir+ "/*.*")) {
+        ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry)o;
+        if(entry.getFilename().equals(path)) {
+          return true;
+        }
+      }
+      return false;
+    } catch (Exception e) {
+      throw new ContentProviderException("connectionError",e);
+    }
+  }
 
   public void close() throws AdminException{
     if (session != null) try {session.disconnect(); } catch (Exception ignored){}

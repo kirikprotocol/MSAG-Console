@@ -51,6 +51,9 @@ public abstract class FileResource {
    */
   public abstract List<String> listCSVFiles() throws AdminException;
 
+
+  public abstract boolean contains(String path) throws AdminException;
+
   /**
    * Загружает файл с ресурса
    * @param path путь к файлу на ресурсе

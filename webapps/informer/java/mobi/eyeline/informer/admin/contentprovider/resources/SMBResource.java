@@ -79,6 +79,21 @@ class SMBResource extends FileResource {
   }
 
   @Override
+  public boolean contains(String path) throws AdminException {
+    try {
+      String[] fs = smb.list();
+      for (String _f : fs) {
+        if (_f.equals(path)) {
+          return true;
+        }
+      }
+    } catch (Exception e) {
+      throw new ContentProviderException("connectionError", e);
+    }
+    return false;
+  }
+
+  @Override
   public void get(String path, OutputStream os) throws AdminException {
     InputStream is = null;
     try {

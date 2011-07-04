@@ -179,8 +179,9 @@ public class MemoryFileSystem extends FileSystem {
 
     ArrayList<String> result = new ArrayList<String>();
     for (Map.Entry<String, byte[]> e : files.entrySet()) {
-      if (e.getKey().startsWith(file.getAbsolutePath()) && !e.getKey().equals(file.getAbsolutePath()))
-        result.add(e.getKey());
+      if (e.getKey().startsWith(file.getAbsolutePath()) && !e.getKey().equals(file.getAbsolutePath())) {
+        result.add(e.getKey().substring(e.getKey().lastIndexOf(file.getAbsolutePath())+file.getAbsolutePath().length()+1));
+      }
     }
     String[] res = new String[result.size()];
     return result.toArray(res);
@@ -194,6 +195,25 @@ public class MemoryFileSystem extends FileSystem {
     ArrayList<String> result = new ArrayList<String>();
     for (Map.Entry<String, byte[]> e : files.entrySet()) {
       if (e.getKey().startsWith(file.getAbsolutePath()) && !e.getKey().equals(file.getAbsolutePath()))
+        result.add(e.getKey());
+    }
+    File[] res = new File[result.size()];
+    int i = 0;
+    for(String s : result) {
+      res[i] = new File(s);
+      i++;
+    }
+    return res;
+  }
+
+  public File[] listFiles(File file, FileFilter fileFilter) {
+    byte[] bytes = files.get(file.getAbsolutePath());
+    if (bytes == null || bytes != DIRECTORY)
+      throw new IllegalArgumentException(file.getAbsolutePath() + " is not a directory");
+
+    ArrayList<String> result = new ArrayList<String>();
+    for (Map.Entry<String, byte[]> e : files.entrySet()) {
+      if (e.getKey().startsWith(file.getAbsolutePath()) && !e.getKey().equals(file.getAbsolutePath()) && fileFilter.accept(new File(e.getKey())))
         result.add(e.getKey());
     }
     File[] res = new File[result.size()];
