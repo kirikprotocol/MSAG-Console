@@ -14,8 +14,8 @@ public abstract class AbstractSMPPService extends AbstractService {
   protected void reply(Message m, String sourceAddress, String text) {
     try {
       final Message msg = new Message();
-      msg.setSourceAddress(m.getDestinationAddress());
-      msg.setDestinationAddress(sourceAddress);
+      msg.setSourceAddress(sourceAddress);
+      msg.setDestinationAddress(m.getSourceAddress());
       msg.setMessageString(text);
       msg.setConnectionName(m.getConnectionName());
       send(msg);
