@@ -662,3 +662,11 @@ B3211: Jun 06, 2011
     SMSC	Orig address for receipts separated form smsc address. See config.xml - core.receipt_orig_address
     SMSC	Set smsc address in case of TCAP continue on MO SMS, see maplimits.xml - sms.openRespRealAddr
     SMSC	Some config parameters can be changed in run time. See Administration Guide
+
+B3212: Jun 30, 2011
+    SMSC	Fix for possible crash when applying MAP network configurations
+    MCISme	Delay send notification after alert_notification on configurable time
+    MCISme	Added support for async interaction with rotator
+    MCISme	Advertising protocol V1 no more supported
+    INMan	Multithreaded handling of SMSC packets
+    USSMan	Multithreaded handling of requests

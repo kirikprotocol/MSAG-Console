@@ -10,6 +10,6 @@ util/pdudumpfiltermsag  pdudumpfiltermsag -L$(SMSC_BUILDDIR)/bin -llogger -lutil
 -system/profilertest  profilertest       -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lsmeman -lsms -lutil-regexp -ldb -lprofiler -lresourcemanager -lutil-config -lutil $(XERCES_LIB) -lutil-xml -lutil-recoder-recode_dll -lsms -lutil-templates -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc -ldl -lcore-threads -lpthread -lcore-buffers -lrt
 util/rtest rtest -L$(SMSC_BUILDDIR)/bin -llogger -lrouter -lsystem-common -lutil -lsmeman -lutil-config-smeman -lsms -lutil-config-route -lutil-regexp -ldb -lprofiler -lutil-config -lutil $(XERCES_LIB) -lutil-xml -lutil-recoder-recode_dll -lsms  -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldl -lcore-threads -lpthread -lcore-buffers -ladmin-service -lutil-config-alias -lrt
 util/RepairAndMergeStore RepairAndMergeStore -L$(SMSC_BUILDDIR)/bin -lsms -llogger -lrt
-util/CheckStore CheckStore -L$(SMSC_BUILDDIR)/bin -lsms -llogger -lrt
+-util/CheckStore CheckStore -L$(SMSC_BUILDDIR)/bin -lsms -llogger -lrt
 #-util/test2          test               -lc
 #LeakHunter.so LeakHunter -shared
