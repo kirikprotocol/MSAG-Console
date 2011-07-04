@@ -293,24 +293,24 @@ public class DeliveryListController extends DeliveryController {
     return Arrays.asList(infos).subList(startPos, startPos + count);
   }
 
-//  private List<Delivery> getUnsortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count) throws AdminException {
-//    final Delivery infos[] = new Delivery[count];
-//    config.getDeliveries(u.getLogin(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
-//      int pos = 0;
-//
-//      public boolean visit(Delivery value) throws AdminException {
-//        if (pos >= startPos + count)
-//          return false;
-//
-//        if (pos >= startPos)
-//          infos[pos - startPos] = value;
-//
-//        pos++;
-//        return true;
-//      }
-//    });
-//    return Arrays.asList(infos);
-//  }
+  private List<Delivery> getUnsortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count) throws AdminException {
+    final Delivery infos[] = new Delivery[count];
+    config.getDeliveries(u.getLogin(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
+      int pos = 0;
+
+      public boolean visit(Delivery value) throws AdminException {
+        if (pos >= startPos + count)
+          return false;
+
+        if (pos >= startPos)
+          infos[pos - startPos] = value;
+
+        pos++;
+        return true;
+      }
+    });
+    return Arrays.asList(infos);
+  }
 
   private static boolean accept(Delivery delivery, DeliveryFilter filter) {
     if(filter.getEndDateFrom()!= null && delivery.getEndDate() != null && delivery.getEndDate().before(filter.getEndDateFrom())) {
@@ -423,7 +423,12 @@ public class DeliveryListController extends DeliveryController {
         public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
           try {
             final boolean calculateDates = sortOrder != null && sortOrder.getColumnId().equals("startDate");
-            List<Delivery> list = getSortedDeliveriesList(u, filter, startPos, count, sortOrder,  calculateDates);
+
+            List<Delivery> list;
+            if (sortOrder != null)
+              list = getSortedDeliveriesList(u, filter, startPos, count, sortOrder, calculateDates);
+            else
+              list = getUnsortedDeliveriesList(u, filter, startPos, count);
 
             List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
             for (Delivery di : list)
