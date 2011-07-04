@@ -70,6 +70,15 @@ struct MetaEntityInfo
     bool persistanceEnabled;
 };
 
+struct SmppEntityAdminInfo
+{
+    std::string systemId;
+    SmppBindType bindType;
+    std::string host;
+    int  port;
+    bool connected;
+};
+
 }//smpp
 }//transport
 }//scag

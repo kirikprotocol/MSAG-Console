@@ -10,7 +10,7 @@ using util::HRTimer;
 
 int SmppWriter::Execute()
 {
-  smsc_log_debug(log,"Starting SmppWriter");
+  smsc_log_debug(log_,"Starting SmppWriter");
   net::Multiplexer::SockArray ready,error;
     unsigned passcount = 0;
   while(!isStopping)
@@ -38,7 +38,7 @@ int SmppWriter::Execute()
               }
               if(sockets[i]->checkTimeout(inactivityTimeout))
               {
-                  smsc_log_warn(log, "SmppWriter: inactivity timeout expired");
+                  smsc_log_warn(log_, "SmppWriter: inactivity timeout expired");
                   sockets[i]->disconnect();
                   continue;
               }
@@ -49,7 +49,7 @@ int SmppWriter::Execute()
               } else if ( sockets[i]->getBindType() == btNone &&
                           sockets[i]->isConnected() &&
                           sockets[i]->checkTimeout(mgr_->bindTimeout()) ) {
-                  smsc_log_warn(log, "SmppWriter: bind timeout on socket: %s", sockets[i]->getPeer() );
+                  smsc_log_warn(log_, "SmppWriter: bind timeout on socket: %s", sockets[i]->getPeer() );
                   sockets[i]->disconnect();
                   continue;
               }
@@ -69,7 +69,7 @@ int SmppWriter::Execute()
           if (dotiming) timepoll = hrt.get();
           for(int i=0;i<error.Count();i++)
           {
-              smsc_log_warn(log,"writer: error on socket %p",error[i]);
+              smsc_log_warn(log_,"writer: error on socket %p",error[i]);
               getSmppSocket(error[i])->disconnect();
           }
           for(int i=0;i<ready.Count();i++)
@@ -78,7 +78,7 @@ int SmppWriter::Execute()
                   getSmppSocket(ready[i])->sendData();
               }catch(std::exception& e)
                   {
-                      smsc_log_warn(log,"exception in sendData:%s",e.what());
+                      smsc_log_warn(log_,"exception in sendData:%s",e.what());
                   }
           }
           if (dotiming) timewrite = hrt.get();
@@ -86,12 +86,12 @@ int SmppWriter::Execute()
           deleteDisconnected();
       }
 
-      if (dotiming) smsc_log_info( log, "timing (us): socks=%d prep=%lld poll=%lld write=%lld",
+      if (dotiming) smsc_log_info( log_, "timing (us): socks=%d prep=%lld poll=%lld write=%lld",
                                    haveData, timeprep/1000, timepoll/1000, timewrite/1000 );
 
   } // while ! stopping
   deleteDisconnected();
-  smsc_log_debug(log,"Execution of SmppWriter finished");  
+  smsc_log_debug(log_,"Execution of SmppWriter finished");  
   return 0;
 }
 

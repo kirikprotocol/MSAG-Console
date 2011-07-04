@@ -19,15 +19,16 @@ struct SmscSocket:SmppSocket{
   {
     if(sock->Init(host.c_str(),port,0)==-1)
     {
-      smsc_log_warn(log, "Failed to resolve host %s",host.c_str());
+      smsc_log_warn(log_, "Failed to resolve host %s",host.c_str());
       return false;
     }
     if(sock->ConnectEx(false,bindHost.c_str())==-1)
     {
-      smsc_log_warn(log, "Failed to connect to %s:%d",host.c_str(),port);
+      smsc_log_warn(log_, "Failed to connect to %s:%d",host.c_str(),port);
       return false;
     }
     connected=true;
+    fillPeerData();
     return true;
   }
   void bind(const char* regSysId,const char* sysId,const char* pass,const char* addrRange,const char* sysType)
@@ -43,9 +44,9 @@ struct SmscSocket:SmppSocket{
       case smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP:
       {
         if(pdu->get_commandStatus()) {
-            smsc_log_warn(log, "SMSC bind failed: RESP status=%u",unsigned(pdu->get_commandStatus()));
+            smsc_log_warn(log_, "SMSC bind failed: RESP status=%u",unsigned(pdu->get_commandStatus()));
         } else if (chReg->registerSmscChannel(this)!=rarOk) {
-            smsc_log_warn(log, "Registration of smsc channel failed???");
+            smsc_log_warn(log_, "Registration of smsc channel failed???");
         } else {
             bindType=btTransceiver;
         }

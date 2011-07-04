@@ -22,7 +22,7 @@ class SmppIOBase:public thr::ThreadedTask{
 public:
   SmppIOBase()
   {
-    log=smsc::logger::Logger::getInstance("smpp.io");
+    log_=smsc::logger::Logger::getInstance("smpp.io");
     inactivityTimeout=120;
     enquireLinkTimeout=60;
   }
@@ -40,22 +40,23 @@ public:
     MutexGuard mg(mon);
     return sockets.Count();
   }
-  virtual void onAddSocket(SmppSocket* sock)
+
+  virtual void onAddSocket(SmppSocket& sock) {}
+  virtual void onDeleteSocket(SmppSocket& sock) {}
+
+  void addSocket(SmppSocketPtr& sock)
   {
-  }
-  virtual void onDeleteSocket(SmppSocket* sock)
-  {
-  }
-  void addSocket(SmppSocket* sock)
-  {
+    if (!sock) return;
     MutexGuard mg(mon);
-    smsc_log_debug(log, "add socket %p",sock);
-    sock->acquire();
-    sock->setMonitor(&mon);
+    smsc_log_debug(log_, "add socket %p (%u)",sock.get(),sock->refCount());
+    // sock->acquire();
+    // sock->setMonitor(&mon);
     sockets.Push(sock);
-    onAddSocket(sock);
+    onAddSocket(*sock);
     mon.notify();
   }
+
+
   void deleteSocket(int index)
   {
     MutexGuard mg(mon);
@@ -75,15 +76,15 @@ protected:
 
   void deleteSocketUnsync(int index)
   {
-    smsc_log_debug(log, "delete socket %p",sockets[index]);
-    onDeleteSocket(sockets[index]);
-    sockets[index]->release();
+    smsc_log_debug(log_, "delete socket %p (%u)",sockets[index].get(),sockets[index]->refCount());
+    onDeleteSocket(*sockets[index]);
+    // sockets[index]->release();
     sockets.Delete(index);
   }
   sync::EventMonitor mon;
-  buf::Array<SmppSocket*> sockets;
+  buf::Array<SmppSocketPtr> sockets;
   net::Multiplexer mul;
-  smsc::logger::Logger* log;
+  smsc::logger::Logger* log_;
   int inactivityTimeout;
   int enquireLinkTimeout;
 };

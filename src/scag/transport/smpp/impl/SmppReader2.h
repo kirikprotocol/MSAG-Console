@@ -12,15 +12,15 @@ class SmppReader:public SmppIOBase
 public:
   const char* taskName(){return "SmppReader";}
   int Execute();
-  void onAddSocket(SmppSocket* sock)
+  void onAddSocket(SmppSocket& sock)
   {
     MutexGuard mg(mulMtx);
-    mul.add(sock->getSocket());
+    mul.add(sock.getSocket());
   }
-  void onDeleteSocket(SmppSocket* sock)
+  void onDeleteSocket(SmppSocket& sock)
   {
     MutexGuard mg(mulMtx);
-    mul.remove(sock->getSocket());
+    mul.remove(sock.getSocket());
   }
 protected:
   sync::Mutex mulMtx;

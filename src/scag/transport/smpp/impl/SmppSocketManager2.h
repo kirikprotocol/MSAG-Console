@@ -61,7 +61,7 @@ public:
     );
       tp.startTask( acc );
       tp.setMaxThreads( maxReaderCount_*2 + 1 );
-    log=smsc::logger::Logger::getInstance("smpp.sock");
+    log=smsc::logger::Logger::getInstance("smpp.skmgr");
   }
 
     void init( unsigned socketsPerThread,

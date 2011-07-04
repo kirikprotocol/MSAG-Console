@@ -72,7 +72,7 @@ void SmppSocket::processInput()
     rdToRead=ntohl(rdToRead);
     if(rdToRead>70000)
     {
-        smsc_log_warn(log,"command received from %s too large:%d",getPeer(),rdToRead);
+        smsc_log_warn(log_,"command received from %s too large:%d",getPeer(),rdToRead);
         MutexGuard mg(mtx);
         disconnect();
         return;
@@ -92,7 +92,7 @@ void SmppSocket::processInput()
   }
   if(res<=0)
   {
-      smsc_log_warn(log, "SmppSocket error from recv");
+      smsc_log_warn(log_, "SmppSocket error from recv");
       disconnect();
       return;
   }
@@ -115,7 +115,7 @@ void SmppSocket::processInput()
   PduGuard pdu(smsc::smpp::fetchSmppPdu(&s));
   if(pdu.isNull())
   {
-      smsc_log_warn(log, "Failed to parse pdu from %s, closing connection",getPeer());
+      smsc_log_warn(log_, "Failed to parse pdu from %s, closing connection",getPeer());
       disconnect();
       return;
   }
@@ -123,7 +123,7 @@ void SmppSocket::processInput()
 
   if ( bindType == btNone ) {
       // we cannot be unbound here!
-      smsc_log_warn(log, "Unbound state: wrong command %x/%x from %s, closing connection",
+      smsc_log_warn(log_, "Unbound state: wrong command %x/%x from %s, closing connection",
                     pdu->get_sequenceNumber(), pdu->get_commandId(), getPeer() );
       disconnect();
       return;
@@ -133,37 +133,37 @@ void SmppSocket::processInput()
   {
     case SmppCommandSet::GENERIC_NACK:
     {
-      smsc_log_warn(log, "Generic nack:%x/%x",pdu->get_sequenceNumber(),pdu->get_commandId());
+      smsc_log_warn(log_, "Generic nack:%x/%x",pdu->get_sequenceNumber(),pdu->get_commandId());
     }break;
 
     case SmppCommandSet::BIND_RECIEVER:
     case SmppCommandSet::BIND_TRANSMITTER:
     case SmppCommandSet::BIND_TRANCIEVER:
     {
-      smsc_log_debug(log, "uninmplemented %x",pdu->get_commandId());
+      smsc_log_debug(log_, "uninmplemented %x",pdu->get_commandId());
     }break;
 
     case SmppCommandSet::BIND_RECIEVER_RESP:
     case SmppCommandSet::BIND_TRANSMITTER_RESP:
     case SmppCommandSet::BIND_TRANCIEVER_RESP:
     {
-      smsc_log_debug(log, "uninmplemented %x",pdu->get_commandId());
+      smsc_log_debug(log_, "uninmplemented %x",pdu->get_commandId());
     }break;
 
     case SmppCommandSet::UNBIND:
     {
-      smsc_log_info(log, "unbind %s",systemId.c_str());
+      smsc_log_info(log_, "unbind %s",systemId.c_str());
       putCommand(SmppCommand::makeUnbindResp(pdu->get_sequenceNumber(),0,0));
       if(bindType!=btNone)
       {
-        smsc_log_debug(log, "unregisterChannel (bt=%d)", bindType);
+        smsc_log_debug(log_, "unregisterChannel (bt=%d)", bindType);
         chReg->unregisterChannel(this);
       }
       bindType=btNone;
     }break;
     case SmppCommandSet::UNBIND_RESP:
     {
-      smsc_log_debug(log, "uninmplemented %x",pdu->get_commandId());
+      smsc_log_debug(log_, "uninmplemented %x",pdu->get_commandId());
     }break;
 
     case SmppCommandSet::ENQUIRE_LINK:
@@ -181,7 +181,7 @@ void SmppSocket::processInput()
     }break;
     case SmppCommandSet::ENQUIRE_LINK_RESP:
     {
-      smsc_log_debug(log, "uninmplemented %x",pdu->get_commandId());
+      smsc_log_debug(log_, "uninmplemented %x",pdu->get_commandId());
     }break;
 
     case SmppCommandSet::QUERY_SM:
@@ -203,11 +203,11 @@ void SmppSocket::processInput()
     {
       try{
           std::auto_ptr<SmppCommand> cmd(new SmppCommand(pdu));
-          cmdQueue->putCommand(this,cmd);
+          cmdQueue->putCommand(*this,cmd);
           break;
       }catch(std::exception& e)
       {
-        smsc_log_warn(log, "putCommand exception:%s",e.what());
+        smsc_log_warn(log_, "putCommand exception:%s",e.what());
       }
     }//break; fallthru
     default:
@@ -220,7 +220,7 @@ void SmppSocket::processInput()
 
 void SmppSocket::sendData()
 {
-    smsc_log_debug(log, "sendData: %d/%d(%s)",wrBufSent,wrBufUsed,getPeer());
+    smsc_log_debug(log_, "sendData: %d/%d(%s)",wrBufSent,wrBufUsed,getPeer());
   if(wrBufUsed && wrBufSent<wrBufUsed)
   {
     int res;
@@ -230,7 +230,7 @@ void SmppSocket::sendData()
     }
     if(res<=0)
     {
-        smsc_log_warn(log, "sendData: write failed:%d", res);
+        smsc_log_warn(log_, "sendData: write failed:%d", res);
         disconnect();
         return;
     }
@@ -241,7 +241,7 @@ void SmppSocket::sendData()
       wrBufSent=0;
       wrBufUsed=0;
     }
-    smsc_log_debug(log, "sendData: sent %d bytes",res);
+    smsc_log_debug(log_, "sendData: sent %d bytes",res);
     return;
   }
   using namespace smsc::smpp;
@@ -264,13 +264,13 @@ void SmppSocket::sendData()
     wrBuffer=new char[sz];
     wrBufSize=sz;
   }
-  smsc_log_debug(log,"Preparing to send %x/%d",
+  smsc_log_debug(log_,"Preparing to send %x/%d",
      pdu->get_commandId(), pdu->get_sequenceNumber());
   SmppStream st;
   assignStreamWith(&st,wrBuffer,wrBufSize,false);
   if(!fillSmppPdu(&st,pdu))
   {
-    smsc_log_warn(log, "Failed to create buffer from pdu, skipping");
+    smsc_log_warn(log_, "Failed to create buffer from pdu, skipping");
     wrBufUsed=0; wrBufSent=0;
     return;
   }
@@ -285,7 +285,7 @@ void SmppSocket::sendData()
   }
   wrBufSent=0;
   wrBufUsed=sz;
-  smsc_log_debug(log,"Prepared buffer size %d",wrBufUsed);
+  smsc_log_debug(log_,"Prepared buffer size %d",wrBufUsed);
 }
 
 

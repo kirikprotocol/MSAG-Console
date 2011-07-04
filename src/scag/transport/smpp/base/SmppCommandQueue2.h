@@ -11,8 +11,8 @@ class SmppCommand;
 
 class SmppCommandQueue{
 public:
-    virtual void putCommand(SmppChannel* ch, std::auto_ptr<SmppCommand> cmd)=0;
-    virtual bool getCommand(SmppCommand*& cmd)=0;
+    virtual void putCommand( SmppChannel& ch, std::auto_ptr<SmppCommand> cmd)=0;
+    virtual bool getCommand( SmppCommand*& cmd)=0;
 };
 
 }//smpp

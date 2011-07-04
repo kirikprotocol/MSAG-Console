@@ -46,7 +46,7 @@ public:
   virtual void unregisterChannel(SmppChannel* ch);
 
   //queue
-    virtual void putCommand(SmppChannel* ct, std::auto_ptr<SmppCommand> cmd );
+    virtual void putCommand(SmppChannel& ct, std::auto_ptr<SmppCommand> cmd );
     virtual bool getCommand(SmppCommand*& cmd);
 
     // lcm
@@ -366,9 +366,12 @@ protected:
                 {
                     lastEntity=0;
                 }
-                smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
-                if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled)continue;
-                return ents[lastEntity].ptr;
+                if ( ents[lastEntity].ptr->isEnabledAndBound() ) {
+                    return ents[lastEntity].ptr;
+                }
+                // smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
+                // if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled) continue;
+                // return ents[lastEntity].ptr;
             }
             return 0;
         }

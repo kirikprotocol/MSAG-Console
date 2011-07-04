@@ -100,19 +100,25 @@ public:
     /// reset to an initial state, used at disconnect
     void reset()
     {
-        bt = btNone;
-        channel = 0;
-        transChannel = 0;
-        recvChannel = 0;
         {
-            // NOTE: we don't reset seq nums.
-            // MutexGuard mg(seqMtx);
-            // seq = 0;
-            // slicingSeq8 = 0;
-            // slicingSeq16 = 0;
+            MutexGuard mg(mtx);
+            bt = btNone;
+            channel.reset(0);
+            transChannel.reset(0);
+            recvChannel.reset(0);
+            info.type = etUnknown;
         }
-        MutexGuard mg(sarMutex_);
-        sarMapping_.Empty();
+        // {
+        // NOTE: we don't reset seq nums.
+        // MutexGuard mg(seqMtx);
+        // seq = 0;
+        // slicingSeq8 = 0;
+        // slicingSeq16 = 0;
+        // }
+        {
+            MutexGuard mg(sarMutex_);
+            sarMapping_.Empty();
+        }
     }
 
 
@@ -153,6 +159,7 @@ public:
         break;
     }
   }
+  /*
   void setUid(int argUid)
   {
     MutexGuard mg(mtx);
@@ -175,6 +182,7 @@ public:
         break;
     }
   }
+   */
   int  getUid()
   {
     MutexGuard mg(mtx);
@@ -403,16 +411,159 @@ public:
     }
 
 
+    bool isEnabledAndBound() {
+        smsc::core::synchronization::MutexGuard mg(mtx);
+        return ( info.enabled && bt != btNone );
+    }
+
+
+    /// @return old value of 'enabled' flag
+    bool updateInfo( const SmppEntityInfo& newInfo )
+    {
+        smsc::core::synchronization::MutexGuard mg(mtx);
+        bool oldEnabled = info.enabled;
+        info = newInfo;
+        return oldEnabled;
+    }
+
+
+    void disconnect()
+    {
+        smsc::core::synchronization::MutexGuard mg(mtx);
+        switch(bt)
+        {
+        case btTransceiver:
+            channel->disconnect();
+            break;
+        case btTransmitter:
+            transChannel->disconnect();
+            break;
+        case btRecvAndTrans:
+            transChannel->disconnect();
+            //fallthru
+        case  btReceiver:
+            recvChannel->disconnect();
+            break;
+        default:
+            // nothing
+            break;
+        }
+    }
+
+
+    bool getAdminInfo( SmppEntityType entType, SmppEntityAdminInfo& ai ) {
+        smsc::core::synchronization::MutexGuard mg(mtx);
+        if ( info.type != entType ) return false;
+        ai.systemId = getSystemId();
+        ai.bindType = bt;
+        ai.host = info.host;
+        ai.port = info.port;
+        ai.connected = connected;
+        return true;
+    }
+
+
+    /// check if entity is allowed to connect, and then connect
+    /// @param password may be NULL (do not check password)
+    /// @return:
+    /// NULL              - successfully connected;
+    /// "" (empty string) - already connected;
+    /// non-empty         - failure reason static text.
+    const char* checkAndBindChannel( SmppEntityType eType,
+                                     SmppBindType   bindType,
+                                     SmppChannel*   ch,
+                                     int            argUid,
+                                     const char*    password )
+    {
+        MutexGuard mg(mtx);
+        if (!info.enabled) { return "disabled"; }
+        if (password && info.password != password) { return "password mismatch"; }
+        if (info.type == etUnknown) { return "was disabled"; }
+        if (info.type != eType) { return "type mismatch"; }
+        if ((info.bindType==btReceiver && bindType!=btReceiver)||
+            (info.bindType==btTransmitter && bindType!=btTransmitter)) {
+            return "bind type mismatch";
+        }
+
+        if((bt==btReceiver && bindType==btReceiver)||
+           (bt==btTransmitter && bindType==btTransmitter)||
+           (bt!=btNone))
+        {
+            // already connected
+            return "";
+        }
+
+        if(bt==btNone) {
+            bt=bindType;
+        } else {
+            // upgrade transmitter/receiver to recv and trans
+            bt=btRecvAndTrans;
+        }
+
+        switch (bindType) {
+        case btTransceiver: channel.reset(ch); break;
+        case btReceiver : recvChannel.reset(ch); break;
+        case btTransmitter: transChannel.reset(ch); break;
+        default: throw smsc::util::Exception("logic error: cant have bindType=%d",bindType);
+        }
+        // info.host = get
+        connected = true;
+        if (eType == etService) {
+            info.host = ch->getPeer();
+        }
+        switch(bt) {
+        case btNone:
+            throw smsc::util::Exception("Failed to set uid of unbound entity '%s'",info.systemId.c_str());
+        case btReceiver:
+            recvChannel->setUid(argUid);
+            break;
+        case btTransmitter:
+            transChannel->setUid(argUid);
+            // fall thru
+        case btRecvAndTrans:
+            recvChannel->setUid(argUid);
+            // transChannel->setUid(argUid);
+            break;
+        case btTransceiver:
+            channel->setUid(argUid);
+            break;
+        }
+        return 0; // ok
+    }
+
+
+    /// unbind the channel.
+    /// return true if successful
+    bool unbindChannel( SmppChannel* ch ) {
+        MutexGuard mg(mtx);
+        if ( bt == btRecvAndTrans ) {
+            const SmppBindType chbt = ch->getBindType();
+            if ( chbt == btReceiver ) {
+                bt = btTransmitter;
+            } else if ( chbt == btTransmitter ) {
+                bt = btReceiver;
+            } else {
+                return false;
+            }
+        } else {
+            bt = btNone;
+        }
+        connected = false;
+        if ( info.type == etService ) { info.host = ""; }
+        return true;
+    }
+
 public:
-  SmppEntityInfo info;
-  SmppBindType bt;
-  Mutex mtx;
-  SmppChannel* channel;
-  SmppChannel* recvChannel;
-  SmppChannel* transChannel;
-  bool connected;
-  // smsc::util::TimeSlotCounter<> incCnt;
+    SmppEntityInfo info; // must be changed under mutex
+    SmppBindType bt;
     counter::CounterPtrAny incCnt;
+
+protected:
+    Mutex mtx;
+    SmppChannelPtr channel;
+    SmppChannelPtr recvChannel;
+    SmppChannelPtr transChannel;
+    bool connected;
 
 protected:
     int seq;

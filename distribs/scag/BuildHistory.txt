@@ -818,3 +818,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag bugfix: message_id was inaccessible in data_sm_resp
 
 --- current fixes ---
+2011-07-04 15:04 bukind
+  msag bugfix: SMPP sockets rewritten using EmbedRefPtr

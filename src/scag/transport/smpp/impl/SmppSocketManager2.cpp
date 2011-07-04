@@ -46,6 +46,8 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
 {
     do {
 
+        SmppSocketPtr sockPtr(sock);
+
         const uint32_t netaddr = getNetworkAddress(sock->getPeerAddress().sin_addr);
         int cpi = -1;
         unsigned regc;
@@ -95,12 +97,11 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
             {
                 // if (l) l->addConnection();
                 sock->setSocketManager(this);
-                readers[i]->addSocket(sock);
-                writers[i]->addSocket(sock);
+                readers[i]->addSocket(sockPtr);
+                writers[i]->addSocket(sockPtr);
                 // ++registeredConnections_;
                 const unsigned rc = readers[i]->getSocketsCount();
                 mg.Unlock();
-                sock->release();
                 sock = 0;
                 smsc_log_info(log,"Reusing reader/writer (%d), conn(perIp/total)=%d/%d",rc,cpi,regc);
                 break;
@@ -140,13 +141,13 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
             SmppWriter* wr = new SmppWriter(*this);
             readers.Push(rd);
             writers.Push(wr);
-            rd->addSocket(sock);
-            wr->addSocket(sock);
+            rd->addSocket(sockPtr);
+            wr->addSocket(sockPtr);
             tp.startTask(rd);
             tp.startTask(wr);
             const unsigned rc = readers.Count();
             mg.Unlock();
-            sock->release();
+            // sock->release();
             sock = 0;
             smsc_log_info(log,"Creating new reader/writer (%d), conn(perIp/total)=%d/%d", rc, cpi, regc );
         }
@@ -154,7 +155,7 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
 
     if ( sock ) {
         sock->disconnect();
-        sock->release();
+        // sock->release();
         return false;
     }
     return true;
@@ -172,9 +173,9 @@ void SmppSocketManager::unregisterSocket(SmppSocket* sock)
             cpi = -1;
             conn->reportSmscDisconnect(sock->getSystemId());
             break;
-        }
-        if ( sock->getType() == etService ) {
+        } else if ( sock->getType() == etService ) {
             const uint32_t netaddr = getNetworkAddress(sock->getPeerAddress().sin_addr);
+            if (!netaddr) { break; }
             uint8_t* isWhite = whiteList_.GetPtr(netaddr);
             if ( isWhite ) {
                 cpi = -1;

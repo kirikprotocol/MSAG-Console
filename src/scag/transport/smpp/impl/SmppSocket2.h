@@ -53,16 +53,16 @@ protected:
 
 struct SmppSocket : SmppChannel
 {
+    friend class eyeline::informer::EmbedRefPtr< SmppSocket >;
+
     SmppSocket( Socket* s = 0 ) :
     outMon(0),
     cmdQueue(0),
     chReg(0),
     sm(0),
     sock(s),
-    peer_(0),
-    peerAddrFilled_(false),
     bindFailed_(false),
-    refCount(1),
+    // refCount(1),
     connected(bool(s)),
     bindType(btNone),
     sockType(etUnknown),
@@ -76,26 +76,30 @@ struct SmppSocket : SmppChannel
     wrBufSize(DefaultBufferSize),
     wrBufUsed(0),
     wrBufSent(0),
-    log(0),
     dump(0)
     {
         rdBuffer = new char[rdBufSize];
         wrBuffer = new char[wrBufSize];
-        log = smsc::logger::Logger::getInstance("smpp.io");
         dump = smsc::logger::Logger::getInstance("smpp.dmp");
         if ( s ) {
-            smsc_log_debug( log, "SmppSocket init: %x", s );
+            smsc_log_debug( log_, "SmppSocket @%p ctor(%x)", this, s );
             sock->setData(0,this);
+        } else {
+            smsc_log_debug( log_, "SmppSocket @%p ctor()", this);
         }
+        fillPeerData();
     }
 
+  /*
   void acquire()
   {
     MutexGuard mg(mtx);
     refCount++;
-    smsc_log_debug(log, "acquire:%p(%s)/%d",this,systemId.c_str(),refCount);
+    smsc_log_debug(log_, "acquire:%p(%s)/%d",this,systemId.c_str(),refCount);
   }
+   */
 
+    /*
   void release()
   {
     int cnt;
@@ -103,13 +107,13 @@ struct SmppSocket : SmppChannel
       MutexGuard mg(mtx);
       cnt=--refCount;
     }
-    smsc_log_debug(log, "release:%p(%s)/%d",this,systemId.c_str(),cnt);
+    smsc_log_debug(log_, "release:%p(%s)/%d",this,systemId.c_str(),cnt);
     if(!cnt)
     {
-      smsc_log_debug(log, "Deleting socket for %s(%s)", systemId.c_str(), getPeer());
+      smsc_log_debug(log_, "Deleting socket for %s(%s)", systemId.c_str(), getPeer());
       if(bindType!=btNone)
       {
-        smsc_log_debug(log, "unregisterChannel(bt=%d)",bindType);
+        smsc_log_debug(log_, "unregisterChannel(bt=%d)",bindType);
         chReg->unregisterChannel(this);
         bindType=btNone;
       }
@@ -117,6 +121,7 @@ struct SmppSocket : SmppChannel
       delete this;
     }
   }
+     */
 
   void setMonitor(EventMonitor* mon)
   {
@@ -141,9 +146,19 @@ struct SmppSocket : SmppChannel
 
   void disconnect()
   {
+      smsc_log_debug(log_,"SmppSocket @%p disconnect()",this);
       connected=false;
       sock->Close();
-      dropPeer();
+      // peername_ = "";
+      // memset(&peeraddr_,0,sizeof(peeraddr_));
+      if (bindType!=btNone) {
+          chReg->unregisterChannel(this);
+          bindType = btNone;
+      }
+      if (sm) {
+          sm->unregisterSocket(this);
+      }
+      fillPeerData();
   }
 
   /// NOTE: in case this method return false, the connection should be in bound state!
@@ -153,8 +168,15 @@ struct SmppSocket : SmppChannel
 
   bool wantToSend()
   {
-    MutexGuard mg(mtx);
-    return wrBufUsed>0 || outQueue.Count()>0;
+      bool res;
+      {
+          MutexGuard mg(mtx);
+          res = (wrBufUsed>0 || outQueue.Count()>0);
+      }
+      if (res) {
+          smsc_log_debug(log_,"SmppSocket @%p wantToSend()",this);
+      }
+      return res;
   }
   void sendData();
 
@@ -197,49 +219,41 @@ struct SmppSocket : SmppChannel
 
   void genEnquireLink(int to);
 
-    const char* getPeer() const {
-        if ( ! sock ) return "";
-        if ( ! peer_ ) {
-            MutexGuard mg(const_cast<SmppSocket*>(this)->mtx);
-            peer_ = new char[32];
-            Socket::PrintAddrPort( getPeerAddress(), peer_ );
-        }
-        return peer_;
-    }
-
-    const sockaddr_in& getPeerAddress() const
-    {
-        if ( sock && !peerAddrFilled_ ) {
-            MutexGuard mg(const_cast<SmppSocket*>(this)->mtx);
-            peerAddrFilled_ = true;
-            socklen_t len = sizeof(peerAddr_);
-            getpeername(sock->getSocket(),(sockaddr*)&peerAddr_,&len); // no error checking
-        }
+    const sockaddr_in& getPeerAddress() const {
         return peerAddr_;
     }
 
 protected:
+    void fillPeerData() {
+        MutexGuard mg(mtx);
+        if ( sock && connected ) {
+            socklen_t len = sizeof(peerAddr_);
+            getpeername(sock->getSocket(),(sockaddr*)&peerAddr_,&len); // no error checking
+            Socket::PrintAddrPort( getPeerAddress(), peername_.str );
+        } else {
+            memset(&peerAddr_,0,sizeof(peerAddr_));
+            peername_ = "";
+        }
+    }
+
+
   virtual ~SmppSocket()
   {
       MutexGuard mg(mtx);
-    smsc_log_debug(log, "SmmpSocket destroying: %x", sock);
+    smsc_log_debug(log_, "SmppSocket @%p destroying: %x", this, sock);
     delete [] wrBuffer;
     wrBufUsed = 0;
     delete [] rdBuffer;
     rdBufUsed = 0;
-    if(sock)delete sock;
-      dropPeer();
+    if (sock) { delete sock; sock = 0; }
+    // dropPeer();
     if ( outQueue.Count() > 0 ) {
-        smsc_log_warn(log, "destructor: there are %u commands to send", outQueue.Count() );
+        smsc_log_warn(log_, "destructor: there are %u commands to send", outQueue.Count() );
         SmppCommand* cmd;
         while ( outQueue.Pop(cmd) )
             delete cmd;
     }
   }
-
-    inline void dropPeer() {
-        if (peer_) { delete[] peer_; peer_ = 0; }
-    }
 
 
     SmppSocket(const SmppSocket&);
@@ -252,16 +266,14 @@ protected:
 
 protected:
     EventMonitor* outMon;
-    SmppCommandQueue* cmdQueue;
-    SmppChannelRegistrator* chReg;
+    SmppCommandQueue* cmdQueue;    // where to put incoming commands
+    SmppChannelRegistrator* chReg; // where to register socket
     SmppSMInterface* sm;
     Socket* sock;
-    mutable char* peer_;
-    mutable sockaddr_in peerAddr_;
-    mutable bool        peerAddrFilled_;
+    sockaddr_in peerAddr_;
     bool                bindFailed_;
     Mutex mtx;
-    int refCount;
+    // int refCount;
     bool connected;
     SmppBindType bindType;
     SmppEntityType sockType;
@@ -282,7 +294,6 @@ protected:
     CyclicQueue<SmppCommand*> outQueue;
     Mutex outMtx;
 
-    smsc::logger::Logger* log;
     smsc::logger::Logger* dump;
 
 private:
@@ -294,6 +305,8 @@ inline SmppSocket* getSmppSocket(Socket* sock)
 {
   return (SmppSocket*)sock->getData(0);
 }
+
+typedef eyeline::informer::EmbedRefPtr< SmppSocket >  SmppSocketPtr;
 
 }//smpp
 }//transport

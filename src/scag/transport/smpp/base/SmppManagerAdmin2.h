@@ -9,15 +9,6 @@ namespace scag2 {
 namespace transport {
 namespace smpp {
 
-struct SmppEntityAdminInfo
-{
-    std::string systemId;
-    SmppBindType bindType;
-    std::string host;
-    int  port;
-    bool connected;
-};
-
 typedef std::list<SmppEntityAdminInfo> SmppEntityAdminInfoList;
 
 struct SmppManagerAdmin{

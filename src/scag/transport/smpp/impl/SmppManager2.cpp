@@ -664,36 +664,37 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
   {
     throw smsc::util::Exception("updateSmppEntity:Enitity with systemId='%s' not found",info.systemId.c_str());
   }
-  SmppEntity& ent=**ptr;
-  MutexGuard emg(ent.mtx);
-  bool oldEnabled=ent.info.enabled;
-  ent.info=info;
 
-  if(ent.info.type==etSmsc)
-  {
-    SmscConnectInfo ci;
-    ci.regSysId=info.systemId.c_str();
-    ci.sysId=info.bindSystemId.c_str();
-    ci.pass=info.bindPassword.c_str();
-    ci.hosts[0]=info.host.c_str();
-    ci.ports[0]=info.port;
-    ci.hosts[1]=info.altHost.c_str();
-    ci.ports[1]=info.altPort;
-    ci.addressRange=info.addressRange.c_str();
-    ci.systemType=info.systemType.c_str();
+    SmppEntity& ent=**ptr;
+    const bool oldEnabled = ent.updateInfo( info );
 
-    if(oldEnabled==false && ent.info.enabled==true)
-    {
-      sm.getSmscConnectorAdmin()->addSmscConnect(ci);
-    }else if(oldEnabled==true && ent.info.enabled==false)
-    {
-      sm.getSmscConnectorAdmin()->deleteSmscConnect(info.systemId.c_str());
-    }else if(oldEnabled==true && ent.info.enabled==true)
-    {
-      sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
+    // MutexGuard emg(ent.mtx);
+    // bool oldEnabled=ent.info.enabled;
+    // ent.info=info;
+
+    if (info.type==etSmsc) {
+
+        SmscConnectInfo ci;
+        ci.regSysId=info.systemId.c_str();
+        ci.sysId=info.bindSystemId.c_str();
+        ci.pass=info.bindPassword.c_str();
+        ci.hosts[0]=info.host.c_str();
+        ci.ports[0]=info.port;
+        ci.hosts[1]=info.altHost.c_str();
+        ci.ports[1]=info.altPort;
+        ci.addressRange=info.addressRange.c_str();
+        ci.systemType=info.systemType.c_str();
+
+        if (oldEnabled==false && info.enabled==true) {
+            sm.getSmscConnectorAdmin()->addSmscConnect(ci);
+        } else if(oldEnabled==true && info.enabled==false) {
+            sm.getSmscConnectorAdmin()->deleteSmscConnect(info.systemId.c_str());
+        } else if(oldEnabled==true && info.enabled==true) {
+            sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
+        }
     }
-  }
 
+    /*
   switch(ent.bt)
   {
     case btTransceiver:
@@ -712,7 +713,8 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
       // nothing
       break;
   }
-
+     */
+    ent.disconnect();
 }
 
 void SmppManagerImpl::disconnectSmppEntity(const char* sysId)
@@ -725,6 +727,8 @@ void SmppManagerImpl::disconnectSmppEntity(const char* sysId)
     throw smsc::util::Exception("disconnectSmppEntity:Enitity with systemId='%s' not found",sysId);
   }
   SmppEntity& ent=**ptr;
+  ent.disconnect();
+  /*
   MutexGuard emg(ent.mtx);
   switch(ent.bt)
   {
@@ -744,9 +748,10 @@ void SmppManagerImpl::disconnectSmppEntity(const char* sysId)
       // nothing
       break;
   }
+   */
 
-  if(ent.info.type==etSmsc)
-      sm.getSmscConnectorAdmin()->reportSmscDisconnect(sysId);
+    if (ent.info.type==etSmsc)
+        sm.getSmscConnectorAdmin()->reportSmscDisconnect(sysId);
 }
 
 void SmppManagerImpl::deleteSmppEntity(const char* sysId)
@@ -758,7 +763,9 @@ void SmppManagerImpl::deleteSmppEntity(const char* sysId)
   {
     throw smsc::util::Exception("deleteSmppEntity:Enitity with systemId='%s' not found",sysId);
   }
-  SmppEntity& ent=**ptr;
+    SmppEntity& ent=**ptr;
+    ent.disconnect();
+    /*
   MutexGuard emg(ent.mtx);
   switch(ent.bt)
   {
@@ -778,14 +785,14 @@ void SmppManagerImpl::deleteSmppEntity(const char* sysId)
       // nothing
       break;
   }
+     */
 
-  if(ent.info.type==etSmsc)
-  {
-    sm.getSmscConnectorAdmin()->deleteSmscConnect(sysId);
-  }
-
+    if(ent.info.type==etSmsc)
+    {
+        sm.getSmscConnectorAdmin()->deleteSmscConnect(sysId);
+    }
     ent.reset();
-    ent.info.type = etUnknown;
+    // ent.info.type = etUnknown;
     /*
   ent.bt=btNone;
   ent.channel=0;
@@ -805,19 +812,18 @@ SmppEntityAdminInfoList * SmppManagerImpl::getEntityAdminInfoList(SmppEntityType
 
     SmppEntityAdminInfoList * result = new SmppEntityAdminInfoList;
 
+    SmppEntityAdminInfo ai;
     for (buf::Hash<SmppEntity *>::Iterator it = registry.getIterator(); it.Next(key, value);)
     {
-        MutexGuard emg(value->mtx);
-        /*SmppEntityType type;
-        std::string host;
-        int  port;
-        bool connected;*/
-
-        if (value->info.type == entType)
-        {
-            SmppEntityAdminInfo ai = {value->getSystemId(), value->bt, value->info.host, value->info.port, value->connected};
+        if ( value->getAdminInfo(entType,ai) ) {
             result->push_back(ai);
         }
+        // MutexGuard emg(value->mtx);
+        // if (value->info.type == entType)
+        // {
+        // SmppEntityAdminInfo ai = {value->getSystemId(), value->bt, value->info.host, value->info.port, value->connected};
+        // result->push_back(ai);
+        // }
     }
 
     return result;
@@ -825,12 +831,21 @@ SmppEntityAdminInfoList * SmppManagerImpl::getEntityAdminInfoList(SmppEntityType
 
 
 
-int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch)
+int SmppManagerImpl::registerSmeChannel( const char* sysId,
+                                         const char* pwd,
+                                         SmppBindType bt,
+                                         SmppChannel* ch )
 {
     const char* text = 0;
     int ret = rarFailed;
     bool snmpTracking = true;
     do {
+        if (!ch) {
+            smsc_log_warn(log,"failed to register sme with sysId='%s' - ch is null",sysId);
+            text = "chanell is null";
+            break;
+        }
+
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(sysId);
         if (!ptr)
@@ -839,17 +854,41 @@ int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBi
             // TODO: We have no SME info information here,
             // so we cannot determine if we should report on this failure via SNMP.
             // Right now, we do report about this activity.
-            text = "sme is not found";
+            text = "not found";
             break;
         }
-        snmpTracking = (*ptr)->info.snmpTracking;
+        SmppEntity& ent=**ptr;
+        snmpTracking = ent.info.snmpTracking;
+        try {
+            text = ent.checkAndBindChannel(etService,bt,ch,++lastUid,pwd);
+            if (!text) {
+                text = "connected";
+                // smsc_log_info(log,"registerSmeChannel('%s') successfully connected",sysId);
+                ret = rarOk;
+            } else if ( !text[0] ) {
+                // smsc_log_info(log,"registerSmeChannel('%s') failed: already connected",sysId);
+                text = 0; // reset text to avoid snmp tracking
+                ret = rarAlready;
+            }
+            const smsc::logger::Logger::LogLevel level = 
+                ( ret == rarFailed ?
+                  smsc::logger::Logger::LEVEL_WARN :
+                  smsc::logger::Logger::LEVEL_INFO );
+            if (log->isLogLevelEnabled(level)) {
+                log->log(level,"registerSmeChannel('%s'): %s",sysId,text ? text : "already connected");
+            }
+        } catch (std::exception& e) {
+            smsc_log_warn(log,"registerSmeChannel('%s') exc: %s",sysId,e.what());
+            text = "unknown error";
+        }
+
+        /*
         if(!(*ptr)->info.enabled)
         {
             smsc_log_info(log,"Failed to register sme with sysId='%s' - disabled",sysId);
             text = "sme is disabled";
             break;
         }
-        SmppEntity& ent=**ptr;
         if(!(ent.info.password == pwd))
         {
             smsc_log_info(log,"Failed to register sme with sysId='%s' - password mismatch:'%s'!='%s'",sysId,ent.info.password.c_str(),pwd);
@@ -907,6 +946,7 @@ int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBi
         smsc_log_info(log,"Registered sme with sysId='%s'",sysId);
         text = "connected";
         ret = rarOk;
+         */
     } while ( false );
 
     if ( text && snmpqueue_ && snmpTracking ) {
@@ -928,16 +968,39 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
     int ret = rarFailed;
     bool snmpTracking = true;
     do {
+        assert(ch);
+
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
-        if(!ptr || (**ptr).info.bindType==btNone)
-        {
-            smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
-            text = "smsc is not found";
-            // TODO: see the same code for registerSmeChannel above
+        if (!ptr) {
+            // smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
+            text = "not found";
             break;
         }
-        snmpTracking = (*ptr)->info.snmpTracking;
+        SmppEntity& ent=**ptr;
+        snmpTracking = ent.info.snmpTracking;
+        try {
+            text = ent.checkAndBindChannel( etSmsc, btTransceiver, ch, ++lastUid, 0 );
+            if (!text) {
+                text = "connected";
+                ret = rarOk;
+            } else if (!text[0]) {
+                text = 0;
+                ret = rarAlready;
+            }
+            const smsc::logger::Logger::LogLevel level = 
+                ( ret == rarFailed ?
+                  smsc::logger::Logger::LEVEL_WARN :
+                  smsc::logger::Logger::LEVEL_INFO);
+            if (log->isLogLevelEnabled(level)) {
+                log->log(level,"registerSmscChannel('%s'): %s",ch->getSystemId(),text ? text : "already connected");
+            }
+        } catch (std::exception& e) {
+            smsc_log_warn(log,"registerSmscChannel('%s') exc: %s",ch->getSystemId(),e.what());
+            text = "unknown error";
+        }
+
+        /*
         if(!(**ptr).info.enabled)
         {
             smsc_log_info(log,"Failed to register smsc with sysId='%s' - disabled",ch->getSystemId());
@@ -955,6 +1018,7 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
         ent.setUid(++lastUid);
         text = "connected";
         ret = rarOk;
+         */
     } while ( false );
 
     if ( text && snmpqueue_ && snmpTracking ) {
@@ -979,13 +1043,20 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
     do {
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
-        if(!ptr || (**ptr).bt==btNone)
-        {
-            smsc_log_info(log,"Failed to unregister smsc with sysId='%s' - Not found",ch->getSystemId());
+        if (!ptr) {
+            smsc_log_info(log,"Failed to unregister sysId='%s' - Not found",ch->getSystemId());
             break; // no snmp
         }
         SmppEntity& ent=**ptr;
         snmpTracking = ent.info.snmpTracking;
+        isDeleted = !ent.info.enabled;
+        isSME = (ent.info.type == etService);
+        if (ent.unbindChannel(ch)) {
+            text = "disconnected";
+        } else {
+            smsc_log_warn(log,"attempt to unregister channel with invalid bind type sysId='%s'",ch->getSystemId());
+        }
+        /*
         isDeleted = (ent.info.enabled == false);
         MutexGuard mg2(ent.mtx);
         isSME = ( ent.info.type == etService );
@@ -1003,7 +1074,9 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
         ent.connected = false;
         if (ent.info.type == etService) ent.info.host = "";
         text = "disconnected";
+         */
     } while ( false );
+
     if ( text && snmpqueue_ && snmpTracking ) {
         snmp::TrapRecord* trap = new snmp::TrapRecord;
         trap->recordType = snmp::TrapRecord::Trap;
@@ -1028,13 +1101,14 @@ static std::auto_ptr<SmppCommand> mkErrResp(int cmdId,int dlgId,int errCode)
   }
 }
 
-void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cmd )
+
+void SmppManagerImpl::putCommand( SmppChannel& ct, std::auto_ptr<SmppCommand> cmd )
 {
     SmppEntity* entPtr=0;
     {
         MutexGuard regmg(regMtx);
-        SmppEntity** ptr=registry.GetPtr(ct->getSystemId());
-        if (!ptr) throw Exception("Unknown system id:%s",ct->getSystemId());
+        SmppEntity** ptr=registry.GetPtr(ct.getSystemId());
+        if (!ptr) throw Exception("Unknown system id:%s",ct.getSystemId());
         cmd->setEntity(*ptr);
         entPtr=*ptr;
     }
@@ -1051,7 +1125,7 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
     {
         smsc_log_warn(limitsLog,"Denied %s from '%s' due to shutting down", i == DELIVERY ? "DELIVERY" : (i == SUBMIT ? "SUBMIT" : "DATASM"), entPtr->info.systemId.c_str());
         std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::SYSERR);
-        ct->putCommand( resp );
+        ct.putCommand( resp );
         return;
     }
 
@@ -1078,7 +1152,7 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
         {
             smsc_log_info(limitsLog,"Denied by license limitation:%d/%d",cntValue,licLimit);
             std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::THROTTLED);
-            ct->putCommand(resp);
+            ct.putCommand(resp);
             return;
         }
     }
@@ -1092,16 +1166,16 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
     {
         smsc_log_warn(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt,entPtr->info.sendLimit);
         std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
-        ct->putCommand(resp);
+        ct.putCommand(resp);
     } else if ( queue.Count()>=queueLimit && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) {
         smsc_log_warn(limitsLog,"Denied submit from '%s' by queueLimit:%d/%d",entPtr->info.systemId.c_str(),queue.Count(),queueLimit);
         std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
-        ct->putCommand(resp);
+        ct.putCommand(resp);
     } else {
         if(entPtr->info.inQueueLimit>0 && entPtr->getQueueCount() >= entPtr->info.inQueueLimit) {
             smsc_log_warn(limitsLog,"Denied submit from '%s' by inQueueLimit:%d/%d",entPtr->info.systemId.c_str(),entPtr->getQueueCount(),entPtr->info.inQueueLimit);
             std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
-            ct->putCommand(resp);
+            ct.putCommand(resp);
         } else {
             queue.Push( cmd.release() );
             queueCount->setValue(queue.Count());
