@@ -24,13 +24,12 @@ namespace inman {
  * class ServiceCHSRI implementation:
  * ************************************************************************** */
 ServiceCHSRI::ServiceCHSRI(const ServiceCHSRI_CFG & in_cfg, Logger * uselog/* = NULL*/)
-  : logger(uselog), _logId("SRISrv"), mapSess(0), disp(new TCAPDispatcher())
-  , running(false), _cfg(in_cfg)
+  : logger(uselog), _logId("SRISrv"), mapSess(0), running(false), _cfg(in_cfg)
 {
   if (!logger)
-    logger = Logger::getInstance("smsc.inman.CHSRI");
+    logger = Logger::getInstance("map.chsri");
 
-  disp->Init(_cfg.mapCfg.ss7);
+  mTcDisp.Init(_cfg.mapCfg.ss7, logger);
 }
 
 ServiceCHSRI::~ServiceCHSRI()
@@ -58,7 +57,7 @@ ServiceCHSRI::~ServiceCHSRI()
       delete worker;
     }
     pool.clear();
-    delete disp;
+    //delete disp;
   }
   smsc_log_debug( logger, "SRISrv: Released." );
 }
@@ -68,7 +67,7 @@ bool ServiceCHSRI::start()
   MutexGuard  grd(_sync);
   if (running)
     return true;
-  if ((running = (disp->Start() && getSession()))) {
+  if ((running = (mTcDisp.Start() && getSession()))) {
     smsc_log_debug(logger, "%s: Started.", _logId);
   }
   return running;
@@ -79,11 +78,11 @@ void ServiceCHSRI::stop(bool do_wait/* = false*/)
   MutexGuard  grd(_sync);
   if (running) {
     smsc_log_debug(logger, "%s: Stopping TCAP dispatcher ..", _logId);
-    disp->Stop(do_wait);
+    mTcDisp.Stop(do_wait);
     running = false;
   }
   if (do_wait)
-    disp->Stop(true);
+    mTcDisp.Stop(true);
   smsc_log_debug(logger, "%s: Stopped.", _logId);
 }
 
@@ -91,17 +90,17 @@ void ServiceCHSRI::stop(bool do_wait/* = false*/)
 bool ServiceCHSRI::getSession(void)
 {
   if (!mapSess) { //openSSN, initialize TCSessionMA
-    if (disp->ss7State() != TCAPDispatcherITF::ss7CONNECTED) {
+    if (mTcDisp.ss7State() != TCAPDispatcherITF::ss7CONNECTED) {
       smsc_log_error(logger, "%s: TCAPDispatcher is not connected!", _logId);
       return false;
     }
-    if (!disp->acRegistry()->getFactory(_ac_map_locInfoRetrieval_v3)
-        && !disp->acRegistry()->regFactory(initMAPCHSRI3Components)) {
+    if (!mTcDisp.acRegistry()->getFactory(_ac_map_locInfoRetrieval_v3)
+        && !mTcDisp.acRegistry()->regFactory(initMAPCHSRI3Components)) {
       smsc_log_fatal(logger, "%s: ROS factory registration failed: %s!", _logId,
                      _ac_map_locInfoRetrieval_v3.nick());
       return false;
     }
-    SSNSession * session = disp->openSSN(_cfg.mapCfg.usr.ownSsn, _cfg.mapCfg.usr.maxDlgId);
+    SSNSession * session = mTcDisp.openSSN(_cfg.mapCfg.usr.ownSsn, _cfg.mapCfg.usr.maxDlgId);
     if (!session) {
       smsc_log_error(logger, "%s: SSN[%u] is unavailable!", _logId, 
                      (unsigned)_cfg.mapCfg.usr.ownSsn);
@@ -183,7 +182,7 @@ SRIInterrogator * ServiceCHSRI::newWorker(void)
     }
   }
   smsc_log_debug(logger, "new Intrgtr[] from heap");
-  return new SRIInterrogator(mapSess, this);
+  return new SRIInterrogator(mapSess, this, logger);
 }
 
 /* ************************************************************************** *
@@ -194,7 +193,7 @@ SRIInterrogator::SRIInterrogator(TCSessionMA * pSession, SRI_CSIListenerIface * 
   : _active(false), tcSesssion(pSession), csiHdl(csi_listener),  logger(uselog)
 { 
   if (!logger)
-    logger = Logger::getInstance("smsc.inman.inap.atih.Intrgtr");
+    logger = Logger::getInstance("map.chsri");
 }
 
 void SRIInterrogator::rlseMapDialog(void)

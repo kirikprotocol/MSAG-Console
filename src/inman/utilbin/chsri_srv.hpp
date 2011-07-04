@@ -117,7 +117,7 @@ private:
   Logger*           logger;
   const char *      _logId;
   TCSessionMA *     mapSess;
-  TCAPDispatcher *  disp;
+  TCAPDispatcher    mTcDisp;
   volatile bool     running;
   ServiceCHSRI_CFG  _cfg;
   IntrgtrMAP        workers;

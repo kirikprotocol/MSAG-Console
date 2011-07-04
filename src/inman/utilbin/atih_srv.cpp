@@ -24,12 +24,12 @@ namespace inman {
  * class ServiceATIH implementation:
  * ************************************************************************** */
 ServiceATIH::ServiceATIH(const ServiceATIH_CFG & in_cfg, Logger * uselog/* = NULL*/)
-  : logger(uselog), _logId("ATIHSrv"), mapSess(0), disp(new TCAPDispatcher())
-  , running(false), _cfg(in_cfg)
+  : logger(uselog), _logId("ATIHSrv"), mapSess(0), running(false), _cfg(in_cfg)
 {
   if (!logger)
-    logger = Logger::getInstance("smsc.inman.ATIH");
-  disp->Init(_cfg.mapCfg.ss7);
+    logger = Logger::getInstance("map.atih");
+
+  mTcDisp.Init(_cfg.mapCfg.ss7, logger);
   _reqCfg.setCSI(UnifiedCSI::csi_O_BC);
 }
 
@@ -58,7 +58,7 @@ ServiceATIH::~ServiceATIH()
       delete worker;
     }
     pool.clear();
-    delete disp;
+    //delete disp;
   }
   smsc_log_debug(logger, "%s: Released.", _logId);
 }
@@ -68,7 +68,7 @@ bool ServiceATIH::start(void)
   MutexGuard  grd(_sync);
   if (running)
     return true;
-  if ((running = (disp->Start() && getSession()))) {
+  if ((running = (mTcDisp.Start() && getSession()))) {
     smsc_log_debug(logger, "%s: Started.", _logId);
   }
   return running;
@@ -79,11 +79,11 @@ void ServiceATIH::stop(bool do_wait/* = false*/)
   MutexGuard  grd(_sync);
   if (running) {
     smsc_log_debug(logger, "%s: Stopping TCAP dispatcher ..", _logId);
-    disp->Stop(do_wait);
+    mTcDisp.Stop(do_wait);
     running = false;
   }
   if (do_wait)
-    disp->Stop(true);
+    mTcDisp.Stop(true);
   smsc_log_debug(logger, "%s: Stopped.", _logId);
 }
 
@@ -91,17 +91,17 @@ void ServiceATIH::stop(bool do_wait/* = false*/)
 bool ServiceATIH::getSession(void)
 {
   if (!mapSess) { //openSSN, initialize TCSessionMA
-    if (disp->ss7State() != TCAPDispatcherITF::ss7CONNECTED) {
+    if (mTcDisp.ss7State() != TCAPDispatcherITF::ss7CONNECTED) {
       smsc_log_error(logger, "%s: TCAPDispatcher is not connected!", _logId);
       return false;
     }
-    if (!disp->acRegistry()->getFactory(_ac_map_anyTimeInfoHandling_v3)
-        && !disp->acRegistry()->regFactory(initMAPATIH3Components)) {
+    if (!mTcDisp.acRegistry()->getFactory(_ac_map_anyTimeInfoHandling_v3)
+        && !mTcDisp.acRegistry()->regFactory(initMAPATIH3Components)) {
       smsc_log_fatal(logger, "%s: ROS factory registration failed: %s!", _logId,
                      _ac_map_anyTimeInfoHandling_v3.nick());
       return false;
     }
-    SSNSession * session = disp->openSSN(_cfg.mapCfg.usr.ownSsn, _cfg.mapCfg.usr.maxDlgId);
+    SSNSession * session = mTcDisp.openSSN(_cfg.mapCfg.usr.ownSsn, _cfg.mapCfg.usr.maxDlgId);
     if (!session) {
       smsc_log_error(logger, "%s: SSN[%u] is unavailable!", _logId, 
                      (unsigned)_cfg.mapCfg.usr.ownSsn);
@@ -184,7 +184,7 @@ ATIInterrogator * ServiceATIH::newWorker(void)
     }
   }
   smsc_log_debug(logger, "new Intrgtr[] from heap");
-  return new ATIInterrogator(mapSess, this);
+  return new ATIInterrogator(mapSess, this, logger);
 }
 
 /* ************************************************************************** *
@@ -195,7 +195,7 @@ ATIInterrogator::ATIInterrogator(TCSessionMA * pSession, AT_CSIListenerIface * c
   : _active(false), tcSesssion(pSession), csiHdl(csi_listener),  logger(uselog)
 { 
   if (!logger)
-    logger = Logger::getInstance("smsc.inman.inap.atsi");
+    logger = Logger::getInstance("map.atih");
 }
 
 void ATIInterrogator::rlseMapDialog(void)

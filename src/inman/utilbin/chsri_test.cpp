@@ -170,8 +170,10 @@ void cmd_get_csi(Console&, const std::vector<std::string> &args)
     fprintf(stdout, "[get_csi] failed to request CSI");
 }
 
-
+/* ---------------------------------------------------------- */
 static const char * const _nmTst = "CH-SRI";
+static const char * const _nmLogger = "map.chsri";
+
 int main(int argc, char** argv)
 {
   int     rval = 0;
@@ -180,10 +182,10 @@ int main(int argc, char** argv)
   tzset();
   URCRegistryInit4MAP();
   Logger::Init();
-  Logger * rootLogger = Logger::getInstance("smsc.inman");
+  Logger * rootLogger = Logger::getInstance(_nmLogger);
 
   smsc_log_info(rootLogger,"***************************");
-  smsc_log_info(rootLogger,"* SIBINCO MAP %s TEST *", _nmTst);
+  smsc_log_info(rootLogger,"* Eyeline MAP %s TEST *", _nmTst);
   smsc_log_info(rootLogger,"***************************");
   if (argc > 1)
     cfgFile = argv[1];
