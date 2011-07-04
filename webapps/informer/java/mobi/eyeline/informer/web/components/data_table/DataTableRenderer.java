@@ -252,7 +252,7 @@ public class DataTableRenderer extends Renderer {
 
 
     int rowsCount = 0 , selected = 0;
-    if(ajax) {
+//    if(ajax) {
       rowsCount = m.getRowsCount();
       selected = t.getSelectedRows().size();
       if(t.isSelectAll()) {
@@ -261,7 +261,7 @@ public class DataTableRenderer extends Renderer {
       if(t.isShowSelectedOnly()) {
         rowsCount = selected;
       }
-    }
+//    }
 
     if (rowsCount > t.getPageSize()) {
 
@@ -332,10 +332,10 @@ public class DataTableRenderer extends Renderer {
         w.append("\n};");
         w.append("\nautoUpdate" + t.getId() + "();");
       } else {
-        w.append("\nfunction load" + t.getId() + "(){");
-        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
-        w.append("\n};");
-        w.append("\n  window.onload =load" + t.getId() +";");
+//        w.append("\nfunction load" + t.getId() + "(){");
+//        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
+//        w.append("\n};");
+//        w.append("\n  window.onload =load" + t.getId() +";");
       }
       w.append("\n</script>");
     }

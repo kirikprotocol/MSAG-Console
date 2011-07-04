@@ -11,7 +11,10 @@ import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 import javax.el.ValueExpression;
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Artem Snopkov
@@ -122,12 +125,12 @@ public class DataTableHandler extends ComponentHandler {
       }
     }
 
-    if(!t.isInternalUpdate()) {
-      t.setSelectAll(false);
-      t.setSelectedRows(Collections.<String>emptyList());
-      t.setShowSelectedOnly(false);
-      return;
-    }
+//    if(!t.isInternalUpdate()) {
+//      t.setSelectAll(false);
+//      t.setSelectedRows(Collections.<String>emptyList());
+//      t.setShowSelectedOnly(false);
+//      return;
+//    }
 
     DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
     if (t.getSelectedRowsExpression() != null && !(m instanceof ModelWithObjectIds))
