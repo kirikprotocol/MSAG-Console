@@ -1149,7 +1149,10 @@ bool SmscSender::processQueue( DataQueue& queue )
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId));
-                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry, drm.nchunks );
+                // FIXME: for now fix SENT counter only for good responses
+                const bool fixTransactional = (rd.status == smsc::system::Status::OK);
+                rproc_.receiveReceipt( drm, retryPolicy_, rd.status,
+                                       rd.retry, drm.nchunks, fixTransactional );
                 continue;
             } else if ( *rd.rcptId.msgId == '\0' ) {
                 if (rd.status == smsc::system::Status::OK || log_->isDebugEnabled()) {

@@ -100,14 +100,16 @@ public:
                        const RetryPolicy& policy,
                        msgtime_type       currentTime,
                        int                smppState,
-                       unsigned           nchunks );
+                       unsigned           nchunks,
+                       bool               fixTransactional = false );
 
     /// finalize message. message is removed from cache.
     void finalizeMessage( msgid_type   msgId,
                           msgtime_type currentTime,
                           uint8_t      state,
                           int          smppState,
-                          unsigned     nchunks );
+                          unsigned     nchunks,
+                          bool         fixTransactional = false );
 
 
     /// notify transfer threads that they should be stopped.
@@ -147,7 +149,8 @@ protected:
                      msgtime_type      currentTime,
                      uint8_t           state,
                      int               smppState,
-                     unsigned          nchunks );
+                     unsigned          nchunks,
+                     bool              fixTransactional = false );
 
     virtual void resendIO( bool isInputDirection, volatile bool& stopFlag );
 

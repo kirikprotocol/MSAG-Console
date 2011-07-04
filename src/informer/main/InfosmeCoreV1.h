@@ -109,7 +109,8 @@ public:
     virtual void receiveReceipt( const DlvRegMsgId& drmId,
                                  const RetryPolicy& retryPolicy,
                                  int smppStatus, bool retry,
-                                 unsigned nchunks );
+                                 unsigned nchunks,
+                                 bool fixTransactional );
     virtual bool receiveResponse( const DlvRegMsgId& drmId );
 
     /// license traffic control

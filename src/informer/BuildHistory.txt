@@ -1,3 +1,6 @@
+2011-07-04 16:43 bukind
+  feature: counting SENT for transactional messages (only for good ones)
+
 =====================================================================
 2011-06-28 15:52 bukind informer-build-20110628
 2011-06-28 14:35 bukind

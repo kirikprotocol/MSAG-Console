@@ -610,7 +610,8 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                                     const RetryPolicy& policy,
                                     msgtime_type       currentTime,
                                     int                smppState,
-                                    unsigned           nchunks )
+                                    unsigned           nchunks,
+                                    bool               fixTransactional )
 {
     const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
@@ -677,21 +678,22 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
     if ( retryDelay == -1 ) {
         // permanent failure
         mg.Unlock();
-        doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,nchunks);
+        doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,nchunks,fixTransactional);
         return;
     } else if (cancelling_) {
         mg.Unlock();
         smsc_log_warn(log_,"R=%u/D=%u/M=%llu is trying to retry=%d but cancelled",
                       getRegionId(),dlvId,ulonglong(msgId),
                       retryDelay );
-        doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,nchunks);
+        doFinalize(ml,currentTime,MSGSTATE_FAILED,smppState,nchunks,fixTransactional);
     }
 
     if (retryDelay == 0 && m.timeLeft>0) {
         // immediate retry
         // putting the message to the new queue
-        assert( m.state == MSGSTATE_PROCESS );
-        // m.state = MSGSTATE_PROCESS;
+        // assert( m.state == MSGSTATE_PROCESS );
+        uint8_t prevState = m.state;
+        m.state = MSGSTATE_PROCESS;
         if ( newQueue_.Count() == 0 && resendQueue_.empty() ) {
             // signalling to bind
             std::vector< regionid_type > regs;
@@ -700,6 +702,13 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         }
         newQueue_.PushFront(iter);
         mg.Unlock();
+        if (fixTransactional && prevState != MSGSTATE_SENT ) {
+            dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_SENT,1,prevState);
+            prevState = MSGSTATE_SENT;
+        }
+        if (prevState != MSGSTATE_PROCESS) {
+            dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_PROCESS,1,prevState);
+        }
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into immediate retry",
                        getRegionId(), dlvId, ulonglong(msgId));
         return;
@@ -710,7 +719,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
          (m.timeLeft <= getCS()->getRetryMinTimeToLive()) ) {
 
         mg.Unlock();
-        doFinalize(ml,currentTime,MSGSTATE_EXPIRED,smppState,nchunks);
+        doFinalize(ml,currentTime,MSGSTATE_EXPIRED,smppState,nchunks,fixTransactional);
         return;
 
     }
@@ -769,8 +778,12 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
     }
 
     mg.Unlock();
-    const uint8_t prevState = m.state;
+    uint8_t prevState = m.state;
     m.state = MSGSTATE_RETRY;
+    if (fixTransactional && prevState != MSGSTATE_SENT) {
+        dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_SENT,1,prevState);
+        prevState = MSGSTATE_SENT;
+    }
     smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu/%+u",
                    getRegionId(), dlvId, ulonglong(msgId),
                    msgTimeToYmd(m.lastTime),
@@ -785,7 +798,8 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                        msgtime_type currentTime,
                                        uint8_t      state,
                                        int          smppState,
-                                       unsigned     nchunks )
+                                       unsigned     nchunks,
+                                       bool         fixTransactional )
 {
     const DeliveryInfo& info = dlv_->getDlvInfo();
     MsgLock ml(messageList_);
@@ -806,7 +820,7 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
             return;
         }
     }
-    doFinalize(ml,currentTime,state,smppState,nchunks);
+    doFinalize(ml,currentTime,state,smppState,nchunks,fixTransactional);
 }
 
 
@@ -814,7 +828,8 @@ void RegionalStorage::doFinalize(MsgLock&          ml,
                                  msgtime_type      currentTime,
                                  uint8_t           state,
                                  int               smppState,
-                                 unsigned          nchunks )
+                                 unsigned          nchunks,
+                                 bool              fixTransactional )
 {
     const dlvid_type dlvId = dlv_->getDlvId();
     MsgIter iter = ml.getIter();
@@ -831,7 +846,11 @@ void RegionalStorage::doFinalize(MsgLock&          ml,
     Message& m = iter->msg;
     m.lastTime = currentTime;
     m.retryCount = nchunks;
-    const uint8_t prevState = m.state;
+    uint8_t prevState = m.state;
+    if ( fixTransactional && prevState != MSGSTATE_SENT ) {
+        dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_SENT,1,prevState);
+        prevState = MSGSTATE_SENT;
+    }
     m.state = state;
     smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is finalized, state=%u, smpp=%u, ttl=%d, nchunks=%u, checkFin=%d",
                    unsigned(getRegionId()),

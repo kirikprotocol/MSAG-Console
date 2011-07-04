@@ -833,11 +833,12 @@ void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId,
                                     const RetryPolicy& policy,
                                     int      status,
                                     bool     retry,
-                                    unsigned nchunks )
+                                    unsigned nchunks,
+                                    bool     transactional )
 {
-    smsc_log_debug(log_,"rcpt received R=%u/D=%u/M=%llu status=%u retry=%d nchunks=%u",
+    smsc_log_debug(log_,"rcpt received R=%u/D=%u/M=%llu status=%u retry=%d nchunks=%u trans=%d",
                    drmId.regId, drmId.dlvId,
-                   drmId.msgId, status, retry, nchunks );
+                   drmId.msgId, status, retry, nchunks, transactional );
     try {
         DeliveryImplPtr dlv;
         if ( !dlvMgr_->getDelivery(drmId.dlvId,dlv) ) {
@@ -860,11 +861,12 @@ void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId,
         const bool ok = (status == smsc::system::Status::OK);
         if (!ok && retry) {
             // attempt to retry
-            reg->retryMessage( drmId.msgId, policy, now, status, nchunks);
+            reg->retryMessage( drmId.msgId, policy, now, status,
+                               nchunks, transactional );
         } else {
             reg->finalizeMessage(drmId.msgId, now,
                                  ok ? MSGSTATE_DELIVERED : MSGSTATE_FAILED,
-                                 status, nchunks );
+                                 status, nchunks, transactional );
         }
     } catch ( std::exception& e ) {
         smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt process failed, exc: %s",

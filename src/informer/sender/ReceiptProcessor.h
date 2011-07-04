@@ -16,7 +16,8 @@ public:
                                  const RetryPolicy& policy,
                                  int                smppStatus,
                                  bool               retry,
-                                 unsigned           nchunks ) = 0;
+                                 unsigned           nchunks,
+                                 bool               fixTransactional = false ) = 0;
     virtual bool receiveResponse( const DlvRegMsgId& drm ) = 0;
 
     virtual void incIncoming() = 0;
