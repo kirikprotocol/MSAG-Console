@@ -138,7 +138,7 @@ public class GroupEditSMPPService extends AbstractSMPPService {
   }
 
   private void reply(SMPPRequest req, String message) {
-    sendMessage(req.getInObj().getMessage().getDestinationAddress(), req.getInObj().getMessage().getSourceAddress(), message);
+    reply(req.getInObj().getMessage(), message);
   }
 
   private String getReason(CommandExecutionException e) {

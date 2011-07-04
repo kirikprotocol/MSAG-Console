@@ -76,7 +76,7 @@ public class GroupSendSMPPService extends AbstractSMPPService {
           int sent = 0;
           for (DeliveryStatus status : statuses)
             if (status.getStatus() > 0) sent++;
-          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(total)));
+          reply(m, sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(total)));
         }
       }
     });
@@ -94,10 +94,10 @@ public class GroupSendSMPPService extends AbstractSMPPService {
     } catch (CommandExecutionException e) {
       switch (e.getErrCode()) {
         case GroupSendCmd.ERR_UNKNOWN_GROUP:
-          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownGroup);
+          reply(m, unknownGroup);
           break;
         case GroupSendCmd.ERR_UNKNOWN_SUBMITTER:
-          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownSubmitter);
+          reply(m, unknownSubmitter);
           break;
         default:
           log.error(e,e);
@@ -142,7 +142,7 @@ public class GroupSendSMPPService extends AbstractSMPPService {
           int sent = 0;
           for (DeliveryStatus status : statuses)
             if (status.getStatus() > 0) sent++;
-          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(statuses.length)));
+          reply(m, sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(statuses.length)));
         }
       }
     });
@@ -152,10 +152,10 @@ public class GroupSendSMPPService extends AbstractSMPPService {
     } catch (CommandExecutionException e) {
       switch (e.getErrCode()) {
         case GroupSendCmd.ERR_UNKNOWN_GROUP:
-          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownGroup);
+          reply(m, unknownGroup);
           break;
         case GroupSendCmd.ERR_UNKNOWN_SUBMITTER:
-          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), unknownSubmitter);
+          reply(m, unknownSubmitter);
           break;
         default:
           log.error(e,e);

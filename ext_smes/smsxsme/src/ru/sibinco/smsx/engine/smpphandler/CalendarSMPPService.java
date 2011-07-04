@@ -137,15 +137,15 @@ public class CalendarSMPPService extends AbstractSMPPService {
               break;
             case CalendarSendMessageCmd.ERR_WRONG_SEND_DATE:
               inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgSendDateIsWrong);
-              sendMessage(sourceAddress, destinationAddress, cmd.getMessage(), cmd.getDestAddressSubunit());
+              reply(inObj.getMessage(), serviceAddress, msgSendDateIsWrong);
+              sendMessage(sourceAddress, destinationAddress, inObj.getMessage().getConnectionName(), cmd.getMessage(), cmd.getDestAddressSubunit());
               break;
             case CalendarSendMessageCmd.ERR_WRONG_DESTINATION_ADDRESS:
               inObj.respond(Data.ESME_RINVDSTADR);
               break;
             default:
               inObj.respond(Data.ESME_RX_P_APPN);
-              log.error("WARNING: Unknown result type in Calendar Handler");
+              log.error("WARNING: Unknown result type in Calendar Handler: " + e.getErrCode());
           }
         }
 

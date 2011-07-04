@@ -71,7 +71,7 @@ public class GroupEditProfileSMPPService extends AbstractSMPPService {
       } catch (SMPPException e) {
         log.error(e);
       }
-      sendMessage(smppRequest.getInObj().getMessage().getDestinationAddress(), smppRequest.getInObj().getMessage().getSourceAddress(), notification);
+      reply(smppRequest.getInObj().getMessage(), notification);
     } catch (CommandExecutionException e) {
       log.error(e,e);
       return false;

@@ -116,12 +116,12 @@ public class SecretSMPPService extends AbstractSMPPService {
     try {
       Services.getInstance().getSecretService().execute(cmd);
       inObj.respond(Data.ESME_ROK);
-      sendMessage(serviceAddress, sourceAddress, msgUnregisterOk);
+      reply(inObj.getMessage(), serviceAddress, msgUnregisterOk);
     } catch (CommandExecutionException e) {
       switch (e.getErrCode()) {
         case SecretUnregisterAbonentCmd.ERR_SOURCE_ABONENT_NOT_REGISTERED:
           inObj.respond(Data.ESME_ROK);
-          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
+          reply(inObj.getMessage(), serviceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
           break;
         case SecretUnregisterAbonentCmd.ERR_SYS_ERROR:
           inObj.respond(Data.ESME_RX_P_APPN);
@@ -143,12 +143,12 @@ public class SecretSMPPService extends AbstractSMPPService {
     try {
       Services.getInstance().getSecretService().execute(cmd);
       inObj.respond(Data.ESME_ROK);
-      sendMessage(serviceAddress, sourceAddress, msgRegisterOk);
+      reply(inObj.getMessage(), serviceAddress, msgRegisterOk);
     } catch (CommandExecutionException e) {
       switch (e.getErrCode()) {
         case SecretRegisterAbonentCmd.ERR_SOURCE_ABONENT_ALREADY_REGISTERED:
           inObj.respond(Data.ESME_ROK);
-          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentAlreadyRegistered.replaceAll("\\{abonent}", sourceAddress));
+          reply(inObj.getMessage(), serviceAddress, msgSourceAbonentAlreadyRegistered.replaceAll("\\{abonent}", sourceAddress));
           break;
         case SecretRegisterAbonentCmd.ERR_SYS_ERROR:
           inObj.respond(Data.ESME_RX_P_APPN);
@@ -169,16 +169,16 @@ public class SecretSMPPService extends AbstractSMPPService {
     try {
       Services.getInstance().getSecretService().execute(cmd);
       inObj.respond(Data.ESME_ROK);
-      sendMessage(serviceAddress, sourceAddress, msgChangePwdOk);
+      reply(inObj.getMessage(), serviceAddress, msgChangePwdOk);
     } catch (CommandExecutionException e) {
       switch (e.getErrCode()) {
         case SecretChangePasswordCmd.ERR_SOURCE_ABONENT_NOT_REGISTERED:
           inObj.respond(Data.ESME_ROK);
-          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
+          reply(inObj.getMessage(), serviceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
           break;
         case SecretChangePasswordCmd.ERR_INVALID_PASSWORD:
           inObj.respond(Data.ESME_ROK);
-          sendMessage(serviceAddress, sourceAddress, msgInvalidPassword);
+          reply(inObj.getMessage(), serviceAddress, msgInvalidPassword);
           break;
         case SecretChangePasswordCmd.ERR_SYS_ERROR:
           inObj.respond(Data.ESME_RX_P_APPN);
@@ -237,17 +237,17 @@ public class SecretSMPPService extends AbstractSMPPService {
       switch (e.getErrCode()) {
         case SecretGetMessagesCmd.ERR_SOURCE_ABONENT_NOT_REGISTERED:
           inObj.respond(Data.ESME_ROK);
-          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
+          reply(inObj.getMessage(), serviceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
           break;
 
         case SecretGetMessagesCmd.ERR_INVALID_PASSWORD:
           inObj.respond(Data.ESME_ROK);
-          sendMessage(serviceAddress, sourceAddress, msgInvalidPassword);
+          reply(inObj.getMessage(), serviceAddress, msgInvalidPassword);
           break;
 
         case SecretGetMessagesCmd.ERR_NO_MESSAGES:
           inObj.respond(Data.ESME_ROK);
-          sendMessage(serviceAddress, sourceAddress, msgNoMessages);
+          reply(inObj.getMessage(), serviceAddress, msgNoMessages);
           break;
 
         case SecretGetMessagesCmd.ERR_SYS_ERROR:
