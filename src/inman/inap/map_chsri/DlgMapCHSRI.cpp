@@ -43,7 +43,7 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, uint16_t timeou
 
   bindTCDialog(timeout_sec);
 
-  CHSendRoutingInfoArg     arg;
+  CHSendRoutingInfoArg     arg(_logger);
   arg.setGMSCorSCFaddress(_tcSess->getOwnAdr());
   arg.setSubscrMSISDN(tnpi_adr);
 
