@@ -513,12 +513,13 @@ void DeliveryImpl::checkFinalize()
     smsc_log_debug(log_,"D=%u check finalize invoked",dlvId);
     DeliveryStats ds;
     bool finalize = true;
-    bool endReached = true;
+    bool endReached = false;
     const msgtime_type currentTime = currentTimeSeconds();
     {
         smsc::core::synchronization::MutexGuard mg(cacheLock_);
         int regId;
         StoreList::iterator ptr;
+        endReached = (storeHash_.Count() > 0); // set to true if there are regstores
         for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
             if (finalize && !(*ptr)->isFinished()) {
                 finalize = false;
