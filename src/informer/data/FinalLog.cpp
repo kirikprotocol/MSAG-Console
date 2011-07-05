@@ -80,7 +80,8 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
                             dlvid_type           dlvId,
                             const char*          userId,
                             const Message&       msg,
-                            int                  smppStatus )
+                            int                  smppStatus,
+                            int                  nsms )
 {
     char cstate;
     switch (msg.state) {
@@ -98,7 +99,7 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
                                 currentTime % 60, dlvId, userId, msg.msgId,
                                 cstate,
                                 smppStatus, caddr,
-                                msg.retryCount,
+                                nsms,
                                 msg.userData.c_str() );
     if (bufsize < 0) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf to final.log: %d",bufsize);

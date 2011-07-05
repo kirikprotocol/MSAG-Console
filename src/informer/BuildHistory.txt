@@ -1,3 +1,5 @@
+2011-07-05 12:59 bukind
+  feature: writing SENT records into activity.log
 2011-07-05 11:55 bukind
   feature: added a number of retries in msg.log
 2011-07-05 10:33 bukind

@@ -574,7 +574,8 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
 
 void RegionalStorage::messageSent( msgid_type msgId,
-                                   msgtime_type currentTime )
+                                   msgtime_type currentTime,
+                                   unsigned nchunks )
 {
     const DeliveryInfo& info = dlv_->getDlvInfo();
     MsgLock ml(messageList_);
@@ -601,8 +602,8 @@ void RegionalStorage::messageSent( msgid_type msgId,
     m.lastTime = currentTime;
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_SENT;
+    dlv_->activityLog_->addRecord(currentTime,*region_,m,0,nchunks,prevState);
     dlv_->storeJournal_->journalMessage(info.getDlvId(),getRegionId(),*iter);
-    dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
 }
 
 
@@ -702,10 +703,13 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         }
         newQueue_.PushFront(iter);
         mg.Unlock();
+        /*
+         * fixTransactional should not be set here
         if (fixTransactional && prevState != MSGSTATE_SENT ) {
             dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_SENT,1,prevState);
             prevState = MSGSTATE_SENT;
         }
+         */
         if (prevState != MSGSTATE_PROCESS) {
             dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_PROCESS,1,prevState);
         }
@@ -780,17 +784,21 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
     mg.Unlock();
     uint8_t prevState = m.state;
     m.state = MSGSTATE_RETRY;
+    /*
+     * fixTransactional should not be set here
     if (fixTransactional && prevState != MSGSTATE_SENT) {
-        dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_SENT,1,prevState);
+        m.state = MSGSTATE_SENT;
+        dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,MSGSTATE_SENT,1,prevState);
         prevState = MSGSTATE_SENT;
     }
+     */
     smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu/%+u",
                    getRegionId(), dlvId, ulonglong(msgId),
                    msgTimeToYmd(m.lastTime),
                    int(m.lastTime - currentTime) );
-    dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,prevState);
+    dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,
+                                  nchunks, prevState);
     dlv_->storeJournal_->journalMessage(info.getDlvId(),getRegionId(),*iter);
-    // dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
 }
 
 
@@ -845,10 +853,10 @@ void RegionalStorage::doFinalize(MsgLock&          ml,
     const bool checkFinal = messageList_.empty();
     Message& m = iter->msg;
     m.lastTime = currentTime;
-    m.retryCount = nchunks;
     uint8_t prevState = m.state;
     if ( fixTransactional && prevState != MSGSTATE_SENT ) {
-        dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_SENT,1,prevState);
+        m.state = MSGSTATE_SENT;
+        dlv_->activityLog_->addRecord(currentTime,*region_,m,0,nchunks,prevState);
         prevState = MSGSTATE_SENT;
     }
     m.state = state;
@@ -859,7 +867,7 @@ void RegionalStorage::doFinalize(MsgLock&          ml,
                    m.timeLeft,
                    nchunks,
                    checkFinal);
-    dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,prevState);
+    dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,nchunks,prevState);
     dlv_->storeJournal_->journalMessage(dlvId,getRegionId(),*iter);
     if (checkFinal) dlv_->checkFinalize();
 }
@@ -1195,7 +1203,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                            unsigned(regionId), dlvId,
                            ulonglong(m.msgId));
             regionid_type serial = MessageLocker::nullSerial;
-            dlv_->activityLog_->addRecord(currentTime,*region_,m,0,MSGSTATE_INPUT);
+            dlv_->activityLog_->addRecord(currentTime,*region_,m,0,0,MSGSTATE_INPUT);
             dlv_->storeJournal_->journalMessage(dlvId,regionId,*i);
             i->serial = serial;
         }
@@ -1215,14 +1223,14 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
         Message& m = i->msg;
         m.lastTime = currentTime;
         m.timeLeft = 0;
-        m.retryCount = 0; // nchunks
+        // m.retryCount = 0;
         const uint8_t prevState = m.state;
         m.state = MSGSTATE_EXPIRED;
         smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is cancelled, state=%u, smpp=%u",
                        unsigned(regionId),
                        unsigned(dlvId),
                        ulonglong(m.msgId),m.state,smppState );
-        dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,prevState);
+        dlv_->activityLog_->addRecord(currentTime,*region_,m,smppState,0,prevState);
         dlv_->storeJournal_->journalMessage(dlvId,regionId,*i);
     }
 }

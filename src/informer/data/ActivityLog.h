@@ -26,11 +26,13 @@ public:
     inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
     /// this will automatically increment stats
+    /// nchunks is a number of SMS chunks
     void addRecord( msgtime_type         currentTime,
                     const Region&        region,
                     const Message&       msg,
                     int                  smppStatus,
-                    uint8_t              fromState = 0 );
+                    int                  nchunks,
+                    uint8_t              fromState );
 
     /// add records about deletion of messages
     void addDeleteRecords( msgtime_type                   currentTime,

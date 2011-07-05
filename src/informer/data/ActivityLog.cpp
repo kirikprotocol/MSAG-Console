@@ -128,6 +128,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
             case 'N' : ++ods.totalMessages; ++ods.newMessages;  break;
             case 'P' : /*++ods.procMessages;*/ --ods.newMessages;  break;
             case 'R' : /*++ods.retryMessages; */  break;
+            case 'S' : break;
             case 'B' : break; // skip record - do nothing
             case 'D' :
             case 'E' :
@@ -253,7 +254,8 @@ bool ActivityLog::readFirstRecordSeconds( const std::string& filename,
 void ActivityLog::addRecord( msgtime_type currentTime,
                              const Region& region,
                              const Message& msg,
-                             int smppStatus,
+                             int     smppStatus,
+                             int     nchunks,
                              uint8_t fromState )
 {
     const regionid_type regId = region.getRegionId();
@@ -268,22 +270,28 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     unsigned planTime = 0;
     int retryCount = int(msg.retryCount);
     char cstate = msgStateToString(MsgState(msg.state))[0];
+    if (!nchunks && msg.state != MSGSTATE_PROCESS) {
+        // calculate number of sms
+        const char* text = msg.text.getText();
+        if (!text) {
+            smsc_log_warn(log_,"R=%u/D=%u/M=%llu text is NULL, statistics on SMS will be wrong possibly",
+                          regId, getDlvId(), ulonglong(msg.msgId) );
+            nchunks = 1;
+        } else {
+            nchunks = int(dlvInfo_->evaluateNchunks(text,strlen(text)));
+        }
+    }
     switch (msg.state) {
     case MSGSTATE_INPUT:
     case MSGSTATE_PROCESS:
+    case MSGSTATE_SENT:
         break;
     case MSGSTATE_DELIVERED:
     case MSGSTATE_FAILED:
     case MSGSTATE_EXPIRED:
     case MSGSTATE_KILLED:
-        if (!retryCount) {
-            const char* text = msg.text.getText();
-            if (!text) {
-                throw InfosmeException(EXC_LOGICERROR,"R=%u/D=%u/M=%llu text is NULL",
-                                       regId, getDlvId(), ulonglong(msg.msgId) );
-            }
-            retryCount = int(dlvInfo_->evaluateNchunks(text,strlen(text)));
-        }
+        // all final states write nchunks instead of retryCount!
+        retryCount = nchunks;
         break;
     case MSGSTATE_RETRY:
         planTime = unsigned(msg.lastTime - currentTime);
@@ -329,7 +337,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
-        dlvInfo_->incMsgStats(region,msg.state,1,fromState,retryCount);
+        dlvInfo_->incMsgStats(region,msg.state,1,fromState,nchunks);
     }
 
     // writing final log
@@ -339,7 +347,8 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                                               getDlvId(),
                                               dlvInfo_->getUserInfo().getUserId(),
                                               msg,
-                                              smppStatus);
+                                              smppStatus,
+                                              nchunks );
     }
 }
 

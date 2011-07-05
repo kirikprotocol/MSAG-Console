@@ -91,8 +91,9 @@ public:
 
     /// change message state when non-transaction response has come.
     /// message is left in the cache.
-    void messageSent( msgid_type msgId,
-                      msgtime_type currentTime );
+    void messageSent( msgid_type   msgId,
+                      msgtime_type currentTime,
+                      unsigned     nchunks );
 
     /// change message state when temporal failure received.
     /// message is removed from the cache.

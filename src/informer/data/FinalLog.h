@@ -21,12 +21,12 @@ public:
     FinalLog();
     ~FinalLog();
 
-    /// NOTE: msg.retryCount contains Nsms
     void addMsgRecord( msgtime_type         currentTime,
                        dlvid_type           dlvId,
                        const char*          userId,
                        const Message&       msg,
-                       int                  smppStatus );
+                       int                  smppStatus,
+                       int                  nsms );
 
     void addDlvRecord( msgtime_type         currentTime,
                        dlvid_type           dlvId,

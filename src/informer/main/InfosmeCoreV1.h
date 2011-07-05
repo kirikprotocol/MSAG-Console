@@ -111,7 +111,8 @@ public:
                                  int smppStatus, bool retry,
                                  unsigned nchunks,
                                  bool fixTransactional );
-    virtual bool receiveResponse( const DlvRegMsgId& drmId );
+    virtual bool receiveResponse( const DlvRegMsgId& drmId,
+                                  unsigned           nchunks );
 
     /// license traffic control
     virtual void incIncoming();

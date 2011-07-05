@@ -1200,7 +1200,7 @@ bool SmscSender::processQueue( DataQueue& queue )
                 continue;
             }
 
-            if ( !rproc_.receiveResponse(drm) ) {
+            if ( !rproc_.receiveResponse(drm,drm.nchunks) ) {
                 // response processing failed -- no dlv, no msg?
                 continue;
             }

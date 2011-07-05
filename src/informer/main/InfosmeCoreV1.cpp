@@ -877,7 +877,7 @@ void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId,
 }
 
 
-bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
+bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId, unsigned nchunks )
 {
     smsc_log_debug(log_,"good resp received R=%u/D=%u/M=%llu",
                    drmId.regId,
@@ -904,7 +904,7 @@ bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
 
         const msgtime_type now(currentTimeSeconds());
 
-        reg->messageSent(drmId.msgId,now);
+        reg->messageSent(drmId.msgId,now,nchunks);
         return true;
 
     } catch ( std::exception& e ) {

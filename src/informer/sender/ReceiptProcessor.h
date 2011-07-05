@@ -18,7 +18,8 @@ public:
                                  bool               retry,
                                  unsigned           nchunks,
                                  bool               fixTransactional = false ) = 0;
-    virtual bool receiveResponse( const DlvRegMsgId& drm ) = 0;
+    virtual bool receiveResponse( const DlvRegMsgId& drm,
+                                  unsigned           nchunks ) = 0;
 
     virtual void incIncoming() = 0;
     virtual void incOutgoing( unsigned nchunks ) = 0;

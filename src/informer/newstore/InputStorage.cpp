@@ -127,7 +127,7 @@ public:
             msg.lastTime = currentTime_;
             msg.timeLeft = 0;
             // we have to add kill record in activity log
-            al_.addRecord(currentTime_,reg_,msg,0,MSGSTATE_INPUT);
+            al_.addRecord(currentTime_,reg_,msg,0,0,MSGSTATE_INPUT);
         } else {
             al_.getDlvInfo().getUserInfo().getDA().startPvssCheck(ipn_,msg);
         }
@@ -215,7 +215,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
         if ( !p ) {
             throw InfosmeException(EXC_LOGICERROR,"Region %u is not found in just fetched hash",i->serial);
         }
-        activityLog_->addRecord(currentTime,**p,i->msg,0);
+        activityLog_->addRecord(currentTime,**p,i->msg,0,0,0);
     }
     // save regions in vector
     std::vector< regionid_type > regv;
@@ -585,6 +585,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                         const int smppState = smsc::system::Status::DENIEDBYGLOBALBL;
                         activityLog_->addRecord(currentTime,region,i->msg,
                                                 smppState,
+                                                0,
                                                 MSGSTATE_INPUT);
                         i = msglist.erase(i);
                     } else {
