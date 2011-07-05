@@ -1,6 +1,7 @@
 #include <cassert>
 #include <string.h>
 #include "informer/io/DirListing.h"
+#include "informer/io/TmpBuf.h"
 #include "FinalLog.h"
 #include "Message.h"
 #include "CommonSettings.h"
@@ -94,23 +95,25 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
     }
     char caddr[30];
     printSubscriber(caddr,msg.subscriber);
-    char buf[200];
-    const int bufsize = sprintf(buf,"%02u,%u,%s,0,%llu,%c,%d,%s,%u,%s\n",
+    TmpBuf<char,1024> buf;
+    const int bufsize = sprintf(buf.get(),"%02u,%u,%s,0,%llu,%c,%d,%s,%u,",
                                 currentTime % 60, dlvId, userId, msg.msgId,
                                 cstate,
                                 smppStatus, caddr,
-                                nsms,
-                                msg.userData.c_str() );
+                                nsms );
     if (bufsize < 0) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf to final.log: %d",bufsize);
     }
+    buf.setPos(bufsize);
+    buf.append(msg.msgUserData.c_str(),msg.msgUserData.size());
+    buf.append("\n",1);
     smsc::core::synchronization::MutexGuard mg(lock_);
     doCheckRollFile(currentTime,true);
     if ( currentTime < createTime_ ) {
         // fix for delayed write
-        ::memcpy(buf,"00",2);
+        ::memcpy(buf.get(),"00",2);
     }
-    fg_.write(buf,bufsize);
+    fg_.write(buf.get(),buf.getPos());
     // fg_.fsync();
 }
 

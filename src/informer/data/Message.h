@@ -2,6 +2,7 @@
 #define _INFORMER_MESSAGE_H
 
 #include <list>
+#include <string>
 #include "util/TypeInfo.h"
 #include "MessageText.h"
 #include "MessageFlags.h"
@@ -15,11 +16,12 @@ namespace informer {
 // 8+8+4+4+8+4+24+2+1 = 16+16+24+3 = 32+27 = 59 + (4bytes/locker) => 64 bytes
 struct Message
 {
-    static const size_t USERDATA_LENGTH = 24;
+    // static const size_t USERDATA_LENGTH = 24;
 
     msgid_type       msgId;      // unique message id (constant)          8
     personid_type    subscriber; // not changed (constant)                8
-    smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // 24 (constant)
+    // smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // 24 (constant)
+    std::string      msgUserData;
     MessageText      text;       // message text                         16
     MessageFlags     flags;      // message flags                        16
     msgtime_type     lastTime;   // lasttime / filenumber                 4
@@ -33,7 +35,8 @@ struct Message
         std::swap(msgId,m.msgId);
         std::swap(lastTime,m.lastTime);
         std::swap(timeLeft,m.timeLeft);
-        std::swap(userData,m.userData);
+        // std::swap(userData,m.userData);
+        msgUserData.swap(m.msgUserData);
         text.swap(m.text);
         std::swap(retryCount,m.retryCount);
         flags.swap(m.flags);
@@ -41,10 +44,15 @@ struct Message
     }
 
     inline void setUserData( const char* userDataValue ) {
-        if ( strlen(userDataValue) >= USERDATA_LENGTH ) {
+        if ( strlen(userDataValue) >= MSG_USERDATA_LENGTH ) {
             throw InfosmeException(EXC_BADNAME, "too long userdata '%s'",userDataValue);
         }
-        userData = userDataValue;
+        // user data should not contain invalid chars
+        char badchar;
+        if ( userDataValue[0] && !isGoodAsciiName(userDataValue,&badchar) ) {
+            throw InfosmeException(EXC_BADNAME, "invalid char in userData: '%c'",badchar);
+        }
+        msgUserData = userDataValue;
     }
 
     static const uint16_t maxRetryCount = 0xffff;

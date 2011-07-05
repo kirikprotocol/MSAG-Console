@@ -73,7 +73,7 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   }
   if(di.hasUserData())
   {
-    did.userData=di.getUserData();
+    did.dlvUserData=di.getUserData();
   }
 
   did.sourceAddress=di.getSourceAddress();
@@ -139,9 +139,9 @@ void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoDa
   {
     di.setSvcType(did.svcType);
   }
-  if(!did.userData.empty())
+  if(!did.dlvUserData.empty())
   {
-    di.setUserData(did.userData);
+    di.setUserData(did.dlvUserData);
   }
 
   di.setSourceAddress(did.sourceAddress);

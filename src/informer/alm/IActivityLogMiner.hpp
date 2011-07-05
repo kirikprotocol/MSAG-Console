@@ -59,7 +59,8 @@ struct ALMResult{
   int code;
   msgtime_type date;
   std::string text;
-  smsc::core::buffers::FixedLengthString<Message::USERDATA_LENGTH> userData;
+  // smsc::core::buffers::FixedLengthString<Message::USERDATA_LENGTH> userData;
+  std::string userData;
 };
 
 class IActivityLogMiner{

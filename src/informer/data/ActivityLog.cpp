@@ -303,22 +303,24 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     printSubscriber(caddr,msg.subscriber);
 
     TmpBuf<char,1024> buf;
-    int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,",
+    int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,",
                       unsigned(now.tm_sec), cstate, regId,
                       msg.msgId, retryCount, planTime, 
                       caddr,
-                      msg.timeLeft, smppStatus,
-                      msg.userData.c_str());
+                      msg.timeLeft, smppStatus);
     if ( off < 0 ) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf to activity.log: %d",off);
     }
-    buf.SetPos(off);
+    buf.setPos(off);
+    buf.Append(msg.msgUserData.c_str(),msg.msgUserData.size());
+    buf.Append(",",1);
+    off = buf.getPos();
     if ( ! msg.flags.isEmpty() ) {
         HexDump hd(false);
         off += int(hd.hexdumpsize(msg.flags.bufsize())) + 1;
         buf.reserve(off);
         hd.hexdump(buf.GetCurPtr(),msg.flags.buf(),msg.flags.bufsize());
-        buf.SetPos(off);
+        buf.setPos(off);
     }
     buf.Append(",\"",2);
     escapeText(buf, msg.text.getText(),strlen(msg.text.getText()));

@@ -113,7 +113,7 @@ public:
         msg.subscriber = fb.get64();
         // msg.lastTime = fb.get32();
         msg.timeLeft = -1; // waiting for pvss
-        msg.userData = fb.getCString();
+        msg.msgUserData = fb.getCString();
         if (version==2) {
             MessageFlags(fb.getCString()).swap(msg.flags);
         }
@@ -383,7 +383,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
     }
     // writing regions
     // FIXME: optimize (write regions via big buffer)
-    TmpBuf<unsigned char,200> msgbuf;
+    TmpBuf<unsigned char,4096> msgbuf;
     for ( std::vector< regionid_type >::const_iterator ir = regv.begin();
           ir != regv.end(); ++ir ) {
         const regionid_type regId = *ir;
@@ -412,7 +412,12 @@ void InputStorage::dispatchMessages( MsgIter begin,
             // writing to a file
             Message& msg = i->msg;
             if (msg.text.isUnique()) {
-                msgbuf.setSize(90+strlen(msg.text.getText()));
+                msgbuf.setSize(200 + 2*msg.flags.bufsize() +
+                               strlen(msg.text.getText()) +
+                               msg.msgUserData.size() );
+            } else {
+                msgbuf.setSize(200 + 2*msg.flags.bufsize() +
+                               msg.msgUserData.size() );
             }
             // msg.lastTime = ro.wfn;
             // msg.timeLeft = ro.woff;
@@ -425,9 +430,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
             tb.set64(msg.msgId);
             tb.set8(state);
             tb.set64(msg.subscriber);
-            // tb.set32(msg.lastTime);
-            // tb.set32(msg.timeLeft);
-            tb.setCString(msg.userData.c_str());
+            tb.setCString(msg.msgUserData.c_str());
             if (::defaultVersion==2) {
                 tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
             }

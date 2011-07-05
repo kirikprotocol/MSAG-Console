@@ -361,9 +361,12 @@ bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime,
     if(req->filter.resultFields&rfUserData)
     {
       std::string::size_type np=line.find(',',pos);
-      smsc::core::buffers::FixedLengthString<Message::USERDATA_LENGTH> userData, *uptr;
-      uptr = rec ? &(rec->userData) : &userData;
-      uptr->assign(line.c_str()+pos,np-pos);
+      // smsc::core::buffers::FixedLengthString<Message::USERDATA_LENGTH> userData, *uptr;
+      if (rec) {
+          // std::string userData, *uptr;
+          // uptr = rec ? &(rec->userData) : &userData;
+          rec->userData.assign(line.c_str()+pos,np-pos);
+      }
       pos=np+1;
     }else
     {

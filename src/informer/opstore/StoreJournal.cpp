@@ -90,7 +90,7 @@ public:
             msg.retryCount = fb.get16();
             if (fb.getPos() == fb.getLen()) break;
             msg.subscriber = fb.get64();
-            msg.userData = fb.getCString();
+            msg.msgUserData = fb.getCString();
             if (version_ == 2) {
                 MessageFlags(fb.getCString()).swap(msg.flags);
             }
@@ -133,16 +133,19 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
                                      regionid_type  regionId,
                                      MessageLocker& ml )
 {
-    TmpBuf<unsigned char,200> buf;
+    TmpBuf<unsigned char,4096> buf;
     // NOTE: it is a prediction (NOT under lock!)
     const bool equalSerials = (ml.serial == serial_);
     const Message& msg = ml.msg;
     if (!equalSerials) {
         if (msg.text.isUnique()) {
-            // need to write text
-            buf.setSize(90+2*msg.flags.bufsize()+strlen(msg.text.getText()));
+            // need to write text and userdata
+            buf.setSize( 200 + 2*msg.flags.bufsize() + 
+                         strlen(msg.text.getText()) + 
+                         msg.msgUserData.size());
         } else {
-            buf.setSize(90+2*msg.flags.bufsize());
+            buf.setSize( 200 + 2*msg.flags.bufsize() +
+                         msg.msgUserData.size() );
         }
     }
     ToBuf tb(buf.get(),buf.getSize());
@@ -169,7 +172,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
             break;
         }
         tb.set64(msg.subscriber);
-        tb.setCString(msg.userData.c_str());
+        tb.setCString(msg.msgUserData.c_str());
         if (version_==2) {
             tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
         }
@@ -190,14 +193,17 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
             equalSerials && ml.serial != serial_ ) {
             // oops, the serial has changed while we were preparing the buffer
             if (msg.text.isUnique()) {
-                buf.reserve(90+2*msg.flags.bufsize()+strlen(msg.text.getText()));
+                buf.reserve( 200 + 2*msg.flags.bufsize()
+                             + strlen(msg.text.getText()) +
+                             msg.msgUserData.size() );
             } else {
-                buf.reserve(90+2*msg.flags.bufsize());
+                buf.reserve( 200 + 2*msg.flags.bufsize() +
+                             msg.msgUserData.size() );
             }
             tb.setBuf(buf.get(),buf.getSize());
             tb.setPos(buflen);
             tb.set64(msg.subscriber);
-            tb.setCString(msg.userData.c_str());
+            tb.setCString(msg.msgUserData.c_str());
             if (version_==2) {
                 tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
             }

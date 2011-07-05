@@ -95,7 +95,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         data.retryPolicy = config.getString("retryPolicy","");
         data.replaceMessage = config.getBool("replaceMessage",false,false);
         data.svcType = config.getString("svcType","");
-        data.userData = config.getString("userData","");
+        data.dlvUserData = config.getString("userData","");
         data.sourceAddress = config.getString("sourceAddress");
         data.finalDlvRecords = config.getBool("finalDlvRecords",false);
         data.finalMsgRecords = config.getBool("finalMsgRecords",false);
@@ -638,8 +638,8 @@ void DeliveryImpl::writeDeliveryInfoData()
     if (!data.svcType.empty()) {
         config.setString("svcType",data.svcType.c_str());
     }
-    if (!data.userData.empty()) {
-        config.setString("userData",data.userData.c_str());
+    if (!data.dlvUserData.empty()) {
+        config.setString("userData",data.dlvUserData.c_str());
     }
     if (!data.sourceAddress.empty()) {
         config.setString("sourceAddress",data.sourceAddress.c_str());

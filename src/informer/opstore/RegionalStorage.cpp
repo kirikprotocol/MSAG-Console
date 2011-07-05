@@ -200,7 +200,7 @@ public:
                 msg.retryCount = 1;
             }
             msg.subscriber = fb.get64();
-            msg.userData = fb.getCString();
+            msg.msgUserData = fb.getCString();
             if ( version >= 2 ) {
                 MessageFlags(fb.getCString()).swap(msg.flags);
             } else if ( version != 1 ) {
@@ -1443,8 +1443,10 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                 Message& msg = i->msg;
                 uint8_t stateVersion = version;
                 if (msg.text.isUnique()) {
-                    buf.setSize(100 + strlen(msg.text.getText()));
+                    buf.setSize(200 + strlen(msg.text.getText()) + msg.msgUserData.size());
                     stateVersion |= 0x80;
+                } else {
+                    buf.setSize(200 + msg.msgUserData.size());
                 }
                 ToBuf tb(buf.get(),buf.getSize());
                 tb.skip(LENSIZE);
@@ -1454,7 +1456,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                 tb.set32(msg.timeLeft);
                 tb.set16(msg.retryCount);
                 tb.set64(msg.subscriber);
-                tb.setCString(msg.userData.c_str());
+                tb.setCString(msg.msgUserData.c_str());
                 tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
                 if (stateVersion & 0x80) {
                     tb.setCString(msg.text.getText());

@@ -1,4 +1,6 @@
 2011-07-05 13:59 bukind
+  feature: variable size of msg.userData + check chars in userData
+2011-07-05 13:59 bukind
   feature: snmp traps on PVSS (dis)connect, SMSC first failure to connect
 2011-07-05 13:10 bukind
   feature: added a number of new/sent SMS in msg.log

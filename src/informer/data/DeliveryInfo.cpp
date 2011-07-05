@@ -449,9 +449,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         throw InfosmeException(EXC_BADNAME,"D=%u too long name '%s'",
                                dlvId_, data.name.c_str());
     }
-    if ( data.userData.size() >= DLV_USERDATA_LENGTH ) {
+    if ( data.dlvUserData.size() >= DLV_USERDATA_LENGTH ) {
         throw InfosmeException(EXC_BADNAME,"D=%u too long userdata '%s'",
-                               dlvId_, data.userData.c_str());
+                               dlvId_, data.dlvUserData.c_str());
     }
 
     smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);

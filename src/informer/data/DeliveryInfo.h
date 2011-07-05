@@ -44,7 +44,7 @@ struct DeliveryInfoData
   std::string retryPolicy;
   bool replaceMessage;
   std::string svcType;
-  std::string userData;
+  std::string dlvUserData;
   std::string sourceAddress;
   bool finalDlvRecords;
   bool finalMsgRecords;
@@ -173,7 +173,7 @@ public:
     // const char* getUserData() const { return data_.userData.c_str(); }
     void getUserData( std::string& userData ) const {
         smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
-        userData = data_.userData;
+        userData = data_.dlvUserData;
     }
 
     void getSourceAddress( smsc::sms::Address& oa ) const {

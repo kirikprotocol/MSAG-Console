@@ -699,7 +699,7 @@ void InfosmeCoreV1::selfTest()
             data.retryPolicy = "1s:*";
             data.replaceMessage = false;
             data.svcType = "info";
-            data.userData = "0xdeadbeef";
+            data.dlvUserData = "0xdeadbeef";
             data.sourceAddress = "10000";
             data.finalDlvRecords = true;
             data.finalMsgRecords = true;
@@ -752,7 +752,7 @@ void InfosmeCoreV1::selfTest()
                     mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
                     char userdata[30];
                     sprintf(userdata,"msg#%d",i);
-                    mlk.msg.userData = userdata;
+                    mlk.msg.msgUserData = userdata;
                     if ( i / 10 % 2 ) {
                         char msgtext[50];
                         sprintf(msgtext,"русский текст #%u",i);
