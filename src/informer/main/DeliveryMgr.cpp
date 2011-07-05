@@ -439,6 +439,8 @@ public:
                 DeliveryInfo::IncStat* is = &dis;
                 do {
                     DeliveryStats& ds = is->stats;
+                    // clean up proc to be able to use isEmpty()
+                    ds.procMessages = 0;
                     if ( ds.isEmpty() ) {
                         is = is->next;
                         continue; 
