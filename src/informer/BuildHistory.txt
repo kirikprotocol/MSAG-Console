@@ -1,3 +1,5 @@
+2011-07-05 13:10 bukind
+  feature: added a number of new/sent SMS in msg.log
 2011-07-05 12:59 bukind
   feature: writing SENT records into activity.log
 2011-07-05 11:55 bukind

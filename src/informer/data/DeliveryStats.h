@@ -121,10 +121,13 @@ struct DeliveryAggregationStats : public DeliveryStats
 {
 public:
     uint32_t   retryMessages;
+    uint32_t   newSms;
+    uint32_t   sentSms;
 
     void clear() {
-        retryMessages = 0;
-        DeliveryStats::clear();
+        memset(this,0,sizeof(*this));
+        // retryMessages = 0;
+        // DeliveryStats::clear();
     }
 
     bool isEmpty() const {
@@ -137,6 +140,10 @@ public:
             retryMessages += value;
         } else {
             DeliveryStats::incStat(state,value,smsValue);
+            if (smsValue>0) {
+                if (state == MSGSTATE_SENT) { sentSms += smsValue; }
+                else if ( state == MSGSTATE_INPUT ) { newSms += smsValue; }
+            }
         }
     }
 };

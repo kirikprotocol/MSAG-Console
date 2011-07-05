@@ -446,12 +446,12 @@ public:
                         fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
                         fg.seek(0,SEEK_END);
                         if (fg.getPos() == 0) {
-                            const char* header = "#3 MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID,RETRY\n";
+                            const char* header = "#3 MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID,RETRY,SMSNEW,SMSSENT\n";
                             fg.write(header,strlen(header));
                         }
                     }
 
-                    char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s,%u\n",
+                    char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%u\n",
                                                dlvId, userId.c_str(),
                                                ds.totalMessages,
                                                ds.sentMessages,
@@ -464,7 +464,9 @@ public:
                                                ds.killedMessages,
                                                is->regionId,
                                                is->smscId.c_str(),
-                                               ds.retryMessages );
+                                               ds.retryMessages,
+                                               ds.newSms,
+                                               ds.sentSms );
                     fg.write(buf,p-buf);
                     is = is->next;
                 } while ( is );
