@@ -1,3 +1,5 @@
+2011-07-05 11:55 bukind
+  feature: added a number of retries in msg.log
 2011-07-05 10:33 bukind
   bugfix: switching ACTIVE->PAUSED when there are no regions in opstore at start
 2011-07-05 09:36 bukind

@@ -57,7 +57,7 @@ class DeliveryInfo
 public:
     struct IncStat {
         smsc::core::buffers::FixedLengthString< SMSC_ID_LENGTH > smscId;
-        DeliveryStats stats;
+        DeliveryAggregationStats stats;
         regionid_type regionId;
         IncStat*      next;
         IncStat() : next(0) {}

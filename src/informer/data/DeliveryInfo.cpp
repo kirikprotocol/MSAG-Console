@@ -86,8 +86,6 @@ isOldActLog_(false)
 
     // stats
     stats_.clear();
-    // incstats_[0].clear();
-    // incstats_[1].clear();
     readStats();
 
     glossary_.init(dlvId);

@@ -29,7 +29,8 @@ public:
         memset(this,0,sizeof(*this));
     }
 
-    int32_t getRetryMessagesCount() const {
+    /// calculate retry messages count
+    int32_t calcRetryMessagesCount() const {
         return totalMessages - 
             newMessages - procMessages - sentMessages - dlvdMessages -
             failedMessages - expiredMessages - killedMessages;
@@ -50,9 +51,9 @@ public:
             dlvdMessages == 0 &&
             failedMessages == 0 &&
             expiredMessages == 0 &&
-            dlvdSms == 0 &&
-            failedSms == 0 &&
-            expiredSms == 0 &&
+            // dlvdSms == 0 &&         // they will be 0 if corr. messages fields are 0
+            // failedSms == 0 &&
+            // expiredSms == 0 &&
             killedMessages == 0;
     }
 
@@ -114,6 +115,33 @@ public:
         }
     }
 };
+
+
+struct DeliveryAggregationStats : public DeliveryStats
+{
+public:
+    uint32_t   retryMessages;
+
+    void clear() {
+        retryMessages = 0;
+        DeliveryStats::clear();
+    }
+
+    bool isEmpty() const {
+        return (retryMessages == 0 && DeliveryStats::isEmpty());
+    }
+
+    void incStat( uint8_t state, int value, int smsValue ) {
+        if (!value) return;
+        if (state == MSGSTATE_RETRY) {
+            retryMessages += value;
+        } else {
+            DeliveryStats::incStat(state,value,smsValue);
+        }
+    }
+};
+
+
 
 } // informer
 } // smsc

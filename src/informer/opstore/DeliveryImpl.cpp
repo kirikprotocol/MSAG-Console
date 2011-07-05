@@ -538,7 +538,6 @@ void DeliveryImpl::checkFinalize()
         if (ds.isFinished()) {
             smsc_log_debug(log_,"D=%u all messages are final, confirmed by stats", dlvId);
             setState(DLVSTATE_FINISHED);
-            // source_->getDlvActivator().setDeliveryState(dlvId,DLVSTATE_FINISHED,0);
         } else {
             smsc_log_warn(log_,"D=%u all messages are final, discrep by stats: tot=%u/dlv=%u/fail=%u/exp=%u/kill=%u",
                           dlvId,

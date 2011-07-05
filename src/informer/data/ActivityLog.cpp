@@ -105,7 +105,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 }
                 if (version<=2) {
                     // swapping new and retry messages
-                    ds.newMessages = ds.getRetryMessagesCount();
+                    ds.newMessages = ds.calcRetryMessagesCount();
                 }
                 statLineHasBeenRead = true;
                 ods = ds;

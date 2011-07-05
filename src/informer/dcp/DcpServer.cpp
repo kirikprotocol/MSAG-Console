@@ -596,7 +596,7 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
   respStats.setFailedMessage(ds.failedMessages);
   respStats.setNewMessages(ds.newMessages);
   respStats.setProcessMessage(ds.procMessages);
-  respStats.setRetriedMessages(ds.getRetryMessagesCount());
+  respStats.setRetriedMessages(ds.calcRetryMessagesCount());
   respStats.setSentMessages(ds.sentMessages);
 
   enqueueResp(resp,inmsg);

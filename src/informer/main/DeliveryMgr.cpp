@@ -329,18 +329,6 @@ public:
         // cleaning the statistics
         mgr_.cs_.flipStatBankIndex();
         mgr_.core_.initUserStats();
-        /*
-         * clearing statistics is not needed here
-        DeliveryStats ds;
-        MutexGuard mg(mgr_.mon_);
-        for ( DeliveryIList::iterator i = mgr_.deliveryList_.begin();
-              i != mgr_.deliveryList_.end(); ++i ) {
-            for ( regionid_type regId = anyRegionId;
-                  (regId = (*i)->popMsgStats(regId,ds)) != anyRegionId;
-                  ++regId ) {
-            }
-        }
-         */
         smsc_log_debug(log_,"stats dumper inited");
     }
 
@@ -438,7 +426,7 @@ public:
 
                 DeliveryInfo::IncStat* is = &dis;
                 do {
-                    DeliveryStats& ds = is->stats;
+                    DeliveryAggregationStats& ds = is->stats;
                     // clean up proc to be able to use isEmpty()
                     ds.procMessages = 0;
                     if ( ds.isEmpty() ) {
@@ -458,12 +446,12 @@ public:
                         fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
                         fg.seek(0,SEEK_END);
                         if (fg.getPos() == 0) {
-                            const char* header = "#2 MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID\n";
+                            const char* header = "#3 MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID,RETRY\n";
                             fg.write(header,strlen(header));
                         }
                     }
 
-                    char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s\n",
+                    char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s,%u\n",
                                                dlvId, userId.c_str(),
                                                ds.totalMessages,
                                                ds.sentMessages,
@@ -475,7 +463,8 @@ public:
                                                ds.expiredSms,
                                                ds.killedMessages,
                                                is->regionId,
-                                               is->smscId.c_str());
+                                               is->smscId.c_str(),
+                                               ds.retryMessages );
                     fg.write(buf,p-buf);
                     is = is->next;
                 } while ( is );
