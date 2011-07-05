@@ -436,27 +436,31 @@ public:
             DeliveryInfo& dinfo = dlv->getDlvInfo();
             while ( dinfo.popMsgStats(dis) ) {
 
-                if ( dis.stats.isEmpty() ) { continue; }
-
-                if (!fg.isOpened()) {
-                    // open file
-                    char fpath[200 + SMSC_ID_LENGTH];
-                    const unsigned dayhour = unsigned(ymd/10000);
-                    sprintf(fpath,"%04u.%02u.%02u/msg%02u.log",
-                            dayhour / 1000000,
-                            dayhour / 10000 % 100,
-                            dayhour / 100 % 100,
-                            dayhour % 100);
-                    fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
-                    fg.seek(0,SEEK_END);
-                    if (fg.getPos() == 0) {
-                        const char* header = "#2 MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID\n";
-                        fg.write(header,strlen(header));
-                    }
-                }
                 DeliveryInfo::IncStat* is = &dis;
                 do {
                     DeliveryStats& ds = is->stats;
+                    if ( ds.isEmpty() ) {
+                        is = is->next;
+                        continue; 
+                    }
+
+                    if (!fg.isOpened()) {
+                        // open file
+                        char fpath[200 + SMSC_ID_LENGTH];
+                        const unsigned dayhour = unsigned(ymd/10000);
+                        sprintf(fpath,"%04u.%02u.%02u/msg%02u.log",
+                                dayhour / 1000000,
+                                dayhour / 10000 % 100,
+                                dayhour / 100 % 100,
+                                dayhour % 100);
+                        fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
+                        fg.seek(0,SEEK_END);
+                        if (fg.getPos() == 0) {
+                            const char* header = "#2 MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID\n";
+                            fg.write(header,strlen(header));
+                        }
+                    }
+
                     char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s\n",
                                                dlvId, userId.c_str(),
                                                ds.totalMessages,

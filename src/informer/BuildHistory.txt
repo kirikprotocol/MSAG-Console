@@ -1,3 +1,5 @@
+2011-07-05 09:36 bukind
+  bugfix: empty records in msgXX.log
 2011-07-04 16:43 bukind
   feature: counting SENT for transactional messages (only for good ones)
 

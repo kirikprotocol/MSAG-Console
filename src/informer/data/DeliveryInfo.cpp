@@ -300,6 +300,7 @@ void DeliveryInfo::incMsgStats( const Region& region,
     stats_.incStat(state,value,smsValue);
     if (fromState) {stats_.incStat(fromState,-value,0);}
     // aggregation stats
+    if (value < 0) { return; }
     const unsigned idx = getCS()->getStatBankIndex();
     // search for the position in the map
     StatList& sm = statlist_[idx];
