@@ -1414,6 +1414,7 @@ int SmscSender::Execute()
 
 void SmscSender::connectLoop()
 {
+    bool isFirstAttempt = true;
     while ( !getCS()->isStopping() && !isStopping_) {
 
         const usectime_type startingConn = currentTimeMicro();
@@ -1438,6 +1439,15 @@ void SmscSender::connectLoop()
                 }
             } catch ( std::exception& e ) {
                 smsc_log_error(log_,"session connect exc: %s", e.what());
+            }
+            // cannot connect
+            if ( getCS()->getSnmp() && isFirstAttempt ) {
+                isFirstAttempt = false;
+                getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_CONNECT,
+                                              SnmpTrap::SEV_MINOR,
+                                              "SMSC",
+                                              smscId_.c_str(),
+                                              "cannot connect" );
             }
         }
         // connection failed, waiting

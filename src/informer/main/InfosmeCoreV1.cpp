@@ -227,6 +227,7 @@ alm_(0),
 snmp_(0),
 pvss_(0),
 pvssHandler_(0),
+pvssTrapSent_(false),
 trafficMon_(MTXWHEREAMI),
 trafficSpeed_(cs_.getLicenseLimit())
 {
@@ -423,6 +424,11 @@ void InfosmeCoreV1::init( bool archive )
                 std::auto_ptr<scag2::pvss::Protocol> 
                     pvssProto( new scag2::pvss::pvap::PvapProtocol );
                 
+                pvssId_ = pvssConfig->getHost();
+                char buf[20];
+                snprintf(buf,sizeof(buf),":%u",pvssConfig->getPort());
+                pvssId_ += buf;
+
                 pvssHandler_ = new PvssRespHandler(*this);
                 pvss_ = new scag2::pvss::core::client::ClientCore( pvssConfig.release(),
                                                                    pvssProto.release() );
@@ -1026,8 +1032,24 @@ void InfosmeCoreV1::startPvssCheck( PvssNotifyee& pn, Message& msg )
 
             if ( ! pvss_->canProcessRequest(&exc) ) {
                 MutexGuard mg(emon);
+                if (!pvssTrapSent_ && getCS()->getSnmp()) {
+                    pvssTrapSent_ = true;
+                    getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_CONNECT,
+                                                  SnmpTrap::SEV_MAJOR,
+                                                  "PVSS",
+                                                  pvssId_.c_str(),
+                                                  "not connected?" );
+                }
                 emon.wait(100);
                 continue;
+            } else if ( pvssTrapSent_ && getCS()->getSnmp() ) {
+                MutexGuard mg(emon);
+                pvssTrapSent_ = false;
+                getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_CONNECT,
+                                              SnmpTrap::SEV_CLEAR,
+                                              "PVSS",
+                                              pvssId_.c_str(),
+                                              "connection restored" );
             }
 
             char buf[30];

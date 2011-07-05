@@ -214,7 +214,9 @@ private:
     SnmpManager*                                  snmp_;         // owned
 
     scag2::pvss::core::client::Client*            pvss_;         // owned
+    std::string                                   pvssId_;
     PvssRespHandler*                              pvssHandler_;  // owned
+    bool                                          pvssTrapSent_;
 
     smsc::core::synchronization::EventMonitor     trafficMon_;
     SpeedControl<usectime_type,tuPerSec>          trafficSpeed_;
