@@ -1,3 +1,5 @@
+2011-07-06 09:53 bukind
+  feature: alm now returns SENT messages
 2011-07-05 13:59 bukind
   feature: variable size of msg.userData + check chars in userData
 2011-07-05 13:59 bukind

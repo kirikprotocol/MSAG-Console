@@ -169,7 +169,8 @@ inline dlvid_type getDeliveryChunkStart(dlvid_type dlvId) {
 /// @return pointer to trailing \0.
 char* makeDeliveryPath( char* buf, dlvid_type dlvId );
 
-/// check if name contains only good ascii characters
+/// check if name is not empty and contains only good ascii characters.
+/// allowed chars are: -.0123456789:; @A-Z _#^= a-z
 bool isGoodAsciiName( const char* str, char* badchar = 0 );
 
 } // informer

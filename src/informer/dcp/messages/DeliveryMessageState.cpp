@@ -7,11 +7,12 @@ namespace messages{
 
 const int8_t DeliveryMessageState::New;
 const int8_t DeliveryMessageState::Process;
-const int8_t DeliveryMessageState::Retry;
 const int8_t DeliveryMessageState::Delivered;
 const int8_t DeliveryMessageState::Failed;
 const int8_t DeliveryMessageState::Expired;
+const int8_t DeliveryMessageState::Retry;
 const int8_t DeliveryMessageState::Killed;
+const int8_t DeliveryMessageState::Sent;
 std::map<DeliveryMessageState::type,std::string> DeliveryMessageState::nameByValue;
 std::map<std::string,DeliveryMessageState::type> DeliveryMessageState::valueByName;
 DeliveryMessageState::StaticInitializer DeliveryMessageState::staticInitializer;

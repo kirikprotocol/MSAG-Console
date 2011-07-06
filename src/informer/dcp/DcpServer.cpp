@@ -1056,7 +1056,7 @@ void fillFilter(const MSG& inmsg,alm::ALMRequestFilter& filter)
   {
     VECLOOP(it,messages::DeliveryMessageState,inmsg.getStates())
     {
-      MsgState st;
+      MsgState st = MsgState(0);
       switch(it->getValue())
       {
         case messages::DeliveryMessageState::New:st=MSGSTATE_INPUT;break;
@@ -1064,9 +1064,11 @@ void fillFilter(const MSG& inmsg,alm::ALMRequestFilter& filter)
         case messages::DeliveryMessageState::Delivered:st=MSGSTATE_DELIVERED;break;
         case messages::DeliveryMessageState::Failed:st=MSGSTATE_FAILED;break;
         case messages::DeliveryMessageState::Expired:st=MSGSTATE_EXPIRED;break;
+        case messages::DeliveryMessageState::Retry:st=MSGSTATE_RETRY;break;
         case messages::DeliveryMessageState::Killed:st=MSGSTATE_KILLED;break;
+        case messages::DeliveryMessageState::Sent:st=MSGSTATE_SENT;break;
       }
-      filter.stateFilter.insert(st);
+      if (st != MsgState(0)) { filter.stateFilter.insert(st); }
     }
   }
   if(inmsg.hasMsisdnFilter())
@@ -1158,9 +1160,10 @@ bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t tim
         case MSGSTATE_INPUT:mi.setState(messages::DeliveryMessageState::New);break;
         case MSGSTATE_PROCESS:mi.setState(messages::DeliveryMessageState::Process);break;
         case MSGSTATE_DELIVERED:mi.setState(messages::DeliveryMessageState::Delivered);break;
+        case MSGSTATE_SENT:mi.setState(messages::DeliveryMessageState::Sent);break;
+        case MSGSTATE_RETRY:mi.setState(messages::DeliveryMessageState::Retry);break;
         case MSGSTATE_FAILED:mi.setState(messages::DeliveryMessageState::Failed);break;
         case MSGSTATE_EXPIRED:mi.setState(messages::DeliveryMessageState::Expired);break;
-        case MSGSTATE_RETRY:mi.setState(messages::DeliveryMessageState::Retry);break;
         case MSGSTATE_KILLED:mi.setState(messages::DeliveryMessageState::Killed);break;
         default:break;
       }

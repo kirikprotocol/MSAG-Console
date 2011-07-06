@@ -1047,26 +1047,26 @@ dlvid_type DeliveryMgr::getDeliveries( unsigned        count,
         DeliveryChunk* chunk = deliveryChunkList_->getNextChunk(startId);
         if (!chunk) {
             // no more chunks and deliveries
-            smsc_log_debug(log_,"no more chunks found for startId=%u",startId);
+            // smsc_log_debug(log_,"no more chunks found for startId=%u",startId);
             startId = 0;
             break;
         }
         
         // processing the chunk
-        smsc_log_debug(log_,"processing chunk for startId=%u",startId);
+        // smsc_log_debug(log_,"processing chunk for startId=%u",startId);
         while ( chunk->getNextDelivery(startId) ) {
             DeliveryImplPtr ptr;
-            smsc_log_debug(log_,"delivery D=%u marked in chunk",startId);
+            // smsc_log_debug(log_,"delivery D=%u marked in chunk",startId);
             if (getDelivery(startId,ptr)) {
                 if ( filter.filter(*ptr) ) {
-                    smsc_log_debug(log_,"delivery D=%u selected by filter",startId);
+                    // smsc_log_debug(log_,"delivery D=%u selected by filter",startId);
                     if (result) {
                         result->push_back(ptr);
                     }
                     if (count>0) {
                         if (!--count) {
                             ++startId;
-                            smsc_log_debug(log_,"count exhausted, nextId=%u",startId);
+                            // smsc_log_debug(log_,"count exhausted, nextId=%u",startId);
                             return startId;
                         }
                     }
@@ -1074,7 +1074,7 @@ dlvid_type DeliveryMgr::getDeliveries( unsigned        count,
             }
             ++startId;
             if ( currentTimeSeconds() >= endTime ) {
-                smsc_log_debug(log_,"timeout reached");
+                // smsc_log_debug(log_,"timeout reached");
                 return startId;
             }
         }

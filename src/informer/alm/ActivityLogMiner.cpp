@@ -293,11 +293,12 @@ bool ActivityLogMiner::parseRecord(Request* req, msgtime_type endTime,
     }
     if((req->filter.resultFields&rfState) || !req->filter.stateFilter.empty())
     {
-      MsgState state;
+      MsgState state = MsgState(0);
       switch(st)
       {
         case 'N': state=MSGSTATE_INPUT;break;
         case 'P': state=MSGSTATE_PROCESS;break;
+        case 'S': state=MSGSTATE_SENT;break;
         case 'R': state=MSGSTATE_RETRY;break;
         case 'D': state=MSGSTATE_DELIVERED;break;
         case 'F': state=MSGSTATE_FAILED;break;
