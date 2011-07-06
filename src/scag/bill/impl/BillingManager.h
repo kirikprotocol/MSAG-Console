@@ -115,8 +115,8 @@ public EwalletCallParams::TransactionRegistrator
     static const INPBilling             _protoDef; //Sms/USSd billing protocol definition
 
     std::auto_ptr<Socket>               socket;
-    smsc::inman::interaction::Connect   pipe;
     smsc::inman::interaction::PckBuffersPool_T<2048>  _pckPool;
+    smsc::inman::interaction::Connect   pipe;
 
     // ------------------------------------------------------------
     // -- PacketListenerIface interface methods:
