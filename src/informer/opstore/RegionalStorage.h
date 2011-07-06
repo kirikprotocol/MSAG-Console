@@ -114,7 +114,10 @@ public:
 
 
     /// notify transfer threads that they should be stopped.
-    void stopTransfer();
+    void stopTransfer() {
+        smsc::core::synchronization::MutexGuard mg(cacheMon_ MTXWHEREPOST);
+        doStopTransfer();
+    }
 
     /// rolling over the storage
     /// @return number of bytes written
@@ -133,6 +136,9 @@ public:
     void cancelOperativeStorage();
 
 protected:
+    // cacheMon_ must be locked
+    void doStopTransfer();
+
     /// invoked when upload task has finished.
     virtual void transferFinished( InputTransferTask* );
 
