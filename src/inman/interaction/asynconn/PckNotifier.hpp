@@ -32,7 +32,7 @@ public:
   static const unsigned   _MAX_IDENT_SZ = 32;
   static const TimeSlice  _dflt_ShutdownTmo; //300 millisecs
 
-  PckNotifier() : _iniThreads(1), _pckStore(NULL), _logger(NULL)
+  PckNotifier() : _iniThreads(1), _logger(NULL)
   {
     _logId[0] = 0;
   }
@@ -160,7 +160,6 @@ protected:
 
   /* - */
   uint16_t            _iniThreads;  //1 - by default
-  PckBuffersPoolAC *  _pckStore;
   EVTTaskPool         _taskPool;
   char                _logId[sizeof("%s.Ntfr") + _MAX_IDENT_SZ];
   Logger *            _logger;
