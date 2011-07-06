@@ -112,6 +112,7 @@ SocketListenerIface *
   newConn._grd->addListener(*this);
   if (newConn._grd->start()) {
     _connMap.insert(ConnectsMap::value_type(newConn._grd->getId(), newConn));
+    smsc_log_info(logger, "%s: registered %s", _logId, newConn._grd->logId());
     return newConn._grd.get();
   }
   smsc_log_fatal(logger, "%s: failed to start %s", _logId, newConn._grd->logId());
@@ -132,16 +133,21 @@ void ICSTcpServer::onConnectClosing(TcpServerIface & p_srv, unsigned conn_id)
     return;
 
   ConnectInfo rConn = it->second;
+
+  it->second._grd->removeListener(*this);
+  //Note: Connect object MUST not be destroyed inside this thread,
+  //so postpone its destruction.
+  _corpses.push_back(it->second._grd);
   _connMap.erase(it);
 
   if (rConn._protoId.empty()) { //no protocol was assigned
-    smsc_log_info(logger, "%s: unregistered Connect[%u], protocol <not assigned>",
-                  _logId, conn_id);
+    smsc_log_info(logger, "%s: unregistered %s, protocol <not assigned>",
+                  _logId, rConn._grd->logId());
     return;
   }
 
-  smsc_log_info(logger, "%s: unregistered Connect[%u], protocol %s",
-                _logId, conn_id, rConn._protoId.c_str());
+  smsc_log_info(logger, "%s: unregistered %s, protocol %s",
+                _logId, rConn._grd->logId(), rConn._protoId.c_str());
 
   //Check if registered services should be notified
   ProtocolsMap::iterator cit = _protoReg.find(rConn._protoId);
@@ -184,13 +190,14 @@ bool ICSTcpServer::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
                   _logId, conn_id);
     return true;
   }
-  ConnectInfo & rConn = it->second;
-  rConn._grd->removeListener(*this);
+
+  ConnectGuard  connGrd = it->second._grd;
+  connGrd->removeListener(*this);
 
   ProtocolsMap::iterator pIt;
   if (!detectProto(recv_pck, pIt)) {
-    smsc_log_warn(logger, "%s: unknown packet is received on Connect[%u]",
-                  _logId, conn_id);
+    smsc_log_warn(logger, "%s: unknown packet is received on %s",
+                  _logId, connGrd->logId());
     _tcpSrv.rlseConnectionNotify(conn_id, true);
     return true;
   }
@@ -200,18 +207,20 @@ bool ICSTcpServer::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
   ++(pIt->second._refs);
   {
     ReverseMutexGuard rGrd(_sync);
-    isAccepted = connSrv->setConnListener(rConn._grd);
+    isAccepted = connSrv->setConnListener(connGrd);
   }
   --(pIt->second._refs);
 
   if (!isAccepted) {
-    smsc_log_warn(logger, "%s: %s service provider denied Connect[%u]",
-                  _logId, connSrv->protoDef().ident().c_str(), conn_id);
+    smsc_log_warn(logger, "%s: %s service provider denied %s",
+                  _logId, connSrv->protoDef().ident().c_str(), connGrd->logId());
     _tcpSrv.rlseConnectionNotify(conn_id, true);
   } else {
-    rConn._protoId = connSrv->protoDef().ident();
-    smsc_log_info(logger, "%s: %s service provider accepted Connect[%u]",
-                  _logId, connSrv->protoDef().ident().c_str(), conn_id);
+    it = _connMap.find(conn_id); //NOTE: EOF event may be already in process
+    if (it != _connMap.end())
+      it->second._protoId = connSrv->protoDef().ident();
+    smsc_log_info(logger, "%s: %s service provider accepted %s",
+                  _logId, connSrv->protoDef().ident().c_str(), connGrd->logId());
   }
   return !isAccepted; //if ok, report packet to newly created connect listener
 }
