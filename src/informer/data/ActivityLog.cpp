@@ -326,31 +326,36 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     escapeText(buf, msg.text.getText(),strlen(msg.text.getText()));
     buf.Append("\"\n",2);
 
-    {
-        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
-        if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
-            createFile(currentTime,now);
+    try {
+
+        {
+            smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
+            if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
+                createFile(currentTime,now);
+            }
+
+            if ( currentTime < createTime_ ) {
+                // a fix for delayed write
+                smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
+                               getDlvId(), unsigned(createTime_ - currentTime));
+                ::memcpy(buf.get(),"00",2);
+            }
+            fg_.write(buf.get(),buf.GetPos());
+            dlvInfo_->incMsgStats(region,msg.state,1,fromState,nchunks);
         }
 
-        if ( currentTime < createTime_ ) {
-            // a fix for delayed write
-            smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
-                           getDlvId(), unsigned(createTime_ - currentTime));
-            ::memcpy(buf.get(),"00",2);
+        // writing final log
+        if ( msg.state >= MSGSTATE_FINAL &&
+             dlvInfo_->wantFinalMsgRecords() ) {
+            FinalLog::getFinalLog()->addMsgRecord(currentTime,
+                                                  getDlvId(),
+                                                  dlvInfo_->getUserInfo().getUserId(),
+                                                  msg,
+                                                  smppStatus,
+                                                  nchunks );
         }
-        fg_.write(buf.get(),buf.GetPos());
-        dlvInfo_->incMsgStats(region,msg.state,1,fromState,nchunks);
-    }
-
-    // writing final log
-    if ( msg.state >= MSGSTATE_FINAL &&
-         dlvInfo_->wantFinalMsgRecords() ) {
-        FinalLog::getFinalLog()->addMsgRecord(currentTime,
-                                              getDlvId(),
-                                              dlvInfo_->getUserInfo().getUserId(),
-                                              msg,
-                                              smppStatus,
-                                              nchunks );
+    } catch ( std::exception& e ) {
+        throw;
     }
 }
 

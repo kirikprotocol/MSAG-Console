@@ -50,7 +50,7 @@ void FileGuard::create( const char* fn, mode_t mode, bool mkdirs, bool truncate 
         } while (true);
 
         if (fd_==-1) {
-            throw ErrnoException(errno,"create('%s',mode=%o,mkdirs=%d,trunc=%d)",fn,mode,mkdirs,truncate);
+            throw FileWriteException(errno,"create('%s',mode=%o,mkdirs=%d,trunc=%d)",fn,mode,mkdirs,truncate);
         }
     }
 }
@@ -89,7 +89,7 @@ void FileGuard::write( const void* buf, size_t buflen, bool atomic )
     while (buflen>0) {
         ssize_t written = ::write(fd_,buf,buflen);
         if (written == -1) {
-            throw ErrnoException(errno,"write(buflen=%llu)",ulonglong(buflen));
+            throw FileWriteException(errno,"write(buflen=%llu)",ulonglong(buflen));
         }
         buflen -= written;
         pos_ += written;
@@ -171,13 +171,13 @@ void FileGuard::makedirs( const std::string& dir )
                 } else if ( errno == EEXIST ) {
                     // smsc_log_debug(log_,"directory '%s' already exist, ok",wk->c_str());
                 } else {
-                    throw ErrnoException(errno,"mkdir('%s')",wk->c_str());
+                    throw FileWriteException(errno,"mkdir('%s')",wk->c_str());
                 }
             } else {
                 throw ErrnoException(errno,"stat('%s')",wk->c_str());
             }
         } else if ( !S_ISDIR(dst.st_mode) ) {
-            throw InfosmeException(EXC_LOGICERROR,"path '%s' exist and not a dir",wk->c_str());
+            throw InfosmeException(EXC_LOGICERROR,"path '%s' exists and is not a dir",wk->c_str());
         }
     }
 }

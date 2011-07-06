@@ -33,7 +33,7 @@ size_t FileReader::readRecords( TmpBufBase<char>& buf,
             // EOF
             smsc_log_debug(log_,"EOF found");
             if (ptr < buf.getCurPtr()) {
-                throw FileDataException(fg_.getPos()-buf.getPos(),"file is garbled");
+                throw FileReadException(fg_.getPos()-buf.getPos(),"file is garbled");
             }
             break;
         }

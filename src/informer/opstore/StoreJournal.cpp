@@ -5,6 +5,7 @@
 #include "informer/io/HexDump.h"
 #include "informer/io/IOConverter.h"
 #include "informer/io/FileReader.h"
+#include "informer/snmp/SnmpManager.h"
 
 namespace {
 const unsigned LENSIZE = 2;
@@ -304,9 +305,16 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
         smsc_log_info(log_,"journal '%s' has been read, %u records",jpath.c_str(),unsigned(total));
         version_ = sjreader.version_;
         serial_ = sjreader.serial_;
-    } catch ( FileDataException& e ) {
-        smsc_log_warn(log_,"file '%s', exc: %s", jpath.c_str(), e.what());
+    } catch ( FileReadException& e ) {
+        smsc_log_error(log_,"file '%s', exc: %s", jpath.c_str(), e.what());
         // FIXME: the journal is corrupted, should we trunk the file?
+        if ( getCS()->getSnmp() ) {
+            getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                          SnmpTrap::SEV_MAJOR,
+                                          "opstore",
+                                          jpath.c_str(),
+                                          e.what() );
+        }
         throw;
     } catch ( std::exception& e ) {
         smsc_log_error(log_,"file '%s', exc: %s", jpath.c_str(), e.what());

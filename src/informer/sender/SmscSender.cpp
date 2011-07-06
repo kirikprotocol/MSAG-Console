@@ -260,9 +260,17 @@ protected:
             const size_t total = fileReader.readRecords(buf,sjreader);
             smsc_log_info(log_,"journal '%s' has been read, %u/%u total/unique records",jpath.c_str(),
                           unsigned(total), unsigned(sjreader.unique_) );
-        } catch ( FileDataException& e ) {
-            smsc_log_warn(log_,"file '%s', (FIXME) exc: %s", jpath.c_str(), e.what());
+        } catch ( FileReadException& e ) {
+            smsc_log_error(log_,"file '%s', (FIXME) exc: %s", jpath.c_str(), e.what());
             // FIXME: the smsc journal is corrupted, should we trunk the file?
+            if ( getCS()->getSnmp() ) {
+                getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                              SnmpTrap::SEV_MAJOR,
+                                              "smscjnl",
+                                              jpath.c_str(),
+                                              e.what() );
+            }
+            // FIXME: for now we do not throw
         } catch ( std::exception& e ) {
             smsc_log_error(log_,"file '%s', exc: %s", jpath.c_str(), e.what());
         }

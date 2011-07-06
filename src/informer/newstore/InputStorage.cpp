@@ -17,6 +17,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "system/status.h"
+#include "informer/snmp/SnmpManager.h"
 
 namespace {
 
@@ -477,6 +478,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
     MessageList msglist;
     TmpBuf<char,8192> buf;
     InputPvssNotifyee ipn;
+    std::string fname;
     while (reqCount>0) {
 
         try {
@@ -489,11 +491,18 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                     smsc_log_debug(log_,"R=%u/D=%u no more files to read", regId, getDlvId());
                     break;
                 }
-                const std::string fname = makeFilePath(regId,ro.rfn);
+                fname = makeFilePath(regId,ro.rfn);
                 // check if the file exists
                 struct stat st;
                 if ( -1 == stat( fname.c_str(), &st ) ) {
                     if (ro.roff != 0) {
+                        if (getCS()->getSnmp()) {
+                            getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                                          SnmpTrap::SEV_MAJOR,
+                                                          "newstore-item",
+                                                          fname.c_str(),
+                                                          "not found");
+                        }
                         throw InfosmeException(EXC_LOGICERROR,"R=%u/D=%u file '%s' has roff=%u, but is inaccessible",
                                                regId, getDlvId(), fname.c_str(), ro.roff);
                     }
@@ -505,8 +514,24 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                                        ro.rfn, ro.roff );
                         continue;
                     }
+                    if (getCS()->getSnmp()) {
+                        char errbuf[64];
+                        sprintf(errbuf,"file check problem errno=%d",errno);
+                        getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                                      SnmpTrap::SEV_MAJOR,
+                                                      "newstore-item",
+                                                      fname.c_str(),
+                                                      errbuf );
+                    }
                     throw ErrnoException(errno,"stat('%s')",fname.c_str());
                 } else if ( !S_ISREG(st.st_mode) ) {
+                    if (getCS()->getSnmp()) {
+                        getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                                      SnmpTrap::SEV_MAJOR,
+                                                      "newstore-item",
+                                                      fname.c_str(),
+                                                      "is not a file" );
+                    }
                     throw InfosmeException(EXC_LOGICERROR,"'%s' is not a file",fname.c_str());
                 }
                 smsc_log_debug(log_,"R=%u/D=%u trying to open new file '%s'",
@@ -531,10 +556,17 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                     ++ro.rfn;
                     ro.roff=0;
                 }
-            } catch ( FileDataException& e ) {
+            } catch ( FileReadException& e ) {
                 if (ro.rfn < ro.wfn) {
                     smsc_log_error(log_,"R=%u/D=%u RP=%u/%u intermediate file exc: %s",
                                    regId, getDlvId(), ro.rfn, ro.roff, e.what());
+                    if ( getCS()->getSnmp() ) {
+                        getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                                      SnmpTrap::SEV_MAJOR,
+                                                      "newstore-item",
+                                                      fname.c_str(),
+                                                      e.what() );
+                    }
                     throw;
                 }
                 smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u last record garbled, wait until write finish",

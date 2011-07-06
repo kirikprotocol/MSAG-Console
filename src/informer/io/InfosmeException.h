@@ -74,13 +74,29 @@ public:
         message += ": ";
         message += STRERROR(err,ebuf,sizeof(ebuf));
     }
+protected:
+    ErrnoException() {}
 };
 
 
-class FileDataException : public InfosmeException
+class FileWriteException : public ErrnoException
 {
 public:
-    FileDataException( size_t pos, const char* fmt, ... ) :
+    FileWriteException( int err, const char* fmt, ... )
+    {
+        code_ = EXC_SYSTEM;
+        SMSC_UTIL_EX_FILL(fmt);
+        char ebuf[100];
+        message += ": ";
+        message += STRERROR(err,ebuf,sizeof(ebuf));
+    }
+};
+
+
+class FileReadException : public InfosmeException
+{
+public:
+    FileReadException( size_t pos, const char* fmt, ... ) :
     pos_(pos)
     {
         code_ = EXC_BADFILE;
