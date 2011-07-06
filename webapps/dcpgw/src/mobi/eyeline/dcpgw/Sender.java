@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,9 +24,6 @@ public class Sender extends Thread{
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    // Use à lock to control the addition of messages in the queues.
-    private final ReentrantLock lock = new ReentrantLock();
-
     private DcpConnection connection;
     private String host;
     private int port;
@@ -36,7 +32,7 @@ public class Sender extends Thread{
 
     private int capacity;
 
-    private long timeout;
+    private long sending_timeout, waiting_timeout;
 
     private final Map<Integer, LinkedBlockingQueue<Message>> delivery_id_queue_map;
 
@@ -49,7 +45,7 @@ public class Sender extends Thread{
     private Map<LinkedBlockingQueue<Message>, ScheduledFuture> queue_task_map;
     private LinkedBlockingQueue<SendTask> sendTaskQueue;
 
-    public Sender(String host, int port, final String login, String password, int capacity, long timeout, SmppServer smppServer){
+    public Sender(String host, int port, final String login, String password, int capacity, long sending_timeout, long waiting_timeout, SmppServer smppServer){
         this.host = host;
         this.port = port;
         this.login = login;
@@ -57,7 +53,9 @@ public class Sender extends Thread{
 
         this.capacity = capacity;
 
-        this.timeout = timeout;
+        this.sending_timeout = sending_timeout;
+        this.waiting_timeout = waiting_timeout;
+
         this.smppServer = smppServer;
 
         delivery_id_queue_map = Collections.synchronizedMap(new HashMap<Integer, LinkedBlockingQueue<Message>>());
@@ -68,19 +66,23 @@ public class Sender extends Thread{
         sendTaskQueue = new LinkedBlockingQueue<SendTask>();
     }
 
-    public void addMessage(int delivery_id, long gId, mobi.eyeline.smpp.api.pdu.Message request){
+    public void addMessage(int delivery_id, long gId){
         log.debug("Try to put '"+gId+"' message to the "+delivery_id+"_queue ...");
+
+        boolean message_added_to_queue = false;
 
         LinkedBlockingQueue<Message> queue;
         synchronized (delivery_id_queue_map){
-            queue = delivery_id_queue_map.get(delivery_id);
-            if (queue == null){
-                log.debug(delivery_id+"_queue not found.");
+            if (delivery_id_queue_map.containsKey(delivery_id)){
+                queue = delivery_id_queue_map.get(delivery_id);
+            } else {
                 queue = new LinkedBlockingQueue<Message>(capacity);
                 delivery_id_queue_map.put(delivery_id, queue);
                 log.debug("Initialize new "+delivery_id+"_queue.");
             }
         }
+
+        mobi.eyeline.smpp.api.pdu.Message request = Manager.getInstance().getRequest(gId);
 
         Address smpp_destination_address = request.getDestinationAddress();
         String destination_address_str = smpp_destination_address.getAddress();
@@ -94,57 +96,70 @@ public class Sender extends Thread{
         informer_message.setProperty("gId", Long.toString(gId));
 
         synchronized (queue){
+
             try {
+
                 log.debug(delivery_id + "_queue size before putting new message " + queue.size() + ".");
-                queue.put(informer_message);
+                message_added_to_queue = queue.offer(informer_message, waiting_timeout, TimeUnit.MILLISECONDS);
                 log.debug("Successfully put "+gId+" message to "+delivery_id+"_queue.");
+
             } catch (InterruptedException e) {
                 log.error(e);
-                // todo ?
+
+                try {
+                    smppServer.send(request.getResponse(Status.SYSERR));
+                } catch (SmppException e1) {
+                    log.error(e1);
+                    // todo ?
+                }
+
             }
 
-            int size = queue.size();
-            log.debug(delivery_id+"_queue size has increased to "+size+".");
+            if (message_added_to_queue){
+                int size = queue.size();
+                log.debug(delivery_id+"_queue size has increased to "+size+".");
 
-            if (queue.size() == 1){
+                if (queue.size() == 1){
 
-                if (connection == null){
-                    try{
-                        log.debug("Try to create new dcp connection for user '"+login+"' ...");
-                        connection = new DcpConnection(host, port, login, password);
-                        log.debug("Successfully create new dcp connection for user '"+login+"'.");
-                    } catch (AdminException e) {
-                        log.error("Couldn't create new dcp connection for user '"+login+"'.",e);
-                        // todo ?
+                    if (connection == null){
+                        try{
+                            log.debug("Try to create new dcp connection for user '"+login+"' ...");
+                            connection = new DcpConnection(host, port, login, password);
+                            log.debug("Successfully create new dcp connection for user '"+login+"'.");
+                        } catch (AdminException e) {
+                            log.error("Couldn't create new dcp connection for user '"+login+"'.",e);
+                            // todo ?
+                        }
                     }
+
+                    SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
+                    ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, sending_timeout, TimeUnit.MILLISECONDS);
+                    queue_task_map.put(queue, scheduledFuture);
                 }
 
-                SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
-                ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, timeout, TimeUnit.MILLISECONDS);
-                queue_task_map.put(queue, scheduledFuture);
-            }
+                messages_requests_map.put(informer_message, request);
 
-            messages_requests_map.put(informer_message, request);
+                if (size == capacity) {
+                    ScheduledFuture scheduledFuture = queue_task_map.get(queue);
+                    scheduledFuture.cancel(true);
+                    queue_task_map.remove(queue);
 
-            if (size == capacity) {
-                ScheduledFuture scheduledFuture = queue_task_map.get(queue);
-                scheduledFuture.cancel(true);
-                queue_task_map.remove(queue);
+                    SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
+                    sendTaskQueue.add(sendTask);
 
-                SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
-                sendTaskQueue.add(sendTask);
+                    synchronized (this){
+                        log.debug("Try to notify all waited threads ...");
+                        notifyAll();
+                    }
+                    log.debug(delivery_id+"_queue is full, try to notify the waiting thread to add messages to informer's deliveries ...");
 
-                synchronized (this){
-                    log.debug("Try to notify all waited threads ...");
-                    notifyAll();
+                } else if (size < capacity) {
+                    log.debug(delivery_id+"_queue size "+size+" less than capacity "+capacity+", do nothing.");
+                } else if (size > capacity) {
+                    log.error(delivery_id+"_queue size '"+size+"' more than capacity '"+capacity+".");
                 }
-                log.debug(delivery_id+"_queue is full, try to notify the waiting thread to add messages to informer's deliveries ...");
-
-            } else if (size < capacity) {
-                log.debug(delivery_id+"_queue size "+size+" less than capacity "+capacity+", do nothing.");
-            } else if (size > capacity) {
-                log.error(delivery_id+"_queue size '"+size+"' more than capacity '"+capacity+".");
             }
+
         }
     }
 

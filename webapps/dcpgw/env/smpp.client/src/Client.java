@@ -101,7 +101,7 @@ public class Client extends Thread implements PDUListener {
                 client.handlePDU(submitSM);
             }
 
-            for(int i=5; i<10; i++){
+            /*for(int i=5; i<10; i++){
                 SubmitSM submitSM = new SubmitSM();
                 submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
                 submitSM.setConnectionName("env.client");
@@ -112,7 +112,7 @@ public class Client extends Thread implements PDUListener {
                 submitSM.setValidityPeriod(1000*validity_period);
                 logger.debug("Try send submitSM ...");
                 client.handlePDU(submitSM);
-            }
+            }*/
         } catch (SmppException e) {
             logger.error("", e);
         }

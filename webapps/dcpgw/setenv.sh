@@ -12,5 +12,6 @@ CLASSPATH=$CLASSPATH:lib/xercesImpl.jar
 CLASSPATH=$CLASSPATH:lib/org.eclipse.wst.xml.xpath2.processor_1.1.0.jar
 CLASSPATH=$CLASSPATH:lib/protogenfw.jar
 CLASSPATH=$CLASSPATH:lib/apm_utils.jar
+CLASSPATH=$CLASSPATH:lib/commons-io-2.0.1.jar
 
 #echo $CLASSPATH
