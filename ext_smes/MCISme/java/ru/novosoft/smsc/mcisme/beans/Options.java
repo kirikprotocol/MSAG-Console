@@ -40,6 +40,7 @@ public class Options extends MCISmeBean
   private boolean defaultWantNotifyMe = false;
   private boolean useWantNotifyPolicy = false;
   private boolean groupSmsByCallingAbonent = false;
+  private String schedDelay = "00:00:00";
 
 
 /*  public final static int NO_CONSTRAINT           = 0;
@@ -157,6 +158,7 @@ public class Options extends MCISmeBean
         unrespondedMessagesSleep = getConfig().getInt("MCISme.unrespondedMessagesSleep");
         outgoingSpeedMax = getConfig().getInt("MCISme.outgoingSpeedMax");
         responceWaitTime = getConfig().getString("MCISme.responceWaitTime");
+        schedDelay = getConfig().getString("MCISme.schedDelay");
         inputQueueSize = getConfig().getInt("MCISme.inputQueueSize");
         maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
@@ -344,6 +346,7 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
     getConfig().setInt   ("MCISme.outgoingSpeedMax", outgoingSpeedMax);
     getConfig().setString("MCISme.responceWaitTime", responceWaitTime);
+    getConfig().setString("MCISme.schedDelay", schedDelay);
     getConfig().setInt   ("MCISme.inputQueueSize", inputQueueSize);
     getConfig().setInt   ("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool  ("MCISme.forceInform", forceInform);
@@ -840,6 +843,12 @@ public class Options extends MCISmeBean
   }
   public void setResponceWaitTime(String responceWaitTime) {
     this.responceWaitTime = responceWaitTime;
+  }
+  public String getSchedDelay() {
+    return schedDelay;
+  }
+  public void setSchedDelay(String schedDelay) {
+    this.schedDelay = schedDelay;
   }
 
   public int getSmppThreadPoolMaxInt() {

@@ -144,6 +144,10 @@
   <th>Routes file location</th>
   <td><input class=txt name=routesFileLocation value="<%=StringEncoderDecoder.encode(bean.getRoutesFileLocation())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Schedule delay on alert notification</th>
+  <td><input class=txt name=schedDelay value="<%=StringEncoderDecoder.encode(bean.getSchedDelay())%>"></td>
+</tr>
 </table>
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.rr_settings")%></div>
 <table class=properties_list cellspacing=0 width="100%" <%rowN=0;%>>
