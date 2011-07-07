@@ -375,7 +375,7 @@ public:
         return siteQuery;
     }
     void setSiteQuery(const std::string& p) {
-        URLField = p;
+        siteQuery = p;
     }
     
     const std::string& getURLField() {
