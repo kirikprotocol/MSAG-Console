@@ -126,6 +126,13 @@ public:
     }
     ~FileReadException() throw() {}
 
+    FileReadException( const FileReadException& f, const char* newfn ) :
+    fn_(newfn), pos_(f.pos_)
+    {
+        code_ = f.code_;
+        message = f.message;
+    }
+
     inline const char* getFileName() const { return fn_.c_str(); }
     inline size_t getPos() const { return pos_; }
 
