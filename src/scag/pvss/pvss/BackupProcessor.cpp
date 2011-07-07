@@ -647,7 +647,12 @@ int BackupProcessor::BackupProcessingTask::Execute()
                     if ( -1 == rename((subdir + ".tmp").c_str(), subdir.c_str()) ) {
                         throw ErrnoException(errno,"rename(%s)",subdir.c_str());
                     }
-                    FileGuard::unlink( filename.c_str() );
+                    try {
+                        FileGuard::unlink( filename.c_str() );
+                    } catch ( std::exception& ) {
+                        smsc_log_warn(log_,"file %s has been copied but not removed",
+                                      nextFileName.c_str());
+                    }
                 }
             }
 
