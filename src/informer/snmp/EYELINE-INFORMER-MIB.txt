@@ -82,4 +82,16 @@
     "Notify about connections and disconnections"
     ::= { informerNotifications 1 }
 
+    -- 1.3.6.1.4.1.26757.4.0.2
+    -- trap is sent when a file IO error occured
+    -- category will be one of "opstore", "newstore", "newstore-item",
+    --   "smscjnl", "actlog"
+    -- alertId  will be the problematic filename/dirname
+    informerFileIOAlert NOTIFICATION-TYPE
+    OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
+    STATUS current
+    DESCRIPTION
+    "Notify about file IO problems"
+    ::= { informerNotifications 2 }
+
     END

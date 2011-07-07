@@ -7,6 +7,7 @@
 #include "informer/data/CommonSettings.h"
 #include "informer/data/FinalLog.h"
 #include "system/status.h"
+#include "informer/snmp/SnmpManager.h"
 
 using smsc::core::synchronization::MutexGuard;
 
@@ -365,6 +366,16 @@ public:
             }
             try {
                 dumpStats( msgtime_type(nextTime / 1000) );
+            } catch ( FileWriteException& e ) {
+                smsc_log_warn(log_,"stats dumper exc: fn='%s' %s",
+                              e.getFileName(),e.what());
+                if ( getCS()->getSnmp() ) {
+                    getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                                  SnmpTrap::SEV_MAJOR,
+                                                  "statdump",
+                                                  e.getFileName(),
+                                                  e.what() );
+                }
             } catch ( std::exception& e ) {
                 smsc_log_warn(log_,"stats dumper exc: %s",e.what());
             }

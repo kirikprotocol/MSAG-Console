@@ -58,6 +58,7 @@ public:
 
 private:
     void createFile( msgtime_type currentTime, struct tm& now );
+    void makeActLogPath( char* buf, const struct tm& now ) const;
 
 private:
     smsc::logger::Logger*              log_;

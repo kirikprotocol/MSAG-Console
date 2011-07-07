@@ -3,6 +3,7 @@
 #include "CommonSettings.h"
 #include "informer/io/TextEscaper.h"
 #include "informer/io/HexDump.h"
+#include "informer/snmp/SnmpManager.h"
 #include "UserInfo.h"
 #include "FinalLog.h"
 #include "Region.h"
@@ -354,7 +355,14 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                                                   smppStatus,
                                                   nchunks );
         }
-    } catch ( std::exception& e ) {
+    } catch ( FileWriteException& e ) {
+        if ( getCS()->getSnmp() ) {
+            getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                          SnmpTrap::SEV_MAJOR,
+                                          "actlog",
+                                          e.getFileName(),
+                                          e.what() );
+        }
         throw;
     }
 }
@@ -376,23 +384,34 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
     if (!shift) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf delrec");
     }
-    {
-        smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
-        if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
-            createFile(currentTime,now);
-        }
+    try {
+        {
+            smsc::core::synchronization::MutexGuard mg(lock_ MTXWHEREPOST);
+            if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
+                createFile(currentTime,now);
+            }
 
-        if ( currentTime < createTime_ ) {
-            // a fix for delayed write
-            smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
-                           getDlvId(), unsigned(createTime_ - currentTime));
-            ::memcpy(buf,"00",2);
+            if ( currentTime < createTime_ ) {
+                // a fix for delayed write
+                smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
+                               getDlvId(), unsigned(createTime_ - currentTime));
+                ::memcpy(buf,"00",2);
+            }
+            for ( std::vector<msgid_type>::const_iterator i = msgIds.begin();
+                  i != msgIds.end(); ++i ) {
+                const int off = sprintf(buf+shift,"%llu,,,,,,,\n",ulonglong(*i));
+                fg_.write(buf,shift+off);
+            }
         }
-        for ( std::vector<msgid_type>::const_iterator i = msgIds.begin();
-              i != msgIds.end(); ++i ) {
-            const int off = sprintf(buf+shift,"%llu,,,,,,,\n",ulonglong(*i));
-            fg_.write(buf,shift+off);
+    } catch ( FileWriteException& e ) {
+        if ( getCS()->getSnmp() ) {
+            getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                          SnmpTrap::SEV_MAJOR,
+                                          "actlog",
+                                          e.getFileName(),
+                                          e.what() );
         }
+        throw;
     }
 }
 
@@ -409,10 +428,7 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
     char fnbuf[100];
     const int oldmin = now.tm_min;
     now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
-    sprintf(makeDeliveryPath(fnbuf,getDlvId()),
-            "activity_log/%04u.%02u.%02u/%02u/%02u.log",
-            now.tm_year+1900, now.tm_mon+1, now.tm_mday,
-            now.tm_hour, now.tm_min );
+    makeActLogPath(fnbuf,now);
     fg_.create((getCS()->getStorePath()+fnbuf).c_str(),
                0666, true );
     createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
@@ -442,6 +458,16 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
         }
         fg_.write(headbuf,size_t(headlen));
     }
+}
+
+
+void ActivityLog::makeActLogPath( char* fnbuf, const struct tm& now ) const
+{
+    const int tm_min = ((now.tm_min*60) / period_) * period_ / 60;
+    sprintf(makeDeliveryPath(fnbuf,getDlvId()),
+            "activity_log/%04u.%02u.%02u/%02u/%02u.log",
+            now.tm_year+1900, now.tm_mon+1, now.tm_mday,
+            now.tm_hour, tm_min );
 }
 
 

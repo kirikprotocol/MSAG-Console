@@ -18,7 +18,7 @@ void FileGuard::ropen( const char* fn )
         smsc_log_debug(log_,"ropen %s",fn);
         fd_ = open(fn,O_RDONLY);
         if (fd_==-1) {
-            throw ErrnoException(errno,"ropen('%s')",fn);
+            throw FileReadException(fn,errno,0,"ropen");
         }
     }
 }
@@ -50,7 +50,7 @@ void FileGuard::create( const char* fn, mode_t mode, bool mkdirs, bool truncate 
         } while (true);
 
         if (fd_==-1) {
-            throw FileWriteException(errno,"create('%s',mode=%o,mkdirs=%d,trunc=%d)",fn,mode,mkdirs,truncate);
+            throw FileWriteException(fn,errno,"create(mode=%o,mkdirs=%d,trunc=%d)",mode,mkdirs,truncate);
         }
     }
 }
@@ -75,7 +75,7 @@ const struct stat& FileGuard::getStat( struct stat& st ) const
         throw InfosmeException(EXC_LOGICERROR,"stat failed: file is not opened");
     }
     if (-1 == fstat(fd_,&st)) {
-        throw ErrnoException(errno,"fstat");
+        throw FileReadException(fn_.c_str(),errno,0,"fstat");
     }
     return st;
 }
@@ -89,8 +89,9 @@ void FileGuard::write( const void* buf, size_t buflen, bool atomic )
     while (buflen>0) {
         ssize_t written = ::write(fd_,buf,buflen);
         if (written == -1) {
-            throw FileWriteException(errno,"write(buflen=%llu)",ulonglong(buflen));
+            throw FileWriteException(fn_.c_str(),errno,"write");
         }
+        buf = static_cast<const uint8_t*>(buf) + written;
         buflen -= written;
         pos_ += written;
         if (atomic && buflen>0) {
@@ -112,7 +113,7 @@ size_t FileGuard::read( void* buf, size_t buflen )
         ssize_t readlen = ::read(fd_,buf,buflen);
         if (readlen==0) break; // EOF
         else if (readlen==-1) {
-            throw ErrnoException(errno,"read(buflen=%llu)",ulonglong(buflen));
+            throw FileReadException(fn_.c_str(),errno,pos_,"read");
         }
         pos_ += readlen;
         wasread += readlen;
@@ -171,7 +172,7 @@ void FileGuard::makedirs( const std::string& dir )
                 } else if ( errno == EEXIST ) {
                     // smsc_log_debug(log_,"directory '%s' already exist, ok",wk->c_str());
                 } else {
-                    throw FileWriteException(errno,"mkdir('%s')",wk->c_str());
+                    throw FileWriteException(wk->c_str(),errno,"mkdir");
                 }
             } else {
                 throw ErrnoException(errno,"stat('%s')",wk->c_str());
@@ -289,7 +290,7 @@ void FileGuard::truncate( size_t pos )
 {
     if (fd_!=-1) {
         if (-1 == ftruncate(fd_,pos)) {
-            throw ErrnoException(errno,"truncate(pos=%llu)", ulonglong(pos));
+            throw FileWriteException(fn_.c_str(),errno,"truncate(pos=%llu)",ulonglong(pos));
         }
     }
 }

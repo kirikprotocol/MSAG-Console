@@ -54,6 +54,8 @@ public:
     {
         SMSC_UTIL_EX_FILL(fmt);
     }
+    ~InfosmeException() throw() {}
+
     ErrorCode getCode() const { return code_; }
 
 protected:
@@ -74,6 +76,7 @@ public:
         message += ": ";
         message += STRERROR(err,ebuf,sizeof(ebuf));
     }
+    ~ErrnoException() throw() {}
 protected:
     ErrnoException() {}
 };
@@ -82,7 +85,10 @@ protected:
 class FileWriteException : public ErrnoException
 {
 public:
-    FileWriteException( int err, const char* fmt, ... )
+    FileWriteException( const char* fn,
+                        int err, 
+                        const char* fmt, ... ) :
+    fn_(fn)
     {
         code_ = EXC_SYSTEM;
         SMSC_UTIL_EX_FILL(fmt);
@@ -90,25 +96,42 @@ public:
         message += ": ";
         message += STRERROR(err,ebuf,sizeof(ebuf));
     }
+    ~FileWriteException() throw() {}
+
+    inline const char* getFileName() const { return fn_.c_str(); }
+
+protected:
+    std::string fn_;
 };
 
 
-class FileReadException : public InfosmeException
+class FileReadException : public ErrnoException
 {
 public:
-    FileReadException( size_t pos, const char* fmt, ... ) :
-    pos_(pos)
+    // when file cannot be opened/found
+    FileReadException( const char* fn,
+                       int err, size_t pos,
+                       const char* fmt, ... ) :
+    fn_(fn), pos_(pos)
     {
-        code_ = EXC_BADFILE;
         SMSC_UTIL_EX_FILL(fmt);
-        char ebuf[30];
-        sprintf(ebuf," at %llu",static_cast<unsigned long long>(pos));
-        message += ebuf;
+        if ( err != 0 ) {
+            code_ = EXC_SYSTEM;
+            char ebuf[100];
+            message += ": ";
+            message += STRERROR(err,ebuf,sizeof(ebuf));
+        } else {
+            code_ = EXC_BADFILE;
+        }
     }
+    ~FileReadException() throw() {}
+
+    inline const char* getFileName() const { return fn_.c_str(); }
     inline size_t getPos() const { return pos_; }
 
 private:
-    size_t pos_;
+    std::string fn_;
+    size_t      pos_;
 };
 
 }

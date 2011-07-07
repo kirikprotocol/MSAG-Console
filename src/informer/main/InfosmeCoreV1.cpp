@@ -999,9 +999,21 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
     }
     if (dlv.getDlvInfo().wantFinalDlvRecords() &&
         (newState == DLVSTATE_FINISHED || newState == DLVSTATE_ACTIVE) ) {
-        FinalLog::getFinalLog()->addDlvRecord(currentTime,bs.dlvId,
-                                              dlv.getUserInfo().getUserId(),
-                                              newState );
+        try {
+            FinalLog::getFinalLog()->addDlvRecord(currentTime,
+                                                  bs.dlvId,
+                                                  dlv.getUserInfo().getUserId(),
+                                                  newState );
+        } catch ( FileWriteException& e ) {
+            smsc_log_error(log_,"final log exc fn='%s': %s",e.getFileName(),e.what());
+            if ( getCS()->getSnmp() ) {
+                getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_FILEIO,
+                                              SnmpTrap::SEV_MAJOR,
+                                              "finallog",
+                                              e.getFileName(),
+                                              e.what());
+            }
+        }
     }
     dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
     if ( bs.regIds.empty() ) return;

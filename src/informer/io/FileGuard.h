@@ -22,9 +22,9 @@ public:
         try {
             close();
         } catch ( std::exception& e ) {
-            smsc_log_error(log_,"exc at close: %s",e.what());
+            smsc_log_error(log_,"fn='%s' exc at close: %s",fn_.c_str(),e.what());
         } catch (...) {
-            smsc_log_error(log_,"exc at closing the file");
+            smsc_log_error(log_,"fn='%s' exc at closing the file",fn_.c_str());
         }
     }
 
@@ -32,9 +32,14 @@ public:
         return fd_ != -1;
     }
 
+    inline const char* getFileName() const {
+        return fn_.c_str();
+    }
+
     void swap( FileGuard& fg ) {
         std::swap(fd_,fg.fd_);
         std::swap(pos_,fg.pos_);
+        fn_.swap(fg.fn_);
     }
 
     void ropen( const char* fn );
@@ -62,7 +67,7 @@ public:
     void fsync() {
         if (fd_!=-1) {
             if ( 0 != ::fsync(fd_) ) {
-                throw ErrnoException(errno,"fsync fd=%d",fd_);
+                throw FileWriteException(fn_.c_str(),errno,"fsync");
             }
         }
     }
@@ -97,8 +102,9 @@ private:
     static smsc::logger::Logger* log_;
 
 private:
-    int    fd_;
-    size_t pos_;
+    std::string fn_;
+    int         fd_;
+    size_t      pos_;
 };
 
 } // informer
