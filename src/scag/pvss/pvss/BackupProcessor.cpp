@@ -18,7 +18,7 @@
 using eyeline::informer::makeDirListing;
 using eyeline::informer::InfosmeException;
 using eyeline::informer::ErrnoException;
-using eyeline::informer::FileDataException;
+using eyeline::informer::FileReadException;
 using eyeline::informer::FileGuard;
 using eyeline::informer::NoDotsNameFilter;
 using eyeline::informer::EXC_IOERROR;
@@ -598,15 +598,15 @@ int BackupProcessor::BackupProcessingTask::Execute()
                 BackupParser bp(processor_);
                 smsc_log_info(log_,"starting to process %s",nextFileName.c_str());
                 rfsr.read( filename.c_str(), &isStopping, &bp);
-            } catch ( FileDataException& e ) {
+            } catch ( FileReadException& e ) {
                 smsc_log_warn(log_,"file '%s' parsing exc at pos=%llu: %s",
                               filename.c_str(),
                               static_cast<unsigned long long>(e.getPos()),
                               e.what() );
                 if ( badFilePos == e.getPos() ) {
-                    throw FileDataException(e.getPos(),
-                                            "file '%s' persistent parsing exc: %s",
-                                            filename.c_str(), e.what());
+                    throw FileReadException(filename.c_str(),0,e.getPos(),
+                                            "persistent parsing exc: %s",
+                                            e.what());
                 }
                 badFilePos = e.getPos();
                 MutexGuard mg(mon_);

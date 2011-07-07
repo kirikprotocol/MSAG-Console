@@ -6,7 +6,7 @@
 #include "informer/io/TmpBuf.h"
 
 using eyeline::informer::InfosmeException;
-using eyeline::informer::FileDataException;
+using eyeline::informer::FileReadException;
 using eyeline::informer::FileGuard;
 using eyeline::informer::FileReader;
 using eyeline::informer::TmpBuf;
@@ -81,10 +81,10 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
         if ( pos != 0 ) {
             // it is a trailer
             if ( lines != linesRead ) {
-                throw FileDataException(filePos,"not matched: linesRead=%u lines=%u",
+                throw FileReadException("",0,filePos,"not matched: linesRead=%u lines=%u",
                                         linesRead, lines );
             } else if ( crcRead != crc32 ) {
-                throw FileDataException(filePos,"not matched: crcRead=%08x crc32=%08x",
+                throw FileReadException("",0,filePos,"not matched: crcRead=%08x crc32=%08x",
                                         crcRead, crc32 );
             }
             // get the next file name
@@ -92,7 +92,7 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
         }
     }
     if (cr!='\n') {
-        throw FileDataException(filePos,"not terminated by \\n");
+        throw FileReadException("",0,filePos,"not terminated by \\n");
     }
     if ( rp_ ) {
         rp_->parseRecord(buf,--buflen);
@@ -151,9 +151,13 @@ std::string RollingFileStreamReader::readNextFile( const char* fullName )
     while ( wasread > 0 ) {
         size_t reclen = rfr.readRecordLength(pos,ptr,wasread);
         if ( reclen > wasread ) {
-            throw FileDataException(pos,"file '%s' is garbled",fullName);
+            throw FileReadException(fullName,0,pos,"file is garbled");
         }
-        rfr.readRecordData(pos,ptr,reclen);
+        try {
+            rfr.readRecordData(pos,ptr,reclen);
+        } catch ( FileReadException& e ) {
+            throw FileReadException(e,fullName);
+        }
         wasread -= reclen;
         pos += reclen;
         ptr += reclen;
