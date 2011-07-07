@@ -2,14 +2,14 @@ TEMPLATE_PROPS=msag.properties.silverstone.philippines
 
 # Uncomment it to create usual build
 # Comment it to create date separated build (to track external installations)
-BUILD_DIR=/home/msag/distribs/upload.v2/msag/build
-WEBBUILD_DIR=/home/msag/distribs/upload.v2/msag/webbuild
+BUILD_DIR=/home/msag/distribs/upload.v2/pvss/build
+WEBBUILD_DIR=/home/msag/distribs/upload.v2/pvss/webbuild
 
 # Change it for building external installations
 # DISTR_DIR=/home/msag/distribs/msag
 # Change it for building updates for external installations
-DISTR_DIR=/home/msag/distribs/upload.v2/msag/distr
-WEBDISTR_DIR=/home/msag/distribs/upload.v2/msag/webdistr
+DISTR_DIR=/home/msag/distribs/upload.v2/pvss/distr
+WEBDISTR_DIR=/home/msag/distribs/upload.v2/pvss/webdistr
 
-SMSC_DIR=/home/msag/distribs/upload.v2/msag/build
+SMSC_DIR=/home/msag/distribs/upload.v2/pvss/build
 MAKE_ARGS=CXX=CC DEBUG=YES VERBOSE=NO TRACE=YES DISABLE_SMPP_CHECKS=YES UNICODE=YES MSAG_FAKE_STAT=NO MSAG_INMAN_BILL=NO LEAKTRACE=NO LOGGER_TIMED_CONFIG_RELOAD=NO USECOLORS=YES XTARGET="-m64 -xmodel=medium -Kpic" B64=YES SNMP=YES
