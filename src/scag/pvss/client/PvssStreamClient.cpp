@@ -16,6 +16,9 @@
 #include "PvssReader.h"
 #include "PvssWriter.h"
 
+
+using namespace smsc::core::synchronization;
+
 namespace {
 
 class PvssCmdDestroy : public scag2::pvss::PersCallInitiator

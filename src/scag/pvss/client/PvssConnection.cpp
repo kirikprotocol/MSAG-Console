@@ -4,6 +4,8 @@
 #include "scag/pvss/base/PersClientException.h"
 #include "PvssStreamClient.h"
 
+using namespace smsc::core::synchronization;
+
 namespace {
 using namespace scag2::pvss::client;
 using namespace scag2::util::storage;

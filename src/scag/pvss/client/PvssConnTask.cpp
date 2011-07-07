@@ -1,6 +1,8 @@
 #include "PvssConnTask.h"
 #include "PvssConnection.h"
 
+using namespace smsc::core::synchronization;
+
 namespace scag2 {
 namespace pvss {
 namespace client {

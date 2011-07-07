@@ -83,7 +83,7 @@ private:
     bool isStopping;
     smsc::logger::Logger* log_;
 
-    EventMonitor                    queueMonitor_;
+    smsc::core::synchronization::EventMonitor queueMonitor_;
     PersCall*                       headContext_;
     PersCall*                       tailContext_;
     unsigned                        callsCount_;
@@ -94,7 +94,7 @@ private:
     PvssConnector*                                connector_;
     smsc::core::buffers::Array< PvssConnection* > connections_; // owned
 
-    EventMonitor                    connMonitor_;
+    smsc::core::synchronization::EventMonitor  connMonitor_;
     smsc::core::buffers::Array< PvssConnection* > connected_;   // not owned
 };
 

@@ -18,6 +18,7 @@ using namespace scag2::pvss::core;
 using namespace scag2::pvss::flooder;
 using namespace scag2::pvss;
 using namespace scag2::exceptions;
+using namespace smsc::core::synchronization;
 
 smsc::core::synchronization::EventMonitor em;
 std::auto_ptr<FlooderStat> flooderStat;

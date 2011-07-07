@@ -18,7 +18,7 @@ void PvssReader::postProcess()
     if ( now - (lastCheck_ + pers_->timeout) <= 0 ) return;
     lastCheck_ = now;
     // cleanup sockets w/o events
-    MutexGuard mg(mon_);
+    smsc::core::synchronization::MutexGuard mg(mon_);
     for ( int i = 0; i < sockets_.Count(); ++i ) {
         PvssConnection* con = sockets_[i];
         if ( con->isConnected() ) con->dropExpiredCalls();

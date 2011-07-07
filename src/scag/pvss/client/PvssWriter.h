@@ -42,7 +42,7 @@ protected:
         if ( hasAvailable_ ) {
             pers_->waitForCalls(200);
         } else if ( ! pers_->async ) {
-            MutexGuard mg(mon_);
+            smsc::core::synchronization::MutexGuard mg(mon_);
             hasAvailable_ = false;
             for ( int i = 0; i < sockets_.Count(); ++i ) {
                 if ( ! sockets_[i]->isReading() ) {

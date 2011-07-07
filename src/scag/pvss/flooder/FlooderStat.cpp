@@ -4,6 +4,8 @@
 #include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/util/histo/HistoLogger.h"
 
+using namespace smsc::core::synchronization;
+
 namespace scag2 {
 namespace pvss {
 namespace flooder {

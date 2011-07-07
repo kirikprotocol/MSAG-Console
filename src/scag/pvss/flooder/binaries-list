@@ -11,23 +11,23 @@ scag/pvss_flooder   flooder  \
     -lscag-pvss-base \
     -lscag-pvss-data \
     -lscag-pvss-common \
+    -linformer-io \
     \
     -lscag-util-storage -lscag-util-singleton \
     -lscag-util-io \
     -lscag-util -lscag-exc \
     \
-    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
     -llicense-check \
-    -lcore-network $(SOCKETLIB) -lnsl \
+    -lcore-network $(SOCKETLIB) $(LIBNSL) \
     -lcore-threads \
     -lutil-mirrorfile \
     -lutil-config \
     -lutil-xml $(XERCES_LIB) \
-    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
     -lutil \
-    $(__LIBRARIES) \
+    $(__LIBRARIES) $(LIBICONV) \
     $(SSL_LIB) \
-    -lpthread -lrt -ldl
+    -lpthread $(LIBRT) -ldl
 
 scag/pvss-flooder2  flooder2 \
     -lscag-pvss-api-pvap \
@@ -37,18 +37,19 @@ scag/pvss-flooder2  flooder2 \
     -lscag-pvss-api-packets \
     -lscag-pvss-data \
     -lscag-pvss-common \
+    -linformer-io \
     -lscag-util-storage \
     -lscag-util-io \
     -lscag-util \
     -lutil-config \
     -lutil-xml $(XERCES_LIB) \
-    -lcore-network $(SOCKETLIB) -lnsl \
+    -lcore-network $(SOCKETLIB) $(LIBNSL) \
     -lcore-threads \
-    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
     -lutil \
-    $(__LIBRARIES) \
+    $(__LIBRARIES) $(LIBICONV) \
     $(SSL_LIB) \
-    -lpthread -lrt -ldl \
+    -lpthread $(LIBRT) -ldl \
     $(LIBMALLOC)
 
 scag/pvss-getProfile  testGetProfile \
@@ -58,14 +59,15 @@ scag/pvss-getProfile  testGetProfile \
     -lscag-pvss-api-packets \
     -lscag-pvss-data \
     -lscag-pvss-common \
+    -linformer-io \
     -lscag-util-io \
     -lscag-util-storage \
     -lscag-util \
-    -lcore-network $(SOCKETLIB) -lnsl \
+    -lcore-network $(SOCKETLIB) $(LIBNSL) \
     -lcore-threads \
-    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
     -lutil \
-    $(__LIBRARIES) \
+    $(__LIBRARIES) $(LIBICONV) \
     $(SSL_LIB) \
-    -lpthread -lrt -ldl \
+    -lpthread $(LIBRT) -ldl \
     $(LIBMALLOC)
