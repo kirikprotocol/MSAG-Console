@@ -315,7 +315,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     buf.setPos(off);
     buf.Append(msg.msgUserData.c_str(),msg.msgUserData.size());
     buf.Append(",",1);
-    off = buf.getPos();
+    off = int(buf.getPos());
     if ( ! msg.flags.isEmpty() ) {
         HexDump hd(false);
         off += int(hd.hexdumpsize(msg.flags.bufsize())) + 1;
