@@ -523,6 +523,11 @@ int BackupProcessor::BackupProcessingTask::Execute()
         } catch ( std::exception& e ) {
             smsc_log_warn(log_,"readNextFile exc: %s",e.what());
         }
+        if ( nextFileName.empty() ) {
+            smsc_log_info(log_,"next backup file is empty, so this is the first run");
+        } else {
+            smsc_log_info(log_,"next backup file found: %s", nextFileName.c_str());
+        }
 
         // then in the loop
 
@@ -591,6 +596,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
             RollingFileStreamReader rfsr;
             try {
                 BackupParser bp(processor_);
+                smsc_log_info(log_,"starting to process %s",nextFileName.c_str());
                 rfsr.read( filename.c_str(), &isStopping, &bp);
             } catch ( FileDataException& e ) {
                 smsc_log_warn(log_,"file '%s' parsing exc at pos=%llu: %s",
@@ -617,6 +623,9 @@ int BackupProcessor::BackupProcessingTask::Execute()
                 mon_.wait(failureSleep);
                 continue;
             }
+
+            smsc_log_info(log_,"file %s has been read, records=%u crc=%u",
+                          nextFileName.c_str(), rfsr.getLines(), rfsr.getCrc32() );
 
             // 5. move the file to journal dir
             {
