@@ -820,6 +820,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
 =================================================================================================================
 2011-07-07 15:06 bukind pvss-build-20110707
   pvss bugfix: backup processor logging
+2011-07-07 17:03 bukind
+  pvss feature: ignoring unlink errors after archiving is done in backup mode
 
 --- current fixes ---
 2011-07-04 15:04 bukind
