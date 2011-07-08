@@ -77,7 +77,6 @@ class SingleUserContentPContext implements ContentProviderContext {
     deliveryManager.forceActivatePlannedDeliveries();
   }
 
-  @Override
   public void pauseDelivery(String login, int deliveryId) throws AdminException {
     deliveryManager.pauseDelivery(login, "", deliveryId);
   }

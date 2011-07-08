@@ -36,8 +36,6 @@ public interface ContentProviderContext {
 
   void activateDelivery(String login,  int deliveryId) throws AdminException;
 
-  void pauseDelivery(String login, int deliveryId) throws AdminException;
-
   void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException;
 
   void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException;
