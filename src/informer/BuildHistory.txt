@@ -1,3 +1,5 @@
+=====================================================================
+2011-07-08 16:16 bukind informer-build-20110708
 2011-07-07 12:59 bukind
   feature: sending snmp alert on various fileio problems
 2011-07-06 17:30 bukind
@@ -5,7 +7,7 @@
 2011-07-06 10:39 bukind
   feature: make it possible to revive outdated dlv by moving enddate
 2011-07-06 09:53 bukind
-  feature: alm now returns SENT messages
+  feature: alm now returns SENT messages, dcp changed
 2011-07-05 13:59 bukind
   feature: variable size of msg.userData + check chars in userData
 2011-07-05 13:59 bukind
