@@ -35,6 +35,11 @@ static http_methods method_table[] = {
 
 #define METHOD_COUNT (int)(sizeof(method_table) / sizeof(method_table[0]))
 
+StatusCode HttpParser::parse(HttpContext& cx) {
+	unsigned int len = cx.unparsedLength();
+	return parse(cx.getUnparsed(), len, cx);
+}
+
 StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
 {
   char          *saved_buf = buf, *local_buf = buf;

@@ -34,11 +34,13 @@ void IOTask::killSocket(Socket *s) {
         multiplexer.remove(s);
 
     if ((flags & DEL_SITE_SOCK) && cx->site) {
+        cx->sslCloseConnection(cx->site);
 //        cx->site->Abort();
         delete cx->site;
         cx->site = NULL;
     }
     if ((flags & DEL_USER_SOCK) && cx->user) {
+        cx->sslCloseConnection(cx->user);
 //        cx->user->Abort();
         delete cx->user;
         cx->user = NULL;
@@ -176,6 +178,7 @@ int HttpReaderTask::Execute()
                 HttpContext *cx = HttpContext::getContext(s);
                 smsc_log_error(logger, "%p: %p failed", this, cx);
                 if (cx->action == FINALIZE_SOCKET) {
+                  cx->sslCloseConnection(s);
                   smsc_log_warn(logger, "%p: %p, socket %p finalization error", this, cx, s);
                   s->Abort();
                   cx->setDestiny(0, STAT_RESP | DEL_USER_SOCK);
@@ -189,6 +192,7 @@ int HttpReaderTask::Execute()
                 Socket *s = ready[i];
                 HttpContext *cx = HttpContext::getContext(s);
                 if (cx->action == FINALIZE_SOCKET) {
+                  cx->sslCloseConnection(s);
                   smsc_log_debug(logger, "%p: %p, finalize socket %p", this, cx, s);
                   deleteSocket(s, SHUT_WR);
                   smsc_log_debug(logger, "%p: %p, socket %p finalized", this, cx, s);
@@ -199,18 +203,44 @@ int HttpReaderTask::Execute()
                   removeSocket(s);
                   continue;
                 }
-                unsigned int unparsed_len;
-                int len;
-                unparsed_len = cx->loadUnparsed(buf);                
-                do
-                    len = s->Read(buf + unparsed_len, READER_BUF_SIZE - unparsed_len);
-                while (len == -1 && errno == EINTR);
 
+                int len;
+/*
+                unsigned int unparsed_len;
+                if ( cx->useHttps() ) {
+                	len = cx->sslReadMessage(s, buf, READER_BUF_SIZE);
+                    unparsed_len = cx->loadUnparsed(buf);
+                    unparsed_len = 0;
+                    smsc_log_debug(logger, "HTTPS data received. len=%d", len);
+                }
+                else {
+                    unparsed_len = cx->loadUnparsed(buf);
+					do
+						len = s->Read(buf + unparsed_len, READER_BUF_SIZE - unparsed_len);
+					while (len == -1 && errno == EINTR);
+                }
                 if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
-                    smsc_log_debug(logger, "%p: %p, data received. len=%d", this, cx, len);
+//                    smsc_log_debug(logger, "%p: %p, data received. len=%d", this, cx, len);
                     unparsed_len += len;
                     len = unparsed_len;
-                    switch (HttpParser::parse(buf, unparsed_len, *cx)) {
+*/
+                /*
+                 * to avoid of buffer buf overflow
+                 */
+                if ( cx->useHttps() ) {
+                	len = cx->sslReadMessage(s, buf, READER_BUF_SIZE);
+                    smsc_log_debug(logger, "HTTPS data received. len=%d", len);
+                }
+                else {
+                	do
+ 						len = s->Read(buf, READER_BUF_SIZE);
+ 					while (len == -1 && errno == EINTR);
+                 }
+                if (len > 0) {
+                	cx->appendUnparsed(buf, len);
+                }
+                if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
+                    switch (HttpParser::parse(*cx)) {
                     case OK:
                         removeSocket(s);
                         if (cx->action == READ_RESPONSE) {
@@ -235,7 +265,7 @@ int HttpReaderTask::Execute()
                         break;
                     case CONTINUE:
                         HttpContext::updateTimestamp(s, now);
-                        cx->saveUnparsed(buf + len - unparsed_len, unparsed_len);
+//                        cx->saveUnparsed(buf + len - unparsed_len, unparsed_len);
                     }
                 }
                 else {                    
@@ -351,43 +381,59 @@ int HttpWriterTask::Execute()
                 HttpContext *cx = HttpContext::getContext(s);
                 const char *data;
                 unsigned int size;
-                int written_size;
+                int written_size = 0;
 
-                if (cx->flags == 0) {
-                    // write headers
-                    const std::string &headers = cx->command->getMessageHeaders();
+            	if ( cx->useHttps() ) {
+					smsc_log_debug(logger, "HttpWriterTask::Execute HTTPS");
+					written_size = cx->sslWriteCommand(s);
+					smsc_log_debug(logger, "HttpWriterTask::Execute HTTPS written %d", written_size);
+					if (written_size <= 0) {
+						smsc_log_debug(logger, "HttpWriterTask::Execute HTTPS write error");
+						if (cx->action == SEND_REQUEST)
+							cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
+						else
+							cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);
+						error.Push(s);
+						continue;
+					}
+            	}
+            	else
+            	{
+					if (cx->flags == 0) {
+						// write headers
+						const std::string &headers = cx->command->getMessageHeaders();
 
-                    data = headers.data() + cx->position;
-                    size = headers.size() - cx->position;
-                }
-                else {
-                    // write content
-                    data = cx->command->getMessageContent(size);
-                    data += cx->position;
-                    size -= cx->position;
-                }
-                
-                written_size = 0;
-                if (size) {
-                    do {
-                        written_size = s->Write(data, size);
-                    } while (written_size == -1 && errno == EINTR);
-                    smsc_log_debug(logger, "written %d", written_size);
-                    if (written_size > 0) {
-                        cx->position += written_size;
-                        HttpContext::updateTimestamp(s, now);
-                    }
-                    else {
-                        smsc_log_error(logger, "%p: %p, write error", this, cx);
-                        if (cx->action == SEND_REQUEST)
-                            cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK); 
-                        else
-                            cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK); 
-                        error.Push(s);
-                        continue;
-                    }
-                }
-                
+						data = headers.data() + cx->position;
+						size = headers.size() - cx->position;
+					}
+					else {
+						// write content
+						data = cx->command->getMessageContent(size);
+						data += cx->position;
+						size -= cx->position;
+					}
+
+//					written_size = 0;
+					if (size) {
+						do {
+							written_size = s->Write(data, size);
+						} while (written_size == -1 && errno == EINTR);
+						smsc_log_debug(logger, "written %d", written_size);
+						if (written_size > 0) {
+							cx->position += written_size;
+							HttpContext::updateTimestamp(s, now);
+						}
+						else {
+							smsc_log_error(logger, "%p: %p, write error", this, cx);
+							if (cx->action == SEND_REQUEST)
+								cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
+							else
+								cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);
+							error.Push(s);
+							continue;
+						}
+					}
+            	}
                 if (cx->flags == 0)
                 {
                     if(cx->position >= cx->command->getMessageHeaders().size())

@@ -1,3 +1,21 @@
+08.07.2011 HTTPS protocol support added.
+new files: 
+base/Https.cpp
+base/Https.h
+changed files:
+base/HttpCommand.cpp
+base/HttpCommand2.h
+base/HttpContext.cpp
+base/HttpContext.h
+base/HttpParser.cpp
+base/HttpParser.h
+impl/HttpAcceptor.cpp
+impl/HttpAcceptor.h
+impl/HttpProcessor.cpp
+impl/IOTasks.cpp
+impl/Managers.cpp
+impl/Managers.h
+
 06.07.2006: Добавлен выбор и установка мест положения адресов абонентов и уср в запросе.
             Добавлены экшены для работы с куки.
 

@@ -27,11 +27,11 @@ int HttpAcceptor::Execute()
             break;
 
         if (!user_socket) {
-            smsc_log_error(logger, "failed to accept, error: %s", strerror(errno));
+            smsc_log_error(logger, "%s failed to accept, error: %s", taskName(), strerror(errno));
             break;
         }
-        HttpContext *cx = new HttpContext(user_socket);
-        smsc_log_info(logger, "accepted: context %p, socket %p", cx, user_socket);
+        HttpContext *cx = new HttpContext(user_socket, httpsOptions);
+        smsc_log_info(logger, "%s accepted: context %p, socket %p", taskName(), cx, user_socket);
         if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
           cx->action = SEND_RESPONSE;
           cx->createFakeResponse(503);
@@ -45,14 +45,14 @@ int HttpAcceptor::Execute()
     if (user_socket)
         delete user_socket;
 
-    smsc_log_debug(logger, "quit");
+    smsc_log_debug(logger, "%s quit", taskName());
 
     return isStopping == false;
 }
 
 const char* HttpAcceptor::taskName()
 {
-    return "HttpAcceptor";
+    return (httpsOptions == NULL) ? "HttpAcceptor" : "HttpsAcceptor";
 }
 
 void HttpAcceptor::shutdown()
@@ -64,21 +64,24 @@ void HttpAcceptor::shutdown()
     WaitFor();
 }
 
-void HttpAcceptor::init(const char *host, int port)
+void HttpAcceptor::init(const char *host, int port, HttpsOptions* options)
 {
     isStopping = false;
+    httpsOptions = options;
 
     logger = Logger::getInstance("http.acceptor");
 
     try {
         if (masterSocket.InitServer(host, port, 0, 0) == -1) {          
-            smsc_log_error(logger, "failed to init master socket");
+            smsc_log_error(logger, "%s failed to init master socket", taskName());
             throw Exception("Socket::InitServer() failed");
         }
+        smsc_log_info(logger, "%s masterSocket init: host %s, port %d", taskName(), host, port);
         if (masterSocket.StartServer() == -1) {
-            smsc_log_error(logger, "failed to start master socket");
+            smsc_log_error(logger, "%s failed to start master socket", taskName());
             throw Exception("Socket::StartServer() failed");
         }
+        smsc_log_info(logger, "%s masterSocket StartServer Ok", taskName());
     }
     catch(...) {
         throw;

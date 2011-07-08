@@ -5,16 +5,19 @@
 #include "core/network/Socket.hpp"
 #include "core/buffers/TmpBuf.hpp"
 #include "HttpCommand2.h"
+#include "logger/Logger.h"
+#include "Https.h"
+#include "openssl/ssl.h"
 
 #define DFLT_BUF_SIZE 32
+#define HTTP_CHUNK_SIZE 0x10000
 
-namespace scag2 {
-namespace transport {
-namespace http {
+namespace scag2 { namespace transport { namespace http {
 
 using smsc::core::network::Socket;
 using smsc::core::buffers::TmpBuf;
 using smsc::core::synchronization::Mutex;
+using smsc::logger::Logger;
 
 enum ActionID {
     NOP = -1,
@@ -29,6 +32,12 @@ enum ActionID {
     SEND_RESPONSE
 };
 
+/*
+ * HTTPS usage is defined
+ * for "user" part - on constructor, if HttpsOptions is not NULL
+ * for "site" part - later //TODO
+ */
+
 /* no virtual methods are allowed in HttpContext */
 class HttpContext 
 {
@@ -36,17 +45,7 @@ public:
     /* field 'next' must be always the first field */
     HttpContext *next;
 
-    HttpContext(Socket* userSocket) :
-    user(userSocket),
-    site(NULL),
-    command(NULL),
-    action(READ_REQUEST),
-    requestFailed(false),
-    unparsed(DFLT_BUF_SIZE)
-    {
-        setContext(user, this); 
-    }
-
+    HttpContext(Socket* userSocket, HttpsOptions* options=NULL);
     ~HttpContext();
 
     unsigned int loadUnparsed(char* buf) {
@@ -85,17 +84,16 @@ public:
     static time_t getTimestamp(Socket* s) {
         return (time_t)s->getData(TIMESTAMP);
     }
-    
-    TransactionContext &getTransactionContext() {
-        return trc;
-    }
-
     void setDestiny(int status, unsigned int flag) {
         result = status;
         this->flags = flag;
     }
     void nextAction() {
         action = actionNext[action];
+    }
+
+    TransactionContext &getTransactionContext() {
+        return trc;
     }
     void createFakeResponse(int status) {
         if (!(command && command->isResponse())) {
@@ -116,6 +114,22 @@ public:
         return *(HttpResponse *)command;
     }
 
+    int sslUserConnection(bool verify_client=false); //server mode connection
+    int sslSiteConnection(bool verify_client=false); //client mode connection
+    int sslCloseConnection(Socket* s);
+    int sslReadMessage(Socket* s, const char* readBuf, const size_t readBufSize);
+    int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
+    int sslWriteCommand(Socket* s);
+    bool useHttps(void) { return sslOptions!=NULL; }
+
+    //tmp for debug
+    int sslCheckShutdown(void) { return (userSsl) ? SSL_get_shutdown(userSsl) : 0; }
+    //for HttpReaderTask::Execute
+    char* getUnparsed(void) { return unparsed.get(); }
+    unsigned int unparsedLength() { return static_cast<unsigned int>(unparsed.GetPos()); }
+    void appendUnparsed(char* buf, unsigned int len) {
+        unparsed.Append(buf, len);
+    }
 
 public:
     Socket *user;
@@ -142,8 +156,18 @@ protected:
 
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;
+    Logger *logger;
+
+	HttpsOptions* sslOptions;
+    SSL*		userSsl;
+    SSL*		siteSsl;
+    SSL_CTX*	userContext;
+    SSL_CTX*	siteContext;
+    int sslCheckIoError(SSL* ssl, int ret);
+    void sslLogErrors(void);
+    SSL* sslCheckConnection(Socket* s);
+    void sslCertInfo(X509* cert);
 };
 
 }}}
-
 #endif // SCAG_TRANSPORT_HTTP_CONTEXT

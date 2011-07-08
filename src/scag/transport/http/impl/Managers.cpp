@@ -21,7 +21,8 @@ processor_(0),
 licenseCounter(10, 20),
 licenseFileCheckHour(0),
 licenseExpired(false),
-acceptor(*this)
+acceptor(*this),
+sslAcceptor(*this)
 {
     logger = Logger::getInstance("http.manager");
     lastLicenseExpTest = 0;
@@ -44,11 +45,16 @@ void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig
     scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
     acceptor.init(cfg.host.c_str(), cfg.port);
     smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
+    // todo: use config for httpsOptions fields sslAcceptor:port, httpsOptions:verify & certificates
+    httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT);
+    sslAcceptor.init(cfg.host.c_str(), cfg.port+1, &httpsOptions);
+    smsc_log_info(logger, "Https manager inited host=%s:%d", cfg.host.c_str(), cfg.port+1);
 }
 
 void HttpManagerImpl::shutdown()
 {
     acceptor.shutdown();
+    sslAcceptor.shutdown();
 
     while(1)
     {

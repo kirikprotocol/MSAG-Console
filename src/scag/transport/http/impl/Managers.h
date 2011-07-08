@@ -14,6 +14,7 @@
 #include "scag/re/base/LongCallContextBase.h"
 #include "util/timeslotcounter.hpp"
 #include "scag/transport/http/base/HttpManager.h"
+#include "scag/transport/http/base/Https.h"
 
 namespace scag2 {
 namespace transport {
@@ -246,9 +247,12 @@ public:
     int licenseFileCheckHour;
     bool licenseExpired;
 
+    HttpsOptions httpsOptions;
+
 protected:
     Logger *logger;
     HttpAcceptor acceptor;
+    HttpAcceptor sslAcceptor;
 };
 
 }}}
