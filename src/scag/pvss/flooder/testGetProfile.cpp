@@ -9,7 +9,7 @@
 
 void usage( const char* prog )
 {
-    std::fprintf(stderr,"Usage: %s HOST PORT [-a|-o|-s|-p|PROFKEY ...]\n",prog);
+    std::fprintf(stderr,"Usage: %s HOST PORT [-a|-o|-s|-p] PROFKEY ...\n",prog);
 }
 
 using namespace scag2::pvss;
@@ -54,6 +54,7 @@ int main( int argc, char** argv )
 
     // processing
     ScopeType scope = SCOPE_ABONENT;
+    int shellresult = 0;
     for ( char** p = argv+3; *p != 0; ++p ) {
         if ( strlen(*p) == 0 ) continue;
         if ( (*p)[0] == '-' && strlen(*p) == 2 ) {
@@ -90,14 +91,17 @@ int main( int argc, char** argv )
             resp = client->processRequestSync(req);
         } catch ( std::exception& e ) {
             smsc_log_warn(logmain,"exception: %s",e.what());
+            shellresult = 127;
             continue;
         }
         if ( ! resp.get() ) {
             smsc_log_warn(logmain,"response is NULL");
+            shellresult = 126;
             continue;
         }
         if ( resp->getStatus() != 0 ) {
             smsc_log_warn(logmain,"response has bad status: %u", resp->getStatus() );
+            shellresult = resp->getStatus();
             continue;
         }
         
@@ -111,7 +115,8 @@ int main( int argc, char** argv )
               ++i ) {
             std::printf("%s\n",(*i)->getVarName().c_str());
         }
+        shellresult = 0;
     }
     client->shutdown();
-    return 0;
+    return shellresult;
 }
