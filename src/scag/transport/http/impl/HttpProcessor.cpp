@@ -60,28 +60,23 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
     }
 
     inURLFields.assign(pos, end);
-    smsc_log_debug(logger, "parsePath: inURLFields=%s", inURLFields.c_str());
     if(findPlace("ADDR", rs, defInPlaces[PlacementKind::ADDR], cx, inURLFields)) {
-        smsc_log_debug(logger, "parsePath: abonent=%s", rs.c_str());
         cx.setAbonent(rs);
     }
     
-  i = 0;
-  if(findPlace("ROUTE_ID", rs, defInPlaces[PlacementKind::ROUTE_ID], cx, inURLFields))
-    i = atoi(rs.c_str());
+    i = 0;
+    if(findPlace("ROUTE_ID", rs, defInPlaces[PlacementKind::ROUTE_ID], cx, inURLFields))
+    	i = atoi(rs.c_str());
     
-  if(i > 0)    
-    cx.setRouteId(i);
-  else
-  {      
-      if(findPlace("SERVICE_ID", rs, defInPlaces[PlacementKind::SERVICE_ID], cx, inURLFields))
-          i = atoi(rs.c_str());
-      if(i > 0) cx.setServiceId(i);
-  }
-/*
-  if(findPlace("ADDR", rs, defInPlaces[PlacementKind::ADDR], cx, inURLFields))
-      cx.setAbonent(rs);
-*/
+    if(i > 0)
+    	cx.setRouteId(i);
+    else
+    {
+    	if(findPlace("SERVICE_ID", rs, defInPlaces[PlacementKind::SERVICE_ID], cx, inURLFields))
+    		i = atoi(rs.c_str());
+    	if(i > 0) cx.setServiceId(i);
+    }
+
   if(cx.getRouteId() <= 0 && cx.getServiceId() <= 0)
   {
       pos = end + 1;
@@ -90,7 +85,7 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
       {
         smsc_log_debug(logger, "No slash in path 1");
         return false;
-        }
+      }
 
       mid = strchr(pos, ':');
       if (mid && (mid < end)) {
@@ -142,9 +137,6 @@ void HttpProcessorImpl::clearPlaces(const PlacementArray& places, HttpRequest& r
 
 bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const PlacementArray& places, HttpRequest& request, std::string& url)
 {
-    smsc_log_debug(logger, "places[%d]", places.Count());
-    smsc_log_debug(logger, "places[%d] = %d \'%s\'", places.Count(), places[0].type, places[0].name.c_str());
-
     for(int i = 0; i < places.Count(); i++)
     {
         switch(places[i].type)
@@ -363,10 +355,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             request.setProviderId(r.provider_id);
 
             const std::string& s = request.getAbonent();
-            smsc_log_debug( logger, "Request address before: %s", request.getAddress().c_str());
             request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
-            smsc_log_debug( logger, "Request address  after: %s", request.getAddress().c_str());
-
         }
         else
         {
@@ -406,10 +395,6 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 registerEvent(stat::events::http::REQUEST_OK, request);
                 setFields(request, r);
                 if (logger->isDebugEnabled()) {
-                    smsc_log_debug( logger, "Request details: %s %s %s",
-                    		request.getSitePath().c_str(),
-                    		request.getSiteFileName().c_str(),
-                    		request.getURLField().c_str());
                   smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING:\n%s", request.serialize().c_str());
                   std::string params;
                   if (request.getPostParams(params)) {

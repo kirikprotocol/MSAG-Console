@@ -42,6 +42,7 @@ public:
     //unsigned int maxHeaderLength;
     std::string host;
     int port;
+    int portHttps;
 };
 
 }

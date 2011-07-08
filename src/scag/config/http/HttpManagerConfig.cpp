@@ -21,6 +21,7 @@ void HttpManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
         scagQueueLimit = cv.getInt("scagQueueLimit", NULL);
         connectionTimeout = cv.getInt("connectionTimeout", NULL);
         port = cv.getInt("port", NULL);
+        portHttps = cv.getInt("portHttps", NULL);
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){
@@ -39,7 +40,9 @@ bool HttpManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
             scagPoolSize != cv.getInt("scagPoolSize", NULL) ||
             scagQueueLimit != cv.getInt("scagQueueLimit", NULL) ||
             connectionTimeout != cv.getInt("connectionTimeout", NULL) ||
-            port != cv.getInt("port", NULL) || strcmp(host.c_str(), h.get());
+            port != cv.getInt("port", NULL) ||
+            portHttps != cv.getInt("portHttps", NULL) ||
+            strcmp(host.c_str(), h.get());
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){
