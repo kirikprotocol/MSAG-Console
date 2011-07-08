@@ -88,12 +88,12 @@ endif
 
 ifeq ($(CXX),CC)
 ifeq ($(SNMP),YES)
-SSL_LIB:=-lcrypto -lssl
+SSL_LIB:=-lssl -lcrypto
 else
-SSL_LIB:=$(SSL_LIB_DIR)/libcrypto.a $(SSL_LIB_DIR)/libssl.a
+SSL_LIB:=$(SSL_LIB_DIR)/libssl.a $(SSL_LIB_DIR)/libcrypto.a
 endif
 else
-SSL_LIB:=-lcrypto -lssl
+SSL_LIB:=-lssl -lcrypto
 endif
 
 XERCES_LIB:=-lxerces-c
