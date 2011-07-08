@@ -330,7 +330,7 @@ public class DataTable extends EyelineComponent {
           i++;
         }
       } catch (ModelException e) {
-        error = e; //todo?
+        error = e;
         throw new RuntimeException(e);
       }
       this.selected = selected;

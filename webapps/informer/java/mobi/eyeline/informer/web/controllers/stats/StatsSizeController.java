@@ -27,7 +27,7 @@ public class StatsSizeController extends DeliveryStatController  {
 
   private boolean loaded;
 
-  private boolean init;
+  private boolean init = true;
 
   private LoadListener loadListener;
 

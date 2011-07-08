@@ -30,7 +30,7 @@ public abstract class DeliveryStatController extends InformerController{
   protected DeliveryStatFilter filter;
   private AggregationType aggregation;
 
-  private boolean init;
+  private boolean init = true;
 
   private LoadListener loadListener;
 

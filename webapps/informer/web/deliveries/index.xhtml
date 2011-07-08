@@ -41,9 +41,9 @@
           </h:selectOneMenu>
 
           <h:outputText value="#{deliveryBundle.id}"/>
-          <tr:inputText columns="10" value="#{deliveries.idFilter}" simple="true">
-            <tr:validateLongRange minimum="0"/>
-          </tr:inputText>
+          <h:inputText value="#{deliveries.idFilter}" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.id}">
+            <f:validateLongRange minimum="0"/>
+          </h:inputText>
 
         </h:panelGrid>
       </eye:dataTableFilter>

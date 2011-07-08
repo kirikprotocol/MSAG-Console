@@ -41,9 +41,9 @@
               </h:selectOneMenu>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.error']}"/>
-              <tr:inputText id="errorCode" value="#{messages.msgFilter.errorCode}" simple="true">
-                <tr:validateLongRange minimum="0"/>
-              </tr:inputText>
+              <h:inputText id="errorCode" value="#{messages.msgFilter.errorCode}" converterMessage="#{msg['invalid_param_value']} #{msg['informer.deliveries.message.error']}">
+                <f:validateLongRange minimum="0"/>
+              </h:inputText>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.from_date']}"/>
               <eye:inputDate required="true" id="fromDate" value="#{messages.msgFilter.fromDate}" type="date" autocomplete="true"/>

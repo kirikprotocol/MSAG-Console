@@ -46,7 +46,7 @@ public class ErrorStatsController extends InformerController{
 
   private boolean loaded;
 
-  private boolean init = false;
+  private boolean init = true;
 
   private LoadListener loadListener;
 

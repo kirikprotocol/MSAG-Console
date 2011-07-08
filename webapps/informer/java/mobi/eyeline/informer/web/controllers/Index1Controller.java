@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.web.controllers;
 
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.web.components.data_table.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
@@ -162,7 +163,7 @@ public class Index1Controller extends InformerController{
     return null;
   }
 
-  public class MyDataTablePreloadableModel implements ModelWithObjectIds, PreloadableModel {
+  public class MyDataTablePreloadableModel implements ModelWithObjectIds {
 
     private final ArrayList<Integer> list;
 
@@ -177,9 +178,9 @@ public class Index1Controller extends InformerController{
 
     public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) throws ModelException{
 
-//      if(System.currentTimeMillis()%15 == 0) {
-//        throw new ModelException("internal.error");
-//      }
+      if(System.currentTimeMillis()%15 == 0) {
+        throw new ModelException(new DeliveryException("interaction_error").getMessage(locale));
+      }
       if (sortOrder != null && sortOrder.getColumnId().equals("mycolumn")) {
         Collections.sort(list, new Comparator<Integer>() {
 
@@ -202,21 +203,23 @@ public class Index1Controller extends InformerController{
 
     public int getRowsCount() throws ModelException{
 
-//      if(System.currentTimeMillis()%15 == 0) {
-//        throw new ModelException("internal.error");
-//      }
+      if(System.currentTimeMillis()%1 == 0) {
+        throw new ModelException("internal.error");
+      }
       return list.size();
     }
 
     public String getId(Object value) throws ModelException{
-//      if(System.currentTimeMillis()%15 == 0) {
-//        throw new ModelException("internal.error");
-//      }
+      if(System.currentTimeMillis()%1 == 0) {
+        throw new ModelException(new DeliveryException("interaction_error").getMessage(locale));
+      }
       return value != null ? value.toString() : null;
     }
 
-    @Override
-    public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) {
+    public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) throws ModelException {
+      if(System.currentTimeMillis()%1 == 0) {
+        throw new ModelException(new DeliveryException("interaction_error").getMessage(locale));
+      }
       LoadListener listener = null;
       if(!loaded) {
         if(loadListener == null) {
@@ -244,3 +247,9 @@ public class Index1Controller extends InformerController{
   }
 
 }
+   /*
+
+
+    <script type="text/javascript">var _locale='ru';var _tLocale='ru';</script><script type="text/javascript" src="/adf/jsLibs/resources/LocaleElements_ru1_2_13.js?loc=ru"></script>{"type":"error","data":"Сервис недоступен "}
+
+    */

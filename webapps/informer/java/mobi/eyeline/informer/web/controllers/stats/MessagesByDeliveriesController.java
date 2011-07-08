@@ -38,7 +38,7 @@ public class MessagesByDeliveriesController extends InformerController{
 
   private String nameFilter;
 
-  private boolean init;
+  private boolean init = true;
 
   private LoadListener loadListener;
 

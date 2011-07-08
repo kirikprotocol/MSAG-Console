@@ -13,8 +13,9 @@ public interface PreloadableModel extends DataTableModel {
    * @param count сколько записейц требуется загрузить
    * @param sortOrder сортировка записей (возможно null)
    * @return возвращает объект LoadListener, если процесс загрузки начался либо в процессе, null если данные уже загружены и могут быть показаны, используя метод {@link PreloadableModel#getRows(int, int, DataTableSortOrder)}
+   * @throws ModelException ошибка загрузки
    */
-  public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder);
+  public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) throws ModelException;
 
 
 }
