@@ -4,12 +4,14 @@
 #include "scag/pvss/api/core/client/impl/ClientCore.h"
 #include "scag/pvss/api/pvap/PvapProtocol.h"
 #include "scag/pvss/api/packets/ProfileRequest.h"
+#include "scag/pvss/api/packets/GetCommand.h"
+#include "scag/pvss/api/packets/GetResponse.h"
 #include "scag/pvss/api/packets/GetProfileCommand.h"
 #include "scag/pvss/api/packets/GetProfileResponse.h"
 
 void usage( const char* prog )
 {
-    std::fprintf(stderr,"Usage: %s HOST PORT [-a|-o|-s|-p] PROFKEY ...\n",prog);
+    std::fprintf(stderr,"Usage: %s HOST PORT [-a|-o|-s|-p] [-n PROPKEY] PROFKEY ...\n",prog);
 }
 
 using namespace scag2::pvss;
@@ -46,7 +48,7 @@ int main( int argc, char** argv )
         client->startup();
     } catch ( PvssException& e ) {
         smsc_log_error(logmain,"client startup exception: %s", e.what());
-        std::terminate();
+        return 125;
     }
 
     // waiting for connection
@@ -55,6 +57,7 @@ int main( int argc, char** argv )
     // processing
     ScopeType scope = SCOPE_ABONENT;
     int shellresult = 0;
+    std::string propertyName;
     for ( char** p = argv+3; *p != 0; ++p ) {
         if ( strlen(*p) == 0 ) continue;
         if ( (*p)[0] == '-' && strlen(*p) == 2 ) {
@@ -63,8 +66,21 @@ int main( int argc, char** argv )
             case 'o' : scope = SCOPE_OPERATOR; break;
             case 'p' : scope = SCOPE_PROVIDER; break;
             case 's' : scope = SCOPE_SERVICE; break;
+            case 'n' : {
+                // get property name
+                if ( !*++p ) {
+                    smsc_log_error(logmain,"property name is not supplied");
+                    return 124;
+                } else if ( ! strlen(*p) ) {
+                    smsc_log_error(logmain,"empty property name");
+                    return 124;
+                }
+                propertyName = *p;
+                continue;
+            }
             default : {
-                smsc_log_warn(logmain,"Unknown switch: %s",*p);
+                smsc_log_error(logmain,"Unknown switch: %s",*p);
+                return 123;
             }
             } // switch
             continue;
@@ -85,8 +101,20 @@ int main( int argc, char** argv )
             }
             }
         }
-        std::auto_ptr<Request> req(new ProfileRequest(pk,new GetProfileCommand()));
+
+        const bool hasProperty = !propertyName.empty();
+
+        std::auto_ptr<Request> req;
         std::auto_ptr<Response> resp;
+        if (hasProperty) {
+            std::auto_ptr<GetCommand> gcmd(new GetCommand());
+            gcmd->setVarName(propertyName);
+            req.reset(new ProfileRequest(pk,gcmd.release()));
+            propertyName = "";
+        } else {
+            req.reset(new ProfileRequest(pk,new GetProfileCommand()));
+        }
+
         try {
             resp = client->processRequestSync(req);
         } catch ( std::exception& e ) {
@@ -94,6 +122,7 @@ int main( int argc, char** argv )
             shellresult = 127;
             continue;
         }
+
         if ( ! resp.get() ) {
             smsc_log_warn(logmain,"response is NULL");
             shellresult = 126;
@@ -106,14 +135,22 @@ int main( int argc, char** argv )
         }
         
         const ProfileResponse* pr = static_cast<const ProfileResponse*>(resp.get());
-        const GetProfileResponse* gpr = static_cast<const GetProfileResponse*>(pr->getResponse());
-        std::printf("================================================\n"
-                    "profile %s is fetched, %u properties\n",
-                    pk.toString().c_str(),unsigned(gpr->getContent().size()));
-        for ( std::vector<GetProfileResponseComponent*>::const_iterator i = gpr->getContent().begin();
-              i != gpr->getContent().end();
-              ++i ) {
-            std::printf("%s\n",(*i)->getVarName().c_str());
+        if ( hasProperty ) {
+            const GetResponse* gpr = static_cast<const GetResponse*>(pr->getResponse());
+            std::printf("================================================\n"
+                        "profile %s\n"
+                        "%s\n",pk.toString().c_str(),
+                        gpr->getProperty().toString().c_str());
+        } else {
+            const GetProfileResponse* gpr = static_cast<const GetProfileResponse*>(pr->getResponse());
+            std::printf("================================================\n"
+                        "profile %s is fetched, %u properties\n",
+                        pk.toString().c_str(),unsigned(gpr->getContent().size()));
+            for ( std::vector<GetProfileResponseComponent*>::const_iterator i = gpr->getContent().begin();
+                  i != gpr->getContent().end();
+                  ++i ) {
+                std::printf("%s\n",(*i)->getVarName().c_str());
+            }
         }
         shellresult = 0;
     }
