@@ -206,60 +206,72 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     userSection.setString("organization",user.getOrganization());
     if(user.getCdrDestination() != null) {
       userSection.setString("cdrDestination",user.getCdrDestination());
+    }else {
+      userSection.removeParam("cdrDestination");
     }
     if(user.getCdrOriginator() != null) {
       userSection.setString("cdrOriginator",user.getCdrOriginator());
+    }else {
+      userSection.removeParam("cdrOriginator");
     }
-    if(user.isCreateCDR()) {
-      userSection.setBool("createCDR",true);
-    }
+    userSection.setBool("createCDR",user.isCreateCDR());
+
     if(user.getLocale()!=null) {
       userSection.setString("locale",user.getLocale().getLanguage());
+    }else {
+      userSection.removeParam("locale");
     }
     userSection.setInt("smsPerSec",user.getSmsPerSec());
     userSection.setString("sourceAddr",user.getSourceAddr().getSimpleAddress());
     if(user.getValidityPeriod() != null) {
       userSection.setString("validityPeriod",user.getValidityPeriod().getTimeString());
+    }else {
+      userSection.removeParam("validityPeriod");
     }
     if(user.getMessageTimeToLive() != null) {
       userSection.setString("messageTimeToLive",user.getMessageTimeToLive().getTimeString());
+    }else {
+      userSection.removeParam("messageTimeToLive");
     }
     userSection.setString("deliveryType",user.getDeliveryType().toString());
-    if(user.isTransactionMode())  {
-      userSection.setBool("transactionMode",true);
-    }
+
+    userSection.setBool("transactionMode",user.isTransactionMode());
+
     userSection.setBool("retryOnFail", user.isRetryOnFail());
-    if (user.getPolicyId() != null) {
+    if(user.getPolicyId() != null) {
       userSection.setString("policyId", user.getPolicyId());
+    }else {
+      userSection.removeParam("policyId");
     }
     if (user.getDeliveryStartTime() != null) {
       userSection.setString("deliveryStartTime", user.getDeliveryStartTime().getTimeString());
+    }else {
+      userSection.removeParam("deliveryStartTime");
     }
+
     if (user.getDeliveryEndTime() != null) {
       userSection.setString("deliveryEndTime", user.getDeliveryEndTime().getTimeString());
+    }else {
+      userSection.removeParam("deliveryEndTime");
     }
 
     userSection.addSection(createUserRolesSection(user));
 
-    if (!user.getDeliveryDays().isEmpty()) {
-      userSection.addSection(createDeliveryDaysSection(user));
-    }
+    userSection.addSection(createDeliveryDaysSection(user));
+
     userSection.setBool("useDataSm", user.isUseDataSm());
     userSection.setBool("allRegionsAllowed", user.isAllRegionsAllowed());
-    if (user.getRegions() != null && !user.getRegions().isEmpty()) {
-      userSection.addSection(createRegionsSection(user));
-    }
+
+    userSection.addSection(createRegionsSection(user));
 
     userSection.setInt("priority", user.getPriority());
-    if (user.isEmailNotification()) {
-      userSection.setBool("emailNotification", true);
-    }
-    if (user.isSmsNotification()) {
-      userSection.setBool("smsNotification", true);
-    }
-    if (user.isCreateArchive()) {
-      userSection.setBool("createArchive", true);
-    }
+
+    userSection.setBool("emailNotification", user.isEmailNotification());
+
+    userSection.setBool("smsNotification", user.isSmsNotification());
+
+    userSection.setBool("createArchive", user.isCreateArchive());
+
 
     userSection.setInt("deliveryLifetime", user.getDeliveryLifetime());
 
@@ -274,8 +286,10 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
   private XmlConfigSection createRegionsSection(User user) {
     XmlConfigSection regionsSection = new XmlConfigSection("REGIONS");
     List<Integer> regions = user.getRegions();
-    for (Integer region : regions) {
-      regionsSection.setBool(region.toString(), true);
+    if(regions != null) {
+      for (Integer region : regions) {
+        regionsSection.setBool(region.toString(), true);
+      }
     }
     return regionsSection;
   }
