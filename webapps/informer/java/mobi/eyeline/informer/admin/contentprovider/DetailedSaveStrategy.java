@@ -9,10 +9,7 @@ import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * author: Aleksandr Khalitov
@@ -74,115 +71,66 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     return name.substring(0, name.lastIndexOf(CSV_POSFIX)+CSV_POSFIX.length());
   }
 
-  private static String[] csvFilesFromWork(File[] inProcess) {
-    String[] csvFromInProcess = new String[inProcess.length];
-    int i=0;
-    for(File f : inProcess) {
-      csvFromInProcess[i] = csvFileFromWorkFile(f.getName());
-      i++;
+  private void downloadCsvFilesFromResource(FileResource resource) throws AdminException {
+    for (String remoteCsvFile : resource.listCSVFiles()) {
+      File localCsvFile = new File(localCopy, remoteCsvFile);
+      File localInProcessFile = new File(localCopy, buildInProcess(remoteCsvFile));
+      File localFinishedFile = new File(localCopy, buildFinished(remoteCsvFile));
+
+      if (fileSys.exists(localCsvFile) || fileSys.exists(localInProcessFile) || fileSys.exists(localFinishedFile))
+        continue;
+
+      helper.downloadFileFromResource(resource, remoteCsvFile, localCsvFile);
     }
-    return csvFromInProcess;
   }
 
-  private static String[] inProcessFromWork(File[] finished) {
-    String[] inProcessFromFinished = new String[finished.length];
-    int i=0;
-    for(File f : finished) {
-      inProcessFromFinished[i] = buildInProcess(
-          csvFileFromWorkFile(f.getName())
-      );
-      i++;
-    }
-    return inProcessFromFinished;
-  }
+  private void synchronizeInProcess(FileResource resource) throws AdminException {
+    File[] inProcessFiles = helper.getFiles(localCopy, IN_PROCESS);
+    for (File localInProcessFile : inProcessFiles) {
+      String csvFile = csvFileFromWorkFile(localInProcessFile.getName());
 
-  private void synchronizeInProcess() throws AdminException {
-    File[] inProcess = helper.getFiles(localCopy, IN_PROCESS);
-    String[] csvFromInProcess = csvFilesFromWork(inProcess);
-    for(int i = 0;i < csvFromInProcess.length;i++) {
-      String f = csvFromInProcess[i];
-
-      if(resource.contains(f)) {
-        String newFile = buildInProcess(f);
-        if(!resource.contains(newFile)) {
-          helper.logRenameAtResource(f, newFile);
-          resource.rename(f, newFile);
-        }
-      }else if (!resource.contains(inProcess[i].getName())) {
-        fileSys.delete(inProcess[i]);
+      if (resource.contains(csvFile)) {
+        resource.rename(csvFile, localInProcessFile.getName());
+      } else if (!resource.contains(localInProcessFile.getName())){
+        fileSys.delete(localInProcessFile);
       }
     }
   }
 
+  private void synchronizeFinished(FileResource resource) throws AdminException {
+    File[] finishedFiles = helper.getFiles(localCopy, FINISHED);
+    for(File localFinishedFile : finishedFiles) {
+      if (resource.contains(localFinishedFile.getName()))
+        continue;
 
-  private void synchronizeFinished() throws AdminException {
-    File[] finished = helper.getFiles(localCopy, FINISHED);
-    String[] inProcessFromFinished = inProcessFromWork(finished);
-    for(int i = 0;i < inProcessFromFinished.length;i++) {
-      String file = inProcessFromFinished[i];
-      String csvFile = csvFileFromWorkFile(file);
-      String finishedFile = buildFinished(csvFile);
-      String reportFile = buildReportName(csvFile);
+      String localCsvFile = csvFileFromWorkFile(localFinishedFile.getName());
+      File localReportFile = new File(localCopy, buildReportName(localCsvFile));
+      String localInProcessFile = buildInProcess(localCsvFile);
 
-      if(resource.contains(file)) {
-        if(createReports && !resource.contains(reportFile)) {
-          String reportTmp = reportFile + ".part";
-          if(resource.contains(reportTmp)) {
-            helper.logRemoveFromResource(reportTmp);
-            resource.remove(reportTmp);
-          }
-          helper.uploadFile(resource, new File(localCopy, reportFile), reportTmp);
-          helper.logRenameAtResource(reportTmp, reportFile);
-          resource.rename(reportTmp,  reportFile);
-        }
-        if(!resource.contains(finishedFile)) {
-          helper.logRenameAtResource(file, finishedFile);
-          resource.rename(file, finishedFile);
-        }
-      }else if (!resource.contains(finished[i].getName())) {
-        fileSys.delete(new File(localCopy, reportFile));
-        fileSys.delete(new File(localCopy, finishedFile));
+      if(resource.contains(localInProcessFile)) {
+        if(createReports && !resource.contains(localReportFile.getName()))
+          helper.uploadFileToResource(resource, localReportFile);
+        resource.rename(localInProcessFile, localFinishedFile.getName());
+      } else {
+        fileSys.delete(localReportFile);
+        fileSys.delete(localFinishedFile);
       }
     }
   }
 
-  private Set<String> getExcludeFiles() {
-    Set<String> exclude = new HashSet<String>();
-    for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
-      exclude.add(f.getName());
-    }
-
-    File[] inProcess = helper.getFiles(localCopy, IN_PROCESS);
-    String[] csvFromInProcess = csvFilesFromWork(inProcess);
-    exclude.addAll(Arrays.asList(csvFromInProcess));
-
-    File[] finished = helper.getFiles(localCopy, FINISHED);
-    for(File f : finished) {
-      exclude.add(
-          csvFileFromWorkFile(f.getName())
-      );
-    }
-    return exclude;
-  }
-
-
-  void synchronize(boolean allowDeliveryCreation) throws AdminException{
-    if(!fileSys.exists(localCopy)) {
+  void synchronize(boolean downloadNewFiles) throws AdminException{
+    if(!fileSys.exists(localCopy))
       fileSys.mkdirs(localCopy);
-    }
+
     try{
       resource.open();
-      if(allowDeliveryCreation) {
 
-        Set<String> exclude = getExcludeFiles();
+      if(downloadNewFiles)
+        downloadCsvFilesFromResource(resource);
 
-        helper.downloadNewFiles(resource, exclude, localCopy);
+      synchronizeInProcess(resource);
 
-      }
-
-      synchronizeInProcess();
-
-      synchronizeFinished();
+      synchronizeFinished(resource);
 
       helper.notifyInteractionOk("type","synchronization");
 
@@ -197,11 +145,15 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
   }
 
 
-  public void process(boolean allowCreate) throws AdminException{
+  public void process(boolean allowCreate) throws AdminException {
     try{
       helper.logStartProcess(allowCreate);
+
       synchronize(allowCreate);
+
       File[] list = fileSys.listFiles(localCopy);
+      if (list == null)
+        return;
 
       for(File f : list) {
         try{
@@ -212,55 +164,54 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
             helper.logProcessFile(f.getName());
             processInProcessFile(f);
           }
-        }catch (Exception e){
+        } catch (Exception e){
           helper.notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
           log.error(e,e);
         }
       }
-      synchronize(allowCreate);
+
+      synchronize(false);
     }finally {
       helper.logEndProcess();
     }
   }
 
-  private void processInProcessFile(File f) throws Exception {
-    final String md5 = helper.getMD5Checksum(f);
-    String deliveryName = SaveStrategyHelper.getDeliveryName(f);
-    Delivery d = helper.getDelivery(deliveryName, md5);
-    if(d != null) {
-      if(d.getStatus() == DeliveryStatus.Finished)  {
-        helper.logFinishDelivery(deliveryName);
-        if(createReports) {
-          buildReport(new File(localCopy, buildReportName(csvFileFromWorkFile(f.getName()))), d);
-        }
-        fileSys.rename(f, new File(localCopy, buildFinished(csvFileFromWorkFile(f.getName()))));
-      }
-    }
+  private void processInProcessFile(File localInProcessFile) throws Exception {
+    final String md5 = helper.getMD5Checksum(localInProcessFile);
+    String deliveryName = SaveStrategyHelper.getDeliveryName(localInProcessFile);
+    Delivery d = helper.lookupDelivery(deliveryName, md5);
+
+    if(d == null || d.getStatus() != DeliveryStatus.Finished)
+      return;
+
+    helper.logFinishDelivery(deliveryName);
+
+    String localCsvFile = csvFileFromWorkFile(localInProcessFile.getName());
+    if(createReports)
+      buildReport(new File(localCopy, buildReportName(localCsvFile)), d);
+
+    File localFinishedFile = new File(localCopy, buildFinished(localCsvFile));
+    fileSys.rename(localInProcessFile, localFinishedFile);
   }
 
 
-  private void processCsvFile(File f) throws Exception {
-    final String md5 = helper.getMD5Checksum(f);
-    String deliveryName = SaveStrategyHelper.getDeliveryName(f);
-    Delivery d = helper.getDelivery(deliveryName, md5);
+  private void processCsvFile(File localCsvFile) throws Exception {
+    final String md5 = helper.getMD5Checksum(localCsvFile);
+    String deliveryName = SaveStrategyHelper.getDeliveryName(localCsvFile);
+    Delivery d = helper.lookupDelivery(deliveryName, md5);
 
-    boolean create = false;
-    if(d != null) {
-      if(d.getStatus() == DeliveryStatus.Paused) {
-        helper.logDropBrokenDelivery(deliveryName);
-        context.dropDelivery(user.getLogin(), d.getId());
-        create = true;
-      }
-    }else {
-      create = true;
+    if (d != null && d.getStatus() == DeliveryStatus.Paused) {
+      helper.logDropBrokenDelivery(deliveryName);
+      context.dropDelivery(user.getLogin(), d.getId());
+      d = null;
     }
 
-    if(create) {
+    if(d == null) {
       final PrintStream[] ps = new PrintStream[1];
       try{
-        ps[0] = new PrintStream(fileSys.getOutputStream(new File(localCopy, buildReportName(f.getName())), false), true, encoding);
+        ps[0] = new PrintStream(fileSys.getOutputStream(new File(localCopy, buildReportName(localCsvFile.getName())), false), true, encoding);
         helper.logCreateDelivery(deliveryName);
-        helper.createDelivery(f, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
+        helper.createDelivery(localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
           @Override
           public void reject(String abonent, String userData) {
             ReportFormatter.writeReportLine(ps[0], abonent, userData, new Date(), MessageState.Failed, 9999);
@@ -272,44 +223,14 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         }
       }
     }
-    fileSys.rename(f, new File(localCopy, buildInProcess(f.getName())));
-  }
-
-  private void copyFile(File source, File destination) throws AdminException {
-    BufferedInputStream src = null;
-    BufferedOutputStream dest = null;
-    try {
-      src = new BufferedInputStream(fileSys.getInputStream(source));
-      dest = new BufferedOutputStream(fileSys.getOutputStream(destination, false));
-
-      byte[] buf = new byte[1024];
-      int len;
-      while ((len = src.read(buf)) > 0){
-        dest.write(buf, 0, len);
-      }
-    } catch (IOException e){
-      log.error(e,e);
-      throw new ContentProviderException("ioerror");
-    }finally {
-      if (src != null) {
-        try {
-          src.close();
-        } catch (IOException ignored) {
-        }
-      }
-      if (dest != null) {
-        try {
-          dest.close();
-        } catch (IOException ignored) {
-        }
-      }
-    }
+    fileSys.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
 
   private void buildReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
     File reportTmp = new File(reportFile.getAbsolutePath()+".tmp."+System.currentTimeMillis());
     try{
-      copyFile(reportFile, reportTmp);
+      fileSys.copy(reportFile, reportTmp);
+
       PrintStream ps = null;
       try {
         if (encoding == null) encoding = "UTF-8";
@@ -318,17 +239,19 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         MessageFilter filter = new MessageFilter(d.getId(), d.getCreateDate(), new Date());
         context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
           public boolean visit(Message mi) throws AdminException {
-            ReportFormatter.writeReportLine(psFinal, SaveStrategyHelper.getCpAbonent(mi),
+            ReportFormatter.writeReportLine(psFinal, SaveStrategyHelper.getMessageRecipient(mi),
                 mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
             return true;
           }
         });
+      } catch (UnsupportedEncodingException ignored) {
       } finally {
         if (ps != null) try {
           ps.close();
         } catch (Exception ignored) {
         }
       }
+
       fileSys.delete(reportFile);
       fileSys.rename(reportTmp, reportFile);
 
@@ -337,14 +260,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         fileSys.delete(reportTmp);
       }catch (AdminException ignored){}
       throw e;
-    } catch (UnsupportedEncodingException e){
-      try{
-        fileSys.delete(reportTmp);
-      }catch (AdminException ignored){}
-      throw e;
     }
   }
-
-
 
 }

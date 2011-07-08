@@ -10,8 +10,6 @@ import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * author: Aleksandr Khalitov
@@ -55,36 +53,22 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
   }
 
 
-  private Set<String> getExcludeFiles() {
-    Set<String> existed = new HashSet<String>();
-    for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
-      existed.add(f.getName());
-    }
-    return existed;
-  }
-
-
   void synchronize(boolean allowDownloadNew) throws AdminException{
     if(!fileSys.exists(localCopy)) {
       fileSys.mkdirs(localCopy);
     }
 
-
-    Set<String> exclude = getExcludeFiles();
-
     try{
       resource.open();
-      if(allowDownloadNew) {
-        exclude.addAll(
-            helper.downloadNewFiles(resource, exclude, localCopy)
-        );
+
+      for(String remoteCsvFile : resource.listCSVFiles()) {
+        File localCsvFile = new File(localCopy, remoteCsvFile);
+        if (!fileSys.exists(localCsvFile) && allowDownloadNew)
+          helper.downloadFileFromResource(resource, remoteCsvFile, localCsvFile);
+        if (fileSys.exists(localCsvFile))
+          resource.remove(remoteCsvFile);
       }
-      for(String r : resource.listCSVFiles()) {
-        if(exclude.contains(r)) {
-          helper.logRemoveFromResource(r);
-          resource.remove(r);
-        }
-      }
+
       helper.notifyInteractionOk("type", "synchronization");
     }catch (AdminException e){
       helper.notifyInteractionError("Can't synchronize", "type","synchronization");
@@ -121,27 +105,23 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
   }
 
 
-  private void processFile(File f) throws Exception {
-    final String md5 = helper.getMD5Checksum(f);
-    String deliveryName = SaveStrategyHelper.getDeliveryName(f);
-    Delivery d = helper.getDelivery(deliveryName, md5);
+  private void processFile(File csvFile) throws Exception {
+    final String md5 = helper.getMD5Checksum(csvFile);
+    String deliveryName = SaveStrategyHelper.getDeliveryName(csvFile);
+    Delivery d = helper.lookupDelivery(deliveryName, md5);
 
-    boolean create = false;
-    if(d != null) {
-      if(d.getStatus() == DeliveryStatus.Paused) {
-        helper.logDropBrokenDelivery(deliveryName);
-        context.dropDelivery(user.getLogin(), d.getId());
-        create = true;
-      }
-    }else {
-      create = true;
+    if (d != null && d.getStatus() == DeliveryStatus.Paused) {
+      helper.logDropBrokenDelivery(deliveryName);
+      context.dropDelivery(user.getLogin(), d.getId());
+      d = null;
     }
 
-    if(create) {
+    if (d == null) {
       helper.logCreateDelivery(deliveryName);
-      helper.createDelivery(f, deliveryName, sourceAddr, encoding, md5, null);
+      helper.createDelivery(csvFile, deliveryName, sourceAddr, encoding, md5, null);
     }
-    fileSys.delete(f);
+
+    fileSys.delete(csvFile);
   }
 
 }
