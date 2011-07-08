@@ -14,101 +14,74 @@
   <ui:define name="content">
 
     <tr:form>
-      <c:set var="longOpState" value="#{statsMessagesByRec.state}"/>
 
 
-        <eye:dataTableFilter bean="#{statsMessagesByRec}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
+      <eye:dataTableFilter bean="#{statsMessagesByRec}" clearAction="clearFilter" applyAction="start">
+        <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.recMsisdn']}"/>
-            <h:inputText id="Recipient" value="#{statsMessagesByRec.msisdn}" required="true"
-                         converterMessage="#{msg['invalid_param_value']} #{msg['stat.page.recMsisdn']}"
-                         converter="addressConverter"/>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.recMsisdn']}"/>
+          <h:inputText id="Recipient" value="#{statsMessagesByRec.msisdn}" required="true"
+                       converterMessage="#{msg['invalid_param_value']} #{msg['stat.page.recMsisdn']}"
+                       converter="addressConverter"/>
 
-            <h:outputText value="&#160;"/>
-            <h:outputText value="&#160;"/>
+          <h:outputText value="&#160;"/>
+          <h:outputText value="&#160;"/>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <eye:inputDate value="#{statsMessagesByRec.fromDate}" type="both" />
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
+          <eye:inputDate value="#{statsMessagesByRec.fromDate}" type="both" />
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <eye:inputDate value="#{statsMessagesByRec.tillDate}" type="both"/>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
+          <eye:inputDate value="#{statsMessagesByRec.tillDate}" type="both"/>
 
-          </h:panelGrid>
-        </eye:dataTableFilter>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
       <eye:delimiter/>
 
+      <eye:dataTable value="#{statsMessagesByRec.records}" var="row" rendered="#{statsMessagesByRec.init}">
 
-        <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}" >
+        <eye:row>
+          <eye:column name="recipient" title="#{msg['stat.page.recMsisdn']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.recipient}"/>
+          </eye:column>
+          <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
+            <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">
+              #{row.name}
+            </a>
+          </eye:column>
+          <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="5%" align="center">
+            <tr:panelGroupLayout shortDesc="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
+              <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.userId}">
+                #{row.userId}
+              </a>
+            </tr:panelGroupLayout>
+            <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
+          </eye:column>
+          <eye:column name="text" title="#{msg['stat.page.text']}" sortable="true" width="20%" align="center">
+            <h:outputText value="#{row.text}"/>
+          </eye:column>
+          <eye:column name="deliveryDate" title="#{msg['stat.page.deliveryDate']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.deliveryDateString}"/>
+          </eye:column>
+          <eye:column name="state" title="#{msg['stat.page.state']}" sortable="true" width="5%" align="center">
+            <h:outputText value="#{row.state}"  converter="messageStateConverter"/>
+          </eye:column>
+          <eye:column name="state" title="#{msg['stat.page.errorString']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.errorString}"/>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
 
-          <eye:message level="error" rendered="#{longOpState == 3}">
-            <h:outputText value="#{statsMessagesByRec.error}"/>
-          </eye:message>
+      <eye:delimiter/>
 
-          <h:panelGroup rendered="#{longOpState == 1}">
-            <tr:message id="upload_message"/>
-
-            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-              <h:outputText value="#{msg['processing.label']}"/>
-              <eye:progressBar current="#{statsMessagesByRec.current}" maximum="#{statsMessagesByRec.total}" width="500" height="20" />
-            </h:panelGrid>
-
-            <eye:delimiter/>
-
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{statsMessagesByRec.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
-          </h:panelGroup>
-
-          <eye:dataTable value="#{statsMessagesByRec.records}" var="row" rendered="#{longOpState == 2}" >
-
-            <eye:row>
-              <eye:column name="recipient" title="#{msg['stat.page.recMsisdn']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.recipient}"/>
-              </eye:column>
-              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
-                <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">
-                  #{row.name}
-                </a>
-              </eye:column>
-              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="5%" align="center">
-                <tr:panelGroupLayout shortDesc="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
-                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.userId}">
-                    #{row.userId}
-                  </a>
-                </tr:panelGroupLayout>
-                <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
-              </eye:column>
-              <eye:column name="text" title="#{msg['stat.page.text']}" sortable="true" width="20%" align="center">
-                <h:outputText value="#{row.text}"/>
-              </eye:column>
-              <eye:column name="deliveryDate" title="#{msg['stat.page.deliveryDate']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.deliveryDateString}"/>
-              </eye:column>
-              <eye:column name="state" title="#{msg['stat.page.state']}" sortable="true" width="5%" align="center">
-                <h:outputText value="#{row.state}"  converter="messageStateConverter"/>
-              </eye:column>
-              <eye:column name="state" title="#{msg['stat.page.errorString']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.errorString}"/>
-              </eye:column>
-            </eye:row>
-          </eye:dataTable>
-
-          <eye:delimiter/>
-
-          <eye:buttons rendered="#{longOpState == 2}">
-            <eye:space/>
-            <eye:button >
-              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
-                <tr:fileDownloadActionListener method="#{statsMessagesByRec.download}" contentType="application/csv" filename="statByRecipients.csv"/>
-              </tr:commandLink>
-            </eye:button>
-          </eye:buttons>
-        </eye:updatableContent>
+      <eye:buttons rendered="#{statsMessagesByRec.init}">
+        <eye:space/>
+        <eye:button >
+          <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
+            <tr:fileDownloadActionListener method="#{statsMessagesByRec.download}" contentType="application/csv" filename="statByRecipients.csv"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
 
     </tr:form>
 

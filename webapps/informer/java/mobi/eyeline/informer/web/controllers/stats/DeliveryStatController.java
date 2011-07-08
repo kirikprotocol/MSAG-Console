@@ -3,11 +3,13 @@ package mobi.eyeline.informer.web.controllers.stats;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelException;
+import mobi.eyeline.informer.web.components.data_table.model.PreloadableModel;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.controllers.LongOperationController;
+import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
 import java.io.IOException;
@@ -21,21 +23,25 @@ import java.util.*;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public abstract class DeliveryStatController extends LongOperationController {
+public abstract class DeliveryStatController extends InformerController{
+
   private User user;
   private boolean initError = false;
   protected DeliveryStatFilter filter;
   private AggregationType aggregation;
 
+  private boolean init;
 
+  private LoadListener loadListener;
 
   protected final DeliveryStatTotals totals;
+
   private final Map<Object, AggregatedRecord> recordsMap;
+
   protected final List<AggregatedRecord> records;
 
 
   public DeliveryStatController(DeliveryStatTotals totals) {
-    super();
     aggregation = AggregationType.DAY;
     filter = new DeliveryStatFilter();
     initUser();
@@ -55,7 +61,6 @@ public abstract class DeliveryStatController extends LongOperationController {
   }
 
   public void clearFilter() {
-    reset();
     clearRecords();
     initUser();
     filter.setFromDate(null);
@@ -101,7 +106,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   public List<SelectItem> getAggregations() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
     for (AggregationType a : AggregationType.values()) {
-        ret.add(new SelectItem(a));    
+      ret.add(new SelectItem(a));
     }
     return ret;
   }
@@ -113,6 +118,8 @@ public abstract class DeliveryStatController extends LongOperationController {
   protected void clearRecords() {
     recordsMap.clear();
     records.clear();
+    loaded = false;
+    loadListener = null;
     getTotals().reset();
   }
 
@@ -144,15 +151,34 @@ public abstract class DeliveryStatController extends LongOperationController {
     return ret;
   }
 
-  abstract void loadRecords(Configuration config, final Locale locale) throws AdminException, InterruptedException;
+  abstract void loadRecords(Configuration config, final Locale locale, LoadListener listener) throws AdminException;
 
-  @Override
-  public void execute(Configuration config, final Locale locale) throws Exception {
+  private boolean loaded = false;
+
+  public boolean isLoaded() {
+    return loaded;
+  }
+
+  void setLoaded(boolean loaded) {
+    this.loaded = loaded;
+  }
+
+  public String start() {
+    clearRecords();
+    init = true;
+    return null;
+  }
+
+  public boolean isInit() {
+    return init;
+  }
+
+  protected void load(Configuration config, final Locale locale, LoadListener listener) throws AdminException {
     clearRecords();
     try {
-      loadRecords(config, locale);
+      loadRecords(config, locale, listener);
     }
-    catch (Exception e) {
+    catch (AdminException e) {
       clearRecords();
       throw e;
     }
@@ -164,14 +190,14 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   public DataTableModel getRecords() {
 
-    if (getState() != 2)
-      return new EmptyDataTableModel();
+    final Locale locale = getLocale();
+
+    final Configuration config = getConfig();
 
     //loadRecords();
-    return new DataTableModel() {
+    return new PreloadableModel() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-
         // Сортируем записи
         if (sortOrder != null && !records.isEmpty()) {
           Collections.sort(records, records.get(0).getRecordsComparator(sortOrder));
@@ -194,6 +220,33 @@ public abstract class DeliveryStatController extends LongOperationController {
 
       public int getRowsCount() {
         return records.size();
+      }
+
+      @Override
+      public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        LoadListener listener = null;
+        if(!loaded) {
+          if(loadListener == null) {
+            loadListener = new LoadListener();
+            new Thread() {
+              public void run() {
+                try{
+                  DeliveryStatController.this.load(config, locale, loadListener);
+                }catch (AdminException e){
+                  logger.error(e,e);
+                  loadListener.setLoadError(new ModelException(e.getMessage(locale)));
+                }catch (Exception e){
+                  logger.error(e,e);
+
+                }finally {
+                  loaded = true;
+                }
+              }
+            }.start();
+          }
+          listener = loadListener;
+        }
+        return listener;
       }
     };
   }
@@ -219,13 +272,6 @@ public abstract class DeliveryStatController extends LongOperationController {
       }
       r.printWithChildrenToCSV(writer, true);
     }
-  }
-
-
-  @Override
-  public void reset() {
-    super.reset();    //To change body of overridden methods use File | Settings | File Templates.
-    clearRecords();
   }
 
   public DeliveryStatTotals getTotals() {

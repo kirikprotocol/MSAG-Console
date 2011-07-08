@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 
 import java.io.IOException;
@@ -33,15 +34,15 @@ public class AggregatedErrorStatsStrategy implements ErrorStatsStrategy{
     }
   }
 
-  public void execute(Delivery delivery, User user, final ProgressListener progressListener) throws Exception {
+  public void execute(Delivery delivery, User user, final LoadListener listener) throws AdminException {
     rowMap.clear();
     MessageFilter filter = new MessageFilter(delivery.getId(), delivery.getCreateDate(), delivery.getEndDate() == null ? new java.util.Date() : delivery.getEndDate());
     filter.setStates(MessageState.Delivered, MessageState.Expired, MessageState.Failed);
-    progressListener.setTotal(informerStrategy.countMessages(user.getLogin(), filter)+1);
+    listener.setTotal(informerStrategy.countMessages(user.getLogin(), filter)+1);
     informerStrategy.getMessagesStates(user.getLogin(), filter, 2000, new Visitor<Message>() {
       @Override
       public boolean visit(Message value) throws AdminException {
-        progressListener.incrementCurrent();
+        listener.setCurrent(listener.getCurrent()+1);
         int error = value.getErrorCode() == null ? 0 : value.getErrorCode();
         addRow(value.getDate(), error);
         return true;

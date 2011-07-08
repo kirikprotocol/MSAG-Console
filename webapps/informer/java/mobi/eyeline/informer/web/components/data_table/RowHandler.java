@@ -5,7 +5,9 @@ import com.sun.facelets.tag.TagAttribute;
 import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelException;
 import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
+import org.apache.log4j.Logger;
 
 import javax.el.ELException;
 import javax.faces.FacesException;
@@ -17,6 +19,9 @@ import java.util.List;
  * @author Artem Snopkov
  */
 public class RowHandler extends ComponentHandler {
+
+  private static final Logger logger = Logger.getLogger(RowHandler.class);
+
   private final TagAttribute data;
   private final TagAttribute innerData;
   private final TagAttribute innerRows;
@@ -55,8 +60,18 @@ public class RowHandler extends ComponentHandler {
 
       ctx.getVariableMapper().setVariable(var, r.getVarExpr());
       if (!r.isInner()) {
-        DataTableModel dt = (DataTableModel) ctx.getVariableMapper().resolveVariable(tid + "___dataTableModel").getValue(ctx);
-        String rowId = (dt instanceof ModelWithObjectIds) ? ((ModelWithObjectIds)dt).getId(r.getVarExpr().getValue(ctx)) : null;
+        DataTable t = (DataTable) ctx.getVariableMapper().resolveVariable(tid + "___dataTable").getValue(ctx);
+        DataTableModel dt = t.getModel();
+        String rowId = null;
+        if(dt instanceof ModelWithObjectIds) {
+          try {
+            rowId = ((ModelWithObjectIds)dt).getId(r.getVarExpr().getValue(ctx));
+          } catch (ModelException e) {
+            t.setError(e);
+            logger.error(e,e);
+            return;
+          }
+        }
         r.setRowId(rowId != null ? rowId :  getId(ctx));
         if (innerData != null)
           r.setHasInnerData(innerData.getBoolean(ctx));

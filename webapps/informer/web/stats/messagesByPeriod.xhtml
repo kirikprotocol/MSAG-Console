@@ -17,98 +17,60 @@
 
     <tr:form id="smsc" rendered="#{!messagesByPeriod.initError}" >
 
-      <eye:set var="longOpState" value="#{messagesByPeriod.state}"/>
+      <eye:dataTableFilter bean="#{messagesByPeriod}" clearAction="clearFilter" applyAction="start">
+        <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column200Width, column50Width,columnTopLeftAlign">
 
-        <eye:dataTableFilter bean="#{messagesByPeriod}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column200Width, column50Width,columnTopLeftAlign">
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
+          <eye:inputDate value="#{messagesByPeriod.filter.fromDate}" type="both" />
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <eye:inputDate value="#{messagesByPeriod.filter.fromDate}" type="both" />
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
+          <h:selectOneMenu value="#{messagesByPeriod.regionId}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{messagesByPeriod.regions}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
-            <h:selectOneMenu value="#{messagesByPeriod.regionId}">
-              <f:selectItem itemLabel="" itemValue=""/>
-              <f:selectItems value="#{messagesByPeriod.regions}"/>
-            </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
+          <h:selectOneMenu value="#{messagesByPeriod.aggregation}" >
+            <f:selectItems value="#{messagesByPeriod.aggregations}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
-            <h:selectOneMenu value="#{messagesByPeriod.aggregation}" >
-              <f:selectItems value="#{messagesByPeriod.aggregations}"/>
-            </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
+          <eye:inputDate value="#{messagesByPeriod.filter.tillDate}" type="both"/>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <eye:inputDate value="#{messagesByPeriod.filter.tillDate}" type="both"/>
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{messagesByPeriod.userInAdminRole}"/>
+          <h:selectOneMenu value="#{messagesByPeriod.smscFilter}" rendered="#{messagesByPeriod.userInAdminRole}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{messagesByPeriod.smscs}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.smsc']}" rendered="#{messagesByPeriod.userInAdminRole}"/>
-            <h:selectOneMenu value="#{messagesByPeriod.smscFilter}" rendered="#{messagesByPeriod.userInAdminRole}">
-              <f:selectItem itemLabel="" itemValue=""/>
-              <f:selectItems value="#{messagesByPeriod.smscs}"/>
-            </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.user']}" rendered="#{messagesByPeriod.admin}"/>
+          <h:selectOneMenu value="#{messagesByPeriod.filter.user}" rendered="#{messagesByPeriod.admin}" required="false">
+            <f:selectItems value="#{messagesByPeriod.users}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.user']}" rendered="#{messagesByPeriod.admin}"/>
-            <h:selectOneMenu value="#{messagesByPeriod.filter.user}" rendered="#{messagesByPeriod.admin}" required="false">
-              <f:selectItems value="#{messagesByPeriod.users}"/>
-            </h:selectOneMenu>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
-          </h:panelGrid>
-        </eye:dataTableFilter>
+        <eye:delimiter/>
 
+      <h:panelGroup rendered="#{messagesByPeriod.init}">
 
-        <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
+        <ui:include src="#{messagesByPeriod.regionAggregation ? 'messagesByPeriod_region.xhtml' : ''}"/>
+        <ui:include src="#{messagesByPeriod.timeAggregation ? 'messagesByPeriod_time.xhtml' : ''}"/>
+        <ui:include src="#{messagesByPeriod.smscAggregation ? 'messagesByPeriod_smsc.xhtml' : ''}"/>
 
-          <eye:delimiter/>
+        <eye:delimiter/>
 
+        <eye:buttons rendered="#{messagesByPeriod.init}">
+          <eye:space/>
+          <eye:button>
+            <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
+              <tr:fileDownloadActionListener method="#{messagesByPeriod.download}" contentType="application/csv" filename="commonStat.csv"/>
+            </tr:commandLink>
+          </eye:button>
+        </eye:buttons>
 
-          <eye:message level="error" rendered="#{longOpState == 3}">
-            <p/>
-            <h:outputText value="#{messagesByPeriod.error}"/>
-            <p/>
-          </eye:message>
-
-
-
-
-          <h:panelGroup rendered="#{longOpState == 1}">
-            <tr:message id="upload_message"/>
-
-            <h:panelGrid columns="2" columnClasses="column50Width">
-              <h:outputText value="#{msg['processing.label']}  #{messagesByPeriod.current}"/>
-              <eye:progressBar current="#{messagesByPeriod.current}" maximum="#{messagesByPeriod.total}" width="500" height="20" />
-            </h:panelGrid>
-
-            <eye:delimiter/>
-
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByPeriod.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
-          </h:panelGroup>
-
-          <h:panelGroup rendered="#{longOpState==2}">
-
-            <ui:include src="#{messagesByPeriod.regionAggregation ? 'messagesByPeriod_region.xhtml' : ''}"/>
-            <ui:include src="#{messagesByPeriod.timeAggregation ? 'messagesByPeriod_time.xhtml' : ''}"/>
-            <ui:include src="#{messagesByPeriod.smscAggregation ? 'messagesByPeriod_smsc.xhtml' : ''}"/>
-
-          <eye:delimiter/>
-
-          <eye:buttons>
-            <eye:space/>
-            <eye:button>
-              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
-                <tr:fileDownloadActionListener method="#{messagesByPeriod.download}" contentType="application/csv" filename="commonStat.csv"/>
-              </tr:commandLink>
-            </eye:button>
-          </eye:buttons>
-
-        </h:panelGroup>
-
-
-        </eye:updatableContent>
-
-
+      </h:panelGroup>
 
     </tr:form>
 

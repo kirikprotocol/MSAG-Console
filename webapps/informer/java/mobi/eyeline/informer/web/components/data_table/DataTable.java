@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.components.data_table;
 
 import mobi.eyeline.informer.web.components.EyelineComponent;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelException;
 import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 
 import javax.el.ValueExpression;
@@ -37,6 +38,46 @@ public class DataTable extends EyelineComponent {
   private boolean showSelectedOnly;
 
   private boolean disallowSelectAll;
+
+  private ModelException error;
+
+  private int totalSize;
+
+  private Integer loadCurrent;
+
+  private Integer loadTotal;
+
+  public Integer getLoadTotal() {
+    return loadTotal;
+  }
+
+  public void setLoadTotal(int loadTotal) {
+    this.loadTotal = loadTotal;
+  }
+
+  public Integer getLoadCurrent() {
+    return loadCurrent;
+  }
+
+  public void setLoadCurrent(int loadCurrent) {
+    this.loadCurrent = loadCurrent;
+  }
+
+  public int getTotalSize() {
+    return totalSize;
+  }
+
+  public void setTotalSize(int totalSize) {
+    this.totalSize = totalSize;
+  }
+
+  public ModelException getError() {
+    return error;
+  }
+
+  public void setError(ModelException error) {
+    this.error = error;
+  }
 
   public boolean isShowSelectedOnly() {
     return showSelectedOnly;
@@ -257,7 +298,7 @@ public class DataTable extends EyelineComponent {
     this.disallowSelectAll = disallowSelectAll;
   }
 
-  private static class LazySelectedList implements List<String>{
+  private class LazySelectedList implements List<String>{
 
     private final DataTableModel model;
 
@@ -275,17 +316,22 @@ public class DataTable extends EyelineComponent {
       int i = 0;
       List rows;
       ModelWithObjectIds ident = (ModelWithObjectIds)model;
-      while(!(rows =  model.getRows(10000*i, 10000, null)).isEmpty()) {
-        for (Object o : rows) {
-          String id = ident.getId(o);
-          if(unselected == null || !unselected.contains(id)) {
-            selected.add(id);
+      try {
+        while(!(rows =  model.getRows(10000*i, 10000, null)).isEmpty()) {
+          for (Object o : rows) {
+            String id = ident.getId(o);
+            if(unselected == null || !unselected.contains(id)) {
+              selected.add(id);
+            }
           }
+          if(rows.size()<10000) {
+            break;
+          }
+          i++;
         }
-        if(rows.size()<10000) {
-          break;
-        }
-        i++;
+      } catch (ModelException e) {
+        error = e; //todo?
+        throw new RuntimeException(e);
       }
       this.selected = selected;
     }

@@ -16,101 +16,67 @@
 
     <tr:form id="smsc" rendered="#{!deliveriesCountByPeriod.initError}">
 
-      <eye:set var="longOpState" value="#{deliveriesCountByPeriod.state}"/>
 
+      <eye:dataTableFilter bean="#{deliveriesCountByPeriod}" clearAction="clearFilter" applyAction="start">
+        <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
 
-        <eye:dataTableFilter bean="#{deliveriesCountByPeriod}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
+          <eye:inputDate value="#{deliveriesCountByPeriod.filter.fromDate}" type="both" />
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <eye:inputDate value="#{deliveriesCountByPeriod.filter.fromDate}" type="both" />
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
+          <h:selectOneMenu value="#{deliveriesCountByPeriod.aggregation}" >
+            <f:selectItems value="#{deliveriesCountByPeriod.aggregations}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
-            <h:selectOneMenu value="#{deliveriesCountByPeriod.aggregation}" >
-              <f:selectItems value="#{deliveriesCountByPeriod.aggregations}"/>
-            </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
+          <eye:inputDate value="#{deliveriesCountByPeriod.filter.tillDate}" type="both"/>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <eye:inputDate value="#{deliveriesCountByPeriod.filter.tillDate}" type="both"/>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.user']}" rendered="#{deliveriesCountByPeriod.admin}"/>
+          <h:selectOneMenu value="#{deliveriesCountByPeriod.filter.user}" rendered="#{deliveriesCountByPeriod.admin}" required="false">
+            <f:selectItems value="#{deliveriesCountByPeriod.users}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.user']}" rendered="#{deliveriesCountByPeriod.admin}"/>
-            <h:selectOneMenu value="#{deliveriesCountByPeriod.filter.user}" rendered="#{deliveriesCountByPeriod.admin}" required="false">
-              <f:selectItems value="#{deliveriesCountByPeriod.users}"/>
-            </h:selectOneMenu>
-            
-          </h:panelGrid>
-        </eye:dataTableFilter>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
       <eye:delimiter/>
 
+      <eye:dataTable value="#{deliveriesCountByPeriod.records}" var="row" rendered="#{deliveriesCountByPeriod.init}">
+        <eye:row innerRows="#{row.innerRows}">
+          <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="50%" align="center">
+            <h:outputText value="#{row.data.periodString}"/>
+            <f:facet name="inner">
+              <h:outputText value="#{row.periodString}" style="color:GREEN"/>
+            </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+            </f:facet>
 
-        <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}">
-
-          <eye:message level="error" rendered="#{longOpState == 3}">
-            <p/>
-            <h:outputText value="#{deliveriesCountByPeriod.error}"/>
-            <p/>
-          </eye:message>
-
-          <h:panelGroup rendered="#{longOpState == 1}">
-            <tr:message id="upload_message"/>
-
-            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-              <h:outputText value="#{msg['processing.label']}  #{deliveriesCountByPeriod.current}"/>
-              <eye:progressBar current="#{deliveriesCountByPeriod.current}" maximum="#{deliveriesCountByPeriod.total}" width="500" height="20" />
-            </h:panelGrid>
-
-            <eye:delimiter/>
-
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{deliveriesCountByPeriod.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
-          </h:panelGroup>
+          </eye:column>
+          <eye:column name="counter" title="#{msg['stat.page.deliveriesCount']}" sortable="true" width="50%" align="center">
+            <h:outputText value="#{row.data.counter}"/>
+            <f:facet name="inner">
+              <h:outputText value="#{row.counter}" style="color:GREEN"/>
+            </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="#{deliveriesCountByPeriod.totals.counter}" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
 
 
-            <eye:dataTable value="#{deliveriesCountByPeriod.records}" var="row" rendered="#{longOpState == 2}" >
-              <eye:row innerRows="#{row.innerRows}">
-                <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="50%" align="center">
-                  <h:outputText value="#{row.data.periodString}"/>
-                  <f:facet name="inner">
-                    <h:outputText value="#{row.periodString}" style="color:GREEN"/>
-                  </f:facet>
-                  <f:facet name="footer">
-                        <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
-                  </f:facet>
+        </eye:row>
+      </eye:dataTable>
 
-                </eye:column>
-                <eye:column name="counter" title="#{msg['stat.page.deliveriesCount']}" sortable="true" width="50%" align="center">
-                  <h:outputText value="#{row.data.counter}"/>
-                  <f:facet name="inner">
-                    <h:outputText value="#{row.counter}" style="color:GREEN"/>
-                  </f:facet>
-                  <f:facet name="footer">
-                      <h:outputText value="#{deliveriesCountByPeriod.totals.counter}" style="font-weight:bold;"/>
-                  </f:facet>
-                </eye:column>
+      <eye:delimiter/>
 
-
-              </eye:row>
-            </eye:dataTable>
-
-          <eye:delimiter/>
-          
-          <eye:buttons rendered="#{longOpState == 2}">
-            <eye:space/>
-            <eye:button>
-              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
-                <tr:fileDownloadActionListener method="#{deliveriesCountByPeriod.download}" contentType="application/csv" filename="deliveryCountStat.csv"/>
-              </tr:commandLink>
-            </eye:button>
-          </eye:buttons>
-        </eye:updatableContent>
-
-
-
+      <eye:buttons rendered="#{deliveriesCountByPeriod.init}">
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
+            <tr:fileDownloadActionListener method="#{deliveriesCountByPeriod.download}" contentType="application/csv" filename="deliveryCountStat.csv"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
 
     </tr:form>
 

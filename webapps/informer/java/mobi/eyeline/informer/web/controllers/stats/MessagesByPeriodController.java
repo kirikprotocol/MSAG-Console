@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.model.SelectItem;
@@ -19,7 +20,7 @@ import java.util.*;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public class MessagesByPeriodController extends DeliveryStatController implements DeliveryStatVisitor {
+public class MessagesByPeriodController extends DeliveryStatController{
 
 
   private List<Integer> deliveriesIds = null;
@@ -77,15 +78,9 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
   @Override
-  public String start() {
-    clearRecords();
-    return super.start();
-  }
-
-  @Override
-  public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
+  public void loadRecords(final Configuration config, final Locale locale, final LoadListener l) throws AdminException {
     this.locale = locale;
-    config.statistics(getFilter(), this);
+    config.statistics(getFilter(), new DeliveryStatVisitorImpl(l));
   }
 
   private Locale locale;
@@ -207,33 +202,6 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     return false;
   }
 
-  public boolean visit(DeliveryStatRecord rec, int total, int current) {
-    AggregationType type = getAggregation();
-    setCurrentAndTotal(current, total);
-    AggregatedRecord newRecord;
-    switch (type) {
-      case REGION: newRecord = createWithRegionAggregation(rec); break;
-      case SMSC:   newRecord = createWithSmscAggregation(rec); break;
-      default:     newRecord = createWithTimeAggregation(rec); break;
-    }
-
-    if(smscFilter != null && smscFilter.length() > 0) {
-      String[] smsc = new String[]{null};
-      getSmsc(rec, smsc);
-      if(!smsc[0].equals(smscFilter)) {
-        return !isCancelled();
-      }
-    }
-
-    AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
-    if (oldRecord == null) {
-      putRecord(newRecord);
-    } else {
-      oldRecord.add(newRecord);
-    }
-    getTotals().add(newRecord);
-    return !isCancelled();
-  }
 
   private String backParams;
   private String backAction;
@@ -315,7 +283,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
           }
           getFilter().setFromDate(from);
 
-          reset();
+          clearRecords();
           start();
         }
       }
@@ -347,6 +315,44 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     @Override
     public Delivery getDelivery(String login, int id) throws AdminException {
       return getConfig().getArchiveDelivery(login, id);
+    }
+  }
+
+  private class DeliveryStatVisitorImpl implements DeliveryStatVisitor {
+
+    private final LoadListener l;
+
+    public DeliveryStatVisitorImpl(LoadListener l) {
+      this.l = l;
+    }
+
+    public boolean visit(DeliveryStatRecord rec, int total, int current) {
+      AggregationType type = getAggregation();
+      l.setCurrent(current);
+      l.setTotal(total);
+      AggregatedRecord newRecord;
+      switch (type) {
+        case REGION: newRecord = createWithRegionAggregation(rec); break;
+        case SMSC:   newRecord = createWithSmscAggregation(rec); break;
+        default:     newRecord = createWithTimeAggregation(rec); break;
+      }
+
+      if(smscFilter != null && smscFilter.length() > 0) {
+        String[] smsc = new String[]{null};
+        getSmsc(rec, smsc);
+        if(!smsc[0].equals(smscFilter)) {
+          return true;
+        }
+      }
+
+      AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
+      if (oldRecord == null) {
+        putRecord(newRecord);
+      } else {
+        oldRecord.add(newRecord);
+      }
+      getTotals().add(newRecord);
+      return true;
     }
   }
 }

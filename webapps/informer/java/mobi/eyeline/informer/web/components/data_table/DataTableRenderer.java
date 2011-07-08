@@ -1,11 +1,12 @@
 package mobi.eyeline.informer.web.components.data_table;
 
 import mobi.eyeline.informer.web.components.AjaxFacesContext;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.PreloadableModel;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
@@ -17,6 +18,8 @@ public class DataTableRenderer extends Renderer {
 
 
   private boolean ajax = false;
+
+  private boolean renderChilds = false;
 
   public void decode(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) {
     DataTable t = (DataTable) component;
@@ -70,41 +73,65 @@ public class DataTableRenderer extends Renderer {
     return result;
   }
 
-  public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
-    DataTable t = (DataTable) component;
-
-    ajax = false;
-    if (context instanceof AjaxFacesContext) {
-      AjaxFacesContext ctx = (AjaxFacesContext) context;
-      if (ctx.getAjaxComponentId().equals(t.getId())) {
-        ajax = true;
-        ctx.setSkipContent(false);
+  private void encodeBeginAjax(FacesContext context, DataTable t) throws IOException{
+    Writer w = context.getResponseWriter();
+    if(t.getError() != null || t.getLoadCurrent() != null) {
+      ((HttpServletResponse)context.getExternalContext().getResponse()).setContentType("application/json");
+      w.append("{\"type\":");
+      if(t.getError() != null) {
+        w.append("\"error\"");
+      }else if(t.getLoadCurrent() != null) {
+        w.append("\"progress\"");
       }
+      w.append(",\"data\":\"");
+      if(t.getError() != null) {
+        w.append(
+            jsonEscape(t.getError().getMessage())
+        );
+      }else if(t.getLoadCurrent() != null) {
+        int progress = t.getLoadCurrent()*100;
+        if(t.getLoadTotal() == 0) {
+          progress = 0;
+        }else {
+          progress/=t.getLoadTotal();
+        }
+        w.append(""+progress);
+      }
+    }else {
+      encodeBeginGeneral(context, t);
     }
+
+  }
+
+  private void encodeBeginNonAjax(FacesContext context, DataTable t) throws IOException{
 
     Writer w = context.getResponseWriter();
-
     String sOrder = t.getSortOrder();
-    if (sOrder == null)
-      sOrder = "";
 
-    if (!ajax) {
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_column" + "\" name=\"" + t.getId() + "_column\" value=\"" + sOrder + "\">");
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\">");
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_select" + "\" name=\"" + t.getId() + "_select\" value=\""+toJson(t.getSelectedRows())+"\">");
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_selectAll" + "\" name=\"" + t.getId() + "_selectAll\" value=\""+t.isSelectAll()+"\">");
-      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_showSelected" + "\" name=\"" + t.getId() + "_showSelected\" value=\""+t.isShowSelectedOnly()+"\">");
-    }
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_column" + "\" name=\"" + t.getId() + "_column\" value=\"" + sOrder + "\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_select" + "\" name=\"" + t.getId() + "_select\" value=\""+toJson(t.getSelectedRows())+"\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_selectAll" + "\" name=\"" + t.getId() + "_selectAll\" value=\""+t.isSelectAll()+"\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_showSelected" + "\" name=\"" + t.getId() + "_showSelected\" value=\""+t.isShowSelectedOnly()+"\">");
+
+    w.append("\n<div id=\"" + t.getId() + "\">");
+
+    encodeBeginGeneral(context, t);
+  }
+
+  private void encodeBeginGeneral(FacesContext context, DataTable t) throws IOException {
     String ctxPath = context.getExternalContext().getRequestContextPath();
+    Writer w = context.getResponseWriter();
 
     List<Column> columns = getColumns(t);
     boolean hasInnerData = t.hasInnerData();
 
+    Locale l = context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale();
+    ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), l);
 
-    if (!ajax)
-      w.append("\n<div id=\"" + t.getId() + "\">");
+
     w.append("\n<table class=\"list\" id=\"" + t.getId() + "_table\" cellspacing=\"1\">");
     if (t.isSelection())
       w.append("\n<col width=\"1%\"/>");
@@ -114,8 +141,6 @@ public class DataTableRenderer extends Renderer {
       if (column.isRendered())
         w.append("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
     }
-
-    ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
 
     w.append("\n<thead>");
     if (t.isSelection()) {
@@ -182,86 +207,167 @@ public class DataTableRenderer extends Renderer {
     w.append("\n</thead>");
 
     w.append("\n<tbody>");
+
   }
 
-  public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+  public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     DataTable t = (DataTable) component;
+    renderChilds = t.getError() == null && t.getLoadCurrent() == null;
+
+    ajax = false;
+    if (context instanceof AjaxFacesContext) {
+      AjaxFacesContext ctx = (AjaxFacesContext) context;
+      if (ctx.getAjaxComponentId().equals(t.getId())) {
+        ajax = true;
+        ctx.setSkipContent(false);
+      }
+    }
+
+    if(ajax) {
+      encodeBeginAjax(context, t);
+    }else {
+      encodeBeginNonAjax(context, t);
+    }
+  }
+
+  @Override
+  public boolean getRendersChildren() {
+    return true;
+  }
+
+  @Override
+  public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
+    if(renderChilds) {
+      super.encodeChildren(context, component);
+    }
+  }
+
+  private void encodeEndAjax(FacesContext context, DataTable t) throws IOException{
+
+    Writer w = context.getResponseWriter();
+    if (t.getError() == null && t.getLoadCurrent() == null) {
+      boolean columnFooter = false;
+      for (UIComponent ch : t.getFirstRow().getChildren()) {
+        if (ch.getFacet("footer") != null) {
+          columnFooter = true;
+          break;
+        }
+      }
+      if(columnFooter) {
+        int currentRow = t.getChildCount() + 1;
+        w.append("\n<tr class=\"row" + (currentRow & 1) + "\">");
+        if(t.isSelection())
+          w.append("\n<td>&nbsp;</td>");
+        if (t.hasInnerData())
+          w.append("\n<td>&nbsp;</td>");
+        for (UIComponent ch : t.getFirstRow().getChildren()) {
+          Column col = (Column)ch;
+          UIComponent footer = ch.getFacet("footer");
+          w.append("\n<td align=\"").append(col.getAlign()).append("\">");
+          if (footer != null) {
+            footer.encodeBegin(context);
+            footer.encodeEnd(context);
+          }else {
+            w.append("&nbsp;");
+          }
+          w.append("</td>");
+        }
+
+        w.append("\n</tr>");
+
+      }else {
+        UIComponent footer = t.getFacet("footer");
+        int currentRow = t.getChildCount()+1;
+        if(footer != null) {
+          int colspan = t.getFirstRow().getChildCount();
+          if(colspan == 0) {
+            colspan = 1;
+          }
+          w.append("\n<tr  class=\"row" + (currentRow & 1) + "\">");
+          if(t.isSelection()) {
+            w.append("\n<td>&nbsp;</td>");
+          }
+          w.append("\n<td colspan=\""+colspan+"\">");
+          footer.encodeBegin(context);
+          footer.encodeEnd(context);
+          w.append("</td>");
+          w.append("\n</tr>");
+        }
+      }
+      encodeEndGeneral(context, t);
+    }else {
+      w.append("\"}");
+    }
+  }
+
+  private void encodeEndNoneAjax(FacesContext context, DataTable t) throws IOException {
 
     Writer w = context.getResponseWriter();
 
     String ctxPath = context.getExternalContext().getRequestContextPath();
 
-    boolean columnFooter = false;
-    for (UIComponent ch : t.getFirstRow().getChildren()) {
-      if (ch.getFacet("footer") != null) {
-        columnFooter = true;
-        break;
-      }
-    }
-    if(columnFooter) {
-      int currentRow = t.getChildCount() + 1;
-      w.append("\n<tr class=\"row" + (currentRow & 1) + "\">");
-      if(t.isSelection())
-        w.append("\n<td>&nbsp;</td>");
-      if (t.hasInnerData())
-        w.append("\n<td>&nbsp;</td>");
-      for (UIComponent ch : t.getFirstRow().getChildren()) {
-        Column col = (Column)ch;
-        UIComponent footer = ch.getFacet("footer");
-        w.append("\n<td align=\"").append(col.getAlign()).append("\">");
-        if (footer != null) {
-          footer.encodeBegin(context);
-          footer.encodeEnd(context);
-        }else {
-          w.append("&nbsp;");
-        }
-        w.append("</td>");
-      }
+    encodeEndGeneral(context, t);
 
-      w.append("\n</tr>");
+    w.append("\n</div>");
+    w.append("<table id=\""+t.getId()+"_progress\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
+        .append("<div style=\"margin-top:auto;margin-bottom:auto;\">" +
+            "<table style=\"width:0%\"><tr>"+
+            "<td><img  src=\"" + ctxPath + "/images/loading.gif\" alt=\"\"/></td>" +
+            "<td><span style=\"font-size:15px\" id=\"" + t.getId() + "_progress_content\"></span></td>" +
+            "</tr></table>"+
+            "</div>")
+        .append("</td></tr></table>");
+    w.append("\n</div>");
+    w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
 
-    }else {
-      UIComponent footer = t.getFacet("footer");
-      int currentRow = t.getChildCount()+1;
-      if(footer != null) {
-        int colspan = t.getFirstRow().getChildCount();
-        if(colspan == 0) {
-          colspan = 1;
-        }
-        w.append("\n<tr  class=\"row" + (currentRow & 1) + "\">");
-        if(t.isSelection()) {
-          w.append("\n<td>&nbsp;</td>");
-        }
-        w.append("\n<td colspan=\""+colspan+"\">");
-        footer.encodeBegin(context);
-        footer.encodeEnd(context);
-        w.append("</td>");
-        w.append("\n</tr>");
-      }
+    if (t.isUpdateUsingSubmit() == null)
+      w.append("\nvar updateUsingSubmit" + t.getId() + "= false;");
+    else
+      w.append("\nvar updateUsingSubmit" + t.getId() + "= " + t.isUpdateUsingSubmit() + ";");
+
+    ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
+
+
+    w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "',updateUsingSubmit" + t.getId() + ","+(t.getModel() instanceof PreloadableModel)+", \""+b.getString("error.title")+"\");");
+    if (t.getAutoUpdate() != null && (t.isUpdateUsingSubmit() == null || !t.isUpdateUsingSubmit())) {
+      w.append("\nfunction autoUpdate" + t.getId() + "(){");
+      w.append("\n  pagedTable" + t.getId() + ".updateTable();");
+      w.append("\n  window.setTimeout(autoUpdate" + t.getId() + "," + t.getAutoUpdate() * 1000 + ");");
+      w.append("\n};");
+      w.append("\nautoUpdate" + t.getId() + "();");
+    } else {
+      w.append("\nfunction load" + t.getId() + "(){");
+      w.append("\n  pagedTable" + t.getId() + ".updateTable();");
+      w.append("\n};");
+      w.append("\n  window.onload =load" + t.getId() +";");
     }
+    w.append("\n</script>");
+  }
+
+  private void encodeEndGeneral(FacesContext context, DataTable t) throws IOException {
+
+    Writer w = context.getResponseWriter();
+
+    String ctxPath = context.getExternalContext().getRequestContextPath();
+
 
     w.append("\n</tbody>");
     w.append("\n</table>");
 
-
-
-    DataTableModel m = t.getModel();
 
     w.append("<table class=\"navbar\" cellspacing=\"1\" cellpadding=\"0\">");
     w.append("<tr>");
 
 
     int rowsCount = 0 , selected = 0;
-//    if(ajax) {
-      rowsCount = m.getRowsCount();
-      selected = t.getSelectedRows().size();
-      if(t.isSelectAll()) {
-        selected = rowsCount - selected;
-      }
-      if(t.isShowSelectedOnly()) {
-        rowsCount = selected;
-      }
-//    }
+    rowsCount = t.getTotalSize();
+    selected = t.getSelectedRows().size();
+    if(t.isSelectAll()) {
+      selected = rowsCount - selected;
+    }
+    if(t.isShowSelectedOnly()) {
+      rowsCount = selected;
+    }
 
     if (rowsCount > t.getPageSize()) {
 
@@ -311,33 +417,16 @@ public class DataTableRenderer extends Renderer {
     w.append("</td>");
     w.append("</tr>");
     w.append("</table>");
+  }
 
-    if(!ajax) {
-      w.append("\n</div>");
-      w.append("<table id=\""+t.getId()+"_overlay\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
-          .append("<img src=\"" + ctxPath + "/images/loading.gif\" alt=\"\" style=\"margin-top:auto;margin-bottom:auto;\"/>")
-          .append("</td></tr></table>");
-      w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
 
-      if (t.isUpdateUsingSubmit() == null)
-        w.append("\nvar updateUsingSubmit" + t.getId() + "= false;");
-      else
-        w.append("\nvar updateUsingSubmit" + t.getId() + "= " + t.isUpdateUsingSubmit() + ";");
+  public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+    DataTable t = (DataTable) component;
 
-      w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "',updateUsingSubmit" + t.getId() + ");");
-      if (t.getAutoUpdate() != null && (t.isUpdateUsingSubmit() == null || !t.isUpdateUsingSubmit())) {
-        w.append("\nfunction autoUpdate" + t.getId() + "(){");
-        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
-        w.append("\n  window.setTimeout(autoUpdate" + t.getId() + "," + t.getAutoUpdate() * 1000 + ");");
-        w.append("\n};");
-        w.append("\nautoUpdate" + t.getId() + "();");
-      } else {
-//        w.append("\nfunction load" + t.getId() + "(){");
-//        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
-//        w.append("\n};");
-//        w.append("\n  window.onload =load" + t.getId() +";");
-      }
-      w.append("\n</script>");
+    if(ajax) {
+      encodeEndAjax(context, t);
+    }else {
+      encodeEndNoneAjax(context, t);
     }
 
     if (ajax && (context instanceof AjaxFacesContext))
@@ -383,5 +472,52 @@ public class DataTableRenderer extends Renderer {
       i++;
     }
     return res;
+  }
+
+
+  static String jsonEscape(String s) {
+    StringBuilder sb = new StringBuilder();
+    for(int i=0;i<s.length();i++){
+      char ch=s.charAt(i);
+      switch(ch){
+        case '"':
+          sb.append("\\\"");
+          break;
+        case '\\':
+          sb.append("\\");
+          break;
+        case '\b':
+          sb.append("\\b");
+          break;
+        case '\f':
+          sb.append("\\f");
+          break;
+        case '\n':
+//				sb.append("\\n");
+          break;
+        case '\r':
+          sb.append("\\r");
+          break;
+        case '\t':
+          sb.append("\\t");
+          break;
+        case '/':
+          sb.append("/");
+          break;
+        default:
+          if((ch>='\u0000' && ch<='\u001F') || (ch>='\u007F' && ch<='\u009F') || (ch>='\u2000' && ch<='\u20FF')){
+            String ss=Integer.toHexString(ch);
+            sb.append("\\u");
+            for(int k=0;k<4-ss.length();k++){
+              sb.append('0');
+            }
+            sb.append(ss.toUpperCase());
+          }
+          else{
+            sb.append(ch);
+          }
+      }
+    }
+    return sb.toString();
   }
 }

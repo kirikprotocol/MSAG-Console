@@ -7,10 +7,13 @@ import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.ModelException;
+import mobi.eyeline.informer.web.components.data_table.model.PreloadableModel;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.controllers.LongOperationController;
+import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
 import java.io.IOException;
@@ -24,7 +27,7 @@ import java.util.*;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public class MessagesByDeliveriesController extends LongOperationController {
+public class MessagesByDeliveriesController extends InformerController{
   private User currentUser;
   private boolean initError = false;
   private MessagesByDeliveriesTotals totals;
@@ -35,6 +38,10 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   private String nameFilter;
 
+  private boolean init;
+
+  private LoadListener loadListener;
+
   public MessagesByDeliveriesController() {
     super();
     totals = new MessagesByDeliveriesTotals();
@@ -42,7 +49,25 @@ public class MessagesByDeliveriesController extends LongOperationController {
     filter = new DeliveryStatFilter();
     initUser();
     filter.setFromDate(getLastWeekStart().getTime());
-    start();
+  }
+
+  private boolean loaded;
+
+
+  public boolean isLoaded() {
+    return loaded;
+  }
+
+  public String start() {
+    records.clear();
+    init = true;
+    loaded = false;
+    loadListener = null;
+    return null;
+  }
+
+  public boolean isInit() {
+    return init;
   }
 
   protected static Calendar getLastWeekStart() {
@@ -70,7 +95,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
   }
 
   public void clearFilter() {
-    reset();
+    loaded = false;
     totals.reset();
     records.clear();
     initUser();
@@ -236,8 +261,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
   }
 
 
-  @Override
-  public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
+  public void execute(final Configuration config, final Locale locale, final LoadListener listener) throws AdminException {
     totals.reset();
     records.clear();
 
@@ -251,32 +275,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
     final Map<Integer, MessagesByDeliveriesRecord> recsMap = new HashMap<Integer, MessagesByDeliveriesRecord>();
 
-    config.statistics(deliveryFilter, new DeliveryStatVisitor() {
-
-      public boolean visit(DeliveryStatRecord rec, int total, int current) {
-        setCurrentAndTotal(current, total);
-
-        Integer key = rec.getTaskId();
-        MessagesByDeliveriesRecord oldRecord = recsMap.get(key);
-        String[] region = new String[1];
-        String[] delivery = new String[1];
-        int state = getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
-        boolean archivated = state == 0;
-        boolean deleted = state == -1;
-        boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
-        if (oldRecord == null) {
-          oldRecord = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, true);
-          recsMap.put(key, oldRecord);
-        }else {
-          MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, false);
-          oldRecord.add(c);
-        }
-        oldRecord.updateTime(rec.getDate());
-        oldRecord.setDeliveryStatus(getDeliveryStatus(config, locale, rec.getUser(), rec.getTaskId()));
-
-        return !isCancelled();
-      }
-    });
+    config.statistics(deliveryFilter, new DeliveryStatVisitorImpl(listener, recsMap, config, locale));
 
     for (MessagesByDeliveriesRecord r : recsMap.values()) {
       if (hideDeleted && r.isDeletedDelviery())
@@ -290,7 +289,11 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public DataTableModel getRecords() {
 
-    return new DataTableModel() {
+    final Locale locale = getLocale();
+
+    final Configuration config = getConfig();
+
+    return new PreloadableModel() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
@@ -312,6 +315,30 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
       public int getRowsCount() {
         return records.size();
+      }
+
+      @Override
+      public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        LoadListener listener = null;
+        if(!loaded) {
+          if(loadListener == null) {
+            loadListener = new LoadListener();
+            new Thread() {
+              public void run() {
+                try{
+                  MessagesByDeliveriesController.this.execute(config, locale, loadListener);
+                }catch (AdminException e){
+                  logger.error(e,e);
+                  loadListener.setLoadError(new ModelException(e.getMessage(locale)));
+                }finally {
+                  loaded = true;
+                }
+              }
+            }.start();
+          }
+          listener = loadListener;
+        }
+        return listener;
       }
     };
   }
@@ -336,5 +363,45 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public MessagesByDeliveriesTotals getTotals() {
     return totals;
+  }
+
+  private class DeliveryStatVisitorImpl implements DeliveryStatVisitor {
+
+    private final LoadListener listener;
+    private final Map<Integer, MessagesByDeliveriesRecord> recsMap;
+    private final Configuration config;
+    private final Locale locale;
+
+    public DeliveryStatVisitorImpl(LoadListener listener, Map<Integer, MessagesByDeliveriesRecord> recsMap, Configuration config, Locale locale) {
+      this.listener = listener;
+      this.recsMap = recsMap;
+      this.config = config;
+      this.locale = locale;
+    }
+
+    public boolean visit(DeliveryStatRecord rec, int total, int current) {
+      listener.setCurrent(current);
+      listener.setTotal(total);
+
+      Integer key = rec.getTaskId();
+      MessagesByDeliveriesRecord oldRecord = recsMap.get(key);
+      String[] region = new String[1];
+      String[] delivery = new String[1];
+      int state = getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
+      boolean archivated = state == 0;
+      boolean deleted = state == -1;
+      boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
+      if (oldRecord == null) {
+        oldRecord = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, true);
+        recsMap.put(key, oldRecord);
+      }else {
+        MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, false);
+        oldRecord.add(c);
+      }
+      oldRecord.updateTime(rec.getDate());
+      oldRecord.setDeliveryStatus(getDeliveryStatus(config, locale, rec.getUser(), rec.getTaskId()));
+
+      return true;
+    }
   }
 }

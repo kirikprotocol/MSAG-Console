@@ -4,10 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.archive.ArchiveDelivery;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.controllers.InformerController;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
 
@@ -172,7 +169,7 @@ public class DeliveriesResultController extends InformerController{
     }
 
     return new ModelWithObjectIds() {
-      public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
+      public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) throws ModelException {
         try {
           List<ArchiveDelivery> deliveries = getDeliveries(startPos, count, sortOrder);
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(deliveries.size());
@@ -183,8 +180,7 @@ public class DeliveriesResultController extends InformerController{
           }
           return rows;
         } catch (AdminException e) {
-          addError(e);
-          return Collections.emptyList();
+          throw new ModelException(e.getMessage(getLocale()));
         }
       }
 
@@ -193,7 +189,7 @@ public class DeliveriesResultController extends InformerController{
         return ((DeliveryRow)value).getId().toString();
       }
 
-      public int getRowsCount() {
+      public int getRowsCount() throws ModelException {
         try {
           final int[] count = new int[]{0};
           getConfig().getDeliveriesResult(reqId, new Visitor<ArchiveDelivery>() {
@@ -207,8 +203,7 @@ public class DeliveriesResultController extends InformerController{
           });
           return count[0];
         } catch (AdminException e) {
-          addError(e);
-          return 0;
+          throw new ModelException(e.getMessage(getLocale()));
         }
       }
     };

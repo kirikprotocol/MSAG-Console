@@ -321,7 +321,7 @@
   <managed-bean>
     <managed-bean-name>index1</managed-bean-name>
     <managed-bean-class>mobi.eyeline.informer.web.controllers.Index1Controller</managed-bean-class>
-    <managed-bean-scope>request</managed-bean-scope>
+    <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>

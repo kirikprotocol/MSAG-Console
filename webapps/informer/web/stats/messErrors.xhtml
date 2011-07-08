@@ -12,70 +12,51 @@
   <ui:define name="content">
 
     <tr:form>
-      <c:set var="longOpState" value="#{messErrors.state}"/>
 
       <h:inputHidden id="delivery" value="#{messErrors.deliveryId}"/>
       <h:inputHidden id="errors_stats_come_back_params" value="#{messErrors.backParams}"/>
       <h:inputHidden id="errors_stats_come_back" value="#{messErrors.backAction}"/>
 
-      <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}">
 
-        <eye:message level="error" rendered="#{longOpState == 3}">
-          <h:outputText value="#{messErrors.error}"/>
-        </eye:message>
+      <eye:dataTableFilter bean="#{messErrors}" applyAction="start" clearAction="clearFilter">
 
-        <eye:dataTableFilter bean="#{messErrors}" applyAction="start" clearAction="clearFilter">
+        <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign">
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
+          <h:selectOneMenu value="#{messErrors.groupType}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{messErrors.groupTypes}"/>
+          </h:selectOneMenu>
+        </h:panelGrid>
 
-          <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign">
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
-            <h:selectOneMenu value="#{messErrors.groupType}">
-              <f:selectItem itemLabel="" itemValue=""/>
-              <f:selectItems value="#{messErrors.groupTypes}"/>
-            </h:selectOneMenu>
-          </h:panelGrid>
+      </eye:dataTableFilter>
 
-        </eye:dataTableFilter>
+      <eye:delimiter/>
 
-        <eye:delimiter/>
+      <h:panelGroup rendered="#{messErrors.init}">
+        <ui:include src="#{messErrors.aggregated ? 'messErrors_aggr.xhtml' : ''}"/>
+        <ui:include src="#{!messErrors.aggregated ? 'messErrors_simple.xhtml' : ''}"/>
+      </h:panelGroup>
 
-        <h:panelGroup rendered="#{longOpState == 1}">
 
-          <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-            <h:outputText value="#{msg['processing.label']}"/>
-            <eye:progressBar current="#{messErrors.current}" maximum="#{messErrors.total}" width="500" height="20" />
-          </h:panelGrid>
 
-          <eye:delimiter/>
+      <eye:delimiter/>
 
-          <eye:buttons>
-            <eye:button>
-              <tr:commandLink text="#{msg['stop.button']}" action="#{messErrors.cancel}"/>
-            </eye:button>
-            <eye:space/>
-          </eye:buttons>
-        </h:panelGroup>
+      <eye:buttons rendered="#{messErrors.init}">
+        <eye:button >
+          <tr:commandLink text="#{msg['informer.stats.by.errors.back']}" action="#{messErrors.backAction}" immediate="true">
+            <f:param value="#{messErrors.backParams}" name="errors_stats_come_back_params"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['informer.stats.by.errors.download']}">
+            <tr:fileDownloadActionListener method="#{messErrors.download}" contentType="application/csv" filename="errors.csv"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
 
-        <h:panelGroup rendered="#{longOpState == 2}">
-          <ui:include src="#{messErrors.aggregated ? 'messErrors_aggr.xhtml' : ''}"/>
-          <ui:include src="#{!messErrors.aggregated ? 'messErrors_simple.xhtml' : ''}"/>
-        </h:panelGroup>
 
-        <eye:buttons rendered="#{longOpState == 2 || longOpState == 3}">
-          <eye:button >
-            <tr:commandLink text="#{msg['informer.stats.by.errors.back']}" action="#{messErrors.backAction}" immediate="true">
-              <f:param value="#{messErrors.backParams}" name="errors_stats_come_back_params"/>
-            </tr:commandLink>
-          </eye:button>
-          <eye:space/>
-          <eye:button rendered="#{longOpState == 2}" >
-            <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['informer.stats.by.errors.download']}">
-              <tr:fileDownloadActionListener method="#{messErrors.download}" contentType="application/csv" filename="errors.csv"/>
-            </tr:commandLink>
-          </eye:button>
-        </eye:buttons>
-      </eye:updatableContent>
-
-      <eye:buttons rendered="#{longOpState == 0 }">
+      <eye:buttons rendered="#{!messErrors.init}">
         <eye:button >
           <tr:commandLink text="#{msg['informer.stats.by.errors.back']}" action="#{messErrors.backAction}" immediate="true">
             <f:param value="#{messErrors.backParams}" name="errors_stats_come_back_params"/>

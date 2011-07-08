@@ -6,11 +6,13 @@ import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.informer.admin.delivery.MessageFilter;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelException;
+import mobi.eyeline.informer.web.components.data_table.model.PreloadableModel;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.controllers.LongOperationController;
+import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
 import java.io.IOException;
@@ -23,7 +25,7 @@ import java.util.ResourceBundle;
 /**
  * @author Aleksandr Khalitov
  */
-public class ErrorStatsController extends LongOperationController{
+public class ErrorStatsController extends InformerController{
 
   private Integer deliveryId;
 
@@ -42,6 +44,16 @@ public class ErrorStatsController extends LongOperationController{
   public static final String COME_BACK_PARAMS = "errors_stats_come_back_params";
   public static final String COME_BACK = "errors_stats_come_back";
 
+  private boolean loaded;
+
+  private boolean init = false;
+
+  private LoadListener loadListener;
+
+  public boolean isLoaded() {
+    return loaded;
+  }
+
   public ErrorStatsController() {
     config = getConfig();
     informerStrategy = new CommonInformerStrategy(config);
@@ -52,23 +64,26 @@ public class ErrorStatsController extends LongOperationController{
     return groupType != null;
   }
 
-  @Override
-  public void execute(Configuration config, Locale locale) throws Exception {
+  public void execute(LoadListener listener) throws AdminException {
     if(groupType == null) {
       statsStrategy = new SimpleErrorStatsStrategy(informerStrategy);
     }else {
       statsStrategy = new AggregatedErrorStatsStrategy(groupType, informerStrategy);
     }
-    ErrorStatsStrategy.ProgressListener pL = new ProgressListenerImpl();
-    statsStrategy.execute(delivery, user, pL);
+    statsStrategy.execute(delivery, user, listener);
   }
 
-  @Override
+  public boolean isInit() {
+    return init;
+  }
+
   public String start() {
+    loaded = false;
+    loadListener = null;
+    init = true;
     if(deliveryId == null) {
       return null;
     }
-    reset();
     user = config.getUser(getUserName());
     if(user == null) {
       return null;
@@ -82,7 +97,7 @@ public class ErrorStatsController extends LongOperationController{
     if(delivery == null) {
       return null;
     }
-    return super.start();
+    return null;
   }
 
 
@@ -132,10 +147,33 @@ public class ErrorStatsController extends LongOperationController{
 
   public DataTableModel getRecords() {
 
-    if (getState() != 2)
-      return new EmptyDataTableModel();
+    final Locale locale = getLocale();
 
-    return new DataTableModel() {
+    return new PreloadableModel() {
+
+      @Override
+      public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        LoadListener listener = null;
+        if(!loaded) {
+          if(loadListener == null) {
+            loadListener = new LoadListener();
+            new Thread() {
+              public void run() {
+                try{
+                  ErrorStatsController.this.execute(loadListener);
+                }catch (AdminException e){
+                  logger.error(e,e);
+                  loadListener.setLoadError(new ModelException(e.getMessage(locale)));
+                }finally {
+                  loaded = true;
+                }
+              }
+            }.start();
+          }
+          listener = loadListener;
+        }
+        return listener;
+      }
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         return statsStrategy.getRows(startPos, count, sortOrder);
@@ -188,17 +226,6 @@ public class ErrorStatsController extends LongOperationController{
       result.add(new SelectItem(s, bundle.getString("informer.stats.by.errors.group."+s)));
     }
     return result;
-  }
-
-  private class ProgressListenerImpl implements ErrorStatsStrategy.ProgressListener {
-    @Override
-    public void incrementCurrent() {
-      current++;
-    }
-    @Override
-    public void setTotal(int t) {
-      total = t;
-    }
   }
 
 

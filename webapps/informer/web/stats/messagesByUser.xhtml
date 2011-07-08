@@ -16,7 +16,6 @@
   <ui:define name="content">
 
     <tr:form id="smsc" rendered="#{!messagesByUserStats.initError}">
-      <eye:set var="longOpState" value="#{messagesByUserStats.state}"/>
 
 
         <eye:dataTableFilter bean="#{messagesByUserStats}" clearAction="clearFilter" applyAction="start">
@@ -37,33 +36,7 @@
 
         <eye:delimiter/>
 
-
-        <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
-
-          <eye:message level="error" rendered="#{longOpState == 3}">
-            <h:outputText value="#{messagesByUserStats.error}"/>
-          </eye:message>
-
-
-          <h:panelGroup rendered="#{longOpState == 1}">
-            <tr:message id="upload_message"/>
-
-            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-              <h:outputText value="#{msg['processing.label']}  #{messagesByUserStats.current}"/>
-              <eye:progressBar current="#{messagesByUserStats.current}" maximum="#{messagesByUserStats.total}" width="500" height="20" />
-            </h:panelGrid>
-
-            <eye:delimiter/>
-
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByUserStats.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
-          </h:panelGroup>
-
-          <eye:dataTable value="#{messagesByUserStats.records}" var="row" rendered="#{longOpState == 2}">
+          <eye:dataTable value="#{messagesByUserStats.records}" var="row" rendered="#{messagesByUserStats.init}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <tr:panelGroupLayout shortDesc="#{row.userDetails}" rendered="#{statsMessagesByRec.admin and row.user != null}">
@@ -109,7 +82,7 @@
 
           <eye:delimiter/>
 
-          <eye:buttons rendered="#{longOpState == 2}">
+          <eye:buttons rendered="#{messagesByUserStats.init}">
             <eye:space/>
             <eye:button>
               <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
@@ -118,7 +91,7 @@
             </eye:button>
           </eye:buttons>
 
-        </eye:updatableContent>
+
 
 
     </tr:form>

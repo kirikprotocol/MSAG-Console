@@ -4,15 +4,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:eye="http://taglib.eyeline.mobi">
 
 
 <ui:composition>
 
-  <eye:dataTable value="#{messErrors.records}" var="row" rendered="#{longOpState == 2}" >
+  <eye:dataTable value="#{messErrors.records}" var="row">
     <eye:row>
       <eye:column name="errorCode" title="#{msg['informer.deliveries.message.error']}" width="20%" align="center" sortable="true">
         <h:outputText value="#{row.errorCode}"/>

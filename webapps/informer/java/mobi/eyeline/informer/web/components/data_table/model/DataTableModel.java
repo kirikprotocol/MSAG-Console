@@ -17,12 +17,12 @@ public interface DataTableModel {
    * @param sortOrder порядок сортировки
    * @return список экземпляров DataTableRow согласно указанным критериям
    */
-  List getRows(int startPos, int count, DataTableSortOrder sortOrder);
+  List getRows(int startPos, int count, DataTableSortOrder sortOrder) throws ModelException;
 
   /**
    * Возвращает общее число элементов в таблице
    *
    * @return общее число элементов в таблице
    */
-  int getRowsCount();
+  int getRowsCount() throws ModelException;
 }

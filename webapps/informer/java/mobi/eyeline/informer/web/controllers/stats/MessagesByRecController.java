@@ -4,11 +4,13 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelException;
+import mobi.eyeline.informer.web.components.data_table.model.PreloadableModel;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.controllers.LongOperationController;
+import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
 import java.io.IOException;
@@ -24,7 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public class MessagesByRecController extends LongOperationController {
+public class MessagesByRecController extends InformerController {
   private User user;
   private boolean initError = false;
   private List<MessagesByRecRecord> records;
@@ -34,6 +36,12 @@ public class MessagesByRecController extends LongOperationController {
   private Date tillDate;
   private Address msisdn;
   private String allowedUser;
+
+  private boolean loaded;
+
+  private boolean init;
+
+  private LoadListener loadListener;
 
   public MessagesByRecController() {
     super();
@@ -52,7 +60,8 @@ public class MessagesByRecController extends LongOperationController {
   }
 
   public void clearFilter() {
-    reset();
+    loaded = false;
+    loadListener = null;
     try{
       lock.lock();
       records.clear();
@@ -63,7 +72,25 @@ public class MessagesByRecController extends LongOperationController {
     setFromDate(null);
     setTillDate(null);
     msisdn = null;
+  }
 
+  public String start() {
+    loaded = false;
+    loadListener = null;
+    init = true;
+    return null;
+  }
+
+  public boolean isInit() {
+    return init;
+  }
+
+  public boolean isLoaded() {
+    return loaded;
+  }
+
+  public void setLoaded(boolean loaded) {
+    this.loaded = loaded;
   }
 
   public void setUser(User user) {
@@ -105,8 +132,7 @@ public class MessagesByRecController extends LongOperationController {
 
   private Lock lock = new ReentrantLock();
 
-  @Override
-  public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
+  public void execute(final Configuration config, final Locale locale, final LoadListener listener) throws AdminException {
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
     deliveryFilter.setCreateDateFrom(fromDate);
@@ -115,46 +141,15 @@ public class MessagesByRecController extends LongOperationController {
       deliveryFilter.setUserIdFilter(allowedUser);
     }
 
-    setCurrentAndTotal(0, config.countDeliveries(getUser().getLogin(), deliveryFilter));
+    listener.setCurrent(0);
+    listener.setTotal(config.countDeliveries(getUser().getLogin(), deliveryFilter));
     try{
       lock.lock();
       records.clear();
       config.getDeliveries(getUser().getLogin(), deliveryFilter, 1000,
-          new Visitor<Delivery>() {
-            public boolean visit(Delivery delivery) throws AdminException {
-              final int deliveryId = delivery.getId();
-              final String name = delivery.getName();
-              final String userId = delivery.getOwner();
-              final User owner = config.getUser(userId);
-
-              MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate != null ? fromDate : delivery.getCreateDate(),
-                  tillDate != null ? tillDate : delivery.getEndDate() != null ? delivery.getEndDate() : new Date());
-              messageFilter.setMsisdnFilter(msisdn.getSimpleAddress());
-
-              config.getMessagesStates(getUser().getLogin(), messageFilter, 1000,
-                  new Visitor<Message>() {
-                    public boolean visit(Message message) throws AdminException {
-                      String errString = null;
-                      Integer errCode = message.getErrorCode();
-                      if (errCode != null) {
-                        try {
-                          errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode." + errCode);
-                        }
-                        catch (MissingResourceException ex) {
-                          errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode.unknown");
-                        }
-                      }
-                      MessagesByRecRecord rec = new MessagesByRecRecord(message.getAbonent().getSimpleAddress(), deliveryId, userId, owner, name, message.getText(), message.getDate(), message.getState(), errString);
-                      records.add(rec);
-                      return !isCancelled();
-                    }
-                  }
-              );
-              setCurrent(getCurrent() + 1);
-              return !isCancelled();
-            }
-          }
+          new DeliveryVisitorImpl(config, locale, listener)
       );
+      loaded = true;
     }finally {
       lock.unlock();
     }
@@ -163,10 +158,38 @@ public class MessagesByRecController extends LongOperationController {
 
   public synchronized DataTableModel getRecords() {
 
-    if (getState() != 2)
-      return new EmptyDataTableModel();
+    final Locale locale = getLocale();
 
-    return new DataTableModel() {
+    final Configuration config = getConfig();
+
+    return new PreloadableModel() {
+
+      @Override
+      public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        LoadListener listener = null;
+        if(!loaded) {
+          if(loadListener == null) {
+            loadListener = new LoadListener();
+            new Thread() {
+              public void run() {
+                try{
+                  MessagesByRecController.this.execute(config, locale, loadListener);
+                }catch (AdminException e){
+                  logger.error(e,e);
+                  loadListener.setLoadError(new ModelException(e.getMessage(locale)));
+                }catch (Exception e){
+                  logger.error(e,e);
+
+                }finally {
+                  loaded = true;
+                }
+              }
+            }.start();
+          }
+          listener = loadListener;
+        }
+        return listener;
+      }
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         try{
@@ -267,4 +290,48 @@ public class MessagesByRecController extends LongOperationController {
 
   //
 
+  private class DeliveryVisitorImpl implements Visitor<Delivery> {
+    private final Configuration config;
+    private final Locale locale;
+    private final LoadListener listener;
+
+    public DeliveryVisitorImpl(Configuration config, Locale locale, LoadListener listener) {
+      this.config = config;
+      this.locale = locale;
+      this.listener = listener;
+    }
+
+    public boolean visit(Delivery delivery) throws AdminException {
+      final int deliveryId = delivery.getId();
+      final String name = delivery.getName();
+      final String userId = delivery.getOwner();
+      final User owner = config.getUser(userId);
+
+      MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate != null ? fromDate : delivery.getCreateDate(),
+          tillDate != null ? tillDate : delivery.getEndDate() != null ? delivery.getEndDate() : new Date());
+      messageFilter.setMsisdnFilter(msisdn.getSimpleAddress());
+
+      config.getMessagesStates(getUser().getLogin(), messageFilter, 1000,
+          new Visitor<Message>() {
+            public boolean visit(Message message) throws AdminException {
+              String errString = null;
+              Integer errCode = message.getErrorCode();
+              if (errCode != null) {
+                try {
+                  errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode." + errCode);
+                }
+                catch (MissingResourceException ex) {
+                  errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode.unknown");
+                }
+              }
+              MessagesByRecRecord rec = new MessagesByRecRecord(message.getAbonent().getSimpleAddress(), deliveryId, userId, owner, name, message.getText(), message.getDate(), message.getState(), errString);
+              records.add(rec);
+              return true;
+            }
+          }
+      );
+      listener.setCurrent(listener.getCurrent() + 1);
+      return true;
+    }
+  }
 }

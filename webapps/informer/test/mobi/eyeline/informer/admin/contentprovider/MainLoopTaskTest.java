@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.*;
@@ -20,7 +21,7 @@ import static org.junit.Assert.*;
 /**
  * @author Aleksandr Khalitov
  */
-//@Ignore
+@Ignore
 public class MainLoopTaskTest {
 
   private MainLoopTask task;
@@ -47,7 +48,7 @@ public class MainLoopTaskTest {
   public void init() throws Exception{
     u = prepareUser();
     fileSystem = new MemoryFileSystem();
-    fileSystem.createNewFile(workDir = new File("cpt-test-"+System.currentTimeMillis()));;
+    fileSystem.createNewFile(workDir = new File("cpt-test-"+System.currentTimeMillis()));
     resource = new SingleFileResource();
     deliveryManager = new TestDeliveryManager();
     ContentProviderContext context = new SingleUserContentPContext(u, deliveryManager, fileSystem);

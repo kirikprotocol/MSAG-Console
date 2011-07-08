@@ -12,5 +12,5 @@ public interface ModelWithObjectIds extends DataTableModel {
    * @param o объект
    * @return идентификатор
    */
-  public String getId(Object o);
+  public String getId(Object o) throws ModelException;
 }

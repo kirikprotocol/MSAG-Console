@@ -1,9 +1,9 @@
 package mobi.eyeline.informer.web.controllers;
 
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
+import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
+import org.apache.log4j.Logger;
 
 import javax.faces.context.FacesContext;
 import java.text.SimpleDateFormat;
@@ -12,13 +12,61 @@ import java.util.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class Index1Controller {
+public class Index1Controller extends InformerController{
+
+  private static final Logger logger = Logger.getLogger(Index1Controller.class);
 
   private static int current = 0;
 
   private Date date;
 
   private List selected = new ArrayList(0);
+
+  private MyDataTablePreloadableModel dataTableModel;
+
+  private boolean init;
+
+  private LoadListener loadListener;
+
+  private boolean loaded;
+
+  public Index1Controller() {
+  }
+
+  public String query() {
+
+    final ArrayList<Integer> list = new ArrayList<Integer>();
+
+    for (int i = 0; i < 100; i++) {
+      list.add(i);
+    }
+
+    dataTableModel = new MyDataTablePreloadableModel(list, getLocale());
+
+    init = true;
+
+    loaded = false;
+
+    loadListener = null;
+
+    return null;
+  }
+
+  public boolean isLoaded() {
+    return loaded;
+  }
+
+  public void setLoaded(boolean loaded) {
+    this.loaded = loaded;
+  }
+
+  public boolean isInit() {
+    return init;
+  }
+
+  public void setInit(boolean init) {
+    this.init = init;
+  }
 
   public String getSelectedStr() {
     return selected == null ? null : selected.toString();
@@ -63,7 +111,7 @@ public class Index1Controller {
     }
     System.out.println(date);
     current = 0;
-    return null;
+    return query();
   }
 
   public String print() {
@@ -105,15 +153,8 @@ public class Index1Controller {
     };
   }
 
-
   public  DataTableModel getModel() {
-
-    final ArrayList<Integer> list = new ArrayList<Integer>();
-
-    for (int i = 0; i < 100; i++)
-      list.add(i);
-
-    return new MyDataTableModel(list);
+    return dataTableModel == null ? new EmptyDataTableModel() : dataTableModel;
   }
 
   public String clear() {
@@ -121,15 +162,24 @@ public class Index1Controller {
     return null;
   }
 
-  public static class MyDataTableModel implements ModelWithObjectIds {
+  public class MyDataTablePreloadableModel implements ModelWithObjectIds, PreloadableModel {
 
     private final ArrayList<Integer> list;
 
-    public MyDataTableModel(ArrayList<Integer> list) {
+    private boolean loaded;
+
+    private Locale locale;
+
+    public MyDataTablePreloadableModel(ArrayList<Integer> list, Locale locale) {
       this.list = list;
+      this.locale = locale;
     }
 
-    public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+    public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) throws ModelException{
+
+//      if(System.currentTimeMillis()%15 == 0) {
+//        throw new ModelException("internal.error");
+//      }
       if (sortOrder != null && sortOrder.getColumnId().equals("mycolumn")) {
         Collections.sort(list, new Comparator<Integer>() {
 
@@ -143,19 +193,54 @@ public class Index1Controller {
       }
 
       ArrayList<Integer> res = new ArrayList<Integer>();
-      for (int i = startPos; i < Math.min(startPos + count, list.size()); i++)
+      for (int i = startPos; i < Math.min(startPos + count, list.size()); i++) {
         res.add(list.get(i));
+      }
 
       return res;
     }
 
-    public int getRowsCount() {
+    public int getRowsCount() throws ModelException{
+
+//      if(System.currentTimeMillis()%15 == 0) {
+//        throw new ModelException("internal.error");
+//      }
       return list.size();
     }
 
-    public String getId(Object value) {
+    public String getId(Object value) throws ModelException{
+//      if(System.currentTimeMillis()%15 == 0) {
+//        throw new ModelException("internal.error");
+//      }
       return value != null ? value.toString() : null;
     }
 
+    @Override
+    public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) {
+      LoadListener listener = null;
+      if(!loaded) {
+        if(loadListener == null) {
+          loadListener = new LoadListener();
+          new Thread() {
+            public void run() {
+              try{
+                loadListener.setTotal(9);
+                for(int i=0;i<10;i++) {
+                  try {
+                    Thread.sleep(250);
+                    loadListener.setCurrent(i);
+                  } catch (InterruptedException e) {}
+                }
+              }finally {
+                loaded = true;
+              }
+            }
+          }.start();
+        }
+        listener = loadListener;
+      }
+      return listener;
+    }
   }
+
 }

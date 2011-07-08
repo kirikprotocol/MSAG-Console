@@ -13,181 +13,150 @@
   <ui:define name="content">
 
     <tr:form>
-      <eye:set var="longOpState" value="#{messagesByDeliveries.state}"/>
 
+      <eye:dataTableFilter bean="#{messagesByDeliveries}" clearAction="clearFilter" applyAction="start">
+        <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column200Width, column50Width, columnTopLeftAlign">
 
-        <eye:dataTableFilter bean="#{messagesByDeliveries}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column200Width, column50Width, columnTopLeftAlign">
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.from_date']}"/>
+          <eye:inputDate value="#{messagesByDeliveries.filter.fromDate}" type="both" />
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.from_date']}"/>
-            <eye:inputDate value="#{messagesByDeliveries.filter.fromDate}" type="both" />
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.deliveryName']}"/>
+          <t:inputText id="Name" value="#{messagesByDeliveries.nameFilter}"/>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.deliveryName']}"/>
-            <t:inputText id="Name" value="#{messagesByDeliveries.nameFilter}"/>
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.hideDeleted']}"/>
+          <h:selectBooleanCheckbox value="#{messagesByDeliveries.hideDeleted}"/>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.hideDeleted']}"/>
-            <h:selectBooleanCheckbox value="#{messagesByDeliveries.hideDeleted}"/>
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.till_date']}"/>
+          <eye:inputDate value="#{messagesByDeliveries.filter.tillDate}"  type="both"/>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.till_date']}"/>
-            <eye:inputDate value="#{messagesByDeliveries.filter.tillDate}"  type="both"/>
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
+          <h:selectOneMenu value="#{messagesByDeliveries.regionId}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{messagesByDeliveries.regions}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.region']}"/>
-            <h:selectOneMenu value="#{messagesByDeliveries.regionId}">
-              <f:selectItem itemLabel="" itemValue=""/>
-              <f:selectItems value="#{messagesByDeliveries.regions}"/>
-            </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap" value="#{msg['stat.page.user']}" rendered="#{messagesByDeliveries.admin}"/>
+          <h:selectOneMenu value="#{messagesByDeliveries.filter.user}" rendered="#{messagesByDeliveries.admin}" required="false">
+            <f:selectItems value="#{messagesByDeliveries.users}"/>
+          </h:selectOneMenu>
 
-            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.user']}" rendered="#{messagesByDeliveries.admin}"/>
-            <h:selectOneMenu value="#{messagesByDeliveries.filter.user}" rendered="#{messagesByDeliveries.admin}" required="false">
-              <f:selectItems value="#{messagesByDeliveries.users}"/>
-            </h:selectOneMenu>
-
-          </h:panelGrid>
-        </eye:dataTableFilter>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
       <eye:delimiter/>
 
-        <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}" >
 
-          <eye:message level="error" rendered="#{longOpState == 3}">
-            <p/>
-            <h:outputText value="#{messagesByDeliveries.error}"/>
-            <p/>
-          </eye:message>
+      <eye:dataTable value="#{messagesByDeliveries.records}" var="row" rendered="#{messagesByDeliveries.init}">
 
-          <h:panelGroup rendered="#{longOpState == 1}">
-            <tr:message id="upload_message"/>
+        <eye:row innerRows="#{row.innerRows}">
 
-            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-              <h:outputText value="#{msg['processing.label']}"/>
-              <eye:progressBar current="#{messagesByDeliveries.current}" maximum="#{messagesByDeliveries.total}" width="500" height="20" />
-            </h:panelGrid>
+          <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="20%" align="center">
+            <h:outputText value="#{row.deliveryName}" rendered="#{row.deletedOrArchivatedDelviery}"/>
 
-            <eye:delimiter/>
+            <tr:panelGroupLayout rendered="#{!row.deletedOrArchivatedDelviery}">
+              <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">#{row.deliveryName}</a>
+            </tr:panelGroupLayout>
 
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByDeliveries.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
-
-          </h:panelGroup>
-
-          <eye:dataTable value="#{messagesByDeliveries.records}" var="row" rendered="#{(longOpState == 2)}" >
-
-            <eye:row innerRows="#{row.innerRows}">
-
-              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="20%" align="center">
-                <h:outputText value="#{row.deliveryName}" rendered="#{row.deletedOrArchivatedDelviery}"/>
-
-                <tr:panelGroupLayout rendered="#{!row.deletedOrArchivatedDelviery}">
-                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/deliveries/edit.faces?delivery=#{row.deliveryId}">#{row.deliveryName}</a>
+            <f:facet name="inner">
+              <h:panelGroup>
+                <h:outputText value="#{row.region}" rendered="#{row.deletedRegion}" style="color:GREEN"/>
+                <tr:panelGroupLayout rendered="#{!row.deletedRegion}">
+                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/regions/edit.faces?REGION_ID=#{row.regionId}">#{row.region}</a>
                 </tr:panelGroupLayout>
+              </h:panelGroup>
+            </f:facet>
 
-                <f:facet name="inner">
-                  <h:panelGroup>
-                    <h:outputText value="#{row.region}" rendered="#{row.deletedRegion}" style="color:GREEN"/>
-                    <tr:panelGroupLayout rendered="#{!row.deletedRegion}">
-                      <a class="xi" href="#{facesContext.externalContext.requestContextPath}/regions/edit.faces?REGION_ID=#{row.regionId}">#{row.region}</a>
-                    </tr:panelGroupLayout>
-                  </h:panelGroup>
-                </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
 
-                <f:facet name="footer">
-                  <h:outputText value="" style="font-weight:bold;"/>
-                </f:facet>
-              </eye:column>
+          <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+            <h:outputText value="#{row.login}" rendered="#{row.user == null}"/>
 
-              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
-                <h:outputText value="#{row.login}" rendered="#{row.user == null}"/>
+            <h:outputText value="#{row.login}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin and row.user != null}"/>
 
-                <h:outputText value="#{row.login}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin and row.user != null}"/>
+            <tr:panelGroupLayout shortDesc="#{row.userDetails}" rendered="#{statsMessagesByRec.admin and row.user != null}">
+              <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.login}">#{row.login}</a>
+            </tr:panelGroupLayout>
 
-                <tr:panelGroupLayout shortDesc="#{row.userDetails}" rendered="#{statsMessagesByRec.admin and row.user != null}">
-                  <a class="xi" href="#{facesContext.externalContext.requestContextPath}/users/edit.faces?userId=#{row.login}">#{row.login}</a>
-                </tr:panelGroupLayout>
+            <f:facet name="footer">
+              <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
 
-                <f:facet name="footer">
-                  <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
-                </f:facet>
-              </eye:column>
+          <eye:column name="startDate" title="#{msg['stat.page.activityStart']}" width="10%" align="center">
+            <h:outputText value="#{row.minDate}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm"/>
+            </h:outputText>
+          </eye:column>
 
-              <eye:column name="startDate" title="#{msg['stat.page.activityStart']}" width="10%" align="center">
-                <h:outputText value="#{row.minDate}">
-                  <f:convertDateTime pattern="dd.MM.yyyy HH:mm"/>
-                </h:outputText>
-              </eye:column>
+          <eye:column name="endDate" title="#{msg['stat.page.activityEnd']}" width="10%" align="center">
+            <h:outputText value="#{row.maxDate}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm"/>
+            </h:outputText>
+          </eye:column>
 
-              <eye:column name="endDate" title="#{msg['stat.page.activityEnd']}" width="10%" align="center">
-                <h:outputText value="#{row.maxDate}">
-                  <f:convertDateTime pattern="dd.MM.yyyy HH:mm"/>
-                </h:outputText>
-              </eye:column>
-
-              <eye:column name="new" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.newMessages}"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.newMessages}"/>
-                </f:facet>
-                <f:facet name="footer">
-                  <h:outputText value="#{messagesByDeliveries.totals.newMessages}" style="font-weight:bold;"/>
-                </f:facet>
-              </eye:column>
-              <eye:column name="process" title="#{msg['message.state.Sent']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.procMessages}"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.procMessages}"/>
-                </f:facet>
-                <f:facet name="footer">
-                  <h:outputText value="#{messagesByDeliveries.totals.processMessages}" style="font-weight:bold;"/>
-                </f:facet>
-              </eye:column>
-              <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
-                </f:facet>
-                <f:facet name="footer">
-                  <h:outputText value="#{messagesByDeliveries.totals.deliveredMessages}(#{messagesByDeliveries.totals.deliveredSms})" style="font-weight:bold;"/>
-                </f:facet>
-              </eye:column>
-              <eye:column name="failed" title="#{msg['message.state.Failed']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.failedMessages}(#{row.failedSms})"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.failedMessages}(#{row.failedSms})"/>
-                </f:facet>
-                <f:facet name="footer">
-                  <h:outputText value="#{messagesByDeliveries.totals.failedMessages}(#{messagesByDeliveries.totals.failedSms})" style="font-weight:bold;"/>
-                </f:facet>
-              </eye:column>
-              <eye:column name="expired" title="#{msg['message.state.Expired']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.expiredMessages}(#{row.expiredSms})"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.expiredMessages}(#{row.expiredSms})"/>
-                </f:facet>
-                <f:facet name="footer">
-                  <h:outputText value="#{messagesByDeliveries.totals.expiredMessages}(#{messagesByDeliveries.totals.expiredSms})" style="font-weight:bold;"/>
-                </f:facet>
-              </eye:column>
+          <eye:column name="new" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.newMessages}"/>
+            <f:facet name="inner">
+              <h:outputText value="#{row.newMessages}"/>
+            </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="#{messagesByDeliveries.totals.newMessages}" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
+          <eye:column name="process" title="#{msg['message.state.Sent']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.procMessages}"/>
+            <f:facet name="inner">
+              <h:outputText value="#{row.procMessages}"/>
+            </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="#{messagesByDeliveries.totals.processMessages}" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
+          <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
+            <f:facet name="inner">
+              <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
+            </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="#{messagesByDeliveries.totals.deliveredMessages}(#{messagesByDeliveries.totals.deliveredSms})" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
+          <eye:column name="failed" title="#{msg['message.state.Failed']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.failedMessages}(#{row.failedSms})"/>
+            <f:facet name="inner">
+              <h:outputText value="#{row.failedMessages}(#{row.failedSms})"/>
+            </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="#{messagesByDeliveries.totals.failedMessages}(#{messagesByDeliveries.totals.failedSms})" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
+          <eye:column name="expired" title="#{msg['message.state.Expired']}" sortable="true" width="10%" align="center">
+            <h:outputText value="#{row.expiredMessages}(#{row.expiredSms})"/>
+            <f:facet name="inner">
+              <h:outputText value="#{row.expiredMessages}(#{row.expiredSms})"/>
+            </f:facet>
+            <f:facet name="footer">
+              <h:outputText value="#{messagesByDeliveries.totals.expiredMessages}(#{messagesByDeliveries.totals.expiredSms})" style="font-weight:bold;"/>
+            </f:facet>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
 
 
-            </eye:row>
-          </eye:dataTable>
+      <eye:delimiter/>
 
+      <eye:buttons rendered="#{messagesByDeliveries.init}">
+        <eye:space/>
+        <eye:button >
+          <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
+            <tr:fileDownloadActionListener method="#{messagesByDeliveries.download}" contentType="application/csv" filename="deliveriesStat.csv"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
 
-          <eye:delimiter/>
-
-          <eye:buttons rendered="#{longOpState == 2}">
-            <eye:space/>
-            <eye:button >
-              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
-                <tr:fileDownloadActionListener method="#{messagesByDeliveries.download}" contentType="application/csv" filename="deliveriesStat.csv"/>
-              </tr:commandLink>
-            </eye:button>
-          </eye:buttons>
-
-        </eye:updatableContent>
 
 
     </tr:form>

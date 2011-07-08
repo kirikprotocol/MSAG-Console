@@ -3,10 +3,7 @@ package mobi.eyeline.informer.web.controllers.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
+import mobi.eyeline.informer.web.components.data_table.model.*;
 
 import javax.faces.event.ActionEvent;
 import java.util.*;
@@ -393,14 +390,14 @@ public class DeliveryListController extends DeliveryController {
       }
 
       return new ModelWithObjectIds() {
-        public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        public List getRows(int startPos, int count, DataTableSortOrder sortOrder) throws ModelException{
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(1);
           if(delivery[0] != null) {
             try {
               calculateDates(u, delivery[0]);
               rows.add(new DeliveryRow(delivery[0], stats[0]));
             } catch (AdminException e) {
-              addError(e);
+              throw new ModelException(e.getMessage(getLocale()));
             }
           }
           return rows;
@@ -420,7 +417,7 @@ public class DeliveryListController extends DeliveryController {
     } else {
 
       return new ModelWithObjectIds() {
-        public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
+        public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) throws ModelException {
           try {
             final boolean calculateDates = sortOrder != null && sortOrder.getColumnId().equals("startDate");
 
@@ -442,10 +439,8 @@ public class DeliveryListController extends DeliveryController {
             return rows;
 
           } catch (AdminException e) {
-            addError(e);
+            throw new ModelException(e.getMessage(getLocale()));
           }
-
-          return Collections.emptyList();
         }
 
         @Override
@@ -453,12 +448,11 @@ public class DeliveryListController extends DeliveryController {
           return ((DeliveryRow)value).getId().toString();
         }
 
-        public int getRowsCount() {
+        public int getRowsCount() throws ModelException{
           try {
             return config.countDeliveries(u.getLogin(), filter);
           } catch (AdminException e) {
-            addError(e);
-            return 0;
+            throw new ModelException(e.getMessage(getLocale()));
           }
         }
       };

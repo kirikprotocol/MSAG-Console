@@ -3,9 +3,10 @@ package mobi.eyeline.informer.web.controllers.users;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.ModelException;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 
 import java.util.*;
 
@@ -63,13 +64,12 @@ public class CPResourceListController extends CPResourceController {
     return new ModelWithObjectIds() {
 
       @Override
-      public String getId(Object value) {
+      public String getId(Object value) throws ModelException {
         Row r = (Row)value;
         try {
           return r.getUser()+'|'+r.getHashId();
         } catch (AdminException e) {
-          addError(e);
-          return null;
+          throw new ModelException(e.getMessage(getLocale()));
         }
       }
 

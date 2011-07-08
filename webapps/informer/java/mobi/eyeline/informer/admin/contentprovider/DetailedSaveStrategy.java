@@ -101,6 +101,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     String[] csvFromInProcess = csvFilesFromWork(inProcess);
     for(int i = 0;i < csvFromInProcess.length;i++) {
       String f = csvFromInProcess[i];
+
       if(resource.contains(f)) {
         String newFile = buildInProcess(f);
         if(!resource.contains(newFile)) {

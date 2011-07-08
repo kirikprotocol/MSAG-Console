@@ -7,10 +7,7 @@ import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.controllers.InformerController;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
 
@@ -124,7 +121,7 @@ public class MessagesResultController extends InformerController{
     }
 
     return new ModelWithObjectIds() {
-      public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
+      public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) throws ModelException {
         try {
           List<ArchiveMessage> messages = getMessages(startPos, count, sortOrder);
           List<MessageRow> rows = new ArrayList<MessageRow>(messages.size());
@@ -135,8 +132,7 @@ public class MessagesResultController extends InformerController{
           }
           return rows;
         } catch (AdminException e) {
-          addError(e);
-          return Collections.emptyList();
+          throw new ModelException(e.getMessage(getLocale()));
         }
       }
 
@@ -145,7 +141,7 @@ public class MessagesResultController extends InformerController{
         return Long.toString(((MessageRow)value).getId());
       }
 
-      public int getRowsCount() {
+      public int getRowsCount() throws ModelException {
         try {
           final int[] count = new int[]{0};
           getConfig().getMessagesResult(reqId, new Visitor<ArchiveMessage>() {
@@ -159,8 +155,7 @@ public class MessagesResultController extends InformerController{
           });
           return count[0];
         } catch (AdminException e) {
-          addError(e);
-          return 0;
+          throw new ModelException(e.getMessage(getLocale()));
         }
       }
     };

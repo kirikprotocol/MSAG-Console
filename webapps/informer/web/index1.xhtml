@@ -19,61 +19,47 @@
 
     <h:form>
 
-      <!--<eye:inputDate value="#{index1.date}" type="full"/>-->
+      <eye:inputDate value="#{index1.date}" type="full"/>
 
       <tr:commandLink id="id1" text="Submit date" action="#{index1.printDate}"/>
 
-      <!--<p/>-->
-      <!--<h:outputText value="Selected on submit: #{index1.selectedStr}"/>-->
-
-      <c:if test="#{index1.date != null}">
-        <tr:commandLink id="id2" text="Submit date" action="#{index1.print}"/>
-      </c:if>
-
-      <!--<c:set var="i" value="1"/>-->
-
-      <!--<eye:dataTable value="#{index1.model}" var="m" selectedRows="#{index1.selected}">-->
-        <!--<eye:row innerData="#{i == 15}">-->
-
-          <!--<c:set var="i" value="#{i+1}"/>-->
+      <p/>
+      <h:outputText value="Selected on submit: #{index1.selectedStr}"/>
 
 
-          <!--<eye:column name="mycolumn" title="e1" width="33%" sortable="true" align="center">-->
+      <c:set var="i" value="1"/>
 
-            <!--<h:outputText value="#{m}"/>-->
+      <eye:dataTable value="#{index1.model}" var="m" selectedRows="#{index1.selected}" rendered="#{index1.init}">
+        <eye:row innerData="#{i == 15}">
 
-            <!--<f:facet name="footer">-->
-              <!--<h:outputText value="e1 footer"/>-->
-            <!--</f:facet>-->
-
-          <!--</eye:column>-->
-
-          <!--<eye:column name="e2" title="e2" width="33%" sortable="true">-->
-            <!--<h:outputText value="#{m%2}"/>-->
-          <!--</eye:column>-->
+          <c:set var="i" value="#{i+1}"/>
 
 
-          <!--<eye:column name="e3" title="e3" width="33%" sortable="true">-->
+          <eye:column name="mycolumn" title="e1" width="33%" sortable="true" align="center">
 
-            <!--<h:outputText value="#{m%3}"/>-->
+            <h:outputText value="#{m}"/>
 
-            <!--<f:facet name="footer">-->
-              <!--<h:outputText value="e3 footer"/>-->
-            <!--</f:facet>-->
 
-          <!--</eye:column>-->
+          </eye:column>
 
-        <!--</eye:row>-->
+          <eye:column name="e2" title="e2" width="33%" sortable="true">
+            <h:outputText value="#{m%2}"/>
+          </eye:column>
 
-        <!--<f:facet name="footer">-->
-          <!--<h:outputText value="sdfgjkadfgdsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasadasdasdasadsadsadasdadasdsaddddddddddsssssssadsdsaasdasd"/>-->
-        <!--</f:facet>-->
 
-        <!--<f:facet name="innerData">-->
-          <!--<h:outputText value="inner data"/>-->
-        <!--</f:facet>-->
+          <eye:column name="e3" title="e3" width="33%" sortable="true">
 
-      <!--</eye:dataTable>-->
+            <h:outputText value="#{m%3}"/>
+
+          </eye:column>
+
+        </eye:row>
+
+        <f:facet name="innerData">
+          <h:outputText value="inner data"/>
+        </f:facet>
+
+      </eye:dataTable>
 
 
 

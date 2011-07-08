@@ -6,10 +6,8 @@ import mobi.eyeline.informer.admin.delivery.stat.StatEntity;
 import mobi.eyeline.informer.admin.delivery.stat.StatEntityProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.DateAndFile;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
+import mobi.eyeline.informer.web.components.data_table.LoadListener;
+import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.application.FacesMessage;
@@ -24,7 +22,14 @@ import java.util.*;
  * Time: 11:19:29
  */
 public class StatsSizeController extends DeliveryStatController  {
+
   private List<String> selectedRows;
+
+  private boolean loaded;
+
+  private boolean init;
+
+  private LoadListener loadListener;
 
 
   public StatsSizeController() {
@@ -32,12 +37,13 @@ public class StatsSizeController extends DeliveryStatController  {
     setAggregation(AggregationType.MONTH);
   }
 
+
   public DataTableModel getRecords() {
 
-    if (getState() != 2)
-      return new EmptyDataTableModel();
+    final Locale locale = getLocale();
+    final Configuration config = getConfig();
 
-    class DataTableModelImpl implements DataTableModel, ModelWithObjectIds {
+    class DataTablePreloadableModelImpl implements ModelWithObjectIds, PreloadableModel {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
@@ -69,13 +75,40 @@ public class StatsSizeController extends DeliveryStatController  {
       public String getId(Object o) {
         return ((StatsSizeRecord)o).getPeriodId();
       }
-    };
-    return new DataTableModelImpl();
+
+      @Override
+      public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        LoadListener listener = null;
+        if(!loaded) {
+          if(loadListener == null) {
+            loadListener = new LoadListener();
+            new Thread() {
+              public void run() {
+                try{
+                  StatsSizeController.this.load(config, locale, loadListener);
+                }catch (AdminException e){
+                  logger.error(e,e);
+                  loadListener.setLoadError(new ModelException(e.getMessage(locale)));
+                }catch (Exception e){
+                  logger.error(e,e);
+
+                }finally {
+                  loaded = true;
+                }
+              }
+            }.start();
+          }
+          listener = loadListener;
+        }
+        return listener;
+      }
+    }
+    return new DataTablePreloadableModelImpl();
   }
 
 
   @Override
-  void loadRecords(Configuration config, Locale locale) throws AdminException, InterruptedException {
+  void loadRecords(Configuration config, Locale locale, LoadListener listener) throws AdminException {
 
     DeliveryStatFilter filter = getFilter();
     final List<StatEntity> files = new LinkedList<StatEntity>();
@@ -93,7 +126,8 @@ public class StatsSizeController extends DeliveryStatController  {
 
     int total = files.size() + dfiles.size();
 
-    setCurrentAndTotal(0, total == 0 ? 1 : total);
+    listener.setCurrent(0);
+    listener.setTotal(total == 0 ? 1 : total);
 
     for(StatEntity f : files) {
 
@@ -107,7 +141,7 @@ public class StatsSizeController extends DeliveryStatController  {
         oldRecord.add(newRecord);
       }
       getTotals().add(newRecord);
-      setCurrent(getCurrent() + 1);
+      listener.setCurrent(listener.getCurrent()+1);
 
     }
 
@@ -120,8 +154,9 @@ public class StatsSizeController extends DeliveryStatController  {
         oldRecord.add(newRecord);
       }
       getTotals().add(newRecord);
-      setCurrent(getCurrent() + 1);
+      listener.setCurrent(listener.getCurrent()+1);
     }
+    loaded = true;
   }
 
   @Override
@@ -201,9 +236,16 @@ public class StatsSizeController extends DeliveryStatController  {
     return null;
   }
 
-  @Override
+  public boolean isInit() {
+    return init;
+  }
+
   public String start() {
     selectedRows = null;
-    return super.start();
+    loaded = false;
+    loadListener = null;
+    clearRecords();
+    init = true;
+    return null;
   }
 }
