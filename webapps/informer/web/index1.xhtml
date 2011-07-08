@@ -23,6 +23,10 @@
 
       <tr:commandLink id="id1" text="Submit date" action="#{index1.printDate}"/>
 
+      <tr:inputText id="id1" simple="true">
+        <tr:validateLongRange/>
+      </tr:inputText>
+
       <p/>
       <h:outputText value="Selected on submit: #{index1.selectedStr}"/>
 

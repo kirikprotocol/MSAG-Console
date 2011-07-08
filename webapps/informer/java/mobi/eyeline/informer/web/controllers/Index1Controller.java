@@ -178,7 +178,7 @@ public class Index1Controller extends InformerController{
 
     public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) throws ModelException{
 
-      if(System.currentTimeMillis()%15 == 0) {
+      if(System.currentTimeMillis()%1 == 0) {
         throw new ModelException(new DeliveryException("interaction_error").getMessage(locale));
       }
       if (sortOrder != null && sortOrder.getColumnId().equals("mycolumn")) {

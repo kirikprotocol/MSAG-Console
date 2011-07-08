@@ -14,7 +14,6 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
   var progressElement = document.getElementById(tableId+"_progress");
   var progressContentElement = document.getElementById(tableId+"_progress_content");
   var checked = false;
-  var viewProgress = _progress;
   var titleError = _titleError;
 
   /**
