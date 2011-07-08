@@ -79,8 +79,8 @@ public class DetailedSaveStrategyTest {
   @Test
   public void testSynchrInProgressNothing() throws AdminException {
 
-    File resourceFile = prepareResourceFile(false, ".inprocess");
-    File localFile = prepareLocalFile(false, ".inprocess");
+    File resourceFile = prepareResourceFile(false, ".active");
+    File localFile = prepareLocalFile(false, ".active");
 
     strategy.synchronize(true);
 
@@ -93,12 +93,12 @@ public class DetailedSaveStrategyTest {
   public void testSynchrInProgressRename() throws AdminException {
 
     File resourceFile = prepareResourceFile(false, null);
-    File localFile = prepareLocalFile(false, ".inprocess");
+    File localFile = prepareLocalFile(false, ".active");
 
     strategy.synchronize(true);
 
     assertFalse("File exist", fs.exists(resourceFile));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".inprocess")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".active")));
     assertTrue("File doesn't exist!", fs.exists(localFile));
 
   }
@@ -108,7 +108,7 @@ public class DetailedSaveStrategyTest {
     File dir = new File("dir");
     fs.mkdirs(dir);
 
-    File localFile = prepareLocalFile(false, ".inprocess");
+    File localFile = prepareLocalFile(false, ".active");
 
     strategy.synchronize(true);
 
@@ -119,7 +119,7 @@ public class DetailedSaveStrategyTest {
   @Test
   public void testSynchrFinished() throws AdminException {
 
-    File resourceFile = prepareResourceFile(false, ".inprocess");
+    File resourceFile = prepareResourceFile(false, ".active");
     File localFile = prepareLocalFile(false, ".finished");
     File report = createEmptyLocalFile(".rep");
 
@@ -149,7 +149,7 @@ public class DetailedSaveStrategyTest {
     _init();
 
 
-    File resourceFile = prepareResourceFile(false, ".inprocess");
+    File resourceFile = prepareResourceFile(false, ".active");
     File localFile = prepareLocalFile(false, ".finished");
 
     strategy.synchronize(true);
@@ -189,7 +189,7 @@ public class DetailedSaveStrategyTest {
 
   @Test
   public void testSynchrFinishedReportUploadError() throws AdminException{
-    File resourceFile = prepareResourceFile(false, ".inprocess");
+    File resourceFile = prepareResourceFile(false, ".active");
     File localFile = prepareLocalFile(false, ".finished");
     File report = createEmptyLocalFile(".rep");
     File reportPart = createEmptyResourceFile(".rep.part");
@@ -230,7 +230,7 @@ public class DetailedSaveStrategyTest {
 
     assertTrue("File doesn't exist!", fs.exists(resourceFile));
     assertFalse("File exist!", fs.exists(new File("workDir" + File.separatorChar + "simpleLocalCopy", "test.csv")));
-    assertFalse("File exist!", fs.exists(new File("workDir" + File.separatorChar + "simpleLocalCopy", "test.csv.inprocess")));
+    assertFalse("File exist!", fs.exists(new File("workDir" + File.separatorChar + "simpleLocalCopy", "test.csv.active")));
 
     assertEquals(deliveryManager.countDeliveries(user.getLogin(), user.getPassword(), new DeliveryFilter()), 0);
   }
@@ -264,7 +264,7 @@ public class DetailedSaveStrategyTest {
 
     assertTrue("File doesn't exist!", fs.exists(resourceFile));
     assertFalse("File exist!", fs.exists(new File("workDir" + File.separatorChar + "simpleLocalCopy", "test.csv")));
-    assertFalse("File exist!", fs.exists(new File("workDir" + File.separatorChar + "simpleLocalCopy", "test.csv.inprocess")));
+    assertFalse("File exist!", fs.exists(new File("workDir" + File.separatorChar + "simpleLocalCopy", "test.csv.active")));
 
     deliveryManager.shutdown();
 
@@ -278,8 +278,8 @@ public class DetailedSaveStrategyTest {
     assertFalse("File exists!", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv")));
     assertFalse("File exists!", fs.exists(resourceFile));
     assertFalse("File exist", fs.exists(resourceFile));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".inprocess")));
-    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.inprocess")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".active")));
+    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.active")));
   }
 
 
@@ -317,8 +317,8 @@ public class DetailedSaveStrategyTest {
     assertFalse("File exists!", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv")));
     assertFalse("File exists!", fs.exists(resourceFile));
     assertFalse("File exist", fs.exists(resourceFile));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".inprocess")));
-    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.inprocess")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".active")));
+    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.active")));
 
     Thread.sleep(51);
     deliveryManager.forceModifyDeliveries();
@@ -364,8 +364,8 @@ public class DetailedSaveStrategyTest {
     assertFalse("File exists!", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv")));
     assertFalse("File exists!", fs.exists(resourceFile));
     assertFalse("File exist", fs.exists(resourceFile));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".inprocess")));
-    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.inprocess")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".active")));
+    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.active")));
 
     final Delivery[] exist = new Delivery[]{null};
     deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), new DeliveryFilter(), 1000, new Visitor<Delivery>() {

@@ -51,7 +51,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
 
   private static final String CSV_POSFIX = ".csv";
-  private static final String IN_PROCESS = ".inprocess";
+  private static final String IN_PROCESS = ".active";
   private static final String FINISHED = ".finished";
   private static final String REPORT = ".rep";
 
