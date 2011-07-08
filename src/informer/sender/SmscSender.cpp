@@ -556,6 +556,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
             sms.setValidTime(now + validityTime);
 
             do {
+                // NOTE: svctype is a mandatory parameter
                 bool rip;
                 if ( ! msg.flags.hasReplaceIfPresent(rip) ) {
                     rip = info.isReplaceIfPresent();
@@ -563,6 +564,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                                     rip ? 1 : 0 );
                 if ( rip ) {
+                    // set svctype from msg/dlv only if replace_if_present is set
                     const char* mst = msg.flags.getSvcType();
                     if ( mst && mst[0] ) {
                         sms.setEServiceType(mst);
@@ -576,6 +578,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                         }
                     }
                 }
+                // otherwise set common svctype
                 sms.setEServiceType(getCS()->getSvcType());
             } while (false);
             sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID, getCS()->getProtocolId());
