@@ -24,7 +24,7 @@ int main( int argc, char** argv )
     // 1
     if ( argc < 3 ) {
         usage(argv[0]);
-        std::terminate();
+        return -1;
     }
 
     const std::string host = argv[1];
