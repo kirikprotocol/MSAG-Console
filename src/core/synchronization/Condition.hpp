@@ -43,6 +43,7 @@ public:
     //Note: mutex MUST BE LOCKED!
     int WaitOn(Mutex & use_mtx)
     {
+        use_mtx.ltid = (pthread_t)-1;
         int rval = pthread_cond_wait(&event, &use_mtx.mutex);
         use_mtx.updateThreadId();
         return rval;
@@ -51,6 +52,7 @@ public:
     int WaitOn(Mutex & use_mtx, const TimeSlice & use_timeout)
     {
         struct timespec tv = use_timeout.adjust2Nano();
+        use_mtx.ltid = (pthread_t)-1;
         int rval = pthread_cond_timedwait(&event, &use_mtx.mutex, &tv);
         use_mtx.updateThreadId();
         return rval;
@@ -61,6 +63,7 @@ public:
         struct timespec tvs;
         tvs.tv_sec = abs_time.tv_sec;
         tvs.tv_nsec = abs_time.tv_usec*1000;
+        use_mtx.ltid = (pthread_t)-1;
         int rval = pthread_cond_timedwait(&event, &use_mtx.mutex, &tvs);
         use_mtx.updateThreadId();
         return rval;
@@ -68,6 +71,7 @@ public:
     //Note: mutex MUST BE LOCKED!
     int WaitOn(Mutex & use_mtx, const struct timespec & abs_time)
     {
+        use_mtx.ltid = (pthread_t)-1;
         int rval = pthread_cond_timedwait(&event, &use_mtx.mutex, &abs_time);
         use_mtx.updateThreadId();
         return rval;

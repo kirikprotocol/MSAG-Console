@@ -330,6 +330,7 @@ protected:
   };
 public:
   SmppWriter(SmppPduEventListener *lst,Socket* sock):
+    mon(MTXWHEREAMI),
     listener(lst),
     socket(sock)
   {
