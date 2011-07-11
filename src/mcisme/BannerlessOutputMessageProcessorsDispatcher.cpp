@@ -20,8 +20,6 @@ BannerlessOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications
   std::auto_ptr<const sms_info> autoPtrSmsInfo(pInfo);
   try {
     _taskProcessor.SendAbntOnlineNotifications(autoPtrSmsInfo.get(), abntProfile);
-    _taskProcessor.commitMissedCallEvents(autoPtrSmsInfo->abnt, autoPtrSmsInfo->events,
-                                          abntProfile);
   } catch(std::exception& ex) {
     smsc_log_error(_logger, "BannerlessOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications::: caught exception '%s'",
                    ex.what());
