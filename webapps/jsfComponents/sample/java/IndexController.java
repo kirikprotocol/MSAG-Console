@@ -1,7 +1,6 @@
 import mobi.eyeline.util.Time;
-import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
-import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
+import mobi.eyeline.util.jsf.components.data_table.LoadListener;
+import mobi.eyeline.util.jsf.components.data_table.model.*;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import mobi.eyeline.util.jsf.components.page_calendar.PageCalendarModel;
@@ -109,12 +108,18 @@ public class IndexController {
   }
 
 
+  private LoadListener loadListener;
+
   public void clear() {
-
-
+    loadListener = null;
+    loaded = false;
   }
 
+  private boolean loaded = false;
+
   public void query() {
+    loadListener = null;
+    loaded = false;
 
   }
 
@@ -156,7 +161,7 @@ public class IndexController {
   }
 
 
-  private static class MyDataTableModel implements DataTableModel, ModelWithObjectIds {
+  private class MyDataTableModel implements PreloadableModel, ModelWithObjectIds {
 
     private final List<Row> rows;
 
@@ -192,6 +197,37 @@ public class IndexController {
     @Override
     public String getId(Object o) {
       return ((Row)o).field1;
+    }
+
+    @Override
+    public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) throws ModelException {
+
+      if(System.currentTimeMillis()%20 == 0) {
+        throw new ModelException("interaction_error");
+      }
+      LoadListener listener = null;
+      if(!loaded) {
+        if(loadListener == null) {
+          loadListener = new LoadListener();
+          new Thread() {
+            public void run() {
+              try{
+                loadListener.setTotal(9);
+                for(int i=0;i<10;i++) {
+                  try {
+                    Thread.sleep(250);
+                    loadListener.setCurrent(i);
+                  } catch (InterruptedException e) {}
+                }
+              }finally {
+                loaded = true;
+              }
+            }
+          }.start();
+        }
+        listener = loadListener;
+      }
+      return listener;
     }
   }
 }

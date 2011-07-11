@@ -98,7 +98,7 @@ function PageCalendar(contentId) {
     if (updateUsingSubmit)
       return closestForm.submit();
 
-    var onResponse = function(text) {
+    var onResponse = function(text,contentType) {
       bodyElement.innerHTML = text;
     };
 

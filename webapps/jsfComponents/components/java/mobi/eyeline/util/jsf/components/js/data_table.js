@@ -3,7 +3,7 @@
  * @param tableId идентификатор таблицы, которой надо управлять
  * @param updateUsingSubmit флаг, если он true, то обновление содержимого таблицы происходит через сабмит формы. Иначе - через Ajax
  */
-function DataTable(tableId, updateUsingSubmit) {
+function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
 
   var columnElement = document.getElementById(tableId + '_column');
   var pageElement = document.getElementById(tableId + '_page');
@@ -11,8 +11,10 @@ function DataTable(tableId, updateUsingSubmit) {
   var selectedOnly = document.getElementById(tableId+"_showSelected");
   var previousPageSizeElement = document.getElementById(tableId + '_previousPageSize');
   var bodyElement = document.getElementById(tableId);
-  var overlay = document.getElementById(tableId+"_overlay");
+  var progressElement = document.getElementById(tableId+"_progress");
+  var progressContentElement = document.getElementById(tableId+"_progress_content");
   var checked = false;
+  var titleError = _titleError;
 
   /**
    * Ищет форму, которая содержит элемент с указанным идентификатором
@@ -101,21 +103,47 @@ function DataTable(tableId, updateUsingSubmit) {
    * Обновляет содержимое таблицы
    */
 
-  this.updateTable = function() {
-    this.setOverlay();
-    checked = false;    
+  var emptyProgress = function() {
+    setProgressFunction("");
+  };
+
+  var updateFunction = this.updateTable = function() {
+
+    checked = false;
     if (updateUsingSubmit)
       return closestForm.submit();
 
-    var column = columnElement.value;
-    var page = pageElement.value;
-    var pageSize = pageSizeElement.value;
-    var previousPageSize = previousPageSizeElement.value;
-    var onResponse = function(text) {
-      hideOverlay();
-      if (column != columnElement.value) return;
+    emptyProgress();
+    sendRequest();
+
+  };
+
+
+
+  var sendRequest = function() {
+
+    var onResponse = function(text, contentType) {
+      if(contentType != null) {
+        var i = contentType.indexOf(";");
+        if(i != null) {
+          var t = contentType.substring(0, i);
+          if(t == "application/json") {
+            var rObject =  eval( '('+text+')' );
+            if(rObject.type == "progress") {
+              setProgressFunction(rObject.data+"%");
+              window.setTimeout(sendRequest, 1000);
+            }else {
+              bodyElement.innerHTML = getError(rObject.data, titleError);
+              hideProgress();
+            }
+            return;
+          }
+        }
+      }
+      hideProgress();
       bodyElement.innerHTML = text;
     };
+
     var params = 'eyelineComponentUpdate=' + tableId + '&' + prepareFormParameters();
     new EXmlHttpRequest(requestUrl, params, onResponse).send();
   };
@@ -176,7 +204,7 @@ function DataTable(tableId, updateUsingSubmit) {
     if (headerElement == null)
       return;
 
-    headerElement.className = (expand) ? 'eyeline_inner_data_opened' : 'eyeline_inner_data_closed';
+    headerElement.className = (expand) ? 'inner_data_opened' : 'inner_data_closed';
 
     var elements = document.getElementsByTagName('tr');
     for (var j = 0; j < elements.length; j++) {
@@ -192,7 +220,7 @@ function DataTable(tableId, updateUsingSubmit) {
     if (headerElement == null)
       return;
 
-    _expandRow(rowId, headerElement.className == 'eyeline_inner_data_closed');
+    _expandRow(rowId, headerElement.className == 'inner_data_closed');
   };
 
   this.expandAll = function() {
@@ -201,7 +229,7 @@ function DataTable(tableId, updateUsingSubmit) {
     if (expandElement == null || tableElement == null)
       return;
 
-    var expand = expandElement.className == 'eyeline_inner_data_closed';
+    var expand = expandElement.className == 'inner_data_closed';
     var rows = tableElement.rows;
 
     for (var i = 0; i < rows.length; i++) {
@@ -210,37 +238,37 @@ function DataTable(tableId, updateUsingSubmit) {
         _expandRow(row.id, expand);
     }
 
-    expandElement.className = expand ? 'eyeline_inner_data_opened' : 'eyeline_inner_data_closed';
+    expandElement.className = expand ? 'inner_data_opened' : 'inner_data_closed';
   };
 
-  this.setOverlay = function() {
-   var el = bodyElement;
-   if (el.offsetParent) {
-     var x=0;
-     var y=0;
-     var w = el.offsetWidth+'px';
-     var h = el.offsetHeight+'px';
-     do {
-       x+=el.offsetLeft;
-       y+=el.offsetTop;
-     }
-     while (el = el.offsetParent);
+  var setProgressFunction = this.setProgress = function(value) {
+    var el = bodyElement;
+    if (el.offsetParent) {
+      var x=0;
+      var y=0;
+      var w = el.offsetWidth+'px';
+      var h = el.offsetHeight+'px';
+      do {
+        x+=el.offsetLeft;
+        y+=el.offsetTop;
+      }
+      while (el = el.offsetParent);
 
-     overlay.style.left=x+'px';
-     overlay.style.top= y+'px';
-     overlay.style.width = w;
-     overlay.style.height = h;     
-   }
+      progressElement.style.left=x+'px';
+      progressElement.style.top= y+'px';
+      progressElement.style.width = w;
+      progressElement.style.height = h;
+      progressContentElement.innerHTML=getProgressBar(value);
+    }
   };
 
-  var hideOverlay = function() {
-    overlay.style.top = '-500px';
-    overlay.style.width = '1px';
-    overlay.style.height = '1px';
-  }
+  var hideProgress = function() {
+    progressElement.style.top = '-500px';
+    progressElement.style.width = '1px';
+    progressElement.style.height = '1px';
+  };
 
 }
-
 
 function changeSelectAll(tableId, checked) {
   if(document.getElementById(tableId+"_showSelected").value == "true") {
@@ -262,8 +290,8 @@ function changeSelectAll(tableId, checked) {
 
   var select = document.getElementById(tableId+"_select");
   var selectObject = !(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
-          select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
-          eval('(' + select.value + ')');
+      select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
+      eval('(' + select.value + ')');
   updateSelectCount(tableId, selectObject);
   if(!checked) {
     document.getElementById(tableId+"_check").className = 'select_page';
@@ -316,8 +344,8 @@ function changeSelect(checked, rowId, tableId) {
   }
   var select = document.getElementById(tableId+"_select");
   var selectObject = !(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
-          select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
-          eval('(' + select.value + ')');
+      select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
+      eval('(' + select.value + ')');
   if(checked) {
     for(var i1=0; i1<selectObject.length; i1++) {
       if(selectObject[i1] == rowId) {
@@ -371,6 +399,32 @@ function updateSelectCount(tableId, selectObject) {
 }
 
 
+function getProgressBar(value) {
+  return value;
+}
+
+
+
+function getError(error, errorTitle) {
+  return "<table class=\"x73\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" summary=\"\">\n" +
+      "      <tbody>\n" +
+      "      <tr>\n" +
+      "        <td>\n" +
+      "          <div class=\"xdj\">\n" +
+      "            <div>\n" +
+      "              <h1 class=\"x72\">\n" +
+      "                 <div class=\"x71\">"+errorTitle+"</div" +
+      "              </h1>\n" +
+      "            </div>\n" +
+      "            <div class=\"xap\">\n" +
+      error +
+      "            </div>\n" +
+      "          </div>\n" +
+      "        </td>\n" +
+      "      </tr>\n" +
+      "      </tbody>\n" +
+      "    </table>";
+}
 
 
 

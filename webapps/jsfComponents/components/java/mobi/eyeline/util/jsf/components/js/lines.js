@@ -157,7 +157,7 @@ function Lines(contentId, updatePeriod, height, width) {
 
   var callUpdate = function () {
 
-    var onResponse = function(text) {
+    var onResponse = function(text,contentType) {
       g.draw(text);
       if(updatePeriod>0) {
         checkUpdate();

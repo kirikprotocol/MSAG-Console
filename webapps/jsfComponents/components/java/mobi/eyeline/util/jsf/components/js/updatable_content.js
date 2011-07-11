@@ -105,7 +105,7 @@ function UpdateContent(contentId, updatePeriod) {
    * Обновляет содержимое
    */
   var callUpdate = function () {
-    var onResponse = function(text) {
+    var onResponse = function(text,contentType) {
       bodyElement.innerHTML = text;
 
       var scripts = bodyElement.getElementsByTagName("script");

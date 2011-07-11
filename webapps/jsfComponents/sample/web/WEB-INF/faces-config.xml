@@ -24,7 +24,7 @@
   <managed-bean>
     <managed-bean-name>index</managed-bean-name>
     <managed-bean-class>IndexController</managed-bean-class>
-    <managed-bean-scope>request</managed-bean-scope>
+    <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
   <navigation-rule>

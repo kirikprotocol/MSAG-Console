@@ -5,7 +5,7 @@ function EXmlHttpRequest(url, parameters, onResponse) {
   var alertContents = function() {
     if (http_request.readyState == 4) {
       if (http_request.status == 200) {
-        onResponse(http_request.responseText);
+        onResponse(http_request.responseText,http_request.getResponseHeader("Content-Type"));
       }
     }
   };
