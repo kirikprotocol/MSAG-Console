@@ -81,22 +81,17 @@ OutputMessageProcessor::Execute()
 {
   while (!_isStopped) {
     try {
-      AbntAddr calledAbnt;
       std::auto_ptr<SendMessageEventHandler> handler(waitingForHandler());
-      if ( handler.get() ) {
-        try {
-          handler->handle();
-        } catch(...) {
-          _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
-          throw;
-        }
-        _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
-      }
+
+      if ( handler.get() )
+        handler->handle();
+
     } catch (std::exception& ex) {
-      smsc_log_error(_logger, "OutputMessageProcessor::Execute::: caught unexpected exception '%s'", ex.what());
+      smsc_log_error(_logger, "OutputMessageProcessor::Execute::: caught exception '%s'", ex.what());
     } catch (...) {
       smsc_log_error(_logger, "OutputMessageProcessor::Execute::: caught unexpected exception '...'");
     }
+    _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
   }
 
   try {
