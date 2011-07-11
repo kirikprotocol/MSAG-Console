@@ -86,6 +86,17 @@ BannerReader::handleTimedOutRequests(unsigned req_exp_period)
                                                          expiredBannerReq.origBannerReq->ownerId, expiredBannerReq.origBannerReq->rotatorId,
                                                          expiredBannerReq.origBannerReq->serviceName),
                                                          ERR_ADV_TIMEOUT);
+          BannerResponseTrace bannerRespTrace;
+          bannerRespTrace.bannerId = -1;
+          bannerRespTrace.transactionId = expiredBannerReq.trnId;
+          bannerRespTrace.ownerId = expiredBannerReq.origBannerReq->ownerId;
+          bannerRespTrace.rotatorId = expiredBannerReq.origBannerReq->rotatorId;
+          bannerRespTrace.serviceName = expiredBannerReq.origBannerReq->serviceName;
+          BannerInfo*  bannerInfo = new BannerInfo(bannerRespTrace, "", expiredBannerReq.origBannerReq->mcEventOut,
+                                                   expiredBannerReq.origBannerReq->charSet);
+          expiredBannerReq.origBannerReq->resetMCEventOut(); // in order to avoid destroying of MCEventOut object at BannerRequest's destructor.
+          _bannerResponseListener.handleEvent(bannerInfo);
+          delete expiredBannerReq.origBannerReq;
         } catch (NetworkException& ex) {
           smsc_log_error(_logger, "BannerReader::handleTimedOutRequests::: caught NetworkException '%s'", ex.what());
           _reconnector.scheduleBrokenConnectionToReestablishing(bannerEngineProxy);
