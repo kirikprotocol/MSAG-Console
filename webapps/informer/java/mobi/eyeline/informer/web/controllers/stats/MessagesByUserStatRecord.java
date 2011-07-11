@@ -112,7 +112,7 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   void printWithChildrenToCSV(PrintWriter writer, boolean detalized) {
     if (detalized) {
       writer.println(StringEncoderDecoder.toCSVString(';',
-          userId, newMessages, processMessages, processSms, deliveredMessages, deliveredMessagesSMS, failedMessages, failedMessagesSMS, expiredMessages, expiredMessagesSMS));
+          userId, newMessages, newSms, processMessages, processSms, deliveredMessages, deliveredMessagesSMS, failedMessages, failedMessagesSMS, expiredMessages, expiredMessagesSMS));
     } else {
       writer.println(StringEncoderDecoder.toCSVString(';',
           userId,
