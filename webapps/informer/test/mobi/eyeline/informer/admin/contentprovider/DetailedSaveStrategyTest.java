@@ -121,14 +121,14 @@ public class DetailedSaveStrategyTest {
 
     File resourceFile = prepareResourceFile(false, ".active");
     File localFile = prepareLocalFile(false, ".finished");
-    File report = createEmptyLocalFile(".rep");
+    File report = createEmptyLocalFile(".report");
 
     strategy.synchronize(true);
 
     assertTrue("File doesn't exist", fs.exists(localFile));
     assertTrue("File doesn't exist", fs.exists(report));
     assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.finished")));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.rep")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.report")));
     assertFalse("File exists", fs.exists(resourceFile));
   }
 
@@ -165,7 +165,7 @@ public class DetailedSaveStrategyTest {
     fs.mkdirs(dir);
 
     File localFile = prepareLocalFile(false, ".finished");
-    File report = createEmptyLocalFile(".rep");
+    File report = createEmptyLocalFile(".report");
 
     strategy.synchronize(true);
 
@@ -177,7 +177,7 @@ public class DetailedSaveStrategyTest {
   public void testSynchrFinishedNothing() throws AdminException {
     File resourceFile = prepareResourceFile(false, ".finished");
     File localFile = prepareLocalFile(false, ".finished");
-    File report = createEmptyLocalFile(".rep");
+    File report = createEmptyLocalFile(".report");
 
     strategy.synchronize(true);
 
@@ -191,15 +191,15 @@ public class DetailedSaveStrategyTest {
   public void testSynchrFinishedReportUploadError() throws AdminException{
     File resourceFile = prepareResourceFile(false, ".active");
     File localFile = prepareLocalFile(false, ".finished");
-    File report = createEmptyLocalFile(".rep");
-    File reportPart = createEmptyResourceFile(".rep.part");
+    File report = createEmptyLocalFile(".report");
+    File reportPart = createEmptyResourceFile(".report.part");
 
     strategy.synchronize(true);
 
     assertTrue("File doesn't exist", fs.exists(localFile));
     assertTrue("File doesn't exist", fs.exists(report));
     assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.finished")));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.rep")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.report")));
     assertFalse("File exists", fs.exists(reportPart));
     assertFalse("File exists", fs.exists(resourceFile));
   }
@@ -327,9 +327,9 @@ public class DetailedSaveStrategyTest {
 
     strategy.process(true);
     assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.finished")));
-    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.rep")));
+    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.report")));
     assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath() + ".finished")));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath() + ".rep")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath() + ".report")));
 
   }
 
@@ -349,9 +349,9 @@ public class DetailedSaveStrategyTest {
     strategy.process(true);
 
     assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.finished")));
-    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.rep")));
+    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.report")));
     assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath() + ".finished")));
-    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath() + ".rep")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath() + ".report")));
 
   }
 
