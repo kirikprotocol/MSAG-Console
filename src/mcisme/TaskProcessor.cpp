@@ -566,6 +566,7 @@ void TaskProcessor::Stop()
   {
     smsc_log_info(logger, "Stopping event processing...");
 
+    _outputMessageProcessorsDispatcher->shutdown();
     if (mciModule) mciModule->Detach();
     timeoutMonitor->Stop();
     closeInQueue();
@@ -793,7 +794,7 @@ TaskProcessor::sendMessage(const MCEventOut& out_event, const BannerResponseTrac
   try {
     if(!getMessageSender()->send(seqNum, out_event.msg))
     {
-      smsc_log_error(logger, "Send DATA_SM for Subscriber %s failed", pInfo->abnt.toString().c_str());
+      smsc_log_error(logger, "Send DATA_SM for Subscriber %s failed", out_event.msg.called_abonent.toString().c_str());
       pDeliveryQueue->Reschedule(out_event.msg.called_abonent);
       deleteSmsInfo(seqNum);
       delete pInfo;
