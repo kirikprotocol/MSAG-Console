@@ -180,6 +180,7 @@ BannerOutputMessageProcessorsDispatcher::shutdown()
   } while (true);
 
   _reconnectorThread->stop();
+  _bannerReader->stop();
 }
 
 }}
