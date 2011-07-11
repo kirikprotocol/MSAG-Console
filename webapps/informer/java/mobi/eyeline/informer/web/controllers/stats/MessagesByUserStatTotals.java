@@ -15,6 +15,9 @@ public class MessagesByUserStatTotals implements DeliveryStatTotals{
   private long deliveredMessagesSMS;
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
+  private long newSms;
+  private long processSms;
+  private long retryMessages;
 
   public MessagesByUserStatTotals() {
     reset();
@@ -31,6 +34,9 @@ public class MessagesByUserStatTotals implements DeliveryStatTotals{
     this.deliveredMessagesSMS = 0;
     this.failedMessagesSMS = 0;
     this.expiredMessagesSMS = 0;
+    this.retryMessages = 0;
+    this.newSms = 0;
+    this.processSms = 0;
   }
 
   public void add(AggregatedRecord r) {
@@ -43,6 +49,21 @@ public class MessagesByUserStatTotals implements DeliveryStatTotals{
     this.deliveredMessagesSMS += mur.getDeliveredMessagesSMS();
     this.failedMessagesSMS += mur.getFailedMessagesSMS();
     this.expiredMessagesSMS += mur.getExpiredMessagesSMS();
+    this.processSms += mur.getProcessSms();
+    this.newSms += mur.getNewSms();
+    this.retryMessages += mur.getRetryMessages();
+  }
+
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessSms() {
+    return processSms;
+  }
+
+  public long getRetryMessages() {
+    return retryMessages;
   }
 
   public long getNewMessages() {

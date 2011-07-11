@@ -135,7 +135,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
       while ((line = reader.readLine()) != null) {
         try {
           CSVTokenizer tokenizer = new CSVTokenizer(line);
-          //   MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID
+          //   MINSEC,DLVID,USER,NEW,SENT,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID,SMSCID,RETRY,SMSNEW,SMSSENT
           if (tokenizer.hasMoreTokens()) {
             String minsec = tokenizer.nextToken();
             int minute = Integer.parseInt(minsec.substring(0, minsec.length() - 2));
@@ -174,12 +174,25 @@ public class DeliveryStatProvider extends StatEntityProvider{
             if(tokenizer.hasMoreTokens()) {
               smsc = tokenizer.nextToken();
             }
+            int retry = 0;
+            if(tokenizer.hasMoreTokens()) {
+              retry = Integer.parseInt(tokenizer.nextToken());
+            }
+            int newSms = newmessages;
+            if(tokenizer.hasMoreTokens()) {
+              newSms = Integer.parseInt(tokenizer.nextToken());
+            }
+            int processingSms = processing;
+            if(tokenizer.hasMoreTokens()) {
+              processingSms = Integer.parseInt(tokenizer.nextToken());
+            }
+
             if(filter.getRegionId() != null && !filter.getRegionId().equals(regionId)){
               continue;
             }
             DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
                 newmessages, processing, delivered, failed, expired,
-                deliveredSms, failedSms, expiredSms, regionId, smsc
+                deliveredSms, failedSms, expiredSms, regionId, smsc, retry, newSms, processingSms
             );
 
             if (!visitor.visit(rec, total, current)) {

@@ -20,6 +20,9 @@ public class MessagesBySmscRecord extends AggregatedRecord implements MessagesRe
   private long deliveredMessagesSMS;
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
+  private long newSms;
+  private long processSms;
+  private long retryMessages;
 
   private String smsc;
 
@@ -36,6 +39,9 @@ public class MessagesBySmscRecord extends AggregatedRecord implements MessagesRe
     this.expiredMessagesSMS = dsr.getExpiredSMS();
     this.smsc = smsc;
     this.deleted = deleted;
+    this.processSms = dsr.getProcessingSms();
+    this.newSms = dsr.getNewSms();
+    this.retryMessages = dsr.getRetry();
   }
 
   public boolean isDeleted() {
@@ -58,6 +64,9 @@ public class MessagesBySmscRecord extends AggregatedRecord implements MessagesRe
     this.deliveredMessagesSMS += other.getDeliveredMessagesSMS();
     this.failedMessagesSMS += other.getFailedMessagesSMS();
     this.expiredMessagesSMS += other.getExpiredMessagesSMS();
+    this.processSms += other.getProcessSms();
+    this.newSms += other.getNewSms();
+    this.retryMessages += other.getRetryMessages();
   }
 
 
@@ -93,8 +102,8 @@ public class MessagesBySmscRecord extends AggregatedRecord implements MessagesRe
     if (detalized) {
       writer.println(StringEncoderDecoder.toCSVString(';',
           "SMSC",
-          "NEW",
-          "PROCESS",
+          "NEW", "NEW SMS",
+          "PROCESS", "PROCESS SMS",
           "DELIVERED", "DELIVERED SMS",
           "FAILED", "FAILED SMS",
           "EXPIRED", "EXPIRED SMS"));
@@ -113,8 +122,8 @@ public class MessagesBySmscRecord extends AggregatedRecord implements MessagesRe
     if (detalised) {
       writer.println(StringEncoderDecoder.toCSVString(';',
           getSmsc(),
-          getNewMessages(),
-          getProcessMessages(),
+          getNewMessages(), getNewSms(),
+          getProcessMessages(), getProcessSms(),
           getDeliveredMessages(), getDeliveredMessagesSMS(),
           getFailedMessages(), getFailedMessagesSMS(),
           getExpiredMessages(), getExpiredMessagesSMS()));
@@ -125,6 +134,18 @@ public class MessagesBySmscRecord extends AggregatedRecord implements MessagesRe
           getDeliveredMessages(), getDeliveredMessagesSMS(),
           getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
     }
+  }
+
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessSms() {
+    return processSms;
+  }
+
+  public long getRetryMessages() {
+    return retryMessages;
   }
 
   public String getSmsc() {

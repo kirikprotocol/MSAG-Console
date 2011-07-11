@@ -25,21 +25,21 @@
                 </f:facet>
               </eye:column>
               <eye:column name="new" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.newMessages}"/>
+                <h:outputText value="#{row.data.newMessages}(#{row.data.newSms})"/>
                 <f:facet name="inner">
-                  <h:outputText value="#{row.newMessages}" style="color:GREEN"/>
+                  <h:outputText value="#{row.newMessages}(#{row.newSms})" style="color:GREEN"/>
                 </f:facet>
                 <f:facet name="footer">
-                  <h:outputText value="#{messagesByPeriod.totals.newMessages}" style="font-weight:bold;"/>
+                  <h:outputText value="#{messagesByPeriod.totals.newMessages}(#{messagesByPeriod.totals.newSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
               <eye:column name="process" title="#{msg['message.state.Sent']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.processMessages}"/>
+                <h:outputText value="#{row.data.processMessages}(#{row.data.processSms})"/>
                 <f:facet name="inner">
-                  <h:outputText value="#{row.processMessages}" style="color:GREEN"/>
+                  <h:outputText value="#{row.processMessages}(#{row.processSms})" style="color:GREEN"/>
                 </f:facet>
                 <f:facet name="footer">
-                  <h:outputText value="#{messagesByPeriod.totals.processMessages}" style="font-weight:bold;"/>
+                  <h:outputText value="#{messagesByPeriod.totals.processMessages}(#{messagesByPeriod.totals.processSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
 

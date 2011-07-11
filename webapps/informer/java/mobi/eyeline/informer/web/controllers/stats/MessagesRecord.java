@@ -21,4 +21,10 @@ public interface MessagesRecord{
 
   public long getExpiredMessagesSMS();
 
+  public long getNewSms();
+
+  public long getProcessSms();
+
+  public long getRetryMessages();
+
 }

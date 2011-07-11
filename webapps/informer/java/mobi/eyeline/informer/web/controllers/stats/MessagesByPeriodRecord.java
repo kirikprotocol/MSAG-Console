@@ -23,6 +23,9 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
   private long deliveredMessagesSMS;
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
+  private long newSms;
+  private long processSms;
+  private long retryMessages;
 
   public MessagesByPeriodRecord(DeliveryStatRecord dsr, AggregationType type, boolean isParent) {
     super(dsr.getDate(), type, isParent);
@@ -34,6 +37,9 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
     this.deliveredMessagesSMS = dsr.getDeliveredSMS();
     this.failedMessagesSMS = dsr.getFailedSMS();
     this.expiredMessagesSMS = dsr.getExpiredSMS();
+    this.processSms = dsr.getProcessingSms();
+    this.newSms = dsr.getNewSms();
+    this.retryMessages = dsr.getRetry();
 
     if (getChildAggregationType() != null) {
       MessagesByPeriodRecord child = new MessagesByPeriodRecord(dsr, getChildAggregationType(), false);
@@ -52,6 +58,9 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
     this.deliveredMessagesSMS += other.getDeliveredMessagesSMS();
     this.failedMessagesSMS += other.getFailedMessagesSMS();
     this.expiredMessagesSMS += other.getExpiredMessagesSMS();
+    this.processSms += other.getProcessSms();
+    this.newSms += other.getNewSms();
+    this.retryMessages += other.getRetryMessages();
     addChildren(r);
   }
 
@@ -61,16 +70,16 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
       if (isParent()) {
         writer.println(StringEncoderDecoder.toCSVString(';',
             getPeriodString(), "",
-            getNewMessages(),
-            getProcessMessages(),
+            getNewMessages(), getNewSms(),
+            getProcessMessages(), getProcessSms(),
             getDeliveredMessages(), getDeliveredMessagesSMS(),
             getFailedMessages(), getFailedMessagesSMS(),
             getExpiredMessages(), getExpiredMessagesSMS()));
       } else {
         writer.println(StringEncoderDecoder.toCSVString(';',
             "", getPeriodString(),
-            getNewMessages(),
-            getProcessMessages(),
+            getNewMessages(), getNewSms(),
+            getProcessMessages(), getProcessSms(),
             getDeliveredMessages(), getDeliveredMessagesSMS(),
             getFailedMessages(), getFailedMessagesSMS(),
             getExpiredMessages(), getExpiredMessagesSMS()));
@@ -97,8 +106,8 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
     if (detalized) {
       writer.println(StringEncoderDecoder.toCSVString(';',
           "PERIOD", "",
-          "NEW",
-          "PROCESS",
+          "NEW", "NEW SMS",
+          "PROCESS", "PROCESS SMS",
           "DELIVERED", "DELIVERED SMS",
           "FAILED", "FAILED SMS",
           "EXPIRED", "EXPIRED SMS"));
@@ -140,6 +149,18 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
     };
   }
 
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessSms() {
+    return processSms;
+  }
+
+  public long getRetryMessages() {
+    return retryMessages;
+  }
+
   public long getNewMessages() {
     return newMessages;
   }
@@ -171,4 +192,6 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
   public long getExpiredMessagesSMS() {
     return expiredMessagesSMS;
   }
+
+
 }

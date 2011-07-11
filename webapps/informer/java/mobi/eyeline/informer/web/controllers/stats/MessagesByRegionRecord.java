@@ -20,6 +20,9 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
   private long deliveredMessagesSMS;
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
+  private long newSms;
+  private long processSms;
+  private long retryMessages;
 
   private String region;
   private Integer regionId;
@@ -38,6 +41,9 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
     this.region = region;
     this.regionId = dsr.getRegionId();
     this.deleted = deleted;
+    this.processSms = dsr.getProcessingSms();
+    this.newSms = dsr.getNewSms();
+    this.retryMessages = dsr.getRetry();
   }
 
   public boolean isDeleted() {
@@ -60,6 +66,9 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
     this.deliveredMessagesSMS += other.getDeliveredMessagesSMS();
     this.failedMessagesSMS += other.getFailedMessagesSMS();
     this.expiredMessagesSMS += other.getExpiredMessagesSMS();
+    this.processSms += other.getProcessSms();
+    this.newSms += other.getNewSms();
+    this.retryMessages += other.getRetryMessages();
   }
 
 
@@ -96,8 +105,8 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
     if (detalized) {
       writer.println(StringEncoderDecoder.toCSVString(';',
           "REGION",
-          "NEW",
-          "PROCESS",
+          "NEW", "NEW SMS",
+          "PROCESS", "PROCESS SMS",
           "DELIVERED", "DELIVERED SMS",
           "FAILED", "FAILED SMS",
           "EXPIRED", "EXPIRED SMS"));
@@ -116,8 +125,8 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
     if (detalised) {
       writer.println(StringEncoderDecoder.toCSVString(';',
           getRegion(),
-          getNewMessages(),
-          getProcessMessages(),
+          getNewMessages(), getNewSms(),
+          getProcessMessages(), getProcessSms(),
           getDeliveredMessages(), getDeliveredMessagesSMS(),
           getFailedMessages(), getFailedMessagesSMS(),
           getExpiredMessages(), getExpiredMessagesSMS()));
@@ -128,6 +137,18 @@ public class MessagesByRegionRecord extends AggregatedRecord implements Messages
           getDeliveredMessages(), getDeliveredMessagesSMS(),
           getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
     }
+  }
+
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessSms() {
+    return processSms;
+  }
+
+  public long getRetryMessages() {
+    return retryMessages;
   }
 
   public Integer getRegionId() {

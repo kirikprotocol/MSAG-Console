@@ -28,7 +28,10 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   private long failedMessages;
   private long failedSms;
   private long expiredMessages;
-  private long expiredSms;
+  private long expiredSms;  
+  private long newSms;
+  private long processSms;
+  private long retryMessages;
 
   private final User user;
 
@@ -64,6 +67,9 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     incFailedSms(rec.getFailedSMS());
     incExpiredMessages(rec.getExpired());
     incExpiredSms(rec.getExpiredSMS());
+    incNewSms(rec.getNewSms());
+    incProcSms(rec.getProcessingSms());
+    incRetryMessages(rec.getRetry());
     if(isParent) {
       innerRowsMap = new TreeMap<Object, AggregatedRecord>();
       MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, user, deliveryName, deletedDelivery, archivated, region, deletedRegion, false);
@@ -136,6 +142,10 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.newMessages += newMessages;
   }
 
+  public void incNewSms(long newSms) {
+    this.newSms += newSms;
+  }
+
   public long getProcMessages() {
     return procMessages;
   }
@@ -146,6 +156,14 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
 
   public void incProcMessages(long procMessages) {
     this.procMessages += procMessages;
+  }
+
+  public void incProcSms(long procSms) {
+    this.processSms += procSms;
+  }
+
+  public void incRetryMessages(long retryMessages) {
+    this.retryMessages += retryMessages;
   }
 
   public long getDeliveredMessages() {
@@ -220,6 +238,18 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.expiredSms += expiredSms;
   }
 
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessSms() {
+    return processSms;
+  }
+
+  public long getRetryMessages() {
+    return retryMessages;
+  }
+
   public void updateTime(Date date) {
     if (minDate == null || minDate.after(date))
       minDate = date;
@@ -246,8 +276,8 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           "STATUS",
           "STARTDATE",
           "ENDDATE",
-          "NEW",
-          "PROCESS",
+          "NEW", "NEW SMS",
+          "PROCESS", "PROCESS SMS",
           "DELIVERED",
           "FAILED",
           "EXPIRED"));
@@ -274,8 +304,8 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
             deliveryStatus,
             fmtDate(minDate),
             fmtDate(maxDate),
-            r.newMessages,
-            r.procMessages,
+            r.newMessages, r.newSms,
+            r.procMessages, r.processSms,
             r.deliveredMessages,
             r.failedMessages,
             r.expiredMessages));
@@ -325,6 +355,9 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.deliveredSms += other.getDeliveredSms();
     this.failedSms += other.getFailedSms();
     this.expiredSms += other.getExpiredSms();
+    this.processSms += other.getProcessSms();
+    this.newSms += other.getNewSms();
+    this.retryMessages +=other.getRetryMessages();
     if(isParent) {
       addChild(r);
     }

@@ -16,6 +16,9 @@ public class MessagesByPeriodTotals implements DeliveryStatTotals {
   private long deliveredMessagesSMS;
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
+  private long newSms;
+  private long processSms;
+  private long retryMessages;
 
   public MessagesByPeriodTotals() {
     reset();
@@ -30,6 +33,9 @@ public class MessagesByPeriodTotals implements DeliveryStatTotals {
     this.deliveredMessagesSMS = 0;
     this.failedMessagesSMS = 0;
     this.expiredMessagesSMS = 0;
+    this.retryMessages = 0;
+    this.newSms = 0;
+    this.processSms = 0;
   }
 
   public void add(AggregatedRecord r) {
@@ -43,6 +49,9 @@ public class MessagesByPeriodTotals implements DeliveryStatTotals {
       this.deliveredMessagesSMS += mpr.getDeliveredMessagesSMS();
       this.failedMessagesSMS += mpr.getFailedMessagesSMS();
       this.expiredMessagesSMS += mpr.getExpiredMessagesSMS();
+      this.processSms += mpr.getProcessSms();
+      this.newSms += mpr.getNewSms();
+      this.retryMessages += mpr.getRetryMessages();
     }
   }
 
@@ -78,4 +87,15 @@ public class MessagesByPeriodTotals implements DeliveryStatTotals {
     return expiredMessagesSMS;
   }
 
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessSms() {
+    return processSms;
+  }
+
+  public long getRetryMessages() {
+    return retryMessages;
+  }
 }

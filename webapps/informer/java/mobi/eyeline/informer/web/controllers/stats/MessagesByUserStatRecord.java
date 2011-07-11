@@ -25,6 +25,9 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   private long deliveredMessagesSMS;
   private long failedMessagesSMS;
   private long expiredMessagesSMS;
+  private long newSms;
+  private long processSms;
+  private long retryMessages;
 
   public MessagesByUserStatRecord(String userId, User user, DeliveryStatRecord rec) {
     this.userId = userId;
@@ -38,6 +41,9 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
     this.deliveredMessagesSMS = rec.getDeliveredSMS();
     this.failedMessagesSMS = rec.getFailedSMS();
     this.expiredMessagesSMS = rec.getExpiredSMS();
+    this.retryMessages = rec.getRetry();
+    this.processSms = rec.getProcessingSms();
+    this.newSms = rec.getNewSms();
   }
 
 
@@ -57,6 +63,9 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
     this.failedMessagesSMS += r.failedMessagesSMS;
     this.expiredMessages += r.expiredMessages;
     this.expiredMessagesSMS += r.expiredMessagesSMS;
+    this.newSms += r.newSms;
+    this.processSms += r.processSms;
+    this.retryMessages += r.retryMessages;
   }
 
   @Override
@@ -91,7 +100,7 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   void printCSVheader(PrintWriter writer, boolean detalized) {
     if (detalized) {
       writer.println(StringEncoderDecoder.toCSVString(';',
-          "USER", "NEW", "PROCESS", "DELIVERED", "DELIVERED_SMS", "FAILED", "FAILED_SMS", "EXPIRED", "EXPIRED_SMS"));
+          "USER", "NEW", "NEW SMS","PROCESS", "PROCESS SMS", "DELIVERED", "DELIVERED_SMS", "FAILED", "FAILED_SMS", "EXPIRED", "EXPIRED_SMS"));
     } else {
       writer.println(StringEncoderDecoder.toCSVString(';',
           "USER", "WAIT", "DELIVERED", "DELIVERED_SMS", "NOTDELIVERED", "NOTDELIVERED_SMS"));
@@ -103,7 +112,7 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   void printWithChildrenToCSV(PrintWriter writer, boolean detalized) {
     if (detalized) {
       writer.println(StringEncoderDecoder.toCSVString(';',
-          userId, newMessages, processMessages, deliveredMessages, deliveredMessagesSMS, failedMessages, failedMessagesSMS, expiredMessages, expiredMessagesSMS));
+          userId, newMessages, processMessages, processSms, deliveredMessages, deliveredMessagesSMS, failedMessages, failedMessagesSMS, expiredMessages, expiredMessagesSMS));
     } else {
       writer.println(StringEncoderDecoder.toCSVString(';',
           userId,
@@ -115,6 +124,17 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
     }
   }
 
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessSms() {
+    return processSms;
+  }
+
+  public long getRetryMessages() {
+    return retryMessages;
+  }
 
   public String getUserId() {
     return userId;

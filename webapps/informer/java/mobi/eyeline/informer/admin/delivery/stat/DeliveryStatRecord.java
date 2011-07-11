@@ -23,8 +23,13 @@ public class DeliveryStatRecord {
   private final Integer regionId;
   private final String smsc;
 
+  private final long retry;
+  private final long newSms;
+  private final long processingSms;
 
-  public DeliveryStatRecord(String user, Date date, int taskId, int newmessages, int processing, int delivered, int failed, int expired, int deliveredSMS, int failedSMS, int expiredSMS, Integer regionId, String smsc) {
+
+
+  public DeliveryStatRecord(String user, Date date, int taskId, int newmessages, int processing, int delivered, int failed, int expired, int deliveredSMS, int failedSMS, int expiredSMS, Integer regionId, String smsc, long retry, long newSms, long processingSms) {
     this.user = user;
     this.date = date;
     this.taskId = taskId;
@@ -38,6 +43,21 @@ public class DeliveryStatRecord {
     this.expiredSMS = expiredSMS;
     this.regionId = regionId;
     this.smsc = smsc;
+    this.retry = retry;
+    this.newSms = newSms;
+    this.processingSms = processingSms;
+  }
+
+  public long getRetry() {
+    return retry;
+  }
+
+  public long getNewSms() {
+    return newSms;
+  }
+
+  public long getProcessingSms() {
+    return processingSms;
   }
 
   public Date getDate() {
