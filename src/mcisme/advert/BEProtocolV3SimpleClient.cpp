@@ -76,10 +76,6 @@ BEProtocolV3SimpleClient::parseBannerResponse(const char* packet, uint32_t total
                    errCode, *banner_id);
     throw ProtocolError();
   }
-  // NEXT IS JUST FOR DEBUG ######
-  if (*banner_id == -1) {
-    *banner_id = 10;
-  }
 }
 
 uint32_t
