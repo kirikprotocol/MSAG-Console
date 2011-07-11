@@ -69,7 +69,7 @@ void HttpAcceptor::init(const char *host, int port, HttpsOptions* options)
     isStopping = false;
     httpsOptions = options;
 
-    logger = Logger::getInstance("http.acceptor");
+    logger = Logger::getInstance((httpsOptions == NULL) ? "http.acceptor" : "https.acceptor");
 
     try {
         if (masterSocket.InitServer(host, port, 0, 0) == -1) {          

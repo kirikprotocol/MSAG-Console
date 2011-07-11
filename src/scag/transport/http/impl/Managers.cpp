@@ -48,7 +48,7 @@ void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig
     // todo: use config for httpsOptions fields sslAcceptor:port, httpsOptions:verify & certificates
     httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT);
     sslAcceptor.init(cfg.host.c_str(), cfg.portHttps, &httpsOptions);
-    smsc_log_info(logger, "Https manager inited host=%s:%d", cfg.host.c_str(), cfg.port+1);
+    smsc_log_info(logger, "Https manager inited host=%s:%d", cfg.host.c_str(), cfg.portHttps);
 }
 
 void HttpManagerImpl::shutdown()
