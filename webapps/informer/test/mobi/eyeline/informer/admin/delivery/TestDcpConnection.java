@@ -57,6 +57,7 @@ public class TestDcpConnection extends DcpConnection{
     int id = dIdCounter++;
     delivery.setId(id);
     delivery.setCreateDate(new Date());
+    delivery.setStatus(DeliveryStatus.Paused);
     deliveries.put(id, delivery.cloneDelivery());
     histories.put(id, new DeliveryStatusHistory(id,
         new LinkedList<DeliveryStatusHistory.Item>(){{add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Planned));}}));
