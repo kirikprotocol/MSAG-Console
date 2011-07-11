@@ -125,7 +125,8 @@ public:
   {
     MutexGuard guard(trafficMonitor);
 
-    if (TrafficControl::stopped) return;
+    if (TrafficControl::stopped)
+      throw RetryException("TrafficControl::incOutgoing::: shutdown in progress");
 
     int out = outgoing.Get();
     int inc = incoming.Get();
@@ -245,23 +246,26 @@ public:
     : MessageSender(), processor(processor), session(session) {}
 
   virtual ~MCISmeMessageSender() {
-    WriteLockGuard activeThreadRunGuard(_activeThreadRunningLock);
-    session = 0;
+    waitingForAllOperationsWillComplete();
   }
 
   void waitingForAllOperationsWillComplete()
   {
     WriteLockGuard activeThreadRunGuard(_activeThreadRunningLock);
+    session = 0;
   }
 
   virtual int getSequenceNumber()
   {
     ReadLockGuard activeThreadRunGuard(_activeThreadRunningLock);
 
-    return (session) ? session->getNextSeq():0;
+    if (session)
+      return session->getNextSeq();
+    else
+      throw RetryException("MCISmeMessageSender::getSequence::: shutdown in progress");
   }
 
-  virtual bool send(int seqNumber, const Message& message)
+  virtual bool send(int seq_number, const Message& message)
   {
     ReadLockGuard activeThreadRunGuard(_activeThreadRunningLock);
 
@@ -331,13 +335,13 @@ public:
       sm.get_header().set_commandLength(sm.size());
       sm.get_header().set_commandId(SmppCommandSet::DATA_SM);
       sm.get_header().set_commandStatus(0);
-      sm.get_header().set_sequenceNumber(seqNumber);
+      sm.get_header().set_sequenceNumber(seq_number);
 
       if (msgBuf) delete msgBuf;
 
       TrafficControl::incOutgoing();
 
-      smsc_log_info(logger, "Sending DATA_SM: seqNum=%d,to %s,from %s,'%s'", seqNumber, daStr.c_str(), oaStr, message.message.c_str());
+      smsc_log_info(logger, "Sending DATA_SM: seqNum=%d,to %s,from %s,'%s'", seq_number, daStr.c_str(), oaStr, message.message.c_str());
       asyncTransmitter->sendPdu(&(sm.get_header()));
     } else {
       const char* out  = message.GetMsg();
@@ -395,7 +399,7 @@ public:
       {
         if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
           smsc_log_error(logger, "Message with seqNum=%d is too large to send (%d bytes)",
-                         seqNumber, outLen);
+                         seq_number, outLen);
           return false;
         }
         sm.get_optional().set_payloadType(0);
@@ -406,12 +410,12 @@ public:
       sm.get_header().set_commandLength(sm.size(false));
       sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
       sm.get_header().set_commandStatus(0);
-      sm.get_header().set_sequenceNumber(seqNumber);
+      sm.get_header().set_sequenceNumber(seq_number);
 
       if (msgBuf) delete msgBuf;
 
       TrafficControl::incOutgoing();
-      smsc_log_info(logger, "Sending SUBMIT_SM: seqNum=%d,to %s,from %s,'%s'", seqNumber, daStr.c_str(), oaStr, message.message.c_str());
+      smsc_log_info(logger, "Sending SUBMIT_SM: seqNum=%d,to %s,from %s,'%s'", seq_number, daStr.c_str(), oaStr, message.message.c_str());
 
       asyncTransmitter->sendPdu(&(sm.get_header()));
     }
@@ -493,6 +497,7 @@ private:
   }
 
 protected:
+  // for use in ThreadGroup<SmppHeader>
   virtual bool isRunning()
   {
     return !isNeedStop();
