@@ -45,7 +45,7 @@ public class SimpleSaveStrategyTest {
     user = prepareUser();
     settings = prepareSettings();
 
-    ContentProviderContext context = new SingleUserContentPContext(prepareUser(), deliveryManager, fs);
+    ContentProviderContext context = new SingleUserContentPContextStub(prepareUser(), deliveryManager, fs);
 
     ResourceOptions resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
     resourceOptions.setSourceAddress(new Address("+79139489906"));

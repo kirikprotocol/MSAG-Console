@@ -16,7 +16,7 @@ import java.util.List;
 /**
 * author: Aleksandr Khalitov
 */
-class SingleUserContentPContext implements ContentProviderContext {
+class SingleUserContentPContextStub implements ContentProviderContext {
 
   private final User user;
 
@@ -24,7 +24,7 @@ class SingleUserContentPContext implements ContentProviderContext {
 
   private final FileSystem fileSystem;
 
-  SingleUserContentPContext(User user, TestDeliveryManager deliveryManager, FileSystem fileSystem) {
+  SingleUserContentPContextStub(User user, TestDeliveryManager deliveryManager, FileSystem fileSystem) {
     this.user = user;
     this.fileSystem = fileSystem;
     user.setAllRegionsAllowed(true);
