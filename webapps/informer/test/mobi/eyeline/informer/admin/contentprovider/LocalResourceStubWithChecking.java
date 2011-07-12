@@ -12,11 +12,11 @@ import java.util.List;
 /**
 * author: Aleksandr Khalitov
 */
-class LocalResourceWithChecking extends FileResource {
+class LocalResourceStubWithChecking extends FileResource {
 
   private final FileResource local;
 
-  LocalResourceWithChecking(File dir, FileSystem fs) {
+  LocalResourceStubWithChecking(File dir, FileSystem fs) {
     this.local = FileResource.createLocal(dir, fs);
   }
 

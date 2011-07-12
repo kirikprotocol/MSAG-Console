@@ -51,7 +51,7 @@ public class SimpleSaveStrategyTest {
     resourceOptions.setSourceAddress(new Address("+79139489906"));
     resourceOptions.setEncoding("utf-8");
 
-    strategy = new SimpleSaveStrategy(context, new LocalResourceWithChecking(new File("dir"), fs) , resourceOptions);
+    strategy = new SimpleSaveStrategy(context, new LocalResourceStubWithChecking(new File("dir"), fs) , resourceOptions);
 
   }
 

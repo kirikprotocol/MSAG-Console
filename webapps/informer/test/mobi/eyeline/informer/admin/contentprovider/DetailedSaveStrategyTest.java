@@ -54,7 +54,7 @@ public class DetailedSaveStrategyTest {
   private void _init() throws AdminException {
     ContentProviderContext context = new SingleUserContentPContext(prepareUser(), deliveryManager, fs);
 
-    strategy = new DetailedSaveStrategy(context, new LocalResourceWithChecking(new File("dir"), fs) , resourceOptions);
+    strategy = new DetailedSaveStrategy(context, new LocalResourceStubWithChecking(new File("dir"), fs) , resourceOptions);
   }
 
 
