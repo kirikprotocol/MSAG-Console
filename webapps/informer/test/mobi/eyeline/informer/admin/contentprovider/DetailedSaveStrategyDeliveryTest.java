@@ -34,12 +34,16 @@ public class DetailedSaveStrategyDeliveryTest {
   private File workDir = new File("work");
   private File localCopyDir = new File(workDir, "detailedLocalCopy");
 
-  private DetailedSaveStrategy createStrategy(ResourceOptions opts) throws AdminException {
-    return new DetailedSaveStrategy(ctx, remoteResource, opts);
+  private DetailedSaveStrategy createStrategy(User u) throws AdminException {
+    UserCPsettings s = new UserCPsettings();
+    s.setCreateReports(true);
+    return createStrategy(u, s);
   }
 
-  private DetailedSaveStrategy createStrategy(User u) throws AdminException {
-    return new DetailedSaveStrategy(ctx, remoteResource, createResourceOptions(u));
+  private DetailedSaveStrategy createStrategy(User u, UserCPsettings s) {
+    ResourceOptions opts = new ResourceOptions(u, workDir, s);
+    opts.setSourceAddress(new Address(".5.0.MTC"));
+    return new DetailedSaveStrategy(ctx, remoteResource, opts);
   }
 
   private User createUser(String login) {
@@ -76,20 +80,6 @@ public class DetailedSaveStrategyDeliveryTest {
     return res[0];
   }
 
-  private List<Delivery> getDeliveries(String deliveryName, String user) throws AdminException {
-    DeliveryFilter f = new DeliveryFilter();
-    f.setNameFilter(deliveryName);
-    final List<Delivery> res = new ArrayList<Delivery>();
-    ctx.getDeliveries(user, f, new Visitor<Delivery>() {
-      @Override
-      public boolean visit(Delivery value) throws AdminException {
-        res.add(value);
-        return true;
-      }
-    });
-    return res;
-  }
-
   private List<Message> getMessages(int deliveryId, String user) throws AdminException {
     MessageFilter f = new MessageFilter(deliveryId, new Date(0), new Date());
     final List<Message> result = new ArrayList<Message>();
@@ -105,9 +95,7 @@ public class DetailedSaveStrategyDeliveryTest {
 
   private void processResourceWithRandomUser(String login) throws AdminException {
     User u = createUser(login);
-    ResourceOptions opts = createResourceOptions(u);
-    DetailedSaveStrategy s = createStrategy(opts);
-
+    DetailedSaveStrategy s = createStrategy(u);
     s.process(true);
   }
 
@@ -312,10 +300,8 @@ public class DetailedSaveStrategyDeliveryTest {
     u.setAllRegionsAllowed(false);
     u.setRegions(Arrays.asList(r.getRegionId()));
 
-
     DetailedSaveStrategy s = createStrategy(u);
     s.process(true);
-
 
     Delivery d = getDelivery("test", "login");
 
@@ -326,6 +312,20 @@ public class DetailedSaveStrategyDeliveryTest {
     assertTrue(fs.exists(reportFile));
     String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
     assertFileContainsLine(reportFile, "\\+79166666666\\|" + datePattern + "\\|Failed\\|9999");
+  }
+
+  @Test
+  public void testImportFileWithoutReport() throws AdminException {
+    remoteResource.addFile("test.csv");
+
+    User u = createUser("login");
+    UserCPsettings s = new UserCPsettings();
+    s.setCreateReports(false);
+
+    DetailedSaveStrategy str = createStrategy(u, s);
+    str.process(true);
+
+    assertFalse(fs.exists(new File(localCopyDir, "test.csv.report")));
   }
 
 

@@ -142,7 +142,7 @@ class SaveStrategyHelper {
     return delivery;
   }
 
-  void createDelivery(File f, String deliveryName, Address sourceAddr, String encoding, String md5, RejectListener rejectListener) throws Exception{
+  void createDelivery(File f, String deliveryName, Address sourceAddr, String encoding, String md5, RejectListener rejectListener) throws AdminException {
     if (encoding == null)
       encoding="UTF-8";
 

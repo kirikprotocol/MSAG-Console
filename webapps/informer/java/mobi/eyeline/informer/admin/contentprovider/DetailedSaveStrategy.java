@@ -208,24 +208,35 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       d = null;
     }
 
-    if(d == null) {
+    if(d == null)
+      createDelivery(deliveryName, md5, localCsvFile);
+
+    fileSys.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
+  }
+
+  private void createDelivery(String deliveryName, final String md5, File localCsvFile) throws AdminException {
+    helper.logCreateDelivery(deliveryName);
+
+    if (createReports) {
       final PrintStream[] ps = new PrintStream[1];
       try{
         ps[0] = new PrintStream(fileSys.getOutputStream(new File(localCopy, buildReportName(localCsvFile.getName())), false), true, encoding);
-        helper.logCreateDelivery(deliveryName);
         helper.createDelivery(localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
           @Override
           public void reject(String abonent, String userData) {
             ReportFormatter.writeReportLine(ps[0], abonent, userData, new Date(), MessageState.Failed, 9999);
           }
         });
-      }finally {
+      } catch (UnsupportedEncodingException e) {
+        log.error(e,e);
+      } finally {
         if(ps[0]!=null) {
           ps[0].close();
         }
       }
+    } else {
+      helper.createDelivery(localCsvFile, deliveryName, sourceAddr, encoding, md5, null);
     }
-    fileSys.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
 
   private void buildReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
