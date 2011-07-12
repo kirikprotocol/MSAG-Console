@@ -318,25 +318,6 @@ class SaveStrategyHelper {
       }
     }
 
-    private Message createMessage(String[] lineData) {
-      Address ab;
-      try {
-        ab = new Address(lineData[0]);
-      } catch (Exception e) {
-        throw new IllegalArgumentException("INVALID ABONENT");
-      }
-
-      String userData = lineData[2];
-
-      Message m = Message.newMessage(ab, loadTextFromFile ? decodeText(lineData[1]) : null);
-      if(!lineData[0].equals(ab.getSimpleAddress())) {
-        setCpAbonent(m, lineData[0]);
-      }
-      if (userData != null)
-        m.setProperty("udata", userData);
-      return m;
-    }
-
     private boolean isRegionAllowed(Address addr) {
       if (regions == null)
         return true;
