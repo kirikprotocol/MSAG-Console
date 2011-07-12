@@ -220,6 +220,46 @@ public class DeliveryStatProviderTest {
 
   }
 
+  @Test
+  public void testParsingData() throws Exception {
+
+    DeliveryStatProvider statProvider = new TestDeliveryStatProvider(statDir, FileSystem.getFSForSingleInst());
+
+    final List<DeliveryStatRecord> records = new ArrayList<DeliveryStatRecord>();
+
+    statProvider.accept(null ,new DeliveryStatVisitor(){
+      public boolean visit(DeliveryStatRecord rec, int total, int current) {
+        if(records.size()<2) {
+          records.add(rec);
+        }
+        return records.size() < 2;
+      }
+    });
+    assertEquals(records.size(), 2);
+
+    DeliveryStatRecord r = records.get(0);
+    assertEquals(r.getNewSms(), 200000);
+    assertEquals(r.getProcessing(), 1);
+    assertEquals(r.getProcessingSms(), 2);
+    assertEquals(r.getRetry(), 1);
+    assertEquals(r.getDelivered(), 2);
+    assertEquals(r.getDeliveredSMS(), 5);
+    assertEquals(r.getExpired(), 4);
+    assertEquals(r.getExpiredSMS(), 7);
+    assertEquals(r.getFailed(), 3);
+    assertEquals(r.getFailedSMS(), 6);
+    assertEquals(r.getNewmessages(), 100000);
+    assertEquals(r.getSmsc(), "Silverstone");
+    assertEquals(r.getTaskId(), 1);
+    assertEquals(r.getUser(), "a");
+    assertEquals(r.getRegionId(), new Integer(4));
+
+    r = records.get(1);
+    assertEquals(r.getRetry(), 0);
+    assertEquals(r.getNewSms(), r.getNewmessages());
+    assertEquals(r.getProcessingSms(), r.getProcessing());
+  }
+
 
 
 }
