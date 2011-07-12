@@ -273,7 +273,8 @@ public class DetailedSaveStrategyDeliveryTest {
   public void testImportFileWithInvalidAddress() throws AdminException, IOException {
     remoteResource.addFile("test.csv",
         "+79139495113|One text",
-        "invalidAddress|One text");
+        "invalidAddress|One text",
+        "anotherInvalidAddress|userData|text");
 
     processResourceWithRandomUser("login");
     Delivery d = getDelivery("test", "login");
@@ -285,6 +286,7 @@ public class DetailedSaveStrategyDeliveryTest {
     assertTrue(fs.exists(reportFile));
     String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
     assertFileContainsLine(reportFile, "invalidAddress\\|" + datePattern + "\\|Failed\\|9999");
+    assertFileContainsLine(reportFile, "anotherInvalidAddress\\|userData\\|" + datePattern + "\\|Failed\\|9999");
   }
 
   @Test
@@ -312,6 +314,32 @@ public class DetailedSaveStrategyDeliveryTest {
     assertTrue(fs.exists(reportFile));
     String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
     assertFileContainsLine(reportFile, "\\+79166666666\\|" + datePattern + "\\|Failed\\|9999");
+  }
+
+  @Test
+  public void testImportFileWithUserData() throws AdminException, IOException {
+    remoteResource.addFile("test.csv",
+        "+79139495113|12345|text",
+        "+79139495113|text1");
+
+    processResourceWithRandomUser("login");
+
+    Delivery d = getDelivery("test", "login");
+    ctx.finalizeDelivery(d.getId());
+
+    Delivery d1 = getDelivery("test", "login");
+    assertEquals(DeliveryStatus.Finished, d1.getStatus());
+
+    processResourceWithRandomUser("login");
+
+    File reportFile = new File(localCopyDir, "test.csv.report");
+
+    assertTrue(fs.exists(reportFile));
+    assertTrue(fs.exists(new File(localCopyDir, "test.csv.finished")));
+
+    String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
+    assertFileContainsLine(reportFile, "\\+79139495113\\|12345\\|" + datePattern + "\\|Delivered\\|0");
+    assertFileContainsLine(reportFile, "\\+79139495113\\|" + datePattern + "\\|Delivered\\|0");
   }
 
   @Test

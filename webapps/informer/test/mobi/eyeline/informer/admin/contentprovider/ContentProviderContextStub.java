@@ -22,7 +22,7 @@ public class ContentProviderContextStub implements ContentProviderContext {
   private final FileSystem fs;
   private final Map<String, User> users;
   private final Map<String, Region> regions;
-  private final DeliveryManager deliveryManager;
+  private final TestDeliveryManager deliveryManager;
   private final Set<String> userRestrictions;
 
   private final Map<String, Integer> activateBans;
@@ -63,6 +63,10 @@ public class ContentProviderContextStub implements ContentProviderContext {
 
   public void addRestriction(String login) {
     userRestrictions.add(login);
+  }
+
+  public void finalizeDelivery(int deliveryId) throws AdminException {
+    deliveryManager.forceDeliveryFinalization(deliveryId);
   }
 
   @Override

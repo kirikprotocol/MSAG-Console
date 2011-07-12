@@ -489,6 +489,17 @@ public class TestDcpConnection extends DcpConnection{
     }
   }
 
+  synchronized void forceDeliveryFinalization(int deliveryId) throws AdminException {
+    Delivery d = deliveries.get(deliveryId);
+    if (d == null)
+      return;
+
+    List<Message> ms = messages.get(deliveryId);
+    for (Message m : ms)
+      m.setState(MessageState.Delivered);
+
+    d.setStatus(DeliveryStatus.Finished);
+  }
 
   @SuppressWarnings({"EmptyCatchBlock"})
   synchronized void modifyAll() throws AdminException {

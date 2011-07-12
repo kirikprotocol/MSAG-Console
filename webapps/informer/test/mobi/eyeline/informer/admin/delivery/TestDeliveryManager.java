@@ -29,6 +29,9 @@ public class TestDeliveryManager extends DeliveryManager{
     connection.forceActivate();
   }
 
+  public void forceDeliveryFinalization(int deliveryId) throws AdminException {
+    connection.forceDeliveryFinalization(deliveryId);
+  }
 
   @Override
   public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
