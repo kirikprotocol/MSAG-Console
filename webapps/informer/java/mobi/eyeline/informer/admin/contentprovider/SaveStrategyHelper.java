@@ -353,13 +353,34 @@ class SaveStrategyHelper {
           if (line.length() == 0) continue;
           try {
             splitLine(line, lineData);
-            Message m = createMessage(lineData);
 
-            if (isRegionAllowed(m.getAbonent()))
-              return m;
-            else if (rejectListener != null)
-              rejectListener.reject(lineData[0], m.getProperty("udata"));
+            String addr = lineData[0];
+            String text = lineData[1];
+            String userData = lineData[2];
 
+            Address ab;
+            try {
+              ab = new Address(addr);
+            } catch (Exception e) {
+              rejectListener.reject(addr, userData);
+              continue;
+            }
+
+            if (!isRegionAllowed(ab)) {
+              if (rejectListener != null)
+                rejectListener.reject(addr, userData);
+              continue;
+            }
+
+            Message m = Message.newMessage(ab, loadTextFromFile ? decodeText(text) : null);
+            if(!addr.equals(ab.getSimpleAddress())) {
+              setCpAbonent(m, addr);
+            }
+
+            if (userData != null)
+              m.setProperty("udata", userData);
+
+            return m;
           } catch (Exception e) {
             log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.",e);
           }
