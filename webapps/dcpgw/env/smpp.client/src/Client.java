@@ -1,6 +1,7 @@
 import mobi.eyeline.smpp.api.PDUListener;
 import mobi.eyeline.smpp.api.SmppClient;
 import mobi.eyeline.smpp.api.SmppException;
+import mobi.eyeline.smpp.api.pdu.DeliverSM;
 import mobi.eyeline.smpp.api.pdu.Message;
 import mobi.eyeline.smpp.api.pdu.PDU;
 import mobi.eyeline.smpp.api.pdu.SubmitSM;
@@ -76,10 +77,21 @@ public class Client extends Thread implements PDUListener {
                     return true;
                 } catch (SmppException e) {
                     logger.error("", e);
+                    return false;
                 }
+
             case DeliverSM:
+
                 logger.debug("Handle DeliverSM pdu.");
-                return true;
+                DeliverSM deliverSM = (DeliverSM) pdu;
+                try{
+                    smppClient.send(deliverSM.getResponse());
+                    logger.debug("Send DeliverSMResp pdu.");
+                    return true;
+                } catch (SmppException e){
+                    logger.error("Couldn't send DeliverSMResp.", e);
+                    return false;
+                }
         }
         return false;
     }

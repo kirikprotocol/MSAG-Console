@@ -5,7 +5,7 @@ import mobi.eyeline.informer.admin.delivery.DcpConnection;
 import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.SmppServer;
-import mobi.eyeline.smpp.api.pdu.data.Address;
+import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
@@ -32,20 +32,21 @@ public class Sender extends Thread{
 
     private int capacity;
 
-    private long sending_timeout, waiting_timeout;
+    private long sending_timeout;
 
     private final Map<Integer, LinkedBlockingQueue<Message>> delivery_id_queue_map;
 
     private boolean interrupt = false;
-
-    private HashMap<Message, mobi.eyeline.smpp.api.pdu.Message> messages_requests_map;
 
     private SmppServer smppServer;
 
     private Map<LinkedBlockingQueue<Message>, ScheduledFuture> queue_task_map;
     private LinkedBlockingQueue<SendTask> sendTaskQueue;
 
-    public Sender(String host, int port, final String login, String password, int capacity, long sending_timeout, long waiting_timeout, SmppServer smppServer){
+    private Hashtable<Long, Integer> id_seq_num_table;
+    private Hashtable<Long, String> id_conn_name_table;
+
+    public Sender(String host, int port, final String login, String password, int capacity, long sending_timeout, SmppServer smppServer){
         this.host = host;
         this.port = port;
         this.login = login;
@@ -54,22 +55,25 @@ public class Sender extends Thread{
         this.capacity = capacity;
 
         this.sending_timeout = sending_timeout;
-        this.waiting_timeout = waiting_timeout;
 
         this.smppServer = smppServer;
 
         delivery_id_queue_map = Collections.synchronizedMap(new HashMap<Integer, LinkedBlockingQueue<Message>>());
         queue_task_map = Collections.synchronizedMap(new HashMap<LinkedBlockingQueue<Message>, ScheduledFuture>());
 
-        messages_requests_map = new HashMap<Message, mobi.eyeline.smpp.api.pdu.Message>();
-
         sendTaskQueue = new LinkedBlockingQueue<SendTask>();
+
+        id_seq_num_table = new Hashtable<Long, Integer>();
+        id_conn_name_table = new Hashtable<Long, String>();
     }
 
-    public void addMessage(int delivery_id, long gId){
-        log.debug("Try to put '"+gId+"' message to the "+delivery_id+"_queue ...");
-
-        boolean message_added_to_queue = false;
+    public void addMessage(long id,
+                           String destination_address,
+                           String text,
+                           int sequence_number,
+                           String connection_name,
+                           int delivery_id){
+        log.debug("Try to put '"+id+"' message to the "+delivery_id+"_queue ...");
 
         LinkedBlockingQueue<Message> queue;
         synchronized (delivery_id_queue_map){
@@ -82,32 +86,31 @@ public class Sender extends Thread{
             }
         }
 
-        mobi.eyeline.smpp.api.pdu.Message request = Manager.getInstance().getRequest(gId);
-
-        Address smpp_destination_address = request.getDestinationAddress();
-        String destination_address_str = smpp_destination_address.getAddress();
-        String text = request.getMessage();
-        log.debug("gId '"+gId+"', destination address '"+destination_address_str+"', text '"+text+"'.");
-
-        mobi.eyeline.informer.util.Address informer_destination_address = new mobi.eyeline.informer.util.Address(destination_address_str);
+        mobi.eyeline.informer.util.Address informer_destination_address = new mobi.eyeline.informer.util.Address(destination_address);
 
         Message informer_message = Message.newMessage(informer_destination_address, text);
 
-        informer_message.setProperty("gId", Long.toString(gId));
+        informer_message.setProperty("id", Long.toString(id));
 
         synchronized (queue){
 
             try {
 
                 log.debug(delivery_id + "_queue size before putting new message " + queue.size() + ".");
-                message_added_to_queue = queue.offer(informer_message, waiting_timeout, TimeUnit.MILLISECONDS);
-                log.debug("Successfully put "+gId+" message to "+delivery_id+"_queue.");
+                queue.put(informer_message);
+                id_seq_num_table.put(id, sequence_number);
+                id_conn_name_table.put(id, connection_name);
+                log.debug("Successfully put "+id+" message to "+delivery_id+"_queue.");
 
             } catch (InterruptedException e) {
                 log.error(e);
 
                 try {
-                    smppServer.send(request.getResponse(Status.SYSERR));
+                    SubmitSMResp submitSMResp = new SubmitSMResp();
+                    submitSMResp.setConnectionName(connection_name);
+                    submitSMResp.setStatus(Status.SYSERR);
+                    submitSMResp.setSequenceNumber(sequence_number);
+                    smppServer.send(submitSMResp);
                 } catch (SmppException e1) {
                     log.error(e1);
                     // todo ?
@@ -115,52 +118,129 @@ public class Sender extends Thread{
 
             }
 
-            if (message_added_to_queue){
-                int size = queue.size();
-                log.debug(delivery_id+"_queue size has increased to "+size+".");
+            int size = queue.size();
+            log.debug(delivery_id+"_queue size has increased to "+size+".");
 
-                if (queue.size() == 1){
+            if (queue.size() == 1){
 
-                    if (connection == null){
-                        try{
-                            log.debug("Try to create new dcp connection for user '"+login+"' ...");
-                            connection = new DcpConnection(host, port, login, password);
-                            log.debug("Successfully create new dcp connection for user '"+login+"'.");
-                        } catch (AdminException e) {
-                            log.error("Couldn't create new dcp connection for user '"+login+"'.",e);
+                if (connection == null){
+                    try{
+                        log.debug("Try to create new dcp connection for user '"+login+"' ...");
+                        connection = new DcpConnection(host, port, login, password);
+                        log.debug("Successfully create new dcp connection for user '"+login+"'.");
+                    } catch (AdminException e) {
+                        log.error("Couldn't create new dcp connection for user '"+login+"'.",e);
+
+                        try {
+                            SubmitSMResp submitSMResp = new SubmitSMResp();
+                            submitSMResp.setConnectionName(connection_name);
+                            submitSMResp.setStatus(Status.SYSERR);
+                            submitSMResp.setSequenceNumber(sequence_number);
+                            smppServer.send(submitSMResp);
+
+                        } catch (SmppException e1) {
+                            log.error(e1);
                             // todo ?
                         }
-                    }
 
-                    SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
-                    ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, sending_timeout, TimeUnit.MILLISECONDS);
-                    queue_task_map.put(queue, scheduledFuture);
+                    }
                 }
 
-                messages_requests_map.put(informer_message, request);
-
-                if (size == capacity) {
-                    ScheduledFuture scheduledFuture = queue_task_map.get(queue);
-                    scheduledFuture.cancel(true);
-                    queue_task_map.remove(queue);
-
-                    SendTask sendTask = new SendTask(queue, delivery_id, connection, smppServer, messages_requests_map);
-                    sendTaskQueue.add(sendTask);
-
-                    synchronized (this){
-                        log.debug("Try to notify all waited threads ...");
-                        notifyAll();
-                    }
-                    log.debug(delivery_id+"_queue is full, try to notify the waiting thread to add messages to informer's deliveries ...");
-
-                } else if (size < capacity) {
-                    log.debug(delivery_id+"_queue size "+size+" less than capacity "+capacity+", do nothing.");
-                } else if (size > capacity) {
-                    log.error(delivery_id+"_queue size '"+size+"' more than capacity '"+capacity+".");
-                }
+                SendTask sendTask = new SendTask(this, delivery_id);
+                ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, sending_timeout, TimeUnit.MILLISECONDS);
+                queue_task_map.put(queue, scheduledFuture);
             }
 
+
+            if (size == capacity) {
+                ScheduledFuture scheduledFuture = queue_task_map.get(queue);
+                scheduledFuture.cancel(true);
+                queue_task_map.remove(queue);
+
+                SendTask sendTask = new SendTask(this, delivery_id);
+                sendTaskQueue.add(sendTask);
+
+                synchronized (this){
+                    log.debug("Try to notify all waited threads ...");
+                    notifyAll();
+                }
+                log.debug(delivery_id+"_queue is full, try to notify the waiting thread to add messages to informer's deliveries ...");
+
+            } else if (size < capacity) {
+                log.debug(delivery_id+"_queue size "+size+" less than capacity "+capacity+", do nothing.");
+            } else if (size > capacity) {
+                log.error(delivery_id+"_queue size '"+size+"' more than capacity '"+capacity+".");
+            }
         }
+    }
+
+    public void sendMessages(int delivery_id){
+        LinkedBlockingQueue<Message> queue = delivery_id_queue_map.get(delivery_id);
+
+        if (!queue.isEmpty()){
+            log.debug(delivery_id+"_queue is not empty and has size "+queue.size());
+
+            Message[] ar = new Message[queue.size()];
+            List<Message> list = Arrays.asList(queue.toArray(ar));
+
+            try{
+                log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
+                connection.addDeliveryMessages(delivery_id, list);
+                log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
+
+                for(Message m: list){
+
+                    try{
+                        SubmitSMResp submitSMResp = new SubmitSMResp();
+                        Properties p = m.getProperties();
+                        long id = Long.parseLong(p.getProperty("id"));
+                        submitSMResp.setSequenceNumber(id_seq_num_table.get(id));
+                        submitSMResp.setConnectionName(id_conn_name_table.get(id));
+                        submitSMResp.setMessageId(Long.toString(id));
+                        smppServer.send(submitSMResp);
+
+                        id_seq_num_table.remove(id);
+                        id_conn_name_table.remove(id);
+
+                        log.debug("Send smpp response with status 'OK' for "+m.getProperties().getProperty("gId")+" message from "+delivery_id+" delivery." );
+                    } catch (SmppException e) {
+                        log.error("Could not send response to client", e);
+                    }
+
+                }
+
+                queue.clear();
+                log.debug("Clean queue for delivery with '"+delivery_id+"'.");
+
+            } catch (AdminException e) {
+                log.error("Couldn't add list with messages to delivery with id '"+delivery_id+"'.",e);
+
+                for(Message m: list){
+
+                    try{
+                        SubmitSMResp submitSMResp = new SubmitSMResp();
+                        submitSMResp.setStatus(Status.SYSERR);
+                        Properties p = m.getProperties();
+                        long id = Long.parseLong(p.getProperty("id"));
+                        submitSMResp.setSequenceNumber(id_seq_num_table.get(id));
+                        submitSMResp.setConnectionName(id_conn_name_table.get(id));
+                        smppServer.send(submitSMResp);
+
+                        id_seq_num_table.remove(id);
+                        id_conn_name_table.remove(id);
+                    } catch (SmppException e2) {
+                        log.error("Could not send response to client", e2);
+                    }
+                }
+
+                queue.clear();
+                log.debug("Clean queue for delivery with '"+delivery_id+"'.");
+            }
+
+        } else {
+            log.debug(delivery_id+"_queue is empty.");
+        }
+
     }
 
     public void run() {

@@ -1,7 +1,11 @@
 package mobi.eyeline.dcpgw;
 
+import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.exeptions.UpdateConfigurationException;
+import mobi.eyeline.dcpgw.journal.DeliverSMData;
+import mobi.eyeline.dcpgw.journal.DeliverSMStatus;
+import mobi.eyeline.dcpgw.journal.JournalManager;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.MessageState;
@@ -10,7 +14,7 @@ import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.filesystem.*;
-import mobi.eyeline.smpp.api.pdu.Request;
+import mobi.eyeline.smpp.api.pdu.*;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
 import mobi.eyeline.smpp.api.types.EsmMessageType;
@@ -25,8 +29,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import mobi.eyeline.smpp.api.SmppServer;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.PDUListener;
-import mobi.eyeline.smpp.api.pdu.PDU;
-import mobi.eyeline.smpp.api.pdu.Message;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -93,47 +95,88 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
             new PDUListener() {
 
                 public boolean handlePDU(PDU pdu) {
-                    long time = System.currentTimeMillis();
-                    long gId = time + gateway_mgsId.incrementAndGet();
-                    log.debug("Handle pdu with type "+pdu.getType()+", set gId '"+gId+"'.");
+
                     switch (pdu.getType()) {
 
                         case SubmitSM:{
 
+                            long time = System.currentTimeMillis();
+                            long id = time + gateway_mgsId.incrementAndGet();
                             Message request = (Message) pdu;
+                            String connection_name = request.getConnectionName();
+                            int sequence_number = request.getSequenceNumber();
 
-                            Manager.getInstance().setRequest(gId, request, time);
+                            log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', set id '"+id+"'.");
 
                             Address source_address = request.getSourceAddress();
+                            String source_address_str = source_address.getAddress();
+
+                            Address smpp_destination_address = request.getDestinationAddress();
+                            String destination_address_str = smpp_destination_address.getAddress();
+
+                            String text = request.getMessage();
+                            log.debug("Id '"+id+"', source address '"+source_address_str+"', destination address '"+destination_address_str+"', text '"+text+"'.");
+
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
                             String login = delivery_id_user_map.get(delivery_id);
+                            log.debug("Id '"+id+"', service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
-                            log.debug("Try to add SubmitSM with gId '"+gId+"' has: service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
-                            Manager.getInstance().getSender(login).addMessage(delivery_id, gId);
+                            Manager.getInstance().getSender(login).addMessage(id, destination_address_str, text, sequence_number, connection_name, delivery_id);
 
                             break;
                         }
                         case DataSM: {
 
+                            long time = System.currentTimeMillis();
+                            long id = time + gateway_mgsId.incrementAndGet();
                             Message request = (Message) pdu;
+                            String connection_name = request.getConnectionName();
+                            int sequence_number = request.getSequenceNumber();
 
-                            Manager.getInstance().setRequest(gId, request, time);
+                            log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', set id '"+id+"'.");
 
                             Address source_address = request.getSourceAddress();
+                            String source_address_str = source_address.getAddress();
+
+                            Address smpp_destination_address = request.getDestinationAddress();
+                            String destination_address_str = smpp_destination_address.getAddress();
+
+                            String text = request.getMessage();
+                            log.debug("Id '"+id+"', source address '"+source_address_str+"', destination address '"+destination_address_str+"', text '"+text+"'.");
+
                             long service_number = Long.parseLong(source_address.getAddress());
                             int delivery_id = service_number_delivery_id_map.get(service_number);
                             String login = delivery_id_user_map.get(delivery_id);
+                            log.debug("Id '"+id+"', service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
-                            log.debug("Try to add DataSM with gId '"+gId+"', service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
-                            Manager.getInstance().getSender(login).addMessage(delivery_id, gId);
+                            Manager.getInstance().getSender(login).addMessage(id, destination_address_str, text, sequence_number, connection_name, delivery_id);
 
                             break;
                         }
 
                         case DeliverSMResp:{
-                            Message request = (Message) pdu;
+                            log.debug("Handle pdu with type "+pdu.getType());
 
+                            DeliverSMResp deliverSMResp = (DeliverSMResp) pdu;
+                            int sequence_number = deliverSMResp.getSequenceNumber();
+                            log.debug("DeliverSMResp: sequence_number="+sequence_number);
+
+                            long time = System.currentTimeMillis();
+
+                            DeliverSMData deliverSMData = JournalManager.getInstance().getDeliverSMData(sequence_number);
+                            if (deliverSMData != null){
+                                try {
+                                    JournalManager.getInstance().writeToJournal(time, sequence_number, DeliverSMStatus.DONE, deliverSMData);
+                                } catch (CouldNotWriteToJournalException e) {
+                                    log.error(e);
+                                    // todo ?
+                                }
+                            } else {
+                                log.warn("Couldn't find deliver receipt with sequence number "+sequence_number);
+                            }
+
+                            log.debug("DeliverSMResp: sequence_num="+sequence_number);
                         }
 
                     }
@@ -196,7 +239,6 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                             Calendar c = Calendar.getInstance();
                             c.setTimeInMillis(time);
 
-
                             if( request.getRegDeliveryReceipt() != RegDeliveryReceipt.None ) {
 
                                 Message rcpt = request.getAnswer();
@@ -217,11 +259,25 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
 
                                 rcpt.setMessage("gId:" + gId + " sub:001 dlvrd:001 submit date:" + subm_date + " done date:" + notf_date + " stat:"+finalMessageStates+" err:000 Text:");
                                 try {
+                                    long send_receipt_time = System.currentTimeMillis();
                                     smppServer.send(rcpt);
+
+                                    int sequence_number = rcpt.getSequenceNumber();
+
+                                    DeliverSMData deliverSMData = new DeliverSMData(gId, send_receipt_time);
+                                    try {
+                                        JournalManager.getInstance().writeToJournal(send_receipt_time, sequence_number, DeliverSMStatus.SEND, deliverSMData);
+                                    } catch (CouldNotWriteToJournalException e1) {
+                                        log.error(e1);
+                                        // todo ?
+                                    }
+                                    log.debug("Send for "+gId+" message deliver receipt with sequence number "+sequence_number+".");
+
                                 } catch (SmppException e1) {
                                     log.error("Couldn't send delivery receipt to the client.", e1);
                                     // todo ?
                                 }
+
                             }
 
                         }
@@ -266,7 +322,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                     Element user_el = (Element) users_list.get(i);
                     String login = user_el.getAttributeValue("login");
                     String password = user_el.getAttributeValue("password");
-                    log.debug("User ¹"+(i+1)+": login="+login+" password="+password);
+                    log.debug("User "+(i+1)+": login="+login+" password="+password);
                     user_password_map.put(login, password);
                 }
             } else {
@@ -278,7 +334,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                 Element delivery_el = (Element) deliveries_list.get(i);
                 int delivery_id = Integer.parseInt(delivery_el.getAttributeValue("id"));
                 String user = delivery_el.getAttributeValue("user");
-                log.debug("Delivery ¹"+(i+1)+": id="+delivery_id+", user="+user);
+                log.debug("Delivery "+(i+1)+": id="+delivery_id+", user="+user);
                 delivery_id_user_map.put(delivery_id, user);
 
                 Element sns_el = delivery_el.getChild("Sns");
@@ -287,7 +343,7 @@ public class SMPP2DCPGateway extends Thread implements PDUListener {
                     for(int j=0; j<sns_list.size(); j++){
                         Element sn_el = (Element) sns_list.get(j);
                         long service_number = Long.parseLong(sn_el.getValue());
-                        log.debug("service number ¹"+(j+1)+": "+service_number);
+                        log.debug("service number "+(j+1)+": "+service_number);
                         service_number_delivery_id_map.put(service_number, delivery_id);
                     }
                 } else {

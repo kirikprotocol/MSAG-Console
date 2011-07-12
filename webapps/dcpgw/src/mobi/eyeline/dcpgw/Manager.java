@@ -32,7 +32,7 @@ public class Manager {
 
     private int capacity;
 
-    private long sending_timeout, waiting_timeout;
+    private long sending_timeout;
 
     private HashMap<String, Sender> user_senders_map;
 
@@ -96,15 +96,6 @@ public class Manager {
             System.exit(1);
         }
 
-        s = prop.getProperty("waiting.timeout.mls");
-        if (s != null && !s.isEmpty()){
-            waiting_timeout = Integer.parseInt(s);
-            log.debug("Configuration property: waiting.timeout.mls="+waiting_timeout);
-        } else {
-            log.error("Configuration property 'waiting.timeout.mls' is invalid or not specified in config");
-            System.exit(1);
-        }
-
         user_senders_map = new HashMap<String, Sender>();
 
         id_request_table = new Hashtable<Long, Message>();
@@ -127,7 +118,7 @@ public class Manager {
             sender = user_senders_map.get(user);
         } else {
             log.debug("Try to initialize sender for user '"+user+"'.");
-            sender = new Sender(informer_host, informer_port, user, user_password_map.get(user), capacity, sending_timeout, waiting_timeout, smppServer);
+            sender = new Sender(informer_host, informer_port, user, user_password_map.get(user), capacity, sending_timeout, smppServer);
             user_senders_map.put(user, sender);
             sender.start();
         }
