@@ -42,6 +42,8 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     this.fileSys = context.getFileSystem();
     this.sourceAddr = opts.getSourceAddress();
     this.encoding = opts.getEncoding();
+    if (encoding == null)
+      encoding = "UTF-8";
     this.createReports = opts.isCreateReports();
 
     localCopy = new File(opts.getWorkDir(), "detailedLocalCopy");
@@ -53,7 +55,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
   private static final String CSV_POSFIX = ".csv";
   private static final String IN_PROCESS = ".active";
   private static final String FINISHED = ".finished";
-  private static final String REPORT = ".rep";
+  private static final String REPORT = ".report";
 
   private static String buildFinished(String csv) {
     return csv + FINISHED;
@@ -108,7 +110,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       String localInProcessFile = buildInProcess(localCsvFile);
 
       if(resource.contains(localInProcessFile)) {
-        if(createReports && !resource.contains(localReportFile.getName()))
+        if(fileSys.exists(localReportFile) && !resource.contains(localReportFile.getName()))
           helper.uploadFileToResource(resource, localReportFile);
         resource.rename(localInProcessFile, localFinishedFile.getName());
       } else {
@@ -125,12 +127,12 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     try{
       resource.open();
 
+      synchronizeFinished(resource);
+
       if(downloadNewFiles)
         downloadCsvFilesFromResource(resource);
 
       synchronizeInProcess(resource);
-
-      synchronizeFinished(resource);
 
       helper.notifyInteractionOk("type","synchronization");
 
