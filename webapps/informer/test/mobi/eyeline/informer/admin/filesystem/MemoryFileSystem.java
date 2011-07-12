@@ -23,6 +23,10 @@ public class MemoryFileSystem extends FileSystem {
     files.put(new File("").getAbsolutePath(), DIRECTORY);
   }
 
+  public void clear() {
+    files.clear();
+  }
+
   public InputStream getInputStream(File file) throws AdminException {
     if (!files.containsKey(file.getAbsolutePath()))
       throw new FileSystemException("io_error", file.getAbsolutePath() + " does not exists");
