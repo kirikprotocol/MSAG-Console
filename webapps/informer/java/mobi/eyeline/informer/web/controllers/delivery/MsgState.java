@@ -11,6 +11,8 @@ public enum MsgState {
   New(MessageState.New, MessageState.Process),
   Delivered(MessageState.Delivered),
   Failed(MessageState.Failed),
+  Sent(MessageState.Sent),
+  Retry(MessageState.Retry),
   Expired(MessageState.Expired);
 
   private MessageState[] states;

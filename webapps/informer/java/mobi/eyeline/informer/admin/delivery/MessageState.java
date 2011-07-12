@@ -10,5 +10,7 @@ public enum MessageState {
   Process,
   Delivered,
   Failed,
-  Expired
+  Expired,
+  Sent,
+  Retry
 }

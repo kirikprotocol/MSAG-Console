@@ -329,11 +329,12 @@ end
 enum byte DeliveryMessageState
   New       1
   Process   2
-  Retry     6
   Delivered 3
   Failed    4
   Expired   5
+  Retry     6
   Killed    7
+  Sent      8
 end
 
 message RequestMessagesState 43
