@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
-import mobi.eyeline.informer.web.components.data_table.LoadListener;
+import mobi.eyeline.informer.web.components.data_table.model.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
 import org.apache.log4j.Logger;

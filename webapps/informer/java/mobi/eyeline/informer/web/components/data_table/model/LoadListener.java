@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.web.components.data_table;
+package mobi.eyeline.informer.web.components.data_table.model;
 
 import mobi.eyeline.informer.web.components.data_table.model.ModelException;
 

@@ -5,7 +5,7 @@ import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
 import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.UserStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
-import mobi.eyeline.informer.web.components.data_table.LoadListener;
+import mobi.eyeline.informer.web.components.data_table.model.LoadListener;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.model.SelectItem;

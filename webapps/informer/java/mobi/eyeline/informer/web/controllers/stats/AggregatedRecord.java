@@ -12,7 +12,7 @@ import java.util.*;
  * Date: 29.10.2010
  * Time: 14:26:08
  */
-public abstract class AggregatedRecord implements DataTableRow {
+public abstract class AggregatedRecord {
   protected TreeMap<Object, AggregatedRecord> innerRowsMap = null;
   protected List<AggregatedRecord> innerRows = null;
   protected boolean isParent;
