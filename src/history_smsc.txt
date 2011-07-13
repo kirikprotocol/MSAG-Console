@@ -670,3 +670,8 @@ B3212: Jun 30, 2011
     MCISme	Advertising protocol V1 no more supported
     INMan	Multithreaded handling of SMSC packets
     USSMan	Multithreaded handling of requests
+
+B3213: Jul 13, 2011
+    MCISme	Fix for handling timeouts on banner engine, send attempt now should be done anyway
+    MCISme	Fix for shutdown sequences
+    Inman	Fix for closing socket seq
