@@ -27,6 +27,9 @@ const char *HttpContext::taskName[8] = {
     "Writer"            // <- SEND_RESPONSE
 };
 
+const char* HttpContext::nameUser = {"user"};
+const char* HttpContext::nameSite = {"site"};
+
 enum StatusCode {
   OK,
   ERROR,
@@ -169,21 +172,12 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 }
 
 int HttpContext::sslCloseConnection(Socket* s) {
-/*
-	SSL* &ssl;
-	if (s == user)
-		ssl = userSsl;
-	else if (s == site)
-		ssl = siteSsl;
-	else {
-		smsc_log_debug(logger, "sslCloseConnection: unknown socket");
+	if (!this->useHttps())
 		return 0;
-	}
-*/
 	SSL* &ssl = (s == user) ? userSsl : siteSsl;
-	smsc_log_debug(logger, "sslCloseConnection: %s %p", (s==user)?"user":"site", ssl);
+	smsc_log_debug(logger, "sslCloseConnection: %s %p", connName(s), ssl);
 	if ( ssl == NULL ) {
-		smsc_log_debug(logger, "sslCloseConnection: %s already closed", (s==user)?"user":"site");
+		smsc_log_debug(logger, "sslCloseConnection: %s already closed", connName(s));
 		return 0;
 	}
 	try {
@@ -193,9 +187,9 @@ int HttpContext::sslCloseConnection(Socket* s) {
 	}
 	catch (...) {
 		ssl = NULL;
-		smsc_log_debug(logger, "sslCloseConnection: %s Unknown error", (s==user)?"user":"site");
+		smsc_log_debug(logger, "sslCloseConnection: %s Unknown error", connName(s));
 	}
-	smsc_log_debug(logger, "sslCloseConnection: %s Ok", (s==user)?"user":"site");
+	smsc_log_debug(logger, "sslCloseConnection: %s Ok", connName(s));
 	return 1;
 }
 
@@ -254,18 +248,17 @@ int HttpContext::sslReadMessage(Socket* s, const char *readBuf, const size_t rea
 	int len=0;
 	size_t total=0;
 
-	unparsed.SetPos(0);
+//	unparsed.SetPos(0);
 
 /*
  * Messages with length over 16 Kbytes takes more then one TCP package
  * so we have to process several packages to get whole message.
- * After every package read SSL_pending returns 0. In this case we try to read anyway
+ * After every package read, SSL_pending returns 0. In this case we try to read anyway
  * and finish reading only where SSL_read returns 0.
  */
 	while ( toRead > 0 ) {
-		smsc_log_debug(logger, "sslReadMessage: %s cycle toRead=%d", (s==user?"user":"site"), toRead);
+//		smsc_log_debug(logger, "sslReadMessage: %s cycle toRead=%d", connName(s), toRead);
 		len = SSL_read(ssl, (void*)readBuf, toRead);
-		smsc_log_debug(logger, "sslReadMessage: %d chars from %s.", len, (s==user?"user":"site"));
 		if (len == 0) {
 			if ( SSL_get_shutdown(ssl) ) {
 				return 0;
@@ -275,9 +268,11 @@ int HttpContext::sslReadMessage(Socket* s, const char *readBuf, const size_t rea
 			return 0;
 		}
 		else if ( len > 0 ) {
-			smsc_log_debug(logger, "sslReadMessage: %d chars from %s.", len, (s==user?"user":"site"));
+			smsc_log_debug(logger, "sslReadMessage: %d chars from %s.", len, connName(s));
 			unparsed.Append(readBuf, len);
-			total += len;
+			total = unparsed.GetPos();
+			smsc_log_debug(logger, "sslReadMessage: %d chars from %s. Total: %d",
+					len, connName(s), total);
 /*
  * SSL_pending() returns amount of bytes in SSL receive buffer available to read, but without guarantee.
  * Called before SSL_read(), SSL_pending always returns 0, so we have to call SSL_read first.
@@ -294,14 +289,53 @@ int HttpContext::sslReadMessage(Socket* s, const char *readBuf, const size_t rea
 				break;
 		}
 	}
-	unparsed.Append("\0", 1);
-//	smsc_log_debug(logger, "sslReadMessage:total %d chars from %s.", total, (s==user?"user":"site"));
-	smsc_log_debug(logger, "sslReadMessage:total %d chars from %s:\n%s", total, (s==user?"user":"site"), unparsed.get());
+//	unparsed.Append("\0", 1);
+//	smsc_log_debug(logger, "sslReadMessage:total %d chars from %s:\n%s", total, connName(s), unparsed.get());
 
 	return total;
 }
 
-// non-blocking and partial write allowed: SSL_write returns after every 16kb block
+int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t readBufSize) {
+	SSL* ssl = sslCheckConnection(s);
+	if (ssl == NULL)
+		return 0;
+
+	size_t toRead = readBufSize;
+	int len=0;
+	size_t total=0;
+
+	while ( toRead > 0 ) {
+//		smsc_log_debug(logger, "sslReadPartial: %s cycle toRead=%d", connName(s), toRead);
+		len = SSL_read(ssl, (void*)readBuf, toRead);
+		if (len == 0) {
+			if ( SSL_get_shutdown(ssl) ) {
+				return 0;
+			}
+			else {
+				break;  // it seems, the read operation is over here
+			}
+		}
+		else if ( len > 0 ) {
+			unparsed.Append(readBuf, len);
+			total = unparsed.GetPos();
+			smsc_log_debug(logger, "sslReadPartial: %d chars from %s. Total: %d",
+					len, connName(s), total);
+			toRead = SSL_pending(ssl);
+			if ( 0 == toRead )
+				toRead = readBufSize;
+//				break;
+			if ( toRead > readBufSize )
+				toRead = readBufSize;
+			continue;
+		}
+		else {
+			if ( sslCheckIoError(ssl, len) == ERROR ) // CONTINUE )
+				return 0;
+		}
+	}
+	return total;
+}
+
 int HttpContext::sslWriteMessage(Socket* s, const char * buf, const size_t buf_size) {
 	SSL* ssl = sslCheckConnection(s);
 	if (ssl == NULL) {
@@ -314,9 +348,9 @@ int HttpContext::sslWriteMessage(Socket* s, const char * buf, const size_t buf_s
 	int total = 0;
 	char* data = (char*)buf;
 	while ( toWrite > 0 ) {
-		smsc_log_debug(logger, "sslWriteMessage: %s cycle toWrite=%d", (s==user?"user":"site"), toWrite);
+		smsc_log_debug(logger, "sslWriteMessage: %s cycle toWrite=%d", connName(s), toWrite);
 		len = SSL_write(ssl, data, toWrite);
-		smsc_log_debug(logger, "sslWriteMessage: %d chars to %s.", len, (s==user?"user":"site"));
+		smsc_log_debug(logger, "sslWriteMessage: %d chars to %s.", len, connName(s));
 		if (len == 0) {
 			if ( SSL_get_shutdown(ssl) ) {
 				return 0;
@@ -338,6 +372,58 @@ int HttpContext::sslWriteMessage(Socket* s, const char * buf, const size_t buf_s
 		}
 	}
 	return total;
+}
+
+void HttpContext::prepareData() {
+    if ( useHttps() && ((action == SEND_REQUEST) || (action == SEND_RESPONSE)) ) {
+		const char *data;
+		unsigned int size;
+		unparsed.SetPos(0);
+	// write headers
+		const std::string &headers = command->getMessageHeaders();
+		size = headers.size();
+		if (size)
+			saveUnparsed(const_cast<char*>(headers.data()), static_cast<unsigned int>(headers.size()));
+
+	// write content
+		data = command->getMessageContent(size);
+		if (size)
+			unparsed.Append(data, size);
+		unparsed.Append("\0", 1);
+		size = unparsed.GetPos();
+		size = (size>0) ? size-1 : 0;
+		unparsed.SetPos(size);
+		position = 0;
+		flags = 1;
+		smsc_log_debug(logger, "prepare data: hdrs=%d total=%d", headers.size(), unparsed.GetPos());
+    }
+}
+
+// non-blocking and partial write allowed: SSL_write returns after every 16kb block
+int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWrite) {
+	int len;
+	while ( toWrite > 0 ) {
+		SSL* ssl = sslCheckConnection(s);
+		if (ssl == NULL) {
+			smsc_log_debug(logger, "sslWritePartial: create connection failed");
+			return 0;
+		}
+		len = SSL_write(ssl, data, toWrite);
+		smsc_log_debug(logger, "sslWritePartial: %d of %d chars to %s.", len, toWrite, connName(s));
+		if ( len > 0 ) {
+			return len;
+		}
+		if (len == 0) {
+			if ( SSL_get_shutdown(ssl) ) {
+				return 0;
+			}
+			continue;
+		}
+		if ( sslCheckIoError(ssl, len) == ERROR ) {
+			return 0;
+		}
+	}
+	return 0;
 }
 
 int HttpContext::sslWriteCommand(Socket* s) {
@@ -369,10 +455,41 @@ int HttpContext::sslWriteCommand(Socket* s) {
 	return cnt;
 }
 
+bool HttpContext::commandIsOver() {
+	bool result = true;
+	if (flags == 1) {
+		result = useHttps()
+				? (position >= unparsed.GetPos())
+				: (position >= unsigned(command->getContentLength()));
+	}
+	return result;
+}
+
+void HttpContext::getCommandAttr(const char* &data, unsigned int &size) {
+	if ( useHttps() ) {
+		flags = 1;
+		data = unparsed.get();
+		size = unparsed.GetPos();
+	}
+	else {	// no https
+		if (flags == 0) {
+			// write headers
+			const std::string &headers = command->getMessageHeaders();
+
+			data = headers.data();
+			size = headers.size();
+		}
+		else {
+			// write content
+			data = command->getMessageContent(size);
+		}
+	}
+	smsc_log_debug(logger, "prepared state: data %p size=%d", data, size);
+}
+
 /*
  * check SSL io functions ret value in case ret<0
  */
-
 int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 {
 	int result = ERROR;

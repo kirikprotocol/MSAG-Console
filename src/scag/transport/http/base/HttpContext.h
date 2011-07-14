@@ -118,7 +118,9 @@ public:
     int sslSiteConnection(bool verify_client=false); //client mode connection
     int sslCloseConnection(Socket* s);
     int sslReadMessage(Socket* s, const char* readBuf, const size_t readBufSize);
+    int sslReadPartial(Socket* s, const char* readBuf, const size_t readBufSize);
     int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
+    int sslWritePartial(Socket* s, const char* data, const size_t toWrite);
     int sslWriteCommand(Socket* s);
     bool useHttps(void) { return sslOptions!=NULL; }
 
@@ -127,9 +129,10 @@ public:
     //for HttpReaderTask::Execute
     char* getUnparsed(void) { return unparsed.get(); }
     unsigned int unparsedLength() { return static_cast<unsigned int>(unparsed.GetPos()); }
-    void appendUnparsed(char* buf, unsigned int len) {
-        unparsed.Append(buf, len);
-    }
+    void appendUnparsed(char* buf, unsigned int len) { unparsed.Append(buf, len); }
+    void prepareData();
+    bool commandIsOver();
+    void getCommandAttr(const char* &data, unsigned int &size);
 
 public:
     Socket *user;
@@ -153,6 +156,8 @@ protected:
 
     static ActionID actionNext[8];
     static const char *taskName[8];
+    static const char* nameUser;
+    static const char* nameSite;
 
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;
@@ -167,6 +172,7 @@ protected:
     void sslLogErrors(void);
     SSL* sslCheckConnection(Socket* s);
     void sslCertInfo(X509* cert);
+    const char* connName(Socket* s) { return (s==user?nameUser:nameSite); }
 };
 
 }}}
