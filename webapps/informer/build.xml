@@ -44,8 +44,26 @@ public class Mode {${line.separator}
 }
     </echo>
   </target>
+
+  <target name="version_prod" unless="is.dev">
+    <echo file="java/mobi/eyeline/informer/web/Version.java">
+package mobi.eyeline.informer.web;${line.separator}${line.separator}
+public class Version {${line.separator}
+  public final static String version = "${informer.implementation.version}";${line.separator}
+}
+    </echo>
+  </target>
+
+  <target name="version_dev" if="is.dev">
+    <echo file="java/mobi/eyeline/informer/web/Version.java">
+package mobi.eyeline.informer.web;${line.separator}${line.separator}
+public class Version {${line.separator}
+  public final static String version = "";${line.separator}
+}
+    </echo>
+  </target>
    
-  <target name="prebuild" depends="gen_admin_protocol, gen_delivery_protocol, mode"/>
+  <target name="prebuild" depends="gen_admin_protocol, gen_delivery_protocol, mode, version_dev, version_prod"/>
 
   <target name="compile.sources" depends="prebuild">
     <delete dir="${informer.source.classes}" failonerror="false"/>
@@ -106,9 +124,26 @@ public class Mode {${line.separator}
   <target name="exploded">
     <delete dir="${informer.exploded.dir}" failonerror="false"/>
     <mkdir dir="${informer.exploded.dir}"/>
-    <copy todir="${informer.exploded.dir}">
-      <fileset dir="web" includes="**/*"/>
+    <copy todir="${informer.exploded.dir}" >
+      <fileset dir="web" includes="**/*" />
     </copy>
+
+    <move todir="${informer.exploded.dir}/js">
+      <fileset dir="${informer.exploded.dir}/js" />
+      <mapper>
+        <mapper type="regexp"
+                from="(.*)\.js" to="\1${informer.implementation.version}\.js"/>
+      </mapper>
+    </move>
+
+    <move todir="${informer.exploded.dir}/styles">
+      <fileset dir="${informer.exploded.dir}/styles" />
+      <mapper>
+        <mapper type="regexp"
+                from="(.*)\.css" to="\1${informer.implementation.version}\.css"/>
+      </mapper>
+    </move>
+
 
     <mkdir dir="${informer.exploded.dir}/WEB-INF/lib"/>
     <copy todir="${informer.exploded.dir}/WEB-INF/lib" >

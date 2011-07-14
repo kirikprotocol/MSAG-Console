@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.web.Version;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -73,30 +74,32 @@ public class UserSessionController extends InformerController {
   }
 
   public void downloadFile(FacesContext context, String file, OutputStream out) throws IOException{
-      BufferedInputStream bis = null;
-      BufferedOutputStream bos = null;
-      try{
-        bis = new BufferedInputStream(context.getExternalContext().getResourceAsStream(file));
-        bos = new BufferedOutputStream(out);
-        byte[] buffer = new byte[4096];
-        int count;
-        while((count = bis.read(buffer, 0, buffer.length)) != -1) {
-          bos.write(buffer, 0, count);
-        }
-        bos.flush();
-      }finally {
-        if(bis != null) {
-          try{
-            bis.close();
-          }catch (Exception ignored){}
-        }
-        if(bos != null) {
-          try{
-            bos.close();
-          }catch (Exception ignored){}
-        }
+    BufferedInputStream bis = null;
+    BufferedOutputStream bos = null;
+    try{
+      bis = new BufferedInputStream(context.getExternalContext().getResourceAsStream(file));
+      bos = new BufferedOutputStream(out);
+      byte[] buffer = new byte[4096];
+      int count;
+      while((count = bis.read(buffer, 0, buffer.length)) != -1) {
+        bos.write(buffer, 0, count);
       }
+      bos.flush();
+    }finally {
+      if(bis != null) {
+        try{
+          bis.close();
+        }catch (Exception ignored){}
+      }
+      if(bos != null) {
+        try{
+          bos.close();
+        }catch (Exception ignored){}
+      }
+    }
+  }
 
-
+  public String getVersion() {
+    return Version.version;
   }
 }

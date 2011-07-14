@@ -7,37 +7,7 @@
   <tr:document title="#{msg['informer.title']}" >
 
 
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/colors.css"/>
-
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/common.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/list.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/properties_list.css"/>
-
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_list.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/navbar.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/messages.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/message.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_menu.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/main_menu.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/menu_bar.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_calendar.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/dataTable.css"/>
-
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/sme_menu.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/header.css"/>
-
-
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_group.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/data_table_filter.css"/>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/collapsing_group.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/dynamic_table.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/ajax.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table_filter.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/updatable_content.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/selectToggleMany.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/page_calendar.js"></script>
-    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menubar.js"></script>
+    <ui:include src="main_resources.xhtml"/>
 
     <script type="text/javascript">
 
@@ -64,7 +34,7 @@
             <tr>
               <td width="236px"><img src="#{facesContext.externalContext.requestContextPath}/images/smsc_04.jpg" WIDTH="236px" HEIGHT="45px" alt=""/></td>
               <td bgcolor="#161E49"><span
-                  style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&#160;#{applicationScope['informer-version']}</span>
+                  style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&#160;#{userSession.version}</span>
               </td>
               <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_06.jpg"></td>
             </tr>

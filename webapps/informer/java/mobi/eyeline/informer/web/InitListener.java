@@ -4,14 +4,9 @@ import mobi.eyeline.informer.admin.monitoring.MBean;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
 
 /**
  * Инициализация web-приложения
@@ -32,9 +27,7 @@ public class InitListener implements ServletContextListener {
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
 
-      String version = readVersion(servletContextEvent.getServletContext());
-
-      MBean.getInstance(MBean.Source.SYSTEM).notifyStartup(version == null ? "" : version);
+      MBean.getInstance(MBean.Source.SYSTEM).notifyStartup(Version.version == null ? "" : Version.version);
 
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
       initLog4j(new File(new File(appBaseDir, "conf"), "log4j.properties").getAbsolutePath());
@@ -47,9 +40,6 @@ public class InitListener implements ServletContextListener {
       WebContext.init(appBaseDir);
 
       context = WebContext.getInstance();
-
-      servletContextEvent.getServletContext().setAttribute("informer-version",
-          version);
 
 
       MBean.getInstance(MBean.Source.SYSTEM).notifyConfigurationOk();
@@ -70,33 +60,6 @@ public class InitListener implements ServletContextListener {
     }
     MBean.getInstance(MBean.Source.SYSTEM).notifyShutdown();
     MBean.shutdown();
-  }
-
-  @SuppressWarnings({"EmptyCatchBlock"})
-  private static String readVersion(ServletContext context) {
-    Manifest mf = new Manifest();
-    InputStream is = null;
-    try {
-      is = context.getResourceAsStream("META-INF/MANIFEST.MF");
-      if (is == null) {
-        is = context.getResourceAsStream("META-INF/manifest.mf");
-      }
-      if (is == null) {
-        return null;
-      }
-      mf.read(is);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-    Attributes a = mf.getMainAttributes();
-    return a != null ? a.getValue("Implementation-Version") : null;
   }
 
 }
