@@ -46,29 +46,38 @@ siteSsl(NULL),
 userContext(NULL),
 siteContext(NULL)
 {
-    logger = Logger::getInstance("http.https");
+	logger = Logger::getInstance("http.https");
 
 	if ( sslOptions ) {
 		userContext = sslOptions->userContext();
 		siteContext = sslOptions->siteContext();
 		trc.sitePort = 443;
 	}
-    setContext(user, this);
+	setContext(user, this);
 }
 
 HttpContext::~HttpContext()
 {
-    if (user)
-        delete user;
-    if (site)
-        delete site;
+/*
+	if (userSsl)
+		sslCloseConnection(user);
+	if (siteSsl)
+		sslCloseConnection(site);
+*/
+	if (user)
+		delete user;
+	if (site)
+		delete site;
 
-    if (command)
-        delete command;
+	if (command)
+		delete command;
 }
 
 int HttpContext::sslUserConnection(bool verify_client) {
-	// A SSL structure is created
+/*
+	if (userSsl)
+		sslCloseConnection(user);
+*/
 	userSsl = SSL_new(userContext);
 	if ( userSsl == NULL)
 		return 0;
@@ -94,7 +103,7 @@ int HttpContext::sslUserConnection(bool verify_client) {
 
 		/* Get the client's certificate (optional) */
 		client_cert = SSL_get_peer_certificate(userSsl);
-	    sslCertInfo(client_cert);
+		sslCertInfo(client_cert);
 
 		user->setNonBlocking(1);
 	}
@@ -104,10 +113,15 @@ int HttpContext::sslUserConnection(bool verify_client) {
 		userSsl = NULL;
 		return 0;
 	}
+	smsc_log_debug(logger, "sslUserConnection:created %p", userSsl);
 	return 1;
 }
 
 int HttpContext::sslSiteConnection(bool verify_client) {
+/*
+	if (siteSsl)
+		sslCloseConnection(site);
+*/
 	smsc_log_debug(logger, "sslSiteConnection:try to create, siteContext: %p", siteContext);
 	siteSsl = SSL_new(siteContext);
 	if ( siteSsl == NULL) {
@@ -129,17 +143,17 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 		/* Perform SSL Handshake on the SSL client */
 		smsc_log_debug(logger, "sslSiteConnection:SSL_connect(%p);", siteSsl);
 		site->setNonBlocking(0);
-	    err = SSL_connect(siteSsl);
-	    smsc_log_debug(logger, "sslSiteConnection:SSL_connect result=%d;", err);
+		err = SSL_connect(siteSsl);
+		smsc_log_debug(logger, "sslSiteConnection:SSL_connect result=%d;", err);
 		if ( err <= 0) {
 			sslLogErrors();
 			throw 0;
 		}
 		smsc_log_debug(logger, "SSL connection version: %s using %s", SSL_get_version(siteSsl), SSL_get_cipher(siteSsl));
 
-	    /* Get the server's certificate (optional) */
-	    server_cert = SSL_get_peer_certificate(siteSsl);
-	    sslCertInfo(server_cert);
+		/* Get the server's certificate (optional) */
+		server_cert = SSL_get_peer_certificate(siteSsl);
+		sslCertInfo(server_cert);
 
 		site->setNonBlocking(1);
 	}
@@ -155,7 +169,8 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 }
 
 int HttpContext::sslCloseConnection(Socket* s) {
-	SSL* ssl;
+/*
+	SSL* &ssl;
 	if (s == user)
 		ssl = userSsl;
 	else if (s == site)
@@ -164,16 +179,24 @@ int HttpContext::sslCloseConnection(Socket* s) {
 		smsc_log_debug(logger, "sslCloseConnection: unknown socket");
 		return 0;
 	}
-	if ( ssl ) {
-		SSL_shutdown(ssl);
-	    SSL_free(ssl);
-	    ssl = NULL;
-	} else {
+*/
+	SSL* &ssl = (s == user) ? userSsl : siteSsl;
+	smsc_log_debug(logger, "sslCloseConnection: %s %p", (s==user)?"user":"site", ssl);
+	if ( ssl == NULL ) {
 		smsc_log_debug(logger, "sslCloseConnection: %s already closed", (s==user)?"user":"site");
 		return 0;
 	}
+	try {
+		SSL_shutdown(ssl);
+		SSL_free(ssl);
+		ssl = NULL;
+	}
+	catch (...) {
+		ssl = NULL;
+		smsc_log_debug(logger, "sslCloseConnection: %s Unknown error", (s==user)?"user":"site");
+	}
 	smsc_log_debug(logger, "sslCloseConnection: %s Ok", (s==user)?"user":"site");
-    return 1;
+	return 1;
 }
 
 void HttpContext::sslCertInfo(X509* cert) {
@@ -240,7 +263,9 @@ int HttpContext::sslReadMessage(Socket* s, const char *readBuf, const size_t rea
  * and finish reading only where SSL_read returns 0.
  */
 	while ( toRead > 0 ) {
+		smsc_log_debug(logger, "sslReadMessage: %s cycle toRead=%d", (s==user?"user":"site"), toRead);
 		len = SSL_read(ssl, (void*)readBuf, toRead);
+		smsc_log_debug(logger, "sslReadMessage: %d chars from %s.", len, (s==user?"user":"site"));
 		if (len == 0) {
 			if ( SSL_get_shutdown(ssl) ) {
 				return 0;
@@ -289,6 +314,7 @@ int HttpContext::sslWriteMessage(Socket* s, const char * buf, const size_t buf_s
 	int total = 0;
 	char* data = (char*)buf;
 	while ( toWrite > 0 ) {
+		smsc_log_debug(logger, "sslWriteMessage: %s cycle toWrite=%d", (s==user?"user":"site"), toWrite);
 		len = SSL_write(ssl, data, toWrite);
 		smsc_log_debug(logger, "sslWriteMessage: %d chars to %s.", len, (s==user?"user":"site"));
 		if (len == 0) {
@@ -329,6 +355,8 @@ int HttpContext::sslWriteCommand(Socket* s) {
 // write content
 	data = command->getMessageContent(written_size);
 	sendBuf.Append(data, written_size);
+	smsc_log_debug(logger, "sslWriteCommand: hdrs=%d content=%d buf=%d", headers.size(), written_size, sendBuf.GetPos());
+
 	size += written_size;
 	data = sendBuf.get();
 
@@ -336,9 +364,9 @@ int HttpContext::sslWriteCommand(Socket* s) {
 	if ( cnt <= 0 )
 		return 0;  //error
 // success: set values that shows whole content have been sent
-     flags = 1;
-     position = (unsigned)command->getContentLength();
-     return cnt;
+	flags = 1;
+	position = (unsigned)command->getContentLength();
+	return cnt;
 }
 
 /*

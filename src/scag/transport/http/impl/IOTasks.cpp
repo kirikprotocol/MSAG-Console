@@ -149,6 +149,7 @@ int HttpReaderTask::Execute()
     smsc_log_debug(logger, "%p started", this);
     
     for (;;) {
+//        smsc_log_debug(logger, "HttpReaderTask cycle %llu", time(NULL));
         {
             MutexGuard g(sockMon);
 
@@ -245,6 +246,8 @@ int HttpReaderTask::Execute()
                         removeSocket(s);
                         if (cx->action == READ_RESPONSE) {
                             smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
+                            if ( cx->useHttps() )
+                            	cx->sslCloseConnection(s);
                             s->Abort();
                             delete s;
                             cx->site = NULL;
@@ -387,7 +390,11 @@ int HttpWriterTask::Execute()
 					smsc_log_debug(logger, "HttpWriterTask::Execute HTTPS");
 					written_size = cx->sslWriteCommand(s);
 					smsc_log_debug(logger, "HttpWriterTask::Execute HTTPS written %d", written_size);
-					if (written_size <= 0) {
+					if (written_size > 0) {
+//						cx->position += written_size;
+						HttpContext::updateTimestamp(s, now);
+					}
+					else {
 						smsc_log_debug(logger, "HttpWriterTask::Execute HTTPS write error");
 						if (cx->action == SEND_REQUEST)
 							cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
@@ -397,8 +404,7 @@ int HttpWriterTask::Execute()
 						continue;
 					}
             	}
-            	else
-            	{
+            	else {	// no https
 					if (cx->flags == 0) {
 						// write headers
 						const std::string &headers = cx->command->getMessageHeaders();
@@ -457,6 +463,8 @@ int HttpWriterTask::Execute()
                         smsc_log_info(logger, "%p: %p, response sent", this, cx);
                         if (cx->command->closeConnection()) {
                           smsc_log_debug(logger, "%p: %p, close connection, finalize socket %p", this, cx, s);
+                          if ( cx->useHttps() )
+                        	  cx->sslCloseConnection(s);
                           deleteSocket(s, SHUT_WR);
                           smsc_log_debug(logger, "%p: %p, socket %p finalized", this, cx, s);
                           cx->user = NULL;
