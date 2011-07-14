@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
-import mobi.eyeline.informer.web.components.data_table.model.DataTableRow;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 
 import java.io.PrintWriter;
