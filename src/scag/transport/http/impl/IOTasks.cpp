@@ -247,7 +247,8 @@ int HttpReaderTask::Execute()
                 	smsc_log_debug(logger, "parse start");
                 	switch (HttpParser::parse(*cx)) {
                     case OK:
-                    	smsc_log_debug(logger, "parse OK");
+                    	smsc_log_debug(logger, "parse OK. Headers=%d content=%d",
+                    			cx->command->getMessageHeaders().size(), cx->command->getContentLength());
                         removeSocket(s);
                         if (cx->action == READ_RESPONSE) {
                             smsc_log_debug(logger, "%p: %p, response parsed", this, cx);

@@ -117,11 +117,11 @@ public:
     int sslUserConnection(bool verify_client=false); //server mode connection
     int sslSiteConnection(bool verify_client=false); //client mode connection
     int sslCloseConnection(Socket* s);
-    int sslReadMessage(Socket* s, const char* readBuf, const size_t readBufSize);
     int sslReadPartial(Socket* s, const char* readBuf, const size_t readBufSize);
-    int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
     int sslWritePartial(Socket* s, const char* data, const size_t toWrite);
-    int sslWriteCommand(Socket* s);
+//    int sslReadMessage(Socket* s, const char* readBuf, const size_t readBufSize);
+//    int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
+//    int sslWriteCommand(Socket* s);
     bool useHttps(void) { return sslOptions!=NULL; }
 
     //tmp for debug
