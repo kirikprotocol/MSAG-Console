@@ -2,6 +2,8 @@ package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DcpConnection;
+import mobi.eyeline.informer.admin.delivery.DeliveryState;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.SmppServer;
@@ -46,6 +48,9 @@ public class Sender extends Thread{
     private Hashtable<Long, Integer> id_seq_num_table;
     private Hashtable<Long, String> id_conn_name_table;
 
+    private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+    private Calendar cal;
+
     public Sender(String host, int port, final String login, String password, int capacity, long sending_timeout, SmppServer smppServer){
         this.host = host;
         this.port = port;
@@ -65,6 +70,8 @@ public class Sender extends Thread{
 
         id_seq_num_table = new Hashtable<Long, Integer>();
         id_conn_name_table = new Hashtable<Long, String>();
+
+        cal = Calendar.getInstance(STAT_TIMEZONE);
     }
 
     public void addMessage(long id,
@@ -188,23 +195,32 @@ public class Sender extends Thread{
                 connection.addDeliveryMessages(delivery_id, list);
                 log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
 
+                DeliveryState deliveryState = new DeliveryState();
+                deliveryState.setStatus(DeliveryStatus.Planned);
+
+                connection.changeDeliveryState(delivery_id, deliveryState);
+
                 for(Message m: list){
 
                     try{
                         SubmitSMResp submitSMResp = new SubmitSMResp();
                         Properties p = m.getProperties();
-                        long id = Long.parseLong(p.getProperty("id"));
-                        submitSMResp.setSequenceNumber(id_seq_num_table.get(id));
-                        submitSMResp.setConnectionName(id_conn_name_table.get(id));
-                        submitSMResp.setMessageId(Long.toString(id));
+                        long message_id = Long.parseLong(p.getProperty("id"));
+                        submitSMResp.setSequenceNumber(id_seq_num_table.get(message_id));
+                        submitSMResp.setConnectionName(id_conn_name_table.get(message_id));
+                        submitSMResp.setMessageId(Long.toString(message_id));
                         smppServer.send(submitSMResp);
 
-                        id_seq_num_table.remove(id);
-                        id_conn_name_table.remove(id);
+                        Date sumbit_time = cal.getTime();
+                        Manager.getInstance().rememberSubmitTime(message_id, sumbit_time);
 
-                        log.debug("Send smpp response with status 'OK' for "+m.getProperties().getProperty("gId")+" message from "+delivery_id+" delivery." );
+                        id_seq_num_table.remove(message_id);
+                        id_conn_name_table.remove(message_id);
+
+                        log.debug("Send smpp response with status 'OK' for "+message_id+" message from "+delivery_id+" delivery." );
                     } catch (SmppException e) {
                         log.error("Could not send response to client", e);
+                        // todo ?
                     }
 
                 }
@@ -230,6 +246,7 @@ public class Sender extends Thread{
                         id_conn_name_table.remove(id);
                     } catch (SmppException e2) {
                         log.error("Could not send response to client", e2);
+                        // todo ?
                     }
                 }
 

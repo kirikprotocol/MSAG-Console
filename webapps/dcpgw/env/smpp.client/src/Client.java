@@ -1,28 +1,21 @@
 import mobi.eyeline.smpp.api.PDUListener;
 import mobi.eyeline.smpp.api.SmppClient;
 import mobi.eyeline.smpp.api.SmppException;
-import mobi.eyeline.smpp.api.pdu.DeliverSM;
-import mobi.eyeline.smpp.api.pdu.Message;
-import mobi.eyeline.smpp.api.pdu.PDU;
-import mobi.eyeline.smpp.api.pdu.SubmitSM;
-import mobi.eyeline.smpp.api.pdu.data.Address;
-import mobi.eyeline.smpp.api.pdu.tlv.TLVByte;
-import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
-import mobi.eyeline.smpp.api.types.Encoding;
-import mobi.eyeline.smpp.api.types.EsmGsm;
+import mobi.eyeline.smpp.api.pdu.*;
+import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
-import mobi.eyeline.smpp.api.types.Status;
-import mobi.eyeline.smpp.api.types.eyeline.Charging;
-import mobi.eyeline.smpp.api.types.eyeline.TransportType;
 import org.apache.log4j.Logger;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,10 +29,14 @@ public class Client extends Thread implements PDUListener {
     Properties config;
     SmppClient smppClient;
 
-    private static String dest_address;
+    private static String dest_address, source_address;
     private static long validity_period;
     private static String message;
+    private File final_log_dir;
 
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private final FinalLogGenerator finalLogGenerator;
 
     public Client() throws SmppException {
         this.config = new Properties();
@@ -50,18 +47,24 @@ public class Client extends Thread implements PDUListener {
         } catch (IOException e) {
           throw new SmppException("Could not initialize", e);
         }
+
         logger.debug("Try to add shutdown hook ...");
         Runtime.getRuntime().addShutdownHook(this);
+
         logger.debug("Try to initialize smpp client ...");
         smppClient = new SmppClient(config, this);
         logger.debug("Try to start smpp client ...");
         smppClient.start();
 
-        String source_address = config.getProperty("source.address");
+        source_address = config.getProperty("source.address");
         dest_address = config.getProperty("dest.address");
         validity_period = Long.parseLong(config.getProperty("validity.period"));
 
         message = config.getProperty("message");
+
+        final_log_dir = new File(config.getProperty("final.log.dir"));
+
+        finalLogGenerator = new FinalLogGenerator(final_log_dir);
 
         logger.debug("Start smpp client.");
     }
@@ -82,9 +85,13 @@ public class Client extends Thread implements PDUListener {
 
             case DeliverSM:
 
-                logger.debug("Handle DeliverSM pdu.");
+
                 DeliverSM deliverSM = (DeliverSM) pdu;
+                int sequence_number = deliverSM.getSequenceNumber();
+                logger.debug("Handle DeliverSM pdu with sequence number "+sequence_number);
+
                 try{
+                    logger.debug("123: "+deliverSM.getResponse().getSequenceNumber());
                     smppClient.send(deliverSM.getResponse());
                     logger.debug("Send DeliverSMResp pdu.");
                     return true;
@@ -92,6 +99,15 @@ public class Client extends Thread implements PDUListener {
                     logger.error("Couldn't send DeliverSMResp.", e);
                     return false;
                 }
+
+            case SubmitSMResp:
+
+                SubmitSMResp submitSMResp = (SubmitSMResp) pdu;
+                long message_id = Long.parseLong(submitSMResp.getMessageId());
+                logger.debug("message_id="+message_id);
+
+                finalLogGenerator.writeFinalState(message_id);
+
         }
         return false;
     }
@@ -99,32 +115,55 @@ public class Client extends Thread implements PDUListener {
     public static void main(String args[]){
         logger.debug("Start smpp client.");
         try{
-            Client client = new Client();
-            for(int i=0; i<5; i++){
+            final Client client = new Client();
+
+            scheduler.scheduleAtFixedRate(new Runnable() {
+
+                @Override
+                public void run() {
+                    SubmitSM submitSM = new SubmitSM();
+                    submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
+                    submitSM.setConnectionName("env.client");
+
+                    DateFormat df = DateFormat.getDateTimeInstance();
+                    Calendar cal = Calendar.getInstance();
+                    Date date = cal.getTime();
+
+                    submitSM.setMessage("message " +df.format(date));
+
+                    try{
+                        submitSM.setSourceAddress(source_address);
+                        submitSM.setDestinationAddress(dest_address);
+                    } catch (InvalidAddressFormatException e){
+                        logger.error(e);
+                    }
+                    submitSM.setValidityPeriod(1000 * validity_period);
+                    client.handlePDU(submitSM);
+                }
+
+            }, 2, 2, TimeUnit.SECONDS);
+
+            /*for(int i=0; i<2; i++){
                 SubmitSM submitSM = new SubmitSM();
                 submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
                 submitSM.setConnectionName("env.client");
 
-                submitSM.setMessage(message+" "+i);
-                submitSM.setSourceAddress("10001");
-                submitSM.setDestinationAddress(dest_address);
-                submitSM.setValidityPeriod(1000*validity_period);
-                logger.debug("Try send submitSM ...");
-                client.handlePDU(submitSM);
-            }
+                DateFormat df = DateFormat.getDateTimeInstance();
+                Calendar cal = Calendar.getInstance();
+                Date date = cal.getTime();
 
-            /*for(int i=5; i<10; i++){
-                SubmitSM submitSM = new SubmitSM();
-                submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
-                submitSM.setConnectionName("env.client");
+                submitSM.setMessage("message " +df.format(date));
 
-                submitSM.setMessage(message+" "+i);
-                submitSM.setSourceAddress("10003");
-                submitSM.setDestinationAddress(dest_address);
-                submitSM.setValidityPeriod(1000*validity_period);
-                logger.debug("Try send submitSM ...");
+                try{
+                    submitSM.setSourceAddress(source_address);
+                    submitSM.setDestinationAddress(dest_address);
+                } catch (InvalidAddressFormatException e){
+                    logger.error(e);
+                }
+                submitSM.setValidityPeriod(1000 * validity_period);
                 client.handlePDU(submitSM);
             }*/
+
         } catch (SmppException e) {
             logger.error("", e);
         }

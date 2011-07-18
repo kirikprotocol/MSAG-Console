@@ -48,4 +48,33 @@ public class DcpConnection {
     return resp.getMessageIds();
   }
 
+  /**
+   * Меняет состояние рассылки
+   *
+   * @param deliveryId идентификатор рассылки
+   * @param state      новое состояние
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void changeDeliveryState(int deliveryId, DeliveryState state) throws AdminException {
+    ChangeDeliveryState req = new ChangeDeliveryState();
+    req.setDeliveryId(deliveryId);
+    req.setState(convert(state));
+    client.send(req);
+  }
+
+  /**
+   * Возвращает статистику по рассылке
+   *
+   * @param deliveryId идентификатор рассылки
+   * @return статистика по рассылке
+   * @throws AdminException ошибка выполнения команды
+   */
+  public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
+    GetDeliveryState req = new GetDeliveryState();
+    req.setDeliveryId(deliveryId);
+    GetDeliveryStateResp resp;
+    resp = client.send(req);
+    return convert(resp.getStats(), resp.getState());
+  }
+
 }

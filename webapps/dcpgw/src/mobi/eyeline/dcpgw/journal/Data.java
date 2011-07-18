@@ -11,13 +11,13 @@ import java.util.Set;
  * Date: 10.07.11
  * Time: 19:42
  */
-public class DeliverSMData {
+public class Data {
 
     private long message_id;
 
     private long time;
 
-    public DeliverSMData(long message_id, long time){
+    public Data(long message_id, long time){
         this.message_id = message_id;
         this.time = time;
     }
@@ -27,7 +27,7 @@ public class DeliverSMData {
     }
 
     public long getMessageId(){
-        return this.getMessageId();
+        return this.message_id;
     }
 
     public void setTime(long time){

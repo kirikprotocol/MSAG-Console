@@ -6,7 +6,7 @@ if [ "$pid" == "" ]; then
 ./mv_logs.sh
 . ./setenv.sh
 
-  PARAM="-Ddcpgw -Xmx256m -cp "$CLASSPATH" mobi.eyeline.dcpgw.SMPP2DCPGateway"
+  PARAM="-Ddcpgw -Xmx256m -cp "$CLASSPATH" mobi.eyeline.dcpgw.Gateway"
   nohup $JAVA_HOME/bin/java $PARAM 1>logs/out 2>logs/err &
   echo Gateway successfully started.
   echo $!>SRV_P.PID

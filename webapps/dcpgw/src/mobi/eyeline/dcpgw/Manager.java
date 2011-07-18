@@ -34,17 +34,17 @@ public class Manager {
 
     private long sending_timeout;
 
-    private HashMap<String, Sender> user_senders_map;
+    private Hashtable<String, Sender> user_senders_map;
 
-    private HashMap<String, String> user_password_map;
+    private Hashtable<String, String> user_password_map;
 
     private String informer_host;
     private int informer_port;
 
     private SmppServer smppServer;
 
-    private Hashtable<Long, Message> id_request_table;
-    private Hashtable<Long, Long> id_time_table;
+    private Hashtable<Long, Message> id_rcpt_table;
+    private Hashtable<Long, Date> id_submit_time_table;
 
     // Private constructor prevents instantiation from other classes
     private Manager(){
@@ -96,17 +96,17 @@ public class Manager {
             System.exit(1);
         }
 
-        user_senders_map = new HashMap<String, Sender>();
+        user_senders_map = new Hashtable<String, Sender>();
 
-        id_request_table = new Hashtable<Long, Message>();
-        id_time_table = new Hashtable<Long, Long>();
+        id_rcpt_table = new Hashtable<Long, Message>();
+        id_submit_time_table = new Hashtable<Long, Date>();
     }
 
     public void setSmppServer(SmppServer smppServer){
         this.smppServer = smppServer;
     }
 
-    public void setUserPasswordMap(HashMap<String, String> user_password_map){
+    public void setUserPasswordMap(Hashtable<String, String> user_password_map){
         this.user_password_map = user_password_map;
     }
 
@@ -126,17 +126,20 @@ public class Manager {
         return sender;
     }
 
-    synchronized public void setRequest(long gId, Message request, long time){
-        id_request_table.put(gId, request);
-        id_time_table.put(gId, time);
+    public void rememberReceiptMessage(long message_id, Message rcpt){
+        id_rcpt_table.put(message_id, rcpt);
     }
 
-    synchronized public Message getRequest(long gId){
-        return id_request_table.get(gId);
+    public Message getReceiptMessage(long message_id){
+        return id_rcpt_table.get(message_id);
     }
 
-    synchronized public long getTime(long gId){
-        return id_time_table.get(gId);
+    public Date getSubmitTime(long message_id){
+        return id_submit_time_table.get(message_id);
+    }
+
+    public void rememberSubmitTime(long message_id, Date date){
+        id_submit_time_table.put(message_id, date);
     }
 
 }

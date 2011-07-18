@@ -5,7 +5,7 @@ package mobi.eyeline.dcpgw.journal;
  * Date: 10.07.11
  * Time: 19:52
  */
-public enum DeliverSMStatus {
+public enum Status {
 
     SEND,
     DONE

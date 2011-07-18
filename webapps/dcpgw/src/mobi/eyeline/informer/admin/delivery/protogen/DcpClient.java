@@ -99,4 +99,12 @@ public class DcpClient extends SyncProtogenConnection {
     sendPdu(req, new OkResponse());
   }
 
+  public void send(ChangeDeliveryState req) throws AdminException {
+    sendPdu(req, new OkResponse());
+  }
+
+  public GetDeliveryStateResp send(GetDeliveryState req) throws AdminException {
+    return sendPdu(req, new GetDeliveryStateResp());
+  }
+
 }
