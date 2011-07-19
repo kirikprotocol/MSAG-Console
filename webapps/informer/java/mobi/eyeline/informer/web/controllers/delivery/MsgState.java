@@ -6,14 +6,13 @@ import mobi.eyeline.informer.admin.delivery.MessageState;
  * @author Artem Snopkov
  */
 public enum MsgState {
-
-  Finalized(MessageState.Delivered, MessageState.Failed, MessageState.Expired),
   New(MessageState.New, MessageState.Process),
+  Retry(MessageState.Retry),
+  Sent(MessageState.Sent),
   Delivered(MessageState.Delivered),
   Failed(MessageState.Failed),
-  Sent(MessageState.Sent),
-  Retry(MessageState.Retry),
-  Expired(MessageState.Expired);
+  Expired(MessageState.Expired),
+  Finalized(MessageState.Delivered, MessageState.Failed, MessageState.Expired);
 
   private MessageState[] states;
 

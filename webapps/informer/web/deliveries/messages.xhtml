@@ -28,7 +28,7 @@
         <h:panelGroup rendered="#{messages.deliveryId!= null}">
 
           <eye:dataTableFilter bean="#{messages}" clearAction="clear" applyAction="query">
-            <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width, columnTopLeftAlign">
+            <h:panelGrid columns="8" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width, column300Width, column50Width, columnTopLeftAlign">
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.abonent']}"/>
               <h:inputText id="msisdn" value="#{messages.msgFilter.msisdn}" converter="addressConverter"
@@ -44,6 +44,9 @@
               <tr:inputText id="errorCode" value="#{messages.msgFilter.errorCode}" simple="true">
                 <tr:validateLongRange minimum="0"/>
               </tr:inputText>
+
+              <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.noResended']}"/>
+              <h:selectBooleanCheckbox value="#{messages.noResended}"/>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.from_date']}"/>
               <eye:inputDate required="true" id="fromDate" value="#{messages.msgFilter.fromDate}" type="date" autocomplete="true"/>
@@ -62,16 +65,19 @@
 
         <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and messages.resendAllowed}" selectedRows="#{messages.selected}" disallowSelectAll="true">
           <eye:row>
-            <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
+            <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="10%">
               <h:outputText value="#{m.abonent.simpleAddress}"/>
             </eye:column>
-            <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="15%">
+            <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="10%">
               <h:outputText value="#{m.state}" converter="messageStateConverter"/>
             </eye:column>
             <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" width="15%">
-              <tr:outputText value="#{m.date}">
-                <f:convertDateTime dateStyle="short" type="both"/>
-              </tr:outputText>
+              <h:outputText value="#{m.date}">
+                <f:convertDateTime dateStyle="short" type="both" pattern="dd.MM.yyyy HH:mm"/>
+              </h:outputText>
+            </eye:column>
+            <eye:column name="resended" title="#{msg['informer.deliveries.message.resended']}" width="10%" align="center">
+              <h:graphicImage value="/images/ic_checked.gif" rendered="#{m.resended}"/>
             </eye:column>
             <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%" rendered="#{messages.showTexts}">
               <h:outputText value="#{m.text}"/>
@@ -86,11 +92,14 @@
 
         <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init and !messages.resendAllowed}">
           <eye:row>
-            <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
+            <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="10%">
               <h:outputText value="#{m.abonent.simpleAddress}"/>
             </eye:column>
-            <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="15%">
+            <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="10%">
               <h:outputText value="#{m.state}" converter="messageStateConverter"/>
+            </eye:column>
+            <eye:column name="resended" title="#{msg['informer.deliveries.message.resended']}" width="10%" align="center">
+              <h:graphicImage value="/images/ic_checked.gif" rendered="#{m.wasResended}"/>
             </eye:column>
             <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" width="15%">
               <tr:outputText value="#{m.date}">

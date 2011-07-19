@@ -172,7 +172,7 @@ class AdminContextBase {
       regionsManager = new RegionsManager(infosme, new File(confDir, "regions.xml"),
           new File(confDir, "backup"), fileSystem);
 
-      deliveryManager = new DeliveryManager(is.getDcpHost(), is.getDcpPort());
+      deliveryManager = new DeliveryManager(is.getDcpHost(), is.getDcpPort(), workDir, fileSystem);
       statisticsManager = new StatisticsManager(new File(is.getStatDir()), fileSystem);
 
       informerConfDir = confDir;

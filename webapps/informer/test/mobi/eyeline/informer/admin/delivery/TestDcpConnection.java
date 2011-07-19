@@ -25,7 +25,7 @@ public class TestDcpConnection extends DcpConnection{
 
   private Map<Integer, Delivery> deliveries = new LinkedHashMap<Integer, Delivery>();
 
-  private Map<Integer, List<Message>> messages = new HashMap<Integer, List<Message>>();          //todo В информере одно сообщение хранится в нескольких статусах. К примеру, new, process, delivered. Надо и здесь сделать также!!
+  private Map<Integer, List<Message>> messages = new HashMap<Integer, List<Message>>();
 
   private Map<Integer, DeliveryStatusHistory> histories = new HashMap<Integer, DeliveryStatusHistory>();
 
@@ -338,7 +338,7 @@ public class TestDcpConnection extends DcpConnection{
 
   @Override
   public boolean getNextDeliveriesCount(int reqId, int pieceSize, int[] result) throws AdminException {
-     if(!deliveryReqs.containsKey(reqId) || pieceSize == 0) {
+    if(!deliveryReqs.containsKey(reqId) || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
     DeliveryRequest r = deliveryReqs.get(reqId);
@@ -546,23 +546,27 @@ public class TestDcpConnection extends DcpConnection{
         copy = new ArrayList<Message>(ms);
       }
       int count = 0;
+      Map<Long, Message> toModify = new HashMap<Long, Message>();
       for(Message m : copy) {
-        if(m.getState() == MessageState.New) {
-          if(count<100) {
-            m = m.cloneMessage();
-            ms.add(m);
-            boolean delivered = r.nextBoolean();
-            if(delivered) {
-              m.setState(MessageState.Delivered);
-            }else {
-              m.setState(MessageState.Failed);
-              m.setErrorCode(1179);
-            }
-            m.setDate(new Date());
-          }
-          count++;
+        switch (m.state) {
+          case New: toModify.put(m.getId(), m); break;
+          default:toModify.remove(m.getId());
         }
-
+      }
+      for(Message m : toModify.values()) {
+        if(count<100) {
+          m = m.cloneMessage();
+          ms.add(m);
+          boolean delivered = r.nextBoolean();
+          if(delivered) {
+            m.setState(MessageState.Delivered);
+          }else {
+            m.setState(MessageState.Failed);
+            m.setErrorCode(1179);
+          }
+          m.setDate(new Date());
+        }
+        count++;
       }
       if(count <= 10 ) {
         if(logger.isDebugEnabled()) {

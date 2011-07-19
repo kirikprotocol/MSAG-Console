@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.filesystem.MemoryFileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
@@ -53,7 +54,7 @@ public class CdrDaemonTest {
 
     TestDeliveryManager manager = null;
     try {
-      manager = new TestDeliveryManager();
+      manager = new TestDeliveryManager(new File(""), new MemoryFileSystem());
 
       final User user = new User();
       user.setLogin("a");

@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.filesystem.MemoryFileSystem;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
@@ -9,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -24,7 +26,7 @@ public class TestDeliveryManagerTest {
 
   @BeforeClass
   public static void init() {
-    manager = new TestDeliveryManager();
+    manager = new TestDeliveryManager(new File(""), new MemoryFileSystem());
   }
 
   @AfterClass

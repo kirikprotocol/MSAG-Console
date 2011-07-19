@@ -2,10 +2,7 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Алгориитм извлечения сообщений из информера для случая, когда требуется достать сообщения не в
@@ -17,18 +14,19 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
 
   boolean[] ids = new boolean[1000];
 
-  Set<Long> idsSet = new HashSet<Long>();
+  Set<Long> processSet = new HashSet<Long>();
+  Set<Long> retrySet = new HashSet<Long>();
+  Set<Long> sentSet = new HashSet<Long>();
 
   int newMsgs = 0;
-  int procMessages = 0;
   int dlvrdMsgs = 0;
   int failedMsgs = 0;
   int expMsgs = 0;
 
-  private int messagesCountPiece;
+  private final String resendProperty;
 
-  GetNonFinalMessagesStrategy(int messagesCountPiece) {
-    this.messagesCountPiece = messagesCountPiece;
+  GetNonFinalMessagesStrategy(String resendProperty) {
+    this.resendProperty = resendProperty;
   }
 
   private boolean[] extendArray(boolean[] arr, int toSize) {
@@ -37,7 +35,30 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     return newArr;
   }
 
+  private Set<Long> getResended(DcpConnection conn, int deliveryId, int _pieceSize) throws AdminException {
+    Delivery d = conn.getDelivery(deliveryId);
+
+    final Set<Long> resendedSet = new HashSet<Long>();
+
+    MessageFilter _filter = new MessageFilter(d.getId(), d.getCreateDate(), d.getEndDate() != null ? d.getEndDate() : new Date(System.currentTimeMillis()+(24*60*60*1000)));
+    int _reqId = conn.getMessages(_filter);
+    new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message>() {
+      @Override
+      public boolean visit(Message _m) throws AdminException {
+        String _p =_m.getProperty(resendProperty);
+        if(_p != null) {
+          resendedSet.add(Long.parseLong(_p));
+        }
+        return true;
+      }
+    });
+    return resendedSet;
+  }
+
+
   public void getMessages(DcpConnection conn, MessageFilter filter, int _pieceSize, final Visitor<Message> visitor) throws AdminException {
+
+    final Set<Long> resended = getResended(conn, filter.getDeliveryId(), _pieceSize);
 
     final EnumMap<MessageState, Object> states = new EnumMap<MessageState, Object>(MessageState.class);
     if (filter.getStates() != null) {
@@ -48,7 +69,7 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
         states.put(s, null);
     }
 
-    MessageFilter f = new MessageFilter(filter);
+    final MessageFilter f = new MessageFilter(filter);
 
     // Сначала выгребаем все финализированные сообщения и запоминаем их идентификаторы
     f.setStates(MessageState.Delivered, MessageState.Failed, MessageState.Expired);
@@ -57,6 +78,12 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     final boolean st[] = new boolean[]{true};
     new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message> () {
       public boolean visit(Message value) throws AdminException {
+        if(resended.contains(value.getId())) {
+          if(f.isNoResended()) {
+            return true;
+          }
+          value.setResended(true);
+        }
         int id = (int)value.getId().longValue();
         if (ids.length <= id)
           ids = extendArray(ids, id + 1000);
@@ -77,6 +104,12 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message> () {
 
       public boolean visit(Message value) throws AdminException {
+        if(resended.contains(value.getId())) {
+          if(f.isNoResended()) {
+            return true;
+          }
+          value.setResended(true);
+        }
         int id = (int)value.getId().longValue();
 
         if (ids.length > id) {
@@ -111,6 +144,12 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     _reqId = conn.getMessages(f);
     new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message> () {
       public boolean visit(Message value) throws AdminException {
+        if(resended.contains(value.getId())) {
+          if(f.isNoResended()) {
+            return true;
+          }
+          value.setResended(true);
+        }
         int id = (int)value.getId().longValue();
 
         if (ids.length > id && ids[id])
@@ -135,7 +174,7 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     return false;
   }
 
-  public int countMessages(DcpConnection conn, MessageFilter messageFilter) throws AdminException {
+  public int countMessages(DcpConnection conn, final MessageFilter messageFilter) throws AdminException {
 //    final int counter[] = new int[]{0};
 //    getMessages(conn, messageFilter, 1000, new Visitor<Message>() {
 //      public boolean visit(Message value) throws AdminException {
@@ -145,67 +184,97 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
 //    });
 //    return counter[0];
 
+    final Set<Long> resended = getResended(conn, messageFilter.getDeliveryId(), 1000);
+
     boolean hasNewStatus = containsStatus(messageFilter, MessageState.New);
     if (hasNewStatus) {
       MessageFilter f = new MessageFilter(messageFilter);
       f.setStates(MessageState.New);
-      int reqId = conn.countMessages(f);
-      int[] tmpRes = new int[]{0};
-      int res = 0;
-      boolean more;
-      do {
-        more= conn.getNextMessagesCount(reqId, messagesCountPiece, tmpRes);
-        res+=tmpRes[0];
-      }while (more);
-      newMsgs = res;
+
+      int reqId = conn.getMessages(f);
+      final int[] tmpRes = new int[]{0};
+      new VisitorHelperImpl(1000, reqId, conn).visit(new Visitor<Message> () {
+        public boolean visit(Message value) throws AdminException {
+          if (!messageFilter.isNoResended() || !resended.contains(value.getId())) {
+            tmpRes[0]++;
+          }
+          return true;
+        }
+      });
+      newMsgs = tmpRes[0];
     }
 
     MessageFilter f = new MessageFilter(messageFilter);
 
-    f.setStates(MessageState.Delivered, MessageState.Failed, MessageState.Expired, MessageState.Process);
+    f.setStates(MessageState.Delivered, MessageState.Failed, MessageState.Expired, MessageState.Process, MessageState.Sent, MessageState.Retry);
 
     int _reqId = conn.getMessages(f);
 
     new VisitorHelperImpl(1000, _reqId, conn).visit(new Visitor<Message> () {
       public boolean visit(Message value) throws AdminException {
+        if(messageFilter.isNoResended()) {
+          if(resended.contains(value.getId())) {
+            return true;
+          }
+        }
         switch (value.getState()) {
           case Process:
-            idsSet.add(value.getId());
+            processSet.add(value.getId());
+            break;
+          case Sent:
+            processSet.remove(value.getId());
+            sentSet.add(value.getId());
+            break;
+          case Retry:
+            processSet.remove(value.getId());
+            sentSet.remove(value.getId());
+            retrySet.add(value.getId());
             break;
           case Delivered:
             dlvrdMsgs++;
-            idsSet.remove(value.getId());
+            processSet.remove(value.getId());
+            sentSet.remove(value.getId());
+            retrySet.remove(value.getId());
             break;
           case Failed:
             failedMsgs++;
-            idsSet.remove(value.getId());
+            processSet.remove(value.getId());
+            sentSet.remove(value.getId());
+            retrySet.remove(value.getId());
             break;
           default:
             expMsgs++;
-            idsSet.remove(value.getId());
+            processSet.remove(value.getId());
+            sentSet.remove(value.getId());
+            retrySet.remove(value.getId());
             break;
         }
-
         return true;
       }
     });
 
-    newMsgs -= (idsSet.size() + dlvrdMsgs + failedMsgs + expMsgs);
+    int countResended = resended.size();
+    resended.clear();
+
+    newMsgs -= (processSet.size() + sentSet.size() + retrySet.size() + dlvrdMsgs + failedMsgs + expMsgs);
 
     int total = 0;
     if (messageFilter.getStates() != null) {
       for (MessageState s : messageFilter.getStates()) {
         switch (s) {
           case New: total += newMsgs; break;
-          case Process: total += idsSet.size(); break;
+          case Process: total += processSet.size(); break;
+          case Retry: total += retrySet.size(); break;
+          case Sent: total += sentSet.size(); break;
           case Delivered: total += dlvrdMsgs; break;
           case Failed: total += failedMsgs; break;
           case Expired: total += expMsgs; break;
         }
       }
     } else {
-      total = newMsgs + idsSet.size() + dlvrdMsgs + failedMsgs + expMsgs;
+      total = newMsgs + processSet.size() + retrySet.size() + sentSet.size() + dlvrdMsgs + failedMsgs + expMsgs;
     }
+
 
     return total;
   }

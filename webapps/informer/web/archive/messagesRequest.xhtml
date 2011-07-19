@@ -14,7 +14,7 @@
     <tr:form>
 
       <eye:message level="error" rendered="#{messagesRequest.requestError != null}">
-       <h:panelGrid style="padding-left:10px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+        <h:panelGrid style="padding-left:10px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText value="#{messagesRBundle.requestError}:" style="white-space:nowrap;"/>
           <h:outputText value="'#{messagesRequest.requestError}'"/>
         </h:panelGrid>
@@ -55,18 +55,21 @@
         <h:panelGrid style="padding-left:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
           <h:outputText value="#{messagesRBundle.from}" style="white-space:nowrap;"/>
-          <eye:inputDate type="both" value="#{messagesRequest.from}" popupCalendar="true" rendered="#{messagesRequest.new}"/>
-          <h:outputText value="#{messagesRequest.from}" rendered="#{!messagesRequest.new}">
-            <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
-          </h:outputText>
+          <h:panelGroup>
+            <eye:inputDate type="both" value="#{messagesRequest.from}" popupCalendar="true" rendered="#{messagesRequest.new}"/>
+            <h:outputText value="#{messagesRequest.from}" rendered="#{!messagesRequest.new}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+          </h:panelGroup>
 
           <h:outputText value="#{messagesRBundle.till}" style="white-space:nowrap;"/>
-          <eye:inputDate type="both" value="#{messagesRequest.till}" popupCalendar="true" rendered="#{messagesRequest.new}"/>
-          <h:outputText value="#{messagesRequest.till}" rendered="#{!messagesRequest.new and messagesRequest.till != null}">
-            <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
-          </h:outputText>
-          <h:outputText value="-" rendered="#{!messagesRequest.new and messagesRequest.till == null}"/>
-
+          <h:panelGroup>
+            <eye:inputDate type="both" value="#{messagesRequest.till}" popupCalendar="true" rendered="#{messagesRequest.new}"/>
+            <h:outputText value="#{messagesRequest.till}" rendered="#{!messagesRequest.new and messagesRequest.till != null}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+            <h:outputText value="-" rendered="#{!messagesRequest.new and messagesRequest.till == null}"/>
+          </h:panelGroup>
         </h:panelGrid>
 
         <eye:pageSubtitle value="#{msg['archive.request.messages.receiver']}"/>

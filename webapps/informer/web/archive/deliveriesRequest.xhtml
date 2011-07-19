@@ -53,20 +53,22 @@
 
         <h:panelGrid style="padding-left:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
-
           <h:outputText value="#{deliveriesRBundle.from}" style="white-space:nowrap;"/>
-          <eye:inputDate type="both" value="#{deliveriesRequest.from}" popupCalendar="true" rendered="#{deliveriesRequest.new}"/>
-          <h:outputText value="#{deliveriesRequest.from}" rendered="#{!deliveriesRequest.new}">
-            <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
-          </h:outputText>
+          <h:panelGroup>
+            <eye:inputDate type="both" value="#{deliveriesRequest.from}" popupCalendar="true" rendered="#{deliveriesRequest.new}"/>
+            <h:outputText value="#{deliveriesRequest.from}" rendered="#{!deliveriesRequest.new}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+          </h:panelGroup>
 
           <h:outputText value="#{deliveriesRBundle.till}" style="white-space:nowrap;"/>
-          <eye:inputDate type="both" value="#{deliveriesRequest.till}" popupCalendar="true" rendered="#{deliveriesRequest.new}"/>
-          <h:outputText value="#{deliveriesRequest.till}" rendered="#{!deliveriesRequest.new and deliveriesRequest.till != null}">
-            <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
-          </h:outputText>
-          <h:outputText value="-" rendered="#{!deliveriesRequest.new and deliveriesRequest.till == null}"/>
-
+          <h:panelGroup>
+            <eye:inputDate type="both" value="#{deliveriesRequest.till}" popupCalendar="true" rendered="#{deliveriesRequest.new}"/>
+            <h:outputText value="#{deliveriesRequest.till}" rendered="#{!deliveriesRequest.new and deliveriesRequest.till != null}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+            <h:outputText value="-" rendered="#{!deliveriesRequest.new and deliveriesRequest.till == null}"/>
+          </h:panelGroup>
         </h:panelGrid>
 
         <eye:pageSubtitle value="#{msg['archive.request.deliveries.options']}"/>

@@ -149,6 +149,11 @@
   </converter>
 
   <converter>
+    <converter-id>requestTypeStringConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.archive.RequestTypeStringConverter</converter-class>
+  </converter>
+
+  <converter>
     <converter-id>requestStatusConverter</converter-id>
     <converter-class>mobi.eyeline.informer.web.controllers.archive.RequestStatusConverter</converter-class>
   </converter>

@@ -256,7 +256,7 @@ public class TestAdminContext extends AdminContext {
         infosme.addRegion(s.getRegionId());
       }
 
-      deliveryManager = new TestDeliveryManager();
+      deliveryManager = new TestDeliveryManager(workDir, fileSystem);
       statisticsManager = new TestStatisticsManager(new TestDeliveryStatProvider(statDir, fileSystem), new TestUserStatProvider(statDir, fileSystem));
       createDeliveries();
 

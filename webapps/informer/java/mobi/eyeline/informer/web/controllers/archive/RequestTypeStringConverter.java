@@ -12,20 +12,18 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 /**
- * @author Aleksandr Khalitov
+ * author: Aleksandr Khalitov
  */
-public class RequestTypeConverter implements Converter {
+public class RequestTypeStringConverter implements Converter {
   @Override
   public Object getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) throws ConverterException {
-    if (s != null && s.length() > 0)
-      return Request.Type.valueOf(s);
     return null;
   }
 
-
+  @Override
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
     if(o != null && (o instanceof Request.Type)) {
-      return o.toString();
+      return getAsString(getLocale(facesContext), o.toString());
     }
     return null;
   }
@@ -43,9 +41,4 @@ public class RequestTypeConverter implements Converter {
       return type;
     }
   }
-
-  public static String getAsString(Locale locale, Request.Type type) {
-    return getAsString(locale, type.toString());
-  }
-
 }

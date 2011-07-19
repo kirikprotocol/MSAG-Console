@@ -2,13 +2,16 @@ package mobi.eyeline.informer.web.controllers.archive;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.archive.Request;
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
+import mobi.eyeline.informer.admin.archive.RequestFilter;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
+import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
+import javax.faces.model.SelectItem;
 import java.util.*;
 
 /**
@@ -18,8 +21,9 @@ public class RequestListController extends InformerController{
 
   private List selectedRows;
 
-
   private String error;
+
+  private RequestFilter filter = new RequestFilter();
 
   public RequestListController() {
     try {
@@ -31,6 +35,13 @@ public class RequestListController extends InformerController{
     }
   }
 
+  public void query() {
+  }
+
+  public void clear() {
+    filter = new RequestFilter();
+  }
+
   public String getError() {
     return error;
   }
@@ -40,19 +51,13 @@ public class RequestListController extends InformerController{
   }
 
   public DataTableModel getRequests() {
+    if(!isUserInAdminRole()) {
+      filter.setCreator(getUserName());
+    }
     final List<Request> requests;
     try{
-      requests = getConfig().getRequests();
-      if(!isUserInAdminRole()) {
-        Iterator<Request> i = requests.iterator();
-        String u = getUserName();
-        while(i.hasNext()) {
-          Request r = i.next();
-          if(!r.getCreater().equals(u)) {
-            i.remove();
-          }
-        }
-      }
+      requests = getConfig().getRequests(filter);
+
     }catch(AdminException e) {
       addError(e);
       return new EmptyDataTableModel();
@@ -67,10 +72,16 @@ public class RequestListController extends InformerController{
           return result;
         }
 
-        if (sortOrder == null || sortOrder.getColumnId() == null || sortOrder.getColumnId().equals("name")) {
+        if (sortOrder == null || sortOrder.getColumnId() == null || sortOrder.getColumnId().equals("id")) {
           Collections.sort(requests, new Comparator<Request>() {
             public int compare(Request o1, Request o2) {
-              return (o1.getName().compareTo(o2.getName())) * (sortOrder == null || sortOrder.isAsc() ? 1 : -1);
+              return (o1.getId() < o2.getId() ? -1 : o1.getId() > o2.getId() ? 1 : 0) * (sortOrder == null || sortOrder.isAsc() ? 1 : -1);
+            }
+          });
+        }else if (sortOrder.getColumnId().equals("name")) {
+          Collections.sort(requests, new Comparator<Request>() {
+            public int compare(Request o1, Request o2) {
+              return (o1.getName().compareTo(o2.getName())) * (sortOrder.isAsc() ? 1 : -1);
             }
           });
         } else if (sortOrder.getColumnId().equals("type")) {
@@ -110,6 +121,14 @@ public class RequestListController extends InformerController{
     };
   }
 
+  public RequestFilter getFilter() {
+    return filter;
+  }
+
+  public void setFilter(RequestFilter filter) {
+    this.filter = filter;
+  }
+
   public String cancel() {
     String rId = getRequestParameter("requestId");
     if(rId != null && rId.length()>0) {
@@ -120,6 +139,46 @@ public class RequestListController extends InformerController{
       }
     }
     return null;
+  }
+
+  public List<SelectItem> getUniqueTypes() {
+    List<SelectItem> result = new LinkedList<SelectItem>();
+    for (Request.Type st : Request.Type.values()) {
+      result.add(new SelectItem(st, RequestTypeConverter.getAsString(getLocale(), st)));
+    }
+    return result;
+  }
+
+  public List<SelectItem> getUniqueUsers() {
+    List<SelectItem> result = new LinkedList<SelectItem>();
+    for (User st : getConfig().getUsers()) {
+      result.add(new SelectItem(st.getLogin(), st.getLogin()));
+    }
+    Collections.sort(result, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
+    return result;
+  }
+
+  public String getCreator() {
+    return filter.getCreator();
+  }
+
+  public void setCreator(String creator) {
+    filter.setCreator(creator == null || creator.length() == 0 ? null : creator);
+  }
+
+  public String getId() {
+    return filter.getId() == null ? null : filter.getId().toString();
+  }
+
+  public void setId(String id) {
+    if(id != null && id.length()>0) {
+      filter.setId(Integer.parseInt(id));
+    }
   }
 
   public List getSelectedRows() {

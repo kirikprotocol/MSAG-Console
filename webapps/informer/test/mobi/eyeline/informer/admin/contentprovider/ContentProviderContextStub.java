@@ -33,7 +33,7 @@ public class ContentProviderContextStub implements ContentProviderContext {
     this.fs = fs;
     this.users = new HashMap<String, User>();
     this.regions = new HashMap<String, Region>();
-    this.deliveryManager = new TestDeliveryManager();
+    this.deliveryManager = new TestDeliveryManager(new File(""), fs);
     this.userRestrictions = new HashSet<String>();
     this.activateBans = new HashMap<String, Integer>();
     this.createBans = new HashMap<String, Integer>();

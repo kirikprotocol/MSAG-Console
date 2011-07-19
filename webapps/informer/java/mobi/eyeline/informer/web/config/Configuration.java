@@ -455,6 +455,10 @@ public class Configuration {
     context.addSingleTextMessages(login, msDataSource, deliveryId);
   }
 
+  public void addSingleTextMessagesWithData(String login, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+    context.addSingleMessagesWithData(login, msDataSource, deliveryId);
+  }
+
   public void copyUserSettingsToDeliveryPrototype(String user, DeliveryPrototype delivery) throws AdminException {
     context.copyUserSettingsToDeliveryPrototype(user, delivery);
   }
@@ -566,8 +570,8 @@ public class Configuration {
     context.modifyRequest(request);
   }
 
-  public List<Request> getRequests() throws AdminException {
-    return context.getRequests();
+  public List<Request> getRequests(RequestFilter filter) throws AdminException {
+    return context.getRequests(filter);
   }
 
   public Request getRequest(int requestId) throws AdminException {
@@ -610,6 +614,14 @@ public class Configuration {
     Delivery d = context.getDelivery(login, deliveryId);
     context.archivateDelivery(login, deliveryId);
     journal.logDeliveryArchivated(login, d);
+  }
+
+  public int resend(String login, int deliveryId, Collection<Long> messageIdsFilter) throws AdminException {
+    return context.resend(login, deliveryId, messageIdsFilter);
+  }
+
+  public int resendAll(String login, int deliveryId, MessageFilter filter) throws AdminException {
+    return context.resendAll(login, deliveryId, filter);
   }
 
   public enum ConfigType {

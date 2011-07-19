@@ -41,7 +41,7 @@ public class DetailedSaveStrategyTest {
   @Before
   public void init() throws AdminException {
     fs = new MemoryFileSystem();
-    deliveryManager = new TestDeliveryManager();
+    deliveryManager = new TestDeliveryManager(new File(""), fs);
 
     settings = prepareSettings();
     user = prepareUser();
@@ -138,7 +138,7 @@ public class DetailedSaveStrategyTest {
 
 
     fs = new MemoryFileSystem();
-    deliveryManager = new TestDeliveryManager();
+    deliveryManager = new TestDeliveryManager(new File(""), fs);
     user = prepareUser();
 
     settings = prepareSettings();
@@ -242,7 +242,7 @@ public class DetailedSaveStrategyTest {
     shutdown();
 
     fs = new MemoryFileSystem();
-    deliveryManager = new TestDeliveryManager(){
+    deliveryManager = new TestDeliveryManager(new File(""), fs){
       @Override
       public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
         throw new DeliveryException(DeliveryException.ErrorStatus.ServiceOffline,"offline");
@@ -268,7 +268,7 @@ public class DetailedSaveStrategyTest {
 
     deliveryManager.shutdown();
 
-    deliveryManager = new TestDeliveryManager();
+    deliveryManager = new TestDeliveryManager(new File(""), fs);
 
    _init();
 
@@ -290,7 +290,7 @@ public class DetailedSaveStrategyTest {
 
     fs = new MemoryFileSystem();
     final boolean[] fail = new boolean[]{true};
-    deliveryManager = new TestDeliveryManager(){
+    deliveryManager = new TestDeliveryManager(new File(""), fs){
       @Override
       public void getMessages(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
         if(fail[0]) {

@@ -1,8 +1,10 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
 
+import java.io.File;
 import java.util.Date;
 
 /**
@@ -10,8 +12,8 @@ import java.util.Date;
  */
 public class TestDeliveryManager extends DeliveryManager{
 
-  public TestDeliveryManager() {
-    super();
+  public TestDeliveryManager(File workDir, FileSystem fs) {
+    super(workDir, fs);
   }
 
   private TestDcpConnection connection = new TestDcpConnection();

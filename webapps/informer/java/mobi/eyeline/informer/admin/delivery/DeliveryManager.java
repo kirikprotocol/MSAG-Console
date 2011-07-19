@@ -1,10 +1,13 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -25,13 +28,19 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
   private static final int COUNT_MESSAGES_PIECE = 100000;
   private static final int COUNT_DELIVERIES_PIECE = 10000;
 
+  private final File workDir;
+  private final FileSystem fs;
 
-  public DeliveryManager(String host, int port) {
+  public DeliveryManager(String host, int port, File workDir, FileSystem fs) {
     this.host = host;
     this.port = port;
+    this.workDir = workDir;
+    this.fs = fs;
   }
 
-  protected DeliveryManager() {
+  protected DeliveryManager(File workDir, FileSystem fs) {
+    this.workDir = workDir;
+    this.fs = fs;
   }
 
   protected DcpConnection createConnection(String host, int port, String login, String password) throws AdminException {
@@ -121,6 +130,140 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       for (Message _m : messages) {
         _m.setId(ids[i]);
         i++;
+      }
+    }
+  }
+
+  private int prepareResendFile(File tmpFile, String login, String password, final Delivery delivery, final Collection<Long> messageIdsFilter, MessageFilter filter) throws AdminException{
+    final PrintWriter[] w = new PrintWriter[]{null};
+    try {
+      w[0] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(tmpFile, false))));
+
+      final int[] count = new int[]{0};
+
+      if(messageIdsFilter != null) {
+        filter = new MessageFilter(delivery.getId(), delivery.getCreateDate(),
+            delivery.getEndDate() ==  null ? new Date(System.currentTimeMillis()+(24*60*60*1000)) : delivery.getEndDate());
+      }
+
+      getMessages(login, password, filter, 1000, new Visitor<Message>() {
+        public boolean visit(Message value) throws AdminException {
+          if (messageIdsFilter != null && !messageIdsFilter.remove(value.getId())) {
+            return true;
+          }
+          switch (value.getState()) {
+            case Process:
+            case New:
+              break;
+            default:
+              w[0].print(value.getAbonent());
+              w[0].print(',');
+              if (delivery.getSingleText() == null) {
+                w[0].print(StringEncoderDecoder.csvEscape(',', value.getText()));
+                w[0].print(',');
+              }
+              w[0].println(value.getId());
+              count[0]++;
+          }
+          return messageIdsFilter == null || !messageIdsFilter.isEmpty();
+        }
+      });
+      return count[0];
+    } finally {
+      if (w[0] != null) {
+        w[0].close();
+      }
+    }
+  }
+
+
+  public int resend(String login, String password, int deliveryId, final Collection<Long> messageIdsFilter) throws AdminException {
+
+    final Delivery delivery = getDelivery(login, password, deliveryId);
+    File tmpFile = new File(workDir,"resend_"+delivery.getId()+'_'+System.currentTimeMillis()+".tmp");
+    try{
+      int count = prepareResendFile(tmpFile, login, password, delivery, messageIdsFilter, null);
+      if(count > 0) {
+        resendFromFile(login, password, tmpFile, delivery);
+      }
+      return count;
+    }finally {
+      try{
+        if(fs.exists(tmpFile)) {
+          fs.delete(tmpFile);
+        }
+      }catch (Exception ignored){}
+    }
+
+  }
+
+  public int resendAll(String login, String password, int deliveryId, final MessageFilter filter) throws AdminException {
+
+    final Delivery delivery = getDelivery(login, password, deliveryId);
+    File tmpFile = new File(workDir,"resend_"+delivery.getId()+'_'+System.currentTimeMillis()+".tmp");
+    try{
+      int count = prepareResendFile(tmpFile, login, password, delivery, null, filter);
+      resendFromFile(login, password, tmpFile, delivery);
+      return count;
+    }finally {
+      try{
+        if(fs.exists(tmpFile)) {
+          fs.delete(tmpFile);
+        }
+      }catch (Exception ignored){}
+    }
+
+  }
+
+  private static final String RESEND_PROPERTY = "rs";
+
+  private void resendFromFile(String login, String password, File file, Delivery delivery) throws AdminException{
+    final BufferedReader[] r = new BufferedReader[]{null};
+    try {
+      r[0] = new BufferedReader(new InputStreamReader(fs.getInputStream(file)));
+      if (delivery.getSingleText() == null) {
+        addIndividualMessages(login, password, new DataSource<Message>() {
+          public Message next() throws AdminException {
+            try {
+              String line = r[0].readLine();
+              if (line == null) {
+                return null;
+              }
+              String[] s = line.split(",", 3);
+              Message m = Message.newMessage(new Address(s[0]), StringEncoderDecoder.csvDecode(s[1]));
+              m.setProperty(RESEND_PROPERTY, s[2]);
+              return m;
+            } catch (IOException e) {
+              e.printStackTrace();
+              return null;
+            }
+          }
+        }, delivery.getId());
+      } else {
+        addSingleTextMessagesWithData(login, password, new DataSource<Message>() {
+          public Message next() throws AdminException {
+            try {
+              String line = r[0].readLine();
+              if (line == null) {
+                return null;
+              }
+              String[] s = line.split(",", 2);
+              Message m = Message.newMessage(new Address(s[0]), null);
+              m.setProperty(RESEND_PROPERTY, s[1]);
+              return m;
+            } catch (IOException e) {
+              e.printStackTrace();
+              return null;
+            }
+          }
+        }, delivery.getId());
+      }
+    } finally {
+      if (r[0] != null) {
+        try {
+          r[0].close();
+        } catch (Exception ignored) {
+        }
       }
     }
   }
@@ -533,12 +676,12 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   private static GetMessagesStrategy selectGetMessagesStrategy(MessageFilter filter) {
     if (filter.getStates() == null)
-      return new GetNonFinalMessagesStrategy(COUNT_MESSAGES_PIECE);
+      return new GetNonFinalMessagesStrategy(RESEND_PROPERTY);
     for (MessageState s : filter.getStates())
-      if (s == MessageState.New || s == MessageState.Process)
-        return new GetNonFinalMessagesStrategy(COUNT_MESSAGES_PIECE);
+      if (s == MessageState.New || s == MessageState.Process || s == MessageState.Retry || s == MessageState.Sent)
+        return new GetNonFinalMessagesStrategy(RESEND_PROPERTY);
 
-    return new GetFinalizedMessagesStrategy(COUNT_MESSAGES_PIECE);
+    return new GetFinalizedMessagesStrategy(COUNT_MESSAGES_PIECE, RESEND_PROPERTY);
   }
 
   /**

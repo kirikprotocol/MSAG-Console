@@ -96,7 +96,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       if(archiveDaemonManager != null) {
         ArchiveDaemonSettings archiveDaemonSettings = archiveDaemonManager.getSettings();
-        archiveDeliveryManager = new DeliveryManager(archiveDaemonSettings.getDcpHost(), archiveDaemonSettings.getDcpPort());
+        archiveDeliveryManager = new DeliveryManager(archiveDaemonSettings.getDcpHost(), archiveDaemonSettings.getDcpPort(), workDir, fileSystem);
         archiveRequestsManager = new ArchiveRequestsManager(this, this.webConfig.getArchiveSettings());
       }
 
@@ -921,8 +921,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return archiveRequestsManager.getRequest(requestId);
   }
 
-  public List<Request> getRequests() throws AdminException {
-    return archiveRequestsManager.getRequests();
+  public List<Request> getRequests(RequestFilter filter) throws AdminException {
+    return archiveRequestsManager.getRequests(filter);
   }
 
   public void modifyRequest(Request request) throws AdminException {
@@ -976,4 +976,13 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     monitoringJournal.visit(eventsFilter,v);
   }
 
+  public int resend(String login, int deliveryId, Collection<Long> messageIdsFilter) throws AdminException {
+    User u = getUser(login);
+    return deliveryManager.resend(login, u.getPassword(), deliveryId, messageIdsFilter);
+  }
+
+  public int resendAll(String login, int deliveryId, MessageFilter filter) throws AdminException {
+    User u = getUser(login);
+    return deliveryManager.resendAll(login, u.getPassword(), deliveryId, filter);
+  }
 }

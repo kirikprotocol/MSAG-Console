@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -101,11 +102,37 @@ public class ArchiveRequestsManager {
 
   }
 
-  public List<Request> getRequests() throws AdminException {
-    List<Request> c = storage.getRequests();
-    for(Request r : c) {
-      setStatus(r);
+  private static boolean accept(RequestFilter filter, Request request) {
+    if(filter == null) {
+      return true;
     }
+    if(filter.getId() != null && request.getId() != filter.getId()) {
+      return false;
+    }
+    if(filter.getType() != null && request.getType() != filter.getType()) {
+      return false;
+    }
+    if(filter.getCreator() != null && !request.getCreater().equals(filter.getCreator()))  {
+      return false;
+    }
+    if(filter.getNamePrefix() != null && filter.getNamePrefix().length()>0 && !request.getName().startsWith(filter.getNamePrefix())) {
+      return false;
+    }
+    return true;
+  }
+
+  public List<Request> getRequests(RequestFilter filter) throws AdminException {
+    List<Request> c = storage.getRequests();
+    Iterator<Request> i = c.iterator();
+    while(i.hasNext()) {
+      Request r = i.next();
+      if (accept(filter, r)) {
+        setStatus(r);
+      } else {
+        i.remove();
+      }
+    }
+
     return c;
   }
 

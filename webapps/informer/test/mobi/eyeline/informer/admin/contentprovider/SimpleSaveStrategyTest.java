@@ -37,7 +37,7 @@ public class SimpleSaveStrategyTest {
   @Before
   public void init() throws AdminException {
     fs = new MemoryFileSystem();
-    deliveryManager = new TestDeliveryManager();
+    deliveryManager = new TestDeliveryManager(new File(""), new MemoryFileSystem());
     _init();
   }
 
@@ -125,7 +125,7 @@ public class SimpleSaveStrategyTest {
   @Test
   public void testInformerOffline() throws AdminException {
     shutdown();
-    deliveryManager = new TestDeliveryManager() {
+    deliveryManager = new TestDeliveryManager(new File(""), new MemoryFileSystem()) {
       @Override
       public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
         throw new DeliveryException(DeliveryException.ErrorStatus.ServiceOffline ,"message");
@@ -151,7 +151,7 @@ public class SimpleSaveStrategyTest {
       }
     }
 
-    deliveryManager = new TestDeliveryManager();
+    deliveryManager = new TestDeliveryManager(new File(""), new MemoryFileSystem());
     _init();
 
     assertTrue("File doesn't exists", fs.exists(new File("workDir" + File.separatorChar + "simpleLocalCopy", "test.csv")));

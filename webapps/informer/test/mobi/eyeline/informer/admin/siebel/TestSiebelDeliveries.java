@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.filesystem.MemoryFileSystem;
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
@@ -12,6 +13,7 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ class TestSiebelDeliveries implements SiebelContext {
     this.detector = detector;
   }
 
-  private TestDeliveryManager deliveryManager = new TestDeliveryManager();
+  private TestDeliveryManager deliveryManager = new TestDeliveryManager(new File(""), new MemoryFileSystem());
 
 
   public void addMessages(String login, DataSource<Message> msDataSource, int deliveryId) throws AdminException {

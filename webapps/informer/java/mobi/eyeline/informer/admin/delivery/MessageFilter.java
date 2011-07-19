@@ -21,6 +21,8 @@ public class MessageFilter {
   private Date endDate;
   private int[] errorCodes;
 
+  private boolean noResended;
+
   public MessageFilter(Integer deliveryId, Date startDate, Date endDate) {
     if (deliveryId == null || startDate == null || endDate == null) {
       throw new IllegalArgumentException("Some arguments are null");
@@ -37,6 +39,15 @@ public class MessageFilter {
     this.startDate = copy.startDate;
     this.endDate = copy.endDate;
     this.errorCodes = copy.errorCodes;
+    this.noResended = copy.noResended;
+  }
+
+  public boolean isNoResended() {
+    return noResended;
+  }
+
+  public void setNoResended(boolean noResended) {
+    this.noResended = noResended;
   }
 
   public Integer getDeliveryId() {

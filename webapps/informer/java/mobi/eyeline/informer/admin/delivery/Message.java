@@ -19,11 +19,13 @@ public class Message {
 
   protected Long id;
   protected MessageState state;
+
   protected Date date;
   protected String text;
   protected Integer glossaryIndex;
   protected Address abonent;
   protected Integer errorCode;
+  protected boolean resended;
 
   protected final Properties properties = new Properties();
 
@@ -57,6 +59,14 @@ public class Message {
 
   void setId(Long id) {
     this.id = id;
+  }
+
+  public boolean isResended() {
+    return resended;
+  }
+
+  void setResended(boolean resended) {
+    this.resended = resended;
   }
 
   public Address getAbonent() {
@@ -133,10 +143,10 @@ public class Message {
   public Message cloneMessage() {
     Message m = new Message(text);
     m.id = id;
-    m.abonent = abonent;
+    m.abonent = abonent == null ? null : new Address(abonent);
     m.glossaryIndex = glossaryIndex;
     m.state = state;
-    m.date = date;
+    m.date = date == null ? null : new Date(date.getTime());
     m.errorCode = errorCode;
     m.properties.putAll(properties);
     return m;

@@ -17,6 +17,35 @@
         <h:outputText value="#{requests.error}"/>
       </eye:message>
 
+      <eye:dataTableFilter bean="#{requests}" clearAction="clear" applyAction="query">
+        <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
+
+          <h:outputText style="white-space:nowrap" value="#{msg['archive.request.id']}"/>
+          <h:inputText id="id" value="#{requests.id}"
+                       validatorMessage="#{msg['invalid_param_value']} #{msg['archive.request.id']}">
+            <f:validateLongRange minimum="0"/>
+          </h:inputText>
+
+          <h:outputText style="white-space:nowrap" value="#{msg['archive.request.type']}"/>
+          <h:selectOneMenu id="type"  value="#{requests.filter.type}" converter="requestTypeConverter">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{requests.uniqueTypes}"/>
+          </h:selectOneMenu>
+
+          <h:outputText style="white-space:nowrap" value="#{msg['archive.request.name']}"/>
+          <h:inputText id="name" value="#{requests.filter.namePrefix}"/>
+
+          <h:outputText style="white-space:nowrap" value="#{msg['archive.request.creator']}" rendered="#{requests.userInAdminRole}"/>
+          <h:selectOneMenu rendered="#{requests.userInAdminRole}" id="creator"  value="#{requests.creator}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{requests.uniqueUsers}" />
+          </h:selectOneMenu>
+
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
       <eye:buttons>
         <eye:button rendered="#{!requests.offline}">
           <eye:menubar label="#{msg['archive.request.new']} ...">
@@ -34,7 +63,10 @@
 
       <eye:dataTable value="#{requests.requests}" selectedRows="#{requests.selectedRows}" var="m">
         <eye:row>
-          <eye:column name="name" title="#{msg['archive.request.name']}" sortable="true" width="24%" align="left" defaultSortOrder="asc">
+          <eye:column name="id" title="#{msg['archive.request.id']}" sortable="true" width="7%" align="center" defaultSortOrder="desc">
+            <h:outputText value="#{m.id}"/>
+          </eye:column>
+          <eye:column name="name" title="#{msg['archive.request.name']}" sortable="true" width="24%" align="left">
             <tr:commandLink text="#{m.name}" action="DELIVERIES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{m.deliveriesSearch}">
               <f:param name="reqId" value="#{m.id}"/>
             </tr:commandLink>
@@ -42,8 +74,8 @@
               <f:param name="reqId" value="#{m.id}"/>
             </tr:commandLink>
           </eye:column>
-          <eye:column name="type" title="#{msg['archive.request.type']}" sortable="true" width="17%" align="left">
-            <h:outputText value="#{m.type}" converter="requestTypeConverter"/>
+          <eye:column name="type" title="#{msg['archive.request.type']}" sortable="true" width="10%" align="left">
+            <h:outputText value="#{m.type}" converter="requestTypeStringConverter"/>
           </eye:column>
           <eye:column name="begin" title="#{deliveriesRBundle.from}" sortable="true" width="16%" align="center">
             <h:outputText value="#{m.from}">

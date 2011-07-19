@@ -33,9 +33,9 @@ public class ArchiveRequestsManagerTest {
   @Before
   public void before() throws Exception {
     resultDir = TestUtils.createRandomDir("-results");
-    dm = new TestDeliveryManager();
-    final RequestStorage rs = new RequestMemoryStorage();
     final FileSystem fs = new TestFileSystem();
+    dm = new TestDeliveryManager(new File(""), fs);
+    final RequestStorage rs = new RequestMemoryStorage();
 
     requestsManager = new ArchiveRequestsManager(rs, new ArchiveContext() {
       @Override
