@@ -572,12 +572,12 @@ public class TestDcpConnection extends DcpConnection{
           switch (rI) {
             case 0:
             case 1:
-              if(m.getState() == MessageState.Sent) {
-                m.setState(MessageState.Retry);
-              }else {
-                m.setState(MessageState.Sent);
-              }
-              break;
+//              if(m.getState() == MessageState.Sent) {
+//                m.setState(MessageState.Retry);
+//              }else {
+//                m.setState(MessageState.Sent);
+//              }
+//              break;
             case 2: m.setState(MessageState.Failed); m.setErrorCode(1179); break;
             default: m.setState(MessageState.Delivered); break;
           }
@@ -585,19 +585,8 @@ public class TestDcpConnection extends DcpConnection{
         }
         count++;
       }
-      boolean finished = true;
-      for(Message m : messages.get(d.getId())) {
-        switch (m.getState()) {
-          case New:
-          case Process:
-          case Sent:
-          case Expired: break;
-          default: finished = false;
-        }
-        if(!finished) {
-          break;
-        }
-      }
+      DeliveryStatistics statistics = getDeliveryState(d.getId());
+      boolean finished = statistics.getNewMessages() == 0 && statistics.getProcessMessages() == 0 && statistics.getRetriedMessages() == 0 && statistics.getSentMessages() == 0;
       if(finished) {
         if(logger.isDebugEnabled()) {
           logger.debug("Delivery is finished: "+d.getName());
