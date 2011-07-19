@@ -235,6 +235,7 @@
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
             <sm-et:txt name="portHttps" title="port HTTPS" type="int" validation="port" onchanged="configChanged();"/>
+            <sm-et:txt title="Certificates location" name="certificatesDir" type="string" onchanged="configChanged();"/>
             <sm-et:txt title="Reader Sockets" name="readerSockets" type="int" onchanged="configChanged();"/>
             <sm-et:txt title="Writer Sockets" name="writerSockets" type="int" onchanged="configChanged();"/>
             <sm-et:txt title="Reader Pool Size" name="readerPoolSize" type="int" onchanged="configChanged();"/>
