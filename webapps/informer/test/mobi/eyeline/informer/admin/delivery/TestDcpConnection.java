@@ -299,40 +299,49 @@ public class TestDcpConnection extends DcpConnection{
     state.setStatus(deliveries.get(deliveryId).getStatus());
     DeliveryStatistics stats = new DeliveryStatistics();
     List<Message> ms = messages.get(deliveryId);
-    int delivered = 0;
-    int failed = 0;
-    int newD = 0;
-    int exp = 0;
-    int proc = 0;
+    Set<Long> delivered = new HashSet<Long>();
+    Set<Long> failed = new HashSet<Long>();
+    Set<Long> newD = new HashSet<Long>();
+    Set<Long> exp = new HashSet<Long>();
+    Set<Long> proc = new HashSet<Long>();
+    Set<Long> retry = new HashSet<Long>();
+    Set<Long> sent = new HashSet<Long>();
     if(ms != null) {
       for(Message m : ms) {
+        Long id = m.getId();
         switch (m.getState()) {
-          case Delivered: delivered++; break;
+          case Delivered:
+            newD.remove(id);proc.remove(id);sent.remove(id);retry.remove(id);
+            delivered.add(id); break;
           case New:
-            boolean finished = false;
-            for(Message _m : ms) {
-              if(_m != m && _m.getId().equals(m.getId())) {
-                finished = true;
-                break;
-              }
-            }
-            if(!finished) {
-              newD++;
-            }
+            newD.add(id);
             break;
-          case Failed: failed++; break;
-          case Process: exp++; break;
-          case Expired: proc++; break;
+          case Failed:
+            newD.remove(id);proc.remove(id);sent.remove(id);retry.remove(id);
+            failed.add(id); break;
+          case Process:
+            newD.remove(id);proc.add(id);break;
+          case Expired:
+            newD.remove(id);proc.remove(id);sent.remove(id);retry.remove(id);
+            exp.add(id);; break;
+          case Sent:
+            newD.remove(id);proc.remove(id);sent.add(id);retry.remove(id);
+            break;
+          case Retry:
+            newD.remove(id);proc.remove(id);sent.remove(id);retry.add(id);
+            break;
         }
       }
     }
     stats.setDeliveryState(state);
 
-    stats.setDeliveredMessages(delivered);
-    stats.setFailedMessages(failed);
-    stats.setExpiredMessages(exp);
-    stats.setProcessMessages(proc);
-    stats.setNewMessages(newD);
+    stats.setDeliveredMessages(delivered.size());
+    stats.setFailedMessages(failed.size());
+    stats.setExpiredMessages(exp.size());
+    stats.setProcessMessages(proc.size());
+    stats.setNewMessages(newD.size());
+    stats.setRetriedMessages(retry.size());
+    stats.setSentMessages(sent.size());
     return stats;
   }
 
@@ -549,33 +558,53 @@ public class TestDcpConnection extends DcpConnection{
       Map<Long, Message> toModify = new HashMap<Long, Message>();
       for(Message m : copy) {
         switch (m.state) {
-          case New: toModify.put(m.getId(), m); break;
-          default:toModify.remove(m.getId());
+          case Delivered:
+          case Failed:
+          case Expired:toModify.remove(m.getId()); break;
+          default: toModify.put(m.getId(), m);
         }
       }
       for(Message m : toModify.values()) {
         if(count<100) {
           m = m.cloneMessage();
           ms.add(m);
-          boolean delivered = r.nextBoolean();
-          if(delivered) {
-            m.setState(MessageState.Delivered);
-          }else {
-            m.setState(MessageState.Failed);
-            m.setErrorCode(1179);
+          int rI= r.nextInt(10);
+          switch (rI) {
+            case 0:
+            case 1:
+              if(m.getState() == MessageState.Sent) {
+                m.setState(MessageState.Retry);
+              }else {
+                m.setState(MessageState.Sent);
+              }
+              break;
+            case 2: m.setState(MessageState.Failed); m.setErrorCode(1179); break;
+            default: m.setState(MessageState.Delivered); break;
           }
           m.setDate(new Date());
         }
         count++;
       }
-      if(count <= 10 ) {
+      boolean finished = true;
+      for(Message m : messages.get(d.getId())) {
+        switch (m.getState()) {
+          case New:
+          case Process:
+          case Sent:
+          case Expired: break;
+          default: finished = false;
+        }
+        if(!finished) {
+          break;
+        }
+      }
+      if(finished) {
         if(logger.isDebugEnabled()) {
           logger.debug("Delivery is finished: "+d.getName());
         }
         d.setStatus(DeliveryStatus.Finished);
         addHistoryItem(d, DeliveryStatus.Finished);
       }
-
     }
   }
 

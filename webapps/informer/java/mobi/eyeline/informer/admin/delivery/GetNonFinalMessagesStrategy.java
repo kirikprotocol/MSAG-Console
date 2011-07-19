@@ -55,6 +55,36 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     return resendedSet;
   }
 
+  private void getRetryAndSent(DcpConnection conn, final MessageFilter f, int _pieceSize, final Set<Long> retry, final Set<Long> sent, final Set<Long> resended) throws AdminException {
+    // Сначала выгребаем все финализированные сообщения и запоминаем их идентификаторы
+    f.setStates(MessageState.Retry, MessageState.Sent);
+
+    int _reqId = conn.getMessages(f);
+    new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message> () {
+      public boolean visit(Message value) throws AdminException {
+        if(resended.contains(value.getId())) {
+          if(f.isNoResended()) {
+            return true;
+          }
+          value.setResended(true);
+        }
+        int id = (int)value.getId().longValue();
+        if (ids.length > id) {
+          if (ids[id])
+            return true;
+        }
+        if(value.getState() == MessageState.Retry) {
+          sent.remove(value.getId());
+          retry.add(value.getId());
+        }else if(value.getState() == MessageState.Sent) {
+          retry.remove(value.getId());
+          sent.add(value.getId());
+        }
+
+        return true;
+      }
+    });
+  }
 
   public void getMessages(DcpConnection conn, MessageFilter filter, int _pieceSize, final Visitor<Message> visitor) throws AdminException {
 
@@ -90,6 +120,60 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
         ids[id] = true;
 
         return !states.containsKey(value.getState()) || (st[0] = visitor.visit(value));
+      }
+    });
+
+    if (!st[0])
+      return;
+
+    final Set<Long> retry = new HashSet<Long>();
+    final Set<Long> sent = new HashSet<Long>();
+
+    //загружаем списки отправленных и находящихся в передоставке
+    getRetryAndSent(conn, f, _pieceSize, retry, sent, resended);
+
+    //выгребаем все отправленные и находящиеся в передоставке
+    f.setStates(MessageState.Retry, MessageState.Sent);
+    _reqId = conn.getMessages(f);
+    st[0] = true;
+
+    final boolean containsRetryState = states.containsKey(MessageState.Retry);
+    final boolean containsSentState = states.containsKey(MessageState.Sent);
+
+    new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message> () {
+      public boolean visit(Message value) throws AdminException {
+        if(resended.contains(value.getId())) {
+          if(f.isNoResended()) {
+            return true;
+          }
+          value.setResended(true);
+        }
+        int id = (int)value.getId().longValue();
+        if (ids.length > id) {
+          if (ids[id])
+            return true;
+        }
+        if(value.getState() == MessageState.Sent && sent.remove(value.getId())) {
+          if (ids.length <= id)
+            ids = extendArray(ids, id + 1000);
+          ids[id] = true;
+          if(containsSentState) {
+            st[0] = visitor.visit(value);
+            return st[0];
+          }
+        }
+
+        if(value.getState() == MessageState.Retry && retry.remove(value.getId())) {
+          if (ids.length <= id)
+            ids = extendArray(ids, id + 1000);
+          ids[id] = true;
+          if(containsRetryState) {
+            st[0] = visitor.visit(value);
+            return st[0];
+          }
+        }
+
+        return true;
       }
     });
 
@@ -253,7 +337,6 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
       }
     });
 
-    int countResended = resended.size();
     resended.clear();
 
     newMsgs -= (processSet.size() + sentSet.size() + retrySet.size() + dlvrdMsgs + failedMsgs + expMsgs);

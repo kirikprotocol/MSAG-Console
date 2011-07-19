@@ -133,7 +133,7 @@ public class TestAdminContext extends AdminContext {
       d.setSourceAddress(new Address("+7901111"+i));
       d.setActivePeriodEnd(new Time(20,0,0));
       d.setActivePeriodStart(new Time(9,0,0));
-      d.setActiveWeekDays(new Day[]{Day.Fri, Day.Mon, Day.Thu, Day.Wed, Day.Thu,});
+      d.setActiveWeekDays(new Day[]{Day.Fri, Day.Mon, Day.Thu, Day.Wed, Day.Tue,});
       d.setDeliveryMode(DeliveryMode.SMS);
       if(i%5 == 1) {
         d.setEndDate(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
