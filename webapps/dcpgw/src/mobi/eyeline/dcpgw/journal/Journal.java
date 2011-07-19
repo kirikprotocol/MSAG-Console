@@ -1,7 +1,6 @@
 package mobi.eyeline.dcpgw.journal;
 
 import mobi.eyeline.dcpgw.exeptions.CouldNotCleanJournalException;
-import mobi.eyeline.dcpgw.exeptions.CouldNotGetNextFileException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import org.apache.log4j.Logger;
@@ -13,8 +12,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * User: Stepanov Dmitry Nikolaevich
@@ -27,18 +24,12 @@ public class Journal {
 
     private static final String sep=",";
 
-    private int max_number_of_files = 10;
-    private int max_file_size_mb = 10;
+    private int max_journal_size_mb = 10;
 
-    private File current_file;
-    private File journal_dir;
+    private File journal_dir, current_file, cleaned_file;
 
     private DateFormat df;
     private Calendar cal;
-
-    private long clean_journal_timeout = 60000;
-
-    private FileFilter csv_file_filter;
 
     public Journal(){
         String userDir = System.getProperty("user.dir");
@@ -53,28 +44,21 @@ public class Journal {
             System.exit(1);
         }
 
-        String s = prop.getProperty("max.number.of.files");
+        String s = prop.getProperty("max.journal.size.mb");
         if (s != null && !s.isEmpty()){
-            max_number_of_files = Integer.parseInt(s);
-            log.debug("Set: max_number_of_files="+max_number_of_files);
+            max_journal_size_mb = Integer.parseInt(s);
+            log.debug("Set: max_journal_size_mb="+ max_journal_size_mb);
         } else {
-            log.warn("Couldn't find property max.number.of.files, set default value " + max_number_of_files);
-        }
-
-        s = prop.getProperty("max.file.size.mb");
-        if (s != null && !s.isEmpty()){
-            max_file_size_mb = Integer.parseInt(s);
-            log.debug("Set: max_file_size_mb="+max_file_size_mb);
-        } else {
-            log.warn("Couldn't find property max_file_size_mb, set default value " + max_file_size_mb);
+            log.warn("Couldn't find property max_journal_size_mb, set default value " + max_journal_size_mb);
         }
 
         s = prop.getProperty("clean.journal.timeout.msl");
+        long clean_journal_timeout = 60000;
         if (s != null && !s.isEmpty()){
             clean_journal_timeout = Long.parseLong(s);
-            log.debug("Set: clean_journal_time="+clean_journal_timeout);
+            log.debug("Set: clean_journal_time="+ clean_journal_timeout);
         } else {
-            log.warn("Couldn't find clean journal timeout, set default value to "+clean_journal_timeout);
+            log.warn("Couldn't find clean journal timeout, set default value to "+ clean_journal_timeout);
         }
 
         journal_dir = new File(userDir+File.separator+"journal");
@@ -97,22 +81,6 @@ public class Journal {
             System.exit(1);
         }
 
-        String file_name = "journal_0.csv";
-        current_file = new File(journal_dir, file_name);
-        if (!current_file.exists()){
-            log.debug("Detected that file journal_0.csv doesn't exist.");
-            try {
-                if (current_file.createNewFile()){
-                    log.debug("Successfully create file "+file_name);
-                } else {
-                    log.debug("Couldn't create file "+file_name);
-                }
-            } catch (IOException e) {
-                log.error(e);
-                System.exit(1);
-            }
-        }
-
         df = DateFormat.getDateTimeInstance();
         cal = Calendar.getInstance();
 
@@ -131,13 +99,27 @@ public class Journal {
 
         }, clean_journal_timeout, clean_journal_timeout, TimeUnit.MILLISECONDS);
 
-        csv_file_filter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isFile() && file.getName().toLowerCase().endsWith(".csv");
-            }
+    }
 
-        };
+    private void appendFile(File source, File target) throws IOException {
+
+        //Открываем 1-й файл для записи
+        BufferedOutputStream bufOut = new BufferedOutputStream(new FileOutputStream(target, true)); // true - добавление в конец файла
+
+        //Открываем 2-й файл для считывания
+        BufferedInputStream bufRead = new BufferedInputStream(new FileInputStream(source));
+
+        int n;
+
+        while((n = bufRead.read()) != -1) {
+            bufOut.write(n);
+        }
+
+        bufOut.flush(); // Принудительно выталкиваем данные с буфера
+
+        bufOut.close(); // Закрываем соединения
+
+        bufRead.close();
 
     }
 
@@ -148,250 +130,195 @@ public class Journal {
 
         log.debug("Try to write to journal string: "+s);
 
-            int byteCount;
+        int byteCount;
+        try {
+            byte[] bytes = (s+"\n").getBytes("UTF-8");
+            byteCount = bytes.length;
+            //log.debug("Byte count "+byteCount);
+        } catch (UnsupportedEncodingException e) {
+            log.error(e);
+            throw new CouldNotWriteToJournalException(e);
+        }
+
+        String file_name = "journal_0.csv";
+        current_file = new File(journal_dir, file_name);
+        if (!current_file.exists()){
+            log.debug("Detected that file 'journal_0.csv' doesn't exist.");
             try {
-                byte[] bytes = (s+"\n").getBytes("UTF-8");
-                byteCount = bytes.length;
-                log.debug("Byte count "+byteCount);
-            } catch (UnsupportedEncodingException e) {
+                if (current_file.createNewFile()){
+                    log.debug("Successfully create file "+file_name);
+                } else {
+                    log.debug("Couldn't create file "+file_name);
+                }
+            } catch (IOException e) {
                 log.error(e);
                 throw new CouldNotWriteToJournalException(e);
             }
+        }
 
-            long file_length = current_file.length();
-            log.debug("Length of the current file in bytes: "+file_length);
+        cleaned_file = new File(journal_dir, "journal_1.csv");
 
-            if (file_length+byteCount <= max_file_size_mb*1024*1024){
-                log.debug("Length of the current file after appending string will be less or equal than "+max_file_size_mb+" mb.");
-            } else {
-                log.debug("Length of the current file after appending string will be more than "+max_file_size_mb+" mb.");
-                try {
-                    current_file = getNextFile();
-                } catch (CouldNotGetNextFileException e) {
-                    throw new CouldNotWriteToJournalException("Couldn't write to journal. ",e);
-                }
-            }
+        long sum;
+        if (!cleaned_file.exists()){
+            sum = current_file.length();
+        } else {
+            sum = current_file.length() + cleaned_file.length();
+        }
+
+        log.debug("Length of the journal in bytes: "+sum);
+
+        if (sum+byteCount <= max_journal_size_mb*1024/**1024*/){
+            log.debug("Length of the journal after appending string will be less or equal than "+ max_journal_size_mb +" mb.");
 
             try {
                 BufferedWriter out = new BufferedWriter(new FileWriter(current_file, true));
                 out.write(s+"\n");
                 out.close();
-                log.debug("Successfully write to the journal");
+                log.debug("Successfully write to the journal.");
             } catch (IOException e) {
                 log.error("Could not append a string to the file "+current_file.getName(), e);
                 throw new CouldNotWriteToJournalException(e);
             }
 
-
-
-    }
-
-    synchronized private File getNextFile() throws CouldNotGetNextFileException {
-
-        File[] journals = journal_dir.listFiles(csv_file_filter);
-
-        int number_of_journals = journals.length;
-
-        if (number_of_journals <= max_number_of_files){
-            log.debug("Number of journal files is "+number_of_journals+" and it's less than max number "+max_number_of_files+".");
-
-            NavigableMap<Integer, File> files_map = new TreeMap<Integer, File>();
-            for(File f:journals){
-                String name = f.getName();
-                Pattern p = Pattern.compile("journal_(\\d*)\\.csv");
-                Matcher m = p.matcher(name);
-                if (m.matches()){
-                    int number_of_file = Integer.parseInt(m.group(1));
-                    files_map.put(number_of_file, f);
-                    log.debug(number_of_file + " --> " + name);
-                } else {
-                    log.warn("Found the file name does not match the pattern "+name+".");
-                }
-            }
-
-            NavigableMap<Integer, File> descending_files_map = files_map.descendingMap();
-            for (Map.Entry<Integer, File> entry : descending_files_map.entrySet()) {
-                int number = entry.getKey();
-                File file = entry.getValue();
-                String old_name = file.getName();
-                String new_name = "journal_" + (number + 1)+".csv";
-                boolean renamed = file.renameTo(new File(journal_dir, new_name));
-                if (renamed) {
-                    log.debug("Successfully rename file " + old_name + " to file " + new_name);
-                } else {
-                    log.error("Couldn't rename file " + old_name + " to file " + new_name+".");
-                    throw new CouldNotGetNextFileException("Couldn't rename file " + old_name + " to file " + new_name+".");
-                }
-            }
-
-            String new_file_name = "journal_0.csv";
-            File file = new File(journal_dir, new_file_name);
-            try {
-                if (file.createNewFile()){
-                    log.debug("New file "+new_file_name+" was successfully created.");
-                } else {
-                    log.error("Couldn't create new file with name "+new_file_name+".");
-                    throw new CouldNotGetNextFileException("Couldn't create new file with name "+new_file_name+".");
-                }
-
-                return file;
-            } catch (IOException e) {
-                log.debug("Couldn't create new file "+file.getName(), e);
-                throw new CouldNotGetNextFileException("Couldn't create new file "+file.getName(), e);
-            }
-
         } else {
-            log.error("Number of journal files is " + number_of_journals + " and it's more than max number " + max_number_of_files + ".");
-            throw new CouldNotGetNextFileException("Number of journal files is "+number_of_journals+" and it's more than max number "+max_number_of_files+".");
+            log.error("Size of the journal after appending string will be more than maximum allowed juornal size "+ max_journal_size_mb +" mb.");
+            throw new CouldNotWriteToJournalException("Size of the journal after appending string will be more than maximum allowed juornal size "+ max_journal_size_mb +" mb.");
         }
 
     }
 
-    synchronized public void cleanJournal() throws CouldNotCleanJournalException {
-
+    public void cleanJournal() throws CouldNotCleanJournalException {
         log.debug("Try to clean journal ... ");
 
-        File[] journals = journal_dir.listFiles(csv_file_filter);
+        cleaned_file = new File(journal_dir, "journal_1.csv");
+        if (!cleaned_file.exists()){
 
-        if (journals.length > 0){
-
-            TreeMap<String, File> m = new TreeMap<String, File>();
-
-            for(File f: journals) {
-                String name = f.getName();
-                if ( !name.equals("journal_0.csv") ) {
-                    m.put(name, f);
-                    log.debug("put file with name "+f.getName());
-                }
-            }
-
-            NavigableMap<String, File> dm = m.descendingMap();
-
-            Set<Long> message_ids = new HashSet<Long>();
-
-            Vector<File> temp_journals = new Vector<File>();
-            int temp_journal_number = 1;
-            File temp_journal = new File(journal_dir,"journal_"+temp_journal_number+ ".csv.tmp");
+            log.debug("Detected that cleaned journal file "+cleaned_file.getName()+" doesn't exist.");
             try {
-                if (temp_journal.createNewFile()) log.debug("Create new temporary file: "+temp_journal.getName() );
+                if (cleaned_file.createNewFile()){
+                    log.debug("Successfully create cleaned journal file "+cleaned_file.getName());
+                } else {
+                    log.warn("Couldn't create cleaned journal file "+cleaned_file.getName()+" because it already exists.");
+                }
             } catch (IOException e) {
-                log.debug(e);
+                log.debug("Couldn't create cleaned file '"+cleaned_file.getName()+"'.");
                 throw new CouldNotCleanJournalException(e);
             }
 
-            temp_journals.add(temp_journal);
+        }
 
-            PrintWriter pw;
-            try {
-                pw = new PrintWriter(new FileWriter(temp_journal));
-            } catch (IOException e) {
-                log.error(e);
-                throw new CouldNotCleanJournalException(e);
+        try {
+            appendFile(current_file, cleaned_file);
+        } catch (IOException e) {
+            log.error(e);
+            throw new CouldNotCleanJournalException("Couldn't append file '"+current_file.getName()+"' to another file '"+cleaned_file.getName()+"'.");
+        }
+
+        if (current_file.delete()){
+            log.debug("Successfully delete current file "+current_file.getName()+"'.");
+        } else {
+            log.error("Couldn't delete current journal file "+current_file.getName()+"'.");
+            throw new CouldNotCleanJournalException("Couldn't delete current journal file "+current_file.getName()+"'.");
+        }
+
+        File temp_journal = new File(journal_dir, cleaned_file.getName()+".tmp");
+        try {
+            if (temp_journal.createNewFile()){
+                log.debug("Successfully create temporary cleaned journal file "+temp_journal.getName()+"'.");
+            } else {
+                log.warn("Couldn't create temporary cleaned journal file "+temp_journal.getName()+" because it already exists.");
             }
+        } catch (IOException e) {
+            log.error(e);
+            throw new CouldNotCleanJournalException("Couldn't create temporary cleaned journal file.", e);
+        }
 
-            for (Map.Entry<String, File> entry : dm.entrySet()) {
-                File f = entry.getValue();
-                log.debug("Cleaning journal file: " + f.getName());
-                Scanner scanner;
-                try {
-                    scanner = new Scanner(f);
-                } catch (FileNotFoundException e) {
-                    log.error(e);
-                    throw new CouldNotCleanJournalException(e);
-                }
+        PrintWriter pw;
+        try {
+            pw = new PrintWriter(new FileWriter(temp_journal));
+        } catch (IOException e) {
+            log.error(e);
+            throw new CouldNotCleanJournalException(e);
+        }
 
-                scanner.useDelimiter(sep);
-                while (scanner.hasNextLine()){
-                    String line = scanner.nextLine();
+        Set<Long> message_ids = new HashSet<Long>();
 
-                    String[] ar = line.split(sep);
+        BufferedReader buffReader;
 
-                    long message_id = Long.parseLong(ar[1].trim());
-                    String status = ar[3].trim();
+        try{
+            buffReader = new BufferedReader (new FileReader(cleaned_file));
+            String line;
+            while((line = buffReader.readLine()) != null){
+                String[] ar = line.split(sep);
+                long message_id = Long.parseLong(ar[1].trim());
+                String status = ar[3].trim();
 
-                    if (status.equals(Status.DONE.toString())) {
-                        message_ids.add(message_id);
+                if (status.equals(Status.DONE.toString())) {
+                    if (message_ids.add(message_id)){
                         log.debug(message_id+"_message has DONE status, remember it.");
                     } else {
-
-                        if (!message_ids.contains(message_id)){
-
-                            log.debug(message_id+"_message has "+status+" status, so try to write it to the temporary journal file "+temp_journal.getName());
-
-                            int byte_count;
-                            try {
-                                byte[] bytes = (line+"\n").getBytes("UTF-8");
-                                byte_count = bytes.length;
-                            } catch (UnsupportedEncodingException e) {
-                                log.error(e);
-                                throw new CouldNotCleanJournalException(e);
-                            }
-
-                            long temp_file_length = temp_journal.length();
-
-                            if (temp_file_length+byte_count > max_file_size_mb*1024*1024){
-
-                                log.debug("Temporary file has byte length "+temp_file_length);
-
-                                pw.close();
-
-                                temp_journal_number++;
-
-                                String next_temp_file_name = "journal_"+temp_journal_number+".csv.tmp";
-
-                                log.debug("Try to create next temporary journal file "+next_temp_file_name+" ...");
-
-                                temp_journal = new File(journal_dir, next_temp_file_name);
-
-                                temp_journals.add(temp_journal);
-
-                                try {
-                                    pw = new PrintWriter(new FileWriter(temp_journal));
-                                } catch (IOException e) {
-                                    log.error(e);
-                                    throw new CouldNotCleanJournalException(e);
-                                }
-
-
-                            }
-
-                            pw.println(line);
-                            pw.flush();
-
-                        }
-
-                    }
-
-                }
-
-                scanner.close();
-            }
-
-            pw.close();
-
-            for(File f: journals){
-                if (!f.delete()){
-                    throw new CouldNotCleanJournalException("Could not delete old journal file.");
-                }
-            }
-
-            for(File f: temp_journals){
-                String name = f.getName();
-                Pattern p2 = Pattern.compile("(journal_\\d*\\.csv)\\.tmp");
-                Matcher m2 = p2.matcher(name);
-                if (m2.matches()){
-                    String new_name = m2.group(1);
-                    File new_file = new File(journal_dir, new_name);
-                    if (!f.renameTo(new_file)){
-                        throw new CouldNotCleanJournalException("Could not rename temporary journal file.");
+                        log.warn("Couldn't remember message with 'DONE' status because it's already added to the map. ");
                     }
                 }
             }
-            log.debug("Successfully clean journal.");
-
-        } else {
-            log.debug("Did not found any of journal.");
+            buffReader.close();
+        } catch (IOException ioe){
+            log.error(ioe);
+            throw new CouldNotCleanJournalException(ioe);
         }
+
+        int counter = 0;
+        try{
+            buffReader = new BufferedReader (new FileReader(cleaned_file));
+            String line;
+            while((line = buffReader.readLine()) != null){
+                log.debug("line: "+line);
+                String[] ar = line.split(sep);
+
+                long message_id = Long.parseLong(ar[1].trim());
+                String status = ar[3].trim();
+                log.debug(message_id+"_message has "+status+" status, so try to write it to the temporary journal file "+temp_journal.getName());
+
+                if (!message_ids.contains(message_id)){
+                    pw.println(line);
+                    pw.flush();
+                    counter++;
+                }
+
+            }
+            buffReader.close();
+        } catch (IOException ioe){
+            log.error(ioe);
+            throw new CouldNotCleanJournalException(ioe);
+        } finally {
+            pw.close();
+        }
+
+        if (cleaned_file.delete()){
+            log.debug("Successfully delete cleaned file "+cleaned_file.getName()+"'.");
+        } else {
+            log.error("Couldn't delete cleaned journal file "+cleaned_file.getName()+"'.");
+            throw new CouldNotCleanJournalException("Couldn't delete cleaned journal file "+cleaned_file.getName()+"'.");
+        }
+
+        if (counter>0){
+            log.debug("Detected that temporary file isn't empty.");
+            if (temp_journal.renameTo(cleaned_file)){
+                log.debug("Successfully rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+            } else {
+                log.error("Couldn't rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+                throw new CouldNotCleanJournalException("Couldn't rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+            }
+        } else {
+            log.debug("Detected that cleaned file is empty.");
+            if (temp_journal.delete()){
+                log.debug("Successfully delete temporary file '"+temp_journal.getName());
+            } else {
+                log.debug("Couldn't delete temporary file '"+temp_journal.getName());
+            }
+        }
+
+        log.debug("Successfully clean journal.");
     }
 
     public Hashtable<Integer, Data> loadJournal() throws CouldNotLoadJournalException {
@@ -399,11 +326,12 @@ public class Journal {
 
         Hashtable<Integer, Data> table = new Hashtable<Integer, Data>();
 
-        File[] journals = journal_dir.listFiles(csv_file_filter);
+        File j0 = new File(journal_dir, "journal_0.csv");
+        File j1 = new File(journal_dir, "journal_1.csv");
+        File[] journals = {j1, j0};
 
-        if (journals.length > 0){
-
-            for(File f: journals){
+        for(File f: journals){
+            if (f.exists()){
                 log.debug("Read file "+f.getName());
                 try {
                     Scanner scanner = new Scanner(f);
@@ -431,18 +359,15 @@ public class Journal {
                             table.put(sequence_number, data);
                             log.debug("Write in memory: "+sequence_number+" --> "+ data.toString());
                         }
-
                     }
-
                 } catch (FileNotFoundException e) {
                     log.error(e);
                     throw new CouldNotLoadJournalException(e);
                 }
             }
-            log.debug("Successfully load journal in memory.");
-        } else {
-            log.debug("Did not found any of journal.");
         }
+
+        log.debug("Successfully load journal in memory.");
         return table;
     }
 

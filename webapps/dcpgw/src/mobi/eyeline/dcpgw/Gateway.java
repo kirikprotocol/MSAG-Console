@@ -132,6 +132,9 @@ public class Gateway extends Thread implements PDUListener {
 
                         case SubmitSM:{
 
+
+
+
                             long time = System.currentTimeMillis();
                             long message_id = time + al.incrementAndGet();
 
@@ -160,14 +163,13 @@ public class Gateway extends Thread implements PDUListener {
                             Manager.getInstance().getSender(login).addMessage(message_id, destination_address_str, text, sequence_number, connection_name, delivery_id);
 
                             if( request.getRegDeliveryReceipt() != RegDeliveryReceipt.None ) {
+
                                 Message rcpt = request.getAnswer();
                                 rcpt.setEsmMessageType(EsmMessageType.DeliveryReceipt);
 
                                 Date date = cal.getTime();
                                 int sn = Integer.parseInt(sdf.format(date))+ai.incrementAndGet();
                                 rcpt.setSequenceNumber(sn);
-
-                                log.debug("seq num:" + rcpt.getSequenceNum());
 
                                 Manager.getInstance().rememberReceiptMessage(message_id, rcpt);
                             }
@@ -344,7 +346,6 @@ public class Gateway extends Thread implements PDUListener {
             long send_receipt_time = System.currentTimeMillis();
 
             Data data = new Data(message_id, send_receipt_time);
-            log.debug("l1");
             journal.write(sequence_number, data, Status.SEND);
 
             table.put(sequence_number, data);
@@ -353,8 +354,6 @@ public class Gateway extends Thread implements PDUListener {
             log.debug("Try to send delivery receipt with message id '"+message_id+"' and sequence number '"+sequence_number);
             smppServer.send(delivery_receipt);
             log.debug("Successfully send delivery receipt with sequence number "+sequence_number);
-
-
 
         }
     }
