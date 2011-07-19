@@ -12,11 +12,14 @@ class HttpManagerConfig
 {
 public:
 
-    HttpManagerConfig(int rs, int ws, int rps, int wps, int sps, int sql, int ct, const std::string h, int p):
+    HttpManagerConfig(int rs, int ws, int rps, int wps, int sps, int sql, int ct,
+    		const std::string h, int p,
+    		int p2, std::string d):
         readerSockets(rs), writerSockets(ws),
         readerPoolSize(rps),writerPoolSize(wps),
         scagPoolSize(sps), scagQueueLimit(sql),
-        connectionTimeout(ct), host(h), port(p)
+        connectionTimeout(ct), host(h), port(p),
+        portHttps(p2), certificatesDir(d)
     {
     }
 
@@ -24,7 +27,8 @@ public:
         readerSockets(0), writerSockets(0),
         readerPoolSize(0),writerPoolSize(0),
         scagPoolSize(0), scagQueueLimit(0),
-        connectionTimeout(0), host(""), port(0)
+        connectionTimeout(0), host(""), port(0),
+    	portHttps(0), certificatesDir("")
     {
     }
 
@@ -43,6 +47,7 @@ public:
     std::string host;
     int port;
     int portHttps;
+    std::string certificatesDir;
 };
 
 }

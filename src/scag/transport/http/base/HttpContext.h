@@ -10,7 +10,7 @@
 #include "openssl/ssl.h"
 
 #define DFLT_BUF_SIZE 32
-#define HTTP_CHUNK_SIZE 0x10000
+//#define HTTP_CHUNK_SIZE 0x10000
 
 namespace scag2 { namespace transport { namespace http {
 

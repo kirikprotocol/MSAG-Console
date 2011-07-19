@@ -4,17 +4,17 @@
 namespace scag2 { namespace transport { namespace http {
 
 // todo certificates
-#define RSA_SERVER_CERT     "/Users/ksv/tst_data/s_cert.pem"
-#define RSA_SERVER_KEY      "/Users/ksv/tst_data/s_privkey.pem"
+#define RSA_SERVER_CERT     "/s_cert.pem"
+#define RSA_SERVER_KEY      "/s_privkey.pem"
 
-#define RSA_SERVER_CA_CERT	"server_ca.crt"
-#define RSA_SERVER_CA_PATH	"/Users/ksv/tst_data"
+#define RSA_SERVER_CA_CERT	"/server_ca.crt"
+#define RSA_SERVER_CA_PATH	"/CA"
 
-#define RSA_CLIENT_CERT		"/Users/ksv/tst_data/c_cert.pem"
-#define RSA_CLIENT_KEY		"/Users/ksv/tst_data/c_privkey.pem"
+#define RSA_CLIENT_CERT		"/c_cert.pem"
+#define RSA_CLIENT_KEY		"/c_privkey.pem"
 
-#define RSA_CLIENT_CA_CERT  "client_ca.crt"
-#define RSA_CLIENT_CA_PATH  "/Users/ksv/tst_data"
+#define RSA_CLIENT_CA_CERT  "/client_ca.crt"
+#define RSA_CLIENT_CA_PATH  "/CA"
 
 HttpsOptions::~HttpsOptions()
 {
@@ -24,7 +24,8 @@ HttpsOptions::~HttpsOptions()
 		SSL_CTX_free(userCtx);
 }
 
-int HttpsOptions::init(bool user_verify, bool site_verify) {
+int HttpsOptions::init(bool user_verify, bool site_verify, std::string certDir) {
+	certificatesDir = certDir;
 	int result = userInit(user_verify);
 	if (result )
 		result = siteInit(site_verify);
@@ -32,6 +33,7 @@ int HttpsOptions::init(bool user_verify, bool site_verify) {
 }
 
 int HttpsOptions::userInit(bool verify) {
+	std::string tmp;
 	userVerify = verify;
 
 	/* Load encryption & hashing algorithms for the SSL program */
@@ -49,12 +51,14 @@ int HttpsOptions::userInit(bool verify) {
 	if (!userCtx) {
 		return 0;
 	}
-      /* Load the server certificate into the SSL_CTX structure */
-	if (SSL_CTX_use_certificate_file(userCtx, RSA_SERVER_CERT, SSL_FILETYPE_PEM) <= 0) {
+	/* Load the server certificate into the SSL_CTX structure */
+	tmp = certificatesDir + RSA_SERVER_CERT;
+	if (SSL_CTX_use_certificate_file(userCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		return 0;
 	}
 	/* Load the private-key corresponding to the server certificate */
-	if (SSL_CTX_use_PrivateKey_file(userCtx, RSA_SERVER_KEY, SSL_FILETYPE_PEM) <= 0) {
+	tmp = certificatesDir + RSA_SERVER_KEY;
+	if (SSL_CTX_use_PrivateKey_file(userCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		return 0;
     }
 	/* Check if the server certificate and private-key matches */
@@ -65,7 +69,8 @@ int HttpsOptions::userInit(bool verify) {
 
 	if ( userVerify ) {
 		/* Load the RSA CA certificate into the SSL_CTX structure */
-		if (!SSL_CTX_load_verify_locations(userCtx, RSA_SERVER_CA_CERT, NULL)) {
+		tmp = certificatesDir + RSA_SERVER_CA_PATH + RSA_SERVER_CA_CERT;
+		if (!SSL_CTX_load_verify_locations(userCtx, tmp.c_str(), NULL)) {
 			return 0;
 		}
 		/* Set to require peer (client) certificate verification */
@@ -78,18 +83,22 @@ int HttpsOptions::userInit(bool verify) {
 }
 
 int HttpsOptions::siteInit(bool verify) {
+	std::string tmp;
 	siteVerify = verify;
+
     /* Create an SSL_CTX structure */
 	siteCtx = SSL_CTX_new(method);
 	if (!siteCtx) {
 		return 0;
 	}
     /* Load the client certificate into the SSL_CTX structure */
-	if (SSL_CTX_use_certificate_file(siteCtx, RSA_CLIENT_CERT, SSL_FILETYPE_PEM) <= 0) {
+	tmp = certificatesDir + RSA_CLIENT_CERT;
+	if (SSL_CTX_use_certificate_file(siteCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		return 0;
 	}
 	/* Load the private-key corresponding to the server certificate */
-	if (SSL_CTX_use_PrivateKey_file(siteCtx, RSA_CLIENT_KEY, SSL_FILETYPE_PEM) <= 0) {
+	tmp = certificatesDir + RSA_CLIENT_KEY;
+	if (SSL_CTX_use_PrivateKey_file(siteCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		return 0;
 	}
 	/* Check if the server certificate and private-key matches */
@@ -99,7 +108,8 @@ int HttpsOptions::siteInit(bool verify) {
 	}
 	if ( siteVerify ) {
 		/* Load the RSA CA certificate into the SSL_CTX structure */
-		if (!SSL_CTX_load_verify_locations(siteCtx, RSA_CLIENT_CA_CERT, NULL)) {
+		tmp = certificatesDir + RSA_CLIENT_CA_PATH + RSA_CLIENT_CA_CERT;
+		if (!SSL_CTX_load_verify_locations(siteCtx, tmp.c_str(), NULL)) {
 			return 0;
 		}
 		/* Set to require peer (client) certificate verification */

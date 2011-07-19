@@ -22,6 +22,8 @@ void HttpManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
         connectionTimeout = cv.getInt("connectionTimeout", NULL);
         port = cv.getInt("port", NULL);
         portHttps = cv.getInt("portHttps", NULL);
+        std::auto_ptr<char> dir_( cv.getString("certificatesDir") );
+        certificatesDir = dir_.get();
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){
@@ -33,6 +35,7 @@ bool HttpManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
         std::auto_ptr<char> h( cv.getString("host") );
+        std::auto_ptr<char> d( cv.getString("certificatesDir") );
         return readerSockets != cv.getInt("readerSockets", NULL) ||
             writerSockets != cv.getInt("writerSockets", NULL) ||
             readerPoolSize != cv.getInt("readerPoolSize", NULL) ||
@@ -42,7 +45,8 @@ bool HttpManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
             connectionTimeout != cv.getInt("connectionTimeout", NULL) ||
             port != cv.getInt("port", NULL) ||
             portHttps != cv.getInt("portHttps", NULL) ||
-            strcmp(host.c_str(), h.get());
+            strcmp(host.c_str(), h.get()) ||
+            strcmp(certificatesDir.c_str(), d.get());
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){

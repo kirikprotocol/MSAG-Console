@@ -36,19 +36,25 @@ void HttpManagerImpl::configChanged()
 
 void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig& conf)
 {
-    this->cfg = conf;
-    processor_ = &p;
-    p.setScagTaskManager( scags );
+	try {
+		this->cfg = conf;
+		processor_ = &p;
+		p.setScagTaskManager( scags );
 
-    readers.init(cfg.readerPoolSize, cfg.readerSockets, "http.reader");
-    writers.init(cfg.writerPoolSize, cfg.writerSockets, "http.writer");
-    scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
-    acceptor.init(cfg.host.c_str(), cfg.port);
-    smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
-// no validate_certificates for user and site connections (later)
-    httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT);
-    sslAcceptor.init(cfg.host.c_str(), cfg.portHttps, &httpsOptions);
-    smsc_log_info(logger, "Https manager inited host=%s:%d", cfg.host.c_str(), cfg.portHttps);
+		readers.init(cfg.readerPoolSize, cfg.readerSockets, "http.reader");
+		writers.init(cfg.writerPoolSize, cfg.writerSockets, "http.writer");
+		scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
+		acceptor.init(cfg.host.c_str(), cfg.port);
+		smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
+
+	// no validate_certificates for user and site connections (later)
+		httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT, cfg.certificatesDir);
+		sslAcceptor.init(cfg.host.c_str(), cfg.portHttps, &httpsOptions);
+		smsc_log_info(logger, "Https manager inited host=%s:%d, cert=%s", cfg.host.c_str(), cfg.portHttps, cfg.certificatesDir.c_str());
+	}
+	catch(...) {
+		smsc_log_info(logger, "Http(s) manager init error");
+	}
 }
 
 void HttpManagerImpl::shutdown()

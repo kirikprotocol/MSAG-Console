@@ -2,6 +2,7 @@
 #define SCAG_TRANSPORT_HTTP_BASE_HTTPS
 
 #include <openssl/ssl.h>
+#include <string>
 
 namespace scag2 { namespace transport { namespace http {
 
@@ -15,7 +16,7 @@ public:
 	HttpsOptions(SSL_METHOD *meth) : method(meth), userCtx(NULL), siteCtx(NULL) {};
     ~HttpsOptions();
 
-    int init(bool user_verify, bool site_verify);
+    int init(bool user_verify, bool site_verify, std::string certDir);
     SSL_CTX* userContext(void) { return userCtx; }
     SSL_CTX* siteContext(void) { return siteCtx; }
 
@@ -23,6 +24,7 @@ public:
     bool		siteVerify;
 
 protected:
+    std::string certificatesDir;
     SSL_METHOD* method;
     SSL_CTX*	userCtx;
     SSL_CTX*	siteCtx;
