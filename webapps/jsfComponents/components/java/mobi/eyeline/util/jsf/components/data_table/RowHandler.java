@@ -18,6 +18,8 @@ import java.util.List;
  * @author Artem Snopkov
  */
 public class RowHandler extends ComponentHandler {
+
+
   private final TagAttribute data;
   private final TagAttribute innerData;
   private final TagAttribute innerRows;

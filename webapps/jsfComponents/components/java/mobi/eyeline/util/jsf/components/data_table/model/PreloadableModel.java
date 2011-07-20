@@ -1,11 +1,10 @@
 package mobi.eyeline.util.jsf.components.data_table.model;
 
-import mobi.eyeline.util.jsf.components.data_table.LoadListener;
-
 /**
+ * Модель, требующая предварительной загрузки данных перед вызовом метода getRows().
  * author: Aleksandr Khalitov
  */
-public interface PreloadableModel extends DataTableModel{
+public interface PreloadableModel extends DataTableModel {
 
   /**
    * Предварительная загрузка записей
