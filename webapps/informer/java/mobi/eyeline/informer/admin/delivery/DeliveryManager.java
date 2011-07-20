@@ -676,12 +676,12 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   private static GetMessagesStrategy selectGetMessagesStrategy(MessageFilter filter) {
     if (filter.getStates() == null)
-      return new GetNonFinalMessagesStrategy(RESEND_PROPERTY);
+      return new GetMessagesLightStrategy(RESEND_PROPERTY);
     for (MessageState s : filter.getStates())
       if (s == MessageState.New || s == MessageState.Process || s == MessageState.Retry || s == MessageState.Sent)
-        return new GetNonFinalMessagesStrategy(RESEND_PROPERTY);
+        return new GetMessagesLightStrategy(RESEND_PROPERTY);
 
-    return new GetFinalizedMessagesStrategy(COUNT_MESSAGES_PIECE, RESEND_PROPERTY);
+    return new GetFinalMessagesLightStrategy(RESEND_PROPERTY);
   }
 
   /**

@@ -443,6 +443,10 @@ public class TestDcpConnection extends DcpConnection{
     return r;
   }
 
+  protected synchronized int getMessagesWithFields(MessageFilter filter, MessageField ... fields) throws AdminException {
+    return getMessages(filter);
+  }
+
   public synchronized boolean getNextMessages(int reqId, int pieceSize, Collection<Message> messages) throws AdminException {
     MessageRequest req = messReqs.get(reqId);
     if(req == null || pieceSize == 0) {
@@ -561,6 +565,7 @@ public class TestDcpConnection extends DcpConnection{
           case Delivered:
           case Failed:
           case Expired:toModify.remove(m.getId()); break;
+//          case Retry: return;
           default: toModify.put(m.getId(), m);
         }
       }

@@ -319,6 +319,11 @@ class DcpConnection {
    * @throws AdminException ошибка выполнения команды
    */
   public int getMessages(MessageFilter filter) throws AdminException {
+    return getMessagesWithFields(filter, MessageField.values());
+  }
+
+
+  protected int getMessagesWithFields(MessageFilter filter, MessageField ... fields) throws AdminException {
     RequestMessagesState req = new RequestMessagesState();
     if (filter != null) {
       if (filter.getDeliveryId() != null) {
@@ -327,11 +332,13 @@ class DcpConnection {
       req.setEndDate(convertDateToDcpFormat(filter.getEndDate()));
       req.setStartDate(convertDateToDcpFormat(filter.getStartDate()));
 
-      ReqField[] fieldses = ReqField.values();
-      ReqField[] fs = new ReqField[fieldses.length + 1];
-      fs[0] = ReqField.UserData;
-      System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
-      req.setFields(fs);
+      if(fields != null && fields.length>0) {
+        ReqField[] fs = new ReqField[fields.length];
+        for(int i=0;i<fields.length;i++) {
+          fs[i] = ReqField.valueOf(fields[i].toString());
+        }
+        req.setFields(fs);
+      }
 
       if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
         req.setMsisdnFilter(filter.getMsisdnFilter());

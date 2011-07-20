@@ -311,10 +311,11 @@ public class MessageListController extends InformerController {
   protected void _download(final PrintWriter writer) throws IOException {
     try {
       final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+      writer.println("Abonent;Date;Text;State;Resended;ErrorCode;");
       visit(new Visitor<Message>() {
         public boolean visit(Message value) throws AdminException {
           writer.println(StringEncoderDecoder.toCSVString(';',value.getAbonent().getSimpleAddress(), sdf.format(value.getDate()), value.getText(),
-              value.getState().toString(), value.getErrorCode() == null ? "" : value.getErrorCode().toString()
+              value.getState().toString(), Boolean.valueOf(value.isResended()), value.getErrorCode() == null ? "" : value.getErrorCode().toString()
           ));
           return true;
         }
