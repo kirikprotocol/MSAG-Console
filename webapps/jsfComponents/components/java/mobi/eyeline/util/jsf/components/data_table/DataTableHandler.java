@@ -105,40 +105,42 @@ public class DataTableHandler extends ComponentHandler {
   }
 
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
-    final DataTable t = (DataTable) c;
-    String tid = t.getId();
+    if(c.isRendered()) {
+      final DataTable t = (DataTable) c;
+      String tid = t.getId();
 
-    DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
-    if (t.getSelectedRowsExpression() != null && !(m instanceof ModelWithObjectIds))
-      throw new FacesException("Model should implement ModelWithObjectIds interface.");
+      DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
+      if (t.getSelectedRowsExpression() != null && !(m instanceof ModelWithObjectIds))
+        throw new FacesException("Model should implement ModelWithObjectIds interface.");
 
-    t.setModel(m);
+      t.setModel(m);
 
-    ctx.getVariableMapper().setVariable("___tid", new ConstantExpression(tid));
+      ctx.getVariableMapper().setVariable("___tid", new ConstantExpression(tid));
 
-    // Header
-    nextHandler.apply(ctx, c);
+      // Header
+      nextHandler.apply(ctx, c);
 
-    handleColumns(t);
+      handleColumns(t);
 
-    if(!t.isInternalUpdate()) {
-      t.setSelectAll(false);
-      t.setSelectedRows(Collections.<String>emptyList());
-      t.setShowSelectedOnly(false);
-      return;
+      if(!t.isInternalUpdate()) {
+        t.setSelectAll(false);
+        t.setSelectedRows(Collections.<String>emptyList());
+        t.setShowSelectedOnly(false);
+        return;
+      }
+
+      List rows;
+      try{
+        rows = loadRows(t);
+        t.setTotalSize(t.getModel().getRowsCount());
+      } catch (ModelException e) {
+        //todo
+        t.setError(e);
+        rows = Collections.emptyList();
+      }
+
+      handleRows(ctx, t, rows);
     }
-
-    List rows;
-    try{
-      rows = loadRows(t);
-      t.setTotalSize(t.getModel().getRowsCount());
-    } catch (ModelException e) {
-      //todo
-      t.setError(e);
-      rows = Collections.emptyList();
-    }
-
-    handleRows(ctx, t, rows);
   }
 
   private List loadRows(final DataTable t) throws ModelException {
