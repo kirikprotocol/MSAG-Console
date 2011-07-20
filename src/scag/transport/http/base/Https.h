@@ -2,9 +2,11 @@
 #define SCAG_TRANSPORT_HTTP_BASE_HTTPS
 
 #include <openssl/ssl.h>
+#include "logger/Logger.h"
 #include <string>
 
 namespace scag2 { namespace transport { namespace http {
+using smsc::logger::Logger;
 
 #define VALIDATE_CERT true
 #define NO_VALIDATE_CERT false
@@ -24,6 +26,7 @@ public:
     bool		siteVerify;
 
 protected:
+    Logger *logger;
     std::string certificatesDir;
     SSL_METHOD* method;
     SSL_CTX*	userCtx;

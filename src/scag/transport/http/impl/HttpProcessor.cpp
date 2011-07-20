@@ -315,7 +315,10 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                     request.setSitePort(r.defSite.port);
                 }
                 else
-                    r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
+                {
+                    r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());
+                }
+                smsc_log_debug(logger, "Route %p found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", r, request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
             } catch (const RouteNotFoundException& e) {
                 smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
                 registerEvent( stat::events::http::REQUEST_FAILED, request);

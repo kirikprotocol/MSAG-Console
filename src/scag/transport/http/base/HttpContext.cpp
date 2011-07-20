@@ -45,15 +45,11 @@ requestFailed(false),
 unparsed(DFLT_BUF_SIZE),
 sslOptions(options),
 userSsl(NULL),
-siteSsl(NULL),
-userContext(NULL),
-siteContext(NULL)
+siteSsl(NULL)
 {
 	logger = Logger::getInstance("http.https");
 
 	if ( sslOptions ) {
-		userContext = sslOptions->userContext();
-		siteContext = sslOptions->siteContext();
 		trc.sitePort = 443;
 	}
 	setContext(user, this);
@@ -61,12 +57,11 @@ siteContext(NULL)
 
 HttpContext::~HttpContext()
 {
-/*
 	if (userSsl)
 		sslCloseConnection(user);
 	if (siteSsl)
 		sslCloseConnection(site);
-*/
+
 	if (user)
 		delete user;
 	if (site)
@@ -81,7 +76,7 @@ int HttpContext::sslUserConnection(bool verify_client) {
 	if (userSsl)
 		sslCloseConnection(user);
 */
-	userSsl = SSL_new(userContext);
+	userSsl = SSL_new(sslOptions->userContext());
 	if ( userSsl == NULL)
 		return 0;
 	try
@@ -125,8 +120,8 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 	if (siteSsl)
 		sslCloseConnection(site);
 */
-	smsc_log_debug(logger, "sslSiteConnection:try to create, siteContext: %p", siteContext);
-	siteSsl = SSL_new(siteContext);
+	smsc_log_debug(logger, "sslSiteConnection:try to create, siteContext: %p", sslOptions->siteContext());
+	siteSsl = SSL_new(sslOptions->siteContext());
 	if ( siteSsl == NULL) {
 		smsc_log_debug(logger, "sslSiteConnection:create failed.");
 		return 0;
@@ -172,7 +167,7 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 }
 
 int HttpContext::sslCloseConnection(Socket* s) {
-	if (!this->useHttps())
+	if (!this->useHttps(s))
 		return 0;
 	SSL* &ssl = (s == user) ? userSsl : siteSsl;
 	smsc_log_debug(logger, "sslCloseConnection: %s %p", connName(s), ssl);
@@ -237,6 +232,16 @@ SSL* HttpContext::sslCheckConnection(Socket* s) {
 		return siteSsl;
 	}
 	return NULL;
+}
+
+bool HttpContext::useHttps(Socket* s) {
+	if (s == user) {
+		return ( userSsl != NULL );
+	}
+	else if (s == site) {
+		return ( siteSsl != NULL );
+	}
+	return false;
 }
 
 int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t readBufSize) {
@@ -328,7 +333,7 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
  * TmpBuf unparsed used to store data, it was unused when SEND_REQUEST or SEND_RESPONSE actions.
  */
 void HttpContext::prepareData() {
-    if ( useHttps() && ((action == SEND_REQUEST) || (action == SEND_RESPONSE)) ) {
+    if ( (action == SEND_REQUEST) || (action == SEND_RESPONSE) ) {
 		const char *data;
 		unsigned int size, cnt_size, wrong_size;
 		unparsed.SetPos(0);
@@ -361,10 +366,10 @@ void HttpContext::prepareData() {
 /*
  * Analyse if position reach the end of transmitted data buffer for HTTP and HTTPS
  */
-bool HttpContext::commandIsOver() {
+bool HttpContext::commandIsOver(Socket* s) {
 	bool result = true;
 	if (flags == 1) {
-		result = useHttps()
+		result = useHttps(s)
 				? (position >= unparsed.GetPos())
 				: (position >= unsigned(command->getContentLength()));
 	}
@@ -373,8 +378,8 @@ bool HttpContext::commandIsOver() {
 /*
  * returns ptr and size for HttpWriterTask::Execute depends on useHttps
  */
-void HttpContext::getCommandAttr(const char* &data, unsigned int &size) {
-	if ( useHttps() ) {
+void HttpContext::getCommandAttr(Socket* s, const char* &data, unsigned int &size) {
+	if ( useHttps(s) ) {
 		flags = 1;
 		data = unparsed.get();
 		size = unparsed.GetPos();

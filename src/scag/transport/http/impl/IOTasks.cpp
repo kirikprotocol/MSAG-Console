@@ -209,7 +209,7 @@ int HttpReaderTask::Execute()
                 int len;
 /*
                 unsigned int unparsed_len;
-                if ( cx->useHttps() ) {
+                if ( cx->useHttps(s) ) {
                 	len = cx->sslReadMessage(s, buf, READER_BUF_SIZE);
                     unparsed_len = cx->loadUnparsed(buf);
                     unparsed_len = 0;
@@ -230,7 +230,7 @@ int HttpReaderTask::Execute()
                  * to avoid of buffer buf overflow
                  */
                 smsc_log_debug(logger, "read from socket %p to context %p", s, cx);
-                if ( cx->useHttps() ) {
+                if ( cx->useHttps(s) ) {
 //                	len = cx->sslReadMessage(s, buf, READER_BUF_SIZE);
                 	len = cx->sslReadPartial(s, buf, READER_BUF_SIZE);
                 }
@@ -252,7 +252,7 @@ int HttpReaderTask::Execute()
                         removeSocket(s);
                         if (cx->action == READ_RESPONSE) {
                             smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
-                            if ( cx->useHttps() ) {
+                            if ( cx->useHttps(s) ) {
                             	cx->sslCloseConnection(s);
                             }
                             s->Abort();
@@ -398,7 +398,7 @@ int HttpWriterTask::Execute()
                 int written_size = 0;
 
 /*
-            	if ( cx->useHttps() ) {
+            	if ( cx->useHttps(s) ) {
 					cx->flags = 1;
 					data = cx->getUnparsed() + cx->position;
 					size = cx->unparsedLength() - cx->position;
@@ -433,12 +433,12 @@ int HttpWriterTask::Execute()
 					}
 
 */
-                cx->getCommandAttr(data, size);
+                cx->getCommandAttr(s, data, size);
 				smsc_log_debug(logger, "data to send %p size=%d pos=%d", data, size, cx->position);
 				data += cx->position;
 				size -= cx->position;
 				if (size) {
-					if ( cx->useHttps() ) {
+					if ( cx->useHttps(s) ) {
 						written_size = cx->sslWritePartial(s, data, size);
 					}
 					else {
@@ -470,7 +470,7 @@ int HttpWriterTask::Execute()
                         cx->position = 0;
                     }
                 }
-                else if ( cx->commandIsOver() )
+                else if ( cx->commandIsOver(s) )
                 {
                     removeSocket(s);
                     if (cx->action == SEND_REQUEST) {
@@ -485,7 +485,7 @@ int HttpWriterTask::Execute()
                         smsc_log_info(logger, "%p: %p, response sent", this, cx);
                         if (cx->command->closeConnection()) {
                           smsc_log_debug(logger, "%p: %p, close connection, finalize socket %p", this, cx, s);
-                          if ( cx->useHttps() )
+                          if ( cx->useHttps(s) )
                         	  cx->sslCloseConnection(s);
                           deleteSocket(s, SHUT_WR);
                           smsc_log_debug(logger, "%p: %p, socket %p finalized", this, cx, s);
@@ -530,7 +530,6 @@ int HttpWriterTask::Execute()
 void HttpWriterTask::registerContext(HttpContext* cx)
 {
     Socket *s;
-    smsc_log_debug(logger, "HttpWriterTask::registerContext %p data size=%d", cx, cx->unparsedLength());
 
     cx->cleanUnparsed();
     cx->flags = 0;
@@ -538,6 +537,9 @@ void HttpWriterTask::registerContext(HttpContext* cx)
     cx->position = 0;    
     
     if (cx->action == SEND_REQUEST) {
+/*
+ * TODO: make decision to use HTTPS connection on site (depends on url or route fields);
+ */
         s = cx->site = new Socket;
         HttpContext::setContext(s, cx);
     }

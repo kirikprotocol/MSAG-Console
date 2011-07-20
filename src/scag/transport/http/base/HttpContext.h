@@ -9,15 +9,15 @@
 #include "Https.h"
 #include "openssl/ssl.h"
 
-#define DFLT_BUF_SIZE 32
-//#define HTTP_CHUNK_SIZE 0x10000
-
 namespace scag2 { namespace transport { namespace http {
 
 using smsc::core::network::Socket;
 using smsc::core::buffers::TmpBuf;
 using smsc::core::synchronization::Mutex;
 using smsc::logger::Logger;
+
+#define DFLT_BUF_SIZE 32
+//#define HTTP_CHUNK_SIZE 0x10000
 
 enum ActionID {
     NOP = -1,
@@ -117,22 +117,25 @@ public:
     int sslUserConnection(bool verify_client=false); //server mode connection
     int sslSiteConnection(bool verify_client=false); //client mode connection
     int sslCloseConnection(Socket* s);
+    bool useHttps(Socket* s);
     int sslReadPartial(Socket* s, const char* readBuf, const size_t readBufSize);
     int sslWritePartial(Socket* s, const char* data, const size_t toWrite);
+
 //    int sslReadMessage(Socket* s, const char* readBuf, const size_t readBufSize);
 //    int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
 //    int sslWriteCommand(Socket* s);
-    bool useHttps(void) { return sslOptions!=NULL; }
 
-    //tmp for debug
-    int sslCheckShutdown(void) { return (userSsl) ? SSL_get_shutdown(userSsl) : 0; }
+//temporary for debug info
+//    int sslCheckShutdown(void) { return (userSsl) ? SSL_get_shutdown(userSsl) : 0; }
+//    char* getUnparsed(void) { return unparsed.get(); }
+//    unsigned int unparsedLength() { return static_cast<unsigned int>(unparsed.GetPos()); }
+
     //for HttpReaderTask::Execute
-    char* getUnparsed(void) { return unparsed.get(); }
-    unsigned int unparsedLength() { return static_cast<unsigned int>(unparsed.GetPos()); }
     void appendUnparsed(char* buf, unsigned int len) { unparsed.Append(buf, len); }
+    //for HttpWriterTask::Execute
     void prepareData();
-    bool commandIsOver();
-    void getCommandAttr(const char* &data, unsigned int &size);
+    bool commandIsOver(Socket* s);
+    void getCommandAttr(Socket* s, const char* &data, unsigned int &size);
 
 public:
     Socket *user;
@@ -166,8 +169,6 @@ protected:
 	HttpsOptions* sslOptions;
     SSL*		userSsl;
     SSL*		siteSsl;
-    SSL_CTX*	userContext;
-    SSL_CTX*	siteContext;
     int sslCheckIoError(SSL* ssl, int ret);
     void sslLogErrors(void);
     SSL* sslCheckConnection(Socket* s);
