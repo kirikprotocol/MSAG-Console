@@ -56,7 +56,7 @@ public class MessagesRequest extends Request{
     this.owner = owner;
   }
 
-  public void copyFrom(MessagesRequestPrototype pr) {
+  void copyFrom(MessagesRequestPrototype pr) {
     this.address = pr.getAddress() == null ? null : new Address(pr.getAddress());
     this.from = pr.getFrom() == null ? null : new Date(pr.getFrom().getTime());
     this.till = pr.getTill() == null ? null : new Date(pr.getTill().getTime());
