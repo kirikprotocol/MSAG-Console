@@ -154,6 +154,8 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
           switch (value.getState()) {
             case Process:
             case New:
+            case Retry:
+            case Sent:
               break;
             default:
               w[0].print(value.getAbonent());
