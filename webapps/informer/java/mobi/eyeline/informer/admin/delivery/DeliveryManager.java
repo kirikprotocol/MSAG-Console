@@ -187,6 +187,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       int count = prepareResendFile(tmpFile, login, password, delivery, messageIdsFilter, null);
       if(count > 0) {
         resendFromFile(login, password, tmpFile, delivery, listener, count);
+        activateDelivery(login, password, delivery.getId());
       }
     }finally {
       try{
@@ -206,6 +207,7 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       int count = prepareResendFile(tmpFile, login, password, delivery, null, filter);
       if(count > 0) {
         resendFromFile(login, password, tmpFile, delivery, listener, count);
+        activateDelivery(login, password, delivery.getId());
       }
     }finally {
       try{
