@@ -17,8 +17,12 @@ import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -71,7 +75,9 @@ public class Gateway extends Thread implements PDUListener {
 
     private Calendar cal;
 
-    private static Hashtable<Integer, Data> table;
+    private static Hashtable<Integer, Data> recepts_table;
+
+    private static int recend_receipts_interval, recend_receipts_timeout, recend_receipts_max_timeout;
 
     public Gateway() throws SmppException, InitializationException{
 
@@ -96,7 +102,7 @@ public class Gateway extends Thread implements PDUListener {
         delivery_id_user_map = new Hashtable<Integer, String>();
         service_number_delivery_id_map = new Hashtable<Long, Integer>();
 
-        table = new Hashtable<Integer, Data>();
+        recepts_table = new Hashtable<Integer, Data>();
 
         System.setProperty("javax.xml.validation.SchemaFactory:http://www.w3.org/XML/XMLSchema/v1.1",
                            "org.apache.xerces.jaxp.validation.XMLSchema11Factory");
@@ -190,7 +196,7 @@ public class Gateway extends Thread implements PDUListener {
                             int sequence_number = resp.getSequenceNumber();
                             log.debug("DeliverSMResp: sequence_number="+sequence_number);
 
-                            Data data = table.get(sequence_number);
+                            Data data = recepts_table.get(sequence_number);
 
                             if (data != null){
 
@@ -203,7 +209,7 @@ public class Gateway extends Thread implements PDUListener {
                                         // todo ?
                                     }
 
-                                    table.remove(sequence_number);
+                                    recepts_table.remove(sequence_number);
                                     log.debug("Remove from memory: " + sequence_number);
 
                                 }
@@ -238,6 +244,54 @@ public class Gateway extends Thread implements PDUListener {
             log.error(e);
 
         }
+
+
+        // Initialize the scheduler that will resend delivery receipts to smpp clients.
+
+        String s = config.getProperty("resend.receipts.interval.sec");
+        if (s != null && !s.isEmpty()){
+            recend_receipts_interval = Integer.parseInt(s);
+            log.debug("Initialization parameter: resend_receipts_timeout="+recend_receipts_interval);
+        } else {
+            log.warn("Parameter 'resend.receipts.interval.sec' is not found or is empty, set default value to " + recend_receipts_interval + " seconds.");
+        }
+
+        s = config.getProperty("resend.receipts.timeout.sec");
+
+        if (s != null && !s.isEmpty()){
+            recend_receipts_timeout = Integer.parseInt(s);
+            log.debug("Initialization parameter: resend_receipts_timeout="+recend_receipts_timeout);
+        } else {
+            log.warn("Parameter 'resend.receipts.timeout.sec' is not found or is empty, set default value to " + recend_receipts_timeout + " seconds.");
+        }
+
+        s = config.getProperty("resend.receipts.max.timeout.min");
+
+        if (s != null && !s.isEmpty()){
+            recend_receipts_max_timeout = Integer.parseInt(s);
+            log.debug("Initialization parameter: resend_receipts_timeout="+recend_receipts_max_timeout);
+        } else {
+            log.warn("Parameter 'resend.receipts.max.timeout.min' is not found or is empty, set default value to " + recend_receipts_max_timeout + " minutes.");
+        }
+
+
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleWithFixedDelay(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    resendDeliveryReceipts();
+                } catch (SmppException e) {
+                    log.error(e);
+                    // todo ?
+                } catch (CouldNotWriteToJournalException e) {
+                    log.error(e);
+                    // todo ?
+                }
+            }
+
+        }, recend_receipts_timeout, recend_receipts_timeout, TimeUnit.SECONDS);
 
     }
 
@@ -343,12 +397,12 @@ public class Gateway extends Thread implements PDUListener {
 
             int sequence_number = delivery_receipt.getSequenceNumber();
 
-            long send_receipt_time = System.currentTimeMillis();
+            long first_sending_time = System.currentTimeMillis();
 
-            Data data = new Data(message_id, send_receipt_time);
+            Data data = new Data(message_id, first_sending_time, first_sending_time );
             journal.write(sequence_number, data, Status.SEND);
 
-            table.put(sequence_number, data);
+            recepts_table.put(sequence_number, data);
             log.debug("Remember to the memory: " + sequence_number+" --> " + data);
 
             log.debug("Try to send delivery receipt with message id '"+message_id+"' and sequence number '"+sequence_number);
@@ -358,5 +412,52 @@ public class Gateway extends Thread implements PDUListener {
         }
     }
 
+    public static void resendDeliveryReceipts() throws SmppException, CouldNotWriteToJournalException {
+        log.debug("Check receipts table to recent unanswered receipts ...");
+
+        long current_time = System.currentTimeMillis();
+
+        for (Map.Entry<Integer, Data> entry : recepts_table.entrySet()) {
+
+            int sequence_number = entry.getKey();
+            Data data = entry.getValue();
+            long last_resend_time = data.getLastResendTime();
+            long first_sending_time = data.getFirstSendingTime();
+            long message_id = data.getMessageId();
+            DateFormat df = DateFormat.getDateTimeInstance();
+
+            if (current_time - first_sending_time < recend_receipts_max_timeout*1000){
+
+                if (current_time - last_resend_time > recend_receipts_timeout*1000){
+
+                    synchronized (read_write_monitor){
+                        log.debug("sequence_number: "+sequence_number+", first sending time: "+first_sending_time+", last resending time: "+last_resend_time);
+                        Message rcpt = Manager.getInstance().getReceiptMessage(message_id);
+
+                        smppServer.send(rcpt);
+
+                        long send_receipt_time = System.currentTimeMillis();
+                        data.setLastResendTime(send_receipt_time);
+
+                        journal.write(sequence_number, data, Status.SEND);
+                    }
+
+                }
+
+            } else {
+
+                synchronized (read_write_monitor){
+                    log.debug("The maximum time of resending delivery receipt with sequence number " + sequence_number + " expired.");
+                    recepts_table.remove(sequence_number);
+                    journal.write(sequence_number, data, Status.DONE);
+                    log.debug("Remove deliver receipt data with sequence number "+sequence_number+" from memory and write to journal with status DONE.");
+                }
+
+            }
+
+        }
+
+        log.debug("Successfully done recent task.");
+    }
 
 }

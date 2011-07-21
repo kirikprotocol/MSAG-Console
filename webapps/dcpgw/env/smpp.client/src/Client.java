@@ -86,7 +86,7 @@ public class Client extends Thread implements PDUListener {
             case DeliverSM:
 
 
-                DeliverSM deliverSM = (DeliverSM) pdu;
+                /*DeliverSM deliverSM = (DeliverSM) pdu;
                 int sequence_number = deliverSM.getSequenceNumber();
                 logger.debug("Handle DeliverSM pdu with sequence number "+sequence_number);
 
@@ -98,7 +98,7 @@ public class Client extends Thread implements PDUListener {
                 } catch (SmppException e){
                     logger.error("Couldn't send DeliverSMResp.", e);
                     return false;
-                }
+                }*/
 
             case SubmitSMResp:
 
@@ -117,7 +117,7 @@ public class Client extends Thread implements PDUListener {
         try{
             final Client client = new Client();
 
-            scheduler.scheduleAtFixedRate(new Runnable() {
+            /*scheduler.scheduleAtFixedRate(new Runnable() {
 
                 @Override
                 public void run() {
@@ -141,9 +141,9 @@ public class Client extends Thread implements PDUListener {
                     client.handlePDU(submitSM);
                 }
 
-            }, 2, 2, TimeUnit.SECONDS);
+            }, 5, 5, TimeUnit.SECONDS); */
 
-            /*for(int i=0; i<2; i++){
+            for(int i=0; i<2; i++){
                 SubmitSM submitSM = new SubmitSM();
                 submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
                 submitSM.setConnectionName("env.client");
@@ -162,7 +162,7 @@ public class Client extends Thread implements PDUListener {
                 }
                 submitSM.setValidityPeriod(1000 * validity_period);
                 client.handlePDU(submitSM);
-            }*/
+            }
 
         } catch (SmppException e) {
             logger.error("", e);

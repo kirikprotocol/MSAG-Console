@@ -124,9 +124,12 @@ public class Journal {
     }
 
     public void write(int sequence_number, Data data, Status status) throws CouldNotWriteToJournalException {
-        cal.setTimeInMillis(data.getTime());
-        Date date = cal.getTime();
-        String s = df.format(date)+sep+ data.getMessageId()+sep+sequence_number+sep+status;
+        cal.setTimeInMillis(data.getFirstSendingTime());
+        Date first_sending_date = cal.getTime();
+        cal.setTimeInMillis(data.getLastResendTime());
+        Date last_resending_time = cal.getTime();
+        String s = df.format(first_sending_date) + sep + df.format(last_resending_time) + sep + data.getMessageId() +
+                   sep + sequence_number + sep + status;
 
         log.debug("Try to write to journal string: "+s);
 
@@ -190,132 +193,138 @@ public class Journal {
     public void cleanJournal() throws CouldNotCleanJournalException {
         log.debug("Try to clean journal ... ");
 
-        cleaned_file = new File(journal_dir, "journal_1.csv");
-        if (!cleaned_file.exists()){
+        if (current_file.exists()){
 
-            log.debug("Detected that cleaned journal file "+cleaned_file.getName()+" doesn't exist.");
+            cleaned_file = new File(journal_dir, "journal_1.csv");
+            if (!cleaned_file.exists()){
+
+                log.debug("Detected that cleaned journal file "+cleaned_file.getName()+" doesn't exist.");
+                try {
+                    if (cleaned_file.createNewFile()){
+                        log.debug("Successfully create cleaned journal file "+cleaned_file.getName());
+                    } else {
+                        log.warn("Couldn't create cleaned journal file "+cleaned_file.getName()+" because it already exists.");
+                    }
+                } catch (IOException e) {
+                    log.debug("Couldn't create cleaned file '"+cleaned_file.getName()+"'.");
+                    throw new CouldNotCleanJournalException(e);
+                }
+
+            }
+
             try {
-                if (cleaned_file.createNewFile()){
-                    log.debug("Successfully create cleaned journal file "+cleaned_file.getName());
+                appendFile(current_file, cleaned_file);
+            } catch (IOException e) {
+                log.error(e);
+                throw new CouldNotCleanJournalException("Couldn't append file '"+current_file.getName()+"' to another file '"+cleaned_file.getName()+"'.");
+            }
+
+            if (current_file.delete()){
+                log.debug("Successfully delete current file "+current_file.getName()+"'.");
+            } else {
+                log.error("Couldn't delete current journal file "+current_file.getName()+"'.");
+                throw new CouldNotCleanJournalException("Couldn't delete current journal file "+current_file.getName()+"'.");
+            }
+
+            File temp_journal = new File(journal_dir, cleaned_file.getName()+".tmp");
+            try {
+                if (temp_journal.createNewFile()){
+                    log.debug("Successfully create temporary cleaned journal file "+temp_journal.getName()+"'.");
                 } else {
-                    log.warn("Couldn't create cleaned journal file "+cleaned_file.getName()+" because it already exists.");
+                    log.warn("Couldn't create temporary cleaned journal file "+temp_journal.getName()+" because it already exists.");
                 }
             } catch (IOException e) {
-                log.debug("Couldn't create cleaned file '"+cleaned_file.getName()+"'.");
+                log.error(e);
+                throw new CouldNotCleanJournalException("Couldn't create temporary cleaned journal file.", e);
+            }
+
+            PrintWriter pw;
+            try {
+                pw = new PrintWriter(new FileWriter(temp_journal));
+            } catch (IOException e) {
+                log.error(e);
                 throw new CouldNotCleanJournalException(e);
             }
 
-        }
+            Set<Long> message_ids = new HashSet<Long>();
 
-        try {
-            appendFile(current_file, cleaned_file);
-        } catch (IOException e) {
-            log.error(e);
-            throw new CouldNotCleanJournalException("Couldn't append file '"+current_file.getName()+"' to another file '"+cleaned_file.getName()+"'.");
-        }
+            BufferedReader buffReader;
 
-        if (current_file.delete()){
-            log.debug("Successfully delete current file "+current_file.getName()+"'.");
-        } else {
-            log.error("Couldn't delete current journal file "+current_file.getName()+"'.");
-            throw new CouldNotCleanJournalException("Couldn't delete current journal file "+current_file.getName()+"'.");
-        }
+            try{
+                buffReader = new BufferedReader (new FileReader(cleaned_file));
+                String line;
+                while((line = buffReader.readLine()) != null){
+                    String[] ar = line.split(sep);
+                    long message_id = Long.parseLong(ar[2].trim());
+                    String status = ar[4].trim();
 
-        File temp_journal = new File(journal_dir, cleaned_file.getName()+".tmp");
-        try {
-            if (temp_journal.createNewFile()){
-                log.debug("Successfully create temporary cleaned journal file "+temp_journal.getName()+"'.");
-            } else {
-                log.warn("Couldn't create temporary cleaned journal file "+temp_journal.getName()+" because it already exists.");
-            }
-        } catch (IOException e) {
-            log.error(e);
-            throw new CouldNotCleanJournalException("Couldn't create temporary cleaned journal file.", e);
-        }
-
-        PrintWriter pw;
-        try {
-            pw = new PrintWriter(new FileWriter(temp_journal));
-        } catch (IOException e) {
-            log.error(e);
-            throw new CouldNotCleanJournalException(e);
-        }
-
-        Set<Long> message_ids = new HashSet<Long>();
-
-        BufferedReader buffReader;
-
-        try{
-            buffReader = new BufferedReader (new FileReader(cleaned_file));
-            String line;
-            while((line = buffReader.readLine()) != null){
-                String[] ar = line.split(sep);
-                long message_id = Long.parseLong(ar[1].trim());
-                String status = ar[3].trim();
-
-                if (status.equals(Status.DONE.toString())) {
-                    if (message_ids.add(message_id)){
-                        log.debug(message_id+"_message has DONE status, remember it.");
-                    } else {
-                        log.warn("Couldn't remember message with 'DONE' status because it's already added to the map. ");
+                    if (status.equals(Status.DONE.toString())) {
+                        if (message_ids.add(message_id)){
+                            log.debug(message_id+"_message has DONE status, remember it.");
+                        } else {
+                            log.warn("Couldn't remember message with 'DONE' status because it's already added to the map. ");
+                        }
                     }
                 }
+                buffReader.close();
+            } catch (IOException ioe){
+                log.error(ioe);
+                throw new CouldNotCleanJournalException(ioe);
             }
-            buffReader.close();
-        } catch (IOException ioe){
-            log.error(ioe);
-            throw new CouldNotCleanJournalException(ioe);
-        }
 
-        int counter = 0;
-        try{
-            buffReader = new BufferedReader (new FileReader(cleaned_file));
-            String line;
-            while((line = buffReader.readLine()) != null){
-                log.debug("line: "+line);
-                String[] ar = line.split(sep);
+            int counter = 0;
+            try{
+                buffReader = new BufferedReader (new FileReader(cleaned_file));
+                String line;
+                while((line = buffReader.readLine()) != null){
+                    log.debug("line: "+line);
+                    String[] ar = line.split(sep);
 
-                long message_id = Long.parseLong(ar[1].trim());
-                String status = ar[3].trim();
-                log.debug(message_id+"_message has "+status+" status, so try to write it to the temporary journal file "+temp_journal.getName());
+                    long message_id = Long.parseLong(ar[2].trim());
+                    String status = ar[4].trim();
+                    log.debug(message_id+"_message has "+status+" status, so try to write it to the temporary journal file "+temp_journal.getName());
 
-                if (!message_ids.contains(message_id)){
-                    pw.println(line);
-                    pw.flush();
-                    counter++;
+                    if (!message_ids.contains(message_id)){
+                        pw.println(line);
+                        pw.flush();
+                        counter++;
+                    }
+
                 }
-
+                buffReader.close();
+            } catch (IOException ioe){
+                log.error(ioe);
+                throw new CouldNotCleanJournalException(ioe);
+            } finally {
+                pw.close();
             }
-            buffReader.close();
-        } catch (IOException ioe){
-            log.error(ioe);
-            throw new CouldNotCleanJournalException(ioe);
-        } finally {
-            pw.close();
-        }
 
-        if (cleaned_file.delete()){
-            log.debug("Successfully delete cleaned file "+cleaned_file.getName()+"'.");
-        } else {
-            log.error("Couldn't delete cleaned journal file "+cleaned_file.getName()+"'.");
-            throw new CouldNotCleanJournalException("Couldn't delete cleaned journal file "+cleaned_file.getName()+"'.");
-        }
-
-        if (counter>0){
-            log.debug("Detected that temporary file isn't empty.");
-            if (temp_journal.renameTo(cleaned_file)){
-                log.debug("Successfully rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+            if (cleaned_file.delete()){
+                log.debug("Successfully delete cleaned file "+cleaned_file.getName()+"'.");
             } else {
-                log.error("Couldn't rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
-                throw new CouldNotCleanJournalException("Couldn't rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+                log.error("Couldn't delete cleaned journal file "+cleaned_file.getName()+"'.");
+                throw new CouldNotCleanJournalException("Couldn't delete cleaned journal file "+cleaned_file.getName()+"'.");
             }
-        } else {
-            log.debug("Detected that cleaned file is empty.");
-            if (temp_journal.delete()){
-                log.debug("Successfully delete temporary file '"+temp_journal.getName());
+
+            if (counter>0){
+                log.debug("Detected that temporary file isn't empty.");
+                if (temp_journal.renameTo(cleaned_file)){
+                    log.debug("Successfully rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+                } else {
+                    log.error("Couldn't rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+                    throw new CouldNotCleanJournalException("Couldn't rename temporary cleaned journal file '"+temp_journal.getName()+"' to file '"+cleaned_file.getName()+"'.");
+                }
             } else {
-                log.debug("Couldn't delete temporary file '"+temp_journal.getName());
+                log.debug("Detected that cleaned file is empty.");
+                if (temp_journal.delete()){
+                    log.debug("Successfully delete temporary file '"+temp_journal.getName());
+                } else {
+                    log.debug("Couldn't delete temporary file '"+temp_journal.getName());
+                }
             }
+
+        } else {
+            log.debug("There is not file "+current_file.getName()+", so nothing to clean.");
         }
 
         log.debug("Successfully clean journal.");
@@ -338,15 +347,27 @@ public class Journal {
                     scanner.useDelimiter(sep);
                     while (scanner.hasNextLine()){
                         String s = scanner.next();
-                        long time;
+                        long first_sending_time;
                         try {
                             Date date = df.parse(s);
                             cal.setTime(date);
-                            time = cal.getTimeInMillis();
+                            first_sending_time = cal.getTimeInMillis();
                         } catch (ParseException e) {
                             log.error(e);
                             throw new CouldNotLoadJournalException(e);
                         }
+
+                        s = scanner.next();
+                        long last_resending_time;
+                        try {
+                            Date date = df.parse(s);
+                            cal.setTime(date);
+                            last_resending_time = cal.getTimeInMillis();
+                        } catch (ParseException e){
+                            log.error(e);
+                            throw new CouldNotLoadJournalException(e);
+                        }
+
                         long message_id = scanner.nextLong();
                         int sequence_number = scanner.nextInt();
                         String status = scanner.next();
@@ -355,7 +376,7 @@ public class Journal {
                             table.remove(sequence_number);
                             log.debug("Remove from memory: "+sequence_number);
                         } else {
-                            Data data = new Data(message_id, time);
+                            Data data = new Data(message_id, first_sending_time, last_resending_time);
                             table.put(sequence_number, data);
                             log.debug("Write in memory: "+sequence_number+" --> "+ data.toString());
                         }
