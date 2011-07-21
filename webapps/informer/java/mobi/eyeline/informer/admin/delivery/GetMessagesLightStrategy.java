@@ -154,25 +154,4 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
       return connection.getNextMessages(reqId, pieceSize, result);
     }
   }
-
-  public static void main(String... args) throws AdminException {
-    DcpConnection conn = new DcpConnection("silverstone", 9573, "artem", "laefeeza1");
-    GetMessagesLightStrategy s = new GetMessagesLightStrategy("resend");
-    MessageFilter f = new MessageFilter(1245, new Date(System.currentTimeMillis() - 3600 * 1000 * 24), new Date());
-    f.setMsisdnFilter("+79139495113");
-
-    final AtomicInteger count = new AtomicInteger(0);
-
-    long start = System.currentTimeMillis();
-    s.getMessages(conn, f, 1000, new Visitor<Message>() {
-      public boolean visit(Message value) throws AdminException {
-        count.incrementAndGet();
-        return false;
-      }
-    });
-
-    long totalTime =(System.currentTimeMillis() - start);
-    System.out.println(totalTime + " ms.");
-    conn.close();
-  }
 }
