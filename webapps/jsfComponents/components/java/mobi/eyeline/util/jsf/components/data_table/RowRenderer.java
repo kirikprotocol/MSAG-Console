@@ -39,7 +39,7 @@ public class RowRenderer extends Renderer {
 
       w.append("\n<tr class=\"eyeline_row" + (rowNumber & 1) + "\" id=\"" + t.getId() + rowId + "\">");
       if (t.isSelection())
-        w.append("\n  <td align=\"center\"><input "+ (
+     w.append("\n  <td align=\"center\"><input "+ (
             (t.isSelectAll() && !t.isSelected(rowId)) || (!t.isSelectAll() && t.isSelected(rowId)) ? "CHECKED" : "") +
             ((t.isShowSelectedOnly()) ? " disabled=\"true\"" : "") +
             " onclick=\"changeSelect(this.checked, '"+rowId+"', '"+t.getId()+"')\" class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");

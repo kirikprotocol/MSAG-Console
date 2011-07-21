@@ -167,13 +167,13 @@ public class DataTableRenderer extends Renderer {
         w.append("<table id=\"select_all_button_"+t.getId()+"\" class=\"select_all_button\"><tr><td>");
       }
 
-      w.append("<div id=\"" + t.getId() + "_check\" src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"select_page\" selectpage=\"\" " +
+      w.append("<div id=\"" + t.getId() + "_check\" class=\"select_page\" selectpage=\"\" " +
           "onclick=\"changeSelectAllPage(this, '"+t.getId()+"');\">&nbsp;</div>");
 
 
       if(!t.isDisallowSelectAll() && !t.isShowSelectedOnly()) {
         w.append("</td><td>");
-        w.append("<img clicked=\"0\" style=\"cursor: pointer;\" id=\"" + t.getId() + "_check_all\" src=\"" + ctxPath + "/images/list_opened_center.gif\" class=\"ico16\" onclick=\"" +
+        w.append("<div clicked=\"0\" style=\"cursor: pointer;\" id=\"" + t.getId() + "_check_all\" class=\"select_all_button\" onclick=\"" +
             "    var itemsElm = document.getElementById('select_all_content"+t.getId()+"');" +
             "    var main = document.getElementById('select_all_"+t.getId()+"');" +
             "    var button = document.getElementById('select_all_button_"+t.getId()+"');" +
@@ -185,7 +185,7 @@ public class DataTableRenderer extends Renderer {
             "    itemsElm.style.visibility = 'hidden';\n" +
             "    this.setAttribute('clicked', '0');" +
             "    button.className='select_all_button';" +
-            "}"+"\"/>");
+            "}"+"\">&nbsp;</div");
         w.append("</td></tr></table>");
         w.append(
             "<div id=\"select_all_content"+t.getId()+"\" class=\"select_all_content\"" +
@@ -330,7 +330,7 @@ public class DataTableRenderer extends Renderer {
     w.append("<table id=\""+t.getId()+"_progress\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
         .append("<div style=\"margin-top:auto;margin-bottom:auto;\">" +
             "<table style=\"width:0%\"><tr>"+
-            "<td><img  src=\"" + ctxPath + "/images/loading.gif\" alt=\"\"/></td>" +
+            "<td><div class=\"eyeline_loading\" alt=\"\">&nbsp;</div></td>" +
             "<td><span style=\"font-size:15px\" id=\"" + t.getId() + "_progress_content\"></span></td>" +
             "</tr></table>"+
             "</div>")
@@ -389,9 +389,9 @@ public class DataTableRenderer extends Renderer {
 
     if (rowsCount > t.getPageSize()) {
 
-      w.append("<td class=\"eyeline_first\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(0)\"><img src=\"" + ctxPath + "/images/nav_first.gif\" width=\"12\" height=\"11\"/></a></td>");
+      w.append("<td class=\"eyeline_first\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(0)\"><div class=\"eyeline_first\">&nbsp;</div></a></td>");
       if (t.getCurrentPage() > 0)
-        w.append("<td class=\"eyeline_prev\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"/></a></td>");
+        w.append("<td class=\"eyeline_prev\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><div class=\"eyeline_prev\">&nbsp;</div></a></td>");
 
       int numberOfPages = rowsCount / t.getPageSize();
       if (t.getPageSize() * numberOfPages == rowsCount)
@@ -404,9 +404,9 @@ public class DataTableRenderer extends Renderer {
         w.append("<td class=\"eyeline_" + (i == t.getCurrentPage() ? "current" : "page") + "\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + i + ")\">" + (i + 1) + "</a></td>");
 
       if (t.getCurrentPage() < numberOfPages)
-        w.append("<td class=\"eyeline_next\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() + 1) + ")\"><img src=\"" + ctxPath + "/images/nav_next.gif\" width=\"12\" height=\"11\"/></a></td>");
+        w.append("<td class=\"eyeline_next\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() + 1) + ")\"><div class=\"eyeline_next\">&nbsp;</div></a></td>");
 
-      w.append("<td class=\"eyeline_last\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + numberOfPages + ")\"><img src=\"" + ctxPath + "/images/nav_last.gif\" width=\"12\" height=\"11\"/></a></td>");
+      w.append("<td class=\"eyeline_last\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + numberOfPages + ")\"><div class=\"eyeline_last\">&nbsp;</div></a></td>");
     }
 
     ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
