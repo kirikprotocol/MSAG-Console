@@ -62,7 +62,7 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
 
     loadResended(conn, filter.getDeliveryId(), _pieceSize);
 
-    visitMessages(conn, filter, _pieceSize, new Visitor<Message>() {
+    visitMessages(conn, filter, new Visitor<Message>() {
       @Override
       public boolean visit(Message _m) throws AdminException {
         if(resended.contains(_m.getId())) {
@@ -73,7 +73,7 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
         }
         return visitor.visit(_m);
       }
-    });
+    }, MessageField.values());
   }
 
   @Override
@@ -87,7 +87,7 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
 
     final int[] result = new int[]{0};
 
-    visitMessages(conn, filter, 1000, new Visitor<Message>() {
+    visitMessages(conn, filter, new Visitor<Message>() {
       @Override
       public boolean visit(Message _m) throws AdminException {
         if(filter.isNoResended() && resended.contains(_m.getId())) {
@@ -96,18 +96,18 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
         result[0]++;
         return true;
       }
-    });
+    }, new MessageField[0]);
     return result[0];
   }
 
 
-  private void visitMessages(DcpConnection conn, final MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+  private void visitMessages(DcpConnection conn, final MessageFilter filter, Visitor<Message> visitor, MessageField ... fields) throws AdminException {
     long now = System.currentTimeMillis();
     try{
       if(logger.isDebugEnabled()) {
         logger.debug("Visit messages: id="+filter.getDeliveryId());
       }
-      int _reqId = conn.getMessagesWithFields(filter, MessageField.State);
+      int _reqId = conn.getMessagesWithFields(filter, fields);
       new VisitorHelperImpl(1000, _reqId, conn).visit(visitor);
     }finally {
       if(logger.isDebugEnabled()) {

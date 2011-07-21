@@ -91,7 +91,7 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
         }
         return true;
       }
-    });
+    }, MessageField.values());
   }
 
   @Override
@@ -118,18 +118,18 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
         }
         return true;
       }
-    });
+    }, MessageField.State);
     return result[0];
   }
 
-  private void visitMessages(DcpConnection conn, final MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+  private void visitMessages(DcpConnection conn, final MessageFilter filter, int _pieceSize, Visitor<Message> visitor, MessageField ... fields) throws AdminException {
     loadStatesAndResended(conn, filter.getDeliveryId(), _pieceSize);
     long now = System.currentTimeMillis();
     try{
       if(logger.isDebugEnabled()) {
         logger.debug("Visit messages: id="+filter.getDeliveryId());
       }
-      int _reqId = conn.getMessages(filter);
+      int _reqId = conn.getMessagesWithFields(filter, fields);
       new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(visitor);
     }finally {
       if(logger.isDebugEnabled()) {

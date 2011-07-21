@@ -335,7 +335,7 @@ class DcpConnection {
       req.setEndDate(convertDateToDcpFormat(filter.getEndDate()));
       req.setStartDate(convertDateToDcpFormat(filter.getStartDate()));
 
-      if(fields != null && fields.length>0) {
+      if(fields != null) {
         ReqField[] fs = new ReqField[fields.length];
         for(int i=0;i<fields.length;i++) {
           fs[i] = ReqField.valueOf(fields[i].toString());

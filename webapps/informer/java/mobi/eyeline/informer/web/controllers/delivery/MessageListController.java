@@ -449,6 +449,11 @@ public class MessageListController extends InformerController {
     private class ResendListenerImpl implements ResendListener {
       @Override
       public void resended(long messageId, int totalSize) {
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         resended++;
         resendTotal = totalSize;
       }
