@@ -156,11 +156,17 @@ public class MessageListController extends InformerController {
   }
 
   public int getResendCurrent() {
-    return thread != null ? thread.resended : 0;
+    if(thread == null) {
+      return 0;
+    }else if(thread.finished && thread.resendTotal == 0) {
+      return Integer.MAX_VALUE;
+    }else {
+      return thread.resended;
+    }
   }
 
   public int getResendTotal() {
-    return thread != null ? thread.resendTotal : Integer.MAX_VALUE;
+    return thread == null || thread.resendTotal == 0 ? Integer.MAX_VALUE : thread.resendTotal;
   }
 
   private void loadDeliveryOptions() {
@@ -400,7 +406,7 @@ public class MessageListController extends InformerController {
 
     private int deliveryId;
 
-    private int resendTotal = Integer.MAX_VALUE;
+    private int resendTotal = 0;
 
     private final MessageFilter filter;
 
@@ -447,6 +453,11 @@ public class MessageListController extends InformerController {
     private class ResendListenerImpl implements ResendListener {
       @Override
       public void resended(long messageId, int totalSize) {
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         resended++;
         resendTotal = totalSize;
       }
