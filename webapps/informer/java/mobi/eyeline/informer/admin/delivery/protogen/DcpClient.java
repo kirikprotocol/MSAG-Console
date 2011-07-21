@@ -21,16 +21,14 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class DcpClient extends SyncProtogenConnection {
 
-  private static final Logger log = Logger.getLogger(DcpClient.class);
-
   public static final int RESPONSE_TIMEOUT = 30000;
 
   private final Lock lock = new ReentrantLock();
   private final String login;
   private final String password;
 
-  public DcpClient(String host, int port, String login, String password) {
-    super(host, port, RESPONSE_TIMEOUT);
+  public DcpClient(String host, int port, String login, String password, Logger log) {
+    super(host, port, RESPONSE_TIMEOUT, log);
     this.login = login;
     this.password = password;
   }

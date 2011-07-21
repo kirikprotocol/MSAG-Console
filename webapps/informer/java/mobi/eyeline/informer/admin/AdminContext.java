@@ -976,13 +976,13 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     monitoringJournal.visit(eventsFilter,v);
   }
 
-  public int resend(String login, int deliveryId, Collection<Long> messageIdsFilter) throws AdminException {
+  public void resend(String login, int deliveryId, Collection<Long> messageIdsFilter, ResendListener listener) throws AdminException {
     User u = getUser(login);
-    return deliveryManager.resend(login, u.getPassword(), deliveryId, messageIdsFilter);
+    deliveryManager.resend(login, u.getPassword(), deliveryId, messageIdsFilter, listener);
   }
 
-  public int resendAll(String login, int deliveryId, MessageFilter filter) throws AdminException {
+  public void resendAll(String login, int deliveryId, MessageFilter filter, ResendListener listener) throws AdminException {
     User u = getUser(login);
-    return deliveryManager.resendAll(login, u.getPassword(), deliveryId, filter);
+    deliveryManager.resendAll(login, u.getPassword(), deliveryId, filter, listener);
   }
 }

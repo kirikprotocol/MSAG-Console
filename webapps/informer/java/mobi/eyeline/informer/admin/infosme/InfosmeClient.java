@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.protogen.ResponseWaitTimeoutException;
 import mobi.eyeline.informer.admin.protogen.ServerOfflineException;
 import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
 import mobi.eyeline.protogen.framework.PDU;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
@@ -16,8 +17,8 @@ class InfosmeClient extends SyncProtogenConnection {
 
   private static final int RESPONSE_TIMEOUT = 30000;
 
-  InfosmeClient(String host, int port) {
-    super(host, port, RESPONSE_TIMEOUT);
+  InfosmeClient(String host, int port, Logger logger) {
+    super(host, port, RESPONSE_TIMEOUT, logger);
   }
 
   protected void onConnect() throws IOException {

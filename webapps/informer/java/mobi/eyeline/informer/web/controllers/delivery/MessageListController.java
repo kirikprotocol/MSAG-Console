@@ -1,10 +1,7 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.Message;
-import mobi.eyeline.informer.admin.delivery.MessageFilter;
-import mobi.eyeline.informer.admin.delivery.Visitor;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
@@ -314,7 +311,7 @@ public class MessageListController extends InformerController {
       writer.println("Abonent;Date;Text;State;Resended;ErrorCode;");
       visit(new Visitor<Message>() {
         public boolean visit(Message value) throws AdminException {
-          writer.println(StringEncoderDecoder.toCSVString(';',value.getAbonent().getSimpleAddress(), sdf.format(value.getDate()), value.getText(),
+          writer.println(StringEncoderDecoder.toCSVString(';', value.getAbonent().getSimpleAddress(), sdf.format(value.getDate()), value.getText(),
               value.getState().toString(), Boolean.valueOf(value.isResended()), value.getErrorCode() == null ? "" : value.getErrorCode().toString()
           ));
           return true;
@@ -431,9 +428,9 @@ public class MessageListController extends InformerController {
         }
 
         if(sld != null) {
-          resended = config.resend(u.getLogin(), deliveryId, sld);
+          config.resend(u.getLogin(), deliveryId, sld, new ResendListenerImpl());
         }else {
-          resended = config.resendAll(u.getLogin(), deliveryId, filter);
+          config.resendAll(u.getLogin(), deliveryId, filter, new ResendListenerImpl());
         }
 
         resendCurrent = resendTotal;
@@ -446,6 +443,14 @@ public class MessageListController extends InformerController {
         error = bundle.getString("internal.error");
       } finally {
         finished = true;
+      }
+    }
+
+    private class ResendListenerImpl implements ResendListener {
+      @Override
+      public void resended(long messageId, int totalSize) {
+        resended++;
+        resendTotal = totalSize;
       }
     }
 

@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
+import org.apache.log4j.Logger;
 
 /**
  * Администрирование Informer
@@ -12,8 +13,10 @@ public class InfosmeImpl implements Infosme {
 
   private final InfosmeClient client;
 
+  private static final Logger logger = Logger.getLogger("ADMIN");
+
   public InfosmeImpl(String host, int port) {
-    this.client = new InfosmeClient(host, port);
+    this.client = new InfosmeClient(host, port, logger);
   }
 
   protected void checkResponse(int status) throws InfosmeException {

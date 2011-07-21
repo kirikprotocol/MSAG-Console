@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import org.apache.log4j.Logger;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,13 +20,15 @@ class DcpConnection {
 
   private DcpClient client;
 
+  private static final Logger logger = Logger.getLogger("DCP");
+
   /**
    * Таймаут в секундах. Информер будет собирать следующий кусок списка либо подсчёта сообщений или рассылок до тех пор, пока не наберет pieceSize или пока не истечет timeout
    */
   private int timeoutSec = 2*DcpClient.RESPONSE_TIMEOUT/3/1000;
 
   public DcpConnection(String host, int port, final String login, String password) throws AdminException {
-    this.client = new DcpClient(host, port, login, password);
+    this.client = new DcpClient(host, port, login, password, logger);
   }
 
   protected DcpConnection() {

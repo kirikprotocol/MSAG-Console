@@ -616,12 +616,12 @@ public class Configuration {
     journal.logDeliveryArchivated(login, d);
   }
 
-  public int resend(String login, int deliveryId, Collection<Long> messageIdsFilter) throws AdminException {
-    return context.resend(login, deliveryId, messageIdsFilter);
+  public void resend(String login, int deliveryId, Collection<Long> messageIdsFilter, ResendListener listener) throws AdminException {
+    context.resend(login, deliveryId, messageIdsFilter, listener);
   }
 
-  public int resendAll(String login, int deliveryId, MessageFilter filter) throws AdminException {
-    return context.resendAll(login, deliveryId, filter);
+  public void resendAll(String login, int deliveryId, MessageFilter filter, ResendListener listener) throws AdminException {
+    context.resendAll(login, deliveryId, filter, listener);
   }
 
   public enum ConfigType {

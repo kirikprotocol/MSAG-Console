@@ -177,16 +177,15 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
   }
 
 
-  public int resend(String login, String password, int deliveryId, final Collection<Long> messageIdsFilter) throws AdminException {
+  public void resend(String login, String password, int deliveryId, final Collection<Long> messageIdsFilter, final ResendListener listener) throws AdminException {
 
     final Delivery delivery = getDelivery(login, password, deliveryId);
     File tmpFile = new File(workDir,"resend_"+delivery.getId()+'_'+System.currentTimeMillis()+".tmp");
     try{
       int count = prepareResendFile(tmpFile, login, password, delivery, messageIdsFilter, null);
       if(count > 0) {
-        resendFromFile(login, password, tmpFile, delivery);
+        resendFromFile(login, password, tmpFile, delivery, listener, count);
       }
-      return count;
     }finally {
       try{
         if(fs.exists(tmpFile)) {
@@ -197,14 +196,15 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   }
 
-  public int resendAll(String login, String password, int deliveryId, final MessageFilter filter) throws AdminException {
+  public void resendAll(String login, String password, int deliveryId, final MessageFilter filter,final ResendListener listener) throws AdminException {
 
     final Delivery delivery = getDelivery(login, password, deliveryId);
     File tmpFile = new File(workDir,"resend_"+delivery.getId()+'_'+System.currentTimeMillis()+".tmp");
     try{
       int count = prepareResendFile(tmpFile, login, password, delivery, null, filter);
-      resendFromFile(login, password, tmpFile, delivery);
-      return count;
+      if(count > 0) {
+        resendFromFile(login, password, tmpFile, delivery, listener, count);
+      }
     }finally {
       try{
         if(fs.exists(tmpFile)) {
@@ -217,43 +217,50 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   private static final String RESEND_PROPERTY = "rs";
 
-  private void resendFromFile(String login, String password, File file, Delivery delivery) throws AdminException{
+  private void resendFromFile(String login, String password, File file, Delivery delivery, final ResendListener listener, final int totalCount) throws AdminException{
     final BufferedReader[] r = new BufferedReader[]{null};
     try {
       r[0] = new BufferedReader(new InputStreamReader(fs.getInputStream(file)));
       if (delivery.getSingleText() == null) {
         addIndividualMessages(login, password, new DataSource<Message>() {
           public Message next() throws AdminException {
+            Message m;
             try {
               String line = r[0].readLine();
               if (line == null) {
                 return null;
               }
               String[] s = line.split(",", 3);
-              Message m = Message.newMessage(new Address(s[0]), StringEncoderDecoder.csvDecode(s[1]));
+              m = Message.newMessage(new Address(s[0]), StringEncoderDecoder.csvDecode(s[1]));
               m.setProperty(RESEND_PROPERTY, s[2]);
+              if(listener != null) {
+                listener.resended(Long.parseLong(s[2]), totalCount);
+              }
               return m;
+
             } catch (IOException e) {
-              e.printStackTrace();
-              return null;
+              throw new DeliveryException("interaction_error");
             }
           }
         }, delivery.getId());
       } else {
         addSingleTextMessagesWithData(login, password, new DataSource<Message>() {
           public Message next() throws AdminException {
+            Message m;
             try {
               String line = r[0].readLine();
               if (line == null) {
                 return null;
               }
               String[] s = line.split(",", 2);
-              Message m = Message.newMessage(new Address(s[0]), null);
+              m = Message.newMessage(new Address(s[0]), null);
               m.setProperty(RESEND_PROPERTY, s[1]);
+              if(listener != null) {
+                listener.resended(Long.parseLong(s[1]), totalCount);
+              }
               return m;
             } catch (IOException e) {
-              e.printStackTrace();
-              return null;
+              throw new DeliveryException("interaction_error");
             }
           }
         }, delivery.getId());

@@ -34,15 +34,18 @@ public abstract class SyncProtogenConnection {
   private InputStream is;
   private OutputStream os;
 
-  protected SyncProtogenConnection(String host, int port, int timeout, int connectTimeout) {
+  protected final Logger log;
+
+  protected SyncProtogenConnection(String host, int port, int timeout, int connectTimeout, Logger log) {
     this.host = host;
     this.port = port;
     this.timeout = timeout;
     this.connectTimeout = connectTimeout;
+    this.log = log;
   }
 
-  protected SyncProtogenConnection(String host, int port, int timeout) {
-    this(host, port, timeout, DEFAULT_CONNECT_TIMEOUT);
+  protected SyncProtogenConnection(String host, int port, int timeout, Logger log) {
+    this(host, port, timeout, DEFAULT_CONNECT_TIMEOUT, log);
   }
 
   public String getHost() {
