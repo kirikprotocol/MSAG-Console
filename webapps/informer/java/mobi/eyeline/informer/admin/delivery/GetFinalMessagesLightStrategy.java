@@ -24,7 +24,7 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
     this.resendProperty = resendProperty;
   }
 
-  private void loadResended(DcpConnection conn, int deliveryId, int _pieceSize) throws AdminException {
+  private void loadResended(MessageFilter initialFilter, DcpConnection conn, int deliveryId, int _pieceSize) throws AdminException {
     long now = System.currentTimeMillis();
     try{
       if(logger.isDebugEnabled()) {
@@ -35,6 +35,8 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
 
       MessageFilter filter = new MessageFilter(d.getId(), d.getCreateDate(), d.getEndDate() != null ? d.getEndDate() : new Date(System.currentTimeMillis()+(24*60*60*1000)));
       filter.setStates(MessageState.New);
+      filter.setMsisdnFilter(initialFilter.getMsisdnFilter());
+      filter.setErrorCodes(initialFilter.getErrorCodes());
 
       int _reqId = conn.getMessagesWithFields(filter, MessageField.UserData, MessageField.State);
       new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message>() {
@@ -60,7 +62,7 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
       logger.debug("Get messages for delivery: id="+filter.getDeliveryId());
     }
 
-    loadResended(conn, filter.getDeliveryId(), _pieceSize);
+    loadResended(filter, conn, filter.getDeliveryId(), _pieceSize);
 
     visitMessages(conn, filter, new Visitor<Message>() {
       @Override
@@ -82,7 +84,7 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
       logger.debug("Count messages for delivery: id="+filter.getDeliveryId());
     }
     if(filter.isNoResended()) {
-      loadResended(conn, filter.getDeliveryId(), 1000);
+      loadResended(filter, conn, filter.getDeliveryId(), 1000);
     }
 
     final int[] result = new int[]{0};

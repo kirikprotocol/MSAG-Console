@@ -1,12 +1,14 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -39,15 +41,20 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
     states[id] = element;
   }
 
-  private void loadStatesAndResended(DcpConnection conn, int deliveryId, int _pieceSize) throws AdminException {
+  private void loadStatesAndResended(MessageFilter filter, DcpConnection conn, int deliveryId, int _pieceSize) throws AdminException {
     long now = System.currentTimeMillis();
     try{
       if(logger.isDebugEnabled()) {
         logger.debug("Load states and resended: id="+deliveryId);
       }
       Delivery d = conn.getDelivery(deliveryId);
-      MessageFilter emptyFilter = new MessageFilter(d.getId(), d.getCreateDate(), d.getEndDate() != null ? d.getEndDate() : new Date(System.currentTimeMillis()+(24*60*60*1000)));
+      MessageFilter emptyFilter = new MessageFilter(filter);
+      emptyFilter.setStartDate(d.getCreateDate());
+      emptyFilter.setEndDate(d.getEndDate() != null ? d.getEndDate() : new Date(System.currentTimeMillis()+(24*60*60*1000)));
+      emptyFilter.setStates();
+
       int _reqId = conn.getMessagesWithFields(emptyFilter, MessageField.UserData, MessageField.State);
+
       new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message>() {
         @Override
         public boolean visit(Message _m) throws AdminException {
@@ -123,7 +130,7 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
   }
 
   private void visitMessages(DcpConnection conn, final MessageFilter filter, int _pieceSize, Visitor<Message> visitor, MessageField ... fields) throws AdminException {
-    loadStatesAndResended(conn, filter.getDeliveryId(), _pieceSize);
+    loadStatesAndResended(filter, conn, filter.getDeliveryId(), _pieceSize);
     long now = System.currentTimeMillis();
     try{
       if(logger.isDebugEnabled()) {
@@ -138,7 +145,6 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
     }
   }
 
-
   private class VisitorHelperImpl extends VisitorHelper<Message> {
     VisitorHelperImpl(int pieceSize, int reqId, DcpConnection dcpConnection) {
       super(pieceSize, reqId, dcpConnection);
@@ -147,5 +153,26 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
     protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Message> result) throws AdminException {
       return connection.getNextMessages(reqId, pieceSize, result);
     }
+  }
+
+  public static void main(String... args) throws AdminException {
+    DcpConnection conn = new DcpConnection("silverstone", 9573, "artem", "laefeeza1");
+    GetMessagesLightStrategy s = new GetMessagesLightStrategy("resend");
+    MessageFilter f = new MessageFilter(1245, new Date(System.currentTimeMillis() - 3600 * 1000 * 24), new Date());
+    f.setMsisdnFilter("+79139495113");
+
+    final AtomicInteger count = new AtomicInteger(0);
+
+    long start = System.currentTimeMillis();
+    s.getMessages(conn, f, 1000, new Visitor<Message>() {
+      public boolean visit(Message value) throws AdminException {
+        count.incrementAndGet();
+        return false;
+      }
+    });
+
+    long totalTime =(System.currentTimeMillis() - start);
+    System.out.println(totalTime + " ms.");
+    conn.close();
   }
 }
