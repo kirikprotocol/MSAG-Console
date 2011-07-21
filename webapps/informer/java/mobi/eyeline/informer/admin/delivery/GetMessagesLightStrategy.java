@@ -3,7 +3,10 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import org.apache.log4j.Logger;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -35,19 +38,6 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
       states = extendArray(states, id + 1000);
     states[id] = element;
   }
-
-  private EnumMap<MessageState, Object> buildStatesMap(MessageFilter filter) {
-    final EnumMap<MessageState, Object> statesMap = new EnumMap<MessageState, Object>(MessageState.class);
-    if (filter.getStates() != null) {
-      for (MessageState s : filter.getStates())
-        statesMap.put(s, null);
-    } else {
-      for (MessageState s : MessageState.values())
-        statesMap.put(s, null);
-    }
-    return statesMap;
-  }
-
 
   private void loadStatesAndResended(DcpConnection conn, int deliveryId, int _pieceSize) throws AdminException {
     long now = System.currentTimeMillis();
@@ -81,97 +71,69 @@ public class GetMessagesLightStrategy implements GetMessagesStrategy{
     if(logger.isDebugEnabled()) {
       logger.debug("Get messages for delivery: id="+filter.getDeliveryId());
     }
-
-    loadStatesAndResended(conn, filter.getDeliveryId(), _pieceSize);
-
-    final EnumMap<MessageState, Object> statesMap = buildStatesMap(filter);
-
-    final MessageFilter filterWOState = new MessageFilter(filter);
-    filterWOState.setStates(new MessageState[0]);
-
-
-    long now = System.currentTimeMillis();
-    try{
-      if(logger.isDebugEnabled()) {
-        logger.debug("Process messages: id="+filter.getDeliveryId());
-      }
-      int _reqId = conn.getMessages(filterWOState);
-      new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message>() {
-        @Override
-        public boolean visit(Message _m) throws AdminException {
-          if(resended.contains(_m.getId())) {
-            _m.setResended(true);
-          }
-          if(filterWOState.isNoResended() && _m.isResended()) {
-            return true;
-          }
-          int id = (int)_m.getId().longValue();
-          if(states.length<=id) {
-            return true;
-          }
-          MessageState realState = states[id];
-          if(realState != null && realState == _m.getState()) {
-            if(statesMap.containsKey(realState)) {
-              states[id] = null;         // message is processed, remove it from array
-              return visitor.visit(_m);
-            }
-          }
+    visitMessages(conn, filter, _pieceSize, new Visitor<Message>() {
+      @Override
+      public boolean visit(Message _m) throws AdminException {
+        if(resended.contains(_m.getId())) {
+          _m.setResended(true);
+        }
+        if(filter.isNoResended() && _m.isResended()) {
           return true;
         }
-      });
-    }finally {
-      if(logger.isDebugEnabled()) {
-        logger.debug("Processing is completed (id="+filter.getDeliveryId()+"). Time="+(System.currentTimeMillis() - now)+"ms");
+        int id = (int)_m.getId().longValue();
+        if(states.length<=id) {
+          return true;
+        }
+        MessageState realState = states[id];
+        if(realState != null && realState == _m.getState()) {
+          states[id] = null;         // message is processed, remove it from array
+          return visitor.visit(_m);
+        }
+        return true;
       }
-
-    }
+    });
   }
 
   @Override
-  public int countMessages(DcpConnection conn, MessageFilter filter) throws AdminException {
+  public int countMessages(DcpConnection conn, final MessageFilter filter) throws AdminException {
     if(logger.isDebugEnabled()) {
       logger.debug("Count messages for delivery: id="+filter.getDeliveryId());
     }
+    final int[] result = new int[]{0};
 
-    loadStatesAndResended(conn, filter.getDeliveryId(), 1000);
+    visitMessages(conn, filter, 1000, new Visitor<Message>() {
+      @Override
+      public boolean visit(Message _m) throws AdminException {
+        if (filter.isNoResended() && resended.contains(_m.getId())) {
+          return true;
+        }
+        int id = (int) _m.getId().longValue();
+        if (states.length <= id) {
+          return true;
+        }
+        MessageState realState = states[id];
+        if (realState != null && realState == _m.getState()) {
+          states[id] = null;       // message is processed, remove it from array
+          result[0]++;
+        }
+        return true;
+      }
+    });
+    return result[0];
+  }
 
-    final EnumMap<MessageState, Object> statesMap = buildStatesMap(filter);
-
-    final MessageFilter filterWOState = new MessageFilter(filter);
-    filterWOState.setStates(new MessageState[0]);
-
+  private void visitMessages(DcpConnection conn, final MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+    loadStatesAndResended(conn, filter.getDeliveryId(), _pieceSize);
     long now = System.currentTimeMillis();
     try{
       if(logger.isDebugEnabled()) {
-        logger.debug("Process messages: id="+filter.getDeliveryId());
+        logger.debug("Visit messages: id="+filter.getDeliveryId());
       }
-      int _reqId = conn.getMessagesWithFields(filterWOState, MessageField.State);
-      final int[] result = new int[]{0};
-
-      new VisitorHelperImpl(1000, _reqId, conn).visit(new Visitor<Message>() {
-        @Override
-        public boolean visit(Message _m) throws AdminException {
-          if(filterWOState.isNoResended() && resended.contains(_m.getId())) {
-            return true;
-          }
-          int id = (int)_m.getId().longValue();
-          if(states.length<=id) {
-            return true;
-          }
-          MessageState realState = states[id];
-          if(realState != null && realState == _m.getState()) {
-            if(statesMap.containsKey(realState)) {
-              states[id] = null;       // message is processed, remove it from array
-              result[0]++;
-            }
-          }
-          return true;
-        }
-      });
-      return result[0];
+      int _reqId = conn.getMessages(filter);
+      new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(visitor);
     }finally {
       if(logger.isDebugEnabled()) {
-        logger.debug("Processing is completed (id="+filter.getDeliveryId()+"). Time="+(System.currentTimeMillis() - now)+"ms");
+        logger.debug("Visiting is completed (id="+filter.getDeliveryId()+"). Time="+(System.currentTimeMillis() - now)+"ms");
       }
     }
   }

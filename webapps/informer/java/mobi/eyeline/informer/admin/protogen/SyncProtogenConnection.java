@@ -20,7 +20,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class SyncProtogenConnection {
 
-  private static final Logger logger = Logger.getLogger(SyncProtogenConnection.class);
   private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
 
   private final Lock sendLock = new ReentrantLock();
@@ -34,18 +33,18 @@ public abstract class SyncProtogenConnection {
   private InputStream is;
   private OutputStream os;
 
-  protected final Logger log;
+  protected final Logger logger;
 
-  protected SyncProtogenConnection(String host, int port, int timeout, int connectTimeout, Logger log) {
+  protected SyncProtogenConnection(String host, int port, int timeout, int connectTimeout, Logger logger) {
     this.host = host;
     this.port = port;
     this.timeout = timeout;
     this.connectTimeout = connectTimeout;
-    this.log = log;
+    this.logger = logger;
   }
 
-  protected SyncProtogenConnection(String host, int port, int timeout, Logger log) {
-    this(host, port, timeout, DEFAULT_CONNECT_TIMEOUT, log);
+  protected SyncProtogenConnection(String host, int port, int timeout, Logger logger) {
+    this(host, port, timeout, DEFAULT_CONNECT_TIMEOUT, logger);
   }
 
   public String getHost() {
@@ -56,7 +55,7 @@ public abstract class SyncProtogenConnection {
     return port;
   }
 
-  private static void serialize(PDU request, OutputStream os) throws IOException {
+  private void serialize(PDU request, OutputStream os) throws IOException {
     BufferWriter writer = new BufferWriter();
     int pos = writer.size();
     writer.appendInt(0); // write 4 bytes for future length

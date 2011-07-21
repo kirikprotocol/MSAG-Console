@@ -3,7 +3,10 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import org.apache.log4j.Logger;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * author: Aleksandr Khalitov
@@ -21,19 +24,6 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
     this.resendProperty = resendProperty;
   }
 
-  private EnumMap<MessageState, Object> buildStatesMap(MessageFilter filter) {
-    final EnumMap<MessageState, Object> statesMap = new EnumMap<MessageState, Object>(MessageState.class);
-    if (filter.getStates() != null) {
-      for (MessageState s : filter.getStates())
-        statesMap.put(s, null);
-    } else {
-      for (MessageState s : MessageState.values())
-        statesMap.put(s, null);
-    }
-    return statesMap;
-  }
-
-
   private void loadResended(DcpConnection conn, int deliveryId, int _pieceSize) throws AdminException {
     long now = System.currentTimeMillis();
     try{
@@ -43,8 +33,10 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
 
       Delivery d = conn.getDelivery(deliveryId);
 
-      MessageFilter emptyFilter = new MessageFilter(d.getId(), d.getCreateDate(), d.getEndDate() != null ? d.getEndDate() : new Date(System.currentTimeMillis()+(24*60*60*1000)));
-      int _reqId = conn.getMessagesWithFields(emptyFilter, MessageField.UserData, MessageField.State);
+      MessageFilter filter = new MessageFilter(d.getId(), d.getCreateDate(), d.getEndDate() != null ? d.getEndDate() : new Date(System.currentTimeMillis()+(24*60*60*1000)));
+      filter.setStates(MessageState.New);
+
+      int _reqId = conn.getMessagesWithFields(filter, MessageField.UserData, MessageField.State);
       new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message>() {
         @Override
         public boolean visit(Message _m) throws AdminException {
@@ -70,36 +62,18 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
 
     loadResended(conn, filter.getDeliveryId(), _pieceSize);
 
-    final EnumMap<MessageState, Object> statesMap = buildStatesMap(filter);
-
-
-    long now = System.currentTimeMillis();
-    try{
-      if(logger.isDebugEnabled()) {
-        logger.debug("Process messages: id="+filter.getDeliveryId());
-      }
-      int _reqId = conn.getMessages(filter);
-
-      new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message>() {
-        @Override
-        public boolean visit(Message _m) throws AdminException {
-          if(resended.contains(_m.getId())) {
-            _m.setResended(true);
-          }
-          if(filter.isNoResended() && _m.isResended()) {
-            return true;
-          }
-          if(statesMap.containsKey(_m.getState())) {
-            return visitor.visit(_m);
-          }
+    visitMessages(conn, filter, _pieceSize, new Visitor<Message>() {
+      @Override
+      public boolean visit(Message _m) throws AdminException {
+        if(resended.contains(_m.getId())) {
+          _m.setResended(true);
+        }
+        if(filter.isNoResended() && _m.isResended()) {
           return true;
         }
-      });
-    }finally {
-      if(logger.isDebugEnabled()) {
-        logger.debug("Processing is completed (id="+filter.getDeliveryId()+"). Time="+(System.currentTimeMillis() - now)+"ms");
+        return visitor.visit(_m);
       }
-    }
+    });
   }
 
   @Override
@@ -111,33 +85,33 @@ public class GetFinalMessagesLightStrategy implements GetMessagesStrategy{
       loadResended(conn, filter.getDeliveryId(), 1000);
     }
 
-    final EnumMap<MessageState, Object> statesMap = buildStatesMap(filter);
+    final int[] result = new int[]{0};
 
+    visitMessages(conn, filter, 1000, new Visitor<Message>() {
+      @Override
+      public boolean visit(Message _m) throws AdminException {
+        if(filter.isNoResended() && resended.contains(_m.getId())) {
+          return true;
+        }
+        result[0]++;
+        return true;
+      }
+    });
+    return result[0];
+  }
+
+
+  private void visitMessages(DcpConnection conn, final MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
     long now = System.currentTimeMillis();
     try{
       if(logger.isDebugEnabled()) {
-        logger.debug("Process messages: id="+filter.getDeliveryId());
+        logger.debug("Visit messages: id="+filter.getDeliveryId());
       }
       int _reqId = conn.getMessagesWithFields(filter, MessageField.State);
-
-      final int[] result = new int[]{0};
-
-      new VisitorHelperImpl(1000, _reqId, conn).visit(new Visitor<Message>() {
-        @Override
-        public boolean visit(Message _m) throws AdminException {
-          if(filter.isNoResended() && resended.contains(_m.getId())) {
-            return true;
-          }
-          if(statesMap.containsKey(_m.getState())) {
-            result[0]++;
-          }
-          return true;
-        }
-      });
-      return result[0];
+      new VisitorHelperImpl(1000, _reqId, conn).visit(visitor);
     }finally {
       if(logger.isDebugEnabled()) {
-        logger.debug("Processing is completed (id="+filter.getDeliveryId()+"). Time="+(System.currentTimeMillis() - now)+"ms");
+        logger.debug("Visiting is completed (id="+filter.getDeliveryId()+"). Time="+(System.currentTimeMillis() - now)+"ms");
       }
     }
   }

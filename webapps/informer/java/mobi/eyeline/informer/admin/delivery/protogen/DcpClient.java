@@ -49,8 +49,8 @@ public class DcpClient extends SyncProtogenConnection {
     FailResponse fail = new FailResponse();
     try {
       lock.lock();
-      if (log.isDebugEnabled())
-        log.debug("Dcp Connection locked: login=" + login);
+      if (logger.isDebugEnabled())
+        logger.debug("Dcp Connection locked: login=" + login);
 
       PDU resp;
       resp = request(request, response, fail);
@@ -60,7 +60,7 @@ public class DcpClient extends SyncProtogenConnection {
           String message = fail.hasStatusMessage() ?  fail.getStatusMessage() : "";
           DeliveryException.ErrorStatus e = DeliveryException.ErrorStatus.valueOf(fail.getStatus());
           if(e == null) {
-            log.warn("Unknown response status="+fail.getStatus());
+            logger.warn("Unknown response status="+fail.getStatus());
           }else {
             if(e == DeliveryException.ErrorStatus.CommandHandling && message.equals("Not ready yet")) {
               throw new DeliveryException("not_ready_yet");
@@ -84,8 +84,8 @@ public class DcpClient extends SyncProtogenConnection {
       throw new DeliveryException("interaction_error", e, e.getMessage());
     } finally {
       lock.unlock();
-      if (log.isDebugEnabled())
-        log.debug("Dcp Connection unlocked: login=" + login);
+      if (logger.isDebugEnabled())
+        logger.debug("Dcp Connection unlocked: login=" + login);
     }
   }
 
