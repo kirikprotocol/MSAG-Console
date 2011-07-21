@@ -46,7 +46,7 @@
   <!-- FaceletViewHandler configuration -->
   <context-param>
     <param-name>org.apache.myfaces.trinidad.ALTERNATE_VIEW_HANDLER</param-name>
-    <param-value>mobi.eyeline.util.jsf.components.AjaxViewHandler</param-value>
+    <param-value>mobi.eyeline.util.jsf.components.TrinidadAlternateViewHandler</param-value>
   </context-param>
 
   <!-- Use documents saved as *.xhtml for Facelets -->

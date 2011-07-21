@@ -1,5 +1,4 @@
 import mobi.eyeline.util.Time;
-import mobi.eyeline.util.jsf.components.data_table.LoadListener;
 import mobi.eyeline.util.jsf.components.data_table.model.*;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
@@ -194,12 +193,10 @@ public class IndexController {
       return 50;
     }
 
-    @Override
     public String getId(Object o) {
       return ((Row)o).field1;
     }
 
-    @Override
     public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) throws ModelException {
 
       if(System.currentTimeMillis()%20 == 0) {

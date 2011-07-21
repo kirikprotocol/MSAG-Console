@@ -10,6 +10,7 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseStream;
 import javax.faces.context.ResponseWriter;
+import javax.faces.event.ActionListener;
 import javax.faces.render.RenderKit;
 import java.io.IOException;
 import java.io.Writer;
@@ -21,28 +22,16 @@ import java.util.Iterator;
 public class AjaxFacesContext extends FacesContext {
 
   private final String ajaxComponentId;
-  private boolean skipContent = true;
-
-  private FacesContext impl;
+  private final FacesContext wrapped;
 
   public AjaxFacesContext(FacesContext facesContext, String ajaxComponentId) {
-    impl = facesContext;
+    super();
     this.ajaxComponentId = ajaxComponentId;
+    this.wrapped = facesContext;
   }
 
   public void setSkipContent(boolean skipContent) {
-    this.skipContent = skipContent;
-  }
-
-  public ResponseWriter getAjaxResponseWriter() {
-    return impl.getResponseWriter();
-  }
-
-  public ResponseWriter getResponseWriter() {
-    if (skipContent)
-      return new BulkResponseWriter(impl.getResponseWriter());
-    else
-      return impl.getResponseWriter();
+    ((AjaxWriter)getResponseWriter()).setSkipContent(skipContent);
   }
 
   public String getAjaxComponentId() {
@@ -50,169 +39,103 @@ public class AjaxFacesContext extends FacesContext {
   }
 
   @Override
-  public ELContext getELContext() {
-    return impl.getELContext();
-  }
-
-  @Override
   public Application getApplication() {
-    return impl.getApplication();
+    return wrapped.getApplication();
   }
 
   @Override
   public Iterator<String> getClientIdsWithMessages() {
-    return impl.getClientIdsWithMessages();
+    return wrapped.getClientIdsWithMessages();
+  }
+
+  @Override
+  public ELContext getELContext() {
+    return wrapped.getELContext();
   }
 
   @Override
   public ExternalContext getExternalContext() {
-    return impl.getExternalContext();
+    return wrapped.getExternalContext();
   }
 
   @Override
   public FacesMessage.Severity getMaximumSeverity() {
-    return impl.getMaximumSeverity();
+    return wrapped.getMaximumSeverity();
   }
 
   @Override
   public Iterator<FacesMessage> getMessages() {
-    return impl.getMessages();
+    return wrapped.getMessages();
   }
 
   @Override
   public Iterator<FacesMessage> getMessages(String s) {
-    return impl.getMessages(s);
+    return wrapped.getMessages(s);
   }
 
   @Override
   public RenderKit getRenderKit() {
-    return impl.getRenderKit();
+    return wrapped.getRenderKit();
   }
 
   @Override
   public boolean getRenderResponse() {
-    return impl.getRenderResponse();
+    return wrapped.getRenderResponse();
   }
 
   @Override
   public boolean getResponseComplete() {
-    return impl.getResponseComplete();
+    return wrapped.getResponseComplete();
   }
 
   @Override
   public ResponseStream getResponseStream() {
-    return impl.getResponseStream();
+    return wrapped.getResponseStream();
   }
 
   @Override
   public void setResponseStream(ResponseStream responseStream) {
-    impl.setResponseStream(responseStream);
+    wrapped.setResponseStream(responseStream);
   }
 
   @Override
-  public void setResponseWriter(ResponseWriter writer) {
-    impl.setResponseWriter(writer);
+  public ResponseWriter getResponseWriter() {
+    return wrapped.getResponseWriter();
+  }
+
+  @Override
+  public void setResponseWriter(ResponseWriter responseWriter) {
+    wrapped.setResponseWriter(responseWriter);
   }
 
   @Override
   public UIViewRoot getViewRoot() {
-    return impl.getViewRoot();
+    return wrapped.getViewRoot();
   }
 
   @Override
   public void setViewRoot(UIViewRoot uiViewRoot) {
-    impl.setViewRoot(uiViewRoot);
+    wrapped.setViewRoot(uiViewRoot);
   }
 
   @Override
   public void addMessage(String s, FacesMessage facesMessage) {
-    impl.addMessage(s, facesMessage);
+    wrapped.addMessage(s, facesMessage);
   }
 
   @Override
   public void release() {
-    impl.release();
+    wrapped.release();
   }
 
   @Override
   public void renderResponse() {
-    impl.renderResponse();
+    wrapped.renderResponse();
   }
 
   @Override
   public void responseComplete() {
-    impl.responseComplete();
+    wrapped.responseComplete();
   }
 
-  private static class BulkResponseWriter extends ResponseWriter {
-
-    private ResponseWriter w;
-
-    private BulkResponseWriter(ResponseWriter w) {
-      this.w = w;
-    }
-
-    @Override
-    public String getContentType() {
-      return w.getContentType();
-    }
-
-    @Override
-    public String getCharacterEncoding() {
-      return w.getCharacterEncoding();
-    }
-
-    @Override
-    public void write(char[] cbuf, int off, int len) throws IOException {
-    }
-
-    @Override
-    public void flush() throws IOException {
-    }
-
-    @Override
-    public void close() throws IOException {
-    }
-
-    @Override
-    public void startDocument() throws IOException {
-    }
-
-    @Override
-    public void endDocument() throws IOException {
-    }
-
-    @Override
-    public void startElement(String s, UIComponent uiComponent) throws IOException {
-    }
-
-    @Override
-    public void endElement(String s) throws IOException {
-    }
-
-    @Override
-    public void writeAttribute(String s, Object o, String s1) throws IOException {
-    }
-
-    @Override
-    public void writeURIAttribute(String s, Object o, String s1) throws IOException {
-    }
-
-    @Override
-    public void writeComment(Object o) throws IOException {
-    }
-
-    @Override
-    public void writeText(Object o, String s) throws IOException {
-    }
-
-    @Override
-    public void writeText(char[] chars, int i, int i1) throws IOException {
-    }
-
-    @Override
-    public ResponseWriter cloneWithWriter(Writer writer) {
-      return this;
-    }
-  }
 }
