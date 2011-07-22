@@ -7,10 +7,8 @@
 
     <ui:define name="content">
 
-      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/page_calendar.css"/>
-
       <h:form>
-        <eye:pageCalendar var="d" value="#{index.calendarModel}">
+        <eye:pageCalendar var="d" value="#{pageCalendar.calendarModel}">
           <h:outputText value="#{d}"/>
         </eye:pageCalendar>
       </h:form>

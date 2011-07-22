@@ -11,12 +11,12 @@
 
       <h:messages/>
 
-      <h:panelGrid columns="2">
-        <eye:inputTime value="#{index.time}"/><h:commandButton value="Submit"/>
+      <h:panelGrid columns="1">
+        <eye:inputTime value="#{inputTime.time}"/>
+        <h:commandButton value="Submit"/>
+        <h:outputText value="Time string: #{inputTime.timeString}"/>
       </h:panelGrid>
-      <br/>
 
-      <h:outputText value="Time string: #{index.timeString}"/>
     </h:form>
 
   </ui:define>

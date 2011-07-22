@@ -2,6 +2,7 @@
         xmlns:h="http://java.sun.com/jsf/html"
         xmlns:eye="http://taglib.eyeline.mobi"
         xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:t="http://myfaces.apache.org/tomahawk"
         xmlns:f="http://java.sun.com/jsf/core">
 
 
@@ -14,10 +15,10 @@
         <h:messages/>
 
         <h:panelGrid columns="1">
-          <eye:inputDate type="full" required="true" value="#{index.inputDate}"/><h:commandLink value="Submit"/>
+          <eye:inputDate id="date" type="full" required="true" value="#{inputDate.inputDate}"/><h:commandButton value="Submit"/>
         </h:panelGrid>
 
-        <h:outputText value="#{index.inputDateString}"/>
+        <h:outputText value="#{inputDate.inputDateString}"/>
 
       </h:form>
 

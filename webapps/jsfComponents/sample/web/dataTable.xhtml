@@ -8,23 +8,19 @@
 
   <ui:define name="content">
 
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/common.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/dataTable.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/data_table_filter.css"/>
-    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/message.css"/>
-
     <h:form>
 
-      <eye:dataTableFilter bean="#{index}" applyAction="query" clearAction="clear">
+      <eye:dataTableFilter bean="#{dataTable}" applyAction="query" clearAction="clear">
 
-        <h:panelGrid columns="2" width="400px">
-          <h:outputText value="Some field"/>
-          <h:inputText/>
+        <h:panelGrid columns="3">
+          <h:outputText value="Field1"/>
+          <h:inputText value="#{dataTable.field1Filter}"/>
+          <h:outputText value="&#160;"/>
         </h:panelGrid>
 
       </eye:dataTableFilter>
 
-      <eye:dataTable value="#{index.model}" var="r" selectedRows="#{index.selected}">
+      <eye:dataTable value="#{dataTable.model}" var="r" selectedRows="#{dataTable.selected}">
         <eye:row>
           <eye:column name="field1" title="field1" sortable="true" width="30%" align="center">
             <h:outputText value="#{r.field1}"/>

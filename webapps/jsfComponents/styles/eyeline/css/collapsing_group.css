@@ -6,8 +6,12 @@ td.eyeline_collapsing_group_closed {
 }
 
 td.eyeline_collapsing_group_opened {
+  background-color: #F8F6EE;
   border-bottom: 1px solid #161E49;
+}
 
+td.collapsing_group_closed {
+  background-color: #F3F0E3;
 }
 
 
@@ -22,10 +26,12 @@ td.eyeline_collapsing_group_flag_closed {
 }
 
 td.eyeline_collapsing_group_flag_closed {
+  background-color: #F3F0E3;
   background-image: url(../images/list_closed.gif);
 }
 
 td.eyeline_collapsing_group_flag_opened {
+  background-color: #F8F6EE;
   background-image: url(../images/list_opened.gif);
   /*border-bottom: 1px solid #161E49;*/
 }

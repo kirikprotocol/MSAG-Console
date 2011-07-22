@@ -8,16 +8,27 @@
 
     <ui:define name="content">
 
-
-      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/common.css"/>
-      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/dynamic_table.css"/>
-
       <h:form>
 
-        <eye:dynamicTable value="#{index.dynamicTableModel}">
-          <eye:textColumn name="field1" allowEditAfterAdd="true"/>
-          <eye:textColumn name="field2" allowEditAfterAdd="true"/>
-        </eye:dynamicTable>
+        <h:panelGrid columns="1">
+
+          <eye:dynamicTable value="#{dynamicTable.dynamicTableModel}">
+            <eye:textColumn name="field1" allowEditAfterAdd="true"/>
+            <eye:textColumn name="field2" allowEditAfterAdd="true"/>
+          </eye:dynamicTable>
+
+          <h:commandButton value="Submit"/>
+
+          <h:dataTable border="1" value="#{dynamicTable.rows}" var="v">
+            <h:column>
+              <h:outputText value="#{v.field1}"/>
+            </h:column>
+            <h:column>
+              <h:outputText value="#{v.field2}"/>
+            </h:column>
+          </h:dataTable>
+
+        </h:panelGrid>
 
       </h:form>
 

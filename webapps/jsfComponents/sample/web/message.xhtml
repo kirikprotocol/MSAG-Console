@@ -1,6 +1,6 @@
 <f:view xmlns="http://www.w3.org/1999/xhtml"
         xmlns:h="http://java.sun.com/jsf/html"
-        xmlns:tr="http://myfaces.apache.org/trinidad" xmlns:eye="http://taglib.eyeline.mobi"
+        xmlns:eye="http://taglib.eyeline.mobi"
         xmlns:ui="http://java.sun.com/jsf/facelets"
         xmlns:f="http://java.sun.com/jsf/core">
 
@@ -11,12 +11,18 @@
 
     <h:form>
 
+      <h:inputTextarea cols="40" rows="5"  value="#{messages.text}"/><h:commandButton value="Submit text"/>
+
+      <eye:delimiter/>
+      <eye:delimiter/>
+      <eye:delimiter/>
+
       <eye:message level="warn">
-        Warning!!!!
+        <h:outputText value="#{messages.text}"/>
       </eye:message>
 
       <eye:message level="error">
-        Error!!!!
+        <h:outputText value="#{messages.text}"/>
       </eye:message>
 
     </h:form>

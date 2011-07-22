@@ -38,3 +38,16 @@ div.eyeline_page_calendar_header_next {
   background-repeat: no-repeat;
   background-position: left;
 }
+
+table.eyeline_page_calendar th {
+    background-color: #F8F6EE;
+    border-bottom: 1px solid #161E49;
+    padding: 2px 0;
+    text-align: center;
+}
+
+table.eyeline_page_calendar td {
+    border-bottom: 1px solid #161E49;
+    padding: 2px 0;
+    text-align: center;
+}

@@ -19,12 +19,65 @@
 
   </application>
 
+  <managed-bean>
+    <managed-bean-name>dataTable</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.DataTableController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>buttons</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.ButtonController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>inputTime</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.InputTimeController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
 
   <managed-bean>
-    <managed-bean-name>index</managed-bean-name>
-    <managed-bean-class>IndexController</managed-bean-class>
+    <managed-bean-name>inputDate</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.InputDateController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>pageCalendar</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.PageCalendarController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>updatable</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.UpdatableContentController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>messages</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.MessagesController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>progressBar</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.ProgressBarController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>dynamicTable</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.DynamicTableController</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>lines</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.LinesController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
   <navigation-rule>

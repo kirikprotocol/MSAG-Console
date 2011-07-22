@@ -10,8 +10,13 @@
 
       <h:form>
 
-        <eye:updatableContent updatePeriod="2">
-          <h:outputText value="#{index.date}"/>
+
+        <h:inputText value="#{updatable.updatePeriod}"/><h:commandButton value="Submit period"/>
+
+        <p/>
+
+        <eye:updatableContent updatePeriod="#{updatable.updatePeriod}" enabled="#{updatable.updatePeriod>0}">
+          <h:outputText style="font-weight: bold;" value="#{updatable.date}"/>
         </eye:updatableContent>
 
       </h:form>

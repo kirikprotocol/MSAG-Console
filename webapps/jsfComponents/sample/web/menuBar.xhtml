@@ -3,13 +3,8 @@
         xmlns:h="http://java.sun.com/jsf/html"
         xmlns:eye="http://taglib.eyeline.mobi" xmlns:ui="http://java.sun.com/jsf/facelets">
 
+  <ui:composition>
 
-  <ui:composition template="/main.xhtml">
-
-    <ui:define name="content">
-
-      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/main_menu.css"/>
-      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/css/menu_bar.css"/>
 
       <h:form>
 
@@ -17,26 +12,26 @@
           <tr>
             <td width="26">&#160;</td>
             <td width="1%">
-              <eye:menubar label="informer.admin">
-                <eye:menubaritem><h:commandLink value="informer.admin.status" action="INDEX"/></eye:menubaritem>
+              <eye:menubar label="Components">
+                <eye:menubaritem><h:commandLink value="Buttons" action="BUTTONS"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Collapsing Group" action="COLLAPSING_GROUP"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Data table" action="DATA_TABLE"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Dynamic table" action="DYNAMIC_TABLE"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Input time" action="INPUT_TIME"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Page calendar" action="PAGE_CALENDAR"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Updatable content" action="UPDATABLE_CONTENT"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Messages" action="MESSAGES"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Input date" action="INPUT_DATE"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Progress bar" action="PROGRESS_BAR"/></eye:menubaritem>
                 <eye:menubardelimiter/>
-                <eye:menubaritem><h:commandLink value="informer.admin.config" action="CONFIG"/></eye:menubaritem>
-              </eye:menubar>
-            </td>
-            <td width="1%">
-              <eye:menubar label="informer.deliveries">
-                <eye:menubaritem><h:commandLink value="informer.deliveries.list" action="DELIVERIES"/></eye:menubaritem>
-                <eye:menubaritem><h:commandLink value="informer.deliveries.scheduling" action="DELIVERIES_WEEKLY"/></eye:menubaritem>
+                <eye:menubaritem><h:commandLink value="Lines" action="LINES"/></eye:menubaritem>
               </eye:menubar>
             </td>
             <td width="100%">&#160;</td>
           </tr>
         </table>
-
-
       </h:form>
 
-    </ui:define>
   </ui:composition>
 
 </f:view>
