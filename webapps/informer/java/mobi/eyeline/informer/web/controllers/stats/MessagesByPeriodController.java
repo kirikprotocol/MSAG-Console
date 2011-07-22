@@ -239,7 +239,7 @@ public class MessagesByPeriodController extends DeliveryStatController{
     String s = getRequestParameter("delivery");
     if (s == null)
       s = (String)getRequest().get("delivery");
-    if (s != null) {
+    if (s != null && s.length() > 0) {
       try {
 
         StringTokenizer st = new StringTokenizer(s,",; ");
@@ -290,8 +290,10 @@ public class MessagesByPeriodController extends DeliveryStatController{
       catch (AdminException e) {
         addError(e);
       }
-    }
-    return "STATS_DELIVERY_MESSAGES_BY_PERIOD";
+      return "STATS_DELIVERY_MESSAGES_BY_PERIOD";
+    } else
+      return null;
+
   }
 
 
