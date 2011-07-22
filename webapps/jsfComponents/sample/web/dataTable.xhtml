@@ -1,39 +1,58 @@
 <f:view xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:ui="http://java.sun.com/jsf/facelets">
 
 
-<ui:composition template="/main.xhtml">
+  <ui:composition template="/main.xhtml">
 
-  <ui:define name="content">
+    <ui:define name="content">
 
-    <h:form>
+      <h:form>
 
-      <eye:dataTableFilter bean="#{dataTable}" applyAction="query" clearAction="clear">
+        <eye:dataTableFilter bean="#{dataTable}" applyAction="query" clearAction="clear">
 
-        <h:panelGrid columns="3">
-          <h:outputText value="Field1"/>
-          <h:inputText value="#{dataTable.field1Filter}"/>
-          <h:outputText value="&#160;"/>
-        </h:panelGrid>
+          <h:panelGrid columns="3">
+            <h:outputText value="Field1"/>
+            <h:inputText value="#{dataTable.field1Filter}"/>
+            <h:outputText value="&#160;"/>
+          </h:panelGrid>
 
-      </eye:dataTableFilter>
+        </eye:dataTableFilter>
 
-      <eye:dataTable value="#{dataTable.model}" var="r" selectedRows="#{dataTable.selected}">
-        <eye:row>
-          <eye:column name="field1" title="field1" sortable="true" width="30%" align="center">
-            <h:outputText value="#{r.field1}"/>
-          </eye:column>
-          <eye:column name="field2" title="field2" sortable="true" width="70%" align="center">
-            <h:outputText value="#{r.field2}"/>
-          </eye:column>                                  <!-- need common -->
-        </eye:row>
-      </eye:dataTable>
+        <eye:dataTable value="#{dataTable.model}" var="row" selectedRows="#{dataTable.selected}">
+          <eye:row innerRows="#{row.inner}">
+            <eye:column name="field1" title="field1" sortable="true" width="30%" align="center">
+                <h:commandLink value="#{row.field1}" action="#{dataTable.choose}">
+                  <f:param name="selected" value="#{row.field1}"/>
+                </h:commandLink>
+              <f:facet name="inner">
+                <h:outputText value="#{row.field1}" style="color:GREEN"/>
+              </f:facet>
+              <f:facet name="footer">
+                <h:outputText value="footer1"/>
+              </f:facet>
+            </eye:column>
+            <eye:column name="field2" title="field2" sortable="true" width="70%" align="center">
+              <h:outputText value="#{row.field2}"/>
+              <f:facet name="inner">
+                <h:outputText value="#{row.field2}" style="color:GREEN"/>
+              </f:facet>
+              <f:facet name="footer">
+                <h:outputText value="footer2"/>
+              </f:facet>
+            </eye:column>
+          </eye:row>
+        </eye:dataTable>
 
-    </h:form>
-  </ui:define>
 
-</ui:composition>
+        <eye:delimiter/>
+
+        <h:outputText value="#{dataTable.notification}"/>
+
+      </h:form>
+    </ui:define>
+
+  </ui:composition>
 
 </f:view>

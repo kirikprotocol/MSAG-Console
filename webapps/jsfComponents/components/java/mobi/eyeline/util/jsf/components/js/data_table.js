@@ -204,7 +204,7 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
     if (headerElement == null)
       return;
 
-    headerElement.className = (expand) ? 'inner_data_opened' : 'inner_data_closed';
+    headerElement.className = (expand) ? 'eyeline_inner_data_opened' : 'eyeline_inner_data_closed';
 
     var elements = document.getElementsByTagName('tr');
     for (var j = 0; j < elements.length; j++) {
@@ -220,7 +220,7 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
     if (headerElement == null)
       return;
 
-    _expandRow(rowId, headerElement.className == 'inner_data_closed');
+    _expandRow(rowId, headerElement.className == 'eyeline_inner_data_closed');
   };
 
   this.expandAll = function() {
@@ -229,7 +229,7 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
     if (expandElement == null || tableElement == null)
       return;
 
-    var expand = expandElement.className == 'inner_data_closed';
+    var expand = expandElement.className == 'eyeline_inner_data_closed';
     var rows = tableElement.rows;
 
     for (var i = 0; i < rows.length; i++) {
@@ -238,7 +238,7 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
         _expandRow(row.id, expand);
     }
 
-    expandElement.className = expand ? 'inner_data_opened' : 'inner_data_closed';
+    expandElement.className = expand ? 'eyeline_inner_data_opened' : 'eyeline_inner_data_closed';
   };
 
   var setProgressFunction = this.setProgress = function(value) {

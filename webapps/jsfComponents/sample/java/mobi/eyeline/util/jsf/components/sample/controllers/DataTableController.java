@@ -2,6 +2,7 @@ package mobi.eyeline.util.jsf.components.sample.controllers;
 
 import mobi.eyeline.util.jsf.components.data_table.model.*;
 
+import javax.faces.context.FacesContext;
 import java.util.*;
 
 /**
@@ -9,6 +10,7 @@ import java.util.*;
  */
 public class DataTableController {
 
+  private String notification;
 
   private String field1Filter;
 
@@ -29,6 +31,20 @@ public class DataTableController {
     System.out.println("Selected: "+selected);
   }
 
+  public String choose() {
+    String selected = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("selected");
+    notification = "Selected: "+selected;
+    return null;
+  }
+
+  public String getNotification() {
+    return notification;
+  }
+
+  public void setNotification(String notification) {
+    this.notification = notification;
+  }
+
   public String getField1Filter() {
     return field1Filter;
   }
@@ -43,6 +59,7 @@ public class DataTableController {
     loadListener = null;
     loaded = false;
     field1Filter = null;
+    notification = null;
   }
 
   private boolean loaded = false;
@@ -50,14 +67,30 @@ public class DataTableController {
   public void query() {
     loadListener = null;
     loaded = false;
+    notification = null;
   }
 
   public static class Row {
+
+    private final List<Row> inner;
 
     private String field1;
     private String field2;
 
     public Row(String field1, String field2) {
+      this.field1 = field1;
+      this.field2 = field2;
+
+      Random r = new Random();
+      int size = r.nextInt(4);
+      inner = new ArrayList<Row>(size);
+      for(int i=0;i<size;i++) {
+        inner.add(new Row(null, "f" + r.nextInt(100), "f" + r.nextInt(100)));
+      }
+    }
+
+    public Row(List<Row> inner, String field1, String field2) {
+      this.inner = inner;
       this.field1 = field1;
       this.field2 = field2;
     }
@@ -69,10 +102,11 @@ public class DataTableController {
     public String getField2() {
       return field2;
     }
-  }
 
-  public String getDate() {
-    return new Date().toString();
+    public List<Row> getInner() {
+      return inner;
+    }
+
   }
 
 

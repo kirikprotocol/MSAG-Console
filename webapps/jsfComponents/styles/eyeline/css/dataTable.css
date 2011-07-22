@@ -68,7 +68,7 @@ div.eyeline_inner_data_opened {
   background-image: url(../images/list_opened.gif);
 }
 
-div.inner_data_closed {
+div.eyeline_inner_data_closed {
   width: 15px;
   background-image: url(../images/list_closed.gif);
 }

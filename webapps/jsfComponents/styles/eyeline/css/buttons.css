@@ -19,9 +19,14 @@ table.eyeline_buttons td {
   padding-right: 4px;
 }
 
-
-table.eyeline_buttons a:hover {
-   color: #443a3a;
+table.eyeline_buttons a, a:visited, a:hover{
+  border: 0 none;
+  color: #161E49;
+  cursor: pointer;
+  font-family: Verdana,Arial,Tahoma,Helvetica,sans,sans-serif;
+  font-size: 11px;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 table.eyeline_buttons_background {
