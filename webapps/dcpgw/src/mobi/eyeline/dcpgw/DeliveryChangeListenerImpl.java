@@ -63,7 +63,6 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
                     try {
                         Gateway.sendDeliveryReceipt(message_id, rcpt);
-                        // todo remove receipt
                     } catch (SmppException e1) {
                         log.error("Couldn't send delivery receipt to the client.", e1);
                         // todo ?
@@ -71,7 +70,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                         log.error(e);
                     }
                 } else {
-
+                    log.debug("Couldn't find receipt with message id "+message_id);
                 }
 
             } else {

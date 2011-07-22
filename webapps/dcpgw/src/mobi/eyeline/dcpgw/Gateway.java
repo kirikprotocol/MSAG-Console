@@ -242,7 +242,7 @@ public class Gateway extends Thread implements PDUListener {
             deliveryChangesDetector.start();
         } catch (InitException e) {
             log.error(e);
-
+            System.exit(0);
         }
 
 

@@ -38,6 +38,8 @@ public class Client extends Thread implements PDUListener {
 
     private final FinalLogGenerator finalLogGenerator;
 
+    private int counter=0;
+
     public Client() throws SmppException {
         this.config = new Properties();
         try {
@@ -83,22 +85,29 @@ public class Client extends Thread implements PDUListener {
                     return false;
                 }
 
+
             case DeliverSM:
 
+                counter++;
+                if (counter > 1){
 
-                /*DeliverSM deliverSM = (DeliverSM) pdu;
-                int sequence_number = deliverSM.getSequenceNumber();
-                logger.debug("Handle DeliverSM pdu with sequence number "+sequence_number);
+                    DeliverSM deliverSM = (DeliverSM) pdu;
+                    int sequence_number = deliverSM.getSequenceNumber();
+                    logger.debug("Handle DeliverSM pdu with sequence number "+sequence_number);
 
-                try{
-                    logger.debug("123: "+deliverSM.getResponse().getSequenceNumber());
-                    smppClient.send(deliverSM.getResponse());
-                    logger.debug("Send DeliverSMResp pdu.");
+                    try{
+                        logger.debug("123: "+deliverSM.getResponse().getSequenceNumber());
+                        smppClient.send(deliverSM.getResponse());
+                        logger.debug("Send DeliverSMResp pdu.");
+                        return true;
+                    } catch (SmppException e){
+                        logger.error("Couldn't send DeliverSMResp.", e);
+                        return false;
+                    }
+
+                } else {
                     return true;
-                } catch (SmppException e){
-                    logger.error("Couldn't send DeliverSMResp.", e);
-                    return false;
-                }*/
+                }
 
             case SubmitSMResp:
 

@@ -19,8 +19,6 @@ public class FinalLogGenerator {
 
     private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
 
-    private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
-
     private static Logger log = Logger.getLogger(FinalLogGenerator.class);
 
     private File final_log_dir;
@@ -41,34 +39,23 @@ public class FinalLogGenerator {
         SimpleDateFormat sdf_sec = new SimpleDateFormat("ss");
 
         File current_file = new File(final_log_dir, sdf.format(date)+".csv");
-        if (!current_file.exists()){
-            try {
-                if (!current_file.createNewFile()) log.error("Couldn't create file "+current_file.getName());
-            } catch (IOException e) {
-                log.debug(e);
+
+        try{
+
+            if (!current_file.exists()){
+                BufferedWriter bw = new BufferedWriter(new FileWriter(current_file));
+                bw.write("#1 SEC,DLVID,USERID,RECTYPE,MSGID,STATE,SMPP,SUBSCRIBER,NSMS,USERDATA\n");
+                log.debug("Write first line.");
+                bw.close();
             }
-        }
 
-        String line = sdf_sec.format(date)+",3,a,0,"+System.currentTimeMillis()+",D,0,+79139138729,1,id="+message_id;
-
-        BufferedWriter bw = null;
-
-        try {
-            bw = new BufferedWriter(new FileWriter(current_file, true));
+            BufferedWriter bw = new BufferedWriter(new FileWriter(current_file, true));
+            String line = sdf_sec.format(date)+",3,stepanovd,0,"+System.currentTimeMillis()+",D,0,+79139138729,1,id="+message_id;
             bw.write(line + "\n");
-        } catch (IOException e) {
+            bw.close();
+        } catch (IOException e){
             log.error(e);
-        } finally {
-            try{
-                if (bw != null) {
-                    bw.close();
-                }
-            }catch(IOException ioe1){
-                log.error(ioe1);
-            }
         }
-
-
 
     }
 
