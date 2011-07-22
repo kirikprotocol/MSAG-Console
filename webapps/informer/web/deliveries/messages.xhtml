@@ -99,7 +99,7 @@
               <h:outputText value="#{m.state}" converter="messageStateConverter"/>
             </eye:column>
             <eye:column name="resended" title="#{msg['informer.deliveries.message.resended']}" width="10%" align="center">
-              <h:graphicImage value="/images/ic_checked.gif" rendered="#{m.wasResended}"/>
+              <h:graphicImage value="/images/ic_checked.gif" rendered="#{m.resended}"/>
             </eye:column>
             <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" width="15%">
               <tr:outputText value="#{m.date}">
