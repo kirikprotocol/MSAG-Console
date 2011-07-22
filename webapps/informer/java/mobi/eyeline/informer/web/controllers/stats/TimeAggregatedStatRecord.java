@@ -161,16 +161,16 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
     return childAggreagtionType;
   }
 
-  abstract void printCSVheader(PrintWriter writer, boolean detalized);
+  abstract void printCSVheader(PrintWriter writer);
 
-  abstract void printCSV(PrintWriter writer, boolean detalized);
+  abstract void printCSV(PrintWriter writer);
 
 
-  public void printWithChildrenToCSV(PrintWriter writer, boolean detalized) {
-    printCSV(writer, detalized);
+  public void printWithChildrenToCSV(PrintWriter writer) {
+    printCSV(writer);
     if (isParent() && getInnerRows() != null) {
       for (TimeAggregatedStatRecord child : (List<TimeAggregatedStatRecord>) getInnerRows()) {
-        child.printCSV(writer, detalized);
+        child.printCSV(writer);
       }
     }
   }

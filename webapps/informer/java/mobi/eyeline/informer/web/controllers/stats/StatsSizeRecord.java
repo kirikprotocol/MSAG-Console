@@ -82,12 +82,12 @@ public class StatsSizeRecord extends TimeAggregatedStatRecord {
   }
 
   @Override
-  public void printCSVheader(PrintWriter writer, boolean detalised) {
+  public void printCSVheader(PrintWriter writer) {
     writer.println(StringEncoderDecoder.toCSVString(';',"DATE","","FILES","SIZE"));
   }
 
   @Override
-  void printCSV(PrintWriter writer, boolean detalized) {
+  void printCSV(PrintWriter writer) {
     if (isParent()) {
       writer.println(StringEncoderDecoder.toCSVString(';',getPeriodString(), "", count,size));
     } else {

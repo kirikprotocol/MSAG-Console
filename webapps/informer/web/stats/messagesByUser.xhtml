@@ -53,6 +53,12 @@
                   <h:outputText value="#{messagesByUserStats.totals.newMessages}(#{messagesByUserStats.totals.newSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
+              <eye:column name="retry" title="#{msg['message.state.Retry']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.retryMessages}"/>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByUserStats.totals.retryMessages}" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
               <eye:column name="process" title="#{msg['message.state.Sent']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.processMessages}(#{row.processSms})"/>
                 <f:facet name="footer">

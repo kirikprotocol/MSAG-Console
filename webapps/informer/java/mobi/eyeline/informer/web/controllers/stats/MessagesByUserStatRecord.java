@@ -78,6 +78,8 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
           return mul * o1.getUserId().compareTo(o2.getUserId());
         } else if (sortOrder.getColumnId().equals("new")) {
           return o1.getNewMessages() >= o2.getNewMessages() ? mul : -mul;
+        } else if (sortOrder.getColumnId().equals("retry")) {
+          return o1.getRetryMessages() >= o2.getRetryMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("process")) {
           return o1.getProcessMessages() >= o2.getProcessMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("delivered")) {
@@ -97,31 +99,16 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   }
 
   @Override
-  void printCSVheader(PrintWriter writer, boolean detalized) {
-    if (detalized) {
-      writer.println(StringEncoderDecoder.toCSVString(';',
-          "USER", "NEW", "NEW SMS","PROCESS", "PROCESS SMS", "DELIVERED", "DELIVERED_SMS", "FAILED", "FAILED_SMS", "EXPIRED", "EXPIRED_SMS"));
-    } else {
-      writer.println(StringEncoderDecoder.toCSVString(';',
-          "USER", "WAIT", "DELIVERED", "DELIVERED_SMS", "NOTDELIVERED", "NOTDELIVERED_SMS"));
-    }
+  void printCSVheader(PrintWriter writer) {
+    writer.println(StringEncoderDecoder.toCSVString(';',
+        "USER", "NEW", "NEW SMS", "RETRY", "PROCESS", "PROCESS SMS", "DELIVERED", "DELIVERED_SMS", "FAILED", "FAILED_SMS", "EXPIRED", "EXPIRED_SMS"));
   }
 
 
   @Override
-  void printWithChildrenToCSV(PrintWriter writer, boolean detalized) {
-    if (detalized) {
-      writer.println(StringEncoderDecoder.toCSVString(';',
-          userId, newMessages, newSms, processMessages, processSms, deliveredMessages, deliveredMessagesSMS, failedMessages, failedMessagesSMS, expiredMessages, expiredMessagesSMS));
-    } else {
-      writer.println(StringEncoderDecoder.toCSVString(';',
-          userId,
-          newMessages + processMessages,
-          deliveredMessages,
-          deliveredMessagesSMS,
-          failedMessages + expiredMessages,
-          failedMessagesSMS + expiredMessagesSMS));
-    }
+  void printWithChildrenToCSV(PrintWriter writer) {
+    writer.println(StringEncoderDecoder.toCSVString(';',
+        userId, newMessages, newSms, retryMessages, processMessages, processSms, deliveredMessages, deliveredMessagesSMS, failedMessages, failedMessagesSMS, expiredMessages, expiredMessagesSMS));
   }
 
   public long getNewSms() {

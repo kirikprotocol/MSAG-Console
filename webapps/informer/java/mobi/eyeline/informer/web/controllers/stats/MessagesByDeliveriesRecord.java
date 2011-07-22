@@ -269,56 +269,37 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     return user;
   }
 
-  public void printCSVheader(PrintWriter writer, boolean fullMode) {
-    if (fullMode) {
+  public void printCSVheader(PrintWriter writer) {
+
       writer.println(StringEncoderDecoder.toCSVString(';',"NAME", "REGION",
           "USER",
           "STATUS",
           "STARTDATE",
           "ENDDATE",
           "NEW", "NEW SMS",
+          "RETRY",
           "PROCESS", "PROCESS SMS",
           "DELIVERED",
           "FAILED",
           "EXPIRED"));
-    } else {
-      writer.println(StringEncoderDecoder.toCSVString(';',"NAME", "REGION",
-          "USER",
-          "STATUS",
-          "STARTDATE",
-          "ENDDATE",
-          "WAIT",
-          "DELIVERED",
-          "NOTDELIVERED"));
-
-    }
   }
 
-  public void printWithChildrenToCSV(PrintWriter writer, boolean fullMode) {
+  public void printWithChildrenToCSV(PrintWriter writer) {
 
     for(AggregatedRecord r1 : innerRowsMap.values()) {
       MessagesByDeliveriesRecord r = (MessagesByDeliveriesRecord) r1;
-      if (fullMode) {
+
         writer.println(StringEncoderDecoder.toCSVString(';',r.deliveryName, r.region,
             r.login,
             deliveryStatus,
             fmtDate(minDate),
             fmtDate(maxDate),
             r.newMessages, r.newSms,
+            r.retryMessages,
             r.procMessages, r.processSms,
             r.deliveredMessages,
             r.failedMessages,
             r.expiredMessages));
-      } else {
-        writer.println(StringEncoderDecoder.toCSVString(';',r.deliveryName, r.region,
-            r.login,
-            deliveryStatus,
-            fmtDate(minDate),
-            fmtDate(maxDate),
-            r.newMessages,
-            r.deliveredMessages,
-            r.failedMessages + r.expiredMessages));
-      }
     }
   }
 
@@ -375,6 +356,8 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           return mul * o1.getLogin().compareTo(o2.getLogin());
         } else if (sortOrder.getColumnId().equals("new")) {
           return o1.getNewMessages() >= o2.getNewMessages() ? mul : -mul;
+        } else if (sortOrder.getColumnId().equals("retry")) {
+          return o1.getRetryMessages() >= o2.getRetryMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("process")) {
           return o1.getProcMessages() >= o2.getProcMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("delivered")) {

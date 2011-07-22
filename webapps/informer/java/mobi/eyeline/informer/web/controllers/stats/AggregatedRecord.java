@@ -22,9 +22,9 @@ public abstract class AggregatedRecord {
 
   abstract Comparator getRecordsComparator(DataTableSortOrder sortOrder);
 
-  abstract void printCSVheader(PrintWriter writer, boolean detalised);
+  abstract void printCSVheader(PrintWriter writer);
 
-  abstract void printWithChildrenToCSV(PrintWriter writer, boolean detalised);
+  abstract void printWithChildrenToCSV(PrintWriter writer);
 
 
   protected void addChild(AggregatedRecord newChild) {

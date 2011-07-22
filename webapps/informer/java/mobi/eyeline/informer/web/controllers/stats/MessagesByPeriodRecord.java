@@ -65,12 +65,13 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
   }
 
 
-  void printCSV(PrintWriter writer, boolean detalized) {
-    if (detalized) {
+  void printCSV(PrintWriter writer) {
+
       if (isParent()) {
         writer.println(StringEncoderDecoder.toCSVString(';',
             getPeriodString(), "",
             getNewMessages(), getNewSms(),
+            getRetryMessages(),
             getProcessMessages(), getProcessSms(),
             getDeliveredMessages(), getDeliveredMessagesSMS(),
             getFailedMessages(), getFailedMessagesSMS(),
@@ -79,46 +80,25 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
         writer.println(StringEncoderDecoder.toCSVString(';',
             "", getPeriodString(),
             getNewMessages(), getNewSms(),
+            getRetryMessages(),
             getProcessMessages(), getProcessSms(),
             getDeliveredMessages(), getDeliveredMessagesSMS(),
             getFailedMessages(), getFailedMessagesSMS(),
             getExpiredMessages(), getExpiredMessagesSMS()));
       }
-    } else {
-      if (isParent()) {
-        writer.println(StringEncoderDecoder.toCSVString(';',
-            getPeriodString(), "",
-            getNewMessages() + getProcessMessages(),
-            getDeliveredMessages(), getDeliveredMessagesSMS(),
-            getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
-      } else {
-        writer.println(StringEncoderDecoder.toCSVString(';',
-            "", getPeriodString(),
-            getNewMessages() + getProcessMessages(),
-            getDeliveredMessages(), getDeliveredMessagesSMS(),
-            getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
-      }
-    }
+
   }
 
   @Override
-  void printCSVheader(PrintWriter writer, boolean detalized) {
-    if (detalized) {
-      writer.println(StringEncoderDecoder.toCSVString(';',
-          "PERIOD", "",
-          "NEW", "NEW SMS",
-          "PROCESS", "PROCESS SMS",
-          "DELIVERED", "DELIVERED SMS",
-          "FAILED", "FAILED SMS",
-          "EXPIRED", "EXPIRED SMS"));
-    } else {
-      writer.println(StringEncoderDecoder.toCSVString(';',
-          "PERIOD", "",
-          "WAIT",
-          "DELIVERED", "DELIVERED SMS",
-          "NOT DELIVERED", "NOT DELIVERED SMS"));
-    }
-
+  void printCSVheader(PrintWriter writer) {
+    writer.println(StringEncoderDecoder.toCSVString(';',
+        "PERIOD", "",
+        "NEW", "NEW SMS",
+        "RETRY",
+        "PROCESS", "PROCESS SMS",
+        "DELIVERED", "DELIVERED SMS",
+        "FAILED", "FAILED SMS",
+        "EXPIRED", "EXPIRED SMS"));
   }
 
 
@@ -131,6 +111,8 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord implements 
           return mul * o1.getStartCalendar().compareTo(o2.getStartCalendar());
         } else if (sortOrder.getColumnId().equals("new")) {
           return o1.getNewMessages() >= o2.getNewMessages() ? mul : -mul;
+        } else if (sortOrder.getColumnId().equals("retry")) {
+          return o1.getRetryMessages() >= o2.getRetryMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("process")) {
           return o1.getProcessMessages() >= o2.getProcessMessages() ? mul : -mul;
         } else if (sortOrder.getColumnId().equals("delivered")) {

@@ -25,10 +25,19 @@
               <eye:column name="new" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.data.newMessages}(#{row.data.newSms})"/>
                 <f:facet name="inner">
-                  <h:outputText value="#{row.newMessages}" style="color:GREEN"/>
+                  <h:outputText value="#{row.newMessages}(#{row.newSms})" style="color:GREEN"/>
                 </f:facet>
                 <f:facet name="footer">
                   <h:outputText value="#{deliveryMessagesByPeriod.totals.newMessages}(#{deliveryMessagesByPeriod.totals.newSms})" style="font-weight:bold;"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="retry" title="#{msg['message.state.Retry']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.retryMessages}"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.retryMessages}" style="color:GREEN"/>
+                </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{deliveryMessagesByPeriod.totals.retryMessages}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
               <eye:column name="process" title="#{msg['message.state.Sent']}" sortable="true" width="10%" align="center">

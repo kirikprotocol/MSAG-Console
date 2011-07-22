@@ -265,9 +265,9 @@ public abstract class DeliveryStatController extends InformerController{
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       AggregatedRecord r = records.get(i);
       if (i == 0) {
-        r.printCSVheader(writer, true);
+        r.printCSVheader(writer);
       }
-      r.printWithChildrenToCSV(writer, true);
+      r.printWithChildrenToCSV(writer);
     }
   }
 

@@ -353,8 +353,8 @@ public class MessagesByDeliveriesController extends InformerController{
 
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       MessagesByDeliveriesRecord r = records.get(i);
-      if (i == 0) r.printCSVheader(writer, true);
-      r.printWithChildrenToCSV(writer, true);
+      if (i == 0) r.printCSVheader(writer);
+      r.printWithChildrenToCSV(writer);
     }
   }
 
