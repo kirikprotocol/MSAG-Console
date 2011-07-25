@@ -9,6 +9,10 @@ import mobi.eyeline.dcpgw.journal.Journal;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.filesystem.*;
+import mobi.eyeline.informer.util.config.XmlConfig;
+import mobi.eyeline.informer.util.config.XmlConfigException;
+import mobi.eyeline.informer.util.config.XmlConfigParam;
+import mobi.eyeline.informer.util.config.XmlConfigSection;
 import mobi.eyeline.smpp.api.pdu.*;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
@@ -17,7 +21,6 @@ import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -30,18 +33,6 @@ import mobi.eyeline.smpp.api.SmppServer;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.PDUListener;
 import mobi.eyeline.smpp.api.pdu.data.Address;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
-import org.jdom.transform.JDOMSource;
-import org.xml.sax.SAXException;
-
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
-
 
 public class Gateway extends Thread implements PDUListener {
 
@@ -55,11 +46,9 @@ public class Gateway extends Thread implements PDUListener {
 
     private Hashtable<String, String> user_password_map;
     private Hashtable<Integer, String> delivery_id_user_map;
-    private Hashtable<Long, Integer> service_number_delivery_id_map;
+    private Hashtable<String, Integer> service_number_delivery_id_map;
 
     private String mapping_filename;
-
-    private Schema schema;
 
     private AtomicLong al = new AtomicLong(0);
 
@@ -86,10 +75,9 @@ public class Gateway extends Thread implements PDUListener {
         Properties config = new Properties();
 
         String userDir = System.getProperty("user.dir");
-        String filename = userDir+File.separator+"config"+File.separator+"dcpgw.properties";
+        String filename = userDir+File.separator+"conf"+File.separator+"dcpgw.properties";
 
-        mapping_filename = userDir+File.separator+"config"+File.separator+"mapping.xml";
-        String schema_filename = userDir+File.separator+"config"+File.separator+"mapping.xsd";
+        mapping_filename = userDir+File.separator+"conf"+File.separator+"config.xml";
 
         try {
             config.load(new FileInputStream(filename));
@@ -100,24 +88,9 @@ public class Gateway extends Thread implements PDUListener {
 
         user_password_map = new Hashtable<String, String>();
         delivery_id_user_map = new Hashtable<Integer, String>();
-        service_number_delivery_id_map = new Hashtable<Long, Integer>();
+        service_number_delivery_id_map = new Hashtable<String, Integer>();
 
         recepts_table = new Hashtable<Integer, Data>();
-
-        System.setProperty("javax.xml.validation.SchemaFactory:http://www.w3.org/XML/XMLSchema/v1.1",
-                           "org.apache.xerces.jaxp.validation.XMLSchema11Factory");
-        SchemaFactory sf = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
-        try {
-            InputStream inputStream = new FileInputStream(schema_filename);
-            StreamSource ss = new StreamSource(inputStream);
-            schema = sf.newSchema(ss);
-        } catch (FileNotFoundException e) {
-            log.error(e);
-            throw new InitializationException(e);
-        } catch (SAXException e) {
-            log.error(e);
-            throw new InitializationException(e);
-        }
 
         try {
             updateDeliveries();
@@ -138,9 +111,6 @@ public class Gateway extends Thread implements PDUListener {
 
                         case SubmitSM:{
 
-
-
-
                             long time = System.currentTimeMillis();
                             long message_id = time + al.incrementAndGet();
 
@@ -159,12 +129,10 @@ public class Gateway extends Thread implements PDUListener {
                             String text = request.getMessage();
                             log.debug("Id '"+message_id+"', source address '"+source_address_str+"', destination address '"+destination_address_str+"', text '"+text+"'.");
 
-                            long service_number = Long.parseLong(source_address_str);
-
-                            int delivery_id = service_number_delivery_id_map.get(service_number);
+                            int delivery_id = service_number_delivery_id_map.get(source_address_str);
 
                             String login = delivery_id_user_map.get(delivery_id);
-                            log.debug("Id '"+message_id+"', service_number '"+service_number+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
+                            log.debug("Id '"+message_id+"', service_number '"+source_address_str+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
                             Manager.getInstance().getSender(login).addMessage(message_id, destination_address_str, text, sequence_number, connection_name, delivery_id);
 
@@ -190,33 +158,34 @@ public class Gateway extends Thread implements PDUListener {
                         }
 
                         case DeliverSMResp:{
-                            log.debug("Handle pdu with type "+pdu.getType());
+                            synchronized (read_write_monitor){
 
-                            DeliverSMResp resp = (DeliverSMResp) pdu;
-                            int sequence_number = resp.getSequenceNumber();
-                            log.debug("DeliverSMResp: sequence_number="+sequence_number);
+                                log.debug("Handle pdu with type "+pdu.getType());
 
-                            Data data = recepts_table.get(sequence_number);
+                                DeliverSMResp resp = (DeliverSMResp) pdu;
+                                int sequence_number = resp.getSequenceNumber();
+                                log.debug("DeliverSMResp: sequence_number="+sequence_number);
 
-                            if (data != null){
+                                Data data = recepts_table.get(sequence_number);
 
-                                synchronized (read_write_monitor){
+                                if (data != null){
 
-                                    try {
-                                        journal.write(sequence_number, data, Status.DONE);
-                                    } catch (CouldNotWriteToJournalException e) {
-                                        log.error(e);
-                                        // todo ?
-                                    }
+                                        try {
+                                            journal.write(sequence_number, data, Status.DONE);
+                                        } catch (CouldNotWriteToJournalException e) {
+                                            log.error(e);
+                                            // todo ?
+                                        }
+                                        recepts_table.remove(sequence_number);
 
-                                    recepts_table.remove(sequence_number);
-                                    log.debug("Remove from memory: " + sequence_number);
+                                        log.debug("Remove from memory: " + sequence_number);
 
+                                } else {
+                                    log.warn("Couldn't find deliver receipt with sequence number "+sequence_number);
                                 }
 
-                            } else {
-                                log.warn("Couldn't find deliver receipt with sequence number "+sequence_number);
                             }
+
                             break;
                         }
 
@@ -295,69 +264,49 @@ public class Gateway extends Thread implements PDUListener {
 
     }
 
-    private void validateXMLSchema11(Document document) throws SAXException, IOException {
-        log.debug("Try to validate in-memory document ...");
-        Validator v = schema.newValidator();
-        JDOMSource in = new JDOMSource(document);
-        v.validate(in);
-        log.debug("Successfully validate xml file!");
-    }
-
     private void updateDeliveries() throws UpdateConfigurationException{
         log.debug("Try to update deliveries ...");
         try {
 
-            SAXBuilder builder = new SAXBuilder();
-            Document document = builder.build(new File(mapping_filename));
-            validateXMLSchema11(document);
+            XmlConfig xmlConfig = new XmlConfig();
+            xmlConfig.load(new File(mapping_filename));
+            XmlConfigSection users_section = xmlConfig.getSection("users");
+            Collection<XmlConfigSection> c = users_section.sections();
+            for(XmlConfigSection s: c){
+                String login = s.getName();
 
-            Element deliveries_el = document.getRootElement();
-            Element users_el = deliveries_el.getChild("Users");
-            if (users_el != null){
-                List users_list = users_el.getChildren("User");
-                for(int i=0; i<users_list.size(); i++){
-
-                    Element user_el = (Element) users_list.get(i);
-                    String login = user_el.getAttributeValue("login");
-                    String password = user_el.getAttributeValue("password");
-                    log.debug("User "+(i+1)+": login="+login+" password="+password);
-                    user_password_map.put(login, password);
-                }
-            } else {
-                log.debug("Could not find any user.");
+                XmlConfigParam p = s.getParam("password");
+                String password = p.getString();
+                log.debug("login: "+login+", password: "+password);
+                user_password_map.put(login, password);
             }
 
-            List deliveries_list = deliveries_el.getChildren("Delivery");
-            for(int i=0; i<deliveries_list.size();i++){
-                Element delivery_el = (Element) deliveries_list.get(i);
-                int delivery_id = Integer.parseInt(delivery_el.getAttributeValue("id"));
-                String user = delivery_el.getAttributeValue("user");
-                log.debug("Delivery "+(i+1)+": id="+delivery_id+", user="+user);
+            XmlConfigSection deliveries_section = xmlConfig.getSection("deliveries");
+            c = deliveries_section.sections();
+            for(XmlConfigSection s: c){
+
+                int delivery_id = Integer.parseInt(s.getName());
+
+                XmlConfigParam p = s.getParam("user");
+                String user = p.getString();
                 delivery_id_user_map.put(delivery_id, user);
+                log.debug("delivery_id: "+delivery_id+", user:"+user);
 
-                Element sns_el = delivery_el.getChild("Sns");
-                if (sns_el != null){
-                    List sns_list = sns_el.getChildren("Sn");
-                    for(int j=0; j<sns_list.size(); j++){
-                        Element sn_el = (Element) sns_list.get(j);
-                        long service_number = Long.parseLong(sn_el.getValue());
-                        service_number_delivery_id_map.put(service_number, delivery_id);
-                        log.debug("service number "+(j+1)+": "+service_number+" --> "+delivery_id);
-                    }
-                } else {
-                    log.debug("Couldn't find any service number.");
+                XmlConfigParam p2 = s.getParam("services_numbers");
+                String[] ar = p2.getStringArray(",");
+
+                for(String a: ar){
+                    String service_number = a.trim();
+                    service_number_delivery_id_map.put(service_number, delivery_id);
+                    log.debug("service_number: "+service_number+", delivery_id: "+delivery_id);
                 }
-
             }
 
             Manager.getInstance().setUserPasswordMap(user_password_map);
 
-        } catch(JDOMException e) {
-            throw new UpdateConfigurationException(e);
-        } catch (IOException e) {
-            throw new UpdateConfigurationException(e);
-        } catch (SAXException e) {
-            throw new UpdateConfigurationException(e);
+        } catch (XmlConfigException e) {
+            log.debug(e);
+            // todo ?
         }
         log.debug("Successfully update deliveries ...");
     }
@@ -396,6 +345,9 @@ public class Gateway extends Thread implements PDUListener {
         synchronized (read_write_monitor){
 
             int sequence_number = delivery_receipt.getSequenceNumber();
+            log.debug("Try to send delivery receipt with message id '"+message_id+"' and sequence number '"+sequence_number+"'.");
+            smppServer.send(delivery_receipt);
+            log.debug("Successfully send delivery receipt with sequence number '"+sequence_number+"'.");
 
             long first_sending_time = System.currentTimeMillis();
 
@@ -404,10 +356,6 @@ public class Gateway extends Thread implements PDUListener {
 
             recepts_table.put(sequence_number, data);
             log.debug("Remember to the memory: " + sequence_number+" --> " + data);
-
-            log.debug("Try to send delivery receipt with message id '"+message_id+"' and sequence number '"+sequence_number);
-            smppServer.send(delivery_receipt);
-            log.debug("Successfully send delivery receipt with sequence number "+sequence_number);
 
         }
     }
@@ -424,7 +372,7 @@ public class Gateway extends Thread implements PDUListener {
             long last_resend_time = data.getLastResendTime();
             long first_sending_time = data.getFirstSendingTime();
             long message_id = data.getMessageId();
-            DateFormat df = DateFormat.getDateTimeInstance();
+            //DateFormat df = DateFormat.getDateTimeInstance();
 
             if (current_time - first_sending_time < recend_receipts_max_timeout*1000){
 

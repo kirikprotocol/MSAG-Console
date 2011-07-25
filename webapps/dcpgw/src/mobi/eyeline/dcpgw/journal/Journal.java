@@ -33,7 +33,7 @@ public class Journal {
 
     public Journal(){
         String userDir = System.getProperty("user.dir");
-        String filename = userDir+"/config/dcpgw.properties";
+        String filename = userDir+"/conf/dcpgw.properties";
 
         Properties prop = new Properties();
 
@@ -74,15 +74,15 @@ public class Journal {
             log.debug("Detected that journal directory already exists.");
         }
 
+        df = DateFormat.getDateTimeInstance();
+        cal = Calendar.getInstance();
+
         try {
             loadJournal();
         } catch (CouldNotLoadJournalException e) {
             log.error(e);
             System.exit(1);
         }
-
-        df = DateFormat.getDateTimeInstance();
-        cal = Calendar.getInstance();
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleWithFixedDelay(new Runnable() {
@@ -103,10 +103,8 @@ public class Journal {
 
     private void appendFile(File source, File target) throws IOException {
 
-        //Открываем 1-й файл для записи
-        BufferedOutputStream bufOut = new BufferedOutputStream(new FileOutputStream(target, true)); // true - добавление в конец файла
+        BufferedOutputStream bufOut = new BufferedOutputStream(new FileOutputStream(target, true));
 
-        //Открываем 2-й файл для считывания
         BufferedInputStream bufRead = new BufferedInputStream(new FileInputStream(source));
 
         int n;
@@ -115,9 +113,9 @@ public class Journal {
             bufOut.write(n);
         }
 
-        bufOut.flush(); // Принудительно выталкиваем данные с буфера
+        bufOut.flush();
 
-        bufOut.close(); // Закрываем соединения
+        bufOut.close();
 
         bufRead.close();
 
@@ -337,6 +335,31 @@ public class Journal {
 
         File j0 = new File(journal_dir, "journal_0.csv");
         File j1 = new File(journal_dir, "journal_1.csv");
+
+        File j1_tmp = new File(journal_dir, "journal_1.csv.tmp");
+        if (j1_tmp.exists()){
+            log.debug("Detected that file '"+j1_tmp.getName()+"' exist.");
+            if (j1.exists()){
+                log.debug("Detected that file '"+j1.getName()+"' exist.");
+                if (j1_tmp.delete()){
+                    log.debug("Successfully delete file '"+j1_tmp+"'.");
+                } else {
+                    log.debug("Couldn't delete file '"+j1_tmp+"'.");
+                    throw new CouldNotLoadJournalException("Couldn't delete file '"+j1_tmp+"'.");
+                }
+            } else {
+                log.debug("Detected that file '"+j1.getName()+"' doesn't exist.");
+                if (j1_tmp.renameTo(j1)){
+                    log.debug("Successfully rename file '"+j1_tmp.getName()+"' to the file '"+j1.getName()+"'.");
+                } else {
+                    log.debug("Couldn't rename file '"+j1_tmp.getName()+"' to the file '"+j1.getName()+"'.");
+                    throw new CouldNotLoadJournalException("Couldn't rename file '"+j1_tmp.getName()+"' to the file '"+j1.getName()+"'.");
+                }
+            }
+        }
+
+
+
         File[] journals = {j1, j0};
 
         for(File f: journals){
@@ -370,9 +393,9 @@ public class Journal {
 
                         long message_id = scanner.nextLong();
                         int sequence_number = scanner.nextInt();
-                        String status = scanner.next();
+                        String status_str = scanner.next();
 
-                        if (Status.valueOf(status) == Status.DONE){
+                        if (status_str.equals(Status.DONE.toString())){
                             table.remove(sequence_number);
                             log.debug("Remove from memory: "+sequence_number);
                         } else {

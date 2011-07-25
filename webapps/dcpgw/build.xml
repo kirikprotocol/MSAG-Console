@@ -47,7 +47,7 @@
         <copydir src="${lib.dir}" dest="${DISTR_DIR}/lib"/>
         <chmod file="${DISTR_DIR}/${ant.project.name}.jar" perm="u+x"/>
 
-        <copy todir="${DISTR_DIR}/config">
+        <copy todir="${DISTR_DIR}/conf">
           <fileset dir="${conf.dir}"/>
         </copy>
 
