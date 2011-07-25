@@ -1,0 +1,10 @@
+include Types.def
+
+message UpdateConfig 1
+end
+
+message UpdateConfigResp 2
+  int32 status 1
+  string statusMessage 2
+end
+

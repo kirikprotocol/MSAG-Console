@@ -2,7 +2,6 @@ package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
-import mobi.eyeline.dcpgw.exeptions.UpdateConfigurationException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.journal.Status;
 import mobi.eyeline.dcpgw.journal.Journal;
@@ -44,11 +43,11 @@ public class Gateway extends Thread implements PDUListener {
 
     private ProcessingQueue procQueue;
 
-    private Hashtable<String, String> user_password_map;
-    private Hashtable<Integer, String> delivery_id_user_map;
-    private Hashtable<String, Integer> service_number_delivery_id_map;
+    private static Hashtable<String, String> user_password_map;
+    private static Hashtable<Integer, String> delivery_id_user_map;
+    private static Hashtable<String, Integer> service_number_delivery_id_map;
 
-    private String mapping_filename;
+    private static String mapping_filename;
 
     private AtomicLong al = new AtomicLong(0);
 
@@ -93,8 +92,8 @@ public class Gateway extends Thread implements PDUListener {
         recepts_table = new Hashtable<Integer, Data>();
 
         try {
-            updateDeliveries();
-        } catch (UpdateConfigurationException e) {
+            updateConfiguration();
+        } catch (XmlConfigException e) {
             log.error(e);
             throw new InitializationException(e);
         }
@@ -264,50 +263,42 @@ public class Gateway extends Thread implements PDUListener {
 
     }
 
-    private void updateDeliveries() throws UpdateConfigurationException{
+    public static void updateConfiguration() throws XmlConfigException {
         log.debug("Try to update deliveries ...");
-        try {
-
-            XmlConfig xmlConfig = new XmlConfig();
-            xmlConfig.load(new File(mapping_filename));
-            XmlConfigSection users_section = xmlConfig.getSection("users");
-            Collection<XmlConfigSection> c = users_section.sections();
-            for(XmlConfigSection s: c){
-                String login = s.getName();
-
-                XmlConfigParam p = s.getParam("password");
-                String password = p.getString();
-                log.debug("login: "+login+", password: "+password);
-                user_password_map.put(login, password);
-            }
-
-            XmlConfigSection deliveries_section = xmlConfig.getSection("deliveries");
-            c = deliveries_section.sections();
-            for(XmlConfigSection s: c){
-
-                int delivery_id = Integer.parseInt(s.getName());
-
-                XmlConfigParam p = s.getParam("user");
-                String user = p.getString();
-                delivery_id_user_map.put(delivery_id, user);
-                log.debug("delivery_id: "+delivery_id+", user:"+user);
-
-                XmlConfigParam p2 = s.getParam("services_numbers");
-                String[] ar = p2.getStringArray(",");
-
-                for(String a: ar){
-                    String service_number = a.trim();
-                    service_number_delivery_id_map.put(service_number, delivery_id);
-                    log.debug("service_number: "+service_number+", delivery_id: "+delivery_id);
-                }
-            }
-
-            Manager.getInstance().setUserPasswordMap(user_password_map);
-
-        } catch (XmlConfigException e) {
-            log.debug(e);
-            // todo ?
+        XmlConfig xmlConfig = new XmlConfig();
+        xmlConfig.load(new File(mapping_filename));
+        XmlConfigSection users_section = xmlConfig.getSection("users");
+        Collection<XmlConfigSection> c = users_section.sections();
+        for(XmlConfigSection s: c){
+            String login = s.getName();
+            XmlConfigParam p = s.getParam("password");
+            String password = p.getString();
+            log.debug("login: "+login+", password: "+password);
+            user_password_map.put(login, password);
         }
+
+        XmlConfigSection deliveries_section = xmlConfig.getSection("deliveries");
+        c = deliveries_section.sections();
+        for(XmlConfigSection s: c){
+
+            int delivery_id = Integer.parseInt(s.getName());
+
+            XmlConfigParam p = s.getParam("user");
+            String user = p.getString();
+            delivery_id_user_map.put(delivery_id, user);
+            log.debug("delivery_id: "+delivery_id+", user:"+user);
+
+            XmlConfigParam p2 = s.getParam("services_numbers");
+            String[] ar = p2.getStringArray(",");
+
+            for(String a: ar){
+                String service_number = a.trim();
+                service_number_delivery_id_map.put(service_number, delivery_id);
+                log.debug("service_number: "+service_number+", delivery_id: "+delivery_id);
+            }
+        }
+
+        Manager.getInstance().setUserPasswordMap(user_password_map);
         log.debug("Successfully update deliveries ...");
     }
 
