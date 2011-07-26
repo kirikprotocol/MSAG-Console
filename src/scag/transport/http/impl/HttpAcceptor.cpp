@@ -64,10 +64,10 @@ void HttpAcceptor::shutdown()
     WaitFor();
 }
 
-void HttpAcceptor::init(const char *host, int port, HttpsOptions* options)
+void HttpAcceptor::init(const char *host, int port, HttpsOptions& options)
 {
     isStopping = false;
-    httpsOptions = options;
+    httpsOptions = new HttpsOptions(options); //separate copy for each acceptor
 
     logger = Logger::getInstance((httpsOptions == NULL) ? "http.acceptor" : "https.acceptor");
 

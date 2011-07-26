@@ -3,7 +3,7 @@
 
 namespace scag2 { namespace transport { namespace http {
 
-// todo certificates
+// relative to cfg::certificatesDir
 #define RSA_SERVER_CERT     "/s_cert.pem"
 #define RSA_SERVER_KEY      "/s_privkey.pem"
 
@@ -29,6 +29,8 @@ int HttpsOptions::init(bool user_verify, bool site_verify, std::string certDir) 
 	logger = Logger::getInstance("http.https");
 
 	certificatesDir = certDir;
+	userActive = false;
+	siteActive = false;
 	try {
 		/* Load encryption & hashing algorithms for the SSL program */
 		SSL_library_init();

@@ -260,6 +260,7 @@ bool HttpRouterImpl::getTraceRouteById(const std::string& addr, const std::strin
 
 HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
 {
+    smsc_log_debug(logger, "Attempt to find route. abonent:%s, site:[%s]:[%d][%s]", addr.c_str(), site.c_str(), port, path.c_str());
     MutexGuard mt(GetRouteMutex);
     TmpBuf<char, 512> pt(512);
     std::string s;
@@ -270,8 +271,49 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 //    Address adr(addr.c_str());
     s = site + ':' + lltostr(port, buf + 19);
 
+/*
+ * Add mix-protocol feature; (xom 25.07.11)
+ * in case of user:Https but site:Http and vise versa
+ * try to resolve route selection from available set of 3 port numbers (port, 443, 80);
+ *
+ * This way we have possible problems.
+ * Note 1: Let some service exists, described by [site]:[port] in hostsMap.
+ * When port is non-std port number (not 80 or 443), the only way to find a route is
+ * to put port number into address string in request. Otherwise this route won't be found.
+ *
+ * Note 2:
+ *
+ * instead of these 2 lines:
     if(!(p = hostsMap->GetPtr(s.c_str())))
-        throw RouteNotFoundException();            
+		throw RouteNotFoundException();
+*/
+    do {
+	    smsc_log_debug(logger, "try to find route 1. %s", s.c_str());
+//		if ( (p = hostsMap->GetPtr(s.c_str())) ) {	// 1st: check given port number
+	    if(!(p = hostsMap->GetPtr(s.c_str()))) {}
+	    else {
+		    smsc_log_debug(logger, "route 1. %p", p);
+			break;									// route found
+		}											// if unsuccessfull
+		if ( port != 443 ) {						// 2nd: check default https port number
+			s = site + ':' + lltostr(443, buf + 19);
+		    smsc_log_debug(logger, "try to find route 2. %s", s.c_str());
+			if ( (p = hostsMap->GetPtr(s.c_str())) ) {
+			    smsc_log_debug(logger, "route 2. %p", p);
+				break;	 							// route found
+			}
+		}
+													// if unsuccessfull
+		if ( port != 80 ) {							// 3rd: check default http port number
+			s = site + ':' + lltostr(80, buf + 19);
+		    smsc_log_debug(logger, "try to find route 3. %s", s.c_str());
+			if( (p = hostsMap->GetPtr(s.c_str())) ) {
+			    smsc_log_debug(logger, "route 3. %p", p);
+				break;								// route found
+			}
+		}
+		throw RouteNotFoundException();				// found nothing
+    } while (0);
 
     hid = *p;
 
@@ -414,6 +456,7 @@ uint32_t HttpRouterImpl::getId(Hash<uint32_t>* h, const std::string& s, uint32_t
     else
     {
         h->Insert(s.c_str(), ++id);
+        smsc_log_debug(logger, "Add to hostsMap: %s, %d", s.c_str(), id);
         rid = id;
     }
     return rid;

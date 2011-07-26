@@ -50,8 +50,13 @@ siteSsl(NULL)
 	logger = Logger::getInstance("http.https");
 
 	if ( sslOptions ) {
-		trc.sitePort = 443;
+		userHttps = sslOptions->userActive;
+		if ( userHttps )
+			trc.sitePort = 443;
 	}
+// Mix-protocol: tmp decision
+	siteHttps = userHttps;
+
 	setContext(user, this);
 }
 
@@ -69,6 +74,11 @@ HttpContext::~HttpContext()
 
 	if (command)
 		delete command;
+}
+
+void HttpContext::setSiteHttps(bool supported) {
+	siteHttps = supported;
+	smsc_log_debug(logger, "HttpContext::setSiteHttps=%s [port=%d]", (siteHttps?"YES":"NO"), command->getSitePort());
 }
 
 int HttpContext::sslUserConnection(bool verify_client) {
@@ -167,7 +177,7 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 }
 
 int HttpContext::sslCloseConnection(Socket* s) {
-	if (!this->useHttps(s))
+	if ( !this->useHttps(s) )
 		return 0;
 	SSL* &ssl = (s == user) ? userSsl : siteSsl;
 	smsc_log_debug(logger, "sslCloseConnection: %s %p", connName(s), ssl);
@@ -236,10 +246,10 @@ SSL* HttpContext::sslCheckConnection(Socket* s) {
 
 bool HttpContext::useHttps(Socket* s) {
 	if (s == user) {
-		return ( userSsl != NULL );
+		return ( userHttps );
 	}
 	else if (s == site) {
-		return ( siteSsl != NULL );
+		return ( siteHttps );
 	}
 	return false;
 }
@@ -330,34 +340,45 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 
 /*
  * Prepare command data as continuous message buffer to write over HTTPS.
- * TmpBuf unparsed used to store data, it was unused when SEND_REQUEST or SEND_RESPONSE actions.
+ * TmpBuf sendBuf used to store data, it was unused when SEND_REQUEST or SEND_RESPONSE actions.
  */
 void HttpContext::prepareData() {
-    if ( (action == SEND_REQUEST) || (action == SEND_RESPONSE) ) {
+    if ( (siteHttps && (action == SEND_REQUEST)) || (userHttps && (action == SEND_RESPONSE)) )
+    {
 		const char *data;
 		unsigned int size, cnt_size, wrong_size;
-		unparsed.SetPos(0);
+		size_t tmp;
+		sendBuf.SetPos(0);
 	// write headers
 		const std::string &headers = command->getMessageHeaders();
 		size = headers.size();
 		if (size)
-			saveUnparsed(const_cast<char*>(headers.data()), static_cast<unsigned int>(headers.size()));
+			sendBuf.Append(headers.data(), size);
+//
+		sendBuf.Append("\0", 1);
+		tmp = sendBuf.GetPos();
+		if (tmp > 0) {
+			sendBuf.SetPos(--tmp);
+		}
+		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", size, sendBuf.GetPos(), sendBuf.get());
+//
 
 	// write content
 		cnt_size = command->getContentLength();
-		smsc_log_debug(logger, "prepareData: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
 		data = command->getMessageContent(wrong_size);
+		smsc_log_debug(logger, "prepareData h:%d c:%d w:%d pos:%d", size, cnt_size, wrong_size, sendBuf.GetPos());
 //		assert(cnt_size==wrong_size);	//TODO: what wrong with command->getMessageContent?
 		if (cnt_size)
-			unparsed.Append(data, cnt_size);
-		smsc_log_debug(logger, "prepareData: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
-
-		unparsed.Append("\0", 1);
-		size_t tmp = unparsed.GetPos();
+			sendBuf.Append(data, cnt_size);
+		smsc_log_debug(logger, "prepareData: %d + %d = %d.", size, cnt_size, sendBuf.GetPos());
+//
+		sendBuf.Append("\0", 1);
+		tmp = sendBuf.GetPos();
 		if (tmp > 0) {
-			unparsed.SetPos(--tmp);
+			sendBuf.SetPos(--tmp);
 		}
-		smsc_log_debug(logger, "prepareData: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
+		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", cnt_size, sendBuf.GetPos(), sendBuf.get());
+//
 		position = 0;
 		flags = 1;
     }
@@ -368,11 +389,20 @@ void HttpContext::prepareData() {
  */
 bool HttpContext::commandIsOver(Socket* s) {
 	bool result = true;
-	if (flags == 1) {
-		result = useHttps(s)
-				? (position >= unparsed.GetPos())
-				: (position >= unsigned(command->getContentLength()));
-	}
+	smsc_log_debug(logger, "commandIsOver Https=%s flags=%d position=%d upos=%d cpos=%d",
+			(useHttps(s)?"Yes":"No"), flags, position, sendBuf.GetPos(), command->getContentLength());
+    if (flags == 0)
+    {
+        if (position >= command->getMessageHeaders().size()) {
+            flags = 1;
+            position = 0;
+        }
+        return (command->getContentLength() > 0);
+    }
+	result = useHttps(s)
+			? (position >= sendBuf.GetPos())
+			: (position >= unsigned(command->getContentLength()));
+	smsc_log_debug(logger, "commandIsOver=%s", (result?"Yes":"No"));
 	return result;
 }
 /*
@@ -381,8 +411,9 @@ bool HttpContext::commandIsOver(Socket* s) {
 void HttpContext::getCommandAttr(Socket* s, const char* &data, unsigned int &size) {
 	if ( useHttps(s) ) {
 		flags = 1;
-		data = unparsed.get();
-		size = unparsed.GetPos();
+		data = sendBuf.get();
+		size = sendBuf.GetPos();
+		smsc_log_debug(logger, "getCommandAttr1 %p size=%d pos=%d", data, size, position);
 	}
 	else {	// no https
 		if (flags == 0) {
@@ -391,10 +422,13 @@ void HttpContext::getCommandAttr(Socket* s, const char* &data, unsigned int &siz
 
 			data = headers.data();
 			size = headers.size();
+			smsc_log_debug(logger, "getCommandAttr2 %p size=%d pos=%d", data, size, position);
 		}
 		else {
 			// write content
 			data = command->getMessageContent(size);
+			size = command->getContentLength();
+			smsc_log_debug(logger, "getCommandAttr3 %p size=%d pos=%d", data, size, position);
 		}
 	}
 }

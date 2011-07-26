@@ -127,15 +127,18 @@ public:
 
 //temporary for debug info
 //    int sslCheckShutdown(void) { return (userSsl) ? SSL_get_shutdown(userSsl) : 0; }
-//    char* getUnparsed(void) { return unparsed.get(); }
-//    unsigned int unparsedLength() { return static_cast<unsigned int>(unparsed.GetPos()); }
 
+    //for HttpParser
+    char* getUnparsed(void) { return unparsed.get(); }
+    unsigned int unparsedLength() { return static_cast<unsigned int>(unparsed.GetPos()); }
     //for HttpReaderTask::Execute
     void appendUnparsed(char* buf, unsigned int len) { unparsed.Append(buf, len); }
     //for HttpWriterTask::Execute
     void prepareData();
     bool commandIsOver(Socket* s);
     void getCommandAttr(Socket* s, const char* &data, unsigned int &size);
+    //for HttpWriterTask::registerContext
+     void setSiteHttps(bool supported); // { siteHttps = supported; }
 
 public:
     Socket *user;
@@ -167,6 +170,8 @@ protected:
     Logger *logger;
 
 	HttpsOptions* sslOptions;
+	bool		userHttps; //https usage flags
+	bool		siteHttps;
     SSL*		userSsl;
     SSL*		siteSsl;
     int sslCheckIoError(SSL* ssl, int ret);
@@ -174,6 +179,7 @@ protected:
     SSL* sslCheckConnection(Socket* s);
     void sslCertInfo(X509* cert);
     const char* connName(Socket* s) { return (s==user?nameUser:nameSite); }
+    TmpBuf<char, 1> sendBuf;
 };
 
 }}}

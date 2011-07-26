@@ -44,12 +44,17 @@ void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig
 		readers.init(cfg.readerPoolSize, cfg.readerSockets, "http.reader");
 		writers.init(cfg.writerPoolSize, cfg.writerSockets, "http.writer");
 		scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
-		acceptor.init(cfg.host.c_str(), cfg.port);
+/*
+ * Mix-protocol: init every acceptor with httpsOptions object passed to HttpContext constructor
+ */
+		// no validate_certificates for user and site connections (later)
+		httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT, cfg.certificatesDir);
+
+		acceptor.init(cfg.host.c_str(), cfg.port, httpsOptions);
 		smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
 
-	// no validate_certificates for user and site connections (later)
-		httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT, cfg.certificatesDir);
-		sslAcceptor.init(cfg.host.c_str(), cfg.portHttps, &httpsOptions);
+		httpsOptions.userActive = true;
+		sslAcceptor.init(cfg.host.c_str(), cfg.portHttps, httpsOptions);
 		smsc_log_info(logger, "Https manager inited host=%s:%d, cert=%s", cfg.host.c_str(), cfg.portHttps, cfg.certificatesDir.c_str());
 	}
 	catch(...) {
@@ -59,26 +64,24 @@ void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig
 
 void HttpManagerImpl::shutdown()
 {
-    acceptor.shutdown();
-    sslAcceptor.shutdown();
+	acceptor.shutdown();
+	sslAcceptor.shutdown();
 
-    while(1)
-    {
-        if(!readers.canStop())
-            smsc_log_info(logger, "Waiting readers to stop");
-        else if(!writers.canStop())
-            smsc_log_info(logger, "Waiting writers to stop");
-        else if(!scags.canStop())
-            smsc_log_info(logger, "Waiting scagtasks to stop");
-        else
-            break;
-        sleep(1);
-    }
-        
-    scags.shutdown();
-    readers.shutdown();
-    writers.shutdown();
-    smsc_log_info(logger, "HttpManager shutdown");
+	while(1) {
+		if(!readers.canStop())
+			smsc_log_info(logger, "Waiting readers to stop");
+		else if(!writers.canStop())
+			smsc_log_info(logger, "Waiting writers to stop");
+		else if(!scags.canStop())
+			smsc_log_info(logger, "Waiting scagtasks to stop");
+		else
+			break;
+		sleep(1);
+	}
+	scags.shutdown();
+	readers.shutdown();
+	writers.shutdown();
+	smsc_log_info(logger, "HttpManager shutdown");
 }
 
 bool HttpManagerImpl::isLicenseExpired() {

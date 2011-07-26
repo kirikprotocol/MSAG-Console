@@ -14,8 +14,33 @@ using smsc::logger::Logger;
 class HttpsOptions
 {
 public:
-	HttpsOptions() : method(NULL), userCtx(NULL), siteCtx(NULL) {};
-	HttpsOptions(SSL_METHOD *meth) : method(meth), userCtx(NULL), siteCtx(NULL) {};
+	HttpsOptions()
+		: userVerify(false)
+		, siteVerify(false)
+		, userActive(false)
+		, siteActive(false)
+		, method(NULL)
+		, userCtx(NULL)
+		, siteCtx(NULL)
+		{};
+	HttpsOptions(SSL_METHOD* meth)
+		: userVerify(false)
+		, siteVerify(false)
+		, userActive(false)
+		, siteActive(false)
+		, method(meth)
+		, userCtx(NULL)
+		, siteCtx(NULL)
+		{};
+	HttpsOptions(HttpsOptions& src)
+		: userVerify(src.userVerify)
+		, siteVerify(src.siteVerify)
+		, userActive(src.userActive)
+		, siteActive(src.siteActive)
+		, method(src.method)
+		, userCtx(src.userCtx)
+		, siteCtx(src.siteCtx)
+		{};
     ~HttpsOptions();
 
     int init(bool user_verify, bool site_verify, std::string certDir);
@@ -24,6 +49,8 @@ public:
 
     bool		userVerify;
     bool		siteVerify;
+    bool		userActive;
+    bool		siteActive;
 
 protected:
     Logger *logger;

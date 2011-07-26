@@ -27,7 +27,7 @@ public:
     virtual const char* taskName();
 
     void shutdown();
-    void init(const char *host, int port, HttpsOptions* options=NULL);
+    void init(const char *host, int port, HttpsOptions& options);
 
 protected:
     HttpManagerImpl &manager;    

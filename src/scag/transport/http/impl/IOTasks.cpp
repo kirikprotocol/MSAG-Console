@@ -435,9 +435,9 @@ int HttpWriterTask::Execute()
 */
                 cx->getCommandAttr(s, data, size);
 				smsc_log_debug(logger, "data to send %p size=%d pos=%d", data, size, cx->position);
-				data += cx->position;
-				size -= cx->position;
 				if (size) {
+					data += cx->position;
+					size -= cx->position;
 					if ( cx->useHttps(s) ) {
 						written_size = cx->sslWritePartial(s, data, size);
 					}
@@ -462,6 +462,7 @@ int HttpWriterTask::Execute()
 						continue;
 					}
 				}
+/*
                 if (cx->flags == 0)
                 {
                     if(cx->position >= cx->command->getMessageHeaders().size())
@@ -470,7 +471,9 @@ int HttpWriterTask::Execute()
                         cx->position = 0;
                     }
                 }
-                else if ( cx->commandIsOver(s) )
+                else
+*/
+                if ( cx->commandIsOver(s) )
                 {
                     removeSocket(s);
                     if (cx->action == SEND_REQUEST) {
@@ -526,7 +529,6 @@ int HttpWriterTask::Execute()
     return 0;
 }
 
-
 void HttpWriterTask::registerContext(HttpContext* cx)
 {
     Socket *s;
@@ -540,12 +542,14 @@ void HttpWriterTask::registerContext(HttpContext* cx)
 /*
  * TODO: make decision to use HTTPS connection on site (depends on url or route fields);
  */
+    	cx->setSiteHttps(cx->command->getSitePort() == 443);
         s = cx->site = new Socket;
         HttpContext::setContext(s, cx);
     }
     else
         s = cx->user;
 
+    smsc_log_debug(logger, "HttpWriterTask::registerContext");
     cx->prepareData(); //xom 14.07.2011
     addSocket(s, cx->action != SEND_REQUEST);
 }
