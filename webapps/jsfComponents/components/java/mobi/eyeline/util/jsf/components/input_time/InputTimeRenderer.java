@@ -99,7 +99,7 @@ public class InputTimeRenderer extends Renderer {
       inputClass = "class=\"validationError\"";
 
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
-    w.a("<div class=\"inputTime\" id=\"").a(id).a("\">");
+    w.a("<div class=\"eyeline_inputTime\" id=\"").a(id).a("\">");
     w.a("<input type=\"text\" id=\"").a(id).a(".hours\" name=\"").a(id).a(".hours\" value=\"").a(hours).a("\" maxlength=\"3\" size=\"2\"").a(inputClass).a(">");
     w.a(":");
     w.a("<input type=\"text\" id=\"").a(id).a(".minutes\" name=\"").a(id).a(".minutes\" value=\"").a(minutes).a("\" maxlength=\"2\" size=\"2\"").a(inputClass).a(" >");

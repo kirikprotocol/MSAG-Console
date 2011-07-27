@@ -1,15 +1,15 @@
 /*Стиль внешнего div*/
-div.inputTime {
+div.eyeline_inputTime {
   white-space: nowrap;
 }
 
 /*Стиль полей ввода при возникновении ошибки*/
-div.inputTime input.validationError {
+div.eyeline_inputTime input.validationError {
   border: 1px solid RED;
 }
 
 /*Стиль нотификации об ошибке (отображается после полей ввода)*/
-div.inputTime span.error {
+div.eyeline_inputTime span.error {
   color: RED;
   font-weight: bold;
   cursor: default;
