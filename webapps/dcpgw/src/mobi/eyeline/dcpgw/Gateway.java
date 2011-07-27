@@ -1,5 +1,6 @@
 package mobi.eyeline.dcpgw;
 
+import mobi.eyeline.dcpgw.admin.UpdateConfigServer;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
@@ -94,6 +95,23 @@ public class Gateway extends Thread implements PDUListener {
         try {
             updateConfiguration();
         } catch (XmlConfigException e) {
+            log.error(e);
+            throw new InitializationException(e);
+        }
+
+        String s = config.getProperty("update.config.server.port");
+        int update_config_server_port;
+        if (s != null && !s.isEmpty()){
+            update_config_server_port = Integer.parseInt("update.config.server.port");
+            log.debug("update.config.server.port="+update_config_server_port);
+        } else {
+            log.debug("Parameter 'update.config.server.port' is not found or is empty");
+            throw new InitializationException("Parameter 'update.config.server.port' is not found or is empty");
+        }
+
+        try {
+            UpdateConfigServer updateConfigServer = new UpdateConfigServer(update_config_server_port);
+        } catch (IOException e) {
             log.error(e);
             throw new InitializationException(e);
         }
@@ -216,7 +234,7 @@ public class Gateway extends Thread implements PDUListener {
 
         // Initialize the scheduler that will resend delivery receipts to smpp clients.
 
-        String s = config.getProperty("resend.receipts.interval.sec");
+        s = config.getProperty("resend.receipts.interval.sec");
         if (s != null && !s.isEmpty()){
             recend_receipts_interval = Integer.parseInt(s);
             log.debug("Initialization parameter: resend_receipts_timeout="+recend_receipts_interval);

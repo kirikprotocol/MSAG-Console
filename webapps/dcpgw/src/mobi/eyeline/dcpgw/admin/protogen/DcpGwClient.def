@@ -1,7 +1,0 @@
-include DcpGwMessages.def
-
-protocol DcpGWClient
-  UpdateConfig outmsg
-  UpdateConfigResp inmsg
-end
-

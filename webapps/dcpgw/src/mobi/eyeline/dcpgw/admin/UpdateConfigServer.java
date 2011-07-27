@@ -5,13 +5,13 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.net.*;
 
-public class Server extends Thread {
+public class UpdateConfigServer extends Thread {
 
-    private static Logger log = Logger.getLogger(Server.class);
+    private static Logger log = Logger.getLogger(UpdateConfigServer.class);
 
     private ServerSocket serverSocket;
 
-    public Server(int port) throws IOException {
+    public UpdateConfigServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
         this.start();
     }

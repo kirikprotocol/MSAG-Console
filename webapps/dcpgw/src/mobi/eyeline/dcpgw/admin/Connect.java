@@ -4,11 +4,12 @@ import mobi.eyeline.dcpgw.Gateway;
 import mobi.eyeline.dcpgw.admin.protogen.protocol.UpdateConfig;
 import mobi.eyeline.dcpgw.admin.protogen.protocol.UpdateConfigResp;
 import mobi.eyeline.informer.util.config.XmlConfigException;
+import mobi.eyeline.protogen.framework.BufferReader;
+import mobi.eyeline.protogen.framework.BufferWriter;
+import mobi.eyeline.protogen.framework.PDU;
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 
 /**
@@ -22,14 +23,14 @@ class Connect extends Thread {
    private static Logger log = Logger.getLogger(Connect.class);
 
    private Socket client = null;
-   private ObjectInputStream ois = null;
-   private ObjectOutputStream oos = null;
+   private InputStream is = null;
+   private OutputStream os = null;
 
    public Connect(Socket clientSocket) {
      client = clientSocket;
      try {
-      ois = new ObjectInputStream(client.getInputStream());
-      oos = new ObjectOutputStream(client.getOutputStream());
+      is = client.getInputStream();
+      os = client.getOutputStream();
      } catch(Exception e1) {
          try {
             client.close();
@@ -44,27 +45,52 @@ class Connect extends Thread {
 
    public void run() {
       try {
-          UpdateConfig uc = (UpdateConfig) ois.readObject();
-          log.debug("Read update config object from object input stream, sequence number '"+uc.getSeqNum()+"'.");
-          ois.close();
+          BufferReader buffer = new BufferReader(1024);
+          buffer.fillFully(is, 4);
+          int len = buffer.removeInt();
 
-          Gateway.updateConfiguration();
-          UpdateConfigResp ucr = new UpdateConfigResp();
-          oos.writeObject(ucr);
-          oos.flush();
-          oos.close();
+          if (log.isDebugEnabled()) log.debug("Received packet len=" + len);
+          if (len > 0) buffer.fillFully(is, len);
+
+          if (log.isDebugEnabled()) log.debug("PDU received: " + buffer.getHexDump());
+
+          int tag = buffer.removeInt();
+
+          int seqNum = buffer.removeInt();
+
+          UpdateConfigResp configUpdateResp;
+          try {
+              Gateway.updateConfiguration();
+              configUpdateResp = new UpdateConfigResp(seqNum, 0, "ok");
+          } catch (XmlConfigException e) {
+              configUpdateResp = new UpdateConfigResp(seqNum, 1, "Couldn't update configuration.");
+          }
+
+          serialize(configUpdateResp, os);
+
+          os.close();
           client.close();
-      } catch (ClassNotFoundException e) {
-          log.error(e);
-          // todo ?
       } catch (IOException e) {
           log.error(e);
           // todo ?
-      } catch (XmlConfigException e) {
-          log.error(e);
-          // todo ?
       }
-
    }
+
+   private static void serialize(PDU request, OutputStream os) throws IOException {
+    BufferWriter writer = new BufferWriter();
+    int pos = writer.size();
+    writer.appendInt(0); // write 4 bytes for future length
+    writer.appendInt(request.getTag());
+    writer.appendInt(request.getSeqNum());
+    request.encode(writer);
+    int len = writer.size()-pos-4;
+    writer.replaceInt( len,  pos); // fill first 4 bytes with actual length
+
+    if (log.isDebugEnabled())
+      log.debug("Sending PDU: " + writer.getHexDump());
+
+    writer.writeBuffer(os);
+    os.flush();
+  }
 
 }
