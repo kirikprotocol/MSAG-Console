@@ -19,7 +19,7 @@ table.eyeline_buttons td {
   padding-right: 4px;
 }
 
-table.eyeline_buttons a, a:visited, a:hover{
+table.eyeline_buttons a, a:visited, a:hover {
   border: 0 none;
   color: #161E49;
   cursor: pointer;

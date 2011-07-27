@@ -46,6 +46,30 @@
     </component>
   </tag>
 
+  <tag>
+    <tag-name>buttons</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.buttons_panel</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>button</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.buttons_panel.button</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>space</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.buttons_panel.space</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+    </component>
+  </tag>
+
 
   <tag>
     <tag-name>progressBar</tag-name>
@@ -86,32 +110,7 @@
     <source>tags/data_table_filter.xhtml</source>
   </tag>
 
-  <tag>
-    <tag-name>buttons</tag-name>
-    <component>
-      <component-type>buttonsPanel</component-type>
-      <renderer-type>buttonsPanel</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.buttons_panel.ButtonsPanelHandler</handler-class>
-    </component>
-  </tag>
 
-  <tag>
-    <tag-name>button</tag-name>
-    <component>
-      <component-type>button</component-type>
-      <renderer-type>buttonsPanel</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.buttons_panel.ButtonHandler</handler-class>
-    </component>
-  </tag>
-
-  <tag>
-    <tag-name>space</tag-name>
-    <component>
-      <component-type>space</component-type>
-      <renderer-type>buttonsPanel</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.buttons_panel.SpaceHandler</handler-class>
-    </component>
-  </tag>
   
   <tag>
     <tag-name>dataTable</tag-name>

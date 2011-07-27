@@ -176,4 +176,51 @@
     </attribute>
   </tag>
 
+  <!-- ============================================ BUTTONS PANEL ================================================== -->
+
+  <tag>
+    <description>Панель кнопок. Может содержать внутри себя теги button и space</description>
+    <name>buttons</name>
+    <tag-class>mobi.eyeline.util.jsf.components.buttons_panel.ButtonsPannel</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Кнопка на панели buttons. Может содержать произвольный контент.</description>
+    <name>button</name>
+    <tag-class>mobi.eyeline.util.jsf.components.buttons_panel.Button</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Горизонтальная пружинка на панели кнопок</description>
+    <name>space</name>
+    <tag-class>mobi.eyeline.util.jsf.components.buttons_panel.Space</tag-class>
+    <body-content>empty</body-content>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
 </taglib>
