@@ -39,6 +39,15 @@
   </tag>
 
   <tag>
+    <tag-name>collapsingGroup</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.collapsing_group</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+    </component>
+  </tag>
+
+
+  <tag>
     <tag-name>progressBar</tag-name>
     <source>tags/progressBar.xhtml</source>
   </tag>
@@ -51,14 +60,7 @@
 
 
 
-  <tag>
-    <tag-name>collapsingGroup</tag-name>
-    <component>
-      <component-type>collapsingGroup</component-type>
-      <renderer-type>collapsingGroup</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.collapsing_group.CollapsingGroupHandler</handler-class>
-    </component>
-  </tag>
+
 
   <tag>
     <tag-name>dynamicTable</tag-name>

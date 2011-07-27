@@ -1,23 +1,12 @@
-function collasping_group_showhide_section(sectionId)
-{
-    var headerElem = document.getElementById("sectionHeader_" + sectionId);
-    var headerFlagElem = document.getElementById("sectionHeaderFlag_" + sectionId);
-    var valueElem = document.getElementById("sectionValue_" + sectionId);
-    var openedElement = document.getElementById("sectionOpened_" + sectionId);      
-    if (valueElem.style.display != "none")
-    {
-        headerElem.className = "eyeline_collapsing_group_closed";
-        headerFlagElem.className = "eyeline_collapsing_group_flag_closed";
-        valueElem.style.display = "none";
-        openedElement.value="false";
-    }
-    else
-    {
-        headerElem.className = "eyeline_collapsing_group_opened";
-        headerFlagElem.className = "eyeline_collapsing_group_flag_opened";
-        valueElem.style.display = "";
-        openedElement.value="true";
-    }
+function initCollapsingGroup(groupId) {
+  var header = $("#" + groupId + "Header");
+  var body = $("#" + groupId + "Body");
+  var status = $("#" + groupId + "Status");
 
-    return false;
+  header.click(function () {
+    var idx = status.val();
+    header.removeClass("eyeline_collapsingGroupHeader"+idx).addClass("eyeline_collapsingGroupHeader"+(1-idx));
+    body.removeClass("eyeline_collapsingGroupBody"+idx).addClass("eyeline_collapsingGroupBody"+(1-idx));
+    status.val(1 - idx);
+  });
 }

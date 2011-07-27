@@ -2,12 +2,15 @@ package mobi.eyeline.util.jsf.components.collapsing_group;
 
 import mobi.eyeline.util.jsf.components.EyelineComponent;
 
+import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
+import javax.faces.render.Renderer;
+import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * @author Artem Snopkov
  */
-public class CollapsingGroup extends EyelineComponent {
+public class CollapsingGroup extends UIPanel implements JspTag {
 
   private String label;
   private boolean opened;
@@ -28,13 +31,23 @@ public class CollapsingGroup extends EyelineComponent {
     this.opened = opened;
   }
 
-  public void processDecodes(javax.faces.context.FacesContext context) {
-    CollapsingGroupRenderer.decodeGroup(context, this);
-    super.processDecodes(context);
+  @Override
+  public String getFamily() {
+    return "Eyeline";
+  }
+
+  @Override
+  public String getRendererType() {
+    return "mobi.eyeline.util.jsf.components.collapsing_group";
+  }
+
+  @Override
+  protected Renderer getRenderer(FacesContext context) {
+    return new CollapsingGroupRenderer();
   }
 
   public Object saveState(FacesContext context) {
-    Object[] values = new Object[5];
+    Object[] values = new Object[3];
     values[0] = super.saveState(context);
     values[1] = opened;
     values[2] = label;

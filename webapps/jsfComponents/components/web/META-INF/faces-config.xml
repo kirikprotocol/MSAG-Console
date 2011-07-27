@@ -44,6 +44,11 @@
     <component-class>mobi.eyeline.util.jsf.components.message.Message</component-class>
   </component>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.collapsing_group</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.collapsing_group.CollapsingGroup</component-class>
+  </component>
+
   <render-kit>
 
     <renderer>

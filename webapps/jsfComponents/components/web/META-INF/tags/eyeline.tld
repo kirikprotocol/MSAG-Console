@@ -110,8 +110,8 @@
     </attribute>
   </tag>
 
-
   <!-- ============================================ MESSAGE ======================================================== -->
+
   <tag>
     <description><![CDATA[
       Поле для отображения сообщений. <br>
@@ -129,6 +129,39 @@
     <attribute>
       <description>Важность сообщения. Допустимые значения: info, warn, error. По-умолчанию, info.</description>
       <name>level</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <!-- ============================================ COLLAPSING GROUP =============================================== -->
+
+  <tag>
+    <description>Схлапывающаяся группа элементов</description>
+    <name>collapsingGroup</name>
+    <tag-class>mobi.eyeline.util.jsf.components.collapsing_group.CollapsingGroup</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Флаг, определяющий надо ли открывать ли группу при первом отображении. По-умолчанию, false</description>
+      <name>opened</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
+    <attribute>
+      <description>Заголовок группы. В качестве альтернативы заголовок можно задать в фасете header.</description>
+      <name>label</name>
       <required>false</required>
       <rtexprvalue>false</rtexprvalue>
       <type>java.lang.String</type>
