@@ -9,11 +9,10 @@
         <webroots>
           <root url="file://$MODULE_DIR$/web" relative="/" />
         </webroots>
-        <sourceRoots>
-          <root url="file://$MODULE_DIR$/src" />
-          <root url="file://$MODULE_DIR$/java" />
-        </sourceRoots>
       </configuration>
+      <facet type="jsf" name="JSF">
+        <configuration />
+      </facet>
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
@@ -23,8 +22,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="sample" level="project" />
     <orderEntry type="module" module-name="components" />
+    <orderEntry type="library" name="sample_libs" level="project" />
   </component>
 </module>
 

@@ -8,6 +8,7 @@
 
   <namespace>http://taglib.eyeline.mobi</namespace>
 
+
   <tag>
     <tag-name>delimiter</tag-name>
     <source>tags/delimiter.xhtml</source>
@@ -16,10 +17,17 @@
   <tag>
     <tag-name>inputTime</tag-name>
     <component>
-      <component-type>inputTime</component-type>
-      <renderer-type>inputTime</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.input_time.InputTimeHandler</handler-class>
+      <component-type>mobi.eyeline.util.jsf.components.input_time</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
     </component>
+  </tag>
+
+  <tag>
+    <tag-name>validateTimeInterval</tag-name>
+    <validator>
+      <validator-id>mobi.eyeline.util.jsf.components.validateTimeInterval</validator-id>
+      <handler-class>mobi.eyeline.util.jsf.components.EyelineValidateHandler</handler-class>
+    </validator>
   </tag>
 
   <tag>

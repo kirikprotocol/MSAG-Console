@@ -29,7 +29,18 @@
     <converter-class>mobi.eyeline.util.jsf.components.DateConverter</converter-class>
   </converter>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.input_time</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.input_time.InputTime</component-class>
+  </component>
+
+  <validator>
+    <validator-id>mobi.eyeline.util.jsf.components.validateTimeInterval</validator-id>
+    <validator-class>mobi.eyeline.util.jsf.components.input_time.TimeIntervalValidator</validator-class>
+  </validator>
+
   <render-kit>
+
     <renderer>
       <component-family>Eyeline</component-family>
       <renderer-type>collapsingGroup</renderer-type>
@@ -101,12 +112,6 @@
       <component-family>Eyeline</component-family>
       <renderer-type>lineChart</renderer-type>
       <renderer-class>mobi.eyeline.util.jsf.components.graph.LinesRenderer</renderer-class>
-    </renderer>
-
-    <renderer>
-      <component-family>Eyeline</component-family>
-      <renderer-type>inputTime</renderer-type>
-      <renderer-class>mobi.eyeline.util.jsf.components.input_time.InputTimeRenderer</renderer-class>
     </renderer>
 
   </render-kit>

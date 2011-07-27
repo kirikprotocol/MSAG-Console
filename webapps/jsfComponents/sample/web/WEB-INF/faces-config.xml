@@ -12,6 +12,8 @@
       org.apache.myfaces.trinidad.core
     </default-render-kit-id>
 
+    <message-bundle>mobi.eyeline.util.jsf.components.sample.MyMessages</message-bundle>
+
     <locale-config>
       <default-locale>ru</default-locale>
       <supported-locale>en</supported-locale>

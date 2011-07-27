@@ -1,21 +1,61 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
 
 
 <ui:composition template="/main.xhtml">
+
+  <ui:define name="styles">
+
+    .props .column1 { width: 100px; white-space: nowrap; text-align: right; }
+
+    .props .column2 { width: 100px; white-space: nowrap; text-align: left; }
+
+    .props .column3 { width: 100%; white-space: nowrap; text-align: left; }
+
+  </ui:define>
 
   <ui:define name="content">
 
     <h:form>
 
-      <h:messages/>
+      <h:panelGrid styleClass="props" columns="3" columnClasses="column1, column2, column3">
 
-      <h:panelGrid columns="1">
-        <eye:inputTime value="#{inputTime.time}"/>
-        <h:commandButton value="Submit"/>
-        <h:outputText value="Time string: #{inputTime.timeString}"/>
+        <h:outputText>Произвольное значение:</h:outputText>
+        <eye:inputTime value="#{inputTime.time1}"/>
+        <h:outputText> </h:outputText>
+
+        <h:outputText>Обязательное значение:</h:outputText>
+        <eye:inputTime value="#{inputTime.time2}" required="true"/>
+        <h:outputText> (ограничение задается с помощью аттрибута required)</h:outputText>
+
+        <h:outputText>Значение должно попадать в интервал (5 утра - 8 вечера):</h:outputText>
+        <eye:inputTime value="#{inputTime.time4}">
+          <eye:validateTimeInterval minTime="05:00:00" maxTime="20:00:00"/>
+        </eye:inputTime>
+        <h:outputText> (ограничение задается с помощью validateTimeInterval)</h:outputText>
+
+        <h:outputText>Значение должно быть не ранее 5 утра:</h:outputText>
+        <eye:inputTime value="#{inputTime.time5}">
+          <eye:validateTimeInterval minTime="05:00:00"/>
+        </eye:inputTime>
+        <h:outputText> (ограничение задается с помощью validateTimeInterval)</h:outputText>
+
+        <h:outputText>Значение должно быть не позднее 8 вечера:</h:outputText>
+        <eye:inputTime value="#{inputTime.time6}">
+          <eye:validateTimeInterval maxTime="20:00:00"/>
+        </eye:inputTime>
+        <h:outputText> (ограничение задается с помощью validateTimeInterval)</h:outputText>
+
+        <h:outputText>Значение должно быть не ранее 12 дня:</h:outputText>
+        <eye:inputTime value="#{inputTime.time3}"/>
+        <h:outputText> (проверка делается в контроллере. Если значение некорректно, то кидается IllegalArgumentException)</h:outputText>
+
       </h:panelGrid>
+
+      <h:commandButton value="Submit" action="#{inputTime.submit}"/>
 
     </h:form>
 
