@@ -39,6 +39,11 @@
     <validator-class>mobi.eyeline.util.jsf.components.input_time.TimeIntervalValidator</validator-class>
   </validator>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.message</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.message.Message</component-class>
+  </component>
+
   <render-kit>
 
     <renderer>

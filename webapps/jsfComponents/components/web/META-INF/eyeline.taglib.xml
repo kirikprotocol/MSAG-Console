@@ -31,6 +31,14 @@
   </tag>
 
   <tag>
+    <tag-name>message</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.message</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
     <tag-name>progressBar</tag-name>
     <source>tags/progressBar.xhtml</source>
   </tag>
@@ -40,10 +48,7 @@
     <source>tags/inputDate.xhtml</source>
   </tag>
 
-  <tag>
-    <tag-name>message</tag-name>
-    <source>tags/message.xhtml</source>
-  </tag>
+
 
 
   <tag>

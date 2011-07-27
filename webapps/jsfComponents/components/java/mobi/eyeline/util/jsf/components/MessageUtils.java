@@ -23,6 +23,24 @@ public class MessageUtils {
     return getMessage(facesContext, facesContext.getViewRoot().getLocale(), FacesMessage.SEVERITY_ERROR, messageId, args);
   }
 
+  public static String getMessageString(FacesContext facesContext, String messageId, String ... args) {
+    return getMessageString(facesContext, facesContext.getViewRoot().getLocale(), messageId, args);
+  }
+
+  public static String getMessageString(FacesContext facesContext, Locale locale, String messageId, String ... args) {
+    String result;
+
+    ResourceBundle appBundle = getApplicationBundle(facesContext, locale);
+    result = getBundleString(appBundle, messageId, args);
+
+    if (result == null) {
+      ResourceBundle defBundle = getDefaultBundle(facesContext, locale);
+      result = getBundleString(defBundle, messageId, args);
+    }
+
+    return result;
+  }
+
   public static FacesMessage getMessage(FacesContext facesContext, Locale locale, FacesMessage.Severity severity, String messageId, String ... args) {
     ResourceBundle appBundle;
     ResourceBundle defBundle;
