@@ -63,11 +63,12 @@ class Connect extends Thread {
               Gateway.updateConfiguration();
               configUpdateResp = new UpdateConfigResp(seqNum, 0, "ok");
           } catch (XmlConfigException e) {
-              configUpdateResp = new UpdateConfigResp(seqNum, 1, "Couldn't update configuration.");
+              configUpdateResp = new UpdateConfigResp(seqNum, 1, "Couldn't update configuration:"+e.getMessage());
           }
 
           serialize(configUpdateResp, os);
 
+          is.close();
           os.close();
           client.close();
       } catch (IOException e) {

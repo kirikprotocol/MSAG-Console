@@ -102,7 +102,7 @@ public class Gateway extends Thread implements PDUListener {
         String s = config.getProperty("update.config.server.port");
         int update_config_server_port;
         if (s != null && !s.isEmpty()){
-            update_config_server_port = Integer.parseInt("update.config.server.port");
+            update_config_server_port = Integer.parseInt(s);
             log.debug("update.config.server.port="+update_config_server_port);
         } else {
             log.debug("Parameter 'update.config.server.port' is not found or is empty");

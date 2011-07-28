@@ -55,7 +55,7 @@ public class UpdateConfigClient extends SyncProtogenConnection {
           int port = 0;
           s = config.getProperty("port");
           if (s != null && !s.isEmpty()){
-              port = Integer.parseInt("port");
+              port = Integer.parseInt(s);
               log.debug("port="+port);
           } else {
               log.error("Check 'port' property.");
@@ -76,7 +76,7 @@ public class UpdateConfigClient extends SyncProtogenConnection {
                   }
               }
 
-          }, 5, 5, TimeUnit.SECONDS);
+          }, 15, 15, TimeUnit.SECONDS);
 
         }catch (IOException e) {
           log.error(e);
