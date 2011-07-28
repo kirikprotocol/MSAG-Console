@@ -36,28 +36,34 @@ static http_methods method_table[] = {
 #define METHOD_COUNT (int)(sizeof(method_table) / sizeof(method_table[0]))
 
 StatusCode HttpParser::parse(HttpContext& cx) {
-	unsigned int len = cx.unparsedLength();
-	return parse(cx.getUnparsed(), len, cx);
-}
+	char *buf, *saved_buf, *local_buf;
+	unsigned int len, local_len;
 
-StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
-{
-  char          *saved_buf = buf, *local_buf = buf;
-  unsigned int  local_len = len;
-  StatusCode    rc = OK;
-  HttpCommand   *command;
-  switch (cx.action) {
-    case READ_REQUEST:
-      if (cx.command == NULL)
-        cx.command = new HttpRequest(&cx, cx.getTransactionContext());
-      break;
-    case READ_RESPONSE:
-      if (cx.command == NULL)
-        cx.command = new HttpResponse(&cx, cx.getTransactionContext());
-      break;
-    default:
-      return ERROR;
-  }
+	StatusCode    rc = OK;
+	HttpCommand   *command;
+
+	switch (cx.action) {
+	case READ_REQUEST:
+		if (cx.command == NULL)
+			cx.command = new HttpRequest(&cx, cx.getTransactionContext());
+		break;
+	case READ_RESPONSE:
+		if (cx.command == NULL)
+			cx.command = new HttpResponse(&cx, cx.getTransactionContext());
+		break;
+	default:
+		return ERROR;
+	}
+
+	buf = cx.getUnparsed();
+	len = cx.unparsedLength();
+	buf += cx.parsePosition;
+	len -= cx.parsePosition;
+
+	local_len = len;
+	saved_buf = buf;
+	local_buf = buf;
+
   
   if (len == 0)
     return OK;
@@ -66,17 +72,20 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
   
   do {
     if (cx.flags == 0) {
+    	cx.parsePosition = 0;
       rc = readLine(local_buf, local_len);
       if (rc != OK)
-        break;
+          return rc;
+//        break;
 
       if (local_len == 0)
-        return ERROR;
+        return ERROR1;
 
       rc = parseFirstLine(saved_buf, local_len, cx);
       if (rc != OK)
         return rc;
 
+      cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
       saved_buf = local_buf;
       local_len = len - static_cast<int>(local_buf - buf);
 
@@ -86,11 +95,14 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
     while ((cx.flags == 1) && local_len) {
       rc = readLine(local_buf, local_len);
       if (rc != OK)
-        break;
+          return rc;
+//        break;
 
-      if ((rc == OK) && (local_len == 0)) {
+      if (/*(rc == OK) &&*/ (local_len == 0)) {
         // empty line at the end of HTTP header
+        cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
         cx.flags = 2;
+        command->content.SetPos(0); // xom 27.07.11 to avoid of bad command->content info (?)
         local_len = len - static_cast<int>(local_buf - buf);
 
         if (command->contentLength == 0)
@@ -116,6 +128,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
       if (rc != OK)
         return rc;
 
+      cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
       saved_buf = local_buf;
       local_len = len - static_cast<int>(local_buf - buf);
     }
@@ -125,12 +138,13 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
 
     if (cx.flags != 2) {
       // rare case when end of line was exactly at buffer end
-      len = 0;
+//      len = 0;
       return CONTINUE;
     }
     
     command->appendMessageContent(local_buf, local_len);
-    len = 0;
+    cx.parsePosition += static_cast<unsigned int>(local_len);
+//    len = 0;
 
     if ((command->contentLength > 0) && (command->content.GetPos() >= size_t(command->contentLength))) {
       if (cx.action == READ_REQUEST) {
@@ -154,11 +168,11 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
 
     return CONTINUE;
   } while (false);
-
+/*
   if (rc == CONTINUE) {
     len = len - static_cast<int>(saved_buf - buf);
   }
-
+*/
   return rc;
 }
 
@@ -171,7 +185,7 @@ StatusCode HttpParser::readLine(char*& buf, unsigned int& len)
     char ch = *buf++;
 
     if (ch == '\0')
-      return ERROR;
+      return ERROR2;
 
     if (ch == '\r')
       continue;
@@ -191,18 +205,18 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
     case READ_RESPONSE:
       {
         if ((len < 5) || compareNocaseN(buf, "HTTP/", 5))
-          return ERROR;
+          return ERROR3;
 
         const char *pos = findCharsN(buf, " \t", len);
         if (!pos)
-          return ERROR;
+          return ERROR4;
 
         cx.getResponse().httpVersion.assign(buf, pos - buf);
 
         pos++;
         cx.getResponse().setStatus(atoi(pos));
         if (!cx.getResponse().getStatus())
-          return ERROR;
+          return ERROR5;
 
         while (isdigit(*pos))
             pos++;
@@ -225,14 +239,14 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         }
 
         if (method_idx == -1)
-          return ERROR;
+          return ERROR6;
 
         const char *pos = findCharsN(buf, " \t", len);
         if (!pos)
-          return ERROR;
+          return ERROR7;
 
         if (unsigned(pos - buf) != method_table[method_idx].size)
-          return ERROR;
+          return ERROR8;
 
         // we've got method
         cx.getRequest().setMethod(method_table[method_idx].value);
@@ -255,7 +269,7 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
           end++;
           cx.getRequest().httpVersion.assign(end, len - (end - buf));
         } else
-          return ERROR;
+          return ERROR9;
 
         if (method_table[method_idx].value == GET) {
           pos = path.c_str();
@@ -281,13 +295,13 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
   const char  *pos = findCharsN(buf, ":", len);
 
   if (!pos)
-    return ERROR;
+    return ERROR10;
 
   const char  *p = pos;
   while (--p >= buf && *p <= 32);
 
   if (p < buf)
-    return ERROR; // no key
+    return ERROR11; // no key
 
   key.assign(buf, p - buf + 1);
   pos++;
@@ -374,7 +388,7 @@ StatusCode HttpParser::parseQueryParameters(const char *buf, HttpRequest& cx)
     mid = strchr(start, '=');
 
     if (!mid || (mid && end && (mid > end)))
-      return ERROR;
+      return ERROR12;
 
     key.assign(start, mid - start);
 
@@ -389,7 +403,7 @@ StatusCode HttpParser::parseQueryParameters(const char *buf, HttpRequest& cx)
       value = mid;
 
     if(urlDecode(value) != OK)
-        return ERROR;
+        return ERROR13;
 
     cx.setQueryParameter(key, value);
 
@@ -413,12 +427,12 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     mid = strchr(start, '=');
 
     if (!mid || (mid && end && (mid > end)))
-      return ERROR;
+      return ERROR14;
 
     while(start < mid && *start == ' ') start++;
 
     if(start >= mid || (*start == '$' && set))
-        return ERROR;
+        return ERROR15;
 
     val = mid + 1;
 
@@ -519,7 +533,7 @@ StatusCode HttpParser::urlDecode(std::string &s)
     if (*pos == '%') {
       if (!isxdigit(pos[1]) || !isxdigit(pos[2])) {
           delete[] result;
-          return ERROR;
+          return ERROR16;
         }
 
         buf[2] = *++pos; 

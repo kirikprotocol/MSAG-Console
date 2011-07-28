@@ -175,6 +175,7 @@ int HttpReaderTask::Execute()
         removeSocket(error);
 
         if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) > 0) {
+            smsc_log_debug(logger, "multiplexer.canRead. ready:%d: error:%d", ready.Count(), error.Count());
             for (i = 0; i < (unsigned int)error.Count(); i++) {
                 Socket *s = error[i];           
                 HttpContext *cx = HttpContext::getContext(s);
@@ -244,11 +245,20 @@ int HttpReaderTask::Execute()
                  }
                 smsc_log_debug(logger, "read %d chars, action=%d", len, cx->action);
                 if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
-                	smsc_log_debug(logger, "parse start");
-                	switch (HttpParser::parse(*cx)) {
+                	if ( cx->command == NULL )
+                		smsc_log_debug(logger, "parse start. f:%d pp:%d h:00 c:00 w:00", cx->flags, cx->parsePosition);
+                	else {
+                   		smsc_log_debug(logger, "parse start. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
+                			cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
+                			cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
+                	}
+                	StatusCode sc = HttpParser::parse(*cx);
+            		smsc_log_debug(logger, "parse result %d", sc);
+            		switch ( sc ) {
                     case OK:
-                    	smsc_log_debug(logger, "parse OK. Headers=%d content=%d",
-                    			cx->command->getMessageHeaders().size(), cx->command->getContentLength());
+                		smsc_log_debug(logger, "parse OK. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
+                			cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
+                			cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
                         removeSocket(s);
                         if (cx->action == READ_RESPONSE) {
                             smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
@@ -267,17 +277,21 @@ int HttpReaderTask::Execute()
                         cx->result = 0;
                         manager.process(cx);
                         break;
+                    case CONTINUE:
+                		smsc_log_debug(logger, "parse CONTINUE. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
+                			cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
+                			cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
+                    	HttpContext::updateTimestamp(s, now);
+//                        cx->saveUnparsed(buf + len - unparsed_len, unparsed_len);
+                        break;
                     case ERROR:
-                    	smsc_log_debug(logger, "parse ERROR");
+                    default:
+                    	smsc_log_debug(logger, "parse ERROR=%d", sc);
                         smsc_log_error(logger, "%p: %p, parse error", this, cx);
                         cx->setDestiny(405, cx->action == READ_RESPONSE ?
                             (FAKE_RESP | DEL_SITE_SOCK) : FAKE_RESP);
                         error.Push(s);
                         break;
-                    case CONTINUE:
-                    	smsc_log_debug(logger, "parse CONTINUE");
-                    	HttpContext::updateTimestamp(s, now);
-//                        cx->saveUnparsed(buf + len - unparsed_len, unparsed_len);
                     }
                 }
                 else {                    
@@ -314,6 +328,7 @@ void HttpReaderTask::registerContext(HttpContext* cx)
     cx->flags = 0;
     cx->result = 0;
     cx->position = 0;
+    cx->parsePosition = 0;
 
     addSocket(cx->action == READ_RESPONSE ? cx->site : cx->user, true);
 }
@@ -433,7 +448,7 @@ int HttpWriterTask::Execute()
 					}
 
 */
-                cx->getCommandAttr(s, data, size);
+                cx->messageGet(s, data, size);
 				smsc_log_debug(logger, "data to send %p size=%d pos=%d", data, size, cx->position);
 				if (size) {
 					data += cx->position;
@@ -473,7 +488,7 @@ int HttpWriterTask::Execute()
                 }
                 else
 */
-                if ( cx->commandIsOver(s) )
+                if ( cx->messageIsOver(s) )
                 {
                     removeSocket(s);
                     if (cx->action == SEND_REQUEST) {
@@ -549,8 +564,14 @@ void HttpWriterTask::registerContext(HttpContext* cx)
     else
         s = cx->user;
 
-    smsc_log_debug(logger, "HttpWriterTask::registerContext");
-    cx->prepareData(); //xom 14.07.2011
+    //debug block
+    {
+    	unsigned int buf_len;
+		const char* data = cx->command->getMessageContent(buf_len);
+    	smsc_log_debug(logger, "HttpWriterTask::registerContext. h:%d c:%d w:%d d:%p",
+    			cx->command->getMessageHeaders().size(), cx->command->getContentLength(), buf_len, data);
+    }
+    cx->messagePrepare(); //xom 14.07.2011
     addSocket(s, cx->action != SEND_REQUEST);
 }
 

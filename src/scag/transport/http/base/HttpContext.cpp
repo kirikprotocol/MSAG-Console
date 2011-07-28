@@ -32,8 +32,8 @@ const char* HttpContext::nameSite = {"site"};
 
 enum StatusCode {
   OK,
-  ERROR,
-  CONTINUE
+  CONTINUE,
+  ERROR
 };
 
 HttpContext::HttpContext(Socket* userSocket, HttpsOptions* options) :
@@ -340,44 +340,42 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 
 /*
  * Prepare command data as continuous message buffer to write over HTTPS.
- * TmpBuf sendBuf used to store data, it was unused when SEND_REQUEST or SEND_RESPONSE actions.
+ * TmpBuf unparsed used to store data, it was unused when SEND_REQUEST or SEND_RESPONSE actions.
  */
-void HttpContext::prepareData() {
+void HttpContext::messagePrepare() {
     if ( (siteHttps && (action == SEND_REQUEST)) || (userHttps && (action == SEND_RESPONSE)) )
     {
 		const char *data;
-		unsigned int size, cnt_size, wrong_size;
+		unsigned int size, cnt_size;
 		size_t tmp;
-		sendBuf.SetPos(0);
+		unparsed.SetPos(0);
 	// write headers
 		const std::string &headers = command->getMessageHeaders();
 		size = headers.size();
 		if (size)
-			sendBuf.Append(headers.data(), size);
+			unparsed.Append(headers.data(), size);
 //
-		sendBuf.Append("\0", 1);
-		tmp = sendBuf.GetPos();
+		unparsed.Append("\0", 1);
+		tmp = unparsed.GetPos();
 		if (tmp > 0) {
-			sendBuf.SetPos(--tmp);
+			unparsed.SetPos(--tmp);
 		}
-		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", size, sendBuf.GetPos(), sendBuf.get());
+		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", size, unparsed.GetPos(), unparsed.get());
 //
 
 	// write content
-		cnt_size = command->getContentLength();
-		data = command->getMessageContent(wrong_size);
-		smsc_log_debug(logger, "prepareData h:%d c:%d w:%d pos:%d", size, cnt_size, wrong_size, sendBuf.GetPos());
-//		assert(cnt_size==wrong_size);	//TODO: what wrong with command->getMessageContent?
+		data = command->getMessageContent(cnt_size);
+		smsc_log_debug(logger, "prepareData h:%d c:%d pos:%d", size, cnt_size, unparsed.GetPos());
 		if (cnt_size)
-			sendBuf.Append(data, cnt_size);
-		smsc_log_debug(logger, "prepareData: %d + %d = %d.", size, cnt_size, sendBuf.GetPos());
+			unparsed.Append(data, cnt_size);
+		smsc_log_debug(logger, "prepareData: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
 //
-		sendBuf.Append("\0", 1);
-		tmp = sendBuf.GetPos();
+		unparsed.Append("\0", 1);
+		tmp = unparsed.GetPos();
 		if (tmp > 0) {
-			sendBuf.SetPos(--tmp);
+			unparsed.SetPos(--tmp);
 		}
-		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", cnt_size, sendBuf.GetPos(), sendBuf.get());
+		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", cnt_size, unparsed.GetPos(), unparsed.get());
 //
 		position = 0;
 		flags = 1;
@@ -387,32 +385,32 @@ void HttpContext::prepareData() {
 /*
  * Analyse if position reach the end of transmitted data buffer for HTTP and HTTPS
  */
-bool HttpContext::commandIsOver(Socket* s) {
+bool HttpContext::messageIsOver(Socket* s) {
 	bool result = true;
 	smsc_log_debug(logger, "commandIsOver Https=%s flags=%d position=%d upos=%d cpos=%d",
-			(useHttps(s)?"Yes":"No"), flags, position, sendBuf.GetPos(), command->getContentLength());
+			(useHttps(s)?"Yes":"No"), flags, position, unparsed.GetPos(), command->content.GetPos());
     if (flags == 0)
     {
         if (position >= command->getMessageHeaders().size()) {
             flags = 1;
             position = 0;
         }
-        return (command->getContentLength() > 0);
+        return (command->content.GetPos() == 0);
     }
 	result = useHttps(s)
-			? (position >= sendBuf.GetPos())
-			: (position >= unsigned(command->getContentLength()));
+			? (position >= unparsed.GetPos())
+			: (position >= unsigned(command->content.GetPos()));
 	smsc_log_debug(logger, "commandIsOver=%s", (result?"Yes":"No"));
 	return result;
 }
 /*
  * returns ptr and size for HttpWriterTask::Execute depends on useHttps
  */
-void HttpContext::getCommandAttr(Socket* s, const char* &data, unsigned int &size) {
+void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 	if ( useHttps(s) ) {
 		flags = 1;
-		data = sendBuf.get();
-		size = sendBuf.GetPos();
+		data = unparsed.get();
+		size = unparsed.GetPos();
 		smsc_log_debug(logger, "getCommandAttr1 %p size=%d pos=%d", data, size, position);
 	}
 	else {	// no https
@@ -427,7 +425,6 @@ void HttpContext::getCommandAttr(Socket* s, const char* &data, unsigned int &siz
 		else {
 			// write content
 			data = command->getMessageContent(size);
-			size = command->getContentLength();
 			smsc_log_debug(logger, "getCommandAttr3 %p size=%d pos=%d", data, size, position);
 		}
 	}

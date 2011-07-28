@@ -134,9 +134,9 @@ public:
     //for HttpReaderTask::Execute
     void appendUnparsed(char* buf, unsigned int len) { unparsed.Append(buf, len); }
     //for HttpWriterTask::Execute
-    void prepareData();
-    bool commandIsOver(Socket* s);
-    void getCommandAttr(Socket* s, const char* &data, unsigned int &size);
+    void messagePrepare();
+    bool messageIsOver(Socket* s);
+    void messageGet(Socket* s, const char* &data, unsigned int &size);
     //for HttpWriterTask::registerContext
      void setSiteHttps(bool supported); // { siteHttps = supported; }
 
@@ -149,6 +149,7 @@ public:
     ActionID action;
     unsigned int flags;
     unsigned int position;
+    unsigned int parsePosition;
     int result;
 
     bool requestFailed;
@@ -179,7 +180,6 @@ protected:
     SSL* sslCheckConnection(Socket* s);
     void sslCertInfo(X509* cert);
     const char* connName(Socket* s) { return (s==user?nameUser:nameSite); }
-    TmpBuf<char, 1> sendBuf;
 };
 
 }}}

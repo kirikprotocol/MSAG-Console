@@ -24,13 +24,29 @@ class HttpRequest;
 
 enum StatusCode { 
   OK,
+  CONTINUE,
   ERROR,
-  CONTINUE
+  ERROR1,
+  ERROR2,
+  ERROR3,
+  ERROR4,
+  ERROR5,
+  ERROR6,
+  ERROR7,
+  ERROR8,
+  ERROR9,
+  ERROR10,
+  ERROR11,
+  ERROR12,
+  ERROR13,
+  ERROR14,
+  ERROR15,
+  ERROR16
 };
 
 class HttpParser {
 public:
-  static StatusCode parse(char* buf, unsigned int& len, HttpContext& cx);
+//  static StatusCode parse(char* buf, unsigned int& len, HttpContext& cx);
   static StatusCode parse(HttpContext& cx);
 
   static void urlEncode(std::string &s);
