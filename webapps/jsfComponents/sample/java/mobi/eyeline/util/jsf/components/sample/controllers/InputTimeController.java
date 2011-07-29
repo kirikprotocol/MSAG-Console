@@ -18,6 +18,9 @@ public class InputTimeController {
   private Time time5;
   private Time time6;
 
+  public String getFromTime() {
+    return "05:00:00";
+  }
 
   public Time getTime1() {
     return time1;

@@ -39,9 +39,9 @@
 
         <h:outputText>Значение должно быть не ранее 5 утра:</h:outputText>
         <eye:inputTime value="#{inputTime.time5}">
-          <eye:validateTimeInterval minTime="05:00:00"/>
+          <eye:validateTimeInterval minTime="#{inputTime.fromTime}"/>
         </eye:inputTime>
-        <h:outputText> (ограничение задается с помощью validateTimeInterval)</h:outputText>
+        <h:outputText> (ограничение задается с помощью validateTimeInterval, время берется из контроллера)</h:outputText>
 
         <h:outputText>Значение должно быть не позднее 8 вечера:</h:outputText>
         <eye:inputTime value="#{inputTime.time6}">

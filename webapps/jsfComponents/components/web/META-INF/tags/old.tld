@@ -5,8 +5,8 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd">
 
   <tlib-version>1.0</tlib-version>
-  <short-name>eye</short-name>
-  <uri>http://taglib.eyeline.mobi</uri>
+  <short-name>eye1</short-name>
+  <uri>http://taglib1.eyeline.mobi</uri>
   <description><![CDATA[Text which will be shown if validation fails.]]></description>
 
   <!-- INPUT DATE -->
@@ -264,27 +264,8 @@
 
   </tag>
 
-  <!-- UPDATABLE CONTENT -->
 
-  <tag>
-    <name>updatableContent</name>
-    <description>Блок с обновляющимся содержимым</description>
-    <body-content>JSP</body-content>
 
-    <attribute>
-      <name>updatePeriod</name>
-      <description>Период обновления</description>
-      <type>int</type>
-      <required>true</required>
-    </attribute>
-
-    <attribute>
-      <name>enabled</name>
-      <description>Вкл/выкл обновления</description>
-      <type>boolean</type>
-    </attribute>
-
-  </tag>
 
   <!-- COLLAPSING GROUP -->
 

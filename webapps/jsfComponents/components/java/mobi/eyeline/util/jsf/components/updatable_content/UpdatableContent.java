@@ -1,19 +1,25 @@
 package mobi.eyeline.util.jsf.components.updatable_content;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
-
+import javax.el.ValueExpression;
+import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
+import javax.faces.render.Renderer;
+import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * @author Aleksandr Khalitov
  */
-public class UpdatableContent extends EyelineComponent {
+public class UpdatableContent extends UIPanel {
 
   private int updatePeriod;
   private boolean enabled = true;
 
   public int getUpdatePeriod() {
-    return updatePeriod;
+    ValueExpression exp = getValueExpression("updatePeriod");
+    if (exp == null)
+      return updatePeriod;
+    else
+      return (Integer)exp.getValue(getFacesContext().getELContext());
   }
 
   public void setUpdatePeriod(int updatePeriod) {
@@ -26,6 +32,16 @@ public class UpdatableContent extends EyelineComponent {
 
   public void setEnabled(boolean enabled) {
     this.enabled = enabled;
+  }
+
+  @Override
+  public String getFamily() {
+    return "Eyeline";
+  }
+
+  @Override
+  protected Renderer getRenderer(FacesContext context) {
+    return new UpdatableContentRenderer();
   }
 
   public Object saveState(FacesContext context) {

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <taglib version="2.1" xmlns="http://java.sun.com/xml/ns/javaee"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd">
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd">
 
   <description><![CDATA[Text which will be shown if validation fails.]]></description>
   <tlib-version>1.0</tlib-version>
@@ -98,7 +98,9 @@
       <name>minTime</name>
       <required>false</required>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.String</type>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
     </attribute>
 
     <attribute>
@@ -106,7 +108,9 @@
       <name>maxTime</name>
       <required>false</required>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.String</type>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
     </attribute>
   </tag>
 
@@ -125,6 +129,14 @@
     <name>message</name>
     <tag-class>mobi.eyeline.util.jsf.components.message.Message</tag-class>
     <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
 
     <attribute>
       <description>Важность сообщения. Допустимые значения: info, warn, error. По-умолчанию, info.</description>
@@ -152,7 +164,16 @@
     <body-content>JSP</body-content>
 
     <attribute>
-      <description>Флаг, определяющий надо ли открывать ли группу при первом отображении. По-умолчанию, false</description>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий надо ли открывать ли группу при первом отображении. По-умолчанию, false
+      </description>
       <name>opened</name>
       <required>false</required>
       <rtexprvalue>false</rtexprvalue>
@@ -185,6 +206,14 @@
     <body-content>JSP</body-content>
 
     <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
       <description>Отрисовывать компонент (по умолчанию: true)</description>
       <name>rendered</name>
       <required>false</required>
@@ -198,6 +227,14 @@
     <name>button</name>
     <tag-class>mobi.eyeline.util.jsf.components.buttons_panel.Button</tag-class>
     <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
 
     <attribute>
       <description>Отрисовывать компонент (по умолчанию: true)</description>
@@ -215,12 +252,113 @@
     <body-content>empty</body-content>
 
     <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
       <description>Отрисовывать компонент (по умолчанию: true)</description>
       <name>rendered</name>
       <required>false</required>
       <rtexprvalue>false</rtexprvalue>
       <type>java.lang.Boolean</type>
     </attribute>
+  </tag>
+
+  <!-- ============================================ UPDATABLE CONTENT ============================================== -->
+
+  <tag>
+    <description>Область страницы, которая может быть обновлена без обновления всей страницы (через AJAX)</description>
+    <name>updatableContent</name>
+    <tag-class>mobi.eyeline.util.jsf.components.updatable_content.UpdatableContentTag</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий требуется ли автоматическое обновление содержимого или нет. По-умолчанию, true
+      </description>
+      <name>enabled</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Период автоматического обновления. Должен быть указан только в том случае, если enabled=true
+      </description>
+      <name>updatePeriod</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Integer</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <!-- ============================================= PROGRESS BAR ================================================== -->
+
+  <tag>
+    <description>Прогресс бар. Прогресс расчитывается так: current/maximum*100%</description>
+    <name>progressBar</name>
+    <tag-class>mobi.eyeline.util.jsf.components.progress_bar.ProgressBarTag</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Текущий прогресс</description>
+      <name>current</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Integer</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Максимальный прогресс</description>
+      <name>maximum</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Integer</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
   </tag>
 
 </taglib>

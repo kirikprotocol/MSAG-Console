@@ -6,19 +6,36 @@
 
   <ui:composition template="/main.xhtml">
 
+    <ui:define name="scripts" >
+      $(function() {
+        $("#manualUpdateButton").click(function(){
+          $("#mycontent").trigger("updateContent");
+          return false;
+        })
+      });
+    </ui:define>
+
+    <ui:define name="styles">
+      #mycontent { border: solid GREEN }
+      .column1 {width: 200px;}
+      .column2 {width: 100%; text-align: left;}
+    </ui:define>
+
     <ui:define name="content">
 
       <h:form>
 
-
-        <h:inputText value="#{updatable.updatePeriod}"/><h:commandButton value="Submit period"/>
+        <h:panelGrid columns="2" columnClasses="column1, column2">
+          <eye:updatableContent id="mycontent" updatePeriod="#{updatable.updatePeriod}" enabled="#{updatable.updatePeriod > 0}">
+            <h:outputText style="font-weight: bold;" value="#{updatable.date}"/>
+          </eye:updatableContent>
+          <a id="manualUpdateButton" href="#">Обновить вручную</a>
+        </h:panelGrid>
 
         <p/>
 
-        <eye:updatableContent updatePeriod="#{updatable.updatePeriod}" enabled="#{updatable.updatePeriod>0}">
-          <h:outputText style="font-weight: bold;" value="#{updatable.date}"/>
-        </eye:updatableContent>
-
+        <h:inputText value="#{updatable.updatePeriod}"/>
+        <h:commandButton value="Задать период обновления (0 - выкл автообновление)"/>
       </h:form>
 
     </ui:define>

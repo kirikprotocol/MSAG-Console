@@ -7,13 +7,20 @@
 
   <ui:composition template="/main.xhtml">
 
+    <ui:define name="styles">
+      #mybar {
+        height:20px;
+
+      }
+    </ui:define>
+
     <ui:define name="content">
 
       <h:form>
 
         <eye:updatableContent updatePeriod="2">
 
-          <eye:progressBar current="#{progressBar.nextInt}" maximum="100" width="600" height="20"/>
+          <eye:progressBar id="mybar" current="#{progressBar.nextInt}" maximum="100" width="600" height="20"/>
 
         </eye:updatableContent>
 

@@ -36,7 +36,7 @@ public class TimeIntervalValidatorTag extends ValidatorELTag {
   protected Validator createValidator() throws JspException {
     TimeIntervalValidator res = new TimeIntervalValidator();
     res.setMinTime((String)getExprValue(minTime, FacesContext.getCurrentInstance()));
-    res.setMaxTime((String)getExprValue(minTime, FacesContext.getCurrentInstance()));
+    res.setMaxTime((String)getExprValue(maxTime, FacesContext.getCurrentInstance()));
     return res;
   }
 }

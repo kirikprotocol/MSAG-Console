@@ -18,7 +18,7 @@
     <tag-name>inputTime</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.input_time</component-type>
-      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
@@ -26,7 +26,7 @@
     <tag-name>validateTimeInterval</tag-name>
     <validator>
       <validator-id>mobi.eyeline.util.jsf.components.validateTimeInterval</validator-id>
-      <handler-class>mobi.eyeline.util.jsf.components.EyelineValidateHandler</handler-class>
+      <handler-class>com.sun.facelets.tag.jsf.ValidateHandler</handler-class>
     </validator>
   </tag>
 
@@ -34,7 +34,7 @@
     <tag-name>message</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.message</component-type>
-      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
@@ -42,7 +42,7 @@
     <tag-name>collapsingGroup</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.collapsing_group</component-type>
-      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
@@ -50,7 +50,7 @@
     <tag-name>buttons</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.buttons_panel</component-type>
-      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
@@ -58,7 +58,7 @@
     <tag-name>button</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.buttons_panel.button</component-type>
-      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
@@ -66,14 +66,25 @@
     <tag-name>space</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.buttons_panel.space</component-type>
-      <handler-class>mobi.eyeline.util.jsf.components.EyelineComponentHandler</handler-class>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>updatableContent</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.updatable_content</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
 
   <tag>
     <tag-name>progressBar</tag-name>
-    <source>tags/progressBar.xhtml</source>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.progress_bar</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
   </tag>
 
   <tag>
@@ -136,15 +147,6 @@
       <component-type>row</component-type>
       <renderer-type>dataTableRow</renderer-type>
       <handler-class>mobi.eyeline.util.jsf.components.data_table.RowHandler</handler-class>
-    </component>
-  </tag>
-
-  <tag>
-    <tag-name>updatableContent</tag-name>
-    <component>
-      <component-type>updatableContent</component-type>
-      <renderer-type>updatableContent</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.updatable_content.UpdatableContentHandler</handler-class>
     </component>
   </tag>
 
