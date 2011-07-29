@@ -6,7 +6,7 @@
 namespace scag2 { namespace transport { namespace http {
 
 using namespace std;
-
+/*
 ActionID HttpContext::actionNext[8] = {
     SEND_REQUEST,               // <- PROCESS_REQUEST
     SEND_RESPONSE,              // <- PROCESS_RESPONSE
@@ -26,7 +26,7 @@ const char *HttpContext::taskName[8] = {
     "Reader",           // <- READ_RESPONSE
     "Writer"            // <- SEND_RESPONSE
 };
-
+*/
 const char* HttpContext::nameUser = {"user"};
 const char* HttpContext::nameSite = {"site"};
 
@@ -269,11 +269,18 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
  * After every package read, SSL_pending returns 0. In this case we try to read anyway
  * and finish reading only where SSL_read returns 0.
  */
-	while ( toRead > 0 )
+	do
 	{
-		len = SSL_read(ssl, (void*)readBuf, readBufSize); // toRead);
+		len = SSL_read(ssl, (void*)readBuf, readBufSize);
 		smsc_log_debug(logger, "sslReadPartial: %s cycle, len=%d toRead=%d", connName(s), len, toRead);
-		if (len == 0) {
+		if ( len > 0 ) {
+			unparsed.Append(readBuf, len);
+			total = unparsed.GetPos();
+//			toRead = 1; //SSL_pending(ssl);
+			smsc_log_debug(logger, "sslReadPartial: %d chars from %s. Total=%d", len, connName(s), total);
+			continue;
+		}
+		else if (len == 0) {
 			if ( SSL_get_shutdown(ssl) ) {
 				smsc_log_debug(logger, "sslReadPartial: shutdown detected from %s. Total=%d", connName(s), total);
 				return 0;
@@ -285,29 +292,22 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
  */
 			toRead = SSL_pending(ssl);
 			if ( toRead > 0 ) {
-				smsc_log_debug(logger, "sslReadPartial: not completed from %s. Total=%d, toRead=%d", connName(s), total, toRead);
+//				smsc_log_debug(logger, "sslReadPartial: not completed from %s. Total=%d, toRead=%d", connName(s), total, toRead);
 				continue;
 			}
 			smsc_log_debug(logger, "sslReadPartial: completed from %s. Total=%d", connName(s), total);
 			break;  // it seems, the read operation is over here
 		}
-		else if ( len > 0 ) {
-			unparsed.Append(readBuf, len);
-			total = unparsed.GetPos();
-			toRead = 1; //SSL_pending(ssl);
-			smsc_log_debug(logger, "sslReadPartial: %d chars from %s. Total=%d, toRead=%d", len, connName(s), total, toRead);
-			continue;
-		}
 		else {  //len<0
-			smsc_log_debug(logger, "sslReadPartial: error from %s. len=%d Total=%d", connName(s), len, total);
 			if ( sslCheckIoError(ssl, len) == ERROR ) { // CONTINUE )
-				smsc_log_debug(logger, "sslReadPartial: Critical error from %s Exit reading.", connName(s));
+				smsc_log_error(logger, "sslReadPartial: Critical error from %s. Exit reading.", connName(s));
 				return 0;
 			}
 			toRead = SSL_pending(ssl);
-			smsc_log_debug(logger, "sslReadPartial: Managed error from %s. Continue reading toRead=%d", connName(s), toRead);
+			if (toRead)
+				smsc_log_debug(logger, "sslReadPartial: Managed error from %s. Continue reading toRead=%d", connName(s), toRead);
 		}
-	}
+	} while ( toRead > 0 );
 	return total;
 }
 
@@ -360,22 +360,22 @@ void HttpContext::messagePrepare() {
 		if (tmp > 0) {
 			unparsed.SetPos(--tmp);
 		}
-		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", size, unparsed.GetPos(), unparsed.get());
+		smsc_log_debug(logger, "messagePrepare: +%d =%d.\n%s", size, unparsed.GetPos(), unparsed.get());
 //
 
 	// write content
 		data = command->getMessageContent(cnt_size);
-		smsc_log_debug(logger, "prepareData h:%d c:%d pos:%d", size, cnt_size, unparsed.GetPos());
+		smsc_log_debug(logger, "messagePrepare h:%d c:%d pos:%d", size, cnt_size, unparsed.GetPos());
 		if (cnt_size)
 			unparsed.Append(data, cnt_size);
-		smsc_log_debug(logger, "prepareData: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
+		smsc_log_debug(logger, "messagePrepare: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
 //
 		unparsed.Append("\0", 1);
 		tmp = unparsed.GetPos();
 		if (tmp > 0) {
 			unparsed.SetPos(--tmp);
 		}
-		smsc_log_debug(logger, "prepareData: +%d =%d.\n%s", cnt_size, unparsed.GetPos(), unparsed.get());
+		smsc_log_debug(logger, "messagePrepare: +%d =%d.\n%s", cnt_size, unparsed.GetPos(), unparsed.get());
 //
 		position = 0;
 		flags = 1;
@@ -386,32 +386,34 @@ void HttpContext::messagePrepare() {
  * Analyse if position reach the end of transmitted data buffer for HTTP and HTTPS
  */
 bool HttpContext::messageIsOver(Socket* s) {
-	bool result = true;
-	smsc_log_debug(logger, "commandIsOver Https=%s flags=%d position=%d upos=%d cpos=%d",
+	bool result;
+	smsc_log_debug(logger, "messageIsOver Https=%s flags=%d position=%d upos=%d cpos=%d",
 			(useHttps(s)?"Yes":"No"), flags, position, unparsed.GetPos(), command->content.GetPos());
-    if (flags == 0)
-    {
-        if (position >= command->getMessageHeaders().size()) {
+    if (flags == 0) {
+    	if ( result = (position >= command->getMessageHeaders().size()) ) {
             flags = 1;
             position = 0;
+            result = (command->content.GetPos() == 0);
         }
-        return (command->content.GetPos() == 0);
     }
-	result = useHttps(s)
+    else {
+    	result = useHttps(s)
 			? (position >= unparsed.GetPos())
 			: (position >= unsigned(command->content.GetPos()));
-	smsc_log_debug(logger, "commandIsOver=%s", (result?"Yes":"No"));
+    }
+	smsc_log_debug(logger, "messageIsOver=%s", (result?"Yes":"No"));
 	return result;
 }
+
 /*
- * returns ptr and size for HttpWriterTask::Execute depends on useHttps
+ * returns message ptr and size for HttpWriterTask::Execute depends on useHttps
  */
 void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 	if ( useHttps(s) ) {
 		flags = 1;
 		data = unparsed.get();
 		size = unparsed.GetPos();
-		smsc_log_debug(logger, "getCommandAttr1 %p size=%d pos=%d", data, size, position);
+		smsc_log_debug(logger, "messageGet Https %p size=%d pos=%d", data, size, position);
 	}
 	else {	// no https
 		if (flags == 0) {
@@ -420,12 +422,12 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 
 			data = headers.data();
 			size = headers.size();
-			smsc_log_debug(logger, "getCommandAttr2 %p size=%d pos=%d", data, size, position);
+			smsc_log_debug(logger, "messageGet Http hdr %p size=%d pos=%d", data, size, position);
 		}
 		else {
 			// write content
 			data = command->getMessageContent(size);
-			smsc_log_debug(logger, "getCommandAttr3 %p size=%d pos=%d", data, size, position);
+			smsc_log_debug(logger, "messageGet Http cnt %p size=%d pos=%d", data, size, position);
 		}
 	}
 }
@@ -436,10 +438,11 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 {
 	int result = ERROR;
-	int ssl_err;
-
 	int oerrno = errno;
-	switch ((ssl_err = SSL_get_error(ssl, ret))) {
+	int ssl_err = SSL_get_error(ssl, ret);
+	smsc_log_debug(logger, "HttpContext::sslCheckIoError ret:%d errno:%d ssl_err:%d txt:%s\n", ret, ssl_err, oerrno, strerror(oerrno));
+
+	switch ( ssl_err ) {
 	case SSL_ERROR_WANT_READ:
 	case SSL_ERROR_WANT_WRITE:
 		/* apache team preference:
@@ -467,7 +470,7 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 		break;
 	case SSL_ERROR_ZERO_RETURN:
 		/* clean shutdown on the remote side */
-		smsc_log_debug(logger, "SSL_ERROR_ZERO_RETURN:%d %d %d %s\n", ret, ssl_err, oerrno, strerror(oerrno));
+		smsc_log_error(logger, "SSL_ERROR_ZERO_RETURN:%d %d %d %s\n", ret, ssl_err, oerrno, strerror(oerrno));
 		result = OK;
 		break;
 
@@ -481,7 +484,7 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 void HttpContext::sslLogErrors(void) {
 	unsigned long ulerr;
 	while ( (ulerr = ERR_get_error()) ) {  /* get all errors from the error-queue */
-		smsc_log_debug(logger, "%s %d SSL:%d %s\n", __FILE__, __LINE__, ERR_error_string(ulerr, NULL));
+		smsc_log_error(logger, "%s %d SSL:%d %s\n", __FILE__, __LINE__, ERR_error_string(ulerr, NULL));
 	}
 }
 

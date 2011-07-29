@@ -175,7 +175,6 @@ int HttpReaderTask::Execute()
         removeSocket(error);
 
         if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) > 0) {
-            smsc_log_debug(logger, "multiplexer.canRead. ready:%d: error:%d", ready.Count(), error.Count());
             for (i = 0; i < (unsigned int)error.Count(); i++) {
                 Socket *s = error[i];           
                 HttpContext *cx = HttpContext::getContext(s);
@@ -209,30 +208,12 @@ int HttpReaderTask::Execute()
 
                 int len;
 /*
-                unsigned int unparsed_len;
-                if ( cx->useHttps(s) ) {
-                	len = cx->sslReadMessage(s, buf, READER_BUF_SIZE);
-                    unparsed_len = cx->loadUnparsed(buf);
-                    unparsed_len = 0;
-                    smsc_log_debug(logger, "HTTPS data received. len=%d", len);
-                }
-                else {
-                    unparsed_len = cx->loadUnparsed(buf);
-					do
-						len = s->Read(buf + unparsed_len, READER_BUF_SIZE - unparsed_len);
-					while (len == -1 && errno == EINTR);
-                }
-                if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
-//                    smsc_log_debug(logger, "%p: %p, data received. len=%d", this, cx, len);
-                    unparsed_len += len;
-                    len = unparsed_len;
-*/
-                /*
-                 * to avoid of buffer buf overflow
-                 */
+ * To avoid of buffer buf overflow:
+ * Let read next portion of data into fixed-sized buf, and store in cx->unparsed.
+ * Then pass cx->unparsed to parser.
+ */
                 smsc_log_debug(logger, "read from socket %p to context %p", s, cx);
                 if ( cx->useHttps(s) ) {
-//                	len = cx->sslReadMessage(s, buf, READER_BUF_SIZE);
                 	len = cx->sslReadPartial(s, buf, READER_BUF_SIZE);
                 }
                 else {
@@ -282,11 +263,9 @@ int HttpReaderTask::Execute()
                 			cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
                 			cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
                     	HttpContext::updateTimestamp(s, now);
-//                        cx->saveUnparsed(buf + len - unparsed_len, unparsed_len);
                         break;
                     case ERROR:
                     default:
-                    	smsc_log_debug(logger, "parse ERROR=%d", sc);
                         smsc_log_error(logger, "%p: %p, parse error", this, cx);
                         cx->setDestiny(405, cx->action == READ_RESPONSE ?
                             (FAKE_RESP | DEL_SITE_SOCK) : FAKE_RESP);
@@ -413,41 +392,10 @@ int HttpWriterTask::Execute()
                 int written_size = 0;
 
 /*
-            	if ( cx->useHttps(s) ) {
-					cx->flags = 1;
-					data = cx->getUnparsed() + cx->position;
-					size = cx->unparsedLength() - cx->position;
-					written_size = cx->sslWritePartial(s, data, size);
-//					written_size = cx->sslWriteCommand(s);
-					if (written_size > 0) {
-						cx->position += written_size;
-						HttpContext::updateTimestamp(s, now);
-					}
-					else {
-						if (cx->action == SEND_REQUEST)
-							cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
-						else
-							cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);
-						error.Push(s);
-						continue;
-					}
-            	}
-            	else {	// no https
-					if (cx->flags == 0) {
-						// write headers
-						const std::string &headers = cx->command->getMessageHeaders();
-
-						data = headers.data() + cx->position;
-						size = headers.size() - cx->position;
-					}
-					else {
-						// write content
-						data = cx->command->getMessageContent(size);
-						data += cx->position;
-						size -= cx->position;
-					}
-
-*/
+ * HttpContext function to define message (or part of message) attributes: ptr and size
+ * that is ready to send
+ * both Http and Https
+ */
                 cx->messageGet(s, data, size);
 				smsc_log_debug(logger, "data to send %p size=%d pos=%d", data, size, cx->position);
 				if (size) {
@@ -478,16 +426,10 @@ int HttpWriterTask::Execute()
 					}
 				}
 /*
-                if (cx->flags == 0)
-                {
-                    if(cx->position >= cx->command->getMessageHeaders().size())
-                    {
-                        cx->flags = 1;
-                        cx->position = 0;
-                    }
-                }
-                else
-*/
+ * HttpContext function to analyse
+ * if the whole message already sent, depends on cx->flags, cx->position and message size
+ * both Http and Https
+ */
                 if ( cx->messageIsOver(s) )
                 {
                     removeSocket(s);

@@ -25,23 +25,7 @@ class HttpRequest;
 enum StatusCode { 
   OK,
   CONTINUE,
-  ERROR,
-  ERROR1,
-  ERROR2,
-  ERROR3,
-  ERROR4,
-  ERROR5,
-  ERROR6,
-  ERROR7,
-  ERROR8,
-  ERROR9,
-  ERROR10,
-  ERROR11,
-  ERROR12,
-  ERROR13,
-  ERROR14,
-  ERROR15,
-  ERROR16
+  ERROR
 };
 
 class HttpParser {

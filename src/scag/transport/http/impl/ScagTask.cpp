@@ -59,13 +59,7 @@ int ScagTask::Execute()
                   smsc_log_warn(logger, "%p: %p, status %d, fake response created", this, cx, cx->result);
                   cx->result = 0; // Clear status for LCM, fake resp already created
                 }
-				smsc_log_debug(logger, "ScagTask::Execute1. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
-					cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
-					cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
                 st = processor.processResponse(cx->getResponse());
-				smsc_log_debug(logger, "ScagTask::Execute2. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
-					cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
-					cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
                 if (st == re::STATUS_OK) {
                   smsc_log_info(logger, "%p: %p, response approved", this, cx);
                 }
@@ -85,9 +79,6 @@ int ScagTask::Execute()
             }
 
             cx->getResponse().serialize();
-			smsc_log_debug(logger, "ScagTask::Execute3. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
-				cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
-				cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
             cx->action = SEND_RESPONSE;
             manager.writerProcess(cx);       
             break;      

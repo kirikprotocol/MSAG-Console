@@ -35,7 +35,8 @@ enum ActionID {
 /*
  * HTTPS usage is defined
  * for "user" part - on constructor, if HttpsOptions is not NULL
- * for "site" part - later //TODO
+ * for "site" part - see HttpWriterTask::registerContext() :
+ * cx->setSiteHttps(cx->command->getSitePort() == 443);
  */
 
 /* no virtual methods are allowed in HttpContext */
@@ -88,10 +89,6 @@ public:
         result = status;
         this->flags = flag;
     }
-    void nextAction() {
-        action = actionNext[action];
-    }
-
     TransactionContext &getTransactionContext() {
         return trc;
     }
@@ -103,16 +100,20 @@ public:
         }
         getResponse().fillFakeResponse(status);
     }
-    const char *getTaskName() {
-        return taskName[action];
-    }
-
     HttpRequest &getRequest() {
         return *(HttpRequest *)command;
     }
     HttpResponse &getResponse() {
         return *(HttpResponse *)command;
     }
+/*
+    void nextAction() {
+        action = actionNext[action];
+    }
+    const char *getTaskName() {
+        return taskName[action];
+    }
+*/
 
     int sslUserConnection(bool verify_client=false); //server mode connection
     int sslSiteConnection(bool verify_client=false); //client mode connection
@@ -161,8 +162,10 @@ protected:
         CONNECT_FLAG
     };
 
+/*
     static ActionID actionNext[8];
     static const char *taskName[8];
+*/
     static const char* nameUser;
     static const char* nameSite;
 
