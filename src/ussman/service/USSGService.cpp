@@ -176,6 +176,10 @@ void USSGService::onConnectClosing(TcpServerIface & p_srv, unsigned conn_id)
     return;
 
   ConnectGuard rConn = it->second;
+  rConn->removeListener(*this);
+  //Note: Connect object MUST not be destroyed inside this thread,
+  //so postpone its destruction.
+  _corpses.push_back(it->second);
   _connMap.erase(it);
   smsc_log_info(_logger, "%s: unregistering Connect[%u]", _logId, conn_id);
   onDisconnect(rConn);
@@ -209,7 +213,7 @@ bool USSGService::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
                   _logId, conn_id);
     return true;
   }
-  ConnectGuard & rConn = it->second;
+  ConnectGuard  rConn = it->second;
   rConn->removeListener(*this);
 
   IProtocolAC::PduId pduId = _iProtoDef.isKnownPacket(recv_pck);
