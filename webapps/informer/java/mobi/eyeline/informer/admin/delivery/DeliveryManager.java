@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.CSVTokenizer;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
@@ -234,11 +235,14 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
               if (line == null) {
                 return null;
               }
-              String[] s = line.split(",", 3);
-              m = Message.newMessage(new Address(s[0]), StringEncoderDecoder.csvDecode(s[1]));
-              m.setProperty(RESEND_PROPERTY, s[2]);
+              CSVTokenizer t = new CSVTokenizer(line);
+              String addr = t.nextToken();
+              String text = t.nextToken();
+              String resend = t.nextToken();
+              m = Message.newMessage(new Address(addr), StringEncoderDecoder.csvDecode(text));
+              m.setProperty(RESEND_PROPERTY, resend);
               if(listener != null) {
-                listener.resended(Long.parseLong(s[2]), totalCount);
+                listener.resended(Long.parseLong(resend), totalCount);
               }
               return m;
 
