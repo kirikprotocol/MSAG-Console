@@ -16,211 +16,125 @@ import mobi.eyeline.informer.util.config.XmlConfigSection;
 import mobi.eyeline.smpp.api.pdu.*;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
-import mobi.eyeline.smpp.api.types.EsmMessageType;
-import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import mobi.eyeline.smpp.api.SmppServer;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.PDUListener;
-import mobi.eyeline.smpp.api.pdu.data.Address;
 
 public class Gateway extends Thread implements PDUListener {
 
-    private static final Object read_write_monitor = new Object();
-
     private static Logger log = Logger.getLogger(Gateway.class);
+
+    // Configuration file with deliveries data.
+    private static File deliveries_file;
+
+    // Configurations file with users data.
+    private static File users_file;
+
+    // Table used to store user passwords.
+    private static Hashtable<String, String> user_password_table;
+
+    // Table used to map delivery identifier and user..
+    private static Hashtable<Integer, String> delivery_id_user_table;
+
+    // Table used to map service number and delivery identifier.
+    private static Hashtable<String, Integer> service_number_delivery_id_table;
+
+    private static final Object read_write_monitor = new Object();
 
     private static SmppServer smppServer;
 
     private ProcessingQueue procQueue;
 
-    private static Hashtable<String, String> user_password_map;
-    private static Hashtable<Integer, String> delivery_id_user_map;
-    private static Hashtable<String, Integer> service_number_delivery_id_map;
-
-    private static String mapping_filename;
-
-    private AtomicLong al = new AtomicLong(0);
-
-    private AtomicInteger ai = new AtomicInteger(0);
-
-    private SimpleDateFormat sdf = new SimpleDateFormat("ddHHmmss");
-
     protected DeliveryChangesDetectorImpl deliveryChangesDetector;
 
     protected FileSystem fileSystem;
 
-    private static final Journal journal = new Journal();
-
-    private Calendar cal;
+    private static Journal journal;
 
     private static Hashtable<Integer, Data> recepts_table;
 
-    private static int recend_receipts_interval, recend_receipts_timeout, recend_receipts_max_timeout;
+    private static int recend_receipts_timeout;
+    private static int recend_receipts_max_timeout;
+
+    private static PDUListenerImpl pduListener;
 
     public Gateway() throws SmppException, InitializationException{
-
+        log.debug("Try to initialize gateway ...");
         Runtime.getRuntime().addShutdownHook(this);
 
+        // User's current working directory
+        String user_dir = System.getProperty("user.dir");
+        log.debug("User directory: "+user_dir);
+
+        // Load configuration properties.
+        String filename = user_dir+File.separator+"conf"+File.separator+"dcpgw.properties";
         Properties config = new Properties();
-
-        String userDir = System.getProperty("user.dir");
-        String filename = userDir+File.separator+"conf"+File.separator+"dcpgw.properties";
-
-        mapping_filename = userDir+File.separator+"conf"+File.separator+"config.xml";
-
         try {
             config.load(new FileInputStream(filename));
         } catch (IOException e) {
-            log.debug("Couldn't load properties file.");
+            log.debug("Couldn't load properties file '"+filename+"'.");
             throw new InitializationException(e);
         }
 
-        user_password_map = new Hashtable<String, String>();
-        delivery_id_user_map = new Hashtable<Integer, String>();
-        service_number_delivery_id_map = new Hashtable<String, Integer>();
+        // Load users and deliveries configuration.
 
-        recepts_table = new Hashtable<Integer, Data>();
+        String users_file_str = Utils.getProperty(config, "users.file", user_dir+File.separator+"conf"+File.separator+"users.xml" );
+        users_file = new File(users_file_str);
+        user_password_table = new Hashtable<String, String>();
+
+        String deliveries_file_str = Utils.getProperty(config, "deliveries.file", user_dir+File.separator+"conf"+File.separator+"config.xml" );
+        deliveries_file = new File(deliveries_file_str);
+        delivery_id_user_table = new Hashtable<Integer, String>();
+        service_number_delivery_id_table = new Hashtable<String, Integer>();
+
+        pduListener = new PDUListenerImpl();
 
         try {
             updateConfiguration();
         } catch (XmlConfigException e) {
-            log.error(e);
+            log.error("Couldn't update configuration.", e);
             throw new InitializationException(e);
         }
 
-        String s = config.getProperty("update.config.server.port");
-        int update_config_server_port;
-        if (s != null && !s.isEmpty()){
-            update_config_server_port = Integer.parseInt(s);
-            log.debug("update.config.server.port="+update_config_server_port);
-        } else {
-            log.debug("Parameter 'update.config.server.port' is not found or is empty");
-            throw new InitializationException("Parameter 'update.config.server.port' is not found or is empty");
-        }
+        recepts_table = new Hashtable<Integer, Data>();
+
+        // Initialize update configuration server.
+        String update_config_server_host = config.getProperty("update.config.server.host");
+
+        String s = Utils.getProperty(config,"update.config.server.port");
+        int update_config_server_port = Integer.parseInt(s);
 
         try {
-            UpdateConfigServer updateConfigServer = new UpdateConfigServer(update_config_server_port);
+            new UpdateConfigServer(update_config_server_host, update_config_server_port);
         } catch (IOException e) {
-            log.error(e);
+            log.error("Couldn't initialize update config server socket with host '"+update_config_server_host+"' and port '"+update_config_server_port+"'. ", e);
             throw new InitializationException(e);
         }
 
-        cal = Calendar.getInstance();
+        journal = new Journal();
 
-        procQueue = new ProcessingQueue(config,
+        // Initialize smpp server.
 
-            new PDUListener() {
-
-                public boolean handlePDU(PDU pdu) {
-
-                    switch (pdu.getType()) {
-
-                        case SubmitSM:{
-
-                            long time = System.currentTimeMillis();
-                            long message_id = time + al.incrementAndGet();
-
-                            Message request = (Message) pdu;
-                            String connection_name = request.getConnectionName();
-                            int sequence_number = request.getSequenceNumber();
-
-                            log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', set id '"+message_id+"'.");
-
-                            Address source_address = request.getSourceAddress();
-                            String source_address_str = source_address.getAddress();
-
-                            Address smpp_destination_address = request.getDestinationAddress();
-                            String destination_address_str = smpp_destination_address.getAddress();
-
-                            String text = request.getMessage();
-                            log.debug("Id '"+message_id+"', source address '"+source_address_str+"', destination address '"+destination_address_str+"', text '"+text+"'.");
-
-                            int delivery_id = service_number_delivery_id_map.get(source_address_str);
-
-                            String login = delivery_id_user_map.get(delivery_id);
-                            log.debug("Id '"+message_id+"', service_number '"+source_address_str+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
-
-                            Manager.getInstance().getSender(login).addMessage(message_id, destination_address_str, text, sequence_number, connection_name, delivery_id);
-
-                            if( request.getRegDeliveryReceipt() != RegDeliveryReceipt.None ) {
-
-                                Message rcpt = request.getAnswer();
-                                rcpt.setEsmMessageType(EsmMessageType.DeliveryReceipt);
-
-                                Date date = cal.getTime();
-                                int sn = Integer.parseInt(sdf.format(date))+ai.incrementAndGet();
-                                rcpt.setSequenceNumber(sn);
-
-                                Manager.getInstance().rememberReceiptMessage(message_id, rcpt);
-                            }
-
-                            break;
-                        }
-                        case DataSM: {
-
-
-
-                            break;
-                        }
-
-                        case DeliverSMResp:{
-                            synchronized (read_write_monitor){
-
-                                log.debug("Handle pdu with type "+pdu.getType());
-
-                                DeliverSMResp resp = (DeliverSMResp) pdu;
-                                int sequence_number = resp.getSequenceNumber();
-                                log.debug("DeliverSMResp: sequence_number="+sequence_number);
-
-                                Data data = recepts_table.get(sequence_number);
-
-                                if (data != null){
-
-                                        try {
-                                            journal.write(sequence_number, data, Status.DONE);
-                                        } catch (CouldNotWriteToJournalException e) {
-                                            log.error(e);
-                                            // todo ?
-                                        }
-                                        recepts_table.remove(sequence_number);
-
-                                        log.debug("Remove from memory: " + sequence_number);
-
-                                } else {
-                                    log.warn("Couldn't find deliver receipt with sequence number "+sequence_number);
-                                }
-
-                            }
-
-                            break;
-                        }
-
-                    }
-
-                    return true;
-                }
-            }
-
-        , null);
+        procQueue = new ProcessingQueue(config, pduListener, null);
 
         smppServer = new SmppServer(config, this);
 
         Manager.getInstance().setSmppServer(smppServer);
 
+        // Initialize final log change detector.
+        String final_log_dir = Utils.getProperty(config, "final.log.dir", user_dir+File.separator+"final_log");
+
         fileSystem = FileSystem.getFSForSingleInst();
         try {
-            deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(userDir+File.separator+"final_log"), fileSystem);
+            deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(final_log_dir), fileSystem);
 
             DeliveryChangeListenerImpl deliveryChangeListener = new DeliveryChangeListenerImpl();
             deliveryChangesDetector.addListener(deliveryChangeListener);
@@ -228,38 +142,16 @@ public class Gateway extends Thread implements PDUListener {
             deliveryChangesDetector.start();
         } catch (InitException e) {
             log.error(e);
-            System.exit(0);
+            throw new InitializationException(e);
         }
-
 
         // Initialize the scheduler that will resend delivery receipts to smpp clients.
 
-        s = config.getProperty("resend.receipts.interval.sec");
-        if (s != null && !s.isEmpty()){
-            recend_receipts_interval = Integer.parseInt(s);
-            log.debug("Initialization parameter: resend_receipts_timeout="+recend_receipts_interval);
-        } else {
-            log.warn("Parameter 'resend.receipts.interval.sec' is not found or is empty, set default value to " + recend_receipts_interval + " seconds.");
-        }
+        int recend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
 
-        s = config.getProperty("resend.receipts.timeout.sec");
+        recend_receipts_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
 
-        if (s != null && !s.isEmpty()){
-            recend_receipts_timeout = Integer.parseInt(s);
-            log.debug("Initialization parameter: resend_receipts_timeout="+recend_receipts_timeout);
-        } else {
-            log.warn("Parameter 'resend.receipts.timeout.sec' is not found or is empty, set default value to " + recend_receipts_timeout + " seconds.");
-        }
-
-        s = config.getProperty("resend.receipts.max.timeout.min");
-
-        if (s != null && !s.isEmpty()){
-            recend_receipts_max_timeout = Integer.parseInt(s);
-            log.debug("Initialization parameter: resend_receipts_timeout="+recend_receipts_max_timeout);
-        } else {
-            log.warn("Parameter 'resend.receipts.max.timeout.min' is not found or is empty, set default value to " + recend_receipts_max_timeout + " minutes.");
-        }
-
+        recend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleWithFixedDelay(new Runnable() {
@@ -277,23 +169,38 @@ public class Gateway extends Thread implements PDUListener {
                 }
             }
 
-        }, recend_receipts_timeout, recend_receipts_timeout, TimeUnit.SECONDS);
+        }, recend_receipts_interval, recend_receipts_interval, TimeUnit.SECONDS);
 
+        log.debug("Successfully initialize gateway!");
     }
 
     public static void updateConfiguration() throws XmlConfigException {
-        log.debug("Try to update deliveries ...");
+        log.debug("Try to load users configuration ...");
+
+        Hashtable<String, String> t = new Hashtable<String, String>();
+
         XmlConfig xmlConfig = new XmlConfig();
-        xmlConfig.load(new File(mapping_filename));
-        XmlConfigSection users_section = xmlConfig.getSection("users");
+        xmlConfig.load(users_file);
+
+        XmlConfigSection users_section = xmlConfig.getSection("USERS");
         Collection<XmlConfigSection> c = users_section.sections();
         for(XmlConfigSection s: c){
             String login = s.getName();
             XmlConfigParam p = s.getParam("password");
             String password = p.getString();
             log.debug("login: "+login+", password: "+password);
-            user_password_map.put(login, password);
+            t.put(login, password);
         }
+
+        log.debug("Successfully update deliveries ...");
+
+        log.debug("Try to load deliveries ...");
+
+        Hashtable<Integer, String> t1 = new Hashtable<Integer, String>();
+        Hashtable<String, Integer> t2 = new Hashtable<String, Integer>();
+
+        xmlConfig = new XmlConfig();
+        xmlConfig.load(deliveries_file);
 
         XmlConfigSection deliveries_section = xmlConfig.getSection("deliveries");
         c = deliveries_section.sections();
@@ -303,7 +210,7 @@ public class Gateway extends Thread implements PDUListener {
 
             XmlConfigParam p = s.getParam("user");
             String user = p.getString();
-            delivery_id_user_map.put(delivery_id, user);
+            t1.put(delivery_id, user);
             log.debug("delivery_id: "+delivery_id+", user:"+user);
 
             XmlConfigParam p2 = s.getParam("services_numbers");
@@ -311,27 +218,33 @@ public class Gateway extends Thread implements PDUListener {
 
             for(String a: ar){
                 String service_number = a.trim();
-                service_number_delivery_id_map.put(service_number, delivery_id);
+                t2.put(service_number, delivery_id);
                 log.debug("service_number: "+service_number+", delivery_id: "+delivery_id);
             }
         }
 
-        Manager.getInstance().setUserPasswordMap(user_password_map);
-        log.debug("Successfully update deliveries ...");
+        log.debug("Successfully load deliveries ...");
+
+        user_password_table = t;
+        Manager.getInstance().setUserPasswordMap(user_password_table);
+
+        delivery_id_user_table = t1;
+        service_number_delivery_id_table = t2;
+        pduListener.update(delivery_id_user_table, service_number_delivery_id_table);
     }
 
-  public boolean handlePDU(PDU pdu) {
-    try {
-      procQueue.add(pdu, pdu.isMessage());
-    } catch (QueueException e) {
-      try {
-        smppServer.send(((Request)pdu).getResponse(e.getStatus()));
-      } catch (SmppException e1) {
-        log.error("Could not send resp", e1);
-      }
+    public boolean handlePDU(PDU pdu) {
+        try {
+            procQueue.add(pdu, pdu.isMessage());
+        } catch (QueueException e) {
+            try {
+                smppServer.send(((Request)pdu).getResponse(e.getStatus()));
+            } catch (SmppException e1) {
+                log.error("Could not send resp", e1);
+            }
+        }
+        return true;
     }
-    return true;
-  }
 
     @Override
     public void run() {
@@ -365,6 +278,34 @@ public class Gateway extends Thread implements PDUListener {
 
             recepts_table.put(sequence_number, data);
             log.debug("Remember to the memory: " + sequence_number+" --> " + data);
+
+        }
+    }
+
+    public static void handleDeliverySMResp(PDU pdu){
+        synchronized (read_write_monitor){
+
+            DeliverSMResp resp = (DeliverSMResp) pdu;
+            int sequence_number = resp.getSequenceNumber();
+            log.debug("DeliverSMResp: sequence_number="+sequence_number);
+
+            Data data = recepts_table.get(sequence_number);
+
+            if (data != null){
+                try {
+                    journal.write(sequence_number, data, Status.DONE);
+                } catch (CouldNotWriteToJournalException e) {
+                    log.error(e);
+                    // todo ?
+                }
+
+                recepts_table.remove(sequence_number);
+
+                log.debug("Remove from memory: " + sequence_number);
+
+            } else {
+                log.warn("Couldn't find deliver receipt with sequence number "+sequence_number);
+            }
 
         }
     }

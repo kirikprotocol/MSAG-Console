@@ -53,7 +53,8 @@
           <fileset dir="${conf.dir}"/>
         </copy>
 
-        <mkdir dir="${DISTR_DIR}/final_log"/>
+        <!--mkdir dir="${DISTR_DIR}/final_log"/-->
+
         <!--copydir src="${SOURCE_DIR}/env/final_log" dest="${DISTR_DIR}/final_log"/-->
 
     </target>

@@ -13,14 +13,9 @@
 
     <section name="deliveries">
 
-        <section name="1246">
+        <section name="1248">
             <param name="user" type="string">stepanovd</param>
             <param name="services_numbers" type="string">10001,10002</param>
-        </section>
-
-        <section name="1247">
-            <param name="user" type="string">stepanovd</param>
-            <param name="services_numbers" type="string">10003,10004</param>
         </section>
 
     </section>

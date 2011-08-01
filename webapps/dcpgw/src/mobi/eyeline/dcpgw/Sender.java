@@ -130,7 +130,7 @@ public class Sender extends Thread{
 
             if (queue.size() == 1){
 
-                /*if (connection == null){
+                if (connection == null){
                     try{
                         log.debug("Try to create new dcp connection for user '"+login+"' ...");
                         connection = new DcpConnection(host, port, login, password);
@@ -151,7 +151,7 @@ public class Sender extends Thread{
                         }
 
                     }
-                }*/
+                }
 
                 SendTask sendTask = new SendTask(this, delivery_id);
                 ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, sending_timeout, TimeUnit.MILLISECONDS);
@@ -192,13 +192,13 @@ public class Sender extends Thread{
 
             try{
                 log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
-                //connection.addDeliveryMessages(delivery_id, list);
+                connection.addDeliveryMessages(delivery_id, list);
                 log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
 
                 DeliveryState deliveryState = new DeliveryState();
                 deliveryState.setStatus(DeliveryStatus.Planned);
 
-                //connection.changeDeliveryState(delivery_id, deliveryState);
+                connection.changeDeliveryState(delivery_id, deliveryState);
 
                 for(Message m: list){
 

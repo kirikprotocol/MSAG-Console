@@ -1,8 +1,10 @@
 package mobi.eyeline.dcpgw.journal;
 
+import mobi.eyeline.dcpgw.Utils;
 import mobi.eyeline.dcpgw.exeptions.CouldNotCleanJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
+import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -31,7 +33,7 @@ public class Journal {
     private DateFormat df;
     private Calendar cal;
 
-    public Journal(){
+    public Journal() throws InitializationException{
         String userDir = System.getProperty("user.dir");
         String filename = userDir+"/conf/dcpgw.properties";
 
@@ -44,31 +46,20 @@ public class Journal {
             System.exit(1);
         }
 
-        String s = prop.getProperty("max.journal.size.mb");
-        if (s != null && !s.isEmpty()){
-            max_journal_size_mb = Integer.parseInt(s);
-            log.debug("Set: max_journal_size_mb="+ max_journal_size_mb);
-        } else {
-            log.warn("Couldn't find property max_journal_size_mb, set default value " + max_journal_size_mb);
-        }
+        max_journal_size_mb = Utils.getProperty(prop, "max.journal.size.mb", 10);
 
-        s = prop.getProperty("clean.journal.timeout.msl");
-        long clean_journal_timeout = 60000;
-        if (s != null && !s.isEmpty()){
-            clean_journal_timeout = Long.parseLong(s);
-            log.debug("Set: clean_journal_time="+ clean_journal_timeout);
-        } else {
-            log.warn("Couldn't find clean journal timeout, set default value to "+ clean_journal_timeout);
-        }
+        long clean_journal_timeout = Utils.getProperty(prop, "clean.journal.timeout.msl", 60000);
 
-        journal_dir = new File(userDir+File.separator+"journal");
+        String journal_dir_str = Utils.getProperty(prop, "journal.dir", userDir+File.separator+"journal");
+
+        journal_dir = new File(journal_dir_str);
         if (!journal_dir.exists()){
             log.debug("Detected that journal directory doesn't exist.");
             if (journal_dir.mkdir()){
                 log.debug("Successfully create journal directory.");
             } else {
                 log.error("Couldn't create journal directory, check permissions.");
-                System.exit(1);
+                throw new InitializationException("Couldn't create journal directory, check permissions.");
             }
         } else {
             log.debug("Detected that journal directory already exists.");
@@ -80,8 +71,8 @@ public class Journal {
         try {
             loadJournal();
         } catch (CouldNotLoadJournalException e) {
-            log.error(e);
-            System.exit(1);
+            log.error("Couldn't load journal.",e);
+            throw new InitializationException(e);
         }
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -168,7 +159,7 @@ public class Journal {
 
         log.debug("Length of the journal in bytes: "+sum);
 
-        if (sum+byteCount <= max_journal_size_mb*1024/**1024*/){
+        if (sum+byteCount <= max_journal_size_mb*1024*1024){
             log.debug("Length of the journal after appending string will be less or equal than "+ max_journal_size_mb +" mb.");
 
             try {

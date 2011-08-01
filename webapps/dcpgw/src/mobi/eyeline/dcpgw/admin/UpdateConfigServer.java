@@ -11,8 +11,12 @@ public class UpdateConfigServer extends Thread {
 
     private ServerSocket serverSocket;
 
-    public UpdateConfigServer(int port) throws IOException {
-        this.serverSocket = new ServerSocket(port);
+    public UpdateConfigServer(String host, int port) throws IOException {
+        serverSocket = new ServerSocket(port);
+        if (host!= null && !host.isEmpty()){
+            serverSocket.bind(new InetSocketAddress(host,port));
+            log.debug("Set update server host to '"+host+"'.");
+        }
         this.start();
     }
 
