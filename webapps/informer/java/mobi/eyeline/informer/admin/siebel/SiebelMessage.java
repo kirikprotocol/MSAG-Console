@@ -15,8 +15,6 @@ class SiebelMessage {
   private String waveId;
   private String msisdn;
   private String message;
-
-  private State state;
   private String smscCode;
   private String smscValue;
 
@@ -68,14 +66,6 @@ class SiebelMessage {
     this.message = message;
   }
 
-  public State getMessageState() {
-    return state;
-  }
-
-  public void setMessageState(State state) {
-    this.state = state;
-  }
-
   public String getSmscCode() {
     return smscCode;
   }
@@ -96,7 +86,6 @@ class SiebelMessage {
     return "SiebelMessage{" +
         "smscValue='" + smscValue + '\'' +
         ", smscCode='" + smscCode + '\'' +
-        ", state=" + state +
         ", message='" + message + '\'' +
         ", msisdn='" + msisdn + '\'' +
         ", waveId='" + waveId + '\'' +

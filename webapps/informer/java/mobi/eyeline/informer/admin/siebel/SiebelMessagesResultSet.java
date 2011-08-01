@@ -1,8 +1,5 @@
 package mobi.eyeline.informer.admin.siebel;
 
-import mobi.eyeline.informer.admin.siebel.ResultSet;
-import mobi.eyeline.informer.admin.siebel.SiebelException;
-import mobi.eyeline.informer.admin.siebel.SiebelMessage;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
@@ -42,10 +39,6 @@ class SiebelMessagesResultSet implements ResultSet<SiebelMessage> {
       siebelMessage.setCreated(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("message.created")).getTime()));
       siebelMessage.setLastUpd(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("message.last.upd")).getTime()));
       siebelMessage.setMessage(sqlResult.getString(sql.getProperty("message.message")));
-      String ms = sqlResult.getString(sql.getProperty("message.message.state"));
-      if (ms != null) {
-        siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
-      }
       siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("message.msisdn")));
       siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("message.smsc.stat.code")));
       siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("message.smsc.stat.val")));

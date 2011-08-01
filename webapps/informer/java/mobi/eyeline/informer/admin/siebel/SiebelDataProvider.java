@@ -14,15 +14,6 @@ import java.util.Properties;
 interface SiebelDataProvider {
 
   /**
-   * Возвращает сообщение по его идентификатору
-   *
-   * @param clcId идентификатор сообщения
-   * @return сообщение
-   * @throws SiebelException ошибка выполнения команды
-   */
-  public SiebelMessage getMessage(String clcId) throws AdminException;
-
-  /**
    * Возвращает сообщения по идентификатору рассылки
    *
    * @param waveId идентификатор рассылки
@@ -30,15 +21,6 @@ interface SiebelDataProvider {
    * @throws AdminException ошибка выполнения команды
    */
   public ResultSet<SiebelMessage> getMessages(String waveId) throws AdminException;
-
-  /**
-   * Возвращает состояние сообщения
-   *
-   * @param clcId идентификатор рассылки
-   * @return состояние рассылки
-   * @throws AdminException ошибка выполнения команды
-   */
-  public SiebelMessage.State getMessageState(String clcId) throws AdminException;
 
   /**
    * Устанавливает состояние сообщений

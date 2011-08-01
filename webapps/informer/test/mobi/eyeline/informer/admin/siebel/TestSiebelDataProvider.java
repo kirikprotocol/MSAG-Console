@@ -57,17 +57,6 @@ class TestSiebelDataProvider implements SiebelDataProvider{
     };
   }
 
-  public SiebelMessage.State getMessageState(String clcId) throws AdminException {
-    for(List<SiebelMessage> ms : messages.values()) {
-      for(SiebelMessage s : ms) {
-        if(s.getClcId().endsWith(clcId)) {
-          return s.getMessageState();
-        }
-      }
-    }
-    return null;
-  }
-
   public void setMessageStates(Map<String, SiebelMessage.DeliveryState> deliveryStates) throws AdminException {
     for(List<SiebelMessage> ms : messages.values()) {
       for(SiebelMessage s : ms) {
@@ -75,7 +64,7 @@ class TestSiebelDataProvider implements SiebelDataProvider{
           SiebelMessage.DeliveryState state = deliveryStates.get(s.getClcId());
           s.setSmscCode(state.getSmppCode());
           s.setSmscValue(state.getSmppCodeDescription());
-          s.setMessageState(state.getState());
+//          s.setMessageState(state.getState());
           s.setLastUpd(new Date());
         }
       }

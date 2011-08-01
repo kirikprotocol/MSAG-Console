@@ -559,42 +559,61 @@ class SiebelManager {
     return msisdn;
   }
 
+  private boolean validateMessage(SiebelMessage message, User u, Map<String, SiebelMessage.DeliveryState> unloaded) throws AdminException {
+    String msisdn = message.getMsisdn();
+    String clcId = message.getClcId();
+    String text = message.getMessage();
+    if(text == null || text.length() == 0) {
+      logger.error("Illegal message text: '"+text+'\'');
+      unloaded.put(clcId, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "", ""));
+      return false;
+    }
+    Region r;
+    if (msisdn == null || !Address.validate(msisdn) ||
+        !(u.isAllRegionsAllowed() || ((r = context.getRegion(new Address(msisdn))) != null
+                  && u.getRegions() != null && u.getRegions().contains(r.getRegionId())))) {
+      logger.error("Illegal message msisdn: '"+msisdn+'\'');
+      unloaded.put(clcId, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "11", "Invalid Dest Addr"));
+      return false;
+    }
+    return true;
+  }
+
+  private Message createMessage(SiebelMessage sM, User u, Map<String, SiebelMessage.DeliveryState> unloaded) throws AdminException {
+    if(!validateMessage(sM, u, unloaded)) {
+      return null;
+    }
+    Address abonent = new Address(sM.getMsisdn());
+    Message msg = Message.newMessage(abonent, sM.getMessage());
+    msg.setProperty(UserDataConsts.SIEBEL_MESSAGE_ID, sM.getClcId());
+    return msg;
+  }
+
   private int addMessages(Delivery delivery, final ResultSet<SiebelMessage> messages) throws AdminException {
     try {
-
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: starting delivery generation...");
       }
       final int[] countMessages = new int[]{0};
 
-      final Collection<String> unloaded = new ArrayList<String>(10001);
+      final Map<String, SiebelMessage.DeliveryState> unloaded = new HashMap<String, SiebelMessage.DeliveryState>(10001){
+        @Override
+        public SiebelMessage.DeliveryState put(String key, SiebelMessage.DeliveryState value) {
+          logger.error(new StringBuilder(60).append("Siebel: Unloaded message ctrl_id='").append(key).append('\'').toString());
+          return super.put(key, value);
+        }
+      };
 
       final User u = context.getUser(siebelUser);
 
       context.addMessages(siebelUser, new DataSource<Message>() {
         public Message next() throws AdminException {
-          Message msg;
           while (messages.next()) {
             SiebelMessage sM = messages.get();
-            String msisdn = sM.getMsisdn();
-            if (msisdn != null && Address.validate(msisdn = convertMsisdn(msisdn))) {
-              Address abonent = new Address(msisdn);
-              Region r;
-              if (u.isAllRegionsAllowed() || ((r = context.getRegion(abonent)) != null
-                  && u.getRegions() != null && u.getRegions().contains(r.getRegionId()))) {
-                msg = Message.newMessage(abonent, sM.getMessage());
-                msg.setProperty(UserDataConsts.SIEBEL_MESSAGE_ID, sM.getClcId());
-                countMessages[0]++;
-                return msg;
-              } else {
-                unloaded.add(sM.getClcId());
-              }
-            } else {
-              unloaded.add(sM.getClcId());
-            }
-            if (unloaded.size() == 10000) {
-              updateUnloaded(unloaded);
-              unloaded.clear();
+            Message msg = createMessage(sM, u, unloaded);
+            if(msg != null) {
+              countMessages[0]++;
+              return msg;
             }
           }
           return null;
@@ -623,14 +642,9 @@ class SiebelManager {
     }
   }
 
-  private void updateUnloaded(Collection<String> unloaded) {
+  private void updateUnloaded(Map<String, SiebelMessage.DeliveryState> unloaded) {
     try {
-      Map<String, SiebelMessage.DeliveryState> states = new HashMap<String, SiebelMessage.DeliveryState>(unloaded.size());
-      for (String anUnloaded : unloaded) {
-        logger.error(new StringBuilder(60).append("Siebel: Unloaded message for '").append(anUnloaded).append('\'').toString());
-        states.put(anUnloaded, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "11", "Invalid Dest Addr"));
-      }
-      provider.setMessageStates(states);
+      provider.setMessageStates(unloaded);
     } catch (Exception e) {
       logger.error(e, e);
     }

@@ -131,54 +131,6 @@ class SiebelDataProviderImpl implements SiebelDataProvider {
     return sql.getProperty(string);
   }
 
-  public SiebelMessage getMessage(String clcId) throws AdminException {
-    if (clcId == null) {
-      throw new SiebelException("internal_error");
-    }
-    SiebelMessage siebelMessage = null;
-    Connection connection = null;
-    PreparedStatement prepStatement = null;
-    java.sql.ResultSet sqlResult = null;
-
-    try {
-      connection = pool.getConnection();
-
-      prepStatement = connection.prepareStatement(getSql("message.get"));
-      prepStatement.setFetchSize(FETCH_SIZE);
-      prepStatement.setString(1, clcId);
-
-      sqlResult = prepStatement.executeQuery();
-
-      if (sqlResult.next()) {
-        siebelMessage = new SiebelMessage();
-        siebelMessage.setClcId(clcId);
-        siebelMessage.setCreated(new Date(sqlResult.getTimestamp(getSql("message.created")).getTime()));
-        siebelMessage.setLastUpd(new Date(sqlResult.getTimestamp(getSql("message.last.upd")).getTime()));
-        siebelMessage.setMessage(sqlResult.getString(getSql("message.message")));
-        String ms = sqlResult.getString(getSql("message.message.state"));
-        if (ms != null) {
-          siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
-        }
-        siebelMessage.setMsisdn(sqlResult.getString(getSql("message.msisdn")));
-        siebelMessage.setSmscCode(sqlResult.getString(getSql("message.smsc.stat.code")));
-        siebelMessage.setSmscValue(sqlResult.getString(getSql("message.smsc.stat.val")));
-        siebelMessage.setWaveId(sqlResult.getString(getSql("message.wave.id")));
-      }
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get siebelMessage " + siebelMessage);
-      }
-    } catch (Exception exc) {
-      logger.error("Unable to get SiebelMessage from the dataBase with clcId: " + clcId, exc);
-      throw new SiebelException("unable_get_data");
-
-    } finally {
-      closeConn(connection, prepStatement, sqlResult);
-    }
-    return siebelMessage;
-  }
-
-
   public ResultSet<SiebelMessage> getMessages(String waveId) throws AdminException {
     if (waveId == null) {
       throw new SiebelException("internal_error");
