@@ -11,7 +11,9 @@ namespace network{
 
 class Multiplexer{
 protected:
-  enum{STATE_MODE_READ=0,STATE_MODE_WRITE=1};
+#define STATE_MODE_READ true
+#define STATE_MODE_WRITE false
+//	enum{STATE_MODE_READ=0,STATE_MODE_WRITE=1};
 public:
   typedef smsc::core::buffers::Array<Socket*> SockArray;
   Multiplexer(){}
@@ -69,7 +71,9 @@ protected:
   SockArray sockets;
   smsc::core::buffers::Array<pollfd> fds;
 
-  int checkState(int mode,SockArray& ready,SockArray& error,int timeout);
+  int checkState(bool isReadMode,SockArray& ready,SockArray& error,int timeout);
+#undef STATE_MODE_READ
+#undef STATE_MODE_WRITE
 };
 
 }//network

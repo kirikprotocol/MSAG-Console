@@ -7,9 +7,10 @@ namespace network{
 
 using smsc::core::buffers::Array;
 
-int Multiplexer::checkState(int mode,SockArray& ready,SockArray& error,int timeout)
+int Multiplexer::checkState(bool isReadMode,SockArray& ready,SockArray& error,int timeout)
 {
-  int mask;
+  int mask = isReadMode ? POLLIN : POLLOUT;
+  /*
   if(mode==STATE_MODE_READ)
   {
     mask=POLLIN;
@@ -18,6 +19,7 @@ int Multiplexer::checkState(int mode,SockArray& ready,SockArray& error,int timeo
   {
     mask=POLLOUT;
   }
+*/
   for(int i=0;i<sockets.Count();i++)
   {
     fds[i].events=mask;
@@ -32,14 +34,18 @@ int Multiplexer::checkState(int mode,SockArray& ready,SockArray& error,int timeo
 /*
  * (xom 28.07.11) due to multimasking of revent
  * it seems to better check I/O signals first instead of errors
- * to avoid of lost the tail of message
+ * to avoid of lost the tail of message when read
  */
-	if(fds[i].revents&mask) {
+	if ( isReadMode && (fds[i].revents&POLLIN) ) {
 		ready.Push(sockets[i]);
 		continue;
 	}
 	if(fds[i].revents&err) {
 		error.Push(sockets[i]);
+		continue;
+	}
+	if ( (!isReadMode) && (fds[i].revents&POLLOUT) ) {
+		ready.Push(sockets[i]);
 		continue;
 	}
   }

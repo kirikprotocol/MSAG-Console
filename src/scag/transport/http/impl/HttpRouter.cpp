@@ -456,7 +456,6 @@ uint32_t HttpRouterImpl::getId(Hash<uint32_t>* h, const std::string& s, uint32_t
     else
     {
         h->Insert(s.c_str(), ++id);
-        smsc_log_debug(logger, "Add to hostsMap: %s, %d", s.c_str(), id);
         rid = id;
     }
     return rid;

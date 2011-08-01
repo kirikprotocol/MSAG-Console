@@ -52,7 +52,7 @@ int HttpAcceptor::Execute()
 
 const char* HttpAcceptor::taskName()
 {
-    return (httpsOptions == NULL) ? "HttpAcceptor" : "HttpsAcceptor";
+    return (httpsOptions->userActive) ? "HttpsAcceptor" : "HttpAcceptor";
 }
 
 void HttpAcceptor::shutdown()
@@ -61,6 +61,9 @@ void HttpAcceptor::shutdown()
 
     masterSocket.Close();
     manager.scags.looseQueueLimit();
+    if (httpsOptions->userActive) {
+    	smsc_log_debug(logger, "%s SSL create %d free %d", taskName(), HttpContext::counter_create, HttpContext::counter_free);
+    }
     WaitFor();
 }
 
@@ -69,7 +72,12 @@ void HttpAcceptor::init(const char *host, int port, HttpsOptions& options)
     isStopping = false;
     httpsOptions = new HttpsOptions(options); //separate copy for each acceptor
 
-    logger = Logger::getInstance((httpsOptions == NULL) ? "http.acceptor" : "https.acceptor");
+    logger = Logger::getInstance((httpsOptions->userActive) ? "https.acceptor" : "http.acceptor");
+    if (httpsOptions->userActive) {
+    	HttpContext::counter_create = 0;
+    	HttpContext::counter_free = 0;
+        smsc_log_debug(logger, "%s SSL create %d free %d", taskName(), HttpContext::counter_create, HttpContext::counter_free);
+    }
 
     try {
         if (masterSocket.InitServer(host, port, 0, 0) == -1) {          

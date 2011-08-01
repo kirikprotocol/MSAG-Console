@@ -154,6 +154,9 @@ public:
     int result;
 
     bool requestFailed;
+//temporary for debug log
+    static unsigned int counter_create;
+    static unsigned int counter_free;
 
 protected:
     enum DataKeys {
@@ -182,6 +185,7 @@ protected:
     void sslLogErrors(void);
     SSL* sslCheckConnection(Socket* s);
     void sslCertInfo(X509* cert);
+//temporary for debug log
     const char* connName(Socket* s) { return (s==user?nameUser:nameSite); }
 };
 

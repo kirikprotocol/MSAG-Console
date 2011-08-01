@@ -30,6 +30,9 @@ const char *HttpContext::taskName[8] = {
 const char* HttpContext::nameUser = {"user"};
 const char* HttpContext::nameSite = {"site"};
 
+unsigned int HttpContext::counter_create;
+unsigned int HttpContext::counter_free;
+
 enum StatusCode {
   OK,
   CONTINUE,
@@ -82,97 +85,79 @@ void HttpContext::setSiteHttps(bool supported) {
 }
 
 int HttpContext::sslUserConnection(bool verify_client) {
-/*
-	if (userSsl)
-		sslCloseConnection(user);
-*/
 	userSsl = SSL_new(sslOptions->userContext());
-	if ( userSsl == NULL)
+	if ( userSsl == NULL) {
+		smsc_log_debug(logger, "sslUserConnection:create failed.");
 		return 0;
-	try
-	{
-		int			err;
-		X509*		client_cert = NULL;
-		std::string cert_nfo;
-
-		/* Assign the socket into the SSL structure (SSL and socket without BIO) */
-		if ( 0 == SSL_set_fd(userSsl, user->getSocket()) )
+	}
+	try {
+		// Assign the socket into the SSL structure (SSL and socket without BIO)
+		if ( SSL_set_fd(userSsl, user->getSocket()) == 0 )
 			throw 0;
 
-		/* Perform SSL Handshake on the SSL server */
-		err = SSL_accept(userSsl);
-		if ( (err) == -1) {
-			ERR_print_errors_fp(stderr);
+		// Perform SSL Handshake on the SSL server
+		if ( SSL_accept(userSsl) == -1 ) {
+			sslLogErrors();
 			throw 0;
 		}
 
-		/* Informational output (optional) */
-		smsc_log_debug(logger, "SSL connection version: %s using %s", SSL_get_version(userSsl), SSL_get_cipher(userSsl));
-
-		/* Get the client's certificate (optional) */
-		client_cert = SSL_get_peer_certificate(userSsl);
-		sslCertInfo(client_cert);
+		// Get the client's certificate (optional)
+//		X509*		client_cert = NULL;
+//		client_cert = SSL_get_peer_certificate(userSsl);
+//		sslCertInfo(client_cert);
 
 		user->setNonBlocking(1);
 	}
-	catch (...)
-	{
+	catch (...) {
 		SSL_free(userSsl);
 		userSsl = NULL;
+		smsc_log_error(logger, "SSL user connection failed");
 		return 0;
 	}
-	smsc_log_debug(logger, "sslUserConnection:created %p", userSsl);
+	HttpContext::counter_create++;
+	smsc_log_debug(logger, "sslUserConnection:created %p c:%d f:%d version: %s using %s",
+			userSsl, HttpContext::counter_create, HttpContext::counter_free,
+			SSL_get_version(userSsl), SSL_get_cipher(userSsl));
 	return 1;
 }
 
 int HttpContext::sslSiteConnection(bool verify_client) {
-/*
-	if (siteSsl)
-		sslCloseConnection(site);
-*/
-	smsc_log_debug(logger, "sslSiteConnection:try to create, siteContext: %p", sslOptions->siteContext());
 	siteSsl = SSL_new(sslOptions->siteContext());
 	if ( siteSsl == NULL) {
 		smsc_log_debug(logger, "sslSiteConnection:create failed.");
 		return 0;
 	}
-	try
-	{
-		int		err;
-		X509*	server_cert = NULL;
-
-		/* Assign the socket into the SSL structure (SSL and socket without BIO) */
-		smsc_log_debug(logger, "sslSiteConnection:SSL_set_fd(%p, %p);", siteSsl, site);
+	try {
+		// Assign the socket into the SSL structure (SSL and socket without BIO)
 		if ( 0 == SSL_set_fd(siteSsl, site->getSocket()) ) {
-			smsc_log_debug(logger, "sslSiteConnection:Unable to SSL_set_fd set socket.");
+			smsc_log_error(logger, "sslSiteConnection:Unable to SSL_set_fd set socket.");
 			throw 0;
 		}
 
-		/* Perform SSL Handshake on the SSL client */
-		smsc_log_debug(logger, "sslSiteConnection:SSL_connect(%p);", siteSsl);
+		// Perform SSL Handshake on the SSL client
 		site->setNonBlocking(0);
-		err = SSL_connect(siteSsl);
-		smsc_log_debug(logger, "sslSiteConnection:SSL_connect result=%d;", err);
-		if ( err <= 0) {
+		if ( SSL_connect(siteSsl) <= 0) {
 			sslLogErrors();
 			throw 0;
 		}
-		smsc_log_debug(logger, "SSL connection version: %s using %s", SSL_get_version(siteSsl), SSL_get_cipher(siteSsl));
 
-		/* Get the server's certificate (optional) */
-		server_cert = SSL_get_peer_certificate(siteSsl);
-		sslCertInfo(server_cert);
+		// Get the server's certificate (optional)
+//		X509*	server_cert = NULL;
+//		server_cert = SSL_get_peer_certificate(siteSsl);
+//		sslCertInfo(server_cert);
 
 		site->setNonBlocking(1);
 	}
-	catch (...)
-	{
+	catch (...) {
 		smsc_log_debug(logger, "sslSiteConnection:Exception when configure.");
 		SSL_free(siteSsl);
 		siteSsl = NULL;
 		return 0;
 	}
-	smsc_log_debug(logger, "sslSiteConnection:created %p", siteSsl);
+	HttpContext::counter_create++;
+	smsc_log_debug(logger, "sslSiteConnection:created %p c:%d f:%d version: %s using %s",
+			siteSsl, HttpContext::counter_create, HttpContext::counter_free,
+			SSL_get_version(siteSsl), SSL_get_cipher(siteSsl));
 	return 1;
 }
 
@@ -180,7 +165,6 @@ int HttpContext::sslCloseConnection(Socket* s) {
 	if ( !this->useHttps(s) )
 		return 0;
 	SSL* &ssl = (s == user) ? userSsl : siteSsl;
-	smsc_log_debug(logger, "sslCloseConnection: %s %p", connName(s), ssl);
 	if ( ssl == NULL ) {
 		smsc_log_debug(logger, "sslCloseConnection: %s already closed", connName(s));
 		return 0;
@@ -189,12 +173,13 @@ int HttpContext::sslCloseConnection(Socket* s) {
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
 		ssl = NULL;
+		HttpContext::counter_free++;
 	}
 	catch (...) {
 		ssl = NULL;
-		smsc_log_debug(logger, "sslCloseConnection: %s Unknown error", connName(s));
+		smsc_log_debug(logger, "sslCloseConnection: %s Unknown error c:%d f:%d", connName(s), HttpContext::counter_create, HttpContext::counter_free);
 	}
-	smsc_log_debug(logger, "sslCloseConnection: %s Ok", connName(s));
+	smsc_log_debug(logger, "sslCloseConnection: %s Ok c:%d f:%d", connName(s), HttpContext::counter_create, HttpContext::counter_free);
 	return 1;
 }
 
