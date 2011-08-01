@@ -89,7 +89,10 @@
 
   <tag>
     <tag-name>inputDate</tag-name>
-    <source>tags/inputDate.xhtml</source>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.input_date</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
   </tag>
 
 

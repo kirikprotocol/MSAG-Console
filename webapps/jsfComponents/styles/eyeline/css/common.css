@@ -37,7 +37,7 @@ img.button {
    top: 3px;*/
 }
 
-input, textarea, select {
+input, textarea, select, button {
   border: 1px solid #C8BE9E;
   color: #161E49;
   font-size: 100%;
@@ -46,6 +46,11 @@ input, textarea, select {
 input {
 /*behavior : url(/scripts/input.htc);*/
   z-index: 10;
+}
+
+/*Стиль полей ввода при возникновении ошибки*/
+input.validationError {
+  border: 1px solid RED;
 }
 
 textarea {

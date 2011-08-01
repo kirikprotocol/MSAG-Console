@@ -114,6 +114,114 @@
     </attribute>
   </tag>
 
+  <!-- ============================================= INPUT DATE ==================================================== -->
+
+  <tag>
+    <description>Поле для ввода даты и времени</description>
+    <name>inputDate</name>
+    <tag-class>mobi.eyeline.util.jsf.components.input_date.InputDateTag</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Значение, которое будет отображаться в данном компоненте</description>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.util.Date</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий может ли данное поле содержать пустое значение. По-умолчанию, false.</description>
+      <name>required</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
+    <attribute>
+      <description>Сообщение об ошибке в случае некорректно введенного значения</description>
+      <name>converterMessage</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Сообщение об ошибке валидации</description>
+      <name>validatorMessage</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Сообщение о том, что поле является обязательным</description>
+      <name>requiredMessage</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий надо ли вводить время или достаточно только даты</description>
+      <name>inputTime</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Ограничение на минимальную дату</description>
+      <name>minDate</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.util.Date</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Ограничение на максимальную дату</description>
+      <name>maxDate</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.util.Date</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Количество месяцев. которые надо показывать во всплывающем календаре</description>
+      <name>numberOfMonths</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Integer</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
+  </tag>
+
   <!-- ============================================ MESSAGE ======================================================== -->
 
   <tag>
@@ -360,5 +468,7 @@
     </attribute>
 
   </tag>
+
+
 
 </taglib>

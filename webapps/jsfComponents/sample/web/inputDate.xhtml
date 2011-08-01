@@ -8,17 +8,33 @@
 
   <ui:composition template="/main.xhtml">
 
+    <ui:define name="styles">
+      .column1 {width: 100px; white-space: nowrap; text-align: right;}
+      .column2 {width: 100%; white-space: nowrap; text-align: left;}
+    </ui:define>
+
     <ui:define name="content">
 
       <h:form>
 
-        <h:messages/>
+        <h:panelGrid columns="2" columnClasses="column1, column2">
+          <h:outputText value="Обязательное поле"/>
+          <eye:inputDate required="true" value="#{inputDate.inputDate}"/>
 
-        <h:panelGrid columns="1">
-          <eye:inputDate id="date" type="full" required="true" value="#{inputDate.inputDate}"/><h:commandButton value="Submit"/>
+          <h:outputText value="Дата и время"/>
+          <eye:inputDate value="#{inputDate.inputDate1}" inputTime="true"/>
+
+          <h:outputText value="Дата с ограничением"/>
+          <eye:inputDate value="#{inputDate.inputDate2}" minDate="#{inputDate.minDate}" maxDate="#{inputDate.maxDate}"/>
+
+          <h:outputText value="Дата с несколькими месяцами"/>
+          <eye:inputDate value="#{inputDate.inputDate3}" numberOfMonths="3"/>
+
+          <h:outputText value="Обязательное поле (проверка в settere)"/>
+          <eye:inputDate value="#{inputDate.inputDate4}"/>
         </h:panelGrid>
 
-        <h:outputText value="#{inputDate.inputDateString}"/>
+        <h:commandButton value="Submit"/>
 
       </h:form>
 
