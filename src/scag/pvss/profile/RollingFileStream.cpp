@@ -80,12 +80,15 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
         sscanf(buf,FILETRAILER,&linesRead,&crcRead,&pos);
         if ( pos != 0 ) {
             // it is a trailer
-            if ( lines != linesRead ) {
-                throw FileReadException("",0,filePos,"not matched: linesRead=%u lines=%u",
-                                        linesRead, lines );
-            } else if ( crcRead != crc32 ) {
-                throw FileReadException("",0,filePos,"not matched: crcRead=%08x crc32=%08x",
-                                        crcRead, crc32 );
+            if ( rp_ ) {
+                // if rp is not set, then we only need to extract nextfile
+                if ( lines != linesRead ) {
+                    throw FileReadException("",0,filePos,"not matched: linesInTail=%u lines=%u",
+                                            linesRead, lines );
+                } else if ( crcRead != crc32 ) {
+                    throw FileReadException("",0,filePos,"not matched: crcInTail=%08x crc32=%08x",
+                                            crcRead, crc32 );
+                }
             }
             // get the next file name
             nextFile = buf+pos;
@@ -389,7 +392,7 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
 time_t RollingFileStream::tryToRoll( time_t now )
 {
     time_t rollTime = startTime_ + interval_;
-    if ( rollTime < now ) {
+    if ( rollTime <= now ) {
         doRollover( now, prefix_.c_str() );
         rollTime = startTime_ + interval_;
     }

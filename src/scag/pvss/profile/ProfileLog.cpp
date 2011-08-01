@@ -49,6 +49,7 @@ void ProfileLog::init( smsc::logger::Logger::LogLevel level,
 
 void ProfileLog::logva( int level, const char* const format, va_list args ) throw()
 {
+    if (level < level_) return;
     char buf[2048];
 
     class BufferGuard {
@@ -554,6 +555,7 @@ int ProfileLogRoller::Execute()
 
             if ( needPostfix ) {
                 // fix all unfinished streams
+                smsc_log_debug(log_,"need postfix");
                 needPostfix = false;
                 char* streamName;
                 EmbedRefPtr<ProfileLogStream> stream;
@@ -579,12 +581,13 @@ int ProfileLogRoller::Execute()
                 if ( sleep > sleepTime ) {
                     sleep = sleepTime;
                 }
+                smsc_log_debug(log_,"sleep=%d",sleep);
                 MutexGuard mg(mon_);
                 mon_.wait(sleep*1000);
                 continue;
             }
 
-            if ( now >= nextConfigTry ) {
+            if ( configReloadInterval_ && now >= nextConfigTry ) {
                 nextConfigTry = now + configReloadInterval_;
                 try {
                     needPostfix = readConfiguration();
@@ -603,11 +606,11 @@ int ProfileLogRoller::Execute()
             EmbedRefPtr<ProfileLogStream> stream;
             for ( LogStreams::Iterator it(&logStreams_); it.Next(streamName,stream); ) {
                 time_t next = stream->tryToRoll( now );
+                smsc_log_debug(log_,"rolling at %ld, next=%ld",long(now),long(next));
                 if ( next < nextRollTry ) {
                     nextRollTry = next;
                 }
             }
-
         }
 
     } catch ( std::exception& e ) {

@@ -22,6 +22,7 @@ using eyeline::informer::FileReadException;
 using eyeline::informer::FileGuard;
 using eyeline::informer::NoDotsNameFilter;
 using eyeline::informer::EXC_IOERROR;
+using eyeline::informer::EXC_BADFILE;
 
 namespace scag2 {
 namespace pvss {
@@ -164,7 +165,8 @@ struct BackupProcessor::BackupParser : public ProfileLogStreamRecordParser
             break;
         }
         case 'G' : {
-            break;
+            smsc_log_warn(proc_.log_,"action G is ignored on key=%s",profileKey.toString().c_str());
+            return;
         }
         default:
             throw InfosmeException(EXC_IOERROR,"unknown action '%c' in '%.*s'",act,reclen,record);
@@ -520,8 +522,12 @@ int BackupProcessor::BackupProcessingTask::Execute()
         std::string nextFileName;
         try {
             nextFileName = processor_.readTheNextFile( processor_.archiveDir_ );
+        } catch ( FileReadException& e ) {
+            smsc_log_error(log_,"exc in '%s': %s",e.getFileName(),e.what());
+            throw InfosmeException(e.getCode(),"%s in file '%s'",e.what(),e.getFileName());
         } catch ( std::exception& e ) {
-            smsc_log_warn(log_,"readNextFile exc: %s",e.what());
+            smsc_log_error(log_,"readNextFile exc: %s",e.what());
+            throw;
         }
         if ( nextFileName.empty() ) {
             smsc_log_info(log_,"next backup file is empty, so this is the first run");
@@ -604,15 +610,18 @@ int BackupProcessor::BackupProcessingTask::Execute()
                               static_cast<unsigned long long>(e.getPos()),
                               e.what() );
                 if ( badFilePos == e.getPos() ) {
-                    throw FileReadException(filename.c_str(),0,e.getPos(),
-                                            "persistent parsing exc: %s",
-                                            e.what());
+                    throw InfosmeException(EXC_BADFILE,
+                                           "exc in file '%s': %s",
+                                           filename.c_str(),e.what());
                 }
                 badFilePos = e.getPos();
                 MutexGuard mg(mon_);
                 mon_.wait(failureSleep);
                 continue;
-            } // other exceptions are not handled
+            } catch ( std::exception& e ) {
+                throw InfosmeException(EXC_BADFILE,"exc in file '%s': %s",
+                                       filename.c_str(),e.what());
+            }
 
             badFilePos = size_t(-1); // reset bad file pos
 
