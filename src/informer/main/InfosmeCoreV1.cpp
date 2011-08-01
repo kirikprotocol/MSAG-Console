@@ -2,6 +2,7 @@
 #include "DeliveryMgr.h"
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
+#include "informer/snmp/SnmpManager.h"
 #ifdef SNMP
 #include "SnmpManagerImpl.h"
 #endif
