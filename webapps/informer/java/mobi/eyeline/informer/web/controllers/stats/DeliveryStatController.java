@@ -3,7 +3,6 @@ package mobi.eyeline.informer.web.controllers.stats;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.components.data_table.model.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -58,13 +57,14 @@ public abstract class DeliveryStatController extends InformerController{
   }
 
   public void clearFilter() {
-    clearRecords();
     initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskIds(null);
     filter.setRegionId(null);
     setAggregation(AggregationType.DAY);
+    loadListener = null;
+    loaded = false;
   }
 
 
@@ -115,8 +115,6 @@ public abstract class DeliveryStatController extends InformerController{
   protected void clearRecords() {
     recordsMap.clear();
     records.clear();
-    loaded = false;
-    loadListener = null;
     getTotals().reset();
   }
 
@@ -161,8 +159,9 @@ public abstract class DeliveryStatController extends InformerController{
   }
 
   public String start() {
-    clearRecords();
     init = true;
+    loadListener = null;
+    loaded = false;
     return null;
   }
 
@@ -229,14 +228,12 @@ public abstract class DeliveryStatController extends InformerController{
               public void run() {
                 try{
                   DeliveryStatController.this.load(config, locale, loadListener);
+                  loaded = true;
                 }catch (AdminException e){
                   logger.error(e,e);
                   loadListener.setLoadError(new ModelException(e.getMessage(locale)));
                 }catch (Exception e){
                   logger.error(e,e);
-
-                }finally {
-                  loaded = true;
                 }
               }
             }.start();

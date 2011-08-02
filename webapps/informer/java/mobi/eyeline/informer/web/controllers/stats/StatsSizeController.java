@@ -6,7 +6,6 @@ import mobi.eyeline.informer.admin.delivery.stat.StatEntity;
 import mobi.eyeline.informer.admin.delivery.stat.StatEntityProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.DateAndFile;
-import mobi.eyeline.informer.web.components.data_table.model.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.config.Configuration;
 
@@ -86,14 +85,12 @@ public class StatsSizeController extends DeliveryStatController  {
               public void run() {
                 try{
                   StatsSizeController.this.load(config, locale, loadListener);
+                  loaded = true;
                 }catch (AdminException e){
                   logger.error(e,e);
                   loadListener.setLoadError(new ModelException(e.getMessage(locale)));
                 }catch (Exception e){
                   logger.error(e,e);
-
-                }finally {
-                  loaded = true;
                 }
               }
             }.start();
@@ -244,7 +241,6 @@ public class StatsSizeController extends DeliveryStatController  {
     selectedRows = null;
     loaded = false;
     loadListener = null;
-    clearRecords();
     init = true;
     return null;
   }

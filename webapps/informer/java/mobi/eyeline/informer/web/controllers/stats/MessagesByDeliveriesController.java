@@ -7,7 +7,6 @@ import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.components.data_table.model.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -56,7 +55,6 @@ public class MessagesByDeliveriesController extends InformerController{
   }
 
   public String start() {
-    records.clear();
     init = true;
     loaded = false;
     loadListener = null;
@@ -93,8 +91,8 @@ public class MessagesByDeliveriesController extends InformerController{
 
   public void clearFilter() {
     loaded = false;
+    loadListener = null;
     totals.reset();
-    records.clear();
     initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);
@@ -324,11 +322,12 @@ public class MessagesByDeliveriesController extends InformerController{
               public void run() {
                 try{
                   MessagesByDeliveriesController.this.execute(config, locale, loadListener);
+                  loaded = true;
                 }catch (AdminException e){
                   logger.error(e,e);
                   loadListener.setLoadError(new ModelException(e.getMessage(locale)));
-                }finally {
-                  loaded = true;
+                }catch (Exception e){
+                  logger.error(e,e);
                 }
               }
             }.start();

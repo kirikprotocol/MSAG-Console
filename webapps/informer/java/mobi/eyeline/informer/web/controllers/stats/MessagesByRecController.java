@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
-import mobi.eyeline.informer.web.components.data_table.model.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -13,8 +12,6 @@ import javax.faces.model.SelectItem;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -59,16 +56,9 @@ public class MessagesByRecController extends InformerController {
   public void clearFilter() {
     loaded = false;
     loadListener = null;
-    try{
-      lock.lock();
-      records.clear();
-    }finally {
-      lock.unlock();
-    }
     initUser();
     setFromDate(null);
     setTillDate(null);
-    msisdn = null;
   }
 
   public String start() {
@@ -127,9 +117,8 @@ public class MessagesByRecController extends InformerController {
     return ret;
   }
 
-  private Lock lock = new ReentrantLock();
-
   public void execute(final Configuration config, final Locale locale, final LoadListener listener) throws AdminException {
+    records.clear();
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
     deliveryFilter.setCreateDateFrom(fromDate);
@@ -140,16 +129,9 @@ public class MessagesByRecController extends InformerController {
 
     listener.setCurrent(0);
     listener.setTotal(config.countDeliveries(getUser().getLogin(), deliveryFilter));
-    try{
-      lock.lock();
-      records.clear();
-      config.getDeliveries(getUser().getLogin(), deliveryFilter, 1000,
-          new DeliveryVisitorImpl(config, locale, listener)
-      );
-      loaded = true;
-    }finally {
-      lock.unlock();
-    }
+    config.getDeliveries(getUser().getLogin(), deliveryFilter, 1000,
+        new DeliveryVisitorImpl(config, locale, listener)
+    );
   }
 
 
@@ -171,14 +153,12 @@ public class MessagesByRecController extends InformerController {
               public void run() {
                 try{
                   MessagesByRecController.this.execute(config, locale, loadListener);
+                  loaded = true;
                 }catch (AdminException e){
                   logger.error(e,e);
                   loadListener.setLoadError(new ModelException(e.getMessage(locale)));
                 }catch (Exception e){
                   logger.error(e,e);
-
-                }finally {
-                  loaded = true;
                 }
               }
             }.start();
@@ -189,74 +169,59 @@ public class MessagesByRecController extends InformerController {
       }
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-        try{
-          lock.lock();
-          // Сортируем записи
-          if (sortOrder != null && !records.isEmpty()) {
-            Collections.sort(records, new Comparator<MessagesByRecRecord>() {
+        // Сортируем записи
+        if (sortOrder != null && !records.isEmpty()) {
+          Collections.sort(records, new Comparator<MessagesByRecRecord>() {
 
-              public int compare(MessagesByRecRecord o1, MessagesByRecRecord o2) {
+            public int compare(MessagesByRecRecord o1, MessagesByRecRecord o2) {
 
-                final int mul = sortOrder.isAsc() ? 1 : -1;
-                if (sortOrder.getColumnId().equals("name")) {
-                  return mul * o1.getName().compareTo(o2.getName());
-                }
-                if (sortOrder.getColumnId().equals("userId")) {
-                  return mul * o1.getUserId().compareTo(o2.getUserId());
-                }
-                if (sortOrder.getColumnId().equals("text")) {
-                  if (o1.getText() == null && o1.getText() == null) return 0;
-                  if (o1.getText() == null) return mul;
-                  return mul * o1.getText().compareTo(o2.getText());
-                }
-                if (sortOrder.getColumnId().equals("deliveryDate")) {
-                  return mul * o1.getDeliveryDate().compareTo(o2.getDeliveryDate());
-                }
-                if (sortOrder.getColumnId().equals("state")) {
-                  return mul * o1.getState().compareTo(o2.getState());
-                }
-                if (sortOrder.getColumnId().equals("errorString")) {
-                  return mul * o1.getErrorString().compareTo(o2.getErrorString());
-                }
-                return 0;
+              final int mul = sortOrder.isAsc() ? 1 : -1;
+              if (sortOrder.getColumnId().equals("name")) {
+                return mul * o1.getName().compareTo(o2.getName());
               }
-            });
-          }
-
-          List<MessagesByRecRecord> result = new LinkedList<MessagesByRecRecord>();
-          for (Iterator<MessagesByRecRecord> i = records.iterator(); i.hasNext() && count > 0;) {
-            MessagesByRecRecord r = i.next();
-            if (--startPos < 0) {
-              result.add(r);
-              count--;
+              if (sortOrder.getColumnId().equals("userId")) {
+                return mul * o1.getUserId().compareTo(o2.getUserId());
+              }
+              if (sortOrder.getColumnId().equals("text")) {
+                if (o1.getText() == null && o1.getText() == null) return 0;
+                if (o1.getText() == null) return mul;
+                return mul * o1.getText().compareTo(o2.getText());
+              }
+              if (sortOrder.getColumnId().equals("deliveryDate")) {
+                return mul * o1.getDeliveryDate().compareTo(o2.getDeliveryDate());
+              }
+              if (sortOrder.getColumnId().equals("state")) {
+                return mul * o1.getState().compareTo(o2.getState());
+              }
+              if (sortOrder.getColumnId().equals("errorString")) {
+                return mul * o1.getErrorString().compareTo(o2.getErrorString());
+              }
+              return 0;
             }
-          }
-          return result;
-        }finally {
-          lock.unlock();
+          });
         }
+
+        List<MessagesByRecRecord> result = new LinkedList<MessagesByRecRecord>();
+        for (Iterator<MessagesByRecRecord> i = records.iterator(); i.hasNext() && count > 0;) {
+          MessagesByRecRecord r = i.next();
+          if (--startPos < 0) {
+            result.add(r);
+            count--;
+          }
+        }
+        return result;
       }
 
       public int getRowsCount() {
-        try{
-          lock.lock();
-          return records.size();
-        }finally {
-          lock.unlock();
-        }
+        return records.size();
       }
     };
   }
 
   @Override
   protected void _download(PrintWriter writer) throws IOException {
-    try{
-      lock.lock();
-      for (MessagesByRecRecord r : records) {
-        r.printCSV(writer);
-      }
-    }finally {
-      lock.unlock();
+    for (MessagesByRecRecord r : records) {
+      r.printCSV(writer);
     }
   }
 

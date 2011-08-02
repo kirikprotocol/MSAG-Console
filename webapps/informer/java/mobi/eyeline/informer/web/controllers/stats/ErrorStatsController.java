@@ -6,7 +6,6 @@ import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.informer.admin.delivery.MessageFilter;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.components.data_table.model.LoadListener;
 import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -158,11 +157,12 @@ public class ErrorStatsController extends InformerController{
               public void run() {
                 try{
                   ErrorStatsController.this.execute(loadListener);
+                  loaded = true;
                 }catch (AdminException e){
                   logger.error(e,e);
                   loadListener.setLoadError(new ModelException(e.getMessage(locale)));
-                }finally {
-                  loaded = true;
+                }catch (Exception e){
+                  logger.error(e, e);
                 }
               }
             }.start();

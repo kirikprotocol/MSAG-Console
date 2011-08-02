@@ -1,18 +1,14 @@
 package mobi.eyeline.informer.web.components.data_table.model;
 
-import mobi.eyeline.informer.web.components.data_table.model.ModelException;
-
 /**
 * author: Aleksandr Khalitov
 */
-public class LoadListener {
+public class LoadListener{
 
   private int current;
   private int total = Integer.MAX_VALUE;
 
   private ModelException loadError;
-
-  private boolean finished;
 
   public int getCurrent() {
     return current;
@@ -38,11 +34,5 @@ public class LoadListener {
     this.loadError = loadError;
   }
 
-  public boolean isFinished() {
-    return finished;
-  }
 
-  public void setFinished(boolean finished) {
-    this.finished = finished;
-  }
 }

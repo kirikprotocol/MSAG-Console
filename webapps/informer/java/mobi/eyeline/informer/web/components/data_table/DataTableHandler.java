@@ -91,7 +91,7 @@ public class DataTableHandler extends ComponentHandler {
   }
 
   @SuppressWarnings({"unchecked"})
-  private void getRows(List rows, DataTable t, int startPos, int number, DataTableSortOrder s) throws ModelException {
+  private void getRows(List rows, DataTable t, int startPos, DataTableSortOrder s) throws ModelException {
     if(!t.isShowSelectedOnly()) {
       rows.addAll(t.getModel().getRows(startPos, t.getPageSize(), s));
     } else {
@@ -99,11 +99,11 @@ public class DataTableHandler extends ComponentHandler {
     }
   }
 
-  private void load(List rows, DataTable t, int startPos, int number,  DataTableSortOrder s) throws ModelException {
-    getRows(rows, t, startPos, number, s);
+  private void load(List rows, DataTable t, int startPos, DataTableSortOrder s) throws ModelException {
+    getRows(rows, t, startPos, s);
     if (rows.isEmpty() && t.getCurrentPage() > 0) {
       t.setCurrentPage(0);
-      getRows(rows,t, 0, number, s);
+      getRows(rows,t, 0, s);
     }
   }
 
@@ -163,7 +163,7 @@ public class DataTableHandler extends ComponentHandler {
         return rows;
       }
     }
-    load(rows, t, startPos, t.getPageSize(), s);
+    load(rows, t, startPos, s);
     return rows;
   }
 
