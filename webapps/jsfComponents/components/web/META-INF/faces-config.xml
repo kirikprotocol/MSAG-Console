@@ -79,6 +79,21 @@
     <component-class>mobi.eyeline.util.jsf.components.input_date.InputDate</component-class>
   </component>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.menubar</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.menubar.MenuBar</component-class>
+  </component>
+
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.menubar.item</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.menubar.MenuBarItem</component-class>
+  </component>
+
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.menubar.delimiter</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.menubar.MenuBarDelimiter</component-class>
+  </component>
+
 
 
   <render-kit>
@@ -87,18 +102,6 @@
       <component-family>Eyeline</component-family>
       <renderer-type>dynamicTable</renderer-type>
       <renderer-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTableRenderer</renderer-class>
-    </renderer>
-
-    <renderer>
-      <component-family>Eyeline</component-family>
-      <renderer-type>menuBar</renderer-type>
-      <renderer-class>mobi.eyeline.util.jsf.components.menubar.MenuBarRenderer</renderer-class>
-    </renderer>
-
-    <renderer>
-      <component-family>Eyeline</component-family>
-      <renderer-type>menu</renderer-type>
-      <renderer-class>mobi.eyeline.util.jsf.components.menubar.MenuBarRenderer</renderer-class>
     </renderer>
 
     <renderer>

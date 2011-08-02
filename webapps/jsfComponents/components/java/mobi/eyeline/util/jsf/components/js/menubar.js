@@ -1,7 +1,5 @@
 function MenuBar(headerId, itemsId) {
 
-  this.menuBarObj = this;
-
   var menuBarElm = document.getElementById(headerId);
   menuBarElm.className = "eyeline_menubardiv";
 
@@ -43,7 +41,7 @@ function MenuBar(headerId, itemsId) {
 function MenuItem(itemId) {
   this.itemId = itemId;
 
-  this.itemClassNameOver="eyeline_menuitemover";
-  this.itemClassName="eyeline_menuitem";
+  this.itemClassNameOver = "eyeline_menuitemover";
+  this.itemClassName = "eyeline_menuitem";
 }
 

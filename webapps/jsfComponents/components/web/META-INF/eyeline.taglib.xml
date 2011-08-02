@@ -95,6 +95,29 @@
     </component>
   </tag>
 
+  <tag>
+    <tag-name>menubar</tag-name>
+     <component>
+      <component-type>mobi.eyeline.util.jsf.components.menubar</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>menubaritem</tag-name>
+     <component>
+      <component-type>mobi.eyeline.util.jsf.components.menubar.item</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
+
+   <tag>
+    <tag-name>menubardelimiter</tag-name>
+     <component>
+      <component-type>mobi.eyeline.util.jsf.components.menubar.delimiter</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
 
 
 
@@ -163,32 +186,7 @@
   </tag>
 
 
-  <tag>
-    <tag-name>menubar</tag-name>
-     <component>
-      <component-type>menubar</component-type>
-      <renderer-type>menuBar</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.menubar.MenuBarHandler</handler-class>
-    </component>
-  </tag>
 
-  <tag>
-    <tag-name>menubaritem</tag-name>
-     <component>
-      <component-type>menubaritem</component-type>
-      <renderer-type>menuBar</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.menubar.MenuBarItemHandler</handler-class>
-    </component>
-  </tag>
-
-   <tag>
-    <tag-name>menubardelimiter</tag-name>
-     <component>
-      <component-type>menubardelimiter</component-type>
-      <renderer-type>menuBar</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.menubar.MenuBarDelimiterHandler</handler-class>
-    </component>
-  </tag>
 
   <tag>
     <tag-name>set</tag-name>

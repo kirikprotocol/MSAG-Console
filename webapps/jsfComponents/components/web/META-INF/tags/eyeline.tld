@@ -469,6 +469,85 @@
 
   </tag>
 
+  <!-- ============================================= MENU BAR ====================================================== -->
 
+  <tag>
+    <description>Кнопка, при наведении на которую появляется всплывающее меню</description>
+    <name>menubar</name>
+    <tag-class>mobi.eyeline.util.jsf.components.menubar.MenuBarTag</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Название</description>
+      <name>label</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Горизонтальный разделитель в меню</description>
+    <name>menubardelimiter</name>
+    <tag-class>mobi.eyeline.util.jsf.components.menubar.MenuBarDelimiterTag</tag-class>
+    <body-content>empty</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Элемент в menubar</description>
+    <name>menubaritem</name>
+    <tag-class>mobi.eyeline.util.jsf.components.menubar.MenuBarItemTag</tag-class>
+    <body-content>empty</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
 
 </taglib>

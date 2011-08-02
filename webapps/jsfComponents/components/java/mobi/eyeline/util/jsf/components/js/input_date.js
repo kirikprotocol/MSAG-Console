@@ -19,7 +19,7 @@ function initRuLocale() {
       showMonthAfterYear: false,
       yearSuffix: ''};
   });
-};
+}
 
 function initInputDate(elementId, value, minDate, maxDate, inputTime, numberOfMonths, locale) {
   initRuLocale();
