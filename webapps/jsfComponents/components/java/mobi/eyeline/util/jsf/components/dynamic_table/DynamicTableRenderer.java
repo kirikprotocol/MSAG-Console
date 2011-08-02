@@ -7,6 +7,7 @@ import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
+import javax.faces.convert.ConverterException;
 import javax.faces.render.Renderer;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,12 +21,8 @@ import java.util.TreeMap;
 public class DynamicTableRenderer extends Renderer {
 
   public void decode(FacesContext context, UIComponent component) {
+    DynamicTable c = (DynamicTable)component;
 
-    DynamicTable c = (DynamicTable) component;
-    decodeTable(context, c);
-  }
-
-  static void decodeTable(FacesContext context, DynamicTable c) {
     DynamicTableModel newModel = new DynamicTableModel();
     String paramPrefix = c.getId() + '_';
     String newCellPrefix = c.getId() + "_newcell";
@@ -58,7 +55,12 @@ public class DynamicTableRenderer extends Renderer {
     for (DynamicTableRow row : rows.values())
       newModel.addRow(row);
 
-    c.setModel(newModel);
+    c.setSubmittedValue(newModel);
+  }
+
+  @Override
+  public Object getConvertedValue(FacesContext context, UIComponent component, Object submitted) throws ConverterException {
+    return submitted;
   }
 
 
@@ -75,7 +77,7 @@ public class DynamicTableRenderer extends Renderer {
     ResponseWriter w = context.getResponseWriter();
     DynamicTable table = (DynamicTable) component;
     importResorces(w);
-    w.append("\n<table cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"><tr>");
+    w.append("\n<table class=\"eyeline_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"><tr>");
     for (Column c : table.getColumns()) {
       w.append("<th");
       w.append(" width=\""+c.getWidth()+"\"");
@@ -117,7 +119,11 @@ public class DynamicTableRenderer extends Renderer {
 
     w.append("var dtable=new DynamicTable('" + ResourceUtils.getResourceUrl("") + "','" + component.getId() + "'," + columnsArray.toString() + ");\n");
 
-    DynamicTableModel m = table.getModel();
+    DynamicTableModel m = (DynamicTableModel)table.getSubmittedValue();
+    if (m == null)
+      m = (DynamicTableModel)table.getValue();
+
+
     for (DynamicTableRow row : m.getRows()) {
       StringBuilder valuesArray = new StringBuilder();
       valuesArray.append("new Array(");

@@ -1,30 +1,21 @@
 package mobi.eyeline.util.jsf.components.dynamic_table;
 
 import mobi.eyeline.util.jsf.components.EyelineComponent;
+import mobi.eyeline.util.jsf.components.base.UIInputImpl;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
 
 import javax.el.ValueExpression;
 import javax.faces.context.FacesContext;
+import javax.faces.render.Renderer;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Artem Snopkov
  */
-public class DynamicTable extends EyelineComponent {
+public class DynamicTable extends UIInputImpl {
 
-  private DynamicTableModel model;
   private List<Column> columns = new ArrayList<Column>();
-  private int width;
-  private ValueExpression valueExpression;
-
-  public DynamicTableModel getModel() {
-    return model;
-  }
-
-  public void setModel(DynamicTableModel value) {
-    this.model = value;
-  }
 
   void addColumn(Column column) {
     columns.add(column);
@@ -34,41 +25,14 @@ public class DynamicTable extends EyelineComponent {
     return columns;
   }
 
-  int getWidth() {
-    return width;
+  @Override
+  public String getFamily() {
+    return "Eyeline";
   }
 
-  void setWidth(int width) {
-    this.width = width;
+  @Override
+  protected Renderer getRenderer(FacesContext context) {
+    return new DynamicTableRenderer();
   }
 
-  public void processUpdates(javax.faces.context.FacesContext context) {
-    if (valueExpression != null)
-      valueExpression.setValue(context.getELContext(), model);
-    super.processUpdates(context);
-  }
-
-  public void processDecodes(javax.faces.context.FacesContext context) {
-    DynamicTableRenderer.decodeTable(context, this);
-    super.processDecodes(context);
-  }
-
-  public void setValueExpression(ValueExpression valueExpression) {
-    this.valueExpression = valueExpression;
-  }
-
-  public Object saveState(FacesContext context) {
-    Object[] values = new Object[5];
-    values[0] = super.saveState(context);
-    values[1] = model;
-    values[2] = valueExpression;
-    return (values);
-  }
-
-  public void restoreState(FacesContext context, Object state) {
-    Object[] values = (Object[]) state;
-    super.restoreState(context, values[0]);
-    model = (DynamicTableModel) values[1];
-    valueExpression = (ValueExpression) values[2];
-  }
 }

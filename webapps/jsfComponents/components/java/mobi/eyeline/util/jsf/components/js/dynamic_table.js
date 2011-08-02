@@ -186,7 +186,7 @@ function DynamicTable(contextPath, tableId, columns) {
 
     for (var i = 0; i < count; i++) {
       var row = tableElem.rows[i];
-      row.setAttribute("class", "row" + ((i + 1) & 1));
+      row.setAttribute("class", "eyeline_row" + ((i + 1) & 1));
     }
   };
 
@@ -201,7 +201,7 @@ function DynamicTable(contextPath, tableId, columns) {
     var newCount = tableElem.rows.length;
     // Create new row
     var newRow = tableElem.insertRow(newCount - 1);
-    newRow.setAttribute("class", "row" + (newCount & 1));
+    newRow.setAttribute("class", "eyeline_row" + (newCount & 1));
     newRow.id = tableId + "_row_" + newCount;
 
     // Fill row
@@ -219,7 +219,7 @@ function DynamicTable(contextPath, tableId, columns) {
     newRow.insertCell(newRow.cells.length).appendChild(image);
 
     var lastRow = tableElem.rows[tableId + "_newrow"];
-    lastRow.setAttribute("class", "row" + ((newCount + 1) & 1))
+    lastRow.setAttribute("class", "eyeline_row" + ((newCount + 1) & 1))
   };
 
 
@@ -228,7 +228,7 @@ function DynamicTable(contextPath, tableId, columns) {
     var newCount = tableElem.rows.length;
     // Create new row
     var newRow = tableElem.insertRow(newCount);
-    newRow.setAttribute("class", "row" + (newCount & 1));
+    newRow.setAttribute("class", "eyeline_row" + (newCount & 1));
     newRow.id = tableId + "_newrow";
 
     // Fill row

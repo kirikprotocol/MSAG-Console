@@ -550,4 +550,163 @@
     </attribute>
   </tag>
 
+  <!-- ============================================= DYNAMIC TABLE ================================================= -->
+
+  <tag>
+    <description>Таблица для ввода данных с изменяемым количеством строк</description>
+    <name>dynamicTable</name>
+    <tag-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTableTag</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Ссылка на модель</description>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Тег, описывающий текстовую колонку в dynamicTable</description>
+    <name>textColumn</name>
+    <tag-class>mobi.eyeline.util.jsf.components.dynamic_table.TextColumnTag</tag-class>
+    <body-content>empty</body-content>
+
+    <attribute>
+      <description>Идентификатор колонки, используемый при извлечении данных из модели</description>
+      <name>name</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Название колонки</description>
+      <name>title</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Ширина колонки</description>
+      <name>width</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий можно ли редактировать данные после добавления строки</description>
+      <name>allowEditAfterAdd</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Максимально допустимая длина значения</description>
+      <name>maxLength</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Integer</type>
+      </deferred-value>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Тег, описывающий колонку c select-ом в dynamicTable</description>
+    <name>selectColumn</name>
+    <tag-class>mobi.eyeline.util.jsf.components.dynamic_table.SelectColumnTag</tag-class>
+    <body-content>empty</body-content>
+
+    <attribute>
+      <description>Идентификатор колонки, используемый при извлечении данных из модели</description>
+      <name>name</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Название колонки</description>
+      <name>title</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Ширина колонки</description>
+      <name>width</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий можно ли редактировать данные после добавления строки</description>
+      <name>allowEditAfterAdd</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Список возможных значений</description>
+      <name>values</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.util.List</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий должны ли значения в одном столбце быть уникальными или нет</description>
+      <name>uniqueValues</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+  </tag>
+
+
+
 </taglib>

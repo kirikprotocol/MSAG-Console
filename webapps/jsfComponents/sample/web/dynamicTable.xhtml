@@ -5,6 +5,11 @@
 
 
   <ui:composition template="/main.xhtml">
+    <ui:define name="styles">
+      .column1 {width: 30%}
+      .column2 {width: 30%}
+      .column3 {width: 40%}
+    </ui:define>
 
     <ui:define name="content">
 
@@ -13,18 +18,22 @@
         <h:panelGrid columns="1">
 
           <eye:dynamicTable value="#{dynamicTable.dynamicTableModel}">
-            <eye:textColumn name="field1" allowEditAfterAdd="true"/>
-            <eye:textColumn name="field2" allowEditAfterAdd="true"/>
+            <eye:textColumn name="field1" allowEditAfterAdd="true" width="30%"/>
+            <eye:textColumn name="field2" allowEditAfterAdd="false" width="30%"/>
+            <eye:selectColumn name="field3" values="#{dynamicTable.selectValues}" allowEditAfterAdd="true" uniqueValues="true" width="40%"/>
           </eye:dynamicTable>
 
           <h:commandButton value="Submit"/>
 
-          <h:dataTable border="1" value="#{dynamicTable.rows}" var="v">
+          <h:dataTable border="1" value="#{dynamicTable.rows}" var="v" columnClasses="column1,column2,column3">
             <h:column>
               <h:outputText value="#{v.field1}"/>
             </h:column>
             <h:column>
               <h:outputText value="#{v.field2}"/>
+            </h:column>
+            <h:column>
+              <h:outputText value="#{v.field3}"/>
             </h:column>
           </h:dataTable>
 

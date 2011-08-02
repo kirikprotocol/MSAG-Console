@@ -1,14 +1,14 @@
 
 div.eyeline_addbutton {
-  background-image: url("../images/but_add.gif");
-  background-repeat: no-repeat;
-  background-position: center;
+  background: url("../images/but_add.gif") no-repeat center;
   cursor: pointer;
+  height: 20px;
+  width: 19px;
 }
 
 div.eyeline_delbutton {
-  background-image: url("../images/but_del.gif");
-  background-repeat: no-repeat;
-  background-position: center;
+  background: url("../images/but_del.gif") no-repeat center;
   cursor: pointer;
+  height: 20px;
+  width: 19px;
 }

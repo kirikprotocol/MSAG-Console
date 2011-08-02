@@ -119,16 +119,11 @@
     </component>
   </tag>
 
-
-
-
-
   <tag>
     <tag-name>dynamicTable</tag-name>
     <component>
-      <component-type>dynamicTable</component-type>
-      <renderer-type>dynamicTable</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTableHandler</handler-class>
+      <component-type>mobi.eyeline.util.jsf.components.dynamic_table</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
@@ -142,13 +137,15 @@
     <handler-class>mobi.eyeline.util.jsf.components.dynamic_table.SelectColumnTagHandler</handler-class>
   </tag>
 
+
+
+
+
   <tag>
     <tag-name>dataTableFilter</tag-name>
     <source>tags/data_table_filter.xhtml</source>
   </tag>
 
-
-  
   <tag>
     <tag-name>dataTable</tag-name>
      <component>

@@ -94,6 +94,11 @@
     <component-class>mobi.eyeline.util.jsf.components.menubar.MenuBarDelimiter</component-class>
   </component>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.dynamic_table</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTable</component-class>
+  </component>
+
 
 
   <render-kit>
