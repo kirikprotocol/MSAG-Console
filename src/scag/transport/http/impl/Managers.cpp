@@ -48,17 +48,20 @@ void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig
  * Mix-protocol: init every acceptor with httpsOptions object passed to HttpContext constructor
  */
 		// no validate_certificates for user and site connections (later)
-		httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT, cfg.certificatesDir);
+		httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT, &cfg);
 
 		acceptor.init(cfg.host.c_str(), cfg.port, httpsOptions);
 		smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
 
-		httpsOptions.userActive = true;
-		sslAcceptor.init(cfg.host.c_str(), cfg.portHttps, httpsOptions);
-		smsc_log_info(logger, "Https manager inited host=%s:%d, cert=%s", cfg.host.c_str(), cfg.portHttps, cfg.certificatesDir.c_str());
+		if ( cfg.httpsEnabled ) {
+			httpsOptions.userActive = true;
+			sslAcceptor.init(cfg.host.c_str(), cfg.httpsPort, httpsOptions);
+			smsc_log_info(logger, "Https manager inited host=%s:%d, cert=%s timeout=%d",
+					cfg.host.c_str(), cfg.httpsPort, cfg.httpsCertificates.c_str(), cfg.httpsTimeout);
+		}
 	}
 	catch(...) {
-		smsc_log_info(logger, "Http(s) manager init error");
+		smsc_log_error(logger, "Http manager init error");
 	}
 }
 

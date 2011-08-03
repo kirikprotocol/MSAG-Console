@@ -223,19 +223,10 @@ int HttpReaderTask::Execute()
                     if (len > 0) {
                     	cx->appendUnparsed(buf, len);
                     }
-                 }
+                }
                 smsc_log_debug(logger, "read %d chars, action=%d", len, cx->action);
                 if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
-                	if ( cx->command == NULL )
-                		smsc_log_debug(logger, "parse start. f:%d pp:%d h:00 c:00 w:00", cx->flags, cx->parsePosition);
-                	else {
-                   		smsc_log_debug(logger, "parse start. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
-                			cx->command->getMessageHeaders().size(), cx->command->getContentLength(),
-                			cx->command->content.GetPos(), cx->command->content.get(), cx->command->content.getSize());
-                	}
-                	StatusCode sc = HttpParser::parse(*cx);
-            		smsc_log_debug(logger, "parse result %d", sc);
-            		switch ( sc ) {
+            		switch ( HttpParser::parse(*cx) ) {
                     case OK:
                 		smsc_log_debug(logger, "parse OK. f:%d pp:%d h:%d c:%d w:%d d:%p sz:%d", cx->flags, cx->parsePosition,
                 			cx->command->getMessageHeaders().size(), cx->command->getContentLength(),

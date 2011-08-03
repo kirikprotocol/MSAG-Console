@@ -4,6 +4,7 @@
 #include <openssl/ssl.h>
 #include "logger/Logger.h"
 #include <string>
+#include "scag/config/http/HttpManagerConfig.h"
 
 namespace scag2 { namespace transport { namespace http {
 using smsc::logger::Logger;
@@ -15,35 +16,31 @@ class HttpsOptions
 {
 public:
 	HttpsOptions()
-		: userVerify(false)
-		, siteVerify(false)
-		, userActive(false)
-		, siteActive(false)
-		, method(NULL)
-		, userCtx(NULL)
-		, siteCtx(NULL)
+		: userVerify(false), siteVerify(false)
+		, userActive(false), siteActive(false)
+		, logger(NULL)
+		, method(NULL), userCtx(NULL), siteCtx(NULL)
 		{};
 	HttpsOptions(SSL_METHOD* meth)
-		: userVerify(false)
-		, siteVerify(false)
-		, userActive(false)
-		, siteActive(false)
-		, method(meth)
-		, userCtx(NULL)
-		, siteCtx(NULL)
+		: userVerify(false), siteVerify(false)
+		, userActive(false), siteActive(false)
+		, logger(NULL)
+		, method(meth), userCtx(NULL), siteCtx(NULL)
 		{};
 	HttpsOptions(HttpsOptions& src)
-		: userVerify(src.userVerify)
+		: cfg(src.cfg)
+		, userVerify(src.userVerify)
 		, siteVerify(src.siteVerify)
 		, userActive(src.userActive)
 		, siteActive(src.siteActive)
+		, logger(src.logger)
 		, method(src.method)
 		, userCtx(src.userCtx)
 		, siteCtx(src.siteCtx)
 		{};
     ~HttpsOptions();
 
-    int init(bool user_verify, bool site_verify, std::string certDir);
+    int init(bool user_verify, bool site_verify, const config::HttpManagerConfig* conf);
     SSL_CTX* userContext(void) { return userCtx; }
     SSL_CTX* siteContext(void) { return siteCtx; }
 
@@ -53,8 +50,8 @@ public:
     bool		siteActive;
 
 protected:
-    Logger *logger;
-    std::string certificatesDir;
+    const config::HttpManagerConfig* cfg;
+    Logger*		logger;
     SSL_METHOD* method;
     SSL_CTX*	userCtx;
     SSL_CTX*	siteCtx;

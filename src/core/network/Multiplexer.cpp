@@ -10,16 +10,6 @@ using smsc::core::buffers::Array;
 int Multiplexer::checkState(bool isReadMode,SockArray& ready,SockArray& error,int timeout)
 {
   int mask = isReadMode ? POLLIN : POLLOUT;
-  /*
-  if(mode==STATE_MODE_READ)
-  {
-    mask=POLLIN;
-  }else
-  if(mode==STATE_MODE_WRITE)
-  {
-    mask=POLLOUT;
-  }
-*/
   for(int i=0;i<sockets.Count();i++)
   {
     fds[i].events=mask;
@@ -34,7 +24,7 @@ int Multiplexer::checkState(bool isReadMode,SockArray& ready,SockArray& error,in
 /*
  * (xom 28.07.11) due to multimasking of revent
  * it seems to better check I/O signals first instead of errors
- * to avoid of lost the tail of message when read
+ * to avoid of lost the tail of message when read mode
  */
 	if ( isReadMode && (fds[i].revents&POLLIN) ) {
 		ready.Push(sockets[i]);
@@ -46,7 +36,6 @@ int Multiplexer::checkState(bool isReadMode,SockArray& ready,SockArray& error,in
 	}
 	if ( (!isReadMode) && (fds[i].revents&POLLOUT) ) {
 		ready.Push(sockets[i]);
-		continue;
 	}
   }
   return ready.Count()+error.Count();

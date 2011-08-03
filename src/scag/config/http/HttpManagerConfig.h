@@ -14,12 +14,13 @@ public:
 
     HttpManagerConfig(int rs, int ws, int rps, int wps, int sps, int sql, int ct,
     		const std::string h, int p,
-    		int p2, std::string d):
+    		bool eh, int ph, std::string ch, int th):
         readerSockets(rs), writerSockets(ws),
         readerPoolSize(rps),writerPoolSize(wps),
         scagPoolSize(sps), scagQueueLimit(sql),
         connectionTimeout(ct), host(h), port(p),
-        portHttps(p2), certificatesDir(d)
+    	httpsEnabled(eh), httpsPort(ph),
+    	httpsCertificates(ch), httpsTimeout(th)
     {
     }
 
@@ -28,7 +29,25 @@ public:
         readerPoolSize(0),writerPoolSize(0),
         scagPoolSize(0), scagQueueLimit(0),
         connectionTimeout(0), host(""), port(0),
-    	portHttps(0), certificatesDir("")
+        httpsEnabled(false), httpsPort(0),
+        httpsCertificates(""), httpsTimeout(0)
+    {
+    }
+
+    HttpManagerConfig(HttpManagerConfig& src)
+		: readerSockets(src.readerSockets)
+		, writerSockets(src.writerSockets)
+		, readerPoolSize(src.readerPoolSize)
+		, writerPoolSize(src.writerPoolSize)
+		, scagPoolSize(src.scagPoolSize)
+		, scagQueueLimit(src.scagQueueLimit)
+		, connectionTimeout(src.connectionTimeout)
+		, host(src.host)
+		, port(src.port)
+		, httpsEnabled(src.httpsEnabled)
+		, httpsPort(src.httpsPort)
+		, httpsCertificates(src.httpsCertificates)
+		, httpsTimeout(src.httpsTimeout)
     {
     }
 
@@ -46,8 +65,10 @@ public:
     //unsigned int maxHeaderLength;
     std::string host;
     int port;
-    int portHttps;
-    std::string certificatesDir;
+    bool httpsEnabled;
+    int httpsPort;
+    std::string httpsCertificates;
+    int httpsTimeout;
 };
 
 }

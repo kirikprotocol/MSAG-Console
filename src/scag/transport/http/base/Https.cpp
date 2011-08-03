@@ -3,7 +3,7 @@
 
 namespace scag2 { namespace transport { namespace http {
 
-// relative to cfg::certificatesDir
+// relative to cfg.httpsCertificates
 #define RSA_SERVER_CERT     "/s_cert.pem"
 #define RSA_SERVER_KEY      "/s_privkey.pem"
 
@@ -24,13 +24,20 @@ HttpsOptions::~HttpsOptions()
 		SSL_CTX_free(userCtx);
 }
 
-int HttpsOptions::init(bool user_verify, bool site_verify, std::string certDir) {
+int HttpsOptions::init(bool user_verify, bool site_verify, const config::HttpManagerConfig* conf) {
+	this->cfg = conf;
 	int result=0;
 	logger = Logger::getInstance("http.https");
 
-	certificatesDir = certDir;
 	userActive = false;
 	siteActive = false;
+	if ( cfg->httpsEnabled ) {
+		smsc_log_info(logger, "HttpsOptions initialization.");
+	}
+	else {
+		smsc_log_info(logger, "HttpsOptions disabled.");
+		return 1;
+	}
 	try {
 		/* Load encryption & hashing algorithms for the SSL program */
 		SSL_library_init();
@@ -63,13 +70,13 @@ int HttpsOptions::userInit(bool verify) {
 		return 0;
 	}
 	/* Load the server certificate into the SSL_CTX structure */
-	tmp = certificatesDir + RSA_SERVER_CERT;
+	tmp = cfg->httpsCertificates + RSA_SERVER_CERT;
 	if (SSL_CTX_use_certificate_file(userCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		smsc_log_debug(logger, "HttpsOptions::userInit server certificate usage failed");
 		return 0;
 	}
 	/* Load the private-key corresponding to the server certificate */
-	tmp = certificatesDir + RSA_SERVER_KEY;
+	tmp = cfg->httpsCertificates + RSA_SERVER_KEY;
 	if (SSL_CTX_use_PrivateKey_file(userCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		smsc_log_debug(logger, "HttpsOptions::userInit server key usage failed");
 		return 0;
@@ -82,7 +89,7 @@ int HttpsOptions::userInit(bool verify) {
 
 	if ( userVerify ) {
 		/* Load the RSA CA certificate into the SSL_CTX structure */
-		tmp = certificatesDir + RSA_SERVER_CA_PATH + RSA_SERVER_CA_CERT;
+		tmp = cfg->httpsCertificates + RSA_SERVER_CA_PATH + RSA_SERVER_CA_CERT;
 		if (!SSL_CTX_load_verify_locations(userCtx, tmp.c_str(), NULL)) {
 			smsc_log_debug(logger, "HttpsOptions::userInit server certificate verify_locations failed");
 			return 0;
@@ -106,13 +113,13 @@ int HttpsOptions::siteInit(bool verify) {
 		return 0;
 	}
     /* Load the client certificate into the SSL_CTX structure */
-	tmp = certificatesDir + RSA_CLIENT_CERT;
+	tmp = cfg->httpsCertificates + RSA_CLIENT_CERT;
 	if (SSL_CTX_use_certificate_file(siteCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		smsc_log_debug(logger, "HttpsOptions::siteInit client certificate usage failed");
 		return 0;
 	}
 	/* Load the private-key corresponding to the server certificate */
-	tmp = certificatesDir + RSA_CLIENT_KEY;
+	tmp = cfg->httpsCertificates + RSA_CLIENT_KEY;
 	if (SSL_CTX_use_PrivateKey_file(siteCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
 		smsc_log_debug(logger, "HttpsOptions::siteInit client key usage failed");
 		return 0;
@@ -124,7 +131,7 @@ int HttpsOptions::siteInit(bool verify) {
 	}
 	if ( siteVerify ) {
 		/* Load the RSA CA certificate into the SSL_CTX structure */
-		tmp = certificatesDir + RSA_CLIENT_CA_PATH + RSA_CLIENT_CA_CERT;
+		tmp = cfg->httpsCertificates + RSA_CLIENT_CA_PATH + RSA_CLIENT_CA_CERT;
 		if (!SSL_CTX_load_verify_locations(siteCtx, tmp.c_str(), NULL)) {
 			smsc_log_debug(logger, "HttpsOptions::siteInit client certificate verify_locations failed");
 			return 0;
