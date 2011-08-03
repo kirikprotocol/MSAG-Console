@@ -9,6 +9,7 @@ import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
 import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 
 import javax.el.ELException;
+import javax.el.VariableMapper;
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import java.io.IOException;
@@ -19,8 +20,6 @@ import java.util.List;
  */
 public class RowHandler extends ComponentHandler {
 
-
-  private final TagAttribute data;
   private final TagAttribute innerData;
   private final TagAttribute innerRows;
   private final TagAttribute opened;
@@ -28,37 +27,32 @@ public class RowHandler extends ComponentHandler {
   public RowHandler(ComponentConfig config) {
     super(config);
 
-    data = getAttribute("data");
     innerData = getAttribute("innerData");
     innerRows = getAttribute("innerRows");
     opened = getAttribute("opened");
   }
 
   @Override
-  protected UIComponent createComponent(FaceletContext ctx) {
-    return new Row();
-  }
-
-  @Override
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
 
     Row r = (Row) c;
-    String tid = (String) ctx.getVariableMapper().resolveVariable("___tid").getValue(ctx);
+    VariableMapper variableMapper = ctx.getVariableMapper();
+    String tid = (String) variableMapper.resolveVariable("___tid").getValue(ctx);
 
-    if (ctx.getVariableMapper().resolveVariable(tid + "___currentRow") == null) {
+    if (variableMapper.resolveVariable(tid + "___currentRow") == null) {
       r.setHeader(true);
 
     } else {
 
-      r.setInner(ctx.getVariableMapper().resolveVariable(tid + "___innerRow") != null);
-      String var = (String) ctx.getVariableMapper().resolveVariable(tid + "___var").getValue(ctx);
+      r.setInner(variableMapper.resolveVariable(tid + "___innerRow") != null);
+      String var = (String) variableMapper.resolveVariable(tid + "___var").getValue(ctx);
 
-      Object currentRow = ctx.getVariableMapper().resolveVariable(tid + "___currentRow").getValue(ctx);
+      Object currentRow = variableMapper.resolveVariable(tid + "___currentRow").getValue(ctx);
       r.setVar(ctx, currentRow);
 
-      ctx.getVariableMapper().setVariable(var, r.getVarExpr());
+      variableMapper.setVariable(var, r.getVarExpr());
       if (!r.isInner()) {
-        DataTable t = (DataTable) ctx.getVariableMapper().resolveVariable(tid + "___dataTable").getValue(ctx);
+        DataTable t = (DataTable) variableMapper.resolveVariable(tid + "___dataTable").getValue(ctx);
         DataTableModel dt = t.getModel();
         String rowId = null;
         if(dt instanceof ModelWithObjectIds) {
@@ -78,15 +72,15 @@ public class RowHandler extends ComponentHandler {
           List innerRowsList = (List) innerRows.getObject(ctx);
           if (innerRowsList != null && !innerRowsList.isEmpty()) {
             r.setHasInnerRows(true);
-            ctx.getVariableMapper().setVariable(tid + "___innerRows", new ConstantExpression(innerRowsList));
-            ctx.getVariableMapper().setVariable(tid + "___innerRowsId", new ConstantExpression(r.getRowId()));
+            variableMapper.setVariable(tid + "___innerRows", new ConstantExpression(innerRowsList));
+            variableMapper.setVariable(tid + "___innerRowsId", new ConstantExpression(r.getRowId()));
           } else {
-            ctx.getVariableMapper().setVariable(tid + "___innerRows", null);
-            ctx.getVariableMapper().setVariable(tid + "___innerRowsId", null);
+            variableMapper.setVariable(tid + "___innerRows", null);
+            variableMapper.setVariable(tid + "___innerRowsId", null);
           }
         }
       } else {
-        r.setRowId((String) ctx.getVariableMapper().resolveVariable(tid + "___innerRowsId").getValue(ctx));
+        r.setRowId((String) variableMapper.resolveVariable(tid + "___innerRowsId").getValue(ctx));
       }
     }
 

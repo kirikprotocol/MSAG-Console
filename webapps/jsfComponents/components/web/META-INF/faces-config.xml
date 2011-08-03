@@ -99,33 +99,23 @@
     <component-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTable</component-class>
   </component>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.data_table</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.data_table.DataTable</component-class>
+  </component>
+
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.data_table.column</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.data_table.Column</component-class>
+  </component>
+
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.data_table.row</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.data_table.Row</component-class>
+  </component>
 
 
   <render-kit>
-
-    <renderer>
-      <component-family>Eyeline</component-family>
-      <renderer-type>dynamicTable</renderer-type>
-      <renderer-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTableRenderer</renderer-class>
-    </renderer>
-
-    <renderer>
-      <component-family>Eyeline</component-family>
-      <renderer-type>dataTable</renderer-type>
-      <renderer-class>mobi.eyeline.util.jsf.components.data_table.DataTableRenderer</renderer-class>
-    </renderer>
-
-    <renderer>
-      <component-family>Eyeline</component-family>
-      <renderer-type>dataTableColumn</renderer-type>
-      <renderer-class>mobi.eyeline.util.jsf.components.data_table.ColumnRenderer</renderer-class>
-    </renderer>
-
-    <renderer>
-      <component-family>Eyeline</component-family>
-      <renderer-type>dataTableRow</renderer-type>
-      <renderer-class>mobi.eyeline.util.jsf.components.data_table.RowRenderer</renderer-class>
-    </renderer>
 
     <renderer>
       <component-family>Eyeline</component-family>

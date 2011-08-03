@@ -19,8 +19,7 @@ import java.util.*;
 public class DataTableRenderer extends Renderer {
 
 
-
-  private void importResources(ResponseWriter writer) throws IOException{
+  private void importResources(ResponseWriter writer) throws IOException {
 
     writer.startElement("script", null);
     writer.writeAttribute("type", "text/javascript", null);
@@ -33,16 +32,13 @@ public class DataTableRenderer extends Renderer {
     writer.endElement("script");
 
   }
+
   private boolean ajax = false;
 
   private boolean renderChilds = false;
 
   public void decode(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) {
     DataTable t = (DataTable) component;
-    decodeTable(context, t);
-  }
-
-  static void decodeTable(javax.faces.context.FacesContext context, DataTable t) {
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String column = reqParams.get(t.getId() + "_column");
     if (column != null && column.trim().length() == 0)
@@ -61,9 +57,7 @@ public class DataTableRenderer extends Renderer {
 
     String select = reqParams.get(t.getId() + "_select");
 
-    t.clearSelectedRows();
-
-    t.updateSelected(toArray(select));
+    t.setSelectedRows(toArray(select));
 
     String selectAll = reqParams.get(t.getId() + "_selectAll");
 
@@ -77,7 +71,6 @@ public class DataTableRenderer extends Renderer {
 
   }
 
-
   private static List<Column> getColumns(DataTable t) {
     List<Column> result = new ArrayList<Column>();
     for (UIComponent c : t.getFirstRow().getChildren()) {
@@ -89,37 +82,37 @@ public class DataTableRenderer extends Renderer {
     return result;
   }
 
-  private void encodeBeginAjax(FacesContext context, DataTable t) throws IOException{
+  private void encodeBeginAjax(FacesContext context, DataTable t) throws IOException {
     Writer w = context.getResponseWriter();
-    if(t.getError() != null || t.getLoadCurrent() != null) {
-      ((HttpServletResponse)context.getExternalContext().getResponse()).setContentType("application/json");
+    if (t.getError() != null || t.getLoadCurrent() != null) {
+      ((HttpServletResponse) context.getExternalContext().getResponse()).setContentType("application/json");
       w.append("{\"type\":");
-      if(t.getError() != null) {
+      if (t.getError() != null) {
         w.append("\"error\"");
-      }else if(t.getLoadCurrent() != null) {
+      } else if (t.getLoadCurrent() != null) {
         w.append("\"progress\"");
       }
       w.append(",\"data\":\"");
-      if(t.getError() != null) {
+      if (t.getError() != null) {
         w.append(
             jsonEscape(t.getError().getMessage())
         );
-      }else if(t.getLoadCurrent() != null) {
-        int progress = t.getLoadCurrent()*100;
-        if(t.getLoadTotal() == 0) {
+      } else if (t.getLoadCurrent() != null) {
+        int progress = t.getLoadCurrent() * 100;
+        if (t.getLoadTotal() == 0) {
           progress = 0;
-        }else {
-          progress/=t.getLoadTotal();
+        } else {
+          progress /= t.getLoadTotal();
         }
-        w.append(""+progress);
+        w.append("" + progress);
       }
-    }else {
+    } else {
       encodeBeginGeneral(context, t);
     }
 
   }
 
-  private void encodeBeginNonAjax(FacesContext context, DataTable t) throws IOException{
+  private void encodeBeginNonAjax(FacesContext context, DataTable t) throws IOException {
 
     ResponseWriter w = context.getResponseWriter();
     String sOrder = t.getSortOrder();
@@ -130,9 +123,9 @@ public class DataTableRenderer extends Renderer {
     w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");
     w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\">");
     w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
-    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_select" + "\" name=\"" + t.getId() + "_select\" value=\""+toJson(t.getSelectedRows())+"\">");
-    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_selectAll" + "\" name=\"" + t.getId() + "_selectAll\" value=\""+t.isSelectAll()+"\">");
-    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_showSelected" + "\" name=\"" + t.getId() + "_showSelected\" value=\""+t.isShowSelectedOnly()+"\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_select" + "\" name=\"" + t.getId() + "_select\" value=\"" + toJson(t.getSelectedRows()) + "\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_selectAll" + "\" name=\"" + t.getId() + "_selectAll\" value=\"" + t.isSelectAll() + "\">");
+    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_showSelected" + "\" name=\"" + t.getId() + "_showSelected\" value=\"" + t.isShowSelectedOnly() + "\">");
 
     w.append("\n<div id=\"" + t.getId() + "\">");
 
@@ -151,7 +144,7 @@ public class DataTableRenderer extends Renderer {
 
 
     w.append("\n<table class=\"eyeline_list\" id=\"" + t.getId() + "_table\" cellspacing=\"1\">");
-    if (t.isSelection())
+    if (t.isRowsSelectionEnabled())
       w.append("\n<col width=\"1%\"/>");
     if (hasInnerData)
       w.append("\n<col width=\"1%\"/>");
@@ -161,40 +154,40 @@ public class DataTableRenderer extends Renderer {
     }
 
     w.append("\n<thead>");
-    if (t.isSelection()) {
+    if (t.isRowsSelectionEnabled()) {
       w.append("\n<th class=\"eyeline_ico\" width=\"1px\">");
-      if(!t.isDisallowSelectAll() && !t.isShowSelectedOnly()) {
-        w.append("<table id=\"select_all_button_"+t.getId()+"\" class=\"select_all_button\"><tr><td>");
+      if (!t.isDisallowSelectAll() && !t.isShowSelectedOnly()) {
+        w.append("<table id=\"select_all_button_" + t.getId() + "\" class=\"select_all_button\"><tr><td>");
       }
 
       w.append("<div id=\"" + t.getId() + "_check\" class=\"select_page\" selectpage=\"\" " +
-          "onclick=\"changeSelectAllPage(this, '"+t.getId()+"');\">&nbsp;</div>");
+          "onclick=\"changeSelectAllPage(this, '" + t.getId() + "');\">&nbsp;</div>");
 
 
-      if(!t.isDisallowSelectAll() && !t.isShowSelectedOnly()) {
+      if (!t.isDisallowSelectAll() && !t.isShowSelectedOnly()) {
         w.append("</td><td>");
         w.append("<div clicked=\"0\" style=\"cursor: pointer;\" id=\"" + t.getId() + "_check_all\" class=\"select_all_button\" onclick=\"" +
-            "    var itemsElm = document.getElementById('select_all_content"+t.getId()+"');" +
-            "    var main = document.getElementById('select_all_"+t.getId()+"');" +
-            "    var button = document.getElementById('select_all_button_"+t.getId()+"');" +
-            "if(this.getAttribute('clicked') == '0') {"+
+            "    var itemsElm = document.getElementById('select_all_content" + t.getId() + "');" +
+            "    var main = document.getElementById('select_all_" + t.getId() + "');" +
+            "    var button = document.getElementById('select_all_button_" + t.getId() + "');" +
+            "if(this.getAttribute('clicked') == '0') {" +
             "    itemsElm.style.visibility = 'visible';\n" +
             "    this.setAttribute('clicked', '1');" +
             "    button.className='select_all_button_selected';" +
-            "}else {"+
+            "}else {" +
             "    itemsElm.style.visibility = 'hidden';\n" +
             "    this.setAttribute('clicked', '0');" +
             "    button.className='select_all_button';" +
-            "}"+"\">&nbsp;</div");
+            "}" + "\">&nbsp;</div");
         w.append("</td></tr></table>");
         w.append(
-            "<div id=\"select_all_content"+t.getId()+"\" class=\"select_all_content\"" +
-                " onclick=\"document.getElementById('"+t.getId()+"_check_all').onclick();\">"+
+            "<div id=\"select_all_content" + t.getId() + "\" class=\"select_all_content\"" +
+                " onclick=\"document.getElementById('" + t.getId() + "_check_all').onclick();\">" +
                 "   <div style=\"margin: 4px 4px 4px 4px\">" +
-                "         <a id=\"select_item_1"+t.getId()+"\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('"+t.getId()+"', true);\">"+ b.getString("page.select.all")+"</a>\n" +
+                "         <a id=\"select_item_1" + t.getId() + "\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('" + t.getId() + "', true);\">" + b.getString("page.select.all") + "</a>\n" +
                 "         <br/>" +
-                "         <a id=\"unselect_item_1"+t.getId()+"\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('"+t.getId()+"', false);\">"+b.getString("page.unselect.all")+"</a>\n" +
-                "   </div>"+
+                "         <a id=\"unselect_item_1" + t.getId() + "\" class=\"xi\" href=\"#\" onclick=\"changeSelectAll('" + t.getId() + "', false);\">" + b.getString("page.unselect.all") + "</a>\n" +
+                "   </div>" +
                 "</div>\n");
       }
       w.append("</th>");
@@ -241,9 +234,9 @@ public class DataTableRenderer extends Renderer {
       }
     }
 
-    if(ajax) {
+    if (ajax) {
       encodeBeginAjax(context, t);
-    }else {
+    } else {
       encodeBeginNonAjax(context, t);
     }
   }
@@ -255,12 +248,12 @@ public class DataTableRenderer extends Renderer {
 
   @Override
   public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
-    if(renderChilds) {
+    if (renderChilds) {
       super.encodeChildren(context, component);
     }
   }
 
-  private void encodeEndAjax(FacesContext context, DataTable t) throws IOException{
+  private void encodeEndAjax(FacesContext context, DataTable t) throws IOException {
 
     Writer w = context.getResponseWriter();
     if (t.getError() == null && t.getLoadCurrent() == null) {
@@ -271,21 +264,21 @@ public class DataTableRenderer extends Renderer {
           break;
         }
       }
-      if(columnFooter) {
+      if (columnFooter) {
         int currentRow = t.getChildCount() + 1;
         w.append("\n<tr class=\"eyeline_row" + (currentRow & 1) + "\">");
-        if(t.isSelection())
+        if (t.isRowsSelectionEnabled())
           w.append("\n<td>&nbsp;</td>");
         if (t.hasInnerData())
           w.append("\n<td>&nbsp;</td>");
         for (UIComponent ch : t.getFirstRow().getChildren()) {
-          Column col = (Column)ch;
+          Column col = (Column) ch;
           UIComponent footer = ch.getFacet("footer");
           w.append("\n<td align=\"").append(col.getAlign()).append("\">");
           if (footer != null) {
             footer.encodeBegin(context);
             footer.encodeEnd(context);
-          }else {
+          } else {
             w.append("&nbsp;");
           }
           w.append("</td>");
@@ -293,19 +286,19 @@ public class DataTableRenderer extends Renderer {
 
         w.append("\n</tr>");
 
-      }else {
+      } else {
         UIComponent footer = t.getFacet("footer");
-        int currentRow = t.getChildCount()+1;
-        if(footer != null) {
+        int currentRow = t.getChildCount() + 1;
+        if (footer != null) {
           int colspan = t.getFirstRow().getChildCount();
-          if(colspan == 0) {
+          if (colspan == 0) {
             colspan = 1;
           }
           w.append("\n<tr  class=\"eyeline_row" + (currentRow & 1) + "\">");
-          if(t.isSelection()) {
+          if (t.isRowsSelectionEnabled()) {
             w.append("\n<td>&nbsp;</td>");
           }
-          w.append("\n<td colspan=\""+colspan+"\">");
+          w.append("\n<td colspan=\"" + colspan + "\">");
           footer.encodeBegin(context);
           footer.encodeEnd(context);
           w.append("</td>");
@@ -313,7 +306,7 @@ public class DataTableRenderer extends Renderer {
         }
       }
       encodeEndGeneral(context, t);
-    }else {
+    } else {
       w.append("\"}");
     }
   }
@@ -327,12 +320,12 @@ public class DataTableRenderer extends Renderer {
     encodeEndGeneral(context, t);
 
     w.append("\n</div>");
-    w.append("<table id=\""+t.getId()+"_progress\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
+    w.append("<table id=\"" + t.getId() + "_progress\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
         .append("<div style=\"margin-top:auto;margin-bottom:auto;\">" +
-            "<table style=\"width:0%\"><tr>"+
+            "<table style=\"width:0%\"><tr>" +
             "<td><div class=\"eyeline_loading\" alt=\"\">&nbsp;</div></td>" +
             "<td><span style=\"font-size:15px\" id=\"" + t.getId() + "_progress_content\"></span></td>" +
-            "</tr></table>"+
+            "</tr></table>" +
             "</div>")
         .append("</td></tr></table>");
     w.append("\n</div>");
@@ -346,7 +339,7 @@ public class DataTableRenderer extends Renderer {
     ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
 
 
-    w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "',updateUsingSubmit" + t.getId() + ","+(t.getModel() instanceof PreloadableModel)+", \""+b.getString("error.title")+"\");");
+    w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "',updateUsingSubmit" + t.getId() + "," + (t.getModel() instanceof PreloadableModel) + ", \"" + b.getString("error.title") + "\");");
     if (t.getAutoUpdate() != null && (t.isUpdateUsingSubmit() == null || !t.isUpdateUsingSubmit())) {
       w.append("\nfunction autoUpdate" + t.getId() + "(){");
       w.append("\n  pagedTable" + t.getId() + ".updateTable();");
@@ -357,7 +350,7 @@ public class DataTableRenderer extends Renderer {
       w.append("\nfunction load" + t.getId() + "(){");
       w.append("\n  pagedTable" + t.getId() + ".updateTable();");
       w.append("\n};");
-      w.append("\n  window.onload =load" + t.getId() +";");
+      w.append("\n  window.onload =load" + t.getId() + ";");
     }
     w.append("\n</script>");
   }
@@ -377,13 +370,13 @@ public class DataTableRenderer extends Renderer {
     w.append("<tr>");
 
 
-    int rowsCount = 0 , selected = 0;
+    int rowsCount = 0, selected = 0;
     rowsCount = t.getTotalSize();
     selected = t.getSelectedRows().size();
-    if(t.isSelectAll()) {
+    if (t.isSelectAll()) {
       selected = rowsCount - selected;
     }
-    if(t.isShowSelectedOnly()) {
+    if (t.isShowSelectedOnly()) {
       rowsCount = selected;
     }
 
@@ -411,14 +404,14 @@ public class DataTableRenderer extends Renderer {
 
     ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
 
-    w.append("<td class=\"eyeline_total\">" + b.getString("total") + ": " + "<span id=\""+t.getId()+"_totalCount\">"+rowsCount + "</span>&nbsp;|&nbsp;");
-    if(t.isSelection()) {
-      w.append("<a href=\"#\" class=\"xi\" title=\""+b.getString("page.show.choise")+"\" style=\"cursor: pointer;\" onclick=\"pagedTable" + t.getId() + ".onlySelected()\">"+
-          "<span style=\"font-size: x-small\">"+
-          (t.isShowSelectedOnly() ? b.getString("selected.only"): b.getString("selected")+": ")
-          +"<span id=\""+ t.getId()+"_selectedCount\">"
-          +(t.isShowSelectedOnly() ? "" : selected)+
-          "</span></span>"+
+    w.append("<td class=\"eyeline_total\">" + b.getString("total") + ": " + "<span id=\"" + t.getId() + "_totalCount\">" + rowsCount + "</span>&nbsp;|&nbsp;");
+    if (t.isRowsSelectionEnabled()) {
+      w.append("<a href=\"#\" class=\"xi\" title=\"" + b.getString("page.show.choise") + "\" style=\"cursor: pointer;\" onclick=\"pagedTable" + t.getId() + ".onlySelected()\">" +
+          "<span style=\"font-size: x-small\">" +
+          (t.isShowSelectedOnly() ? b.getString("selected.only") : b.getString("selected") + ": ")
+          + "<span id=\"" + t.getId() + "_selectedCount\">"
+          + (t.isShowSelectedOnly() ? "" : selected) +
+          "</span></span>" +
           "</a>&nbsp;|&nbsp;"
       );
     }
@@ -441,9 +434,9 @@ public class DataTableRenderer extends Renderer {
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
     DataTable t = (DataTable) component;
 
-    if(ajax) {
+    if (ajax) {
       encodeEndAjax(context, t);
-    }else {
+    } else {
       encodeEndNoneAjax(context, t);
     }
 
@@ -460,12 +453,12 @@ public class DataTableRenderer extends Renderer {
   private static String toJson(String[] strings) {
     StringBuilder res = new StringBuilder();
     res.append('[');
-    if(strings != null) {
+    if (strings != null) {
       boolean first = true;
-      for(String s : strings) {
-        if(!first) {
+      for (String s : strings) {
+        if (!first) {
           res.append(',');
-        }else {
+        } else {
           first = false;
         }
         res.append("&quot;").append(s).append("&quot;");
@@ -476,17 +469,17 @@ public class DataTableRenderer extends Renderer {
   }
 
   private static String[] toArray(String json) {
-    if(json == null || json.length()<=2) {
+    if (json == null || json.length() <= 2) {
       return null;
     }
-    json = json.substring(1, json.length()-1); //remove []
+    json = json.substring(1, json.length() - 1); //remove []
 
     String[] ss = json.split(",");
     String[] res = new String[ss.length];
 
-    int i =0;
-    for(String s : ss) {
-      res[i] = s.substring(1, s.length()-1); //remove ""
+    int i = 0;
+    for (String s : ss) {
+      res[i] = s.substring(1, s.length() - 1); //remove ""
       i++;
     }
     return res;
@@ -495,9 +488,9 @@ public class DataTableRenderer extends Renderer {
 
   static String jsonEscape(String s) {
     StringBuilder sb = new StringBuilder();
-    for(int i=0;i<s.length();i++){
-      char ch=s.charAt(i);
-      switch(ch){
+    for (int i = 0; i < s.length(); i++) {
+      char ch = s.charAt(i);
+      switch (ch) {
         case '"':
           sb.append("\\\"");
           break;
@@ -523,15 +516,14 @@ public class DataTableRenderer extends Renderer {
           sb.append("/");
           break;
         default:
-          if((ch>='\u0000' && ch<='\u001F') || (ch>='\u007F' && ch<='\u009F') || (ch>='\u2000' && ch<='\u20FF')){
-            String ss=Integer.toHexString(ch);
+          if ((ch >= '\u0000' && ch <= '\u001F') || (ch >= '\u007F' && ch <= '\u009F') || (ch >= '\u2000' && ch <= '\u20FF')) {
+            String ss = Integer.toHexString(ch);
             sb.append("\\u");
-            for(int k=0;k<4-ss.length();k++){
+            for (int k = 0; k < 4 - ss.length(); k++) {
               sb.append('0');
             }
             sb.append(ss.toUpperCase());
-          }
-          else{
+          } else {
             sb.append(ch);
           }
       }

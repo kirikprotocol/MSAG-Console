@@ -16,88 +16,8 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
   var checked = false;
   var titleError = _titleError;
 
-  /**
-   * Ищет форму, которая содержит элемент с указанным идентификатором
-   * @param elementId идентификатор элемента
-   */
-  var getClosestForm = function(elementId) {
-    for (var k = 0; k < document.forms.length; k++) {
-      var form = document.forms[k];
-      if (form.elements[elementId] != null)
-        return form;
-    }
-    return null;
-  };
-
-  var closestForm = getClosestForm(columnElement.id);
-  var requestUrl = closestForm.getAttribute("action");
-
-  /**
-   * Обходит все элементы формы и строит список параметров для сабмита
-   */
-  var prepareFormParameters = function() {
-    return constructArgs(closestForm);
-  };
-
-  /**
-   * Обходит все элементы внутри rootElement и строит строку для сабмита
-   * @param rootElement корневой элемент
-   */
-  var constructArgs = function (rootElement) {
-    var args = "";
-    for (var i = 0; i < rootElement.children.length; i++) {
-      var el = rootElement.children[i];
-
-      var pname = el.getAttribute("id");
-      if (pname == null || pname.length == 0)
-        pname = el.getAttribute("name");
-      if (pname == null || pname.length == 0)
-        pname = el.id;
-      if (pname == null || pname.length == 0)
-        pname = el.name;
-
-      if (pname != null && pname.length != 0) {
-        if (el.tagName == "INPUT" && el.getAttribute("type") == "checkbox") {
-          if (el.getAttribute("checked") != null && (el.getAttribute("checked") || el.getAttribute("checked") == "checked"))
-            args += pname + '=true';
-          continue;
-        }
-        var value = el.getAttribute("value");
-        if (value == null) {
-          if (el.checked)
-            value = "true";
-          else if (el.tagName == "SELECT") {
-
-            for (var op=0; op < el.options.length; op++) {
-              if (el.options[op].getAttribute("selected") != null) {
-                value = el.options[op].value;
-                break;
-              }
-            }
-          }
-        }
-
-
-        if (value != null) {
-          if (args.length > 0)
-            args += '&';
-          args += pname + '=' + value;
-          continue;
-        }
-      }
-
-      var v = constructArgs(el);
-      if (v.length > 0) {
-        if (args.length > 0)
-          args += '&';
-        args += v;
-      }
-
-    }
-    return args;
-  };
-
-
+  var closestForm = $("#"+columnElement.id).parents("form");
+  var requestUrl = closestForm.attr("action");
 
   /**
    * Обновляет содержимое таблицы
@@ -107,7 +27,7 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
     setProgressFunction("");
   };
 
-  var updateFunction = this.updateTable = function() {
+  this.updateTable = function() {
 
     checked = false;
     if (updateUsingSubmit)
@@ -122,30 +42,28 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
 
   var sendRequest = function() {
 
-    var onResponse = function(text, contentType) {
-      if(contentType != null) {
-        var i = contentType.indexOf(";");
-        if(i != null) {
-          var t = contentType.substring(0, i);
-          if(t == "application/json") {
-            var rObject =  eval( '('+text+')' );
-            if(rObject.type == "progress") {
-              setProgressFunction(rObject.data+"%");
-              window.setTimeout(sendRequest, 1000);
-            }else {
-              bodyElement.innerHTML = getError(rObject.data, titleError);
-              hideProgress();
-            }
-            return;
-          }
+    var func = function(data, status) {
+      if (status != 'success')
+        return;
+
+      if(typeof(data) == "object") {
+        if(data.type == "progress") {
+          setProgressFunction(data.data+"%");
+          window.setTimeout(sendRequest, 1000);
+        } else {
+          bodyElement.innerHTML = getError(data.data, titleError);
+          hideProgress();
         }
+      } else {
+        hideProgress();
+        bodyElement.innerHTML = data;
       }
-      hideProgress();
-      bodyElement.innerHTML = text;
     };
 
-    var params = 'eyelineComponentUpdate=' + tableId + '&' + prepareFormParameters();
-    new EXmlHttpRequest(requestUrl, params, onResponse).send();
+    var params = serializeForm(closestForm);
+    params["eyelineComponentUpdate"] = tableId;
+    $.ajaxSetup({cache: false});
+    $.post(requestUrl, params, func);
   };
 
   /**

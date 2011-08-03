@@ -2,12 +2,15 @@ package mobi.eyeline.util.jsf.components.data_table;
 
 import mobi.eyeline.util.jsf.components.EyelineComponent;
 
+import javax.el.ValueExpression;
+import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
+import javax.faces.render.Renderer;
 
 /**
  * @author Artem Snopkov
  */
-public class Column extends EyelineComponent {
+public class Column extends UIPanel {
 
   private String name;
   private String title;
@@ -15,6 +18,16 @@ public class Column extends EyelineComponent {
   private String align = "left";
   private boolean sortable;
   private String defaultSortOrder;
+
+  @Override
+  public String getFamily() {
+    return "Eyeline";
+  }
+
+  @Override
+  protected Renderer getRenderer(FacesContext context) {
+    return new ColumnRenderer();
+  }
 
   public void setName(String name) {
     this.name = name;
@@ -25,15 +38,27 @@ public class Column extends EyelineComponent {
   }
 
   public String getName() {
-    return name;
+    ValueExpression exp = getValueExpression("name");
+    if (exp == null)
+      return name;
+    else
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
   public String getTitle() {
-    return title;
+    ValueExpression exp = getValueExpression("title");
+    if (exp == null)
+      return title;
+    else
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
   public String getWidth() {
-    return width;
+    ValueExpression exp = getValueExpression("width");
+    if (exp == null)
+      return width;
+    else
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setWidth(String width) {
@@ -41,7 +66,11 @@ public class Column extends EyelineComponent {
   }
 
   public String getAlign() {
-    return align;
+    ValueExpression exp = getValueExpression("align");
+    if (exp == null)
+      return align;
+    else
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setAlign(String align) {
@@ -49,7 +78,11 @@ public class Column extends EyelineComponent {
   }
 
   public boolean isSortable() {
-    return sortable;
+    ValueExpression exp = getValueExpression("sortable");
+    if (exp == null)
+      return sortable;
+    else
+      return (Boolean) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setSortable(boolean sortable) {
@@ -57,7 +90,11 @@ public class Column extends EyelineComponent {
   }
 
   public String getDefaultSortOrder() {
-    return defaultSortOrder;
+    ValueExpression exp = getValueExpression("defaultSortOrder");
+    if (exp == null)
+      return defaultSortOrder;
+    else
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setDefaultSortOrder(String defaultSortOrder) {

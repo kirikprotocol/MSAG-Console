@@ -97,7 +97,7 @@
 
   <tag>
     <tag-name>menubar</tag-name>
-     <component>
+    <component>
       <component-type>mobi.eyeline.util.jsf.components.menubar</component-type>
       <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
@@ -105,15 +105,15 @@
 
   <tag>
     <tag-name>menubaritem</tag-name>
-     <component>
+    <component>
       <component-type>mobi.eyeline.util.jsf.components.menubar.item</component-type>
       <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
-   <tag>
+  <tag>
     <tag-name>menubardelimiter</tag-name>
-     <component>
+    <component>
       <component-type>mobi.eyeline.util.jsf.components.menubar.delimiter</component-type>
       <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
@@ -137,8 +137,29 @@
     <handler-class>mobi.eyeline.util.jsf.components.dynamic_table.SelectColumnTagHandler</handler-class>
   </tag>
 
+  <tag>
+    <tag-name>dataTable</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.data_table</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.data_table.DataTableHandler</handler-class>
+    </component>
+  </tag>
 
+  <tag>
+    <tag-name>column</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.data_table.column</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
 
+  <tag>
+    <tag-name>row</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.data_table.row</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.data_table.RowHandler</handler-class>
+    </component>
+  </tag>
 
 
   <tag>
@@ -146,32 +167,6 @@
     <source>tags/data_table_filter.xhtml</source>
   </tag>
 
-  <tag>
-    <tag-name>dataTable</tag-name>
-     <component>
-      <component-type>dataTable</component-type>
-      <renderer-type>dataTable</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.data_table.DataTableHandler</handler-class>
-    </component>
-  </tag>
-
-  <tag>
-    <tag-name>column</tag-name>
-     <component>
-      <component-type>column</component-type>
-      <renderer-type>dataTableColumn</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.data_table.ColumnHandler</handler-class>
-    </component>
-  </tag>
-
-  <tag>
-    <tag-name>row</tag-name>
-     <component>
-      <component-type>row</component-type>
-      <renderer-type>dataTableRow</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.data_table.RowHandler</handler-class>
-    </component>
-  </tag>
 
   <tag>
     <tag-name>pageCalendar</tag-name>
@@ -183,11 +178,9 @@
   </tag>
 
 
-
-
   <tag>
     <tag-name>set</tag-name>
-     <component>
+    <component>
       <component-type>set</component-type>
       <handler-class>mobi.eyeline.util.jsf.components.set.SetHandler</handler-class>
     </component>
@@ -195,7 +188,7 @@
 
   <tag>
     <tag-name>lines</tag-name>
-     <component>
+    <component>
       <component-type>lines</component-type>
       <renderer-type>lines</renderer-type>
       <handler-class>mobi.eyeline.util.jsf.components.graph.LinesHandler</handler-class>
@@ -204,7 +197,7 @@
 
   <tag>
     <tag-name>lineChart</tag-name>
-     <component>
+    <component>
       <component-type>lineChart</component-type>
       <renderer-type>lineChart</renderer-type>
       <handler-class>mobi.eyeline.util.jsf.components.graph.LineChartHandler</handler-class>

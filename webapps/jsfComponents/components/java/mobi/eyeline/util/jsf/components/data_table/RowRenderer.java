@@ -1,5 +1,7 @@
 package mobi.eyeline.util.jsf.components.data_table;
 
+import mobi.eyeline.util.jsf.components.HtmlWriter;
+
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
@@ -31,16 +33,16 @@ public class RowRenderer extends Renderer {
     if (r.isInner()) {
 
       w.append("\n<tr class=\"eyeline_inner\" name=\"innerData" + t.getId() + rowId + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
-      if (t.isSelection())
+      if (t.isRowsSelectionEnabled())
         w.append("\n<td>&nbsp;</td>");
       w.append("\n<td>&nbsp;</td>");
 
     } else {
 
       w.append("\n<tr class=\"eyeline_row" + (rowNumber & 1) + "\" id=\"" + t.getId() + rowId + "\">");
-      if (t.isSelection())
+      if (t.isRowsSelectionEnabled())
      w.append("\n  <td align=\"center\"><input "+ (
-            (t.isSelectAll() && !t.isSelected(rowId)) || (!t.isSelectAll() && t.isSelected(rowId)) ? "CHECKED" : "") +
+            (t.isSelectAll() && !t.isRowSelected(rowId)) || (!t.isSelectAll() && t.isRowSelected(rowId)) ? "CHECKED" : "") +
             ((t.isShowSelectedOnly()) ? " disabled=\"true\"" : "") +
             " onclick=\"changeSelect(this.checked, '"+rowId+"', '"+t.getId()+"')\" class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");
 
@@ -63,6 +65,15 @@ public class RowRenderer extends Renderer {
     return true;
   }
 
+  int getColumnsCount(Row r) {
+    int res = 0;
+    for (UIComponent c : r.getChildren()) {
+      if (c instanceof Column)
+        res++;
+    }
+    return res;
+  }
+
   @Override
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
     Row r = (Row) component;
@@ -71,20 +82,19 @@ public class RowRenderer extends Renderer {
       return;
 
     DataTable t = (DataTable) r.getParent();
-    Writer w = context.getResponseWriter();
+    HtmlWriter w = new HtmlWriter(context.getResponseWriter());
 
-    w.append("\n</tr>");
+    w.a("\n</tr>");
 
     if (r.hasInnerData()) {
       UIComponent innerDataFacet = r.getFacet("innerData");
       if (innerDataFacet != null) {
-        w.append("\n<tr class=\"eyeline_inner\" name=\"innerData" + t.getId() + r.getRowId() + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
-        w.append("\n  <td align=\"left\" colspan=\"" + (r.getColumnsCount() + 2) + "\">");
-
+        w.a("\n<tr class=\"eyeline_inner\" name=\"innerData" + t.getId() + r.getRowId() + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
+        w.a("\n  <td align=\"left\" colspan=\"" + (getColumnsCount(r) + 2) + "\">");
         innerDataFacet.encodeBegin(context);
         innerDataFacet.encodeEnd(context);
-        w.append("\n  </td>");
-        w.append("\n</tr>");
+        w.a("\n  </td>");
+        w.a("\n</tr>");
       }
     }
   }

@@ -37,11 +37,4 @@ public class LoadListener {
     this.loadError = loadError;
   }
 
-  public boolean isFinished() {
-    return finished;
-  }
-
-  public void setFinished(boolean finished) {
-    this.finished = finished;
-  }
 }

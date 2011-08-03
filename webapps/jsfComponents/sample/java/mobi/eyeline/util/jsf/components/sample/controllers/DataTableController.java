@@ -154,9 +154,9 @@ public class DataTableController {
 
     public LoadListener prepareRows(int startPos, int count, DataTableSortOrder sortOrder) throws ModelException {
 
-      if(System.currentTimeMillis()%20 == 0) {
-        throw new ModelException("interaction_error");
-      }
+//      if(System.currentTimeMillis()%20 == 0) {
+//        throw new ModelException("interaction_error");
+//      }
       LoadListener listener = null;
       if(!loaded) {
         if(loadListener == null) {
