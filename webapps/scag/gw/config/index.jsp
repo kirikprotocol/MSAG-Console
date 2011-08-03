@@ -234,8 +234,6 @@
         <sm-ep:properties id="HttpTransport" display="none">
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt name="portHttps" title="port HTTPS" type="int" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt title="Certificates location" name="certificatesDir" type="string" onchanged="configChanged();"/>
             <sm-et:txt title="Reader Sockets" name="readerSockets" type="int" onchanged="configChanged();"/>
             <sm-et:txt title="Writer Sockets" name="writerSockets" type="int" onchanged="configChanged();"/>
             <sm-et:txt title="Reader Pool Size" name="readerPoolSize" type="int" onchanged="configChanged();"/>
@@ -243,6 +241,16 @@
             <sm-et:txt title="Scag Pool Size" name="scagPoolSize" type="int" onchanged="configChanged();"/>
             <sm-et:txt title="Scag Queue Limit" name="scagQueueLimit" type="int" onchanged="configChanged();"/>
             <sm-et:txt title="Connection Timeout" name="connectionTimeout" type="int" onchanged="configChanged();"/>
+        <tr><td colspan=2>
+            <sm-et:section title="HTTPS" name="https" type="table">
+                <sm-ep:properties id="https" display="none">
+                    <sm-et:checkin name="enabled" title="Enabled" onchanged="configChanged();"/>
+                    <sm-et:txt name="port" title="Port" type="int" validation="port" onchanged="configChanged();"/>
+                    <sm-et:txt name="certificatesLocation" title="Certificates location" type="string" onchanged="configChanged();"/>
+                    <sm-et:txt name="timeout" title="Timeout" type="int" onchanged="configChanged();"/>
+                </sm-ep:properties>
+            </sm-et:section>
+        </td></tr>
         </sm-ep:properties>
     </sm-et:section>
 
