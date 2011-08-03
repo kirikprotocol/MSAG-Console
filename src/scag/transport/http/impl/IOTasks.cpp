@@ -497,14 +497,7 @@ void HttpWriterTask::registerContext(HttpContext* cx)
     else
         s = cx->user;
 
-    //debug block
-    {
-    	unsigned int buf_len;
-		const char* data = cx->command->getMessageContent(buf_len);
-    	smsc_log_debug(logger, "HttpWriterTask::registerContext. h:%d c:%d w:%d d:%p",
-    			cx->command->getMessageHeaders().size(), cx->command->getContentLength(), buf_len, data);
-    }
-    cx->messagePrepare(); //xom 14.07.2011
+    cx->messagePrepare();
     addSocket(s, cx->action != SEND_REQUEST);
 }
 

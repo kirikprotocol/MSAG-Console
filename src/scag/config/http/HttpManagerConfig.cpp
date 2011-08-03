@@ -10,7 +10,7 @@ HttpManagerConfig::HttpManagerConfig(const ConfigView& cv) throw(ConfigException
 void HttpManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
 {
     try {
-        std::auto_ptr <char> h(cv.getString("host", NULL, false));
+        std::auto_ptr <char> h(cv.getString("host", "in HttpManagerConfig.init", true));
         host = h.get();
 
         readerSockets = cv.getInt("readerSockets", NULL);
@@ -21,11 +21,11 @@ void HttpManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
         scagQueueLimit = cv.getInt("scagQueueLimit", NULL);
         connectionTimeout = cv.getInt("connectionTimeout", NULL);
         port = cv.getInt("port", NULL);
-        httpsEnabled = cv.getBool("Https.enabled", NULL);
-        httpsPort = cv.getInt("Https.port", NULL);
-        std::auto_ptr<char> c( cv.getString("Https.certificatesLocation") );
+        httpsEnabled = cv.getBool("https.enabled", NULL);
+        httpsPort = cv.getInt("https.port", NULL);
+        std::auto_ptr<char> c(cv.getString("https.certificatesLocation", "in HttpManagerConfig.init", true));
         httpsCertificates = c.get();
-        httpsTimeout = cv.getInt("Https.timeout", NULL);
+        httpsTimeout = cv.getInt("https.timeout", NULL);
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){
@@ -36,8 +36,8 @@ void HttpManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
 bool HttpManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
-        std::auto_ptr<char> h( cv.getString("host") );
-        std::auto_ptr<char> c( cv.getString("Https.certificatesLocation") );
+        std::auto_ptr<char> h(cv.getString("host", "in HttpManagerConfig.check", true));
+        std::auto_ptr<char> c(cv.getString("https.certificatesLocation", "in HttpManagerConfig.check", true));
         return readerSockets != cv.getInt("readerSockets", NULL) ||
             writerSockets != cv.getInt("writerSockets", NULL) ||
             readerPoolSize != cv.getInt("readerPoolSize", NULL) ||
@@ -47,10 +47,10 @@ bool HttpManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
             connectionTimeout != cv.getInt("connectionTimeout", NULL) ||
             port != cv.getInt("port", NULL) ||
             strcmp(host.c_str(), h.get()) ||
-            httpsEnabled != cv.getBool("Https.enabled", NULL) ||
-            httpsPort != cv.getInt("Https.port", NULL) ||
+            httpsEnabled != cv.getBool("https.enabled", NULL) ||
+            httpsPort != cv.getInt("https.port", NULL) ||
             strcmp(httpsCertificates.c_str(), c.get()) ||
-            httpsTimeout != cv.getInt("httpsTimeout", NULL);
+            httpsTimeout != cv.getInt("https.timeout", NULL);
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){

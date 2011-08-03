@@ -208,7 +208,7 @@ void HttpContext::sslCertInfo(X509* cert) {
 			cert_nfo.append("Unknown");
 		cert_nfo.append(".");
 
-		X509_free (cert);
+		X509_free(cert);
 	}
 	else
 		cert_nfo = "The peer does not have certificate.";
@@ -334,7 +334,7 @@ void HttpContext::messagePrepare() {
 		unsigned int size, cnt_size;
 		size_t tmp;
 		unparsed.SetPos(0);
-	// write headers
+		// write headers
 		const std::string &headers = command->getMessageHeaders();
 		size = headers.size();
 		if (size)
@@ -345,23 +345,21 @@ void HttpContext::messagePrepare() {
 		if (tmp > 0) {
 			unparsed.SetPos(--tmp);
 		}
-		smsc_log_debug(logger, "messagePrepare: +%d =%d.\n%s", size, unparsed.GetPos(), unparsed.get());
-//
-
-	// write content
+//		smsc_log_debug(logger, "messagePrepare: +%d =%d.\n%s", size, unparsed.GetPos(), unparsed.get());
+		// write content
 		data = command->getMessageContent(cnt_size);
-		smsc_log_debug(logger, "messagePrepare h:%d c:%d pos:%d", size, cnt_size, unparsed.GetPos());
+//		smsc_log_debug(logger, "messagePrepare h:%d c:%d pos:%d", size, cnt_size, unparsed.GetPos());
 		if (cnt_size)
 			unparsed.Append(data, cnt_size);
-		smsc_log_debug(logger, "messagePrepare: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
-//
+//		smsc_log_debug(logger, "messagePrepare: %d + %d = %d.", size, cnt_size, unparsed.GetPos());
+
 		unparsed.Append("\0", 1);
 		tmp = unparsed.GetPos();
 		if (tmp > 0) {
 			unparsed.SetPos(--tmp);
 		}
-		smsc_log_debug(logger, "messagePrepare: +%d =%d.\n%s", cnt_size, unparsed.GetPos(), unparsed.get());
-//
+//		smsc_log_debug(logger, "messagePrepare: +%d =%d.\n%s", cnt_size, unparsed.GetPos(), unparsed.get());
+
 		position = 0;
 		flags = 1;
     }
@@ -372,8 +370,8 @@ void HttpContext::messagePrepare() {
  */
 bool HttpContext::messageIsOver(Socket* s) {
 	bool result;
-	smsc_log_debug(logger, "messageIsOver Https=%s flags=%d position=%d upos=%d cpos=%d",
-			(useHttps(s)?"Yes":"No"), flags, position, unparsed.GetPos(), command->content.GetPos());
+/*	smsc_log_debug(logger, "messageIsOver Https=%s flags=%d position=%d upos=%d cpos=%d",
+			(useHttps(s)?"Yes":"No"), flags, position, unparsed.GetPos(), command->content.GetPos()); */
     if (flags == 0) {
     	if ( result = (position >= command->getMessageHeaders().size()) ) {
             flags = 1;
@@ -386,7 +384,7 @@ bool HttpContext::messageIsOver(Socket* s) {
 			? (position >= unparsed.GetPos())
 			: (position >= unsigned(command->content.GetPos()));
     }
-	smsc_log_debug(logger, "messageIsOver=%s", (result?"Yes":"No"));
+//	smsc_log_debug(logger, "messageIsOver=%s", (result?"Yes":"No"));
 	return result;
 }
 
@@ -398,7 +396,7 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 		flags = 1;
 		data = unparsed.get();
 		size = unparsed.GetPos();
-		smsc_log_debug(logger, "messageGet Https %p size=%d pos=%d", data, size, position);
+//		smsc_log_debug(logger, "messageGet Https %p size=%d pos=%d", data, size, position);
 	}
 	else {	// no https
 		if (flags == 0) {
@@ -407,12 +405,12 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 
 			data = headers.data();
 			size = headers.size();
-			smsc_log_debug(logger, "messageGet Http hdr %p size=%d pos=%d", data, size, position);
+//			smsc_log_debug(logger, "messageGet Http hdr %p size=%d pos=%d", data, size, position);
 		}
 		else {
 			// write content
 			data = command->getMessageContent(size);
-			smsc_log_debug(logger, "messageGet Http cnt %p size=%d pos=%d", data, size, position);
+//			smsc_log_debug(logger, "messageGet Http cnt %p size=%d pos=%d", data, size, position);
 		}
 	}
 }

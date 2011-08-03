@@ -116,6 +116,13 @@
         <param name="scagPoolSize" type="int">10</param>
         <param name="scagQueueLimit" type="int">10</param>
         <param name="connectionTimeout" type="int">100</param>
+
+        <section name="https">
+            <param name="enabled" type="bool">true</param>
+            <param name="port" type="int">@gateway.https.port@</param>
+            <param name="certificatesLocation" type="string">@certificates.path@</param>
+            <param name="timeout" type="int">180</param>
+        </section>
     </section>
 
     <section name="PvssClient">

@@ -30,6 +30,7 @@ daemon.link.name         =msag_ssdaemon
 gateway.admin.port=23811
 gateway.smpp.port=23830
 gateway.http.port=23840
+gateway.https.port=23850
 
 bill.config_dir=conf
 bill.server_host=127.0.0.1
@@ -52,6 +53,7 @@ scag.rules.path=/opt/home/msag_test/msag_distr/services/scag/conf/rules
 scag2.rules.path=/opt/home/msag_test/msag_distr/services/scag2/conf/rules
 stat.dir=/opt/home/msag_test/msag_distr/storage/statistics
 stat.traffic_dir=/opt/home/msag_test/msag_distr/storage/statistics/traffic
+certificates.path=/opt/home/msag_test/msag_distr/storage/certificates
 
 stat.perf_host=0.0.0.0
 stat.perf_port=23981
