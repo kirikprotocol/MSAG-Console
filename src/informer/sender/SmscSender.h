@@ -26,6 +26,7 @@ namespace informer {
 
 class ReceiptProcessor;
 class RegionSender;
+class DeadLockWatch;
 struct Message;
 struct CoreSmscStats;
 
@@ -187,6 +188,7 @@ private:
     smsc::core::buffers::Hash< ReceiptList::iterator > receiptHash_;
 
     SmscJournal*                                       journal_;
+    DeadLockWatch*                                     dlwatch_;
     DataQueue*                                         rQueue_;
 
     // queueMon only to put into queue and notify

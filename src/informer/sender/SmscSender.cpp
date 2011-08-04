@@ -16,6 +16,7 @@
 #include "sms/sms.h"
 #include "system/status.h"
 #include "informer/snmp/SnmpManager.h"
+#include "informer/data/DeadLockWatch.h"
 
 using smsc::core::synchronization::MutexGuard;
 
@@ -380,6 +381,7 @@ awaken_(false),
 isStopping_(false)
 {
     journal_ = new SmscJournal(*this);
+    dlwatch_ = new DeadLockWatch( getCS()->getDLWatcher(), "SMSC", smscId.c_str() );
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
     wQueue_.reset(new DataQueue());
@@ -410,6 +412,9 @@ SmscSender::~SmscSender()
     }
     if (journal_) {
         delete journal_;
+    }
+    if (dlwatch_) {
+        delete dlwatch_;
     }
 }
 
@@ -1431,6 +1436,7 @@ void SmscSender::connectLoop()
         const usectime_type startingConn = currentTimeMicro();
         msgtime_type interConnect;
         {
+            if (dlwatch_) { dlwatch_->ping(); }
             MutexGuard mg(reconfLock_);
             connTime_ = 0;
             smsc_log_debug(log_,"S='%s': trying to connect",smscId_.c_str());
@@ -1491,7 +1497,10 @@ void SmscSender::sendLoop()
     std::auto_ptr<DataQueue> rQueue(new DataQueue);
     while ( !getCS()->isStopping() && !isStopping_ ) {
 
+        if (dlwatch_) { dlwatch_->ping(); }
+
         currentTime_ = currentTimeMicro();
+
         if (rQueue->Count() == 0) {
 
             MutexGuard mg(queueMon_);

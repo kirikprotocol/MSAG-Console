@@ -94,4 +94,15 @@
     "Notify about file IO problems"
     ::= { informerNotifications 2 }
 
+    -- 1.3.6.1.4.1.26757.4.0.3
+    -- trap is sent when a dead lock is detected (may be false positive)
+    -- category will be one of "SMSC"
+    -- alertId  will be the id of the object.
+    informerDeadLockAlert NOTIFICATION-TYPE
+    OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
+    STATUS current
+    DESCRIPTION
+    "Notify when a dead lock is detected"
+    ::= { informerNotifications 3 }
+
     END

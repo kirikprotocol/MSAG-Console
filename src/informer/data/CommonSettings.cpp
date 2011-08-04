@@ -5,6 +5,7 @@
 #include "informer/io/ConfigWrapper.h"
 #include "util/config/Config.h"
 #include "TimezoneGroup.h"
+#include "DeadLockWatch.h"
 #include "logger/Logger.h"
 
 using smsc::util::config::Config;
@@ -19,6 +20,7 @@ CommonSettings::CommonSettings( unsigned licenseLimit ) :
 log_(smsc::logger::Logger::getInstance("comset")),
 utf8_(0),
 snmp_(0),
+dlwatcher_(0),
 incStatBank_(0),
 licenseLimit_(licenseLimit),
 // regionSpeedLimitNBins_(25),
@@ -31,6 +33,7 @@ emergency_(false)
 {
     assert(instance_ == 0);
     instance_ = this;
+    dlwatcher_ = new DeadLockWatcher();
 }
 
 
@@ -41,8 +44,16 @@ CommonSettings::~CommonSettings()
         delete *i;
     }
     tzgroups_.clear();
+    delete dlwatcher_;
     delete utf8_;
     instance_ = 0;
+}
+
+
+void CommonSettings::setStopping()
+{
+    stopping_ = true;
+    dlwatcher_->setStopping();
 }
 
 
@@ -54,6 +65,7 @@ void CommonSettings::init( smsc::util::config::Config& cfg,
     snmp_ = snmp;
     archive_ = archive;
     utf8_ = new UTF8();
+    dlwatcher_->start();
 
     const ConfigWrapper conf(cfg,log_);
     emergency_ = conf.getBool("emergency",false);

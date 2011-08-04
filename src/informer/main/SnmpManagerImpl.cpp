@@ -95,6 +95,7 @@ int SnmpManagerImpl::Execute()
 {
     oid informerConnectAlert_oid[] = { 1,3,6,1,4,1,26757,4,0,1 };
     oid informerFileIOAlert_oid[] = { 1,3,6,1,4,1,26757,4,0,2 };
+    oid informerDeadLockAlert_oid[] = { 1,3,6,1,4,1,26757,4,0,3 };
     oid alertMessage_oid[] = { 1,3,6,1,4,1,26757,4,5, 0 };
     oid alertSeverity_oid[] = { 1,3,6,1,4,1,26757,4,7, 0 };
     oid alertObjCategory_oid[] = { 1,3,6,1,4,1,26757,4,9, 0 };
@@ -118,6 +119,7 @@ int SnmpManagerImpl::Execute()
 #define TRAPTCASE(x,y) case (x) : { typeoid = y; typeoidlen = OID_LENGTH(y); break; }
                 TRAPTCASE(SnmpTrap::TYPE_CONNECT,informerConnectAlert_oid);
                 TRAPTCASE(SnmpTrap::TYPE_FILEIO,informerFileIOAlert_oid);
+                TRAPTCASE(SnmpTrap::TYPE_DEADLOCK,informerDeadLockAlert_oid);
 #undef TRAPTCASE
             default:
                 smsc_log_warn(log_,"trap type %d is not implemented",int(trap->type));

@@ -9,7 +9,8 @@ struct SnmpTrap
 
     typedef enum {
         TYPE_CONNECT = 1,
-        TYPE_FILEIO = 2
+        TYPE_FILEIO = 2,
+        TYPE_DEADLOCK = 3
     } Type;
 
 

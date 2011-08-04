@@ -23,6 +23,7 @@ namespace informer {
 class UTF8;
 class TimezoneGroup;
 class SnmpManager;
+class DeadLockWatcher;
 
 class CommonSettings
 {
@@ -49,9 +50,9 @@ public:
         return stopping_;
     }
 
-    void setStopping() {
-        stopping_ = true;
-    }
+    void setStopping();
+    // stopping_ = true;
+    // }
 
     // --- configurable parameters
 
@@ -234,18 +235,21 @@ public:
 
     inline SnmpManager* getSnmp() const { return snmp_; }
 
+    inline DeadLockWatcher& getDLWatcher() const { return *dlwatcher_; }
+
 private:
     void loadTimezones();
     typedef std::map< std::string, TimezoneGroup* > TzMap;
 
 private:
     smsc::logger::Logger* log_;
-    std::string path_;
-    std::string archivePath_;
-    std::string statpath_;
-    UTF8*       utf8_;        // owned converter
-    SnmpManager* snmp_;
-    unsigned    incStatBank_;
+    std::string     path_;
+    std::string     archivePath_;
+    std::string     statpath_;
+    UTF8*           utf8_;        // owned converter
+    SnmpManager*     snmp_;
+    DeadLockWatcher* dlwatcher_;
+    unsigned         incStatBank_;
 
     std::string svcType_;
     unsigned licenseLimit_;
