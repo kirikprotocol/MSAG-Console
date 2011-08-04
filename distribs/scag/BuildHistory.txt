@@ -823,12 +823,15 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2011-07-07 17:03 bukind
   pvss feature: ignoring unlink errors after archiving is done in backup mode
 
---- current fixes ---
-2011-07-04 15:04 bukind
-  msag bugfix: SMPP sockets rewritten using EmbedRefPtr
+=================================================================================================================
+2011-08-01 15:25 bukind pvss-build-20110801
 2011-08-01 14:35 bukind
   pvss bugfix: R_ACCESS properties are now marked with 'U' in backup log when
   pvss bugfix: ignoring 'G' records when parsing backup log
   pvss bugfix: not checking lines/crc match when reading nextFile only
   pvss bugfix: catching some more exceptions
+
+--- current fixes ---
+2011-07-04 15:04 bukind
+  msag bugfix: SMPP sockets rewritten using EmbedRefPtr
 
