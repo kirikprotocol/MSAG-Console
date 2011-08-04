@@ -1,6 +1,5 @@
 #include "DeadLockWatch.h"
 #include "CommonSettings.h"
-#include "informer/io/Typedefs.h"
 #include "informer/snmp/SnmpManager.h"
 
 using namespace smsc::core::synchronization;
@@ -9,12 +8,14 @@ namespace eyeline {
 namespace informer {
 
 DeadLockWatch::DeadLockWatch( DeadLockWatcher& watcher,
-                              const char* category, const char* name ) :
+                              const char* category,
+                              const char* name,
+                              timediff_type period ) :
 watcher_(watcher),
 category_(category),
 name_(name),
-serial_(1),
-prevSerial_(0) 
+period_(period),
+lastTime_(currentTimeSeconds())
 {
     watcher.registerWatch(*this);
 }
@@ -57,7 +58,6 @@ void DeadLockWatcher::setStopping()
 
 int DeadLockWatcher::Execute()
 {
-    const msgtime_type interval = 60;
     msgtime_type nextTime = currentTimeSeconds();
     while ( ! stopping_ ) {
         MutexGuard mg(mon_);
@@ -69,23 +69,27 @@ int DeadLockWatcher::Execute()
             continue;
         }
         if ( stopping_ ) { break; }
-        nextTime = currentTime + interval;
+        nextTime = currentTime + getCS()->getDeadLockWatchPeriod();
 
         // processing all items
         for ( WatchList::const_iterator i = watches_.begin(), ie = watches_.end();
               i != ie; ++i ) {
-            if ( ! (*i)->isAlive() ) {
+            msgtime_type dead = (*i)->isAlive( currentTime );
+            if ( dead > 0 ) {
                 // report dead lock
                 if ( getCS()->getSnmp() ) {
+                    char buf[80];
+                    sprintf(buf,"deadlock/threadexit detected during %u seconds",unsigned(dead));
                     getCS()->getSnmp()->sendTrap( SnmpTrap::TYPE_DEADLOCK,
                                                   SnmpTrap::SEV_MAJOR,
                                                   (*i)->getCategory(),
                                                   (*i)->getName(),
-                                                  "dead lock detected" );
+                                                  buf );
                 }
-                fprintf(stderr,"deadlock (%llu) in %s '%s'\n",
+                fprintf(stderr,"%llu deadlock in %s '%s' for %u seconds\n",
                         msgTimeToYmd(currentTime),
-                        (*i)->getCategory(), (*i)->getName() );
+                        (*i)->getCategory(), (*i)->getName(),
+                        unsigned(dead));
             }
         }
     }

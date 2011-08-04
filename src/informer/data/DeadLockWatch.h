@@ -5,6 +5,7 @@
 #include <vector>
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "informer/io/Typedefs.h"
 
 namespace eyeline {
 namespace informer {
@@ -16,28 +17,29 @@ class DeadLockWatch
 public:
     DeadLockWatch( DeadLockWatcher& watcher,
                    const char*      category,
-                   const char*      name );
+                   const char*      name,
+                   timediff_type    period );
 
     ~DeadLockWatch();
 
-    inline void ping() { ++serial_; }
+    inline void ping( msgtime_type now ) { lastTime_ = now; }
 
-    bool isAlive() {
-        const int next = serial_;
-        const bool res = (next != prevSerial_);
-        prevSerial_ = next;
-        return res;
+    /// return 0 if ok, otherwise the number of seconds of last activity
+    msgtime_type isAlive( msgtime_type now ) const {
+        timediff_type res = timediff_type(now - lastTime_);
+        if ( res <= period_ ) return 0;
+        return msgtime_type(res);
     }
 
     const char* getCategory() const { return category_.c_str(); }
     const char* getName() const { return name_.c_str(); }
 
 private:
-    DeadLockWatcher&  watcher_;
-    const std::string category_;
-    const std::string name_;
-    volatile int      serial_;
-    int               prevSerial_;
+    DeadLockWatcher&      watcher_;
+    const std::string     category_;
+    const std::string     name_;
+    timediff_type         period_;
+    volatile msgtime_type lastTime_;
 };
 
 

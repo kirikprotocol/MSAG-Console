@@ -8,6 +8,7 @@
 #include "informer/data/FinalLog.h"
 #include "system/status.h"
 #include "informer/snmp/SnmpManager.h"
+#include "informer/data/DeadLockWatch.h"
 
 using smsc::core::synchronization::MutexGuard;
 
@@ -150,7 +151,11 @@ public:
     InputJournalRoller( DeliveryMgr& mgr ) :
     mgr_(mgr), log_(smsc::logger::Logger::getInstance("inroller")),
     waitmon_(MTXWHEREAMI),
-    speedControl_( std::max(getCS()->getInputJournalRollingSpeed(),1U)*1000 ) {}
+    speedControl_( std::max(getCS()->getInputJournalRollingSpeed(),1U)*1000 ),
+    dlwatch_(getCS()->getDLWatcher(),
+             "inroller",
+             "inroller",
+             getCS()->getInputJournalRollingPeriod()+3) {}
 
     ~InputJournalRoller() { WaitFor(); }
 
@@ -166,6 +171,7 @@ public:
         while (! getCS()->isStopping() ) {
             bool firstPass = true;
             const usectime_type startTime = currentTimeMicro();
+            dlwatch_.ping(msgtime_type(startTime / tuPerSec));
             speedControl_.suspend( startTime % flipTimePeriod );
             size_t written = 0;
             smsc_log_debug(log_,"input rolling pass started");
@@ -194,6 +200,8 @@ public:
                     ++iter;
                 }
 
+                dlwatch_.ping( currentTimeSeconds() );
+
                 try {
                     const size_t chunk = ptr->rollOverInput();
                     if ( chunk > 0 ) {
@@ -212,13 +220,16 @@ public:
                            unsigned(elapsedTime % tuPerSec / 1000) );
             // MutexGuard mg(mgr_.mon_);
             if (!getCS()->isStopping()) {
+                dlwatch_.ping( currentTimeSeconds());
                 try {
                     mgr_.inputJournal_->rollOver(); // change files
+                    dlwatch_.ping( currentTimeSeconds());
                     MutexGuard mg(waitmon_);
                     waitmon_.wait(getCS()->getInputJournalRollingPeriod()*1000);
                 } catch ( std::exception& e ) {
                     smsc_log_warn(log_,"input rolling file exc: %s",e.what());
                 }
+                dlwatch_.ping( currentTimeSeconds());
             }
         }
         smsc_log_debug(log_,"input journal roller stopped");
@@ -229,6 +240,7 @@ private:
     smsc::logger::Logger* log_;
     smsc::core::synchronization::EventMonitor waitmon_;
     SpeedControl<usectime_type,tuPerSec> speedControl_;
+    DeadLockWatch         dlwatch_;
 };
 
 
@@ -238,7 +250,9 @@ public:
     StoreJournalRoller( DeliveryMgr& mgr ) :
     mgr_(mgr), log_(smsc::logger::Logger::getInstance("oproller")),
     waitmon_(MTXWHEREAMI),
-    speedControl_(std::max(getCS()->getOpJournalRollingSpeed(),1U)*1000) {}
+    speedControl_(std::max(getCS()->getOpJournalRollingSpeed(),1U)*1000),
+    dlwatch_(getCS()->getDLWatcher(),"oproller","oproller",
+             getCS()->getOpJournalRollingPeriod()+3) {}
     ~StoreJournalRoller() { WaitFor(); }
 
     void stop() {
@@ -253,6 +267,7 @@ public:
         while (! getCS()->isStopping()) { // never ending loop
             bool firstPass = true;
             const usectime_type startTime = currentTimeMicro();
+            dlwatch_.ping(msgtime_type(startTime/tuPerSec));
             speedControl_.suspend( startTime % flipTimePeriod );
             size_t written = 0;
             smsc_log_debug(log_,"store rolling pass started");
@@ -280,6 +295,9 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
+
+                dlwatch_.ping( currentTimeSeconds() );
+
                 try {
                     const size_t chunk = ptr->rollOverStore( speedControl_ );
                     if ( chunk > 0 ) {
@@ -297,13 +315,16 @@ public:
                            unsigned(elapsedTime % tuPerSec / 1000) );
             // MutexGuard mg(mgr_.mon_);
             if (! getCS()->isStopping()) {
+                dlwatch_.ping(currentTimeSeconds());
                 try {
                     mgr_.storeJournal_->rollOver(); // change files
+                    dlwatch_.ping(currentTimeSeconds());
                     MutexGuard mg(waitmon_);
                     waitmon_.wait(getCS()->getOpJournalRollingPeriod()*1000);
                 } catch ( std::exception& e ) {
                     smsc_log_warn(log_,"store rolling file exc: %s",e.what());
                 }
+                dlwatch_.ping(currentTimeSeconds());
             }
         }
         smsc_log_debug(log_,"store journal roller stopped");
@@ -314,6 +335,7 @@ private:
     smsc::logger::Logger* log_;
     smsc::core::synchronization::EventMonitor waitmon_;
     SpeedControl<usectime_type,tuPerSec> speedControl_;
+    DeadLockWatch         dlwatch_;
 };
 
 
@@ -321,7 +343,8 @@ class DeliveryMgr::StatsDumper : public smsc::core::threads::Thread
 {
 public:
     StatsDumper( DeliveryMgr& mgr ) :
-    mgr_(mgr), log_(smsc::logger::Logger::getInstance("statdump")) {}
+    mgr_(mgr), log_(smsc::logger::Logger::getInstance("statdump")),
+    dlwatch_( getCS()->getDLWatcher(), "statdump", "statdump", 63 ) {}
     ~StatsDumper() { WaitFor(); }
     
 
@@ -356,6 +379,7 @@ public:
             }
         }
         while (! getCS()->isStopping()) {
+            dlwatch_.ping( currentTimeSeconds() );
             {
                 MutexGuard mg(mgr_.mon_);
                 const msectime_type now = msectime_type(currentTimeMicro()/1000);
@@ -489,6 +513,7 @@ public:
 private:
     DeliveryMgr&          mgr_;
     smsc::logger::Logger* log_;
+    DeadLockWatch         dlwatch_;
 };
 
 
@@ -639,6 +664,7 @@ DeliveryMgr::DeliveryMgr( InfosmeCoreV1& core, CommonSettings& cs ) :
 log_(smsc::logger::Logger::getInstance("dlvmgr")),
 core_(core),
 cs_(cs),
+dlwatch_(0),
 deliveryChunkList_(new DeliveryChunkList),
 mon_(MTXWHEREAMI),
 inputRollingIter_(deliveryList_.end()),
@@ -659,6 +685,9 @@ archiveLock_(MTXWHEREAMI)
     storeJournal_ = new StoreJournal;
     inputJournal_ = new InputJournal;
     ctp_.setMaxThreads(10);
+    dlwatch_ = new DeadLockWatch( getCS()->getDLWatcher(),
+                                  "dlvmgr", "dlvmgr",
+                                  60 );
 }
 
 
@@ -676,6 +705,7 @@ DeliveryMgr::~DeliveryMgr()
     delete inputRoller_;
     delete storeJournal_;
     delete inputJournal_;
+    delete dlwatch_;
 
     smsc_log_info(log_,"--- destroying all deliveries ---");
     deliveryHash_.Empty();
@@ -959,8 +989,10 @@ int DeliveryMgr::Execute()
     // DeliveryWakeQueue stopList;
     while ( !getCS()->isStopping() ) {
 
+
         const msectime_type curTime = msectime_type(currentTimeMicro() / 1000);
         const msgtime_type now(msgtime_type(curTime/1000));
+        dlwatch_->ping(now);
 
         // processing wakelist
         if ( ! wakeList.empty() ) {

@@ -381,7 +381,10 @@ awaken_(false),
 isStopping_(false)
 {
     journal_ = new SmscJournal(*this);
-    dlwatch_ = new DeadLockWatch( getCS()->getDLWatcher(), "SMSC", smscId.c_str() );
+    dlwatch_ = new DeadLockWatch( getCS()->getDLWatcher(),
+                                  "SMSC",
+                                  smscId.c_str(),
+                                  getCS()->getDeadLockWatchPeriod() );
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
     wQueue_.reset(new DataQueue());
@@ -1436,7 +1439,7 @@ void SmscSender::connectLoop()
         const usectime_type startingConn = currentTimeMicro();
         msgtime_type interConnect;
         {
-            if (dlwatch_) { dlwatch_->ping(); }
+            if (dlwatch_) { dlwatch_->ping(msgtime_type(startingConn/tuPerSec)); }
             MutexGuard mg(reconfLock_);
             connTime_ = 0;
             smsc_log_debug(log_,"S='%s': trying to connect",smscId_.c_str());
@@ -1497,9 +1500,8 @@ void SmscSender::sendLoop()
     std::auto_ptr<DataQueue> rQueue(new DataQueue);
     while ( !getCS()->isStopping() && !isStopping_ ) {
 
-        if (dlwatch_) { dlwatch_->ping(); }
-
         currentTime_ = currentTimeMicro();
+        if (dlwatch_) { dlwatch_->ping( msgtime_type(currentTime_/tuPerSec)); }
 
         if (rQueue->Count() == 0) {
 

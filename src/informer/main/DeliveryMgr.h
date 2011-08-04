@@ -16,6 +16,7 @@ namespace informer {
 
 class InfosmeCoreV1;
 class CommonSettings;
+class DeadLockWatch;
 
 class DeliveryMgr : public smsc::core::threads::Thread
 {
@@ -105,6 +106,7 @@ private:
     smsc::logger::Logger*                      log_;
     InfosmeCoreV1&                             core_;
     CommonSettings&                            cs_;
+    DeadLockWatch*                             dlwatch_;
 
     DeliveryChunkList*                            deliveryChunkList_;
 

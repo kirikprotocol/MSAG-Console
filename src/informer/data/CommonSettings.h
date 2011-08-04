@@ -204,6 +204,10 @@ public:
 
     // --- non-configurable parameters
 
+    inline msgtime_type getDeadLockWatchPeriod() const {
+        return 60;
+    }
+
     /// return a length of period (second) to split resend messages into.
     /// must state: assert(3600%ret==0), assert(ret%60==0).
     /// NOTE: never changes this value unless you don't have resends!
