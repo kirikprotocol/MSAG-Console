@@ -681,13 +681,13 @@ lastDlvId_(0),
 archiveLock_(MTXWHEREAMI)
 {
     smsc_log_debug(log_,"ctor");
+    dlwatch_ = new DeadLockWatch( getCS()->getDLWatcher(),
+                                  "dlvmgr", "dlvmgr",
+                                  60 );
     if ( getCS()->isArchive() || getCS()->isEmergency() ) { return; }
     storeJournal_ = new StoreJournal;
     inputJournal_ = new InputJournal;
     ctp_.setMaxThreads(10);
-    dlwatch_ = new DeadLockWatch( getCS()->getDLWatcher(),
-                                  "dlvmgr", "dlvmgr",
-                                  60 );
 }
 
 
