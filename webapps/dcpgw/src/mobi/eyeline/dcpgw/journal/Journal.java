@@ -35,7 +35,7 @@ public class Journal {
 
     public Journal() throws InitializationException{
         String userDir = System.getProperty("user.dir");
-        String filename = userDir+"/conf/dcpgw.properties";
+        String filename = userDir+File.separator+"conf"+File.separator+"config.properties";
 
         Properties prop = new Properties();
 
@@ -360,10 +360,12 @@ public class Journal {
                     Scanner scanner = new Scanner(f);
                     scanner.useDelimiter(sep);
                     while (scanner.hasNextLine()){
-                        String s = scanner.next();
+                        String line = scanner.nextLine();
+                        String[] ar = line.split(sep);
+
                         long first_sending_time;
                         try {
-                            Date date = df.parse(s);
+                            Date date = df.parse(ar[0]);
                             cal.setTime(date);
                             first_sending_time = cal.getTimeInMillis();
                         } catch (ParseException e) {
@@ -371,10 +373,9 @@ public class Journal {
                             throw new CouldNotLoadJournalException(e);
                         }
 
-                        s = scanner.next();
                         long last_resending_time;
                         try {
-                            Date date = df.parse(s);
+                            Date date = df.parse(ar[1]);
                             cal.setTime(date);
                             last_resending_time = cal.getTimeInMillis();
                         } catch (ParseException e){
@@ -382,9 +383,9 @@ public class Journal {
                             throw new CouldNotLoadJournalException(e);
                         }
 
-                        long message_id = scanner.nextLong();
-                        int sequence_number = scanner.nextInt();
-                        String status_str = scanner.next();
+                        long message_id = Long.parseLong(ar[2]);
+                        int sequence_number = Integer.parseInt(ar[3]);
+                        String status_str = ar[4];
 
                         if (status_str.equals(Status.DONE.toString())){
                             table.remove(sequence_number);

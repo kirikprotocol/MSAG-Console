@@ -112,7 +112,9 @@ public class Client extends Thread implements PDUListener {
             case SubmitSMResp:
 
                 SubmitSMResp submitSMResp = (SubmitSMResp) pdu;
-                long message_id = Long.parseLong(submitSMResp.getMessageId());
+                String message_id_str = submitSMResp.getMessageId();
+                logger.debug("SubmitSMResp messageId="+message_id_str);
+                long message_id = Long.parseLong(message_id_str);
                 logger.debug("message_id="+message_id);
 
                 finalLogGenerator.writeFinalState(message_id);
@@ -133,9 +135,9 @@ public class Client extends Thread implements PDUListener {
                     SubmitSM submitSM = new SubmitSM();
                     submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
                     if (Math.random() < 0.5){
-                        submitSM.setConnectionName("env.client1");
+                        submitSM.setConnectionName("client1");
                     } else{
-                        submitSM.setConnectionName("env.client2");
+                        submitSM.setConnectionName("client2");
                     }
 
                     DateFormat df = DateFormat.getDateTimeInstance();

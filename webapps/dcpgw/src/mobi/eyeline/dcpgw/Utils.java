@@ -27,7 +27,7 @@ public class Utils {
     public static String getProperty(Properties properties, String name, String default_value){
         String s = properties.getProperty(name);
         if (s == null || s.isEmpty()) {
-            log.error("Property '" + name + "' is not defined or is empty, set default value to '" + s+"'.");
+            log.error("Property '" + name + "' is not defined or is empty, set default value to '" +default_value+ "'.");
             return default_value;
         } else {
             log.debug("Set property '"+name+"' to '"+s+"'.");

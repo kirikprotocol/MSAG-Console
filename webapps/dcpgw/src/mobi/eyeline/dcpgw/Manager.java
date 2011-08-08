@@ -49,7 +49,7 @@ public class Manager {
     // Private constructor prevents instantiation from other classes
     private Manager(){
         String userDir = System.getProperty("user.dir");
-        String filename = userDir+"/conf/dcpgw.properties";
+        String filename = userDir+File.separator+"conf"+File.separator+"config.properties";
 
         Properties prop = new Properties();
 
