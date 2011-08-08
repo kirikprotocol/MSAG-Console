@@ -29,7 +29,7 @@ struct SnmpTrap
     std::string  message;
 
     bool isValid() const {
-        if (type != TYPE_CONNECT) return false;
+        if (int(type) < TYPE_CONNECT || int(type) > TYPE_DEADLOCK) return false;
         if (severity < SEV_CLEAR || severity > SEV_CRITICAL) return false;
         if (!category.size() ||
             !objid.size() ||
@@ -51,7 +51,9 @@ struct SnmpTrap
 
     static const char* typeToString( Type t ) {
         switch (t) {
-        case TYPE_CONNECT: return "conn";
+        case TYPE_CONNECT:  return "conn";
+        case TYPE_FILEIO:   return "fileio";
+        case TYPE_DEADLOCK: return "deadlk";
         default: return "???";
         }
     }
