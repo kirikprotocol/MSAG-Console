@@ -75,6 +75,7 @@ activePeriodEnd_(-1),
 validityPeriod_(-1),
 messageTimeToLive_(-1),
 archivationTime_(-1),
+finalizationDelay_(0),
 activeWeekDays_(-1),
 statLock_( MTXWHEREAMI ),
 isOldActLog_(false)
@@ -86,6 +87,7 @@ isOldActLog_(false)
 
     // stats
     stats_.clear();
+    lastStatTime_ = currentTimeSeconds();
     readStats();
 
     glossary_.init(dlvId);
@@ -288,6 +290,7 @@ void DeliveryInfo::initMsgStats( regionid_type,
 
 
 void DeliveryInfo::incMsgStats( const Region& region,
+                                msgtime_type currentTime,
                                 uint8_t state,
                                 int value, uint8_t fromState, int smsValue )
 {
@@ -295,6 +298,7 @@ void DeliveryInfo::incMsgStats( const Region& region,
     char smscId[SMSC_ID_LENGTH];
     region.getSmscId(smscId);
     smsc::core::synchronization::MutexGuard mg(statLock_);
+    lastStatTime_ = currentTime;
     stats_.incStat(state,value,smsValue);
     if (fromState) {stats_.incStat(fromState,-value,0);}
     // aggregation stats
@@ -462,6 +466,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     timediff_type validityPeriod = validityPeriod_;
     timediff_type messageTimeToLive = messageTimeToLive_;
     timediff_type archivationPeriod = archivationTime_;
+    timediff_type finalizationDelay = finalizationDelay_;
 
     int activeWeekDays = activeWeekDays_;
     smsc::sms::Address sourceAddress(sourceAddress_);
@@ -491,6 +496,12 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     }
     if ((!old || old->archivationPeriod != data.archivationPeriod) && !data.archivationPeriod.empty() ) {
         archivationPeriod = parseTime(data.archivationPeriod.c_str(), true);
+    }
+    if ((!old || old->finalizationDelay != data.finalizationDelay) && !data.finalizationDelay.empty()) {
+        finalizationDelay = parseTime(data.finalizationDelay.c_str(), true);
+        if (finalizationDelay > userInfo_->getMaxFinalizationDelay()) {
+            throw InfosmeException(EXC_CONFIG,"finalization delay %d is too large",finalizationDelay);
+        }
     }
     if (!old || ( old->retryPolicy != data.retryPolicy ||
                   old->retryOnFail != data.retryOnFail ) ) {
@@ -546,6 +557,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
 
     // filling
     const msgtime_type now = currentTimeSeconds();
+
     if (startDate != 0) {
         startDate_ = startDate;
     } else {
@@ -566,6 +578,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         messageTimeToLive_ = getCS()->getMessageTimeToLiveDefault();
     }
     if (archivationPeriod != -1) { archivationTime_ = archivationPeriod; }
+    if (finalizationDelay != 0) { finalizationDelay_ = finalizationDelay; }
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
     if (sourceAddressChanged) { sourceAddress_ = sourceAddress; }
     if (newRetryPolicy) { retryPolicy_ = retryPolicy; }

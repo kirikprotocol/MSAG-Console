@@ -1,3 +1,5 @@
+2011-08-08 11:48 bukind
+  feature: finalizationDelay
 2011-08-04 18:59 bukind
   feature: dead lock detectors
 2011-08-01 10:52 bukind

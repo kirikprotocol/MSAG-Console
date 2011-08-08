@@ -38,7 +38,8 @@ UserInfo::UserInfo( DeliveryActivator& da,
                     const char* pwd,
                     unsigned    priority,
                     unsigned    speed,
-                    unsigned    totaldlv ) :
+                    unsigned    totaldlv,
+                    timediff_type maxFinDelay ) :
 refLock_( MTXWHEREAMI ),
 ref_(0),
 speedControl_(speed),
@@ -48,6 +49,7 @@ roles_(0),
 maxTotalDeliveries_(totaldlv),
 priority_(priority),
 isDeleted_(false),
+maxFinalizationDelay_(maxFinDelay),
 statLock_( MTXWHEREAMI )
 {
     getlog();
@@ -167,6 +169,7 @@ void UserInfo::update( const UserInfo& user )
     maxTotalDeliveries_ = user.maxTotalDeliveries_;
     priority_ = user.priority_;
     allowedAddresses_ = user.allowedAddresses_;
+    maxFinalizationDelay_ = user.maxFinalizationDelay_;
     smsc_log_info(log_,"U='%s' updated: roles=%llu maxTotalDlv=%u speed=%u prio=%u",
                   userId_.c_str(), ulonglong(roles_), unsigned(maxTotalDeliveries_),
                   unsigned(speedControl_.getSpeed()), unsigned(priority_) );

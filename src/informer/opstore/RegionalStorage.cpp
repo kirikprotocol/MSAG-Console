@@ -567,7 +567,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     }
     if (needsave) {
         dlv_->storeJournal_->journalMessage(dlvId,getRegionId(),*iter);
-        dlv_->dlvInfo_->incMsgStats(*region_,m.state,1,prevState);
+        dlv_->dlvInfo_->incMsgStats(*region_,currentTime,m.state,1,prevState);
     }
     return secondsReady;
 }
@@ -711,15 +711,8 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         }
         newQueue_.PushFront(iter);
         mg.Unlock();
-        /*
-         * fixTransactional should not be set here
-        if (fixTransactional && prevState != MSGSTATE_SENT ) {
-            dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_SENT,1,prevState);
-            prevState = MSGSTATE_SENT;
-        }
-         */
         if (prevState != MSGSTATE_PROCESS) {
-            dlv_->dlvInfo_->incMsgStats(*region_,MSGSTATE_PROCESS,1,prevState);
+            dlv_->dlvInfo_->incMsgStats(*region_,currentTime,MSGSTATE_PROCESS,1,prevState);
         }
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into immediate retry",
                        getRegionId(), dlvId, ulonglong(msgId));

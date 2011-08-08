@@ -83,7 +83,8 @@ public:
               const char* pwd,
               unsigned    priority = 1,
               unsigned    speed = 1,
-              unsigned    totaldlv = 10 );
+              unsigned    totaldlv = 10,
+              timediff_type maxFinDelay = 0 );
               
     inline DeliveryActivator& getDA() const { return da_; }
 
@@ -127,6 +128,8 @@ public:
 
     // check if the address oa is allowed
     bool checkSourceAddress( const smsc::sms::Address& oa );
+
+    timediff_type getMaxFinalizationDelay() const { return maxFinalizationDelay_; }
 
     // mark the user as deleted
     void setDeleted( bool del ) {
@@ -178,6 +181,7 @@ private:
     DeliveryList deliveries_;
     // delivery limits, e.g. sourceaddrs, etc.
     std::vector< smsc::sms::Address > allowedAddresses_; // or empty
+    timediff_type  maxFinalizationDelay_;
 
     // statistics
     smsc::core::synchronization::Mutex statLock_;

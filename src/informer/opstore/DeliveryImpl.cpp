@@ -78,6 +78,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         data.validityPeriod = config.getString("validityPeriod","");
         data.messageTimeToLive = config.getString("messageTimeToLive","");
         data.archivationPeriod = config.getString("archivationPeriod","");
+        data.finalizationDelay = config.getString("finalizationDelay","");
         data.flash = config.getBool("flash",false);
         data.useDataSm = config.getBool("useDataSm",false);
         const std::string dlvMode = config.getString("deliveryMode","sms");
@@ -535,7 +536,14 @@ void DeliveryImpl::checkFinalize()
         dlvInfo_->getMsgStats(ds);
     }
     if (finalize) {
-        if (ds.isFinished()) {
+
+        const timediff_type uptoFin = 
+            dlvInfo_->getLastStatTime() + dlvInfo_->getFinalizationDelay() - currentTime;
+
+        if ( uptoFin > 0 ) {
+            smsc_log_debug(log_,"D=%u delayed finalization %+d",uptoFin);
+            finalize = false;
+        } else if (ds.isFinished()) {
             smsc_log_debug(log_,"D=%u all messages are final, confirmed by stats", dlvId);
             setState(DLVSTATE_FINISHED);
         } else {
@@ -616,6 +624,9 @@ void DeliveryImpl::writeDeliveryInfoData()
     }
     if (!data.archivationPeriod.empty()) {
         config.setString("archivationPeriod",data.archivationPeriod.c_str());
+    }
+    if (!data.finalizationDelay.empty()) {
+        config.setString("finalizationDelay",data.finalizationDelay.c_str());
     }
     config.setBool("flash",data.flash);
     config.setBool("useDataSm",data.useDataSm);

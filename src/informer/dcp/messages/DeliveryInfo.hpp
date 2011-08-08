@@ -53,6 +53,7 @@ public:
     messageTimeToLiveFlag=false;
     creationDateFlag=false;
     boundToLocalTimeFlag=false;
+    finalizationDelayFlag=false;
   }
  
 
@@ -313,6 +314,15 @@ public:
       rv+="boundToLocalTime=";
       rv+=boundToLocalTime?"true":"false";
     }
+    if(finalizationDelayFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="finalizationDelay=";
+      rv+=finalizationDelay;
+    }
     return rv;
   }
 
@@ -476,6 +486,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(boundToLocalTime);
+    }
+    if(finalizationDelayFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(finalizationDelay);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -1052,6 +1068,28 @@ public:
   {
     return boundToLocalTimeFlag;
   }
+  const std::string& getFinalizationDelay()const
+  {
+    if(!finalizationDelayFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("finalizationDelay");
+    }
+    return finalizationDelay;
+  }
+  void setFinalizationDelay(const std::string& argValue)
+  {
+    finalizationDelay=argValue;
+    finalizationDelayFlag=true;
+  }
+  std::string& getFinalizationDelayRef()
+  {
+    finalizationDelayFlag=true;
+    return finalizationDelay;
+  }
+  bool hasFinalizationDelay()const
+  {
+    return finalizationDelayFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -1207,6 +1245,11 @@ public:
     {
       ds.writeTag(boundToLocalTimeTag);
     ds.writeBoolLV(boundToLocalTime); 
+    }
+    if(finalizationDelayFlag)
+    {
+      ds.writeTag(finalizationDelayTag);
+    ds.writeStrLV(finalizationDelay); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -1468,6 +1511,15 @@ public:
           boundToLocalTime=ds.readBoolLV();
           boundToLocalTimeFlag=true;
         }break;
+        case finalizationDelayTag:
+        {
+          if(finalizationDelayFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("finalizationDelay");
+          }
+          finalizationDelay=ds.readStrLV();
+          finalizationDelayFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -1584,6 +1636,7 @@ protected:
   static const int32_t messageTimeToLiveTag=28;
   static const int32_t creationDateTag=29;
   static const int32_t boundToLocalTimeTag=30;
+  static const int32_t finalizationDelayTag=31;
 
   int connId;
 
@@ -1613,6 +1666,7 @@ protected:
   std::string messageTimeToLive;
   std::string creationDate;
   bool boundToLocalTime;
+  std::string finalizationDelay;
 
   bool nameFlag;
   bool userIdFlag;
@@ -1640,6 +1694,7 @@ protected:
   bool messageTimeToLiveFlag;
   bool creationDateFlag;
   bool boundToLocalTimeFlag;
+  bool finalizationDelayFlag;
 };
 
 }

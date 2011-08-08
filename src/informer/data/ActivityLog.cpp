@@ -342,7 +342,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                 ::memcpy(buf.get(),"00",2);
             }
             fg_.write(buf.get(),buf.GetPos());
-            dlvInfo_->incMsgStats(region,msg.state,1,fromState,nchunks);
+            dlvInfo_->incMsgStats(region,currentTime,msg.state,1,fromState,nchunks);
         }
 
         // writing final log

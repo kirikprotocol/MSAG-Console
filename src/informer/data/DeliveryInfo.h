@@ -49,6 +49,7 @@ struct DeliveryInfoData
   bool finalDlvRecords;
   bool finalMsgRecords;
   bool boundToLocalTime;
+  std::string finalizationDelay; // HH:MM:SS or empty
 };
 
 
@@ -120,6 +121,11 @@ public:
 
     /// return active period end in seconds since midnight (localtime) or -1
     inline timediff_type getActivePeriodEnd() const { return activePeriodEnd_; }
+
+    /// return the number of seconds allowed to wait for new messages
+    inline timediff_type getFinalizationDelay() const {
+        return finalizationDelay_;
+    }
 
     /// check activity time.
     /// @return number of seconds to wait until active period.
@@ -197,10 +203,15 @@ public:
 
     /// increment stats, optionally decrementing fromState
     void incMsgStats( const Region& region,
+                      msgtime_type  currentTime,
                       uint8_t state,
                       int     value = 1,
                       uint8_t fromState = 0,
                       int     smsValue = 0 );
+
+    inline msgtime_type getLastStatTime() const {
+        return lastStatTime_;
+    }
 
     /// the method pops released incremental stats.
     /// @return true if stats is filled.
@@ -245,6 +256,7 @@ private:
     timediff_type         validityPeriod_;
     timediff_type         messageTimeToLive_;
     timediff_type         archivationTime_;
+    timediff_type         finalizationDelay_; // may be 0
     int                   activeWeekDays_;
     smsc::sms::Address    sourceAddress_;
     RetryString           retryPolicy_;
@@ -253,6 +265,7 @@ private:
 
     mutable smsc::core::synchronization::Mutex statLock_;
     DeliveryStats                      stats_;
+    msgtime_type                       lastStatTime_; // not persistent
 
     struct StatNode : public smsc::core::buffers::IntrListNodeBase<StatNode, IncStat> {};
     typedef smsc::core::buffers::IntrList< StatNode > StatList;
