@@ -119,60 +119,93 @@ public class SmsOperativeExport extends SmsExport {
         return con;
     }
 
+    private List listStoreFiles() {
+      String filenamePrefix = new File(smsstorePath).getName();
+      int i = filenamePrefix.lastIndexOf('.');
+      if (i>0)
+        filenamePrefix = filenamePrefix.substring(0, i);
+
+      File[] files = new File(smsstorePath).getParentFile().listFiles();
+      if (files == null)
+        return new ArrayList();
+
+      List result = new ArrayList();
+      for (int j=0; j<files.length; j++) {
+        if (files[j].getName().startsWith(filenamePrefix))
+          result.add(files[j].getAbsolutePath());
+      }
+      return result;
+    }
+
+    protected boolean readMessages(ExportSettings export, Map result) throws AdminException, IOException {
+      List opstoreFiles = listStoreFiles();
+      boolean haveArc = false;
+      for (Iterator iter = opstoreFiles.iterator(); iter.hasNext();) {
+        String file = (String) iter.next();
+        boolean res = readMessages(new File(file), export, result);
+        haveArc = haveArc || res;
+      }
+      return haveArc;
+    }
+
+    private boolean readMessages(File f, ExportSettings export, Map msgsFull) throws IOException, AdminException {
+      InputStream input = null;
+      long tm = 0;
+      boolean haveArc = false;
+      logger.info("start reading operative file " + f.getName() + " in: " + new Date());
+      try {
+        input = new BufferedInputStream(new FileInputStream(f));
+        tm = System.currentTimeMillis();
+        String FileName = Message.readString(input, 9);
+        int version = (int) Message.readUInt32(input);
+        if (version > 0x010000) haveArc = true;
+
+        while (true) {
+          int msgSize1 = (int) Message.readUInt32(input);
+          byte message[] = new byte[msgSize1];
+          Functions.readBuffer(input, message, msgSize1);
+          int msgSize2 = (int) Message.readUInt32(input);
+
+          if (msgSize1 != msgSize2) throw new AdminException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
+          InputStream bis = new ByteArrayInputStream(message);
+          long msgId = Message.readInt64(bis);
+          Long lmsgId = new Long(msgId);
+
+          Message.readUInt32(bis); // Skip seq
+          Message.readString(bis,1); // Skip final
+
+          int status = Message.readUInt8(bis);
+
+          if (status == SmsRow.MSG_STATE_ENROUTE) {
+            Sms sms = new Sms(msgId, status, bis);
+            msgsFull.put(lmsgId, sms);
+          } else
+            msgsFull.remove(lmsgId);
+        } //while(true)
+      } catch (EOFException e) {
+      } finally {
+        if (input != null)
+          input.close();
+      }
+      logger.info("end reading operative file " + f.getName() + " in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000 + " sec.");
+      return haveArc;
+    }
+
     protected void _export(ExportSettings export) throws AdminException {
         final String tablesPrefix = export.getTablesPrefix();
         String CREATE_PROC_SQL = CREATE_PROC_INSERT_RECORD + INSERT_OP_SQL + tablesPrefix + INSERT_FIELDS + INSERT_VALUES;
-        InputStream input = null;
 
         HashMap msgsFull = new HashMap(5000);
+
         long tm = 0;
         Connection conn = null;
         PreparedStatement createprocStmt = null;
         OracleCallableStatement callinsertStmt = null;
-        boolean haveArc = false;
         try {
-            input = new BufferedInputStream(new FileInputStream(smsstorePath));
-            logger.info("start reading operative file in: " + new Date());
-            tm = System.currentTimeMillis();
-            String FileName = Message.readString(input, 9);
-            int version = (int) Message.readUInt32(input);
-            if (version > 0x010000) haveArc = true;
-            try {
-                SmsFileImport resp = new SmsFileImport();
-
-                int j = 0;
-                while (true) {
-                    int msgSize1 = (int) Message.readUInt32(input);
-                    byte message[] = new byte[msgSize1];
-                    Functions.readBuffer(input, message, msgSize1);
-                    int msgSize2 = (int) Message.readUInt32(input);
-
-                    if (msgSize1 != msgSize2) throw new AdminException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
-                    InputStream bis = new ByteArrayInputStream(message);
-                    long msgId = Message.readInt64(bis);
-                    Long lmsgId = new Long(msgId);
-
-                    Message.readUInt32(bis); // Skip seq
-                    Message.readString(bis,1); // Skip final
-
-                    int status = Message.readUInt8(bis);
-
-                    j++;
-                    if (status == SmsRow.MSG_STATE_ENROUTE) {
-                      Sms sms = new Sms(msgId, status, bis);
-                      msgsFull.put(lmsgId, sms);
-                    } else
-                      msgsFull.remove(lmsgId);
-
-
-                } //while(true)
-            } catch (EOFException e) {
-            }
-            logger.info("end reading operative file in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000 + " sec.");
-            logger.info("start clearing old data from Table in: " + new Date());
-            tm = System.currentTimeMillis();
+            boolean haveArc = readMessages(export, msgsFull);
+            logger.info("Connecting to DB...");
             conn = getOracleConnection(export);
-
+            logger.info("Clearing table...");
             clearTable(conn, tablesPrefix, null);
             logger.info("end clearing old data from Table in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
             tm = System.currentTimeMillis();
@@ -228,13 +261,7 @@ public class SmsOperativeExport extends SmsExport {
             }
             logger.error("Unexpected exception occured exporting operative store file", e);
         } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    logger.warn("can't close file");
-                }
-            }
+
             logger.info("end export in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
             closeStatement(callinsertStmt);
             if (conn != null) {
