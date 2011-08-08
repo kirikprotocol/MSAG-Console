@@ -52,10 +52,12 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   {
     did.archivationPeriod=di.getArchivationPeriod();
   }
+  /*
   if(di.hasFinalizationDelay())
   {
     did.finalizationDelay=di.getFinalizationDelay();
   }
+   */
   did.flash=di.getFlash();
   did.useDataSm=di.getUseDataSm();
   switch(di.getDeliveryMode().getValue())
@@ -124,10 +126,12 @@ void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoDa
   {
     di.setArchivationPeriod(did.archivationPeriod);
   }
+  /*
   if(!did.finalizationDelay.empty())
   {
     di.setFinalizationDelay(did.finalizationDelay);
   }
+   */
   di.setFlash(did.flash);
   di.setUseDataSm(did.useDataSm);
   switch(did.deliveryMode)
