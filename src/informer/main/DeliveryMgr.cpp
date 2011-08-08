@@ -452,6 +452,7 @@ public:
                     }
                     continue;
                 }
+
             }
             const userid_type userId = info.getUserInfo().getUserId();
 
@@ -507,6 +508,12 @@ public:
                 } while ( is );
                 dis.clear();
             } // while there are incremental stat records
+
+            // check finalize for active dlv
+            if ( DLVSTATE_ACTIVE == dlv->getState() ) {
+                dlv->checkFinalize();
+            }
+
         } while (true);
     }
 
