@@ -1599,7 +1599,7 @@ void InfosmeCoreV1::loadUsers( const char* userId )
             const unsigned totaldlv = unsigned(cwrap.getInt("totalDeliveries",-1,-1,100000));
             const std::string maxFinDelayStr = cwrap.getString("maxFinalizationDelay","");
             const timediff_type maxFinDelay = 
-                maxFinDelayStr.empty() ? 0 : parseTime(maxFinDelayStr.c_str(),true);
+                maxFinDelayStr.empty() ? 3600 : parseTime(maxFinDelayStr.c_str(),true);
             const std::string password = cwrap.getString("password");
             uservec.push_back(UserInfoPtr(new UserInfo(*this,
                                                        i->c_str(),
