@@ -26,9 +26,11 @@ import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionContext;
 import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
+import mobi.eyeline.informer.admin.service.ServiceInfo;
 import mobi.eyeline.informer.admin.siebel.SiebelContext;
 import mobi.eyeline.informer.admin.siebel.SiebelProvider;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
+import mobi.eyeline.informer.admin.smppgw.*;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -49,14 +51,14 @@ import java.util.List;
  *
  * @author Aleksandr Khalitov
  */
-public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext, RestrictionContext, ArchiveContext {
-
-
+public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext, RestrictionContext, ArchiveContext, SmppGWConfigManagerContext {
 
   protected User2RegionDep user2regionDep;
   protected Delivery2UserDep delivery2UserDep;
   protected Restriction2UserDep restriction2UserDep;
   protected Region2SmscDep region2smscDep;
+  protected SmppGW2DeliveryDep smppGW2DeliveryDep;
+  protected SmppGW2UserDep smppGW2UserDep;
 
   protected RestrictionProvider restrictionProvider;
   protected DeliveryNotificationsProvider deliveryNotificationsProvider;
@@ -67,6 +69,12 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   protected ArchiveRequestsManager archiveRequestsManager;
 
   protected DeliveryManager archiveDeliveryManager;
+
+  protected SmppGWServiceManager smppGWServiceManager;
+
+  protected SmppGWConfigManager smppGWManager;
+
+  private SmppGW smppGW;
 
   public AdminContext() {
   }
@@ -99,6 +107,13 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
         archiveDeliveryManager = new DeliveryManager(archiveDaemonSettings.getDcpHost(), archiveDaemonSettings.getDcpPort(), workDir, fileSystem);
         archiveRequestsManager = new ArchiveRequestsManager(this, this.webConfig.getArchiveSettings());
       }
+      ServiceInfo si = serviceManager.getService(SmppGWServiceManager.SERVICE_ID);
+      if (si != null) {
+        smppGWServiceManager = new SmppGWServiceManager(serviceManager);
+        File configDir = new File(si.getBaseDir().getAbsolutePath()+File.separatorChar+"conf");
+        smppGW = new SmppGWImpl(new File(configDir, "config.properties"), fileSystem);
+        smppGWManager = new SmppGWConfigManager(smppGW, configDir, new File(configDir, "backup") , this);
+      }
 
     } catch (AdminException e) {
       throw new InitException(e);
@@ -112,6 +127,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     delivery2UserDep = new Delivery2UserDep(deliveryManager, usersManager);
     restriction2UserDep = new Restriction2UserDep(restrictionProvider, usersManager);
     region2smscDep = new Region2SmscDep(regionsManager, smscManager);
+    if(smppGWManager != null) {
+      smppGW2DeliveryDep = new SmppGW2DeliveryDep(smppGWManager);
+      smppGW2UserDep = new SmppGW2UserDep(smppGWManager);
+    }
   }
 
   public void shutdown() {
@@ -128,6 +147,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
     if(archiveRequestsManager != null) {
       archiveRequestsManager.shutdown();
+    }
+    if(smppGW != null) {
+      smppGW.shutdown();
     }
 
     super.shutdown();
@@ -194,6 +216,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   @Override
+  public boolean containsDelivery(String login, int deliveryId) throws AdminException {
+    return getDelivery(login, deliveryId) != null;
+  }
+
+  @Override
   public UnmodifiableDeliveryManager getDeliveryManager() {
     return archiveDeliveryManager;
   }
@@ -222,6 +249,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   public synchronized void updateUser(User u) throws AdminException {
     user2regionDep.updateUser(u);
     usersManager.updateUser(u);
+    if(smppGW2UserDep != null) {
+      smppGW2UserDep.updateUser(u);
+    }
     updateLocalFtpAccounts();
     restriction2UserDep.updateUser(u);
   }
@@ -444,7 +474,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {
-    return deliveryChangesDetector.getProcessedNotificationsFiles(startDate,endDate);
+    return deliveryChangesDetector.getProcessedNotificationsFiles(startDate, endDate);
   }
 
   // ARCHIVE =======================================================================================================================
@@ -545,6 +575,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public void archivateDelivery(String login, int deliveryId) throws AdminException {
+    if(smppGW2DeliveryDep != null) {
+      smppGW2DeliveryDep.archivateDelivery(deliveryId);
+    }
     if(!isArchiveDaemonDeployed()) {
       throw new IntegrityException("archiveDaemon.undeployed");
     }
@@ -563,6 +596,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public void dropDelivery(String login, int deliveryId) throws AdminException {
+    if(smppGW2DeliveryDep != null) {
+      smppGW2DeliveryDep.removeDelivery(deliveryId);
+    }
     User user = getUser(login);
     try {
       lockDelivery(deliveryId);
@@ -879,8 +915,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return isArchiveDaemonDeployed() ? archiveDaemonManager.getArchiveDaemonHosts() : null;
   }
 
-  
-   public void startPvss() throws AdminException {
+
+  public void startPvss() throws AdminException {
     if(isPVSSDeployed()) {
       pvssManager.startPVSS();
     }
@@ -891,18 +927,49 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       pvssManager.stopPVSS();
     }
   }
-  
+
   public List<String> getPvssHosts() throws AdminException {
     return isPVSSDeployed() ? pvssManager.getPVSSHosts() : null;
   }
-  
+
   public String getPvssOnlineHosts() throws AdminException {
     return isPVSSDeployed() ? pvssManager.getPVSSOnlineHost() : null;
-  }     
-  
+  }
+
   public void switchPvss(String toHost) throws AdminException {
     if(isPVSSDeployed()) {
       pvssManager.switchPVSS(toHost);
+    }
+  }
+
+  public boolean isSmppGWDeployed() {
+    return smppGWServiceManager != null;
+  }
+
+
+  public void startSmppGW() throws AdminException {
+    if(isSmppGWDeployed()) {
+      smppGWServiceManager.startSmppGW();
+    }
+  }
+
+  public void stopSmppGW() throws AdminException {
+    if(isSmppGWDeployed()) {
+      smppGWServiceManager.stopSmppGW();
+    }
+  }
+
+  public List<String> getSmppGWHosts() throws AdminException {
+    return isSmppGWDeployed() ? smppGWServiceManager.getSmppGWHosts() : null;
+  }
+
+  public String getSmppGWOnlineHosts() throws AdminException {
+    return isSmppGWDeployed() ? smppGWServiceManager.getSmppGWOnlineHost() : null;
+  }
+
+  public void switchSmppGW(String toHost) throws AdminException {
+    if(isSmppGWDeployed()) {
+      smppGWServiceManager.switchSmppGW(toHost);
     }
   }
 
@@ -984,5 +1051,21 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   public void resendAll(String login, int deliveryId, MessageFilter filter, ResendListener listener) throws AdminException {
     User u = getUser(login);
     deliveryManager.resendAll(login, u.getPassword(), deliveryId, filter, listener);
+  }
+
+  public SmppGWProviderSettings getSmppGWProviderSettings() {
+    return smppGWManager.getProviderSettings();
+  }
+
+  public SmppGWEndpointSettings getSmppGWEndpointSettings() {
+    return smppGWManager.getEndpointSettings();
+  }
+
+  public void updateSmppGWSettings(SmppGWEndpointSettings endpointSettings) throws AdminException {
+    smppGWManager.updateSettings(endpointSettings);
+  }
+
+  public void updateSmppGWSettings(SmppGWProviderSettings providerSettings) throws AdminException {
+    smppGWManager.updateSettings(providerSettings);
   }
 }

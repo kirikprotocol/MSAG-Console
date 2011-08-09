@@ -1,0 +1,57 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi" xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+<ui:composition>
+
+
+  <tr:form>
+    <eye:buttons>
+      <eye:button>
+        <tr:commandLink text="#{msg['done.button']}" shortDesc="#{msg['smppgw.provider.edit.done']}" action="#{smppgwProvider.next}"/>
+      </eye:button>
+      <eye:button>
+        <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['smppgw.provider.edit.cancel']}" action="#{smppgwProvider.cancel}"/>
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
+
+    <eye:delimiter/>
+
+    <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign">
+
+      <h:outputText value="#{smppGWRouteBundle.deliveryId}"/>
+      <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
+        <h:outputText value="#{smppgwProvider.activePage.deliveryName}"/>
+        <h:commandButton value="#{msg['change.button']}" action="#{smppgwProvider.back}"/>
+      </h:panelGrid>
+
+      <h:outputText value="#{smppGWRouteBundle.serviceNumbers}"/>
+      <eye:dynamicTable value="#{smppgwProvider.activePage.serviceNumbers}">
+        <eye:textColumn name="address" maxLength="21" width="300px" />
+      </eye:dynamicTable>
+
+    </h:panelGrid>
+
+    <eye:delimiter/>
+
+
+    <eye:buttons>
+      <eye:button>
+        <tr:commandLink text="#{msg['done.button']}" shortDesc="#{msg['smppgw.provider.edit.done']}" action="#{smppgwProvider.next}"/>
+      </eye:button>
+      <eye:button>
+        <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['smppgw.provider.edit.cancel']}" action="#{smppgwProvider.cancel}"/>
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
+  </tr:form>
+
+</ui:composition>
+
+</html>
+
+

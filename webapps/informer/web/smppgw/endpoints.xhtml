@@ -1,0 +1,71 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smppgw.endpoints']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smppgw">
+
+      <eye:dataTableFilter bean="#{smppgwEndpoints}" clearAction="clear" applyAction="apply">
+        <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign">
+          <h:outputText value="#{smppGWEndpointBundle.name}"/>
+          <h:inputText value="#{smppgwEndpoints.namePrefix}"/>
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button><tr:commandLink text="#{msg['create.button']}" shortDesc="#{msg['smppgw.endpoint.create']}" action="SMPPGW_ENDPOINT_EDIT"/></eye:button>
+        <eye:button><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['smppgw.endpoint.delete']}" action="#{smppgwEndpoints.remove}"
+             onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+      <eye:dataTable value="#{smppgwEndpoints.connections}" selectedRows="#{smppgwEndpoints.selected}" var="r">
+        <eye:row>
+          <eye:column name="name" title="#{smppGWEndpointBundle.name}" sortable="true" defaultSortOrder="asc" width="30%">
+            <h:commandLink value="#{r.name}" action="SMPPGW_ENDPOINT_EDIT">
+              <f:param name="endpoint" value="#{r.name}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="systemId" title="#{smppGWEndpointBundle.systemId}" sortable="true"  width="70%">
+            <h:outputText value="#{r.systemId}"/>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['create.button']}" shortDesc="#{msg['smppgw.endpoint.delete']}" action="SMPPGW_ENDPOINT_EDIT"/>
+        </eye:button>
+        <eye:button><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['smppgw.endpoint.delete']}" action="#{smppgwEndpoints.remove}"
+             onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

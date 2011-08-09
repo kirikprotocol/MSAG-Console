@@ -24,7 +24,8 @@ public enum Subject {
   DELIVERIES("subject.deliveries"),
   RESTRICTIONS("subject.restrictions"),
   WEBCONFIG("subject.webconfig"),
-  PVSS("subject.pvss");
+  PVSS("subject.pvss"),
+  SMPPGW("subject.smppGW");
 
   private static final Map<String, Subject> map = new HashMap<String, Subject>(values().length) {
     {

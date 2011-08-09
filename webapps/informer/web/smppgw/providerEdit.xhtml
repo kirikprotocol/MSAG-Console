@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smppgw.provider.edit']}"/>
+
+  <ui:define name="content">
+
+      <ui:include src="#{smppgwProvider.activePage.pageId == 'EDIT_SETTINGS' ? 'providerEdit_settings.xhtml' : ''}"/>
+
+      <ui:include src="#{smppgwProvider.activePage.pageId == 'CHOOSE_DELIVERY' ? 'providerEdit_delivery.xhtml' : ''}"/>
+
+      <ui:include src="#{smppgwProvider.activePage.pageId == 'ROUTE_SETTINGS' ? 'providerEdit_route.xhtml' : ''}"/>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

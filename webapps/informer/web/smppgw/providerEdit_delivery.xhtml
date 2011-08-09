@@ -1,0 +1,54 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi" xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+<ui:composition>
+
+  <tr:form>
+
+    <eye:pageSubtitle value="#{msg['smppgw.provider.edit.delivery.choose']}"/>
+
+    <eye:delimiter/>
+
+    <eye:dataTableFilter bean="#{smppgwProvider.activePage}" applyAction="apply" clearAction="clear">
+
+      <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width columnTopLeftAlign">
+
+        <h:outputText value="#{deliveryBundle.name}"/>
+        <h:inputText value="#{smppgwProvider.activePage.nameFilter}"/>
+
+        <h:outputText value="#{deliveryBundle.owner}"/>
+        <h:selectOneMenu value="#{smppgwProvider.activePage.userFilter}">
+          <f:selectItem itemLabel="" itemValue=""/>
+          <f:selectItems value="#{smppgwProvider.activePage.uniqueUsers}"/>
+        </h:selectOneMenu>
+
+      </h:panelGrid>
+
+    </eye:dataTableFilter>
+
+    <eye:delimiter/>
+
+    <eye:dataTable value="#{smppgwProvider.activePage.deliveries}" var="r">
+      <eye:row>
+        <eye:column align="center" name="name" title="#{deliveryBundle.name}" width="30%" sortable="true" defaultSortOrder="asc">
+          <h:commandLink action="#{smppgwProvider.next}" value="#{r.name}">
+            <f:param value="#{r.id}" name="delivery"/>
+          </h:commandLink>
+        </eye:column>
+        <eye:column name="userId" align="center" title="#{deliveryBundle.owner}" sortable="true">
+          <h:outputText value="#{r.user}"/>
+        </eye:column>
+      </eye:row>
+    </eye:dataTable>
+
+  </tr:form>
+
+</ui:composition>
+
+</html>
+
+

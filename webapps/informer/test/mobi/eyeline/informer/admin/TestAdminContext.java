@@ -23,6 +23,8 @@ import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
 import mobi.eyeline.informer.admin.siebel.SiebelProvider;
+import mobi.eyeline.informer.admin.smppgw.SmppGWServiceManager;
+import mobi.eyeline.informer.admin.smppgw.TestSmppGWConfigManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
@@ -53,14 +55,19 @@ import static org.junit.Assert.assertNotNull;
  */
 public class TestAdminContext extends AdminContext {
 
-  private void prepareServices(File confDir, File archiveConf) throws IOException, AdminException {
+  private void prepareServices(File confDir, File archiveConf, File smppGWConf) throws IOException, AdminException {
     TestUtils.exportResource(TestUsersManager.class.getResourceAsStream("users.xml"), new File(confDir,"users.xml"), false);
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestArchiveDaemonManager.class.getResourceAsStream("config.xml"), new File(archiveConf, "config.xml"), false);
+
+    TestUtils.exportResource(TestSmppGWConfigManager.class.getResourceAsStream("config.properties"), new File(smppGWConf, "config.properties"), false);
+    TestUtils.exportResource(TestSmppGWConfigManager.class.getResourceAsStream("deliveries.xml"), new File(smppGWConf, "deliveries.xml"), false);
+    TestUtils.exportResource(TestSmppGWConfigManager.class.getResourceAsStream("endpoints.xml"), new File(smppGWConf, "endpoints.xml"), false);
+
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
     TestUtils.exportResource(TimezonesConfig.class.getResourceAsStream("timezones.xml"), new File(confDir, "timezones.xml"), false);
-   }
+  }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
     if(!fileSystem.exists(dstStatDir)) {
@@ -213,11 +220,12 @@ public class TestAdminContext extends AdminContext {
       File servicesDir = new File(appBaseDir, "services");
       File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
       File archiveDaemonConf = new File(servicesDir, "ArchiveDaemon"+File.separatorChar+"conf");
+      File smppGWConf = new File(servicesDir, "dcpgw"+File.separatorChar+"conf");
       File statDir = new File(appBaseDir, "stat");
       File statusLogsDir = new File(appBaseDir, "statuslogs");
 
       workDir = new File(webConfig.getWorkDir());
-      
+
       if(!workDir.exists() && !workDir.mkdirs()) {
         throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
       }
@@ -225,7 +233,7 @@ public class TestAdminContext extends AdminContext {
       confDir.mkdirs();
       archiveDaemonConf.mkdirs();
 
-      prepareServices(confDir, archiveDaemonConf);
+      prepareServices(confDir, archiveDaemonConf, smppGWConf);
       prepareStat(statDir,fileSystem);
       prepareNotificationLogs(statusLogsDir,fileSystem);
 
@@ -241,6 +249,8 @@ public class TestAdminContext extends AdminContext {
       archiveDaemonManager = new TestArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
       pvssManager = new PVSSManager(serviceManager);
+      smppGWServiceManager = new SmppGWServiceManager(serviceManager);
+      smppGWManager = new TestSmppGWConfigManager(smppGWConf, new File(smppGWConf, "backup") , this);
       infosme = new TestInfosme();
       usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 

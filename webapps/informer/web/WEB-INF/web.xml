@@ -283,6 +283,7 @@
       <url-pattern>/cdr/*</url-pattern>
       <url-pattern>/journal/*</url-pattern>
       <url-pattern>/monitoring/*</url-pattern>
+      <url-pattern>/smppgw/*</url-pattern>
       <url-pattern>/notifications/*</url-pattern>
       <url-pattern>/stats/messagesByUser.faces</url-pattern>
       <url-pattern>/stats/statSizeByPeriod.faces</url-pattern>

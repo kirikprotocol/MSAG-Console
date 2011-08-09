@@ -165,6 +165,38 @@
               </td>
             </tr>
             </c:if>
+            <c:if test="#{informerStatus.smppGWDeployed}">
+              <c:set var="rowIndex" value="#{rowIndex+1}"/>
+              <tr class="row#{rowIndex%2}">
+              <td width="center">
+                <h:graphicImage value="/images/ic_internal.gif" rendered="#{informerStatus.smppGWOnlineHost != null}"/>
+                <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{informerStatus.smppGWOnlineHost == null}"/>
+              </td>
+              <td width="center"><h:outputText value="#{msg['status.page.service.smppGW']}"/></td>
+              <td width="center"><h:outputText value="#{informerStatus.smppGWOnlineHost}" style="color:GREEN"/></td>
+              <td width="center">
+                <h:panelGroup>
+                  <h:panelGroup rendered="#{!informerStatus.smppGWSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.start']}" action="#{informerStatus.startSmppGW}" rendered="#{informerStatus.smppGWOnlineHost == null}"/>
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopSmppGW}" rendered="#{informerStatus.smppGWOnlineHost != null}"/>
+                  </h:panelGroup>
+
+                  <h:panelGroup rendered="#{informerStatus.smppGWSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopSmppGW}" rendered="#{informerStatus.smppGWOnlineHost != null}"/>
+                    <h:outputText value=" #{msg['status.page.or']} " rendered="#{informerStatus.smppGWOnlineHost != null}"/>
+                    <h:commandLink value="#{msg['status.page.switch']}" action="#{informerStatus.switchSmppGWHost}" rendered="#{informerStatus.smppGWOnlineHost != null}"/>
+
+                    <h:commandLink value="#{msg['status.page.start_at']}" action="#{informerStatus.switchSmppGWHost}" rendered="#{informerStatus.smppGWOnlineHost == null}"/>
+                    <h:outputText value="  "/>
+
+                    <h:selectOneMenu value="#{informerStatus.smppGWSwitchTo}">
+                      <f:selectItems value="#{informerStatus.smppGWHosts}"/>
+                    </h:selectOneMenu>
+                  </h:panelGroup>
+                </h:panelGroup>
+              </td>
+            </tr>
+            </c:if>
 
           </table>
         </h:panelGroup>

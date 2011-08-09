@@ -23,6 +23,7 @@ public class TestServiceManagerHA extends ServiceManager {
     services.put("Informer", getInfo("Informer", true));
     services.put("ArchiveDaemon", getInfo("ArchiveDaemon", true));
     services.put("pvss", getInfo("pvss", true));
+    services.put("dcpgw", getInfo("dcpgw", true));
   }
 
   private ServiceInfo getInfo(String serviceId, boolean online) {

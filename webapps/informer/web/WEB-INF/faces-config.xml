@@ -77,6 +77,21 @@
       <var>messagesRBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.smppgw.SmppGWEndpoint</base-name>
+      <var>smppGWEndpointBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.smppgw.SmppGWProvider</base-name>
+      <var>smppGWProviderBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.smppgw.SmppGWRoute</base-name>
+      <var>smppGWRouteBundle</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -161,6 +176,11 @@
   <converter>
     <converter-id>authErrorConverter</converter-id>
     <converter-class>mobi.eyeline.informer.web.controllers.AuthErrorConverter</converter-class>
+  </converter>
+
+  <converter>
+    <converter-id>csvConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.JsonConverter</converter-class>
   </converter>
 
   <render-kit>
@@ -537,6 +557,31 @@
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>smppgwProviders</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.smppgw.SmppGWProvidersController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
+  <managed-bean>
+    <managed-bean-name>smppgwEndpoints</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.smppgw.SmppGWEndpointsController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>smppgwEndpoint</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.smppgw.SmppGWEndpointEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>smppgwProvider</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.smppgw.SmppGWProviderEditController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
 
   <navigation-rule>
     <navigation-case>
@@ -784,6 +829,27 @@
     <navigation-case>
       <from-outcome>MESS_ERRORS</from-outcome>
       <to-view-id>/stats/messErrors.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>SMPPGW_PROVIDERS</from-outcome>
+      <to-view-id>/smppgw/providers.xhtml</to-view-id>
+    </navigation-case>
+
+
+    <navigation-case>
+      <from-outcome>SMPPGW_PROVIDER_EDIT</from-outcome>
+      <to-view-id>/smppgw/providerEdit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>SMPPGW_ENDPOINTS</from-outcome>
+      <to-view-id>/smppgw/endpoints.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>SMPPGW_ENDPOINT_EDIT</from-outcome>
+      <to-view-id>/smppgw/endpointEdit.xhtml</to-view-id>
     </navigation-case>
 
   </navigation-rule>

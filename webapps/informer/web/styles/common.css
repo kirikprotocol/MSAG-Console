@@ -183,6 +183,10 @@ div.query_result {
   width:100px;
 }
 
+.columnCenter{
+ text-align: center;
+}
+
 .column100WidthNoWrap {
   width:100px;
   white-space:nowrap;
@@ -216,6 +220,16 @@ div.query_result {
 }
 .column0Width {
   width:0px;
+}
+.column10WidthCenter {
+  text-align: center;
+  width:10px;
+}
+.column10Width {
+  width:10px;
+}
+.column100PerWidth {
+  width:100%;
 }
 .column0WidthLeft {
   width:0px;

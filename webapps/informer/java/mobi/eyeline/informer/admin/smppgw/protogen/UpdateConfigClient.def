@@ -1,0 +1,7 @@
+include UpdateConfigMessages.def
+
+protocol UpdateConfigClient
+  UpdateConfig outmsg
+  UpdateConfigResp inmsg
+end
+

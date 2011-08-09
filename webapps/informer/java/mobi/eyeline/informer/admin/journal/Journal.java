@@ -45,6 +45,7 @@ public class Journal {
   private final FtpServerDiffHelper ftpserver = new FtpServerDiffHelper();
   private final ArchiveDaemonDiffHelper archiveDaemon = new ArchiveDaemonDiffHelper();
   private final PvssDiffHelper pvss = new PvssDiffHelper();
+  private final SmppGWDiffHelper smppGW = new SmppGWDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -333,6 +334,37 @@ public class Journal {
    */
   public void logPvssSwitch(String toHost, String user) throws AdminException {
     pvss.logPvssSwitch(this, toHost, user);
+  }
+
+  /**
+   * Добавляет в журнал запись о старте SmppGW
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logSmppGWStart(String user) throws AdminException {
+    smppGW.logSmppGWStart(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об остановке SmppGW
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logSmppGWStop(String user) throws AdminException {
+    smppGW.logSmppGWStop(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись о переключении SmppGW на другой хост
+   *
+   * @param toHost новый хост
+   * @param user   пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logSmppGWSwitch(String toHost, String user) throws AdminException {
+    smppGW.logSmppGWSwitch(this, toHost, user);
   }
 
   /**

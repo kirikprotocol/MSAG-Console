@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
  */
 public class ValidationHelper {
 
+  private static final Pattern LATIN_DIGIT_PATTERN = Pattern.compile("^[a-zA-Z0-9]*$");
+
   private final String paramNameBundle;
 
   public ValidationHelper(String paramNameBundle) {
@@ -38,6 +40,12 @@ public class ValidationHelper {
     for (int val : value)
       if (val <= 0)
         throw new ValidationException(paramNameBundle, argName);
+  }
+
+  public void checkLatinDigit(String argName, String value) throws AdminException {
+    if(value != null && !LATIN_DIGIT_PATTERN.matcher(value).matches()) {
+      throw new ValidationException(paramNameBundle, argName);
+    }
   }
 
   public void checkNegative(String argName, int value) throws AdminException {

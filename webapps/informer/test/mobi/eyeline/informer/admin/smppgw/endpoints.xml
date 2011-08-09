@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+<config>
+
+  <section name="endpoints">
+
+    <section name="endpoint1">
+      <param name="systemId" type="string">systemId1</param>
+      <param name="password" type="string">password</param>
+    </section>
+
+    <section name="endpoint1">
+      <param name="systemId" type="string">systemId2</param>
+      <param name="password" type="string">password</param>
+    </section>
+
+  </section>
+
+</config>

@@ -33,6 +33,10 @@ public class InformerStatusController extends InformerController {
   private List<String> pvssHosts;
   private String pvssSwitchTo;
 
+  private String smppGWOnlineHost;
+  private List<String> smppGWHosts;
+  private String smppGWSwitchTo;
+
   public InformerStatusController() {
     try {
       reload();
@@ -62,6 +66,12 @@ public class InformerStatusController extends InformerController {
       this.pvssOnlineHost = c.getPVSSOnlineHost();
     } else {
       pvssHosts = Collections.emptyList();
+    }
+    if (c.isSmppGWDeployed()) {
+      this.smppGWHosts = c.getSmppGWHosts();
+      this.smppGWOnlineHost = c.getSmppGWOnlineHost();
+    } else {
+      smppGWHosts = Collections.emptyList();
     }
   }
 
@@ -142,6 +152,11 @@ public class InformerStatusController extends InformerController {
     return getConfig().isPVSSDeployed();
   }
 
+
+  public boolean isSmppGWDeployed() {
+    return getConfig().isSmppGWDeployed();
+  }
+
   public String startFtpServer() {
     if (ftpServerOnlineHost == null) {
       try {
@@ -169,6 +184,18 @@ public class InformerStatusController extends InformerController {
     if (pvssOnlineHost == null) {
       try {
         getConfig().startPVSS(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
+
+  public String startSmppGW() {
+    if (smppGWOnlineHost == null) {
+      try {
+        getConfig().startSmppGW(getUserName());
         reload();
       } catch (AdminException e) {
         addError(e);
@@ -252,6 +279,17 @@ public class InformerStatusController extends InformerController {
     }
     return null;
   }
+  public String stopSmppGW() {
+    if (smppGWOnlineHost != null) {
+      try {
+        getConfig().stopSmppGW(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
 
   public String switchArchiveDaemonHost() {
     try {
@@ -271,12 +309,24 @@ public class InformerStatusController extends InformerController {
     }
     return null;
   }
+  public String switchSmppGWHost() {
+    try {
+      getConfig().switchSmppGW(smppGWSwitchTo, getUserName());
+      reload();
+    } catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
 
   public String getArchiveDaemonOnlineHost() {
     return archiveDaemonOnlineHost;
   }
   public String getPvssOnlineHost() {
     return pvssOnlineHost;
+  }
+  public String getSmppGWOnlineHost() {
+    return smppGWOnlineHost;
   }
 
   public List<SelectItem> getArchiveDaemonHosts() {
@@ -330,6 +380,32 @@ public class InformerStatusController extends InformerController {
 
   public void setPvssSwitchTo(String pvssSwitchTo) {
     this.pvssSwitchTo = pvssSwitchTo;
+  }
+  public List<SelectItem> getSmppGWHosts() {
+    List<SelectItem> items = new ArrayList<SelectItem>(smppGWHosts.size());
+    for (String host : smppGWHosts) {
+      if (smppGWOnlineHost == null || !host.equals(smppGWOnlineHost))
+        items.add(new SelectItem(host, host));
+    }
+    Collections.sort(items, new Comparator<SelectItem>() {
+      @Override
+      public int compare(SelectItem o1, SelectItem o2) {
+        return o1.getLabel().compareTo(o2.getLabel());
+      }
+    });
+    return items;
+  }
+
+  public boolean isSmppGWSwitchAllowed() {
+    return smppGWHosts != null && smppGWHosts.size() > 1;
+  }
+
+  public String getSmppGWSwitchTo() {
+    return smppGWSwitchTo;
+  }
+
+  public void setSmppGWSwitchTo(String smppGWSwitchTo) {
+    this.smppGWSwitchTo = smppGWSwitchTo;
   }
 
 }

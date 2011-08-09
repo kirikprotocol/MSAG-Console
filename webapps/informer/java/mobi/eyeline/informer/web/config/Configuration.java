@@ -18,6 +18,8 @@ import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
+import mobi.eyeline.informer.admin.smppgw.SmppGWEndpointSettings;
+import mobi.eyeline.informer.admin.smppgw.SmppGWProviderSettings;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -300,10 +302,6 @@ public class Configuration {
     return context.isArchiveDaemonDeployed();
   }
 
-  public boolean isPVSSDeployed() {
-    return context.isPVSSDeployed();
-  }
-
   public String getFtpServerOnlineHost() throws AdminException {
     return context.getFtpServerOnlineHost();
   }
@@ -355,14 +353,18 @@ public class Configuration {
     journal.logArchiveDaemonStart(user);
   }
 
-  public void startPVSS(String user) throws AdminException {
-    context.startPvss();
-    journal.logPvssStart(user);
-  }
-
   public void stopArchiveDaemon(String user) throws AdminException {
     context.stopArchiveDaemon();
     journal.logArchiveDaemonStop(user);
+  }
+
+  public boolean isPVSSDeployed() {
+    return context.isPVSSDeployed();
+  }
+
+  public void startPVSS(String user) throws AdminException {
+    context.startPvss();
+    journal.logPvssStart(user);
   }
 
   public void stopPvss(String user) throws AdminException {
@@ -375,6 +377,41 @@ public class Configuration {
     journal.logPvssSwitch(toHost, user);
   }
 
+  public String getPVSSOnlineHost() throws AdminException {
+    return context.getPvssOnlineHosts();
+  }
+
+  public List<String> getPVSSHosts() throws AdminException {
+    return context.getPvssHosts();
+  }
+
+  public String getSmppGWOnlineHost() throws AdminException {
+    return context.getSmppGWOnlineHosts();
+  }
+
+  public List<String> getSmppGWHosts() throws AdminException {
+    return context.getSmppGWHosts();
+  }
+  public boolean isSmppGWDeployed() {
+    return context.isSmppGWDeployed();
+  }
+
+  public void startSmppGW(String user) throws AdminException {
+    context.startSmppGW();
+    journal.logSmppGWStart(user);
+  }
+
+  public void stopSmppGW(String user) throws AdminException {
+    context.stopSmppGW();
+    journal.logSmppGWStop(user);
+  }
+
+  public void switchSmppGW(String toHost, String user) throws AdminException {
+    context.switchSmppGW(toHost);
+    journal.logSmppGWSwitch(toHost, user);
+  }
+
+
   public void switchArchiveDaemon(String toHost, String user) throws AdminException {
     context.switchArchiveDaemon(toHost);
     journal.logArchiveDaemonSwitch(toHost, user);
@@ -384,16 +421,8 @@ public class Configuration {
     return context.getArchiveDaemonOnlineHost();
   }
 
-  public String getPVSSOnlineHost() throws AdminException {
-    return context.getPvssOnlineHosts();
-  }
-
   public List<String> getArchiveDaemonHosts() throws AdminException {
     return context.getArchiveDaemonHosts();
-  }
-
-  public List<String> getPVSSHosts() throws AdminException {
-    return context.getPvssHosts();
   }
 
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
@@ -626,5 +655,23 @@ public class Configuration {
 
   public enum ConfigType {
     CONFIG, USERS
+  }
+
+  public SmppGWProviderSettings getSmppGWProviderSettings() {
+    return context.getSmppGWProviderSettings();
+  }
+
+  public SmppGWEndpointSettings getSmppGWEndpointSettings() {
+    return context.getSmppGWEndpointSettings();
+  }
+
+  public void updateSmppGWSettings(SmppGWEndpointSettings endpointSettings) throws AdminException {
+    //todo journal
+    context.updateSmppGWSettings(endpointSettings);
+  }
+
+  public void updateSmppGWSettings(SmppGWProviderSettings providerSettings) throws AdminException {
+    //todo journal
+    context.updateSmppGWSettings(providerSettings);
   }
 }

@@ -28,6 +28,9 @@
             <eye:menubardelimiter/>
             <eye:menubaritem><h:commandLink value="#{msg['cp.resource.list']}" action="CP_RESOURCE_LIST"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.siebel']}" action="SIEBEL"/></eye:menubaritem>
+            <eye:menubardelimiter rendered="#{userSession.smppGWDeployed}"/>
+            <eye:menubaritem rendered="#{userSession.smppGWDeployed}"><h:commandLink value="#{msg['informer.admin.smppgw.endpoints']}" action="SMPPGW_ENDPOINTS"/></eye:menubaritem>
+            <eye:menubaritem rendered="#{userSession.smppGWDeployed}"><h:commandLink value="#{msg['informer.admin.smppgw.providers']}" action="SMPPGW_PROVIDERS"/></eye:menubaritem>
             <eye:menubardelimiter/>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.journal']}" action="JOURNAL"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['monitor.page.title']}" action="MONITORING"/></eye:menubaritem>

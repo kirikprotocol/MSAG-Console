@@ -29,6 +29,13 @@
     </protogen>
   </target>
 
+  <target name="gen_smpp_gw_protocol">
+    <protogen language="java" msgPackage="mobi.eyeline.informer.admin.smppgw.protogen.protocol" defFile="java/mobi/eyeline/informer/admin/smppgw/protogen/UpdateConfigClient.def" outDir="java"
+              tempDir="java/mobi/eyeline/informer/admin/smppgw/protogen/tmp">
+      <cgp name="search.path" value="java/mobi/eyeline/informer/admin/smppgw/protogen/"/>
+    </protogen>
+  </target>
+
   <target name="gen_delivery_protocol">
     <protogen language="java" msgPackage="mobi.eyeline.informer.admin.delivery.protogen.protocol" defFile="java/mobi/eyeline/informer/admin/delivery/protogen/DcpClient.def" outDir="java"
               tempDir="java/mobi/eyeline/informer/admin/delivery/protogen/tmp">
@@ -63,7 +70,7 @@ public class Version {${line.separator}
     </echo>
   </target>
    
-  <target name="prebuild" depends="gen_admin_protocol, gen_delivery_protocol, mode, version_dev, version_prod"/>
+  <target name="prebuild" depends="gen_admin_protocol, gen_delivery_protocol, gen_smpp_gw_protocol, mode, version_dev, version_prod"/>
 
   <target name="compile.sources" depends="prebuild">
     <delete dir="${informer.source.classes}" failonerror="false"/>

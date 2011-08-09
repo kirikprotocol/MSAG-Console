@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <section name="provider">
+    <section name="provider1">
+      <!--Parameter contains smpp connections systemIds.-->
+      <param name="endpoint_ids" type="string">systemId1,systemId2</param>
+      <section name="deliveries">
+        <section name="1248">
+          <param name="user" type="string">stepanovd</param>
+          <param name="services_numbers" type="string">10001,10002</param>
+        </section>
+      </section>
+    </section>
+  </section>
+
+  <section name="users">
+    <section name="stepanovd">
+      <param name="password" type="string">stepanovd</param>
+    </section>
+  </section>
+
+</config>

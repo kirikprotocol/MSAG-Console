@@ -38,6 +38,10 @@ public class UserSessionController extends InformerController {
     }
   }
 
+  public boolean isSmppGWDeployed() {
+    return getConfig().isSmppGWDeployed();
+  }
+
   public String logout() {
     HttpSession session = getSession(false);
     if (session != null) {

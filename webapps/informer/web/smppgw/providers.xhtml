@@ -1,0 +1,71 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.smppgw.providers']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smppgw">
+
+      <eye:dataTableFilter bean="#{smppgwProviders}" clearAction="clear" applyAction="apply">
+        <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
+          <h:outputText value="#{smppGWProviderBundle.name}" style="white-space:nowrap;"/>
+          <h:inputText value="#{smppgwProviders.namePrefix}"/>
+          <h:outputText value="#{smppGWRouteBundle.serviceNumber}" style="white-space:nowrap;"/>
+          <h:inputText value="#{smppgwProviders.address}" converter="addressConverter" converterMessage="#{msg['invalid_param_value']} #{smppGWRouteBundle.serviceNumber}"/>
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button><tr:commandLink text="#{msg['create.button']}" shortDesc="#{msg['smppgw.provider.create']}" action="#{smppgwProvider.setProvider}"/></eye:button>
+        <eye:button><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['smppgw.provider.delete']}" action="#{smppgwProviders.remove}"
+             onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+      <eye:dataTable value="#{smppgwProviders.providers}" selectedRows="#{smppgwProviders.selected}" var="r">
+        <eye:row>
+          <eye:column name="name" title="#{smppGWProviderBundle.name}" sortable="true" defaultSortOrder="asc" width="30%">
+            <h:commandLink value="#{r.name}" action="#{smppgwProvider.setProvider}">
+              <f:param name="provider" value="#{r.name}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="descr" title="#{smppGWProviderBundle.descr}" width="70%">
+            <h:outputText value="#{r.descr}"/>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['create.button']}" shortDesc="#{msg['smppgw.provider.delete']}" action="#{smppgwProvider.setProvider}"/>
+        </eye:button>
+        <eye:button><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['smppgw.provider.delete']}" action="#{smppgwProviders.remove}"
+             onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

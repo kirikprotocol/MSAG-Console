@@ -1,0 +1,192 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi" xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+<ui:composition>
+
+    <tr:form id="smppgw">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" shortDesc="#{msg['smppgw.provider.edit.done']}" action="#{smppgwProvider.activePage.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['smppgw.provider.edit.cancel']}" action="SMPPGW_PROVIDERS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+      <eye:pageSubtitle value="#{msg['smppgw.provider.edit.general']}"/>
+
+      <eye:delimiter/>
+
+      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign">
+
+        <h:outputText value="#{smppGWProviderBundle.name}" style="white-space:nowrap;"/>
+        <h:outputText value="#{smppgwProvider.activePage.oldName}" rendered="#{!smppgwProvider.activePage.new}"/>
+        <h:inputText value="#{smppgwProvider.activePage.provider.name}" rendered="#{smppgwProvider.activePage.new}"/>
+
+        <h:outputText value="#{smppGWProviderBundle.descr}" style="white-space:nowrap;"/>
+        <tr:inputText rows="3" columns="50" value="#{smppgwProvider.activePage.provider.descr}" simple="true"/>
+
+      </h:panelGrid>
+
+      <eye:delimiter/>
+
+
+      <h:panelGroup style="padding-left: 10px">
+        <eye:pageSubtitle value="#{msg['smppgw.provider.edit.conns']}"/>
+      </h:panelGroup>
+
+      <h:panelGrid columns="2" columnClasses="column0Width,">
+        <h:outputText value="&#160;"/>
+        <eye:dynamicTable value="#{smppgwProvider.activePage.endpoints}">
+          <eye:selectColumn name="conn" values="#{smppgwProvider.activePage.availableEndpoints}" uniqueValues="true" width="15%"/>
+        </eye:dynamicTable>
+      </h:panelGrid>
+
+      <eye:delimiter/>
+
+      <h:panelGroup style="padding-left: 10px">
+        <eye:pageSubtitle value="#{msg['smppgw.provider.edit.routes']}"/>
+      </h:panelGroup>
+
+      <h:inputText style="display: none" id="selected" value="#{smppgwProvider.activePage.selected}" converter="csvConverter"/>
+
+      <style type="text/css">
+        .selectAll {
+          text-align: center;
+          background: url(../images/ico16_checked_sa.gif);
+          background-repeat: no-repeat;
+          background-position: center;
+          cursor: pointer;
+          height: 16px;
+
+        }
+        .unselectAll {
+          text-align: center;
+          background: url(../images/ico16_checked_sa_checked.gif);
+          background-repeat: no-repeat;
+          background-position: center;
+          cursor: pointer;
+          height: 16px;
+        }
+      </style>
+
+      <t:dataTable id="routes" renderedIfEmpty="false" value="#{smppgwProvider.activePage.routes}" var="r" style="padding: 10px 10px 0px 10px" columnClasses=",,columnCenter" styleClass="list" rowIndexVar="rowIndex" rowStyleClass="row#{requestScope['rowIndex']%2}">
+        <h:column headerClass="column10WidthCenter">
+          <f:facet name="header">
+            <div id="all" class="selectAll" onclick="
+              var checked;
+              if(this.className == 'selectAll') {
+                this.className = 'unselectAll';
+                checked = true;
+              }else {
+                this.className = 'selectAll';
+                checked = false;
+              }
+              var es = document.getElementById('routes').getElementsByTagName('input');
+              for(var i=0;i&lt;es.length;i++) {
+                es[i].checked = checked;
+                es[i].onchange();
+              }
+            "></div>
+          </f:facet>
+          <h:panelGroup rendered="#{r.selected}">
+            <input id="route_#{r.deliveryId}" type="checkbox" checked="true" onchange="selectRoute(this.checked,'#{r.deliveryId}');"/>
+          </h:panelGroup>
+          <h:panelGroup rendered="#{!r.selected}">
+            <input id="route_#{r.deliveryId}" type="checkbox" onchange="selectRoute(this.checked,'#{r.deliveryId}');"/>
+          </h:panelGroup>
+        </h:column>
+        <h:column>
+          <f:facet name="header">
+            <h:outputText style="white-space:nowrap;" value="#{smppGWRouteBundle.serviceNumbers}"/>
+          </f:facet>
+          <h:outputText style="white-space:nowrap;" value="#{r.addresses}"/>
+        </h:column>
+        <h:column>
+          <f:facet name="header">
+            <h:outputText value="#{smppGWRouteBundle.deliveryId}"/>
+          </f:facet>
+          <h:outputText style="white-space:nowrap;" value="#{r.delivery}"/>
+        </h:column>
+        <h:column>
+          <h:commandLink style="white-space:nowrap;" value="#{msg['smppgw.provider.edit.route']}" action="#{smppgwProvider.next}">
+            <f:param name="deliveryId" value="#{r.deliveryId}"/>
+          </h:commandLink>
+        </h:column>
+      </t:dataTable>
+
+      <h:panelGrid columns="2" columnClasses="column0Width,columnTopLeftAlign">
+        <h:commandButton value="#{msg['smppgw.provider.edit.route.add']}" action="#{smppgwProvider.next}"/><h:commandButton value="#{msg['smppgw.provider.edit.route.remove']}" action="#{smppgwProvider.activePage.removeRoutes}"  onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+      </h:panelGrid>
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" shortDesc="#{msg['smppgw.provider.edit.done']}" action="#{smppgwProvider.activePage.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['smppgw.provider.edit.cancel']}" action="SMPPGW_PROVIDERS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+    <script type="text/javascript">
+      function selectRoute(checked, rowId) {
+        var select = document.getElementById("selected");
+        var selectObject = !(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
+            select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &amp;&amp;
+            eval('(' + select.value + ')');
+        if(checked) {
+          for(var i1=0; i1 &lt; selectObject.length; i1++) {
+            if(selectObject[i1] == rowId) {
+              return;
+            }
+          }
+          selectObject[selectObject.length] = rowId;
+        }else {
+          var k = -1;
+          for(var i=0; i &lt; selectObject.length; i++) {
+            if(selectObject[i] == rowId) {
+              k = i;
+              break;
+            }
+          }
+          if(k != -1) {
+            selectObject.splice(k,1);
+          }
+        }
+        select.value = toJson(selectObject);
+      }
+
+      function toJson(arr) {
+        var res = "[";
+        var first = 1;
+        for(var i=0; i &lt; arr.length; i++) {
+          if(first == 0) {
+            res+=","
+          }else {
+            first = 0;
+          }
+          res+="\""+arr[i]+"\"";
+        }
+        return res+"]"
+      }
+    </script>
+
+
+</ui:composition>
+
+
+</html>
+
+
