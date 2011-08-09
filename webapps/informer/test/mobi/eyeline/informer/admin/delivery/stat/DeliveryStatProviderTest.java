@@ -227,18 +227,24 @@ public class DeliveryStatProviderTest {
 
     final List<DeliveryStatRecord> records = new ArrayList<DeliveryStatRecord>();
 
-    statProvider.accept(null ,new DeliveryStatVisitor(){
+//    statProvider.accept(null ,new DeliveryStatVisitor(){
+//      public boolean visit(DeliveryStatRecord rec, int total, int current) {
+//        if(records.size()<2) {
+//          records.add(rec);
+//        }
+//        return records.size() < 2;
+//      }
+//    });
+
+    statProvider.processFile(new DeliveryStatFilter(), new DeliveryStatVisitor() {
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
-        if(records.size()<2) {
-          records.add(rec);
-        }
-        return records.size() < 2;
+        records.add(rec);
+        return false;
       }
-    });
-    assertEquals(records.size(), 2);
+    },0,0,"p20101016/msg11.log");
 
     DeliveryStatRecord r = records.get(0);
-//    assertEquals(r.getNewSms(), 200000);
+    assertEquals(r.getNewSms(), 200000);
     assertEquals(r.getProcessing(), 1);
     assertEquals(r.getProcessingSms(), 2);
     assertEquals(r.getRetry(), 1);
@@ -252,12 +258,7 @@ public class DeliveryStatProviderTest {
     assertEquals(r.getSmsc(), "Silverstone");
     assertEquals(r.getTaskId(), 1);
     assertEquals(r.getUser(), "a");
-    assertEquals(r.getRegionId(), new Integer(4));
-
-    r = records.get(1);
-    assertEquals(r.getRetry(), 0);
-    assertEquals(r.getNewSms(), r.getNewmessages());
-    assertEquals(r.getProcessingSms(), r.getProcessing());
+    assertEquals(r.getRegionId(), new Integer(4));;
   }
 
 
