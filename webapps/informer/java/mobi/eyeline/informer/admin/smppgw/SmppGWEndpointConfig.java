@@ -9,7 +9,7 @@ import java.io.OutputStream;
 /**
  * author: Aleksandr Khalitov
  */
-public class SmppGWEndpointConfig implements ManagedConfigFile< SmppGWEndpointSettings> {
+class SmppGWEndpointConfig implements ManagedConfigFile< SmppGWEndpointSettings> {
 
   private final static String ENDPOINTS_SECTION = "endpoints";
 

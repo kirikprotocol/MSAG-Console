@@ -20,7 +20,7 @@ class SmppGWProviderConfig implements ManagedConfigFile<SmppGWProviderSettings> 
 
   private final static String PROVIDERS_SECTION = "providers";
 
-  private SmppGWConfigManagerContext context;
+  private final SmppGWConfigManagerContext context;
 
   SmppGWProviderConfig(SmppGWConfigManagerContext context) {
     this.context = context;

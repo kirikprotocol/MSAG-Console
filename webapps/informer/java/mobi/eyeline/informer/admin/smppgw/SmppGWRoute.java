@@ -18,7 +18,7 @@ public class SmppGWRoute {
 
   private String user;
 
-  private List<Address> serviceNumbers = new LinkedList<Address>();
+  private final List<Address> serviceNumbers = new LinkedList<Address>();
 
   public SmppGWRoute() {
   }

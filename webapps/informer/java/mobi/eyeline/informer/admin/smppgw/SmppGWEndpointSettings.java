@@ -11,7 +11,7 @@ import java.util.*;
  */
 public class SmppGWEndpointSettings {
 
-  private Map<String, SmppGWEndpoint> endpoints = new HashMap<String, SmppGWEndpoint>();
+  private final Map<String, SmppGWEndpoint> endpoints = new HashMap<String, SmppGWEndpoint>();
 
   public SmppGWEndpointSettings() {
   }
@@ -34,14 +34,6 @@ public class SmppGWEndpointSettings {
   }
 
   public void addEndpoint(SmppGWEndpoint endpoint) throws AdminException{
-    endpoint.validate();
-    if(endpoints.containsKey(endpoint.getName())) {
-      throw new SmppGWException("endpoint_name_intersection", endpoint.getName());
-    }
-    endpoints.put(endpoint.getName(), new SmppGWEndpoint(endpoint));
-  }
-
-  public void saveEndpoint(SmppGWEndpoint endpoint) throws AdminException{
     endpoint.validate();
     if(endpoints.containsKey(endpoint.getName())) {
       throw new SmppGWException("endpoint_name_intersection", endpoint.getName());

@@ -17,9 +17,9 @@ public class SmppGWProvider {
 
   private String descr;
 
-  private List<String> endpoints = new LinkedList<String>();
+  private final List<String> endpoints = new LinkedList<String>();
 
-  private Map<Integer, SmppGWRoute> routes = new HashMap<Integer, SmppGWRoute>();
+  private final Map<Integer, SmppGWRoute> routes = new HashMap<Integer, SmppGWRoute>();
 
   public SmppGWProvider() {
   }

@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class SmppGWProviderSettings {
 
-  private Map<String, SmppGWProvider> providers = new HashMap<String, SmppGWProvider>();
+  private final Map<String, SmppGWProvider> providers = new HashMap<String, SmppGWProvider>();
 
   public SmppGWProviderSettings() {
   }

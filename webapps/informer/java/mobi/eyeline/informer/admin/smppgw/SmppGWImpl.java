@@ -48,7 +48,7 @@ public class SmppGWImpl implements SmppGW {
   }
 
 
-  protected void checkResponse(int status) throws SmppGWException {
+  void checkResponse(int status) throws SmppGWException {
     switch (status) {
       case 0 : return;
       case 6 : throw new SmppGWException("server_not_ready");
