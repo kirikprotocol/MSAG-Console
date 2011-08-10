@@ -177,7 +177,7 @@ sub outrow{
     }
     if(defined($f->{maxwidth}))
     {
-      $v=substr($v,$f->{maxwidth});
+      $v=substr($v,0,$f->{maxwidth});
     }
 
     if($f->{align} eq 'R')

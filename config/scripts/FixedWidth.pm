@@ -15,8 +15,8 @@ my @OUT_FIELDS;
 {field=>'OTHER_ADDR',width=>31},                # pos=114
 {value=>'',width=>31},                          # pos=145
 {value=>'',width=>17},                          # pos=176
-{field=>'SRC_SME_ID',width=>10,maxwidth=>10},   # pos=193 inc route
-{field=>'DST_SME_ID',width=>10,maxwidth=>10},   # pos=203 out route
+{field=>'SRC_SME_ID',width=>10},   # pos=193 inc route
+{field=>'DST_SME_ID',width=>10},   # pos=203 out route
 {value=>'0',width=>5},                          # pos=213
 {value=>'0',width=>10},                         # pos=218
 {field=>'SERVICE_TYPE',width=>5},               # pos=228 service type
@@ -48,12 +48,19 @@ sub outrow{
       $v=$f->{value};
     }
     $v=substr($v,-$f->{maxwidth}) if length($v)>$f->{maxwidth};
-    if($f->{align} eq 'R')
+    my $l=length($v);
+    if($l<$f->{width})
     {
-      $v=' 'x($f->{width}-length($v)).$v;
+      if($f->{align} eq 'R')
+      {
+        $v=' 'x($f->{width}-length($v)).$v;
+      }else
+      {
+        $v.=' 'x($f->{width}-length($v));
+      }
     }else
     {
-      $v.=' 'x($f->{width}-length($v));
+      $v=substr($v,0,$f->{width});
     }
     $file->print($v);
   }
