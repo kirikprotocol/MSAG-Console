@@ -29,6 +29,8 @@ public class RouteSettingsPage extends ProviderEditPage{
 
   private SmppGWRoute route;
 
+  private SmppGWRoute oldRoute;
+
   private final boolean isNew;
 
   RouteSettingsPage(SmppGWProvider provider, int deliveryId, boolean aNew) throws AdminException{
@@ -48,12 +50,23 @@ public class RouteSettingsPage extends ProviderEditPage{
       route.setUser(d.getOwner());
       route.setDeliveryId(deliveryId);
     }else {
-      for(Address a : route.getServiceNumbers()) {
-        DynamicTableRow row = new DynamicTableRow();
-        row.setValue("address", a.getSimpleAddress());
-        serviceNumbers.addRow(row);
-      }
+      fillServiceNumbers(route);
     }
+  }
+
+  RouteSettingsPage(SmppGWProvider provider, int deliveryId, SmppGWRoute oldRoute, boolean aNew) throws AdminException{
+    this(provider, deliveryId, aNew);
+    this.oldRoute = oldRoute;
+    fillServiceNumbers(oldRoute);
+  }
+
+  private void fillServiceNumbers(SmppGWRoute route) {
+    for(Address a : route.getServiceNumbers()) {
+      DynamicTableRow row = new DynamicTableRow();
+      row.setValue("address", a.getSimpleAddress());
+      serviceNumbers.addRow(row);
+    }
+
   }
 
   @Override
@@ -75,7 +88,7 @@ public class RouteSettingsPage extends ProviderEditPage{
       addresses.add(new Address(a));
     }
     for(SmppGWRoute r : provider.getRoutes()) {
-      if(r.getDeliveryId() == route.getDeliveryId()) {
+      if(r.getDeliveryId() == route.getDeliveryId() || (oldRoute != null && r.getDeliveryId() == oldRoute.getDeliveryId())) {
         continue;
       }
       for(Address a : r.getServiceNumbers()) {
@@ -92,6 +105,9 @@ public class RouteSettingsPage extends ProviderEditPage{
     route.validate();
 
     provider.removeRoute(route.getDeliveryId());
+    if(oldRoute != null) {
+      provider.removeRoute(oldRoute.getDeliveryId());
+    }
     provider.addRoute(route);
 
     return new ProviderSettingsPage(provider, isNew);
@@ -103,7 +119,7 @@ public class RouteSettingsPage extends ProviderEditPage{
 
   @Override
   public ProviderEditPage backPage() throws AdminException {
-    return new ChooseDeliveryPage(provider, isNew);
+    return new ChooseDeliveryPage(provider, isNew, route);
   }
 
   @Override

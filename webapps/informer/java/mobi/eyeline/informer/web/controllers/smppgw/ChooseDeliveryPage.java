@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.smppgw.SmppGWProvider;
+import mobi.eyeline.informer.admin.smppgw.SmppGWRoute;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -26,6 +27,8 @@ public class ChooseDeliveryPage extends ProviderEditPage{
 
   private final boolean isNew;
 
+  private SmppGWRoute route;
+
   public void apply() {
 
   }
@@ -33,6 +36,12 @@ public class ChooseDeliveryPage extends ProviderEditPage{
   public void clear() {
     nameFilter = null;
     userFilter = null;
+  }
+
+
+  ChooseDeliveryPage(SmppGWProvider provider, boolean aNew, SmppGWRoute route) {
+    this(provider, aNew);
+    this.route = route;
   }
 
 
@@ -44,8 +53,12 @@ public class ChooseDeliveryPage extends ProviderEditPage{
   @Override
   public ProviderEditPage nextPage() throws AdminException {
     String delivery = getRequestParameter("delivery");
-    System.out.println("Delivery:" + delivery);
-    return new RouteSettingsPage(provider, Integer.parseInt(delivery), isNew);
+    int deliveryId = Integer.parseInt(delivery);
+    if(route == null) {
+      return new RouteSettingsPage(provider, deliveryId, isNew);
+    }else {
+      return new RouteSettingsPage(provider, deliveryId, route, isNew);
+    }
   }
 
   @Override
