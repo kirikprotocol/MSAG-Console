@@ -354,7 +354,20 @@ void InfosmeCoreV1::init( bool archive )
         itp_.setMaxThreads(cs_.getInputTransferThreadCount());
         rtp_.setMaxThreads(cs_.getResendIOThreadCount());
 
-        if (!archive && !getCS()->isEmergency() ) { finalLog_ = new FinalLog(); }
+        if (!archive && !getCS()->isEmergency() ) {
+            std::vector< std::string > finalpaths;
+            const char* finsect = "finallog";
+            if ( cfg->findSection(finsect) ) {
+                std::auto_ptr<Config> fincfg(cfg->getSubConfig(finsect,true));
+                char* dummykey;
+                char* pathval;
+                for ( Config::strParamsType::Iterator it(&(fincfg->strParams));
+                      it.Next(dummykey,pathval); ) {
+                    finalpaths.push_back( pathval );
+                }
+            }
+            finalLog_ = new FinalLog( finalpaths );
+        }
 
         if (!dlvMgr_) {
             smsc_log_info(log_,"--- creating delivery mgr ---");

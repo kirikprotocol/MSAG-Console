@@ -91,8 +91,19 @@ public:
                          const std::string& to,
                          unsigned maxdepth );
 
-    static void copyfile( const char* from, const char* to );
+    /// copy file.
+    /// \param tempext is the extension of temporary file ${to} + ${tempext}.
+    /// then this temporary file is renamed into final one.
+    /// if tempext is empty, then temporary file is not used.
+    static void copyfile( const char* from,
+                          const char* to,
+                          const char* tempext = ".tmpcopy" );
     
+    /// rename the file, or (if failed) try to copy.
+    static void renameorcopy( const char* from,
+                              const char* to,
+                              const char* tempext = ".tmpcopy" );
+
 private:
     inline static void getlog() {
         if (!log_) {

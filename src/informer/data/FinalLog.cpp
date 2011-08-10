@@ -7,6 +7,13 @@
 #include "CommonSettings.h"
 
 
+namespace {
+
+const char* finallogpath = "final_log/";
+
+}
+
+
 namespace eyeline {
 namespace informer {
 
@@ -32,20 +39,37 @@ private:
 
 FinalLog* FinalLog::instance_ = 0;
 
-FinalLog::FinalLog() :
+FinalLog::FinalLog( const std::vector< std::string >& finpaths ) :
 lock_( MTXWHEREAMI ),
+finalpaths_(finpaths),
 createTime_(0),
 period_(60)
 {
     assert(!instance_);
     instance_ = this;
 
+    if (finalpaths_.empty()) {
+        finalpaths_.push_back(getCS()->getStorePath() + ::finallogpath);
+    }
+    for ( std::vector< std::string >::iterator it = finalpaths_.begin();
+          it != finalpaths_.end(); ++it ) {
+        assert(!it->empty());
+        if ( (*it)[0] != '/' ) {
+            // relative path
+            *it = getCS()->getStorePath() + *it;
+        }
+        if ( (*it)[it->size()-1] != '/' ) {
+            *it += '/';
+        }
+    }
+
     // check if we have unrolled old files
     std::vector< ulonglong > logfiles;
     std::vector< std::string > dummy;
     LogFileFilter lff(logfiles);
     try {
-        makeDirListing( lff, S_IFREG ).list( (getCS()->getStorePath() + "final_log").c_str(),
+        makeDirListing( lff, S_IFREG ).list( (getCS()->getStorePath() +
+                                              ::finallogpath).c_str(),
                                              dummy );
     } catch ( ErrnoException& e ) {
         return;
@@ -55,16 +79,16 @@ period_(60)
     for ( std::vector< ulonglong >::const_iterator i = logfiles.begin();
           i != logfiles.end(); ++i ) {
         char fn[100];
-        sprintf(fn,"final_log/%llu.log",*i);
+        sprintf(fn,"%llu.log",*i);
         if ( *i < ymdTime ) {
             // need to roll
             rollFile(fn);
         } else if ( fg_.isOpened() ) {
-            throw InfosmeException(EXC_LOGICERROR,"two open files in final_log");
+            throw InfosmeException(EXC_LOGICERROR,"two open files in %s",::finallogpath);
         } else {
             createTime_ = ymdToMsgTime(*i);
             strcpy(filename_,fn);
-            fg_.create(fn,0666);
+            fg_.create((getCS()->getStorePath() + ::finallogpath + fn).c_str(),0666);
         }
     }
 }
@@ -170,10 +194,10 @@ void FinalLog::doCheckRollFile( msgtime_type currentTime, bool create )
 
         const int oldmin = now.tm_min;
         now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
-        sprintf(filename_,"final_log/%04u%02u%02u%02u%02u.log",
+        sprintf(filename_,"%04u%02u%02u%02u%02u.log",
                 now.tm_year+1900, now.tm_mon+1, now.tm_mday,
                 now.tm_hour, now.tm_min );
-        fg_.create((getCS()->getStorePath()+filename_).c_str(), 0666, true );
+        fg_.create((getCS()->getStorePath() + ::finallogpath + filename_).c_str(), 0666, true );
         createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
         fg_.seek(0, SEEK_END);
         if (fg_.getPos() == 0) {
@@ -190,11 +214,13 @@ void FinalLog::rollFile( const char* fn )
     const size_t stemlen = ::strlen(fn) - 3;
     assert( stemlen < 90 );
     memcpy(fnbuf,fn,stemlen);
-    memcpy(fnbuf+stemlen,"csv",4);
-    if (-1 == rename((getCS()->getStorePath() + fn).c_str(),
-                     (getCS()->getStorePath() + fnbuf).c_str())) {
-        throw ErrnoException(errno,"rename('%s','%s')",fn,fnbuf);
+    memcpy(fnbuf + stemlen,"csv",4);
+    const std::string fromfile = getCS()->getStorePath() + ::finallogpath + fn;
+    for ( std::vector< std::string >::const_iterator it = finalpaths_.begin() + 1;
+          it != finalpaths_.end(); ++it ) {
+        FileGuard::copyfile( fromfile.c_str(), (*it + fnbuf).c_str() );
     }
+    FileGuard::renameorcopy( fromfile.c_str(), (finalpaths_.front() + fnbuf).c_str() );
 }
 
 } // informer

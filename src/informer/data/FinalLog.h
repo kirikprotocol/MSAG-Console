@@ -1,6 +1,7 @@
 #ifndef _INFORMER_FINALLOG_H
 #define _INFORMER_FINALLOG_H
 
+#include <vector>
 #include "informer/io/FileGuard.h"
 #include "informer/data/DeliveryInfo.h"
 
@@ -18,7 +19,7 @@ public:
     /// pseudo singleton.
     inline static FinalLog* getFinalLog() { return instance_; }
 
-    FinalLog();
+    explicit FinalLog( const std::vector< std::string >& finalpaths );
     ~FinalLog();
 
     void addMsgRecord( msgtime_type         currentTime,
@@ -42,10 +43,11 @@ private:
 
 private:
     smsc::core::synchronization::Mutex lock_;
+    std::vector< std::string >         finalpaths_;
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;
-    char                               filename_[100];
+    char                               filename_[50]; // YYYYMMDDHHMMSS.log
 };
 
 } // informer

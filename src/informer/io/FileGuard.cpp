@@ -270,18 +270,56 @@ void FileGuard::copydir( const char* from,
 
 
 void FileGuard::copyfile( const char* from,
-                          const char* to )
+                          const char* to,
+                          const char* tempext )
 {
-    FileGuard fg, fd;
+    FileGuard fg;
     fg.ropen(from);
     struct stat st;
-    fd.create(to, fg.getStat(st).st_mode & (S_IRWXU|S_IRWXG|S_IRWXO),
-              true, true );
-    char buf[8192];
-    while ( true ) {
-        const size_t wasread = fg.read(buf,sizeof(buf));
-        if (wasread == 0) { break; }
-        fd.write(buf,wasread);
+    std::string tempfilestr;
+    const char* tocopy;
+    if (!tempext || !tempext[0]) {
+        // no temporary file
+        tocopy = to;
+    } else {
+        tempfilestr = to;
+        tempfilestr += tempext;
+        tocopy = tempfilestr.c_str();
+    }
+
+    try {
+        FileGuard fd;
+        fd.create(tocopy, fg.getStat(st).st_mode & (S_IRWXU|S_IRWXG|S_IRWXO),
+                  true, true );
+        char buf[8192];
+        while ( true ) {
+            const size_t wasread = fg.read(buf,sizeof(buf));
+            if (wasread == 0) { break; }
+            fd.write(buf,wasread);
+        }
+    } catch ( std::exception& ) {
+        ::unlink( tocopy );
+        throw;
+    }
+    
+    if (!tempfilestr.empty()) {
+        // temp file was used, renaming
+        if ( -1 == ::rename( tocopy, to ) ) {
+            throw ErrnoException(errno,"rename('%s','%s')",tocopy,to);
+        }
+    }
+}
+
+
+void FileGuard::renameorcopy( const char* from,
+                              const char* to,
+                              const char* tempext )
+{
+    if ( -1 == ::rename(from,to) ) {
+        if ( errno != EXDEV ) {
+            throw ErrnoException(errno,"rename('%s','%s')",from,to);
+        }
+        copyfile(from, to, tempext);
     }
 }
 
