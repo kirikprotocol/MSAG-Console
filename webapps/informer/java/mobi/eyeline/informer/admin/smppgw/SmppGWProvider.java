@@ -71,7 +71,7 @@ public class SmppGWProvider {
   public List<SmppGWRoute> getRoutes() {
     List<SmppGWRoute> res = new ArrayList<SmppGWRoute>(routes.size());
     for(SmppGWRoute r : routes.values()) {
-      res.add(new SmppGWRoute(r));
+      res.add(r);
     }
     return res;
   }

@@ -52,7 +52,7 @@ public class SmppGWProviderSettings {
   public Collection<SmppGWProvider> getProviders() {
     Collection<SmppGWProvider> rez = new ArrayList<SmppGWProvider>(providers.size());
     for(SmppGWProvider e : providers.values()) {
-      rez.add(new SmppGWProvider(e));
+      rez.add(e);
     }
     return rez;
   }
