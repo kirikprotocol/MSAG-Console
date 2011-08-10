@@ -25,7 +25,10 @@
 
       <h:outputText value="#{smppGWRouteBundle.deliveryId}"/>
       <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-        <h:outputText value="#{smppgwProvider.activePage.deliveryName}"/>
+        <h:commandLink value="#{smppgwProvider.activePage.deliveryName}" action="DELIVERY_EDIT">
+          <f:param name="delivery_comeback" value="SMPPGW_PROVIDER_EDIT"/>
+          <f:param name="delivery" value="#{smppgwProvider.activePage.deliveryId}"/>
+        </h:commandLink>
         <h:commandButton value="#{msg['change.button']}" action="#{smppgwProvider.back}"/>
       </h:panelGrid>
 

@@ -57,31 +57,40 @@ public class DeliveryEditController extends DeliveryController {
   public DeliveryEditController() {
     super();
 
-    String p = getRequestParameter(DELIVERY_PARAM);
-    if(p == null || p.length() == 0) {
-      p = getRequestParameter(ErrorStatsController.COME_BACK_PARAMS);
-    }
+    String p = getRequestParameter(ErrorStatsController.COME_BACK_PARAMS);
     if(p == null || p.length() == 0) {
       p = getRequestParameter(MessagesByPeriodController.COME_BACK_PARAMS);
     }
     if(p == null || p.length() == 0) {
       p = getRequestParameter(MessageListController.COME_BACK_PARAMS);
     }
-    id = p == null || (p = p.trim()).length() == 0 ? null : Integer.parseInt(p);
+    if(p == null || p.length() == 0) {
+      p = getRequestParameter(DELIVERY_PARAM);
+    }
 
-    if(id == null) {
+    String[] ps = null;
+    if(p == null || p.length() == 0) {
       p = getRequestParameter(UserEditController.COME_BACK_PARAMS);
       if(p != null) {
-        String[] s = p.split("=");
+        ps = p.split("\\|");
+        String[] s = ps[0].split("=");
         if(s.length>1) {
           id = Integer.parseInt(s[1]);
         }
       }
+    }else {
+      ps = p.split("\\|");
+      id = Integer.parseInt(ps[0]);
     }
+
 
     p = getRequestParameter(DELIVERY_COMEBACK_PARAM);
     if (p != null && p.length() != 0) {
       comeBackParam = p;
+    }else {
+      if(ps != null && ps.length>1) {
+        comeBackParam = ps[1];
+      }
     }
 
     try {

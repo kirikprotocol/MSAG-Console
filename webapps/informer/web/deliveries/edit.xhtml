@@ -28,13 +28,13 @@
               <tr:commandLink text="#{msg['informer.stats.by.messages']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats.mess']}">
                 <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
                 <f:param name="stats_come_back" value="DELIVERY_EDIT"/>
-                <f:param name="stats_come_back_params" value="#{deliveryEdit.delivery.id}"/>
+                <f:param name="stats_come_back_params" value="#{deliveryEdit.delivery.id}|#{deliveryEdit.comeBackParam}"/>
               </tr:commandLink>
             </eye:menubaritem>
             <eye:menubaritem>
               <tr:commandLink text="#{msg['informer.stats.by.error']}" action="#{messErrors.setDeliveryParam}" actionListener="#{deliveryEdit.statForSelected}" shortDesc="#{msg['delivery.details.stats.errors']}">
                 <f:param name="errors_stats_come_back" value="DELIVERY_EDIT"/>
-                <f:param name="errors_stats_come_back_params" value="#{deliveryEdit.delivery.id}"/>
+                <f:param name="errors_stats_come_back_params" value="#{deliveryEdit.delivery.id}|#{deliveryEdit.comeBackParam}"/>
               </tr:commandLink>
             </eye:menubaritem>
           </eye:menubar>
@@ -42,7 +42,7 @@
         <eye:button>
           <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
-            <f:param name="#{deliveryEdit.messagesComeBackParamsName}" value="#{deliveryEdit.delivery.id}"/>
+            <f:param name="#{deliveryEdit.messagesComeBackParamsName}" value="#{deliveryEdit.delivery.id}|#{deliveryEdit.comeBackParam}"/>
             <f:param name="#{deliveryEdit.messagesComeBackName}" value="DELIVERY_EDIT"/>
           </tr:commandLink>
         </eye:button>
@@ -74,7 +74,7 @@
             <tr:commandLink text=">>" action="USER_EDIT" immediate="true" shortDesc="#{msg['user.details.show']}">
               <f:param name="user_edit_comeback" value="DELIVERY_EDIT"/>
               <f:param name="userId" value="#{deliveryEdit.delivery.owner}"/>
-              <f:param name="user_edit_comeback_params" value="#{deliveryEdit.userComeBackParams}"/>
+              <f:param name="user_edit_comeback_params" value="#{deliveryEdit.userComeBackParams}|#{deliveryEdit.comeBackParam}"/>
             </tr:commandLink>
           </tr:panelGroupLayout>
 

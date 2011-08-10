@@ -227,15 +227,6 @@ public class DeliveryStatProviderTest {
 
     final List<DeliveryStatRecord> records = new ArrayList<DeliveryStatRecord>();
 
-//    statProvider.accept(null ,new DeliveryStatVisitor(){
-//      public boolean visit(DeliveryStatRecord rec, int total, int current) {
-//        if(records.size()<2) {
-//          records.add(rec);
-//        }
-//        return records.size() < 2;
-//      }
-//    });
-
     statProvider.processFile(new DeliveryStatFilter(), new DeliveryStatVisitor() {
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
         records.add(rec);

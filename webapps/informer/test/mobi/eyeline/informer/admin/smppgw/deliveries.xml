@@ -4,7 +4,7 @@
 
 <config>
 
-  <section name="provider">
+  <section name="providers">
     <section name="provider1">
       <!--Parameter contains smpp connections systemIds.-->
       <param name="endpoint_ids" type="string">systemId1,systemId2</param>

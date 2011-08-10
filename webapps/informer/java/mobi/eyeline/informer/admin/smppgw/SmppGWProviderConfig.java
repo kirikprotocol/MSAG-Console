@@ -18,7 +18,7 @@ import java.util.Set;
  */
 class SmppGWProviderConfig implements ManagedConfigFile<SmppGWProviderSettings> {
 
-  private final static String PROVIDERS_SECTION = "provider";
+  private final static String PROVIDERS_SECTION = "providers";
 
   private SmppGWConfigManagerContext context;
 

@@ -23,6 +23,8 @@ public class RouteSettingsPage extends ProviderEditPage{
 
   private String deliveryName;
 
+  private int deliveryId;
+
   private DynamicTableModel serviceNumbers = new DynamicTableModel();
 
   private SmppGWRoute route;
@@ -31,6 +33,7 @@ public class RouteSettingsPage extends ProviderEditPage{
 
   RouteSettingsPage(SmppGWProvider provider, int deliveryId, boolean aNew) throws AdminException{
     this.provider = provider;
+    this.deliveryId = deliveryId;
     isNew = aNew;
     Delivery d = getConfig().getDelivery(getUserName(), deliveryId);
     if(d != null) {
@@ -92,6 +95,10 @@ public class RouteSettingsPage extends ProviderEditPage{
     provider.addRoute(route);
 
     return new ProviderSettingsPage(provider, isNew);
+  }
+
+  public int getDeliveryId() {
+    return deliveryId;
   }
 
   @Override

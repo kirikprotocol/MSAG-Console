@@ -243,7 +243,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
         }
       }
     }
-    ftpServerManager.updateUsers(ftpUsers);
+    try{
+      ftpServerManager.updateUsers(ftpUsers);
+    }catch (AdminException e){
+      logger.error(e,e);
+    }
   }
 
   public synchronized void updateUser(User u) throws AdminException {
