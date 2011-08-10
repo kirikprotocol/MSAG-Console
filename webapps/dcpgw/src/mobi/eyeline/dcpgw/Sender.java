@@ -1,10 +1,7 @@
 package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DcpConnection;
-import mobi.eyeline.informer.admin.delivery.DeliveryState;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
-import mobi.eyeline.informer.admin.delivery.Message;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.SmppServer;
 import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
@@ -195,10 +192,18 @@ public class Sender extends Thread{
                 connection.addDeliveryMessages(delivery_id, list);
                 log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
 
-                DeliveryState deliveryState = new DeliveryState();
-                deliveryState.setStatus(DeliveryStatus.Planned);
 
-                connection.changeDeliveryState(delivery_id, deliveryState);
+
+                DeliveryStatistics delivery_statistics = connection.getDeliveryState(delivery_id);
+                DeliveryState ds = delivery_statistics.getDeliveryState();
+
+                if (ds.getStatus() == DeliveryStatus.Finished){
+                    log.debug("Detected that delivery status is finished.");
+                    DeliveryState deliveryState = new DeliveryState();
+                    deliveryState.setStatus(DeliveryStatus.Planned);
+                    connection.changeDeliveryState(delivery_id, deliveryState);
+                    log.debug("Change delivery status on planned.");
+                }
 
                 for(Message m: list){
 

@@ -11,9 +11,6 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * User: Stepanov Dmitry Nikolaevich
@@ -24,7 +21,7 @@ public class Journal {
 
     private static Logger log = Logger.getLogger(Journal.class);
 
-    private static final String sep=",";
+    private static final String sep=";";
 
     private int max_journal_size_mb = 10;
 
@@ -47,8 +44,6 @@ public class Journal {
         }
 
         max_journal_size_mb = Utils.getProperty(prop, "max.journal.size.mb", 10);
-
-        long clean_journal_timeout = Utils.getProperty(prop, "clean.journal.timeout.msl", 60000);
 
         String journal_dir_str = Utils.getProperty(prop, "journal.dir", userDir+File.separator+"journal");
 
@@ -74,26 +69,10 @@ public class Journal {
             log.error("Couldn't load journal.",e);
             throw new InitializationException(e);
         }
-
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleWithFixedDelay(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    cleanJournal();
-                } catch (CouldNotCleanJournalException e) {
-                    log.error(e);
-                    // todo ?
-                }
-            }
-
-        }, clean_journal_timeout, clean_journal_timeout, TimeUnit.MILLISECONDS);
-
     }
 
     private void appendFile(File source, File target) throws IOException {
-
+        log.debug("Try to append file '"+source.getName()+"' to file '"+target.getName()+"'.");
         BufferedOutputStream bufOut = new BufferedOutputStream(new FileOutputStream(target, true));
 
         BufferedInputStream bufRead = new BufferedInputStream(new FileInputStream(source));
@@ -109,6 +88,7 @@ public class Journal {
         bufOut.close();
 
         bufRead.close();
+        log.debug("Successfully append journal file.");
 
     }
 
@@ -185,8 +165,8 @@ public class Journal {
         if (current_file.exists()){
 
             cleaned_file = new File(journal_dir, "journal_1.csv");
-            if (!cleaned_file.exists()){
 
+            if (!cleaned_file.exists()){
                 log.debug("Detected that cleaned journal file "+cleaned_file.getName()+" doesn't exist.");
                 try {
                     if (cleaned_file.createNewFile()){

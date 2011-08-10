@@ -1,12 +1,10 @@
 package mobi.eyeline.dcpgw;
 
-import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
-import mobi.eyeline.dcpgw.journal.Data;
-import mobi.eyeline.dcpgw.journal.Status;
 import mobi.eyeline.smpp.api.PDUListener;
-import mobi.eyeline.smpp.api.pdu.DeliverSMResp;
+import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.Message;
 import mobi.eyeline.smpp.api.pdu.PDU;
+import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.types.EsmMessageType;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
@@ -79,23 +77,36 @@ public class PDUListenerImpl implements PDUListener {
                 log.debug("Message: "+text);
                 log.debug("Id '"+message_id+"', source address '"+source_address_str+"', destination address '"+destination_address_str+"', text '"+text+"'.");
 
-                int delivery_id = service_number_delivery_id_map.get(source_address_str);
+                if (service_number_delivery_id_map.containsKey(source_address_str)) {
 
-                String login = delivery_id_user_map.get(delivery_id);
-                log.debug("Id '"+message_id+"', service_number '"+source_address_str+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
+                    int delivery_id = service_number_delivery_id_map.get(source_address_str);
 
-                Manager.getInstance().getSender(login).addMessage(message_id, destination_address_str, text, sequence_number, connection_name, delivery_id);
+                    String login = delivery_id_user_map.get(delivery_id);
+                    log.debug("Id '"+message_id+"', service_number '"+source_address_str+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
 
-                if (request.getRegDeliveryReceipt() != RegDeliveryReceipt.None ) {
+                    Manager.getInstance().getSender(login).addMessage(message_id, destination_address_str, text, sequence_number, connection_name, delivery_id);
 
-                    Message rcpt = request.getAnswer();
-                    rcpt.setEsmMessageType(EsmMessageType.DeliveryReceipt);
+                    if (request.getRegDeliveryReceipt() != RegDeliveryReceipt.None ) {
 
-                    Date date = cal.getTime();
-                    int sn = Integer.parseInt(sdf.format(date))+ai.incrementAndGet();
-                    rcpt.setSequenceNumber(sn);
+                        Message rcpt = request.getAnswer();
+                        rcpt.setEsmMessageType(EsmMessageType.DeliveryReceipt);
 
-                    Manager.getInstance().rememberReceiptMessage(message_id, rcpt);
+                        Date date = cal.getTime();
+                        int sn = Integer.parseInt(sdf.format(date))+ai.incrementAndGet();
+                        rcpt.setSequenceNumber(sn);
+
+                        Manager.getInstance().rememberReceiptMessage(message_id, rcpt);
+                    }
+                } else {
+                    SubmitSMResp submitSMResp = new SubmitSMResp();
+                    submitSMResp.setStatus(mobi.eyeline.smpp.api.types.Status.SYSERR);
+                    submitSMResp.setSequenceNumber(sequence_number);
+                    submitSMResp.setConnectionName(connection_name);
+                    try {
+                        Gateway.sendSubmitSMResp(submitSMResp);
+                    } catch (SmppException e) {
+                        log.error("Could not send response to client", e);
+                    }
                 }
 
                 break;

@@ -8,6 +8,9 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="dcpgw_lib" level="project" />
+    <javadoc-paths>
+      <root url="http://download.oracle.com/javase/6/docs/api/" />
+    </javadoc-paths>
   </component>
 </module>
 

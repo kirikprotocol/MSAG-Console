@@ -1,6 +1,7 @@
 package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.dcpgw.admin.UpdateConfigServer;
+import mobi.eyeline.dcpgw.exeptions.CouldNotCleanJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
@@ -47,7 +48,6 @@ public class Gateway extends Thread implements PDUListener {
     // Table used to map service number and delivery identifier.
     private static Hashtable<String, Integer> service_number_delivery_id_table;
 
-    //
     private static Hashtable<String, String[]> provider_systemIds_table;
 
     private static final Object read_write_monitor = new Object();
@@ -71,6 +71,8 @@ public class Gateway extends Thread implements PDUListener {
 
     public static final String CONNECTION_PREFIX = "smpp.sme.";
 
+    private static Hashtable<String, String> systemId_password_table;
+
     public Gateway() throws SmppException, InitializationException{
         log.debug("Try to initialize gateway ...");
         Runtime.getRuntime().addShutdownHook(this);
@@ -89,32 +91,22 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
+        // Load endpoints
         String endpoints_file_str = Utils.getProperty(config, "users.file", user_dir+File.separator+"conf"+File.separator+"endpoints.xml" );
         endpoints_file = new File(endpoints_file_str);
 
-        XmlConfig xmlConfig = new XmlConfig();
         try {
-            xmlConfig.load(endpoints_file);
-            XmlConfigSection endpoints_section = xmlConfig.getSection("endpoints");
-            Collection<XmlConfigSection> c = endpoints_section.sections();
-            for(XmlConfigSection s: c){
-                String endpoint_name = s.getName();
-
-                XmlConfigParam p = s.getParam("systemId");
-                String systemId = p.getString();
-
-                p = s.getParam("password");
-                String password = p.getString();
-                log.debug("Load: endpoint name="+endpoint_name+", systemId="+systemId+", password="+password);
-
-                String connection_property_name = CONNECTION_PREFIX+systemId+".password";
-
-                config.setProperty(connection_property_name, password);
-                log.debug("Set "+connection_property_name+" --> password");
-            }
+            systemId_password_table = loadEndpoints();
         } catch (XmlConfigException e) {
             log.error(e);
             throw new InitializationException(e);
+        }
+
+        for (Map.Entry<String, String> entry : systemId_password_table.entrySet()) {
+            String systemId = entry.getKey();
+            String password = entry.getValue();
+            String connection_property_name = CONNECTION_PREFIX+systemId+".password";
+            config.setProperty(connection_property_name, password);
         }
 
         // Load users and deliveries configuration.
@@ -185,8 +177,8 @@ public class Gateway extends Thread implements PDUListener {
 
         recend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
 
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleWithFixedDelay(new Runnable() {
+        ScheduledExecutorService scheduler1 = Executors.newSingleThreadScheduledExecutor();
+        scheduler1.scheduleWithFixedDelay(new Runnable() {
 
             @Override
             public void run() {
@@ -203,8 +195,51 @@ public class Gateway extends Thread implements PDUListener {
 
         }, recend_receipts_interval, recend_receipts_interval, TimeUnit.SECONDS);
 
+        long clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
+
+        ScheduledExecutorService scheduler2 = Executors.newSingleThreadScheduledExecutor();
+        scheduler2.scheduleWithFixedDelay(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    cleanJournal();
+                } catch (CouldNotCleanJournalException e) {
+                    log.error(e);
+                    // todo ?
+                }
+            }
+
+        }, clean_journal_timeout, clean_journal_timeout, TimeUnit.MILLISECONDS);
+
         log.debug("Successfully initialize gateway!");
     }
+
+    public static Hashtable<String, String> loadEndpoints() throws XmlConfigException {
+        log.debug("Try to load endpoints ...");
+        Hashtable<String, String> result = new Hashtable<String, String>();
+
+        XmlConfig xmlConfig = new XmlConfig();
+
+        xmlConfig.load(endpoints_file);
+        XmlConfigSection endpoints_section = xmlConfig.getSection("endpoints");
+        Collection<XmlConfigSection> c = endpoints_section.sections();
+        for(XmlConfigSection s: c){
+            String endpoint_name = s.getName();
+
+            XmlConfigParam p = s.getParam("systemId");
+            String systemId = p.getString();
+
+            p = s.getParam("password");
+            String password = p.getString();
+            log.debug("Load: endpoint name="+endpoint_name+", systemId="+systemId+", password="+password);
+
+            result.put(systemId, password);
+        }
+
+        return result;
+    }
+
 
     public static void updateConfiguration() throws XmlConfigException {
         log.debug("Try to load update configuration ...");
@@ -261,13 +296,17 @@ public class Gateway extends Thread implements PDUListener {
             log.debug("login: "+login+", password: "+password);
         }
 
-
-
         provider_systemIds_table = t;
         delivery_id_user_table = t1;
         service_number_delivery_id_table = t2;
 
         user_password_table = t3;
+
+        /*Hashtable<String, String> t4 = loadEndpoints();
+        for(Map.Entry<String, String> entry: t4.entrySet()){
+            String systemId = entry.getKey();
+            smppServer.getSession(systemId);
+        }*/
 
         Manager.getInstance().setUserPasswordMap(user_password_table);
 
@@ -304,6 +343,10 @@ public class Gateway extends Thread implements PDUListener {
             log.error("Couldn't initialize gateway.", e);
         }
 
+    }
+
+    public static void sendSubmitSMResp(SubmitSMResp submitSMResp) throws SmppException {
+        smppServer.send(submitSMResp);
     }
 
     public static void sendDeliveryReceipt(long message_id, Message delivery_receipt) throws SmppException, CouldNotWriteToJournalException{
@@ -350,6 +393,12 @@ public class Gateway extends Thread implements PDUListener {
                 log.warn("Couldn't find deliver receipt with sequence number "+sequence_number);
             }
 
+        }
+    }
+
+    public static void cleanJournal() throws CouldNotCleanJournalException {
+        synchronized (read_write_monitor){
+            journal.cleanJournal();
         }
     }
 

@@ -6,12 +6,12 @@
 
          <section name="endpoint1">
              <param name="systemId" type="string">systemId1</param>
-             <param name="password" type="string">password</param>
+             <param name="password" type="string">passwrd1</param>
          </section>
 
          <section name="endpoint2">
              <param name="systemId" type="string">systemId2</param>
-             <param name="password" type="string">password</param>
+             <param name="password" type="string">passwrd2</param>
          </section>
 
      </section>

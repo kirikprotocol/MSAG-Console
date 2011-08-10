@@ -36,9 +36,11 @@ public class Client extends Thread implements PDUListener {
 
     private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private final FinalLogGenerator finalLogGenerator;
+    private FinalLogGenerator finalLogGenerator;
 
     private int counter=0;
+
+    private boolean generate_final_log = false;
 
     public Client() throws SmppException {
         this.config = new Properties();
@@ -64,9 +66,12 @@ public class Client extends Thread implements PDUListener {
 
         message = config.getProperty("message");
 
-        final_log_dir = new File(config.getProperty("final.log.dir"));
-
-        finalLogGenerator = new FinalLogGenerator(final_log_dir);
+        if (config.getProperty("final.log.dir") != null){
+            final_log_dir = new File(config.getProperty("final.log.dir"));
+            finalLogGenerator = new FinalLogGenerator(final_log_dir);
+            generate_final_log = true;
+            logger.debug("Set generate final log variable value to true.");
+        }
 
         logger.debug("Start smpp client.");
     }
@@ -117,8 +122,7 @@ public class Client extends Thread implements PDUListener {
                 long message_id = Long.parseLong(message_id_str);
                 logger.debug("message_id="+message_id);
 
-                finalLogGenerator.writeFinalState(message_id);
-
+                if (generate_final_log) finalLogGenerator.writeFinalState(message_id);
         }
         return false;
     }
@@ -135,9 +139,9 @@ public class Client extends Thread implements PDUListener {
                     SubmitSM submitSM = new SubmitSM();
                     submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
                     if (Math.random() < 0.5){
-                        submitSM.setConnectionName("client1");
+                        submitSM.setConnectionName("con1");
                     } else{
-                        submitSM.setConnectionName("client2");
+                        submitSM.setConnectionName("con2");
                     }
 
                     DateFormat df = DateFormat.getDateTimeInstance();
