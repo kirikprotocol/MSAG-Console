@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.util.config.ConfigFileManager;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -48,11 +47,9 @@ public class SmppGWConfigManager {
     endpointSettings.validate();
     providerSettings.validate();
     for(SmppGWProvider p : providerSettings.getProviders()) {
-      Iterator<String> i = p.getEndpoints().iterator();
-      while(i.hasNext()) {
-        String e = i.next();
-        if(!endpointSettings.containsEndpoint(e)) {   // Проверяем, существует ли соединение, указанное в КП
-          i.remove();
+      for (String e : p.getEndpoints()) {               //копия
+        if (!endpointSettings.containsEndpoint(e)) {   // Проверяем, существует ли соединение, указанное в КП
+          p.removeEndpoint(e);
         }
       }
       for(SmppGWRoute r : p.getRoutes()) {
@@ -80,15 +77,8 @@ public class SmppGWConfigManager {
   }
 
   public void updateSettings(SmppGWProviderSettings providerSettings) throws AdminException {
-    validate(providerSettings, endpointSettings);
-    try {
-      lock.writeLock().lock();
-      this.providerSettings = providerSettings;
-      save();
-      smppGW.updateConfig();
-    } finally {
-      lock.writeLock().unlock();
-    }
+    SmppGWEndpointSettings endpointSettings = new SmppGWEndpointSettings(this.endpointSettings);
+    updateSettings(providerSettings, endpointSettings);
   }
 
   public void updateSettings() throws AdminException {
@@ -102,15 +92,8 @@ public class SmppGWConfigManager {
   }
 
   public void updateSettings(SmppGWEndpointSettings endpointSettings) throws AdminException {
-    validate(providerSettings, endpointSettings);
-    try {
-      lock.writeLock().lock();
-      this.endpointSettings = endpointSettings;
-      save();
-      smppGW.updateConfig();
-    } finally {
-      lock.writeLock().unlock();
-    }
+    SmppGWProviderSettings providerSettings = new SmppGWProviderSettings(this.providerSettings);
+    updateSettings(providerSettings, endpointSettings);
   }
 
   public SmppGWProviderSettings getProviderSettings() {

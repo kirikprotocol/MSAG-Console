@@ -665,13 +665,13 @@ public class Configuration {
     return context.getSmppGWEndpointSettings();
   }
 
-  public void updateSmppGWSettings(SmppGWEndpointSettings endpointSettings) throws AdminException {
-    //todo journal
+  public void updateSmppGWSettings(SmppGWEndpointSettings endpointSettings, String user) throws AdminException {
     context.updateSmppGWSettings(endpointSettings);
+    journal.logSmppGWUpdateEndpoints(user);
   }
 
-  public void updateSmppGWSettings(SmppGWProviderSettings providerSettings) throws AdminException {
-    //todo journal
+  public void updateSmppGWSettings(SmppGWProviderSettings providerSettings, String user) throws AdminException {
     context.updateSmppGWSettings(providerSettings);
+    journal.logSmppGWUpdateProviders(user);
   }
 }

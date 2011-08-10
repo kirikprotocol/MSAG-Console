@@ -75,7 +75,7 @@ public class SmppGWEndpointEditController extends InformerController{
         s.removeEndpoint(endpoint.getName());
       }
       s.addEndpoint(endpoint);
-      getConfig().updateSmppGWSettings(s);
+      getConfig().updateSmppGWSettings(s, getUserName());
     }catch (AdminException e){
       addError(e);
       return null;

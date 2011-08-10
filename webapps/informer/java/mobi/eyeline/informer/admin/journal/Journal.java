@@ -368,6 +368,26 @@ public class Journal {
   }
 
   /**
+   * Добавляет в журнал запись об обновлении настроек SMPPGW провайдеров
+   *
+   * @param user   пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logSmppGWUpdateProviders(String user) throws AdminException {
+    smppGW.logUpdateSmppGWProviders(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об обновлении настроек SMPPGW соединений
+   *
+   * @param user   пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logSmppGWUpdateEndpoints(String user) throws AdminException {
+    smppGW.logUpdateSmppGWEndpoints(this, user);
+  }
+
+  /**
    * Добавляет в журнал запись о старте Informer
    *
    * @param user пользователь, от имени которого надо формировать записи

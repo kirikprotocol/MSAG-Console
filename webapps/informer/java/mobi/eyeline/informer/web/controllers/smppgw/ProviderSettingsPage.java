@@ -200,7 +200,7 @@ public class ProviderSettingsPage extends ProviderEditPage{
     }
     try{
       ss.addProvider(provider);
-      getConfig().updateSmppGWSettings(ss);
+      getConfig().updateSmppGWSettings(ss, getUserName());
     }catch (AdminException e) {
       addError(e);
       return null;

@@ -61,7 +61,7 @@ public class SmppGWProvidersController extends InformerController{
         settings.removeProvider((String)o);
       }
       try {
-        getConfig().updateSmppGWSettings(settings);
+        getConfig().updateSmppGWSettings(settings, getUserName());
       } catch (AdminException e) {
         addError(e);
       }

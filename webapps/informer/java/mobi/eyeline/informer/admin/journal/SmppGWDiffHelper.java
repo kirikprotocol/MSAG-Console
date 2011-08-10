@@ -23,4 +23,12 @@ public class SmppGWDiffHelper extends DiffHelper{
   public void logSmppGWSwitch(Journal j, String toHost, String user) throws AdminException {
     j.addRecord(JournalRecord.Type.SERVICE_NODE_SWITCH, subject, user, "smpp_gw_switch", toHost);
   }
+
+  public void logUpdateSmppGWProviders(Journal j, String user) throws AdminException {
+    j.addRecord(JournalRecord.Type.CHANGE, subject, user, "smpp_gw_providers_update");
+  }
+
+  public void logUpdateSmppGWEndpoints(Journal j, String user) throws AdminException {
+    j.addRecord(JournalRecord.Type.CHANGE, subject, user, "smpp_gw_endpoints_update");
+  }
 }
