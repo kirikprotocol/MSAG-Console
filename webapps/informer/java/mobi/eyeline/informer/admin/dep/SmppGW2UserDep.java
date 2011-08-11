@@ -23,7 +23,6 @@ public class SmppGW2UserDep {
   public void updateUser(User u) throws AdminException {
     String login = u.getLogin();
 
-    try{
     for(SmppGWProvider p : smppGwManager.getProviderSettings().getProviders()) {
       for(SmppGWRoute r : p.getRoutes()) {
         if(r.getUser().equals(login)) {
@@ -31,9 +30,6 @@ public class SmppGW2UserDep {
           return;
         }
       }
-    }
-    }catch (AdminException e){
-      logger.error(e,e);
     }
   }
 }

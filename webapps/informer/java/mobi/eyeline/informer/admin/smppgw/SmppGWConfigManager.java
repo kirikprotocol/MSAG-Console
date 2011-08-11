@@ -71,7 +71,7 @@ public class SmppGWConfigManager {
       this.endpointSettings = endpointSettings;
       save();
       smppGW.updateConfig();
-    } finally {
+    } catch (OfflineException ignore){} finally {
       lock.writeLock().unlock();
     }
   }
