@@ -27,6 +27,8 @@ public class Message {
   protected Integer errorCode;
   protected boolean resended;
 
+  protected String keywords;
+
   protected final Properties properties = new Properties();
 
   public static Message newMessage(String text) {
@@ -51,6 +53,14 @@ public class Message {
 
   void setText(String text) {
     this.text = text;
+  }
+
+  public String getKeywords() {
+    return keywords;
+  }
+
+  public void setKeywords(String keywords) {
+    this.keywords = keywords;
   }
 
   public Long getId() {
@@ -149,6 +159,7 @@ public class Message {
     m.date = date == null ? null : new Date(date.getTime());
     m.errorCode = errorCode;
     m.properties.putAll(properties);
+    m.keywords = keywords;
     return m;
   }
 
@@ -162,6 +173,7 @@ public class Message {
     if (id != null ? !id.equals(message.id) : message.id != null) return false;
     if (abonent != null ? !abonent.equals(message.abonent) : message.abonent != null) return false;
     if (text != null ? !text.equals(message.text) : message.text != null) return false;
+    if (keywords != null ? !keywords.equals(message.keywords) : message.keywords != null) return false;
     if ((properties != null && message.properties == null) || (properties == null && message.properties != null)) {
       return false;
     }

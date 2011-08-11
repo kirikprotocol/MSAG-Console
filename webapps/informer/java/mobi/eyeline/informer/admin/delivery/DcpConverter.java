@@ -250,6 +250,11 @@ class DcpConverter {
       result.setIndex(m.getGlossaryIndex());
       result.setMsgType(MessageType.GlossaryMessage);
     }
+    if(m.getKeywords() != null) {
+      MessageFlags flags = new MessageFlags();
+      flags.setEyelineKeywordTLV(m.getKeywords());
+      result.setFlags(flags);
+    }
 
     String userDataStr = convertUserData(m.getProperties());
     if (userDataStr != null)

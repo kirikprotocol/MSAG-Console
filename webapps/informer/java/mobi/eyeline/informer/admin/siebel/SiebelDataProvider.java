@@ -28,7 +28,7 @@ interface SiebelDataProvider {
    * @param deliveryStates состояния сообщений, ключ - идентификатор сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public void setMessageStates(Map<String, SiebelMessage.DeliveryState> deliveryStates) throws AdminException;
+  public void setMessageStates(Map<String, DeliveryMessageState> deliveryStates) throws AdminException;
 
   /**
    * Возвращает рассылку по её идентификатору

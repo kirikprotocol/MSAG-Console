@@ -57,14 +57,14 @@ class TestSiebelDataProvider implements SiebelDataProvider{
     };
   }
 
-  public void setMessageStates(Map<String, SiebelMessage.DeliveryState> deliveryStates) throws AdminException {
+  public void setMessageStates(Map<String, DeliveryMessageState> deliveryStates) throws AdminException {
     for(List<SiebelMessage> ms : messages.values()) {
       for(SiebelMessage s : ms) {
         if(deliveryStates.containsKey(s.getClcId())) {
-          SiebelMessage.DeliveryState state = deliveryStates.get(s.getClcId());
+          DeliveryMessageState state = deliveryStates.get(s.getClcId());
           s.setSmscCode(state.getSmppCode());
           s.setSmscValue(state.getSmppCodeDescription());
-//          s.setMessageState(state.getState());
+          s.setMessageState(state.getState() == null ? null : state.getState().toString());
           s.setLastUpd(new Date());
         }
       }
@@ -79,7 +79,12 @@ class TestSiebelDataProvider implements SiebelDataProvider{
     List<SiebelDelivery> res = new LinkedList<SiebelDelivery>();
     for(SiebelDelivery sd : deliveries.values()) {
       if(sd.getLastUpdate().after(from)) {
-        res.add(sd);
+        switch (sd.getStatus()) {
+          case ENQUEUED:
+          case PAUSED:
+          case STOPPED:  res.add(sd); break;
+          default: res.add(sd);
+        }
       }
     }
     final Iterator<SiebelDelivery> i = res.iterator();

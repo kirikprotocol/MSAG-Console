@@ -43,10 +43,9 @@
         <eye:pageSubtitle value="#{msg['smppgw.provider.edit.conns']}"/>
       </h:panelGroup>
 
-      <h:panelGrid columns="2" columnClasses="column0Width,">
-        <h:outputText value="&#160;"/>
+      <h:panelGrid style="padding-left: 10px" columns="2" columnClasses="column300Width, columnTopLeftAlig">
         <eye:dynamicTable value="#{smppgwProvider.activePage.endpoints}">
-          <eye:selectColumn name="conn" values="#{smppgwProvider.activePage.availableEndpoints}" uniqueValues="true" width="15%"/>
+          <eye:selectColumn name="conn" values="#{smppgwProvider.activePage.availableEndpoints}" uniqueValues="true"/>
         </eye:dynamicTable>
       </h:panelGrid>
 

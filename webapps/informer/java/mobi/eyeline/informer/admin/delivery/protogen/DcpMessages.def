@@ -96,6 +96,7 @@ message DeliveryInfo
   // DD.MM.YY hh:mm:ss, ignored on input
   string creationDate 29 opt
   bool boundToLocalTime 30 opt
+  string finalizationDelay 31 opt
 end
 
 enum byte MessageType
@@ -112,6 +113,7 @@ message MessageFlags
   string svcType 5 opt
   string sourceAddress 6 opt
   DeliveryMode deliveryMode 7 opt
+  string eyelineKeywordTLV 8 opt
 end
 
 message DeliveryMessage

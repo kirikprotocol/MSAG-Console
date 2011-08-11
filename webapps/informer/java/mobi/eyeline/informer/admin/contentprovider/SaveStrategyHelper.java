@@ -70,18 +70,26 @@ class SaveStrategyHelper {
 
     String abonent = line.substring(0, inx).trim();
 
-    String text, userData = null;
+    String text, userData = null, keywords = null;
     int nextInx = line.indexOf('|', inx + 1);
     if (nextInx < 0)
       text = line.substring(inx + 1).trim();
     else {
       userData = line.substring(inx + 1, nextInx);
-      text = line.substring(nextInx + 1).trim();
+      inx = nextInx;
+      nextInx = line.indexOf('|', inx+1);
+      if(nextInx < 0) {
+        text = line.substring(inx + 1).trim();
+      }else {
+        keywords = line.substring(inx + 1, nextInx).trim();
+        text = line.substring(nextInx+1).trim();
+      }
     }
 
     result[0] = abonent;
     result[1] = text;
     result[2] = userData;
+    result[3] = keywords;
   }
 
   private String checkAllLinesContainsSameText(File f, String encoding) throws AdminException {
@@ -90,7 +98,7 @@ class SaveStrategyHelper {
       is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f), encoding));
       String line;
       String first = null;
-      String[] data = new String[3];
+      String[] data = new String[4];
       while ((line = is.readLine()) != null) {
         try {
           splitLine(line, data);
@@ -328,7 +336,7 @@ class SaveStrategyHelper {
     public Message next() throws AdminException {
       try {
         String line;
-        String[] lineData=new String[3];
+        String[] lineData=new String[4];
         while ((line = reader.readLine()) != null) {
           line = line.trim();
           if (line.length() == 0) continue;
@@ -338,6 +346,7 @@ class SaveStrategyHelper {
             String addr = lineData[0];
             String text = lineData[1];
             String userData = lineData[2];
+            String keywords = lineData[3];
 
             Address ab;
             try {
@@ -360,6 +369,8 @@ class SaveStrategyHelper {
 
             if (userData != null)
               m.setProperty("udata", userData);
+
+            m.setKeywords(keywords);
 
             return m;
           } catch (Exception e) {

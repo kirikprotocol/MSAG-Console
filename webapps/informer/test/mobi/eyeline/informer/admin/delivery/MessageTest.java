@@ -42,6 +42,7 @@ public class MessageTest {
     m.setErrorCode(1212);
     m.setGlossaryIndex(1);
     m.setId(12121l);
+    m.setKeywords("keyWs");
     m.setProperty("prop1", "value1");
     m.setProperty("prop2", "value2");
     Assert.assertEquals(m.cloneMessage(), m.cloneMessage());

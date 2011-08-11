@@ -110,6 +110,9 @@ public class ChooseDeliveryPage extends ProviderEditPage{
 
     getConfig().getDeliveries(u.getLogin(), filter, 1000, new Visitor<Delivery>() {
       public boolean visit(Delivery value) throws AdminException {
+        if(!canBeRouted(value)) {
+          return true;
+        }
         if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
           insert(infos, value, comparator);
 
@@ -120,12 +123,19 @@ public class ChooseDeliveryPage extends ProviderEditPage{
     return Arrays.asList(infos).subList(startPos, startPos + count);
   }
 
+  private boolean canBeRouted(Delivery value) {
+    return value.getArchiveTime() == null;
+  }
+
   private List<Delivery> getUnsortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count) throws AdminException {
     final Delivery infos[] = new Delivery[count];
     getConfig().getDeliveries(u.getLogin(), filter, 1000, new Visitor<Delivery>() {
       int pos = 0;
 
       public boolean visit(Delivery value) throws AdminException {
+        if(!canBeRouted(value)) {
+          return true;
+        }
         if (pos >= startPos + count)
           return false;
 

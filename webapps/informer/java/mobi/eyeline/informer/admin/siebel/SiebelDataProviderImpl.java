@@ -409,48 +409,48 @@ class SiebelDataProviderImpl implements SiebelDataProvider {
     return status;
   }
 
-  public SiebelMessage.State getMessageState(String clcId) throws AdminException {
-    if (clcId == null) {
-      throw new SiebelException("internal_error");
-    }
-    Connection connection = null;
-    PreparedStatement prepStatement = null;
-    java.sql.ResultSet sqlResult = null;
-    SiebelMessage.State state = null;
-
-    try {
-      connection = pool.getConnection();
-
-      prepStatement = connection.prepareStatement(getSql("message.get.status"));
-      prepStatement.setFetchSize(FETCH_SIZE);
-      prepStatement.setString(1, clcId);
-
-      sqlResult = prepStatement.executeQuery();
-
-      if (sqlResult.next()) {
-        String st =
-            sqlResult.getString(getSql("message.message.state"));
-        if (st != null) {
-          state = SiebelMessage.State.valueOf(st);
-        }
-      }
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get SmsMailParam's state " + state);
-      }
-    } catch (SQLException exc) {
-      logger.error("Unable to get SiebelMessage state with clcId: " + clcId, exc);
-      throw new SiebelException("unable_get_data");
-
-    } finally {
-      closeConn(connection, prepStatement, sqlResult);
-    }
-    return state;
-  }
+//  public SiebelMessage.DeliveryState.State getMessageState(String clcId) throws AdminException {
+//    if (clcId == null) {
+//      throw new SiebelException("internal_error");
+//    }
+//    Connection connection = null;
+//    PreparedStatement prepStatement = null;
+//    java.sql.ResultSet sqlResult = null;
+//    SiebelMessage.DeliveryState.State state = null;
+//
+//    try {
+//      connection = pool.getConnection();
+//
+//      prepStatement = connection.prepareStatement(getSql("message.get.status"));
+//      prepStatement.setFetchSize(FETCH_SIZE);
+//      prepStatement.setString(1, clcId);
+//
+//      sqlResult = prepStatement.executeQuery();
+//
+//      if (sqlResult.next()) {
+//        String st =
+//            sqlResult.getString(getSql("message.message.state"));
+//        if (st != null) {
+//          state = SiebelMessage.DeliveryState.State.valueOf(st);
+//        }
+//      }
+//
+//      if (logger.isDebugEnabled()) {
+//        logger.debug("Succesful get SmsMailParam's state " + state);
+//      }
+//    } catch (SQLException exc) {
+//      logger.error("Unable to get SiebelMessage state with clcId: " + clcId, exc);
+//      throw new SiebelException("unable_get_data");
+//
+//    } finally {
+//      closeConn(connection, prepStatement, sqlResult);
+//    }
+//    return state;
+//  }
 
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  public void setMessageStates(Map<String, SiebelMessage.DeliveryState> deliveryStates) throws AdminException {
+  public void setMessageStates(Map<String, DeliveryMessageState> deliveryStates) throws AdminException {
     if (deliveryStates == null || deliveryStates.isEmpty()) {
       return;
     }
@@ -464,12 +464,12 @@ class SiebelDataProviderImpl implements SiebelDataProvider {
       connection.setAutoCommit(false);
       try {
         int count = 0;
-        for (Map.Entry<String, SiebelMessage.DeliveryState> stringDeliveryStateEntry : deliveryStates.entrySet()) {
+        for (Map.Entry<String, DeliveryMessageState> stringDeliveryStateEntry : deliveryStates.entrySet()) {
           if (prepStatement == null) {
             prepStatement = connection.prepareStatement(getSql("message.update.delivered"));
           }
           String clcId = stringDeliveryStateEntry.getKey();
-          SiebelMessage.DeliveryState deliverySt = stringDeliveryStateEntry.getValue();
+          DeliveryMessageState deliverySt = stringDeliveryStateEntry.getValue();
           prepStatement.setString(1, deliverySt.getSmppCode());
           prepStatement.setString(2, deliverySt.getSmppCodeDescription());
           prepStatement.setString(3, deliverySt.getState().toString());

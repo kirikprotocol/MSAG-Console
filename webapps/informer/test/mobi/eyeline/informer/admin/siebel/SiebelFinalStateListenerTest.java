@@ -6,10 +6,10 @@ import org.junit.Test;
 import testutils.TestUtils;
 
 import java.io.File;
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Aleksandr Khalitov
@@ -20,7 +20,7 @@ public class SiebelFinalStateListenerTest {
 
   private static SiebelManager siebelManager;
 
-  private static Map<String, SiebelMessage.DeliveryState> messagesState = new HashMap<String, SiebelMessage.DeliveryState>();
+  private static Map<String, DeliveryMessageState> messagesState = new HashMap<String, DeliveryMessageState>();
   private static Set<String> processedDeliveries = new HashSet<String>();
 
   private static File workDir = new File("siebel"+System.currentTimeMillis());

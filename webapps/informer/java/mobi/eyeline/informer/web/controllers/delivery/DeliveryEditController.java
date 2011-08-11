@@ -8,6 +8,8 @@ import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatusHistory;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.infosme.TestSmsException;
+import mobi.eyeline.informer.admin.smppgw.SmppGWProvider;
+import mobi.eyeline.informer.admin.smppgw.SmppGWRoute;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
@@ -120,6 +122,22 @@ public class DeliveryEditController extends DeliveryController {
 
   public boolean isArchiveDaemonDeployed() {
     return config.isArchiveDaemonDeployed();
+  }
+
+  public boolean isArchivateAvailable() {
+    if(!config.isArchiveDaemonDeployed() || !isUserInAdminRole()) {
+      return false;
+    }
+    if(config.isSmppGWDeployed()) {
+      int id = delivery.getId();
+      for(SmppGWProvider p : getConfig().getSmppGWProviderSettings().getProviders()) {
+        SmppGWRoute r = p.getRoute(id);
+        if(r != null) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   public String getArchiveTime() {

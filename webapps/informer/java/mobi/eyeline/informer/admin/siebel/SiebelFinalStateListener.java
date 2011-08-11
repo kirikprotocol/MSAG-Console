@@ -228,17 +228,17 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
   }
 
 
-  private SiebelMessage.State getState(String st) {
+  private DeliveryMessageState.State getState(String st) {
     MessageState state = MessageState.valueOf(st);
-    SiebelMessage.State siebelState;
+    DeliveryMessageState.State siebelState;
     if (state == MessageState.Delivered) {
-      siebelState = SiebelMessage.State.DELIVERED;
+      siebelState = DeliveryMessageState.State.DELIVERED;
     } else if (state == MessageState.Expired) {
-      siebelState = SiebelMessage.State.EXPIRED;
+      siebelState = DeliveryMessageState.State.EXPIRED;
     } else if (state == MessageState.Failed) {
-      siebelState = SiebelMessage.State.ERROR;
+      siebelState = DeliveryMessageState.State.ERROR;
     } else {
-      siebelState = SiebelMessage.State.UNKNOWN;
+      siebelState = DeliveryMessageState.State.UNKNOWN;
     }
     return siebelState;
   }
@@ -260,7 +260,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
     FileUtils.truncateFile(f, c, 2);
 
     BufferedReader reader = null;
-    Map<String, SiebelMessage.DeliveryState> states = new HashMap<String, SiebelMessage.DeliveryState>(1001);
+    Map<String, DeliveryMessageState> states = new HashMap<String, DeliveryMessageState>(1001);
     Map<String, SiebelDelivery.Status> deliveries = new HashMap<String, SiebelDelivery.Status>(1001);
     try{
       reader = new BufferedReader(new InputStreamReader(fs.getInputStream(f)));
@@ -271,7 +271,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
         List<String> list = StringEncoderDecoder.csvDecode(',',line);
         if(list.get(0).equals("0")) {
           states.put(list.get(1),
-              new SiebelMessage.DeliveryState(getState(list.get(2)), list.get(3), getErrorDescr(list.get(3))));
+              new DeliveryMessageState(getState(list.get(2)), list.get(3), getErrorDescr(list.get(3))));
           countMessages++;
         }else{
           deliveries.put(list.get(1), SiebelDelivery.Status.PROCESSED);

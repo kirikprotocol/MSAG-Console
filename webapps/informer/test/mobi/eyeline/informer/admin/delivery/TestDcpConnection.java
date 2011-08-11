@@ -475,6 +475,7 @@ public class TestDcpConnection extends DcpConnection{
     r.position+=result.size();
     for(Message d : result) {
       Message info = new Message();
+      info.setKeywords(d.getKeywords());
       info.setAbonent(d.getAbonent());
       info.setDate(d.getDate());
       info.setErrorCode(d.getErrorCode());

@@ -91,7 +91,7 @@ class SiebelManager {
     return !shutdown;
   }
 
-  public void setMessageStates(Map<String, SiebelMessage.DeliveryState> deliveryStates) throws AdminException {
+  public void setMessageStates(Map<String, DeliveryMessageState> deliveryStates) throws AdminException {
     if (provider != null && !provider.isShutdowned()) {
       provider.setMessageStates(deliveryStates);
     } else {
@@ -479,9 +479,9 @@ class SiebelManager {
 
       if (st.getStatus() == SiebelDelivery.Status.ENQUEUED) {
         if(!isCreationAvailable()) {
-              if(st.getWaveId() != null) {
-                addError(st.getWaveId());
-              }
+          if(st.getWaveId() != null) {
+            addError(st.getWaveId());
+          }
           return;
         }
         thread = new Runnable() {
@@ -559,30 +559,27 @@ class SiebelManager {
     return msisdn;
   }
 
-  private boolean validateMessage(SiebelMessage message, User u, Map<String, SiebelMessage.DeliveryState> unloaded) throws AdminException {
+  private boolean validateMessage(SiebelMessage message, User u, Map<String, DeliveryMessageState> unloaded) throws AdminException {
     String msisdn = message.getMsisdn();
     String clcId = message.getClcId();
     String text = message.getMessage();
     if(text == null || text.length() == 0) {
       logger.error("Illegal message text: '"+text+'\'');
-      unloaded.put(clcId, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "", ""));
+      unloaded.put(clcId, new DeliveryMessageState(DeliveryMessageState.State.REJECTED, "", ""));
       return false;
     }
     Region r;
     if (msisdn == null || !Address.validate(msisdn) ||
         !(u.isAllRegionsAllowed() || ((r = context.getRegion(new Address(msisdn))) != null
-                  && u.getRegions() != null && u.getRegions().contains(r.getRegionId())))) {
+            && u.getRegions() != null && u.getRegions().contains(r.getRegionId())))) {
       logger.error("Illegal message msisdn: '"+msisdn+'\'');
-      unloaded.put(clcId, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "11", "Invalid Dest Addr"));
+      unloaded.put(clcId, new DeliveryMessageState(DeliveryMessageState.State.REJECTED, "11", "Invalid Dest Addr"));
       return false;
     }
     return true;
   }
 
-  private Message createMessage(SiebelMessage sM, User u, Map<String, SiebelMessage.DeliveryState> unloaded) throws AdminException {
-    if(!validateMessage(sM, u, unloaded)) {
-      return null;
-    }
+  private Message createMessage(SiebelMessage sM) throws AdminException {
     Address abonent = new Address(sM.getMsisdn());
     Message msg = Message.newMessage(abonent, sM.getMessage());
     msg.setProperty(UserDataConsts.SIEBEL_MESSAGE_ID, sM.getClcId());
@@ -596,16 +593,7 @@ class SiebelManager {
       }
       final int[] countMessages = new int[]{0};
 
-      //todo Выбран очень сложный способ хранения некорректных сообщений.
-      //todo А что, если Siebel создаст рассылку с несколькими миллионами неправильных сообщений? Все они попадут в эту Map...
-      //todo Надо упростить.
-      final Map<String, SiebelMessage.DeliveryState> unloaded = new HashMap<String, SiebelMessage.DeliveryState>(10001){
-        @Override
-        public SiebelMessage.DeliveryState put(String key, SiebelMessage.DeliveryState value) {
-          logger.error(new StringBuilder(60).append("Siebel: Unloaded message ctrl_id='").append(key).append('\'').toString());
-          return super.put(key, value);
-        }
-      };
+      final Map<String, DeliveryMessageState> unloaded = new HashMap<String, DeliveryMessageState>(10001);
 
       final User u = context.getUser(siebelUser);
 
@@ -613,10 +601,16 @@ class SiebelManager {
         public Message next() throws AdminException {
           while (messages.next()) {
             SiebelMessage sM = messages.get();
-            Message msg = createMessage(sM, u, unloaded);  //todo Зачем validateMessage делается внутри createMessage??? Это же никак не следует из названия метода! Делай validateMessage перед вызовом createMessage.
-            if(msg != null) {
+            if(validateMessage(sM, u, unloaded)) {
+              Message msg = createMessage(sM);
               countMessages[0]++;
               return msg;
+            }else {
+              logger.error(new StringBuilder(60).append("Siebel: Unloaded message ctrl_id='").append(sM.getClcId()).append('\'').toString());
+              if(unloaded.size() == 10000) {
+                updateUnloaded(unloaded);
+                unloaded.clear();
+              }
             }
           }
           return null;
@@ -645,7 +639,7 @@ class SiebelManager {
     }
   }
 
-  private void updateUnloaded(Map<String, SiebelMessage.DeliveryState> unloaded) {
+  private void updateUnloaded(Map<String, DeliveryMessageState> unloaded) {
     try {
       provider.setMessageStates(unloaded);
     } catch (Exception e) {

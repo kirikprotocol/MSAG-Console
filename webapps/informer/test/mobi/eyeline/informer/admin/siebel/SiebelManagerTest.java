@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -164,18 +164,20 @@ public class SiebelManagerTest {
     sm.setCreated(new Date());
     sm.setLastUpd(new Date());
     sm.setMsisdn("+79529223755");
-    dataProvider.addMessage(wid, sm);
-        sm = new SiebelMessage();
-    sm.setClcId(Integer.toString(++i));
-    sm.setCreated(new Date());
-    sm.setLastUpd(new Date());
-    sm.setMsisdn("+79139489906");
+    sm.setMessage("message");
     dataProvider.addMessage(wid, sm);
         sm = new SiebelMessage();
     sm.setClcId(Integer.toString(++i));
     sm.setCreated(new Date());
     sm.setLastUpd(new Date());
     sm.setMsisdn("+79167543243");
+    dataProvider.addMessage(wid, sm);
+        sm = new SiebelMessage();
+    sm.setClcId(Integer.toString(++i));
+    sm.setCreated(new Date());
+    sm.setLastUpd(new Date());
+    sm.setMsisdn("dasdsaasddasasd");
+    sm.setMessage("Message");
     dataProvider.addMessage(wid, sm);
 
     SiebelDelivery sd = new SiebelDelivery();
@@ -189,6 +191,24 @@ public class SiebelManagerTest {
     dataProvider.addDelivery(sd);
   }
 
+  private void testMessages() throws AdminException {
+    int i=0;
+    SiebelMessage sm = dataProvider.getMessage(Integer.toString(++i));
+    assertNotNull(sm);
+    assertNotSame(sm.getSmscCode(),"11");
+    assertNotSame(sm.getSmscValue(),"Invalid Dest Addr");
+    sm = dataProvider.getMessage(Integer.toString(++i));
+    assertNotNull(sm);
+    assertNotSame(sm.getSmscCode(),"11");
+    assertNotSame(sm.getSmscValue(),"Invalid Dest Addr");
+    assertEquals(sm.getMessageState(), DeliveryMessageState.State.REJECTED.toString());
+    sm = dataProvider.getMessage(Integer.toString(++i));
+    assertNotNull(sm);
+    assertEquals(sm.getSmscCode(),"11");
+    assertEquals(sm.getSmscValue(),"Invalid Dest Addr");
+    assertEquals(sm.getMessageState(), DeliveryMessageState.State.REJECTED.toString());
+  }
+
   @Test
   public void testDelivery() throws Exception{
     String wid = "10000";
@@ -198,6 +218,7 @@ public class SiebelManagerTest {
     Thread.sleep(TIMEOUT*1500);
 
     testCreation();
+    testMessages();
 
     dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.PAUSED);
 
