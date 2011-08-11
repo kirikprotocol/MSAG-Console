@@ -596,6 +596,9 @@ class SiebelManager {
       }
       final int[] countMessages = new int[]{0};
 
+      //todo Выбран очень сложный способ хранения некорректных сообщений.
+      //todo А что, если Siebel создаст рассылку с несколькими миллионами неправильных сообщений? Все они попадут в эту Map...
+      //todo Надо упростить.
       final Map<String, SiebelMessage.DeliveryState> unloaded = new HashMap<String, SiebelMessage.DeliveryState>(10001){
         @Override
         public SiebelMessage.DeliveryState put(String key, SiebelMessage.DeliveryState value) {
@@ -610,7 +613,7 @@ class SiebelManager {
         public Message next() throws AdminException {
           while (messages.next()) {
             SiebelMessage sM = messages.get();
-            Message msg = createMessage(sM, u, unloaded);
+            Message msg = createMessage(sM, u, unloaded);  //todo Зачем validateMessage делается внутри createMessage??? Это же никак не следует из названия метода! Делай validateMessage перед вызовом createMessage.
             if(msg != null) {
               countMessages[0]++;
               return msg;
