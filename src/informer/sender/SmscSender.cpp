@@ -656,6 +656,14 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 } // ussdpush
             }
 
+            // smpp unknown optionals
+            const char* unknownBuf;
+            const size_t unknownLen = msg.flags.getExtraTLV(unknownBuf);
+            if ( unknownLen ) {
+                sms.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,
+                                   unknownBuf,unknownLen);
+            }
+            
             drm->nchunks = nchunks;
             smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
                            smscId_.c_str(),

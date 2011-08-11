@@ -14,6 +14,7 @@ static const size_t DLV_NAME_LENGTH = 256;
 static const size_t DLV_SVCTYPE_LENGTH = 32;
 static const size_t DLV_USERDATA_LENGTH = 1024;
 static const size_t MSG_USERDATA_LENGTH = 1024;
+static const size_t MSG_EYELINEKEYWORD_LENGTH = 256;
 static const size_t REGION_NAME_LENGTH = 64;
 static const size_t SMSC_ID_LENGTH = 64;
 static const size_t USER_ID_LENGTH = 64;
@@ -110,6 +111,7 @@ typedef enum {
     DLVMODE_USSDPUSH = 1,
     DLVMODE_USSDPUSHVLR = 2
 } DlvMode;
+const char* dlvModeToString( DlvMode mode );
 
 typedef enum {
     MSGSTATE_INPUT = 1,

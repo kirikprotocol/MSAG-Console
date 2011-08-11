@@ -41,20 +41,33 @@ public:
         return fb_.getCString();
     }
 
+    const char* getOString( size_t& len ) {
+        len = fb_.getc16();
+        return reinterpret_cast<const char*>(fb_.skip(len));
+    }
+
 private:
     FromBuf fb_;
 };
 }
 
 
-void MessageFlagBuilder::setBool(bool value, uint16_t tag)
+#define SETBIT(x) if ((bitmask_&x)) { \
+    throw InfosmeException(EXC_LOGICERROR,"bit %llu is already set in mfb",x); \
+} else bitmask_ |= x
+
+
+void MessageFlagBuilder::setBool(bool value, uint16_t tag, uint64_t bit)
 {
+    SETBIT(bit);
+    /*
     MessageFlagParser mp(buf_.get(),buf_.GetPos());
     if (mp.findTag(tag)) {
         mp.getLen();
         buf_.get()[mp.getPos()] = char(value ? 1 : 0);
         return;
     }
+     */
     buf_.reserve(buf_.GetPos()+10);
     ToBuf tb(buf_.GetCurPtr(),buf_.getSize()-buf_.GetPos());
     tb.setc16(tag);
@@ -63,7 +76,7 @@ void MessageFlagBuilder::setBool(bool value, uint16_t tag)
     buf_.SetPos(buf_.GetPos()+tb.getPos());
 }
 
-
+/*
 void MessageFlagBuilder::cutField(uint16_t tag)
 {
     MessageFlagParser mp(buf_.get(),buf_.GetPos());
@@ -79,14 +92,20 @@ void MessageFlagBuilder::cutField(uint16_t tag)
         buf_.SetPos( o - buf_.get() );
     }
 }
+ */
 
 
 void MessageFlagBuilder::setSvcType( const char* value )
 {
-    if (!value || !value[0]) return;
+    if (!value || !value[0]) {
+        throw InfosmeException(EXC_LOGICERROR,"empty svctype in mfb");
+    }
     const size_t vallen = strlen(value);
-    if (vallen >= DLV_SVCTYPE_LENGTH) return;
-    cutField(TAG_SVCTYPE);
+    if (vallen >= DLV_SVCTYPE_LENGTH) {
+        throw InfosmeException(EXC_LOGICERROR,"too long svctype in mfb");
+    }
+    SETBIT(BIT_SVCTYPE);
+    // cutField(TAG_SVCTYPE);
     buf_.reserve(buf_.GetPos()+10+vallen);
     ToBuf tb(buf_.GetCurPtr(),buf_.getSize()-buf_.GetPos());
     tb.setc16(TAG_SVCTYPE);
@@ -101,8 +120,8 @@ void MessageFlagBuilder::setSourceAddress( const smsc::sms::Address& oa )
     char oabuf[32];
     oa.toString(oabuf,sizeof(oabuf));
     const size_t oalen = strlen(oabuf);
-
-    cutField(TAG_SOURCEADDRESS);
+    SETBIT(BIT_SOURCEADDRESS);
+    // cutField(TAG_SOURCEADDRESS);
     buf_.reserve(buf_.GetPos()+10+oalen);
     ToBuf tb(buf_.GetCurPtr(),buf_.getSize()-buf_.GetPos());
     tb.setc16(TAG_SOURCEADDRESS);
@@ -114,13 +133,67 @@ void MessageFlagBuilder::setSourceAddress( const smsc::sms::Address& oa )
 
 void MessageFlagBuilder::setDeliveryMode( DlvMode dlvMode )
 {
-    cutField(TAG_DELIVERYMODE);
+    // cutField(TAG_DELIVERYMODE);
+    SETBIT(BIT_DELIVERYMODE);
     buf_.reserve(buf_.GetPos()+10);
     ToBuf tb(buf_.GetCurPtr(),buf_.getSize()-buf_.GetPos());
     tb.setc16(TAG_DELIVERYMODE);
     tb.setc16(1);
     tb.set8(uint8_t(dlvMode));
     buf_.SetPos(buf_.GetPos()+tb.getPos());
+}
+
+
+void MessageFlagBuilder::setEyelineKeywordTLV( const char* value )
+{
+    if (!value || !value[0]) {
+        throw InfosmeException(EXC_LOGICERROR,"empty eyelinekeyword in mfb");
+    }
+    const size_t vallen = strlen(value);
+    if (vallen >= MSG_EYELINEKEYWORD_LENGTH) {
+        throw InfosmeException(EXC_LOGICERROR,"too long eyelinekeyword in mfb");
+    }
+    SETBIT(BIT_EYELINEKEYWORD);
+    MessageFlagParser mp(buf_.get(),buf_.GetPos());
+    size_t pos;
+    if (mp.findTag(TAG_EXTRATLV,&pos)) {
+        const uint16_t len = mp.getLen();
+        if (mp.getPos()+len < buf_.getPos()) {
+            // there is a tail, move it
+            // copy tlvs into temporary buf
+            TmpBuf<char,512> tmpbuf;
+            tmpbuf.append(buf_.get()+mp.getPos(),len);
+            // move the tail
+            char* o = buf_.get() + pos;
+            const char* i = buf_.get() + mp.getPos() + len;
+            const char* e = buf_.GetCurPtr();
+            for ( ; i != e; ++i, ++o ) {
+                *o = *i;
+            }
+            // append the buffer
+            buf_.setPos(o - buf_.get());
+            tmpbuf.reserve(tmpbuf.getPos()+vallen+10);
+            ToBuf tb(tmpbuf.GetCurPtr(),tmpbuf.getSize()-tmpbuf.GetPos());
+            tb.set16(0x4906);
+            tb.set16(vallen+1);
+            tb.setCString(value);
+            buf_.reserve( buf_.getPos() + tmpbuf.getPos() + 10 );
+            ToBuf tb2(buf_.getCurPtr(),buf_.getSize()-buf_.getPos());
+            tb2.setc16(TAG_EXTRATLV);
+            tb2.setc16(tmpbuf.getPos());
+            buf_.setPos(buf_.GetPos()+tb2.getPos());
+            buf_.append(tmpbuf.get(),tmpbuf.getPos());
+        }
+    } else {
+        buf_.reserve(buf_.getPos()+vallen+10);
+        ToBuf tb(buf_.GetCurPtr(),buf_.getSize()-buf_.GetPos());
+        tb.setc16(TAG_EXTRATLV);
+        tb.setc16(uint16_t(vallen+1+2+2));
+        tb.set16(0x4906);
+        tb.set16(vallen+1);
+        tb.setCString(value);
+        buf_.SetPos(buf_.GetPos()+tb.getPos());
+    }
 }
 
 
@@ -224,7 +297,15 @@ bool MessageFlags::getDeliveryMode( DlvMode& dlvMode ) const
 }
 
 
-
+size_t MessageFlags::getExtraTLV( const char*& ptr ) const
+{
+    if (!flags_) return 0;
+    MessageFlagParser mp(flags_,flagsize_);
+    if (!mp.findTag(TAG_EXTRATLV)) return false;
+    size_t len;
+    ptr = mp.getOString(len);
+    return len;
+}
 
 }
 }

@@ -195,6 +195,17 @@ personid_type parseAddress( const char* isdn )
 }
 
 
+const char* dlvModeToString( DlvMode mode )
+{
+    switch (mode) {
+    case DLVMODE_SMS : return "SMS";
+    case DLVMODE_USSDPUSH : return "USSDPUSH";
+    case DLVMODE_USSDPUSHVLR : return "USSDPUSHVLR";
+    default : return "???";
+    }
+}
+
+
 const char* msgStateToString( MsgState state )
 {
     switch (state) {

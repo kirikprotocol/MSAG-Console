@@ -113,6 +113,7 @@ message MessageFlags
   string svcType 5 opt
   string sourceAddress 6 opt
   DeliveryMode deliveryMode 7 opt
+  string eyelineKeywordTLV 8 opt
 end
 
 message DeliveryMessage
