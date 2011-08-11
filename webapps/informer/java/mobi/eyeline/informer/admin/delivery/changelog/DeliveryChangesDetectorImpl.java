@@ -49,6 +49,7 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
     this.fileSys = fileSys;
     backupDir = new File(baseDir, "processedFiles");
     try {
+
       if (!fileSys.exists(backupDir)) {
         fileSys.mkdirs(backupDir);
       }

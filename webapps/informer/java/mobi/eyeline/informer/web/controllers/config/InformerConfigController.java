@@ -45,6 +45,14 @@ public class InformerConfigController extends SettingsController<InformerSetting
 
   public String save() {
     try {
+      if(!getConfig().isSmppGWDeployed()) {
+        settings.setSmppGWFinalLogsDir(loadSettings().getSmppGWFinalLogsDir());
+      }else {
+        if(settings.getSmppGWFinalLogsDir() == null || settings.getSmppGWFinalLogsDir().length() == 0) {
+          addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "config.smppgw.finallog.dir.empty");
+          return null;
+        }
+      }
       setSettings(settings);
       Revision rev = submitSettings();
       if (rev != null) {

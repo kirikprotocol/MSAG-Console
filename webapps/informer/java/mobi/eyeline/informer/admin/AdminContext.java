@@ -90,7 +90,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       restrictionProvider = new RestrictionProvider(this, new File(confDir, "restrictions.csv"), new File(confDir, "backup"), fileSystem);
 
       InformerSettings is = informerManager.getConfigSettings();
-      deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getStoreDir(), "final_log"), fileSystem);
+      deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getWebFinalLogsDir()), fileSystem);
 
       fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir);
 

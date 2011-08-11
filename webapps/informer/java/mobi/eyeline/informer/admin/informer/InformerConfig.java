@@ -27,6 +27,10 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     settings.setStatDir(s.getString("statPath", null));
     settings.setStoreDir(s.getString("storePath"));
 
+    XmlConfigSection s1 = s.getSection("finallog");
+    settings.setWebFinalLogsDir(s1.getString("webapp"));
+    settings.setSmppGWFinalLogsDir(s1.getString("dcpgw", null));
+
     settings.setResendIOThreadCount(s.getInt("resendIOThreadCount"));
     settings.setInputMinQueueSize(s.getInt("inputMinQueueSize"));
     settings.setInputTransferThreadCount(s.getInt("inputTransferThreadCount"));
@@ -64,6 +68,13 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     s.setInt("dcpPort", settings.getDcpPort());
     s.setString("statPath", settings.getStatDir());
     s.setString("storePath", settings.getStoreDir());
+
+    XmlConfigSection s1 = s.getOrCreateSection("finallog");
+    s1.clear();
+    s1.setString("webapp",settings.getWebFinalLogsDir());
+    if(settings.getSmppGWFinalLogsDir() != null) {
+      s1.setString("dcpgw",settings.getSmppGWFinalLogsDir());
+    }
 
     s.setInt("resendIOThreadCount", settings.getResendIOThreadCount());
     s.setInt("inputMinQueueSize", settings.getInputMinQueueSize());

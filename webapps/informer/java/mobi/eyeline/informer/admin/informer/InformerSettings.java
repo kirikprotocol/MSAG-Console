@@ -25,6 +25,9 @@ public class InformerSettings {
   private String statDir;
   private String storeDir;
 
+  private String webFinalLogsDir;
+  private String smppGWFinalLogsDir;
+
   // additional
 
   private int resendIOThreadCount;
@@ -73,7 +76,7 @@ public class InformerSettings {
     vh.checkNotEmpty("persHost", persHost);
     vh.checkPort("persSyncPort", persSyncPort);
     vh.checkPort("persAsyncPort", persAsyncPort);
-    vh.checkNotEmpty("statDir", statDir);
+    vh.checkNotEmpty("webFinalLogsDir", webFinalLogsDir);
     vh.checkNotEmpty("storeDir", storeDir);
   }
 
@@ -301,6 +304,22 @@ public class InformerSettings {
     this.storeDir = storeDir;
   }
 
+  public String getWebFinalLogsDir() {
+    return webFinalLogsDir;
+  }
+
+  public void setWebFinalLogsDir(String webFinalLogsDir) {
+    this.webFinalLogsDir = webFinalLogsDir;
+  }
+
+  public String getSmppGWFinalLogsDir() {
+    return smppGWFinalLogsDir;
+  }
+
+  public void setSmppGWFinalLogsDir(String smppGWFinalLogsDir) {
+    this.smppGWFinalLogsDir = smppGWFinalLogsDir;
+  }
+
   /**
    * Копирует настройки
    *
@@ -317,6 +336,8 @@ public class InformerSettings {
     cs.persAsyncPort = persAsyncPort;
     cs.statDir = statDir;
     cs.storeDir = storeDir;
+    cs.webFinalLogsDir = webFinalLogsDir;
+    cs.smppGWFinalLogsDir = smppGWFinalLogsDir;
 
     cs.resendIOThreadCount=resendIOThreadCount;
     cs.inputMinQueueSize=inputMinQueueSize;

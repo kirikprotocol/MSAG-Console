@@ -68,14 +68,27 @@
       </eye:collapsingGroup>
 
       <eye:collapsingGroup label="#{msg['config.store.section']}" opened="true">
-        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <h:outputText style="white-space:nowrap;" value="#{informerSettings.statDir}"/>
-          <tr:inputText value="#{config.settings.statDir}" simple="true"  columns="100"/>
+        <h:panelGroup>
 
-          <h:outputText style="white-space:nowrap;" value="#{informerSettings.storeDir}"/>
-          <tr:inputText value="#{config.settings.storeDir}" simple="true"  columns="100"/>
+          <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+            <h:outputText style="white-space:nowrap;" value="#{informerSettings.statDir}"/>
+            <tr:inputText value="#{config.settings.statDir}" simple="true"  columns="100"/>
 
-        </h:panelGrid>
+            <h:outputText style="white-space:nowrap;" value="#{informerSettings.storeDir}"/>
+            <tr:inputText value="#{config.settings.storeDir}" simple="true"  columns="100"/>
+          </h:panelGrid>
+
+          <eye:collapsingGroup label="#{msg['config.finallog']}" opened="true">
+            <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+              <h:outputText style="white-space:nowrap;" value="#{informerSettings.webFinalLogsDir}"/>
+              <tr:inputText value="#{config.settings.webFinalLogsDir}" simple="true"  columns="100"/>
+              <h:outputText style="white-space:nowrap;" value="#{informerSettings.smppGWFinalLogsDir}" rendered="#{userSession.smppGWDeployed}"/>
+              <tr:inputText value="#{config.settings.smppGWFinalLogsDir}" simple="true"  rendered="#{userSession.smppGWDeployed}" columns="100"/>
+            </h:panelGrid>
+          </eye:collapsingGroup>
+
+        </h:panelGroup>
+
       </eye:collapsingGroup>
 
 

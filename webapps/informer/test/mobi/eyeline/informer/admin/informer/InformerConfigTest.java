@@ -7,10 +7,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.TestUtils;
 
+import java.io.File;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import java.io.File;
 
 /**
  * @author Artem Snopkov
@@ -48,6 +48,9 @@ public class InformerConfigTest {
     assertEquals(25404, s.getPersAsyncPort());
     assertEquals("stat", s.getStatDir());
     assertEquals("store", s.getStoreDir());
+
+    assertEquals("ПУТЬ К ЛОГАМ ДЛЯ DCPGW",s.getSmppGWFinalLogsDir());
+    assertEquals("ПУТЬ К ЛОГАМ ДЛЯ МОРДЫ",s.getWebFinalLogsDir());
   }
 
   @Test

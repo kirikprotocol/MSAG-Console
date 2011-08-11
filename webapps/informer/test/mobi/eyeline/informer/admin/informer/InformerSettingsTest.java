@@ -4,8 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -364,6 +363,29 @@ public class InformerSettingsTest {
   }
 
   @Test
+  public void webFinalLog() throws AdminException {
+    try {
+      cs.setWebFinalLogsDir(null);
+      cs.validate();
+      fail();
+    } catch (AdminException e) {}
+    try {
+      cs.setWebFinalLogsDir("");
+      cs.validate();
+      fail();
+    } catch (AdminException e) {}
+
+    cs.setWebFinalLogsDir("s1");
+    assertEquals("s1", cs.getWebFinalLogsDir());
+  }
+
+  @Test
+  public void smppgwFinalLog() throws AdminException {
+    cs.setSmppGWFinalLogsDir("s1");
+    assertEquals("s1", cs.getSmppGWFinalLogsDir());
+  }
+
+  @Test
   public void cloneAndValidateSettings() throws AdminException { 
 
     cs.validate();
@@ -381,6 +403,8 @@ public class InformerSettingsTest {
     assertEquals(cs.getPersSyncPort(), cs1.getPersSyncPort());
     assertEquals(cs.getStatDir(), cs1.getStatDir());
     assertEquals(cs.getStoreDir(), cs1.getStoreDir());
+    assertEquals(cs.getWebFinalLogsDir(), cs1.getWebFinalLogsDir());
+    assertEquals(cs.getSmppGWFinalLogsDir(), cs1.getSmppGWFinalLogsDir());
   }
 
 
@@ -413,5 +437,7 @@ public class InformerSettingsTest {
     cs.setAdminHandlers(463);
     cs.setRetryMinTimeToLive(763);
     cs.setResponseWaitTime(62);
+    cs.setWebFinalLogsDir("web_final");
+    cs.setSmppGWFinalLogsDir("Smpp_gw_final");
   }
 }

@@ -26,6 +26,10 @@
     <param name="adminHandlers" type="int">3</param>
     <param name="retryMinTimeToLive" type="int">30</param>
     <param name="responseWaitTime" type="int">70</param>
+    <section name="finallog">
+      <param name="webapp" type="string">ПУТЬ К ЛОГАМ ДЛЯ МОРДЫ</param>
+      <param name="dcpgw" type="string">ПУТЬ К ЛОГАМ ДЛЯ DCPGW</param>
+    </section>
   </section>
 
   <section name="pvss">
