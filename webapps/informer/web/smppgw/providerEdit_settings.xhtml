@@ -43,9 +43,10 @@
         <eye:pageSubtitle value="#{msg['smppgw.provider.edit.conns']}"/>
       </h:panelGroup>
 
-      <h:panelGrid style="padding-left: 10px" columns="2" columnClasses="column300Width, columnTopLeftAlig">
+      <h:panelGrid columns="2" styleClass="properties_list" columnClasses="column10Width, columnTopLeftAlign">
+        <h:outputText value="&#160;"/>
         <eye:dynamicTable value="#{smppgwProvider.activePage.endpoints}">
-          <eye:selectColumn name="conn" values="#{smppgwProvider.activePage.availableEndpoints}" uniqueValues="true"/>
+          <eye:selectColumn name="conn" values="#{smppgwProvider.activePage.availableEndpoints}" uniqueValues="true" width="20%"/>
         </eye:dynamicTable>
       </h:panelGrid>
 
@@ -116,15 +117,19 @@
           <h:outputText style="white-space:nowrap;" value="#{r.delivery}"/>
         </h:column>
         <h:column>
+          <f:facet name="header">
+            <h:outputText value="&#160;"/>
+          </f:facet>
           <h:commandLink style="white-space:nowrap;" value="#{msg['smppgw.provider.edit.route']}" action="#{smppgwProvider.next}">
             <f:param name="deliveryId" value="#{r.deliveryId}"/>
           </h:commandLink>
         </h:column>
       </t:dataTable>
 
-      <h:panelGrid columns="2" columnClasses="column0Width,columnTopLeftAlign">
-        <h:commandButton value="#{msg['smppgw.provider.edit.route.add']}" action="#{smppgwProvider.next}"/><h:commandButton value="#{msg['smppgw.provider.edit.route.remove']}" action="#{smppgwProvider.activePage.removeRoutes}"  onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
-      </h:panelGrid>
+      <h:panelGrid columns="3" styleClass="properties_list" columnClasses="column10Width,columnTopLeftAlign">
+        <h:commandButton value="#{msg['smppgw.provider.edit.route.add']}" action="#{smppgwProvider.next}"/>
+        <h:commandButton value="#{msg['smppgw.provider.edit.route.remove']}" action="#{smppgwProvider.activePage.removeRoutes}"  onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+       </h:panelGrid>
       <eye:delimiter/>
 
       <eye:buttons>
