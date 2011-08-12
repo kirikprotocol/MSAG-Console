@@ -42,7 +42,7 @@ class MessageFlagBuilder : protected MessageTags
         BIT_DELIVERYMODE = BIT(6),
         BIT_EYELINEKEYWORD = BIT(7)
     };
-#undef BIT(x)
+#undef BIT
 
 public:
     MessageFlagBuilder() : bitmask_(0) {}
