@@ -3,3 +3,5 @@ informer/tests/testutf8 testutf8 \
  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
  -lutil \
  -lpthread -lrt -ldl
+
+informer/tests/testSizes testSizes
