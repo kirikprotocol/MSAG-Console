@@ -10,6 +10,5 @@ CLASSPATH=$CLASSPATH:lib/log4j-1.2.16.jar
 CLASSPATH=$CLASSPATH:lib/protogenfw.jar
 CLASSPATH=$CLASSPATH:lib/apm_utils.jar
 CLASSPATH=$CLASSPATH:lib/commons-io-2.0.1.jar
-CLASSPATH=$CLASSPATH:lib/smppsme.jar
 
 #echo $CLASSPATH

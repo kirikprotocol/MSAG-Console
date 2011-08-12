@@ -6,14 +6,15 @@ import mobi.eyeline.smpp.api.pdu.Message;
 import mobi.eyeline.smpp.api.pdu.PDU;
 import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.Address;
+import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import mobi.eyeline.smpp.api.types.EsmMessageType;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
+import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -31,25 +32,13 @@ public class PDUListenerImpl implements PDUListener {
 
     private AtomicInteger ai = new AtomicInteger(0);
 
-    // Table used to map delivery identifier and user..
-    private Hashtable<Integer, String> delivery_id_user_map;
-
-    // Table used to map service number and delivery identifier.
-    private Hashtable<String, Integer> service_number_delivery_id_map;
-
-    private Calendar cal;
+    private Calendar cal = Calendar.getInstance();
 
     private SimpleDateFormat sdf = new SimpleDateFormat("ddHHmmss");
 
     public PDUListenerImpl(){
-        cal = Calendar.getInstance();
-    }
 
-    public void update(Hashtable<Integer, String> delivery_id_user_map, Hashtable<String, Integer> service_number_delivery_id_map){
-        this.delivery_id_user_map = delivery_id_user_map;
-        this.service_number_delivery_id_map = service_number_delivery_id_map;
     }
-
 
     @Override
     public boolean handlePDU(PDU pdu) {
@@ -63,26 +52,31 @@ public class PDUListenerImpl implements PDUListener {
 
                 Message request = (Message) pdu;
                 String connection_name = request.getConnectionName();
+
                 int sequence_number = request.getSequenceNumber();
 
-                log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', set id '"+message_id+"'.");
+                log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', connection_name '"+connection_name+"', set id '"+message_id+"'.");
+
+                Provider provider = Gateway.getProvider(connection_name);
+                log.debug("This connection name corresponds to the provider with name '"+provider.getName()+"'.");
 
                 Address source_address = request.getSourceAddress();
-                String source_address_str = source_address.getAddress();
+                String service_number = source_address.getAddress();
 
                 Address smpp_destination_address = request.getDestinationAddress();
                 String destination_address_str = smpp_destination_address.getAddress();
 
                 String text = request.getMessage();
                 log.debug("Message: "+text);
-                log.debug("Id '"+message_id+"', source address '"+source_address_str+"', destination address '"+destination_address_str+"', text '"+text+"'.");
+                log.debug("Id '"+message_id+"', service number '"+service_number+"', destination address '"+destination_address_str+"', text '"+text+"'.");
 
-                if (service_number_delivery_id_map.containsKey(source_address_str)) {
+                Delivery delivery = provider.getDelivery(service_number);
+                if (delivery != null){
 
-                    int delivery_id = service_number_delivery_id_map.get(source_address_str);
+                    int delivery_id = delivery.getId();
+                    String login= delivery.getUser();
 
-                    String login = delivery_id_user_map.get(delivery_id);
-                    log.debug("Id '"+message_id+"', service_number '"+source_address_str+"', delivery_id '"+delivery_id+"', user '"+login+"'.");
+                    log.debug("Message id '"+message_id+"', service number '"+service_number+"', delivery id '"+delivery_id+"', user '"+login+"'.");
 
                     Manager.getInstance().getSender(login).addMessage(message_id, destination_address_str, text, sequence_number, connection_name, delivery_id);
 
@@ -98,12 +92,16 @@ public class PDUListenerImpl implements PDUListener {
                         Manager.getInstance().rememberReceiptMessage(message_id, rcpt);
                     }
                 } else {
+                    log.debug("Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.");
                     SubmitSMResp submitSMResp = new SubmitSMResp();
-                    submitSMResp.setStatus(mobi.eyeline.smpp.api.types.Status.SYSERR);
+
+                    submitSMResp.setStatus(Status.SUBMITFAIL);
                     submitSMResp.setSequenceNumber(sequence_number);
                     submitSMResp.setConnectionName(connection_name);
+                    submitSMResp.setTLV(new TLVString( (short)0x001D, "Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.") );
                     try {
                         Gateway.sendSubmitSMResp(submitSMResp);
+                        log.debug("SUBMIT_SM_RESP sn: "+sequence_number+", con: "+connection_name+", status '"+submitSMResp.getStatus());
                     } catch (SmppException e) {
                         log.error("Could not send response to client", e);
                     }

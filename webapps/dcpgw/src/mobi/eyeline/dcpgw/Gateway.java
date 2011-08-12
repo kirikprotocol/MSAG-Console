@@ -42,14 +42,6 @@ public class Gateway extends Thread implements PDUListener {
     // Table used to store user passwords.
     private static Hashtable<String, String> user_password_table;
 
-    // Table used to map delivery identifier and user..
-    private static Hashtable<Integer, String> delivery_id_user_table;
-
-    // Table used to map service number and delivery identifier.
-    private static Hashtable<String, Integer> service_number_delivery_id_table;
-
-    private static Hashtable<String, String[]> provider_systemIds_table;
-
     private static final Object read_write_monitor = new Object();
 
     private static SmppServer smppServer;
@@ -67,11 +59,9 @@ public class Gateway extends Thread implements PDUListener {
     private static int recend_receipts_timeout;
     private static int recend_receipts_max_timeout;
 
-    private static PDUListenerImpl pduListener;
-
     public static final String CONNECTION_PREFIX = "smpp.sme.";
 
-    private static Hashtable<String, String> systemId_password_table;
+    private static Hashtable<String, Provider> connection_provider_table;
 
     public Gateway() throws SmppException, InitializationException{
         log.debug("Try to initialize gateway ...");
@@ -95,6 +85,7 @@ public class Gateway extends Thread implements PDUListener {
         String endpoints_file_str = Utils.getProperty(config, "users.file", user_dir+File.separator+"conf"+File.separator+"endpoints.xml" );
         endpoints_file = new File(endpoints_file_str);
 
+        Hashtable<String, String> systemId_password_table;
         try {
             systemId_password_table = loadEndpoints();
         } catch (XmlConfigException e) {
@@ -109,17 +100,14 @@ public class Gateway extends Thread implements PDUListener {
             config.setProperty(connection_property_name, password);
         }
 
-        // Load users and deliveries configuration.
+        connection_provider_table = new Hashtable<String, Provider>();
+
         user_password_table = new Hashtable<String, String>();
 
         String deliveries_file_str = Utils.getProperty(config, "deliveries.file", user_dir+File.separator+"conf"+File.separator+"deliveries.xml" );
         deliveries_file = new File(deliveries_file_str);
-        delivery_id_user_table = new Hashtable<Integer, String>();
-        service_number_delivery_id_table = new Hashtable<String, Integer>();
 
-        pduListener = new PDUListenerImpl();
-
-        provider_systemIds_table = new Hashtable<String, String[]>();
+        PDUListenerImpl pduListener = new PDUListenerImpl();
 
         try {
             updateConfiguration();
@@ -242,65 +230,75 @@ public class Gateway extends Thread implements PDUListener {
 
 
     public static void updateConfiguration() throws XmlConfigException {
-        log.debug("Try to load update configuration ...");
+        log.debug("Try to update configuration ...");
 
+        // Update deliveries file.
         XmlConfig xmlConfig = new XmlConfig();
         xmlConfig.load(deliveries_file);
 
-        Hashtable<String, String[]> t = new Hashtable<String, String[]>();
-        Hashtable<Integer, String> t1 = new Hashtable<Integer, String>();
-        Hashtable<String, Integer> t2 = new Hashtable<String, Integer>();
+        Hashtable<String, Provider> connection_provider_temp_table = new Hashtable<String, Provider>();
 
         XmlConfigSection providers_section = xmlConfig.getSection("providers");
-        Collection<XmlConfigSection> c = providers_section.sections();
+        Collection<XmlConfigSection> providers_collection = providers_section.sections();
 
-        for(XmlConfigSection s: c){
-            String provider_name = s.getName();
+        for(XmlConfigSection s: providers_collection){
+
+            Provider provider = new Provider();
+
+            String name = s.getName();
+            provider.setName(name);
+
             XmlConfigParam p = s.getParam("endpoint_ids");
+            String[] endpoint_ids = p.getStringArray(",");
+            provider.setEndpointIds(endpoint_ids);
 
-            String[] ar = p.getStringArray(",");
-            t.put(provider_name, ar);
-            log.debug("put "+provider_name+" --> "+p.getString());
+            p = s.getParam("description");
+            String description = p.getString();
+            provider.setDescription(description);
 
             XmlConfigSection deliveries_section = s.getSection("deliveries");
-            Collection<XmlConfigSection> c2 = deliveries_section.sections();
-            for(XmlConfigSection d_s: c2){
+            Collection<XmlConfigSection> deliveries_collection = deliveries_section.sections();
+
+            for(XmlConfigSection d_s: deliveries_collection){
+
+                Delivery delivery = new Delivery();
+
                 int delivery_id = Integer.parseInt(d_s.getName());
+                delivery.setId(delivery_id);
+
                 p = d_s.getParam("user");
                 String user = p.getString();
+                delivery.setUser(user);
 
-                t1.put(delivery_id, user);
-                log.debug("delivery_id: "+delivery_id+", user:"+user);
+                p = d_s.getParam("services_numbers");
+                String[] services_numbers = p.getStringArray(",");
+                delivery.setServicesNumbers(services_numbers);
 
-                XmlConfigParam p2 = d_s.getParam("services_numbers");
-                ar = p2.getStringArray(",");
-
-                for(String a: ar){
-                    String service_number = a.trim();
-                    t2.put(service_number, delivery_id);
-                    log.debug("service_number: "+service_number+", delivery_id: "+delivery_id);
-                }
+                provider.addDelivery(delivery);
+                log.debug("Load: "+delivery.toString());
             }
 
+            for(String endpoint_id: endpoint_ids) connection_provider_temp_table.put(endpoint_id, provider);
+
+            log.debug("Load: "+provider.toString());
         }
 
-        Hashtable<String, String> t3 = new Hashtable<String, String>();
+        Hashtable<String, String> user_password_temp_table = new Hashtable<String, String>();
 
         XmlConfigSection users_section = xmlConfig.getSection("users");
-        c = users_section.sections();
-        for(XmlConfigSection s: c){
+        providers_collection = users_section.sections();
+        for(XmlConfigSection s: providers_collection){
             String login = s.getName();
             XmlConfigParam p = s.getParam("password");
             String password = p.getString();
-            t3.put(login, password);
+            user_password_temp_table.put(login, password);
             log.debug("login: "+login+", password: "+password);
         }
 
-        provider_systemIds_table = t;
-        delivery_id_user_table = t1;
-        service_number_delivery_id_table = t2;
+        connection_provider_table = connection_provider_temp_table;
+        user_password_table = user_password_temp_table;
 
-        user_password_table = t3;
+        // Update endpoint file.
 
         /*Hashtable<String, String> t4 = loadEndpoints();
         for(Map.Entry<String, String> entry: t4.entrySet()){
@@ -309,8 +307,6 @@ public class Gateway extends Thread implements PDUListener {
         }*/
 
         Manager.getInstance().setUserPasswordMap(user_password_table);
-
-        pduListener.update(delivery_id_user_table, service_number_delivery_id_table);
 
         log.debug("Successfully update deliveries ...");
     }
@@ -448,6 +444,10 @@ public class Gateway extends Thread implements PDUListener {
         }
 
         log.debug("Successfully done recent task.");
+    }
+
+    public static Provider getProvider(String connection_name){
+        return connection_provider_table.get(connection_name);
     }
 
 }
