@@ -664,7 +664,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
             const size_t unknownLen = msg.flags.getExtraTLV(unknownBuf);
             if ( unknownLen ) {
                 sms.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,
-                                   unknownBuf,unknownLen);
+                                   unknownBuf,unsigned(unknownLen));
             }
             
             drm->nchunks = nchunks;
