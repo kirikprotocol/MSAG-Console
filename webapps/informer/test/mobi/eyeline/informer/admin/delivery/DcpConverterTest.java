@@ -129,7 +129,11 @@ public class DcpConverterTest {
     m.setId(34L);
     m.setAbonent(new Address("2313123"));
     m.setText("sdaasdass sdadas sadgdxvxc");
+    m.setKeywords("keywords!");
     DeliveryMessage dm = DcpConverter.convert(m);
+    assertEquals(dm.hasFlags(), true);
+    assertEquals(dm.getFlags().hasEyelineKeywordTLV(), true);
+    assertEquals(dm.getFlags().getEyelineKeywordTLV(), m.getKeywords());
     assertEquals(dm.getAbonent(), m.getAbonent().getSimpleAddress());
     assertEquals(dm.getText(), m.getText());
   }
