@@ -355,33 +355,29 @@ public:
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
-    if(!transactionModeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("transactionMode");
-    }
-    if(!useDataSmFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("useDataSm");
-    }
-    if(!replaceMessageFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("replaceMessage");
-    }
-    if(!flashFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("flash");
-    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
-    ds.writeTag(transactionModeTag);
+    if(transactionModeFlag)
+    {
+      ds.writeTag(transactionModeTag);
     ds.writeBoolLV(transactionMode); 
-    ds.writeTag(useDataSmTag);
+    }
+    if(useDataSmFlag)
+    {
+      ds.writeTag(useDataSmTag);
     ds.writeBoolLV(useDataSm); 
-    ds.writeTag(replaceMessageTag);
+    }
+    if(replaceMessageFlag)
+    {
+      ds.writeTag(replaceMessageTag);
     ds.writeBoolLV(replaceMessage); 
-    ds.writeTag(flashTag);
+    }
+    if(flashFlag)
+    {
+      ds.writeTag(flashTag);
     ds.writeBoolLV(flash); 
+    }
     if(svcTypeFlag)
     {
       ds.writeTag(svcTypeTag);
@@ -505,22 +501,6 @@ public:
           //}
           ds.skip(ds.readLength());
       }
-    }
-    if(!transactionModeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("transactionMode");
-    }
-    if(!useDataSmFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("useDataSm");
-    }
-    if(!replaceMessageFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("replaceMessage");
-    }
-    if(!flashFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("flash");
     }
 
   }
