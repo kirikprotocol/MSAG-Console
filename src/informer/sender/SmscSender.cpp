@@ -378,7 +378,8 @@ receiptMon_( MTXWHEREAMI ),
 journal_(0),
 queueMon_( MTXWHEREAMI ),
 awaken_(false),
-isStopping_(false)
+isStopping_(false),
+hasSessionError_(false)
 {
     journal_ = new SmscJournal(*this);
     dlwatch_ = new DeadLockWatch( getCS()->getDLWatcher(),
@@ -407,7 +408,9 @@ isStopping_(false)
 SmscSender::~SmscSender()
 {
     stop();
-    if (session_.get()) session_->close();
+    if (session_.get()) {
+        session_->close();
+    }
     if (parser_) delete parser_;
     if (wQueue_.get()) {
         assert(wQueue_->Count() == 0);
@@ -444,7 +447,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
             break;
         }
 
-        if ( session_->isClosed() ) {
+        if ( session_->isClosed() || hasSessionError_ ) {
             what = "not connected";
             res = smsc::system::Status::SMENOTCONNECTED;
             break;
@@ -819,7 +822,9 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
         sbm.get_optional().set_ussdServiceOp(ussdop);
     }
 
-    if ( !session_.get() || session_->isClosed() ) {
+    if ( !session_.get() ||
+         session_->isClosed() ||
+         hasSessionError_ ) {
         return smsc::system::Status::SMENOTCONNECTED;
     }
 
@@ -939,7 +944,7 @@ void SmscSender::handleEvent( smsc::sme::SmppHeader* pdu )
 void SmscSender::handleError( int errorCode )
 {
     smsc_log_error(log_,"S='%s' transport error, code=%d", smscId_.c_str(), errorCode);
-    session_->close();
+    hasSessionError_ = true; // session_->close();
 }
 
 
@@ -1456,6 +1461,7 @@ void SmscSender::connectLoop()
             } else if ( !session_->isClosed() ) {
                 // session connected
                 connTime_ = startingConn;
+                hasSessionError_ = false;
                 break;
             }
             try {
@@ -1463,6 +1469,7 @@ void SmscSender::connectLoop()
                 session_->connect();
                 if (!session_->isClosed()) {
                     connTime_ = currentTimeMicro();
+                    hasSessionError_ = false;
                     break;
                 }
             } catch ( std::exception& e ) {
@@ -1539,7 +1546,11 @@ void SmscSender::sendLoop()
         }
 
         MutexGuard mg(reconfLock_);  // prevent reconfiguration
-        if ( !session_.get() || session_->isClosed() ) { break; }
+        if ( !session_.get() ||
+             session_->isClosed() ||
+             hasSessionError_ ) {
+            break; 
+        }
         bool throttled = false;
         if (rQueue->Count() > 0) {
             throttled = processQueue(*rQueue.get());
@@ -1562,7 +1573,9 @@ void SmscSender::sendLoop()
     }
     {
         MutexGuard mg(reconfLock_);
-        if (session_.get() && !session_->isClosed()) session_->close();
+        if (session_.get() && !session_->isClosed()) {
+            session_->close();
+        }
         if (rQueue->Count() > 0) processQueue(*rQueue.get());
     }
     {

@@ -196,6 +196,7 @@ private:
     std::auto_ptr<DataQueue>                           wQueue_;
     bool                                               awaken_;
     bool                                               isStopping_;
+    bool                                               hasSessionError_;
 };
 
 typedef EmbedRefPtr< SmscSender >  SmscSenderPtr;
