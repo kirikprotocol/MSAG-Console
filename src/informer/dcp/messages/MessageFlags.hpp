@@ -33,6 +33,7 @@ public:
     svcTypeFlag=false;
     sourceAddressFlag=false;
     deliveryModeFlag=false;
+    eyelineKeywordTLVFlag=false;
   }
  
 
@@ -107,6 +108,15 @@ public:
       rv+="deliveryMode=";
       rv+=DeliveryMode::getNameByValue(deliveryMode);
     }
+    if(eyelineKeywordTLVFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="eyelineKeywordTLV=";
+      rv+=eyelineKeywordTLV;
+    }
     return rv;
   }
 
@@ -156,6 +166,12 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(deliveryMode.getValue());
  
+    }
+    if(eyelineKeywordTLVFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(eyelineKeywordTLV);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -314,6 +330,28 @@ public:
   {
     return deliveryModeFlag;
   }
+  const std::string& getEyelineKeywordTLV()const
+  {
+    if(!eyelineKeywordTLVFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("eyelineKeywordTLV");
+    }
+    return eyelineKeywordTLV;
+  }
+  void setEyelineKeywordTLV(const std::string& argValue)
+  {
+    eyelineKeywordTLV=argValue;
+    eyelineKeywordTLVFlag=true;
+  }
+  std::string& getEyelineKeywordTLVRef()
+  {
+    eyelineKeywordTLVFlag=true;
+    return eyelineKeywordTLV;
+  }
+  bool hasEyelineKeywordTLV()const
+  {
+    return eyelineKeywordTLVFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -359,6 +397,11 @@ public:
       ds.writeTag(deliveryModeTag);
     ds.writeByteLV(deliveryMode.getValue());
  
+    }
+    if(eyelineKeywordTLVFlag)
+    {
+      ds.writeTag(eyelineKeywordTLVTag);
+    ds.writeStrLV(eyelineKeywordTLV); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -443,6 +486,15 @@ public:
           deliveryMode=ds.readByteLV();
           deliveryModeFlag=true;
         }break;
+        case eyelineKeywordTLVTag:
+        {
+          if(eyelineKeywordTLVFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("eyelineKeywordTLV");
+          }
+          eyelineKeywordTLV=ds.readStrLV();
+          eyelineKeywordTLVFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -496,6 +548,7 @@ protected:
   static const int32_t svcTypeTag=5;
   static const int32_t sourceAddressTag=6;
   static const int32_t deliveryModeTag=7;
+  static const int32_t eyelineKeywordTLVTag=8;
 
   int connId;
 
@@ -506,6 +559,7 @@ protected:
   std::string svcType;
   std::string sourceAddress;
   DeliveryMode deliveryMode;
+  std::string eyelineKeywordTLV;
 
   bool transactionModeFlag;
   bool useDataSmFlag;
@@ -514,6 +568,7 @@ protected:
   bool svcTypeFlag;
   bool sourceAddressFlag;
   bool deliveryModeFlag;
+  bool eyelineKeywordTLVFlag;
 };
 
 }

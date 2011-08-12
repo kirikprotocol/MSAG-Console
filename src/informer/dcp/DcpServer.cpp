@@ -52,12 +52,10 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   {
     did.archivationPeriod=di.getArchivationPeriod();
   }
-  /*
   if(di.hasFinalizationDelay())
   {
     did.finalizationDelay=di.getFinalizationDelay();
   }
-   */
   did.flash=di.getFlash();
   did.useDataSm=di.getUseDataSm();
   switch(di.getDeliveryMode().getValue())
@@ -540,6 +538,9 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
             case messages::DeliveryMode::USSD_PUSH_VLR : mfb.setDeliveryMode( DLVMODE_USSDPUSHVLR ); break;
             default: throw InfosmeException(EXC_IOERROR,"invalid delivery mode %u",mf.getDeliveryMode().getValue());
             }
+        }
+        if ( mf.hasEyelineKeywordTLV() ) {
+            mfb.setEyelineKeywordTLV( mf.getEyelineKeywordTLV().c_str() );
         }
         ml.msg.flags.reset( mfb );
     }

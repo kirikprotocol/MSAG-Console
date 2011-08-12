@@ -4,7 +4,7 @@
 #define VER_BUILD 20110708
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
-#define VER_DATE  "Thu Aug 11 17:49:00 NOVST 2011"
+#define VER_DATE  "Fri Aug 12 10:10:00 NOVST 2011"
 
 #ifdef SNMP
 #define SNMP_STR " snmp"
