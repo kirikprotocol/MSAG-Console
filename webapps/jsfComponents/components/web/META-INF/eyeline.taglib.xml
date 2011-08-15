@@ -138,6 +138,11 @@
   </tag>
 
   <tag>
+    <tag-name>fileDownloadListener</tag-name>
+    <handler-class>mobi.eyeline.util.jsf.components.downloading.FileDownloadListenerHandler</handler-class>
+  </tag>
+
+  <tag>
     <tag-name>dataTable</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.data_table</component-type>
