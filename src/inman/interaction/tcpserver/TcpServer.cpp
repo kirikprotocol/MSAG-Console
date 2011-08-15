@@ -225,7 +225,7 @@ ConnectState_e TcpServer::onReadEvent(void) /*throw()*/
     smsc_log_warn(_logger, "%s: connection refused, "
                   "resource limitation: %u", getIdent(), _cfg._maxConn);
   } else {
-    smsc_log_debug(_logger, "%s: accepted connection on Socket[%u]", getIdent(),
+    smsc_log_info(_logger, "%s: accepted connection on Socket[%u]", getIdent(),
                    clientSocket->getSocket());
     _openConnect(clientSocket);
   }
