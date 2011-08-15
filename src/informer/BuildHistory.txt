@@ -1,3 +1,5 @@
+=====================================================================
+2011-08-15 09:47 bukind informer-build-20110815
 2011-08-12 15:21 bukind
   bugfix: deadlock in SmppBase+SmscSender
 2011-08-12 10:10 bukind
