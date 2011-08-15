@@ -108,7 +108,7 @@ bool USSGService::setConnListener(const ConnectGuard & use_conn) /*throw()*/
 //  MutexGuard  grd(_sync);
   USSConnManager * pMgr = _sessReg.find(use_conn->getId());
   if (pMgr) {
-    smsc_log_warn(_logger, "%s: session[%s] is already opened on Connect[%u]",
+    smsc_log_warn(_logger, "%s: %s is already opened on Connect[%u]",
                   _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
     _sync.notify();
     return false;
@@ -125,13 +125,12 @@ bool USSGService::setConnListener(const ConnectGuard & use_conn) /*throw()*/
 //Handles USSConnManager destruction upon disconnection.
 void USSGService::onDisconnect(const ConnectGuard & use_conn) /*throw()*/
 {
-  std::auto_ptr<USSConnManager> pMgr;
-  pMgr.reset(_sessReg.extract(use_conn->getId()));
+  std::auto_ptr<USSConnManager> pMgr(_sessReg.extract(use_conn->getId()));
   if (pMgr.get()) {
     ReverseMutexGuard  grd(_sync);
     pMgr->bind(NULL);
     pMgr->stop(false);
-    smsc_log_debug(_logger, "%s: closing session[%s] on Connect[%u]",
+    smsc_log_info(_logger, "%s: closing %s on Connect[%u]",
                    _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
     pMgr.reset(); //USSConnManager is destroyed at this point
   }
@@ -157,9 +156,10 @@ SocketListenerIface *
   connGrd->addListener(*this);
   if (connGrd->start()) {
     _connMap.insert(ConnectsMap::value_type(connGrd->getId(), connGrd));
+    smsc_log_info(_logger, "%s: activated %s", _logId, connGrd->logId());
     return connGrd.get();
   }
-  smsc_log_fatal(_logger, "%s: failed to start %s", _logId, connGrd->logId());
+  smsc_log_fatal(_logger, "%s: failed to activate %s", _logId, connGrd->logId());
   return NULL;
 }
 
@@ -231,7 +231,7 @@ bool USSGService::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck)
 
   bool isAccepted = setConnListener(rConn);
   if (!isAccepted) {
-    smsc_log_warn(_logger, "%s: denyed Connect[%u]", _logId, conn_id);
+    smsc_log_warn(_logger, "%s: denied Connect[%u]", _logId, conn_id);
     _tcpSrv.rlseConnectionNotify(conn_id, true);
   } else {
     smsc_log_info(_logger, "%s: accepted Connect[%u]", _logId, conn_id);

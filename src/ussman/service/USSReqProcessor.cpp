@@ -38,6 +38,11 @@ void USSReqProcessor::wrkHandlePacket(const SPckUSSRequest & recv_pck) /*throw()
   bool wDone = false;
   {
     MutexGuard  grd(_sync);
+    {
+      char tBuf[interaction::USSRequestMessage::_ussReq_strSZ];
+      recv_pck._Cmd.log2str(tBuf, (unsigned)sizeof(tBuf));
+      smsc_log_info(_logger, "%s: <-- REQUEST %s", _logId, tBuf);
+    }
     _reqData = recv_pck._Cmd.getOpData();
     _resPck.setDlgId(recv_pck.getDlgId());
     _resPck._Cmd._msIsdn = recv_pck._Cmd._msIsdn;
@@ -62,7 +67,7 @@ void USSReqProcessor::wrkHandlePacket(const SPckUSSRequest & recv_pck) /*throw()
     }
   }
   if (wDone)
-    _wrkMgr->workerDone(*this); //worker ny be destroyed at this point
+    _wrkMgr->workerDone(*this); //worker may be destroyed at this point
 }
 
 /* -------------------------------------------------------------------------- *
@@ -104,7 +109,7 @@ void USSReqProcessor::wrkAbort(const char * abrt_reason/* = NULL*/)
     }
   }
   if (wDone)
-    _wrkMgr->workerDone(*this); //worker ny be destroyed at this point
+    _wrkMgr->workerDone(*this); //worker may be destroyed at this point
 }
 
 /* ------------------------------------------------------------------------ *
@@ -212,7 +217,7 @@ ObjAllcStatus_e
     sendResult();
     _sync.notify();
   }
-  _wrkMgr->workerDone(*this); //worker ny be destroyed at this point
+  _wrkMgr->workerDone(*this); //worker may be destroyed at this point
   return rval;
 }
 
