@@ -152,7 +152,7 @@ void MapDialogAC::bindTCDialog(uint16_t timeout_sec/* = 0*/)
 //Returns false if result handler is not set.
 bool MapDialogAC::doRefUser(void)
 {
-  if (_resHdl.Lock()) {
+  if (_resHdl.get() && _resHdl.Lock()) {
     _thisRefs.addRef(MapDialogAC::refIdHandler);
     return true;
   }
