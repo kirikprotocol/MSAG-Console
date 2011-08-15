@@ -86,7 +86,7 @@ static Dialog* findDialog(UCHAR_T ssn, EINSS7INSTANCE_T tcapInstanceId,
     Dialog* pDlg = NULL;
     SSNSession* pSession = findSSNsession(ssn);
     if (pSession && !(pDlg = pSession->findDialog(TCDialogID(tcapInstanceId, dialogueId))))
-        tccb_log_warn("SS7TC: Invalid(closed) Dialog[%U:%Xh]", 
+        tccb_log_warn("SS7TC: Invalid(closed) Dialog[%u:%Xh]",
                       (unsigned)tcapInstanceId, (unsigned)dialogueId);
     return pDlg;
 }
