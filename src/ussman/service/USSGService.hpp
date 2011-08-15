@@ -71,7 +71,7 @@ protected:
 public:
   static const interaction::INPUSSGateway  _iProtoDef; //provided protocol definition
 
-  USSGService(const USSGateway_XCFG & in_cfg, const char * log_id = NULL,
+  explicit USSGService(const USSGateway_XCFG & in_cfg, const char * log_id = NULL,
               Logger * use_log = NULL)
     : _logId(log_id ? log_id : "USSMan")
     , _logger(use_log ? use_log : Logger::getInstance("smsc.ussman"))
