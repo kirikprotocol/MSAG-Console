@@ -816,12 +816,9 @@ public class DeliveryManager implements UnmodifiableDeliveryManager{
       Message addr = addrDs.next();
       if (addr == null)
         return null;
-      Message m = new Message();
-      m.setAbonent(addr.getAbonent());
+      Message m = addr.cloneMessage();
       m.setGlossaryIndex(0);
-      for(Map.Entry entry : addr.getProperties().entrySet()) {
-        m.setProperty((String)entry.getKey(), (String)entry.getValue());
-      }
+      m.setText(null);
       return m;
     }
   }
