@@ -209,13 +209,15 @@ void ToBuf::setCString( const char* s )
 
 void ToBuf::setHexCString( const char* s, size_t slen )
 {
+    static const char* hexdigits = "0123456789abcdef";
     register const size_t inc = slen*2+1;
     checksz(inc);
     register unsigned char* out = buf;
     for ( ; slen > 0; --slen ) {
         register uint8_t bt = uint8_t(*s);
-        *out++ = bt >> 4;
-        *out++ = bt & 0xf;
+        *out++ = hexdigits[bt >> 4];
+        *out++ = hexdigits[bt & 0xf];
+        ++s;
     }
     *out = '\0';
     buf += inc;

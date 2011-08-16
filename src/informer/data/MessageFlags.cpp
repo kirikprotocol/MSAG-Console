@@ -236,7 +236,7 @@ flags_(0), flagsize_(0)
             flagsize_ = 0;
             throw InfosmeException(EXC_IOERROR,"bad msgflags (not a digit)");
         }
-        *o++ = char(res);
+        *o = char(res);
     }
 }
 
