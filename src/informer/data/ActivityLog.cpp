@@ -318,8 +318,8 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     off = int(buf.getPos());
     if ( ! msg.flags.isEmpty() ) {
         HexDump hd(false);
-        off += int(hd.hexdumpsize(msg.flags.bufsize())) + 1;
-        buf.reserve(off);
+        off += int(hd.hexdumpsize(msg.flags.bufsize()));
+        buf.reserve(off+1);
         hd.hexdump(buf.GetCurPtr(),msg.flags.buf(),msg.flags.bufsize());
         buf.setPos(off);
     }
