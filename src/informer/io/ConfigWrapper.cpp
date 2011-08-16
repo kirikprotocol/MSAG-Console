@@ -33,7 +33,7 @@ int ConfigWrapper::getInt( const char* name, int def, int min, int max, bool use
             throw InfosmeException(EXC_CONFIG,"the parameter '%s' is not found",name);
         }
         if (log_) {
-            smsc_log_info(log_,"the parameter '%s' is not found, using %d", name, def);
+            smsc_log_debug(log_,"the parameter '%s' is not found, using %d", name, def);
         }
         val = def;
     }
@@ -69,8 +69,8 @@ std::string ConfigWrapper::getString( const char* name, const char* def, bool st
             throw InfosmeException(EXC_CONFIG,"mandatory parameter '%s' is not found",name);
         }
         if (log_) {
-            smsc_log_info(log_,"the parameter '%s' is not found, using '%s'",
-                          name, def);
+            smsc_log_debug(log_,"the parameter '%s' is not found, using '%s'",
+                           name, def);
         }
         val = def;
     }

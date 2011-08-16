@@ -734,7 +734,7 @@ void DeliveryMgr::init()
 
     // loading deliveries
     do {
-        smsc_log_debug(log_,"--- loading last dlvid ---");
+        smsc_log_info(log_,"--- loading last dlvid ---");
         FileGuard fg;
         try {
             fg.ropen((path+lastidpath).c_str());
@@ -750,7 +750,7 @@ void DeliveryMgr::init()
         if ( last > lastDlvId_ ) { lastDlvId_ = last; }
     } while (false);
 
-    smsc_log_debug(log_,"--- loading deliveries ---");
+    smsc_log_info(log_,"--- loading deliveries ---");
 
     TmpBuf<char,300> buf;
     buf.setSize(path.size()+100);
@@ -769,12 +769,13 @@ void DeliveryMgr::init()
     }
     std::sort( chunks1.begin(), chunks1.end() );
     char* bufpos1 = buf.GetCurPtr();
+    unsigned totaldlv = 0;
     for ( std::vector<std::string>::iterator kchunk = chunks1.begin();
           kchunk != chunks1.end(); ++kchunk ) {
         strcpy(bufpos1,kchunk->c_str());
         strcat(bufpos1,"/");
         chunks.clear();
-        smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
+        smsc_log_info(log_,"--- loading deliveries chunk '%s' ---",buf.get());
         try {
             makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(),chunks);
         } catch ( std::exception& e ) {
@@ -820,16 +821,20 @@ void DeliveryMgr::init()
                         throw InfosmeException(EXC_LOGICERROR,"cannot create a chunk for D=%u",dlvId);
                     }
                     chunk->setDelivery(dlvId,true);
+                    ++totaldlv;
                     continue;
                 }
                 try {
                     readDelivery( dlvId );
+                    ++totaldlv;
                 } catch (std::exception& e) {
                     smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
                 }
             }
         }
     }
+
+    smsc_log_info(log_,"--- deliveries loaded, %u total---", totaldlv);
 
     // reading journals and binding deliveries and regions
     if ( !getCS()->isArchive() ) {
@@ -867,7 +872,7 @@ void DeliveryMgr::init()
         }
 
     }
-    smsc_log_debug(log_,"--- init done ---");
+    smsc_log_info(log_,"--- delivery manager init done ---");
 }
 
 
