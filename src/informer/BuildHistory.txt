@@ -1,8 +1,7 @@
+=====================================================================
+2011-08-16 12:43 bukind informer-build-20110815
 2011-08-16 12:09 bukind
   bugfix: memory corruption typos in MessageFlags IO
-
-=====================================================================
-2011-08-15 09:47 bukind informer-build-20110815
 2011-08-12 15:21 bukind
   bugfix: deadlock in SmppBase+SmscSender
 2011-08-12 10:10 bukind
