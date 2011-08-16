@@ -65,7 +65,8 @@ void CommonSettings::init( smsc::util::config::Config& cfg,
     snmp_ = snmp;
     archive_ = archive;
     utf8_ = new UTF8();
-    dlwatcher_->start();
+    // dead lock watcher will be started later
+    // dlwatcher_->start();
 
     const ConfigWrapper conf(cfg,log_);
     emergency_ = conf.getBool("emergency",false);

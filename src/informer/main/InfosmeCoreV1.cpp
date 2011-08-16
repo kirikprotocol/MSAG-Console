@@ -473,6 +473,9 @@ void InfosmeCoreV1::init( bool archive )
             dcpServer_->assignCore(this);
         }
 
+        // start the dead lock watcher
+        getCS()->getDLWatcher().start();
+
     } catch ( InfosmeException& e ) {
         throw;
     } catch ( HashInvalidKeyException& e ) {

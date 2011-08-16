@@ -1,3 +1,6 @@
+2011-08-16 17:02 bukind
+  feature: dead lock watcher must be started after full init
+
 =====================================================================
 2011-08-16 12:43 bukind informer-build-20110815
 2011-08-16 12:09 bukind
