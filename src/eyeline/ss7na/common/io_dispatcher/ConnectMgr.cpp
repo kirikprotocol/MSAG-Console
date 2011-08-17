@@ -175,7 +175,7 @@ ConnectMgr::processReadReadyEvent(int* listen_status)
   if ( *listen_status & corex::io::IOObjectsPool::OK_READ_READY ) {
     smsc_log_debug(_logger, "ConnectMgr::processReadReadyEvent::: try process all ready input streams");
     corex::io::InputStream* iStream;
-    while ( iStream = _ioObjectsPool.getNextReadyInputStream() ) {
+    while ( (iStream = _ioObjectsPool.getNextReadyInputStream()) ) {
       corex::io::IOObject* curSocket = iStream->getOwner();
       std::string curSocketFingerPrint = curSocket->toString();
       smsc_log_debug(_logger, "ConnectMgr::processReadReadyEvent::: got InputStream for socket [=%s]", curSocketFingerPrint.c_str());
@@ -237,7 +237,7 @@ ConnectMgr::processAcceptReadyEvent(int* listen_status)
   if ( *listen_status & corex::io::IOObjectsPool::OK_ACCEPT_READY ) {
     corex::io::network::ServerSocket* serverSocket;
     smsc_log_debug(_logger, "ConnectMgr::processAcceptReadyEvent::: try process next ready server socket");
-    if ( serverSocket = _ioObjectsPool.getNextReadyServerSocket() ) {
+    if ( (serverSocket = _ioObjectsPool.getNextReadyServerSocket()) ) {
       std::string curServerSocketFingerPrint = serverSocket->toString();
       smsc_log_debug(_logger, "ConnectMgr::processAcceptReadyEvent::: next serverSocket=[%s] is ready", curServerSocketFingerPrint.c_str());
 
@@ -281,6 +281,7 @@ ConnectMgr::getEvent()
     smsc_log_info(_logger, "ConnectMgr::processReadReadyEvent::: connection for socket with id=[%s] closed by remote side", _curConnect->getLinkId().getValue().c_str());
     return cleanupLinkInfo(_curConnect->getLinkId());
   }
+  return 0;//make compiler happy
 }
 
 bool
@@ -441,17 +442,15 @@ std::set<LinkId>
 ConnectMgr::getLinkSetIds(const LinkId& link_id)
 {
   smsc::core::synchronization::MutexGuard guard(_linkSetLock);
-  {
-    smsc::core::synchronization::MutexGuard linkLockGuard(_linkLock);
-    if ( _activeLinks.find(link_id) == _activeLinks.end() )
-      return std::set<LinkId>();
+  smsc::core::synchronization::MutexGuard linkLockGuard(_linkLock);
+  if ( _activeLinks.find(link_id) == _activeLinks.end() )
+    return std::set<LinkId>();
 
-    link_to_linksets_t::iterator iter = _linkToLinkSets.find(link_id);
-    if ( iter != _linkToLinkSets.end() )
-      return *(iter->second);
-    else
-      return std::set<LinkId>();
-  }
+  link_to_linksets_t::iterator iter = _linkToLinkSets.find(link_id);
+  if ( iter != _linkToLinkSets.end() )
+    return *(iter->second);
+  else
+    return std::set<LinkId>();
 }
 
 void

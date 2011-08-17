@@ -15,13 +15,19 @@ InputEventProcessor::InputEventProcessor(MessagePublisher& message_publisher,
   snprintf(_taskName, sizeof(_taskName), "ioEventProc_%u", proc_num);
 }
 
+void InputEventProcessor::stop()
+{
+  ThreadedTask::stop();
+  _messagePublisher.interrupt();
+}
+
 int
 InputEventProcessor::Execute()
 {
   while (!isStopping) {
     try {
       std::auto_ptr<IOEvent> ioEvent(_messagePublisher.getIOEvent());
-      ioEvent->handle();
+      if(ioEvent.get())ioEvent->handle();
     } catch (std::exception& ex) {
       smsc_log_error(_logger, "InputEventProcessor::Execute::: caught exception '%s'", ex.what());
     } catch (...) {

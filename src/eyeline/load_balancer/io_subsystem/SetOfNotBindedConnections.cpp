@@ -117,11 +117,10 @@ LinkSetRefPtr
 SetOfNotBindedConnections::getRelatedLinkSet() const
 {
   LinkSetRefPtr relatedLinkSet = _ioProcessor.getLinkSet(_relatedLinkSetId);
-  if ( relatedLinkSet.Get() )
-    return relatedLinkSet;
-  else
+  if ( !relatedLinkSet.Get() )
     throw smsc::util::Exception("SetOfNotBindedConnections::getRelatedLinkSet::: linkSet with id='%s' is not registered",
                                 _relatedLinkSetId.toString().c_str());
+  return relatedLinkSet;
 }
 
 }}}

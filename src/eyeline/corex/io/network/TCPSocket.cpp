@@ -134,7 +134,7 @@ void TCPSocket::connect(unsigned connect_timeout)
           _inputStream = new GenericInputStream(this, _sockfd); _outputStream = new GenericOutputStream(this, _sockfd);
           return;
         }
-        if ( errno = ECONNREFUSED )
+        if ( errno == ECONNREFUSED )
           connRefused = true;
       }
     }

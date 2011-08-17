@@ -10,13 +10,17 @@ namespace eyeline {
 namespace corex {
 namespace io {
 
-int _turn_Off_SIGPIPE_Delivery()
+namespace{
+struct turn_Off_SIGPIPE_Delivery_Struct
 {
-  sigset(SIGPIPE, SIG_IGN);
-  return 0;
+  turn_Off_SIGPIPE_Delivery_Struct()
+  {
+    sigset(SIGPIPE, SIG_IGN);
+  }
+} turn_Off_SIGPIPE_Delivery;
 }
 
-static int turn_Off_SIGPIPE_Delivery = _turn_Off_SIGPIPE_Delivery();
+//static int turn_Off_SIGPIPE_Delivery = _turn_Off_SIGPIPE_Delivery();
 
 void
 IOObject::setNonBlocking(int fd, bool on)

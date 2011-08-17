@@ -15,6 +15,7 @@ public:
 
   virtual int Execute();
   virtual const char* taskName() { return _taskName; };
+  void stop();
 private:
   MessagePublisher& _messagePublisher;
   smsc::logger::Logger* _logger;

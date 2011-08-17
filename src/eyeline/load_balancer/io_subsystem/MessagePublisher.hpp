@@ -18,12 +18,14 @@ public:
 
   void publish(IOEvent* new_ioEvent);
   IOEvent* getIOEvent();
+  void interrupt();
 protected:
   void putEventToQueue(IOEvent* new_event);
   IOEvent* getEventFromQueue();
 private:
   smsc::core::synchronization::EventMonitor _eventsMonitor;
   utilx::ArrayBasedQueue<IOEvent*, utilx::FakeMutex> _eventsQueue;
+  bool interrupted;
 };
 
 }}}

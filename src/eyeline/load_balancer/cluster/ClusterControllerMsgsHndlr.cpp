@@ -86,7 +86,7 @@ ClusterControllerMsgsHndlr::getAllSmeStatus(std::vector<messages::ServiceStatus>
     {
       if(bnd[i])
       {
-        serviceStatus.getBoundSmscRef().push_back(i+1);
+        serviceStatus.getBoundSmscRef().push_back((int8_t)(i+1));
       }
     }
 

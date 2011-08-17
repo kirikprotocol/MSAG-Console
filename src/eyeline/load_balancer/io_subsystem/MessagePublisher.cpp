@@ -5,7 +5,7 @@ namespace load_balancer {
 namespace io_subsystem {
 
 MessagePublisher::MessagePublisher(unsigned max_events_queue_sz)
-  :_eventsQueue(max_events_queue_sz)
+  :_eventsQueue(max_events_queue_sz),interrupted(false)
 {}
 
 void
@@ -28,12 +28,23 @@ MessagePublisher::putEventToQueue(IOEvent* new_event)
   _eventsMonitor.notify();
 }
 
+void MessagePublisher::interrupt()
+{
+  smsc::core::synchronization::MutexGuard synchronize(_eventsMonitor);
+  _eventsMonitor.notify();
+  interrupted=true;
+}
+
 IOEvent*
 MessagePublisher::getEventFromQueue()
 {
   smsc::core::synchronization::MutexGuard synchronize(_eventsMonitor);
-  while ( _eventsQueue.isEmpty() )
+  while ( _eventsQueue.isEmpty() && !interrupted)
     _eventsMonitor.wait();
+  if(interrupted)
+  {
+    return 0;
+  }
   return _eventsQueue.dequeue();
 }
 

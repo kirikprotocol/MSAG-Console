@@ -194,10 +194,9 @@ PacketWriter::getOutputStream(const LinkId& link_id)
 {
   smsc::core::synchronization::MutexGuard synchronize(_lockForKnownOStreams);
   ostream_registry_t::iterator iter = _known_oStreams.find(link_id);
-  if ( iter != _known_oStreams.end() )
-    return iter->second;
-  else
+  if ( iter == _known_oStreams.end() )
     throw smsc::util::Exception("PacketWriter::getOutputStream::: there isn't OutputStream for linkId=[%s]",link_id.toString().c_str());
+  return iter->second;
 }
 
 void

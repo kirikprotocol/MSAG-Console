@@ -109,6 +109,7 @@ MessageForwardingHelper::forwardMessageToSme(const MESSAGE& message,
       throw smsc::util::Exception("MessageForwardingHelper::forwardMessageToSme::: there isn't link for id=%s",
                                   linkIdToSme.toString().c_str());
   }
+  return io_subsystem::LinkId();//make compiler happy
 }
 
 template <class MESSAGE>
