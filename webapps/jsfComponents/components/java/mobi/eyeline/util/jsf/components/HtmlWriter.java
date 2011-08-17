@@ -20,4 +20,9 @@ public class HtmlWriter {
     return this;
   }
 
+  public HtmlWriter a(char s) throws IOException {
+    w.append(s);
+    return this;
+  }
+
 }

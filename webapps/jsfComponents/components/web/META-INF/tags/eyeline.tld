@@ -9,6 +9,413 @@
   <short-name>eye</short-name>
   <uri>http://taglib.eyeline.mobi</uri>
 
+
+  <!-- ========================================== PAGED CALENDAR ===============================================  -->
+
+  <tag>
+    <description>Календарь, отображаемый на странице</description>
+    <name>pageCalendar</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Название переменной на странице, в которую будет записываться текущий объект календаря, полученный из модели</description>
+      <name>var</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Модель календаря</description>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>mobi.eyeline.util.jsf.components.page_calendar.PageCalendarModel</type>
+    </attribute>
+  </tag>
+
+  <!-- ========================================== CHARTS ===============================================  -->
+
+  <tag>
+    <description>Контейнер для отрисовки графиков</description>
+    <name>lines</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Названия для точек оси Х</description>
+      <name>labels</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.util.List</type>
+    </attribute>
+    <attribute>
+      <description>Высота графика</description>
+      <name>height</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+    <attribute>
+      <description>Ширина графика</description>
+      <name>width</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+    <attribute>
+      <description>Период обновления в секундах. Если период равен нулю, то компонент не обновляется</description>
+      <name>updatePeriod</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>График</description>
+    <name>lineChart</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Массив координат точек графика (двумерный)</description>
+      <name>values</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+      <description>Цвет линии (к примеру: #F44)</description>
+      <name>color</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Закрашивать или нет область подграфика</description>
+      <name>shade</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <!-- ================================== DELIMITER =============================================================== -->
+
+  <tag>
+    <description>Вертикальный разделитель, замена &lt;p/&gt;</description>
+    <name>delimiter</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <!-- ================================== DATA TABLE FILTER ======================================================= -->
+
+  <tag>
+    <description>
+      Секция с фильтрами для dataTable. Может содержать одну кнопку "Применить" или две кнопки: "Применить" и "Очистить".
+      Если заданы атрибуты bean и applyAction, то по нажатию на кнопку "Применить" вызывается указанный метод у бина.
+      В противном случае при нажатии кнопки "Применить" сабмитается форма, в которой находится dataTableFilter.
+      Если заданы атрибуьы bean и clearAction, то отображается кнопка "Очистить" при нажатии на которую вызывается соответствующий метод бина.
+    </description>
+    <name>dataTableFilter</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Бин, экшены которого будут вызываться</description>
+      <name>bean</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+      <description>Название метода бина, который надо вызвать при нажатии кнопки "Применить"</description>
+      <name>applyAction</name>
+      <rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+      <description>Название метода бина, который надо вызвать при нажатии кнопки "Очистить"</description>
+      <name>clearAction</name>
+      <rtexprvalue>false</rtexprvalue>
+    </attribute>
+  </tag>
+
+  <!-- ================================== DATA TABLE =============================================================== -->
+
+  <tag>
+    <description>Многостраничная таблица</description>
+    <name>dataTable</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Флаг, означающий отображать или нет таблицу</description>
+      <name>rendered</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+    <attribute>
+      <description>Атрибут, описывающий откуда брать модель для таблицы</description>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>mobi.eyeline.util.jsf.components.data_table.model.DataTableModel</type>
+    </attribute>
+    <attribute>
+      <description>Период обновления таблицы в секундах. При наличии этого атрибута содержимое таблицы автоматически обновляется.</description>
+      <name>autoUpdate</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+    <attribute>
+      <description>Количество строк на одной странице по-умолчанию</description>
+      <name>pageSize</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+    <attribute>
+      <description>Можно ли изменять кол-во строк на странице с веб-интерфейса (по умолчанию: можно)</description>
+      <name>pageSizeRendered</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+    <attribute>
+      <description>Тег, описывающий куда передать список идентификаторов выделенных строк таблицы</description>
+      <name>selectedRows</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.util.List</type>
+    </attribute>
+    <attribute>
+      <description>
+        Флаг, описывающий способ обновления собержимого таблицы. Если флаг равен true, то содержимое таблицы (при сортировке, перемещении по страницам)
+        будет обновляться петем сабмита формы. В противном случае таблица будет обновляться через Ajax.
+      </description>
+      <name>updateUsingSubmit</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+    <attribute>
+      <description>Название переменной на странице, в которую будет записываться текущая строка или внутренняя строка</description>
+      <name>var</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Отключает возможность выделить все записи (по умолчанию: false)</description>
+      <name>disallowSelectAll</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Колонка в dataTable</description>
+    <name>column</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Название колонки. Используется при получении данных из модели</description>
+      <name>name</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Заголовок колонки</description>
+      <name>title</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Флаг, разрешающий или запрещающий сортировку по данной колонке</description>
+      <name>sortable</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+    <attribute>
+      <description>Ширина колонки в процентах или пикселях</description>
+      <name>width</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Выравнивание содержимого колонки</description>
+      <name>align</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Сортировка по-умолчанию. Возможные значения: asc, desc. Атрибут может быть установлен только для одной колонки в таблице.</description>
+      <name>defaultSortOrder</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Строка в dataTable.</description>
+    <name>row</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Флаг, разрешающий или запрещающий раскрытие содержимого строки</description>
+      <name>opened</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+    <attribute>
+      <description>Флаг, сообщающий есть ли внутри строки значение или нет</description>
+      <name>innerData</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+    <attribute>
+      <description>Атрибут, описывающий как можно получить внутренние строки для данной строки</description>
+      <name>innerRows</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.util.List</type>
+    </attribute>
+  </tag>
+
+
+  <!-- ================================== FILE DOWNLOADING ========================================================= -->
+
+  <tag>
+    <description>Listener к commandLink или commandButton, позволяющий по нажатию начинать загрузку файла</description>
+    <name>fileDownloadListener</name>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <description>Метод, для загрузки файла, с двумя параметрами FacesContext и OutputStream.</description>
+      <name>method</name>
+      <rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+      <description>Content или mime тип файла</description>
+      <name>contentType</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Название файла, отображаемое пользователю при загрузке</description>
+      <name>filename</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+  </tag>
+
+  <!-- ===================================== INPUT TEXT ============================================================ -->
+
+  <tag>
+    <description>Поле для ввода текста</description>
+    <name>inputText</name>
+    <tag-class>mobi.eyeline.util.jsf.components.input_text.InputText</tag-class>
+    <body-content>JSP</body-content>
+
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Значение, которое будет отображаться в данном компоненте</description>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Object</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий может ли данное поле содержать пустое значение. По-умолчанию, false.</description>
+      <name>required</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
+    <attribute>
+      <description>Сообщение об ошибке в случае некорректно введенного значения</description>
+      <name>converterMessage</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Сообщение об ошибке валидации</description>
+      <name>validatorMessage</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Сообщение о том, что поле является обязательным</description>
+      <name>requiredMessage</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Размер поля ввода</description>
+      <name>size</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+
+    <attribute>
+      <description>Количество "колонок" поля</description>
+      <name>cols</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+
+    <attribute>
+      <description>Количество "строк" поля (Если это параметр указан отрисовывается textare)</description>
+      <name>rows</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий может ли значение поля изменяться пользователем</description>
+      <name>readonly</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Идентификатор конвертера, который будет преобразовывать строковое значеи аттрибута "value" в объект и наоборот</description>
+      <name>converter</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
+    </attribute>
+  </tag>
   <!-- ===================================== INPUT TIME ============================================================ -->
 
   <tag>

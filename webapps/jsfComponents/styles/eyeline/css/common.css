@@ -53,6 +53,10 @@ input.validationError {
   border: 1px solid RED;
 }
 
+textarea.validationError {
+  border: 1px solid RED;
+}
+
 textarea {
   height: 80px;
   width: 100%;

@@ -1,0 +1,37 @@
+<f:view xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+  <ui:composition template="/main.xhtml">
+
+    <ui:define name="content">
+
+      <style type="text/css">
+        .column100Width {
+          width: 300px;
+        }
+        .columnLeftAlign {
+          text-align: left;
+        }
+      </style>
+
+      <h:form>
+
+        <h:panelGrid columns="2" columnClasses="column300Width, columnLeftAlign">
+
+          <h:inputTextarea cols="20" rows="3" value="#{downloading.text}"/>
+
+          <h:commandLink value="Download as file">
+            <eye:fileDownloadListener method="#{downloading.download}" contentType="application/csv" filename="downloadedFile.csv"/>
+          </h:commandLink>
+
+        </h:panelGrid>
+
+      </h:form>
+    </ui:define>
+
+  </ui:composition>
+
+</f:view>

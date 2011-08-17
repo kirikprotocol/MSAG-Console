@@ -19,6 +19,7 @@
       <supported-locale>en</supported-locale>
     </locale-config>
 
+    <!--<navigation-handler>mobi.eyeline.util.jsf.components.NavigationHandlerImpl</navigation-handler>-->
   </application>
 
   <managed-bean>
@@ -82,6 +83,29 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>downloading</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.FileDownloadingController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>inputText</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.InputTextController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>userBean</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.UserController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <converter>
+    <converter-id>stringWrapper</converter-id>
+    <converter-class>mobi.eyeline.util.jsf.components.sample.controllers.StringWrapperConverter</converter-class>
+  </converter>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>BUTTONS</from-outcome>
@@ -102,6 +126,10 @@
     <navigation-case>
       <from-outcome>INPUT_TIME</from-outcome>
       <to-view-id>/inputTime.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>INPUT_TEXT</from-outcome>
+      <to-view-id>/inputText.xhtml</to-view-id>
     </navigation-case>
     <navigation-case>
       <from-outcome>LINES</from-outcome>
@@ -134,6 +162,10 @@
     <navigation-case>
       <from-outcome>PROGRESS_BAR</from-outcome>
       <to-view-id>/progressBar.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>FILE_DOWNLOADING</from-outcome>
+      <to-view-id>/fileDownloading.xhtml</to-view-id>
     </navigation-case>
   </navigation-rule>
 

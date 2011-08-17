@@ -23,6 +23,14 @@
   </tag>
 
   <tag>
+    <tag-name>inputText</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.input_text</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
     <tag-name>validateTimeInterval</tag-name>
     <validator>
       <validator-id>mobi.eyeline.util.jsf.components.validateTimeInterval</validator-id>

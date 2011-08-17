@@ -34,6 +34,11 @@
     <component-class>mobi.eyeline.util.jsf.components.input_time.InputTime</component-class>
   </component>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.input_text</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.input_text.InputText</component-class>
+  </component>
+
   <validator>
     <validator-id>mobi.eyeline.util.jsf.components.validateTimeInterval</validator-id>
     <validator-class>mobi.eyeline.util.jsf.components.input_time.TimeIntervalValidator</validator-class>
