@@ -49,33 +49,26 @@ final class ClusterControllerClient extends ClientConnection {
 
   @Override
   protected void onSend(BufferWriter writer, PDU pdu) throws IOException {
-    int pos = writer.size();
-    writer.writeInt(0); // write 4 bytes for future length
-    writer.writeInt(pdu.getTag());
-    writer.writeInt(pdu.getSeqNum());
-    pdu.encode(writer);
-    writer.replaceInt(pos, writer.getLength() - pos - 4);
+    ControllerProtocol.encodeMessage(writer, pdu);
+    if( log.isDebugEnabled() ) log.debug("PDU sent: "+pdu);
   }
 
   @Override
   protected PDU onReceive(BufferReader bufferReader) throws IOException {
-    int tag = bufferReader.readInt();
-    int seqNum = bufferReader.readInt();
-
-    if (log.isDebugEnabled())
-      log.debug("PDU received: tag=" + tag + ", seqNum=" + seqNum);
+    PDU pdu = ControllerProtocol.decodeMessage(bufferReader);
+    if (log.isDebugEnabled()) log.debug("PDU rcvd: "+pdu);
 
     ResponseListener l;
     synchronized(listeners) {
-      l = listeners.get(seqNum);
+      l = listeners.get(pdu.getSeqNum());
     }
     if (l != null) {
-      if (l.getExpectedResponseTag() != tag) {
-        log.error("Unexpected tag: " + tag + " for seqNum: " + seqNum);
-        throw new IOException("Unexpected tag: " + tag + " for seqNum: " + seqNum);
+      if (l.getExpectedResponseTag() != pdu.getTag()) {
+        log.error("Unexpected tag: " + pdu.getTag() + " for seqNum: " + pdu.getSeqNum());
+        throw new IOException("Unexpected tag: " + pdu.getTag() + " for seqNum: " + pdu.getSeqNum());
       }
 
-      return l.receive(bufferReader);
+      return l.receive(pdu);
     } else {
       log.error("Unexpected seqNum=" + seqNum);
       throw new IOException("Unexpected seqNum=" + seqNum);
@@ -324,10 +317,10 @@ final class ClusterControllerClient extends ClientConnection {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 
     private PDU response;
-    private PDU responseEx;
+    private int responseTag;
 
     public ResponseListener(PDU responseEx) {
-      this.responseEx = responseEx;
+      this.responseTag = responseEx.getTag();
     }
 
     public PDU getResponse(int timeout) throws InterruptedException {
@@ -336,12 +329,11 @@ final class ClusterControllerClient extends ClientConnection {
     }
 
     public int getExpectedResponseTag() {
-      return responseEx.getTag();
+      return responseTag;
     }
 
-    public PDU receive(BufferReader buffer) throws IOException {
-      responseEx.decode(buffer);
-      response = responseEx;
+    public PDU receive(PDU resp) throws IOException {
+      response = resp;
       respLatch.countDown();
       return response;
     }
