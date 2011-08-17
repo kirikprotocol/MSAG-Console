@@ -56,7 +56,6 @@ final class ClusterControllerClient extends ClientConnection {
   @Override
   protected PDU onReceive(BufferReader bufferReader) throws IOException {
     PDU pdu = ControllerProtocol.decodeMessage(bufferReader);
-    if (log.isDebugEnabled()) log.debug("PDU rcvd: "+pdu);
 
     ResponseListener l;
     synchronized(listeners) {
@@ -64,14 +63,12 @@ final class ClusterControllerClient extends ClientConnection {
     }
     if (l != null) {
       if (l.getExpectedResponseTag() != pdu.getTag()) {
-        log.error("Unexpected tag: " + pdu.getTag() + " for seqNum: " + pdu.getSeqNum());
-        throw new IOException("Unexpected tag: " + pdu.getTag() + " for seqNum: " + pdu.getSeqNum());
+        throw new IOException("PDU rcvd unexpected tag: " + pdu);
       }
-
+      if (log.isDebugEnabled()) log.debug("PDU rcvd: "+pdu);
       return l.receive(pdu);
     } else {
-      log.error("Unexpected seqNum=" + seqNum);
-      throw new IOException("Unexpected seqNum=" + seqNum);
+      throw new IOException("PDU rcvd unexpected seqnum: " + pdu);
     }
   }
 
@@ -88,18 +85,10 @@ final class ClusterControllerClient extends ClientConnection {
       }
     }
     try {
-      if (log.isDebugEnabled())
-        log.debug("Sending request: " + request);
-      System.out.println("OUT: " + os);
       send(request);
-      if (log.isDebugEnabled())
-        log.debug("Request sent: " + request);
-
       if (response != null) {
         PDU resp = l.getResponse(RESPONSE_TIMEOUT);
         if (resp != null) {
-          if (log.isDebugEnabled())
-            log.debug("Response received: " + response);
           return (T) resp;
         } else
           throw new ClusterControllerException("response_timeout");
