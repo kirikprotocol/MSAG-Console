@@ -386,6 +386,14 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
 
     scheduler=new scheduler::Scheduler();
 
+    try{
+        scheduler->setStoresCount(cfg.cfgman->getInt("MessageStore.LocalStore.storeFilesCount"));
+      }catch(...)
+      {
+        smsc_log_warn(log,"MessageStore.LocalStore.storeFilesCount not found, using default %d",32);
+        scheduler->setStoresCount(32);
+      }
+
     char dpfStoreCfg[64];
     sprintf(dpfStoreCfg,"dpf.storeDir%d",nodeIndex);
     scheduler->InitDpfTracker(cfg.cfgman->getString(dpfStoreCfg),
