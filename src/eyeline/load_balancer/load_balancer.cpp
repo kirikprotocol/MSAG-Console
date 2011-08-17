@@ -48,6 +48,8 @@ int main(int argc, char** argv)
 {
   initialize();
   smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("init");
+  smsc_log_error(logger, "\n");
+  smsc_log_error(logger, "starting load balancer.");
 
   const char* cfgFile;
   if ( argc < 2 )
@@ -95,5 +97,6 @@ int main(int argc, char** argv)
     smsc_log_error(logger, "caught unexpected exception [%s]. Terminate.", ex.what());
     return 1;
   }
+  smsc_log_error(logger, "load balancer shutdown complete.\n");
   return 0;
 }
