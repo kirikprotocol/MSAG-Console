@@ -84,7 +84,7 @@ ClusterControllerMgr::shutdown()
 {
   smsc_log_debug(_logger, "ClusterControllerMgr::startup::: try shutdown thread");
   _shutdownInProgress = true;
-  _socket->close();
+  //_socket->close();
 }
 
 void
