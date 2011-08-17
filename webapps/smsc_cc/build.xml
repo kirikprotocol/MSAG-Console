@@ -148,7 +148,7 @@ public class AdminMode {${line.separator}
   <target name="distr" depends="weave.sources, exploded, predistr.dev,predistr.prod">
     <delete dir="${smsc.distr.dir}" failonerror="false"/>
     <mkdir dir="${smsc.distr.dir}"/>
-    <war destfile="${smsc.distr.dir}/smsc.war" basedir="${smsc.exploded.dir}">
+    <war destfile="${smsc.distr.dir}/smsc.war" basedir="${smsc.exploded.dir}" webxml="${smsc.exploded.dir}/WEB-INF/web.xml">
       <manifest>
         <attribute name="Implementation-Version" value="${smsc.implementation.version}"/>
       </manifest>
