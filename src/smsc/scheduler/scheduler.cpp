@@ -620,8 +620,9 @@ void Scheduler::Init(smsc::util::config::Manager* cfgman)
 {
   smsc=&Smsc::getInstance();
   localFileStore.Init(cfgman);
-  archiveStorage.init(cfgman->getString("MessageStore.archiveDir"),cfgman->getInt("MessageStore.archiveInterval"));
-
+  char archiveStorePathCfg[64];
+  sprintf(archiveStorePathCfg,"MessageStore.archiveDir%d",psmsc->nodeIndex);
+  archiveStorage.init(cfgman->getString(archiveStorePathCfg),cfgman->getInt("MessageStore.archiveInterval"));
 }
 
 
