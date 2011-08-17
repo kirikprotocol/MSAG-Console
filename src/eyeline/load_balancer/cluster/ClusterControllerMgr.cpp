@@ -30,6 +30,7 @@ ClusterControllerMgr::ClusterControllerMgr(const std::string& peer_host,
 
 ClusterControllerMgr::~ClusterControllerMgr()
 {
+  WaitFor();
   delete _socket;
 }
 
