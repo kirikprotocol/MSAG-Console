@@ -28,15 +28,15 @@ void ClusterLoadBalancerProtocol::decodeAndHandleMessage(eyeline::protogen::fram
     {
       messages::GetServicesStatus msg;
       msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
     }break;
     case tag_DisconnectService:
     {
       messages::DisconnectService msg;
       msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
     }break;
     default:
       throw eyeline::protogen::framework::UnhandledMessage(tag);
