@@ -49,7 +49,7 @@ final class ClusterControllerClient extends ClientConnection {
 
   @Override
   protected void onSend(BufferWriter writer, PDU pdu) throws IOException {
-    int pos = writer.getLength();
+    int pos = writer.size();
     writer.writeInt(0); // write 4 bytes for future length
     writer.writeInt(pdu.getTag());
     writer.writeInt(pdu.getSeqNum());
