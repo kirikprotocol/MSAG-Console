@@ -90,7 +90,9 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman)
   }
   minRollTime=cfgman->getInt("MessageStore.LocalStore.minRollTime");
 
-  primaryFileName=cfgman->getString("MessageStore.LocalStore.filename");
+  char localStoreCfg[64];
+  sprintf(localStoreCfg,"MessageStore.LocalStore.filename%d",smsc->nodeIndex);
+  primaryFileName=cfgman->getString(localStoreCfg);
 
   typedef vector<LoadFileInfo> LoadFileVector;
   LoadFileVector files;
