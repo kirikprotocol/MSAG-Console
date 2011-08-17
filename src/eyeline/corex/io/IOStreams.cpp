@@ -1,6 +1,9 @@
 #include <unistd.h>
 #include "eyeline/corex/io/IOStreams.hpp"
 #include "eyeline/corex/io/IOExceptions.hpp"
+#include "logger/Logger.h"
+#include <string.h>
+#include <errno.h>
 
 namespace eyeline {
 namespace corex {
@@ -13,7 +16,11 @@ GenericInputStream::read(uint8_t *buf, size_t bufSz)
 {
   ssize_t result = ::read(_fd, buf, bufSz);
   if ( result < 0 )
+  {
+    static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("io.str.read");
+    smsc_log_debug(log,"read error:%s",strerror(errno));
     throw smsc::util::SystemError("GenericInputStream::read::: call to read() failed");
+  }
   if ( !result )
     throw EOFException("GenericInputStream::read::: connection closed by remote side");
 
