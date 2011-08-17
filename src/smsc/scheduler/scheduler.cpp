@@ -623,15 +623,18 @@ void Scheduler::Init(smsc::util::config::Manager* cfgman)
   smsc=&Smsc::getInstance();
   localFileStore.Init(cfgman);
   char archiveStorePathCfg[64];
-  sprintf(archiveStorePathCfg,"MessageStore.archiveDir%d",psmsc->nodeIndex);
+  sprintf(archiveStorePathCfg,"MessageStore.archiveDir%d",smsc->nodeIndex);
   archiveStorage.init(cfgman->getString(archiveStorePathCfg),cfgman->getInt("MessageStore.archiveInterval"));
 }
 
 
 void Scheduler::DelayInit(smsc::util::config::Manager* cfgman)
 {
-  archiveStorage.init(cfgman->getString("MessageStore.archiveDir"),cfgman->getInt("MessageStore.archiveInterval"));
   smsc=&Smsc::getInstance();
+  char archiveStorePathCfg[64];
+  sprintf(archiveStorePathCfg,"MessageStore.archiveDir%d",smsc->nodeIndex);
+  archiveStorage.init(cfgman->getString(archiveStorePathCfg),cfgman->getInt("MessageStore.archiveInterval"));
+  
   delayInit=true;
 }
 
