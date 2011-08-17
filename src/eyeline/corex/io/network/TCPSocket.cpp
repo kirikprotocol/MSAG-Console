@@ -205,6 +205,7 @@ TCPSocket::tryConnectWithTimeout(int connect_timeout)
       }
     }
   }
+  setNonBlocking(_sockfd, false);
 
   return 0;
 }
