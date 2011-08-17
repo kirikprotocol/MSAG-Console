@@ -57,6 +57,10 @@ ClusterControllerMgr::Execute()
       } catch (std::exception& ex) {
         smsc_log_error(_logger, "ClusterControllerMgr::Execute::: caught exception [%s]",
                        ex.what());
+        delete _socket;
+        sleep(1);
+        _socket = new corex::io::network::TCPSocket(_peerHost, _peerPort);
+        _connected=false;
       }
     }
   } catch(std::exception& ex) {

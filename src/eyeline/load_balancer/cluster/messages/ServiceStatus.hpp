@@ -33,7 +33,7 @@ public:
     boundSmscFlag=false;
     boundSmsc.clear();
   }
- 
+
 
   std::string toString()const
   {
@@ -260,7 +260,7 @@ public:
     }
     ds.writeTag(bindModeTag);
     ds.writeByteLV(bindMode);
- 
+
     ds.writeTag(boundSmscTag);
     ds.writeLength(DataStream::fieldSize(boundSmsc));
     for(std::vector<int8_t>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
@@ -342,6 +342,7 @@ public:
           //  throw protogen::framework::UnexpectedTag("ServiceStatus",tag);
           //}
           ds.skip(ds.readLength());
+          break;
       }
     }
     if(!serviceNameFlag)
@@ -364,7 +365,7 @@ public:
   }
 
 
- 
+
 
 protected:
   //static const int8_t versionMajor=1;
