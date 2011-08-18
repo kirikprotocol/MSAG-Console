@@ -19,12 +19,13 @@ void FifoLink::push(FifoLink * & fifo_head, FifoLink * & fifo_tail)
   fifo_tail = this;
   if (!fifo_head)
     fifo_head = this;
+  _prev = 0;
 }
 //Excludes this node from start of FIFO queue.
 void FifoLink::pop(FifoLink * & fifo_head, FifoLink * & fifo_tail)
 {
   fifo_head = _prev;
-  _prev = 0;
+  _next = _prev = 0;
   if (!fifo_head)
     fifo_tail = 0;
   else
@@ -47,6 +48,7 @@ void FifoLink::unlink(FifoLink * & fifo_head, FifoLink * & fifo_tail)
   //intermediate element
   _next->_prev = _prev;
   _prev->_next = _next;
+  _next = _prev = 0;
 }
 
 /* ************************************************************************** *
@@ -57,8 +59,6 @@ FifoLink * FifoList::pop_front(void)
   FifoLink * pNode = _head;
   if (_head)
     pNode->pop(_head, _tail);
-  if (!_head)
-    _tail = 0;
   return pNode;
 }
 
