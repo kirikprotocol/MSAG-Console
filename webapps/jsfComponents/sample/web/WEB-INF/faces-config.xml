@@ -95,11 +95,11 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
-  <managed-bean>
-    <managed-bean-name>userBean</managed-bean-name>
-    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.UserController</managed-bean-class>
-    <managed-bean-scope>session</managed-bean-scope>
-  </managed-bean>
+  <!--<managed-bean>-->
+    <!--<managed-bean-name>userBean</managed-bean-name>-->
+    <!--<managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.UserController</managed-bean-class>-->
+    <!--<managed-bean-scope>session</managed-bean-scope>-->
+  <!--</managed-bean>-->
 
   <converter>
     <converter-id>stringWrapper</converter-id>
