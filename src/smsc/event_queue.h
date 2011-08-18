@@ -75,18 +75,22 @@ class EventQueue
     {
     }
 
-    void push_back(const CommandType& c)
+    bool push_back(const CommandType& c)
     {
       //cmds.push_back(c);
       for(int i=0;i<8;i++)
       {
+        if(i>=6 && c->cmdid==SUBMIT )
+        {
+          return false;
+        }
         if(!pool[i].IsOk())
         {
           pool[i]=c;
-          return;
+          return true;
         }
       }
-      __warning2__("LOCKER POOL OUT OF ITEMS! msgId=%lld",msgId);
+      return false;
     }
 
     //
@@ -134,7 +138,6 @@ class EventQueue
         while(l)
         {
           tmp=l->next_hash;
-          __trace2__("deleting in hash destructor:msgid=%lld",l->msgId);
           //delete l;
           l=tmp;
         }
@@ -303,14 +306,12 @@ public:
   void enqueueEx(EnqueueVector& in)
   {
     __synchronized__
-    static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("eventqueue");
     bool doSignal=false;
     for(EnqueueVector::iterator it=in.begin();it!=in.end();it++)
     {
       MsgIdType msgId=it->first;
       CommandType& command=it->second;
 
-      debug2(log,"enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
       Locker* locker = hash.get(msgId);
 
       if ( !locker )
@@ -321,7 +322,10 @@ public:
 
         hash.put(msgId,locker);
       }
-      locker->push_back(command);
+      if(!locker->push_back(command))
+      {
+        continue;
+      }
       if(!locker->locked && !locker->enqueued &&
          StateChecker::commandIsValid(locker->state,command))
       {
@@ -329,6 +333,7 @@ public:
         queue.Push(locker,command->get_priority());
         doSignal=true;
       }
+      command=CommandType();
     }
     if(doSignal)event.Signal();
   }

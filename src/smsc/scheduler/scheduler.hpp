@@ -142,6 +142,7 @@ public:
     rolling=false;
     curFile=0;
     rollFile=0;
+    maxStoreFiles=16;
     curFile=new StoreFileData;
   }
   virtual ~Scheduler()
