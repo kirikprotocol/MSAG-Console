@@ -73,180 +73,176 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 		return OK;
   
 	command = cx.command;
+
+	smsc_log_debug(logger, "1 f:%d llen:%d pp:%d", cx.flags, local_len, cx.parsePosition);
   
-  do {
-    if (cx.flags == 0) {
-      cx.parsePosition = 0;
-	  command->chunked = false;
-	  command->chunk_size = 0;
-	  command->setContentLength(0);
-      rc = readLine(local_buf, local_len);
-      if (rc != OK)
-          return rc;
-//        break;
-
-      if (local_len == 0)
-        return ERROR;
-
-      rc = parseFirstLine(saved_buf, local_len, cx);
-      if (rc != OK)
-        return rc;
-
-      cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-      saved_buf = local_buf;
-      local_len = len - static_cast<int>(local_buf - buf);
-
-      cx.flags = 1;
-    }
-
-    while ((cx.flags == 1) && local_len) {
-//	  smsc_log_debug(logger, "f:%d llen:%d", cx.flags, local_len);
-      rc = readLine(local_buf, local_len);
-      if (rc != OK)
-          return rc;
-//        break;
-//	  smsc_log_debug(logger, "f:%d llen:%d %s", cx.flags, local_len, std::string(saved_buf, 10).c_str());
-
-      if (/*(rc == OK) &&*/ (local_len == 0)) {
-        // empty line at the end of HTTP header
-        cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-        saved_buf = local_buf;
-        local_len = len - static_cast<int>(local_buf - buf);
-
-        /*
-         *  cx.flags:
-         *  0 - default value
-         *  1 - after first header parsed
-         *  2 - after all headers parsed, waiting content
-         *  3 - after all headers parsed, chunked, waiting chunk size
-         *  4 - after all headers parsed, chunked, waiting chunk data
-         */
-        if (command->chunked) {
-        	cx.flags = 3;
-//            command->content.SetPos(0); // xom 27.07.11 to avoid of bad command->content info (?)
-        }
-        else {
-        	if (command->contentLength == 0)
-        		return OK;
-        	cx.flags = 2;
-        }
-
-        if ((cx.action == READ_REQUEST) && (command->contentLength == -1)) {
-          switch (cx.getRequest().getMethod()) {
-            case GET:
-            case POST:            
-            case TRACE:
-            case OPTIONS:
-            case HEAD:
-              return OK;
-          default:
-              break;
-          }
-        }
-
-        break;
-      }
-
-      rc = parseHeaderFieldLine(saved_buf, local_len, cx, *command);
-      if (rc != OK)
-        return rc;
-
-      cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-      saved_buf = local_buf;
-      local_len = len - static_cast<int>(local_buf - buf);
-    }
-
-    if (rc != OK)
-      break;
-
-    if (cx.flags < 2) {
-      // rare case when end of line was exactly at buffer end
-//      len = 0;
-      return CONTINUE;
-    }
-	if (2 == cx.flags) {
-		command->appendMessageContent(local_buf, local_len);
-		cx.parsePosition += static_cast<unsigned int>(local_len);
-		local_len = 0;
-		break;
-	}
-
-    while (local_len) {
-		if (3 == cx.flags) {
-//			smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+	do {
+		if (cx.flags == 0) {
+			cx.parsePosition = 0;
+			command->chunked = false;
+			command->chunk_size = 0;
+			command->setContentLength(0);
 			rc = readLine(local_buf, local_len);
-//			smsc_log_debug(logger, "rc:%d chs:%d cxch:%d llen:%d cnt:%d", rc, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
-			if (rc != OK) {
+			if (rc != OK)
 				return rc;
-			}
 
-			command->chunk_size = cx.chunks.add(std::string(saved_buf, local_len));
-//			smsc_log_debug(logger, "str:%s chs:%d cxch:%d front:%d", cx.chunks.getHeader().c_str(), command->chunk_size, cx.chunks.size(), cx.chunks.getLastData());
-			if (0 == command->chunk_size) {
-				command->contentLength = command->content.GetPos();
-				rc = OK;
+			if (local_len == 0)
+				return ERROR;
+
+			rc = parseFirstLine(saved_buf, local_len, cx);
+			if (rc != OK)
+				return rc;
+
+			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
+			saved_buf = local_buf;
+			local_len = len - static_cast<int>(local_buf - buf);
+
+			cx.flags = 1;
+		}
+
+		while ((cx.flags == 1) && local_len) {
+			smsc_log_debug(logger, "2 f:%d llen:%d pp:%d", cx.flags, local_len, cx.parsePosition);
+			rc = readLine(local_buf, local_len);
+			if (rc != OK)
+			  return rc;
+			smsc_log_debug(logger, "3 f:%d llen:%d %s", cx.flags, local_len, std::string(saved_buf, 10).c_str());
+
+			if (/*(rc == OK) &&*/ (local_len == 0)) {
+				// empty line at the end of HTTP header
+				cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
+				saved_buf = local_buf;
+				local_len = len - static_cast<int>(local_buf - buf);
+
+				/*
+				 *  cx.flags:
+				 *  0 - default value
+				 *  1 - after first header parsed
+				 *  2 - after all headers parsed, waiting content
+				 *  3 - after all headers parsed, chunked, waiting chunk size
+				 *  4 - after all headers parsed, chunked, waiting chunk data
+				 */
+				if (command->chunked) {
+					cx.flags = 3;
+				//            command->content.SetPos(0); // xom 27.07.11 to avoid of bad command->content info (?)
+				}
+				else {
+					if (command->contentLength == 0) {
+						smsc_log_debug(logger, "4 f:%d llen:%d %s", cx.flags, local_len, std::string(saved_buf, 10).c_str());
+						return OK;
+					}
+					cx.flags = 2;
+				}
+
+				if ((cx.action == READ_REQUEST) && (command->contentLength == -1)) {
+					switch (cx.getRequest().getMethod()) {
+					case GET:
+					case POST:
+					case TRACE:
+					case OPTIONS:
+					case HEAD:
+						return OK;
+					default:
+						break;
+					}
+				}
+
+				smsc_log_debug(logger, "5 f:%d llen:%d", cx.flags, local_len);
 				break;
 			}
-			cx.flags = 4;
+
+			rc = parseHeaderFieldLine(saved_buf, local_len, cx, *command);
+			if (rc != OK)
+				return rc;
+
 			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-			local_len = len - static_cast<unsigned int>(local_buf - buf);
 			saved_buf = local_buf;
-//			continue;
+			local_len = len - static_cast<int>(local_buf - buf);
 		}
-		if (4 == cx.flags) {
-//			smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
-			local_len = command->appendChunkedMessageContent(local_buf, local_len);
-			local_buf += local_len;
-//			smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
-			if (0 == command->chunk_size) {
-				rc = readLine(local_buf, local_len);	//read CRLF on chunk end
-//				smsc_log_debug(logger, "rc:%d llen:%d", rc, local_len);
+
+		if (rc != OK)
+			break;
+
+		if (cx.flags < 2) {	// rare case when end of line was exactly at buffer end
+			return CONTINUE;
+		}
+		if (2 == cx.flags) {
+			smsc_log_debug(logger, "6 f:%d llen:%d rc=%d", cx.flags, local_len, rc);
+			command->appendMessageContent(local_buf, local_len);
+			cx.parsePosition += static_cast<unsigned int>(local_len);
+			local_len = 0;
+
+			rc = (static_cast<int>(command->content.GetPos()) < command->contentLength) ? CONTINUE : OK;
+			break;
+		}
+
+		while (local_len) {
+			if (3 == cx.flags) {
+//				smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+				rc = readLine(local_buf, local_len);
+//				smsc_log_debug(logger, "rc:%d chs:%d cxch:%d llen:%d cnt:%d", rc, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
 				if (rc != OK) {
 					return rc;
 				}
-				if (local_len>0) {
-					return ERROR;
+
+				command->chunk_size = cx.chunks.add(std::string(saved_buf, local_len));
+//				smsc_log_debug(logger, "str:%s chs:%d cxch:%d front:%d", cx.chunks.getHeader().c_str(), command->chunk_size, cx.chunks.size(), cx.chunks.getLastData());
+				if (0 == command->chunk_size) {
+					command->contentLength = command->content.GetPos();
+					rc = OK;
+					break;
 				}
-
-				cx.flags = 3;
+				cx.flags = 4;
+				cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
+				local_len = len - static_cast<unsigned int>(local_buf - buf);
+				saved_buf = local_buf;
 			}
-			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-			local_len = len - static_cast<unsigned int>(local_buf - buf);
-			saved_buf = local_buf;
-			rc = CONTINUE;
+			if (4 == cx.flags) {
+//				smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+				local_len = command->appendChunkedMessageContent(local_buf, local_len);
+				local_buf += local_len;
+//				smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+				if (0 == command->chunk_size) {
+					rc = readLine(local_buf, local_len);	//read CRLF on chunk end
+//					smsc_log_debug(logger, "rc:%d llen:%d", rc, local_len);
+					if (rc != OK) {
+						return rc;
+					}
+					if (local_len>0) {
+						return ERROR;
+					}
+
+					cx.flags = 3;
+				}
+				cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
+				local_len = len - static_cast<unsigned int>(local_buf - buf);
+				saved_buf = local_buf;
+				rc = CONTINUE;
+			}
 		}
-    }
-    if (rc != OK)
-        break;
-// analyse if command->content is already full
-    if ((command->contentLength > 0) && (command->content.GetPos() >= size_t(command->contentLength))) {
-      if (cx.action == READ_REQUEST) {
-        const char *tmp = command->contentType.c_str();
+		if (rc != OK)
+			break;
+		// analyse if command->content is already full
+		if ((command->contentLength > 0) && (command->content.GetPos() >= size_t(command->contentLength))) {
+			if (cx.action == READ_REQUEST) {
+				const char *tmp = command->contentType.c_str();
 
-        if ((cx.getRequest().getMethod() == POST) && !strcmp(tmp, CONTENT_TYPE_URL_ENCODED)) {
-          char *pp = command->content.get();
-          size_t ll = command->content.GetPos();
-          
-          while (ll && (pp[ll-1] == '\r' || pp[ll-1] == '\n'))
-            ll--;            
-        
-          std::string params(pp, ll);
+				if ((cx.getRequest().getMethod() == POST) && !strcmp(tmp, CONTENT_TYPE_URL_ENCODED)) {
+					char *pp = command->content.get();
+					size_t ll = command->content.GetPos();
 
-          parseQueryParameters(params.c_str(), cx.getRequest());
-        }
-      }
+					while (ll && (pp[ll-1] == '\r' || pp[ll-1] == '\n'))
+						ll--;
 
-      return OK;
-    }
+					std::string params(pp, ll);
+					parseQueryParameters(params.c_str(), cx.getRequest());
+				}
+			}
+			return OK;
+		}
 
-    return CONTINUE;
-  } while (false);
-/*
-  if (rc == CONTINUE) {
-    len = len - static_cast<int>(saved_buf - buf);
-  }
-*/
-  return rc;
+		return CONTINUE;
+	} while (false);
+	return rc;
 }
 
 StatusCode HttpParser::readLine(char*& buf, unsigned int& len)
