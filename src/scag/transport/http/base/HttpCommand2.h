@@ -26,6 +26,7 @@ class HttpParser;
 const char CONTENT_LENGTH_FIELD[] = "Content-Length";
 const char CONTENT_TYPE_FIELD[] = "Content-Type";
 const char CONNECTION_FIELD[] = "Connection";
+const char KEEP_ALIVE_FIELD[] = "Keep-Alive";
 const char TRANSFER_ENCODING_FIELD[] = "Transfer-Encoding";
 const char CONTENT_ENCODING_FIELD[] = "Content-Encoding";
 const char ACCEPT_ENCODING_FIELD[] = "Accept-Encoding";
@@ -141,8 +142,11 @@ public:
     trc(tcx),
     context(cx),
     contentLength(-1), /* totalHeadersSize(0), */
+    chunked(false),
+    chunk_size(0),
     serial_(makeSerial()),
-    closeConnect_(false)
+    closeConnect_(false),
+    keepAlive(0)
     {}
     virtual ~HttpCommand();
 
@@ -284,10 +288,14 @@ public:
     void appendMessageContent(char *data, unsigned int length) {
         content.Append(data, length);
     }
+    unsigned int appendChunkedMessageContent(char *data, unsigned int length);
 
     Cookie* getCookie(const std::string& name);
     Cookie* setCookie(const std::string& name, const std::string& value);
     void delCookie(const std::string& name);
+    int getKeepAlive() { return keepAlive; }
+    void setKeepAlive(int value) { keepAlive = value; }
+    void checkConnectionFields();
 
 protected:
     virtual void setSession( scag2::sessions::Session* s ) { session_ = s; };
@@ -311,6 +319,8 @@ public:
     HttpContext* context;
     // unsigned int totalHeadersSize;
     int contentLength;
+    bool chunked;
+    unsigned int chunk_size;
     
     void setLengthField(unsigned int length);
     void setCloseConnection(bool closeConnect) { closeConnect_ = closeConnect; }
@@ -319,6 +329,7 @@ public:
 private:
     uint32_t  serial_;
     bool closeConnect_;
+    int	 keepAlive;
 };
 
 

@@ -33,6 +33,7 @@ int HttpAcceptor::Execute()
         HttpContext *cx = new HttpContext(user_socket, httpsOptions);
         smsc_log_info(logger, "%s accepted: context %p, socket %p", taskName(), cx, user_socket);
         if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
+            smsc_log_info(logger, "%s accepted: context %p, socket %p manager.isLicenseExpired", taskName(), cx, user_socket);
           cx->action = SEND_RESPONSE;
           cx->createFakeResponse(503);
           manager.writers.process(cx);

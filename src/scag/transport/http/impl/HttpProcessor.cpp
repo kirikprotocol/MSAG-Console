@@ -129,7 +129,7 @@ void HttpProcessorImpl::clearPlaces(const PlacementArray& places, HttpRequest& r
               break;
           case PlacementType::HEADER:
               smsc_log_debug(logger, "del from header: %s", places[i].name.c_str());
-              request.delHeaderField(places[i].name);
+              request.removeHeaderField(places[i].name);
               break;
       }
   }

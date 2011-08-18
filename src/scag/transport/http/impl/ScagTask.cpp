@@ -34,6 +34,7 @@ int ScagTask::Execute()
             if (st == re::STATUS_OK)
             {
               smsc_log_info(logger, "%p: %p, request approved", this, cx);
+              cx->getRequest().checkConnectionFields();
               cx->getRequest().serialize();
               cx->action = SEND_REQUEST;
               manager.writerProcess(cx);                               
@@ -78,6 +79,7 @@ int ScagTask::Execute()
                 smsc_log_warn(logger, "%p: %p, status %d, fake response created", this, cx, cx->result);
             }
 
+            cx->getResponse().checkConnectionFields();
             cx->getResponse().serialize();
             cx->action = SEND_RESPONSE;
             manager.writerProcess(cx);       

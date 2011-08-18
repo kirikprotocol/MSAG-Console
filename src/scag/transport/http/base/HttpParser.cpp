@@ -4,10 +4,13 @@
 #include "HttpContext.h"
 #include "HttpCommand2.h"
 #include "HttpParser.h"
+#include "logger/Logger.h"
 
 namespace scag2 {
 namespace transport {
 namespace http {
+using smsc::logger::Logger;
+
 
 const char HOST_FIELD[] = "Host";
 const char CONTENT_TYPE_URL_ENCODED[] = "application/x-www-form-urlencoded";
@@ -36,6 +39,7 @@ static http_methods method_table[] = {
 #define METHOD_COUNT (int)(sizeof(method_table) / sizeof(method_table[0]))
 
 StatusCode HttpParser::parse(HttpContext& cx) {
+	Logger* logger = smsc::logger::Logger::getInstance("parser");
 	char *buf, *saved_buf, *local_buf;
 	unsigned int len, local_len;
 
@@ -65,14 +69,17 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 	local_buf = buf;
 
   
-  if (len == 0)
-    return OK;
+	if (len == 0)
+		return OK;
   
-  command = cx.command;
+	command = cx.command;
   
   do {
     if (cx.flags == 0) {
-    	cx.parsePosition = 0;
+      cx.parsePosition = 0;
+	  command->chunked = false;
+	  command->chunk_size = 0;
+	  command->setContentLength(0);
       rc = readLine(local_buf, local_len);
       if (rc != OK)
           return rc;
@@ -93,21 +100,36 @@ StatusCode HttpParser::parse(HttpContext& cx) {
     }
 
     while ((cx.flags == 1) && local_len) {
+//	  smsc_log_debug(logger, "f:%d llen:%d", cx.flags, local_len);
       rc = readLine(local_buf, local_len);
       if (rc != OK)
           return rc;
 //        break;
+//	  smsc_log_debug(logger, "f:%d llen:%d %s", cx.flags, local_len, std::string(saved_buf, 10).c_str());
 
       if (/*(rc == OK) &&*/ (local_len == 0)) {
         // empty line at the end of HTTP header
         cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
         saved_buf = local_buf;
-        cx.flags = 2;
-        command->content.SetPos(0); // xom 27.07.11 to avoid of bad command->content info (?)
         local_len = len - static_cast<int>(local_buf - buf);
 
-        if (command->contentLength == 0)
-          return OK;
+        /*
+         *  cx.flags:
+         *  0 - default value
+         *  1 - after first header parsed
+         *  2 - after all headers parsed, waiting content
+         *  3 - after all headers parsed, chunked, waiting chunk size
+         *  4 - after all headers parsed, chunked, waiting chunk data
+         */
+        if (command->chunked) {
+        	cx.flags = 3;
+//            command->content.SetPos(0); // xom 27.07.11 to avoid of bad command->content info (?)
+        }
+        else {
+        	if (command->contentLength == 0)
+        		return OK;
+        	cx.flags = 2;
+        }
 
         if ((cx.action == READ_REQUEST) && (command->contentLength == -1)) {
           switch (cx.getRequest().getMethod()) {
@@ -137,16 +159,66 @@ StatusCode HttpParser::parse(HttpContext& cx) {
     if (rc != OK)
       break;
 
-    if (cx.flags != 2) {
+    if (cx.flags < 2) {
       // rare case when end of line was exactly at buffer end
 //      len = 0;
       return CONTINUE;
     }
-    
-    command->appendMessageContent(local_buf, local_len);
-    cx.parsePosition += static_cast<unsigned int>(local_len);
-//    len = 0;
+	if (2 == cx.flags) {
+		command->appendMessageContent(local_buf, local_len);
+		cx.parsePosition += static_cast<unsigned int>(local_len);
+		local_len = 0;
+		break;
+	}
 
+    while (local_len) {
+		if (3 == cx.flags) {
+//			smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+			rc = readLine(local_buf, local_len);
+//			smsc_log_debug(logger, "rc:%d chs:%d cxch:%d llen:%d cnt:%d", rc, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+			if (rc != OK) {
+				return rc;
+			}
+
+			command->chunk_size = cx.chunks.add(std::string(saved_buf, local_len));
+//			smsc_log_debug(logger, "str:%s chs:%d cxch:%d front:%d", cx.chunks.getHeader().c_str(), command->chunk_size, cx.chunks.size(), cx.chunks.getLastData());
+			if (0 == command->chunk_size) {
+				command->contentLength = command->content.GetPos();
+				rc = OK;
+				break;
+			}
+			cx.flags = 4;
+			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
+			local_len = len - static_cast<unsigned int>(local_buf - buf);
+			saved_buf = local_buf;
+//			continue;
+		}
+		if (4 == cx.flags) {
+//			smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+			local_len = command->appendChunkedMessageContent(local_buf, local_len);
+			local_buf += local_len;
+//			smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
+			if (0 == command->chunk_size) {
+				rc = readLine(local_buf, local_len);	//read CRLF on chunk end
+//				smsc_log_debug(logger, "rc:%d llen:%d", rc, local_len);
+				if (rc != OK) {
+					return rc;
+				}
+				if (local_len>0) {
+					return ERROR;
+				}
+
+				cx.flags = 3;
+			}
+			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
+			local_len = len - static_cast<unsigned int>(local_buf - buf);
+			saved_buf = local_buf;
+			rc = CONTINUE;
+		}
+    }
+    if (rc != OK)
+        break;
+// analyse if command->content is already full
     if ((command->contentLength > 0) && (command->content.GetPos() >= size_t(command->contentLength))) {
       if (cx.action == READ_REQUEST) {
         const char *tmp = command->contentType.c_str();
@@ -315,8 +387,8 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
 //  for (unsigned int i = 0; i < key.length(); ++i)
 //    key[i] = tolower(key[i]);
 
-  if (!strcasecmp(key.c_str(), KEEP_ALIVE))
-    return OK;
+//  if (!strcasecmp(key.c_str(), KEEP_ALIVE))
+//    return OK;
 
   if (!strcasecmp(key.c_str(), HOST_FIELD) && cx.action == READ_REQUEST) {
     return OK;
@@ -332,9 +404,27 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
     cmd.setContentLength(atoi(value.c_str()));
     return OK;
   }
+/*
+ *   Connection: keep-alive
+ *   Keep-Alive: 300
+ */
 
+  if ((key.compare(TRANSFER_ENCODING_FIELD) == 0) && (value.compare("chunked") == 0)) {
+	  cmd.chunked = true;
+	  return OK;
+  }
   if ((key.compare(CONNECTION_FIELD) == 0) && (value.compare("close") == 0)) {
-    cmd.setCloseConnection(true);
+	  cmd.setCloseConnection(true);
+	  return OK;
+  }
+  if ((key.compare(CONNECTION_FIELD) == 0) && (value.compare("keep-alive") == 0)) {
+	  cmd.setCloseConnection(false);
+	  return OK;
+  }
+  if (key.compare(KEEP_ALIVE_FIELD) == 0) {
+	  cmd.setKeepAlive(HttpContext::fromString<int>(value));
+	  cx.setTimeout(cmd.getKeepAlive());
+	  return OK;
   }
 
   if (!strcasecmp(key.c_str(), CONTENT_TYPE_FIELD)) {

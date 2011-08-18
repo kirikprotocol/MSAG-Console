@@ -2,6 +2,7 @@
 #include <iconv.h>
 #include "util/Exception.hpp"
 #include "HttpCommand2.h"
+#include "HttpContext.h"
 #include "HttpParser.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag/exc/SCAGExceptions.h"
@@ -41,6 +42,9 @@ static const std::string connection_field(CONNECTION_FIELD);
 static const std::string transfer_encoding(TRANSFER_ENCODING_FIELD);
 static const std::string content_encoding(CONTENT_ENCODING_FIELD);
 static const std::string accept_encoding(ACCEPT_ENCODING_FIELD);
+static const std::string keep_alive_field(KEEP_ALIVE_FIELD);
+static const std::string keep_alive("keep-alive");
+static const std::string keep_alive_default_timeout("100");
 static const std::string close("close");
 static const std::string empty;        
 
@@ -297,7 +301,6 @@ void HttpRequest::delHeaderField(const std::string& name) {
     // headerFields.Delete(name.c_str());
 }
 
-
 const std::string& HttpCommand::getMessageText()
 {
     const std::string &content_type = getHeaderField(content_type_field);
@@ -377,6 +380,30 @@ void HttpCommand::setMessageBinary(uint8_t* body, int length, const std::string&
     removeHeaderField(content_encoding);
     
     textContent.clear();
+}
+/*
+ * add chunked data to content
+ * if data followed by CRLF, truncate it.
+ */
+unsigned int HttpCommand::appendChunkedMessageContent(char *data, unsigned int length) {
+	length = (chunk_size > length) ? length : chunk_size;
+	content.Append(data, length);
+    chunk_size -= length;
+    return length;
+}
+void HttpCommand::checkConnectionFields() {
+    if ( keepAlive ) {
+    	setHeaderField(connection_field, keep_alive);
+    	if ( getHeaderField(keep_alive_field) == empty ) {
+    		std::string tmp = HttpContext::toString<int>(keepAlive);
+    		setHeaderField(keep_alive_field, tmp);
+    	}
+    }
+    else {
+    	setHeaderField(connection_field, close);
+    	removeHeaderField(keep_alive_field);
+    }
+
 }
 
 
@@ -459,7 +486,8 @@ const std::string& HttpRequest::serialize()
         headers += httpVersion;
         headers += CRLF;
 
-        setHeaderField(connection_field, close);
+//     	setHeaderField(connection_field, close);
+
         //removeHeaderField(accept_encoding);   // Was inserted to skip ubsupported encodings
         //removeHeaderField("TE");              // in responses (on message body processing).
 
@@ -518,8 +546,8 @@ const std::string& HttpResponse::serialize()
         headers += statusLine;
         headers += CRLF;
 
-        setHeaderField(connection_field, close);
-        
+//     	setHeaderField(connection_field, close);
+
         if(cookies.GetCount())
         {
             headers += "Set-Cookie: ";
@@ -589,6 +617,10 @@ void HttpResponse::fillFakeResponse(int s)
     content.Append("</h1></body></html>", 19);
     setLengthField(content.GetPos());
     setHeaderField(content_type_field, "text/html");
+	setHeaderField(connection_field, close);
+	setCloseConnection(true);
+	setKeepAlive(0);
+	this->chunked = false;
 }
 
 bool HttpResponse::isResponse()

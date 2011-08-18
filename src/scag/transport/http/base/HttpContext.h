@@ -7,7 +7,11 @@
 #include "HttpCommand2.h"
 #include "logger/Logger.h"
 #include "Https.h"
+#include "HttpChunked.h"
 #include "openssl/ssl.h"
+#include <queue>
+#include <sstream>
+
 
 namespace scag2 { namespace transport { namespace http {
 
@@ -15,9 +19,9 @@ using smsc::core::network::Socket;
 using smsc::core::buffers::TmpBuf;
 using smsc::core::synchronization::Mutex;
 using smsc::logger::Logger;
+//using scag2::transport::http::ChunkInfo;
 
 #define DFLT_BUF_SIZE 32
-//#define HTTP_CHUNK_SIZE 0x10000
 
 enum ActionID {
     NOP = -1,
@@ -36,7 +40,7 @@ enum ActionID {
  * HTTPS usage is defined
  * for "user" part - on constructor, if HttpsOptions is not NULL
  * for "site" part - see HttpWriterTask::registerContext() :
- * cx->setSiteHttps(cx->command->getSitePort() == 443);
+ * cx->setSiteHttps(cx->command->getSitePort() != 80);
  */
 
 /* no virtual methods are allowed in HttpContext */
@@ -106,6 +110,14 @@ public:
     HttpResponse &getResponse() {
         return *(HttpResponse *)command;
     }
+    void setTimeout(int value) {
+    	connectionTimeout = value;
+//        user->setData(TIMEOUT, (void *)&value);
+//        site->setData(TIMEOUT, (void *)&value);
+    }
+
+    bool isTimedOut(Socket* s, time_t now);
+
 /*
     void nextAction() {
         action = actionNext[action];
@@ -114,16 +126,34 @@ public:
         return taskName[action];
     }
 */
-
+/*
+    void chunkAdd(unsigned int value) {
+    	chunks.push(value);
+    }
+    unsigned int chunkGet(void) {
+    	unsigned int v = chunks.front();
+    	chunks.pop();
+    	return v;
+    }
+    unsigned int chunksSize(void) {
+    	return chunks.size();
+    }
+    unsigned int chunkVal(void) {
+    	return chunks.back();
+    }
+*/
     int sslUserConnection(bool verify_client=false); //server mode connection
     int sslSiteConnection(bool verify_client=false); //client mode connection
-    int sslCloseConnection(Socket* s);
+//    int sslCloseConnection(Socket* s);
+
+    void closeConnection(Socket* s);
+
     bool useHttps(Socket* s);
     int sslReadPartial(Socket* s, const char* readBuf, const size_t readBufSize);
     int sslWritePartial(Socket* s, const char* data, const size_t toWrite);
 
 //    int sslReadMessage(Socket* s, const char* readBuf, const size_t readBufSize);
-//    int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
+    int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
 //    int sslWriteCommand(Socket* s);
 
 //temporary for debug info
@@ -132,14 +162,20 @@ public:
     //for HttpParser
     char* getUnparsed(void) { return unparsed.get(); }
     unsigned int unparsedLength() { return static_cast<unsigned int>(unparsed.GetPos()); }
-    //for HttpReaderTask::Execute
+    //for HttpReaderTask
+    void beforeReader(void);
     void appendUnparsed(char* buf, unsigned int len) { unparsed.Append(buf, len); }
-    //for HttpWriterTask::Execute
+    //for HttpWriterTask
+//    Socket* beforeWriter(void);
     void messagePrepare();
-    bool messageIsOver(Socket* s);
     void messageGet(Socket* s, const char* &data, unsigned int &size);
-    //for HttpWriterTask::registerContext
-     void setSiteHttps(bool supported); // { siteHttps = supported; }
+    bool messageIsOver(Socket* s);
+    void setSiteHttps(bool supported); // { siteHttps = supported; }
+//    int sendMessage(Socket *s);
+
+protected:
+    void closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info);
+    void prepareNextChunk();
 
 public:
     Socket *user;
@@ -149,19 +185,22 @@ public:
 
     ActionID action;
     unsigned int flags;
-    unsigned int position;
-    unsigned int parsePosition;
+    unsigned int position;		// command->content position when send chunked response
+    unsigned int parsePosition;	// this->unparsed position when parse
+    unsigned int sendPosition;	// this->unparsed position when send message
     int result;
 
     bool requestFailed;
 //temporary for debug log
     static unsigned int counter_create;
     static unsigned int counter_free;
+    ChunkInfo chunks;
 
 protected:
     enum DataKeys {
         CONTEXT,
         TIMESTAMP,
+//        TIMEOUT,
         CONNECT_FLAG
     };
 
@@ -172,9 +211,18 @@ protected:
     static const char* nameUser;
     static const char* nameSite;
 
+//    std::queue<chunk_info> chunks;
+
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;
     Logger *logger;
+/*
+ * connectionTimeout - performs additional connection check if site response includes "Connection: keep-alive" header
+ * default value = cfg:https.timeout;
+ * set value when HttpParser::parse found a header "Keep-Alive: value"
+ * check value when IOTask::checkConnectionTimeout found default IOTask::connectionTimeout expires
+ */
+    int connectionTimeout;
 
 	HttpsOptions* sslOptions;
 	bool		userHttps; //https usage flags
@@ -187,6 +235,23 @@ protected:
     void sslCertInfo(X509* cert);
 //temporary for debug log
     const char* connName(Socket* s) { return (s==user?nameUser:nameSite); }
+
+public:
+    template<class T>
+    static std::string toString(const T& t)
+    {
+         std::ostringstream stream;
+         stream << t;
+         return stream.str();
+    }
+    template<class T>
+    static T fromString(const std::string& s)
+    {
+         std::istringstream stream(s);
+         T t;
+         stream >> t;
+         return t;
+    }
 };
 
 }}}

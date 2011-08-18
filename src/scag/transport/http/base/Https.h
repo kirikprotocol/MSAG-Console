@@ -43,6 +43,7 @@ public:
     int init(bool user_verify, bool site_verify, const config::HttpManagerConfig* conf);
     SSL_CTX* userContext(void) { return userCtx; }
     SSL_CTX* siteContext(void) { return siteCtx; }
+    int httpsTimeout(void) { return cfg->httpsTimeout; }
 
     bool		userVerify;
     bool		siteVerify;
