@@ -27,8 +27,9 @@ opendir(D,$dir) || die "Failed to read dir $dir";
 for my $file(readdir(D))
 {
   next unless $file=~/$rx/;
-  $foundSomething=1;
   my $st=stat($dir.$file);
+  next unless $st;
+  $foundSomething=1;
   my $outfile=MakeFilename($outmask,$st->mtime);
   my $tempfile=$dir.$file.'tmp'.time;
   rename($dir.$file,$tempfile) || die "Failed to rename $file to $tempfile";
