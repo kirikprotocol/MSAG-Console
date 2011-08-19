@@ -95,11 +95,17 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
-  <!--<managed-bean>-->
-    <!--<managed-bean-name>userBean</managed-bean-name>-->
-    <!--<managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.UserController</managed-bean-class>-->
-    <!--<managed-bean-scope>session</managed-bean-scope>-->
-  <!--</managed-bean>-->
+  <managed-bean>
+    <managed-bean-name>userBean</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.UserController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>inputFile</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.InputFileController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <converter>
     <converter-id>stringWrapper</converter-id>
@@ -122,6 +128,10 @@
     <navigation-case>
       <from-outcome>DYNAMIC_TABLE</from-outcome>
       <to-view-id>/dynamicTable.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>INPUT_FILE</from-outcome>
+      <to-view-id>/inputFile.xhtml</to-view-id>
     </navigation-case>
     <navigation-case>
       <from-outcome>INPUT_TIME</from-outcome>
