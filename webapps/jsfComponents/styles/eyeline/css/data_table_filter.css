@@ -48,3 +48,7 @@ table.eyeline_data_table_filter a.xi {
   /*font-size: x-small;*/
 }
 
+.eyeline_data_table_filter_button {
+  cursor: pointer;
+}
+

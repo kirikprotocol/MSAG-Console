@@ -10,6 +10,9 @@
   <uri>http://taglib.eyeline.mobi</uri>
 
 
+
+
+
   <!-- ========================================== PAGED CALENDAR ===============================================  -->
 
   <tag>
@@ -95,23 +98,6 @@
     </attribute>
   </tag>
 
-  <!-- ================================== DELIMITER =============================================================== -->
-
-  <tag>
-    <description>Вертикальный разделитель, замена &lt;p/&gt;</description>
-    <name>delimiter</name>
-    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
-    <body-content>JSP</body-content>
-
-    <attribute>
-      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
-      <name>rendered</name>
-      <required>false</required>
-      <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.Boolean</type>
-    </attribute>
-  </tag>
-
   <!-- ================================== DATA TABLE FILTER ======================================================= -->
 
   <tag>
@@ -125,18 +111,12 @@
     <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
     <attribute>
-      <description>Бин, экшены которого будут вызываться</description>
-      <name>bean</name>
-      <required>true</required>
-      <rtexprvalue>false</rtexprvalue>
-    </attribute>
-    <attribute>
-      <description>Название метода бина, который надо вызвать при нажатии кнопки "Применить"</description>
+      <description>Метода бина, который надо вызвать при нажатии кнопки "Применить"</description>
       <name>applyAction</name>
       <rtexprvalue>false</rtexprvalue>
     </attribute>
     <attribute>
-      <description>Название метода бина, который надо вызвать при нажатии кнопки "Очистить"</description>
+      <description>Метода бина, который надо вызвать при нажатии кнопки "Очистить"</description>
       <name>clearAction</name>
       <rtexprvalue>false</rtexprvalue>
     </attribute>
@@ -416,6 +396,75 @@
       </deferred-value>
     </attribute>
   </tag>
+
+  <!-- ===================================== INPUT FILE ============================================================ -->
+
+  <tag>
+    <description>Поле для загрузки файла (для кореектной работы компонента в форме надо указывать enctype="multipart/form-data")</description>
+    <name>inputFile</name>
+    <tag-class>mobi.eyeline.util.jsf.components.input_file.InputFile</tag-class>
+    <body-content>JSP</body-content>
+
+
+    <attribute>
+      <description>Идентификатор компонента</description>
+      <name>id</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <description>Значение, которое будет передано в контроллер</description>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>mobi.eyeline.util.jsf.components.input_file.UploadedFile</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <name>rendered</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
+    <attribute>
+      <description>Флаг, определяющий может ли данное поле содержать пустое значение. По-умолчанию, false.</description>
+      <name>required</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
+
+
+    <attribute>
+      <description>Сообщение о том, что поле является обязательным</description>
+      <name>requiredMessage</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <description>Размер поля ввода</description>
+      <name>size</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+
+    <attribute>
+      <description>Количество "колонок" поля</description>
+      <name>size</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Integer</type>
+    </attribute>
+  </tag>
+
   <!-- ===================================== INPUT TIME ============================================================ -->
 
   <tag>

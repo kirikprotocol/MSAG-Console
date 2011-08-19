@@ -1,0 +1,50 @@
+<f:view xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:eye="http://taglib.eyeline.mobi" xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+  <ui:composition template="/main.xhtml">
+
+    <ui:define name="styles">
+      .column100width {
+      width:100px;
+      white-space: nowrap;
+      }
+      .columnLeftAlign {
+      text-align:left;
+      }
+
+    </ui:define>
+
+    <ui:define name="content">
+
+      <h:form enctype="multipart/form-data">
+
+        <h:panelGrid columns="2" columnClasses="column100width, columnLeftAlign">
+
+          <h:outputText value="Файл (обязательное значение)"/><eye:inputFile size="50" requiredMessage="Поле пусто!" required="true" value="#{inputFile.value}"/>
+
+        </h:panelGrid>
+
+        <p/>
+        <p/>
+
+        <h:panelGroup rendered="#{inputFile.descr != null}">
+          <h:inputTextarea rows="3" cols="50" readonly="true" value="#{inputFile.descr}"/>
+        </h:panelGroup>
+
+
+        <eye:buttons>
+          <eye:button>
+            <h:commandLink value="Submit" action="#{inputFile.action}"/>
+          </eye:button>
+          <eye:space/>
+        </eye:buttons>
+
+      </h:form>
+    </ui:define>
+
+  </ui:composition>
+
+</f:view>

@@ -30,13 +30,23 @@
   </converter>
 
   <component>
-    <component-type>mobi.eyeline.util.jsf.components.input_time</component-type>
-    <component-class>mobi.eyeline.util.jsf.components.input_time.InputTime</component-class>
+    <component-type>mobi.eyeline.util.jsf.components.data_table_filter</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.data_table_filter.DataTableFilter</component-class>
+  </component>
+
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.input_file</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.input_file.InputFile</component-class>
   </component>
 
   <component>
     <component-type>mobi.eyeline.util.jsf.components.input_text</component-type>
     <component-class>mobi.eyeline.util.jsf.components.input_text.InputText</component-class>
+  </component>
+
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.input_time</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.input_time.InputTime</component-class>
   </component>
 
   <validator>

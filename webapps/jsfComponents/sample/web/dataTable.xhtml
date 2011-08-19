@@ -10,7 +10,7 @@
 
       <h:form>
 
-        <eye:dataTableFilter bean="#{dataTable}" applyAction="query" clearAction="clear">
+        <eye:dataTableFilter applyAction="#{dataTable.query}" clearAction="#{dataTable.clear}">
 
           <h:panelGrid columns="3">
             <h:outputText value="Field1"/>
@@ -45,8 +45,8 @@
           </eye:row>
         </eye:dataTable>
 
-
-        <eye:delimiter/>
+        <p/>
+        <p/>
 
         <h:outputText value="#{dataTable.notification}"/>
 

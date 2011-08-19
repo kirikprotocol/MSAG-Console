@@ -8,16 +8,26 @@
 
   <namespace>http://taglib.eyeline.mobi</namespace>
 
-
   <tag>
-    <tag-name>delimiter</tag-name>
-    <source>tags/delimiter.xhtml</source>
+    <tag-name>dataTableFilter</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.data_table_filter</component-type>
+      <handler-class>mobi.eyeline.util.jsf.components.data_table_filter.DataTableFilterHandler</handler-class>
+    </component>
   </tag>
 
   <tag>
     <tag-name>inputTime</tag-name>
     <component>
       <component-type>mobi.eyeline.util.jsf.components.input_time</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>inputFile</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.input_file</component-type>
       <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
@@ -173,13 +183,6 @@
       <handler-class>mobi.eyeline.util.jsf.components.data_table.RowHandler</handler-class>
     </component>
   </tag>
-
-
-  <tag>
-    <tag-name>dataTableFilter</tag-name>
-    <source>tags/data_table_filter.xhtml</source>
-  </tag>
-
 
   <tag>
     <tag-name>pageCalendar</tag-name>

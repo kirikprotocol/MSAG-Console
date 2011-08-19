@@ -1,0 +1,11 @@
+/*Стиль внешнего div*/
+div.eyeline_inputFile {
+  white-space: nowrap;
+}
+
+/*Стиль нотификации об ошибке (отображается после полей ввода)*/
+div.eyeline_inputFile span.error {
+  color: RED;
+  font-weight: bold;
+  cursor: default;
+}
