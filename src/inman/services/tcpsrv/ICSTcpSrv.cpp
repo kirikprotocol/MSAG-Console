@@ -96,7 +96,8 @@ bool ICSTcpServer::unregisterProtocol(const IProtocolId_t & proto_id)
 // -- TcpServerListenerIface interface mthods
 // --------------------------------------------------------------------------
 SocketListenerIface *
-    ICSTcpServer::onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock)
+    ICSTcpServer::onConnectOpening(TcpServerIface & p_srv, ConnectUId conn_id,
+                                   std::auto_ptr<Socket> & use_sock)
 {
   MutexGuard  grd(_sync);
   //cleanUp died connects first
@@ -105,14 +106,14 @@ SocketListenerIface *
 
   ConnectInfo newConn;
   newConn._grd = _connPool.allcObj();
-  newConn._grd->bind(use_sock, logger);
   //set consequtive processing of incoming packets
-  newConn._grd->init(_pckPool, 1);
+  newConn._grd->init(conn_id, _pckPool, 1, logger);
+  newConn._grd->bind(use_sock);
   //listen for 1st incoming packet in order to detect required protocol
   newConn._grd->addListener(*this);
   if (newConn._grd->start()) {
-    _connMap.insert(ConnectsMap::value_type(newConn._grd->getId(), newConn));
-    smsc_log_info(logger, "%s: registered %s", _logId, newConn._grd->logId());
+    _connMap.insert(ConnectsMap::value_type(newConn._grd->getUId(), newConn));
+    smsc_log_info(logger, "%s: activated %s", _logId, newConn._grd->logId());
     return newConn._grd.get();
   }
   smsc_log_fatal(logger, "%s: failed to start %s", _logId, newConn._grd->logId());
@@ -120,7 +121,7 @@ SocketListenerIface *
 }
 
 //Notifies that connection is to be closed on given soket, no more events will be reported.
-void ICSTcpServer::onConnectClosing(TcpServerIface & p_srv, unsigned conn_id)
+void ICSTcpServer::onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id)
 {
   MutexGuard grd(_sync);
 

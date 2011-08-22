@@ -18,6 +18,7 @@ namespace tcpsrv {
 using smsc::util::CustomException;
 using smsc::core::network::Socket;
 
+using smsc::inman::interaction::ConnectUId;
 using smsc::inman::interaction::ConnectsPool;
 using smsc::inman::interaction::TcpServerCFG;
 using smsc::inman::interaction::PacketBufferAC;
@@ -36,11 +37,9 @@ public:
                const ICServicesHostITF * svc_host, Logger * use_log = NULL)
       : smsc::inman::ICServiceAC_T<TcpServerCFG>(ICSIdent::icsIdTCPServer,
                                                   svc_host, use_cfg, use_log)
-      , _tcpSrv("TCPSrv", use_log)
+      , _logId("ICSTcp"), _cfg(use_cfg.release()), _tcpSrv("TCPSrv", use_log)
   {
-    _cfg.reset(use_cfg.release());
     _icsState = ICServiceAC::icsStConfig;
-    _logId = _tcpSrv.getIdent();
     if (!logger)
       logger = Logger::getInstance("smsc.inman");
 #ifdef __GRD_POOL_DEBUG__
@@ -71,7 +70,7 @@ private:
     ConnectGuard    _grd;
     IProtocolId_t   _protoId;
   };
-  typedef std::map<unsigned /*sock_id*/, ConnectInfo> ConnectsMap;
+  typedef std::map<ConnectUId, ConnectInfo> ConnectsMap;
 
   struct ProtocolInfo {
     ICSConnServiceIface * _srv; //sevice provider
@@ -120,9 +119,9 @@ protected:
   //socket.  If listener isn't interested in connection, the 'use_sock' must
   //be kept intact and NULL must be returned.
   virtual SocketListenerIface *
-    onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock);
+    onConnectOpening(TcpServerIface & p_srv, ConnectUId conn_id, std::auto_ptr<Socket> & use_sock);
   //Notifies that connection is to be closed on given soket, no more events will be reported.
-  virtual void onConnectClosing(TcpServerIface & p_srv, unsigned conn_id);
+  virtual void onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id);
   //notifies that TcpServer is shutdowned, no more events on any connect will be reported.
   virtual void onServerShutdown(TcpServerIface & p_srv, TcpServerIface::RCode_e down_reason);
 

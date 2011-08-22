@@ -49,7 +49,8 @@ public:
 
   bool empty(void) const { return _sockHdl == NULL; }
 
-  unsigned getId(void) const { return _sockHdl ? _sockHdl->getId() : 0; }
+  unsigned getUId(void) const { return _sockHdl ? _sockHdl->getUId() : 0; }
+  SOCKET   getFd(void) const { return _sockHdl ? _sockHdl->getFd() : INVALID_SOCKET; }
 
   void setRef(void) { _flags._inUse = true; }
   void unRef(void) { _flags._inUse = false; }

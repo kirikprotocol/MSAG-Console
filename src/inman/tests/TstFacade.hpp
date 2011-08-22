@@ -25,6 +25,7 @@ using smsc::util::CustomException;
 
 using smsc::core::synchronization::Mutex;
 
+using smsc::inman::interaction::ConnectUId;
 using smsc::inman::interaction::PacketBufferAC;
 using smsc::inman::interaction::PckAccumulatorIface;
 using smsc::inman::interaction::INPPacketIface;
@@ -90,9 +91,9 @@ public:
   //socket.  If listener isn't interested in connection, the 'use_sock' must
   //be kept intact and NULL must be returned.
   virtual SocketListenerIface *
-    onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock);
+    onConnectOpening(TcpServerIface & p_srv, ConnectUId conn_id, std::auto_ptr<Socket> & use_sock);
   //Notifies that connection is to be closed on given soket, no more events will be reported.
-  virtual void onConnectClosing(TcpServerIface & p_srv, unsigned conn_id);
+  virtual void onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id);
   //notifies that TcpServer is shutdowned, no more events on any connect will be reported.
   virtual void onServerShutdown(TcpServerIface & p_srv, TcpServerIface::RCode_e down_reason);
 

@@ -17,6 +17,7 @@ namespace smsc {
 namespace inman {
 namespace smbill {
 
+using smsc::inman::interaction::ConnectUId;
 using smsc::inman::interaction::IProtocolAC;
 using smsc::inman::tcpsrv::ConnectGuard;
 using smsc::inman::filestore::InFileStorageRoller;
@@ -26,9 +27,7 @@ class ICSSmBilling : public smsc::inman::ICServiceAC_T<SmBillingXCFG>
                    , public smsc::inman::tcpsrv::ICSConnServiceIface {
 private:
   typedef smsc::inman::interaction::PckBuffersPool_T<1536> PacketsPool;
-  typedef smsc::util::POBJRegistry_T <
-    SOCKET /*conn_id*/, SmBillManager
-  > SessionsRegistry;
+  typedef smsc::util::POBJRegistry_T <ConnectUId, SmBillManager> SessionsRegistry;
 
   mutable smsc::core::synchronization::EventMonitor _sync;
   /* - */

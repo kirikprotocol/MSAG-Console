@@ -79,16 +79,17 @@ bool ICSAbntDetector::setConnListener(const ConnectGuard & use_conn) /*throw()*/
     return false;
   }
 
-  AbntDetectorManager * pMgr = _sessReg.find(use_conn->getId());
+  AbntDetectorManager * pMgr = _sessReg.find(use_conn->getUId());
   if (pMgr) {
     smsc_log_warn(logger, "%s: session[%s] is already opened on Connect[%u]",
-                  _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
+                  _logId,  pMgr->mgrId(), (unsigned)use_conn->getUId());
     _sync.notify();
     return false;
   }
   //create new connect manager
   pMgr = new AbntDetectorManager(_wCfg, _iProtoDef, ++_lastSessId, logger);
-  _sessReg.insert(use_conn->getId(), pMgr);
+  _sessReg.insert(use_conn->getUId(), pMgr);
+  use_conn->setPckPool(_pckPool); //switch to own buffers pool
   pMgr->bind(&use_conn);
   pMgr->start(); //switch Connect to asynchronous mode
   _sync.notify();
@@ -101,7 +102,7 @@ void ICSAbntDetector::onDisconnect(const ConnectGuard & use_conn) /*throw()*/
   std::auto_ptr<AbntDetectorManager> pMgr;
   {
     MutexGuard  grd(_sync);
-    pMgr.reset(_sessReg.extract(use_conn->getId()));
+    pMgr.reset(_sessReg.extract(use_conn->getUId()));
     if (!pMgr.get()) {
       _sync.notify();
       return;
@@ -110,7 +111,7 @@ void ICSAbntDetector::onDisconnect(const ConnectGuard & use_conn) /*throw()*/
   pMgr->bind(NULL);
   pMgr->stop(false);
   smsc_log_debug(logger, "%s: closing session[%s] on Connect[%u]",
-                _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
+                _logId,  pMgr->mgrId(), (unsigned)use_conn->getUId());
   _sync.notify();
   //pMgr.reset(); //AbntDetectorManager is destroyed at this point
 }

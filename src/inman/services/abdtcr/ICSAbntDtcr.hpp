@@ -17,6 +17,7 @@ namespace smsc {
 namespace inman {
 namespace abdtcr {
 
+using smsc::inman::interaction::ConnectUId;
 using smsc::inman::interaction::IProtocolAC;
 using smsc::inman::interaction::INPAbntContract;
 
@@ -27,9 +28,7 @@ class ICSAbntDetector : public smsc::inman::ICServiceAC_T<AbntDetectorXCFG>
                       , public smsc::inman::tcpsrv::ICSConnServiceIface {
 private:
   typedef smsc::inman::interaction::PckBuffersPool_T<256> PacketsPool;
-  typedef smsc::util::POBJRegistry_T<
-    SOCKET /*conn_id*/, AbntDetectorManager
-  > SessionsRegistry;
+  typedef smsc::util::POBJRegistry_T<ConnectUId, AbntDetectorManager> SessionsRegistry;
 
   mutable smsc::core::synchronization::EventMonitor  _sync;
   /* - */

@@ -2,6 +2,7 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
+#include "util/IntTypes.hpp"
 #include "util/BinDump.hpp"
 using smsc::util::DumpHex;
 //using smsc::util::DumpDbg;
@@ -16,15 +17,6 @@ namespace interaction {
 /* ************************************************************************** *
  * class Connect implementation:
  * ************************************************************************** */
-Connect::Connect(std::auto_ptr<Socket> & use_sock, Logger * use_log/* = NULL*/)
-  : SocketListenerIface(use_sock), _pckPool(NULL)
-  , _logger(use_log ? use_log : Logger::getInstance(ASYNCONN_DFLT_LOGGER))
-{
-  snprintf(_logId, sizeof(_logId)-1, "Conn[%u]", getId());
-  _pckNtfr.init(_logId, _logger);
-}
-
-//
 Connect::~Connect()
 {
   stop();
@@ -35,31 +27,48 @@ Connect::~Connect()
   }
 }
 
-//Binds asynchronous Connect to given socket, initializes ident string.
-void Connect::bind(std::auto_ptr<Socket> & use_sock, Logger * use_log/* = NULL*/)
+//Initializes Connect object. Must be called prior to any other method.
+//Sets Connect UId, incoming packet processing mode and pool of buffers to
+//accumulate them in.
+//Returns false if no more PacketBuffer is available in given pool.
+//Note: setting (max_threads == 1) forces the consecutive packets processing
+//     (see setMaxThreads() description).
+bool Connect::init(ConnectUId use_uid, PckBuffersPoolAC & pck_pool,
+                   uint16_t max_threads/* = 0*/, Logger * use_log/* = NULL*/)
+{
+  MutexGuard  grd(_rcvSync);
+  _uId = use_uid;
+  snprintf(_logId, sizeof(_logId)-1, "Conn[%u]", (unsigned)getUId());
+  _logger = use_log ? use_log : Logger::getInstance(ASYNCONN_DFLT_LOGGER);
+  _pckNtfr.init(_logId, _logger);
+  _pckNtfr.setThreads(1, max_threads);
+  _pckPool = &pck_pool;
+  return (!_pckGrd.get() && prepareNextBuffer());
+}
+
+//Binds Connect to given socket.
+void Connect::bind(std::auto_ptr<Socket> & use_sock)
 {
   MutexGuard  grd(_rcvSync);
   SocketListenerIface::assignSocket(use_sock);
-  _logger = use_log ? use_log : Logger::getInstance(ASYNCONN_DFLT_LOGGER);
-  snprintf(_logId, sizeof(_logId)-1, "Conn[%u]", getId());
-  _pckNtfr.init(_logId, _logger);
+  if (isOpened())   //update logId
+    snprintf(_logId, sizeof(_logId)-1, "Conn[%u]{%s}", (unsigned)getUId(),
+             smsc::util::IntToA_T<ident_type>(getFd()).get());
 }
 
-//Returns false if socket is not opened or no PacketBuffer is available in given pool.
-bool Connect::init(PckBuffersPoolAC & pck_pool, uint16_t max_threads/* = 0*/)
-{
-  _pckNtfr.setThreads(1, max_threads);
-
-  MutexGuard  grd(_rcvSync);
-  _pckPool = &pck_pool;
-  return ((!_pckGrd.get() && prepareNextBuffer()) && isOpened());
-}
 //Resets incoming packet accumulation, already acquired data is lost.
 //Returns false if socket is not opened or no PacketBuffer is available.
 bool Connect::reset(void)
 {
   MutexGuard  grd(_rcvSync);
   return (prepareNextBuffer() && isOpened());
+}
+
+bool Connect::setPckPool(PckBuffersPoolAC & pck_pool)
+{
+  MutexGuard  grd(_rcvSync);
+  _pckPool = &pck_pool;
+  return (!_pckGrd.get() && prepareNextBuffer());
 }
 
 //Sends data stored in PacketBuffer (starting from its current position)
@@ -189,7 +198,7 @@ bool Connect::prepareNextBuffer(void)
   _pckGrd = _pckPool->allcObj();
   if (_pckGrd.get()) {
     _pckGrd->reset();
-    _pckGrd->_connId = SocketListenerIface::getId();
+    _pckGrd->_connId = SocketListenerIface::getUId();
     _pckAcq.init(*_pckGrd, _logId, _logger);
     return true;
   }

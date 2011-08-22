@@ -42,8 +42,9 @@ public:
   // -----------------------------------------
   virtual State_e getState(void) const /*throw()*/= 0;
   //Establishes outgoing connection to given host.
-  //Returns true and initialized Socket object on success.
-  virtual bool setConnection(const char * host, unsigned port,
+  //Returns initialized Socket object and connection Id reserved for it
+  //in case of success, otherwise returns zero.
+  virtual ConnectUId setConnection(const char * host, unsigned port,
                              std::auto_ptr<Socket> & conn_sock) = 0;
   //Registers already established connection and starts to control the
   //associated socket events. If 'monitoring_on' is TRUE, server listeners
@@ -53,11 +54,11 @@ public:
   virtual bool registerConnection(SocketListenerIface & sock_hdl, bool monitoring_on = false) = 0;
   //Waits until last connection event is handled and closes/aborts socket.
   //No listeners are notified about socket closing.
-  virtual void rlseConnectionWait(unsigned sock_id, bool do_abort = false) = 0;
+  virtual void rlseConnectionWait(ConnectUId conn_id, bool do_abort = false) = 0;
   //Marks connection as subject for closing and returns immediately.
   //Registered listener(s) will be notified on socket closing.
-  //Returns false if no connection is associated with given socket.
-  virtual bool rlseConnectionNotify(unsigned sock_id, bool do_abort = false) = 0;
+  //Returns false if no connection  with given id is registered.
+  virtual bool rlseConnectionNotify(ConnectUId conn_id, bool do_abort = false) = 0;
   //
   virtual void addListener(TcpServerListenerIface & use_lstr) /*throw()*/= 0;
   //
@@ -65,8 +66,9 @@ public:
 
 protected:
   IdentString_t _idStr;
+  ConnectUId    _lastConnId;
 
-  explicit TcpServerIface(const char * use_id = NULL) : _idStr(use_id)
+  explicit TcpServerIface(const char * use_id = NULL) : _idStr(use_id), _lastConnId(0)
   { }
   //
   virtual ~TcpServerIface() //forbid interface destruction
@@ -88,12 +90,12 @@ public:
   // -- TcpServerListenerIface interface methods:
   // ----------------------------------------------
   //Notifies that incoming connection with remote peer is accepted on given
-  //socket.  If listener isn't interested in connection, the 'use_sock' must
-  //be kept intact and NULL must be returned.
+  //socket.  If listener ignores connection, the 'use_sock' argument must be
+  //kept intact and NULL must be returned.
   virtual SocketListenerIface *
-    onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock) = 0;
-  //Notifies that connection is to be closed on given soket, no more events will be reported.
-  virtual void onConnectClosing(TcpServerIface & p_srv, unsigned conn_id) = 0;
+    onConnectOpening(TcpServerIface & p_srv, ConnectUId conn_id, std::auto_ptr<Socket> & use_sock) = 0;
+  //Notifies that given connection is to be closed, no more events will be reported.
+  virtual void onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id) = 0;
   //notifies that TcpServer is shutdowned, no more events on any connect will be reported.
   virtual void onServerShutdown(TcpServerIface & p_srv, TcpServerIface::RCode_e down_reason) = 0;
 };

@@ -27,7 +27,7 @@ void TSTFacadeAC::Prompt(Logger::LogLevel dlvl, const char * zstr)
 void TSTFacadeAC::do_disconnect(void)
 {
   if (_pipe.isOpened())
-    _tcpSrv->rlseConnectionWait(_pipe.getId());
+    _tcpSrv->rlseConnectionWait(_pipe.getUId());
   _pipe.stop();
   _pipe.clearListeners();
 }
@@ -54,18 +54,24 @@ unsigned TSTFacadeAC::initConnect(const char* use_host, int use_port)
     Prompt(Logger::LEVEL_INFO, msg.c_str());
   }
   std::auto_ptr<Socket> pSock;
-  if (_tcpSrv->setConnection(use_host, use_port, pSock)) {
-    _pipe.bind(pSock, logger);
-    _pipe.init(_pckPool, 1); //set consequitive mode
+  ConnectUId connId = _tcpSrv->setConnection(use_host, use_port, pSock);
+  if (connId) {
+    _pipe.init(connId, _pckPool, 1, logger); //set consequitive mode
+    _pipe.bind(pSock);
     _pipe.addListener(*this);
     _pipe.start();
     _tcpSrv->registerConnection(_pipe, true);
     {
       std::string msg;
-      format(msg, "Connect[%u] created\n", _pipe.getId());
+      format(msg, "Connect[%u] created\n", _pipe.getUId());
       Prompt(Logger::LEVEL_INFO, msg.c_str());
     }
-    return _pipe.getId();
+    return _pipe.getUId();
+  }
+  {
+    std::string msg;
+    format(msg, "fialed to connect to %s:%d\n", use_host, use_port);
+    Prompt(Logger::LEVEL_ERROR, msg.c_str());
   }
   return 0;
 }
@@ -106,7 +112,7 @@ int TSTFacadeAC::sendPckPart(INPPacketIface * snd_pck, uint32_t num_bytes/* = 0*
 //socket.  If listener isn't interested in connection, the 'use_sock' must
 //be kept intact and NULL must be returned.
 SocketListenerIface *
-  TSTFacadeAC::onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock)
+  TSTFacadeAC::onConnectOpening(TcpServerIface & p_srv, ConnectUId conn_id, std::auto_ptr<Socket> & use_sock)
 {
   MutexGuard grd(_sync);
   Prompt(Logger::LEVEL_WARN, "denying incoming connection request");
@@ -114,13 +120,13 @@ SocketListenerIface *
 }
 
 //Notifies that connection is to be closed on given soket, no more events will be reported.
-void TSTFacadeAC::onConnectClosing(TcpServerIface & p_srv, unsigned conn_id)
+void TSTFacadeAC::onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id)
 {
   MutexGuard grd(_sync);
   std::string msg;
   format(msg, "%s closed Connect[%u]", p_srv.getIdent(), conn_id);
   Prompt(Logger::LEVEL_INFO, msg.c_str());
-  if (conn_id == (unsigned)_pipe.getId()) {
+  if (conn_id == (unsigned)_pipe.getUId()) {
     _pipe.stop();
     _pipe.clearListeners();
   }

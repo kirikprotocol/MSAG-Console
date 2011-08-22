@@ -142,7 +142,7 @@ TcpServer::State_e TcpServer::getState(void) const /*throw()*/
   return _runState;
 }
 
-bool TcpServer::setConnection(const char * host, unsigned port, std::auto_ptr<Socket> & conn_sock)
+ConnectUId TcpServer::setConnection(const char * host, unsigned port, std::auto_ptr<Socket> & conn_sock)
 {
   conn_sock.reset(new Socket());
   if (conn_sock->Init(host, port, _cfg._pollTmo*1000) || conn_sock->Connect()) {
@@ -154,7 +154,15 @@ bool TcpServer::setConnection(const char * host, unsigned port, std::auto_ptr<So
 
   smsc_log_debug(_logger, "%s: Socket[%u] is connected to %s:%u", getIdent(),
                  conn_sock->getSocket(), host, port);
-  return true;
+
+  MutexGuard  grd(_sync);
+  ConnectUId connId = getNextConnId();
+  if (!connId) {
+    smsc_log_warn(_logger, "%s: unable to allocate ConnectUId, closing Socket[%u]", getIdent(),
+                  conn_sock->getSocket());
+    conn_sock.reset();
+  }
+  return connId;
 }
 
 bool TcpServer::registerConnection(SocketListenerIface & sock_hdl, bool monitoring_on/* = false*/)
@@ -165,35 +173,37 @@ bool TcpServer::registerConnection(SocketListenerIface & sock_hdl, bool monitori
     return false;
   }
 
-  SocketsRegistry::const_iterator cit = _connReg.find(sock_hdl.getId());
+  SocketsRegistry::const_iterator cit = _connReg.find(sock_hdl.getUId());
   if (cit != _connReg.end()) {
-    smsc_log_error(_logger, "%s: Connect[%u] is already registered", getIdent(), sock_hdl.getId());
+    smsc_log_error(_logger, "%s: Connect[%u] is already registered", getIdent(), sock_hdl.getUId());
     return false;
   }
   _connReg.insert(SocketInfo(sock_hdl, monitoring_on));
-  smsc_log_info(_logger, "%s: Connect[%u] is registered", getIdent(), sock_hdl.getId());
+  smsc_log_info(_logger, "%s: Connect[%u]{%u} is registered", getIdent(),
+                sock_hdl.getUId(), sock_hdl.getFd());
   _sync.notify(); //awake _listenSockets()
   return true;
 }
 
-void TcpServer::rlseConnectionWait(unsigned sock_id, bool do_abort/* = false*/)
+void TcpServer::rlseConnectionWait(ConnectUId conn_id, bool do_abort/* = false*/)
 {
   SocketInfo  connInf;
   {
     MutexGuard  grd(_sync);
-    while (!_unregisterConnection(sock_id, do_abort, &connInf))
+    while (!_unregisterConnection(conn_id, do_abort, &connInf))
       _connEvent.WaitOn(_sync);
   }
   if (!connInf.empty()) {
-    smsc_log_info(_logger, "%s: %s Socket[%u]", getIdent(), do_abort ? "aborting" : "closing", sock_id);
+    smsc_log_info(_logger, "%s: %s Connect[%u]{%u}", getIdent(),
+                  do_abort ? "aborting" : "closing", conn_id, connInf.getFd());
     connInf.closeSocket();
   }
 }
 
-bool TcpServer::rlseConnectionNotify(unsigned sock_id, bool do_abort/* = false*/)
+bool TcpServer::rlseConnectionNotify(ConnectUId conn_id, bool do_abort/* = false*/)
 {
   MutexGuard  grd(_sync);
-  SocketsRegistry::iterator it = _connReg.find(sock_id);
+  SocketsRegistry::iterator it = _connReg.find(conn_id);
   if (it != _connReg.end()) {
     it->second.markToClose(do_abort, true);
     return true;
@@ -204,6 +214,25 @@ bool TcpServer::rlseConnectionNotify(unsigned sock_id, bool do_abort/* = false*/
 /* -------------------------------------------------------------------------- *
  * Private/Protected methods:
  * -------------------------------------------------------------------------- */
+#define MAX_CONN_UID_ATTEMPT 3
+//Returns zero if no UId available.
+ConnectUId TcpServer::getNextConnId(void)
+{
+  ConnectUId rval = 0;
+  unsigned short numAtt = 0;
+
+  do {
+    if (!(rval = ++_lastConnId))
+      rval = ++_lastConnId;
+
+    SocketsRegistry::const_iterator it = _connReg.find(rval);
+    if (it == _connReg.end())
+      return rval;
+
+  } while (++numAtt < MAX_CONN_UID_ATTEMPT);
+  
+  return 0;
+}
 // ---------------------------------------------------
 // -- SocketListenerIface interface methods
 // ---------------------------------------------------
@@ -242,7 +271,7 @@ void TcpServer::onCloseEvent(int err_no) /*throw()*/
   } else {
     smsc_log_info(_logger, "%s: Closing server socket ..", getIdent());
   }
-  SocketsRegistry::iterator it = _connReg.find(SocketListenerIface::getId());
+  SocketsRegistry::iterator it = _connReg.find(SocketListenerIface::getUId());
   SocketInfo & rInf = it->second;
   rInf.setRef();
   rInf.markToClose(true, false);
@@ -267,10 +296,10 @@ TcpServer::RCode_e TcpServer::_initSrvSocket(void)
                    getIdent(), _cfg._host.c_str(), _cfg._port, errno, strerror(errno));
     return TcpServerIface::rcSrvError;
   }
-  SocketListenerIface::assignSocket(srvSocket);
+  SocketListenerIface::assignSocket(srvSocket); //connId = 0
   _connReg.insert(SocketInfo(*(SocketListenerIface*)this, false));
   smsc_log_info(_logger, "%s: opened service Socket[%u] at %s:%u", getIdent(),
-                 SocketListenerIface::getId(), _cfg._host.c_str(), _cfg._port);
+                 SocketListenerIface::getFd(), _cfg._host.c_str(), _cfg._port);
 
   _runState = TcpServerIface::srvInited;
   return TcpServerIface::rcOk;
@@ -281,12 +310,12 @@ TcpServer::RCode_e TcpServer::_startServerSocket(void)
   if (!_cfg._host.empty()) {
     if (!_socket->isConnected() && _socket->StartServer()) {
       smsc_log_fatal(_logger, "%s: failed to start server on Socket[%u] at %s:%d",
-                     getIdent(), SocketListenerIface::getId(),
+                     getIdent(), SocketListenerIface::getFd(),
                      _cfg._host.c_str(), _cfg._port);
       return TcpServerIface::rcSrvError;
     }
     smsc_log_info(_logger, "%s: started server on Socket[%u] at %s:%u", getIdent(),
-                   SocketListenerIface::getId(), _cfg._host.c_str(), _cfg._port);
+                   SocketListenerIface::getFd(), _cfg._host.c_str(), _cfg._port);
   }
   return TcpServerIface::rcOk;
 }
@@ -318,17 +347,17 @@ bool TcpServer::_unregisterConnection(unsigned sock_id, bool do_abort, SocketInf
 void TcpServer::_notifyOnClose(const SocketInfo & conn_inf) /*throw()*/
 {
   if (conn_inf.needNotify() && conn_inf.isMonitored()) {
-    unsigned sockId = conn_inf.sockHandler()->getId();
+    unsigned connId = conn_inf.sockHandler()->getUId();
     try {
       for (ListenersList::iterator it = _lsrList.begin(); !it.isEnd(); ++it) {
-        it->onConnectClosing(*this, sockId);
+        it->onConnectClosing(*this, connId);
       }
     } catch (const std::exception & exc) {
-      smsc_log_error(_logger, "%s: Socket[%u] handler exception (onConnectClosing): %s",
-                      getIdent(), sockId, exc.what());
+      smsc_log_error(_logger, "%s: Connect[%u] handler exception (onConnectClosing): %s",
+                      getIdent(), connId, exc.what());
     } catch (...) {
-      smsc_log_error(_logger, "%s: Socket[%u] handler exception (onConnectClosing): <unknown>",
-                      getIdent(), sockId);
+      smsc_log_error(_logger, "%s: Connect[%u] handler exception (onConnectClosing): <unknown>",
+                      getIdent(), connId);
     }
   }
 }
@@ -339,8 +368,8 @@ void TcpServer::_closeConnection(SocketsRegistry::iterator use_it) /*throw()*/
   _connReg.erase(use_it);
   {
     ReverseMutexGuard rGrd(_sync);
-    smsc_log_info(_logger, "%s: %s Socket[%u]", getIdent(), 
-                  connInf.needAbort() ? "aborting" : "closing", connInf.getId());
+    smsc_log_info(_logger, "%s: %s Connect[%u]{%u}", getIdent(), 
+                  connInf.needAbort() ? "aborting" : "closing", connInf.getUId(), connInf.getFd());
     connInf.closeSocket();
     _notifyOnClose(connInf);
   }
@@ -368,22 +397,30 @@ bool TcpServer::_openConnect(std::auto_ptr<Socket> & use_sock) /*throw()*/
   SocketListenerIface * sockHdl = NULL;
 
   use_sock->SetNoDelay(true);
-  try {
-    ReverseMutexGuard rGrd(_sync);
-    //notify registered TcpServerListeners about connect creation
-    for (ListenersList::iterator it = _lsrList.begin(); !it.isEnd() && use_sock.get(); ++it) {
-      sockHdl = it->onConnectOpening(*this, use_sock);
+  ConnectUId connId = getNextConnId();
+
+  if (!connId) {
+    smsc_log_warn(_logger, "%s: unable to allocate ConnectUId", getIdent());
+  } else {
+    try {
+      ReverseMutexGuard rGrd(_sync);
+      //notify registered TcpServerListeners about connect creation
+      for (ListenersList::iterator it = _lsrList.begin(); !it.isEnd() && use_sock.get(); ++it) {
+        sockHdl = it->onConnectOpening(*this, connId, use_sock);
+      }
+    } catch (const std::exception & exc) {
+      smsc_log_error(_logger, "%s: TcpServerListener exception (onConnectOpening): %s",
+                      getIdent(), exc.what());
+    } catch (...) {
+      smsc_log_error(_logger, "%s: TcpServerListener exception (onConnectOpening): <unknown>",
+                      getIdent());
     }
-  } catch (const std::exception & exc) {
-    smsc_log_error(_logger, "%s: Socket[%u] handler exception (on open): %s",
-                    getIdent(), sockId, exc.what());
-  } catch (...) {
-    smsc_log_error(_logger, "%s: Socket[%u] handler exception (on open): <unknown>",
-                    getIdent(), sockId);
   }
 
   if (sockHdl && (sockHdl->getState() == SocketListenerIface::connAlive)) {
     _connReg.insert(SocketInfo(*sockHdl, true));
+    smsc_log_info(_logger, "%s: Connect[%u]{%u} is registered", getIdent(),
+                  sockHdl->getUId(), sockHdl->getFd());
     _sync.notify(); //awake _listenSockets()
     return true;
   }
@@ -401,10 +438,10 @@ void TcpServer::_listenSockets(void)
     if (_runState == TcpServerIface::srvStopping) {
       //close service socket, other connects will be served for a while
       if (SocketListenerIface::isOpened()) {
-        smsc_log_debug(_logger, "%s: stopping service Socket[%u] ..", getIdent(), SocketListenerIface::getId());
-        SocketsRegistry::iterator it = _connReg.find(SocketListenerIface::getId());
+        smsc_log_debug(_logger, "%s: stopping service Socket[%u] ..", getIdent(), SocketListenerIface::getFd());
+        SocketsRegistry::iterator it = _connReg.find(SocketListenerIface::getUId());
         if (it == _connReg.end()) {
-          smsc_log_warn(_logger, "%s: service Socket[%u] isn't registered", getIdent(), SocketListenerIface::getId());
+          smsc_log_warn(_logger, "%s: service Socket[%u] isn't registered", getIdent(), SocketListenerIface::getFd());
         } else
           it->second.markToClose(false, false);
       }
@@ -462,7 +499,7 @@ void TcpServer::_listenSockets(void)
         }
         if (rInf.isInUse()) {
           //Scan pollfd array for occured events for this fd
-          if (fdArr.find((int)rInf.getId(), fdPos)) {
+          if (fdArr.find((int)rInf.getFd(), fdPos)) {
             short rEvents = fdArr._ptr[fdPos].revents;
             /* - */
             if (rEvents & POLLIN) {
@@ -472,7 +509,7 @@ void TcpServer::_listenSockets(void)
                 st = rInf.sockHandler()->onReadEvent();
               }
               if (st == SocketListenerIface::connEOF) {
-                smsc_log_debug(_logger, "%s: handler ends Connect[%u]", getIdent(), rInf.getId());
+                smsc_log_debug(_logger, "%s: handler ends Connect[%u]", getIdent(), rInf.getUId());
               }
               if (st != SocketListenerIface::connAlive) {
                 rInf.markToClose(st != SocketListenerIface::connEOF, true);
@@ -482,7 +519,7 @@ void TcpServer::_listenSockets(void)
             }
             if (rEvents & (POLLNVAL | POLLERR | POLLHUP)) {
               smsc_log_error(_logger, "%s: error event on Socket[%u], mask 0x%X",
-                             getIdent(), rInf.getId(), rEvents);
+                             getIdent(), rInf.getFd(), rEvents);
               int errNum = EBADFD; /* f.d. invalid for this operation	*/
               if (rEvents & POLLHUP)
                 errNum = EPIPE;

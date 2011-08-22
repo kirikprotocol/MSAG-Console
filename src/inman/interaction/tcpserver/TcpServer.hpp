@@ -35,8 +35,9 @@ public:
   static const unsigned int _DFLT_SHUTDOWN_TMO_MS = 400; //millisecs
 
   explicit TcpServer(const char * use_id = _DFLT_IDENT, Logger * use_log = NULL)
-    : TcpServerIface(use_id), _runState(TcpServer::srvIdle), _lsrList(&_sync)
-    , _connReg(2), _logger(use_log ? use_log : Logger::getInstance("smsc.inman"))
+    : TcpServerIface(use_id), SocketListenerIface(0)
+    , _runState(TcpServer::srvIdle), _lsrList(&_sync), _connReg(2)
+    , _logger(use_log ? use_log : Logger::getInstance("smsc.inman"))
   {
     if (_idStr.empty())
       _idStr = _DFLT_IDENT;
@@ -71,9 +72,10 @@ public:
   // -----------------------------------------
   virtual State_e getState(void) const /*throw()*/;
   //Establishes outgoing connection to given host.
-  //Returns true on success and initialized Socket object.
-  virtual bool setConnection(const char * host, unsigned port,
-                             std::auto_ptr<Socket> & conn_sock);
+  //Returns initialized Socket object and connection Id reserved for it
+  //in case of success, otherwise returns zero.
+  virtual ConnectUId setConnection(const char * host, unsigned port,
+                                   std::auto_ptr<Socket> & conn_sock);
   //Registers already established connection and starts to control the
   //associated socket events. If 'monitoring_on' is TRUE, server listeners
   //will be notified about this connection closing.
@@ -82,11 +84,11 @@ public:
   virtual bool registerConnection(SocketListenerIface & sock_hdl, bool monitoring_on = false);
   //Waits until last connection event is handled and closes/aborts socket.
   //No listeners are notified about socket closing.
-  virtual void rlseConnectionWait(unsigned sock_id, bool do_abort = false);
+  virtual void rlseConnectionWait(ConnectUId conn_id, bool do_abort = false);
   //Marks connection as subject for closing and returns immediately.
   //Registered listener(s) will be notified on socket closing.
-  //Returns false if no connection is associated with given socket.
-  virtual bool rlseConnectionNotify(unsigned sock_id, bool do_abort = false);
+  //Returns false if no connection  with given id is registered.
+  virtual bool rlseConnectionNotify(ConnectUId conn_id, bool do_abort = false);
   //
   virtual void addListener(TcpServerListenerIface & use_lstr)
   {
@@ -130,6 +132,8 @@ protected:
   RCode_e _startServerSocket(void);
   void    _listenSockets(void);
 
+  //Returns zero if no UId available.
+  ConnectUId getNextConnId(void);
   //Notifies TcpServerlisteners about incoming connection request.
   //If some listener creates SocketEventHandler a new connection is registered.
   bool _openConnect(std::auto_ptr<Socket> & use_sock);

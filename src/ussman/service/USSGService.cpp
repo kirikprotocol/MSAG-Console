@@ -106,20 +106,20 @@ void USSGService::stop(bool do_wait/* = false*/)
 bool USSGService::setConnListener(const ConnectGuard & use_conn) /*throw()*/
 {
 //  MutexGuard  grd(_sync);
-  USSConnManager * pMgr = _sessReg.find(use_conn->getId());
+  USSConnManager * pMgr = _sessReg.find(use_conn->getUId());
   if (pMgr) {
     smsc_log_warn(_logger, "%s: USSCon[%s] is already opened on Connect[%u]",
-                  _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
+                  _logId,  pMgr->mgrId(), (unsigned)use_conn->getUId());
     _sync.notify();
     return false;
   }
   //create new connect manager
   pMgr = new USSConnManager(_mgrCfg, _iProtoDef, ++_lastSessId, _logger);
-  _sessReg.insert(use_conn->getId(), pMgr);
+  _sessReg.insert(use_conn->getUId(), pMgr);
   pMgr->bind(&use_conn);
   pMgr->start(); //also switches Connect to asynchronous mode
   smsc_log_info(_logger, "%s: USSCon[%s] is started on Connect[%u]",
-                _logId, pMgr->mgrId(), (unsigned)use_conn->getId());
+                _logId, pMgr->mgrId(), (unsigned)use_conn->getUId());
   _sync.notify();
   return true;
 }
@@ -127,13 +127,13 @@ bool USSGService::setConnListener(const ConnectGuard & use_conn) /*throw()*/
 //Handles USSConnManager destruction upon disconnection.
 void USSGService::onDisconnect(const ConnectGuard & use_conn) /*throw()*/
 {
-  std::auto_ptr<USSConnManager> pMgr(_sessReg.extract(use_conn->getId()));
+  std::auto_ptr<USSConnManager> pMgr(_sessReg.extract(use_conn->getUId()));
   if (pMgr.get()) {
     ReverseMutexGuard  grd(_sync);
     pMgr->bind(NULL);
     pMgr->stop(false);
     smsc_log_info(_logger, "%s: closing USSCon[%s] on Connect[%u]",
-                   _logId,  pMgr->mgrId(), (unsigned)use_conn->getId());
+                   _logId,  pMgr->mgrId(), (unsigned)use_conn->getUId());
     pMgr.reset(); //USSConnManager is destroyed at this point
   }
   _sync.notify();
@@ -143,7 +143,8 @@ void USSGService::onDisconnect(const ConnectGuard & use_conn) /*throw()*/
 // -- TcpServerListenerIface interface mthods
 // --------------------------------------------------------------------------
 SocketListenerIface *
-  USSGService::onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock)
+  USSGService::onConnectOpening(TcpServerIface & p_srv, ConnectUId conn_id,
+                                std::auto_ptr<Socket> & use_sock)
 {
   MutexGuard  grd(_sync);
   //cleanUp died connects first
@@ -151,13 +152,13 @@ SocketListenerIface *
     _corpses.pop_front();
 
   ConnectGuard connGrd = _connPool.allcObj();
-  connGrd->bind(use_sock, _logger);
   //set consequtive processing of incoming packets
-  connGrd->init(_pckPool, 1);
+  connGrd->init(conn_id, _pckPool, 1, _logger);
+  connGrd->bind(use_sock);
   //listen for 1st incoming packet in order to detect required protocol
   connGrd->addListener(*this);
   if (connGrd->start()) {
-    _connMap.insert(ConnectsMap::value_type(connGrd->getId(), connGrd));
+    _connMap.insert(ConnectsMap::value_type(connGrd->getUId(), connGrd));
     smsc_log_info(_logger, "%s: activated %s", _logId, connGrd->logId());
     return connGrd.get();
   }
@@ -166,7 +167,7 @@ SocketListenerIface *
 }
 
 //Notifies that connection is to be closed on given soket, no more events will be reported.
-void USSGService::onConnectClosing(TcpServerIface & p_srv, unsigned conn_id)
+void USSGService::onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id)
 {
   MutexGuard grd(_sync);
   //cleanUp died connects first

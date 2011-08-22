@@ -21,6 +21,7 @@ using smsc::logger::Logger;
 using smsc::util::CustomException;
 using smsc::core::network::Socket;
 
+using smsc::inman::interaction::ConnectUId;
 using smsc::inman::interaction::ConnectsPool;
 using smsc::inman::interaction::ConnectGuard;
 using smsc::inman::interaction::TcpServerCFG;
@@ -35,12 +36,9 @@ class USSGService : protected smsc::inman::interaction::TcpServerListenerIface
 protected:
   typedef smsc::inman::interaction::PckBuffersPool_T<1536> PacketsPool;
 
-  typedef std::map<unsigned /*sock_id*/, ConnectGuard> ConnectsMap;
+  typedef std::map<ConnectUId, ConnectGuard> ConnectsMap;
   typedef std::list<ConnectGuard> ConnectsList;
-
-  typedef smsc::util::POBJRegistry_T <
-    SOCKET /*conn_id*/, USSConnManager
-  > SessionsRegistry;
+  typedef smsc::util::POBJRegistry_T<ConnectUId, USSConnManager> SessionsRegistry;
 
   mutable smsc::core::synchronization::EventMonitor _sync;
   /* - */
@@ -98,12 +96,12 @@ protected:
   // -- TcpServerListenerIface interface mthods
   // -------------------------------------------
   //Notifies that incoming connection with remote peer is accepted on given
-  //socket.  If listener isn't interested in connection, the 'use_sock' must
-  //be kept intact and NULL must be returned.
+  //socket.  If listener ignores connection, the 'use_sock' must be kept
+  //intact and NULL must be returned.
   virtual SocketListenerIface *
-    onConnectOpening(TcpServerIface & p_srv, std::auto_ptr<Socket> & use_sock);
+    onConnectOpening(TcpServerIface & p_srv, ConnectUId conn_id, std::auto_ptr<Socket> & use_sock);
   //Notifies that connection is to be closed on given soket, no more events will be reported.
-  virtual void onConnectClosing(TcpServerIface & p_srv, unsigned conn_id);
+  virtual void onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id);
   //notifies that TcpServer is shutdowned, no more events on any connect will be reported.
   virtual void onServerShutdown(TcpServerIface & p_srv, TcpServerIface::RCode_e down_reason);
 
