@@ -63,28 +63,26 @@ public:
     value.addr_content.type = _type;
     value.addr_content.plan = _plan;
     setValue(_len, _value);
-  };
+  }
 
   AbntAddr(const AbntAddrValue* _full_addr)
   {
     __require__(_full_addr);
     memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
     checkAddrValueValidity(value.addr_content.signals, sizeof(value.addr_content.signals));
-  };
+  }
 
   AbntAddr(const uint8_t* _full_addr)
   {
     __require__(_full_addr);
     memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
     checkAddrValueValidity(value.addr_content.signals, sizeof(value.addr_content.signals));
-  };
+  }
 
   AbntAddr(const AbntAddr& addr)
   {
     memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
-  };
-
-  ~AbntAddr(){};
+  }
 
   AbntAddr(const char* text)
   {
@@ -189,7 +187,7 @@ public:
 
   const uint8_t* getAddrSig(void) const
   {
-    return (uint8_t*)&(value.full_addr);
+    return value.full_addr;
   }
 
   /**
@@ -329,6 +327,6 @@ public:
   }
 };
 
-};	//  namespace mcisme
-};	//  namespace smsc
+}	//  namespace mcisme
+}	//  namespace smsc
 #endif
