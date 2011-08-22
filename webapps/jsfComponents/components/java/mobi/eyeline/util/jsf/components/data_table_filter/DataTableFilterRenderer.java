@@ -20,7 +20,7 @@ public class DataTableFilterRenderer extends Renderer{
   public void decode(FacesContext context, UIComponent component) {
     String id = component.getId();
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
-    String action = reqParams.get("action."+id);
+    String action = reqParams.get("action"+id);
     ((DataTableFilter)component).setAction(action);
   }
 
@@ -53,7 +53,7 @@ public class DataTableFilterRenderer extends Renderer{
     importResorces(w);
 
     w.a("<div id=\"").a(filter.getId()).a("\" class=\"eyeline_data_table_filter\">\n");
-    w.a("<input type=\"hidden\" id=\"").a("action.").a(component.getId()).a("\" name=\"action.").a(component.getId()).a("\" value=\"\">");
+    w.a("<input type=\"hidden\" id=\"").a("action").a(component.getId()).a("\" name=\"action").a(component.getId()).a("\" value=\"\">");
     w.a("  <table class=\"eyeline_data_table_filter\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n" +
         "    <tr>\n" +
         "      <td align=\"left\" width=\"10%\">\n" +
