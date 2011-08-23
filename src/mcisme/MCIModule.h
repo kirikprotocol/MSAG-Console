@@ -21,8 +21,6 @@
 //#define MCI_MODULE_TEST YES
 #undef  MCI_MODULE_TEST
 
-extern "C" void clearSignalMask(void);
-
 namespace smsc {
 namespace mcisme {
 
@@ -185,8 +183,6 @@ public:
   }
   virtual int Execute()
   {
-    clearSignalMask();
-
     while (!isNeedExit())
     {
       setRunning(true);
