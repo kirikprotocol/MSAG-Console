@@ -564,7 +564,7 @@ public:
 extern "C" void appSignalHandler(int sig)
 {
   smsc_log_debug(logger, "Signal %d handled !", sig);
-  if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
+  if (sig==smsc::system::SHUTDOWN_SIGNAL)
   {
     smsc_log_info(logger, "Shutting down by signal...");
     if (bAdminListenerInited) adminListener->shutdown();
@@ -583,13 +583,14 @@ extern "C" void setShutdownHandler(void)
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+  // unlock SIGTERM for signal processing at dedicated thread
   if(pthread_sigmask(SIG_UNBLOCK, &set, NULL) != 0) {
     if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
   }
   sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
 }
 
-extern "C" void clearSignalMask(void)
+static void blockAllSignals(void)
 {
   sigset_t set;
   sigemptyset(&set);
@@ -608,7 +609,6 @@ struct ShutdownThread : public Thread
   virtual ~ShutdownThread() {};
 
   virtual int Execute() {
-    clearSignalMask();
     setShutdownHandler();
     shutdownEvent.Wait();
     return 0;
@@ -660,7 +660,12 @@ int main(void)
   logger = Logger::getInstance("smsc.mcisme.MCISme");
 
   atexit(atExitHandler);
-  clearSignalMask();
+  /*
+    spawned threads will inherit signal mask of main thread, so
+    signals will blocked in all threads except ones where some signal will
+    be unlocked explicitly (for instance, in dedicated signal handler thread)
+  */
+  blockAllSignals();
   shutdownThread.Start();
 
   std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
@@ -800,7 +805,7 @@ int main(void)
       smsc_log_info(logger, "Running messages send loop...");
       setShutdownHandler();
       processor.Run();
-      clearSignalMask();
+
       smsc_log_info(logger, "Message send loop exited");
 
       smsc_log_info(logger, "Disconnecting from SMSC ...");
