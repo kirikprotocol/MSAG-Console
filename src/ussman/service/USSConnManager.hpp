@@ -48,9 +48,11 @@ public:
   {
     if (!_logger)
       _logger = Logger::getInstance("smsc.ussman");
-    snprintf(_logId, sizeof(_logId)-1, "USSCon[%u]", cm_id);
+    snprintf(_logId, sizeof(_logId)-1, "ConnMgr[%u]", cm_id);
   }
   virtual ~USSConnManager();
+
+  const char * logId(void) const { return &_logId[0]; }
 
   using smsc::inman::interaction::ConnectManagerAC::mgrId;
   using smsc::inman::interaction::ConnectManagerAC::bind;

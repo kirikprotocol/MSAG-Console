@@ -108,8 +108,8 @@ bool USSGService::setConnListener(const ConnectGuard & use_conn) /*throw()*/
 //  MutexGuard  grd(_sync);
   USSConnManager * pMgr = _sessReg.find(use_conn->getUId());
   if (pMgr) {
-    smsc_log_warn(_logger, "%s: USSCon[%s] is already opened on Connect[%u]",
-                  _logId,  pMgr->mgrId(), (unsigned)use_conn->getUId());
+    smsc_log_warn(_logger, "%s: %s is already opened on Connect[%u]",
+                  _logId,  pMgr->logId(), (unsigned)use_conn->getUId());
     _sync.notify();
     return false;
   }
@@ -118,8 +118,8 @@ bool USSGService::setConnListener(const ConnectGuard & use_conn) /*throw()*/
   _sessReg.insert(use_conn->getUId(), pMgr);
   pMgr->bind(&use_conn);
   pMgr->start(); //also switches Connect to asynchronous mode
-  smsc_log_info(_logger, "%s: USSCon[%s] is started on Connect[%u]",
-                _logId, pMgr->mgrId(), (unsigned)use_conn->getUId());
+  smsc_log_info(_logger, "%s: %s is started on Connect[%u]",
+                _logId, pMgr->logId(), (unsigned)use_conn->getUId());
   _sync.notify();
   return true;
 }
@@ -132,8 +132,8 @@ void USSGService::onDisconnect(const ConnectGuard & use_conn) /*throw()*/
     ReverseMutexGuard  grd(_sync);
     pMgr->bind(NULL);
     pMgr->stop(false);
-    smsc_log_info(_logger, "%s: closing USSCon[%s] on Connect[%u]",
-                   _logId,  pMgr->mgrId(), (unsigned)use_conn->getUId());
+    smsc_log_info(_logger, "%s: closing %s on Connect[%u]",
+                   _logId,  pMgr->logId(), (unsigned)use_conn->getUId());
     pMgr.reset(); //USSConnManager is destroyed at this point
   }
   _sync.notify();
