@@ -203,19 +203,24 @@ flags_(0), flagsize_(0)
     if (!hexdump || !hexdump[0]) {
         return;
     }
+    // hexdump = ToBuf::stripHexDump(hexdump);
     const size_t len = strlen(hexdump);
     if ( (len & 1) != 0 ) {
         throw InfosmeException(EXC_IOERROR,"bad msgflags (not even)");
     }
     flagsize_ = unsigned(len / 2);
     flags_ = new char[flagsize_];
+    ToBuf tb(flags_,flagsize_);
+    tb.fillFromHexDump(hexdump);
+}
+/*
     for ( char* o = flags_; *hexdump != '\0' ; ++o ) {
         uint8_t res;
         const char vh = uint8_t(*hexdump++);
         if ( vh >= '0' && vh <= '9' ) {
             res = (vh-'0');
         } else if ( (vh >= 'a' && vh <= 'f') ||
-                    (vh >= 'A' && vh <= 'f') ) {
+                    (vh >= 'A' && vh <= 'F') ) {
             res = (vh & 0x7) + 9;
         } else {
             delete flags_;
@@ -238,7 +243,7 @@ flags_(0), flagsize_(0)
         }
         *o = char(res);
     }
-}
+*/
 
 
 void MessageFlags::reset( const MessageFlagBuilder& mfb )

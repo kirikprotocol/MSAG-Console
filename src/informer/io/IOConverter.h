@@ -54,6 +54,11 @@ struct ToBuf
     void copy( size_t bytes, const void* from );
     void setCString( const char* s );
     void setHexCString( const char* s, size_t slen );
+    void fillFromHexDump( const char* dump );
+
+    // strip white spaces (' ','\n','\t') from hex dump
+    static void stripHexDump( char* dump );
+
     void skip( size_t bytes );
     void setPos( size_t newpos );
     void setBuf( void* thebuf, size_t bufLen ) {

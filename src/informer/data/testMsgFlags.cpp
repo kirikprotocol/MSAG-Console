@@ -52,6 +52,8 @@ int main()
     mfb.setSvcType("hello");
     mfb.setEyelineKeywordTLV("eyeline keyword");
 
+    printf("--- message flag builder created ---\n");
+
     HexDump hd;
     {
         HexDump::string_type dump;
@@ -60,22 +62,32 @@ int main()
         printf("builder: %s\n",hd.c_str(dump) );
     }
 
+    printf("--- making flags from the builder ---\n");
+
     MessageFlags mf;
     mf.reset(mfb);
     showflags(mf);
 
-    char storebuf[300];
+    printf("--- printing flags into hexdump ---\n");
+
+    char storebuf[2000];
     {
-        ToBuf tb(storebuf,sizeof(storebuf));
-        tb.setHexCString(mf.buf(),mf.bufsize());
+        // ToBuf tb(storebuf,sizeof(storebuf));
+        // tb.setHexCString(mf.buf(),mf.bufsize());
+
+        *hd.hexdump( storebuf, mf.buf(), mf.bufsize() ) = '\0';
+        ToBuf::stripHexDump( storebuf );
+
         HexDump::string_type dump;
-        hd.hexdump( dump, storebuf, mf.bufsize()*2+1 );
-        hd.strdump( dump, storebuf, mf.bufsize()*2+1 );
+        const size_t len = strlen(storebuf);
+        hd.hexdump( dump, storebuf, len+1 );
+        hd.strdump( dump, storebuf, len+1 );
         printf("storebuf: %s\n",hd.c_str(dump) );
     }
 
-    FromBuf fb(storebuf,mf.bufsize()*2+1);
-    MessageFlags(fb.getCString()).swap(mf);
+    printf("--- loading from hexdump ---\n");
+
+    MessageFlags(storebuf).swap(mf);
     showflags(mf);
     return 0;
 }

@@ -224,6 +224,72 @@ void ToBuf::setHexCString( const char* s, size_t slen )
 }
 
 
+void ToBuf::fillFromHexDump( const char* hexdump )
+{
+    if (!hexdump || !hexdump[0]) { return; }
+    const size_t len = strlen(hexdump);
+    if ( (len & 1) != 0 ) {
+        throw InfosmeException(EXC_IOERROR,"bad msgflags (not even)");
+    }
+    const size_t inc = unsigned(len / 2);
+    checksz(inc);
+    for ( register unsigned char* o = buf; *hexdump != '\0' ; ++o ) {
+        uint8_t res;
+        const char vh = uint8_t(*hexdump++);
+        if ( vh >= '0' && vh <= '9' ) {
+            res = (vh-'0');
+        } else if ( (vh >= 'a' && vh <= 'f') ||
+                    (vh >= 'A' && vh <= 'F') ) {
+            res = (vh & 0x7) + 9;
+        } else {
+            pos -= inc;
+            throw InfosmeException(EXC_IOERROR,"bad hexdump (not a digit): %s",hexdump);
+        }
+        res <<= 4;
+        uint8_t vl = uint8_t(*hexdump++);
+        if ( vl >= '0' && vl <= '9' ) {
+            res += (vl-'0');
+        } else if ( (vl >= 'a' && vl <= 'f') ||
+                    (vl >= 'A' && vl <= 'F') ) {
+            res += (vl & 0x7) + 9;
+        } else {
+            pos -= inc;
+            throw InfosmeException(EXC_IOERROR,"bad hexdump (not a digit): %s",hexdump);
+        }
+        *o = res;
+    }
+    buf += inc;
+}
+
+
+void ToBuf::stripHexDump( char* hexdump )
+{
+    if (!hexdump || !hexdump[0]) return;
+    register char* i = hexdump;
+    // first search for ' \n\t'
+    register char* o = hexdump;
+    for ( ; *i != '\0'; ++i ) {
+        register char c = *i;
+        if ( c == ' ' || c == '\n' || c == '\t' ) {
+            ++i;
+            goto docopy;
+        }
+        ++o;
+    }
+    // we have no copies here
+    return;
+docopy:
+    for ( ; *i != '\0'; ++i ) {
+        register char c = *i;
+        if ( c != ' ' && c != '\n' && c != '\t' ) {
+            *o++ = *i;
+        }
+    }
+    *o = '\0';
+    return;
+}
+
+
 void ToBuf::skip( size_t bytes )
 {
     checksz(bytes);
