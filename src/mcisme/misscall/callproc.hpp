@@ -3,13 +3,14 @@
 
 #include <inttypes.h>
 #include <time.h>
+#include <signal.h>
 #include <string>
 #include <vector>
 
-#include <core/buffers/Hash.hpp>
-#include <core/synchronization/Mutex.hpp>
-#include <logger/Logger.h>
-#include <core/network/Socket.hpp>
+#include "core/buffers/Hash.hpp"
+#include "core/synchronization/Mutex.hpp"
+#include "logger/Logger.h"
+#include "core/network/Socket.hpp"
 
 namespace smsc{
 namespace misscall{
@@ -119,11 +120,18 @@ public:
   virtual int  run();
   static void setHost(const std::string& host);
   static void setPort(int port);
+  virtual void stop() {
+    _stopped = true;
+    if (_tid)
+      pthread_kill(_tid, SIGUSR1);
+  }
 private:
   smsc::logger::Logger* _logger;
   smsc::core::network::Socket _serverSocket;
   static std::string _host;
   static in_port_t _port;
+  bool _stopped;
+  pthread_t _tid;
 };
 
 }//namespace misscall

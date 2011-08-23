@@ -2,6 +2,7 @@
 #include <time.h>
 #include <string>
 #include <ctype.h>
+#include <assert.h>
 #include <util/Exception.hpp>
 
 #include "callproc.hpp"
@@ -24,7 +25,7 @@ static int caseInsensitiveCompare(const std::string& l, const std::string r)
     if ( cmp ) return cmp;
   }
 
-  return lsz - rsz;
+  return static_cast<int>(lsz - rsz);
 }
 
 static MissedCallEvent
@@ -97,6 +98,22 @@ stringParser(const std::string& inputStr)
 
 #include "callproc.hpp"
 
+extern "C" void longSysCallInterrupHandler(int sig)
+{
+  return;
+}
+
+extern "C" void setLongSysCallInterruptHandler(void)
+{
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set, SIGUSR1);
+  // unlock SIGUSR1 for interrupt accept() call
+  int st= pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+  assert(st == 0);
+  sigset(SIGUSR1, longSysCallInterrupHandler);
+}
+
 namespace smsc{
 namespace misscall{
 
@@ -113,7 +130,8 @@ MissedCallProcessorEmulator::setPort(int port)
 }
 
 MissedCallProcessorEmulator::MissedCallProcessorEmulator()
-  : _logger(smsc::logger::Logger::getInstance("smsc.misscall"))
+  : _logger(smsc::logger::Logger::getInstance("smsc.misscall")),
+    _stopped(false), _tid(0)
 {
   smsc_log_info(_logger, "Initializing MissedCallProcessorEmulator");
   if (_serverSocket.InitServer(_host.c_str(), _port, 0, 0, 1) ||
@@ -130,8 +148,11 @@ int MissedCallProcessorEmulator::run()
   _serverSocket.StartServer();
   core::network::Socket* clntSocket=NULL;
   char cmdBuf[128];
+
+  _tid = pthread_self();
+  setLongSysCallInterruptHandler();
   try {
-    while (true) {
+    while (!_stopped) {
       if(clntSocket) delete clntSocket;
       clntSocket = _serverSocket.Accept();
       if (clntSocket)
