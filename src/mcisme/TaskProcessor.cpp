@@ -29,7 +29,6 @@
 #include "BannerlessOutputMessageProcessorsDispatcher.hpp"
 
 extern bool isMSISDNAddress(const char* string);
-extern "C" void clearSignalMask(void);
 
 namespace smsc {
 namespace mcisme {
@@ -526,6 +525,7 @@ TaskProcessor::~TaskProcessor()
     this->Stop();
   } catch (...) {}
   delete templateManager;
+  delete _outputMessageProcessorsDispatcher;
   delete mciModule;
   delete statistics;
   delete pStorage;
@@ -534,7 +534,6 @@ TaskProcessor::~TaskProcessor()
   try {
     smsc::system::common::TimeZoneManager::Shutdown();
   } catch (...) {}
-  delete _outputMessageProcessorsDispatcher;
 }
 
 void TaskProcessor::Start()
@@ -623,8 +622,6 @@ void TaskProcessor::Run()
 
 int TaskProcessor::Execute()
 {
-  clearSignalMask();
-
   MissedCallEvent event;
 
   smsc_log_debug(logger, "Execute");
