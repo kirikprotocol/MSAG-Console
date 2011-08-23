@@ -1,3 +1,7 @@
+2011-08-23 16:35 bukind
+  bugfix: incoming.txt must be deleted after transfer
+  todo: make delivery store scan for .out at start
+
 2011-08-16 17:02 bukind
   feature: dead lock watcher must be started after full init
 

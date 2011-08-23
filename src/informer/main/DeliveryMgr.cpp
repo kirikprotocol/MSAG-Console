@@ -1432,8 +1432,6 @@ void DeliveryMgr::readFromArchive()
             ptr = buf + (ptr-p);
         }
         fg.close();
-        // delete the incoming file
-        FileGuard::unlink(fname.c_str());
     }
 
     // processing dlvs
@@ -1462,6 +1460,9 @@ void DeliveryMgr::readFromArchive()
             smsc_log_warn(log_,"D=%u is already attached",*i);
         }
     }
+    
+    // delete the incoming file
+    FileGuard::unlink(fname.c_str());
 }
 
 
