@@ -181,6 +181,7 @@ BannerOutputMessageProcessorsDispatcher::shutdown()
 
   _reconnectorThread->stop();
   _bannerReader->stop();
+  _bannerListener->stop();
 }
 
 }}
