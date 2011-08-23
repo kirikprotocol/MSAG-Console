@@ -31,8 +31,6 @@ TimeoutMonitor::TimeoutMonitor(TaskProcessor* _processor):
 
 int TimeoutMonitor::Execute()
 {
-  clearSignalMask();
-
   while (!bNeedExit)
   {
     smsc_log_debug(logger, "TimeoutMonitor: Start wait %d sec", pause);
