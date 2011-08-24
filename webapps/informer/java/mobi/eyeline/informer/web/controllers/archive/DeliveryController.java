@@ -131,11 +131,11 @@ public class DeliveryController extends InformerController{
   }
 
   public String getActivePeriodStart() {
-    return getTime(delivery.getActivePeriodStart());
+    return delivery == null ? null : getTime(delivery.getActivePeriodStart());
   }
 
   public String getActivePeriodEnd() {
-    return getTime(delivery.getActivePeriodEnd());
+    return delivery == null ? null : getTime(delivery.getActivePeriodEnd());
   }
 
   private static String getTime(Time time) {
@@ -222,11 +222,13 @@ public class DeliveryController extends InformerController{
   }
 
   public String getDeliveryMode() {
-    return delivery.getDeliveryMode().toString();
+    return delivery == null ? null : delivery.getDeliveryMode().toString();
   }
 
   public void statForSelected(ActionEvent e) {
-    getRequest().put("delivery", delivery.getId());
+    if(delivery != null) {
+      getRequest().put("delivery", delivery.getId());
+    }
   }
 
   public String getMessagesComeBackName() {
