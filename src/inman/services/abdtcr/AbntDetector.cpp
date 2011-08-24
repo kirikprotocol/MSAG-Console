@@ -220,7 +220,7 @@ bool AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
     unRef(refIdIAProvider);
   
     if (_state != adIAPQuering) {
-      smsc_log_warn(_logger, "%s: onIAPQueried() at state: %s", state2Str());
+      smsc_log_warn(_logger, "%s: onIAPQueried() at state: %s", _logId, state2Str());
       return true;
     }
     stopTimer();
