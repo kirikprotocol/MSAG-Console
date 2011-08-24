@@ -25,11 +25,32 @@ namespace informer {
 
 struct DeliveryMgr::NumericNameFilter 
 {
+    NumericNameFilter( std::vector<dlvid_type>* dlvs = 0,
+                       std::vector<dlvid_type>* archived = 0 ) :
+    dlvs_(dlvs), archived_(archived) {}
+
     inline bool operator()( const char* fn ) const {
         char* endptr;
-        strtoul(fn,&endptr,10);
-        return (*endptr=='\0');
+        const dlvid_type dlvId = strtoul(fn,&endptr,10);
+        if (dlvId > 0 && endptr != fn) {
+            // starts with a number
+            if ( archived_ && strcmp(endptr,".out") == 0 ) {
+                archived_->push_back(dlvId);
+                return false;
+            }
+            if (*endptr=='\0') {
+                if (dlvs_) {
+                    dlvs_->push_back(dlvId);
+                    return false;
+                }
+                return true;
+            }
+        }
+        return false;
     }
+private:
+    mutable std::vector< dlvid_type >* dlvs_;
+    mutable std::vector< dlvid_type >* archived_;
 };
 
 
@@ -759,7 +780,6 @@ void DeliveryMgr::init()
     buf.SetPos(strlen(buf.get()));
     std::vector<std::string> chunks1;
     std::vector<std::string> chunks;
-    std::vector<std::string> dlvs;
     smsc_log_debug(log_,"listing deliveries storage '%s'",buf.get());
     try {
         makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), chunks1);
@@ -788,29 +808,15 @@ void DeliveryMgr::init()
               ichunk != chunks.end(); ++ichunk ) {
             strcpy(bufpos2,ichunk->c_str());
             strcat(bufpos2,"/");
-            dlvs.clear();
             smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
-            makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), dlvs);
-            for ( std::vector<std::string>::iterator idlv = dlvs.begin();
+            std::vector< std::string > dummy;
+            std::vector< dlvid_type > dlvs;
+            std::vector< dlvid_type > archived;
+            makeDirListing(NumericNameFilter(&dlvs,&archived),S_IFDIR).list(buf.get(), dummy);
+            for ( std::vector<dlvid_type>::const_iterator idlv = dlvs.begin();
                   idlv != dlvs.end();
                   ++idlv ) {
-                // get dlvid
-                const char* dlvstr = idlv->c_str();
-                if ( !*dlvstr ) {
-                    // null-length string
-                    smsc_log_warn(log_,"chunk '%s' has empty item, skipped",buf.get());
-                    continue;
-                }
-                char* endptr;
-                const dlvid_type dlvId(dlvid_type(strtoul(dlvstr,&endptr,10)));
-                if ( *endptr ) {
-                    smsc_log_warn(log_,"chunk '%s' has non-valid item '%s', skipped",buf.get(),dlvstr);
-                    continue;
-                }
-                if (dlvId<=0) {
-                    smsc_log_warn(log_,"chunk '%s' has D=%u, which is not valid, skipped",buf.get(),dlvId);
-                    continue;
-                }
+                const dlvid_type dlvId = *idlv;
                 if (dlvId > lastDlvId_) {
                     lastDlvId_ = dlvId;
                 }
@@ -830,6 +836,14 @@ void DeliveryMgr::init()
                 } catch (std::exception& e) {
                     smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
                 }
+            } // valid dlv
+            for ( std::vector< dlvid_type >::const_iterator idlv = archived.begin();
+                  idlv != archived.end(); ++idlv ) {
+                const dlvid_type dlvId = *idlv;
+                if (dlvId > lastDlvId_) {
+                    lastDlvId_ = dlvId;
+                }
+                signalArchive(dlvId);
             }
         }
     }
