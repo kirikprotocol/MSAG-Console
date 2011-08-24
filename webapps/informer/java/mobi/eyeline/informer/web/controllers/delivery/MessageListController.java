@@ -174,7 +174,12 @@ public class MessageListController extends InformerController {
       try {
         Delivery delivery = strategy.getDelivery(u.getLogin(), deliveryId);
         msgFilter.setFromDate(new Date(delivery.getCreateDate().getTime()));
-        msgFilter.setTillDate(delivery.getEndDate() == null ? new Date(System.currentTimeMillis() + (24 * 60 * 60 * 1000)) : delivery.getEndDate());
+        msgFilter.setTillDate(
+            new Date((delivery.getEndDate() == null ?
+                          System.currentTimeMillis() :
+                          delivery.getEndDate().getTime())
+                     + (24 * 60 * 60 * 1000))
+        );
         deliveryName = delivery.getName();
       } catch (AdminException e) {
         logger.error(e, e);
