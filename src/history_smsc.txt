@@ -675,3 +675,9 @@ B3213: Jul 13, 2011
     MCISme	Fix for handling timeouts on banner engine, send attempt now should be done anyway
     MCISme	Fix for shutdown sequences
     Inman	Fix for closing socket seq
+
+B3214: Aug 24, 2011
+    MCISme	fixed shutdown seq in BannerOutputMessageProcessorsDispatcher
+    MCISme	signal masks reorganized
+    INMan/USSMan TCPServer manages unique connect id instead of file descriptor
+    INMan/USSMan queue node unlinking sync bug is fixed
