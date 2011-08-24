@@ -142,6 +142,9 @@ public class ErrorStatsController extends InformerController{
   }
 
   public DataTableModel getRecords() {
+    if(delivery == null) {
+      return new EmptyDataTableModel();
+    }
 
     final Locale locale = getLocale();
 

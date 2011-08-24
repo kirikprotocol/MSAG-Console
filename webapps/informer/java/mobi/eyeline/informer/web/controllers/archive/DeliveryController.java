@@ -60,7 +60,7 @@ public class DeliveryController extends InformerController{
         return;
       }
     } catch (AdminException e) {
-      addError(e);
+      error = e.getMessage(getLocale());
       return;
     }
     String user = getUserName();
@@ -104,7 +104,8 @@ public class DeliveryController extends InformerController{
           addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found", "");
         }
       }catch (AdminException e){
-        addError(e);
+        error = e.getMessage(getLocale());
+        return;
       }
     }else {
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found", id);
@@ -154,7 +155,7 @@ public class DeliveryController extends InformerController{
   }
 
   public String getValidityPeriod() {
-    return getTime(delivery.getValidityPeriod());
+    return delivery == null ? null : getTime(delivery.getValidityPeriod());
   }
 
   public boolean isSecret() {

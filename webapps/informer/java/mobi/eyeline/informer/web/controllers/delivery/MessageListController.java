@@ -5,10 +5,7 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.ModelWithObjectIds;
+import mobi.eyeline.informer.web.components.data_table.model.*;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -355,7 +352,7 @@ public class MessageListController extends InformerController {
     final MessageFilter filter = getModelFilter();
 
     return new ModelWithObjectIds() {
-      public List getRows(final int startPos, final int count, final DataTableSortOrder sortOrder) {
+      public List getRows(final int startPos, final int count, final DataTableSortOrder sortOrder) throws ModelException{
         if (!init || state == 1) {
           return Collections.emptyList();
         }
@@ -372,8 +369,7 @@ public class MessageListController extends InformerController {
             }
           }, filter);
         } catch (AdminException e) {
-          logger.error(e, e);
-          error = e.getMessage(getLocale());
+          throw new ModelException(e.getMessage(getLocale()));
         }
         return list;
       }
@@ -383,14 +379,13 @@ public class MessageListController extends InformerController {
         return ((Message)value).getId().toString();
       }
 
-      public int getRowsCount() {
+      public int getRowsCount() throws ModelException{
         try {
           return strategy.countMessages(u.getLogin(), filter);
         } catch (LocalizedException e) {
           logger.error(e, e);
-          error = e.getMessage(getLocale());
+          throw new ModelException(e.getMessage(getLocale()));
         }
-        return 0;
       }
     };
   }
