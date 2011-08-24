@@ -190,54 +190,6 @@ public class MessagesByDeliveriesController extends InformerController{
     return ret;
   }
 
-  private int getDeliveryName(Configuration config, Locale locale, String userId, int deliveryId, String[] result) {
-    User user = config.getUser(userId);
-    Delivery delivery = null;
-    if (user != null) {
-      try {
-        delivery = config.getDelivery(user.getLogin(), deliveryId);
-      } catch (AdminException e) {
-        logger.error(e,e);
-      }
-      if(delivery != null) {
-        result[0] = delivery.getName();
-        return 1;
-      }else {
-        if(config.isArchiveDaemonDeployed()) {
-          try {
-            delivery = config.getArchiveDelivery(user.getLogin(), deliveryId);
-          } catch (AdminException e) {
-            logger.error(e,e);
-          }
-        }
-        if(delivery != null) {
-          result[0] = delivery.getName()+" (" +
-              ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.archivedDelivery") +", id="+deliveryId+')';
-          return 0;
-        }
-      }
-    }
-    result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';
-    return -1;
-  }
-
-  private String getDeliveryStatus(Configuration config, Locale locale, String userId, int deliveryId) {
-    User user = config.getUser(userId);
-    Delivery delivery = null;
-    if (user != null) {
-      try {
-        delivery = config.getDelivery(user.getLogin(), deliveryId);
-      } catch (AdminException e) {
-        logger.error(e,e);
-      }
-      if(delivery != null) {
-        return  ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("delivery.status."+delivery.getStatus());
-      }
-    }
-    return "";
-  }
-
-
   private boolean getRegion(Configuration config, Locale locale, Integer regId, String[] result) {
     if(regId != null) {
       if(regId != 0) {
@@ -368,6 +320,8 @@ public class MessagesByDeliveriesController extends InformerController{
     private final Configuration config;
     private final Locale locale;
 
+    private Map<Integer, Delivery> deliveriesCache = new HashMap<Integer, Delivery>();
+
     public DeliveryStatVisitorImpl(LoadListener listener, Map<Integer, MessagesByDeliveriesRecord> recsMap, Configuration config, Locale locale) {
       this.listener = listener;
       this.recsMap = recsMap;
@@ -383,7 +337,7 @@ public class MessagesByDeliveriesController extends InformerController{
       MessagesByDeliveriesRecord oldRecord = recsMap.get(key);
       String[] region = new String[1];
       String[] delivery = new String[1];
-      int state = getDeliveryName(config, locale, rec.getUser(), rec.getTaskId(), delivery);
+      int state = getDeliveryName(rec.getUser(), rec.getTaskId(), delivery);
       boolean archivated = state == 0;
       boolean deleted = state == -1;
       boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
@@ -395,9 +349,71 @@ public class MessagesByDeliveriesController extends InformerController{
         oldRecord.add(c);
       }
       oldRecord.updateTime(rec.getDate());
-      oldRecord.setDeliveryStatus(getDeliveryStatus(config, locale, rec.getUser(), rec.getTaskId()));
+      oldRecord.setDeliveryStatus(getDeliveryStatus(rec.getUser(), rec.getTaskId()));
 
       return true;
+    }
+
+    private Delivery getDelivery(String login, int deliveryId) throws AdminException{
+      Delivery d = deliveriesCache.get(deliveryId);
+      if(d == null) {
+        try {
+          d = config.getDelivery(login, deliveryId);
+        } catch (AdminException e) {
+          logger.error(e,e);
+        }
+        if(d != null) {
+          deliveriesCache.put(deliveryId, d);
+        }
+      }
+      return d;
+    }
+
+    private int getDeliveryName(String userId, int deliveryId, String[] result) {
+      User user = config.getUser(userId);
+      Delivery delivery = null;
+      if (user != null) {
+        try {
+          delivery = getDelivery(user.getLogin(), deliveryId);
+        } catch (AdminException e) {
+          logger.error(e,e);
+        }
+        if(delivery != null) {
+          result[0] = delivery.getName();
+          return 1;
+        }else {
+          if(config.isArchiveDaemonDeployed()) {
+            try {
+              delivery = config.getArchiveDelivery(user.getLogin(), deliveryId);
+            } catch (AdminException e) {
+              logger.error(e,e);
+            }
+          }
+          if(delivery != null) {
+            result[0] = delivery.getName()+" (" +
+                ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.archivedDelivery") +", id="+deliveryId+')';
+            return 0;
+          }
+        }
+      }
+      result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';
+      return -1;
+    }
+
+    private String getDeliveryStatus(String userId, int deliveryId) {
+      User user = config.getUser(userId);
+      Delivery delivery = null;
+      if (user != null) {
+        try {
+          delivery = getDelivery(user.getLogin(), deliveryId);
+        } catch (AdminException e) {
+          logger.error(e,e);
+        }
+        if(delivery != null) {
+          return  ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("delivery.status."+delivery.getStatus());
+        }
+      }
+      return "";
     }
   }
 }
