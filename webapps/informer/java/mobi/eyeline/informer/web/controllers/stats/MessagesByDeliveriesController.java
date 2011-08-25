@@ -321,6 +321,7 @@ public class MessagesByDeliveriesController extends InformerController{
     private final Locale locale;
 
     private Map<Integer, Delivery> deliveriesCache = new HashMap<Integer, Delivery>();
+    private Map<Integer, Delivery> deliveriesArchiveCache = new HashMap<Integer, Delivery>();
 
     public DeliveryStatVisitorImpl(LoadListener listener, Map<Integer, MessagesByDeliveriesRecord> recsMap, Configuration config, Locale locale) {
       this.listener = listener;
@@ -369,6 +370,21 @@ public class MessagesByDeliveriesController extends InformerController{
       return d;
     }
 
+    private Delivery getArchiveDelivery(String login, int deliveryId) throws AdminException{
+      Delivery d = deliveriesArchiveCache.get(deliveryId);
+      if(d == null) {
+        try {
+          d = config.getArchiveDelivery(login, deliveryId);
+        } catch (AdminException e) {
+          logger.error(e,e);
+        }
+        if(d != null) {
+          deliveriesArchiveCache.put(deliveryId, d);
+        }
+      }
+      return d;
+    }
+
     private int getDeliveryName(String userId, int deliveryId, String[] result) {
       User user = config.getUser(userId);
       Delivery delivery = null;
@@ -384,7 +400,7 @@ public class MessagesByDeliveriesController extends InformerController{
         }else {
           if(config.isArchiveDaemonDeployed()) {
             try {
-              delivery = config.getArchiveDelivery(user.getLogin(), deliveryId);
+              delivery = getArchiveDelivery(user.getLogin(), deliveryId);
             } catch (AdminException e) {
               logger.error(e,e);
             }
