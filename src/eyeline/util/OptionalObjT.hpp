@@ -45,8 +45,10 @@ public:
   //
   void clear(void)
   {
-    if (_ptr)
+    if (_ptr) {
       _ptr->~_TArg();
+      _ptr = 0;
+    }
   }
 
   //
@@ -64,6 +66,7 @@ public:
 
   //
   _TArg  * get(void) { return _ptr; }
+  //
   const _TArg  * get(void) const { return _ptr; }
   //
   _TArg * operator->() { return _ptr; }
