@@ -140,17 +140,12 @@ public:
   }
   virtual uint32_t getNextSequenceNumber()
   {
-    /*
-    MutexGuard guard(mutex);
+    RefGuard rg(this);
     if ( proxy )
     {
       return proxy->getNextSequenceNumber();
     }
     else throw runtime_error("proxy unregistred");
-    */
-    MutexGuard mg(seqMtx);
-    if(seq==0)seq++;
-    return seq++;
   }
   virtual uint32_t getUniqueId() const {return uniqueId;}
   virtual bool hasInput() const {__unreachable__("");return 0;}
