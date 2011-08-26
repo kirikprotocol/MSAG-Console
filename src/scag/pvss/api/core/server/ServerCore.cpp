@@ -13,6 +13,8 @@
 #include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/counter/Accumulator.h"
 #include "scag/counter/Manager.h"
+#include "util/findConfigFile.h"
+#include "license/check/license.hpp"
 
 using namespace smsc::core::buffers;
 using smsc::core::synchronization::MutexGuard;
@@ -54,7 +56,9 @@ started_(false),
 syncDispatcher_(0),
 last_(config->getStatisticsInterval()),
 hasNewStats_(false),
-exceptions_(new ExceptionCount)
+exceptions_(new ExceptionCount),
+nextLicenseTime_(0),
+licenseFileTime_(0)
 {
 }
 
@@ -62,6 +66,56 @@ exceptions_(new ExceptionCount)
 ServerCore::~ServerCore()
 {
     shutdown();
+}
+
+
+void ServerCore::checkLicenseFile()
+{
+    const time_t now = time(0);
+    if ( nextLicenseTime_ >= now ) {
+        return;
+    }
+    MutexGuard mg(licenseLock_);
+    if ( nextLicenseTime_ >= now ) {
+        return;
+    }
+    const char* what;
+    do {
+        const std::string licenseIni = smsc::util::findConfigFile("license.ini");
+        const std::string licenseSig = smsc::util::findConfigFile("license.sig");
+        struct stat st;
+        if ( 0 != stat(licenseIni.c_str(),&st) ) {
+            what = "license if not found";
+            break;
+        }
+        if ( licenseFileTime_ == st.st_mtime ) {
+            // file has not been changed
+            return;
+        }
+        static const char* keys[] = {
+            "Organization",
+            "Hostids",
+            "LicenseExpirationDate",
+            "LicenseType",
+            "Product"
+        };
+        smsc::core::buffers::Hash<std::string> licenseHash;
+        if ( !smsc::license::check::CheckLicense( licenseIni.c_str(),
+                                                  licenseSig.c_str(),
+                                                  licenseHash,
+                                                  keys,
+                                                  sizeof(keys)/sizeof(keys[0])) ) {
+            what = "invalid license";
+            break;
+        }
+        licenseFileTime_ = st.st_mtime;
+        nextLicenseTime_ = now + 600;
+        return;
+
+    } while ( false );
+    smsc_log_error(log_,"%s",what);
+    fprintf(stderr,"%s\n",what);
+    std::terminate();
 }
 
 
@@ -343,6 +397,7 @@ int ServerCore::doExecute()
         // currentTime = util::currentTimeMillis();
         // int timeToWait = int(nextWakeupTime-currentTime);
         int timeToWait = minTimeToSleep;
+        checkLicenseFile();
         std::auto_ptr<ExceptionCount> exceptions;
         {
             MutexGuard mg(statMutex_);

@@ -39,6 +39,8 @@ public:
 
     virtual const char* taskName() { return "pvss.srv"; }
 
+    void checkLicenseFile();
+
     /**
      * Implementation of InactivityTracker.Listener method.<p/>
      * Will be called by InactivityTracker when channel remains inactive during specified timeout.<p/>
@@ -141,113 +143,6 @@ public:
      * 3) Signal writers to send or cancel the rest of data and exit.
      */
     virtual void shutdown();
-    /*
-    {
-        started = false;
-        acceptor.shutdown();
-        shutdownIO();
-        synchronized (processingContexts) {
-            processingContexts.notifyAll();
-        }
-        synchronized (contextsMonitor) {
-            contextsMonitor.notifyAll();
-        }
-    }
-     */
-
-    /*
-    private void timeoutContext(ServerContext context, boolean pending)
-    {
-        String contextType = (pending) ? "Pending":"Processing";
-        final int seqNum = context.getSeqNum();
-        final SocketChannel channel = context.getChannel();
-        try {
-            sendResponse(new ErrorResponse(seqNum, Response.StatusType.REQUEST_TIMEOUT,
-                                           contextType + " request timeout"), channel);
-        } catch (PvssException send_error_exc) {
-            log_.warn(contextType + " request timeout send failed. Details: " + send_error_exc.getMessage());
-        }
-    }
-
-    private void cancelContext(ServerContext context, boolean pending)
-    {
-        String contextType = (pending) ? "Pending":"Processing";
-        final int seqNum = context.getSeqNum();
-        final SocketChannel channel = context.getChannel();
-        try {
-            sendResponse(new ErrorResponse(seqNum, Response.StatusType.SERVER_SHUTDOWN,
-                                           contextType + " request cancelled"), channel);
-        } catch (PvssException send_error_exc) {
-            log_.warn(contextType + " request cancelled send failed. Details: " + send_error_exc.getMessage());
-        }
-    }
-     */
-
-    /*
-    {
-        final long minTimeout = 10; // min sleep time = 10msec
-        final long processTimeout = config.getProcessTimeout();
-        long nextWakeupTime;
-
-        while (started)
-        {
-            final long currentTime = System.currentTimeMillis();
-
-            synchronized (contextsMonitor) // check pending requests queue
-            {
-                ServerContext context = pendingContexts.peekFirst();
-                if (context != null) {
-                    long nextTime = context.getCreationTime() + processTimeout;
-                    if (currentTime >= nextTime) { // pending context has expired
-                        pendingContexts.removeFirst();
-                        timeoutContext(context, true);
-                        continue; // expire all pending packets first
-                    }
-                    else nextWakeupTime = nextTime;
-                }
-                else nextWakeupTime = currentTime + processTimeout;
-            }
-
-            synchronized (processingContexts) // no pending requests for expire now => check processing contexts
-            {
-                ServerContext context = processingContexts.peekFirst();
-                if (context != null) {
-                    final long nextTime = context.getCreationTime() + processTimeout;
-                    if (currentTime >= nextTime) {
-                        processingContexts.removeFirst();
-                        ServerContext removed = removeProcessingContext(context.getChannel(), context.getSeqNum(), true);
-                        if (removed != null) timeoutContext(removed, false); // processing context has expired
-                        continue; // expire the rest of contexts
-                    }
-                    else if (nextTime < nextWakeupTime) nextWakeupTime = nextTime;
-                }
-
-                long timeToSleep = nextWakeupTime - currentTime;
-                try { processingContexts.wait((timeToSleep > minTimeout) ? timeToSleep : minTimeout); }
-                catch (InterruptedException e) { e.printStackTrace(); }
-            }
-        }
-        cleanup();
-    }
-     */
-
-    /*
-    private void cleanup()
-    {
-        synchronized (contextsMonitor) { // cancel all pending requests
-            for (ServerContext context : pendingContexts) cancelContext(context, true);
-            pendingContexts.clear();
-        }
-
-        synchronized (processingContexts) { // cancel not PROCESSED contexts
-            for (ServerContext context : processingContexts) {
-                ServerContext removed = removeProcessingContext(context.getChannel(), context.getSeqNum(), true);
-                if (removed != null) cancelContext(removed, false); // cancel processing context
-            }
-            processingContexts.clear();
-        }
-    }
-     */
 
     virtual ServerConfig& getConfig() const { return *static_cast<ServerConfig*>(config);}
 
@@ -338,6 +233,10 @@ private:
     bool                                        hasNewStats_;
     std::auto_ptr<ExceptionCount>               exceptions_;
     ExceptionCount                              totalExceptions_;  // counted in main thread
+
+    smsc::core::synchronization::Mutex          licenseLock_;
+    time_t                                      nextLicenseTime_;
+    time_t                                      licenseFileTime_;
 };
 
 } // namespace server
