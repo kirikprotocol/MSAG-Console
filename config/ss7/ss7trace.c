@@ -114,7 +114,7 @@ int ss7trace(char* modname, char* operation) {
   USHORT_T res;
   USHORT_T i,j,id;
   UCHAR_T* modids;
-  /* Присоединяемся к модулю управления*/
+  /* я┐╜я┐╜соея┐╜я┐╜я┐╜яемя┐╜я┐╜ я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜равя┐╜я┐╜я┐╜я┐╜я┐╜*/
 
   res = EINSS7_MgmtApiSendBindReq(USERID,MGMT_ID,6,WAIT);
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
@@ -127,7 +127,7 @@ int ss7trace(char* modname, char* operation) {
     return -1;
   }
 
-  /* Запрашиваем текущее состояние стэка */
+  /* я┐╜я┐╜я┐╜я┐╜шивя┐╜я┐╜я┐╜ текя┐╜щее я┐╜я┐╜я┐╜яния┐╜ я┐╜я┐╜? */
 
   res = EINSS7_MgmtApiSendMgmtReq(USERID,
                                   MGMT_ID,
@@ -146,7 +146,7 @@ int ss7trace(char* modname, char* operation) {
     return -1 ;
   }
 
-  /* Проводим инициализацию модулей */
+  /* я┐╜ровя┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜циая┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜улея┐╜ */
 
   for(j = 0; j < sizeof(moduledesc)/sizeof(modesc); j++) {
     id = moduledesc[j].id;
@@ -170,6 +170,7 @@ int ss7trace(char* modname, char* operation) {
     fprintf(stderr, "FAILED: trace order request.\n");
     return -1 ;
   }
+  return 0;
 }
 
 /*********************************************************************/
