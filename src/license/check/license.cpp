@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <string>
 #include <vector>
@@ -11,6 +12,10 @@
 #include <openssl/rand.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
+
+#ifdef linux
+#include <dbus/dbus.h>
+#endif
 
 namespace smsc{
 namespace license{
@@ -183,6 +188,161 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic,const char* k
   smsc_log_info(log, "Licensed for host ids %s",lic["Hostid"].c_str());
   smsc_log_info(log, "Licensed maximum sms throughput %s",lic["MaxSmsThroughput"].c_str());
   return true;
+}
+
+
+void gethostid( char* buf, size_t buflen )
+{
+#ifdef linux
+    // read from /org/freedesktop/Hal/devices/computer : 'system.hardware.uuid'
+    const char* what = 0;
+    DBusConnection* dbus = 0;
+    DBusMessage* msg = 0;
+    do {
+
+        struct DBusErrorGuard {
+            DBusErrorGuard() {
+                dbus_error_init(&e);
+            }
+            ~DBusErrorGuard() {
+                dbus_error_free(&e);
+            }
+            inline void free() {
+                dbus_error_free(&e);
+            }
+            inline bool is_set() {
+                return dbus_error_is_set(&e);
+            }
+            DBusError e;
+        } err;
+
+        // connect
+        dbus = dbus_bus_get_private(DBUS_BUS_SYSTEM,&err.e);
+        if ( err.is_set() ) {
+            fprintf(stderr,"Connection error (%s)\n",err.e.message);
+            err.free();
+        }
+        if (0 == dbus) {
+            what = "cannot connect to dbus";
+            break;
+        }
+
+        // request name
+        /*
+        dbus_bus_request_name( dbus, "test.method.client.scag",
+                               DBUS_NAME_FLAG_REPLACE_EXISTING,
+                               &err.e );
+        if ( err.is_set() ) {
+            fprintf(stderr,"Name error (%s)\n",err.e.message);
+            err.free();
+        }
+        if ( DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER != ret ) {
+            what = "cannot set dbus name";
+            break;
+        }
+         */
+
+        // create a message
+        msg = dbus_message_new_method_call( "org.freedesktop.Hal",
+                                            "/org/freedesktop/Hal/devices/computer",
+                                            "org.freedesktop.Hal.Device",
+                                            "GetProperty" );
+        if ( 0 == msg ) {
+            what = "cannot create dbus msg";
+            break;
+        }
+
+        DBusMessageIter args;
+        dbus_message_iter_init_append(msg,&args);
+        const char* stringname = "system.hardware.uuid";
+        if ( !dbus_message_iter_append_basic(&args,DBUS_TYPE_STRING,&stringname)) {
+            what = "out of memory on msg args";
+            break;
+        }
+
+        // send message
+        DBusPendingCall* pending;
+        if ( !dbus_connection_send_with_reply( dbus, msg, &pending, -1 )) {
+            what = "out of memory on send";
+            break;
+        }
+        if ( 0 == pending ) {
+            what = "pending call null";
+            break;
+        }
+        dbus_connection_flush(dbus);
+        dbus_message_unref(msg); msg = 0;
+
+        dbus_pending_call_block(pending);
+        msg = dbus_pending_call_steal_reply(pending);
+        dbus_pending_call_unref(pending);
+        if ( 0 == msg ) {
+            what = "reply null";
+            break;
+        }
+
+        if ( !dbus_message_iter_init(msg,&args) ) {
+            fprintf(stderr,"reply has no arguments\n");
+            break;
+        }
+
+        /*
+        do {
+            
+            const int argtype = dbus_message_iter_get_arg_type(&args);
+            switch (argtype) {
+            case DBUS_TYPE_BOOLEAN: {
+                dbus_bool_t res;
+                dbus_message_iter_get_basic(&args,&res);
+                fprintf(stderr,"bool %d\n",res);
+                break;
+            }
+            case DBUS_TYPE_UINT32: {
+                dbus_uint32_t res;
+                dbus_message_iter_get_basic(&args,&res);
+                fprintf(stderr,"uint32 %u\n",unsigned(res));
+                break;
+            }
+            case DBUS_TYPE_STRING : {
+                char* res;
+                dbus_message_iter_get_basic(&args,&res);
+                fprintf(stderr,"string %s\n",res);
+                break;
+            }
+            default:
+                fprintf(stderr,"unknown type: %d\n",argtype);
+            }
+
+        } while ( dbus_message_iter_next(&args) );
+         */
+
+        if ( DBUS_STRING_TYPE != dbus_message_iter_get_arg_type(&args) ) {
+            what = "dbus result is not string";
+            break;
+        }
+
+        char* hi;
+        dbus_message_iter_get_basic(&args,&hi);
+        strncpy(buf,hi,buflen);
+        buf[buflen-1] = '\0';
+
+        if ( dbus_message_iter_next(&args) ) {
+            what = "dbus result has spurious data";
+            break;
+        }
+
+    } while (false);
+
+    if (msg) { dbus_message_unref(msg); }
+    if (dbus) { dbus_connection_close(dbus); }
+
+    if (what) {
+        throw smsc::util::Exception("exc in hostid: %s",what);
+    }
+#else
+    const long hi = ::gethostid();
+    snprintf(buf,buflen,"%lx",hi);
+#endif
 }
 
 }//namespace check
