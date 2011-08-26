@@ -7,26 +7,43 @@ import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 
 /**
  * @author Artem Snopkov
  */
 public class RowRenderer extends Renderer {
 
-  private int rowNumber;
+  private int getRowNumber(UIComponent row, UIComponent table) {
+    int res = 0;
+    List<UIComponent> rows = table.getChildren();
+    if(rows != null && !rows.isEmpty()) {
+      for(UIComponent c : rows) {
+        if(c == row) {
+          break;
+        }
+        if(c instanceof Row) {
+          if(!((Row) c).isInner()){
+            res++;
+          }
+        }
+      }
+    }
+    return res;
+  }
 
   @Override
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     Row r = (Row) component;
-    DataTable t = (DataTable) r.getParent();
-
-    if (t.getFirstRow() == r)
-      rowNumber = 0;
-
-    Writer w = context.getResponseWriter();
 
     if (r.isHeader())
       return;
+
+    DataTable t = (DataTable) r.getParent();
+
+    Writer w = context.getResponseWriter();
+
+    int rowNumber = getRowNumber(r, t);
 
     String rowId = r.getRowId();
 
@@ -39,7 +56,7 @@ public class RowRenderer extends Renderer {
 
     } else {
 
-      w.append("\n<tr class=\"eyeline_row" + (rowNumber & 1) + "\" id=\"" + t.getId() + rowId + "\">");
+      w.append("\n<tr class=\"eyeline_row" + ((rowNumber+1) & 1) + "\" id=\"" + t.getId() + rowId + "\">");
       if (t.isRowsSelectionEnabled())
      w.append("\n  <td align=\"center\"><input "+ (
             (t.isSelectAll() && !t.isRowSelected(rowId)) || (!t.isSelectAll() && t.isRowSelected(rowId)) ? "CHECKED" : "") +
@@ -51,7 +68,6 @@ public class RowRenderer extends Renderer {
       else if (t.hasInnerData())
         w.append("\n  <td>&nbsp;</td>");
 
-      rowNumber++;
     }
   }
 
