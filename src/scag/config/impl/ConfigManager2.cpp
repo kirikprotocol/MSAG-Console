@@ -472,19 +472,22 @@ void ConfigManagerImpl::checkLicenseFile()
   t.tm_mon=m-1;
   t.tm_mday=d;
   license.expdate = mktime(&t);
-  long hostid;
+    // long hostid;
   std::string ids=licconfig["Hostids"];
   std::string::size_type pos=0;
   bool ok = false;
 
-  do {
-    sscanf(ids.c_str() + pos,"%lx", &hostid);
+    char hostid[200];
+    smsc::license::check::gethostid(hostid,sizeof(hostid));
 
-    if (hostid == gethostid())
-    {
-      ok = true;
-      break;
-    }
+  do {
+      char buf[200];
+      sscanf(ids.c_str()+pos,"%150s", &buf);
+
+      if ( 0 == strcmp(hostid,buf) ) {
+          ok = true;
+          break;
+      }
 
     pos = ids.find(',', pos);
     if (pos!=std::string::npos) pos++;
