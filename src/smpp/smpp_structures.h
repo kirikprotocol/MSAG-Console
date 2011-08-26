@@ -1482,7 +1482,8 @@ inline uint32_t calcSmppPacketLength(const SmppHeader* __pdu)
   return 0;
 }
 
-inline bool dump_pdu(SmppHeader* _pdu,FILE* log = stderr)
+template <class TLOG>
+inline bool dump_pdu(SmppHeader* _pdu,TLOG* log)
 {
   using namespace SmppCommandSet;
   //uint32_t length = 4*4; // header
