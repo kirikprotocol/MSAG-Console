@@ -13,7 +13,6 @@ char * getStackStatusDescription(UCHAR_T mmState);
 char * getTypeOfServiceDescription(UCHAR_T typeOfService);
 UCHAR_T *hexDump( UCHAR_T* src, USHORT_T len );
 void deinitcp();
-int ss7run(char* cfg, USHORT_T modnum, char* argv[]);
 
 typedef struct modescr {
   char* name;

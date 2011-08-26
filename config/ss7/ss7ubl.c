@@ -96,7 +96,7 @@ int ss7ubl(char* _hsn, char* _spn, char* _ts) {
   USHORT_T res;
   USHORT_T i,j,id;
   UCHAR_T* modids;
-  /* Присоединяемся к модулю управления*/
+  /* я┐╜я┐╜соея┐╜я┐╜я┐╜яемя┐╜я┐╜ я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜ я┐╜равя┐╜я┐╜я┐╜я┐╜я┐╜*/
 
   res = EINSS7_MgmtApiSendBindReq(USERID,MGMT_ID,6,WAIT);
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
@@ -109,7 +109,7 @@ int ss7ubl(char* _hsn, char* _spn, char* _ts) {
     return -1;
   }
 
-  /* Запрашиваем текущее состояние стэка */
+  /* я┐╜я┐╜я┐╜я┐╜шивя┐╜я┐╜я┐╜ текя┐╜щее я┐╜я┐╜я┐╜яния┐╜ я┐╜я┐╜? */
 
   res = EINSS7_MgmtApiSendMgmtReq(USERID,
                                   MGMT_ID,
@@ -167,6 +167,7 @@ int ss7ubl(char* _hsn, char* _spn, char* _ts) {
     fprintf(stderr, "FAILED: trace order request.\n");
     return -1 ;
   }
+  return 0;
 }
 
 /*********************************************************************/
