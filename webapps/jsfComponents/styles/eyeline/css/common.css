@@ -130,6 +130,79 @@ div.secSmsc {
   font-weight: bold;
 }
 
+.logo {
+
+}
+
+.logo_left{
+  width: 236px;
+  height: 45px;
+  background-image: url(../images/smsc_04.jpg);
+}
+
+.logo_right{
+  width : 12px;
+  background-image: url(../images/smsc_06.jpg);
+}
+
+.logo_center {
+  background-color: #161E49;
+  color:  #161E49;
+}
+
+
+.content_left {
+  width: 12px;
+  background-image: url(../images/smsc_24.jpg);
+}
+
+.content_center{
+
+}
+
+.content_right {
+  height: 1px;
+  width: 12px;
+  background-image: url(../images/smsc_26.jpg);
+}
+
+.page_left {
+  width: 30px;
+  background-image: url(../images/smsc_03.jpg);
+}
+
+.page_right {
+  width: 30px;
+  background-image: url(../images/smsc_07.jpg);
+}
+
+.footer {
+
+}
+
+.footer_center_left {
+  background-color: #161E49;
+  color: #6F77A3;
+  text-align: left;
+  width: 49%;
+}
+.footer_center_right {
+  background-color: #161E49;
+  color: #6F77A3;
+  text-align: right;
+  width: 49%;
+}
+
+.footer_left {
+  width: 12px;
+  background-color: #161E49;
+}
+
+.footer_right {
+  width: 12px;
+  background-color: #161E49;
+}
+
 /*************************************************************************/
 table.smsc_status,
 table.smsc_status td,
@@ -148,6 +221,13 @@ table.smsc_status th {
   text-align: left;
   font: bold 18px Verdana, Geneva, Arial, Helvetica, sans-serif;
   white-space: nowrap;
+  background-image: url(../images/smsc_17.jpg);
+}
+
+table.smsc_status .right {
+  width: 12px;
+  background-image: url(../images/smsc_19.jpg);
+  padding-right: 0px;
 }
 
 /*************************************************************************/
@@ -265,7 +345,7 @@ div.query_result {
 }
 
 .linkButton {
-  
+
 }
 
 .overlay{

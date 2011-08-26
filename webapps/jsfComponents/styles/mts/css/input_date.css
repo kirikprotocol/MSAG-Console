@@ -1,0 +1,6 @@
+/*Стиль нотификации об ошибке (отображается после полей ввода)*/
+div.eyeline_inputDate span.error {
+  color: RED;
+  font-weight: bold;
+  cursor: default;
+}

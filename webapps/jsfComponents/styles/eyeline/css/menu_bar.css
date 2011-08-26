@@ -4,6 +4,8 @@ div.eyeline_menubardivover {
   z-index: 100001;
   border: none;
   visibility: visible;
+  font-size: 14px;
+
 }
 
 div.eyeline_menudiv {
@@ -57,4 +59,14 @@ div.eyeline_menubardelimiterbottom {
   font-size: 1px;
   width:1%;
   border-bottom:0px outset;
+}
+
+#menu_link a{
+  color: #f2e275;
+  font-size: 14px;
+}
+
+#menu_link a:hover{
+  color: yellow;
+  font-size: 14px;
 }

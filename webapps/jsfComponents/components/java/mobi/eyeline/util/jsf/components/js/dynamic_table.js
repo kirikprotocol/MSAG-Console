@@ -40,7 +40,8 @@ function TextColumn(columnId, allowEditAfterAdd) {
       input.type="hidden";
       newCell.appendChild(input);
       var label = document.createElement("label");
-      label.textContent = value;
+      label.innerHTML = value;
+      label.setAttribute("for",id);
       newCell.appendChild(label);
     } else {
       newCell.appendChild(createInput(id, value));
@@ -186,7 +187,7 @@ function DynamicTable(contextPath, tableId, columns) {
 
     for (var i = 0; i < count; i++) {
       var row = tableElem.rows[i];
-      row.setAttribute("class", "eyeline_row" + ((i + 1) & 1));
+      row.className="eyeline_row" + ((i + 1) & 1);
     }
   };
 
@@ -201,7 +202,7 @@ function DynamicTable(contextPath, tableId, columns) {
     var newCount = tableElem.rows.length;
     // Create new row
     var newRow = tableElem.insertRow(newCount - 1);
-    newRow.setAttribute("class", "eyeline_row" + (newCount & 1));
+    newRow.className="eyeline_row" + (newCount & 1);
     newRow.id = tableId + "_row_" + newCount;
 
     // Fill row
@@ -211,15 +212,15 @@ function DynamicTable(contextPath, tableId, columns) {
     }
 
     var image = document.createElement("div");
-    image.setAttribute("class", "eyeline_delbutton");
-    image.innerHTML='&nbsp';
+    image.className = "eyeline_delbutton";
+    image.innerHTML='&nbsp;';
     image.onclick = function(e) {
       tableInstance.delRow(newCount);
     };
     newRow.insertCell(newRow.cells.length).appendChild(image);
 
     var lastRow = tableElem.rows[tableId + "_newrow"];
-    lastRow.setAttribute("class", "eyeline_row" + ((newCount + 1) & 1))
+    lastRow.className="eyeline_row" + ((newCount + 1) & 1);
   };
 
 
@@ -228,7 +229,7 @@ function DynamicTable(contextPath, tableId, columns) {
     var newCount = tableElem.rows.length;
     // Create new row
     var newRow = tableElem.insertRow(newCount);
-    newRow.setAttribute("class", "eyeline_row" + (newCount & 1));
+    newRow.className="eyeline_row" + (newCount & 1);
     newRow.id = tableId + "_newrow";
 
     // Fill row
@@ -236,8 +237,8 @@ function DynamicTable(contextPath, tableId, columns) {
       columns[i].createLastColumnElement(tableId, newRow);
 
     var image = document.createElement("div");
-    image.setAttribute("class", "eyeline_addbutton");
-    image.innerHTML='&nbsp';
+    image.className="eyeline_addbutton";
+    image.innerHTML='&nbsp;';
     image.onclick = function(e) {
       var values = new Array();
       for (var i = 0; i < columns.length; i++) {

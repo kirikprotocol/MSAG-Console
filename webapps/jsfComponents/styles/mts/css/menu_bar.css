@@ -1,0 +1,71 @@
+div.eyeline_menubardiv,
+div.eyeline_menubardivover {
+  white-space: nowrap;
+  z-index: 100001;
+  border: none;
+  visibility: visible;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+div.eyeline_menudiv {
+  cursor: default;
+  padding-bottom: 1px;
+  padding-top: 1px;
+  position: absolute;
+  margin-left: 3px;
+  overflow: auto;
+  z-index: 100001;
+}
+
+div.eyeline_menuitem,
+div.eyeline_menuitemover {
+  border: none;
+
+  padding-bottom: 1px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 1px;
+
+  position: relative; /* Do not alter this line! */
+
+  white-space: nowrap;
+  z-index: 100002;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+div.eyeline_menuitem *,
+div.eyeline_menuitemover * {
+  text-decoration: none;
+}
+
+div.eyeline_menubardiv  {
+  cursor: default;
+}
+
+div.eyeline_menubardivover {
+  cursor: pointer;
+}
+
+div.eyeline_menubardelimitertop {
+  height: 1px;
+  font-size: 1px;
+  border-bottom:1px outset;
+}
+
+div.eyeline_menubardelimiterbottom {
+  height: 1px;
+  font-size: 1px;
+  width:1%;
+  border-bottom:0px outset;
+}
+
+.menu_link a{
+  color: #C00000;
+  font-size: 14px;
+}
+.menu_link a:hover{
+  color: #E00000;
+  font-size: 14px;
+}

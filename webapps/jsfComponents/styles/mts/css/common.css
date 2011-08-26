@@ -1,0 +1,380 @@
+/******************************************************************************/
+/* COMMON TAGS                                                                */
+/******************************************************************************/
+
+html {
+  height:100%;
+}
+
+body {
+  background-color: #FFFFFF;
+  color: #333333;
+  display: block;
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: x-small;
+  margin: 0px 0px 0px 0px;
+  display: block;
+  height:100%;
+}
+
+body * {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 11px;
+}
+
+table {
+  border: 0px;
+  width: 100%;
+}
+
+img {
+  border: none;
+}
+
+img.button {
+  /*behavior : url(/scripts/click_submit.htc);*/
+  cursor: pointer; /*cursor: hand;*/
+  /*	position: relative;
+   top: 3px;*/
+}
+
+input, textarea, select, button {
+  border: 1px solid #C8BE9E;
+  color: #161E49;
+  font-size: 100%;
+}
+
+input {
+  /*behavior : url(/scripts/input.htc);*/
+  z-index: 10;
+}
+
+/*Стиль полей ввода при возникновении ошибки*/
+input.validationError {
+  border: 1px solid RED;
+}
+
+textarea.validationError {
+  border: 1px solid RED;
+}
+
+textarea {
+  height: 80px;
+  width: 100%;
+}
+
+form {
+  display: inline;
+}
+
+th {
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+hr {
+  color: #C8BE9E;
+  height: 1px;
+}
+
+input.txt {
+  width: 265px;
+}
+
+input.txtW {
+  width: 100%;
+}
+
+input.radio, input.check {
+  /*width: 1.2em;*/
+  /*height: 1.2em;*/
+  padding: 0px;
+  margin: 0px;
+}
+
+input.x27 {
+  font-size: 100%;
+}
+
+textarea.x27 {
+  font-size: 100%;
+}
+
+select.x2j {
+  font-size: 100%;
+}
+
+input.radio {
+  border: none;
+}
+
+.clickable {
+  cursor: pointer; /*cursor: hand;*/
+}
+
+select.selectW {
+  width: 100%;
+}
+
+/*************************************************************************/
+div.page_subtitle,
+div.secSmsc {
+  background-position: left;
+  background-repeat: no-repeat;
+  color: #308380;
+  padding-left: 19px;
+  margin-left: 0px;
+  margin-bottom: 4px;
+  background-image: url(../images/smsc_ico.gif);
+  font-size: small;
+  font-weight: bold;
+}
+
+
+.page_left {
+  width: 30px;
+  background-image: url(../images/smsc_03.jpg);
+}
+
+.page_right {
+  width: 30px;
+  background-image: url(../images/smsc_07.jpg);
+}
+
+
+.logo {
+
+}
+
+.logo_left{
+  width: 281px;
+  height: 67px;
+  background-image: url(../images/mts_new_logo_ru.png);
+}
+
+.logo_right{
+  width : 175px;
+  height: 35px;
+  background-image: url(../images/eyeline_logo.png);
+  background-repeat: no-repeat;
+  background-position: center
+}
+
+.logo_center {
+  background-color: #FFFFFF;
+  color: #E00000;
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+}
+
+
+.content_left {
+  width: 10px;
+}
+
+.content_center{
+
+}
+
+.content_right {
+  width: 10px;
+}
+
+.footer {
+  border-top: 1px #E00000 solid;
+}
+
+.footer_center_left {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  background-color: #FFFFFF;
+  color: #666666;
+  white-space: nowrap;
+  text-align: left;
+  width: 49%;
+}
+.footer_center_right {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  background-color: #FFFFFF;
+  color: #666666;
+  white-space: nowrap;
+  text-align: right;
+  width: 49%;
+}
+
+.footer_left {
+  width: 12px;
+}
+
+.footer_right {
+  width: 12px;
+}
+
+/*************************************************************************/
+table.smsc_status,
+table.smsc_status td,
+table.smsc_status th {
+  color: white;
+  height: 30px;
+  text-align: right; /*	padding-right:10px; */
+  background-repeat: no-repeat;
+  background-color: #E00000;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+
+}
+
+table.smsc_status th {
+  padding-left: 26px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+table.smsc_status .right {
+  width: 0px;
+  background-color: #E00000;
+  padding-right: 0px;
+}
+
+/*************************************************************************/
+div.query_result {
+  color: #161E49;
+  font-weight: bold;
+}
+
+.columnTop {
+  vertical-align:top;
+}
+
+.columnLeftAlign {
+  text-align:left;
+}
+
+.columnTopLeftAlign {
+  vertical-align:top;
+  text-align:left;
+}
+
+.columnCenter {
+  text-align:center;
+}
+.columnCenterBorderNone {
+  text-align:center;
+}
+
+.column50Width {
+  width:50px;
+}
+
+.column50WidthNoWrap {
+  width:50px;
+  white-space:nowrap;
+}
+.column70Width {
+  width:70px;
+}
+
+.column100Width {
+  width:100px;
+}
+
+.column100WidthNoWrap {
+  width:100px;
+  white-space:nowrap;
+}
+.column100WidthTopLeft {
+  width:100px;
+  vertical-align:top;
+  text-align:left;
+}
+
+.column400Width {
+  width:400px;
+}
+
+.column600Width {
+  width:600px;
+}
+
+.column50ProcWidth {
+  width:50%;
+}
+
+.column50ProcWidthTop {
+  width:50%;
+}
+
+
+.column0WidthRight {
+  width:0px;
+  text-align:right;
+}
+.column0Width {
+  width:0px;
+}
+.column0WidthLeft {
+  width:0px;
+  text-align:left;
+}
+.column20Width {
+  width:20px;
+}
+
+.column200Width {
+  width:200px;
+}
+
+.column200WidthTopLeft {
+  width:200px;
+  vertical-align:top;
+  text-align:left;
+}
+
+.column300Width {
+  width:300px;
+}
+
+.column300WidthTopLeft {
+  width:300px;
+  vertical-align:top;
+  text-align:left;
+}
+
+.comment {
+  margin-left:10px;
+  color:#666666;
+  font-size:smaller;
+}
+
+.jscalendar-DB-table-style {
+  width:250px;
+}
+
+.linkButton {
+
+}
+
+.overlay{
+  z-Index:100000;
+  /*background-color: #e8e7e7;*/
+  background-color: #FFFFFF;
+  background-position: center;
+  text-align:center;
+  position:absolute;
+  width:1px;
+  height:1px;
+  top:-500px;
+  left:0px;
+  margin:0px 0px 0px 0px;
+  /*border:1px solid #000000;*/
+  opacity: 0.7;  /*CSS3 - Mozilla 1.7b +, Firefox 0.9 +, Safari 1.2+, Opera 9*/
+  -khtml-opacity: 0.7;  /*Konqueror 3.1, Safari 1.1*/
+  -moz-opacity: 0.7;  /*Mozilla 1.6 и ниже*/
+  filter:progid:DXImageTransform.Microsoft.Alpha(opacity=70);  /*IE 5.5+*/
+}

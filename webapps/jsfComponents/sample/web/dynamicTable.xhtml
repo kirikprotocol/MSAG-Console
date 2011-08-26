@@ -18,9 +18,9 @@
         <h:panelGrid columns="1">
 
           <eye:dynamicTable value="#{dynamicTable.dynamicTableModel}">
-            <eye:textColumn name="field1" allowEditAfterAdd="true" width="30%"/>
-            <eye:textColumn name="field2" allowEditAfterAdd="false" width="30%"/>
-            <eye:selectColumn name="field3" values="#{dynamicTable.selectValues}" allowEditAfterAdd="true" uniqueValues="true" width="40%"/>
+            <eye:textColumn title="field1" name="field1" allowEditAfterAdd="true" width="30%"/>
+            <eye:textColumn title="field2" name="field2" allowEditAfterAdd="false" width="30%"/>
+            <eye:selectColumn title="field3" name="field3" values="#{dynamicTable.selectValues}" allowEditAfterAdd="true" uniqueValues="true" width="40%"/>
           </eye:dynamicTable>
 
           <h:commandButton value="Submit"/>

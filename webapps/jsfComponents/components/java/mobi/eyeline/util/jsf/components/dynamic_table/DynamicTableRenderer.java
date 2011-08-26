@@ -80,10 +80,13 @@ public class DynamicTableRenderer extends Renderer {
     w.append("\n<table class=\"eyeline_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"><tr>");
     for (Column c : table.getColumns()) {
       w.append("<th");
+      if(c.getTitle() == null || c.getTitle().length() == 0) {
+        w.append(" style=\"display:none\"");
+      }
       w.append(" width=\""+c.getWidth()+"\"");
       w.append(" >"+(c.getTitle()==null ? "":c.getTitle())+"</td>");
     }
-    w.append("</tr></table>\n");
+    w.append("<th style=\"display:none\">&nbsp;</th></tr></table>\n");
 
     w.append("<script language=\"javascript\" type=\"text/javascript\">\n");
 

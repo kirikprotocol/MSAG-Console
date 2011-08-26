@@ -14,13 +14,18 @@ table.main_menu td {
 
 table.main_menu a,
 table.main_menu a:visited,
-table.main_menu a:hover,
 table.main_menu div,
+table.main_menu a:hover,
 table.main_menu a.xi {
   text-decoration: none;
   color: #F2E275;
   font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
-  font-size: 14px;
+}
+
+
+table.main_menu a:hover {
+  color:YELLOW;
+
 }
 
 
@@ -31,6 +36,7 @@ table.main_menu div.eyeline_menubardivover {
 table.main_menu div.eyeline_menudiv {
   background-color: #3A5867;
   border: 1px solid #111155;
+  font-size: 12px;
 }
 
 table.main_menu div.eyeline_menuitem *,
@@ -43,11 +49,13 @@ table.main_menu div.eyeline_menuitemover a.xi {
 
 table.main_menu div.eyeline_menuitem *,
 table.main_menu div.eyeline_menuitem a.xi {
+  font-size: 12px;
   color: #F2E275;
 }
 
 table.main_menu div.eyeline_menuitemover *,
 table.main_menu div.eyeline_menuitemover a.xi {
+  font-size: 12px;
   color: yellow;
 }
 

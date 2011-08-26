@@ -1,0 +1,54 @@
+table.eyeline_page_calendar_header {
+  width: 100%;
+}
+
+table.eyeline_page_calendar_header td.eyeline_prev {
+  width:40%;
+
+}table.eyeline_page_calendar_header td.eyeline_prev a {
+  text-decoration:none
+}
+
+table.eyeline_page_calendar_header td.eyeline_header {
+  width:20%;
+  text-align:center;
+  color: #C00000;
+  font-weight:bolder;
+  font-size: medium;
+}
+
+table.eyeline_page_calendar_header td.eyeline_next {
+  width:40%;
+}
+
+table.eyeline_page_calendar_header td.eyeline_next a {
+  text-decoration:none
+}
+
+div.eyeline_page_calendar_header_prev {
+  background-image: url("../images/nav_prev.gif");
+  background-repeat: no-repeat;
+  background-position: right;
+}
+
+div.eyeline_page_calendar_header_next {
+  width: 12px;
+  height: 11px;
+  background-image: url("../images/nav_next.gif");
+  background-repeat: no-repeat;
+  background-position: left;
+}
+
+table.eyeline_page_calendar th {
+  background-color: #F8F6EE;
+  border-bottom: 1px solid #161E49;
+  padding: 2px 0;
+  text-align: center;
+  font-weight: bold;
+}
+
+table.eyeline_page_calendar td {
+  border-bottom: 1px solid #161E49;
+  padding: 2px 0;
+  text-align: center;
+}

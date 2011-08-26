@@ -1,0 +1,8 @@
+.eyeline_progress_bar_border {
+  border: 1px solid BLACK;
+}
+
+.eyeline_progress_bar_content {
+  background-color: #E00000;
+  height: 100%;
+}

@@ -1,0 +1,39 @@
+.eyeline_message {
+  background-color:#E9E8E8;
+  border:1px solid #999999;
+  margin:5px 0 0;
+  padding:0;
+  width:100%;
+}
+
+.eyeline_message .header_error,
+.eyeline_message .header_warn,
+.eyeline_message .header_info {
+  border: 0 solid #CCCCCC;
+  border-bottom-width: 1px;
+  font-family:Arial,Helvetica,Geneva,sans-serif;
+  font-size:13pt;
+  font-weight:bold;
+  margin:0;
+  padding:0;
+}
+
+.eyeline_message .header_error {
+  color:#CC0000;
+}
+
+.eyeline_message .header_warn {
+  color: #cccc00;
+}
+
+.eyeline_message .header_info {
+  color:#336633;
+}
+
+.eyeline_message .body {
+  font-family:Arial,Helvetica,Geneva,sans-serif;
+  font-size:10pt;
+  font-weight:normal;
+  margin:0;
+  padding:5px 30px;
+}

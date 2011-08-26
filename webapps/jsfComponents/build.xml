@@ -132,8 +132,17 @@
   </target>
 
 
-  <target name="distr" depends="distr.eyeline.sample">
+  <target name="distr.mts.sample" depends="explode.sample">
+
+    <copy todir="${sample.exploded.dir}">
+      <fileset dir="${styles.dir}/mts"/>
+    </copy>
+
+    <mkdir dir="${sample.distr.dir}"/>
+    <war basedir="${sample.exploded.dir}" destfile="${sample.distr.dir}/jsf-sample.war" manifest="${manifest.file}"/>
   </target>
+
+  <target name="distr" depends="distr.mts.sample"/>
 
 
 </project>

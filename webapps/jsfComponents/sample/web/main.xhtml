@@ -43,15 +43,15 @@
 
     <table cellspacing="0" cellpadding="0" height="100%" >
       <tr height="2%">
-        <td width="30" background="#{facesContext.externalContext.requestContextPath}/images/smsc_03.jpg" rowspan="4"></td>
-        <td bgcolor="#F3F0E3" valign="top">
+        <td class="page_left" rowspan="4"></td>
+        <td valign="top">
 
           <!-- "SMS Service Center" header -->
-          <table cellspacing="0" cellpadding="0" border="0">
+          <table cellspacing="0" class ="logo" cellpadding="0" border="0">
             <tr>
-              <td width="236px"><img src="#{facesContext.externalContext.requestContextPath}/images/smsc_04.jpg" WIDTH="236px" HEIGHT="45px" alt=""/></td>
-              <td bgcolor="#161E49">&#160;</td>
-              <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_06.jpg"></td>
+              <td class="logo_left" >&#160;</td>
+              <td class="logo_center">Informer</td>
+              <td class="logo_right">&#160;</td>
             </tr>
           </table>
 
@@ -60,37 +60,28 @@
 
           <table cellpadding="0" cellspacing="0" height="30px" class="smsc_status">
             <tr>
-              <th background="#{facesContext.externalContext.requestContextPath}/images/smsc_17.jpg" style="white-space:nowrap">#{pageTitle}</th>
+              <th style="white-space:nowrap">Титул страницы</th>
               <td><h:outputText value="&#160;"/></td>
-              <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_19.jpg" style="padding-right:0px;"></td>
+              <td class="right"></td>
             </tr>
           </table>
         </td>
-        <td width="30" background="#{facesContext.externalContext.requestContextPath}/images/smsc_07.jpg" rowspan="4"></td>
+        <td class="page_right" rowspan="4"></td>
       </tr>
       <tr height="97%">
         <td valign="top">
           <table cellspacing="0" cellpadding="0" height="100%">
             <tr>
-              <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_24.jpg" ></td>
+              <td class="content_left"></td>
               <td valign="top">
                 <h:messages id="informer_errors"/>
         <p/>
         <p/>
-                <!--<h:form>-->
-                <!--<ui:repeat value="#{userBean.lastPoints}" var="p">-->
-                  <!--<h:commandLink value="#{p}" action="#{userBean.choose}">-->
-                    <!--<f:param value="#{p}" name="point"/>-->
-                  <!--</h:commandLink>-->
-                  <!--<h:outputText value="->"/>-->
-                <!--</ui:repeat>-->
-                <!--</h:form>-->
-                <!--<eye:delimiter/>-->
                 <ui:insert name="content"/>
         <p/>
         <p/>
               </td>
-              <td height="1px" width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_26.jpg"></td>
+              <td class="content_right"></td>
             </tr>
           </table>
 
@@ -100,13 +91,12 @@
 
       <tr height="1%">
         <td >
-          <table cellpadding="0" cellspacing="0">
+          <table class="footer" cellpadding="0" cellspacing="0">
             <tr>
-              <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_30.jpg"></td>
-              <td align="right" bgcolor="#161E49"><span
-                  style="color: #6F77A3;">Copyright&#160;&#160;2003-2011.&#160;All&#160;rights&#160;reserved.</span>
-              </td>
-              <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_32.jpg"></td>
+              <td class="footer_left"></td>
+              <td class="footer_center_left">Version 2011.8.26.341-SNAPSHOT</td>
+              <td class="footer_center_right">Copyright&#160;&#160;2003-2011.&#160;All&#160;rights&#160;reserved.</td>
+              <td class="footer_right"></td>
             </tr>
           </table>
         </td>

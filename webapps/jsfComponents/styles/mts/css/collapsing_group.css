@@ -1,0 +1,24 @@
+.eyeline_collapsingGroupHeader0,
+.eyeline_collapsingGroupHeader1 {
+  cursor: pointer;
+  padding-left: 15px;
+  height: 17px;
+}
+
+.eyeline_collapsingGroupHeader0 {
+  background: #F8F6EE url('../images/list_opened.gif') left no-repeat;
+  border-bottom: 1px solid #161E49;
+}
+
+.eyeline_collapsingGroupHeader1 {
+  background: #F3F0E3 url('../images/list_closed.gif') left no-repeat;
+}
+
+.eyeline_collapsingGroupBody0,
+.eyeline_collapsingGroupBody1{
+  margin-left: 10px;
+}
+
+.eyeline_collapsingGroupBody1 {
+  display: none;
+}

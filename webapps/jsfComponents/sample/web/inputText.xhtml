@@ -23,20 +23,20 @@
 
         <h:panelGrid columns="3" columnClasses="column200width, column200width, columnLeftAlign">
 
-          <h:outputText value="Строковое значение"/><eye:inputText value="#{inputText.stringValue}"/><h:outputText value="Значение: #{inputText.stringValue}"/>
-          <h:outputText value="Численное значение"/><eye:inputText converterMessage="Ошибка конвертации!!!!" value="#{inputText.intValue}"/><h:outputText value="Значение: #{inputText.intValue}"/>
-          <h:outputText value="Обязательное"/><eye:inputText required="true" value="#{inputText.required}"/><h:outputText value="Значение: #{inputText.required}"/>
-          <h:outputText value="Длина поля: 3"/><eye:inputText cols="3" value="#{inputText.size}"/><h:outputText value="Значение: #{inputText.size}"/>
-          <h:outputText value="Только чтение"/><eye:inputText readonly="true" value="#{inputText.readonly}"/><h:outputText value="Значение: #{inputText.readonly}"/>
-          <h:outputText value="Конвертер"/><eye:inputText converterMessage="Ошибка конвертации!!!!" converter="stringWrapper" value="#{inputText.converter}"/><h:panelGroup><h:outputText value="Значение: "/><h:outputText converter="stringWrapper" value="#{inputText.converter}"/></h:panelGroup>
-          <h:outputText value="Область текста 3 на 20 (Обязательное)"/><eye:inputText required="true" cols="20" rows="3" value="#{inputText.textarea}"/><h:panelGrid columns="2" columnClasses="column100width, columnLeftAlign"><h:outputText value="Значение (html textarea):"/><textarea readonly="true" cols="20" rows="3">#{inputText.textarea}</textarea></h:panelGrid>
-          <h:outputText value="Длина от 2 до 5"/>
+          <h:outputText style="white-space: nowrap;" value="Строковое значение"/><eye:inputText value="#{inputText.stringValue}"/><h:outputText value="Значение: #{inputText.stringValue}"/>
+          <h:outputText style="white-space: nowrap;" value="Численное значение"/><eye:inputText converterMessage="Ошибка конвертации!!!!" value="#{inputText.intValue}"/><h:outputText value="Значение: #{inputText.intValue}"/>
+          <h:outputText style="white-space: nowrap;" value="Обязательное"/><eye:inputText required="true" value="#{inputText.required}"/><h:outputText value="Значение: #{inputText.required}"/>
+          <h:outputText style="white-space: nowrap;" value="Длина поля: 3"/><eye:inputText cols="3" value="#{inputText.size}"/><h:outputText value="Значение: #{inputText.size}"/>
+          <h:outputText style="white-space: nowrap;" value="Только чтение"/><eye:inputText readonly="true" value="#{inputText.readonly}"/><h:outputText value="Значение: #{inputText.readonly}"/>
+          <h:outputText style="white-space: nowrap;" value="Конвертер"/><eye:inputText converterMessage="Ошибка конвертации!!!!" converter="stringWrapper" value="#{inputText.converter}"/><h:panelGroup><h:outputText value="Значение: "/><h:outputText converter="stringWrapper" value="#{inputText.converter}"/></h:panelGroup>
+          <h:outputText style="white-space: nowrap;" value="Область текста 3 на 20 (Обязательное)"/><eye:inputText required="true" cols="20" rows="3" value="#{inputText.textarea}"/><h:panelGrid columns="2" columnClasses="column100width, columnLeftAlign"><h:outputText  style="white-space: nowrap;" value="Значение (html textarea):"/><textarea readonly="true" cols="20" rows="3">#{inputText.textarea}</textarea></h:panelGrid>
+          <h:outputText style="white-space: nowrap;" value="Длина от 2 до 5"/>
           <eye:inputText value="#{inputText.validatelenght}" validatorMessage="Ошибка валидации!!!!">
             <f:validateLength minimum="2" maximum="5"/>
           </eye:inputText>
           <h:panelGroup><h:outputText value="Значение: "/><h:outputText value="#{inputText.validatelenght}"/></h:panelGroup>
-          <h:outputText value="Численное (парсинг в сеттере, NAE)"/><eye:inputText value="#{inputText.formatSetter}"/><h:outputText value="Значение: #{inputText.formatSetter}"/>
-          <h:outputText value="Численное (парсинг в сеттере, IAE) "/><eye:inputText value="#{inputText.illegalSetter}"/><h:outputText value="Значение: #{inputText.illegalSetter}"/>
+          <h:outputText style="white-space: nowrap;" value="Численное (парсинг в сеттере, NAE)"/><eye:inputText value="#{inputText.formatSetter}"/><h:outputText value="Значение: #{inputText.formatSetter}"/>
+          <h:outputText style="white-space: nowrap;" value="Численное (парсинг в сеттере, IAE) "/><eye:inputText value="#{inputText.illegalSetter}"/><h:outputText value="Значение: #{inputText.illegalSetter}"/>
 
         </h:panelGrid>
 
