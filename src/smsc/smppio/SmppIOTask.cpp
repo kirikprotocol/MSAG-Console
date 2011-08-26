@@ -9,6 +9,7 @@
 #include "SmppSocketsManager.hpp"
 #include "SmppIOTask.hpp"
 #include "SmppProxy.hpp"
+#include "smsc/smsc.hpp"
 
 namespace smsc{
 namespace smppio{
@@ -482,7 +483,7 @@ int SmppInputThread::Execute()
                   si=smeManager->getSmeInfo(proxyIndex);
                   if(!proxy)
                   {
-                    proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
+                    proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout,Smsc::getInstance().nodeIndex);
                     proxy->updateSmeInfo(si);
                     info2(log,"SmppProxy: new(%s) %p!",si.systemId.c_str(),proxy);
                   }
@@ -575,7 +576,7 @@ int SmppInputThread::Execute()
                       {
                         if(rebindproxy)
                         {
-                          proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
+                          proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout,Smsc::getInstance().nodeIndex);
                           proxy->updateSmeInfo(si);
                           info2(log,"SmppProxy: new backup proxy(%s) %p!",si.systemId.c_str(),proxy);
                           rebindproxy=false;
@@ -1033,7 +1034,7 @@ int SmppInputThread::Execute()
                 {
                 }
                 */
-              }
+              }break;
             }
             disposePdu(pdu);
           }

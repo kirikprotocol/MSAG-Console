@@ -33,12 +33,12 @@ const int proxyTransceiver=smeTRX;
 
 class SmppProxy:public SmeProxy{
 public:
-  SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock),
+  SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout,int nodeIndex):smppReceiverSocket(sock),smppTransmitterSocket(sock),
     shapeCounterIn(60,500),shapeCounterOut(60,500)
   {
     smppReceiverSocket->assignProxy(this);
     dualChannel=false;
-    seq=1;
+    seq=nodeIndex;
     refcnt=2;
     rxcnt=0;
     txcnt=0;
@@ -261,6 +261,7 @@ public:
           break;
         default:
           errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),Status::INVBNDSTS);
+          break;
       }
       SmppHeader* pdu=errresp.makePdu(0);
       errresp=SmscCommand::makeSmppPduCommand(pdu,ct);
@@ -502,7 +503,7 @@ public:
   uint32_t getNextSequenceNumber()
   {
     MutexGuard g(seqMutex);
-    return seq++;
+    return seq+=16;
   }
 
   void setProxyType(int newtype)
@@ -837,7 +838,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
           return true;
         default:
           return false;
-      }
+      }break;
     case proxyTransmitter:
       switch(cmd->get_commandId())
       {
@@ -849,7 +850,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
           return true;
         default:
           return false;
-      }
+      }break;
     case proxyTransceiver:
       switch(cmd->get_commandId())
       {
@@ -862,7 +863,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
           return true;
         default:
           return false;
-      }
+      }break;
   }
   return false;
 }
@@ -889,7 +890,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
           return true;
         default:
           return false;
-      }
+      }break;
     case proxyTransmitter:
       switch(cmd->get_commandId())
       {
@@ -901,7 +902,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
           return true;
         default:
           return false;
-      }
+      }break;
     case proxyTransceiver:
       switch(cmd->get_commandId())
       {
@@ -914,7 +915,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
           return true;
         default:
           return false;
-      }
+      }break;
   }
   return false;
 }
