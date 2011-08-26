@@ -46,9 +46,9 @@ using scag::util::SerializeBuffer;
     public:
         SaccEvent(uint16_t et) : sEventType(et) {};
         SaccEvent(const SaccEvent& src) : sEventType(src.sEventType) {};
-        virtual ~SaccEvent() {};
+        virtual ~SaccEvent() {}
 
-        uint16_t getEventType()const {return sEventType; };
+        uint16_t getEventType()const {return sEventType; }
         virtual void write(SaccSerialBuffer& buf) = 0;
         virtual const char* getName() = 0;
     };
