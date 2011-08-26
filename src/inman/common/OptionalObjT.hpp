@@ -68,9 +68,17 @@ public:
   _TArg  * get(void) { return _ptr; }
   //
   const _TArg  * get(void) const { return _ptr; }
-
+  //
   _TArg * operator->() { return _ptr; }
   const _TArg * operator->() const { return _ptr; }
+
+  //
+  OptionalObj_T & operator=(const OptionalObj_T & cp_obj)
+  {
+    _mem._aligner = _ptr = 0;
+    if (cp_obj._ptr)
+      _ptr = new (_mem._buf)_TArg(*cp_obj._ptr);
+  }
 };
 
 
