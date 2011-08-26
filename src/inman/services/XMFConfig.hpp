@@ -124,10 +124,10 @@ public:
 
   //Searches associated config file for a section with given absolute name.
   //NOTE: Performs file parsing if necessary.
-  bool hasSection(const char * nm_sec_abs)  throw(ConfigException)
+  const XCFConfig * hasSection(const char * nm_sec_abs)  throw(ConfigException)
   {
     XCFConfig * cfgFile = getSectionConfig(nm_sec_abs); //throws
-    return cfgFile ? cfgFile->second.findSection(nm_sec_abs) : false;
+    return (cfgFile && cfgFile->second.findSection(nm_sec_abs)) ? cfgFile : NULL;
   }
 
   //Assignes given XConfigView to section with specified absolute name
