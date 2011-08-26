@@ -406,7 +406,7 @@ public class DataTableRenderer extends Renderer {
 
     w.append("<td class=\"eyeline_total\">" + b.getString("total") + ": " + "<span id=\"" + t.getId() + "_totalCount\">" + rowsCount + "</span>&nbsp;|&nbsp;");
     if (t.isRowsSelectionEnabled()) {
-      w.append("<a href=\"#\" class=\"xi\" title=\"" + b.getString("page.show.choise") + "\" style=\"cursor: pointer;\" onclick=\"pagedTable" + t.getId() + ".onlySelected()\">" +
+      w.append("<a href=\"#\" title=\"" + b.getString("page.show.choise") + "\" style=\"cursor: pointer;\" onclick=\"pagedTable" + t.getId() + ".onlySelected()\">" +
           "<span style=\"font-size: x-small\">" +
           (t.isShowSelectedOnly() ? b.getString("selected.only") : b.getString("selected") + ": ")
           + "<span id=\"" + t.getId() + "_selectedCount\">"

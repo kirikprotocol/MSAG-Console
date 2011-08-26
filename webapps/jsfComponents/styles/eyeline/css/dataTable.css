@@ -55,6 +55,13 @@ table.eyeline_list th a:hover {
   background-position: left;
 }
 
+
+table.eyeline_list td a,
+table.eyeline_list td a:visited,
+table.eyeline_list td a:hover {
+  color: #161E49;
+}
+
 table.eyeline_list th a.eyeline_up {
   background-image: url(../images/sort_up.gif);
 }
@@ -130,6 +137,13 @@ img {
   border: medium none;
 }
 
+table.eyeline_navbar td.eyeline_page a,
+table.eyeline_navbar td.eyeline_page a:hover,
+table.eyeline_navbar td.eyeline_page a:visited {
+  color:#161E49;
+}
+
+
 table.eyeline_navbar td.eyeline_page,
 table.eyeline_navbar td.eyeline_current {
   cursor: pointer;
@@ -141,7 +155,7 @@ table.eyeline_navbar td.eyeline_current {
 }
 
 table.eyeline_navbar td.eyeline_total {
-  /*color: #1A8999;*/
+  color:#161E49;
   text-align: right;
 }
 
