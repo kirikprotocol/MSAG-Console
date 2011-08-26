@@ -123,26 +123,28 @@
 
   <target name="distr.eyeline.sample" depends="explode.sample">
 
-    <copy todir="${sample.exploded.dir}">
-      <fileset dir="${styles.dir}/eyeline"/>
-    </copy>
-
     <mkdir dir="${sample.distr.dir}"/>
-    <war basedir="${sample.exploded.dir}" destfile="${sample.distr.dir}/jsf-sample.war" manifest="${manifest.file}"/>
+    <mkdir dir="${sample.distr.dir}/eyeline"/>
+    <war destfile="${sample.distr.dir}/eyeline/jsf-sample.war" manifest="${manifest.file}">
+      <fileset dir="${sample.exploded.dir}"/>
+      <fileset dir="${styles.dir}/eyeline"/>
+    </war>
+
   </target>
 
 
   <target name="distr.mts.sample" depends="explode.sample">
 
-    <copy todir="${sample.exploded.dir}">
-      <fileset dir="${styles.dir}/mts"/>
-    </copy>
-
     <mkdir dir="${sample.distr.dir}"/>
-    <war basedir="${sample.exploded.dir}" destfile="${sample.distr.dir}/jsf-sample.war" manifest="${manifest.file}"/>
+    <mkdir dir="${sample.distr.dir}/mts"/>
+    <war destfile="${sample.distr.dir}/mts/jsf-sample.war" manifest="${manifest.file}">
+      <fileset dir="${sample.exploded.dir}"/>
+      <fileset dir="${styles.dir}/mts"/>
+    </war>
+
   </target>
 
-  <target name="distr" depends="distr.mts.sample"/>
+  <target name="distr" depends="distr.mts.sample, distr.eyeline.sample"/>
 
 
 </project>
