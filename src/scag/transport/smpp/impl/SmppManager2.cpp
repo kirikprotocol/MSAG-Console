@@ -606,6 +606,18 @@ void SmppManagerImpl::LoadRoutes(const char* cfgFile)
   RouteConfig& cfg = ConfigManager::Instance().getRouteConfig();
   router::RouteManager* newman=new router::RouteManager();
   router::loadRoutes(newman,cfg,0);
+    if (log->isDebugEnabled()) {
+        std::vector<std::string> dump;
+        newman->dumpInto( dump );
+        std::string dumpstr;
+        dumpstr.reserve(80*dump.size());
+        for ( std::vector<std::string>::const_iterator i = dump.begin();
+              i != dump.end();
+              ++i ) {
+            dumpstr += "\n" + *i;
+        }
+        smsc_log_debug(log,"new routes: %s",dumpstr.c_str());
+    }
   {
     sync::MutexGuard mg(routerSwitchMtx);
     routeMan=newman;
@@ -617,6 +629,18 @@ void SmppManagerImpl::ReloadRoutes()
     RouteConfig& cfg = ConfigManager::Instance().getRouteConfig();
   router::RouteManager* newman=new router::RouteManager();
   router::loadRoutes(newman,cfg,0);
+    if (log->isDebugEnabled()) {
+        std::vector<std::string> dump;
+        newman->dumpInto( dump );
+        std::string dumpstr;
+        dumpstr.reserve(80*dump.size());
+        for ( std::vector<std::string>::const_iterator i = dump.begin();
+              i != dump.end();
+              ++i ) {
+            dumpstr += "\n" + *i;
+        }
+        smsc_log_debug(log,"new routes: %s",dumpstr.c_str());
+    }
   {
     sync::MutexGuard mg(routerSwitchMtx);
     routeMan=newman;

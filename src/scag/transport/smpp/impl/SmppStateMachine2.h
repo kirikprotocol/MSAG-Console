@@ -76,7 +76,7 @@ protected:
     int getUSSDOp( const char* where, SMS& sms, SmsCommand* smscmd ) const;
 
 protected: // static
-    static sync::Mutex expMtx_;
+    static smsc::core::synchronization::Mutex expMtx_;
     static bool expProc_;
     static ResponseRegistry reg_;
 //    static std::vector<int> allowedUnknownOptionals;
