@@ -38,7 +38,7 @@ public:
   {
     smppReceiverSocket->assignProxy(this);
     dualChannel=false;
-    seq=nodeIndex;
+    seq=nodeIndex-1;
     refcnt=2;
     rxcnt=0;
     txcnt=0;
