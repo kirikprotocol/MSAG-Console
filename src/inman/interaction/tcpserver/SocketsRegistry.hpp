@@ -8,9 +8,9 @@
 #define __SMSC_INMAN_CONNECTS_REGISTRY_HPP
 
 #include <poll.h>
+#include <vector>
 #include <map>
 
-#include "core/buffers/Array.hpp"
 #include "inman/interaction/tcpserver/TcpServerDefs.hpp"
 
 namespace smsc  {
@@ -110,12 +110,12 @@ public:
   typedef SocketsMap::const_iterator const_iterator;
 
   explicit SocketsRegistry(int num_to_rsrv = 0)
-    : _isModified(false), _fds(num_to_rsrv)
+    : _isModified(false), _fds((FDsArray::size_type)num_to_rsrv)
   { }
   ~SocketsRegistry()
   { }
 
-  void            reserve(int num_to_rsrv) { _fds.SetSize(num_to_rsrv); }
+  void            reserve(int num_to_rsrv) { _fds.reserve(num_to_rsrv); }
   //
   bool            empty(void) const { return _sockMap.empty(); }
   //
@@ -132,9 +132,9 @@ public:
   //
   SocketInfo *    insert(const SocketInfo & sock_inf);
   //
-  void            erase(iterator use_it);
+  bool            erase(iterator use_it);
   //
-  void            erase(unsigned conn_id);
+  bool            erase(unsigned conn_id);
   //returns NULL if not found
   const_iterator  find(unsigned conn_id) const { return _sockMap.find(conn_id); }
   //returns NULL if not found
@@ -147,7 +147,7 @@ private:
   bool        _isModified;
 
 protected:
-  typedef smsc::core::buffers::Array<pollfd> FDsArray;
+  typedef std::vector<pollfd> FDsArray;
 
   SocketsMap  _sockMap;
   FDsArray    _fds;

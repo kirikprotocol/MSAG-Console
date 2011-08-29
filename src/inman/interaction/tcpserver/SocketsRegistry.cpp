@@ -19,23 +19,25 @@ SocketInfo * SocketsRegistry::insert(const SocketInfo & sock_inf)
   return &(res.first->second);
 }
 //
-void SocketsRegistry::erase(iterator use_it)
+bool SocketsRegistry::erase(iterator use_it)
 {
   if (use_it != _sockMap.end()) {
     _sockMap.erase(use_it);
-    _isModified = true;
+    return (_isModified = true);
   }
+  return false;
 }
 //
-void SocketsRegistry::erase(unsigned conn_id)
+bool SocketsRegistry::erase(unsigned conn_id)
 {
-  erase(_sockMap.find(conn_id));
+  return erase(_sockMap.find(conn_id));
 }
 
 pollfd_arr SocketsRegistry::composeFds(void)
 {
   if (_isModified) {
-    _fds.SetSize((int)_sockMap.size());
+    _fds.clear();
+    _fds.resize((FDsArray::size_type)_sockMap.size());
     int i = 0;
     for (SocketsMap::const_iterator
           it = _sockMap.begin(); it != _sockMap.end(); ++it, ++i) {
@@ -45,7 +47,7 @@ pollfd_arr SocketsRegistry::composeFds(void)
     }
     _isModified = false;
   }
-  return pollfd_arr(_fds.Count(), &_fds[0]);
+  return pollfd_arr(_fds.size(), &_fds[0]);
 }
 
 } // interaction
