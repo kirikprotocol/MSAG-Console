@@ -476,8 +476,12 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (!old && !data.startDate.empty()) { // calculate only at start
         startDate = parseDateTime(data.startDate.c_str());
     }
-    if ((!old || old->endDate != data.endDate) && !data.endDate.empty() ) {
-        endDate = parseDateTime(data.endDate.c_str());
+    if (!old || old->endDate != data.endDate) {
+        if (!data.endDate.empty() ) {
+            endDate = parseDateTime(data.endDate.c_str());
+        } else {
+            endDate = 0; // reset endDate
+        }
     }
     if ((!old || old->activePeriodStart != data.activePeriodStart) && !data.activePeriodStart.empty() ) {
         activePeriodStart = parseTime(data.activePeriodStart.c_str());
@@ -564,7 +568,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         // treat it as now
         startDate_ = now;
     }
-    if (endDate != 0) { endDate_ = endDate; }
+    endDate_ = endDate;
     if (activePeriodStart != -1) { activePeriodStart_ = activePeriodStart; }
     if (activePeriodEnd != -1) { activePeriodEnd_ = activePeriodEnd; }
     if (validityPeriod != -1) {
