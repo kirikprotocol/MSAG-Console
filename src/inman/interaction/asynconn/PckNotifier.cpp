@@ -54,7 +54,8 @@ bool PckNotifier::onPacketEvent(const PckBufferGuard & use_pck)
     smsc_log_error(_logger, "%s: failed to activate task", _logId);
     _taskPool.rlseTask(pTask);
   } else {
-    smsc_log_error(_logger, "%s: task pool is exhausted", _logId);
+    smsc_log_error(_logger, "%s: task pool is exhausted: %u of %u", _logId,
+                   (unsigned)_taskPool.usage(), (unsigned)_taskPool.capacity());
   }
   return false;
 }
@@ -82,6 +83,19 @@ void PckNotifier::EVTTaskPool::rlseTask(PckNotifier::PckEventTask * p_task)
 {
   MutexGuard grd(_sync);
   _pool.rlseObj(static_cast<TaskPool::PooledObj*>(p_task));
+}
+
+//
+uint16_t PckNotifier::EVTTaskPool::capacity(void) const
+{
+  MutexGuard grd(_sync);
+  return _pool.capacity(); 
+}
+//
+uint16_t PckNotifier::EVTTaskPool::usage(void) const
+{
+  MutexGuard grd(_sync);
+  return _pool.usage();
 }
 
 

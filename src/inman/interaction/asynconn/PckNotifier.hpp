@@ -151,11 +151,15 @@ protected:
     ~EVTTaskPool()
     { }
 
-    inline void reserveTasks(uint16_t num_tasks);
+    void reserveTasks(uint16_t num_tasks);
     //Returns NULL if no task available
-    inline PckEventTask * allcTask(void);
+    PckEventTask * allcTask(void);
     //
-    inline void rlseTask(PckEventTask * p_task);
+    void rlseTask(PckEventTask * p_task);
+    //
+    uint16_t capacity(void) const;
+    //
+    uint16_t usage(void) const;
   };
 
   /* - */
