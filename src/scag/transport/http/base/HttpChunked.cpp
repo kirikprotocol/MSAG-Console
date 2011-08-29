@@ -1,3 +1,4 @@
+#include <string.h>
 #include "HttpChunked.h"
 
 namespace scag2 { namespace transport { namespace http
