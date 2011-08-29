@@ -7,7 +7,6 @@
 #endif
 #define __SMSC_INMAN_INAP_MAP_CHSRI__
 
-#include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/map/DlgMapAC.hpp"
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
 
@@ -33,18 +32,9 @@ public:
 //initiates a CallHandling SEND-ROUTING-INFO request to HLR,
 //collects intermediate results, in case of success reports it to MAP User.
 class MapCHSRIDlg : public MapDialogAC { // GMSC/SCF -> HLR
-private:
-  TCSessionMA *         _tcSess;
-  CHSendRoutingInfoRes  _reqRes;
-
-  CHSRIhandlerITF * sriHdl(void)
-  {
-    return static_cast<CHSRIhandlerITF *>(_resHdl.get());
-  }
-
 public:
   explicit MapCHSRIDlg(Logger * use_log = NULL)
-    : MapDialogAC("MapSRI", use_log), _tcSess(NULL)
+    : MapDialogAC("MapSRI", use_log)
   { }
   //
   virtual ~MapCHSRIDlg()
@@ -62,15 +52,24 @@ protected:
   // -----------------------------------------
   // -- MapDialogAC interface methods:
   // -----------------------------------------
-  //Releases TC dialog object
-  virtual void  rlseTCDialog(void) { _tcSess->releaseDialog(_tcDlg); }
-
   // -----------------------------------------
   // -- TCDialogUserITF interface methods:
   // -----------------------------------------
   //InvokeListener iface methods
   virtual void onInvokeResultNL(InvokeRFP pInv, TcapEntity * res);
   virtual void onInvokeResult(InvokeRFP pInv, TcapEntity * res);
+
+private:
+  CHSendRoutingInfoRes  _reqRes;
+
+  TCSessionMA * tcSessMA(void)
+  {
+    return static_cast<TCSessionMA *>(_tcSess);
+  }
+  CHSRIhandlerITF * sriHdl(void)
+  {
+    return static_cast<CHSRIhandlerITF *>(_resHdl.get());
+  }
 };
 
 } //chsri

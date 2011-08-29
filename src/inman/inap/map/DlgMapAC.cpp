@@ -28,6 +28,7 @@ namespace inap {
  * ************************************************************************** */
 MapDialogAC::MapDialogAC(const char * use_ident, Logger * use_log/* = NULL*/)
   : _delThis(false), _logPfx(use_ident), _logger(use_log), _tcDlg(NULL)
+  , _tcSess(NULL)
 {
   _ctrState.value = 0;
   if (!_logger)
@@ -198,7 +199,7 @@ void MapDialogAC::unbindTCDialog(void)
   endTCDialog();
 
   if (_tcDlg) {
-    rlseTCDialog();
+    _tcSess->releaseDialog(_tcDlg);
     _tcDlg = NULL;
     _thisRefs.unRef(MapDialogAC::refIdTCDialog);
   }

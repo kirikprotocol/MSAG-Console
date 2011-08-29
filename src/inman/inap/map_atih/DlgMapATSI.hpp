@@ -7,7 +7,6 @@
 #endif
 #define __SMSC_INMAN_INAP_MAP_ATSI__
 
-#include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/map/DlgMapAC.hpp"
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 
@@ -37,17 +36,9 @@ public:
 //initiates a ANY-TIME-SUBSCRIPTION-INTERROFATION request to HLR,
 //awiats result, in case of success reports it to MAP User.
 class MapATSIDlg : public MapDialogAC { // VLR -> HLR
-private:
-  TCSessionMA * _tcSess;
-
-  ATSIhandlerITF * atsiHdl(void)
-  {
-    return static_cast<ATSIhandlerITF *>(_resHdl.get());
-  }
-
 public:
   explicit MapATSIDlg(Logger * use_log = NULL)
-    : MapDialogAC("MapATSI", use_log), _tcSess(NULL)
+    : MapDialogAC("MapATSI", use_log)
   { }
   //
   virtual ~MapATSIDlg()
@@ -64,15 +55,22 @@ protected:
   // -----------------------------------------
   // -- MapDialogAC interface methods:
   // -----------------------------------------
-  //Releases TC dialog object
-  virtual void  rlseTCDialog(void) { _tcSess->releaseDialog(_tcDlg); }
- 
   // -----------------------------------------
   // -- TCDialogUserITF interface methods:
   // -----------------------------------------
   //InvokeListener methods
   virtual void onInvokeResultNL(InvokeRFP pInv, TcapEntity * res);
   virtual void onInvokeResult(InvokeRFP pInv, TcapEntity * res);
+
+private:
+  TCSessionMA * tcSessMA(void)
+  {
+    return static_cast<TCSessionMA *>(_tcSess);
+  }
+  ATSIhandlerITF * atsiHdl(void)
+  {
+    return static_cast<ATSIhandlerITF *>(_resHdl.get());
+  }
 };
 
 } //atih

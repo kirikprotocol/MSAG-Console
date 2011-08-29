@@ -12,6 +12,7 @@
 
 #include "inman/common/RefCountersMaskT.hpp"
 #include "inman/inap/dialog.hpp"
+#include "inman/inap/HDSSnSession.hpp"
 
 namespace smsc {
 namespace inman {
@@ -86,12 +87,6 @@ protected:
   //Unrefs and unlocks result handler
   virtual ObjAllcStatus_e finalizeObj(void);
 
-  // -----------------------------------------
-  // -- MapDialogAC interface methods:
-  // -----------------------------------------
-  //Releases TC dialog object
-  virtual void  rlseTCDialog(void) = 0;
-
   friend class smsc::inman::inap::Dialog;
   // -----------------------------------------
   // -- TCDialogUserITF interface methods:
@@ -109,10 +104,13 @@ protected:
                               uint8_t invId = 0, uint8_t opCode = 0);
 
   //InvokeListener methods
-  virtual void onInvokeResultNL(InvokeRFP pInv, TcapEntity * res) = 0;
-  virtual void onInvokeResult(InvokeRFP pInv, TcapEntity * res) = 0;
   virtual void onInvokeError(InvokeRFP pInv, TcapEntity * resE);
   virtual void onInvokeLCancel(InvokeRFP pInv);
+  // -----------------------------------------
+  // -- MapDialogAC interface methods:
+  // -----------------------------------------
+  virtual void onInvokeResultNL(InvokeRFP pInv, TcapEntity * res) = 0;
+  virtual void onInvokeResult(InvokeRFP pInv, TcapEntity * res) = 0;
 
 private:
   volatile  bool  _delThis;  //delete 'this' on last reference reset
@@ -150,7 +148,8 @@ protected:
 
   MapUserRef        _resHdl;
   Logger *          _logger;
-  Dialog *          _tcDlg;    //TCAP dialog
+  Dialog *          _tcDlg;   //TCAP dialog
+  TCSessionAC *     _tcSess;  //TCAP dialogs factory
 
   //Sets MAP user for this dialog
   void bindUser(MapDlgUserIface & res_hdl);

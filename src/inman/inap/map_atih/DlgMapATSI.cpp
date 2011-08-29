@@ -41,7 +41,7 @@ void MapATSIDlg::subsciptionInterrogation(const RequestedSubscription & req_cfg,
     throw CustomException((int32_t)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                   "MapATSI: invalid subscriber addr", subcr_adr.getSignals());
 
-  _tcDlg = _tcSess->openDialog(subcr_adr, _logger);
+  _tcDlg = tcSessMA()->openDialog(subcr_adr, _logger);
   if (!_tcDlg)
     throw CustomException((int32_t)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                           _logPfx, "unable to create TC dialog");

@@ -8,7 +8,6 @@
 #endif
 #define __SMSC_USSMAN_INAP_MAP_USS2__
 
-#include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/map/DlgMapAC.hpp"
 #include "ussman/comp/map_uss/MapUSSComps.hpp"
 
@@ -42,17 +41,9 @@ public:
 //initiates a MAP-PROCESS-UNSTRUCTURED-SS-REQUEST request to SCF,
 //awiats result, in case of success reports it to MAP User.
 class MapUSSDlg : public smsc::inman::inap::MapDialogAC {
-private:
-  TCSessionSR * _tcSess;
-
-  USSDhandlerITF * ussdHdl(void)
-  {
-    return static_cast<USSDhandlerITF *>(_resHdl.get());
-  }
-
 public:
   explicit MapUSSDlg(Logger * use_log = NULL)
-    : smsc::inman::inap::MapDialogAC("MapUSS", use_log), _tcSess(NULL)
+    : smsc::inman::inap::MapDialogAC("MapUSS", use_log)
   { }
   //
   virtual ~MapUSSDlg()
@@ -72,15 +63,22 @@ protected:
   // -----------------------------------------
   // -- MapDialogAC interface methods:
   // -----------------------------------------
-  //Releases TC dialog object
-  virtual void  rlseTCDialog(void) { _tcSess->releaseDialog(_tcDlg); }
-
   // -----------------------------------------
   // -- TCDialogUserITF interface methods:
   // -----------------------------------------
   //InvokeListener methods
   virtual void onInvokeResultNL(InvokeRFP pInv, TcapEntity * res);
   virtual void onInvokeResult(InvokeRFP pInv, TcapEntity * res);
+
+private:
+  TCSessionSR * tcSessSR(void)
+  {
+    return static_cast<TCSessionSR *>(_tcSess);
+  }
+  USSDhandlerITF * ussdHdl(void)
+  {
+    return static_cast<USSDhandlerITF *>(_resHdl.get());
+  }
 };
 
 } //uss

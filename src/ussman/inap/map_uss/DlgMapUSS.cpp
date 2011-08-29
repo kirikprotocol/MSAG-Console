@@ -180,7 +180,7 @@ const char *
     throw CustomException((int32_t)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                           _logPfx, "invalid initialization");
 
-  if (!(_tcDlg = _tcSess->openDialog(_logger)))
+  if (!(_tcDlg = tcSessSR()->openDialog(_logger)))
     throw CustomException((int32_t)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                           _logPfx, "unable to create TC dialog");
   bindTCDialog(); //composes _logId

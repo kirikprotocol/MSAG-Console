@@ -36,7 +36,7 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, uint16_t timeou
     throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                   "MapSRI", "invalid initialization");
 
-  _tcDlg = _tcSess->openDialog(tnpi_adr, _logger);
+  _tcDlg = tcSessMA()->openDialog(tnpi_adr, _logger);
   if (!_tcDlg)
       throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                   "MapSRI", "unable to create TC dialog");
