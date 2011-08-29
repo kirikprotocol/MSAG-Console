@@ -7,6 +7,7 @@ import javax.el.ValueExpression;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
+import java.text.ParseException;
 
 /**
  * User: artem
@@ -37,12 +38,19 @@ public class UIInputImpl extends UIInput {
         vb.setValue(context.getELContext(), getLocalValue());
         setValue(null);
         setLocalValueSet(false);
+
       } catch (ELException e) {
         Throwable cause = e.getCause();
-        FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
-        if(cause != null) {
+        if (cause != null && ((cause instanceof IllegalArgumentException)
+            || (cause instanceof NumberFormatException) || (cause instanceof ParseException))) {
+          FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
           message.setDetail(cause.getLocalizedMessage());
-        }
+          context.addMessage(getClientId(context), message);
+          setValid(false);
+        } else
+          throw e;
+      } catch (NumberFormatException e ){
+        FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
         context.addMessage(getClientId(context), message);
         setValid(false);
       }

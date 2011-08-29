@@ -2,6 +2,7 @@ package mobi.eyeline.util.jsf.components.input_text;
 
 import mobi.eyeline.util.jsf.components.HtmlWriter;
 
+import javax.el.ValueExpression;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -34,9 +35,41 @@ public class InputTextRenderer extends Renderer{
 
   @Override
   public Object getConvertedValue(FacesContext context, UIComponent component, Object submittedValue) throws ConverterException {
-    Converter c = ((InputText)component).getConverter();
+    InputText inputText =(InputText)component;
+    Converter c = inputText.getConverter();
     String v = submittedValue == null ? null : ((String[])submittedValue)[0];
-    return c == null ? v : c.getAsObject(context, component, v);
+
+    if(c != null) {
+      return c.getAsObject(context, component, v);
+    }
+    if(v != null) {
+      ValueExpression exp = inputText.getValueExpression("value");
+      if(exp != null) {
+        Class type = exp.getType(context.getELContext());
+        if(type == String.class) {
+          return v;
+        }else {
+          try{
+            if(type == Integer.class) {
+              return Integer.parseInt(v);
+            }else if(type == Long.class) {
+              return Long.parseLong(v);
+            }else if(type == Float.class) {
+              return Float.parseFloat(v);
+            }else if(type == Double.class) {
+              return Double.parseDouble(v);
+            }else if(type == Short.class) {
+              return Short.parseShort(v);
+            }else if(type == Byte.class) {
+              return Byte.parseByte(v);
+            }
+          }catch (NumberFormatException e){
+            throw new ConverterException();
+          }
+        }
+      }
+    }
+    return null;
   }
 
   private String getErrorMessage(FacesContext context, UIComponent t) {
