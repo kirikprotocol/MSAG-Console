@@ -132,10 +132,11 @@ protected:
     }
   };
 
+  typedef smsc::util::FifoQueue_T<IndexedNode, size_type> NodeQueue;
   /* -- DATA members: -- */
   const bool  _doErase; //object release mode: destroy or just mark as unused
   NodeArray   _store;   //store of all allocated nodes.
-  FifoList    _pool;    //queue of unused nodes
+  NodeQueue   _pool;    //queue of unused nodes
 
   //Releases (marks as unused) a node with given unique index
   void rlseNode(size_type obj_idx)
@@ -166,6 +167,12 @@ public:
 
   //Returns total number of allocated objects managed by pool
   size_type capacity(void) const { return (size_type)_store.size(); }
+
+  //Returns number of currently used objects.
+  size_type usage(void) const
+  {
+    return (size_type)_store.size() - _pool.size();
+  }
 
   //Ensures that pool capacity() isn't less then 'num_to_reserve'.
   void reserve(size_type num_to_reserve)
