@@ -341,7 +341,7 @@ void gethostid( char* buf, size_t buflen )
     }
 #else
     const long hi = ::gethostid();
-    snprintf(buf,buflen,"%lx",hi);
+    snprintf(buf,buflen,"%08lx",hi);
 #endif
 }
 
