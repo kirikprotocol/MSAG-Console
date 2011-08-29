@@ -69,10 +69,14 @@ table.eyeline_list td a:hover {
 
 table.eyeline_list th a.eyeline_up {
   background-image: url(../images/sort_up.gif);
+  background-position: left;
+  background-repeat: no-repeat;
 }
 
 table.eyeline_list th a.eyeline_down {
   background-image: url(../images/sort_down.gif);
+  background-position: left;
+  background-repeat: no-repeat;
 }
 
 div.eyeline_inner_data_opened {
