@@ -260,7 +260,7 @@ bool HttpRouterImpl::getTraceRouteById(const std::string& addr, const std::strin
 
 HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
 {
-    smsc_log_debug(logger, "Attempt to find route. abonent:%s, site:[%s]:[%d][%s]", addr.c_str(), site.c_str(), port, path.c_str());
+//    smsc_log_debug(logger, "Attempt to find route. abonent:%s, site:[%s]:[%d][%s]", addr.c_str(), site.c_str(), port, path.c_str());
     MutexGuard mt(GetRouteMutex);
     TmpBuf<char, 512> pt(512);
     std::string s;
@@ -288,27 +288,25 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 		throw RouteNotFoundException();
 */
     do {
-	    smsc_log_debug(logger, "try to find route 1. %s", s.c_str());
-//		if ( (p = hostsMap->GetPtr(s.c_str())) ) {	// 1st: check given port number
-	    if(!(p = hostsMap->GetPtr(s.c_str()))) {}
-	    else {
-		    smsc_log_debug(logger, "route 1. %p", p);
+//	    smsc_log_debug(logger, "try to find route 1. %s", s.c_str());
+		if ( (p = hostsMap->GetPtr(s.c_str())) ) {	// 1st: check given port number
+//		    smsc_log_debug(logger, "route 1. %p", p);
 			break;									// route found
 		}											// if unsuccessfull
 		if ( port != 443 ) {						// 2nd: check default https port number
 			s = site + ':' + lltostr(443, buf + 19);
-		    smsc_log_debug(logger, "try to find route 2. %s", s.c_str());
+//		    smsc_log_debug(logger, "try to find route 2. %s", s.c_str());
 			if ( (p = hostsMap->GetPtr(s.c_str())) ) {
-			    smsc_log_debug(logger, "route 2. %p", p);
+//			    smsc_log_debug(logger, "route 2. %p", p);
 				break;	 							// route found
 			}
 		}
 													// if unsuccessfull
 		if ( port != 80 ) {							// 3rd: check default http port number
 			s = site + ':' + lltostr(80, buf + 19);
-		    smsc_log_debug(logger, "try to find route 3. %s", s.c_str());
+//		    smsc_log_debug(logger, "try to find route 3. %s", s.c_str());
 			if( (p = hostsMap->GetPtr(s.c_str())) ) {
-			    smsc_log_debug(logger, "route 3. %p", p);
+//			    smsc_log_debug(logger, "route 3. %p", p);
 				break;								// route found
 			}
 		}

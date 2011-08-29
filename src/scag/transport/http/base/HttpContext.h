@@ -112,52 +112,18 @@ public:
     }
     void setTimeout(int value) {
     	connectionTimeout = value;
-//        user->setData(TIMEOUT, (void *)&value);
-//        site->setData(TIMEOUT, (void *)&value);
     }
 
     bool isTimedOut(Socket* s, time_t now);
 
-/*
-    void nextAction() {
-        action = actionNext[action];
-    }
-    const char *getTaskName() {
-        return taskName[action];
-    }
-*/
-/*
-    void chunkAdd(unsigned int value) {
-    	chunks.push(value);
-    }
-    unsigned int chunkGet(void) {
-    	unsigned int v = chunks.front();
-    	chunks.pop();
-    	return v;
-    }
-    unsigned int chunksSize(void) {
-    	return chunks.size();
-    }
-    unsigned int chunkVal(void) {
-    	return chunks.back();
-    }
-*/
     int sslUserConnection(bool verify_client=false); //server mode connection
     int sslSiteConnection(bool verify_client=false); //client mode connection
-//    int sslCloseConnection(Socket* s);
 
     void closeConnection(Socket* s);
 
     bool useHttps(Socket* s);
     int sslReadPartial(Socket* s, const char* readBuf, const size_t readBufSize);
     int sslWritePartial(Socket* s, const char* data, const size_t toWrite);
-
-//    int sslReadMessage(Socket* s, const char* readBuf, const size_t readBufSize);
-    int sslWriteMessage(Socket* s, const char* buf, const size_t buf_size);
-//    int sslWriteCommand(Socket* s);
-
-//temporary for debug info
-//    int sslCheckShutdown(void) { return (userSsl) ? SSL_get_shutdown(userSsl) : 0; }
 
     //for HttpParser
     char* getUnparsed(void) { return unparsed.get(); }
@@ -171,7 +137,6 @@ public:
     void messageGet(Socket* s, const char* &data, unsigned int &size);
     bool messageIsOver(Socket* s);
     void setSiteHttps(bool supported); // { siteHttps = supported; }
-//    int sendMessage(Socket *s);
 
 protected:
     void closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info);
@@ -204,10 +169,6 @@ protected:
         CONNECT_FLAG
     };
 
-/*
-    static ActionID actionNext[8];
-    static const char *taskName[8];
-*/
     static const char* nameUser;
     static const char* nameSite;
 

@@ -40,6 +40,9 @@ protected:
         Socket *getSocket(unsigned int i) {
             return sockets[i];
         }
+        const pollfd* getFds(unsigned int i) {
+        	return &fds[i];
+        }
     };
 
     
@@ -48,7 +51,8 @@ protected:
     void killSocket(Socket *s);
     void removeSocket(Multiplexer::SockArray &error);
     inline void removeSocket(Socket *s);
-    inline static void deleteSocket(Socket *s, int how);
+//    inline static void deleteSocket(Socket *s, int how);
+    inline static void clearSocket(Socket *s);
      
     HttpMultiplexer multiplexer;
     EventMonitor sockMon;

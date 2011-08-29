@@ -4,13 +4,10 @@
 #include "HttpContext.h"
 #include "HttpCommand2.h"
 #include "HttpParser.h"
-#include "logger/Logger.h"
 
 namespace scag2 {
 namespace transport {
 namespace http {
-using smsc::logger::Logger;
-
 
 const char HOST_FIELD[] = "Host";
 const char CONTENT_TYPE_URL_ENCODED[] = "application/x-www-form-urlencoded";
@@ -39,7 +36,6 @@ static http_methods method_table[] = {
 #define METHOD_COUNT (int)(sizeof(method_table) / sizeof(method_table[0]))
 
 StatusCode HttpParser::parse(HttpContext& cx) {
-	Logger* logger = smsc::logger::Logger::getInstance("parser");
 	char *buf, *saved_buf, *local_buf;
 	unsigned int len, local_len;
 
@@ -74,8 +70,6 @@ StatusCode HttpParser::parse(HttpContext& cx) {
   
 	command = cx.command;
 
-	smsc_log_debug(logger, "1 f:%d llen:%d pp:%d", cx.flags, local_len, cx.parsePosition);
-  
 	do {
 		if (cx.flags == 0) {
 			cx.parsePosition = 0;
@@ -101,13 +95,11 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 		}
 
 		while ((cx.flags == 1) && local_len) {
-			smsc_log_debug(logger, "2 f:%d llen:%d pp:%d", cx.flags, local_len, cx.parsePosition);
 			rc = readLine(local_buf, local_len);
 			if (rc != OK)
 			  return rc;
-			smsc_log_debug(logger, "3 f:%d llen:%d %s", cx.flags, local_len, std::string(saved_buf, 10).c_str());
 
-			if (/*(rc == OK) &&*/ (local_len == 0)) {
+			if (0 == local_len) {
 				// empty line at the end of HTTP header
 				cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
 				saved_buf = local_buf;
@@ -127,7 +119,6 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 				}
 				else {
 					if (command->contentLength == 0) {
-						smsc_log_debug(logger, "4 f:%d llen:%d %s", cx.flags, local_len, std::string(saved_buf, 10).c_str());
 						return OK;
 					}
 					cx.flags = 2;
@@ -145,8 +136,6 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 						break;
 					}
 				}
-
-				smsc_log_debug(logger, "5 f:%d llen:%d", cx.flags, local_len);
 				break;
 			}
 
@@ -166,7 +155,6 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 			return CONTINUE;
 		}
 		if (2 == cx.flags) {
-			smsc_log_debug(logger, "6 f:%d llen:%d rc=%d", cx.flags, local_len, rc);
 			command->appendMessageContent(local_buf, local_len);
 			cx.parsePosition += static_cast<unsigned int>(local_len);
 			local_len = 0;
@@ -177,15 +165,12 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 
 		while (local_len) {
 			if (3 == cx.flags) {
-//				smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
 				rc = readLine(local_buf, local_len);
-//				smsc_log_debug(logger, "rc:%d chs:%d cxch:%d llen:%d cnt:%d", rc, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
 				if (rc != OK) {
 					return rc;
 				}
 
 				command->chunk_size = cx.chunks.add(std::string(saved_buf, local_len));
-//				smsc_log_debug(logger, "str:%s chs:%d cxch:%d front:%d", cx.chunks.getHeader().c_str(), command->chunk_size, cx.chunks.size(), cx.chunks.getLastData());
 				if (0 == command->chunk_size) {
 					command->contentLength = command->content.GetPos();
 					rc = OK;
@@ -197,13 +182,10 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 				saved_buf = local_buf;
 			}
 			if (4 == cx.flags) {
-//				smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
 				local_len = command->appendChunkedMessageContent(local_buf, local_len);
 				local_buf += local_len;
-//				smsc_log_debug(logger, "f:%d chs:%d cxch:%d llen:%d cnt:%d", cx.flags, command->chunk_size, cx.chunks.size(), local_len, command->content.GetPos());
 				if (0 == command->chunk_size) {
 					rc = readLine(local_buf, local_len);	//read CRLF on chunk end
-//					smsc_log_debug(logger, "rc:%d llen:%d", rc, local_len);
 					if (rc != OK) {
 						return rc;
 					}

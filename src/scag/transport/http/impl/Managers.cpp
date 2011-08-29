@@ -196,6 +196,7 @@ void ScagTaskManager::shutdown()
 
 void ScagTaskManager::process(HttpContext* cx, bool continued)
 {
+	smsc_log_debug( logger, "ScagTaskManager::process cx=%p continued=%s", cx, (continued?"yes":"no") );
     MutexGuard g(procMut);
 
     cx->next = NULL;
@@ -213,6 +214,7 @@ void ScagTaskManager::process(HttpContext* cx, bool continued)
     {
         MutexGuard q(taskMon);
     
+    	smsc_log_debug( logger, "ScagTaskManager::process call taskMon.notify()");
         taskMon.notify();   
     }
 }

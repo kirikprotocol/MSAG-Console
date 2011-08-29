@@ -22,10 +22,10 @@ int ScagTask::Execute()
         while (!((cx = manager.scags.getFirst()) || isStopping))
             manager.scags.waitForContext();
 
+        smsc_log_debug(logger, "%p choosen for context %p", this, cx);
+
         if (isStopping)
             break;
-
-        smsc_log_debug(logger, "%p choosen for context %p", this, cx);
 
         switch (cx->action) {
         case PROCESS_REQUEST:
