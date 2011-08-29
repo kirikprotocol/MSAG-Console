@@ -27,7 +27,6 @@
     <delete dir="${build.dir}" failonerror="false"/>
   </target>
 
-
   <target name="compile.components" depends="clean">
     <mkdir dir="${components.source.classes}"/>
     <javac srcdir="components/java" destdir="${components.source.classes}" classpathref="components.lib" debug="true"/>
@@ -66,19 +65,31 @@
   <target name="doc.components">
     <mkdir dir="${components.doc.dir}"/>
     <java jar="components/libdev/tlddoc-1.3.jar" fork="true" failonerror="true">
-        <arg value="-d"/>
-        <arg value="${components.doc.dir}"/>
-        <arg value="-doctitle"/>
-        <arg value="${implementation.title} v.${implementation.version}"/>
-        <arg value="-windowtitle"/>
-        <arg value="${implementation.title} v.${implementation.version}"/>
-        <arg value="components/web/META-INF/tags/eyeline.tld"/>
-      </java>
+      <arg value="-d"/>
+      <arg value="${components.doc.dir}"/>
+      <arg value="-doctitle"/>
+      <arg value="${implementation.title} v.${implementation.version}"/>
+      <arg value="-windowtitle"/>
+      <arg value="${implementation.title} v.${implementation.version}"/>
+      <arg value="components/web/META-INF/tags/eyeline.tld"/>
+    </java>
   </target>
 
 
+  <target name="version">
+    <echo file="sample/java/mobi/eyeline/util/jsf/components/Version.java">
+package mobi.eyeline.util.jsf.components;${line.separator}${line.separator}
 
-  <target name="compile.sample" depends="distr.components">
+public class Version {${line.separator}
+
+  public final static String version = "${implementation.version}";${line.separator}
+
+}
+    </echo>
+  </target>
+
+
+  <target name="compile.sample" depends="distr.components,version">
     <mkdir dir="${sample.source.classes}"/>
     <path id="components.lib">
       <fileset dir="${components.distr.dir}" includes="*.jar"/>
