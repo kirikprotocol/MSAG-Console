@@ -12,17 +12,10 @@
 #endif
 #define __SMSC_UTIL_GUARDED_IFACE_POOL
 
-//#define __GRD_POOL_DEBUG__
-
 #include <vector>
 
 #include "inman/common/GrdObjPoolDefs.hpp"
 #include "core/synchronization/Mutex.hpp"
-
-#ifdef __GRD_POOL_DEBUG__
-#include "logger/Logger.h"
-using smsc::logger::Logger;
-#endif /* __GRD_POOL_DEBUG__ */
 
 namespace smsc {
 namespace util {
@@ -256,6 +249,13 @@ public:
     //
     ~ObjRef()
     { }
+
+#ifdef __GRD_POOL_DEBUG__
+    void logThis(Logger * use_log, const char * log_id) const
+    {
+      this->pNode()->logThis(use_log, log_id);
+    }
+#endif /* __GRD_POOL_DEBUG__ */
   };
 
   //NOTE: by default pooled objects are destroyed upon release.

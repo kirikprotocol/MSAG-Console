@@ -148,10 +148,19 @@ SocketListenerIface *
 {
   MutexGuard  grd(_sync);
   //cleanUp died connects first
-  while (!_corpses.empty())
+  while (!_corpses.empty()) {
+  #ifdef __GRD_POOL_DEBUG__
+    smsc_log_debug(_logger, "%s: onConnectOpening() corpses cleanUp ..", _logId);
+    _corpses.front().logThis(_logger, _logId);
+  #endif /* __GRD_POOL_DEBUG__ */
     _corpses.pop_front();
+  }
 
   ConnectGuard connGrd = _connPool.allcObj();
+  #ifdef __GRD_POOL_DEBUG__
+  smsc_log_debug(_logger, "%s: onConnectOpening(%u)", _logId, conn_id);
+  connGrd.logThis(_logger, _logId);
+  #endif /* __GRD_POOL_DEBUG__ */
   //set consequtive processing of incoming packets
   connGrd->init(conn_id, _pckPool, 1, _logger);
   connGrd->bind(use_sock);
@@ -171,13 +180,22 @@ void USSGService::onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id)
 {
   MutexGuard grd(_sync);
   //cleanUp died connects first
-  while (!_corpses.empty())
+  while (!_corpses.empty()) {
+  #ifdef __GRD_POOL_DEBUG__
+    smsc_log_debug(_logger, "%s: onConnectClosing() corpses cleanUp ..", _logId);
+    _corpses.front().logThis(_logger, _logId);
+  #endif /* __GRD_POOL_DEBUG__ */
     _corpses.pop_front();
+  }
 
   ConnectsMap::iterator it = _connMap.find(conn_id);
   if (it == _connMap.end()) //Connect already unregistered by onConnectError()
     return;
 
+  #ifdef __GRD_POOL_DEBUG__
+  smsc_log_debug(_logger, "%s: onConnectClosing(%u)", _logId, conn_id);
+  it->second.logThis(_logger, _logId);
+  #endif /* __GRD_POOL_DEBUG__ */
   ConnectGuard rConn = it->second;
   rConn->removeListener(*this);
   //Note: Connect object MUST not be destroyed inside this thread,

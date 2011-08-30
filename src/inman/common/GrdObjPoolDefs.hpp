@@ -7,6 +7,13 @@
 #endif
 #define __SMSC_UTIL_GUARDED_OBJ_POOL_DEFS
 
+//#define __GRD_POOL_DEBUG__
+
+#ifdef __GRD_POOL_DEBUG__
+#include "logger/Logger.h"
+using smsc::logger::Logger;
+#endif /* __GRD_POOL_DEBUG__ */
+
 #include "inman/common/FifoQueue.hpp"
 
 namespace smsc {
@@ -53,6 +60,14 @@ protected:
 public:
   virtual ~PoolAnchorAC_T()
   { }
+
+#ifdef __GRD_POOL_DEBUG__
+    void logThis(Logger * use_log, const char * log_id) const
+    {
+      smsc_log_debug(use_log, "%s: _pNode=%p {_prev=%p, _next=%p, _nodeIdx=%u, _refs=%u}",
+                     log_id, this, _prev, _next, (unsigned)_nodeIdx, (unsigned)_refs);
+    }
+#endif /* __GRD_POOL_DEBUG__ */
 
   //Returns false if maximum number of refs is already reached
   bool addRef(void) const
@@ -106,6 +121,10 @@ private:
   }
 
 protected:
+#ifdef __GRD_POOL_DEBUG__
+  const PoolAnchorAC_T<_IfaceArg, _SizeTypeArg> * pNode(void) const { return _pNode; }
+#endif /* __GRD_POOL_DEBUG__ */
+
   explicit PoolObjRefAC_T(PoolAnchorAC_T<_IfaceArg, _SizeTypeArg> & use_node)
     : _pNode(&use_node)
   {
