@@ -115,7 +115,7 @@ public:
   {
   }
   using Thread::Start;
-  void Start()
+  void StartThread()
   {
     stopped=0;
     Thread::Start();
@@ -169,6 +169,7 @@ public:
     logrd=smsc::logger::Logger::getInstance("smpp.rd");
     running=false;
   }
+  virtual ~SmppReader(){}
 #ifndef _WIN32
   static void sigdisp(int sig)
   {
@@ -340,6 +341,7 @@ public:
     logwr=smsc::logger::Logger::getInstance("smpp.wr");
     stopped=false;
   }
+  virtual ~SmppWriter(){}
   int Execute()
   {
     smsc_log_info(logwr,"smpp writer started");
@@ -776,8 +778,8 @@ public:
     socket.setConnectTimeout(cfg.timeOut);
     if(socket.Connect()==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkConnect);
-    reader.Start();
-    writer.Start();
+    reader.StartThread();
+    writer.StartThread();
     PduBindTRX pdu;
     unsigned int expectedbindresp;
     switch(bindtype)
@@ -935,6 +937,7 @@ protected:
         listener->handleTimeout(key);
         tolist.erase(tolist.begin());
         lock.Delete(key);
+        continue;
       }
       if(l->event)
       {
@@ -1088,6 +1091,7 @@ protected:
           default:
             return false;
         }
+        break;
       case BindType::Transmitter:
         switch(pdu->get_commandId())
         {
@@ -1104,6 +1108,7 @@ protected:
           default:
             return false;
         }
+        break;
       case BindType::Transceiver:
         switch(pdu->get_commandId())
         {
@@ -1120,6 +1125,7 @@ protected:
           default:
             return false;
         }
+        break;
     }
     return false;
   }
@@ -1149,6 +1155,7 @@ protected:
           default:
             return false;
         }
+        break;
       case BindType::Transmitter:
         switch(pdu->get_commandId())
         {
@@ -1164,6 +1171,7 @@ protected:
           default:
             return false;
         }
+        break;
       case BindType::Transceiver:
         switch(pdu->get_commandId())
         {
@@ -1180,6 +1188,7 @@ protected:
           default:
             return false;
         }
+        break;
     }
     return false;
   }
@@ -1301,6 +1310,7 @@ protected:
       default:
       {
         lockMutex.Unlock();
+        break;
       }
     }
   }
