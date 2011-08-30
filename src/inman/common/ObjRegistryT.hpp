@@ -50,7 +50,12 @@ public:
 
     _TArg * pValue(void) const { return rIt->second; }
 
-    const_iterator & operator=(const const_iterator & use_it) { rIt = use_it.rIt; }
+    const_iterator & operator=(const const_iterator & use_it)
+    {
+      if (this != &use_it)
+        rIt = use_it.rIt; 
+      return *this;
+    }
     const value_type & operator*() const { return *rIt; }
     const value_type * operator->() const { return rIt.operator->(); }
 
