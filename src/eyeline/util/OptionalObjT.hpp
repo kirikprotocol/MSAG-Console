@@ -47,7 +47,7 @@ public:
   {
     if (_ptr) {
       _ptr->~_TArg();
-      _ptr = 0;
+      _mem._aligner = _ptr = 0;
     }
   }
 
@@ -75,9 +75,12 @@ public:
   //
   OptionalObj_T & operator=(const OptionalObj_T & cp_obj)
   {
-    _mem._aligner = _ptr = 0;
-    if (cp_obj._ptr)
-      _ptr = new (_mem._buf)_TArg(*cp_obj._ptr);
+    if (this != &cp_obj) {
+      clear();
+      if (cp_obj._ptr)
+        _ptr = new (_mem._buf)_TArg(*cp_obj._ptr);
+    }
+    return *this;
   }
 };
 
