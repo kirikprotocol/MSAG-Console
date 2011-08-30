@@ -164,9 +164,11 @@ public:
 
   PoolObjRefAC_T & operator= (const PoolObjRefAC_T & cp_obj)
   {
-    release();
-    _pNode = cp_obj._pNode;
-    setRef();
+    if (this != &cp_obj) {
+      release();
+      _pNode = cp_obj._pNode;
+      setRef();
+    }
     return *this;
   }
 };
