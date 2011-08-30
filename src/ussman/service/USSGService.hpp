@@ -81,6 +81,10 @@ public:
     _mgrCfg._wrkCfg._tcUsr = in_cfg._tcUsr;
     _tcpCfg = in_cfg._tcp;
     _ss7Cfg = in_cfg._ss7;
+#ifdef __GRD_POOL_DEBUG__
+    _pckPool.debugInit("_pckPool", _logger);
+    _connPool.debugInit("_connPool", _logger);
+#endif /* __GRD_POOL_DEBUG__ */
   }
   ~USSGService();
 
