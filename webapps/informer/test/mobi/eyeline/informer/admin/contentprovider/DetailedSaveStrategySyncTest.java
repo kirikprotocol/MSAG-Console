@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.filesystem.MemoryFileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -8,9 +9,7 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * User: artem
@@ -52,11 +51,15 @@ public class DetailedSaveStrategySyncTest {
 
     if (afterOnResource != null) {
       remoteResource.open();
-      assertTrue(remoteResource.contains(afterOnResource));
+      assertTrue(contains(remoteResource, afterOnResource));
       if (beforeOnResource != null && !beforeOnResource.equals(afterOnResource))
-        assertFalse(remoteResource.contains(beforeOnResource));
+        assertFalse(contains(remoteResource, beforeOnResource));
       remoteResource.close();
     }
+  }
+
+  private boolean contains(FileResource resource, String file) throws AdminException {
+    return resource.listFiles().contains(file);
   }
 
   @Test
@@ -93,9 +96,9 @@ public class DetailedSaveStrategySyncTest {
     strategy.synchronize(true);
 
     remoteResource.open();
-    assertTrue(remoteResource.contains("1.csv.finished"));
-    assertTrue(remoteResource.contains("1.csv.report"));
-    assertFalse(remoteResource.contains("1.csv.active"));
+    assertTrue(contains(remoteResource, "1.csv.finished"));
+    assertTrue(contains(remoteResource, "1.csv.report"));
+    assertFalse(contains(remoteResource, "1.csv.active"));
     remoteResource.close();
   }
 

@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -44,15 +45,23 @@ public abstract class FileResource {
    */
   public abstract void open() throws AdminException;
 
+  public final List<String> listCSVFiles() throws AdminException {
+    List<String> list =  listFiles();
+    Iterator<String> i = list.iterator();
+    while(i.hasNext()) {
+      if(!i.next().endsWith(".csv")) {
+        i.remove();
+      }
+    }
+    return list;
+  }
+
   /**
-   * Возвращает список csv файлов на файловом ресурсе
-   * @return  список csv файлов на файловом ресурсе
+   * Возвращает список файлов на файловом ресурсе
+   * @return  список файлов на файловом ресурсе
    * @throws AdminException ошибка
    */
-  public abstract List<String> listCSVFiles() throws AdminException;
-
-
-  public abstract boolean contains(String path) throws AdminException;
+  public abstract List<String> listFiles() throws AdminException;
 
   /**
    * Загружает файл с ресурса

@@ -88,10 +88,10 @@ class SFTPResource extends FileResource {
     }
   }
 
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     try {
       List<String> remoteFiles = new ArrayList<String>();
-      for (Object o : channel.ls(remoteDir+ "/*.csv")) {
+      for (Object o : channel.ls(remoteDir+ "/*.*")) {
         ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry)o;
         remoteFiles.add(entry.getFilename());
       }
@@ -134,21 +134,6 @@ class SFTPResource extends FileResource {
       channel.put(is, remoteDir + "/" +toFileName);
     }
     catch (Exception e) {
-      throw new ContentProviderException("connectionError",e);
-    }
-  }
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    try {
-      for(Object o : channel.ls(remoteDir+ "/*.*")) {
-        ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry)o;
-        if(entry.getFilename().equals(path)) {
-          return true;
-        }
-      }
-      return false;
-    } catch (Exception e) {
       throw new ContentProviderException("connectionError",e);
     }
   }

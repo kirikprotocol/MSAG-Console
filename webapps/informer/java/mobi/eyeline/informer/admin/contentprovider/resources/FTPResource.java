@@ -52,36 +52,18 @@ class FTPResource extends FileResource {
     }
   }
 
-  @Override
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     List<String> result = new LinkedList<String>();
     try{
       FTPFile[] fs = ftp.list();
       for(FTPFile f : fs) {
         String name = f.getName();
-        if(name.endsWith(".csv")) {
-          result.add(name);
-        }
+        result.add(name);
       }
     } catch (Exception e) {
       throw new ContentProviderException("connectionError",e);
     }
     return result;
-  }
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    try{
-      String[] ss = ftp.listNames();
-      for(String s : ss) {
-        if(s.equals(path)) {
-          return true;
-        }
-      }
-      return false;
-    } catch (Exception e) {
-      throw new ContentProviderException("connectionError",e);
-    }
   }
 
   @Override
@@ -119,8 +101,6 @@ class FTPResource extends FileResource {
       throw new ContentProviderException("connectionError",e);
     }
   }
-
-
 
   @Override
   public void close() throws AdminException {

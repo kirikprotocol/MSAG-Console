@@ -36,9 +36,9 @@ class LogDecorator extends FileResource {
   }
 
   @Override
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     log("listing ...");
-    List<String> res = wrapped.listCSVFiles();
+    List<String> res = wrapped.listFiles();
     if (res.isEmpty()) {
       log("resource is empty.");
     } else {
@@ -83,17 +83,6 @@ class LogDecorator extends FileResource {
     log("closing ...");
     wrapped.close();
     log("OK");
-  }
-
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    try{
-      log("contains ...");
-      return wrapped.contains(path);
-    }finally {
-      log("OK");
-    }
   }
 
   @Override

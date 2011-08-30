@@ -17,13 +17,8 @@ class NullResource extends FileResource {
   }
 
   @Override
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     return Collections.emptyList();
-  }
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    return false;
   }
 
   @Override

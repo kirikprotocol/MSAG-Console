@@ -32,19 +32,11 @@ class LocalResourceStubWithChecking extends FileResource {
   }
 
   @Override
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     if(!opened) {
       throw new IllegalStateException("Resource is closed!!!");
     }
-    return local.listCSVFiles();
-  }
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    if(!opened) {
-      throw new IllegalStateException("Resource is closed!!!");
-    }
-    return local.contains(path);
+    return local.listFiles();
   }
 
   @Override

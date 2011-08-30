@@ -60,12 +60,6 @@ public class DetailedSaveStrategyDeliveryTest {
     return u;
   }
 
-  private ResourceOptions createResourceOptions(User u) {
-    ResourceOptions opts = new ResourceOptions(u, workDir, new UserCPsettings());
-    opts.setSourceAddress(new Address(".5.0.MTC"));
-    return opts;
-  }
-
   private Delivery getDelivery(String deliveryName, String user) throws AdminException {
     DeliveryFilter f = new DeliveryFilter();
     f.setNameFilter(deliveryName);
@@ -99,6 +93,10 @@ public class DetailedSaveStrategyDeliveryTest {
     s.process(true);
   }
 
+  private boolean contains(String file) throws AdminException {
+    return remoteResource.listFiles().contains(file);
+  }
+
   @Test
   public void testImportFileWithOneLine() throws AdminException {
     remoteResource.addFile("test.csv",
@@ -111,7 +109,7 @@ public class DetailedSaveStrategyDeliveryTest {
 
     assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv.active"));
+    assertTrue(contains("test.csv.active"));
     remoteResource.close();
   }
 
@@ -127,7 +125,7 @@ public class DetailedSaveStrategyDeliveryTest {
     assertEquals(Delivery.Type.SingleText, d.getType());
     assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv.active"));
+    assertTrue(contains("test.csv.active"));
     remoteResource.close();
   }
 
@@ -143,7 +141,7 @@ public class DetailedSaveStrategyDeliveryTest {
     assertEquals(Delivery.Type.IndividualTexts, d.getType());
     assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv.active"));
+    assertTrue(contains("test.csv.active"));
     remoteResource.close();
   }
 
@@ -157,7 +155,7 @@ public class DetailedSaveStrategyDeliveryTest {
     assertEquals(Delivery.Type.IndividualTexts, d.getType());
     assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv.active"));
+    assertTrue(contains("test.csv.active"));
     remoteResource.close();
   }
 
@@ -174,14 +172,14 @@ public class DetailedSaveStrategyDeliveryTest {
 
     assertTrue(fs.exists(new File(localCopyDir, "test.csv")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv"));
+    assertTrue(contains("test.csv"));
     remoteResource.close();
 
     processResourceWithRandomUser("login");
 
     assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv.active"));
+    assertTrue(contains("test.csv.active"));
     remoteResource.close();
 
     assertEquals(DeliveryStatus.Planned, getDelivery("test", "login").getStatus());
@@ -198,14 +196,14 @@ public class DetailedSaveStrategyDeliveryTest {
 
     assertTrue(fs.exists(new File(localCopyDir, "test.csv")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv"));
+    assertTrue(contains("test.csv"));
     remoteResource.close();
 
     processResourceWithRandomUser("login");
 
     assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv.active"));
+    assertTrue(contains("test.csv.active"));
     remoteResource.close();
 
     assertEquals(DeliveryStatus.Planned, getDelivery("test", "login").getStatus());
@@ -224,14 +222,14 @@ public class DetailedSaveStrategyDeliveryTest {
 
     assertTrue(fs.exists(new File(localCopyDir, "test.csv")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv"));
+    assertTrue(contains("test.csv"));
     remoteResource.close();
 
     processResourceWithRandomUser("login");
 
     assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
     remoteResource.open();
-    assertTrue(remoteResource.contains("test.csv.active"));
+    assertTrue(contains("test.csv.active"));
     remoteResource.close();
 
     assertEquals(DeliveryStatus.Planned, getDelivery("test", "login").getStatus());

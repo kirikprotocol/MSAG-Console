@@ -13,6 +13,7 @@ import mobi.eyeline.informer.util.MD5Encoder;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -255,9 +256,9 @@ class SaveStrategyHelper {
     fileSys.rename(partFile, toFile);
   }
 
-  void uploadFileToResource(FileResource resource, File file) throws AdminException {
+  void uploadFileToResource(FileResource resource, File file, Collection<String> remoteFilesCache) throws AdminException {
     String partFile = file.getName() + ".part";
-    if(resource.contains(partFile))
+    if(remoteFilesCache.contains(partFile))
       resource.remove(partFile);
 
     InputStream is = null;

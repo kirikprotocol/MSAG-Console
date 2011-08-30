@@ -7,7 +7,6 @@ import mobi.eyeline.informer.admin.filesystem.MemoryFileSystem;
 import java.io.*;
 import java.util.*;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -63,26 +62,17 @@ class FileResourceStub extends FileResource  {
   }
 
   @Override
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     checkResourceIsOpened();
     String[] files =  fs.list(workDir);
     List<String> res = new ArrayList<String>(files.length);
-    for (String f : files)
-      if (f.endsWith(".csv"))
-        res.add(f);
+    Collections.addAll(res, files);
     return res;
-  }
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    checkResourceIsOpened();
-    return fs.exists(new File(workDir, path));
   }
 
   @Override
   public void get(String path, OutputStream os) throws AdminException {
     checkResourceIsOpened();
-    assertTrue(contains(path));
 
     if (filesDeprecatedToLoad.contains(path)) {
       throw new ContentProviderException("Load error");
@@ -107,14 +97,12 @@ class FileResourceStub extends FileResource  {
   @Override
   public void rename(String fromPath, String toPath) throws AdminException {
     checkResourceIsOpened();
-    assertTrue(contains(fromPath));
     fs.rename(new File(workDir, fromPath), new File(workDir, toPath));
   }
 
   @Override
   public void remove(String path) throws AdminException {
     checkResourceIsOpened();
-    assertTrue(contains(path));
     if (filesDeprecatedToRemove.contains(path)) {
       throw new ContentProviderException("Remove error");
     }
@@ -124,7 +112,6 @@ class FileResourceStub extends FileResource  {
   @Override
   public void put(InputStream is, String toPath) throws AdminException {
     checkResourceIsOpened();
-    assertFalse(contains(toPath));
     fs.createNewFile(new File(workDir, toPath), is);
   }
 

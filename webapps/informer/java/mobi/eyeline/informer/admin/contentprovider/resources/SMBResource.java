@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderException;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -63,34 +64,15 @@ class SMBResource extends FileResource {
   }
 
   @Override
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     List<String> result = new LinkedList<String>();
     try {
       String[] fs = smb.list();
-      for (String _f : fs) {
-        if (_f.endsWith(".csv")) {
-          result.add(_f);
-        }
-      }
+      Collections.addAll(result, fs);
     } catch (Exception e) {
       throw new ContentProviderException("connectionError", e);
     }
     return result;
-  }
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    try {
-      String[] fs = smb.list();
-      for (String _f : fs) {
-        if (_f.equals(path)) {
-          return true;
-        }
-      }
-    } catch (Exception e) {
-      throw new ContentProviderException("connectionError", e);
-    }
-    return false;
   }
 
   @Override

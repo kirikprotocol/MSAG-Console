@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,14 +42,10 @@ class LocalResource extends FileResource {
       throw new ContentProviderException("userDirNotFound","", dir.getAbsolutePath());
   }
 
-  public List<String> listCSVFiles() throws AdminException {
+  public List<String> listFiles() throws AdminException {
     String[] files = fileSys.list(dir);
     List<String> ret = new ArrayList<String>();
-    for(String f: files) {
-      if(f.endsWith(".csv")) {
-        ret.add(f);
-      }
-    }
+    Collections.addAll(ret, files);
     return ret;
   }
 
@@ -68,12 +65,6 @@ class LocalResource extends FileResource {
         }
     }
   }
-
-  @Override
-  public boolean contains(String path) throws AdminException {
-    return fileSys.exists(new File(dir, path));
-  }
-
 
   public void rename(String fromFileName, String toFileName) throws AdminException {
     fileSys.rename(new File(dir,fromFileName),new File(dir,toFileName));
