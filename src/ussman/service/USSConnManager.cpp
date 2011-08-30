@@ -58,7 +58,7 @@ int USSConnManager::denyRequest(WorkerID dlg_id,
 
   char tBuf[interaction::USSResultMessage::_ussRes_strSZ];
   sPck._Cmd.log2str(tBuf, (unsigned)sizeof(tBuf));
-  smsc_log_info(_logger, "%: --> RESULT[%s:%u] %s", _logId, mgrId(), dlg_id, tBuf);
+  smsc_log_info(_logger, "%s: --> RESULT[%s:%u] %s", _logId, mgrId(), dlg_id, tBuf);
 
   return _connGrd->sendPck(pckBuf);
 }
