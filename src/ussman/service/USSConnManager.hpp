@@ -49,6 +49,9 @@ public:
     if (!_logger)
       _logger = Logger::getInstance("smsc.ussman");
     snprintf(_logId, sizeof(_logId)-1, "ConnMgr[%u]", cm_id);
+#ifdef __GRD_POOL_DEBUG__
+    _wrkPool.debugInit("_wrkPool", _logger);
+#endif /* __GRD_POOL_DEBUG__ */
   }
   virtual ~USSConnManager();
 
