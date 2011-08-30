@@ -223,7 +223,7 @@ public:
         //    ->registerCmdSet(smsc::inman::interaction::INPCSBilling::getInstance());
         //pipe = new smsc::inman::interaction::Connect
         //    ( socket, smsc::inman::interaction::INPSerializer::getInstance(), logger);
-        pipe.init(_pckPool, 1); //Set consequitive mode of incoming packet procoessing
+        pipe.init(0, _pckPool, 1, logger); //Set consequitive mode of incoming packet procoessing
         pipe.addListener(*this);
         #endif
     }
