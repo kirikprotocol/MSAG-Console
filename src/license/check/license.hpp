@@ -13,6 +13,8 @@ bool CheckLicense(const char* lf,const char* sig,Hash<std::string>& lic,const ch
 // get the system-specific host id into the buffer
 void gethostid( char* buf, size_t buflen );
 
+bool checkHostIds( const char* hostids );
+
 }//namespace check
 }//namespace license
 }//namespace smsc

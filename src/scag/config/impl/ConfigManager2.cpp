@@ -473,10 +473,15 @@ void ConfigManagerImpl::checkLicenseFile()
   t.tm_mday=d;
   license.expdate = mktime(&t);
     // long hostid;
+
+    if ( !smsc::license::check::checkHostIds(licconfig["Hostids"].c_str()) ) {
+        throw std::runtime_error("code 1");
+    }
+
+    /*
   std::string ids=licconfig["Hostids"];
   std::string::size_type pos=0;
   bool ok = false;
-
     char hostid[200];
     smsc::license::check::gethostid(hostid,sizeof(hostid));
 
@@ -495,6 +500,7 @@ void ConfigManagerImpl::checkLicenseFile()
   } while(pos!=std::string::npos);
 
   if (!ok) throw runtime_error("code 1");
+     */
 
   if (smsc::util::crc32(0,licconfig["Product"].c_str(),licconfig["Product"].length())!=0x1D5DA434) throw runtime_error("code 2");
 

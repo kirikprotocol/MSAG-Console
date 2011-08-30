@@ -345,6 +345,31 @@ void gethostid( char* buf, size_t buflen )
 #endif
 }
 
+
+bool checkHostIds( const char* hostids )
+{
+    char hostid[200];
+    smsc::license::check::gethostid( hostid, sizeof(hostid) );
+    for ( const char* p = hostids; *p != '\0'; ) {
+        while ( *p == ' ' || *p == '\t' || *p == ',' ) {
+            ++p;
+        }
+        if ( *p == '\0' ) break;
+        char buf[200];
+        int pos = 0;
+        sscanf(p,"%150[0-9a-f-]%n",buf,&pos);
+        if (!pos) {
+            throw std::runtime_error("wrong hostids");
+        }
+        p += pos;
+        if ( 0 == strcmp(buf,hostid) ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 }//namespace check
 }//namespace license
 }//namespace smsc
