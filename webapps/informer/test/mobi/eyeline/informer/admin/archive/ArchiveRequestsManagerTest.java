@@ -215,7 +215,7 @@ public class ArchiveRequestsManagerTest {
     d.setDeliveryMode(DeliveryMode.SMS);
     d.setEndDate(new Date(System.currentTimeMillis() + 300000));
     d.setStartDate(new Date(System.currentTimeMillis() - 300000));
-    d.setName("Test delivery");
+    d.setName("Test delivery | ");
     d.setOwner("me");
     d.setPriority(15);
     d.setReplaceMessage(true);
@@ -226,7 +226,7 @@ public class ArchiveRequestsManagerTest {
     d.setValidityPeriod(new Time(1, 0, 0));
     d.setMessageTimeToLive(new Time(2, 0, 0));
     d.setSourceAddress(new Address("+79123942341"));
-    d.setSingleText("text_text");
+    d.setSingleText("text_text \n text | text!");
     d.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, "dsada@dsadas.das");
     d.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, "+422414412");
     Delivery created = dm.createDeliveryWithSingleText("", "", d, new DataSource<Address>() {
@@ -258,6 +258,7 @@ public class ArchiveRequestsManagerTest {
     assertEquals(m.getOwner(), d.getOwner());
     assertEquals(m.getDeliveryId(), d.getId().intValue());
     assertEquals(m.getDeliveryName(), d.getName());
+    assertEquals(m.getText(), "text_text \n text | text!");
   }
 
 

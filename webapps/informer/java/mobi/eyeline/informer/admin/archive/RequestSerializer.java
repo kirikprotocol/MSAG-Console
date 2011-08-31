@@ -23,7 +23,7 @@ class RequestSerializer {
     w.print("|");
     w.print(d.getId());
     w.print("|");
-    w.print(d.getName());
+    w.print(d.getName().replace("|","\\|"));
     w.print("|");
     w.print(d.getOwner());
     w.print("|");
@@ -33,22 +33,26 @@ class RequestSerializer {
     w.print("|");
     w.print(m.getDate() != null ? df.format(m.getDate()) : " ");
     w.print("|");
-    w.print(m.getText());
+    w.print(m.getText().replace("\n","\\n").replace("|","\\|"));
     w.println();
   }
 
   static void deserialize(String line, ArchiveMessage message) throws ParseException {
     final SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-    String[] parts = line.split("\\|", 9);
-    message.setId(Long.parseLong(parts[0]));
-    message.setAbonent(new Address(parts[1]));
-    message.setDeliveryId(Integer.parseInt(parts[2]));
-    message.setDeliveryName(parts[3]);
-    message.setOwner(parts[4]);
-    message.setState(MessageState.valueOf(parts[5]));
-    message.setErrorCode(parts[6].equals(" ") ? null : Integer.parseInt(parts[6]));
-    message.setDate(parts[7].equals(" ") ? null : df.parse(parts[7]));
-    message.setText(parts[8]);
+
+    StringTokenizer tokenizer = new StringTokenizer(line, "|");
+
+    message.setId(Long.parseLong(nextToken(tokenizer)));
+    message.setAbonent(new Address(nextToken(tokenizer)));
+    message.setDeliveryId(Integer.parseInt(nextToken(tokenizer)));
+    message.setDeliveryName(nextToken(tokenizer));
+    message.setOwner(nextToken(tokenizer));
+    message.setState(MessageState.valueOf(nextToken(tokenizer)));
+    String s = nextToken(tokenizer);
+    message.setErrorCode(s.equals(" ") ? null : Integer.parseInt(s));
+    s = nextToken(tokenizer);
+    message.setDate(s.equals(" ") ? null : df.parse(s));
+    message.setText(nextToken(tokenizer));
   }
 
   static void serialize(PrintWriter w, Delivery d) {
@@ -57,7 +61,7 @@ class RequestSerializer {
 
     w.print(d.getId());
     w.print("|");
-    w.print(d.getName());
+    w.print(d.getName().replace("|","\\|"));
     w.print("|");
     w.print(d.getOwner());
     w.print("|");
@@ -73,18 +77,26 @@ class RequestSerializer {
 
     StringTokenizer tokenizer = new StringTokenizer(line, "|");
 
-    delivery.setId(Integer.parseInt(tokenizer.nextToken()));
-    delivery.setName(tokenizer.nextToken());
+    delivery.setId(Integer.parseInt(nextToken(tokenizer)));
+    delivery.setName(nextToken(tokenizer));
 
-    delivery.setOwner(tokenizer.nextToken());
+    delivery.setOwner(nextToken(tokenizer));
 
-    delivery.setStartDate(df.parse(tokenizer.nextToken()));
+    delivery.setStartDate(df.parse(nextToken(tokenizer)));
 
-    String date = tokenizer.nextToken();
+    String date = nextToken(tokenizer);
     if(date.length()>1) {
       delivery.setEndDate(df.parse(date));
     }
 
+  }
+
+  private static String nextToken(StringTokenizer tokenizer) {
+    String res = tokenizer.nextToken();
+    while(res.endsWith("\\") && tokenizer.hasMoreTokens()) {
+      res=res.substring(0,res.length()-1)+'|'+tokenizer.nextToken();
+    }
+    return res.replace("\\n","\n");
   }
 
 
