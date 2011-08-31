@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers.archive;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatusHistory;
 import mobi.eyeline.informer.admin.users.User;
@@ -56,7 +57,7 @@ public class DeliveryController extends InformerController{
     Configuration config = getConfig();
     try {
       if(!config.isArchiveDaemonDeployed() || config.getArchiveDaemonOnlineHost() == null) {
-        error = getLocalizedString("archive.daemon.offline");
+        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "archive.daemon.offline");
         return;
       }
     } catch (AdminException e) {
@@ -101,8 +102,15 @@ public class DeliveryController extends InformerController{
           emailNotificationAddress = delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
           smsNotificationAddress = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
         }else {
-          addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found", "");
+          addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found", id);
         }
+      }catch (DeliveryException e) {
+        if(e.getErrorStatus() == DeliveryException.ErrorStatus.NoSuchEntry) {
+          error = getLocalizedString("delivery.not.found", id);
+        } else {
+          error = e.getMessage(getLocale());
+        }
+        return;
       }catch (AdminException e){
         error = e.getMessage(getLocale());
         return;
@@ -117,8 +125,8 @@ public class DeliveryController extends InformerController{
     return error;
   }
 
-  public boolean isOffline() {
-    return error != null;
+  public boolean isNotRendered() {
+    return error != null || delivery == null || status == null || statusHistory == null;
   }
 
   public List<SelectItem> getAllDays() {
