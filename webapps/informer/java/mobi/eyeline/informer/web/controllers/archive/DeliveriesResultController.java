@@ -49,7 +49,7 @@ public class DeliveriesResultController extends InformerController{
         error = getLocalizedString("archive.daemon.offline");
       }
     } catch (AdminException e) {
-      addError(e);
+      error = e.getMessage(getLocale());
     }
   }
 
