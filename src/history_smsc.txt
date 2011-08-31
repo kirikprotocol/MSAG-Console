@@ -681,3 +681,6 @@ B3214: Aug 24, 2011
     MCISme	signal masks reorganized
     INMan/USSMan TCPServer manages unique connect id instead of file descriptor
     INMan/USSMan queue node unlinking sync bug is fixed
+    INMan/USSMan fix for tcp server accept file descriptors update for select
+    INMan/USSMan fix for pure virtual call on destruction of pooled objects
+    SMPPBase	fixed signalling to locker that already deleted from timeouts list
