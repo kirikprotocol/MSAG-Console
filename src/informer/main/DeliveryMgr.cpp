@@ -32,7 +32,7 @@ struct DeliveryMgr::NumericNameFilter
     inline bool operator()( const char* fn ) const {
         char* endptr;
         const dlvid_type dlvId = strtoul(fn,&endptr,10);
-        if (dlvId > 0 && endptr != fn) {
+        if (endptr != fn) {
             // starts with a number
             if ( archived_ && strcmp(endptr,".out") == 0 ) {
                 archived_->push_back(dlvId);
