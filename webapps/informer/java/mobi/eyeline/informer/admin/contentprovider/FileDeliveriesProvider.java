@@ -109,7 +109,7 @@ public class FileDeliveriesProvider implements UserDirResolver {
     try {
       con = getConnection(u,ucps);
       con.open();
-      con.listCSVFiles();
+      con.listFiles();
     }
     finally {
       try {if(con!=null) con.close();} catch (Exception ignored){}

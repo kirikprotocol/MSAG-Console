@@ -8,11 +8,12 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 
 /**
  * author: Aleksandr Khalitov
@@ -76,8 +77,9 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     return name.substring(0, name.lastIndexOf(CSV_POSFIX)+CSV_POSFIX.length());
   }
 
-  private void downloadFilesFromResource(FileResource resource, Collection<String> remoteFilesCache) throws AdminException {
-    for (String remoteCsvFile : remoteFilesCache) {
+  private void downloadFilesFromResource(FileResource resource) throws AdminException {
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
+    for (String remoteCsvFile : remoteFiles) {
       if(!remoteCsvFile.endsWith(".csv")) {
         continue;
       }
@@ -92,32 +94,34 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     }
   }
 
-  private void synchronizeInProcess(FileResource resource, Collection<String> remoteFilesCache) throws AdminException {
+  private void synchronizeInProcess(FileResource resource) throws AdminException {
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     File[] inProcessFiles = helper.getFiles(localCopy, IN_PROCESS);
     for (File localInProcessFile : inProcessFiles) {
       String csvFile = csvFileFromWorkFile(localInProcessFile.getName());
 
-      if (remoteFilesCache.contains(csvFile)) {
+      if (remoteFiles.contains(csvFile)) {
         resource.rename(csvFile, localInProcessFile.getName());
-      } else if (!remoteFilesCache.contains(localInProcessFile.getName())){
+      } else if (!remoteFiles.contains(localInProcessFile.getName())){
         fileSys.delete(localInProcessFile);
       }
     }
   }
 
-  private void synchronizeFinished(FileResource resource, Collection<String> remoteFilesCache) throws AdminException {
+  private void synchronizeFinished(FileResource resource) throws AdminException {
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     File[] finishedFiles = helper.getFiles(localCopy, FINISHED);
     for(File localFinishedFile : finishedFiles) {
-      if (remoteFilesCache.contains(localFinishedFile.getName()))
+      if (remoteFiles.contains(localFinishedFile.getName()))
         continue;
 
       String localCsvFile = csvFileFromWorkFile(localFinishedFile.getName());
       File localReportFile = new File(localCopy, buildReportName(localCsvFile));
       String localInProcessFile = buildInProcess(localCsvFile);
 
-      if(remoteFilesCache.contains(localInProcessFile)) {
-        if(fileSys.exists(localReportFile) && !remoteFilesCache.contains(localReportFile.getName()))
-          helper.uploadFileToResource(resource, localReportFile, remoteFilesCache);
+      if(remoteFiles.contains(localInProcessFile)) {
+        if(fileSys.exists(localReportFile) && !remoteFiles.contains(localReportFile.getName()))
+          helper.uploadFileToResource(resource, localReportFile, remoteFiles);
         resource.rename(localInProcessFile, localFinishedFile.getName());
       } else {
         fileSys.delete(localReportFile);
@@ -133,55 +137,12 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     try{
       resource.open();
 
-      final Collection<String> remoteFilesCache = new HashSet<String>(resource.listFiles());
-
-      FileResource wrapped = new FileResource() {         // отслеживает изменения на ресурсе, редактирует кэш
-        @Override
-        public void open() throws AdminException {
-          resource.open();
-        }
-
-        @Override
-        public List<String> listFiles() throws AdminException {
-          return resource.listFiles();
-        }
-
-        @Override
-        public void get(String path, OutputStream os) throws AdminException {
-          resource.get(path, os);
-        }
-
-        @Override
-        public void rename(String fromPath, String toPath) throws AdminException {
-          resource.rename(fromPath, toPath);
-          remoteFilesCache.remove(fromPath);
-          remoteFilesCache.add(toPath);
-        }
-
-        @Override
-        public void remove(String path) throws AdminException {
-          resource.remove(path);
-          remoteFilesCache.remove(path);
-        }
-
-        @Override
-        public void put(InputStream is, String toPath) throws AdminException {
-          resource.put(is, toPath);
-          remoteFilesCache.add(toPath);
-        }
-
-        @Override
-        public void close() throws AdminException {
-          resource.close();
-        }
-      };
-
-      synchronizeFinished(wrapped, new HashSet<String>(remoteFilesCache));      //копия кэша во избежание Concurrent modification при итерации
+      synchronizeFinished(resource);
 
       if(downloadNewFiles)
-        downloadFilesFromResource(wrapped, new HashSet<String>(remoteFilesCache));      //копия кэша во избежание Concurrent modification при итерации
+        downloadFilesFromResource(resource);
 
-      synchronizeInProcess(wrapped, new HashSet<String>(remoteFilesCache));
+      synchronizeInProcess(resource);
 
       helper.notifyInteractionOk("type","synchronization");
 

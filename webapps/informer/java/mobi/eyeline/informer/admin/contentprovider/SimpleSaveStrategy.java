@@ -61,7 +61,10 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
     try{
       resource.open();
 
-      for(String remoteCsvFile : resource.listCSVFiles()) {
+      for(String remoteCsvFile : resource.listFiles()) {
+        if(!remoteCsvFile.endsWith(".csv")) {
+          continue;
+        }
         File localCsvFile = new File(localCopy, remoteCsvFile);
         if (!fileSys.exists(localCsvFile) && allowDownloadNew)
           helper.downloadFileFromResource(resource, remoteCsvFile, localCsvFile);
