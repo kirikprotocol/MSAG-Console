@@ -1,7 +1,6 @@
 package mobi.eyeline.util.jsf.components.collapsing_group;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
-
+import javax.el.ValueExpression;
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
@@ -16,7 +15,11 @@ public class CollapsingGroup extends UIPanel implements JspTag {
   private boolean opened;
 
   public String getLabel() {
-    return label;
+    ValueExpression exp = getValueExpression("label");
+    if (exp == null) {
+      return label;
+    } else
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setLabel(String label) {

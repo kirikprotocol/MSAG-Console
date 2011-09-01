@@ -11,23 +11,26 @@
 
       <h:form>
 
-        <eye:collapsingGroup label="Группа 1" opened="false">
-          <h:panelGrid columns="1">
-            <h:outputText value="element 1"/>
-            <h:outputText value="element 2"/>
-            <h:outputText value="element 3"/>
-            <eye:collapsingGroup opened="true">
-              <f:facet name="header">
-                <h:outputText value="Заголовок задан в фасете header"/>
-              </f:facet>
-              <h:panelGrid columns="1">
-                <h:outputText value="element 4"/>
-                <h:outputText value="element 5"/>
-                <h:outputText value="element 6"/>
-              </h:panelGrid>
-            </eye:collapsingGroup>
-          </h:panelGrid>
-        </eye:collapsingGroup>
+        <h:panelGroup rendered="true">
+          <eye:collapsingGroup label="#{msg['javax.faces.component.UIInput.CONVERSION']}" opened="false">
+            <h:panelGrid columns="1">
+              <h:outputText value="element 1"/>
+              <h:outputText value="element 2"/>
+              <h:outputText value="element 3"/>
+              <eye:collapsingGroup opened="true">
+                <f:facet name="header">
+                  <h:outputText value="Заголовок задан в фасете header"/>
+                </f:facet>
+                <h:panelGrid columns="1">
+                  <h:outputText value="element 4"/>
+                  <h:outputText value="element 5"/>
+                  <h:outputText value="element 6"/>
+                </h:panelGrid>
+              </eye:collapsingGroup>
+            </h:panelGrid>
+          </eye:collapsingGroup>
+        </h:panelGroup>
+
 
         <h:commandButton value="Submit"/>
 

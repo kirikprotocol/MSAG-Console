@@ -19,6 +19,11 @@
       <supported-locale>en</supported-locale>
     </locale-config>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.util.jsf.components.sample.MyMessages</base-name>
+      <var>msg</var>
+    </resource-bundle>
+
     <!--<navigation-handler>mobi.eyeline.util.jsf.components.NavigationHandlerImpl</navigation-handler>-->
   </application>
 
