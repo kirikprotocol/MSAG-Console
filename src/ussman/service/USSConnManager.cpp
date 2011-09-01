@@ -114,7 +114,8 @@ bool USSConnManager::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pc
     WorkerID * pwId = _reqReg.GetPtr(iPck._Cmd.getOpData());
     if (pwId) {
       _logger->log_(_cfg._denyDupRequest ? Logger::LEVEL_WARN : Logger::LEVEL_ERROR,
-                    "%s: duplicate of USSreq[%s:%u] is received", _logId, mgrId(), *pwId);
+                    "%s: recieved USSreq[%s:%u] is a duplicate of USSreq[%s:%u], %s ..", _logId,
+                    mgrId(), iPck.getDlgId(), mgrId(), *pwId, _cfg._denyDupRequest ? "denying" : "ignoring");
 
       if (_cfg._denyDupRequest)
         denyRequest(iPck.getDlgId(), interaction::USSResultMessage::reqDUPLICATE);  //ignore sending failure here
