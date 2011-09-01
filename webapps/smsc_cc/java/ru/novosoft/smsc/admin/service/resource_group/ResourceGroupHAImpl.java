@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.admin.service.resource_group;
 
+import ru.novosoft.smsc.admin.resource_group.NativeResourceGroupHA;
+
 import java.io.File;
 
 

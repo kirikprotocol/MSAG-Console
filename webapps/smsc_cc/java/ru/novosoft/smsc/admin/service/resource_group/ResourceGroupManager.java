@@ -2,6 +2,8 @@ package ru.novosoft.smsc.admin.service.resource_group;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.resource_group.LibNotFoundException;
+import ru.novosoft.smsc.admin.resource_group.NativeResourceGroupHA;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,7 +44,11 @@ public class ResourceGroupManager {
         }
     }
 
-    NativeResourceGroupHA.LoadLibrary();
+    try {
+      NativeResourceGroupHA.LoadLibrary();
+    } catch (LibNotFoundException e) {
+      throw new ResourceGroupException("jni_lib_not_found");
+    }
     if (logger.isDebugEnabled())
       logger.debug("JNI Library loaded.");
     refreshHAResGroupList();

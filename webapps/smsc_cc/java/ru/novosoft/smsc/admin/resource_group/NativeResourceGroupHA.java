@@ -1,15 +1,13 @@
-package ru.novosoft.smsc.admin.service.resource_group;
-
-import ru.novosoft.smsc.admin.AdminException;
+package ru.novosoft.smsc.admin.resource_group;
 
 public final class NativeResourceGroupHA {
 
-  public static void LoadLibrary() throws AdminException {
+  public static void LoadLibrary() throws LibNotFoundException {
     try {
       System.loadLibrary("NativeResourceGroupHA");
     } catch (UnsatisfiedLinkError e) {
       e.printStackTrace();
-      throw new ResourceGroupException("jni_lib_not_found");
+      throw new LibNotFoundException();
     }
   }
 
