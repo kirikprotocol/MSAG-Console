@@ -751,7 +751,7 @@ public:
     atrans(*this),
     closed(true)
 #ifdef INTHASH_USAGE_CHECKING
-    ,lock(SMSCFILELINE)
+    ,lockHash(SMSCFILELINE)
 #endif
   {
     log=smsc::logger::Logger::getInstance("smpp.ses");
@@ -869,7 +869,7 @@ public:
     closed=true;
     abortWaits();
     MutexGuard mg(lockMutex);
-    lock.Empty();
+    lockHash.Empty();
   }
 
   int getNextSeq()
@@ -912,7 +912,7 @@ protected:
 
   smsc::logger::Logger* log;
 
-  IntHash<Lock> lock;
+  IntHash<Lock> lockHash;
   TOList tolist;
 
   void processTimeouts()
@@ -926,7 +926,7 @@ protected:
     while(! tolist.empty() && tolist.front().to < now )
     {
       int key=tolist.front().seq;
-      Lock* l = lock.GetPtr(key);
+      Lock* l = lockHash.GetPtr(key);
       if (!l) {
           // lock was already processed
           tolist.erase(tolist.begin());
@@ -936,7 +936,7 @@ protected:
       {
         listener->handleTimeout(key);
         tolist.erase(tolist.begin());
-        lock.Delete(key);
+        lockHash.Delete(key);
         continue;
       }
       if(l->event)
@@ -973,7 +973,7 @@ protected:
     processTimeouts();
     MutexGuard g(lockMutex);
     smsc_log_debug(log,"registerPdu seq=%d",seq);
-    if(lock.Exist(seq))
+    if(lockHash.Exist(seq))
     {
       throw smsc::util::Exception("Attempt to register pdu with already registered seq=%d",seq);
     }
@@ -986,22 +986,22 @@ protected:
     l.event=event;
     l.pdu=NULL;
     l.error=0;
-    lock.Insert(seq,l);
+    lockHash.Insert(seq,l);
   }
   SmppHeader* getPduResponse(int seq)
   {
     MutexGuard g(lockMutex);
-    if(!lock.Exist(seq))return NULL;
-    const Lock &l=lock.Get(seq);
+    if(!lockHash.Exist(seq))return NULL;
+    const Lock &l=lockHash.Get(seq);
     if(l.error)
     {
       tolist.erase(l.toit);
-      lock.Delete(seq);
+      lockHash.Delete(seq);
       throw Exception("Unknown error");
     }
     SmppHeader *retval=l.pdu;
     tolist.erase(l.toit);
-    lock.Delete(seq);
+    lockHash.Delete(seq);
     return retval;
   }
 
@@ -1010,7 +1010,7 @@ protected:
     MutexGuard g(lockMutex);
     Lock l;
     int key;
-    IntHash<Lock>::Iterator i=lock.First();
+    IntHash<Lock>::Iterator i=lockHash.First();
     while(i.Next(key,l))
     {
       if(l.event)
@@ -1212,26 +1212,26 @@ protected:
       //�������� ���������� ������ ������ ��������.
       case GENERIC_NACK://����� ������.
       {
-        if(lock.Exist(seq))
+        if(lockHash.Exist(seq))
         {
-          Lock &l=lock.Get(seq);
+          Lock &l=lockHash.Get(seq);
           if(l.event)
           {
-            lockMutex.Unlock();
             l.error=1;
             l.event->Signal();
+            lockMutex.Unlock();
             disposePdu(pdu);
           }else
           {
             tolist.erase(l.toit);
-            lock.Delete(seq);
+            lockHash.Delete(seq);
             lockMutex.Unlock();
             listener->handleEvent(pdu);
           }
         }else
         {
-          disposePdu(pdu);
           lockMutex.Unlock();
+          disposePdu(pdu);
         }
       }break;
       /*case ENQUIRE_LINK_RESP:
@@ -1261,19 +1261,19 @@ protected:
       case UNBIND_RESP:
       case ENQUIRE_LINK_RESP:
       {
-        if(lock.Exist(seq))
+        if(lockHash.Exist(seq))
         {
           smsc_log_debug(log,"processIncoming: lock for %d found",seq);
-          Lock &l=lock.Get(seq);
+          Lock &l=lockHash.Get(seq);
           if(l.event)
           {
             l.pdu=pdu;
-            lockMutex.Unlock();
             l.event->Signal();
+            lockMutex.Unlock();
           }else
           {
             tolist.erase(l.toit);
-            lock.Delete(seq);
+            lockHash.Delete(seq);
             lockMutex.Unlock();
             listener->handleEvent(pdu);
           }
