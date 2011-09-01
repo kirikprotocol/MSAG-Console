@@ -125,17 +125,21 @@ function validateField_mask(elem, noEmpty)
 	//var special_pattern_header = "^\\.5\\.0\\.";
 	//var special_pattern1 = RegExp(special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$");
 	//var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
-    var special_pattern1 = /^\.5\.0\.[ _\-:0-9A-Za-z]{0,20}\?{0,20}$/;
-    var special_pattern2 = /^\.5\.0\.([ _\-:0-9A-Za-z]|\?){1,20}$/;
+    // Punctuation: One of !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+    // Special java script characters: One of ^ $ . * + ? = ! : | \ / ( ) [ ] { }
+    // From special characters remover * " ' \
+    var special_pattern1 = /^\.5\.0\.[\!#\$%&\(\)\+,-\.\/\:;<\=>@\[\]\^_`\{\|\}~0-9A-Za-z]{0,20}\?{0,20}$/;
+    var special_pattern2 = /^\.5\.0\.([\!#\$%&\(\)\+,-\.\/\:;<\=>\?@\[\]\^_`\{\|\}~0-9A-Za-z]){1,20}$/;
 
-	return elem.value == null
-		|| (
-			   (elem.value.match(        pattern1) == null || elem.value.match(        pattern2) == null)
-			&& (elem.value.match(special_pattern1) == null || elem.value.match(special_pattern2) == null)
-		   )
-		//? validationError(elem, "Invalid mask")
-		? validationError(elem, '<fmt:message>scripts.maskErrorMsg</fmt:message>')
-		: true;
+    if (elem.value == null){
+        return validationError(elem, '<fmt:message>scripts.maskErrorMsg</fmt:message>');
+    } else {
+        var v = trim(elem.value);
+        return ((v.match(        pattern1) == null || v.match(        pattern2) == null)
+			    && (v.match(special_pattern1) == null || v.match(special_pattern2) == null))
+                ? validationError(elem, '<fmt:message>scripts.maskErrorMsg</fmt:message>')
+		          : true;
+    }
 }
 
 function validateField_routeMask(elem, noEmpty)
@@ -243,7 +247,7 @@ function validateField_address(elem)
 	//var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
 	//var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
 	var r1 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?\d{1,20}$/
-    var r2 = /^\.5\.0\.[ _\-:0-9A-Za-z]{1,20}$/;
+    var r2 = /^\.5\.0\.[\u0021\u0022\u0023\u0024\u0025\u005E\u0026\u0027\u002A\u0028\u0029\u005F\u002B\u002C\u002D\u002E\u002F\u003A\u003B\u003C\u003D\u003E\u0040\u005B\u005C\u005D\u005F\u0060\u007B\u007C\u007D\u007E0-9A-Za-z]{1,20}$/;
 
 	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
 		? validationError(elem, '<fmt:message>scripts.addressErrorMsg</fmt:message>')
@@ -259,7 +263,7 @@ function validateField_address_prefix(elem)
 	//var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
 	//var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
 	var r1 = /^((\.[0-6\*]\.(0|1|3|4|6|8|9|10|14|18|\*)\.)|(\+))?(\d|\*){1,20}$/
-	var r2 = /^\.5\.0\.[ _\-:0-9A-Za-z\*]{1,20}$/;
+	var r2 = /^\.5\.0\.[\u0021\u0022\u0023\u0024\u0025\u005E\u0026\u0027\u002A\u0028\u0029\u005F\u002B\u002C\u002D\u002E\u002F\u003A\u003B\u003C\u003D\u003E\u0040\u005B\u005C\u005D\u005F\u0060\u007B\u007C\u007D\u007E0-9A-Za-z\*]{1,20}$/;
 
 	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
 		? validationError(elem, '<fmt:message>scripts.addrPreErrorMsg</fmt:message>')
