@@ -191,10 +191,8 @@
     </h:panelGroup>
 
     <h:panelGroup>
-      <c:set var="nm" value="delivery.status.unknown"/>
-      <c:if test="#{archiveDelivery.status != null}">
-        <c:set var="nm" value="delivery.status.#{archiveDelivery.status.deliveryState.status}"/>
-      </c:if>
+
+      <c:set var="nm" value="delivery.status.#{archiveDelivery.status.deliveryState.status}"/>
 
       <eye:pageSubtitle value="#{msg['delivery.edit.status']} : #{msg[nm]}"/>
 
