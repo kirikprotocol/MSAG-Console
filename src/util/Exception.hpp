@@ -62,7 +62,7 @@ public:
   {
     if (msg || err_desc)
     {
-      fill(err_code, msg, err_desc);
+      fill(msg, err_code, err_desc);
     }
   }
   CustomException(const char * fmt, ...) : errCode(-1), exId("CustomException")
@@ -85,7 +85,7 @@ public:
     SMSC_UTIL_EX_FILL(fmt);
   }
 
-  void fill(const char * msg, int32_t err_code,const char * err_desc = NULL)
+  void fill(const char * msg, int32_t err_code, const char * err_desc = NULL)
   {
     message = msg ? msg : "";
     if ((errCode = err_code))
