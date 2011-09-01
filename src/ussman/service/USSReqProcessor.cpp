@@ -50,6 +50,7 @@ void USSReqProcessor::wrkHandlePacket(const SPckUSSRequest & recv_pck) /*throw()
     if (!initMapDialog(recv_pck._Cmd._inSSN, recv_pck._Cmd._inAddr)) {
       _resPck._Cmd._status = interaction::USSResultMessage::reqFAILED;
       sendResult();
+      doCleanUp();
       wDone = true;
     } else {
       try {
