@@ -8,6 +8,8 @@
 #endif
 #include <memory.h>
 #include <string>
+#include <stdexcept>
+
 
 namespace smsc{
 namespace core{
@@ -55,8 +57,65 @@ struct KeyVal{
    }
 };
 
+template <class NodeType,size_t POOL_PAGE_SIZE=256>
+struct HTPooledAllocator{
+   struct PoolPage{
+      PoolPage():m_current(m_nodes),m_nextPage(0){}
+      NodeType m_nodes[POOL_PAGE_SIZE];
+      NodeType* m_current;
+      PoolPage* m_nextPage;
+   };
+   PoolPage m_firstPage;
+   PoolPage* m_currentPage;
+   NodeType* m_freeNodes;
+   HTPooledAllocator():m_currentPage(&m_firstPage),m_freeNodes(0){}
+   ~HTPooledAllocator()
+   {
+      PoolPage* ptr=m_firstPage.m_nextPage;
+      PoolPage* optr;
+      while(ptr)
+      {
+         optr=ptr;
+         ptr=ptr->m_nextPage;
+         delete optr;
+      }
+   }
+   NodeType* newNode()
+   {
+      if(m_freeNodes)
+      {
+         NodeType* rv=m_freeNodes;
+         m_freeNodes=m_freeNodes->m_next;
+         return rv;
+      }
+      if(m_currentPage->m_current==m_currentPage->m_nodes+POOL_PAGE_SIZE)
+      {
+         m_currentPage=m_currentPage->m_nextPage=new PoolPage;
+      }
+      return m_currentPage->m_current++;
+   }
+   void freeNode(NodeType* a_ptr)
+   {
+      a_ptr->m_next=m_freeNodes;
+      m_freeNodes=a_ptr;
+   }
+};
 
-template <class K,class V,typename HF=HTDefaultHashFunc>
+template <class NodeType,size_t N>
+class HTHeapAllocator{
+public:
+  NodeType* newNode()
+  {
+    return new NodeType;
+  }
+  void freeNode(NodeType* a_ptr)
+  {
+    delete a_ptr;
+  }
+};
+
+
+template <class K,class V,typename HF=HTDefaultHashFunc,size_t PoolSz=256,template <class NT,size_t SZ=PoolSz> class NodesAllocator=HTPooledAllocator>
 class HashTree{
 protected:
    struct Node;
@@ -95,6 +154,17 @@ public:
       return *this;
    }
 
+   template <size_t DefSz2,template <class NT2,size_t SZ2=DefSz2> class NodesAllocator2>
+   HashTree& operator=(const HashTree<K,V,HF,DefSz2,NodesAllocator2>& a_other)
+   {
+      clear();
+      for(typename HashTree<K,V,HF,DefSz2,NodesAllocator2>::const_iterator it=a_other.begin(),end=a_other.end();it!=end;++it)
+      {
+         insert(it->m_key,it->m_value);
+      }
+      return *this;
+   }
+
    bool operator==(const HashTree& a_other)const
    {
       if(this==&a_other)
@@ -121,11 +191,45 @@ public:
             return false;
          }
       }
+      return true;
    }
+   template <size_t DefSz2,template <class NT2,size_t SZ2=DefSz2> class NodesAllocator2>
+   bool operator==(const HashTree<K,V,HF,DefSz2,NodesAllocator2>& a_other)const
+   {
+      const_iterator it1=begin(),end1=end();
+      typename HashTree<K,V,HF,DefSz2,NodesAllocator2>::const_iterator it2=a_other.begin(),end2=a_other.end();
+      for(;;++it1,++it2)
+      {
+         if(it1==end1)
+         {
+            if(it2==end2)
+            {
+               return true;
+            }
+            return false;
+         }
+         if(it2==end2)
+         {
+            return false;
+         }
+         if(!(it1->m_key==it2->m_key) || !(it1->m_value==it2->m_value))
+         {
+            return false;
+         }
+      }
+   }
+
    bool operator!=(const HashTree& a_other)const
    {
       return !operator==(a_other);
    }
+
+   template <size_t DefSz2,template <class NT2,size_t SZ2=DefSz2> class NodesAllocator2>
+   bool operator!=(const HashTree<K,V,HF,DefSz2,NodesAllocator2>& a_other)const
+   {
+     return !operator==(a_other);
+   }
+
 
    ~HashTree()
    {
@@ -197,11 +301,13 @@ public:
       iterator(DataNode* a_node):m_node(a_node){}
       friend class HashTree;
       typename HashTree::DataNode* m_node;
+      friend class const_iterator;
    };
 
    class const_iterator{
    public:
       const_iterator():m_node(0){}
+      const_iterator(const iterator& a_other):m_node(a_other.m_node){}
       const_iterator operator++(int)
       {
          m_node=m_node->m_next;
@@ -281,158 +387,37 @@ public:
 
    iterator insert(const K& a_key,const V& a_value)
    {
-      uint32_t hashCode=m_hashFunc(a_key);
-      size_t bitIndex=0;
-      if(!m_root)
-      {
-         if(!m_npool)
-         {
-            m_npool=new MemPool<Node>;
-            m_dpool=new MemPool<DataNode>;
-            m_apool=new MemPool<DataArrayNode>;
-         }
-         m_root=m_npool->newNode();
-         m_root->m_nodeType=ntInnerNode;
-         m_root->m_ch[3]=m_root->m_ch[2]=m_root->m_ch[1]=m_root->m_ch[0]=0;
-      }
-      Node* ptr=m_root;
-      Node* parent=0;
-      unsigned char parentIdx=0;
-      unsigned char idx;
-      for(;;)
-      {
-         idx=hashCode&3;
-         if(ptr->m_nodeType==ntInnerNode)
-         {
-           if(ptr->m_ch[idx])
-           {
-             parent=ptr;
-             parentIdx=idx;
-             ptr=ptr->m_ch[idx];
-             hashCode>>=2;
-             bitIndex+=2;
-             continue;
-           }else
-           {
-             DataNode& n=*(DataNode*)(ptr->m_ch[idx]=(Node*)m_dpool->newNode());
-             n.constructKeyVal(value_type(a_key,a_value));
-             n.m_next=(DataNode*)&m_end;
-             n.m_prev=m_end.m_prev;
-             if(m_end.m_prev)
-             {
-               m_end.m_prev->m_next=&n;
-             }else
-             {
-               m_begin=&n;
-             }
-             m_end.m_prev=&n;
-             m_count++;
-             return iterator(&n);
-           }
-         }
+      return insert(a_key,a_value,true);
+   }
 
-         if(ptr->m_nodeType==ntValuesArray)
-         {
-            DataArrayNode& va=ptr->asArray();
-            for(size_t i=0;i<va.m_count;i++)
-            {
-               if(va.m_array[i]->keyval().m_key==a_key)
-               {
-                  va.m_array[i]->keyval().m_value=a_value;
-                  return iterator(va.m_array[i]);
-               }
-            }
-            DataNode** newArr=new DataNode*[va.m_count+1];
-            memcpy(newArr,va.m_array,sizeof(DataNode*)*va.m_count);
-            delete [] va.m_array;
-            va.m_array=newArr;
-            DataNode& n=*m_dpool->newNode();
-            n.constructKeyVal(value_type(a_key,a_value));
-            n.m_next=(DataNode*)&m_end;
-            n.m_prev=m_end.m_prev;
-            if(m_end.m_prev)
-            {
-               m_end.m_prev->m_next=&n;
-            }else
-            {
-               m_begin=&n;
-            }
-            m_end.m_prev=&n;
-            va.m_array[va.m_count++]=&n;
-            m_count++;
-            return iterator(&n);
-         }else
-         {
-            DataNode* dptr=ptr->asDataPtr();
-            if(dptr->keyval().m_key==a_key)
-            {
-               dptr->keyval().m_value=a_value;
-               return iterator(dptr);
-            }
-            if(bitIndex!=30)
-            {
-               uint32_t oldHashCode=m_hashFunc(dptr->keyval().m_key);
-               oldHashCode>>=bitIndex;
-               do
-               {
-                  Node* newNode=parent->m_ch[parentIdx]=m_npool->newNode();
-                  newNode->m_nodeType=ntInnerNode;
-                  newNode->m_ch[3]=newNode->m_ch[2]=newNode->m_ch[1]=newNode->m_ch[0]=0;
-                  if((oldHashCode&3)!=idx)
-                  {
-                     newNode->m_ch[oldHashCode&3]=ptr;
-                     ptr=newNode;
-                     DataNode& n=*(DataNode*)(ptr->m_ch[idx]=(Node*)(dptr=m_dpool->newNode()));
-                     n.constructKeyVal(value_type(a_key,a_value));
-                     n.m_next=(DataNode*)&m_end;
-                     n.m_prev=m_end.m_prev;
-                     if(m_end.m_prev)
-                     {
-                        m_end.m_prev->m_next=dptr;
-                     }else
-                     {
-                        m_begin=dptr;
-                     }
-                     m_end.m_prev=dptr;
-                     m_count++;
-                     return iterator(dptr);
-                  }
-                  parent=newNode;
-                  parentIdx=idx;
-                  hashCode>>=2;
-                  oldHashCode>>=2;
-                  bitIndex+=2;
-                  idx=hashCode&3;
-               }while(bitIndex<30);
-            }
+   V& operator[](const K& a_key)
+   {
+      iterator it=insert(a_key,V(),false);
+      return it->m_value;
+   }
 
-            DataArrayNode* newNode=(DataArrayNode*)(parent->m_ch[parentIdx]=(Node*)m_apool->newNode());
-            newNode->m_nodeType=ntValuesArray;
-            newNode->m_count=0;
-            newNode->m_array=new DataNode*[2];
-            newNode->m_array[0]=dptr;
-            DataNode& n=*(newNode->m_array[1]=m_dpool->newNode());
-            n.constructKeyVal(value_type(a_key,a_value));
-            n.m_next=(DataNode*)&m_end;
-            n.m_prev=m_end.m_prev;
-            if(m_end.m_prev)
-            {
-               m_end.m_prev->m_next=&n;
-            }else
-            {
-               m_begin=&n;
-            }
-            m_end.m_prev=&n;
-            m_count++;
-            return iterator(&n);
-         }
+   const V& operator[](const K& a_key)const
+   {
+      iterator it=find(a_key);
+      if(it==end())
+      {
+        throw std::runtime_error("const HashTree::operator[] on non existent key");
       }
-      return end();
+      return it->m_value;
    }
 
    iterator insert(const value_type& a_keyval)
    {
       return insert(a_keyval.m_key,a_keyval.m_value);
+   }
+
+   template <class InputIterator>
+   void insert(InputIterator it,InputIterator end)
+   {
+     for(;it!=end;++it)
+     {
+       insert(*it);
+     }
    }
 
    iterator find(const K& a_key)
@@ -649,7 +634,7 @@ public:
       return m_count;
    }
 
-   bool empty()
+   bool empty()const
    {
       return !m_count;
    }
@@ -666,12 +651,12 @@ public:
       m_end.m_prev=0;
       if(a_freeMemPool && m_npool)
       {
-        delete m_npool;
-        delete m_dpool;
-        delete m_apool;
-        m_npool=0;
-        m_dpool=0;
-        m_apool=0;
+         delete m_npool;
+         delete m_dpool;
+         delete m_apool;
+         m_npool=0;
+         m_dpool=0;
+         m_apool=0;
       }
    }
 
@@ -687,15 +672,15 @@ public:
       m_begin=a_other.m_begin;
       a_other.m_begin=tmpBegin;
 
-      MemPool<Node>* tmpNPool=m_npool;
+      NodesAllocator<Node>* tmpNPool=m_npool;
       m_npool=a_other.m_npool;
       a_other.m_npool=tmpNPool;
 
-      MemPool<DataNode>* tmpDPool=m_dpool;
+      NodesAllocator<DataNode>* tmpDPool=m_dpool;
       m_dpool=a_other.m_dpool;
       a_other.m_dpool=tmpDPool;
 
-      MemPool<DataArrayNode>* tmpAPool=m_apool;
+      NodesAllocator<DataArrayNode>* tmpAPool=m_apool;
       m_apool=a_other.m_apool;
       a_other.m_apool=tmpAPool;
 
@@ -714,6 +699,164 @@ public:
    }
 
 protected:
+
+   iterator insert(const K& a_key,const V& a_value,bool overwrite)
+   {
+      uint32_t hashCode=m_hashFunc(a_key);
+      size_t bitIndex=0;
+      if(!m_root)
+      {
+         if(!m_npool)
+         {
+            m_npool=new NodesAllocator<Node>;
+            m_dpool=new NodesAllocator<DataNode>;
+            m_apool=new NodesAllocator<DataArrayNode>;
+         }
+         m_root=m_npool->newNode();
+         m_root->m_nodeType=ntInnerNode;
+         m_root->m_ch[3]=m_root->m_ch[2]=m_root->m_ch[1]=m_root->m_ch[0]=0;
+      }
+      Node* ptr=m_root;
+      Node* parent=0;
+      unsigned char parentIdx=0;
+      unsigned char idx;
+      for(;;)
+      {
+         idx=hashCode&3;
+         if(ptr->m_nodeType==ntInnerNode)
+         {
+           if(ptr->m_ch[idx])
+           {
+             parent=ptr;
+             parentIdx=idx;
+             ptr=ptr->m_ch[idx];
+             hashCode>>=2;
+             bitIndex+=2;
+             continue;
+           }else
+           {
+             DataNode& n=*(DataNode*)(ptr->m_ch[idx]=(Node*)m_dpool->newNode());
+             n.constructKeyVal(value_type(a_key,a_value));
+             n.m_next=(DataNode*)&m_end;
+             n.m_prev=m_end.m_prev;
+             if(m_end.m_prev)
+             {
+               m_end.m_prev->m_next=&n;
+             }else
+             {
+               m_begin=&n;
+             }
+             m_end.m_prev=&n;
+             m_count++;
+             return iterator(&n);
+           }
+         }
+
+         if(ptr->m_nodeType==ntValuesArray)
+         {
+            DataArrayNode& va=ptr->asArray();
+            for(size_t i=0;i<va.m_count;i++)
+            {
+               if(va.m_array[i]->keyval().m_key==a_key)
+               {
+                  if(overwrite)
+                  {
+                     va.m_array[i]->keyval().m_value=a_value;
+                  }
+                  return iterator(va.m_array[i]);
+               }
+            }
+            DataNode** newArr=new DataNode*[va.m_count+1];
+            memcpy(newArr,va.m_array,sizeof(DataNode*)*va.m_count);
+            delete [] va.m_array;
+            va.m_array=newArr;
+            DataNode& n=*m_dpool->newNode();
+            n.constructKeyVal(value_type(a_key,a_value));
+            n.m_next=(DataNode*)&m_end;
+            n.m_prev=m_end.m_prev;
+            if(m_end.m_prev)
+            {
+               m_end.m_prev->m_next=&n;
+            }else
+            {
+               m_begin=&n;
+            }
+            m_end.m_prev=&n;
+            va.m_array[va.m_count++]=&n;
+            m_count++;
+            return iterator(&n);
+         }else
+         {
+            DataNode* dptr=ptr->asDataPtr();
+            if(dptr->keyval().m_key==a_key)
+            {
+               if(overwrite)
+               {
+                  dptr->keyval().m_value=a_value;
+               }
+               return iterator(dptr);
+            }
+            if(bitIndex!=30)
+            {
+               uint32_t oldHashCode=m_hashFunc(dptr->keyval().m_key);
+               oldHashCode>>=bitIndex;
+               do
+               {
+                  Node* newNode=parent->m_ch[parentIdx]=m_npool->newNode();
+                  newNode->m_nodeType=ntInnerNode;
+                  newNode->m_ch[3]=newNode->m_ch[2]=newNode->m_ch[1]=newNode->m_ch[0]=0;
+                  if((oldHashCode&3)!=idx)
+                  {
+                     newNode->m_ch[oldHashCode&3]=ptr;
+                     ptr=newNode;
+                     DataNode& n=*(DataNode*)(ptr->m_ch[idx]=(Node*)(dptr=m_dpool->newNode()));
+                     n.constructKeyVal(value_type(a_key,a_value));
+                     n.m_next=(DataNode*)&m_end;
+                     n.m_prev=m_end.m_prev;
+                     if(m_end.m_prev)
+                     {
+                        m_end.m_prev->m_next=dptr;
+                     }else
+                     {
+                        m_begin=dptr;
+                     }
+                     m_end.m_prev=dptr;
+                     m_count++;
+                     return iterator(dptr);
+                  }
+                  parent=newNode;
+                  parentIdx=idx;
+                  hashCode>>=2;
+                  oldHashCode>>=2;
+                  bitIndex+=2;
+                  idx=hashCode&3;
+               }while(bitIndex<30);
+            }
+
+            DataArrayNode* newNode=(DataArrayNode*)(parent->m_ch[parentIdx]=(Node*)m_apool->newNode());
+            newNode->m_nodeType=ntValuesArray;
+            newNode->m_count=0;
+            newNode->m_array=new DataNode*[2];
+            newNode->m_array[0]=dptr;
+            DataNode& n=*(newNode->m_array[1]=m_dpool->newNode());
+            n.constructKeyVal(value_type(a_key,a_value));
+            n.m_next=(DataNode*)&m_end;
+            n.m_prev=m_end.m_prev;
+            if(m_end.m_prev)
+            {
+               m_end.m_prev->m_next=&n;
+            }else
+            {
+               m_begin=&n;
+            }
+            m_end.m_prev=&n;
+            m_count++;
+            return iterator(&n);
+         }
+      }
+      return end();
+   }
+
    friend class iterator;
    friend class const_iterator;
 
@@ -785,53 +928,9 @@ protected:
    DataNodeBase m_end;
    DataNode* m_begin;
 
-   enum{POOL_PAGE_SIZE=256};
-   template <class NodeType>
-   struct MemPool{
-      struct PoolPage{
-         PoolPage():m_current(m_nodes),m_nextPage(0){}
-         NodeType m_nodes[POOL_PAGE_SIZE];
-         NodeType* m_current;
-         PoolPage* m_nextPage;
-      };
-      PoolPage m_firstPage;
-      PoolPage* m_currentPage;
-      NodeType* m_freeNodes;
-      MemPool():m_currentPage(&m_firstPage),m_freeNodes(0){}
-      ~MemPool()
-      {
-         PoolPage* ptr=m_firstPage.m_nextPage;
-         PoolPage* optr;
-         while(ptr)
-         {
-            optr=ptr;
-            ptr=ptr->m_nextPage;
-            delete optr;
-         }
-      }
-      NodeType* newNode()
-      {
-         if(m_freeNodes)
-         {
-            NodeType* rv=m_freeNodes;
-            m_freeNodes=m_freeNodes->m_next;
-            return rv;
-         }
-         if(m_currentPage->m_current==m_currentPage->m_nodes+POOL_PAGE_SIZE)
-         {
-            m_currentPage=m_currentPage->m_nextPage=new PoolPage;
-         }
-         return m_currentPage->m_current++;
-      }
-      void freeNode(NodeType* a_ptr)
-      {
-         a_ptr->m_next=m_freeNodes;
-         m_freeNodes=a_ptr;
-      }
-   };
-   MemPool<Node>* m_npool;
-   MemPool<DataNode>* m_dpool;
-   MemPool<DataArrayNode>* m_apool;
+   NodesAllocator<Node>* m_npool;
+   NodesAllocator<DataNode>* m_dpool;
+   NodesAllocator<DataArrayNode>* m_apool;
 
    void recClear(Node* a_ptr)
    {
@@ -862,15 +961,14 @@ protected:
    }
 };
 
-template <class K,class V,typename HF>
-const intptr_t HashTree<K,V,HF>::ntInnerNode;
-template <class K,class V,typename HF>
-const intptr_t HashTree<K,V,HF>::ntValuesArray;
+template <class K,class V,typename HF,size_t PoolSz,template <class NT,size_t SZ> class NodesAllocator>
+const intptr_t HashTree<K,V,HF,PoolSz,NodesAllocator>::ntInnerNode;
+template <class K,class V,typename HF,size_t PoolSz,template <class NT,size_t SZ> class NodesAllocator>
+const intptr_t HashTree<K,V,HF,PoolSz,NodesAllocator>::ntValuesArray;
 
 
 }
 }
 }
-
 
 #endif

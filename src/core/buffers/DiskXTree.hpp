@@ -50,7 +50,7 @@ public:
     const char* orgkey=key;
     while(*key)
     {
-      if(ptr->chSize==0 && ptr->children==0 && ptr->child==0)
+      if(ptr->chSize==0 && ptr->children==0 && ptr->child==0 && ptr->data==0)
       {
         ptr->nodeType=ntCollapsed;
         size_t l=strlen(key);
