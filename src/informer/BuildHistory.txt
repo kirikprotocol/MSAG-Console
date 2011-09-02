@@ -1,8 +1,7 @@
-2011-09-01 19:03 bukind
-  bugfix: bug in SmppSession: too early Unlock before l->event.Signal
-
 =====================================================================
 2011-08-31 13:46 bukind informer-build-20110831
+2011-09-01 19:03 bukind
+  bugfix: bug in SmppSession: too early Unlock before l->event.Signal
 2011-08-29 10:21 bukind
   feature: ability to remove endDate in run-time added
 2011-08-24 13:55 bukind
