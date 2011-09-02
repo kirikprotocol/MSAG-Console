@@ -122,7 +122,7 @@
                                     </c:choose>
                                   </c:when>
                                   <c:otherwise>
-                                    <c:out value="${val}"/>
+                                    <c:out value="${val}" escapeXml="false"/>
                                   </c:otherwise>
                                </c:choose> 
                             </c:when>

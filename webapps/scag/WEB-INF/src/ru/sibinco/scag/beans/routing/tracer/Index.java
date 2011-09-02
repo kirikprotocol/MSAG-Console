@@ -1,8 +1,12 @@
 package ru.sibinco.scag.beans.routing.tracer;
 
+import org.apache.log4j.Logger;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.bean.TabledBean;
+import ru.sibinco.scag.backend.service.Service;
+import ru.sibinco.scag.backend.service.ServiceProvider;
+import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
@@ -17,6 +21,8 @@ import java.util.*;
 
 
 public class Index extends TabledBeanImpl implements TabledBean {
+
+    protected final Logger log = Logger.getLogger(this.getClass());
 
     public final int traceRouteFound = 10;
     public static final int traceRouteStatus = 20;
@@ -41,7 +47,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
 
     private String message = null;
     private List routeInfo = null;
-    private HashMap routeInfoMap = null;
+    private LinkedHashMap routeInfoMap = null;
     private List traceResults = null;
     private int messageType = traceRouteStatus;
 
@@ -155,11 +161,39 @@ public class Index extends TabledBeanImpl implements TabledBean {
                     message.startsWith("Route not found") ? traceRouteNotFound : traceRouteFound;
             routeInfo = parseRouteInfo((String) traceResults.get(1));
             if (routeInfo != null) {
-                routeInfoMap = new HashMap();
+                routeInfoMap = new LinkedHashMap();
+
+                if (routeInfo.contains("route id")) {
+                    if (routeInfo.indexOf("route id") + 1 < routeInfo.size()){
+                        String routeId = (String) routeInfo.get(routeInfo.indexOf("route id") + 1);
+                        log.debug("Route id: "+routeId);
+
+                        ScagRoutingManager scagRoutingManager = appContext.getScagRoutingManager();
+                        ServiceProvidersManager serviceProviderManager = appContext.getServiceProviderManager();
+
+                        Integer serviceId = scagRoutingManager.getServiceIdByRouteId(routeId);
+                        log.debug("Service id: "+serviceId);
+                        Integer providerId = scagRoutingManager.getProviderIdByServiceId(serviceId.longValue());
+                        log.debug("Provider id: "+providerId);
+
+                        Service service = serviceProviderManager.getServiceById(serviceId.longValue());
+                        String service_name = service.getName();
+                        log.debug("Service name: "+service_name);
+
+                        ServiceProvider sp = (ServiceProvider) serviceProviderManager.getServiceProviders().get(providerId.longValue());
+                        String provider_name = sp.getName();
+                        log.debug("Provider name: "+provider_name);
+
+                        routeInfoMap.put("provider", "<a href=\"../msag/services/edit.jsp?editId="+providerId+"\">"+provider_name+"</a>");
+                        routeInfoMap.put("service", "<a href=\"../msag/services/service/edit.jsp?parentId="+serviceId+"&editChild=true&editId="+providerId+"\">"+service_name+"</a>");
+                    }
+                }
+
                 for (int i = 0; i < routeInfo.size(); i += 2) {
                     String key = (String) routeInfo.get(i);
                     String value = (String) routeInfo.get(i + 1);
                     routeInfoMap.put(key, value);
+                    log.debug("SMPP route info: "+key+" --> "+value);
                 }
             }
             traceResults.remove(0);
@@ -182,7 +216,32 @@ public class Index extends TabledBeanImpl implements TabledBean {
                     message.startsWith("Http route not found") ? traceRouteNotFound : traceRouteFound;
             routeInfo = parseRouteInfo((String) traceResults.get(1));
             if (routeInfo != null) {
-                routeInfoMap = new HashMap();
+                routeInfoMap = new LinkedHashMap();
+
+                if (routeInfo.contains("ServiceId")) {
+                    if (routeInfo.indexOf("ServiceId") + 1 < routeInfo.size()){
+                        Long serviceId = new Long((String) routeInfo.get(routeInfo.indexOf("ServiceId") + 1));
+                        log.debug("Service id: "+routeId);
+
+                        ScagRoutingManager scagRoutingManager = appContext.getScagRoutingManager();
+                        ServiceProvidersManager serviceProviderManager = appContext.getServiceProviderManager();
+
+                        Integer providerId = scagRoutingManager.getProviderIdByServiceId(serviceId);
+                        log.debug("Provider id: "+providerId);
+
+                        Service service = serviceProviderManager.getServiceById(serviceId);
+                        String service_name = service.getName();
+                        log.debug("Service name: "+service_name);
+
+                        ServiceProvider sp = (ServiceProvider) serviceProviderManager.getServiceProviders().get(providerId.longValue());
+                        String provider_name = sp.getName();
+                        log.debug("Provider name: "+provider_name);
+
+                        routeInfoMap.put("Provider", "<a href=\"../msag/services/edit.jsp?editId="+providerId+"\">"+provider_name+"</a>");
+                        routeInfoMap.put("Service", "<a href=\"../msag/services/service/edit.jsp?parentId="+serviceId+"&editChild=true&editId="+providerId+"\">"+service_name+"</a>");
+                    }
+                }
+
                 for (int i = 0; i < routeInfo.size(); i += 2) {
                     String key = (String) routeInfo.get(i);
                     String value = (String) routeInfo.get(i + 1);
@@ -190,7 +249,9 @@ public class Index extends TabledBeanImpl implements TabledBean {
                         value = appContext.getServiceProviderManager().getServiceById(new Long(value)).getName();
                     }
                     routeInfoMap.put(key, value);
+                    log.debug("HTTP route info: "+key+" --> "+value);
                 }
+                routeInfoMap.remove("ServiceId");
             }
             traceResults.remove(0);
             traceResults.remove(0);
@@ -255,7 +316,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
         return routeInfo;
     }
 
-    public HashMap getRouteInfoMap() {
+    public LinkedHashMap getRouteInfoMap() {
         return routeInfoMap;
     }
 
