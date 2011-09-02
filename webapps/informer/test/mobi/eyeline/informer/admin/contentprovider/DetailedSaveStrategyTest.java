@@ -109,10 +109,12 @@ public class DetailedSaveStrategyTest {
     fs.mkdirs(dir);
 
     File localFile = prepareLocalFile(false, ".active");
+    File report = createEmptyLocalFile(".report");
 
     strategy.synchronize(true);
 
     assertFalse("File exist", fs.exists(localFile));
+    assertFalse("File exist", fs.exists(report));
 
   }
 

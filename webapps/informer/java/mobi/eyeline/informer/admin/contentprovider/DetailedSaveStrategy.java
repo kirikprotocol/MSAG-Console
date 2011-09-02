@@ -104,6 +104,10 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         resource.rename(csvFile, localInProcessFile.getName());
       } else if (!remoteFiles.contains(localInProcessFile.getName())){
         fileSys.delete(localInProcessFile);
+        File localReportFile = new File(localCopy, buildReportName(csvFile));
+        if(fileSys.exists(localReportFile)) {
+          fileSys.delete(localReportFile);
+        }
       }
     }
   }
