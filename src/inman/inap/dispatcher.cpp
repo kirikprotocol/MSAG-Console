@@ -93,7 +93,7 @@ TCAPDispatcher::TCAPDispatcher()
 #ifdef EIN_HD
     , _rcpMgrAdr(NULL)
 #endif /* EIN_HD */
-    , _logId("TCAPDsp"), logger(NULL), _msgAcq(*this)
+    , _logId("TCAPDsp"), logger(Logger::getInstance("smsc.inman.inap")), _msgAcq(*this)
 {
     ApplicationContextRegistry::get();
     TCCbkLink::get(); //Link TC API Callbacks
@@ -144,7 +144,8 @@ bool TCAPDispatcher::Init(const TCDsp_CFG & use_cfg, Logger * use_log/* = NULL*/
         return false;
     _unitCfg = &(it->second);
 
-    logger = use_log ? use_log : Logger::getInstance("smsc.inman.inap");
+    if (use_log)
+      logger = use_log;
 
     if (connectCP(TCAPDispatcherITF::ss7REGISTERED) < 0)
         return false;
