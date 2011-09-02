@@ -100,7 +100,7 @@ public:
 
   Billing() : smsc::inman::interaction::WorkerIface()
     , _cfg(0), _pState(bilIdle), _chrgFlags(0), _billPrio(0)
-    , _msgType(ChargeParm::msgUnknown), _billMode(ChargeParm::billOFF)
+    , _msgType(BillModes::msgUnknown), _billMode(BillModes::billOFF)
     , _curIAPrvd(AbonentPolicy::iapNone)
     , _cfgScf(0), _xsmsSrv(0), _billErr(0), _capTask(0), _capSched(0)
   { }
@@ -209,9 +209,9 @@ private:
   CDRRecord             _cdr;       //data for CDR record creation & CAP3 interaction
   SMCAPSpecificInfo     _csInfo;    //data for CAP3 interaction
   uint8_t               _chrgFlags; //flags which customize billing settings
-  const BModesPrio *    _billPrio;  //billing modes priority 
-  ChargeParm::MSG_TYPE  _msgType;   //
-  ChargeParm::BILL_MODE _billMode;  //current billing mode
+  const BillModesPrio * _billPrio;  //billing modes priority 
+  BillModes::MsgType_e  _msgType;   //
+  BillModes::BillType_e _billMode;  //current billing mode
   // ..
   ThisGuard             _wrkRefs[refIdMAX];
   TimersRegistry        _timers;    //active timers

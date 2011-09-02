@@ -3,16 +3,13 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/smbill/SmBillCfgReader.hpp"
+#include "inman/services/common/BillModesCfgReader.hpp"
 
 #include "inman/incache/AbCacheDefs.hpp"
 using smsc::inman::cache::AbonentCacheCFG;
 
 #include "inman/inap/xcfg/TCUsrCfgParser.hpp"
 using smsc::inman::inap::TCAPUsrCfgParser;
-
-#include "util/csv/CSVArrayOf.hpp"
-using smsc::util::csv::CSVArrayOfStr;
-
 
 namespace smsc {
 namespace inman {
@@ -80,26 +77,26 @@ ICSrvCfgReaderAC::CfgState
 ICSrvCfgReaderAC::CfgState
   ICSSmBillingCfgReader::parseConfig(void * opaque_obj/* = NULL*/) throw(ConfigException)
 {
-  //according to ChargeParm::ContractReqMode
+  //according to SmBillParams::ContractReqMode
   static const char * _abReq[] = { "onDemand", "always" };
   uint32_t tmo = 0;
   const char * cstr = NULL;
 
   //read BillingModes subsection
-  readBillingModes(_topSec);
-  if (icsCfg->prm->mo_billMode.useIN() || icsCfg->prm->mt_billMode.useIN()) {
+  readBillingModes(_topSec, icsCfg->prm->billMode);
+  if (icsCfg->prm->billMode.useIN()) {
     icsDeps.insert(ICSIdent::icsIdTCAPDisp);
     icsDeps.insert(ICSIdent::icsIdScheduler);
   }
 
   cstr = NULL;
-  icsCfg->prm->cntrReq = ChargeParm::reqOnDemand;
+  icsCfg->prm->cntrReq = SmBillParams::reqOnDemand;
   try { cstr = _topSec.getString("abonentTypeRequest");
   } catch (const ConfigException & exc) { }
   if (cstr && cstr[0]) {
-    if (!strcmp(_abReq[ChargeParm::reqAlways], cstr)) {
-      icsCfg->prm->cntrReq = ChargeParm::reqAlways; 
-    } else if (strcmp(_abReq[ChargeParm::reqOnDemand], cstr))
+    if (!strcmp(_abReq[SmBillParams::reqAlways], cstr)) {
+      icsCfg->prm->cntrReq = SmBillParams::reqAlways; 
+    } else if (strcmp(_abReq[SmBillParams::reqOnDemand], cstr))
       throw ConfigException("illegal 'abonentTypeRequest' value");
   } else
     cstr = NULL;
@@ -136,15 +133,15 @@ ICSrvCfgReaderAC::CfgState
   } catch (const ConfigException & exc) {
     throw ConfigException("'cdrMode' is unknown or missing");
   }
-  if (!strcmp(cstr, _CDRmodes[ChargeParm::cdrALL]))
-    icsCfg->prm->cdrMode = ChargeParm::cdrALL;
-  else if (!strcmp(cstr, _CDRmodes[ChargeParm::cdrNONE]))
-    icsCfg->prm->cdrMode = ChargeParm::cdrNONE;
-  else if (strcmp(cstr, _CDRmodes[ChargeParm::cdrBILLMODE]))
+  if (!strcmp(cstr, SmBillParams::cdrModeStr(SmBillParams::cdrALL)))
+    icsCfg->prm->cdrMode = SmBillParams::cdrALL;
+  else if (!strcmp(cstr, SmBillParams::cdrModeStr(SmBillParams::cdrNONE)))
+    icsCfg->prm->cdrMode = SmBillParams::cdrNONE;
+  else if (strcmp(cstr, SmBillParams::cdrModeStr(SmBillParams::cdrBILLMODE)))
     throw ConfigException("'cdrMode' is unknown or missing");
   smsc_log_info(logger, "  cdrMode: %s [%d]", cstr, icsCfg->prm->cdrMode);
 
-  if (icsCfg->prm->cdrMode != ChargeParm::cdrNONE) {
+  if (icsCfg->prm->cdrMode != SmBillParams::cdrNONE) {
     cstr = NULL;
     try { cstr = _topSec.getString("cdrDir");
     } catch (const ConfigException & exc) { }
@@ -233,7 +230,7 @@ ICSrvCfgReaderAC::CfgState
 
   //read CAP3Sms configuration
   if (icsDeps.LookUp(ICSIdent::icsIdTCAPDisp))
-    icsCfg->prm->capSms.reset(readCAP3Sms(_topSec));
+    readCAP3Sms(_topSec, icsCfg->prm->capSms.init());
 
 #ifdef SMSEXTRA
   /* ********************************* *
@@ -256,129 +253,41 @@ ICSrvCfgReaderAC::CfgState
   return ICSrvCfgReaderAC::cfgComplete;
 }
 
-void ICSSmBillingCfgReader::str2BillMode(const char * m_str,
-                                    ChargeParm::BILL_MODE (& pbm)[2])
-    throw(ConfigException)
-{
-  if (!m_str || !m_str[0])
-    throw ConfigException("Invalid billMode");
-
-  CSVArrayOfStr  bmList((CSVArrayOfStr::size_type)2);
-  if (!bmList.fromStr(m_str) || (bmList.size() > 2))
-    throw ConfigException("Invalid billMode '%s'", m_str);
-
-  pbm[0] = pbm[1] = ChargeParm::billOFF;
-  CSVArrayOfStr::size_type i = 0;
-  do {
-    if (!strcmp(_BILLmodes[ChargeParm::bill2IN], bmList[i].c_str()))
-      pbm[i] = ChargeParm::bill2IN;
-    else if (!strcmp(_BILLmodes[ChargeParm::bill2CDR], bmList[i].c_str())) {
-      pbm[i] = ChargeParm::bill2CDR; // no need to check next value
-      pbm[++i] = ChargeParm::bill2CDR; 
-    } else if (!strcmp(_BILLmodes[ChargeParm::billOFF], bmList[i].c_str()))
-      ++i; // no need to check next value
-    else
-      throw ConfigException("Invalid billMode '%s'", bmList[i].c_str());
-  } while (++i < bmList.size());
-
-  //check bill2IN setting ..
-  if ((pbm[0] == ChargeParm::bill2IN) && (pbm[0] == pbm[1]))
-    throw ConfigException("Invalid billMode '%s'", m_str);
-}
-
-void ICSSmBillingCfgReader::readBillMode(ChargeParm::MSG_TYPE msg_type,
-                                    const char * mode, bool mt_bill)
-    throw(ConfigException)
-{
-  BillModes * b_map = mt_bill ? &icsCfg->prm->mt_billMode : &icsCfg->prm->mo_billMode;
-  if (b_map->isAssigned(msg_type))
-    throw ConfigException("Multiple settings for '%s'", _MSGtypes[msg_type]);
-
-  ChargeParm::BILL_MODE    pbm[2];
-  str2BillMode(mode, pbm);
-
-  //according to #B2501:
-  if ((msg_type == ChargeParm::msgSMS) && (pbm[0] == ChargeParm::bill2IN)) {
-    smsc_log_warn(logger, "Unsafe billMode '%s' for messageType '%s'",
-                          _BILLmodes[ChargeParm::bill2IN],
-                          _MSGtypes[ChargeParm::msgSMS]);
-    smsc_log_warn(logger, "  consider double CDR creation for prepaid abonents by serving IN-point");
-/*    throw ConfigException("Forbidden billMode '%s' for messageType '%s'",
-                          _BILLmodes[ChargeParm::bill2IN],
-                          _MSGtypes[ChargeParm::msgSMS]);*/
-  }
-  b_map->assign(msg_type, pbm[0], pbm[1]);
-  smsc_log_info(logger, "    %s -> %s, %s", mt_bill ? "MT" : "MO",
-                ChargeParm::billModeStr(pbm[0]), ChargeParm::billModeStr(pbm[1]));
-}
-
-void ICSSmBillingCfgReader::readModesFor(ChargeParm::MSG_TYPE msg_type, XConfigView * m_cfg)
-    throw(ConfigException)
-{
-  const char * mode = NULL;
-  smsc_log_info(logger, "  %s ..", ChargeParm::msgTypeStr(msg_type));
-
-  try { mode = m_cfg->getString("MO"); }
-  catch (const ConfigException& exc) { }
-  if (!mode || !mode[0])
-    throw ConfigException("%s parameter 'MO' is invalid or missing!",
-                              ChargeParm::msgTypeStr(msg_type));
-  readBillMode(msg_type, mode, false);
-
-  try { mode = m_cfg->getString("MT"); }
-  catch (const ConfigException& exc) { }
-  if (!mode || !mode[0])
-    throw ConfigException("%s parameter 'MT' is invalid or missing!",
-                              ChargeParm::msgTypeStr(msg_type));
-  readBillMode(msg_type, mode, true);
-}
-
 /* Reads BillingModes subsection */
-void ICSSmBillingCfgReader::readBillingModes(XConfigView & cfg)
+void ICSSmBillingCfgReader::readBillingModes(const XConfigView & cfg_sec, TrafficBillModes & st_bmode)
     throw(ConfigException)
 {
-  if (!cfg.findSubSection("BillingModes"))
-    throw ConfigException("'BillingModes' subsection is missed");
+  const char * cstr = NULL;
+  try { cstr = cfg_sec.getString("billingModes");
+  } catch (const ConfigException & exc) { }
+  if (!cstr || !cstr[0])
+    throw ConfigException("parametr 'billingModes' is invalid or missing!");
+  smsc_log_info(logger, "  billingModes: '%s' ..", cstr);
 
-  XConfigView   bmCfg;
-  cfg.getSubConfig(bmCfg, "BillingModes");
-
-  std::auto_ptr<CStrSet>  msgs(bmCfg.getShortSectionNames());
-  if (msgs->empty())
-    throw ConfigException("no billing modes set");
-
-  for (CStrSet::iterator sit = msgs->begin(); sit != msgs->end(); ++sit) {
-    std::auto_ptr<XConfigView> curMsg(bmCfg.getSubConfig(sit->c_str()));
-    if (!strcmp(_MSGtypes[ChargeParm::msgSMS], sit->c_str()))
-      readModesFor(ChargeParm::msgSMS, curMsg.get());
-    else if (!strcmp(_MSGtypes[ChargeParm::msgUSSD], sit->c_str()))
-      readModesFor(ChargeParm::msgUSSD, curMsg.get());
-    else if (!strcmp(_MSGtypes[ChargeParm::msgXSMS], sit->c_str()))
-      readModesFor(ChargeParm::msgXSMS, curMsg.get());
-    else
-      throw ConfigException("Illegal section for messageType %s", sit->c_str());
-  }
+  BillModesCfgReader  parser(logger);
+  const XCFConfig * pBmCfg = _xmfCfg.hasSection(parser.nmCfgSection());
+  if (!pBmCfg)
+    throw ConfigException("section '%s' is missing!", parser.nmCfgSection());
+  parser.parseSection(pBmCfg->second, cstr, st_bmode); //throws
 }
 
 //Returns true if service depends on other ones
-TCAPUsr_CFG * ICSSmBillingCfgReader::readCAP3Sms(XConfigView & cfg_sec)
+void ICSSmBillingCfgReader::readCAP3Sms(const XConfigView & cfg_sec, TCAPUsr_CFG & cap_cfg)
     throw(ConfigException)
 {
   const char * cstr = NULL;
   try { cstr = cfg_sec.getString("CAP3Sms");
   } catch (const ConfigException & exc) { }
+  if (!cstr || !cstr[0])
+    throw ConfigException("parametr 'CAP3Sms' is invalid or missing!");
 
-  TCAPUsrCfgParser    parser(logger, cstr);
-  if (!_xmfCfg.hasSection(parser.nmCfgSection()))
-    throw ConfigException("section %s' is missing!", parser.nmCfgSection());
+  TCAPUsrCfgParser  parser(logger, cstr);
+  const XCFConfig * pTCfg = _xmfCfg.hasSection(parser.nmCfgSection());
+  if (!pTCfg)
+    throw ConfigException("section '%s' is missing!", parser.nmCfgSection());
 
   smsc_log_info(logger, "Reading settings from '%s' ..", parser.nmCfgSection());
-  XCFConfig * pTCfg = _xmfCfg.getSectionConfig(cstr);
-
-  std::auto_ptr<TCAPUsr_CFG>  capCfg(new TCAPUsr_CFG());
-  parser.readConfig(pTCfg->second, *capCfg.get()); //throws
-  /**/
-  return capCfg.release();
+  parser.readConfig(pTCfg->second, cap_cfg); //throws
 }
 
 } //smbill

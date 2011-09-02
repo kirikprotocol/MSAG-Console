@@ -49,9 +49,7 @@ namespace smsc {
 namespace inman {
 namespace smbill {
 
-const char * const _BILLmodes[] = {"OFF", "CDR", "IN"};
-const char * const _MSGtypes[] = {"unknown", "SMS", "USSD", "XSMS"};
-const char * const _CDRmodes[] = {"none", "billMode", "all"};
+const char * const SmBillParams::k_nmCDRmodes[] = {"none", "billMode", "all"};
 
 /* ************************************************************************** *
  * class Billing implementation:
@@ -364,7 +362,7 @@ unsigned Billing::writeCDR(void)
     memset(_cdr._srcIMSI.str, '0', IMSIString::MAX_SZ-1);
     _cdr._srcIMSI.str[IMSIString::MAX_SZ-1] = 0;
   }
-  if (!_cdr._inBilled || (_cfg->prm->cdrMode == ChargeParm::cdrALL)) {
+  if (!_cdr._inBilled || (_cfg->prm->cdrMode == SmBillParams::cdrALL)) {
     //remove TonNpi for MSCs ids
     TonNpiAddress tna;
     if (tna.fromText(_cdr._srcMSC.c_str()))
@@ -396,7 +394,7 @@ bool Billing::doFinalize(void)
                         " abonent(%s), type %s, TDR(s) written: %u", _logId,
           isBillComplete() ? "" : "IN", _cdr._chargeType ? "MT" : "MO",
           _cdr.nmPolicy(), _cdr.dpType().c_str(),
-          _cdr._inBilled ? _cfgScf->Ident() : _cfg->prm->billModeStr(_billMode), _billErr,
+          _cdr._inBilled ? _cfgScf->Ident() : BillModes::billModeStr(_billMode), _billErr,
           _abNumber.getSignals(), _abCsi.type2Str(), cdrs);
 
   doCleanUp();
@@ -420,7 +418,7 @@ void Billing::abortThis(const char * reason/* = NULL*/)
 //
 RCHash Billing::startCAPSmTask(void)
 {
-  if (_msgType == ChargeParm::msgSMS) { // _billMode == ChargeParm::bill2IN
+  if (_msgType == BillModes::msgSMS) { // _billMode == BillModes::bill2IN
     smsc_log_warn(_logger, "%s: %s(%s, %s): double CDR is also created by'%s' for %s",
                   _logId, _cdr.dpType().c_str(), _cdr._chargeType ? "MT" : "MO",
                   _cdr.nmPolicy(), _cfgScf->_ident.c_str(), _cdr._srcAdr.c_str());
@@ -601,21 +599,21 @@ bool Billing::verifyChargeSms(void)
   }
 
   if (_xsmsSrv)
-    _msgType = ChargeParm::msgXSMS;
+    _msgType = BillModes::msgXSMS;
   else
-    _msgType = (_cdr._bearer == CDRRecord::dpUSSD) ? ChargeParm::msgUSSD : ChargeParm::msgSMS;
+    _msgType = (_cdr._bearer == CDRRecord::dpUSSD) ? BillModes::msgUSSD : BillModes::msgSMS;
 
   //determine billmode
-  _billPrio = _cdr._chargeType ? _cfg->prm->mt_billMode.modeFor(_msgType) : 
-                                  _cfg->prm->mo_billMode.modeFor(_msgType);
+  _billPrio = _cdr._chargeType ? _cfg->prm->billMode.mt.modeFor(_msgType) : 
+                                  _cfg->prm->billMode.mo.modeFor(_msgType);
   _billMode = _billPrio->first;
 
   //according to #B2501:
 /*
-    if (_msgType == ChargeParm::msgSMS) {
+    if (_msgType == BillModes::msgSMS) {
       //only bill2CDR & billOFF allowed for ordinary SMS
       _cdr._smsXMask &= ~SMSX_INCHARGE_SRV;
-      if (_billMode == ChargeParm::bill2IN) {
+      if (_billMode == BillModes::bill2IN) {
         smsc_log_error(_logger, "%s: incompatible billingMode and messageType", _logId);
         return false; 
       }
@@ -627,26 +625,26 @@ bool Billing::verifyChargeSms(void)
 //NOTE: _sync should be locked upon entry!
 Billing::PGraphState Billing::onChargeSms(void)
 {
-  if ((_billMode == ChargeParm::bill2IN) && !_cfg->prm->capSms.get())
+  if ((_billMode == BillModes::bill2IN) && !_cfg->prm->capSms.get())
     _billMode = _billPrio->second;
 
-  if (_billMode == ChargeParm::billOFF)
+  if (_billMode == BillModes::billOFF)
     return chargeResult(false, _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch));
 
   //Here goes either bill2IN or bill2CDR ..
   if ((_cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
       || (_cdr._chargePolicy == CDRRecord::ON_SUBMIT_COLLECTED))
-    _billMode = ChargeParm::bill2CDR;
+    _billMode = BillModes::bill2CDR;
   else if (_cdr._smsXMask & SMSX_NOCHARGE_SRV)
-    _billMode = ChargeParm::bill2CDR;
+    _billMode = BillModes::bill2CDR;
   else if (_cdr._smsXMask & SMSX_INCHARGE_SRV)
-    _billMode = ChargeParm::bill2IN;
+    _billMode = BillModes::bill2IN;
   else if (_chrgFlags & ChargeSms::chrgCDR)
-    _billMode = ChargeParm::bill2CDR;
+    _billMode = BillModes::bill2CDR;
 
   //check for SMS extra sevice number being set
   if ((_xsmsSrv && _xsmsSrv->adr.empty())) {
-    _billMode = ChargeParm::bill2CDR;
+    _billMode = BillModes::bill2CDR;
     _billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgSpecific);
   }
 
@@ -663,14 +661,14 @@ Billing::PGraphState Billing::onChargeSms(void)
   // 1) billing mode bill2CDR
   // 2) callBarred state denies processing 
   if (!strcmp(_abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
-    _billMode = ChargeParm::bill2CDR;
+    _billMode = BillModes::bill2CDR;
     if (_abCsi.isUnknown())
       askProvider = true; //check for callBarred state
   }
 #endif /* SMSEXTRA */
 
   if (_abCsi.isPostpaid() && _abCsi.getImsi()) {
-    _billMode = ChargeParm::bill2CDR;
+    _billMode = BillModes::bill2CDR;
     //do not interact IN platform, just create CDR
     return chargeResult(true);
   }
@@ -692,8 +690,8 @@ Billing::PGraphState Billing::onChargeSms(void)
   /* **************************************************** */
   /* conditions which switch ON provider request         */
   /* **************************************************** */
-  askProvider |= ((_cfg->prm->cntrReq == ChargeParm::reqAlways)
-                  || ( (_billMode == ChargeParm::bill2IN)
+  askProvider |= ((_cfg->prm->cntrReq == SmBillParams::reqAlways)
+                  || ( (_billMode == BillModes::bill2IN)
                         && (_abCsi.isUnknown() || !getServiceKey(UnifiedCSI::csi_MO_SM)) )
                   );
 
@@ -729,36 +727,33 @@ Billing::PGraphState Billing::onChargeSms(void)
 Billing::PGraphState Billing::configureSCFandCharge(void)
 {
   if (_abCsi.isPostpaid()) {
-    _billMode = ChargeParm::bill2CDR;
+    _billMode = BillModes::bill2CDR;
     return chargeResult(true);
   }
   //Here goes either abtPrepaid or abtUnknown ..
   RCHash err = 0;
-  if (_billMode == ChargeParm::bill2IN) {
-    INManErrorId::Code_e rc = configureSCF();
+  if (_billMode == BillModes::bill2IN) {
+    INManErrorId::Code_e rc = configureSCF(); //may change _billMode !!
     if (rc) {
       err = _RCS_INManErrors->mkhash(rc);
-      if ((_billMode = _billPrio->second) == ChargeParm::billOFF)
-        return chargeResult(false, err);
-      //else //billCDR
-      smsc_log_info(_logger, "%s: switching to CDR mode for abonent(%s)",
-                    _logId, _abNumber.toString().c_str());
+      if ((_billMode = _billPrio->second) == BillModes::bill2CDR) {
+        smsc_log_info(_logger, "%s: switching to CDR mode for abonent(%s)",
+                      _logId, _abNumber.toString().c_str());
+      }
     }
   }
-  if (_billMode == ChargeParm::bill2IN) {
+  if (_billMode == BillModes::bill2IN) {
     err = startCAPSmTask();
     if (!err)
       return pgCont; //awaiting response from IN point
 
     smsc_log_error(_logger, "%s: %s", _logId, URCRegistry::explainHash(err).c_str());
-    if ((_billMode = _billPrio->second) == ChargeParm::billOFF)
-      return chargeResult(false, err);
-    //else //billCDR
-    smsc_log_info(_logger, "%s: switching to CDR mode for abonent(%s)",
-                  _logId, _abNumber.toString().c_str());
+    if ((_billMode = _billPrio->second) == BillModes::bill2CDR) {
+      smsc_log_info(_logger, "%s: switching to CDR mode for abonent(%s)",
+                    _logId, _abNumber.toString().c_str());
+    }
   }
-  //_billMode == ChargeParm::bill2CDR
-  return chargeResult(true, err);
+  return chargeResult(_billMode != BillModes::billOFF, err);
 }
 
 INManErrorId::Code_e Billing::configureSCF(void)
@@ -799,6 +794,23 @@ INManErrorId::Code_e Billing::configureSCF(void)
                    _logId, _abNumber.toString().c_str());
     return INManErrorId::cfgInconsistency;
 */
+  }
+
+  //check for billModes overriding by IN configuration
+  if (_cfgScf && _cfgScf->_prm->_billMode.get()) {
+    const BillModesPrio * ovrPrio = _cdr._chargeType ?
+                                    _cfgScf->_prm->_billMode->mt.modeFor(_msgType) :
+                                    _cfgScf->_prm->_billMode->mo.modeFor(_msgType);
+
+    if (ovrPrio && (*ovrPrio != *_billPrio)) {
+      _billPrio = ovrPrio;
+      _billMode = ovrPrio->first;
+      smsc_log_info(_logger, "%s: using billingModes {%s, %s} "
+                     "for abonent(%s) (overriden by %s)", _logId,
+                     BillModes::billModeStr(_billPrio->first),
+                     BillModes::billModeStr(_billPrio->second),
+                     _abNumber.toString().c_str(), _cfgScf->_ident.c_str());
+    }
   }
   return INManErrorId::noErr;
 }
@@ -916,7 +928,7 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
   if (_logger->isInfoEnabled()) {
     std::string reply = !do_charge ? 
                   format("NOT_POSSIBLE (cause %u", _billErr) :
-                  format("POSSIBLE (via %s, cause %u", (_billMode == ChargeParm::bill2CDR) ?
+                  format("POSSIBLE (via %s, cause %u", (_billMode == BillModes::bill2CDR) ?
                          "CDR" : _cfgScf->Ident(), _billErr);
     if (_billErr) {
       reply += ": ";
@@ -964,7 +976,7 @@ void Billing::onSubmitReport(RCHash scf_err, bool in_billed/* = false*/)
     //if message has been already delivered, then create CDR
     //even if secondary billing mode is OFF
     if (submitted) 
-      _billMode = ChargeParm::bill2CDR;
+      _billMode = BillModes::bill2CDR;
     smsc_log_error(_logger, "%s: %s%s interaction failure: %s",
                    _logId, submitted ? "switching to CDR mode: " : "", _cfgScf->Ident(),
                    URCRegistry::explainHash(scf_err).c_str());
@@ -1043,7 +1055,7 @@ TimeWatcherITF::SignalResult
       case Billing::bilInited: { //CapSMTask lasts too long
         //CapSMTask suspends while awaiting Continue/Release from SCF
         bool doCharge = ((_billMode = _billPrio->second) 
-                              == ChargeParm::billOFF) ? false : true;
+                              == BillModes::billOFF) ? false : true;
         smsc_log_error(_logger, "%s: %s%s is timed out (RRSM)", _logId, 
                      doCharge ? "switching to CDR mode: " : "", _capName.c_str());
         abortCAPSmTask();
@@ -1173,18 +1185,18 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
                        _capName.c_str(), state2Str(), sm_res->nmPMode());
         scfCharge = false;
         capErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
-        if (_billPrio->second == ChargeParm::bill2CDR) {
+        if (_billPrio->second == BillModes::bill2CDR) {
             smsc_log_error(_logger, "%s: switching to CDR mode: %s interaction failure",
                            _logId, _cfgScf->Ident());
-            _billMode = ChargeParm::bill2CDR;
+            _billMode = BillModes::bill2CDR;
             doCharge = true;
         } else
             doCharge = false;
       } else if (!sm_res->doCharge && !sm_res->rejectRPC
-            && (_billPrio->second == ChargeParm::bill2CDR)) {
+            && (_billPrio->second == BillModes::bill2CDR)) {
         smsc_log_error(_logger, "%s: switching to CDR mode: %s interaction failure",
                     _logId, _cfgScf->Ident());
-        _billMode = ChargeParm::bill2CDR;
+        _billMode = BillModes::bill2CDR;
         doCharge = true;
       }
       if (!scfCharge) { //CapSMS task will be released by itself
@@ -1206,7 +1218,7 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
         //      not, so unconditionally create TDR and rise in_billed flag
         smsc_log_error(_logger, "%s: switching to CDR mode: %s interaction failure",
                        _logId, _cfgScf->Ident());
-        _billMode = ChargeParm::bill2CDR;
+        _billMode = BillModes::bill2CDR;
       }
       unrefCAPSmTask(false);
       _capTask = 0; //omit CAPTask releasing while cleanUp phase
@@ -1219,7 +1231,7 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
       unrefCAPSmTask(false);
       smsc_log_error(_logger, "%s: switching to CDR mode: %s interaction failure: %s",
                   _logId, _cfgScf->Ident(), URCRegistry::explainHash(capErr).c_str());
-      _billMode = ChargeParm::bill2CDR;
+      _billMode = BillModes::bill2CDR;
       _billErr = sm_res->scfErr;
     } else {
       smsc_log_warn(_logger, "%s: %s reported: %s <- %s", _logId,

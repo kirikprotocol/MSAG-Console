@@ -3,6 +3,7 @@ static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "util/csv/CSVArrayOf.hpp"
+#include "inman/services/common/BillModesCfgReader.hpp"
 #include "inman/services/iapmgr/SCFsCfgReader.hpp"
 
 namespace smsc {
@@ -261,6 +262,19 @@ void SCFsCfgReader::readSCFParms(const char * nm_sec, XConfigView & cfg_sec,
   } else
     smsc_log_info(logger, "  defaultIMSI: <none>", cstr);
   /**/
+
+  cstr = NULL;
+  try { cstr = cfg_sec.getString("billingModes");
+  } catch (const ConfigException & exc) { }
+
+  if (cstr && cstr[0]) {
+    smsc_log_info(logger, "  billingModes: '%s' ..", cstr);
+    BillModesCfgReader  parser(logger);
+    const XCFConfig * pBmCfg = _xmfCfg.hasSection(parser.nmCfgSection());
+    if (!pBmCfg)
+      throw ConfigException("section '%s' is missing!", parser.nmCfgSection());
+    parser.parseSection(pBmCfg->second, cstr, in_parms._billMode.init()); //throws
+  }
 }
 
 // -- ----------------------------------------------

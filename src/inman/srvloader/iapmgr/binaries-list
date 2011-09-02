@@ -9,7 +9,7 @@
 switch INMAN_ICS_LINKAGE
 static: #no need for .so loader, service is statically linked into libinman
 default: \
-inman/ldlib/libinman_ics_iapmgr.so IAPMgrLoader  $(SHARED_OPT) -linman-services-iapmgr -linman-abprov -linman-comp -linman-common -lutil -ldl -lrt
+inman/ldlib/libinman_ics_iapmgr.so IAPMgrLoader  $(SHARED_OPT) -linman-services-iapmgr -linman-services-common -linman-abprov -linman-comp -linman-common -lutil -ldl -lrt
 end switch
 
 

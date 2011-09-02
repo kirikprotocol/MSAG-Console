@@ -10,6 +10,7 @@
 #include "inman/common/RPCList.hpp"
 #include "inman/common/OptionalObjT.hpp"
 #include "inman/common/CellGlobalId.hpp"
+#include "inman/services/common/BillingModes.hpp"
 #include "inman/services/iapmgr/SKAlgorithms.hpp"
 
 namespace smsc  {
@@ -56,6 +57,8 @@ struct INScfParams {
   //optional params:
   IMSIString      _dfltImsi;  //default IMSI for abonents served by this gsmSCF
   INParmsCapSms   _capSms;    //Cap3Sms parameters
+  smsc::util::OptionalObj_T<TrafficBillModes>
+                  _billMode; //overriding billingModes settings
 };
 
 class INScfCFG {

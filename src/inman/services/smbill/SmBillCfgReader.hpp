@@ -8,6 +8,7 @@
 #define __SMSC_INMAN_CONFIG_PARSING__
 
 #include "inman/services/ICSCfgReader.hpp"
+#include "inman/services/common/BillingModes.hpp"
 #include "inman/services/smbill/SmBillDefs.hpp"
 
 namespace smsc   {
@@ -42,18 +43,10 @@ public:
 
 class ICSSmBillingCfgReader : public ICSrvCfgReaderAC_T<SmBillingXCFG> {
 private:
-  void str2BillMode(const char * m_str, ChargeParm::BILL_MODE (& pbm)[2])
-      throw(ConfigException);
-  //
-  void readBillMode(ChargeParm::MSG_TYPE msg_type, const char * mode, bool mt_bill)
-      throw(ConfigException);
-  //
-  void readModesFor(ChargeParm::MSG_TYPE msg_type, XConfigView * m_cfg)
-      throw(ConfigException);
   /* Reads BillingModes subsection */
-  void readBillingModes(XConfigView & cfg) throw(ConfigException);
+  void readBillingModes(const XConfigView & cfg_sec, TrafficBillModes & bill_mode) throw(ConfigException);
   //Returns true if service depends on other ones
-  TCAPUsr_CFG * readCAP3Sms(XConfigView & cfg_sec) throw(ConfigException);
+  void readCAP3Sms(const XConfigView & cfg_sec, TCAPUsr_CFG & cap_cfg) throw(ConfigException);
 
 protected:
   static const uint32_t   _MAX_THREADS_NUM = 0xFFFF;
