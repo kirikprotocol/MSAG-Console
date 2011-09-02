@@ -36,7 +36,7 @@ int PerfSocketServer::Execute()
     while(!isStopping)
     {
         // smsc_log_debug(logger,"perfsocksrv rolling");
-        if(listener.canRead(ready, err)){
+        if(listener.canRead(ready, err, 1000)){
             smsc_log_info(logger, "There are ready sockets");
             for(int i=0; i<= ready.Count() - 1; i++){
                 if(ready[i] == &genSocket){
