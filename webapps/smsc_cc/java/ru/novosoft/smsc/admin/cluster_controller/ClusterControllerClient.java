@@ -77,16 +77,17 @@ final class ClusterControllerClient extends ClientConnection {
   }
 
   private <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
-    ResponseListener l = new ResponseListener(response);
+    ResponseListener l = null;
     int seq = request.assignSeqNum();
     if (response != null) {
+      l = new ResponseListener(response);
       synchronized (listeners) {
         listeners.put(seq, l);
       }
     }
     try {
       send(request);
-      if (response != null) {
+      if (l != null) {
         PDU resp = l.getResponse(RESPONSE_TIMEOUT);
         if (resp != null) {
           return (T) resp;
