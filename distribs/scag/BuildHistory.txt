@@ -817,6 +817,11 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2011-06-23 16:45 bukind
   msag bugfix: message_id was inaccessible in data_sm_resp
 
+<<<<<<< BuildHistory.txt
+=================================================================================================================
+2011-06-27 10:08 bukind msag-build-20110627
+
+=======
 =================================================================================================================
 2011-07-07 15:06 bukind pvss-build-20110707
   pvss bugfix: backup processor logging
@@ -831,8 +836,14 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss bugfix: not checking lines/crc match when reading nextFile only
   pvss bugfix: catching some more exceptions
 
+>>>>>>> 1.202
 --- current fixes ---
 2011-07-04 15:04 bukind
   msag bugfix: SMPP sockets rewritten using EmbedRefPtr
 2011-09-02 10:31 bukind
   pvss enhance: better logging on pvss duplicate instance
+
+===================================================================================================
+2011-09-02 12:00 makar (web-console only)                                                          
+1) MSAG Admin CHANGE: Non-alphanumeric characters support for address mask (for .5.0), BUG 5980
+2) MSAG Admin CHANGE: Service & Propvider links on Routes Tracing page added (for found route).
