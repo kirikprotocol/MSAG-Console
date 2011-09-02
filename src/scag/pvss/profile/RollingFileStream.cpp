@@ -71,8 +71,13 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
         ++lines;
         crc32 = smsc::util::crc32(crc32,buf,buflen);
         std::swap(buf[buflen-1],cr);
+    } else if ( filePos == 0 ) {
+        // version ?
+        if ( 0 != strncmp(buf,FILEHEADER,strlen(FILEHEADER)) ) {
+            throw FileReadException("",0,filePos,"not started with VERSION");
+        }
+        std::swap(buf[buflen-1],cr);
     } else {
-        // processing meta comments, i.e. version, crc, etc.
         std::swap(buf[buflen-1],cr);
         int pos = 0;
         // trying to read trailer
@@ -80,6 +85,9 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
         sscanf(buf,FILETRAILER,&linesRead,&crcRead,&pos);
         if ( pos != 0 ) {
             // it is a trailer
+            if ( ! nextFile.empty() ) {
+                throw FileReadException("",0,filePos,"duplicate trailer lines, search with grep '^#'");
+            }
             if ( rp_ ) {
                 // if rp is not set, then we only need to extract nextfile
                 if ( lines != linesRead ) {

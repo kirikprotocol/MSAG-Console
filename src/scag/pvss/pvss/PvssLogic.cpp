@@ -1022,7 +1022,7 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
   try {
     recordCount = cfg.getInt("initRecordCount"); 
   } catch (...) {
-    recordCount = DEF_BLOCK_SIZE;
+    recordCount = DEF_RECORD_COUNT;
     smsc_log_warn(logger, "Parameter <PVSS.%s.initRecordCount> missed. Defaul value is %d",
                    storageType, DEF_RECORD_COUNT);
   }

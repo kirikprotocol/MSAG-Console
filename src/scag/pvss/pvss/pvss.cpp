@@ -442,7 +442,8 @@ int main(int argc, char* argv[]) {
             sprintf(filename,"/tmp/pvss%s.%d", backup ? "-backup" : "", serverConfig.getPort());
             inst.reset( new scag::util::Inst(filename) );
             if ( !inst->run()) {
-                fprintf( stderr, "Instance is running already.\n");
+                fprintf( stderr, "pvss on port %d is already running, its pid is in %s\n",
+                         serverConfig.getPort(), filename );
                 exit(-1);
             }
         }
@@ -513,6 +514,8 @@ int main(int argc, char* argv[]) {
         std::auto_ptr< ServerCore > server
             ( new ServerCore( new ServerConfig(serverConfig),
                               new scag2::pvss::pvap::PvapProtocol ));
+
+        server->checkLicenseFile();
 
         // backup processor must be here
         std::auto_ptr< BackupProcessor > backupProcessor;
