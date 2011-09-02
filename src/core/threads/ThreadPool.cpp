@@ -191,8 +191,8 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
       {
         if (!usedThreads[i].destructing)
         {
-          smsc_log_warn(_tpLogger, "ThreadPool(%p): unfinished tasks(%s)",
-                         this, usedThreads[i].ptr->taskName());
+          smsc_log_warn(_tpLogger, "ThreadPool(%p:%p): unfinished tasks(%s)",
+                         this, usedThreads[i].ptr, usedThreads[i].ptr->taskName());
           usedThreads[i].ptr->stopTask();
           usedThreads[i].ptr->Kill(SIGUSR1);
         }
