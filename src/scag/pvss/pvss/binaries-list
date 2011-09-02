@@ -96,9 +96,9 @@ scag/tests/pvss-testBackupProcessor testBackupProcessor \
         -lpthread $(LIBRT) -ldl
 
 scag/pvssScanBackupFile scanPvssBackup \
+  -lscag-pvss-profile \
   -linformer-io \
   -lcore-threads \
-  -lscag-pvss-profile \
   @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil \
   $(__LIBRARIES) \
