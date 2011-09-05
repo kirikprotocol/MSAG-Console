@@ -64,7 +64,7 @@ public:
   virtual bool unregisterProtocol(const IProtocolId_t & proto_id);
 
 private:
-  typedef std::list<ConnectGuard> ConnectsList;
+  typedef std::vector<ConnectGuard> ConnectsList;
 
   struct ConnectInfo {
     ConnectGuard    _grd;

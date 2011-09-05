@@ -18,8 +18,7 @@ ICSTcpServer::~ICSTcpServer()
   {
     MutexGuard grd(_sync);
     //cleanUp died connects
-    while (!_corpses.empty())
-      _corpses.pop_front();
+    _corpses.clear();
   }
 }
 
@@ -101,8 +100,7 @@ SocketListenerIface *
 {
   MutexGuard  grd(_sync);
   //cleanUp died connects first
-  while (!_corpses.empty())
-    _corpses.pop_front();
+  _corpses.clear();
 
   ConnectInfo newConn;
   newConn._grd = _connPool.allcObj();
@@ -124,10 +122,8 @@ SocketListenerIface *
 void ICSTcpServer::onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id)
 {
   MutexGuard grd(_sync);
-
   //cleanUp died connects first
-  while (!_corpses.empty())
-    _corpses.pop_front();
+  _corpses.clear();
 
   ConnectsMap::iterator it = _connMap.find(conn_id);
   if (it == _connMap.end()) //Connect already unregistered by onConnectError()
@@ -168,8 +164,7 @@ void ICSTcpServer::onServerShutdown(TcpServerIface & p_srv, TcpServerIface::RCod
   _tcpSrv.removeListener(*this);
   MutexGuard  grd(_sync);
   //cleanUp died connects first
-  while (!_corpses.empty())
-    _corpses.pop_front();
+  _corpses.clear();
 
   _icsState = ICServiceAC::icsStInited;
   smsc_log_debug(logger, "%s: TCP server shutdowned, reason %d", _logId, down_reason);

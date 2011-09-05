@@ -37,7 +37,7 @@ protected:
   typedef smsc::inman::interaction::PckBuffersPool_T<1536> PacketsPool;
 
   typedef std::map<ConnectUId, ConnectGuard> ConnectsMap;
-  typedef std::list<ConnectGuard> ConnectsList;
+  typedef std::vector<ConnectGuard> ConnectsList;
   typedef smsc::util::POBJRegistry_T<ConnectUId, USSConnManager> SessionsRegistry;
 
   mutable smsc::core::synchronization::EventMonitor _sync;
