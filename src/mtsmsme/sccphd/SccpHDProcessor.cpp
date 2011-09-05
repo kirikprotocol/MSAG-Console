@@ -23,7 +23,6 @@ using smsc::mtsmsme::processor::util::getReturnCodeDescription;
 
 #define MAXENTRIES 1000
 #define MAXSEGM 272
-#define TCINST 0
 #define MGMT_VER 6
 #define MCIERROR 999
 int going;

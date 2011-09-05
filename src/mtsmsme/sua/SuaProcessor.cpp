@@ -30,7 +30,6 @@ using namespace eyeline::ss7na;
 
 #define MAXENTRIES 1000
 #define MAXSEGM 272
-#define TCINST 0
 #define MGMT_VER 6
 #define MCIERROR 999
 int going;
