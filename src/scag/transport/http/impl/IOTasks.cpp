@@ -137,7 +137,7 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error)
 //						s->Abort();
 						cx->setDestiny(0, STAT_RESP | DEL_SITE_SOCK | DEL_USER_SOCK | DEL_CONTEXT);
 					}
-					else if (cx->action == KEEP_ALIVE) {
+					else if (cx->action == KEEP_ALIVE_TIMEOUT) {
 //						smsc_log_debug(logger, "%p: socket %p timeout expired, cx=%p f:%d a:%s", this, s, cx, cx->flags, cx->actionName());
 //						s->Abort();
 						cx->setDestiny(0, STAT_RESP | DEL_SITE_SOCK | DEL_USER_SOCK | DEL_CONTEXT);
@@ -211,7 +211,7 @@ int HttpReaderTask::Execute()
                 	cx->closeConnection(s);
  				    continue;
                 }
-                if (cx->action == KEEP_ALIVE) {
+                if (cx->action == KEEP_ALIVE_TIMEOUT) {
                     smsc_log_warn(logger, "%p: %p, socket %p error where keep-alive timeout", this, cx, s);
                     cx->setDestiny(0, DEL_CONTEXT);
                 	cx->closeConnection(s);
@@ -252,8 +252,8 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 //	smsc_log_debug(logger, "%p: %p, manageReadyRead socket %p", this, cx, s);
     time_t now = time(NULL);
 
-	if (cx->action == KEEP_ALIVE) {
-		smsc_log_debug(logger, "%p: %p, manageReadyRead socket %p change action from KEEP_ALIVE to READ_REQUEST", this, cx, s);
+	if (cx->action == KEEP_ALIVE_TIMEOUT) {
+		smsc_log_debug(logger, "%p: %p, manageReadyRead socket %p change action from KEEP_ALIVE_TIMEOUT to READ_REQUEST", this, cx, s);
 		cx->action = READ_REQUEST;
 	}
 /*
@@ -558,7 +558,7 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
             }
             else {
 //				smsc_log_debug(logger, "%p connection: keep-alive, stay active cx:%p socket:%p", this, cx, s);
-            	cx->action = KEEP_ALIVE;
+            	cx->action = KEEP_ALIVE_TIMEOUT;
 				cx->result = 0;
             	manager.readerProcess(cx);
             }

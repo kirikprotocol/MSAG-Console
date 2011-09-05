@@ -19,7 +19,7 @@ const char* HttpContext::ActionNames[ACTION_LAST] = {
 "SEND_REQUEST",
 "READ_RESPONSE",
 "SEND_RESPONSE",
-"KEEP_ALIVE"
+"KEEP_ALIVE_TIMEOUT"
 };
 
 
@@ -619,7 +619,7 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 {
 	int rc = ERROR;
-	int oerrno = errno;
+//	int oerrno = errno;
 	int ssl_err = SSL_get_error(ssl, ret);
 //	smsc_log_debug(logger, "sslCheckIoError ret:%d  errno:%d, %s", ret, oerrno, strerror(oerrno));
 //	smsc_log_debug(logger, "sslCheckIoError SSLerr:%d, %s", ssl_err, ERR_error_string(ssl_err, NULL));

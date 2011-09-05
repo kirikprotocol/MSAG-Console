@@ -34,7 +34,7 @@ enum ActionID {
     SEND_REQUEST,
     READ_RESPONSE,
     SEND_RESPONSE,
-    KEEP_ALIVE,
+    KEEP_ALIVE_TIMEOUT,
     ACTION_LAST
 };
 
