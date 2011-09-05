@@ -7,7 +7,7 @@ static const char ident[] = "@(#)$Id$";
 #include "inman/common/console.hpp"
 #include "inman/common/CmdLine.hpp"
 
-//#include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 namespace smsc {
@@ -42,13 +42,18 @@ void Console::run(const std::string& prompt)
 {
     m_exit = false;
     while (!m_exit) {
-        char line[128];
+        char line[256];
         std::cout << prompt.c_str();
-        std::cin.getline( line, sizeof(line) );
-        try {
-    	    parse( line );
-        } catch(const std::exception& ex) {
-    	    std::cout << "ERROR: " << ex.what() << std::endl;
+//        std::cin.getline( line, sizeof(line) );
+        if (fgets(line, sizeof(line)-1, stdin)) {
+          size_t n = strlen(line);
+          if (line[n - 1] == '\n')
+            line[n - 1] = 0;
+          try {
+            parse(line);
+          } catch(const std::exception& ex) {
+            std::cout << "ERROR: " << ex.what() << std::endl;
+          }
         }
     }         
 }
