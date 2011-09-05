@@ -22,14 +22,14 @@ int ScagTask::Execute()
         while (!((cx = manager.scags.getFirst()) || isStopping))
             manager.scags.waitForContext();
 
-        smsc_log_debug(logger, "%p choosen for context %p", this, cx);
+        smsc_log_debug(logger, "%p choosen for context %p act:%s isStopping:%s", this, cx, (cx?HttpContext::actionName(cx->action):"Undefined"), (isStopping?"y":"n"));
 
         if (isStopping)
             break;
 
         switch (cx->action) {
         case PROCESS_REQUEST:
-            smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
+//            smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
             st = processor.processRequest(cx->getRequest());
             if (st == re::STATUS_OK)
             {
@@ -52,7 +52,7 @@ int ScagTask::Execute()
               // no break, go to the case PROCESS_RESPONSE
             }
         case PROCESS_RESPONSE:
-            smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
+//            smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
             if (!cx->requestFailed)
             {
                 if (cx->result) {
@@ -93,11 +93,12 @@ int ScagTask::Execute()
                 }
 
                 bool delivered = !cx->result;
-                smsc_log_debug(logger, "%p: %p, call to statusResponse(%s)", this, cx, delivered ? "true" : "false");
                 st = processor.statusResponse(cx->getResponse(), delivered);
+//                smsc_log_debug(logger, "%p: %p, call to statusResponse(%s)=%d", this, cx, (delivered?"true":"false"), st);
 
                 if(st == re::STATUS_LONG_CALL || st == re::STATUS_PROCESS_LATER)
                     break;
+//                smsc_log_debug(logger, "%p: delete HttpContext(%p)", this, cx);
                 delete cx;
             }
         default:
@@ -113,7 +114,8 @@ int ScagTask::Execute()
 }
 
 const char* ScagTask::taskName() {
-    return "ScagTask";
+	sprintf(bufName, "ScagTask[%p]", this);
+    return bufName; // "ScagTask";
 }
 
 void ScagTask::stop() {

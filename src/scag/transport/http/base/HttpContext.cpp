@@ -9,6 +9,19 @@ using namespace std;
 
 const char* HttpContext::nameUser = {"User"};
 const char* HttpContext::nameSite = {"Site"};
+const char* HttpContext::ActionNames[ACTION_LAST] = {
+"PROCESS_REQUEST",
+"PROCESS_RESPONSE",
+"PROCESS_STATUS_RESPONSE",
+"PROCESS_LCM",
+"FINALIZE_SOCKET",
+"READ_REQUEST",
+"SEND_REQUEST",
+"READ_RESPONSE",
+"SEND_RESPONSE",
+"KEEP_ALIVE"
+};
+
 
 unsigned int HttpContext::counter_create;
 unsigned int HttpContext::counter_free;
@@ -49,7 +62,6 @@ HttpContext::~HttpContext()
 {
 	try
 	{
-		smsc_log_debug(logger, "~HttpContext %p user %p site %p", this, user, site);
 		if (site) {
 			closeSocketConnection(site, siteHttps, siteSsl, nameSite);
 			delete site;
@@ -68,18 +80,10 @@ HttpContext::~HttpContext()
 
 bool HttpContext::isTimedOut(Socket* s, time_t now) {
 	return (now - HttpContext::getTimestamp(s)) >= connectionTimeout;
-/* debug block
-	long diff = now - HttpContext::getTimestamp(s);
-	bool rc = (diff >= connectionTimeout);
-	if (rc)
-		smsc_log_debug(logger, "HttpContext::isTimedOut socket %p timeout=%d", s, connectionTimeout);
-	return rc;
-*/
 }
 
 void HttpContext::setSiteHttps(bool supported) {
 	siteHttps = supported;
-//	smsc_log_debug(logger, "HttpContext::setSiteHttps=%s [port=%d]", (siteHttps?"YES":"NO"), command->getSitePort());
 }
 
 int HttpContext::sslUserConnection(bool verify_client) {
@@ -116,8 +120,6 @@ int HttpContext::sslUserConnection(bool verify_client) {
 		return 0;
 	}
 	HttpContext::counter_create++;
-//	smsc_log_debug(logger, "sslUserConnection:created %p c:%d f:%d version: %s using %s",
-//			userSsl, HttpContext::counter_create, HttpContext::counter_free, SSL_get_version(userSsl), SSL_get_cipher(userSsl));
 	return 1;
 }
 
@@ -155,21 +157,16 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 		return 0;
 	}
 	HttpContext::counter_create++;
-//	smsc_log_debug(logger, "sslSiteConnection:created %p c:%d f:%d version: %s using %s",
-//			siteSsl, HttpContext::counter_create, HttpContext::counter_free, SSL_get_version(siteSsl), SSL_get_cipher(siteSsl));
 	return 1;
 }
 
 void HttpContext::closeConnection(Socket* s) {
-//	smsc_log_debug(logger, "closeConnection: socket %p user %p site %p", s, user, site);
 	return (s == user) ? closeSocketConnection(user, userHttps, userSsl, "User") : closeSocketConnection(site, siteHttps, siteSsl, "Site");
 }
 
 void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info) {
-	const size_t SHUT_BUF_SIZE = 4;
-	char SHUT_BUF[SHUT_BUF_SIZE];
-
 	try {
+		s->setNonBlocking(0);
 		if ( httpsFlag ) {
 			if ( ssl == NULL ) {
 				smsc_log_debug(logger, "close%sConnection: already closed", info);
@@ -187,10 +184,6 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 			}
 			smsc_log_debug(logger, "close%sConnection: Ok c:%d f:%d", info, HttpContext::counter_create, HttpContext::counter_free);
 
-		}
-		if (action == FINALIZE_SOCKET) {
-			shutdown(s->getSocket(), SHUT_WR);
-			while ((int)recv(s->getSocket(), SHUT_BUF, SHUT_BUF_SIZE, 0) > 0);
 		}
 		s->Abort();
 		delete s;
@@ -352,14 +345,16 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 }
 */
 
-int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t readBufSize) {
-		SSL* ssl = sslCheckConnection(s);
-		if (ssl == NULL)
-			return 0;
+int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t readBufSize, bool& closed) {
+	SSL* ssl = sslCheckConnection(s);
+	if (ssl == NULL) {
+		smsc_log_debug(logger, "sslReadPartial: no %s connection return -2", connName(s));
+		return -2;
+	}
 
 	size_t toRead = readBufSize;
 	int len=0, err=0, total=0;
-
+	closed = false;
 //
 // Messages with length over 16 Kbytes takes more then one TCP package
 // so we have to process several packages to get whole message.
@@ -372,14 +367,16 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 		if ( len > 0 ) {
 			unparsed.Append(readBuf, len);
 			total += len;
+/*
 			toRead = SSL_pending(ssl);
-			if ( toRead >0 )
+			if ( toRead > 0 )
 				continue;
+*/
 			break;
 		}
 		else if (len == 0) {
 			if ( SSL_get_shutdown(ssl) ) {
-				smsc_log_debug(logger, "sslReadPartial: shutdown detected from %s. Total=%d", connName(s), unparsed.GetPos());
+				smsc_log_debug(logger, "sslReadPartial: shutdown detected from %s. Total=%d, return -1", connName(s), total);
 				return -1;
 			}
 //
@@ -394,13 +391,17 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 			}
 //			s->Abort(); ///
 			smsc_log_debug(logger, "sslReadPartial: completed from %s. Total=%d", connName(s), unparsed.GetPos());
+			closed = true;
 			break;  // it seems, the read operation is over here
 		}
 		else {  //len<0
 			err = sslCheckIoError(ssl, len);
+//			smsc_log_debug(logger, "sslReadPartial: sslCheckIoError err=%d", err);
+			if ( err == CONTINUE )
+				continue;
 			if ( err == ERROR ) {
-				smsc_log_error(logger, "sslReadPartial: Critical error from %s. Exit reading.", connName(s));
-				return 0;
+				smsc_log_error(logger, "sslReadPartial: Critical error from %s. Exit reading. return -3", connName(s));
+				return -3;
 			}
 			toRead = SSL_pending(ssl);
 			if (toRead)
@@ -437,7 +438,7 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 }
 
 void HttpContext::beforeReader(void) {
-//	smsc_log_debug(logger, "HttpContext::beforeReader cx:%p user=%p site=%p", this, user, site);
+//	smsc_log_debug(logger, "HttpContext::beforeReader cx:%p user=%p site=%p act=%s", this, user, site, actionName());
 	unparsed.SetPos(0);
 	flags = 0;
 	result = 0;
@@ -493,7 +494,6 @@ void HttpContext::messagePrepare() {
 		if (tmp > 0) {
 			unparsed.SetPos(--tmp);
 		}
-//		smsc_log_debug(logger, "messagePrepare: +%d =%d.\n%s", size, unparsed.GetPos(), unparsed.get());
 		// write content
 		data = command->getMessageContent(cnt_size);
 		if (cnt_size)
@@ -513,9 +513,6 @@ void HttpContext::messagePrepare() {
  */
 bool HttpContext::messageIsOver(Socket* s) {
 	bool rc = false;
-//	smsc_log_debug(logger, "messageIsOver Https=%s flags=%d sendPosition=%d upos=%d cpos=%d",
-//			(useHttps(s)?"Yes":"No"), flags, sendPosition, unparsed.GetPos(), command->content.GetPos());
-//	smsc_log_debug(logger, "messageIsOver chunked=%s position=%d ch_size=%d", ((command->chunked)?"Yes":"No"), position, chunks.size());
 	if (command->chunked) {
 	    if (flags == 0) {
 	    	if ( rc = (sendPosition >= command->getMessageHeaders().size()) ) {
@@ -525,12 +522,10 @@ bool HttpContext::messageIsOver(Socket* s) {
 	    else {
 	    	if ( rc = (sendPosition >= chunks.getSend()) ) {
 		    	chunks.remove();
-//		    	smsc_log_debug(logger, "messageIsOver chunks.remove()= ch_size=%d", chunks.size());
 	        }
 	    }
 	    if (rc) {
 	    	prepareNextChunk();
-//			smsc_log_debug(logger, "prepareNextChunk %s pos=%d send=%d", chunks.getHeader().c_str(), position, chunks.getSend());
 	    }
 	}
 	else {
@@ -547,12 +542,10 @@ bool HttpContext::messageIsOver(Socket* s) {
 				: (sendPosition >= unsigned(command->content.GetPos()));
 		}
 	}
-//	smsc_log_debug(logger, "messageIsOver=%s", (rc?"Yes":"No"));
 	return rc;
 }
 
 void HttpContext::prepareNextChunk() {
-//	smsc_log_debug(logger, "prepareNextChunk start ch_size=%d", chunks.size());
 	char* tmp;
 	unsigned int data_len = 0;
 	unparsed.SetPos(0);
@@ -569,7 +562,6 @@ void HttpContext::prepareNextChunk() {
 		chunks.setSend(unparsed.GetPos());
 	}
 	sendPosition = 0;
-//	smsc_log_debug(logger, "prepareNextChunk Ok ch_size=%d", chunks.size());
 }
 
 /*
@@ -619,7 +611,6 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 			}
 		}
 	}
-//	smsc_log_debug(logger, "messageGet %s %p sz=%d sendPos=%d flags=%d pos=%d", mode.c_str(), data, size, sendPosition, flags, position);
 }
 
 /*
@@ -630,7 +621,9 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 	int rc = ERROR;
 	int oerrno = errno;
 	int ssl_err = SSL_get_error(ssl, ret);
-	smsc_log_debug(logger, "HttpContext::sslCheckIoError ret:%d errno:%d ssl_err:%d txt:%s\n", ret, ssl_err, oerrno, strerror(oerrno));
+//	smsc_log_debug(logger, "sslCheckIoError ret:%d  errno:%d, %s", ret, oerrno, strerror(oerrno));
+//	smsc_log_debug(logger, "sslCheckIoError SSLerr:%d, %s", ssl_err, ERR_error_string(ssl_err, NULL));
+//	sslLogErrors();
 
 	switch ( ssl_err ) {
 	case SSL_ERROR_WANT_READ:
@@ -655,12 +648,10 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 		 *
 		 */
 		sslLogErrors();
-
-		smsc_log_debug(logger, "%s %d SSL:%d %d %d %s\n", __FILE__, __LINE__, ret, ssl_err, oerrno, strerror(oerrno));
 		break;
 	case SSL_ERROR_ZERO_RETURN:
 		/* clean shutdown on the remote side */
-		smsc_log_error(logger, "SSL_ERROR_ZERO_RETURN:%d %d %d %s\n", ret, ssl_err, oerrno, strerror(oerrno));
+		smsc_log_error(logger, "SSL_ERROR_ZERO_RETURN");
 		rc = OK;
 		break;
 //	case SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG:
@@ -669,14 +660,14 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 	default:
 		sslLogErrors();
 		break;
-	}	//switch
+	}
 	return rc;
 }
 
 void HttpContext::sslLogErrors(void) {
 	unsigned long ulerr;
 	while ( (ulerr = ERR_get_error()) ) {  /* get all errors from the error-queue */
-		smsc_log_error(logger, "%s %d SSL:%d %s\n", __FILE__, __LINE__, ERR_error_string(ulerr, NULL));
+		smsc_log_error(logger, "%s %d SSL:%d %s", __FILE__, __LINE__, ERR_error_string(ulerr, NULL));
 	}
 }
 

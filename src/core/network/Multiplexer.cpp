@@ -36,6 +36,7 @@ int Multiplexer::checkState(bool isReadMode,SockArray& ready,SockArray& error,in
 	}
 	if ( (!isReadMode) && (fds[i].revents&POLLOUT) ) {
 		ready.Push(sockets[i]);
+		continue;
 	}
   }
   return ready.Count()+error.Count();

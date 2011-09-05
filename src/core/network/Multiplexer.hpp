@@ -13,7 +13,6 @@ class Multiplexer{
 protected:
   static const bool STATE_MODE_READ = true;
   static const bool STATE_MODE_WRITE = false;
-//	enum{STATE_MODE_READ=0,STATE_MODE_WRITE=1};
 public:
   typedef smsc::core::buffers::Array<Socket*> SockArray;
   Multiplexer(){}
@@ -55,16 +54,16 @@ public:
   }
   int canRead(SockArray& ready,SockArray& error,int timeout=-1)
   {
-    return checkState(STATE_MODE_READ,ready,error,timeout);
+	  return checkState(STATE_MODE_READ,ready,error,timeout);
   }
   int canWrite(SockArray& ready,SockArray& error,int timeout=-1)
   {
-    return checkState(STATE_MODE_WRITE,ready,error,timeout);
+	  return checkState(STATE_MODE_WRITE,ready,error,timeout);
   }
 
   int getSize()const
   {
-    return sockets.Count();
+	  return sockets.Count();
   }
 
 protected:
@@ -72,8 +71,6 @@ protected:
   smsc::core::buffers::Array<pollfd> fds;
 
   int checkState(bool isReadMode,SockArray& ready,SockArray& error,int timeout);
-// #undef STATE_MODE_READ
-// #undef STATE_MODE_WRITE
 };
 
 }//network

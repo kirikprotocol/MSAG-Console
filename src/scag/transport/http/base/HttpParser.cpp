@@ -35,7 +35,8 @@ static http_methods method_table[] = {
 
 #define METHOD_COUNT (int)(sizeof(method_table) / sizeof(method_table[0]))
 
-StatusCode HttpParser::parse(HttpContext& cx) {
+StatusCode HttpParser::parse(HttpContext& cx, bool last_data) {
+//	Logger* logger = smsc::logger::Logger::getInstance("parser");
 	char *buf, *saved_buf, *local_buf;
 	unsigned int len, local_len;
 
@@ -65,8 +66,10 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 	local_buf = buf;
 
   
-	if (len == 0)
+	if (len == 0) {
+//		smsc_log_debug(logger, "return ok len=0");
 		return OK;
+	}
   
 	command = cx.command;
 
@@ -77,15 +80,17 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 			command->chunk_size = 0;
 			command->setContentLength(0);
 			rc = readLine(local_buf, local_len);
-			if (rc != OK)
+			if (rc != OK) {
 				return rc;
+			}
 
 			if (local_len == 0)
 				return ERROR;
 
 			rc = parseFirstLine(saved_buf, local_len, cx);
-			if (rc != OK)
+			if (rc != OK) {
 				return rc;
+			}
 
 			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
 			saved_buf = local_buf;
@@ -113,17 +118,8 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 				 *  3 - after all headers parsed, chunked, waiting chunk size
 				 *  4 - after all headers parsed, chunked, waiting chunk data
 				 */
-				if (command->chunked) {
-					cx.flags = 3;
-				//            command->content.SetPos(0); // xom 27.07.11 to avoid of bad command->content info (?)
-				}
-				else {
-					if (command->contentLength == 0) {
-						return OK;
-					}
-					cx.flags = 2;
-				}
-
+				cx.flags = (command->chunked) ? 3:2;
+// RESPONSE may contain content without Content-Length header (RFC2068 ¤4.4)
 				if ((cx.action == READ_REQUEST) && (command->contentLength == -1)) {
 					switch (cx.getRequest().getMethod()) {
 					case GET:
@@ -159,7 +155,13 @@ StatusCode HttpParser::parse(HttpContext& cx) {
 			cx.parsePosition += static_cast<unsigned int>(local_len);
 			local_len = 0;
 
-			rc = (static_cast<int>(command->content.GetPos()) < command->contentLength) ? CONTINUE : OK;
+			if (last_data) {
+				command->contentLength = command->content.GetPos();
+				rc = OK;
+			}
+			else {
+				rc = (static_cast<int>(command->content.GetPos()) < command->contentLength) ? CONTINUE : OK;
+			}
 			break;
 		}
 

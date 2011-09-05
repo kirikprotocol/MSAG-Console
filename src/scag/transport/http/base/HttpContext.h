@@ -33,7 +33,9 @@ enum ActionID {
     READ_REQUEST,
     SEND_REQUEST,
     READ_RESPONSE,
-    SEND_RESPONSE
+    SEND_RESPONSE,
+    KEEP_ALIVE,
+    ACTION_LAST
 };
 
 /*
@@ -122,7 +124,7 @@ public:
     void closeConnection(Socket* s);
 
     bool useHttps(Socket* s);
-    int sslReadPartial(Socket* s, const char* readBuf, const size_t readBufSize);
+    int sslReadPartial(Socket* s, const char* readBuf, const size_t readBufSize, bool& closed);
     int sslWritePartial(Socket* s, const char* data, const size_t toWrite);
 
     //for HttpParser
@@ -138,6 +140,9 @@ public:
     bool messageIsOver(Socket* s);
     void setSiteHttps(bool supported); // { siteHttps = supported; }
 
+    static const char* actionName(ActionID act) { return ActionNames[act]; }
+    const char* actionName() { return ActionNames[action]; }
+
 protected:
     void closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info);
     void prepareNextChunk();
@@ -146,7 +151,7 @@ public:
     Socket *user;
     Socket *site;
 
-    HttpCommand *command; // owned
+    HttpCommand *command;	// owned
 
     ActionID action;
     unsigned int flags;
@@ -171,8 +176,7 @@ protected:
 
     static const char* nameUser;
     static const char* nameSite;
-
-//    std::queue<chunk_info> chunks;
+    static const char* ActionNames[ACTION_LAST];
 
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;
