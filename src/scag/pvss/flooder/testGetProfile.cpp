@@ -36,6 +36,7 @@ int main( int argc, char** argv )
     core::client::ClientConfig clientConfig;
     clientConfig.setHost(host);
     clientConfig.setPort(port);
+    clientConfig.setConnectionsCount(1);
     clientConfig.setMaxReaderChannelsCount(5);
     clientConfig.setMaxWriterChannelsCount(5);
     clientConfig.setReadersCount(2);
@@ -156,6 +157,9 @@ int main( int argc, char** argv )
         }
         shellresult = 0;
     }
+    // struct timespec ts = { 70, 0 };
+    // ::nanosleep( &ts, 0 );
+
     smsc_log_debug(logmain,"shutting down the pvss client");
     client->shutdown();
     smsc_log_debug(logmain,"client shutdown");

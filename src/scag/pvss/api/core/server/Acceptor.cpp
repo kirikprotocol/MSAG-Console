@@ -24,9 +24,9 @@ void Acceptor::shutdown()
     SockTask::shutdown();
     waitUntilReleased();
     for ( int i = 0; i < finishingSockets_.Count(); ++i ) {
-        smsc::core::network::Socket* socket = finishingSockets_[i];
-        socket->Close();
-        delete socket;
+        const FinSock& fs = finishingSockets_[i];
+        fs.socket->Close();
+        delete fs.socket;
     }
 }
 
@@ -34,9 +34,11 @@ void Acceptor::shutdown()
 void Acceptor::init() /* throw (PvssException) */ 
 {
     if ( socket_.isConnected() ) return;
+    const int connectTimeout = 300;
     if ( -1 == socket_.InitServer( getConfig().getHost().c_str(),
                                    getConfig().getPort(),
-                                   int(getConfig().getConnectTimeout())) ) {
+                                   connectTimeout ) ) {
+        // int(getConfig().getConnectTimeout())) ) {
         throw PvssException(PvssException::NOT_CONNECTED,"cannot init socket at %s:%u",
                             getConfig().getHost().c_str(),
                             unsigned(getConfig().getPort()));
@@ -65,7 +67,10 @@ bool Acceptor::setupSockets( util::msectime_type currentTime )
             socket->GetPeer(buf);
             smsc_log_info(log_,"incoming connection %p from: %s", socket, buf);
         }
-        finishingSockets_.Push(socket);
+        FinSock fs;
+        fs.socket = socket;
+        fs.connTime = util::currentTimeMillis();
+        finishingSockets_.Push(fs);
     }
     return finishingSockets_.Count() > 0;
 }
@@ -75,8 +80,26 @@ void Acceptor::processEvents()
 {
     if ( isStopping ) return;
     smsc::core::network::Multiplexer mul;
+    const util::msectime_type now = util::currentTimeMillis();
+    bool hasSockets = false;
     for ( int i = 0; i < finishingSockets_.Count(); ++i ) {
-        mul.add( finishingSockets_[i] );
+        FinSock& fs = finishingSockets_[i];
+        const unsigned delta = unsigned(now - fs.connTime);
+        smsc::core::network::Socket* socket = fs.socket;
+        if ( delta > getConfig().getConnectTimeout() ) {
+            smsc_log_warn(log_,"socket %p connect timeout, will close",socket);
+            socket->Close();
+            removeFinishingSocket(socket);
+            delete socket;
+            continue;
+        }
+        hasSockets = true;
+        smsc_log_debug(log_,"waiting to write into %p after %u msec",
+                       fs.socket, unsigned(now - fs.connTime));
+        mul.add( fs.socket );
+    }
+    if ( !hasSockets ) {
+        return;
     }
     smsc::core::network::Multiplexer::SockArray ready;
     smsc::core::network::Multiplexer::SockArray error;
@@ -92,7 +115,10 @@ void Acceptor::processEvents()
         removeFinishingSocket(socket);
         PvssSocket* channel = new PvssSocket(*serverCore_,socket);
         // FIXME: should we check accept time of the channel ?
-        bool accepted = serverCore_->acceptChannel(channel);
+        bool accepted = false;
+        try {
+            accepted = serverCore_->acceptChannel(channel);
+        } catch (...) {}
         char buf[3];
         buf[2] = 0;
         short* pbuf = reinterpret_cast<short*>(buf);
@@ -110,7 +136,7 @@ void Acceptor::processEvents()
 void Acceptor::removeFinishingSocket(smsc::core::network::Socket* socket)
 {
     for (int i = 0; i < finishingSockets_.Count(); ++i ) {
-        if ( finishingSockets_[i] == socket ) {
+        if ( finishingSockets_[i].socket == socket ) {
             finishingSockets_.Delete(i);
             break;
         }

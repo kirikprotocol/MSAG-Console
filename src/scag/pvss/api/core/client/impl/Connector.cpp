@@ -36,6 +36,14 @@ bool Connector::setupSockets(util::msectime_type currentTime)
     for ( int i = 0; i < sockets_.Count(); ++i ) {
         PvssSocket& channel = *sockets_[i];
         if ( channel.isConnected() ) {
+            const unsigned delta = unsigned(currentTime - channel.getConnectTime());
+            if ( delta > core_->getConfig().getConnectTimeout() ) {
+                // close on timeout
+                smsc_log_warn(log_,"server has not answered on %p, will reconnect",&channel);
+                channel.disconnect();
+                channel.setConnectTime( currentTime );
+                continue;
+            }
             smsc_log_debug(log_,"channel %p is connected, waiting for server answer ...",&channel);
             finishingSockets_.Push( &channel );
             wakeupTime_ = currentTime;
@@ -64,19 +72,19 @@ void Connector::processEvents()
     // connect those sockets that are waiting for connect
     smsc_log_debug(log_,"total pending sockets to connect: %u", unsigned(pendingSockets_.Count()));
     while ( pendingSockets_.Count() > 0 ) {
-        PvssSocket& channel = *pendingSockets_[0];
-        smsc_log_debug( log_, "connecting socket %p ...", channel.socket() );
+        PvssSocket* channel = pendingSockets_[0];
+        smsc_log_debug( log_, "connecting socket %p ...", channel->socket() );
         pendingSockets_.Delete(0);
         try {
-            channel.connect();
+            channel->connect();
             // move sockets to finishing
-            smsc_log_debug( log_, "socket %p connected, waiting for server answer", channel.socket() );
-            finishingSockets_.Push(&channel);
+            smsc_log_debug( log_, "socket %p connected, waiting for server answer", channel->socket() );
+            finishingSockets_.Push(channel);
             continue;
         } catch ( std::exception& e ) {
             // cannot connect
             smsc_log_warn(log_,"cannot connect: %s", e.what());
-            core_->handleError(PvssException(PvssException::CONNECT_FAILED,"cannot connect: %s",e.what()),channel);
+            core_->handleError(PvssException(PvssException::CONNECT_FAILED,"cannot connect: %s",e.what()),*channel);
         }
     }
 

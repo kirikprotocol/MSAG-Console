@@ -33,12 +33,17 @@ protected:
     virtual void processEvents();
 
 private:
-    void removeFinishingSocket(smsc::core::network::Socket* socket);
+    void removeFinishingSocket( smsc::core::network::Socket* socket );
 
 private:
-    smsc::core::network::Socket                                socket_;   // server socket
-    smsc::core::buffers::Array< smsc::core::network::Socket* > finishingSockets_; // owned
-    ServerCore*                                                serverCore_;
+    struct FinSock {
+        smsc::core::network::Socket* socket;
+        util::msectime_type          connTime;
+    };
+
+    smsc::core::network::Socket           socket_;   // server socket
+    smsc::core::buffers::Array< FinSock > finishingSockets_; // owned
+    ServerCore*                           serverCore_;
 };
 
 } // namespace server
