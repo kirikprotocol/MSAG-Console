@@ -223,14 +223,14 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     }
 
     if(d == null) {
+      File reportFile = createReports ? new File(localCopy, buildReportName(localCsvFile.getName())) : null;
       try{
-        createDelivery(deliveryName, md5, localCsvFile);
-      }catch (Exception e) {
-        if(createReports) {
+        createDelivery(deliveryName, md5, localCsvFile, reportFile);
+      }catch (AdminException e) {
+        if(reportFile != null) {
           try{
-            File f = new File(localCopy, buildReportName(localCsvFile.getName()));
-            if(fileSys.exists(f)) {
-              fileSys.delete(f);
+            if(fileSys.exists(reportFile)) {
+              fileSys.delete(reportFile);
             }
           }catch (Exception ignored) {}
         }
@@ -241,13 +241,13 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     fileSys.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
 
-  private void createDelivery(String deliveryName, final String md5, File localCsvFile) throws AdminException {
+  private void createDelivery(String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
     helper.logCreateDelivery(deliveryName);
 
-    if (createReports) {
+    if (reportFile != null) {
       final PrintStream[] ps = new PrintStream[1];
       try{
-        ps[0] = new PrintStream(fileSys.getOutputStream(new File(localCopy, buildReportName(localCsvFile.getName())), false), true, encoding);
+        ps[0] = new PrintStream(fileSys.getOutputStream(reportFile, false), true, encoding);
         helper.createDelivery(localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
           @Override
           public void reject(String abonent, String userData) {
