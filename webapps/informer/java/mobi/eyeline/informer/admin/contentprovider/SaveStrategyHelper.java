@@ -90,7 +90,7 @@ class SaveStrategyHelper {
     result[0] = abonent;
     result[1] = text;
     result[2] = userData;
-    result[3] = keywords;
+    result[3] = keywords == null || keywords.length() == 0 ? null : keywords;
   }
 
   private String checkAllLinesContainsSameText(File f, String encoding) throws AdminException {

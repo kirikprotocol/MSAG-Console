@@ -162,6 +162,39 @@ public class DetailedSaveStrategyTest {
   }
 
   @Test
+  public void testCreateErrorDeleteReport() throws AdminException {
+
+    fs = new MemoryFileSystem();
+    deliveryManager = new TestDeliveryManager(new File(""), fs){
+      @Override
+      public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+        if(true) {
+          throw new DeliveryException("interaction_error", "-1");
+        }
+        return null;
+      }
+    };
+    user = prepareUser();
+
+    settings = prepareSettings();
+    settings.setWorkType(UserCPsettings.WorkType.detailed);
+    settings.setCreateReports(true);
+    resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
+    resourceOptions.setSourceAddress(new Address("+79139489906"));
+    resourceOptions.setEncoding("utf-8");
+    _init();
+
+
+    File resourceFile = prepareResourceFile(false, null);
+
+    strategy.process(true);
+
+    assertTrue("File doesn't exist", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv")));
+    assertFalse("File exist!", fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv.report")));
+
+  }
+
+  @Test
   public void testSynchrFinishedRemove() throws AdminException {
     File dir = new File("dir");
     fs.mkdirs(dir);

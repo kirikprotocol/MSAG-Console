@@ -222,8 +222,21 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       d = null;
     }
 
-    if(d == null)
-      createDelivery(deliveryName, md5, localCsvFile);
+    if(d == null) {
+      try{
+        createDelivery(deliveryName, md5, localCsvFile);
+      }catch (Exception e) {
+        if(createReports) {
+          try{
+            File f = new File(localCopy, buildReportName(localCsvFile.getName()));
+            if(fileSys.exists(f)) {
+              fileSys.delete(f);
+            }
+          }catch (Exception ignored) {}
+        }
+        throw e;
+      }
+    }
 
     fileSys.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
