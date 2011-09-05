@@ -19,6 +19,7 @@ using namespace scag2::pvss;
 int main( int argc, char** argv )
 {
     smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_WARN );
+    // smsc::logger::Logger::Init();
     smsc::logger::Logger* logmain = smsc::logger::Logger::getInstance("main");
 
     // 1
@@ -39,6 +40,7 @@ int main( int argc, char** argv )
     clientConfig.setMaxWriterChannelsCount(5);
     clientConfig.setReadersCount(2);
     clientConfig.setWritersCount(2);
+    clientConfig.setIOTimeout(100);
 
     std::auto_ptr< core::client::Client > client
         ( new core::client::ClientCore(new core::client::ClientConfig(clientConfig),
@@ -154,6 +156,8 @@ int main( int argc, char** argv )
         }
         shellresult = 0;
     }
+    smsc_log_debug(logmain,"shutting down the pvss client");
     client->shutdown();
+    smsc_log_debug(logmain,"client shutdown");
     return shellresult;
 }
