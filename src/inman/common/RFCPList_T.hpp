@@ -64,11 +64,11 @@ public:
     GuardedList * _pList; //referenced list with guard
     RfcIterator   _rIt;   //iterator of referenced node
 
-    //NOTE: Constructor cann't be called for iterator referencing erased node
+    //NOTE.1: targeted list MUST be locked!
+    //NOTE.2: Constructor cann't be called for iterator referencing erased node!
     iterator(GuardedList & use_list, const RfcIterator & use_it)
       : _pList(&use_list), _rIt(use_it)
     {
-      MutexGuard grd(*_pList->_sync);
       _pList->_rfcList.markNode(_rIt);
     }
 
@@ -80,11 +80,8 @@ public:
 
     iterator insertNode(_TArg * p_obj)
     {
-      RfcIterator nit;
-      {
-        MutexGuard grd(*_pList->_sync);
-        nit = _pList->_rfcList.insert(_rIt, p_obj);
-      }
+      MutexGuard grd(*_pList->_sync);
+      RfcIterator nit = _pList->_rfcList.insert(_rIt, p_obj);
       return iterator(*_pList, nit);
     }
 
@@ -111,6 +108,21 @@ public:
     _TArg * & operator*() { return *reinterpret_cast<_TArg **>((&(_rIt->_value))); }
 
     bool  isEnd(void) const { return (_rIt == _pList->_rfcList.end()); }
+
+    iterator & operator=(const iterator & cp_it)
+    {
+      if (_pList) {
+        MutexGuard grd(*_pList->_sync);
+        _pList->_rfcList.unmarkNode(_rIt);
+      }
+      _pList = cp_it._pList;
+      _rIt = cp_it._rIt;
+      if (_pList) {
+        MutexGuard grd(*_pList->_sync);
+        _pList->_rfcList.markNode(_rIt);
+      }
+      return *this;
+    }
 
     iterator & operator++() //preincrement
     {
@@ -159,11 +171,11 @@ public:
     const GuardedList * _pList; //referenced list with guard
     RfcConstIterator    _rIt;   //const_iterator of referenced node
 
-    //NOTE: Constructor cann't be called for iterator referencing erased node
+    //NOTE.1: targeted list MUST be locked!
+    //NOTE.2: Constructor cann't be called for iterator referencing erased node!
     const_iterator(const GuardedList & use_list, const RfcConstIterator & use_it)
       : _pList(&use_list), _rIt(use_it)
     {
-      MutexGuard grd(*_pList->_sync);
       _pList->_rfcList.markNode(_rIt);
     }
 
@@ -198,6 +210,21 @@ public:
     _TArg * const & operator*() const { return *reinterpret_cast<_TArg **>((&(_rIt->_value))); }
 
     bool  isEnd(void) const { return (_rIt == _pList->_rfcList.end()); }
+
+    const_iterator & operator=(const const_iterator & cp_it)
+    {
+      if (_pList) {
+        MutexGuard grd(*_pList->_sync);
+        _pList->_rfcList.unmarkNode(_rIt);
+      }
+      _pList = cp_it._pList;
+      _rIt = cp_it._rIt;
+      if (_pList) {
+        MutexGuard grd(*_pList->_sync);
+        _pList->_rfcList.markNode(_rIt);
+      }
+      return *this;
+    }
 
     const_iterator & operator++() //preincrement
     {
@@ -250,21 +277,25 @@ public:
 
   iterator begin(void)
   {
+    MutexGuard grd(*_grdList._sync);
     return iterator(_grdList, _grdList._rfcList.begin());
   }
 
   const_iterator begin(void) const
   {
+    MutexGuard grd(*_grdList._sync);
     return const_iterator(_grdList, _grdList._rfcList.begin());
   }
 
   iterator end(void)
   {
+    MutexGuard grd(*_grdList._sync);
     return iterator(_grdList, _grdList._rfcList.end());
   }
 
   const_iterator end(void) const
   {
+    MutexGuard grd(*_grdList._sync);
     return const_iterator(_grdList, _grdList._rfcList.end());
   }
 
