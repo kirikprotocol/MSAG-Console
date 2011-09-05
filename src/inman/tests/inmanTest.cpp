@@ -15,6 +15,7 @@ static char const ident[] = "@(#)$Id$";
 using smsc::inman::common::Console;
 
 #include "inman/tests/TstSmBill.hpp"
+using smsc::inman::test::TSTFacadeAC;
 using smsc::inman::test::BillFacade;
 using smsc::inman::test::CapSmDialogCfg;
 
@@ -114,7 +115,7 @@ static void cmd_disconnect(Console&, const std::vector<std::string> &args)
 {
   if ((args.size() < 2)
       || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-    fprintf(stdout, hlp_connect, args[0].c_str());
+    fprintf(stdout, hlp_disconnect, args[0].c_str());
     fprintf(stdout, "  BillFacade connected: %s\n  DtcrFacade connected: %s\n",
             _billFacade->isActive() ? "YES" : "NO",
             _dtcrFacade->isActive() ? "YES" : "NO");
@@ -134,13 +135,66 @@ static void cmd_disconnect(Console&, const std::vector<std::string> &args)
     }
     /* */
   } else {
-    fprintf(stdout, hlp_connect, args[0].c_str());
+    fprintf(stdout, hlp_disconnect, args[0].c_str());
   }
   fprintf(stdout, "  BillFacade connected: %s\n  DtcrFacade connected: %s\n",
           _billFacade->isActive() ? "YES" : "NO",
           _dtcrFacade->isActive() ? "YES" : "NO");
 }
 
+static const char hlp_loopconnect[] = "USAGE: loopconnect [?|help | bill | dtcr] [num_cycles]\n";
+static void cmd_loopconnect(Console&, const std::vector<std::string> &args)
+{
+  if ((args.size() < 2)
+      || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+    fprintf(stdout, hlp_loopconnect, args[0].c_str());
+    fprintf(stdout, "  BillFacade connected: %s\n  DtcrFacade connected: %s\n",
+            _billFacade->isActive() ? "YES" : "NO",
+            _dtcrFacade->isActive() ? "YES" : "NO");
+    return;
+  }
+
+  const char * pTst = NULL;
+  TSTFacadeAC * pFcd = NULL;
+
+  if (!strcmp("bill", args[1].c_str())) {
+    pFcd = _billFacade;
+    pTst = "Bill";
+    /* */
+  } else if (!strcmp("dtcr", args[1].c_str())) {
+    pFcd = _dtcrFacade;
+    pTst = "Dtcr";
+    /* */
+  } else {
+    fprintf(stdout, hlp_loopconnect, args[0].c_str());
+    return;
+  }
+
+  long numAtt = 1000;
+  if (args.size() > 2) {
+    numAtt = atol(args[2].c_str());
+    if (numAtt <= 0) {
+      fprintf(stdout, hlp_loopconnect, args[0].c_str());
+      return;
+    }
+  }
+
+  if (pFcd->isActive()) {
+    fprintf(stdout, "  %sFacade: disconnecting ..\n", pTst);
+    pFcd->disconnect();
+  }
+  fprintf(stdout, "  Performing %ld reconnect cycles .. \n", numAtt);
+
+  for (long i = 0; i < numAtt; ++i) {
+    fprintf(stdout, "  %sFacade: connecting ..\n", pTst);
+    pFcd->initConnect(_inmanIP._host, _inmanIP._port);
+    if (pFcd->isActive()) {
+      fprintf(stdout, "  %sFacade: disconnecting ..\n", pTst);
+      pFcd->disconnect();
+    }
+    usleep(1000 * 400); //sleep 400 ms
+  }
+}
 /* ************************************************************************** *
  * Console commands: sending INMan commands
  * ************************************************************************** */
@@ -731,6 +785,7 @@ int main(int argc, char** argv)
  * ************************************************************************** */
     console.addItem("connect", cmd_connect);
     console.addItem("disconnect", cmd_disconnect);
+    console.addItem("loopconnect", cmd_loopconnect);
 /* ************************************************************************** *
  * Console commands: sending Billing commands to INMan
  * ************************************************************************** */
@@ -778,8 +833,8 @@ int main(int argc, char** argv)
     if (!_connServ->Start()) {
       smsc_log_fatal(_logger, "TCP server failed to start");
     } else {
-      _billFacade->initConnect(_inmanIP._host, _inmanIP._port);
-      _dtcrFacade->initConnect(_inmanIP._host, _inmanIP._port);
+//      _billFacade->initConnect(_inmanIP._host, _inmanIP._port);
+//      _dtcrFacade->initConnect(_inmanIP._host, _inmanIP._port);
       console.run("console>"); //cycles
     }
   } catch (const std::exception& error) {
