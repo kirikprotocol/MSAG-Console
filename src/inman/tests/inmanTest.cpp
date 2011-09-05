@@ -142,7 +142,11 @@ static void cmd_disconnect(Console&, const std::vector<std::string> &args)
           _dtcrFacade->isActive() ? "YES" : "NO");
 }
 
-static const char hlp_loopconnect[] = "USAGE: loopconnect [?|help | bill | dtcr] [num_cycles]\n";
+static const char hlp_loopconnect[] =
+"USAGE: loopconnect [?|help | bill | dtcr] [num_cycles] [sleep_ms]\n"
+"NOTE:  num_cycles by default = 1000,"
+"       sleep_ms by default = 200 ms";
+
 static void cmd_loopconnect(Console&, const std::vector<std::string> &args)
 {
   if ((args.size() < 2)
@@ -178,6 +182,14 @@ static void cmd_loopconnect(Console&, const std::vector<std::string> &args)
       return;
     }
   }
+  useconds_t tmoUSec = 200;
+  if (args.size() > 3) {
+    tmoUSec = atol(args[3].c_str());
+    if (!tmoUSec) {
+      fprintf(stdout, hlp_loopconnect, args[0].c_str());
+      return;
+    }
+  }
 
   if (pFcd->isActive()) {
     fprintf(stdout, "  %sFacade: disconnecting ..\n", pTst);
@@ -192,7 +204,7 @@ static void cmd_loopconnect(Console&, const std::vector<std::string> &args)
       fprintf(stdout, "  %sFacade: disconnecting ..\n", pTst);
       pFcd->disconnect();
     }
-    usleep(1000 * 400); //sleep 400 ms
+    usleep(1000 * tmoUSec); //sleep tmoUSec ms
   }
 }
 /* ************************************************************************** *
