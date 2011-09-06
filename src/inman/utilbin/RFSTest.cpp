@@ -12,7 +12,7 @@ using smsc::inman::cdr::_CDRRecordHeader_TEXT;
 
 static char     _runService = 0;
 
-extern "C" static void sighandler(int signal)
+extern "C" void sighandler(int signal)
 {
     _runService = 0;
 }
