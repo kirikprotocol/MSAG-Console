@@ -92,6 +92,7 @@ static int log_phase_fatal(ICSState phase_id, Logger * use_log, const char * err
 static const char _hlpMsg[] =
  "USAGE: %s [-help | -list-uid] | [[-parse|-init] config_file_name]\n"
  "  -help      print help on command line arguments\n"
+ "  -version   print version info\n"
  "  -list-uid  print supported ICService's UIds\n"
  "  -parse     parse services configuration and exit\n"
  "  -init      perform services initialization phase and exit\n"
@@ -105,11 +106,15 @@ int main(int argc, char** argv)
     if (argc > 1) { //parse command line args
       if (*argv[1] == '-') {
         if (!strcmp(argv[1], "-help")) {
-          fprintf(stderr, _hlpMsg, argv[0]);
+          fprintf(stdout, _hlpMsg, argv[0]);
+          return 0;
+        }
+        if (!strcmp(argv[1], "-version")) {
+          fprintf(stdout, "%s\n", _getProductVersionStr());
           return 0;
         }
         if (!strcmp(argv[1], "-list-uid")) {
-          fprintf(stderr, "Known UIds: %s\n", ICSLoadupsReg::get().knownUIds().toString().c_str());
+          fprintf(stdout, "Known UIds: %s\n", ICSLoadupsReg::get().knownUIds().toString().c_str());
           return 0;
         }
         if (!strcmp(argv[1], "-parse")) {
