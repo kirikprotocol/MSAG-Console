@@ -359,8 +359,16 @@ enum HttpMethod {
     DELETE,
     TRACE,
     CONNECT,
-    OPTIONS
+    OPTIONS,
+    METHOD_COUNT = OPTIONS,
+    HTTP_METHOD_LAST
 };
+
+typedef struct {
+  const char   *name;
+  unsigned int  size;
+  HttpMethod    value;
+} http_methods;
 
 /**
  * Class provides access to the HTTP request message
@@ -417,10 +425,12 @@ public:
 
     bool getPostParams(std::string& params);
 
+    static const char* httpMethodNames(HttpMethod hm);
+
 protected:
     void serializeQuery(std::string& s);
 
-    static const char *httpMethodNames[9];
+//    static const char *httpMethodNames[HTTP_METHOD_LAST];
 
     StringHash queryParameters;
     ParameterIterator queryParametersIterator;
@@ -432,6 +442,9 @@ protected:
     
     bool isInitialRequest;
     bool failedBeforeSessionCreate;
+
+public:
+    static const http_methods method_table[METHOD_COUNT];
 };
 
 /**

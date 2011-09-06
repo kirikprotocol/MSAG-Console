@@ -16,6 +16,7 @@ const char KEEP_ALIVE[] = "keep-alive";
 const char COOKIE_FIELD[] = "Cookie";
 const char SET_COOKIE_FIELD[] = "Set-Cookie";
 
+/*
 struct http_methods {
   const char   *name; 
   unsigned int  size;
@@ -32,8 +33,11 @@ static http_methods method_table[] = {
   {"CONNECT", 7, CONNECT},
   {"OPTIONS", 7, OPTIONS}
 };
+*/
 
-#define METHOD_COUNT (int)(sizeof(method_table) / sizeof(method_table[0]))
+// METHOD_COUNT defined in HttpCommand2.h
+//#define METHOD_COUNT (int)(sizeof(HttpRequest::method_table) / sizeof(HttpRequest::method_table[0]))
+//#define METHOD_COUNT HTTP_METHOD_LAST-1
 
 StatusCode HttpParser::parse(HttpContext& cx, bool last_data) {
 //	Logger* logger = smsc::logger::Logger::getInstance("parser");
@@ -254,6 +258,7 @@ StatusCode HttpParser::readLine(char*& buf, unsigned int& len)
 
 StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& cx)
 {
+	Logger* logger = smsc::logger::Logger::getInstance("parser");
   switch (cx.action) {
     case READ_RESPONSE:
       {
@@ -284,8 +289,8 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         int   method_idx = -1;
 
         for (int i = 0; i < METHOD_COUNT; ++i) {
-          if ((len >= method_table[i].size) && 
-              !compareNocaseN(buf, method_table[i].name, method_table[i].size)) {
+          if ((len >= HttpRequest::method_table[i].size) &&
+              !compareNocaseN(buf, HttpRequest::method_table[i].name, HttpRequest::method_table[i].size)) {
             method_idx = i;
             break;
           }
@@ -298,13 +303,14 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         if (!pos)
           return ERROR;
 
-        if (unsigned(pos - buf) != method_table[method_idx].size)
+        if (unsigned(pos - buf) != HttpRequest::method_table[method_idx].size)
           return ERROR;
 
         // we've got method
-        cx.getRequest().setMethod(method_table[method_idx].value);
+        cx.getRequest().setMethod(HttpRequest::method_table[method_idx].value);
+		smsc_log_debug(logger, "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
 
-        switch (method_table[method_idx].value) {
+        switch (HttpRequest::method_table[method_idx].value) {
           case GET:
           case POST:
             break;
@@ -324,7 +330,7 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         } else
           return ERROR;
 
-        if (method_table[method_idx].value == GET) {
+        if (HttpRequest::method_table[method_idx].value == GET) {
           pos = path.c_str();
           end = strchr(pos, '?');
 

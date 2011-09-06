@@ -24,7 +24,8 @@ using smsc::util::Exception;
 using exceptions::SCAGException;
 using util::encodings::Convertor;
 
-const char *HttpRequest::httpMethodNames[9] = {
+/*
+const char *HttpRequest::httpMethodNames[HTTP_METHOD_LAST] = {
     NULL,
     "GET",
     "HEAD",
@@ -34,6 +35,17 @@ const char *HttpRequest::httpMethodNames[9] = {
     "TRACE",
     "CONNECT",
     "OPTIONS"    
+};
+*/
+const http_methods HttpRequest::method_table[METHOD_COUNT] = {
+  {"GET", 3, GET},
+  {"HEAD", 4, HEAD},
+  {"POST", 4, POST},
+  {"PUT", 3, PUT},
+  {"DELETE", 6, DELETE},
+  {"TRACE", 5, TRACE},
+  {"CONNECT", 7, CONNECT},
+  {"OPTIONS", 7, OPTIONS}
 };
 
 static const std::string content_length_field(CONTENT_LENGTH_FIELD);
@@ -257,6 +269,15 @@ void HttpCommand::removeHeaderField(const std::string& fieldName)
     headerFields.Delete(fieldName.c_str());
 }
 
+const char* HttpRequest::httpMethodNames(HttpMethod hm) {
+	 if ( hm>0 && hm<HTTP_METHOD_LAST)
+//		 return httpMethodNames[hm];
+		 return method_table[hm-1].name;
+	 else
+		 smsc_log_debug(smsc::logger::Logger::getInstance("Http.Request"), "httpMethodNames: invalid value: %d", hm);
+	 return "UnknownHttpMethod";
+}
+
 HttpRequest::ParameterIterator& HttpRequest::getQueryParameterNames()
 {
     queryParameters.First();
@@ -471,7 +492,7 @@ const std::string& HttpRequest::serialize()
         
         //headers.reserve(totalHeadersSize);
         
-        headers = httpMethodNames[httpMethod];
+        headers = httpMethodNames(httpMethod);	// (httpMethod<HTTP_METHOD_LAST) ? httpMethodNames[httpMethod] : "UnknownHttpMethod";
         headers += SP;
         headers += getSitePath();
         headers += getSiteFileName();
