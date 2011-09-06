@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.8.0 or higher -->
+<!-- configuration for INMan v1.9.0 or higher -->
 <config>
   <!-- NOTE: Remove prefix 'sample_' from optional param/section name
              in order to activate it.
@@ -44,6 +44,10 @@
       <param name="IDPReqMode" type="string"></param>  <!-- [MT (default), SEQ] -->
 
       <param name="sample_defaultIMSI" type="string">250013903368782</param>
+
+      <param name="sample_billingModes" type="string">ForcedCDR</param> <!--
+       override global billing modes for each type of messages
+       -->
     </section>
 
     <section name="IN_Vlad_Huawei">

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.8.0 or higher -->
+<!-- configuration for INMan v1.9.0 or higher -->
 <config>
-  <param name="version" type="string">0.8.0</param>   <!-- config version -->
+  <param name="version" type="string">1.9.0</param>   <!-- config version -->
 
   <section name="Services">
     <param name="Host" type="string">uid: icsTCPServer</param> <!--  -->
@@ -60,46 +60,67 @@
      0 - means the default cache  interval is used -->
   </section>
 
-  <section name="Billing">   <!-- SMS/USSD messages charging -->
-   <section name="BillingModes"> <!--
-     Sets billing mode depending on message type. The following types are
-     recognized:
-        SMS  : ordinary SMS message,
-        USSD : ordinary USSD message,
-        XSMS : SMS Extra message.
-     For each message type the following modes may be assigned either for
-     MO or MT billing:
-        OFF : billing is forbidden (default),
-        CDR : perform billing by generating CDR,
-        IN  : perform billing by interacting the IN point, in case
-              of failure follow the secondary mode.
-     -->
-    <section name="SMS"> <!-- ordinary SMS message -->
-      <param name="MO" type="string"> OFF </param>
-      <param name="MT" type="string">IN, CDR</param>
-    </section>
-    <section name="USSD"> <!-- ordinary USSD message -->
-      <param name="MO" type="string">IN, CDR</param>
-      <param name="MT" type="string">IN, CDR</param>
-    </section>
-    <section name="XSMS"> <!-- SMS Extra message -->
-      <param name="MO" type="string">IN, OFF</param>
-      <param name="MT" type="string">IN, OFF</param>
-    </section>
-   </section>
-
-    <param name="abonentTypeRequest" type="string">onDemand</param> <!-- [onDemand, always]
-    mode of abonent contract type determination (request to AbonentProvider)
-    onDemand : determine only if required for billing, default
-    always   : always determine
+  <section name="BillingModes"> <!--
+    Sets billing mode depending on message type. The following types are
+    recognized:
+       SMS  : ordinary SMS message,
+       USSD : ordinary USSD message,
+       XSMS : SMS Extra message.
+    For each message type the following modes may be assigned either for
+    MO or MT billing:
+       OFF : billing is forbidden (default),
+       CDR : perform billing by generating CDR,
+       IN  : perform billing by interacting the IN point, in case
+             of failure follow the secondary mode.
     -->
+   <section name="Global"> <!-- global settings -->
+     <section name="SMS"> <!-- ordinary SMS message -->
+       <param name="MO" type="string"> OFF </param>
+       <param name="MT" type="string">IN, CDR</param>
+     </section>
+     <section name="USSD"> <!-- ordinary USSD message -->
+       <param name="MO" type="string">IN, CDR</param>
+       <param name="MT" type="string">IN, CDR</param>
+     </section>
+     <section name="XSMS"> <!-- SMS Extra message -->
+       <param name="MO" type="string">IN, OFF</param>
+       <param name="MT" type="string">IN, OFF</param>
+     </section>
+   </section> <!-- Global -->
+
+   <section name="ForcedCDR"> <!-- overriding settings -->
+     <section name="SMS"> <!-- ordinary SMS message -->
+       <param name="MO" type="string">OFF</param>
+       <param name="MT" type="string">CDR</param>
+     </section>
+     <section name="USSD"> <!-- ordinary USSD message -->
+       <param name="MO" type="string">CDR</param>
+       <param name="MT" type="string">CDR</param>
+     </section>
+     <section name="XSMS"> <!-- SMS Extra message -->
+       <param name="MO" type="string">CDR</param>
+       <param name="MT" type="string">CDR</param>
+     </section>
+   </section> <!-- ForcedCDR -->
+
+  </section> <!-- BillingModes -->
+
+  <section name="Billing">   <!-- SMS/USSD messages charging -->
+    <param name="billingModes" type="string">Global</param> <!--
+     billing modes setting for each type of messages
+     -->
+    <param name="abonentTypeRequest" type="string">onDemand</param> <!-- [onDemand, always]
+     mode of abonent contract type determination (request to AbonentProvider)
+     onDemand : determine only if required for billing, default
+     always   : always determine
+     -->
     <param name="abonentPolicy" type="string">MTC_Default</param> <!-- 
-      default abonent contract determination policy (defined in 'AbonentPolicies'
-      section), it's used if abonent ISDN address doesn't belong to any of
-      address pools specified in 'AbonentPolicies' section.
+     default abonent contract determination policy (defined in 'AbonentPolicies'
+     section), it's used if abonent ISDN address doesn't belong to any of
+     address pools specified in 'AbonentPolicies' section.
      -->
     <param name="abonentTypeTimeout" type="int">8</param> <!-- units: seconds, [1 .. 65535],
-    maximum allowed time for determining abonent contract type,  default 8
+     maximum allowed time for determining abonent contract type,  default 8
      billing continues on its expiration in CDR mode
      -->
     <param name="maxBillings" type="int">200</param>   <!--  [1 .. 100000] , default 1000 
@@ -107,9 +128,9 @@
      0 - means use default value-->
     <param name="maxTimeout" type="int">30</param>  <!--
      units: seconds [5 .. 65535], default 120, 
-    maximum allowed value for billing suspending time (SMSC/IAProvider interaction, etc),
-    billing aborts on its expiration.
-    NOTE: setting timeout to less then default value may cause unpredicted behavior!!!
+     maximum allowed value for billing suspending time (SMSC/IAProvider interaction, etc),
+     billing aborts on its expiration.
+     NOTE: setting timeout to less then default value may cause unpredicted behavior!!!
      -->
     <param name="cdrDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
     <param name="cdrInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
