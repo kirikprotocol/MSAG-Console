@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.archive.ArchiveSettings;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.contentprovider.CpFileFormat;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 
@@ -33,6 +34,15 @@ class WebConfigSettings {
   private boolean allowUssdPushDeliveries;
   private String workDir;
 
+  private CpFileFormat cpFileFormat = CpFileFormat.EYELINE;
+
+  public CpFileFormat getCpFileFormat() {
+    return cpFileFormat;
+  }
+
+  public void setCpFileFormat(CpFileFormat cpFileFormat) {
+    this.cpFileFormat = cpFileFormat;
+  }
 
   public String getWorkDir() {
     return workDir;

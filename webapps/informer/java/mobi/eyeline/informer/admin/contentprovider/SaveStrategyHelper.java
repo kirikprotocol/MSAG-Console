@@ -64,53 +64,24 @@ class SaveStrategyHelper {
     mbean.notifyInteractionOk(getResourceHost(), resourceOpts.getPort(), attrs);
   }
 
-  private static void splitLine(String line, String[] result) {
-    int inx = line.indexOf('|');
-    if (inx < 0)
-      throw new IllegalArgumentException("INVALID LINE FORMAT");
-
-    String abonent = line.substring(0, inx).trim();
-
-    String text, userData = null, keywords = null;
-    int nextInx = line.indexOf('|', inx + 1);
-    if (nextInx < 0)
-      text = line.substring(inx + 1).trim();
-    else {
-      userData = line.substring(inx + 1, nextInx);
-      inx = nextInx;
-      nextInx = line.indexOf('|', inx+1);
-      if(nextInx < 0) {
-        text = line.substring(inx + 1).trim();
-      }else {
-        keywords = line.substring(inx + 1, nextInx).trim();
-        text = line.substring(nextInx+1).trim();
-      }
-    }
-
-    result[0] = abonent;
-    result[1] = text;
-    result[2] = userData;
-    result[3] = keywords == null || keywords.length() == 0 ? null : keywords;
-  }
-
-  private String checkAllLinesContainsSameText(File f, String encoding) throws AdminException {
+  private String checkAllLinesContainsSameText(FileFormatStrategy formatStrategy, File f, String encoding) throws AdminException {
     BufferedReader is = null;
     try {
       is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f), encoding));
       String line;
       String first = null;
-      String[] data = new String[4];
       while ((line = is.readLine()) != null) {
+        FileFormatStrategy.MessageInfo info;
         try {
-          splitLine(line, data);
+          info = formatStrategy.parseLine(line);
         } catch (IllegalArgumentException e) {
           log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.",e);
           continue;
         }
 
         if(first == null) {
-          first = data[1];
-        } else if(!first.equals(data[1])) {
+          first = info.getText();
+        } else if(!first.equals(info.getText())) {
           return null;
         }
       }
@@ -151,11 +122,11 @@ class SaveStrategyHelper {
     return delivery;
   }
 
-  void createDelivery(File f, String deliveryName, Address sourceAddr, String encoding, String md5, RejectListener rejectListener) throws AdminException {
+  void createDelivery(FileFormatStrategy formatStrategy, File f, String deliveryName, Address sourceAddr, String encoding, String md5, RejectListener rejectListener) throws AdminException {
     if (encoding == null)
       encoding="UTF-8";
 
-    String sigleText = checkAllLinesContainsSameText(f, encoding);
+    String sigleText = checkAllLinesContainsSameText(formatStrategy, f, encoding);
 
     DeliveryPrototype proto = createProto(deliveryName, sourceAddr);
     proto.setProperty(MD5_PROPERTY, md5);
@@ -169,7 +140,7 @@ class SaveStrategyHelper {
 
     Delivery d = strategy.createDelivery(proto);
 
-    strategy.addMessages(user, d, f, encoding, rejectListener);
+    strategy.addMessages(formatStrategy, user, d, f, encoding, rejectListener);
 
     context.activateDelivery(user.getLogin(), d.getId());
   }
@@ -305,11 +276,14 @@ class SaveStrategyHelper {
     final RejectListener rejectListener;
     private final boolean loadTextFromFile;
 
-    public FileMessageSource(List<Integer> allowedRegions, File messagesFile, String encoding, RejectListener rejectListener, boolean singleText) throws AdminException, UnsupportedEncodingException {
+    private final FileFormatStrategy formatStrategy;
+
+    public FileMessageSource(FileFormatStrategy formatStrategy, List<Integer> allowedRegions, File messagesFile, String encoding, RejectListener rejectListener, boolean singleText) throws AdminException, UnsupportedEncodingException {
       this.regions = allowedRegions;
       this.reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(messagesFile), encoding));
       this.rejectListener = rejectListener;
       this.loadTextFromFile = !singleText;
+      this.formatStrategy = formatStrategy;
     }
 
     void close()  {
@@ -337,41 +311,40 @@ class SaveStrategyHelper {
     public Message next() throws AdminException {
       try {
         String line;
-        String[] lineData=new String[4];
         while ((line = reader.readLine()) != null) {
           line = line.trim();
           if (line.length() == 0) continue;
           try {
-            splitLine(line, lineData);
+            FileFormatStrategy.MessageInfo info = formatStrategy.parseLine(line);
 
-            String addr = lineData[0];
-            String text = lineData[1];
-            String userData = lineData[2];
-            String keywords = lineData[3];
+//            String addr = lineData[0];
+//            String text = lineData[1];
+//            String userData = lineData[2];
+//            String keywords = lineData[3];
 
             Address ab;
             try {
-              ab = new Address(addr);
+              ab = new Address(info.getMsisdn());
             } catch (Exception e) {
-              rejectListener.reject(addr, userData);
+              rejectListener.reject(info.getMsisdn(), info.getUserData());
               continue;
             }
 
             if (!isRegionAllowed(ab)) {
               if (rejectListener != null)
-                rejectListener.reject(addr, userData);
+                rejectListener.reject(info.getMsisdn(), info.getUserData());
               continue;
             }
 
-            Message m = Message.newMessage(ab, loadTextFromFile ? decodeText(text) : null);
-            if(!addr.equals(ab.getSimpleAddress())) {
-              setCpAbonent(m, addr);
+            Message m = Message.newMessage(ab, loadTextFromFile ? decodeText(info.getText()) : null);
+            if(!info.getMsisdn().equals(ab.getSimpleAddress())) {
+              setCpAbonent(m, info.getMsisdn());
             }
 
-            if (userData != null)
-              m.setProperty("udata", userData);
+            if (info.getUserData() != null)
+              m.setProperty("udata", info.getUserData());
 
-            m.setKeywords(keywords);
+            m.setKeywords(info.getKeyword());
 
             return m;
           } catch (Exception e) {
@@ -392,10 +365,10 @@ class SaveStrategyHelper {
       return context.createDeliveryWithIndividualTexts(user.getLogin(), proto, null);
     }
 
-    public void addMessages(User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException {
+    public void addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException {
       FileMessageSource src = null;
       try {
-        src = new FileMessageSource(user.isAllRegionsAllowed() ? null : user.getRegions(), messagesFile, encoding, rejectListener, false);
+        src = new FileMessageSource(formatStrategy, user.isAllRegionsAllowed() ? null : user.getRegions(), messagesFile, encoding, rejectListener, false);
         context.addMessages(user.getLogin(),src,d.getId());
       } catch (UnsupportedEncodingException ignored) {
       } finally {
@@ -411,10 +384,10 @@ class SaveStrategyHelper {
       return context.createDeliveryWithSingleTextWithData(user.getLogin(), proto, null);
     }
 
-    public void addMessages(User user, Delivery d, File messagesFile, String encoding,  RejectListener rejectListener) throws AdminException {
+    public void addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding,  RejectListener rejectListener) throws AdminException {
       FileMessageSource src = null;
       try {
-        src = new FileMessageSource(user.isAllRegionsAllowed() ? null : user.getRegions(), messagesFile, encoding, rejectListener, true);
+        src = new FileMessageSource(formatStrategy, user.isAllRegionsAllowed() ? null : user.getRegions(), messagesFile, encoding, rejectListener, true);
         context.addSingleMessagesWithData(user.getLogin(), src, d.getId());
       } catch (UnsupportedEncodingException ignored) {
       } finally {
@@ -429,7 +402,7 @@ class SaveStrategyHelper {
 
     Delivery createDelivery(DeliveryPrototype proto) throws AdminException;
 
-    public void addMessages(User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException;
+    public void addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException;
 
   }
 

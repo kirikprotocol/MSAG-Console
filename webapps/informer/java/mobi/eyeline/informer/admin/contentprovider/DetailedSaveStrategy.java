@@ -160,6 +160,14 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     }
   }
 
+  private FileFormatStrategy getFormatStrategy() {
+    if(context.getCpFileFormat() == CpFileFormat.MTS) {
+      return new MtsFileFormatStrategy();
+    }else {
+      return new EyelineFileFormatStrategy();
+    }
+  }
+
 
   public void process(boolean allowCreate) throws AdminException {
     try{
@@ -171,14 +179,16 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       if (list == null)
         return;
 
+      FileFormatStrategy formatStrategy = getFormatStrategy();
+
       for(File f : list) {
         try{
           if(allowCreate && f.getName().endsWith(CSV_POSFIX)) {
             helper.logProcessFile(f.getName());
-            processCsvFile(f);
+            processCsvFile(formatStrategy, f);
           }else if(f.getName().endsWith(IN_PROCESS)) {
             helper.logProcessFile(f.getName());
-            processInProcessFile(f);
+            processInProcessFile(formatStrategy, f);
           }
         } catch (Exception e){
           helper.notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());
@@ -192,7 +202,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     }
   }
 
-  private void processInProcessFile(File localInProcessFile) throws Exception {
+  private void processInProcessFile(FileFormatStrategy formatStrategy, File localInProcessFile) throws Exception {
     final String md5 = helper.getMD5Checksum(localInProcessFile);
     String deliveryName = SaveStrategyHelper.getDeliveryName(localInProcessFile);
     Delivery d = helper.lookupDelivery(deliveryName, md5);
@@ -204,14 +214,14 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
     String localCsvFile = csvFileFromWorkFile(localInProcessFile.getName());
     if(createReports)
-      buildReport(new File(localCopy, buildReportName(localCsvFile)), d);
+      buildReport(formatStrategy, new File(localCopy, buildReportName(localCsvFile)), d);
 
     File localFinishedFile = new File(localCopy, buildFinished(localCsvFile));
     fileSys.rename(localInProcessFile, localFinishedFile);
   }
 
 
-  private void processCsvFile(File localCsvFile) throws Exception {
+  private void processCsvFile(FileFormatStrategy formatStrategy, File localCsvFile) throws Exception {
     final String md5 = helper.getMD5Checksum(localCsvFile);
     String deliveryName = SaveStrategyHelper.getDeliveryName(localCsvFile);
     Delivery d = helper.lookupDelivery(deliveryName, md5);
@@ -225,7 +235,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     if(d == null) {
       File reportFile = createReports ? new File(localCopy, buildReportName(localCsvFile.getName())) : null;
       try{
-        createDelivery(deliveryName, md5, localCsvFile, reportFile);
+        createDelivery(formatStrategy, deliveryName, md5, localCsvFile, reportFile);
       }catch (AdminException e) {
         if(reportFile != null) {
           try{
@@ -241,17 +251,17 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     fileSys.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
 
-  private void createDelivery(String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
+  private void createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
     helper.logCreateDelivery(deliveryName);
 
     if (reportFile != null) {
       final PrintStream[] ps = new PrintStream[1];
       try{
         ps[0] = new PrintStream(fileSys.getOutputStream(reportFile, false), true, encoding);
-        helper.createDelivery(localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
+        helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
           @Override
           public void reject(String abonent, String userData) {
-            ReportFormatter.writeReportLine(ps[0], abonent, userData, new Date(), MessageState.Failed, 9999);
+            formatStrategy.writeReportLine(ps[0], abonent, userData, new Date(), MessageState.Failed, 9999);
           }
         });
       } catch (UnsupportedEncodingException e) {
@@ -262,11 +272,11 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         }
       }
     } else {
-      helper.createDelivery(localCsvFile, deliveryName, sourceAddr, encoding, md5, null);
+      helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, null);
     }
   }
 
-  private void buildReport(File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
+  private void buildReport(final FileFormatStrategy formatStrategy, File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
     File reportTmp = new File(reportFile.getAbsolutePath()+".tmp."+System.currentTimeMillis());
     try{
       fileSys.copy(reportFile, reportTmp);
@@ -279,8 +289,8 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         MessageFilter filter = new MessageFilter(d.getId(), d.getCreateDate(), new Date());
         context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
           public boolean visit(Message mi) throws AdminException {
-            ReportFormatter.writeReportLine(psFinal, SaveStrategyHelper.getMessageRecipient(mi),
-                mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
+            formatStrategy.writeReportLine(psFinal, SaveStrategyHelper.getMessageRecipient(mi),
+                  mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
             return true;
           }
         });
@@ -302,5 +312,6 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       throw e;
     }
   }
+
 
 }

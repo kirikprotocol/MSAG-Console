@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.archive.ArchiveSettings;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.contentprovider.CpFileFormat;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
@@ -30,6 +31,19 @@ class WebConfigManager extends BaseManager<WebConfigSettings> {
     if (backup == null) {
       throw new InitException("backup dir is null");
     }
+  }
+
+  /**
+   * Возвращает формат файлов импорта рассылок
+   *
+   * @return формат файлов
+   */
+  public CpFileFormat getCpFileFormat() {
+    return readSettings(new SettingsReader<WebConfigSettings, CpFileFormat>() {
+      public CpFileFormat executeRead(WebConfigSettings settings) {
+        return settings.getCpFileFormat();
+      }
+    });
   }
 
   /**

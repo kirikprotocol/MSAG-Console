@@ -29,6 +29,8 @@ public class ContentProviderContextStub implements ContentProviderContext {
   private final Map<String, Integer> createBans;
   private final Map<String, Integer> addMessagesBans;
 
+  private CpFileFormat cpFileFormat = CpFileFormat.MTS;
+
   public ContentProviderContextStub(FileSystem fs) {
     this.fs = fs;
     this.users = new HashMap<String, User>();
@@ -87,6 +89,15 @@ public class ContentProviderContextStub implements ContentProviderContext {
   @Override
   public Region getRegion(Address ab) {
     return regions.get(ab.getSimpleAddress());
+  }
+
+  public void setCpFileFormat(CpFileFormat cpFileFormat) {
+    this.cpFileFormat = cpFileFormat;
+  }
+
+  @Override
+  public CpFileFormat getCpFileFormat() {
+    return cpFileFormat;
   }
 
   private void checkDeliveryCreationBan(String deliveryName) throws ContentProviderException {

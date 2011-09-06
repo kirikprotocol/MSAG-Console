@@ -24,6 +24,8 @@ class SingleUserContentPContextStub implements ContentProviderContext {
 
   private final FileSystem fileSystem;
 
+  protected CpFileFormat cpFileFormat = CpFileFormat.MTS;
+
   SingleUserContentPContextStub(User user, TestDeliveryManager deliveryManager, FileSystem fileSystem) {
     this.user = user;
     this.fileSystem = fileSystem;
@@ -54,6 +56,15 @@ class SingleUserContentPContextStub implements ContentProviderContext {
   @Override
   public Region getRegion(Address ab) {
     return null;
+  }
+
+  public void setCpFileFormat(CpFileFormat cpFileFormat) {
+    this.cpFileFormat = cpFileFormat;
+  }
+
+  @Override
+  public CpFileFormat getCpFileFormat() {
+    return cpFileFormat;
   }
 
   @Override

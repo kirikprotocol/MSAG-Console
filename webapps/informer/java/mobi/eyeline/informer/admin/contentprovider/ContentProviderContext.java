@@ -28,6 +28,8 @@ public interface ContentProviderContext {
   Region getRegion(Address ab);
 
 
+  CpFileFormat getCpFileFormat();
+
   Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
 
   Delivery createDeliveryWithSingleTextWithData(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;

@@ -17,10 +17,6 @@ import static org.junit.Assert.*;
  */
 public class SimpleSaveStrategySyncTest {
 
-  private MemoryFileSystem fs = new MemoryFileSystem();
-  private ContentProviderContextStub ctx = new ContentProviderContextStub(fs);
-  private FileResourceStub remoteResource = new FileResourceStub();
-
   private File workDir=new File("work");
   private File localCopyDir = new File(workDir, "simpleLocalCopy");
 

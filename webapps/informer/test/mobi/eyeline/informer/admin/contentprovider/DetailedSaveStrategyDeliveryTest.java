@@ -315,7 +315,8 @@ public class DetailedSaveStrategyDeliveryTest {
   }
 
   @Test
-  public void testImportFileWithUserData() throws AdminException, IOException {
+  public void testImportFileWithUserDataEyeline() throws AdminException, IOException {
+    ctx.setCpFileFormat(CpFileFormat.EYELINE);
     remoteResource.addFile("test.csv",
         "+79139495113|12345|text",
         "+79139495113|text1");
@@ -337,6 +338,60 @@ public class DetailedSaveStrategyDeliveryTest {
 
     String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
     assertFileContainsLine(reportFile, "\\+79139495113\\|12345\\|" + datePattern + "\\|Delivered\\|0");
+    assertFileContainsLine(reportFile, "\\+79139495113\\|" + datePattern + "\\|Delivered\\|0");
+  }
+
+  @Test
+  public void testImportFileWithUserDataAndKeywordEyeline() throws AdminException, IOException {
+    ctx.setCpFileFormat(CpFileFormat.EYELINE);
+    remoteResource.addFile("test.csv",
+        "+79139495113|12345|keyword1|text",
+        "+79139495113|text1");
+
+    processResourceWithRandomUser("login");
+
+    Delivery d = getDelivery("test", "login");
+    ctx.finalizeDelivery(d.getId());
+
+    Delivery d1 = getDelivery("test", "login");
+    assertEquals(DeliveryStatus.Finished, d1.getStatus());
+
+    processResourceWithRandomUser("login");
+
+    File reportFile = new File(localCopyDir, "test.csv.report");
+
+    assertTrue(fs.exists(reportFile));
+    assertTrue(fs.exists(new File(localCopyDir, "test.csv.finished")));
+
+    String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
+    assertFileContainsLine(reportFile, "\\+79139495113\\|12345\\|" + datePattern + "\\|Delivered\\|0");
+    assertFileContainsLine(reportFile, "\\+79139495113\\|" + datePattern + "\\|Delivered\\|0");
+  }
+
+  @Test
+  public void testImportFileWithUserDataMTS() throws AdminException, IOException {
+    ctx.setCpFileFormat(CpFileFormat.MTS);
+    remoteResource.addFile("test.csv",
+        "12345|+79139495113|text",
+        "+79139495113|text1");
+
+    processResourceWithRandomUser("login");
+
+    Delivery d = getDelivery("test", "login");
+    ctx.finalizeDelivery(d.getId());
+
+    Delivery d1 = getDelivery("test", "login");
+    assertEquals(DeliveryStatus.Finished, d1.getStatus());
+
+    processResourceWithRandomUser("login");
+
+    File reportFile = new File(localCopyDir, "test.csv.report");
+
+    assertTrue(fs.exists(reportFile));
+    assertTrue(fs.exists(new File(localCopyDir, "test.csv.finished")));
+
+    String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
+    assertFileContainsLine(reportFile, "12345\\|\\+79139495113\\|" + datePattern + "\\|Delivered\\|0");
     assertFileContainsLine(reportFile, "\\+79139495113\\|" + datePattern + "\\|Delivered\\|0");
   }
 

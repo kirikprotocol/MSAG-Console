@@ -83,6 +83,14 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
     }
   }
 
+  private FileFormatStrategy getFormatStrategy() {
+    if(context.getCpFileFormat() == CpFileFormat.MTS) {
+      return new MtsFileFormatStrategy();
+    }else {
+      return new EyelineFileFormatStrategy();
+    }
+  }
+
 
   public void process(boolean allowDeliveryCreation) throws AdminException{
 
@@ -92,10 +100,11 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
       synchronize(allowDeliveryCreation);
 
       if(allowDeliveryCreation) {
+        final FileFormatStrategy formatStrategy = getFormatStrategy();
         for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
           try{
             helper.logProcessFile(f.getName());
-            processFile(f);
+            processFile(formatStrategy, f);
           }catch (Exception e){
             helper.notifyInternalError(DELIVERY_PROC_ERR + " file=" + f.getName(), "Can't process delivery for user=" + user.getLogin());
             log.error(e,e);
@@ -108,7 +117,7 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
   }
 
 
-  private void processFile(File csvFile) throws Exception {
+  private void processFile(final FileFormatStrategy formatStrategy, File csvFile) throws Exception {
     final String md5 = helper.getMD5Checksum(csvFile);
     String deliveryName = SaveStrategyHelper.getDeliveryName(csvFile);
     Delivery d = helper.lookupDelivery(deliveryName, md5);
@@ -121,7 +130,7 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
 
     if (d == null) {
       helper.logCreateDelivery(deliveryName);
-      helper.createDelivery(csvFile, deliveryName, sourceAddr, encoding, md5, null);
+      helper.createDelivery(formatStrategy, csvFile, deliveryName, sourceAddr, encoding, md5, null);
     }
 
     fileSys.delete(csvFile);

@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.archive.ArchiveSettings;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.contentprovider.CpFileFormat;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
@@ -73,6 +74,12 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     s.setInt("chunkSize", archiveSettings.getChunkSize());
     s.setInt("executorsSize", archiveSettings.getExecutorsSize());
 
+    XmlConfigSection cp = config.getOrCreateSection("contentProvider");
+    cp.clear();
+    if(settings.getCpFileFormat() != null) {
+      cp.setString("fileFormat", settings.getCpFileFormat().toString());
+    }
+
     config.save(newFile);
   }
 
@@ -128,6 +135,13 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
       XmlConfigSection siebel = webconfig.getSection("siebel");
       settings.setSiebelSettings(new SiebelSettings(siebel.toProperties("", null)));
+
+      String fF = null;
+      if(webconfig.containsSection("contentProvider")) {
+        XmlConfigSection cp = webconfig.getSection("contentProvider");
+        fF = cp.getString("fileFormat", null);
+      }
+      settings.setCpFileFormat(fF == null || fF.length() == 0 ? CpFileFormat.EYELINE : CpFileFormat.valueOf(fF));
 
       XmlConfigSection cdr = webconfig.getSection("cdr");
       CdrSettings cdrSettings = new CdrSettings();

@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.cdr.CdrProviderContext;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
+import mobi.eyeline.informer.admin.contentprovider.CpFileFormat;
 import mobi.eyeline.informer.admin.contentprovider.FileDeliveriesProvider;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
@@ -76,6 +77,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   private SmppGW smppGW;
 
+  protected CpFileFormat cpFileFormat;
+
   public AdminContext() {
   }
 
@@ -91,6 +94,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       InformerSettings is = informerManager.getConfigSettings();
       deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getWebFinalLogsDir()), fileSystem);
+
+      cpFileFormat = webConfig.getCpFileFormat();
 
       fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir);
 
@@ -155,6 +160,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     super.shutdown();
   }
 
+  @Override
+  public CpFileFormat getCpFileFormat() {
+    return cpFileFormat;
+  }
 
   public File getWorkDir() {
     return new File(workDir.getAbsolutePath());

@@ -204,7 +204,9 @@ public class TestAdminContext extends AdminContext {
     try {
       File webConfDir = new File(appBaseDir,"conf");
       TestUtils.exportResource(TestWebConfigManager.class.getResourceAsStream("webconfig.xml"), new File(webConfDir, "webconfig.xml"), false);
-      this.webConfig = new  TestWebConfigManager(new File(webConfDir,"webconfig.xml") ,new File(webConfDir, "backup"), FileSystem.getFSForSingleInst()) ;
+      this.webConfig = new  TestWebConfigManager(new File(webConfDir,"webconfig.xml") ,new File(webConfDir, "backup"), FileSystem.getFSForSingleInst());
+
+      cpFileFormat = webConfig.getCpFileFormat();
 
       fileSystem = new TestFileSystem();
 
