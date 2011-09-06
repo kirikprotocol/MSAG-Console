@@ -8,6 +8,7 @@ static const char ident[] = "@(#)$Id$";
 #include "inman/common/CmdLine.hpp"
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 namespace smsc {
