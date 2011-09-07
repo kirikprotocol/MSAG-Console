@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
@@ -14,6 +14,7 @@ import mobi.eyeline.informer.web.controllers.InformerController;
 import javax.faces.model.SelectItem;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.MessageFormat;
 import java.util.*;
 
 
@@ -208,7 +209,7 @@ public class MessagesByDeliveriesController extends InformerController{
   }
 
 
-  public void execute(final Configuration config, final Locale locale, final LoadListener listener) throws AdminException {
+  public void execute(final Configuration config, final Locale locale, final LoadListener listener, final String login) throws AdminException {
     totals.reset();
     records.clear();
 
@@ -222,7 +223,7 @@ public class MessagesByDeliveriesController extends InformerController{
 
     final Map<Integer, MessagesByDeliveriesRecord> recsMap = new HashMap<Integer, MessagesByDeliveriesRecord>();
 
-    config.statistics(deliveryFilter, new DeliveryStatVisitorImpl(listener, recsMap, config, locale));
+    config.statistics(deliveryFilter, new DeliveryStatVisitorImpl(listener, recsMap, config, locale, login));
 
     for (MessagesByDeliveriesRecord r : recsMap.values()) {
       if (hideDeleted && r.isDeletedDelviery())
@@ -239,6 +240,8 @@ public class MessagesByDeliveriesController extends InformerController{
     final Locale locale = getLocale();
 
     final Configuration config = getConfig();
+
+    final String login = getUserName();
 
     return new PreloadableModel() {
 
@@ -273,7 +276,7 @@ public class MessagesByDeliveriesController extends InformerController{
             new Thread() {
               public void run() {
                 try{
-                  MessagesByDeliveriesController.this.execute(config, locale, loadListener);
+                  MessagesByDeliveriesController.this.execute(config, locale, loadListener, login);
                   loaded = true;
                 }catch (AdminException e){
                   logger.error(e,e);
@@ -320,14 +323,14 @@ public class MessagesByDeliveriesController extends InformerController{
     private final Configuration config;
     private final Locale locale;
 
-    private Map<Integer, Delivery> deliveriesCache = new HashMap<Integer, Delivery>();
-    private Map<Integer, Delivery> deliveriesArchiveCache = new HashMap<Integer, Delivery>();
+    private DeliveryCache cache;
 
-    public DeliveryStatVisitorImpl(LoadListener listener, Map<Integer, MessagesByDeliveriesRecord> recsMap, Configuration config, Locale locale) {
+    public DeliveryStatVisitorImpl(LoadListener listener, Map<Integer, MessagesByDeliveriesRecord> recsMap, Configuration config, Locale locale, String login) throws AdminException{
       this.listener = listener;
       this.recsMap = recsMap;
       this.config = config;
       this.locale = locale;
+      cache = new DeliveryCache(config, locale, login, filter, nameFilter);
     }
 
     public boolean visit(DeliveryStatRecord rec, int total, int current) {
@@ -337,99 +340,127 @@ public class MessagesByDeliveriesController extends InformerController{
       Integer key = rec.getTaskId();
       MessagesByDeliveriesRecord oldRecord = recsMap.get(key);
       String[] region = new String[1];
-      String[] delivery = new String[1];
-      int state = getDeliveryName(rec.getUser(), rec.getTaskId(), delivery);
-      boolean archivated = state == 0;
-      boolean deleted = state == -1;
-      boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
-      if (oldRecord == null) {
-        oldRecord = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, true);
-        recsMap.put(key, oldRecord);
-      }else {
-        MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), delivery[0], deleted, archivated, region[0], deletedRegion, false);
-        oldRecord.add(c);
-      }
-      oldRecord.updateTime(rec.getDate());
-      oldRecord.setDeliveryStatus(getDeliveryStatus(rec.getUser(), rec.getTaskId()));
+      try{
+        DeliveryInfo deliveryInfo = cache.getDeliveryInfo(rec.getTaskId());
+        boolean archivated = deliveryInfo.state == DeliveryInfo.State.Archivated;
+        boolean deleted = deliveryInfo.state == DeliveryInfo.State.Removed;
+        boolean deletedRegion = !getRegion(config, locale, rec.getRegionId(), region);
+        if (oldRecord == null) {
+          oldRecord = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), deliveryInfo.name, deleted, archivated, region[0], deletedRegion, true);
+          recsMap.put(key, oldRecord);
+        }else {
+          MessagesByDeliveriesRecord c = new MessagesByDeliveriesRecord(rec, config.getUser(rec.getUser()), deliveryInfo.name, deleted, archivated, region[0], deletedRegion, false);
+          oldRecord.add(c);
+        }
+        oldRecord.updateTime(rec.getDate());
+        oldRecord.setDeliveryStatus(deliveryInfo.status);
 
+      }catch (AdminException e) {
+        logger.error(e,e);
+      }
       return true;
     }
+  }
 
-    private Delivery getDelivery(String login, int deliveryId) throws AdminException{
-      Delivery d = deliveriesCache.get(deliveryId);
-      if(d == null) {
-        try {
-          d = config.getDelivery(login, deliveryId);
-        } catch (AdminException e) {
-          logger.error(e,e);
-        }
-        if(d != null) {
-          deliveriesCache.put(deliveryId, d);
-        }
-      }
-      return d;
+
+
+  private static class DeliveryCache {
+
+    private final Map<Integer, DeliveryInfo> cache = new HashMap<Integer, DeliveryInfo>(100);
+
+    private final Configuration config;
+
+    private final String login;
+
+    private Map<DeliveryStatus, String> statuses = new EnumMap<DeliveryStatus, String>(DeliveryStatus.class);
+
+    private MessageFormat archivatedNameFormat;
+    private MessageFormat removedNameFormat;
+
+    private final DeliveryStatFilter filter;
+    private final String nameFilter;
+    private final Locale locale;
+
+    private DeliveryCache(Configuration config, Locale locale, String login, DeliveryStatFilter filter, String nameFilter) throws AdminException {
+      this.config = config;
+      this.login = login;
+      this.locale = locale;
+      this.filter = filter;
+      this.nameFilter = nameFilter;
+      init();
     }
 
-    private Delivery getArchiveDelivery(String login, int deliveryId) throws AdminException{
-      Delivery d = deliveriesArchiveCache.get(deliveryId);
-      if(d == null) {
-        try {
+    private DeliveryFilter getDeliveryFilter() {
+      DeliveryFilter deliveryFilter = new DeliveryFilter();
+      if(filter.getFromDate() != null) {
+        deliveryFilter.setCreateDateFrom(filter.getFromDate());
+      }
+      if(filter.getUser() != null) {
+        deliveryFilter.setUserIdFilter(filter.getUser());
+      }
+      if(nameFilter != null && nameFilter.length()>0) {
+        deliveryFilter.setNameFilter(nameFilter);
+      }
+      return deliveryFilter;
+    }
+
+    private void init() throws AdminException{
+      ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);
+      archivatedNameFormat = new MessageFormat(bundle.getString("stat.page.archivedDelivery"));
+      removedNameFormat = new MessageFormat(bundle.getString("stat.page.deletedDelivery"));
+      for(DeliveryStatus s : DeliveryStatus.values()) {
+        statuses.put(s, bundle.getString("delivery.status."+s));
+      }
+
+      config.getDeliveries(login, getDeliveryFilter(), 1000, new Visitor<Delivery>() {
+        @Override
+        public boolean visit(Delivery value) throws AdminException {
+          cache.put(value.getId(), new DeliveryInfo(value.getName(), DeliveryInfo.State.Active, statuses.get(value.getStatus())));
+          return true;
+        }
+      });
+    }
+
+    private DeliveryInfo getDeliveryInfo(int deliveryId) throws AdminException {
+      DeliveryInfo res = cache.get(deliveryId);
+      if(res == null) {
+        //архивная или удаленная, грузим с архива
+        Delivery d = null;
+        try{
           d = config.getArchiveDelivery(login, deliveryId);
-        } catch (AdminException e) {
-          logger.error(e,e);
+        }catch (DeliveryException e) {
+          if(e.getErrorStatus() != DeliveryException.ErrorStatus.NoSuchEntry) {
+            throw e;
+          }
         }
         if(d != null) {
-          deliveriesArchiveCache.put(deliveryId, d);
-        }
-      }
-      return d;
-    }
-
-    private int getDeliveryName(String userId, int deliveryId, String[] result) {
-      User user = config.getUser(userId);
-      Delivery delivery = null;
-      if (user != null) {
-        try {
-          delivery = getDelivery(user.getLogin(), deliveryId);
-        } catch (AdminException e) {
-          logger.error(e,e);
-        }
-        if(delivery != null) {
-          result[0] = delivery.getName();
-          return 1;
+          res = new DeliveryInfo(archivatedNameFormat.format(new Object[]{d.getName(), Integer.toString(d.getId())}), DeliveryInfo.State.Archivated, statuses.get(d.getStatus()));
         }else {
-          if(config.isArchiveDaemonDeployed()) {
-            try {
-              delivery = getArchiveDelivery(user.getLogin(), deliveryId);
-            } catch (AdminException e) {
-              logger.error(e,e);
-            }
-          }
-          if(delivery != null) {
-            result[0] = delivery.getName()+" (" +
-                ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.archivedDelivery") +", id="+deliveryId+')';
-            return 0;
-          }
+          res = new DeliveryInfo(removedNameFormat.format(new Object[]{Integer.toString(deliveryId)}), DeliveryInfo.State.Removed, "");
         }
+        cache.put(deliveryId, res);
       }
-      result[0] = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';
-      return -1;
+
+      return res;
+    }
+  }
+
+
+  private static class DeliveryInfo {
+
+    private String name;
+
+    private State state;
+
+    private String status;
+
+    private DeliveryInfo(String name, State state, String status) {
+      this.name = name;
+      this.state = state;
+      this.status = status;
     }
 
-    private String getDeliveryStatus(String userId, int deliveryId) {
-      User user = config.getUser(userId);
-      Delivery delivery = null;
-      if (user != null) {
-        try {
-          delivery = getDelivery(user.getLogin(), deliveryId);
-        } catch (AdminException e) {
-          logger.error(e,e);
-        }
-        if(delivery != null) {
-          return  ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("delivery.status."+delivery.getStatus());
-        }
-      }
-      return "";
-    }
+    private enum State {Active, Archivated, Removed}
+
   }
 }
