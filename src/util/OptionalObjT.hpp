@@ -66,9 +66,9 @@ public:
   }
 
   //
-  _TArg  * get(void) { return mHasObj ? pObj() : NULL; }
+  _TArg  * get(void) { return mHasObj ? pObj() : 0; }
   //
-  const _TArg  * get(void) const { return mHasObj ? pObj() : NULL; }
+  const _TArg  * get(void) const { return mHasObj ? pObj() : 0; }
   //
   _TArg * operator->() { return get(); }
   const _TArg * operator->() const { return get(); }
