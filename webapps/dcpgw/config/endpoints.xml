@@ -7,11 +7,13 @@
          <section name="endpoint1">
              <param name="systemId" type="string">systemId1</param>
              <param name="password" type="string">passwrd1</param>
+             <param name="enabled" type="bool">true</param>
          </section>
 
          <section name="endpoint2">
              <param name="systemId" type="string">systemId2</param>
              <param name="password" type="string">passwrd2</param>
+             <param name="enabled" type="bool">false</param>
          </section>
 
      </section>

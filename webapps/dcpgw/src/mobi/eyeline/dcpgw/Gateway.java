@@ -14,6 +14,7 @@ import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigParam;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
+import mobi.eyeline.smpp.api.*;
 import mobi.eyeline.smpp.api.pdu.*;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
@@ -24,10 +25,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import mobi.eyeline.smpp.api.SmppServer;
-import mobi.eyeline.smpp.api.SmppException;
-import mobi.eyeline.smpp.api.PDUListener;
 
 public class Gateway extends Thread implements PDUListener {
 
@@ -44,7 +41,7 @@ public class Gateway extends Thread implements PDUListener {
 
     private static final Object read_write_monitor = new Object();
 
-    private static SmppServer smppServer;
+    private static ConfigurableInRuntimeSmppServer smppServer;
 
     private ProcessingQueue procQueue;
 
@@ -137,7 +134,7 @@ public class Gateway extends Thread implements PDUListener {
 
         procQueue = new ProcessingQueue(config, pduListener, null);
 
-        smppServer = new SmppServer(config, this);
+        smppServer = new ConfigurableInRuntimeSmppServer(config, this);
 
         Manager.getInstance().setSmppServer(smppServer);
 
@@ -215,16 +212,26 @@ public class Gateway extends Thread implements PDUListener {
         for(XmlConfigSection s: c){
             String endpoint_name = s.getName();
 
-            XmlConfigParam p = s.getParam("systemId");
-            String systemId = p.getString();
+            XmlConfigParam p = s.getParam("enabled");
+            boolean enabled = p.getBool();
 
-            p = s.getParam("password");
-            String password = p.getString();
-            log.debug("Load: endpoint name="+endpoint_name+", systemId="+systemId+", password="+password);
+            if (enabled){
 
-            result.put(systemId, password);
+                p = s.getParam("systemId");
+                String systemId = p.getString();
+
+                p = s.getParam("password");
+                String password = p.getString();
+                log.debug("Load endpoint: name="+endpoint_name+", systemId="+systemId+", password="+password+" .");
+
+                result.put(systemId, password);
+            } else {
+                log.debug("Endpoint with name '"+endpoint_name+"' is disabled.");
+            }
+
         }
 
+        log.debug("Successfully load endpoints!");
         return result;
     }
 
@@ -300,11 +307,10 @@ public class Gateway extends Thread implements PDUListener {
 
         // Update endpoint file.
 
-        /*Hashtable<String, String> t4 = loadEndpoints();
-        for(Map.Entry<String, String> entry: t4.entrySet()){
-            String systemId = entry.getKey();
-            smppServer.getSession(systemId);
-        }*/
+        if (smppServer != null){
+            Hashtable<String, String> system_id_password_temp_table = loadEndpoints();
+            smppServer.updateConnections(system_id_password_temp_table);
+        }
 
         Manager.getInstance().setUserPasswordMap(user_password_table);
 
