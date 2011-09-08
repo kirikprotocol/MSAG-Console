@@ -17,7 +17,6 @@
 
 #include "util/Exception.hpp"
 #include "util/IntTypes.hpp"
-#include "util/MaxSizeof.hpp"
 #include "core/buffers/LWArrayTraitsT.hpp"
 
 namespace smsc {
