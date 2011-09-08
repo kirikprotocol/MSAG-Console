@@ -101,7 +101,7 @@ protected:
     if (!enlarge(shift_sz))
       return false;
 
-    _TraitsArg::shift_right(_buf + at_pos, _numElem - at_pos, shift_sz);
+    _TraitsArg::shift_right(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
     _numElem -= at_pos;
     _numElem += shift_sz;
     return true;
@@ -196,7 +196,7 @@ public:
       denyIndex(use_idx);
 
     if (use_idx >= _numElem) {
-      _TraitsArg::construct(_buf + _numElem, use_idx - _numElem + 1);
+      _TraitsArg::construct(_buf + _numElem, (_SizeTypeArg)(use_idx - _numElem + 1));
       _numElem = use_idx + 1;
     }
     return _buf[use_idx];
@@ -221,7 +221,7 @@ public:
       num_to_erase = _numElem - at_pos;
 
     //copy elements starting from first to last
-    _TraitsArg::shift_left(_buf + at_pos, _numElem - at_pos, num_to_erase);
+    _TraitsArg::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), num_to_erase);
     //destroy excessive elements
     _TraitsArg::destroy(_buf + _numElem - num_to_erase, num_to_erase);
     _numElem -= num_to_erase;
@@ -297,13 +297,13 @@ public:
     if (req_sz == _numElem)
       return true;
     if (req_sz < _numElem) { //shrink
-      _TraitsArg::destroy(_buf + req_sz, _numElem - req_sz);
+      _TraitsArg::destroy(_buf + req_sz, (_SizeTypeArg)(_numElem - req_sz));
       _numElem = req_sz;
       return true;
     }
     if (req_sz > _numElem) {
       reserve(req_sz);
-      _TraitsArg::construct(_buf + _numElem, req_sz - _numElem);
+      _TraitsArg::construct(_buf + _numElem, (_SizeTypeArg)(req_sz - _numElem));
       _numElem = req_sz;
       return true;
     }
@@ -335,7 +335,7 @@ public:
   void shiftLeft(_SizeTypeArg shift_sz, _SizeTypeArg at_pos = 0) //throw()
   {
     //copy elements starting from first to last
-    _TraitsArg::shift_left(_buf + at_pos, _numElem - at_pos, shift_sz);
+    _TraitsArg::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
     //reset excessive elements
     _TraitsArg::reset(_buf + _numElem - shift_sz, shift_sz);
     _numElem -= shift_sz;
