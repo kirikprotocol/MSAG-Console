@@ -38,6 +38,8 @@
 #include "messages/AliasAdd.hpp"
 #include "messages/AliasDel.hpp"
 #include "messages/UpdateProfileAbntResp.hpp"
+#include "messages/GetServicesStatus.hpp"
+#include "messages/DisconnectService.hpp"
 #include "messages/GetSmscConfigsState.hpp"
 #include "messages/ApplyRoutesResp.hpp"
 #include "messages/ApplyRescheduleResp.hpp"
@@ -80,8 +82,6 @@
 #include "messages/CgmListAbonentsResp.hpp"
 #include "messages/AliasAddResp.hpp"
 #include "messages/AliasDelResp.hpp"
-#include "messages/GetServicesStatusResp.hpp"
-#include "messages/DisconnectServiceResp.hpp"
 #include "messages/LockConfigResp.hpp"
 #include "messages/GetConfigsStateResp.hpp"
 

@@ -46,8 +46,8 @@ protocol ControllerProtocol
   UpdateProfileAbntResp
 
 //load balancer
-  GetServicesStatus inmsg
-  DisconnectService inmsg
+  GetServicesStatus outmsg
+  DisconnectService outmsg
 
 // runtime
   LockConfig inmsg
@@ -106,8 +106,8 @@ protocol ControllerProtocol
   UpdateProfileAbnt inmsg
 
 //load balancer
-  GetServicesStatusResp
-  DisconnectServiceResp 
+  GetServicesStatusResp inmsg
+  DisconnectServiceResp inmsg
 
 // runtime
   LockConfigResp

@@ -6,8 +6,6 @@
 #include "messages/AclList.hpp"
 #include "messages/CgmCheck.hpp"
 #include "messages/CgmListAbonents.hpp"
-#include "messages/GetServicesStatus.hpp"
-#include "messages/DisconnectService.hpp"
 #include "messages/LockConfig.hpp"
 #include "messages/UnlockConfig.hpp"
 #include "messages/GetConfigsState.hpp"
@@ -15,6 +13,8 @@
 #include "messages/RegisterAsWebapp.hpp"
 #include "messages/RegisterAsSmsc.hpp"
 #include "messages/UpdateProfileAbnt.hpp"
+#include "messages/GetServicesStatusResp.hpp"
+#include "messages/DisconnectServiceResp.hpp"
 #include "messages/GetSmscConfigsStateResp.hpp"
 
 namespace eyeline {
@@ -326,20 +326,6 @@ void ControllerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Se
       msg.messageSetSeqNum(seq);
       handler->handle(msg);
     }break;
-    case tag_GetServicesStatus:
-    {
-      messages::GetServicesStatus msg;
-      msg.deserialize(ss);
-      msg.messageSetSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DisconnectService:
-    {
-      messages::DisconnectService msg;
-      msg.deserialize(ss);
-      msg.messageSetSeqNum(seq);
-      handler->handle(msg);
-    }break;
     case tag_LockConfig:
     {
       messages::LockConfig msg;
@@ -616,6 +602,20 @@ void ControllerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Se
     case tag_UpdateProfileAbnt:
     {
       messages::UpdateProfileAbnt msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_GetServicesStatusResp:
+    {
+      messages::GetServicesStatusResp msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_DisconnectServiceResp:
+    {
+      messages::DisconnectServiceResp msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
       handler->handle(msg);
