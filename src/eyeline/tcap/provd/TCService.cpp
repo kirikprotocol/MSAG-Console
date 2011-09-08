@@ -115,16 +115,18 @@ void TCService::shutdown()
   //unbind subsystems
   for (unsigned i = 0; i < _cfg._sccpCfg._links.size(); ++i) {
     SccpApi::ErrorCode_e errSccp = _sccpApi->unbind(i);
-    if (errSccp != SccpApi::OK)
+    if (errSccp != SccpApi::OK) {
       smsc_log_error(_logger, "%s: SccpApi::unbind(%s) failed: %d", _logId,
                      _cfg._sccpCfg._links[i]._name.c_str(), (unsigned)errSccp);
+    }
   }
   //disconnect links
   for (unsigned i = 0; i < _cfg._sccpCfg._links.size(); ++i) {
     SccpApi::ErrorCode_e errSccp = _sccpApi->disconnect(i);
-    if (errSccp != SccpApi::OK)
+    if (errSccp != SccpApi::OK) {
       smsc_log_error(_logger, "%s: SccpApi::disconnect(%s) failed: %d", _logId,
                      _cfg._sccpCfg._links[i]._name.c_str(), (unsigned)errSccp);
+    }
   }
   //
   _msgReaders.Stop(true);
