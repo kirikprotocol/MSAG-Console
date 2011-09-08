@@ -62,7 +62,7 @@ public:
 private:
   union {
     void *  _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf2_T<SCSPIndDispatcherUDT,
+    uint8_t _buf[smsc::util::MaxSizeOf2_T<SCSPIndDispatcherUDT,
                                             SCSPIndDispatcherNTC >::VALUE];
   } _objMem;
 

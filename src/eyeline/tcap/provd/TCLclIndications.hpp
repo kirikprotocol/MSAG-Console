@@ -113,11 +113,11 @@ private:
   union {
     void *  _aligner;
 /*
-    uint8_t _buf[eyeline::util::MaxSizeOf4_T<
+    uint8_t _buf[smsc::util::MaxSizeOf4_T<
                   TCIndLclCancel, TCIndLclReject, TIndLclPAbort, TIndLclNotice
                   >::VALUE];
 */
-    uint8_t _buf[eyeline::util::MaxSizeOf3_T<
+    uint8_t _buf[smsc::util::MaxSizeOf3_T<
                     TCIndLclCancel, TIndLclPAbort, TIndLclNotice
                   >::VALUE];
   } _memObj;
