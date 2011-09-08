@@ -130,10 +130,10 @@ protected:
   };
 
   //NOTE: position in array is a associated Invokaction ids, which are assigned incrementally !
-  typedef eyeline::util::LWArray_T<TimerInfo, uint8_t, _DFLT_INVOCATIONS_NUM> LocalInvokes;
+  typedef smsc::core::buffers::LWArray_T<TimerInfo, uint8_t, _DFLT_INVOCATIONS_NUM> LocalInvokes;
 
   //Sorted array of remote Invocation Ids. (position != invId)
-  typedef eyeline::util::LWArray_T<uint8_t, uint8_t, _DFLT_INVOCATIONS_NUM>   RemoteInvokes;
+  typedef smsc::core::buffers::LWArray_T<uint8_t, uint8_t, _DFLT_INVOCATIONS_NUM>   RemoteInvokes;
 
   typedef std::list<TC_LRejectIndComposer>  TCRejectList;
 
