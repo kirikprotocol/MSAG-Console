@@ -15,7 +15,7 @@ namespace ber {
 
 class SETOFElementDecoder : public ElementDecoderByTagAC {
 private:
-  eyeline::util::LWArray_T<EDAlternative, uint16_t, 1> _altStore;
+  smsc::core::buffers::LWArray_T<EDAlternative, uint16_t, 1> _altStore;
 
   //SET OF cann't has unknown extension additions !!!
   using ElementDecoderByTagAC::setUnkExtension;

@@ -34,7 +34,7 @@ public:
 
 class TaggingDecoder {
 private:
-  eyeline::util::LWArray_T<TLParser, uint8_t, _ASTaggingDFLT_SZ> _tlws;
+  smsc::core::buffers::LWArray_T<TLParser, uint8_t, _ASTaggingDFLT_SZ> _tlws;
   const ASTagging * _effTags; //original complete tagging of type
   const TLParser *  _outerTL; //either outermost tag or implicit tag
 

@@ -25,7 +25,7 @@ template <
 >
 class DecoderOfSeqOfArrayed_T : public DecoderOfSeqOfAC_T<_TArg, _DecoderOfTArg> {
 public:
-  typedef eyeline::util::LWArrayExtension_T<_TArg, uint16_t> ElementsArray;
+  typedef smsc::core::buffers::LWArrayExtension_T<_TArg, uint16_t> ElementsArray;
 
 protected:
   ElementsArray * _dVal;

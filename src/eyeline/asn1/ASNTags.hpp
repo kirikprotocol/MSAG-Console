@@ -8,7 +8,7 @@
 #define __ABSTRACT_SYNTAX_TAGS_DEFS__
 
 #include <inttypes.h>
-#include "eyeline/util/LWArray.hpp"
+#include "core/buffers/LWArrayT.hpp"
 #include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
@@ -122,7 +122,7 @@ extern const UniversalTags & _uniTag(void);
  * ************************************************************************* */
 
 static const uint8_t _ASTaggingDFLT_SZ = 4;
-typedef eyeline::util::LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ> ASTagsArray;
+typedef smsc::core::buffers::LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ> ASTagsArray;
 
 //ASN type complete tagging (vector of ASTags)
 //NOTE: Overall number of tags is limited to 255

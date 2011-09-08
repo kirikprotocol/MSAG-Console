@@ -23,7 +23,7 @@ namespace ber {
  * ************************************************************************* */
 class EncoderOfConstructedAC : public TypeValueEncoderAC {
 public:
-  typedef eyeline::util::LWArrayExtension_T<TLVLayoutEncoder, uint16_t> ElementsArray;
+  typedef smsc::core::buffers::LWArrayExtension_T<TLVLayoutEncoder, uint16_t> ElementsArray;
 
 private:
   ElementsArray * _elmArray; //NOTE: actually it's a reference to storage,

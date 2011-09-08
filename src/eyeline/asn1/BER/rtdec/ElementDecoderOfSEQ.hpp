@@ -16,11 +16,11 @@ namespace ber {
 template <uint16_t _NumOfElemsArg, uint16_t _NumOfMandatoryArg>
 class SEQElementDecoder_T : public ElementDecoderByTDef {
 private:
-  typedef eyeline::util::LWArray_T<EDAlternative, uint16_t, _NumOfElemsArg> EDAlternativesStore;
-  typedef eyeline::util::LWArray_T<EDAOccurence, uint16_t, _NumOfElemsArg> EDAOccurenceStore;
+  typedef smsc::core::buffers::LWArray_T<EDAlternative, uint16_t, _NumOfElemsArg> EDAlternativesStore;
+  typedef smsc::core::buffers::LWArray_T<EDAOccurence, uint16_t, _NumOfElemsArg> EDAOccurenceStore;
   //NOTE: in order to avoid reallocation of TDMatrix, its capacity must be at
   //      least (number_of_mandatory_elements + 1)
-  typedef eyeline::util::LWArray_T<TDMatrixRow, uint16_t, _NumOfMandatoryArg + 1> TDMatrixStore;
+  typedef smsc::core::buffers::LWArray_T<TDMatrixRow, uint16_t, _NumOfMandatoryArg + 1> TDMatrixStore;
   typedef eyeline::util::BITArray_T<uint16_t, _NumOfElemsArg> EDAOccurencesBitStore;
 
   EDAlternativesStore   _altStore;

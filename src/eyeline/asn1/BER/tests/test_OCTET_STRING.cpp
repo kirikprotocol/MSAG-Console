@@ -65,7 +65,7 @@ test_OCTET_STRING_dec(char* err_msg)
     size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
 
     DecoderOfOCTSTR decOctStr;
-    util::LWArray_T<uint8_t, uint16_t, 128> expectedValue;
+    smsc::core::buffers::LWArray_T<uint8_t, uint16_t, 128> expectedValue;
     decOctStr.setValue(expectedValue, 128);
 
     DECResult decResult= decOctStr.decode(patternTrSyntaxBin, patternLen);

@@ -28,11 +28,11 @@ template <
 >
 class EncoderOfExtensibleStructure_T : public EncoderOfStructureAC {
 private:
-  typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumFieldsTArg + 1> FieldsStore;
+  typedef smsc::core::buffers::LWArray_T<TLVLayoutEncoder, uint16_t, _NumFieldsTArg + 1> FieldsStore;
   FieldsStore     _fieldsStore;
 
   typedef EncoderProducer_T<EncoderOfASType> ExtEncoderProducer;
-  typedef eyeline::util::LWArray_T<ExtEncoderProducer, uint16_t, 1> ExtEncodersStore;
+  typedef smsc::core::buffers::LWArray_T<ExtEncoderProducer, uint16_t, 1> ExtEncodersStore;
 
   ExtEncodersStore   _encsStore;
 

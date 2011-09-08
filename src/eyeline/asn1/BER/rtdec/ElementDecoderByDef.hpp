@@ -32,7 +32,7 @@ protected:
     }
   };
 
-  typedef eyeline::util::LWArrayExtension_T<EDAOccurence, uint16_t> EDAOccurenceArray;
+  typedef smsc::core::buffers::LWArrayExtension_T<EDAOccurence, uint16_t> EDAOccurenceArray;
   typedef eyeline::util::BITArrayExtension_T<uint16_t> EDAOccurencesMask;
 
   //TagDecoder entry
@@ -52,8 +52,8 @@ protected:
     }
   };
   //
-  typedef eyeline::util::LWArray_T<TDEntry, uint16_t, 1> TDMatrixRow;
-  typedef eyeline::util::LWArrayExtension_T<TDMatrixRow, uint16_t> TDMatrix;
+  typedef smsc::core::buffers::LWArray_T<TDEntry, uint16_t, 1> TDMatrixRow;
+  typedef smsc::core::buffers::LWArrayExtension_T<TDMatrixRow, uint16_t> TDMatrix;
 
   //Initialization data
 

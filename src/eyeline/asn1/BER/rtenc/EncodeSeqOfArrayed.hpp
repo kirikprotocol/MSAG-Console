@@ -7,7 +7,7 @@
 #endif
 #define __ASN1_BER_ENCODER_SEQUENCE_OF_ARRAYED
 
-#include "eyeline/util/LWArray.hpp"
+#include "core/buffers/LWArrayT.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeSequenced.hpp"
 
 namespace eyeline {
@@ -34,8 +34,8 @@ protected:
   { }
 
 public:
-  typedef eyeline::util::LWArrayExtension_T<_TArg, uint16_t> ElementsArray;
-  typedef eyeline::util::LWArrayExtension_T<_TArg *, uint16_t> ElementsPtrArray;
+  typedef smsc::core::buffers::LWArrayExtension_T<_TArg, uint16_t> ElementsArray;
+  typedef smsc::core::buffers::LWArrayExtension_T<_TArg *, uint16_t> ElementsPtrArray;
 
   // constructor for untagged SEQUENCE OF
   explicit EncoderOfSeqOfArrayed_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)

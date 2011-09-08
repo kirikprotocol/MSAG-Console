@@ -16,7 +16,7 @@ namespace ber {
 template <uint16_t _SizeTArg>
 class CHCElementDecoder_T : public ElementDecoderByTagAC {
 private:
-  eyeline::util::LWArray_T<EDAlternative, uint16_t, _SizeTArg> _altStore;
+  smsc::core::buffers::LWArray_T<EDAlternative, uint16_t, _SizeTArg> _altStore;
 
 protected:
   // ----------------------------------------------------------

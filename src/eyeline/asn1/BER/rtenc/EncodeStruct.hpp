@@ -72,7 +72,7 @@ template <
 >
 class EncoderOfStructure_T : public EncoderOfStructureAC {
 private:
-  typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumFieldsTArg> FieldsStore;
+  typedef smsc::core::buffers::LWArray_T<TLVLayoutEncoder, uint16_t, _NumFieldsTArg> FieldsStore;
   FieldsStore     _fieldsStore;
 
 protected:

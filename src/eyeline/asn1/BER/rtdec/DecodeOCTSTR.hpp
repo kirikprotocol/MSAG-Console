@@ -19,7 +19,7 @@ template <
 >
 class OSTRDecConverter_T : public RCSDecConverterIface {
 public:
-  typedef typename eyeline::util::LWArrayExtension_T<uint8_t, _SizeTypeArg> ArrayType;
+  typedef typename smsc::core::buffers::LWArrayExtension_T<uint8_t, _SizeTypeArg> ArrayType;
 
 protected:
   _SizeTypeArg _maxSize;
@@ -76,7 +76,7 @@ protected:
   OSTRDecConverter_T<_SizeTypeArg> _vCvt;
 
 public:
-  typedef typename eyeline::util::LWArrayExtension_T<uint8_t, _SizeTypeArg> ArrayType;
+  typedef typename smsc::core::buffers::LWArrayExtension_T<uint8_t, _SizeTypeArg> ArrayType;
 
   //Constructor for base type
   explicit DecoderOfOCTSTR_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)

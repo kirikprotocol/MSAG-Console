@@ -45,7 +45,7 @@ public:
 template <uint16_t _SizeTArg>
 class SETElementDecoder_T : public SETElementDecoderAC {
 private:
-  eyeline::util::LWArray_T<EDAlternative, uint16_t, _SizeTArg> _altStore;
+  smsc::core::buffers::LWArray_T<EDAlternative, uint16_t, _SizeTArg> _altStore;
 
 public:
   explicit SETElementDecoder_T(ElementDecoderByTagAC::Order_e use_order 

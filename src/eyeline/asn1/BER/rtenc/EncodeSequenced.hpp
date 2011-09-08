@@ -33,8 +33,8 @@ template <
 class EncoderOfSequencedAC_T : public EncoderOfConstructedAC {
 private:
   typedef EncoderProducer_T<_EncoderOfTArg> EncoderProducer;
-  typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumElemsTArg> ElementsStore;
-  typedef eyeline::util::LWArray_T<EncoderProducer, uint16_t, _NumElemsTArg> ProducersStore;
+  typedef smsc::core::buffers::LWArray_T<TLVLayoutEncoder, uint16_t, _NumElemsTArg> ElementsStore;
+  typedef smsc::core::buffers::LWArray_T<EncoderProducer, uint16_t, _NumElemsTArg> ProducersStore;
 
   ElementsStore   _elmStore;
   ProducersStore  _prdStore;

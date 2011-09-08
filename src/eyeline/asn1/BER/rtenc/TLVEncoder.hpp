@@ -106,7 +106,7 @@ public:
 
 class TLVLayoutEncoder {
 private:
-  typedef eyeline::util::LWArray_T<TLComposer, uint8_t, _ASTaggingDFLT_SZ> TLComposersArray;
+  typedef smsc::core::buffers::LWArray_T<TLComposer, uint8_t, _ASTaggingDFLT_SZ> TLComposersArray;
 
   //data for encoding optimization if layout calculation was done prior to encoding
   TLComposersArray  _tlws;

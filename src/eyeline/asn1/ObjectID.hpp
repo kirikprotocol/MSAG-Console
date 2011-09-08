@@ -8,7 +8,8 @@
 #define __ABSTRACT_SYNTAX_OID_DEFS__
 
 #include <inttypes.h>
-#include "eyeline/util/LWArray.hpp"
+#include "core/buffers/LWArrayT.hpp"
+#include "core/buffers/LWArrayTraitsInt.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -19,7 +20,7 @@ static const uint8_t _ObjectID_DFLT_SUBIDS_NUM = 16;
 //NOTE: Overall number of subIdentifiers is limited to 255
 static const uint8_t _ObjectID_MAX_SUBIDS_NUM = 255;
 
-typedef eyeline::util::LWArray_T<SubIdType, uint8_t, _ObjectID_DFLT_SUBIDS_NUM> RelativeOID;
+typedef smsc::core::buffers::LWArray_T<SubIdType, uint8_t, _ObjectID_DFLT_SUBIDS_NUM> RelativeOID;
 
 class ObjectID : public RelativeOID {
 public:

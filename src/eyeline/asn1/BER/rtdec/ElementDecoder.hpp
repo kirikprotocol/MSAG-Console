@@ -15,7 +15,7 @@ namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-typedef eyeline::util::LWArrayExtension_T<EDAlternative, uint16_t> EDAlternativesArray;
+typedef smsc::core::buffers::LWArrayExtension_T<EDAlternative, uint16_t> EDAlternativesArray;
 
 class ElementDecoderAC {
 public:
