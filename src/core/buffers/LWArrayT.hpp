@@ -76,7 +76,7 @@ protected:
                                 " insert (%s) exceeds available limit (%s)",
                                 SizeToStr((_SizeTypeArg)sizeof(_SizeTypeArg)).get(),
                                 SizeToStr(_orgSz).get(), SizeToStr(num_2add).get(),
-                                SizeToStr(_MAX_SIZE() - _numElem));
+                                SizeToStr(_MAX_SIZE() - _numElem).get());
   }
 
   //Reallocates heap buffer.
