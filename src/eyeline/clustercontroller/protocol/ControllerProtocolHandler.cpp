@@ -909,6 +909,7 @@ struct UpdateSmeStatusOp{
           {
             it2->setConnType(messages::SmeConnectType::directConnect);
           }
+          it2->getStatusRef().insert(it2->getStatusRef().begin(),it->getStatus().begin(),it->getStatus().end());
           found=true;
           break;
         }
