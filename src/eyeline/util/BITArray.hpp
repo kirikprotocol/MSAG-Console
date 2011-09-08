@@ -10,7 +10,7 @@
 
 #include <memory.h>
 #include "util/Exception.hpp"
-#include "eyeline/util/IntConv.hpp"
+#include "util/IntTypes.hpp"
 
 namespace eyeline {
 namespace util {
@@ -39,28 +39,27 @@ private:
   _SizeTypeArg  _numBits;   //number of initialized/assigned bits
 
 protected:
+  typedef smsc::util::IntToA_T<_SizeTypeArg> SizeToStr;
+
   _SizeTypeArg _MAX_FACTOR(void) const { return _MAX_SIZE()/_orgBits; }
+
 
   void denyIndex(_SizeTypeArg bit_idx) const //throw(std::exception)
   {
-    UIntToA_T<_SizeTypeArg> v0((_SizeTypeArg)sizeof(_SizeTypeArg));
-    UIntToA_T<_SizeTypeArg> v1(_orgBits);
-    UIntToA_T<_SizeTypeArg> v2(bit_idx);
-    UIntToA_T<_SizeTypeArg> v3(_numBits ? _numBits - 1 : 0);
     throw smsc::util::Exception("BITArray_T<%s,%s>: index=%s is out of range=%c0:%s%c",
-                                v0.get(), v1.get(), v2.get(),
-                                _numBits ? '[' : '(', v3.get(), _numBits ? ']' : ')');
+                                SizeToStr((_SizeTypeArg)sizeof(_SizeTypeArg)).get(),
+                                SizeToStr(_orgBits).get(), SizeToStr(bit_idx).get(),
+                                _numBits ? '[' : '(', 
+                                SizeToStr(_numBits ? _numBits - 1 : 0).get(),
+                                _numBits ? ']' : ')');
   }
   void denyAddition(_SizeTypeArg bits_2add) const //throw(std::exception)
   {
-    UIntToA_T<_SizeTypeArg> v0((_SizeTypeArg)sizeof(_SizeTypeArg));
-    UIntToA_T<_SizeTypeArg> v1(_orgBits);
-    UIntToA_T<_SizeTypeArg> v2(bits_2add);
-    UIntToA_T<_SizeTypeArg> v3(_MAX_SIZE() - size());
-
     throw smsc::util::Exception("BITArray_T<%s,%s>: number of elements are to"
                                 " insert (%s) exceeds available limit (%s)",
-                                v0.get(), v1.get(), v2.get(), v3.get());
+                                SizeToStr((_SizeTypeArg)sizeof(_SizeTypeArg)).get(),
+                                SizeToStr(_orgBits).get(), SizeToStr(bits_2add).get(),
+                                SizeToStr(_MAX_SIZE() - size()).get());
   }
 
   //Returns number of unused bits in last assigned octet

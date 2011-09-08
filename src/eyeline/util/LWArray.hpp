@@ -12,7 +12,7 @@
 #include <algorithm>
 
 #include "util/Exception.hpp"
-#include "eyeline/util/IntConv.hpp"
+#include "util/IntTypes.hpp"
 #include "eyeline/util/MaxSizeof.hpp"
 #include "eyeline/util/LWArrayTraits.hpp"
 
@@ -55,26 +55,23 @@ private:
   _SizeTypeArg  _numElem;       //number of initilized/assigned elements
 
 protected:
-  void denyIndex(_SizeTypeArg use_idx) const //throw(std::exception)
+  typedef smsc::util::IntToA_T<_SizeTypeArg> SizeToStr;
+
+  void denyIndex(_SizeTypeArg use_idx) const throw(smsc::util::Exception)
   {
-    UIntToA_T<_SizeTypeArg> v0((_SizeTypeArg)sizeof(_SizeTypeArg));
-    UIntToA_T<_SizeTypeArg> v1(_orgSz);
-    UIntToA_T<_SizeTypeArg> v2(use_idx);
-    UIntToA_T<_SizeTypeArg> v3(_numElem ? _numElem-1 : 0);
     throw smsc::util::Exception("LWArray_T<%s,%s>: index=%s is out of range=%s",
-                                v0.get(), v1.get(), v2.get(), v3.get());
+                                SizeToStr((_SizeTypeArg)sizeof(_SizeTypeArg)).get(),
+                                SizeToStr(_orgSz).get(), SizeToStr(use_idx).get(),
+                                SizeToStr(_numElem ? _numElem-1 : 0).get());
   }
 
-  void denyAddition(_SizeTypeArg num_2add) const //throw(std::exception)
+  void denyAddition(_SizeTypeArg num_2add) const throw(smsc::util::Exception)
   {
-    UIntToA_T<_SizeTypeArg> v0((_SizeTypeArg)sizeof(_SizeTypeArg));
-    UIntToA_T<_SizeTypeArg> v1(_orgSz);
-    UIntToA_T<_SizeTypeArg> v2(num_2add);
-    UIntToA_T<_SizeTypeArg> v3(_MAX_SIZE() - _numElem);
-
     throw smsc::util::Exception("LWArray_T<%s,%s>: number of elements are to"
                                 " insert (%s) exceeds available limit (%s)",
-                                v0.get(), v1.get(), v2.get(), v3.get());
+                                SizeToStr((_SizeTypeArg)sizeof(_SizeTypeArg)).get(),
+                                SizeToStr(_orgSz).get(), SizeToStr(num_2add).get(),
+                                SizeToStr(_MAX_SIZE() - _numElem).get());
   }
 
   //Reallocates heap buffer.
