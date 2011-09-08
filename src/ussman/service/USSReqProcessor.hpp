@@ -7,7 +7,7 @@
 #endif
 #define __SMSC_USSMAN_REQUEST_ROCESSOR_HPP
 
-#include "inman/common/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 
 #include "inman/interaction/asyncmgr/AsynWorkerDefs.hpp"
 
