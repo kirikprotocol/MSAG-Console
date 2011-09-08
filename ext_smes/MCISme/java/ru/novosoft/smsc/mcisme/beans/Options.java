@@ -158,7 +158,6 @@ public class Options extends MCISmeBean
         unrespondedMessagesSleep = getConfig().getInt("MCISme.unrespondedMessagesSleep");
         outgoingSpeedMax = getConfig().getInt("MCISme.outgoingSpeedMax");
         responceWaitTime = getConfig().getString("MCISme.responceWaitTime");
-        schedDelay = getConfig().getString("MCISme.schedDelay");
         inputQueueSize = getConfig().getInt("MCISme.inputQueueSize");
         maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
@@ -292,6 +291,7 @@ public class Options extends MCISmeBean
 
         resendingPeriod = getConfig().getString("MCISme.Scheduling.resendingPeriod");
         schedOnBusy = getConfig().getString("MCISme.Scheduling.schedOnBusy");
+        schedDelay = getConfig().getString("MCISme.Scheduling.schedDelay");
 
         statDir = getConfig().getString("MCISme.Statistics.statDir");
 
@@ -346,7 +346,6 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
     getConfig().setInt   ("MCISme.outgoingSpeedMax", outgoingSpeedMax);
     getConfig().setString("MCISme.responceWaitTime", responceWaitTime);
-    getConfig().setString("MCISme.schedDelay", schedDelay);
     getConfig().setInt   ("MCISme.inputQueueSize", inputQueueSize);
     getConfig().setInt   ("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool  ("MCISme.forceInform", forceInform);
@@ -437,6 +436,7 @@ public class Options extends MCISmeBean
 
     getConfig().setString("MCISme.Scheduling.resendingPeriod", resendingPeriod);
     getConfig().setString("MCISme.Scheduling.schedOnBusy", schedOnBusy);
+    getConfig().setString("MCISme.Scheduling.schedDelay", schedDelay);
 
     getConfig().setString("MCISme.Statistics.statDir", statDir);
 
