@@ -9,6 +9,7 @@ namespace corex {
 namespace timers {
 
 using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::ReverseMutexGuard;
 
 static TimeSlice    _DFLT_SHUTDOWN_TIMEOUT(100, TimeSlice::tuMSecs);
 static TimeSlice    _DFLT_SLEEP_TIMEOUT(100, TimeSlice::tuMSecs);

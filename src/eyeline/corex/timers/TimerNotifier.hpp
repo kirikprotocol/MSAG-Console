@@ -27,7 +27,7 @@ protected:
     typedef std::vector<SWSignalingTask *> TasksArray;
     typedef std::list<SWSignalingTask *> TasksPool;
 
-    mutable Mutex     _sync;
+    mutable smsc::core::synchronization::Mutex     _sync;
     StopWatchStore &  _swStore;
     Logger *          _logger;
     TasksArray        _store;
