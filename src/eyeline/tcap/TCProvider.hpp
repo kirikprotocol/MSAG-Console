@@ -7,6 +7,7 @@
 #endif /* __GNUC__ */
 #define __EYELINE_TCAP_TC_PROVIDER_HPP
 
+#include <memory>
 #include "core/synchronization/Mutex.hpp"
 #include "eyeline/tcap/TCProviderIface.hpp"
 

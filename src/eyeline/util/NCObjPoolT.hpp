@@ -32,8 +32,8 @@ protected:
   class IndexedNode : public FifoLink {
   private:
     union {
-      void *  _aligner;
-      uint8_t _buf[sizeof(_IndexedTArg)];
+      void *        _aligner;
+      unsigned char _buf[sizeof(_IndexedTArg)];
     } _mem;
 
     size_type       _idx; //unique id of this element assigned by pool

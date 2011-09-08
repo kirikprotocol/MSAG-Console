@@ -5,6 +5,7 @@
 #ident "@(#)$Id$"
 #define _CORE_TIMERS_EXPIRATION_TIME_HPP
 
+#include <inttypes.h>
 #include "core/synchronization/TimeSlice.hpp"
 #include "eyeline/corex/timers/TimeOps.hpp"
 
