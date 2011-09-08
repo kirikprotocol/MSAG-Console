@@ -18,7 +18,7 @@ namespace util {
  *       assigned by pool while object creation,
  *  
  * NOTE: Object class must have a following constructor: 
- *        _IndexedTArg(_SizeTypeArg use_idx);
+ *        explicit _IndexedTArg(_SizeTypeArg use_idx);
  * ******************************************************************* */
 template <
   class _IndexedTArg                 // : public IndexedNCObj_T<>
@@ -40,11 +40,12 @@ protected:
     _IndexedTArg *  _pObj;
 
     IndexedNode(const IndexedNode & use_obj);
+    IndexedNode & operator=(const IndexedNode & use_obj);
 
   protected:
     friend class NCOIndexedPool_T;
 
-    IndexedNode(size_type  use_idx) 
+    explicit IndexedNode(size_type  use_idx) 
       : FifoLink(), _idx(use_idx), _pObj(NULL)
     {
       _mem._aligner = 0;
@@ -80,6 +81,10 @@ protected:
   };
 
   class NodeArray : public std::vector<IndexedNode *> {
+  protected:
+    NodeArray(const NodeArray & cp_obj);
+    NodeArray & operator=(const NodeArray & cp_obj);
+
   public:
     NodeArray() : std::vector<IndexedNode *>()
     { }
@@ -93,7 +98,7 @@ protected:
   };
 
   /* -- DATA members: -- */
-  bool        _doErase; //object release mode: destroy or just mark as unused
+  const bool  _doErase; //object release mode: destroy or just mark as unused
   NodeArray   _store;   //store of all allocated nodes.
   FifoQueue   _pool;    //queue of unused nodes
 
@@ -116,7 +121,7 @@ public:
   explicit NCOIndexedPool_T(bool erase_on_rlse = true)
     : _doErase(erase_on_rlse)
   { }
-  NCOIndexedPool_T(size_type num_to_reserve, bool erase_on_rlse = true)
+  explicit NCOIndexedPool_T(size_type num_to_reserve, bool erase_on_rlse = true)
     : _doErase(erase_on_rlse)
   {
     reserve(num_to_reserve);
@@ -201,9 +206,10 @@ private:
   const _IndexTypeArg _idx; //unique index of this object
 
   IndexedNCObj_T(const IndexedNCObj_T & cp_obj);
+  IndexedNCObj_T & operator=(const IndexedNCObj_T & cp_obj);
 
 public:
-  IndexedNCObj_T(_IndexTypeArg use_idx) : _TArg(), _idx(use_idx)
+  explicit IndexedNCObj_T(_IndexTypeArg use_idx) : _TArg(), _idx(use_idx)
   { }
   ~IndexedNCObj_T()
   { }
@@ -241,7 +247,8 @@ public:
   //Returns NULL in case maximum number of objects is already reached!
   _TArg * allcObj(void)
   {
-    return NCOIndexedPool_T<IndexedNCObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::allcObj();
+    IndexedObj * pooledObj = NCOIndexedPool_T<IndexedNCObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::allcObj();
+    return static_cast<_TArg *>(pooledObj);
   }
 
   //Releases (marks as unused) given pooled object
@@ -251,7 +258,6 @@ public:
     NCOIndexedPool_T<IndexedNCObj_T<_TArg, _SizeTypeArg>, _SizeTypeArg>::rlseObj(pooledObj);
   }
 };
-
 
 } //util
 } //eyeline
