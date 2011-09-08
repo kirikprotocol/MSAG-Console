@@ -8,7 +8,7 @@
 #define __EYELINE_UTIL_UNION_HPP
 
 #include <inttypes.h>
-#include "eyeline/util/MaxSizeof.hpp"
+#include "util/MaxSizeof.hpp"
 
 namespace eyeline {
 namespace util {
@@ -122,7 +122,7 @@ class UnionStorageOf2_T : public UnionStorageAC {
 protected:
   union {
     void *  _aligner;
-    uint8_t _buf[util::MaxSizeOf2_T<_TArg1, _TArg2>::VALUE];
+    uint8_t _buf[smsc::util::MaxSizeOf2_T<_TArg1, _TArg2>::VALUE];
   } _mem;
 
 public:
@@ -169,7 +169,7 @@ class UnionStorageOf3_T : public UnionStorageAC {
 protected:
   union {
     void *  _aligner;
-    uint8_t _buf[util::MaxSizeOf3_T<_TArg1, _TArg2, _TArg3>::VALUE];
+    uint8_t _buf[smsc::util::MaxSizeOf3_T<_TArg1, _TArg2, _TArg3>::VALUE];
   } _mem;
 
 public:
@@ -219,7 +219,7 @@ class UnionStorageOf4_T : public UnionStorageAC {
 protected:
   union {
     void *  _aligner;
-    uint8_t _buf[util::MaxSizeOf4_T<_TArg1, _TArg2, _TArg3, _TArg4>::VALUE];
+    uint8_t _buf[smsc::util::MaxSizeOf4_T<_TArg1, _TArg2, _TArg3, _TArg4>::VALUE];
   } _mem;
 
 public:
@@ -273,7 +273,7 @@ class UnionStorageOf5_T : public UnionStorageAC {
 protected:
   union {
     void *  _aligner;
-    uint8_t _buf[util::MaxSizeOf5_T<_TArg1, _TArg2, _TArg3, _TArg4, _TArg5>::VALUE];
+    uint8_t _buf[smsc::util::MaxSizeOf5_T<_TArg1, _TArg2, _TArg3, _TArg4, _TArg5>::VALUE];
   } _mem;
 
 public:
@@ -332,7 +332,7 @@ class UnionStorageOf6_T : public UnionStorageAC {
 protected:
   union {
     void *  _aligner;
-    uint8_t _buf[util::MaxSizeOf6_T<_TArg1, _TArg2, _TArg3, _TArg4, _TArg5, _TArg6>::VALUE];
+    uint8_t _buf[smsc::util::MaxSizeOf6_T<_TArg1, _TArg2, _TArg3, _TArg4, _TArg5, _TArg6>::VALUE];
   } _mem;
 
 public:

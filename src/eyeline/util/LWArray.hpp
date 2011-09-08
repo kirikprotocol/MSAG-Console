@@ -13,7 +13,6 @@
 
 #include "util/Exception.hpp"
 #include "util/IntTypes.hpp"
-#include "eyeline/util/MaxSizeof.hpp"
 #include "eyeline/util/LWArrayTraits.hpp"
 
 namespace eyeline {

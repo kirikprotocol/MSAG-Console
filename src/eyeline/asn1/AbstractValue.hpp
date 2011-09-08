@@ -7,8 +7,8 @@
 #endif
 #define __ABSTRACT_VALUE_DEFS__
 
+#include "util/MaxSizeof.hpp"
 #include "eyeline/asn1/AbstractSyntax.hpp"
-#include "eyeline/util/MaxSizeof.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -125,7 +125,7 @@ private:
 
   union {
     void * aligner;
-    uint8_t buf[eyeline::util::MaxSizeOf2_T<EncoderOf_TArg, DecoderOf_TArg>::VALUE];
+    uint8_t buf[smsc::util::MaxSizeOf2_T<EncoderOf_TArg, DecoderOf_TArg>::VALUE];
   } _memCdc;
 
   union {
