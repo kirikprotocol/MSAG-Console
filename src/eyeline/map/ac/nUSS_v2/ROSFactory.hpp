@@ -3,7 +3,9 @@
  * in v2 of Network Unstructured Supplementary Service Application Context.
  * ************************************************************************* */
 #ifndef __EYELINE_MAP_AC_NUSS_V2_ROS_FACTORY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_AC_NUSS_V2_ROS_FACTORY_HPP
 
 #include "eyeline/asn1/EncodedOID.hpp"

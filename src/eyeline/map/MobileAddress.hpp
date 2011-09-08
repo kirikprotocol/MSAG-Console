@@ -2,7 +2,9 @@
  * Base class for various mobile addresses.
  * ************************************************************************** */
 #ifndef __EYELINE_MAP_MOBILE_ADDRESS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_MOBILE_ADDRESS_HPP
 
 #include <inttypes.h>
