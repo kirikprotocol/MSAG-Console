@@ -35,7 +35,7 @@ using smsc::ussman::comp::USSDataString;
 
 using smsc::util::TonNpiAddress;
 
-static smsc::logger::Logger* logger;
+//static smsc::logger::Logger* logger;
 
 static ssize_t						/* Read "n" bytes from a descriptor. */
 readn(int fd, void *vptr, size_t n)
@@ -188,13 +188,13 @@ static void printUsage(const char* progName)
   printf("Usage: %s [-h] [-v] [-I IMSIvalue] [cfg_file [needDcs]]\n", progName);
 }
 
-#include <logger/Logger.h>
+//#include <logger/Logger.h>
 
-static void init_logger()
-{
-  smsc::logger::Logger::Init();
-  logger = smsc::logger::Logger::getInstance("smsc.uss_tst");
-}
+//static void init_logger()
+//{
+//  smsc::logger::Logger::Init();
+//  logger = smsc::logger::Logger::getInstance("smsc.uss_tst");
+//}
 
 
 int doSSRequest(int sock_fd, uint32_t & dlg_id, const SubscriberSSCfg & ssp_cfg)
@@ -287,7 +287,7 @@ int main(int argc, char** argv)
   int needDcs = 0;
   const char *  cfgFile = "test_ussbalance.cfg";  
 
-  init_logger();
+  //init_logger();
 
   if (argc > 1) {
     if ( !strcmp(argv[1], "-v") ) {
