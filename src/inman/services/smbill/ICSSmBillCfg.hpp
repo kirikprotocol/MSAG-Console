@@ -10,7 +10,7 @@
 #include <map>
 
 #include "util/TonNpiAddress.hpp"
-#include "inman/common/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 #include "inman/inap/TCUsrDefs.hpp"
 #include "inman/services/ICSrvIDs.hpp"
 #include "inman/services/common/BillingModes.hpp"

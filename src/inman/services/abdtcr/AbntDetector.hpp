@@ -8,7 +8,7 @@
 #endif
 #define __INMAN_ABNT_DETECTOR_HPP
 
-#include "inman/common/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 #include "inman/abprov/IAProvider.hpp"
 #include "inman/interaction/msgdtcr/MsgContract.hpp"
 #include "inman/interaction/asyncmgr/AsynWorkerDefs.hpp"

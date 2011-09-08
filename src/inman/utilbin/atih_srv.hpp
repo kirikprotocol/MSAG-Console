@@ -10,7 +10,7 @@
 
 #include <map>
 
-#include "inman/common/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 #include "inman/inap/dispatcher.hpp"

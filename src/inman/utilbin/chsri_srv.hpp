@@ -10,7 +10,7 @@
 
 #include <map>
 
-#include "inman/common/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 #include "inman/inap/dispatcher.hpp"

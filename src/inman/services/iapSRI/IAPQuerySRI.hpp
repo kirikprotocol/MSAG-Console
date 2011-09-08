@@ -10,7 +10,7 @@
 #endif
 #define SMSC_INMAN_IAPQUERY_HLR_SRI_HPP
 
-#include "inman/common/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 #include "inman/common/IDXObjPool_T.hpp"
 #include "inman/abprov/facility2/inc/IAPQuery.hpp"
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"

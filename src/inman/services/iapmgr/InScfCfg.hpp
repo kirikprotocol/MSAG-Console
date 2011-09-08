@@ -7,8 +7,8 @@
 #endif
 #define __INMAN_ICS_IAPMGR_INSCF_HPP
 
+#include "util/OptionalObjT.hpp"
 #include "inman/common/RPCList.hpp"
-#include "inman/common/OptionalObjT.hpp"
 #include "inman/common/CellGlobalId.hpp"
 #include "inman/services/common/BillingModes.hpp"
 #include "inman/services/iapmgr/SKAlgorithms.hpp"
