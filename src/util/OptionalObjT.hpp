@@ -15,13 +15,14 @@ template <
 > 
 class OptionalObj_T {
 private:
-  bool  mHasObj;
   union {
     void *        mAligner;
     unsigned char mBuf[sizeof(_TArg)];
   }     mMem;
 
 protected:
+  bool  mHasObj;
+
   _TArg * pObj(void) { return (_TArg *)(mMem.mBuf); }
   const _TArg * pObj(void) const { return (const _TArg *)(mMem.mBuf); }
 
