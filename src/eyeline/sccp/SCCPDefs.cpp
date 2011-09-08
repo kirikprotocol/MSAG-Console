@@ -77,7 +77,7 @@ bool UDTParms::calculate_itu93(UDTParms & use_parms, bool use_hopCount,
     uint16_t segmDataSz = (260-7) - called_addrLen - calling_addrLen;
     if (data_sz <= segmDataSz*16) {
       use_parms._kind = XUDT_93_MS;
-      use_parms._numSegm = (uint8_t)((uint32_t)data_sz<<1 + segmDataSz)/(segmDataSz<<1);
+      use_parms._numSegm = (uint8_t)(((uint32_t)data_sz<<1) + segmDataSz)/(segmDataSz<<1);
       use_parms._segmDataSz = segmDataSz;
       return true;
     }
@@ -110,7 +110,7 @@ bool UDTParms::calculate_itu96(UDTParms & use_parms,
     uint16_t segmDataSz = (254-6) - called_addrLen - calling_addrLen;
     if (data_sz <= segmDataSz*16) {
       use_parms._kind = XUDT_96_MS;
-      use_parms._numSegm = (uint8_t)((uint32_t)data_sz<<1 + segmDataSz)/(segmDataSz<<1);
+      use_parms._numSegm = (uint8_t)(((uint32_t)data_sz<<1) + segmDataSz)/(segmDataSz<<1);
       use_parms._segmDataSz = segmDataSz;
       return true;
     }

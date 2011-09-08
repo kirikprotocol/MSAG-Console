@@ -2,6 +2,7 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
+#include <stdio.h>
 #include "eyeline/sccp/GlobalTitle.hpp"
 
 namespace eyeline {
