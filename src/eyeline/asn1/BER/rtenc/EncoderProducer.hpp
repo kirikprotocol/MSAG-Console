@@ -8,7 +8,7 @@
 #endif
 #define __ASN1_BER_ENCODER_PRODUCER_HPP
 
-#include "eyeline/util/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 
 #include "eyeline/asn1/ASNTags.hpp"
 #include "eyeline/asn1/TransferSyntax.hpp"
@@ -21,9 +21,9 @@ template <
   //must have tagged & untagged type constructors, copying constructor
   class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>(TransferSyntax::Rule_e use_rule)*/ 
 > 
-class EncoderProducer_T : public eyeline::util::OptionalObj_T<_EncoderOfTArg> {
+class EncoderProducer_T : public smsc::util::OptionalObj_T<_EncoderOfTArg> {
 public:
-  EncoderProducer_T() : eyeline::util::OptionalObj_T<_EncoderOfTArg>()
+  EncoderProducer_T() : smsc::util::OptionalObj_T<_EncoderOfTArg>()
   { }
   ~EncoderProducer_T()
   { }
@@ -32,14 +32,18 @@ public:
   _EncoderOfTArg  & init(TransferSyntax::Rule_e use_rule)
   {
     this->clear();
-    return *(this->_ptr = new (this->_mem._buf)_EncoderOfTArg(use_rule));
+    new (this->pObj())_EncoderOfTArg(use_rule);
+    this->mHasObj = true;
+    return *(this->pObj());
   }
   //
   _EncoderOfTArg  & init(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                          TransferSyntax::Rule_e use_rule)
   {
     this->clear();
-    return *(this->_ptr = new (this->_mem._buf)_EncoderOfTArg(use_tag, tag_env, use_rule));
+    new (this->pObj())_EncoderOfTArg(use_tag, tag_env, use_rule);
+    this->mHasObj = true;
+    return *(this->pObj());
   }
 };
 

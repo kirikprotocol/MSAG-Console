@@ -13,7 +13,7 @@ namespace eyeline {
 namespace map {
 namespace err {
 
-using eyeline::util::OptionalObj_T;
+using smsc::util::OptionalObj_T;
 
 /* Type is defined in IMPLICIT tagging environment as follow:
   ExtensibleSystemFailureParam ::= SEQUENCE {

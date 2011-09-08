@@ -4,7 +4,7 @@
 #endif
 # define __EYELINE_MAP_7F0_PROTO_EXT_PRIVATEEXTENSION_HPP__
 
-# include "eyeline/util/OptionalObjT.hpp"
+# include "util/OptionalObjT.hpp"
 
 # include "eyeline/asn1/EncodedOID.hpp"
 # include "eyeline/asn1/TransferSyntax.hpp"
@@ -13,7 +13,7 @@ namespace eyeline {
 namespace map {
 namespace ext {
 
-using eyeline::util::OptionalObj_T;
+using smsc::util::OptionalObj_T;
 
 /* Type is defined in IMPLICIT tagging environment as follow:
   PrivateExtension ::= SEQUENCE {
