@@ -24,6 +24,8 @@ ClusterControllerMsgsHndlr::handle(const messages::GetServicesStatus& msg)
   messages::GetServicesStatusResp responseMsg;
   messages::Response responseResult;
 
+  responseMsg.messageSetSeqNum(msg.messageGetSeqNum());
+
   try {
     std::vector<messages::ServiceStatus> servicesStatusArray;
     getAllSmeStatus(&servicesStatusArray);
