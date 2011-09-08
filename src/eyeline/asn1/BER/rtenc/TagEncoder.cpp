@@ -2,7 +2,6 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
-#include "eyeline/util/IntConv.hpp"
 #include "eyeline/asn1/BER/rtenc/TagEncoder.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeIdents_impl.hpp"
 
@@ -59,7 +58,7 @@ ENCResult encode_tag(const ASTag & use_tag, bool is_constructed,
   if (!max_len || !use_enc) {
     rval.status = ENCResult::encBadArg;
   } else if (!(rval.nbytes = compose_toc(use_tag, is_constructed, use_enc,
-                                                 DOWNCAST_UNSIGNED(max_len, uint8_t)))) {
+                                         TSBuffer::adoptRange<uint8_t>(max_len)))) {
     rval.status = ENCResult::encMoreMem;
   }
   return rval;

@@ -44,8 +44,8 @@ public:
   //Returns number of bytes consumed from buffer.
   DECResult unpackFragment(const uint8_t * use_buf, TSLength req_bytes) /* throw()*/
   {
-    _SizeTypeArg numOcts = DOWNCAST_UNSIGNED(req_bytes, _SizeTypeArg);
-    DECResult rval(DECResult::decOk);
+    _SizeTypeArg  numOcts = TSBuffer::adoptRange<_SizeTypeArg>(req_bytes);
+    DECResult     rval(DECResult::decOk);
 
     //NOTE: intermediate fragments MUST BE octet aligned
     if ((numOcts < 2) || _prvUnused) {

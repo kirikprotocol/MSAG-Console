@@ -13,7 +13,7 @@ namespace ber {
  * ************************************************************************* */
 DECResult GraphStrDecConverter::unpackFragment(const uint8_t * use_buf, TSLength req_bytes) /* throw()*/
 {
-  std::string::size_type numOcts = DOWNCAST_UNSIGNED(req_bytes, std::string::size_type);
+  std::string::size_type numOcts = TSBuffer::adoptRange<std::string::size_type>(req_bytes);
   DECResult rval(DECResult::decOk);
 
   try {

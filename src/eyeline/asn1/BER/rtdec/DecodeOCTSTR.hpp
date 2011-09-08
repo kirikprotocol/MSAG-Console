@@ -47,7 +47,7 @@ public:
   //Returns number of bytes consumed from buffer.
   DECResult unpackFragment(const uint8_t * use_buf, TSLength req_bytes) /* throw()*/
   {
-    _SizeTypeArg numOcts = DOWNCAST_UNSIGNED(req_bytes, _SizeTypeArg);
+    _SizeTypeArg numOcts = TSBuffer::adoptRange<_SizeTypeArg>(req_bytes);
     if (numOcts < req_bytes)
       return DECResult(DECResult::decBadVal); //too long value
 
