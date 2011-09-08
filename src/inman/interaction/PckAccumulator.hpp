@@ -8,8 +8,7 @@
 #define __SMSC_INMAN_ASYNCONN_PCK_ACCUM
 
 #include "util/Exception.hpp"
-
-#include "inman/common/OptionalObjT.hpp"
+#include "util/OptionalObjT.hpp"
 #include "inman/interaction/PacketBuffer.hpp"
 
 namespace smsc  {
