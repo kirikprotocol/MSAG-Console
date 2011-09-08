@@ -27,6 +27,15 @@ public:
   TSLength  _maxlen;  //encoding length in units(bytes or bits depending
                       //on TransferSyntax alignment
 
+  //Verifies that length of TSLength type fit into _SizeTypeArg type.
+  template <
+    typename _SizeTypeArg //MUST be an unsigned integer type
+  >
+  static _SizeTypeArg adoptRange(TSLength max_len)
+  {
+    return (((max_len) > (_SizeTypeArg)(-1)) ? (_SizeTypeArg)(-1) : (_SizeTypeArg)(max_len));
+  }
+
   explicit TSBuffer(uint8_t * use_buf = 0, TSLength enc_len = 0)
     : _isConst(false), _maxlen(enc_len)
   {
