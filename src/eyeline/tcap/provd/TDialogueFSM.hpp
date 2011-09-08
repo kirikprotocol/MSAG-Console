@@ -22,6 +22,7 @@ namespace provd {
 
 using smsc::logger::Logger;
 using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 using smsc::core::synchronization::EventMonitor;
 
 using eyeline::corex::timers::TimerIdent;

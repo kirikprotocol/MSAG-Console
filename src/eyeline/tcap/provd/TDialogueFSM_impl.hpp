@@ -4,7 +4,7 @@ template<class TDLG_IND_COMPOSER>
   bool TDialogueFSM::notifyLocalTCUser(TDlgIndHandlerGuard & grd_user,
                                        TDLG_IND_COMPOSER & tr_ind) /* throw() */
 {
-  ReverseMutexGuard rGrd(_sync); //TODO: analyze necessarity!
+  smsc::core::synchronization::ReverseMutexGuard rGrd(_sync); //TODO: analyze necessarity!
 
   bool rval = true;
   try {

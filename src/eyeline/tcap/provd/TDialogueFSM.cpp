@@ -14,6 +14,7 @@ namespace provd {
 using eyeline::ros::ROSRejectPdu;
 using eyeline::ros::ROSPduPrimitiveAC;
 using smsc::core::synchronization::MutexGuard;
+using smsc::core::synchronization::TimeSlice;
 //using smsc::core::synchronization::MutexTryGuard;
 
 using eyeline::corex::timers::TimeWatcherIface;
