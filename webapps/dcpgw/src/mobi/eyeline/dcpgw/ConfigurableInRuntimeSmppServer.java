@@ -22,16 +22,20 @@ public class ConfigurableInRuntimeSmppServer extends SmppServer {
 
     public ConfigurableInRuntimeSmppServer(Properties config, PDUListener listener) throws SmppException {
         super(config, listener);
+        //log.debug("init properties:" +config);
     }
 
     public void updateConnections(Hashtable<String, String> systemId_password_table){
-        log.debug("Try to update connections ...");
+        log.debug("Try to update smpp connections ...");
+        //log.debug("properties: "+config);
+
         for (Map.Entry<String, String> entry : systemId_password_table.entrySet()) {
             String systemId = entry.getKey();
             String password = entry.getValue();
             String connection_property_str = CONNECTION_PREFIX+systemId+".password";
+            //log.debug("connection property: "+connection_property_str);
 
-            if (config.contains(connection_property_str)){
+            if (config.containsKey(connection_property_str)){
                 String password_old = config.getProperty(connection_property_str);
 
                 if (!password_old.equals(password)){
@@ -52,12 +56,16 @@ public class ConfigurableInRuntimeSmppServer extends SmppServer {
 
         for (Object skey : config.keySet()) {
             String key = (String) skey;
+            //log.debug("config key: "+key);
+
             if (key.startsWith(CONNECTION_PREFIX) && key.endsWith(".password")) {
                 String systemId = key.substring(CONNECTION_PREFIX.length());
                 systemId = systemId.substring(0, systemId.length() - ".password".length());
 
-                if (!systemId_password_table.contains(systemId)){
-                    log.debug("Detected that new config doesn't contain connection with systemId '"+systemId+"'.");
+                if (!systemId_password_table.containsKey(systemId)){
+
+                    config.remove(CONNECTION_PREFIX+systemId+".password");
+                    log.debug("Remove connection with system id '"+systemId+"' from the smpp server configuration.");
 
                     ServerSession server_session = getSession(systemId);
                     if (server_session != null){
@@ -67,7 +75,8 @@ public class ConfigurableInRuntimeSmppServer extends SmppServer {
                 }
             }
         }
-        log.debug("Successfully update connections!");
+
+        log.debug("Successfully updated the list of smpp connections!");
     }
 
 

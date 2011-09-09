@@ -64,19 +64,19 @@ public class UpdateConfigClient extends SyncProtogenConnection {
 
           final UpdateConfigClient updateConfigClient = new UpdateConfigClient(host, port);
 
-          scheduler.scheduleAtFixedRate(new Runnable() {
+          /*scheduler.scheduleAtFixedRate(new Runnable() {
 
               @Override
               public void run() {
-                  try {
+                  try {*/
                       updateConfigClient.send(new UpdateConfig());
-                  } catch (AdminException e) {
+                  /*} catch (AdminException e) {
                       log.error(e);
                       System.exit(4);
                   }
               }
 
-          }, 15, 15, TimeUnit.SECONDS);
+          }, 15, 15, TimeUnit.SECONDS);*/
 
         }catch (IOException e) {
           log.error(e);

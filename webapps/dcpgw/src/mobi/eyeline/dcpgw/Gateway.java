@@ -282,12 +282,12 @@ public class Gateway extends Thread implements PDUListener {
                 delivery.setServicesNumbers(services_numbers);
 
                 provider.addDelivery(delivery);
-                log.debug("Load: "+delivery.toString());
+                log.debug("Load "+delivery.toString());
             }
 
             for(String endpoint_id: endpoint_ids) connection_provider_temp_table.put(endpoint_id, provider);
 
-            log.debug("Load: "+provider.toString());
+            log.debug("Load "+provider.toString());
         }
 
         Hashtable<String, String> user_password_temp_table = new Hashtable<String, String>();
@@ -314,7 +314,7 @@ public class Gateway extends Thread implements PDUListener {
 
         Manager.getInstance().setUserPasswordMap(user_password_table);
 
-        log.debug("Successfully update deliveries ...");
+        log.debug("Successfully update configuration!");
     }
 
     public boolean handlePDU(PDU pdu) {

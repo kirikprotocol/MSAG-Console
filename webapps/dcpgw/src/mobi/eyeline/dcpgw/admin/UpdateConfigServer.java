@@ -25,7 +25,7 @@ public class UpdateConfigServer extends Thread {
     public void run() {
         while (true) {
             try {
-                log.debug("Waiting for connections.");
+                log.debug("Waiting for connections ...");
                 Socket client = serverSocket.accept();
                 log.debug("Accepted a connection from: " + client.getInetAddress());
                 Connect c = new Connect(client);
