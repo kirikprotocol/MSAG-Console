@@ -5,13 +5,21 @@
 #
 # format: binary_name source_name libraries
 
+IAP_SRI_LIBS=$(SHARED_OPT) -L$(SMSC_BUILDDIR)/bin/inman/ldlib \
+  -linman-services-iapSRI -linman-abprov -linman-abprov-facility2-inc \
+  -linman-inap-xcfg -linman-inap-map_chsri -linman-inap-map -linman-comp-map_chsri -linman-comp -linman-common \
+  -linman-codec_inc-map -linman-asn1rt \
+  -lutil -lrt -ldl \
+  -linman_iap_fclt2 @inman/ldlib/libinman_iap_fclt2.so
+
 # using global setting of service linkage
 switch INMAN_ICS_LINKAGE
 static: #no need for .so loader, module is statically linked into libinman
 staticSS7:\
-inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader  $(SHARED_OPT) -linman-services-iapSRI -linman-abprov -linman-abprov-facility2-inc -linman-inap-xcfg -linman-inap-map_chsri -linman-comp-map_chsri  -linman-inap-map -linman-comp -linman-common -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt2 @inman/ldlib/libinman_iap_fclt2.so -lrt -linman-asn1rt -lutil
+inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader %(IAP_SRI_LIBS)
 default:\
-inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader  $(SHARED_OPT) -linman-services-iapSRI -linman-abprov -linman-abprov-facility2-inc -linman-inap-xcfg -linman-inap-map_chsri  -linman-inap-map -linman-comp-map_chsri -linman-comp -linman-common -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt2 @inman/ldlib/libinman_iap_fclt2.so -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so -lrt -linman-asn1rt -lutil
+inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader %(IAP_SRI_LIBS) \
+  -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so
 end switch
 
 

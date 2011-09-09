@@ -3,12 +3,47 @@
 #
 # INMan executable
 
+CORE_SRV_LIBS=-L$(SMSC_BUILDDIR)/bin -linman -linman-services -linman-services-tmwatch
+XCFG_LIBS=-lutil-config -lutil-xml -lutil-csv $(XERCES_LIB)
+NETSOCK_LIBS=-lcore-network $(SOCKETLIB) -lnsl
+TCPSRV_LIBS=-linman-services-tcpsrv -linman-interaction-tcpserver -linman-interaction-asynconn
+TCAPDSP_LIBS=-linman-services-tcapdsp -linman-inap-xcfg -linman-inap -linman-comp \
+             -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME)
+MAP_COMP_LIBS=-linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt
+CAPSMS_LIBS=-linman-inap-cap_sms -linman-comp-cap_sms -linman-codec_inc-cap -linman-codec_inc-in_cs
+
 switch INMAN_ICS_LINKAGE
 static:\
-inman/inman inman -L$(SMSC_BUILDDIR)/bin -L$(SS7_STACK_HOME)/lib -linman -linman-services -linman-services-tcpsrv -linman-services-tmwatch -linman-services-abdtcr -linman-interaction-msgdtcr -linman-services-iapmgr -linman-services-iapSRI -linman-services-iapATSI -linman-abprov  -linman-abprov-facility2 -linman-abprov-facility2-inc -linman-inap-map_chsri -linman-comp-map_chsri -linman-inap-map_atih -linman-comp-map_atih -linman-inap-map -linman-codecs-map_atih -linman-services-scheduler -linman-incache-solid -linman-services-smbill -linman-interaction-msgbill -linman-interaction-asyncmgr -linman-interaction-serializer -linman-storage -linman-services-abcache -linman-incache-solid -linman-services-tcapdsp -linman-inap-xcfg -linman-inap -l$(SS7_LIBRARY_NAME) -linman-inap-cap_sms -linman-comp-cap_sms -linman-interaction-tcpserver -linman-interaction-asynconn -linman-comp -linman-codec_inc-cap -linman-codec_inc-map -linman-codec_inc-in_cs -linman-codec_inc-ros -linman-common -linman-asn1rt -lutil-config -lutil-xml -lcore-threads -llogger -lcore-network -lutil-mirrorfile -lutil-csv -lutil -lutil-URCdb @liblogger.so -lpthread $(XERCES_LIB) $(SOCKETLIB) -lrt -lnsl -ldl
+inman/inman inman %(CORE_SRV_LIBS) \
+  -linman-services-abdtcr -linman-interaction-msgdtcr \
+  -linman-services-iapmgr -linman-services-iapSRI -linman-services-iapATSI \
+  -linman-abprov -linman-abprov-facility2 -linman-abprov-facility2-inc \
+  -linman-inap-map_chsri -linman-comp-map_chsri \
+  -linman-inap-map_atih -linman-comp-map_atih -linman-codecs-map_atih \
+  -linman-inap-map \
+  -linman-services-smbill -linman-interaction-msgbill -linman-storage \
+  -linman-interaction-asyncmgr -linman-interaction-serializer \
+  -linman-services-abcache -linman-incache-solid -linman-services-scheduler \
+  %(CAPSMS_LIBS) %(MAP_COMP_LIBS) \
+  %(TCPSRV_LIBS) %(TCAPDSP_LIBS) \
+  -linman-services-common \
+  -linman-common %(XCFG_LIBS) -lcore-threads \
+  -llogger @liblogger.so \
+  %(NETSOCK_LIBS) -lcore-buffers -lutil-URCdb \
+  -lutil -lpthread -lrt -ldl
 staticSS7:\
-inman/inman inman -L$(SMSC_BUILDDIR)/bin -L$(SS7_STACK_HOME)/lib -linman -linman-services -linman-services-tcpsrv -linman-services-tcapdsp -linman-inap-xcfg -linman-inap -l$(SS7_LIBRARY_NAME) -linman-comp -linman-services-tmwatch -linman-interaction-tcpserver -linman-interaction-asynconn -linman-common -lutil-config -lutil-xml -lcore-threads -llogger -lcore-network  -lutil-mirrorfile -lutil-csv -lutil -lutil-URCdb @liblogger.so $(XERCES_LIB) $(SOCKETLIB) -lrt -lnsl -ldl
+inman/inman inman %(CORE_SRV_LIBS) \
+  %(TCPSRV_LIBS) %(TCAPDSP_LIBS) \
+  -linman-common %(XCFG_LIBS) -lcore-threads \
+  -llogger @liblogger.so \
+  %(NETSOCK_LIBS) -lcore-buffers -lutil-URCdb \
+  -lutil -lpthread -lrt -ldl
 default:\
-inman/inman inman -L$(SMSC_BUILDDIR)/bin -linman -linman-services -linman-services-tcpsrv -linman-services-tmwatch -linman-interaction-tcpserver -linman-interaction-asynconn -linman-common -lutil-config -lutil-xml   -lcore-threads -llogger -lcore-network -lutil-mirrorfile -lutil-csv -lutil -lutil-URCdb @liblogger.so $(XERCES_LIB) $(SOCKETLIB) $(__LIBRARIES) -lrt -lnsl -ldl
+inman/inman inman %(CORE_SRV_LIBS) \
+  %(TCPSRV_LIBS) \
+  -linman-common %(XCFG_LIBS) -lcore-threads \
+  -llogger @liblogger.so \
+  %(NETSOCK_LIBS) -lcore-buffers -lutil-URCdb \
+  -lutil -lpthread -lrt -ldl
 end switch
 
