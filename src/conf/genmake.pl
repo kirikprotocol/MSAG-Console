@@ -179,7 +179,9 @@ sub generate{
         }
         if($line=~/^(\w+)=(.*)$/)
         {
-          $localVars{$1}=$2;
+          my $value=$2;
+          $value=~s/\%\((\w+)\)/if(exists($localVars{$1})){$localVars{$1};}else{print STDERR "Warning: undefined local variable $1\n";"";}/ge;
+          $localVars{$1}=$value;
           next;
         }
         # print STDERR "line to parse: $line\n";
@@ -190,7 +192,7 @@ sub generate{
         {
           next;
         }
-        $libs=~s/\%\((\w+)\)/$localVars{$1}/ge;
+        $libs=~s/\%\((\w+)\)/if(exists($localVars{$1})){$localVars{$1};}else{print STDERR "Warning: undefined local variable $1\n";"";}/ge;
         my $rawlibs=$libs;
         $libs=~s/(\$\((\w+)\))/if(exists($ENV{$2})){$ENV{$2}}else{$1}/ge;
         my $libdeps;
