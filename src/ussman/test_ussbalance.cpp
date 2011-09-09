@@ -29,8 +29,7 @@ using smsc::inman::interaction::PacketBuffer_T;
 using smsc::ussman::comp::USSOperationData;
 using smsc::ussman::comp::USSDataString;
 
-#include "util/BinDump.hpp"
-#include "inman/common/cvtutil.hpp"
+//#include "util/BinDump.hpp"
 
 
 using smsc::util::TonNpiAddress;
