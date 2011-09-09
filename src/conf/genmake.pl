@@ -190,8 +190,8 @@ sub generate{
         {
           next;
         }
-        my $rawlibs=$libs;
         $libs=~s/\%\((\w+)\)/$localVars{$1}/ge;
+        my $rawlibs=$libs;
         $libs=~s/(\$\((\w+)\))/if(exists($ENV{$2})){$ENV{$2}}else{$1}/ge;
         my $libdeps;
         for my $l(split(/\s+/,$libs))
