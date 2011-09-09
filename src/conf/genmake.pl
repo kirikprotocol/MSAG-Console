@@ -112,6 +112,7 @@ sub generate{
       # 3 - in switch, value found, but now we are not under it.
       my $switchMode;
       my $switchValue;
+      my %localVars;
       while(<$f>)
       {
         s/[\x0d\x0a]//g;
@@ -176,6 +177,11 @@ sub generate{
         {
             next;
         }
+        if($line=~/^(\w+)=(.*)$/)
+        {
+          $localVars{$1}=$2;
+          next;
+        }
         # print STDERR "line to parse: $line\n";
         my ($binname,$srcname,$libs) = split(/\s+/,$line,3);
         $line = "";
@@ -186,6 +192,7 @@ sub generate{
         }
         my $rawlibs=$libs;
         $libs=~s/(\$\((\w+)\))/if(exists($ENV{$2})){$ENV{$2}}else{$1}/ge;
+        $libs=~s/\%\((\w+)\)/$localVars{$1}/ge;
         my $libdeps;
         for my $l(split(/\s+/,$libs))
         {
