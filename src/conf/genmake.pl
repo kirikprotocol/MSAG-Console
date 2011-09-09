@@ -179,9 +179,10 @@ sub generate{
         }
         if($line=~/^(\w+)=(.*)$/)
         {
+	  my $name=$1;
           my $value=$2;
           $value=~s/\%\((\w+)\)/if(exists($localVars{$1})){$localVars{$1};}else{print STDERR "Warning: undefined local variable $1\n";"";}/ge;
-          $localVars{$1}=$value;
+          $localVars{$name}=$value;
           next;
         }
         # print STDERR "line to parse: $line\n";
