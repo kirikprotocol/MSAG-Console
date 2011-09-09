@@ -2,8 +2,24 @@
 # $Id$
 #
 
-ussman/test_ussbalance test_ussbalance -L$(SS7_STACK_HOME)/lib -L$(SMSC_BUILDDIR)/bin -lussman-interaction -linman-interaction-serializer -lussman-comp -linman-common -lutil -lutil-config -lutil-xml -lutil-csv -lcore-threads -lpthread -llogger @liblogger.so -lcore-network $(XERCES_LIB) $(__LIBRARIES) $(SOCKETLIB) -lrt -lnsl -ldl
+XCFG_LIBS=-lutil-config -lutil-xml -lutil-csv $(XERCES_LIB)
+NETSOCK_LIBS=-lcore-network $(SOCKETLIB) -lnsl
+TCPSRV_LIBS=-linman-interaction-tcpserver -linman-interaction-asynconn
+TCAPDSP_LIBS=-linman-inap-xcfg -linman-inap -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME)
+MAP_COMP_LIBS=-linman-comp -linman-common -linman-codec_inc-map -linman-asn1rt
+USS_DLG_LIBS=-lussman-inap-map_uss -linman-inap-map -lussman-comp-map_uss -lussman-comp %(MAP_COMP_LIBS)
+USSGW_PROTO_LIBS=-lussman-interaction -linman-interaction-serializer
 
-ussman/ussman ussman -L$(SMSC_BUILDDIR)/lib -L$(SS7_STACK_HOME)/lib -L$(SMSC_BUILDDIR)/bin -lussman -lussman-service -linman-inap-xcfg -linman-interaction-tcpserver -linman-interaction-asyncmgr -linman-interaction-asynconn -lussman-interaction -linman-interaction-serializer -lussman-inap-map_uss -linman-inap-map -linman-inap -l$(SS7_LIBRARY_NAME) -lussman-comp-map_uss -lussman-comp -linman-codec_inc-map -linman-asn1rt    -linman-comp -linman-common -lutil -lutil-URCdb -lutil-config -lutil-xml -lutil-csv -lcore-threads -lpthread -llogger @liblogger.so -lcore-network $(XERCES_LIB) $(__LIBRARIES) $(SOCKETLIB) -lrt -lnsl -ldl
+ussman/test_ussbalance test_ussbalance -L$(SMSC_BUILDDIR)/bin \
+  %(USSGW_PROTO_LIBS) -lussman-comp -linman-common \
+  %(XCFG_LIBS) -llogger @liblogger.so \
+  %(NETSOCK_LIBS) \
+  -lutil -lpthread -lrt -ldl
 
+ussman/ussman ussman -L$(SMSC_BUILDDIR)/bin -lussman \
+  -lussman-service -linman-interaction-asyncmgr %(USSGW_PROTO_LIBS) \
+  %(TCPSRV_LIBS) %(TCAPDSP_LIBS) %(USS_DLG_LIBS) \
+  %(XCFG_LIBS) -lcore-threads -llogger @liblogger.so \
+  %(NETSOCK_LIBS) -lcore-buffers -lutil-URCdb \
+  -lutil -lpthread -lrt -ldl
 
