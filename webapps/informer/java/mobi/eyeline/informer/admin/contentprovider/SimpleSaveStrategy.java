@@ -116,6 +116,8 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
       if(allowDeliveryCreation) {
         List<File> files = helper.getFiles(localCopy, CSV_POSFIX);
         if(!files.isEmpty()) {
+          Collections.shuffle(files);
+          long start = System.currentTimeMillis();
           final FileFormatStrategy formatStrategy = getFormatStrategy();
           for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
             try{
@@ -124,6 +126,13 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
             }catch (Exception e){
               helper.notifyInternalError(DELIVERY_PROC_ERR + " file=" + f.getName(), "Can't process delivery for user=" + user.getLogin());
               log.error(e,e);
+            }
+            long time = System.currentTimeMillis() - start;
+            if(time >= maxTimeMillis) {
+              if(log.isDebugEnabled()) {
+                log.debug("Downloading timeout reached. Stop it.");
+              }
+              break;
             }
           }
         }

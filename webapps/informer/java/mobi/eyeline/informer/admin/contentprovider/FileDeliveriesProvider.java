@@ -162,7 +162,9 @@ public class FileDeliveriesProvider implements UserDirResolver {
       scheduler.awaitTermination(SHUTDOWN_WAIT_TIME, TimeUnit.MILLISECONDS);
     }
     catch (Exception e) {
+      try{
       if(!scheduler.isShutdown() )scheduler.shutdownNow();
+      }catch (Exception ignored) {}
     }
     scheduler = null;
     mainLoopTask.shutdown();
