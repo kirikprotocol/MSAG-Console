@@ -195,7 +195,9 @@ class MainLoopTask implements Runnable {
 
     private final int group;
 
-    private final Lock lock = new ReentrantLock();
+    private final Lock usersLock = new ReentrantLock();
+
+    private final Lock runLock = new ReentrantLock();
 
     private Future task;
 
@@ -220,21 +222,21 @@ class MainLoopTask implements Runnable {
 
     public void addUser(String login) {
       try{
-        lock.lock();
+        usersLock.lock();
         users.add(login);
         removedUsers.remove(login);
       }finally {
-        lock.unlock();
+        usersLock.unlock();
       }
     }
 
     public void removeUser(String login) {
       try{
-        lock.lock();
+        usersLock.lock();
         users.remove(login);
         removedUsers.add(login);
       }finally {
-        lock.unlock();
+        usersLock.unlock();
       }
     }
 
@@ -247,17 +249,21 @@ class MainLoopTask implements Runnable {
       if(task != null) {
         task.cancel(false);
       }
-      cleanRemovedUsersDirs();
+      try{
+        runLock.lock();
+        cleanRemovedUsersDirs();
+      }finally {
+        runLock.unlock();
+      }
     }
 
     private List<String> copyUsers() {
       try{
-        lock.lock();
+        usersLock.lock();
         return new ArrayList<String>(this.users);
       }finally {
-        lock.unlock();
+        usersLock.unlock();
       }
-
     }
 
     public void run() {
@@ -271,6 +277,7 @@ class MainLoopTask implements Runnable {
 
       Set<String> checkedUcps = new HashSet<String>();
       try{
+        runLock.lock();
         for(String uS : users ) {
           if(!started) {
             return;
@@ -298,26 +305,25 @@ class MainLoopTask implements Runnable {
         getMBean().notifyInternalError(UNKNOWN_ERR, e.getMessage());
         log.error(e,e);
       }finally {
-        cleanRemovedUsersDirs();
-        if(log.isDebugEnabled()) {
-          log.debug("Group Executor finished: "+group);
+        try{
+          cleanRemovedUsersDirs();
+          if(log.isDebugEnabled()) {
+            log.debug("Group Executor finished: "+group);
+          }
+        }finally {
+          runLock.unlock();
         }
       }
     }
 
     private void cleanRemovedUsersDirs() {
-      try{
-        lock.lock();
-        if(!removedUsers.isEmpty()) {
-          for(String u : removedUsers) {
-            try{
-              cleanUserDirs(u, null);
-            }catch (Exception ignored){}
-          }
-          removedUsers.clear();
+      if(!removedUsers.isEmpty()) {
+        for(String u : removedUsers) {
+          try{
+            cleanUserDirs(u, null);
+          }catch (Exception ignored){}
         }
-      }finally {
-        lock.unlock();
+        removedUsers.clear();
       }
     }
 
