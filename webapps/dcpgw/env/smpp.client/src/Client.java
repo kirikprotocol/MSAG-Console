@@ -144,6 +144,8 @@ public class Client extends Thread implements PDUListener {
                         submitSM.setConnectionName("con2");
                     }
 
+                    //submitSM.setConnectionName("con1");
+
                     DateFormat df = DateFormat.getDateTimeInstance();
                     Calendar cal = Calendar.getInstance();
                     Date date = cal.getTime();
@@ -165,7 +167,7 @@ public class Client extends Thread implements PDUListener {
             /*for(int i=0; i<2; i++){
                 SubmitSM submitSM = new SubmitSM();
                 submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
-                submitSM.setConnectionName("env.client");
+                submitSM.setConnectionName("con1");
 
                 DateFormat df = DateFormat.getDateTimeInstance();
                 Calendar cal = Calendar.getInstance();

@@ -236,7 +236,7 @@ public class Gateway extends Thread implements PDUListener {
     }
 
 
-    public static void updateConfiguration() throws XmlConfigException {
+    public synchronized static void updateConfiguration() throws XmlConfigException {
         log.debug("Try to update configuration ...");
 
         // Update deliveries file.
