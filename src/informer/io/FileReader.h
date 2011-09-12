@@ -25,6 +25,7 @@ public:
 
         /// read record length from fb and checks its validity.
         /// for special-char-terminated records please find out it from the stream.
+        /// if the char is not found return buflen+1.
         virtual size_t readRecordLength( size_t filePos,
                                          char* buf,
                                          size_t buflen ) = 0;

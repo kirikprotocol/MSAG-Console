@@ -18,6 +18,24 @@ public:
         getlog();
     }
 
+    FileGuard( int fd ) : fd_(fd), pos_(0) {
+        getlog();
+        // setting pos
+        if ( fd != -1 ) {
+            pos_ = lseek(fd_,0,SEEK_CUR);
+            if ( off_t(pos_) == off_t(-1) ) {
+                pos_ = 0;
+            }
+        }
+    }
+
+    inline int release() {
+        const int res = fd_;
+        fd_ = -1;
+        pos_ = 0;
+        return res;
+    }
+
     ~FileGuard() {
         try {
             close();
