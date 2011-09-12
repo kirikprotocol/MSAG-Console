@@ -84,3 +84,62 @@ endswitch
   $(SSL_LIB) $(LIBICONV) \
   -lpthread $(LIBRT) -ldl \
   $(LIBMALLOC)  
+
+
+scag/tests/testRule testRule \
+  -lscag-counter-impl \
+  -lscag-re-impl \
+  -lscag-re-actions-impl \
+  -lscag-lcm-impl \
+  -lscag-transport-smpp-impl \
+  \
+  -lscag-bill-ewallet \
+  -lscag-sessions-base \
+  -lscag-lcm-base \
+  -lscag-re-base \
+  -lscag-bill-base \
+  -lscag-transport-smpp-base \
+  -lscag-transport-smpp-common \
+  -lscag-transport-smpp-router \
+  -lscag-transport-http-base \
+  -lscag-stat-base \
+  -lscag-pvss-data \
+  -lscag-pvss-api-packets \
+  -lscag-pvss-common \
+  \
+  -lscag-counter \
+  -lscag-transport \
+  \
+  -lscag-config-base \
+  \
+switch SNMP
+YES: -lscag-snmp -lscag-snmp-counters \
+endswitch
+  \
+  -lscag-util-properties \
+  -lscag-util-storage \
+  -lscag-util-memory \
+  -lscag-util-singleton \
+  -lscag-util-encodings \
+  -lscag-util-io \
+  -lscag-util \
+  -lscag-exc \
+  -linformer-io \
+  -lcore-buffers \
+  -lsms -lcore-network $(SOCKETLIB) $(LIBNSL) \
+  -lcore-threads \
+  \
+  -lutil-config \
+  -lutil-xml \
+  -lutil-recoder-recode_dll \
+  -lutil-regexp \
+  $(XERCES_LIB) \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil \
+  $(__LIBRARIES) \
+switch SNMP
+YES: $(SNMP_LIBS_CORE) \
+endswitch
+  $(SSL_LIB) $(LIBICONV) \
+  -lpthread $(LIBRT) -ldl \
+  $(LIBMALLOC)  

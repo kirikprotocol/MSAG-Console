@@ -38,8 +38,9 @@ public:
     void init( const std::string& dir );
 
     virtual ActionFactory& getActionFactory() {return factory;}
-    virtual void updateRule(RuleKey& key);
-    virtual void removeRule(RuleKey& key);
+    virtual void updateRule(const RuleKey& key);
+    virtual void removeRule(const RuleKey& key);
+    void loadRuleFile( const RuleKey& key, const std::string& rulePath );
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, actions::CommandProperty& cp, util::HRTiming* hrt = 0);
     virtual void finalizeSession(Session& session, RuleStatus& rs);
 
@@ -172,6 +173,9 @@ private:
     Rules* rules;
     Mutex   changeLock;
     Hash<Property> ConstantsHash;
+
+    class AutoRuleTester;
+    AutoRuleTester* autoRuleTester_;
 };
 
 } // namespace re

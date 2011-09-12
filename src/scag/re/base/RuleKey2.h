@@ -14,6 +14,12 @@ struct RuleKey
         return serviceId==key.serviceId && transport==key.transport;
     }
     RuleKey() : serviceId(-1) {};
+    static RuleKey create( int transport, int servId ) {
+        RuleKey key;
+        key.transport = transport;
+        key.serviceId = servId;
+        return key;
+    }
 };
 
 }}

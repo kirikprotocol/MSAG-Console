@@ -38,8 +38,8 @@ public:
     /// this method is invoked (directly) for session destruction only!
     virtual void finalizeSession(Session& session, RuleStatus& rs) = 0;
 
-    virtual void updateRule(RuleKey& key) = 0;
-    virtual void removeRule(RuleKey& key) = 0;
+    virtual void updateRule(const RuleKey& key) = 0;
+    virtual void removeRule(const RuleKey& key) = 0;
 //    virtual ActionFactory& getActionFactory() = 0;
     virtual smsc::core::buffers::Hash<TransportType>& getTransportTypeHash() = 0;
 //    virtual bool findTransport(const char * name, TransportType& transportType) = 0;

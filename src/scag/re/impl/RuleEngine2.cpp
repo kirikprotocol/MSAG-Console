@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #include <xercesc/util/PlatformUtils.hpp>
@@ -20,9 +21,148 @@
 #include "util/regexp/RegExp.hpp"
 #include "scag/util/HRTimer.h"
 #include "scag/util/singleton/XercesSingleton.h"
+#include "core/threads/Thread.hpp"
+#include "core/synchronization/EventMonitor.hpp"
+#include "informer/io/DirListing.h"
+#include "informer/io/FileGuard.h"
+#include "informer/io/Typedefs.h"
 
 namespace scag2 {
 namespace re {
+
+using namespace smsc::core::synchronization;
+using namespace eyeline::informer;
+
+class RuleFileCollector
+{
+public:
+    RuleFileCollector( std::vector< RuleKey >& rulelist,
+                       int transport ) : rules_(rulelist), trans_(transport) {}
+    inline bool operator() ( const char* fn ) const
+    {
+        // "rule_XXX.xml";
+        int servid, pos = 0;
+        sscanf(fn,"rule_%d.xml%n",&servid,&pos);
+        if ( size_t(pos) != strlen(fn) ) return false;
+        rules_.push_back( RuleKey() );
+        rules_.back().serviceId = servid;
+        rules_.back().transport = trans_;
+        return false;
+    }
+private:
+    std::vector< RuleKey >& rules_;
+    int trans_;
+};
+
+
+class RuleEngineImpl::AutoRuleTester : protected smsc::core::threads::Thread
+{
+public:
+    AutoRuleTester( RuleEngineImpl& re, const std::string& autodir ) :
+        log_(smsc::logger::Logger::getInstance("re.autolog")),
+        re_(&re),
+        autodir_(autodir),
+        stopping_(false) {}
+
+    ~AutoRuleTester() {
+        stop();
+        WaitFor();
+    }
+
+    void start() {
+        Start();
+    }
+
+    void stop() {
+        MutexGuard mg(mon_);
+        stopping_ = true;
+        mon_.notify();
+    }
+
+    int Execute() {
+        smsc_log_debug(log_,"auto rule tester started, dir = '%s'", autodir_.c_str());
+        msgtime_type nextTime = currentTimeSeconds() + 20;
+        const msgtime_type reloadPeriod = 3;
+        int currentIter = 0;
+        while ( ! stopping_ ) {
+
+            // sleeping a little
+            const msgtime_type currentTime = currentTimeSeconds();
+            {
+                if ( currentTime < nextTime ) {
+                    MutexGuard mg(mon_);
+                    mon_.wait( (nextTime-currentTime)*1000 );
+                    continue;
+                }
+            }
+
+            std::string fromRules = autodir_;
+            char buf[20];
+            sprintf(buf,"/%d/",currentIter);
+            fromRules.append(buf);
+            struct stat st;
+            if ( 0 != ::stat(fromRules.c_str(),&st) || !S_ISDIR(st.st_mode) ) {
+                currentIter = 0;
+                nextTime = currentTime + 1;
+                continue;
+            }
+            smsc_log_info(log_,"starting iteration %d",currentIter);
+
+            ++currentIter;
+            nextTime = currentTime + reloadPeriod;
+
+            std::vector< RuleKey > rulelist;
+            char* transportKey;
+            scag::transport::TransportType transportVal;
+            for ( Hash<scag::transport::TransportType>::Iterator it(&(re_->TransportTypeHash));
+                  it.Next(transportKey,transportVal); ) {
+                std::string transDir = fromRules + transportKey + "/";
+                std::vector< std::string > fakelist;
+                try {
+                    makeDirListing( RuleFileCollector(rulelist,transportVal),
+                                    S_IFREG).list( transDir.c_str(), fakelist);
+                } catch ( std::exception& e ) {
+                    smsc_log_debug(log_,"exc while scan dir '%s': %s",
+                                   transDir.c_str(), e.what());
+                }
+            }
+
+            const std::string todir = re_->RulesDir + "/";
+            try {
+                FileGuard::copydir( fromRules.c_str(), todir.c_str(), 2 );
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"exc in copydir '%s' -> '%s'",
+                              fromRules.c_str(),todir.c_str());
+            }
+
+            // and finally, apply all rules
+            for ( std::vector< RuleKey >::const_iterator it( rulelist.begin() );
+                  it != rulelist.end(); ++it ) {
+                try {
+                    smsc_log_info(log_,"starting updateRule(%d,%d)",it->transport,it->serviceId);
+                    re_->updateRule( *it );
+                    smsc_log_info(log_,"updateRule(%d,%d) finished",it->transport,it->serviceId);
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"exc in updateRule(%d,%d): %s",
+                                  it->transport, it->serviceId, e.what());
+                }
+            }
+
+            nextTime = currentTimeSeconds() + reloadPeriod;
+        }
+        smsc_log_debug(log_,"auto rule tester stopped");
+        return 0;
+    }
+
+private:
+    smsc::logger::Logger* log_;
+    smsc::core::synchronization::EventMonitor mon_;
+    RuleEngineImpl*       re_;
+    std::string           autodir_;
+    bool                  stopping_;
+};
+
+// =========================================================================
 
 void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
 {
@@ -417,22 +557,38 @@ void RuleEngineImpl::init( const std::string& dir )
 
     RulesDir = dir;
 
+    if ( !dir.empty() ) {
 
-    char * transportkey = 0;
-    scag::transport::TransportType value;
+        char * transportkey = 0;
+        scag::transport::TransportType value;
 
-    std::string currentDir;
+        std::string currentDir;
 
-    TransportTypeHash.First();
-    for (Hash <scag::transport::TransportType>::Iterator it = TransportTypeHash.getIterator(); it.Next(transportkey, value);)
-    {
-        currentDir = dir;
-        currentDir.append("/");
-        currentDir.append(transportkey);
+        TransportTypeHash.First();
+        for (Hash <scag::transport::TransportType>::Iterator it = TransportTypeHash.getIterator(); it.Next(transportkey, value);)
+        {
+            currentDir = dir;
+            currentDir.append("/");
+            currentDir.append(transportkey);
 
-        smsc_log_info(logger,"Rule Engine: Init transport %s...", transportkey);
-        ReadRulesFromDir(value, currentDir.c_str());
-        smsc_log_info(logger,"Rule Engine: Transport %s inited", transportkey);
+            smsc_log_info(logger,"Rule Engine: Init transport %s...", transportkey);
+            ReadRulesFromDir(value, currentDir.c_str());
+            smsc_log_info(logger,"Rule Engine: Transport %s inited", transportkey);
+        }
+
+        // auto rule tester
+        struct stat st;
+        std::string autodir = RulesDir;
+        while ( autodir[autodir.size()-1] == '/' ) {
+            autodir.erase(autodir.size()-1);
+        }
+        autodir += ".autorules";
+        if ( 0 != ::stat(autodir.c_str(),&st) || !S_ISDIR(st.st_mode) ) {
+            smsc_log_debug(logger,"Rule Engine auto rule tester is not started");
+        } else {
+            autoRuleTester_ = new AutoRuleTester(*this,autodir);
+            autoRuleTester_->start();
+        }
     }
 
     smsc_log_info(logger,"Rule Engine inited successfully...");
@@ -440,11 +596,16 @@ void RuleEngineImpl::init( const std::string& dir )
 }
 
 
-void RuleEngineImpl::updateRule(RuleKey& key)
+void RuleEngineImpl::updateRule(const RuleKey& key)
+{
+    const std::string filename = CreateRuleFileName(RulesDir,key);
+    loadRuleFile( key, filename );
+}
+
+
+void RuleEngineImpl::loadRuleFile( const RuleKey& key, const std::string& filename )
 {
     MutexGuard mg(changeLock);
-
-    std::string filename = CreateRuleFileName(RulesDir,key);
     Rule* newRule = ParseFile(filename);
     if (!newRule) 
         throw SCAGException("Cannod load rule %d from file %s", key.serviceId, filename.c_str());
@@ -463,7 +624,7 @@ void RuleEngineImpl::updateRule(RuleKey& key)
 }
 
 
-void RuleEngineImpl::removeRule(RuleKey& key)
+void RuleEngineImpl::removeRule(const RuleKey& key)
 {
     MutexGuard mg(changeLock);
 
@@ -479,13 +640,16 @@ void RuleEngineImpl::removeRule(RuleKey& key)
 }
 
 RuleEngineImpl::RuleEngineImpl() :
-rules(0)
+rules(0), autoRuleTester_(0)
 {
     logger = Logger::getInstance("scag.re");
 }
 
 RuleEngineImpl::~RuleEngineImpl()
 {
+    if (autoRuleTester_) {
+        delete autoRuleTester_;
+    }
     XMLPlatformUtils::Terminate();
     if (rules) rules->unref();
 
