@@ -237,6 +237,17 @@ int main(int argc,char* argv[])
           "Product",
           0
     };
+
+    const char* pvssKeys[] = 
+    {
+          "Organization",
+          "Hostids",
+          "LicenseExpirationDate",
+          "LicenseType",
+          "Product",
+          0
+    };
+
     const char** lkeys = 0;
     if (strcmp(argv[1],"smsc")==0 ) {
         lkeys = smscKeys;
@@ -244,6 +255,8 @@ int main(int argc,char* argv[])
         lkeys = scagKeys;
     } else if ( strcmp(argv[1],"infosme")==0 ) {
         lkeys = infosmeKeys;
+    } else if ( strcmp(argv[1],"pvss") == 0 ) {
+        lkeys = pvssKeys;
     }
     if (!lkeys) {
       fprintf(stderr,"Product %s is not supported\n",argv[1]);
