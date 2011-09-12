@@ -167,9 +167,7 @@ public:
         return stopFlag_;
     }
 
-    virtual size_t recordLengthSize() const {
-        return LENSIZE;
-    }
+    virtual size_t recordLengthSize() const { return LENSIZE; }
 
     virtual size_t readRecordLength( size_t filePos, char* buf, size_t buflen )
     {

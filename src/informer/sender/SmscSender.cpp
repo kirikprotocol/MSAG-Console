@@ -78,9 +78,7 @@ public:
             return getCS()->isStopping(); // sender_.isStopping_;
         }
 
-        virtual size_t recordLengthSize() const {
-            return LENSIZE;
-        }
+        virtual size_t recordLengthSize() const { return LENSIZE; }
 
         virtual size_t readRecordLength( size_t filePos, char* buf, size_t buflen )
         {
