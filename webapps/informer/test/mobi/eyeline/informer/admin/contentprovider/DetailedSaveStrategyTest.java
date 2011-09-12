@@ -372,10 +372,35 @@ public class DetailedSaveStrategyTest {
   @Test
   public void testMaxTimeDownloading() throws Exception {
 
+    shutdown();
+
+    resourceOptions.setMaxTimeSec(0);
+
+    _init();
+
     File resourceFile1 = prepareResourceFile(false, null);
     fs.rename(resourceFile1, resourceFile1 = new File(resourceFile1.getParent(), "test_max_time1.csv"));
     File resourceFile2 = prepareResourceFile(false, null);
     fs.rename(resourceFile2, resourceFile2 = new File(resourceFile2.getParent(), "test_max_time2.csv"));
+
+    strategy.synchronize(true);
+
+    boolean exist1 = fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test_max_time1.csv"));
+    boolean exist2 = fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test_max_time2.csv"));
+
+    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
+
+    strategy.synchronize(true);
+
+    exist1 = fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test_max_time1.csv"));
+    exist2 = fs.exists(new File("workDir" + File.separatorChar + "detailedLocalCopy", "test_max_time2.csv"));
+
+    assertTrue("One of the file exists", exist1 && exist2);
+  }
+
+
+  @Test
+  public void testMaxTimeUploading() throws Exception {
 
     shutdown();
 
@@ -383,61 +408,42 @@ public class DetailedSaveStrategyTest {
 
     _init();
 
-    strategy.process(true);
+    File finishedLocal1 = createEmptyLocalFile(null);
+    fs.rename(finishedLocal1, finishedLocal1 = new File(finishedLocal1.getParent(), "file1.csv.finished"));
+    File resourceActive1 = createEmptyResourceFile(null);
+    fs.rename(resourceActive1, new File(resourceActive1.getParent(), "file1.csv.active"));
+    File resourceActive2 = createEmptyResourceFile(null);
+    fs.rename(resourceActive2, new File(resourceActive2.getParent(), "file2.csv.active"));
+    File finishedLocal2 = createEmptyLocalFile(null);
+    fs.rename(finishedLocal2, finishedLocal2 = new File(finishedLocal1.getParent(), "file2.csv.finished"));
+    File reportLocal1 = createEmptyLocalFile(null);
+    fs.rename(reportLocal1, reportLocal1 = new File(reportLocal1.getParent(), "file1.csv.report"));
+    File reportLocal2 = createEmptyLocalFile(null);
+    fs.rename(reportLocal2, reportLocal2 = new File(reportLocal2.getParent(), "file2.csv.report"));
 
-    boolean exist1 = fs.exists(resourceFile1);
-    boolean exist2 = fs.exists(resourceFile2);
+    strategy.synchronize(false);
 
-    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
+    boolean exist1 = fs.exists(new File(resourceActive1.getParent(), "file1.csv.finished"));
+    boolean exist2 = fs.exists(new File(resourceActive2.getParent(), "file2.csv.finished"));
 
-    strategy.process(true);
+    assertTrue("File doesn't exist", (exist1 || exist2) && !(exist1 && exist2));
 
-    exist1 = fs.exists(resourceFile1);
-    exist2 = fs.exists(resourceFile2);
+    exist1 = fs.exists(new File(resourceActive1.getParent(), "file1.csv.report"));
+    exist2 = fs.exists(new File(resourceActive2.getParent(), "file2.csv.report"));
 
-    assertFalse("One of the file exists", exist1 || exist2);
-  }
+    assertTrue("File doesn't exist", (exist1 || exist2) && !(exist1 && exist2));
 
+    strategy.synchronize(false);          // second file
 
-  @Test
-  public void testMaxTimeUploading() throws Exception {
+    exist1 = fs.exists(new File(resourceActive1.getParent(), "file1.csv.finished"));
+    exist2 = fs.exists(new File(resourceActive2.getParent(), "file2.csv.finished"));
 
-    File resourceFile1 = prepareResourceFile(false, null);
-    fs.rename(resourceFile1, resourceFile1 = new File(resourceFile1.getParent(), "test_max_time1.csv"));
-    File resourceFile2 = prepareResourceFile(false, null);
-    fs.rename(resourceFile2, resourceFile2 = new File(resourceFile2.getParent(), "test_max_time2.csv"));
+    assertTrue("File doesn't exist", exist1 && exist2);
 
-    resourceOptions.setMaxTimeSec(0);
+    exist1 = fs.exists(new File(resourceActive1.getParent(), "file1.csv.report"));
+    exist2 = fs.exists(new File(resourceActive2.getParent(), "file2.csv.report"));
 
-    _init();
-
-    strategy.synchronize(true);          // first file
-
-    strategy.synchronize(true);          // second file
-
-    strategy.process(true);
-
-    boolean exist1 = fs.exists(resourceFile1);
-    boolean exist2 = fs.exists(resourceFile2);
-
-    assertFalse("One of the file exists", exist1 || exist2);
-
-    Thread.sleep(51);
-    deliveryManager.forceModifyDeliveries();
-
-
-    strategy.process(true); //uploads first file
-
-    exist1 = fs.exists(new File(resourceFile1.getAbsolutePath() + ".finished"));
-    exist2 = fs.exists(new File(resourceFile2.getAbsolutePath() + ".finished"));
-
-
-    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
-
-    exist1 = fs.exists(new File(resourceFile1.getAbsolutePath() + ".report"));
-    exist2 = fs.exists(new File(resourceFile2.getAbsolutePath() + ".report"));
-
-    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
+    assertTrue("File doesn't exist", exist1 && exist2);
 
   }
 

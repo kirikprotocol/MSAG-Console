@@ -11,9 +11,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * author: Aleksandr Khalitov
@@ -81,7 +79,8 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
   }
 
   private void downloadFilesFromResource(FileResource resource) throws AdminException {
-    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
+    List<String> remoteFiles = new ArrayList<String>(resource.listFiles());
+    Collections.shuffle(remoteFiles);
 
     long start = System.currentTimeMillis();
     for (String remoteCsvFile : remoteFiles) {
@@ -108,18 +107,16 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
   private void synchronizeInProcess(FileResource resource) throws AdminException {
     Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
-    File[] inProcessFiles = helper.getFiles(localCopy, IN_PROCESS);
-    if(inProcessFiles != null) {
-      for (File localInProcessFile : inProcessFiles) {
-        String csvFile = csvFileFromWorkFile(localInProcessFile.getName());
-        if (remoteFiles.contains(csvFile)) {
-          resource.rename(csvFile, localInProcessFile.getName());
-        } else if (!remoteFiles.contains(localInProcessFile.getName())){
-          fileSys.delete(localInProcessFile);
-          File localReportFile = new File(localCopy, buildReportName(csvFile));
-          if(fileSys.exists(localReportFile)) {
-            fileSys.delete(localReportFile);
-          }
+    List<File> inProcessFiles = helper.getFiles(localCopy, IN_PROCESS);
+    for (File localInProcessFile : inProcessFiles) {
+      String csvFile = csvFileFromWorkFile(localInProcessFile.getName());
+      if (remoteFiles.contains(csvFile)) {
+        resource.rename(csvFile, localInProcessFile.getName());
+      } else if (!remoteFiles.contains(localInProcessFile.getName())){
+        fileSys.delete(localInProcessFile);
+        File localReportFile = new File(localCopy, buildReportName(csvFile));
+        if(fileSys.exists(localReportFile)) {
+          fileSys.delete(localReportFile);
         }
       }
     }
@@ -127,25 +124,22 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
   private void synchronizeFinished(FileResource resource) throws AdminException {
     Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
-    File[] finishedFiles = helper.getFiles(localCopy, FINISHED);
-    if(finishedFiles != null) {
-      long start = System.currentTimeMillis();
-      for(File localFinishedFile : finishedFiles) {
-        if (remoteFiles.contains(localFinishedFile.getName()))
-          continue;
+    List<File> finishedFiles = helper.getFiles(localCopy, FINISHED);
+    Collections.shuffle(finishedFiles);
+    long start = System.currentTimeMillis();
+    for(File localFinishedFile : finishedFiles) {
+      if (remoteFiles.contains(localFinishedFile.getName()))
+        continue;
 
-        String localCsvFile = csvFileFromWorkFile(localFinishedFile.getName());
-        File localReportFile = new File(localCopy, buildReportName(localCsvFile));
-        String localInProcessFile = buildInProcess(localCsvFile);
+      String localCsvFile = csvFileFromWorkFile(localFinishedFile.getName());
+      File localReportFile = new File(localCopy, buildReportName(localCsvFile));
+      String localInProcessFile = buildInProcess(localCsvFile);
 
-        if(remoteFiles.contains(localInProcessFile)) {
-          if(fileSys.exists(localReportFile) && !remoteFiles.contains(localReportFile.getName()))
-            helper.uploadFileToResource(resource, localReportFile, remoteFiles);
-          resource.rename(localInProcessFile, localFinishedFile.getName());
-        } else {
-          fileSys.delete(localReportFile);
-          fileSys.delete(localFinishedFile);
-        }
+      if(remoteFiles.contains(localInProcessFile)) {
+        if(fileSys.exists(localReportFile) && !remoteFiles.contains(localReportFile.getName()))
+          helper.uploadFileToResource(resource, localReportFile, remoteFiles);
+        resource.rename(localInProcessFile, localFinishedFile.getName());
+
         long time = System.currentTimeMillis() - start;
         if(time >= maxTimeMillis) {
           if(log.isDebugEnabled()) {
@@ -153,6 +147,10 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
           }
           break;
         }
+
+      } else {
+        fileSys.delete(localReportFile);
+        fileSys.delete(localFinishedFile);
       }
     }
   }
@@ -202,16 +200,34 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       if (list == null)
         return;
 
+      List<File> fs = Arrays.asList(list);
+
+      Collections.shuffle(fs);
+
       FileFormatStrategy formatStrategy = getFormatStrategy();
 
-      for(File f : list) {
+      long start = System.currentTimeMillis();
+      for(File f : fs) {
         try{
+          long time = System.currentTimeMillis() - start;
           if(allowCreate && f.getName().endsWith(CSV_POSFIX)) {
             helper.logProcessFile(f.getName());
             processCsvFile(formatStrategy, f);
+            if(time >= maxTimeMillis) {
+              if(log.isDebugEnabled()) {
+                log.debug("Processing timeout reached. Stop it.");
+              }
+              break;
+            }
           }else if(f.getName().endsWith(IN_PROCESS)) {
             helper.logProcessFile(f.getName());
             processInProcessFile(formatStrategy, f);
+            if(time >= maxTimeMillis) {
+              if(log.isDebugEnabled()) {
+                log.debug("Processing timeout reached. Stop it.");
+              }
+              break;
+            }
           }
         } catch (Exception e){
           helper.notifyInternalError(DELIVERY_PROC_ERR+" file="+f.getName(), "Can't process delivery for user="+user.getLogin());

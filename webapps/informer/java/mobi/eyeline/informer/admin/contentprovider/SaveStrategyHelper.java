@@ -13,9 +13,7 @@ import mobi.eyeline.informer.util.MD5Encoder;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * author: Aleksandr Khalitov
@@ -103,13 +101,14 @@ class SaveStrategyHelper {
     return fileName.substring(0, fileName.lastIndexOf(".csv"));
   }
 
-  File[] getFiles(File localCopy, final String posfix) {
-    return fileSys.listFiles(localCopy, new FileFilter() {
+  List<File> getFiles(File localCopy, final String posfix) {
+    File[] fs =  fileSys.listFiles(localCopy, new FileFilter() {
       @Override
       public boolean accept(File pathname) {
         return pathname.getName().endsWith(posfix);
       }
     });
+    return fs == null ? Collections.<File>emptyList() : Arrays.asList(fs);
   }
 
   private DeliveryPrototype createProto(String deliveryName, Address sourceAddr) throws AdminException {

@@ -10,6 +10,8 @@ import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * author: Aleksandr Khalitov
@@ -64,7 +66,9 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
       resource.open();
 
       long start = System.currentTimeMillis();
-      for(String remoteCsvFile : resource.listFiles()) {
+      List<String> files = resource.listFiles();
+      Collections.shuffle(files);
+      for(String remoteCsvFile : files) {
         if(!remoteCsvFile.endsWith(".csv")) {
           continue;
         }
@@ -110,8 +114,8 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
       synchronize(allowDeliveryCreation);
 
       if(allowDeliveryCreation) {
-        File[] files = helper.getFiles(localCopy, CSV_POSFIX);
-        if(files != null && files.length>0) {
+        List<File> files = helper.getFiles(localCopy, CSV_POSFIX);
+        if(!files.isEmpty()) {
           final FileFormatStrategy formatStrategy = getFormatStrategy();
           for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
             try{
