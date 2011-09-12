@@ -36,12 +36,32 @@ class WebConfigSettings {
 
   private CpFileFormat cpFileFormat = CpFileFormat.EYELINE;
 
+  private int cpGroupSize = 1;
+
+  private int cpMaxTimeSec = 60;
+
   public CpFileFormat getCpFileFormat() {
     return cpFileFormat;
   }
 
   public void setCpFileFormat(CpFileFormat cpFileFormat) {
     this.cpFileFormat = cpFileFormat;
+  }
+
+  public int getCpMaxTimeSec() {
+    return cpMaxTimeSec;
+  }
+
+  public void setCpMaxTimeSec(int cpMaxTimeSec) {
+    this.cpMaxTimeSec = cpMaxTimeSec;
+  }
+
+  public int getCpGroupSize() {
+    return cpGroupSize;
+  }
+
+  public void setCpGroupSize(int cpGroupSize) {
+    this.cpGroupSize = cpGroupSize;
   }
 
   public String getWorkDir() {

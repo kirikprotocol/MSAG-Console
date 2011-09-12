@@ -34,6 +34,33 @@ class WebConfigManager extends BaseManager<WebConfigSettings> {
   }
 
   /**
+   * Возвращает максимальное время операций с ресурсом контент провайдера
+   *
+   * @return формат файлов
+   */
+  public Integer getCpMaxTime() {
+    return readSettings(new SettingsReader<WebConfigSettings, Integer>() {
+      public Integer executeRead(WebConfigSettings settings) {
+        return settings.getCpMaxTimeSec();
+      }
+    });
+  }
+
+  /**
+   * Возвращает кол-во групп пользователей для обработки контент провайдром
+   *
+   * @return кол-во групп пользователей для обработки контент провайдром
+   */
+  public Integer getCpGroupSize() {
+    return readSettings(new SettingsReader<WebConfigSettings, Integer>() {
+      public Integer executeRead(WebConfigSettings settings) {
+        return settings.getCpGroupSize();
+      }
+    });
+  }
+
+
+  /**
    * Возвращает формат файлов импорта рассылок
    *
    * @return формат файлов

@@ -348,7 +348,7 @@ class SaveStrategyHelper {
 
             return m;
           } catch (Exception e) {
-            log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.",e);
+            log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.", e);
           }
         }
       } catch (IOException ioe) {

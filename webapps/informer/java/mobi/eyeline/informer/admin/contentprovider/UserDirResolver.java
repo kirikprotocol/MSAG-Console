@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * Copyright Eyeline.mobi
@@ -16,6 +17,8 @@ import java.io.File;
 interface UserDirResolver {
 
   public File getUserLocalDir(String login, UserCPsettings ucps) throws AdminException;
+
+  public Collection<File> getAllUserLocalDirs(String login) throws AdminException;
 
   public FileResource getConnection(User user, UserCPsettings ucps) throws AdminException;
 

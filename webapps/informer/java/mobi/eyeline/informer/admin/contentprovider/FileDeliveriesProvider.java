@@ -8,6 +8,10 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -26,14 +30,19 @@ public class FileDeliveriesProvider implements UserDirResolver {
   private static final long SHUTDOWN_WAIT_TIME = 2000L;
   private FileSystem fileSys;
   private ContentProviderContext context;
-  private File informerBase;
-  private File workDir;
+  private final File informerBase;
+  private final File workDir;
+  private final int groupSize;
+  private final int maxTimeSec;
+
+  private MainLoopTask mainLoopTask;
 
 
-
-  public FileDeliveriesProvider(ContentProviderContext context, File informerBase, File workDir) throws AdminException {
+  public FileDeliveriesProvider(ContentProviderContext context, File informerBase, File workDir, int groupSize, int maxTimeSec) throws AdminException {
     this.context = context;
     this.informerBase = informerBase;
+    this.groupSize = groupSize;
+    this.maxTimeSec = maxTimeSec;
     this.workDir = new File(workDir,"contentProvider");
 
     fileSys=context.getFileSystem();
@@ -60,7 +69,8 @@ public class FileDeliveriesProvider implements UserDirResolver {
       }
     });
 
-    scheduler.scheduleAtFixedRate(new MainLoopTask(context,this,workDir),0, 60, TimeUnit.SECONDS);
+    mainLoopTask = new MainLoopTask(context, this ,workDir, groupSize, maxTimeSec);
+    scheduler.scheduleAtFixedRate(mainLoopTask, 60, 60, TimeUnit.SECONDS);
 
     if (log.isDebugEnabled())
       log.debug("Content Provider Daemon successfully started.");
@@ -68,6 +78,32 @@ public class FileDeliveriesProvider implements UserDirResolver {
 
   public File getUserLocalDir(String login, UserCPsettings ucps) throws AdminException {
     return new File(workDir,login+"_"+ucps.getHashId());
+  }
+
+  @Override
+  public Collection<File> getAllUserLocalDirs(final String login) throws AdminException {
+    File[] files = fileSys.listFiles(workDir, new FileFilter() {
+      @Override
+      public boolean accept(File pathname) {
+        if(!fileSys.isDirectory(pathname)) {
+          return false;
+        }
+        int i = pathname.getName().indexOf(login);
+        if(i != 0) {
+          return false;
+        }
+        if(pathname.getName().substring(login.length()).length() != 33) {
+          return false;
+        }
+        return true;
+      }
+    });
+    if(files == null) {
+      return Collections.emptyList();
+    }
+    Collection<File> res = new ArrayList<File>(files.length);
+    Collections.addAll(res, files);
+    return res;
   }
 
   public FileResource getConnection(User user, UserCPsettings ucps) throws AdminException {
@@ -120,14 +156,16 @@ public class FileDeliveriesProvider implements UserDirResolver {
     if (log.isDebugEnabled())
       log.debug("Content Provider Daemon shutdowning...");
 
+
     scheduler.shutdown();
     try {
       scheduler.awaitTermination(SHUTDOWN_WAIT_TIME, TimeUnit.MILLISECONDS);
     }
-    catch (InterruptedException e) {
+    catch (Exception e) {
       if(!scheduler.isShutdown() )scheduler.shutdownNow();
     }
     scheduler = null;
+    mainLoopTask.shutdown();
 
     if (log.isDebugEnabled())
       log.debug("Content Provider Daemon shutdowned.");

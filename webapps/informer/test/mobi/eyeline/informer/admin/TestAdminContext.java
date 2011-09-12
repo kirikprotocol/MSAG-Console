@@ -278,7 +278,7 @@ public class TestAdminContext extends AdminContext {
       deliveryNotificationsProvider = new DeliveryNotificationsProvider(this, webConfig.getNotificationSettings());
       deliveryChangesDetector.addListener(deliveryNotificationsProvider);
 
-      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir);
+      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getCpGroupSize(), webConfig.getCpMaxTime());
 
       siebelProvider = new SiebelProvider(this, webConfig.getSiebelSettings(), workDir);
 

@@ -21,9 +21,10 @@ class ResourceOptions {
   Integer port;
   UserCPsettings.Protocol protocol;
   String path;
+  int maxTimeSec;
 
 
-  ResourceOptions(User u, File workDir, UserCPsettings s) {
+  ResourceOptions(User u, File workDir, UserCPsettings s, int maxTimeSec) {
     this.user = u;
     this.workDir = workDir;
     this.sourceAddress = s.getSourceAddress();
@@ -33,6 +34,7 @@ class ResourceOptions {
     this.port = s.getPort();
     this.protocol = s.getProtocol();
     this.path = s.getDirectory();
+    this.maxTimeSec = maxTimeSec;
   }
 
   public String getPath() {
@@ -85,5 +87,13 @@ class ResourceOptions {
 
   public void setEncoding(String encoding) {
     this.encoding = encoding;
+  }
+
+  public int getMaxTimeSec() {
+    return maxTimeSec;
+  }
+
+  public void setMaxTimeSec(int maxTimeSec) {
+    this.maxTimeSec = maxTimeSec;
   }
 }

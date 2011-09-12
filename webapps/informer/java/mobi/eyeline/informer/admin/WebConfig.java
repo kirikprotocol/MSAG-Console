@@ -79,6 +79,12 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     if(settings.getCpFileFormat() != null) {
       cp.setString("fileFormat", settings.getCpFileFormat().toString());
     }
+    if(settings.getCpGroupSize() != 0) {
+      cp.setInt("groupSize", settings.getCpGroupSize());
+    }
+    if(settings.getCpMaxTimeSec() != 0 ) {
+      cp.setInt("maxTimeSec", settings.getCpMaxTimeSec());
+    }
 
     config.save(newFile);
   }
@@ -140,6 +146,13 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       if(webconfig.containsSection("contentProvider")) {
         XmlConfigSection cp = webconfig.getSection("contentProvider");
         fF = cp.getString("fileFormat", null);
+        int gS = cp.getInt("groupSize", 1);
+        if(gS == 0) {
+          gS = 1;
+        }
+        settings.setCpGroupSize(gS);
+        int mT = cp.getInt("maxTimeSec", 0);
+        settings.setCpMaxTimeSec(mT);
       }
       settings.setCpFileFormat(fF == null || fF.length() == 0 ? CpFileFormat.EYELINE : CpFileFormat.valueOf(fF));
 

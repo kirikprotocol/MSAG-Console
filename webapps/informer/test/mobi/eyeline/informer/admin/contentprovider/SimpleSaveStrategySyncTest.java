@@ -23,7 +23,7 @@ public class SimpleSaveStrategySyncTest {
   private SimpleSaveStrategy createStrategy(MemoryFileSystem fs, FileResourceStub remoteResource) throws AdminException {
     UserCPsettings s = new UserCPsettings();
     s.setCreateReports(true);
-    ResourceOptions opts =  new ResourceOptions(new User(), workDir, s);
+    ResourceOptions opts =  new ResourceOptions(new User(), workDir, s, 60);
     ContentProviderContextStub ctx = new ContentProviderContextStub(fs);
     return new SimpleSaveStrategy(ctx, remoteResource, opts);
   }

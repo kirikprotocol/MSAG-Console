@@ -45,7 +45,7 @@ public class DetailedSaveStrategyTest {
 
     settings = prepareSettings();
     user = prepareUser();
-    resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
+    resourceOptions = new ResourceOptions(user, new File("workDir"), settings, 60);
     resourceOptions.setSourceAddress(new Address("+79139489906"));
     resourceOptions.setEncoding("utf-8");
     _init();
@@ -145,7 +145,7 @@ public class DetailedSaveStrategyTest {
 
     settings = prepareSettings();
     settings.setCreateReports(false);
-    resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
+    resourceOptions = new ResourceOptions(user, new File("workDir"), settings, 60);
     resourceOptions.setSourceAddress(new Address("+79139489906"));
     resourceOptions.setEncoding("utf-8");
     _init();
@@ -179,7 +179,7 @@ public class DetailedSaveStrategyTest {
     settings = prepareSettings();
     settings.setWorkType(UserCPsettings.WorkType.detailed);
     settings.setCreateReports(true);
-    resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
+    resourceOptions = new ResourceOptions(user, new File("workDir"), settings, 60);
     resourceOptions.setSourceAddress(new Address("+79139489906"));
     resourceOptions.setEncoding("utf-8");
     _init();
@@ -287,7 +287,7 @@ public class DetailedSaveStrategyTest {
 
     settings = prepareSettings();
     settings.setCreateReports(false);
-    resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
+    resourceOptions = new ResourceOptions(user, new File("workDir"), settings, 60);
     resourceOptions.setSourceAddress(new Address("+79139489906"));
     resourceOptions.setEncoding("utf-8");
     _init();
@@ -338,7 +338,7 @@ public class DetailedSaveStrategyTest {
     user = prepareUser();
 
     settings = prepareSettings();
-    resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
+    resourceOptions = new ResourceOptions(user, new File("workDir"), settings, 60);
     resourceOptions.setSourceAddress(new Address("+79139489906"));
     resourceOptions.setEncoding("utf-8");
     _init();
@@ -368,6 +368,78 @@ public class DetailedSaveStrategyTest {
 
   }
 
+
+  @Test
+  public void testMaxTimeDownloading() throws Exception {
+
+    File resourceFile1 = prepareResourceFile(false, null);
+    fs.rename(resourceFile1, resourceFile1 = new File(resourceFile1.getParent(), "test_max_time1.csv"));
+    File resourceFile2 = prepareResourceFile(false, null);
+    fs.rename(resourceFile2, resourceFile2 = new File(resourceFile2.getParent(), "test_max_time2.csv"));
+
+    shutdown();
+
+    resourceOptions.setMaxTimeSec(0);
+
+    _init();
+
+    strategy.process(true);
+
+    boolean exist1 = fs.exists(resourceFile1);
+    boolean exist2 = fs.exists(resourceFile2);
+
+    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
+
+    strategy.process(true);
+
+    exist1 = fs.exists(resourceFile1);
+    exist2 = fs.exists(resourceFile2);
+
+    assertFalse("One of the file exists", exist1 || exist2);
+  }
+
+
+  @Test
+  public void testMaxTimeUploading() throws Exception {
+
+    File resourceFile1 = prepareResourceFile(false, null);
+    fs.rename(resourceFile1, resourceFile1 = new File(resourceFile1.getParent(), "test_max_time1.csv"));
+    File resourceFile2 = prepareResourceFile(false, null);
+    fs.rename(resourceFile2, resourceFile2 = new File(resourceFile2.getParent(), "test_max_time2.csv"));
+
+    resourceOptions.setMaxTimeSec(0);
+
+    _init();
+
+    strategy.synchronize(true);          // first file
+
+    strategy.synchronize(true);          // second file
+
+    strategy.process(true);
+
+    boolean exist1 = fs.exists(resourceFile1);
+    boolean exist2 = fs.exists(resourceFile2);
+
+    assertFalse("One of the file exists", exist1 || exist2);
+
+    Thread.sleep(51);
+    deliveryManager.forceModifyDeliveries();
+
+
+    strategy.process(true); //uploads first file
+
+    exist1 = fs.exists(new File(resourceFile1.getAbsolutePath() + ".finished"));
+    exist2 = fs.exists(new File(resourceFile2.getAbsolutePath() + ".finished"));
+
+
+    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
+
+    exist1 = fs.exists(new File(resourceFile1.getAbsolutePath() + ".report"));
+    exist2 = fs.exists(new File(resourceFile2.getAbsolutePath() + ".report"));
+
+    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
+
+  }
 
 
   @Test

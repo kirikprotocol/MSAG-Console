@@ -41,7 +41,7 @@ public class DetailedSaveStrategyDeliveryTest {
   }
 
   private DetailedSaveStrategy createStrategy(User u, UserCPsettings s) {
-    ResourceOptions opts = new ResourceOptions(u, workDir, s);
+    ResourceOptions opts = new ResourceOptions(u, workDir, s, 60);
     opts.setSourceAddress(new Address(".5.0.MTC"));
     return new DetailedSaveStrategy(ctx, remoteResource, opts);
   }

@@ -34,27 +34,59 @@ public class SimpleSaveStrategyTest {
   private User user;
   private UserCPsettings settings;
 
+  private ResourceOptions resourceOptions;
+
   @Before
   public void init() throws AdminException {
     fs = new MemoryFileSystem();
+    user = prepareUser();
+    settings = prepareSettings();
     deliveryManager = new TestDeliveryManager(new File(""), new MemoryFileSystem());
+
+    resourceOptions = new ResourceOptions(user, new File("workDir"), settings, 60);
+    resourceOptions.setSourceAddress(new Address("+79139489906"));
+    resourceOptions.setEncoding("utf-8");
+
     _init();
   }
 
   private void _init() throws AdminException {
-    user = prepareUser();
-    settings = prepareSettings();
 
     ContentProviderContext context = new SingleUserContentPContextStub(prepareUser(), deliveryManager, fs);
-
-    ResourceOptions resourceOptions = new ResourceOptions(user, new File("workDir"), settings);
-    resourceOptions.setSourceAddress(new Address("+79139489906"));
-    resourceOptions.setEncoding("utf-8");
 
     strategy = new SimpleSaveStrategy(context, new LocalResourceStubWithChecking(new File("dir"), fs) , resourceOptions);
 
   }
 
+
+  @Test
+  public void testMaxTimeDownloading() throws Exception {
+
+    File resourceFile1 = prepareResourceFile(false);
+    fs.rename(resourceFile1, resourceFile1 = new File(resourceFile1.getParent(), "test_max_time1.csv"));
+    File resourceFile2 = prepareResourceFile(false);
+    fs.rename(resourceFile2, resourceFile2 = new File(resourceFile2.getParent(), "test_max_time2.csv"));
+
+    shutdown();
+
+    resourceOptions.setMaxTimeSec(0);
+
+    _init();
+
+    strategy.process(true);
+
+    boolean exist1 = fs.exists(resourceFile1);
+    boolean exist2 = fs.exists(resourceFile2);
+
+    assertTrue("Both files exist or both don't exist", (exist1 || exist2) && !(exist1 && exist2));
+
+    strategy.process(true);
+
+    exist1 = fs.exists(resourceFile1);
+    exist2 = fs.exists(resourceFile2);
+
+    assertFalse("One of the file exists", exist1 || exist2);
+  }
 
   @After
   public void shutdown() {

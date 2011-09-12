@@ -49,7 +49,7 @@ public class SimpleSaveStrategyDeliveryTest {
   }
 
   private ResourceOptions createResourceOptions(User u) {
-    ResourceOptions opts = new ResourceOptions(u, workDir, new UserCPsettings());
+    ResourceOptions opts = new ResourceOptions(u, workDir, new UserCPsettings(), 60);
     opts.setSourceAddress(new Address(".5.0.MTC"));
     return opts;
   }

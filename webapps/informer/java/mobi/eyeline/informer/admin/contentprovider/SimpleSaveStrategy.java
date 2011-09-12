@@ -35,8 +35,10 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
 
   private static final String CSV_POSFIX  = ".csv";
 
+  private final long maxTimeMillis;
 
   SimpleSaveStrategy(ContentProviderContext context, FileResource resource, ResourceOptions opts) throws AdminException {
+    this.maxTimeMillis = 1000 * opts.getMaxTimeSec();
     this.context = context;
     this.user = opts.getUser();
     this.resource = resource;
@@ -61,6 +63,7 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
     try{
       resource.open();
 
+      long start = System.currentTimeMillis();
       for(String remoteCsvFile : resource.listFiles()) {
         if(!remoteCsvFile.endsWith(".csv")) {
           continue;
@@ -70,6 +73,13 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
           helper.downloadFileFromResource(resource, remoteCsvFile, localCsvFile);
         if (fileSys.exists(localCsvFile))
           resource.remove(remoteCsvFile);
+        long time = System.currentTimeMillis() - start;
+        if(time >= maxTimeMillis) {
+          if(log.isDebugEnabled()) {
+            log.debug("Downloading timeout reached. Stop it.");
+          }
+          break;
+        }
       }
 
       helper.notifyInteractionOk("type", "synchronization");
@@ -100,14 +110,17 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
       synchronize(allowDeliveryCreation);
 
       if(allowDeliveryCreation) {
-        final FileFormatStrategy formatStrategy = getFormatStrategy();
-        for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
-          try{
-            helper.logProcessFile(f.getName());
-            processFile(formatStrategy, f);
-          }catch (Exception e){
-            helper.notifyInternalError(DELIVERY_PROC_ERR + " file=" + f.getName(), "Can't process delivery for user=" + user.getLogin());
-            log.error(e,e);
+        File[] files = helper.getFiles(localCopy, CSV_POSFIX);
+        if(files != null && files.length>0) {
+          final FileFormatStrategy formatStrategy = getFormatStrategy();
+          for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
+            try{
+              helper.logProcessFile(f.getName());
+              processFile(formatStrategy, f);
+            }catch (Exception e){
+              helper.notifyInternalError(DELIVERY_PROC_ERR + " file=" + f.getName(), "Can't process delivery for user=" + user.getLogin());
+              log.error(e,e);
+            }
           }
         }
       }

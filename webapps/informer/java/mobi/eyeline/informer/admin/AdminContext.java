@@ -97,7 +97,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       cpFileFormat = webConfig.getCpFileFormat();
 
-      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir);
+      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getCpGroupSize(), webConfig.getCpMaxTime());
 
       deliveryNotificationsProvider = new DeliveryNotificationsProvider(this, webConfig.getNotificationSettings());
 
