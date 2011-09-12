@@ -22,7 +22,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="components" level="project" />
+    <orderEntry type="library" name="components_libs" level="project" />
   </component>
 </module>
 

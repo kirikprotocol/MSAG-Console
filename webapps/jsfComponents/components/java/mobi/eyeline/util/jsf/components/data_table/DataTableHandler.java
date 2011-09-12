@@ -57,6 +57,7 @@ public class DataTableHandler extends ComponentHandler {
     try {
       rows = loadRows(t);
       t.setTotalSize(t.getModel().getRowsCount());
+      t.setRowsOnPage(rows.size());
     } catch (ModelException e) {
       t.setError(e);
       rows = Collections.emptyList();

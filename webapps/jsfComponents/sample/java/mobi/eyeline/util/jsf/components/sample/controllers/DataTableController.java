@@ -64,10 +64,11 @@ public class DataTableController {
 
   private boolean loaded = false;
 
-  public void query() {
+  public String query() {
     loadListener = null;
     loaded = false;
     notification = null;
+    return null;
   }
 
   public static class Row {
@@ -119,6 +120,10 @@ public class DataTableController {
     }
 
     public List getRows(int startPos, int count, final DataTableSortOrder dataTableSortOrder) {
+      try {
+        Thread.sleep(500);
+      } catch (InterruptedException e) {
+      }
       if(dataTableSortOrder == null || dataTableSortOrder.getColumnId().equals("field1")) {
         Collections.sort(rows, new Comparator<Row>() {
           public int compare(Row o1, Row o2) {

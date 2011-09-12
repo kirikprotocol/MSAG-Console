@@ -61,10 +61,10 @@ public class RowRenderer extends Renderer {
      w.append("\n  <td align=\"center\"><input "+ (
             (t.isSelectAll() && !t.isRowSelected(rowId)) || (!t.isSelectAll() && t.isRowSelected(rowId)) ? "CHECKED" : "") +
             ((t.isShowSelectedOnly()) ? " disabled=\"true\"" : "") +
-            " onclick=\"changeSelect(this.checked, '"+rowId+"', '"+t.getId()+"')\" class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");
+            " onclick=\""+ t.getId() + "_dataTable.selectRow(this.checked, '"+rowId+"')\" class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");
 
       if (r.hasInnerData() || r.hasInnerRows())
-        w.append("\n  <td class=\"clickable\" onclick=\"pagedTable" + t.getId() + ".expandRow('" + t.getId() + rowId + "')\"><div id=\"innerDataHeader" + t.getId() + rowId + "\" class=\"eyeline_" + (r.isOpened() ? "inner_data_opened" : "inner_data_closed") + "\">&nbsp;</div></td>");
+        w.append("\n  <td class=\"clickable\" onclick=\"" + t.getId() +"_dataTable.expandRow('" + t.getId() + rowId + "')\"><div id=\"innerDataHeader" + t.getId() + rowId + "\" class=\"eyeline_" + (r.isOpened() ? "inner_data_opened" : "inner_data_closed") + "\">&nbsp;</div></td>");
       else if (t.hasInnerData())
         w.append("\n  <td>&nbsp;</td>");
 

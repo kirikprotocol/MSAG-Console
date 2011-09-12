@@ -36,6 +36,8 @@ public class RowHandler extends ComponentHandler {
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
 
     Row r = (Row) c;
+    r.setHasInnerAttribute(innerData != null || innerRows != null);
+
     VariableMapper variableMapper = ctx.getVariableMapper();
     String tid = (String) variableMapper.resolveVariable("___tid").getValue(ctx);
 

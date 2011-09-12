@@ -1,351 +1,554 @@
-/**
- * Хелпер для управления data table на стороне браузера
- * @param tableId идентификатор таблицы, которой надо управлять
- * @param updateUsingSubmit флаг, если он true, то обновление содержимого таблицы происходит через сабмит формы. Иначе - через Ajax
- */
-function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
-
-  var columnElement = document.getElementById(tableId + '_column');
-  var pageElement = document.getElementById(tableId + '_page');
-  var pageSizeElement = document.getElementById(tableId + '_pageSize');
-  var selectedOnly = document.getElementById(tableId+"_showSelected");
-  var previousPageSizeElement = document.getElementById(tableId + '_previousPageSize');
-  var bodyElement = document.getElementById(tableId);
-  var progressElement = document.getElementById(tableId+"_progress");
-  var progressContentElement = document.getElementById(tableId+"_progress_content");
-  var checked = false;
-  var titleError = _titleError;
-
-  var closestForm = $("#"+columnElement.id).parents("form");
-  var requestUrl = closestForm.attr("action");
-
-  /**
-   * Обновляет содержимое таблицы
-   */
-
-  var emptyProgress = function() {
-    setProgressFunction("");
-  };
-
-  this.updateTable = function() {
-
-    checked = false;
-    if (updateUsingSubmit)
-      return closestForm.submit();
-
-    emptyProgress();
-    sendRequest();
-
-  };
-
-
-
-  var sendRequest = function() {
-
-    var func = function(data, status) {
-      if (status != 'success')
-        return;
-
-      if(typeof(data) == "object") {
-        if(data.type == "progress") {
-          setProgressFunction(data.data+"%");
-          window.setTimeout(sendRequest, 1000);
-        } else {
-          bodyElement.innerHTML = getError(data.data, titleError);
-          hideProgress();
-        }
-      } else {
-        hideProgress();
-        bodyElement.innerHTML = data;
-      }
-    };
-
-    var params = serializeForm(closestForm);
-    params["eyelineComponentUpdate"] = tableId;
-    $.ajaxSetup({cache: false});
-    $.post(requestUrl, params, func);
-  };
-
-  /**
-   * Устанавливает новый порядок сортировки в таблице и обновляет её
-   * @param column порядок сортировки
-   */
-  this.setSortOrder = function(column) {
-    columnElement.value = column;
-    this.updateTable();
-  };
-
-  /**
-   * Устанавливает номер страницы для отображения и обновляет таблицу
-   * @param page номер страницы
-   */
-  this.setPage = function(page) {
-    pageElement.value = page;
-    this.updateTable();
-  };
-
-  this.onlySelected = function() {
-    var selected = selectedOnly.value == "true";
-    selectedOnly.value = !selected;
-    this.updateTable();
-  };
-
-  /**
-   * Устанавливает новый размер страницы и обновляет таблицу
-   * @param pageSize размер страницы
-   */
-  this.setPageSize = function (pageSize) {
-    var startIndex = pageElement.value * pageSizeElement.value;
-    pageSizeElement.value = pageSize;
-    this.updateTable();
-    pageElement.value = Math.floor(startIndex / pageSize);
-    previousPageSizeElement.value = pageSizeElement.value;
-  };
-
-  /**
-   * Инвертирует выделение всех строк текущей страницы
-   */
-  this.selectAll = function () {
-    checked = !checked;
-    var endPos = previousPageSizeElement.value;
-    var inputs = document.getElementsByTagName("input");
-    var prefix = tableId + '_rowCheck';
-    for (var i = 0; i < inputs.length; i++) {
-      var c = inputs[i];
-      if (c.id != null && c.id.indexOf(prefix) == 0)
-        c.checked = checked;
-    }
-  };
-
-  var _expandRow = function(rowId, expand) {
-    var headerElement = document.getElementById("innerDataHeader" + rowId);
-    if (headerElement == null)
-      return;
-
-    headerElement.className = (expand) ? 'eyeline_inner_data_opened' : 'eyeline_inner_data_closed';
-
-    var elements = document.getElementsByTagName('tr');
-    for (var j = 0; j < elements.length; j++) {
-      var element = elements[j];
-      var name = element.getAttribute('name');
-      if (name != null && name == ('innerData' + rowId))
-        element.style.display = expand ? "" : "none";
-    }
-  };
-
-  this.expandRow = function(rowId) {
-    var headerElement = document.getElementById("innerDataHeader" + rowId);
-    if (headerElement == null)
-      return;
-
-    _expandRow(rowId, headerElement.className == 'eyeline_inner_data_closed');
-  };
-
-  this.expandAll = function() {
-    var expandElement = document.getElementById(tableId + "_expand");
-    var tableElement = document.getElementById(tableId + "_table");
-    if (expandElement == null || tableElement == null)
-      return;
-
-    var expand = expandElement.className == 'eyeline_inner_data_closed';
-    var rows = tableElement.rows;
-
-    for (var i = 0; i < rows.length; i++) {
-      var row = rows[i];
-      if (row.id != null)
-        _expandRow(row.id, expand);
-    }
-
-    expandElement.className = expand ? 'eyeline_inner_data_opened' : 'eyeline_inner_data_closed';
-  };
-
-  var setProgressFunction = this.setProgress = function(value) {
-    var el = bodyElement;
-    if (el.offsetParent) {
-      var x=0;
-      var y=0;
-      var w = el.offsetWidth+'px';
-      var h = el.offsetHeight+'px';
-      do {
-        x+=el.offsetLeft;
-        y+=el.offsetTop;
-      }
-      while (el = el.offsetParent);
-
-      progressElement.style.left=x+'px';
-      progressElement.style.top= y+'px';
-      progressElement.style.width = w;
-      progressElement.style.height = h;
-      progressContentElement.innerHTML=getProgressBar(value);
-    }
-  };
-
-  var hideProgress = function() {
-    progressElement.style.top = '-500px';
-    progressElement.style.width = '1px';
-    progressElement.style.height = '1px';
-  };
-
+function lookupValueInArray(array, value) {
+  for (var idx = 0; idx < array.length; idx++) {
+    if (array[idx] == value)
+      return idx;
+  }
+  return -1;
 }
 
-function changeSelectAll(tableId, checked) {
-  if(document.getElementById(tableId+"_showSelected").value == "true") {
-    return;
+function removeValueFromArray(array, idx) {
+  var result = new Array(array.length - 1);
+  var k = 0;
+  for (var i = 0; i < array.length; i++) {
+    if (i == idx)
+      continue;
+    result[k++] = array[i];
   }
-  var selectAll = document.getElementById(tableId+"_selectAll");
-
-  var inputs = document.getElementsByTagName("input");
-  var prefix = tableId + '_rowCheck';
-  for (i = 0; i < inputs.length; i++) {
-    c = inputs[i];
-    if (c.id != null && c.id.indexOf(prefix) == 0) {
-      c.checked = checked;
-    }
-  }
-
-  selectAll.value = checked;
-  document.getElementById(tableId+"_select").value = "[]";
-
-  var select = document.getElementById(tableId+"_select");
-  var selectObject = !(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
-      select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
-      eval('(' + select.value + ')');
-  updateSelectCount(tableId, selectObject);
-  if(!checked) {
-    document.getElementById(tableId+"_check").className = 'select_page';
-  }
-
-}
-
-function isAllChecked(tableId, checked) {
-  var inputs = document.getElementsByTagName("input");
-  var prefix = tableId + '_rowCheck';
-  for (var i = 0; i < inputs.length; i++) {
-    var c = inputs[i];
-    if (c.id != null && c.id.indexOf(prefix) == 0) {
-      if(c.checked == checked) {
-        continue
-      }
-      return false;
-    }
-  }
-  return true;
-}
-
-function changeSelectAllPage(el, tableId) {
-  if(document.getElementById(tableId+"_showSelected").value == "true") {
-    return;
-  }
-  var checked = el.getAttribute("selectpage") != "true";
-  var inputs = document.getElementsByTagName("input");
-  var prefix = tableId + '_rowCheck';
-  var allChecked = isAllChecked(tableId, checked);
-  if(allChecked) {
-    checked = !checked;
-  }
-  for (var i = 0; i < inputs.length; i++) {
-    var c = inputs[i];
-    if (c.id != null && c.id.indexOf(prefix) == 0) {
-      c.checked = checked;
-      c.onclick();
-    }
-  }
-  el.setAttribute("selectpage", checked);
-  el.className=(checked ? 'select_page_checked' : 'select_page');
-}
-
-
-function changeSelect(checked, rowId, tableId) {
-  var increment = checked ? 1 : -1;
-  if(document.getElementById(tableId+"_selectAll").value == "true") {
-    checked = !checked;
-  }
-  var select = document.getElementById(tableId+"_select");
-  var selectObject = !(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
-      select.value.replace(/"(\\.|[^"\\])*"/g, ''))) &&
-      eval('(' + select.value + ')');
-  if(checked) {
-    for(var i1=0; i1<selectObject.length; i1++) {
-      if(selectObject[i1] == rowId) {
-        return;
-      }
-    }
-    selectObject[selectObject.length] = rowId;
-  }else {
-    var k = -1;
-    for(var i=0; i<selectObject.length; i++) {
-      if(selectObject[i] == rowId) {
-        k = i;
-        break;
-      }
-    }
-    if(k != -1) {
-      selectObject.splice(k,1);
-    }
-  }
-  select.value = arrayToJson(selectObject);
-  updateSelectCount(tableId, selectObject);
-  if(!checked) {
-    document.getElementById(tableId+"_check").className = 'select_page';
-  }
+  return result;
 }
 
 function arrayToJson(arr) {
   var res = "[";
   var first = 1;
-  for(var i=0; i<arr.length; i++) {
-    if(first == 0) {
-      res+=","
-    }else {
+  for (var i = 0; i < arr.length; i++) {
+    if (first == 0) {
+      res += ","
+    } else {
       first = 0;
     }
-    res+="\""+arr[i]+"\"";
+    res += "\"" + arr[i] + "\"";
   }
-  return res+"]"
+  return res + "]"
 }
 
+var DataTable1 = function(tableId, tableOptions) {
 
-function updateSelectCount(tableId, selectObject) {
-  var selectAll = document.getElementById(tableId+"_selectAll").value == "true";
+  var currentPageNumber = tableOptions.currentPageNumber;
+  var currentSortOrder = tableOptions.sortOrder;
+  if (!currentSortOrder)
+    currentSortOrder = "";
+  var currentPageSize = tableOptions.pageSize;
+  var allRowsSelected = false;
+  var currentMode = "all";
 
-  var count = document.getElementById(tableId+"_selectedCount");
-  if(selectAll) {
-    count.innerHTML = parseInt(document.getElementById(tableId+'_totalCount').innerHTML) - selectObject.length;
-  }else {
-    count.innerHTML = selectObject.length;
+  var tableElement = $("#" + tableId);
+  var closestForm = tableElement.parents("form");
+  var requestUrl = closestForm.attr("action");
+  var bodyElement = tableElement.find("tbody");
+  var select = $("#" + tableId + "_select");
+
+  var requestRows = function() {
+
+    var params = serializeForm(closestForm);
+    params["eyelineComponentUpdate"] = tableId;
+    $.ajaxSetup({cache: false});
+
+    var onResponse = function(data, status, resp) {
+      if (status != 'success')
+        return;
+
+      if (typeof(data) == "object") {
+        if (data.type == "progress") {
+          progressOverlay.showProgress(data.data + "%");
+          window.setTimeout(_sendRequest, 1000);
+        } else {
+          progressOverlay.showError(data.data);
+        }
+      } else {
+        var rowsCount = resp.getResponseHeader("rowsCount");
+        progressOverlay.hide();
+        bodyElement.html(data);
+        navbar.setTotal(rowsCount)
+      }
+    };
+
+    var _sendRequest = function() {
+      $.post(requestUrl, params, onResponse);
+    };
+
+    progressOverlay.showProgress(null);
+    _sendRequest();
+  };
+
+  var _update = function() {
+    $("#" + tableId + "_column").val(currentSortOrder);
+    $("#" + tableId + "_page").val(currentPageNumber);
+    $("#" + tableId + "_pageSize").val(currentPageSize);
+    $("#" + tableId + "_showSelected").val(currentMode == "all" ? "false" : "true");
+    requestRows();
+  };
+
+  this.update = function() {
+    _update();
+  };
+
+  var progressOverlay = new ProgressOverlay(tableElement);
+
+
+  var selectionControl;
+  if (tableOptions.selectButton) {
+    var _selectRow = this.selectRow = function(checked, rowId) {
+      var selectObject = eval('(' + select.val() + ')');
+      var idx = lookupValueInArray(selectObject, rowId);
+      if (allRowsSelected == checked) {
+        if (idx < 0)
+          return;
+        selectObject = removeValueFromArray(selectObject, idx);
+      } else if (idx < 0) {
+        selectObject[selectObject.length] = rowId;
+      }
+      select.val(arrayToJson(selectObject));
+      if (allRowsSelected)
+        navbar.setSelected(navbar.getTotal() - selectObject.length);
+      else
+        navbar.setSelected(selectObject.length);
+    };
+
+    var selectPage = function() {
+      var checkboxes = $("[id*='" + tableId + "_rowCheck']");
+      var checkedBoxes = checkboxes.filter(":checked");
+
+      var checked = (checkedBoxes.length == checkboxes.length);
+
+      var prefixLen = (tableId + "_row").length;
+      $.each(checkboxes, function(idx, el) {
+        el.checked = !checked;
+        _selectRow(!checked, el.name.substr(prefixLen));
+      });
+    };
+
+    selectionControl = new SelectionControl(tableOptions.selectButton, {
+      onSelectPage : selectPage,
+      labels : tableOptions.selectionLabels,
+      onSelectAll : function(checked) {
+        $("#" + tableId + "_select").val("[]");
+        $("#" + tableId + "_selectAll").val(checked);
+        var checkboxes = $("[id*='" + tableId + "_rowCheck']");
+        $.each(checkboxes, function(idx, el) {
+          el.checked = checked;
+        });
+        navbar.setSelected(checked ? navbar.getTotal() : 0);
+        allRowsSelected = checked;
+      }
+    });
   }
-}
 
 
-function getProgressBar(value) {
-  return value;
-}
+  var toggleButton;
+  if (tableOptions.toggleButton) {
+    this.expandRow = function(rowId) {
+      var headerElement = $("#innerDataHeader" + rowId);
+      if (headerElement == null)
+        return;
+
+      if (headerElement.hasClass('eyeline_inner_data_closed')) {
+        $("#innerDataHeader" + rowId).removeClass('eyeline_inner_data_closed').addClass('eyeline_inner_data_opened');
+        $("tr[name='innerData" + rowId + "']").show();
+      } else {
+        $("#innerDataHeader" + rowId).removeClass('eyeline_inner_data_opened').addClass('eyeline_inner_data_closed')
+        $("tr[name='innerData" + rowId + "']").hide();
+      }
+    };
+
+    toggleButton = new ToggleButtonControl(tableOptions.toggleButton, {
+      onChange : function(opened) {
+        if (opened) {
+          $("[id*='innerDataHeader" + tableId + "']").removeClass('eyeline_inner_data_closed').addClass('eyeline_inner_data_opened');
+          $("tr[name*='innerData" + tableId + "']").show();
+        } else {
+          $("[id*='innerDataHeader" + tableId + "']").removeClass('eyeline_inner_data_opened').addClass('eyeline_inner_data_closed');
+          $("tr[name*='innerData" + tableId + "']").hide();
+        }
+      }});
+  }
+
+  var navbar = new NavBarControl(tableOptions.navbar, {
+    total: tableOptions.totalRows,
+    pageSize: currentPageSize,
+    allowedPageSize: [10,20,30,40,50],
+    pageNumber: currentPageNumber,
+    labels : tableOptions.navbarLabels,
+    selected: 0,
+    onChange : function(pageNumber, pageSize) {
+      currentPageNumber = pageNumber;
+      currentPageSize = pageSize;
+      _update();
+    },
+    onChangeMode : function(mode) {
+      currentMode = mode;
+      if (selectionControl)
+        selectionControl.changeLock(mode != "all")
+      _update();
+    }
+  });
+
+  var sortableColumns;
+  if (tableOptions.columns) {
+    sortableColumns = new SortableColumnsControl({
+      columnIds: tableOptions.columns,
+      sortOrder: currentSortOrder,
+      onChange : function(newSort) {
+        currentSortOrder = newSort;
+        _update();
+      }
+    });
+  }
 
 
+};
 
-function getError(error, errorTitle) {
-  return "<table class=\"x73\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" summary=\"\">\n" +
-      "      <tbody>\n" +
-      "      <tr>\n" +
-      "        <td>\n" +
-      "          <div class=\"xdj\">\n" +
-      "            <div>\n" +
-      "              <h1 class=\"x72\">\n" +
-      "                 <div class=\"x71\">"+errorTitle+"</div" +
-      "              </h1>\n" +
-      "            </div>\n" +
-      "            <div class=\"xap\">\n" +
-      error +
-      "            </div>\n" +
-      "          </div>\n" +
-      "        </td>\n" +
-      "      </tr>\n" +
-      "      </tbody>\n" +
-      "    </table>";
-}
+// ::::::::::::::::::::::::::::::::::::::::: ОВЕРЛЕЙ С ПРОГРЕССОМ ::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+var ProgressOverlay = function(parent) {
+
+  var visible = false;
+
+  var progressElement = $("<table>").addClass("eyeline_overlay");
+  $('<tr><td align="center" valign="center">' +
+      '<div style="margin-top:auto;margin-bottom:auto;">' +
+      '<table style="width:0%"><tr>' +
+      '<td><div class="eyeline_loading"></div></td>' +
+      '<td><span></span></td>' +
+      '</tr></table>' +
+      '</div>').appendTo(progressElement);
+
+  var progressContentElement = progressElement.find('span');
+  var progressPicElement = progressElement.find('.eyeline_loading');
+
+  progressElement.appendTo(parent);
+
+  var showOverlay = function(value) {
+    progressContentElement.text(value ? value : "");
+
+    if (visible)
+      return;
+
+    var el = parent[0];
+    if (el.offsetParent) {
+      var x = el.offsetLeft, y = el.offsetTop, w = el.offsetWidth, h = el.offsetHeight;
+      while (el = el.offsetParent) {
+        x += el.offsetLeft;
+        y += el.offsetTop;
+      }
+      progressElement.css("left", x + 'px').css("top", y + 'px').css("width", w + 'px').css("height", h + 'px');
+    }
+    progressElement.show();
+    visible = true;
+  };
+
+  this.showError = function(value) {
+    progressPicElement.hide();
+    progressContentElement.removeClass("eyeline_progress_ok").addClass("eyeline_progress_error");
+    showOverlay(value);
+  };
+
+  this.showProgress = function(value) {
+    progressPicElement.show();
+    progressContentElement.removeClass("eyeline_progress_error").addClass("eyeline_progress_ok");
+    showOverlay(value);
+  };
+
+  this.hide = function() {
+    if (visible)
+      progressElement.hide();
+    visible = false;
+  }
+};
+
+// ::::::::::::::::::::::::::::::::::::::::::::::: ПАНЕЛЬ НАВИГАЦИИ ::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+var NavBarControl = function(id, navbarOptions) {
+  // Read options
+  var totalSize = navbarOptions.total;
+  var pageSize = navbarOptions.pageSize;
+  var allowedPageSize = navbarOptions.allowedPageSize;
+  var numberOfPages = totalSize / pageSize;
+  var pageNumber = Math.min(numberOfPages, navbarOptions.pageNumber);
+  var onChange = navbarOptions.onChange;
+  var onChangeMode = navbarOptions.onChangeMode;
+  var selectedSize = navbarOptions.selected;
+  var labels = navbarOptions.labels;
+  if (!selectedSize)
+    selectedSize = 0;
+  var mode = "all";
+
+  var navBarTable = $("<table>").addClass("eyeline_navbar_panel");
+  var navBarTableBody = $("<tbody>").appendTo(navBarTable);
+  var navBarTableRow = $("<tr>").appendTo(navBarTableBody);
+
+  // Панель навигации ================================================================================================
+
+  var firstButton = $("<td>").appendTo(navBarTableRow).addClass("eyeline_navbar_button eyeline_navbar_first");
+  firstButton.click(function() {
+    setPage(1, onChange);
+  });
+
+  var prevButton = $("<td>").appendTo(navBarTableRow).addClass("eyeline_navbar_button eyeline_navbar_prev");
+  prevButton.click(function() {
+    setPage(pageNumber - 1, onChange);
+  });
+
+  var pageButtons = new Array(9);
+  for (var i = 0; i < 9; i++) {
+    var pageBut = $("<td>").appendTo(navBarTableRow).addClass("eyeline_navbar_button eyeline_navbar_page");
+    pageBut.click(function() {
+      setPage(parseInt(this.getAttribute("curPage")), onChange);
+    });
+    pageButtons[i] = pageBut;
+  }
+
+  var nextButton = $("<td>").appendTo(navBarTableRow).addClass("eyeline_navbar_button eyeline_navbar_next");
+  nextButton.click(function() {
+    setPage(pageNumber + 1, onChange);
+  });
+
+  var lastButton = $("<td>").appendTo(navBarTableRow).addClass("eyeline_navbar_button eyeline_navbar_last");
+  lastButton.click(function() {
+    setPage(numberOfPages, onChange);
+  });
+
+  // Панель счетчиков ================================================================================================
+
+  var counters = $("<td>").appendTo(navBarTableRow).addClass("eyeline_navbar_counters");
+  counters.append(labels[0] + ": ");
+  var total = $("<span>").appendTo(counters).text(totalSize);
+  counters.append(" | ");
+  var selected = $("<span>").appendTo(counters).text(labels[1] + ": " + selectedSize).addClass("eyeline_navbar_selected");
+  selected.click(function() {
+    if (mode == "all") {
+      mode = "selected";
+      selected.text(labels[3]);
+    } else {
+      mode = "all";
+      selected.text(labels[1] + ": " + selectedSize);
+    }
+    if (onChangeMode)
+      onChangeMode(mode);
+  });
+  counters.append(" | " + labels[2] + ": ");
+  var onpage = $("<select>").appendTo(counters);
+  for (var j = 0; j < allowedPageSize.length; j++) {
+    var psize = allowedPageSize[j];
+    var opt = $('<option>', { value :  psize}).text(psize);
+    if (psize == pageSize)
+      opt.attr("selected", "selected");
+    onpage.append(opt);
+  }
+  onpage.change(function() {
+    var selectedValue = onpage.children("option:selected")[0].getAttribute("value");
+    setPageSize(parseInt(selectedValue), onChange);
+  });
+
+  // Вспомогательные функции =========================================================================================
+
+  var setPage = function(pageNumb, onChange) {
+    if (pageNumb > numberOfPages)
+      pageNumb = numberOfPages;
+    if (pageNumb < 1)
+      pageNumb = 1;
+
+    firstButton.css("display", pageNumb <= 1 ? "none" : "");
+    prevButton.css("display", pageNumb <= 1 ? "none" : "");
+    nextButton.css("display", (numberOfPages == 0 || pageNumb == numberOfPages) ? "none" : "");
+    lastButton.css("display", (numberOfPages == 0 || pageNumb == numberOfPages) ? "none" : "");
+
+    var firstVisiblePage = Math.max(pageNumb - 4, 1);
+    var lastVisiblePage = Math.min(pageNumb + 4, numberOfPages);
+    if (lastVisiblePage == firstVisiblePage)
+      lastVisiblePage = 0;
+
+    if (pageNumber)
+      pageButtons[pageNumber - firstVisiblePage].removeClass("eyeline_navbar_current_page");
+    pageButtons[pageNumb - firstVisiblePage].addClass("eyeline_navbar_current_page");
+
+    for (var curPage = firstVisiblePage; curPage <= lastVisiblePage; curPage++)
+      pageButtons[curPage - firstVisiblePage].css("display", "").text(curPage).attr("curPage", curPage);
+
+    for (var i = lastVisiblePage + 1; i < firstVisiblePage + 9; i++)
+      pageButtons[i - firstVisiblePage].css("display", "none");
+
+    pageNumber = pageNumb;
+    if (onChange)
+      onChange(pageNumb, pageSize);
+  };
+
+  var setPageSize = function(pageS, onChange) {
+    var curPos = pageNumber * pageSize;
+    numberOfPages = Math.round(totalSize / pageS);
+    if (pageS * numberOfPages < totalSize)
+      numberOfPages++;
+    var pageN = Math.round(curPos / pageS);
+    if (pageN != pageNumber)
+      setPage(pageN, null);
+    pageSize = pageS;
+    if (onChange)
+      onChange(pageNumber, pageSize);
+  };
+
+  this.setSelected = function(cnt) {
+    selectedSize = cnt;
+    selected.text(labels[1] + ": " + cnt);
+  };
+
+  this.setTotal = function(totalRows) {
+    totalSize = totalRows;
+    total.text(totalRows);
+    setPageSize(pageSize, null);
+    setPage(pageNumber, null);
+  };
+
+  this.getTotal = function() {
+    return totalSize;
+  };
+
+  this.setTotal(totalSize);
+
+  navBarTable.appendTo("#" + id);
+};
+
+// ::::::::::::::::::::::::::::::::::: КНОПКА СОРТИРОВКИ ПО КОЛОНКЕ ТАБЛИЦЫ ::::::::::::::::::::::::::::::::::::::::::::
+
+var SortableColumnsControl = function(columnsOptions) {
+
+  var onchange = columnsOptions.onChange;
+
+  var columns = {};
+  for (var i = 0; i < columnsOptions.columnIds.length; i++) {
+    var column = $("#" + columnsOptions.columnIds[i]);
+    column.addClass("eyeline_data_table_column");
+    column.click(function() {
+      setSort(this.id);
+    });
+    columns[i] = column;
+  }
+
+  var parseSortOrder = function(sortOrderColumn) {
+    var result = {};
+    if (sortOrderColumn.length == 0)
+      return result;
+
+    if (sortOrderColumn.charAt(0) == '-') {
+      result["column"] = sortOrderColumn.substr(1);
+      result["asc"] = false;
+    } else {
+      result["column"] = sortOrderColumn;
+      result["asc"] = true;
+    }
+    return result;
+  };
+
+  var setSort = function(columnId) {
+    var oldSortColumn = sortOrder["column"];
+    var asc = sortOrder["asc"];
+    if (oldSortColumn) {
+      $("#" + oldSortColumn).removeClass("eyeline_up eyeline_down");
+      if (oldSortColumn == columnId)
+        asc = !asc;
+    }
+
+    $("#" + columnId).addClass(asc ? "eyeline_up" : "eyeline_down");
+    sortOrder["column"] = columnId;
+    sortOrder["asc"] = asc;
+
+    if (onchange)
+      onchange((asc ? "" : "-") + columnId);
+  };
+
+  var sortOrder = parseSortOrder(columnsOptions.sortOrder);
+
+  if (sortOrder["column"]) {
+    var columnId = sortOrder["column"];
+    var asc = sortOrder["asc"];
+    $("#" + columnId).addClass(asc ? "eyeline_up" : "eyeline_down");
+  }
+};
+
+// :::::::::::::::::::::::: КНОПКА УСТАНОВКИ/СНЯТИЯ ВЯДЕЛЕНИЯ ВСЕХ ЗАПИСЕЙ/ЗАПИСЕЙ НА СТРАНИЦЕ :::::::::::::::::::::::::
+
+var SelectionControl = function(id, selectionOptions) {
+  var labels = selectionOptions.labels;
+  var selectAllHandler = selectionOptions.onSelectAll;
+  var selectPageHandler = selectionOptions.onSelectPage;
+
+  var selectTable = $("<table>");
+  var selectTableBody = $("<tbody>").appendTo(selectTable);
+  var selectTableRow = $("<tr>").appendTo(selectTableBody);
+  var td1 = $("<td>").appendTo(selectTableRow);
+  var selectPage = $("<div>&nbsp;</div>").appendTo(td1).addClass("select_page_button");
+  var td2 = $("<td>").appendTo(selectTableRow);
+  var showMenu = $("<div>&nbsp;</div>").appendTo(td2).addClass("select_menu_button");
+
+  var selectMenu = $("<div>").appendTo("#" + id).addClass("select_menu_content");
+  var selectAllButton = $("<span>"+labels[0]+"</span>").appendTo(selectMenu);
+  selectMenu.append("<br>");
+  var selectNothingButton = $("<span>"+labels[1]+"</span>").appendTo(selectMenu);
 
 
+  var allowCheckAll = true;
 
+  showMenu.click(function() {
+    selectMenu.toggle();
+  });
 
+  selectAllButton.click(function() {
+    selectMenu.hide();
+    selectAllHandler(true);
+  });
 
+  selectNothingButton.click(function() {
+    selectMenu.hide();
+    selectAllHandler(false);
+  });
 
+  selectPage.click(function() {
+    if (allowCheckAll)
+      selectPageHandler();
+  });
+
+  this.changeLock = function(flag) {
+    if (flag)
+      this.lock();
+    else
+      this.unlock();
+  };
+
+  this.lock = function() {
+    showMenu.hide();
+    selectMenu.hide();
+    allowCheckAll = false;
+  };
+
+  this.unlock = function() {
+    selectMenu.hide();
+    showMenu.show();
+    allowCheckAll = true;
+  };
+
+  selectTable.appendTo("#" + id);
+};
+
+// ::::::::::::::::::::::::::::::: КНОПКА ПОКАЗА/СКРЫТИЯ ВСЕХ INNER ROWS :::::::::::::::::::::::::::::::::::::::::::::::
+
+var ToggleButtonControl = function(id, toggleOptions) {
+  var toggleFunc = toggleOptions.onChange;
+  var button = $("<div>").addClass("toggle_button_closed");
+  button.click(function() {
+    var opened = button.hasClass("toggle_button_opened");
+    if (opened)
+      button.removeClass("toggle_button_opened").addClass("toggle_button_closed");
+    else
+      button.removeClass("toggle_button_closed").addClass("toggle_button_opened");
+    toggleFunc(!opened);
+  });
+  button.appendTo("#" + id);
+};

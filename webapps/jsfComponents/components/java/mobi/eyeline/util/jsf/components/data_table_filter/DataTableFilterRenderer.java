@@ -1,6 +1,7 @@
 package mobi.eyeline.util.jsf.components.data_table_filter;
 
 import mobi.eyeline.util.jsf.components.HtmlWriter;
+import mobi.eyeline.util.jsf.components.MessageUtils;
 import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.component.UIComponent;
@@ -15,6 +16,10 @@ import java.util.ResourceBundle;
  * author: Aleksandr Khalitov
  */
 public class DataTableFilterRenderer extends Renderer{
+
+  private static final String APPLY = "mobi.eyeline.util.jsf.components.data_table_filter.DataTableFilter.APPLY";
+  private static final String CLEAR = "mobi.eyeline.util.jsf.components.data_table_filter.DataTableFilter.CLEAR";
+  private static final String TITLE = "mobi.eyeline.util.jsf.components.data_table_filter.DataTableFilter.TITLE";
 
   @Override
   public void decode(FacesContext context, UIComponent component) {
@@ -34,18 +39,15 @@ public class DataTableFilterRenderer extends Renderer{
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     DataTableFilter filter = (DataTableFilter)component;
 
-    Locale l = context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale();
-    ResourceBundle b = ResourceBundle.getBundle(DataTableFilter.class.getCanonicalName(), l);
-
-    String filterTitle =  b.getString("filter.title");
+    String filterTitle = MessageUtils.getMessageString(context, TITLE);
 
     String applyString = null, clearString = null;
 
     if(filter.containsApplyAction()) {
-      applyString = b.getString("action.apply");
+      applyString = MessageUtils.getMessageString(context, APPLY);
     }
     if(filter.containsClearAction()) {
-      clearString = b.getString("action.clear");
+      clearString = MessageUtils.getMessageString(context, CLEAR);
     }
 
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());

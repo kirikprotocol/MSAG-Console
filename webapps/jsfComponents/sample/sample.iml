@@ -23,7 +23,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="components" />
-    <orderEntry type="library" name="sample" level="project" />
+    <orderEntry type="library" name="sample_libs" level="project" />
   </component>
 </module>
 

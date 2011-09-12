@@ -36,6 +36,7 @@ public class DataTable extends UIPanel {
   private int totalSize;
   private Integer loadCurrent;
   private Integer loadTotal;
+  private int rowsOnPage;
 
 
   // Tag properties
@@ -204,7 +205,7 @@ public class DataTable extends UIPanel {
     for (UIComponent c : getChildren()) {
       if (c instanceof Row) {
         Row r = (Row) c;
-        if (r.hasInnerData() || r.hasInnerRows())
+        if (r.hasInnerAttribute())
           return true;
       }
     }
@@ -229,6 +230,13 @@ public class DataTable extends UIPanel {
     return selectedRows.contains(s);
   }
 
+  public int getRowsOnPage() {
+    return rowsOnPage;
+  }
+
+  public void setRowsOnPage(int rowsOnPage) {
+    this.rowsOnPage = rowsOnPage;
+  }
 
   public void processUpdates(javax.faces.context.FacesContext context) {
     if (getSelectedRowsExpression() != null && !internalUpdate) {

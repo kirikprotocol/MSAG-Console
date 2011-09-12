@@ -15,6 +15,7 @@ public class Row extends UIPanel {
   private boolean header;
   private boolean opened;
   private String rowId;
+  private boolean hasInnerAttribute;
   private boolean hasInnerData;
   private boolean hasInnerRows;
 
@@ -46,6 +47,14 @@ public class Row extends UIPanel {
 
   void setRowId(String rowId) {
     this.rowId = rowId;
+  }
+
+  public boolean hasInnerAttribute() {
+    return hasInnerAttribute;
+  }
+
+  public void setHasInnerAttribute(boolean hasInnerAttribute) {
+    this.hasInnerAttribute = hasInnerAttribute;
   }
 
   boolean hasInnerData() {
