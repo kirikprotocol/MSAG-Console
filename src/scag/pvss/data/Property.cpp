@@ -264,10 +264,15 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
             break;
         } while (true);
         type = STRING;
-        eyeline::informer::TmpBuf<char,512> propbuf;
-        propbuf.reserve(quote+1);
-        s_val = eyeline::informer::unescapeText(propbuf.get(),from.c_str(),
-                                                quote,true);
+        if ( quote == 0 ) {
+            // empty string
+            s_val = "";
+        } else {
+            eyeline::informer::TmpBuf<char,512> propbuf;
+            propbuf.reserve(quote+1);
+            s_val = eyeline::informer::unescapeText(propbuf.get(),from.c_str(),
+                                                    quote,true);
+        }
         // s_val = from.substr(0,quote);
         from.erase(0,quote+1);
     } else if ( from.substr(0,strlen(BOOL_TRUE)) == BOOL_TRUE ) {

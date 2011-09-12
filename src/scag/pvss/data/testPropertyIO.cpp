@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Property.h"
+#include "logger/Logger.h"
 
 using namespace scag2::pvss;
 
@@ -17,6 +18,8 @@ void setPropVal( Property& property, PropertyType pt )
 
 int main()
 {
+    smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
+
     const TimePolicy timePolicies[] = {
         INFINIT, FIXED, ACCESS, R_ACCESS, W_ACCESS
     };
@@ -58,5 +61,11 @@ int main()
             }
         }
     }
+
+
+    const std::string specialString = "\"SADS-Cookie-turmc_pilot-platform.mobassist.com-9000\" STRING: \"\" TIME_POLICY: FIXED FINAL_DATE: 2012/09/09 16:19:11 LIFE_TIME: 86399";
+    Property prop3;
+    prop3.fromString(specialString);
+    std::cout << "prop3:  " << prop3.toString() << std::endl;
     return 0;
 }

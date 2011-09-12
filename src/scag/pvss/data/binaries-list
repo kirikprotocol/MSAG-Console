@@ -2,6 +2,8 @@ scag/tests/pvss-propertyio   testPropertyIO \
   -lscag-pvss-data \
   -lscag-util-storage \
   -lscag-util-io \
+  -linformer-io \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
   -lscag-exc \
   -lutil
 

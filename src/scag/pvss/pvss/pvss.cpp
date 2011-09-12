@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
     } catch ( std::exception& e ) {
         printf("logger initialization failure\n");
         fprintf(stderr,"logger initialization failure\n");
-        return -1;
+        return 2;
     }
 
     // counter manager
@@ -285,10 +285,10 @@ int main(int argc, char* argv[]) {
         mgr->start();
     } catch ( std::exception& e ) {
         smsc_log_error(logger,"exc in counter mgr: %s",e.what());
-        std::terminate();
+        return 3;
     } catch ( ... ) {
         smsc_log_error(logger,"exc in counter mgr");
-        std::terminate();
+        return 3;
     }
 
 #ifdef SNMP
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]) {
         if ( sarg == "--dump" ) {
             if ( i >= argc ) {
                 smsc_log_error(logger,"--dump requires an argument");
-                ::exit(1);
+                std::exit(1);
             }
             dodump = atoi(argv[++i]);
             smsc_log_info(logger,"%s on command line", sarg.c_str());
@@ -341,7 +341,7 @@ int main(int argc, char* argv[]) {
                 extraMsg.c_str(), argv[0]);
         smsc_log_error(logger,"%sUsage: %s [--recovery] [--check-index] [--backup [--allow-skip-once]]",
                        extraMsg.c_str(), argv[0]);
-        ::exit(1);
+        std::exit(1);
     }
 
     try{
@@ -444,7 +444,7 @@ int main(int argc, char* argv[]) {
             if ( !inst->run()) {
                 fprintf( stderr, "pvss on port %d is already running, its pid is in %s\n",
                          serverConfig.getPort(), filename );
-                exit(-1);
+                std::exit(6);
             }
         }
 
@@ -505,10 +505,10 @@ int main(int argc, char* argv[]) {
             }
         } catch ( std::exception& e ) {
             smsc_log_fatal( logger, "Exception in pvss dispatcher createLogics:\n%s", e.what() );
-            exit(-1);
+            exit(4);
         } catch (...) {
             smsc_log_fatal( logger, "unknown exception in pvss dispatcher createLogics" );
-            exit(-1);
+            exit(4);
         }
 
         std::auto_ptr< ServerCore > server
@@ -535,7 +535,7 @@ int main(int argc, char* argv[]) {
             server->startup(pvssDispatcher);
         } catch ( PvssException& e ) {
             smsc_log_error( logger, "exception(%u): %s", __LINE__, e.what() );
-            exit(-1);
+            exit(5);
         }
 
         PersProtocol persProtocol;
@@ -573,16 +573,16 @@ int main(int argc, char* argv[]) {
 
     } catch (const smsc::util::config::ConfigException& exc) {
         smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
-        resultCode = -2;
+        resultCode = 12;
     } catch (const Exception& exc) {
         smsc_log_error(logger, "Top level Exception: %s Exiting.", exc.what());
-        resultCode = -3;
+        resultCode = 13;
     } catch (const std::exception& exc) {
         smsc_log_error(logger, "Top level exception: %s Exiting.", exc.what());
-        resultCode = -4;
+        resultCode = 14;
     } catch (...) {
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
-        resultCode = -5;
+        resultCode = 15;
     }
 
 #ifdef SNMP
