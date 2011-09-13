@@ -7,7 +7,7 @@
   <description><![CDATA[Text which will be shown if validation fails.]]></description>
   <tlib-version>1.0</tlib-version>
   <short-name>eye</short-name>
-  <uri>http://taglib.eyeline.mobi</uri>
+  <uri>http://jsfcomponents.eyeline.mobi</uri>
 
 
 

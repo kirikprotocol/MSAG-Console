@@ -5,7 +5,7 @@
 
 <facelet-taglib>
 
-  <namespace>http://taglib.eyeline.mobi</namespace>
+  <namespace>http://jsfcomponents.eyeline.mobi</namespace>
 
   <tag>
     <tag-name>dataTableFilter</tag-name>
