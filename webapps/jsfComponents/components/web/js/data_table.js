@@ -187,7 +187,7 @@ var DataTable1 = function(tableId, tableOptions) {
     onChangeMode : function(mode) {
       currentMode = mode;
       if (selectionControl)
-        selectionControl.changeLock(mode != "all")
+        selectionControl.changeLock(mode != "all");
       _update();
     }
   });
@@ -198,7 +198,10 @@ var DataTable1 = function(tableId, tableOptions) {
       columnIds: tableOptions.columns,
       sortOrder: currentSortOrder,
       onChange : function(newSort) {
-        currentSortOrder = newSort;
+        if (newSort.charAt(0) == '-')
+          currentSortOrder = "-" + newSort.substr(tableId.length + 2);
+        else
+          currentSortOrder = newSort.substr(tableId.length + 1);
         _update();
       }
     });
