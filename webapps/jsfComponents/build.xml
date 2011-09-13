@@ -6,9 +6,10 @@
   <property name="sample.source.classes" value="${build.dir}/.classes/sample"/>
   <property name="sample.exploded.dir" value="${build.dir}/.exploded/sample"/>
 
-  <property name="components.distr.dir" value="${build.dir}/components"/>
-  <property name="components.doc.dir" value="${build.dir}/docs"/>
-  <property name="sample.distr.dir" value="${build.dir}/sample"/>
+  <property name="components.distr.dir" value="${distr.dir}"/>
+  <property name="components.doc.dir" value="${doc.dir}"/>
+  <property name="sample.distr.dir" value="${distr.dir}/sample"/>
+  <property name="styles.distr.dir" value="${distr.dir}/styles"/>
 
 
   <path id="components.lib">
@@ -25,6 +26,7 @@
 
   <target name="clean">
     <delete dir="${build.dir}" failonerror="false"/>
+    <delete dir="${distr.dir}" failonerror="false"/>
   </target>
 
   <target name="compile.components" depends="clean">
@@ -55,11 +57,25 @@
 
     <mkdir dir="${components.distr.dir}"/>
     <jar destfile="${components.distr.dir}/jsf-components.jar" basedir="${components.source.classes}" manifest="${manifest.file}"/>
+  </target>
 
-    <mkdir dir="${build.dir}/styles"/>
-    <copy todir="${build.dir}/styles">
-      <fileset dir="${styles.dir}"/>
+  <target name="distr.style">
+    <mkdir dir="${styles.distr.dir}/${stylename}/images"/>
+    <copy todir="${styles.distr.dir}/${stylename}/images">
+      <fileset dir="styles/${stylename}/images"/>
     </copy>
+    <concat destfile="${styles.distr.dir}/${stylename}/jsf-components-${stylename}-design.css">
+      <fileset dir="styles/${stylename}/css" includes="*.css"/>
+    </concat>
+  </target>
+
+  <target name="distr.styles">
+    <antcall target="distr.style">
+      <param name="stylename" value="eyeline"/>
+    </antcall>
+    <antcall target="distr.style">
+      <param name="stylename" value="mts"/>
+    </antcall>
   </target>
 
   <target name="doc.components">
@@ -138,7 +154,7 @@ public class Version {${line.separator}
     <mkdir dir="${sample.distr.dir}/eyeline"/>
     <war destfile="${sample.distr.dir}/eyeline/jsf-sample.war" manifest="${manifest.file}">
       <fileset dir="${sample.exploded.dir}"/>
-      <fileset dir="${styles.dir}/eyeline"/>
+      <fileset dir="styles/eyeline"/>
     </war>
 
   </target>
@@ -150,12 +166,12 @@ public class Version {${line.separator}
     <mkdir dir="${sample.distr.dir}/mts"/>
     <war destfile="${sample.distr.dir}/mts/jsf-sample.war" manifest="${manifest.file}">
       <fileset dir="${sample.exploded.dir}"/>
-      <fileset dir="${styles.dir}/mts"/>
+      <fileset dir="styles/mts"/>
     </war>
 
   </target>
 
-  <target name="distr" depends="distr.mts.sample, distr.eyeline.sample"/>
+  <target name="distr" depends="clean, distr.components, distr.styles, doc.components, distr.mts.sample, distr.eyeline.sample"/>
 
 
 </project>
