@@ -154,8 +154,6 @@ public class DataTableRenderer extends Renderer {
     w.a("\n</tbody>");
 
     //RENDER <tfoot>
-
-
     w.a("<tfoot>");
     w.a("<tr><td id=\"").a(t.getId()).a("_navbar\" colspan=\"").a(columnsNumber+"").a("\"></td></tr>");
     w.a("</tfoot>");
@@ -164,6 +162,8 @@ public class DataTableRenderer extends Renderer {
     //RENDER initialization javascript
     StringBuilder columnNames = new StringBuilder();
     for (Column column : columns) {
+      if (!column.isSortable())
+        continue;
       if (columnNames.length() > 0)
         columnNames.append(',');
       columnNames.append("\"" + t.getId() + "_" + column.getName() + "\"");
