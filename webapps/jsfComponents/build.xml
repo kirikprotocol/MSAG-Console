@@ -57,6 +57,10 @@
 
     <mkdir dir="${components.distr.dir}"/>
     <jar destfile="${components.distr.dir}/jsf-components.jar" basedir="${components.source.classes}" manifest="${manifest.file}"/>
+
+    <concat destfile="${components.distr.dir}/jsf-components.js">
+      <fileset dir="components/web/js" includes="*.js"/>
+    </concat>
   </target>
 
   <target name="distr.style">
@@ -140,6 +144,10 @@ public class Version {${line.separator}
     <copy todir="${sample.exploded.dir}/WEB-INF/lib">
       <fileset dir="sample/lib"/>
       <fileset dir="${components.distr.dir}" includes="*.jar"/>
+    </copy>
+
+    <copy todir="${sample.exploded.dir}/js">
+      <fileset dir="${components.distr.dir}" includes="*.js"/>
     </copy>
 
     <jar destfile="${sample.exploded.dir}/WEB-INF/lib/jsf-sample.jar"

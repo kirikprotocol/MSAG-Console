@@ -7,23 +7,6 @@
               xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd"
               version="2.0">
 
-  <managed-bean>
-    <managed-bean-name>componentsResource</managed-bean-name>
-    <managed-bean-class>mobi.eyeline.util.jsf.components.ResourceBean</managed-bean-class>
-    <managed-bean-scope>application</managed-bean-scope>
-  </managed-bean>
-
-  <lifecycle>
-    <phase-listener>mobi.eyeline.util.jsf.components.ResourcePhaseListener</phase-listener>
-  </lifecycle>
-
-  <application>
-    <resource-bundle>
-      <base-name>mobi.eyeline.util.jsf.components.resources.Messages</base-name>
-      <var>eyelineComponentsMsg</var>
-    </resource-bundle>
-  </application>
-
   <converter>
     <converter-id>eyelineDateConverter</converter-id>
     <converter-class>mobi.eyeline.util.jsf.components.DateConverter</converter-class>

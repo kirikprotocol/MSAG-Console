@@ -1,7 +1,6 @@
 package mobi.eyeline.util.jsf.components.collapsing_group;
 
 import mobi.eyeline.util.jsf.components.HtmlWriter;
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -19,17 +18,10 @@ public class CollapsingGroupRenderer extends Renderer {
     cg.setOpened((opened != null && opened.equals("0")));
   }
 
-  private void importResorces(HtmlWriter writer) throws IOException{
-    String resourceURL = ResourceUtils.getResourceUrl("js/collapsing_group.js");
-    writer.a("<script type=\"text/javascript\" src=\"").a(resourceURL).a("\"></script>");
-  }  
-
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
 
     CollapsingGroup cg = (CollapsingGroup) component;
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
-
-    importResorces(w);
 
     String openedStr =cg.isOpened() ? "0" : "1";
 

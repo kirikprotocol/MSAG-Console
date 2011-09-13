@@ -23,7 +23,6 @@ public class FileDownloadListener implements ActionListener, StateHolder {
 
   private MethodExpression method;
 
-  @Override
   public void processAction(ActionEvent actionEvent) throws AbortProcessingException {
     FacesContext context = FacesContext.getCurrentInstance();
     ELContext elContext = context.getELContext();
@@ -72,7 +71,6 @@ public class FileDownloadListener implements ActionListener, StateHolder {
     }
   }
 
-  @Override
   public Object saveState(FacesContext facesContext) {
     Object[] values = new Object[3];
     values[0] = filename;
@@ -81,7 +79,6 @@ public class FileDownloadListener implements ActionListener, StateHolder {
     return values;
   }
 
-  @Override
   public void restoreState(FacesContext facesContext, Object o) {
     Object[] values = (Object[]) o;
     filename = values[0];
@@ -89,12 +86,10 @@ public class FileDownloadListener implements ActionListener, StateHolder {
     method = (MethodExpression)values[2];
   }
 
-  @Override
   public boolean isTransient() {
     return trans;
   }
 
-  @Override
   public void setTransient(boolean b) {
     this.trans = b;
   }

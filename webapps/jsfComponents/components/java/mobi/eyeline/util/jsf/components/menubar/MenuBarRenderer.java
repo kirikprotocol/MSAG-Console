@@ -1,7 +1,5 @@
 package mobi.eyeline.util.jsf.components.menubar;
 
-import mobi.eyeline.util.jsf.components.ResourceUtils;
-
 import javax.faces.component.UIComponent;
 import javax.faces.context.ResponseWriter;
 import javax.faces.render.Renderer;
@@ -13,21 +11,10 @@ import java.io.Writer;
  */
 public class MenuBarRenderer extends Renderer {
 
-  private void importResorces(ResponseWriter writer) throws IOException {
-
-    String resourceURL = ResourceUtils.getResourceUrl("js/menubar.js");
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", resourceURL, null);
-    writer.endElement("script");
-
-  }
-
   public void encodeBegin(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) throws java.io.IOException {
     ResponseWriter w = context.getResponseWriter();
 
     if (component instanceof MenuBar) {
-      importResorces(w);
       String id = component.getId();
       w.append("<div class=\"eyeline_menubardiv\" id=\"menubar" + id + "\">");
       w.append(((MenuBar) component).getLabel());

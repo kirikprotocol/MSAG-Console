@@ -1,7 +1,6 @@
 package mobi.eyeline.util.jsf.components.updatable_content;
 
 import mobi.eyeline.util.jsf.components.AjaxFacesContext;
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -15,34 +14,6 @@ import java.io.IOException;
  */
 public class UpdatableContentRenderer extends Renderer {
 
-  protected void encodeAjaxPart(FacesContext context, ResponseWriter w, UIComponent component) throws IOException {
-    try {
-      if (context instanceof AjaxFacesContext) {
-      }
-      encodeChildren(context, component);
-    } finally {
-      if (context instanceof AjaxFacesContext) {
-        ((AjaxFacesContext) context).setSkipContent(true);
-      }
-    }
-  }
-
-  private void importResources(ResponseWriter writer) throws IOException{
-    String baseURL = ResourceUtils.getResourceUrl("");
-
-
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", baseURL +"js/updatable_content.js", null);
-    writer.endElement("script");
-
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", baseURL +"js/ajax.js", null);
-    writer.endElement("script");
-
-  }
-
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     if (context instanceof AjaxFacesContext) {
       AjaxFacesContext ctx = (AjaxFacesContext) context;
@@ -53,8 +24,6 @@ public class UpdatableContentRenderer extends Renderer {
     }
     UpdatableContent pb = (UpdatableContent) component;
     ResponseWriter w = context.getResponseWriter();
-
-    importResources( w);
 
     w.append("\n<div id=\"").append(pb.getId()).append("\">");
   }

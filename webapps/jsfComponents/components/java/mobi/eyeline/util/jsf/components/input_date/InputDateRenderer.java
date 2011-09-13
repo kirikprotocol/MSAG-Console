@@ -1,7 +1,6 @@
 package mobi.eyeline.util.jsf.components.input_date;
 
 import mobi.eyeline.util.jsf.components.HtmlWriter;
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
@@ -58,11 +57,6 @@ public class InputDateRenderer extends Renderer {
     }
   }
 
-  private void importResorces(HtmlWriter writer) throws IOException {
-    String resourceURL = ResourceUtils.getResourceUrl("js/input_date.js");
-    writer.a("<script type=\"text/javascript\" src=\"").a(resourceURL).a("\"></script>");
-  }
-
   private String getErrorMessage(FacesContext context, UIComponent t) {
     Iterator messages = context.getMessages(t.getClientId(context));
     if (messages != null && messages.hasNext()) {
@@ -101,7 +95,6 @@ public class InputDateRenderer extends Renderer {
       inputClass = "class=\"validationError\"";
 
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
-    importResorces(w);
     w.a("<div class=\"eyeline_inputDate\" id=\"").a(id).a(".div\">");
     w.a("<input type=\"text\" id=\"").a(id).a("\" name=\"").a(id).a("\" value=\"").a(value).a("\" ").a(inputClass).a(">");
     if (!inputDate.isValid()) {

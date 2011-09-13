@@ -3,7 +3,6 @@ package mobi.eyeline.util.jsf.components.data_table;
 import mobi.eyeline.util.jsf.components.AjaxFacesContext;
 import mobi.eyeline.util.jsf.components.HtmlWriter;
 import mobi.eyeline.util.jsf.components.MessageUtils;
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -33,19 +32,6 @@ public class DataTableRenderer extends Renderer {
   private boolean ajax = false;
   private boolean renderChilds = false;
 
-
-  private void importResources(ResponseWriter writer) throws IOException {
-
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", ResourceUtils.getResourceUrl("js/ajax.js"), null);
-    writer.endElement("script");
-
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", ResourceUtils.getResourceUrl("js/data_table.js"), null);
-    writer.endElement("script");
-  }
 
   public void decode(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) {
     DataTable t = (DataTable) component;
@@ -124,8 +110,6 @@ public class DataTableRenderer extends Renderer {
 
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
     String sOrder = t.getSortOrder();
-
-    importResources(context.getResponseWriter());
 
     w.a("\n<input type=\"hidden\" id=\"" + t.getId() + "_column" + "\" name=\"" + t.getId() + "_column\" value=\"" + sOrder + "\">");
     w.a("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");

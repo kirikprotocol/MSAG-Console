@@ -2,7 +2,6 @@ package mobi.eyeline.util.jsf.components.data_table_filter;
 
 import mobi.eyeline.util.jsf.components.HtmlWriter;
 import mobi.eyeline.util.jsf.components.MessageUtils;
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -27,12 +26,6 @@ public class DataTableFilterRenderer extends Renderer{
     ((DataTableFilter)component).setAction(action);
   }
 
-
-  private void importResorces(HtmlWriter writer) throws IOException {
-    String resourceURL = ResourceUtils.getResourceUrl("js/data_table_filter.js");
-    writer.a("<script type=\"text/javascript\" src=\"").a(resourceURL).a("\"></script>");
-  }
-
   @Override
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     DataTableFilter filter = (DataTableFilter)component;
@@ -49,8 +42,6 @@ public class DataTableFilterRenderer extends Renderer{
     }
 
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
-
-    importResorces(w);
 
     w.a("<div id=\"").a(filter.getId()).a("\" class=\"eyeline_data_table_filter\">\n");
     w.a("<input type=\"hidden\" id=\"").a("action").a(component.getId()).a("\" name=\"action").a(component.getId()).a("\" value=\"\">");

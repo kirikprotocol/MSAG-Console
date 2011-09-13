@@ -1,6 +1,5 @@
 package mobi.eyeline.util.jsf.components.dynamic_table;
 
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 
@@ -64,19 +63,9 @@ public class DynamicTableRenderer extends Renderer {
   }
 
 
-  private void importResorces(ResponseWriter writer) throws IOException{
-   String resourceURL = ResourceUtils.getResourceUrl("js/dynamic_table.js");
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", resourceURL, null);
-    writer.endElement("script");
-  }
-
-
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
     ResponseWriter w = context.getResponseWriter();
     DynamicTable table = (DynamicTable) component;
-    importResorces(w);
     w.append("\n<table class=\"eyeline_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"><tr>");
     for (Column c : table.getColumns()) {
       w.append("<th");
@@ -120,7 +109,7 @@ public class DynamicTableRenderer extends Renderer {
     }
     columnsArray.append(')');
 
-    w.append("var dtable=new DynamicTable('" + ResourceUtils.getResourceUrl("") + "','" + component.getId() + "'," + columnsArray.toString() + ");\n");
+    w.append("var dtable=new DynamicTable('" + context.getExternalContext().getRequestContextPath() + "','" + component.getId() + "'," + columnsArray.toString() + ");\n");
 
     DynamicTableModel m = (DynamicTableModel)table.getSubmittedValue();
     if (m == null)

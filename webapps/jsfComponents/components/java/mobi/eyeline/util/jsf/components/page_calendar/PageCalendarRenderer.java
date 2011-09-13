@@ -2,11 +2,9 @@ package mobi.eyeline.util.jsf.components.page_calendar;
 
 import mobi.eyeline.util.jsf.components.AjaxFacesContext;
 import mobi.eyeline.util.jsf.components.HtmlWriter;
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
 import javax.faces.render.Renderer;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -17,20 +15,6 @@ import java.util.Calendar;
  */
 public class PageCalendarRenderer extends Renderer {
 
-
-  private void importResources(ResponseWriter writer) throws IOException{
-    String baseURL = ResourceUtils.getResourceUrl("");
-
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", baseURL +"js/ajax.js", null);
-    writer.endElement("script");
-
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", baseURL +"js/page_calendar.js", null);
-    writer.endElement("script");
-  }
 
   private boolean ajax = false;
 
@@ -57,7 +41,6 @@ public class PageCalendarRenderer extends Renderer {
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
 
     if (!ajax) {
-      importResources(context.getResponseWriter());
       w.a("<input type=\"hidden\" id=\"" + cal.getId() + "_date\" name=\"" + cal.getId() + "_date\" value=\"" + cal.getDate() + "\"/>");
       w.a("\n<div id=\"" + cal.getId() + "\">");
     }

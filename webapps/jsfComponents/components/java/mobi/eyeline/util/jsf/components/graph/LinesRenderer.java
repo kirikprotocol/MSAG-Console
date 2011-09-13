@@ -1,7 +1,6 @@
 package mobi.eyeline.util.jsf.components.graph;
 
 import mobi.eyeline.util.jsf.components.AjaxFacesContext;
-import mobi.eyeline.util.jsf.components.ResourceUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -16,23 +15,6 @@ import java.util.List;
  */
 public class LinesRenderer extends Renderer {
 
-
-  private void importJSResources(ResponseWriter writer, String name) throws IOException{
-    writer.startElement("script", null);
-    writer.writeAttribute("type", "text/javascript", null);
-    writer.writeAttribute("src", ResourceUtils.getResourceUrl(name), null);
-    writer.endElement("script");
-  }
-
-
-
-  private void importResources(ResponseWriter writer) throws IOException{
-    importJSResources(writer, "/js/ajax.js");
-    importJSResources(writer, "/js/raphael-min.js");
-    importJSResources(writer, "/js/g.raphael-min.js");
-    importJSResources(writer, "/js/g.line-min.js");
-    importJSResources(writer, "/js/lines.js");
-  }
 
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     if (context instanceof AjaxFacesContext) {
@@ -57,7 +39,6 @@ public class LinesRenderer extends Renderer {
 
     if(component instanceof Lines) {
       Lines ls = (Lines)component;
-      importResources(context.getResponseWriter());
       context.getResponseWriter().append("\n<div id=\"").append(component.getId()).append("\" style=\"width:"+ls.getWidth()+"px;height:"+ls.getHeight()+"px;border:1px dashed #CCC;\">");
     }
 
