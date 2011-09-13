@@ -84,16 +84,12 @@ public class InputFileRenderer extends Renderer {
       }
       final Method getIS = file.getClass().getMethod("getInputStream");
       return new UploadedFile() {
-        @Override
         public String getContentType() {
           return contentType;
         }
-        @Override
         public long getLength() {
           return lenght;
         }
-
-        @Override
         public InputStream getInputStream() throws Exception {
           try {
             return (InputStream)getIS.invoke(file);
@@ -129,7 +125,7 @@ public class InputFileRenderer extends Renderer {
       if(i != null) {
         if(i.hasNext()) {
           String name = i.next();
-          return o.getClass().getMethod("getUploadedFile", java.lang.String.class).invoke(o, new String[]{name});
+          return o.getClass().getMethod("getUploadedFile", java.lang.String.class).invoke(o, (Object[])new String[]{name});
         }
       }
     }

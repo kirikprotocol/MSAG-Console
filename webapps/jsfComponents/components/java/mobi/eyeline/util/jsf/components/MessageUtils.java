@@ -78,7 +78,7 @@ public class MessageUtils {
     try {
       String res = (bundle == null) ? null : bundle.getString(key);
       if (res != null && args != null)
-        res = MessageFormat.format(res, args);
+        res = MessageFormat.format(res, (Object[]) args);
       return res;
     } catch (MissingResourceException e) {
       return null;
