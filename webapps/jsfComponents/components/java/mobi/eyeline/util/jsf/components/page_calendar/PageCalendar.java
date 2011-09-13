@@ -1,17 +1,18 @@
 package mobi.eyeline.util.jsf.components.page_calendar;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
-
+import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
+import javax.faces.render.Renderer;
 
 /**
  * @author Artem Snopkov
  */
-public class PageCalendar extends EyelineComponent {
+public class PageCalendar extends UIPanel {
 
   private String var;
   private long date;
   private ConstantExpression[] varExpressions;
+  private final Renderer renderer = new PageCalendarRenderer();
 
   public PageCalendar() {
     date = System.currentTimeMillis();
@@ -36,13 +37,18 @@ public class PageCalendar extends EyelineComponent {
     this.date = date;
   }
 
-  public ConstantExpression getVarExpression(int index) {
+  ConstantExpression getVarExpression(int index) {
     return varExpressions[index];
   }
 
-  public void processDecodes(javax.faces.context.FacesContext context) {
-    PageCalendarRenderer.decodeCalendar(context, this);
-    super.processDecodes(context);
+  @Override
+  public String getFamily() {
+    return "Eyeline";
+  }
+
+  @Override
+  protected Renderer getRenderer(FacesContext context) {
+    return renderer;
   }
 
   public Object saveState(FacesContext context) {

@@ -4,12 +4,11 @@ import javax.el.ValueExpression;
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
-import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * @author Artem Snopkov
  */
-public class CollapsingGroup extends UIPanel implements JspTag {
+public class CollapsingGroup extends UIPanel {
 
   private String label;
   private boolean opened;

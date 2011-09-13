@@ -12,53 +12,34 @@
         <tr>
           <td width="26">&#160;</td>
           <td width="1%">
-            <eye:menubar label="Таблицы">
-              <eye:menubaritem><h:commandLink value="Data table" action="DATA_TABLE"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Dynamic table" action="DYNAMIC_TABLE"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Weekly calendar" action="PAGE_CALENDAR"/></eye:menubaritem>
-            </eye:menubar>
-          </td>
-          <td width="1%">
-            <eye:menubar label="Время">
+            <eye:menubar label="Ввод данных">
               <eye:menubaritem><h:commandLink value="Input time" action="INPUT_TIME"/></eye:menubaritem>
               <eye:menubaritem><h:commandLink value="Input date" action="INPUT_DATE"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Input text" action="INPUT_TEXT"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Input file" action="INPUT_FILE"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Dynamic table" action="DYNAMIC_TABLE"/></eye:menubaritem>
+
+
             </eye:menubar>
           </td>
           <td width="1%">
-            <eye:menubar label="Графики">
+            <eye:menubar label="Вывод данных">
+              <eye:menubaritem><h:commandLink value="Data table" action="DATA_TABLE"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Weekly calendar" action="PAGE_CALENDAR"/></eye:menubaritem>
               <eye:menubaritem><h:commandLink value="Lines" action="LINES"/></eye:menubaritem>
-            </eye:menubar>
-          </td>
-          <td width="1%">
-            <eye:menubar label="Кнопки">
-              <eye:menubaritem><h:commandLink value="Buttons" action="BUTTONS"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Messages" action="MESSAGES"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Updatable content" action="UPDATABLE_CONTENT"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Progress bar" action="PROGRESS_BAR"/></eye:menubaritem>
             </eye:menubar>
           </td>
           <td width="1%">
             <eye:menubar label="Другое">
               <eye:menubaritem><h:commandLink value="Collapsing Group" action="COLLAPSING_GROUP"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Input text" action="INPUT_TEXT"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Input file" action="INPUT_FILE"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Collapsing Group" action="COLLAPSING_GROUP"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Updatable content" action="UPDATABLE_CONTENT"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Messages" action="MESSAGES"/></eye:menubaritem>
-              <eye:menubaritem><h:commandLink value="Progress bar" action="PROGRESS_BAR"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Buttons" action="BUTTONS"/></eye:menubaritem>
               <eye:menubaritem><h:commandLink value="File downloading" action="FILE_DOWNLOADING"/></eye:menubaritem>
             </eye:menubar>
           </td>
           <td width="100%">&#160;</td>
-          <td style="white-space:nowrap">
-            <table id="menu_link">
-              <tr>
-                <td style="white-space:nowrap; background-image: none;">
-                  <h:commandLink value="Help"/>
-                </td>
-                <td style="white-space:nowrap; background-image: none;">
-                  <h:commandLink id="MENU0_LOGOUT" value="Logout"/>
-                </td>
-              </tr>
-            </table>
-          </td>
         </tr>
       </table>
     </h:form>

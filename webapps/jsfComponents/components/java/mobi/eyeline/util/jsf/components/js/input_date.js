@@ -1,4 +1,4 @@
-function initRuLocale() {
+function initLocales() {
   jQuery(function($) {
     $.datepicker.regional['ru'] = {
       closeText: 'Закрыть',
@@ -18,17 +18,37 @@ function initRuLocale() {
       isRTL: false,
       showMonthAfterYear: false,
       yearSuffix: ''};
+
+    $.datepicker.regional['en'] = {
+      closeText: 'Close',
+      prevText: '&#x3c;Prev',
+      nextText: 'Next&#x3e;',
+      currentText: 'Today',
+      monthNames: ['January','February','March','April','May','June',
+        'July','August','September','October','November','December'],
+      monthNamesShort: ['Jan','Feb','Mar','Apr','May','Jun',
+        'Jul','Aug','Sep','Oct','Nov','Dec'],
+      dayNames: ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'],
+      dayNamesShort: ['sun','mon','tue','wed','thu','fri','sat'],
+      dayNamesMin: ['SSS','Mo','Tu','We','Th','Fr','Sa'],
+      weekHeader: 'Week',
+      dateFormat: 'dd.mm.yy',
+      firstDay: 1,
+      isRTL: false,
+      showMonthAfterYear: false,
+      yearSuffix: ''};
   });
 }
 
 function initInputDate(elementId, value, minDate, maxDate, inputTime, numberOfMonths, locale) {
-  initRuLocale();
+  initLocales();
 
   $(function() {
     var options = {
       showAnim:"",
       constrainInput : false,
-      showOn: "button"
+      showOn: "button",
+      dateFormat: "dd.mm.yy"
     };
 
     if (numberOfMonths == 1) {

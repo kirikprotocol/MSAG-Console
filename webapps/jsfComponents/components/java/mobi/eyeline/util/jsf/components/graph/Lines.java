@@ -1,14 +1,16 @@
 package mobi.eyeline.util.jsf.components.graph;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
 
+import javax.el.ValueExpression;
+import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
+import javax.faces.render.Renderer;
 import java.util.List;
 
 /**
  * @author Aleksandr Khalitov
  */
-public class Lines extends EyelineComponent {
+public class Lines extends UIPanel {
 
   private List labels;
 
@@ -17,6 +19,16 @@ public class Lines extends EyelineComponent {
   private int height;
 
   private int width;
+
+  @Override
+  public String getFamily() {
+    return "Eyeline";
+  }
+
+  @Override
+  protected Renderer getRenderer(FacesContext context) {
+    return new LinesRenderer();
+  }
 
   public Object saveState(FacesContext context) {
     Object[] values = new Object[5];
@@ -38,7 +50,11 @@ public class Lines extends EyelineComponent {
   }
 
   public int getHeight() {
-    return height;
+    ValueExpression exp = getValueExpression("height");
+    if (exp == null)
+      return height;
+    else
+      return (Integer) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setHeight(int height) {
@@ -46,7 +62,11 @@ public class Lines extends EyelineComponent {
   }
 
   public int getWidth() {
-    return width;
+    ValueExpression exp = getValueExpression("width");
+    if (exp == null)
+      return width;
+    else
+      return (Integer) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setWidth(int width) {
@@ -54,7 +74,11 @@ public class Lines extends EyelineComponent {
   }
 
   public List getLabels() {
-    return labels;
+    ValueExpression exp = getValueExpression("labels");
+    if (exp == null)
+      return labels;
+    else
+      return (List) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setLabels(List labels) {
@@ -62,7 +86,11 @@ public class Lines extends EyelineComponent {
   }
 
   public Integer getUpdatePeriod() {
-    return updatePeriod;
+    ValueExpression exp = getValueExpression("updatePeriod");
+    if (exp == null)
+      return updatePeriod;
+    else
+      return (Integer) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setUpdatePeriod(Integer updatePeriod) {

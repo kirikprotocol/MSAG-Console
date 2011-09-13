@@ -4,7 +4,6 @@ import javax.el.ValueExpression;
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
-import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * @author Aleksandr Khalitov

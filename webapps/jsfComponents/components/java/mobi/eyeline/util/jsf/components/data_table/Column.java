@@ -1,7 +1,5 @@
 package mobi.eyeline.util.jsf.components.data_table;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
-
 import javax.el.ValueExpression;
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;

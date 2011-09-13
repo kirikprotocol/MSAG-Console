@@ -1,10 +1,7 @@
 package mobi.eyeline.util.jsf.components;
 
-import com.sun.corba.se.impl.monitoring.MonitoredObjectImpl;
 
-import javax.el.ValueExpression;
 import javax.faces.application.FacesMessage;
-import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import java.text.MessageFormat;
 import java.util.Locale;

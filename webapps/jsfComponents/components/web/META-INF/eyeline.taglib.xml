@@ -4,7 +4,6 @@
     "http://java.sun.com/dtd/facelet-taglib_1_0.dtd">
 
 <facelet-taglib>
-  <!--<library-class>mobi.eyeline.informer.web.components.EyelineTagLib</library-class>-->
 
   <namespace>http://taglib.eyeline.mobi</namespace>
 
@@ -187,17 +186,15 @@
   <tag>
     <tag-name>pageCalendar</tag-name>
     <component>
-      <component-type>pageCalendar</component-type>
-      <renderer-type>pageCalendar</renderer-type>
+      <component-type>mobi.eyeline.util.jsf.components.page_сalendar</component-type>
       <handler-class>mobi.eyeline.util.jsf.components.page_calendar.PageCalendarHandler</handler-class>
     </component>
   </tag>
 
-
   <tag>
     <tag-name>set</tag-name>
     <component>
-      <component-type>set</component-type>
+      <component-type>mobi.eyeline.util.jsf.components.set</component-type>
       <handler-class>mobi.eyeline.util.jsf.components.set.SetHandler</handler-class>
     </component>
   </tag>
@@ -205,18 +202,16 @@
   <tag>
     <tag-name>lines</tag-name>
     <component>
-      <component-type>lines</component-type>
-      <renderer-type>lines</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.graph.LinesHandler</handler-class>
+      <component-type>mobi.eyeline.util.jsf.components.graph.lines</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 
   <tag>
     <tag-name>lineChart</tag-name>
     <component>
-      <component-type>lineChart</component-type>
-      <renderer-type>lineChart</renderer-type>
-      <handler-class>mobi.eyeline.util.jsf.components.graph.LineChartHandler</handler-class>
+      <component-type>mobi.eyeline.util.jsf.components.graph.lineChart</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
     </component>
   </tag>
 

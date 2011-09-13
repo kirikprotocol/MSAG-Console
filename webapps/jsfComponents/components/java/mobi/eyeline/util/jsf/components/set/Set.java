@@ -1,15 +1,14 @@
 package mobi.eyeline.util.jsf.components.set;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
-
 import javax.el.ELContext;
 import javax.el.ValueExpression;
+import javax.faces.component.UIComponentBase;
 import javax.faces.context.FacesContext;
 
 /**
  * @author Artem Snopkov
  */
-public class Set extends EyelineComponent {
+public class Set extends UIComponentBase {
 
   private String var;
   private ConstantExpression value;
@@ -33,6 +32,11 @@ public class Set extends EyelineComponent {
     else
       this.value.setValue(null, value.getValue(ctx));
     this.expr = value;
+  }
+
+  @Override
+  public String getFamily() {
+    return "Eyeline";
   }
 
   public void processUpdates(javax.faces.context.FacesContext context) {

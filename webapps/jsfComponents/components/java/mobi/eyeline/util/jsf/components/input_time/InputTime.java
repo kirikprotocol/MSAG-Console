@@ -4,12 +4,11 @@ import mobi.eyeline.util.jsf.components.base.UIInputImpl;
 
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
-import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * @author Aleksandr Khalitov
  */
-public class InputTime extends UIInputImpl implements JspTag {
+public class InputTime extends UIInputImpl {
 
   @Override
   public String getFamily() {

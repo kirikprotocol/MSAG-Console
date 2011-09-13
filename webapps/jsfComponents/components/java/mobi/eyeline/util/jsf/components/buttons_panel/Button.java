@@ -1,16 +1,13 @@
 package mobi.eyeline.util.jsf.components.buttons_panel;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
-
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
-import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * @author Artem Snopkov
  */
-public class Button extends UIPanel implements JspTag {
+public class Button extends UIPanel {
 
   @Override
   public String getFamily() {

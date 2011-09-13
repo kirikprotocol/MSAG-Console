@@ -1,13 +1,15 @@
 package mobi.eyeline.util.jsf.components.graph;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
 
+import javax.el.ValueExpression;
+import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
+import javax.faces.render.Renderer;
 
 /**
  * @author Aleksandr Khalitov
  */
-public class LineChart extends EyelineComponent {
+public class LineChart extends UIPanel {
 
   private int[][] values;
 
@@ -15,8 +17,22 @@ public class LineChart extends EyelineComponent {
 
   private boolean shade;
 
+  @Override
+  public String getFamily() {
+    return "Eyeline";
+  }
+
+  @Override
+  protected Renderer getRenderer(FacesContext context) {
+    return new LinesRenderer();
+  }
+
   public boolean getShade() {
-    return shade;
+    ValueExpression exp = getValueExpression("shade");
+    if (exp == null)
+      return shade;
+    else
+      return (Boolean) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setShade(boolean shade) {
@@ -24,7 +40,11 @@ public class LineChart extends EyelineComponent {
   }
 
   public String getColor() {
-    return color;
+    ValueExpression exp = getValueExpression("color");
+    if (exp == null)
+      return color;
+    else
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setColor(String color) {
@@ -32,7 +52,11 @@ public class LineChart extends EyelineComponent {
   }
 
   public int[][] getValues() {
-    return values;
+    ValueExpression exp = getValueExpression("values");
+    if (exp == null)
+      return values;
+    else
+      return (int[][]) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setValues(int[][] values) {

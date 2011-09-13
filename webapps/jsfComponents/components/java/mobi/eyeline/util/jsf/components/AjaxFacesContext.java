@@ -4,16 +4,12 @@ package mobi.eyeline.util.jsf.components;
 import javax.el.ELContext;
 import javax.faces.application.Application;
 import javax.faces.application.FacesMessage;
-import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseStream;
 import javax.faces.context.ResponseWriter;
-import javax.faces.event.ActionListener;
 import javax.faces.render.RenderKit;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.Iterator;
 
 /**

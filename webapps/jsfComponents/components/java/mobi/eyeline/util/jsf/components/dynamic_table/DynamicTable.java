@@ -1,10 +1,7 @@
 package mobi.eyeline.util.jsf.components.dynamic_table;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
 import mobi.eyeline.util.jsf.components.base.UIInputImpl;
-import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
 
-import javax.el.ValueExpression;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
 import java.util.ArrayList;

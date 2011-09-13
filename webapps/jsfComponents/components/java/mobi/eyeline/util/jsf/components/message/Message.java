@@ -1,18 +1,14 @@
 package mobi.eyeline.util.jsf.components.message;
 
-import mobi.eyeline.util.jsf.components.input_time.InputTimeRenderer;
-
-import javax.faces.component.UIOutput;
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
-import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * User: artem
  * Date: 27.07.11
  */
-public class Message extends UIPanel implements JspTag {
+public class Message extends UIPanel {
 
   private String level;
 

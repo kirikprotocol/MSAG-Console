@@ -291,7 +291,7 @@
   <tag>
     <description>Поле для ввода текста</description>
     <name>inputText</name>
-    <tag-class>mobi.eyeline.util.jsf.components.input_text.InputText</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
 
@@ -402,7 +402,7 @@
   <tag>
     <description>Поле для загрузки файла (для кореектной работы компонента в форме надо указывать enctype="multipart/form-data")</description>
     <name>inputFile</name>
-    <tag-class>mobi.eyeline.util.jsf.components.input_file.InputFile</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
 
@@ -470,7 +470,7 @@
   <tag>
     <description>Поле для ввода времени (часы, минуты, секунды).</description>
     <name>inputTime</name>
-    <tag-class>mobi.eyeline.util.jsf.components.input_time.InputTime</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
 
@@ -546,7 +546,7 @@
     </description>
 
     <name>validateTimeInterval</name>
-    <tag-class>mobi.eyeline.util.jsf.components.input_time.TimeIntervalValidatorTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>empty</body-content>
 
     <attribute>
@@ -575,7 +575,7 @@
   <tag>
     <description>Поле для ввода даты и времени</description>
     <name>inputDate</name>
-    <tag-class>mobi.eyeline.util.jsf.components.input_date.InputDateTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -691,7 +691,7 @@
       ]]>
     </description>
     <name>message</name>
-    <tag-class>mobi.eyeline.util.jsf.components.message.Message</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -724,7 +724,7 @@
   <tag>
     <description>Схлапывающаяся группа элементов</description>
     <name>collapsingGroup</name>
-    <tag-class>mobi.eyeline.util.jsf.components.collapsing_group.CollapsingGroup</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -766,7 +766,7 @@
   <tag>
     <description>Панель кнопок. Может содержать внутри себя теги button и space</description>
     <name>buttons</name>
-    <tag-class>mobi.eyeline.util.jsf.components.buttons_panel.ButtonsPannel</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -789,7 +789,7 @@
   <tag>
     <description>Кнопка на панели buttons. Может содержать произвольный контент.</description>
     <name>button</name>
-    <tag-class>mobi.eyeline.util.jsf.components.buttons_panel.Button</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -812,7 +812,7 @@
   <tag>
     <description>Горизонтальная пружинка на панели кнопок</description>
     <name>space</name>
-    <tag-class>mobi.eyeline.util.jsf.components.buttons_panel.Space</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>empty</body-content>
 
     <attribute>
@@ -837,7 +837,7 @@
   <tag>
     <description>Область страницы, которая может быть обновлена без обновления всей страницы (через AJAX)</description>
     <name>updatableContent</name>
-    <tag-class>mobi.eyeline.util.jsf.components.updatable_content.UpdatableContentTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -884,7 +884,7 @@
   <tag>
     <description>Прогресс бар. Прогресс расчитывается так: current/maximum*100%</description>
     <name>progressBar</name>
-    <tag-class>mobi.eyeline.util.jsf.components.progress_bar.ProgressBarTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -930,7 +930,7 @@
   <tag>
     <description>Кнопка, при наведении на которую появляется всплывающее меню</description>
     <name>menubar</name>
-    <tag-class>mobi.eyeline.util.jsf.components.menubar.MenuBarTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -963,7 +963,7 @@
   <tag>
     <description>Горизонтальный разделитель в меню</description>
     <name>menubardelimiter</name>
-    <tag-class>mobi.eyeline.util.jsf.components.menubar.MenuBarDelimiterTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>empty</body-content>
 
     <attribute>
@@ -986,7 +986,7 @@
   <tag>
     <description>Элемент в menubar</description>
     <name>menubaritem</name>
-    <tag-class>mobi.eyeline.util.jsf.components.menubar.MenuBarItemTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>empty</body-content>
 
     <attribute>
@@ -1011,7 +1011,7 @@
   <tag>
     <description>Таблица для ввода данных с изменяемым количеством строк</description>
     <name>dynamicTable</name>
-    <tag-class>mobi.eyeline.util.jsf.components.dynamic_table.DynamicTableTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>JSP</body-content>
 
     <attribute>
@@ -1046,7 +1046,7 @@
   <tag>
     <description>Тег, описывающий текстовую колонку в dynamicTable</description>
     <name>textColumn</name>
-    <tag-class>mobi.eyeline.util.jsf.components.dynamic_table.TextColumnTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>empty</body-content>
 
     <attribute>
@@ -1101,7 +1101,7 @@
   <tag>
     <description>Тег, описывающий колонку c select-ом в dynamicTable</description>
     <name>selectColumn</name>
-    <tag-class>mobi.eyeline.util.jsf.components.dynamic_table.SelectColumnTag</tag-class>
+    <tag-class>mobi.eyeline.util.jsf.components.base.BaseTag</tag-class>
     <body-content>empty</body-content>
 
     <attribute>

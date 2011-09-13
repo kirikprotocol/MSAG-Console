@@ -1,7 +1,5 @@
 package mobi.eyeline.util.jsf.components.progress_bar;
 
-import mobi.eyeline.util.jsf.components.buttons_panel.ButtonsPanelRenderer;
-
 import javax.el.ValueExpression;
 import javax.faces.component.UIOutput;
 import javax.faces.context.FacesContext;

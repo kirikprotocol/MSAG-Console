@@ -3,12 +3,11 @@ package mobi.eyeline.util.jsf.components.input_file;
 import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
-import javax.servlet.jsp.tagext.JspTag;
 
 /**
  * author: Aleksandr Khalitov
  */
-public class InputFile extends UIInput implements JspTag{
+public class InputFile extends UIInput {
 
   @Override
   public String getFamily() {

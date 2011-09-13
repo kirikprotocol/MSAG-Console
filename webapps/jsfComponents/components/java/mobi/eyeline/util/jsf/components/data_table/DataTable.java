@@ -66,7 +66,7 @@ public class DataTable extends UIPanel {
   }
 
   public boolean isPageSizeRendered() {
-    ValueExpression exp = getValueExpression("pageSiizeRendered");
+    ValueExpression exp = getValueExpression("pageSizeRendered");
     if (exp == null)
       return pageSizeRendered;
     else
@@ -102,7 +102,7 @@ public class DataTable extends UIPanel {
   }
 
   public boolean isDisallowSelectAll() {
-    ValueExpression exp = getValueExpression("diallowSelectAll");
+    ValueExpression exp = getValueExpression("disallowSelectAll");
     if (exp == null)
       return disallowSelectAll;
     else

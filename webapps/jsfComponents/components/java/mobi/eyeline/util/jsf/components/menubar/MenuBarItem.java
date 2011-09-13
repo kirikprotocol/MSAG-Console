@@ -1,7 +1,5 @@
 package mobi.eyeline.util.jsf.components.menubar;
 
-import mobi.eyeline.util.jsf.components.EyelineComponent;
-
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
 import javax.faces.render.Renderer;
