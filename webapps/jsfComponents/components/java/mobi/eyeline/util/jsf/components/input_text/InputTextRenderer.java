@@ -5,6 +5,7 @@ import mobi.eyeline.util.jsf.components.HtmlWriter;
 import javax.el.ValueExpression;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
+import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.ConverterException;
@@ -30,8 +31,10 @@ public class InputTextRenderer extends Renderer {
     String id = component.getId();
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String submittedValue = decodeString(reqParams.get(id));
-    if (submittedValue != null)
+    if (submittedValue != null )
       ((InputText) component).setSubmittedValue(new String[]{submittedValue});
+    else if (((UIInput)component).isRequired())
+      ((UIInput)component).setSubmittedValue(new String[]{null});
   }
 
   @Override
