@@ -40,6 +40,7 @@ public class UIInputImpl extends UIInput {
         setLocalValueSet(false);
 
       } catch (ELException e) {
+        e.printStackTrace();
         FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
         Throwable cause = e.getCause();
         if (cause != null)
@@ -47,6 +48,7 @@ public class UIInputImpl extends UIInput {
         context.addMessage(getClientId(context), message);
         setValid(false);
       } catch (NumberFormatException e ){
+        e.printStackTrace();
         FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
         context.addMessage(getClientId(context), message);
         setValid(false);
