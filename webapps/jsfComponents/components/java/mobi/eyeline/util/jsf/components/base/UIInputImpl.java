@@ -40,15 +40,12 @@ public class UIInputImpl extends UIInput {
         setLocalValueSet(false);
 
       } catch (ELException e) {
+        FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
         Throwable cause = e.getCause();
-        if (cause != null && ((cause instanceof IllegalArgumentException)
-            || (cause instanceof NumberFormatException) || (cause instanceof ParseException))) {
-          FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
+        if (cause != null)
           message.setDetail(cause.getLocalizedMessage());
-          context.addMessage(getClientId(context), message);
-          setValid(false);
-        } else
-          throw e;
+        context.addMessage(getClientId(context), message);
+        setValid(false);
       } catch (NumberFormatException e ){
         FacesMessage message = MessageUtils.getErrorMessage(context, UIInput.CONVERSION_MESSAGE_ID);
         context.addMessage(getClientId(context), message);
