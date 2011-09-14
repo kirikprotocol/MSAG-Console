@@ -29,7 +29,7 @@ void IAPNotifier::init(uint16_t ini_threads, uint16_t max_threads/* = 0*/)
     ini_threads = max_threads;
   if (ini_threads > _iniThreads)
     _iniThreads = ini_threads;
-  _taskPool.reserveTasks(_iniThreads);
+  _taskPool.reserve(_iniThreads);
 }
 
 void IAPNotifier::stop(const TimeSlice * use_tmo/* = NULL*/)
@@ -46,16 +46,15 @@ void IAPNotifier::stop(const TimeSlice * use_tmo/* = NULL*/)
 //Starts a threaded task that processes query event.
 bool IAPNotifier::onQueryEvent(AbonentId ab_id)
 {
-  NotificationTask * pTask = _taskPool.allcTask();
-  if (pTask) {
-    if (pTask->init(*_qrsStore, ab_id, _logger)) {
+  NTFTaskRef  pTask = _taskPool.allcObj();
+  if (!pTask.empty()) {
+    if (pTask->init(pTask, *_qrsStore, ab_id, _logger) && startTask(pTask.get())) {
       smsc_log_debug(_logger, "%s: processing %s(%s)", _logId,
                      pTask->taskName(), ab_id.getSignals());
-      startTask(pTask);
       return true;
     }
     smsc_log_error(_logger, "%s: non-existent query for %s", _logId, ab_id.getSignals());
-    _taskPool.rlseTask(pTask);
+    pTask->onRelease();
   } else {
     smsc_log_error(_logger, "%s: task pool is exhausted", _logId);
   }
@@ -63,45 +62,22 @@ bool IAPNotifier::onQueryEvent(AbonentId ab_id)
 }
 
 /* ************************************************************************** *
- * class IAPNotifier::NTFTaskPool implementation:
- * ************************************************************************** */
-void IAPNotifier::NTFTaskPool::reserveTasks(uint16_t num_tasks)
-{
-  MutexGuard grd(_sync);
-  _pool.reserve(num_tasks); 
-}
-
-//Returns NULL if no task available
-IAPNotifier::NotificationTask * IAPNotifier::NTFTaskPool::allcTask(void)
-{
-  MutexGuard grd(_sync);
-  TaskPool::PooledObj * rval = _pool.allcObj();
-  if (rval)
-    rval->setOwner(*this);
-  return rval;
-}
-
-void IAPNotifier::NTFTaskPool::rlseTask(IAPNotifier::NotificationTask * p_task)
-{
-  MutexGuard grd(_sync);
-  _pool.rlseObj(static_cast<TaskPool::PooledObj*>(p_task));
-}
-
-
-/* ************************************************************************** *
  * class IAPNotifier::NotificationTask implementation:
  * ************************************************************************** */
 const TimeSlice IAPNotifier::NotificationTask::_dflt_wait_tmo(50, TimeSlice::tuMSecs); //50 msec
 
-bool IAPNotifier::NotificationTask::init(
+bool IAPNotifier::NotificationTask::init(const NTFTaskGuard & task_grd,
   IAPQueriesStore & qrs_store, const AbonentId & ab_id, Logger * use_log/* = NULL*/)
 {
-  isStopping = isReleased = false;
   _qGrd = qrs_store.getQuery(ab_id, false);
-  if (!(_logger = use_log))
-    _logger = Logger::getInstance(IAPROVIDER_DFLT_LOGGER);
-
-  return (_qGrd.get() != NULL);
+  if (_qGrd.get()) {
+    isStopping = isReleased = false;
+    if (!(_logger = use_log))
+      _logger = Logger::getInstance(IAPROVIDER_DFLT_LOGGER);
+    _thisGrd = task_grd;
+    return true;
+  }
+  return false;
 }
 // -------------------------------------------
 // -- ThreadedTask interface methods
@@ -144,7 +120,7 @@ void IAPNotifier::NotificationTask::onRelease(void)
 {
   _qGrd.clear(); //release query ref(entire query if ref is a last one)
   isReleased = true;
-  _owner->rlseTask(this);
+  _thisGrd.release();
 }
 
 } //iaprvd

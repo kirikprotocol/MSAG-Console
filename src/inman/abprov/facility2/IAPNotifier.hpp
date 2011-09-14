@@ -8,7 +8,7 @@
 #define SMSC_INMAN_IAP_NOTIFIER_HPP
 
 #include "core/threads/ThreadPool.hpp"
-#include "inman/common/IDXObjPool_T.hpp"
+#include "core/buffers/IntrusivePoolOfUniqueT.hpp"
 #include "inman/abprov/facility2/IAPQueriesStore.hpp"
 
 namespace smsc {
@@ -47,35 +47,14 @@ public:
   virtual bool onQueryEvent(AbonentId ab_id);
 
 protected:
-  class NTFTaskPool; //forward declaration of NotificationTasks pool
+  typedef smsc::core::buffers::IDAPoolCoreAC_T<uint16_t>::ObjGuard  NTFTaskGuard;
 
   //Handles referred IAPQuery FSM switching events.
-  class NotificationTask : public smsc::core::threads::ThreadedTask {
-  private:
-    using smsc::core::threads::ThreadedTask::setDelOnCompletion;
-
-    NTFTaskPool *     _owner;
-    IAPQueryGuard     _qGrd;
-    Logger *          _logger;
-
-  protected:
-    static const TimeSlice _dflt_wait_tmo; //50 msec
-
-    //NOTE: task is reusable
-    explicit NotificationTask() : smsc::core::threads::ThreadedTask(false)
-      , _owner(NULL), _logger(NULL)
-    { }
-    //
-    virtual ~NotificationTask()
-    { }
-
-    friend class NTFTaskPool;
-    //Note: this method called once right after task allocation
-    void setOwner(NTFTaskPool & use_owner) { _owner = &use_owner; }
-
+  class NotificationTask : public smsc::core::buffers::UniqueObj_T<smsc::core::threads::ThreadedTask, uint16_t> {
   public:
     //Returns false if there is no active query in storage associated with given abonent.
-    bool init(IAPQueriesStore & qrs_store, const AbonentId & ab_id, Logger * use_log = NULL);
+    bool init(const NTFTaskGuard & task_grd, IAPQueriesStore & qrs_store,
+              const AbonentId & ab_id, Logger * use_log = NULL);
 
     // -------------------------------------------
     // -- ThreadedTask interface methods
@@ -83,27 +62,32 @@ protected:
     virtual const char * taskName(void);
     virtual int   Execute(void);
     virtual void  onRelease(void);
-  };
 
-  class NTFTaskPool {
+  private:
+    typedef smsc::core::buffers::UniqueObj_T<smsc::core::threads::ThreadedTask, uint16_t> Base_T;
+    using Base_T::setDelOnCompletion;
+
+    NTFTaskGuard      _thisGrd; //guards this task until it complete Excecute(); 
+    IAPQueryGuard     _qGrd;
+    Logger *          _logger;
+
   protected:
-    typedef smsc::util::UNQObjPool_T<NotificationTask, uint16_t> TaskPool;
+    static const TimeSlice _dflt_wait_tmo; //50 msec
 
-    mutable Mutex     _sync;
-    TaskPool          _pool; //NOTE: tasks are reusable
-
-  public:
-    NTFTaskPool() : _pool(false)
-    { }
-    ~NTFTaskPool()
-    { }
-
-    inline void reserveTasks(uint16_t num_tasks);
-    //Returns NULL if no task available
-    inline NotificationTask * allcTask(void);
+    // -----------------------------------------------
+    // -- UniqueObj_T<, uint16_t> interface methods
+    // -----------------------------------------------
+    explicit NotificationTask(uint16_t use_idx) : Base_T(use_idx), _logger(0)
+    {
+      this->setDelOnCompletion(false); //task are reusable !!!
+    }
     //
-    inline void rlseTask(NotificationTask * p_task);
+    virtual ~NotificationTask()
+    { }
   };
+  //NOTE: tasks are reusable
+  typedef smsc::core::buffers::IntrusivePoolOfUnique_T<NotificationTask, uint16_t> NTFTaskPool;
+  typedef NTFTaskPool::ObjRef NTFTaskRef;
 
   /* - */
   uint16_t          _iniThreads;  //1 - by default
