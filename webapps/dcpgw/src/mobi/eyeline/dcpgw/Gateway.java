@@ -2,12 +2,14 @@ package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.dcpgw.admin.UpdateConfigServer;
 import mobi.eyeline.dcpgw.exeptions.CouldNotCleanJournalException;
+import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.journal.Status;
 import mobi.eyeline.dcpgw.journal.Journal;
 import mobi.eyeline.informer.admin.InitException;
+import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.filesystem.*;
 import mobi.eyeline.informer.util.config.XmlConfig;
@@ -16,15 +18,19 @@ import mobi.eyeline.informer.util.config.XmlConfigParam;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
 import mobi.eyeline.smpp.api.*;
 import mobi.eyeline.smpp.api.pdu.*;
+import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
+import mobi.eyeline.smpp.api.types.EsmMessageType;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Gateway extends Thread implements PDUListener {
 
@@ -51,7 +57,7 @@ public class Gateway extends Thread implements PDUListener {
 
     private static Journal journal;
 
-    private static Hashtable<Integer, Data> recepts_table;
+    private static Hashtable<Long, Data> message_id_receipt_table;
 
     private static int recend_receipts_timeout;
     private static int recend_receipts_max_timeout;
@@ -59,6 +65,25 @@ public class Gateway extends Thread implements PDUListener {
     public static final String CONNECTION_PREFIX = "smpp.sme.";
 
     private static Hashtable<String, Provider> connection_provider_table;
+
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
+    private static SimpleDateFormat sdf2 = new SimpleDateFormat("ddHHmmss");
+    private static Calendar cal = Calendar.getInstance();
+    private static AtomicInteger ai = new AtomicInteger(0);
+
+    private static Hashtable<Integer, Long> sequence_number_message_id_table;
+
+    public static void main(String args[]){
+
+        try {
+            new Gateway();
+        } catch (SmppException e) {
+            log.error(e);
+        } catch (InitializationException e) {
+            log.error("Couldn't initialize gateway.", e);
+        }
+
+    }
 
     public Gateway() throws SmppException, InitializationException{
         log.debug("Try to initialize gateway ...");
@@ -82,19 +107,31 @@ public class Gateway extends Thread implements PDUListener {
         String endpoints_file_str = Utils.getProperty(config, "users.file", user_dir+File.separator+"conf"+File.separator+"endpoints.xml" );
         endpoints_file = new File(endpoints_file_str);
 
-        Hashtable<String, String> systemId_password_table;
-        try {
-            systemId_password_table = loadEndpoints();
-        } catch (XmlConfigException e) {
-            log.error(e);
-            throw new InitializationException(e);
-        }
+        XmlConfig xmlConfig = new XmlConfig();
 
-        for (Map.Entry<String, String> entry : systemId_password_table.entrySet()) {
-            String systemId = entry.getKey();
-            String password = entry.getValue();
-            String connection_property_name = CONNECTION_PREFIX+systemId+".password";
-            config.setProperty(connection_property_name, password);
+        try {
+            xmlConfig.load(endpoints_file);
+            XmlConfigSection endpoints_section = xmlConfig.getSection("endpoints");
+            Collection<XmlConfigSection> c = endpoints_section.sections();
+            for(XmlConfigSection s: c){
+                String endpoint_name = s.getName();
+
+                XmlConfigParam p = s.getParam("enabled");
+                if (p == null || p.getBool()){
+                    p = s.getParam("systemId");
+                    String systemId = p.getString();
+
+                    p = s.getParam("password");
+                    String password = p.getString();
+
+                    config.setProperty(CONNECTION_PREFIX+systemId+".password", password);
+                    log.debug("Load endpoint: name="+endpoint_name+", systemId="+systemId+", password="+password+" .");
+                } else {
+                    log.debug("Endpoint '"+endpoint_name+"' is disabled.");
+                }
+            }
+        } catch (XmlConfigException e) {
+            throw new InitializationException(e);
         }
 
         connection_provider_table = new Hashtable<String, Provider>();
@@ -104,16 +141,12 @@ public class Gateway extends Thread implements PDUListener {
         String deliveries_file_str = Utils.getProperty(config, "deliveries.file", user_dir+File.separator+"conf"+File.separator+"deliveries.xml" );
         deliveries_file = new File(deliveries_file_str);
 
-        PDUListenerImpl pduListener = new PDUListenerImpl();
-
         try {
             updateConfiguration();
         } catch (XmlConfigException e) {
             log.error("Couldn't update configuration.", e);
             throw new InitializationException(e);
         }
-
-        recepts_table = new Hashtable<Integer, Data>();
 
         // Initialize update configuration server.
         String update_config_server_host = config.getProperty("update.config.server.host");
@@ -128,9 +161,20 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        journal = new Journal();
+        message_id_receipt_table = new Hashtable<Long, Data>();
+        journal = new Journal(message_id_receipt_table, sequence_number_message_id_table);
+
+
+        try {
+            journal.load();
+        } catch (CouldNotLoadJournalException e) {
+            log.error("Couldn't load journal.");
+            throw new InitializationException(e);
+        }
 
         // Initialize smpp server.
+
+        PDUListenerImpl pduListener = new PDUListenerImpl(connection_provider_table);
 
         procQueue = new ProcessingQueue(config, pduListener, null);
 
@@ -187,54 +231,21 @@ public class Gateway extends Thread implements PDUListener {
 
             @Override
             public void run() {
-                try {
-                    cleanJournal();
-                } catch (CouldNotCleanJournalException e) {
-                    log.error(e);
-                    // todo ?
+                synchronized (read_write_monitor){
+                    try {
+                        journal.clean();
+                    } catch (CouldNotCleanJournalException e) {
+                        log.error(e);
+                    }
                 }
             }
 
         }, clean_journal_timeout, clean_journal_timeout, TimeUnit.MILLISECONDS);
 
+        sequence_number_message_id_table = new Hashtable<Integer, Long>();
+
         log.debug("Successfully initialize gateway!");
     }
-
-    public static Hashtable<String, String> loadEndpoints() throws XmlConfigException {
-        log.debug("Try to load endpoints ...");
-        Hashtable<String, String> result = new Hashtable<String, String>();
-
-        XmlConfig xmlConfig = new XmlConfig();
-
-        xmlConfig.load(endpoints_file);
-        XmlConfigSection endpoints_section = xmlConfig.getSection("endpoints");
-        Collection<XmlConfigSection> c = endpoints_section.sections();
-        for(XmlConfigSection s: c){
-            String endpoint_name = s.getName();
-
-            XmlConfigParam p = s.getParam("enabled");
-            boolean enabled = p.getBool();
-
-            if (enabled){
-
-                p = s.getParam("systemId");
-                String systemId = p.getString();
-
-                p = s.getParam("password");
-                String password = p.getString();
-                log.debug("Load endpoint: name="+endpoint_name+", systemId="+systemId+", password="+password+" .");
-
-                result.put(systemId, password);
-            } else {
-                log.debug("Endpoint with name '"+endpoint_name+"' is disabled.");
-            }
-
-        }
-
-        log.debug("Successfully load endpoints!");
-        return result;
-    }
-
 
     public synchronized static void updateConfiguration() throws XmlConfigException {
         log.debug("Try to update configuration ...");
@@ -317,6 +328,42 @@ public class Gateway extends Thread implements PDUListener {
         log.debug("Successfully update configuration!");
     }
 
+    public static Hashtable<String, String> loadEndpoints() throws XmlConfigException {
+        log.debug("Try to load endpoints ...");
+        Hashtable<String, String> result = new Hashtable<String, String>();
+
+        XmlConfig xmlConfig = new XmlConfig();
+
+        xmlConfig.load(endpoints_file);
+        XmlConfigSection endpoints_section = xmlConfig.getSection("endpoints");
+        Collection<XmlConfigSection> c = endpoints_section.sections();
+        for(XmlConfigSection s: c){
+            String endpoint_name = s.getName();
+
+            XmlConfigParam p = s.getParam("enabled");
+            if (p == null || p.getBool()){
+
+                p = s.getParam("systemId");
+                String systemId = p.getString();
+
+                p = s.getParam("password");
+                String password = p.getString();
+                log.debug("Load endpoint: name="+endpoint_name+", systemId="+systemId+", password="+password+" .");
+
+                result.put(systemId, password);
+            } else {
+                log.debug("Endpoint with name '"+endpoint_name+"' is disabled.");
+            }
+
+        }
+
+        log.debug("Successfully load endpoints!");
+        return result;
+    }
+
+
+
+
     public boolean handlePDU(PDU pdu) {
         try {
             procQueue.add(pdu, pdu.isMessage());
@@ -335,37 +382,72 @@ public class Gateway extends Thread implements PDUListener {
         if (smppServer != null) smppServer.shutdown();
     }
 
-    public static void main(String args[]){
 
-        try {
-            new Gateway();
-        } catch (SmppException e) {
-            log.error(e);
-        } catch (InitializationException e) {
-            log.error("Couldn't initialize gateway.", e);
-        }
-
-    }
 
     public static void sendSubmitSMResp(SubmitSMResp submitSMResp) throws SmppException {
         smppServer.send(submitSMResp);
     }
 
-    public static void sendDeliveryReceipt(long message_id, Message delivery_receipt) throws SmppException, CouldNotWriteToJournalException{
+    public static void sendDeliveryReceipt(long message_id, Date submit_date, Date done_date, String connection_name,
+                                           Address source_address, Address destination_address,
+                                           int nsms, MessageState messageState)
+    throws SmppException, CouldNotWriteToJournalException{
+
         synchronized (read_write_monitor){
 
-            int sequence_number = delivery_receipt.getSequenceNumber();
-            log.debug("Try to send delivery receipt with message id '"+message_id+"' and sequence number '"+sequence_number+"'.");
-            smppServer.send(delivery_receipt);
-            log.debug("Successfully send delivery receipt with sequence number '"+sequence_number+"'.");
+            FinalMessageState state;
+            if (messageState == MessageState.Delivered){
+                state = FinalMessageState.DELIVERED;
+            } else if (messageState == MessageState.Expired){
+                state = FinalMessageState.EXPIRED;
+            } else {
+                state = FinalMessageState.UNKNOWN;
+            }
+
+            String message = "id:" + message_id +
+                                     " sub:"+nsms+" dlvrd:"+nsms+" submit date:" + sdf.format(submit_date) +
+                                     " done date:" + sdf.format(done_date) +
+                                     " stat:"+ state +
+                                     " err:000 Text:";
+            log.debug("Receipt message: " + message);
+
+            DeliverSM deliverSM= new DeliverSM();
+            deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
+            deliverSM.setSourceAddress(destination_address);
+            deliverSM.setDestinationAddress(source_address);
+            deliverSM.setConnectionName(connection_name);
+            deliverSM.setMessage(message);
+
+            Date date = cal.getTime();
+            int sequence_number = Integer.parseInt(sdf2.format(date))+ai.incrementAndGet();
+            deliverSM.setSequenceNumber(sequence_number);
+
+            log.debug("Try to send delivery receipt with message id '" + message_id + "' and sequence number '" + sequence_number + "'.");
+            smppServer.send(deliverSM);
+            log.debug("Successfully send delivery receipt with sequence number '" + sequence_number + "'.");
+
+            Data data = message_id_receipt_table.get(message_id);
+            data.setConnectionName(connection_name);
+            data.setSourceAddress(destination_address);
+            data.setDestinationAddress(source_address);
 
             long first_sending_time = System.currentTimeMillis();
+            data.setFirstSendingTime(first_sending_time);
+            data.setLastResendTime(first_sending_time);
 
-            Data data = new Data(message_id, first_sending_time, first_sending_time );
-            journal.write(sequence_number, data, Status.SEND);
+            data.setDoneDate(done_date);
+            data.setSubmitDate(submit_date);
+            data.setFinalMessageState(state);
+            data.setNsms(nsms);
+            data.setSequenceNumber(sequence_number);
+            data.setStatus(Status.SEND);
 
-            recepts_table.put(sequence_number, data);
+            journal.write(data);
+
+            message_id_receipt_table.put(message_id, data);
             log.debug("Remember to the memory: " + sequence_number+" --> " + data);
+
+            sequence_number_message_id_table.put(sequence_number, message_id);
 
         }
     }
@@ -375,32 +457,40 @@ public class Gateway extends Thread implements PDUListener {
 
             DeliverSMResp resp = (DeliverSMResp) pdu;
             int sequence_number = resp.getSequenceNumber();
-            log.debug("DeliverSMResp: sequence_number="+sequence_number);
+            long message_id = sequence_number_message_id_table.get(sequence_number);
+            log.debug("DeliverSMResp: sn="+sequence_number+", message_id="+message_id);
 
-            Data data = recepts_table.get(sequence_number);
-
+            Data data = message_id_receipt_table.get(message_id);
             if (data != null){
+                data.setSequenceNumber(sequence_number);
+                data.setStatus(Status.DONE);
                 try {
-                    journal.write(sequence_number, data, Status.DONE);
+                    journal.write(data);
                 } catch (CouldNotWriteToJournalException e) {
                     log.error(e);
                     // todo ?
                 }
 
-                recepts_table.remove(sequence_number);
+                message_id_receipt_table.remove(message_id);
+                log.debug("Remove deliver receipt data with message id "+message_id+" .");
 
-                log.debug("Remove from memory: " + sequence_number);
+                Set<Integer> s = new HashSet<Integer>();
+                for(Integer sn: sequence_number_message_id_table.keySet()){
+                    if (sequence_number_message_id_table.get(sn) == message_id){
+                        s.add(sn);
+                    }
+                }
 
+                for(Integer sn: s) {
+                    sequence_number_message_id_table.remove(sn);
+                    log.debug("Remove sn --> message_id entry: "+sn+" --> "+message_id);
+                }
+
+                log.debug("Remove from memory deliver receipt data with message id " + message_id+" .");
             } else {
-                log.warn("Couldn't find deliver receipt with sequence number "+sequence_number);
+                log.warn("Couldn't find deliver receipt data with message id " + message_id);
             }
 
-        }
-    }
-
-    public static void cleanJournal() throws CouldNotCleanJournalException {
-        synchronized (read_write_monitor){
-            journal.cleanJournal();
         }
     }
 
@@ -409,40 +499,54 @@ public class Gateway extends Thread implements PDUListener {
 
         long current_time = System.currentTimeMillis();
 
-        for (Map.Entry<Integer, Data> entry : recepts_table.entrySet()) {
+        for (Map.Entry<Long, Data> entry : message_id_receipt_table.entrySet()) {
 
-            int sequence_number = entry.getKey();
+            long message_id = entry.getKey();
             Data data = entry.getValue();
             long last_resend_time = data.getLastResendTime();
             long first_sending_time = data.getFirstSendingTime();
-            long message_id = data.getMessageId();
-            //DateFormat df = DateFormat.getDateTimeInstance();
 
             if (current_time - first_sending_time < recend_receipts_max_timeout*1000){
 
                 if (current_time - last_resend_time > recend_receipts_timeout*1000){
 
                     synchronized (read_write_monitor){
-                        log.debug("sequence_number: "+sequence_number+", first sending time: "+first_sending_time+", last resending time: "+last_resend_time);
-                        Message rcpt = Manager.getInstance().getReceiptMessage(message_id);
 
-                        smppServer.send(rcpt);
+
+                        DeliverSM deliverSM = new DeliverSM();
+                        deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
+                        deliverSM.setSourceAddress(data.getSourceAddress());
+                        deliverSM.setDestinationAddress(data.getDestinationAddress());
+                        deliverSM.setConnectionName(data.getConnectionName());
+
+                        Date date = cal.getTime();
+                        int seqNr = Integer.parseInt(sdf2.format(date))+ai.incrementAndGet();
+                        deliverSM.setSequenceNumber(seqNr);
+                        log.debug("sequence_number: "+seqNr+", first sending time: "+first_sending_time+", last resending time: "+last_resend_time);
+
+                        smppServer.send(deliverSM);
+
+                        sequence_number_message_id_table.put(seqNr, message_id);
 
                         long send_receipt_time = System.currentTimeMillis();
                         data.setLastResendTime(send_receipt_time);
+                        data.setSequenceNumber(seqNr);
+                        data.setStatus(Status.SEND);
 
-                        journal.write(sequence_number, data, Status.SEND);
+                        journal.write(data);
+
+
                     }
 
                 }
 
             } else {
-
                 synchronized (read_write_monitor){
-                    log.debug("The maximum time of resending delivery receipt with sequence number " + sequence_number + " expired.");
-                    recepts_table.remove(sequence_number);
-                    journal.write(sequence_number, data, Status.DONE);
-                    log.debug("Remove deliver receipt data with sequence number "+sequence_number+" from memory and write to journal with status DONE.");
+                    log.debug("The maximum time of resending delivery receipt with message id " + message_id + " expired.");
+                    message_id_receipt_table.remove(message_id);
+                    data.setStatus(Status.EXPIRED);
+                    journal.write(data);
+                    log.debug("Remove deliver receipt data with message id "+message_id+" from memory and write to journal with status EXPIRED.");
                 }
 
             }
@@ -450,10 +554,6 @@ public class Gateway extends Thread implements PDUListener {
         }
 
         log.debug("Successfully done recent task.");
-    }
-
-    public static Provider getProvider(String connection_name){
-        return connection_provider_table.get(connection_name);
     }
 
 }

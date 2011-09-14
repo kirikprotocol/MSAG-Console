@@ -1,5 +1,10 @@
 <project name="dcpgw" default="build" basedir=".">
     <property file="build.properties" />
+
+    <property name="dcpgw.source.classes" value="${dcpgw.build.dir}/classes"/>
+
+    <property name="dcpgw.test.classes" value="${dcpgw.build.dir}/test_classes"/>
+
     <property name="src.dir" location="${SOURCE_DIR}/src"/>
     <property name="sql.dir" location="${SOURCE_DIR}/sql"/>
     <property name="conf.dir" location="${SOURCE_DIR}/config"/>
@@ -12,6 +17,19 @@
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
     </path>
 
+    <path id="lib">
+    <fileset dir="lib" includes="*.jar"/>
+  </path>
+
+    <path id="libdev">
+       <fileset dir="libdev" includes="*.jar"/>
+    </path>
+
+    <path id="all_libs">
+        <path refid="lib"/>
+        <path refid="libdev"/>
+    </path>
+
     <target name="clean" description="Remove build and distribs directory.">
         <delete dir="${BUILD_DIR}"/>
         <delete dir="${DISTR_DIR}"/>
@@ -21,7 +39,10 @@
         <mkdir dir="${BUILD_DIR}"/>
         <mkdir dir="${DISTR_DIR}"/>
         <mkdir dir="${BUILD_DIR}/classes"/>
-        <javac srcdir="${src.dir}" destdir="${BUILD_DIR}/classes" classpathref="project.classpath"/>
+        <javac srcdir="${src.dir}"
+               destdir="${BUILD_DIR}/classes"
+               classpathref="project.classpath"
+        />
     </target>
 
     <target name="build" depends="compile">        
@@ -65,6 +86,63 @@
           <cgp name="search.path" value="src/mobi/eyeline/dcpgw/admin/protogen/"/>
         </protogen>
     </target>
+
+
+
+  <target name="compile.sources">
+    <delete dir="${dcpgw.source.classes}" failonerror="false"/>
+    <mkdir dir="${dcpgw.source.classes}"/>
+    <javac srcdir="java" destdir="${dcpgw.source.classes}" classpathref="lib" debug="true" source="1.5"/>
+    <native2ascii src="java" dest="${dcpgw.source.classes}" ext=".properties" includes="**/*.properties"/>
+  </target>
+
+  <target name="compile.tests" depends="compile.sources">
+    <delete dir="${dcpgw.test.classes}" failonerror="false"/>
+    <mkdir dir="${dcpgw.test.classes}"/>
+    <copy todir="${dcpgw.test.classes}">
+      <fileset dir="${dcpgw.source.classes}"/>
+    </copy>
+    <javac srcdir="test" destdir="${dcpgw.test.classes}" classpathref="all_libs" debug="true" source="1.5"/>
+    <copy todir="${dcpgw.test.classes}">
+      <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml,**/*.csv,**/*.log"/>
+    </copy>
+    <native2ascii src="java" dest="${dcpgw.source.classes}" ext=".properties" includes="**/*.properties"/>
+  </target>
+
+  <target name="test" depends="compile.tests">
+    <delete dir="${dcpgw.tests.dir}" failonerror="false"/>
+    <mkdir dir="${dcpgw.tests.dir}"/>
+
+    <taskdef resource='emma_ant.properties' classpathref='libdev' />
+
+    <emma>
+      <instr instrpath="${dcpgw.test.classes}" mode="overwrite" merge="true" metadatafile="${dcpgw.tests.dir}/metadata.emma">
+        <filter file="emmafilter.txt" />
+      </instr>
+    </emma>
+
+    <junit showoutput="true" printsummary="yes" fork="true">
+      <classpath path="${dcpgw.test.classes}"/>
+      <classpath refid="all_libs"/>
+      <jvmarg value="-Demma.coverage.out.file=${dcpgw.tests.dir}/coverage.emma" />
+      <jvmarg value="-Demma.coverage.out.merge=true" />
+
+      <formatter type="xml" usefile="true"/>
+      <batchtest todir="${dcpgw.tests.dir}">
+        <fileset dir="${dcpgw.test.classes}" includes="**/*Test.class"/>
+      </batchtest>
+    </junit>
+
+    <emma>
+      <report sourcepath="java">
+        <infileset dir="${dcpgw.tests.dir}" includes="*.emma" />
+
+        <xml outfile="${dcpgw.tests.dir}/coverage.xml.report" depth="method" />
+        <html outfile="${dcpgw.tests.dir}/coverage.html" depth="method" encoding="utf-8"/>
+
+      </report>
+    </emma>
+  </target>
 
 </project>
 

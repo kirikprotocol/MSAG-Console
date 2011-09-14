@@ -1,17 +1,23 @@
 package mobi.eyeline.dcpgw;
 
+import mobi.eyeline.dcpgw.exeptions.CouldNotReadMessageStateException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
+import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
+import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.Message;
+import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import org.apache.log4j.Logger;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.Properties;
 
 /**
@@ -24,7 +30,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
     private static Logger log = Logger.getLogger(DeliveryChangeListenerImpl.class);
 
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
 
     @Override
     public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
@@ -35,43 +41,39 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                 String s = p.getProperty("id");
                 long message_id = Long.parseLong(s);
 
-                Message rcpt = Manager.getInstance().getReceiptMessage(message_id);
+                mobi.eyeline.smpp.api.pdu.data.Address source_address, destination_address;
+                try {
+                    source_address  = new mobi.eyeline.smpp.api.pdu.data.Address(p.getProperty("sa"));
+                    destination_address = new mobi.eyeline.smpp.api.pdu.data.Address(e.getAddress().getAddress());
+                } catch (InvalidAddressFormatException e1) {
+                    log.error(e);
+                    throw new CouldNotReadMessageStateException("could.not.read.message.state", e1);
+                }
 
-                if (rcpt != null){
+                String connection_name = p.getProperty("con");
 
-                    Date submit_time = Manager.getInstance().getSubmitTime(message_id);
-                    Date done_date = e.getEventDate();
+                Date submit_date;
+                try {
+                    submit_date = sdf.parse(p.getProperty("sd"));
+                } catch (ParseException e1) {
+                    log.error(e1);
+                    throw new CouldNotReadMessageStateException("could.not.read.message.state", e1);
+                }
 
-                    MessageState messageState = e.getMessageState();
+                Date done_date = e.getEventDate();
 
-                    FinalMessageStates finalMessageStates;
-                    if (messageState == MessageState.Delivered){
-                        finalMessageStates = FinalMessageStates.DELIVERED;
-                    } else if (messageState == MessageState.Expired){
-                        finalMessageStates = FinalMessageStates.EXPIRED;
-                    } else {
-                        finalMessageStates = FinalMessageStates.UNKNOWN;
-                    }
+                MessageState messageState = e.getMessageState();
 
-                    String receipt_message = "id:" + message_id +
-                                             " sub:001 dlvrd:001 submit date:" + sdf.format(submit_time) +
-                                             " done date:" + sdf.format(done_date) +
-                                             " stat:"+finalMessageStates +
-                                             " err:000 Text:";
-                    log.debug("Receipt message: " + receipt_message);
-                    rcpt.setMessage(receipt_message);
+                int nsms = e.getNsms();
 
-                    try {
-                        Gateway.sendDeliveryReceipt(message_id, rcpt);
+                try {
+                        Gateway.sendDeliveryReceipt(message_id, submit_date, done_date, connection_name, source_address, destination_address, nsms, messageState);
                     } catch (SmppException e1) {
                         log.error("Couldn't send delivery receipt to the client.", e1);
                         // todo ?
                     } catch (CouldNotWriteToJournalException e1) {
                         log.error(e);
                     }
-                } else {
-                    log.debug("Couldn't find receipt with message id "+message_id);
-                }
 
             } else {
                 log.warn("Couldn't find message identifier in the final log string.");

@@ -122,7 +122,7 @@ public class Client extends Thread implements PDUListener {
                 long message_id = Long.parseLong(message_id_str);
                 logger.debug("message_id="+message_id);
 
-                if (generate_final_log) finalLogGenerator.writeFinalState(message_id);
+                //if (generate_final_log) finalLogGenerator.writeFinalState(message_id);
         }
         return false;
     }
@@ -138,13 +138,13 @@ public class Client extends Thread implements PDUListener {
                 public void run() {
                     SubmitSM submitSM = new SubmitSM();
                     submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
-                    if (Math.random() < 0.5){
+                    /*if (Math.random() < 0.5){
                         submitSM.setConnectionName("con1");
                     } else{
                         submitSM.setConnectionName("con2");
-                    }
+                    }*/
 
-                    //submitSM.setConnectionName("con1");
+                    submitSM.setConnectionName("con1");
 
                     DateFormat df = DateFormat.getDateTimeInstance();
                     Calendar cal = Calendar.getInstance();

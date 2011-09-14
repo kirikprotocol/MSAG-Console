@@ -6,7 +6,7 @@ package mobi.eyeline.dcpgw;
  * Date: 06.07.11
  * Time: 16:42
  */
-public enum FinalMessageStates {
+public enum FinalMessageState {
 
     DELIVERED { public String toString(){return "DELIVRD"; } },
     EXPIRED,

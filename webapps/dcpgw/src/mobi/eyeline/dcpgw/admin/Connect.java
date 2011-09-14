@@ -1,7 +1,6 @@
 package mobi.eyeline.dcpgw.admin;
 
 import mobi.eyeline.dcpgw.Gateway;
-import mobi.eyeline.dcpgw.admin.protogen.protocol.UpdateConfig;
 import mobi.eyeline.dcpgw.admin.protogen.protocol.UpdateConfigResp;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.protogen.framework.BufferReader;

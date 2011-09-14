@@ -8,6 +8,8 @@ import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -48,6 +50,8 @@ public class Sender extends Thread{
     private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
     private Calendar cal;
 
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
+
     public Sender(String host, int port, final String login, String password, int capacity, long sending_timeout, SmppServer smppServer){
         this.host = host;
         this.port = port;
@@ -72,6 +76,7 @@ public class Sender extends Thread{
     }
 
     public void addMessage(long id,
+                           String source_address,
                            String destination_address,
                            String text,
                            int sequence_number,
@@ -95,6 +100,8 @@ public class Sender extends Thread{
         Message informer_message = Message.newMessage(informer_destination_address, text);
 
         informer_message.setProperty("id", Long.toString(id));
+        informer_message.setProperty("sa", source_address);
+        informer_message.setProperty("con", connection_name);
 
         synchronized (queue){
 
@@ -187,6 +194,12 @@ public class Sender extends Thread{
             Message[] ar = new Message[queue.size()];
             List<Message> list = Arrays.asList(queue.toArray(ar));
 
+            DateFormat df = DateFormat.getDateTimeInstance();
+            for(Message m: list){
+                Date date = cal.getTime();
+                m.setProperty("sd", sdf.format(date));
+            }
+
             try{
                 log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
                 connection.addDeliveryMessages(delivery_id, list);
@@ -215,9 +228,6 @@ public class Sender extends Thread{
                         submitSMResp.setConnectionName(id_conn_name_table.get(message_id));
                         submitSMResp.setMessageId(Long.toString(message_id));
                         smppServer.send(submitSMResp);
-
-                        Date sumbit_time = cal.getTime();
-                        Manager.getInstance().rememberSubmitTime(message_id, sumbit_time);
 
                         id_seq_num_table.remove(message_id);
                         id_conn_name_table.remove(message_id);

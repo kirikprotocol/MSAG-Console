@@ -1,5 +1,8 @@
 package mobi.eyeline.dcpgw.journal;
 
+import mobi.eyeline.dcpgw.FinalMessageState;
+import mobi.eyeline.smpp.api.pdu.data.Address;
+
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -20,10 +23,31 @@ public class Data {
     // Time when the delivery recepit was the last time resend.
     private long last_resending_time;
 
-    public Data(long message_id, long first_sending_time, long last_resending_time){
+    private Address source_address, destination_address;
+
+    private String connection_name;
+
+    private int sequence_number;
+
+    private Date done_date;
+
+    private Date submit_date;
+
+    private FinalMessageState state;
+
+    private int nsms;
+
+    private Status status;
+
+    public Data(){
+
+    }
+
+    public Data(long message_id, Address source_address, Address destination_address, String connection_name){
         this.message_id = message_id;
-        this.first_sending_time = first_sending_time;
-        this.last_resending_time = last_resending_time;
+        this.source_address = source_address;
+        this.destination_address = destination_address;
+        this.connection_name = connection_name;
     }
 
     public void setMessageId(long message_id){
@@ -50,6 +74,38 @@ public class Data {
         return last_resending_time;
     }
 
+    public void setSourceAddress(Address source_address){
+        this.source_address = source_address;
+    }
+
+    public Address getSourceAddress(){
+        return source_address;
+    }
+
+    public void setDestinationAddress(Address destination_address){
+        this.destination_address = destination_address;
+    }
+
+    public Address getDestinationAddress(){
+        return destination_address;
+    }
+
+    public void setConnectionName(String connection_name){
+        this.connection_name = connection_name;
+    }
+
+    public String getConnectionName(){
+        return connection_name;
+    }
+
+    public void setSequenceNumber(int sequence_number){
+        this.sequence_number = sequence_number;
+    }
+
+    public int getSequenceNumber(){
+        return sequence_number;
+    }
+
     public String toString(){
 
         Calendar cal = Calendar.getInstance();
@@ -62,7 +118,48 @@ public class Data {
 
         DateFormat df = DateFormat.getDateTimeInstance();
 
-        return "message_id: "+message_id+", first sending date: "+df.format(first_send_date)+", last resending date: "+df.format(last_resending_date);
+        return "Data{message_id: "+message_id+", first sending date: "+df.format(first_send_date)+", last resending date: "+df.format(last_resending_date)
+                + "sa: "+source_address.getAddress()+", da: "+destination_address.getAddress()+", connection name: "+connection_name+"}";
+    }
+
+    public Date getDoneDate() {
+        return done_date;
+    }
+
+    public void setDoneDate(Date done_date) {
+        this.done_date = done_date;
+    }
+
+    public Date getSubmitDate() {
+        return submit_date;
+    }
+
+    public void setSubmitDate(Date submit_date) {
+        this.submit_date = submit_date;
+    }
+
+    public void setFinalMessageState(FinalMessageState state){
+        this.state = state;
+    }
+
+    public FinalMessageState getFinalMessageState(){
+        return state;
+    }
+
+    public int getNsms() {
+        return nsms;
+    }
+
+    public void setNsms(int nsms) {
+        this.nsms = nsms;
+    }
+
+    public void setStatus(Status status){
+        this.status = status;
+    }
+
+    public Status getStatus(){
+        return status;
     }
 
 }

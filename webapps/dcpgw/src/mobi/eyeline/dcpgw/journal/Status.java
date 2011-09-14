@@ -8,6 +8,7 @@ package mobi.eyeline.dcpgw.journal;
 public enum Status {
 
     SEND,
-    DONE
+    DONE,
+    EXPIRED
 
 }

@@ -1,7 +1,6 @@
 package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.smpp.api.SmppServer;
-import mobi.eyeline.smpp.api.pdu.Message;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -42,9 +41,6 @@ public class Manager {
     private int informer_port;
 
     private SmppServer smppServer;
-
-    private Hashtable<Long, Message> id_rcpt_table;
-    private Hashtable<Long, Date> id_submit_time_table;
 
     // Private constructor prevents instantiation from other classes
     private Manager(){
@@ -97,9 +93,6 @@ public class Manager {
         }
 
         user_senders_map = new Hashtable<String, Sender>();
-
-        id_rcpt_table = new Hashtable<Long, Message>();
-        id_submit_time_table = new Hashtable<Long, Date>();
     }
 
     public void setSmppServer(SmppServer smppServer){
@@ -111,7 +104,6 @@ public class Manager {
     }
 
     synchronized public Sender getSender(String user){
-        //log.debug("Try to get sender for user '"+user+"' ...");
 
         Sender sender;
         if (user_senders_map.containsKey(user)){
@@ -124,22 +116,6 @@ public class Manager {
         }
 
         return sender;
-    }
-
-    public void rememberReceiptMessage(long message_id, Message rcpt){
-        id_rcpt_table.put(message_id, rcpt);
-    }
-
-    public Message getReceiptMessage(long message_id){
-        return id_rcpt_table.get(message_id);
-    }
-
-    public Date getSubmitTime(long message_id){
-        return id_submit_time_table.get(message_id);
-    }
-
-    public void rememberSubmitTime(long message_id, Date date){
-        id_submit_time_table.put(message_id, date);
     }
 
 }
