@@ -119,16 +119,16 @@ public class InputTextController {
   }
 
   public static class Inner {
-    private int innerInt;
+    private Integer innerInt;
 
     public Inner() {
     }
 
-    public int getInnerInt() {
+    public Integer getInnerInt() {
       return innerInt;
     }
 
-    public void setInnerInt(int innerInt) {
+    public void setInnerInt(Integer innerInt) {
       this.innerInt = innerInt;
     }
   }

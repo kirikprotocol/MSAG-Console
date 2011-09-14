@@ -30,9 +30,8 @@ public class InputTextRenderer extends Renderer {
     String id = component.getId();
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String submittedValue = decodeString(reqParams.get(id));
-    ((InputText) component).setSubmittedValue(new String[]{submittedValue});
-
-    System.out.println(id + " SUBMITTED:" + submittedValue);
+    if (submittedValue != null)
+      ((InputText) component).setSubmittedValue(new String[]{submittedValue});
   }
 
   @Override
@@ -41,7 +40,6 @@ public class InputTextRenderer extends Renderer {
     Converter c = inputText.getConverter();
     String v = submittedValue == null ? null : ((String[]) submittedValue)[0];
 
-    System.out.println(component.getId() + " INCONVERTER:" + v);
     if (c != null) {
       return c.getAsObject(context, component, v);
     }
