@@ -45,8 +45,7 @@ void Console::run(const std::string& prompt)
     while (!m_exit) {
         char line[256];
         std::cout << prompt.c_str();
-//        std::cin.getline( line, sizeof(line) );
-        if (fgets(line, sizeof(line)-1, stdin)) {
+        if (fgets(line, (int)sizeof(line)-1, stdin)) {
           size_t n = strlen(line);
           if (line[n - 1] == '\n')
             line[n - 1] = 0;
