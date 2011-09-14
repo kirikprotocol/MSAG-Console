@@ -10,7 +10,7 @@ import javax.servlet.jsp.tagext.JspTag;
 /**
  * author: Aleksandr Khalitov
  */
-public class InputText extends UIInputImpl implements JspTag {
+public class InputText extends UIInputImpl {
 
   private Integer cols;
   private Integer rows;
@@ -18,11 +18,6 @@ public class InputText extends UIInputImpl implements JspTag {
   @Override
   public String getFamily() {
     return "Eyeline";
-  }
-
-  @Override
-  public String getRendererType() {
-    return "mobi.eyeline.util.jsf.components.input_text";
   }
 
   @Override

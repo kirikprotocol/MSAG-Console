@@ -25,6 +25,8 @@ public class InputTextController {
 
   private Integer illegalSetter;
 
+  private Inner inner = new Inner();
+
   public String getFormatSetter() {
     return formatSetter == null ? null : formatSetter.toString();
   }
@@ -106,5 +108,28 @@ public class InputTextController {
 
   public void setIntValue(Integer intValue) {
     this.intValue = intValue;
+  }
+
+  public Inner getInner() {
+    return inner;
+  }
+
+  public void setInner(Inner inner) {
+    this.inner = inner;
+  }
+
+  public static class Inner {
+    private int innerInt;
+
+    public Inner() {
+    }
+
+    public int getInnerInt() {
+      return innerInt;
+    }
+
+    public void setInnerInt(int innerInt) {
+      this.innerInt = innerInt;
+    }
   }
 }

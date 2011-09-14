@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * author: Aleksandr Khalitov
  */
-public class InputTextRenderer extends Renderer{
+public class InputTextRenderer extends Renderer {
 
   private static String decodeString(Object value) {
     String v = value == null ? null : value.toString().trim();
@@ -31,39 +31,55 @@ public class InputTextRenderer extends Renderer{
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String submittedValue = decodeString(reqParams.get(id));
     ((InputText) component).setSubmittedValue(new String[]{submittedValue});
+
+    System.out.println(id + " SUBMITTED:" + submittedValue);
   }
 
   @Override
   public Object getConvertedValue(FacesContext context, UIComponent component, Object submittedValue) throws ConverterException {
-    InputText inputText =(InputText)component;
+    InputText inputText = (InputText) component;
     Converter c = inputText.getConverter();
-    String v = submittedValue == null ? null : ((String[])submittedValue)[0];
+    String v = submittedValue == null ? null : ((String[]) submittedValue)[0];
 
-    if(c != null) {
+    System.out.println(component.getId() + " INCONVERTER:" + v);
+    if (c != null) {
       return c.getAsObject(context, component, v);
     }
-    if(v != null) {
+    if (v != null) {
       ValueExpression exp = inputText.getValueExpression("value");
-      if(exp != null) {
+      if (exp != null) {
         Class type = exp.getType(context.getELContext());
-        if(type == String.class) {
+        if (type == String.class) {
           return v;
-        }else {
-          try{
-            if(type == Integer.class) {
-              return Integer.parseInt(v);
-            }else if(type == Long.class) {
+        } else {
+          try {
+            if (type == Integer.class) {
+              return Integer.valueOf(v);
+            } else if (type == Integer.TYPE) {
+              return v == null ? 0 : Integer.valueOf(v);
+            } else if (type == Long.class) {
               return Long.parseLong(v);
-            }else if(type == Float.class) {
+            } else if (type == Long.TYPE) {
+              return v == null ? 0 : Long.valueOf(v);
+            } else if (type == Float.class) {
               return Float.parseFloat(v);
-            }else if(type == Double.class) {
+            } else if (type == Float.TYPE) {
+              return v == null ? 0 : Float.valueOf(v);
+            } else if (type == Double.class) {
               return Double.parseDouble(v);
-            }else if(type == Short.class) {
+            } else if (type == Double.TYPE) {
+              return v == null ? 0 : Double.valueOf(v);
+            } else if (type == Short.class) {
               return Short.parseShort(v);
-            }else if(type == Byte.class) {
+            } else if (type == Short.TYPE) {
+              return v == null ? 0 : Short.valueOf(v);
+            } else if (type == Byte.class) {
               return Byte.parseByte(v);
+            } else if (type == Byte.TYPE) {
+              return v == null ? 0 : Byte.valueOf(v);
             }
-          }catch (NumberFormatException e){
+          } catch (NumberFormatException e) {
+            e.printStackTrace();
             throw new ConverterException();
           }
         }
@@ -108,7 +124,7 @@ public class InputTextRenderer extends Renderer{
       value = c == null ? inputText.getValue().toString() : c.getAsString(context, component, inputText.getValue());
     }
 
-    if(value == null) {
+    if (value == null) {
       value = "";
     }
 
@@ -124,25 +140,25 @@ public class InputTextRenderer extends Renderer{
 
     boolean textArea = rows != null;
 
-    if(!textArea) {
+    if (!textArea) {
       w.a("<input type=\"text\" value=\"").a(value).a('\"');
-    }else {
+    } else {
       w.a("<textarea rows=\"").a(rows.toString()).a('\"');
     }
     w.a(" id=\"").a(id).a("\" name=\"").a(id).a("\" ").a(inputClass);
-    if(cols != null) {
-      if(!textArea) {
+    if (cols != null) {
+      if (!textArea) {
         w.a(" size");
-      }else {
+      } else {
         w.a(" cols");
       }
       w.a("=\"").a(cols.toString()).a('\"');
     }
-    if(readonly != null && Boolean.parseBoolean(readonly)) {
+    if (readonly != null && Boolean.parseBoolean(readonly)) {
       w.a(" readonly");
     }
     w.a('>');
-    if(textArea) {
+    if (textArea) {
       w.a(value).a("</textarea>");
     }
 
