@@ -11,7 +11,7 @@
 
 #include <inttypes.h>
 #include <vector>
-#include "inman/common/FifoQueue.hpp"
+#include "core/buffers/FifoList.hpp"
 
 namespace smsc {
 namespace util {
@@ -59,7 +59,7 @@ public:
   typedef _IndexTypeArg size_type;
 
 protected:
-  class IndexedNode : public FifoLink {
+  class IndexedNode : public smsc::core::buffers::FifoLink {
   private:
     union {
       void *  _aligner;
@@ -76,7 +76,7 @@ protected:
     friend class IDXObjPool_T;
 
     explicit IndexedNode(size_type use_idx)
-      : FifoLink(), _idx(use_idx), _pObj(NULL)
+      : smsc::core::buffers::FifoLink(), _idx(use_idx), _pObj(NULL)
     {
       _mem._aligner = 0;
     }
@@ -127,12 +127,15 @@ protected:
     {
       typename std::vector<IndexedNode *>::size_type i = 0;
       for (; i < this->size(); ++i) {
-        delete this->at(i); this->at(i) = 0;
+        if (this->at(i)) {
+          delete this->at(i);
+          this->at(i) = 0;
+        }
       }
     }
   };
 
-  typedef smsc::util::FifoQueue_T<IndexedNode, size_type> NodeQueue;
+  typedef smsc::core::buffers::QueueOf_T<IndexedNode, size_type> NodeQueue;
   /* -- DATA members: -- */
   const bool  _doErase; //object release mode: destroy or just mark as unused
   NodeArray   _store;   //store of all allocated nodes.
@@ -142,11 +145,11 @@ protected:
   void rlseNode(size_type obj_idx)
   {
     if (obj_idx < _store.size()) {
-      IndexedNode * pNode = _store[obj_idx];
+      IndexedNode & pNode = *_store[obj_idx];
       if (!_pool.isLinked(pNode)) {
         _pool.push_back(pNode); //downcast IndexedNode to FifoLink
         if (_doErase)
-          pNode->clear();
+          pNode.clear();
       }
     }
   }
@@ -181,7 +184,7 @@ public:
       size_type i = (size_type)_store.size();
       _store.resize(num_to_reserve, NULL);
       for (; i < num_to_reserve; ++i)
-        _pool.push_back(_store[i] = new IndexedNode(i)); //downcast IndexedNode to FifoLink
+        _pool.push_back(*(_store[i] = new IndexedNode(i))); //downcast IndexedNode to FifoLink
     }
   }
 

@@ -62,9 +62,9 @@ public:
     _icsDeps = use_cfg->deps;
     delete use_cfg.release();
     _icsState = ICServiceAC::icsStConfig;
-#ifdef __GRD_POOL_DEBUG__
+#ifdef INTRUSIVE_POOL_DEBUG
     _pckPool.debugInit(_logId, logger);
-#endif /* __GRD_POOL_DEBUG__ */
+#endif /* INTRUSIVE_POOL_DEBUG */
   }
   virtual ~ICSSmBilling();
 

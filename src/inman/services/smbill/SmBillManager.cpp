@@ -132,11 +132,11 @@ bool SmBillManager::onPacketReceived(unsigned conn_id, PacketBufferAC & recv_pck
     }
   }
   ((Billing*)wrkGrd.get())->wrkHandlePacket(iPck, (srlzRes == SerializablePacketIface::dsmPartial) ? &recv_pck : NULL);
-//#ifdef __GRD_POOL_DEBUG__
+//#ifdef INTRUSIVE_POOL_DEBUG
 //  WorkerID numRefs = wrkGrd.getRefs();
 //  smsc_log_debug(_logger, "%s: Worker[%u] handled packet, having %u refs",
 //                 _logId, wrkGrd->wrkId(), (unsigned)numRefs);
-//#endif /* __GRD_POOL_DEBUG__ */
+//#endif /* INTRUSIVE_POOL_DEBUG */
   return true;
 }
 

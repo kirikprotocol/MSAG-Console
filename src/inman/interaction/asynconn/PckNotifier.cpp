@@ -27,7 +27,7 @@ void PckNotifier::setThreads(uint16_t ini_threads, uint16_t max_threads/* = 0*/)
     ini_threads = max_threads;
   if (ini_threads > _iniThreads) {
     _iniThreads = ini_threads;
-    _taskPool.reserveTasks(_iniThreads);
+    _taskPool.reserve(_iniThreads);
   }
 }
 
@@ -45,59 +45,21 @@ void PckNotifier::stop(const TimeSlice * use_tmo/* = NULL*/)
 //Starts a threaded task that processes query event.
 bool PckNotifier::onPacketEvent(const PckBufferGuard & use_pck)
 {
-  PckEventTask * pTask = _taskPool.allcTask();
-  if (pTask) {
-    if (pTask->init(use_pck, _lsrList, _logId, _logger) && startTask(pTask)) {
+  //PckEventTask * pTask = _taskPool.allcTask();
+  EVTTaskRef  pTask = _taskPool.allcObj();
+  if (!pTask.empty()) {
+    if (pTask->init(pTask, use_pck, _lsrList, _logId, _logger) && startTask(pTask.get())) {
       smsc_log_debug(_logger, "%s: activated %s", _logId, pTask->taskName());
       return true;
     }
     smsc_log_error(_logger, "%s: failed to activate task", _logId);
-    _taskPool.rlseTask(pTask);
+    pTask->onRelease();
   } else {
-    smsc_log_error(_logger, "%s: task pool is exhausted: %u of %u", _logId,
+    smsc_log_fatal(_logger, "%s: task pool is exhausted: %u of %u", _logId,
                    (unsigned)_taskPool.usage(), (unsigned)_taskPool.capacity());
   }
   return false;
 }
-
-/* ************************************************************************** *
- * class PckNotifier::EVTTaskPool implementation:
- * ************************************************************************** */
-void PckNotifier::EVTTaskPool::reserveTasks(uint16_t num_tasks)
-{
-  MutexGuard grd(_sync);
-  _pool.reserve(num_tasks); 
-}
-
-//Returns NULL if no task available
-PckNotifier::PckEventTask * PckNotifier::EVTTaskPool::allcTask(void)
-{
-  MutexGuard grd(_sync);
-  TaskPool::PooledObj * rval = _pool.allcObj();
-  if (rval)
-    rval->setOwner(*this);
-  return rval;
-}
-
-void PckNotifier::EVTTaskPool::rlseTask(PckNotifier::PckEventTask * p_task)
-{
-  MutexGuard grd(_sync);
-  _pool.rlseObj(static_cast<TaskPool::PooledObj*>(p_task));
-}
-
-//
-uint16_t PckNotifier::EVTTaskPool::capacity(void) const
-{
-  MutexGuard grd(_sync);
-  return _pool.capacity(); 
-}
-//
-uint16_t PckNotifier::EVTTaskPool::usage(void) const
-{
-  MutexGuard grd(_sync);
-  return _pool.usage();
-}
-
 
 /* ************************************************************************** *
  * class PckNotifier::PckEventTask implementation:
@@ -105,17 +67,22 @@ uint16_t PckNotifier::EVTTaskPool::usage(void) const
 const TimeSlice PckNotifier::PckEventTask::_dflt_wait_tmo(50, TimeSlice::tuMSecs); //50 msec
 
 
-bool PckNotifier::PckEventTask::init(const PckBufferGuard & use_pck,
-                                     ListenersList & lsr_list,
+bool PckNotifier::PckEventTask::init(const EVTTaskGuard & task_grd,
+                                     const PckBufferGuard & use_pck,
+                                     const ListenersList & lsr_list,
                                      const char * log_id, Logger * use_log)
   /*throw()*/
 {
-  isStopping = isReleased = false;
-  _pckGrd = use_pck;
-  _logger = use_log;
-  _lsrList = &lsr_list;
-  snprintf(_logId, sizeof(_logId)-1, "%s[%u]", log_id, (unsigned)_unqIdx);
-  return (_pckGrd.get() != NULL);
+  if (_pckGrd.get()) {
+    isStopping = isReleased = false;
+    _thisGrd = task_grd;
+    _pckGrd = use_pck;
+    _logger = use_log;
+    _lsrList = &lsr_list;
+    snprintf(_logId, sizeof(_logId)-1, "%s[%u]", log_id, (unsigned)getUIdx());
+    return true;
+  }
+  return false;
 }
 // -------------------------------------------
 // -- ThreadedTask interface methods
@@ -134,7 +101,7 @@ int PckNotifier::PckEventTask::Execute(void) /*throw()*/
     }
   } else {
     bool pckDone = false;
-    for (ListenersList::iterator it = _lsrList->begin(); !it.isEnd() && !pckDone; ++it) {
+    for (ListenersList::const_iterator it = _lsrList->begin(); !it.isEnd() && !pckDone; ++it) {
       if (isStopping) {
         Logger::LogLevel logLvl = _pckGrd->isComplete() ?  Logger::LEVEL_WARN : Logger::LEVEL_DEBUG;
         _logger->log(logLvl, "%s: packet event(status %s, data %u bytes) processing is cancelled",
@@ -159,8 +126,8 @@ int PckNotifier::PckEventTask::Execute(void) /*throw()*/
 void PckNotifier::PckEventTask::onRelease(void)
 {
   _pckGrd.release();
+  _thisGrd.release();
   isReleased = true;
-  _owner->rlseTask(this);
 }
 
 } //interaction

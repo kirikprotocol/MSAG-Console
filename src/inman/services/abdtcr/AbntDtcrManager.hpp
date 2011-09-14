@@ -8,8 +8,6 @@
 #endif
 #define __INMAN_ABNT_DETECTOR_MGR_HPP
 
-#include "inman/common/GrdObjPool_T.hpp"
-
 #include "inman/interaction/asyncmgr/ConnManager.hpp"
 #include "inman/services/abdtcr/AbntDetector.hpp"
 
@@ -30,7 +28,7 @@ using smsc::inman::interaction::WorkerID;
 
 class AbntDetectorManager : protected smsc::inman::interaction::ConnectManagerAC {
 private:
-  typedef smsc::util::GrdIfaceImplPool_T <
+  typedef smsc::core::buffers::IntrusivePoolOfIfaceImpl_T <
     smsc::inman::interaction::WorkerIface, AbonentDetector, WorkerID
   > WorkerPool;
 
@@ -49,9 +47,9 @@ public:
     if (!_logger)
       _logger = Logger::getInstance("smsc.inman.abdtcr");
     snprintf(_logId, sizeof(_logId)-1, "AbntMgr[%s]", mgrId());
-#ifdef __GRD_POOL_DEBUG__
+#ifdef INTRUSIVE_POOL_DEBUG
     _wrkPool.debugInit(_logId, _logger);
-#endif /* __GRD_POOL_DEBUG__ */
+#endif /* INTRUSIVE_POOL_DEBUG */
   }
   virtual ~AbntDetectorManager();
 

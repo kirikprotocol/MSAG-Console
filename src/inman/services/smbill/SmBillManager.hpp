@@ -8,7 +8,6 @@
 #endif
 #define __INMAN_BILLING_MANAGER_HPP
 
-#include "inman/common/GrdObjPool_T.hpp"
 #include "inman/interaction/asyncmgr/ConnManager.hpp"
 #include "inman/services/smbill/SmBilling.hpp"
 
@@ -23,7 +22,7 @@ using smsc::inman::interaction::WorkerID;
 //
 class SmBillManager : protected smsc::inman::interaction::ConnectManagerAC {
 private:
-  typedef smsc::util::GrdIfaceImplPool_T <
+  typedef smsc::core::buffers::IntrusivePoolOfIfaceImpl_T <
     smsc::inman::interaction::WorkerIface, Billing, WorkerID
   > WorkerPool;
 
@@ -41,9 +40,9 @@ public:
     if (!_logger)
       _logger = Logger::getInstance("smsc.inman.smbill");
     snprintf(_logId, sizeof(_logId)-1, "BillMgr[%s]", mgrId());
-#ifdef __GRD_POOL_DEBUG__
+#ifdef INTRUSIVE_POOL_DEBUG
     _wrkPool.debugInit(_logId, _logger);
-#endif /* __GRD_POOL_DEBUG__ */
+#endif /* INTRUSIVE_POOL_DEBUG */
   }
   virtual ~SmBillManager();
 

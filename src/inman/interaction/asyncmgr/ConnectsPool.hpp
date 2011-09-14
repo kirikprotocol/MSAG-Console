@@ -7,14 +7,14 @@
 #endif
 #define __SMSC_INMAN_ASYNCMGR_CONNECTS_POOL
 
-#include "inman/common/GrdObjPool_T.hpp"
+#include "core/buffers/IntrusivePoolT.hpp"
 #include "inman/interaction/asynconn/Connect.hpp"
 
 namespace smsc {
 namespace inman {
 namespace interaction {
 
-typedef smsc::util::GrdObjPool_T<Connect, unsigned> ConnectsPool;
+typedef smsc::core::buffers::IntrusivePoolOf_T<Connect, unsigned, true> ConnectsPool;
 typedef ConnectsPool::ObjRef  ConnectGuard;
 
 } //interaction

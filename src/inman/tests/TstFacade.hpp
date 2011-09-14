@@ -56,9 +56,9 @@ public:
   explicit TSTFacadeAC(TcpServerIface & conn_srv, Logger * use_log = NULL)
     : _tcpSrv(&conn_srv), logger(use_log ? use_log : Logger::getInstance("smsc.InTST"))
   {
-#ifdef __GRD_POOL_DEBUG__
+#ifdef INTRUSIVE_POOL_DEBUG
     _pckPool.debugInit("InTST", logger);
-#endif /* __GRD_POOL_DEBUG__ */
+#endif /* INTRUSIVE_POOL_DEBUG */
   }
   virtual ~TSTFacadeAC()
   {

@@ -10,7 +10,7 @@
 
 #include "logger/Logger.h"
 
-#include "inman/common/GrdObjPool_T.hpp"
+#include "core/buffers/IntrusivePoolOfIfaceT.hpp"
 #include "inman/interaction/PacketBuffer.hpp"
 
 namespace smsc {
@@ -18,7 +18,6 @@ namespace inman {
 namespace interaction {
 
 using smsc::logger::Logger;
-using smsc::core::synchronization::Mutex;
 // -------------------------------------------------------------------------------
 
 class WorkerManagerIface; //forward declaration
@@ -49,9 +48,8 @@ protected:
   Logger *              _logger;
 };
 typedef WorkerIface::ident_type WorkerID;
-typedef smsc::util::GrdIfaceImplPool_T<WorkerIface, WorkerID> WorkersPoolAC;
+typedef smsc::core::buffers::IntrusivePoolAC_T<WorkerIface, WorkerID> WorkersPoolAC;
 typedef WorkersPoolAC::ObjRef WorkerGuard;
-
 
 class WorkerManagerIface {
 protected:

@@ -8,14 +8,14 @@
 #endif
 #define __SMSC_INMAN_ASYNCONN_PCK_BUFFER_STORE
 
-#include "inman/common/GrdObjPool_T.hpp"
+#include "core/buffers/IntrusivePoolOfIfaceT.hpp"
 #include "inman/interaction/PckAccumulator.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace interaction  {
 
-typedef smsc::util::GrdIfacePoolAC_T<PckAccumulatorIface, uint32_t> PckBuffersPoolAC;
+typedef smsc::core::buffers::IntrusivePoolAC_T<PckAccumulatorIface, uint32_t> PckBuffersPoolAC;
 typedef PckBuffersPoolAC::ObjRef PckBufferGuard;
 
 class PckBufferRefereeIface {
@@ -30,10 +30,10 @@ public:
 
 template <uint32_t _PACKET_SZ>
 class PckBuffersPool_T : public 
-  smsc::util::GrdIfaceImplPool_T<PckAccumulatorIface, PckAccumulator_T<_PACKET_SZ>, uint32_t> {
+  smsc::core::buffers::IntrusivePoolOfIfaceImpl_T<PckAccumulatorIface, PckAccumulator_T<_PACKET_SZ>, uint32_t, false> {
 public:
   PckBuffersPool_T() //PacketBuffers are reusable
-    : smsc::util::GrdIfaceImplPool_T<PckAccumulatorIface, PckAccumulator_T<_PACKET_SZ>, uint32_t>(false)
+    : smsc::core::buffers::IntrusivePoolOfIfaceImpl_T<PckAccumulatorIface, PckAccumulator_T<_PACKET_SZ>, uint32_t, false>()
   { }
   ~PckBuffersPool_T()
   { }
