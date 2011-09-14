@@ -192,7 +192,7 @@ public class DataTableRenderer extends Renderer {
     w.a("\n  options" + t.getId() + "[\"navbarLabels\"] = [" + navbarLabels + "];");
     w.a("\n  options" + t.getId() + "[\"selectionLabels\"] = [" + selectionLabels + "];");
     if (t.getSortOrder() != null)
-      w.a("\noptions" + t.getId() + "[\"sortOrder\"] = \"" + t.getSortOrder() + "\";");
+      w.a("\noptions" + t.getId() + "[\"sortOrder\"] = \"" + t.getId() + "_" + t.getSortOrder() + "\";");
     if (isRowsSelectionEnabled)
       w.a("\noptions" + t.getId() + "[\"selectButton\"] = \"" + t.getId() + "_selectAllButton\";");
     if (hasInnerData)

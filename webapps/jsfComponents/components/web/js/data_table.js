@@ -175,6 +175,7 @@ var DataTable1 = function(tableId, tableOptions) {
   var navbar = new NavBarControl(tableOptions.navbar, {
     total: tableOptions.totalRows,
     pageSize: currentPageSize,
+    selectionEnabled : (selectionControl != null),
     allowedPageSize: [10,20,30,40,50],
     pageNumber: currentPageNumber,
     labels : tableOptions.navbarLabels,
@@ -325,19 +326,22 @@ var NavBarControl = function(id, navbarOptions) {
   var counters = $("<td>").appendTo(navBarTableRow).addClass("eyeline_navbar_counters");
   counters.append(labels[0] + ": ");
   var total = $("<span>").appendTo(counters).text(totalSize);
-  counters.append(" | ");
-  var selected = $("<span>").appendTo(counters).text(labels[1] + ": " + selectedSize).addClass("eyeline_navbar_selected");
-  selected.click(function() {
-    if (mode == "all") {
-      mode = "selected";
-      selected.text(labels[3]);
-    } else {
-      mode = "all";
-      selected.text(labels[1] + ": " + selectedSize);
-    }
-    if (onChangeMode)
-      onChangeMode(mode);
-  });
+
+  if (navbarOptions.selectionEnabled) {
+    counters.append(" | ");
+    var selected = $("<span>").appendTo(counters).text(labels[1] + ": " + selectedSize).addClass("eyeline_navbar_selected");
+    selected.click(function() {
+      if (mode == "all") {
+        mode = "selected";
+        selected.text(labels[3]);
+      } else {
+        mode = "all";
+        selected.text(labels[1] + ": " + selectedSize);
+      }
+      if (onChangeMode)
+        onChangeMode(mode);
+    });
+  }
   counters.append(" | " + labels[2] + ": ");
   var onpage = $("<select>").appendTo(counters);
   for (var j = 0; j < allowedPageSize.length; j++) {
