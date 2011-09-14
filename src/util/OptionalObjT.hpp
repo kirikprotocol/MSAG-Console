@@ -12,6 +12,7 @@ namespace util {
 
 template <
   class _TArg  //must have public default constructor and destructor
+ , class _ConstructArg = _TArg
 > 
 class OptionalObj_T {
 private:
@@ -58,7 +59,7 @@ public:
     return *pObj();
   }
   //
-  _TArg  & init(const _TArg & use_obj)
+  _TArg  & init(const _ConstructArg & use_obj)
   {
     clear();
     new (mMem.mBuf)_TArg(use_obj);
