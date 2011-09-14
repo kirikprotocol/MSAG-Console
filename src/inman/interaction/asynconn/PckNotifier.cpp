@@ -126,8 +126,8 @@ int PckNotifier::PckEventTask::Execute(void) /*throw()*/
 void PckNotifier::PckEventTask::onRelease(void)
 {
   _pckGrd.release();
-  _thisGrd.release();
   isReleased = true;
+  _thisGrd.release();
 }
 
 } //interaction
