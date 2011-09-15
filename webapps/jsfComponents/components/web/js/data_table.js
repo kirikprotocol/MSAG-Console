@@ -147,15 +147,15 @@ var DataTable1 = function(tableId, tableOptions) {
   var toggleButton;
   if (tableOptions.toggleButton) {
     this.expandRow = function(rowId) {
-      var headerElement = $("#innerDataHeader" + rowId);
+      var headerElement = $("[id='innerDataHeader" + rowId + "']");
       if (headerElement == null)
         return;
 
       if (headerElement.hasClass('eyeline_inner_data_closed')) {
-        $("#innerDataHeader" + rowId).removeClass('eyeline_inner_data_closed').addClass('eyeline_inner_data_opened');
+        headerElement.removeClass('eyeline_inner_data_closed').addClass('eyeline_inner_data_opened');
         $("tr[name='innerData" + rowId + "']").show();
       } else {
-        $("#innerDataHeader" + rowId).removeClass('eyeline_inner_data_opened').addClass('eyeline_inner_data_closed')
+        headerElement.removeClass('eyeline_inner_data_opened').addClass('eyeline_inner_data_closed')
         $("tr[name='innerData" + rowId + "']").hide();
       }
     };
