@@ -151,10 +151,10 @@ SocketListenerIface *
   _corpses.clear();
 
   ConnectGuard connGrd = _connPool.allcObj();
-  #ifdef __GRD_POOL_DEBUG__
+  #ifdef INTRUSIVE_POOL_DEBUG
   smsc_log_debug(_logger, "%s: onConnectOpening(%u)", _logId, conn_id);
   connGrd.logThis(_logger, _logId);
-  #endif /* __GRD_POOL_DEBUG__ */
+  #endif /* INTRUSIVE_POOL_DEBUG */
   //set consequtive processing of incoming packets
   connGrd->init(conn_id, _pckPool, 1, _logger);
   connGrd->bind(use_sock);
@@ -180,10 +180,10 @@ void USSGService::onConnectClosing(TcpServerIface & p_srv, ConnectUId conn_id)
   if (it == _connMap.end()) //Connect already unregistered by onConnectError()
     return;
 
-  #ifdef __GRD_POOL_DEBUG__
+  #ifdef INTRUSIVE_POOL_DEBUG
   smsc_log_debug(_logger, "%s: onConnectClosing(%u)", _logId, conn_id);
   it->second.logThis(_logger, _logId);
-  #endif /* __GRD_POOL_DEBUG__ */
+  #endif /* INTRUSIVE_POOL_DEBUG */
   ConnectGuard rConn = it->second;
   rConn->removeListener(*this);
   //Note: Connect object MUST not be destroyed inside this thread,

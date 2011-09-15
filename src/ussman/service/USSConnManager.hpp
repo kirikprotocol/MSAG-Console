@@ -8,7 +8,7 @@
 #endif
 #define __SMSC_USSMAN_CONNECT_MANAGER_HPP
 
-#include "core/buffers/DAHashT.hpp"
+//#include "core/buffers/DAHashT.hpp"
 #include "inman/interaction/asyncmgr/ConnManager.hpp"
 
 #include "ussman/service/USSReqProcessor.hpp"
@@ -30,7 +30,7 @@ private:
     smsc::ussman::comp::USSOperationData, WorkerID, smsc::core::buffers::DAHashSlotPOD_T
   > USSReqRegistry;
 
-  typedef smsc::util::GrdIfaceImplPool_T <
+  typedef smsc::core::buffers::IntrusivePoolOfIfaceImpl_T <
     smsc::inman::interaction::WorkerIface, USSReqProcessor, WorkerID
   > WorkerPool;
 
@@ -49,9 +49,9 @@ public:
     if (!_logger)
       _logger = Logger::getInstance("smsc.ussman");
     snprintf(_logId, sizeof(_logId)-1, "ConnMgr[%u]", cm_id);
-#ifdef __GRD_POOL_DEBUG__
+#ifdef INTRUSIVE_POOL_DEBUG
     _wrkPool.debugInit("_wrkPool", _logger);
-#endif /* __GRD_POOL_DEBUG__ */
+#endif /* INTRUSIVE_POOL_DEBUG */
   }
   virtual ~USSConnManager();
 
