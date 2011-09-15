@@ -10,36 +10,14 @@
 #endif
 #define __CORE_BUFFERS_INTRUSIVE_POOL_OF_UNIQUE_T
 
+#include "util/UniqueObjT.hpp"
 #include "core/buffers/IntrusivePoolCore.hpp"
 
 namespace smsc {
 namespace core {
 namespace buffers {
 
-// --------------------------------------------------------------------------
-// Transforms object of arbitrary class to UniqueObj (cann't be copied)
-// --------------------------------------------------------------------------
-template <
-  class _TArg       //only default constructor is required !!
-, typename _IndexTypeArg = unsigned //MUST be an unsigned integer type
->
-class UniqueObj_T : public _TArg {
-private:
-  const _IndexTypeArg mUnqIdx; //unique index of this object
-
-  UniqueObj_T(const UniqueObj_T & cp_obj);
-  UniqueObj_T & operator=(const UniqueObj_T & cp_obj);
-
-protected:
-  explicit UniqueObj_T(_IndexTypeArg use_idx) : _TArg(), mUnqIdx(use_idx)
-  { }
-  ~UniqueObj_T()
-  { }
-
-public:
-  _IndexTypeArg getUIdx(void) const { return mUnqIdx; }
-};
-
+using smsc::util::UniqueObj_T;
 
 // ----------------------------------------------------------------------------
 // Multithread-safe intrusive pool of arbitrary objects.
@@ -91,7 +69,7 @@ protected:
     PooledObj * getIface(void)
     {
       if (mObj.empty())
-        mObj.init(this->mNodeIdx);
+        mObj.init(this->mNodeIdx); //UniqueObj_T<> interface
       return static_cast<PooledObj *>(mObj.get());
     }
   };
