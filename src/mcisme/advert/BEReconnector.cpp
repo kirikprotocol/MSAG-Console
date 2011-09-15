@@ -42,7 +42,7 @@ BEReconnector::Execute()
         AdvertisingImpl* brokenConnectionToBE = iter->first;
         if ( brokenConnectionToBE->reinit(_connectTimeout) ) {
           smsc_log_info(_logger, "BEReconnector::Execute::: connection  to [%s] established successful", brokenConnectionToBE->toString().c_str());
-          const AdvertImplRefPtr& restoredConnection=iter->second;
+          AdvertImplRefPtr restoredConnection=iter->second;
           _setOfBrokenConnections.erase(iter++);
           if (_restoredConnNotifier)
             _restoredConnNotifier->connectionRestored(restoredConnection);

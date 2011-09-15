@@ -47,11 +47,14 @@ public:
     if (gettimeofday(&cur_time, NULL) < 0)
       throw util::SystemError("SendBannerIdRegistry::getNextExpiredRequest::: call gettimeofday() failed");
     unsigned long long curTimeInMsecs = cur_time.tv_sec * 1000 + cur_time.tv_usec / 1000;
-    while (!_reqSendTimes.empty()) {
+    while (!_reqSendTimes.empty())
+    {
       time_registry_t::iterator iter = _reqSendTimes.begin();
-      if((*iter).reqTimeInMsecs + expiration_period_inmsecs <= currentTime) {
+      if((*iter).reqTimeInMsecs + expiration_period_inmsecs <= curTimeInMsecs)
+      {
         BannerRequest* bannerReq = removeRequest((*iter).trnId);
-        if (bannerReq) {
+        if (bannerReq)
+	{
           smsc_log_debug(_logger, "SendBannerIdRegistry::getNextExpiredRequest: found expired request with id=%d", (*iter).trnId);
           expired_ban_req->origBannerReq = bannerReq;
           expired_ban_req->trnId = (*iter).trnId;
@@ -66,14 +69,15 @@ public:
 
   BannerRequest* removeRequest(uint32_t transaction_id)
   {
-    try {
-      BannerRequest* ret = _knownBannerRequests.Get(transaction_id);
-      smsc_log_debug(_logger, "SendBannerIdRegistry::removeRequest: returned BannerRequest=0x%p for id=%d", ret, transaction_id);
-      _knownBannerRequests.Delete(transaction_id);
-      return ret;
-    } catch (std::runtime_error& ex) {
-      return NULL;
+    BannerRequest** ptr = _knownBannerRequests.GetPtr(transaction_id);
+    if(!ptr)
+    {
+      return 0;
     }
+    BannerRequest* ret=*ptr;
+    smsc_log_debug(_logger, "SendBannerIdRegistry::removeRequest: returned BannerRequest=0x%p for id=%d", ret, transaction_id);
+    _knownBannerRequests.Delete(transaction_id);
+    return ret;
   }
 
 protected:
