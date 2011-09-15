@@ -22,7 +22,7 @@
 
         <!--<eye:dataTable value="#{dataTable.model}" var="row" selectedRows="#{dataTable.selected}">-->
         <eye:dataTable value="#{dataTable.model}" var="row" >
-          <eye:row innerRows="#{row.inner}">
+          <eye:row innerRows="#{row.inner}" opened="true">
             <eye:column name="field1" title="field1" sortable="true" defaultSortOrder="desc" width="30%" align="center">
                 <h:commandLink value="#{row.field1}" action="#{dataTable.choose}">
                   <f:param name="selected" value="#{row.field1}"/>

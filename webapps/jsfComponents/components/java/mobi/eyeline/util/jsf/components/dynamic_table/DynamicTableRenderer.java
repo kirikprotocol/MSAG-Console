@@ -1,11 +1,11 @@
 package mobi.eyeline.util.jsf.components.dynamic_table;
 
+import mobi.eyeline.util.jsf.components.HtmlWriter;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
-import javax.faces.context.ResponseWriter;
 import javax.faces.convert.ConverterException;
 import javax.faces.render.Renderer;
 import java.io.IOException;
@@ -64,25 +64,39 @@ public class DynamicTableRenderer extends Renderer {
 
 
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-    ResponseWriter w = context.getResponseWriter();
+    HtmlWriter w = new HtmlWriter(context.getResponseWriter());
     DynamicTable table = (DynamicTable) component;
-    w.append("\n<table class=\"eyeline_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"><tr>");
-    for (Column c : table.getColumns()) {
-      w.append("<th");
-      if(c.getTitle() == null || c.getTitle().length() == 0) {
-        w.append(" style=\"display:none\"");
-      }
-      w.append(" width=\""+c.getWidth()+"\"");
-      w.append(" >"+(c.getTitle()==null ? "":c.getTitle())+"</td>");
-    }
-    w.append("<th style=\"display:none\">&nbsp;</th></tr></table>\n");
 
-    w.append("<script language=\"javascript\" type=\"text/javascript\">\n");
+    List<Column> columns = table.getColumns();
+
+    w.a("\n<table class=\"eyeline_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\">");
+    w.a("<colgroup>");
+    for (Column c : columns)
+      w.a("<col width=\"").a(c.getWidth() != null ? c.getWidth() : ((100/columns.size()) + "%")).a("\"/>");
+    w.a("<col width=\"1px\"/>");
+    w.a("</colgroup>");
+
+    w.a("<thead>");
+    w.a("<tr>");
+    for (Column c : table.getColumns()) {
+      w.a("<th");
+      if(c.getTitle() == null || c.getTitle().length() == 0) {
+        w.a(" style=\"display:none\"");
+      }
+      w.a(" >"+(c.getTitle()==null ? "":c.getTitle())+"</td>");
+    }
+    w.a("<th style=\"display:none\">&nbsp;</th>\n");
+    w.a("</tr>");
+    w.a("</thead>");
+    w.a("<tbody></tbody>");
+    w.a("</table>");
+
+    w.a("<script language=\"javascript\" type=\"text/javascript\">\n");
 
     int i = 0;
     for (Column c : table.getColumns()) {
       if (c instanceof TextColumn) {
-        w.append("var column" + i + "= new TextColumn('" + c.getName() + "'," + ((TextColumn) c).isAllowEditAfterAdd() + ");\n");
+        w.a("var column" + i + "= new TextColumn('" + c.getName() + "'," + ((TextColumn) c).isAllowEditAfterAdd() + ");\n");
 
       } else if (c instanceof SelectColumn) {
         StringBuilder values = new StringBuilder();
@@ -95,7 +109,7 @@ public class DynamicTableRenderer extends Renderer {
         }
         values.append(')');
 
-        w.append("var column" + i + "= new SelectColumn('" + c.getName() + "'," + values.toString() + ',' + ((SelectColumn) c).isAllowEditAfterAdd() + ',' + ((SelectColumn) c).isUniqueValues() + ");\n");
+        w.a("var column" + i + "= new SelectColumn('" + c.getName() + "'," + values.toString() + ',' + ((SelectColumn) c).isAllowEditAfterAdd() + ',' + ((SelectColumn) c).isUniqueValues() + ");\n");
       }
       i++;
     }
@@ -109,7 +123,7 @@ public class DynamicTableRenderer extends Renderer {
     }
     columnsArray.append(')');
 
-    w.append("var dtable=new DynamicTable('" + context.getExternalContext().getRequestContextPath() + "','" + component.getId() + "'," + columnsArray.toString() + ");\n");
+    w.a("var dtable=new DynamicTable('" + context.getExternalContext().getRequestContextPath() + "','" + component.getId() + "'," + columnsArray.toString() + ");\n");
 
     DynamicTableModel m = (DynamicTableModel)table.getSubmittedValue();
     if (m == null)
@@ -128,9 +142,9 @@ public class DynamicTableRenderer extends Renderer {
         valuesArray.append("'").append(jsValue).append("'");
       }
       valuesArray.append(")");
-      w.append("dtable.addRow(").append(valuesArray).append(");\n");
+      w.a("dtable.addRow(").a(valuesArray.toString()).a(");\n");
     }
 
-    w.append("</script>");
+    w.a("</script>");
   }
 }
