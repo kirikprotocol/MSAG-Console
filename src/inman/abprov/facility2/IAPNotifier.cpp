@@ -56,7 +56,8 @@ bool IAPNotifier::onQueryEvent(AbonentId ab_id)
     smsc_log_error(_logger, "%s: non-existent query for %s", _logId, ab_id.getSignals());
     pTask->onRelease();
   } else {
-    smsc_log_error(_logger, "%s: task pool is exhausted", _logId);
+    smsc_log_error(_logger, "%s: task pool is exhausted: %u of %u", _logId,
+                   (unsigned)_taskPool.usage(), (unsigned)_taskPool.capacity());
   }
   return false;
 }
