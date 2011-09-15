@@ -679,6 +679,8 @@ B3213: Jul 13, 2011
 B3214: Aug 24, 2011
     MCISme	fixed shutdown seq in BannerOutputMessageProcessorsDispatcher
     MCISme	signal masks reorganized
+    MCISme	memory leak and double delete in expiration of banner requests fix
+    MCISme	deleted object usage in reconnect to banner engine fix.
     INMan/USSMan TCPServer manages unique connect id instead of file descriptor
     INMan/USSMan queue node unlinking sync bug is fixed
     INMan/USSMan fix for tcp server accept file descriptors update for select
