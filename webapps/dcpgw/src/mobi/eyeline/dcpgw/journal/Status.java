@@ -9,6 +9,8 @@ public enum Status {
 
     SEND,
     DONE,
-    EXPIRED
+    EXPIRED_TIMEOUT,
+    EXPIRED_MAX_TIMEOUT,
+    NOT_SEND
 
 }

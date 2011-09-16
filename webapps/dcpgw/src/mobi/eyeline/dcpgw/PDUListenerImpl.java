@@ -26,16 +26,6 @@ public class PDUListenerImpl implements PDUListener {
 
     private AtomicLong al = new AtomicLong(0);
 
-    private Hashtable<String, Provider> connection_provider_table;
-
-    public PDUListenerImpl(Hashtable<String, Provider> connection_provider_table){
-        this.connection_provider_table = connection_provider_table;
-    }
-
-    public void update(Hashtable<String, Provider> connection_provider_table){
-
-    }
-
     @Override
     public boolean handlePDU(PDU pdu) {
 
@@ -53,7 +43,7 @@ public class PDUListenerImpl implements PDUListener {
 
                 log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', connection_name '"+connection_name+"', set id '"+message_id+"'.");
 
-                Provider provider = connection_provider_table.get(connection_name);
+                Provider provider = Gateway.getProvider(connection_name);
                 log.debug("This connection name corresponds to the provider with name '"+provider.getName()+"'.");
 
                 Address source_address = request.getSourceAddress();
@@ -109,7 +99,7 @@ public class PDUListenerImpl implements PDUListener {
 
                 log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', connection_name '"+connection_name+"', set id '"+message_id+"'.");
 
-                Provider provider = connection_provider_table.get(connection_name);
+                Provider provider = Gateway.getProvider(connection_name);
                 log.debug("This connection name corresponds to the provider with name '"+provider.getName()+"'.");
 
                 Address source_address = request.getSourceAddress();

@@ -1,6 +1,7 @@
 package mobi.eyeline.dcpgw.journal;
 
 import mobi.eyeline.dcpgw.FinalMessageState;
+import mobi.eyeline.dcpgw.Gateway;
 import mobi.eyeline.dcpgw.Utils;
 import mobi.eyeline.dcpgw.exeptions.CouldNotCleanJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
@@ -36,13 +37,11 @@ public class Journal {
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
 
-    private Hashtable<Long, Data> message_id_receipt_table;
-    private Hashtable<Integer, Long> sequence_number_message_id_table;
+    //private Hashtable<Long, Data> message_id_receipt_table;
+    //private Hashtable<Integer, Long> sequence_number_message_id_table;
 
 
-    public Journal(Hashtable<Long, Data> message_id_receipt_table, Hashtable<Integer, Long> sequence_number_message_id_table) throws InitializationException{
-        this.message_id_receipt_table = message_id_receipt_table;
-        this.sequence_number_message_id_table = sequence_number_message_id_table;
+    public Journal() throws InitializationException{
 
         String userDir = System.getProperty("user.dir");
         String filename = userDir+File.separator+"conf"+File.separator+"config.properties";
@@ -181,7 +180,7 @@ public class Journal {
 
         if (j1.exists()){
 
-            j2 = new File(dir, "journal_1.csv");
+            j2 = new File(dir, "j2.csv");
 
             try {
                 if (j2.createNewFile()){
@@ -237,14 +236,14 @@ public class Journal {
                 String line;
                 while((line = buffReader.readLine()) != null){
                     String[] ar = line.split(sep);
-                    long message_id = Long.parseLong(ar[2].trim());
-                    String status = ar[11].trim();
+                    long message_id = Long.parseLong(ar[2]);
+                    Status status = Status.valueOf(ar[11]);
 
-                    if (status.equals(Status.DONE.toString())) {
+                    if (status == Status.DONE || status == Status.EXPIRED_TIMEOUT || status == Status.EXPIRED_MAX_TIMEOUT) {
                         if (message_ids.add(message_id)){
-                            log.debug(message_id+"_message has DONE status, remember it.");
+                            log.debug(message_id+"_message has "+status+" status, remember it.");
                         } else {
-                            log.warn("Couldn't remember message with 'DONE' status because it's already added to the map. ");
+                            log.warn("Couldn't remember message with status "+status+" because it's already added to the map. ");
                         }
                     }
                 }
@@ -264,9 +263,10 @@ public class Journal {
 
                     long message_id = Long.parseLong(ar[2].trim());
                     String status = ar[11].trim();
-                    log.debug(message_id+"_message has "+status+" status, so try to write it to the temporary journal file "+temp_journal.getName());
+
 
                     if (!message_ids.contains(message_id)){
+                        log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+temp_journal.getName());
                         pw.println(line);
                         pw.flush();
                         counter++;
@@ -395,11 +395,13 @@ public class Journal {
 
                             int nsms = Integer.parseInt(ar[10]);
 
-                            String status_str = ar[11];
+                            Status status  =  Status.valueOf(ar[11]);
 
-                            if (status_str.equals(Status.DONE.toString())){
-                                message_id_receipt_table.remove(message_id);
-                                log.debug("Remove from delivery receipt data with message id "+sequence_number+" .");
+                            if (status == Status.DONE
+                                    || status == Status.EXPIRED_MAX_TIMEOUT
+                                        ||  status == Status.EXPIRED_TIMEOUT){
+                                Gateway.removeDeliveryReceiptData(sequence_number);
+                                log.debug("Remove from memory delivery receipt data with message id "+sequence_number+" .");
                             } else {
                                 Data data = new Data();
                                 data.setMessageId(message_id);
@@ -412,11 +414,10 @@ public class Journal {
                                 data.setNsms(nsms);
                                 data.setFinalMessageState(finalMessageState);
                                 data.setConnectionName(connection_name);
-                                message_id_receipt_table.put(message_id, data);
-                                log.debug("Write in memory delivery receipt data with system id "+message_id+" --> "+ data.toString());
-
-                                sequence_number_message_id_table.put(sequence_number, message_id);
-                                log.debug("Put sn --> message_id: "+sequence_number+" --> "+message_id);
+                                data.setSequenceNumber(sequence_number);
+                                data.setStatus(status);
+                                Gateway.addDeliveryReceiptData(sequence_number, data);
+                                log.debug("Write in memory delivery receipt data with system id "+message_id+" --> "+ data.toString()+" .");
                             }
                         }
                     }

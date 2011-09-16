@@ -66,15 +66,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
                 int nsms = e.getNsms();
 
-                try {
-                        Gateway.sendDeliveryReceipt(message_id, submit_date, done_date, connection_name, source_address, destination_address, nsms, messageState);
-                    } catch (SmppException e1) {
-                        log.error("Couldn't send delivery receipt to the client.", e1);
-                        // todo ?
-                    } catch (CouldNotWriteToJournalException e1) {
-                        log.error(e);
-                    }
-
+                Gateway.sendDeliveryReceipt(message_id, submit_date, done_date, connection_name, source_address, destination_address, nsms, messageState);
             } else {
                 log.warn("Couldn't find message identifier in the final log string.");
             }

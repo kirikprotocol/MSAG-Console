@@ -4,6 +4,7 @@ import mobi.eyeline.dcpgw.FinalMessageState;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -38,6 +39,8 @@ public class Data {
     private int nsms;
 
     private Status status;
+
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
 
     public Data(){
 
@@ -118,8 +121,19 @@ public class Data {
 
         DateFormat df = DateFormat.getDateTimeInstance();
 
-        return "Data{message_id: "+message_id+", first sending date: "+df.format(first_send_date)+", last resending date: "+df.format(last_resending_date)
-                + "sa: "+source_address.getAddress()+", da: "+destination_address.getAddress()+", connection name: "+connection_name+"}";
+        return "Data{message_id: " + message_id +
+                ", first sending date: " + df.format(first_send_date) +
+                ", last resending date: " + df.format(last_resending_date) +
+                ", sa: " + source_address.getAddress() +
+                ", da: " + destination_address.getAddress() +
+                ", con: " + connection_name +
+                ", submit date: " + sdf.format(submit_date)+
+                ", done date: " + sdf.format(done_date)+
+                ", nsms: " + nsms +
+                ", sn: " + sequence_number +
+                ", state: " + state +
+                ", status: " + status +
+                "}";
     }
 
     public Date getDoneDate() {
