@@ -26,7 +26,11 @@ public class CollapsingGroup extends UIPanel {
   }
 
   public boolean isOpened() {
-    return opened;
+   ValueExpression exp = getValueExpression("opened");
+    if (exp == null) {
+      return opened;
+    } else
+      return (Boolean) exp.getValue(getFacesContext().getELContext());
   }
 
   public void setOpened(boolean opened) {
