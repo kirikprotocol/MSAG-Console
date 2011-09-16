@@ -196,7 +196,7 @@ IAPQueryAC * IAPQueriesPoolSRI::allcQuery(void)
 void IAPQueriesPoolSRI::rlseQuery(IAPQueryAC & use_qry)
 {
   MutexGuard  grd(_sync);
-  _objPool.rlseObj(static_cast<QueriesPool::PooledObj*>(&use_qry));
+  _objPool.rlseObj(static_cast<QueriesPool::PooledObj&>(use_qry));
 }
 
 } //sri

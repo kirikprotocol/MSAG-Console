@@ -115,14 +115,15 @@ protected:
  * ************************************************************************** */
 class IAPQueriesPoolATSI : public IAPQueriesPoolIface {
 protected:
-  typedef smsc::util::IDXObjPool_T<IAPQueryATSI, IAPQueryId>  QueriesPool;
+  //queries are reusable !!
+  typedef smsc::util::IDXObjPool_T<IAPQueryATSI, IAPQueryId, false>  QueriesPool;
 
   mutable Mutex     _sync;
   QueriesPool       _objPool; //objects are reusable
   IAPQueryATSI_CFG  _cfg;
 
 public:
-  IAPQueriesPoolATSI() : _objPool(false)
+  IAPQueriesPoolATSI()
   { }
   virtual ~IAPQueriesPoolATSI()
   { }

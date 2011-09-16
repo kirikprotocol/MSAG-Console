@@ -13,11 +13,6 @@ namespace iaprvd {
 /* ************************************************************************** *
  * class IAPQueryAC implementation:
  * ************************************************************************** */
-IAPQueryAC::IAPQueryAC(IAPQueryId q_id)
-  : _qId(q_id), _usage(0), _owner(NULL), _qStatus(IAPQStatus::iqOk)
-  , _qError(0), _logger(NULL)
-{ }
-
 void IAPQueryAC::init(IAPQueryRefereeIface & use_owner, const AbonentId & ab_id)
 {
   _owner = &use_owner;
@@ -36,7 +31,7 @@ void IAPQueryAC::init(IAPQueryRefereeIface & use_owner, const AbonentId & ab_id)
 void IAPQueryAC::mkTaskName(void)
 {
   char buf[_idTaskSZ + 1];
-  snprintf(buf, sizeof(buf)-1, "[%u:%lu]", _qId, _usage);
+  snprintf(buf, sizeof(buf)-1, "[%u:%lu]", this->getUIdx(), _usage);
   _tName = taskType().c_str();
   _tName += buf;
 }
@@ -47,7 +42,7 @@ bool IAPQueryAC::addListener(IAPQueryListenerITF & pf_cb)
   if (_stages._current <= qryReporting)
     return true;
   _stages.rollback(qryReporting, qryDone);
-  notify();
+  this->notify();
   return false;
 }
 

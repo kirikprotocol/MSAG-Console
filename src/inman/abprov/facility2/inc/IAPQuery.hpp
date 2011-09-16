@@ -10,6 +10,7 @@
 #include <list>
 
 #include "logger/Logger.h"
+#include "util/UniqueObjT.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 
 #include "inman/abprov/IAPErrors.hpp"
@@ -36,11 +37,15 @@ public:
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
-class IAPQueryAC : /* public IndexedObj_T<IAPQueryId>, */
-                    public smsc::core::synchronization::EventMonitor {
+class IAPQueryAC : public smsc::util::UniqueObj_T<smsc::core::synchronization::EventMonitor, IAPQueryId> {
 protected:
-  explicit IAPQueryAC(IAPQueryId q_id);
-  virtual ~IAPQueryAC()  { }
+  explicit IAPQueryAC(IAPQueryId q_id)
+    : smsc::util::UniqueObj_T<smsc::core::synchronization::EventMonitor, IAPQueryId>(q_id)
+    , _usage(0), _owner(NULL), _qStatus(IAPQStatus::iqOk), _qError(0), _logger(NULL)
+  { }
+  //
+  virtual ~IAPQueryAC()
+  { }
 
 public:
   enum ProcStage_e {
@@ -83,11 +88,6 @@ public:
   typedef core::buffers::FixedLengthString<_nmTypeSZ + 1>  TypeString_t;
   typedef core::buffers::FixedLengthString<_nmQuerySZ + 1>  QueryName_t;
 
-
-  // -----------------------------------------------
-  // -- IndexedObj_T<IAPQueryId> interface methods
-  // -----------------------------------------------
-  IAPQueryId getIndex(void) const { return _qId; }
 
   //assigns abonentId and switches FSM to qryIdle state
   void init(IAPQueryRefereeIface & use_owner, const AbonentId & ab_number);
@@ -153,7 +153,6 @@ private:
   };
   typedef std::list<ListenerInfo> QueryListeners;
 
-  const IAPQueryId        _qId;     //query unique id
   /* -- */
   unsigned long           _usage;  //counter of runs of this query object
 
@@ -179,7 +178,7 @@ protected:
   //
   void setStageNotify(ProcStage_e fsm_st)
   {
-    _stages.set(fsm_st); notify(); 
+    _stages.set(fsm_st); this->notify(); 
   }
 };
 
