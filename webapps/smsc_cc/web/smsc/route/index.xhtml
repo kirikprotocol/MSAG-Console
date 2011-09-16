@@ -1,53 +1,52 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:smsc="http://taglib.smsc.mobi"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
-    >
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['routes.page.title']}"/>
 
+  <ui:define name="styles">
+    .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
+    .valueColumn {width: 150px; text-align: left; padding-right: 10px; }
+    .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
+    .lastColumn {text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!routes.initFailed}">
+    <h:form rendered="#{!routes.initFailed}">
 
       <h:inputHidden value="#{routes.revision}"/>
       <eye:message level="warn" rendered="#{routes.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
-      <eye:dataTableFilter bean="#{routes}" clearAction="clearFilter">
-        <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <tr:panelFormLayout inlineStyle="padding:10px">
-            <tr:panelLabelAndMessage label="#{msg['routes.page.name']}">
-              <tr:inputText value="#{routes.nameFilter}"/>
-            </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{msg['routes.page.srcSmeId']}">
-              <tr:inputText value="#{routes.srcSmeFilter}"/>
-            </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{msg['routes.page.dstSmeId']}">
-              <tr:inputText value="#{routes.dstSmeFilter}"/>
-            </tr:panelLabelAndMessage>
-          </tr:panelFormLayout>
+      <eye:dataTableFilter applyAction="#{routes.applyFilter}" clearAction="#{routes.clearFilter}">
 
-          <tr:panelFormLayout inlineStyle="padding:10px">
-            <tr:panelLabelAndMessage label="#{msg['routes.page.subject']}">
-              <tr:inputText value="#{routes.subjectFilter}"/>
-            </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{msg['routes.page.mask']}">
-              <tr:inputText value="#{routes.maskFilter}"/>
-            </tr:panelLabelAndMessage>
-          </tr:panelFormLayout>
+        <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn">
+          <h:outputText value="#{msg['routes.page.name']}"/>
+          <eye:inputText value="#{routes.nameFilter}"/>
+
+          <h:outputText value="#{msg['routes.page.subject']}"/>
+          <eye:inputText value="#{routes.subjectFilter}"/>
+
+          <h:outputText value="#{msg['routes.page.srcSmeId']}"/>
+          <eye:inputText value="#{routes.srcSmeFilter}"/>
+
+          <h:outputText value="#{msg['routes.page.mask']}"/>
+          <eye:inputText value="#{routes.maskFilter}"/>
+
+          <h:outputText value="#{msg['routes.page.dstSmeId']}"/>
+          <eye:inputText value="#{routes.dstSmeFilter}"/>
         </h:panelGrid>
       </eye:dataTableFilter>
 
+      <p/>
+
       <eye:dataTable value="#{routes.routes}" var="route" selectedRows="#{routes.routes2remove}">
-        <eye:row innerData="#{not empty route.notes}" rowId="#{route.name}">
+        <eye:row innerData="#{not empty route.notes}">
 
           <eye:column name="name" title="#{route['name']}" sortable="true" defaultSortOrder="asc" width="60%">
             <h:commandLink action="ROUTE_EDIT" value="#{route.name}" immediate="true">
@@ -56,11 +55,11 @@
           </eye:column>
 
           <eye:column name="active" title="#{route['active']}" width="7%" align="center">
-            <tr:image source="/images/ic_checked.gif" rendered="#{route.active}"/>
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.active}"/>
           </eye:column>
 
           <eye:column name="allowed" title="#{route['enabling']}" width="7%" align="center">
-            <tr:image source="/images/ic_checked.gif" rendered="#{route.enabling}"/>
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.enabling}"/>
           </eye:column>
 
           <eye:column name="billing" title="#{route['billing']}" width="7%" align="center">
@@ -68,15 +67,15 @@
           </eye:column>
 
           <eye:column name="archiving" title="#{route['archiving']}" width="7%" align="center">
-            <tr:image source="/images/ic_checked.gif" rendered="#{route.archiving}"/>
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.archiving}"/>
           </eye:column>
 
           <eye:column name="reports" title="#{msg['routes.page.reports']}" width="7%" align="center">
-            <tr:image source="/images/ic_checked.gif" rendered="#{route.suppressDeliveryReports}"/>
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.suppressDeliveryReports}"/>
           </eye:column>
 
           <eye:column name="transit" title="#{route['transit']}" width="7%" align="center">
-            <tr:image source="/images/ic_checked.gif" rendered="#{route.transit}"/>
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.transit}"/>
           </eye:column>
 
           <f:facet name="innerData">
@@ -87,6 +86,8 @@
 
       </eye:dataTable>
 
+      <p/>
+
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['add.button']}" action="ROUTE_EDIT" immediate="true"/></eye:button>
         <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{routes.removeRoutes}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:button>
@@ -95,7 +96,7 @@
         <eye:button><smsc:resetButton bean="#{routes}" action="reset"/></eye:button>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

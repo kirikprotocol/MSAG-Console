@@ -1,13 +1,13 @@
 package ru.novosoft.smsc.web.controllers.sms_view;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.archive_daemon.SmsDescriptor;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
 import ru.novosoft.smsc.admin.archive_daemon.SmsSet;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import java.util.ArrayList;
 import java.util.Date;

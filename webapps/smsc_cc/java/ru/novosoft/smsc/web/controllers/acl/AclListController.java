@@ -1,9 +1,11 @@
 package ru.novosoft.smsc.web.controllers.acl;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.acl.Acl;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,7 +47,7 @@ public class AclListController extends AclController {
 
     final List<Acl> acls = aclsLst;
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         if (sortOrder != null && sortOrder.getColumnId().equals("name")) {
           Collections.sort(acls, new Comparator<Acl>() {
@@ -64,6 +66,10 @@ public class AclListController extends AclController {
 
       public int getRowsCount() {
         return acls.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return String.valueOf(((Acl) o).getId());
       }
     };
   }

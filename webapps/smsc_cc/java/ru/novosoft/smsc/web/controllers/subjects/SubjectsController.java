@@ -1,14 +1,16 @@
 package ru.novosoft.smsc.web.controllers.subjects;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.RouteSubjectSettings;
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
@@ -52,6 +54,10 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
     masksFilter = new DynamicTableModel();
     namesFilter = null;
     return null;
+  }
+
+  public void applyFilter() {
+
   }
 
   public boolean isInitError() {
@@ -134,7 +140,7 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
       }
     }
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         if (sortOrder != null) {
@@ -163,6 +169,10 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
       }
       public int getRowsCount() {
         return filteredSubjects.size();  //To change body of implemented methods use File | Settings | File Templates.
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Subject)o).getName();
       }
     };
   }

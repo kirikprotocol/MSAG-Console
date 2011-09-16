@@ -3,12 +3,13 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:h="http://java.sun.com/jsf/html">
+      xmlns:tr="http://myfaces.apache.org/trinidad">
+
 
 <ui:composition>
-  <h:commandLink value="#{msg['reset.button']}" action="#{bean[action]}" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false;" immediate="true">
-    <ui:insert/>
-  </h:commandLink>
+
+  <tr:validateLongRange minimum="#{minimum}"/>
+
 </ui:composition>
 
 </html>

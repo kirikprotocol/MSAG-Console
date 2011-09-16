@@ -1,46 +1,42 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['smsc.snmp.traps']}"/>
 
+  <ui:define name="styles">
+    .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
+    .valueColumn {width: 150px; text-align: left; padding-right: 10px; }
+    .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
+    .lastColumn {text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form>
+    <h:form>
 
-      <tr:inputHidden value="#{traps.init}" id="snmp_traps_init"/>
+      <h:inputHidden value="#{traps.init}"/>
 
       <p/>
-      <eye:buttons>
-        <eye:button>
-          <h:commandLink value="Test"/>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
 
-      <eye:dataTableFilter bean="#{traps}" applyAction="query">
+      <eye:dataTableFilter applyAction="#{traps.query}">
 
-        <tr:panelFormLayout labelAlignment="left" inlineStyle="padding: 5px 5px 5px 5px">
+        <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn" style="padding: 5px">
+          <h:outputText value="#{msg['smsc.snmp.traps.date']}"/>
+          <eye:inputDate value="#{traps.dateToView}" />
 
-          <tr:panelLabelAndMessage  label="#{msg['smsc.snmp.traps.date']}">
-            <t:inputDate type="date" value="#{traps.dateToView}" popupCalendar="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{msg['smsc.snmp.traps.type']}">
-            <tr:selectOneChoice value="#{traps.type}" required="true" simple="true">
+          <h:outputText value="#{msg['smsc.snmp.traps.type']}"/>
+          <h:selectOneMenu value="#{traps.type}" required="true">
               <f:selectItems value="#{traps.availableTypes}"/>
-            </tr:selectOneChoice>
-          </tr:panelLabelAndMessage>
-
-        </tr:panelFormLayout>
-
+            </h:selectOneMenu>
+        </h:panelGrid>
       </eye:dataTableFilter>
+
+      <p/>
 
       <eye:dataTable value="#{traps.traps}" var="u" rendered="#{traps.init}">
 
@@ -73,7 +69,7 @@
       </eye:dataTable>
 
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

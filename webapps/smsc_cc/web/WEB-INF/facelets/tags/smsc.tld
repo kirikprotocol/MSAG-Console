@@ -31,4 +31,81 @@
       <required>true</required>
     </attribute>
   </tag>
+
+  <tag>
+    <name>validatePort</name>
+    <description>Проверка принадлежности введенного значения диапозону портов</description>
+  </tag>
+
+  <tag>
+    <name>validatePositive</name>
+    <description>Проверка принадлежности введенного значения интервалу положительных чисел</description>
+  </tag>
+
+  <tag>
+    <name>validateEmail</name>
+    <description>Проверка корректности адреса электронной почты</description>
+  </tag>
+
+  <tag>
+    <name>validatePhone</name>
+    <description>Проверка корректности номера телефона</description>
+  </tag>
+
+  <tag>
+    <name>validateRegExp</name>
+    <description>Проверка на соответствие шаблону</description>
+    <attribute>
+      <name>pattern</name>
+      <description>Шаблон</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>messageDetailNoMatch</name>
+      <description>Текст ошибки</description>
+      <type>java.lang.String</type>
+      <required>false</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>validateLongRange</name>
+    <description>Проверка на соответствие шаблону</description>
+    <attribute>
+      <name>minimum</name>
+      <description>Минимальное значение</description>
+      <type>java.lang.Integer</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>validateLength</name>
+    <description>Проверка на соответствие шаблону</description>
+    <attribute>
+      <name>minimum</name>
+      <description>Минимальное значение</description>
+      <type>java.lang.Integer</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>pageSubtitle</name>
+    <description>Подзаголовок на странице</description>
+    <attribute>
+      <name>value</name>
+      <description>Текст подзаголовка</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, означающий отображать или нет таблицу</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+  </tag>
 </taglib>

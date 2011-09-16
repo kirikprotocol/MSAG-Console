@@ -1,9 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
-      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:ui="http://java.sun.com/jsf/facelets">
 
 <ui:composition>
@@ -30,6 +27,7 @@
         <td width="1%">
           <eye:menubar label="#{msg['smsc.statistic']}" rendered="#{facesContext.externalContext.userPrincipal != null}">
             <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.archiveDaemon']}" action="ARCHIVEDAEMON" rendered="#{archiveDaemon.archiveDaemonDeployed}"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.smsView']}" action="SMS_VIEW"/></eye:menubaritem>
           </eye:menubar>
         </td>
         <td width="1%">

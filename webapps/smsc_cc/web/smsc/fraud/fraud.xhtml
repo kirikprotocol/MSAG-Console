@@ -1,51 +1,50 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:smsc="http://taglib.smsc.mobi"
-      xmlns:jstl="http://java.sun.com/jstl/core">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['smsc.fraud.title']}"/>
 
+  <ui:define name="styles">
+    .labelColumn {width: 1px; text-align: right; white-space : nowrap;}
+    .valueColumn {width: 100%; text-align: left;}
+    .addButton {width: 100px; white-space: nowrap;}
+  </ui:define>
+
   <ui:define name="content">
 
     <h:form rendered="#{!fraud.initError}">
-      <tr:inputHidden value="#{fraud.revision}"/>
-      <eye:message level="warn" rendered="#{fraud.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      <h:inputHidden value="#{fraud.revision}"/>
+      <eye:message level="warn" rendered="#{fraud.settingsChanged}"><h:outputText
+          value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <p/>
 
-      <h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">
-        <eye:pageSubtitle value="#{msg['smsc.fraud.subtitle.policy']}"/>
-        <tr:panelFormLayout>
-          <tr:panelLabelAndMessage label="#{fraudSettingsBundle['enableCheck']}">
-            <h:selectBooleanCheckbox value="#{fraud.enableCheck}"/>
-          </tr:panelLabelAndMessage>
-          <tr:panelLabelAndMessage label="#{fraudSettingsBundle['enableReject']}">
-            <h:selectBooleanCheckbox value="#{fraud.enableReject}"/>
-          </tr:panelLabelAndMessage>
-          <tr:panelLabelAndMessage label="#{fraudSettingsBundle['tail']}">
-            <tr:inputText value="#{fraud.tail}" required="true" simple="true" contentStyle="width:70px; margin-left:5px;">
-              <eye:validatePositive/>
-            </tr:inputText>
-          </tr:panelLabelAndMessage>
-        </tr:panelFormLayout>
+      <smsc:pageSubtitle value="#{msg['smsc.fraud.subtitle.policy']}"/>
+      <h:panelGrid style="padding-left: 10px" columns="2" columnClasses="labelColumn, valueColumn">
+        <h:outputText value="#{fraudSettingsBundle['enableCheck']}"/>
+        <h:selectBooleanCheckbox value="#{fraud.enableCheck}"/>
+        <h:outputText value="#{fraudSettingsBundle['enableReject']}"/>
+        <h:selectBooleanCheckbox value="#{fraud.enableReject}"/>
+        <h:outputText value="#{fraudSettingsBundle['tail']}"/>
+        <eye:inputText value="#{fraud.tail}" required="true">
+          <smsc:validatePositive/>
+        </eye:inputText>
+
       </h:panelGrid>
 
       <p/>
 
       <h:panelGrid style="align:left;" columns="1" columnClasses="column0Width">
-        <eye:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>
-        <eye:dataTable value="#{fraud.addressTableModel}" selectedRows="#{fraud.selectedRows}" var="aaa">
-          <eye:row rowId="#{aaa.address}" opened="true">
+        <smsc:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>
+        <eye:dataTable value="#{fraud.addressTableModel}" selectedRows="#{fraud.selectedRows}" var="row">
+          <eye:row>
             <eye:column name="address" title="#{msg['smsc.fraud.address.label']}" width="99%" sortable="true">
-              <h:outputText value="#{aaa.simpleAddress}"/>
+              <h:outputText value="#{row.simpleAddress}"/>
             </eye:column>
           </eye:row>
         </eye:dataTable>
@@ -55,18 +54,19 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink actionListener="#{fraud.addLine}">
-            <tr:image source="/images/but_add.gif" inlineStyle="margin-bottom: -5px"/>
-          </tr:commandLink>
-          <tr:inputText value="#{fraud.newAddr}" required="false" simple="true" contentStyle="width: 150px; margin-bottom: 0px">
-            <eye:validatePhone/>
-          </tr:inputText>
-
+          <h:commandLink actionListener="#{fraud.addLine}">
+            <h:graphicImage value="/images/but_add.gif" style="margin-left: -20px; margin-bottom: -18px"/>
+          </h:commandLink>
+          <h:panelGroup style="width:150px; margin-bottom: 0px">
+            <eye:inputText value="#{fraud.newAddr}" required="false">
+              <smsc:validatePhone/>
+            </eye:inputText>
+          </h:panelGroup>
         </eye:button>
 
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" id="delete2" actionListener="#{fraud.removeSelected}"
-                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+          <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{fraud.removeSelected}"
+                         onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
         </eye:button>
 
         <eye:space/>

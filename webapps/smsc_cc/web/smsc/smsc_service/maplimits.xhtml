@@ -1,10 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:smsc="http://taglib.smsc.mobi"
       xmlns:c="http://java.sun.com/jstl/core">
 
@@ -12,9 +9,14 @@
 
   <ui:param name="pageTitle" value="#{msg['smsc.smsc.map_limit']}"/>
 
+  <ui:define name="styles">
+    .labelColumn {width: 1px; white-space: nowrap; text-align: right;}
+    .valueColumn {width:100%; text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!mapLimits.initFailed}">
+    <h:form rendered="#{!mapLimits.initFailed}">
 
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{mapLimits}" action="save"/></eye:button>
@@ -22,45 +24,41 @@
         <eye:space/>
       </eye:buttons>
 
-      <tr:inputHidden id="revision" value="#{mapLimits.revision}"/>
-      <eye:message level="warn" rendered="#{mapLimits.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      <h:inputHidden value="#{mapLimits.revision}"/>
+      <eye:message level="warn" rendered="#{mapLimits.settingsChanged}"><h:outputText
+          value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <h:panelGrid columns="1" style="padding:20px;">
 
         <eye:collapsingGroup label="#{msg['smsc.maplimits.dialogsLimits']}" opened="true">
-          <tr:panelFormLayout>
 
-            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitIn}">
-              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitIn}" required="true" simple="true">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
+          <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
+            <h:outputText value="#{mapLimitBundle.dlgLimitIn}"/>
+            <eye:inputText value="#{mapLimits.mlSettings.dlgLimitIn}" required="true">
+              <smsc:validatePositive/>
+            </eye:inputText>
 
-            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitInSri}">
-              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitInSri}" required="true" simple="true">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
+            <h:outputText value="#{mapLimitBundle.dlgLimitInSri}"/>
+            <eye:inputText value="#{mapLimits.mlSettings.dlgLimitInSri}" required="true">
+              <smsc:validatePositive/>
+            </eye:inputText>
 
-            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitInUssd}">
-              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitInUssd}" required="true" simple="true">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
+            <h:outputText value="#{mapLimitBundle.dlgLimitInUssd}"/>
+            <eye:inputText value="#{mapLimits.mlSettings.dlgLimitInUssd}" required="true">
+              <smsc:validatePositive/>
+            </eye:inputText>
 
-            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitOutSri}">
-              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitOutSri}" required="true" simple="true">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
+            <h:outputText value="#{mapLimitBundle.dlgLimitOutSri}"/>
+            <eye:inputText value="#{mapLimits.mlSettings.dlgLimitOutSri}" required="true">
+              <smsc:validatePositive/>
+            </eye:inputText>
 
-            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitUssd}">
-              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitUssd}" required="true" simple="true">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
+            <h:outputText value="#{mapLimitBundle.dlgLimitUssd}"/>
+            <eye:inputText value="#{mapLimits.mlSettings.dlgLimitUssd}" required="true">
+              <smsc:validatePositive/>
+            </eye:inputText>
+          </h:panelGrid>
 
-          </tr:panelFormLayout>
         </eye:collapsingGroup>
 
         <eye:collapsingGroup label="#{mapLimitBundle.ussdNoSriCodes}" opened="true">
@@ -77,40 +75,33 @@
             <c:forEach var="var" items="#{mapLimits.mlSettings.congestionLevels}">
               <c:set var="i" value="#{i+1}"/>
               <eye:collapsingGroup label="#{msg['smsc.maplimits.level']} #{i}" opened="true">
-                <tr:panelFormLayout>
+                <h:panelGrid columns="2" columnClasses="labelCOlumn, valueColumn">
+                  <h:outputText value="#{mapLimitCongLvlBundle.dialogsLimit}"/>
+                  <eye:inputText value="#{var.dialogsLimit}" required="true">
+                    <smsc:validatePositive/>
+                  </eye:inputText>
 
-                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.dialogsLimit}">
-                    <tr:inputText value="#{var.dialogsLimit}" required="true" simple="true">
-                      <eye:validatePositive/>
-                    </tr:inputText>
-                  </tr:panelLabelAndMessage>
+                  <h:outputText value="#{mapLimitCongLvlBundle.failLowerLimit}"/>
+                  <eye:inputText value="#{var.failLowerLimit}" required="true">
+                    <smsc:validatePositive/>
+                  </eye:inputText>
 
-                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.failLowerLimit}">
-                    <tr:inputText value="#{var.failLowerLimit}" required="true" simple="true">
-                      <eye:validatePositive/>
-                    </tr:inputText>
-                  </tr:panelLabelAndMessage>
+                  <h:outputText value="#{mapLimitCongLvlBundle.failUpperLimit}"/>
+                  <eye:inputText value="#{var.failUpperLimit}" required="true">
+                    <smsc:validatePositive/>
+                  </eye:inputText>
 
-                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.failUpperLimit}">
-                    <tr:inputText value="#{var.failUpperLimit}" required="true" simple="true">
-                      <eye:validatePositive/>
-                    </tr:inputText>
-                  </tr:panelLabelAndMessage>
-
-                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.okToLower}">
-                    <tr:inputText value="#{var.okToLower}" required="true" simple="true">
-                      <eye:validatePositive/>
-                    </tr:inputText>
-                  </tr:panelLabelAndMessage>
-
-                </tr:panelFormLayout>
+                  <h:outputText value="#{mapLimitCongLvlBundle.okToLower}"/>
+                  <eye:inputText value="#{var.okToLower}" required="true">
+                    <smsc:validatePositive/>
+                  </eye:inputText>
+                </h:panelGrid>
               </eye:collapsingGroup>
             </c:forEach>
           </h:panelGroup>
         </eye:collapsingGroup>
 
       </h:panelGrid>
-
 
 
       <eye:buttons>
@@ -120,7 +111,7 @@
       </eye:buttons>
 
 
-    </tr:form>
+    </h:form>
 
 
   </ui:define>

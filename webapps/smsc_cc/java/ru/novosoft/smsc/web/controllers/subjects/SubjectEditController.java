@@ -1,12 +1,12 @@
 package ru.novosoft.smsc.web.controllers.subjects;
 
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.RouteSubjectSettings;
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;

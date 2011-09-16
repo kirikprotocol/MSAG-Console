@@ -1,12 +1,14 @@
 package ru.novosoft.smsc.web.controllers.fraud;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
@@ -55,7 +57,7 @@ public class FraudController extends SettingsMController<FraudSettings> {
   public DataTableModel getAddressTableModel() {
     final Collection<Address> whitelist = addresses;
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         List<Address> result = new ArrayList<Address>(whitelist);
         Collections.sort(result, new Comparator<Address>() {
@@ -77,6 +79,10 @@ public class FraudController extends SettingsMController<FraudSettings> {
 
       public int getRowsCount() {
         return whitelist.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Address)o).getAddress();
       }
     };
   }

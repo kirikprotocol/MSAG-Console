@@ -1,38 +1,39 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['smsc.reschedule']}"/>
 
+  <ui:define name="styles">
+    .column1 {width: 1px; text-align:right; white-space: nowrap;}
+    .column2 {text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!reschedule.initFailed}">
+    <h:form rendered="#{!reschedule.initFailed}">
 
       <eye:message level="warn" rendered="#{reschedule.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
-      <tr:inputHidden value="#{reschedule.revision}" id="revision"/>
+      <h:inputHidden value="#{reschedule.revision}"/>
+      
+      <h:panelGrid columns="2" columnClasses="column1, column2" style="margin-left: 5px;">
+        <h:outputText value="#{msg['smsc.reschedule.default']}"/>
+        <eye:inputText value="#{reschedule.defaultReschedule}" required="true">
+          <smsc:validateRegExp pattern="#{reschedule.reschedulePattern}" messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
+        </eye:inputText>
+      </h:panelGrid>
 
-      <tr:panelFormLayout inlineStyle="padding-top:5px; padding-bottom:5px">
-        <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.default']}">
-          <tr:inputText value="#{reschedule.defaultReschedule}" required="true" simple="true">
-            <tr:validateRegExp pattern="#{reschedule.reschedulePattern}"
-                               messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
-          </tr:inputText>
-        </tr:panelLabelAndMessage>
-      </tr:panelFormLayout>
-
-
+      <p/>
 
       <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}" var="g">
 
-        <eye:row rowId="#{g.intervals}" innerData="#{!empty g.statuses}" opened="true">
+        <eye:row innerData="#{!empty g.statuses}" opened="true">
 
           <eye:column name="reschedules" title="" width="50%">
             <h:commandLink value="#{g.intervals}" action="#{reschedule.edit}">
@@ -44,10 +45,10 @@
             <h:panelGroup >
               <h:dataTable value="#{g.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign">
                 <h:column>
-                  <tr:outputText/>
+                  <h:outputText/>
                 </h:column>
                 <h:column>
-                  <tr:outputText value="#{status}" converter="smpp_status_converter"/>
+                  <h:outputText value="#{status}" converter="smpp_status_converter"/>
                 </h:column>
               </h:dataTable>
             </h:panelGroup>
@@ -57,24 +58,24 @@
 
       </eye:dataTable>
 
-
+      <p/>
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" id="add2" action="#{reschedule.edit}"/>
+          <h:commandLink value="#{msg['add.button']}" id="add2" action="#{reschedule.edit}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" id="delete2" actionListener="#{reschedule.removeSelected}"
+          <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{reschedule.removeSelected}"
                           onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false">
             <f:param name="delete" value=""/>
-          </tr:commandLink>
+          </h:commandLink>
         </eye:button>
         <eye:space/>
         <eye:button><smsc:submitButton bean="#{reschedule}" action="submit"/></eye:button>
         <eye:button><smsc:resetButton bean="#{reschedule}" action="reset"/></eye:button>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

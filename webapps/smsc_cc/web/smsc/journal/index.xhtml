@@ -1,40 +1,45 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['journal.page.title']}"/>
 
+  <ui:define name="styles">
+    .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
+    .valueColumn {width: 150px; text-align: left; padding-right: 10px; }
+    .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
+    .lastColumn {text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
     <h:form>
 
-      <eye:dataTableFilter bean="#{journal}" clearAction="clearFilter">
-        <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">
-          <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
-            <h:outputText value="#{msg['journal.page.user']}"/>
-            <h:inputText value="#{journal.filterByUser}"/>
-            <h:outputText value="#{msg['journal.page.from_date']}"/>
-            <t:inputDate value="#{journal.filterByStartDate}" popupCalendar="true" type="full"/>
-          </h:panelGrid>
-          <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
-            <h:outputText value="#{msg['journal.page.subject']}"/>
-            <h:selectOneMenu value="#{journal.filterBySubject}" >
-              <f:selectItems value="#{journal.uniqueSubjectNamesFromJournal}"/>
-            </h:selectOneMenu>
-            <h:outputText value="#{msg['journal.page.till_date']}"/>
-            <t:inputDate value="#{journal.filterByEndDate}" type="full" popupCalendar="true"/>
-          </h:panelGrid>                    
+      <eye:dataTableFilter applyAction="#{journal.applyFilter}" clearAction="#{journal.clearFilter}">
+        <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn">
+          <h:outputText value="#{msg['journal.page.user']}"/>
+          <eye:inputText value="#{journal.filterByUser}"/>
+
+          <h:outputText value="#{msg['journal.page.subject']}"/>
+          <h:selectOneMenu value="#{journal.filterBySubject}">
+            <f:selectItems value="#{journal.uniqueSubjectNamesFromJournal}"/>
+          </h:selectOneMenu>
+
+          <h:outputText value="#{msg['journal.page.from_date']}"/>
+          <eye:inputDate value="#{journal.filterByStartDate}" inputTime="true"/>
+
+          <h:outputText value="#{msg['journal.page.till_date']}"/>
+          <eye:inputDate value="#{journal.filterByEndDate}" inputTime="true"/>
         </h:panelGrid>
       </eye:dataTableFilter>
 
       <eye:dataTable value="#{journal.records}" var="rec">
         <eye:row>
-          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="10%" align="center" defaultSortOrder="desc">
+          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="10%" align="center"
+                      defaultSortOrder="desc">
             <h:outputText value="#{rec.date}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </h:outputText>
@@ -54,6 +59,5 @@
   </ui:define>
 
 </ui:composition>
-
 
 </html>

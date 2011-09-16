@@ -68,6 +68,8 @@ public class SmsQuery {
   }
 
   public void setSmeId(String smeId) {
+    if (smeId != null && smeId.trim().length() == 0)
+      smeId = null;
     this.smeId = smeId;
   }
 
@@ -76,6 +78,8 @@ public class SmsQuery {
   }
 
   public void setSrcSmeId(String srcSmeId) {
+    if (srcSmeId != null && srcSmeId.trim().length() == 0)
+      srcSmeId = null;
     this.srcSmeId = srcSmeId;
   }
 
@@ -84,6 +88,8 @@ public class SmsQuery {
   }
 
   public void setDstSmeId(String dstSmeId) {
+    if (dstSmeId != null && dstSmeId.trim().length() == 0)
+      dstSmeId = null;
     this.dstSmeId = dstSmeId;
   }
 
@@ -92,6 +98,8 @@ public class SmsQuery {
   }
 
   public void setRouteId(String routeId) {
+    if (routeId != null && routeId.trim().length() == 0)
+      routeId = null;
     this.routeId = routeId;
   }
 
@@ -100,6 +108,8 @@ public class SmsQuery {
   }
 
   public void setSmsId(Long smsId) {
+    if (smsId!= null && smsId == Long.MIN_VALUE)
+      smsId = null;
     this.smsId = smsId;
   }
 
@@ -124,6 +134,8 @@ public class SmsQuery {
   }
 
   public void setLastResult(Integer lastResult) {
+    if (lastResult != null && lastResult == Integer.MIN_VALUE)
+      lastResult = null;
     this.lastResult = lastResult;
   }
 
@@ -132,6 +144,8 @@ public class SmsQuery {
   }
 
   public void setMaxRows(Integer maxRows) {
+    if (maxRows != null && maxRows == Integer.MIN_VALUE)
+      maxRows = null;
     this.maxRows = maxRows;
   }
 }

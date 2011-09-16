@@ -1,13 +1,14 @@
 package ru.novosoft.smsc.web.controllers.msc;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.controllers.SmscConfigurationController;
-import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.event.ActionEvent;
@@ -57,6 +58,10 @@ public class MscController extends SmscConfigurationController {
     this.newAddress = newAddres;
   }
 
+  public void applyFilter() {
+
+  }
+
   public String clearFilter() {
     prefixFilter = null;
     return null;
@@ -82,7 +87,7 @@ public class MscController extends SmscConfigurationController {
       filteredMscs.add(msc);
     }
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         if (sortOrder != null) {
@@ -106,6 +111,10 @@ public class MscController extends SmscConfigurationController {
 
       public int getRowsCount() {
         return filteredMscs.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Address)o).getSimpleAddress();
       }
     };
 

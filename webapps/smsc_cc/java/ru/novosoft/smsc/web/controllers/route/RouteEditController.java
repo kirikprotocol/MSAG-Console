@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.web.controllers.route;
 
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.acl.Acl;
 import ru.novosoft.smsc.admin.category.Category;
@@ -7,8 +9,6 @@ import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;

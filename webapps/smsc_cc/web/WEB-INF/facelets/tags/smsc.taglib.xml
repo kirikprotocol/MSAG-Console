@@ -17,4 +17,45 @@
     <tag-name>resetButton</tag-name>
     <source>resetButton.xhtml</source>
   </tag>
+
+  <tag>
+    <tag-name>validatePort</tag-name>
+    <source>validatePort.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validateEmail</tag-name>
+    <source>validateEmail.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validatePhone</tag-name>
+    <source>validatePhone.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validatePositive</tag-name>
+    <source>validatePositive.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>pageSubtitle</tag-name>
+    <source>page_subtitle.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validateRegExp</tag-name>
+    <source>validateRegExp.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validateLongRange</tag-name>
+    <source>validateLongRange.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validateLength</tag-name>
+    <source>validateLength.xhtml</source>
+  </tag>
+
 </facelet-taglib>

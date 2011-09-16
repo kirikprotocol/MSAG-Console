@@ -6,7 +6,9 @@
       xmlns:h="http://java.sun.com/jsf/html">
 
 <ui:composition>
-  <h:commandLink value="#{msg['submit.button']}" action="#{bean[action]}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false;"/>
+  <h:commandLink value="#{msg['submit.button']}" action="#{bean[action]}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false;">
+    <ui:insert/>
+  </h:commandLink>
 </ui:composition>
 
 </html>

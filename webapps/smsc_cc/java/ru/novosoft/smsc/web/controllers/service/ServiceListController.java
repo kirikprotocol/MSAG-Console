@@ -1,12 +1,14 @@
 package ru.novosoft.smsc.web.controllers.service;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.sme.SmeConnectType;
 import ru.novosoft.smsc.admin.sme.SmeServiceStatus;
 import ru.novosoft.smsc.admin.sme.SmeSmscStatus;
 import ru.novosoft.smsc.admin.sme.SmeSmscStatuses;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
@@ -93,7 +95,7 @@ public class ServiceListController extends ServiceController {
       addError(e);
     }
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         if (sortOrder != null && sortOrder.getColumnId().equals("systemId")) {
@@ -125,6 +127,10 @@ public class ServiceListController extends ServiceController {
 
       public int getRowsCount() {
         return smeIds.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Esme)o).getSystemId();
       }
     };
   }

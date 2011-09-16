@@ -1,23 +1,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:smsc="http://taglib.smsc.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['smsc.smsc.logging']}"/>
 
+  <ui:define name="styles">
+    .column1 {width:100px; text-align: left; white-space: nowrap;}
+    .column2 {width:1px; text-align: right;}
+  </ui:define>
+
   <ui:define name="content">
 
     <t:saveState value="#{logging.rLogger}"/>
 
-    <tr:form rendered="#{!logging.initFailed}">
-
+    <h:form rendered="#{!logging.initFailed}">
 
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{logging}" action="save"/></eye:button>
@@ -25,7 +26,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <tr:inputHidden id="revision" value="#{logging.revision}"/>
+      <h:inputHidden value="#{logging.revision}"/>
       <eye:message level="warn" rendered="#{logging.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <h:panelGrid columns="1" style="padding:20px;">
@@ -38,21 +39,16 @@
 
       </h:panelGrid>
 
-
-
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{logging}" action="save"/></eye:button>
         <eye:button><smsc:resetButton bean="#{logging}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
-
-    </tr:form>
-
+    </h:form>
 
   </ui:define>
 
 </ui:composition>
-
 
 </html>

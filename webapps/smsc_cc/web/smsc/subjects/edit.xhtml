@@ -1,17 +1,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{ subjectEdit.oldName!=null ? msg['subject.edit.edit.title'] : msg['subject.edit.add.title']}"/>
 
+  <ui:define name="styles">
+    .column1 {width: 1px; white-space: nowrap; text-align:right;}
+    .column300 {min-width: 300px; text-align: left;}
+    .column500 {min-width: 500px; text-align: left; vertical-align: top;}
+    .lastColumn {width: 100%; vertical-align: top;}
+  </ui:define>
 
   <ui:define name="content">
 
@@ -20,30 +25,28 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" id="add1" action="#{subjectEdit.done}">
+          <h:commandLink value="#{msg['done.button']}" id="add1" action="#{subjectEdit.done}">
             <f:param name="oldName" value="#{subjectEdit.oldName}"/>
-          </tr:commandLink>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="SUBJECTS" immediate="true"/>
+          <h:commandLink value="#{msg['cancel.button']}" id="cancel1" action="SUBJECTS" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
       <p/>
 
-      <eye:pageSubtitle value="#{msg['subject.edit.info']}"/>
+      <smsc:pageSubtitle value="#{msg['subject.edit.info']}"/>
 
-      <h:panelGrid columns="3" columnClasses="column100Width, column300WidthLeft, columnTopLeftAlign">
+      <h:panelGrid columns="3" columnClasses="column1, column300, lastColumn">
 
         <h:outputText value="#{msg['subjects.page.column.name']}"/>
-        <h:inputText value="#{subjectEdit.subj.name}" style="width:300px">
-          <tr:validateLength minimum="1"/>
-        </h:inputText>
+        <eye:inputText value="#{subjectEdit.subj.name}" required="true"/>
         <h:outputText value="&#160;" style="width: 100%"/>
 
         <h:outputText value="#{msg['subjects.page.column.notes']}"/>
-        <h:inputTextarea value="#{subjectEdit.subj.notes}" rows="2" style="width:300px"/>
+        <eye:inputText value="#{subjectEdit.subj.notes}" rows="2"/>
         <h:outputText value="&#160;" style="width: 100%"/>
 
         <h:outputText value="#{msg['subjects.page.column.defaultSme']}"/>
@@ -55,12 +58,12 @@
       </h:panelGrid>
 
 
-      <h:panelGrid columns="2" columnClasses="column500TopLeft, columnTopLeftAlign">
+      <h:panelGrid columns="2" columnClasses="column500, lastColumn">
 
         <h:panelGroup>
-          <eye:pageSubtitle value="#{msg['subjects.page.column.masks']}"/>
+          <smsc:pageSubtitle value="#{msg['subjects.page.column.masks']}"/>
 
-          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign">
+          <h:panelGrid columns="2" columnClasses="column300, lastColumn">
             <eye:dynamicTable value="#{subjectEdit.masksModel}">
               <eye:textColumn name="mask" allowEditAfterAdd="true"/>
             </eye:dynamicTable>
@@ -69,9 +72,9 @@
         </h:panelGroup>
 
         <h:panelGroup>
-          <eye:pageSubtitle value="#{msg['subject.edit.inner.subjects']}"/>
+          <smsc:pageSubtitle value="#{msg['subject.edit.inner.subjects']}"/>
 
-          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign">
+          <h:panelGrid columns="2" columnClasses="column300, lastColumn">
             <c:forEach items="#{subjectEdit.subj.children}" var="child">
               <h:commandLink value="#{child}" action="SUBJECT_EDIT" immediate="true">
                 <f:param name="oldName" value="#{child}"/>
@@ -79,7 +82,7 @@
 
 
               <h:commandLink action="#{subjectEdit.removeChild}">
-                <tr:image source="/images/but_del.gif"/>
+                <h:graphicImage value="/images/but_del.gif"/>
                 <f:param name="oldName" value="#{subjectEdit.oldName}"/>
                 <f:param name="childToRemove" value="#{child}"/>
               </h:commandLink>
@@ -93,7 +96,7 @@
             <h:commandLink action="#{subjectEdit.addChild}"
                            rendered="#{not empty subjectEdit.allowedChildren}">
               <f:param name="oldName" value="#{subjectEdit.oldName}"/>
-              <tr:image source="/images/but_add.gif"/>
+              <h:graphicImage value="/images/but_add.gif"/>
             </h:commandLink>
           </h:panelGrid>
 
@@ -102,12 +105,12 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" id="add2" action="#{subjectEdit.done}">
+          <h:commandLink value="#{msg['done.button']}" id="add2" action="#{subjectEdit.done}">
             <f:param name="oldName" value="#{subjectEdit.oldName}"/>
-          </tr:commandLink>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="SUBJECTS" immediate="true"/>
+          <h:commandLink value="#{msg['cancel.button']}" id="cancel2" action="SUBJECTS" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

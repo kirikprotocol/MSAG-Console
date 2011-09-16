@@ -1,23 +1,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core" xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['smsc.title']}"/>    
+  <ui:param name="pageTitle" value="#{msg['smsc.title']}"/>
+
+  <ui:define name="styles">
+    .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
+    .valueColumn {width: 100%; text-align: left; padding-right: 10px; }
+  </ui:define>
 
   <ui:define name="content">
 
     <h:form>
-      <eye:pageSubtitle value="#{msg['status.page.smscs']}"/>
+      <smsc:pageSubtitle value="#{msg['status.page.smscs']}"/>
 
-      <eye:dataTable value="#{smscStatus.smsCenters}" pageSize="100" var="data">
+      <eye:dataTable value="#{smscStatus.smsCenters}" var="data">
 
         <eye:row innerData="#{data.hasErrors}">
 
@@ -78,7 +80,7 @@
 
           <f:facet name="innerData">
 
-            <h:panelGrid columns="2" columnClasses="column50Width,columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
               <c:forEach items="#{data.errors}" var="error">
                 <h:outputText value="#{msg[error]}:"/>
                 <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED"/>

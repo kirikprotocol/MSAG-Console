@@ -1,13 +1,13 @@
 package ru.novosoft.smsc.web.controllers.sms_view;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.operative_store.Message;
 import ru.novosoft.smsc.admin.operative_store.MessageFilter;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.operative_store.ProgressObserver;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import java.util.*;
 

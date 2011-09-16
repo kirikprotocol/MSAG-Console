@@ -1,25 +1,27 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['lookup.profile.page.title']}"/>
 
+  <ui:define name="styles">
+    .column1 {width: 1px; text-align:right; white-space:nowrap;}
+    .column2 {width: 100%; text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
     <h:form>
 
-      <tr:panelFormLayout >
-        <tr:panelLabelAndMessage label="#{profile['address']}">
-          <tr:inputText value="#{lookupProfile.address}" simple="true"/>
-        </tr:panelLabelAndMessage>
-      </tr:panelFormLayout>
+      <h:panelGrid columns="2" columnClasses="column1, column2">
+        <h:outputText value="#{profile['address']}"/>
+        <eye:inputText value="#{lookupProfile.address}"/>
+      </h:panelGrid>
 
       <p/>
 
@@ -34,104 +36,84 @@
 
       <h:panelGroup rendered="#{lookupProfile.canView}">
 
-        <eye:pageSubtitle value="#{msg['lookup.profile.page.exact.match']}" rendered="#{lookupProfile.lookupResult.exactMatch}"/>
-        <eye:pageSubtitle value="#{msg['lookup.profile.page.mask.match']}: #{lookupProfile.lookupResult.profile.address.simpleAddress}" rendered="#{lookupProfile.lookupResult.maskMatch}"/>
-        <eye:pageSubtitle value="#{msg['lookup.profile.page.default.match']}" rendered="#{lookupProfile.lookupResult.defaultMatch}"/>
+        <smsc:pageSubtitle value="#{msg['lookup.profile.page.exact.match']}" rendered="#{lookupProfile.lookupResult.exactMatch}"/>
+        <smsc:pageSubtitle value="#{msg['lookup.profile.page.mask.match']}: #{lookupProfile.lookupResult.profile.address.simpleAddress}" rendered="#{lookupProfile.lookupResult.maskMatch}"/>
+        <smsc:pageSubtitle value="#{msg['lookup.profile.page.default.match']}" rendered="#{lookupProfile.lookupResult.defaultMatch}"/>
 
-        <tr:panelFormLayout inlineStyle="padding:10px">
+        <h:panelGrid columns="2" columnClasses="column1, column2">
 
-          <tr:panelLabelAndMessage label="#{profile['ucs2']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ucs2}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ucs2}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['ucs2']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ucs2}"/>
+          <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ucs2}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['latin1']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.latin1}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.latin1}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['latin1']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.latin1}"/>
+          <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.latin1}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['ussd7bit']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ussd7bit}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ussd7bit}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['ussd7bit']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ussd7bit}"/>
+          <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ussd7bit}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['reportOptions']}">
-            <tr:outputText value="#{lookupProfile.lookupResult.profile.reportOptions}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['reportOptions']}"/>
+          <h:outputText value="#{lookupProfile.lookupResult.profile.reportOptions}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['locale']}">
-            <tr:outputText value="#{lookupProfile.lookupResult.profile.locale}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['locale']}"/>
+          <h:outputText value="#{lookupProfile.lookupResult.profile.locale}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['aliasHide']}">
-            <tr:outputText value="#{lookupProfile.lookupResult.profile.aliasHide}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['aliasHide']}"/>
+          <h:outputText value="#{lookupProfile.lookupResult.profile.aliasHide}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['aliasModifiable']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.aliasModifiable}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.aliasModifiable}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['aliasModifiable']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.aliasModifiable}"/>
+          <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.aliasModifiable}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['divert']}">
-            <tr:outputText value="#{lookupProfile.lookupResult.profile.divert}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['divert']}"/>
+          <h:outputText value="#{lookupProfile.lookupResult.profile.divert}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['divertActive']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActive}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActive}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['divertActive']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActive}"/>
+          <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActive}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['divertActiveAbsent']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['divertActiveAbsent']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
+          <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['divertActiveBlocked']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['divertActiveBlocked']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
+          <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['divertActiveBarred']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBarred}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBarred}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['divertActiveBarred']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBarred}"/>
+            <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBarred}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['divertActiveCapacity']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['divertActiveCapacity']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
+            <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['divertModifiable']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertModifiable}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertModifiable}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['divertModifiable']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertModifiable}"/>
+            <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertModifiable}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['udhConcat']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.udhConcat}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.udhConcat}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['udhConcat']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.udhConcat}"/>
+            <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.udhConcat}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['translit']}">
-            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.translit}"/>
-            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.translit}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['translit']}"/>
+          <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.translit}"/>
+            <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.translit}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['groupId']}">
-            <h:commandLink value="#{lookupProfile.lookupResult.profile.groupId}" action="CLOSED_GROUP_EDIT" immediate="true">
+          <h:outputText value="#{profile['groupId']}"/>
+          <h:commandLink value="#{lookupProfile.lookupResult.profile.groupId}" action="CLOSED_GROUP_EDIT" immediate="true">
               <f:param name="canView" value="true"/>
               <f:param name="closed_group" value="#{lookupProfile.lookupResult.profile.groupId}"/>
             </h:commandLink>
-          </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{profile['inputAccessMask']}">
-            <tr:outputText value="#{lookupProfile.lookupResult.profile.inputAccessMask}"/>
-          </tr:panelLabelAndMessage>
+          <h:outputText value="#{profile['inputAccessMask']}"/>
+          <h:outputText value="#{lookupProfile.lookupResult.profile.inputAccessMask}"/>
 
-          <tr:panelLabelAndMessage label="#{profile['outputAccessMask']}">
-            <tr:outputText value="#{lookupProfile.lookupResult.profile.outputAccessMask}"/>
-          </tr:panelLabelAndMessage>
-
-        </tr:panelFormLayout>
+          <h:outputText value="#{profile['outputAccessMask']}"/>
+          <h:outputText value="#{lookupProfile.lookupResult.profile.outputAccessMask}"/>
+        </h:panelGrid>
 
       </h:panelGroup>
 

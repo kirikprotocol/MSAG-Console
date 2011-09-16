@@ -1,11 +1,11 @@
 package ru.novosoft.smsc.web.controllers.journal;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.users.UsersSettings;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.controllers.SmscController;
 import ru.novosoft.smsc.web.journal.Journal;
 import ru.novosoft.smsc.web.journal.JournalRecord;
@@ -32,6 +32,10 @@ public class JournalController extends SmscController {
     this.journal = WebContext.getInstance().getJournal();
     this.users = WebContext.getInstance().getUserManager().getUsersSettings();
     clearFilter();
+  }
+
+  public void applyFilter() {
+
   }
 
   public void clearFilter() {

@@ -1,46 +1,48 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{snmpObj.objTitle}"/>
 
+  <ui:define name="styles">
+  .labelColumn {width: 1px; white-space: nowrap; text-align: right;}
+  .valueColumn {width:100%; text-align: left;}
+  .column200 {width: 200px; vertical-align:top;}
+  .severityColumn1 {width:100px; white-space: nowrap;}
+  .severityColumn2 {width:100px;}
+  .severityColumn3 {width:100%;}
+</ui:define>
+
   <ui:define name="content">
 
     <h:form rendered="#{!snmp.initError and snmpObj.obj!=null}">
-      <tr:inputHidden value="#{snmpObj.objName}"  id="objName"/>
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{snmpObj.done}">
+          <h:commandLink value="#{msg['done.button']}" action="#{snmpObj.done}">
             <f:param name="objName" value="#{snmpObj.objName}"/>
-          </tr:commandLink>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="SNMP" immediate="true"/>          
+          <h:commandLink value="#{msg['cancel.button']}" action="SNMP" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
       <p/>
 
-      <tr:panelFormLayout inlineStyle="margin-left:15px;">
-        <tr:panelLabelAndMessage label="#{msg['snmp.object.enabled']}" inlineStyle="text-align:left">
-          <h:selectBooleanCheckbox style="margin-left:15px" value="#{snmpObj.obj.enabled}" required="true"/>
-        </tr:panelLabelAndMessage>
-      </tr:panelFormLayout>
-
-
+      <h:panelGrid columns="2" columnClasses="labelCOlumn, valueColumn">
+        <h:outputText value="#{msg['snmp.object.enabled']}"/>
+        <h:selectBooleanCheckbox style="margin-left:15px" value="#{snmpObj.obj.enabled}" required="true"/>
+      </h:panelGrid>
 
       <eye:collapsingGroup label="#{msg['snmp.counters.label']}" opened="true">
-        <tr:panelFormLayout inlineStyle="margin-left:15px;">
+        <h:panelGroup style="width:200px; margin-left: 20px">
 
           <ui:include src="counterPanel.xhtml">
             <ui:param name="counterLabel" value="#{msg['snmp.object.counter000d']}"/>
@@ -108,32 +110,31 @@
             <ui:param name="snmpObjField" value="#{snmpObj.obj.counterTempError}"/>
           </ui:include>
 
-          <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" rendered="#{not empty snmpObj.countersToAdd}" >
+          <h:panelGrid style="align:left;" columns="2" columnClasses="labelColumn,valueColumn" rendered="#{not empty snmpObj.countersToAdd}" >
             <h:selectOneMenu value="#{snmpObj.counterToAdd}" >
               <f:selectItems value="#{snmpObj.countersToAdd}"/>
             </h:selectOneMenu>
-            <tr:commandLink action="#{snmpObj.addCounter}" >
-              <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
+            <h:commandLink action="#{snmpObj.addCounter}" >
+              <h:graphicImage value="/images/but_add.gif" style=" margin-top:1px;"  />
               <f:param name="objName" value="#{snmpObj.objName}"/>
-            </tr:commandLink>
+            </h:commandLink>
           </h:panelGrid>
-        </tr:panelFormLayout>
+        </h:panelGroup>
       </eye:collapsingGroup>
 
 
       <eye:collapsingGroup label="#{msg['snmp.severities.label']}" opened="true">
-        <tr:panelFormLayout inlineStyle="margin-left:15px;">
+        <h:panelGrid columns="3" columnClasses="labelColumn, labelColumn, valueColumn" >
           <ui:include src="severityPanel.xhtml">
             <ui:param name="label" value="#{msg['snmp.object.severityRegister']}"/>
             <ui:param name="severityName" value="severityRegister"/>
             <ui:param name="snmpObjField" value="#{snmpObj.obj.severityRegister}"/>
-
           </ui:include>
+
           <ui:include src="severityPanel.xhtml">
             <ui:param name="label" value="#{msg['snmp.object.severityRegisterFailed']}"/>
             <ui:param name="severityName" value="severityRegisterFailed"/>
             <ui:param name="snmpObjField" value="#{snmpObj.obj.severityRegisterFailed}"/>
-
           </ui:include>
           <ui:include src="severityPanel.xhtml">
             <ui:param name="label" value="#{msg['snmp.object.severityUnregister']}"/>
@@ -147,17 +148,18 @@
             <ui:param name="snmpObjField" value="#{snmpObj.obj.severityUnregisterFailed}"/>
 
           </ui:include>
-          <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" rendered="#{not empty snmpObj.severitiesToAdd}" >
+        </h:panelGrid>
+          <h:panelGrid style="align:left;" columns="2" columnClasses="labelColumn,valueCOlumn" rendered="#{not empty snmpObj.severitiesToAdd}" >
             <h:selectOneMenu value="#{snmpObj.severityToAdd}" >
               <f:selectItems  value="#{snmpObj.severitiesToAdd}"/>
             </h:selectOneMenu>
-            <tr:commandLink  action="#{snmpObj.addSeverity}" >
-              <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
+            <h:commandLink  action="#{snmpObj.addSeverity}" >
+              <h:graphicImage value="/images/but_add.gif" style=" margin-top:1px;"  />
               <f:param name="objName" value="#{snmpObj.objName}"/>
-            </tr:commandLink>
+            </h:commandLink>
           </h:panelGrid>
 
-        </tr:panelFormLayout>
+
 
       </eye:collapsingGroup>
 
@@ -165,12 +167,12 @@
       
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{snmpObj.done}">
+          <h:commandLink value="#{msg['done.button']}" action="#{snmpObj.done}">
             <f:param name="objName" value="#{snmpObj.objName}"/>
-          </tr:commandLink>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{snmpObj.cancel}" immediate="true"/>
+          <h:commandLink value="#{msg['cancel.button']}" action="#{snmpObj.cancel}" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

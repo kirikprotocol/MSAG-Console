@@ -76,10 +76,6 @@ input.radio {
   border: none;
 }
 
-.clickable {
-  cursor: pointer; /*cursor: hand;*/
-}
-
 select.selectW {
   width: 100%;
 }
@@ -122,88 +118,6 @@ table.smsc_status th {
 div.query_result {
   color: #161E49;
   font-weight: bold;
-}
-
-.columnTop {
- vertical-align:top;
-}
-
-.columnLeft {
-  text-align:left;
-}
-
-.columnTopLeftAlign {
- vertical-align:top;
- text-align:left;
-}
-
-.column50Width {
-  width:50px;
-}
-.column70Width {
-  width:70px;
-}
-
-.column100Width {
-  width:100px;
-}
-.column100WidthTopLeft {
-  width:100px;
-  vertical-align:top;
-  text-align:left;
-}
-
-.column200WidthTopLeft {
-  width:200px;
-  vertical-align:top;
-  text-align:left;
-}
-
-.column300WidthLeft {
-  width:300px;
-  text-align:left;
-}
-
-.column300WidthTopLeft {
-  width:300px;
-  vertical-align:top;
-  text-align:left;
-}
-
-.column300WidthTopRight {
-  width:300px;
-  vertical-align:top;
-  text-align:right;
-}
-
-.column400Width {
-  width:400px;
-}
-
-.column500TopLeft {
-  width:500px;
-  vertical-align:top;
-}
-
-.column150WidthRight {
-  width:150px;
-  text-align:right;
-}
-
-.column0WidthRight {
-  width:0px;
-  text-align:right;
-}
-.column0Width {
-  width:0px;
-  white-space: nowrap;
-}
-.column0WidthLeft {
-  width:0px;
-  text-align:left;
-}
-.column20Width {
-  width:20px;
 }
 
 .listTableHeader {

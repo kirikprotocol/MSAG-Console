@@ -1,68 +1,66 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:f="http://java.sun.com/jsf/core">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['smsc.closed_group.edit']}"/>
 
+  <ui:define name="styles">
+    .column1 {width: 5%; text-align: right;}
+    .column2 {width: 20%;}
+    .column3 {width: 75%;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!closed_group_edit.outOfDate}">
+    <h:form rendered="#{!closed_group_edit.outOfDate}">
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" id="done1" action="#{closed_group_edit.save}"/>
+          <h:commandLink value="#{msg['done.button']}" action="#{closed_group_edit.save}">
+            <f:param name="closed_group" value="#{closed_group_edit.id}"/>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="CLOSED_GROUPS" immediate="true"/>
+          <h:commandLink value="#{msg['cancel.button']}" action="CLOSED_GROUPS" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
-      <tr:inputHidden id="closed_group" value="#{closed_group_edit.id}"/>
+      <h:panelGrid style="padding:10px" columns="3" columnClasses="column1, column2, column3">
 
-      <h:panelGrid style="padding:10px" columns="1">
+        <h:outputText value="#{closedGroupsBundle.name}"/>
+        <eye:inputText value="#{closed_group_edit.name}" required="true"/>
+        <h:outputText value=""/>
 
-        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+        <h:outputText value="#{closedGroupsBundle.description}"/>
+        <eye:inputText rows="3" cols="50" value="#{closed_group_edit.description}" required="true"/>
+        <h:outputText value=""/>
 
-          <tr:panelLabelAndMessage label="#{closedGroupsBundle.name}" labelStyle="text-align:left">
-            <tr:inputText value="#{closed_group_edit.name}" required="true" simple="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{closedGroupsBundle.description}" labelStyle="text-align:left">
-            <tr:inputText rows="3" columns="50" value="#{closed_group_edit.description}" required="true" simple="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{closedGroupsBundle.masks}" labelStyle="text-align:left">
-            <tr:panelGroupLayout>
-              <h:inputHidden/>
-              <eye:dynamicTable value="#{closed_group_edit.dynamicModel}">
-                <eye:textColumn name="mask" maxLength="21" allowEditAfterAdd="true"/>
-              </eye:dynamicTable>
-            </tr:panelGroupLayout>
-          </tr:panelLabelAndMessage>
-
-        </tr:panelFormLayout>
-
+        <h:outputText value="#{closedGroupsBundle.masks}"/>
+        <eye:dynamicTable value="#{closed_group_edit.dynamicModel}">
+          <eye:textColumn name="mask" maxLength="21" allowEditAfterAdd="true"/>
+        </eye:dynamicTable>
+        <h:outputText value=""/>
 
       </h:panelGrid>
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" id="done2" action="#{closed_group_edit.save}"/>
+          <h:commandLink value="#{msg['done.button']}" action="#{closed_group_edit.save}">
+            <f:param name="closed_group" value="#{closed_group_edit.id}"/>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="CLOSED_GROUPS" immediate="true"/>
+          <h:commandLink value="#{msg['cancel.button']}" action="CLOSED_GROUPS" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
   </ui:define>
 
 </ui:composition>

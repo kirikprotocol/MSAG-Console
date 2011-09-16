@@ -1,19 +1,21 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['acl.edit.page.title']}  #{(aclEdit.id == -1) ? '' : aclEdit.idStr}" />
 
+  <ui:define name="styles">
+    .column1 {width: 5%; text-align: right;}
+    .column2 {width: 20%;}
+    .column3 {width: 75%;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!aclEdit.outOfDate}">
+    <h:form rendered="#{!aclEdit.outOfDate}">
 
       <h:inputHidden value="#{aclEdit.id}"/>
 
@@ -23,27 +25,20 @@
         <eye:space/>
       </eye:buttons>
 
-      <h:panelGrid style="padding:10px" columns="1">
-        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">          
+      <h:panelGrid style="padding:10px" columns="3" columnClasses="column1, column2, column3">
+        <h:outputText value="#{msg['acl.edit.page.name']}"/>
+        <eye:inputText value="#{aclEdit.name}" required="true" size="50"/>
+        <h:outputText value=""/>
 
-          <tr:panelLabelAndMessage label="#{msg['acl.edit.page.name']}" >
-            <tr:inputText columns="50" value="#{aclEdit.name}" simple="true" required="true"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText value="#{msg['acl.edit.page.desc']}"/>
+        <eye:inputText value="#{aclEdit.description}" rows="3" size="50"/>
+        <h:outputText value=""/>
 
-          <tr:panelLabelAndMessage label="#{msg['acl.edit.page.desc']}" >
-            <tr:inputText rows="3" columns="50" value="#{aclEdit.description}" simple="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{msg['acl.edit.page.addresses']}">
-            <tr:panelGroupLayout>
-              <h:inputHidden/>
-              <eye:dynamicTable value="#{aclEdit.addresses}" >
-                <eye:textColumn name="address" allowEditAfterAdd="true" maxLength="21" />
-              </eye:dynamicTable>
-            </tr:panelGroupLayout>
-          </tr:panelLabelAndMessage>
-
-        </tr:panelFormLayout>
+        <h:outputText value="#{msg['acl.edit.page.addresses']}"/>
+        <eye:dynamicTable value="#{aclEdit.addresses}" >
+          <eye:textColumn name="address" allowEditAfterAdd="true" maxLength="21" />
+        </eye:dynamicTable>
+        <h:outputText value=""/>
       </h:panelGrid>
 
       <eye:buttons>
@@ -52,7 +47,7 @@
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

@@ -1,17 +1,17 @@
 package ru.novosoft.smsc.web.controllers.alias;
 
-import org.apache.log4j.Logger;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.controllers.SmscConfigurationController;
-import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
@@ -49,6 +49,10 @@ public class AliasController extends SmscConfigurationController {
     aliasesFilter = new DynamicTableModel();
     adressesFilter = new DynamicTableModel();
     hideFilter = null;
+    return null;
+  }
+
+  public String applyFilter() {
     return null;
   }
 
@@ -133,7 +137,7 @@ public class AliasController extends SmscConfigurationController {
 
 
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
 
@@ -169,6 +173,10 @@ public class AliasController extends SmscConfigurationController {
 
       public int getRowsCount() {
         return aliases.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Alias)o).getAlias().getSimpleAddress();
       }
     };
 

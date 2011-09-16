@@ -1,64 +1,66 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi"
+      xmlns:f="http://java.sun.com/jsf/core">
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['smsc.reschedule.edit']}"/>  
+  <ui:param name="pageTitle" value="#{msg['smsc.reschedule.edit']}"/>
+
+  <ui:define name="styles">
+    .column1 {width: 1px; text-align:right; white-space: nowrap;}
+    .column2 {text-align: left;}
+    .column3 {width: 300px;}
+  </ui:define>
 
   <ui:define name="content">
 
-    <tr:form rendered="#{!rescheduleEdit.initFailed}">
+    <h:form rendered="#{!rescheduleEdit.initFailed}">
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" id="done1" action="#{rescheduleEdit.done}"/>
+          <h:commandLink value="#{msg['done.button']}" action="#{rescheduleEdit.done}">
+            <f:param name="edit_initialized" value="true"/>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="RESCHEDULE" immediate="true"/>
+          <h:commandLink value="#{msg['cancel.button']}" action="RESCHEDULE" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
-      <tr:inputHidden id="edit_initialized" value="true"/>
+      <h:inputHidden value="#{rescheduleEdit.oldReschedule}"/>
 
-      <tr:inputHidden value="#{rescheduleEdit.oldReschedule}"/>
+      <h:panelGrid columns="2" columnClasses="column1, column2">
+        <h:outputText value="#{msg['smsc.reschedule.edit.intervals']}"/>
+        <eye:inputText value="#{rescheduleEdit.newReschedule}" required="true" cols="100">
+          <smsc:validateRegExp pattern="#{rescheduleEdit.reschedulePattern}"
+                               messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
+        </eye:inputText>
+      </h:panelGrid>
 
-      <h:panelGrid style="padding:10px" columns="1">
-
-        <h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">
-          <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.edit.intervals']}">
-            <tr:inputText value="#{rescheduleEdit.newReschedule}" required="true" simple="true">
-              <tr:validateRegExp pattern="#{rescheduleEdit.reschedulePattern}"
-                                 messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
-            </tr:inputText>
-          </tr:panelLabelAndMessage>
-        </h:panelGrid>
-
-        <h:panelGrid style="align:left; width:35%"  rendered="#{rescheduleEdit.available}">
-          <eye:dynamicTable value="#{rescheduleEdit.dynamicModel}">
+      <h:panelGrid columns="2" columnClasses="column3, column2">
+        <eye:dynamicTable value="#{rescheduleEdit.dynamicModel}">
             <eye:selectColumn name="code" values="#{rescheduleEdit.availableStatuses}"
                               uniqueValues="true" allowEditAfterAdd="false"/>
           </eye:dynamicTable>
-        </h:panelGrid>
-
       </h:panelGrid>
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" id="done2" action="#{rescheduleEdit.done}"/>
+          <h:commandLink value="#{msg['done.button']}" action="#{rescheduleEdit.done}">
+            <f:param name="edit_initialized" value="true"/>
+          </h:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="RESCHEDULE" immediate="true"/>
+          <h:commandLink value="#{msg['cancel.button']}" action="RESCHEDULE" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
   </ui:define>
 
 </ui:composition>

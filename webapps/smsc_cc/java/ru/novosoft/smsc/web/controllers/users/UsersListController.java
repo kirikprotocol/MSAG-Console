@@ -1,11 +1,13 @@
 package ru.novosoft.smsc.web.controllers.users;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.users.UsersSettings;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.event.ActionEvent;
@@ -26,6 +28,10 @@ public class UsersListController extends UsersController {
 
   public void clearFilter() {
     filterByLogin = null;
+  }
+
+  public void applyFilter() {
+
   }
 
   private List selectedRows;
@@ -88,7 +94,7 @@ public class UsersListController extends UsersController {
       }
     }
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         List<User> tmp = new LinkedList<User>(users);
@@ -125,6 +131,10 @@ public class UsersListController extends UsersController {
 
       public int getRowsCount() {
         return users.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((User)o).getLogin();
       }
     };
   }

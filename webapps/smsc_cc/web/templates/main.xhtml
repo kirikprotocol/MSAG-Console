@@ -1,35 +1,26 @@
 <f:view xmlns="http://www.w3.org/1999/xhtml"
         xmlns:f="http://java.sun.com/jsf/core"
         xmlns:h="http://java.sun.com/jsf/html"
-        xmlns:tr="http://myfaces.apache.org/trinidad"
         xmlns:ui="http://java.sun.com/jsf/facelets">
 
+  <ui:composition>
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/colors.css"/>
+  <html>
+    <head>
+      <title><h:outputText value="#{msg['smsc.title']}"/> </title>
+      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/common.css"/>
+      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/main_menu.css"/>
+      <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/jsf-components-eyeline-design.css"/>
+      <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/jquery.js"></script>
+      <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/jquery-ui.js"></script>
+      <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/jsf-components.js"></script>
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/common.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/list.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/properties_list.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/main_menu.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_list.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/messages.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/message.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_menu.css"/>
+      <style>
+        <ui:insert name="styles"/>
+      </style>
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/header.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/navbar.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/data_table_filter.css"/>
-
-
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_group.css"/>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/collapsing_group.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/dynamic_table.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/ajax.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table_filter.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menubar.js"></script>
-
-  <tr:document title="#{msg['smsc.title']}" >
+    </head>
+    <body>
 
     <table height="100%" cellspacing="0" cellpadding="0" >
       <tr>
@@ -64,9 +55,9 @@
 
             <tr>
               <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_24.jpg"></td>
-              <td>                
+              <td>
                 <p/>
-                <tr:messages id="smsc_errors"/>
+                <h:messages id="smsc_errors"/>
                 <p/>
                 <ui:insert name="content"/>
 
@@ -112,7 +103,7 @@
         </td>
       </tr>
     </table>
-  </tr:document>
-  <!--</body>-->
-  <!--</html>-->
+    </body>
+  </html>
+  </ui:composition>
 </f:view>

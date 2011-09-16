@@ -1,11 +1,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -13,10 +11,10 @@
 
   <ui:define name="content">
 
-    <tr:form id="services" rendered="#{!service.outOfDate}">
+    <h:form id="services" rendered="#{!service.outOfDate}">
 
       <eye:buttons>
-        <eye:button><h:commandLink action="SME_EDIT" value="#{msg['add.button']}"/></eye:button>
+        <eye:button><h:commandLink action="SERVICE_EDIT" value="#{msg['add.button']}"/></eye:button>
         <eye:button><h:commandLink action="#{service.deleteSmes}" value="#{msg['delete.button']}"/></eye:button>
         <eye:space/>
         <eye:button><h:commandLink action="#{service.disconnectSmes}" value="#{msg['services.page.disconnect']}"/></eye:button>
@@ -24,7 +22,7 @@
 
       <eye:dataTable value="#{service.services}" var="srv" selectedRows="#{service.selectedRows}">
 
-        <eye:row rowId="#{srv.systemId}">
+        <eye:row>
 
           <eye:column name="edit" title="" width="5%">
             <h:commandLink action="SERVICE_EDIT" value="#{msg['services.page.edit']}">
@@ -90,7 +88,7 @@
         <eye:button><h:commandLink action="#{service.disconnectSmes}" value="#{msg['services.page.disconnect']}"/></eye:button>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

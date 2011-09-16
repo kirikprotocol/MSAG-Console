@@ -1,11 +1,13 @@
 package ru.novosoft.smsc.web.controllers.reschedule;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.reschedule.Reschedule;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.event.ActionEvent;
@@ -111,7 +113,7 @@ public class RescheduleListController extends RescheduleController {
   public DataTableModel getRescheduleModel() {
     final Collection<Reschedule> reschedules = getSettings().getReschedules();
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
 
       public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
         List<Reschedule> result = new ArrayList<Reschedule>(count);
@@ -132,6 +134,10 @@ public class RescheduleListController extends RescheduleController {
 
       public int getRowsCount() {
         return reschedules.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Reschedule)o).getIntervals();
       }
     };
   }

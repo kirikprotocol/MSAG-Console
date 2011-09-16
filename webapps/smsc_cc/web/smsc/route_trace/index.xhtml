@@ -1,40 +1,37 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:smsc="http://taglib.smsc.mobi"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
-    >
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['route.trace.page.title']}"/>
 
+  <ui:define name="styles">
+    .column1 {width: 1px; text-align:right; white-space: nowrap;}
+    .column2 {text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!routeTrace.initFailed}">
+    <h:form rendered="#{!routeTrace.initFailed}">
 
-      <eye:pageSubtitle value="#{msg['route.trace.page.trace.params']}"/>
+      <smsc:pageSubtitle value="#{msg['route.trace.page.trace.params']}"/>
 
-      <tr:panelFormLayout inlineStyle="padding:10px">
-        <tr:panelLabelAndMessage label="#{msg['route.trace.page.source']}">
-          <tr:inputText value="#{routeTrace.sourceAddress}" simple="true" required="true"/>
-        </tr:panelLabelAndMessage>
-        <tr:panelLabelAndMessage label="#{msg['route.trace.page.destination']}">
-          <tr:inputText value="#{routeTrace.destinationAddress}" simple="true" required="true"/>
-        </tr:panelLabelAndMessage>
-        <tr:panelLabelAndMessage label="#{msg['route.trace.page.sourceSme']}">
-          <h:selectOneMenu value="#{routeTrace.sourceSmeId}">
+      <h:panelGrid columns="2" columnClasses="column1, column2" style="padding: 10px">
+        <h:outputText value="#{msg['route.trace.page.source']}"/>
+        <eye:inputText value="#{routeTrace.sourceAddress}" required="true"/>
+
+        <h:outputText value="#{msg['route.trace.page.destination']}"/>
+        <eye:inputText value="#{routeTrace.destinationAddress}" required="true"/>
+
+        <h:outputText value="#{msg['route.trace.page.sourceSme']}"/>
+        <h:selectOneMenu value="#{routeTrace.sourceSmeId}">
             <f:selectItems value="#{routeTrace.smes}"/>
           </h:selectOneMenu>
-        </tr:panelLabelAndMessage>
-      </tr:panelFormLayout>
-
-      <p/>
+      </h:panelGrid>
 
       <eye:buttons>
         <eye:button>
@@ -45,7 +42,7 @@
 
       <p/>
 
-      <h:panelGrid columns="1" columnClasses="columnTopLeftAlign" rendered="#{routeTrace.showTrace}">
+      <h:panelGrid columns="1" columnClasses="column2" rendered="#{routeTrace.showTrace}">
         <h:panelGroup >
           <h:outputText value="#{msg['route.trace.page.routeFound']} : " style="color:GREEN;" rendered="#{routeTrace.routeFound}"/>
           <h:commandLink action="ROUTE_EDIT" value="#{routeTrace.trace.routeName}" immediate="true" rendered="#{routeTrace.routeFound}">
@@ -56,11 +53,11 @@
           <h:outputText value="#{msg['route.trace.page.routeNotFound']}" style="color:RED" rendered="#{!routeTrace.routeFound}"/>
         </h:panelGroup>
 
-        <eye:pageSubtitle value="#{msg['route.trace.page.trace']}"/>
+        <smsc:pageSubtitle value="#{msg['route.trace.page.trace']}"/>
         <h:inputTextarea value="#{routeTrace.traceLog}" readonly="true" style="width:100%"/>
       </h:panelGrid>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

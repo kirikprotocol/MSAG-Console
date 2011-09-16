@@ -1,13 +1,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:smsc="http://taglib.smsc.mobi"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
     >
 
 <ui:composition template="/templates/main.xhtml">
@@ -16,7 +11,7 @@
 
   <ui:define name="content">
 
-    <tr:form rendered="#{!subjects.initError}">
+    <h:form rendered="#{!subjects.initError}">
 
       <h:inputHidden value="#{timezones.revision}"/>
       <eye:message level="warn" rendered="#{timezones.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
@@ -49,7 +44,7 @@
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

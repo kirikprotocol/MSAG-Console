@@ -48,4 +48,8 @@ public class DefaultProfileController extends ProfileEditController {
     return "INDEX";
   }
 
+  public String reset() {
+    return "DEFAULT_PROFILE";
+  }
+
 }

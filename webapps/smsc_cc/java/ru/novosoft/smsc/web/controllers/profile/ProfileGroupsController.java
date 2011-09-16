@@ -1,11 +1,13 @@
 package ru.novosoft.smsc.web.controllers.profile;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.profile.Profile;
 import ru.novosoft.smsc.admin.profile.ProfilesSet;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import javax.faces.application.FacesMessage;
 import java.util.*;
@@ -40,7 +42,7 @@ public class ProfileGroupsController extends ProfileController {
   }
 
   public DataTableModel getGroups() {
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       private final List<Profile> result = new ArrayList<Profile>();
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
@@ -99,6 +101,10 @@ public class ProfileGroupsController extends ProfileController {
 
       public int getRowsCount() {
         return result.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Profile)o).getAddress().getSimpleAddress();
       }
     };
   }

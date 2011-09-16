@@ -1,10 +1,12 @@
 package ru.novosoft.smsc.web.controllers.closed_groups;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroup;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import javax.faces.event.ActionEvent;
 import java.util.*;
@@ -30,6 +32,10 @@ public class ClosedGroupsListController extends ClosedGroupsController{
     selectedRows = rows;
   }
 
+  public void applyFilter() {
+
+  }
+
   public void clearFilter() {
     filterByAddress = null;
     filterById = null;
@@ -52,7 +58,7 @@ public class ClosedGroupsListController extends ClosedGroupsController{
 
   public DataTableModel getClosedGroupsModel() {
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
 
       private List<ClosedGroup> groups;
 
@@ -134,6 +140,14 @@ public class ClosedGroupsListController extends ClosedGroupsController{
           }
         }
         return groups;
+      }
+
+      public String getId(Object o) throws ModelException {
+        try {
+          return String.valueOf(((ClosedGroup) o).getId());
+        } catch (AdminException e) {
+          return null;
+        }
       }
     };
 

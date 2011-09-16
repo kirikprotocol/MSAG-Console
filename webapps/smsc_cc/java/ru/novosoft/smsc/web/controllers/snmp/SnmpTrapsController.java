@@ -1,13 +1,13 @@
 package ru.novosoft.smsc.web.controllers.snmp;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.snmp.SnmpFilter;
 import ru.novosoft.smsc.admin.snmp.SnmpTrap;
 import ru.novosoft.smsc.admin.snmp.SnmpTrapVisitor;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.application.FacesMessage;
@@ -105,7 +105,6 @@ public class SnmpTrapsController extends SmscController{
     final int total = traps.size();
 
     return new DataTableModel() {
-      @Override
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         List<SnmpTrap> result = new ArrayList<SnmpTrap>(count);
@@ -160,7 +159,6 @@ public class SnmpTrapsController extends SmscController{
         return result;
       }
 
-      @Override
       public int getRowsCount() {
         return total;
       }
@@ -169,12 +167,10 @@ public class SnmpTrapsController extends SmscController{
 
   private static class EmptyDataTableModel implements DataTableModel{
 
-    @Override
     public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
       return Collections.emptyList();
     }
 
-    @Override
     public int getRowsCount() {
       return 0;
     }

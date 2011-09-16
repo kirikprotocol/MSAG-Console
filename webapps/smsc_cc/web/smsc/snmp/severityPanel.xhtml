@@ -4,25 +4,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:f="http://java.sun.com/jsf/core">
 
 
 <ui:composition>
 
-  <tr:panelLabelAndMessage label="#{label}"  rendered="#{snmpObjField!=null}" inlineStyle="text-align:left">
-    <h:selectOneMenu value="#{snmpObjField}">
+
+    <h:outputText value="#{label}" rendered="#{snmpObjField!=null}"/>
+
+    <h:selectOneMenu value="#{snmpObjField}" rendered="#{snmpObjField!=null}">
       <f:selectItems value="#{snmp.severityOptions}"/>
     </h:selectOneMenu>
 
-    <tr:commandLink action="#{snmpObj.removeSeverity}" rendered="#{snmpObj.objName!=null and snmpObj.objName!=''}">
-      <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
+    <h:commandLink action="#{snmpObj.removeSeverity}" rendered="#{snmpObj.objName!=null and snmpObj.objName!='' and snmpObjField != null}">
+      <h:graphicImage value="/images/but_del.gif" style="margin-left:10px; position:relative;"/>
       <f:param name="severityToRemove" value="#{severityName}"/>
       <f:param name="objName" value="#{snmpObj.objName}"/>
-    </tr:commandLink>
-  </tr:panelLabelAndMessage>
+    </h:commandLink>
+
+    <h:outputText value="&#160;" rendered="#{snmoObjField!=null and snmpObj.objName==null or snmpObj.objName==''}"/>
 </ui:composition>
 
 </html>

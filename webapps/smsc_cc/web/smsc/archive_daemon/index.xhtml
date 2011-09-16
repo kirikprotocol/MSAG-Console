@@ -1,142 +1,140 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['archiveDaemon.page.title']}"/>
 
+  <ui:define name="styles">
+    .labelColumn {width: 1px; white-space: nowrap; text-align: right;}
+    .valueColumn {width: 100%; text-align: left;}
+    .column30 {width: 30%;}
+    .column70 {width: 70%;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!archiveDaemon.initError}">
+    <h:form rendered="#{!archiveDaemon.initError}">
 
       <h:inputHidden value="#{archiveDaemon.revision}"/>
-      <eye:message level="warn" rendered="#{archiveDaemon.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      <eye:message level="warn" rendered="#{archiveDaemon.settingsChanged}"><h:outputText
+          value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{archiveDaemon}" action="submit"/></eye:button>
         <eye:button><smsc:resetButton bean="#{archiveDaemon}" action="reset"/></eye:button>
         <eye:space/>
         <eye:button>
-            <h:panelGroup>
-                <h:commandLink value="#{msg['archiveDaemon.page.start']}" action="#{archiveDaemon.start}" rendered="#{archiveDaemon.onlineHost==null}"/>
-                <h:commandLink value="#{msg['archiveDaemon.page.stop']}" action="#{archiveDaemon.stop}" rendered="#{archiveDaemon.onlineHost!=null}" />
-                <h:outputText value=" "/>
-                <h:commandLink value="#{msg['archiveDaemon.page.switch']} " action="#{archiveDaemon.switchHost}" rendered="#{archiveDaemon.showSwitchLink}"/>
-                <h:selectOneMenu value="#{archiveDaemon.switchToHost}" rendered="#{not empty archiveDaemon.hostsItems}" >
-                    <f:selectItems value="#{archiveDaemon.hostsItems}"/>
-                </h:selectOneMenu>
-            </h:panelGroup>
+          <h:panelGroup>
+            <h:commandLink value="#{msg['archiveDaemon.page.start']}" action="#{archiveDaemon.start}"
+                           rendered="#{archiveDaemon.onlineHost==null}"/>
+            <h:commandLink value="#{msg['archiveDaemon.page.stop']}" action="#{archiveDaemon.stop}"
+                           rendered="#{archiveDaemon.onlineHost!=null}"/>
+            <h:outputText value=" "/>
+            <h:commandLink value="#{msg['archiveDaemon.page.switch']} " action="#{archiveDaemon.switchHost}"
+                           rendered="#{archiveDaemon.showSwitchLink}"/>
+            <h:selectOneMenu value="#{archiveDaemon.switchToHost}" rendered="#{not empty archiveDaemon.hostsItems}">
+              <f:selectItems value="#{archiveDaemon.hostsItems}"/>
+            </h:selectOneMenu>
+          </h:panelGroup>
         </eye:button>
       </eye:buttons>
 
       <p/>
 
-      <tr:panelFormLayout>
-          <tr:panelLabelAndMessage label="#{archiveDaemonBundle['interval']}">
-                <h:inputText  value="#{archiveDaemon.config.interval}">
-                <eye:validatePositive/>
-                </h:inputText>
-          </tr:panelLabelAndMessage>
-      </tr:panelFormLayout>
-
+      <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
+        <h:outputText value="#{archiveDaemonBundle['interval']}"/>
+        <eye:inputText value="#{archiveDaemon.config.interval}">
+          <smsc:validatePositive/>
+        </eye:inputText>
+      </h:panelGrid>
 
       <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsView']}" opened="true">
-          <tr:panelFormLayout inlineStyle="margin-left:15px;">
-              <tr:panelLabelAndMessage label="#{archiveDaemonBundle['viewHost']}">
-                    <h:inputText  value="#{archiveDaemon.config.viewHost}"/>
-              </tr:panelLabelAndMessage>
-              <tr:panelLabelAndMessage label="#{archiveDaemonBundle['viewPort']}">
-                    <h:inputText  value="#{archiveDaemon.config.viewPort}">
-                    <eye:validatePositive/>
-                    </h:inputText>
-              </tr:panelLabelAndMessage>
-              <tr:panelLabelAndMessage label="#{archiveDaemonBundle['viewPort']}">
-                <h:inputText  value="#{archiveDaemon.config.viewTimeout}">
-                <eye:validatePositive/>
-                </h:inputText>
-              </tr:panelLabelAndMessage>
-          </tr:panelFormLayout>
+        <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
+          <h:outputText value="#{archiveDaemonBundle['viewHost']}"/>
+          <eye:inputText value="#{archiveDaemon.config.viewHost}"/>
+
+          <h:outputText value="#{archiveDaemonBundle['viewPort']}"/>
+          <eye:inputText value="#{archiveDaemon.config.viewPort}">
+            <smsc:validatePositive/>
+          </eye:inputText>
+
+          <h:outputText value="#{archiveDaemonBundle['viewTimeout']}"/>
+          <eye:inputText value="#{archiveDaemon.config.viewTimeout}">
+            <smsc:validatePositive/>
+          </eye:inputText>
+        </h:panelGrid>
       </eye:collapsingGroup>
 
       <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsQueries']}" opened="true">
-            <tr:panelFormLayout inlineStyle="margin-left:15px;">
-                <tr:panelLabelAndMessage label="#{archiveDaemonBundle['queriesMax']}">
-                      <h:inputText  value="#{archiveDaemon.config.queriesMax}">
-                      <eye:validatePositive/>
-                      </h:inputText>
-                </tr:panelLabelAndMessage>
-                <tr:panelLabelAndMessage label="#{archiveDaemonBundle['queriesInit']}">
-                  <h:inputText  value="#{archiveDaemon.config.queriesInit}">
-                  <eye:validatePositive/>
-                  </h:inputText>
-                </tr:panelLabelAndMessage>
-            </tr:panelFormLayout>
+        <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
+          <h:outputText value="#{archiveDaemonBundle['queriesInit']}"/>
+          <eye:inputText value="#{archiveDaemon.config.queriesInit}">
+            <smsc:validatePositive/>
+          </eye:inputText>
+
+          <h:outputText value="#{archiveDaemonBundle['queriesMax']}"/>
+          <eye:inputText value="#{archiveDaemon.config.queriesMax}">
+            <smsc:validatePositive/>
+          </eye:inputText>
+        </h:panelGrid>
       </eye:collapsingGroup>
 
-        <eye:collapsingGroup label="#{msg['archiveDaemon.page.transactions']}" opened="true">
-              <tr:panelFormLayout inlineStyle="margin-left:15px;">
-                  <tr:panelLabelAndMessage label="#{archiveDaemonBundle['transactionsMaxSmsCount']}">
-                        <h:inputText  value="#{archiveDaemon.config.transactionsMaxSmsCount}">
-                        <eye:validatePositive/>
-                        </h:inputText>
-                  </tr:panelLabelAndMessage>
-                  <tr:panelLabelAndMessage label="#{archiveDaemonBundle['transactionsMaxTimeInterval']}">
-                    <h:inputText  value="#{archiveDaemon.config.transactionsMaxTimeInterval}">
-                    <eye:validatePositive/>
-                    </h:inputText>
-                  </tr:panelLabelAndMessage>
-              </tr:panelFormLayout>
-        </eye:collapsingGroup>
+      <eye:collapsingGroup label="#{msg['archiveDaemon.page.transactions']}" opened="true">
+        <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
+          <h:outputText value="#{archiveDaemonBundle['transactionsMaxSmsCount']}"/>
+          <eye:inputText value="#{archiveDaemon.config.transactionsMaxSmsCount}">
+            <smsc:validatePositive/>
+          </eye:inputText>
+          <h:outputText value="#{archiveDaemonBundle['transactionsMaxTimeInterval']}"/>
+          <eye:inputText value="#{archiveDaemon.config.transactionsMaxTimeInterval}">
+            <smsc:validatePositive/>
+          </eye:inputText>
+        </h:panelGrid>
+      </eye:collapsingGroup>
 
 
-        <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations']}" opened="true">
-              <tr:panelFormLayout inlineStyle="margin-left:15px;">
-                  <tr:panelLabelAndMessage label="#{archiveDaemonBundle['locationsBaseDestination']}">
-                    <h:inputText  value="#{archiveDaemon.config.locationsBaseDestination}">
-                        <tr:validateLength minimum="1"/>
-                    </h:inputText>
-                  </tr:panelLabelAndMessage>
-                  <tr:panelLabelAndMessage label="#{archiveDaemonBundle['locationsTextDestinations']}">
-                    <h:inputText  value="#{archiveDaemon.config.locationsTextDestinations}">
-                        <tr:validateLength minimum="1"/>
-                    </h:inputText>
-                  </tr:panelLabelAndMessage>
-              </tr:panelFormLayout>
-              <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations.sources']}" opened="true">
-                    <tr:panelFormLayout inlineStyle="margin-left:15px;width:300px;">
-                    <eye:dynamicTable value="#{archiveDaemon.locationSources}" >
-                        <eye:textColumn name="key"   allowEditAfterAdd="false" width="50%"/>
-                        <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
-                    </eye:dynamicTable>
-                    </tr:panelFormLayout>
-              </eye:collapsingGroup>
-        </eye:collapsingGroup>
+      <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations']}" opened="true">
+        <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
+          <h:outputText value="#{archiveDaemonBundle['locationsBaseDestination']}"/>
+          <eye:inputText value="#{archiveDaemon.config.locationsBaseDestination}" required="true"/>
+          <h:outputText value="#{archiveDaemonBundle['locationsTextDestinations']}"/>
+          <eye:inputText value="#{archiveDaemon.config.locationsTextDestinations}" required="true"/>
+        </h:panelGrid>
 
-        <eye:collapsingGroup label="#{msg['archiveDaemon.page.indexator']}" opened="true">
-              <tr:panelFormLayout inlineStyle="margin-left:15px;">
-                  <tr:panelLabelAndMessage label="#{archiveDaemonBundle['indexatorMaxFlushSpeed']}">
-                    <h:inputText  value="#{archiveDaemon.config.indexatorMaxFlushSpeed}">
-                        <tr:validateLongRange minimum="0"/>
-                    </h:inputText>
-                  </tr:panelLabelAndMessage>
-              </tr:panelFormLayout>
-              <eye:collapsingGroup label="#{archiveDaemonBundle['indexatorSmeAddrChunkSizes']}" opened="true">
-                    <tr:panelFormLayout inlineStyle="margin-left:15px;width:300px;">
-                    <eye:dynamicTable value="#{archiveDaemon.indexatorSmeAddrChunkSizes}" >
-                        <eye:textColumn name="key"   allowEditAfterAdd="false" width="50%"/>
-                        <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
-                    </eye:dynamicTable>
-                    </tr:panelFormLayout>
-              </eye:collapsingGroup>
-                        
+        <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations.sources']}" opened="true">
+          <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="column30, column70">
+            <eye:dynamicTable value="#{archiveDaemon.locationSources}">
+              <eye:textColumn name="key" allowEditAfterAdd="false" width="50%"/>
+              <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
+            </eye:dynamicTable>
+            <h:outputText value="&#160;"/>
+          </h:panelGrid>
         </eye:collapsingGroup>
+      </eye:collapsingGroup>
+
+      <eye:collapsingGroup label="#{msg['archiveDaemon.page.indexator']}" opened="true">
+        <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
+          <h:outputText value="#{archiveDaemonBundle['indexatorMaxFlushSpeed']}"/>
+          <eye:inputText value="#{archiveDaemon.config.indexatorMaxFlushSpeed}">
+            <smsc:validatePositive/>
+          </eye:inputText>
+        </h:panelGrid>
+
+        <eye:collapsingGroup label="#{archiveDaemonBundle['indexatorSmeAddrChunkSizes']}" opened="true">
+          <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="column30, column70">
+            <eye:dynamicTable value="#{archiveDaemon.indexatorSmeAddrChunkSizes}">
+              <eye:textColumn name="key" allowEditAfterAdd="false" width="50%"/>
+              <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
+            </eye:dynamicTable>
+            <h:outputText value="&#160;"/>
+          </h:panelGrid>
+        </eye:collapsingGroup>
+      </eye:collapsingGroup>
 
       <p/>
 
@@ -146,7 +144,7 @@
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

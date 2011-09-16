@@ -5,101 +5,78 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
 
 <ui:composition>
 
-  <tr:panelFormLayout>
+  <h:panelGrid columns="2" columnClasses="column1, column2">
+    <h:outputText value="#{profile['ucs2']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.ucs2}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['ucs2']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.ucs2}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['latin1']}"/>
+     <h:selectBooleanCheckbox value="#{profile_to_edit.latin1}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['latin1']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.latin1}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['ussd7bit']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.ussd7bit}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['ussd7bit']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.ussd7bit}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
-
-    <tr:panelLabelAndMessage label="#{profile['reportOptions']}">
-      <h:selectOneMenu value="#{profile_to_edit.reportOptions}">
+    <h:outputText value="#{profile['reportOptions']}"/>
+    <h:selectOneMenu value="#{profile_to_edit.reportOptions}">
         <f:selectItems value="#{reportOptions}"/>
       </h:selectOneMenu>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{profile['locale']}">
-      <h:selectOneMenu value="#{profile_to_edit.locale}">
+    <h:outputText value="#{profile['locale']}"/>
+    <h:selectOneMenu value="#{profile_to_edit.locale}">
         <f:selectItems value="#{locales}"/>
       </h:selectOneMenu>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{profile['aliasHide']}">
-      <h:selectOneMenu value="#{profile_to_edit.aliasHide}">
-        <f:selectItems value="#{aliasHideOptions}"/>
-      </h:selectOneMenu>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['aliasHide']}"/>
+    <h:selectOneMenu value="#{profile_to_edit.aliasHide}">
+      <f:selectItems value="#{aliasHideOptions}"/>
+    </h:selectOneMenu>
 
-    <tr:panelLabelAndMessage label="#{profile['aliasModifiable']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.aliasModifiable}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['aliasModifiable']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.aliasModifiable}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['divert']}">
-      <tr:inputText value="#{profile_to_edit.divert}" simple="true"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['divert']}"/>
+    <eye:inputText value="#{profile_to_edit.divert}"/>
 
-    <tr:panelLabelAndMessage label="#{profile['divertActive']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.divertActive}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['divertActive']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.divertActive}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['divertActiveAbsent']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveAbsent}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['divertActiveAbsent']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveAbsent}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['divertActiveBlocked']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveBlocked}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['divertActiveBlocked']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveBlocked}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['divertActiveBarred']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveBarred}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['divertActiveBarred']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveBarred}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['divertActiveCapacity']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveCapacity}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['divertActiveCapacity']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveCapacity}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['divertModifiable']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.divertModifiable}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['divertModifiable']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.divertModifiable}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['udhConcat']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.udhConcat}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['udhConcat']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.udhConcat}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['translit']}">
-      <h:selectBooleanCheckbox value="#{profile_to_edit.translit}" style="margin-left:0px;"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['translit']}"/>
+    <h:selectBooleanCheckbox value="#{profile_to_edit.translit}" style="margin-left:0px;"/>
 
-    <tr:panelLabelAndMessage label="#{profile['groupId']}">
-      <h:selectOneMenu value="#{profile_to_edit.groupId}">
+    <h:outputText value="#{profile['groupId']}"/>
+    <h:selectOneMenu value="#{profile_to_edit.groupId}">
         <f:selectItems value="#{defaultProfile.closedGroups}"/>
       </h:selectOneMenu>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{profile['inputAccessMask']}">
-      <tr:inputText value="#{profile_to_edit.inputAccessMask}" simple="true"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['inputAccessMask']}"/>
+    <h:inputText value="#{profile_to_edit.inputAccessMask}"/>
 
-    <tr:panelLabelAndMessage label="#{profile['outputAccessMask']}">
-      <tr:inputText value="#{profile_to_edit.outputAccessMask}" simple="true"/>
-    </tr:panelLabelAndMessage>
+    <h:outputText value="#{profile['outputAccessMask']}"/>
+    <h:inputText value="#{profile_to_edit.outputAccessMask}"/>
 
-  </tr:panelFormLayout>
-
+  </h:panelGrid>
 
 </ui:composition>
 

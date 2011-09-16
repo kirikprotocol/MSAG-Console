@@ -1,14 +1,10 @@
 package ru.novosoft.smsc.web.controllers.acl;
 
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.acl.Acl;
-import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.application.FacesMessage;
 import java.util.*;

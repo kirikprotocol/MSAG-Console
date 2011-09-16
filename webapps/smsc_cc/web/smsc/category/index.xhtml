@@ -1,23 +1,30 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['categories.page.title']}"/>
 
+  <ui:define name="styles">
+    .column1 {width: 20px; text-align: left;}
+    .column2 {width: 200px; text-align: left;}
+    .column3 {width: 100%; text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!categories.initError}">
+    <h:form rendered="#{!categories.initError}">
 
       <h:inputHidden value="#{categories.revision}"/>
-      <eye:message level="warn" rendered="#{categories.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      <eye:message level="warn" rendered="#{categories.settingsChanged}">
+        <h:outputText value="#{msg['smsc.submit.hint']}"/>
+      </eye:message>
+
+      <p/>
 
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{categories}" action="submit"/></eye:button>
@@ -25,44 +32,41 @@
         <eye:space/>
       </eye:buttons>
 
-      <h:panelGrid columns="1">
+      <p/>
 
-        <h:panelGrid columns="3" columnClasses="column20Width, column200WidthTopLeft, columnTopLeftAlign" rowClasses="listTableHeader">
-          <h:outputText value="Id"/>
-          <h:outputText value="#{msg['categories.page.category']}"/>
-          <h:outputText value="&#160;"/>
-        </h:panelGrid>
+      <c:set var="row" value="0"/>
+      <h:panelGrid columns="3" columnClasses="column1, column2, column3" rowClasses="listTableRow0,listTableRow1">
+        <h:outputText value="Id"/>
+        <h:outputText value="#{msg['categories.page.category']}"/>
+        <h:outputText value="&#160;"/>
 
-        <c:set var="row" value="0"/>
         <c:forEach items="#{categories.ids}" var="id">
-          <h:panelGrid columns="3" columnClasses="column20Width, column200WidthTopLeft, columnTopLeftAlign" rowClasses="listTableRow#{row%2}">
-            <h:outputText value="#{id}"/>
-            <h:inputText value="#{categories.categories[id]}" style="width:100%"/>
-            <h:outputText value="&#160;"/>
-          </h:panelGrid>
+          <h:outputText value="#{id}"/>
+          <eye:inputText value="#{categories.categories[id]}"/>
+          <h:outputText value="&#160;"/>
           <c:set var="row" value="#{row+1}"/>
         </c:forEach>
-
       </h:panelGrid>
 
       <p/>
 
-      <eye:pageSubtitle value="#{msg['categories.page.add']}"/>
-      <h:panelGrid columns="3" columnClasses="column20Width, column200WidthTopLeft, columnTopLeftAlign" rowClasses="listTableRow0">
+      <smsc:pageSubtitle value="#{msg['categories.page.add']}"/>
+
+      <h:panelGrid columns="3" columnClasses="column1, column2, column3" rowClasses="listTableRow0">
         <h:outputText value="&#160;"/>
-        <h:inputText value="#{categories.newCategory}" style="width:100%"/>
+        <eye:inputText value="#{categories.newCategory}" />
         <h:commandLink action="#{categories.addCategory}">
-          <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px; position:relative;"/>
+          <h:graphicImage value="/images/but_add.gif" style=" margin-top:1px; position:relative;"/>
         </h:commandLink>
       </h:panelGrid>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{categories.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{categories.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{categories}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{categories}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

@@ -5,45 +5,42 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 
 <ui:composition>
   <eye:collapsingGroup label="#{counterLabel}" rendered="#{snmpObjField!=null}">
     <f:facet name="header">
-      <h:panelGroup>
-        <h:panelGrid columns="2" columnClasses="column0Width, column0WidthRight">
+      <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
         <h:outputText value="#{counterLabel}"/>
-        <tr:commandLink action="#{snmpObj.removeCounter}" rendered="#{snmpObj.objName!=null and snmpObj.objName!=''}">
-          <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:1px;"/>
+        <h:commandLink action="#{snmpObj.removeCounter}" rendered="#{snmpObj.objName!=null and snmpObj.objName!=''}">
+          <h:graphicImage value="/images/but_del.gif" style="margin-left:10px; position:relative;"/>
           <f:param name="objName" value="#{snmpObj.objName}"/>
           <f:param name="counterToRemove" value="#{counterName}"/>
-        </tr:commandLink>
-        </h:panelGrid>
-      </h:panelGroup>
+        </h:commandLink>
+      </h:panelGrid>
     </f:facet>
-    <h:panelGrid columns="2" style="width:300px;" columnClasses="column0WidthRight,column100Width">
+    <h:panelGrid columns="2" style="width:300px;" columnClasses="labelColumn, valueColumn">
       <h:outputLabel value="#{snmpCounterBundle.warning}"/>
-      <tr:inputText value="#{snmpObjField.warning}" required="true" simple="true" contentStyle="width:50px;">
-        <tr:validateLongRange minimum="0"/>
-      </tr:inputText>
+      <eye:inputText value="#{snmpObjField.warning}" required="true">
+        <smsc:validateLongRange minimum="0"/>
+      </eye:inputText>
 
       <h:outputLabel value="#{snmpCounterBundle.minor}"/>
-      <tr:inputText value="#{snmpObjField.minor}" required="true" simple="true" contentStyle="width:50px;">
-        <tr:validateLongRange minimum="0"/>
-      </tr:inputText>
+      <eye:inputText value="#{snmpObjField.minor}" required="true">
+        <smsc:validateLongRange minimum="0"/>
+      </eye:inputText>
 
       <h:outputLabel value="#{snmpCounterBundle.major}"/>
-      <tr:inputText value="#{snmpObjField.major}" required="true" simple="true" contentStyle="width:50px;">
-        <tr:validateLongRange minimum="0"/>
-      </tr:inputText>
+      <eye:inputText value="#{snmpObjField.major}" required="true">
+        <smsc:validateLongRange minimum="0"/>
+      </eye:inputText>
 
       <h:outputLabel value="#{snmpCounterBundle.critical}"/>
-      <tr:inputText value="#{snmpObjField.critical}" required="true" simple="true" contentStyle="width:50px;">
-        <tr:validateLongRange minimum="0"/>
-      </tr:inputText>
+      <eye:inputText value="#{snmpObjField.critical}" required="true">
+        <smsc:validateLongRange minimum="0"/>
+      </eye:inputText>
     </h:panelGrid>
   </eye:collapsingGroup>
 </ui:composition>

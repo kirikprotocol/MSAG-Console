@@ -1,12 +1,14 @@
 package ru.novosoft.smsc.web.controllers.route;
 
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
+import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Destination;
 import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.admin.route.RouteSubjectSettings;
 import ru.novosoft.smsc.admin.route.Source;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import java.util.*;
 
@@ -33,6 +35,10 @@ public class RouteListController extends RouteController {
     dstSmeFilter = null;
     subjectFilter = null;
     maskFilter = null;
+  }
+
+  public void applyFilter() {
+
   }
 
   public String getNameFilter() {
@@ -177,7 +183,7 @@ public class RouteListController extends RouteController {
   public DataTableModel getRoutes() {
     final List<Route> routes = filterRoutes();
 
-    return new DataTableModel() {
+    return new ModelWithObjectIds() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
         if (sortOrder != null) {
           Collections.sort(routes, new Comparator<Route>() {
@@ -199,6 +205,10 @@ public class RouteListController extends RouteController {
 
       public int getRowsCount() {
         return routes.size();
+      }
+
+      public String getId(Object o) throws ModelException {
+        return ((Route)o).getName();
       }
     };
   }

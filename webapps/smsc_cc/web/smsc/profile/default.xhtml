@@ -1,23 +1,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['default.profile.page.title']}" />
 
+  <ui:define name="styles">
+    .column1 {width: 1px; text-align:right; white-space:nowrap;}
+    .column2 {width: 100%; text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
-    <tr:form rendered="#{!defaultProfile.initFailed}">
+    <h:form rendered="#{!defaultProfile.initFailed}">
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{defaultProfile.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="DEFAULT_PROFILE" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{defaultProfile}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{defaultProfile}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
@@ -29,12 +31,12 @@
       </ui:include>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{defaultProfile.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="DEFAULT_PROFILE" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{defaultProfile}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{defaultProfile}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

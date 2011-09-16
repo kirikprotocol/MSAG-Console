@@ -1,11 +1,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -13,11 +10,11 @@
 
   <ui:define name="content">
 
-    <tr:form rendered="#{!acls.outOfDate}">
+    <h:form rendered="#{!acls.outOfDate}">
 
 
       <eye:dataTable value="#{acls.acls}" selectedRows="#{acls.selectedRows}" var="acl">
-        <eye:row rowId="#{acl.id}">
+        <eye:row>
           <eye:column name="id" title="#{msg['acls.page.id']}" width="5%">
             <h:commandLink action="ACL_EDIT" value="#{acl.id}">
               <f:param name="aclId" value="#{acl.id}"/>
@@ -45,7 +42,7 @@
         <eye:space/>
       </eye:buttons>
 
-    </tr:form>
+    </h:form>
 
   </ui:define>
 

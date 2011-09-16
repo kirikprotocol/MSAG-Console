@@ -1,11 +1,11 @@
 package ru.novosoft.smsc.web.controllers.reschedule;
 
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.reschedule.Reschedule;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;

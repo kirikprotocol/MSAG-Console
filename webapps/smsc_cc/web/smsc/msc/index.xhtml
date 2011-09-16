@@ -1,53 +1,50 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:c="http://java.sun.com/jstl/core">
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 
 <ui:composition template="/templates/main.xhtml">
 
   <ui:param name="pageTitle" value="#{msg['smsc.msc.title']}"/>
 
+  <ui:define name="styles">
+    .column1 {width: 1px; text-align:right; white-space: nowrap;}
+    .column2 {text-align: left;}
+  </ui:define>
+
   <ui:define name="content">
 
     <h:form>
 
-      <eye:dataTableFilter bean="#{msc}" clearAction="clearFilter">
-        <tr:panelFormLayout inlineStyle="width:300px;">
-          <tr:panelLabelAndMessage label="#{msg['smsc.msc.prefix.filter']}">
-            <h:inputText value="#{msc.prefixFilter}" style="width:100px;"/>
-          </tr:panelLabelAndMessage>
-        </tr:panelFormLayout>
+      <eye:dataTableFilter applyAction="#{msc.applyFilter}" clearAction="#{msc.clearFilter}">
+        <h:panelGrid columns="2" columnClasses="column1, column2">
+          <h:outputText value="#{msg['smsc.msc.prefix.filter']}"/>
+          <eye:inputText value="#{msc.prefixFilter}"/>
+        </h:panelGrid>
       </eye:dataTableFilter>
 
-
       <eye:dataTable value="#{msc.commutatorsModel}" selectedRows="#{msc.selectedRows}" var="a">
-
-        <eye:row rowId="#{a.simpleAddress}" opened="true">
+        <eye:row>
           <eye:column name="addr" title="#{msg['smsc.msc.column.addr']}" width="100%" sortable="true" defaultSortOrder="asc">
             <h:outputText value="#{a.simpleAddress}"/>
           </eye:column>
         </eye:row>
-
       </eye:dataTable>
 
       <p/>
 
-
-
       <eye:buttons>
         <eye:button>
-          <tr:commandLink id="add2" actionListener="#{msc.addAddress}" >
-            <tr:image source="/images/but_add.gif" inlineStyle="margin-bottom: -5px"/>
-          </tr:commandLink>
-
-          <tr:inputText value="#{msc.newAddress}" required="false" simple="true" contentStyle="width: 150px; margin-bottom: 0px">
-            <eye:validatePhone/>
-          </tr:inputText>
+          <h:commandLink actionListener="#{msc.addAddress}">
+            <h:graphicImage value="/images/but_add.gif" style="margin-left: -20px; margin-bottom: -18px"/>
+          </h:commandLink>
+          <h:panelGroup style="width:150px; margin-bottom: 0px">
+            <eye:inputText value="#{msc.newAddress}">
+              <smsc:validatePhone/>
+            </eye:inputText>
+          </h:panelGroup>
         </eye:button>
         <eye:button>
           <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{msc.removeSelected}"
@@ -56,8 +53,6 @@
 
         <eye:space/>
       </eye:buttons>
-
-
     </h:form>
 
   </ui:define>

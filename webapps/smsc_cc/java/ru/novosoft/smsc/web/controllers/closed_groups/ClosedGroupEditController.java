@@ -1,10 +1,10 @@
 package ru.novosoft.smsc.web.controllers.closed_groups;
 
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.util.jsf.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroup;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.application.FacesMessage;
 import java.util.HashMap;
@@ -32,7 +32,6 @@ public class ClosedGroupEditController extends ClosedGroupsController{
     id = getRequestParameter("closed_group");
 
     if(id != null && id.length() > 0) {
-      System.out.println("ID IS NOT NULL: "+id);
       try{
         reload(Integer.parseInt(id));
       }catch (AdminException e){
@@ -59,18 +58,15 @@ public class ClosedGroupEditController extends ClosedGroupsController{
       ClosedGroup cg;
       String user = getUserName();
       if(id != null && id.length()>0) {
-        System.out.println("SAVE id="+id);
         if(!oldName.equals(name)) {
-          System.out.println("SAVE name change");
           manager.removeGroup(Integer.parseInt(id));
           cg = manager.addGroup(name, description);
           id = Long.toString(cg.getId());
         }else {
-          System.out.println("SAVE name is not change");
           cg = manager.getGroup(Integer.parseInt(id));
+          cg.setDescription(description);
         }
       }else {
-        System.out.println("SAVE id=null");
         cg = manager.addGroup(name, description);
       }
 
@@ -87,7 +83,6 @@ public class ClosedGroupEditController extends ClosedGroupsController{
 
       for(Map.Entry<String, Address> old : oldM.entrySet()){
         if(!newM.contains(old.getKey())) {
-          System.out.println("SAVE remove mask:"+old.getKey());
           cg.removeMask(old.getValue());
         }
       }
@@ -102,7 +97,6 @@ public class ClosedGroupEditController extends ClosedGroupsController{
             addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.closed_group.mask.illegal", nw);
           }
           if(a != null) {
-            System.out.println("SAVE add mask:"+nw);
             cg.addMask(a);
           }
         }
