@@ -8,12 +8,11 @@ package mobi.eyeline.dcpgw;
  */
 public enum FinalMessageState {
 
-    DELIVERED { public String toString(){return "DELIVRD"; } },
+    DELIVRD,
     EXPIRED,
     DELETED,
-    UNDELIVERABLE { public String toString(){return "UNDELIV";} }    ,
-    ACCEPTED { public String toString() {return "ACCEPTD";} },
+    UNDELIV,
+    ACCEPTD,
     UNKNOWN,
-    REJECTED { public String toString(){return "REJECTD";} }
-
+    REJECTD
 }

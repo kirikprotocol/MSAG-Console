@@ -82,9 +82,12 @@ public class Journal {
 
     private void appendFile(File source, File target) throws IOException {
         log.debug("Try to append file '"+source.getName()+"' to file '"+target.getName()+"'.");
-        BufferedOutputStream bufOut = new BufferedOutputStream(new FileOutputStream(target, true));
 
-        BufferedInputStream bufRead = new BufferedInputStream(new FileInputStream(source));
+        FileOutputStream fos = new FileOutputStream(target, true);
+        BufferedOutputStream bufOut = new BufferedOutputStream(fos);
+
+        FileInputStream fis = new FileInputStream(source);
+        BufferedInputStream bufRead = new BufferedInputStream(fis);
 
         int n;
 
@@ -97,8 +100,7 @@ public class Journal {
         bufOut.close();
 
         bufRead.close();
-        log.debug("Successfully append journal file.");
-
+        log.debug("Successfully append journal.");
     }
 
     /**
@@ -169,75 +171,43 @@ public class Journal {
             }
 
         } else {
-            log.error("Size of the journal after appending string will be more than maximum allowed juornal size "+ max_journal_size_mb +" mb.");
+            log.error("Size of the journal after appending string will be more than maximum allowed journal size "+ max_journal_size_mb +" mb.");
             throw new CouldNotWriteToJournalException("Size of the journal after appending string will be more than maximum allowed juornal size "+ max_journal_size_mb +" mb.");
         }
 
     }
 
-    public void clean() throws CouldNotCleanJournalException {
+    public void clean(){
         log.debug("Try to clean journal ... ");
 
+        long t = System.currentTimeMillis();
+
         if (j1.exists()){
-
-            j2 = new File(dir, "j2.csv");
-
+            BufferedReader buffReader1 = null;
+            BufferedReader buffReader2 = null;
+            PrintWriter pw = null;
             try {
-                if (j2.createNewFile()){
-                    log.debug("Create journal "+ j2.getName()+".");
-                } else {
-                    log.warn("Journal "+ j2.getName()+" already exists.");
-                }
-            } catch (IOException e) {
-                log.debug("Couldn't create cleaned file '"+ j2.getName()+"'.");
-                throw new CouldNotCleanJournalException(e);
-            }
+                if (j2.createNewFile()) log.debug("Create file "+j2.getName());
 
-            try {
                 appendFile(j1, j2);
-            } catch (IOException e) {
-                log.error(e);
-                throw new CouldNotCleanJournalException("Couldn't append file '"+ j1.getName()+"' to another file '"+ j2.getName()+"'.");
-            }
 
-            if (j1.delete()){
-                log.debug("Delete journal "+ j1.getName()+" .");
-            } else {
-                log.error("Couldn't delete journal "+ j1.getName()+" .");
-                throw new CouldNotCleanJournalException("Couldn't delete journal "+ j1.getName()+".");
-            }
+                if (j1.delete()) log.debug("Delete file "+j1.getName());
 
-            File temp_journal = new File(dir, j2.getName()+".tmp");
-            try {
-                if (temp_journal.createNewFile()){
-                    log.debug("Successfully create temporary cleaned journal file "+temp_journal.getName()+"'.");
-                } else {
-                    log.warn("Couldn't create temporary cleaned journal file "+temp_journal.getName()+" because it already exists.");
-                }
-            } catch (IOException e) {
-                log.error(e);
-                throw new CouldNotCleanJournalException("Couldn't create temporary cleaned journal file.", e);
-            }
+                if (j1.createNewFile()) log.debug("Create file "+j1.getName());
 
-            PrintWriter pw;
-            try {
-                pw = new PrintWriter(new FileWriter(temp_journal));
-            } catch (IOException e) {
-                log.error(e);
-                throw new CouldNotCleanJournalException(e);
-            }
+                if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
 
-            Set<Long> message_ids = new HashSet<Long>();
+                pw = new PrintWriter(new FileWriter(j2t));
 
-            BufferedReader buffReader;
+                Set<Long> message_ids = new HashSet<Long>();
 
-            try{
-                buffReader = new BufferedReader (new FileReader(j2));
+                // Читаем очищаемый файл первый раз, чтобы запомнить message_id-ы сообщений, которые уже отработаны.
+                buffReader1 = new BufferedReader (new FileReader(j2));
                 String line;
-                while((line = buffReader.readLine()) != null){
+                while((line = buffReader1.readLine()) != null){
                     String[] ar = line.split(sep);
-                    long message_id = Long.parseLong(ar[2]);
-                    Status status = Status.valueOf(ar[11]);
+                    long message_id = Long.parseLong(ar[2].trim());
+                    Status status = Status.valueOf(ar[11].trim());
 
                     if (status == Status.DONE || status == Status.EXPIRED_TIMEOUT || status == Status.EXPIRED_MAX_TIMEOUT) {
                         if (message_ids.add(message_id)){
@@ -247,69 +217,58 @@ public class Journal {
                         }
                     }
                 }
-                buffReader.close();
-            } catch (IOException ioe){
-                log.error(ioe);
-                throw new CouldNotCleanJournalException(ioe);
-            }
+                buffReader1.close();
 
-            int counter = 0;
-            try{
-                buffReader = new BufferedReader (new FileReader(j2));
-                String line;
-                while((line = buffReader.readLine()) != null){
-                    log.debug("line: "+line);
+                // Читаем второй раз, при этом копируя не отработанные записи во временный файл.
+                int counter = 0;
+                buffReader2 = new BufferedReader (new FileReader(j2));
+                while((line = buffReader2.readLine()) != null){
                     String[] ar = line.split(sep);
 
                     long message_id = Long.parseLong(ar[2].trim());
                     String status = ar[11].trim();
 
-
                     if (!message_ids.contains(message_id)){
-                        log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+temp_journal.getName());
+                        log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                         pw.println(line);
                         pw.flush();
                         counter++;
                     }
 
                 }
-                buffReader.close();
-            } catch (IOException ioe){
-                log.error(ioe);
-                throw new CouldNotCleanJournalException(ioe);
-            } finally {
+                buffReader2.close();
                 pw.close();
-            }
 
-            if (j2.delete()){
-                log.debug("Delete journal "+ j2.getName()+" .");
-            } else {
-                log.error("Couldn't delete journal "+ j2.getName()+" .");
-                throw new CouldNotCleanJournalException("Couldn't delete journal "+ j2.getName()+" .");
-            }
+                if (counter>0){
 
-            if (counter>0){
-                log.debug("Detected that temporary file isn't empty.");
-                if (temp_journal.renameTo(j2)){
-                    log.debug("Rename temporary journal "+temp_journal.getName()+" to journal "+ j2.getName()+" .");
+                    if (j2.delete()) log.debug("Delete file "+j2.getName());
+                    if (j2t.renameTo(j2)) log.debug("Rename file "+j2t.getName()+" to "+j2.getName());
+
                 } else {
-                    log.error("Couldn't rename temporary journal "+temp_journal.getName()+" to journal "+ j2.getName()+".");
-                    throw new CouldNotCleanJournalException("Couldn't rename temporary journal "+temp_journal.getName()+" to journal "+ j2.getName()+".");
+
+                    if (j2t.delete()) log.debug("Delete file "+j2t.getName());
+                    if (j2.delete()) log.debug("Delete file "+j2.getName());
+                    if (j2.createNewFile()) log.debug("Create file "+j2.getName());
+
                 }
-            } else {
-                log.debug("Detected that cleaned file is empty.");
-                if (temp_journal.delete()){
-                    log.debug("Successfully delete temporary file '"+temp_journal.getName());
-                } else {
-                    log.debug("Couldn't delete temporary file '"+temp_journal.getName());
+
+            } catch (IOException e) {
+                log.error(e);
+            } finally {
+                if (pw != null) pw.close();
+                try{
+                    if (buffReader1 != null) buffReader1.close();
+                    if (buffReader2 != null) buffReader2.close();
+                } catch (IOException e2){
+                    log.error(e2);
                 }
             }
 
-        } else {
-            log.debug("There is not file "+ j1.getName()+", so nothing to clean.");
         }
 
-        log.debug("Successfully clean journal.");
+        long d = System.currentTimeMillis() - t;
+
+        log.debug("Journal cleaned, "+d+" mls.");
     }
 
     public Hashtable<Long, Data> load() throws CouldNotLoadJournalException {
@@ -324,7 +283,9 @@ public class Journal {
             // Проверяем существует ли файл, который чистится.
             if (j2.exists()){
                 log.debug("Detected that file '"+j2.getName()+"' exist.");
-                // Если файл который чистится существует, значит шлюз закончил работу во время выбора записей со статусами SEND и то временный файл не нужен и его можно удалить.
+                // Если файл, который чистится существует, значит шлюз закончил работу во время выбора не отработанных
+                // записей. При этом не все не отработанные записи могли быть перенесены во временный файл, поэтому
+                // файл который используется для чистки нужно чистить еще раз, временный файл нужно удалить.
                 if (j2t.delete()){
                     log.debug("Successfully delete file '"+j2t+"'.");
                 } else {
@@ -333,7 +294,9 @@ public class Journal {
                 }
             } else {
                 log.debug("Detected that file '"+j2.getName()+"' doesn't exist.");
-                //Если файла, который чистится нет, то его надо восстановить
+                // Если файла, который чистится нет, а временный есть, то шлюз прекратил работу в тот момент, когда
+                // все не отработанные записи были уже перенесены во временный файл, а файл который чистится был удален.
+                // Поэтому надо временный файл, переименовать в файл, который чистится.
                 if (j2t.renameTo(j2)){
                     log.debug("Successfully rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
                 } else {
@@ -342,6 +305,7 @@ public class Journal {
                 }
             }
         }
+
 
         File[] journals = {j2, j1};
 
@@ -353,7 +317,7 @@ public class Journal {
                     scanner.useDelimiter(sep);
                     while (scanner.hasNextLine()){
                         String line = scanner.nextLine();
-                        if (!line.isEmpty()){
+                        if (!line.isEmpty() && !line.startsWith("#")){
                             String[] ar = line.split(sep);
 
                             long first_sending_time;

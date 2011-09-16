@@ -227,11 +227,7 @@ public class Gateway extends Thread implements PDUListener {
             @Override
             public void run() {
                 synchronized (read_write_monitor) {
-                    try {
-                        journal.clean();
-                    } catch (CouldNotCleanJournalException e) {
-                        log.error(e);
-                    }
+                    journal.clean();
                 }
             }
 
@@ -386,7 +382,7 @@ public class Gateway extends Thread implements PDUListener {
 
             FinalMessageState state;
             if (messageState == MessageState.Delivered) {
-                state = FinalMessageState.DELIVERED;
+                state = FinalMessageState.DELIVRD;
             } else if (messageState == MessageState.Expired) {
                 state = FinalMessageState.EXPIRED;
             } else {
