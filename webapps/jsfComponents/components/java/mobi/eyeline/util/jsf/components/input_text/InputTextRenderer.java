@@ -142,7 +142,10 @@ public class InputTextRenderer extends Renderer {
     boolean textArea = rows != null;
 
     if (!textArea) {
-      w.a("<input type=\"text\" value=\"").a(value).a('\"');
+      if (inputText.isSecret())
+        w.a("<input type=\"password\" value=\"").a(value).a('\"');
+      else
+        w.a("<input type=\"text\" value=\"").a(value).a('\"');
     } else {
       w.a("<textarea rows=\"").a(rows.toString()).a('\"');
     }

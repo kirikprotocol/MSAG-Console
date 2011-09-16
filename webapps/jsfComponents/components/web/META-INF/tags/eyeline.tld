@@ -361,6 +361,16 @@
     </attribute>
 
     <attribute>
+      <description>Флаг, определяющий показывать или нет содержимое поля (для паролей)</description>
+      <name>secret</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
+    </attribute>
+
+    <attribute>
       <description>Количество "колонок" поля</description>
       <name>cols</name>
       <required>false</required>

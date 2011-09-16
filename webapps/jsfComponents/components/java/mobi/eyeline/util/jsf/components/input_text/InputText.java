@@ -14,6 +14,7 @@ public class InputText extends UIInputImpl {
 
   private Integer cols;
   private Integer rows;
+  private boolean secret;
 
   @Override
   public String getFamily() {
@@ -49,12 +50,25 @@ public class InputText extends UIInputImpl {
     this.cols = cols;
   }
 
+  public boolean isSecret() {
+    ValueExpression exp = getValueExpression("secret");
+    if (exp == null)
+      return secret;
+    else
+      return (Boolean) exp.getValue(getFacesContext().getELContext());
+  }
+
+  public void setSecret(boolean secret) {
+    this.secret = secret;
+  }
+
   @Override
   public Object saveState(FacesContext context) {
-    Object[] values = new Object[3];
+    Object[] values = new Object[4];
     values[0] = super.saveState(context);
     values[1] = cols;
     values[2] = rows;
+    values[3] = secret;
     return values;
   }
 
@@ -64,5 +78,6 @@ public class InputText extends UIInputImpl {
     super.restoreState(context, values[0]);
     cols = (Integer)values[1];
     rows = (Integer)values[2];
+    secret = (Boolean)values[3];
   }
 }

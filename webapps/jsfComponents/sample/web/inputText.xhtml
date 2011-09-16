@@ -37,7 +37,8 @@
           <h:panelGroup><h:outputText value="Значение: "/><h:outputText value="#{inputText.validatelenght}"/></h:panelGroup>
           <h:outputText style="white-space: nowrap;" value="Численное (парсинг в сеттере, NAE)"/><eye:inputText value="#{inputText.formatSetter}"/><h:outputText value="Значение: #{inputText.formatSetter}"/>
           <h:outputText style="white-space: nowrap;" value="Численное (парсинг в сеттере, IAE) "/><eye:inputText value="#{inputText.illegalSetter}"/><h:outputText value="Значение: #{inputText.illegalSetter}"/>
-          <h:outputText style="white-space: nowrap;" value="Численное в Inner объекте "/><eye:inputText id="moe" value="#{inputText.inner.innerInt}"/><h:outputText value="Значение: #{inputText.inner.innerInt}"/>
+          <h:outputText style="white-space: nowrap;" value="Численное в Inner объекте "/><eye:inputText value="#{inputText.inner.innerInt}"/><h:outputText value="Значение: #{inputText.inner.innerInt}"/>
+          <h:outputText style="white-space: nowrap;" value="Пароль"/><eye:inputText secret="true" value="#{inputText.password}"/><h:outputText value="Значение: #{inputText.password}"/>
 
         </h:panelGrid>
 

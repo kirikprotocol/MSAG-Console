@@ -27,6 +27,8 @@ public class InputTextController {
 
   private Inner inner = new Inner();
 
+  private String password;
+
   public String getFormatSetter() {
     return formatSetter == null ? null : formatSetter.toString();
   }
@@ -108,6 +110,14 @@ public class InputTextController {
 
   public void setIntValue(Integer intValue) {
     this.intValue = intValue;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public Inner getInner() {
