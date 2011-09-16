@@ -317,10 +317,14 @@ public class Journal {
 
         Hashtable<Long, Data> table = new Hashtable<Long, Data>();
 
+        // Проверяем существует ли временный файл, если он существует, значит шлюз закончил работу не стандартно во время
+        // очистки журнала.
         if (j2t.exists()){
             log.debug("Detected that file '"+j2t.getName()+"' exist.");
+            // Проверяем существует ли файл, который чистится.
             if (j2.exists()){
                 log.debug("Detected that file '"+j2.getName()+"' exist.");
+                // Если файл который чистится существует, значит шлюз закончил работу во время выбора записей со статусами SEND и то временный файл не нужен и его можно удалить.
                 if (j2t.delete()){
                     log.debug("Successfully delete file '"+j2t+"'.");
                 } else {
@@ -329,6 +333,7 @@ public class Journal {
                 }
             } else {
                 log.debug("Detected that file '"+j2.getName()+"' doesn't exist.");
+                //Если файла, который чистится нет, то его надо восстановить
                 if (j2t.renameTo(j2)){
                     log.debug("Successfully rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
                 } else {
