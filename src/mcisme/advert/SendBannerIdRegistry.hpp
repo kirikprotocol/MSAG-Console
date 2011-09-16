@@ -17,6 +17,14 @@ struct ExpiredBannerRequest {
   uint32_t trnId;
 };
 
+inline unsigned long long getTimeInMsec()
+{
+  struct timeval cur_time;
+  if (gettimeofday(&cur_time, NULL) < 0)
+    throw util::SystemError("SendBannerIdRegistry::saveSentBannerInfo::: call gettimeofday() failed");
+  return cur_time.tv_sec*1000+cur_time.tv_usec/1000;
+}
+
 class SendBannerIdRegistry : public util::Singleton<SendBannerIdRegistry>
 {
 public:
@@ -25,11 +33,7 @@ public:
     smsc_log_debug(_logger, "SendBannerIdRegistry::saveSentBannerInfo: insert BannerRequest=0x%p for id=%d", ban_req, ban_req->getId());
     core::synchronization::MutexGuard synchronize(_lock);
     _knownBannerRequests.Insert(ban_req->getId(), ban_req);
-    struct timeval cur_time;
-    if (gettimeofday(&cur_time, NULL) < 0)
-      throw util::SystemError("SendBannerIdRegistry::saveSentBannerInfo::: call gettimeofday() failed");
-    _reqSendTimes.push_back(req_time_info(cur_time.tv_sec * 1000 + cur_time.tv_usec / 1000,
-                                          ban_req->getId()));
+    _reqSendTimes.push_back(req_time_info(getTimeInMsec(),ban_req->getId()));
   }
 
   BannerRequest* ackReceivedBanner(uint32_t transaction_id)
@@ -42,11 +46,7 @@ public:
   bool getNextExpiredRequest(unsigned expiration_period_inmsecs, ExpiredBannerRequest* expired_ban_req)
   {
     core::synchronization::MutexGuard synchronize(_lock);
-    time_t currentTime = time(NULL);
-    struct timeval cur_time;
-    if (gettimeofday(&cur_time, NULL) < 0)
-      throw util::SystemError("SendBannerIdRegistry::getNextExpiredRequest::: call gettimeofday() failed");
-    unsigned long long curTimeInMsecs = cur_time.tv_sec * 1000 + cur_time.tv_usec / 1000;
+    unsigned long long curTimeInMsecs = getTimeInMsec();
     while (!_reqSendTimes.empty())
     {
       time_registry_t::iterator iter = _reqSendTimes.begin();
@@ -60,9 +60,13 @@ public:
           expired_ban_req->trnId = (*iter).trnId;
           return true;
         } else
+	{
           _reqSendTimes.erase(iter);
+	}
       } else
+      {
         return false;
+      }
     }
     return false;
   }

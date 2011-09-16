@@ -26,9 +26,10 @@ BannerReader::Execute()
 {
   _isRunning = true;
   smsc_log_info(_logger, "BannerReader has been started");
+  struct pollfd fds[100]; // change it to some reasonable value
+  unsigned long long curTime,lastExpCheck=getTimeInMsec();
   while (_isRunning)
   {
-    struct pollfd fds[100]; // change it to some reasonable value
     int count = 0;
     _lock.Lock();
     for(activeBEConns_t::const_iterator iter=_activeBEConns.begin(), end_iter=_activeBEConns.end();
@@ -43,19 +44,28 @@ BannerReader::Execute()
     fds[count].revents = 0;
     fds[count].events = POLLRDNORM;
     ++count;
+    
+    curTime=getTimeInMsec();
+    if(curTime-lastExpCheck>_responseTimeoutInMsecs)
+    {
+      handleTimedOutRequests(_responseTimeoutInMsecs);
+      lastExpCheck=curTime;
+    }
+    
 
     int st = ::poll(fds, count, _responseTimeoutInMsecs);
-    if ( st < 0 ) {
+    if ( st < 0 )
+    {
       if ( errno == EINTR )
         smsc_log_error(_logger, "BannerReader::Execute::: poll() was interrupted");
-      else {
+      else 
+      {
         smsc_log_error(_logger, "BannerReader::Execute::: call to poll() failed: (%s, errno=%d)",
                        strerror(errno), errno);
       }
       continue;
-    } else if ( !st ) {
-      handleTimedOutRequests(_responseTimeoutInMsecs);
-    } else {
+    } else if ( st )
+    {
       smsc_log_debug(_logger, "BannerReader::Execute::: %d fds are ready", st);
       handleResponses(st, count, fds);
     }
