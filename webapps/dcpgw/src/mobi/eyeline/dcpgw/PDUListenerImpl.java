@@ -11,7 +11,6 @@ import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
-import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -64,9 +63,12 @@ public class PDUListenerImpl implements PDUListener {
 
                     log.debug("Message id '"+message_id+"', service number '"+service_number+"', delivery id '"+delivery_id+"', user '"+login+"'.");
 
-                    Manager.getInstance().getSender(login).addMessage(message_id, service_number, destination_address_str, text, sequence_number, connection_name, delivery_id);
+                    Sender sender = Gateway.getSender(login);
+                    sender.addMessage(message_id, service_number,
+                            destination_address_str, text, sequence_number, connection_name, delivery_id);
 
-                    if (request.getRegDeliveryReceipt() == RegDeliveryReceipt.None ) log.warn("Received SubmitSM with RegDeliveryReceipt.None .");
+                    if (request.getRegDeliveryReceipt() == RegDeliveryReceipt.None )
+                        log.warn("Received SubmitSM with RegDeliveryReceipt.None .");
 
                 } else {
                     log.debug("Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.");
@@ -120,9 +122,12 @@ public class PDUListenerImpl implements PDUListener {
 
                     log.debug("Message id '"+message_id+"', service number '"+service_number+"', delivery id '"+delivery_id+"', user '"+login+"'.");
 
-                    Manager.getInstance().getSender(login).addMessage(message_id, service_number, destination_address_str, text, sequence_number, connection_name, delivery_id);
+                    Sender sender = Gateway.getSender(login);
+                    sender.addMessage(message_id, service_number,
+                            destination_address_str, text, sequence_number, connection_name, delivery_id);
 
-                    if (request.getRegDeliveryReceipt() == RegDeliveryReceipt.None ) log.warn("Received DataSM with RegDeliveryReceipt.None .");
+                    if (request.getRegDeliveryReceipt() == RegDeliveryReceipt.None )
+                        log.warn("Received DataSM with RegDeliveryReceipt.None .");
 
                 } else {
                     log.debug("Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.");

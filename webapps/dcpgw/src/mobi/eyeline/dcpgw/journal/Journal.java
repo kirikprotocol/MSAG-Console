@@ -1,18 +1,14 @@
 package mobi.eyeline.dcpgw.journal;
 
-import mobi.eyeline.dcpgw.FinalMessageState;
 import mobi.eyeline.dcpgw.Gateway;
 import mobi.eyeline.dcpgw.Utils;
-import mobi.eyeline.dcpgw.exeptions.CouldNotCleanJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
-import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -30,36 +26,18 @@ public class Journal {
 
     private int max_journal_size_mb = 10;
 
-    private File dir, j1, j2, j2t;
+    private File j1;
+    private File j2;
+    private File j2t;
 
-    private DateFormat df;
-    private Calendar cal;
+    private Calendar cal = Calendar.getInstance();
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
 
-    //private Hashtable<Long, Data> message_id_receipt_table;
-    //private Hashtable<Integer, Long> sequence_number_message_id_table;
+    public Journal(String journal_dir, int max_journal_size_mb) throws InitializationException{
+        this.max_journal_size_mb = max_journal_size_mb;
 
-
-    public Journal() throws InitializationException{
-
-        String userDir = System.getProperty("user.dir");
-        String filename = userDir+File.separator+"conf"+File.separator+"config.properties";
-
-        Properties prop = new Properties();
-
-        try{
-            prop.load(new FileInputStream(filename));
-        } catch (IOException e) {
-            log.error(e);
-            System.exit(1);
-        }
-
-        max_journal_size_mb = Utils.getProperty(prop, "max.journal.size.mb", 10);
-
-        String journal_dir_str = Utils.getProperty(prop, "journal.dir", userDir+File.separator+"journal");
-
-        dir = new File(journal_dir_str);
+        File dir = new File(journal_dir);
         j1 = new File(dir, "j1.csv");
         j2 = new File(dir, "j2.csv");
         j2t = new File(dir, "j2.csv.tmp");
@@ -76,8 +54,6 @@ public class Journal {
             log.debug("Detected that journal directory already exists.");
         }
 
-        df = DateFormat.getDateTimeInstance();
-        cal = Calendar.getInstance();
     }
 
     private void appendFile(File source, File target) throws IOException {
@@ -103,20 +79,13 @@ public class Journal {
         log.debug("Successfully append journal.");
     }
 
-    /**
-     *
-     * first_sending_date; last_resending_date; message_id; sequence_number; source_address; dest_address; connection_name; submit_date; done_date; final_message_state; nsms; status
-     * @param data
-     * @throws CouldNotWriteToJournalException
-     */
-
     public void write(Data data) throws CouldNotWriteToJournalException {
         cal.setTimeInMillis(data.getFirstSendingTime());
         Date first_sending_date = cal.getTime();
         cal.setTimeInMillis(data.getLastResendTime());
         Date last_resending_time = cal.getTime();
-        String s = df.format(first_sending_date) + sep +
-                   df.format(last_resending_time) + sep +
+        String s = sdf.format(first_sending_date) + sep +
+                   sdf.format(last_resending_time) + sep +
                    data.getMessageId() + sep +
                    data.getSequenceNumber() + sep +
                    data.getSourceAddress().getAddress() + sep +
@@ -271,10 +240,10 @@ public class Journal {
         log.debug("Journal cleaned, "+d+" mls.");
     }
 
-    public Hashtable<Long, Data> load() throws CouldNotLoadJournalException {
+    public Hashtable<Integer, Data> load() throws CouldNotLoadJournalException {
         log.debug("Try to load journal to the memory ...");
 
-        Hashtable<Long, Data> table = new Hashtable<Long, Data>();
+        Hashtable<Integer, Data> table = new Hashtable<Integer, Data>();
 
         // ѕровер€ем существует ли временный файл, если он существует, значит шлюз закончил работу не стандартно во врем€
         // очистки журнала.
@@ -318,74 +287,27 @@ public class Journal {
                     while (scanner.hasNextLine()){
                         String line = scanner.nextLine();
                         if (!line.isEmpty() && !line.startsWith("#")){
-                            String[] ar = line.split(sep);
 
-                            long first_sending_time;
+                            Data data;
                             try {
-                                Date date = df.parse(ar[0]);
-                                cal.setTime(date);
-                                first_sending_time = cal.getTimeInMillis();
+                                data = Data.parse(line, sep);
                             } catch (ParseException e) {
-                                log.error(e);
                                 throw new CouldNotLoadJournalException(e);
-                            }
-
-                            long last_resending_time;
-                            try {
-                                Date date = df.parse(ar[1]);
-                                cal.setTime(date);
-                                last_resending_time = cal.getTimeInMillis();
-                            } catch (ParseException e){
-                                log.error(e);
-                                throw new CouldNotLoadJournalException(e);
-                            }
-
-                            long message_id = Long.parseLong(ar[2]);
-                            int sequence_number = Integer.parseInt(ar[3]);
-
-                            Address source_address, destination_address;
-                            try {
-                                source_address = new Address(ar[4]);
-                                destination_address = new Address(ar[5]);
                             } catch (InvalidAddressFormatException e) {
                                 throw new CouldNotLoadJournalException(e);
                             }
 
-                            String connection_name = ar[6];
-                            Date submit_date, done_date;
-                            try {
-                                submit_date = sdf.parse(ar[7]);
-                                done_date = sdf.parse(ar[8]);
-                            } catch (ParseException e) {
-                                 throw new CouldNotLoadJournalException(e);
-                            }
-
-                            FinalMessageState finalMessageState =  FinalMessageState.valueOf(ar[9]);
-
-                            int nsms = Integer.parseInt(ar[10]);
-
-                            Status status  =  Status.valueOf(ar[11]);
+                            Status status = data.getStatus();
+                            int sequence_number = data.getSequenceNumber();
+                            long message_id = data.getMessageId();
 
                             if (status == Status.DONE
                                     || status == Status.EXPIRED_MAX_TIMEOUT
                                         ||  status == Status.EXPIRED_TIMEOUT){
-                                Gateway.removeDeliveryReceiptData(sequence_number);
+                                table.remove(sequence_number);
                                 log.debug("Remove from memory delivery receipt data with message id "+sequence_number+" .");
                             } else {
-                                Data data = new Data();
-                                data.setMessageId(message_id);
-                                data.setSourceAddress(source_address);
-                                data.setDestinationAddress(destination_address);
-                                data.setFirstSendingTime(first_sending_time);
-                                data.setLastResendTime(last_resending_time);
-                                data.setSubmitDate(submit_date);
-                                data.setDoneDate(done_date);
-                                data.setNsms(nsms);
-                                data.setFinalMessageState(finalMessageState);
-                                data.setConnectionName(connection_name);
-                                data.setSequenceNumber(sequence_number);
-                                data.setStatus(status);
-                                Gateway.addDeliveryReceiptData(sequence_number, data);
+                                table.put(sequence_number, data);
                                 log.debug("Write in memory delivery receipt data with system id "+message_id+" --> "+ data.toString()+" .");
                             }
                         }

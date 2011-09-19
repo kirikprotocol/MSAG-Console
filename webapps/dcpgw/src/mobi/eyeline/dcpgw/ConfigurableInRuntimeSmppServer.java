@@ -1,10 +1,8 @@
 package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.smpp.api.PDUListener;
-import mobi.eyeline.smpp.api.ServerSession;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.SmppServer;
-import org.apache.log4j.Logger;
 
 import java.util.*;
 

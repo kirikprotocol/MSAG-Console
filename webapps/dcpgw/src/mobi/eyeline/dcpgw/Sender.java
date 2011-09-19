@@ -47,8 +47,7 @@ public class Sender extends Thread{
     private Hashtable<Long, Integer> id_seq_num_table;
     private Hashtable<Long, String> id_conn_name_table;
 
-    private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
-    private Calendar cal;
+    private Calendar cal = Calendar.getInstance();
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
 
@@ -71,8 +70,6 @@ public class Sender extends Thread{
 
         id_seq_num_table = new Hashtable<Long, Integer>();
         id_conn_name_table = new Hashtable<Long, String>();
-
-        cal = Calendar.getInstance(STAT_TIMEZONE);
     }
 
     public void addMessage(long id,
@@ -194,7 +191,6 @@ public class Sender extends Thread{
             Message[] ar = new Message[queue.size()];
             List<Message> list = Arrays.asList(queue.toArray(ar));
 
-            DateFormat df = DateFormat.getDateTimeInstance();
             for(Message m: list){
                 Date date = cal.getTime();
                 m.setProperty("sd", sdf.format(date));

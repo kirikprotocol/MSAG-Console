@@ -2,7 +2,6 @@ package mobi.eyeline.dcpgw.admin;
 
 import mobi.eyeline.dcpgw.Gateway;
 import mobi.eyeline.dcpgw.admin.protogen.protocol.UpdateConfigResp;
-import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.protogen.framework.BufferReader;
 import mobi.eyeline.protogen.framework.BufferWriter;
 import mobi.eyeline.protogen.framework.PDU;
@@ -53,7 +52,7 @@ class Connect extends Thread {
 
            if (log.isDebugEnabled()) log.debug("PDU received: " + buffer.getHexDump());
 
-           int tag = buffer.removeInt();
+           buffer.removeInt();
 
            int seqNum = buffer.removeInt();
 
@@ -62,7 +61,7 @@ class Connect extends Thread {
            try {
                Gateway.updateConfiguration();
                configUpdateResp = new UpdateConfigResp(seqNum, 0, "ok");
-           } catch (XmlConfigException e) {
+           } catch (Exception e) {
                configUpdateResp = new UpdateConfigResp(seqNum, 1, "Couldn't update configuration:"+e.getMessage());
            }
 

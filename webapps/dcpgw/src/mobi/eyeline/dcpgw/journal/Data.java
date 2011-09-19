@@ -2,8 +2,10 @@ package mobi.eyeline.dcpgw.journal;
 
 import mobi.eyeline.dcpgw.FinalMessageState;
 import mobi.eyeline.smpp.api.pdu.data.Address;
+import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -42,15 +44,10 @@ public class Data {
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
 
+    private static Calendar cal = Calendar.getInstance();
+
     public Data(){
 
-    }
-
-    public Data(long message_id, Address source_address, Address destination_address, String connection_name){
-        this.message_id = message_id;
-        this.source_address = source_address;
-        this.destination_address = destination_address;
-        this.connection_name = connection_name;
     }
 
     public void setMessageId(long message_id){
@@ -111,19 +108,15 @@ public class Data {
 
     public String toString(){
 
-        Calendar cal = Calendar.getInstance();
-
         cal.setTimeInMillis(first_sending_time);
         Date first_send_date = cal.getTime();
 
         cal.setTimeInMillis(last_resending_time);
         Date last_resending_date = cal.getTime();
 
-        DateFormat df = DateFormat.getDateTimeInstance();
-
         return "Data{message_id: " + message_id +
-                ", first sending date: " + df.format(first_send_date) +
-                ", last resending date: " + df.format(last_resending_date) +
+                ", first sending date: " + sdf.format(first_send_date) +
+                ", last resending date: " + sdf.format(last_resending_date) +
                 ", sa: " + source_address.getAddress() +
                 ", da: " + destination_address.getAddress() +
                 ", con: " + connection_name +
@@ -174,6 +167,65 @@ public class Data {
 
     public Status getStatus(){
         return status;
+    }
+
+    public static Data parse(String line, String separator) throws ParseException, InvalidAddressFormatException {
+        Data data = new Data();
+        String[] ar = line.split(separator);
+
+        Date date = sdf.parse(ar[0]);
+        cal.setTime(date);
+        long first_sending_time = cal.getTimeInMillis();
+
+        date = sdf.parse(ar[1]);
+        cal.setTime(date);
+        long last_resending_time = cal.getTimeInMillis();
+
+        long message_id = Long.parseLong(ar[2]);
+        int sequence_number = Integer.parseInt(ar[3]);
+
+        Address source_address = new Address(ar[4]);
+        Address destination_address = new Address(ar[5]);
+
+        String connection_name = ar[6];
+        Date submit_date = sdf.parse(ar[7]);
+        Date done_date = sdf.parse(ar[8]);
+
+        FinalMessageState finalMessageState =  FinalMessageState.valueOf(ar[9]);
+
+        int nsms = Integer.parseInt(ar[10]);
+
+        Status status  =  Status.valueOf(ar[11]);
+
+        data.setMessageId(message_id);
+        data.setSourceAddress(source_address);
+        data.setDestinationAddress(destination_address);
+        data.setFirstSendingTime(first_sending_time);
+        data.setLastResendTime(last_resending_time);
+        data.setSubmitDate(submit_date);
+        data.setDoneDate(done_date);
+        data.setNsms(nsms);
+        data.setFinalMessageState(finalMessageState);
+        data.setConnectionName(connection_name);
+        data.setSequenceNumber(sequence_number);
+        data.setStatus(status);
+        return data;
+    }
+
+    public boolean equals(Data data){
+        return (message_id == data.getMessageId() &&
+                connection_name.equals(data.getConnectionName()) &&
+                source_address.equals(data.getSourceAddress()) &&
+                destination_address.equals(data.getDestinationAddress()) &&
+                nsms == data.getNsms() &&
+                submit_date.getTime() == data.getSubmitDate().getTime() &&
+                done_date.getTime() == data.getDoneDate().getTime() &&
+                first_sending_time == data.getFirstSendingTime() &&
+                last_resending_time == data.getLastResendTime() &&
+                sequence_number == data.getSequenceNumber() &&
+                status == data.getStatus() &&
+                state == data.getFinalMessageState()
+                ) ? true : false;
     }
 
 }
