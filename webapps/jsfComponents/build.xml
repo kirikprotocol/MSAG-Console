@@ -61,6 +61,7 @@
   </target>
 
   <target name="distr.scripts">
+    <mkdir dir="${components.distr.dir}"/>
     <echo file="${components.distr.dir}/jsf-components.js" append="false">
 /**
   ${implementation.components.title} ${implementation.version}
