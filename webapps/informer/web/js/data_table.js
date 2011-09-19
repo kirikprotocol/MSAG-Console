@@ -67,9 +67,8 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
           if (el.checked)
             value = "true";
           else if (el.tagName == "SELECT") {
-
             for (var op=0; op < el.options.length; op++) {
-              if (el.options[op].getAttribute("selected") != null) {
+              if (el.options[op].getAttribute("selected") != null && el.options[op].getAttribute("selected") != '') {
                 value = el.options[op].value;
                 break;
               }
