@@ -48,30 +48,10 @@ public:
   //Target overall collisions percentage: = 100/(2**PWR)
   static const uint8_t  _TGT_COLL_PERCENTAGE_PWR = _CollPercentagePwrArg;
 
-
+  explicit DAHash_T(size_type num_to_reserve = 0) : _valCount(0), _collCount(0)
 #if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
-  explicit DAHash_T(const char * use_id) : _id(use_id ? use_id : ""),
-#else
-  DAHash_T() :
-#endif
-    _valCount(0), _collCount(0)
-  { }
-  //
-  DAHash_T(const DAHash_T& src) :
-#if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
-    _id(src._id),
-#endif
-    _valCount(0), _collCount(0)
-  {
-    *this = src;
-  }
-
-#if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
-  explicit DAHash_T(size_type num_to_reserve, const char* id ) : _id(id),
-#else
-  explicit DAHash_T(size_type num_to_reserve) :
-#endif
-    _valCount(0), _collCount(0)
+    , _id("")
+#endif  /* INTHASH_USAGE_* */
   {
     SetSize(num_to_reserve);
   }
@@ -81,15 +61,12 @@ public:
     Empty();
   }
 
-  DAHash_T& operator=(const DAHash_T& src_obj)
-  {
 #if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
-    _id = src_obj._id;
-#endif
-    _hArr = src_obj._hArr;
-    _valCount = src_obj._valCount;
-    return *this;
+  void debugInit(const char * log_id)
+  {
+    _id = log_id;
   }
+#endif /* INTHASH_USAGE_* */
 
   size_type Count(void) const { return _valCount; }
   size_type Size(void) const { return _hArr.size(); }
@@ -465,15 +442,19 @@ public:
   }
 
 private:
+  DAHash_T(const DAHash_T& src);
+  DAHash_T& operator=(const DAHash_T& src_obj);
+
   friend class iterator;
+
+  HashTable_s  _hArr;
+  size_type   _valCount;  //number of assigned values
+  size_type   _collCount; //total number of collisions occured for inserted elements.
 
 #if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
   static smsc::core::synchronization::Mutex _idMutex;
   const char* _id;
 #endif
-  HashTable_s  _hArr;
-  size_type   _valCount;  //number of assigned values
-  size_type   _collCount; //total number of collisions occured for inserted elements.
 
 protected:
   //Note: throws on corrupted key

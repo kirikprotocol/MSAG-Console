@@ -232,6 +232,10 @@ template <
                 = DAHashSlot_T //assume complex objects by default
 >
 class DAHashTable_T {
+private:
+  DAHashTable_T(const DAHashTable_T & src_obj);
+  DAHashTable_T & operator=(const DAHashTable_T & src_obj);
+
 public:
   typedef uint32_t  size_type;
   typedef HKeyValue_T<_KeyArg, _TArg> value_type;
@@ -246,11 +250,7 @@ public:
 
   DAHashTable_T() : _size(0), _kvs(0)
   { }
-  DAHashTable_T(const DAHashTable_T & src_obj) : _size(src_obj._size), _kvs(0)
-  {
-    _kvs = (slot_type *)(new uint8_t[sizeof(slot_type) * src_obj._size]);
-    slot_type::construct(_kvs, src_obj._kvs, src_obj._size);
-  }
+  //
   ~DAHashTable_T()
   {
     destroy();
@@ -323,18 +323,6 @@ public:
     src_obj._kvs = tmp._kvs;
     //
     tmp._size = 0;
-  }
-  //
-  DAHashTable_T & operator=(const DAHashTable_T & src_obj)
-  {
-    if (this == &src_obj)
-      return *this;
-
-    destroy();
-    _kvs = (slot_type *)(new uint8_t[sizeof(slot_type) * src_obj._size]);
-    slot_type::construct(_kvs, src_obj._kvs, src_obj._size);
-    _size = src_obj._size;
-    return *this;
   }
 };
 
