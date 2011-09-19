@@ -464,9 +464,10 @@ protected:
     return DAHashFunc_T::hashKey(use_key, num_attempt) % tbl_size;
   }
 
+  //Returns true if restrictions on number of collisions aren't violated.
   bool checkCollisions(uint16_t next_attempt) const
   {
-    return  !next_attempt || (_collCount < (_valCount >> _TGT_COLL_PERCENTAGE_PWR));
+    return (!_collCount || ((_collCount + next_attempt) < (_hArr.size() >> _TGT_COLL_PERCENTAGE_PWR)));
   }
 
   //Searches for value associated with given key.
