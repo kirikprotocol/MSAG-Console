@@ -151,7 +151,7 @@ public class Journal {
 
         long t = System.currentTimeMillis();
 
-        if (j1.exists()){
+        if (j1.exists() && j1.length() > 0){
             BufferedReader buffReader1 = null;
             BufferedReader buffReader2 = null;
             PrintWriter pw = null;

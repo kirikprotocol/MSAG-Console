@@ -90,18 +90,13 @@ public class Gateway extends Thread implements PDUListener {
         log.debug("Try to initialize gateway ...");
         Runtime.getRuntime().addShutdownHook(this);
 
-        // User's current working directory
         String user_dir = System.getProperty("user.dir");
-        log.debug("User directory: " + user_dir);
-
-        // Load configuration properties.
         String smpp_server_config_file = user_dir + File.separator + "conf" + File.separator + "config.properties";
-        String smpp_endpoints_file = Utils.getProperty(config, "users.file", user_dir + File.separator + "conf" + File.separator + "endpoints.xml");
-        String deliveries_file = Utils.getProperty(config, "deliveries.file", user_dir + File.separator + "conf" + File.separator + "deliveries.xml");
-        cm = new ConfigurationManager(smpp_server_config_file, smpp_endpoints_file, deliveries_file);
+        cm = new ConfigurationManager(smpp_server_config_file);
 
         try {
             config = cm.loadSmppConfigurations();
+
             user_password_table = cm.loadUsers();
             connection_provider_table = cm.loadProviders();
         } catch (IOException e) {
@@ -233,7 +228,7 @@ public class Gateway extends Thread implements PDUListener {
 
         user_senders_map = new Hashtable<String, Sender>();
 
-        log.debug("Successfully initialize gateway!");
+        log.debug("Gateway initialized.");
     }
 
     public synchronized static void updateConfiguration() throws XmlConfigException, IOException, SmppException {
@@ -247,7 +242,9 @@ public class Gateway extends Thread implements PDUListener {
 
         connection_provider_table = connection_provider_temp_table;
         user_password_table = user_password_temp_table;
-        log.debug("Gateway configuration updated.");
+        config = new_config;
+
+        log.debug("Configuration updated.");
     }
 
     public boolean handlePDU(PDU pdu) {

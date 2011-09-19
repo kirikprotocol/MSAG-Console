@@ -118,7 +118,7 @@ public class Sender extends Thread{
                     submitSMResp.setConnectionName(connection_name);
                     submitSMResp.setStatus(Status.SYSERR);
                     submitSMResp.setSequenceNumber(sequence_number);
-                    smppServer.send(submitSMResp);
+                    smppServer.send(submitSMResp, false);
                 } catch (SmppException e1) {
                     log.error(e1);
                     // todo ?
@@ -144,7 +144,7 @@ public class Sender extends Thread{
                             submitSMResp.setConnectionName(connection_name);
                             submitSMResp.setStatus(Status.SYSERR);
                             submitSMResp.setSequenceNumber(sequence_number);
-                            smppServer.send(submitSMResp);
+                            smppServer.send(submitSMResp, false);
 
                         } catch (SmppException e1) {
                             log.error(e1);
@@ -223,7 +223,7 @@ public class Sender extends Thread{
                         submitSMResp.setSequenceNumber(id_seq_num_table.get(message_id));
                         submitSMResp.setConnectionName(id_conn_name_table.get(message_id));
                         submitSMResp.setMessageId(Long.toString(message_id));
-                        smppServer.send(submitSMResp);
+                        smppServer.send(submitSMResp, false);
 
                         id_seq_num_table.remove(message_id);
                         id_conn_name_table.remove(message_id);
@@ -251,7 +251,7 @@ public class Sender extends Thread{
                         long id = Long.parseLong(p.getProperty("id"));
                         submitSMResp.setSequenceNumber(id_seq_num_table.get(id));
                         submitSMResp.setConnectionName(id_conn_name_table.get(id));
-                        smppServer.send(submitSMResp);
+                        smppServer.send(submitSMResp, false);
 
                         id_seq_num_table.remove(id);
                         id_conn_name_table.remove(id);

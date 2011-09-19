@@ -1,6 +1,5 @@
 package mobi.eyeline.dcpgw;
 
-import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigParam;
@@ -9,7 +8,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -26,20 +24,21 @@ public class ConfigurationManager {
     private static Logger log = Logger.getLogger(ConfigurationManager.class);
 
     private String smpp_server_config_file;
-    private String smpp_endpoints_file;
     private String deliveries_file;
 
     public static final String CONNECTION_PREFIX = "smpp.sme.";
 
-    public ConfigurationManager(String smpp_server_config_file, String smpp_endpoints_file, String deliveries_file){
+    public ConfigurationManager(String smpp_server_config_file){
         this.smpp_server_config_file = smpp_server_config_file;
-        this.smpp_endpoints_file = smpp_endpoints_file;
-        this.deliveries_file = deliveries_file;
     }
 
     public Properties loadSmppConfigurations() throws IOException, XmlConfigException {
         Properties properties = new Properties();
         properties.load(new FileInputStream(smpp_server_config_file));
+        String user_dir = System.getProperty("user.dir");
+
+        String smpp_endpoints_file = Utils.getProperty(properties, "users.file", user_dir + File.separator + "conf" + File.separator + "endpoints.xml");
+        deliveries_file = Utils.getProperty(properties, "deliveries.file", user_dir + File.separator + "conf" + File.separator + "deliveries.xml");
 
         XmlConfig xmlConfig = new XmlConfig();
 
