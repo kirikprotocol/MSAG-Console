@@ -144,8 +144,8 @@ static void cmd_disconnect(Console&, const std::vector<std::string> &args)
 
 static const char hlp_loopconnect[] =
 "USAGE: loopconnect [?|help | bill | dtcr] [num_cycles] [sleep_ms]\n"
-"NOTE:  num_cycles by default = 1000,"
-"       sleep_ms by default = 200 ms";
+"NOTE:  num_cycles by default = 1000,\n"
+"       sleep_ms by default = 200 ms\n";
 
 static void cmd_loopconnect(Console&, const std::vector<std::string> &args)
 {
