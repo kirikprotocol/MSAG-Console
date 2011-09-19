@@ -788,6 +788,7 @@ int main(int argc, char** argv)
   smsc::inman::interaction::TcpListenerCFG tcpCfg(200, 300);
 
   std::auto_ptr<TcpServer> _connServ(new TcpServer(TcpServer::_DFLT_IDENT, _logger));
+  _connServ->Init(tcpCfg);
   try {
     _billFacade = new BillFacade(*_abonentsReg, *_connServ.get(), _logger);
     _dtcrFacade = new DtcrFacade(*_abonentsReg, *_connServ.get(), _logger);
@@ -842,7 +843,7 @@ int main(int argc, char** argv)
     console.addItem("detect",  cmd_detect_abn);
     console.addItem("m_detect",  cmd_detect_mlt);
 /* -------------------------------------------------------------------------- */
-    if (!_connServ->Start()) {
+    if (_connServ->Start() != TcpServer::rcOk) {
       smsc_log_fatal(_logger, "TCP server failed to start");
     } else {
 //      _billFacade->initConnect(_inmanIP._host, _inmanIP._port);
