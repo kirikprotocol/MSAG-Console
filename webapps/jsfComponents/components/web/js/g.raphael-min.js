@@ -1,3 +1,4 @@
+
 /*
  * g.Raphael 0.4.1 - Charting library, based on Raphaël
  *

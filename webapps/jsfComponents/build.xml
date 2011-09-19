@@ -35,7 +35,7 @@
   </target>
 
 
-  <target name="distr.components" depends="compile.components">
+  <target name="distr.components" depends="compile.components, distr.scripts">
 
     <property name="manifest.file" value="${build.dir}/components_manifest.mf"/>
 
@@ -58,8 +58,32 @@
     <mkdir dir="${components.distr.dir}"/>
     <jar destfile="${components.distr.dir}/jsf-components.jar" basedir="${components.source.classes}" manifest="${manifest.file}"/>
 
-    <concat destfile="${components.distr.dir}/jsf-components.js">
-      <fileset dir="components/web/js" includes="*.js"/>
+  </target>
+
+  <target name="distr.scripts">
+    <echo file="${components.distr.dir}/jsf-components.js" append="false">
+/**
+  ${implementation.components.title} ${implementation.version}
+
+  Copyright (c) ${implementation.vendor}
+**/
+    </echo>
+    <concat destfile="${components.distr.dir}/jsf-components.js" append="true">
+      <file file="components/web/js/ajax.js"/>
+      <file file="components/web/js/collapsing_group.js"/>
+      <file file="components/web/js/data_table.js"/>
+      <file file="components/web/js/data_table_filter.js"/>
+      <file file="components/web/js/dynamic_table.js"/>
+
+      <file file="components/web/js/raphael-min.js"/>
+      <file file="components/web/js/g.raphael-min.js"/>
+      <file file="components/web/js/g.line-min.js"/>
+      <file file="components/web/js/lines.js"/>
+
+      <file file="components/web/js/input_date.js"/>
+      <file file="components/web/js/menubar.js"/>
+      <file file="components/web/js/page_calendar.js"/>
+      <file file="components/web/js/updatable_content.js"/>
     </concat>
   </target>
 
@@ -68,7 +92,14 @@
     <copy todir="${styles.distr.dir}/${stylename}/images">
       <fileset dir="styles/${stylename}/images"/>
     </copy>
-    <concat destfile="${styles.distr.dir}/${stylename}/jsf-components-${stylename}-design.css">
+    <echo file="${styles.distr.dir}/${stylename}/jsf-components-${stylename}-design.css" append="false">
+/**
+  ${implementation.components.title} ${implementation.version}
+
+  Copyright (c) ${implementation.vendor}
+**/
+    </echo>
+    <concat destfile="${styles.distr.dir}/${stylename}/jsf-components-${stylename}-design.css" append="true">
       <fileset dir="styles/${stylename}/css" includes="*.css"/>
     </concat>
   </target>

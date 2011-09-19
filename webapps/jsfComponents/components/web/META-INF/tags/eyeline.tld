@@ -114,11 +114,17 @@
       <description>Метода бина, который надо вызвать при нажатии кнопки "Применить"</description>
       <name>applyAction</name>
       <rtexprvalue>false</rtexprvalue>
+      <deferred-method>
+        <method-signature>void myMethod()</method-signature>
+      </deferred-method>
     </attribute>
     <attribute>
       <description>Метода бина, который надо вызвать при нажатии кнопки "Очистить"</description>
       <name>clearAction</name>
       <rtexprvalue>false</rtexprvalue>
+      <deferred-method>
+        <method-signature>void myMethod()</method-signature>
+      </deferred-method>
     </attribute>
   </tag>
 
@@ -140,40 +146,33 @@
       <name>value</name>
       <required>true</required>
       <rtexprvalue>false</rtexprvalue>
-      <type>mobi.eyeline.util.jsf.components.data_table.model.DataTableModel</type>
-    </attribute>
-    <attribute>
-      <description>Период обновления таблицы в секундах. При наличии этого атрибута содержимое таблицы автоматически обновляется.</description>
-      <name>autoUpdate</name>
-      <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.Integer</type>
+      <deferred-value>
+        <type>mobi.eyeline.util.jsf.components.data_table.model.DataTableModel</type>
+      </deferred-value>
     </attribute>
     <attribute>
       <description>Количество строк на одной странице по-умолчанию</description>
       <name>pageSize</name>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.Integer</type>
+      <deferred-value>
+        <type>java.lang.Integer</type>
+      </deferred-value>
     </attribute>
     <attribute>
       <description>Можно ли изменять кол-во строк на странице с веб-интерфейса (по умолчанию: можно)</description>
       <name>pageSizeRendered</name>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.Boolean</type>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
     </attribute>
     <attribute>
       <description>Тег, описывающий куда передать список идентификаторов выделенных строк таблицы</description>
       <name>selectedRows</name>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.util.List</type>
-    </attribute>
-    <attribute>
-      <description>
-        Флаг, описывающий способ обновления собержимого таблицы. Если флаг равен true, то содержимое таблицы (при сортировке, перемещении по страницам)
-        будет обновляться петем сабмита формы. В противном случае таблица будет обновляться через Ajax.
-      </description>
-      <name>updateUsingSubmit</name>
-      <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.Boolean</type>
+      <deferred-value>
+        <type>java.util.List</type>
+      </deferred-value>
     </attribute>
     <attribute>
       <description>Название переменной на странице, в которую будет записываться текущая строка или внутренняя строка</description>
@@ -185,7 +184,9 @@
       <description>Отключает возможность выделить все записи (по умолчанию: false)</description>
       <name>disallowSelectAll</name>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.Boolean</type>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
     </attribute>
   </tag>
 
@@ -206,7 +207,9 @@
       <name>title</name>
       <required>true</required>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.String</type>
+      <deferred-value>
+        <type>java.lang.String</type>
+      </deferred-value>
     </attribute>
     <attribute>
       <description>Флаг, разрешающий или запрещающий сортировку по данной колонке</description>
@@ -249,13 +252,17 @@
       <description>Флаг, сообщающий есть ли внутри строки значение или нет</description>
       <name>innerData</name>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.Boolean</type>
+      <deferred-value>
+        <type>java.lang.Boolean</type>
+      </deferred-value>
     </attribute>
     <attribute>
       <description>Атрибут, описывающий как можно получить внутренние строки для данной строки</description>
       <name>innerRows</name>
       <rtexprvalue>false</rtexprvalue>
-      <type>java.util.List</type>
+      <deferred-value>
+        <type>java.util.List</type>
+      </deferred-value>
     </attribute>
   </tag>
 

@@ -200,15 +200,6 @@ div.eyeline_loading {
   height: 15px;
 }
 
-.select_page_button_checked {
-  background: url(../images/ico16_checked_sa_checked.gif);
-  background-repeat: no-repeat;
-  background-position: center;
-  cursor: pointer;
-  width: 15px;
-  height: 15px;
-}
-
 .select_menu_button {
   cursor: pointer;
   background-image: url("../images/list_opened_center.gif");

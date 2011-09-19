@@ -64,11 +64,10 @@ public class DataTableController {
 
   private boolean loaded = false;
 
-  public String query() {
+  public void query() {
     loadListener = null;
     loaded = false;
     notification = null;
-    return null;
   }
 
   public static class Row {

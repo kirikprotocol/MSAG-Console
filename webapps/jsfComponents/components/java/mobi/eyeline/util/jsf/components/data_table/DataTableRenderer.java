@@ -198,7 +198,7 @@ public class DataTableRenderer extends Renderer {
     if (hasInnerData)
       w.a("\noptions" + t.getId() + "[\"toggleButton\"] = \"" + t.getId() + "_expandAll\";");
 
-    w.a("\n  var " +t.getId() + "_dataTable = new DataTable1(\"" + t.getId() + "\", options" + t.getId() + ");");
+    w.a("\n  var " +t.getId() + "_dataTable = new DataTable(\"" + t.getId() + "\", options" + t.getId() + ");");
 
     w.a("\n  $(function(){");
     w.a("\n    " + t.getId() + "_dataTable.update()");
@@ -235,10 +235,10 @@ public class DataTableRenderer extends Renderer {
 
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
     if (t.getError() == null && t.getLoadCurrent() == null) {
-      int columnsNumber = getNumberOfColumns(t);
-      for (int i=t.getRowsOnPage(); i<t.getPageSize(); i++) {
-        w.a("<tr class=\"eyeline_row" + (i&1) + "\"><td colspan=\"" + columnsNumber + "\">&nbsp;</td></tr>");
-      }
+//      int columnsNumber = getNumberOfColumns(t);
+//      for (int i=t.getRowsOnPage(); i<t.getPageSize(); i++) {
+//        w.a("<tr class=\"eyeline_row" + (i&1) + "\"><td colspan=\"" + columnsNumber + "\">&nbsp;</td></tr>");
+//      }
 
       boolean columnFooter = false;
       for (UIComponent ch : t.getFirstRow().getChildren()) {

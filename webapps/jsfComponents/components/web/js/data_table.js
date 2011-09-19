@@ -31,7 +31,7 @@ function arrayToJson(arr) {
   return res + "]"
 }
 
-var DataTable1 = function(tableId, tableOptions) {
+function DataTable(tableId, tableOptions) {
 
   var currentPageNumber = tableOptions.currentPageNumber;
   var currentSortOrder = tableOptions.sortOrder;
