@@ -7,7 +7,7 @@ html {
 }
 
 body {
-  background-color: #FFFFFF;
+  background-color: #EAEAEA;
   color: #333333;
   display: block;
   font-family: Verdana,Arial,Helvetica,sans-serif;
@@ -148,8 +148,10 @@ div.secSmsc {
 }
 
 .logo_left{
-  width: 281px;
-  height: 67px;
+  width: 206px;
+  height: 49px;
+  background-repeat: no-repeat;
+  background-position: center;
   background-image: url(../images/mts_new_logo_ru.png);
 }
 
@@ -162,7 +164,7 @@ div.secSmsc {
 }
 
 .logo_center {
-  background-color: #FFFFFF;
+  background-color: #EAEAEA;
   color: #E00000;
   font-family: Verdana,Arial,Helvetica,sans-serif;
   font-size: 22px;
@@ -191,7 +193,7 @@ div.secSmsc {
 .footer_center_left {
   padding-top: 3px;
   padding-bottom: 3px;
-  background-color: #FFFFFF;
+  background-color: #EAEAEA;
   color: #666666;
   white-space: nowrap;
   text-align: left;
@@ -200,7 +202,7 @@ div.secSmsc {
 .footer_center_right {
   padding-top: 3px;
   padding-bottom: 3px;
-  background-color: #FFFFFF;
+  background-color: #EAEAEA;
   color: #666666;
   white-space: nowrap;
   text-align: right;
