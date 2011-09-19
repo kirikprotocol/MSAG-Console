@@ -16,12 +16,6 @@ import java.util.*;
  */
 public class ConfigurableInRuntimeSmppServer extends SmppServer {
 
-    private static Logger log = Logger.getLogger(Gateway.class);
-
-    private boolean need_update, updated;
-
-    private Properties config;
-
     public ConfigurableInRuntimeSmppServer(Properties config, PDUListener listener) throws SmppException {
         super(config, listener);
     }
