@@ -1,0 +1,143 @@
+#!/usr/bin/perl
+use strict;
+use IPC::Open2;
+use IO::Select;
+
+if(@ARGV<1)
+{
+  print "Specify program name and logfile name in a command line please\n";
+  exit(0);
+}
+
+my $prog=$ARGV[0];
+my $logfile=$ARGV[1];
+$logfile||='lh.log';
+
+open(F,$logfile) || die "Failed to open log file";
+my @log=<F>;
+close F;
+my @res;
+my %uniqueaddr;
+for(@log)
+{
+  chomp;
+  if(/\{(0x.*?)\}/)
+  {
+    $uniqueaddr{$1}=1;
+  }
+}
+my %sym;
+
+$|=1;
+
+print "Creating temp file\n";
+my $tmp="lh.tmp.$$";
+open(F,">$tmp");
+my @keys=keys(%uniqueaddr);
+for(@keys)
+{
+  print F "echo $_\n";
+  print F "whereis -a $_\n";
+}
+close F;
+my $errtmp="lh.$$.err";
+print "Running resolver\n";
+@res=`dbx -q -s /dev/null $prog 2>>$errtmp <$tmp`;
+
+my %res;
+for(my $i=0;$i<@res;$i++)
+{
+  my $addr=$res[$i];
+  chomp $addr;
+  print "$addr\n";
+  next unless $addr=~/0x\w{4,8}/;
+  print "ok\n";
+  $i++;
+  my $sym=$res[$i];
+  $res{$addr}=$sym;
+}
+
+print "Resolving\n";
+for(my $i=0;$i<@keys;$i++)
+{
+  my $key=$keys[$i];
+  my $res=$res{$key};
+  if(!defined($res))
+  {
+    open(F,">>$errtmp");
+    print F @res;
+    close F;
+    print "Symbol resolving error($key). See details in $errtmp.\n";
+    exit;
+  }
+  $res=~s/[\r\n]//;
+  $sym{$key}=$res;
+  print '.';
+}
+print "\nSaving result\n";
+unlink $tmp;
+unlink $errtmp;
+
+my %leaks;
+my $leak;
+my @info;
+for(@log)
+{
+  next if /^$/;
+  if(/^Mem:0x.*? size (\d+),/ || /(---)/)
+  {
+    if($leak)
+    {
+      my $key=join('',@{$leak->{trace}}).$leak->{size};
+      if(exists($leaks{$key}))
+      {
+        $leaks{$key}->{count}++;
+      }else
+      {
+        $leaks{$key}=$leak;
+      }
+    }
+    if($1 ne '---')
+    {
+      $leak={};
+      $leak->{size}=$1;
+      $leak->{count}=1;
+      $leak->{trace}=[];
+    }else
+    {
+      last;
+    }
+    next;
+  }
+  if(/(\{0x.*?\})/)
+  {
+    push @{$leak->{trace}},$1;
+    next;
+  }
+  push @info,$_;
+}
+
+@log=@info;
+for(sort {$b->{count}*$b->{size} <=> $a->{count}*$a->{size}} values(%leaks))
+#for(sort {$b->{count} <=> $a->{count}} values(%leaks))
+{
+  push @log,('Mem: size '.$_->{size}.($_->{count}>1?' count '.$_->{count}:''));
+  push @log,@{$_->{trace}};
+  push @log,'';
+}
+
+for(@log)
+{
+  s/\{(0x.*?)\}/
+    if(exists($sym{$1}))
+    {
+      $sym{$1};
+    }else
+    {
+      $1;
+    }
+  /gex;
+}
+open(F,'>'.$logfile);
+print F "$_\n" for @log;
+close F;

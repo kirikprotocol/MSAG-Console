@@ -51,9 +51,19 @@ static void BackTrace(void** dump)
 #endif
 #endif
 
-#if defined(i386) || defined(__i386)
-#define FRAME_PTR_REGISTER EBP
-#endif
+
+struct ctxdata{
+  void** dump;
+  int cnt;
+};
+
+static int stackWalk(uintptr_t pc,int flags,void* data)
+{
+  ctxdata* d=(ctxdata*)data;
+  if(d->cnt==MAXTRACESIZE)return -1;
+  d->dump[d->cnt++]=(void*)pc;
+  return 0;
+}
 
 static void BackTrace(void** dump)
 {
@@ -61,6 +71,8 @@ static void BackTrace(void** dump)
 
   ucontext_t u;
   getcontext(&u);
+
+#ifdef sparc
   frame* fp=(struct frame*)((long)(u.uc_mcontext.gregs[FRAME_PTR_REGISTER]) + BIAS);
 
   void* savpc;
@@ -85,6 +97,13 @@ static void BackTrace(void** dump)
     fp = (struct frame*)((long)(fp->fr_savfp) + BIAS);
   }
   if(counter!=MAXTRACESIZE)dump[counter]=0;
+#else
+  ctxdata d;
+  d.dump=dump;
+  d.cnt=0;
+  walkcontext(&u,stackWalk,&d);
+  if(d.cnt!=MAXTRACESIZE)dump[d.cnt]=0;
+#endif
 }
 #endif
 
