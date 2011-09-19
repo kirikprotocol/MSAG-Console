@@ -128,31 +128,37 @@ public:
   //Returns empty ObjRef in case of maximum number of objects is already reached!
   ObjRef allcObj(void)
   {
-    smsc::core::synchronization::MutexGuard  grd(this->poolSync());
-    return ObjRefComposer(static_cast<NodeIface*>(this->allcNode()));
+    ObjRefComposer  pObj;
+    {
+      smsc::core::synchronization::MutexGuard  grd(this->poolSync());
+      pObj.initRef(this->allcNode());
+    }
+    return pObj;
   }
 
   //Returns pooled object with given unique index, allocating it if necessary.
   //Returns empty ObjRef in case of given index is out of possible range.
   ObjRef atObj(size_type obj_idx)
   {
-    smsc::core::synchronization::MutexGuard  grd(this->poolSync());
-    return ObjRefComposer(static_cast<NodeIface*>(this->atNode(obj_idx)));
+    ObjRefComposer  pObj;
+    {
+      smsc::core::synchronization::MutexGuard  grd(this->poolSync());
+      pObj.initRef(this->atNode(obj_idx));
+    }
+    return pObj;
   }
 
 protected:
   typedef IDAPoolNodeIface_T<_IfaceArg, _SizeTypeArg> NodeIface;
 
   class ObjRefComposer : public ObjRef {
-  protected:
-    friend class IntrusivePoolAC_T;
-    //
-    explicit ObjRefComposer(NodeIface * use_node) : ObjRef(use_node)
-    { }
-
   public:
+    ObjRefComposer() : ObjRef()
+    { }
     ~ObjRefComposer()
     { }
+
+    using ObjRef::initRef;
   };
 
   //

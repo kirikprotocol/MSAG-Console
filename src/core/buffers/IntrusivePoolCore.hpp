@@ -100,6 +100,12 @@ public:
   protected:
     NodeHeader * mpNodeHdr;
 
+    void initRef(NodeHeader * use_node)
+    {
+      if ((mpNodeHdr = use_node) && !mpNodeHdr->addRef()) //Note: non-synced variant here !!!
+        mpNodeHdr = 0;
+    }
+
     void setRef(void)
     {
       if (mpNodeHdr && !mpNodeHdr->addRefSynced())
@@ -108,10 +114,9 @@ public:
 
     friend class IDAPoolCoreAC_T;
     //NOTE: constructor MUST BE called under referenced pool sync locked !!!
-    explicit ObjGuard(NodeHeader * use_node) : mpNodeHdr(use_node)
+    explicit ObjGuard(NodeHeader * use_node)
     {
-      if (mpNodeHdr && !mpNodeHdr->addRef()) //Note: non-synced variant here !!!
-        mpNodeHdr = 0;
+      initRef(use_node);
     }
 
   public:

@@ -142,16 +142,24 @@ public:
   //Returns empty ObjRef in case of maximum number of objects is already reached!
   ObjRef allcObj(void)
   {
-    smsc::core::synchronization::MutexGuard  grd(this->poolSync());
-    return ObjRef(this->allcNode());
+    ObjRef  pObj;
+    {
+      smsc::core::synchronization::MutexGuard  grd(this->poolSync());
+      pObj.initRef(this->allcNode());
+    }
+    return pObj;
   }
 
   //Returns pooled object with given unique index, allocating it if necessary.
   //Returns empty ObjRef in case of given index is out of possible range.
   ObjRef atObj(size_type obj_idx)
   {
-    smsc::core::synchronization::MutexGuard  grd(this->poolSync());
-    return ObjRef(this->atNode(obj_idx));
+    ObjRef  pObj;
+    {
+      smsc::core::synchronization::MutexGuard  grd(this->poolSync());
+      pObj.initRef(this->atNode(obj_idx));
+    }
+    return pObj;
   }
 
 protected:
