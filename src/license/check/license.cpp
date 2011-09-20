@@ -316,7 +316,7 @@ void gethostid( char* buf, size_t buflen )
         } while ( dbus_message_iter_next(&args) );
          */
 
-        if ( DBUS_STRING_TYPE != dbus_message_iter_get_arg_type(&args) ) {
+        if ( DBUS_TYPE_STRING != dbus_message_iter_get_arg_type(&args) ) {
             what = "dbus result is not string";
             break;
         }
