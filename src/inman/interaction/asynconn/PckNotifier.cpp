@@ -45,7 +45,6 @@ void PckNotifier::stop(const TimeSlice * use_tmo/* = NULL*/)
 //Starts a threaded task that processes query event.
 bool PckNotifier::onPacketEvent(const PckBufferGuard & use_pck)
 {
-  //PckEventTask * pTask = _taskPool.allcTask();
   EVTTaskRef  pTask = _taskPool.allcObj();
   if (!pTask.empty()) {
     if (pTask->init(pTask, use_pck, _lsrList, _logId, _logger) && startTask(pTask.get())) {
@@ -73,10 +72,10 @@ bool PckNotifier::PckEventTask::init(const EVTTaskGuard & task_grd,
                                      const char * log_id, Logger * use_log)
   /*throw()*/
 {
+  _pckGrd = use_pck;
   if (_pckGrd.get()) {
     isStopping = isReleased = false;
     _thisGrd = task_grd;
-    _pckGrd = use_pck;
     _logger = use_log;
     _lsrList = &lsr_list;
     snprintf(_logId, sizeof(_logId)-1, "%s[%u]", log_id, (unsigned)getUIdx());
