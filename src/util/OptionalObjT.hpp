@@ -41,7 +41,7 @@ public:
     clear();
   }
 
-  bool empty(void) const { return mHasObj; }
+  bool empty(void) const { return !mHasObj; }
   //
   void clear(void)
   {
