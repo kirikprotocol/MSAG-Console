@@ -3,5 +3,15 @@
 #
 # INMan testing console executables
 
-inman/inmanTest inmanTest -linman-tests -linman -linman-interaction-msgbill -linman-interaction-msgdtcr -linman-interaction-serializer -linman-interaction-tcpserver -linman-interaction-asynconn -linman-abprov -linman-comp -linman-common -linman-storage $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lutil-csv -lutil -lcore-threads -llogger -lcore-network -lcore-buffers -lthread -lnsl -lutil @liblogger.so
+NETSOCK_LIBS=-lcore-network $(SOCKETLIB) -lnsl
+TCPSRV_LIBS=-linman-interaction-tcpserver -linman-interaction-asynconn
+
+inman/inmanTest inmanTest -L$(SMSC_BUILDDIR)/bin -linman-tests -linman \
+  -linman-interaction-msgbill -linman-interaction-msgdtcr \
+  -linman-interaction-serializer %(TCPSRV_LIBS) \
+  -linman-storage -linman-abprov -linman-comp -linman-common \
+  -llogger @liblogger.so \
+  %(NETSOCK_LIBS) -lcore-threads -lcore-buffers \
+  -lutil -lpthread -lrt -ldl
+
 
