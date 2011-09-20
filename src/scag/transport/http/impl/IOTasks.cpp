@@ -322,7 +322,7 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 				break;
 			}
 */
-			smsc_log_debug(logger, "%p: %p, request parsed, socket %p stay in multiplexer", this, cx, s);
+			smsc_log_debug(logger, "%p: %p, request parsed, socket %p", this, cx, s);
 			cx->action = PROCESS_REQUEST;
 		}
 		else {	//		if (cx->action == READ_RESPONSE) {

@@ -30,7 +30,6 @@ enum StatusCode {
 
 class HttpParser {
 public:
-//  static StatusCode parse(char* buf, unsigned int& len, HttpContext& cx);
   static StatusCode parse(HttpContext& cx, bool last_data=false);
 
   static void urlEncode(std::string &s);

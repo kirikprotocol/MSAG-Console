@@ -35,12 +35,10 @@ static http_methods method_table[] = {
 };
 */
 
-// METHOD_COUNT defined in HttpCommand2.h
+//http_methods, method_table and METHOD_COUNT (table size) defined in HttpCommand2.h
 //#define METHOD_COUNT (int)(sizeof(HttpRequest::method_table) / sizeof(HttpRequest::method_table[0]))
-//#define METHOD_COUNT HTTP_METHOD_LAST-1
 
 StatusCode HttpParser::parse(HttpContext& cx, bool last_data) {
-//	Logger* logger = smsc::logger::Logger::getInstance("parser");
 	char *buf, *saved_buf, *local_buf;
 	unsigned int len, local_len;
 
@@ -71,7 +69,7 @@ StatusCode HttpParser::parse(HttpContext& cx, bool last_data) {
 
   
 	if (len == 0) {
-//		smsc_log_debug(logger, "return ok len=0");
+//		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "return ok len=0");
 		return OK;
 	}
   
@@ -258,7 +256,6 @@ StatusCode HttpParser::readLine(char*& buf, unsigned int& len)
 
 StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& cx)
 {
-	Logger* logger = smsc::logger::Logger::getInstance("parser");
   switch (cx.action) {
     case READ_RESPONSE:
       {
@@ -308,7 +305,7 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
 
         // we've got method
         cx.getRequest().setMethod(HttpRequest::method_table[method_idx].value);
-		smsc_log_debug(logger, "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
+		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
 
         switch (HttpRequest::method_table[method_idx].value) {
           case GET:

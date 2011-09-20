@@ -195,7 +195,7 @@ protected:
     SSL*		userSsl;
     SSL*		siteSsl;
     int sslCheckIoError(SSL* ssl, int ret);
-    void sslLogErrors(void);
+    void sslLogErrors(int ret=0, int ssl_err=0);
     SSL* sslCheckConnection(Socket* s);
     void sslCertInfo(X509* cert);
 //temporary for debug log

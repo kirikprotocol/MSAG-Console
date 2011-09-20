@@ -81,7 +81,7 @@ void HttpAcceptor::init(const char *host, int port, HttpsOptions& options)
     }
 
     try {
-        if (masterSocket.InitServer(host, port, 0, 0) == -1) {          
+        if (masterSocket.InitServer(host, port, 0, 0, true) == -1) {
             smsc_log_error(logger, "%s failed to init master socket", taskName());
             throw Exception("Socket::InitServer() failed");
         }

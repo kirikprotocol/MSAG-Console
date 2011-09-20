@@ -647,7 +647,7 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 		 *   (for socket I/O on Unix systems, consult errno for details).
 		 *
 		 */
-		sslLogErrors();
+		sslLogErrors(ret, ssl_err);
 		break;
 	case SSL_ERROR_ZERO_RETURN:
 		/* clean shutdown on the remote side */
@@ -658,16 +658,16 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 //		rc = CONTINUE;
 
 	default:
-		sslLogErrors();
+		sslLogErrors(ret, ssl_err);
 		break;
 	}
 	return rc;
 }
 
-void HttpContext::sslLogErrors(void) {
+void HttpContext::sslLogErrors(int ret, int ssl_err) {
 	unsigned long ulerr;
 	while ( (ulerr = ERR_get_error()) ) {  /* get all errors from the error-queue */
-		smsc_log_error(logger, "%s %d SSL:%d %s", __FILE__, __LINE__, ERR_error_string(ulerr, NULL));
+		smsc_log_error(logger, "SSL:%d %d %d %s", ret, ssl_err, ulerr, ERR_error_string(ulerr, NULL));
 	}
 }
 
