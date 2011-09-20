@@ -21,7 +21,6 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
   private static final Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
   private final ContentProviderContext context;
-  private final FileSystem fileSys;
   private final User user;
   private final FileResource resource;
   private final Address sourceAddr;
@@ -44,7 +43,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     this.context = context;
     this.user = opts.getUser();
     this.resource = resource;
-    this.fileSys = context.getFileSystem();
+    FileSystem fileSys = context.getFileSystem();
     this.sourceAddr = opts.getSourceAddress();
     this.encoding = opts.getEncoding();
     if (encoding == null)
@@ -91,7 +90,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       File localInProcessFile = new File(localCopy, buildInProcess(remoteCsvFile));
       File localFinishedFile = new File(localCopy, buildFinished(remoteCsvFile));
 
-      if (fileSys.exists(localCsvFile) || fileSys.exists(localInProcessFile) || fileSys.exists(localFinishedFile))
+      if (helper.exists(localCsvFile) || helper.exists(localInProcessFile) || helper.exists(localFinishedFile))
         continue;
 
       helper.downloadFileFromResource(resource, remoteCsvFile, localCsvFile);
@@ -107,16 +106,17 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
   private void synchronizeInProcess(FileResource resource) throws AdminException {
     Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
-    List<File> inProcessFiles = helper.getFiles(localCopy, IN_PROCESS);
+    List<File> inProcessFiles = helper.listFiles(localCopy, IN_PROCESS);
     for (File localInProcessFile : inProcessFiles) {
       String csvFile = csvFileFromWorkFile(localInProcessFile.getName());
       if (remoteFiles.contains(csvFile)) {
         resource.rename(csvFile, localInProcessFile.getName());
       } else if (!remoteFiles.contains(localInProcessFile.getName())){
-        fileSys.delete(localInProcessFile);
+        helper.logFileNotFoundOnResource(localInProcessFile.getName());
+        helper.delete(localInProcessFile);
         File localReportFile = new File(localCopy, buildReportName(csvFile));
-        if(fileSys.exists(localReportFile)) {
-          fileSys.delete(localReportFile);
+        if(helper.exists(localReportFile)) {
+          helper.delete(localReportFile);
         }
       }
     }
@@ -124,7 +124,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
   private void synchronizeFinished(FileResource resource) throws AdminException {
     Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
-    List<File> finishedFiles = helper.getFiles(localCopy, FINISHED);
+    List<File> finishedFiles = helper.listFiles(localCopy, FINISHED);
     Collections.shuffle(finishedFiles);
     long start = System.currentTimeMillis();
     for(File localFinishedFile : finishedFiles) {
@@ -136,7 +136,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       String localInProcessFile = buildInProcess(localCsvFile);
 
       if(remoteFiles.contains(localInProcessFile)) {
-        if(fileSys.exists(localReportFile) && !remoteFiles.contains(localReportFile.getName()))
+        if(helper.exists(localReportFile) && !remoteFiles.contains(localReportFile.getName()))
           helper.uploadFileToResource(resource, localReportFile, remoteFiles);
         resource.rename(localInProcessFile, localFinishedFile.getName());
 
@@ -149,15 +149,18 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         }
 
       } else {
-        fileSys.delete(localReportFile);
-        fileSys.delete(localFinishedFile);
+        if(log.isDebugEnabled()) {
+          log.debug("Delivery's results has been removed at resource => remove them at local copy: "+localCsvFile);
+        }
+        helper.delete(localReportFile);
+        helper.delete(localFinishedFile);
       }
     }
   }
 
   void synchronize(boolean downloadNewFiles) throws AdminException{
-    if(!fileSys.exists(localCopy))
-      fileSys.mkdirs(localCopy);
+    if(!helper.exists(localCopy))
+      helper.mkdirs(localCopy);
 
     try{
       resource.open();
@@ -196,7 +199,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
       synchronize(allowCreate);
 
-      File[] list = fileSys.listFiles(localCopy);
+      File[] list = helper.listFiles(localCopy);
       if (list == null)
         return;
 
@@ -256,7 +259,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       buildReport(formatStrategy, new File(localCopy, buildReportName(localCsvFile)), d);
 
     File localFinishedFile = new File(localCopy, buildFinished(localCsvFile));
-    fileSys.rename(localInProcessFile, localFinishedFile);
+    helper.rename(localInProcessFile, localFinishedFile);
   }
 
 
@@ -278,8 +281,8 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       }catch (AdminException e) {
         if(reportFile != null) {
           try{
-            if(fileSys.exists(reportFile)) {
-              fileSys.delete(reportFile);
+            if(helper.exists(reportFile)) {
+              helper.delete(reportFile);
             }
           }catch (Exception ignored) {}
         }
@@ -287,7 +290,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
       }
     }
 
-    fileSys.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
+    helper.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
 
   private void createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
@@ -296,7 +299,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     if (reportFile != null) {
       final PrintStream[] ps = new PrintStream[1];
       try{
-        ps[0] = new PrintStream(fileSys.getOutputStream(reportFile, false), true, encoding);
+        ps[0] = new PrintStream(helper.getOutputStream(reportFile, false), true, encoding);
         helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
           @Override
           public void reject(String abonent, String userData) {
@@ -318,7 +321,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
   private void buildReport(final FileFormatStrategy formatStrategy, File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {
     File reportTmp = new File(reportFile.getAbsolutePath()+".tmp."+System.currentTimeMillis());
     try{
-      fileSys.copy(reportFile, reportTmp);
+      helper.copy(reportFile, reportTmp);
 
       PrintStream ps = null;
       try {
@@ -341,12 +344,12 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         }
       }
 
-      fileSys.delete(reportFile);
-      fileSys.rename(reportTmp, reportFile);
+      helper.delete(reportFile);
+      helper.rename(reportTmp, reportFile);
 
     } catch (AdminException e){
       try{
-        fileSys.delete(reportTmp);
+        helper.delete(reportTmp);
       }catch (AdminException ignored){}
       throw e;
     }

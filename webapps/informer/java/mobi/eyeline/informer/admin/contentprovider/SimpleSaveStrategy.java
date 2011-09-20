@@ -21,7 +21,6 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
   private static final Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
   private final ContentProviderContext context;
-  private final FileSystem fileSys;
   private final User user;
   private final FileResource resource;
   private final Address sourceAddr;
@@ -45,21 +44,21 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
     this.user = opts.getUser();
     this.resource = resource;
     File workDir = opts.getWorkDir();
-    this.fileSys = context.getFileSystem();
+    FileSystem fileSys = context.getFileSystem();
     this.sourceAddr = opts.getSourceAddress();
     this.encoding = opts.getEncoding();
+    helper = new SaveStrategyHelper(context, fileSys, user, opts);
 
-    if (!fileSys.exists(workDir))
-      fileSys.mkdirs(workDir);
+    if (!helper.exists(workDir))
+      helper.mkdirs(workDir);
 
     localCopy = new File(workDir, "simpleLocalCopy");
-    helper = new SaveStrategyHelper(context, fileSys, user, opts);
   }
 
 
   void synchronize(boolean allowDownloadNew) throws AdminException{
-    if(!fileSys.exists(localCopy)) {
-      fileSys.mkdirs(localCopy);
+    if(!helper.exists(localCopy)) {
+      helper.mkdirs(localCopy);
     }
 
     try{
@@ -73,9 +72,9 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
           continue;
         }
         File localCsvFile = new File(localCopy, remoteCsvFile);
-        if (!fileSys.exists(localCsvFile) && allowDownloadNew)
+        if (!helper.exists(localCsvFile) && allowDownloadNew)
           helper.downloadFileFromResource(resource, remoteCsvFile, localCsvFile);
-        if (fileSys.exists(localCsvFile))
+        if (helper.exists(localCsvFile))
           resource.remove(remoteCsvFile);
         long time = System.currentTimeMillis() - start;
         if(time >= maxTimeMillis) {
@@ -114,12 +113,12 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
       synchronize(allowDeliveryCreation);
 
       if(allowDeliveryCreation) {
-        List<File> files = helper.getFiles(localCopy, CSV_POSFIX);
+        List<File> files = helper.listFiles(localCopy, CSV_POSFIX);
         if(!files.isEmpty()) {
           Collections.shuffle(files);
           long start = System.currentTimeMillis();
           final FileFormatStrategy formatStrategy = getFormatStrategy();
-          for(File f : helper.getFiles(localCopy, CSV_POSFIX)) {
+          for(File f : helper.listFiles(localCopy, CSV_POSFIX)) {
             try{
               helper.logProcessFile(f.getName());
               processFile(formatStrategy, f);
@@ -159,7 +158,7 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
       helper.createDelivery(formatStrategy, csvFile, deliveryName, sourceAddr, encoding, md5, null);
     }
 
-    fileSys.delete(csvFile);
+    helper.delete(csvFile);
   }
 
 }
