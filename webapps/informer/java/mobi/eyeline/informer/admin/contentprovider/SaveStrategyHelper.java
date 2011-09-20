@@ -101,7 +101,7 @@ class SaveStrategyHelper {
     return fileName.substring(0, fileName.lastIndexOf(".csv"));
   }
 
-  List<File> getFiles(File localCopy, final String posfix) {
+  List<File> listFiles(File localCopy, final String posfix) {
     File[] fs =  fileSys.listFiles(localCopy, new FileFilter() {
       @Override
       public boolean accept(File pathname) {
@@ -226,6 +226,43 @@ class SaveStrategyHelper {
     fileSys.rename(partFile, toFile);
   }
 
+  void delete(File file) throws AdminException {
+    if(log.isDebugEnabled()) {
+      log.debug("Delete local file: "+file.getAbsolutePath());
+    }
+    fileSys.delete(file);
+  }
+
+  void rename(File file, File to) throws AdminException {
+    if(log.isDebugEnabled()) {
+      log.debug("Rename local file: "+file.getAbsolutePath()+" to "+to.getAbsolutePath());
+    }
+    fileSys.rename(file, to);
+  }
+
+  void copy(File src, File dst) throws AdminException {
+    if(log.isDebugEnabled()) {
+      log.debug("Copy local file: "+src.getAbsolutePath()+" to "+dst.getAbsolutePath());
+    }
+    fileSys.rename(src, dst);
+  }
+
+  File[] listFiles(File dir) throws AdminException {
+    return fileSys.listFiles(dir);
+  }
+
+  boolean exists(File file) throws AdminException {
+    return fileSys.exists(file);
+  }
+
+  void mkdirs(File file) throws AdminException {
+    fileSys.mkdirs(file);
+  }
+
+  OutputStream getOutputStream(File f, boolean append) throws AdminException{
+    return fileSys.getOutputStream(f, append);
+  }
+
   void uploadFileToResource(FileResource resource, File file, Collection<String> remoteFilesCache) throws AdminException {
     String partFile = file.getName() + ".part";
     if(remoteFilesCache.contains(partFile))
@@ -245,6 +282,8 @@ class SaveStrategyHelper {
 
     resource.rename(partFile, file.getName());
   }
+
+
 
   private static final String ADDR_PREF = "addr_prfx";
 
@@ -435,6 +474,16 @@ class SaveStrategyHelper {
     if(log.isDebugEnabled()) {
       log.debug("Create delivery: "+deliveryName);
     }
+  }
+
+  void logRenameOnResource(String from, String to) {
+    if(log.isDebugEnabled()) {
+      log.debug("Rename file on resource: '"+from+"' => '"+to+'\'');
+    }
+  }
+
+  void logFileNotFoundOnResource(String file) {
+    log.error("File is absent on resource '"+file+"'. Cleanup local files...");
   }
 
   void logFinishDelivery(String deliveryName) {
