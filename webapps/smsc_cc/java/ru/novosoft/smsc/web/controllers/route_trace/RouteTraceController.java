@@ -9,6 +9,7 @@ import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -92,7 +93,9 @@ public class RouteTraceController extends SettingsMController<RouteSubjectSettin
     List<SelectItem> result = new ArrayList<SelectItem>();
     result.add(new SelectItem(null, ""));
     try {
-      for (String smeId : WebContext.getInstance().getSmeManager().smes().keySet())
+      List<String> smeIds = new ArrayList<String>(WebContext.getInstance().getSmeManager().smes().keySet());
+      Collections.sort(smeIds);
+      for (String smeId : smeIds)
         result.add(new SelectItem(smeId));
     } catch (AdminException e) {
       addError(e);

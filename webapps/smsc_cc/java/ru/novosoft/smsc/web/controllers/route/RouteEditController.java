@@ -11,9 +11,7 @@ import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.model.SelectItem;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Artem Snopkov
@@ -42,12 +40,8 @@ public class RouteEditController extends RouteController {
 
   public List<SelectItem> getSmes() {
     List<SelectItem> result = new ArrayList<SelectItem>();
-    try {
-      for (String smeId : WebContext.getInstance().getSmeManager().smes().keySet())
-        result.add(new SelectItem(smeId));
-    } catch (AdminException e) {
-      addError(e);
-    }
+    for (String smeId : getSmeIds())
+      result.add(new SelectItem(smeId));
     return result;
   }
 
@@ -60,7 +54,9 @@ public class RouteEditController extends RouteController {
 
   public List<String> getSmeIds() {
     try {
-      return new ArrayList<String>(WebContext.getInstance().getSmeManager().smes().keySet());
+      List<String> smeIds = new ArrayList<String>(WebContext.getInstance().getSmeManager().smes().keySet());
+      Collections.sort(smeIds);
+      return smeIds;
     } catch (AdminException e) {
       addError(e);
       return new ArrayList<String>();

@@ -33,7 +33,7 @@
   </h:panelGroup>
 
 
-  <h:panelGrid columns="2" rendered="#{!logger.hasChilds}" columnClasses="column100Width, column0WidthRight">
+  <h:panelGrid columns="2" rendered="#{!logger.hasChilds}" columnClasses="column1, column2">
     <h:outputText value="#{logger.name}"/>
     <h:selectOneMenu value="#{logger.level}">
       <ui:include src="print_logger_sitems.xhtml"/>

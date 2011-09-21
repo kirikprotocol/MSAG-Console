@@ -201,6 +201,8 @@ public class RouteSubjectSettings implements Serializable {
    */
   static void checkRoutesSourcesAndDestinations(List<Route> routes, List<Subject> subjects) throws RouteException {
     for (Route r : routes) {
+      if (r.getSrcSmeId() == null)
+        throw new RouteException("route.has.no.source.sme", r.getName());
       if (r.getSources() == null)
         throw new RouteException("route.has.no.sources", r.getName());
       for (Source src : r.getSources()) {

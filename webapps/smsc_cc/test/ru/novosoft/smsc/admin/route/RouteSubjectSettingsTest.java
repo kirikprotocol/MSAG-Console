@@ -78,16 +78,28 @@ public class RouteSubjectSettingsTest {
   @Test
   public void testCheckRoutesSourcesAndDestinations() throws Exception {
     Route r1 = new Route("r1");
+    r1.setSrcSmeId("srcSme");
     r1.setSources(Arrays.asList(new Source("subj1")));
     r1.setDestinations(Arrays.asList(new Destination("subj1", "DSTRLST")));
 
     RouteSubjectSettings.checkRoutesSourcesAndDestinations(Arrays.asList(r1), Arrays.asList(new Subject("subj1")));
+
+    r1.setSrcSmeId(null);
+
+    try {
+      RouteSubjectSettings.checkRoutesSourcesAndDestinations(Arrays.asList(r1), Arrays.asList(new Subject("subj1")));
+      assertTrue(false);
+    } catch (RouteException ignored) {
+    }
+
+    r1.setSrcSmeId("srcSme");
 
     try {
       RouteSubjectSettings.checkRoutesSourcesAndDestinations(Arrays.asList(r1), Collections.<Subject>emptyList());
       assertTrue(false);
     } catch (RouteException ignored) {
     }
+
   }
 
   @Test

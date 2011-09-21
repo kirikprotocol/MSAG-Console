@@ -169,7 +169,8 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
   }
 
   public List<SelectItem> getSmeIds() throws AdminException {
-    Set<String> smeIds = WebContext.getInstance().getSmeManager().smes().keySet();
+    List<String> smeIds = new ArrayList<String>(WebContext.getInstance().getSmeManager().smes().keySet());
+    Collections.sort(smeIds);
     List<SelectItem> ret = new ArrayList<SelectItem>();
     for(String id : smeIds) {
       ret.add(new SelectItem(id));
