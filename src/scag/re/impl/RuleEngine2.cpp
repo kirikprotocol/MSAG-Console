@@ -100,7 +100,7 @@ public:
             char buf[20];
             sprintf(buf,"/%d/",currentIter);
             fromRules.append(buf);
-            struct stat st;
+            struct ::stat st;
             if ( 0 != ::stat(fromRules.c_str(),&st) || !S_ISDIR(st.st_mode) ) {
                 currentIter = 0;
                 nextTime = currentTime + 1;
@@ -577,7 +577,7 @@ void RuleEngineImpl::init( const std::string& dir )
         }
 
         // auto rule tester
-        struct stat st;
+        struct ::stat st;
         std::string autodir = RulesDir;
         while ( autodir[autodir.size()-1] == '/' ) {
             autodir.erase(autodir.size()-1);
