@@ -17,6 +17,7 @@ public class SmppGWEndpointTest {
     e.setName("enpoint1");
     e.setSystemId("systemid");
     e.setPassword("password");
+    e.setEnabled(true);
     return e;
   }
 

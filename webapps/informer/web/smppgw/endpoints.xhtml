@@ -27,7 +27,7 @@
       <eye:buttons>
         <eye:button><tr:commandLink text="#{msg['create.button']}" shortDesc="#{msg['smppgw.endpoint.create']}" action="SMPPGW_ENDPOINT_EDIT"/></eye:button>
         <eye:button><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['smppgw.endpoint.delete']}" action="#{smppgwEndpoints.remove}"
-             onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+                                    onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
@@ -37,11 +37,15 @@
         <eye:row>
           <eye:column name="name" title="#{smppGWEndpointBundle.name}" sortable="true" defaultSortOrder="asc" width="30%">
             <h:commandLink value="#{r.name}" action="SMPPGW_ENDPOINT_EDIT">
-              <f:param name="endpoint" value="#{r.name}"/>
+              <f:param name="endpoint" value="#{r.systemId}"/>
             </h:commandLink>
           </eye:column>
-          <eye:column name="systemId" title="#{smppGWEndpointBundle.systemId}" sortable="true"  width="70%">
+          <eye:column name="systemId" title="#{smppGWEndpointBundle.systemId}" sortable="true"  width="30%">
             <h:outputText value="#{r.systemId}"/>
+          </eye:column>
+          <eye:column name="enabled" title="#{msg['smppgw.endpoints.status']}" width="40%" align="center">
+            <h:graphicImage title="#{msg['smppgw.endpoints.status.enabled']}" value="/images/ic_internal.gif" rendered="#{r.enabled}"/>
+            <h:graphicImage title="#{msg['smppgw.endpoints.status.disabled']}" value="/images/ic_disconnct.gif" rendered="#{!r.enabled}"/>
           </eye:column>
         </eye:row>
       </eye:dataTable>
@@ -53,7 +57,7 @@
           <tr:commandLink text="#{msg['create.button']}" shortDesc="#{msg['smppgw.endpoint.delete']}" action="SMPPGW_ENDPOINT_EDIT"/>
         </eye:button>
         <eye:button><tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['smppgw.endpoint.delete']}" action="#{smppgwEndpoints.remove}"
-             onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+                                    onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
         <eye:space/>
       </eye:buttons>
 

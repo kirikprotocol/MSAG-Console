@@ -24,7 +24,7 @@
 
       <eye:delimiter/>
 
-      <tr:inputHidden id="endpoint" value="#{smppgwEndpoint.oldName}"/>
+      <tr:inputHidden id="endpoint" value="#{smppgwEndpoint.oldSysID}"/>
 
       <h:panelGroup style="padding-left: 10px">
         <eye:pageSubtitle value="#{msg['smppgw.endpoint.edit.settings']}"/>
@@ -35,16 +35,19 @@
       <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign">
 
         <h:outputText value="#{smppGWEndpointBundle.name}" style="white-space:nowrap;"/>
-        <h:outputText value="#{smppgwEndpoint.oldName}" rendered="#{smppgwEndpoint.oldName != null}"/>
-        <h:inputText value="#{smppgwEndpoint.newName}" rendered="#{smppgwEndpoint.oldName == null}"/>
+        <h:inputText value="#{smppgwEndpoint.endpoint.name}"/>
 
 
         <h:outputText value="#{smppGWEndpointBundle.systemId}" style="white-space:nowrap;"/>
-        <h:inputText value="#{smppgwEndpoint.endpoint.systemId}"/>
+        <h:outputText value="#{smppgwEndpoint.oldSysID}" rendered="#{smppgwEndpoint.oldSysID != null}"/>
+        <h:inputText value="#{smppgwEndpoint.newSysID}" rendered="#{smppgwEndpoint.oldSysID == null}"/>
 
 
         <h:outputText value="#{smppGWEndpointBundle.password}" style="white-space:nowrap;"/>
         <h:inputText value="#{smppgwEndpoint.endpoint.password}"/>
+
+        <h:outputText value="#{smppGWEndpointBundle.enabled}" style="white-space:nowrap;"/>
+        <h:selectBooleanCheckbox value="#{smppgwEndpoint.endpoint.enabled}"/>
 
       </h:panelGrid>
       <eye:delimiter/>

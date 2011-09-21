@@ -76,7 +76,7 @@ public class SmppGWEndpointsController extends InformerController {
     return new ModelWithObjectIds() {
       @Override
       public String getId(Object o) throws ModelException {
-        return ((SmppGWEndpoint)o).getName();
+        return ((SmppGWEndpoint)o).getSystemId();
       }
 
       @Override

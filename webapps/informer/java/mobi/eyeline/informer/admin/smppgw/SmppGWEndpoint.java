@@ -13,6 +13,8 @@ public class SmppGWEndpoint {
   private String systemId;
   private String password;
 
+  private boolean enabled;
+
   public SmppGWEndpoint() {
   }
 
@@ -20,6 +22,15 @@ public class SmppGWEndpoint {
     this.name = e.name;
     this.systemId = e.systemId;
     this.password = e.password;
+    this.enabled = e.enabled;
+  }
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
   }
 
   public String getName() {
@@ -64,7 +75,6 @@ public class SmppGWEndpoint {
     if (name != null ? !name.equals(that.name) : that.name != null) return false;
     if (password != null ? !password.equals(that.password) : that.password != null) return false;
     if (systemId != null ? !systemId.equals(that.systemId) : that.systemId != null) return false;
-
-    return true;
+    return enabled == that.enabled;
   }
 }

@@ -15,16 +15,16 @@ public class SmppGWEndpointEditController extends InformerController{
 
   private SmppGWEndpoint endpoint;
 
-  private String oldName;
+  private String oldSysID;
 
-  private String newName;
+  private String newSysID;
 
   public SmppGWEndpointEditController() {
     String e = getRequestParameter("endpoint");
     if(e != null && e.length() != 0) {
       endpoint = getConfig().getSmppGWEndpointSettings().getEndpoint(e);
       if(endpoint != null) {
-        oldName = e;
+        oldSysID = e;
         SmppGWProvider p = getConfig().getSmppGWProviderSettings().getProviderByEndpoint(endpoint.getSystemId());
         if(p != null) {
           providerName = p.getName();
@@ -36,12 +36,12 @@ public class SmppGWEndpointEditController extends InformerController{
     }
   }
 
-  public String getNewName() {
-    return newName;
+  public String getNewSysID() {
+    return newSysID;
   }
 
-  public void setNewName(String newName) {
-    this.newName = newName;
+  public void setNewSysID(String newSysID) {
+    this.newSysID = newSysID;
   }
   public SmppGWEndpoint getEndpoint() {
     return endpoint;
@@ -55,24 +55,24 @@ public class SmppGWEndpointEditController extends InformerController{
     return providerName;
   }
 
-  public String getOldName() {
-    return oldName;
+  public String getOldSysID() {
+    return oldSysID;
   }
 
-  public void setOldName(String oldName) {
-    this.oldName = oldName;
+  public void setOldSysID(String oldSysID) {
+    this.oldSysID = oldSysID;
   }
 
 
   public String save() {
-    if(oldName == null) {
-      endpoint.setName(newName);
+    if(oldSysID == null) {
+      endpoint.setSystemId(newSysID);
     }
     try{
       endpoint.validate();
       SmppGWEndpointSettings s = getConfig().getSmppGWEndpointSettings();
-      if(oldName != null) {
-        s.removeEndpoint(endpoint.getName());
+      if(oldSysID != null) {
+        s.removeEndpoint(endpoint.getSystemId());
       }
       s.addEndpoint(endpoint);
       getConfig().updateSmppGWSettings(s, getUserName());

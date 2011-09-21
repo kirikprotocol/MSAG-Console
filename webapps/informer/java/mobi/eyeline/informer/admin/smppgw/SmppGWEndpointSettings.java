@@ -18,31 +18,31 @@ public class SmppGWEndpointSettings {
 
   public SmppGWEndpointSettings(SmppGWEndpointSettings s) {
     for(SmppGWEndpoint e : s.endpoints.values()) {
-      this.endpoints.put(e.getName(), new SmppGWEndpoint(e));
+      this.endpoints.put(e.getSystemId(), new SmppGWEndpoint(e));
     }
   }
 
   public void validate() throws AdminException {
-    Set<String> usedSysIds = new HashSet<String>(10);
+    Set<String> usedNames = new HashSet<String>(10);
     for(SmppGWEndpoint e : endpoints.values()) {
       e.validate();
-      if(usedSysIds.contains(e.getSystemId())) {     //Проверяем, что systemId уникален
-        throw new SmppGWException("system_id_intersection", e.getSystemId());
+      if(usedNames.contains(e.getName())) {     //Проверяем, что name уникален
+        throw new SmppGWException("endpoint_name_intersection", e.getName());
       }
-      usedSysIds.add(e.getSystemId());
+      usedNames.add(e.getName());
     }
   }
 
   public void addEndpoint(SmppGWEndpoint endpoint) throws AdminException{
     endpoint.validate();
-    if(endpoints.containsKey(endpoint.getName())) {
-      throw new SmppGWException("endpoint_name_intersection", endpoint.getName());
+    if(endpoints.containsKey(endpoint.getSystemId())) {
+      throw new SmppGWException("system_id_intersection", endpoint.getSystemId());
     }
-    endpoints.put(endpoint.getName(), new SmppGWEndpoint(endpoint));
+    endpoints.put(endpoint.getSystemId(), new SmppGWEndpoint(endpoint));
   }
 
-  public void removeEndpoint(String name) {
-    endpoints.remove(name);
+  public void removeEndpoint(String sysId) {
+    endpoints.remove(sysId);
   }
 
   public Collection<SmppGWEndpoint> getEndpoints() {
@@ -53,17 +53,12 @@ public class SmppGWEndpointSettings {
     return rez;
   }
 
-  public SmppGWEndpoint getEndpoint(String name) {
-    return endpoints.get(name);
+  public SmppGWEndpoint getEndpoint(String sysId) {
+    return endpoints.get(sysId);
   }
 
   public boolean containsEndpoint(String systemId) {
-    for(SmppGWEndpoint e :  endpoints.values()) {
-      if(e.getSystemId().equals(systemId)) {
-        return true;
-      }
-    }
-    return false;
+    return endpoints.containsKey(systemId);
   }
 
   public void save(XmlConfigSection parent) throws XmlConfigException {
@@ -72,6 +67,7 @@ public class SmppGWEndpointSettings {
       XmlConfigSection section = parent.getOrCreateSection(e.getName());
       section.setString("systemId", e.getSystemId());
       section.setString("password", e.getPassword());
+      section.setBool("enabled", e.isEnabled());
     }
   }
 
@@ -81,6 +77,7 @@ public class SmppGWEndpointSettings {
       e.setName(es.getName());
       e.setSystemId(es.getString("systemId"));
       e.setPassword(es.getString("password"));
+      e.setEnabled(es.getBool("enabled", false));
       addEndpoint(e);
     }
   }
