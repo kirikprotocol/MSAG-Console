@@ -22,8 +22,9 @@ public:
         getlog();
         // setting pos
         if ( fd != -1 ) {
-            pos_ = lseek(fd_,0,SEEK_CUR);
-            if ( off_t(pos_) == off_t(-1) ) {
+            const off_t pos = ::lseek(fd_,0,SEEK_CUR);
+            pos_ = pos;
+            if ( pos == off_t(-1) ) {
                 pos_ = 0;
             }
         }
