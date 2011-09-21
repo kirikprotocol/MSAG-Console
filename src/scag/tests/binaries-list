@@ -64,4 +64,8 @@
   $(SOCKETLIB) -lnsl \
   -lpthread -lrt -ldl $(LIBMALLOC)
 
-scag/tests/test34  test34
+-scag/tests/test34  test34
+scag/tests/test35  test35 \
+  -lcore-threads \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lpthread $(LIBRT) -ldl

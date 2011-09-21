@@ -2,6 +2,7 @@
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/buffers/FastMTQueue.hpp"
 #include "core/buffers/IntHash64.hpp"
+#include "core/buffers/Hash.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "informer/io/IOConverter.h"
 #include "informer/io/InfosmeException.h"
@@ -15,6 +16,23 @@
 #include "scag/counter/impl/TemplateManagerImpl.h"
 #include "scag/lcm/impl/LongCallManagerImpl.h"
 #include "scag/pvss/api/core/client/Client.h"
+#include "scag/pvss/api/packets/DelCommand.h"
+#include "scag/pvss/api/packets/GetCommand.h"
+#include "scag/pvss/api/packets/IncCommand.h"
+#include "scag/pvss/api/packets/IncModCommand.h"
+#include "scag/pvss/api/packets/DelResponse.h"
+#include "scag/pvss/api/packets/GetResponse.h"
+#include "scag/pvss/api/packets/IncResponse.h"
+#include "scag/pvss/api/packets/BatchCommand.h"
+#include "scag/pvss/api/packets/BatchResponse.h"
+#include "scag/pvss/api/packets/ProfileCommandVisitor.h"
+#include "scag/pvss/api/packets/ProfileRequest.h"
+#include "scag/pvss/api/packets/ProfileResponse.h"
+#include "scag/pvss/api/packets/RequestVisitor.h"
+#include "scag/pvss/api/packets/SetCommand.h"
+#include "scag/pvss/api/packets/SetResponse.h"
+#include "scag/pvss/data/ProfileKey.h"
+#include "scag/pvss/data/Property.h"
 #include "scag/re/impl/RuleEngine2.h"
 #include "scag/sessions/base/SessionStore2.h"
 #include "scag/sessions/base/SessionManager2.h"
@@ -27,9 +45,11 @@
 #include "scag/util/io/Print.h"
 #include "smpp/smpp.h"
 
+using namespace scag2;
 using namespace scag2::re;
 using namespace scag2::lcm;
 using namespace scag2::bill;
+using namespace scag2::pvss;
 using namespace scag2::transport::smpp;
 using namespace smsc::core::synchronization;
 using namespace eyeline::informer;
@@ -472,7 +492,7 @@ public:
 
     SmppChannel& getSme( const char* smeid )
     {
-        SmppChannel* res = 0;
+        // SmppChannel* res = 0;
         MutexGuard mg(regMtx);
         for ( std::vector< SmppChannelPtr >::iterator i = smelist_.begin(), ie = smelist_.end();
               i != ie; ++i ) {
@@ -494,13 +514,229 @@ private:
 
 // ========================================================
 
+class FakeSessionStore : public scag2::sessions::SessionStore
+{
+public:
+    FakeSessionStore() : queue_(0),
+        totalSessions_(0), lockedSessions_(0), stopping_(false) {}
+
+    ~FakeSessionStore()
+    {
+        int64_t key;
+        Session* val;
+        for ( smsc::core::buffers::IntHash64< Session* >::Iterator it(cache_);
+              it.Next(key,val); ) {
+            delete val;
+        }
+        cache_.Empty();
+    }
+
+    void init( SCAGCommandQueue* queue )
+    {
+        MutexGuard mg(mon_);
+        queue_ = queue;
+        stopping_ = false;
+    }
+
+    virtual void releaseSession( Session& session )
+    {
+        const SessionKey& key = session.sessionKey();
+        uint32_t cmd = session.currentCommand();
+        if (!cmd) { abort(); }
+        MutexGuard mg(mon_);
+        if ( session.getLongCallContext().continueExec ) {
+            session.getLongCallContext().continueExec = false;
+        }
+        Session** v = cache_.GetPtr(key.toIndex());
+        if ( !v || *v != &session ) {
+            abort();
+        }
+
+        SCAGCommand* nextcmd = session.popCommand();
+        if (nextcmd) {
+            setCommandSession(*nextcmd,&session);
+            // nextuid = nextcmd->getSerial();
+        } else {
+            --lockedSessions_;
+        }
+    }
+
+
+    virtual void moveLock( Session& s, SCAGCommand* cmd )
+    {
+        if ( !cmd || !s.currentCommand() ) return;
+        if ( s.currentCommand() == cmd->getSerial() ) return; // already set
+        Session* olds = cmd->getSession();
+        if ( olds && olds != &s ) {
+            abort();
+        }
+        MutexGuard mg(mon_);
+        s.setCurrentCommand( cmd->getSerial() );
+    }
+
+
+    void stop() {
+        MutexGuard mg(mon_);
+        stopping_ = true;
+        mon_.notify();
+    }
+
+    ActiveSession fetchSession( const SessionKey& key,
+                                std::auto_ptr<SCAGCommand>& cmd,
+                                bool create = true ) 
+    {
+        MutexGuard mg(mon_);
+
+        Session* session = cmd->getSession();
+        if (session) {
+            if (session->currentCommand() != cmd->getSerial()) {
+                abort();
+            }
+        }
+
+        while ( !session ) {
+
+            if (stopping_) { break; }
+
+            Session** v = cache_.GetPtr(key.toIndex());
+            if ( v ) {
+                // found a ptr to session
+                session = *v;
+                if ( session ) {
+                    // session exists
+                    if ( !session->currentCommand() ) {
+                        // is free
+                        ++lockedSessions_;
+                        session->setCurrentCommand( cmd->getSerial() );
+                        break;
+                    } else if ( session->currentCommand() == cmd->getSerial() ) {
+                        // is already mine
+                        break;
+                    }
+                    // is locked
+                    queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
+                    session->appendCommand( cmd.release() );
+                    session = 0;
+                    break;
+                }
+            }
+
+            if (!create ) {
+                // creation is not allowed
+                session = 0;
+                break;
+            }
+
+            if (!v) {
+                // session ptr is not found
+                session = cache_.Insert( key.toIndex(), new Session(key) );
+            } else {
+                session = *v = new Session(key);
+            }
+
+            session->setCurrentCommand( cmd->getSerial() );
+            ++totalSessions_;
+            ++lockedSessions_;
+            break;
+        }
+
+        if (session) {
+            return makeLockedSession(*session,*cmd.get());
+        } else {
+            return ActiveSession();
+        }
+    }
+
+    void getSessionsCount( uint32_t& sc, uint32_t& sldc, uint32_t& slkc )
+    {
+        MutexGuard mg(mon_);
+        sldc = sc = totalSessions_;
+        slkc = lockedSessions_;
+    }
+
+private:
+
+    inline ActiveSession makeLockedSession( Session&     s,
+                                            SCAGCommand& c )
+    {
+        Session* olds = c.getSession();
+        const uint32_t oldc = s.currentCommand();
+        setCommandSession(c,&s);
+        // should be already set
+        // s.setCurrentCommand(&c);
+        if ( olds && olds != &s ) {
+            ::abort();
+        }
+        if ( oldc && oldc != c.getSerial() ) {
+            ::abort();
+        }
+        s.setLastAccessTime( time(0) );
+        return ActiveSession(*this,s);
+    }
+
+private:
+    EventMonitor mon_;
+    smsc::core::buffers::IntHash64< Session* > cache_;
+    SCAGCommandQueue* queue_;
+    unsigned          totalSessions_;
+    unsigned          lockedSessions_;
+    bool              stopping_;
+};
+
+
+class FakeSessionManager : public scag2::sessions::SessionManager
+{
+public:
+    FakeSessionManager() {}
+
+
+    void init( SCAGCommandQueue& cmdqueue )
+    {
+        store_.init( &cmdqueue );
+    }
+
+
+    virtual void getSessionsCount( uint32_t& sessionsCount,
+                                   uint32_t& sessionsLoadedCount,
+                                   uint32_t& sessionsLockedCount )
+    {
+        store_.getSessionsCount(sessionsCount,
+                                sessionsLoadedCount,
+                                sessionsLockedCount);
+    }
+
+
+    virtual void Stop()
+    {
+        store_.stop();
+    }
+
+
+    virtual ActiveSession fetchSession( const SessionKey& key,
+                                        std::auto_ptr<SCAGCommand>& cmd,
+                                        bool create = true ) 
+    {
+        if ( !cmd.get() ) return ActiveSession();
+        return store_.fetchSession( key, cmd, create );
+    }
+
+
+
+private:
+    FakeSessionStore store_;
+};
+
+
+// ========================================================
+
 class FakeSmppManager : public SmppManager, public SCAGCommandQueue
 {
 public:
     FakeSmppManager( FakeBillingManager& fbm,
+                     FakeSessionManager& fsm,
                      RuleEngineImpl&     ruleEngine ) :
     running(true), queueCmdCount_(0), lcmCount_(0),
-    fbm_(fbm), ruleEngine_(ruleEngine),
+    fbm_(fbm), fsm_(fsm), ruleEngine_(ruleEngine),
     log_(smsc::logger::Logger::getInstance("smppman"))
     {}
 
@@ -664,25 +900,32 @@ public:
         smsc_log_info(log_,"shutdown invoked");
         do {
             MutexGuard mg(queueMon);
+            uint32_t sc, slc, skc;
+            fsm_.getSessionsCount(sc,slc,skc);
+            smsc_log_debug(log_,"queueCmd=%d queue=%d respQueue=%d lcmQueue=%d lcm=%d sc=%d slc=%d skc=%d",
+                           int(queueCmdCount_),
+                           int(queue.Count()),
+                           int(respQueue.Count()),
+                           int(lcmQueue.Count()),
+                           int(lcmCount_),
+                           int(sc), int(slc), int(skc) );
             if ( queueCmdCount_ > 0 ||
                  queue.Count() > 0 ||
                  respQueue.Count() > 0 ||
                  lcmQueue.Count() > 0 ||
-                 lcmCount_ > 0 ) {
-                smsc_log_debug(log_,"queueCmd=%d queue=%d respQueue=%d lcmQueue=%d lcm=%d",
-                               int(queueCmdCount_),
-                               int(queue.Count()),
-                               int(respQueue.Count()),
-                               int(lcmQueue.Count()),
-                               int(lcmCount_));
+                 lcmCount_ > 0 ||
+                 sc > 0 ||
+                 slc > 0 ||
+                 skc > 0 ) {
                 queueMon.wait(100);
                 continue;
             }
             running = false;
             queueMon.notify();
-            stateMachinePool_.stopNotify();
             break;
         } while ( true );
+        fsm_.Stop();
+        stateMachinePool_.stopNotify();
         stateMachinePool_.shutdown(0);
         router_.shutdown();
     }
@@ -795,6 +1038,7 @@ private:
     unsigned queueCmdCount_, lcmCount_;
     smsc::core::threads::ThreadPool stateMachinePool_;
     FakeBillingManager& fbm_;
+    FakeSessionManager& fsm_;
     RuleEngineImpl&     ruleEngine_;
     smsc::logger::Logger* log_;
 };
@@ -802,14 +1046,373 @@ private:
 
 // ========================================================
 
+// ========================================================
+
+class FakePvssClient : public scag2::pvss::core::client::Client, protected smsc::core::threads::Thread
+{
+    struct ReqHand 
+    {
+        ReqHand() {}
+        ReqHand( scag2::pvss::Request* r, ResponseHandler* h ) : req(r), handler(h) {}
+        scag2::pvss::Request*     req;
+        ResponseHandler* handler;
+    };
+
+public:
+    FakePvssClient() : started_(false), log_(smsc::logger::Logger::getInstance("pvssclient")) {}
+
+    virtual ~FakePvssClient() {
+        shutdown();
+    }
+
+    void addToStorage( const ProfileKey& pk, const pvss::Property& prop )
+    {
+        MutexGuard mg(lock_);
+        ProfileStorage* ptr = storage_.GetPtr(pk);
+        if ( !ptr ) {
+            ptr = & storage_.InsertEx( pk, ProfileStorage() );
+        }
+        pvss::Property* p = ptr->storage.GetPtr(prop.getName());
+        if ( !p ) {
+            ptr->storage.Insert(prop.getName(),prop);
+        } else {
+            *p = prop;
+        }
+    }
+
+    void startup() {
+        smsc_log_info(log_,"startup");
+        started_ = true;
+        Start();
+    }
+    
+    void shutdown() {
+        smsc_log_info(log_,"shutdown");
+        started_ = false;
+        queue_.notify();
+        WaitFor();
+    }
+    
+    bool canProcessRequest( PvssException* exc = 0 ) {
+        if (!started_) {
+            if (exc) *exc = PvssException( StatusType::SERVER_SHUTDOWN,
+                                           "not started" );
+            return false;
+        }
+        return true;
+    }
+
+    virtual std::auto_ptr<scag2::pvss::Response> processRequestSync(std::auto_ptr<scag2::pvss::Request>& request)
+    {
+        smsc_log_info(log_,"processSync %s", request->toString().c_str() );
+        struct SimpleWaiter : public scag2::pvss::core::client::Client::ResponseHandler
+        {
+            SimpleWaiter() : resp(0), type(scag2::pvss::StatusType::OK) {}
+            void wait() {
+                MutexGuard mg(mon);
+                while (!resp && type == scag2::pvss::StatusType::OK) {
+                    mon.wait(300);
+                }
+                if (type != scag2::pvss::StatusType::OK) {
+                    throw scag2::pvss::PvssException(exc,type);
+                }
+            }
+            virtual void handleResponse( std::auto_ptr<scag2::pvss::Request> req,
+                                         std::auto_ptr<scag2::pvss::Response> response) {
+                MutexGuard mg(mon);
+                resp = response.release();
+                mon.notify();
+            }
+            virtual void handleError(const scag2::pvss::PvssException& exception,
+                                     std::auto_ptr<scag2::pvss::Request> request) 
+            {
+                MutexGuard mg(mon);
+                exc = exception.what();
+                type = exception.getType();
+                if (type == scag2::pvss::StatusType::OK) type = scag2::pvss::StatusType::UNKNOWN;
+                mon.notify();
+            }
+
+            EventMonitor mon;
+            scag2::pvss::Response*   resp;
+            std::string              exc;   // if resp == 0
+            scag2::pvss::StatusType::Type type;
+        };
+        SimpleWaiter sw;
+        processRequestAsync(request,sw);
+        sw.wait();
+        smsc_log_debug(log_,"processSync result %s",sw.resp->toString().c_str());
+        return std::auto_ptr<scag2::pvss::Response>(sw.resp);
+    }
+
+    virtual void processRequestAsync( std::auto_ptr<scag2::pvss::Request>& request,
+                                      ResponseHandler& handler )
+    {
+        smsc_log_info(log_,"processAsync %s", request->toString().c_str() );
+        if (!started_) {
+            throw scag2::pvss::PvssException(scag2::pvss::StatusType::NOT_CONNECTED,"shutdown");
+        }
+        queue_.Push(ReqHand(request.release(),&handler));
+    }
+
+protected:
+    int Execute()
+    {
+        struct RV : public scag2::pvss::RequestVisitor 
+        {
+            RV() : request(0) {}
+            virtual bool visitPingRequest( PingRequest& req ) { return false; }
+            virtual bool visitAuthRequest( AuthRequest& req ) { return false; }
+            virtual bool visitProfileRequest( ProfileRequest& req ) {
+                request = &req;
+                return true;
+            }
+            ProfileRequest* request;
+        };
+
+        struct CV : public scag2::pvss::ProfileCommandVisitor
+        {
+            CV( FakePvssClient& pvss, const ProfileKey& pk ) :
+            pvss_(pvss), pk_(pk), storage_(0) {}
+
+            virtual bool visitDelCommand( DelCommand& cmd ) 
+            {
+                try {
+                    getStorage(false);
+                    ioProperty(cmd.getVarName().c_str(),0,true);
+                    response.reset(new DelResponse(StatusType::OK));
+                } catch ( PvssException& e ) {
+                    response.reset(new DelResponse(e.getType()));
+                } catch ( std::exception& e ) {
+                    response.reset(new DelResponse(StatusType::UNKNOWN));
+                }
+                return true;
+            }
+
+
+            virtual bool visitSetCommand( SetCommand& cmd )
+            {
+                try {
+                    getStorage(true);
+                    const pvss::Property& newp = cmd.getProperty();
+                    pvss::Property* p = ioProperty(newp.getName(), &newp);
+                    if (p) {
+                        p->setValue(newp);
+                        p->setTimePolicy(newp.getTimePolicy(),
+                                         newp.getFinalDate(),
+                                         newp.getLifeTime());
+                        p->WriteAccess();
+                    }
+                    response.reset(new SetResponse(StatusType::OK));
+                } catch ( PvssException& e ) {
+                    response.reset(new SetResponse(e.getType()));
+                } catch ( std::exception& e ) {
+                    response.reset(new SetResponse(StatusType::UNKNOWN));
+                }
+                return true;
+            }
+
+            virtual bool visitGetCommand( GetCommand& cmd )
+            {
+                try {
+                    getStorage(false);
+                    pvss::Property* p = ioProperty(cmd.getVarName().c_str(),0);
+                    if ( p->getTimePolicy() == R_ACCESS ) {
+                        p->ReadAccess();
+                    }
+                    GetResponse* resp = new GetResponse(StatusType::OK);
+                    response.reset(resp);
+                    resp->setProperty( *p );
+                } catch ( PvssException& e ) {
+                    response.reset( new GetResponse(e.getType()));
+                } catch ( std::exception& e ) {
+                    response.reset( new GetResponse(StatusType::UNKNOWN));
+                }
+                return true;
+            }
+            virtual bool visitIncCommand( IncCommand& cmd )
+            {
+                return doVisitInc(cmd,0);
+            }
+            
+            bool doVisitInc( IncCommand& cmd, uint32_t mod )
+            {
+                try {
+                    getStorage(true);
+                    const pvss::Property& newp = cmd.getProperty();
+                    pvss::Property* p = ioProperty(newp.getName(),0);
+                    uint32_t result = uint32_t(newp.getIntValue());
+                    if (p) {
+                        result = uint32_t(p->getIntValue() + newp.getIntValue());
+                        if (mod) {
+                            result = result % mod;
+                        }
+                        p->setIntValue(result);
+                        p->WriteAccess();
+                    }
+                    IncResponse* resp = new IncResponse(StatusType::OK);
+                    response.reset(resp);
+                    resp->setResult(result);
+                } catch ( PvssException& e ) {
+                    response.reset( new IncResponse(e.getType()) );
+                } catch ( std::exception& e ) {
+                    response.reset( new IncResponse(StatusType::UNKNOWN) );
+                }
+                return true;
+            }
+
+            virtual bool visitIncModCommand( IncModCommand& cmd )
+            {
+                return doVisitInc(cmd,cmd.getModulus());
+            }
+
+            virtual bool visitBatchCommand( BatchCommand& cmd )
+            {
+                std::auto_ptr< BatchResponse > result( new BatchResponse(StatusType::OK) );
+                try {
+                    getStorage(true);
+                    typedef std::vector< BatchRequestComponent* > CmpVector;
+                    const CmpVector& comps = cmd.getBatchContent();
+                    for ( CmpVector::const_iterator i = comps.begin(), ie = comps.end();
+                          i != ie; ++i ) {
+                        if (!(*i)->visit( *this )) {
+                            throw PvssException(StatusType::UNKNOWN,"fail to visit");
+                        }
+                        result->addComponent( static_cast< BatchResponseComponent* >(response.release()) );
+                        if ( result->getStatus() != StatusType::OK &&
+                             cmd.isTransactional()) {
+                            break;
+                        }
+                    }
+                } catch ( PvssException& e ) {
+                    result->setStatus( e.getType() );
+                } catch ( std::exception& e ) {
+                    result->setStatus( StatusType::UNKNOWN );
+                }
+                response.reset( result.release() );
+                return true;
+            }
+
+            virtual bool visitGetProfileCommand( GetProfileCommand& cmd )
+            {
+                return false;
+            }
+
+
+        private:
+            void getStorage(bool create)
+            {
+                if ( storage_ ) return;
+                storage_ = pvss_.storage_.GetPtr(pk_);
+                if ( storage_ ) return;
+                if ( create ) {
+                    storage_ = & pvss_.storage_.InsertEx( pk_, ProfileStorage() );
+                    return;
+                }
+                throw PvssException(StatusType::PROPERTY_NOT_FOUND,"no profile");
+            }
+            
+
+            pvss::Property* ioProperty( const char* name,
+                                        const pvss::Property* newp,
+                                        bool destroy = false )
+            {
+                pvss::Property* p = storage_->storage.GetPtr(name);
+                if (!p) {
+                    if (newp) {
+                        storage_->storage.Insert(name,*newp);
+                        return 0;
+                    }
+                    throw PvssException(StatusType::PROPERTY_NOT_FOUND,"no property");
+                }
+                if (destroy) {
+                    storage_->storage.Delete(name);
+                    return 0;
+                }
+                return p;
+            }
+
+
+        private:
+            FakePvssClient&                  pvss_;
+            const ProfileKey&                pk_;
+            ProfileStorage*                  storage_;
+        public:
+            std::auto_ptr< CommandResponse > response;
+        };
+
+        while (started_) {
+            queue_.waitForItem();
+            ReqHand rh;
+            if (!queue_.Pop(rh)) continue;
+            std::auto_ptr<scag2::pvss::Request> req(rh.req);
+            try {
+                RV rv;
+                if (!req->visit(rv)) {
+                    throw PvssException(StatusType::UNKNOWN, "unknown");
+                }
+                const ProfileKey& pkey = rv.request->getProfileKey();
+                CV cv(*this,pkey);
+                if (!rv.request->getCommand()->visit(cv)) {
+                    throw PvssException(StatusType::UNKNOWN,"unknown");
+                }
+                std::auto_ptr< Response > resp(new ProfileResponse(cv.response.release()));
+                rh.handler->handleResponse(req,resp);
+            } catch ( PvssException& e ) {
+                rh.handler->handleError(e,req);
+            } catch ( std::exception& e ) {
+                rh.handler->handleError(PvssException(StatusType::UNKNOWN,
+                                                      "unknown"),req);
+            }
+        }
+        ReqHand rh;
+        const PvssException e(StatusType::NOT_CONNECTED,"shutdown");
+        while ( queue_.Pop(rh) ) {
+            std::auto_ptr<scag2::pvss::Request> req(rh.req);
+            rh.handler->handleError(e,req);
+        }
+        return 0;
+    }
+
+private:
+    bool started_;
+    smsc::core::buffers::FastMTQueue< ReqHand > queue_;
+    smsc::logger::Logger* log_;
+    smsc::core::synchronization::Mutex                  lock_;
+    struct ProfileStorage 
+    {
+        smsc::core::buffers::Hash< pvss::Property > storage;
+    };
+    struct ProfileKeyHF 
+    {
+        static inline unsigned int CalcHash( const ProfileKey& pk ) {
+            switch (pk.getScopeType()) { 
+            case (SCOPE_ABONENT)  : {
+                const AbntAddr& a = pk.getAddress();
+                return unsigned(a.getNumber());
+            }
+            case (SCOPE_OPERATOR) : return pk.getOperatorKey();
+            case (SCOPE_PROVIDER) : return pk.getProviderKey();
+            case (SCOPE_SERVICE)  : return pk.getServiceKey();
+            default: abort();
+            }
+        }
+    };
+    typedef smsc::core::buffers::XHash<ProfileKey,ProfileStorage,ProfileKeyHF> Storage;
+    Storage storage_;
+};
+
+// ========================================================
+
 class StringParser : public FileReader::RecordReader
 {
 public:
     StringParser( FakeSmppManager& man,
+                  FakePvssClient& pvss,
                   int argc,
                   const char** argv ) :
     log_(smsc::logger::Logger::getInstance("main")),
-    smppManager_(man), argc_(argc), argv_(argv) {}
+    smppManager_(man), pvss_(pvss), argc_(argc), argv_(argv) {}
 
     virtual bool isStopping() {
         return false;
@@ -951,6 +1554,30 @@ public:
             nanosleep(&ts,0);
         } else if ( s[0] == "stop" ) {
             smppManager_.shutdown();
+            pvss_.shutdown();
+        } else if ( s[0] == "pvss" ) {
+            ProfileKey pk;
+            if ( s[1] == "a" ) {
+                pk.setAbonentKey(s[2]);
+            } else {
+                uint32_t ik = getInt(s[2]);
+                if ( s[1] == "o" ) {
+                    pk.setOperatorKey(ik);
+                } else if ( s[1] == "p" ) {
+                    pk.setProviderKey(ik);
+                } else if ( s[1] == "s" ) {
+                    pk.setServiceKey(ik);
+                } else {
+                    throw InfosmeException(EXC_IOERROR,"wrong scope type '%s'",s[1].c_str());
+                }
+            }
+            if ( s[3] != "prop") {
+                throw InfosmeException(EXC_NOTIMPL,"pvss action '%s' is not impl",s[3].c_str());
+            }
+            std::vector< std::string > words( splitString(str,4) );
+            pvss::Property p;
+            p.fromString(words[4]);
+            pvss_.addToStorage(pk,p);
         } else {
             throw InfosmeException(EXC_NOTIMPL,"not supported keyword '%s'",s[0].c_str());
         }
@@ -1036,222 +1663,9 @@ private:
 private:
     smsc::logger::Logger* log_;
     FakeSmppManager&      smppManager_;
+    FakePvssClient&       pvss_;
     const int             argc_;
     const char**          argv_;
-};
-
-
-// ========================================================
-
-class FakeSessionStore : public scag2::sessions::SessionStore
-{
-public:
-    FakeSessionStore() : queue_(0),
-        totalSessions_(0), lockedSessions_(0), stopping_(false) {}
-
-    ~FakeSessionStore()
-    {
-        int64_t key;
-        Session* val;
-        for ( smsc::core::buffers::IntHash64< Session* >::Iterator it(cache_);
-              it.Next(key,val); ) {
-            delete val;
-        }
-        cache_.Empty();
-    }
-
-    void init( SCAGCommandQueue* queue )
-    {
-        MutexGuard mg(mon_);
-        queue_ = queue;
-        stopping_ = false;
-    }
-
-    virtual void releaseSession( Session& session )
-    {
-        const SessionKey& key = session.sessionKey();
-        uint32_t cmd = session.currentCommand();
-        if (!cmd) { abort(); }
-        MutexGuard mg(mon_);
-        if ( session.getLongCallContext().continueExec ) {
-            session.getLongCallContext().continueExec = false;
-        }
-        Session** v = cache_.GetPtr(key.toIndex());
-        if ( !v || *v != &session ) {
-            abort();
-        }
-
-        SCAGCommand* nextcmd = session.popCommand();
-        if (nextcmd) {
-            setCommandSession(*nextcmd,&session);
-            // nextuid = nextcmd->getSerial();
-        } else {
-            --lockedSessions_;
-        }
-    }
-
-
-    virtual void moveLock( Session& s, SCAGCommand* cmd )
-    {
-        if ( !cmd || !s.currentCommand() ) return;
-        if ( s.currentCommand() == cmd->getSerial() ) return; // already set
-        Session* olds = cmd->getSession();
-        if ( olds && olds != &s ) {
-            abort();
-        }
-        MutexGuard mg(mon_);
-        s.setCurrentCommand( cmd->getSerial() );
-    }
-
-
-    void stop() {
-        MutexGuard mg(mon_);
-        stopping_ = true;
-        mon_.notify();
-    }
-
-    ActiveSession fetchSession( const SessionKey& key,
-                                std::auto_ptr<SCAGCommand>& cmd,
-                                bool create = true ) 
-    {
-        MutexGuard mg(mon_);
-
-        Session* session = cmd->getSession();
-        if (session) {
-            if (session->currentCommand() != cmd->getSerial()) {
-                abort();
-            }
-        }
-
-        while ( !session ) {
-
-            if (stopping_) { break; }
-
-            Session** v = cache_.GetPtr(key.toIndex());
-            if ( v ) {
-                // found a ptr to session
-                session = *v;
-                if ( session ) {
-                    // session exists
-                    if ( !session->currentCommand() ) {
-                        // is free
-                        ++lockedSessions_;
-                        session->setCurrentCommand( cmd->getSerial() );
-                        break;
-                    } else if ( session->currentCommand() == cmd->getSerial() ) {
-                        // is already mine
-                        break;
-                    }
-                    // is locked
-                    queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
-                    session->appendCommand( cmd.release() );
-                    session = 0;
-                    break;
-                }
-            }
-
-            if (!create ) {
-                // creation is not allowed
-                session = 0;
-                break;
-            }
-
-            if (!v) {
-                // session ptr is not found
-                session = cache_.Insert( key.toIndex(), new Session(key) );
-            } else {
-                session = *v = new Session(key);
-            }
-
-            session->setCurrentCommand( cmd->getSerial() );
-            ++totalSessions_;
-            ++lockedSessions_;
-            break;
-        }
-
-        if (session) {
-            return makeLockedSession(*session,*cmd.get());
-        } else {
-            return ActiveSession();
-        }
-    }
-
-    void getSessionsCount( uint32_t& sc, uint32_t& sldc, uint32_t& slkc )
-    {
-        sldc = sc = totalSessions_;
-        slkc = lockedSessions_;
-    }
-
-private:
-
-    inline ActiveSession makeLockedSession( Session&     s,
-                                            SCAGCommand& c )
-    {
-        Session* olds = c.getSession();
-        const uint32_t oldc = s.currentCommand();
-        setCommandSession(c,&s);
-        // should be already set
-        // s.setCurrentCommand(&c);
-        if ( olds && olds != &s ) {
-            ::abort();
-        }
-        if ( oldc && oldc != c.getSerial() ) {
-            ::abort();
-        }
-        s.setLastAccessTime( time(0) );
-        return ActiveSession(*this,s);
-    }
-
-private:
-    EventMonitor mon_;
-    smsc::core::buffers::IntHash64< Session* > cache_;
-    SCAGCommandQueue* queue_;
-    unsigned          totalSessions_;
-    unsigned          lockedSessions_;
-    bool              stopping_;
-};
-
-
-class FakeSessionManager : public scag2::sessions::SessionManager
-{
-public:
-    FakeSessionManager() {}
-
-
-    void init( SCAGCommandQueue& cmdqueue )
-    {
-        store_.init( &cmdqueue );
-    }
-
-
-    virtual void getSessionsCount( uint32_t& sessionsCount,
-                                   uint32_t& sessionsLoadedCount,
-                                   uint32_t& sessionsLockedCount )
-    {
-        store_.getSessionsCount(sessionsCount,
-                                sessionsLoadedCount,
-                                sessionsLockedCount);
-    }
-
-
-    virtual void Stop()
-    {
-        store_.stop();
-    }
-
-
-    virtual ActiveSession fetchSession( const SessionKey& key,
-                                        std::auto_ptr<SCAGCommand>& cmd,
-                                        bool create = true ) 
-    {
-        if ( !cmd.get() ) return ActiveSession();
-        return store_.fetchSession( key, cmd, create );
-    }
-
-
-
-private:
-    FakeSessionStore store_;
 };
 
 
@@ -1301,135 +1715,6 @@ public:
 private:
     smsc::logger::Logger* log_;
 };
-
-// ========================================================
-
-class FakePvssClient : public scag2::pvss::core::client::Client, protected smsc::core::threads::Thread
-{
-    struct ReqHand 
-    {
-        ReqHand() {}
-        ReqHand( scag2::pvss::Request* r, ResponseHandler* h ) : req(r), handler(h) {}
-        scag2::pvss::Request*     req;
-        ResponseHandler* handler;
-    };
-
-public:
-    FakePvssClient() : started_(false), log_(smsc::logger::Logger::getInstance("pvssclient")) {}
-
-    virtual ~FakePvssClient() {
-        shutdown();
-    }
-
-    void startup() {
-        smsc_log_info(log_,"startup");
-        started_ = true;
-        Start();
-    }
-    
-    void shutdown() {
-        smsc_log_info(log_,"shutdown");
-        started_ = false;
-        queue_.notify();
-        WaitFor();
-    }
-    
-    bool canProcessRequest( scag2::pvss::PvssException* exc = 0 ) {
-        if (!started_) {
-            if (exc) *exc = scag2::pvss::PvssException( scag2::pvss::StatusType::SERVER_SHUTDOWN,
-                                                        "not started" );
-            return false;
-        }
-        return true;
-    }
-
-    virtual std::auto_ptr<scag2::pvss::Response> processRequestSync(std::auto_ptr<scag2::pvss::Request>& request)
-    {
-        smsc_log_info(log_,"processSync %s", request->toString().c_str() );
-        struct SimpleWaiter : public scag2::pvss::core::client::Client::ResponseHandler
-        {
-            SimpleWaiter() : resp(0), type(scag2::pvss::StatusType::OK) {}
-            void wait() {
-                MutexGuard mg(mon);
-                while (!resp && type == scag2::pvss::StatusType::OK) {
-                    mon.wait(300);
-                }
-                if (type != scag2::pvss::StatusType::OK) {
-                    throw scag2::pvss::PvssException(exc,type);
-                }
-            }
-            virtual void handleResponse( std::auto_ptr<scag2::pvss::Request> req,
-                                         std::auto_ptr<scag2::pvss::Response> response) {
-                MutexGuard mg(mon);
-                resp = response.release();
-                mon.notify();
-            }
-            virtual void handleError(const scag2::pvss::PvssException& exception,
-                                     std::auto_ptr<scag2::pvss::Request> request) 
-            {
-                MutexGuard mg(mon);
-                exc = exception.what();
-                type = exception.getType();
-                if (type == scag2::pvss::StatusType::OK) type = scag2::pvss::StatusType::UNKNOWN;
-                mon.notify();
-            }
-
-            EventMonitor mon;
-            scag2::pvss::Response*   resp;
-            std::string              exc;   // if resp == 0
-            scag2::pvss::StatusType::Type type;
-        };
-        SimpleWaiter sw;
-        processRequestAsync(request,sw);
-        sw.wait();
-        smsc_log_debug(log_,"processSync result %s",sw.resp->toString().c_str());
-        return std::auto_ptr<scag2::pvss::Response>(sw.resp);
-    }
-
-    virtual void processRequestAsync( std::auto_ptr<scag2::pvss::Request>& request,
-                                      ResponseHandler& handler )
-    {
-        smsc_log_info(log_,"processAsync %s", request->toString().c_str() );
-        if (!started_) {
-            throw scag2::pvss::PvssException(scag2::pvss::StatusType::NOT_CONNECTED,"shutdown");
-        }
-        queue_.Push(ReqHand(request.release(),&handler));
-    }
-
-protected:
-    int Execute()
-    {
-        while (started_) {
-            queue_.waitForItem();
-            ReqHand rh;
-            if (!queue_.Pop(rh)) continue;
-            std::auto_ptr<scag2::pvss::Request> req(rh.req);
-            try {
-                throw scag2::pvss::PvssException( scag2::pvss::StatusType::SERVER_BUSY, "busy");
-                // rh.handler->handleResponse(req,resp);
-            } catch ( scag2::pvss::PvssException& e ) {
-                rh.handler->handleError(e,req);
-            } catch ( std::exception& e ) {
-                rh.handler->handleError(scag2::pvss::PvssException(scag2::pvss::StatusType::UNKNOWN,
-                                                                   "unknown"),req);
-            }
-        }
-        ReqHand rh;
-        const scag2::pvss::PvssException e(scag2::pvss::StatusType::NOT_CONNECTED,"shutdown");
-        while ( queue_.Pop(rh) ) {
-            std::auto_ptr<scag2::pvss::Request> req(rh.req);
-            rh.handler->handleError(e,req);
-        }
-        return 0;
-    }
-
-private:
-    bool started_;
-    smsc::core::buffers::FastMTQueue< ReqHand > queue_;
-    smsc::logger::Logger* log_;
-};
-
-// ========================================================
 
 int main( int argc, const char** argv )
 {
@@ -1498,13 +1783,13 @@ int main( int argc, const char** argv )
     smsc_log_info(mainlog,"--- rule engine inited ---");
 
     // create a state machine
-    FakeSmppManager* smppManager = new FakeSmppManager( *fbm, *ruleEngine );
+    FakeSmppManager* smppManager = new FakeSmppManager( *fbm, *fsm, *ruleEngine );
     fsm->init(*smppManager);
 
     smsc_log_info(mainlog,"--- smpp manager created ---");
 
     {
-        StringParser stringParser(*smppManager, argc, argv);
+        StringParser stringParser(*smppManager, *pvssClient, argc, argv);
         FileGuard fg(fileno(stdin));
         {
             FileReader fr(fg);
