@@ -48,26 +48,8 @@ class FileDeliveriesHelper {
     return groupNumber == (Math.abs(name.hashCode())%groupSize);
   }
 
-
-  void cleanUnusedDirs(Integer group, Collection<String> excludeDirs) throws AdminException {
-    String[] allDirs = fileSys.list(workDir);
-    if(allDirs!=null) {
-      for(String dirName : allDirs) {
-        if(!excludeDirs.contains(dirName)) {
-          String userName = null;
-          if(group != null) {
-            userName = getUserByDir(dirName);
-            if(userName == null || !isUserFromGroup(userName, group)) {
-              continue;
-            }
-          }
-          if(logger.isDebugEnabled()) {
-            logger.debug("Unused dir: "+dirName+" will be removed, user="+userName+" group="+group);
-          }
-          fileSys.recursiveDeleteFolder(new File(workDir,dirName));
-        }
-      }
-    }
+  File getWorkDir() {
+    return workDir;
   }
 
   FileResource getConnection(UserCPsettings ucps) throws AdminException {

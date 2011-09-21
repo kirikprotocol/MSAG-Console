@@ -51,27 +51,11 @@ public class FileDeliveriesProvider {
   }
 
 
-  private void cleanupDirs() throws AdminException {
-    Collection<String> usersDirs = new HashSet<String>(10);
-    for(User u : context.getUsers()) {
-      List<UserCPsettings> ucpss = u.getCpSettings();
-      if(u.getCpSettings() != null) {
-        for(UserCPsettings s : ucpss) {
-          usersDirs.add(helper.getUserLocalDir(u.getLogin(), s).getName());
-        }
-      }
-    }
-    helper.cleanUnusedDirs(null, usersDirs);
-
-  }
-
   private synchronized void start() throws AdminException {
     if (log.isDebugEnabled())
       log.debug("Content Provider Daemon starting...");
 
     if(scheduler!=null) return;
-
-    cleanupDirs();
 
     scheduler = Executors.newScheduledThreadPool(2, new ThreadFactoryWithCounter(NAME));
 

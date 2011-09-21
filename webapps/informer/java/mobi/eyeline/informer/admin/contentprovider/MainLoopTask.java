@@ -65,57 +65,62 @@ class MainLoopTask implements Runnable {
     return MBean.getInstance(MBean.Source.CONTENT_PROVIDER);
   }
 
+  private void cleanWorkDir(Collection<String> usedDirs) throws AdminException {
+    File[] allDirs = fileSys.listFiles(fileDeliveriesHelper.getWorkDir());
+    if (allDirs == null)
+      return;
+
+    for(File dir : allDirs) {
+      String dirName = dir.getName();
+      String userName = fileDeliveriesHelper.getUserByDir(dirName);
+      if(userName == null || !fileDeliveriesHelper.isUserFromGroup(userName, groupNumber))
+        continue;
+
+      if (!usedDirs.contains(dirName)) {
+        if(log.isDebugEnabled())
+          log.debug("Unused dir: "+dirName+" will be removed, user="+userName+" group="+groupNumber);
+        fileSys.recursiveDeleteFolder(dir);
+      }
+    }
+  }
+
+  private void cleanLastUpdateTimers(Collection<String> usedDirs) {
+    Iterator<String> usageIds = lastUpdate.keySet().iterator();
+    while(usageIds.hasNext()) {
+      String n = usageIds.next();
+      if(!usedDirs.contains(n)) {
+        usageIds.remove();
+      }
+    }
+  }
+
   public void run() {
     try {
       List<User> users = context.getUsers();
-      Set<String> checkedUcps = new HashSet<String>();
-      Collection<String> usersDirs = new HashSet<String>();
-      for(User u : users ) {
-        if(!fileDeliveriesHelper.isUserFromGroup(u.getLogin(), groupNumber)) {
-          continue;
-        }
-        if(log.isDebugEnabled()) {
-          log.debug("Process user="+u.getLogin()+" group="+groupNumber);
-        }
-        List<UserCPsettings> s = u.getCpSettings();
-        if(s != null && s.size()>0) {
-          try {
-            processUser(u, checkedUcps, usersDirs);
-          }
-          catch (Exception e) {
-            getMBean().notifyInternalError(USER_PROC_ERR, e.getMessage());
-            log.error("Error processing ",e);
-          }
-        }
+      Set<String> usedDirs = new HashSet<String>();
+
+      for(User u : users) {
+        if(fileDeliveriesHelper.isUserFromGroup(u.getLogin(), groupNumber))
+          processUser(u, usedDirs);
       }
 
-      fileDeliveriesHelper.cleanUnusedDirs(groupNumber, usersDirs);
+      cleanWorkDir(usedDirs);
+      cleanLastUpdateTimers(usedDirs);
 
-      Iterator<String> usageIds = lastUpdate.keySet().iterator();
-      while(usageIds.hasNext()) {
-        String n = usageIds.next();
-        if(!checkedUcps.contains(n)) {
-          usageIds.remove();
-        }
-      }
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       getMBean().notifyInternalError(UNKNOWN_ERR, e.getMessage());
       log.error(e,e);
     }
   }
 
   private boolean isUpdateIsNeeded(UserCPsettings ucps, String mapKey, long currentMillis) {
-
     Time now = new Time(currentMillis);
 
-    if(!now.isInInterval(ucps.getActivePeriodStart(), ucps.getActivePeriodEnd())) {
+    if(!now.isInInterval(ucps.getActivePeriodStart(), ucps.getActivePeriodEnd()))
       return false;
-    }
 
     Long lastUs = lastUpdate.get(mapKey);
     return !(lastUs != null && lastUs + (60L * ucps.getPeriodInMin() * 1000) > currentMillis);
-
   }
 
   ResourceProcessStrategy getStrategy(User u, File workDir, UserCPsettings ucps, FileResource resource) throws AdminException {
@@ -127,55 +132,49 @@ class MainLoopTask implements Runnable {
     }
   }
 
-  private void processUser(User u, Collection<String> checkedUcps, Collection<String> userDirs) throws AdminException {
+  private void processUser(User u, Collection<String> usedDirs) {
+    if(u.getCpSettings() ==null)
+      return;
 
-    if(u.getCpSettings()!=null) {
-      for(UserCPsettings ucps : u.getCpSettings()) {
-        try{
+    if(log.isDebugEnabled())
+      log.debug("Start process user="+u.getLogin()+" group="+groupNumber);
 
-          String mapKey = ucps.toString();
-          checkedUcps.add(mapKey);
+    for(UserCPsettings ucps : u.getCpSettings()) {
+      try {
+        File userDir = fileDeliveriesHelper.getUserLocalDir(u.getLogin(), ucps);
+        String mapKey = userDir.getName();
+        usedDirs.add(mapKey);
 
-          long currentMillis = System.currentTimeMillis();
+        long currentMillis = System.currentTimeMillis();
 
-          if (log.isDebugEnabled())
-            log.debug("Start: '" + ucps + "'. User: '" + u.getLogin() + "'...");
+        if (log.isDebugEnabled())
+          log.debug("Start: '" + ucps + "'.");
 
-          File userDir = fileDeliveriesHelper.getUserLocalDir(u.getLogin(), ucps);
+        if(!fileSys.exists(userDir))
+          fileSys.mkdirs(userDir);
 
-          if(!fileSys.exists(userDir)) {
-            fileSys.mkdirs(userDir);
-          }
-          userDirs.add(userDir.getName());
+        ResourceProcessStrategy strategy = getStrategy(u, userDir, ucps, fileDeliveriesHelper.getConnection(ucps));
 
-          ResourceProcessStrategy strategy = getStrategy(u, userDir, ucps, fileDeliveriesHelper.getConnection(ucps));
-
-          if(!isUpdateIsNeeded(ucps, mapKey, currentMillis) || !isCreationAvailable(u)) {
-            try {
-              strategy.process(false);
-            } catch (AdminException e) {
-              log.error(e,e);
-              getMBean().notifyInternalError(RESOURCE_PROC_ERR+": "+ucps,  e.getMessage());
-            }
-          } else {
-            try {
-              strategy.process(true);
-            } catch (AdminException e) {
-              log.error(e,e);
-              getMBean().notifyInternalError(RESOURCE_PROC_ERR+": "+ucps, e.getMessage());
-            }
-            lastUpdate.put(mapKey, currentMillis);
-          }
-
-          if (log.isDebugEnabled())
-            log.debug("Finish: '" + ucps + "'. User: '" + u.getLogin() + "'...");
-
-        }catch (Exception e) {
-          log.error(e, e);
+        boolean allowDeliveryCreation = isUpdateIsNeeded(ucps, mapKey, currentMillis) && isCreationAvailable(u);
+        try {
+          strategy.process(allowDeliveryCreation);
+        } catch (AdminException e) {
+          log.error(e,e);
           getMBean().notifyInternalError(RESOURCE_PROC_ERR+": "+ucps,  e.getMessage());
         }
+        if (allowDeliveryCreation)
+          lastUpdate.put(mapKey, currentMillis);
+
+        if (log.isDebugEnabled())
+          log.debug("Finish: '" + ucps + "'.");
+
+      } catch (Exception e) {
+        log.error(e, e);
+        getMBean().notifyInternalError(RESOURCE_PROC_ERR+": "+ucps,  e.getMessage());
       }
     }
-  }
 
+    if(log.isDebugEnabled())
+      log.debug("End process user="+u.getLogin()+" group="+groupNumber);
+  }
 }
