@@ -14,7 +14,8 @@ template < typename T > struct DynAllocPolicy
 };
 
 /// the interface is analogous to that of auto_ptr<T>,
-
+/// You should guarantee, that all threads using this object
+/// are finished before the dtor!
 template < typename T, class AllocPolicy = DynAllocPolicy< T > > class PerThreadData
 {
     static void destroyData( void* d ) {
