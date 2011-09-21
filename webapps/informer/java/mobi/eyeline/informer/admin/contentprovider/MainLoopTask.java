@@ -22,7 +22,6 @@ class MainLoopTask implements Runnable {
   private ContentProviderContext context;
   private FileSystem fileSys;
 
-  private static final String USER_PROC_ERR = "User processing error";
   private static final String RESOURCE_PROC_ERR = "Resource processing error";
   private static final String UNKNOWN_ERR = "Unknown error";
 
