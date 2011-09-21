@@ -154,6 +154,7 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
         int mT = cp.getInt("maxTimeSec", 0);
         settings.setCpMaxTimeSec(mT);
       }
+      //todo Если я в конфиге в параметре fileFormat напишу какую-нить ерунду, то CpFileFormat кинет IllegalArgumentException, который не перехватывается.
       settings.setCpFileFormat(fF == null || fF.length() == 0 ? CpFileFormat.EYELINE : CpFileFormat.valueOf(fF));
 
       XmlConfigSection cdr = webconfig.getSection("cdr");
