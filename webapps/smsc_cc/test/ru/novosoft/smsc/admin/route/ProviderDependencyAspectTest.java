@@ -48,6 +48,7 @@ public class ProviderDependencyAspectTest {
 
     List<Route> routes = settings.getRoutes();
     Route r = new Route("myRoute");
+    r.setSrcSmeId("123");
     r.setSources(Arrays.asList(new Source(new Address("+79139495113"))));
     r.setDestinations(Arrays.asList(new Destination(new Address("+79139495113"), "infosme")));
     r.setProviderId(223232L); // Invalid Provider id

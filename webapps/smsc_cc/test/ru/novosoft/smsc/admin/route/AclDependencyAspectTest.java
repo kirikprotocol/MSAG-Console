@@ -57,6 +57,7 @@ public class AclDependencyAspectTest {
 
     List<Route> routes = settings.getRoutes();
     Route r = new Route("myRoute");
+    r.setSrcSmeId("test");
     r.setSources(Arrays.asList(new Source(new Address("+79139495113"))));
     r.setDestinations(Arrays.asList(new Destination(new Address("+79139495113"), "infosme")));
     r.setAclId(223232); // Invalid Acl id
