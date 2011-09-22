@@ -96,6 +96,7 @@ public class SmeDependencyAspectTest {
     RouteSubjectSettings settings= m.getSettings();
 
     Route r = new Route("myRoute");
+    r.setSrcSmeId("123");
     r.setSources(Arrays.asList(new Source(new Address("+79139495113"))));
     r.setDestinations(Arrays.asList(new Destination(new Address("+79139495113"), "unknown sme")));
 
