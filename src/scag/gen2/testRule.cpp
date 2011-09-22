@@ -63,16 +63,45 @@ public:
     virtual void reloadConfig(scag2::config::ConfigType type) { abort(); }
     virtual void reloadAllConfigs() { abort(); }
 
-    virtual scag2::config::SmppManConfig& getSmppManConfig() { abort(); }
-    virtual scag2::config::RouteConfig& getRouteConfig() { abort(); }
-    virtual scag2::config::StatManConfig& getStatManConfig() { abort(); }
-    virtual scag2::config::BillingManagerConfig& getBillManConfig() { abort(); }
-    virtual scag2::config::SessionManagerConfig& getSessionManConfig() { abort(); }
-    virtual scag2::config::HttpManagerConfig& getHttpManConfig() { abort(); }
-    virtual scag2::config::PersClientConfig& getPersClientConfig() { abort(); }
-    virtual scag2::config::LongCallManagerConfig& getLongCallManConfig() { abort(); }
-    virtual scag2::config::LicenseInfo& getLicense() { abort(); }
-    virtual void checkLicenseFile() { abort(); }
+    virtual scag2::config::SmppManConfig& getSmppManConfig() {
+        abort(); 
+        return * static_cast<scag2::config::SmppManConfig*>(0);
+    }
+    virtual scag2::config::RouteConfig& getRouteConfig() {
+        abort(); 
+        return * static_cast<scag2::config::RouteConfig*>(0);
+    }
+    virtual scag2::config::StatManConfig& getStatManConfig() {
+        abort(); 
+        return * static_cast<scag2::config::StatManConfig*>(0);
+    }
+    virtual scag2::config::BillingManagerConfig& getBillManConfig() {
+        abort();
+        return * static_cast<scag2::config::BillingManagerConfig*>(0);
+    }
+    virtual scag2::config::SessionManagerConfig& getSessionManConfig() {
+        abort();
+        return * static_cast<scag2::config::SessionManagerConfig*>(0);
+    }
+    virtual scag2::config::HttpManagerConfig& getHttpManConfig() {
+        abort(); 
+        return * static_cast<scag2::config::HttpManagerConfig*>(0);
+    }
+    virtual scag2::config::PersClientConfig& getPersClientConfig() {
+        abort();
+        return * static_cast<scag2::config::PersClientConfig*>(0);
+    }
+    virtual scag2::config::LongCallManagerConfig& getLongCallManConfig() {
+        abort();
+        return * static_cast<scag2::config::LongCallManagerConfig*>(0);
+    }
+    virtual scag2::config::LicenseInfo& getLicense() {
+        abort();
+        return * static_cast<scag2::config::LicenseInfo*>(0);
+    }
+    virtual void checkLicenseFile() {
+        abort(); 
+    }
     
     virtual scag2::config::Config* getConfig() { return 0; }
 
@@ -816,6 +845,8 @@ public:
 
     virtual scag2::util::RefferGuard<router::RouteManager> getTestRouterInstance() {
         abort();
+        static scag2::util::RefferGuard<router::RouteManager> rm(Reffer<router::RouteManager>::Create(0));
+        return rm;
     }
     // virtual void ResetTestRouteManager(router::RouteManager* manager) = 0;
     virtual void getQueueLen( uint32_t& reqQueueLen,
@@ -1544,9 +1575,9 @@ public:
             ToBuf tb(buffer.get(),buffer.getSize());
             tb.fillFromHexDump( smsbuffer.get() );
         
-            smsc::smpp::SmppStream s;
-            assignStreamWith(&s,buffer.get(),tb.getPos(),true);
-            PduGuard pdu(smsc::smpp::fetchSmppPdu(&s));
+            smsc::smpp::SmppStream sss;
+            assignStreamWith(&sss,buffer.get(),tb.getPos(),true);
+            PduGuard pdu(smsc::smpp::fetchSmppPdu(&sss));
 
             smsc_log_info(log_,"--- smpp pdu created, dump follows ---");
 
