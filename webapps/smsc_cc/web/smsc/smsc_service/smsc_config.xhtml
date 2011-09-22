@@ -249,6 +249,21 @@
     </eye:inputText>
   </h:panelGrid>
 
+  <eye:collapsingGroup label="#{msg['profiler.notify.label']}">
+    <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
+      <h:outputText value="#{commonSettings.profilerNotifyHost}"/>
+      <eye:inputText value="#{smscConfig.commonConfig.profilerNotifyHost}" />
+
+      <h:outputText value="#{commonSettings.profilerNotifyPort}"/>
+      <eye:inputText value="#{smscConfig.commonConfig.profilerNotifyPort}" required="true">
+        <smsc:validatePort/>
+      </eye:inputText>
+
+      <h:outputText value="#{commonSettings.profilerNotifyDir}"/>
+      <eye:inputText value="#{smscConfig.commonConfig.profilerNotifyDir}" required="true"/>
+    </h:panelGrid>
+  </eye:collapsingGroup>
+
   <eye:collapsingGroup label="#{msg['profiler.ussdOpsMapping.label']}">
     <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
       <h:outputText value="#{commonSettings.profilerReportNone}"/>
@@ -564,20 +579,6 @@
         </h:panelGrid>
       </eye:collapsingGroup>
 
-      <eye:collapsingGroup label="#{msg['profiler.label']}">
-        <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{instanceSettings.agentHost}"/>
-          <eye:inputText value="#{var.agentHost}" required="true"/>
-
-          <h:outputText value="#{instanceSettings.agentPort}"/>
-          <eye:inputText value="#{var.agentPort}" required="true">
-            <smsc:validatePort/>
-          </eye:inputText>
-
-          <h:outputText value="#{instanceSettings.cacheDir}"/>
-          <eye:inputText value="#{var.cacheDir}" required="true"/>
-        </h:panelGrid>
-      </eye:collapsingGroup>
     </eye:collapsingGroup>
   </c:forEach>
 </h:panelGroup>

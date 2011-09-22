@@ -75,6 +75,9 @@ public class SmscConfigFileTest {
     assertEquals(12,cs.getMscFailureLimit());
     assertEquals(12,cs.getMscSingleAttemptTimeout());
     assertEquals("@localstore.dir@/msc.txt",cs.getMscStoreFile());
+    assertEquals("1", cs.getProfilerNotifyHost());
+    assertEquals(2, cs.getProfilerNotifyPort());
+    assertEquals("3", cs.getProfilerNotifyDir());
     assertEquals(51,cs.getProfilerConcatOff());
     assertEquals(50,cs.getProfilerConcatOn());
     assertEquals(3,cs.getProfilerDefault());
@@ -135,9 +138,6 @@ public class SmscConfigFileTest {
 
       assertEquals((i+1) + "", s.getAdminHost());
       assertEquals(i+2, s.getAdminPort());
-      assertEquals((i + 1) + "", s.getAgentHost());
-      assertEquals(i+2, s.getAgentPort());
-      assertEquals((i+1) + "", s.getCacheDir());
       assertEquals((i+1) + "", s.getCorePerfHost());
       assertEquals(i+2, s.getCorePerfPort());
       assertEquals((i+1)+ "", s.getLocalStoreFilename());

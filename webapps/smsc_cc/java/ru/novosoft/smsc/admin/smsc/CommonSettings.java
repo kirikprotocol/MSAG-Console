@@ -82,6 +82,11 @@ public class CommonSettings implements Cloneable {
   private int profilerProtocolId;
   private String profilerStoreFile;
 
+  //profiler.notify
+  private String profilerNotifyHost;
+  private int profilerNotifyPort;
+  private String profilerNotifyDir;
+
   //profiler.ussdOpsMapping
 
   private int profilerReportNone;
@@ -228,6 +233,11 @@ public class CommonSettings implements Cloneable {
     this.profilerProtocolId = s.profilerProtocolId;
     this.profilerStoreFile = s.profilerStoreFile;
 
+    //profiler.notify
+    this.profilerNotifyHost = s.profilerNotifyHost;
+    this.profilerNotifyPort = s.profilerNotifyPort;
+    this.profilerNotifyDir = s.profilerNotifyDir;
+
     //profiler.ussdOpsMapping
 
     this.profilerReportNone = s.profilerReportNone;
@@ -366,8 +376,14 @@ public class CommonSettings implements Cloneable {
     s.setInt("protocol_id", profilerProtocolId);
     s.setString("storeFile", profilerStoreFile);
 
+    //profiler.nofity
+    s = c.getOrCreateSection("profiler").getOrCreateSection("notify");
+    s.setString("host", profilerNotifyHost);
+    s.setInt("port", profilerNotifyPort);
+    s.setString("dir", profilerNotifyDir);
+
     //profiler.ussdOpsMapping
-    s = s.getOrCreateSection("ussdOpsMapping");
+    s = c.getOrCreateSection("profiler").getOrCreateSection("ussdOpsMapping");
 
     s.setInt("REPORT NONE", profilerReportNone);
     s.setInt("REPORT FULL", profilerReportFull);
@@ -505,8 +521,14 @@ public class CommonSettings implements Cloneable {
     profilerProtocolId = s.getInt("protocol_id");
     profilerStoreFile = s.getString("storeFile");
 
+    //profiler.notify
+    s = c.getSection("profiler").getSection("notify");
+    profilerNotifyHost = s.getString("host");
+    profilerNotifyPort = s.getInt("port");
+    profilerNotifyDir = s.getString("dir");
+
     //profiler.ussdOpsMapping
-    s = s.getSection("ussdOpsMapping");
+    s = c.getSection("profiler").getSection("ussdOpsMapping");
 
     profilerReportNone = s.getInt("REPORT NONE");
     profilerReportFull = s.getInt("REPORT FULL");
@@ -899,6 +921,30 @@ public class CommonSettings implements Cloneable {
   public void setSmppDefaultConnectionsLimit(int smppDefaultConnectionsLimit) throws AdminException {
     vh.checkPositive("smppDefaultConnectionsLimit", smppDefaultConnectionsLimit);
     this.smppDefaultConnectionsLimit = smppDefaultConnectionsLimit;
+  }
+
+  public String getProfilerNotifyHost() {
+    return profilerNotifyHost;
+  }
+
+  public void setProfilerNotifyHost(String agentHost) throws AdminException {
+    this.profilerNotifyHost = agentHost;
+  }
+
+  public int getProfilerNotifyPort() {
+    return profilerNotifyPort;
+  }
+
+  public void setProfilerNotifyPort(int agentPort) throws AdminException {
+    this.profilerNotifyPort = agentPort;
+  }
+
+  public String getProfilerNotifyDir() {
+    return profilerNotifyDir;
+  }
+
+  public void setProfilerNotifyDir(String cacheDir) throws AdminException {
+    this.profilerNotifyDir = cacheDir;
   }
 
   public String getProfilerSystemId() {
@@ -1410,6 +1456,11 @@ public class CommonSettings implements Cloneable {
     cs.profilerServiceType = profilerServiceType;
     cs.profilerProtocolId = profilerProtocolId;
     cs.profilerStoreFile = profilerStoreFile;
+
+    //profiler.notify
+    cs.profilerNotifyHost = profilerNotifyHost;
+    cs.profilerNotifyPort = profilerNotifyPort;
+    cs.profilerNotifyDir = profilerNotifyDir;
 
     //profiler.ussdOpsMapping
 

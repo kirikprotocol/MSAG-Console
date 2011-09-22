@@ -39,11 +39,7 @@ public class InstanceSettings implements Cloneable, Serializable {
 
   private int smppPort;
 
-  private String agentHost;
 
-  private int agentPort;
-
-  private String cacheDir;
 
   private String inmanHost;
 
@@ -71,9 +67,6 @@ public class InstanceSettings implements Cloneable, Serializable {
     localStoreMessIdFile = s.localStoreMessIdFile;
     smppHost = s.smppHost;
     smppPort = s.smppPort;
-    agentHost = s.agentHost;
-    agentPort = s.agentPort;
-    cacheDir = s.cacheDir;
     inmanHost = s.inmanHost;
     inmanPort = s.inmanPort;
   }
@@ -99,10 +92,6 @@ public class InstanceSettings implements Cloneable, Serializable {
     s = c.getSection("smpp");
     smppHost = s.getString("host" + instanceN);
     smppPort = s.getInt("port" + instanceN);
-    s = c.getSection("profiler").getSection("notify");
-    agentHost = s.getString("host" + instanceN);
-    agentPort = s.getInt("port" + instanceN);
-    cacheDir = s.getString("dir" + instanceN);
     s = c.getSection("inman");
     inmanHost = s.getString("host" + instanceN);
     inmanPort = s.getInt("port" + instanceN);
@@ -132,11 +121,6 @@ public class InstanceSettings implements Cloneable, Serializable {
     s = c.getOrCreateSection("smpp");
     s.setString("host" + instanceN, smppHost);
     s.setInt("port" + instanceN, smppPort);
-
-    s = c.getOrCreateSection("profiler").getOrCreateSection("notify");
-    s.setString("host" + instanceN, agentHost);
-    s.setInt("port" + instanceN, agentPort);
-    s.setString("dir" + instanceN, cacheDir);
 
     s = c.getOrCreateSection("inman");
     s.setString("host" + instanceN, inmanHost);
@@ -251,32 +235,7 @@ public class InstanceSettings implements Cloneable, Serializable {
     this.smppPort = smppPort;
   }
 
-  public String getAgentHost() {
-    return agentHost;
-  }
 
-  public void setAgentHost(String agentHost) throws AdminException {
-    vh.checkNotEmpty("agentHost", agentHost);
-    this.agentHost = agentHost;
-  }
-
-  public int getAgentPort() {
-    return agentPort;
-  }
-
-  public void setAgentPort(int agentPort) throws AdminException {
-    vh.checkPort("agentPort", agentPort);
-    this.agentPort = agentPort;
-  }
-
-  public String getCacheDir() {
-    return cacheDir;
-  }
-
-  public void setCacheDir(String cacheDir) throws AdminException {
-    vh.checkNotEmpty("cacheDir", cacheDir);
-    this.cacheDir = cacheDir;
-  }
 
   public String getInmanHost() {
     return inmanHost;
@@ -310,9 +269,6 @@ public class InstanceSettings implements Cloneable, Serializable {
     s.localStoreMessIdFile = localStoreMessIdFile;
     s.smppHost = smppHost;
     s.smppPort = smppPort;
-    s.agentHost = agentHost;
-    s.agentPort = agentPort;
-    s.cacheDir = cacheDir;
     s.inmanHost = inmanHost;
     s.inmanPort = inmanPort;
     return s;
