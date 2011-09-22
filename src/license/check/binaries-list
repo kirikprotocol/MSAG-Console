@@ -1,6 +1,5 @@
 license/testLicense testLicense \
   -llicense-check \
   @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
-  $(SSL_LIB)
-
+  $(SSL_LIB) $(SOCKETLIB)
 
