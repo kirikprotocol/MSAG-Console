@@ -3,7 +3,6 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
@@ -43,7 +42,6 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     this.context = context;
     this.user = opts.getUser();
     this.resource = resource;
-    FileSystem fileSys = context.getFileSystem();
     this.sourceAddr = opts.getSourceAddress();
     this.encoding = opts.getEncoding();
     if (encoding == null)
@@ -52,7 +50,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
     localCopy = new File(opts.getWorkDir(), "detailedLocalCopy");
 
-    helper = new SaveStrategyHelper(context, fileSys, user, opts);
+    helper = new SaveStrategyHelper(context, user, opts);
   }
 
 

@@ -20,22 +20,22 @@
 
       <h:panelGroup >
 
-      <eye:buttons>
+        <eye:buttons>
 
-        <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{cpFileEdit.save}" shortDesc="#{msg['cp.resource.save.desc']}">
-            <f:param name="userId" value="#{cpFileEdit.userId}"/>
-          </tr:commandLink>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="CP_RESOURCE_LIST" immediate="true" shortDesc="#{msg['cp.resource.cancel.desc']}"/>
-        </eye:button>
-        <eye:space/>
-        <eye:button>
-          <tr:commandLink text="#{msg['testconnect.button']}" action="#{cpFileEdit.verifyConnection}" shortDesc="#{msg['cp.resource.check.desc']}"/>
-        </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['done.button']}" action="#{cpFileEdit.save}" shortDesc="#{msg['cp.resource.save.desc']}">
+              <f:param name="userId" value="#{cpFileEdit.userId}"/>
+            </tr:commandLink>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['cancel.button']}" action="CP_RESOURCE_LIST" immediate="true" shortDesc="#{msg['cp.resource.cancel.desc']}"/>
+          </eye:button>
+          <eye:space/>
+          <eye:button>
+            <tr:commandLink text="#{msg['testconnect.button']}" action="#{cpFileEdit.verifyConnection}" shortDesc="#{msg['cp.resource.check.desc']}"/>
+          </eye:button>
 
-      </eye:buttons>
+        </eye:buttons>
 
         <h:inputHidden id="edit" value="#{cpFileEdit.edit}"/>
 
@@ -54,12 +54,20 @@
 
             <h:panelGrid style="padding-top: 5px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.workType']}"/>
-              <h:selectOneMenu id="workType" value="#{cpFileEdit.settings.workType}" onchange="typeChanged()">
+              <h:selectOneMenu id="workType" value="#{cpFileEdit.workType}" onchange="typeChanged()">
                 <f:selectItems value="#{cpFileEdit.workTypes}"/>
               </h:selectOneMenu>
 
-              <h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.createReports}"/>
-              <h:selectBooleanCheckbox id="createReports" value="#{cpFileEdit.settings.createReports}"/>
+              <h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.exportReports}"/>
+              <h:panelGrid columns="1" id="createReports">
+                <h:selectOneMenu id="reportType" value="#{cpFileEdit.reportType}"  onchange="reportChanged()">
+                  <f:selectItems value="#{cpFileEdit.reportTypes}"/>
+                </h:selectOneMenu>
+                <h:panelGrid columns="2" columnClasses="column100Width,columnTopLeftAlign">
+                  <h:outputText style="white-space: nowrap;" value="#{msg['user.edit.import.reportTimeout']}" id="reportTimeoutLabel"/>
+                  <h:inputText converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.reportTimeout']}" value="#{cpFileEdit.reportTimeout}" id="reportTimeout"/>
+                </h:panelGrid>
+              </h:panelGrid>
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.encoding']}"/>
               <h:selectOneMenu value="#{cpFileEdit.settings.encoding}">
@@ -136,7 +144,16 @@
           document.getElementById('createReportsLabel').style.display = disp;
         }
 
+        function reportChanged() {
+          var dt = document.getElementById('reportType');
+          var disp = dt.options[2].selected ? '' : 'none';
+          var e = document.getElementById('reportTimeout');
+          e.style.display = disp;
+          document.getElementById('reportTimeoutLabel').style.display = disp;
+        }
+
         typeChanged();
+        reportChanged();
 
       </script>
 

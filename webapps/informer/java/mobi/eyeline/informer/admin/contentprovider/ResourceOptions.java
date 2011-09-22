@@ -22,6 +22,7 @@ class ResourceOptions {
   UserCPsettings.Protocol protocol;
   String path;
   int maxTimeSec;
+  private Integer reportTimeoutMin;
 
 
   ResourceOptions(User u, File workDir, UserCPsettings s, int maxTimeSec) {
@@ -35,6 +36,11 @@ class ResourceOptions {
     this.protocol = s.getProtocol();
     this.path = s.getDirectory();
     this.maxTimeSec = maxTimeSec;
+    this.reportTimeoutMin = s.getReportTimeoutMin();
+  }
+
+  public Integer getReportTimeoutMin() {
+    return reportTimeoutMin;
   }
 
   public String getPath() {

@@ -32,6 +32,11 @@ public abstract class CPResourceEditController extends CPResourceController{
 
   protected UserCPsettings.Protocol protocol;
 
+  protected WorkType workType = WorkType.simple;
+  protected ReportType reportType = ReportType.none;
+
+  private int reportTimeout = 10;
+
   protected CPResourceEditController(UserCPsettings.Protocol protocol, Integer defaultPort) {
     this.protocol = protocol;
     settings.setProtocol(protocol);
@@ -51,6 +56,7 @@ public abstract class CPResourceEditController extends CPResourceController{
       message = getLocalizedString("cp.resource.edit.userNotFound");
     } else {
       try {
+        setWorkType();
         getConfig().verifyCPSettings(u, settings);
         message = getLocalizedString("cp.resource.edit.conn.verified");
         messageType = "info";
@@ -59,6 +65,17 @@ public abstract class CPResourceEditController extends CPResourceController{
       }
     }
     return null;
+  }
+
+  private void setWorkType() {
+    switch (workType) {
+      case simple: settings.setWorkType(UserCPsettings.WorkType.simple); break;
+      case detailed: switch (reportType) {
+        case final_only: settings.setCreateReports(true);
+        case none: settings.setWorkType(UserCPsettings.WorkType.detailed); break;
+        case period: settings.setWorkType(UserCPsettings.WorkType.detailed_period); settings.setReportTimeoutMin(reportTimeout);
+      }
+    }
   }
 
   protected void loadSettings() {
@@ -82,6 +99,11 @@ public abstract class CPResourceEditController extends CPResourceController{
               try {
                 if(id.equals(s.getHashId())) {
                   settings = s;
+                  switch (settings.getWorkType()) {
+                    case simple: workType = WorkType.simple; reportType = ReportType.none; break;
+                    case detailed: if(settings.isCreateReports()) reportType = ReportType.final_only; workType = WorkType.detailed; break;
+                    case detailed_period: reportType = ReportType.period; workType = WorkType.detailed; reportTimeout = settings.getReportTimeoutMin();break;
+                  }
                   found = true;
                   break;
                 }
@@ -95,9 +117,31 @@ public abstract class CPResourceEditController extends CPResourceController{
           }
         }
       }
-
     }
+  }
 
+  public WorkType getWorkType() {
+    return workType;
+  }
+
+  public void setWorkType(WorkType workType) {
+    this.workType = workType;
+  }
+
+  public ReportType getReportType() {
+    return reportType;
+  }
+
+  public void setReportType(ReportType reportType) {
+    this.reportType = reportType;
+  }
+
+  public int getReportTimeout() {
+    return reportTimeout;
+  }
+
+  public void setReportTimeout(int reportTimeout) {
+    this.reportTimeout = reportTimeout;
   }
 
   public String getMessageType() {
@@ -169,8 +213,8 @@ public abstract class CPResourceEditController extends CPResourceController{
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "cp.resource.edit.userNotFound");
       return null;
     }
+    setWorkType();
     try {
-
       List<UserCPsettings> ss = u.getCpSettings();
       if(ss == null) {
         ss = new ArrayList<UserCPsettings>(1);
@@ -192,7 +236,16 @@ public abstract class CPResourceEditController extends CPResourceController{
       return null;
     }
     return "CP_RESOURCE_LIST";
+  }
 
+
+  public List<SelectItem> getReportTypes() {
+    ReportType[] rts = ReportType.values();
+    List<SelectItem> ret = new ArrayList<SelectItem>(rts.length);
+    for(ReportType p : rts) {
+      ret.add(new SelectItem(p, getLocalizedString("cp.resource.report.type." + p.toString())));
+    }
+    return ret;
   }
 
   public String getUserId() {
@@ -209,5 +262,9 @@ public abstract class CPResourceEditController extends CPResourceController{
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public static enum ReportType {
+    none, final_only, period
   }
 }

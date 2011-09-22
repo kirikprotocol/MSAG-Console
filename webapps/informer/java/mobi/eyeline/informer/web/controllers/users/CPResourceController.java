@@ -43,10 +43,10 @@ public class CPResourceController extends InformerController{
   }
 
   public List<SelectItem> getWorkTypes() {
-    UserCPsettings.WorkType[] workTypes = UserCPsettings.WorkType.values();
+    WorkType[] workTypes = WorkType.values();
     List<SelectItem> ret = new ArrayList<SelectItem>(workTypes.length);
-    for(UserCPsettings.WorkType p : workTypes) {
-      ret.add(new SelectItem(p, getLocalizedString("cp.resource.workType." + p.toString())));
+    for(WorkType p : workTypes) {
+        ret.add(new SelectItem(p, getLocalizedString("cp.resource.workType." + p.toString())));
     }
     return ret;
   }
@@ -55,4 +55,8 @@ public class CPResourceController extends InformerController{
     return getConfig().isFtpServerDeployed();
   }
 
+
+  public static enum WorkType {
+    simple, detailed
+  }
 }

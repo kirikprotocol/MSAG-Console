@@ -31,9 +31,9 @@ class SaveStrategyHelper {
 
   private final ResourceOptions resourceOpts;
 
-  SaveStrategyHelper(ContentProviderContext context, FileSystem fileSys, User user, ResourceOptions opts) {
+  SaveStrategyHelper(ContentProviderContext context, User user, ResourceOptions opts) {
     this.context = context;
-    this.fileSys = fileSys;
+    this.fileSys = context.getFileSystem();
     this.user = user;
     this.resourceOpts = opts;
   }
@@ -247,8 +247,20 @@ class SaveStrategyHelper {
     fileSys.rename(src, dst);
   }
 
-  File[] listFiles(File dir) throws AdminException {
+  File[] listFiles(File dir) {
     return fileSys.listFiles(dir);
+  }
+
+  File[] listFiles(File dir, FileFilter filter) {
+    return fileSys.listFiles(dir, filter);
+  }
+
+  boolean isDirectory(File file) {
+    return fileSys.isDirectory(file);
+  }
+
+  void createNewFile(File file) throws AdminException {
+    fileSys.createNewFile(file);
   }
 
   boolean exists(File file) throws AdminException {

@@ -41,7 +41,12 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     User u = new User();
     u.setLogin(section.getName());
     u.setPassword(section.getString("password"));
-    u.setStatus(User.Status.valueOf(section.getString("status")));
+    String status = section.getString("status");
+    try{
+      u.setStatus(User.Status.valueOf(status));
+    }catch (IllegalArgumentException e) {
+      throw new UserException("illegal_user_status", status);
+    }
     u.setFirstName(section.getString("firstName"));
     u.setLastName(section.getString("lastName"));
     u.setPhone(new Address(section.getString("phone")));
@@ -71,7 +76,12 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       u.getRoles().add(User.INFORMER_USER_ROLE);
 
     u.setDeliveryDays(loadDeliveryDays(section));
-    u.setDeliveryType(User.DeliveryType.valueOf(section.getString("deliveryType")));
+    String dT = section.getString("deliveryType");
+    try{
+      u.setDeliveryType(User.DeliveryType.valueOf(dT));
+    }catch (IllegalArgumentException e) {
+      throw new UserException("illegal_delivery_type", dT);
+    }
     u.setTransactionMode(section.getBool("transactionMode", false));
     u.setRetryOnFail(section.getBool("retryOnFail", false));
     u.setPolicyId(section.getString("policyId", null));
@@ -94,10 +104,16 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       XmlConfigSection cpSectionsRoot = section.getSection(CP_SETTINGS_SECTION);
       for(XmlConfigSection s : cpSectionsRoot.sections()) {
         UserCPsettings ucps = new UserCPsettings();
-        UserCPsettings.Protocol protocol = UserCPsettings.Protocol.valueOf(s.getString("protocol","sftp"));
+        UserCPsettings.Protocol protocol;
+        String pr = s.getString("protocol","sftp");
+        try{
+          protocol = UserCPsettings.Protocol.valueOf(pr);
+        }catch (IllegalArgumentException e) {
+          throw new UserException("illegal_cp_protocol", pr);
+        }
         ucps.setProtocol(protocol);
         if(protocol!=UserCPsettings.Protocol.file) {
-          if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {        
+          if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {
             ucps.setHost(s.getString("host"));
             if(s.containsParam("port")) {ucps.setPort(s.getInt("port"));}
           }else {
@@ -107,8 +123,11 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
           ucps.setPassword(s.getString("password"));
         }
         String wT = s.getString("workType", null);
-        ucps.setWorkType(wT == null || wT.length() == 0 ? UserCPsettings.WorkType.detailed : UserCPsettings.WorkType.valueOf(wT));
-
+        try{
+          ucps.setWorkType(wT == null || wT.length() == 0 ? UserCPsettings.WorkType.detailed : UserCPsettings.WorkType.valueOf(wT));
+        }catch (IllegalArgumentException e) {
+          throw new UserException("illegal_cp_work_type", wT);
+        }
         String period = s.getString("activePeriodStart", null);
         ucps.setActivePeriodStart(new Time(period == null || period.length() == 0 ? "10:00:00" : period));
 
@@ -118,10 +137,16 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         period = s.getString("periodInMin", null);
         ucps.setPeriodInMin(period == null || period.length() == 0 ? 5 : Long.parseLong(period));
 
-        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       
+        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {
           ucps.setDirectory(s.getString("directory"));
         }
         ucps.setEncoding(s.getString("encoding","UTF-8"));
+        if(s.containsParam("reportPeriod")) {
+          int p = s.getInt("reportPeriod");
+          if(p > 0) {
+            ucps.setReportTimeoutMin(p);
+          }
+        }
         ucps.setWorkGroup(s.getString("workGroup", null));
         ucps.setPassiveMode(s.getBool("passiveMode", false));
         ucps.setSourceAddress(new Address(s.getString("sourceAddress")));
@@ -151,7 +176,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
   }
 
 
-  private List<Integer> loadDeliveryDays(XmlConfigSection section) throws XmlConfigException {
+  private List<Integer> loadDeliveryDays(XmlConfigSection section) throws XmlConfigException, AdminException {
     List<Integer> result = new ArrayList<Integer>();
     if (section.containsSection("DELIVERY_DAYS")) {
       XmlConfigSection daysSection = section.getSection("DELIVERY_DAYS");
@@ -159,7 +184,11 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
 
       for (XmlConfigParam p : params) {
         if (p.getBool()) {
-          result.add(Integer.valueOf(p.getName()));
+          try{
+            result.add(Integer.valueOf(p.getName()));
+          }catch (NumberFormatException e) {
+            throw new UserException("illegal_day_number", p.getName());
+          }
         }
       }
 
@@ -303,7 +332,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       section.addSection(s);
       s.setString("protocol",ucps.getProtocol().toString());
       if(ucps.getProtocol() != UserCPsettings.Protocol.file) {
-        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       
+        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {
           s.setString("host",ucps.getHost());
           if(ucps.getPort()!=null && ucps.getPort()!=0){
             s.setInt("port",ucps.getPort());
@@ -321,7 +350,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       s.setString("periodInMin", ucps.getPeriodInMin() == 0 ? "" : Long.toString(ucps.getPeriodInMin()));
       s.setString("activePeriodStart", ucps.getActivePeriodStart() == null ? "" : ucps.getActivePeriodStart().toString());
       s.setString("activePeriodEnd", ucps.getActivePeriodEnd() == null ? "" : ucps.getActivePeriodEnd().toString());
-      if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {               
+      if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {
         s.setString("directory",ucps.getDirectory());
       }
       s.setString("encoding",ucps.getEncoding());
@@ -333,6 +362,11 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       }
       s.setString("sourceAddress",ucps.getSourceAddress().getSimpleAddress());
       s.setString("name", ucps.getName());
+      if(ucps.getReportTimeoutMin() != null) {
+        s.setInt("reportPeriod", ucps.getReportTimeoutMin());
+      }else {
+        s.removeParam("reportPeriod");
+      }
     }
     return section;
   }

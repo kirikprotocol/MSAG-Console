@@ -331,6 +331,7 @@ public class UserTest {
     ucps.setActivePeriodEnd(new Time(20, 10, 10));
     ucps.setWorkType(UserCPsettings.WorkType.simple);
     ucps.setPeriodInMin(100);
+    ucps.setReportTimeoutMin(10);
 
     UserCPsettings ucpsn = new UserCPsettings(ucps);
     assertEquals(ucps,ucpsn);
@@ -398,6 +399,7 @@ public class UserTest {
     ucps.setActivePeriodEnd(new Time("12:00:00"));
     ucps.setActivePeriodStart(new Time("13:00:00"));
     ucps.setName("test!");
+    ucps.setReportTimeoutMin(10);
 
     UserCPsettings ucpsn = new UserCPsettings(ucps);
     assertEquals(ucps,ucpsn);

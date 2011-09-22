@@ -62,12 +62,20 @@
 
             <h:panelGrid style="padding-top: 5px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.workType']}"/>
-              <h:selectOneMenu id="workType" value="#{cpLocalFtpEdit.settings.workType}" onchange="typeChanged()">
+              <h:selectOneMenu id="workType" value="#{cpLocalFtpEdit.workType}" onchange="typeChanged()">
                 <f:selectItems value="#{cpLocalFtpEdit.workTypes}"/>
               </h:selectOneMenu>
 
-              <h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.createReports}"/>
-              <h:selectBooleanCheckbox id="createReports" value="#{cpLocalFtpEdit.settings.createReports}"/>
+              <h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.exportReports}"/>
+              <h:panelGrid columns="1" id="createReports">
+                <h:selectOneMenu id="reportType" value="#{cpLocalFtpEdit.reportType}"  onchange="reportChanged()">
+                  <f:selectItems value="#{cpLocalFtpEdit.reportTypes}"/>
+                </h:selectOneMenu>
+                <h:panelGrid columns="2" columnClasses="column100Width,columnTopLeftAlign">
+                  <h:outputText style="white-space: nowrap;" value="#{msg['user.edit.import.reportTimeout']}" id="reportTimeoutLabel"/>
+                  <h:inputText converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.reportTimeout']}" value="#{cpLocalFtpEdit.reportTimeout}" id="reportTimeout"/>
+                </h:panelGrid>
+              </h:panelGrid>
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.encoding']}"/>
               <h:selectOneMenu value="#{cpLocalFtpEdit.settings.encoding}">
@@ -140,7 +148,16 @@
           document.getElementById('createReportsLabel').style.display = disp;
         }
 
+        function reportChanged() {
+          var dt = document.getElementById('reportType');
+          var disp = dt.options[2].selected ? '' : 'none';
+          var e = document.getElementById('reportTimeout');
+          e.style.display = disp;
+          document.getElementById('reportTimeoutLabel').style.display = disp;
+        }
+
         typeChanged();
+        reportChanged();
 
       </script>
 

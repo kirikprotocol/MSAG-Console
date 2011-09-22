@@ -35,6 +35,8 @@ public class TestDcpConnection extends DcpConnection{
 
   private ScheduledExecutorService executor;
 
+  private int smsPerMin = 50;        //todo
+
   public TestDcpConnection() {
     executor = Executors.newSingleThreadScheduledExecutor();
     executor.scheduleWithFixedDelay(new Runnable() {
@@ -571,7 +573,7 @@ public class TestDcpConnection extends DcpConnection{
         }
       }
       for(Message m : toModify.values()) {
-        if(count<100) {
+        if(count<smsPerMin) {
           m = m.cloneMessage();
           ms.add(m);
           int rI= r.nextInt(10);

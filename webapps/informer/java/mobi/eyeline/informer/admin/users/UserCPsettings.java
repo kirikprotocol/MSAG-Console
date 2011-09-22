@@ -38,6 +38,8 @@ public class UserCPsettings implements Serializable {
   private String workGroup;
   private boolean passiveMode;
 
+  private Integer reportTimeoutMin;
+
   public UserCPsettings() {
   }
 
@@ -60,6 +62,7 @@ public class UserCPsettings implements Serializable {
     this.directoryMaxSize = other.directoryMaxSize;
     this.workGroup = other.workGroup;
     this.passiveMode = other.passiveMode;
+    this.reportTimeoutMin = other.reportTimeoutMin;
   }
 
   public String getWorkGroup() {
@@ -68,6 +71,14 @@ public class UserCPsettings implements Serializable {
 
   public void setWorkGroup(String workGroup) {
     this.workGroup = workGroup;
+  }
+
+  public Integer getReportTimeoutMin() {
+    return reportTimeoutMin;
+  }
+
+  public void setReportTimeoutMin(Integer reportTimeoutMin) {
+    this.reportTimeoutMin = reportTimeoutMin;
   }
 
   public boolean isPassiveMode() {
@@ -223,6 +234,7 @@ public class UserCPsettings implements Serializable {
     if (directory != null ? !directory.equals(that.directory) : that.directory != null) return false;
     if (workGroup != null ? !workGroup.equals(that.workGroup) : that.workGroup != null) return false;
     if(passiveMode != that.passiveMode) return false;
+    if (reportTimeoutMin != null ? !reportTimeoutMin.equals(that.reportTimeoutMin) : that.reportTimeoutMin != null) return false;
     if (encoding != null ? !encoding.equals(that.encoding) : that.encoding != null) return false;
     if (hashId != null ? !hashId.equals(that.hashId) : that.hashId != null) return false;
     if (host != null ? !host.equals(that.host) : that.host != null) return false;
@@ -248,6 +260,7 @@ public class UserCPsettings implements Serializable {
     result = 31 * result + (passiveMode ? 1 : 0);
     result = 31 * result + directoryMaxSize;
     result = 31 * result + (encoding != null ? encoding.hashCode() : 0);
+    result = 31 * result + (reportTimeoutMin != null ? reportTimeoutMin.hashCode() : 0);
     result = 31 * result + (sourceAddress != null ? sourceAddress.hashCode() : 0);
     result = 31 * result + (login != null ? login.hashCode() : 0);
     result = 31 * result + (password != null ? password.hashCode() : 0);
@@ -331,7 +344,7 @@ public class UserCPsettings implements Serializable {
     if(protocol != Protocol.localFtp) {
       if(directory==null || directory.length()==0) throw new UserException("ucps.directory.invalid");
     }
-    if(encoding==null || encoding.length()==0) throw new UserException("ucps.encoding.invalid");
+    if(reportTimeoutMin != null && reportTimeoutMin<=0) throw new UserException("ucps.reportTimeoutMin.invalid");
     if(sourceAddress==null) throw new UserException("ucps.sourceaddr.invalid");
     if(workType == null) throw new UserException("ucps.workType.invalid");
     if(periodInMin <= 0) throw new UserException("ucps.periodInMin.invalid");
@@ -346,6 +359,6 @@ public class UserCPsettings implements Serializable {
   }
 
   public enum WorkType {
-    simple, detailed
+    simple, detailed, detailed_period
   }
 }

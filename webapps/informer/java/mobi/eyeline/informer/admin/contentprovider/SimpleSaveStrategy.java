@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
@@ -44,10 +43,9 @@ class SimpleSaveStrategy implements ResourceProcessStrategy{
     this.user = opts.getUser();
     this.resource = resource;
     File workDir = opts.getWorkDir();
-    FileSystem fileSys = context.getFileSystem();
     this.sourceAddr = opts.getSourceAddress();
     this.encoding = opts.getEncoding();
-    helper = new SaveStrategyHelper(context, fileSys, user, opts);
+    helper = new SaveStrategyHelper(context, user, opts);
 
     if (!helper.exists(workDir))
       helper.mkdirs(workDir);
