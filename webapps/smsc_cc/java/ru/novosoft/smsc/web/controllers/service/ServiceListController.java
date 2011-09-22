@@ -5,10 +5,7 @@ import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
 import mobi.eyeline.util.jsf.components.data_table.model.ModelWithObjectIds;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.sme.SmeConnectType;
-import ru.novosoft.smsc.admin.sme.SmeServiceStatus;
-import ru.novosoft.smsc.admin.sme.SmeSmscStatus;
-import ru.novosoft.smsc.admin.sme.SmeSmscStatuses;
+import ru.novosoft.smsc.admin.sme.*;
 
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
@@ -175,6 +172,18 @@ public class ServiceListController extends ServiceController {
 
     public boolean isConnectedViaLoadBalancer() {
       return connectStatuses != null && connectStatuses.getConnectType() == SmeConnectType.VIA_LOAD_BALANCER;
+    }
+
+    public boolean isConnectedDirectly() {
+      SmeSmscStatus[] statuses = connectStatuses.getStatuses();
+      for (SmeSmscStatus st : statuses)
+        if (st.getConnectionStatus() == SmeConnectStatus.CONNECTED)
+          return true;
+      return false;
+    }
+
+    public boolean isConnected() {
+      return isConnectedDirectly() || isConnectedViaLoadBalancer();
     }
 
     public String getLoadBalancerStatus() {

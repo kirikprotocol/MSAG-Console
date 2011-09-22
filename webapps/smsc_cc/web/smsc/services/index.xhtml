@@ -24,18 +24,19 @@
 
         <eye:row>
 
-          <eye:column name="edit" title="" width="5%">
+          <eye:column name="edit" title="" width="1%">
             <h:commandLink action="SERVICE_EDIT" value="#{msg['services.page.edit']}">
               <f:param name="smeId" value="#{srv.systemId}"/>
             </h:commandLink>
           </eye:column>
 
-          <eye:column name="systemId" title="#{msg['services.page.systemId']}" sortable="true" width="55%" defaultSortOrder="asc">
-            <h:outputText value="#{srv.systemId}"/>
+          <eye:column name="connected" title="" sortable="false" width="1%">
+            <h:graphicImage value="/images/ic_internal.gif" rendered="#{srv.connected}"/>
+            <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{not srv.connected}"/>
           </eye:column>
 
-          <eye:column name="host" title="#{msg['services.page.host']}" width="10%" align="center">
-            <h:outputText value="#{srv.onlineHost}" rendered="#{srv.managed}" style="color:BLUE"/>
+          <eye:column name="systemId" title="#{msg['services.page.systemId']}" sortable="true" width="55%" defaultSortOrder="asc">
+            <h:outputText value="#{srv.systemId}"/>
           </eye:column>
 
           <eye:column name="status" title="#{msg['services.page.status']}" width="10%">
@@ -45,6 +46,10 @@
                 <h:outputText value="#{st}" style="color:GREEN"/><p/>
               </c:forEach>
             </h:panelGroup>
+          </eye:column>
+
+          <eye:column name="host" title="#{msg['services.page.host']}" width="10%" align="center">
+            <h:outputText value="#{srv.onlineHost}" rendered="#{srv.managed}" style="color:BLUE"/>
           </eye:column>
 
           <eye:column name="action" title="#{msg['services.page.action']}" width="20%">
