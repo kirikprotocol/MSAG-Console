@@ -91,7 +91,6 @@ public class RouteTraceController extends SettingsMController<RouteSubjectSettin
 
   public List<SelectItem> getSmes() {
     List<SelectItem> result = new ArrayList<SelectItem>();
-    result.add(new SelectItem(null, ""));
     try {
       List<String> smeIds = new ArrayList<String>(WebContext.getInstance().getSmeManager().smes().keySet());
       Collections.sort(smeIds);

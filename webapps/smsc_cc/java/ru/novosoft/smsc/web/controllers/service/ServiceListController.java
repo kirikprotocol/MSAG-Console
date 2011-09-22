@@ -175,6 +175,9 @@ public class ServiceListController extends ServiceController {
     }
 
     public boolean isConnectedDirectly() {
+      if (connectStatuses == null ||  connectStatuses.getConnectType() != SmeConnectType.DIRECT_CONNECT)
+        return false;
+
       SmeSmscStatus[] statuses = connectStatuses.getStatuses();
       for (SmeSmscStatus st : statuses)
         if (st.getConnectionStatus() == SmeConnectStatus.CONNECTED)
@@ -182,8 +185,16 @@ public class ServiceListController extends ServiceController {
       return false;
     }
 
+    public boolean isInternal() {
+      SmeSmscStatus[] statuses = connectStatuses.getStatuses();
+      for (SmeSmscStatus st : statuses)
+        if (st.getConnectionStatus() == SmeConnectStatus.INTERNAL)
+          return true;
+      return false;
+    }
+
     public boolean isConnected() {
-      return isConnectedDirectly() || isConnectedViaLoadBalancer();
+      return isConnectedDirectly() || isConnectedViaLoadBalancer() || isInternal();
     }
 
     public String getLoadBalancerStatus() {
@@ -194,14 +205,13 @@ public class ServiceListController extends ServiceController {
     }
 
     public List<String> getDirectStatuses() {
-      if (!isConnectedViaLoadBalancer())
-        return null;
-
       List<String> result = new ArrayList<String>();
 
       SmeSmscStatus[] statuses = connectStatuses.getStatuses();
-      for (SmeSmscStatus st : statuses)
-        result.add(st.getSmscInstanceNumber() + ": " + st.getBindMode() + " " + st.getPeerOut());
+      for (SmeSmscStatus st : statuses) {
+        if (st.getConnectionStatus() == SmeConnectStatus.CONNECTED)
+          result.add(st.getSmscInstanceNumber() + ": " + st.getBindMode() + " " + st.getPeerOut());
+      }
       return result;
     }
 

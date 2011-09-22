@@ -79,6 +79,11 @@
     </resource-bundle>
 
     <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.sme.SmeConnectType</base-name>
+      <var>smeConnectType</var>
+    </resource-bundle>
+
+    <resource-bundle>
       <base-name>ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonSettings</base-name>
       <var>archiveDaemonBundle</var>
     </resource-bundle>

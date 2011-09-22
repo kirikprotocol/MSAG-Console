@@ -17,9 +17,9 @@ public class CCSme {
   public static final int BIND_MODE_TRX=2;
   public static final int BIND_MODE_UNKNOWN=3;
 
-  public static final int SME_STATUS_DISCONNECTED=0;
-  public static final int SME_STATUS_BOUND=1;
-  public static final int SME_STATUS_INTERNAL=2;
+  public static final int SME_STATUS_DISCONNECTED=1;
+  public static final int SME_STATUS_BOUND=2;
+  public static final int SME_STATUS_INTERNAL=3;
   public static final int SME_STATUS_UNKNOWN=4;
 
 

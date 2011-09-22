@@ -9,6 +9,10 @@
 
   <ui:param name="pageTitle" value="#{msg['services.page.title']}"/>
 
+  <ui:define name="styles">
+    .statusColumn {white-space: nowrap}
+  </ui:define>
+
   <ui:define name="content">
 
     <h:form id="services" rendered="#{!service.outOfDate}">
@@ -35,17 +39,18 @@
             <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{not srv.connected}"/>
           </eye:column>
 
-          <eye:column name="systemId" title="#{msg['services.page.systemId']}" sortable="true" width="55%" defaultSortOrder="asc">
+          <eye:column name="systemId" title="#{msg['services.page.systemId']}" sortable="true" width="45%" defaultSortOrder="asc">
             <h:outputText value="#{srv.systemId}"/>
           </eye:column>
 
-          <eye:column name="status" title="#{msg['services.page.status']}" width="10%">
-            <h:outputText value="LB #{srv.loadBalancerStatus}" rendered="#{srv.connectedViaLoadBalancer}" style="color: GREEN"/>
-            <h:panelGroup rendered="#{!srv.connectedViaLoadBalancer}">
+          <eye:column name="status" title="#{msg['services.page.status']}" width="20%">
+            <h:outputText value="LB: #{srv.loadBalancerStatus}" rendered="#{srv.connectedViaLoadBalancer}" style="color: GREEN"/>
+            <h:panelGroup rendered="#{srv.connectedDirectly}">
               <c:forEach items="#{srv.directStatuses}" var="st">
-                <h:outputText value="#{st}" style="color:GREEN"/><p/>
+                <h:outputText value="SMSC #{st}" style="color:GREEN"/><br/>
               </c:forEach>
             </h:panelGroup>
+            <h:outputText value="Internal" rendered="#{srv.internal}" style="color: GREEN"/>
           </eye:column>
 
           <eye:column name="host" title="#{msg['services.page.host']}" width="10%" align="center">
