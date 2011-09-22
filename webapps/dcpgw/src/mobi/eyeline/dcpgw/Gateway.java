@@ -53,7 +53,7 @@ public class Gateway extends Thread implements PDUListener {
     private static int recend_receipts_timeout;
     private static int recend_receipts_max_timeout;
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
     private static SimpleDateFormat sdf2 = new SimpleDateFormat("ddHHmmss");
     private static Calendar cal = Calendar.getInstance();
     private static AtomicInteger ai = new AtomicInteger(0);
@@ -64,11 +64,9 @@ public class Gateway extends Thread implements PDUListener {
 
     private static Hashtable<String, Sender> user_senders_map;
 
-    // Подключение к информеру
     private static String informer_host;
     private static int informer_port;
 
-    // Конфигурация шлюза
     private static ConfigurationManager cm;
     private static Properties config;
     private static Hashtable<String, String> user_password_table;
@@ -107,7 +105,7 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        // Инициализируем сервер обновляющий конфигурацию.
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
         String update_config_server_host = config.getProperty("update.config.server.host");
 
         String s = Utils.getProperty(config, "update.config.server.port");
@@ -120,10 +118,10 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        // Инициализируем журнал.
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
         int max_journal_size_mb = Utils.getProperty(config, "max.journal.size.mb", 10);
         String journal_dir = Utils.getProperty(config, "journal.dir", System.getProperty("user.dir")+File.separator+"journal");
-        journal = new Journal(journal_dir, max_journal_size_mb);
+        journal = new Journal(new File(journal_dir), max_journal_size_mb);
 
         try {
             sequence_number_receipt_table = journal.load();
@@ -132,7 +130,7 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        // Инициализируем smpp сервер.
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ smpp пїЅпїЅпїЅпїЅпїЅпїЅ.
 
         PDUListenerImpl pduListener = new PDUListenerImpl();
 
@@ -140,7 +138,7 @@ public class Gateway extends Thread implements PDUListener {
 
         smppServer = new ConfigurableInRuntimeSmppServer(config, this);
 
-        // Инициализируем детектор отслеживающий отчеты о доставке.
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
         String final_log_dir = Utils.getProperty(config, "final.log.dir", user_dir + File.separator + "final_log");
 
         fileSystem = FileSystem.getFSForSingleInst();
@@ -156,7 +154,7 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        // Инициализируем планировщик ответственный за передоставку отчетов о доставке.
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 
         int recend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
 
@@ -176,7 +174,7 @@ public class Gateway extends Thread implements PDUListener {
 
         long clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
 
-        // Инициализируем планировщик ответственный за отчистку журнала
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         ScheduledExecutorService clean_journal_scheduler = Executors.newSingleThreadScheduledExecutor();
         clean_journal_scheduler.scheduleWithFixedDelay(new Runnable() {
 
@@ -189,7 +187,7 @@ public class Gateway extends Thread implements PDUListener {
 
         }, clean_journal_timeout, clean_journal_timeout, TimeUnit.MILLISECONDS);
 
-        // Инициализируем параметры информера
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         s = config.getProperty("informer.host");
         if (s != null && !s.isEmpty()){
             informer_host = s;

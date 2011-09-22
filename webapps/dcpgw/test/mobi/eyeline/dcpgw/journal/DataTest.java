@@ -1,10 +1,9 @@
 package mobi.eyeline.dcpgw.journal;
 
-import test.TestConfigurationManager;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import test.Test;
+import test.T;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,18 +11,19 @@ import test.Test;
  * Date: 17.09.11
  * Time: 20:11
  */
-public class DataTest extends Test {
+public class DataTest extends T {
 
-    private static Data d;
+    private static Data d1, d2;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        d = TestConfigurationManager.getData();
+        d1 = createStaticData();
+        d2 = createStaticData();
     }
 
     @org.junit.Test
     public void writeTest() throws Exception {
-        Assert.assertEquals("Data.equals() doesn't work", d, d);
+        Assert.assertTrue(d1.equals(d2));
     }
 
     @AfterClass

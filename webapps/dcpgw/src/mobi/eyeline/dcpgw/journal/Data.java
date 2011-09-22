@@ -4,7 +4,6 @@ import mobi.eyeline.dcpgw.FinalMessageState;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -42,7 +41,7 @@ public class Data {
 
     private Status status;
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
     private static Calendar cal = Calendar.getInstance();
 
@@ -174,12 +173,10 @@ public class Data {
         String[] ar = line.split(separator);
 
         Date date = sdf.parse(ar[0]);
-        cal.setTime(date);
-        long first_sending_time = cal.getTimeInMillis();
+        long first_sending_time = date.getTime();
 
         date = sdf.parse(ar[1]);
-        cal.setTime(date);
-        long last_resending_time = cal.getTimeInMillis();
+        long last_resending_time = date.getTime();
 
         long message_id = Long.parseLong(ar[2]);
         int sequence_number = Integer.parseInt(ar[3]);
@@ -225,7 +222,7 @@ public class Data {
                 sequence_number == data.getSequenceNumber() &&
                 status == data.getStatus() &&
                 state == data.getFinalMessageState()
-                ) ? true : false;
+        );
     }
 
 }

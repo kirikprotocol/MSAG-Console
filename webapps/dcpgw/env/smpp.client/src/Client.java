@@ -36,8 +36,6 @@ public class Client extends Thread implements PDUListener {
 
     private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private FinalLogGenerator finalLogGenerator;
-
     private int counter=0;
 
     private boolean generate_final_log = false;
@@ -65,13 +63,6 @@ public class Client extends Thread implements PDUListener {
         validity_period = Long.parseLong(config.getProperty("validity.period"));
 
         message = config.getProperty("message");
-
-        if (config.getProperty("final.log.dir") != null){
-            final_log_dir = new File(config.getProperty("final.log.dir"));
-            finalLogGenerator = new FinalLogGenerator(final_log_dir);
-            generate_final_log = true;
-            logger.debug("Set generate final log variable value to true.");
-        }
 
         logger.debug("Start smpp client.");
     }
@@ -122,7 +113,6 @@ public class Client extends Thread implements PDUListener {
                 long message_id = Long.parseLong(message_id_str);
                 logger.debug("message_id="+message_id);
 
-                //if (generate_final_log) finalLogGenerator.writeFinalState(message_id);
         }
         return false;
     }

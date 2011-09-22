@@ -92,8 +92,8 @@
   <target name="compile.sources">
     <delete dir="${dcpgw.source.classes}" failonerror="false"/>
     <mkdir dir="${dcpgw.source.classes}"/>
-    <javac srcdir="java" destdir="${dcpgw.source.classes}" classpathref="lib" debug="true" source="1.5"/>
-    <native2ascii src="java" dest="${dcpgw.source.classes}" ext=".properties" includes="**/*.properties"/>
+    <javac srcdir="src" destdir="${dcpgw.source.classes}" classpathref="lib" debug="true" source="1.5"/>
+    <native2ascii src="src" dest="${dcpgw.source.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
 
   <target name="compile.tests" depends="compile.sources">
@@ -106,7 +106,7 @@
     <copy todir="${dcpgw.test.classes}">
       <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml,**/*.csv,**/*.log"/>
     </copy>
-    <native2ascii src="java" dest="${dcpgw.source.classes}" ext=".properties" includes="**/*.properties"/>
+    <native2ascii src="src" dest="${dcpgw.source.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
 
   <target name="test" depends="compile.tests">

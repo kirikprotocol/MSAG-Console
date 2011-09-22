@@ -32,19 +32,22 @@ public class Journal {
 
     private Calendar cal = Calendar.getInstance();
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
-    public Journal(String journal_dir, int max_journal_size_mb) throws InitializationException{
+    public Journal(File journal_dir, int max_journal_size_mb) throws InitializationException{
         this.max_journal_size_mb = max_journal_size_mb;
 
-        File dir = new File(journal_dir);
-        j1 = new File(dir, "j1.csv");
-        j2 = new File(dir, "j2.csv");
-        j2t = new File(dir, "j2.csv.tmp");
+        if (!journal_dir.exists()) {
+            if (!journal_dir.mkdir()) throw new InitializationException("Couldn't create journal directory.");
+        }
 
-        if (!dir.exists()){
+        j1 = new File(journal_dir, "j1.csv");
+        j2 = new File(journal_dir, "j2.csv");
+        j2t = new File(journal_dir, "j2.csv.tmp");
+
+        if (!journal_dir.exists()){
             log.debug("Detected that journal directory doesn't exist.");
-            if (dir.mkdir()){
+            if (journal_dir.mkdir()){
                 log.debug("Successfully create journal directory.");
             } else {
                 log.error("Couldn't create journal directory, check permissions.");
@@ -170,7 +173,6 @@ public class Journal {
 
                 Set<Long> message_ids = new HashSet<Long>();
 
-                // Читаем очищаемый файл первый раз, чтобы запомнить message_id-ы сообщений, которые уже отработаны.
                 buffReader1 = new BufferedReader (new FileReader(j2));
                 String line;
                 while((line = buffReader1.readLine()) != null){
@@ -188,7 +190,6 @@ public class Journal {
                 }
                 buffReader1.close();
 
-                // Читаем второй раз, при этом копируя не отработанные записи во временный файл.
                 int counter = 0;
                 buffReader2 = new BufferedReader (new FileReader(j2));
                 while((line = buffReader2.readLine()) != null){
@@ -245,16 +246,12 @@ public class Journal {
 
         Hashtable<Integer, Data> table = new Hashtable<Integer, Data>();
 
-        // Проверяем существует ли временный файл, если он существует, значит шлюз закончил работу не стандартно во время
-        // очистки журнала.
         if (j2t.exists()){
             log.debug("Detected that file '"+j2t.getName()+"' exist.");
-            // Проверяем существует ли файл, который чистится.
+
             if (j2.exists()){
                 log.debug("Detected that file '"+j2.getName()+"' exist.");
-                // Если файл, который чистится существует, значит шлюз закончил работу во время выбора не отработанных
-                // записей. При этом не все не отработанные записи могли быть перенесены во временный файл, поэтому
-                // файл который используется для чистки нужно чистить еще раз, временный файл нужно удалить.
+
                 if (j2t.delete()){
                     log.debug("Successfully delete file '"+j2t+"'.");
                 } else {
@@ -263,9 +260,7 @@ public class Journal {
                 }
             } else {
                 log.debug("Detected that file '"+j2.getName()+"' doesn't exist.");
-                // Если файла, который чистится нет, а временный есть, то шлюз прекратил работу в тот момент, когда
-                // все не отработанные записи были уже перенесены во временный файл, а файл который чистится был удален.
-                // Поэтому надо временный файл, переименовать в файл, который чистится.
+
                 if (j2t.renameTo(j2)){
                     log.debug("Successfully rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
                 } else {

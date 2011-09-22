@@ -30,7 +30,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
     private static Logger log = Logger.getLogger(DeliveryChangeListenerImpl.class);
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
     @Override
     public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {

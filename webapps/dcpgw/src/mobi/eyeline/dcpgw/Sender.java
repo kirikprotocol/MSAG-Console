@@ -49,7 +49,7 @@ public class Sender extends Thread{
 
     private Calendar cal = Calendar.getInstance();
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
     public Sender(String host, int port, final String login, String password, int capacity, long sending_timeout, SmppServer smppServer){
         this.host = host;
