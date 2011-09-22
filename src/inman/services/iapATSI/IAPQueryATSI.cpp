@@ -31,16 +31,13 @@ const IAPQueryATSI::TypeString_t IAPQueryATSI::_qryType("IAPQueryATSI");
 // -------------------------------------------------------
 //Starts query execution, in case of success switches FSM to qryStarted state,
 //otherwise to qryDone state.
-IAPQStatus::Code
-  IAPQueryATSI::start(Logger * use_log/* = NULL*/) /*throw()*/
+IAPQueryAC::ProcResult_e  IAPQueryATSI::start(void) /*throw()*/
 {
-  if (use_log)
-    _logger = use_log;
-
   //MAP_ATSI serves only ISDN International numbers
   if (!_abId.interISDN() || !_cfg.hasCSI()) {
-    setStage(qryDone);
-    return (_qStatus = IAPQStatus::iqBadArg);
+    _qStatus = IAPQStatus::iqBadArg;
+    setStageNotify(qryDone);
+    return IAPQueryAC::procNeedReport;
   }
 
   try {
@@ -49,55 +46,30 @@ IAPQStatus::Code
     /* - */
   } catch (const std::exception & exc) {
     smsc_log_error(_logger, "%s(%s): %s", taskName(), _abId.getSignals(), exc.what());
+    _qStatus = IAPQStatus::iqError;
     _exc = exc.what();
-    setStage(qryDone);
     if (_mapDlg.get())
       _mapDlg->unbindUser();
-    return (_qStatus = IAPQStatus::iqError);
+    setStageNotify(qryDone);
+    return IAPQueryAC::procNeedReport;
   }
   setStage(qryStarted);
-  return (_qStatus = IAPQStatus::iqOk);
+  _qStatus = IAPQStatus::iqOk;
+  return IAPQueryAC::procOk;
 }
 
-//Cancels query execution, switches FSM to qryDone state.
-//Note: Listeners aren't notified.
-//Returns false if listener is already targeted and query
-//waits for its mutex.
-bool IAPQueryATSI::cancel(void) /*throw()*/
+//Blocks until all used resources are released.
+//Called only at qryStoppping state.
+IAPQueryAC::ProcResult_e IAPQueryATSI::finalize(void) /*throw()*/
 {
-  if (hasListenerAimed())
-    return false;
+  while (_mapDlg.get() && !_mapDlg->unbindUser())
+    wait();  //sleep while MAPDlg refers this query
 
-  if (getStage() < qryStopping)
-    setStage(qryStopping);
+  if (_mapDlg.get())
+    _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
 
-  if (getStage() < qryDone) {
-    while (_mapDlg.get() && !_mapDlg->unbindUser())
-      wait(); //sleep while MAPDlg refers this query
-
-    if (_mapDlg.get())
-      _mapDlg->endDialog(); //end dialog if it's still active, release TC Dialog
-
-    _lsrList.clear();
-    _qStatus = IAPQStatus::iqCancelled;
-    setStageNotify(qryDone);
-  }
-  return true;
-}
-
-//Returns true if query object may be released.
-//Note: should be at least equal to isCompleted()
-bool IAPQueryATSI::isToRelease(void) /*throw()*/
-{
-  return isCompleted() && (!_mapDlg.get() || _mapDlg->unbindUser());
-}
-
-//Releases all used resources. May be called only at qryDone state.
-//Switches FSM to qryIdle state.
-void IAPQueryATSI::cleanup(void) /*throw()*/
-{
   _mapDlg.clear();
-  _stages.clear();
+  return IAPQueryAC::procOk;
 }
 
 // -------------------------------------------------------
@@ -159,43 +131,28 @@ ObjAllcStatus_e
       smsc_log_error(_logger, "%s(%s): query failed: code 0x%x, %s",
                       taskName(), _abId.getSignals(), err_code, _exc.c_str());
     }
-    setStage(qryReporting);
-    _owner->onQueryEvent(_abId);
+    setStageNotify(qryReporting);
   }
+  reportThis();
   return ObjFinalizerIface::objActive;
 }
 
 /* ************************************************************************** *
  * class IAPQueriesPoolATSI implementation:
  * ************************************************************************** */
-void IAPQueriesPoolATSI::init(const IAPQueryATSI_CFG & use_cfg)
-{
-  MutexGuard grd(_sync);
-  _cfg = use_cfg;
-}
-
 // ------------------------------------------
 // -- IAPQueriesPoolIface interface methods
 // ------------------------------------------
-void IAPQueriesPoolATSI::reserveObj(IAPQueryId num_obj) /*throw()*/
+IAPQueryRef IAPQueriesPoolATSI::allcQuery(void)
 {
-  MutexGuard  grd(_sync);
-  return _objPool.reserve(num_obj);
-}
-
-IAPQueryAC * IAPQueriesPoolATSI::allcQuery(void)
-{
-  MutexGuard  grd(_sync);
-  IAPQueryATSI * pQry = _objPool.allcObj();
-  if (pQry)
-    pQry->configure(_cfg);
+  IAPQueryRef pQry = mObjPool.allcObj();
+  if (pQry.empty()) {
+    smsc_log_error(mLogger, "%s: pool is exhausted: %u of %u", IAPQueryATSI::_qryType.c_str(),
+                   (unsigned)mObjPool.usage(), (unsigned)mObjPool.capacity());
+  } else {
+    (static_cast <IAPQueryATSI*>(pQry.get()))->configure(mCfg, mLogger);
+  }
   return pQry;
-}
-
-void IAPQueriesPoolATSI::rlseQuery(IAPQueryAC & use_qry)
-{
-  MutexGuard  grd(_sync);
-  _objPool.rlseObj(static_cast<QueriesPool::PooledObj&>(use_qry));
 }
 
 } //atih

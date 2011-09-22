@@ -17,9 +17,6 @@ namespace inman {
 namespace iaprvd {
 namespace sri {
 
-using smsc::inman::ICServiceAC_T;
-using smsc::inman::iaprvd::IAProviderAC;
-
 struct IAPrvdSRI_CFG {
   uint16_t      _maxThreads;
   TCAPUsr_CFG   _sriCfg;
@@ -33,8 +30,8 @@ struct IAPrvdSRI_CFG {
 };
 
 
-class ICSIAPrvdSRI : public ICServiceAC_T<IAProviderSRI_XCFG>,
-                      public IAProviderAC {
+class ICSIAPrvdSRI : public smsc::inman::ICServiceAC_T<IAProviderSRI_XCFG>
+                    , public smsc::inman::iaprvd::IAProviderAC {
 private:
   mutable Mutex     _sync;
   const char *      _logId; //logging prefix
@@ -59,8 +56,8 @@ public:
 
   ICSIAPrvdSRI(std::auto_ptr<IAProviderSRI_XCFG> & use_cfg,
                const ICServicesHostITF * svc_host, Logger * use_log = NULL)
-    : ICServiceAC_T<IAProviderSRI_XCFG>(ICSIdent::icsIAPrvdSRI, svc_host, use_cfg, use_log)
-    , IAProviderAC(_iapProperty), _logId("iapSRI"), _cfg(*use_cfg.get())
+    : smsc::inman::ICServiceAC_T<IAProviderSRI_XCFG>(ICSIdent::icsIAPrvdSRI, svc_host, use_cfg, use_log)
+    , smsc::inman::iaprvd::IAProviderAC(_iapProperty), _logId("iapSRI"), _cfg(*use_cfg.get())
     , _qrsFclt("iapSRI", use_log)
   {
     _icsDeps = use_cfg->_deps;
@@ -75,7 +72,7 @@ public:
   // -- ICServiceAC_T interface methods
   // ----------------------------------
   //Returns IAProviderAC
-  virtual void * Interface(void) const { return (IAProviderAC *)this; }
+  virtual void * Interface(void) const { return (smsc::inman::iaprvd::IAProviderAC *)this; }
 
   // ----------------------------------
   // -- IAProviderAC interface methods

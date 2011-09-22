@@ -13,6 +13,20 @@ namespace iaprvd {
 /* ************************************************************************** *
  * class IAPQueryAC implementation:
  * ************************************************************************** */
+const char * IAPQueryAC::nmStage(ProcStage_e use_val)
+{
+  switch (use_val) {
+  case qryIdle:       return "qryIdle";
+  case qryStarted:    return "qryStarted";
+  case qryResulted:   return "qryResulted";
+  case qryReporting:  return "qryReporting";
+  case qryStopping:   return "qryStopping";
+  case qryDone:       return "qryDone";
+  default:;
+  }
+  return "unknown";
+}
+
 void IAPQueryAC::init(IAPQueryRefereeIface & use_owner, const AbonentId & ab_id)
 {
   _owner = &use_owner;
@@ -25,7 +39,38 @@ void IAPQueryAC::init(IAPQueryRefereeIface & use_owner, const AbonentId & ab_id)
   _exc.clear();
   ++_usage;
   mkTaskName();
-  _logger = Logger::getInstance(IAPROVIDER_DFLT_LOGGER);
+  if (!_logger)
+    _logger = Logger::getInstance(IAPROVIDER_DFLT_LOGGER);
+}
+
+//Cancels query execution, switches FSM to qryStopping/qryDone state.
+//If argument 'do_wait' is set, blocks until qryStopping/qryDone state
+//is reached. Note: Listeners aren't notified.
+//Returns false if listener is already targeted and query waits for its mutex.
+IAPQueryAC::ProcResult_e
+  IAPQueryAC::cancel(bool do_wait) /*throw()*/
+{
+  while (hasListenerAimed()) { //qryReporting stage
+    if (!do_wait)
+      return IAPQueryAC::procLater;
+    this->wait();
+  }
+
+  if (getStage() == qryDone)
+    return IAPQueryAC::procOk;
+
+  if (getStage() == qryStopping) {
+    if (do_wait) {
+      finalize(); //blocks until all resources are released
+      setStageNotify(qryDone);
+    }
+    return IAPQueryAC::procOk;
+  }
+  //here getStage() < qryStopping
+  _lsrList.clear();
+  _qStatus = IAPQStatus::iqCancelled;
+  setStageNotify(qryStopping);
+  return IAPQueryAC::procNeedReport;
 }
 
 void IAPQueryAC::mkTaskName(void)
@@ -36,35 +81,47 @@ void IAPQueryAC::mkTaskName(void)
   _tName += buf;
 }
 
-bool IAPQueryAC::addListener(IAPQueryListenerITF & pf_cb)
+//Returns:
+// 'procOk'    - if listener is registered and will be notified as query yelds result.
+// 'procLater' - if query is stopping/already completed.
+IAPQueryAC::ProcResult_e
+  IAPQueryAC::addListener(IAPQueryListenerITF & pf_cb)
 {
-  _lsrList.push_back(ListenerInfo(&pf_cb));
+  IAPQueryAC::ProcResult_e res = IAPQueryAC::procOk;
+
   if (_stages._current <= qryReporting)
-    return true;
-  _stages.rollback(qryReporting, qryDone);
+    _lsrList.push_back(ListenerInfo(&pf_cb));
+  else
+    res = IAPQueryAC::procLater;
+
   this->notify();
-  return false;
+  return res;
 }
 
-//returns false if listener is already targeted and query waits for it mutex.
-bool IAPQueryAC::removeListener(IAPQueryListenerITF & pf_cb)
+//Returns:
+// 'procOk'    - if succeeded.
+// 'procLater' - if listener is already targeted and query waits for its mutex.
+IAPQueryAC::ProcResult_e
+  IAPQueryAC::removeListener(IAPQueryListenerITF & pf_cb)
 {
   QueryListeners::iterator it = _lsrList.begin();
   for (; it != _lsrList.end(); ++it) {
     if (it->_ptr == &pf_cb) {
       if (it->_isAimed)
-        return false;
+        return IAPQueryAC::procLater;
       _lsrList.erase(it);
-      return true;
+      return IAPQueryAC::procOk;
     }
   }
-  return true;
+  return IAPQueryAC::procOk;
 }
 
-void IAPQueryAC::notifyListeners(void) /*throw()*/
+//Is called by query referee.
+IAPQueryAC::ProcResult_e
+  IAPQueryAC::notifyListeners(void) /*throw()*/
 {
-  if (getStage() == qryDone)
-    return;
+  if (getStage() > qryReporting)
+    return IAPQueryAC::procOk;
 
   while (!_lsrList.empty() && (getStage() == qryReporting)) {
     QueryListeners::iterator it = _lsrList.begin();
@@ -88,8 +145,11 @@ void IAPQueryAC::notifyListeners(void) /*throw()*/
         _lsrList.splice(_lsrList.end(), _lsrList, _lsrList.begin());
     }
   }
-  setStage(qryDone);
-  _owner->onQueryEvent(_abId);
+  if (getStage() > qryReporting)
+    return IAPQueryAC::procOk;
+
+  setStageNotify(qryStopping);
+  return procNeedReport;
 }
 
 std::string IAPQueryAC::status2Str(void) const

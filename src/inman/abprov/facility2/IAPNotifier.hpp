@@ -9,7 +9,8 @@
 
 #include "core/threads/ThreadPool.hpp"
 #include "core/buffers/IntrusivePoolOfUniqueT.hpp"
-#include "inman/abprov/facility2/IAPQueriesStore.hpp"
+
+#include "inman/abprov/facility2/inc/IAPQuery.hpp"
 
 namespace smsc {
 namespace inman {
@@ -17,14 +18,12 @@ namespace iaprvd {
 
 using smsc::core::synchronization::TimeSlice;
 
-class IAPNotifier : protected smsc::core::threads::ThreadPool,
-                    public IAPQueryRefereeIface {
+class IAPNotifier : protected smsc::core::threads::ThreadPool {
 public:
   static const unsigned   _MAX_IDENT_SZ = 32;
   static const TimeSlice  _dflt_ShutdownTmo; //300 millisecs
 
-  IAPNotifier(const char * use_ident, IAPQueriesStore & qrs_store,
-              Logger * use_log = NULL);
+  explicit IAPNotifier(const char * use_ident, Logger * use_log = NULL);
   virtual ~IAPNotifier()
   { }
 
@@ -44,7 +43,7 @@ public:
   // ------------------------------------------
   //Returns false if event cann't be processed by referee.
   //Starts a threaded task that processes query event.
-  virtual bool onQueryEvent(AbonentId ab_id);
+  virtual bool onQueryEvent(const IAPQueryRef & p_qry);
 
 protected:
   typedef smsc::core::buffers::IDAPoolCoreAC_T<uint16_t>::ObjGuard  NTFTaskGuard;
@@ -53,8 +52,7 @@ protected:
   class NotificationTask : public smsc::core::buffers::UniqueObj_T<smsc::core::threads::ThreadedTask, uint16_t> {
   public:
     //Returns false if there is no active query in storage associated with given abonent.
-    bool init(const NTFTaskGuard & task_grd, IAPQueriesStore & qrs_store,
-              const AbonentId & ab_id, Logger * use_log = NULL);
+    bool init(const NTFTaskGuard & task_grd, const IAPQueryRef & p_qry, Logger * use_log = NULL);
 
     // -------------------------------------------
     // -- ThreadedTask interface methods
@@ -67,13 +65,11 @@ protected:
     typedef smsc::core::buffers::UniqueObj_T<smsc::core::threads::ThreadedTask, uint16_t> Base_T;
     using Base_T::setDelOnCompletion;
 
-    NTFTaskGuard      _thisGrd; //guards this task until it complete Excecute(); 
-    IAPQueryGuard     _qGrd;
-    Logger *          _logger;
+    NTFTaskGuard  _thisGrd; //guards this task until it complete Excecute(); 
+    IAPQueryRef   _qGrd;
+    Logger *      _logger;
 
   protected:
-    static const TimeSlice _dflt_wait_tmo; //50 msec
-
     // -----------------------------------------------
     // -- UniqueObj_T<, uint16_t> interface methods
     // -----------------------------------------------
@@ -90,11 +86,10 @@ protected:
   typedef NTFTaskPool::ObjRef NTFTaskRef;
 
   /* - */
-  uint16_t          _iniThreads;  //1 - by default
-  IAPQueriesStore * _qrsStore;
-  NTFTaskPool       _taskPool;
-  char              _logId[sizeof("Ntfr[%s]") + _MAX_IDENT_SZ + 1];
-  Logger *          _logger;
+  uint16_t      _iniThreads;  //1 - by default
+  NTFTaskPool   _taskPool;
+  char          _logId[sizeof("Ntfr[%s]") + _MAX_IDENT_SZ + 1];
+  Logger *      _logger;
 };
 
 

@@ -72,7 +72,7 @@ ICServiceAC::RCode ICSIAPrvdATSI::_icsStart(void)
   smsc_log_info(logger, "%s: TCMA[%u:%u] inited", _logId,
                 (unsigned)_cfg._atsiCfg.ownSsn, _cfg._mapSess->getUID());
 
-  _qrsPool.init(IAPQueryATSI_CFG(_cfg._atsiCfg.rosTimeout, *_cfg._mapSess));
+  _qrsPool.init(IAPQueryATSI_CFG(_cfg._atsiCfg.rosTimeout, *_cfg._mapSess), logger);
   _qrsFclt.start();
   /* */
   return ICServiceAC::icsRcOk;
@@ -81,10 +81,7 @@ ICServiceAC::RCode ICSIAPrvdATSI::_icsStart(void)
 //Stops service
 void  ICSIAPrvdATSI::_icsStop(bool do_wait/* = false*/)
 {
-  if (do_wait)
-    _qrsFclt.stop();
-  else
-    _qrsFclt.stopNotify();
+  _qrsFclt.stop(do_wait);
 }
 
 // ----------------------------------

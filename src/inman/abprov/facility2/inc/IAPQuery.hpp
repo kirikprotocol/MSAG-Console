@@ -10,8 +10,10 @@
 #include <list>
 
 #include "logger/Logger.h"
+
 #include "util/UniqueObjT.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "core/buffers/IntrusivePoolOfIfaceT.hpp"
 
 #include "inman/abprov/IAPErrors.hpp"
 #include "inman/abprov/IAProvider.hpp"
@@ -30,53 +32,33 @@ protected:
   { }
 
 public:
-  //Returns false if event cann't be processed by referee
-  virtual bool onQueryEvent(AbonentId ab_id) = 0;
+  // -------------------------------------------------------
+  // -- IAPQueryRefereeIface interface methods
+  // -------------------------------------------------------
+  virtual void onQueryEvent(IAPQueryId qry_id) /*throw()*/= 0;
 };
 
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
 class IAPQueryAC : public smsc::util::UniqueObj_T<smsc::core::synchronization::EventMonitor, IAPQueryId> {
-protected:
-  explicit IAPQueryAC(IAPQueryId q_id)
-    : smsc::util::UniqueObj_T<smsc::core::synchronization::EventMonitor, IAPQueryId>(q_id)
-    , _usage(0), _owner(NULL), _qStatus(IAPQStatus::iqOk), _qError(0), _logger(NULL)
-  { }
-  //
-  virtual ~IAPQueryAC()
-  { }
-
 public:
+  //query FSM processing stage
   enum ProcStage_e {
-      qryIdle = 0x0       //query is not initialized
-    , qryStarted = 0x01   //query is initialized and started
-    , qryResulted = 0x02  //query received a result
-    , qryReporting = 0x04 //query is reporting its result to listeners
-    , qryStopping = 0x08  //query is releasing active resources (connections, etc)
-    , qryDone = 0x10      //query finished its processing cycle
-                          //(NOTE: if query was cancelled result may not be valid)
+    qryIdle = 0x00      //query is not initialized
+  , qryStarted = 0x01   //query is initialized and started
+  , qryResulted = 0x02  //query received a result
+  , qryReporting = 0x04 //query is reporting its result to listeners
+  , qryStopping = 0x08  //query is releasing active resources (connections, etc)
+  , qryDone = 0x10      //query finished its processing cycle
+                        //(NOTE: if query was cancelled result may not be valid)
   };
-
-  struct Stages {
-    ProcStage_e _current;
-    uint16_t    _mask;
-
-    Stages() : _current(qryIdle), _mask(0)
-    { }
-
-    void clear(void)
-    {
-      _mask = 0; _current = qryIdle;
-    }
-    void set(ProcStage_e fsm_st)
-    {
-      _mask |= (_current = fsm_st); 
-    }
-    void rollback(ProcStage_e fsm_to, ProcStage_e fsm_old)
-    {
-      _mask &= ~fsm_old; set(fsm_to);
-    }
+  //query action result
+  enum ProcResult_e {
+    procLater = 0x00      //action cann't be performed right now
+  , procOk = 0x01         //action is succesfully completed
+  , procNeedReport = 0x02 //action is succesfully completed, FSM is switched,
+                          //so query must be reported to referee.
   };
 
   static const unsigned _nmTypeSZ = 32;
@@ -88,21 +70,40 @@ public:
   typedef core::buffers::FixedLengthString<_nmTypeSZ + 1>  TypeString_t;
   typedef core::buffers::FixedLengthString<_nmQuerySZ + 1>  QueryName_t;
 
+  static const char * nmStage(ProcStage_e use_val);
 
-  //assigns abonentId and switches FSM to qryIdle state
+  //Reports query state to its referee.
+  //NOTE: MUST NOT be called on locked query!!!
+  void reportThis(void) { _owner->onQueryEvent(this->getUIdx()); }
+
+  // ------------------------------------------------------------
+  // All following methods should be called on locked query!!!
+  // ------------------------------------------------------------
+
+  const char * nmStage(void) const { return nmStage(getStage()); }
+
+  //Configures query: assigns abonentId, switches FSM to 'qryIdle' state.
   void init(IAPQueryRefereeIface & use_owner, const AbonentId & ab_number);
+  //Cancels query execution (listeners aren't notified), switches FSM to
+  //'qryStopping' state.
+  //If argument 'do_wait' is set, blocks until qryDone state is reached.
+  //Returns 'procLater' if listener is already targeted and query waits for its mutex.
+  //NOTE: Switches FSM (Is called by query referee).
+  ProcResult_e cancel(bool do_wait) /*throw()*/;
+  //Appends given listener to query's listeners list.
   //Returns:
-  // true  if listener is registered and will be notified as query yelds result.
-  // false if query is already completed, so it should be rereported in order to
-  //       notify listener. In that case FSM is switched to qryReporting state.
-  bool addListener(IAPQueryListenerITF & pf_cb);
-  //Removes given listener from query listeners list.
-  //Returns true on success, false if listener is already targeted and query
-  //waits for its mutex.
-  bool removeListener(IAPQueryListenerITF & pf_cb);
-  //Reports query to all enqueued listeners, upon completion
-  //switches FSM to qryDone state.
-  void notifyListeners(void) /*throw()*/;
+  // 'procOk'    - if listener is registered and will be notified as query yelds result.
+  // 'procLater' - if query is stopping/already completed.
+  //               In that case listener should be added to next query.
+  ProcResult_e addListener(IAPQueryListenerITF & pf_cb);
+  //Removes given listener from query's listeners list.
+  //Returns:
+  // 'procOk'    - if succeeded.
+  // 'procLater' - if listener is already targeted and query waits for its mutex.
+  ProcResult_e removeListener(IAPQueryListenerITF & pf_cb);
+  //Reports query to all enqueued listeners, upon completion switches FSM to
+  //'qryStopping' state.
+  ProcResult_e notifyListeners(void) /*throw()*/;
 
   ProcStage_e getStage(void) const { return _stages._current; }
 
@@ -128,21 +129,37 @@ public:
   virtual const TypeString_t & taskType(void) const /*throw()*/ = 0;
   //Starts query execution. May be called only at qryIdle state. 
   //In case of success switches FSM to qryStarted state,
-  //otherwise to qryDone state.
-  virtual IAPQStatus::Code  start(Logger * use_log = NULL) /*throw()*/ = 0;
-  //Cancels query execution, tries to switche FSM to qryStopping/qryDone state.
-  //Note: Listeners aren't notified.
-  //Returns false if listener is already targeted and query
-  //waits for its mutex.
-  virtual bool              cancel(void) /*throw()*/ = 0;
-  //Returns true if query object may be released.
-  //Note: should be at least equal to isCompleted()
-  virtual bool              isToRelease(void) /*throw()*/ = 0;
-  //Releases all used resources. May be called only at qryDone state.
-  //Switches FSM to qryIdle state.
-  virtual void              cleanup(void) /*throw()*/ = 0;
+  //otherwise to qryStopping or qryDone state.
+  virtual ProcResult_e  start(void) /*throw()*/ = 0;
+
+protected:
+  //Blocks until all used resources are released.
+  //Called only at qryStoppping state.
+  virtual ProcResult_e  finalize(void) /*throw()*/ = 0;
+
+  explicit IAPQueryAC(IAPQueryId q_id)
+    : smsc::util::UniqueObj_T<smsc::core::synchronization::EventMonitor, IAPQueryId>(q_id)
+    , _usage(0), _owner(NULL), _qStatus(IAPQStatus::iqOk), _qError(0), _logger(NULL)
+  { }
+  //
+  virtual ~IAPQueryAC()
+  { }
 
 private:
+  struct Stages {
+    ProcStage_e _current;
+    uint16_t    _mask;
+
+    Stages() : _current(qryIdle), _mask(0)
+    { }
+
+    ProcStage_e get(void)               const { return _current; }
+    bool        has(ProcStage_e fsm_st) const { return _mask & fsm_st; }
+
+    void clear(void)              {_mask = 0; _current = qryIdle; }
+    void set(ProcStage_e fsm_st)  { _mask |= (_current = fsm_st); }
+  };
+
   struct ListenerInfo {
     bool                  _isAimed;
     IAPQueryListenerITF * _ptr;
@@ -178,22 +195,27 @@ protected:
   //
   void setStageNotify(ProcStage_e fsm_st)
   {
-    _stages.set(fsm_st); this->notify(); 
+    _stages.set(fsm_st); this->notify();
   }
 };
 
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
+typedef smsc::core::buffers::IDAPoolObjRef_T<IAPQueryAC, IAPQueryId> IAPQueryRef;
+
 class IAPQueriesPoolIface {
 protected:
   virtual ~IAPQueriesPoolIface()
   { }
 
 public:
+  // -------------------------------------------------------
+  // -- IAPQueriesPoolIface interface methods
+  // -------------------------------------------------------
+  virtual IAPQueryRef   allcQuery(void) /*throw()*/ = 0;
+  virtual IAPQueryRef   atQuery(IAPQueryId qry_id) /*throw()*/ = 0;
   virtual void          reserveObj(IAPQueryId num_obj) /*throw()*/ = 0;
-  virtual IAPQueryAC *  allcQuery(void) /*throw()*/ = 0;
-  virtual void          rlseQuery(IAPQueryAC & use_obj) /*throw()*/ = 0;
 };
 
 } //iaprvd

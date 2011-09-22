@@ -74,7 +74,7 @@ ICServiceAC::RCode ICSIAPrvdSRI::_icsStart(void)
   smsc_log_info(logger, "%s: TCMA[%u:%u] inited", _logId,
                 (unsigned)_cfg._sriCfg.ownSsn, _cfg._mapSess->getUID());
 
-  _qrsPool.init(IAPQuerySRI_CFG(_cfg._sriCfg.rosTimeout, *_cfg._mapSess));
+  _qrsPool.init(IAPQuerySRI_CFG(_cfg._sriCfg.rosTimeout, *_cfg._mapSess), logger);
   _qrsFclt.start();
   /* */
   return ICServiceAC::icsRcOk;
@@ -83,10 +83,7 @@ ICServiceAC::RCode ICSIAPrvdSRI::_icsStart(void)
 //Stops service
 void  ICSIAPrvdSRI::_icsStop(bool do_wait/* = false*/)
 {
-  if (do_wait)
-    _qrsFclt.stop();
-  else
-    _qrsFclt.stopNotify();
+  _qrsFclt.stop(do_wait);
 }
 
 // ----------------------------------

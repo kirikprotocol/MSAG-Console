@@ -11,7 +11,6 @@
 #define SMSC_INMAN_IAPQUERY_HLR_SRI_HPP
 
 #include "util/OptionalObjT.hpp"
-#include "inman/common/IDXObjPool_T.hpp"
 #include "inman/abprov/facility2/inc/IAPQuery.hpp"
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 
@@ -24,11 +23,7 @@ using smsc::inman::iaprvd::IAPQueryAC;
 
 using smsc::inman::inap::ObjFinalizerIface;
 using smsc::inman::inap::ObjAllcStatus_e;
-
 using smsc::inman::inap::TCSessionMA;
-using smsc::inman::inap::chsri::MapCHSRIDlg;
-using smsc::inman::inap::chsri::CHSRIhandlerITF;
-
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 
 /* ************************************************************************** *
@@ -50,11 +45,8 @@ struct IAPQuerySRI_CFG {
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
-class IAPQuerySRI : public IAPQueryAC, protected CHSRIhandlerITF {
-private:
-  IAPQuerySRI_CFG                         _cfg;
-  smsc::util::OptionalObj_T<MapCHSRIDlg>  _mapDlg;
-
+class IAPQuerySRI : public IAPQueryAC
+                  , protected smsc::inman::inap::chsri::CHSRIhandlerITF {
 public:
   static const TypeString_t _qryType; //"IAPQuerySRI"
 
@@ -62,31 +54,30 @@ public:
   {
     mkTaskName();
   }
+  virtual ~IAPQuerySRI()
+  {
+    finalize();
+  }
 
-  void configure(const IAPQuerySRI_CFG & use_cfg) { _cfg = use_cfg; }
+  void configure(const IAPQuerySRI_CFG & use_cfg, Logger * use_log = NULL)
+  {
+    _cfg = use_cfg;
+    if (use_log)
+      _logger = use_log;
+  }
   // -------------------------------------------------------
   // -- IAPQueryAC interface methods
   // -------------------------------------------------------
   virtual const TypeString_t & taskType(void) const /*throw()*/ { return _qryType; }
   //Starts query execution. May be called only at qryIdle state. 
   //In case of success switches FSM to qryStarted state,
-  //otherwise to qryDone state.
-  virtual IAPQStatus::Code  start(Logger * use_log = NULL) /*throw()*/;
-  //Cancels query execution, tries to switche FSM to qryStopping/qryDone state.
-  //Note: Listeners aren't notified.
-  //Returns false if listener is already targeted and query
-  //waits for its mutex.
-  virtual bool              cancel(void) /*throw()*/;
-  //Returns true if query object may be released.
-  //Note: should be at least equal to isCompleted()
-  virtual bool              isToRelease(void) /*throw()*/;
-  //Releases all used resources. May be called only at qryDone state.
-  //Switches FSM to qryIdle state.
-  virtual void              cleanup(void) /*throw()*/;
+  //otherwise to qryStopping or qryDone state.
+  virtual ProcResult_e  start(void) /*throw()*/;
 
 protected:
-  virtual ~IAPQuerySRI()
-  { }
+  //Blocks until all used resources are released.
+  //Called only at qryStoppping state.
+  virtual ProcResult_e  finalize(void) /*throw()*/;
 
   friend class smsc::inman::inap::chsri::MapCHSRIDlg;
   // -------------------------------------------------------
@@ -100,6 +91,10 @@ protected:
   virtual ObjAllcStatus_e onDialogEnd(ObjFinalizerIface & use_finalizer, RCHash err_code = 0);
   //
   virtual void Awake(void) { notify(); }
+
+private:
+  IAPQuerySRI_CFG _cfg;
+  smsc::util::OptionalObj_T<smsc::inman::inap::chsri::MapCHSRIDlg>  _mapDlg;
 };
 
 /* ************************************************************************** *
@@ -108,11 +103,13 @@ protected:
 class IAPQueriesPoolSRI : public IAPQueriesPoolIface {
 protected:
   //queries are reusable !!
-  typedef smsc::util::IDXObjPool_T<IAPQuerySRI, IAPQueryId, false>  QueriesPool;
+  typedef smsc::core::buffers::IntrusivePoolOfIfaceUnique_T<
+    IAPQueryAC, IAPQuerySRI, IAPQueryId
+  > QueriesPool;
 
-  mutable Mutex     _sync;
-  QueriesPool       _objPool; //objects are reusable
-  IAPQuerySRI_CFG   _cfg;
+  QueriesPool       mObjPool; //objects are reusable
+  IAPQuerySRI_CFG   mCfg;
+  Logger *          mLogger;
 
 public:
   IAPQueriesPoolSRI()
@@ -121,14 +118,17 @@ public:
   { }
 
   //asigns parameters to use while configuring newly allocated IAPQueries
-  void init(const IAPQuerySRI_CFG & use_cfg);
+  void init(const IAPQuerySRI_CFG & use_cfg, Logger * use_log)
+  {
+    mCfg = use_cfg; mLogger = use_log;
+  }
 
-  // ------------------------------------------
+  // -------------------------------------------------------
   // -- IAPQueriesPoolIface interface methods
-  // ------------------------------------------
-  virtual void          reserveObj(IAPQueryId num_obj) /*throw()*/;
-  virtual IAPQueryAC *  allcQuery(void) /*throw()*/;
-  virtual void          rlseQuery(IAPQueryAC & use_obj) /*throw()*/;
+  // -------------------------------------------------------
+  virtual IAPQueryRef   allcQuery(void) /*throw()*/;
+  virtual IAPQueryRef   atQuery(IAPQueryId qry_id) /*throw()*/ { return mObjPool.atObj(qry_id); }
+  virtual void          reserveObj(IAPQueryId num_obj) /*throw()*/ { return mObjPool.reserve(num_obj); }
 };
 
 } //sri

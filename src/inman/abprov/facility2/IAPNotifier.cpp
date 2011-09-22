@@ -13,9 +13,8 @@ namespace iaprvd {
  * ************************************************************************** */
 const TimeSlice  IAPNotifier::_dflt_ShutdownTmo(300, TimeSlice::tuMSecs);
 
-IAPNotifier::IAPNotifier(const char * use_ident, IAPQueriesStore & qrs_store,
-                         Logger * use_log/* = NULL*/)
-  : _iniThreads(1), _qrsStore(&qrs_store)
+IAPNotifier::IAPNotifier(const char * use_ident, Logger * use_log/* = NULL*/)
+  : _iniThreads(1)
 {
   snprintf(_logId, sizeof(_logId)-1, "Ntfr[%s]", use_ident);
   if (!(_logger = use_log))
@@ -44,16 +43,16 @@ void IAPNotifier::stop(const TimeSlice * use_tmo/* = NULL*/)
 // ------------------------------------------
 //Returns false if event cann't be processed by referee.
 //Starts a threaded task that processes query event.
-bool IAPNotifier::onQueryEvent(AbonentId ab_id)
+bool IAPNotifier::onQueryEvent(const IAPQueryRef & p_qry)
 {
   NTFTaskRef  pTask = _taskPool.allcObj();
   if (!pTask.empty()) {
-    if (pTask->init(pTask, *_qrsStore, ab_id, _logger) && startTask(pTask.get())) {
+    if (pTask->init(pTask, p_qry, _logger) && startTask(pTask.get())) {
       smsc_log_debug(_logger, "%s: processing %s(%s)", _logId,
-                     pTask->taskName(), ab_id.getSignals());
+                     pTask->taskName(), p_qry->getAbonentId().getSignals());
       return true;
     }
-    smsc_log_error(_logger, "%s: non-existent query for %s", _logId, ab_id.getSignals());
+    smsc_log_error(_logger, "%s: non-existent query for %s", _logId, p_qry->getAbonentId().getSignals());
     pTask->onRelease();
   } else {
     smsc_log_error(_logger, "%s: task pool is exhausted: %u of %u", _logId,
@@ -65,12 +64,10 @@ bool IAPNotifier::onQueryEvent(AbonentId ab_id)
 /* ************************************************************************** *
  * class IAPNotifier::NotificationTask implementation:
  * ************************************************************************** */
-const TimeSlice IAPNotifier::NotificationTask::_dflt_wait_tmo(50, TimeSlice::tuMSecs); //50 msec
-
 bool IAPNotifier::NotificationTask::init(const NTFTaskGuard & task_grd,
-  IAPQueriesStore & qrs_store, const AbonentId & ab_id, Logger * use_log/* = NULL*/)
+                                         const IAPQueryRef & p_qry, Logger * use_log/* = NULL*/)
 {
-  _qGrd = qrs_store.getQuery(ab_id, false);
+  _qGrd = p_qry;
   if (_qGrd.get()) {
     isStopping = isReleased = false;
     if (!(_logger = use_log))
@@ -92,34 +89,44 @@ int IAPNotifier::NotificationTask::Execute(void)
 {
   if (!_qGrd.get())
     return -1;
+
+  bool doReport = false;
   {
     MutexGuard  grd(*_qGrd.get());
-    if (!isStopping) {
-      if (_qGrd->getStage() == IAPQueryAC::qryReporting) {
-        smsc_log_debug(_logger, "%s(%s): reporting ",
+    if (_qGrd->getStage() == IAPQueryAC::qryReporting) {
+      if (!isStopping) {
+        smsc_log_debug(_logger, "%s(%s): reporting ..",
                        _qGrd->taskName(), _qGrd->getAbonentId().getSignals());
-        _qGrd->notifyListeners();
-        return 0;
+        doReport = (_qGrd->notifyListeners() == IAPQueryAC::procNeedReport);
+      } else {
+        smsc_log_debug(_logger, "%s(%s): cancelling ..",
+                       _qGrd->taskName(), _qGrd->getAbonentId().getSignals());
+        //never returns 'procLater' here
+        doReport = (_qGrd->cancel(true) == IAPQueryAC::procNeedReport);
       }
-      while ((_qGrd->getStage() == IAPQueryAC::qryDone) && !_qGrd->isToRelease())
-        _qGrd->wait(_dflt_wait_tmo);
-    } //else: task was cancelled, handle only query object releasing
-
+    }
+    if (!doReport && (_qGrd->getStage() == IAPQueryAC::qryStopping)) {
+      smsc_log_debug(_logger, "%s(%s): stopping ..", 
+                     _qGrd->taskName(), _qGrd->getAbonentId().getSignals());
+      //never returns 'procLater' here
+      doReport = (_qGrd->cancel(true) == IAPQueryAC::procNeedReport);
+    }
     if (_qGrd->getStage() == IAPQueryAC::qryDone) {
       smsc_log_debug(_logger, "%s(%s): releasing ..", 
                      _qGrd->taskName(), _qGrd->getAbonentId().getSignals());
-      _qGrd.rlseQuery();
-    } else {
-      smsc_log_warn(_logger, "%s(%s): processEvent() at stage %u", 
-                     _qGrd->taskName(), _qGrd->getAbonentId().getSignals(), (unsigned)_qGrd->getStage());
+    } else if (!doReport) {
+      smsc_log_warn(_logger, "%s(%s): onQueryEvent() at stage(%s)",
+                     _qGrd->taskName(), _qGrd->getAbonentId().getSignals(), _qGrd->nmStage());
     }
   }
+  if (doReport)
+    _qGrd->reportThis();
   return 0;
 }
 
 void IAPNotifier::NotificationTask::onRelease(void)
 {
-  _qGrd.clear(); //release query ref(entire query if ref is a last one)
+  _qGrd.release(); //release query ref(entire query if ref is a last one)
   isReleased = true;
   _thisGrd.release();
 }
