@@ -162,7 +162,7 @@ std::string RollingFileStreamReader::readNextFile( const char* fullName )
     while ( wasread > 0 ) {
         size_t reclen = rfr.readRecordLength(pos,ptr,wasread);
         if ( reclen > wasread ) {
-            throw FileReadException(fullName,0,pos,"file is garbled");
+            throw FileReadException(fullName,0,pos,"file is garbled in readNextFile");
         }
         try {
             rfr.readRecordData(pos,ptr,reclen);
@@ -296,6 +296,8 @@ void RollingFileStream::init()
         } else if ( ! S_ISREG(st.st_mode) ) {
             throw smsc::util::Exception("file '%s' is not a regular file");
         }
+        smsc_log_info(log_,"RollFileStream(%s) last unfinished file: %s",
+                      getName(), filename.c_str());
         if ( st.st_size <= strlen(FILEHEADER) ) {
             // file is ok, use it
             needPostfix_ = ( badlogs.size() > 1 );
@@ -309,7 +311,9 @@ void RollingFileStream::init()
     char buf[128];
     makeFileSuffix(buf,sizeof(buf),filestamp);
     filename.append(buf);
+    file_.SetUnbuffered();
     file_.Append( filename.c_str() );
+    smsc_log_debug(log_,"RollFileStream(%s) opening %s",getName(),filename.c_str());
     if ( filestamp == now ) {
         file_.Write( FILEHEADER, strlen(FILEHEADER) );
     }
@@ -365,9 +369,14 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
         }
         smsc_log_debug(log_,"scanning the file '%s'",filename.c_str());
         RollingFileStreamReader rfsr;
-        rfsr.read( filename.c_str(), &isStopping, 0 );
-        lines = rfsr.getLines();
-        crc32 = rfsr.getCrc32();
+        try {
+            rfsr.read( filename.c_str(), &isStopping, 0 );
+            lines = rfsr.getLines();
+            crc32 = rfsr.getCrc32();
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"file '%s' read exc: %s",filename.c_str(),e.what());
+            continue;
+        }
         if ( rfsr.isFinished() ) {
             throw smsc::util::Exception("file '%s' is already finished?",filename.c_str());
         }
@@ -378,9 +387,9 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
             if ( lastSlash != std::string::npos ) {
                 newname.erase(0,lastSlash+1);
             }
-            char buf[50];
-            makeFileSuffix(buf,sizeof(buf),nextLogTime);
-            newname.append(buf);
+            char nextTimeBuf[50];
+            makeFileSuffix(nextTimeBuf,sizeof(nextTimeBuf),nextLogTime);
+            newname.append(nextTimeBuf);
             newname.append(finalSuffix_);
         }
         smsc_log_info(log_,"fixing file '%s', lines=%u crc32=%x next: %s",
@@ -390,7 +399,7 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
         oldf.Append(filename.c_str());
         finishFile( oldf, crc32, lines, newname.c_str() );
         if ( -1 == rename( filename.c_str(), (filename + finalSuffix_).c_str() ) ) {
-            smsc_log_warn(log_,"cannot rename '%s', errno=%d", filename.c_str(), errno);
+            smsc_log_error(log_,"cannot rename '%s', errno=%d", filename.c_str(), errno);
             throw smsc::util::Exception("rename('%s') exc: errno=%d",filename.c_str(),errno);
         }
     }
@@ -448,6 +457,7 @@ void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
     newfileName.append( buf.get() );
 
     smsc::core::buffers::File newf;
+    newf.SetUnbuffered();
     newf.Append( newfileName.c_str() );
     newf.Write( FILEHEADER, strlen(FILEHEADER) );
 
