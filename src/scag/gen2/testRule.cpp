@@ -3,6 +3,7 @@
 #include "core/buffers/FastMTQueue.hpp"
 #include "core/buffers/IntHash64.hpp"
 #include "core/buffers/Hash.hpp"
+#include "core/buffers/PerThreadData.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "informer/io/IOConverter.h"
 #include "informer/io/InfosmeException.h"
@@ -735,7 +736,7 @@ public:
     FakeSmppManager( FakeBillingManager& fbm,
                      FakeSessionManager& fsm,
                      RuleEngineImpl&     ruleEngine ) :
-    running(true), queueCmdCount_(0), lcmCount_(0),
+    running(true), queueCmdCount_(0), lcmCount_(0), cmdInProcCounter_(0),
     fbm_(fbm), fsm_(fsm), ruleEngine_(ruleEngine),
     log_(smsc::logger::Logger::getInstance("smppman"))
     {}
@@ -902,21 +903,22 @@ public:
             MutexGuard mg(queueMon);
             uint32_t sc, slc, skc;
             fsm_.getSessionsCount(sc,slc,skc);
-            smsc_log_debug(log_,"queueCmd=%d queue=%d respQueue=%d lcmQueue=%d lcm=%d sc=%d slc=%d skc=%d",
+            smsc_log_debug(log_,"queueCmd=%d queue=%d respQueue=%d lcmQueue=%d lcm=%d stotc=%d slokc=%d cmdInProc=%d",
                            int(queueCmdCount_),
                            int(queue.Count()),
                            int(respQueue.Count()),
                            int(lcmQueue.Count()),
                            int(lcmCount_),
-                           int(sc), int(slc), int(skc) );
+                           int(sc), int(skc),
+                           int(cmdInProcCounter_));
             if ( queueCmdCount_ > 0 ||
                  queue.Count() > 0 ||
                  respQueue.Count() > 0 ||
                  lcmQueue.Count() > 0 ||
                  lcmCount_ > 0 ||
-                 sc > 0 ||
-                 slc > 0 ||
-                 skc > 0 ) {
+                 // sc > 0 ||
+                 // skc > 0 ||
+                 cmdInProcCounter_ > 0 ) {
                 queueMon.wait(100);
                 continue;
             }
@@ -1001,6 +1003,15 @@ public:
     virtual bool getCommand( SmppCommand*& cmd ) 
     {
         MutexGuard mg(queueMon);
+        if ( !cmdInProc_.get() ) {
+            cmdInProc_.reset( new bool(false) );
+        }
+        if ( *cmdInProc_.get() ) {
+            // previous cmd was processed
+            --cmdInProcCounter_;
+            *cmdInProc_.get() = false;
+        }
+
         if (running && !queue.Count() && !lcmQueue.Count() && !respQueue.Count() ) {
             queueMon.wait(100);
             // break;
@@ -1016,6 +1027,8 @@ public:
         } else {
             return false;
         }
+        *cmdInProc_.get() = true;
+        ++cmdInProcCounter_;
         return true;
     }
 
@@ -1035,7 +1048,8 @@ private:
     smsc::core::synchronization::EventMonitor queueMon;
     smsc::core::buffers::CyclicQueue< SmppCommand* > queue, lcmQueue, respQueue;
     FakeRouteManager router_;
-    unsigned queueCmdCount_, lcmCount_;
+    unsigned queueCmdCount_, lcmCount_, cmdInProcCounter_;
+    smsc::core::buffers::PerThreadData<bool> cmdInProc_;
     smsc::core::threads::ThreadPool stateMachinePool_;
     FakeBillingManager& fbm_;
     FakeSessionManager& fsm_;
@@ -1614,10 +1628,10 @@ private:
              s[s.size()-1] == ']' ) {
             std::string sub( s, argvstr.size(), s.size()-argvstr.size()-1);
             const uint32_t idx = getInt(sub);
-            if ( argc_ <= int(idx) ) {
+            if ( argc_ < int(idx) ) {
                 throw InfosmeException( EXC_IOERROR, "wrong index in '%s'",s.c_str());
             }
-            return argv_[idx];
+            return argv_[idx-1];
         } else if ( s.size() > envstr.size() &&
                     0 == strncmp(s.c_str(),envstr.c_str(),envstr.size()) &&
                     s[s.size()-1] == ']' ) {
@@ -1718,18 +1732,35 @@ private:
 
 int main( int argc, const char** argv )
 {
+    /*
     if (argc<2) {
         fprintf(stderr,"usage: %s rule.xml\n",argv[0]);
         return -1;
     }
+     */
+
+    std::vector< const char* > vargv;
+    std::string fromFile = "-";
+    for ( const char** p = argv; *p != 0; ++p ) {
+        if ( *p == "-f" || *p == "--from" ) {
+            ++p;
+            if ( *p == 0 ) {
+                fprintf(stderr,"-f --from requires an argument\n");
+                return 1;
+            }
+            fromFile = *p;
+        } else {
+            vargv.push_back(*p);
+        }
+    }
+    vargv.push_back(0);
 
     // Logger::initForTest( Logger::LEVEL_DEBUG );
     Logger::Init();
     Logger* mainlog = Logger::getInstance("mainlog");
 
-    const std::string rulePath = argv[1];
-
-    smsc_log_info(mainlog,"rule path: %s",rulePath.c_str());
+    // const std::string rulePath = argv[1];
+    // smsc_log_info(mainlog,"rule path: %s",rulePath.c_str());
 
     {
         assert(new scag2::counter::impl::HashCountManager(new scag2::counter::impl::TemplateManagerImpl()));
@@ -1789,14 +1820,22 @@ int main( int argc, const char** argv )
     smsc_log_info(mainlog,"--- smpp manager created ---");
 
     {
-        StringParser stringParser(*smppManager, *pvssClient, argc, argv);
-        FileGuard fg(fileno(stdin));
-        {
+        StringParser stringParser(*smppManager, *pvssClient, vargv.size()-1, &vargv[0]);
+        if ( fromFile == "-" ) {
+            FileGuard fg(fileno(stdin));
+            {
+                FileReader fr(fg);
+                eyeline::informer::TmpBuf<char,1024> tbuf;
+                fr.readRecords(tbuf,stringParser);
+            }
+            fg.release();
+        } else {
+            FileGuard fg;
+            fg.ropen(fromFile.c_str());
             FileReader fr(fg);
             eyeline::informer::TmpBuf<char,1024> tbuf;
             fr.readRecords(tbuf,stringParser);
         }
-        fg.release();
     }
 
     /*
