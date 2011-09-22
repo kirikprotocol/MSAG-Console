@@ -247,6 +247,85 @@ protected:
   }
 };
 
+// ------------------------------------------------------------------------------
+// Multithread-safe intrusive pool of unique objects, which implement specified
+// interface.
+// NOTE: pooled objects are reusable (not destroyed upon release)
+// ------------------------------------------------------------------------------
+template <
+  class _IfaceArg                   //Interface implemented by Pooled objects,
+                                    //MUST have no public destructor !!!
+, class _IfaceUnqImplArg            //: public UniqueObj_T<> is required.
+, typename  _SizeTypeArg = unsigned //implicitly restricts pool capacity 
+>
+class IntrusivePoolOfIfaceUnique_T : public IntrusivePoolAC_T<_IfaceArg, _SizeTypeArg> {
+public:
+  typedef _SizeTypeArg size_type;
+
+  //NOTE: by default pooled objects are destroyed upon release.
+  //      Set 'erase_on_rlse' to false if pooled objects are reusable.
+  IntrusivePoolOfIfaceUnique_T() : IntrusivePoolAC_T<_IfaceArg, _SizeTypeArg>()
+  { }
+  explicit IntrusivePoolOfIfaceUnique_T(size_type num_to_reserve)
+    : IntrusivePoolAC_T<_IfaceArg, _SizeTypeArg>()
+  {
+    reserve(num_to_reserve);
+  }
+  virtual ~IntrusivePoolOfIfaceUnique_T()
+  {
+    this->destroyAll();
+  }
+
+protected:
+   // Aggregates pool's node header and memory for pooled object implementation.
+  class AnchoredNode : public IDAPoolNodeIface_T<_IfaceArg, _SizeTypeArg> {
+  private:
+    AnchoredNode(const AnchoredNode & use_obj);
+    AnchoredNode & operator=(const AnchoredNode & use_obj);
+
+  protected:
+    smsc::util::OptionalObj_T<_IfaceUnqImplArg, _SizeTypeArg>  mObj;
+
+  public:
+    AnchoredNode(IDAPoolCoreAC_T<_SizeTypeArg> & use_pool, _SizeTypeArg use_idx)
+      : IDAPoolNodeIface_T<_IfaceArg, _SizeTypeArg>(use_pool, use_idx)
+    { }
+    //
+    virtual ~AnchoredNode()
+    { }
+
+    //Destroys contained object of this node
+    void clear(void) { mObj.clear(); }
+    // --------------------------------------
+    // -- IntrPoolNodeAC_T<> interface method
+    // --------------------------------------
+    //Returns pooled object iface, constructing it if necessary
+    virtual _IfaceArg * getIface(void)
+    {
+      if (mObj.empty())
+        mObj.init(this->mNodeIdx); //UniqueObj_T<> interface
+      return static_cast<_IfaceArg *>(mObj.get());
+    }
+  };
+  
+  typedef IntrusivePoolAC_T<_IfaceArg, _SizeTypeArg> Base_T;
+  // --------------------------------------------------
+  // -- IDAPoolCoreAC_T<> interface methods
+  // --------------------------------------------------
+  virtual typename Base_T::NodeHeader * allocateNode(size_type use_idx)
+  {
+    return static_cast<typename Base_T::NodeHeader *>(new AnchoredNode(*this, use_idx));
+  }
+  virtual void clearNode(typename Base_T::NodeHeader & p_node)
+  {
+    return; //pooled objects are reusable
+  }
+  virtual void destroyNode(typename Base_T::NodeHeader & p_node)
+  {
+    delete static_cast<AnchoredNode *>(&p_node);
+  }
+};
+
 } //buffers
 } //core
 } //smsc
