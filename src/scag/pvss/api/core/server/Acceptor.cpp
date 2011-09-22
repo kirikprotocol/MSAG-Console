@@ -37,7 +37,7 @@ void Acceptor::init() /* throw (PvssException) */
     const int connectTimeout = 300;
     if ( -1 == socket_.InitServer( getConfig().getHost().c_str(),
                                    getConfig().getPort(),
-                                   connectTimeout ) ) {
+                                   connectTimeout, 1, true) ) {
         // int(getConfig().getConnectTimeout())) ) {
         throw PvssException(PvssException::NOT_CONNECTED,"cannot init socket at %s:%u",
                             getConfig().getHost().c_str(),
