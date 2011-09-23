@@ -321,13 +321,19 @@ public:
                            hd.c_str(hex), hd.c_str(hdx) );
         }
 
-        buffer_type::iterator optr = buffer.begin() + initialPos;
-        buffer_type::const_iterator iptr = headers.begin();
-        optr = std::copy( iptr, iptr+idxSize(), optr );
-        iptr += idxSize();
-        for ( ; iptr != headers.end(); iptr += navSize() ) {
-            std::copy( iptr, iptr+navSize(), optr );
-            optr += blockSize();
+        {
+            buffer_type::iterator optr = buffer.begin() + initialPos;
+            buffer_type::const_iterator iptr = headers.begin();
+            optr = std::copy( iptr, iptr+idxSize(), optr );
+            iptr += idxSize();
+            if ( iptr != headers.end() ) {
+                while (true) {
+                    std::copy( iptr, iptr+navSize(), optr );
+                    iptr += navSize();
+                    if ( iptr == headers.end() ) { break; }
+                    optr += blockSize();
+                }
+            }
         }
 
         if (log_ && log_->isDebugEnabled()) {

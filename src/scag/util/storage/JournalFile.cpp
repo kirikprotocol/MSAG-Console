@@ -79,7 +79,7 @@ void JournalFile::open( bool readonly )
     typedef std::vector< JournalRecord* > RecordList;
     RecordList records;
     records.reserve( maxRecords_ );
-    const char* endptr = &journal_[journal_.size()];
+    const char* endptr = &journal_[0] + journal_.size();
     for ( const char* iptr = &journal_[hsz]; iptr < endptr; ) {
 
         const std::string& jrm = store_.journalRecordMark();
@@ -298,7 +298,7 @@ bool JournalFile::writeRecord( const JournalRecord& record )
     if ( lastRecord ) {
         ptr = mempcpy(ptr,store_.journalRecordTrailer().c_str(),store_.journalRecordTrailer().size());
     }
-    assert( ptr == &journal_[journal_.size()] );
+    assert( ptr == &journal_[0] + journal_.size() );
     if ( needHeader ) { journalFile_.Seek(0); }
     journalFile_.Write( &journal_[0], journal_.size() );
     if ( lastRecord ) {
