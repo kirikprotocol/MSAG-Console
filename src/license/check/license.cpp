@@ -357,7 +357,7 @@ bool checkHostIds( const char* hostids )
         if ( *p == '\0' ) break;
         char buf[200];
         int pos = 0;
-        sscanf(p,"%150[0-9a-f-]%n",buf,&pos);
+        sscanf(p,"%150[0-9a-fA-F-]%n",buf,&pos);
         if (!pos) {
             throw std::runtime_error("wrong hostids");
         }
