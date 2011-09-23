@@ -38,7 +38,7 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
 
   private final long maxTimeMillis;
 
-  private final long reportTimeoutMillis;
+  private long reportTimeoutMillis;
 
   DetailedPeriodSaveStrategy(ContentProviderContext context, FileResource resource, ResourceOptions opts) throws AdminException {
     this.maxTimeMillis = 1000 * opts.getMaxTimeSec();
@@ -61,6 +61,14 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
   private static final String CSV_POSFIX = ".csv";
   private static final String IN_PROCESS = ".active";
   private static final String FINISHED = ".finished";
+
+  void setReportTimeoutMillis(long reportTimeoutMillis) {
+    this.reportTimeoutMillis = reportTimeoutMillis;
+  }
+
+  void setReportFileFormat(String pattern) {
+    this.reportFileFormat = new SimpleDateFormat(pattern);
+  }
 
   private static String buildFinished(String csv) {
     return csv + FINISHED;
@@ -433,7 +441,7 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
   }
 
   private final SimpleDateFormat reportInfoFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-  private final SimpleDateFormat reportFileFormat = new SimpleDateFormat("yyyyMMddHHmm");
+  private SimpleDateFormat reportFileFormat = new SimpleDateFormat("yyyyMMddHHmm");
 
   void buildReport(final FileFormatStrategy formatStrategy, String localCsvFile, Delivery d, Date now) throws Exception{
 

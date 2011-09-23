@@ -12,11 +12,17 @@ import java.util.Date;
  */
 public class TestDeliveryManager extends DeliveryManager{
 
+  private TestDcpConnection connection;
+
   public TestDeliveryManager(File workDir, FileSystem fs) {
     super(workDir, fs);
+    connection = new TestDcpConnection();
   }
 
-  private TestDcpConnection connection = new TestDcpConnection();
+  public TestDeliveryManager(File workDir, FileSystem fs, boolean daemon, int smsPerModify) {
+    super(workDir, fs);
+    connection = new TestDcpConnection(daemon, smsPerModify);
+  }
 
   @Override
   protected DcpConnection createConnection(String host, int port, String login, String password) throws AdminException {

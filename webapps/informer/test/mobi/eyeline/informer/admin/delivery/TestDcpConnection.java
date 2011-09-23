@@ -35,20 +35,26 @@ public class TestDcpConnection extends DcpConnection{
 
   private ScheduledExecutorService executor;
 
-  private int smsPerMin = 50;        //todo
+  private int smsPerModify = 50;        //todo
+
+  public TestDcpConnection(boolean daemon, int smsPerModify) {
+    if(daemon) {
+      executor = Executors.newSingleThreadScheduledExecutor();
+      executor.scheduleWithFixedDelay(new Runnable() {
+        public void run() {
+          try{
+            modifyAll();
+          }catch (Exception e){
+            logger.error(e,e);
+            e.printStackTrace();
+          }
+        }
+      }, 30, 30, TimeUnit.SECONDS);
+    }
+  }
 
   public TestDcpConnection() {
-    executor = Executors.newSingleThreadScheduledExecutor();
-    executor.scheduleWithFixedDelay(new Runnable() {
-      public void run() {
-        try{
-          modifyAll();
-        }catch (Exception e){
-          logger.error(e,e);
-          e.printStackTrace();
-        }
-      }
-    }, 30, 30, TimeUnit.SECONDS);
+    this(true, 50);
   }
 
   public boolean isConnected() {
@@ -520,7 +526,6 @@ public class TestDcpConnection extends DcpConnection{
   @SuppressWarnings({"EmptyCatchBlock"})
   synchronized void modifyAll() throws AdminException {
     Random r = new Random();
-    SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
     Date now = new Date();
     for(Delivery d : deliveries.values()) {
       if(d.getStatus() == DeliveryStatus.Planned || d.getStatus() == null) {
@@ -573,7 +578,7 @@ public class TestDcpConnection extends DcpConnection{
         }
       }
       for(Message m : toModify.values()) {
-        if(count<smsPerMin) {
+        if(count< smsPerModify) {
           m = m.cloneMessage();
           ms.add(m);
           int rI= r.nextInt(10);
