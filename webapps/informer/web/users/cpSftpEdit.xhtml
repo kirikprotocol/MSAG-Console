@@ -76,15 +76,13 @@
               </h:selectOneMenu>
 
               <h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.exportReports}"/>
-              <h:panelGrid columns="1" id="createReports">
-                <h:selectOneMenu id="reportType" value="#{cpSftpEdit.reportType}"  onchange="reportChanged()">
-                  <f:selectItems value="#{cpSftpEdit.reportTypes}"/>
-                </h:selectOneMenu>
-                <h:panelGrid columns="2" columnClasses="column100Width,columnTopLeftAlign">
-                  <h:outputText style="white-space: nowrap;" value="#{msg['user.edit.import.reportTimeout']}" id="reportTimeoutLabel"/>
-                  <h:inputText converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.reportTimeout']}" value="#{cpSftpEdit.reportTimeout}" id="reportTimeout"/>
-                </h:panelGrid>
-              </h:panelGrid>
+              <h:selectOneMenu id="reportType" value="#{cpSftpEdit.reportType}"  onchange="reportChanged()">
+                <f:selectItems value="#{cpSftpEdit.reportTypes}"/>
+              </h:selectOneMenu>
+
+              <h:outputText style="white-space: nowrap;" value="#{msg['user.edit.import.reportTimeout']}" id="reportTimeoutLabel"/>
+              <h:inputText converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.reportTimeout']}" value="#{cpSftpEdit.reportTimeout}" id="reportTimeout"/>
+
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.encoding']}"/>
               <h:selectOneMenu value="#{cpSftpEdit.settings.encoding}">
@@ -154,9 +152,11 @@
         function typeChanged() {
           var dt = document.getElementById('workType');
           var disp = dt.options[0].selected ? 'none' : '';
-          var e = document.getElementById('createReports');
+          var e = document.getElementById('reportType');
           if(disp == 'none') {
             e.checked=false;
+            document.getElementById('reportTimeout').style.display = 'none';
+            document.getElementById('reportTimeoutLabel').style.display = 'none';
           }
           e.style.display = disp;
           document.getElementById('createReportsLabel').style.display = disp;
@@ -172,6 +172,7 @@
 
         typeChanged();
         reportChanged();
+
       </script>
 
     </tr:form>

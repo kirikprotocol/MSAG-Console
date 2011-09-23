@@ -492,7 +492,6 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
       filter.setStates(MessageState.Failed, MessageState.Expired, MessageState.Delivered);
 
       final boolean[] startReport = new boolean[]{fromtId == null};
-      System.out.println("From: "+filter.getStartDate()+" Till: "+filter.getEndDate());      //todo
       context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
         public boolean visit(Message mi) throws AdminException {
           if (startReport[0]) {

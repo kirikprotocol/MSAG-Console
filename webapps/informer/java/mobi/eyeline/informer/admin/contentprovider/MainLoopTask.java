@@ -127,6 +127,7 @@ class MainLoopTask implements Runnable {
     switch (ucps.getWorkType()) {
       case simple: return new SimpleSaveStrategy(context, resource, opts);
       case detailed: return new DetailedSaveStrategy(context, resource, opts);
+      case detailed_period: return new DetailedPeriodSaveStrategy(context, resource, opts);
       default: throw new IllegalArgumentException("Work type is unknown: "+ucps.getWorkType());
     }
   }
