@@ -63,6 +63,8 @@ public class RoutesConfigTest {
     assertNull(dst.getSubject());
     assertEquals("SILENT", dst.getSmeId());
     assertEquals(new Address(".1.1.???????????"), dst.getMask());
+
+    assertEquals(TrafficMode.PROHIBITED, r.getTrafficMode());
   }
 
   @Test

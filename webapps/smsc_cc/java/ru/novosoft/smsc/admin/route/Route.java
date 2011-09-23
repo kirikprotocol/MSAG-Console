@@ -33,7 +33,8 @@ public class Route implements Serializable {
   private Long categoryId;
   private String backupSmeId;
 
-  private boolean enabling = true;
+//  private boolean enabling = true;
+  private TrafficMode trafficMode = TrafficMode.ALL;
   private boolean active;
   private boolean archiving = true;
   private boolean transit = false;
@@ -242,12 +243,13 @@ public class Route implements Serializable {
     this.backupSmeId = backupSmeId;
   }
 
-  public boolean isEnabling() {
-    return enabling;
+  public TrafficMode getTrafficMode() {
+    return trafficMode;
   }
 
-  public void setEnabling(boolean enabling) {
-    this.enabling = enabling;
+  public void setTrafficMode(TrafficMode trafficMode) throws AdminException {
+    vh.checkNotNull("trafficMode", trafficMode);
+    this.trafficMode = trafficMode;
   }
 
   public boolean isActive() {

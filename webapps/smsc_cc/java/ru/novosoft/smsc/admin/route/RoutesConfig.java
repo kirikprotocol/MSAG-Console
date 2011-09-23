@@ -70,7 +70,7 @@ class RoutesConfig implements ManagedConfigFile<RouteSubjectSettings> {
           + "\" billing=\"" + getBillingString(r.getBilling())
           + "\" transit=\"" + r.isTransit()
           + "\" archiving=\"" + r.isArchiving()
-          + "\" enabling=\"" + r.isEnabling()
+          + "\" trafficMode=\"" + trafficMode2string(r.getTrafficMode())
           + "\" priority=\"" + r.getPriority()
           + "\" serviceId=\"" + r.getServiceId()
           + "\" suppressDeliveryReports=\"" + r.isSuppressDeliveryReports()
@@ -236,7 +236,7 @@ class RoutesConfig implements ManagedConfigFile<RouteSubjectSettings> {
     String name = routeElem.getAttribute("id");
     Route r = new Route(name);
     r.setPriority(Integer.parseInt(routeElem.getAttribute("priority")));
-    r.setEnabling(routeElem.getAttribute("enabling").equalsIgnoreCase("true"));
+    r.setTrafficMode(string2trafficMode(routeElem.getAttribute("trafficMode")));
     r.setArchiving(routeElem.getAttribute("archiving").equalsIgnoreCase("true"));
     final String billingAttr = routeElem.getAttribute("billing");
     r.setBilling(parseBillingMode(billingAttr));
@@ -280,6 +280,26 @@ class RoutesConfig implements ManagedConfigFile<RouteSubjectSettings> {
     r.setDestinations(parseDestinations(routeElem));
 
     return r;
+  }
+
+  private static String trafficMode2string(TrafficMode tmode) {
+    switch (tmode) {
+      case ALL : return "all";
+      case PROHIBITED: return "prohibited";
+      case SMS_ONLY: return "smsOnly";
+      case USSD_ONLY: return "ussdOnly";
+    }
+    return "all";
+  }
+
+  private static TrafficMode string2trafficMode(String str) {
+    if (str.equalsIgnoreCase("smsOnly"))
+      return TrafficMode.SMS_ONLY;
+    if (str.equalsIgnoreCase("ussdOnly"))
+      return TrafficMode.USSD_ONLY;
+    if (str.equalsIgnoreCase("prohibited"))
+      return TrafficMode.PROHIBITED;
+    return TrafficMode.ALL;
   }
 
   private static BillingMode parseBillingMode(String billingAttr) {

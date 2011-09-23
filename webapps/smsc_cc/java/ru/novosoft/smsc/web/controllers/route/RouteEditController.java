@@ -121,6 +121,13 @@ public class RouteEditController extends RouteController {
     return result;
   }
 
+  public List<SelectItem> getTrafficModes() {
+    List<SelectItem> result = new ArrayList<SelectItem>();
+    for (TrafficMode m : TrafficMode.values())
+      result.add(new SelectItem(m, m.name()));
+    return result;
+  }
+
 
   public DynamicTableModel getSourceMasks() {
     DynamicTableModel m = new DynamicTableModel();

@@ -58,8 +58,8 @@
             <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.active}"/>
           </eye:column>
 
-          <eye:column name="allowed" title="#{route['enabling']}" width="7%" align="center">
-            <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.enabling}"/>
+          <eye:column name="allowed" title="#{route['trafficMode']}" width="7%" align="center">
+            <h:outputText value="#{route.trafficMode}"/>
           </eye:column>
 
           <eye:column name="billing" title="#{route['billing']}" width="7%" align="center">

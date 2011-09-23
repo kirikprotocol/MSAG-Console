@@ -47,7 +47,7 @@
           <eye:inputText id="route" value="#{r.name}" required="true"/>
 
           <h:outputText value="#{route['notes']}"/>
-          <eye:inputText value="#{r.notes}" rows="2" cols="30"/>
+          <eye:inputText value="#{r.notes}" rows="2" cols="15"/>
 
           <h:outputText value="#{route['priority']}"/>
           <eye:inputText value="#{r.priority}"/>
@@ -92,28 +92,29 @@
           <h:selectOneMenu value="#{routeEdit.backupSme}">
             <f:selectItems value="#{routeEdit.smesWithEmpty}"/>
           </h:selectOneMenu>
+        </h:panelGrid>
 
+        <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="padding-left:15px;"> <!-- ROUTE OPTIONS -->
+          <h:outputText value="#{route['active']}"/>
+          <h:selectBooleanCheckbox value="#{r.active}"/>
+          <h:outputText value="#{route['archiving']}"/>
+          <h:selectBooleanCheckbox value="#{r.archiving}"/>
+          <h:outputText value="#{route['suppressDeliveryReports']}"/>
+          <h:selectBooleanCheckbox value="#{r.suppressDeliveryReports}"/>
+          <h:outputText value="#{route['hide']}"/>
+          <h:selectBooleanCheckbox value="#{r.hide}"/>
+          <h:outputText value="#{route['forceDelivery']}"/>
+          <h:selectBooleanCheckbox value="#{r.forceDelivery}"/>
+          <h:outputText value="#{route['transit']}"/>
+          <h:selectBooleanCheckbox value="#{r.transit}"/>
           <h:outputText value="#{route['billing']}"/>
           <h:selectOneMenu value="#{r.billing}">
             <f:selectItems value="#{routeEdit.billingModes}"/>
           </h:selectOneMenu>
-        </h:panelGrid>
-
-        <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn"> <!-- ROUTE OPTIONS -->
-          <h:selectBooleanCheckbox value="#{r.active}"/>
-          <h:outputText value="#{route['active']}"/>
-          <h:selectBooleanCheckbox value="#{r.enabling}"/>
-          <h:outputText value="#{route['enabling']}"/>
-          <h:selectBooleanCheckbox value="#{r.archiving}"/>
-          <h:outputText value="#{route['archiving']}"/>
-          <h:selectBooleanCheckbox value="#{r.suppressDeliveryReports}"/>
-          <h:outputText value="#{route['suppressDeliveryReports']}"/>
-          <h:selectBooleanCheckbox value="#{r.hide}"/>
-          <h:outputText value="#{route['hide']}"/>
-          <h:selectBooleanCheckbox value="#{r.forceDelivery}"/>
-          <h:outputText value="#{route['forceDelivery']}"/>
-          <h:selectBooleanCheckbox value="#{r.transit}"/>
-          <h:outputText value="#{route['transit']}"/>
+          <h:outputText value="#{route['trafficMode']}"/>
+          <h:selectOneMenu value="#{r.trafficMode}">
+            <f:selectItems value="#{routeEdit.trafficModes}"/>
+          </h:selectOneMenu>
         </h:panelGrid>
 
       </h:panelGrid>
