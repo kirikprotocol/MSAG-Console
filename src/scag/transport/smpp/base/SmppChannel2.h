@@ -35,14 +35,14 @@ protected:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(refLock_);
         ++ref_;
-        smsc_log_debug(log_,"ref +1 = %u",ref_);
+        smsc_log_debug(log_,"ref @%p +1 = %u",this,ref_);
     }
     
     void unref() {
         {
             smsc::core::synchronization::MutexGuard mg(refLock_);
             --ref_;
-            smsc_log_debug(log_,"ref -1 = %u",ref_);
+            smsc_log_debug(log_,"ref @%p -1 = %u",this,ref_);
             if (ref_>0) {
                 return;
             }
