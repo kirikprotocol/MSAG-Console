@@ -32,7 +32,9 @@ AbonentDetector::~AbonentDetector()
 {
   MutexGuard grd(_sync);
   doCleanUp();
-  smsc_log_debug(_logger, "%s: Deleted", _logId);
+  if (_logger)
+    _logger->log_((_state < adCompleted) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG,
+                  "%s: Deleted at state %s", _logId, state2Str());
 }
 
 const char * AbonentDetector::state2Str(ADState_e st)
@@ -57,6 +59,11 @@ void AbonentDetector::wrkHandlePacket(const SPckContractRequest & recv_pck) /*th
   bool wDone = true;
   {
     MutexGuard  grd(_sync);
+    if (_state != adIdle) {
+      smsc_log_error(_logger, "%s: protocol error: cmd %u is received at state %s",
+                     _logId, (unsigned)recv_pck._Cmd.Id(), state2Str());
+      return;
+    }
       
     if (verifyReq(&recv_pck._Cmd))
       wDone = onContractReq(&recv_pck._Cmd, _wrkId);

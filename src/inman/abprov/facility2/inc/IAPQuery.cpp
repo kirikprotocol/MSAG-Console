@@ -29,6 +29,10 @@ const char * IAPQueryAC::nmStage(ProcStage_e use_val)
 
 void IAPQueryAC::init(IAPQueryRefereeIface & use_owner, const AbonentId & ab_id)
 {
+  if ((_stages.get() != qryIdle) && (_stages.get() != qryDone)) {
+    smsc_log_warn(_logger, "%s(%s): reinit at stage %s", 
+                   taskName(), _abId.getSignals(), nmStage());
+  }
   _owner = &use_owner;
   _abId = ab_id;
   _stages.clear();
@@ -89,9 +93,11 @@ IAPQueryAC::ProcResult_e
 {
   IAPQueryAC::ProcResult_e res = IAPQueryAC::procOk;
 
-  if (_stages._current <= qryReporting)
+  if (_stages._current <= qryReporting) {
     _lsrList.push_back(ListenerInfo(&pf_cb));
-  else
+    smsc_log_debug(_logger, "%s(%s): added listener: %p", 
+                   taskName(), _abId.getSignals(), &pf_cb);
+  } else
     res = IAPQueryAC::procLater;
 
   this->notify();
@@ -109,6 +115,9 @@ IAPQueryAC::ProcResult_e
     if (it->_ptr == &pf_cb) {
       if (it->_isAimed)
         return IAPQueryAC::procLater;
+
+      smsc_log_debug(_logger, "%s(%s): removed listener: %p", 
+                     taskName(), _abId.getSignals(), &pf_cb);
       _lsrList.erase(it);
       return IAPQueryAC::procOk;
     }
@@ -125,9 +134,15 @@ IAPQueryAC::ProcResult_e
 
   while (!_lsrList.empty() && (getStage() == qryReporting)) {
     QueryListeners::iterator it = _lsrList.begin();
+    smsc_log_debug(_logger, "%s(%s): notifying listener: %p", 
+                   taskName(), _abId.getSignals(), it->_ptr);
+
     bool res = it->_isAimed = true;
     {
       ReverseMutexGuard rGrd(*this);
+      smsc_log_debug(_logger, "%s(%s): calling listener: %p", 
+                     taskName(), _abId.getSignals(), it->_ptr);
+
       try { res = it->_ptr->onIAPQueried(_abId, _abInfo, _qError);
       } catch (const std::exception & exc) {
         smsc_log_error(_logger, "%s(%s): listener exception: %s", 

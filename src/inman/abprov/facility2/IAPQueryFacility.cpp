@@ -160,12 +160,10 @@ bool IAPQueryFacility::startQuery(const AbonentId & ab_number, IAPQueryListenerI
     {
       MutexGuard grd(*pQry.get());
       if (pQry->addListener(pf_cb) != IAPQueryAC::procLater) {
-        smsc_log_debug(mLogger, "%s: listener is added to %s(%s)", mlogId,
-                       pQry->taskName(), ab_number.getSignals());
         rval = true;
       }
       //RARE case: query is just switched to qryStopping and is still
-      //registered, so wait until it will be discharged.
+      //registered, so wait a little until it will be discharged.
       do {
         smsc_log_debug(mLogger, "%s: awaiting %s(%s) to be unregistered", mlogId,
                        pQry->taskName(), ab_number.getSignals());
@@ -192,8 +190,6 @@ bool IAPQueryFacility::cancelQuery(const AbonentId & ab_number, IAPQueryListener
     MutexGuard  grd(*(pQry.get()));
     if (pQry->removeListener(pf_cb) == IAPQueryAC::procLater)
       return false;
-    smsc_log_debug(mLogger, "%s: listener is removed from %s(%s)", mlogId,
-                   pQry->taskName(), ab_number.getSignals());
 
     if (!pQry->hasListener()) {
       smsc_log_debug(mLogger, "%s: cancelling %s(%s)", mlogId,

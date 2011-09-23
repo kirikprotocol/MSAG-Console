@@ -110,9 +110,10 @@ bool AbntDetectorManager::onPacketReceived(unsigned conn_id, PacketBufferAC & re
       if (numWorkers() < _cfg.maxRequests) {
         wrkGrd = _wrkPool.allcObj();
         wrkGrd->wrkInit(iPck._Hdr.dlgId, this, _logger);
-        ((AbonentDetector*)wrkGrd.get())->configure(_cfg, mgrId());
+        (static_cast <AbonentDetector*>(wrkGrd.get()))->configure(_cfg, mgrId());
         monitorWorker(wrkGrd);
-        smsc_log_debug(_logger, "%s: allocated Worker[%u], poolIdx = %u", _logId, wrkGrd->wrkId(), wrkGrd.getPoolIdx());
+        smsc_log_debug(_logger, "%s: allocated Worker[%u], poolIdx = %u, monitored workers: %u",
+                       _logId, wrkGrd->wrkId(), wrkGrd.getPoolIdx(), numWorkers());
         _denyCnt = 0;
         /* */
       } else {
@@ -131,7 +132,7 @@ bool AbntDetectorManager::onPacketReceived(unsigned conn_id, PacketBufferAC & re
       }
     }
   }
-  ((AbonentDetector*)wrkGrd.get())->wrkHandlePacket(iPck);
+  (static_cast <AbonentDetector*>(wrkGrd.get()))->wrkHandlePacket(iPck);
   return true;
 }
 
