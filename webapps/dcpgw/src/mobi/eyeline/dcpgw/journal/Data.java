@@ -225,4 +225,21 @@ public class Data {
         );
     }
 
+    public Data clone(){
+        Data d = new Data();
+        d.setMessageId(message_id);
+        d.setStatus(status);
+        d.setSequenceNumber(sequence_number);
+        d.setConnectionName(connection_name);
+        d.setDestinationAddress(destination_address);
+        d.setSourceAddress(source_address);
+        d.setFinalMessageState(state);
+        d.setSubmitDate(submit_date);
+        d.setDoneDate(done_date);
+        d.setFirstSendingTime(first_sending_time);
+        d.setLastResendTime(last_resending_time);
+        d.setNsms(nsms);
+        return d;
+    }
+
 }

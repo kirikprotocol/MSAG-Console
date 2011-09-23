@@ -172,6 +172,7 @@ public class Journal {
                 pw = new PrintWriter(new FileWriter(j2t));
 
                 Set<Long> message_ids = new HashSet<Long>();
+                Set<Integer> sequence_numbers = new HashSet<Integer>();
 
                 buffReader1 = new BufferedReader (new FileReader(j2));
                 String line;
@@ -179,14 +180,14 @@ public class Journal {
                     String[] ar = line.split(sep);
                     long message_id = Long.parseLong(ar[2].trim());
                     Status status = Status.valueOf(ar[11].trim());
+                    int sequence_number = Integer.parseInt(ar[3]);
 
-                    if (status == Status.DONE || status == Status.EXPIRED_TIMEOUT || status == Status.EXPIRED_MAX_TIMEOUT) {
-                        if (message_ids.add(message_id)){
-                            log.debug(message_id+"_message has "+status+" status, remember it.");
-                        } else {
-                            log.warn("Couldn't remember message with status "+status+" because it's already added to the map. ");
-                        }
+                    if (status == Status.DONE || status == Status.EXPIRED_MAX_TIMEOUT) {
+                        message_ids.add(message_id);
+                    } else if (status == Status.EXPIRED_TIMEOUT){
+                        sequence_numbers.add(sequence_number);
                     }
+
                 }
                 buffReader1.close();
 
@@ -197,8 +198,9 @@ public class Journal {
 
                     long message_id = Long.parseLong(ar[2].trim());
                     String status = ar[11].trim();
+                    int sequence_number = Integer.parseInt(ar[3]);
 
-                    if (!message_ids.contains(message_id)){
+                    if (!message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)){
                         log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                         pw.println(line);
                         pw.flush();
