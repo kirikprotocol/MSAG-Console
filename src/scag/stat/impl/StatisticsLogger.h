@@ -27,7 +27,11 @@ using smsc::core::synchronization::Mutex;
 template<typename Event, typename Buffer>
 class StatisticsLogger {
 public:
-  StatisticsLogger(const string& statDir, const string& saaDir, const string& prefix, uint32_t interval);
+  StatisticsLogger(const string& statDir,
+                   const string& saaDir,
+                   const string& prefix,
+                   uint32_t interval,
+                   const string& suffix = "" );
   ~StatisticsLogger();
   void rollover();
   void logEvent(Event* event);
@@ -40,15 +44,16 @@ private:
   void createSaaDir() const;
 
 private:
-  string statDir_;
-  string saaDir_;
-  string prefix_;
-  string format_;
-  uint32_t interval_; 
-  File file_;
-  time_t lastFileTime_;
-  Mutex mutex_;
-  Logger* logger_;
+    string statDir_;
+    string saaDir_;
+    string prefix_;
+    // string format_;
+    string suffix_;
+    uint32_t interval_; 
+    File file_;
+    time_t lastFileTime_;
+    Mutex mutex_;
+    Logger* logger_;
 };
 
 template<typename Event, typename Buffer>

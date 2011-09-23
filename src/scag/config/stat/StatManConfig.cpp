@@ -1,4 +1,7 @@
 #include "StatManConfig.h"
+#include "util/config/ConfString.h"
+
+using smsc::util::config::ConfString;
 
 namespace scag {
 namespace config {
@@ -15,7 +18,8 @@ StatManConfig::StatManConfig()
     eventFilter.Empty();
     connect_timeout=1000;
     queue_length=100000;
-    filesPrefix = "events";
+    filesPrefix = "events.";
+    filesSuffix = "";
     rollingInterval = 10;
     saaDir = "";
     enabled = true;
@@ -124,6 +128,20 @@ void StatManConfig::init(const ConfigView& cv) throw(ConfigException)
         } catch (ConfigException& e) {
           smsc_log_warn(logger, "StatManConfig: %s Default value is %s", e.what(), enabled ? "true" : "false");
         }
+
+        try {
+            filesPrefix = ConfString(cv.getString("filePrefix")).c_str();
+        } catch (std::exception& e ) {
+            smsc_log_warn(logger,"StatManConfig: filePrefix using default '%s'",filesPrefix.c_str());
+        }
+
+        try {
+            filesSuffix = ConfString(cv.getString("fileSuffix")).c_str();
+        } catch (std::exception& e ) {
+            smsc_log_warn(logger,"StatManConfig: fileSuffix using default '%s'",filesSuffix.c_str());
+        }
+
+
     }
 	catch(ConfigException& e)
 	{
@@ -194,6 +212,7 @@ smsc::core::buffers::IntHash<std::string> StatManConfig::getEventFiler()const{re
 
 std::string StatManConfig::getSaaDir() const { return saaDir; }
 std::string StatManConfig::getFilesPrefix() const { return filesPrefix; }
+std::string StatManConfig::getFilesSuffix() const { return filesSuffix; }
 int StatManConfig::getRollingInterval() const { return rollingInterval; }
 bool StatManConfig::getEnabled() const { return enabled; }
 

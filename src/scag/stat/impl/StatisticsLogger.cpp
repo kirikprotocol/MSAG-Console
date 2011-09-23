@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include <vector>
 #include <exception>
+#include <assert.h>
 #include "core/synchronization/Mutex.hpp"
 #include "scag/util/io/HexDump.h"
 
@@ -25,14 +26,21 @@ namespace scag2 {
 namespace stat  {
 
 static const size_t PREFIX_MAXSIZE = 30;
+static const size_t STEM_MAXSIZE = 30;
 static const size_t SUFFIX_MAXSIZE = 30;
-static const size_t STAT_FILE_NAME_MAXSIZE = PREFIX_MAXSIZE + SUFFIX_MAXSIZE + 1;
+static const size_t STAT_FILE_NAME_MAXSIZE = PREFIX_MAXSIZE + STEM_MAXSIZE + SUFFIX_MAXSIZE + 1;
 
 template<typename Event, typename Buffer>
-StatisticsLogger<Event, Buffer>::StatisticsLogger(const string& statDir, const string& saaDir, const string& prefix, uint32_t interval):
-    statDir_(statDir), saaDir_(saaDir), prefix_(prefix), format_(prefix_ + ".%lld"),
-    interval_(interval), lastFileTime_(0), logger_(Logger::getInstance("statlog")) {
-  //TODO: check prefix size
+StatisticsLogger<Event, Buffer>::StatisticsLogger(const string& statDir,
+                                                  const string& saaDir,
+                                                  const string& prefix,
+                                                  uint32_t interval,
+                                                  const string& suffix ):
+    statDir_(statDir), saaDir_(saaDir), prefix_(prefix), // format_(prefix_ + ".%lld"),
+    interval_(interval), lastFileTime_(0), logger_(Logger::getInstance("statlog")) 
+{
+    assert( PREFIX_MAXSIZE > prefix_.size() );
+    assert( SUFFIX_MAXSIZE > suffix_.size() );
   checkDir();
 };
 
@@ -158,17 +166,43 @@ bool StatisticsLogger<Event, Buffer>::checkDir() {
 
 template<typename Event, typename Buffer>
 time_t StatisticsLogger<Event, Buffer>::getFileTime(const char* fname) const {
-  long long ftime = 0;
-  sscanf(fname, format_.c_str(), &ftime);
-  return time_t(ftime);
+    // long long ftime = 0;
+    if ( !fname ) {
+        throw smsc::util::Exception("invalid null saa filename");
+    }
+    if ( ::strncmp(fname,prefix_.c_str(),prefix_.size()) ) {
+        throw smsc::util::Exception("invalid saa filename (wrong prefix) '%s'",fname);
+    }
+    const size_t flen = ::strlen(fname);
+    if ( flen <= suffix_.size() ||
+         ::strcmp(fname + flen - suffix_.size(),suffix_.c_str()) ) {
+        throw smsc::util::Exception("invalid saa filename (wrong suffix) '%s'",fname);
+    }
+    const size_t stemlen = flen - prefix_.size() - suffix_.size();
+    if ( stemlen > STEM_MAXSIZE ) {
+        throw smsc::util::Exception("invalid saa filename (too long) '%s'",fname);
+    }
+    char buf[STEM_MAXSIZE+1];
+    memcpy(buf,fname+prefix_.size(),stemlen);
+    buf[stemlen] = '\0';
+    long ftime;
+    int pos = 0;
+    sscanf(buf, "%ld%n",ftime,&pos);
+    if ( pos != int(stemlen) ) {
+        throw smsc::util::Exception("invalid saa filename (wrong stem) '%s'",fname);
+    }
+    return time_t(ftime);
 }
 
 template<typename Event, typename Buffer>
 string StatisticsLogger<Event, Buffer>::getFileName(const string& path, time_t curTime) const {
-  char buf[STAT_FILE_NAME_MAXSIZE];
-  memset(buf, 0, STAT_FILE_NAME_MAXSIZE);
-  snprintf(buf, STAT_FILE_NAME_MAXSIZE, "%s.%d", prefix_.c_str(), int(curTime));
-  return path + '/' + string(buf);
+    char buf[STAT_FILE_NAME_MAXSIZE];
+    // memset(buf, 0, STAT_FILE_NAME_MAXSIZE);
+    sprintf(buf, "%s%ld%s",
+            prefix_.c_str(),
+            int(curTime),
+            suffix_.c_str());
+    return path + '/' + string(buf);
 }
 
 template<typename Event, typename Buffer>

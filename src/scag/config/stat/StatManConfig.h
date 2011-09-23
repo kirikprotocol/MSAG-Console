@@ -26,6 +26,8 @@ public:
 
     std::string getSaaDir() const;
     std::string getFilesPrefix() const;
+    // db: returning a string via value: herovo, but we goes along with the style
+    std::string getFilesSuffix() const;
     int getRollingInterval() const;
     bool getEnabled() const;
 	
@@ -56,6 +58,7 @@ protected:
 
         std::string saaDir;
         std::string filesPrefix;
+        std::string filesSuffix;
         int rollingInterval;
         bool enabled;
         smsc::logger::Logger* logger;

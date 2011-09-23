@@ -155,8 +155,11 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 
     initTraffic(smppTrafficByRouteId, traffloc + std::string("/SMPP/") + "traffic.dat");
     initTraffic(httpTrafficByRouteId, traffloc + std::string("/HTTP/") + "traffic.dat");
-    statLogger.reset(new StatLogger(statManConfig.getDir(), statManConfig.getSaaDir(),
-                                    statManConfig.getFilesPrefix(), statManConfig.getRollingInterval()));
+    statLogger.reset(new StatLogger(statManConfig.getDir(),
+                                    statManConfig.getSaaDir(),
+                                    statManConfig.getFilesPrefix(),
+                                    statManConfig.getRollingInterval(),
+                                    statManConfig.getFilesSuffix() ));
     statRoller.reset(new StatRoller(statLogger.get()));
 }
 

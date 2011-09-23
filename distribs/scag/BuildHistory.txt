@@ -865,6 +865,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2011-09-23 14:33 bukind msag-build-20110923
 2011-09-23 14:30 bukind
   lib bugfix: logger uses va_copy now
+2011-09-23 17:26 bukind
+  msag feature: saa file suffix
 
 --- current fixes ---
 2011-09-22 14:33 bukind
