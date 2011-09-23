@@ -58,7 +58,9 @@ Billing::~Billing()
 {
   MutexGuard grd(_sync);
   doCleanUp();
-  smsc_log_debug(_logger, "%s: Deleted", _logId);
+  if (_logger)
+    _logger->log_(((_pState == bilAborted) || (_pState == bilComplete)) ? Logger::LEVEL_DEBUG : Logger::LEVEL_WARN,
+                  "%s: Deleted at state %s", _logId, state2Str());
 }
 
 const char * Billing::state2Str(BillingState bil_state)
