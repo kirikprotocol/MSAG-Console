@@ -79,34 +79,28 @@ void AsynWorkerManagerAC::workerDone(const WorkerIface & p_worker)
 {
   //NOTE: worker object destruction may lasts rather long time,
   //      so perform it while _mgrSync is unlocked.
-  WorkerID wrkId = p_worker.wrkId();
-  {
-    WorkerGuard  tGrd;
-    {
-      MutexGuard grd(_mgrSync);
-      WorkerGuard * wGrd = _wrkReg.GetPtr(wrkId);
-      if (!wGrd || !wGrd->get()) {
-        smsc_log_warn(_logger, "%s: uncontrolled Worker[%u] reported completion",
-                       _logId, wrkId);
-        return;
-      }
-      WorkerID numRefs = wGrd->getRefs();
-//      if (numRefs > 1) {
-        smsc_log_debug(_logger, "%s: Worker[%u] reported completion, having %u refs",
-                       _logId, wrkId, (unsigned)numRefs);
-//      }
-      tGrd = *wGrd;
-      wGrd->release(); //mark worker as no longer monitored, but still registered
-    }
-    //worker may be destoyed at this point.
-    onWorkerRelease(tGrd);
-  }
-  //unregister worker
+  WorkerID      wrkId = p_worker.wrkId();
+  WorkerGuard   tGrd;
   {
     MutexGuard grd(_mgrSync);
+    WorkerGuard * wGrd = _wrkReg.GetPtr(wrkId);
+    if (!wGrd || !wGrd->get()) {
+      smsc_log_warn(_logger, "%s: uncontrolled Worker[%u] reported completion",
+                     _logId, wrkId);
+      return;
+    }
+    tGrd = *wGrd;
     _wrkReg.Delete(wrkId);
     _mgrSync.notify();
   }
+  WorkerID numRefs = tGrd.getRefs();
+//  if (numRefs > 1) {
+    smsc_log_debug(_logger, "%s: Worker[%u] reported completion, having %u refs",
+                   _logId, wrkId, (unsigned)numRefs);
+//  }
+
+  //worker may be destoyed at this point.
+  onWorkerRelease(tGrd);
 }
 
 //Creates a monitored worker guarding object (prevents worker from being deleted).
