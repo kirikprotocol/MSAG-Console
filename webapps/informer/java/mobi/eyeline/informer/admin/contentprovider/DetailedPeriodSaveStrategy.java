@@ -118,10 +118,14 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
     }
   }
 
-  private void deleteAllReports(String localCsvFile) throws AdminException{
+  private void deleteAllReportInfos(String localCsvFile) throws AdminException {
     for(File f : getReportInfoFiles(localCsvFile)) {
       helper.delete(f);
     }
+  }
+
+  private void deleteAllReports(String localCsvFile) throws AdminException{
+    deleteAllReportInfos(localCsvFile);
     for(File f : getReportFiles(localCsvFile)) {
       helper.delete(f);
     }
@@ -148,8 +152,8 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
     for(File f : fs) {
       if(!remoteFiles.contains(f.getName())) {
         helper.uploadFileToResource(resource, f, remoteFiles);
-        //todo remove
       }
+      helper.delete(f);
     }
   }
 
@@ -169,6 +173,7 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
       if(remoteFiles.contains(localInProcessFile)) {
         uploadReports(remoteFiles, localCsvFile);
         resource.rename(localInProcessFile, localFinishedFile.getName());
+        deleteAllReportInfos(localCsvFile);
         long time = System.currentTimeMillis() - start;
         if(time >= maxTimeMillis) {
           if(log.isDebugEnabled()) {
