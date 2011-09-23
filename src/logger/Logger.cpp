@@ -40,7 +40,10 @@ char * vform(const char* format, va_list args,char* buf,size_t bufsize)
   {
 
     while (1) {
+      va_list aq;
+      va_copy(aq,args);
       int n = ::vsnprintf(buffer, size, format, args);
+      va_end(aq);
   
       // If that worked, return a string.
       if ((n > -1) && (static_cast<size_t>(n) < size)) {

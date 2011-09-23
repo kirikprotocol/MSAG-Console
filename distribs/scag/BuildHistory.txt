@@ -866,3 +866,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss feature: SO_REUSEADDR is set on pvss server socket
 2011-09-22 15:26 bukind
   pvss bugfix: backup file roller use unbuffered files, sync access
+2011-09-23 14:30 bukind
+  lib bugfix: logger uses va_copy now

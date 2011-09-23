@@ -12,3 +12,5 @@ logger/testNewLogger testNewLogger \
   -lutil \
   $(LIBNSL) \
   -lpthread $(LIBRT) -ldl
+
+logger/testVform testVform
