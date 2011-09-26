@@ -51,6 +51,8 @@ std::auto_ptr<PersServer> persServer;
 
 #ifdef SNMP
 
+extern "C" {
+
 MsagCounterTableElement* counterListCtor( MsagCounterTableElement* list )
 {
     return scag2::counter::Manager::getInstance().updateSnmpCounterList(list);
@@ -63,6 +65,8 @@ void counterListDtor( MsagCounterTableElement* list )
         delete list;
         list = next;
     }
+}
+
 }
 
 #endif

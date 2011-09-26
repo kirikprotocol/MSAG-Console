@@ -110,7 +110,7 @@ SerializeBuffer& SerializeBuffer::operator>>(uint64_t& val)
 
 SerializeBuffer& SerializeBuffer::operator<<(time_t val)
 {
-    uint32_t tmp=uint32_t(ntohl(val));
+    uint32_t tmp=uint32_t(ntohl(uint32_t(val)));
     this->Append((char*)&tmp,4);
     return *this;
 }
