@@ -156,8 +156,8 @@ div.eyeline_loading {
   background-image: url("../images/loading.gif");
   background-position: center;
   background-repeat: no-repeat;
-  height: 40px;
-  width:40px;
+  height: 20px;
+  width:20px;
 }
 
 .eyeline_progress_error {

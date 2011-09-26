@@ -120,7 +120,7 @@ public class DataTableController {
 
     public List getRows(int startPos, int count, final DataTableSortOrder dataTableSortOrder) {
       try {
-        Thread.sleep(500);
+        Thread.sleep(2000);
       } catch (InterruptedException e) {
       }
       if(dataTableSortOrder == null || dataTableSortOrder.getColumnId().equals("field1")) {

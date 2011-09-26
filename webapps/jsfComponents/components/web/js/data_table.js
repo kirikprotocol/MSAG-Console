@@ -53,30 +53,42 @@ function DataTable(tableId, tableOptions) {
     params["eyelineComponentUpdate"] = tableId;
     $.ajaxSetup({cache: false});
 
+    var progress = null;
+
     var onResponse = function(data, status, resp) {
       if (status != 'success')
         return;
 
       if (typeof(data) == "object") {
         if (data.type == "progress") {
+          progress = data.data;
           progressOverlay.showProgress(data.data + "%");
           window.setTimeout(_sendRequest, 1000);
         } else {
+          progress = 100;
           progressOverlay.showError(data.data);
         }
       } else {
         var rowsCount = resp.getResponseHeader("rowsCount");
+        progress = 100;
         progressOverlay.hide();
         bodyElement.html(data);
         navbar.setTotal(rowsCount)
       }
     };
 
+    var _updateOverlay = function() {
+      if (progress != 100)
+        progressOverlay.showProgress(progress);
+    };
+
     var _sendRequest = function() {
       $.post(requestUrl, params, onResponse);
     };
 
-    progressOverlay.showProgress(null);
+    progress = null;
+    window.setTimeout(_updateOverlay, 1000);
+//    progressOverlay.showProgress(null);
     _sendRequest();
   };
 
@@ -218,8 +230,8 @@ var ProgressOverlay = function(parent) {
   var visible = false;
 
   var progressElement = $("<table>").addClass("eyeline_overlay");
-  $('<tr><td align="center" valign="center">' +
-      '<div style="margin-top:auto;margin-bottom:auto;">' +
+  $('<tr><td align="center" valign="bottom">' +
+      '<div>' +
       '<table style="width:0%"><tr>' +
       '<td><div class="eyeline_loading"></div></td>' +
       '<td><span></span></td>' +

@@ -130,16 +130,6 @@ public class DataTableRenderer extends Renderer {
 
     w.a("\n<table class=\"" + classStr + "\" id=\"" + t.getId() + "\" cellspacing=\"1\">");
 
-    // RENDER <colgroup>
-//    w.a("<colgroup>");
-//    if (isRowsSelectionEnabled)
-//      w.a("\n<col width=\"1%\"/>");
-//    if (hasInnerData)
-//      w.a("\n<col width=\"1%\"/>");
-//    for (Column column : columns)
-//      w.a("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
-//    w.a("</colgroup>");
-
     //RENDER <thead>
     w.a("\n<thead>");
     if (isRowsSelectionEnabled)
@@ -156,10 +146,7 @@ public class DataTableRenderer extends Renderer {
 
     // RENDER <tbody>
     int columnsNumber = getNumberOfColumns(t);
-    w.a("\n<tbody>");
-    for (int i=0; i<t.getPageSize(); i++)
-      w.a("<tr class=\"eyeline_row" + (i&1) + "\"><td colspan=\"" + columnsNumber + "\">&nbsp;</td></tr>");
-    w.a("\n</tbody>");
+    w.a("\n<tbody></tbody>");
 
     //RENDER <tfoot>
     w.a("<tfoot>");
@@ -243,10 +230,6 @@ public class DataTableRenderer extends Renderer {
 
     HtmlWriter w = new HtmlWriter(context.getResponseWriter());
     if (t.getError() == null && t.getLoadCurrent() == null) {
-//      int columnsNumber = getNumberOfColumns(t);
-//      for (int i=t.getRowsOnPage(); i<t.getPageSize(); i++) {
-//        w.a("<tr class=\"eyeline_row" + (i&1) + "\"><td colspan=\"" + columnsNumber + "\">&nbsp;</td></tr>");
-//      }
 
       boolean columnFooter = false;
       for (UIComponent ch : t.getFirstRow().getChildren()) {
