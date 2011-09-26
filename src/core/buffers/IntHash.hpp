@@ -200,7 +200,8 @@ public:
     unsigned int valIdx;
     if (!unmarkVal(key, valIdx))
       return false;
-    values[valIdx] = T();
+    (&values[valIdx])->~T();
+    new (&values[valIdx]) T();
     return true;
   }
 
@@ -210,7 +211,8 @@ public:
     if (!unmarkVal(key, valIdx))
       return false;
     value = values[valIdx];
-    values[valIdx] = T();
+    (&values[valIdx])->~T();
+    new (&values[valIdx]) T();
     return true;
   }
 
