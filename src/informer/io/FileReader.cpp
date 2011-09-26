@@ -35,7 +35,7 @@ size_t FileReader::readRecords( TmpBufBase<char>& buf,
             if (ptr < buf.getCurPtr()) {
                 const size_t pos = fg_.getPos()-buf.getPos();
                 throw FileReadException( fg_.getFileName(), 0, pos,
-                                         "file is garbled at %llu", ulonglong(pos));
+                                         "file is garbled near EOF at %llu", ulonglong(pos));
             }
             break;
         }
