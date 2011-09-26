@@ -13,7 +13,8 @@ namespace iaprvd {
 /* ************************************************************************** *
  * class IAPQueryFacility implementation:
  * ************************************************************************** */
-const TimeSlice  IAPQueryFacility::_dflt_ShutdownTmo(300, TimeSlice::tuMSecs);
+const TimeSlice  IAPQueryFacility::k_dflt_QueryStartTmo(100, TimeSlice::tuMSecs);
+const TimeSlice  IAPQueryFacility::k_dflt_ShutdownTmo(300, TimeSlice::tuMSecs);
 
 //Returns false in case of inconsistent facility state.
 //NOTE: setting max_threads to 0 turns off threads number limitation!
@@ -94,7 +95,9 @@ void IAPQueryFacility::procQueryEvent(const IAPQueryRef & p_qry)
 {
   if (p_qry->getStage() >= IAPQueryAC::qryStopping) { //unregister reported query
     MutexGuard   grd(mSync);
-    if (!mQryReg.Delete(p_qry->getAbonentId())) {
+    if (mQryReg.Delete(p_qry->getAbonentId())) {
+      p_qry->notify(); //query may be awaited to be unregistered
+    } else {
       smsc_log_debug(mLogger, "%s: non-registered %s(%s) reported event(%s)", mlogId,
                     p_qry->taskName(), p_qry->getAbonentId().getSignals(), p_qry->nmStage());
     }
@@ -130,6 +133,7 @@ void IAPQueryFacility::onQueryEvent(IAPQueryId qry_id)
 // ----------------------------------------------
 //Starts query and binds listener to it.
 //Returns true if query succesfully started, false otherwise
+//NOTE: may block for a k_dflt_QueryStartTmo timeout !
 bool IAPQueryFacility::startQuery(const AbonentId & ab_number, IAPQueryListenerITF & pf_cb)
 {
   bool rval = false;
@@ -159,18 +163,20 @@ bool IAPQueryFacility::startQuery(const AbonentId & ab_number, IAPQueryListenerI
     //add a listener to query
     {
       MutexGuard grd(*pQry.get());
-      if (pQry->addListener(pf_cb) != IAPQueryAC::procLater) {
-        rval = true;
-      }
+      if (pQry->addListener(pf_cb) != IAPQueryAC::procLater)
+        return true;
       //RARE case: query is just switched to qryStopping and is still
       //registered, so wait a little until it will be discharged.
-      do {
-        smsc_log_debug(mLogger, "%s: awaiting %s(%s) to be unregistered", mlogId,
+      smsc_log_debug(mLogger, "%s: awaiting %s(%s) to be unregistered", mlogId,
+                     pQry->taskName(), ab_number.getSignals());
+      pQry->wait(k_dflt_QueryStartTmo);
+      if (isRegistered(pQry)) {
+        smsc_log_error(mLogger, "%s: %s(%s) deregistration is timed out", mlogId,
                        pQry->taskName(), ab_number.getSignals());
-        pQry->wait();
-      } while (isRegistered(pQry));
-      pQry.release();
+        return false;
+      }
     }
+    pQry.release();
   } while (!rval);
   return rval;
 }

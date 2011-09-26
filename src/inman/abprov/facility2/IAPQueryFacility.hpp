@@ -31,11 +31,12 @@ public:
   };
 
   static const unsigned   _MAX_IDENT_SZ = 32;
-  static const TimeSlice  _dflt_ShutdownTmo;  //default shutdown timeout = 300 millisecs.
-                                              //Upon its expiration all active queries are killed.
+  static const TimeSlice  k_dflt_QueryStartTmo; //default timeput on IAPQuery start.
+  static const TimeSlice  k_dflt_ShutdownTmo;   //default shutdown timeout = 300 millisecs.
+                                                //Upon its expiration all active queries are killed.
 
   explicit IAPQueryFacility(const char * use_ident, Logger * use_log = NULL)
-    : mState(fctIdle), mShtdTmo(&_dflt_ShutdownTmo), mQryPool(0), mlogId(use_ident)
+    : mState(fctIdle), mShtdTmo(&k_dflt_ShutdownTmo), mQryPool(0), mlogId(use_ident)
     , mLogger(use_log ? use_log : Logger::getInstance(IAPROVIDER_DFLT_LOGGER))
     , mIapNtfr(use_ident, mLogger)
   { }
@@ -62,6 +63,7 @@ public:
   // -------------------------------------------------------
   //Starts query and binds listener to it.
   //Returns: true if query succesfully started, false otherwise
+  //NOTE: may block for a k_dflt_QueryStartTmo timeout !
   virtual bool startQuery(const AbonentId & ab_number, IAPQueryListenerITF & pf_cb);
   //Unbinds query listener, cancels query if no listeners remain.
   //Returns: false if listener is already targeted and query waits for its mutex.
