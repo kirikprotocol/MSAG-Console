@@ -2,8 +2,9 @@
  * Класс TextColumn
  * @param columnId
  */
-function TextColumn(columnId, allowEditAfterAdd, allowEmpty) {
+function TextColumn(columnId, columnClass, allowEditAfterAdd, allowEmpty) {
   this.columnId = columnId;
+  this.columnClass = columnClass;
 
   //--------------------------------------------------------------------------------------------------------------------
   var createInput = function(id, value) {
@@ -32,6 +33,7 @@ function TextColumn(columnId, allowEditAfterAdd, allowEmpty) {
   this.createColumnElement = function (tableId, newRow, newCount, value) {
     var id = getValueElementId(tableId, newCount);
     var newCell = newRow.insertCell(newRow.cells.length);
+    newCell.className=columnClass;
     if (!allowEditAfterAdd) {
       var input = document.createElement("input");
       input.name = id;
@@ -76,8 +78,9 @@ function TextColumn(columnId, allowEditAfterAdd, allowEmpty) {
  * @param columnId
  * @param values
  */
-function SelectColumn(columnId, values, allowEditAfterAdd, uniqueValues) {
+function SelectColumn(columnId, values, columnClass, allowEditAfterAdd, uniqueValues) {
   this.columnId = columnId;
+  this.columnClass = columnClass;
 
   //--------------------------------------------------------------------------------------------------------------------
   var getValueElementId = function(tableId, rowNum) {
@@ -108,6 +111,7 @@ function SelectColumn(columnId, values, allowEditAfterAdd, uniqueValues) {
   this.createColumnElement = function(tableId, newRow, newCount, value) {
     var id = getValueElementId(tableId, newCount);
     var newCell = newRow.insertCell(newRow.cells.length);
+    newCell.className=columnClass;
     if (!allowEditAfterAdd) {
       var input = document.createElement("input");
       input.name = id;

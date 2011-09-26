@@ -101,8 +101,12 @@ public class DynamicTableRenderer extends Renderer {
 
     int i = 0;
     for (Column c : table.getColumns()) {
+      String columnClass = c.getColumnClass();
+      if (columnClass == null)
+        columnClass="";
+
       if (c instanceof TextColumn) {
-        w.a("var column" + i + "= new TextColumn('" + c.getName() + "'," + ((TextColumn) c).isAllowEditAfterAdd() + "," + ((TextColumn) c).isAllowEmpty() + ");\n");
+        w.a("var column" + i + "= new TextColumn('" + c.getName() + "','" + columnClass + "'," + ((TextColumn) c).isAllowEditAfterAdd() + "," + ((TextColumn) c).isAllowEmpty() + ");\n");
 
       } else if (c instanceof SelectColumn) {
         StringBuilder values = new StringBuilder();
@@ -115,7 +119,7 @@ public class DynamicTableRenderer extends Renderer {
         }
         values.append(')');
 
-        w.a("var column" + i + "= new SelectColumn('" + c.getName() + "'," + values.toString() + ',' + ((SelectColumn) c).isAllowEditAfterAdd() + ',' + ((SelectColumn) c).isUniqueValues() + ");\n");
+        w.a("var column" + i + "= new SelectColumn('" + c.getName() + "'," + values.toString() + ",'" + columnClass + "'," + ((SelectColumn) c).isAllowEditAfterAdd() + ',' + ((SelectColumn) c).isUniqueValues() + ");\n");
       }
       i++;
     }
