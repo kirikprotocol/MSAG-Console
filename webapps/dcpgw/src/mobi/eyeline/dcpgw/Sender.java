@@ -1,5 +1,6 @@
 package mobi.eyeline.dcpgw;
 
+import mobi.eyeline.dcpgw.dcp.DcpConnection;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.smpp.api.SmppException;
@@ -8,7 +9,6 @@ import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -26,18 +26,12 @@ public class Sender extends Thread{
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     private DcpConnection connection;
-    private String host;
-    private int port;
-    private String login;
-    private String password;
 
     private int capacity;
 
     private long sending_timeout;
 
     private final Map<Integer, LinkedBlockingQueue<Message>> delivery_id_queue_map;
-
-    private boolean interrupt = false;
 
     private SmppServer smppServer;
 
@@ -51,11 +45,9 @@ public class Sender extends Thread{
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
-    public Sender(String host, int port, final String login, String password, int capacity, long sending_timeout, SmppServer smppServer){
-        this.host = host;
-        this.port = port;
-        this.login = login;
-        this.password = password;
+    public Sender(DcpConnection dcpConnection, int capacity, long sending_timeout, SmppServer smppServer){
+        log.debug("Try to initialize sender ...");
+        this.connection = dcpConnection;
 
         this.capacity = capacity;
 
@@ -70,6 +62,14 @@ public class Sender extends Thread{
 
         id_seq_num_table = new Hashtable<Long, Integer>();
         id_conn_name_table = new Hashtable<Long, String>();
+    }
+
+    public void setDcpConnection(DcpConnection connection){
+        this.connection = connection;
+    }
+
+    public DcpConnection getDcpConnection(){
+        return connection;
     }
 
     public void addMessage(long id,
@@ -130,30 +130,6 @@ public class Sender extends Thread{
             log.debug(delivery_id+"_queue size has increased to "+size+".");
 
             if (queue.size() == 1){
-
-                if (connection == null){
-                    try{
-                        log.debug("Try to create new dcp connection for user '"+login+"' ...");
-                        connection = new DcpConnection(host, port, login, password);
-                        log.debug("Successfully create new dcp connection for user '"+login+"'.");
-                    } catch (AdminException e) {
-                        log.error("Couldn't create new dcp connection for user '"+login+"'.",e);
-
-                        try {
-                            SubmitSMResp submitSMResp = new SubmitSMResp();
-                            submitSMResp.setConnectionName(connection_name);
-                            submitSMResp.setStatus(Status.SYSERR);
-                            submitSMResp.setSequenceNumber(sequence_number);
-                            smppServer.send(submitSMResp, false);
-
-                        } catch (SmppException e1) {
-                            log.error(e1);
-                            // todo ?
-                        }
-
-                    }
-                }
-
                 SendTask sendTask = new SendTask(this, delivery_id);
                 ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, sending_timeout, TimeUnit.MILLISECONDS);
                 queue_task_map.put(queue, scheduledFuture);
@@ -200,8 +176,6 @@ public class Sender extends Thread{
                 log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
                 connection.addDeliveryMessages(delivery_id, list);
                 log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
-
-
 
                 DeliveryStatistics delivery_statistics = connection.getDeliveryState(delivery_id);
                 DeliveryState ds = delivery_statistics.getDeliveryState();
@@ -272,10 +246,10 @@ public class Sender extends Thread{
     }
 
     public void run() {
-        log.debug("Start sender for user '"+login+"'.");
-        while(!interrupt){
+        log.debug("Start sender for connection: "+connection+".");
+        while(!isInterrupted()){
 
-            log.debug("Iterate queues for user "+login+".");
+            log.debug("Iterate queues for connection "+connection+".");
 
             while(!sendTaskQueue.isEmpty()){
                 SendTask sendTask = sendTaskQueue.poll();
@@ -284,21 +258,14 @@ public class Sender extends Thread{
 
             synchronized (this){
                 try{
-                    log.debug("Sender for user '"+login+"' wait.");
+                    log.debug("Sender for connection "+connection+" wait.");
                     wait();
                 } catch (InterruptedException e) {
                     log.error(e);
-                    // todo ?
                 }
             }
         }
-        log.debug("Sender for user '"+login+"' has finished.");
+        log.debug("Sender for connection "+connection+" finished work.");
     }
-
-    public void interrupt(){
-        interrupt = true;
-    }
-
-
 
 }

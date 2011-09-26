@@ -18,13 +18,12 @@ public class JournalTest extends T {
     private static File j2;
     private static File j2t;
 
-    private static final String sep=";";
-
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         String user_dir = System.getProperty("user.dir");
+        System.out.println("user.dir="+user_dir);
 
-        File dir = new File(user_dir + "/.build/journal");
+        File dir = new File(user_dir + File.separator+".build"+File.separator+"journal");
         registerTestObject(dir);
 
         j1 = new File(user_dir +"/.build/journal/j1.csv");
@@ -53,7 +52,7 @@ public class JournalTest extends T {
         br.close();
 
         Assert.assertNotNull("Journal file is empty.", line);
-        Data d = Data.parse(line, sep);
+        Data d = Data.parse(line);
 
         boolean isEquals = e.equals(d);
         Assert.assertTrue("Journal write doesn't work.", isEquals);
@@ -81,7 +80,7 @@ public class JournalTest extends T {
             Assert.assertTrue("Expected and loaded data objects differ.", isEquals);
         }
 
-        j1.delete();
+        System.out.println(j1.delete());
     }
 
     @Test
@@ -110,10 +109,15 @@ public class JournalTest extends T {
         Hashtable<Integer, Data> t = journal.load();
         Data loaded = t.get(expected.getSequenceNumber());
         boolean isEquals = expected.equals(loaded);
-        Assert.assertTrue("Data object dismatch.", isEquals);
+        Assert.assertTrue("Data object wrong.", isEquals);
 
         j1.delete();
     }
+
+    /*@Test
+    public void get022loadTest() throws Exception {
+
+    }*/
 
     @Test
     public void get03cleanTest() throws Exception{
@@ -164,11 +168,11 @@ public class JournalTest extends T {
         Assert.assertNotNull("Couldn't first read line.", line1);
         Assert.assertNotNull("Couldn't second read line.", line2);
 
-        Data loaded1 = Data.parse(line1, ";");
+        Data loaded1 = Data.parse(line1);
         boolean isEquals = expected1.equals(loaded1);
         Assert.assertTrue("First data object wrong.", isEquals);
 
-        Data loaded2 = Data.parse(line2, ";");
+        Data loaded2 = Data.parse(line2);
         isEquals = expected2.equals(loaded2);
         Assert.assertTrue("Second data object wrong.", isEquals);
 
@@ -197,7 +201,7 @@ public class JournalTest extends T {
         br.close();
         Assert.assertNotNull("Couldn't read first line.", line);
 
-        d = Data.parse(line, sep);
+        d = Data.parse(line);
         boolean isEquals = expected.equals(d);
         Assert.assertTrue("Data object wrong.", isEquals);
 
@@ -213,7 +217,6 @@ public class JournalTest extends T {
     public static void main(String[] args) {
         JUnitCore core = new JUnitCore();
         core.addListener(new CalcListener());
-        // Обратите внимание на этот вызов - ниже немного комментариев
         core.run(Request.aClass(JournalTest.class).sortWith(forward()));
     }
 

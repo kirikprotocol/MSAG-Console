@@ -19,7 +19,7 @@ import java.util.*;
  *
  * @author Aleksandr Khalitov
  */
-class DcpConverter {
+public class DcpConverter {
 
   private static final TimeZone DCP_TIMEZONE=TimeZone.getTimeZone("UTC");
 

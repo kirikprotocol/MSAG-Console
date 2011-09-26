@@ -15,7 +15,7 @@ import java.util.Date;
  * Date: 10.07.11
  * Time: 19:42
  */
-public class Data {
+public class Data implements Cloneable{
 
     private long message_id;
 
@@ -44,6 +44,8 @@ public class Data {
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
     private static Calendar cal = Calendar.getInstance();
+
+    private static final String sep=";";
 
     public Data(){
 
@@ -168,9 +170,9 @@ public class Data {
         return status;
     }
 
-    public static Data parse(String line, String separator) throws ParseException, InvalidAddressFormatException {
+    public static Data parse(String line) throws ParseException, InvalidAddressFormatException {
         Data data = new Data();
-        String[] ar = line.split(separator);
+        String[] ar = line.split(sep);
 
         Date date = sdf.parse(ar[0]);
         long first_sending_time = date.getTime();
@@ -209,6 +211,25 @@ public class Data {
         return data;
     }
 
+    public static String format(Data data){
+        cal.setTimeInMillis(data.getFirstSendingTime());
+        Date first_sending_date = cal.getTime();
+        cal.setTimeInMillis(data.getLastResendTime());
+        Date last_resending_time = cal.getTime();
+        return sdf.format(first_sending_date) + sep +
+               sdf.format(last_resending_time) + sep +
+               data.getMessageId() + sep +
+               data.getSequenceNumber() + sep +
+               data.getSourceAddress().getAddress() + sep +
+               data.getDestinationAddress().getAddress()+ sep +
+               data.getConnectionName() + sep +
+               sdf.format(data.getSubmitDate()) + sep +
+               sdf.format(data.getDoneDate()) + sep +
+               data.getFinalMessageState() + sep +
+               data.getNsms() + sep +
+               data.getStatus();
+    }
+
     public boolean equals(Data data){
         return (message_id == data.getMessageId() &&
                 connection_name.equals(data.getConnectionName()) &&
@@ -225,8 +246,8 @@ public class Data {
         );
     }
 
-    public Data clone(){
-        Data d = new Data();
+    public Data clone() throws CloneNotSupportedException {
+        Data d = (Data) super.clone();
         d.setMessageId(message_id);
         d.setStatus(status);
         d.setSequenceNumber(sequence_number);

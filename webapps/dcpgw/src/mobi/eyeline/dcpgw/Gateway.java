@@ -1,36 +1,55 @@
 package mobi.eyeline.dcpgw;
 
-import mobi.eyeline.dcpgw.admin.UpdateConfigServer;
+import mobi.eyeline.dcpgw.admin.protogen.protocol.UpdateConfigResp;
+import mobi.eyeline.dcpgw.dcp.DcpConnection;
+import mobi.eyeline.dcpgw.dcp.DcpConnectionImpl;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
+import mobi.eyeline.dcpgw.exeptions.CouldNotReadMessageStateException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.journal.Journal;
 import mobi.eyeline.dcpgw.journal.Status;
+import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.MessageState;
+import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
+import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.config.XmlConfigException;
+import mobi.eyeline.protogen.framework.*;
 import mobi.eyeline.smpp.api.ConnectionNotEstablishedException;
 import mobi.eyeline.smpp.api.ConnectionNotFoundException;
 import mobi.eyeline.smpp.api.PDUListener;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.*;
+import mobi.eyeline.smpp.api.pdu.PDU;
 import mobi.eyeline.smpp.api.pdu.data.Address;
+import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
+import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import mobi.eyeline.smpp.api.processing.ProcessingQueue;
 import mobi.eyeline.smpp.api.processing.QueueException;
 import mobi.eyeline.smpp.api.types.EsmMessageType;
+import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Gateway extends Thread implements PDUListener {
 
@@ -62,7 +81,7 @@ public class Gateway extends Thread implements PDUListener {
 
     private static long sending_timeout;
 
-    private static Hashtable<String, Sender> user_senders_map;
+    private static Hashtable<String, Sender> user_sender_table;
 
     private static String informer_host;
     private static int informer_port;
@@ -90,12 +109,14 @@ public class Gateway extends Thread implements PDUListener {
 
         String user_dir = System.getProperty("user.dir");
         String smpp_server_config_file = user_dir + File.separator + "conf" + File.separator + "config.properties";
+        log.debug("config file: "+smpp_server_config_file);
         cm = new ConfigurationManager(smpp_server_config_file);
 
         try {
             config = cm.loadSmppConfigurations();
 
             user_password_table = cm.loadUsers();
+
             connection_provider_table = cm.loadProviders();
         } catch (IOException e) {
             log.error(e);
@@ -105,90 +126,7 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        // �������������� ������ ����������� ������������.
-        String update_config_server_host = config.getProperty("update.config.server.host");
-
-        String s = Utils.getProperty(config, "update.config.server.port");
-        int update_config_server_port = Integer.parseInt(s);
-
-        try {
-            new UpdateConfigServer(update_config_server_host, update_config_server_port);
-        } catch (IOException e) {
-            log.error("Couldn't initialize update config server socket with host '" + update_config_server_host + "' and port '" + update_config_server_port + "'. ", e);
-            throw new InitializationException(e);
-        }
-
-        // �������������� ������.
-        int max_journal_size_mb = Utils.getProperty(config, "max.journal.size.mb", 10);
-        String journal_dir = Utils.getProperty(config, "journal.dir", System.getProperty("user.dir")+File.separator+"journal");
-        journal = new Journal(new File(journal_dir), max_journal_size_mb);
-
-        try {
-            sequence_number_receipt_table = journal.load();
-        } catch (CouldNotLoadJournalException e) {
-            log.error("Couldn't load journal.", e);
-            throw new InitializationException(e);
-        }
-
-        // �������������� smpp ������.
-
-        PDUListenerImpl pduListener = new PDUListenerImpl();
-
-        procQueue = new ProcessingQueue(config, pduListener, null);
-
-        smppServer = new ConfigurableInRuntimeSmppServer(config, this);
-
-        // �������������� �������� ������������� ������ � ��������.
-        String final_log_dir = Utils.getProperty(config, "final.log.dir", user_dir + File.separator + "final_log");
-
-        fileSystem = FileSystem.getFSForSingleInst();
-        try {
-            deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(final_log_dir), fileSystem);
-
-            DeliveryChangeListenerImpl deliveryChangeListener = new DeliveryChangeListenerImpl();
-            deliveryChangesDetector.addListener(deliveryChangeListener);
-
-            deliveryChangesDetector.start();
-        } catch (InitException e) {
-            log.error(e);
-            throw new InitializationException(e);
-        }
-
-        // �������������� ����������� ������������� �� ������������ ������� � ��������.
-
-        int recend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
-
-        recend_receipts_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
-
-        recend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
-
-        ScheduledExecutorService resend_delivery_recepits_scheduler = Executors.newSingleThreadScheduledExecutor();
-        resend_delivery_recepits_scheduler.scheduleWithFixedDelay(new Runnable() {
-
-            @Override
-            public void run() {
-                resendDeliveryReceipts();
-            }
-
-        }, recend_receipts_interval, recend_receipts_interval, TimeUnit.SECONDS);
-
-        long clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
-
-        // �������������� ����������� ������������� �� �������� �������
-        ScheduledExecutorService clean_journal_scheduler = Executors.newSingleThreadScheduledExecutor();
-        clean_journal_scheduler.scheduleWithFixedDelay(new Runnable() {
-
-            @Override
-            public void run() {
-                synchronized (read_write_monitor) {
-                    journal.clean();
-                }
-            }
-
-        }, clean_journal_timeout, clean_journal_timeout, TimeUnit.MILLISECONDS);
-
-        // �������������� ��������� ���������
-        s = config.getProperty("informer.host");
+        String s = config.getProperty("informer.host");
         if (s != null && !s.isEmpty()){
             informer_host = s;
             log.debug("Set informer host: "+ informer_host);
@@ -224,12 +162,97 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException("Configuration property 'sending.timeout.mls' is invalid or not specified in config");
         }
 
-        user_senders_map = new Hashtable<String, Sender>();
+        user_sender_table = new Hashtable<String, Sender>();
+
+        String update_config_server_host = config.getProperty("update.config.server.host");
+
+        s = Utils.getProperty(config, "update.config.server.port");
+        int update_config_server_port = Integer.parseInt(s);
+
+        try {
+            new UpdateConfigServer(update_config_server_host, update_config_server_port);
+        } catch (IOException e) {
+            log.error("Couldn't initialize update config server socket with host '" + update_config_server_host + "' and port '" + update_config_server_port + "'. ", e);
+            throw new InitializationException(e);
+        }
+
+        int max_journal_size_mb = Utils.getProperty(config, "max.journal.size.mb", 10);
+        String journal_dir = Utils.getProperty(config, "journal.dir", System.getProperty("user.dir")+File.separator+"journal");
+        journal = new Journal(new File(journal_dir), max_journal_size_mb);
+
+        try {
+            sequence_number_receipt_table = journal.load();
+        } catch (CouldNotLoadJournalException e) {
+            log.error("Couldn't load journal.", e);
+            throw new InitializationException(e);
+        }
+
+        PDUListenerImpl pduListener = new PDUListenerImpl();
+        procQueue = new ProcessingQueue(config, pduListener, null);
+
+        smppServer = new ConfigurableInRuntimeSmppServer(config, this);
+
+        for(String user : user_password_table.keySet() ){
+            try {
+                DcpConnection dcpConnection =
+                        new DcpConnectionImpl(informer_host, informer_port, user, user_password_table.get(user));
+                Sender sender = new Sender(dcpConnection, capacity, sending_timeout, smppServer);
+                sender.start();
+                user_sender_table.put(user, sender);
+            } catch (AdminException e) {
+                log.warn(e);
+            }
+        }
+
+        String final_log_dir = Utils.getProperty(config, "final.log.dir", user_dir + File.separator + "final_log");
+
+        fileSystem = FileSystem.getFSForSingleInst();
+        try {
+            deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(final_log_dir), fileSystem);
+
+            DeliveryChangeListenerImpl deliveryChangeListener = new DeliveryChangeListenerImpl();
+            deliveryChangesDetector.addListener(deliveryChangeListener);
+
+            deliveryChangesDetector.start();
+        } catch (InitException e) {
+            log.error(e);
+            throw new InitializationException(e);
+        }
+
+        int recend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
+
+        recend_receipts_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
+
+        recend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
+
+        ScheduledExecutorService resend_delivery_recepits_scheduler = Executors.newSingleThreadScheduledExecutor();
+        resend_delivery_recepits_scheduler.scheduleWithFixedDelay(new Runnable() {
+
+            @Override
+            public void run() {
+                resendDeliveryReceipts();
+            }
+
+        }, recend_receipts_interval, recend_receipts_interval, TimeUnit.SECONDS);
+
+        long clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
+
+        ScheduledExecutorService clean_journal_scheduler = Executors.newSingleThreadScheduledExecutor();
+        clean_journal_scheduler.scheduleWithFixedDelay(new Runnable() {
+
+            @Override
+            public void run() {
+                synchronized (read_write_monitor) {
+                    journal.clean();
+                }
+            }
+
+        }, clean_journal_timeout, clean_journal_timeout, TimeUnit.MILLISECONDS);
 
         log.debug("Gateway initialized.");
     }
 
-    public synchronized static void updateConfiguration() throws XmlConfigException, IOException, SmppException {
+    private synchronized void updateConfiguration() throws XmlConfigException, IOException, SmppException, AdminException {
         log.debug("Try to update configuration ...");
 
         Hashtable<String, Provider> connection_provider_temp_table = cm.loadProviders();
@@ -241,6 +264,27 @@ public class Gateway extends Thread implements PDUListener {
         connection_provider_table = connection_provider_temp_table;
         user_password_table = user_password_temp_table;
         config = new_config;
+
+        // Add new connections
+        for(String user: user_password_table.keySet()){
+            if (!user_sender_table.containsKey(user)){
+                DcpConnection dcpConnection = new DcpConnectionImpl(informer_host, informer_port, user, user_password_table.get(user));
+
+                Sender sender = new Sender(dcpConnection, capacity, sending_timeout, smppServer);
+                sender.start();
+                user_sender_table.put(user,sender);
+            }
+        }
+
+        // Remove connections
+        for(String user: user_sender_table.keySet()){
+            if (!user_password_table.containsKey(user)){
+                Sender sender = user_sender_table.remove(user);
+                DcpConnection dcpConnection = sender.getDcpConnection();
+                sender.interrupt();
+                dcpConnection.close();
+            }
+        }
 
         log.debug("Configuration updated.");
     }
@@ -263,12 +307,227 @@ public class Gateway extends Thread implements PDUListener {
         if (smppServer != null) smppServer.shutdown();
     }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Handle pdu
 
-    public static void sendSubmitSMResp(SubmitSMResp submitSMResp) throws SmppException {
-        smppServer.send(submitSMResp, false);
+    private class PDUListenerImpl implements PDUListener{
+
+        private AtomicLong al = new AtomicLong(0);
+
+        @Override
+        public boolean handlePDU(PDU pdu) {
+            log.debug("Handle pdu with type "+pdu.getType());
+
+            switch (pdu.getType()) {
+                case SubmitSM:{
+
+                    long time = System.currentTimeMillis();
+                    long message_id = time + al.incrementAndGet();
+
+                        Message request = (Message) pdu;
+                        String connection_name = request.getConnectionName();
+
+                        int sequence_number = request.getSequenceNumber();
+
+                        log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', connection_name '"+connection_name+"', set id '"+message_id+"'.");
+
+                        Provider provider = connection_provider_table.get(connection_name);
+                        log.debug("This connection name corresponds to the provider with name '"+provider.getName()+"'.");
+
+                        Address source_address = request.getSourceAddress();
+                        String service_number = source_address.getAddress();
+
+                        Address smpp_destination_address = request.getDestinationAddress();
+                        String destination_address_str = smpp_destination_address.getAddress();
+
+                        String text = request.getMessage();
+                        log.debug("Message: "+text);
+                        log.debug("Id '"+message_id+"', service number '"+service_number+"', destination address '"+destination_address_str+"', text '"+text+"'.");
+
+                        Delivery delivery = provider.getDelivery(service_number);
+                        if (delivery != null){
+
+                            int delivery_id = delivery.getId();
+                            String login= delivery.getUser();
+
+                            log.debug("Message id '"+message_id+"', service number '"+service_number+"', delivery id '"+delivery_id+"', user '"+login+"'.");
+
+                            Sender sender = user_sender_table.get(login);
+                            sender.addMessage(message_id, service_number,
+                                    destination_address_str, text, sequence_number, connection_name, delivery_id);
+
+                            if (request.getRegDeliveryReceipt() == RegDeliveryReceipt.None )
+                                log.warn("Received SubmitSM with RegDeliveryReceipt.None .");
+
+                        } else {
+                            log.debug("Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.");
+                            SubmitSMResp submitSMResp = new SubmitSMResp();
+
+                            submitSMResp.setStatus(mobi.eyeline.smpp.api.types.Status.SUBMITFAIL);
+                            submitSMResp.setSequenceNumber(sequence_number);
+                            submitSMResp.setConnectionName(connection_name);
+                            submitSMResp.setTLV(new TLVString( (short)0x001D, "Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.") );
+                            try {
+                                smppServer.send(submitSMResp, false);
+                                log.debug("SUBMIT_SM_RESP sn: "+sequence_number+", con: "+connection_name+", status '"+submitSMResp.getStatus());
+                            } catch (SmppException e) {
+                                log.error("Could not send response to client", e);
+                            }
+                        }
+
+                        break;
+                    }
+
+                    case DataSM: {
+
+                        long time = System.currentTimeMillis();
+                        long message_id = time + al.incrementAndGet();
+
+                        Message request = (Message) pdu;
+                        String connection_name = request.getConnectionName();
+
+                        int sequence_number = request.getSequenceNumber();
+
+                        log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', connection_name '"+connection_name+"', set id '"+message_id+"'.");
+
+                        Provider provider = connection_provider_table.get(connection_name);
+                        log.debug("This connection name corresponds to the provider with name '"+provider.getName()+"'.");
+
+                        Address source_address = request.getSourceAddress();
+                        String service_number = source_address.getAddress();
+
+                        Address smpp_destination_address = request.getDestinationAddress();
+                        String destination_address_str = smpp_destination_address.getAddress();
+
+                        String text = request.getMessage();
+                        log.debug("Message: "+text);
+                        log.debug("Id '"+message_id+"', service number '"+service_number+"', destination address '"+destination_address_str+"', text '"+text+"'.");
+
+                        Delivery delivery = provider.getDelivery(service_number);
+                        if (delivery != null){
+
+                            int delivery_id = delivery.getId();
+                            String login= delivery.getUser();
+
+                            log.debug("Message id '"+message_id+"', service number '"+service_number+"', delivery id '"+delivery_id+"', user '"+login+"'.");
+
+                            Sender sender = user_sender_table.get(login);
+                            sender.addMessage(message_id, service_number,
+                                    destination_address_str, text, sequence_number, connection_name, delivery_id);
+
+                            if (request.getRegDeliveryReceipt() == RegDeliveryReceipt.None )
+                                log.warn("Received DataSM with RegDeliveryReceipt.None .");
+
+                        } else {
+                            log.debug("Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.");
+                            SubmitSMResp submitSMResp = new SubmitSMResp();
+
+                            submitSMResp.setStatus(mobi.eyeline.smpp.api.types.Status.SUBMITFAIL);
+                            submitSMResp.setSequenceNumber(sequence_number);
+                            submitSMResp.setConnectionName(connection_name);
+                            submitSMResp.setTLV(new TLVString( (short)0x001D, "Provider "+provider.getName()+" doesn't have delivery with service number '"+service_number+"'.") );
+                            try {
+                                smppServer.send(submitSMResp, false);
+                                log.debug("SUBMIT_SM_RESP sn: "+sequence_number+", con: "+connection_name+", status '"+submitSMResp.getStatus());
+                            } catch (SmppException e) {
+                                log.error("Could not send response to client", e);
+                            }
+                        }
+
+                        break;
+                    }
+
+                    case DeliverSMResp:{
+
+                        synchronized (read_write_monitor) {
+
+                            DeliverSMResp resp = (DeliverSMResp) pdu;
+                            int sequence_number = resp.getSequenceNumber();
+
+                            log.debug("receive DeliverSMResp: sn=" + sequence_number);
+
+                            Data data = sequence_number_receipt_table.get(sequence_number);
+                            if (data != null) {
+                                sequence_number_receipt_table.remove(sequence_number);
+                                log.debug("Remove from memory deliver receipt data with sequence number " + sequence_number + " .");
+
+                                data.setStatus(Status.DONE);
+                                try {
+                                    journal.write(data);
+                                } catch (CouldNotWriteToJournalException e) {
+                                    log.error(e);
+                                }
+                            } else {
+                                log.warn("Couldn't find deliver receipt data with sequence number " + sequence_number);
+                            }
+
+                        }
+
+                        break;
+                    }
+
+                }
+
+                return true;
+        }
+
     }
 
-    public static void sendDeliveryReceipt(long message_id, Date submit_date, Date done_date, String connection_name,
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Delivery
+
+    private class DeliveryChangeListenerImpl implements DeliveryChangeListener {
+
+        private SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
+
+        @Override
+        public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
+            log.debug(e);
+            Properties p = e.getProperties();
+            if (p!=null){
+                if (p.containsKey("id")){
+                    String s = p.getProperty("id");
+                    long message_id = Long.parseLong(s);
+
+                    mobi.eyeline.smpp.api.pdu.data.Address source_address, destination_address;
+                    try {
+                        source_address  = new mobi.eyeline.smpp.api.pdu.data.Address(p.getProperty("sa"));
+                        destination_address = new mobi.eyeline.smpp.api.pdu.data.Address(e.getAddress().getAddress());
+                    } catch (InvalidAddressFormatException e1) {
+                        log.error(e);
+                        throw new CouldNotReadMessageStateException("could.not.read.message.state", e1);
+                    }
+
+                    String connection_name = p.getProperty("con");
+
+                    Date submit_date;
+                    try {
+                        submit_date = sdf.parse(p.getProperty("sd"));
+                    } catch (ParseException e1) {
+                        log.error(e1);
+                        throw new CouldNotReadMessageStateException("could.not.read.message.state", e1);
+                    }
+
+                    Date done_date = e.getEventDate();
+
+                    MessageState messageState = e.getMessageState();
+
+                    int nsms = e.getNsms();
+
+                    sendDeliveryReceipt(message_id, submit_date, done_date, connection_name, source_address, destination_address, nsms, messageState);
+                } else {
+                    log.warn("Couldn't find message identifier in the final log string.");
+                }
+            }
+        }
+
+        @Override
+        public void deliveryStateChanged(ChangeDeliveryStatusEvent e) throws AdminException {
+            log.debug(e);
+        }
+    }
+
+    private void sendDeliveryReceipt(long message_id, Date submit_date, Date done_date, String connection_name,
                                            Address source_address, Address destination_address,
                                            int nsms, MessageState messageState) {
 
@@ -364,33 +623,7 @@ public class Gateway extends Thread implements PDUListener {
         }
     }
 
-    public static void handleDeliverySMResp(PDU pdu) {
-        synchronized (read_write_monitor) {
-
-            DeliverSMResp resp = (DeliverSMResp) pdu;
-            int sequence_number = resp.getSequenceNumber();
-
-            log.debug("receive DeliverSMResp: sn=" + sequence_number);
-
-            Data data = sequence_number_receipt_table.get(sequence_number);
-            if (data != null) {
-                sequence_number_receipt_table.remove(sequence_number);
-                log.debug("Remove from memory deliver receipt data with sequence number " + sequence_number + " .");
-
-                data.setStatus(Status.DONE);
-                try {
-                    journal.write(data);
-                } catch (CouldNotWriteToJournalException e) {
-                    log.error(e);
-                }
-            } else {
-                log.warn("Couldn't find deliver receipt data with sequence number " + sequence_number);
-            }
-
-        }
-    }
-
-    public static void resendDeliveryReceipts() {
+    private void resendDeliveryReceipts() {
         log.debug("Check receipts table to recent unanswered receipts ...");
 
         long current_time = System.currentTimeMillis();
@@ -509,26 +742,117 @@ public class Gateway extends Thread implements PDUListener {
             }
         }
 
-        log.debug("Successfully done recent task.");
+        log.debug("Done resend task.");
     }
 
-    public static Provider getProvider(String connection_name) {
-        return connection_provider_table.get(connection_name);
-    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Update configuration
 
-    synchronized public static Sender getSender(String user){
+    class UpdateConfigServer extends Thread {
 
-        Sender sender;
-        if (user_senders_map.containsKey(user)){
-            sender = user_senders_map.get(user);
-        } else {
-            log.debug("Try to initialize sender for user '"+user+"'.");
-            sender = new Sender(informer_host, informer_port, user, user_password_table.get(user), capacity, sending_timeout, smppServer);
-            user_senders_map.put(user, sender);
-            sender.start();
+        private ServerSocket serverSocket;
+
+        public UpdateConfigServer(String host, int port) throws IOException {
+            if (host!= null && !host.isEmpty()){
+                serverSocket = new ServerSocket();
+                serverSocket.bind(new InetSocketAddress(host,port));
+                log.debug("Set update server host to '"+host+"'.");
+            } else{
+                serverSocket = new ServerSocket(port);
+            }
+            this.start();
         }
 
-        return sender;
+        public void run() {
+            while (!isInterrupted()) {
+                try {
+                    log.debug("Waiting for connections ...");
+                    Socket client = serverSocket.accept();
+                    log.debug("Accepted a connection from: " + client.getInetAddress());
+                    new Connect(client);
+                } catch (IOException e) {
+                    log.error(e);
+                }
+            }
+        }
+
     }
+
+    class Connect extends Thread {
+
+       private Socket client = null;
+       private InputStream is = null;
+       private OutputStream os = null;
+
+       public Connect(Socket clientSocket) {
+         client = clientSocket;
+         try {
+             is = client.getInputStream();
+             os = client.getOutputStream();
+         } catch(IOException e1) {
+             try {
+                client.close();
+             }catch(Exception e) {
+                log.error(e.getMessage());
+             }
+             return;
+         }
+         this.start();
+       }
+
+
+       public void run() {
+           try {
+               BufferReader buffer = new BufferReader(1024);
+               buffer.fillFully(is, 4);
+               int len = buffer.removeInt();
+
+               if (log.isDebugEnabled()) log.debug("Received packet len=" + len);
+               if (len > 0) buffer.fillFully(is, len);
+
+               if (log.isDebugEnabled()) log.debug("PDU received: " + buffer.getHexDump());
+
+               buffer.removeInt();
+
+               int seqNum = buffer.removeInt();
+
+               UpdateConfigResp configUpdateResp;
+
+               try {
+                   updateConfiguration();
+                   configUpdateResp = new UpdateConfigResp(seqNum, 0, "ok");
+               } catch (Exception e) {
+                   configUpdateResp = new UpdateConfigResp(seqNum, 1, "Couldn't update configuration:"+e.getMessage());
+               }
+
+               serialize(configUpdateResp, os);
+
+               is.close();
+               os.close();
+               client.close();
+           } catch (IOException e) {
+               log.error(e);
+           }
+       }
+
+       private void serialize(mobi.eyeline.protogen.framework.PDU request, OutputStream os) throws IOException {
+           BufferWriter writer = new BufferWriter();
+           int pos = writer.size();
+           writer.appendInt(0); // write 4 bytes for future length
+           writer.appendInt(request.getTag());
+           writer.appendInt(request.getSeqNum());
+           request.encode(writer);
+           int len = writer.size()-pos-4;
+           writer.replaceInt( len,  pos); // fill first 4 bytes with actual length
+
+           if (log.isDebugEnabled())
+               log.debug("Sending PDU: " + writer.getHexDump());
+
+           writer.writeBuffer(os);
+           os.flush();
+       }
+    }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

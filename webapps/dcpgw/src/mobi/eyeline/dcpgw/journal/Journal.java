@@ -1,7 +1,5 @@
 package mobi.eyeline.dcpgw.journal;
 
-import mobi.eyeline.dcpgw.Gateway;
-import mobi.eyeline.dcpgw.Utils;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
@@ -10,7 +8,6 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -29,10 +26,6 @@ public class Journal {
     private File j1;
     private File j2;
     private File j2t;
-
-    private Calendar cal = Calendar.getInstance();
-
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
     public Journal(File journal_dir, int max_journal_size_mb) throws InitializationException{
         this.max_journal_size_mb = max_journal_size_mb;
@@ -82,43 +75,12 @@ public class Journal {
         log.debug("Successfully append journal.");
     }
 
-    public void write(Data data) throws CouldNotWriteToJournalException {
-        cal.setTimeInMillis(data.getFirstSendingTime());
-        Date first_sending_date = cal.getTime();
-        cal.setTimeInMillis(data.getLastResendTime());
-        Date last_resending_time = cal.getTime();
-        String s = sdf.format(first_sending_date) + sep +
-                   sdf.format(last_resending_time) + sep +
-                   data.getMessageId() + sep +
-                   data.getSequenceNumber() + sep +
-                   data.getSourceAddress().getAddress() + sep +
-                   data.getDestinationAddress().getAddress()+ sep +
-                   data.getConnectionName() + sep +
-                   sdf.format(data.getSubmitDate()) + sep +
-                   sdf.format(data.getDoneDate()) + sep +
-                   data.getFinalMessageState() + sep +
-                   data.getNsms() + sep +
-                   data.getStatus();
-
-        log.debug("Try to write to journal string: "+s);
+    private boolean isEnoughSpace(String line) throws UnsupportedEncodingException {
+        log.debug("Try to write to journal string: "+line);
 
         int byteCount;
-        try {
-            byte[] bytes = (s+"\n").getBytes("UTF-8");
-            byteCount = bytes.length;
-        } catch (UnsupportedEncodingException e) {
-            log.error(e);
-            throw new CouldNotWriteToJournalException(e);
-        }
-
-        try {
-            if (j1.createNewFile()){
-                log.debug("Create journal "+j1.getName());
-            }
-        } catch (IOException e) {
-            log.error(e);
-            throw new CouldNotWriteToJournalException(e);
-        }
+        byte[] bytes = (line + "\n").getBytes("UTF-8");
+        byteCount = bytes.length;
 
         long sum;
         if (!j2.exists()){
@@ -129,13 +91,37 @@ public class Journal {
 
         log.debug("Length of the journal in bytes: "+sum);
 
-        if (sum+byteCount <= max_journal_size_mb*1024*1024){
+        return sum+byteCount <= max_journal_size_mb*1024*1024;
+    }
+
+    public void write(Data data) throws CouldNotWriteToJournalException {
+
+        try {
+            if (j1.createNewFile()){
+                log.debug("Create journal "+j1.getName());
+            }
+        } catch (IOException e) {
+            log.error(e);
+            throw new CouldNotWriteToJournalException(e);
+        }
+
+        String s = Data.format(data);
+
+        boolean isEnoughSpace;
+        try {
+            isEnoughSpace = isEnoughSpace(s);
+        } catch (UnsupportedEncodingException e) {
+            throw new CouldNotWriteToJournalException(e);
+        }
+
+        if (isEnoughSpace){
             log.debug("Length of the journal after appending string will be less or equal than "+ max_journal_size_mb +" mb.");
 
             try {
-                BufferedWriter out = new BufferedWriter(new FileWriter(j1, true));
-                out.write(s+"\n");
-                out.close();
+                BufferedWriter bw = new BufferedWriter(new FileWriter(j1, true));
+                bw.write(s+"\n");
+                bw.flush();
+                bw.close();
                 log.debug("Successfully write to the journal.");
             } catch (IOException e) {
                 log.error("Could not append a string to the file "+ j1.getName(), e);
@@ -287,7 +273,7 @@ public class Journal {
 
                             Data data;
                             try {
-                                data = Data.parse(line, sep);
+                                data = Data.parse(line);
                             } catch (ParseException e) {
                                 throw new CouldNotLoadJournalException(e);
                             } catch (InvalidAddressFormatException e) {
@@ -309,6 +295,7 @@ public class Journal {
                             }
                         }
                     }
+                    scanner.close();
                 } catch (FileNotFoundException e) {
                     log.error(e);
                     throw new CouldNotLoadJournalException(e);

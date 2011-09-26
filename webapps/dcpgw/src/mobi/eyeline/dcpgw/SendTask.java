@@ -1,19 +1,6 @@
 package mobi.eyeline.dcpgw;
 
-import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DcpConnection;
-import mobi.eyeline.informer.admin.delivery.Message;
-import mobi.eyeline.smpp.api.SmppException;
-import mobi.eyeline.smpp.api.SmppServer;
-import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
-import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * User: Stepanov Dmitry Nikolaevich
