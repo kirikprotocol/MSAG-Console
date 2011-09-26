@@ -12,7 +12,7 @@ static char const ident[] = "@(#)$Id$";
 /* -- NOTE: these defines are set by developers -- */
 #define USSMAN_VER_MAJOR     1    //major verison
 #define USSMAN_VER_MINOR     1    //minor version
-#define USSMAN_VER_FIX       3    //bug fix version
+#define USSMAN_VER_FIX       4    //bug fix version
 #define USSMAN_VER_TAG       ""   //release tag: [alpha, beta, RC]N
 /* -- ----------------------------------------- -- */
 #define USSMAN_VENDOR        "Eyeline"
