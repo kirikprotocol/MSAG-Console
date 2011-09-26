@@ -6,6 +6,14 @@
 
   <ui:composition template="/main.xhtml">
 
+    <ui:define name="styles">
+      .table1 {padding-left: 20px;}
+      .column1 {width: 30%; align: center;}
+      .column2 {width: 70%; align: right;}
+      .row1 {font-weight: bold;}
+      .row2 {font-weight: normal;}
+    </ui:define>
+
     <ui:define name="content">
 
       <h:form>
@@ -21,9 +29,9 @@
         </eye:dataTableFilter>
 
         <!--<eye:dataTable value="#{dataTable.model}" var="row" selectedRows="#{dataTable.selected}">-->
-        <eye:dataTable value="#{dataTable.model}" var="row" >
-          <eye:row innerRows="#{row.inner}" opened="true">
-            <eye:column name="field1" title="field1" sortable="true" defaultSortOrder="desc" width="30%" align="center">
+        <eye:dataTable value="#{dataTable.model}" var="row" tableClass="table1">
+          <eye:row innerRows="#{row.inner}" opened="true" rowClasses="row1, row2">
+            <eye:column name="field1" title="field1" sortable="true" defaultSortOrder="desc" columnClass="column1">
                 <h:commandLink value="#{row.field1}" action="#{dataTable.choose}">
                   <f:param name="selected" value="#{row.field1}"/>
                 </h:commandLink>
@@ -34,7 +42,7 @@
                 <h:outputText value="footer1"/>
               </f:facet>
             </eye:column>
-            <eye:column name="field2" title="field2" sortable="true" width="70%" align="center">
+            <eye:column name="field2" title="field2" sortable="true" columnClass="column2">
               <h:outputText value="#{row.field2}"/>
               <f:facet name="inner">
                 <h:outputText value="#{row.field2}" style="color:GREEN"/>

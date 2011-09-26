@@ -2,7 +2,7 @@
  * Класс TextColumn
  * @param columnId
  */
-function TextColumn(columnId, allowEditAfterAdd) {
+function TextColumn(columnId, allowEditAfterAdd, allowEmpty) {
   this.columnId = columnId;
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -25,8 +25,8 @@ function TextColumn(columnId, allowEditAfterAdd) {
 
   //--------------------------------------------------------------------------------------------------------------------
   this.isAllowedToCreateColumnElement = function(tableId, value) {
-    return true;
-  }
+    return allowEmpty || value.length != 0;
+  };
 
   //--------------------------------------------------------------------------------------------------------------------
   this.createColumnElement = function (tableId, newRow, newCount, value) {

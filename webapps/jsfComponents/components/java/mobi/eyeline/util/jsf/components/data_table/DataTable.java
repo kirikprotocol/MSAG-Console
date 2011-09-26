@@ -16,11 +16,10 @@ import java.util.*;
  */
 public class DataTable extends UIPanel {
 
-  private Integer autoUpdate;
   private int pageSize = 20;
   private boolean pageSizeRendered = true;
-  private Boolean updateUsingSubmit;
   private boolean disallowSelectAll;
+  private String tableClass;
 
 
   private final Renderer renderer = new DataTableRenderer();
@@ -38,20 +37,6 @@ public class DataTable extends UIPanel {
   private Integer loadTotal;
   private int rowsOnPage;
 
-
-  // Tag properties
-
-  public Integer getAutoUpdate() {
-    ValueExpression exp = getValueExpression("autoUpdate");
-    if (exp == null)
-      return autoUpdate;
-    else
-      return (Integer) exp.getValue(getFacesContext().getELContext());
-  }
-
-  public void setAutoUpdate(Integer autoUpdate) {
-    this.autoUpdate = autoUpdate;
-  }
 
   public int getPageSize() {
     ValueExpression exp = getValueExpression("pageSize");
@@ -81,16 +66,16 @@ public class DataTable extends UIPanel {
     return getValueExpression("selectedRows");
   }
 
-  public Boolean isUpdateUsingSubmit() {
-    ValueExpression exp = getValueExpression("updateUsingSubmit");
+  public String getTableClass() {
+    ValueExpression exp = getValueExpression("tableClass");
     if (exp == null)
-      return updateUsingSubmit;
+      return tableClass;
     else
-      return (Boolean) exp.getValue(getFacesContext().getELContext());
+      return (String) exp.getValue(getFacesContext().getELContext());
   }
 
-  public void setUpdateUsingSubmit(boolean updateUsingSubmit) {
-    this.updateUsingSubmit = updateUsingSubmit;
+  public void setTableClass(String clazz) {
+    this.tableClass = clazz;
   }
 
   public DataTableModel getModel() {
@@ -264,32 +249,30 @@ public class DataTable extends UIPanel {
   }
 
   public Object saveState(FacesContext context) {
-    Object[] values = new Object[12];
+    Object[] values = new Object[9];
     values[0] = super.saveState(context);
-    values[1] = updateUsingSubmit;
-    values[2] = autoUpdate;
-    values[3] = currentPage;
-    values[4] = pageSize;
-    values[5] = sortOrder;
-    values[6] = pageSizeRendered;
-    values[7] = selectedRows;
-    values[10] = selectAll;
-    values[11] = disallowSelectAll;
+    values[1] = tableClass;
+    values[2] = currentPage;
+    values[3] = pageSize;
+    values[4] = sortOrder;
+    values[5] = pageSizeRendered;
+    values[6] = selectedRows;
+    values[7] = selectAll;
+    values[8] = disallowSelectAll;
     return (values);
   }
 
   public void restoreState(FacesContext context, Object state) {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
-    updateUsingSubmit = (Boolean) values[1];
-    autoUpdate = (Integer) values[2];
-    currentPage = (Integer) values[3];
-    pageSize = (Integer) values[4];
-    sortOrder = (String) values[5];
-    pageSizeRendered = (Boolean) values[6];
-    selectedRows = (List<String>) values[7];
-    selectAll = (Boolean)values[10];
-    disallowSelectAll = (Boolean)values[11];
+    tableClass = (String) values[1];
+    currentPage = (Integer) values[2];
+    pageSize = (Integer) values[3];
+    sortOrder = (String) values[4];
+    pageSizeRendered = (Boolean) values[5];
+    selectedRows = (List<String>) values[6];
+    selectAll = (Boolean)values[7];
+    disallowSelectAll = (Boolean)values[8];
   }
 
 }

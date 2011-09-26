@@ -9,6 +9,10 @@
       .column1 {width: 30%}
       .column2 {width: 30%}
       .column3 {width: 40%}
+      .dtable {padding-left:30px}
+      .dcolumn1 {width: 10%;}
+      .dcolumn2 {width: 20%; font-weight: bold;}
+      .dcolumn3 {width: 70%;}
     </ui:define>
 
     <ui:define name="content">
@@ -17,10 +21,10 @@
 
         <h:panelGrid columns="1">
 
-          <eye:dynamicTable value="#{dynamicTable.dynamicTableModel}">
-            <eye:textColumn title="field1" name="field1" allowEditAfterAdd="true" width="10%"/>
-            <eye:textColumn title="field2" name="field2" allowEditAfterAdd="false" width="20%"/>
-            <eye:selectColumn title="field3" name="field3" values="#{dynamicTable.selectValues}" allowEditAfterAdd="true" uniqueValues="true" width="70%"/>
+          <eye:dynamicTable value="#{dynamicTable.dynamicTableModel}" tableClass="dtable">
+            <eye:textColumn title="field1" name="field1" allowEditAfterAdd="true" columnClass="dcolumn1" />
+            <eye:textColumn title="field2" name="field2" allowEditAfterAdd="false" columnClass="dcolumn2"/>
+            <eye:selectColumn title="field3" name="field3" values="#{dynamicTable.selectValues}" allowEditAfterAdd="true" uniqueValues="true" columnClass="dcolumn3"/>
           </eye:dynamicTable>
 
           <h:commandButton value="Submit"/>

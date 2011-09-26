@@ -6,7 +6,7 @@ package mobi.eyeline.util.jsf.components.dynamic_table;
 abstract class Column {
 
   private String name;
-  private String width = null;
+  private String columnClass;
   private String title;
 
   public String getName() {
@@ -17,12 +17,12 @@ abstract class Column {
     this.name = name;
   }
 
-  public String getWidth() {
-    return width;
+  public String getColumnClass() {
+    return columnClass;
   }
 
-  public void setWidth(String width) {
-    this.width = width;
+  public void setColumnClass(String columnClass) {
+    this.columnClass = columnClass;
   }
 
   public String getTitle() {

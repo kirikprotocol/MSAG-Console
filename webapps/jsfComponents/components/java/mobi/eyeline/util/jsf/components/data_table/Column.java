@@ -12,8 +12,7 @@ public class Column extends UIPanel {
 
   private String name;
   private String title;
-  private String width = "100%";
-  private String align = "left";
+  private String columnClass;
   private boolean sortable;
   private String defaultSortOrder;
 
@@ -51,28 +50,16 @@ public class Column extends UIPanel {
       return (String) exp.getValue(getFacesContext().getELContext());
   }
 
-  public String getWidth() {
-    ValueExpression exp = getValueExpression("width");
+  public String getColumnClass() {
+    ValueExpression exp = getValueExpression("columnClass");
     if (exp == null)
-      return width;
+      return columnClass;
     else
       return (String) exp.getValue(getFacesContext().getELContext());
   }
 
-  public void setWidth(String width) {
-    this.width = width;
-  }
-
-  public String getAlign() {
-    ValueExpression exp = getValueExpression("align");
-    if (exp == null)
-      return align;
-    else
-      return (String) exp.getValue(getFacesContext().getELContext());
-  }
-
-  public void setAlign(String align) {
-    this.align = align;
+  public void setColumnClass(String cls) {
+    this.columnClass = cls;
   }
 
   public boolean isSortable() {
@@ -100,14 +87,13 @@ public class Column extends UIPanel {
   }
 
   public Object saveState(FacesContext context) {
-    Object[] values = new Object[7];
+    Object[] values = new Object[6];
     values[0] = super.saveState(context);
     values[1] = name;
     values[2] = title;
-    values[3] = width;
-    values[4] = align;
-    values[5] = sortable;
-    values[6] = defaultSortOrder;
+    values[3] = columnClass;
+    values[4] = sortable;
+    values[5] = defaultSortOrder;
     return (values);
   }
 
@@ -116,9 +102,8 @@ public class Column extends UIPanel {
     super.restoreState(context, values[0]);
     name = (String) values[1];
     title = (String) values[2];
-    width = (String) values[3];
-    align = (String) values[4];
-    sortable = (Boolean) values[5];
-    defaultSortOrder = (String) values[6];
+    columnClass = (String) values[3];
+    sortable = (Boolean) values[4];
+    defaultSortOrder = (String) values[5];
   }
 }

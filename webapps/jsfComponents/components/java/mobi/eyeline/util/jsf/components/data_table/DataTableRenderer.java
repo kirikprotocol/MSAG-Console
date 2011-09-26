@@ -124,17 +124,21 @@ public class DataTableRenderer extends Renderer {
     boolean hasInnerData = t.hasInnerData();
     boolean isRowsSelectionEnabled = t.isRowsSelectionEnabled();
 
-    w.a("\n<table class=\"eyeline_list\" id=\"" + t.getId() + "\" cellspacing=\"1\">");
+    String classStr = "eyeline_list";
+    if (t.getTableClass() != null)
+      classStr += " " + t.getTableClass();
+
+    w.a("\n<table class=\"" + classStr + "\" id=\"" + t.getId() + "\" cellspacing=\"1\">");
 
     // RENDER <colgroup>
-    w.a("<colgroup>");
-    if (isRowsSelectionEnabled)
-      w.a("\n<col width=\"1%\"/>");
-    if (hasInnerData)
-      w.a("\n<col width=\"1%\"/>");
-    for (Column column : columns)
-      w.a("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
-    w.a("</colgroup>");
+//    w.a("<colgroup>");
+//    if (isRowsSelectionEnabled)
+//      w.a("\n<col width=\"1%\"/>");
+//    if (hasInnerData)
+//      w.a("\n<col width=\"1%\"/>");
+//    for (Column column : columns)
+//      w.a("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
+//    w.a("</colgroup>");
 
     //RENDER <thead>
     w.a("\n<thead>");
@@ -142,8 +146,12 @@ public class DataTableRenderer extends Renderer {
       w.a("\n<th id=\"").a(t.getId()).a("_selectAllButton\">").a("</th>");
     if (hasInnerData)
       w.a("\n<th id=\"").a(t.getId()).a("_expandAll\">").a("</th>");
-    for (Column column : columns)
-      w.a("\n<th><span id=\"" + t.getId() + "_" + column.getName() + "\">" + (column.getTitle().length() > 0 ? column.getTitle() : "&nbsp;") + "</span></th>");
+    for (Column column : columns) {
+      w.a("\n<th");
+      if (column.getColumnClass() != null)
+        w.a(" class=\"" + column.getColumnClass() + "\"");
+      w.a("><span id=\"" + t.getId() + "_" + column.getName() + "\">" + (column.getTitle().length() > 0 ? column.getTitle() : "&nbsp;") + "</span></th>");
+    }
     w.a("\n</thead>");
 
     // RENDER <tbody>
@@ -257,7 +265,10 @@ public class DataTableRenderer extends Renderer {
         for (UIComponent ch : t.getFirstRow().getChildren()) {
           Column col = (Column) ch;
           UIComponent footer = ch.getFacet("footer");
-          w.a("\n<td align=\"").a(col.getAlign()).a("\">");
+          w.a("\n<td");
+          if (col.getColumnClass() != null)
+            w.a(" class=\"" + col.getColumnClass() + "\"");
+          w.a(">");
           if (footer != null) {
             footer.encodeBegin(context);
             footer.encodeEnd(context);

@@ -188,6 +188,13 @@
         <type>java.lang.Boolean</type>
       </deferred-value>
     </attribute>
+    <attribute>
+      <description>Один или несколько css-стилей (через пробел), которые нужно применить к данной таблице.
+        Стили добавляются к заданному по-умолчанию стилю таблицы eyeline_table</description>
+      <name>tableClass</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.Boolean</type>
+    </attribute>
   </tag>
 
   <tag>
@@ -218,14 +225,8 @@
       <type>java.lang.Boolean</type>
     </attribute>
     <attribute>
-      <description>Ширина колонки в процентах или пикселях</description>
-      <name>width</name>
-      <rtexprvalue>false</rtexprvalue>
-      <type>java.lang.String</type>
-    </attribute>
-    <attribute>
-      <description>Выравнивание содержимого колонки</description>
-      <name>align</name>
+      <description>Один или несколько css-классов (через пробел), которые надо применить к данной колонке.</description>
+      <name>columnClass</name>
       <rtexprvalue>false</rtexprvalue>
       <type>java.lang.String</type>
     </attribute>
@@ -263,6 +264,13 @@
       <deferred-value>
         <type>java.util.List</type>
       </deferred-value>
+    </attribute>
+    <attribute>
+      <description>Список css-классов (через запятую), которые надо применить к строкам таблицы. К каждой строке будет
+      применен один стиль по-очереди</description>
+      <name>rowClasses</name>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
     </attribute>
   </tag>
 
@@ -1058,6 +1066,14 @@
         <type>java.lang.Boolean</type>
       </deferred-value>
     </attribute>
+
+    <attribute>
+      <description>css-класс таблицы</description>
+      <name>tableClass</name>
+      <required>false</required>
+      <rtexprvalue>false</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
   </tag>
 
   <tag>
@@ -1085,13 +1101,11 @@
     </attribute>
 
     <attribute>
-      <description>Ширина колонки</description>
-      <name>width</name>
+      <description>css-класс колонки</description>
+      <name>columnClass</name>
       <required>false</required>
       <rtexprvalue>false</rtexprvalue>
-      <deferred-value>
-        <type>java.lang.String</type>
-      </deferred-value>
+      <type>java.lang.String</type>
     </attribute>
 
     <attribute>
@@ -1140,13 +1154,11 @@
     </attribute>
 
     <attribute>
-      <description>Ширина колонки</description>
-      <name>width</name>
+      <description>css-класс колонки</description>
+      <name>columnClass</name>
       <required>false</required>
       <rtexprvalue>false</rtexprvalue>
-      <deferred-value>
-        <type>java.lang.String</type>
-      </deferred-value>
+      <type>java.lang.String</type>
     </attribute>
 
     <attribute>

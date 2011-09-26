@@ -32,6 +32,13 @@ public class RowRenderer extends Renderer {
     return res;
   }
 
+  private String[] parseRowClasses(String rowClasses) {
+    if (rowClasses == null)
+      return null;
+    String[] result = rowClasses.split(",");
+    return (result.length == 0) ? null : result;
+  }
+
   @Override
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     Row r = (Row) component;
@@ -56,9 +63,14 @@ public class RowRenderer extends Renderer {
 
     } else {
 
-      w.append("\n<tr class=\"eyeline_row" + ((rowNumber+1) & 1) + "\" id=\"" + t.getId() + rowId + "\">");
+      String classStr = "eyeline_row" + ((rowNumber+1) & 1);
+      String[] rowClasses = parseRowClasses(r.getRowClasses());
+      if (rowClasses != null)
+        classStr += " " + rowClasses[(rowNumber%rowClasses.length)];
+
+      w.append("\n<tr class=\"" + classStr + "\" id=\"" + t.getId() + rowId + "\">");
       if (t.isRowsSelectionEnabled())
-     w.append("\n  <td align=\"center\"><input "+ (
+      w.append("\n  <td align=\"center\"><input "+ (
             (t.isSelectAll() && !t.isRowSelected(rowId)) || (!t.isSelectAll() && t.isRowSelected(rowId)) ? "CHECKED" : "") +
             ((t.isShowSelectedOnly()) ? " disabled=\"true\"" : "") +
             " onclick=\""+ t.getId() + "_dataTable.selectRow(this.checked, '"+rowId+"')\" class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");
@@ -67,7 +79,6 @@ public class RowRenderer extends Renderer {
         w.append("\n  <td class=\"clickable\" onclick=\"" + t.getId() +"_dataTable.expandRow('" + t.getId() + rowId + "')\"><div id=\"innerDataHeader" + t.getId() + rowId + "\" class=\"eyeline_" + (r.isOpened() ? "inner_data_opened" : "inner_data_closed") + "\">&nbsp;</div></td>");
       else if (t.hasInnerData())
         w.append("\n  <td>&nbsp;</td>");
-
     }
   }
 

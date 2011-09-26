@@ -15,6 +15,7 @@ import java.io.IOException;
 public class TextColumnTagHandler extends ColumnTagHandler {
 
   private final TagAttribute allowEditAfterAdd;
+  private final TagAttribute allowEmpty;
   private final TagAttribute maxLength;
 
   public TextColumnTagHandler(TagConfig config) {
@@ -22,6 +23,7 @@ public class TextColumnTagHandler extends ColumnTagHandler {
 
     allowEditAfterAdd = getAttribute("allowEditAfterAdd");
     maxLength = getAttribute("maxLength");
+    allowEmpty = getAttribute("allowEmpty");
   }
 
   public void apply(FaceletContext faceletContext, UIComponent parent) throws IOException, FacesException, ELException {
@@ -32,6 +34,8 @@ public class TextColumnTagHandler extends ColumnTagHandler {
         textColumn.setAllowEditAfterAdd(allowEditAfterAdd.getBoolean(faceletContext));
       if (maxLength != null)
         textColumn.setMaxLength(maxLength.getInt(faceletContext));
+      if (allowEmpty != null)
+        textColumn.setAllowEmpty(allowEmpty.getBoolean(faceletContext));
 
       ((DynamicTable) parent).addColumn(textColumn);
     }

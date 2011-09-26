@@ -18,6 +18,7 @@ public class Row extends UIPanel {
   private boolean hasInnerAttribute;
   private boolean hasInnerData;
   private boolean hasInnerRows;
+  private String rowClasses;
 
   private ConstantExpression varExpr;
 
@@ -81,6 +82,14 @@ public class Row extends UIPanel {
     this.header = header;
   }
 
+  public String getRowClasses() {
+    return rowClasses;
+  }
+
+  public void setRowClasses(String rowClasses) {
+    this.rowClasses = rowClasses;
+  }
+
   ValueExpression getVarExpr() {
     if (varExpr == null)
       varExpr = new ConstantExpression(null);
@@ -100,10 +109,11 @@ public class Row extends UIPanel {
   }
 
   public Object saveState(FacesContext context) {
-    Object[] values = new Object[3];
+    Object[] values = new Object[4];
     values[0] = super.saveState(context);
     values[1] = inner;
     values[2] = varExpr;
+    values[3] = rowClasses;
     return (values);
   }
 
@@ -112,5 +122,6 @@ public class Row extends UIPanel {
     super.restoreState(context, values[0]);
     inner = (Boolean) values[1];
     varExpr = (ConstantExpression) values[2];
+    rowClasses = (String)values[3];
   }
 }

@@ -15,7 +15,10 @@ public class ColumnRenderer extends Renderer {
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     Column c = (Column) component;
     Writer w = context.getResponseWriter();
-    w.append("\n  <td align=\"" + c.getAlign() + "\">");
+    w.append("\n  <td");
+    if (c.getColumnClass() != null)
+      w.append(" class=\"" + c.getColumnClass() + "\"");
+    w.append(">");
   }
 
   public void encodeChildren(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) throws java.io.IOException {

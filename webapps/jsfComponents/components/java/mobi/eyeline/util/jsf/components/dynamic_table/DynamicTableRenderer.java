@@ -69,17 +69,23 @@ public class DynamicTableRenderer extends Renderer {
 
     List<Column> columns = table.getColumns();
 
-    w.a("\n<table class=\"eyeline_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\">");
-    w.a("<colgroup>");
-    for (Column c : columns)
-      w.a("<col width=\"").a(c.getWidth() != null ? c.getWidth() : ((100/columns.size()) + "%")).a("\"/>");
-    w.a("<col width=\"1px\"/>");
-    w.a("</colgroup>");
+    String classStr = "eyeline_list";
+    if (table.getTableClass() != null)
+      classStr += " " + table.getTableClass();
+
+    w.a("\n<table class=\"" + classStr + "\" id=\"" + component.getId() + "\" name=\"" + component.getId() + "\">");
+//    w.a("<colgroup>");
+//    for (Column c : columns)
+//      w.a("<col width=\"").a(c.getWidth() != null ? c.getWidth() : ((100/columns.size()) + "%")).a("\"/>");
+//    w.a("<col width=\"1px\"/>");
+//    w.a("</colgroup>");
 
     w.a("<thead>");
     w.a("<tr>");
     for (Column c : table.getColumns()) {
       w.a("<th");
+      if (c.getColumnClass() != null)
+        w.a(" class=\"" + c.getColumnClass() + "\"");
       if(c.getTitle() == null || c.getTitle().length() == 0) {
         w.a(" style=\"display:none\"");
       }
@@ -96,7 +102,7 @@ public class DynamicTableRenderer extends Renderer {
     int i = 0;
     for (Column c : table.getColumns()) {
       if (c instanceof TextColumn) {
-        w.a("var column" + i + "= new TextColumn('" + c.getName() + "'," + ((TextColumn) c).isAllowEditAfterAdd() + ");\n");
+        w.a("var column" + i + "= new TextColumn('" + c.getName() + "'," + ((TextColumn) c).isAllowEditAfterAdd() + "," + ((TextColumn) c).isAllowEmpty() + ");\n");
 
       } else if (c instanceof SelectColumn) {
         StringBuilder values = new StringBuilder();

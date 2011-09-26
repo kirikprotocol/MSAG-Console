@@ -7,6 +7,7 @@ package mobi.eyeline.util.jsf.components.dynamic_table;
 class TextColumn extends Column {
 
   boolean allowEditAfterAdd = true;
+  boolean allowEmpty = false;
   int maxLength;
 
   public boolean isAllowEditAfterAdd() {
@@ -27,5 +28,13 @@ class TextColumn extends Column {
 
   public String getSize() {
     return null;
+  }
+
+  public boolean isAllowEmpty() {
+    return allowEmpty;
+  }
+
+  public void setAllowEmpty(boolean allowEmpty) {
+    this.allowEmpty = allowEmpty;
   }
 }

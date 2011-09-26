@@ -12,6 +12,7 @@ import java.util.List;
  */
 public class DynamicTable extends UIInputImpl {
 
+  private String tableClass;
   private List<Column> columns = new ArrayList<Column>();
 
   void addColumn(Column column) {
@@ -20,6 +21,14 @@ public class DynamicTable extends UIInputImpl {
 
   List<Column> getColumns() {
     return columns;
+  }
+
+  public String getTableClass() {
+    return tableClass;
+  }
+
+  public void setTableClass(String tableClass) {
+    this.tableClass = tableClass;
   }
 
   @Override

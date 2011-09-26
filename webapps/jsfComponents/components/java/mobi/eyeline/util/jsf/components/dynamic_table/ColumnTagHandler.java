@@ -13,7 +13,7 @@ import javax.faces.component.UIComponent;
 abstract class ColumnTagHandler extends TagHandler {
 
   protected final TagAttribute name;
-  protected final TagAttribute width;
+  protected final TagAttribute columnClass;
   protected final TagAttribute title;
 
   public ColumnTagHandler(TagConfig config) {
@@ -21,14 +21,14 @@ abstract class ColumnTagHandler extends TagHandler {
 
     name = getRequiredAttribute("name");
     title = getAttribute("title");
-    width = getAttribute("width");
+    columnClass = getAttribute("columnClass");
   }
 
   protected void apply(Column column, FaceletContext ctx, UIComponent parent) {
     column.setName(name.getValue(ctx));
     if (title != null)
       column.setTitle(title.getValue(ctx));
-    if (width != null)
-      column.setWidth(width.getValue(ctx));
+    if (columnClass != null)
+      column.setColumnClass(columnClass.getValue(ctx));
   }
 }
