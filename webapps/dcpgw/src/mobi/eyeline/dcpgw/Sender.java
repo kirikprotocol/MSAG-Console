@@ -45,15 +45,13 @@ public class Sender extends Thread{
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
-    public Sender(DcpConnection dcpConnection, int capacity, long sending_timeout, SmppServer smppServer){
+    public Sender(DcpConnection dcpConnection, int capacity, long sending_timeout){
         log.debug("Try to initialize sender ...");
         this.connection = dcpConnection;
 
         this.capacity = capacity;
 
         this.sending_timeout = sending_timeout;
-
-        this.smppServer = smppServer;
 
         delivery_id_queue_map = Collections.synchronizedMap(new HashMap<Integer, LinkedBlockingQueue<Message>>());
         queue_task_map = Collections.synchronizedMap(new HashMap<LinkedBlockingQueue<Message>, ScheduledFuture>());
@@ -62,6 +60,10 @@ public class Sender extends Thread{
 
         id_seq_num_table = new Hashtable<Long, Integer>();
         id_conn_name_table = new Hashtable<Long, String>();
+    }
+
+    public void setSmppServer(SmppServer smppServer){
+        this.smppServer = smppServer;
     }
 
     public void setDcpConnection(DcpConnection connection){

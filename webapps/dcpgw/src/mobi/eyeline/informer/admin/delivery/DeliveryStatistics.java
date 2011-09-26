@@ -27,7 +27,7 @@ public class DeliveryStatistics {
     return deliveryState == null ? null : deliveryState.cloneState();
   }
 
-  void setDeliveryState(DeliveryState deliveryState) {
+  public void setDeliveryState(DeliveryState deliveryState) {
     this.deliveryState = deliveryState;
   }
 

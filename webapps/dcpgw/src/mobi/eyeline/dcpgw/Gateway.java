@@ -87,44 +87,45 @@ public class Gateway extends Thread implements PDUListener {
     private static int informer_port;
 
     private static ConfigurationManager cm;
-    private static Properties config;
-    private static Hashtable<String, String> user_password_table;
-    private static Hashtable<String, Provider> connection_provider_table;
+    private Properties config;
+    private Hashtable<String, String> user_password_table;
+    private Hashtable<String, Provider> connection_provider_table;
 
     public static void main(String args[]) {
+        String user_dir = System.getProperty("user.dir");
+        log.debug("user dir:"+user_dir);
+        String smpp_server_config_file = user_dir + File.separator + "conf" + File.separator + "config.properties";
+        log.debug("config file: "+smpp_server_config_file);
 
         try {
-            new Gateway();
-        } catch (SmppException e) {
+            new Gateway(smpp_server_config_file);
+        } catch (Exception e) {
             log.error(e);
-        } catch (InitializationException e) {
-            log.error("Couldn't initialize gateway.", e);
         }
 
     }
 
-    public Gateway() throws SmppException, InitializationException {
+    public Gateway(String smpp_server_config_file) throws SmppException, InitializationException, IOException, XmlConfigException {
         log.debug("Try to initialize gateway ...");
         Runtime.getRuntime().addShutdownHook(this);
 
-        String user_dir = System.getProperty("user.dir");
-        String smpp_server_config_file = user_dir + File.separator + "conf" + File.separator + "config.properties";
-        log.debug("config file: "+smpp_server_config_file);
         cm = new ConfigurationManager(smpp_server_config_file);
 
-        try {
-            config = cm.loadSmppConfigurations();
+        config = cm.loadSmppConfigurations();
 
-            user_password_table = cm.loadUsers();
+        user_password_table = cm.loadUsers();
 
-            connection_provider_table = cm.loadProviders();
-        } catch (IOException e) {
-            log.error(e);
-            throw new InitializationException(e);
-        } catch (XmlConfigException e) {
-            log.error(e);
-            throw new InitializationException(e);
-        }
+        connection_provider_table = cm.loadProviders();
+
+        new Gateway(config, user_password_table, connection_provider_table);
+    }
+
+    public Gateway(Properties config,
+                   Hashtable<String, String> user_password_table,
+                   Hashtable<String, Provider> connection_provider_table) throws InitializationException, SmppException {
+        this.config = config;
+        this.user_password_table = user_password_table;
+        this.connection_provider_table = connection_provider_table;
 
         String s = config.getProperty("informer.host");
         if (s != null && !s.isEmpty()){
@@ -196,7 +197,8 @@ public class Gateway extends Thread implements PDUListener {
             try {
                 DcpConnection dcpConnection =
                         new DcpConnectionImpl(informer_host, informer_port, user, user_password_table.get(user));
-                Sender sender = new Sender(dcpConnection, capacity, sending_timeout, smppServer);
+                Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
+                sender.setSmppServer(smppServer);
                 sender.start();
                 user_sender_table.put(user, sender);
             } catch (AdminException e) {
@@ -204,7 +206,7 @@ public class Gateway extends Thread implements PDUListener {
             }
         }
 
-        String final_log_dir = Utils.getProperty(config, "final.log.dir", user_dir + File.separator + "final_log");
+        String final_log_dir = Utils.getProperty(config, "final.log.dir", System.getProperty("user.dir") + File.separator + "final_log");
 
         fileSystem = FileSystem.getFSForSingleInst();
         try {
@@ -252,6 +254,13 @@ public class Gateway extends Thread implements PDUListener {
         log.debug("Gateway initialized.");
     }
 
+    public void setDcpConnection(String user, DcpConnection dcpConnection){
+        Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
+        user_sender_table.put(user, sender);
+    }
+
+
+
     private synchronized void updateConfiguration() throws XmlConfigException, IOException, SmppException, AdminException {
         log.debug("Try to update configuration ...");
 
@@ -270,7 +279,8 @@ public class Gateway extends Thread implements PDUListener {
             if (!user_sender_table.containsKey(user)){
                 DcpConnection dcpConnection = new DcpConnectionImpl(informer_host, informer_port, user, user_password_table.get(user));
 
-                Sender sender = new Sender(dcpConnection, capacity, sending_timeout, smppServer);
+                Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
+                sender.setSmppServer(smppServer);
                 sender.start();
                 user_sender_table.put(user,sender);
             }

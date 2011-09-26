@@ -1,11 +1,15 @@
 package test;
 
+import mobi.eyeline.dcpgw.Client;
 import mobi.eyeline.dcpgw.FinalMessageState;
+import mobi.eyeline.dcpgw.Gateway;
+import mobi.eyeline.dcpgw.Provider;
+import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.journal.Status;
+import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
-import org.apache.log4j.Logger;
 import org.junit.runner.Description;
 
 import java.io.File;
@@ -131,7 +135,6 @@ public abstract class T {
         return data;
     }
 
-    // Метод возвращает компаратор, который позволяет отсортировать методы в алфавитном порядке
     protected static Comparator forward() {
         return new Comparator() {
 
@@ -142,5 +145,49 @@ public abstract class T {
             }
         };
     }
+
+    public static Gateway createGateway() throws InitializationException, SmppException {
+        Properties properties = new Properties();
+        properties.setProperty("smpp.lastActivityTimeout","300000");
+        properties.setProperty("smpp.inactivityTimeout","60000");
+        properties.setProperty("smpp.connectRetryInterval","5000");
+        properties.setProperty("smpp.bindTimeout","30000");
+        properties.setProperty("smpp.server.port","9012");
+        properties.setProperty("informer.host","silverstone");
+        properties.setProperty("informer.port","9573");
+        properties.setProperty("informer.messages.list.capacity","100");
+        properties.setProperty("sending.timeout.mls","30000");
+        properties.setProperty("file.monitor.interval.mls","30000");
+        properties.setProperty("max.journal.size.mb","10");
+        properties.setProperty("clean.journal.timeout.msl","30000");
+        properties.setProperty("resend.receipts.interval.sec","30");
+        properties.setProperty("resend.receipts.timeout.sec","30");
+        properties.setProperty("resend.receipts.max.timeout.min","720");
+        properties.setProperty("update.config.server.port","9876");
+        properties.setProperty("final.log.dir",System.getProperty("user.dir")+File.separator+".build"+File.separator+"final_log");
+
+        Hashtable<String, String> user_password_table = new Hashtable<String, String>();
+        Hashtable<String, Provider> connection_provider_table = new Hashtable<String, Provider>();
+
+        Gateway gateway = new Gateway(properties, user_password_table, connection_provider_table);
+
+        return gateway;
+    }
+
+    public static Client createClient() throws SmppException {
+        Properties properties = new Properties();
+        properties.setProperty("smpp.lastActivityTimeout","300000");
+        properties.setProperty("smpp.inactivityTimeout","90000");
+        properties.setProperty("smpp.connectRetryInterval","5000");
+        properties.setProperty("smpp.bindTimeout","30000");
+        properties.setProperty("smpp.connector.con1.transformer","mobi.eyeline.smpp.api.transformers.MultipartAssemblingTransformer,mobi.eyeline.smpp.api.transformers.Latin1UnsupportedTransformer");
+        properties.setProperty("smpp.connector.con1.smsc","localhost:9012");
+        properties.setProperty("smpp.connector.con1.systemId","systemId1");
+        properties.setProperty("smpp.connector.con1.password","p1");
+        properties.setProperty("smpp.connector.con1.interfaceVersion","v50");
+
+        return new Client(properties);
+    }
+
 
 }
