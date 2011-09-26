@@ -13,6 +13,12 @@
     .valueColumn {width: 150px; text-align: left; padding-right: 10px; }
     .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
     .lastColumn {text-align: left;}
+
+    .dateColumn {width: 15%;}
+    .idColumn {width: 15%;}
+    .catColumn {width: 15%;}
+    .severityColumn {width: 5%;}
+    .textColumn {width: 50%;}
   </ui:define>
 
   <ui:define name="content">
@@ -42,25 +48,25 @@
 
         <eye:row>
 
-          <eye:column name="date" title="#{msg['smsc.snmp.traps.submitTime']}" width="15%" sortable="#{traps.sortAvailable}">
+          <eye:column name="date" title="#{msg['smsc.snmp.traps.submitTime']}" columnClass="dateColumn" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.submitDate}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </h:outputText>
           </eye:column>
 
-          <eye:column name="alarmId" title="#{msg['smsc.snmp.traps.alarmId']}" width="15%" sortable="#{traps.sortAvailable}">
+          <eye:column name="alarmId" title="#{msg['smsc.snmp.traps.alarmId']}" columnClass="idColumn" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.alarmId}"/>
           </eye:column>
 
-          <eye:column name="alarmCategory" title="#{msg['smsc.snmp.traps.alarmCategory']}" width="15%" sortable="#{traps.sortAvailable}">
+          <eye:column name="alarmCategory" title="#{msg['smsc.snmp.traps.alarmCategory']}" columnClass="alarmColumn" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.alarmCategory}"/>
           </eye:column>
 
-          <eye:column name="severity" title="#{msg['smsc.snmp.traps.severity']}" width="5%" sortable="#{traps.sortAvailable}">
+          <eye:column name="severity" title="#{msg['smsc.snmp.traps.severity']}" columnClass="severityColumn" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.severity}"/>
           </eye:column>
 
-          <eye:column name="text" title="#{msg['smsc.snmp.traps.text']}" width="50%">
+          <eye:column name="text" title="#{msg['smsc.snmp.traps.text']}" columnClass="textColumn">
             <h:outputText value="#{u.text}"/>
           </eye:column>
 

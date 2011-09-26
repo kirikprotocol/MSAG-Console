@@ -11,6 +11,13 @@
 
   <ui:define name="styles">
     .statusColumn {white-space: nowrap}
+
+    .editColumn {width: 1%}
+    .connectedColumn {width: 1%}
+    .systemIdColumn {width: 48%}
+    .statusColumn {width: 20%; text-align: center}
+    .hostColumn {width: 10%; text-align: center}
+    .actionColumn {width: 20%}
   </ui:define>
 
   <ui:define name="content">
@@ -28,22 +35,22 @@
 
         <eye:row>
 
-          <eye:column name="edit" title="" width="1%">
+          <eye:column name="edit" title="" columnClass="editColumn">
             <h:commandLink action="SERVICE_EDIT" value="#{msg['services.page.edit']}">
               <f:param name="smeId" value="#{srv.systemId}"/>
             </h:commandLink>
           </eye:column>
 
-          <eye:column name="connected" title="" sortable="false" width="1%">
+          <eye:column name="connected" title="" sortable="false" columnClass="connectedColumn">
             <h:graphicImage value="/images/ic_internal.gif" rendered="#{srv.connected}"/>
             <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{not srv.connected}"/>
           </eye:column>
 
-          <eye:column name="systemId" title="#{msg['services.page.systemId']}" sortable="true" width="45%" defaultSortOrder="asc">
+          <eye:column name="systemId" title="#{msg['services.page.systemId']}" sortable="true" columnClass="systemIdColumn" defaultSortOrder="asc">
             <h:outputText value="#{srv.systemId}"/>
           </eye:column>
 
-          <eye:column name="status" title="#{msg['services.page.status']}" width="20%">
+          <eye:column name="status" title="#{msg['services.page.status']}" columnClass="statusColumn">
             <h:outputText value="LB: #{srv.loadBalancerStatus}" rendered="#{srv.connectedViaLoadBalancer}" style="color: GREEN"/>
             <h:panelGroup rendered="#{srv.connectedDirectly}">
               <c:forEach items="#{srv.directStatuses}" var="st">
@@ -53,11 +60,11 @@
             <h:outputText value="Internal" rendered="#{srv.internal}" style="color: GREEN"/>
           </eye:column>
 
-          <eye:column name="host" title="#{msg['services.page.host']}" width="10%" align="center">
+          <eye:column name="host" title="#{msg['services.page.host']}" columnClass="hostColumn" >
             <h:outputText value="#{srv.onlineHost}" rendered="#{srv.managed}" style="color:BLUE"/>
           </eye:column>
 
-          <eye:column name="action" title="#{msg['services.page.action']}" width="20%">
+          <eye:column name="action" title="#{msg['services.page.action']}" columnClass="actionColumn">
             <h:panelGroup rendered="#{srv.managed and !srv.switchAllowed}">
               <h:commandLink value="#{msg['services.page.start']}" action="#{service.startSme}" rendered="#{srv.onlineHost == null}">
                 <f:param name="smeId" value="#{srv.systemId}"/>

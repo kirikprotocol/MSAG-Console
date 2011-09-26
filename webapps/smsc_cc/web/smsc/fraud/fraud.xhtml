@@ -13,6 +13,7 @@
     .labelColumn {width: 1px; text-align: right; white-space : nowrap;}
     .valueColumn {width: 100%; text-align: left;}
     .addButton {width: 100px; white-space: nowrap;}
+    .addressColumn {width: 99%}
   </ui:define>
 
   <ui:define name="content">
@@ -43,7 +44,7 @@
         <smsc:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>
         <eye:dataTable value="#{fraud.addressTableModel}" selectedRows="#{fraud.selectedRows}" var="row">
           <eye:row>
-            <eye:column name="address" title="#{msg['smsc.fraud.address.label']}" width="99%" sortable="true">
+            <eye:column name="address" title="#{msg['smsc.fraud.address.label']}" columnClass="addressColumn" sortable="true">
               <h:outputText value="#{row.simpleAddress}"/>
             </eye:column>
           </eye:row>

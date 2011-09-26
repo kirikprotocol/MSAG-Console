@@ -14,6 +14,9 @@
     .valueColumn {width: 150px; text-align: left; padding-right: 10px; }
     .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
     .lastColumn {text-align: left;}
+
+    .nameColumn {width: 60%; text-align: left;}
+    .propCOlumn {width: 7%; text-align: center}
   </ui:define>
 
   <ui:define name="content">
@@ -48,33 +51,33 @@
       <eye:dataTable value="#{routes.routes}" var="route" selectedRows="#{routes.routes2remove}">
         <eye:row innerData="#{not empty route.notes}">
 
-          <eye:column name="name" title="#{route['name']}" sortable="true" defaultSortOrder="asc" width="60%">
+          <eye:column name="name" title="#{route['name']}" sortable="true" defaultSortOrder="asc" columnClass="nameColumn">
             <h:commandLink action="ROUTE_EDIT" value="#{route.name}" immediate="true">
               <f:param name="route" value="#{route.name}"/>
             </h:commandLink>
           </eye:column>
 
-          <eye:column name="active" title="#{route['active']}" width="7%" align="center">
+          <eye:column name="active" title="#{route['active']}" columnClass="propColumn">
             <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.active}"/>
           </eye:column>
 
-          <eye:column name="allowed" title="#{route['trafficMode']}" width="7%" align="center">
+          <eye:column name="allowed" title="#{route['trafficMode']}" columnClass="propColumn">
             <h:outputText value="#{route.trafficMode}"/>
           </eye:column>
 
-          <eye:column name="billing" title="#{route['billing']}" width="7%" align="center">
+          <eye:column name="billing" title="#{route['billing']}" columnClass="propColumn">
             <h:outputText value="#{route.billing}"/>
           </eye:column>
 
-          <eye:column name="archiving" title="#{route['archiving']}" width="7%" align="center">
+          <eye:column name="archiving" title="#{route['archiving']}" columnClass="propColumn">
             <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.archiving}"/>
           </eye:column>
 
-          <eye:column name="reports" title="#{msg['routes.page.reports']}" width="7%" align="center">
+          <eye:column name="reports" title="#{msg['routes.page.reports']}" columnClass="propColumn">
             <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.suppressDeliveryReports}"/>
           </eye:column>
 
-          <eye:column name="transit" title="#{route['transit']}" width="7%" align="center">
+          <eye:column name="transit" title="#{route['transit']}" columnClass="propColumn">
             <h:graphicImage value="/images/ic_checked.gif" rendered="#{route.transit}"/>
           </eye:column>
 

@@ -9,6 +9,11 @@
 
   <ui:param name="pageTitle" value="#{msg['timezones.page.title']}"/>
 
+  <ui:define name="styles">
+    .maskColumn {width: 30%}
+    .timezoneColumn {width: 70%}
+  </ui:define>
+
   <ui:define name="content">
 
     <h:form rendered="#{!subjects.initError}">
@@ -25,15 +30,15 @@
       <p/>
       <eye:collapsingGroup label="#{msg['timezones.page.masks']}" opened="true">
         <eye:dynamicTable value="#{timezones.masksModel}">
-          <eye:textColumn name="mask" maxLength="20" allowEditAfterAdd="true" width="30%"/>
-          <eye:selectColumn name="tzm" values="#{timezones.timesonesItems}" allowEditAfterAdd="true" width="70%"/>
+          <eye:textColumn name="mask" maxLength="20" allowEditAfterAdd="true" columnClass="maskColumn"/>
+          <eye:selectColumn name="tzm" values="#{timezones.timesonesItems}" allowEditAfterAdd="true" columnClass="timezoneColumn"/>
         </eye:dynamicTable>
       </eye:collapsingGroup>
       <p/>
       <eye:collapsingGroup label="#{msg['timezones.page.subjects']}" opened="true">
         <eye:dynamicTable value="#{timezones.subjsModel}" >
-          <eye:selectColumn name="subj" values="#{timezones.availableSubjects}" allowEditAfterAdd="false" uniqueValues="true" width="30%"/>
-          <eye:selectColumn name="tzs" values="#{timezones.timesonesItems}" allowEditAfterAdd="true" width="70%"/>
+          <eye:selectColumn name="subj" values="#{timezones.availableSubjects}" allowEditAfterAdd="false" uniqueValues="true" columnClass="maskColumn"/>
+          <eye:selectColumn name="tzs" values="#{timezones.timesonesItems}" allowEditAfterAdd="true" columnClass="timezoneColumn"/>
         </eye:dynamicTable>
       </eye:collapsingGroup>
       <p/>

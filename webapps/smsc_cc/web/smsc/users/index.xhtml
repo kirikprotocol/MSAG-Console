@@ -12,6 +12,11 @@
   <ui:define name="styles">
     .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
     .valueColumn {width: 100%; text-align: left; padding-right: 10px; }
+
+    .loginColumn {width: 40%;}
+    .firstNameColumn {width: 20%;}
+    .lastNameColumn {width: 20%;}
+    .depColumn {width: 20%;}
   </ui:define>
 
   <ui:define name="content">
@@ -38,21 +43,21 @@
 
         <eye:row opened="true">
 
-          <eye:column name="login" title="#{msg['smsc.users.login']}" width="20%" sortable="true" defaultSortOrder="asc">
+          <eye:column name="login" title="#{msg['smsc.users.login']}" columnClass="loginColumn" sortable="true" defaultSortOrder="asc">
             <h:commandLink value="#{u.login}" action="#{users.edit}">
               <f:param name="login" value="#{u.login}"/>
             </h:commandLink>
           </eye:column>
 
-          <eye:column name="firstName" title="#{msg['smsc.users.firstname']}" width="20%" sortable="true">
+          <eye:column name="firstName" title="#{msg['smsc.users.firstname']}" columnClass="firstNameColumn" sortable="true">
             <h:outputText value="#{u.firstName}"/>
           </eye:column>
 
-          <eye:column name="lastName" title="#{msg['smsc.users.lastname']}" width="20%" sortable="true">
+          <eye:column name="lastName" title="#{msg['smsc.users.lastname']}" columnClass="lastNameColumn" sortable="true">
             <h:outputText value="#{u.lastName}"/>
           </eye:column>
 
-          <eye:column name="dept" title="#{msg['smsc.users.dept']}" width="20%" sortable="true">
+          <eye:column name="dept" title="#{msg['smsc.users.dept']}" columnClass="depColumn" sortable="true">
             <h:outputText value="#{u.dept}"/>
           </eye:column>
 

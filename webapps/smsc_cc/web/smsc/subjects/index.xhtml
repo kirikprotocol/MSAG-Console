@@ -16,6 +16,9 @@
     .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
     .valueColumn {width: 150px; text-align: left; padding-right: 10px; }
     .lastColumn {text-align: left;}
+
+    .nameColumn {width: 50%; text-align: left;}
+    .defaultSmeColumn {width: 50%; text-align: left;}
   </ui:define>
 
   <ui:define name="content">
@@ -45,13 +48,13 @@
 
       <eye:dataTable value="#{subjects.subjectsModel}" selectedRows="#{subjects.selectedRows}" var="s">
         <eye:row innerData="#{not empty s.notes}">
-          <eye:column name="name" title="#{msg['subjects.page.column.name']}" width="50%"
+          <eye:column name="name" title="#{msg['subjects.page.column.name']}" columnClass="nameColumn"
                       sortable="true" defaultSortOrder="asc">
             <h:commandLink value="#{s.name}" action="SUBJECT_EDIT" immediate="true">
               <f:param name="oldName" value="#{s.name}"/>
             </h:commandLink>
           </eye:column>
-          <eye:column name="defaultSme" title="#{msg['subjects.page.column.defaultSme']}" width="48%" sortable="true">
+          <eye:column name="defaultSme" title="#{msg['subjects.page.column.defaultSme']}" columnClass="defaultSmeColumn" sortable="true">
             <h:commandLink value="#{s.defaultSmeId}" action="SERVICE_EDIT" immediate="true">
               <f:param name="smeId" value="#{s.defaultSmeId}"/>
             </h:commandLink>

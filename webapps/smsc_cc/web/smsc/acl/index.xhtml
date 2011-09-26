@@ -8,6 +8,12 @@
 
   <ui:param name="pageTitle" value="#{msg['acls.page.title']}"/>
 
+  <ui:define name="styles">
+    .idColumn {width:5%}
+    .nameColumn {width: 30%}
+    .descColumn {width: 74%}
+  </ui:define>
+
   <ui:define name="content">
 
     <h:form rendered="#{!acls.outOfDate}">
@@ -15,17 +21,17 @@
 
       <eye:dataTable value="#{acls.acls}" selectedRows="#{acls.selectedRows}" var="acl">
         <eye:row>
-          <eye:column name="id" title="#{msg['acls.page.id']}" width="5%">
+          <eye:column name="id" title="#{msg['acls.page.id']}" columnClass="idColumn">
             <h:commandLink action="ACL_EDIT" value="#{acl.id}">
               <f:param name="aclId" value="#{acl.id}"/>
             </h:commandLink>
           </eye:column>
-          <eye:column name="name" title="#{msg['acls.page.name']}" width="30%" sortable="true" defaultSortOrder="asc">
+          <eye:column name="name" title="#{msg['acls.page.name']}" columnClass="nameColumn" sortable="true" defaultSortOrder="asc">
             <h:commandLink action="ACL_EDIT" value="#{acl.name}">
               <f:param name="aclId" value="#{acl.id}"/>
             </h:commandLink>
           </eye:column>
-          <eye:column name="description" title="#{msg['acls.page.desc']}" width="74%">
+          <eye:column name="description" title="#{msg['acls.page.desc']}" columnClass="descColumn">
             <h:commandLink action="ACL_EDIT" value="#{acl.description}">
               <f:param name="aclId" value="#{acl.id}"/>
             </h:commandLink>

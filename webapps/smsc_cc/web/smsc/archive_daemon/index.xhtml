@@ -14,6 +14,9 @@
     .valueColumn {width: 100%; text-align: left;}
     .column30 {width: 30%;}
     .column70 {width: 70%;}
+
+    .dtable {margin-left: 15px; width: 30%}
+    .dtableColumn {width: 50%}
   </ui:define>
 
   <ui:define name="content">
@@ -107,13 +110,10 @@
         </h:panelGrid>
 
         <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations.sources']}" opened="true">
-          <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="column30, column70">
-            <eye:dynamicTable value="#{archiveDaemon.locationSources}">
-              <eye:textColumn name="key" allowEditAfterAdd="false" width="50%"/>
-              <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
-            </eye:dynamicTable>
-            <h:outputText value="&#160;"/>
-          </h:panelGrid>
+          <eye:dynamicTable value="#{archiveDaemon.locationSources}" tableClass="dtable">
+            <eye:textColumn name="key" allowEditAfterAdd="false" columnClass="dtableColumn"/>
+            <eye:textColumn name="value" allowEditAfterAdd="true" columnClass="dtableColumn"/>
+          </eye:dynamicTable>
         </eye:collapsingGroup>
       </eye:collapsingGroup>
 
@@ -126,13 +126,10 @@
         </h:panelGrid>
 
         <eye:collapsingGroup label="#{archiveDaemonBundle['indexatorSmeAddrChunkSizes']}" opened="true">
-          <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="column30, column70">
-            <eye:dynamicTable value="#{archiveDaemon.indexatorSmeAddrChunkSizes}">
-              <eye:textColumn name="key" allowEditAfterAdd="false" width="50%"/>
-              <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
-            </eye:dynamicTable>
-            <h:outputText value="&#160;"/>
-          </h:panelGrid>
+          <eye:dynamicTable value="#{archiveDaemon.indexatorSmeAddrChunkSizes}" tableClass="dtable">
+            <eye:textColumn name="key" allowEditAfterAdd="false" columnClass="dtableColumn"/>
+            <eye:textColumn name="value" allowEditAfterAdd="true" columnClass="dtableColumn"/>
+          </eye:dynamicTable>
         </eye:collapsingGroup>
       </eye:collapsingGroup>
 

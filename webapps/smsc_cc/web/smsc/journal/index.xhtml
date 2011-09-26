@@ -13,6 +13,11 @@
     .valueColumn {width: 150px; text-align: left; padding-right: 10px; }
     .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
     .lastColumn {text-align: left;}
+
+    .timeColumn {width: 10%; align: left;}
+    .userColumn {width: 10%; align: center;}
+    .subjectColumn {width: 10%; align: center;}
+    .descColumn {width: 70%; align: left;}
   </ui:define>
 
   <ui:define name="content">
@@ -38,19 +43,19 @@
 
       <eye:dataTable value="#{journal.records}" var="rec">
         <eye:row>
-          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="10%" align="center"
+          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" columnClass="timeColumn"
                       defaultSortOrder="desc">
             <h:outputText value="#{rec.date}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </h:outputText>
           </eye:column>
-          <eye:column name="user" title="#{msg['journal.page.user']}" sortable="true" width="10%" align="center">
+          <eye:column name="user" title="#{msg['journal.page.user']}" sortable="true" columnClass="userColumn">
             <h:outputText value="#{rec.user}" title="#{rec.userDetails}"/>
           </eye:column>
-          <eye:column name="subject" title="#{msg['journal.page.subject']}" sortable="true" width="10%" align="center">
+          <eye:column name="subject" title="#{msg['journal.page.subject']}" sortable="true" columnClass="subjectColumn">
             <h:outputText value="#{rec.subject}"/>
           </eye:column>
-          <eye:column name="description" title="#{msg['journal.page.description']}" width="70%">
+          <eye:column name="description" title="#{msg['journal.page.description']}" columnClass="descColumn">
             <h:outputText value="#{rec.description}"/>
           </eye:column>
         </eye:row>

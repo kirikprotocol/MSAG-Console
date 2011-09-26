@@ -10,10 +10,16 @@
   <ui:param name="pageTitle" value="#{msg['smsc.alias.title']}"/>
 
   <ui:define name="styles">
+    <!-- Filter -->
     .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
     .valueColumn {width: 200px; text-align: left; padding-right: 10px; }
     .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
     .lastColumn {text-align: left;}
+
+    <!-- Data table -->
+    .aliasColumn {width: 33%}
+    .addressColumn {width: 33%}
+    .hiddenColumn {width: 33%; text-align: center}
   </ui:define>
 
   <ui:define name="content">
@@ -47,16 +53,16 @@
 
         <eye:row opened="true">
 
-          <eye:column name="alias" title="#{msg['smsc.alias.column.alias']}" width="33%" sortable="true"
+          <eye:column name="alias" title="#{msg['smsc.alias.column.alias']}" columnClass="aliasColumn" sortable="true"
                       defaultSortOrder="asc">
             <h:commandLink value="#{a.alias.simpleAddress}" action="#{aliases.edit}">
               <f:param name="aliasToEdit" value="#{a.alias.simpleAddress}"/>
             </h:commandLink>
           </eye:column>
-          <eye:column name="address" title="#{msg['smsc.alias.column.address']}" width="33%" sortable="true">
+          <eye:column name="address" title="#{msg['smsc.alias.column.address']}" columnClass="addressColumn" sortable="true">
             <h:outputText value="#{a.address.simpleAddress}"/>
           </eye:column>
-          <eye:column name="hidden" title="#{msg['smsc.alias.column.hidden']}" width="33%" sortable="true">
+          <eye:column name="hidden" title="#{msg['smsc.alias.column.hidden']}" columnClass="hiddenColumn" sortable="true">
             <h:outputText value="#{msg['smsc.alias.options.hidden']}" rendered="#{a.hide}"/>
             <h:outputText value="#{msg['smsc.alias.options.nothidden']}" rendered="#{!a.hide}"/>
           </eye:column>

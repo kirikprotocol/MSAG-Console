@@ -9,10 +9,16 @@
   <ui:param name="pageTitle" value="#{msg['smsc.smsc.closed_groups']}"/>
 
   <ui:define name="styles">
+    <!-- FILTER -->
     .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
     .valueColumn {width: 100px; text-align: left; padding-right: 10px; }
     .label2Column {width: 1px; text-align:right; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
     .lastColumn {text-align: left;}
+
+    <!-- DATA TABLE -->
+    .idColumn {width: 10%}
+    .nameColumn {width: 25%}
+    .descColumn {width: 60%}
   </ui:define>
 
   <ui:define name="content">
@@ -37,19 +43,19 @@
 
         <eye:row innerData="#{!empty g.masks}" opened="true">
 
-          <eye:column name="id" title="#{closedGroupsBundle.id}" width="10%" sortable="true">
+          <eye:column name="id" title="#{closedGroupsBundle.id}" columnClass="idColumn" sortable="true">
             <h:commandLink value="#{g.id}" action="CLOSED_GROUP_EDIT">
               <f:param name="closed_group" value="#{g.id}"/>
             </h:commandLink>
           </eye:column>
 
-          <eye:column name="name" title="#{closedGroupsBundle.name}" width="25%%" sortable="true">
+          <eye:column name="name" title="#{closedGroupsBundle.name}" columnClass="nameColumn" sortable="true">
             <h:commandLink value="#{g.name}" action="CLOSED_GROUP_EDIT">
               <f:param name="closed_group" value="#{g.id}"/>
             </h:commandLink>
           </eye:column>
 
-          <eye:column name="description" title="#{closedGroupsBundle.description}" width="40%">
+          <eye:column name="description" title="#{closedGroupsBundle.description}" columnClass="descColumn">
             <h:commandLink value="#{g.description}" action="CLOSED_GROUP_EDIT">
               <f:param name="closed_group" value="#{g.id}"/>
             </h:commandLink>

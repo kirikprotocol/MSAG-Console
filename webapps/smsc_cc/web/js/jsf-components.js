@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.3
+  Jsf components 1.4
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -90,30 +90,42 @@ function DataTable(tableId, tableOptions) {
     params["eyelineComponentUpdate"] = tableId;
     $.ajaxSetup({cache: false});
 
+    var progress = null;
+
     var onResponse = function(data, status, resp) {
       if (status != 'success')
         return;
 
       if (typeof(data) == "object") {
         if (data.type == "progress") {
+          progress = data.data;
           progressOverlay.showProgress(data.data + "%");
           window.setTimeout(_sendRequest, 1000);
         } else {
+          progress = 100;
           progressOverlay.showError(data.data);
         }
       } else {
         var rowsCount = resp.getResponseHeader("rowsCount");
+        progress = 100;
         progressOverlay.hide();
         bodyElement.html(data);
         navbar.setTotal(rowsCount)
       }
     };
 
+    var _updateOverlay = function() {
+      if (progress != 100)
+        progressOverlay.showProgress(progress);
+    };
+
     var _sendRequest = function() {
       $.post(requestUrl, params, onResponse);
     };
 
-    progressOverlay.showProgress(null);
+    progress = null;
+    window.setTimeout(_updateOverlay, 1000);
+//    progressOverlay.showProgress(null);
     _sendRequest();
   };
 
@@ -255,8 +267,8 @@ var ProgressOverlay = function(parent) {
   var visible = false;
 
   var progressElement = $("<table>").addClass("eyeline_overlay");
-  $('<tr><td align="center" valign="center">' +
-      '<div style="margin-top:auto;margin-bottom:auto;">' +
+  $('<tr><td align="center" valign="bottom">' +
+      '<div>' +
       '<table style="width:0%"><tr>' +
       '<td><div class="eyeline_loading"></div></td>' +
       '<td><span></span></td>' +
@@ -611,8 +623,9 @@ var ToggleButtonControl = function(id, toggleOptions) {
  * Класс TextColumn
  * @param columnId
  */
-function TextColumn(columnId, allowEditAfterAdd) {
+function TextColumn(columnId, columnClass, allowEditAfterAdd, allowEmpty) {
   this.columnId = columnId;
+  this.columnClass = columnClass;
 
   //--------------------------------------------------------------------------------------------------------------------
   var createInput = function(id, value) {
@@ -634,13 +647,14 @@ function TextColumn(columnId, allowEditAfterAdd) {
 
   //--------------------------------------------------------------------------------------------------------------------
   this.isAllowedToCreateColumnElement = function(tableId, value) {
-    return true;
-  }
+    return allowEmpty || value.length != 0;
+  };
 
   //--------------------------------------------------------------------------------------------------------------------
   this.createColumnElement = function (tableId, newRow, newCount, value) {
     var id = getValueElementId(tableId, newCount);
     var newCell = newRow.insertCell(newRow.cells.length);
+    newCell.className=columnClass;
     if (!allowEditAfterAdd) {
       var input = document.createElement("input");
       input.name = id;
@@ -685,8 +699,9 @@ function TextColumn(columnId, allowEditAfterAdd) {
  * @param columnId
  * @param values
  */
-function SelectColumn(columnId, values, allowEditAfterAdd, uniqueValues) {
+function SelectColumn(columnId, values, columnClass, allowEditAfterAdd, uniqueValues) {
   this.columnId = columnId;
+  this.columnClass = columnClass;
 
   //--------------------------------------------------------------------------------------------------------------------
   var getValueElementId = function(tableId, rowNum) {
@@ -717,6 +732,7 @@ function SelectColumn(columnId, values, allowEditAfterAdd, uniqueValues) {
   this.createColumnElement = function(tableId, newRow, newCount, value) {
     var id = getValueElementId(tableId, newCount);
     var newCell = newRow.insertCell(newRow.cells.length);
+    newCell.className=columnClass;
     if (!allowEditAfterAdd) {
       var input = document.createElement("input");
       input.name = id;

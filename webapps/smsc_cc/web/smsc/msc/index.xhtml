@@ -12,6 +12,7 @@
   <ui:define name="styles">
     .column1 {width: 1px; text-align:right; white-space: nowrap;}
     .column2 {text-align: left;}
+    .addrColumn {width: 100%}
   </ui:define>
 
   <ui:define name="content">
@@ -27,7 +28,7 @@
 
       <eye:dataTable value="#{msc.commutatorsModel}" selectedRows="#{msc.selectedRows}" var="a">
         <eye:row>
-          <eye:column name="addr" title="#{msg['smsc.msc.column.addr']}" width="100%" sortable="true" defaultSortOrder="asc">
+          <eye:column name="addr" title="#{msg['smsc.msc.column.addr']}" columnClass="addrColumn" sortable="true" defaultSortOrder="asc">
             <h:outputText value="#{a.simpleAddress}"/>
           </eye:column>
         </eye:row>

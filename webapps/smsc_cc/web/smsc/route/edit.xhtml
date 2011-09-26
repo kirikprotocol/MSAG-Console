@@ -20,6 +20,10 @@
     .column3 {width: 400px;}
     .column4 {width: 300px;}
     .column5 {width: 400px;}
+
+    .sourceMaskColumn {width: 100%}
+    .destMaskColumn {width:75%}
+    .destSmeColumn {width:25%}
   </ui:define>
 
   <ui:define name="content">
@@ -128,7 +132,7 @@
           <h:outputText value="&#160;"/>
 
           <eye:dynamicTable value="#{routeEdit.sourceMasks}">
-            <eye:textColumn name="mask" allowEditAfterAdd="false" width="300px"/>
+            <eye:textColumn name="mask" allowEditAfterAdd="false" columnClass="sourceMaskColumn"/>
           </eye:dynamicTable>
           <h:outputText value="&#160;"/>
 
@@ -162,8 +166,8 @@
           <h:outputText value="&#160;"/>
 
           <eye:dynamicTable value="#{routeEdit.destinationMasks}">
-            <eye:textColumn name="mask" allowEditAfterAdd="false" width="75%" />
-            <eye:selectColumn values="#{routeEdit.smeIds}" name="sme" width="25%" allowEditAfterAdd="false"/>
+            <eye:textColumn name="mask" allowEditAfterAdd="false" columnClass="destMaskColumn" />
+            <eye:selectColumn values="#{routeEdit.smeIds}" name="sme" columnClass="destSmeColumn" allowEditAfterAdd="false"/>
           </eye:dynamicTable>
           <h:outputText value="&#160;"/>
 

@@ -12,6 +12,8 @@
   <ui:define name="styles">
     .column1 {width: 1px; text-align:right; white-space: nowrap;}
     .column2 {text-align: left;}
+
+    .rescheduleColumn {width: 98%}
   </ui:define>
 
   <ui:define name="content">
@@ -35,7 +37,7 @@
 
         <eye:row innerData="#{!empty g.statuses}" opened="true">
 
-          <eye:column name="reschedules" title="" width="50%">
+          <eye:column name="reschedules" title="" columnClass="rescheduleColumn">
             <h:commandLink value="#{g.intervals}" action="#{reschedule.edit}">
               <f:param name="reschedule" value="#{g.intervals}"/>
             </h:commandLink>
