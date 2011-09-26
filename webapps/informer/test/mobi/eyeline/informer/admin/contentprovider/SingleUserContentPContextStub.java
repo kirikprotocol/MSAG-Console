@@ -33,6 +33,12 @@ class SingleUserContentPContextStub implements ContentProviderContext {
     this.deliveryManager = deliveryManager;
   }
 
+  SingleUserContentPContextStub(User user, TestDeliveryManager deliveryManager, FileSystem fileSystem, CpFileFormat fileFormat) {
+    this(user, deliveryManager, fileSystem);
+    this.cpFileFormat = fileFormat;
+  }
+
+
   @Override
   public FileSystem getFileSystem() {
     return fileSystem;

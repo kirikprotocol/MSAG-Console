@@ -156,7 +156,7 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
 
   private void uploadReports(Collection<String> remoteFiles, String localCsvFile) throws AdminException {
     List<File> fs = getReportFiles(localCsvFile);
-    Collections.sort(fs); //todo check order
+    Collections.sort(fs);
     for(File f : fs) {
       if(!remoteFiles.contains(f.getName())) {
         helper.uploadFileToResource(resource, f, remoteFiles);

@@ -562,10 +562,11 @@ public class TestDcpConnection extends DcpConnection{
       List<Message> copy = null;
       List<Message> ms = messages.get(d.getId());
       if(ms == null) {
-        continue;
-      }else {
-        copy = new ArrayList<Message>(ms);
+        ms = Collections.emptyList();
       }
+
+      copy = new ArrayList<Message>(ms);
+
       int count = 0;
       Map<Long, Message> toModify = new HashMap<Long, Message>();
       for(Message m : copy) {

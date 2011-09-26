@@ -2,7 +2,7 @@ package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
-import mobi.eyeline.informer.admin.delivery.TestDeliveryManager;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.MemoryFileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -12,6 +12,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -32,7 +35,7 @@ public class DetailedPeriodSaveStrategyTest {
 
   private FileResource resource;
 
-  private ContentProviderContext context;
+  private SingleUserContentPContextStub context;
 
   private File localDir;
 
@@ -108,12 +111,12 @@ public class DetailedPeriodSaveStrategyTest {
   }
 
 
-  private File prepareResourceFile(boolean isSingleText, int lines, String posfix) throws AdminException {
+  private File prepareResourceErrorFile(int lines, String posfix) throws AdminException {
     File file = new File(resourceDir, "test.csv"+(posfix == null ? "" : posfix));
     PrintWriter writer = null;
     try{
       writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(file, false))));
-      prepareFile(writer, lines, isSingleText);
+      prepareErrorFile(writer, lines);
     }finally{
       if(writer != null) {
         writer.close();
@@ -123,12 +126,28 @@ public class DetailedPeriodSaveStrategyTest {
     return file;
   }
 
-  private File prepareLocalFile(boolean isSingleText, int lines,  String posfix) throws AdminException {
+
+  private File prepareResourceFile(boolean isSingleText, int lines, String posfix, CpFileFormat fileFormat) throws AdminException {
+    File file = new File(resourceDir, "test.csv"+(posfix == null ? "" : posfix));
+    PrintWriter writer = null;
+    try{
+      writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(file, false))));
+      prepareFile(writer, lines, isSingleText, fileFormat);
+    }finally{
+      if(writer != null) {
+        writer.close();
+      }
+    }
+    assertTrue("File doesn't exist!", fs.exists(file));
+    return file;
+  }
+
+  private File prepareLocalFile(boolean isSingleText, int lines,  String posfix, CpFileFormat fileFormat) throws AdminException {
     File file = new File(localDir, "test.csv"+(posfix == null ? "" : posfix));
     PrintWriter writer = null;
     try{
       writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(file, false))));
-      prepareFile(writer, lines, isSingleText);
+      prepareFile(writer, lines, isSingleText, fileFormat);
     }finally{
       if(writer != null) {
         writer.close();
@@ -138,13 +157,81 @@ public class DetailedPeriodSaveStrategyTest {
     return file;
   }
 
-  private void prepareFile(PrintWriter writer, int lines, boolean isSingleText) {
+  private void prepareFile(PrintWriter writer, int lines, boolean isSingleText, CpFileFormat fileFormat) {
     long nb = 79130000000l;
     for(int i=0; i<lines; i++) {
       long n = nb + i;
-      writer.print("+");writer.print(n);writer.print("|text");writer.println(isSingleText ? "" : i);
-
+      if(fileFormat == CpFileFormat.EYELINE) {
+        writer.print("+");writer.print(n);writer.print("|id");writer.print(n);writer.print("|key");writer.print(n);writer.print("|text");writer.println(isSingleText ? "" : i);
+      }else {
+        writer.print("id");writer.print(n);writer.print("|");writer.print("+");writer.print(n);writer.print("|text");writer.println(isSingleText ? "" : i);
+      }
     }
+  }
+  private void prepareErrorFile(PrintWriter writer, int lines) {
+    for(int i=0; i<lines; i++) {
+      writer.print("+");writer.print("dasda");writer.println("|text");
+    }
+  }
+
+
+  @Test
+  public void testSynchrInProgressNothing() throws AdminException {
+
+    File resourceFile = prepareResourceFile(false, 0, ".active", null);
+    File localFile = prepareLocalFile(false, 0,  ".active", null);
+
+    createStrategy().synchronize(true);
+
+    assertTrue("File doesn't exist", fs.exists(resourceFile));
+    assertTrue("File doesn't exist!", fs.exists(localFile));
+
+  }
+
+  @Test
+  public void testSynchrInProgressRename() throws AdminException {
+
+    File resourceFile = prepareResourceFile(false, 0, null, null);
+    File localFile = prepareLocalFile(false, 0, ".active", null);
+
+    createStrategy().synchronize(true);
+
+    assertFalse("File exist", fs.exists(resourceFile));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getAbsolutePath()+".active")));
+    assertTrue("File doesn't exist!", fs.exists(localFile));
+
+  }
+
+  @Test
+  public void testSynchrInProgressRemove() throws AdminException {
+
+    File localFile = prepareLocalFile(false, 0, ".active", null);
+    File report = createEmptyLocalFile(".20111213141516177.report");
+
+    createStrategy().synchronize(true);
+
+    assertFalse("File exist", fs.exists(localFile));
+    assertFalse("File exist", fs.exists(report));
+
+  }
+
+  @Test
+  public void testSynchrFinished() throws AdminException {
+
+    File resourceFile = prepareResourceFile(false, 0, ".active", null);
+    File localFile = prepareLocalFile(false, 0, ".finished", null);
+    File report = prepareLocalFile(false, 0, ".20111213141516177.report.final", null);
+    File report1 = prepareLocalFile(false, 0, ".20111213141516179.report", null);
+
+    createStrategy().synchronize(true);
+
+    assertTrue("File doesn't exist", fs.exists(localFile));
+    assertFalse("File exists", fs.exists(report));
+    assertFalse("File exists", fs.exists(report1));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.finished")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.20111213141516177.report.final")));
+    assertTrue("File doesn't exist", fs.exists(new File(resourceFile.getParentFile(), "test.csv.20111213141516179.report")));
+    assertFalse("File exists", fs.exists(resourceFile));
   }
 
 
@@ -158,7 +245,7 @@ public class DetailedPeriodSaveStrategyTest {
 
   @Test
   public void testCreate() throws Exception {  //проверяет, что рассылка создается, на ресурсе появляется первоначальный отчёт
-    File file = prepareResourceFile(false, 10, null);
+    File file = prepareResourceFile(false, 10, null, null);
     assertTrue(fs.exists(file));
     DetailedPeriodSaveStrategy strategy = createStrategy();
     strategy.process(true);
@@ -191,10 +278,21 @@ public class DetailedPeriodSaveStrategyTest {
     assertTrue(report);
   }
 
+
   @Test
-  public void testReport() throws Exception {          //проходит весь цикл, проверяет, что все сообщения попали в отчеты на ресурсе
-    File file = prepareResourceFile(false, 1000, null);
+  public void testEyelineReport() throws Exception {
+    testReport(CpFileFormat.EYELINE);
+  }
+
+  @Test
+  public void testMtsReport() throws Exception {
+    testReport(CpFileFormat.MTS);
+  }
+
+  private void testReport(CpFileFormat fileFormat) throws Exception {          //проходит весь цикл, проверяет, что все сообщения попали в отчеты на ресурсе
+    File file = prepareResourceFile(false, 1000, null, fileFormat);
     assertTrue(fs.exists(file));
+    context.setCpFileFormat(fileFormat);
     DetailedPeriodSaveStrategy strategy = createStrategy();
     strategy.process(true);
 
@@ -240,10 +338,90 @@ public class DetailedPeriodSaveStrategyTest {
 
     assertTrue("Final report is not found", _final);
 
-
     assertEquals(21, report);
 
     assertEquals(1000, countMessages);
+
+    assertMessages(countMessages, getFinalStates());
+  }
+
+  private Set<MessageState> getFinalStates() {
+    Set<MessageState> set = new HashSet<MessageState>();
+    set.add(MessageState.Delivered);
+    set.add(MessageState.Failed);
+    return set;
+  }
+
+  private void assertMessages(int countMessages, final Set<MessageState> states) throws Exception{
+
+    final Delivery[] deliveries = new Delivery[1];
+    deliveryManager.getDeliveries("","", new DeliveryFilter(), 100, new Visitor<Delivery>() {
+      @Override
+      public boolean visit(Delivery value) throws AdminException {
+        deliveries[0] = value;
+        return false;
+      }
+    });
+    assertNotNull(deliveries[0]);
+    MessageFilter filter = new MessageFilter(deliveries[0].getId(), deliveries[0].getCreateDate(), new Date());
+    assertEquals(deliveryManager.countMessages("", "",filter) , countMessages);
+
+    if(states != null) {
+      deliveryManager.getMessages("","", filter, 10000, new Visitor<Message>() {
+        @Override
+        public boolean visit(Message value) throws AdminException {
+          if(!states.contains(value.getState())) {
+            fail();
+          }
+          return true;
+        }
+      }
+      );
+    }
+
+  }
+
+
+  @Test
+  public void testErrorReport() throws Exception {
+    File file = prepareResourceErrorFile(1000, null);
+    assertTrue(fs.exists(file));
+    DetailedPeriodSaveStrategy strategy = createStrategy();
+    strategy.process(true);
+
+    Thread.sleep(1000);
+
+    deliveryManager.forceModifyDeliveries(); // send 50 messages
+
+    strategy.process(true);
+
+    boolean _final = false, _finished = false;
+    int countMessages = 0;
+    int report = 0;
+    for(File f : fs.listFiles(resourceDir)) {
+      String name = f.getName();
+      System.out.println(name);
+      if(name.contains("report")) {
+        report++;
+        countMessages+=countLines(f);
+      }
+      if(name.contains("final"))  {
+        _final = true;
+      }
+      if(name.contains("finished")) {
+        _finished = true;
+      }
+    }
+    assertTrue("Delivery is not finished", _finished);
+
+    assertTrue("Final report is not found", _final);
+
+    assertEquals(2, report);
+
+    assertEquals(1000, countMessages);
+
+    assertMessages(0, null);
+
   }
 
 
@@ -290,6 +468,7 @@ public class DetailedPeriodSaveStrategyTest {
 
     assertFalse("Some of files are exist!", fs.exists(active) && fs.exists(report1) && fs.exists(report2) && fs.exists(reportInfo1) && fs.exists(reportInfo2));
   }
+
 
   private int countLines(File f) throws Exception{
     BufferedReader reader = null;
