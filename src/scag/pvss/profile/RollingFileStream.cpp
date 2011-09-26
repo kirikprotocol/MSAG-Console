@@ -302,6 +302,23 @@ void RollingFileStream::init()
             // file is ok, use it
             needPostfix_ = ( badlogs.size() > 1 );
             filestamp = badlogs.back();
+        } else if ( badlogs.back() >= now ) {
+            // we have to wait until we get the next file
+            filestamp = badlogs.back() + 1;
+            if ( filestamp < now + 5 ) {
+                // we may simply wait
+                do {
+                    now = time(0);
+                    if ( filestamp <= now ) { break; }
+                    smsc_log_warn(log_,"filestamp %ld is in the future, waiting %d seconds",
+                                  long(filestamp), int(filestamp-now));
+                    timespec ts = {filestamp-now,0};
+                    ::nanosleep(&ts,0);
+                } while ( true );
+            } else {
+                smsc_log_warn(log_,"filestamp %ld is in future %d seconds, but we will use it anyway",
+                              long(filestamp),int(filestamp-now));
+            }
         }
     } else {
         needPostfix_ = false;
@@ -314,7 +331,7 @@ void RollingFileStream::init()
     file_.SetUnbuffered();
     file_.Append( filename.c_str() );
     smsc_log_debug(log_,"RollFileStream(%s) opening %s",getName(),filename.c_str());
-    if ( filestamp == now ) {
+    if ( file_.Pos() == 0 ) {
         file_.Write( FILEHEADER, strlen(FILEHEADER) );
     }
     smsc_log_info(log_,"RollFileStream(%s) init unfinished=%u needfix=%d usingLast=%d",

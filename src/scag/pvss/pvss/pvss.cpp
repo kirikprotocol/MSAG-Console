@@ -90,7 +90,7 @@ extern "C" void appSignalHandler(int sig)
 
 extern "C" void atExitHandler(void)
 {
-    smsc::logger::Logger::Shutdown();
+    // smsc::logger::Logger::Shutdown();
 }
 
 SyncConfig getSyncConfig(ConfigView& cfg, Logger* logger) {
