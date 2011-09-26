@@ -44,9 +44,8 @@ void SmppSocketManager::addWhiteIp( const char* dotted )
 
 bool SmppSocketManager::registerSocket(SmppSocket* sock)
 {
+    SmppSocketPtr sockPtr(sock);
     do {
-
-        SmppSocketPtr sockPtr(sock);
 
         const uint32_t netaddr = getNetworkAddress(sock->getPeerAddress().sin_addr);
         int cpi = -1;

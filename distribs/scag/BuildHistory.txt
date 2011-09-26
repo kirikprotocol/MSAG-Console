@@ -868,8 +868,19 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2011-09-23 17:26 bukind
   msag feature: saa file suffix
 
+=================================================================================================================
+2011-09-26 14:31 bukind msag-build-20110926
+2011-09-26 14:31 bukind
+  msag bugfix: smpp socket post-dtor usage
+
 --- current fixes ---
 2011-09-22 14:33 bukind
   pvss feature: SO_REUSEADDR is set on pvss server socket
 2011-09-22 15:26 bukind
   pvss bugfix: backup file roller use unbuffered files, sync access
+2011-09-26 13:33 bukind
+  pvss bugfix: writing backup file header only when filesize=0
+2011-09-26 13:58 bukind
+  pvss bugfix: many restarts in one second led to backupfile misreuse
+2011-09-26 14:16 bukind
+  pvss bugfix: race condition in logger/others init (atexit depends on it)
