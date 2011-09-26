@@ -93,10 +93,6 @@ void AsynWorkerManagerAC::workerDone(const WorkerIface & p_worker)
     _wrkReg.Delete(wrkId);
     _mgrSync.notify();
   }
-  WorkerID numRefs = tGrd.getRefs();
-  _logger->log_((numRefs > 1) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG,
-                "%s: Worker[%u] reported completion, having %u refs",
-                _logId, wrkId, (unsigned)numRefs);
   //worker may be destoyed at this point.
   onWorkerRelease(tGrd);
 }

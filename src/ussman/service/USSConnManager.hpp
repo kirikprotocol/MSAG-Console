@@ -49,6 +49,9 @@ public:
     if (!_logger)
       _logger = Logger::getInstance("smsc.ussman");
     snprintf(_logId, sizeof(_logId)-1, "ConnMgr[%u]", cm_id);
+#if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
+    _reqReg.debugInit(_logId);
+#endif /* INTHASH_USAGE_* */
 #ifdef INTRUSIVE_POOL_DEBUG
     _wrkPool.debugInit("_wrkPool", _logger);
 #endif /* INTRUSIVE_POOL_DEBUG */

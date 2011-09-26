@@ -66,6 +66,12 @@ protected:
   //positive value in case of serialization error.
   int denyRequest(unsigned dlg_id, INManErrorId::Code_e use_error);
 
+  // ----------------------------------------------------
+  // -- AsynWorkerManagerAC virtual methods:
+  // ----------------------------------------------------
+  //Performs actions preceeding final worker releasing.
+  virtual void onWorkerRelease(WorkerGuard & wrk_grd);
+
   // -------------------------------------------
   // -- PacketListenerIface interface methods
   // -------------------------------------------

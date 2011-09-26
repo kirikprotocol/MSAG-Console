@@ -74,6 +74,11 @@ void USSConnManager::onWorkerRelease(WorkerGuard & wrk_grd)
     const USSOperationData & reqData = ((USSReqProcessor*)wrk_grd.get())->getReqData();
     _reqReg.Delete(reqData);
   }
+  WorkerID numRefs = wrk_grd.getRefs();
+  //NOTE: numRefs == 2 if worker reported completion from initial wrkHandlePacket() call
+  _logger->log_((numRefs > 2) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG,
+                "%s: Worker[%u] reported completion, having %u refs",
+                _logId, wrk_grd->wrkId(), (unsigned)numRefs);
   wrk_grd.release();
 }
 

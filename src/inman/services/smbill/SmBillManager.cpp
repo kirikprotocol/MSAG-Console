@@ -61,6 +61,20 @@ int SmBillManager::denyRequest(unsigned dlg_id, INManErrorId::Code_e use_error)
   return _connGrd->sendPck(pckBuf);
 }
 
+// ----------------------------------------------------
+// -- AsynWorkerManagerAC virtual methods:
+// ----------------------------------------------------
+//Performs actions preceeding final worker releasing.
+void SmBillManager::onWorkerRelease(WorkerGuard & wrk_grd)
+{
+  WorkerID numRefs = wrk_grd.getRefs();
+  //NOTE: numRefs == 2 if worker reported completion from initial wrkHandlePacket() call
+  _logger->log_((numRefs > 2) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG,
+                "%s: Worker[%u] reported completion, having %u refs",
+                _logId, wrk_grd->wrkId(), (unsigned)numRefs);
+  wrk_grd.release(); 
+}
+
 /* -------------------------------------------------------------------------- *
  * PacketListenerIface interface implementation:
  * -------------------------------------------------------------------------- */
