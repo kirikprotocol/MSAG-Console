@@ -1099,7 +1099,8 @@ bool Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
   bool wDone = false;
   {
     MutexGuard grd(_sync);
-  
+    unRef(refIdIAProvider);  
+
     if (_pState > bilStarted) {
       smsc_log_warn(_logger, "%s: onIAPQueried() at state: %u", _logId, _pState);
       goto _ret_Unlock;
@@ -1156,7 +1157,6 @@ bool Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
       wDone = doFinalize();
 
 _ret_Unlock:
-    unRef(refIdIAProvider);
     if (!wDone) //this worker continues processing
       return true;
   }
