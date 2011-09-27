@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
+./mv_logs.sh
 . ./setenv.sh
 
 PARAM="-Ddcpgw_st -Xmx32m -cp "$CLASSPATH" org.junit.runner.JUnitCore mobi.eyeline.dcpgw.tests.stress.StressTest"

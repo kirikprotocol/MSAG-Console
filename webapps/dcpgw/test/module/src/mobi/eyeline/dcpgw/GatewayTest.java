@@ -15,7 +15,7 @@ import java.util.Date;
 public class GatewayTest extends T{
 
     private static Gateway gateway;
-    private static Client client;
+    //private static Client client;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -27,7 +27,7 @@ public class GatewayTest extends T{
         DcpConnection stub = new DcpConnectionStub();
         gateway.setDcpConnection("test", stub);
 
-        client = createClient();
+        //client = createClient();
 
 
     }
@@ -54,7 +54,6 @@ public class GatewayTest extends T{
 
         wait(10000);
 
-        client.
     }
 
 

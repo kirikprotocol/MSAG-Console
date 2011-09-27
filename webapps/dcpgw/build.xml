@@ -102,9 +102,9 @@
     <copy todir="${dcpgw.test.classes}">
       <fileset dir="${dcpgw.source.classes}"/>
     </copy>
-    <javac srcdir="test" destdir="${dcpgw.test.classes}" classpathref="all_libs" debug="true" source="1.5"/>
+    <javac srcdir="test/module/src" destdir="${dcpgw.test.classes}" classpathref="all_libs" debug="true" source="1.5"/>
     <copy todir="${dcpgw.test.classes}">
-      <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml,**/*.csv,**/*.log"/>
+      <fileset dir="test/module/src" includes="**/*.properties,**/*.bin,**/*.xml,**/*.csv,**/*.log"/>
     </copy>
     <native2ascii src="src" dest="${dcpgw.source.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
