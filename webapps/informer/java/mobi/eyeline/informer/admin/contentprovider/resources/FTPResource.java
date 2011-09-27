@@ -1,12 +1,15 @@
 package mobi.eyeline.informer.admin.contentprovider.resources;
 
 import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPConnector;
 import it.sauronsoftware.ftp4j.FTPFile;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderException;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,6 +40,7 @@ class FTPResource extends FileResource {
   public void open() throws AdminException {
     try{
       ftp = new FTPClient();
+      ftp.setConnector(new FtpConnectorWrapper(ftp.getConnector()));
       ftp.setPassive(passiveMode);
       ftp.setType(FTPClient.TYPE_BINARY);
       ftp.setCharset("cp1251");
@@ -115,5 +119,28 @@ class FTPResource extends FileResource {
 
   public String toString() {
     return "ftp://" + login + "@" + host + ':' + port + "/" + remoteDir;
+  }
+
+  private static class FtpConnectorWrapper implements FTPConnector{
+
+    private static final int timeout = 30000;
+
+    private FTPConnector connector;
+
+    private FtpConnectorWrapper(FTPConnector connector) {
+      this.connector = connector;
+    }
+
+    public Socket connectForCommunicationChannel(String s, int i) throws IOException {
+      Socket socket = connector.connectForCommunicationChannel(s, i);
+      socket.setSoTimeout(timeout);
+      return socket;
+    }
+
+    public Socket connectForDataTransferChannel(String s, int i) throws IOException {
+      Socket socket = connector.connectForDataTransferChannel(s, i);
+      socket.setSoTimeout(timeout);
+      return socket;
+    }
   }
 }
