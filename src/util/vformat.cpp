@@ -20,12 +20,17 @@ unsigned vpformat(const char* fmt, va_list arg_list, char ** p_buf,
                  unsigned buf_sz/* = 1024*/)
 {
     char * vbuf = new char[buf_sz];
-    int n = VSNPRINTF(vbuf, buf_sz - 1, fmt, arg_list);
+    va_list aq;
+    va_copy(aq,arg_list);
+    int n = VSNPRINTF(vbuf, buf_sz - 1, fmt, aq);
+    va_end(aq);
     if ((n > 0) && ((unsigned)n >= buf_sz)) {
         buf_sz = n + 2; // + '\0'
         delete [] vbuf;
         vbuf = new char[buf_sz];
-        n = VSNPRINTF(vbuf, buf_sz - 1, fmt, arg_list);
+        va_copy(aq,arg_list);
+        n = VSNPRINTF(vbuf, buf_sz - 1, fmt, aq);
+        va_end(aq);
     }
     vbuf[(n >= 0) ? n : 0] = 0; //vsnprintf() may return -1 on error
     *p_buf = vbuf;
@@ -35,7 +40,10 @@ unsigned vpformat(const char* fmt, va_list arg_list, char ** p_buf,
 std::string & vformat(std::string & fstr, const char* fmt, va_list arg_list)
 {
     char abuf[1024]; abuf[0] = 0;
-    int n = VSNPRINTF(abuf, sizeof(abuf) - 1, fmt, arg_list);
+    va_list aq;
+    va_copy(aq,arg_list);
+    int n = VSNPRINTF(abuf, sizeof(abuf) - 1, fmt, aq);
+    va_end(aq);
     if (n > 0) {
       if ((unsigned)n >= sizeof(abuf)) {
         char * vbuf = NULL;

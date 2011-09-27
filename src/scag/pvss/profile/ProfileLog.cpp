@@ -82,7 +82,10 @@ void ProfileLog::logva( int level, const char* const format, va_list args ) thro
 
         while (true) {
     
-            int n = ::vsnprintf( buffer + prefixLength, bufsize, format, args );
+            va_list aq;
+            va_copy(aq,args);
+            int n = ::vsnprintf( buffer + prefixLength, bufsize, format, aq );
+            va_end(aq);
     
             if ( (n>-1) && size_t(n) < bufsize ) {
                 bufsize = size_t(n) + prefixLength;

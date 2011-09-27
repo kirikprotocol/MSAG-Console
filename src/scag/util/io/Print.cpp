@@ -43,7 +43,8 @@ int PrintAString::myvasprintf( char** strp, const char* fmt, va_list ap )
     size_t sz = strlen(fmt) * 3;
     *strp = reinterpret_cast< char* >( malloc(sz) );
     // printf( "pre-allocation: %u\n", sz );
-    int res = vsnprintf( *strp, sz, fmt, ap );
+    int res = vsnprintf( *strp, sz, fmt, aq );
+    va_end(aq);
     // printf( "vsnprintf: %d\n", res );
     if ( res < 0 ) {
         free( *strp );
@@ -56,10 +57,11 @@ int PrintAString::myvasprintf( char** strp, const char* fmt, va_list ap )
         sz = size_t(res);
         // printf( "re-allocation: %u\n", sz);
         *strp = reinterpret_cast< char* >( malloc(sz) );
+        va_copy(aq,ap);
         int bsz = vsnprintf( *strp, sz, fmt, aq );
+        va_end(aq);
         assert( sz == size_t(bsz) );
     }
-    va_end( aq );
     return res;
 }
 
@@ -79,11 +81,16 @@ void PrintAString::printva( const char* fmt, va_list args ) throw ()
 void PrintStdString::printva( const char* fmt, va_list args ) throw ()
 {
     smsc::core::buffers::TmpBuf<char,256> buf;
-    int res = vsnprintf(buf.get(),buf.getSize(),fmt,args);
+    va_list aq;
+    va_copy(aq,args);
+    int res = vsnprintf(buf.get(),buf.getSize(),fmt,aq);
+    va_end(aq);
     if ( res < 0 ) { return; }
     if ( size_t(res) > buf.getSize() ) {
         buf.setSize(res);
-        vsnprintf(buf.get(),buf.getSize(),fmt,args);
+        va_copy(aq,args);
+        vsnprintf(buf.get(),buf.getSize(),fmt,aq);
+        va_end(aq);
     }
     str_.append(buf.get());
 }
