@@ -886,4 +886,9 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2011-09-26 14:16 bukind
   pvss bugfix: race condition in logger/others init (atexit depends on it)
 
+=================================================================================================================
+2011-09-27 11:12 bukind msag-build-20110927
+2011-09-27 11:12 bukind
+  msag bugfix: typo in StatLogger
+
 --- current fixes ---

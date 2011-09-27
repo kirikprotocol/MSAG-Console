@@ -36,7 +36,7 @@ StatisticsLogger<Event, Buffer>::StatisticsLogger(const string& statDir,
                                                   const string& prefix,
                                                   uint32_t interval,
                                                   const string& suffix ):
-    statDir_(statDir), saaDir_(saaDir), prefix_(prefix), // format_(prefix_ + ".%lld"),
+    statDir_(statDir), saaDir_(saaDir), prefix_(prefix), suffix_(suffix),
     interval_(interval), lastFileTime_(0), logger_(Logger::getInstance("statlog")) 
 {
     assert( PREFIX_MAXSIZE > prefix_.size() );
