@@ -39,6 +39,7 @@ StatisticsLogger<Event, Buffer>::StatisticsLogger(const string& statDir,
     statDir_(statDir), saaDir_(saaDir), prefix_(prefix), suffix_(suffix),
     interval_(interval), lastFileTime_(0), logger_(Logger::getInstance("statlog")) 
 {
+    smsc_log_info(logger_,"stat logger inited, suffix=%s, suffix_=%s",suffix.c_str(),suffix_.c_str());
     assert( PREFIX_MAXSIZE > prefix_.size() );
     assert( SUFFIX_MAXSIZE > suffix_.size() );
   checkDir();
