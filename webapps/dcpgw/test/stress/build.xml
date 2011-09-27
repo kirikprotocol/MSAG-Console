@@ -1,0 +1,27 @@
+<project name="stress test" default="build" basedir=".">
+
+    <property name="test.classes" value=".build/test_classes"/>
+    <property name="tests.dir" value=".build/tests"/>
+
+    <path id="lib">
+        <fileset dir="lib" includes="*.jar"/>
+    </path>
+
+    <target name="compile.tests">
+      <delete dir="${test.classes}" failonerror="false"/>
+      <mkdir dir="${test.classes}"/>
+      <javac srcdir="src" destdir="${test.classes}" classpathref="lib" debug="true" source="1.5"/>
+      <copy todir="${test.classes}">
+        <fileset dir="src" includes="**/*.properties,**/*.bin,**/*.xml,**/*.csv,**/*.log"/>
+      </copy>
+    </target>
+
+    <target name="build" depends="compile.tests">
+        <mkdir dir=".distr"/>
+        <jar jarfile=".distr/stress.jar"
+             basedir="${test.classes}"
+             index="true">
+        </jar>
+    </target>
+
+</project>
