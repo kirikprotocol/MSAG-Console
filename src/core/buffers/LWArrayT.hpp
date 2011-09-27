@@ -48,8 +48,10 @@ template <
                           //constructors (operator<() in case of sorted array)
   , typename _SizeTypeArg //must be an unsigned integer type, implicitly
                           //restricts maximum number of elements in array!
-  , class _TraitsArg = LWArrayTraits_T<_TArg> //assume non-POD objects by default
-  , class _ResizerArg = LWArrayResizerDflt<_SizeTypeArg>
+  , template <class _T>
+    class _TraitsArg = LWArrayTraits_T //assume non-POD objects by default
+  , template <typename _S>
+    class _ResizerArg = LWArrayResizerDflt
 >
 class LWArrayExtension_T {
 private:
@@ -81,12 +83,12 @@ protected:
   //Reallocates heap buffer.
   void reallocBuf(_SizeTypeArg req_sz) //throw()
   {
-    _SizeTypeArg new_sz =_ResizerArg::resize(req_sz, _orgSz);
+    _SizeTypeArg new_sz =_ResizerArg<_SizeTypeArg>::resize(req_sz, _orgSz);
 
     _TArg * hbuf = (_TArg *)(new uint8_t[sizeof(_TArg) * new_sz]);
     //copy initialized elements
-    _TraitsArg::construct(hbuf, _buf, _numElem);
-    _TraitsArg::destroy(_buf, _numElem);
+    _TraitsArg<_TArg>::construct(hbuf, _buf, _numElem);
+    _TraitsArg<_TArg>::destroy(_buf, _numElem);
     if (_heapBufSz)
       delete [] (uint8_t*)_buf;
 
@@ -101,7 +103,7 @@ protected:
     if (!enlarge(shift_sz))
       return false;
 
-    _TraitsArg::shift_right(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
+    _TraitsArg<_TArg>::shift_right(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
     _numElem -= at_pos;
     _numElem += shift_sz;
     return true;
@@ -196,7 +198,7 @@ public:
       denyIndex(use_idx);
 
     if (use_idx >= _numElem) {
-      _TraitsArg::construct(_buf + _numElem, (_SizeTypeArg)(use_idx - _numElem + 1));
+      _TraitsArg<_TArg>::construct(_buf + _numElem, (_SizeTypeArg)(use_idx - _numElem + 1));
       _numElem = use_idx + 1;
     }
     return _buf[use_idx];
@@ -221,9 +223,9 @@ public:
       num_to_erase = _numElem - at_pos;
 
     //copy elements starting from first to last
-    _TraitsArg::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), num_to_erase);
+    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), num_to_erase);
     //destroy excessive elements
-    _TraitsArg::destroy(_buf + _numElem - num_to_erase, num_to_erase);
+    _TraitsArg<_TArg>::destroy(_buf + _numElem - num_to_erase, num_to_erase);
     _numElem -= num_to_erase;
   }
 
@@ -260,7 +262,7 @@ public:
   //
   void clear(void)
   {
-    _TraitsArg::destroy(_buf, _numElem);
+    _TraitsArg<_TArg>::destroy(_buf, _numElem);
     _numElem = 0;
   }
 
@@ -297,13 +299,13 @@ public:
     if (req_sz == _numElem)
       return true;
     if (req_sz < _numElem) { //shrink
-      _TraitsArg::destroy(_buf + req_sz, (_SizeTypeArg)(_numElem - req_sz));
+      _TraitsArg<_TArg>::destroy(_buf + req_sz, (_SizeTypeArg)(_numElem - req_sz));
       _numElem = req_sz;
       return true;
     }
     if (req_sz > _numElem) {
       reserve(req_sz);
-      _TraitsArg::construct(_buf + _numElem, (_SizeTypeArg)(req_sz - _numElem));
+      _TraitsArg<_TArg>::construct(_buf + _numElem, (_SizeTypeArg)(req_sz - _numElem));
       _numElem = req_sz;
       return true;
     }
@@ -325,7 +327,7 @@ public:
   {
     bool rval = enlarge(use_num);
     if (rval) { //copy elements
-      _TraitsArg::construct(_buf + _numElem, use_arr, use_num);
+      _TraitsArg<_TArg>::construct(_buf + _numElem, use_arr, use_num);
       _numElem += use_num;
     }
     return rval;
@@ -335,9 +337,9 @@ public:
   void shiftLeft(_SizeTypeArg shift_sz, _SizeTypeArg at_pos = 0) //throw()
   {
     //copy elements starting from first to last
-    _TraitsArg::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
+    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
     //reset excessive elements
-    _TraitsArg::reset(_buf + _numElem - shift_sz, shift_sz);
+    _TraitsArg<_TArg>::reset(_buf + _numElem - shift_sz, shift_sz);
     _numElem -= shift_sz;
   }
 
@@ -346,7 +348,7 @@ public:
   {
     if (!shiftRightOnly(shift_sz, at_pos))
       return false;
-    _TraitsArg::reset(_buf, shift_sz);
+    _TraitsArg<_TArg>::reset(_buf, shift_sz);
     return true;
   }
 
@@ -367,7 +369,7 @@ public:
       denyAddition(use_num); //throws
 
     //copy elements
-    _TraitsArg::copy(_buf, use_arr, use_num);
+    _TraitsArg<_TArg>::copy(_buf, use_arr, use_num);
     return;
   }
 
@@ -379,7 +381,7 @@ public:
       denyAddition(use_arr.size()); //throws
 
     //copy elements
-    _TraitsArg::copy(_buf, use_arr.get(), use_arr.size());
+    _TraitsArg<_TArg>::copy(_buf, use_arr.get(), use_arr.size());
     _numElem += use_arr.size();
     return;
   }
@@ -432,13 +434,13 @@ public:
   bool operator==(const LWArrayExtension_T & cmp_obj) const //throw()
   {
     return ((_numElem == cmp_obj._numElem)
-            && !_TraitsArg::compare(_buf, cmp_obj._buf, _numElem));
+            && !_TraitsArg<_TArg>::compare(_buf, cmp_obj._buf, _numElem));
   }
 
   bool operator< (const LWArrayExtension_T & cmp_obj) const //throw()
   {
     if (_numElem == cmp_obj._numElem) {
-      return (_TraitsArg::compare(_buf, cmp_obj._buf, _numElem) < 0);
+      return (_TraitsArg<_TArg>::compare(_buf, cmp_obj._buf, _numElem) < 0);
     }
     return (_numElem < cmp_obj._numElem);
   }
@@ -499,8 +501,10 @@ template <
   , typename _SizeTypeArg       //must be an unsigned integer type, implicitly
                                 //restricts maximum number of elements in array!
   , _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
-  , class _TraitsArg = LWArrayTraits_T<_TArg>
-  , class _ResizerArg = LWArrayResizerDflt<_SizeTypeArg>
+  , template <class _T>
+    class _TraitsArg = LWArrayTraits_T  //assume non-POD objects by default
+  , template <typename _S>
+    class _ResizerArg = LWArrayResizerDflt
 >
 class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg, _TraitsArg, _ResizerArg> {
 private:

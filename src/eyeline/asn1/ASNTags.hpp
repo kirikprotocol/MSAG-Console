@@ -122,7 +122,9 @@ extern const UniversalTags & _uniTag(void);
  * ************************************************************************* */
 
 static const uint8_t _ASTaggingDFLT_SZ = 4;
-typedef smsc::core::buffers::LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ> ASTagsArray;
+typedef smsc::core::buffers::LWArray_T<
+  ASTag, uint8_t, _ASTaggingDFLT_SZ, smsc::core::buffers::LWArrayTraitsPOD_T
+> ASTagsArray;
 
 //ASN type complete tagging (vector of ASTags)
 //NOTE: Overall number of tags is limited to 255

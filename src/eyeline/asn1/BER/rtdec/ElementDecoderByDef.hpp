@@ -52,7 +52,9 @@ protected:
     }
   };
   //
-  typedef smsc::core::buffers::LWArray_T<TDEntry, uint16_t, 1> TDMatrixRow;
+  typedef smsc::core::buffers::LWArray_T<
+    TDEntry, uint16_t, 1, smsc::core::buffers::LWArrayTraitsPOD_T
+  > TDMatrixRow;
   typedef smsc::core::buffers::LWArrayExtension_T<TDMatrixRow, uint16_t> TDMatrix;
 
   //Initialization data

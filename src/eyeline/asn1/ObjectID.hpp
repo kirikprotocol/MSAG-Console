@@ -20,7 +20,9 @@ static const uint8_t _ObjectID_DFLT_SUBIDS_NUM = 16;
 //NOTE: Overall number of subIdentifiers is limited to 255
 static const uint8_t _ObjectID_MAX_SUBIDS_NUM = 255;
 
-typedef smsc::core::buffers::LWArray_T<SubIdType, uint8_t, _ObjectID_DFLT_SUBIDS_NUM> RelativeOID;
+typedef smsc::core::buffers::LWArray_T<
+  SubIdType, uint8_t, _ObjectID_DFLT_SUBIDS_NUM, smsc::core::buffers::LWArrayTraitsPOD_T
+> RelativeOID;
 
 class ObjectID : public RelativeOID {
 public:

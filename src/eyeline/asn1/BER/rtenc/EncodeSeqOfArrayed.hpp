@@ -35,7 +35,9 @@ protected:
 
 public:
   typedef smsc::core::buffers::LWArrayExtension_T<_TArg, uint16_t> ElementsArray;
-  typedef smsc::core::buffers::LWArrayExtension_T<_TArg *, uint16_t> ElementsPtrArray;
+  typedef smsc::core::buffers::LWArrayExtension_T<
+    _TArg *, uint16_t, smsc::core::buffers::LWArrayTraitsPOD_T
+  > ElementsPtrArray;
 
   // constructor for untagged SEQUENCE OF
   explicit EncoderOfSeqOfArrayed_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)

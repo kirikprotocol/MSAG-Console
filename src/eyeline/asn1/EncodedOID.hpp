@@ -18,7 +18,9 @@ public:
   static const uint16_t _dfltNickLength = _ObjectID_DFLT_SUBIDS_NUM*(sizeof(SubIdType)*3+1);
   static const uint16_t _dfltValueLength = _ObjectID_DFLT_SUBIDS_NUM*sizeof(SubIdType)*3;
 
-  typedef smsc::core::buffers::LWArray_T<uint8_t, uint16_t, _dfltValueLength> ValueType;
+  typedef smsc::core::buffers::LWArray_T<
+    uint8_t, uint16_t, _dfltValueLength, smsc::core::buffers::LWArrayTraitsPOD_T
+  > ValueType;
   typedef smsc::core::buffers::FixedLengthString<_dfltNickLength> NickString;
 
 private:

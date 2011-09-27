@@ -19,7 +19,9 @@ class TransactionIdDecoder : public asn1::ber::DecoderOfOCTSTR_T<uint8_t> {
 private:
   using asn1::ber::DecoderOfOCTSTR_T<uint8_t>::setValue;
 
-  typedef smsc::core::buffers::LWArray_T<uint8_t, uint8_t, 4> TrIdOcts;
+  typedef smsc::core::buffers::LWArray_T<
+    uint8_t, uint8_t, 4, smsc::core::buffers::LWArrayTraitsPOD_T
+  > TrIdOcts;
 
   uint32_t * _dVal;
   TrIdOcts  _octs;
