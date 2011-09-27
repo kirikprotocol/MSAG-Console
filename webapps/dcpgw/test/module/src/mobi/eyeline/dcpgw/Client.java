@@ -21,8 +21,8 @@ public class Client extends Thread implements PDUListener {
     Properties config;
     SmppClient smppClient;
 
-    private Hashtable<Integer, PDU> sequence_number_submit_sm_resp_table;
-    private Hashtable<Integer, PDU> sequence_number_deliver_sm_table;
+    Hashtable<Integer, PDU> sequence_number_submit_sm_resp_table;
+    Hashtable<Integer, PDU> sequence_number_deliver_sm_table;
 
     public Client(Properties config) throws SmppException {
         this.config = config;
@@ -60,6 +60,7 @@ public class Client extends Thread implements PDUListener {
                     try{
                         logger.debug("123: "+deliverSM.getResponse().getSequenceNumber());
                         smppClient.send(deliverSM.getResponse());
+                        //sequence_number_deliver_sm_table.put(deliverSM.ge);
                         logger.debug("Send DeliverSMResp pdu.");
                         return true;
                     } catch (SmppException e){
@@ -74,6 +75,7 @@ public class Client extends Thread implements PDUListener {
                 logger.debug("SubmitSMResp messageId="+message_id_str);
                 long message_id = Long.parseLong(message_id_str);
                 logger.debug("message_id="+message_id);
+                sequence_number_submit_sm_resp_table.put(submitSMResp.getSequenceNum(), submitSMResp);
 
         }
         return false;

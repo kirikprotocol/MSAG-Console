@@ -51,6 +51,10 @@ public class GatewayTest extends T{
 
             gateway.handlePDU(submitSM);
         }
+
+        wait(10000);
+
+        client.
     }
 
 
