@@ -376,8 +376,9 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 		}
 		else if (len == 0) {
 			if ( SSL_get_shutdown(ssl) ) {
-				smsc_log_debug(logger, "sslReadPartial: shutdown detected from %s. Total=%d, return -1", connName(s), total);
-				return -1;
+				smsc_log_debug(logger, "sslReadPartial: shutdown detected from %s. Total=%d, return <total>", connName(s), total);
+				closed = true;
+				break; //return -1;
 			}
 //
 // SSL_pending() returns amount of bytes in SSL receive buffer available to read, but without guarantee.
@@ -647,6 +648,10 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 		 *   (for socket I/O on Unix systems, consult errno for details).
 		 *
 		 */
+		if ( (ret<0) && ( (errno==EINTR) || (errno==EAGAIN) ) ) {
+			rc = CONTINUE;
+			break;
+		}
 		sslLogErrors(ret, ssl_err);
 		break;
 	case SSL_ERROR_ZERO_RETURN:
