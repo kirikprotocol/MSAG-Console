@@ -77,6 +77,9 @@ public:
     , csi_UNDEFINED = (unsigned)(-1)
   };
 
+  //Id of last known CSI.
+  static const unsigned k_lastCSI_Id = csi_VT_IM;
+
   explicit UnifiedCSI(CSId_e csi_id = csi_UNDEFINED)
     : _value(csi_id)
   { }
@@ -91,7 +94,7 @@ public:
 
   static CSId_e get(unsigned ui_val)
   {
-    return (ui_val > csi_VT_IM) ? csi_UNDEFINED : static_cast<CSId_e>(ui_val);
+    return (ui_val > k_lastCSI_Id) ? csi_UNDEFINED : static_cast<CSId_e>(ui_val);
   }
 
   CSId_e get(void) const { return static_cast<CSId_e>(_value); }
@@ -118,11 +121,11 @@ public:
 
   //NOTE: it's a caller responsibility to determine type of CSI (basic or additional)
   //prior to calling these methods
-  RequestedCAMEL_SubscriptionInfo_e getBasicCSI() const
+  RequestedCAMEL_SubscriptionInfo_e getBasicCSI(void) const
   {
     return static_cast<RequestedCAMEL_SubscriptionInfo_e>(_value);
   }
-  AdditionalRequestedCAMEL_SubscriptionInfo_e getAdditionalCSI() const
+  AdditionalRequestedCAMEL_SubscriptionInfo_e getAdditionalCSI(void) const
   {
     return static_cast<AdditionalRequestedCAMEL_SubscriptionInfo_e>(_value - _xCSI_Idx);
   }
