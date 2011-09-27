@@ -48,9 +48,9 @@ template <
                           //constructors (operator<() in case of sorted array)
   , typename _SizeTypeArg //must be an unsigned integer type, implicitly
                           //restricts maximum number of elements in array!
-  , template <class _T>
+  , template <class _TypArg>
     class _TraitsArg = LWArrayTraits_T //assume non-POD objects by default
-  , template <typename _S>
+  , template <typename _SzArg>
     class _ResizerArg = LWArrayResizerDflt
 >
 class LWArrayExtension_T {
@@ -501,9 +501,9 @@ template <
   , typename _SizeTypeArg       //must be an unsigned integer type, implicitly
                                 //restricts maximum number of elements in array!
   , _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
-  , template <class _T>
+  , template <class _TypArg>
     class _TraitsArg = LWArrayTraits_T  //assume non-POD objects by default
-  , template <typename _S>
+  , template <typename _SzArg>
     class _ResizerArg = LWArrayResizerDflt
 >
 class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg, _TraitsArg, _ResizerArg> {
