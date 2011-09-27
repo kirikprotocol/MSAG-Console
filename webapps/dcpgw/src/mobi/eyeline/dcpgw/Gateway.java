@@ -648,7 +648,7 @@ public class Gateway extends Thread implements PDUListener {
             long last_resend_time = data.getLastResendTime();
             long first_sending_time = data.getFirstSendingTime();
 
-            if (current_time - first_sending_time < recend_receipts_max_timeout * 1000)
+            if (current_time - first_sending_time < recend_receipts_max_timeout * 1000 * 60)
 
                 if (current_time - last_resend_time >= recend_receipts_timeout * 1000)
                     timeout_expired_sequence_numbers.add(sequence_number);
