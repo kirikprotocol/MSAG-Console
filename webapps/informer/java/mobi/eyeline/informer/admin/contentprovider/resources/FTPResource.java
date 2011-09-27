@@ -125,7 +125,7 @@ class FTPResource extends FileResource {
 
     private static final int timeout = 30000;
 
-    private FTPConnector connector;
+    private final FTPConnector connector;
 
     private FtpConnectorWrapper(FTPConnector connector) {
       this.connector = connector;

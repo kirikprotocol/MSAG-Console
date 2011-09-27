@@ -58,6 +58,7 @@ class SMBResource extends FileResource {
         smb = new SmbNamedPipe(url.toString(), SmbNamedPipe.PIPE_TYPE_RDWR | SmbNamedPipe.PIPE_TYPE_CALL,
             new NtlmPasswordAuthentication(domain, login, password));
       }
+      smb.setConnectTimeout(30000);
     } catch (Exception e) {
       throw new ContentProviderException("connectionError", e);
     }
