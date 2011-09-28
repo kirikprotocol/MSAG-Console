@@ -18,11 +18,9 @@ template </* _TArg = uint8_t */>
 struct LWArrayTraitsPOD_T<uint8_t> {
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void construct(uint8_t * use_dst, _SizeTypeArg num_elem)
+  static void construct(uint8_t * use_dst, const uint8_t & use_val, _SizeTypeArg num_elem)
   {
-#ifdef LW_ARRAY_DEBUG
-    memset(use_dst, 0, num_elem);
-#endif /* LW_ARRAY_DEBUG */
+    memset(use_dst, use_val, num_elem);
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
@@ -40,13 +38,13 @@ struct LWArrayTraitsPOD_T<uint8_t> {
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void reset(uint8_t * use_buf, _SizeTypeArg num_elem)
+  static void assign(uint8_t * use_buf, _SizeTypeArg num_elem, const uint8_t & use_val)
   {
-    memset(use_buf, 0, num_elem);
+    memset(use_buf, use_val, num_elem);
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void copy(uint8_t * use_dst, const uint8_t * use_src, _SizeTypeArg num_elem)
+  static void assign(uint8_t * use_dst, const uint8_t * use_src, _SizeTypeArg num_elem)
   {
     memcpy(use_dst, use_src, num_elem);
   }
@@ -76,11 +74,15 @@ template </* _TArg = uint16_t */>
 struct LWArrayTraitsPOD_T<uint16_t> {
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void construct(uint16_t * use_dst, _SizeTypeArg num_elem)
+  static void construct(uint16_t * use_dst, const uint16_t & use_val, _SizeTypeArg num_elem)
   {
-#ifdef LW_ARRAY_DEBUG
-    memset(use_dst, 0, sizeof(uint16_t)*num_elem);
-#endif /* LW_ARRAY_DEBUG */
+    if (!use_val) {
+      memset(use_dst, 0x00, sizeof(uint16_t)*num_elem);
+    } else {
+      for (_SizeTypeArg i = 0; i < num_elem; ++i) {
+        use_dst[i] = use_val;
+      }
+    }
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
@@ -98,13 +100,13 @@ struct LWArrayTraitsPOD_T<uint16_t> {
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void reset(uint16_t * use_buf, _SizeTypeArg num_elem)
+  static void assign(uint16_t * use_buf, _SizeTypeArg num_elem, const uint16_t & use_val)
   {
-    memset(use_buf, 0, sizeof(uint16_t)*num_elem);
+    construct(use_buf, num_elem, use_val);
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void copy(uint16_t * use_dst, const uint16_t * use_src, _SizeTypeArg num_elem)
+  static void assign(uint16_t * use_dst, const uint16_t * use_src, _SizeTypeArg num_elem)
   {
     memcpy(use_dst, use_src, sizeof(uint16_t)*num_elem);
   }
@@ -134,11 +136,15 @@ template </* _TArg = uint32_t */>
 struct LWArrayTraitsPOD_T<uint32_t> {
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void construct(uint32_t * use_dst, _SizeTypeArg num_elem)
+  static void construct(uint32_t * use_dst, const uint32_t & use_val, _SizeTypeArg num_elem)
   {
-#ifdef LW_ARRAY_DEBUG
-    memset(use_dst, 0, sizeof(uint32_t)*num_elem);
-#endif /* LW_ARRAY_DEBUG */
+    if (!use_val) {
+      memset(use_dst, 0x00, sizeof(uint32_t)*num_elem);
+    } else {
+      for (_SizeTypeArg i = 0; i < num_elem; ++i) {
+        use_dst[i] = use_val;
+      }
+    }
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
@@ -151,18 +157,18 @@ struct LWArrayTraitsPOD_T<uint32_t> {
   static void destroy(uint32_t * use_buf, _SizeTypeArg num_elem)
   {
 #ifdef LW_ARRAY_DEBUG
-    memset(use_buf, 0, sizeof(uint32_t)*num_elem);
+    memset(use_buf, 0xFF, sizeof(uint32_t)*num_elem);
 #endif /* LW_ARRAY_DEBUG */
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void reset(uint32_t * use_buf, _SizeTypeArg num_elem)
+  static void assign(uint32_t * use_buf, _SizeTypeArg num_elem, const uint32_t & use_val)
   {
-    memset(use_buf, 0, sizeof(uint32_t)*num_elem);
+    construct(use_buf, num_elem, use_val);
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void copy(uint32_t * use_dst, const uint32_t * use_src, _SizeTypeArg num_elem)
+  static void assign(uint32_t * use_dst, const uint32_t * use_src, _SizeTypeArg num_elem)
   {
     memcpy(use_dst, use_src, sizeof(uint32_t)*num_elem);
   }

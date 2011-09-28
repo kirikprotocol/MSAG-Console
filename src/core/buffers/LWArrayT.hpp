@@ -77,7 +77,7 @@ protected:
                                 " insert (%s) exceeds available limit (%s)",
                                 SizeToStr((_SizeTypeArg)sizeof(_SizeTypeArg)).get(),
                                 SizeToStr(_orgSz).get(), SizeToStr(num_2add).get(),
-                                SizeToStr(_MAX_SIZE() - _numElem).get());
+                                SizeToStr(maxSize() - _numElem).get());
   }
 
   //Reallocates heap buffer.
@@ -133,24 +133,31 @@ public:
   typedef _TArg         value_type;
   typedef _SizeTypeArg  size_type;
 
-  _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
-
+  static const value_type &  f_dfltValue(void)
+  {
+    static value_type  dfVal;
+    return dfVal;
+  }
+  //maximum possible array size
+  static size_type maxSize(void)  { return (size_type)(-1); }
+  //maximum allowed array index
+  static size_type maxPos(void)   { return maxSize() - 1; }
   //Special Not-a-Position marker
-  _SizeTypeArg npos(void) const { return (_SizeTypeArg)(-1); }
+  static size_type npos(void)     { return (size_type)(-1); }
 
   explicit LWArrayExtension_T() //throw()
     : _orgSz(0), _buf(0), _heapBufSz(0), _numElem(0)
   { }
 
   //Constructor for array, that extends given buffer
-  LWArrayExtension_T(_SizeTypeArg org_max_sz, _TArg * org_buf,
-                     _SizeTypeArg org_num_elem = 0) //throw()
+  LWArrayExtension_T(size_type org_max_sz, value_type * org_buf,
+                     size_type org_num_elem = 0) //throw()
     : _orgSz(org_max_sz), _buf(org_buf), _heapBufSz(0), _numElem(org_num_elem)
   { }
   //
   ~LWArrayExtension_T()
   {
-    assign(0, 0, 0);
+    assignBuf(0, 0, 0);
   }
 
   bool empty(void) const { return _numElem == 0; }
@@ -158,8 +165,8 @@ public:
   bool isHeapBuf(void) const { return _heapBufSz != 0; }
 
   //Assigns buffer to extend
-  void assign(_SizeTypeArg org_max_sz, _TArg * org_buf,
-              _SizeTypeArg org_num_elem = 0) //throw()
+  void assignBuf(size_type org_max_sz, value_type * org_buf,
+              size_type org_num_elem = 0) //throw()
   {
     if (_heapBufSz) {
       clear();
@@ -171,25 +178,35 @@ public:
   }
 
   //Returns number of initilized/assigned array elements
-  _SizeTypeArg size(void) const { return _numElem; }
+  size_type size(void) const { return _numElem; }
 
   //Returns size of allocated array
-  _SizeTypeArg capacity(void) const { return _heapBufSz ? _heapBufSz : _orgSz; }
+  size_type capacity(void) const { return _heapBufSz ? _heapBufSz : _orgSz; }
 
   //Returns address of elements array (single memory block)
-  const _TArg * get(void) const { return _buf; }
+  const value_type * get(void) const { return _buf; }
 
   //Exposes elements buffer.
   //Note: it is an ad hoc method, use it with extreme caution!
   //      Be sure to not perform out of array bounds access or
   //      array rellocation!
-  _TArg * getBuf(void) { return _buf; }
+  value_type * getBuf(void) { return _buf; }
+
+  //Erases all contained elements, then inserts  given number of 
+  //instances of the value of value_type.
+  void assign(size_type req_sz, const value_type & use_val)
+  {
+    clear();
+    reserve(req_sz);
+    _TraitsArg<_TArg>::construct(_buf, use_val, req_sz);
+    _numElem = req_sz;
+  }
 
   //Returns initialized/assigned element of array at specified index.
   //Throws if specified index exceeds maximal allowed array capacity.
   //if specified index is beyond of the space of initialized elemens
   //but within capacity, all elements up to specified one are initialized.
-  _TArg & at(_SizeTypeArg use_idx) //throw(std::exception)
+  value_type & at(size_type use_idx) //throw(std::exception)
   {
     if (use_idx < npos()) {
       if (use_idx >= capacity())
@@ -198,7 +215,7 @@ public:
       denyIndex(use_idx);
 
     if (use_idx >= _numElem) {
-      _TraitsArg<_TArg>::construct(_buf + _numElem, (_SizeTypeArg)(use_idx - _numElem + 1));
+      _TraitsArg<_TArg>::construct(_buf + _numElem, f_dfltValue(), (size_type)(use_idx - _numElem + 1));
       _numElem = use_idx + 1;
     }
     return _buf[use_idx];
@@ -206,16 +223,16 @@ public:
 
   //Returns initialized/assigned element of array.
   //Throws if specified index is beyond of the space of initialized elemens.
-  const _TArg & at(_SizeTypeArg use_idx) const //throw(std::exception)
+  const value_type & at(size_type use_idx) const //throw(std::exception)
   {
     if (use_idx >= _numElem)
       denyIndex(use_idx);
-    return ((const _TArg *)_buf)[use_idx];
+    return ((const value_type *)_buf)[use_idx];
   }
 
   //Destroys number of elements at given position within array.
   //Throws if specified index is beyond of the space of initialized elemens.
-  void erase(_SizeTypeArg at_pos, _SizeTypeArg num_to_erase = 1) //throw(std::exception)
+  void erase(size_type at_pos, size_type num_to_erase = 1) //throw(std::exception)
   {
     if (at_pos >= _numElem)
       denyIndex(at_pos);
@@ -223,7 +240,7 @@ public:
       num_to_erase = _numElem - at_pos;
 
     //copy elements starting from first to last
-    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), num_to_erase);
+    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (size_type)(_numElem - at_pos), num_to_erase);
     //destroy excessive elements
     _TraitsArg<_TArg>::destroy(_buf + _numElem - num_to_erase, num_to_erase);
     _numElem -= num_to_erase;
@@ -231,7 +248,7 @@ public:
 
   //Returns last initialized/assigned element of array.
   //If array is empty the first element is initialized.
-  _TArg & atLast(void) //throw()
+  value_type & atLast(void) //throw()
   {
     if (!_numElem) {
       new (_buf)_TArg();
@@ -242,37 +259,39 @@ public:
 
   //Returns last initialized/assigned element of array.
   //Throws if array is empty.
-  const _TArg & atLast(void) const //throw(std::exception)
+  const value_type & atLast(void) const //throw(std::exception)
   {
     if (!_numElem)
       denyIndex(0);
-    return ((const _TArg *)_buf)[_numElem - 1];
+    return ((const value_type *)_buf)[_numElem - 1];
   }
   //
-  _TArg & operator[](_SizeTypeArg use_idx) //throw(std::exception)
+  value_type & operator[](size_type use_idx) //throw(std::exception)
   {
     return at(use_idx);
   }
   //Returns initialized/assigned element of array at pos 'use_idx'
   //Throws if specified index is beyond of the space of initialized elemens.
-  const _TArg & operator[](_SizeTypeArg use_idx) const //throw(std::exception)
+  const value_type & operator[](size_type use_idx) const //throw(std::exception)
   {
     return at(use_idx);
   }
   //
   void clear(void)
   {
-    _TraitsArg<_TArg>::destroy(_buf, _numElem);
-    _numElem = 0;
+    if (_numElem) {
+      _TraitsArg<_TArg>::destroy(_buf, _numElem);
+      _numElem = 0;
+    }
   }
 
   //Enlarges buffer capacity if current one unable to hold additional number
-  //of elements (performs check for _SizeTypeArg overloading).
-  //Returns false if resulting size exceeds _MAX_SIZE()
-  bool enlarge(_SizeTypeArg add_sz) //throw()
+  //of elements (performs check for size_type overloading).
+  //Returns false if resulting size exceeds maxSize()
+  bool enlarge(size_type add_sz) //throw()
   {
-    _SizeTypeArg reqSz = _numElem + add_sz;
-    if (reqSz < _numElem) //check for _SizeTypeArg overloading;
+    size_type reqSz = _numElem + add_sz;
+    if (reqSz < _numElem) //check for size_type overloading;
       return false;
 
     if (reqSz > capacity()) //heap buffer reallocation is required
@@ -281,8 +300,8 @@ public:
   }
 
   //Reserves space for storing given number of elements,
-  //but no more than _MAX_SIZE().
-  void reserve(_SizeTypeArg num_to_reserve) //throw()
+  //but no more than maxSize().
+  void reserve(size_type num_to_reserve) //throw()
   {
     if (num_to_reserve > capacity())
       reallocBuf(num_to_reserve);
@@ -290,22 +309,22 @@ public:
 
   //Alters the array size.  If the new size is greater than the current
   //one, then (req_sz - size()) instances of the default value of type
-  //_TArg are inserted at the end of the array.
+  //value_type are inserted at the end of the array.
   //If the new size is smaller than the current size(), then the array
   //is truncated by erasing *size() - req_sz) elements off the end.
   //Returns true on success.
-  bool resize(_SizeTypeArg req_sz) //throw()
+  bool resize(size_type req_sz) //throw()
   {
     if (req_sz == _numElem)
       return true;
     if (req_sz < _numElem) { //shrink
-      _TraitsArg<_TArg>::destroy(_buf + req_sz, (_SizeTypeArg)(_numElem - req_sz));
+      _TraitsArg<_TArg>::destroy(_buf + req_sz, (size_type)(_numElem - req_sz));
       _numElem = req_sz;
       return true;
     }
     if (req_sz > _numElem) {
       reserve(req_sz);
-      _TraitsArg<_TArg>::construct(_buf + _numElem, (_SizeTypeArg)(req_sz - _numElem));
+      _TraitsArg<_TArg>::construct(_buf + _numElem, f_dfltValue(), (size_type)(req_sz - _numElem));
       _numElem = req_sz;
       return true;
     }
@@ -314,16 +333,31 @@ public:
 
   //Appends element to array
   //Returns false if resulting number of elements would exceed limit
-  bool append(const _TArg & use_val) //throw()
+  bool append(const value_type & use_val) //throw()
   {
     bool rval = enlarge(1);
     if (rval)
       new (_buf + _numElem++)_TArg(use_val);
     return rval;
   }
+
+  //Appends number of instances of given value to array.
+  //Returns false if resulting number of elements would exceed limit
+  bool append(size_type use_num, const value_type & use_val) //throw()
+  {
+    bool rval = enlarge(use_num);
+    if (rval) {
+      size_type reqSz = _numElem + use_num;
+      while (reqSz > _numElem) {
+        new (_buf + _numElem++)_TArg(use_val);
+      }
+    }
+    return rval;
+  }
+
   //Appends number of elements
   //Returns false if resulting number of elements would exceed limit
-  bool append(const _TArg * use_arr, _SizeTypeArg use_num) //throw()
+  bool append(const value_type * use_arr, size_type use_num) //throw()
   {
     bool rval = enlarge(use_num);
     if (rval) { //copy elements
@@ -334,26 +368,26 @@ public:
   }
 
   //shifts array elements to left (shrinks specified number of elements at given position)
-  void shiftLeft(_SizeTypeArg shift_sz, _SizeTypeArg at_pos = 0) //throw()
+  void shiftLeft(size_type shift_sz, size_type at_pos = 0) //throw()
   {
     //copy elements starting from first to last
-    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (_SizeTypeArg)(_numElem - at_pos), shift_sz);
+    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (size_type)(_numElem - at_pos), shift_sz);
     //reset excessive elements
-    _TraitsArg<_TArg>::reset(_buf + _numElem - shift_sz, shift_sz);
+    _TraitsArg<_TArg>::assign(_buf + _numElem - shift_sz, shift_sz, f_dfltValue());
     _numElem -= shift_sz;
   }
 
   //shifts array right (inserts empty elements at start)
-  bool shiftRight(_SizeTypeArg shift_sz, _SizeTypeArg at_pos = 0) //throw()
+  bool shiftRight(size_type shift_sz, size_type at_pos = 0) //throw()
   {
     if (!shiftRightOnly(shift_sz, at_pos))
       return false;
-    _TraitsArg<_TArg>::reset(_buf, shift_sz);
+    _TraitsArg<_TArg>::assign(_buf, shift_sz, f_dfltValue());
     return true;
   }
 
   //inserts element at start of array shifting existing ones.
-  void prepend(const _TArg & use_val)  //throw(std::exception)
+  void prepend(const value_type & use_val)  //throw(std::exception)
   {
     if (!shiftRightOnly(1))
       denyAddition(1); //throws
@@ -363,13 +397,13 @@ public:
 
   //inserts number of elements at start of array shifting existing ones.
   //Returns false if resulting number of elements would exceed limit
-  void prepend(const _TArg * use_arr, _SizeTypeArg use_num) //throw(std::exception)
+  void prepend(const value_type * use_arr, size_type use_num) //throw(std::exception)
   {
     if (!shiftRightOnly(use_num))
       denyAddition(use_num); //throws
 
     //copy elements
-    _TraitsArg<_TArg>::copy(_buf, use_arr, use_num);
+    _TraitsArg<_TArg>::assign(_buf, use_arr, use_num);
     return;
   }
 
@@ -381,7 +415,7 @@ public:
       denyAddition(use_arr.size()); //throws
 
     //copy elements
-    _TraitsArg<_TArg>::copy(_buf, use_arr.get(), use_arr.size());
+    _TraitsArg<_TArg>::assign(_buf, use_arr.get(), use_arr.size());
     _numElem += use_arr.size();
     return;
   }
@@ -394,7 +428,7 @@ public:
   }
 
   //NOTE: throws if resulting number of elements would exceed limit 
-  LWArrayExtension_T & operator+= (const _TArg & use_val) //throw(std::exception)
+  LWArrayExtension_T & operator+= (const value_type & use_val) //throw(std::exception)
   {
     if (!append(use_val))
       denyAddition(1);
@@ -418,14 +452,14 @@ public:
     return *this;
   }
 
-  LWArrayExtension_T & operator>> (_SizeTypeArg shift_sz) //throw(std::exception)
+  LWArrayExtension_T & operator>> (size_type shift_sz) //throw(std::exception)
   {
     if (!shiftRight(shift_sz))
       denyAddition(shift_sz); //throws
     return *this;
   }
   
-  LWArrayExtension_T & operator<< (_SizeTypeArg shift_sz) //throw()
+  LWArrayExtension_T & operator<< (size_type shift_sz) //throw()
   {
     shiftLeft(shift_sz);
     return *this;
@@ -458,9 +492,9 @@ public:
   //Returns position at which element was successfully inserted or
   //Not-A-Position if insertion failed because of elements number
   //limit is already reached.
-  _SizeTypeArg insert(const _TArg & use_val) //throw()
+  size_type insert(const value_type & use_val) //throw()
   {
-    _SizeTypeArg atPos = _numElem ? lower_bound_pos(use_val) : 0;
+    size_type atPos = _numElem ? lower_bound_pos(use_val) : 0;
 
     if (atPos >= _numElem) { //all elements are less then given one
       if (!append(use_val))
@@ -475,23 +509,22 @@ public:
 
   //Returns the position of first element that is grater or equal to given value.
   //If no such element exists, Not-a-Position is returned.
-  _SizeTypeArg lower_bound(const _TArg & use_val) const //throw()
+  size_type lower_bound(const value_type & use_val) const //throw()
   {
-    _SizeTypeArg atPos = _numElem ? lower_bound_pos(use_val) : 0;
+    size_type atPos = _numElem ? lower_bound_pos(use_val) : 0;
     return  (atPos < _numElem) ? atPos : npos();
   }
 
   //Returns the position of first element that is equal to given value.
   //If no such element exists, Not-A-Position is returned.
-  _SizeTypeArg find(const _TArg & use_val) const //throw()
+  size_type find(const value_type & use_val) const //throw()
   {
-    _SizeTypeArg atPos = lower_bound_pos(use_val);
+    size_type atPos = lower_bound_pos(use_val);
     return ((atPos < _numElem)
             && !(_buf[atPos] < use_val) && !(use_val < _buf[atPos])) ?
                 atPos : npos();
   }
 };
-
 
 /* ************************************************************************* *
  * Lightweight Array: 
@@ -514,6 +547,8 @@ private:
   } _stack;
 
 public:
+  static const _SizeTypeArg k_dfltSize = _max_STACK_SZ;
+
   typedef LWArrayExtension_T<_TArg, _SizeTypeArg, _TraitsArg, _ResizerArg> base_type;
   typedef typename base_type::size_type size_type;
 

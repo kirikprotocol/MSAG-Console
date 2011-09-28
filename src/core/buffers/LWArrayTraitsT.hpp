@@ -22,10 +22,10 @@ template <
 struct LWArrayTraits_T {
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void construct(_TArg * use_dst, _SizeTypeArg num_elem)
+  static void construct(_TArg * use_dst, const _TArg & use_val, _SizeTypeArg num_elem)
   {
     for (_SizeTypeArg i = 0; i < num_elem; ++i)
-      new (use_dst + i)_TArg();
+      new (use_dst + i)_TArg(use_val);
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
@@ -41,20 +41,21 @@ struct LWArrayTraits_T {
     for (_SizeTypeArg i = 0; i < num_elem; ++i)
       use_buf[i].~_TArg();
   }
-  //
+  //Resets elements starting from first to last
+  //NOTE: all ('num_elem') elements of destination MUST BE CONSTRUCTED prior to this call!
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void reset(_TArg * use_buf, _SizeTypeArg num_elem)
+  static void assign(_TArg * use_buf, _SizeTypeArg num_elem, const _TArg & use_val)
   {
     for (_SizeTypeArg i = 0; i < num_elem; ++i) {
       use_buf[i].~_TArg();
-      new (use_buf + i)_TArg();
+      new (use_buf + i)_TArg(use_val);
     }
   }
   //Copies elements starting from first to last
   //NOTE: source and destination MUST NOT OVERLAP
   //NOTE: all ('num_elem') elements of destination MUST BE CONSTRUCTED prior to this call!
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void copy(_TArg * use_dst, const _TArg * use_src, _SizeTypeArg num_elem)
+  static void assign(_TArg * use_dst, const _TArg * use_src, _SizeTypeArg num_elem)
   {
     for (_SizeTypeArg i = 0; i < num_elem; ++i) {
       use_dst[i].~_TArg();
@@ -112,10 +113,10 @@ template <
 struct LWArrayTraitsPOD_T {
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void construct(_TArg * use_dst, _SizeTypeArg num_elem)
+  static void construct(_TArg * use_dst, const _TArg & use_val, _SizeTypeArg num_elem)
   {
     for (_SizeTypeArg i = 0; i < num_elem; ++i)
-      new (use_dst + i)_TArg();
+      new (use_dst + i)_TArg(use_val);
   }
   //
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
@@ -132,18 +133,19 @@ struct LWArrayTraitsPOD_T {
     memset(use_buf, 0, sizeof(_TArg)*num_elem);
 #endif /* LW_ARRAY_DEBUG */
   }
-  //
+  //Resets elements starting from first to last
+  //NOTE: all ('num_elem') elements of destination MUST BE CONSTRUCTED prior to this call!
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void reset(_TArg * use_buf, _SizeTypeArg num_elem)
+  static void assign(_TArg * use_buf, _SizeTypeArg num_elem, const _TArg & use_val)
   {
     for (_SizeTypeArg i = 0; i < num_elem; ++i)
-      new (use_buf + i)_TArg();
+      new (use_buf + i)_TArg(use_val);
   }
   //Copies elements starting from first to last
   //NOTE: source and destination MUST NOT OVERLAP
   //NOTE: all ('num_elem') elements of destination MUST BE CONSTRUCTED prior to this call!
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
-  static void copy(_TArg * use_dst, const _TArg * use_src, _SizeTypeArg num_elem)
+  static void assign(_TArg * use_dst, const _TArg * use_src, _SizeTypeArg num_elem)
   {
     memcpy(use_dst, use_src, sizeof(_TArg)*num_elem);
   }
