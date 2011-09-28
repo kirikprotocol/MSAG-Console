@@ -140,8 +140,8 @@ IAPQueryAC::ProcResult_e
     bool res = it->_isAimed = true;
     {
       ReverseMutexGuard rGrd(*this);
-      smsc_log_debug(_logger, "%s(%s): calling listener: %p", 
-                     taskName(), _abId.getSignals(), it->_ptr);
+      //smsc_log_debug(_logger, "%s(%s): calling listener: %p", 
+      //               taskName(), _abId.getSignals(), it->_ptr);
 
       try { res = it->_ptr->onIAPQueried(_abId, _abInfo, _qError);
       } catch (const std::exception & exc) {
