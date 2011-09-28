@@ -1,0 +1,35 @@
+package $var proto.package$;
+
+import java.util.HashMap;
+import mobi.eyeline.protocol.framework.*;
+import mobi.eyeline.cimdapi.CIMDPDU;
+import $var msg.package$.*;
+
+public enum $var protocol.name$Tag {
+  $foreach message$
+  $var message.name$($var message.tag$) { public CIMDPDU createPdu() { return new $var message.name$();} }$if !message.last$,$else$;$-if$
+  $-foreach$
+  int value;
+
+  $var protocol.name$Tag(int value) {
+    this.value = value;
+  }
+
+  public int getValue() {
+    return value;
+  }
+
+  static HashMap<Integer, $var protocol.name$Tag> map;
+  static {
+    map = new HashMap<Integer, $var protocol.name$Tag>(100);
+    for( $var protocol.name$Tag t : $var protocol.name$Tag.values() ) {
+      map.put( t.value, t );
+    }
+  }
+
+  public static $var protocol.name$Tag valueOf( int v ) {
+    return map.get(v);
+  }
+
+  public abstract CIMDPDU createPdu();
+}

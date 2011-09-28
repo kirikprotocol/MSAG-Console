@@ -1,0 +1,106 @@
+include Types.def
+
+enum int ErrorCode
+    No_error 0
+    Unexpected_operation 1
+    Syntax_error 2
+    Unsupported_parameter_error 3
+    Connection_to_SMS_Center_lost 4
+    No_response_from_SMS_Center 5
+    General_system_error 6
+    Cannot_find_information 7
+    Parameter_formatting_error 8
+    Requested_operation_failed 9
+    Temporary_congestion_error 10
+    Invalid_login 100
+    Incorrect_access_type 101
+    Too_many_users_with_this_login_ID 102
+    Login_refused_by_SMS_Center 103
+    Invalid_window_size 104
+    Windowing_disabled 105
+    Virtual_SMS_Center_based_barring 106
+    Invalid_subaddr 107
+    Alias_account_login_refused 108
+    Incorrect_destination_address 300
+    Incorrect_number_of_destination_addresses 301
+    Syntax_error_in_user_data_parameter 302
+    Incorrect_bin_head_normal_user_data_parameter_combination 303
+    Incorrect_dcs_parameter_usage 304
+    Incorrect_validity_period_parameters_usage 305
+    Incorrect_originator_address_usage 306
+    Incorrect_PID_parameter_usage 307
+    Incorrect_first_delivery_parameter_usage 308
+    Incorrect_reply_path_usage 309
+    Incorrect_status_report_request_parameter_usage 310
+    Incorrect_cancel_enabled_parameter_usage 311
+    Incorrect_priority_parameter_usage 312
+    Incorrect_tariff_class_parameter_usage 313
+    Incorrect_service_description_parameter_usage 314
+    Incorrect_transport_type_parameter_usage 315
+    Incorrect_message_type_parameter_usage 316
+    Incorrect_MMs_parameter_usage 318
+    Incorrect_operation_timer_parameter_usage 319
+    Incorrect_dialogue_ID_parameter_usage 320
+    Incorrect_alpha_originator_address_usage 321
+    Invalid_data_for_alpha_numeric_originator 322
+    Incorrect_address_parameter_usage 400
+    Incorrect_scts_parameter 401
+    Incorrect_scts_parameter_usage 500
+    Incorrect_mode_parameter_usage 501
+    Incorrect_parameter_combination_usage 502
+    Incorrect_scts_param 600
+    Incorrect_address_parameter 601
+    Incorrect_mode_parameter 602
+    Incorrect_parameter_combination 603
+    Changing_password_failed 800
+    Changing_password_not_allowed 801
+    Unsupported_item_requested 900
+end
+
+enum int StatusCode
+    no_status_available 0
+    in_process 1
+    expired 2
+    delivery_failed 3
+    delivery_success 4
+    no_resp 5
+    last_no_resp 6
+    cancelled 7
+    deleted 8
+    deleted_by_cancel 9
+end
+
+enum int StatusErrorCode
+    No_error 0
+    Unknown_subscriber 1
+    Illegal_subscriber 9
+    Teleservice_not_provisioned 11
+    Call_barred 13
+    CUG_reject 15
+    No_SMS_support_in_MS 19
+    Error_in_MS 20
+    Facility_not_supported 21
+    Memory_capacity_exceeded 22
+    Absent_subscriber 29
+    MS_busy_for_MT_SMS 30
+    Network_Protocol_failure 36
+    Illegal_equipment 44
+    No_paging_response 60
+    GMSC_congestion 61
+    HLR_timeout 63
+    MSC_SGSN_timeout 64
+    SMRSE_TCP_error 70
+    MT_congestion 72
+end
+
+enum int Mode
+    Number_of_messages_waiting 0
+    Deliver_one_message 1
+    Deliver_all_messages 2
+end
+
+enum int CancelMode
+    Cancel_all_destination_address 0
+    Cancel_all_sent 1
+    Cancel_one_destination_address_timestamp 2
+end

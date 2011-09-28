@@ -1,0 +1,163 @@
+include Types.def
+
+message Login 1
+  string userIdentity 10 mnd
+  string password 11 mnd
+  int subAddress 12 opt
+  int windowSize 19 opt
+end
+
+message LoginResp 51
+  property response=true
+  ErrorCode errorCode 900 opt
+  string errorText 901 opt
+end
+
+message Logout 2
+end
+
+message LogoutResp 52
+  property response=true
+  ErrorCode errorCode 900 opt
+  string errorText 901 opt
+end
+
+message Submit 3
+    string destinationAddress 21 mnd
+    string originatingAddress 23 opt
+    string alphanumericOriginatingAddress 27 opt
+    int    dataCodingScheme 30 opt
+    hex    userDataHeader 32 opt
+    string userData 33 opt
+    hex    userDataBinary 34 opt
+    bool   moreMessages2Send 44 opt
+    int    validityPeriodRelative 50 opt
+    string validityPeriodAbsolute 51 opt
+    int    protocolIdentifier 52 opt
+    int    firstDeliveryTimeRelative 53 opt
+    string firstDeliveryTimeAbsolute 54 opt
+    bool   replyPath 55 opt
+    int    statusReportRequest 56 opt
+    bool   cancelEnabled 58 opt
+    int    tariffClass 64 opt
+    int    serviceDescription 65 opt
+    int    priority 67 opt
+end
+
+message SubmitResp 53
+  property response=true
+    string destinationAddress 21 opt
+    string scTimeStamp 60 opt
+    ErrorCode errorCode 900 opt
+    string errorText 901 opt
+end
+
+message EnquireMessageStatus 4
+  property response=true
+    string destinationAddress 21 mnd
+    string scTimeStamp 60 mnd
+end
+
+message EnquireMessageStatusResp 54
+  property response=true
+    string destinationAddress 21 opt
+    string scTimeStamp 60 opt
+    StatusCode statusCode 61 opt
+    StatusErrorCode statusErrorCode 62 opt
+    string dischargeTime 63 opt
+    ErrorCode errorCode 900 opt
+    string errorText 901 opt
+end
+
+message DeliveryRequest 5
+    Mode mode 68 opt
+end
+
+message DeliveryRequestResp 55
+  property response=true
+    int numberOfMessagesWaiting 66 opt
+    int errorCode 900 opt
+    string errorText 901 opt
+end
+
+message Cancel 6
+    CancelMode cancelMode 59 mnd
+    string scTimeStamp 60 opt
+    string destinationAddress 21 opt
+end
+
+message CancelResp 56
+  property response=true
+    ErrorCode errorCode 900 opt
+    string errorText 901 opt
+end
+
+message DeliverMessage 20
+    string destinationAddress 21 mnd
+    string originatorAddress 23 mnd
+    string scTimeStamp 60 mnd
+    hex    userDataHeader 32 opt
+    string userData 33 opt
+    hex    userDataBinary 34 opt
+    int    protocolIdentifier 52 opt
+    int    dataCodingScheme 30 opt
+    string originatedIMSI 26 opt
+    string originatedVMSC 28 opt
+    string scAddress 69 opt
+end
+
+message DeliverMessageResp 70
+  property response=true
+  ErrorCode errorCode 900 opt
+end
+
+message DeliverStatusReport 23
+    string destinationAddress 21 mnd
+    string scTimeStamp 60 mnd
+    StatusCode statusCode 61 mnd
+    StatusErrorCode statusErrorCode 62 opt
+    string dischargeTime 63 mnd
+    string originatorAddress 23 opt
+end
+
+message DeliverStatusReportResp 73
+  property response=true
+end
+
+message Set 8
+    string password 11
+end
+
+message SetResp 58
+  property response=true
+      ErrorCode errorCode 900 opt
+      string errorText 901 opt
+end
+
+message Get 9
+    int param 500
+end
+
+message GetResp 58
+  property response=true
+    string scTime 501
+    ErrorCode errorCode 900 opt
+    string errorText 901 opt
+end
+
+message Alive 40
+end
+
+message AliveResp 90
+  property response=true
+end
+
+message GeneralErrorResp 98
+  property response=true
+    ErrorCode errorCode 900 opt
+    string errorText 901 opt
+end
+
+message Nack 99
+  property response=true
+end

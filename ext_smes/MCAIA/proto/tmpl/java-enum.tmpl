@@ -1,0 +1,54 @@
+package $var msg.package$;
+
+import mobi.eyeline.protocol.framework.*;
+import java.util.HashMap;
+
+$macro type$$pack$
+$select %1$
+$case string$String
+$case int$int
+$-select$
+$-pack$$-macro$
+
+$macro objtype$$pack$
+$select %1$
+$case string$String
+$case int$Integer
+$-select$
+$-pack$$-macro$
+
+$macro value$$pack$
+$select enum.type$
+$case string$"$var item.value$"
+$default$$var item.value$
+$-select$
+$-pack$$-macro$
+
+public enum $var enum.name$ {
+  $foreach item$
+  $var item.name$(($expand type enum.type$)$expand value$)$if !item.last$,$else$;$-if$
+  $-foreach$
+
+  $expand type enum.type$ value;
+  public $expand type enum.type$ getValue() {
+    return value;
+  }
+
+  $var enum.name$( $expand type enum.type$ value ) {
+    this.value = value;
+  }
+
+  static HashMap<$expand objtype enum.type$, $var enum.name$> map;
+  static {
+    map = new HashMap<$expand objtype enum.type$, $var enum.name$>();
+    for( $var enum.name$ i : $var enum.name$.values() ) {
+      map.put( i.value, i );
+    }
+  }
+
+  public static $var enum.name$ valueOf( $expand type enum.type$ v ) throws InvalidEnumValueException {
+    $var enum.name$ e = map.get( v );
+    if( e == null ) throw new InvalidEnumValueException("Value "+v+" invalid for enum $var enum.name$");
+    return e;
+  }
+}

@@ -1,0 +1,30 @@
+include enums.def
+include messages.def
+
+protocol CIMDProtocol
+  Login
+  LoginResp
+  Logout
+  LogoutResp
+  Submit
+  SubmitResp
+  EnquireMessageStatus
+  EnquireMessageStatusResp
+  DeliveryRequest
+  DeliveryRequestResp
+  Cancel
+  CancelResp
+  DeliverMessage
+  DeliverMessageResp
+  DeliverStatusReport
+  DeliverStatusReportResp
+  Set
+  SetResp
+  Get
+  GetResp
+  Alive
+  AliveResp
+  GeneralErrorResp
+  Nack
+end
+
