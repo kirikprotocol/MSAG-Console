@@ -57,19 +57,18 @@ uint32_t SKAlgorithmsDb::getSKey(CSIUid_e tgt_csi,
 
     if ((acit->second->algId() == SKAlgorithmAC::algSKMap)
         && org_csis && !org_csis->empty()) {
-      SKAlgorithm_SKMap * alg = static_cast<SKAlgorithm_SKMap *>(acit->second);
-
-      CSIRecordsMap::const_iterator tcit = org_csis->find(alg->argType());
-      if (tcit != org_csis->end())
-        return alg->getSKey((void*)&(tcit->second.scfInfo.serviceKey));
+      const SKAlgorithm_SKMap * alg = static_cast<const SKAlgorithm_SKMap *>(acit->second);
+      const CSIRecord * pRcd = org_csis->find(alg->argType());
+      if (pRcd)
+        return alg->getSKey((void*)&(pRcd->scfInfo.serviceKey));
     }
   }
   //there are no translation algorithms for tgt_csi, so just
   //return serviceKey from orgCSIs (if it exists)
   if (org_csis && !org_csis->empty()) {
-    CSIRecordsMap::const_iterator cit = org_csis->find(tgt_csi);
-    if (cit != org_csis->end())
-      return cit->second.scfInfo.serviceKey;
+    const CSIRecord * pRcd = org_csis->find(tgt_csi);
+    if (pRcd)
+      return pRcd->scfInfo.serviceKey;
   }
   return 0;
 }

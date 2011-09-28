@@ -7,7 +7,8 @@
 #endif
 #define __SMSC_INMAN_IAPRVD_CSIRECORD_HPP
 
-#include <map>
+#include "core/buffers/LWArrayTraitsInt.hpp"
+#include "core/buffers/LWArrayT.hpp"
 
 #include "inman/GsmSCFInfo.hpp"
 #include "inman/comp/CSIDefs.hpp"
@@ -21,8 +22,8 @@ using smsc::inman::comp::CSIUid_e;
 using smsc::inman::comp::UnifiedCSI;
 
 struct CSIRecord {
-  IAPType_e   iapId;  //type of IAProvider that was used to obtain info about this CSI
   CSIUid_e    csiId;  //unified Id of CSI
+  IAPType_e   iapId;  //type of IAProvider that was used to obtain info about this CSI
   GsmSCFinfo  scfInfo;  //gsmSCF serving this CSI
 
   static const size_t _strSZ = 
@@ -30,17 +31,19 @@ struct CSIRecord {
 
   typedef core::buffers::FixedLengthString<_strSZ> StringForm_t;
 
-  CSIRecord() : iapId(IAPProperty::iapUnknown), csiId(UnifiedCSI::csi_UNDEFINED)
+  explicit CSIRecord(CSIUid_e csi_uid = UnifiedCSI::csi_UNDEFINED)
+    : csiId(csi_uid), iapId(IAPProperty::iapUnknown)
   { }
-  CSIRecord(IAPType_e iap_id, CSIUid_e csi_id, const GsmSCFinfo & gsm_scf)
-    : iapId(iap_id), csiId(csi_id), scfInfo(gsm_scf)
+  CSIRecord(CSIUid_e csi_id, IAPType_e iap_id, const GsmSCFinfo & gsm_scf)
+    : csiId(csi_id), iapId(iap_id), scfInfo(gsm_scf)
   { }
   ~CSIRecord()
   { }
 
   void clear(void)
   {
-    iapId = IAPProperty::iapUnknown; csiId = UnifiedCSI::csi_UNDEFINED;
+    csiId = UnifiedCSI::csi_UNDEFINED;
+    iapId = IAPProperty::iapUnknown;
     scfInfo.Reset();
   }
 
@@ -56,41 +59,83 @@ struct CSIRecord {
     toString(rval);
     return rval;
   }
+
+  bool operator< (const CSIRecord & cmp_obj) const
+  {
+    return csiId < cmp_obj.csiId;
+  }
 };
 
 typedef CSIRecord::StringForm_t CSIRecordString_t;
 
-//Defines serving gsmSCF params for DPs of specified category
-class CSIRecordsMap : public std::map<CSIUid_e, CSIRecord> {
+//NOTE: CSIRecordsMap operates with values of CSIUid_e < 0xFF
+class CSIRecordsMap {
+protected:
+  typedef smsc::core::buffers::LWArray_T<
+    uint8_t, uint8_t, UnifiedCSI::k_lastCSI_Id + 1, smsc::core::buffers::LWArrayTraitsPOD_T
+  > RecordsIdxMap;
+  typedef smsc::core::buffers::LWArray_T<
+    CSIRecord, uint8_t, 2, smsc::core::buffers::LWArrayTraitsPOD_T
+  > RecordsArray;
+
+  RecordsIdxMap mIdxMap;
+  RecordsArray  mRcdArr;
+
 public:
-  CSIRecordsMap() : std::map<CSIUid_e, CSIRecord>()
+  typedef RecordsArray::size_type size_type;
+  //
+  struct InsertResult {
+    CSIRecord * mpRcd;
+    bool        mIsOvr;
+    
+    explicit InsertResult(CSIRecord * p_rcd = 0, bool is_ovr = false)
+      : mpRcd(p_rcd), mIsOvr(is_ovr)
+    { }
+  };
+
+  CSIRecordsMap()
   { }
   ~CSIRecordsMap()
   { }
 
-  void insertRecord(const CSIRecord & use_rec)
+  void clear(void) { mIdxMap.clear(); mRcdArr.clear(); }
+
+  //Returns pointer to record if succeeded and true if record is overwritten.
+  //If requested CSIUid_e if beyond the allowed range, NULL is returned.
+  InsertResult insert(const CSIRecord & use_rec) /*throw()*/;
+
+  //Returns number of record that were overwritten.
+  size_type insert(const CSIRecordsMap & use_map) /*throw()*/;
+
+  //Returns initialized/assigned element of map associated wit given key.
+  //if target element isn't assigned yet, it's initialized by default value.
+  //NOTE: throws if requested CSIUid_e if beyond the allowed range.
+  CSIRecord & at(CSIUid_e csi_id) /*throw(std::exception)*/;
+
+  CSIRecord & operator[] (CSIUid_e csi_id) /*throw(std::exception)*/
   {
-    insert(std::map<CSIUid_e, CSIRecord>::value_type(use_rec.csiId, use_rec));
+    return at(csi_id);
   }
 
-  size_type Merge(const CSIRecordsMap & use_map)
+  //
+  bool empty(void) const { return mRcdArr.empty(); }
+  //
+  size_type size(void) const { return mRcdArr.size(); }
+  
+  //
+  const CSIRecord * find(CSIUid_e csi_id) const
   {
-    for (CSIRecordsMap::const_iterator it = use_map.begin(); it != use_map.end(); ++it)
-      insert(*it);
-    return size();
-  }
-
-  const GsmSCFinfo * getSCFinfo(CSIUid_e csi_id) const
-  {
-    CSIRecordsMap::const_iterator it = find(csi_id);
-    return ((it == end()) || it->second.scfInfo.empty()) ? NULL : &(it->second.scfInfo);
+    return ((csi_id < mIdxMap.size()) && (mIdxMap[csi_id])) ? &(mRcdArr[mIdxMap[csi_id] - 1]) : NULL;
   }
   //
-  const CSIRecord * getCSIRecord(CSIUid_e csi_id) const
+  const GsmSCFinfo * getSCFinfo(CSIUid_e csi_id) const
   {
-    CSIRecordsMap::const_iterator it = find(csi_id);
-    return ((it == end()) || it->second.scfInfo.empty()) ? NULL : &(it->second);
+    return ((csi_id < mIdxMap.size()) && (mIdxMap[csi_id])) ? &(mRcdArr[mIdxMap[csi_id] - 1].scfInfo) : NULL;
   }
+  //Returns first assigned CSI record.
+  const CSIRecord * begin(void) const;
+  //Returns assigned CSI record with id next to given one.
+  const CSIRecord * next(CSIUid_e csi_id) const;
 
   //
   CSIRecordString_t toString(CSIUid_e csi_id) const;

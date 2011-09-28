@@ -822,12 +822,12 @@ INManErrorId::Code_e Billing::configureSCF(void)
 void Billing::configureMOSM(void)
 {
   uint32_t          keyMOSM = 0;
-  const CSIRecord * pCsi = _abCsi.csiSCF.getCSIRecord(UnifiedCSI::csi_MO_SM);
+  const CSIRecord * pCsi = _abCsi.csiSCF.find(UnifiedCSI::csi_MO_SM);
 
   if (pCsi)
     keyMOSM = pCsi->scfInfo.serviceKey;
   else //check if SCF for MO-BC may be used
-    pCsi = _abCsi.csiSCF.getCSIRecord(UnifiedCSI::csi_O_BC);
+    pCsi = _abCsi.csiSCF.find(UnifiedCSI::csi_O_BC);
 
   //check if MO_SM parameters are configured for serving gsmSCF
   //serviceKey from config.xml has a higher priority
@@ -852,7 +852,7 @@ uint32_t Billing::getServiceKey(CSIUid_e csi_id) const
   if (_cfgScf) //serviceKey from config.xml has a higher priority
     return _cfgScf->getSKey(csi_id, &_abCsi.csiSCF);
 
-  const CSIRecord * pCsi = _abCsi.csiSCF.getCSIRecord(csi_id);
+  const CSIRecord * pCsi = _abCsi.csiSCF.find(csi_id);
   return pCsi ? pCsi->scfInfo.serviceKey : 0;
 }
 

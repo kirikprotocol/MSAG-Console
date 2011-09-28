@@ -51,7 +51,7 @@ bool AbonentSubscription::Merge(const AbonentSubscription & use_rcd)
     rval = true;
   }
   if (!use_rcd.csiSCF.empty()) {
-    csiSCF.Merge(use_rcd.csiSCF);
+    csiSCF.insert(use_rcd.csiSCF);
     rval = true;
   }
   if (!use_rcd.vlrNum.empty()) {

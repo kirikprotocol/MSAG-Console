@@ -7,6 +7,8 @@
 #endif
 #define __INMAN_ICS_IAPMGR_SKALGORITHMS_HPP
 
+#include <map>
+
 #include "inman/comp/CSIDefs.hpp"
 #include "inman/common/RPCList.hpp"
 #include "inman/abprov/CSIRecordsMap.hpp"
@@ -18,6 +20,7 @@ namespace iapmgr {
 using smsc::inman::comp::CSIUid_e;
 using smsc::inman::comp::UnifiedCSI;
 
+using smsc::inman::iaprvd::CSIRecord;
 using smsc::inman::iaprvd::CSIRecordsMap;
 
 /* --------------------------------------------------------------------- *
