@@ -125,12 +125,14 @@ public:
   //
   const CSIRecord * find(CSIUid_e csi_id) const
   {
-    return ((csi_id < mIdxMap.size()) && (mIdxMap[csi_id])) ? &(mRcdArr[mIdxMap[csi_id] - 1]) : NULL;
+    return (((unsigned)csi_id < mIdxMap.size()) && (mIdxMap[csi_id]))
+            ? &(mRcdArr[mIdxMap[csi_id] - 1]) : NULL;
   }
   //
   const GsmSCFinfo * getSCFinfo(CSIUid_e csi_id) const
   {
-    return ((csi_id < mIdxMap.size()) && (mIdxMap[csi_id])) ? &(mRcdArr[mIdxMap[csi_id] - 1].scfInfo) : NULL;
+    return (((unsigned)csi_id < mIdxMap.size()) && (mIdxMap[csi_id]))
+            ? &(mRcdArr[mIdxMap[csi_id] - 1].scfInfo) : NULL;
   }
   //Returns first assigned CSI record.
   const CSIRecord * begin(void) const;

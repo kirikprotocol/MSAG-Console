@@ -68,6 +68,7 @@ const CSIRecord * CSIRecordsMap::begin(void) const
   while (curIdx < mIdxMap.size()) {
     if (mIdxMap[curIdx])
       return &(mRcdArr[mIdxMap[curIdx] - 1]);
+    ++curIdx;
   }
   return 0;
 }
@@ -75,8 +76,8 @@ const CSIRecord * CSIRecordsMap::begin(void) const
 //Returns assigned CSI record with id next to given one.
 const CSIRecord * CSIRecordsMap::next(CSIUid_e csi_id) const
 {
-  size_type nextIdx = csi_id;
-  if (nextIdx < mIdxMap.size()) {
+  if ((unsigned)csi_id < mIdxMap.size()) {
+    size_type nextIdx = csi_id;
     while (++nextIdx < mIdxMap.size()) {
       if (mIdxMap[nextIdx])
         return &(mRcdArr[mIdxMap[nextIdx] - 1]);
