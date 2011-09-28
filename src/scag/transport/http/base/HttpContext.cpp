@@ -101,8 +101,9 @@ int HttpContext::sslUserConnection(bool verify_client) {
 
 		// Perform SSL Handshake on the SSL server
 		user->setNonBlocking(0);
-		if ( SSL_accept(userSsl) == -1 ) {
-			sslLogErrors();
+		int ret = 0;
+		if ( (ret=SSL_accept(userSsl)) != 1 ) {
+			sslLogErrors(ret, SSL_get_error(userSsl, ret));
 			throw 0;
 		}
 
@@ -138,8 +139,9 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 
 		// Perform SSL Handshake on the SSL client
 		site->setNonBlocking(0);
-		if ( SSL_connect(siteSsl) <= 0) {
-			sslLogErrors();
+		int ret = 0;
+		if ( (ret=SSL_connect(siteSsl)) != 1) {
+			sslLogErrors(ret, SSL_get_error(siteSsl, ret));
 			throw 0;
 		}
 
@@ -354,6 +356,7 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 
 	size_t toRead = readBufSize;
 	int len=0, err=0, total=0;
+	int ssl_err=0, oerrno=0;
 	closed = false;
 //
 // Messages with length over 16 Kbytes takes more then one TCP package
@@ -364,14 +367,14 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 	do
 	{
 		len = SSL_read(ssl, (void*)readBuf, readBufSize);
+		ssl_err = SSL_get_error(ssl, len);
+		oerrno = errno;
+
 		if ( len > 0 ) {
 			unparsed.Append(readBuf, len);
 			total += len;
-/*
-			toRead = SSL_pending(ssl);
-			if ( toRead > 0 )
-				continue;
-*/
+			if ( (ssl_err == SSL_ERROR_ZERO_RETURN) || (ssl_err == SSL_ERROR_SYSCALL) || SSL_get_shutdown(ssl) )
+				closed = true;
 			break;
 		}
 		else if (len == 0) {
@@ -396,7 +399,7 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 			break;  // it seems, the read operation is over here
 		}
 		else {  //len<0
-			err = sslCheckIoError(ssl, len);
+			err = sslCheckIoError(len, ssl_err, oerrno);
 //			smsc_log_debug(logger, "sslReadPartial: sslCheckIoError err=%d", err);
 			if ( err == CONTINUE )
 				continue;
@@ -414,7 +417,7 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 
 // non-blocking and partial write allowed: SSL_write returns after every 16kb block
 int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWrite) {
-	int len;
+	int len=0, ssl_err=0,oerrno=0;
 	SSL* ssl = sslCheckConnection(s);
 	if (ssl == NULL) {
 		smsc_log_debug(logger, "sslWritePartial: create connection failed");
@@ -422,6 +425,8 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 	}
 	while ( toWrite > 0 ) {
 		len = SSL_write(ssl, data, toWrite);
+		ssl_err = SSL_get_error(ssl, len);
+		oerrno = errno;
 		if ( SSL_get_shutdown(ssl) ) {
 			return -1;
 		}
@@ -431,7 +436,7 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 		if (len == 0) {
 			break;
 		}
-		if ( sslCheckIoError(ssl, len) == ERROR ) {
+		if ( sslCheckIoError(len, ssl_err, oerrno) == ERROR ) {
 			break;
 		}
 	}
@@ -617,14 +622,9 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 /*
  * check SSL io functions ret value in case ret<0
  */
-int HttpContext::sslCheckIoError(SSL* ssl, int ret)
+int HttpContext::sslCheckIoError(int ret, int ssl_err, int oerrno)
 {
 	int rc = ERROR;
-//	int oerrno = errno;
-	int ssl_err = SSL_get_error(ssl, ret);
-//	smsc_log_debug(logger, "sslCheckIoError ret:%d  errno:%d, %s", ret, oerrno, strerror(oerrno));
-//	smsc_log_debug(logger, "sslCheckIoError SSLerr:%d, %s", ssl_err, ERR_error_string(ssl_err, NULL));
-//	sslLogErrors();
 
 	switch ( ssl_err ) {
 	case SSL_ERROR_WANT_READ:
@@ -648,7 +648,7 @@ int HttpContext::sslCheckIoError(SSL* ssl, int ret)
 		 *   (for socket I/O on Unix systems, consult errno for details).
 		 *
 		 */
-		if ( (ret<0) && ( (errno==EINTR) || (errno==EAGAIN) ) ) {
+		if ( (ret<0) && ( (oerrno==EINTR) || (oerrno==EAGAIN) ) ) {
 			rc = CONTINUE;
 			break;
 		}
