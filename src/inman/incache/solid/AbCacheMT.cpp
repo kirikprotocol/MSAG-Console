@@ -152,7 +152,7 @@ uint32_t AbonentCacheMTR::AbonentHashData::Write(File & fh) const _THROWS_HFE
 
   //Write known CSI records
   for (uint8_t i = 0; i < _maxCSIsNum; ++i) {
-    const CSIRecord * csiRec = csiSCF.getCSIRecord(_knownCSI[i]);
+    const CSIRecord * csiRec = csiSCF.find(_knownCSI[i]);
     if (csiRec && !csiRec->scfInfo.empty()) {
       //[iapType:3b | CSIUid_e:5b]
       fb = (uint8_t)csiRec->csiId | ((uint8_t)csiRec->iapId << 5);
