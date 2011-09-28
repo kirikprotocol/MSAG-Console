@@ -7,6 +7,8 @@
 #endif
 #define __INMAN_TEST_ABONENTS_DB_HPP
 
+#include <map>
+
 #include "core/synchronization/Mutex.hpp"
 #include "inman/tests/AbonentInfo.hpp"
 

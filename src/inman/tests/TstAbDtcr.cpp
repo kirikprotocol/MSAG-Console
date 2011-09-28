@@ -69,7 +69,7 @@ void DtcrDialog::onResult(AbntContractResult * res)
       csiRec.scfInfo = *res->getGsmSCF();
       csiRec.csiId =  csiRec.scfInfo.serviceKey ?
                         UnifiedCSI::csi_MO_SM : UnifiedCSI::csi_O_BC;
-      abRec.csiSCF.insertRecord(csiRec);
+      abRec.csiSCF.insert(csiRec);
     }
     format(msg, " %s, source(%s)", abRec.toString().c_str(),
            res->cacheUsed() ? "cache" : res->policyUsed());
