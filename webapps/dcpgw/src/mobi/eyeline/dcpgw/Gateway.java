@@ -584,11 +584,11 @@ public class Gateway extends Thread implements PDUListener {
             data.setNsms(nsms);
             data.setSequenceNumber(sn);
             sequence_number_receipt_table.put(sn, data);
-            log.debug("remember data: " + sn + " --> " + data);
+            log.debug("remember data: " + sn + " --> " + data +", table size: "+sequence_number_receipt_table.size());
 
             try {
                 smppServer.send(deliverSM, false);
-                log.debug("resend DeliverSM: sn=" + sn + ", message_id=" + data.getMessageId());
+                log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
 
                 long send_receipt_time = System.currentTimeMillis();
                 data.setLastResendTime(send_receipt_time);
@@ -600,36 +600,20 @@ public class Gateway extends Thread implements PDUListener {
                 } catch (CouldNotWriteToJournalException e) {
                     log.error(e);
                 }
-            } catch (ConnectionNotFoundException e) {
-                log.warn(e);
-
-                long send_receipt_time = System.currentTimeMillis();
-                data.setLastResendTime(send_receipt_time);
-                data.setStatus(Status.NOT_SEND);
-
-                sequence_number_receipt_table.put(sn, data);
-                try {
-                    journal.write(data);
-                } catch (CouldNotWriteToJournalException e2) {
-                    log.error(e2);
-                }
-            } catch (ConnectionNotEstablishedException e) {
-                log.warn(e);
-
-                long send_receipt_time = System.currentTimeMillis();
-                data.setLastResendTime(send_receipt_time);
-                data.setStatus(Status.NOT_SEND);
-
-                sequence_number_receipt_table.put(sn, data);
-                try {
-                    journal.write(data);
-                } catch (CouldNotWriteToJournalException e2) {
-                    log.error(e2);
-                }
             } catch (SmppException e) {
-                log.error(e);
+                log.warn(e);
+
+                long send_receipt_time = System.currentTimeMillis();
+                data.setLastResendTime(send_receipt_time);
+                data.setStatus(Status.NOT_SEND);
+
+                sequence_number_receipt_table.put(sn, data);
+                try {
+                    journal.write(data);
+                } catch (CouldNotWriteToJournalException e2) {
+                    log.error(e2);
+                }
             }
-            log.debug("send DeliverSM: message_id=" + message_id + ", sn=" + sn + ".");
         }
     }
 
@@ -648,14 +632,15 @@ public class Gateway extends Thread implements PDUListener {
             long last_resend_time = data.getLastResendTime();
             long first_sending_time = data.getFirstSendingTime();
 
-            if (current_time - first_sending_time < recend_receipts_max_timeout * 1000 * 60)
+
+            if (current_time - first_sending_time < recend_receipts_max_timeout * 1000 * 60){
 
                 if (current_time - last_resend_time >= recend_receipts_timeout * 1000)
                     timeout_expired_sequence_numbers.add(sequence_number);
 
-                else
-
+            } else {
                     max_timeout_expired_sequence_numbers.add(sequence_number);
+            }
 
         }
 
@@ -669,7 +654,9 @@ public class Gateway extends Thread implements PDUListener {
                 } catch (CouldNotWriteToJournalException e) {
                     log.error(e);
                 }
-                log.debug("Remove deliver receipt data with sequence number " + sn + " and message id " + data.getMessageId() + " from memory and write to journal with status " + Status.EXPIRED_MAX_TIMEOUT + ".");
+                log.debug("Remove deliver receipt data with sequence number " + sn + " and message id " +
+                        data.getMessageId() + " from memory and write to journal with status " + Status.EXPIRED_MAX_TIMEOUT +
+                        ", table size "+sequence_number_receipt_table.size()+".");
             }
         }
 
@@ -714,6 +701,9 @@ public class Gateway extends Thread implements PDUListener {
                         data.setStatus(Status.SEND);
 
                         sequence_number_receipt_table.put(new_sn, data);
+                        log.debug("remember data: " + new_sn + " --> " + data +", table size: "+sequence_number_receipt_table.size());
+
+
                         try {
                             journal.write(data);
                         } catch (CouldNotWriteToJournalException e) {

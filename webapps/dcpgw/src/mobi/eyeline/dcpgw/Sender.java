@@ -176,7 +176,8 @@ public class Sender extends Thread{
 
             try{
                 log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
-                connection.addDeliveryMessages(delivery_id, list);
+
+                long[] informer_message_ids = connection.addDeliveryMessages(delivery_id, list);
                 log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
 
                 DeliveryStatistics delivery_statistics = connection.getDeliveryState(delivery_id);
@@ -190,7 +191,10 @@ public class Sender extends Thread{
                     log.debug("Change delivery status on planned.");
                 }
 
-                for(Message m: list){
+                for(int i = 0; i < list.size(); i++ ){
+
+                    Message m = list.get(i);
+                    log.debug("gateway id --> informer id: " +m.getProperty("id")+" --> "+informer_message_ids[i]);
 
                     try{
                         SubmitSMResp submitSMResp = new SubmitSMResp();
@@ -199,6 +203,7 @@ public class Sender extends Thread{
                         submitSMResp.setSequenceNumber(id_seq_num_table.get(message_id));
                         submitSMResp.setConnectionName(id_conn_name_table.get(message_id));
                         submitSMResp.setMessageId(Long.toString(message_id));
+                        submitSMResp.setStatus(Status.OK);
                         smppServer.send(submitSMResp, false);
 
                         id_seq_num_table.remove(message_id);

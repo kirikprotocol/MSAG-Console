@@ -38,13 +38,12 @@ public class StressTest {
     private static String dest_address, source_address;
     private static long validity_period;
 
-    private static AtomicInteger ai = new AtomicInteger(0);
+    //private static AtomicInteger ai = new AtomicInteger(0);
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("ddHHmmss");
     private static Calendar cal = Calendar.getInstance();
 
     private ScheduledExecutorService scheduler;
-
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -88,10 +87,10 @@ public class StressTest {
                         SubmitSM submitSM = new SubmitSM();
 
                         Date date = cal.getTime();
-                        int sn = Integer.parseInt(sdf.format(date)) + ai.incrementAndGet();
+                        //int sn = Integer.parseInt(sdf.format(date)) + ai.incrementAndGet();
                         submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
 
-                        submitSM.setSequenceNumber(sn);
+                        //submitSM.setSequenceNumber(sn);
                         submitSM.setConnectionName("con1");
 
                         DateFormat df = DateFormat.getDateTimeInstance();
@@ -115,7 +114,6 @@ public class StressTest {
         Thread.sleep(test_time * 1000);
 
         scheduler.shutdown();
-        log.debug("Shutdown scheduler.");
 
         Thread.sleep(check_delay * 1000);
 
@@ -132,6 +130,8 @@ public class StressTest {
 
         Assert.assertTrue("Not all delivery receipt was received.", empty);
     }
+
+
 
     @After
     public void tearDown() throws Exception {

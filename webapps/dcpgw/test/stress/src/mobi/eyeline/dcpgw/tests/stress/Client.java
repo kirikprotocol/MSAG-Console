@@ -4,20 +4,10 @@ import mobi.eyeline.smpp.api.PDUListener;
 import mobi.eyeline.smpp.api.SmppClient;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.*;
-import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
-import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
-import org.junit.Assert;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.DateFormat;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,7 +25,7 @@ public class Client extends Thread implements PDUListener {
 
     HashSet<Long> message_ids;
 
-    int cs1, cs2, cd1;
+    int c1, c2, c3, c4, c5, c6;
 
     public Client(Properties config) throws SmppException {
         this.config = config;
@@ -61,7 +51,7 @@ public class Client extends Thread implements PDUListener {
                 try {
                     Message request = (Message)pdu;
                     smppClient.send(request);
-                    cs1++;
+                    c1++;
                     int sn = pdu.getSequenceNumber();
                     submit_sm_sequence_number_set.add(sn);
                 } catch (SmppException e) {
@@ -72,24 +62,22 @@ public class Client extends Thread implements PDUListener {
             }
             case DeliverSM: {
 
-                    cd1++;
+                    c5++;
                     DeliverSM deliverSM = (DeliverSM) pdu;
                     String message = deliverSM.getMessage();
                     String[] ar = message.split("\\s");
                     String s = ar[0];
                     int sn = deliverSM.getSequenceNumber();
 
-
                     long message_id = Long.parseLong(s.substring(s.indexOf(":")+1,s.length()));
 
-                    boolean contain = message_ids.remove(message_id);
+                    if (message_ids.remove(message_id)) c6++;
 
                     DeliverSMResp deliverSMResp = new DeliverSMResp();
                     deliverSMResp.setStatus(Status.OK);
                     deliverSMResp.setSequenceNumber(sn);
                     deliverSMResp.setConnectionName(deliverSM.getConnectionName());
 
-                    //Assert.assertTrue("Unknown message id.", contain);
 
                     try{
                         smppClient.send(deliverSMResp);
@@ -101,26 +89,32 @@ public class Client extends Thread implements PDUListener {
             }
 
             case SubmitSMResp: {
-                cs2++;
+                c2++;
                 SubmitSMResp submitSMResp = (SubmitSMResp) pdu;
-                String message_id_str = submitSMResp.getMessageId();
-                int sn = submitSMResp.getSequenceNumber();
-                log.debug("receive SubmitSMResp: id="+message_id_str+", sn:"+sn);
+                Status status = submitSMResp.getStatus();
+                if (status.equals(Status.OK)){
+                    String message_id_str = submitSMResp.getMessageId();
+                    int sn = submitSMResp.getSequenceNumber();
+                    log.debug("receive SubmitSMResp: id="+message_id_str+", sn:"+sn);
 
-                Assert.assertNotNull("Message id null", message_id_str);
+                    if (message_id_str != null){
 
-                long message_id = Long.parseLong(submitSMResp.getMessageId());
-                message_ids.add(message_id);
+                        long message_id = Long.parseLong(submitSMResp.getMessageId());
+                        message_ids.add(message_id);
 
-                boolean contain = submit_sm_sequence_number_set.remove(sn);
+                        if (submit_sm_sequence_number_set.remove(sn)) c3++;
+                    }
 
-                Assert.assertTrue("Unknown SubmitSMResp sequence number.", contain);
+                } else {
+                    c4++;
+                    log.warn(submitSMResp);
+                }
 
                 break;
             }
         }
-        log.debug("SubmitSM: "+cs1+", SubmitSMResp: "+cs2+", DeliverSM: "+cd1);
-        return false;
+        log.debug("SubmitSM: send "+c1+", succ "+c3+", err "+c4+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
+        return true;
     }
 
     @Override
