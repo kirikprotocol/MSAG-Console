@@ -190,36 +190,5 @@ public class Version {${line.separator}
     </war>
   </target>
 
-  <target name="mts-script.compile" depends="compile.sources">
-
-    <javac srcdir="mts-script/src" destdir="${informer.source.classes}" classpathref="all_libs" debug="true" source="1.5"/>
-
-  </target>
-
-  <target name="mts-script" depends="mts-script.compile">
-
-    <delete dir="${informer.distr.dir}" failonerror="false"/>
-    <mkdir dir="${informer.distr.dir}"/>
-    <mkdir dir="${informer.distr.dir}/mts-script"/>
-    <mkdir dir="${informer.distr.dir}/mts-script/lib"/>
-
-    <delete>
-      <fileset dir="${informer.source.classes}" includes="mobi/eyeline/informer/web/**/*"/>
-    </delete>
-    <delete>
-      <fileset dir="${informer.source.classes}/mobi/eyeline/informer/admin/" excludes="delivery/**/*,filesystem/**/*,AdminException.class"/>
-    </delete>
-
-    <jar destfile="${informer.distr.dir}/mts-script/lib/mts-stat-script.jar" basedir="${informer.source.classes}"/>
-
-    <copy todir="${informer.distr.dir}/mts-script/lib">
-      <fileset dir="lib" includes="log4j*.jar,"/>
-    </copy>
-
-    <copy todir="${informer.distr.dir}/mts-script">
-      <fileset dir="mts-script/bin"/>
-    </copy>
-  </target>
-
 
 </project>
