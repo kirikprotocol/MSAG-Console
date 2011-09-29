@@ -22,7 +22,7 @@ public class GatewayTest extends T{
         String user_dir = System.getProperty("user.dir");
         System.out.println("user.dir="+user_dir);
 
-        gateway = createGateway();
+        //gateway = createGateway();
 
         DcpConnection stub = new DcpConnectionStub();
         gateway.setDcpConnection("test", stub);

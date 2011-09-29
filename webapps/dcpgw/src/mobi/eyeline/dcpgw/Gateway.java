@@ -10,6 +10,9 @@ import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.journal.Journal;
 import mobi.eyeline.dcpgw.journal.Status;
+import mobi.eyeline.dcpgw.model.Delivery;
+import mobi.eyeline.dcpgw.model.Provider;
+import mobi.eyeline.dcpgw.utils.Utils;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.MessageState;
@@ -86,46 +89,27 @@ public class Gateway extends Thread implements PDUListener {
     private static String informer_host;
     private static int informer_port;
 
-    private static ConfigurationManager cm;
-    private Properties config;
-    private Hashtable<String, String> user_password_table;
-    private Hashtable<String, Provider> connection_provider_table;
+    private ConfigurationManager cm = ConfigurationManager.getInstance();
 
     public static void main(String args[]) {
         String user_dir = System.getProperty("user.dir");
         log.debug("user dir:"+user_dir);
-        String smpp_server_config_file = user_dir + File.separator + "conf" + File.separator + "config.properties";
-        log.debug("config file: "+smpp_server_config_file);
+        String config_file = user_dir + File.separator + "conf" + File.separator + "config.properties";
+        log.debug("config file: "+config_file);
 
         try {
-            new Gateway(smpp_server_config_file);
+            new Gateway(config_file);
         } catch (Exception e) {
             log.error(e);
         }
 
     }
 
-    public Gateway(String smpp_server_config_file) throws SmppException, InitializationException, IOException, XmlConfigException {
+    public Gateway(String config_file) throws InitializationException, SmppException, IOException, XmlConfigException {
         log.debug("Try to initialize gateway ...");
         Runtime.getRuntime().addShutdownHook(this);
-
-        cm = new ConfigurationManager(smpp_server_config_file);
-
-        config = cm.loadSmppConfigurations();
-
-        user_password_table = cm.loadUsers();
-
-        connection_provider_table = cm.loadProviders();
-
-        new Gateway(config, user_password_table, connection_provider_table);
-    }
-
-    public Gateway(Properties config,
-                   Hashtable<String, String> user_password_table,
-                   Hashtable<String, Provider> connection_provider_table) throws InitializationException, SmppException {
-        this.config = config;
-        this.user_password_table = user_password_table;
-        this.connection_provider_table = connection_provider_table;
+        cm.init(config_file);
+        Properties config = cm.getProperties();
 
         String s = config.getProperty("informer.host");
         if (s != null && !s.isEmpty()){
@@ -193,10 +177,10 @@ public class Gateway extends Thread implements PDUListener {
 
         smppServer = new ConfigurableInRuntimeSmppServer(config, this);
 
-        for(String user : user_password_table.keySet() ){
+        for(String user : cm.getInformerUsers()){
             try {
                 DcpConnection dcpConnection =
-                        new DcpConnectionImpl(informer_host, informer_port, user, user_password_table.get(user));
+                        new DcpConnectionImpl(informer_host, informer_port, user);
                 Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
                 sender.setSmppServer(smppServer);
                 sender.start();
@@ -264,35 +248,31 @@ public class Gateway extends Thread implements PDUListener {
     private synchronized void updateConfiguration() throws XmlConfigException, IOException, SmppException, AdminException {
         log.debug("Try to update configuration ...");
 
-        Hashtable<String, Provider> connection_provider_temp_table = cm.loadProviders();
-        Hashtable<String, String> user_password_temp_table = cm.loadUsers();
-        Properties new_config = cm.loadSmppConfigurations();
+        Set<String> old_informer_users = cm.getInformerUsers();
 
-        smppServer.update(new_config);
+        cm.update();
 
-        connection_provider_table = connection_provider_temp_table;
-        user_password_table = user_password_temp_table;
-        config = new_config;
+        // Update smpp connections
+        smppServer.update(cm.getProperties());
+        Set<String> new_informer_users = cm.getInformerUsers();
 
-        // Add new connections
-        for(String user: user_password_table.keySet()){
-            if (!user_sender_table.containsKey(user)){
-                DcpConnection dcpConnection = new DcpConnectionImpl(informer_host, informer_port, user, user_password_table.get(user));
+        // Add new dcp connections
+        for(String new_user: new_informer_users){
+            if (!old_informer_users.contains(new_user)){
+                DcpConnection dcpConnection = new DcpConnectionImpl(informer_host, informer_port, new_user);
 
                 Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
                 sender.setSmppServer(smppServer);
                 sender.start();
-                user_sender_table.put(user,sender);
+                user_sender_table.put(new_user,sender);
             }
         }
 
-        // Remove connections
-        for(String user: user_sender_table.keySet()){
-            if (!user_password_table.containsKey(user)){
-                Sender sender = user_sender_table.remove(user);
-                DcpConnection dcpConnection = sender.getDcpConnection();
+        // Remove deleted dcp connections
+        for(String old_user: user_sender_table.keySet()){
+            if (!new_informer_users.contains(old_user)){
+                Sender sender = user_sender_table.remove(old_user);
                 sender.interrupt();
-                dcpConnection.close();
             }
         }
 
@@ -341,7 +321,7 @@ public class Gateway extends Thread implements PDUListener {
 
                         log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', connection_name '"+connection_name+"', set id '"+message_id+"'.");
 
-                        Provider provider = connection_provider_table.get(connection_name);
+                        Provider provider = ConfigurationManager.getInstance().getProvider(connection_name);
                         log.debug("This connection name corresponds to the provider with name '"+provider.getName()+"'.");
 
                         Address source_address = request.getSourceAddress();
@@ -400,7 +380,7 @@ public class Gateway extends Thread implements PDUListener {
 
                         log.debug("Handle pdu with type '"+pdu.getType()+"', sequence_number '"+sequence_number+"', connection_name '"+connection_name+"', set id '"+message_id+"'.");
 
-                        Provider provider = connection_provider_table.get(connection_name);
+                        Provider provider = ConfigurationManager.getInstance().getProvider(connection_name);
                         log.debug("This connection name corresponds to the provider with name '"+provider.getName()+"'.");
 
                         Address source_address = request.getSourceAddress();

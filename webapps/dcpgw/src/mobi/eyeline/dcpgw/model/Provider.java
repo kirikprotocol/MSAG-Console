@@ -1,6 +1,5 @@
-package mobi.eyeline.dcpgw;
+package mobi.eyeline.dcpgw.model;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Vector;

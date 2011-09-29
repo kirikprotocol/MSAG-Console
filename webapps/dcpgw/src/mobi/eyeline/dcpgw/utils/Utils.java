@@ -1,4 +1,4 @@
-package mobi.eyeline.dcpgw;
+package mobi.eyeline.dcpgw.utils;
 
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import org.apache.log4j.Logger;

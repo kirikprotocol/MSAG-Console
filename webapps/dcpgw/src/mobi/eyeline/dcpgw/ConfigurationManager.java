@@ -1,5 +1,8 @@
 package mobi.eyeline.dcpgw;
 
+import mobi.eyeline.dcpgw.model.Delivery;
+import mobi.eyeline.dcpgw.model.Provider;
+import mobi.eyeline.dcpgw.utils.Utils;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigParam;
@@ -12,6 +15,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,18 +27,61 @@ public class ConfigurationManager {
 
     private static Logger log = Logger.getLogger(ConfigurationManager.class);
 
-    private String smpp_server_config_file;
+    private static ConfigurationManager instance = new ConfigurationManager();
+
+    private String config;
     private String deliveries_file;
+
+    private Properties properties;
+    private Hashtable<String, String> informer_user_password_table;
+    private Hashtable<String, Provider> connection_provider_table;
 
     public static final String CONNECTION_PREFIX = "smpp.sme.";
 
-    public ConfigurationManager(String smpp_server_config_file){
-        this.smpp_server_config_file = smpp_server_config_file;
+    public static ConfigurationManager getInstance(){
+        return instance;
     }
 
-    public Properties loadSmppConfigurations() throws IOException, XmlConfigException {
+    public ConfigurationManager(){
+
+    }
+
+    public void init(String config) throws IOException, XmlConfigException {
+        this.config = config;
+        connection_provider_table = loadProviders();
+        informer_user_password_table = loadInformerUsers();
+        properties = loadSmppConfigurations();
+    }
+
+    public void update() throws IOException, XmlConfigException {
+        Hashtable<String, Provider> connection_provider_temp_table = loadProviders();
+        Hashtable<String, String> informer_user_password_temp_table = loadInformerUsers();
+        Properties properties_temp = loadSmppConfigurations();
+
+        connection_provider_table = connection_provider_temp_table;
+        informer_user_password_table = informer_user_password_temp_table;
+        properties = properties_temp;
+    }
+
+    public Properties getProperties(){
+        return properties;
+    }
+
+    public Provider getProvider(String connection_name){
+        return connection_provider_table.get(connection_name);
+    }
+
+    public Set<String> getInformerUsers(){
+        return informer_user_password_table.keySet();
+    }
+
+    public String getInformerUserPassword(String user){
+        return informer_user_password_table.get(user);
+    }
+
+    private Properties loadSmppConfigurations() throws IOException, XmlConfigException {
         Properties properties = new Properties();
-        properties.load(new FileInputStream(smpp_server_config_file));
+        properties.load(new FileInputStream(config));
         String user_dir = System.getProperty("user.dir");
 
         String smpp_endpoints_file = Utils.getProperty(properties, "users.file", user_dir + File.separator + "conf" + File.separator + "endpoints.xml");
@@ -49,7 +96,7 @@ public class ConfigurationManager {
             String endpoint_name = s.getName();
 
             XmlConfigParam p = s.getParam("enabled");
-            if (p == null || p.getBool()) {
+            if (p.getBool()) {
                 p = s.getParam("systemId");
                 String systemId = p.getString();
 
@@ -65,7 +112,7 @@ public class ConfigurationManager {
         return properties;
     }
 
-    public Hashtable<String, String> loadUsers() throws XmlConfigException {
+    private Hashtable<String, String> loadInformerUsers() throws XmlConfigException {
         log.debug("Try to load users ...");
         Hashtable<String, String> t = new Hashtable<String, String>();
 
@@ -85,9 +132,9 @@ public class ConfigurationManager {
         return t;
     }
 
-    public Hashtable<String, Provider> loadProviders() throws XmlConfigException {
+    private Hashtable<String, Provider> loadProviders() throws XmlConfigException {
         log.debug("Try to load providers ...");
-        Hashtable<String, Provider> t = new Hashtable<String, Provider>();
+        Hashtable<String, Provider> result = new Hashtable<String, Provider>();
 
         XmlConfig xmlConfig = new XmlConfig();
         xmlConfig.load(new File(deliveries_file));
@@ -132,12 +179,12 @@ public class ConfigurationManager {
                 log.debug("Load " + delivery.toString());
             }
 
-            for (String endpoint_id : endpoint_ids) t.put(endpoint_id, provider);
+            for (String endpoint_id : endpoint_ids) result.put(endpoint_id, provider);
 
             log.debug("Load " + provider.toString());
         }
         log.debug("Providers loaded.");
-        return t;
+        return result;
     }
 
 }

@@ -1,5 +1,6 @@
 package mobi.eyeline.dcpgw.dcp;
 
+import mobi.eyeline.dcpgw.ConfigurationManager;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
@@ -22,9 +23,9 @@ public class DcpConnectionImpl implements DcpConnection{
     private DcpClient client;
     private String user;
 
-    public DcpConnectionImpl(String host, int port, final String user, String password) throws AdminException {
+    public DcpConnectionImpl(String host, int port, final String user) throws AdminException {
         this.user = user;
-        this.client = new DcpClient(host, port, user, password);
+        this.client = new DcpClient(host, port, user, ConfigurationManager.getInstance().getInformerUserPassword(user));
     }
 
     public void close() {

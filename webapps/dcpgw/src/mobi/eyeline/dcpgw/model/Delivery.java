@@ -1,4 +1,4 @@
-package mobi.eyeline.dcpgw;
+package mobi.eyeline.dcpgw.model;
 
 import java.util.Arrays;
 

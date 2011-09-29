@@ -268,10 +268,12 @@ public class Sender extends Thread{
                     log.debug("Sender for connection "+connection+" wait.");
                     wait();
                 } catch (InterruptedException e) {
-                    log.error(e);
+                    log.debug(e);
+                    break;
                 }
             }
         }
+        connection.close();
         log.debug("Sender for connection "+connection+" finished work.");
     }
 

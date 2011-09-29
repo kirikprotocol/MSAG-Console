@@ -1,9 +1,9 @@
 package test;
 
-import mobi.eyeline.dcpgw.Client;
+//import mobi.eyeline.dcpgw.Client;
 import mobi.eyeline.dcpgw.FinalMessageState;
 import mobi.eyeline.dcpgw.Gateway;
-import mobi.eyeline.dcpgw.Provider;
+import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.journal.Status;
@@ -146,7 +146,7 @@ public abstract class T {
         };
     }
 
-    public static Gateway createGateway() throws InitializationException, SmppException {
+    /*public static Gateway createGateway() throws InitializationException, SmppException {
         Properties properties = new Properties();
         properties.setProperty("smpp.lastActivityTimeout","300000");
         properties.setProperty("smpp.inactivityTimeout","60000");
@@ -169,7 +169,7 @@ public abstract class T {
         Hashtable<String, String> user_password_table = new Hashtable<String, String>();
         Hashtable<String, Provider> connection_provider_table = new Hashtable<String, Provider>();
 
-        Gateway gateway = new Gateway(properties, user_password_table, connection_provider_table);
+        Gateway gateway = new Gateway();
 
         return gateway;
     }
@@ -187,7 +187,7 @@ public abstract class T {
         properties.setProperty("smpp.connector.con1.interfaceVersion","v50");
 
         return new Client(properties);
-    }
+    }*/
 
 
 }
