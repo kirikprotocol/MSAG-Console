@@ -3626,7 +3626,7 @@ USHORT_T Et96MapDelimiterInd(
           addrPtr=GetScAddr();
           char addrBuf[32];
           SS7ToText(addrPtr,addrBuf);
-          __map_trace2__("using real resp addr for openresp:%s",dialog->subsystem.c_str(),addrBuf);
+          __map_trace2__("using real resp addr for openresp:%s",addrBuf);
         }
         checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,addrPtr,0,0), __func__);
         checkMapReq( Et96MapDelimiterReq(dialog->ssn INSTDLGARG(dialog),dialogueId,0,0), __func__);
