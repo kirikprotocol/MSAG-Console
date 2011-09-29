@@ -80,14 +80,9 @@ public class Gateway extends Thread implements PDUListener {
     private static Calendar cal = Calendar.getInstance();
     private static AtomicInteger ai = new AtomicInteger(0);
 
-    private static int capacity;
 
-    private static long sending_timeout;
 
     private static Hashtable<String, Sender> user_sender_table;
-
-    private static String informer_host;
-    private static int informer_port;
 
     private ConfigurationManager cm = ConfigurationManager.getInstance();
 
@@ -108,56 +103,16 @@ public class Gateway extends Thread implements PDUListener {
     public Gateway(String config_file) throws InitializationException, SmppException, IOException, XmlConfigException {
         log.debug("Try to initialize gateway ...");
         Runtime.getRuntime().addShutdownHook(this);
+
         cm.init(config_file);
-        Properties config = cm.getProperties();
-
-        String s = config.getProperty("informer.host");
-        if (s != null && !s.isEmpty()){
-            informer_host = s;
-            log.debug("Set informer host: "+ informer_host);
-        } else {
-            log.error("informer.host property is invalid or not specified in config");
-            throw new InitializationException("informer.host property is invalid or not specified in config");
-        }
-
-        s = config.getProperty("informer.port");
-        if (s != null && !s.isEmpty()){
-            informer_port = Integer.parseInt(s);
-            log.debug("Set informer port: "+ informer_port);
-        } else {
-            log.error("informer.port property is invalid or not specified in config");
-            throw new InitializationException("informer.port property is invalid or not specified in config");
-        }
-
-        s = config.getProperty("informer.messages.list.capacity");
-        if (s != null && !s.isEmpty()){
-            capacity = Integer.parseInt(s);
-            log.debug("Configuration property: informer.messages.list.capacity="+capacity);
-        } else {
-            log.error("Configuration property 'informer.messages.list.capacity' is invalid or not specified in config");
-            throw new InitializationException("Configuration property 'informer.messages.list.capacity' is invalid or not specified in config");
-        }
-
-        s = config.getProperty("sending.timeout.mls");
-        if (s != null && !s.isEmpty()){
-            sending_timeout = Integer.parseInt(s);
-            log.debug("Configuration property: sending.timeout.mls="+sending_timeout);
-        } else {
-            log.error("Configuration property 'sending.timeout.mls' is invalid or not specified in config");
-            throw new InitializationException("Configuration property 'sending.timeout.mls' is invalid or not specified in config");
-        }
+        Properties config = cm.getConfig();
 
         user_sender_table = new Hashtable<String, Sender>();
 
-        String update_config_server_host = config.getProperty("update.config.server.host");
-
-        s = Utils.getProperty(config, "update.config.server.port");
-        int update_config_server_port = Integer.parseInt(s);
-
         try {
-            new UpdateConfigServer(update_config_server_host, update_config_server_port);
+            new UpdateConfigServer(cm.getUpdateServerHost(), cm.getUpdateServerPort());
         } catch (IOException e) {
-            log.error("Couldn't initialize update config server socket with host '" + update_config_server_host + "' and port '" + update_config_server_port + "'. ", e);
+            log.error("Couldn't initialize update server.", e);
             throw new InitializationException(e);
         }
 
@@ -179,9 +134,7 @@ public class Gateway extends Thread implements PDUListener {
 
         for(String user : cm.getInformerUsers()){
             try {
-                DcpConnection dcpConnection =
-                        new DcpConnectionImpl(informer_host, informer_port, user);
-                Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
+                Sender sender = new Sender(user);
                 sender.setSmppServer(smppServer);
                 sender.start();
                 user_sender_table.put(user, sender);
@@ -238,13 +191,6 @@ public class Gateway extends Thread implements PDUListener {
         log.debug("Gateway initialized.");
     }
 
-    public void setDcpConnection(String user, DcpConnection dcpConnection){
-        Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
-        user_sender_table.put(user, sender);
-    }
-
-
-
     private synchronized void updateConfiguration() throws XmlConfigException, IOException, SmppException, AdminException {
         log.debug("Try to update configuration ...");
 
@@ -253,15 +199,13 @@ public class Gateway extends Thread implements PDUListener {
         cm.update();
 
         // Update smpp connections
-        smppServer.update(cm.getProperties());
+        smppServer.update(cm.getConfig());
         Set<String> new_informer_users = cm.getInformerUsers();
 
         // Add new dcp connections
         for(String new_user: new_informer_users){
             if (!old_informer_users.contains(new_user)){
-                DcpConnection dcpConnection = new DcpConnectionImpl(informer_host, informer_port, new_user);
-
-                Sender sender = new Sender(dcpConnection, capacity, sending_timeout);
+                Sender sender = new Sender(new_user);
                 sender.setSmppServer(smppServer);
                 sender.start();
                 user_sender_table.put(new_user,sender);
