@@ -42,11 +42,22 @@ public class CPResourceController extends InformerController{
     return ret;
   }
 
+//  public List<SelectItem> getWorkTypes() {
+//    WorkType[] workTypes = WorkType.values();
+//    List<SelectItem> ret = new ArrayList<SelectItem>(workTypes.length);
+//    for(WorkType p : workTypes) {
+//        ret.add(new SelectItem(p, getLocalizedString("cp.resource.workType." + p.toString())));
+//    }
+//    return ret;
+//  }
+
   public List<SelectItem> getWorkTypes() {
-    WorkType[] workTypes = WorkType.values();
+    UserCPsettings.WorkType[] workTypes = UserCPsettings.WorkType.values();
     List<SelectItem> ret = new ArrayList<SelectItem>(workTypes.length);
-    for(WorkType p : workTypes) {
+    for(UserCPsettings.WorkType p : workTypes) {
+      if(p != UserCPsettings.WorkType.detailed_period) {
         ret.add(new SelectItem(p, getLocalizedString("cp.resource.workType." + p.toString())));
+      }
     }
     return ret;
   }
@@ -56,7 +67,7 @@ public class CPResourceController extends InformerController{
   }
 
 
-  public static enum WorkType {
-    simple, detailed
-  }
+//  public static enum WorkType {
+//    simple, detailed
+//  }
 }
