@@ -60,6 +60,7 @@ void USSReqProcessor::wrkHandlePacket(const SPckUSSRequest & recv_pck) /*throw()
         smsc_log_debug(_logger, "%s: initiated %s", _logId, dlgId);
       } catch (const std::exception & ex) {
         smsc_log_error(_logger, "%s: MapUSSDlg exception %s", _logId, ex.what());
+        _mapDlg->unbindUser();
         _resPck._Cmd._status = interaction::USSResultMessage::reqFAILED;
         sendResult();
         doCleanUp();
