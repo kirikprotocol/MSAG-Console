@@ -220,8 +220,8 @@ public class DetailedPeriodSaveStrategyTest {
 
     File resourceFile = prepareResourceFile(false, 0, ".active", null);
     File localFile = prepareLocalFile(false, 0, ".finished", null);
-    File report = prepareLocalFile(false, 0, ".20111213141516177.report.final", null);
-    File report1 = prepareLocalFile(false, 0, ".20111213141516179.report", null);
+    File report = prepareLocalFile(false, 1, ".20111213141516177.report.final", null);
+    File report1 = prepareLocalFile(false, 1, ".20111213141516179.report", null);
 
     createStrategy().synchronize(true);
 
@@ -244,7 +244,7 @@ public class DetailedPeriodSaveStrategyTest {
   }
 
   @Test
-  public void testCreate() throws Exception {  //проверяет, что рассылка создается, на ресурсе появляется первоначальный отчёт
+  public void testCreate() throws Exception {  //проверяет, что рассылка создается
     File file = prepareResourceFile(false, 10, null, null);
     assertTrue(fs.exists(file));
     DetailedPeriodSaveStrategy strategy = createStrategy();
@@ -264,18 +264,6 @@ public class DetailedPeriodSaveStrategyTest {
     }
 
     assertTrue(reportInfo);
-
-    boolean report = false;
-
-    for(File f : fs.listFiles(resourceDir)) {
-      String name = f.getName();
-      if(name.contains("report")) {
-        report = true;
-        break;
-      }
-    }
-
-    assertTrue(report);
   }
 
 
@@ -300,16 +288,6 @@ public class DetailedPeriodSaveStrategyTest {
 
     deliveryManager.forceModifyDeliveries(); // send 50 messages
 
-    int report = 0;
-
-    for(File f : fs.listFiles(resourceDir)) {
-      String name = f.getName();
-      if(name.contains("report")) {
-        report++;
-      }
-    }
-    assertEquals(1, report);
-
 
     for(int i=0;i<20;i++) {
       Thread.sleep(10);
@@ -323,7 +301,6 @@ public class DetailedPeriodSaveStrategyTest {
       String name = f.getName();
       System.out.println(name);
       if(name.contains("report")) {
-        report++;
         countMessages+=countLines(f);
       }
       if(name.contains("final"))  {
@@ -337,8 +314,6 @@ public class DetailedPeriodSaveStrategyTest {
     assertTrue("Delivery is not finished", _finished);
 
     assertTrue("Final report is not found", _final);
-
-    assertEquals(21, report);
 
     assertEquals(1000, countMessages);
 
