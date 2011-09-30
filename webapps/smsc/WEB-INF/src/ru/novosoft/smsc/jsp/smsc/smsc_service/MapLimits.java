@@ -42,6 +42,8 @@ public class MapLimits extends SmscBean {
   private String ussdParseNever;
   private String ussdDefaultParsingMode;
 
+  private boolean smsOpenRespRealAddr;
+
   private Level[] levels = new Level[9];
 
 
@@ -86,6 +88,7 @@ public class MapLimits extends SmscBean {
     ussdParseNever = getString("ussd.parseNever",config);
     ussdDefaultParsingMode = getString("ussd.defaultParsingMode",config);
 
+    smsOpenRespRealAddr = getBool("sms.openRespRealAddr", config);
     for(int i=1;i<=8;i++) {
       Level l = new Level(i);
       l.setDialogsLimit(getInt("clevels.level"+i+".dialogsLimit", config));
@@ -125,6 +128,17 @@ public class MapLimits extends SmscBean {
     } catch (Config.WrongParamTypeException e) {
       logger.error("parameter \"" + param + "\" is not string.");
       return null;
+    }
+  }
+
+  private boolean getBool(String param, Config c) {
+    try {
+      return c.getBool(param);
+    } catch (Config.ParamNotFoundException e) {
+      return false;
+    } catch (Config.WrongParamTypeException e) {
+      logger.error("parameter \"" + param + "\" is not bool.");
+      return false;
     }
   }
 
@@ -175,6 +189,7 @@ public class MapLimits extends SmscBean {
       c.setString("ussd.defaultParsingMode", ussdDefaultParsingMode);
     }
 
+    c.setBool("sms.openRespRealAddr", smsOpenRespRealAddr);
 
     for(int i=1;i<=8;i++) {
       Level l = levels[i];
@@ -340,6 +355,14 @@ public class MapLimits extends SmscBean {
     this.ussdDefaultParsingMode = trim(ussdDefaultParsingMode);
   }
 
+  public boolean isSmsOpenRespRealAddr() {
+    return smsOpenRespRealAddr;
+  }
+
+  public void setSmsOpenRespRealAddr(boolean smsOpenRespRealAddr) {
+    this.smsOpenRespRealAddr = smsOpenRespRealAddr;
+  }
+
   public Level[] getLevels() {
     return levels;
   }
@@ -441,6 +464,8 @@ public class MapLimits extends SmscBean {
     private void setOkToLower(int okToLower) {
       this.okToLower = okToLower;
     }
+
+
 
     private void load(HttpServletRequest request) {
       String s = null;

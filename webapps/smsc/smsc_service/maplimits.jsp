@@ -68,7 +68,7 @@
     startSection(out, "sms", "maplimits.sms", true);
     startParams(out);
 
-    param(out, "maplimits.sms.openRespRealAddr", "sms.openRespRealAddr", bean.getBoolParam("sms.openRespRealAddr"));
+    param(out, "maplimits.sms.openRespRealAddr", "sms.openRespRealAddr", bean.isSmsOpenRespRealAddr());
     finishParams(out);
     finishSection(out);
 
