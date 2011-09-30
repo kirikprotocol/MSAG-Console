@@ -1094,6 +1094,7 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
+  time_t now=time(NULL);
 
   if(sms->getValidTime()==-1)
   {
@@ -1105,6 +1106,13 @@ StateType StateMachine::submit(Tuple& t)
       c.src_proxy->getSystemId()
     );
     return ERROR_STATE;
+  }
+
+  if((sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime) && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
+     (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)!=0x2)
+  {
+    sms->setValidTime(now+maxValidTime);
+    debug2(smsLog,"maxValidTime=%d",maxValidTime);
   }
 
   if(c.src_proxy->getSourceAddressRange().length() &&
@@ -1145,7 +1153,6 @@ StateType StateMachine::submit(Tuple& t)
   }
 
 
-  time_t now=time(NULL);
   sms->setSubmitTime(now);
 
   // route sms
@@ -1894,12 +1901,6 @@ StateType StateMachine::submit(Tuple& t)
   int pres=psSingle;
 
 
-  if((sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime) && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
-     (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)!=0x2)
-  {
-    sms->setValidTime(now+maxValidTime);
-    debug2(smsLog,"maxValidTime=%d",maxValidTime);
-  }
 
   debug2(smsLog,"Valid time for sms Id=%lld:%u",t.msgId,(unsigned int)sms->getValidTime());
 
