@@ -686,3 +686,9 @@ B3214: Aug 24, 2011
     INMan/USSMan fix for tcp server accept file descriptors update for select
     INMan/USSMan fix for pure virtual call on destruction of pooled objects
     SMPPBase	fixed signalling to locker that already deleted from timeouts list
+
+B3215: Sep 30, 2011
+    SMSC	Fix for OpenResp call and NO_REASON in MAP
+    INMan	Fix for workers exhausting
+    INMan	Fix for possible memory corruption
+    USSMan/INMan Fix for collision level logic rehashing  
