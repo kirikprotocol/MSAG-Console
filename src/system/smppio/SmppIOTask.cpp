@@ -896,6 +896,24 @@ int SmppInputThread::Execute()
                 }
               }break;
               case SmppCommandSet::SUBMIT_SM:
+              {
+                PduSubmitSm* sbm=(PduSubmitSm*)pdu;
+                if(sbm->get_message().get_smLength()==255)
+                {
+                  SmscCommand answer=SmscCommand::makeSubmitSmResp
+                         (
+                           "",
+                           pdu->get_sequenceNumber(),
+                           Status::INVPARLEN,
+                           false
+                         );
+                  if(ss->getProxy())
+                  {
+                    ss->getProxy()->putCommand(answer);
+                  }
+                  break;
+                }
+              }//no break on purpose!!!
               //case SmppCommandSet::SUBMIT_SM_RESP:
               //case SmppCommandSet::DELIVERY_SM:
               case SmppCommandSet::DELIVERY_SM_RESP:
@@ -1004,7 +1022,7 @@ int SmppInputThread::Execute()
                 //
                 // ��� ��� � ��������, ����� �� ������ ���� break!
                 //
-              }
+              }// no break on purpose!
               default:
               {
                 if(!ss->getProxy() || !ss->getProxy()->isOpened())
