@@ -70,28 +70,19 @@
           <eye:collapsingGroup label="#{msg['cp.resource.import.settings']}" opened="true">
 
             <h:panelGrid style="padding-top: 5px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
-              <!--<h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.workType']}"/>-->
-              <!--<h:selectOneMenu id="workType" value="#{cpSftpEdit.workType}" onchange="typeChanged()">-->
-                <!--<f:selectItems value="#{cpSftpEdit.workTypes}"/>-->
-              <!--</h:selectOneMenu>-->
-
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.workType']}"/>
-              <h:selectOneMenu id="workType" value="#{cpSftpEdit.settings.workType}" onchange="typeChanged()">
+              <h:selectOneMenu id="workType" value="#{cpSftpEdit.workType}" onchange="typeChanged()">
                 <f:selectItems value="#{cpSftpEdit.workTypes}"/>
               </h:selectOneMenu>
 
-              <!--<h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.exportReports}"/>-->
-              <!--<h:selectOneMenu id="reportType" value="#{cpSftpEdit.reportType}"  onchange="reportChanged()">-->
-                <!--<f:selectItems value="#{cpSftpEdit.reportTypes}"/>-->
-              <!--</h:selectOneMenu>-->
 
-              <h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.createReports}"/>
-              <h:selectBooleanCheckbox id="createReports" value="#{cpSftpEdit.settings.createReports}"/>
+              <h:outputText style="white-space:nowrap;" id="createReportsLabel" value="#{userBundle.exportReports}"/>
+              <h:selectOneMenu id="reportType" value="#{cpSftpEdit.reportType}"  onchange="reportChanged()">
+                <f:selectItems value="#{cpSftpEdit.reportTypes}"/>
+              </h:selectOneMenu>
 
-
-              <!--<h:outputText style="white-space: nowrap;" value="#{msg['user.edit.import.reportTimeout']}" id="reportTimeoutLabel"/>-->
-              <!--<h:inputText converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.reportTimeout']}" value="#{cpSftpEdit.reportTimeout}" id="reportTimeout"/>-->
-
+              <h:outputText style="white-space: nowrap;" value="#{msg['user.edit.import.reportTimeout']}" id="reportTimeoutLabel"/>
+              <h:inputText converterMessage="#{msg['invalid_param_value']} #{msg['user.edit.import.reportTimeout']}" value="#{cpSftpEdit.reportTimeout}" id="reportTimeout"/>
 
               <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.encoding']}"/>
               <h:selectOneMenu value="#{cpSftpEdit.settings.encoding}">
@@ -158,41 +149,29 @@
 
       <script type="text/javascript" language="javascript">
 
-//        function typeChanged() {
-//          var dt = document.getElementById('workType');
-//          var disp = dt.options[0].selected ? 'none' : '';
-//          var e = document.getElementById('reportType');
-//          if(disp == 'none') {
-//            e.checked=false;
-//            document.getElementById('reportTimeout').style.display = 'none';
-//            document.getElementById('reportTimeoutLabel').style.display = 'none';
-//          }
-//          e.style.display = disp;
-//          document.getElementById('createReportsLabel').style.display = disp;
-//        }
-//
-//        function reportChanged() {
-//          var dt = document.getElementById('reportType');
-//          var disp = dt.options[2].selected ? '' : 'none';
-//          var e = document.getElementById('reportTimeout');
-//          e.style.display = disp;
-//          document.getElementById('reportTimeoutLabel').style.display = disp;
-//        }
-//
-//        typeChanged();
-//        reportChanged();
         function typeChanged() {
           var dt = document.getElementById('workType');
           var disp = dt.options[0].selected ? 'none' : '';
-          var e = document.getElementById('createReports');
+          var e = document.getElementById('reportType');
           if(disp == 'none') {
             e.checked=false;
+            document.getElementById('reportTimeout').style.display = 'none';
+            document.getElementById('reportTimeoutLabel').style.display = 'none';
           }
           e.style.display = disp;
           document.getElementById('createReportsLabel').style.display = disp;
         }
 
+        function reportChanged() {
+          var dt = document.getElementById('reportType');
+          var disp = dt.options[2].selected ? '' : 'none';
+          var e = document.getElementById('reportTimeout');
+          e.style.display = disp;
+          document.getElementById('reportTimeoutLabel').style.display = disp;
+        }
+
         typeChanged();
+        reportChanged();
 
       </script>
 
