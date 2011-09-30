@@ -158,7 +158,7 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
     List<File> fs = getReportFiles(localCsvFile);
     Collections.sort(fs);
     for(File f : fs) {
-      if(!remoteFiles.contains(f.getName())) {
+      if(!remoteFiles.contains(f.getName()) && !helper.isEmpty(f)) {
         helper.uploadFileToResource(resource, f, remoteFiles);
       }
       helper.delete(f);

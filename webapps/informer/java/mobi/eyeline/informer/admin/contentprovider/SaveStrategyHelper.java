@@ -263,6 +263,10 @@ class SaveStrategyHelper {
     fileSys.createNewFile(file);
   }
 
+  boolean isEmpty(File file) throws AdminException {
+    return fileSys.length(file) == 0;
+  }
+
   boolean exists(File file) throws AdminException {
     return fileSys.exists(file);
   }
