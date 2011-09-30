@@ -3383,7 +3383,7 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
         dialog->state = MAPST_ABORTED;
         __require__(dialog->ssn==localSsn);
       }
-      checkMapReq( Et96MapOpenResp(localSsn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+      checkMapReq( Et96MapOpenResp(localSsn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,0,0,0), __func__);
     }
     ET96MAP_ERROR_FORW_SM_MO_T moResp;
     memset( &moResp, 0, sizeof(ET96MAP_ERROR_FORW_SM_MO_T) );
@@ -3624,17 +3624,20 @@ USHORT_T Et96MapDelimiterInd(
         if(ml.isSmsOpenRespRealAddr())
         {
           addrPtr=GetScAddr();
-          char addrBuf[32];
-          SS7ToText(addrPtr,addrBuf);
-          __map_trace2__("using real resp addr for openresp:%s",addrBuf);
+          if(smsc::logger::_map_cat->isDebugEnabled())
+          {
+            char addrBuf[32];
+            SS7ToText(addrPtr,addrBuf);
+            __map_trace2__("using real resp addr for openresp:%s",addrBuf);
+          }
         }
-        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,addrPtr,0,0), __func__);
+        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,addrPtr,0,0), __func__);
         checkMapReq( Et96MapDelimiterReq(dialog->ssn INSTDLGARG(dialog),dialogueId,0,0), __func__);
         open_confirmed = true;
       }break;
       case MAPST_WaitSmsMODelimiter2:
         reason = ET96MAP_NO_REASON;
-        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,0,0,0), __func__);
         dialog->state = MAPST_WaitImsiReq;
         PauseOnImsiReq(dialog.get());
         break;
@@ -3646,11 +3649,14 @@ USHORT_T Et96MapDelimiterInd(
         if(ml.isOpenRespRealAddr(dialog->subsystem))
         {
           addrPtr=GetUSSDAddr();
-          char addrBuf[32];
-          SS7ToText(addrPtr,addrBuf);
-          __map_trace2__("using real resp addr for ussd code %s:%s",dialog->subsystem.c_str(),addrBuf);
+          if(smsc::logger::_map_cat->isDebugEnabled())
+          {
+            char addrBuf[32];
+            SS7ToText(addrPtr,addrBuf);
+            __map_trace2__("using real resp addr for ussd code %s:%s",dialog->subsystem.c_str(),addrBuf);
+          }
         }
-        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,addrPtr,0,0), __func__);
+        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,addrPtr,0,0), __func__);
         __map_trace2__("subsystem=%s",dialog->subsystem.c_str());
         if(ml.isNoSRIUssd(dialog->subsystem) ||
             ((!dialog->s_imsi.empty() && !dialog->s_msc.empty()) && ml.isCondSRIUssd(dialog->subsystem))
@@ -3670,7 +3676,7 @@ USHORT_T Et96MapDelimiterInd(
       }break;
       case MAPST_WaitUssdV1Delimiter:
         reason = ET96MAP_NO_REASON;
-        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,0,0,0), __func__);
         if( MapDialogContainer::getUssdV1UseOrigEntityNumber() ) {
           dialog->state = MAPST_WaitUssdImsiReq;
           PauseOnImsiReq(dialog.get());
@@ -3732,7 +3738,7 @@ USHORT_T Et96MapDelimiterInd(
         break;
       case MAPST_MapNoticed:
         reason = ET96MAP_NO_REASON;
-        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,0,0,0), __func__);
         checkMapReq( Et96MapCloseReq (dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
         dialog->state = MAPST_END;
         DropMapDialog(dialog.get());
@@ -4388,7 +4394,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 static void ResponseAlertSC(MapDialog* dialog)
 {
   ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-  checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialog->dialogid_map,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+  checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialog->dialogid_map,ET96MAP_RESULT_OK,0,0,0,0), __func__);
   if ( dialog->version == 2 ){
     checkMapReq( Et96MapV2AlertSCResp(dialog->ssn INSTDLGARG(dialog),dialog->dialogid_map,dialog->invokeId,0), __func__);
   }else if ( dialog->version == 1 ){
