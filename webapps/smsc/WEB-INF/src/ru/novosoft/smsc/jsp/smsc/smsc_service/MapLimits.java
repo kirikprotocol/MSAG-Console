@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.jsp.smsc.smsc_service;
 
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -9,7 +10,6 @@ import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
 
 /**
  * User: artem
@@ -18,9 +18,32 @@ import java.util.*;
 
 public class MapLimits extends SmscBean {
 
+  private static final Category logger = Category.getInstance(MapLimits.class);
+
   private String mbSave = null;
   private String mbReset = null;
-  private Map params = new HashMap();
+
+  private String init;
+
+  private String errorStr;
+
+  private int dlglimitIn;
+  private int dlglimitInsri;
+  private int dlglimitUssd;
+  private int dlglimitOutSri;
+  private int dlglimitNiussd;
+
+  private String ussdNo_sri_codes;
+  private String ussdCond_sri_codes;
+  private String ussdAti_codes;
+  private String ussdOpenRespRealAddr;
+  private String ussdParseAlways;
+  private String ussdParseOnlyStar;
+  private String ussdParseNever;
+  private String ussdDefaultParsingMode;
+
+  private Level[] levels = new Level[9];
+
 
   public int process(HttpServletRequest request)
   {
@@ -28,37 +51,141 @@ public class MapLimits extends SmscBean {
     if (result != RESULT_OK)
       return result;
 
-    result = processParams(appContext, request) ;
-    if (result != RESULT_OK) {
-      return result;
+    if(init == null || init.length() == 0 || mbReset != null) {
+      result = load();
+      if (result != RESULT_OK)
+        return result;
+    }else {
+      processLevels(request);
     }
 
     if (mbSave != null)
-      return processApply(appContext);
-    else if (mbReset != null)
-      return processReset(appContext);
+      return save(appContext);
     else
       return RESULT_OK;
   }
 
-  private int processApply(SMSCAppContext appContext)
-  {
+  public int load() {
     Config config = appContext.getSmsc().getMapLimitsConfig();
     if (config == null)
       return error(SMSCErrors.error.smsc.couldntGetConfig);
 
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String name = (String) i.next();
-      Object value = params.get(name);
-      if (value instanceof Boolean)
-        config.setBool(name, ((Boolean) value).booleanValue());
-      else if (value instanceof Integer)
-        config.setInt(name, ((Integer) value).intValue());
-      else
-        config.setString(name, (String) value);
+    dlglimitIn = getInt("dlglimit.in", config);
+    dlglimitInsri = getInt("dlglimit.insri", config);
+    dlglimitUssd = getInt("dlglimit.ussd", config);
+    dlglimitOutSri = getInt("dlglimit.outsri", config);
+    dlglimitNiussd = getInt("dlglimit.niussd", config);
+
+
+    ussdNo_sri_codes = getString("ussd.no_sri_codes",config);
+    ussdCond_sri_codes = getString("ussd.cond_sri_codes",config);
+    ussdAti_codes = getString("ussd.ati_codes",config);
+    ussdOpenRespRealAddr = getString("ussd.openRespRealAddr",config);
+    ussdParseAlways = getString("ussd.parseAlways",config);
+    ussdParseOnlyStar = getString("ussd.parseOnlyStar",config);
+    ussdParseNever = getString("ussd.parseNever",config);
+    ussdDefaultParsingMode = getString("ussd.defaultParsingMode",config);
+
+    for(int i=1;i<=8;i++) {
+      Level l = new Level(i);
+      l.setDialogsLimit(getInt("clevels.level"+i+".dialogsLimit", config));
+      l.setFailLowerLimit(getInt("clevels.level" + i + ".failLowerLimit", config));
+      l.setFailUpperLimit(getInt("clevels.level" + i + ".failUpperLimit", config));
+      l.setOkToLower(getInt("clevels.level"+i+".okToLower", config));
+      levels[i] = l;
     }
+
+    return RESULT_OK;
+  }
+
+  private void processLevels(HttpServletRequest request) {
+    for(int i=1;i<=8;i++) {
+      Level l = new Level(i);
+      l.load(request);
+      levels[i] = l;
+    }
+  }
+
+  private int getInt(String param, Config c) {
     try {
-      appContext.getSmsc().saveMapLimitsConfig(config);
+      return c.getInt(param);
+    } catch (Config.ParamNotFoundException e) {
+      return 0;
+    } catch (Config.WrongParamTypeException e) {
+      logger.error("parameter \"" + param + "\" is not integer.");
+      return -1;
+    }
+  }
+
+  private String getString(String param, Config c) {
+    try {
+      return c.getString(param);
+    } catch (Config.ParamNotFoundException e) {
+      return "";
+    } catch (Config.WrongParamTypeException e) {
+      logger.error("parameter \"" + param + "\" is not string.");
+      return null;
+    }
+  }
+
+  public String getInit() {
+    return init;
+  }
+
+  public void setInit(String init) {
+    this.init = init;
+  }
+
+  private int save(SMSCAppContext appContext) {
+    if(errorStr != null) {
+      return error(errorStr);
+    }
+    Config c = appContext.getSmsc().getMapLimitsConfig();
+    if (c == null)
+      return error(SMSCErrors.error.smsc.couldntGetConfig);
+
+    c.setInt("dlglimit.in", dlglimitIn);
+    c.setInt("dlglimit.insri", dlglimitInsri);
+    c.setInt("dlglimit.ussd", dlglimitUssd);
+    c.setInt("dlglimit.outsri", dlglimitOutSri);
+    c.setInt("dlglimit.niussd", dlglimitNiussd);
+
+    if(ussdNo_sri_codes != null) {
+      c.setString("ussd.no_sri_codes", ussdNo_sri_codes);
+    }
+    if(ussdCond_sri_codes != null) {
+      c.setString("ussd.cond_sri_codes", ussdCond_sri_codes);
+    }
+    if(ussdAti_codes != null) {
+      c.setString("ussd.ati_codes", ussdAti_codes);
+    }
+    if(ussdOpenRespRealAddr != null) {
+      c.setString("ussd.openRespRealAddr", ussdOpenRespRealAddr);
+    }
+    if(ussdParseAlways != null) {
+      c.setString("ussd.parseAlways", ussdParseAlways);
+    }
+    if(ussdParseOnlyStar != null) {
+      c.setString("ussd.parseOnlyStar", ussdParseOnlyStar);
+    }
+    if(ussdParseNever != null) {
+      c.setString("ussd.parseNever", ussdParseNever);
+    }
+    if(ussdDefaultParsingMode != null) {
+      c.setString("ussd.defaultParsingMode", ussdDefaultParsingMode);
+    }
+
+
+    for(int i=1;i<=8;i++) {
+      Level l = levels[i];
+      c.setInt("clevels.level"+i+".dialogsLimit", l.getDialogsLimit());
+      c.setInt("clevels.level" + i + ".failLowerLimit", l.getFailLowerLimit());
+      c.setInt("clevels.level" + i + ".failUpperLimit", l.getFailUpperLimit());
+      c.setInt("clevels.level"+i+".okToLower", l.getOkToLower());
+    }
+
+    try {
+      appContext.getSmsc().saveMapLimitsConfig(c);
       journalAppend(SubjectTypes.TYPE_maplimits, null, Actions.ACTION_MODIFY);
     } catch (AdminException e) {
       logger.error("Couldn't save MAP limits config", e);
@@ -74,126 +201,151 @@ public class MapLimits extends SmscBean {
     return RESULT_OK;
   }
 
-  private int processReset(SMSCAppContext appContext)
-  {
-    params.clear();
-    return loadParams(appContext);
+  public String getDlglimitIn() {
+    return Integer.toString(dlglimitIn);
   }
 
-  private int loadParams(SMSCAppContext appContext)
-  {
-    Config config = appContext.getSmsc().getMapLimitsConfig();
-    if (config == null)
-      return error(SMSCErrors.error.smsc.couldntGetConfig);
-
-    for (Iterator i = config.getParameterNames().iterator(); i.hasNext();) {
-      String name = (String) i.next();
-      params.put(name, config.getParameter(name));
-    }
-
-    return RESULT_OK;
-  }
-
-  private int processParams(SMSCAppContext appContext, HttpServletRequest request)
-  {
-    int result = RESULT_OK;
-    if (params.isEmpty())
-      loadParams(appContext);
-
-    boolean isRequestHaveParams = false;
-
-    Enumeration parameterNames = request.getParameterNames();
-    while (parameterNames.hasMoreElements()) {
-      String s = (String) parameterNames.nextElement();
-      if (s.indexOf('.') > 0) {
-        isRequestHaveParams = true;
-        Object oldValue = params.get(s);
-        final String parameter = request.getParameter(s);
-        if (oldValue != null) {
-          if (oldValue instanceof Integer) {
-            try {
-              if (parameter != null && parameter.trim().length() > 0) {
-                Integer value = Integer.decode(parameter.trim());
-                if (value.intValue() > 0)
-                  params.put(s, Integer.decode(parameter.trim()));
-                else
-                  throw new NumberFormatException();
-              } else
-                  throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-              logger.error("Invalid integer parameter: " + s + "=" + parameter);
-              result = error(SMSCErrors.error.smsc.invalidIntParameter, s);
-            }
-          }
-          else if (oldValue instanceof Boolean)
-            params.put(s, Boolean.valueOf(parameter));
-          else
-            params.put(s, parameter);
-        }
-        else {
-          try {
-            params.put(s, Integer.decode(parameter));
-          } catch (NumberFormatException e) {
-            if (parameter.equalsIgnoreCase("true"))
-              params.put(s, Boolean.TRUE);
-            else if (parameter.equalsIgnoreCase("false"))
-              params.put(s, Boolean.FALSE);
-            else
-              params.put(s, parameter);
-          }
-        }
+  public void setDlglimitIn(String dlglimitIn) {
+    if(dlglimitIn != null && (dlglimitIn = dlglimitIn.trim()).length()>0) {
+      try{
+        this.dlglimitIn = Integer.parseInt(dlglimitIn);
+      }catch (NumberFormatException e) {
+        errorStr = "Illegal integer parameter: "+dlglimitIn;
+        logger.error(e,e);
       }
     }
+  }
 
-    if (isRequestHaveParams) {
-      for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-        String paramName = (String) i.next();
-        Object value = params.get(paramName);
-        if (value instanceof Boolean) {
-          final String parameter = request.getParameter(paramName);
-          if (parameter != null)
-            params.put(paramName, Boolean.valueOf(parameter));
-        }
+  public String getDlglimitInsri() {
+    return Integer.toString(dlglimitInsri);
+  }
+
+  public void setDlglimitInsri(String dlglimitInsri) {
+    if(dlglimitInsri != null && (dlglimitInsri = dlglimitInsri.trim()).length()>0) {
+      try{
+        this.dlglimitInsri = Integer.parseInt(dlglimitInsri);
+      }catch (NumberFormatException e) {
+        errorStr = "Illegal integer parameter: "+dlglimitInsri;
+        logger.error(e,e);
       }
     }
-    return result;
   }
 
-  public int getIntParam(String paramName)
-  {
-    Object param = params.get(paramName);
-    if (param == null) {
-      logger.error("integer parameter \"" + paramName + "\" not found.");
-      return 0;
-    }
-    if (param instanceof Integer) {
-      return ((Integer) param).intValue();
-    }
-    else {
-      logger.error("parameter \"" + paramName + "\" is not integer.");
-      return -1;
+  public String getDlglimitUssd() {
+    return Integer.toString(dlglimitUssd);
+  }
+
+  public void setDlglimitUssd(String dlglimitUssd) {
+    if(dlglimitUssd != null && (dlglimitUssd = dlglimitUssd.trim()).length()>0) {
+      try{
+        this.dlglimitUssd = Integer.parseInt(dlglimitUssd);
+      }catch (NumberFormatException e) {
+        errorStr = "Illegal integer parameter: "+dlglimitUssd;
+        logger.error(e,e);
+      }
     }
   }
 
-  public void setIntParam(String paramName, int paramValue)
-  {
-    params.put(paramName, new Integer(paramValue));
+  public String getDlglimitOutSri() {
+    return Integer.toString(dlglimitOutSri);
   }
 
-  public String getStringParam(String paramName)
-  {
-    Object param = params.get(paramName);
-    if (param == null)
-      return "";
-    if (param instanceof String)
-      return (String) param;
-    else
-      return null;
+  public void setDlglimitOutSri(String dlglimitOutSri) {
+    if(dlglimitOutSri != null && (dlglimitOutSri = dlglimitOutSri.trim()).length()>0) {
+      try{
+        this.dlglimitOutSri = Integer.parseInt(dlglimitOutSri);
+      }catch (NumberFormatException e) {
+        errorStr = "Illegal integer parameter: "+dlglimitOutSri;
+        logger.error(e,e);
+      }
+    }
   }
 
-  public void setStringParam(String paramName, String paramValue)
-  {
-    params.put(paramName, paramValue);
+  public String getDlglimitNiussd() {
+    return Integer.toString(dlglimitNiussd);
+  }
+
+  public void setDlglimitNiussd(String dlglimitNiussd) {
+    if(dlglimitNiussd != null && (dlglimitNiussd = dlglimitNiussd.trim()).length()>0) {
+      try{
+        this.dlglimitNiussd = Integer.parseInt(dlglimitNiussd);
+      }catch (NumberFormatException e) {
+        errorStr = "Illegal integer parameter: "+dlglimitNiussd;
+        logger.error(e,e);
+      }
+    }
+  }
+
+  public String getUssdNo_sri_codes() {
+    return ussdNo_sri_codes;
+  }
+
+  public void setUssdNo_sri_codes(String ussdNo_sri_codes) {
+    this.ussdNo_sri_codes = trim(ussdNo_sri_codes);
+  }
+
+  public String getUssdCond_sri_codes() {
+    return ussdCond_sri_codes;
+  }
+
+  public void setUssdCond_sri_codes(String ussdCond_sri_codes) {
+    this.ussdCond_sri_codes = trim(ussdCond_sri_codes);
+  }
+
+  public String getUssdAti_codes() {
+    return ussdAti_codes;
+  }
+
+  public void setUssdAti_codes(String ussdAti_codes) {
+    this.ussdAti_codes = trim(ussdAti_codes);
+  }
+
+  public String getUssdOpenRespRealAddr() {
+    return ussdOpenRespRealAddr;
+  }
+
+  public void setUssdOpenRespRealAddr(String ussdOpenRespRealAddr) {
+    this.ussdOpenRespRealAddr = trim(ussdOpenRespRealAddr);
+  }
+
+  public String getUssdParseAlways() {
+    return ussdParseAlways;
+  }
+
+  public void setUssdParseAlways(String ussdParseAlways) {
+    this.ussdParseAlways = trim(ussdParseAlways);
+  }
+
+  public String getUssdParseOnlyStar() {
+    return ussdParseOnlyStar;
+  }
+
+  public void setUssdParseOnlyStar(String ussdParseOnlyStar) {
+    this.ussdParseOnlyStar = trim(ussdParseOnlyStar);
+  }
+
+  public String getUssdParseNever() {
+    return ussdParseNever;
+  }
+
+  public void setUssdParseNever(String ussdParseNever) {
+    this.ussdParseNever = trim(ussdParseNever);
+  }
+
+  public String getUssdDefaultParsingMode() {
+    return ussdDefaultParsingMode;
+  }
+
+  public void setUssdDefaultParsingMode(String ussdDefaultParsingMode) {
+    this.ussdDefaultParsingMode = trim(ussdDefaultParsingMode);
+  }
+
+  public Level[] getLevels() {
+    return levels;
+  }
+
+  private static String trim(String s) {
+    return  s == null ? null : s.trim();
   }
 
   public String getMbSave()
@@ -214,5 +366,111 @@ public class MapLimits extends SmscBean {
   public void setMbReset(String mbReset)
   {
     this.mbReset = mbReset;
+  }
+
+  public class Level {
+
+
+    private final int level;
+    private int dialogsLimit;
+    private int failUpperLimit;
+    private int failLowerLimit;
+    private int okToLower;
+
+    private final String dialogsLimitName;
+    private final String failUpperLimitName;
+    private final String failLowerLimitName;
+    private final String okToLowerName;
+
+    public Level(int level) {
+      this.level = level;
+      this.dialogsLimitName = "dialogsLimitName"+level;
+      this.failUpperLimitName = "failUpperLimitName"+level;
+      this.failLowerLimitName = "failLowerLimitName"+level;
+      this.okToLowerName = "okToLowerName"+level;
+    }
+
+    public String getDialogsLimitName() {
+      return dialogsLimitName;
+    }
+
+    public String getFailUpperLimitName() {
+      return failUpperLimitName;
+    }
+
+    public String getFailLowerLimitName() {
+      return failLowerLimitName;
+    }
+
+    public String getOkToLowerName() {
+      return okToLowerName;
+    }
+
+    public int getLevel() {
+      return level;
+    }
+
+    public int getDialogsLimit() {
+      return dialogsLimit;
+    }
+
+    private void setDialogsLimit(int dialogsLimit) {
+      this.dialogsLimit = dialogsLimit;
+    }
+
+    public int getFailUpperLimit() {
+      return failUpperLimit;
+    }
+
+    private void setFailUpperLimit(int failUpperLimit) {
+      this.failUpperLimit = failUpperLimit;
+    }
+
+    public int getFailLowerLimit() {
+      return failLowerLimit;
+    }
+
+    private void setFailLowerLimit(int failLowerLimit) {
+      this.failLowerLimit = failLowerLimit;
+    }
+
+    public int getOkToLower() {
+      return okToLower;
+    }
+
+    private void setOkToLower(int okToLower) {
+      this.okToLower = okToLower;
+    }
+
+    private void load(HttpServletRequest request) {
+      String s = null;
+      try{
+        s = request.getParameter(dialogsLimitName);
+        if(s != null && (s = s.trim()).length()>0) {
+          dialogsLimit = Integer.parseInt(s);
+        }
+
+        s = request.getParameter(failLowerLimitName);
+
+        if(s != null && (s = s.trim()).length()>0) {
+          failLowerLimit = Integer.parseInt(s);
+        }
+        s = request.getParameter(failUpperLimitName);
+
+        if(s != null && (s = s.trim()).length()>0) {
+          failUpperLimit = Integer.parseInt(s);
+        }
+        s = request.getParameter(okToLowerName);
+
+        if(s != null && (s = s.trim()).length()>0) {
+          okToLower = Integer.parseInt(s);
+        }
+      }catch (NumberFormatException e) {
+        errorStr = "Illegal integer parameter: "+s;
+        logger.error(e,e);
+      }
+
+    }
+
   }
 }

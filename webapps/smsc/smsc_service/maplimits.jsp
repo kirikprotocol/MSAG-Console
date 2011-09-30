@@ -1,4 +1,6 @@
 <%@ page import="java.util.*" %>
+<%@ page import="ru.novosoft.smsc.jsp.util.helper.Validation" %>
+<%@ page import="ru.novosoft.smsc.jsp.smsc.smsc_service.MapLimits" %>
 <%@ include file="/WEB-INF/inc/code_header.jsp" %>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.MapLimits"/>
 <jsp:setProperty name="bean" property="*"/>
@@ -13,6 +15,8 @@
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp" %>
 
 <%
+
+
     page_menu_begin(out);
     page_menu_button(session, out, "mbSave", "common.buttons.save", "common.buttons.saveConfig");
     page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset");
@@ -22,16 +26,19 @@
 
 <%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=content>
+
+  <input type="hidden" id="init" name="init" value="true"/>
 <%
     //################################## admin #############################
     startSection(out, "dlglimit", "maplimits.dlglimit", true);
     startParams(out);
 
-    param(out, "maplimits.dlglimit.in", "dlglimit.in", bean.getIntParam("dlglimit.in"));
-    param(out, "maplimits.dlglimit.insri", "dlglimit.insri", bean.getIntParam("dlglimit.insri"));
-    param(out, "maplimits.dlglimit.ussd", "dlglimit.ussd", bean.getIntParam("dlglimit.ussd"));
-    param(out, "maplimits.dlglimit.outsri", "dlglimit.outsri", bean.getIntParam("dlglimit.outsri"));
-    param(out, "maplimits.dlglimit.niussd", "dlglimit.niussd", bean.getIntParam("dlglimit.niussd"));
+//  param(out, label, id, value, null, null, false, validation);
+    param(out, "maplimits.dlglimit.in", "dlglimitIn", bean.getDlglimitIn());
+    param(out, "maplimits.dlglimit.insri", "dlglimitInsri", bean.getDlglimitInsri());
+    param(out, "maplimits.dlglimit.ussd", "dlglimitUssd", bean.getDlglimitUssd());
+    param(out, "maplimits.dlglimit.outsri", "dlglimitOutSri", bean.getDlglimitOutSri());
+    param(out, "maplimits.dlglimit.niussd", "dlglimitNiussd", bean.getDlglimitNiussd());
 
     finishParams(out);
     finishSection(out);
@@ -45,27 +52,29 @@
     parseModes.add("always");
     parseModes.add("never");
 
-    param(out, "maplimits.ussd.no_sri_codes", "ussd.no_sri_codes", bean.getStringParam("ussd.no_sri_codes"));
-    param(out, "maplimits.ussd.cond_sri_codes", "ussd.cond_sri_codes", bean.getStringParam("ussd.cond_sri_codes"));
-    param(out, "maplimits.ussd.ati_codes", "ussd.ati_codes", bean.getStringParam("ussd.ati_codes"));
-    param(out, "maplimits.ussd.openRespRealAddr", "ussd.openRespRealAddr", bean.getStringParam("ussd.openRespRealAddr"));
-    param(out, "maplimits.ussd.parseAlways", "ussd.parseAlways", bean.getStringParam("ussd.parseAlways"));
-    param(out, "maplimits.ussd.parseOnlyStar", "ussd.parseOnlyStar", bean.getStringParam("ussd.parseOnlyStar"));
-    param(out, "maplimits.ussd.newerParse", "ussd.parseNever", bean.getStringParam("ussd.parseNever"));
-    paramSelect(out, "maplimits.ussd.defaultParseMode", "ussd.defaultParsingMode", parseModes, bean.getStringParam("ussd.defaultParsingMode"));
+    param(out, "maplimits.ussd.no_sri_codes", "ussdNo_sri_codes", bean.getUssdNo_sri_codes());
+    param(out, "maplimits.ussd.cond_sri_codes", "ussdCond_sri_codes", bean.getUssdCond_sri_codes());
+    param(out, "maplimits.ussd.ati_codes", "ussdAti_codes", bean.getUssdAti_codes());
+    param(out, "maplimits.ussd.openRespRealAddr", "ussdOpenRespRealAddr", bean.getUssdOpenRespRealAddr());
+    param(out, "maplimits.ussd.parseAlways", "ussdParseAlways", bean.getUssdParseAlways());
+    param(out, "maplimits.ussd.parseOnlyStar", "ussdParseOnlyStar", bean.getUssdParseOnlyStar());
+    param(out, "maplimits.ussd.newerParse", "ussdParseNever", bean.getUssdParseNever());
+    paramSelect(out, "maplimits.ussd.defaultParseMode", "ussdDefaultParsingMode", parseModes, bean.getUssdDefaultParsingMode());
 
     finishParams(out);
     finishSection(out);
 
     //################################## clevels #############################
     startSection(out, "clevels", "maplimits.clevels", true);
+    MapLimits.Level[] levels = bean.getLevels();
     for( int ii = 1; ii <= 8; ii++ ) {
+      MapLimits.Level l = levels[ii];
       startSection(out, "clevels.level"+ii, "maplimits.clevels.level"+ii, true);
       startParams(out);
-      param(out, "maplimits.clevels.level.dialogsLimit", "clevels.level"+ii+".dialogsLimit", bean.getIntParam("clevels.level"+ii+".dialogsLimit"));
-      param(out, "maplimits.clevels.level.failUpperLimit", "clevels.level"+ii+".failUpperLimit", bean.getIntParam("clevels.level"+ii+".failUpperLimit"));
-      param(out, "maplimits.clevels.level.failLowerLimit", "clevels.level"+ii+".failLowerLimit", bean.getIntParam("clevels.level"+ii+".failLowerLimit"));
-      param(out, "maplimits.clevels.level.okToLower", "clevels.level"+ii+".okToLower", bean.getIntParam("clevels.level"+ii+".okToLower"));
+      param(out, "maplimits.clevels.level.dialogsLimit", l.getDialogsLimitName(), Integer.toString(l.getDialogsLimit()));
+      param(out, "maplimits.clevels.level.failUpperLimit", l.getFailUpperLimitName(), Integer.toString(l.getFailUpperLimit()));
+      param(out, "maplimits.clevels.level.failLowerLimit", l.getFailLowerLimitName(), Integer.toString(l.getFailLowerLimit()));
+      param(out, "maplimits.clevels.level.okToLower", l.getOkToLowerName(), Integer.toString(l.getOkToLower()));
       finishParams(out);
       finishSection(out);
     }
