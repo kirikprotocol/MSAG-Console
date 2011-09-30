@@ -64,6 +64,14 @@
     finishParams(out);
     finishSection(out);
 
+    //################################## sms #############################
+    startSection(out, "sms", "maplimits.sms", true);
+    startParams(out);
+
+    param(out, "maplimits.sms.openRespRealAddr", "sms.openRespRealAddr", bean.getBoolParam("sms.openRespRealAddr"));
+    finishParams(out);
+    finishSection(out);
+
     //################################## clevels #############################
     startSection(out, "clevels", "maplimits.clevels", true);
     MapLimits.Level[] levels = bean.getLevels();

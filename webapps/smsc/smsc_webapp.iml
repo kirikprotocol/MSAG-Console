@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module version="4" relativePaths="true" type="J2EE_WEB_MODULE" j2ee-integration="Tomcat Server">
-  <component name="AppServerSpecificValidatorsManager" />
-  <component name="ModuleRootManager" />
+<module relativePaths="true" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="web" name="smsc_webapp">
+      <configuration>
+        <descriptors>
+          <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/../../../smsc_webapp/resources/WEB-INF/web.xml" />
+        </descriptors>
+        <webroots>
+          <root url="file://$MODULE_DIR$" relative="/" />
+        </webroots>
+      </configuration>
+    </facet>
+  </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../../../build/smsc/exploded/smsc/WEB-INF/classes" />
     <exclude-output />
-    <exploded url="file://$MODULE_DIR$/../../../build/smsc/exploded/smsc" />
-    <exclude-exploded />
     <content url="file://$MODULE_DIR$/../../ext_smes/InfoSme">
       <sourceFolder url="file://$MODULE_DIR$/../../ext_smes/InfoSme/java" isTestSource="false" />
     </content>
@@ -116,70 +124,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntryProperties />
   </component>
-  <component name="WebModuleBuildComponent">
-    <setting name="EXPLODED_URL" value="file://$MODULE_DIR$/../../../build/smsc/exploded/smsc" />
-    <setting name="EXPLODED_ENABLED" value="true" />
-    <setting name="JAR_URL" value="file://" />
-    <setting name="JAR_ENABLED" value="false" />
-    <setting name="SYNC_EXPLODED_DIR" value="true" />
-    <setting name="BUILD_MODULE_ON_FRAME_DEACTIVATION" value="false" />
-    <setting name="BUILD_EXTERNAL_DEPENDENCIES" value="false" />
-    <setting name="RUN_JASPER_VALIDATION" value="false" />
-  </component>
-  <component name="WebModuleProperties">
-    <containerElement type="module" name="smsc_lib">
-      <attribute name="method" value="5" />
-      <attribute name="URI" value="/WEB-INF/lib/smsc_lib.jar" />
-    </containerElement>
-    <containerElement type="module" name="tomcat_auth_common">
-      <attribute name="method" value="5" />
-      <attribute name="URI" value="/WEB-INF/lib/tomcat_auth_common.jar" />
-    </containerElement>
-    <containerElement type="module" name="tomcat_auth_server">
-      <attribute name="method" value="5" />
-      <attribute name="URI" value="/WEB-INF/lib/tomcat_auth_server.jar" />
-    </containerElement>
-    <containerElement type="module" name="tomcat_auth_webapp">
-      <attribute name="method" value="5" />
-      <attribute name="URI" value="/WEB-INF/lib/tomcat_auth_webapp.jar" />
-    </containerElement>
-    <containerElement type="library" level="module">
-      <attribute name="method" value="1" />
-      <attribute name="URI" value="/WEB-INF/classes" />
-      <url>file://$MODULE_DIR$/../../../build/smsc/classes</url>
-    </containerElement>
-    <containerElement type="library" level="module">
-      <attribute name="method" value="1" />
-      <attribute name="URI" value="/WEB-INF/lib/antlr.jar" />
-      <url>jar://$MODULE_DIR$/../libs/antlr.jar!/</url>
-    </containerElement>
-    <containerElement type="library" level="module">
-      <attribute name="method" value="1" />
-      <attribute name="URI" value="/WEB-INF/lib/classes12.jar" />
-      <url>jar://$MODULE_DIR$/../libs/classes12.jar!/</url>
-    </containerElement>
-    <containerElement type="library" level="module">
-      <attribute name="method" value="1" />
-      <attribute name="URI" value="/WEB-INF/lib/connpool.jar" />
-      <url>jar://$MODULE_DIR$/../libs/connpool.jar!/</url>
-    </containerElement>
-    <containerElement type="library" level="module">
-      <attribute name="method" value="1" />
-      <attribute name="URI" value="/WEB-INF/lib/log4j.jar" />
-      <url>jar://$MODULE_DIR$/../libs/log4j.jar!/</url>
-    </containerElement>
-    <containerElement type="library" level="module">
-      <attribute name="method" value="1" />
-      <attribute name="URI" value="/WEB-INF/lib/nsjsp.jar" />
-      <url>jar://$MODULE_DIR$/../libs/nsjsp.jar!/</url>
-    </containerElement>
-    <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/../../../smsc_webapp/resources/WEB-INF/web.xml" optional="false" version="2.3" />
-    <webroots>
-      <root url="file://$MODULE_DIR$" relative="/" />
-    </webroots>
-  </component>
-  <component name="WeblogicWebModuleProperties" />
 </module>
 
