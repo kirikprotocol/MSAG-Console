@@ -9,7 +9,7 @@ using smsc::inman::interaction::INPBilling;
 namespace smsc{
 namespace system{
 
-static const INPBilling  _protoDef; //Sms/USSd billing protocol definition
+static const INPBilling  protoDef; //Sms/USSd billing protocol definition
 
 Address INManComm::scAddr;
 
@@ -339,12 +339,12 @@ int INManComm::Execute()
     smsc::inman::interaction::SPckChargeSmsResult pck;
     try
     {
-      INPBilling::PduId pduId = _protoDef.isKnownPacket(buf);
+      INPBilling::PduId pduId = protoDef.isKnownPacket(buf);
       if (!pduId)
         throw smsc::util::Exception("unsupported INMan packet recieved");
 
       INPBilling::CommandTag_e
-        cmdId = static_cast<INPBilling::CommandTag_e>(_protoDef.getCmdId(pduId));
+        cmdId = static_cast<INPBilling::CommandTag_e>(protoDef.getCmdId(pduId));
 
       if (cmdId != INPBilling::CHARGE_SMS_RESULT_TAG) {
         smsc_log_warn(log, "illegal INMan command received: %s", INPBilling::nameOfCmd(cmdId));
