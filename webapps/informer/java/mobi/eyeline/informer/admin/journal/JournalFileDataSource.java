@@ -66,7 +66,7 @@ class JournalFileDataSource implements JournalDataSource {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy" + File.separatorChar + "MM" + File.separator + "dd");
     File d = new File(journalDir, sdf.format(date));
     if (!fileSystem.exists(d)) {
-       fileSystem.mkdirs(d);
+      fileSystem.mkdirs(d);
     }
     File file = new File(d, new SimpleDateFormat("HH").format(date) + ".csv");
 
@@ -149,9 +149,18 @@ class JournalFileDataSource implements JournalDataSource {
     else {
       for (int i = 0; i < str.length(); i++) {
         char ch = str.charAt(i);
-        if (ch == sepChar)
+        if (ch == sepChar) {
           w.print('\\');
-        w.print(ch);
+          w.print(ch);
+        }else if(ch == '\n') {
+          w.print("\\n");
+        }else if(ch == '\r') {
+          w.print("\\r");
+        }else if(ch == '\t') {
+          w.print("\\t");
+        }else {
+          w.print(ch);
+        }
         if (ch == sepChar)
           w.print(' ');
       }
@@ -176,41 +185,53 @@ class JournalFileDataSource implements JournalDataSource {
     }
     w.println();
   }
+  protected static String readFullyStr(String initialStr, StringTokenizer t) {
+    int i = 0;
+    while ((i = initialStr.indexOf("\\")) != -1) {
+      if(initialStr.length() == i+1) {
+        initialStr = initialStr.replace('\\', sepChar) + t.nextToken().substring(1);
+      }else {
+        String old = initialStr;
+        initialStr = old.substring(0, i);
+        switch (old.charAt(i+1)) {
+          case 'n' : initialStr+='\n';break;
+          case 't' : initialStr+='\t';break;
+          case 'r' : initialStr+='\r';break;
+        }
+        if(old.length()>i+2) {
+          initialStr += old.substring(i+2);
+        }
+      }
+    }
+    return initialStr;
+  }
 
-  protected static JournalRecord convert(String ss) {
+  protected static JournalRecord convert(String ss)  {
     StringTokenizer t = new StringTokenizer(ss, sep);
     String sTemp;
     long time = Long.parseLong(t.nextToken());
     String user = (sTemp = t.nextToken()).equals(NULL) ? null : sTemp;
     if (user != null) {
-      while (user.indexOf("\\") != -1) {
-        user = user.replace("\\", sep) + t.nextToken().substring(1);
-      }
+      user = readFullyStr(user, t);
     }
     String subjectKey = (sTemp = t.nextToken()).equals(NULL) ? null : sTemp;
     if (subjectKey != null) {
-      while (subjectKey.indexOf("\\") != -1) {
-        subjectKey = subjectKey.replace("\\", sep) + t.nextToken().substring(1);
-      }
+      subjectKey = readFullyStr(subjectKey, t);
     }
     JournalRecord.Type type = (sTemp = t.nextToken()).equals(NULL) ? null : JournalRecord.Type.valueOf(sTemp);
 
     String descrKey = (sTemp = t.nextToken()).equals(NULL) ? null : sTemp;
     if (descrKey != null) {
-      while (descrKey.indexOf("\\") != -1) {
-        descrKey = descrKey.replace("\\", sep) + t.nextToken().substring(1);
-      }
+      descrKey = readFullyStr(descrKey, t);
     }
 
     List<String> args = new LinkedList<String>();
     while (t.hasMoreTokens()) {
       String arg = t.nextToken();
       if (arg != null) {
-        while (arg.indexOf("\\") != -1) {
-          arg = arg.replace("\\", sep) + t.nextToken().substring(1);
-        }
-        args.add(arg);
+        arg = readFullyStr(arg, t);
       }
+      args.add(arg);
     }
     JournalRecord record = new JournalRecord(type);
     record.setDescription(descrKey, args.toArray(new String[args.size()]));

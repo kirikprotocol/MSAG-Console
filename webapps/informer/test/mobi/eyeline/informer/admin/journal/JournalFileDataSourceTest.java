@@ -30,12 +30,47 @@ public class JournalFileDataSourceTest {
 
 
   @Test
-  public void convertTest() throws IOException {
+  public void convertTest() throws Exception {
     JournalRecord record = new JournalRecord(JournalRecord.Type.CHANGE);
     record.setTime(1000);
-    record.setUser("us|er|1");
+    record.setUser("user1");
+    record.setDescription("descriptionKey", "arg1", "arg2");
+    record.setSubject(Subject.CONFIG);
+    testConverting(record);
+  }
+
+  @Test
+  public void convertWithSepTest() throws Exception {
+    JournalRecord record = new JournalRecord(JournalRecord.Type.CHANGE);
+    record.setTime(1000);
+    record.setUser("|us|er|1");
     record.setDescription("descri|pti|onKey", "arg|1", "ar|g2");
     record.setSubject(Subject.CONFIG);
+    testConverting(record);
+  }
+
+
+  @Test
+  public void convertTestNewLine() throws Exception {
+    JournalRecord record = new JournalRecord(JournalRecord.Type.CHANGE);
+    record.setTime(1000);
+    record.setUser("u\ns|er|1\n");
+    record.setDescription("descri|pti|onKey", "\nar\r\ng|1", "ar|g\n2");
+    record.setSubject(Subject.CONFIG);
+    testConverting(record);
+  }
+
+  @Test
+  public void convertTestTab() throws Exception {
+    JournalRecord record = new JournalRecord(JournalRecord.Type.CHANGE);
+    record.setTime(1000);
+    record.setUser("u\ts|er|1\t");
+    record.setDescription("descri|pti|onKey", "\tar\t\tg|1", "ar|g\t2");
+    record.setSubject(Subject.CONFIG);
+    testConverting(record);
+  }
+
+  private void testConverting(JournalRecord record) throws Exception{
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     PrintWriter writer = null;
     try{
@@ -64,8 +99,8 @@ public class JournalFileDataSourceTest {
       }
     }
     assertEquals(record, record2);
-  }
 
+  }
 
   @Test
   public void writeRead() throws Exception {
