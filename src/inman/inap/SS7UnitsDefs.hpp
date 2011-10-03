@@ -10,6 +10,9 @@
 #include <inttypes.h>
 #include <map>
 
+#include "core/buffers/LWArrayTraitsInt.hpp"
+#include "core/buffers/LWArrayT.hpp"
+
 namespace smsc   {
 namespace inman  {
 namespace inap   {
@@ -25,20 +28,81 @@ struct SS7UnitInstance {
   explicit SS7UnitInstance(uint8_t inst_id = 0)
     : instId(inst_id), connStatus(uconnIdle)
   { }
+
+  bool operator< (const SS7UnitInstance & cmp_obj) const
+  {
+    return instId < cmp_obj.instId;
+  }
 };
 
-class SS7UnitInstsMap : public std::map<uint8_t /* instId */, SS7UnitInstance> {
+class SS7UnitInstsMap {
+protected:
+  typedef smsc::core::buffers::LWArray_T<
+    SS7UnitInstance, uint8_t, 8, smsc::core::buffers::LWArrayTraitsPOD_T
+  > UInstArray;
+
+  UInstArray  mArr; //sorted array
+
+  UInstArray::size_type findPos(uint8_t inst_id) const
+  {
+    if (!mArr.empty()) {
+      UInstArray::size_type atIdx = (mArr.size() - 1) >> 1; //approximately middle position
+      if (mArr.get()[atIdx].instId == inst_id)
+        return atIdx;
+
+      if (mArr.get()[atIdx].instId < inst_id) { //go to the end
+        while (++atIdx < mArr.size()) {
+          if (mArr.get()[atIdx].instId == inst_id)
+            return atIdx;
+        }
+      } else {  //go to the start
+        while (atIdx) {
+          if (mArr.get()[--atIdx].instId == inst_id)
+            return atIdx;
+        }
+      }
+    }
+    return mArr.npos();
+  }
+
 public:
+  typedef uint8_t size_type;
+
+  SS7UnitInstsMap()
+  { }
+  ~SS7UnitInstsMap()
+  { }
+
+  size_type npos(void) const { return mArr.npos(); }
+
+  bool empty(void) const { return mArr.empty(); }
+  size_type size(void) const { return mArr.size(); }
+
+  //Returns npos() in case of failure
+  size_type insert(const SS7UnitInstance & unit_inst) { return mArr.insert(unit_inst); }
+
+  const SS7UnitInstance & operator[] (size_type at_idx) const /*throw(std::exception)*/
+  {
+    return mArr.at(at_idx);
+  }
+
+  //NOTE: throws if there is no assigned element at given pos!!!
+  SS7UnitInstance & operator[] (size_type at_idx) /*throw(std::exception)*/
+  {
+    mArr.verifyIndex(at_idx, "SS7UnitInstsMap"); //throws
+    return mArr.at(at_idx);
+  }
+
   SS7UnitInstance * getInstance(uint8_t inst_id)
   {
-    SS7UnitInstsMap::iterator cit = find(inst_id);
-    return cit == end() ? 0 : &(cit->second);
+    UInstArray::size_type atPos = findPos(inst_id);
+    return (atPos == mArr.npos()) ? 0 : mArr.getBuf() + atPos;
   }
 
   const SS7UnitInstance * findInstance(uint8_t inst_id) const
   {
-    SS7UnitInstsMap::const_iterator cit = find(inst_id);
-    return cit == end() ? 0 : &(cit->second);
+    UInstArray::size_type atPos = findPos(inst_id);
+    return (atPos == mArr.npos()) ? 0 : mArr.get() + atPos;
   }
 
   bool isStatus(uint8_t inst_id, SS7UnitInstance::ConnectStatus use_status) const
@@ -47,6 +111,7 @@ public:
     return (pInst && (pInst->connStatus == use_status));
   }
 };
+
 
 struct SS7Unit_CFG {
   uint16_t        unitId;     //ident of interacted communication unit, see portss7.h

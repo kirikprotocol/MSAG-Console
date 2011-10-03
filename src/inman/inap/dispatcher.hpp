@@ -7,6 +7,9 @@
 #endif
 #define __INMAN_TCAP_DISPATCHER_HPP
 
+#include "core/buffers/LWArrayTraitsInt.hpp"
+#include "core/buffers/LWArrayT.hpp"
+
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 
@@ -18,28 +21,27 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-using smsc::core::threads::Thread;
-using smsc::core::synchronization::EventMonitor;
+//using smsc::core::synchronization::EventMonitor;
 
 //TCAPDispatcher: manages SS7 stack connecton, listens for TCAP messages
 //NOTE: this is a singleton, so initialization is not thread safe
-class TCAPDispatcher : Thread, public TCAPDispatcherITF {
+class TCAPDispatcher : public TCAPDispatcherITF
+                      , protected smsc::core::threads::Thread {
 private:
-    using Thread::Start; //hide it to avoid annoying CC warnings
+    using smsc::core::threads::Thread::Start; //is overloaded
 
-    class MessageListener : Thread {
+    class MessageListener : smsc::core::threads::Thread {
     private:
-      using Thread::Start; //hide it to avoid annoying CC warnings
-
-    protected:
-      mutable EventMonitor  _sync;
-      volatile bool         _running;
-      TCAPDispatcher &      _dsp;
-
+      using smsc::core::threads::Thread::Start; //is overloaded
       // ----------------------------
       // -- Thread interface methods
       // ----------------------------
       int  Execute(void);  //thread entry point
+
+    protected:
+      mutable smsc::core::synchronization::EventMonitor  _sync;
+      volatile bool         _running;
+      TCAPDispatcher &      _dsp;
 
     public:
       MessageListener(TCAPDispatcher & use_dsp)
@@ -56,9 +58,86 @@ private:
       void Notify(void) const { _sync.notify(); }
     };
 
-    typedef std::map<uint8_t, SSNSession *> SSNmap_T;
+    //typedef std::map<uint8_t, SSNSession *> SSNmap_T;
 
-    mutable EventMonitor _sync;
+    struct SSNInfo {
+      SSNSession * pSess;
+
+      explicit SSNInfo(SSNSession * use_ptr = 0) : pSess(use_ptr)
+      { }
+
+      bool operator< (const SSNInfo & cmp_obj) const
+      {
+        return (pSess && cmp_obj.pSess) ? (pSess->getSSN() < cmp_obj.pSess->getSSN())
+                                        : pSess < cmp_obj.pSess;
+      }
+    };
+    
+    class SSNmap_T {  //sorted array
+    protected:
+      typedef smsc::core::buffers::LWArray_T<
+        SSNInfo, uint8_t, 10, smsc::core::buffers::LWArrayTraitsPOD_T
+      > SSNArray;
+      
+      SSNArray  mArr;
+
+      SSNArray::size_type findPos(uint8_t ssn_id) const
+      {
+        if (!mArr.empty()) {
+          size_type atIdx = ((mArr.size() - 1) >> 1); //approximately middle position
+          if (mArr.get()[atIdx].pSess->getSSN() == ssn_id)
+            return atIdx;
+
+          if (mArr.get()[atIdx].pSess->getSSN() < ssn_id) { //go to the end
+            while (++atIdx < mArr.size()) {
+              if (mArr.get()[atIdx].pSess->getSSN() == ssn_id)
+                return atIdx;
+            }
+          } else {  //go to the start
+            while (atIdx) {
+              if (mArr.get()[--atIdx].pSess->getSSN() == ssn_id)
+                return atIdx;
+            }
+          }
+        }
+        return mArr.npos();
+      }
+
+    public:
+      typedef uint8_t size_type;
+
+      SSNmap_T()
+      { }
+      ~SSNmap_T()
+      { }
+
+      size_type npos(void) const { return mArr.npos(); }
+
+      bool empty(void) const { return mArr.empty(); }
+      size_type size(void) const { return mArr.size(); }
+
+      //Returns npos() in case of failure
+      size_type insert(SSNSession * p_sess) { return mArr.insert(SSNInfo(p_sess)); }
+      //
+      void erase(size_type at_idx) /*throw()*/
+      {
+        if (at_idx < mArr.size())
+          mArr.erase(at_idx, 1);
+      }
+
+      SSNSession * find(uint8_t ssn_id) const
+      {
+        size_type atIdx = findPos(ssn_id);
+        return (atIdx == mArr.npos()) ? 0 : mArr.get()[atIdx].pSess;
+      }
+      //
+      SSNSession * operator[] (size_type at_idx) const /*throw()*/
+      {
+        return (at_idx < mArr.size()) ? mArr.get()[at_idx].pSess : 0;
+      }
+    };
+
+    mutable smsc::core::synchronization::EventMonitor _sync;
     volatile SS7State_e  _ss7State;
     volatile DSPState_e  _dspState;
     volatile unsigned    _connCounter;
@@ -85,12 +164,6 @@ private:
     int  Execute(void);         //Autoconnection thread entry point
 
 protected:
-    SSNSession * lookUpSSN(uint8_t ssn) const
-    {
-        SSNmap_T::const_iterator it = _sessions.find(ssn);
-        return (it == _sessions.end()) ? NULL : it->second;
-    }
-
     //Returns:  (-1) - failed to connect, 0 - already connected, 1 - successfully connected
     int  connectCP(SS7State_e upTo = ss7CONNECTED);
     void disconnectCP(SS7State_e downTo = ss7None);

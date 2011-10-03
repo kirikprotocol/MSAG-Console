@@ -220,10 +220,9 @@ void SS7HDCfgParser::readUnits(XConfigView & xcfg_sec, SS7HDConnParms & st_cfg, 
     int instId = atoi(cit->c_str());
     if (!instId || (instId > SS7HDConnParms::_MAX_UNIT_INSTANCE_ID))
       throw ConfigException("SS7Unit instanceId is invalid: %s", cit->c_str());
-    if (unitCfg.instIds.find((uint8_t)instId) != unitCfg.instIds.end())
+    if (unitCfg.instIds.findInstance((uint8_t)instId))
       throw ConfigException("SS7Unit instanceId is duplicated: %s", cit->c_str());
-    unitCfg.instIds.insert(SS7UnitInstsMap::value_type((uint8_t)instId,
-                                                       SS7UnitInstance((uint8_t)instId)));
+    unitCfg.instIds.insert(SS7UnitInstance((uint8_t)instId));
   }
   smsc_log_info(logger, "  instancesList: %s", nmIds.toString().c_str());
   return;

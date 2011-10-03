@@ -106,10 +106,9 @@ public:
   {
     uint16_t maxId = max_dlg_num/(uint16_t)tcap_inst_ids.size();
 
-    for (SS7UnitInstsMap::const_iterator
-         cit = tcap_inst_ids.begin(); cit != tcap_inst_ids.end(); ++cit) {
-      _units.insert(UnitsBinding::value_type(cit->first,
-                                    UNITBinding(UNITStatus(cit->second), maxId)));
+    for (SS7UnitInstsMap::size_type cit = 0; cit < tcap_inst_ids.size(); ++cit) {
+      _units.insert(UnitsBinding::value_type(tcap_inst_ids[cit].instId,
+                                             UNITBinding(UNITStatus(tcap_inst_ids[cit]), maxId)));
     }
     _units.begin()->second._maxId += max_dlg_num % tcap_inst_ids.size();
   }
