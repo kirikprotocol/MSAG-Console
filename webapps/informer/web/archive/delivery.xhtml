@@ -201,13 +201,14 @@
       <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign" >
         <c:forEach items="#{archiveDelivery.statusHistory.historyItems}" var="item">
 
-          <!--<c:set var="nm1" value="delivery.status.#{item.status}"/>-->
+          <c:set var="nm1" value="delivery.status.#{item.status}"/>
 
           <tr:outputText value="#{item.date}" inlineStyle="white-space:nowrap;font-weight: bold">
             <f:convertDateTime dateStyle="short" type="both"/>
           </tr:outputText>
 
-          <!--<h:outputText value=" : #{msg[nm1]}"/>-->
+          <h:outputText value=" : #{msg[nm1]}"/>
+
         </c:forEach>
       </h:panelGrid>
     </h:panelGroup>
