@@ -6,17 +6,14 @@ import ru.novosoft.smsc.admin.category.CategorySettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
-import javax.faces.application.FacesMessage;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * @author Artem Snopkov
  */
 public class CategoryController extends SettingsMController<CategorySettings> {
 
-  private Map<Long, String> categories;
+  private List<Category> categories;
   private String newCategory;
   private boolean initError;
 
@@ -37,31 +34,27 @@ public class CategoryController extends SettingsMController<CategorySettings> {
   }
 
   private void updateCategories(CategorySettings s) throws AdminException {
-    for (Long categoryId : categories.keySet()) {
-      Category cat = s.getCategory(categoryId);
-      cat.setName(categories.get(categoryId));
+    for (Category c : categories) {
+      Category cat = s.getCategory(c.getId());
+      cat.setName(c.getName());
       s.updateCategory(cat);
     }
   }
 
   private void resetCategories() {
-    categories = new TreeMap<Long, String>();
+    categories = new LinkedList<Category>();
     for (Category c : getSettings().getCategories())
-      categories.put(c.getId(), c.getName());
+      categories.add(c);
   }
 
-  public Collection<Long> getIds() {
-    return categories.keySet();
-  }
 
-  public Map<Long, String> getCategories() {
+  public List<Category> getCategories() {
     return categories;
   }
 
   public String addCategory() {
     try {
       CategorySettings s = getSettings();
-      updateCategories(s);
       s.addCategory(newCategory);
       setSettings(s);
       resetCategories();

@@ -214,7 +214,25 @@ public class LoggingController extends SettingsMController<LoggerSettings> {
     }
 
     public Collection<HierarchicalLogger> getChildList() {
-      return childs.values();
+      Collection<HierarchicalLogger> l = childs.values();
+      if(l.isEmpty()) {
+        return l;
+      }
+      List<HierarchicalLogger> list = new ArrayList<HierarchicalLogger>(childs.values());
+      Collections.sort(list, new Comparator<HierarchicalLogger>() {
+        public int compare(HierarchicalLogger o1, HierarchicalLogger o2) {
+          boolean hasChild1 = !o1.childs.isEmpty();
+          boolean hasChild2 = !o2.childs.isEmpty();
+          if((hasChild1 && hasChild2) || !(hasChild1 || hasChild2)) {
+            return o1.getName().compareTo(o2.getName());
+          }else if (hasChild1) {
+            return 1;
+          }else {
+            return -1;
+          }
+        }
+      });
+      return list;
     }
   }
 }

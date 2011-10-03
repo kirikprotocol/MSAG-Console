@@ -19,7 +19,24 @@ public class ServiceListController extends ServiceController {
   private List selectedRows;
   private Map<String, String> switchToHost = new HashMap<String, String>();
 
+  private String nameFilter;
+
   public ServiceListController() {
+  }
+
+  public void apply() {
+  }
+
+  public void clear() {
+    nameFilter = null;
+  }
+
+  public String getNameFilter() {
+    return nameFilter;
+  }
+
+  public void setNameFilter(String nameFilter) {
+    this.nameFilter = nameFilter == null || (nameFilter = nameFilter.trim()).length() == 0 ? null : nameFilter;
   }
 
   public void setSelectedRows(List selectedRows) {
@@ -87,7 +104,11 @@ public class ServiceListController extends ServiceController {
   public DataTableModel getServices() {
     final List<String> smeIds = new ArrayList<String>();
     try {
-      smeIds.addAll(mngr.smes().keySet());
+      for(String s : mngr.smes().keySet()) {
+        if(nameFilter == null || s.startsWith(nameFilter)) {
+          smeIds.add(s);
+        }
+      }
     } catch (AdminException e) {
       addError(e);
     }

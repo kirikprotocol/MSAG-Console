@@ -38,4 +38,32 @@ public class Source implements Serializable {
   public String getSubject() {
     return subject;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    Source source = (Source) o;
+
+    if (mask != null ? !mask.equals(source.mask) : source.mask != null) return false;
+    if (subject != null ? !subject.equals(source.subject) : source.subject != null) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = mask != null ? mask.hashCode() : 0;
+    result = 31 * result + (subject != null ? subject.hashCode() : 0);
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "Source{" +
+        "mask=" + mask +
+        ", subject='" + subject + '\'' +
+        '}';
+  }
 }

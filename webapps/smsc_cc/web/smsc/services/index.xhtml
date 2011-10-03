@@ -31,6 +31,15 @@
         <eye:button><h:commandLink action="#{service.disconnectSmes}" value="#{msg['services.page.disconnect']}"/></eye:button>
       </eye:buttons>
 
+      <eye:dataTableFilter applyAction="#{service.apply}" clearAction="#{service.clear}">
+        <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="width: 300px">
+          <h:outputText value="#{msg['service.edit.page.systemId']}"/>
+          <eye:inputText value="#{service.nameFilter}"/>
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <p/>
+
       <eye:dataTable value="#{service.services}" var="srv" selectedRows="#{service.selectedRows}">
 
         <eye:row>

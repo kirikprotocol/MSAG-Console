@@ -34,9 +34,9 @@
         <h:outputText value="#{msg['providers.page.provider']}"/>
         <h:outputText value="&#160;"/>
 
-        <c:forEach items="#{providers.ids}" var="id">
-          <h:outputText value="#{id}"/>
-          <eye:inputText value="#{providers.providers[id]}"/>
+        <c:forEach items="#{providers.providers}" var="p">
+          <h:outputText value="#{p.id}"/>
+          <eye:inputText value="#{p.name}"/>
           <h:outputText value="&#160;"/>
           <c:set var="row" value="#{row+1}"/>
         </c:forEach>

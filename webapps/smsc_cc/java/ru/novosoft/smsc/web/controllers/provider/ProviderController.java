@@ -6,15 +6,12 @@ import ru.novosoft.smsc.admin.provider.ProviderSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
-import javax.faces.application.FacesMessage;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 
 public class ProviderController extends SettingsMController<ProviderSettings> {
 
-  private Map<Long, String> providers;
+  private List<Provider> providers;
   private String newProvider;
   private boolean initError;
 
@@ -36,31 +33,26 @@ public class ProviderController extends SettingsMController<ProviderSettings> {
 
 
   private void updateProviders(ProviderSettings s) throws AdminException {
-    for (Long categoryId : providers.keySet()) {
-      Provider p = s.getProvider(categoryId);
-      p.setName(providers.get(categoryId));
+    for(Provider provider : providers) {
+      Provider p = s.getProvider(provider.getId());
+      p.setName(provider.getName());
       s.updateProvider(p);
     }
   }
 
   private void resetProviders() {
-    providers = new TreeMap<Long, String>();
+    providers = new LinkedList<Provider>();
     for (Provider c : getSettings().getProviders())
-      providers.put(c.getId(), c.getName());
+      providers.add(c);
   }
 
-  public Collection<Long> getIds() {
-    return providers.keySet();
-  }
-
-  public Map<Long, String> getProviders() {
+  public List<Provider> getProviders() {
     return providers;
   }
 
   public String addProvider() {
     try {
       ProviderSettings s = getSettings();
-      updateProviders(s);
       s.addProvider(newProvider);
       setSettings(s);
       resetProviders();

@@ -40,9 +40,9 @@
         <h:outputText value="#{msg['categories.page.category']}"/>
         <h:outputText value="&#160;"/>
 
-        <c:forEach items="#{categories.ids}" var="id">
-          <h:outputText value="#{id}"/>
-          <eye:inputText value="#{categories.categories[id]}"/>
+        <c:forEach items="#{categories.categories}" var="c">
+          <h:outputText value="#{c.id}"/>
+          <eye:inputText value="#{c.name}"/>
           <h:outputText value="&#160;"/>
           <c:set var="row" value="#{row+1}"/>
         </c:forEach>

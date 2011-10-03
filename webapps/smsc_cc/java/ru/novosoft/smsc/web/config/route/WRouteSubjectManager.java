@@ -90,13 +90,17 @@ public class WRouteSubjectManager extends BaseSettingsManager<RouteSubjectSettin
       else
         findChanges(oldRoute, newRoute, Route.class, new ChangeListener() {
           public void foundChange(String propertyName, Object oldValue, Object newValue) {
-            j.user(user).change("property_changed", valueToString(oldValue), valueToString(newValue)).route(newRoute.getName());
+            String o = valueToString(oldValue);
+            String n = valueToString(newValue);
+            if(!o.equals(n)) {
+              j.user(user).change("property_changed", propertyName, o, n).route(newRoute.getName());
+            }
           }
         });
     }
 
     for (Route route : newRoutes) {
-      if (!oldRoutes.contains(route))
+      if (getRouteByName(oldRoutes, route.getName()) == null)
         j.user(user).add().route(route.getName());
     }
   }
