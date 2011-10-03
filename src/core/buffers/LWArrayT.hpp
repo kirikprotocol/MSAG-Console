@@ -63,9 +63,12 @@ private:
 protected:
   typedef smsc::util::IntToA_T<_SizeTypeArg> SizeToStr;
 
-  void denyIndex(_SizeTypeArg use_idx) const throw(smsc::util::Exception)
+
+  void denyIndex(_SizeTypeArg use_idx, const char * arr_id = 0) const throw(smsc::util::Exception)
   {
-    throw smsc::util::Exception("LWArray_T<%s,%s>: index=%s is out of range=%s",
+    if (!arr_id)
+      arr_id = "LWArray_T";
+    throw smsc::util::Exception("%s<%s,%s>: index=%s is out of range=%s", arr_id,
                                 SizeToStr((_SizeTypeArg)sizeof(_SizeTypeArg)).get(),
                                 SizeToStr(_orgSz).get(), SizeToStr(use_idx).get(),
                                 SizeToStr(_numElem ? _numElem-1 : 0).get());
@@ -182,6 +185,13 @@ public:
 
   //Returns size of allocated array
   size_type capacity(void) const { return _heapBufSz ? _heapBufSz : _orgSz; }
+
+  void verifyIndex(_SizeTypeArg use_idx, const char * arr_id = 0) const
+    throw(smsc::util::Exception)
+  {
+    if (use_idx >= _numElem)
+      denyIndex(use_idx, arr_id);
+  }
 
   //Returns address of elements array (single memory block)
   const value_type * get(void) const { return _buf; }
