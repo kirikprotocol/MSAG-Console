@@ -171,7 +171,7 @@ int main(int argc, char** argv)
       rval = log_phase_fatal(ICServiceAC::icsStConfig, inmanLogger, "unknown exception caught");
     }
 
-    if (tgtPhase > ICServiceAC::icsStConfig) {
+    if (_svcHost && (tgtPhase > ICServiceAC::icsStConfig)) {
       try {
         if (_svcHost->ICSInit() == ICServiceAC::icsRcOk)
           log_phase_ok(ICServiceAC::icsStInited, inmanLogger);
@@ -184,7 +184,7 @@ int main(int argc, char** argv)
       }
     }
 
-    if (tgtPhase > ICServiceAC::icsStInited) {
+    if (_svcHost && (tgtPhase > ICServiceAC::icsStInited)) {
       try {
         if (_svcHost->ICSStart() == ICServiceAC::icsRcOk) {
           _runService = 1;
