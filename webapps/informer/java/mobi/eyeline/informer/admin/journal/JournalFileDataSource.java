@@ -106,7 +106,13 @@ class JournalFileDataSource implements JournalDataSource {
               if (line.length() == 0) {
                 continue;                   // may happens in repaired file
               }
-              JournalRecord record = convert(line);
+              JournalRecord record;
+              try{
+                record = convert(line);
+              } catch (Exception e) {
+                logger.error("Can't parse journal record. File='"+f.getAbsolutePath()+"' line='"+line+'\'',e);
+                continue;
+              }
               if (!filter.accept(record)) {
                 continue;
               }
@@ -130,9 +136,6 @@ class JournalFileDataSource implements JournalDataSource {
       logger.error(e, e);
       throw new JournalException("cant_read_journal", e);
     } catch (ParseException e) {
-      logger.error(e, e);
-      throw new JournalException("cant_read_journal", e);
-    } catch (NumberFormatException e) {
       logger.error(e, e);
       throw new JournalException("cant_read_journal", e);
     }
