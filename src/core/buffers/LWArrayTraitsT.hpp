@@ -175,7 +175,7 @@ struct LWArrayTraitsPOD_T {
   static void shift_left(_TArg * use_buf, _SizeTypeArg num_elem, const _SizeTypeArg shift_sz)
   {
     //copy elements starting from first to last
-    memmove(use_buf - shift_sz, (const void *)use_buf, sizeof(_TArg)*num_elem);
+    memmove(use_buf, (const void *)(use_buf + shift_sz), sizeof(_TArg)*(num_elem - shift_sz));
   }
 };
 

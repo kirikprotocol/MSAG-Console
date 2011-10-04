@@ -65,7 +65,7 @@ struct LWArrayTraitsPOD_T<uint8_t> {
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
   static void shift_left(uint8_t * use_buf, _SizeTypeArg num_elem, const _SizeTypeArg shift_sz)
   {
-    memmove(use_buf - shift_sz, (const uint8_t *)use_buf, num_elem);
+    memmove(use_buf, (const void *)(use_buf + shift_sz), sizeof(uint8_t)*(num_elem - shift_sz));
   }
 };
 
@@ -127,7 +127,7 @@ struct LWArrayTraitsPOD_T<uint16_t> {
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
   static void shift_left(uint16_t * use_buf, _SizeTypeArg num_elem, const _SizeTypeArg shift_sz)
   {
-    memmove(use_buf - shift_sz, (const void *)use_buf, sizeof(uint16_t)*num_elem);
+    memmove(use_buf, (const void *)(use_buf + shift_sz), sizeof(uint16_t)*(num_elem - shift_sz));
   }
 };
 
@@ -189,7 +189,7 @@ struct LWArrayTraitsPOD_T<uint32_t> {
   template < typename _SizeTypeArg /* must be an unsigned integer type */ >
   static void shift_left(uint32_t * use_buf, _SizeTypeArg num_elem, const _SizeTypeArg shift_sz)
   {
-    memmove(use_buf - shift_sz, (const void *)use_buf, sizeof(uint32_t)*num_elem);
+    memmove(use_buf, (const void *)(use_buf + shift_sz), sizeof(uint32_t)*(num_elem - shift_sz));
   }
 };
 

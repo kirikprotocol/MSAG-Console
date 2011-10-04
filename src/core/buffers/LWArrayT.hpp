@@ -246,11 +246,11 @@ public:
   {
     if (at_pos >= _numElem)
       denyIndex(at_pos);
-    if ((at_pos + num_to_erase) > _numElem)
-      num_to_erase = _numElem - at_pos;
 
-    //copy elements starting from first to last
-    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (size_type)(_numElem - at_pos), num_to_erase);
+    if ((at_pos + num_to_erase) < _numElem)
+      _TraitsArg<_TArg>::shift_left(_buf + at_pos, (size_type)(_numElem - at_pos), num_to_erase);
+    else
+      num_to_erase = (size_type)(_numElem - at_pos);
     //destroy excessive elements
     _TraitsArg<_TArg>::destroy(_buf + _numElem - num_to_erase, num_to_erase);
     _numElem -= num_to_erase;
@@ -377,11 +377,16 @@ public:
     return rval;
   }
 
-  //shifts array elements to left (shrinks specified number of elements at given position)
-  void shiftLeft(size_type shift_sz, size_type at_pos = 0) //throw()
+  //Shifts array elements to left (shrinks specified number of elements at given position)
+  //Throws if specified index is beyond of the space of initialized elemens.
+  void shiftLeft(size_type shift_sz, size_type at_pos = 0) //throw(std::exception)
   {
-    //copy elements starting from first to last
-    _TraitsArg<_TArg>::shift_left(_buf + at_pos, (size_type)(_numElem - at_pos), shift_sz);
+    if (at_pos >= _numElem)
+      denyIndex(at_pos);
+    if (shift_sz < (_numElem - at_pos))
+      _TraitsArg<_TArg>::shift_left(_buf + at_pos, (size_type)(_numElem - at_pos), shift_sz);
+    else
+      shift_sz = (size_type)(_numElem - at_pos);
     //reset excessive elements
     _TraitsArg<_TArg>::assign(_buf + _numElem - shift_sz, shift_sz, f_dfltValue());
     _numElem -= shift_sz;
