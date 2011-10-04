@@ -211,6 +211,8 @@ TCAPDispatcherITF::DSPState_e TCAPDispatcher::Stop(bool do_wait/* = false*/)
       while (!_sessions.empty()) {
         SSNmap_T::size_type idx = _sessions.size() - 1;
         SSNSession * pSession = _sessions[idx];
+        smsc_log_debug(logger, "%s: destroying SSN[%u], sessIdx = %u", _logId,
+                       (unsigned)(pSession->getSSN()), (unsigned)idx);
         _sessions.erase(idx);
         {
           ReverseMutexGuard rGrd(_sync);
