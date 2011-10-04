@@ -162,6 +162,18 @@ public:
     return pObj;
   }
 
+  //Returns reference to pooled object with given unique index, if it was
+  //previously allocated, otherwise returns empty ObjRef.
+  ObjRef hasObj(size_type obj_idx) const
+  {
+    ObjRef  pObj;
+    {
+      smsc::core::synchronization::MutexGuard  grd(this->poolSync());
+      pObj.initRef(this->isActiveNode(obj_idx));
+    }
+    return pObj;
+  }
+
 protected:
   // --------------------------------------------------
   // -- IDAPoolCoreAC_T<> interface methods

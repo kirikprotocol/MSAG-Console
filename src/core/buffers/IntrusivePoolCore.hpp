@@ -302,6 +302,16 @@ protected:
     return pNode;
   }
 
+  //Checks if node with given index is currently in use and returns it.
+  //Returns NULL if node either isn't allocated or is linked in pool.
+  NodeHeader * isActiveNode(size_type obj_idx) const
+  {
+    if (obj_idx >= mStore.size())
+      return NULL;
+    NodeHeader * pNode = mStore[obj_idx];
+    return mPool.isLinked(*pNode) ? NULL : pNode;
+  }
+
   //Releases (marks as unused) a given node
   void rlseNode(NodeHeader & p_node)
   {
