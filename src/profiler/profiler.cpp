@@ -48,7 +48,7 @@ using namespace smsc::resourcemanager;
 
 using namespace smsc::sms;
 
-/*
+
 static bool isValidAlias(const std::string& s)
 {
   if(s.length()==0 || s.length()>10)return false;
@@ -61,7 +61,7 @@ static bool isValidAlias(const std::string& s)
     //isalnum(s[i]) &&
   }
   return true;
-}*/
+}
 
 class AccessDeniedException{};
 
