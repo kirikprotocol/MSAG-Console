@@ -7,7 +7,7 @@ system/smsc smscmain \
  -lutil-config-smeman -lrt -ladmin-util \
  -lutil -lstore -lsms $(__OBJECTS) $(__LIBRARIES) \
   $(MAP_LIBRARIES) \
- $(XERCES_LIB) -ldl -ldb \
+ $(XERCES_LIB) -ldl \
  -lsystem -lsms -ladmin-util -ladmin-protocol -lmscman \
  -ladmin-service -ladmin-smsc_service \
  -ladmin-util -ladmin -ladmin-protocol -lutil-recoder-recode_dll \
@@ -27,7 +27,7 @@ endswitch
 switch SNMP
 YES: -lsystem-snmp \
 endswitch
- @liblogger.so
+ @liblogger$(SHLIBEXT)
 
 # -lpicl \
 #

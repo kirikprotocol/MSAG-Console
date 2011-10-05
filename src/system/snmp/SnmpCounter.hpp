@@ -244,7 +244,7 @@ protected:
       smsc_log_debug(log,"normal severity order for %s/%d",name,cntIdx);
       for(int i=0;i<4;i++)
       {
-        if(cntValue<limArr[i])break;
+        if((int)cntValue<limArr[i])break;
         rv++;
       }
     }else
@@ -252,7 +252,7 @@ protected:
       smsc_log_debug(log,"reversed severity order for %s/%d",name,cntIdx);
       for(int i=0;i<4;i++)
       {
-        if(cntValue>limArr[i])break;
+        if((int)cntValue>limArr[i])break;
         rv++;
       }
     }

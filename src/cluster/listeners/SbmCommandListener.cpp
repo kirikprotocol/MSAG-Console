@@ -29,14 +29,15 @@ SbmCommandListener::SbmCommandListener(DistrListAdmin* dladmin_)
 
 void SbmCommandListener::handle(const Command& command)
 {
-    
+
 	switch( command.getType() ){
-	case SBMADDSUBMITER_CMD:
-		sbmAddSubmiter(command);
-		break;
-    case SBMDELETESUBMITER_CMD:
-        sbmDeleteSubmiter(command);
-		break;
+	  case SBMADDSUBMITER_CMD:
+	    sbmAddSubmiter(command);
+	    break;
+	  case SBMDELETESUBMITER_CMD:
+	    sbmDeleteSubmiter(command);
+	    break;
+    default:break;
 	}
 }
 

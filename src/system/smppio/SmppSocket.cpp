@@ -43,7 +43,7 @@ char* SmppSocket::getBuffer(int length)
 {
   if(length>bufferSize)
   {
-    delete buffer;
+    delete [] buffer;
     buffer=new char[length];
     bufferSize=length;
   }

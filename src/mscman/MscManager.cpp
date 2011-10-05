@@ -317,7 +317,7 @@ try {
   }
   MscInfo info;
   MutexGuard  guard(mon);
-  while(info.offset=storeFile.Read(info))
+  while((info.offset=storeFile.Read(info)))
   {
     mscs.Insert(info.mscNum, new MscInfo(info));
   }

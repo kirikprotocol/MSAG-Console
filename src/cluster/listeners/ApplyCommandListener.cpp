@@ -48,6 +48,8 @@ void ApplyCommandListener::handle(const Command& command)
       break;
     case APPLYCONFIG_CMD:
       applyConfig();
+      break;
+    default:break;
   }
 }
 

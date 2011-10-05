@@ -31,7 +31,7 @@ static Hash<int> cntNameToIdx;
 struct InitCntNameToIdx{
   InitCntNameToIdx()
   {
-    for(int i=0;i<sizeof(cntNames)/sizeof(cntNames[0]);i++)
+    for(int i=0;i<int(sizeof(cntNames)/sizeof(cntNames[0]));i++)
     {
       cntNameToIdx.Insert(cntNames[i],i);
     }
@@ -40,7 +40,7 @@ struct InitCntNameToIdx{
 
 
 template <int N>
-int FindMapping(const XmlStr& name,char* (&names)[N],int (&values)[N],int defValue)
+int FindMapping(const XmlStr& name,const char* (&names)[N],int (&values)[N],int defValue)
 {
   for(int i=0;i<N;i++)
   {
@@ -89,7 +89,7 @@ static void ParseRecord(DOMNode* record,SnmpCounter::SeverityLimits& lim,SnmpCou
 
     }else if(nodeName=="severity")
     {
-      static char* svrtNames[]={
+      static const char* svrtNames[]={
         "off","normal","warning","minor","major","critical"
       };
       static int svrtValues[]={

@@ -145,7 +145,7 @@ public:
         SMS& sms=*cmd->get_sms();
         if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
         {
-          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND )
+          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=(uint32_t)USSD_PSSR_IND )
           {
             ussdSession=true;
           }
@@ -323,9 +323,9 @@ public:
         SMS& sms=*cmd->get_sms();
         if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
         {
-          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=(uint32_t)USSD_PSSR_IND &&
              !(
-               sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+               sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==(uint32_t)USSD_USSR_REQ &&
                sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
               )
             )
@@ -804,7 +804,7 @@ protected:
   int submitLimit;
   int submitCount;
 
-  smsc::util::TimeSlotCounter<> shapeCounterOut,shapeCounterIn;
+  smsc::util::TimeSlotCounter<> shapeCounterIn,shapeCounterOut;
   int shapeLimit;
 
   bool disconnecting;
@@ -825,6 +825,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
     case SMPP_PDU:
     case ALERT_NOTIFICATION:
       return true;
+    default:break;
   }
 
   switch(proxyType)
@@ -837,6 +838,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
+      break;
     case proxyTransmitter:
       switch(cmd->get_commandId())
       {
@@ -849,6 +851,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
+      break;
     case proxyTransceiver:
       switch(cmd->get_commandId())
       {
@@ -862,6 +865,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
+      break;
   }
   return false;
 }
@@ -878,6 +882,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
     case SMPP_PDU:
     case SMEALERT:
       return true;
+    default:break;
   }
   switch(proxyType)
   {
@@ -889,6 +894,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
+      break;
     case proxyTransmitter:
       switch(cmd->get_commandId())
       {
@@ -901,6 +907,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
+      break;
     case proxyTransceiver:
       switch(cmd->get_commandId())
       {
@@ -914,6 +921,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
+      break;
   }
   return false;
 }

@@ -75,7 +75,7 @@ protected:
     }
     _size=newsize;
     DestroyRange(0,_count);
-    delete (_data-_empty*SZ());
+    delete [] (_data-_empty*SZ());
     _empty=0;
     _data=newdata;
   }
@@ -293,7 +293,7 @@ public:
       new(((T*)newdata)+i)T(Obj(_count-1-i));
     }
     DestroyRange(0,_count);
-    delete (_data-_empty*SZ());
+    delete [] (_data-_empty*SZ());
     _empty=0;
     _data=newdata;
   }

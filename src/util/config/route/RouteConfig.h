@@ -4,6 +4,7 @@
 #include <xercesc/dom/DOM.hpp>
 #include "util/config/route/RouteStructures.h"
 #include "logger/Logger.h"
+#include "util/AutoArrPtr.hpp"
 
 namespace smsc {
 namespace util {
@@ -53,7 +54,7 @@ protected:
   smsc::logger::Logger *logger;
   RoutePVector routes;
   SubjectPHash subjects;
-  std::auto_ptr<char> config_filename;
+  smsc::util::auto_arr_ptr<char> config_filename;
 
   void expandSubject(Subject& subj);
 

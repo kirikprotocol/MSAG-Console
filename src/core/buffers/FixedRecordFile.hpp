@@ -64,7 +64,7 @@ public:
 
   File::offset_type Read(RecordType& rec)
   {
-    if(filePos==fileSize || filePos+RecordType::Size()>fileSize)return 0;
+    if(filePos==fileSize || (File::offset_type)(filePos+RecordType::Size())>fileSize)return 0;
     bool used;
     File::offset_type rv=0;
     do{
@@ -79,7 +79,7 @@ public:
         storeFile.SeekCur(RecordType::Size());
       }
       filePos+=1+RecordType::Size();
-    }while(!used && filePos+RecordType::Size()<=fileSize);
+    }while(!used && (File::offset_type)(filePos+RecordType::Size())<=fileSize);
     if(!used && filePos!=fileSize)
     {
       holes.push_back(filePos);

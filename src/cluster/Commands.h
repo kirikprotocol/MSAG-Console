@@ -420,8 +420,8 @@ namespace smsc { namespace cluster
     private:
         int maxLists;
         int maxElements;
-        smsc::core::buffers::File::offset_type offset;
         std::string address;
+        smsc::core::buffers::File::offset_type offset;
     public:
         PrcAddPrincipalCommand(int maxLists_, int maxElements_, smsc::core::buffers::File::offset_type offset_, std::string address_);
         PrcAddPrincipalCommand() : Command(PRCADDPRINCIPAL_CMD) {};

@@ -1986,7 +1986,7 @@ Variant SmscComponent::aclListNames(const Arguments & args) throw (AdminExceptio
     const AclNamedIdent & ident(*i);
     const size_t len = 3*sizeof(ident.first) + ident.second.length()+2;
     std::auto_ptr<char> buffer(new char[len]);
-    snprintf(buffer.get(), len, "%lu,%s", ident.first, ident.second.c_str());
+    snprintf(buffer.get(), len, "%u,%s", ident.first, ident.second.c_str());
     result.appendValueToStringList(buffer.get());
   }
 
@@ -2003,7 +2003,7 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
 
     Variant result(service::StringListType);
     char buffer[256];
-    snprintf(buffer, sizeof(buffer), "%lu", aclInfo.ident);
+    snprintf(buffer, sizeof(buffer), "%u", aclInfo.ident);
     result.appendValueToStringList(buffer);
     result.appendValueToStringList(aclInfo.name);
     result.appendValueToStringList(aclInfo.description);
@@ -2020,6 +2020,7 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
   } catch (...) {
     throw AdminException("Could not get ACL info, nested: Unknown exception");
   }
+  return Variant();//make compiler happy
 }
 
 Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
@@ -2042,6 +2043,7 @@ Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
   } catch (HashInvalidKeyException &e) {
     throw AdminException("Parameter id not found");
   }
+  return Variant();
 }
 
 Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
@@ -2080,6 +2082,7 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
   } catch (HashInvalidKeyException &e) {
     throw AdminException("Parameter id or name or description or adressess not found");
   }
+  return Variant();
 }
 
 Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminException)
@@ -2110,6 +2113,7 @@ Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminExcepti
   } catch (HashInvalidKeyException &e) {
     throw AdminException("Parameter id or name or description not found");
   }
+  return Variant();
 }
 
 Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminException)
@@ -2140,6 +2144,7 @@ Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminEx
   } catch (HashInvalidKeyException &e) {
     throw AdminException("Parameter id or prefix not found");
   }
+  return Variant();
 }
 
 Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminException)
@@ -2167,6 +2172,7 @@ Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminEx
   } catch (HashInvalidKeyException &e) {
     throw AdminException("Parameter id or adressess not found");
   }
+  return Variant();
 }
 
 Variant SmscComponent::aclAddAddresses(const Arguments & args) throw (AdminException)
@@ -2194,6 +2200,7 @@ Variant SmscComponent::aclAddAddresses(const Arguments & args) throw (AdminExcep
   } catch (HashInvalidKeyException &e) {
     throw AdminException("Parameter id or adressess not found");
   }
+  return Variant();
 }
 
 using namespace smsc::distrlist;

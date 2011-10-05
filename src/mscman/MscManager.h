@@ -30,7 +30,7 @@ namespace mscman {
         static smsc::logger::Logger *log;
 
         bool                automaticRegistration;
-        int                 failureLimit;
+        uint32_t            failureLimit;
         time_t              singleAttemptTimeout;
 
         MscManager(Manager& config)

@@ -185,7 +185,7 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic,const char* k
   smsc_log_info(log, "Licensed for %s",lic["Organization"].c_str());
   smsc_log_info(log, "License type %s",lic["LicenseType"].c_str());
   smsc_log_info(log, "License expiration date %s",lic["LicenseExpirationDate"].c_str());
-  smsc_log_info(log, "Licensed for host ids %s",lic["Hostid"].c_str());
+  smsc_log_info(log, "Licensed for host ids %s",lic["Hostids"].c_str());
   smsc_log_info(log, "Licensed maximum sms throughput %s",lic["MaxSmsThroughput"].c_str());
   return true;
 }
@@ -288,7 +288,7 @@ void gethostid( char* buf, size_t buflen )
 
         /*
         do {
-            
+
             const int argtype = dbus_message_iter_get_arg_type(&args);
             switch (argtype) {
             case DBUS_TYPE_BOOLEAN: {

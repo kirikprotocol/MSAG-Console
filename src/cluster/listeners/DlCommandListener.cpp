@@ -31,15 +31,16 @@ void DlCommandListener::handle(const Command& command)
 {
 
 	switch( command.getType() ){
-	case DLADD_CMD:
-		dlAdd(command);
-		break;
-    case DLDELETE_CMD:
-        dlDelete(command);
-		break;
-    case DLALTER_CMD:
-        dlAlter(command);
-		break;
+	  case DLADD_CMD:
+	    dlAdd(command);
+	    break;
+	  case DLDELETE_CMD:
+	    dlDelete(command);
+	    break;
+	  case DLALTER_CMD:
+	    dlAlter(command);
+	    break;
+	  default:break;
 	}
 }
 
@@ -81,7 +82,7 @@ void DlCommandListener::dlDelete(const Command& command)
     /*printf("\n============== dlDelete ==============\n");
     printf("dlname: %s\n", dlname.c_str());
     return;*/
-    
+
     BEGINMETHOD
     {
         dladmin->deleteDistrList(dlname.c_str());

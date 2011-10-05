@@ -96,7 +96,7 @@ void DistrListManager::init()
           warn2(logger,"PRINCIPAL NOT FOUND: %s",buf);
         }else
         {
-          if(prcPtr->maxEl!=0 && lst.members.size()>prcPtr->maxEl)
+          if(prcPtr->maxEl!=0 && (int)lst.members.size()>prcPtr->maxEl)
           {
             warn2(logger,"LIST %s EXCEEDED MAXIMUM NUMBER OF ELEMETS OF PRINCIPAL %s - %d/%d",
               lst.name,buf,lst.members.size(),prcPtr->maxEl);
@@ -135,7 +135,7 @@ void DistrListManager::addDistrList(string dlName, bool system,const Address& dl
           PrincipalNotExistsException, ListCountExceededException)
 {
     MutexGuard mg(mtx);
-    for(int i=0;i<dlName.length();i++)dlName[i]=tolower(dlName[i]);
+    for(size_t i=0;i<dlName.length();i++)dlName[i]=tolower(dlName[i]);
     if(lists.Exists(dlName.c_str()))throw ListAlreadyExistsException();
     PrincipalRecord* prcPtr;
     if(!system)
@@ -457,7 +457,7 @@ void DistrListManager::addMember(string dlName, const Address& member,smsc::core
     {
       PrincipalRecord* prcPtr=principals.GetPtr(lst.owner.toString().c_str());
       if(!prcPtr)throw PrincipalNotExistsException("%s",lst.owner.toString().c_str());
-      if(prcPtr->maxEl!=0 && lst.members.size()>=prcPtr->maxEl)throw MemberCountExceededException();
+      if(prcPtr->maxEl!=0 && (int)lst.members.size()>=prcPtr->maxEl)throw MemberCountExceededException();
     }
 
     MemberRecord memRec(lst,member);

@@ -111,8 +111,8 @@ protected:
   uint64_t fileSize;
   Mutex mtx;
   Scheduler& sched;
-  bool running;
   bool loadup;
+  bool running;
   bool rolling;
   uint64_t maxStoreSize;
   time_t minRollTime,lastRollTime;
@@ -125,7 +125,7 @@ class Scheduler:public smsc::core::threads::ThreadedTask, public SmeProxy,public
 public:
   //Scheduler(EventQueue& eq):queue(eq)
   static smsc::logger::Logger* log;
-  Scheduler():firstQueue(1000),localFileStore(*this)
+  Scheduler():localFileStore(*this),firstQueue(1000)
   {
     smeSeq=0;
     prxmon=0;
@@ -611,7 +611,7 @@ public:
 
     void CopyBuf(BufOps::SmsBuffer& buf)
     {
-      if(smsBufSize!=buf.GetPos())
+      if(smsBufSize!=(int)buf.GetPos())
       {
         Clear();
         smsBufSize=(int)buf.GetPos();

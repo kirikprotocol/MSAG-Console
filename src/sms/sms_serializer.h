@@ -217,10 +217,9 @@ inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
               int partDc=dcList?dcList[p]:dc;
               if(sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
               {
-                SMSPartInfo spi;
                 unsigned dataLen;
                 uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&dataLen);
-                getSMSPartInfoBin(data,dataLen,p);
+                SMSPartInfo spi=getSMSPartInfoBin(data,dataLen,p);
                 partDc=spi.dc;
               }
               if(partDc==8)
@@ -376,8 +375,7 @@ inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms,int ver)
         {
           unsigned dataLen;
           uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&dataLen);
-          SMSPartInfo spi;
-          getSMSPartInfoBin(data,dataLen,i);
+          SMSPartInfo spi=getSMSPartInfoBin(data,dataLen,i);
           partDc=spi.dc;
         }
         if(partDc==8)

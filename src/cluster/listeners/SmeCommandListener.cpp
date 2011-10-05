@@ -11,17 +11,18 @@ SmeCommandListener::SmeCommandListener(smsc::smeman::SmeManager *smeman_)
 void SmeCommandListener::handle(const Command& command)
 {
 
-	switch( command.getType() ){
-	case SMEADD_CMD:
-		smeAdd(command);
-		break;
+  switch( command.getType() ){
+    case SMEADD_CMD:
+      smeAdd(command);
+      break;
     case SMEREMOVE_CMD:
-        smeRemove(command);
-		break;
+      smeRemove(command);
+      break;
     case SMEUPDATE_CMD:
-        smeUpdate(command);
-		break;
-	}
+      smeUpdate(command);
+      break;
+    default:break;
+  }
 }
 
 void SmeCommandListener::smeAdd(const Command& command)

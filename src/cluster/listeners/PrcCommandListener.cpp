@@ -32,15 +32,16 @@ void PrcCommandListener::handle(const Command& command)
 {
 
 	switch( command.getType() ){
-	case PRCADDPRINCIPAL_CMD:
-		prcAddPrincipal(command);
-		break;
-    case PRCDELETEPRINCIPAL_CMD:
-        prcDeletePrincipal(command);
-		break;
-    case PRCALTERPRINCIPAL_CMD:
-        prcAlterPrincipal(command);
-		break;
+	  case PRCADDPRINCIPAL_CMD:
+	    prcAddPrincipal(command);
+	    break;
+	  case PRCDELETEPRINCIPAL_CMD:
+	    prcDeletePrincipal(command);
+	    break;
+	  case PRCALTERPRINCIPAL_CMD:
+	    prcAlterPrincipal(command);
+	    break;
+    default:break;
 	}
 }
 

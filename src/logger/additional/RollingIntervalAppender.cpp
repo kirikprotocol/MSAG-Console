@@ -237,7 +237,12 @@ void RollingIntervalAppender::write(timeval tp, const char logLevelName, const c
   timeStr[timeStrLength] = 0;
   const size_t desiredLength = strlen(message)+128;
   TmpBuf<char, 4096> buffer(desiredLength+1);
-  const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u %10.10s: %s\n", logLevelName, timeStr, unsigned(msec), unsigned(thrId), category, message);
+#ifdef __APPLE__
+  unsigned thrIdNum=(unsigned)pthread_mach_thread_np(thrId);
+#else
+  unsigned thrIdNum=(unsigned)thrId;
+#endif
+  const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u %10.10s: %s\n", logLevelName, timeStr, unsigned(msec), thrIdNum, category, message);
   buffer[desiredLength] = 0;
 #endif
 

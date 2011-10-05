@@ -53,7 +53,7 @@ ConfigView::ConfigView(const Config& use_config, const char* cat)
 
 ConfigView::~ConfigView()
 {
-    if (category) delete category;
+    if (category) delete [] category;
 }
 
 bool ConfigView::findSubSection(const char * const subsectionName) const
@@ -112,7 +112,7 @@ int32_t ConfigView::getInt(const char* param, const char* error) const
 {
     char* section = prepareSubSection(param);
     int32_t result;
-    try 
+    try
     {
         result = config.getInt(section);
     }
@@ -135,9 +135,9 @@ char* ConfigView::getString(const char* param, const char* error, bool check) co
 {
     char* section = prepareSubSection(param);
     char* result;
-    try 
+    try
     {
-        char* tmp = config.getString(section);   
+        char* tmp = config.getString(section);
         result = new char[strlen(tmp)+1];
         strcpy(result, tmp);
     }
@@ -149,11 +149,11 @@ char* ConfigView::getString(const char* param, const char* error, bool check) co
         if (check)
             smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                      section, (error) ? error:"");
-        if (section) delete section;
+        if (section) delete [] section;
         if (check) throw ConfigException(s.c_str());
         return 0;
     }
-    if (section) delete section;
+    if (section) delete [] section;
     return result;
 }
 bool ConfigView::getBool(const char* param, const char* error) const
@@ -161,7 +161,7 @@ bool ConfigView::getBool(const char* param, const char* error) const
 {
     char* section = prepareSubSection(param);
     bool result;
-    try 
+    try
     {
         result = config.getBool(section);
     }

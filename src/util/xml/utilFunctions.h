@@ -72,7 +72,7 @@ inline
 int AttrGetIntValue(DOMNamedNodeMap* attr,const char* attrName)
 {
   XmlStr value(attr->getNamedItem(XmlStr(attrName))->getNodeValue());
-  return atoi(value.c_str());
+  return (int)strtol(value.c_str(), (char **)NULL, 10);
 }
 
 inline

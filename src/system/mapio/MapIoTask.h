@@ -952,6 +952,7 @@ public:
       MAPSTATS_Update(isUSSD?MAPSTATS_DISPOSEDIALOG_USSD:MAPSTATS_DISPOSEDIALOG_IN);
       throw;
     }
+    return 0;
   }
 
   MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate)
@@ -984,6 +985,7 @@ public:
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_INSRI);
       throw;
     }
+    return 0;
   }
 
   MapDialog* createAbonentStatusDialog(ET96MAP_LOCAL_SSN_T lssn,const SmscCommand& cmd)
@@ -1016,6 +1018,7 @@ public:
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUTSRI);
       throw;
     }
+    return 0;
   }
 
 
@@ -1124,6 +1127,7 @@ public:
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUTSRI);
       throw;
     }
+    return 0;
   }
 
   MapDialog* createOrAttachSMSCUSSDDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)

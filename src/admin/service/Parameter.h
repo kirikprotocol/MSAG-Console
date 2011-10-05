@@ -40,7 +40,7 @@ public:
   Parameter & operator =(const Parameter & copy)
   {
     if (name != 0)
-      delete name;
+      delete [] name;
     name = cStringCopy(copy.name);
     type = copy.type;
     return *this;
@@ -49,7 +49,7 @@ public:
   virtual ~Parameter()
   {
     if (name != 0)
-      delete name;
+      delete [] name;
   }
 
   const char * const getName() const

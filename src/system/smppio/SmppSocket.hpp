@@ -44,8 +44,8 @@ public:
   SmppSocket(int sockmode,Socket* sock,int timeOut):
     mode(sockmode),
     socket(sock),
-    timeOut(timeOut),
     lastEnquireLink(0),
+    timeOut(timeOut),
     channelType(ctUnbound)
   {
     proxy=NULL;
@@ -136,8 +136,8 @@ protected:
   int bufferSize;
   int bufferOffset;
   int mode;
-  time_t lastEnquireLink;
   smsc::core::network::Socket* socket;
+  time_t lastEnquireLink;
   int timeOut;
   SmppIOTask *inThread,*outThread;
   SmppProxy *proxy;

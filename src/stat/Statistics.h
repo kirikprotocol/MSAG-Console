@@ -24,9 +24,9 @@ namespace smsc { namespace stat
 
     struct StatInfo
     {
-        int errcode;       // 0 - if status ok
         smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> smeId; // either src or dst smeId
         smsc::core::buffers::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1> routeId;
+        int errcode;       // 0 - if status ok
         signed long providerId, categoryId; // -1 if undefined
 
         StatInfo(const char* _smeId, const char* _routeId, int _errcode = 0,

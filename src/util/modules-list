@@ -1,6 +1,6 @@
 xml
 config
-#leaktracing
+leaktracing
 templates
 recoder
 regexp

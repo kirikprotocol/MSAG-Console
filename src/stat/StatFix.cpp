@@ -33,8 +33,8 @@ offset_type FileSize(int fd)
     fstat(fd, &st);
     return st.st_size;
 }
-				  
-int SetPos(int fd, offset_type off) 
+
+int SetPos(int fd, offset_type off)
 {
     if (lseek(fd, off, SEEK_SET) == -1) {
 	printf("SetPos failed. Cause=%s\n", strerror(errno));
@@ -110,45 +110,46 @@ int bytesSkipped = 0;
 
 void dumpSkipped(bool showall)
 {
-    if (bytesSkipped >= MAX_FILEREC_SIZE || (showall && bytesSkipped)) { 
+    if (bytesSkipped >= MAX_FILEREC_SIZE || (showall && bytesSkipped)) {
 	printf("Skipped %d bytes:\n", bytesSkipped);
-	for (int i=0; i<bytesSkipped; i++) printf("%02X ", (uint8_t)skip[i]); printf("("); 
+	for (int i=0; i<bytesSkipped; i++) printf("%02X ", (uint8_t)skip[i]); printf("(");
 	for (int i=0; i<bytesSkipped; i++) printf("%c", skip[i]); printf(")\n");
 	bytesSkipped = 0;
     }
 }
 
 int parse(int fdR, int fdW)
-{	
+{
     int status = 0; bytesSkipped = 0;
     uint16_t int16 = 0; uint32_t int32 = 0; offset_type offR = 0;
 
     if (status = SetPos(fdR, 0)) return status;
     if (status = SetPos(fdW, 0)) return status;
-    
+
     // Processing header
     if (status = ReadBuff(fdR, buff, 9)) return status;
     if (status = ReadInt16(fdR, int16)) return status;
-    
+
     /*if (strcmp(buff, "SMSC.STAT") || int16 != 1) {
 	printf("File is not SMSC statistics file (1.0 version)\n");
 	return -5;
     }*/
-    
+
     if (status = WriteBuff(fdW, buff, 9)) return status;
     if (status = WriteInt16(fdW, int16)) return status;
 
     int recordsRestored = 0;
-    uint32_t sz1, sz2; offR += 11; 
+    uint32_t sz1, sz2; offR += 11;
     offset_type maxOffR = FileSize(fdR);
     printf("File size %lld\n", maxOffR);
-        
+
     // Processing data
     while (offR+8 < maxOffR)
     {
 	//printf("offR=%lld\n", offR);
 	if (status = ReadInt32(fdR, sz1)) return status;
-	if (!sz1 || sz1 < 1200 || sz1 > 8192 || sz1 >= maxOffR-offR || sz1 >= MAX_FILEREC_SIZE) { // skip 1 byte
+	if (!sz1 || sz1 < 1200 || sz1 > 18192 || sz1 >= maxOffR-offR || sz1 >= MAX_FILEREC_SIZE)
+	{ // skip 1 byte
 	    printf("sz1=%d isn't seems to be valid, off=%lld\n", sz1, offR);
 	    dumpSkipped(false);
 	    skip[bytesSkipped++] = (uint8_t)((htonl(sz1)>>24)&0x00000000000000ff);
@@ -176,13 +177,17 @@ int parse(int fdR, int fdW)
     return status;
 }
 
+#ifndef O_LARGEFILE
+#define O_LARGEFILE 0
+#endif
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
 	printf("Usage: StatFix file1 (... fileN)\n");
 	return -1;
     }
-    
+
     char wfname[256];
     for (int fcount=1; fcount<argc; fcount++)
     {
@@ -192,7 +197,7 @@ int main(int argc, char* argv[])
 	    printf("Failed to open file: %s\n", fname);
 	    continue;
 	}
-	
+
 	sprintf(wfname, "%s.fix", fname);
 	int fdW = open(wfname, O_WRONLY|O_LARGEFILE|O_CREAT, 0644);
 	if (fdW == -1) {
@@ -200,9 +205,9 @@ int main(int argc, char* argv[])
 	    printf("Failed to create file: %s\n", wfname);
 	    continue;
 	}
-	
+
 	printf("Scanning file: %s\n", fname);
-	int st = parse(fdR, fdW);	
+	int st = parse(fdR, fdW);
 	printf("File %s scan %s (status=%d)\n", fname, (st == 0) ? "ok":"failed", st);
 	close(fdR); close(fdW);
     }

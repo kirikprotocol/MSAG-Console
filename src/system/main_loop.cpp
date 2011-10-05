@@ -3,7 +3,7 @@
 #include "smsc.hpp"
 #include <memory>
 #include <vector>
-#ifndef linux
+#ifdef __SunOS
 #include <thread.h>
 #endif
 
@@ -33,9 +33,9 @@ bool Smsc::routeSms(SmeIndex srcIdx,const Address& org,const Address& dst, smsc:
 bool isUSSDSessionSms(SMS* sms)
 {
   return sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
-         sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+         sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=(uint32_t)USSD_PSSR_IND &&
          !(
-            sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+            sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==(uint32_t)USSD_USSR_REQ &&
             !sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
           )
   ;
@@ -118,13 +118,13 @@ void Smsc::mainLoop(int idx)
 {
   typedef std::vector<SmscCommand> CmdVector;
   CmdVector frame;
-  SmeIndex smscSmeIdx=smeman.lookup("smscsme");
+  //SmeIndex smscSmeIdx=smeman.lookup("smscsme");
   Event e;
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("mainloop");
   smsc::logger::Logger *speedLog= smsc::logger::Logger::getInstance("ml.speeds");
   SpeedTimer st;
   st.enabled=speedLog->isDebugEnabled();
-#ifndef linux
+#ifdef __SunOS
   thr_setprio(thr_self(),127);
 #endif
   time_t last_tm = time(NULL);
@@ -133,13 +133,13 @@ void Smsc::mainLoop(int idx)
   EventQueue::EnqueueVector enqueueVector;
   FindTaskVector findTaskVector;
   typedef std::vector<int> IntVector;
-  IntVector shuffle;
+  //IntVector shuffle;
 
   smsc::logger::Logger *tslog = smsc::logger::Logger::getInstance("timestat");
 
   int sbmcnt=0;
 
-  time_t lastTimeStatCheck=last_tm;
+  //time_t lastTimeStatCheck=last_tm;
 
   int licenseExpTrapDay=-1;
 
@@ -341,7 +341,7 @@ void Smsc::mainLoop(int idx)
       int sz=(int)findTaskVector.size();
       st.start();
       tasks.findAndRemoveTaskEx(findTaskVector);
-      SMSId id;
+      //SMSId id;
       for(FindTaskVector::iterator it=findTaskVector.begin();it!=findTaskVector.end();it++)
       {
         if(it->found)
@@ -368,11 +368,11 @@ void Smsc::mainLoop(int idx)
       debug2(speedLog,"enqueue time=%lld, size=%d",st.getTime(),sz);
     }
 
-    shuffle.clear();
+    /*shuffle.clear();
     {
-      for(int i=0;i<frame.size();i++)
+      for(size_t i=0;i<frame.size();i++)
       {
-        int x=((double)rand()/RAND_MAX)*i;
+        size_t x=((double)rand()/RAND_MAX)*i;
         if(x<shuffle.size())
         {
           shuffle.push_back(shuffle[x]);
@@ -382,13 +382,14 @@ void Smsc::mainLoop(int idx)
           shuffle.push_back(i);
         }
       }
-    }
+    }*/
 
 
     int eqsize,equnsize;
-    for(int j=0;j<frame.size();j++)
+    for(size_t j=0;j<frame.size();j++)
     {
-      SmscCommand* i=&frame[shuffle[j]];
+      //SmscCommand* i=&frame[shuffle[j]];
+      SmscCommand* i=&frame[j];
       eventqueue.getStats(eqsize,equnsize);
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
@@ -448,7 +449,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
 {
   SMSId id=0;
   static smsc::logger::Logger *log = smsc::logger::Logger::getInstance("sms.trace");
-  static smsc::logger::Logger *logML = smsc::logger::Logger::getInstance("smsc.mainLoop");
+  //static smsc::logger::Logger *logML = smsc::logger::Logger::getInstance("smsc.mainLoop");
   switch(cmd->get_commandId())
   {
     case __CMD__(SUBMIT):
@@ -565,8 +566,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     case __CMD__(REPLACE):
     {
       int pos;
-      if(sscanf(cmd->get_replaceSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-         cmd->get_replaceSm().messageId.get()[pos]!=0)
+      if(sscanf(cmd->get_replaceSm().messageId.c_str(),"%lld%n",&id,&pos)!=1 ||
+         cmd->get_replaceSm().messageId.c_str()[pos]!=0)
       {
         cmd.getProxy()->putCommand
         (
@@ -583,8 +584,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     case __CMD__(QUERY):
     {
       int pos;
-      if(sscanf(cmd->get_querySm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-         cmd->get_querySm().messageId.get()[pos]!=0)
+      if(sscanf(cmd->get_querySm().messageId.c_str(),"%lld%n",&id,&pos)!=1 ||
+         cmd->get_querySm().messageId.c_str()[pos]!=0)
       {
         cmd.getProxy()->putCommand
         (
@@ -601,7 +602,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     }
     case __CMD__(CANCEL):
     {
-      if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()))
+      if((cmd->get_cancelSm().messageId[0] && cmd->get_cancelSm().serviceType[0]))
       {
           cmd.getProxy()->putCommand
           (
@@ -614,11 +615,11 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
           return;
       }
 
-      if(cmd->get_cancelSm().messageId.get())
+      if(cmd->get_cancelSm().messageId[0])
       {
         int pos=0;
-        if(sscanf(cmd->get_cancelSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-           cmd->get_cancelSm().messageId.get()[pos]!=0)
+        if(sscanf(cmd->get_cancelSm().messageId.c_str(),"%lld%n",&id,&pos)!=1 ||
+           cmd->get_cancelSm().messageId.c_str()[pos]!=0)
         {
           cmd.getProxy()->putCommand
           (
@@ -632,8 +633,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         };
       }else
       {
-        if(!cmd->get_cancelSm().sourceAddr.get() || !cmd->get_cancelSm().sourceAddr.get()[0] ||
-           !cmd->get_cancelSm().destAddr.get() || !cmd->get_cancelSm().destAddr.get()[0])
+        if(!cmd->get_cancelSm().sourceAddr[0] ||
+           !cmd->get_cancelSm().destAddr[0])
         {
           cmd.getProxy()->putCommand
           (
@@ -705,11 +706,11 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         mergeCache.Delete(mci);
       }
       return;
-    };
+    }break;
     default:
     {
       __warning2__("mainLoop: unprocessed command id:%d",cmd->get_commandId());
-    };
+    }break;
   }
   ev.push_back(EventQueue::EnqueueVector::value_type(id,cmd));
 }

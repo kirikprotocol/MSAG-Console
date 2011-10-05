@@ -22,12 +22,13 @@ ProfileCommandListener::ProfileCommandListener(smsc::profiler::Profiler * profil
 void ProfileCommandListener::handle(const Command& command)
 {
   switch( command.getType() ){
-  case PROFILEUPDATE_CMD:
-    profileUpdate(command);
-    break;
+    case PROFILEUPDATE_CMD:
+      profileUpdate(command);
+      break;
     case PROFILEDELETE_CMD:
-        profileDelete(command);
-    break;
+      profileDelete(command);
+      break;
+    default:break;
   }
 }
 

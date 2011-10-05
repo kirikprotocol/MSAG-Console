@@ -44,7 +44,7 @@ namespace smsc { namespace distrlist
               setName(argName);
             };
         DistrList(const Address& owner, const char* argName="", int maxEl=0)
-            : maxEl(maxEl), system(false), owner(owner)
+            : system(false), maxEl(maxEl), owner(owner)
         {
           setName(argName);
         };

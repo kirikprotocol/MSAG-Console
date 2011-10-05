@@ -44,17 +44,17 @@ char * vform(const char* format, va_list args,char* buf,size_t bufsize)
       va_copy(aq,args);
       int n = ::vsnprintf(buffer, size, format, aq);
       va_end(aq);
-  
+
       // If that worked, return a string.
       if ((n > -1) && (static_cast<size_t>(n) < size)) {
         return buffer;
       }
-  
+
       // Else try again with more space.
       size = (n > -1) ?
         n + 1 :   // ISO/IEC 9899:1999
       size * 2; // twice the old size
-  
+
       if(buffer!=buf)delete [] buffer;
       buffer = new char[size];
     }
@@ -419,7 +419,7 @@ void Logger::configure(const char * const configFileName) throw (Exception)
   if(props.Exists("configReloadInterval"))
     reloadConfigInterval = atoi(props["configReloadInterval"]);
 
-  struct ::stat st={0,};
+  stat_type st={0,};
   ::stat((const char*)configFileName, &st);
   lastConfigMTime=st.st_mtime;
 
@@ -491,7 +491,7 @@ void Logger::storeConfig(const char * const configFileName) throw (Exception)
 
 Logger::LogLevel Logger::findDebugLevel(const char * const name)
 {
-  std::auto_ptr<char> n(cStringCopy(name));
+  smsc::util::auto_arr_ptr<char> n(cStringCopy(name));
   while (strlen(n.get()) > 0 && (!logLevels.Exists(n.get())))
     truncateLastNamePart(n.get());
 
@@ -503,7 +503,7 @@ Logger::LogLevel Logger::findDebugLevel(const char * const name)
 
 Appender* Logger::findAppenderByCat(const char * const name)
 {
-  std::auto_ptr<char> n(cStringCopy(name));
+  smsc::util::auto_arr_ptr<char> n(cStringCopy(name));
   while (strlen(n.get()) > 0 && !cats2appenders.Exists(n.get()))
     truncateLastNamePart(n.get());
 
@@ -661,7 +661,7 @@ void Logger::logva_(timeval tv,const LogLevel _logLevel, const char * const stri
 #else
   char buf[2048];
   char* msg=vform(stringFormat, args,buf,sizeof(buf));
-  std::auto_ptr<char> messageBuf(msg==buf?0:msg);
+  smsc::util::auto_arr_ptr<char> messageBuf(msg==buf?0:msg);
   if (isInitialized())
   {
     try{

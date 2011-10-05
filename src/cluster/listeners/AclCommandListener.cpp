@@ -18,23 +18,24 @@ AclCommandListener::AclCommandListener(AclAbstractMgr   *aclmgr_)
 void AclCommandListener::handle(const Command& command)
 {
 
-	switch( command.getType() ){
-	case ACLREMOVE_CMD:
-		aclRemove(command);
-		break;
+  switch( command.getType() ){
+    case ACLREMOVE_CMD:
+      aclRemove(command);
+      break;
     case ACLCREATE_CMD:
-        aclCreate(command);
-		break;
+      aclCreate(command);
+      break;
     case ACLUPDATEINFO_CMD:
-        aclUpdateInfo(command);
-		break;
+      aclUpdateInfo(command);
+      break;
     case ACLREMOVEADDRESSES_CMD:
-        aclRemoveAddresses(command);
-		break;
+      aclRemoveAddresses(command);
+      break;
     case ACLADDADDRESSES_CMD:
-        aclAddAddresses(command);
-		break;
-	}
+      aclAddAddresses(command);
+      break;
+    default:break;
+  }
 }
 
 void AclCommandListener::aclRemove(const Command& command)
@@ -45,8 +46,8 @@ void AclCommandListener::aclRemove(const Command& command)
 
     cmd->getArgs(aclId);
 
-    
-    
+
+
     try {
       aclmgr->remove(aclId);
     } catch (std::exception &e) {
@@ -56,7 +57,7 @@ void AclCommandListener::aclRemove(const Command& command)
     } catch (...) {
       throw Exception("Could not remove ACL, nested: Unknown exception");
     }
-  
+
 }
 
 void AclCommandListener::aclCreate(const Command& command)
@@ -72,7 +73,7 @@ void AclCommandListener::aclCreate(const Command& command)
 
     cmd->getArgs(name, description, cache_type, cache_type_present, offset, phones);
 
-    
+
     cache_type_present = cache_type.length() > 0;
 
     std::vector<AclPhoneNumber> phones_;
@@ -124,8 +125,8 @@ void AclCommandListener::aclUpdateInfo(const Command& command)
       throw Exception("Could not update ACL info, nested: \"%s\"", e);
     } catch (...) {
       throw Exception("Could not update ACL info, nested: Unknown exception");
-    }  
-  
+    }
+
 }
 
 void AclCommandListener::aclRemoveAddresses(const Command& command)
@@ -138,7 +139,7 @@ void AclCommandListener::aclRemoveAddresses(const Command& command)
     cmd->getArgs(aclId, addresses);
 
     try {
-      
+
         for (std::vector<std::string>::const_iterator i = addresses.begin(); i != addresses.end(); i++) {
             aclmgr->removePhone(aclId, *i);
         }
@@ -149,7 +150,7 @@ void AclCommandListener::aclRemoveAddresses(const Command& command)
     } catch (...) {
       throw Exception("Could not remove addresses, nested: Unknown exception");
     }
-  
+
 }
 
 void AclCommandListener::aclAddAddresses(const Command& command)
@@ -172,7 +173,7 @@ void AclCommandListener::aclAddAddresses(const Command& command)
     } catch (...) {
       throw Exception("Could not add addresses, nested: Unknown exception");
     }
-  
+
 }
 
 }

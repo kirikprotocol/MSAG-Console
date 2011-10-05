@@ -81,7 +81,7 @@ public:
   int seq;
   Mutex seqMtx;
 
-  SmeRecord():seq(1),refCnt(0),deleted(false),freeProxy(false){}
+  SmeRecord():deleted(false),refCnt(0),freeProxy(false),seq(1){}
 
   void acquire()
   {

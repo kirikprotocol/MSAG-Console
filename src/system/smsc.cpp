@@ -40,6 +40,8 @@
 #include "closedgroups/ClosedGroupsManager.hpp"
 #include "system/common/TimeZoneMan.hpp"
 #include "alias/AliasManImpl.hpp"
+#include "util/TimeSource.h"
+#include "util/AutoArrPtr.hpp"
 
 #ifdef USE_MAP
 #include "mapio/FraudControl.hpp"
@@ -61,6 +63,8 @@
 #ifdef ENABLE_MAP_SYM
 #include "system/mapsym.hpp"
 #endif
+
+typedef struct stat stat_type;
 
 namespace smsc{
 namespace system{
@@ -228,7 +232,7 @@ public:
         }
 
         uint32_t smePerfDataSize = 0;
-        std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
+        smsc::util::auto_arr_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
         perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
         info2(log,"ut=%.3lf;avg=%.3lf;last=%.3lf;cnt=%llu;eq=%d;equnl=%d;sched=%d;dpf=%d;sbm=%d;rej=%d;dlv=%d;fwd=%d;tmp=%d;prm=%d",ut,avg,rate,cnt,eqhash,equnl,d.inScheduler,d.dpfCount,
               d.counters[6].lastSecond,d.counters[7].lastSecond,d.counters[8].lastSecond,d.counters[9].lastSecond,d.counters[10].lastSecond,d.counters[11].lastSecond);
@@ -1838,6 +1842,30 @@ std::string Smsc::licenseFile;
 std::string Smsc::licenseSigFile;
 time_t Smsc::licenseFileModTime=0;
 
+#ifdef __APPLE__
+long local_gethostid()
+{
+  uuid_t id;
+  timespec tv={0,0};
+  if(gethostuuid(id,&tv)==0)
+  {
+    long res=0;
+    for(int i=0;i<16;i++)
+    {
+      res^=((uint32_t)(unsigned char)(id[i]))<<((i%4)*8);
+    }
+    return res;
+  }else
+  {
+    throw Exception("Failed to get uuid");
+  }
+}
+#else
+long local_gethostid()
+{
+  return gethostid();
+}
+#endif
 
 void Smsc::InitLicense()
 {
@@ -1848,17 +1876,25 @@ void Smsc::InitLicense()
       licenseSigFile=smsc::util::findConfigFile("license.sig");
   }
 
-  struct ::stat st;
+  stat_type st;
   if(::stat(licenseFile.c_str(),&st)!=0)
   {
     throw Exception("Failed to stat '%s'",licenseFile.c_str());
   }
+#ifdef __APPLE__
+  if(st.st_mtimespec.tv_sec==licenseFileModTime)
+  {
+    return;
+  }
+  licenseFileModTime=st.st_mtimespec.tv_sec;
+#else
   if(st.st_mtime==licenseFileModTime)
   {
     return;
   }
-
   licenseFileModTime=st.st_mtime;
+#endif
+
 
   static const char *lkeys[]=
   {
@@ -1891,7 +1927,7 @@ void Smsc::InitLicense()
   bool ok=false;
   do{
     sscanf(ids.c_str()+pos,"%lx",&hostid);
-    if(hostid==gethostid())
+    if(hostid==local_gethostid())
     {
       ok=true;break;
     }

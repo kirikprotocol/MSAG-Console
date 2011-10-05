@@ -141,7 +141,7 @@ public:
     Record r;
     smsc::core::buffers::File::offset_type off;
     int cnt=0;
-    while(off=store.Read(r))
+    while((off=store.Read(r)))
     {
       Record *recptr=new Record(r.addr,r.alias,r.hide);
       char buf[32];

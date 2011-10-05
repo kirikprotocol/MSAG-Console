@@ -111,7 +111,7 @@ public:
     Inc(0);
     int l=last;
     count+=inc;
-    if(count>maxperslot*slotsCount)
+    if(count>(T)(maxperslot*slotsCount))
     {
       //inc-=count-maxperslot*slotsCount-1;
       //count=maxperslot*slotsCount+1;
@@ -129,7 +129,7 @@ public:
       }
       l--;
       if(l<0)l=slotsCount-1;
-      if(l==first)break;
+      if(l==(int)first)break;
     }
     //count-=inc;
     slot[last]+=inc;
@@ -160,7 +160,7 @@ public:
   {
     return slotRes;
   }
-  
+
   /*void dump(std::vector<T>& v)
   {
     v.insert(v.begin(),slot,slot+slotsCount);

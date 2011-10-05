@@ -23,6 +23,12 @@ void UCS_T(char* buffer, const char* orig, unsigned len, unsigned esm_class,Conv
     for ( unsigned k = 0; k < len/2; ++k )
     {
       ((uint16_t*)buffer)[k] = Conv(((uint16_t*)orig)[k]);
+      /*
+      uint16_t val;
+      memcpy(&val,orig+k*2,2);
+      val=Conv(val);
+      memcpy(buffer+k*2,&val,2);
+      */
     }
   }
   else
@@ -34,7 +40,7 @@ void UCS_T(char* buffer, const char* orig, unsigned len, unsigned esm_class,Conv
     }
     ++udhLen;
     // copy udh
-    memcpy(buffer,orig,udhLen);
+    if(buffer!=orig)memcpy(buffer,orig,udhLen);
     len -= udhLen;
     buffer += udhLen;
     orig += udhLen;
@@ -45,6 +51,12 @@ void UCS_T(char* buffer, const char* orig, unsigned len, unsigned esm_class,Conv
     for ( unsigned k = 0; k < len/2; ++k )
     {
       ((uint16_t*)buffer)[k] = Conv(((uint16_t*)orig)[k]);
+      /*
+      uint16_t val;
+      memcpy(&val,orig+k*2,2);
+      val=Conv(val);
+      memcpy(buffer+k*2,&val,2);
+      */
     }
   }
 }

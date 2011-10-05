@@ -186,7 +186,7 @@ int StatusSme::Execute()
             answer="chain for "+arg+" not found in scheduled";
           }else
           {
-            answer="chain scheduled to %u"+sc;
+            smsc::util::format(answer,"chain scheduled to %lu",sc);
           }
         }
       }catch(...)

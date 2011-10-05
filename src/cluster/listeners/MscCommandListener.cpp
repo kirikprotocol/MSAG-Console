@@ -27,6 +27,7 @@ void MscCommandListener::handle(const Command& command)
     case MSCREPORT_CMD:
       mscReport(command);
       break;
+    default:break;
   }
 }
 

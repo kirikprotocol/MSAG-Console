@@ -417,7 +417,7 @@ RouteConfig::status RouteConfig::reload()
 {
   __trace__("smsc::util::config::route::RouteConfig - Reload routes");
   clear();
-  std::auto_ptr<char> tmp = config_filename;
+  smsc::util::auto_arr_ptr<char> tmp = config_filename;
   status result = load(tmp.get());
   __trace2__("smsc::util::config::route::RouteConfig - loaded %u routes, %u subjects", routes.size(), subjects.GetCount());
   return result;

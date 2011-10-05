@@ -64,12 +64,13 @@ unsigned char ConvertW2C(unsigned short val, ConvEncodingEnum encoding )
     {
       switch(encoding)
       {
-        case CONV_ENCODING_CP1251:return '¹';
-        case CONV_ENCODING_KOI8R:return '¿';
-        case CONV_ENCODING_ANSI:return'î';
+        case CONV_ENCODING_CP1251:return 'N';
+        case CONV_ENCODING_KOI8R:return 'N';
+        case CONV_ENCODING_ANSI:return'N';
         default:return '?';
       }
-    }else return '?';
+    }
+    return '?';
   case 0x0: //ANSI
     return (unsigned char)(val&0xff);
   default: // Unknown
@@ -121,19 +122,16 @@ int Transliterate(const char* buf,size_t len,ConvEncodingEnum encoding,char *des
   if(len==0)return 0;
   size_t j=0;
   const unsigned char* res;
-  bool prev_is_capital,next_is_capital;
+  bool prev_is_capital=false,next_is_capital;
   if(len>1)
   {
     if((unsigned char)buf[1]>127)Translit((unsigned char)buf[1],encoding,0,&prev_is_capital);
     else if(buf[1]>='A' && buf[1]<='Z')prev_is_capital=true;
-  }else
-  {
-    prev_is_capital=false;
   }
-  for(int i=0;i<len;i++)
+  for(int i=0;i<(int)len;i++)
   {
     unsigned char ch=(unsigned char)buf[i];
-    if(i<len-1)
+    if(i<(int)len-1)
     {
       next_is_capital=!isxalpha(buf[i+1]) || isxupper(buf[i+1]);
     }
@@ -286,7 +284,7 @@ int RECODE_DECL ConvertTextTo7Bit(const char* text, size_t textbuf_size, char* b
     else if ( text[1] >= 'A' && text[1] <= 'Z' ) prev_is_capital = true;
     else prev_is_capital = false;
   }
-  for ( int i=0; i < textbuf_size; ++i )
+  for ( size_t i=0; i < textbuf_size; ++i )
   {
     unsigned char ch = (unsigned char)(text[i]);
     if ( ch > 127 ) {
@@ -308,11 +306,11 @@ int RECODE_DECL Convert7BitToUCS2(const char* bit7buf, size_t bit7buf_size,
 {
   InBitStream bstream((unsigned char*)bit7buf,bit7buf_size);
   memset(ucs2,0,ucs2buff_size);
-  int i;
+  size_t i;
   for ( i=0; i < ucs2buff_size/2; ++i ){
     ucs2[i] = (short)(unsigned short)bstream.Get();
   }
-  return i;
+  return (int)i;
 }
 
 int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, size_t ucs2buff_size,
@@ -395,6 +393,7 @@ unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, size_t chars,char* 
     case '\\':out[k++] = 0x1b; out[k++] = 0x2f; break;
     default:
       out[k++] = _8bit_2_7bit[static_cast<unsigned char>(in[i])];
+      break;
     }
   }
   return (unsigned)k;

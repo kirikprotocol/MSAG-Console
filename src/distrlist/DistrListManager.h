@@ -33,12 +33,12 @@ namespace smsc { namespace distrlist
         int lstCount;
         smsc::core::buffers::File::offset_type offset;
 
-        PrincipalRecord():lstCount(0),Principal()
+        PrincipalRecord():Principal(),lstCount(0)
         {
         }
 
-        PrincipalRecord(Address address, int maxLst, int maxEl):lstCount(0),
-          Principal(address, maxLst,maxEl){}
+        PrincipalRecord(Address address, int maxLst, int maxEl):Principal(address, maxLst,maxEl),lstCount(0)
+          {}
 
         void Read(smsc::core::buffers::File& f)
         {

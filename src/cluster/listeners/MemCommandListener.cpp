@@ -30,14 +30,15 @@ MemCommandListener::MemCommandListener(DistrListAdmin* dladmin_)
 void MemCommandListener::handle(const Command& command)
 {
 
-	switch( command.getType() ){
-	case MEMADDMEMBER_CMD:
-		memAddMember(command);
-		break;
+  switch( command.getType() ){
+    case MEMADDMEMBER_CMD:
+      memAddMember(command);
+      break;
     case MEMDELETEMEMBER_CMD:
-        memDeleteMember(command);
-		break;
-	}
+      memDeleteMember(command);
+      break;
+    default:break;
+  }
 }
 
 void MemCommandListener::memAddMember(const Command& command)

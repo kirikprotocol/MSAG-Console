@@ -134,7 +134,7 @@ class StateMachine;
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser(0),testRouter_(0),mergeCacheTimeouts(4096), ishs(false)
+  Smsc():ssockman(&tp,&smeman),router_(0),aliaser(0),testRouter_(0),stopFlag(false),mergeCacheTimeouts(4096), ishs(false)
   {
     submitOkCounter=0;
     submitErrCounter=0;
@@ -526,7 +526,7 @@ public:
     inManCom->ChargeSms(id,sms,ctx);
   }
 
-  bool ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final,int policy)
+  bool ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final,unsigned int policy)
   {
     try{
       if(sms.billingRequired() &&
@@ -602,9 +602,9 @@ protected:
   Mutex routerSwitchMutex;
   //Mutex aliasesSwitchMutex;
   Reffer<RouteManager>* router_;
+  AliasManager* aliaser;
   Reffer<RouteManager>* testRouter_;
 
-  AliasManager* aliaser;
 
   void enqueueEx(EventQueue::EnqueueVector& ev);
   EventQueue eventqueue;

@@ -74,7 +74,7 @@ struct SmeErrorCounter
     TimeSlotCounter<int>*   slot;
     uint16_t                errors;
 
-    SmeErrorCounter() : errors(0), slot(0) {};
+    SmeErrorCounter() : slot(0),errors(0) {};
     virtual ~SmeErrorCounter() {
         if (slot) delete slot;
     };
@@ -242,6 +242,7 @@ class PerformanceListener{
 public:
   virtual void reportGenPerformance(PerformanceData* data)=0;
   virtual void reportSmePerformance(uint8_t* data, uint32_t size)=0;
+  virtual ~PerformanceListener(){}
 };
 
 class PerformanceDataDispatcher:public PerformanceListener{
@@ -259,7 +260,7 @@ public:
   {
     MutexGuard g(mtx);
     PerformanceData ld=*data;
-    int high,low;
+    //int high,low;
 
     ld.size=htonl((uint32_t)sizeof(ld));
     ld.countersNumber=htonl(ld.countersNumber);
@@ -319,7 +320,7 @@ public:
     {
       int wr=sockets[i]->WriteAll((char*)data, size);
 
-      if(wr!=size)
+      if(wr!=(int)size)
       {
         sockets[i]->Abort();
         delete sockets[i];

@@ -137,11 +137,13 @@ protected:
 
   void init()
   {
+  /*
     char thr[11];
     snprintf(thr, sizeof(thr), "[%.8X]", unsigned(pthread_self()));
     std::string ndc;
     ndc += thr;
     //ndc += cl_addr;
+    */
   }
 
 };

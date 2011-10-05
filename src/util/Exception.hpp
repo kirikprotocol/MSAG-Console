@@ -75,7 +75,7 @@ public:
     message = org_exc.message;
   }
 
-  ~CustomException() throw ()
+  virtual ~CustomException() throw ()
   {
   }
 

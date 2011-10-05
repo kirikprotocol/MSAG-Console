@@ -11,6 +11,7 @@
 
 #include "core/buffers/TmpBuf.hpp"
 #include "core/buffers/File.hpp"
+#include "util/AutoArrPtr.hpp"
 
 using namespace smsc::core::buffers;
 
@@ -120,7 +121,7 @@ Config* Config::createFromFile( const char* xmlfile, time_t* ifnewer )
     }
     struct stat s;
     int rc = stat(xmlfile,&s);
-    std::auto_ptr<char> tmp;
+    smsc::util::auto_arr_ptr<char> tmp;
     if ( *xmlfile != '/' ) {
         if ( rc == 0 && S_ISREG(s.st_mode) ) {
             // found
@@ -183,7 +184,7 @@ void Config::parse(const DOMElement &element)
   catch (DOMException &e)
   {
     std::string s("Exception on processing config tree, nested: ");
-    std::auto_ptr<char> msg(XMLString::transcode(e.msg));
+    smsc::util::auto_arr_ptr<char> msg(XMLString::transcode(e.msg));
     s += msg.get();
     throw ConfigException(s.c_str());
   }
@@ -206,7 +207,7 @@ void Config::processNode(const DOMElement &element,
     {
       DOMElement *e = (DOMElement*)(n);
       XmlStr name(e->getAttribute(XmlStr("name")));
-      auto_ptr<char> fullName(new char[strlen(prefix) +1 +strlen(name) +1]);
+      smsc::util::auto_arr_ptr<char> fullName(new char[strlen(prefix) +1 +strlen(name) +1]);
       if (prefix[0] != 0)
       {
         strcpy(fullName.get(), prefix);
@@ -238,7 +239,7 @@ void Config::processParamNode(const DOMElement &element,
   throw (DOMException)
 {
   //getting value
-  std::auto_ptr<char> value(getNodeText(element));
+  smsc::util::auto_arr_ptr<char> value(getNodeText(element));
 
   if (strcmp(type, "string") == 0)
   {
@@ -324,7 +325,7 @@ void Config::ConfigTree::write(std::ostream &out, std::string prefix)
   std::string newPrefix(prefix + "  ");
   for(sections.First(); sections.Next(_name, val);)
   {
-    std::auto_ptr<char> tmp_name(encode(_name));
+    smsc::util::auto_arr_ptr<char> tmp_name(encode(_name));
     out << prefix << "<section name=\"" << tmp_name.get() << "\">" << std::endl;
     val->write(out, newPrefix);
     out << prefix << "</section>" << std::endl;
@@ -332,8 +333,8 @@ void Config::ConfigTree::write(std::ostream &out, std::string prefix)
 
   for (size_t i=0; i<params.size(); i++)
   {
-    std::auto_ptr<char> paramName(encode(params[i].name));
-    std::auto_ptr<char> paramValue(encode(params[i].value));
+    smsc::util::auto_arr_ptr<char> paramName(encode(params[i].name));
+    smsc::util::auto_arr_ptr<char> paramValue(encode(params[i].value));
     out << prefix << "<param name=\"" << paramName.get() << "\" type=\"";
     switch (params[i].type)
     {
@@ -359,7 +360,7 @@ char * Config::ConfigTree::getText(std::string prefix)
   std::string newPrefix(prefix + "  ");
   for(sections.First(); sections.Next(_name, val);)
   {
-    std::auto_ptr<char> tmp_name(encode(_name));
+    smsc::util::auto_arr_ptr<char> tmp_name(encode(_name));
     result += prefix;
     result += "<section name=\"";
     result += tmp_name.get();
@@ -373,8 +374,8 @@ char * Config::ConfigTree::getText(std::string prefix)
 
   for (size_t i=0; i<params.size(); i++)
   {
-    std::auto_ptr<char> paramName(encode(params[i].name));
-    std::auto_ptr<char> paramValue(encode(params[i].value));
+    smsc::util::auto_arr_ptr<char> paramName(encode(params[i].name));
+    smsc::util::auto_arr_ptr<char> paramValue(encode(params[i].value));
     result += prefix;
     result += "<param name=\"";
     result += paramName.get();

@@ -47,7 +47,7 @@ void StderrAppender::log(timeval tp,const char logLevelName, const char * const 
                     lcltm.tm_min, lcltm.tm_sec, int(msec), unsigned(thrId), category);
   return unsigned(res);
 }
-    
+
 void StderrAppender::write(timeval tp, const char logLevelName, const char* category, char* buf, size_t bufsize) throw()
 {
     // printing prefix and replacing the trailing \0 with space.
@@ -60,7 +60,12 @@ void StderrAppender::write(timeval tp, const char logLevelName, const char* cate
   char timeStr[32];
   const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m %H:%M:%S", &lcltm);
   timeStr[timeStrLength] = 0;
-  fprintf(stderr, "%c %s,%03ld %03u %10.10s: %s\n", logLevelName, timeStr, msec, unsigned(thrId), category, message);
+#ifdef __APPLE__
+  unsigned thrIdNum=(unsigned)pthread_mach_thread_np(thrId);
+#else
+  unsigned thrIdNum=(unsigned)thrId;
+#endif
+  fprintf(stderr, "%c %s,%03ld %03u %10.10s: %s\n", logLevelName, timeStr, msec, thrIdNum, category, message);
   ///TODO fflush(stderr);
 }
 #endif

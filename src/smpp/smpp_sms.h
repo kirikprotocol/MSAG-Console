@@ -35,14 +35,19 @@ inline Address PduAddress2Address(const PduAddress& source)
 inline PduAddress Address2PduAddress(const Address& addr)
 {
   PduAddress src;
-  char val[21];
-  int val_length = addr.getValue(val);
-  __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
-  src.set_value(val);
+  src.set_value(addr.value);
   src.set_typeOfNumber(addr.getTypeOfNumber());
   src.set_numberingPlan(addr.getNumberingPlan());
   return src;
 }
+
+inline void Address2PduAddress(const Address& addr,PduAddress& src)
+{
+  src.set_value(addr.value);
+  src.set_typeOfNumber(addr.getTypeOfNumber());
+  src.set_numberingPlan(addr.getNumberingPlan());
+}
+
 
 inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
 {
@@ -220,26 +225,8 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
   else*/
   {
     PduPartSm& message = pdu->get_message();
-    PduAddress& src = message.get_source();
-    {
-      char val[21];
-      Address& addr = sms->getOriginatingAddress();
-      int val_length = addr.getValue(val);
-      __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
-      src.set_value(val);
-      src.set_typeOfNumber(addr.getTypeOfNumber());
-      src.set_numberingPlan(addr.getNumberingPlan());
-    }
-    PduAddress& dest = message.get_dest();
-    {
-      char val[21];
-      Address& addr = sms->getDestinationAddress();
-      int val_length = addr.getValue(val);
-      __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
-      dest.set_value(val);
-      dest.set_typeOfNumber(addr.getTypeOfNumber());
-      dest.set_numberingPlan(addr.getNumberingPlan());
-    }
+    Address2PduAddress(sms->getOriginatingAddress(),message.get_source());
+    Address2PduAddress(sms->getDestinationAddress(),message.get_dest());
     {
       //char msg[256];
       //const smsc::sms::Body& sms_body = sms->getMessageBody();
@@ -752,26 +739,8 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
   using namespace smsc::smeman;
   PduDataPartSm& data = pdu->get_data();
-  PduAddress& src = data.get_source();
-  {
-    char val[21];
-    Address& addr = sms->getOriginatingAddress();
-    int val_length = addr.getValue(val);
-    __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
-    src.set_value(val);
-    src.set_typeOfNumber(addr.getTypeOfNumber());
-    src.set_numberingPlan(addr.getNumberingPlan());
-  }
-  PduAddress& dest = data.get_dest();
-  {
-    char val[21];
-    Address& addr = sms->getDestinationAddress();
-    int val_length = addr.getValue(val);
-    __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
-    dest.set_value(val);
-    dest.set_typeOfNumber(addr.getTypeOfNumber());
-    dest.set_numberingPlan(addr.getNumberingPlan());
-  }
+  Address2PduAddress(sms->getOriginatingAddress(),data.get_source());
+  Address2PduAddress(sms->getDestinationAddress(),data.get_dest());
   {
     char buff[7];
     memset(buff,0,sizeof(buff));

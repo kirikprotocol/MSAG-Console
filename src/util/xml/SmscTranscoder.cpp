@@ -25,19 +25,31 @@ typedef char** iconvinputarg_t;
 typedef const char** iconvinputarg_t;
 #endif
 
+struct XMLStrGuard{
+  char* str;
+  XMLStrGuard(char* argStr):str(argStr){}
+  ~XMLStrGuard()
+  {
+    XMLString::release(&str);
+  }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 /// SmscTranscoder
 ///////////////////////////////////////////////////////////////////////////////
 SmscTranscoder::SmscTranscoder(const XMLCh *const encodingName, const unsigned int blockSize, MemoryManager *const manager)
   :XMLTranscoder(encodingName, blockSize, manager)
 {
-  std::auto_ptr<const char> enc(XMLString::transcode(encodingName));
-  iconvHandlerFrom = getIconv(ucs2, enc.get());
+  char* enc=XMLString::transcode(encodingName);
+  XMLStrGuard sg(enc);
+  iconvHandlerFrom = getIconv(ucs2, enc);
   if (iconvHandlerFrom == (iconv_t)-1)
-    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", enc.get(), ucs2, (int)errno);
-  iconvHandlerTo = getIconv(enc.get(), ucs2);
+  {
+    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", enc, ucs2, (int)errno);
+  }
+  iconvHandlerTo = getIconv(enc, ucs2);
   if (iconvHandlerTo == (iconv_t)-1) {
-    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", ucs2, enc.get(), (int)errno);
+    throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", ucs2, enc, (int)errno);
   }
 }
 

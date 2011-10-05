@@ -15,10 +15,10 @@ public:
 /*	ConfigException(const char * const exceptionMessage)
 		: Exception(exceptionMessage)
 	{}*/
-	ConfigException(const char * const exceptionMessage, ...)
+	ConfigException(const char * const fmt, ...)
 		: Exception()
-	{SMSC_UTIL_EX_FILL(exceptionMessage);}
-	~ConfigException()throw(){}
+	{SMSC_UTIL_EX_FILL(fmt);}
+	virtual ~ConfigException()throw(){}
 };
 
 }

@@ -637,7 +637,7 @@ void Scheduler::DelayInit(smsc::util::config::Manager* cfgman)
 
 int Scheduler::Execute()
 {
-  smsc::logger::Logger* smsLog=smsc::logger::Logger::getInstance("sms.trace");
+  //smsc::logger::Logger* smsLog=smsc::logger::Logger::getInstance("sms.trace");
   if(delayInit)
   {
     info1(log,"Start delayedInit");

@@ -51,8 +51,8 @@ DistrListProcess::~DistrListProcess()
 }
 void DistrListProcess::close()  {}
 
-/// кидает exception если был достигнут лимит
-/// и длина очереди еще не упала до допустимого значения
+/// пїЅпїЅпїЅпїЅпїЅпїЅ exception пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+/// пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void DistrListProcess::putCommand(const SmscCommand& cmd)
 {
   MutexGuard g(mon);
@@ -113,7 +113,7 @@ uint32_t DistrListProcess::getNextSequenceNumber()
 
 static void lowercase(string& str)
 {
-  for(int i=0;i<str.length();i++)str[i]=tolower((unsigned char)str[i]);
+  for(size_t i=0;i<str.length();i++)str[i]=tolower((unsigned char)str[i]);
 }
 
 //uint32_t DistrListProcess::getUniqueId() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
@@ -129,7 +129,7 @@ const char * DistrListProcess::getSystemId() const
 int DistrListProcess::Execute()
 {
   SmscCommand cmd,answ;
-  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.distrlist.process");
+  //smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.distrlist.process");
   while(!isStopping)
   {
     CheckTimeouts();
@@ -803,7 +803,7 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
     if ( taskpair.second >= taskpair.first->count )
     {
       __warning__(":DPL: out of adresses range");
-      // за пределом массива адресов !!!
+      // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ !!!
     }else
     {
       ListTask* task = taskpair.first;
@@ -856,7 +856,7 @@ void DistrListProcess::SendDLAnswer(ListTask* task)
   }
 
   int okCnt=0;
-  for(int i=0;i<task->count;i++)
+  for(unsigned i=0;i<task->count;i++)
   {
     if(task->list[i].responsed && task->list[i].errcode==0)
     {
@@ -883,7 +883,7 @@ void DistrListProcess::SendDLAnswer(ListTask* task)
 }
 
 
-void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мапы
+void DistrListProcess::SendSubmitResp(ListTask* task) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
 {
   __trace2__(":DPL: %s",__FUNCTION__);
   unsigned status = 0;
@@ -897,7 +897,7 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
     {
       if ( task->list[i].errcode != 0 ) {
         __require__ ( uno  < 256 );
-        if (!task->list[i].responsed) task_map.erase(task->list[i].dialogId); // остальные уже удалены
+        if (!task->list[i].responsed) task_map.erase(task->list[i].dialogId); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         ue[uno].addr = task->list[i].addr;
         ue[uno].errcode = task->list[i].errcode; //0; // !!!!! must be fixed
         ++uno;
@@ -925,7 +925,7 @@ void DistrListProcess::CheckTimeouts()
     //__trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
     //  ctime(&curTime),task_sheduler.front(),ctime(&task_sheduler.front()->startTime));
     ListTask* task=task_sheduler.front();
-    for(int i=0;i<task->count;i++)
+    for(unsigned i=0;i<task->count;i++)
     {
       MAPTYPE::iterator it=task_map.find(task->list[i].dialogId);
       if(it!=task_map.end())
@@ -935,7 +935,7 @@ void DistrListProcess::CheckTimeouts()
     }
     if(task->taskType==ttMulti)
     {
-      SendSubmitResp(task); // удаляет из списка и мапы
+      SendSubmitResp(task); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
     }else
     {
       SendDLAnswer(task);

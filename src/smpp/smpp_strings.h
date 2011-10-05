@@ -16,7 +16,6 @@ namespace smpp{
 
 /**
   Octet String
-  ����� ����� �������������� � ����������� ��� ������ �������� ���� ���!
 */
 struct OStr //: public MemoryManagerUnit
 {
@@ -81,7 +80,6 @@ struct OStr //: public MemoryManagerUnit
 
 /**
   C Octet String
-  ����� ����� �������������� � ����������� ��� ������ �������� ���� ���!
 */
 struct COStr //: public MemoryManagerUnit
 {
@@ -89,11 +87,27 @@ struct COStr //: public MemoryManagerUnit
   char* text;
   COStr() : text(0) {};
   //void dispose() {if ( text ) smartFree(text); text = 0;}
-  void dispose() {if ( text ) delete text; text = 0;}
-  ~COStr(){ /*__trace__(__PRETTY_FUNCTION__); __watch__(text);*/ dispose(); }
-  operator const char*()const{/*__require__(text!=NULL);*/ return text;}
-  const char* cstr()const{/*__require__(text!=NULL);*/ return text;}
-  uint16_t size()const{ return text ? (uint16_t)strlen( text ) : 0 ; }
+  void dispose()
+  {
+    if ( text ) delete [] text;
+    text = 0;
+  }
+  ~COStr()
+  { /*__trace__(__PRETTY_FUNCTION__); __watch__(text);*/
+    dispose();
+  }
+  operator const char*() const
+  {/*__require__(text!=NULL);*/
+    return text;
+  }
+  const char* cstr() const
+  {/*__require__(text!=NULL);*/
+    return text;
+  }
+  uint16_t size() const
+  {
+    return text ? (uint16_t) strlen(text) : 0;
+  }
   void copy(const char* src)
   {
 //    __require__ ( src != NULL );

@@ -78,6 +78,7 @@ public:
     {
       throw ConfigException("Int key '%s' not found",paramName);
     }
+    return 0;//make compiler happy
   }
 
   char * getString(const char * const paramName)
@@ -90,6 +91,7 @@ public:
     {
       throw ConfigException("String key '%s' not found",paramName);
     }
+    return 0;//make compiler happy
   }
 
   bool getBool(const char * const paramName) const
@@ -102,6 +104,7 @@ public:
     {
       throw ConfigException("Bool key '%s' not found",paramName);
     }
+    return false;//make compiler happy
   }
 
   void setInt(const char * const paramName, int32_t value)

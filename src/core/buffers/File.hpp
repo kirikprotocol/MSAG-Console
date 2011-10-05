@@ -44,7 +44,7 @@
 # include <unistd.h>
 #endif
 
-
+typedef struct stat stat_type;
 
 namespace smsc{
 namespace core{
@@ -245,13 +245,13 @@ public:
     if(swp.flags&FLG_RDBUF)swp.flags&=~FLG_RDBUF;
     if(swp.flags&FLG_WRBUF)swp.Flush();
 
-    if(buffer!=initBuffer || swp.buffer!=swp.initBuffer)
+    if(buffer!=initBuffer && swp.buffer!=swp.initBuffer)
     {
       std::swap(buffer,swp.buffer);
+      std::swap(bufferSize,swp.bufferSize);
     }
 
     std::swap(fd,swp.fd);
-    std::swap(bufferSize,swp.bufferSize);
     std::swap(fileSize,swp.fileSize);
     std::swap(bufferPosition,swp.bufferPosition);
     std::swap(filename,swp.filename);
@@ -317,7 +317,7 @@ public:
     if(fd!=-1)
     {
       lseek(fd,0,SEEK_SET);
-      size_t rdsz=read(fd,buffer,(size_t)fileSize);
+      ssize_t rdsz=read(fd,buffer,(size_t)fileSize);
       if(rdsz!=fileSize)throw FileException(FileException::errReadFailed,filename.c_str());
       if(eventHandler)
       {
@@ -527,7 +527,7 @@ public:
   {
     if(isInMemory())
     {
-      if(bufferPosition+sz>fileSize)
+      if(bufferPosition+sz>(size_t)fileSize)
       {
         throw FileException(FileException::errEndOfFile,filename.c_str());
       }
@@ -613,7 +613,7 @@ public:
       }
       memcpy(buffer+bufferPosition,buf,sz);
       bufferPosition+=sz;
-      if(bufferPosition>fileSize)fileSize=bufferPosition;
+      if(bufferPosition>(size_t)fileSize)fileSize=bufferPosition;
       return;
     }
     Check();
@@ -693,7 +693,7 @@ public:
       }
       memset(buffer+bufferPosition,0,sz);
       bufferPosition+=sz;
-      if(bufferPosition>fileSize)fileSize=bufferPosition;
+      if(bufferPosition>(size_t)fileSize)fileSize=bufferPosition;
       return;
     }
     char buf[8192]={0,};
@@ -769,11 +769,7 @@ public:
     if(isInMemory())return fileSize;
     Check();
     Flush();
-#ifdef __GNUC__
-    struct stat st;
-#else
-    struct ::stat st;
-#endif
+    stat_type st;
     fstat(fd,&st);
     return st.st_size;
   }
@@ -954,7 +950,7 @@ public:
     Check();
     if(isInMemory())
     {
-      if(bufferPosition==fileSize)return false;
+      if(bufferPosition==(size_t)fileSize)return false;
       char* eoln=(char*)memchr(buffer+bufferPosition,'\n',(int)fileSize-bufferPosition);
       if(eoln==NULL)
       {
@@ -1073,11 +1069,7 @@ public:
     struct _stat st;
     return _stat(file,&st)==0;
 #else
-#ifdef __GNUC__
-    struct stat st;
-#else
-    struct ::stat st;
-#endif
+    stat_type st;
     return ::stat(file,&st)==0;
 #endif
   }
@@ -1093,12 +1085,8 @@ public:
 # error "WIN32 is not impl yet"
 #endif
 
-#ifdef __GNUC__
-        struct stat st;
-#else
-        struct ::stat st;
-#endif
-        return (::stat(file,&st)==0) && S_ISDIR(st.st_mode);
+      stat_type st;
+      return (::stat(file,&st)==0) && S_ISDIR(st.st_mode);
     }
 
   static void Rename(const char* oldname,const char* newname)
@@ -1213,7 +1201,7 @@ public:
       }
       if(flt!=rdfAll)
       {
-        struct ::stat st;
+        stat_type st;
         file=dirName;
         if(file.length() && file[file.length()-1]!='/')file+="/";
         file+=ptr->d_name;
@@ -1256,11 +1244,7 @@ public:
 
   static offset_type Size(const char* argFileName)
   {
-#ifdef __GNUC__
-    struct stat st;
-#else
-    struct ::stat st;
-#endif
+    stat_type st;
     ::stat(argFileName,&st);
     return st.st_size;
   }

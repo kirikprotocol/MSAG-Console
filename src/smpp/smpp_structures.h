@@ -1478,6 +1478,7 @@ inline uint32_t calcSmppPacketLength(const SmppHeader* __pdu)
   case DATA_SM_RESP: return reinterpret_cast<PduDataSmResp*>(_pdu)->size();
   default:
     __unreachable__("this code is not reachable");
+    break;
   }
   return 0;
 }
@@ -1519,6 +1520,7 @@ inline bool dump_pdu(SmppHeader* _pdu,TLOG* log)
   case DATA_SM_RESP: reinterpret_cast<PduDataSmResp*>(_pdu)->dump(log); break;
   default:
     __unreachable__("this code is not reachable");
+    break;
   }
   return true;
 }
@@ -1585,6 +1587,7 @@ static inline void disposePdu(SmppHeader* _pdu)
     delete(reinterpret_cast<PduDataSmResp*>(_pdu)); break;
   default:
     delete _pdu;
+    break;
     //__unreachable__("this code is not reachable");
   }
 }

@@ -19,7 +19,7 @@ class AgentListener : public Thread
 {
 public:
     AgentListener()
-        : logger(Logger::getInstance("AgentLst")), stop(true), stopSmsc(false),clntSock(0),psmsc(0)
+        : logger(Logger::getInstance("AgentLst")),clntSock(0), stop(true), stopSmsc(false),psmsc(0)
     {
   };
   virtual ~AgentListener()

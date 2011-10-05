@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <time.h>
 #include <string.h>
 #include <string>
@@ -43,6 +44,7 @@
 #include "util/Exception.hpp"
 #include "util/Uint64Converter.h"
 #include "core/buffers/TmpBuf.hpp"
+#include "util/AutoArrPtr.hpp"
 
 namespace smsc {
 
@@ -122,41 +124,135 @@ struct Address
     setValue(addr.length, addr.value);
   };
 
+protected:
+  static int scanNum(const char*& ptr)
+  {
+    int rv=0;
+    while(isdigit(*ptr))
+    {
+      rv*=10;
+      rv+=*ptr-'0';
+      ++ptr;
+    }
+    return rv;
+  }
+public:
+
   Address(const char* text)
   {
+    const char* org=text;
     if(!text || !*text)throw runtime_error("bad address NULL");
-    AddressValue addr_value;
-    int iplan,itype;
-    memset(addr_value,0,sizeof(addr_value));
-    int scanned = sscanf(text,".5.%d.%20s",
-      &iplan,addr_value);
-    if(scanned==2)
+    if(*text=='.')
     {
-      itype=5;
-      scanned=1;
+      ++text;
+      if(!isdigit(*text))
+      {
+        throw smsc::util::Exception("Invalid address:%s",org);
+      }
+      type=scanNum(text);
+      if(*text!='.')
+      {
+        throw smsc::util::Exception("Invalid address:%s",org);
+      }
+      ++text;
+      if(!isdigit(*text))
+      {
+        throw smsc::util::Exception("Invalid address:%s",org);
+      }
+      plan=scanNum(text);
+      if(*text!='.')
+      {
+        throw smsc::util::Exception("Invalid address:%s",org);
+      }
+      ++text;
+      if(!*text)
+      {
+        throw smsc::util::Exception("Invalid address:%s",org);
+      }
+      size_t len=strlen(text);
+      if(len>=sizeof(value))
+      {
+        throw smsc::util::Exception("Address too long:%s",org);
+      }
+      if(type==5)
+      {
+        memcpy(value,text,len);
+        length=(uint8_t)len;
+        return;
+      }
+    }else if(*text=='+')
+    {
+      type=1;
+      plan=1;
+      ++text;
     }else
     {
-      scanned = sscanf(text,".%d.%d.%20[0123456789?]s",&itype,&iplan,addr_value);
+      type=0;
+      plan=1;
+    }
+    length=0;
+    while(*text)
+    {
+      if(!isdigit(*text) && *text!='?')
+      {
+        throw smsc::util::Exception("Invalid address:%s",org);
+      }
+      value[length++]=*text++;
+    }
+    value[length]=0;
+    /*
+    AddressValue addr_value;
+    int iplan,itype,addroff;
+    memset(addr_value,0,sizeof(addr_value));
+    int scanned = sscanf(text,".5.%d.%n",
+      &iplan,&addroff);
+    if(scanned==1)
+    {
+      if(strlen(text+addroff)>sizeof(addr_value)-1)
+      {
+
+        throw runtime_error(string("too long address:")+text);
+      }
+      itype=5;
+      memcpy(addr_value,text+addroff,sizeof(addr_value));
+    }else
+    {
+      scanned = sscanf(text,".%d.%d.%20[0123456789?]s%n",&itype,&iplan,addr_value,&addroff);
       if(scanned==3)
       {
+        if(text[addroff]!=0)
+        {
+          throw runtime_error(string("address contains unrecognized tail:")+text);
+        }
         scanned=1;
+      }else
+      {
+        scanned=0;
       }
     }
     if ( scanned != 1 )
     {
-      scanned = sscanf(text,"+%20[0123456789?]s",addr_value);
+      scanned = sscanf(text,"+%20[0123456789?]s%n",addr_value,&addroff);
       if ( scanned )
       {
+        if(text[addroff]!=0)
+        {
+          throw runtime_error(string("address contains unrecognized tail:")+text);
+        }
         iplan = 1;//ISDN
         itype = 1;//INTERNATIONAL
       }
       else
       {
-        scanned = sscanf(text,"%20[0123456789?]s",addr_value);
+        scanned = sscanf(text,"%20[0123456789?]s%n",addr_value,&addroff);
         if ( !scanned )
           throw runtime_error(string("bad address ")+text);
         else
         {
+          if(text[addroff]!=0)
+          {
+            throw runtime_error(string("address contains unrecognized tail:")+text);
+          }
           iplan = 1;//ISDN
           itype = 0;//UNKNOWN
         }
@@ -170,6 +266,7 @@ struct Address
       throw runtime_error(string("bad address ")+text);
     }
     memcpy(value,addr_value,sizeof(addr_value));
+    */
   }
 
   /**
@@ -656,7 +753,7 @@ struct PropertySet{
 struct Body
 {
 private:
-  mutable auto_ptr<uint8_t> buff;
+  mutable smsc::util::auto_arr_ptr<uint8_t> buff;
   mutable int         buffLen;
   mutable PropertySet prop;
 public:
@@ -690,7 +787,7 @@ public:
     uint8_t* b = new uint8_t[len];
     memcpy(b,body.getBuffer(),len);
     setBuffer(b, len);*/
-    buff=auto_ptr<uint8_t>(0);
+    buff.reset(0);
     prop=body.prop;
   }
 
@@ -714,7 +811,7 @@ public:
   Body& operator =(const Body& body)
   {
     buffLen=0;
-    buff=auto_ptr<uint8_t>(0);
+    buff.reset(0);
     prop=body.prop;
     /*int len = body.getBufferLength();
     uint8_t* b = new uint8_t[len];
@@ -740,7 +837,7 @@ public:
     int blength=getBufferLength();
     if ( !buff.get() || buffLen < blength )
     {
-      buff = auto_ptr<uint8_t>(new uint8_t[blength]);
+      buff.reset(new uint8_t[blength]);
     }
     buffLen = blength;
     encode(buff.get(),buffLen);
@@ -756,7 +853,7 @@ public:
   {
     //encode(buffer,length);
     decode(buffer,length);
-    this->buff = auto_ptr<uint8_t>(buffer);
+    this->buff .reset(buffer);
     //delete buffer;
   }
 
@@ -1826,7 +1923,7 @@ struct SMSPartInfo{
     flPartPresent=1,
     flHasSRR=2
   };
-  SMSPartInfo():fl(flPartPresent){}
+  SMSPartInfo():fl(flPartPresent),mr(0){}
   uint8_t fl;//flags
   uint8_t dc;//dc of part
   uint8_t mr;//mr of part

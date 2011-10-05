@@ -37,30 +37,30 @@ namespace smsc { namespace util { namespace templates
         virtual ~FormatRenderingException() throw() {};
     };
 
-    static const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION  = "arg";
-    static const char* SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION   = "default";
-    static const char* SMSC_DBSME_IO_FORMAT_PATTERN_OPTION   = "pattern";
-    static const char* SMSC_DBSME_IO_FORMAT_PRECISION_OPTION = "precision";
-    static const char* SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION  = "exponent";
-    static const char* SMSC_DBSME_IO_FORMAT_DIGITS_OPTION    = "digits";
-    static const char* SMSC_DBSME_IO_FORMAT_EXPORT_OPTION    = "export";
-    static const char* SMSC_DBSME_IO_FORMAT_IMPORT_OPTION    = "import";
+    extern const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION;
+    extern const char* SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION;
+    extern const char* SMSC_DBSME_IO_FORMAT_PATTERN_OPTION;
+    extern const char* SMSC_DBSME_IO_FORMAT_PRECISION_OPTION;
+    extern const char* SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION;
+    extern const char* SMSC_DBSME_IO_FORMAT_DIGITS_OPTION;
+    extern const char* SMSC_DBSME_IO_FORMAT_EXPORT_OPTION;
+    extern const char* SMSC_DBSME_IO_FORMAT_IMPORT_OPTION;
 
-    static const char* SMSC_DBSME_MSG_TEXT		     = "msg-text";
-    
-    static const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
-    static const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
-    static const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
-    static const char  SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN    = '=';
+    extern const char* SMSC_DBSME_MSG_TEXT;
 
-    static const char*  ioNowString         = "now";
-    static const char*  ioTodayString       = "today";
-    static const char*  ioTomorrowString    = "tomorrow";
-    static const char*  ioYesterdayString   = "yesterday";
-    static const char*  ioInternalPatternString = "internal";
+    const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
+    const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
+    const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
+    const char  SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN    = '=';
 
-    static const char* SMSC_DBSME_IO_DEFAULT_FORMAT_PATTERN  = "dd.MM.yyyy HH:mm:ss";
-    static const char* SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN   = "%d.%d.%d %d:%d:%d %n";
+    extern const char* ioNowString;
+    extern const char* ioTodayString;
+    extern const char* ioTomorrowString;
+    extern const char* ioYesterdayString;
+    extern const char* ioInternalPatternString;
+
+    extern const char* SMSC_DBSME_IO_DEFAULT_FORMAT_PATTERN;
+    extern const char* SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN;
 
     extern const char*  ioFullMonthesNames[];
     extern const char*  ioShortMonthesNames[];
@@ -82,10 +82,8 @@ namespace smsc { namespace util { namespace templates
     static const char*  ioShortWeekDays[7] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };*/
-    
-    static const char*  ioDayTimeParts[2] = {
-        "AM", "PM"
-    };
+
+    extern const char*  ioDayTimeParts[2];
 
     class ContextEnvironment
     {
@@ -97,11 +95,11 @@ namespace smsc { namespace util { namespace templates
         Hash<float>         flts;
         Hash<double>        dbls;
         Hash<long double>   ldls;
-	
+
         static void toUpperCase(const char* str, char* low);
-	
+
 	bool needMsgText;
-	
+
     public:
 
         ContextEnvironment() { needMsgText = false; };
@@ -122,7 +120,7 @@ namespace smsc { namespace util { namespace templates
 
         void reset();
 	void setNeedMsgText(bool need) { needMsgText = need; };
-	bool isNeedMsgText() { return needMsgText; }; 
+	bool isNeedMsgText() { return needMsgText; };
     };
 
     const int ioEntityTypesNumber = 14;
@@ -175,15 +173,15 @@ namespace smsc { namespace util { namespace templates
         virtual ~FormatEntityRenderer();
 
         /**
-         * Ищет сущность форматирования и возвращает её тип по значению указанной опции.
-         * Если сущность, опция или ключ не найдены, возвращает -1.
+         * пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
+         * пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ -1.
          *
-         * @param key       значение указанной опции
-         * @param option    опция, по цмолчанию SMSC_DBSME_IO_FORMAT_IMPORT_OPTION
-         * @return          EntityType для найденной опции. 
-         *                  Если сущность, опция или ключ не найдены, возвращает -1.
+         * @param key       пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+         * @param option    пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ SMSC_DBSME_IO_FORMAT_IMPORT_OPTION
+         * @return          EntityType пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
+         *                  пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ -1.
          */
-        int getEntityType(const char* key, 
+        int getEntityType(const char* key,
                           const char* option = SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
     };
 

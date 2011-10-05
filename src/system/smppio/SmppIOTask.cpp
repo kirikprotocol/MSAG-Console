@@ -160,7 +160,7 @@ void SmppInputThread::killSocket(int idx)
   mon.Unlock();
   KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
   mon.Lock();
-  int rcnt=m->removeSocket(s);
+  /*int rcnt=*/m->removeSocket(s);
   delete ss;
 }
 
@@ -218,7 +218,7 @@ int SmppInputThread::Execute()
           getSocketData(s).inSocket=ss;
           mul.add(s);
         }
-        bool to=false;
+        //bool to=false;
         SmppProxy *prx=ss->getProxy();
         if(
             getSocketData(s).killSocket ||
@@ -1199,7 +1199,7 @@ int SmppOutputThread::Execute()
             continue;
           }
           if(pdu==0)continue;
-          int cmdid=pdu->get_commandId();
+          uint32_t cmdid=pdu->get_commandId();
           trace2("SmppOutThread: commandId=%x, seq number:%d,socket=%p",
             pdu->get_commandId(),pdu->get_sequenceNumber(),ss->getSocket());
           int size=calcSmppPacketLength(pdu);

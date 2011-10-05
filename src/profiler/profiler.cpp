@@ -48,6 +48,7 @@ using namespace smsc::resourcemanager;
 
 using namespace smsc::sms;
 
+/*
 static bool isValidAlias(const std::string& s)
 {
   if(s.length()==0 || s.length()>10)return false;
@@ -60,7 +61,7 @@ static bool isValidAlias(const std::string& s)
     //isalnum(s[i]) &&
   }
   return true;
-}
+}*/
 
 class AccessDeniedException{};
 
@@ -729,7 +730,7 @@ int Profiler::Execute()
           __trace2__("ussd service op=%d",sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
           char *str=body;
           char *ptr=str;
-          while(ptr=strchr(ptr,'#'))*ptr='*';
+          while((ptr=strchr(ptr,'#')))*ptr='*';
 
           int code=-1;
           int pos;

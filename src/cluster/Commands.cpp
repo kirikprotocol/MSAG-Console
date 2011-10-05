@@ -1380,7 +1380,7 @@ void* SmeRemoveCommand::serialize(uint32_t &len)
 }
 bool SmeRemoveCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len != SMEID_LENGTH || !buffer)
+    if(len != (uint32_t)SMEID_LENGTH || !buffer)
         return false;
 
     try {

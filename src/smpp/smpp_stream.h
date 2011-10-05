@@ -32,7 +32,7 @@ namespace smpp{
 //using std::max;
 
 #ifdef DISABLE_SMPP_CHECKS
-#ifdef __GNUC__
+#if defined(__GNUC__) && __GNUC__>=4 && __GNUC_MINOR__>2
 #pragma push_macro("__require__")
 #endif
 #undef __require__
@@ -376,7 +376,7 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
 }
 
 #ifdef DISABLE_SMPP_CHECKS
-#ifdef __GNUC__
+#if defined(__GNUC__) && __GNUC__>=4 && __GNUC_MINOR__>2
 #pragma pop_macro("__require__")
 #endif
 #endif

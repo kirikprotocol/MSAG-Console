@@ -287,7 +287,7 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
         File::offset_type fpos = 0; FileStorage::getPos(&fpos);
         size_t headerPos = ((bill) ? strlen(SMSC_BILLING_HEADER_TEXT):
             (strlen(SMSC_ARCHIVE_HEADER_TEXT) + sizeof(SMSC_ARCHIVE_VERSION_INFO)))+2;
-        if (fpos <= headerPos) return false; // file is empty => no rolling
+        if ((size_t)fpos <= headerPos) return false; // file is empty => no rolling
     }
 
     time_t current = time(NULL);
@@ -582,9 +582,9 @@ class UnlockableMutexGuard
 {
 protected:
 
-    bool locked;
     Mutex& lock;
     Mutex  unlock;
+    bool locked;
 
 public:
 
@@ -612,7 +612,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, File::offset_type* pos /*= 0 (no set
     int8_t odMscSize = 0; int8_t odImsiSize = 0;
     int8_t ddMscSize = 0; int8_t ddImsiSize = 0;
     int8_t routeSize = 0; int8_t srcSmeSize = 0; int8_t dstSmeSize = 0;
-    int32_t textLen  = 0; int32_t bodyBufferLen = 0;
+    /*int32_t textLen  = 0;*/ int32_t bodyBufferLen = 0;
 
     UnlockableMutexGuard unlockableGuard(storageFileLock);
     initialize(true); // virtual method call (open for read or create destination file)
@@ -691,7 +691,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, File::offset_type* pos /*= 0 (no set
 
         memcpy(&svcSize, position, sizeof(svcSize)); position+=sizeof(svcSize);
         if (svcSize > 0) {
-            if (svcSize <= sizeof(sms.eServiceType)) {
+            if ((size_t)svcSize <= sizeof(sms.eServiceType)) {
                 memcpy(strBuff, position, svcSize); strBuff[svcSize] = '\0';
                 sms.setEServiceType(strBuff);
                 position+=svcSize;
@@ -967,7 +967,7 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
 #if defined(sun) || defined(__sun__)
           size_t rv=iconv(cd,(const char**)&msg,&inBufSize,&outBuf,&outBufSize);
 #else
-          size_t rv=iconv(cd,(char**)&msg,&inBufSize,&outBuf,&outBufSize);
+          /*size_t rv=*/iconv(cd,(char**)&msg,&inBufSize,&outBuf,&outBufSize);
 #endif
           textLen=(int)(outBuf-text);
         }

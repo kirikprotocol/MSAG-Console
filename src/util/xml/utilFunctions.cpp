@@ -6,6 +6,7 @@
 #include <util/cstrings.h>
 #include <util/Exception.hpp>
 #include "core/buffers/TmpBuf.hpp"
+#include "util/AutoArrPtr.hpp"
 
 namespace smsc {
 namespace util {
@@ -92,7 +93,7 @@ XmlStr::XmlStr(const XMLCh * const str)
   unsigned int res = transcoder->transcodeTo(str, srcCount,
                                              (unsigned char * const) tmpbuf.get(),
                                              dstCount, charsEaten, XMLTranscoder::UnRep_RepChar);
-  if (res == (size_t) -1)
+  if (res == (unsigned int) -1)
     throw Exception("Could not transcode string");
   else if (charsEaten != srcCount) {
       throw Exception("Could not transcode string, input=%u, eaten=%u",srcCount,charsEaten);
@@ -104,7 +105,7 @@ XmlStr::XmlStr(const XMLCh * const str)
 }
 
 XmlStr::XmlStr(const char * const str)
-  :cstr(str), xown(true), released(false)
+  :cstr(str), xstr(0), xown(true), released(false)
 {
   const char * const INTERNAL_SMSC_ENCODING = getLocalEncoding();
   XMLTransService::Codes resValue = XMLTransService::Ok;
@@ -117,9 +118,9 @@ XmlStr::XmlStr(const char * const str)
   xstr = new XMLCh[xstrLen+1];
   unsigned int dstCount = (unsigned int)xstrLen;
   unsigned int bytesEaten = 0;
-  std::auto_ptr<unsigned char> charSizes(new unsigned char[xstrLen +1]);
+  smsc::util::auto_arr_ptr<unsigned char> charSizes(new unsigned char[xstrLen +1]);
   unsigned int res = transcoder->transcodeFrom((const unsigned char * const) str, srcCount, (XMLCh * const)xstr, dstCount, bytesEaten, (unsigned char * const)charSizes.get());
-  if (res == (size_t) -1)
+  if (res == (unsigned int) -1)
     throw Exception("Could not transcode string");
 }
 
@@ -127,9 +128,9 @@ XmlStr::~XmlStr()
 {
   if (!released) {
     if (xown)
-      delete xstr;
+      delete [] xstr;
     else
-      delete cstr;
+      delete [] cstr;
   }
 }
 

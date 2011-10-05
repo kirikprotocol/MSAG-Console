@@ -34,7 +34,7 @@ public:
 
 	Service()
 		: logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(true)
-	{	
+	{
 		init(0, 0, 0, 0, stopped);
 	}
 
@@ -86,8 +86,8 @@ protected:
 	std::auto_ptr<char> args;
 	static const char * const service_exe;
 	std::auto_ptr<char> service_dir;
+  Logger *logger;
 	bool autostart;
-	Logger *logger;
 
 	run_status status;
 

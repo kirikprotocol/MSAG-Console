@@ -76,18 +76,18 @@ static inline void print(RouteRecord* record,const char* ppp= "")
 static inline
 string AddrToString(const Address& addr)
 {
-  char buff[128] = {0};
-  snprintf(buff,127,".%d.%d.%s\x00",addr.type,addr.plan,addr.value);
+  char buff[128];
+  snprintf(buff,127,".%d.%d.%s",addr.type,addr.plan,addr.value);
   return string(buff);
 }
 
-inline
+static inline
 int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
 {
 //__trace2__("compare (strong)(pattern ? pattern)");
 //print(pat1,"\tP1");
 //print(pat2,"\tP2");
-#define ifn0goto {if (result) goto result_;}
+#define ifn0goto {if (result) return result;}
   int32_t result;
   result = (int32_t)pat1->rp.dest.type - (int32_t)pat2->rp.dest.type; ifn0goto;
   result = (int32_t)pat1->rp.dest.plan - (int32_t)pat2->rp.dest.plan; ifn0goto;
@@ -108,11 +108,10 @@ int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
             min(pat1->src_def,pat2->src_def));
   ifn0goto;
   result = (int32_t)pat1->src_def - (int32_t)pat2->src_def; ifn0goto;
-result_:
+#undef ifn0goto
 //  __trace2__("(sort)result(P1%cP2)%d",result>0?'>':result<0?'<':'=',
  //     result);
-  return (int32_t)result;
-#undef if0ngoto
+  return result;
 }
 
 inline

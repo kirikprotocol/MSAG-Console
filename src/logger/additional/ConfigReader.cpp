@@ -14,7 +14,7 @@ ConfigReader::AppenderInfo::AppenderInfo(const char * const name, const char * c
 ConfigReader::CatInfo::CatInfo(const char * const name, const char * const initStr)
   : name(cStringCopy(name))
 {
-  std::auto_ptr<char> a(cStringCopy(initStr));
+  smsc::util::auto_arr_ptr<char> a(cStringCopy(initStr));
   char * pos = strchr(a.get(), ',');
   if (pos == NULL)
   {
@@ -39,7 +39,7 @@ void ConfigReader::init(Properties const & properties)
   for (Properties::Iterator i (appendersSection.get()); i.Next(key, value); )
   {
     char * name = NULL;
-    std::auto_ptr<char> nm(cStringCopy(key));
+    smsc::util::auto_arr_ptr<char> nm(cStringCopy(key));
     char * pos = strchr(nm.get(), '.');
     if (pos != NULL)
       *pos = 0;
@@ -60,7 +60,7 @@ void ConfigReader::init(Properties const & properties)
 
   if (properties.Exists("root"))
   {
-    std::auto_ptr<char> rootStr(cStringCopy(properties["root"]));
+    smsc::util::auto_arr_ptr<char> rootStr(cStringCopy(properties["root"]));
     char * pos = strchr(rootStr.get(), ',');
     if (pos == NULL)
     {
@@ -181,7 +181,7 @@ ConfigReader::AppenderInfo* ConfigReader::createAppender(const char * const name
   Properties::Iterator i (&ap);
   if (i.Next(k, v))
   {
-    std::auto_ptr<char> t(cStringCopy(k));
+    smsc::util::auto_arr_ptr<char> t(cStringCopy(k));
     char * p = strchr(t.get(), '.');
     if (p!= NULL)
       *p = 0;

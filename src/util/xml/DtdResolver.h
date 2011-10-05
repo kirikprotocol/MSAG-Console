@@ -9,6 +9,7 @@
 #include <xercesc/framework/Wrapper4InputSource.hpp>
 #include "core/buffers/TmpBuf.hpp"
 #include "util/xml/utilFunctions.h"
+#include "util/AutoArrPtr.hpp"
 
 namespace smsc {
 namespace util {
@@ -26,7 +27,7 @@ public:
     :logger(smsc::logger::Logger::getInstance("smsc.util.xml.DtdResolver"))
   {
   }
-  
+
   virtual DOMInputSource* resolveEntity(const XMLCh *const publicId, const XMLCh *const systemId, const XMLCh *const baseURI)
   {
     if (XMLString::endsWith(systemId, XmlStr(".dtd")))
@@ -60,7 +61,7 @@ private:
     XMLString::copyNString(tmpDtdName + prefixLen, dtdName, (const unsigned)dtdNameLen);
     tmpDtdName[prefixLen + dtdNameLen] = 0;
 
-    std::auto_ptr<char> dtdNameTranscodedToCallCFunctionStat(XMLString::transcode(tmpDtdName));
+    smsc::util::auto_arr_ptr<char> dtdNameTranscodedToCallCFunctionStat(XMLString::transcode(tmpDtdName));
     if (stat(dtdNameTranscodedToCallCFunctionStat.get(), &s) == 0) {
       return new Wrapper4InputSource(new LocalFileInputSource(tmpDtdName));
     } else

@@ -25,9 +25,9 @@ struct Task
   uint32_t sequenceNumber;
   time_t creationTime;
   time_t timeout;
-  bool diverted;
   smsc::sms::SMSId messageId;
   smsc::sms::SMS  *sms;
+  bool diverted;
   int inDlgId;
 
   Task* next;
@@ -100,7 +100,7 @@ public:
   bool getExpired(Task* t)
   {
     MutexGuard guard(mutex);
-    unsigned long now = time(NULL);
+    time_t now = time(NULL);
     for(int i=0;i<toCount;i++)
     {
       if ( toList[i].timeout_link_begin &&

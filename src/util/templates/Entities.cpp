@@ -8,6 +8,32 @@
 namespace smsc { namespace util { namespace templates
 {
 
+const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION  = "arg";
+const char* SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION   = "default";
+const char* SMSC_DBSME_IO_FORMAT_PATTERN_OPTION   = "pattern";
+const char* SMSC_DBSME_IO_FORMAT_PRECISION_OPTION = "precision";
+const char* SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION  = "exponent";
+const char* SMSC_DBSME_IO_FORMAT_DIGITS_OPTION    = "digits";
+const char* SMSC_DBSME_IO_FORMAT_EXPORT_OPTION    = "export";
+const char* SMSC_DBSME_IO_FORMAT_IMPORT_OPTION    = "import";
+
+const char* SMSC_DBSME_MSG_TEXT         = "msg-text";
+
+const char*  ioNowString         = "now";
+const char*  ioTodayString       = "today";
+const char*  ioTomorrowString    = "tomorrow";
+const char*  ioYesterdayString   = "yesterday";
+const char*  ioInternalPatternString = "internal";
+
+
+const char* SMSC_DBSME_IO_DEFAULT_FORMAT_PATTERN  = "dd.MM.yyyy HH:mm:ss";
+const char* SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN   = "%d.%d.%d %d:%d:%d %n";
+
+const char*  ioDayTimeParts[2] = {
+    "AM", "PM"
+};
+
+
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::TmpBuf;
 
@@ -39,7 +65,7 @@ struct InitLocaleDataDummy{
       return;
     };
     fprintf(stderr,"setlocale for LC_TIME to %s\n",newLocale);
-    tm t;
+    tm t={0,};
     static char mon1[12][32];
     static char mon2[12][32];
     static char week1[7][32];
