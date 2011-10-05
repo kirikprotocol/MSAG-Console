@@ -44,6 +44,8 @@ import ru.novosoft.smsc.admin.smsc.SmscManagerImpl;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
 import ru.novosoft.smsc.admin.snmp.SnmpManagerImpl;
+import ru.novosoft.smsc.admin.stat.SmscStatContext;
+import ru.novosoft.smsc.admin.stat.SmscStatProvider;
 import ru.novosoft.smsc.admin.timezone.TimezoneManager;
 import ru.novosoft.smsc.admin.timezone.TimezoneManagerImpl;
 import ru.novosoft.smsc.admin.users.UsersManager;
@@ -90,6 +92,8 @@ public class AdminContext {
 
   protected OperativeStoreProvider operativeStoreProvider;
 
+  protected SmscStatProvider smscStatProvider;
+
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
   }
@@ -114,7 +118,7 @@ public class AdminContext {
         fileSystem = FileSystem.getFSForHAInst();
     }
 
-    clusterControllerManager = new ClusterControllerManager(serviceManager, fileSystem);    
+    clusterControllerManager = new ClusterControllerManager(serviceManager, fileSystem);
     clusterController = new ClusterController(clusterControllerManager);
 
     smscManager = new SmscManagerImpl(serviceManager, clusterController, fileSystem);
@@ -175,6 +179,8 @@ public class AdminContext {
     }
 
     operativeStoreProvider = new OperativeStoreProvider(operativeStorages, fileSystem);
+
+    smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem));
 
     AdminContextLocator.registerContext(this);
   }
@@ -275,11 +281,40 @@ public class AdminContext {
     return instType;
   }
 
+  public SmscStatProvider getSmscStatProvider() {
+    return smscStatProvider;
+  }
+
   /**
    * Деинициализирует контекст.
    */
   public void shutdown() {
     clusterController.shutdown();
     AdminContextLocator.unregisterContext(this);
+  }
+
+  protected static class SmscStatContextImpl implements SmscStatContext {
+
+    private final SmscManager smscManager;
+    private final FileSystem fileSystem;
+
+    public SmscStatContextImpl(SmscManager smscManager, FileSystem fileSystem) {
+      this.smscManager = smscManager;
+      this.fileSystem = fileSystem;
+    }
+
+    public File[] getStatDirs() throws AdminException {
+      SmscSettings s = smscManager.getSettings();
+      int countSmscs =  s.getSmscInstancesCount();
+      File[] dirs = new File[countSmscs];
+      for(int i=0; i <= countSmscs; i++) {
+        dirs[i] = new File(s.getInstanceSettings(i).getMessageStoreStatsDir());
+      }
+      return dirs;
+    }
+
+    public FileSystem getFileSystem() {
+      return fileSystem;
+    }
   }
 }

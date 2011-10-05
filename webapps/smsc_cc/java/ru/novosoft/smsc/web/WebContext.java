@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
+import ru.novosoft.smsc.admin.stat.SmscStatProvider;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.acl.WAclManager;
@@ -72,6 +73,7 @@ public class WebContext {
   private final WUserManager userManager;
   private final OperativeStoreProvider operativeStoreProvider;
   private final ArchiveDemon archiveDaemon;
+  private final SmscStatProvider smscStatProvider;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -128,6 +130,7 @@ public class WebContext {
     userManager = new WUserManager(adminContext.getUsersManager(), journal, user);
     operativeStoreProvider = adminContext.getOperativeStoreProvider();
     archiveDaemon = adminContext.getArchiveDaemon();
+    smscStatProvider = adminContext.getSmscStatProvider();
   }
 
   public WebXml getWebXml() {
@@ -221,6 +224,10 @@ public class WebContext {
 
   public OperativeStoreProvider getOperativeStoreProvider() {
     return operativeStoreProvider;
+  }
+
+  public SmscStatProvider getSmscStatProvider() {
+    return smscStatProvider;
   }
 
   public ArchiveDemon getArchiveDaemon() {

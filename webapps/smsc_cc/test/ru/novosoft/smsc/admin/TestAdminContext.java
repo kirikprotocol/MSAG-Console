@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.closed_groups.TestClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerConfigTest;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerManager;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManagerImplTest;
 import ru.novosoft.smsc.admin.fraud.TestFraudManager;
@@ -41,6 +42,8 @@ import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
 import ru.novosoft.smsc.admin.snmp.SnmpManagerImplTest;
 import ru.novosoft.smsc.admin.snmp.TestSnmpManager;
+import ru.novosoft.smsc.admin.stat.SmscStatContext;
+import ru.novosoft.smsc.admin.stat.TestSmscStatProvider;
 import ru.novosoft.smsc.admin.timezone.TestTimezoneManager;
 import ru.novosoft.smsc.admin.timezone.TimezonesConfigTest;
 import ru.novosoft.smsc.admin.users.TestUsersManager;
@@ -49,6 +52,8 @@ import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author Artem Snopkov
@@ -86,9 +91,18 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false);
     TestUtils.exportResource(TestProfileManager.emptyProfilesFileAsStream(AdminMode.smsx, PROFILES_VERSION), new File(smscDir, "profiles.bin"), false);
 
-    File operStoreDir = new File(servicesDir, "SMSC1/store/operative");
+    File operStoreDir = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"operative");
     operStoreDir.mkdirs();
     TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false);
+
+
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
+    File statDir =  new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat"+File.separatorChar+format.format(new Date()));
+    statDir.mkdirs();
+    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("05.rts"), new File(statDir, "05.rts"), false);
+    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("06.rts"), new File(statDir, "06.rts"), false);
+    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("07.rts"), new File(statDir, "07.rts"), false);
+
 
     File snmp = new File(servicesDir, "snmp");
     if(!snmp.exists()) {
@@ -180,11 +194,23 @@ public class TestAdminContext extends AdminContext {
     loggerManager = new TestLoggerManager(clusterController);
 
     File[] operStores = new File[smscInstancesNumber];
-    operStores[0] = new File(servicesDir, "SMSC1/store/operative/store.bin");
+    operStores[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
     for (int i =0; i<smscInstancesNumber; i++)
-      operStores[i] = new File(servicesDir, "SMSC" + i + "/store/operative/store.bin");
+      operStores[i] = new File(servicesDir, "SMSC" + i + +File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
 
-    operativeStoreProvider = new OperativeStoreProvider(operStores, fileSystem);    
+    operativeStoreProvider = new OperativeStoreProvider(operStores, fileSystem);
+
+    final File[] statsDir = new File[smscInstancesNumber];
+    statsDir[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat");
+    smscStatProvider = new TestSmscStatProvider(new SmscStatContext() {
+      public File[] getStatDirs() throws AdminException {
+        return statsDir;
+      }
+
+      public FileSystem getFileSystem() {
+        return fileSystem;
+      }
+    });
   }
 
   public TestAdminContext() throws AdminException {

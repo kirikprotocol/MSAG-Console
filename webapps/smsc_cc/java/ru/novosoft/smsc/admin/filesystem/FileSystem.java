@@ -1,6 +1,4 @@
 package ru.novosoft.smsc.admin.filesystem;
-
-import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.*;
@@ -91,5 +89,47 @@ public abstract class FileSystem {
    * @throws AdminException ошибка при проверки
    */
   public abstract boolean exists(File file) throws AdminException;
+
+  /**
+   * Возвращает список имён файлов в данной директории
+   *
+   * @param file директория
+   * @return список имён файлов
+   * @throws ru.novosoft.smsc.admin.AdminException ошибка
+   */
+  public String[] list(File file) throws AdminException {
+    return file.list();
+  }
+
+  /**
+   * Возвращает список файлов в данной директории
+   *
+   * @param file директория
+   * @return список файлов
+   */
+  public File[] listFiles(File file) {
+    return file.listFiles();
+  }
+
+  /**
+   * Возвращает список файлов в данной директории
+   *
+   * @param file директория
+   * @param fileFilter фильтр
+   * @return список файлов
+   */
+  public File[] listFiles(File file, FileFilter fileFilter) {
+    return file.listFiles(fileFilter);
+  }
+
+  /**
+   * Является ли данный File директорией
+   *
+   * @param file File
+   * @return true - да, false - нет
+   */
+  public boolean isDirectory(File file) {
+    return file.isDirectory();
+  }
 
 }
