@@ -23,8 +23,8 @@ using smsc::core::synchronization::MutexGuard;
 
 class ProfileNotifier:public smsc::core::threads::ThreadedTask, public ProfileNotifierInterface{
 public:
-  ProfileNotifier(const char* argHost,int argPort,const char* argDir):
-    host(argHost),port(argPort),dir(argDir)
+  ProfileNotifier(const char* argHost,int argPort,const char* argDir,int argNodeIndex):
+    host(argHost),port(argPort),dir(argDir),nodeIndex(argNodeIndex)
   {
     reconnectTimeout=10;
     log=smsc::logger::Logger::getInstance("prof.not");
@@ -46,7 +46,9 @@ public:
     {
       filePath+='/';
     }
-    filePath+="profile_changes.lst";
+    char fileName[64];
+    sprintf(fileName,"profile_changes%d.lst",nodeIndex);
+    filePath+=fileName;
 
     if(s.Init(host.c_str(),port,0)==-1)
     {
@@ -232,6 +234,7 @@ protected:
   int port;
   int reconnectTimeout;
   std::string dir;
+  int nodeIndex;
   smsc::logger::Logger* log;
 };
 

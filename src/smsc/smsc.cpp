@@ -47,6 +47,8 @@
 #include "smsc/interconnect/ClusterInterconnect.hpp"
 #include "smsc/configregistry/ConfigRegistry.hpp"
 
+typedef struct stat stat_struct;
+
 namespace smsc{
 
 using std::auto_ptr;
@@ -83,6 +85,7 @@ public:
     start.tv_nsec=0;
     smsc=psmsc;
   }
+  virtual ~SpeedMonitor(){}
   int Execute()
   {
     smsc::logger::Logger* log=smsc::logger::Logger::getInstance("speedmon");
@@ -572,7 +575,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
         const char* dir=cfg.cfgman->getString("profiler.notify.dir");
         if(*host && *dir)
         {
-          pnot=new ProfileNotifier(host,port,dir);
+          pnot=new ProfileNotifier(host,port,dir,nodeIndex);
           tp2.startTask(pnot);
         }else
         {
@@ -1037,6 +1040,7 @@ class MainLoopRunner:public smsc::core::threads::Thread
 {
 public:
   MainLoopRunner(){}
+  virtual ~MainLoopRunner(){}
   void assignSmsc(Smsc* argSmsc){smsc=argSmsc;}
   void assignIdx(int argIdx)
   {
@@ -1369,8 +1373,7 @@ void Smsc::InitLicense()
     licenseFile=findConfigFile("license.ini");
     licenseSigFile=findConfigFile("license.sig");
   }
-
-  struct ::stat st;
+  stat_struct st;
   if(::stat(licenseFile.c_str(),&st)!=0)
   {
     throw Exception("Failed to stat '%s'",licenseFile.c_str());
