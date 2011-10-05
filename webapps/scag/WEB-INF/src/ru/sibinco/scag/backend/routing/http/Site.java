@@ -21,7 +21,7 @@ public class Site {
     private boolean defaultSite;
 
     public String getId() {
-        return host;
+        return host+"_"+port;
     }
 
     public Site() {
@@ -75,5 +75,9 @@ public class Site {
 
     public void setDefaultSite(boolean defaultSite) {
         this.defaultSite = defaultSite;
+    }
+
+    public String toString(){
+        return "Site{host="+host+", port="+port+", default="+defaultSite+", path="+pathLinks+"}";
     }
 }

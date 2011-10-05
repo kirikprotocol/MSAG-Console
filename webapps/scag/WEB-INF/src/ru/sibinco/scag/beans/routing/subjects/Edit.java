@@ -176,28 +176,33 @@ public class Edit extends EditBean {
                         throw new SCAGJspException(Constants.errors.routing.sites.HTTP_SITE_ALREADY_EXISTS, getName());//
                     try {
                         HttpSite httpSite = new HttpSite(getName());
-                        for (int i = 0; i < sitesHost.length; i++) {
-                            for (int j = 0; j < sitesPort.length; j++) {
-                                String port = sitesPort[j];
-                                int portlen = sitesPort[j].lastIndexOf('_');
-                                String siteName = port.substring(0, portlen);
-                                port = port.substring(portlen + 1);
-                                if (sitesHost[i].equals(siteName)) {
-                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port),sitesHost[i].equals(defaultSiteObjId));
-                                    List listPath = new ArrayList();
-                                    for (int k = 0; k < pathLinks.length; k++) {
-                                        String pathLink = pathLinks[k];
-                                        int pathlen = pathLink.lastIndexOf('^');
-                                        String sitPath = pathLink.substring(0, pathlen);
-                                        if (sitPath.equals(site.getHost())) {
-                                            listPath.add(pathLink.substring(pathlen + 1));
-                                        }
-                                    }
-                                    site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
-                                    httpSite.getSites().put(site.getHost(), site);
-                                }
-                            }
+
+                        for (int j = 0; j < sitesPort.length; j++) {
+                             String port = sitesPort[j];
+                             int portlen = sitesPort[j].lastIndexOf('_');
+                             String siteName = port.substring(0, portlen);
+                             port = port.substring(portlen + 1);
+                             final Site site = new Site(siteName, Integer.parseInt(port), siteName.equals(defaultSiteObjId));
+                             List listPath = new ArrayList();
+                             for (int k = 0; k < pathLinks.length; k++) {
+                                  String pathLink = pathLinks[k];
+                                  int s1 = pathLink.lastIndexOf('_');
+                                  String sitPath = pathLink.substring(0, s1);
+
+                                  int s2 = pathLink.lastIndexOf("^");
+
+                                  if (sitPath.equals(site.getHost())) {
+                                      String path = pathLink.substring(s2 + 1);
+                                      if (port.equals(pathLink.substring(s1+1, s2))){
+                                          logger.debug("http subject destination site: host="+sitPath + ", port="+port+", path="+path);
+                                          listPath.add(path);
+                                      }
+                                  }
+                             }
+                             site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
+                             httpSite.getSites().put(site.getId(), site);
                         }
+
 
                         httpSites.put(httpSite.getName(), httpSite);
                         messagetxt = "Added new http subject site: '" + getName() + "'.";
@@ -275,28 +280,30 @@ public class Edit extends EditBean {
 
                     try {
                         HttpSite httpSite = new HttpSite(getName());
-                        for (int i = 0; i < sitesHost.length; i++) {
-                            for (int j = 0; j < sitesPort.length; j++) {
-                                String port = sitesPort[j];
-                                int portlen = sitesPort[j].lastIndexOf('_');
-                                String siteName = port.substring(0, portlen);
-                                port = port.substring(portlen + 1);
-                                if (sitesHost[i].equals(siteName)) {
-                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port),sitesHost[i].equals(defaultSiteObjId));
-                                    List listPath = new ArrayList();
-                                    for (int k = 0; k < pathLinks.length; k++) {
-                                        String pathLink = pathLinks[k];
-                                        int pathlen = pathLink.lastIndexOf('^');
-                                        String sitPath = pathLink.substring(0, pathlen);
-                                        if (sitPath.equals(site.getHost())) {
-                                            listPath.add(pathLink.substring(pathlen + 1));
-                                        }
-                                    }
-                                    site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
-                                    httpSite.getSites().put(site.getHost(), site);
-                                }
-                            }
+                        for (int j = 0; j < sitesPort.length; j++) {
+                             String port = sitesPort[j];
+                             int portlen = sitesPort[j].lastIndexOf('_');
+                             String siteName = port.substring(0, portlen);
+                             port = port.substring(portlen + 1);
+                             final Site site = new Site(siteName, Integer.parseInt(port), (siteName+"_"+port).equals(defaultSiteObjId));
+                             List listPath = new ArrayList();
+                             for (int k = 0; k < pathLinks.length; k++) {
+                                 String pathLink = pathLinks[k];
+                                 int s1 = pathLink.lastIndexOf('_');
+                                 String sitPath = pathLink.substring(0, s1);
+                                 int s2 = pathLink.lastIndexOf("^");
+                                 if (sitPath.equals(site.getHost())) {
+                                     String path = pathLink.substring(s2 + 1);
+                                     if (port.equals(pathLink.substring(s1+1, s2))){
+                                        logger.debug("site: host="+sitPath + ", port="+port+", path="+path);
+                                        listPath.add(path);
+                                     }
+                                 }
+                             }
+                             site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
+                             httpSite.getSites().put(site.getId(), site);
                         }
+
                         httpSites.remove(httpSite.getName());
                         httpSites.put(httpSite.getName(), httpSite);
                         messagetxt = "Changed http subject site: '" + getName() + "'.";

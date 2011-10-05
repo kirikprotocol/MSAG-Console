@@ -323,26 +323,31 @@ public class Edit extends EditBean {
                 routeSite.getSiteSubjects().put(httpSite.getName(), httpSite);
             }
         }
-        for (int i = 0; i < sitesHost.length; i++) {
+        //for (int i = 0; i < sitesHost.length; i++) {
             for (int j = 0; j < sitesPort.length; j++) {
                 String port = sitesPort[j];
                 int portlen = sitesPort[j].lastIndexOf('_');
                 String siteName = port.substring(0, portlen);
                 port = port.substring(portlen + 1);
-                if (sitesHost[i].equals(siteName)) {
-                    final Site site = new Site(sitesHost[i], Integer.parseInt(port), sitesHost[i].equals(defaultSiteObjId));
+                //if (sitesHost[i].equals(siteName)) {
+                    final Site site = new Site(siteName, Integer.parseInt(port), (siteName+"_"+port).equals(defaultSiteObjId));
                     List listPath = new ArrayList();
                     for (int k = 0; k < pathLinks.length; k++) {
                         String pathLink = pathLinks[k];
-                        int pathlen = pathLink.lastIndexOf('^');
-                        String sitPath = pathLink.substring(0, pathlen);
+                        int s1 = pathLink.lastIndexOf('_');
+                        String sitPath = pathLink.substring(0, s1);
+                        int s2 = pathLink.lastIndexOf("^");
                         if (sitPath.equals(site.getHost())) {
-                            listPath.add(pathLink.substring(pathlen + 1));
+                            String path = pathLink.substring(s2 + 1);
+                            if (port.equals(pathLink.substring(s1+1, s2))){
+                                listPath.add(path);
+                                logger.debug("site: host="+sitPath + ", port="+port+", path="+path);
+                            }
                         }
                     }
                     site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
-                    routeSite.getSites().put(site.getHost(), site);
-                }
+                    routeSite.getSites().put(site.getId(), site);
+                //}
             }
             routeSite.getAddressPlace().clear();
             routeSite.getUsrPlace().clear();
@@ -362,16 +367,16 @@ public class Edit extends EditBean {
                 routeSite.getServiceIdPlace().add(siteServiceId[j]);
             }
 
-        }
+        //}
         return routeSite;
     }
 
     public String findDuplicateSite(final Site[] sites) {
         Map collide = new HashMap();
         for (int i = 0; i < sites.length; ++i) {
-            String key = sites[i].getHost();
+            String key = sites[i].getId();
             if (collide.containsKey(key))
-                return sites[i].getHost();
+                return sites[i].getId();
             else
                 collide.put(key, null);
         }

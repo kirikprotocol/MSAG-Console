@@ -660,7 +660,9 @@ function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
 //    alert("addSite");
     var valueElem = getElementByIdUni(valueElem);
     var portElem = getElementByIdUni(portElem);
-    if(document.getElementById(trim(valueElem.value)) != null){
+    var s = trim(valueElem.value)+"_"+trimStr(portElem.value);
+    console.log(s);
+    if(document.getElementById(trim(valueElem.value)+"_"+trimStr(portElem.value)) != null){
         alert("! " + msgVal);
         return false;
     }
@@ -673,7 +675,7 @@ function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
 //        var tbl = opForm.all.div_site_table;
         var tbl = getElementByIdUni("div_site_table");
         var newRow = tbl.insertRow(tbl.rows.length);
-        newRow.id = "sectionHeader_"+siteName;
+        newRow.id = "sectionHeader_"+siteName+"_"+trimStr(portElem.value);
 //        newCell = newRow.insertCell();
         newCell = document.createElement("TD");
 //        newCell.innerHTML = addSiteSectionBody(siteName, trimStr(valueElem.value), trimStr(portElem.value), addPathStr);
@@ -701,7 +703,7 @@ function addSiteSectionBody_(siteName, siteFullName, sitePort, addPathStr) {
             + " <td width=\"100%\"><input type=\"radio\" name=\"defaultSiteObjId\" " +isSiteChecked() + " value=\"" + siteFullName + "\">&nbsp;" + siteFullName +":"+sitePort+ "</td>"
             + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "\"  value=\"" + siteFullName + "\">"
             + " <input type=\"hidden\" name=\"sitesPort\" value=\"" + siteFullName + "_" + sitePort + "\"></td>"
-            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
+            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + ')\"></td>"
 //            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','sectionHeader_" + siteName + "','div_site_table' )\"></td>"
 //            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','" + rowId + "','div_site_table' )\"></td>"
             + " </tr>"
@@ -718,29 +720,29 @@ function addSiteSectionBody_(siteName, siteFullName, sitePort, addPathStr) {
 }
 
 function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr, tblId) {
-    var sectionHeader_ = "sectionHeader_" + siteName;
-    var newPSN = getElementByIdUni( "newPath_" + "siteName" );
-    var sitespTSN = getElementByIdUni( "sitesp_table_" + "siteName" );
-    var rowId = "sectionHeader_" + siteName;
+    var sectionHeader_ = "sectionHeader_" + siteName + "_"+sitePort;
+    var newPSN = getElementByIdUni( "newPath_" + "siteName");
+    var sitespTSN = getElementByIdUni( "sitesp_table_" + "siteName");
+    var rowId = "sectionHeader_" + siteName+"_"+sitePort;
     return ""
 //            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" style=\"width:100%;background-image:none\">"// onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
-            + " <table id=\"sitesp_table_" + siteName + "\" cellpadding=\"0\" cellspacing=\"0\" class=\"properties_list\">"
+            + " <table id=\"sitesp_table_" + siteName +"_"+ sitePort + "\" cellpadding=\"0\" cellspacing=\"0\" class=\"properties_list\">"
             + " <col width=\"1%\">"
             + " <col width=\"99%\">"
             + " <tr>"
-            + " <td width=\"100%\"><input type=\"radio\" name=\"defaultSiteObjId\" " +isSiteChecked() + " value=\"" + siteFullName + "\">&nbsp;" + siteFullName +":"+sitePort+ "</td>"
-            + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "\"  value=\"" + siteFullName + "\">"
+            + " <td width=\"100%\"><input type=\"radio\" name=\"defaultSiteObjId\" " +isSiteChecked() + " value=\"" + siteFullName+"_"+sitePort + "\">&nbsp;" + siteFullName +":"+sitePort+ "</td>"
+            + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "_" + sitePort + "\"  value=\"" + siteFullName + "\">"
             + " <input type=\"hidden\" name=\"sitesPort\" value=\"" + siteFullName + "_" + sitePort + "\"></td>"
 //            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
 //            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','sectionHeader_" + siteName + "','div_site_table' )\"></td>"
-            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','" + rowId + "','div_site_table' )\" style=\"cursor:pointer;\"></td>"
+            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "_"+sitePort + "','" + rowId + "','div_site_table' )\" style=\"cursor:pointer;\"></td>"
             + " </tr>"
             + " <tr>"
             + " <td nowrap=\"true\" align=\"right\">" + addPathStr + "&nbsp;</td>"
-            + " <td align=\"right\"><input id=\"newPath_" + siteName + "\" class=\"txt\" name=\"newPath_" + siteName + "\" onkeyup=\"resetValidation(this)\"></td>"
+            + " <td align=\"right\"><input id=\"newPath_" + siteName + "_" + sitePort + "\" class=\"txt\" name=\"newPath_" + siteName + "_" + sitePort + "\" onkeyup=\"resetValidation(this)\"></td>"
             + " <td><img src=\"content/images/but_add.gif\" alt=\"" + addPathStr + "\" "
 //            + "onclick=\"addPath(opForm.all.newPath_" + siteName + ", '" + siteFullName + "', opForm.all.sitesp_table_" + siteName + ", '" + siteName + "')\" "
-            + "onclick=\"addPath('newPath_" + siteName + "', '" + siteFullName + "', 'sitesp_table_" + siteName + "', '" + siteName + "')\" "
+            + "onclick=\"addPath('newPath_" + siteName + "_" + sitePort + "', '" + siteFullName + "_" + sitePort + "', 'sitesp_table_" + siteName + "_"+ sitePort + "', '" + siteName + "_" + sitePort + "')\" "
             + "style=\"cursor:pointer;\"></td>"
             + " </tr>"
             + " </table>"
