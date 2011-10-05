@@ -703,7 +703,7 @@ function addSiteSectionBody_(siteName, siteFullName, sitePort, addPathStr) {
             + " <td width=\"100%\"><input type=\"radio\" name=\"defaultSiteObjId\" " +isSiteChecked() + " value=\"" + siteFullName + "\">&nbsp;" + siteFullName +":"+sitePort+ "</td>"
             + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "\"  value=\"" + siteFullName + "\">"
             + " <input type=\"hidden\" name=\"sitesPort\" value=\"" + siteFullName + "_" + sitePort + "\"></td>"
-            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + ')\"></td>"
+            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
 //            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','sectionHeader_" + siteName + "','div_site_table' )\"></td>"
 //            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','" + rowId + "','div_site_table' )\"></td>"
             + " </tr>"
