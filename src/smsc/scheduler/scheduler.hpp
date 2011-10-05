@@ -56,6 +56,7 @@ public:
   {
     wrLog=smsc::logger::Logger::getInstance("wrspeed");
   }
+  virtual ~LocalFileStore(){}
 
   void Stop()
   {
@@ -204,7 +205,7 @@ public:
     }else
     {
       idFile.WOpen(idFileName);
-      idSeq=nodeIdx;
+      idSeq=nodeIdx-1;
       idFile.WriteNetInt64(idSeq);
     }
     idFile.SetUnbuffered();
