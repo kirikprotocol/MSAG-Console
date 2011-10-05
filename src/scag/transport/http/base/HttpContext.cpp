@@ -22,7 +22,6 @@ const char* HttpContext::ActionNames[ACTION_LAST] = {
 "KEEP_ALIVE_TIMEOUT"
 };
 
-
 unsigned int HttpContext::counter_create;
 unsigned int HttpContext::counter_free;
 
@@ -171,7 +170,7 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 		s->setNonBlocking(0);
 		if ( httpsFlag ) {
 			if ( ssl == NULL ) {
-				smsc_log_debug(logger, "close%sConnection: already closed", info);
+//				smsc_log_debug(logger, "close%sConnection: already closed", info);
 				return;
 			}
 			try {
@@ -184,7 +183,7 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 				ssl = NULL;
 				smsc_log_error(logger, "close%sConnection: Unknown error c:%d f:%d", info, HttpContext::counter_create, HttpContext::counter_free);
 			}
-			smsc_log_debug(logger, "close%sConnection: Ok c:%d f:%d", info, HttpContext::counter_create, HttpContext::counter_free);
+			smsc_log_debug(logger, "%p close%sConnection: Ok c:%d f:%d", this, info, HttpContext::counter_create, HttpContext::counter_free);
 
 		}
 		s->Abort();
@@ -251,106 +250,11 @@ bool HttpContext::useHttps(Socket* s) {
 	}
 	return false;
 }
-/*
- * perspective upgrade of ssl communication routines based on Rescorla's "An Introduction to OpenSSL Programming"
- */
-/*
-int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t readBufSize) {
-	SSL* ssl = sslCheckConnection(s);
-	if (ssl == NULL)
-		return 0;
-
-	int len=0, total=0;
-	int read_blocked_on_write, read_blocked;
-
-// required: a cycle with socket select() where readfds and writefds filled
-	// Now check if thereÕs data to read
-	if((FD_ISSET(sock, &readfds) && !write_blocked_on_read) || (read_blocked_on_write && FD_ISSET(sock, &writefds)))
-	{
-		do {
-			read_blocked_on_write=0;
-			read_blocked=0;
-
-			len = SSL_read(ssl, (void*)readBuf, readBufSize);
-			switch ( SSL_get_error(ssl, len) )
-			{
-				case SSL_ERROR_NONE:
-					unparsed.Append(readBuf, len);
-					total += len;
-					break;
-				case SSL_ERROR_ZERO_RETURN:
-					// End of data
-					if ( SSL_get_shutdown(ssl) ) {
-						smsc_log_debug(logger, "sslReadPartial: shutdown detected from %s. Total=%d", connName(s), unparsed.GetPos());
-						SSL_shutdown(ssl);
-						return -1;
-					}
-					break;
-				case SSL_ERROR_WANT_READ:
-					read_blocked = 1;
-					break;
-					// We get a WANT_WRITE if weÕre trying to rehandshake and we block on a write during that rehandshake.
-					// We need to wait on the socket to be writeable but reinitiate the read when it is
-					//
-				case SSL_ERROR_WANT_WRITE:
-					read_blocked_on_write=1;
-					break;
-				default:
-					sslLogErrors();
-					smsc_log_debug(logger, "%s %d SSL:%d %d %d %s\n", __FILE__, __LINE__, ret, ssl_err, oerrno, strerror(oerrno));
-					break;
-					// ("SSL read problem");
-			}
-		// We need a check for read_blocked here because SSL_pending() doesnÕt work properly during the handshake.
-		// This check prevents a busy-wait loop around SSL_read()
-		//
-		} while (SSL_pending(ssl) && !read_blocked);
-	}
-	return total;
-}
-
-//
-int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWrite) {
-	int len;
-	SSL* ssl = sslCheckConnection(s);
-	if (ssl == NULL) {
-		smsc_log_debug(logger, "sslWritePartial: create connection failed");
-		return 0;
-	}
-	// select() cycle required
-	// If the socket is writeable...
-	if ((FD_ISSET(sock,&writefds) && c2sl) || (write_blocked_on_read && FD_ISSET(sock,&readfds))) {
-		write_blocked_on_read=0;
-		// Try to write
-		r=SSL_write(ssl,c2s+c2s_offset,c2sl);
-		// add:			if ( SSL_get_shutdown(ssl) ) {}
-		switch (SSL_get_error(ssl,r)) {
-		// We wrote something
-		case SSL_ERROR_NONE:
-			c2sl-=r;
-			c2s_offset+=r;
-			break;
-		// We would have blocked
-		case SSL_ERROR_WANT_WRITE:
-			break;
-		// We get a WANT_READ if weÕre trying to rehandshake and we block on write during the current connection.
-		// We need to wait on the socket to be readable
-		// but reinitiate our write when it is
-		case SSL_ERROR_WANT_READ:
-			write_blocked_on_read=1;
-			break;
-		// Some other error
-		default:
-			return 0;
-		}
-	}
-}
-*/
 
 int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t readBufSize, bool& closed) {
 	SSL* ssl = sslCheckConnection(s);
 	if (ssl == NULL) {
-		smsc_log_debug(logger, "sslReadPartial: no %s connection return -2", connName(s));
+		smsc_log_error(logger, "sslReadPartial: no %s connection return -2", connName(s));
 		return -2;
 	}
 
@@ -393,14 +297,12 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 				smsc_log_debug(logger, "sslReadPartial: not completed from %s. Total=%d, toRead=%d", connName(s), total, toRead);
 				continue;
 			}
-//			s->Abort(); ///
-			smsc_log_debug(logger, "sslReadPartial: completed from %s. Total=%d", connName(s), unparsed.GetPos());
+//			smsc_log_debug(logger, "sslReadPartial: completed from %s. Total=%d", connName(s), unparsed.GetPos());
 			closed = true;
 			break;  // it seems, the read operation is over here
 		}
 		else {  //len<0
 			err = sslCheckIoError(len, ssl_err, oerrno);
-//			smsc_log_debug(logger, "sslReadPartial: sslCheckIoError err=%d", err);
 			if ( err == CONTINUE )
 				continue;
 			if ( err == ERROR ) {
@@ -409,7 +311,7 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 			}
 			toRead = SSL_pending(ssl);
 			if (toRead)
-				smsc_log_debug(logger, "sslReadPartial: Managed error from %s. Continue reading toRead=%d", connName(s), toRead);
+				smsc_log_error(logger, "sslReadPartial: Managed error from %s. Continue reading toRead=%d", connName(s), toRead);
 		}
 	} while ( toRead > 0 );
 	return total;
@@ -444,34 +346,11 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 }
 
 void HttpContext::beforeReader(void) {
-//	smsc_log_debug(logger, "HttpContext::beforeReader cx:%p user=%p site=%p act=%s", this, user, site, actionName());
 	unparsed.SetPos(0);
 	flags = 0;
 	result = 0;
 	parsePosition = 0;
 }
-/*
-Socket* HttpContext::beforeWriter(void) {
-	smsc_log_debug(logger, "HttpContext::beforeWriter cx:%p user=%p site=%p", this, user, site);
-    Socket *s;
-
-    if (action == SEND_REQUEST) {
-
-//TODO: make decision to use HTTPS connection on site (depends on url or route fields);
-    	setSiteHttps(command->getSitePort() != 80);
-        s = site = new Socket;
-        HttpContext::setContext(s, this);
-    }
-    else
-        s = user;
-
-    flags = 0;
-    result = 0;
-    sendPosition = 0;
-    messagePrepare();
-    return s;
-}
-*/
 
 /*
  * Prepare this->command data as suitable (continuous) message buffer to write over HTTPS or chunked.

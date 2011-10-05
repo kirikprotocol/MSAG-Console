@@ -316,13 +316,13 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 }
                 else
                 {
-                   smsc_log_debug(logger, "Attempt to find route. abonent:%s, site:[%s]:[%d][%s][%s]",
-                    	request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str());
+//                   smsc_log_debug(logger, "Attempt to find route. abonent:%s, site:[%s]:[%d][%s][%s]",
+//                    	request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str());
                    r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());
 // (xom 25.07.11) add port change (port,443,80 selection) as mix-protocol feature
                    request.setSitePort(r.defSite.port);
                 }
-                smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
+//                smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
             } catch (const RouteNotFoundException& e) {
                 smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
                 registerEvent( stat::events::http::REQUEST_FAILED, request);
@@ -354,9 +354,9 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 return scag::re::STATUS_OK;
             }
 
-            smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str());
+//            smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str());
 
-            smsc_log_debug( logger, "httproute found route_id=%d, service_id=%d", r.id, r.service_id);
+//            smsc_log_debug( logger, "httproute found route_id=%d, service_id=%d", r.id, r.service_id);
             request.setServiceId(r.service_id);
             request.setRouteId(r.id);
             request.setProviderId(r.provider_id);
@@ -441,7 +441,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 
 int HttpProcessorImpl::processResponse(HttpResponse& response)
 {
-    smsc_log_debug( logger, "Got http_response command abonent=%s, route_id=%d, service_id=%d", response.getAbonent().c_str(), response.getRouteId(), response.getServiceId());
+//    smsc_log_debug( logger, "Got http_response command abonent=%s, route_id=%d, service_id=%d", response.getAbonent().c_str(), response.getRouteId(), response.getServiceId());
     
     if(!response.getAbonent().length())
     {
@@ -452,7 +452,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
         return re::STATUS_OK;
     }
 
-    smsc_log_debug(logger, "SERIALIZED RESPONSE BEFORE: %s", response.serialize().c_str());
+    smsc_log_debug(logger, "SERIALIZED RESPONSE BEFORE:\n%s", response.serialize().c_str());
     
     ActiveSession se;
     try{
@@ -497,7 +497,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
                 registerEvent(stat::events::http::RESPONSE_OK, response);
                 // response.setSession(SessionPtr(0));
                 // SessionManager::Instance().releaseSession(se);
-                smsc_log_debug(logger, "SERIALIZED RESPONSE AFTER: %s", response.serialize().c_str());
+                smsc_log_debug(logger, "SERIALIZED RESPONSE AFTER:\n%s", response.serialize().c_str());
                 return rs.status;
             }
 
@@ -544,8 +544,8 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
 
 int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 {
-    smsc_log_debug(logger, "Got http_status_response command abonent=%s, route_id=%d, service_id=%d, delivered=%d",
-             response.getAbonent().c_str(), response.getRouteId(), response.getServiceId(), delivered);
+//    smsc_log_debug(logger, "Got http_status_response command abonent=%s, route_id=%d, service_id=%d, delivered=%d",
+//             response.getAbonent().c_str(), response.getRouteId(), response.getServiceId(), delivered);
              
     if(!response.getAbonent().length())
     {

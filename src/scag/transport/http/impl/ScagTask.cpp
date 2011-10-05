@@ -29,7 +29,6 @@ int ScagTask::Execute()
 
         switch (cx->action) {
         case PROCESS_REQUEST:
-//            smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
             st = processor.processRequest(cx->getRequest());
             if (st == re::STATUS_OK)
             {
@@ -52,7 +51,6 @@ int ScagTask::Execute()
               // no break, go to the case PROCESS_RESPONSE
             }
         case PROCESS_RESPONSE:
-//            smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
             if (!cx->requestFailed)
             {
                 if (cx->result) {
@@ -85,28 +83,35 @@ int ScagTask::Execute()
             manager.writerProcess(cx);       
             break;      
         case PROCESS_STATUS_RESPONSE:
+        	try
             {
                 if (cx->requestFailed || cx->getResponse().isFake()) {
-                  smsc_log_warn(logger, "%p: %p, do not call to statusResponse(). fake status_response skipped", this, cx);
+                  smsc_log_warn(logger, "%p, case PROCESS_STATUS_RESPONSE, failed request: HttpContext %p delete", this, cx);
                   delete cx;
+                  cx = NULL;
                   break;
                 }
 
                 bool delivered = !cx->result;
                 st = processor.statusResponse(cx->getResponse(), delivered);
-//                smsc_log_debug(logger, "%p: %p, call to statusResponse(%s)=%d", this, cx, (delivered?"true":"false"), st);
 
                 if(st == re::STATUS_LONG_CALL || st == re::STATUS_PROCESS_LATER)
                     break;
-//                smsc_log_debug(logger, "%p: delete HttpContext(%p)", this, cx);
+                smsc_log_debug(logger, "%p, case PROCESS_STATUS_RESPONSE, normal HttpContext %p delete", this, cx);
                 delete cx;
+                cx = NULL;
             }
+        	catch(...) {
+                smsc_log_error(logger, "%p, Unresolved exception when case PROCESS_STATUS_RESPONSE, delete HttpContext %p", this, cx);
+        	}
         default:
             break;
         } // switch action
     }
 
-    if(cx) delete cx;
+    if (cx) {
+    	delete cx;
+    }
 
     smsc_log_debug(logger, "%p quit", this);
 

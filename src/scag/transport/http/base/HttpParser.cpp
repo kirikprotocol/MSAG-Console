@@ -305,7 +305,7 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
 
         // we've got method
         cx.getRequest().setMethod(HttpRequest::method_table[method_idx].value);
-		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
+//		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
 
         switch (HttpRequest::method_table[method_idx].value) {
           case GET:
