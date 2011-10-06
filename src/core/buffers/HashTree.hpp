@@ -115,7 +115,8 @@ public:
 };
 
 
-template <class K,class V,typename HF=HTDefaultHashFunc,size_t PoolSz=256,template <class NT,size_t SZ=PoolSz> class NodesAllocator=HTPooledAllocator>
+template <class K,class V,typename HF=HTDefaultHashFunc,
+          size_t PoolSz=256,template <class NT,size_t SZ=PoolSz> class NodesAllocator=HTPooledAllocator>
 class HashTree{
 protected:
    struct Node;
@@ -126,10 +127,22 @@ public:
    typedef KeyVal<K,V> value_type;
 
    explicit HashTree(const HF& a_hashFunc=HF()):
-       m_root(0),m_count(0),m_hashFunc(a_hashFunc),m_begin((DataNode*)&m_end),m_npool(0),m_dpool(0),m_apool(0)
+       m_root(0),m_count(0),m_hashFunc(a_hashFunc),m_begin((DataNode*)&m_end),m_npool(0),m_dpool(0),m_apool(0),m_externalAllocators(false)
    {
       m_end.m_prev=0;
       m_end.m_next=0;
+   }
+
+   typedef NodesAllocator<Node> NodeAlloc;
+   typedef NodesAllocator<DataNode> DataNodeAlloc;
+   typedef NodesAllocator<DataArrayNode> ArrayNodeAlloc;
+
+   void assignAllocators(NodeAlloc* argNA,DataNodeAlloc* argDA,ArrayNodeAlloc* argAN)
+   {
+     m_npool=argNA;
+     m_dpool=argDA;
+     m_apool=argAN;
+     m_externalAllocators=true;
    }
 
    HashTree(const HashTree& a_other):m_root(0),m_count(0),m_hashFunc(a_other.m_hashFunc),m_begin(&m_end)
@@ -191,7 +204,7 @@ public:
             return false;
          }
       }
-      return true;
+      return false;
    }
    template <size_t DefSz2,template <class NT2,size_t SZ2=DefSz2> class NodesAllocator2>
    bool operator==(const HashTree<K,V,HF,DefSz2,NodesAllocator2>& a_other)const
@@ -217,6 +230,7 @@ public:
             return false;
          }
       }
+      return false;
    }
 
    bool operator!=(const HashTree& a_other)const
@@ -239,6 +253,7 @@ public:
    class iterator{
    public:
       iterator():m_node(0){}
+      iterator(const iterator& a_other):m_node(a_other.m_node){}
       iterator operator++(int)
       {
          m_node=m_node->m_next;
@@ -307,6 +322,7 @@ public:
    class const_iterator{
    public:
       const_iterator():m_node(0){}
+      const_iterator(const const_iterator& a_other):m_node(a_other.m_node){}
       const_iterator(const iterator& a_other):m_node(a_other.m_node){}
       const_iterator operator++(int)
       {
@@ -321,7 +337,7 @@ public:
          return const_iterator(rv);
       }
 
-      const_iterator operator--(int)const
+      const_iterator operator--(int)
       {
          m_node=m_node->m_prev;
          return *this;
@@ -649,7 +665,7 @@ public:
       m_count=0;
       m_begin=(DataNode*)&m_end;
       m_end.m_prev=0;
-      if(a_freeMemPool && m_npool)
+      if(a_freeMemPool && m_npool && !m_externalAllocators)
       {
          delete m_npool;
          delete m_dpool;
@@ -683,6 +699,10 @@ public:
       NodesAllocator<DataArrayNode>* tmpAPool=m_apool;
       m_apool=a_other.m_apool;
       a_other.m_apool=tmpAPool;
+
+      bool tmpExt=m_externalAllocators;
+      m_externalAllocators=a_other.m_externalAllocators;
+      a_other.m_externalAllocators=tmpExt;
 
 
       if(m_end.m_prev)
@@ -931,6 +951,7 @@ protected:
    NodesAllocator<Node>* m_npool;
    NodesAllocator<DataNode>* m_dpool;
    NodesAllocator<DataArrayNode>* m_apool;
+   bool m_externalAllocators;
 
    void recClear(Node* a_ptr)
    {
