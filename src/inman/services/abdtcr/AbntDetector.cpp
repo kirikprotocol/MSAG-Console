@@ -32,9 +32,10 @@ AbonentDetector::~AbonentDetector()
 {
   MutexGuard grd(_sync);
   doCleanUp();
-  if (_logger)
-    _logger->log_((_state < adCompleted) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG,
-                  "%s: Deleted at state %s", _logId, state2Str());
+  if (_logger) {
+    smsc_log_level((_state < adCompleted) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG,
+                   _logger, "%s: Deleted at state %s", _logId, state2Str());
+  }
 }
 
 const char * AbonentDetector::state2Str(ADState_e st)

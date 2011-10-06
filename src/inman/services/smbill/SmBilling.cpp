@@ -58,9 +58,11 @@ Billing::~Billing()
 {
   MutexGuard grd(_sync);
   doCleanUp();
-  if (_logger)
-    _logger->log_(((_pState == bilAborted) || (_pState == bilComplete)) ? Logger::LEVEL_DEBUG : Logger::LEVEL_WARN,
-                  "%s: Deleted at state %s", _logId, state2Str());
+  if (_logger) {
+    Logger::LogLevel logLvl = ((_pState == bilAborted) || (_pState == bilComplete))
+                              ? Logger::LEVEL_DEBUG : Logger::LEVEL_WARN;
+    smsc_log_level(logLvl, _logger, "%s: Deleted at state %s", _logId, state2Str());
+  }
 }
 
 const char * Billing::state2Str(BillingState bil_state)
