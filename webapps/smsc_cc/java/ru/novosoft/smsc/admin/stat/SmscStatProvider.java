@@ -314,7 +314,12 @@ public class SmscStatProvider {
   }
 
 
-  public Statistics getStatistics(SmscStatFilter filter) throws AdminException {
+  Statistics getStatistics(SmscStatFilter filter) throws AdminException {
+    return getStatistics(filter, null);
+  }
+
+
+  public Statistics getStatistics(SmscStatFilter filter, SmscStatLoadListener loadListener) throws AdminException {
 
     SimpleDateFormat dateDayFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
     SimpleDateFormat dateDayLocalFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
@@ -341,6 +346,10 @@ public class SmscStatProvider {
     Set<FileWithDate> selectedFiles = getStatFiles(fromQueryDate, tillQueryDate);
     if (selectedFiles.size() <= 0) return stat;
 
+    if(loadListener != null) {
+      loadListener.setTotal(selectedFiles.size()+1);
+    }
+
     Map<Date, CountersSet> statByHours = new TreeMap<Date, CountersSet>();
     Map<String, SmeIdCountersSet> countersForSme = new HashMap<String, SmeIdCountersSet>();
     Map<String, RouteIdCountersSet> countersForRoute = new HashMap<String, RouteIdCountersSet>();
@@ -349,6 +358,9 @@ public class SmscStatProvider {
     for (Iterator<FileWithDate> iterator = selectedFiles.iterator(); iterator.hasNext() && !finished;) {
       FileWithDate fwd = iterator.next();
       processFile(fwd, fromQueryDate, tillQueryDate, stat, statByHours, countersForSme, countersForRoute);
+      if(loadListener != null) {
+        loadListener.incrementProgress();
+      }
     }
     if(logger.isDebugEnabled()) {
       logger.debug("End scanning statistics, time spent: " + ((System.currentTimeMillis() - tm) / 1000) + " sec");
@@ -389,6 +401,8 @@ public class SmscStatProvider {
     if (countersSme != null) stat.addSmeIdCollection(countersSme);
     Collection<RouteIdCountersSet> countersRoute = countersForRoute.values();
     if (countersRoute != null) stat.addRouteIdCollection(countersRoute);
+
+    loadListener.incrementProgress();
 
     return stat;
   }

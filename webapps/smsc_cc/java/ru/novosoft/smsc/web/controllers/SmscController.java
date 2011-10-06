@@ -2,15 +2,14 @@ package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.web.LocaleFilter;
-import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
-import java.io.Serializable;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -89,6 +88,29 @@ public abstract class SmscController implements Serializable {
 
   public boolean isAccessToUsers() {
     return FacesContext.getCurrentInstance().getExternalContext().isUserInRole("users");
+  }
+
+  /**
+   * Метод для отдачи файлов
+   *
+   * @param context Faces context
+   * @param out     Output Stream
+   * @throws java.io.IOException ошибка записи
+   */
+  public void download(FacesContext context, OutputStream out) throws IOException {
+    Charset charset = Charset.forName("windows-1251");
+    PrintWriter w = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, charset)));
+    _download(w);
+    w.flush();
+  }
+
+  /**
+   * Метод для отдачи файлов (требует переопределения в наследнике)
+   *
+   * @param writer Print writer
+   * @throws java.io.IOException ошибка записи
+   */
+  protected void _download(PrintWriter writer) throws IOException {
   }
 
 }

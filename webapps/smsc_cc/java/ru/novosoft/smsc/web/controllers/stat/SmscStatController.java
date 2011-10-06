@@ -27,7 +27,7 @@ public class SmscStatController extends SmscController{
 
   private Statistics statistics;
 
-  private LoadListener loadListener;
+  private LoadListenerImpl loadListener;
 
   private boolean loaded;
 
@@ -130,16 +130,14 @@ public class SmscStatController extends SmscController{
   }
 
   private LoadListener load(final Locale locale) {
-    LoadListener listener = null;
+    LoadListenerImpl listener = null;
     if(!loaded) {
       if(loadListener == null) {
-        loadListener = new LoadListener();
-        loadListener.setCurrent(0);
-        loadListener.setTotal(1);
+        loadListener = new LoadListenerImpl();
         new Thread() {
           public void run() {
             try{
-              statistics = provider.getStatistics(filter);
+              statistics = provider.getStatistics(filter, loadListener);
               loaded = true;
             }catch (AdminException e){
               logger.error(e,e);
@@ -234,6 +232,16 @@ public class SmscStatController extends SmscController{
     };
   }
 
+  private void getFilteredRouteStat(List<RouteIdCountersSet> records) {
+    for(RouteIdCountersSet r : statistics.getRouteIdStat()) {
+      if((categoryId != null && r.getCategoryId() != categoryId) ||
+          (providerId != null && r.getProviderId() != providerId)) {
+        continue;
+      }
+      records.add(r);
+    }
+  }
+
   public DataTableModel getRouteStat() {
 
     final Locale locale = getLocale();
@@ -246,13 +254,7 @@ public class SmscStatController extends SmscController{
         return load(locale);
       }
       public List getRows(int startPos, int count, DataTableSortOrder dataTableSortOrder) throws ModelException {
-        for(RouteIdCountersSet r : statistics.getRouteIdStat()) {
-          if((categoryId != null && r.getCategoryId() != categoryId) ||
-              (providerId != null && r.getProviderId() != providerId)) {
-            continue;
-          }
-          records.add(r);
-        }
+        getFilteredRouteStat(records);
         List<RouteIdCountersSet> result = new LinkedList<RouteIdCountersSet>();
         for (int i = startPos; i < Math.min(records.size(), startPos + count); i++) {
           RouteIdCountersSet r = records.get(i);
@@ -303,6 +305,13 @@ public class SmscStatController extends SmscController{
 
   public static enum StatType {
     GENERAL, SMES, ROUTES, ERRORS
+  }
+
+
+  private static class LoadListenerImpl extends LoadListener implements SmscStatLoadListener {
+    public void incrementProgress() {
+      this.setCurrent(getCurrent() + 1);
+    }
   }
 
 }
