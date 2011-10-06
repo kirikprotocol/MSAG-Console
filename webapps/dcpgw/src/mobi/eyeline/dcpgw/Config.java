@@ -1,13 +1,17 @@
 package mobi.eyeline.dcpgw;
 
+import mobi.eyeline.dcpgw.dcp.DcpConnectionImpl;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
+import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.dcpgw.utils.Utils;
+import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigParam;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
+import mobi.eyeline.smpp.api.SmppException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -21,11 +25,15 @@ import java.util.*;
  * Date: 19.09.11
  * Time: 16:43
  */
-public class ConfigurationManager {
+public class Config {
 
-    private static Logger log = Logger.getLogger(ConfigurationManager.class);
+    private static Config instance = new Config();
 
-    private static ConfigurationManager instance = new ConfigurationManager();
+    public static Config getInstance(){
+        return instance;
+    }
+
+    private static Logger log = Logger.getLogger(Config.class);
 
     private String deliveries_file;
     private String smpp_endpoints_file;
@@ -51,13 +59,24 @@ public class ConfigurationManager {
 
     private Hashtable<String, HashSet<Integer>> informer_user_delivery_ids_table;
 
-    public static ConfigurationManager getInstance(){
-        return instance;
-    }
+    private static Hashtable<String, DcpConnectionImpl> informer_user_connection_table;
 
-    public ConfigurationManager(){
+    private int max_journal_size_mb;
 
-    }
+    private File journal_dir;
+
+    private File final_log_dir;
+
+    private int resend_receipts_interval;
+
+    private int send_receipts_interval;
+    private int send_receipts_limit;
+    private int resend_receipts_timeout;
+    private int resend_receipts_max_timeout;
+
+    private int clean_journal_timeout;
+
+    private String separator;
 
     public void init(String config_file) throws IOException, XmlConfigException, InitializationException {
         config = new Properties();
@@ -109,17 +128,66 @@ public class ConfigurationManager {
 
         update_config_server_port = Integer.parseInt(s);
 
+        providers = loadInformerProviders();
+
+        connection_provider_table = new Hashtable<String, Provider>();
         informer_user_delivery_ids_table = new Hashtable<String, HashSet<Integer>>();
 
-        providers = loadInformerProviders();
+        for(Provider provider: providers){
+            String[] endpoints = provider.getEndpointIds();
+            for(String connection_name: endpoints) connection_provider_table.put(connection_name, provider);
+
+            Vector<Delivery> deliveries = provider.getDeliveries();
+            for(Delivery delivery: deliveries){
+                int delivery_id = delivery.getId();
+                String informer_user = delivery.getUser();
+                if (!informer_user_delivery_ids_table.containsKey(informer_user))
+                    informer_user_delivery_ids_table.put(informer_user, new HashSet<Integer>());
+
+                Set<Integer> delivery_ids = informer_user_delivery_ids_table.get(informer_user);
+                delivery_ids.add(delivery_id);
+                log.debug("informer_user --> delivery_id: "+informer_user+" --> "+delivery_id);
+            }
+        }
+
         informer_user_password_table = loadInformerUsers();
         config_with_smpp_endpoints = loadSmppEndpoints();
+
+        informer_user_connection_table = new Hashtable<String, DcpConnectionImpl>();
+        for(String informer_user : informer_user_password_table.keySet()){
+            try {
+                DcpConnectionImpl connection = new DcpConnectionImpl(informer_user);
+                informer_user_connection_table.put(informer_user, connection);
+            } catch (AdminException e) {
+                log.warn(e);
+            }
+        }
+
+        max_journal_size_mb = Utils.getProperty(config, "max.journal.size.mb", 10);
+        journal_dir = new File(Utils.getProperty(config, "journal.dir", System.getProperty("user.dir")+File.separator+"journal"));
+
+        final_log_dir = new File(Utils.getProperty(config, "final.log.dir", System.getProperty("user.dir") + File.separator + "final_log"));
+
+        resend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
+
+        send_receipts_interval = Utils.getProperty(config, "send.receipts.interval.mls", 1000);
+
+        send_receipts_limit = Utils.getProperty(config, "send.receipts.limit.mls", 100);
+
+        resend_receipts_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
+
+        resend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
+
+        clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
     }
 
-    public void update() throws IOException, XmlConfigException {
+    public void update() throws IOException, XmlConfigException, AdminException, SmppException {
+        log.debug("Try to update configuration ...");
         Set<Provider> providers_temp = loadInformerProviders();
         Hashtable<String, String> informer_user_password_temp_table = loadInformerUsers();
         Properties properties_temp = loadSmppEndpoints();
+
+        Server.getInstance().update(properties_temp);
 
         providers = providers_temp;
 
@@ -143,8 +211,28 @@ public class ConfigurationManager {
             }
         }
 
+        Set<String> old_informer_users = informer_user_password_table.keySet();
         informer_user_password_table = informer_user_password_temp_table;
+        Set<String> new_informer_users = informer_user_password_table.keySet();
+
         config_with_smpp_endpoints = properties_temp;
+
+        // Add new dcp connections
+        for(String new_user: new_informer_users){
+            if (!old_informer_users.contains(new_user)){
+                DcpConnectionImpl connection = new DcpConnectionImpl(new_user);
+                informer_user_connection_table.put(new_user, connection);
+            }
+        }
+
+        // Remove deleted dcp connections
+        for(String old_user: informer_user_connection_table.keySet()){
+            if (!new_informer_users.contains(old_user)){
+                DcpConnectionImpl connection = informer_user_connection_table.remove(old_user);
+                connection.interrupt();
+            }
+        }
+        log.debug("Configuration updated.");
     }
 
     public Properties getConfig(){
@@ -294,4 +382,41 @@ public class ConfigurationManager {
     public Set<Integer> getDeliveries(String informer_user) {
         return informer_user_delivery_ids_table.get(informer_user);
     }
+
+    public DcpConnectionImpl getDCPConnection(String informer_user){
+        return informer_user_connection_table.get(informer_user);
+    }
+
+    public int getMaxJournalSize(){
+        return  max_journal_size_mb;
+    }
+
+    public File getJournalDir(){
+        return journal_dir;
+    }
+
+    public File getFinalLogDir(){
+        return final_log_dir;
+    }
+
+    public int getRecendReceiptsInterval(){
+        return resend_receipts_interval;
+    }
+
+    public int getRecendReceiptsMaxTimeout(){
+        return resend_receipts_max_timeout;
+    }
+
+    public int getRecendReceiptsTimeout(){
+        return resend_receipts_interval;
+    }
+
+    public int getCleanJournalTimeout(){
+        return clean_journal_timeout;
+    }
+
+    public int getSendReceiptLimit(){
+        return send_receipts_limit;
+    }
+
 }

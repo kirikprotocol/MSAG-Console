@@ -1,5 +1,6 @@
 package mobi.eyeline.dcpgw.journal;
 
+import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
@@ -9,6 +10,9 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: Stepanov Dmitry Nikolaevich
@@ -16,6 +20,12 @@ import java.util.*;
  * Time: 16:58
  */
 public class Journal {
+
+    private static Journal instance = new Journal();
+
+    public static Journal getInstance(){
+        return instance;
+    }
 
     private static Logger log = Logger.getLogger(Journal.class);
 
@@ -27,7 +37,9 @@ public class Journal {
     private File j2;
     private File j2t;
 
-    public Journal(File journal_dir, int max_journal_size_mb) throws InitializationException{
+    private final Object monitor = new Object();
+
+    public void init(File journal_dir, int max_journal_size_mb) throws InitializationException{
         this.max_journal_size_mb = max_journal_size_mb;
 
         if (!journal_dir.exists()) {
@@ -50,29 +62,135 @@ public class Journal {
             log.debug("Detected that journal directory already exists.");
         }
 
+        ScheduledExecutorService clean_journal_scheduler = Executors.newSingleThreadScheduledExecutor();
+        clean_journal_scheduler.scheduleWithFixedDelay(new Runnable() {
+
+            @Override
+            public void run() {
+                clean();
+            }
+
+        }, Config.getInstance().getCleanJournalTimeout(), Config.getInstance().getCleanJournalTimeout(), TimeUnit.MILLISECONDS);
+
     }
 
-    private void appendFile(File source, File target) throws IOException {
-        log.debug("Try to append file '"+source.getName()+"' to file '"+target.getName()+"'.");
+    public Hashtable<Integer, Data> load() throws CouldNotLoadJournalException {
+        log.debug("Try to load journal to the memory ...");
 
-        FileOutputStream fos = new FileOutputStream(target, true);
-        BufferedOutputStream bufOut = new BufferedOutputStream(fos);
+        Hashtable<Integer, Data> table = new Hashtable<Integer, Data>();
 
-        FileInputStream fis = new FileInputStream(source);
-        BufferedInputStream bufRead = new BufferedInputStream(fis);
+        if (j2t.exists()){
+            log.debug("Detected that file '"+j2t.getName()+"' exist.");
 
-        int n;
+            if (j2.exists()){
+                log.debug("Detected that file '"+j2.getName()+"' exist.");
 
-        while((n = bufRead.read()) != -1) {
-            bufOut.write(n);
+                if (j2t.delete()){
+                    log.debug("Successfully delete file '"+j2t+"'.");
+                } else {
+                    log.debug("Couldn't delete file '"+j2t+"'.");
+                    throw new CouldNotLoadJournalException("Couldn't delete file '"+j2t+"'.");
+                }
+            } else {
+                log.debug("Detected that file '"+j2.getName()+"' doesn't exist.");
+
+                if (j2t.renameTo(j2)){
+                    log.debug("Successfully rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
+                } else {
+                    log.debug("Couldn't rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
+                    throw new CouldNotLoadJournalException("Couldn't rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
+                }
+            }
         }
 
-        bufOut.flush();
 
-        bufOut.close();
+        File[] journals = {j2, j1};
 
-        bufRead.close();
-        log.debug("Successfully append journal.");
+        for(File f: journals){
+            if (f.exists()){
+                log.debug("Read file "+f.getName());
+                try {
+                    Scanner scanner = new Scanner(f);
+                    scanner.useDelimiter(sep);
+                    while (scanner.hasNextLine()){
+                        String line = scanner.nextLine();
+                        if (!line.isEmpty() && !line.startsWith("#")){
+
+                            Data data;
+                            try {
+                                data = Data.parse(line);
+                            } catch (ParseException e) {
+                                throw new CouldNotLoadJournalException(e);
+                            } catch (InvalidAddressFormatException e) {
+                                throw new CouldNotLoadJournalException(e);
+                            }
+
+                            Data.Status status = data.getStatus();
+                            int sequence_number = data.getSequenceNumber();
+                            long message_id = data.getMessageId();
+
+                            if (status == Data.Status.DONE
+                                    || status == Data.Status.EXPIRED_MAX_TIMEOUT
+                                        ||  status == Data.Status.EXPIRED_TIMEOUT){
+                                table.remove(sequence_number);
+                                log.debug("Remove from memory delivery receipt data with message id "+sequence_number+" .");
+                            } else {
+                                table.put(sequence_number, data);
+                                log.debug("Write in memory delivery receipt data with system id "+message_id+" --> "+ data.toString()+" .");
+                            }
+                        }
+                    }
+                    scanner.close();
+                } catch (FileNotFoundException e) {
+                    log.error(e);
+                    throw new CouldNotLoadJournalException(e);
+                }
+            }
+        }
+
+        log.debug("Successfully load journal in memory.");
+        return table;
+    }
+
+    public void write(Data data) throws CouldNotWriteToJournalException {
+        synchronized (monitor){
+            try {
+                if (j1.createNewFile()){
+                    log.debug("Create journal "+j1.getName());
+                }
+            } catch (IOException e) {
+                log.error(e);
+                throw new CouldNotWriteToJournalException(e);
+            }
+
+            String s = Data.format(data);
+
+            boolean isEnoughSpace;
+            try {
+                isEnoughSpace = isEnoughSpace(s);
+            } catch (UnsupportedEncodingException e) {
+                throw new CouldNotWriteToJournalException(e);
+            }
+
+            if (isEnoughSpace){
+                log.debug("Length of the journal after appending string will be less or equal than "+ max_journal_size_mb +" mb.");
+
+                try {
+                    BufferedWriter bw = new BufferedWriter(new FileWriter(j1, true));
+                    bw.write(s+"\n");
+                    bw.flush();
+                    bw.close();
+                    log.debug("Successfully write to the journal.");
+                } catch (IOException e) {
+                    log.error("Could not append a string to the file "+ j1.getName(), e);
+                    throw new CouldNotWriteToJournalException(e);
+                }
+
+            } else {
+                log.error("Size of the journal after appending string will be more than maximum allowed journal size "+ max_journal_size_mb +" mb.");
+                throw new CouldNotWriteToJournalException("Size of the journal after appending string will be more than maximum allowed juornal size "+ max_journal_size_mb +" mb.");
+            }
+        }
     }
 
     private boolean isEnoughSpace(String line) throws UnsupportedEncodingException {
@@ -94,47 +212,6 @@ public class Journal {
         return sum+byteCount <= max_journal_size_mb*1024*1024;
     }
 
-    public void write(Data data) throws CouldNotWriteToJournalException {
-
-        try {
-            if (j1.createNewFile()){
-                log.debug("Create journal "+j1.getName());
-            }
-        } catch (IOException e) {
-            log.error(e);
-            throw new CouldNotWriteToJournalException(e);
-        }
-
-        String s = Data.format(data);
-
-        boolean isEnoughSpace;
-        try {
-            isEnoughSpace = isEnoughSpace(s);
-        } catch (UnsupportedEncodingException e) {
-            throw new CouldNotWriteToJournalException(e);
-        }
-
-        if (isEnoughSpace){
-            log.debug("Length of the journal after appending string will be less or equal than "+ max_journal_size_mb +" mb.");
-
-            try {
-                BufferedWriter bw = new BufferedWriter(new FileWriter(j1, true));
-                bw.write(s+"\n");
-                bw.flush();
-                bw.close();
-                log.debug("Successfully write to the journal.");
-            } catch (IOException e) {
-                log.error("Could not append a string to the file "+ j1.getName(), e);
-                throw new CouldNotWriteToJournalException(e);
-            }
-
-        } else {
-            log.error("Size of the journal after appending string will be more than maximum allowed journal size "+ max_journal_size_mb +" mb.");
-            throw new CouldNotWriteToJournalException("Size of the journal after appending string will be more than maximum allowed juornal size "+ max_journal_size_mb +" mb.");
-        }
-
-    }
-
     public void clean(){
         log.debug("Try to clean journal ... ");
 
@@ -149,10 +226,6 @@ public class Journal {
 
                 appendFile(j1, j2);
 
-                if (j1.delete()) log.debug("Delete file "+j1.getName());
-
-                if (j1.createNewFile()) log.debug("Create file "+j1.getName());
-
                 if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
 
                 pw = new PrintWriter(new FileWriter(j2t));
@@ -165,12 +238,12 @@ public class Journal {
                 while((line = buffReader1.readLine()) != null){
                     String[] ar = line.split(sep);
                     long message_id = Long.parseLong(ar[2].trim());
-                    Status status = Status.valueOf(ar[11].trim());
+                    Data.Status status = Data.Status.valueOf(ar[11].trim());
                     int sequence_number = Integer.parseInt(ar[3]);
 
-                    if (status == Status.DONE || status == Status.EXPIRED_MAX_TIMEOUT) {
+                    if (status == Data.Status.DONE || status == Data.Status.EXPIRED_MAX_TIMEOUT) {
                         message_ids.add(message_id);
-                    } else if (status == Status.EXPIRED_TIMEOUT){
+                    } else if (status == Data.Status.EXPIRED_TIMEOUT){
                         sequence_numbers.add(sequence_number);
                     }
 
@@ -229,82 +302,33 @@ public class Journal {
         log.debug("Journal cleaned, "+d+" mls.");
     }
 
-    public Hashtable<Integer, Data> load() throws CouldNotLoadJournalException {
-        log.debug("Try to load journal to the memory ...");
+    private void appendFile(File source, File target) throws IOException {
+        synchronized (monitor){
+            log.debug("Try to append file '"+source.getName()+"' to file '"+target.getName()+"'.");
 
-        Hashtable<Integer, Data> table = new Hashtable<Integer, Data>();
+            FileOutputStream fos = new FileOutputStream(target, true);
+            BufferedOutputStream bufOut = new BufferedOutputStream(fos);
 
-        if (j2t.exists()){
-            log.debug("Detected that file '"+j2t.getName()+"' exist.");
+            FileInputStream fis = new FileInputStream(source);
+            BufferedInputStream bufRead = new BufferedInputStream(fis);
 
-            if (j2.exists()){
-                log.debug("Detected that file '"+j2.getName()+"' exist.");
+            int n;
 
-                if (j2t.delete()){
-                    log.debug("Successfully delete file '"+j2t+"'.");
-                } else {
-                    log.debug("Couldn't delete file '"+j2t+"'.");
-                    throw new CouldNotLoadJournalException("Couldn't delete file '"+j2t+"'.");
-                }
-            } else {
-                log.debug("Detected that file '"+j2.getName()+"' doesn't exist.");
-
-                if (j2t.renameTo(j2)){
-                    log.debug("Successfully rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
-                } else {
-                    log.debug("Couldn't rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
-                    throw new CouldNotLoadJournalException("Couldn't rename file '"+j2t.getName()+"' to the file '"+j2.getName()+"'.");
-                }
+            while((n = bufRead.read()) != -1) {
+                bufOut.write(n);
             }
+
+            bufOut.flush();
+
+            bufOut.close();
+
+            bufRead.close();
+
+            if (j1.delete()) log.debug("Delete file "+j1.getName());
+
+            if (j1.createNewFile()) log.debug("Create file "+j1.getName());
+            log.debug("Successfully append journal.");
         }
-
-
-        File[] journals = {j2, j1};
-
-        for(File f: journals){
-            if (f.exists()){
-                log.debug("Read file "+f.getName());
-                try {
-                    Scanner scanner = new Scanner(f);
-                    scanner.useDelimiter(sep);
-                    while (scanner.hasNextLine()){
-                        String line = scanner.nextLine();
-                        if (!line.isEmpty() && !line.startsWith("#")){
-
-                            Data data;
-                            try {
-                                data = Data.parse(line);
-                            } catch (ParseException e) {
-                                throw new CouldNotLoadJournalException(e);
-                            } catch (InvalidAddressFormatException e) {
-                                throw new CouldNotLoadJournalException(e);
-                            }
-
-                            Status status = data.getStatus();
-                            int sequence_number = data.getSequenceNumber();
-                            long message_id = data.getMessageId();
-
-                            if (status == Status.DONE
-                                    || status == Status.EXPIRED_MAX_TIMEOUT
-                                        ||  status == Status.EXPIRED_TIMEOUT){
-                                table.remove(sequence_number);
-                                log.debug("Remove from memory delivery receipt data with message id "+sequence_number+" .");
-                            } else {
-                                table.put(sequence_number, data);
-                                log.debug("Write in memory delivery receipt data with system id "+message_id+" --> "+ data.toString()+" .");
-                            }
-                        }
-                    }
-                    scanner.close();
-                } catch (FileNotFoundException e) {
-                    log.error(e);
-                    throw new CouldNotLoadJournalException(e);
-                }
-            }
-        }
-
-        log.debug("Successfully load journal in memory.");
-        return table;
     }
 
 }
