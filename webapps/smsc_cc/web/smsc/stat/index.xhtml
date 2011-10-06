@@ -1,0 +1,324 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+<ui:param name="pageTitle" value="#{msg['smsc.statistic.sms']}"/>
+
+<ui:define name="styles">
+  .labelColumn {width: 1px; text-align:left; white-space: nowrap;}
+  .valueColumn {width: 200px; text-align: left; padding-right: 10px; }
+  .lastColumn {text-align: left;}
+
+  .dateColumn {
+    text-align: center;
+  }
+
+  .numberColumn {
+    text-align: center;
+  }
+
+  .errcodeColumn {
+    width: 20%;
+    text-align: center;
+  }
+
+  .counterColumn {
+    width: 80%;
+    text-align: left;
+  }
+
+</ui:define>
+
+<ui:define name="content">
+
+  <h:form id="filter">
+
+    <eye:dataTableFilter applyAction="#{smscStat.start}" clearAction="#{smscStat.clear}">
+
+      <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, labelColumn, lastColumn">
+        <h:outputText value="#{msg['smsc.stat.type']}"/>
+        <h:selectOneMenu id="type" value="#{smscStat.type}" onchange="changeType();">
+          <f:selectItems value="#{smscStat.types}"/>
+        </h:selectOneMenu>
+
+        <h:outputText value="&#160;"/>
+        <h:outputText value="&#160;"/>
+
+        <h:outputText value="#{msg['smsc.stat.fromDate']}"/>
+        <eye:inputDate inputTime="true" value="#{smscStat.filter.from}"/>
+
+        <h:outputText value="#{msg['smsc.stat.tillDate']}"/>
+        <eye:inputDate inputTime="true" value="#{smscStat.filter.from}"/>
+
+        <h:outputText id="providerLabel" value="#{msg['smsc.stat.provider']}"/>
+        <h:selectOneMenu id="provider" value="#{smscStat.providerId}">
+          <f:selectItem itemLabel="" itemValue=""/>
+          <f:selectItems value="#{smscStat.allProviders}"/>
+        </h:selectOneMenu>
+
+        <h:outputText id="categoryLabel" value="#{msg['smsc.stat.category']}"/>
+        <h:selectOneMenu id="category" value="#{smscStat.categoryId}">
+          <f:selectItem itemLabel="" itemValue=""/>
+          <f:selectItems value="#{smscStat.allCategories}"/>
+        </h:selectOneMenu>
+
+      </h:panelGrid>
+    </eye:dataTableFilter>
+
+    <p/>
+
+
+    <eye:dataTable value="#{smscStat.general}" var="r" rendered="#{smscStat.showGeneral}">
+
+      <eye:row innerRows="#{r.hourStat}">
+        <eye:column name="date" title="#{msg['smsc.stat.date']}" columnClass="dateColumn">
+          <h:outputText value="#{r.date}">
+            <f:convertDateTime pattern="dd-MMM-yyyy"/>
+          </h:outputText>
+          <f:facet name="inner">
+            <h:outputText value="#{r.hour}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{msg['smsc.stat.total']}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="accepted" title="#{msg['smsc.stat.accepted']}" columnClass="numberColumn">
+          <h:outputText value="#{r.accepted}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.accepted}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{smscStat.total.accepted}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="rejected" title="#{msg['smsc.stat.rejected']}" columnClass="numberColumn">
+          <h:outputText value="#{r.rejected}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.rejected}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{smscStat.total.rejected}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="delivered" title="#{msg['smsc.stat.delivered']}" columnClass="numberColumn">
+          <h:outputText value="#{r.delivered}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.delivered}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{smscStat.total.delivered}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="failed" title="#{msg['smsc.stat.failed']}" columnClass="numberColumn">
+          <h:outputText value="#{r.failed}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.failed}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{smscStat.total.failed}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="rescheduled" title="#{msg['smsc.stat.rescheduled']}" columnClass="numberColumn">
+          <h:outputText value="#{r.rescheduled}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.rescheduled}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{smscStat.total.rescheduled}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="temporal" title="#{msg['smsc.stat.temporal']}" columnClass="numberColumn">
+          <h:outputText value="#{r.temporal}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.temporal}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{smscStat.total.temporal}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="peak" title="#{msg['smsc.stat.peak.io']}" columnClass="numberColumn">
+          <h:outputText value="#{r.peak_i}/#{r.peak_o}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.peak_i}/#{r.peak_o}" style="color:GREEN"/>
+          </f:facet>
+          <f:facet name="footer">
+            <h:outputText value="#{smscStat.total.peak_i}/#{smscStat.total.peak_o}" style="font-weight:bold;"/>
+          </f:facet>
+        </eye:column>
+
+      </eye:row>
+
+    </eye:dataTable>
+
+
+    <eye:dataTable value="#{smscStat.smeStat}" var="r" rendered="#{smscStat.showSmes}">
+
+      <eye:row innerRows="#{r.errors}">
+        <eye:column name="sme" title="#{msg['smsc.stat.sme']}" columnClass="dateColumn">
+          <h:outputText value="#{r.smeid}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.errcode}" style="color:GREEN"  converter="smpp_status_converter"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="accepted" title="#{msg['smsc.stat.accepted']}" columnClass="numberColumn">
+          <h:outputText value="#{r.accepted}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.counter}" style="color:GREEN"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="rejected" title="#{msg['smsc.stat.rejected']}" columnClass="numberColumn">
+          <h:outputText value="#{r.rejected}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="delivered" title="#{msg['smsc.stat.delivered']}" columnClass="numberColumn">
+          <h:outputText value="#{r.delivered}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="failed" title="#{msg['smsc.stat.failed']}" columnClass="numberColumn">
+          <h:outputText value="#{r.failed}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="rescheduled" title="#{msg['smsc.stat.rescheduled']}" columnClass="numberColumn">
+          <h:outputText value="#{r.rescheduled}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="temporal" title="#{msg['smsc.stat.temporal']}" columnClass="numberColumn">
+          <h:outputText value="#{r.temporal}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="peak" title="#{msg['smsc.stat.peak.io']}" columnClass="numberColumn">
+          <h:outputText value="#{r.peak_i}/#{r.peak_o}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+      </eye:row>
+
+    </eye:dataTable>
+
+    <eye:dataTable value="#{smscStat.routeStat}" var="r" rendered="#{smscStat.showRoutes}">
+
+      <eye:row innerRows="#{r.errors}">
+        <eye:column name="sme" title="#{msg['smsc.stat.route']}" columnClass="dateColumn">
+          <h:outputText value="#{r.routeid}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.errcode}" style="color:GREEN" converter="smpp_status_converter"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="accepted" title="#{msg['smsc.stat.accepted']}" columnClass="numberColumn">
+          <h:outputText value="#{r.accepted}"/>
+          <f:facet name="inner">
+            <h:outputText value="#{r.counter}" style="color:GREEN"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="rejected" title="#{msg['smsc.stat.rejected']}" columnClass="numberColumn">
+          <h:outputText value="#{r.rejected}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="delivered" title="#{msg['smsc.stat.delivered']}" columnClass="numberColumn">
+          <h:outputText value="#{r.delivered}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="failed" title="#{msg['smsc.stat.failed']}" columnClass="numberColumn">
+          <h:outputText value="#{r.failed}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="rescheduled" title="#{msg['smsc.stat.rescheduled']}" columnClass="numberColumn">
+          <h:outputText value="#{r.rescheduled}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="temporal" title="#{msg['smsc.stat.temporal']}" columnClass="numberColumn">
+          <h:outputText value="#{r.temporal}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+        <eye:column name="peak" title="#{msg['smsc.stat.peak.io']}" columnClass="numberColumn">
+          <h:outputText value="#{r.peak_i}/#{r.peak_o}"/>
+          <f:facet name="inner">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+        </eye:column>
+
+      </eye:row>
+
+    </eye:dataTable>
+
+    <eye:dataTable value="#{smscStat.errors}" var="r" rendered="#{smscStat.showErrors}">
+
+      <eye:row>
+        <eye:column name="code" title="#{msg['smsc.stat.errcode']}" columnClass="errcodeColumn">
+          <h:outputText value="#{r.errcode}"  converter="smpp_status_converter"/>
+        </eye:column>
+
+        <eye:column name="counter" title="#{msg['smsc.stat.counter']}" columnClass="counterColumn">
+          <h:outputText value="#{r.counter}"/>
+        </eye:column>
+      </eye:row>
+
+    </eye:dataTable>
+
+  </h:form>
+
+  <script type="text/javascript">
+    function changeType() {
+      var e = document.getElementById('filter:type');
+      var d = e.options[2].selected ? '' : 'none';
+      document.getElementById('filter:category').style.display=d;
+      document.getElementById('filter:categoryLabel').style.display=d;
+      document.getElementById('filter:provider').style.display=d;
+      document.getElementById('filter:providerLabel').style.display=d;
+    }
+    changeType();
+  </script>
+
+</ui:define>
+
+</ui:composition>
+
+
+</html>

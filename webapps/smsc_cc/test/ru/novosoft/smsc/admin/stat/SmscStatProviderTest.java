@@ -103,10 +103,10 @@ public class SmscStatProviderTest {
   public void testOneInstance() throws AdminException {
     context.addExcludeDir(0);
     Statistics statistics = provider.getStatistics(getFilter());
-    assertEquals(4, statistics.getDateStat().size());
+    assertEquals(4, statistics.getGeneralStat().size());
     assertEquals(3, statistics.getSmeIdStat().size());
     assertEquals(2, statistics.getRouteIdStat().size());
-    assertEquals(3, statistics.getErrorStat().size());
+    assertEquals(3, statistics.getErrors().size());
   }
 
   @Test
@@ -127,7 +127,7 @@ public class SmscStatProviderTest {
   public void testOneInstanceErrors() throws AdminException {
     context.addExcludeDir(0);
     Statistics statistics = provider.getStatistics(getFilter());
-    for(ErrorCounterSet s : statistics.getErrorStat()) {
+    for(ErrorCounterSet s : statistics.getErrors()) {
       switch (s.getErrcode()) {
         case 0: assertEquals(135, s.getCounter()); break;
         case 1026: assertEquals(135, s.getCounter()); break;
@@ -237,7 +237,7 @@ public class SmscStatProviderTest {
   public void testOneInstanceOneDay() throws AdminException {
     context.addExcludeDir(0);
     Statistics _statistics = provider.getStatistics(getFilter());
-    Collection<DateCountersSet> set =  _statistics.getDateStat();
+    Collection<DateCountersSet> set =  _statistics.getGeneralStat();
     assertTrue(!set.isEmpty());
     DateCountersSet d = set.iterator().next();
     assertEquals(5, d.getAccepted());
@@ -254,10 +254,10 @@ public class SmscStatProviderTest {
   @Test
   public void testTwoInstance() throws AdminException {
     Statistics statistics = provider.getStatistics(getFilter());
-    assertEquals(4, statistics.getDateStat().size());
+    assertEquals(4, statistics.getGeneralStat().size());
     assertEquals(3, statistics.getSmeIdStat().size());
     assertEquals(2, statistics.getRouteIdStat().size());
-    assertEquals(3, statistics.getErrorStat().size());
+    assertEquals(3, statistics.getErrors().size());
   }
 
   @Test
@@ -276,7 +276,7 @@ public class SmscStatProviderTest {
   @Test
   public void testTwoInstanceErrors() throws AdminException {
     Statistics statistics = provider.getStatistics(getFilter());
-    for(ErrorCounterSet s : statistics.getErrorStat()) {
+    for(ErrorCounterSet s : statistics.getErrors()) {
       switch (s.getErrcode()) {
         case 0: assertEquals(270, s.getCounter()); break;
         case 1026: assertEquals(270, s.getCounter()); break;
@@ -289,7 +289,7 @@ public class SmscStatProviderTest {
   @Test
   public void testTwoInstanceTwoDay() throws AdminException {
     Statistics _statistics = provider.getStatistics(getFilter());
-    Collection<DateCountersSet> set =  _statistics.getDateStat();
+    Collection<DateCountersSet> set =  _statistics.getGeneralStat();
     assertTrue(!set.isEmpty());
     DateCountersSet d = set.iterator().next();
     assertEquals(10, d.getAccepted());

@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.admin.stat;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /**
  * author: Aleksandr Khalitov
@@ -19,7 +19,7 @@ public class DateCountersSet extends CountersSet {
     super.increment(set);
   }
 
-  public Collection getHourStat() {
+  public List<HourCountersSet> getHourStat() {
     return byHours;
   }
   public Date getDate() {

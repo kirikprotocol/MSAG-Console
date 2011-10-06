@@ -3,7 +3,7 @@ package ru.novosoft.smsc.admin.stat;
 /**
  * author: Aleksandr Khalitov
  */
-class CountersSet {
+public class CountersSet {
 
   private long accepted = 0;
   private long rejected = 0;

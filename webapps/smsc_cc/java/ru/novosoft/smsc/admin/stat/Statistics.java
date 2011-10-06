@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.admin.stat;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,9 +8,10 @@ import java.util.List;
  * author: Aleksandr Khalitov
  */
 public class Statistics extends ExtendedCountersSet {
-  private List<DateCountersSet> byDates = new LinkedList<DateCountersSet>(); // contains DateCountersSet
-  private List<SmeIdCountersSet> bySmeId = new LinkedList<SmeIdCountersSet>(); // contains SmeIdCountersSet
-  private List<RouteIdCountersSet> byRouteId = new LinkedList<RouteIdCountersSet>(); // contains RouteIdCountersSet
+
+  private List<DateCountersSet> byDates = new LinkedList<DateCountersSet>();
+  private List<SmeIdCountersSet> bySmeId = new LinkedList<SmeIdCountersSet>();
+  private List<RouteIdCountersSet> byRouteId = new LinkedList<RouteIdCountersSet>();
 
   Statistics() {
   }
@@ -28,21 +28,28 @@ public class Statistics extends ExtendedCountersSet {
     this.increment(set); // increments total statistics
   }
 
-  public Collection<DateCountersSet> getDateStat() {
+  public List<DateCountersSet> getGeneralStat() {
     return byDates;
   }
-  public Collection<ErrorCounterSet> getErrorStat() {
-    return this.getErrors();
+
+  public int generalStatSize() {
+    return byDates.size();
   }
 
+  public int smeStatSize() {
+    return bySmeId.size();
+  }
+
+  public int routeStatSize() {
+    return byRouteId.size();
+  }
 
   void addSmeIdCollection(Collection<SmeIdCountersSet> col){
     if(col != null) {
       bySmeId.addAll(col);
     }
   }
-  public Collection<SmeIdCountersSet> getSmeIdStat() {
-    Collections.sort(bySmeId);
+  public List<SmeIdCountersSet> getSmeIdStat() {
     return bySmeId;
   }
 
@@ -52,8 +59,7 @@ public class Statistics extends ExtendedCountersSet {
     }
   }
 
-  public Collection<RouteIdCountersSet> getRouteIdStat() {
-    Collections.sort(byRouteId);
+  public List<RouteIdCountersSet> getRouteIdStat() {
     return byRouteId;
   }
 }

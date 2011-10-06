@@ -200,7 +200,7 @@ public class TestAdminContext extends AdminContext {
 
     operativeStoreProvider = new OperativeStoreProvider(operStores, fileSystem);
 
-    final File[] statsDir = new File[smscInstancesNumber];
+    final File[] statsDir = new File[1];
     statsDir[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat");
     smscStatProvider = new TestSmscStatProvider(new SmscStatContext() {
       public File[] getStatDirs() throws AdminException {

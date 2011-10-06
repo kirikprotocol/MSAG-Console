@@ -1,14 +1,13 @@
 package ru.novosoft.smsc.admin.stat;
 
-import java.util.Collection;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * author: Aleksandr Khalitov
  */
 class ExtendedCountersSet extends CountersSet {
 
-  private TreeMap<Integer, ErrorCounterSet> errors = new TreeMap<Integer, ErrorCounterSet>();
+  private Map<Integer, ErrorCounterSet> errors = new TreeMap<Integer, ErrorCounterSet>();
 
   ExtendedCountersSet() {
   }
@@ -32,8 +31,12 @@ class ExtendedCountersSet extends CountersSet {
     }
   }
 
-  Collection<ErrorCounterSet> getErrors() {
-    return errors.values();
+ public List<ErrorCounterSet> getErrors() {
+    return new ArrayList<ErrorCounterSet>(errors.values());
+  }
+
+  public int errorStatSize() {
+    return errors.size();
   }
 }
 

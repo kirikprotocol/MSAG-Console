@@ -77,7 +77,7 @@
 
   <context-param>
     <param-name>facelets.LIBRARIES</param-name>
-    <param-value>/WEB-INF/facelets/tags/eyeline.taglib.xml;/WEB-INF/facelets/tags/smsc.taglib.xml</param-value>
+    <param-value>/WEB-INF/facelets/tags/smsc.taglib.xml</param-value>
   </context-param>
 
   <context-param>
@@ -182,6 +182,9 @@
     <listener-class>ru.novosoft.smsc.web.InitListener</listener-class>
   </listener>
 
+  <session-config>
+    <session-timeout>30</session-timeout>
+  </session-config>
 
   <login-config>
     <auth-method>FORM</auth-method>
@@ -213,6 +216,7 @@
       <url-pattern>/smsc/timezones/*</url-pattern>
       <url-pattern>/smsc/route/*</url-pattern>
       <url-pattern>/smsc/route_trace/*</url-pattern>
+      <url-pattern>/smsc/stat/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>smsc_service</role-name>
