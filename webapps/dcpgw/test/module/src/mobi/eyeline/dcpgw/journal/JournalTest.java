@@ -88,19 +88,19 @@ public class JournalTest extends T {
         Data d = createUniqueData();
         journal.write(d);
 
-        d.setStatus(Status.EXPIRED_TIMEOUT);
+        d.setStatus(Data.Status.EXPIRED_TIMEOUT);
         journal.write(d);
 
         Data d1 = createUniqueData();
         journal.write(d1);
 
-        d1.setStatus(Status.EXPIRED_MAX_TIMEOUT);
+        d1.setStatus(Data.Status.EXPIRED_MAX_TIMEOUT);
         journal.write(d1);
 
         Data d2 = createUniqueData();
         journal.write(d2);
 
-        d2.setStatus(Status.DONE);
+        d2.setStatus(Data.Status.DONE);
         journal.write(d2);
 
         Data expected = createUniqueData();
@@ -121,19 +121,19 @@ public class JournalTest extends T {
 
     @Test
     public void get03cleanTest() throws Exception{
-        Data d = createUniqueData(Status.SEND);
+        Data d = createUniqueData(Data.Status.SEND);
         journal.write(d);
-        d.setStatus(Status.DONE);
+        d.setStatus(Data.Status.DONE);
         journal.write(d);
 
-        Data d1 = createUniqueData(Status.SEND);
+        Data d1 = createUniqueData(Data.Status.SEND);
         journal.write(d1);
-        d1.setStatus(Status.EXPIRED_TIMEOUT);
+        d1.setStatus(Data.Status.EXPIRED_TIMEOUT);
         journal.write(d1);
 
-        Data d2 = createUniqueData(Status.SEND);
+        Data d2 = createUniqueData(Data.Status.SEND);
         journal.write(d2);
-        d2.setStatus(Status.EXPIRED_MAX_TIMEOUT);
+        d2.setStatus(Data.Status.EXPIRED_MAX_TIMEOUT);
         journal.write(d2);
 
         journal.clean();
@@ -150,10 +150,10 @@ public class JournalTest extends T {
 
     @Test
     public void get04cleanTest() throws Exception{
-        Data expected1 = createUniqueData(Status.SEND);
+        Data expected1 = createUniqueData(Data.Status.SEND);
         journal.write(expected1);
 
-        Data expected2 = createUniqueData(Status.NOT_SEND);
+        Data expected2 = createUniqueData(Data.Status.NOT_SEND);
         journal.write(expected2);
 
         journal.clean();
@@ -182,13 +182,13 @@ public class JournalTest extends T {
 
     @Test
     public void get05cleanTest() throws Exception{
-        Data d = createUniqueData(Status.SEND);
+        Data d = createUniqueData(Data.Status.SEND);
         journal.write(d);
 
-        d.setStatus(Status.EXPIRED_TIMEOUT);
+        d.setStatus(Data.Status.EXPIRED_TIMEOUT);
         journal.write(d);
 
-        Data expected = createUniqueData(Status.SEND);
+        Data expected = createUniqueData(Data.Status.SEND);
         journal.write(expected);
 
         journal.clean();

@@ -11,6 +11,7 @@ import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -39,8 +40,13 @@ public class Journal {
 
     private final Object monitor = new Object();
 
-    public void init(File journal_dir, int max_journal_size_mb) throws InitializationException{
-        this.max_journal_size_mb = max_journal_size_mb;
+    private Hashtable<String, Hashtable<Integer, Data>> connection_sn_data_store;
+    private Hashtable<String, LinkedBlockingQueue<Data>> connection_data_queue_table;
+
+    public void init() throws InitializationException{
+        this.max_journal_size_mb = Config.getInstance().getMaxJournalSize();
+
+        File journal_dir = Config.getInstance().getJournalDir();
 
         if (!journal_dir.exists()) {
             if (!journal_dir.mkdir()) throw new InitializationException("Couldn't create journal directory.");
@@ -72,12 +78,18 @@ public class Journal {
 
         }, Config.getInstance().getCleanJournalTimeout(), Config.getInstance().getCleanJournalTimeout(), TimeUnit.MILLISECONDS);
 
+        try {
+            load();
+        } catch (CouldNotLoadJournalException e) {
+            throw new InitializationException(e);
+        }
     }
 
-    public Hashtable<Integer, Data> load() throws CouldNotLoadJournalException {
+    private void load() throws CouldNotLoadJournalException {
         log.debug("Try to load journal to the memory ...");
 
-        Hashtable<Integer, Data> table = new Hashtable<Integer, Data>();
+        connection_sn_data_store = new Hashtable<String, Hashtable<Integer, Data>>();
+        connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<Data>>();
 
         if (j2t.exists()){
             log.debug("Detected that file '"+j2t.getName()+"' exist.");
@@ -103,7 +115,6 @@ public class Journal {
             }
         }
 
-
         File[] journals = {j2, j1};
 
         for(File f: journals){
@@ -126,17 +137,38 @@ public class Journal {
                             }
 
                             Data.Status status = data.getStatus();
+
+                            String connection = data.getConnectionName();
+                            if (status == Data.Status.INIT){
+
+                                if (!connection_data_queue_table.containsKey(connection))
+                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<Data>());
+
+
+                                try {
+                                    connection_data_queue_table.get(connection).put(data);
+                                } catch (InterruptedException e) {
+                                    throw new CouldNotLoadJournalException(e);
+                                }
+                            }
+
                             int sequence_number = data.getSequenceNumber();
-                            long message_id = data.getMessageId();
+
+                            if (!connection_sn_data_store.containsKey(connection))
+                                    connection_sn_data_store.put(connection, new Hashtable<Integer, Data>(Config.getInstance().getSendReceiptLimit()));
 
                             if (status == Data.Status.DONE
                                     || status == Data.Status.EXPIRED_MAX_TIMEOUT
                                         ||  status == Data.Status.EXPIRED_TIMEOUT){
-                                table.remove(sequence_number);
-                                log.debug("Remove from memory delivery receipt data with message id "+sequence_number+" .");
+
+                                connection_sn_data_store.get(connection).remove(sequence_number);
+                                log.debug("remove from memory data: con="+connection+", sn="+sequence_number);
+
                             } else {
-                                table.put(sequence_number, data);
-                                log.debug("Write in memory delivery receipt data with system id "+message_id+" --> "+ data.toString()+" .");
+
+                                connection_sn_data_store.get(connection).put(sequence_number, data);
+
+                                log.debug("add to memory: " + data.toString());
                             }
                         }
                     }
@@ -149,7 +181,6 @@ public class Journal {
         }
 
         log.debug("Successfully load journal in memory.");
-        return table;
     }
 
     public void write(Data data) throws CouldNotWriteToJournalException {
@@ -329,6 +360,14 @@ public class Journal {
             if (j1.createNewFile()) log.debug("Create file "+j1.getName());
             log.debug("Successfully append journal.");
         }
+    }
+
+    public Hashtable<String, Hashtable<Integer, Data>> getSendedReceipts(){
+        return connection_sn_data_store;
+    }
+
+    public Hashtable<String, LinkedBlockingQueue<Data>> getNotSendedReceipts(){
+        return connection_data_queue_table;
     }
 
 }

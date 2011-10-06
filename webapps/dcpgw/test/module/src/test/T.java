@@ -2,12 +2,7 @@ package test;
 
 //import mobi.eyeline.dcpgw.Client;
 import mobi.eyeline.dcpgw.FinalMessageState;
-import mobi.eyeline.dcpgw.Gateway;
-import mobi.eyeline.dcpgw.model.Provider;
-import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
-import mobi.eyeline.dcpgw.journal.Status;
-import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import org.junit.runner.Description;
@@ -70,7 +65,7 @@ public abstract class T {
         data.setSubmitDate(date);
         data.setFirstSendingTime(time);
         data.setLastResendTime(time);
-        data.setStatus(Status.SEND);
+        data.setStatus(Data.Status.SEND);
         data.setNsms(1);
         data.setSequenceNumber(1);
         data.setFinalMessageState(FinalMessageState.DELIVRD);
@@ -96,7 +91,7 @@ public abstract class T {
         long time = System.currentTimeMillis();
         data.setFirstSendingTime(time);
         data.setLastResendTime(time);
-        data.setStatus(Status.SEND);
+        data.setStatus(Data.Status.SEND);
         data.setNsms(1);
         int sn = Integer.parseInt(sdf2.format(date)) + ai.incrementAndGet();
         data.setSequenceNumber(sn);
@@ -106,7 +101,7 @@ public abstract class T {
         return data;
     }
 
-    public static Data createUniqueData(Status status){
+    public static Data createUniqueData(Data.Status status){
         Data data = new Data();
         data.setConnectionName("systemId");
 

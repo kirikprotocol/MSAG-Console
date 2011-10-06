@@ -54,7 +54,7 @@ public class Gateway extends Thread implements PDUListener {
         config.init(config_file);
         Properties properties = config.getConfig();
 
-        Journal.getInstance().init(config.getJournalDir(), config.getMaxJournalSize());
+        Journal.getInstance().init();
 
         PDUListenerImpl pduListener = new PDUListenerImpl();
         procQueue = new ProcessingQueue(properties, pduListener, null);

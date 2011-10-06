@@ -31,7 +31,7 @@ public class Data implements Cloneable{
 
     private String connection_name;
 
-    private int sequence_number;
+    private Integer sequence_number;
 
     private Date done_date;
 
@@ -61,7 +61,7 @@ public class Data implements Cloneable{
         return this.message_id;
     }
 
-    public void setFirstSendingTime(long time){
+    public void setFirstSendingTime(Long time){
         this.first_sending_time = time;
     }
 
@@ -69,7 +69,7 @@ public class Data implements Cloneable{
         return first_sending_time;
     }
 
-    public void setLastResendTime(long last_resending_time){
+    public void setLastResendTime(Long last_resending_time){
         this.last_resending_time = last_resending_time;
     }
 
@@ -101,11 +101,11 @@ public class Data implements Cloneable{
         return connection_name;
     }
 
-    public void setSequenceNumber(int sequence_number){
+    public void setSequenceNumber(Integer sequence_number){
         this.sequence_number = sequence_number;
     }
 
-    public int getSequenceNumber(){
+    public Integer getSequenceNumber(){
         return sequence_number;
     }
 
@@ -136,7 +136,7 @@ public class Data implements Cloneable{
                 ", submit date: " + sdf.format(submit_date)+
                 ", done date: " + sdf.format(done_date)+
                 ", nsms: " + nsms +
-                ", sn: " + sequence_number +
+                ", sn: " + (sequence_number != null ? sequence_number : "N/A") +
                 ", state: " + state +
                 ", status: " + status +
                 "}";
@@ -189,14 +189,25 @@ public class Data implements Cloneable{
         Date date = sdf.parse(ar[0]);
         long init_time = date.getTime();
 
-        date = sdf.parse(ar[1]);
-        long first_sending_time = date.getTime();
+        Long first_sending_time = null;
+        if (!ar[1].equals("N/A")){
+            date = sdf.parse(ar[1]);
+            first_sending_time = date.getTime();
+        }
 
-        date = sdf.parse(ar[2]);
-        long last_resending_time = date.getTime();
+        Long last_resending_time = null;
+        if (!ar[2].equals("N/A")){
+            date = sdf.parse(ar[2]);
+            last_resending_time = date.getTime();
+        }
 
         long message_id = Long.parseLong(ar[3]);
-        int sequence_number = Integer.parseInt(ar[4]);
+
+
+        Integer sequence_number = null;
+        if (!ar[4].equals("N/A")){
+            sequence_number = Integer.parseInt(ar[4]);
+        }
 
         Address source_address = new Address(ar[5]);
         Address destination_address = new Address(ar[6]);
@@ -244,11 +255,12 @@ public class Data implements Cloneable{
             cal.setTimeInMillis(last_resending_time);
             last_resending_date = cal.getTime();
         }
+
         return sdf.format(init_date) + sep +
                (first_sending_date  != null ? sdf.format(first_sending_date) : "N/A") + sep +
                (last_resending_date != null ? sdf.format(last_resending_date): "N/A") + sep +
                data.getMessageId() + sep +
-               data.getSequenceNumber() + sep +
+               (data.getSequenceNumber() != null ? data.getSequenceNumber() : "N/A") + sep +
                data.getSourceAddress().getAddress() + sep +
                data.getDestinationAddress().getAddress()+ sep +
                data.getConnectionName() + sep +

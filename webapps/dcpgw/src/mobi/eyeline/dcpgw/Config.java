@@ -172,7 +172,7 @@ public class Config {
 
         send_receipts_interval = Utils.getProperty(config, "send.receipts.interval.mls", 1000);
 
-        send_receipts_limit = Utils.getProperty(config, "send.receipts.limit.mls", 100);
+        send_receipts_limit = Utils.getProperty(config, "send.receipts.limit", 100);
 
         resend_receipts_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
 
@@ -399,16 +399,20 @@ public class Config {
         return final_log_dir;
     }
 
-    public int getRecendReceiptsInterval(){
+    public int getSendReceiptsInterval(){
+        return send_receipts_interval;
+    }
+
+    public int getResendReceiptsInterval(){
         return resend_receipts_interval;
     }
 
-    public int getRecendReceiptsMaxTimeout(){
+    public int getResendReceiptsMaxTimeout(){
         return resend_receipts_max_timeout;
     }
 
-    public int getRecendReceiptsTimeout(){
-        return resend_receipts_interval;
+    public int getResendReceiptsTimeout(){
+        return resend_receipts_timeout;
     }
 
     public int getCleanJournalTimeout(){
