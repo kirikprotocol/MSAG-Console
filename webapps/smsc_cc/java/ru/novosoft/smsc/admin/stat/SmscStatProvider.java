@@ -402,7 +402,9 @@ public class SmscStatProvider {
     Collection<RouteIdCountersSet> countersRoute = countersForRoute.values();
     if (countersRoute != null) stat.addRouteIdCollection(countersRoute);
 
-    loadListener.incrementProgress();
+    if(loadListener != null) {
+      loadListener.incrementProgress();
+    }
 
     return stat;
   }
