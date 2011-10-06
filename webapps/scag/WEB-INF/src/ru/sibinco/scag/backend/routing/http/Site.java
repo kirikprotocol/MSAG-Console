@@ -21,7 +21,7 @@ public class Site {
     private boolean defaultSite;
 
     public String getId() {
-        return host+"_"+port;
+        return host+":"+port;
     }
 
     public Site() {

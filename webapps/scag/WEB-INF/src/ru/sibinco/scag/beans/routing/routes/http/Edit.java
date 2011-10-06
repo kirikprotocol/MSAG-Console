@@ -326,15 +326,15 @@ public class Edit extends EditBean {
         //for (int i = 0; i < sitesHost.length; i++) {
             for (int j = 0; j < sitesPort.length; j++) {
                 String port = sitesPort[j];
-                int portlen = sitesPort[j].lastIndexOf('_');
+                int portlen = sitesPort[j].lastIndexOf(':');
                 String siteName = port.substring(0, portlen);
                 port = port.substring(portlen + 1);
                 //if (sitesHost[i].equals(siteName)) {
-                    final Site site = new Site(siteName, Integer.parseInt(port), (siteName+"_"+port).equals(defaultSiteObjId));
+                    final Site site = new Site(siteName, Integer.parseInt(port), (siteName+":"+port).equals(defaultSiteObjId));
                     List listPath = new ArrayList();
                     for (int k = 0; k < pathLinks.length; k++) {
                         String pathLink = pathLinks[k];
-                        int s1 = pathLink.lastIndexOf('_');
+                        int s1 = pathLink.lastIndexOf(':');
                         String sitPath = pathLink.substring(0, s1);
                         int s2 = pathLink.lastIndexOf("^");
                         if (sitPath.equals(site.getHost())) {
