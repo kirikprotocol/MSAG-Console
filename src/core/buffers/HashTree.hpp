@@ -145,7 +145,7 @@ public:
      m_externalAllocators=true;
    }
 
-   HashTree(const HashTree& a_other):m_root(0),m_count(0),m_hashFunc(a_other.m_hashFunc),m_begin(&m_end)
+   HashTree(const HashTree& a_other):m_root(0),m_count(0),m_hashFunc(a_other.m_hashFunc),m_begin((DataNode*)&m_end)
    {
       for(const_iterator it=a_other.begin(),end=a_other.end();it!=end;++it)
       {
