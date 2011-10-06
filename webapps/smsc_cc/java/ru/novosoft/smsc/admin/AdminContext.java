@@ -307,7 +307,7 @@ public class AdminContext {
       SmscSettings s = smscManager.getSettings();
       int countSmscs =  s.getSmscInstancesCount();
       File[] dirs = new File[countSmscs];
-      for(int i=0; i <= countSmscs; i++) {
+      for(int i=0; i < countSmscs; i++) {
         dirs[i] = new File(s.getInstanceSettings(i).getMessageStoreStatsDir());
       }
       return dirs;
