@@ -21,6 +21,7 @@
 #define smsc_log_warn(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isWarnEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_WARN, __VA_ARGS__)
 #define smsc_log_info(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isInfoEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_INFO, __VA_ARGS__)
 #define smsc_log_debug(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isDebugEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_DEBUG, __VA_ARGS__)
+#define smsc_log_level(log_lvl, p_logger, ...) if (p_logger->isLogLevelEnabled(log_lvl)) p_logger->log_(log_lvl, __VA_ARGS__)
 #endif
 
 // using namespace smsc::core::buffers;
@@ -321,6 +322,14 @@ inline void smsc_log_debug(T* l,const char* stringFormat,...)
   va_list args;
   va_start(args, stringFormat);
   l->logva(smsc::logger::Logger::LEVEL_DEBUG, stringFormat,args);
+  va_end(args);
+}
+template <class T>
+inline void smsc_log_level(smsc::logger::Logger::LogLevel log_lvl, T* l, const char* stringFormat, ...)
+{
+  va_list args;
+  va_start(args, stringFormat);
+  l->logva(log_lvl, stringFormat,args);
   va_end(args);
 }
 #endif
