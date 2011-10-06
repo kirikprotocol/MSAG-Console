@@ -1,4 +1,7 @@
 #ifndef SMSC_LOGGER_H_INCLUDED_C3A87A6B
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define SMSC_LOGGER_H_INCLUDED_C3A87A6B
 
 #include <stdarg.h>
