@@ -283,8 +283,22 @@ public class SmscStatController extends SmscController{
     this.categoryId = categoryId == null || categoryId.length() == 0 ? null : Long.parseLong(categoryId);
   }
 
-  public SmscStatFilter getFilter() {
-    return filter;
+
+
+  public Date getFrom() {
+    return filter.getFrom();
+  }
+
+  public void setFrom(Date from) {
+    filter.setFrom(from);
+  }
+
+  public Date getTill() {
+    return filter.getTill();
+  }
+
+  public void setTill(Date till) {
+    filter.setTill(till);
   }
 
   public static enum StatType {

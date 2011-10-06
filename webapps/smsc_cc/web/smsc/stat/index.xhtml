@@ -49,10 +49,10 @@
         <h:outputText value="&#160;"/>
 
         <h:outputText value="#{msg['smsc.stat.fromDate']}"/>
-        <eye:inputDate inputTime="true" value="#{smscStat.filter.from}"/>
+        <eye:inputDate inputTime="true" value="#{smscStat.from}"/>
 
         <h:outputText value="#{msg['smsc.stat.tillDate']}"/>
-        <eye:inputDate inputTime="true" value="#{smscStat.filter.from}"/>
+        <eye:inputDate inputTime="true" value="#{smscStat.till}"/>
 
         <h:outputText id="providerLabel" value="#{msg['smsc.stat.provider']}"/>
         <h:selectOneMenu id="provider" value="#{smscStat.providerId}">
