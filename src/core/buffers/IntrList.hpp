@@ -40,8 +40,16 @@ public:
   {
     return endNode.ilNextNode;
   }
+  const T* front() const
+  {
+    return endNode.ilNextNode;
+  }
 
   T* back()
+  {
+    return endNode.ilPrevNode;
+  }
+  const T* back() const
   {
     return endNode.ilPrevNode;
   }
@@ -275,13 +283,16 @@ public:
     {
       clear();
     }
+    node->ilNextNode = node->ilPrevNode = 0;
   }
 
   void pop_front()
   {
     if(!count)return;
+    T * frontNode = endNode.ilNextNode;
     endNode.ilNextNode->ilNextNode->ilPrevNode=endPtr();
     endNode.ilNextNode=endNode.ilNextNode->ilNextNode;
+    frontNode->ilNextNode = frontNode->ilPrevNode = 0;
     count--;
   }
 
