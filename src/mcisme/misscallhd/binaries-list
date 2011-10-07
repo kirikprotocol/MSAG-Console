@@ -1,0 +1,6 @@
+mcisme/mcd   	  mcd \
+     -lmcisme-misscallhd \
+     -L$(SS7HD)/lib -l$(SS7_LIBRARY_NAME) -lmcisme-misscallhd \
+     -L$(SMSC_BUILDDIR)/bin -llogger -lutil-regexp -lutil-config -lutil-xml \
+      $(XERCES_LIB) -lsocket -lnsl
+
