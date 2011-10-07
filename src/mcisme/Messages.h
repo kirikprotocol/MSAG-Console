@@ -19,7 +19,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 
 #include "Templates.h"
-#include "misscall/callproc.hpp"
+#include "mcisme/callproc.hpp"
 #include "mcisme/AbntAddr.hpp"
 #include "logger/Logger.h"
 #include "mcisme/Profiler.h"
@@ -134,15 +134,15 @@ struct MCEventOut {
   }
 };
 
-/* -------------------------- Параметры для шаблона сообщения -------------------------- */
-extern const char* MSG_TEMPLATE_PARAM_ABONENT; // кому посылается сообщение (i|n)
-extern const char* MSG_TEMPLATE_PARAM_TOTAL;   // общее количество звонков  (i)
-extern const char* MSG_TEMPLATE_PARAM_ROWS;    // строки сообщения          (i)
+/* -------------------------- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ -------------------------- */
+extern const char* MSG_TEMPLATE_PARAM_ABONENT; // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (i|n)
+extern const char* MSG_TEMPLATE_PARAM_TOTAL;   // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ  (i)
+extern const char* MSG_TEMPLATE_PARAM_ROWS;    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ          (i)
     
-/* -------------------------- Параметры для шаблона строки -------------------------- */
-extern const char* MSG_TEMPLATE_PARAM_CALLER;  // номер звонившего абонента (i)
-extern const char* MSG_TEMPLATE_PARAM_COUNT;   // количество звонков от абонента, if (single) => 1 (i)
-extern const char* MSG_TEMPLATE_PARAM_DATE;    // дата звонка/дата последнего звонка (i)
+/* -------------------------- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ -------------------------- */
+extern const char* MSG_TEMPLATE_PARAM_CALLER;  // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (i)
+extern const char* MSG_TEMPLATE_PARAM_COUNT;   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, if (single) => 1 (i)
+extern const char* MSG_TEMPLATE_PARAM_DATE;    // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (i)
 
 class TaskProcessor;
 

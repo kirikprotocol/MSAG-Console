@@ -16,7 +16,7 @@
 
 #include <system/smscsignalhandlers.h>
 
-#include <mcisme/misscall/callproc.hpp>
+#include <mcisme/callproc.hpp>
 
 //#define MCI_MODULE_TEST YES
 #undef  MCI_MODULE_TEST
