@@ -314,7 +314,7 @@ public class SmscStatProvider {
   }
 
 
-  Statistics getStatistics(SmscStatFilter filter) throws AdminException {
+  public Statistics getStatistics(SmscStatFilter filter) throws AdminException {
     return getStatistics(filter, null);
   }
 

@@ -35,6 +35,8 @@ public class SmscStatController extends SmscController{
 
   private Long categoryId;
 
+  private boolean changed = true;
+
   public SmscStatController() {
     this.provider = WebContext.getInstance().getSmscStatProvider();
     Calendar c = Calendar.getInstance();
@@ -64,8 +66,11 @@ public class SmscStatController extends SmscController{
 
 
   public String start() {
-    loaded = false;
-    loadListener = null;
+    if(changed) {
+      loaded = false;
+      loadListener = null;
+      changed = false;
+    }
     return null;
   }
 
@@ -77,6 +82,14 @@ public class SmscStatController extends SmscController{
     filter.setFrom(null);
     filter.setTill(null);
     return null;
+  }
+
+  public boolean isChanged() {
+    return changed;
+  }
+
+  public void setChanged(boolean changed) {
+    this.changed = changed;
   }
 
   public boolean isShowGeneral(){
