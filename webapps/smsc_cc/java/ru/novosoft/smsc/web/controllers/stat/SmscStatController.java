@@ -35,7 +35,7 @@ public class SmscStatController extends SmscController{
 
   private Long categoryId;
 
-  private boolean changed = true;
+  private boolean changed = false;
 
   public SmscStatController() {
     this.provider = WebContext.getInstance().getSmscStatProvider();
