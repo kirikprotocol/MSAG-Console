@@ -8,7 +8,7 @@
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
 #include "util/config/ConfigException.h"
-#include "mcisme/misscallhd/callproc.hpp"
+#include "mcisme/callproc.hpp"
 
 using std::vector;
 using smsc::util::config::Manager;
