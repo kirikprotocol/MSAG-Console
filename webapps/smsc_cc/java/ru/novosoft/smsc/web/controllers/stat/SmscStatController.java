@@ -34,8 +34,9 @@ public class SmscStatController extends SmscController{
   private Long providerId;
 
   private Long categoryId;
-
-  private boolean changed = false;
+  
+  private Date oldFrom;
+  private Date oldTill;
 
   public SmscStatController() {
     this.provider = WebContext.getInstance().getSmscStatProvider();
@@ -45,6 +46,7 @@ public class SmscStatController extends SmscController{
     c.set(Calendar.SECOND, 0);
     c.set(Calendar.MILLISECOND, 0);
     setFrom(c.getTime());
+    oldFrom = getFrom();
   }
 
   public StatType getType() {
@@ -66,10 +68,11 @@ public class SmscStatController extends SmscController{
 
 
   public String start() {
-    if(changed) {
+    if(isChanged()) {
       loaded = false;
       loadListener = null;
-      changed = false;
+      oldFrom = getFrom();
+      oldTill = getTill();
     }
     return null;
   }
@@ -79,17 +82,31 @@ public class SmscStatController extends SmscController{
     loadListener = null;
     providerId = null;
     categoryId = null;
-    filter.setFrom(null);
-    filter.setTill(null);
+    setFrom(null);
+    setTill(null);
     return null;
   }
 
   public boolean isChanged() {
-    return changed;
-  }
-
-  public void setChanged(boolean changed) {
-    this.changed = changed;
+    if(oldFrom == null && filter.getFrom() != null) {
+      return true;
+    }else if(oldFrom != null && getFrom() == null) {
+      return true;
+    }else if(oldFrom != null) {
+      if(!oldFrom.equals(getFrom())) {
+        return true;
+      }
+    }
+    if(oldTill == null && getTill() != null) {
+      return true;
+    }else if(oldTill != null && getTill() == null) {
+      return true;
+    }else if(oldTill != null) {
+      if(!oldTill.equals(getTill())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public boolean isShowGeneral(){
