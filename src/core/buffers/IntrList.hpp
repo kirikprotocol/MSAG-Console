@@ -1,4 +1,7 @@
 #ifndef __SMSC_CORE_BUFFERS_INTRLIST_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_CORE_BUFFERS_INTRLIST_HPP__
 
 #include <sys/types.h>
@@ -11,13 +14,13 @@ namespace buffers{
 struct IntrListEmptyStruct{};
 
 template <class T,class Base=IntrListEmptyStruct>
-struct IntrListNodeBase:public Base{
+struct IntrListNodeBase : public Base {
   typedef Base IntrListNodeBaseParent;
   T* ilPrevNode;
   T* ilNextNode;
 };
 
-template <class T>
+template <class T /* : public IntrListNodeBase<T> */>
 class IntrList{
 public:
   typedef T* value_type;
@@ -44,7 +47,6 @@ public:
   }
 
   class iterator{
-    friend class IntrList;
   public:
       typedef ptrdiff_t                        difference_type;
       typedef std::bidirectional_iterator_tag  iterator_category;
@@ -52,7 +54,11 @@ public:
       typedef T*                               pointer;
       typedef T&                               reference;
 
-    explicit iterator(T* argNode=0):node(argNode){}
+    iterator() : node(0)
+    { }
+    ~iterator()
+    { }
+
     iterator& operator=(const iterator& argOther)
     {
       node=argOther.node;
@@ -105,14 +111,30 @@ public:
     {
       return node;
     }
+
   protected:
     T* node;
+
+    friend class IntrList;
+    explicit iterator(T* argNode) : node(argNode)
+    { }
   };
 
   class const_iterator{
-    friend class IntrList;
   public:
-    explicit const_iterator(const T* argNode=0):node(argNode){}
+    const_iterator() : node(0)
+    { }
+    const_iterator(const iterator & use_it) : node(use_it.node)
+    {}
+    ~const_iterator()
+    { }
+
+    const_iterator& operator=(const iterator& argOther)
+    {
+      node=argOther.node;
+      return *this;
+    }
+
     const_iterator& operator=(const const_iterator& argOther)
     {
       node=argOther.node;
@@ -150,7 +172,6 @@ public:
       return const_iterator(node);
     }
 
-
     const T& operator*()const
     {
       return *node;
@@ -159,8 +180,13 @@ public:
     {
       return node;
     }
+
   protected:
     const T* node;
+
+    friend class IntrList;
+    explicit const_iterator(const T* argNode) : node(argNode)
+    { }
   };
 
 
@@ -267,6 +293,7 @@ public:
   {
     value->ilPrevNode->ilNextNode=value->ilNextNode;
     value->ilNextNode->ilPrevNode=value->ilPrevNode;
+    value->ilPrevNode = value->ilNextNode = 0;
     count--;
   }
 
@@ -326,4 +353,5 @@ protected:
 }
 
 
-#endif
+#endif /* __SMSC_CORE_BUFFERS_INTRLIST_HPP__ */
+
