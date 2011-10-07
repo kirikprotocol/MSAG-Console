@@ -93,7 +93,9 @@ public:
   typedef enum {REAL_CALL_PROCESOR, CALL_PROCESOR_EMULATOR} instance_type_t;
   static void setInstanceType(instance_type_t instance_type);
   static MissedCallProcessor* instance();
+#ifdef EIN_HD
   void configure(int user_id, int user_instance, const string& cpmgr, const string& remoteinstlist);
+#endif
   virtual int  run();
   virtual void stop();
   virtual void addMissedCallListener(MissedCallListener* listener);

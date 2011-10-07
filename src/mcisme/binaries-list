@@ -3,6 +3,20 @@
 
 # binary name source name libraries         
 
+switch EIN_HD
+101:\
+mcisme/MCISme MCISme \
+    -ldl -ladmin-util -ladmin-protocol \
+    -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin \
+    -lsystem-common -lutil-config-route $(SOCKETLIB) -lcore-network -lmcisme \
+    -lmcisme-misscallhd -lmcisme-advert -lmcisme -lscag-util-singleton \
+    -lscag-exc -lscag-util-encodings -lscag-util-singleton -lscag-exc \
+    -lutil-regexp -L$(SS7HD)/lib -l$(SS7_LIBRARY_NAME) \
+    -lmcisme-misscallhd -lmcisme-mcaia -ldb -lutil-templates -lutil-config \
+    -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lcore-buffers \
+    -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin \
+    -llogger -lnsl -lsystem-common -lutil-config-route
+default:\
 #old (EINss7166)
 mcisme/MCISme MCISme \
     -ldl -ladmin-util -ladmin-protocol \
@@ -15,6 +29,7 @@ mcisme/MCISme MCISme \
     -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lcore-buffers \
     -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin \
     -llogger -lnsl -lsystem-common -lutil-config-route
+end switch
 #mcisme/DatFileConvert DatFileConvert \
     -ldl -ladmin-util -ladmin-protocol \
     -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin \
