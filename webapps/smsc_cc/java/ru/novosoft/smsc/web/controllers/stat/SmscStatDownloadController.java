@@ -107,7 +107,7 @@ public class SmscStatDownloadController extends SmscController{
     for (ErrorCounterSet s : set.getErrors()) {
       String errMessage = SmppStatusConverter.getAsString(s.getErrcode(), locale);
       errMessage = errMessage + " (" + s.getErrcode() + ')';
-      out.print('\'' + errMessage + '\'');
+      out.print('\"' + errMessage + '\"');
       out.print(COL_SEP);
       out.print(s.getCounter());
       out.print(COL_SEP);
@@ -183,7 +183,7 @@ public class SmscStatDownloadController extends SmscController{
     out.println(SME_STAT_STR);
     out.println("SME Id" + GEN_CAP_STR);
     for (SmeIdCountersSet s : statistics.getSmeIdStat()) {
-      out.print('\'' + s.getSmeid() + '\'');
+      out.print('\"' + s.getSmeid() + '\"');
       out.print(COL_SEP);
       exportCounters(out, s);
       exportErrors(out, s, locale);
@@ -194,7 +194,7 @@ public class SmscStatDownloadController extends SmscController{
     out.println(RT_STAT_STR);
     out.println("Route Id" + GEN_CAP_STR);
     for (RouteIdCountersSet s : statistics.getRouteIdStat()) {
-      out.print('\'' + s.getRouteid() + '\'');
+      out.print('\"' + s.getRouteid() + '\"');
       out.print(COL_SEP);
       exportCounters(out, s);
       exportErrors(out, s, locale);
