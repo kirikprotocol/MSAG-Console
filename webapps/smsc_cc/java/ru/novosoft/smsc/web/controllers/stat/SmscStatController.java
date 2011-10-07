@@ -326,7 +326,6 @@ public class SmscStatController extends SmscController{
     GENERAL, SMES, ROUTES, ERRORS
   }
 
-
   private static class LoadListenerImpl extends LoadListener implements SmscStatLoadListener {
     public void incrementProgress() {
       this.setCurrent(getCurrent() + 1);

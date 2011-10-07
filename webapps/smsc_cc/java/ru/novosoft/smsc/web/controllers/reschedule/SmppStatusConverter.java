@@ -27,8 +27,12 @@ public class SmppStatusConverter implements Converter {
       return null;
     }
     Integer code = Integer.parseInt(o.toString());
-    ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-        (Locale)facesContext.getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER));
+
+    return getAsString(code, (Locale) facesContext.getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER));
+  }
+
+  public static String getAsString(int code, Locale locale) {
+    ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
     return "("+code+") "+bundle.getString("smsc.errcode."+code);
   }
 

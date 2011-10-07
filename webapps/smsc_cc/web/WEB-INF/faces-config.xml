@@ -356,6 +356,12 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>smscStatDownload</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.stat.SmscStatDownloadController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -530,6 +536,11 @@
     <navigation-case>
       <from-outcome>SMS_STAT</from-outcome>
       <to-view-id>/smsc/stat/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMS_STAT_DOWNLOAD</from-outcome>
+      <to-view-id>/smsc/stat/download.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

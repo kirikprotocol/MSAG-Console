@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * author: Aleksandr Khalitov
  */
-class ExtendedCountersSet extends CountersSet {
+public class ExtendedCountersSet extends CountersSet {
 
   private Map<Integer, ErrorCounterSet> errors = new TreeMap<Integer, ErrorCounterSet>();
 
