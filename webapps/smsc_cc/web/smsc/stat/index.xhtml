@@ -54,9 +54,7 @@
     <eye:inputDate inputTime="true" value="#{smscStat.from}"/>
 
     <h:outputText value="#{msg['smsc.stat.tillDate']}"/>
-    <h:panelGrid  onclick="changed()">
-      <eye:inputDate inputTime="true" value="#{smscStat.till}"/>
-    </h:panelGrid >
+    <eye:inputDate inputTime="true" value="#{smscStat.till}"/>
 
     <h:outputText id="providerLabel" value="#{msg['smsc.stat.provider']}"/>
     <h:selectOneMenu id="provider" value="#{smscStat.providerId}">
