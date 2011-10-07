@@ -43,9 +43,11 @@
   <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, labelColumn, lastColumn">
 
     <h:outputText value="#{msg['smsc.stat.type']}"/>
-    <h:selectOneMenu id="type" value="#{smscStat.type}" onchange="changeType();">
-      <f:selectItems value="#{smscStat.types}"/>
-    </h:selectOneMenu>
+    <h:panelGrid  columns="1">
+      <h:selectOneMenu id="type" value="#{smscStat.type}" onchange="changeType();">
+        <f:selectItems value="#{smscStat.types}"/>
+      </h:selectOneMenu>
+    </h:panelGrid>
 
     <h:outputText value="&#160;"/>
     <h:selectBooleanCheckbox id="changed" value="#{smscStat.changed}" style="display: none"/>
@@ -61,16 +63,20 @@
     </h:panelGrid >
 
     <h:outputText id="providerLabel" value="#{msg['smsc.stat.provider']}"/>
-    <h:selectOneMenu id="provider" value="#{smscStat.providerId}">
-      <f:selectItem itemLabel="" itemValue=""/>
-      <f:selectItems value="#{smscStat.allProviders}"/>
-    </h:selectOneMenu>
+    <h:panelGrid  columns="1">
+      <h:selectOneMenu id="provider" value="#{smscStat.providerId}">
+        <f:selectItem itemLabel="" itemValue=""/>
+        <f:selectItems value="#{smscStat.allProviders}"/>
+      </h:selectOneMenu>
+    </h:panelGrid>
 
     <h:outputText id="categoryLabel" value="#{msg['smsc.stat.category']}"/>
-    <h:selectOneMenu id="category" value="#{smscStat.categoryId}">
-      <f:selectItem itemLabel="" itemValue=""/>
-      <f:selectItems value="#{smscStat.allCategories}"/>
-    </h:selectOneMenu>
+    <h:panelGrid  columns="1">
+      <h:selectOneMenu id="category" value="#{smscStat.categoryId}">
+        <f:selectItem itemLabel="" itemValue=""/>
+        <f:selectItems value="#{smscStat.allCategories}"/>
+      </h:selectOneMenu>
+    </h:panelGrid>
 
 
   </h:panelGrid>
