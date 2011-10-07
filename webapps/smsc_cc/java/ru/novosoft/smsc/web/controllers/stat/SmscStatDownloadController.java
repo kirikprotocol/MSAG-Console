@@ -106,7 +106,6 @@ public class SmscStatDownloadController extends SmscController{
     out.println(ERR_STAT_STR);
     for (ErrorCounterSet s : set.getErrors()) {
       String errMessage = SmppStatusConverter.getAsString(s.getErrcode(), locale);
-      errMessage = errMessage + " (" + s.getErrcode() + ')';
       out.print('\"' + errMessage + '\"');
       out.print(COL_SEP);
       out.print(s.getCounter());
