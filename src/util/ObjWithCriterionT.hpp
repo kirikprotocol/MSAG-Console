@@ -67,47 +67,6 @@ struct less_crit : public std::binary_function<_TArg, _TArg, bool> {
   }
 };
 
-template <
-  class _ForwardIter
-, class _TArg /* : public ObjWithCriterion_T<> */
->
-_ForwardIter lower_bound_crit(_ForwardIter it_first, 
-                              const typename std::iterator_traits<_ForwardIter>::difference_type it_range,
-                              const typename _TArg::criterion_type & crit_val)
-{
-  typedef typename std::iterator_traits<_ForwardIter>::difference_type distance_type;
-  typedef less_crit<_TArg> compare_type;
-
-  distance_type curRange = it_range;
-  distance_type curHalf;
-  _ForwardIter itMiddle;
-
-  while (curRange > 0) {
-    curHalf = curRange >> 1;
-    itMiddle = it_first;
-    std::advance(itMiddle, curHalf);
-    if (compare_type(*itMiddle, crit_val)) {
-      it_first = itMiddle;
-      ++it_first;
-      curRange = curRange - curHalf - 1;
-    } else
-      curRange = curHalf;
-  }
-  return it_first;
-}
-
-template <
-  class _ForwardIter
-, class _TArg /* : public ObjWithCriterion_T<> */
->
-_ForwardIter lower_bound_crit(_ForwardIter it_first, _ForwardIter it_last,
-                              const typename _TArg::criterion_type & crit_val)
-{
-  typedef typename std::iterator_traits<_ForwardIter>::difference_type distance_type;
-  distance_type curRange = std::distance(it_first, it_last);
-  return lower_bound_crit<_ForwardIter, _TArg>(it_first, curRange, crit_val);
-}
-
 } //util
 } //smsc
 #endif /* __UTIL_OBJ_WITH_CRITERION_T */
