@@ -49,6 +49,7 @@ using namespace smsc::resourcemanager;
 using namespace smsc::sms;
 
 
+#ifdef SMSEXTRA
 static bool isValidAlias(const std::string& s)
 {
   if(s.length()==0 || s.length()>10)return false;
@@ -62,6 +63,7 @@ static bool isValidAlias(const std::string& s)
   }
   return true;
 }
+#endif
 
 class AccessDeniedException{};
 
@@ -284,6 +286,7 @@ int Profiler::update(const Address& address,const Profile& profile)
     smsc_log_error(log, "exception during profile update/insert:%s",e.what());
     return pusError;
   }
+  return pusError;//avoid warning
 }
 
 int Profiler::updatemask(const Address& address,const Profile& profile)
@@ -310,6 +313,7 @@ int Profiler::updatemask(const Address& address,const Profile& profile)
     smsc_log_error(log, "exception during profile update/insert:%s",e.what());
     return pusError;
   }
+  return pusError;//avoid warning
 }
 
 
@@ -495,11 +499,13 @@ static const int _update_charset_ussd=7;
 static const int _update_divert_cond=8;
 static const int _update_udhconcat=9;
 static const int _update_translit=10;
+#ifdef SMSEXTRA
 static const int _update_subscription_add=11;
 static const int _update_subscription_clear=12;
 static const int _update_extra_nick=13;
 
 static const int _update_extra=0x10000;
+#endif
 
 static const int update_div_cond_Absent=1;
 static const int update_div_cond_Blocked=2;
@@ -1265,7 +1271,8 @@ int Profiler::Execute()
         default:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgError");
-        };
+          break;
+        }
       }
       __trace2__("Profiler: msgstr=%s",msgstr.c_str());
       ans.setOriginatingAddress(originatingAddress.length()?originatingAddress.c_str():sms->getDestinationAddress());
