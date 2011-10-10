@@ -16,13 +16,6 @@
 #include "util/config/Manager.h"
 #include "util/xml/IconvRegistry.h"
 
-/* Static check for 64bit positions for files */
-template <bool cnd> struct StaticCheck {};
-template <>  struct StaticCheck<true>  {};
-template <>  struct StaticCheck<false> { private: StaticCheck(); };
-/// NOTE: fpos_t may contain extra fields
-static StaticCheck< sizeof(off_t)==8 > staticCheck;
-
 namespace smsc { namespace store
 {
 
