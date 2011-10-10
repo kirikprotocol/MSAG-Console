@@ -382,7 +382,7 @@ int partitionSms(SMS* sms)
     }
     //len+=udhilen;
   }
-  if(!(len>=0 && len<=65535))
+  if(len>65535)
   {
     __warning2__("udhlen=%d, data len=%d",udhilen,len);
     return psErrorLength;
