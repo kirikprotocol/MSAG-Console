@@ -83,6 +83,7 @@ TimeSlotCounter<> sok_time_cnt(30,100);
 
 class MyListener:public SmppPduEventListener{
 public:
+  virtual ~MyListener(){}
   void handleEvent(SmppHeader *pdu)
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
@@ -247,6 +248,7 @@ bool autoReconnect=false;
 int setDpf=-1;
 
 bool doPartitionSms=false;
+bool useSarForPartition=false;
 
 Option options[]=
 {
@@ -281,6 +283,7 @@ Option options[]=
   {"setdpf",'i',&setDpf},
   {"replaceIfPresent",'i',&replaceIfPresent},
   {"partitionSms",'b',&doPartitionSms},
+  {"useSarForPartition",'b',&useSarForPartition},
   {"maxSimultaneousMultipart",'i',&maxSimultaneousMultipart},
   {"trackingMode",'b',&trackingMode},
   {"probTempErr",'i',&tempErrProb},
@@ -401,6 +404,8 @@ int main(int argc,char* argv[])
     StrList words;
     StrList sources;
     StrList dests;
+
+    int sarMsgSeq=0;
 
     Address startAddr,endAddr,curAddr;
 
@@ -626,10 +631,20 @@ int main(int argc,char* argv[])
           {
             s.setConcatSeqNum(0);
             mparts.push_back(s);
-            int pres=partitionSms(&mparts.back());
-            if(pres!=psSingle && pres!=psMultiple)
+            if(useSarForPartition)
             {
-              __warning2__("pres result:%d!!!",pres);
+              SMS& sms=mparts.back();
+              sms.setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM,sarMsgSeq++);
+              int segs=3+(rand()%5);
+              sms.setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS,segs);
+              sms.setIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM,0);
+            }else
+            {
+              int pres=partitionSms(&mparts.back());
+              if(pres!=psSingle && pres!=psMultiple)
+              {
+                __warning2__("pres result:%d!!!",pres);
+              }
             }
             if(current==mparts.end())
             {
@@ -702,13 +717,29 @@ int main(int argc,char* argv[])
         {
           if(doPartitionSms)
           {
-            s=*current;
-            mparts.erase(current++);
-            if(current==mparts.end())
+            if(useSarForPartition)
             {
-              current=mparts.begin();
+              current->setIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM,current->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)+1);
+              s=*current;
+              if(s.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)==s.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)-1)
+              {
+                mparts.erase(current++);
+                if(current==mparts.end())
+                {
+                  current=mparts.begin();
+                }
+                mpartsSize--;
+              }
+            }else
+            {
+              s=*current;
+              mparts.erase(current++);
+              if(current==mparts.end())
+              {
+                current=mparts.begin();
+              }
+              mpartsSize--;
             }
-            mpartsSize--;
           }
           PduSubmitSm sm;
           sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
