@@ -33,28 +33,28 @@ protected:
   struct LISTELEMENT
   {
     unsigned dialogId;
-    Address addr;           // адрес получателя
+    Address addr;           // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     bool responsed;
     unsigned errcode;
   };
   struct ListTask;
-  friend class DistrListProcess::ListTask;
+  friend struct DistrListProcess::ListTask;
   enum TaskType{ttMulti,ttDistrList};
   struct ListTask
   {
     TaskType taskType;//0 - submit multi, 1 - distr list
     time_t expirationTime;
     std::string listName;
-    unsigned count;           // количество елементов в задаче
-    unsigned submited_count;  // количество элементов на которые прешол ответ
+    unsigned count;           // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    unsigned submited_count;  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     std::vector<LISTELEMENT> list;
-    SmscCommand cmd;          // исходная команда
+    SmscCommand cmd;          // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   };
   typedef pair<ListTask*,unsigned> TPAIR;
   typedef std::map<unsigned,TPAIR> MAPTYPE;
   typedef list<ListTask*> LISTTYPE;
-  MAPTYPE task_map;       // маппинг диалог <-> {задача,индекс элемента}
-  LISTTYPE task_sheduler; // список задач упорядоченый по таймаутам
+  MAPTYPE task_map;       // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ <-> {пїЅпїЅпїЅпїЅпїЅпїЅ,пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
+  LISTTYPE task_sheduler; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   DistrListAdmin* admin;
   mutable EventMonitor mon;
   Array<SmscCommand> outQueue;
@@ -83,8 +83,8 @@ public:
   DistrListProcess(DistrListAdmin* admin,SmeRegistrar* sm);
   virtual ~DistrListProcess();
   virtual void close();
-  /// кидает exception если был достигнут лимит
-  /// и длина очереди еще не упала до допустимого значения
+  /// пїЅпїЅпїЅпїЅпїЅпїЅ exception пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+  /// пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   virtual void putCommand(const SmscCommand& command);
   virtual bool getCommand(SmscCommand& cmd);
   virtual SmeProxyState getState() const;
