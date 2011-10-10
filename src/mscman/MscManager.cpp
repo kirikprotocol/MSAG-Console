@@ -424,6 +424,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
           updateFile(info);
         }
       }break;
+      case MSCOP_UNKNOWN:break;
     }
   }
   catch (Exception& exc)
