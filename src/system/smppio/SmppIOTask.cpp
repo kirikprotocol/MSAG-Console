@@ -1055,7 +1055,7 @@ int SmppInputThread::Execute()
                 {
                 }
                 */
-              }
+              }break;
             }
             disposePdu(pdu);
           }
@@ -1129,7 +1129,7 @@ void SmppOutputThread::killSocket(int idx)
   mon.Unlock(); // this method is always called only with locked mon.
   KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
   mon.Lock();
-  int rcnt=m->removeSocket(s);
+  /*int rcnt=*/m->removeSocket(s);
   delete ss;
 }
 

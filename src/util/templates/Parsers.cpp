@@ -57,7 +57,7 @@ void InputParser::parse(std::string& input,
         else throw ParsingException("Type <%s> is invalid !",
                                     ioEntityTypeStrings[entity->type]);
     }
-    
+
     if (!ctx.isNeedMsgText() && (input.length() > 0))
         throw ParsingWarning("Unexpected paramenters left in input : '%s'", input.c_str());
 }
@@ -345,10 +345,10 @@ void StringParser::parse(std::string& input,
     std::string line = "";
 
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
-    
-    
+
+
     if (imp && (*SMSC_DBSME_MSG_TEXT == *imp)) ctx.setNeedMsgText(true);
-    
+
     char* impVal = 0;
     if (imp && ctx.importStr(imp, impVal) && impVal && impVal[0])
     {
@@ -410,7 +410,7 @@ void FloatParser::parse(std::string& input,
         const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         if (!(str && *str) && def) str = def;
-        double dblval = 0.0;
+        //double dblval = 0.0;
         if ((result = sscanf(str, "%le%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning float type. "

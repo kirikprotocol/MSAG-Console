@@ -256,7 +256,7 @@ int StatusSme::Execute()
     }
 
 
-    time_t t=time(NULL)+60;
+    //time_t t=time(NULL)+60;
     //s.setValidTime(t);
     s.setOriginatingAddress(sms->getDestinationAddress());
     s.setDestinationAddress(sms->getOriginatingAddress());
