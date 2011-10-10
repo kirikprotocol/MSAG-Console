@@ -74,8 +74,8 @@ namespace smsc { namespace store
 
         int32_t                 messagesToSend;
 
-    friend class ProcessQueryGuard;
-    friend class ProcessArchiveGuard;
+    friend struct ProcessQueryGuard;
+    friend struct ProcessArchiveGuard;
 
         bool prepareIndex(QueryMessage* query, Array<Param>& index);
 
