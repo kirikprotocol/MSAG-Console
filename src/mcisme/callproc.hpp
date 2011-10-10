@@ -50,6 +50,10 @@ class MissedCallListener{
   public:
     virtual void missed(const MissedCallEvent& event) = 0;
 };
+struct IsupUserCfg {
+  int userinstance, userid;
+  std::string cpMgrHostAndPort,remoteInstancies;
+};
 struct Circuits {
   uint32_t ts;
   uint8_t  hsn;
@@ -94,7 +98,7 @@ public:
   static void setInstanceType(instance_type_t instance_type);
   static MissedCallProcessor* instance();
 #ifdef EIN_HD
-  void configure(int user_id, int user_instance, const string& cpmgr, const string& remoteinstlist);
+  void configure(const IsupUserCfg& cfg);
 #endif
   virtual int  run();
   virtual void stop();

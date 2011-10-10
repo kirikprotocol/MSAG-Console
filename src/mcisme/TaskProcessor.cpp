@@ -144,6 +144,16 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   std::string callingMask = config->getString("CallingMask");
   std::string calledMask = config->getString("CalledMask");
 
+#ifdef EIN_HD
+  smsc_log_info(logger, "ISUP Loading...");
+  std::auto_ptr<ConfigView> isupCfgGuard(config->getSubConfig("isup"));
+  ConfigView* isupCfg = isupCfgGuard.get();
+  isup.userid = isupCfg->getInt("userid");
+  isup.userinstance = isupCfg->getInt("userinstance");
+  isup.cpMgrHostAndPort = isupCfg->getString("cpMgrHostAndPort");
+  isup.remoteInstancies = isupCfg->getString("remoteInstancies");
+  smsc_log_info(logger, "ISUP loaded.");
+#endif
   smsc_log_info(logger, "Loading templates ...");
   std::auto_ptr<ConfigView> templatesCfgGuard(config->getSubConfig("Templates"));
   ConfigView* templatesCfg = templatesCfgGuard.get();
@@ -302,7 +312,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     smsc::misscall::MissedCallProcessor::setInstanceType(smsc::misscall::MissedCallProcessor::REAL_CALL_PROCESOR);
 
   mciModule = new MCIModule(circuitsMap, rules, releaseSettings, redirectionAddress,
-                            callingMask.c_str(), calledMask.c_str(), countryCode.c_str());
+                            callingMask.c_str(), calledMask.c_str(), countryCode.c_str(),isup);
 
   smsc_log_info(logger, "MCI Module starting...");
   mciModule->Start();

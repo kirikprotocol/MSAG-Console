@@ -71,10 +71,10 @@ void detectDisconnect(USHORT_T result, const char *func) {
     going = 0;
   }
 }
-void MissedCallProcessor::configure(int user_id,
-                                    int user_instance,
-                                    const std::string& cpmgr,
-                                    const std::string& remoteinstlist)
+static void setuser(int user_id,
+               int user_instance,
+               const std::string& cpmgr,
+               const std::string& remoteinstlist)
 {
   USER = user_id; USER_INSTANCE = user_instance;
   strncpy(cpMgrHostAndPort,cpmgr.c_str(),cpmgr.length());
@@ -87,6 +87,10 @@ void MissedCallProcessor::configure(int user_id,
     str += s + (str[s] == 0 ? 0 : 1);
   }
   ISUP_INSTANCES_COUNT = idx;
+}
+void MissedCallProcessor::configure(const IsupUserCfg& cfg)
+{
+  setuser(cfg.userid,cfg.userinstance,cfg.cpMgrHostAndPort,cfg.remoteInstancies);
 }
 static smsc::util::regexp::RegExp maskRx;
 static smsc::util::regexp::RegExp calledMaskRx;

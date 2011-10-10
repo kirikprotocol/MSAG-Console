@@ -119,6 +119,8 @@ class TaskProcessor : public Thread, public MissedCallListener,
 
   int          protocolId, daysValid;
   std::string  svcType, svcTypeOnLine, svcTypeForBe, address;
+  IsupUserCfg isup;
+
 
   uint32_t _qosTimeToLive; //in minutes
   int      releaseCallsStrategy;

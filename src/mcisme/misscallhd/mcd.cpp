@@ -22,6 +22,7 @@ using smsc::misscall::ReleaseSettings;
 using smsc::misscall::REDIREC_RULE_STRATEGY;
 using smsc::misscall::Circuits;
 using smsc::misscall::Rule;
+using smsc::misscall::IsupUserCfg;
 using smsc::logger::Logger;
 
 static Logger* logger = 0;
@@ -71,6 +72,7 @@ static struct Rule rule = {
   /* inform   */ 1
 };
 vector<Rule> rules;
+static struct IsupUserCfg isup;
 class ToolConfig {
   private:
     Logger* logger;
@@ -84,24 +86,24 @@ class ToolConfig {
 
       ConfigView tietoConfig(manager, "tieto");
 
-      try { cpMgrHostAndPort = tietoConfig.getInt("userid");
+      try { isup.userid = tietoConfig.getInt("userid");
       } catch (ConfigException& exc) {
         throw ConfigException("\'userid\' is unknown or missing");
       }
 
-      try { userinstance = tietoConfig.getInt("userinstance");
+      try { isup.userinstance = tietoConfig.getInt("userinstance");
       } catch (ConfigException& exc) {
         throw ConfigException("\'userinstance\' is unknown or missing");
       }
 
       try {
-        cpMgrHostAndPort = tietoConfig.getString("cpMgrHostAndPort");
+        isup.cpMgrHostAndPort = tietoConfig.getString("cpMgrHostAndPort");
       } catch (ConfigException& exc) {
         throw ConfigException("\'cpMgrHostAndPort\' is unknown or missing");
       }
 
       try {
-        isupinstances = tietoConfig.getString("remoteInstancies");
+        isup.remoteInstancies = tietoConfig.getString("remoteInstancies");
       } catch (ConfigException& exc) {
         throw ConfigException("\'remoteInstancies\' is unknown or missing");
       }
@@ -144,7 +146,7 @@ nodaemon:
 
   Listener listener;
   MissedCallProcessor *processor = MissedCallProcessor::instance();
-  processor->configure(userid,userinstance,cpMgrHostAndPort,isupinstances);
+  processor->configure(isup);
   processor->setReleaseSettings(relCauses);
   circuitsMap.Insert("sample",channel);
   processor->setCircuits(circuitsMap);

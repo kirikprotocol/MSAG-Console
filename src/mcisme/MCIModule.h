@@ -68,7 +68,8 @@ public:
 
   MCIModule(Hash<Circuits>& circuits, std::vector<Rule>& rules, 
             const ReleaseSettings& releaseSettings, const char* redirectionAddress,
-            const char* callingMask, const char* calledMask, const char* countryCode) 
+            const char* callingMask, const char* calledMask, const char* countryCode,
+            const IsupUserCfg& isup)
     : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
       listener(0), bAttached(false), bNeedExit(false), bRunning(false)
   {
@@ -76,6 +77,10 @@ public:
 #ifndef MCI_MODULE_TEST    
     module = MissedCallProcessor::instance();
     if (!module) throw Exception("Failed to instantiate MCI Module processor.");
+#ifdef EIN_HD
+    module->configure(isup);
+#endif
+
     module->setReleaseSettings(releaseSettings);
     module->setRedirectionAddress(redirectionAddress);
     module->setCircuits(circuits);
