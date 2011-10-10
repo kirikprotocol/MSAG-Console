@@ -1414,6 +1414,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
           break;
         default:
           CloseMapDialog(dialog->dialogid_map,dialog->ssn,dialog->instanceId);
+          break;
       }
     }
   }catch(std::exception &e)
