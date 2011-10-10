@@ -70,9 +70,10 @@ public class Config {
     private int resend_receipts_interval;
 
     private int send_receipts_interval;
-    private int send_receipts_limit;
-    private int resend_receipts_timeout;
-    private int resend_receipts_max_timeout;
+    private int delivery_request_limit;
+    private int delivery_response_timeout;
+    private int delivery_response_max_timeout;
+    private int delivery_queue_limit;
 
     private int clean_journal_timeout;
 
@@ -172,13 +173,15 @@ public class Config {
 
         send_receipts_interval = Utils.getProperty(config, "send.receipts.interval.mls", 1000);
 
-        send_receipts_limit = Utils.getProperty(config, "send.receipts.limit", 100);
+        delivery_request_limit = Utils.getProperty(config, "send.receipts.limit", 100);
 
-        resend_receipts_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
+        delivery_response_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
 
-        resend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
+        delivery_response_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
 
         clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
+
+        delivery_queue_limit = Utils.getProperty(config, "delivery.receipt.queue.limit", 10000);
     }
 
     public void update() throws IOException, XmlConfigException, AdminException, SmppException {
@@ -235,7 +238,7 @@ public class Config {
         log.debug("Configuration updated.");
     }
 
-    public Properties getConfig(){
+    public Properties getProperties(){
         return config_with_smpp_endpoints;
     }
 
@@ -407,20 +410,24 @@ public class Config {
         return resend_receipts_interval;
     }
 
-    public int getResendReceiptsMaxTimeout(){
-        return resend_receipts_max_timeout;
+    public int getDeliveryResponseMaxTimeout(){
+        return delivery_response_max_timeout;
     }
 
-    public int getResendReceiptsTimeout(){
-        return resend_receipts_timeout;
+    public int getDeliveryResponseTimeout(){
+        return delivery_response_timeout;
     }
 
     public int getCleanJournalTimeout(){
         return clean_journal_timeout;
     }
 
-    public int getSendReceiptLimit(){
-        return send_receipts_limit;
+    public int getDeliveryRequestLimit(){
+        return delivery_request_limit;
+    }
+
+    public int getDeliveryQueueLimit(){
+        return delivery_queue_limit;
     }
 
 }

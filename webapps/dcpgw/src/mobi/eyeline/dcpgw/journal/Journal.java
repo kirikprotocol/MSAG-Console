@@ -43,10 +43,15 @@ public class Journal {
     private Hashtable<String, Hashtable<Integer, Data>> connection_sn_data_store;
     private Hashtable<String, LinkedBlockingQueue<Data>> connection_data_queue_table;
 
-    public void init() throws InitializationException{
-        this.max_journal_size_mb = Config.getInstance().getMaxJournalSize();
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-        File journal_dir = Config.getInstance().getJournalDir();
+    private int queue_limit;
+    private int request_limit;
+
+    public void init(File journal_dir, int max_journal_size_mb, int clean_timeout, int queue_limit, int request_limit) throws InitializationException{
+        this.max_journal_size_mb = max_journal_size_mb;
+        this.queue_limit = queue_limit;
+        this.request_limit = request_limit;
 
         if (!journal_dir.exists()) {
             if (!journal_dir.mkdir()) throw new InitializationException("Couldn't create journal directory.");
@@ -68,28 +73,23 @@ public class Journal {
             log.debug("Detected that journal directory already exists.");
         }
 
-        ScheduledExecutorService clean_journal_scheduler = Executors.newSingleThreadScheduledExecutor();
-        clean_journal_scheduler.scheduleWithFixedDelay(new Runnable() {
+
+        scheduler.scheduleWithFixedDelay(new Runnable() {
 
             @Override
             public void run() {
                 clean();
             }
 
-        }, Config.getInstance().getCleanJournalTimeout(), Config.getInstance().getCleanJournalTimeout(), TimeUnit.MILLISECONDS);
+        }, clean_timeout, clean_timeout, TimeUnit.MILLISECONDS);
 
-        try {
-            load();
-        } catch (CouldNotLoadJournalException e) {
-            throw new InitializationException(e);
-        }
-    }
-
-    private void load() throws CouldNotLoadJournalException {
-        log.debug("Try to load journal to the memory ...");
 
         connection_sn_data_store = new Hashtable<String, Hashtable<Integer, Data>>();
         connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<Data>>();
+    }
+
+    public void load() throws CouldNotLoadJournalException {
+        log.debug("Try to load journal to the memory ...");
 
         if (j2t.exists()){
             log.debug("Detected that file '"+j2t.getName()+"' exist.");
@@ -142,7 +142,7 @@ public class Journal {
                             if (status == Data.Status.INIT){
 
                                 if (!connection_data_queue_table.containsKey(connection))
-                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<Data>());
+                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<Data>(queue_limit));
 
 
                                 try {
@@ -150,25 +150,27 @@ public class Journal {
                                 } catch (InterruptedException e) {
                                     throw new CouldNotLoadJournalException(e);
                                 }
-                            }
-
-                            int sequence_number = data.getSequenceNumber();
-
-                            if (!connection_sn_data_store.containsKey(connection))
-                                    connection_sn_data_store.put(connection, new Hashtable<Integer, Data>(Config.getInstance().getSendReceiptLimit()));
-
-                            if (status == Data.Status.DONE
-                                    || status == Data.Status.EXPIRED_MAX_TIMEOUT
-                                        ||  status == Data.Status.EXPIRED_TIMEOUT){
-
-                                connection_sn_data_store.get(connection).remove(sequence_number);
-                                log.debug("remove from memory data: con="+connection+", sn="+sequence_number);
-
                             } else {
 
-                                connection_sn_data_store.get(connection).put(sequence_number, data);
+                                Integer sequence_number = data.getSequenceNumber();
 
-                                log.debug("add to memory: " + data.toString());
+                                if (!connection_sn_data_store.containsKey(connection))
+                                        connection_sn_data_store.put(connection, new Hashtable<Integer, Data>(request_limit));
+
+                                if (status == Data.Status.DONE
+                                        || status == Data.Status.EXPIRED_MAX_TIMEOUT
+                                            ||  status == Data.Status.EXPIRED_TIMEOUT
+                                                || status == Data.Status.DELETED){
+
+                                    connection_sn_data_store.get(connection).remove(sequence_number);
+                                    log.debug("remove from memory data: con="+connection+", sn="+sequence_number);
+
+                                } else {
+
+                                    connection_sn_data_store.get(connection).put(sequence_number, data);
+
+                                    log.debug("add to memory: " + data.toString());
+                                }
                             }
                         }
                     }
@@ -261,58 +263,57 @@ public class Journal {
 
                 pw = new PrintWriter(new FileWriter(j2t));
 
-                Set<Long> message_ids = new HashSet<Long>();
+                Set<Long> finished_message_ids = new HashSet<Long>();
                 Set<Integer> sequence_numbers = new HashSet<Integer>();
+                Set<Long> processed_message_ids = new HashSet<Long>();
 
                 buffReader1 = new BufferedReader (new FileReader(j2));
                 String line;
                 while((line = buffReader1.readLine()) != null){
                     String[] ar = line.split(sep);
-                    long message_id = Long.parseLong(ar[2].trim());
-                    Data.Status status = Data.Status.valueOf(ar[11].trim());
-                    int sequence_number = Integer.parseInt(ar[3]);
+                    long message_id = Long.parseLong(ar[3].trim());
+                    Data.Status status = Data.Status.valueOf(ar[12].trim());
+                    int sequence_number = Integer.parseInt(ar[4]);
 
                     if (status == Data.Status.DONE || status == Data.Status.EXPIRED_MAX_TIMEOUT) {
-                        message_ids.add(message_id);
+                        finished_message_ids.add(message_id);
                     } else if (status == Data.Status.EXPIRED_TIMEOUT){
                         sequence_numbers.add(sequence_number);
+                    } else if (status == Data.Status.SEND || status == Data.Status.NOT_SEND){
+                        processed_message_ids.add(message_id);
                     }
 
                 }
                 buffReader1.close();
 
-                int counter = 0;
                 buffReader2 = new BufferedReader (new FileReader(j2));
                 while((line = buffReader2.readLine()) != null){
                     String[] ar = line.split(sep);
 
-                    long message_id = Long.parseLong(ar[2].trim());
-                    String status = ar[11].trim();
-                    int sequence_number = Integer.parseInt(ar[3]);
+                    long message_id = Long.parseLong(ar[3].trim());
+                    Data.Status status = Data.Status.valueOf(ar[12].trim());
+                    int sequence_number = Integer.parseInt(ar[4]);
 
-                    if (!message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)){
-                        log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
-                        pw.println(line);
-                        pw.flush();
-                        counter++;
+                    if (status == Data.Status.INIT){
+                        if (!processed_message_ids.contains(message_id)){
+                            log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
+                            pw.println(line);
+                            pw.flush();
+                        }
+                    } else {
+                        if (!finished_message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)){
+                            log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
+                            pw.println(line);
+                            pw.flush();
+                        }
                     }
 
                 }
                 buffReader2.close();
                 pw.close();
 
-                if (counter>0){
-
-                    if (j2.delete()) log.debug("Delete file "+j2.getName());
-                    if (j2t.renameTo(j2)) log.debug("Rename file "+j2t.getName()+" to "+j2.getName());
-
-                } else {
-
-                    if (j2t.delete()) log.debug("Delete file "+j2t.getName());
-                    if (j2.delete()) log.debug("Delete file "+j2.getName());
-                    if (j2.createNewFile()) log.debug("Create file "+j2.getName());
-
-                }
+                if (j2.delete()) log.debug("Delete file "+j2.getName());
+                if (j2t.renameTo(j2)) log.debug("Rename file "+j2t.getName()+" to "+j2.getName());
 
             } catch (IOException e) {
                 log.error(e);
@@ -362,12 +363,17 @@ public class Journal {
         }
     }
 
-    public Hashtable<String, Hashtable<Integer, Data>> getSendedReceipts(){
-        return connection_sn_data_store;
+    public Hashtable<Integer, Data> getDataTable(String connection_name){
+        return connection_sn_data_store.get(connection_name);
     }
 
-    public Hashtable<String, LinkedBlockingQueue<Data>> getNotSendedReceipts(){
-        return connection_data_queue_table;
+    public LinkedBlockingQueue<Data> getDataQueue(String connection_name){
+        return connection_data_queue_table.get(connection_name);
+    }
+
+    public void shutdown(){
+        scheduler.shutdown();
+        log.debug("journal shutdown");
     }
 
 }

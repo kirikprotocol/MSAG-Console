@@ -2,6 +2,7 @@ package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.dcpgw.admin.UpdateConfigServer;
 import mobi.eyeline.dcpgw.dcp.DeliveryChangeListenerImpl;
+import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Journal;
 import mobi.eyeline.dcpgw.smpp.PDUListenerImpl;
@@ -52,9 +53,15 @@ public class Gateway extends Thread implements PDUListener {
 
         Config config = Config.getInstance();
         config.init(config_file);
-        Properties properties = config.getConfig();
+        Properties properties = config.getProperties();
 
-        Journal.getInstance().init();
+        Journal.getInstance().init(config.getJournalDir(), config.getMaxJournalSize(),
+                config.getCleanJournalTimeout(), config.getDeliveryQueueLimit(), config.getDeliveryRequestLimit());
+        try {
+            Journal.getInstance().load();
+        } catch (CouldNotLoadJournalException e) {
+            throw new InitializationException(e);
+        }
 
         PDUListenerImpl pduListener = new PDUListenerImpl();
         procQueue = new ProcessingQueue(properties, pduListener, null);
@@ -100,6 +107,7 @@ public class Gateway extends Thread implements PDUListener {
     @Override
     public void run() {
         Server.getInstance().shutdown();
+        Journal.getInstance().shutdown();
     }
 
 

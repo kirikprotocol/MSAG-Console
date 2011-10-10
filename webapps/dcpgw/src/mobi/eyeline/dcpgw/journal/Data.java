@@ -272,6 +272,28 @@ public class Data implements Cloneable{
     }
 
     public boolean equals(Data data){
+
+        boolean b1 = false;
+        if (first_sending_time != null){
+            b1 = data.getFirstSendingTime() != null && first_sending_time.equals(data.getFirstSendingTime());
+        } else {
+            b1 = data.getFirstSendingTime() == null;
+        }
+
+        boolean b2 = false;
+        if (last_resending_time != null){
+            b2 = data.getLastResendTime() != null && last_resending_time.equals(data.getLastResendTime());
+        } else {
+            b2 = data.getLastResendTime() == null;
+        }
+
+        boolean b3 = false;
+        if (sequence_number != null){
+            b3 = data.getSequenceNumber() != null && sequence_number.equals(data.getSequenceNumber());
+        } else {
+            b3 = data.getSequenceNumber() == null;
+        }
+
         return (message_id == data.getMessageId() &&
                 connection_name.equals(data.getConnectionName()) &&
                 source_address.equals(data.getSourceAddress()) &&
@@ -280,9 +302,9 @@ public class Data implements Cloneable{
                 submit_date.getTime() == data.getSubmitDate().getTime() &&
                 done_date.getTime() == data.getDoneDate().getTime() &&
                 init_time.equals(data.getInitTime()) &&
-                first_sending_time.equals(data.getFirstSendingTime()) &&
-                last_resending_time.equals(data.getLastResendTime()) &&
-                sequence_number == data.getSequenceNumber() &&
+                b1  &&
+                b2  &&
+                b3 &&
                 status == data.getStatus() &&
                 state == data.getFinalMessageState()
         );
@@ -321,7 +343,8 @@ public class Data implements Cloneable{
         EXPIRED_TIMEOUT,
         EXPIRED_MAX_TIMEOUT,
         NOT_SEND,
-        INIT
+        INIT,
+        DELETED
 
     }
 }

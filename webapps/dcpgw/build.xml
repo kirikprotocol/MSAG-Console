@@ -7,7 +7,7 @@
 
     <property name="src.dir" location="${SOURCE_DIR}/src"/>
     <property name="sql.dir" location="${SOURCE_DIR}/sql"/>
-    <property name="conf.dir" location="${SOURCE_DIR}/config"/>
+    <property name="conf.dir" location="${SOURCE_DIR}/conf"/>
     <property name="dist.dir" location="${DISTR_DIR}"/>
     <property name="lib.dir" location="${SOURCE_DIR}/lib"/>
 

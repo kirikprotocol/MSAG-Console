@@ -1,6 +1,7 @@
 package mobi.eyeline.dcpgw.dcp;
 
 import mobi.eyeline.dcpgw.exeptions.CouldNotReadMessageStateException;
+import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
 import mobi.eyeline.dcpgw.smpp.Server;
@@ -84,7 +85,13 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                     data.setStatus(Data.Status.INIT);
                     data.setInitTime(System.currentTimeMillis());
 
-                    Server.getInstance().addDeliveryReceiptData(data);
+                    try {
+                        Server.getInstance().send(data);
+                    } catch (InterruptedException e1) {
+
+                    } catch (CouldNotWriteToJournalException e1) {
+
+                    }
                 } else {
                     log.warn("Couldn't find message identifier in the final log string.");
                 }
