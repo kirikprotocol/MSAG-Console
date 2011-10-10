@@ -4,7 +4,7 @@ system/smsc smscmain \
  -lprofiler -lsystem-smppio \
  -lcore-threads -lpthread $(SOCKETLIB) -lcore-buffers -lcore-network -lsystem \
  -lsystem-smppio -lutil-config $(XERCES_LIB) -lutil -lutil-xml -lsmeman \
- -lutil-config-smeman -lrt -ladmin-util \
+ -lutil-config-smeman $(LIBRT) -ladmin-util \
  -lutil -lstore -lsms $(__OBJECTS) $(__LIBRARIES) \
   $(MAP_LIBRARIES) \
  $(XERCES_LIB) -ldl \
@@ -17,7 +17,7 @@ system/smsc smscmain \
 switch SNMP
 YES: $(SNMP_LIBS) \
 endswitch
- -lnsl \
+ $(LIBNSL) $(LIBICONV) \
 switch SNMP
 YES: -lsnmp -lsnmp-smestattable -lsnmp-smeerrtable \
 endswitch
