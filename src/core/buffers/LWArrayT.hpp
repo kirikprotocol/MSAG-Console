@@ -131,8 +131,7 @@ protected:
   //NOTE: array should not be empty!
   _SizeTypeArg lower_bound_crit_pos(const typename _TArg::criterion_type & use_val) const //throw()
   {
-    typedef typename std::iterator_traits<const _TArg*>::difference_type distance_type;
-    const _TArg * pNext = smsc::util::lower_bound_crit<const _TArg*, typename _TArg::criterion_type>(get(), (distance_type)size(), use_val);
+    const _TArg * pNext = std::lower_bound(get(), get() + size(), use_val, smsc::util::less_crit<_TArg>());
     return (pNext - get());
   }
 
