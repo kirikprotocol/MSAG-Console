@@ -15,8 +15,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#pragma hdrstop
-
 #include "String.hpp"
 
 namespace smsc{
