@@ -154,7 +154,7 @@ struct Allocator{
     {
       cnt++;ptr=ptr->next;
     }
-    printf("Pool pages:%d(%d bytes)\n",cnt,cnt*PGSZ*sizeof(T));
+    printf("Pool pages:%d(%d bytes)\n",cnt,int(cnt*PGSZ*sizeof(T)));
     for(int i=0;i<256;i++)
     {
       cnt=0;
