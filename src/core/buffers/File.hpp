@@ -730,7 +730,6 @@ public:
           throw std::runtime_error("invalid whence parameter");
         }
       }
-      if(bufferPosition<0)bufferPosition=0;
       if(bufferPosition>bufferSize)ResizeBuffer(bufferPosition);
     }else
     {
