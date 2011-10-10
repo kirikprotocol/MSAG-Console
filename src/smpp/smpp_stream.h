@@ -348,7 +348,7 @@ inline void fillX(SmppStream* s,OStr& str){ fillOctetStr(s,str); }
 inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
 {
   __check_smpp_stream_invariant__ ( stream );
-  if(!(octets >= 0 && octets <= (stream->dataLength-stream->dataOffset)))
+  if(octets > (stream->dataLength-stream->dataOffset))
   {
     throw std::runtime_error("Broken octet str");
   };
