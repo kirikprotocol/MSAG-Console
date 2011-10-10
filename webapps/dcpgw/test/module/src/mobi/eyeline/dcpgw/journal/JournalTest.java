@@ -9,11 +9,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Hashtable;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import test.CalcListener;
 
 public class JournalTest extends T {
 
-    private static Journal journal;
+    private static Journal journal = Journal.getInstance();
     private static File j1;
     private static File j2;
     private static File j2t;
@@ -38,7 +40,7 @@ public class JournalTest extends T {
         registerTestObject(j2t);
         j2t.delete();
 
-        journal = new Journal(dir, 1);
+        journal.init(dir, 1, 30000000, 10000, 100);
         registerTestObject(journal);
     }
 
@@ -56,68 +58,79 @@ public class JournalTest extends T {
 
         boolean isEquals = e.equals(d);
         Assert.assertTrue("Journal write doesn't work.", isEquals);
-
-        j1.delete();
     }
 
     @Test
     public void get020loadTest() throws Exception {
         Hashtable<Integer, Data> t1 = new Hashtable<Integer, Data>();
         for(int i=0; i<100; i++){
-            Data d = createUniqueData();
+            Data d = createData();
             registerTestObject(d);
             t1.put(d.getSequenceNumber(), d);
             journal.write(d);
         }
 
-        Hashtable<Integer, Data> t2 = journal.load();
+        journal.load();
+
+        Hashtable<Integer, Data> sn_data_store = journal.getDataTable(con);
+
         for(Integer sn: t1.keySet()) {
             Data expected = t1.get(sn);
-            Data loaded = t2.get(sn);
+            Data loaded = sn_data_store.get(sn);
             Assert.assertNotNull("Loaded data is null.", loaded);
 
             boolean isEquals = expected.equals(loaded);
             Assert.assertTrue("Expected and loaded data objects differ.", isEquals);
         }
-
-        System.out.println(j1.delete());
     }
 
     @Test
     public void get021loadTest() throws Exception {
-        Data d = createUniqueData();
+        Data d = createData();
         journal.write(d);
 
         d.setStatus(Data.Status.EXPIRED_TIMEOUT);
         journal.write(d);
 
-        Data d1 = createUniqueData();
+        Data d1 = createData();
         journal.write(d1);
 
         d1.setStatus(Data.Status.EXPIRED_MAX_TIMEOUT);
         journal.write(d1);
 
-        Data d2 = createUniqueData();
+        Data d2 = createData();
         journal.write(d2);
 
         d2.setStatus(Data.Status.DONE);
         journal.write(d2);
 
-        Data expected = createUniqueData();
-        journal.write(expected);
+        Data d3 = createData();
+        journal.write(d3);
 
-        Hashtable<Integer, Data> t = journal.load();
-        Data loaded = t.get(expected.getSequenceNumber());
-        boolean isEquals = expected.equals(loaded);
-        Assert.assertTrue("Data object wrong.", isEquals);
+        d3.setStatus(Data.Status.DELETED);
+        journal.write(d3);
 
-        j1.delete();
+        journal.load();
+
+        Hashtable<Integer, Data> sn_data_store = journal.getDataTable(con);
+
+        Assert.assertTrue("Not all objects was removed.", sn_data_store.size() == 0);
     }
 
-    /*@Test
+    @Test
     public void get022loadTest() throws Exception {
+        String con = "con";
+        Data expected = createInitialData();
+        journal.write(expected);
 
-    }*/
+        journal.load();
+
+        LinkedBlockingQueue<Data> queue = journal.getDataQueue(con);
+        Data loaded = queue.poll();
+
+        boolean isEquals = expected.equals(loaded);
+        Assert.assertTrue("Expected and loaded data objects differ.", isEquals);
+    }
 
     @Test
     public void get03cleanTest() throws Exception{
@@ -207,6 +220,15 @@ public class JournalTest extends T {
 
         j1.delete();
         j2.delete();
+    }
+
+    @After
+    public void tearDown(){
+        if (journal.getDataQueue(con) != null) journal.getDataQueue(con).clear();
+        if (journal.getDataTable(con) != null) journal.getDataTable(con).clear();
+        j1.delete();
+        j2.delete();
+        j2t.delete();
     }
 
     @AfterClass

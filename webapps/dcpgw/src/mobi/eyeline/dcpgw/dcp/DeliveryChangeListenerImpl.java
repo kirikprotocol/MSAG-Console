@@ -85,13 +85,8 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                     data.setStatus(Data.Status.INIT);
                     data.setInitTime(System.currentTimeMillis());
 
-                    try {
-                        Server.getInstance().send(data);
-                    } catch (InterruptedException e1) {
+                    Server.getInstance().send(data);
 
-                    } catch (CouldNotWriteToJournalException e1) {
-
-                    }
                 } else {
                     log.warn("Couldn't find message identifier in the final log string.");
                 }

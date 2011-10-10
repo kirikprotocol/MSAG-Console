@@ -102,7 +102,7 @@ public class Server{
         server.shutdown();
     }
 
-    public void send(Data data) throws InterruptedException, CouldNotWriteToJournalException {
+    public void send(Data data){
         String connection_name = data.getConnectionName();
 
         Connection connection = connections.get(connection_name);

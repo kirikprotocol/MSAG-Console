@@ -1,7 +1,6 @@
 package test;
 
-//import mobi.eyeline.dcpgw.Client;
-import mobi.eyeline.dcpgw.FinalMessageState;
+import mobi.eyeline.dcpgw.smpp.FinalMessageState;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
@@ -21,6 +20,8 @@ public abstract class T {
     private static SimpleDateFormat sdf2 = new SimpleDateFormat("ddHHmmss");
 
     private static AtomicLong al = new AtomicLong(0);
+
+    protected static final String con = "con";
 
     public static void registerTestObject(Object object){
         testObjects.add(object);
@@ -52,7 +53,7 @@ public abstract class T {
 
     public static Data createStaticData(){
         Data data = new Data();
-        data.setConnectionName("systemId");
+        data.setConnectionName(con);
 
         try {
             data.setDestinationAddress(new Address("79139118729"));
@@ -63,8 +64,7 @@ public abstract class T {
 
         data.setDoneDate(date);
         data.setSubmitDate(date);
-        data.setFirstSendingTime(time);
-        data.setLastResendTime(time);
+        data.setInitTime(time);
         data.setStatus(Data.Status.SEND);
         data.setNsms(1);
         data.setSequenceNumber(1);
@@ -74,9 +74,9 @@ public abstract class T {
         return data;
     }
 
-    public static Data createUniqueData(){
+    public static Data createData(){
         Data data = new Data();
-        data.setConnectionName("systemId");
+        data.setConnectionName(con);
 
         try {
             data.setDestinationAddress(new Address("79139118729"));
@@ -86,6 +86,7 @@ public abstract class T {
         }
 
         Calendar cal = Calendar.getInstance();
+        data.setInitTime(time);
         data.setSubmitDate(cal.getTime());
         data.setDoneDate(cal.getTime());
         long time = System.currentTimeMillis();
@@ -101,9 +102,32 @@ public abstract class T {
         return data;
     }
 
+    public static Data createInitialData(){
+        Data data = new Data();
+        data.setConnectionName(con);
+
+        try {
+            data.setDestinationAddress(new Address("79139118729"));
+            data.setSourceAddress(new Address("11111"));
+        } catch (InvalidAddressFormatException e) {
+            e.printStackTrace();
+        }
+
+        Calendar cal = Calendar.getInstance();
+        data.setInitTime(time);
+        data.setSubmitDate(cal.getTime());
+        data.setDoneDate(cal.getTime());
+        long time = System.currentTimeMillis();
+        data.setStatus(Data.Status.INIT);
+        data.setNsms(1);
+        data.setFinalMessageState(FinalMessageState.DELIVRD);
+        data.setMessageId(System.currentTimeMillis());
+        return data;
+    }
+
     public static Data createUniqueData(Data.Status status){
         Data data = new Data();
-        data.setConnectionName("systemId");
+        data.setConnectionName(con);
 
         try {
             data.setDestinationAddress(new Address("79139118729"));
@@ -116,6 +140,7 @@ public abstract class T {
         data.setSubmitDate(cal.getTime());
         data.setDoneDate(cal.getTime());
         long time = System.currentTimeMillis();
+        data.setInitTime(time);
         data.setFirstSendingTime(time);
         data.setLastResendTime(time);
         data.setStatus(status);

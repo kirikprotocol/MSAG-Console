@@ -1,9 +1,0 @@
-<!ENTITY % sectionbody "(section | param)*">
-
-<!ELEMENT config %sectionbody;>
-
-<!ELEMENT section %sectionbody;>
-<!ATTLIST section name CDATA #REQUIRED>
-
-<!ELEMENT param (#PCDATA)>
-<!ATTLIST param name CDATA #REQUIRED type (string|int|bool) #IMPLIED>
