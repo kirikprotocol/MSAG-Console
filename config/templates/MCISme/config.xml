@@ -75,6 +75,13 @@
 	    <param name="timeout" type="int">10</param>
         </section>  
 	
+  <section name="isup">
+    <param name="userid" type="int">41</param>
+    <param name="cpMgrHostAndPort" type="string">@ss7cpmgr@</param>
+    <param name="userinstance" type="int">1</param>
+    <param name="remoteInstancies" type="string">1,2</param>
+  </section>
+	
         <section name="Circuits">
 	    <section name="MSC1">
 		<param name="hsn" type="int">1</param>
