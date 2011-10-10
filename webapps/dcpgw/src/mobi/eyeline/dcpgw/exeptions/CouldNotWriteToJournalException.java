@@ -12,10 +12,6 @@ public class CouldNotWriteToJournalException extends Exception{
          super(message);
      }
 
-     public CouldNotWriteToJournalException(String message, Throwable cause){
-         super(message, cause);
-     }
-
      public CouldNotWriteToJournalException(Throwable cause){
          super(cause);
      }

@@ -12,10 +12,6 @@ public class CouldNotLoadJournalException extends Exception{
          super(message);
      }
 
-     public CouldNotLoadJournalException(String message, Throwable cause){
-         super(message, cause);
-     }
-
      public CouldNotLoadJournalException(Throwable cause){
          super(cause);
      }
