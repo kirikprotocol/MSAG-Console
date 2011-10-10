@@ -160,6 +160,7 @@ inline unsigned ConvertText27bit(
     default:
       PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]],bit7buf_end);
       (*elen) += 1;
+      break;
     }
 #undef __pchar
 #undef __escape
