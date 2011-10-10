@@ -84,6 +84,7 @@ void SmeManager::statusSme(Variant& result){
                     break;
                default:
                     tmpStr += "unknown,";
+                    break;
                }
                char inIP[128], outIP[128];
                for(int i=0; i<=127; i++)
