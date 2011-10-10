@@ -87,7 +87,8 @@ public:
     ///   =0 message is ready (not limited by active period).
     ///   >0 message is not ready (number of MICROseconds to wait).
     int getNextMessage( usectime_type currentTime,
-                        int weekTime, Message& msg );
+                        int weekTime, Message& msg,
+                        timediff_type minSmscValidityPeriod );
 
     /// change message state when non-transaction response has come.
     /// message is left in the cache.

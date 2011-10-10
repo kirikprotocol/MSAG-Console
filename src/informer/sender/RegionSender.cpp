@@ -100,22 +100,6 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         currentTime_ = currentTime;
         const msgtime_type now = msgtime_type(currentTime_ / tuPerSec);
 
-        /*
-        struct tm tmnow;
-        {
-            const time_t tmp = time_t(now);
-            if ( !gmtime_r(&tmp,&tmnow) ) {
-                throw InfosmeException(EXC_SYSTEM,"R=%u gmtime_r()",getRegionId());
-            }
-        }
-        static const int daynight = 24*3600;
-        static const int aweek = 7*daynight;
-        // monday is 0..daynight-1, tue is daynight..daynight*2-1, etc.
-        weekTime_ = int( ((tmnow.tm_wday+6)*daynight +
-                          (now % daynight) + 
-                          region_->getTimezone()) % aweek );
-         */
-
         smsc::core::synchronization::MutexGuard mg(lock_);
         weekTime_ = region_->getLocalWeekTime(now,&localTime_);
 
@@ -134,10 +118,6 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         }
         
         nchunks_ = 0;
-        // smsc_log_debug(log_,"R=%u processing weekTime=%u curTime=%llu locTime=%+d",
-        // getRegionId(),weekTime_,
-        // msgTimeToYmd(msgtime_type(currentTime_/tuPerSec)),
-        // int(localTime_ - msgtime_type(currentTime_/tuPerSec)));
         const unsigned toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
         if (toSleep>0) {
             // smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
@@ -239,7 +219,8 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
 
             const int sleepTimeNotReady = ptr->getNextMessage(currentTime_,
                                                               weekTime_,
-                                                              msg_);
+                                                              msg_,
+                                                              conn_->getMinValidityTime());
             if (sleepTimeNotReady <= 0) {
                 // smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
                 // unsigned(getRegionId()),

@@ -1,3 +1,6 @@
+2011-10-10 15:38 bukind
+  bugfix: not sending messages near the activity end
+
 =====================================================================
 2011-08-31 13:46 bukind informer-build-20110831
 2011-09-01 19:03 bukind

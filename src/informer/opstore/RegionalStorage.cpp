@@ -327,7 +327,9 @@ bool RegionalStorage::isEndDateReached( msgtime_type currentTime )
 
 
 int RegionalStorage::getNextMessage( usectime_type usecTime,
-                                     int weekTime, Message& msg )
+                                     int weekTime,
+                                     Message& msg,
+                                     timediff_type minSmscValidityPeriod )
 {
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_ MTXWHEREPOST);
@@ -350,6 +352,10 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                        getRegionId(), dlvId, weekTime, secondsReady );
         if ( secondsReady > 100 ) { secondsReady = 100; }
         return secondsReady*tuPerSec;
+    } else if ( -secondsReady < minSmscValidityPeriod ) {
+        smsc_log_debug(log_,"R=%u/D=%u is on active period, but smsc validity period is too small",
+                       getRegionId(), dlvId );
+        return 100*tuPerSec;
     }
 
     /// check speed control

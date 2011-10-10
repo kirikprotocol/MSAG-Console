@@ -112,6 +112,10 @@ public:
     /// get stats
     void getSmscStats( usectime_type currentTime, CoreSmscStats& stats );
 
+    inline timediff_type getMinValidityTime() const {
+        return smscConfig_.minValidityTime;
+    }
+
 private:
     virtual void handleEvent( smsc::sme::SmppHeader* pdu );
     virtual void handleError( int errorcode );
