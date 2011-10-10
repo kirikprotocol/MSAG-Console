@@ -13,10 +13,11 @@
 #endif
 #define __CORE_BUFFERS_LWARRAY_DEFS
 
-#include <algorithm>
+//#include <algorithm>
 
 #include "util/Exception.hpp"
 #include "util/IntTypes.hpp"
+#include "util/ObjWithCriterionT.hpp"
 #include "core/buffers/LWArrayTraitsT.hpp"
 
 namespace smsc {
@@ -44,13 +45,17 @@ struct LWArrayResizerDflt {
  * allocates new array on heap.
  * ************************************************************************* */
 template <
-    class _TArg           //Element of array, must have default & copying
-                          //constructors (operator<() in case of sorted array)
-  , typename _SizeTypeArg //must be an unsigned integer type, implicitly
+  class _TArg       //Element of array, must have default & copying constructors.
+                    //If sorted array functionality is required,
+                    //operator<() must be defined.
+                    //If sorted by criterion array functionality is required,
+                    //smsc::util::ObjWithCriterion_T<> must be the parent type.
+
+, typename _SizeTypeArg //must be an unsigned integer type, implicitly
                           //restricts maximum number of elements in array!
-  , template <class _TypArg>
+, template <class _TypArg>
     class _TraitsArg = LWArrayTraits_T //assume non-POD objects by default
-  , template <typename _SzArg>
+, template <typename _SzArg>
     class _ResizerArg = LWArrayResizerDflt
 >
 class LWArrayExtension_T {
@@ -112,10 +117,22 @@ protected:
     return true;
   }
 
+  //Returns the offset of first element that is grater or equal to given value.
+  //If no such element exists, zero is returned.
   //NOTE: array should not be empty!
   _SizeTypeArg lower_bound_pos(const _TArg & use_val) const //throw()
   {
     const _TArg * pNext = std::lower_bound(get(), get() + size(), use_val);
+    return (pNext - get());
+  }
+
+  //Returns the offset of first element having criterion that is grater or equal to given value.
+  //If no such element exists, zero is returned.
+  //NOTE: array should not be empty!
+  _SizeTypeArg lower_bound_crit_pos(const typename _TArg::criterion_type & use_val) const //throw()
+  {
+    typedef typename std::iterator_traits<const _TArg*>::difference_type distance_type;
+    const _TArg * pNext = smsc::util::lower_bound_crit<const _TArg*, typename _TArg::criterion_type>(get(), (distance_type)size(), use_val);
     return (pNext - get());
   }
 
@@ -530,6 +547,14 @@ public:
     return  (atPos < _numElem) ? atPos : npos();
   }
 
+  //Returns the position of first element having criterion that is grater or equal to given value.
+  //If no such element exists, Not-a-Position is returned.
+  size_type lower_bound_crit(const typename value_type::criterion_type & use_val) const //throw()
+  {
+    size_type atPos = _numElem ? lower_bound_crit_pos(use_val) : 0;
+    return  (atPos < _numElem) ? atPos : npos();
+  }
+
   //Returns the position of first element that is equal to given value.
   //If no such element exists, Not-A-Position is returned.
   size_type find(const value_type & use_val) const //throw()
@@ -539,19 +564,34 @@ public:
             && !(_buf[atPos] < use_val) && !(use_val < _buf[atPos])) ?
                 atPos : npos();
   }
+
+  //Returns the position of first element having criterion that is equal to given value.
+  //If no such element exists, Not-A-Position is returned.
+  size_type find_crit(const typename value_type::criterion_type & use_crit) const //throw()
+  {
+    size_type atPos = lower_bound_crit_pos(use_crit);
+    return ((atPos < _numElem)
+            && !(_buf[atPos].getCriterion() < use_crit) && !(use_crit < _buf[atPos].getCriterion())) ?
+                atPos : npos();
+  }
 };
 
 /* ************************************************************************* *
  * Lightweight Array: 
  * ************************************************************************* */
 template <
-    class _TArg                 //Element of array, must have a default & copying constructors!
-  , typename _SizeTypeArg       //must be an unsigned integer type, implicitly
-                                //restricts maximum number of elements in array!
-  , _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
-  , template <class _TypArg>
+  class _TArg       //Element of array, must have default & copying constructors.
+                    //If sorted array functionality is required,
+                    //operator<() must be defined.
+                    //If sorted by criterion array functionality is required,
+                    //smsc::util::ObjWithCriterion_T<> must be the parent type.
+
+, typename _SizeTypeArg       //must be an unsigned integer type, implicitly
+                              //restricts maximum number of elements in array!
+, _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
+, template <class _TypArg>
     class _TraitsArg = LWArrayTraits_T  //assume non-POD objects by default
-  , template <typename _SzArg>
+, template <typename _SzArg>
     class _ResizerArg = LWArrayResizerDflt
 >
 class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg, _TraitsArg, _ResizerArg> {
