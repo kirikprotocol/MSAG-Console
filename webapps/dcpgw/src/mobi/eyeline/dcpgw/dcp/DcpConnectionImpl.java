@@ -108,6 +108,8 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     }
 
     public void sendMessages(int delivery_id){
+        long t = System.currentTimeMillis();
+
         LinkedBlockingQueue<Message> queue = delivery_id_queue_map.get(delivery_id);
 
         if (!queue.isEmpty()){
@@ -124,7 +126,9 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
             try{
                 log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
 
+
                 long[] informer_message_ids = addDeliveryMessages(delivery_id, list);
+
                 log.debug("Successfully add list with messages to delivery with id '"+delivery_id+"'.");
 
                 DeliveryStatistics delivery_statistics = getDeliveryState(delivery_id);
@@ -184,13 +188,16 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         } else {
             log.debug(delivery_id+"_queue is empty.");
         }
+        long dif = System.currentTimeMillis() - t;
+        log.debug("Done send messages task, "+dif+" mls");
 
     }
 
     public void run() {
-        log.debug("Start connection for "+informer_user+".");
+        log.debug("Start dcp connection for "+informer_user+".");
         while(!isInterrupted()){
 
+            log.debug("send task queue size "+sendTaskQueue.size());
             while(!sendTaskQueue.isEmpty()){
                 SendTask sendTask = sendTaskQueue.poll();
                 sendTask.run();

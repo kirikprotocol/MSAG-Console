@@ -20,7 +20,9 @@ import mobi.eyeline.smpp.api.processing.QueueException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 public class Gateway extends Thread implements PDUListener {
@@ -109,7 +111,5 @@ public class Gateway extends Thread implements PDUListener {
         Server.getInstance().shutdown();
         Journal.getInstance().shutdown();
     }
-
-
 
 }

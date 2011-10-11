@@ -4,6 +4,7 @@ import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.*;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
+import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -109,9 +110,11 @@ public class Client extends Thread implements PDUListener {
 
                 SubmitSMResp submitSMResp = (SubmitSMResp) pdu;
                 String message_id_str = submitSMResp.getMessageId();
-                logger.debug("SubmitSMResp messageId="+message_id_str);
-                long message_id = Long.parseLong(message_id_str);
-                logger.debug("message_id="+message_id);
+                if (submitSMResp.getStatus() == Status.OK){
+                    logger.debug("SubmitSMResp messageId="+message_id_str);
+                } else {
+                    logger.debug("SubmitSMResp status="+submitSMResp.getStatus());
+                }
 
         }
         return false;

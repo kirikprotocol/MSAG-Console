@@ -30,6 +30,7 @@ public class PDUListenerImpl implements PDUListener {
 
     @Override
     public boolean handlePDU(PDU pdu) {
+        log.debug("handle " + pdu.getType()+": sn="+pdu.getSequenceNumber());
         switch (pdu.getType()) {
             case SubmitSM:{
 
@@ -99,7 +100,7 @@ public class PDUListenerImpl implements PDUListener {
 
             case DataSM: {
 
-                 long time = System.currentTimeMillis();
+                long time = System.currentTimeMillis();
                 long message_id = time + al.incrementAndGet();
 
                 Message request = (Message) pdu;

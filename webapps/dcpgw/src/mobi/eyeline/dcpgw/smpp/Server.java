@@ -129,9 +129,11 @@ public class Server{
         } else {
 
             if (!deleted_connections.contains(connection_name)) {
-                log.error("Couldn't handle DeliverSMResp with message id "+resp.getMessageId()+" and sequence number "+resp.getSequenceNumber()+", couldn't find smpp connection "+connection_name);
+                log.error("Couldn't handle DeliverSMResp with message id "+resp.getMessageId()+" and sequence number "+
+                        resp.getSequenceNumber()+", couldn't find smpp connection "+connection_name);
             } else {
-                log.debug("Couldn't handle DeliverSMResp with message_id "+resp.getMessageId()+" and sequence number "+resp.getSequenceNumber()+", connection "+connection_name+" was deleted or disabled.");
+                log.debug("Couldn't handle DeliverSMResp with message_id "+resp.getMessageId()+" and sequence number "+
+                        resp.getSequenceNumber()+", connection "+connection_name+" was deleted or disabled.");
             }
             return false;
         }

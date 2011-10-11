@@ -156,9 +156,6 @@ public class JournalTest extends T {
 
         boolean empty2 = j2.length() == 0;
         Assert.assertTrue("Second journal not empty.", empty2);
-
-        j1.delete();
-        j2.delete();
     }
 
     @Test
@@ -188,9 +185,6 @@ public class JournalTest extends T {
         Data loaded2 = Data.parse(line2);
         isEquals = expected2.equals(loaded2);
         Assert.assertTrue("Second data object wrong.", isEquals);
-
-        j1.delete();
-        j2.delete();
     }
 
     @Test
@@ -217,9 +211,49 @@ public class JournalTest extends T {
         d = Data.parse(line);
         boolean isEquals = expected.equals(d);
         Assert.assertTrue("Data object wrong.", isEquals);
+    }
 
-        j1.delete();
-        j2.delete();
+    @Test
+    public void get06cleanTest() throws Exception{
+        Data d = createUniqueData(Data.Status.INIT);
+        journal.write(d);
+
+        d.setStatus(Data.Status.SEND);
+        journal.write(d);
+
+        d.setStatus(Data.Status.DONE);
+        journal.write(d);
+
+        journal.clean();
+
+        boolean empty = j1.length() == 0;
+        Assert.assertTrue("First journal not empty.", empty);
+
+        empty = j2.length() == 0;
+        Assert.assertTrue("Second journal not empty.", empty);
+    }
+
+    @Test
+    public void get07cleanTest() throws Exception{
+        Data d = createUniqueData(Data.Status.INIT);
+        journal.write(d);
+
+        d.setStatus(Data.Status.SEND);
+        journal.write(d);
+
+        journal.clean();
+
+        boolean empty = j1.length() == 0;
+        Assert.assertTrue("First journal not empty.", empty);
+
+        BufferedReader br = new BufferedReader(new FileReader(j2));
+        String line = br.readLine();
+        br.close();
+        Assert.assertNotNull("Couldn't read first line.", line);
+
+        Data loaded = Data.parse(line);
+        boolean isEquals = d.equals(loaded);
+        Assert.assertTrue("Data object wrong.", isEquals);
     }
 
     @After

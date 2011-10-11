@@ -48,6 +48,7 @@ public class Journal {
     private int request_limit;
 
     public void init(File journal_dir, int max_journal_size_mb, int clean_timeout, int queue_limit, int request_limit) throws InitializationException{
+        log.debug("Try to initialize journal ...");
         this.max_journal_size_mb = max_journal_size_mb;
         this.queue_limit = queue_limit;
         this.request_limit = request_limit;
@@ -85,10 +86,12 @@ public class Journal {
 
         connection_sn_data_store = new Hashtable<String, Hashtable<Integer, Data>>();
         connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<Data>>();
+
+        log.debug("Initialize journal.");
     }
 
     public void load() throws CouldNotLoadJournalException {
-        log.debug("Try to load journal to the memory ...");
+        log.debug("Try to load journal ...");
 
         if (j2t.exists()){
             log.debug("Detected that file '"+j2t.getName()+"' exist.");
@@ -181,7 +184,7 @@ public class Journal {
             }
         }
 
-        log.debug("Successfully load journal in memory.");
+        log.debug("Successfully load journal.");
     }
 
     public void write(Data data) throws CouldNotWriteToJournalException {
@@ -262,21 +265,23 @@ public class Journal {
 
                 pw = new PrintWriter(new FileWriter(j2t));
 
+
                 Set<Long> finished_message_ids = new HashSet<Long>();
                 Set<Integer> sequence_numbers = new HashSet<Integer>();
                 Set<Long> processed_message_ids = new HashSet<Long>();
 
                 buffReader1 = new BufferedReader (new FileReader(j2));
+
                 String line;
                 while((line = buffReader1.readLine()) != null){
                     String[] ar = line.split(sep);
                     long message_id = Long.parseLong(ar[3].trim());
                     Data.Status status = Data.Status.valueOf(ar[12].trim());
-                    int sequence_number = Integer.parseInt(ar[4]);
 
                     if (status == Data.Status.DONE || status == Data.Status.EXPIRED_MAX_TIMEOUT) {
                         finished_message_ids.add(message_id);
                     } else if (status == Data.Status.EXPIRED_TIMEOUT){
+                        int sequence_number = Integer.parseInt(ar[4]);
                         sequence_numbers.add(sequence_number);
                     } else if (status == Data.Status.SEND || status == Data.Status.NOT_SEND){
                         processed_message_ids.add(message_id);
@@ -284,35 +289,58 @@ public class Journal {
 
                 }
                 buffReader1.close();
+                log.debug("Read file "+j2);
 
+                int counter = 0;
                 buffReader2 = new BufferedReader (new FileReader(j2));
+
                 while((line = buffReader2.readLine()) != null){
                     String[] ar = line.split(sep);
 
                     long message_id = Long.parseLong(ar[3].trim());
                     Data.Status status = Data.Status.valueOf(ar[12].trim());
-                    int sequence_number = Integer.parseInt(ar[4]);
+
 
                     if (status == Data.Status.INIT){
                         if (!processed_message_ids.contains(message_id)){
                             log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();
+                            counter++;
                         }
                     } else {
+                        int sequence_number = Integer.parseInt(ar[4]);
                         if (!finished_message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)){
                             log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();
+                            counter++;
                         }
                     }
 
                 }
                 buffReader2.close();
                 pw.close();
+                log.debug("Write to file "+j2t);
 
-                if (j2.delete()) log.debug("Delete file "+j2.getName());
-                if (j2t.renameTo(j2)) log.debug("Rename file "+j2t.getName()+" to "+j2.getName());
+                boolean b;
+                if (counter>0){
+
+                    b = j2.delete();
+                    log.debug("Delete file "+j2.getName()+": "+b);
+                    b = j2t.renameTo(j2);
+                    log.debug("Rename file "+j2t.getName()+" to "+j2.getName()+": "+b);
+
+                } else {
+
+                    b = j2t.delete();
+                    log.debug("Delete file "+j2t.getName()+": "+b);
+                    b = j2.delete();
+                    log.debug("Delete file "+j2.getName()+": "+b);
+                    b = j2.createNewFile();
+                    log.debug("Create file "+j2.getName()+": "+b);
+
+                }
 
             } catch (IOException e) {
                 log.error(e);
@@ -355,9 +383,12 @@ public class Journal {
 
             bufRead.close();
 
-            if (j1.delete()) log.debug("Delete file "+j1.getName());
+            boolean b = j1.delete();
+            log.debug("Delete file "+j1.getName()+": "+b);
 
-            if (j1.createNewFile()) log.debug("Create file "+j1.getName());
+            b = j1.createNewFile();
+            log.debug("Create file "+j1.getName()+": "+b);
+
             log.debug("Successfully append journal.");
         }
     }

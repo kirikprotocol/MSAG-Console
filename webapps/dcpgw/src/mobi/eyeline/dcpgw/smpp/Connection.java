@@ -54,6 +54,9 @@ public class Connection {
     private int response_max_timeout;
     private int request_limit;
 
+    ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    ScheduledExecutorService resend_delivery_receipts_scheduler = Executors.newSingleThreadScheduledExecutor();
+
     public Connection(String name){
         this.name = name;
 
@@ -64,17 +67,23 @@ public class Connection {
         sn_data_table = Journal.getInstance().getDataTable(name);
         queue = Journal.getInstance().getDataQueue(name);
 
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        if (sn_data_table == null) sn_data_table = new Hashtable<Integer, Data>();
+        if (queue == null) queue = new LinkedBlockingQueue<Data>(config.getDeliveryQueueLimit());
+
+        int t1 = config.getSendReceiptsInterval();
+
         scheduler.scheduleWithFixedDelay(new Runnable() {
 
             @Override
             public void run() {
-                send();
+                 send();
             }
 
-        }, config.getSendReceiptsInterval(), config.getSendReceiptsInterval(), TimeUnit.SECONDS);
+        }, t1, t1, TimeUnit.MILLISECONDS);
+        log.debug("Initialize scheduler with send interval "+t1+" mls.");
 
-        ScheduledExecutorService resend_delivery_receipts_scheduler = Executors.newSingleThreadScheduledExecutor();
+        int t2 = config.getResendReceiptsInterval();
+
         resend_delivery_receipts_scheduler.scheduleWithFixedDelay(new Runnable() {
 
             @Override
@@ -82,7 +91,8 @@ public class Connection {
                 resend();
             }
 
-        }, config.getResendReceiptsInterval(), config.getResendReceiptsInterval(), TimeUnit.SECONDS);
+        }, t2 , t2, TimeUnit.SECONDS);
+        log.debug("Initialize scheduler with resend interval " + t2 + " sec.");
     }
 
     void send(Data data){
@@ -91,7 +101,7 @@ public class Connection {
 
         try{
             queue.add(data);
-            log.debug("add "+data.getMessageId()+"_rcpt to "+name+"_queue");
+            log.debug("add "+data.getMessageId()+"_rcpt to "+name+"_delivery_queue, size "+queue.size());
         } catch (IllegalStateException e) {
             log.warn(name+"_queue full, couldn't add delivery receipt with message_id "+data.getMessageId());
         }
@@ -103,73 +113,86 @@ public class Connection {
         }
     }
 
-    private void send(){
+    public void send(){
+
+        if (queue.isEmpty()) {
+            //log.debug(name+"_delivery_queue is empty.");
+            return;
+        } else {
+            log.debug(name+"_delivery_queue size is "+queue.size()+", "+name+"_sn_data_table size is "+sn_data_table.size());
+        }
 
         synchronized (monitor) {
 
             if (sn_data_table.size() < request_limit){
 
                 int available = request_limit - sn_data_table.size();
+                log.debug(name+"_con, available="+available);
                 for(int i=0; i < available; i++){
 
                     Data data = queue.poll();
 
-                    long first_sending_time = System.currentTimeMillis();
-                    data.setFirstSendingTime(first_sending_time);
+                    if (data != null){
 
-                    long message_id = data.getMessageId();
-                    int nsms = data.getNsms();
-                    Date done_date = data.getDoneDate();
-                    Date submit_date = data.getSubmitDate();
-                    Address source_address = data.getSourceAddress();
-                    Address destination_address = data.getDestinationAddress();
-                    FinalMessageState state = data.getFinalMessageState();
+                        long first_sending_time = System.currentTimeMillis();
+                        data.setFirstSendingTime(first_sending_time);
 
-                    String message = "id:" + message_id +
-                                     " sub:" + nsms +
-                                     " dlvrd:" + nsms +
-                                     " submit date:" + sdf.format(submit_date) +
-                                     " done date:" + sdf.format(done_date) +
-                                     " stat:" + state +
-                                     " err:000 Text:";
+                        long message_id = data.getMessageId();
+                        int nsms = data.getNsms();
+                        Date done_date = data.getDoneDate();
+                        Date submit_date = data.getSubmitDate();
+                        Address source_address = data.getSourceAddress();
+                        Address destination_address = data.getDestinationAddress();
+                        FinalMessageState state = data.getFinalMessageState();
 
-                    log.debug("Receipt message: " + message);
+                        String message = "id:" + message_id +
+                                         " sub:" + nsms +
+                                         " dlvrd:" + nsms +
+                                         " submit date:" + sdf.format(submit_date) +
+                                         " done date:" + sdf.format(done_date) +
+                                         " stat:" + state +
+                                         " err:000 Text:";
 
-                    DeliverSM deliverSM = new DeliverSM();
-                    deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
-                    deliverSM.setSourceAddress(destination_address);
-                    deliverSM.setDestinationAddress(source_address);
-                    deliverSM.setConnectionName(name);
-                    deliverSM.setMessage(message);
+                        log.debug("Receipt message: " + message);
 
-                    Date date = cal.getTime();
-                    int sn = Integer.parseInt(sdf2.format(date)) + ai.incrementAndGet();
-                    deliverSM.setSequenceNumber(sn);
+                        DeliverSM deliverSM = new DeliverSM();
+                        deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
+                        deliverSM.setSourceAddress(destination_address);
+                        deliverSM.setDestinationAddress(source_address);
+                        deliverSM.setConnectionName(name);
+                        deliverSM.setMessage(message);
 
-                    data.setSequenceNumber(sn);
+                        Date date = cal.getTime();
+                        int sn = Integer.parseInt(sdf2.format(date)) + ai.incrementAndGet();
+                        deliverSM.setSequenceNumber(sn);
 
-                    try {
-                        Server.getInstance().send(deliverSM);
-                        log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
-                        data.setStatus(Data.Status.SEND);
-                        sn_data_table.put(sn, data);
+                        data.setSequenceNumber(sn);
 
                         try {
-                            Journal.getInstance().write(data);
-                        } catch (CouldNotWriteToJournalException e) {
-                            log.error(e);
-                        }
-                    } catch (SmppException e) {
-                        log.warn(e);
+                            Server.getInstance().send(deliverSM);
+                            log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
+                            data.setStatus(Data.Status.SEND);
+                            sn_data_table.put(sn, data);
 
-                        data.setStatus(Data.Status.NOT_SEND);
-                        sn_data_table.put(sn, data);
+                            try {
+                                Journal.getInstance().write(data);
+                            } catch (CouldNotWriteToJournalException e) {
+                                log.error(e);
+                            }
+                        } catch (SmppException e) {
+                            log.warn(e);
 
-                        try {
-                            Journal.getInstance().write(data);
-                        } catch (CouldNotWriteToJournalException e2) {
-                            log.error(e2);
+                            data.setStatus(Data.Status.NOT_SEND);
+                            sn_data_table.put(sn, data);
+
+                            try {
+                                Journal.getInstance().write(data);
+                            } catch (CouldNotWriteToJournalException e2) {
+                                log.error(e2);
+                            }
                         }
+                    } else {
+                        break;
                     }
 
                 }
