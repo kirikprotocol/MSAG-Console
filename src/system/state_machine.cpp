@@ -696,8 +696,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       if(t>999)t=999;
       t*=60;
       t+=mnts;
-      smsc_log_debug(smsLog,"DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
-      sms.setNextTime(time(NULL)+t*60);
+      smsc_log_debug(smsLog,"DIRECT: %.*s, t=%d",m[1].end-m[1].start,buf+m[1].start,t);
+      time_t newTime=time(NULL)+t*60;
+      sms.setNextTime(newTime);
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
@@ -1908,29 +1909,6 @@ StateType StateMachine::submit(Tuple& t)
 
 
 
-  if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
-  {
-    submitResp(t,sms,Status::INVSCHED);
-    warn2(smsLog, "SBM: invalid schedule time(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
-      sms->getNextTime(),
-      t.msgId,c.dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      c.src_proxy->getSystemId()
-    );
-    if(c.createSms==scsReplace)
-    {
-      try{
-        store->changeSmsStateToDeleted(t.msgId);
-      }catch(std::exception& e)
-      {
-        warn2(smsLog,"Failed to change incomplete sms state to deleted Id=%lld",t.msgId);
-      }
-    }
-    return ERROR_STATE;
-  }
-
-
   bool isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
   bool isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
 
@@ -2002,6 +1980,29 @@ StateType StateMachine::submit(Tuple& t)
       }
       return ERROR_STATE;
     }
+
+    if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
+    {
+      submitResp(t,sms,Status::INVSCHED);
+      warn2(smsLog, "SBM: invalid schedule time(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+        sms->getNextTime(),
+        t.msgId,c.dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        c.src_proxy->getSystemId()
+      );
+      if(c.createSms==scsReplace)
+      {
+        try{
+          store->changeSmsStateToDeleted(t.msgId);
+        }catch(std::exception& e)
+        {
+          warn2(smsLog,"Failed to change incomplete sms state to deleted Id=%lld",t.msgId);
+        }
+      }
+      return ERROR_STATE;
+    }
+
 
     if(sms->getIntProperty(Tag::SMSC_TRANSLIT)==0)
     {
@@ -2320,6 +2321,14 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   smsc_log_debug(smsLog,"Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)now);
   if(!isDatagram && !isTransaction && stime>now)
   {
+    smsc_log_info(smsLog, "SBM: Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s - sms defered till %d",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      sms->getDestinationSmeId(),
+      (int)sms->getNextTime()
+    );
     smsc->getScheduler()->AddScheduledSms(t.msgId,*sms,dest_proxy_index);
     sms->setLastResult(Status::DEFERREDDELIVERY);
     smsc->ReportDelivery(t.msgId,resp->cntx.inDlgId,*sms,false,Smsc::chargeOnDelivery);
