@@ -7,80 +7,73 @@
 #endif
 #define __INMAN_ICS_TIME_WATCHER_HPP
 
+#include "core/timers/TimeoutsMonitor.hpp"
+
 #include "inman/services/ICSrvDefs.hpp"
-#include "inman/services/tmwatch/TimeWatcher.hpp"
+#include "inman/services/tmwatch/TMWatcherDefs.hpp"
 
 namespace smsc {
 namespace inman {
 
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
-using smsc::core::synchronization::TimeSlice;
-
-using smsc::core::timers::TimeWatchersRegistry;
-using smsc::core::timers::TimeWatchersRegistryITF;
-using smsc::core::timers::TimeWatcher;
-using smsc::core::timers::TimeWatcherTMO;
-
-//TimeWatchers service.
-class ICSTMWatcher : public ICServiceAC, public TimeWatchersRegistryITF {
+class ICSTMWatcher : public ICServiceAC, public TimeWatcherIface {
 protected:
-    mutable Mutex   _sync;
-    std::auto_ptr<TimeWatchersRegistry> twReg;
+  mutable smsc::core::synchronization::Mutex  mSync;
+  smsc::core::timers::TimeoutsMonitor         mTmoMon;
 
-    // ---------------------------------
-    // -- ICServiceAC interface methods
-    // --------------------------------- 
-    Mutex & _icsSync(void) const { return _sync; }
-    //Initializes service verifying that all dependent services are inited
-    RCode _icsInit(void) { return ICServiceAC::icsRcOk; }
-    //Starts service verifying that all dependent services are started
-    RCode _icsStart(void)
-    {
-        return twReg->StartAll() ? ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
-    }
-    //Stops service
-    void  _icsStop(bool do_wait = false)
-    {
-        twReg->StopAll(do_wait);
-    }
+  // ---------------------------------
+  // -- ICServiceAC interface methods
+  // --------------------------------- 
+  virtual smsc::core::synchronization::Mutex & _icsSync(void) const { return mSync; }
+  //Initializes service verifying that all dependent services are inited
+  virtual RCode _icsInit(void) { return ICServiceAC::icsRcOk; }
+  //Starts service verifying that all dependent services are started
+  virtual RCode _icsStart(void)
+  {
+    return mTmoMon.start() ? ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
+  }
+  //Stops service
+  virtual void _icsStop(bool do_wait = false)
+  {
+    if (do_wait)
+      mTmoMon.stop();
+    else
+      mTmoMon.stopNotify();
+  }
 
 public:
-    ICSTMWatcher(const ICServicesHostITF * svc_host, Logger * use_log)
-        : ICServiceAC(ICSIdent::icsIdTimeWatcher, svc_host, use_log)
-        , twReg(new TimeWatchersRegistry(use_log))
-    {
-        _icsState = ICServiceAC::icsStConfig;
-    }
-    ~ICSTMWatcher()
-    {
-        ICSStop(true);
-    }
+  explicit ICSTMWatcher(const ICServicesHostITF * svc_host, Logger * use_log = NULL)
+      : ICServiceAC(ICSIdent::icsIdTimeWatcher, svc_host, use_log)
+      , mTmoMon("0", use_log)
+  {
+    _icsState = ICServiceAC::icsStConfig;
+  }
+  virtual ~ICSTMWatcher()
+  {
+    ICSStop(true);
+  }
 
-    //Returns TimeWatchersRegistryITF
-    void * Interface(void) const
-    {
-        return (TimeWatchersRegistryITF*)this;
-    }
+  // -------------------------------------
+  // ICServiceAC interface methods:
+  // -------------------------------------
+  //Returns TimeWatcherIface
+  virtual void * Interface(void) const
+  {
+    return (TimeWatcherIface*)this;
+  }
 
-    // -------------------------------------
-    // TimeWatchersRegistryITF interface methods:
-    // -------------------------------------
-    //Returns generic TimeWatcher (optionally started)
-    TimeWatcher *
-        getTimeWatcher(uint32_t num_tmrs = 0, bool do_start = true)
-    {
-        MutexGuard grd(_sync);
-        return twReg->getTimeWatcher(num_tmrs, do_start);
-    }
-    //Returns TimeWatcherTMO responsible for given timeout (optionally started)
-    TimeWatcherTMO *
-        getTmoTimeWatcher(const TimeSlice & use_tmo,
-                          uint32_t num_tmrs = 0, bool do_start = true)
-    {
-        MutexGuard grd(_sync);
-        return twReg->getTmoTimeWatcher(use_tmo, num_tmrs, do_start);
-    }
+  // -------------------------------------
+  // TimeWatcherIface interface methods:
+  // -------------------------------------
+  virtual TimerHdl createTimer(TimerListenerIface & tmr_lsr, const TimeSlice & use_tmo)
+  {
+    return mTmoMon.createTimer(tmr_lsr, use_tmo);
+  }
+  virtual void      reserveTimers(TimerUId num_tmr, uint16_t num_tmo = 0)
+  {
+    mTmoMon.reserveTimers(num_tmr);
+    if (num_tmo)
+      mTmoMon.reserveTimeouts(num_tmo);
+  }
 };
 
 } //inman

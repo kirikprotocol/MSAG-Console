@@ -260,24 +260,25 @@ bool AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
  * TimerListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
-TimeWatcherITF::SignalResult
-    AbonentDetector::onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
+AbonentDetector::EventResult_e
+  AbonentDetector::onTimerEvent(TimerUId tmr_id, const char * tmr_stat)
 {
   {
     MutexTryGuard grd(_sync);
     if (!grd.tgtLocked()) //detector is busy, request resignalling
-      return TimeWatcherITF::evtResignal;
+      return evtResignal;
   
-    smsc_log_debug(_logger, "%s: timer[%s] signaled at state %s", _logId,
-                   tm_hdl.IdStr(), state2Str());
+    smsc_log_debug(_logger, "%s: Timer[%s] signaled at state %s", _logId,
+                   tmr_stat, state2Str());
     unRef(refIdTMWatcher);
     _iapTimer.clear();
+    _sync.notify();
 
     if (_state > adIAPQuering)
-      return TimeWatcherITF::evtOk;
+      return evtOk;
   
     if (startIAPQuery())              //check if next IAProvider may ne requested
-      return TimeWatcherITF::evtOk;   //keep adIAPQuering state
+      return evtOk;   //keep adIAPQuering state
   
     _state = adTimedOut;
     //_abCsi.clear(); //abtUnknown
@@ -285,7 +286,7 @@ TimeWatcherITF::SignalResult
     reportAndClean();
   }
   _wrkMgr->workerDone(*this);
-  return TimeWatcherITF::evtOk;
+  return evtOk;
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -340,23 +341,30 @@ void AbonentDetector::configureMOSM(void)
 //
 bool AbonentDetector::startTimer(void)
 {
-  TimeWatcherITF::Error tErr = TimeWatcherITF::errBadTimer;
-
-  _iapTimer.init(_cfg.abtTimeout.CreateTimer(this));
-  if (_iapTimer->Id() && ((tErr = _iapTimer->Start()) == TimeWatcherITF::errOk)) {
-    smsc_log_debug(_logger, "%s: started timer[%s]", _logId, _iapTimer->IdStr());
-    return true;
+  TimerHdl::Error_e tErr = TimerHdl::errMonitorState;
+  if (!(_iapTimer.mSwHdl = _cfg.abtTimeout.createTimer(*this)).empty()) {
+    _iapTimer.mState = _state;
+    if ((tErr = _iapTimer.mSwHdl.start()) == TimerHdl::errOk) {
+      smsc_log_debug(_logger, "%s: started Timer[%s]",
+                     _logId, _iapTimer.mSwHdl.getStatStr());
+      return true;
+    }
   }
-  smsc_log_error(_logger, "%s: failed to start timer[%s], code: %u",
-                 _logId, _iapTimer->IdStr(), tErr);
+  smsc_log_error(_logger, "%s: failed to start Timer[%s], code: %u",
+                 _logId, _iapTimer.mSwHdl.getStatStr(), tErr);
   return false;
 }
 //
 void AbonentDetector::stopTimer(void)
 {
-  if (_iapTimer.get()) {
-    smsc_log_debug(_logger, "%s: releasing timer[%s]", _logId, _iapTimer->IdStr());
-    _iapTimer->Stop();
+  if (!_iapTimer.mSwHdl.empty()) {
+    smsc_log_debug(_logger, "%s: releasing Timer[%s]", _logId, _iapTimer.mSwHdl.getStatStr());
+    if (_iapTimer.mSwHdl.stop() == TimerHdl::errTimerState) {
+      //timer is awaiting this->_sync
+      addRef(refIdItself);
+      _sync.wait();
+      unRef(refIdItself);
+    }
     _iapTimer.clear();
   }
 }

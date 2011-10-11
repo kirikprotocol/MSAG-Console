@@ -3,7 +3,6 @@ static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/smbill/ICSSmBilling.hpp"
-using smsc::core::timers::TimeWatchersRegistryITF;
 using smsc::inman::tcpsrv::ICSTcpServerIface;
 using smsc::inman::iapmgr::IAPManagerITF;
 
@@ -84,11 +83,10 @@ ICServiceAC::RCode ICSSmBilling::_icsInit(void)
   }
 
   //Smbilling uses up to two timeout values.
-  TimeWatchersRegistryITF * icsTW = (TimeWatchersRegistryITF *)
-                                  _icsHost->getInterface(ICSIdent::icsIdTimeWatcher);
+  TimeWatcherIface * icsTW = (TimeWatcherIface *)_icsHost->getInterface(ICSIdent::icsIdTimeWatcher);
   if (_wCfg.iapMgr)
-    _wCfg.abtTimeout.Init(icsTW, _wCfg.prm->maxBilling);
-  _wCfg.maxTimeout.Init(icsTW, _wCfg.prm->maxBilling);
+    _wCfg.abtTimeout.init(*icsTW, _wCfg.prm->maxBilling);
+  _wCfg.maxTimeout.init(*icsTW, _wCfg.prm->maxBilling);
 
   ICSTcpServerIface * tcpSrv = (ICSTcpServerIface *)_icsHost->getInterface(ICSIdent::icsIdTCPServer);
   tcpSrv->registerProtocol(*this);
@@ -99,14 +97,6 @@ ICServiceAC::RCode ICSSmBilling::_icsStart(void)
 {
   if (_roller.get())
     _roller->Start();
-  if (_wCfg.abtTimeout.Value() && !_wCfg.abtTimeout.Start()) {
-    smsc_log_fatal(logger, "%s: TimeWatcher[abt] startup failure!", _logId);
-    return ICServiceAC::icsRcError;
-  }
-  if (!_wCfg.maxTimeout.Start()) {
-    smsc_log_fatal(logger, "%s: TimeWatcher[max] startup failure!", _logId);
-    return ICServiceAC::icsRcError;
-  }
   return ICServiceAC::icsRcOk;
 }
 

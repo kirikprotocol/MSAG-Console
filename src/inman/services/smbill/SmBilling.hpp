@@ -38,13 +38,10 @@ namespace inman {
 namespace smbill {
 
 using smsc::core::synchronization::Condition;
-using smsc::core::timers::TimeWatcherITF;
 
 using smsc::core::timers::TimerHdl;
-using smsc::core::timers::OPAQUE_OBJ;
 
 using smsc::inman::INManErrorId;
-
 using smsc::inman::ScheduledTaskAC;
 
 using smsc::inman::iaprvd::IAPAbility;
@@ -68,9 +65,9 @@ using smsc::inman::cdr::CDRRecord;
 
 
 class Billing : public smsc::inman::interaction::WorkerIface
-                      , smsc::inman::iaprvd::IAPQueryListenerITF
-                      , smsc::core::timers::TimerListenerITF
-                      , smsc::inman::TaskRefereeITF {
+              , protected smsc::inman::iaprvd::IAPQueryListenerITF
+              , protected smsc::core::timers::TimerListenerIface
+              , protected smsc::inman::TaskRefereeITF {
 public:
   enum BillingState {
     bilIdle = 0,
@@ -134,23 +131,23 @@ private:
   };
 
   struct TimerInfo {
-    BillingState  _fsmState;
-    TimerHdl      _hdl;
-    WorkerGuard   _wrkGrd;
+    BillingState  mFsmState;
+    TimerHdl      mSwHdl;
+    WorkerGuard   mWrkGrd;
 
-    TimerInfo() : _fsmState(bilIdle)
+    TimerInfo() : mFsmState(bilIdle)
     { }
     //
-    bool empty(void) const { return _hdl.empty() && (_fsmState == bilIdle); }
+    bool empty(void) const { return mSwHdl.empty() && (mFsmState == bilIdle); }
     //
-    void clear(void) { _fsmState = bilIdle; _hdl.clear(); _wrkGrd.release(); }
+    void clear(void) { mFsmState = bilIdle; mSwHdl.release(); mWrkGrd.release(); }
   };
 
   class TimersRegistry {
   protected:
-    static const unsigned _MAX_TIMERS = 4;
+    static const unsigned k_maxTimersNum = 4;
 
-    TimerInfo   _reg[_MAX_TIMERS];
+    TimerInfo   mReg[k_maxTimersNum];
 
   public:
     TimersRegistry()
@@ -158,14 +155,24 @@ private:
     ~TimersRegistry()
     { }
 
-    unsigned size(void) const { return _MAX_TIMERS; }
+    unsigned size(void) const { return k_maxTimersNum; }
 
-    //returns null if no timer at given FSM state exists 
+    //returns null if no timer with given UId exists.
+    TimerInfo * find(TimerUId sw_uid)
+    {
+      for (unsigned i = 0; i < k_maxTimersNum; ++i) {
+        if (mReg[i].mSwHdl.isTimerUId(sw_uid))
+          return &mReg[i];
+      }
+      return NULL;
+    }
+
+    //returns null if no timer at given FSM state exists.
     TimerInfo * find(BillingState fsm_state)
     {
-      for (unsigned i = 0; i < _MAX_TIMERS; ++i) {
-        if (_reg[i]._fsmState == fsm_state)
-          return &_reg[i];
+      for (unsigned i = 0; i < k_maxTimersNum; ++i) {
+        if (mReg[i].mFsmState == fsm_state)
+          return &mReg[i];
       }
       return NULL;
     }
@@ -177,7 +184,7 @@ private:
         return false;
 
       if ((p_inf = find(bilIdle)))
-        p_inf->_fsmState = fsm_state;
+        p_inf->mFsmState = fsm_state;
       return true;
     }
     //
@@ -188,7 +195,7 @@ private:
         pInf->clear();
     }
 
-    TimerInfo & operator[](unsigned use_idx) { return _reg[use_idx]; }
+    TimerInfo & operator[](unsigned use_idx) { return mReg[use_idx]; }
   };
 
   struct ThisGuard {
@@ -262,7 +269,8 @@ private:
   bool unrefCAPSmTask(bool wait_report = true);
   void abortCAPSmTask(bool wait_report = true);
   //
-  bool startTimer(const TimeoutHDL & tmo_hdl);
+  bool startTimer(const TimerFact & tmo_hdl);
+  void stopTimer(TimerInfo & p_tmr);
   void stopTimer(BillingState bilState);
 
   //Returns false if PDU contains invalid data preventing request processing
@@ -296,10 +304,9 @@ protected:
   virtual bool onIAPQueried(const AbonentId & ab_number,
                             const AbonentSubscription & ab_info, RCHash qry_status);
   // -------------------------------------------------------
-  // -- TimerListenerITF interface methods:
+  // -- TimerListenerIface interface methods:
   // -------------------------------------------------------
-  virtual TimeWatcherITF::SignalResult
-      onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
+  virtual EventResult_e onTimerEvent(TimerUId tmr_id, const char * tmr_stat);
   // -------------------------------------------------------
   // -- TaskRefereeITF interface methods:
   // -------------------------------------------------------

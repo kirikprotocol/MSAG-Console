@@ -3,7 +3,7 @@
 #
 # INMan executable
 
-CORE_SRV_LIBS=-L$(SMSC_BUILDDIR)/bin -linman -linman-services -linman-services-tmwatch
+CORE_SRV_LIBS=-L$(SMSC_BUILDDIR)/bin -linman -linman-services -linman-services-tmwatch -lcore-timers
 XCFG_LIBS=-lutil-config -lutil-xml -lutil-csv $(XERCES_LIB)
 NETSOCK_LIBS=-lcore-network $(SOCKETLIB) -lnsl
 TCPSRV_LIBS=-linman-services-tcpsrv -linman-interaction-tcpserver -linman-interaction-asynconn

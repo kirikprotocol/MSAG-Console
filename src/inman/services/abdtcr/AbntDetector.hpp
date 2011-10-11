@@ -9,6 +9,8 @@
 #define __INMAN_ABNT_DETECTOR_HPP
 
 #include "util/OptionalObjT.hpp"
+#include "core/synchronization/EventMonitor.hpp"
+
 #include "inman/abprov/IAProvider.hpp"
 #include "inman/interaction/msgdtcr/MsgContract.hpp"
 #include "inman/interaction/asyncmgr/AsynWorkerDefs.hpp"
@@ -20,11 +22,8 @@ namespace abdtcr {
 
 using smsc::util::RCHash;
 using smsc::logger::Logger;
-using smsc::core::synchronization::EventMonitor;
 
-using smsc::core::timers::TimeWatcherITF;
 using smsc::core::timers::TimerHdl;
-using smsc::core::timers::OPAQUE_OBJ;
 
 using smsc::inman::iaprvd::AbonentId;
 using smsc::inman::iaprvd::AbonentSubscription;
@@ -38,17 +37,18 @@ using smsc::inman::iapmgr::IAPPrio_e;
 using smsc::inman::iapmgr::INScfCFG;
 
 class AbonentDetector : public smsc::inman::interaction::WorkerIface
-                      , smsc::inman::iaprvd::IAPQueryListenerITF
-                      , smsc::core::timers::TimerListenerITF
-                      , smsc::inman::interaction::AbntContractReqHandlerITF {
+                      , protected smsc::inman::iaprvd::IAPQueryListenerITF
+                      , protected smsc::core::timers::TimerListenerIface
+                      , protected smsc::inman::interaction::AbntContractReqHandlerITF {
 public:
   enum ADState_e {
-    adIdle = 0,
-    adIAPQuering,
-    adTimedOut,
-    adDetermined,
-    adCompleted,    // AD -> SMSC : AbntContractResult
-    adAborted
+    adIdle = 0
+  , adIAPQuering    // AD <- SMSC : AbntContractRequest
+                    //   [Timer] AD -> IAProvider
+  , adTimedOut
+  , adDetermined    // AD <- IAProvider: query result
+  , adCompleted     // AD -> SMSC : AbntContractResult
+  , adAborted
   };
 
   AbonentDetector() : smsc::inman::interaction::WorkerIface()
@@ -83,10 +83,9 @@ protected:
   virtual bool onIAPQueried(const AbonentId & ab_number,
                             const AbonentSubscription & ab_info, RCHash qry_status);
   // -------------------------------------------------------
-  // -- TimerListenerITF interface methods:
+  // -- TimerListenerIface interface methods:
   // -------------------------------------------------------
-  virtual TimeWatcherITF::SignalResult
-      onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
+  virtual EventResult_e onTimerEvent(TimerUId tmr_id, const char * tmr_stat);
   // -------------------------------------------------------
   // -- AbntContractReqHandlerITF interface methods:
   // -------------------------------------------------------
@@ -101,7 +100,19 @@ private:
     , refIdMAX = 0x03 //just a max cap
   };
 
-  mutable EventMonitor  _sync;
+  struct TimerInfo {
+    ADState_e     mState;
+    TimerHdl      mSwHdl;
+
+    TimerInfo() : mState(adIdle)
+    { }
+    //
+    bool empty(void) const { return mSwHdl.empty() && (mState == adIdle); }
+    //
+    void clear(void) { mState = adIdle; mSwHdl.release(); }
+  };
+
+  mutable smsc::core::synchronization::EventMonitor  _sync;
   ADState_e             _state;
   AbonentDetectorCFG    _cfg;
   //prefix for logging info
@@ -114,7 +125,7 @@ private:
   const INScfCFG *      _cfgScf;    //serving gsmSCF(IN-point) configuration
   uint32_t              _wErr;
   WorkerGuard           _wrkRefs[refIdMAX];
-  smsc::util::OptionalObj_T<TimerHdl> _iapTimer;   //timer for InAbonentProvider quering
+  TimerInfo             _iapTimer;   //timer for IAProvider quering
 
   const char * state2Str(void) { return state2Str(_state); }
 

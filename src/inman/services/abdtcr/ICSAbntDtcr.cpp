@@ -43,9 +43,9 @@ ICServiceAC::RCode ICSAbntDetector::_icsInit(void)
   if (_wCfg.useCache)
     _wCfg.abCache = (AbonentCacheITF*)_icsHost->getInterface(ICSIdent::icsIdAbntCache);
   //there is only one timeout value AbonentDetectors use.
-  smsc::core::timers::TimeWatchersRegistryITF *
-    icsTW = (smsc::core::timers::TimeWatchersRegistryITF *)_icsHost->getInterface(ICSIdent::icsIdTimeWatcher);
-  _wCfg.abtTimeout.Init(icsTW, _wCfg.maxRequests);
+  smsc::inman::TimeWatcherIface *
+    icsTW = (smsc::inman::TimeWatcherIface *)_icsHost->getInterface(ICSIdent::icsIdTimeWatcher);
+  _wCfg.abtTimeout.init(*icsTW, _wCfg.maxRequests);
 
   ICSTcpServerIface * tcpSrv = (ICSTcpServerIface *)_icsHost->getInterface(ICSIdent::icsIdTCPServer);
   tcpSrv->registerProtocol(*this);

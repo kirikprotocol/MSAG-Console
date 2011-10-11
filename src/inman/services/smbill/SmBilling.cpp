@@ -3,7 +3,9 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/smbill/SmBilling.hpp"
-using smsc::inman::iaprvd::IAProviderAC;
+using smsc::core::timers::TimerFSM;
+using smsc::core::synchronization::MutexTryGuard;
+
 using smsc::inman::iaprvd::CSIRecord;
 using smsc::inman::iaprvd::IAPProperty;
 
@@ -17,9 +19,7 @@ using smsc::inman::interaction::DeliveredSmsData;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
-//using smsc::inman::interaction::CsBillingHdr_dlg;
-using smsc::core::synchronization::MutexTryGuard;
-//using smsc::core::synchronization::TimeSlice;
+
 using smsc::util::URCRegistry;
 using smsc::util::format;
 using smsc::util::CustomException;
@@ -336,14 +336,8 @@ void Billing::doCleanUp(void)
   //check for pending query to AbonentProvider
   cancelIAPQuery();
   //release active timers
-  for (unsigned i = 0; i < _timers.size(); ++i) {
-    if (!_timers[i].empty()) {
-      _timers[i]._hdl.Stop();
-      smsc_log_debug(_logger, "%s: Released timer[%s] at state(%s)", _logId,
-                     _timers[i]._hdl.IdStr(), state2Str());
-      _timers[i].clear();
-    }
-  }
+  for (unsigned i = 0; i < _timers.size(); ++i)
+    stopTimer(_timers[i]);
   //abort dialog with IN-platform
   abortCAPSmTask(true);
 }
@@ -514,33 +508,47 @@ RCHash Billing::startCAPSmTask(void)
 }
 
 //NOTE: _sync should be locked upon entry!
-bool Billing::startTimer(const TimeoutHDL & tmo_hdl)
+bool Billing::startTimer(const TimerFact & tmo_hdl)
 {
   TimerInfo * pTmr = NULL;
   if (!_timers.alloc(_pState, pTmr)) {
-    smsc_log_fatal(_logger, "%s: timer[%s] is already active at state %s", _logId,
-                   pTmr->_hdl.IdStr(), state2Str());
+    smsc_log_fatal(_logger, "%s: Timer[%s] is already active at state %s", _logId,
+                   pTmr->mSwHdl.getStatStr(), state2Str());
     return false;
   }
-  OPAQUE_OBJ            timerArg((unsigned)_pState);
-  TimeWatcherITF::Error tErr = TimeWatcherITF::errBadTimer;
-
-  pTmr->_hdl = tmo_hdl.CreateTimer(this, &timerArg);
-  if (pTmr->_hdl.empty()) {
-    smsc_log_fatal(_logger, "%s: failed to allocate timer at state '%s'", _logId,
+  TimerHdl::Error_e tErr = TimerHdl::errMonitorState;
+  if ((pTmr->mSwHdl = tmo_hdl.createTimer(*this)).empty()) {
+    smsc_log_fatal(_logger, "%s: failed to allocate Timer at state '%s'", _logId,
                    state2Str());
   } else {
-    if ((tErr = pTmr->_hdl.Start()) == TimeWatcherITF::errOk) {
-      smsc_log_debug(_logger, "%s: started timer[%s] at state %s", _logId,
-                     pTmr->_hdl.IdStr(), state2Str());
-      pTmr->_wrkGrd = _wrkMgr->getWorkerGuard(*this);
+    pTmr->mFsmState = _pState;
+    if ((tErr = pTmr->mSwHdl.start()) == TimerHdl::errOk) {
+      smsc_log_debug(_logger, "%s: started Timer[%s] at state %s", _logId,
+                     pTmr->mSwHdl.getStatStr(), state2Str());
+      pTmr->mWrkGrd = _wrkMgr->getWorkerGuard(*this);
       return true;
     }
-    smsc_log_fatal(_logger, "%s: failed to start timer[%s]:%u", _logId,
-                   pTmr->_hdl.IdStr(), _pState);
+    smsc_log_fatal(_logger, "%s: failed to start Timer[%s]:%u", _logId,
+                   pTmr->mSwHdl.getStatStr(), _pState);
   }
   pTmr->clear();
   return false;
+}
+
+//NOTE: _sync should be locked upon entry!
+void Billing::stopTimer(TimerInfo & p_tmr)
+{
+  if (!p_tmr.mSwHdl.empty()) {
+    smsc_log_debug(_logger, "%s: releasing Timer[%s]:%s at state(%s)", _logId,
+                   p_tmr.mSwHdl.getStatStr(), state2Str(p_tmr.mFsmState), state2Str());
+    if (p_tmr.mSwHdl.stop() == TimerHdl::errTimerState) {
+      //timer is awaiting this->_sync
+      addRef(refIdItself);
+      _sync.wait();
+      unRef(refIdItself);
+    }
+    p_tmr.clear(); //releases timer and WorkerGuard
+  }
 }
 
 //NOTE: _sync should be locked upon entry!
@@ -548,10 +556,7 @@ void Billing::stopTimer(Billing::BillingState bil_state)
 {
   TimerInfo * pTmr = _timers.find(bil_state);
   if (pTmr) {
-    smsc_log_debug(_logger, "%s: releasing timer[%s]:%s at state(%s)", _logId,
-                   pTmr->_hdl.IdStr(), state2Str(bil_state), state2Str());
-    pTmr->_hdl.Stop();
-    pTmr->clear(); //WorkerGuard is also released here
+    stopTimer(*pTmr);
   } else {
     smsc_log_warn(_logger, "%s: no active timer for state(%s)", _logId, state2Str());
   }
@@ -1024,28 +1029,29 @@ void Billing::abortCAPSmTask(bool wait_report/* = true */)
  * TimerListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks _sync !!!
-TimeWatcherITF::SignalResult
-    Billing::onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
+Billing::EventResult_e
+  Billing::onTimerEvent(TimerUId tmr_id, const char * tmr_stat)
 {
   bool wDone = false;
   {
     MutexTryGuard grd(_sync);
     if (!grd.tgtLocked()) //billing is busy, request resignalling
-      return TimeWatcherITF::evtResignal;
+      return evtResignal;
 
-    smsc_log_debug(_logger, "%s: timer[%s] signaled, states: %u -> %u",
-                   _logId, tm_hdl.IdStr(), opaque_obj->val.ui, (unsigned)_pState);
+    BillingState  grdState = bilIdle;
+    TimerInfo *   pInf = _timers.find(tmr_id);
 
-    TimerInfo * pInf = _timers.find(static_cast<BillingState>(opaque_obj->val.ui));
     if (pInf) {
-      pInf->clear(); //deletes handle (unrefs timer), releases WorkerGuard
+      grdState = pInf->mFsmState;
+      smsc_log_debug(_logger, "%s: Timer[%s] signaled, states: %u -> %u",
+                     _logId, tmr_stat, (unsigned)grdState, (unsigned)_pState);
+      pInf->clear(); //unrefs timer, releases WorkerGuard
     } else {
-      smsc_log_warn(_logger, "%s: timer[%s] signaled, but isn't registered",
-                     _logId, tm_hdl.IdStr());
+      smsc_log_warn(_logger, "%s: Timer[%s] signaled, but isn't registered",
+                     _logId, tmr_stat);
     }
 
-    if (opaque_obj->val.ui == (unsigned)_pState) {
-      //target operation doesn't complete yet.
+    if (grdState == _pState) { //target operation doesn't complete yet.
       switch (_pState) {
       case Billing::bilStarted: { //abonent provider query is expired
         cancelIAPQuery();
@@ -1085,10 +1091,10 @@ TimeWatcherITF::SignalResult
     } //else: state, guarded by timer, is already finished
 
     if (!wDone)
-      return TimeWatcherITF::evtOk;
+      return evtOk;
   }
   _wrkMgr->workerDone(*this);
-  return TimeWatcherITF::evtOk;
+  return evtOk;
 }
 
 /* -------------------------------------------------------------------------- *
