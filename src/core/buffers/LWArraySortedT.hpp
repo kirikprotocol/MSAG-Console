@@ -57,7 +57,10 @@ public:
   //If no such element exists, Not-a-Position is returned.
   size_type lower_bound_crit(const criterion_type & use_val) const //throw()
   {
-    size_type atPos = this->size() ? lower_bound_crit_pos(use_val) : 0;
+    if (this->empty())
+      return this->npos();
+
+    size_type atPos = lower_bound_crit_pos(use_val);
     return  (atPos < this->size()) ? atPos : this->npos();
   }
 
@@ -65,7 +68,7 @@ public:
   //If no such element exists, Not-A-Position is returned.
   size_type find_crit(const criterion_type & use_crit) const //throw()
   {
-    size_type atPos = lower_bound_crit_pos(use_crit);
+    size_type atPos = lower_bound_crit(use_crit);
     comparator_type oComp;
     return ((atPos < this->size())
             && !oComp((this->get())[atPos], use_crit)

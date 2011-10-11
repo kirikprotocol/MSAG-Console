@@ -530,7 +530,9 @@ public:
   //If no such element exists, Not-a-Position is returned.
   size_type lower_bound(const value_type & use_val) const //throw()
   {
-    size_type atPos = _numElem ? lower_bound_pos(use_val) : 0;
+    if (!_numElem)
+      return npos();
+    size_type atPos = lower_bound_pos(use_val);
     return  (atPos < _numElem) ? atPos : npos();
   }
 
@@ -538,7 +540,7 @@ public:
   //If no such element exists, Not-A-Position is returned.
   size_type find(const value_type & use_val) const //throw()
   {
-    size_type atPos = lower_bound_pos(use_val);
+    size_type atPos = lower_bound(use_val);
     return ((atPos < _numElem)
             && !(_buf[atPos] < use_val) && !(use_val < _buf[atPos])) ?
                 atPos : npos();
