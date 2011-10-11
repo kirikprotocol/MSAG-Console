@@ -692,3 +692,10 @@ B3215: Sep 30, 2011
     INMan	Fix for workers exhausting
     INMan	Fix for possible memory corruption
     USSMan/INMan Fix for collision level logic rehashing  
+
+B3216: Oct 11, 2011
+    SMSC	deferred delivery logging and schedule delivery time checking fix
+    SMSC	possible extra SubmitResp on merging SMS from MAP
+    SMSC	code clearance for valgrind, some optimization
+    INMan	logging fixes
+    INMan	std::map replaced with optimized collections
