@@ -210,7 +210,7 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
 }
 
 
-void INManComm::Report(SMSId id,int dlgId,const SMS& sms,bool final)
+void INManComm::ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final)
 {
   info2(log,"Report: Id=%lld;dda=%s;dlgid=%d;lr=%d;cp=%d;final=%s",id,sms.getDealiasedDestinationAddress().toString().c_str(),
       dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY),final?"Y":"N");

@@ -536,7 +536,7 @@ public:
           )
         )
       {
-        inManCom->Report(id,dlgId,sms,final);
+        inManCom->ReportDelivery(id,dlgId,sms,final);
       }
     }catch(std::exception& e)
     {

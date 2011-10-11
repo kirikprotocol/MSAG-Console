@@ -45,7 +45,7 @@ public:
 
   void ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeResponse::SubmitContext& ctx);
   void ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeResponse::ForwardContext& contex);
-  void Report(SMSId id,int dlgId,const SMS& sms,bool final);
+  void ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final);
   void FullReport(SMSId id,const SMS& sms);
 
   //////////
