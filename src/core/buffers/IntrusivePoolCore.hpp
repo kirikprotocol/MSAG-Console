@@ -70,9 +70,11 @@ public:
     //Returns true if last ref is just reset
     bool unRef(void) const
     {
-      if (mRefs)
+      if (mRefs) {
         --mRefs;
-      return (mRefs == 0);
+        return (mRefs == 0);
+      }
+      return false;
     }
 
     size_type getRefs(void) const { return mRefs; }
@@ -249,9 +251,15 @@ protected:
     }
 #endif /* INTRUSIVE_POOL_DEBUG */
     for (typename NodeArray::size_type i = 0; i < mStore.size(); ++i) {
-      if (mStore.at(i)) {
-        destroyNode(*mStore.at(i));
+      NodeHeader * pNode = mStore.at(i);
+      if (pNode) {
+        //NOTE: Forcedly reset refCnt in order to prevent calling rlseNode() !!!
+        pNode->mRefs = 0;
         mStore.at(i) = 0;
+        {
+          smsc::core::synchronization::ReverseMutexGuard  rGrd(mSync);
+          destroyNode(*pNode);
+        }
       }
     }
   }
