@@ -18,7 +18,10 @@ uint32_t cnt = 0, err = 0;
 #define URL_ "+79039126430_111/192.168.1.213/w1251.html?abonent=+79039126430&usr=12"
 #define THREADS_CNT 1
 #define REQUESTS_CNT 1
-/*#define SERVER "sunfire"
+/*
+https://eyeline.mobi/images/home_page_9mm.jpg
+http://eyeline.mobi/images/home_page_9mm.jpg
+#define SERVER "sunfire"
 #define PORT 5001
 #define URL_ "/1_2/192.168.1.213/w1251.html"
 #define THREADS_CNT 60

@@ -146,6 +146,15 @@ public:
 protected:
     void closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info);
     void prepareNextChunk();
+//temporary for debug log
+/*
+	Mutex mtx_c;
+	Mutex mtx_f;
+	static unsigned int counter_create;
+	static unsigned int counter_free;
+	void createCount();
+	void freeCount();
+*/
 
 public:
     Socket *user;
@@ -162,8 +171,6 @@ public:
 
     bool requestFailed;
 //temporary for debug log
-    static unsigned int counter_create;
-    static unsigned int counter_free;
     ChunkInfo chunks;
 
 protected:
@@ -197,7 +204,7 @@ protected:
     int sslCheckIoError(int ret, int ssl_err, int oerrno);
     void sslLogErrors(int ret=0, int ssl_err=0);
     SSL* sslCheckConnection(Socket* s);
-    void sslCertInfo(X509* cert);
+//    void sslCertInfo(X509* cert);
 //temporary for debug log
     const char* connName(Socket* s) { return (s==user?nameUser:nameSite); }
 

@@ -22,8 +22,8 @@ const char* HttpContext::ActionNames[ACTION_LAST] = {
 "KEEP_ALIVE_TIMEOUT"
 };
 
-unsigned int HttpContext::counter_create;
-unsigned int HttpContext::counter_free;
+//unsigned int HttpContext::counter_create;
+//unsigned int HttpContext::counter_free;
 
 enum StatusCode {
   OK,
@@ -119,7 +119,8 @@ int HttpContext::sslUserConnection(bool verify_client) {
 		smsc_log_error(logger, "SSL user connection failed");
 		return 0;
 	}
-	HttpContext::counter_create++;
+//	createCount();
+//	HttpContext::counter_create++;
 	return 1;
 }
 
@@ -157,7 +158,8 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 		siteSsl = NULL;
 		return 0;
 	}
-	HttpContext::counter_create++;
+//	createCount();
+//	HttpContext::counter_create++;
 	return 1;
 }
 
@@ -177,13 +179,16 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 				SSL_shutdown(ssl);
 				SSL_free(ssl);
 				ssl = NULL;
-				HttpContext::counter_free++;
+//				freeCount();
+//				HttpContext::counter_free++;
 			}
 			catch(...) {
 				ssl = NULL;
-				smsc_log_error(logger, "close%sConnection: Unknown error c:%d f:%d", info, HttpContext::counter_create, HttpContext::counter_free);
+				smsc_log_error(logger, "%p close%sConnection: Unknown error", this, info);
+//				smsc_log_error(logger, "close%sConnection: Unknown error c:%d f:%d", info, HttpContext::counter_create, HttpContext::counter_free);
 			}
-			smsc_log_debug(logger, "%p close%sConnection: Ok c:%d f:%d", this, info, HttpContext::counter_create, HttpContext::counter_free);
+			smsc_log_debug(logger, "%p close%sConnection: Ok", this, info);
+//			smsc_log_debug(logger, "%p close%sConnection: Ok c:%d f:%d", this, info, HttpContext::counter_create, HttpContext::counter_free);
 
 		}
 		s->Abort();
@@ -195,6 +200,7 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 	}
 }
 
+/*
 void HttpContext::sslCertInfo(X509* cert) {
 	char*	str;
 	std::string cert_nfo;
@@ -226,6 +232,7 @@ void HttpContext::sslCertInfo(X509* cert) {
 		cert_nfo = "The peer does not have certificate.";
 	smsc_log_debug(logger, "%s", cert_nfo.c_str());
 }
+*/
 
 SSL* HttpContext::sslCheckConnection(Socket* s) {
 	if (s == user) {
@@ -555,4 +562,14 @@ void HttpContext::sslLogErrors(int ret, int ssl_err) {
 	}
 }
 
+/*
+void HttpContext::createCount() {
+	smsc::core::synchronization::MutexGuard mt(mtx_c);
+    counter_create++;
+}
+void HttpContext::freeCount() {
+	smsc::core::synchronization::MutexGuard mt(mtx_f);
+    counter_free++;
+}
+*/
 }}}

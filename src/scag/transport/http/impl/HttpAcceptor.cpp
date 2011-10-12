@@ -62,9 +62,11 @@ void HttpAcceptor::shutdown()
 
     masterSocket.Close();
     manager.scags.looseQueueLimit();
+/*
     if (httpsOptions->userActive) {
     	smsc_log_debug(logger, "%s SSL create %d free %d", taskName(), HttpContext::counter_create, HttpContext::counter_free);
     }
+*/
     WaitFor();
 }
 
@@ -74,12 +76,13 @@ void HttpAcceptor::init(const char *host, int port, HttpsOptions& options)
     httpsOptions = new HttpsOptions(options); //separate copy for each acceptor
 
     logger = Logger::getInstance((httpsOptions->userActive) ? "https.acceptor" : "http.acceptor");
+/*
     if (httpsOptions->userActive) {
     	HttpContext::counter_create = 0;
     	HttpContext::counter_free = 0;
         smsc_log_debug(logger, "%s SSL create %d free %d", taskName(), HttpContext::counter_create, HttpContext::counter_free);
     }
-
+*/
     try {
         if (masterSocket.InitServer(host, port, 0, 0, true) == -1) {
             smsc_log_error(logger, "%s failed to init master socket", taskName());
