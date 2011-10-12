@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.web.controllers.sms_view;
 
-import mobi.eyeline.util.jsf.components.data_table.model.*;
-import org.apache.log4j.Logger;
+import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.util.jsf.components.data_table.model.LoadListener;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.operative_store.Message;
 import ru.novosoft.smsc.admin.operative_store.MessageFilter;
@@ -9,7 +9,6 @@ import ru.novosoft.smsc.admin.operative_store.ProgressObserver;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.model.SelectItem;
 import java.io.IOException;
@@ -20,19 +19,11 @@ import java.util.*;
 /**
  * @author Artem Snopkov
  */
-public class SmsViewOperativeController extends SmscController {
-
-  private static final Logger logger = Logger.getLogger(SmsViewOperativeController.class);
+public class SmsViewOperativeController extends SmsViewController {
 
   private MessageFilter messageFilter = new MessageFilter();
 
   private MessageFilter oldFilter;
-
-  private WebContext wcontext = WebContext.getInstance();
-
-  private LoadListener loadListener;
-
-  private boolean loaded;
 
   private Collection[] msgs;
 
@@ -42,14 +33,15 @@ public class SmsViewOperativeController extends SmscController {
 
   private int smscInstancesNumber;
 
+  private boolean init = false;
 
   public SmsViewOperativeController() {
-    oldFilter = new MessageFilter(messageFilter);
     try {
       smscInstancesNumber = WebContext.getInstance().getSmscManager().getSettings().getSmscInstancesCount();
     } catch (AdminException e) {
       addError(e);
     }
+    oldFilter = new MessageFilter(messageFilter);
   }
 
   public MessageFilter getMessageFilter() {
@@ -61,18 +53,26 @@ public class SmsViewOperativeController extends SmscController {
   }
 
   public String apply() {
+    init = true;
     if(!oldFilter.equals(messageFilter)) {
-      loaded = false;
-      loadListener = null;
+      loadingIsNeeded();
       oldFilter = new MessageFilter(messageFilter);
     }
     return null;
   }
 
+  public boolean isInit() {
+    return init;
+  }
+
+  public void setInit(boolean init) {
+    this.init = init;
+  }
+
   public String clear() {
+    init = true;
     messageFilter = new MessageFilter();
-    loaded = false;
-    loadListener = null;
+    loadingIsNeeded();
     return null;
   }
 
@@ -83,6 +83,19 @@ public class SmsViewOperativeController extends SmscController {
       res.add(new SelectItem(i));
     }
     return res;
+  }
+
+  public int getCurrentInstance() {
+    return currentInstance;
+  }
+
+  public void setCurrentInstance(int currentInstance) {
+    this.currentInstance = currentInstance;
+  }
+
+
+  public int getSmscInstancesNumber() {
+    return smscInstancesNumber;
   }
 
   public String getSmsId() {
@@ -101,146 +114,54 @@ public class SmsViewOperativeController extends SmscController {
     messageFilter.setLastResult(lastResult == null || (lastResult = lastResult.trim()).length() == 0 ? null : Integer.parseInt(lastResult));
   }
 
-  private LoadListener load(final Locale locale) {
-    LoadListener listener = null;
-    if(!loaded) {
-      if(loadListener == null) {
-        loadListener = new LoadListener();
-        new Thread() {
-          public void run() {
-            try{
-              loadListener.setTotal(smscInstancesNumber * 100);
 
-              msgs = new Collection[smscInstancesNumber];
+  protected void _load(Locale locale, final LoadListener loadListener) throws AdminException {
+    int smscInstancesNumber = getSmscInstancesNumber();
+    loadListener.setTotal(smscInstancesNumber * 100);
 
-              totalSize = 0;
-              for (int i = 0; i < smscInstancesNumber; i++) {
-                final int currentSmsc = i;
-                msgs[i] = wcontext.getOperativeStoreProvider().getMessages(i, messageFilter, new ProgressObserver() {
-                  public void update(long current, long total) {
-                    loadListener.setCurrent((int) (currentSmsc * 100 + current / total * 100));
-                  }
-                });
-                if (msgs[i] != null)
-                  totalSize += msgs[i].size();
-              }
-              loaded = true;
-            }catch (AdminException e){
-              logger.error(e,e);
-              loadListener.setLoadError(new ModelException(e.getMessage(locale)));
-            }catch (Exception e){
-              logger.error(e, e);
-              loadListener.setLoadError(new ModelException(e.getLocalizedMessage() != null ? e.getLocalizedMessage() : e.getMessage() != null
-                  ? e.getMessage() : "Internal error"));
-            }
-          }
-        }.start();
-      }
-      listener = loadListener;
+    msgs = new Collection[smscInstancesNumber];
+
+    totalSize = 0;
+    for (int i = 0; i < smscInstancesNumber; i++) {
+      final int currentSmsc = i;
+      msgs[i] = wcontext.getOperativeStoreProvider().getMessages(i, messageFilter, new ProgressObserver() {
+        public void update(long current, long total) {
+          loadListener.setCurrent((int) (currentSmsc * 100 + current / total * 100));
+        }
+      });
+      if (msgs[i] != null)
+        totalSize += msgs[i].size();
     }
-    return listener;
   }
 
-
-  public DataTableModel getMessages() {
-
-    final Locale locale = getLocale();
-
+  protected List getRows(int startPos, int count, DataTableSortOrder dataTableSortOrder)  {
     final int _instance = currentInstance;
-
-    return new PreloadableModel() {
-      public LoadListener prepareRows(int i, int i1, DataTableSortOrder dataTableSortOrder) throws ModelException {
-        return load(locale);
-      }
-
-      @SuppressWarnings({"unchecked"})
-      public List getRows(int startPos, int count, DataTableSortOrder dataTableSortOrder) throws ModelException {
-        if(msgs == null || _instance >= msgs.length || (_instance != -1 && msgs[_instance] == null) ) {
-          return Collections.emptyList();
-        }
-        List<Message> result = new LinkedList<Message>();
-        List<Message> records;
-        if(_instance == -1) {
-          records = new ArrayList<Message>(totalSize);
-          for(Collection<Message> c : msgs)  {
-            records.addAll(c);
-          }
-        }else {
-          records = new ArrayList<Message>(msgs[_instance]);
-        }
-        Collections.sort(records, getComparator(dataTableSortOrder));
-        for (int i = startPos; i < Math.min(records.size(), startPos + count); i++) {
-          result.add(records.get(i));
-        }
-        return result;
-      }
-      public int getRowsCount() throws ModelException {
-        if(msgs == null || _instance >= msgs.length || (_instance != -1 &&  msgs[_instance] == null)) {
-          return 0;
-        }
-        return  _instance == -1 ? totalSize : msgs[_instance].size();
-      }
-    };
-
-  }
-
-  public List<SelectItem> getMaxRows() {
-    List<SelectItem> res = new ArrayList<SelectItem>();
-    Collections.addAll(res,
-        new SelectItem(10),
-        new SelectItem(100),
-        new SelectItem(200),
-        new SelectItem(300),
-        new SelectItem(400),
-        new SelectItem(500),
-        new SelectItem(1000),
-        new SelectItem(2000),
-        new SelectItem(5000)
-    );
-    return res;
-  }
-
-
-  public int getCurrentInstance() {
-    return currentInstance;
-  }
-
-  public void setCurrentInstance(int currentInstance) {
-    this.currentInstance = currentInstance;
-  }
-
-  public Collection[] getMsgs() {
-    return msgs;
-  }
-
-  public int getTotalSize() {
-    return totalSize;
-  }
-
-  private static final String smppStatusPrefix = "smsc.errcode.";
-
-
-  public List<SelectItem> getLastResults() {
-    Locale locale = getLocale();
-    ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
-    Enumeration<String> enumeration = bundle.getKeys();
-    Map<Integer,String> preres = new TreeMap<Integer, String>();
-    while (enumeration.hasMoreElements()) {
-      String key = enumeration.nextElement();
-      if(key.length() > smppStatusPrefix.length() && key.startsWith(smppStatusPrefix)) {
-        try{
-          Integer code = Integer.parseInt(key.substring(smppStatusPrefix.length()));
-          preres.put(code, "(" + code + ") " + bundle.getString(key));
-        }catch (NumberFormatException ignored){}
-      }
+    if(msgs == null || _instance >= msgs.length || (_instance != -1 && msgs[_instance] == null) ) {
+      return Collections.emptyList();
     }
-
-    List<SelectItem> res = new ArrayList<SelectItem>(preres.size());
-    for(Map.Entry<Integer, String> e : preres.entrySet()) {
-      res.add(new SelectItem(e.getKey().toString(), e.getValue()));
+    List<Message> result = new LinkedList<Message>();
+    List<Message> records;
+    if(_instance == -1) {
+      records = new ArrayList<Message>(totalSize);
+      for(Collection<Message> c : msgs)  {
+        records.addAll(c);
+      }
+    }else {
+      records = new ArrayList<Message>(msgs[_instance]);
     }
+    Collections.sort(records, getComparator(dataTableSortOrder));
+    for (int i = startPos; i < Math.min(records.size(), startPos + count); i++) {
+      result.add(records.get(i));
+    }
+    return result;
+  }
 
-    return res;
+  protected int getRowsCount() {
+    final int _instance = currentInstance;
+    if(msgs == null || _instance >= msgs.length || (_instance != -1 &&  msgs[_instance] == null)) {
+      return 0;
+    }
+    return  _instance == -1 ? totalSize : msgs[_instance].size();
   }
 
   private static Comparator<Message> getComparator(final DataTableSortOrder sortOrder) {
@@ -269,14 +190,11 @@ public class SmsViewOperativeController extends SmscController {
     };
   }
 
-  public boolean isLoaded() {
-    return loaded;
-  }
-
   @SuppressWarnings({"unchecked"})
   @Override
   protected void _download(PrintWriter writer) throws IOException {
-    if(!loaded || msgs == null || currentInstance>= msgs.length || (currentInstance != -1 && msgs[currentInstance] == null)) {
+    int currentInstance = getCurrentInstance();
+    if(!isLoaded() || msgs == null || currentInstance>= msgs.length || (currentInstance != -1 && msgs[currentInstance] == null)) {
       return;
     }
     SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", getLocale());
@@ -296,7 +214,7 @@ public class SmsViewOperativeController extends SmscController {
       addError(e);
     }
   }
-  
+
   private static final char TAB = '\t';
   private static final String LINE_SEP = "\r\n";
   private static final String SPACE = " ";
@@ -324,7 +242,7 @@ public class SmsViewOperativeController extends SmscController {
   private static final String SPECIAL_ROLE1 = "smsView_smstext_p2p";
   private static final String SPECIAL_ROLE2 = "smsView_smstext_content";
 
-  public boolean isAllowToShowSmsText(Message row) throws AdminException{
+  protected boolean isAllowToShowSmsText(Message row) throws AdminException{
     if (row.getSrcSmeId().equalsIgnoreCase(MAP_PROXY) && row.getDstSmeId().equals(MAP_PROXY)) {
       return isUserhasRole(SPECIAL_ROLE1);
     }else {

@@ -74,12 +74,4 @@ public class SmsSet {
   public void setHasMore(boolean hasMore) {
     this.hasMore = hasMore;
   }
-
-  public int getMaxRows() {
-    return maxRows;
-  }
-
-  public void setMaxRows(int maxRows) {
-    this.maxRows = maxRows;
-  }
 }

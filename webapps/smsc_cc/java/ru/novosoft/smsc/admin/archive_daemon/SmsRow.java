@@ -24,9 +24,9 @@ public class SmsRow {
   protected Integer lastResult;
   protected Date lastTryTime;
   protected Date nextTryTime;
-  protected String originatingAddress = "originatingAddress";
-  protected String destinationAddress = "destinationAddress";
-  protected String dealiasedDestinationAddress = "dealiasedDestinationAddress";
+  protected Address originatingAddress;
+  protected Address destinationAddress;
+  protected Address dealiasedDestinationAddress;
   protected Integer messageReference;
   protected String serviceType;
   protected boolean needArchivate;
@@ -43,9 +43,6 @@ public class SmsRow {
   protected Short concatSeqNum;
   protected Long pointer;
   protected Integer bodyLen;
-  protected Address originatingAddressMask;
-  protected Address destinationAddressMask;
-  protected Address dealiasedDestinationAddressMask;
 
   protected Status status;
 
@@ -74,93 +71,45 @@ public class SmsRow {
     return Long.toHexString(getId()).toUpperCase();
   }
 
-  public String getOriginatingAddress() {
+  public Address getOriginatingAddress() {
     return originatingAddress;
   }
 
-  public void setOriginatingAddress(String address) throws AdminException {
+  public void setOriginatingAddress(Address address) throws AdminException {
     originatingAddress = address;
-    try {
-      originatingAddressMask = new Address(address);
-    } catch (Exception ex) {
-      originatingAddressMask = new Address(".5.0.inv_addr");
-    }
   }
 
-  public void setOriginatingAddress(Address mask) {
-    originatingAddress = mask.getAddress();
-    originatingAddressMask = mask;
-  }
-
-  public String getDestinationAddress() {
+  public Address getDestinationAddress() {
     return destinationAddress;
   }
 
-  public void setDestinationAddress(String address) throws AdminException {
+  public void setDestinationAddress(Address address) throws AdminException {
     destinationAddress = address;
-    try {
-      destinationAddressMask = new Address(address);
-    } catch (Exception ex) {
-      destinationAddressMask = new Address(".5.0.invalid_addr");
-    }
   }
 
-  public void setDestinationAddress(Address mask) {
-    destinationAddress = mask.getAddress();
-    destinationAddressMask = mask;
-  }
 
-  public String getDealiasedDestinationAddress() {
+  public Address getDealiasedDestinationAddress() {
     return dealiasedDestinationAddress;
   }
 
-  public void setDealiasedDestinationAddress(String address) throws AdminException {
+  public void setDealiasedDestinationAddress(Address address) throws AdminException {
     dealiasedDestinationAddress = address;
-    try {
-      dealiasedDestinationAddressMask = new Address(address);
-    } catch (Exception ex) {
-      dealiasedDestinationAddressMask = new Address(".5.0.invalid_addr");
-    }
   }
 
-  public void setDealiasedDestinationAddress(Address mask) {
-    dealiasedDestinationAddress = mask.getAddress();
-    dealiasedDestinationAddressMask = mask;
-  }
-
-  public String getToString() {
-    return ((getDealiasedDestinationAddress() == null || getDealiasedDestinationAddress().length() == 0 ||
-        getDestinationAddress().equalsIgnoreCase(getDealiasedDestinationAddress())) ? getDestinationAddress() : (getDestinationAddress() + " (" + getDealiasedDestinationAddress() + ")"));
-  }
-
-  public String getDateString() {
-    return formatter.format(getSubmitTime());
-  }
 
   public Date getSubmitTime() {
-    return submitTime == null ? new Date() : submitTime;
+    return submitTime == null ? null : submitTime;
   }
 
   public void setSubmitTime(Date submitTime) {
     this.submitTime = submitTime;
   }
 
-  public static String getStatusString(int status) {
+  private String getStatusString(int status) {
     Status s;
     return (s = Status.get(status)) != null ? s.toString() : "UNKNOWN";
   }
 
-  public String getStatus() {
-    return getStatusString(getStatusInt());
-  }
-
-  public int getStatusInt() {
-    return status == null ? 0 : status.getCode();
-  }
-
-  public void setStatus(int status) {
-    this.status = Status.get(status);
-  }
 
   public int getLastResult() {
     return lastResult == null ? 0 : lastResult;
@@ -338,18 +287,6 @@ public class SmsRow {
     this.validTime = validTime;
   }
 
-  public Address getDealiasedDestinationAddressMask() {
-    return dealiasedDestinationAddressMask;
-  }
-
-  public Address getDestinationAddressMask() {
-    return destinationAddressMask;
-  }
-
-  public Address getOriginatingAddressMask() {
-    return originatingAddressMask;
-  }
-
   public boolean isTextEncoded() {
     return textEncoded;
   }
@@ -416,8 +353,15 @@ public class SmsRow {
     this.originalText = originalText;
   }
 
+  public Status getStatus() {
+    return status;
+  }
 
-  private static enum Status {
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  public static enum Status {
     MSG_STATE_ENROUTE(0),
     MSG_STATE_DELIVERED(1),
     MSG_STATE_EXPIRED(2),

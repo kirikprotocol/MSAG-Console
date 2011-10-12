@@ -38,6 +38,8 @@ public class SmscStatController extends SmscController{
   private Date oldFrom;
   private Date oldTill;
 
+  private boolean init = false;
+
   public SmscStatController() {
     this.provider = WebContext.getInstance().getSmscStatProvider();
     Calendar c = Calendar.getInstance();
@@ -68,6 +70,7 @@ public class SmscStatController extends SmscController{
 
 
   public String start() {
+    init = true;
     if(isChanged()) {
       loaded = false;
       loadListener = null;
@@ -78,6 +81,7 @@ public class SmscStatController extends SmscController{
   }
 
   public String clear() {
+    init = true;
     loaded = false;
     loadListener = null;
     providerId = null;
@@ -85,6 +89,10 @@ public class SmscStatController extends SmscController{
     setFrom(null);
     setTill(null);
     return null;
+  }
+
+  public boolean isInit() {
+    return init;
   }
 
   public boolean isChanged() {

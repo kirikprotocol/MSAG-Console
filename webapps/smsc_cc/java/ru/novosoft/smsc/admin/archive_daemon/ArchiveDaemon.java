@@ -44,7 +44,7 @@ public class ArchiveDaemon {
    * @return статистика смс
    * @throws AdminException ошибка извлечения статистики
    */
-  public SmsSet getSmsSet(SmsQuery query) throws AdminException {
+  public SmsSet getSmsSet(ArchiveMessageFilter query) throws AdminException {
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
@@ -114,7 +114,7 @@ public class ArchiveDaemon {
    * @return кол-во смс
    * @throws AdminException ошибка извлечения статистики
    */
-  public int getSmsCount(SmsQuery query) throws AdminException {
+  public int getSmsCount(ArchiveMessageFilter query) throws AdminException {
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;

@@ -74,7 +74,7 @@
 
 <p/>
 
-<eye:dataTable value="#{smscStat.general}" var="r" rendered="#{smscStat.showGeneral}">
+<eye:dataTable value="#{smscStat.general}" var="r" rendered="#{smscStat.showGeneral and smscStat.init}">
 
   <eye:row innerRows="#{r.hourStat}">
     <eye:column name="date" title="#{msg['smsc.stat.date']}" columnClass="dateColumn">
@@ -164,7 +164,7 @@
 </eye:dataTable>
 
 
-<eye:dataTable value="#{smscStat.smeStat}" var="r" rendered="#{smscStat.showSmes}">
+<eye:dataTable value="#{smscStat.smeStat}" var="r" rendered="#{smscStat.showSmes and smscStat.init}">
 
   <eye:row innerRows="#{r.errors}">
     <eye:column name="sme" title="#{msg['smsc.stat.sme']}" columnClass="dateColumn">
@@ -227,7 +227,7 @@
 
 </eye:dataTable>
 
-<eye:dataTable value="#{smscStat.routeStat}" var="r" rendered="#{smscStat.showRoutes}">
+<eye:dataTable value="#{smscStat.routeStat}" var="r" rendered="#{smscStat.showRoutes and smscStat.init}">
 
   <eye:row innerRows="#{r.errors}">
     <eye:column name="sme" title="#{msg['smsc.stat.route']}" columnClass="dateColumn">
@@ -290,7 +290,7 @@
 
 </eye:dataTable>
 
-<eye:dataTable value="#{smscStat.errors}" var="r" rendered="#{smscStat.showErrors}">
+<eye:dataTable value="#{smscStat.errors}" var="r" rendered="#{smscStat.showErrors and smscStat.init}">
 
   <eye:row>
     <eye:column name="code" title="#{msg['smsc.stat.errcode']}" columnClass="errcodeColumn">

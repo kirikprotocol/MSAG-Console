@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.util.Functions;
 
 import java.util.Date;
 
@@ -11,7 +9,7 @@ import java.util.Date;
  *
  * @author Aleksandr Khalitov
  */
-public class SmsQuery {
+public class ArchiveMessageFilter {
 
   private int rowsMaximum = 500;
 
@@ -31,17 +29,32 @@ public class SmsQuery {
 
   private Long smsId;
 
-  private Date fromDate = Functions.truncateTime(new Date());
-  private boolean isFilterFromDate = true;
+  private Date fromDate = new Date();
 
   private Date tillDate = new Date();
-  private boolean isFilterTillDate = false;
 
   private Integer status;
 
   private Integer lastResult;
 
-  private String sortBy = "lastDate";
+  public ArchiveMessageFilter() {
+  }
+
+  public ArchiveMessageFilter(ArchiveMessageFilter q) {
+    abonentAddress = q.getAbonentAddress() == null ? null : new Address(q.getAbonentAddress());
+    fromAddress = q.getFromAddress() == null ? null : new Address(q.getFromAddress());
+    toAddress = q.getToAddress() == null ? null : new Address(q.getToAddress());
+    smeId = q.getSmeId();
+    srcSmeId = q.getSrcSmeId();
+    dstSmeId = q.getDstSmeId();
+    routeId = q.getRouteId();
+    smsId = q.getSmsId();
+    fromDate = q.getFromDate() == null ? null : new Date(q.getFromDate().getTime());
+    tillDate = q.getTillDate() == null ? null : new Date(q.getTillDate().getTime());
+    lastResult = q.getLastResult();
+    rowsMaximum = q.getRowsMaximum();
+    status = q.getStatus();
+  }
 
   public int getRowsMaximum() {
     return rowsMaximum;
@@ -111,17 +124,10 @@ public class SmsQuery {
     return smsId;
   }
 
-  public void setSmsId(Long id) throws AdminException {
+  public void setSmsId(Long id) {
     smsId = id;
   }
 
-  public void setFilterFromDate(boolean enabled) {
-    isFilterFromDate = enabled;
-  }
-
-  public boolean getFilterFromDate() {
-    return isFilterFromDate;
-  }
 
   public Date getFromDate() {
     return fromDate;
@@ -131,28 +137,12 @@ public class SmsQuery {
     fromDate = date;
   }
 
-  public void setFilterTillDate(boolean enabled) {
-    isFilterTillDate = enabled;
-  }
-
-  public boolean getFilterTillDate() {
-    return isFilterTillDate;
-  }
-
   public Date getTillDate() {
     return tillDate;
   }
 
   public void setTillDate(Date date) {
     tillDate = date;
-  }
-
-  public String getSortBy() {
-    return sortBy;
-  }
-
-  public void setSortBy(String by) {
-    sortBy = by;
   }
 
   public Integer getStatus() {

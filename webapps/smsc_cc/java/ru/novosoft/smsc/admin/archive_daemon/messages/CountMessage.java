@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin.archive_daemon.messages;
 
-import ru.novosoft.smsc.admin.archive_daemon.SmsQuery;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveMessageFilter;
 
 
 /**
@@ -11,7 +11,7 @@ import ru.novosoft.smsc.admin.archive_daemon.SmsQuery;
 
 public class CountMessage extends QueryMessage {
 
-  public CountMessage(SmsQuery query) {
+  public CountMessage(ArchiveMessageFilter query) {
     super(Message.SMSC_BYTE_COUNT_TYPE, query);
   }
 

@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin.archive_daemon.messages;
 
-import ru.novosoft.smsc.admin.archive_daemon.SmsQuery;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveMessageFilter;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.IOUtils;
 
@@ -28,14 +28,14 @@ public class QueryMessage extends Message {
   public final static byte T_STAUS = 110;
   public final static byte T_LAST_RESULT = 120;
 
-  private SmsQuery query = null;
+  private ArchiveMessageFilter query = null;
 
-  public QueryMessage(SmsQuery query) {
+  public QueryMessage(ArchiveMessageFilter query) {
     super(SMSC_BYTE_QUERY_TYPE);
     this.query = query;
   }
 
-  public QueryMessage(byte type, SmsQuery query) {
+  public QueryMessage(byte type, ArchiveMessageFilter query) {
     super(type);
     this.query = query;
   }
@@ -69,9 +69,9 @@ public class QueryMessage extends Message {
       }
       list.add(new Param(T_SMS_ID, idValue));
     }
-    if (query.getFilterFromDate())
+    if (query.getFromDate() != null)
       list.add(new Param(T_FROM_DATE, convertStringToDate(query.getFromDate())));
-    if (query.getFilterTillDate())
+    if (query.getTillDate() != null)
       list.add(new Param(T_TILL_DATE, convertStringToDate(query.getTillDate())));
 
     if (query.getAbonentAddress() != null) {

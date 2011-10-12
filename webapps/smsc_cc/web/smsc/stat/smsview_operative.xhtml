@@ -95,7 +95,7 @@
 
       <p/>
 
-      <eye:dataTable value="#{smsViewOper.messages}" var="r">
+      <eye:dataTable value="#{smsViewOper.messages}" var="r" rendered="#{smsViewOper.init}">
 
         <eye:row>
           <eye:column name="id" title="#{msg['smsc.sms.view.id']}" columnClass="idColumn" sortable="true" defaultSortOrder="asc">
@@ -151,7 +151,7 @@
 
       </eye:dataTable>
 
-      <eye:buttons>
+      <eye:buttons rendered="#{smsViewOper.init}">
         <eye:button>
           <h:commandLink value="#{msg['download.button']}">
             <eye:fileDownloadListener contentType="application/vnd.ms-excel" filename="smsview.xls" method="#{smsViewOper.download}"/>

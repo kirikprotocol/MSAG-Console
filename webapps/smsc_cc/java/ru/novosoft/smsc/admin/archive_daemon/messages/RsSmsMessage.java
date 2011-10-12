@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin.archive_daemon.messages;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.SmsDescriptor;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
+import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -49,7 +50,7 @@ public class RsSmsMessage extends Message {
       throw new IOException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
 
     sms.setId(IOUtils.readInt64(is));
-    sms.setStatus(IOUtils.readUInt8(is));
+    sms.setStatus(SmsRow.Status.get(IOUtils.readUInt8(is)));
     sms.setSubmitTime(convertDateFromString(IOUtils.readString8(is)));
     sms.setValidTime(convertDateFromString(IOUtils.readString8(is)));
     sms.setLastTryTime(convertDateFromString(IOUtils.readString8(is)));
@@ -57,17 +58,17 @@ public class RsSmsMessage extends Message {
     sms.setAttempts((int) IOUtils.readUInt32(is));
     sms.setLastResult((int) IOUtils.readUInt32(is));
     try {
-      sms.setOriginatingAddress(IOUtils.readString8(is));
+      sms.setOriginatingAddress(new Address(IOUtils.readString8(is)));
     } catch (AdminException e) {
       throw new IOException(e.getMessage());
     }
     try {
-      sms.setDestinationAddress(IOUtils.readString8(is));
+      sms.setDestinationAddress(new Address(IOUtils.readString8(is)));
     } catch (AdminException e) {
       throw new IOException(e.getMessage());
     }
     try {
-      sms.setDealiasedDestinationAddress(IOUtils.readString8(is));
+      sms.setDealiasedDestinationAddress(new Address(IOUtils.readString8(is)));
     } catch (AdminException e) {
       throw new IOException(e.getMessage());
     }
