@@ -78,8 +78,12 @@ function DataTable(tableId, tableOptions) {
     };
 
     var _updateOverlay = function() {
-      if (progress != 100)
+      if (progress != 100) {
+        if (progress != null)
+          progress+="%";
         progressOverlay.showProgress(progress);
+      }
+
     };
 
     var _sendRequest = function() {
@@ -87,8 +91,7 @@ function DataTable(tableId, tableOptions) {
     };
 
     progress = null;
-    window.setTimeout(_updateOverlay, 1000);
-//    progressOverlay.showProgress(null);
+    window.setTimeout(_updateOverlay,300);
     _sendRequest();
   };
 

@@ -2,7 +2,6 @@
         xmlns:h="http://java.sun.com/jsf/html"
         xmlns:eye="http://jsfcomponents.eyeline.mobi"
         xmlns:ui="http://java.sun.com/jsf/facelets"
-        xmlns:t="http://myfaces.apache.org/tomahawk"
         xmlns:f="http://java.sun.com/jsf/core">
 
 
@@ -34,7 +33,11 @@
           <eye:inputDate value="#{inputDate.inputDate4}"/>
         </h:panelGrid>
 
-        <h:commandButton value="Submit"/>
+        <eye:buttons>
+          <eye:button><h:commandLink value="Submit"/> </eye:button>
+          <eye:space/>
+        </eye:buttons>
+        <!--<h:commandButton value="Submit"/>-->
 
       </h:form>
 

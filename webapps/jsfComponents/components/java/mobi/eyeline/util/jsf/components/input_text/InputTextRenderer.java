@@ -31,7 +31,8 @@ public class InputTextRenderer extends Renderer {
     String id = component.getId();
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String submittedValue = decodeString(reqParams.get(id));
-    if (submittedValue != null )
+    ((InputText) component).setSubmittedValue(null);
+    if (submittedValue != null)
       ((InputText) component).setSubmittedValue(new String[]{submittedValue});
     else if (((UIInput)component).isRequired())
       ((UIInput)component).setSubmittedValue(new String[]{null});
