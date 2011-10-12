@@ -3,7 +3,7 @@ package ru.novosoft.smsc.web.controllers.sms_view;
 import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
 import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemon;
 import ru.novosoft.smsc.admin.archive_daemon.SmsDescriptor;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
 import ru.novosoft.smsc.admin.archive_daemon.SmsSet;
@@ -18,43 +18,43 @@ import java.util.List;
  */
 class GetSmsFromArchive implements GetSmsStrategy {
 
-  private final ArchiveDemon archiveDaemon;
+  private final ArchiveDaemon archiveDaemon;
 
-  public GetSmsFromArchive(ArchiveDemon archiveDaemon) {
+  public GetSmsFromArchive(ArchiveDaemon archiveDaemon) {
     this.archiveDaemon = archiveDaemon;
   }
 
-  public DataTableModel getSms(SmsQuery query, GetSmsProgress progress) throws AdminException {
+  public DataTableModel getSms(SmsQuery query, GetSmsProgress progress) throws AdminException {             //todo status
 
-    ru.novosoft.smsc.admin.archive_daemon.SmsQuery q = new ru.novosoft.smsc.admin.archive_daemon.SmsQuery();
-    if (query.getAbonentAddress() != null)
-      q.setAbonentAddress(query.getAbonentAddress().getSimpleAddress());
-    if (query.getDstSmeId() != null)
-      q.setDstSmeId(query.getDstSmeId());
-    if (query.getFromAddress() != null)
-      q.setFromAddress(query.getFromAddress().getSimpleAddress());
-    if (query.getFromDate() != null)
-      q.setFromDate(query.getFromDate());
-    if (query.getLastResult() != null)
-      q.setLastResult(query.getLastResult());
-    if (query.getMaxRows() != null)
-      q.setRowsMaximum(query.getMaxRows());
-    if (query.getRouteId() != null)
-      q.setRouteId(query.getRouteId());
-    if (query.getSmeId() != null)
-      q.setSmeId(query.getSmeId());
-    if (query.getSmsId() != null)
-      q.setSmsId(query.getSmsId().toString());
-    if (query.getSrcSmeId() != null)
-      q.setSrcSmeId(query.getSrcSmeId());
-    if (query.getTillDate() != null)
-      q.setTillDate(query.getTillDate());
-    if (query.getToAddress() != null)
-      q.setToAddress(query.getToAddress().getSimpleAddress());
+//    ru.novosoft.smsc.admin.archive_daemon.SmsQuery q = new ru.novosoft.smsc.admin.archive_daemon.SmsQuery();
+//    if (query.getAbonentAddress() != null)
+//      q.setAbonentAddress(query.getAbonentAddress().getSimpleAddress());
+//    if (query.getDstSmeId() != null)
+//      q.setDstSmeId(query.getDstSmeId());
+//    if (query.getFromAddress() != null)
+//      q.setFromAddress(query.getFromAddress().getSimpleAddress());
+//    if (query.getFromDate() != null)
+//      q.setFromDate(query.getFromDate());
+//    if (query.getLastResult() != null)
+//      q.setLastResult(query.getLastResult());
+//    if (query.getMaxRows() != null)
+//      q.setRowsMaximum(query.getMaxRows());
+//    if (query.getRouteId() != null)
+//      q.setRouteId(query.getRouteId());
+//    if (query.getSmeId() != null)
+//      q.setSmeId(query.getSmeId());
+//    if (query.getSmsId() != null)
+//      q.setSmsId(query.getSmsId().toString());
+//    if (query.getSrcSmeId() != null)
+//      q.setSrcSmeId(query.getSrcSmeId());
+//    if (query.getTillDate() != null)
+//      q.setTillDate(query.getTillDate());
+//    if (query.getToAddress() != null)
+//      q.setToAddress(query.getToAddress().getSimpleAddress());
 
     progress.setCurrent(0);
     progress.setTotal(1);
-    final SmsSet messages = archiveDaemon.getSmsSet(q);
+    final SmsSet messages = archiveDaemon.getSmsSet(new ru.novosoft.smsc.admin.archive_daemon.SmsQuery());
     progress.setCurrent(1);
 
     return new DataTableModel() {

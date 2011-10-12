@@ -134,7 +134,7 @@ public class AdminMode {${line.separator}
     <equals arg1="${smsc.devMode}" arg2="true"/>
   </condition>
 
-  <target name="predistr.dev" if="is.dev">
+  <target name="predistr.dev" if="is.dev" depends="test">
     <echo>DEVELOPERS MODE</echo>
     <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.test.classes}"/>
   </target>

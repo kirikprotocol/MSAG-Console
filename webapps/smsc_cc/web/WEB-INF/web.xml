@@ -308,4 +308,14 @@
     <role-name>services</role-name>
   </security-role>
 
+  <security-role>
+    <role-name>smsView_smstext_p2p</role-name>
+  </security-role>
+
+  <security-role>
+    <role-name>services</role-name>
+  </security-role>
+
+
+
 </web-app>

@@ -91,10 +91,12 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false);
     TestUtils.exportResource(TestProfileManager.emptyProfilesFileAsStream(AdminMode.smsx, PROFILES_VERSION), new File(smscDir, "profiles.bin"), false);
 
-    File operStoreDir = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"operative");
-    operStoreDir.mkdirs();
-    TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false);
-
+    for(int i=1; i<3;i++) {
+      File operStoreDir = new File(servicesDir, "SMSC"+i+File.separatorChar+"store"+File.separatorChar+"operative");
+      operStoreDir.mkdirs();
+      TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false);
+      TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.20111010113952.bin"), new File(operStoreDir, "store.20111010113952.bin"), false);
+    }
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
     File statDir =  new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat"+File.separatorChar+format.format(new Date()));
@@ -196,7 +198,7 @@ public class TestAdminContext extends AdminContext {
     File[] operStores = new File[smscInstancesNumber];
     operStores[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
     for (int i =0; i<smscInstancesNumber; i++)
-      operStores[i] = new File(servicesDir, "SMSC" + i + +File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
+      operStores[i] = new File(servicesDir, "SMSC" + i +File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
 
     operativeStoreProvider = new OperativeStoreProvider(operStores, fileSystem);
 

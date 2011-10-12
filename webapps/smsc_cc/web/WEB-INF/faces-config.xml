@@ -345,9 +345,15 @@
   </managed-bean>
 
   <managed-bean>
-    <managed-bean-name>smsView</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.sms_view.SmsViewController</managed-bean-class>
-    <managed-bean-scope>request</managed-bean-scope>
+    <managed-bean-name>smsViewOper</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.sms_view.SmsViewOperativeController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>smsViewArchive</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.sms_view.SmsViewArchiveController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
@@ -529,8 +535,13 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
-      <from-outcome>SMS_VIEW</from-outcome>
-      <to-view-id>/smsc/sms_view/index.faces</to-view-id>
+      <from-outcome>SMS_VIEW_OPERATIVE</from-outcome>
+      <to-view-id>/smsc/stat/smsview_operative.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMS_VIEW_ARCHIVE</from-outcome>
+      <to-view-id>/smsc/stat/smsview_archive.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

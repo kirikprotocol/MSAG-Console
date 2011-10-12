@@ -16,15 +16,15 @@ import java.net.Socket;
  * @author Aleksandr Khalitov
  */
 
-public class ArchiveDemon {
+public class ArchiveDaemon {
 
   private final static int MAX_SMS_FETCH_SIZE = 5000;
 
-  private static final Logger logger = Logger.getLogger(ArchiveDemon.class);
+  private static final Logger logger = Logger.getLogger(ArchiveDaemon.class);
 
   private final ArchiveDaemonManager manager;
 
-  public ArchiveDemon(ArchiveDaemonManager manager) throws AdminException {
+  public ArchiveDaemon(ArchiveDaemonManager manager) throws AdminException {
     this.manager = manager;
   }
 

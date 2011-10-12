@@ -90,6 +90,10 @@ public abstract class SmscController implements Serializable {
     return FacesContext.getCurrentInstance().getExternalContext().isUserInRole("users");
   }
 
+   protected boolean isUserhasRole(String name) {
+    return FacesContext.getCurrentInstance().getExternalContext().isUserInRole(name);
+  }
+
   /**
    * Метод для отдачи файлов
    *

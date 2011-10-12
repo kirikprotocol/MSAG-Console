@@ -20,23 +20,41 @@ public class SmsQuery {
   private Date fromDate;
   private Date tillDate;
   private Integer lastResult;
-  private Integer maxRows;
+  private Integer maxRows = 1000;
+  private SmsStatus smsStatus;
 
   SmsQuery() {
   }
 
+  public SmsQuery(SmsQuery q) {
+    abonentAddress = q.getAbonentAddress() == null ? null : new Address(q.getAbonentAddress());
+    fromAddress = q.getFromAddress() == null ? null : new Address(q.getFromAddress());
+    toAddress = q.getToAddress() == null ? null : new Address(q.getToAddress());
+    smeId = q.getSmeId();
+    srcSmeId = q.getSrcSmeId();
+    dstSmeId = q.getDstSmeId();
+    routeId = q.getRouteId();
+    smsId = q.getSmsId();
+    fromDate = q.getFromDate() == null ? null : new Date(q.getFromDate().getTime());
+    tillDate = q.getTillDate() == null ? null : new Date(q.getTillDate().getTime());
+    lastResult = q.getLastResult();
+    maxRows = q.getMaxRows();
+    smsStatus = q.getSmsStatus();
+  }
+
   public void clear() {
-    Address abonentAddress = null;
-    Address fromAddress = null;
-    Address toAddress = null;
-    String smeId = null;
-    String srcSmeId = null;
-    String dstSmeId = null;
-    String routeId = null;
-    Long smsId = null;
-    Date fromDate = null;
-    Date tillDate = null;
-    Integer lastResult = null;
+    abonentAddress = null;
+    fromAddress = null;
+    toAddress = null;
+    smeId = null;
+    srcSmeId = null;
+    dstSmeId = null;
+    routeId = null;
+    smsId = null;
+    fromDate = null;
+    tillDate = null;
+    lastResult = null;
+    smsStatus = null;
   }
 
   public Address getAbonentAddress() {
@@ -147,5 +165,38 @@ public class SmsQuery {
     if (maxRows != null && maxRows == Integer.MIN_VALUE)
       maxRows = null;
     this.maxRows = maxRows;
+  }
+
+  public SmsStatus getSmsStatus() {
+    return smsStatus;
+  }
+
+  public void setSmsStatus(SmsStatus smsStatus) {
+    this.smsStatus = smsStatus;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    SmsQuery smsQuery = (SmsQuery) o;
+
+    if (abonentAddress != null ? !abonentAddress.equals(smsQuery.abonentAddress) : smsQuery.abonentAddress != null)
+      return false;
+    if (dstSmeId != null ? !dstSmeId.equals(smsQuery.dstSmeId) : smsQuery.dstSmeId != null) return false;
+    if (fromAddress != null ? !fromAddress.equals(smsQuery.fromAddress) : smsQuery.fromAddress != null) return false;
+    if (fromDate != null ? !fromDate.equals(smsQuery.fromDate) : smsQuery.fromDate != null) return false;
+    if (lastResult != null ? !lastResult.equals(smsQuery.lastResult) : smsQuery.lastResult != null) return false;
+    if (maxRows != null ? !maxRows.equals(smsQuery.maxRows) : smsQuery.maxRows != null) return false;
+    if (routeId != null ? !routeId.equals(smsQuery.routeId) : smsQuery.routeId != null) return false;
+    if (smeId != null ? !smeId.equals(smsQuery.smeId) : smsQuery.smeId != null) return false;
+    if (smsId != null ? !smsId.equals(smsQuery.smsId) : smsQuery.smsId != null) return false;
+    if (smsStatus != smsQuery.smsStatus) return false;
+    if (srcSmeId != null ? !srcSmeId.equals(smsQuery.srcSmeId) : smsQuery.srcSmeId != null) return false;
+    if (tillDate != null ? !tillDate.equals(smsQuery.tillDate) : smsQuery.tillDate != null) return false;
+    if (toAddress != null ? !toAddress.equals(smsQuery.toAddress) : smsQuery.toAddress != null) return false;
+
+    return true;
   }
 }
