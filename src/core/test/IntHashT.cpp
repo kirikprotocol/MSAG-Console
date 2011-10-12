@@ -1,10 +1,13 @@
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <map>
 
 //#define INTHASH_USAGE_DEBUG
 #define INTHASH_USAGE_CHECKING
-//#include "core/buffers/IntHashT.hpp"
 #include "core/buffers/DAHashT.hpp"
 #include "core/buffers/DAHashFuncInts.hpp"
 #include "util/csv/CSValueTraitsInt.hpp"
@@ -272,7 +275,7 @@ int main(void)
   HashTester_T<uint32_t>  hash32_16("ku32c16");
   //if (!hash32_16.testHash_plain(0, 70000000))
   //    --rval;
-  if (!hash32_16.testHash_rand_del(0, 100000000, 8192))
+  if (!hash32_16.testHash_rand_del(0, 100000000, 16384))
     --rval;
   
 /*
@@ -284,7 +287,7 @@ int main(void)
 /*
   if (!hash64_16.testHash_plain(0, 70000000))
     --rval;*/
-   if (!hash64_16.testHash_rand_del(0, 100000000, 8192))
+   if (!hash64_16.testHash_rand_del(0, 100000000, 20480))
     --rval;
 
 /*  
