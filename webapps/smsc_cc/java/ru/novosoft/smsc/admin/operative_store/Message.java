@@ -65,4 +65,19 @@ public interface Message extends Serializable {
   public boolean isTextEncoded() throws AdminException;
 
   public BodyParameters getBodyParameters() throws AdminException;
+
+  public Status getStatus() throws AdminException;
+
+
+  public static enum Status {
+    ENROUTE, DELIVERED, EXPIRED, UNDELIVERABLE, DELETED, UNKNOWN;
+    public static Status valueOf(int status) {
+      Status[] _values =  Status.values();
+      if(status>=0 && status<_values.length) {
+        return _values[status];
+      }else{
+        return UNKNOWN;
+      }
+    }
+  }
 }

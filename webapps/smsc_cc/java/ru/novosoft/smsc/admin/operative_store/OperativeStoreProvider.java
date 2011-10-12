@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.admin.operative_store;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.IOUtils;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
 import java.io.*;
 import java.util.*;
@@ -37,10 +37,27 @@ public class OperativeStoreProvider {
     return true;
   }
 
-  static Collection<Message> getMessages(File smsStore, FileSystem fs, MessageFilter v, ProgressObserver p) throws AdminException {
+  private static File[] listStoreFiles(final FileSystem fs, File baseFile) {
+    String fn = baseFile.getName();
+    int i =  fn.lastIndexOf('.');
+    final String filenamePrefix = i > 0 ? fn.substring(0, i) : fn;
 
-    Map<Long, Message> msgs = new HashMap<Long, Message>();
-    LinkedList<LazyMessageImpl> objectsPool = new LinkedList<LazyMessageImpl>();
+    File[] files = fs.listFiles(baseFile.getParentFile(), new FileFilter() {
+      public boolean accept(File pathname) {
+        return !fs.isDirectory(pathname) && pathname.getName().startsWith(filenamePrefix);
+      }
+    });
+
+    if (files == null) {
+      return null;
+    }
+    Arrays.sort(files);
+    return files;
+  }
+
+  private static void getMessages(File smsStore, FileSystem fs, MessageFilter v, ProgressObserver p, Map<Long, Message> msgs, Set<Long> finishedMsgs, long delay) throws AdminException {
+
+    int maxSize = v == null ? Integer.MAX_VALUE : v.getMaxRowSize();
 
     boolean haveArc = false;
 
@@ -60,28 +77,38 @@ public class OperativeStoreProvider {
       try {
         long step = 0;
 
+        //noinspection InfiniteLoopStatement
+
+        boolean outOfSize = false;
         while (true) {
+          if(delay != 0) {
+            try {
+              Thread.sleep(delay);
+            } catch (InterruptedException e) {
+              return;
+            }
+          }
           int msgSize1 = (int) IOUtils.readUInt32(input);
           long msgId = IOUtils.readInt64(input);  // 8 bytes
 
-          if (v != null && v.getSmsId() != null && msgId != v.getSmsId()) {
+          boolean outOfSize1 = (msgs.size() == maxSize && !msgs.containsKey(msgId));
+          outOfSize = outOfSize || outOfSize1;
+
+          if ((v != null && v.getSmsId() != null && msgId != v.getSmsId()) || finishedMsgs.contains(msgId) || outOfSize1) {
             IOUtils.skip(input, msgSize1 - 8 + 4);
             continue;
           }
 
-          IOUtils.skip(input, 5); // Skip seq (4 bytes) and finall (1 byte)
+          IOUtils.skip(input, 4); // Skip seq (4 bytes)
+
+          int fin = IOUtils.readUInt8(input); // finall (1 byte)
           int status = IOUtils.readUInt8(input); // 1 byte
 
-          if (status == 0) {
+          if (fin == 0) {
             byte[] message = new byte[msgSize1 - 8 - 5 - 1];
             IOUtils.readFully(input, message, msgSize1 - 8 - 5 - 1);
 
-            LazyMessageImpl sms;
-            if (!objectsPool.isEmpty()) {
-              sms = objectsPool.removeFirst();
-              sms.reset(message, haveArc, msgId);
-            } else
-              sms = new LazyMessageImpl(message, haveArc, msgId);
+            LazyMessageImpl sms = new LazyMessageImpl(message, haveArc, msgId, status);
 
             boolean allowed = true;
             if (v != null) {
@@ -105,17 +132,18 @@ public class OperativeStoreProvider {
                 allowed = false;
               } else if (!v.additionalFilter(sms)) {
                 allowed = false;
+              }else if (v.getLastResult() != null && !v.getLastResult().equals(sms.getLastResult())) {
+                allowed = false;
               }
             }
 
-            if (allowed)
+            if (allowed && !outOfSize1)
               msgs.put(msgId, sms);
 
 
           } else {
-            LazyMessageImpl msg = (LazyMessageImpl) msgs.remove(msgId);
-            if (msg != null)
-              objectsPool.add(msg);
+            msgs.remove(msgId);
+            finishedMsgs.add(msgId);
             IOUtils.skip(input, msgSize1 - 8 - 5 - 1);
           }
 
@@ -135,7 +163,7 @@ public class OperativeStoreProvider {
         }
 
 
-      } catch (EOFException e) {
+      } catch (EOFException ignored) {
       }
 
     } catch (IOException e) {
@@ -144,10 +172,33 @@ public class OperativeStoreProvider {
       if (input != null)
         try {
           input.close();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
     }
+  }
 
+  static Collection<Message> getMessages(File smsStore, FileSystem fs, MessageFilter v, final ProgressObserver p) throws AdminException {
+
+    Map<Long, Message> msgs = new HashMap<Long, Message>();
+
+    final File[] files = listStoreFiles(fs, smsStore);
+    if(files != null && files.length != 0) {
+      final long[] totals = new long[]{0};
+      for(File f : files) {
+        totals[0] += f.length();
+      }
+      ProgressObserver _p = new ProgressObserver() {
+        public void update(long current, long total) {
+          p.update(current, totals[0]);
+        }
+      };
+      Set<Long> finished = new HashSet<Long>();
+      for(int i = 0; i < files.length; i++){
+        File file  = files[i];
+        long delay = i == (files.length - 1) ? 10 : 0;
+        getMessages(file, fs, v, _p, msgs, finished, delay);
+      }
+    }
     return msgs.values();
   }
 
@@ -166,19 +217,6 @@ public class OperativeStoreProvider {
     File smsStore = smsStorePaths[smscInstanceNumber];
     if (!smsStore.exists())
       return Collections.emptyList();
-
-    String smsstorePath = smsStore.getName();
-    File rowFile = new File(smsStore.getParentFile(), smsstorePath.substring(0, smsstorePath.lastIndexOf('.')) + ".rol");
-
-    // Check .row file does not exists
-    while (rowFile.exists()) {
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        return Collections.emptyList();
-      }
-    }
 
     return getMessages(smsStore, fs, filter, progressObserver);
   }

@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.admin.operative_store;
 
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.util.Functions;
 
 import java.util.Date;
 
@@ -10,7 +8,7 @@ import java.util.Date;
  * Фильтр сообщений
  * @author Artem Snopkov
  */
-public class MessageFilter {
+public class MessageFilter{
 
   private Address abonentAddress;
   private Address fromAddress;
@@ -23,7 +21,33 @@ public class MessageFilter {
   private Date fromDate;
   private Date tillDate;
   private Integer lastResult;
+  private int maxRowSize = 1000;
 
+  public MessageFilter() {
+  }
+
+  public MessageFilter(MessageFilter o) {
+    abonentAddress = o.getAbonentAddress() == null ? null : new Address(o.getAbonentAddress());
+    fromAddress = o.getFromAddress() == null ? null : new Address(o.getFromAddress());
+    toAddress = o.getToAddress() == null ? null : new Address(o.getToAddress());
+    smeId = o.getSmeId();
+    srcSmeId = o.getSrcSmeId();
+    dstSmeId = o.getDstSmeId();
+    routeId = o.getRouteId();
+    smsId = o.getSmsId();
+    fromDate = o.getFromDate() != null ? new Date(o.getFromDate().getTime()) : null;
+    tillDate = o.getTillDate() != null ? new Date(o.getTillDate().getTime()) : null;
+    maxRowSize = o.getMaxRowSize();
+    lastResult = o.getLastResult();
+  }
+
+  public Integer getLastResult() {
+    return lastResult;
+  }
+
+  public void setLastResult(Integer lastResult) {
+    this.lastResult = lastResult;
+  }
 
   public Address getAbonentAddress() {
     return abonentAddress;
@@ -70,7 +94,7 @@ public class MessageFilter {
    * @param smeId srcSmeId или dstSmeId
    */
   public void setSmeId(String smeId) {
-    this.smeId = smeId;
+    this.smeId = smeId == null || smeId.length() == 0 ? null : smeId;
   }
 
   public String getSrcSmeId() {
@@ -82,7 +106,7 @@ public class MessageFilter {
    * @param srcSmeId идентификатор SME отправителя
    */
   public void setSrcSmeId(String srcSmeId) {
-    this.srcSmeId = srcSmeId;
+    this.srcSmeId = srcSmeId == null || srcSmeId.length() == 0 ? null : srcSmeId;
   }
 
   public String getDstSmeId() {
@@ -95,7 +119,7 @@ public class MessageFilter {
    * @param dstSmeId идентификатор SME-получателя
    */
   public void setDstSmeId(String dstSmeId) {
-    this.dstSmeId = dstSmeId;
+    this.dstSmeId = dstSmeId == null || dstSmeId.length() == 0 ? null : dstSmeId;
   }
 
   public String getRouteId() {
@@ -107,7 +131,7 @@ public class MessageFilter {
    * @param routeId идентификатор маршрута
    */
   public void setRouteId(String routeId) {
-    this.routeId = routeId;
+    this.routeId = routeId == null || routeId.length() == 0 ? null : routeId;
   }
 
   public Long getSmsId() {
@@ -152,6 +176,46 @@ public class MessageFilter {
    * @return true, если сообщение удовлетворяет фильтру и false - в противном случае.
    */
   public boolean additionalFilter(Message m) {
+    return true;
+  }
+
+  /**
+   * Максимальное кол-во извлекаемых строк
+   * @return максимальное кол-во извлекаемых строк
+   */
+  public int getMaxRowSize() {
+    return maxRowSize;
+  }
+
+  /**
+   * Устанавливает максимальное кол-во извлекаемых строк
+   * @param maxRowSize максимальное кол-во извлекаемых строк
+   */
+  public void setMaxRowSize(int maxRowSize) {
+    this.maxRowSize = maxRowSize;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    MessageFilter that = (MessageFilter) o;
+
+    if (maxRowSize != that.maxRowSize) return false;
+    if (abonentAddress != null ? !abonentAddress.equals(that.abonentAddress) : that.abonentAddress != null)
+      return false;
+    if (dstSmeId != null ? !dstSmeId.equals(that.dstSmeId) : that.dstSmeId != null) return false;
+    if (fromAddress != null ? !fromAddress.equals(that.fromAddress) : that.fromAddress != null) return false;
+    if (fromDate != null ? !fromDate.equals(that.fromDate) : that.fromDate != null) return false;
+    if (lastResult != null ? !lastResult.equals(that.lastResult) : that.lastResult != null) return false;
+    if (routeId != null ? !routeId.equals(that.routeId) : that.routeId != null) return false;
+    if (smeId != null ? !smeId.equals(that.smeId) : that.smeId != null) return false;
+    if (smsId != null ? !smsId.equals(that.smsId) : that.smsId != null) return false;
+    if (srcSmeId != null ? !srcSmeId.equals(that.srcSmeId) : that.srcSmeId != null) return false;
+    if (tillDate != null ? !tillDate.equals(that.tillDate) : that.tillDate != null) return false;
+    if (toAddress != null ? !toAddress.equals(that.toAddress) : that.toAddress != null) return false;
+
     return true;
   }
 }

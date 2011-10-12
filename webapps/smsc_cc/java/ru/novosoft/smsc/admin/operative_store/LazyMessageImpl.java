@@ -13,6 +13,7 @@ import java.util.Date;
  */
 class LazyMessageImpl implements Message {
 
+
   private final static byte INT_TAG_TYPE = 0;
   private final static byte STR_TAG_TYPE = 1;
   private final static byte BIN_TAG_TYPE = 2;
@@ -50,8 +51,11 @@ class LazyMessageImpl implements Message {
   private InputStream is;
   private boolean haveArc;
 
-  LazyMessageImpl(byte[] message, boolean haveArc, long id) {
+  private final Status status;
+
+  LazyMessageImpl(byte[] message, boolean haveArc, long id, int status) {
     reset(message, haveArc, id);
+    this.status = Status.valueOf(status);
   }
 
   void reset(byte[] message, boolean haveArc, long id) {
@@ -481,6 +485,10 @@ class LazyMessageImpl implements Message {
   public BodyParameters getBodyParameters() throws AdminException {
     parseBody();
     return parameters;
+  }
+
+  public Status getStatus() throws AdminException {
+    return status;
   }
 
   private void parseBody() throws AdminException {

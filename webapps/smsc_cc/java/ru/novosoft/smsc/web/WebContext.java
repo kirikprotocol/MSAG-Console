@@ -3,7 +3,7 @@ package ru.novosoft.smsc.web;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
@@ -72,7 +72,7 @@ public class WebContext {
   private final WTimezoneManager timezoneManager;
   private final WUserManager userManager;
   private final OperativeStoreProvider operativeStoreProvider;
-  private final ArchiveDemon archiveDaemon;
+  private final ArchiveDaemon archiveDaemon;
   private final SmscStatProvider smscStatProvider;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
@@ -230,7 +230,7 @@ public class WebContext {
     return smscStatProvider;
   }
 
-  public ArchiveDemon getArchiveDaemon() {
+  public ArchiveDaemon getArchiveDaemon() {
     return archiveDaemon;
   }
 

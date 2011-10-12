@@ -1,8 +1,7 @@
 package ru.novosoft.smsc.admin.archive_daemon.messages;
 
-import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.admin.archive_daemon.SmsQuery;
+import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.IOUtils;
 
 import java.io.IOException;
@@ -57,21 +56,14 @@ public class QueryMessage extends Message {
     }
   }
 
-  private boolean isMeaning(String str) {
-    return (str != null && str.length() != 0 && !str.trim().equalsIgnoreCase("*"));
-  }
-
-  private boolean isMeaning(int value) {
-    return (value != SmsQuery.SMS_UNDEFINED_VALUE);
-  }
 
   private List<Param> formatParameters() throws IOException {
     List<Param> list = new ArrayList<Param>();
 
-    if (isMeaning(query.getSmsId())) {
+    if (query.getSmsId() != null) {
       long idValue;
       try {
-        idValue = Long.parseLong(query.getSmsId().trim());
+        idValue = query.getSmsId();
       } catch (NumberFormatException ex) {
         throw new IOException("Invalid numeric format for sms id");
       }
@@ -82,39 +74,39 @@ public class QueryMessage extends Message {
     if (query.getFilterTillDate())
       list.add(new Param(T_TILL_DATE, convertStringToDate(query.getTillDate())));
 
-    if (isMeaning(query.getAbonentAddress())) {
+    if (query.getAbonentAddress() != null) {
 
-      Address address = new Address(query.getAbonentAddress().trim());
+      Address address = new Address(query.getAbonentAddress());
       list.add(new Param(T_ABN_ADDRESS, address.getNormalizedAddress()));
 
     } else {
-      if (isMeaning(query.getFromAddress())) {
+      if (query.getFromAddress() != null) {
 
-        Address address = new Address(query.getFromAddress().trim());
+        Address address = query.getFromAddress();
         list.add(new Param(T_SRC_ADDRESS, address.getNormalizedAddress()));
 
       }
-      if (isMeaning(query.getToAddress())) {
-        Address address = new Address(query.getToAddress().trim());
+      if (query.getToAddress() != null) {
+        Address address = query.getToAddress();
         list.add(new Param(T_DST_ADDRESS, address.getNormalizedAddress()));
       }
     }
 
-    if (isMeaning(query.getSmeId())) {
+    if (query.getSmeId() != null) {
       list.add(new Param(T_SME_ID, query.getSmeId().trim()));
     } else {
-      if (isMeaning(query.getSrcSmeId()))
+      if (query.getSrcSmeId() != null)
         list.add(new Param(T_SRC_SME_ID, query.getSrcSmeId().trim()));
-      if (isMeaning(query.getDstSmeId()))
+      if (query.getDstSmeId() != null)
         list.add(new Param(T_DST_SME_ID, query.getDstSmeId().trim()));
     }
 
-    if (isMeaning(query.getRouteId()))
+    if (query.getRouteId() != null)
       list.add(new Param(T_ROUTE_ID, query.getRouteId().trim()));
 
-    if (isMeaning(query.getStatus()))
+    if (query.getStatus() != null)
       list.add(new Param(T_STAUS, query.getStatus()));
-    if (isMeaning(query.getLastResult()))
+    if (query.getLastResult() != null)
       list.add(new Param(T_LAST_RESULT, query.getLastResult()));
 
     return list;
