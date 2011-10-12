@@ -95,7 +95,7 @@ struct HashTester_T {
 
   const char *    _hashId;
 
-  HashTester_T(const char * use_id) : _hashId(use_id)
+  explicit HashTester_T(const char * use_id) : _hashId(use_id)
   { }
   ~HashTester_T()
   { }
@@ -115,12 +115,11 @@ struct HashTester_T {
 
     bool        rval = true;
     DelQueue    delQueue;
-    TstCache_t  tCache
-  #if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
-      (_hashId)
-  #endif
-    ;
+    TstCache_t  tCache;
 
+  #if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
+    tCache.debugInit(_hashId);
+  #endif
     //test sequential insertion/find, random delete
     fprintf(stderr, "\nIntHash_T<%s>::inserting elements sequentially, deleting randomly.. \n", _hashId);
     size_type attNum = 0;
