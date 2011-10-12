@@ -136,7 +136,7 @@ public:
     //for HttpWriterTask
 //    Socket* beforeWriter(void);
     void messagePrepare();
-    void messageGet(Socket* s, const char* &data, unsigned int &size);
+    void messageGet(Socket* s, char* &data, unsigned int &size);
     bool messageIsOver(Socket* s);
     void setSiteHttps(bool supported); // { siteHttps = supported; }
 

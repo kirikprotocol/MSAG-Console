@@ -63,11 +63,11 @@ HttpContext::~HttpContext()
 	{
 		if (site) {
 			closeSocketConnection(site, siteHttps, siteSsl, nameSite);
-			delete site;
+//			if (site) delete site;
 		}
 		if (user) {
 			closeSocketConnection(user, userHttps, userSsl, nameUser);
-			delete user;
+//			if (user) delete user;
 		}
 		if (command)
 			delete command;
@@ -464,14 +464,14 @@ void HttpContext::prepareNextChunk() {
 /*
  * returns message ptr and size for HttpWriterTask::Execute depends on useHttps
  */
-void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
+void HttpContext::messageGet(Socket* s, char* &data, unsigned int &size) {
 	std::string mode;
 
 	if (command->chunked) {
 		if (flags == 0) {
 			mode = "Chunked hdr";
 			// write headers
-			data = command->getMessageHeaders().data();
+			data = const_cast<char*>(command->getMessageHeaders().data());
 			size = command->getMessageHeaders().size();
 		}
 		else {
@@ -493,7 +493,7 @@ void HttpContext::messageGet(Socket* s, const char* &data, unsigned int &size) {
 			if (flags == 0) {
 				mode = "Http hdr";
 				// write headers
-				data = command->getMessageHeaders().data();
+				data = const_cast<char*>(command->getMessageHeaders().data());
 				size = command->getMessageHeaders().size();
 			}
 			else {

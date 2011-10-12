@@ -446,8 +446,8 @@ int HttpWriterTask::Execute()
 
 void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) {
     HttpContext *cx = HttpContext::getContext(s);
-	const char *data;
-	unsigned int size;
+	char *data = NULL;
+	unsigned int size = 0;
 	int written_size = 0;
     time_t now = time(NULL);
 
