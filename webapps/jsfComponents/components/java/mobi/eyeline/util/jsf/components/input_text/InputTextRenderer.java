@@ -31,11 +31,7 @@ public class InputTextRenderer extends Renderer {
     String id = component.getId();
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String submittedValue = decodeString(reqParams.get(id));
-    ((InputText) component).setSubmittedValue(null);
-    if (submittedValue != null)
       ((InputText) component).setSubmittedValue(new String[]{submittedValue});
-    else if (((UIInput)component).isRequired())
-      ((UIInput)component).setSubmittedValue(new String[]{null});
   }
 
   @Override
@@ -47,43 +43,42 @@ public class InputTextRenderer extends Renderer {
     if (c != null) {
       return c.getAsObject(context, component, v);
     }
-    if (v != null) {
-      ValueExpression exp = inputText.getValueExpression("value");
-      if (exp != null) {
-        Class type = exp.getType(context.getELContext());
-        if (type == String.class) {
-          return v;
-        } else {
-          try {
-            if (type == Integer.class) {
-              return Integer.valueOf(v);
-            } else if (type == Integer.TYPE) {
-              return v == null ? 0 : Integer.valueOf(v);
-            } else if (type == Long.class) {
-              return Long.parseLong(v);
-            } else if (type == Long.TYPE) {
-              return v == null ? 0 : Long.valueOf(v);
-            } else if (type == Float.class) {
-              return Float.parseFloat(v);
-            } else if (type == Float.TYPE) {
-              return v == null ? 0 : Float.valueOf(v);
-            } else if (type == Double.class) {
-              return Double.parseDouble(v);
-            } else if (type == Double.TYPE) {
-              return v == null ? 0 : Double.valueOf(v);
-            } else if (type == Short.class) {
-              return Short.parseShort(v);
-            } else if (type == Short.TYPE) {
-              return v == null ? 0 : Short.valueOf(v);
-            } else if (type == Byte.class) {
-              return Byte.parseByte(v);
-            } else if (type == Byte.TYPE) {
-              return v == null ? 0 : Byte.valueOf(v);
-            }
-          } catch (NumberFormatException e) {
-            e.printStackTrace();
-            throw new ConverterException();
+
+    ValueExpression exp = inputText.getValueExpression("value");
+    if (exp != null) {
+      Class type = exp.getType(context.getELContext());
+      if (type == String.class) {
+        return v;
+      } else {
+        try {
+          if (type == Integer.class) {
+            return v == null ? null : Integer.valueOf(v);
+          } else if (type == Integer.TYPE) {
+            return v == null ? 0 : Integer.valueOf(v);
+          } else if (type == Long.class) {
+            return v == null ? null : Long.parseLong(v);
+          } else if (type == Long.TYPE) {
+            return v == null ? 0 : Long.valueOf(v);
+          } else if (type == Float.class) {
+            return v == null ? null : Float.parseFloat(v);
+          } else if (type == Float.TYPE) {
+            return v == null ? 0 : Float.valueOf(v);
+          } else if (type == Double.class) {
+            return v == null ? null : Double.parseDouble(v);
+          } else if (type == Double.TYPE) {
+            return v == null ? 0 : Double.valueOf(v);
+          } else if (type == Short.class) {
+            return v == null ? null : Short.parseShort(v);
+          } else if (type == Short.TYPE) {
+            return v == null ? 0 : Short.valueOf(v);
+          } else if (type == Byte.class) {
+            return v == null ? null : Byte.parseByte(v);
+          } else if (type == Byte.TYPE) {
+            return v == null ? 0 : Byte.valueOf(v);
           }
+        } catch (NumberFormatException e) {
+          e.printStackTrace();
+          throw new ConverterException();
         }
       }
     }
