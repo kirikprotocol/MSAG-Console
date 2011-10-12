@@ -150,7 +150,7 @@ public class Index extends SmscBean {
                 timezones.putSubject(newSubjName, newSubjValue);
             }*/
             timezones.save();
-//            smsc.applyTimezones();
+            smsc.applyTimezones();
         }
         catch (Exception e) {
             return error(SMSCErrors.error.smsc.timezones.couldntSave, e);
