@@ -14,9 +14,7 @@ import mobi.eyeline.informer.util.config.XmlConfigSection;
 import mobi.eyeline.smpp.api.SmppException;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -77,7 +75,12 @@ public class Config {
 
     private int clean_journal_timeout;
 
+    private File message_id_rang_file;
+
     private String separator;
+
+    private long initial_message_id;
+    private long rang = 10000;
 
     public void init(String config_file) throws IOException, XmlConfigException, InitializationException {
         config = new Properties();
@@ -86,6 +89,23 @@ public class Config {
 
         smpp_endpoints_file = Utils.getProperty(config, "users.file", user_dir + File.separator + "conf" + File.separator + "endpoints.xml");
         deliveries_file = Utils.getProperty(config, "deliveries.file", user_dir + File.separator + "conf" + File.separator + "deliveries.xml");
+
+        // Load message id range
+        message_id_rang_file = new File(user_dir + File.separator + "conf" + File.separator + "message_id_rang");
+        if (message_id_rang_file.createNewFile()){
+            log.debug("Create new message id file: "+ message_id_rang_file);
+            initial_message_id = 0;
+            PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
+            pw.println(initial_message_id+rang);
+            pw.flush();
+            pw.close();
+            log.debug("Write to file initial message id rang: "+ initial_message_id + rang);
+        } else {
+            BufferedReader br = new BufferedReader(new FileReader(message_id_rang_file));
+            String line = br.readLine();
+            initial_message_id = Long.parseLong(line);
+            log.debug("Load from file initial message id rang: " + initial_message_id);
+        }
 
         String s = config.getProperty("informer.host");
         if (s != null && !s.isEmpty()){
@@ -428,6 +448,18 @@ public class Config {
 
     public int getDeliveryQueueLimit(){
         return delivery_queue_limit;
+    }
+
+    public long getInitialMessageId(){
+        return initial_message_id;
+    }
+
+    public long getRang(){
+        return rang;
+    }
+
+    public File getMessageIdRangFile(){
+        return message_id_rang_file;
     }
 
 }

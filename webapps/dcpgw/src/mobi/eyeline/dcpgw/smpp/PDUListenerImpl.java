@@ -14,6 +14,10 @@ import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -28,14 +32,37 @@ public class PDUListenerImpl implements PDUListener {
 
     private AtomicLong al = new AtomicLong(0);
 
+    private long initial_message_id;
+    private long limit;
+    private long rang;
+    private File message_id_rang_file;
+
+    public PDUListenerImpl(){
+        Config config = Config.getInstance();
+        initial_message_id = config.getInitialMessageId();
+        rang = config.getRang();
+        limit = initial_message_id + rang;
+        message_id_rang_file = config.getMessageIdRangFile();
+    }
+
     @Override
     public boolean handlePDU(PDU pdu) {
         log.debug("handle " + pdu.getType()+": sn="+pdu.getSequenceNumber());
         switch (pdu.getType()) {
             case SubmitSM:{
 
-                long time = System.currentTimeMillis();
-                long message_id = time + al.incrementAndGet();
+                long message_id = initial_message_id + al.incrementAndGet();
+                if (message_id == limit){
+                    try {
+                        PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
+                        limit = limit + rang;
+                        pw.println(limit);
+                        pw.flush();
+                        pw.close();
+                    } catch (IOException e) {
+                        log.error("Couldn't write to file new initial message id rang.", e);
+                    }
+                }
 
                 Message request = (Message) pdu;
 

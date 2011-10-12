@@ -94,16 +94,14 @@ public class Client extends Thread implements PDUListener {
                 Status status = submitSMResp.getStatus();
                 if (status.equals(Status.OK)){
                     String message_id_str = submitSMResp.getMessageId();
+
                     int sn = submitSMResp.getSequenceNumber();
+                    if (submit_sm_sequence_number_set.remove(sn)) c3++;
+
                     log.debug("receive SubmitSMResp: id="+message_id_str+", sn:"+sn);
 
-                    if (message_id_str != null){
-
-                        long message_id = Long.parseLong(submitSMResp.getMessageId());
-                        message_ids.add(message_id);
-
-                        if (submit_sm_sequence_number_set.remove(sn)) c3++;
-                    }
+                    long message_id = Long.parseLong(submitSMResp.getMessageId());
+                    message_ids.add(message_id);
 
                 } else if (status.equals(Status.MSGQFUL)){
                     int sn = submitSMResp.getSequenceNumber();
