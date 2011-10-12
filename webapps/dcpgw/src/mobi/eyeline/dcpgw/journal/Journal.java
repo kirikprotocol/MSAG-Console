@@ -266,9 +266,12 @@ public class Journal {
                 pw = new PrintWriter(new FileWriter(j2t));
 
 
-                Set<Long> finished_message_ids = new HashSet<Long>();
+                Set<Long> done_message_ids = new HashSet<Long>();
+                Set<Long> expired_max_messages_ids = new HashSet<Long>();
                 Set<Integer> sequence_numbers = new HashSet<Integer>();
                 Set<Long> processed_message_ids = new HashSet<Long>();
+                Set<Long> deleted_messages_ids = new HashSet<Long>();
+
 
                 buffReader1 = new BufferedReader (new FileReader(j2));
 
@@ -279,12 +282,21 @@ public class Journal {
                     Data.Status status = Data.Status.valueOf(ar[12].trim());
 
                     if (status == Data.Status.DONE || status == Data.Status.EXPIRED_MAX_TIMEOUT) {
-                        finished_message_ids.add(message_id);
+                        done_message_ids.add(message_id);
+                        log.debug("finished: message_id="+message_id);
+                    } else if (status == Data.Status.DELETED){
+                        deleted_messages_ids.add(message_id);
+                        log.debug("deleted: message_id="+message_id);
+                    } else if (status == Data.Status.EXPIRED_MAX_TIMEOUT){
+                        expired_max_messages_ids.add(message_id);
+                        log.debug("expired_max: message_id="+message_id);
                     } else if (status == Data.Status.EXPIRED_TIMEOUT){
                         int sequence_number = Integer.parseInt(ar[4]);
                         sequence_numbers.add(sequence_number);
+                        log.debug("expired: sn="+sequence_number);
                     } else if (status == Data.Status.SEND || status == Data.Status.NOT_SEND){
                         processed_message_ids.add(message_id);
+                        log.debug("processed: message_id="+message_id);
                     }
 
                 }
@@ -292,7 +304,7 @@ public class Journal {
                 log.debug("Read file "+j2);
 
                 int counter = 0;
-                buffReader2 = new BufferedReader (new FileReader(j2));
+                buffReader2 = new BufferedReader(new FileReader(j2));
 
                 while((line = buffReader2.readLine()) != null){
                     String[] ar = line.split(sep);
@@ -300,17 +312,18 @@ public class Journal {
                     long message_id = Long.parseLong(ar[3].trim());
                     Data.Status status = Data.Status.valueOf(ar[12].trim());
 
-
                     if (status == Data.Status.INIT){
-                        if (!processed_message_ids.contains(message_id)){
+                        if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
                             log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();
                             counter++;
                         }
+
                     } else {
                         int sequence_number = Integer.parseInt(ar[4]);
-                        if (!finished_message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)){
+                        if (!done_message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)
+                                && !deleted_messages_ids.contains(message_id) && !expired_max_messages_ids.contains(message_id)){
                             log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();

@@ -105,8 +105,7 @@ public class Client extends Thread implements PDUListener {
 
                 } else if (status.equals(Status.MSGQFUL)){
                     int sn = submitSMResp.getSequenceNumber();
-                    submit_sm_sequence_number_set.remove(sn);
-                    c7++;
+                    if (submit_sm_sequence_number_set.remove(sn)) c7++;
                 } else {
                     c4++;
                     log.warn(submitSMResp);
