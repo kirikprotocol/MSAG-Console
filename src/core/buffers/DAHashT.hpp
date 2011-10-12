@@ -30,7 +30,7 @@ template <
 , template <typename _K, class _T>
   class     _SlotTArg       //required DAHashSlot_T<_KeyArg, _TArg> interface
                 = DAHashSlot_T //assume complex objects by default
-, uint8_t   _CollMaxNumArg
+, uint8_t   _CollMaxNumArg        //NOTE: must belong to range [1..159], target
                 = 16
 , uint8_t   _CollPercentagePwrArg //NOTE: must belong to range [1..6], target
                 = 3               //percentage is calculated as := 100/(2**PWR)
@@ -44,9 +44,14 @@ public:
   typedef uint32_t                    size_type;
   typedef HKeyValue_T<_KeyArg, _TArg> value_type;
 
-  static const uint8_t  _MAX_COLL_NUM = _CollMaxNumArg;
+  static const uint8_t k_maxRehashAtt = (sizeof(size_type)<<3) - 1;
+  //
   //Target overall collisions percentage: = 100/(2**PWR)
   static const uint8_t  _TGT_COLL_PERCENTAGE_PWR = _CollPercentagePwrArg;
+  //
+  static const uint8_t  _MAX_COLL_NUM = (_CollMaxNumArg > 159) ? 159 : _CollMaxNumArg;
+  //
+  static const uint16_t k_primeNum[160];
 
   explicit DAHash_T(size_type num_to_reserve = 0) : _valCount(0), _collCount(0)
 #if defined(INTHASH_USAGE_CHECKING) || defined(INTHASH_USAGE_DEBUG)
@@ -80,7 +85,7 @@ public:
   void SetSize(size_type num_to_reserve) /*throw()*/
   {
     if (num_to_reserve > _hArr.size()) //Rehash cann't fail here
-      Rehash(num_to_reserve < _MAX_COLL_NUM ? _MAX_COLL_NUM : num_to_reserve);
+      doRehash(num_to_reserve < _MAX_COLL_NUM ? _MAX_COLL_NUM : num_to_reserve);
   }
 
   const _TArg & Get(const _KeyArg & use_key) const /*throw(std::exception)*/
@@ -339,11 +344,9 @@ public:
   iterator Insert(const _KeyArg & key, const _TArg & value)  /*throw(std::runtime_error)*/
   {
     if (!_hArr.size())
-      Rehash(_MAX_COLL_NUM);
-    else if (_valCount == _hArr.size()) {
-      size_type newSz = _hArr.size() << 1;
-      Rehash(newSz < _hArr.size() ? HashTable_s::_maxSize : newSz); //throws
-    }
+      doRehash(_MAX_COLL_NUM);
+    else if (_valCount == _hArr.size())
+      doRehash(0);
 
     uint16_t  attempt = 0;
     size_type idx;
@@ -369,8 +372,7 @@ public:
                   _id, (unsigned)attempt, _hArr.size(), _valCount, _collCount);
         }
 #endif
-        size_type newSz = _hArr.size() << 1;
-        Rehash(newSz < _hArr.size() ? HashTable_s::_maxSize : newSz); //throws
+        doRehash(0); //throws
         attempt = 0;
         continue;
       }
@@ -391,8 +393,7 @@ public:
               _id, (unsigned)attempt, _hArr.size(), _valCount, _collCount);
         }
 #endif
-        size_type newSz = _hArr.size() << 1;
-        Rehash(newSz < _hArr.size() ? HashTable_s::_maxSize : newSz); //throws
+        doRehash(0); //throws
         attempt = 0;
       }
     }
@@ -461,7 +462,8 @@ protected:
   static size_type calcIndex(uint32_t tbl_size, const _KeyArg & use_key, uint16_t num_attempt)
     /*throw(std::exception)*/
   {
-    return DAHashFunc_T::hashKey(use_key, num_attempt) % tbl_size;
+    return ((DAHashFunc_T::hashKey(use_key, num_attempt) % tbl_size)
+                                  + (k_primeNum[num_attempt] % tbl_size)) % tbl_size;
   }
 
   //Returns true if restrictions on number of collisions aren't violated.
@@ -543,23 +545,27 @@ protected:
 
   //calculates a new size as a multiple of original size
   //Returns: new_sz >= req_sz
-  size_type calcSize(size_type req_sz, size_type org_sz)
+  size_type calcNextSize(uint8_t rehash_att) const
   {
-    size_type factor = req_sz/org_sz + (req_sz % org_sz  ? 1 : 0);
-    return org_sz > org_sz*factor ? HashTable_s::_maxSize : org_sz*factor;
+    size_type orgSz = !_hArr.size() ? ((_MAX_COLL_NUM+1) >> 1) : _hArr.size();
+    size_type nextSz = orgSz << (1 + rehash_att);
+    return (nextSz <= orgSz) ? HashTable_s::_maxSize : nextSz;
   }
 
-  //Throws if number of collisions exceeds allowed limit at maximum hash array size.
-  void Rehash(size_type tgt_size) /*throw(std::runtime_error)*/
+  //Throws if number of collisions exceeds allowed limit at maximum hash array
+  //size or maximum number of rehash attempts is reached.
+  void doRehash(size_type tgt_size = 0) /*throw(std::runtime_error)*/
   {
-    bool      nextRehash;
-    size_type orgSz = !_hArr.size() ? (_MAX_COLL_NUM>>1) : _hArr.size();
+    bool      nextRehash = false;
+    uint8_t   rehashAtt = 0;
+    size_type nextSz = tgt_size ? tgt_size : calcNextSize(0);
 
     do {
+      size_type   newCollNum = 0;
       HashTable_s newArr;
-      newArr.allocate(tgt_size);
+
+      newArr.allocate(nextSz);
       nextRehash = false;
-      size_type newCollNum = 0;
 
       for (size_type i = 0; i < _hArr.size(); ++i) {
         if (_hArr.hasValueAt(i)) {
@@ -587,11 +593,12 @@ protected:
           } while (!nextRehash && (++attNum < _MAX_COLL_NUM));
 
           if (nextRehash || (attNum >= _MAX_COLL_NUM)) {
-            if (tgt_size == HashTable_s::_maxSize)
-              throw std::runtime_error("DAHash_T::Rehash - max collisions occured at max size");
-            //recalc new tgt_size
-            tgt_size = calcSize(orgSz, tgt_size + (tgt_size % orgSz ? 0 : 1));
             nextRehash = true;
+            do {
+              if (nextSz == HashTable_s::_maxSize)
+                throw std::runtime_error("DAHash_T::Rehash - max collisions occured at max size");
+              nextSz = calcNextSize(++rehashAtt);
+            } while (nextSz <= tgt_size);
             break;
           }
         }
@@ -606,7 +613,10 @@ protected:
         _hArr.swap(newArr);
         _collCount = newCollNum;
       }
-    } while (nextRehash);
+    } while (nextRehash && (rehashAtt < k_maxRehashAtt));
+
+    if (nextRehash)
+      throw std::runtime_error("DAHash_T::Rehash - failed at max attempts");
   }
 }; //DAHash_T
 
@@ -622,6 +632,17 @@ template <
 smsc::core::synchronization::Mutex
   DAHash_T<_KeyArg, _TArg, _SlotTArg, _CollMaxNumArg, _CollPercentagePwrArg>::_idMutex;
 #endif
+
+
+template <
+  class     _KeyArg
+, class     _TArg
+, template <typename _K, class _T>
+  class     _SlotTArg
+, uint8_t   _CollMaxNumArg
+, uint8_t   _CollPercentagePwrArg
+>
+const uint8_t DAHash_T<_KeyArg, _TArg, _SlotTArg, _CollMaxNumArg, _CollPercentagePwrArg>::k_maxRehashAtt;
 
 template <
   class     _KeyArg
@@ -642,6 +663,27 @@ template <
 , uint8_t   _CollPercentagePwrArg
 >
 const uint8_t DAHash_T<_KeyArg, _TArg, _SlotTArg, _CollMaxNumArg, _CollPercentagePwrArg>::_TGT_COLL_PERCENTAGE_PWR;
+
+template <
+  class     _KeyArg
+, class     _TArg
+, template <typename _K, class _T>
+  class     _SlotTArg
+, uint8_t   _CollMaxNumArg
+, uint8_t   _CollPercentagePwrArg
+>
+const uint16_t DAHash_T<_KeyArg, _TArg, _SlotTArg, _CollMaxNumArg, _CollPercentagePwrArg>::k_primeNum[160] = {
+    0,   2,   3,   5,   7,  11,  13,  17,  19,  23,  29,  31,  37,  41,  43,  47,
+   53,  59,  61,  67,  71,  73,  79,  83,  89,  97, 101, 103, 107, 109, 113, 127,
+  131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
+  223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307,
+  311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401,
+  409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463, 467, 479, 487, 491, 499,
+  503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601, 607,
+  613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709,
+  719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823,
+  827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937
+};
 
 }//buffers
 }//core
