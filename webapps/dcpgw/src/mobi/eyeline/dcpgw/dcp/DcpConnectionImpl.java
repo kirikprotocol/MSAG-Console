@@ -50,6 +50,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     private String informer_user;
 
     public DcpConnectionImpl(String informer_user) throws AdminException {
+        super("ic_"+informer_user);
         this.informer_user = informer_user;
 
         Config config = Config.getInstance();
@@ -77,32 +78,41 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         log.debug("Initialize connection for informer user "+informer_user+".");
     }
 
-    public synchronized void addMessage(int delivery_id, Message informer_message,
+    public void addMessage(int delivery_id, Message informer_message,
                                         long message_id, SubmitSMResp resp) throws InterruptedException {
         LinkedBlockingQueue<Message> queue = delivery_id_queue_map.get(delivery_id);
 
-        queue.put(informer_message);
-        int size = queue.size();
-        log.debug("add "+message_id+"_message to "+delivery_id+"_queue, size "+size);
-        message_id_submit_sm_resp_table.put(message_id, resp);
+        synchronized (queue){
+            queue.put(informer_message);
+            int size = queue.size();
+            log.debug("add "+message_id+"_message to "+delivery_id+"_queue, size "+size);
+            message_id_submit_sm_resp_table.put(message_id, resp);
 
-        if (queue.size() == 1){
-            SendTask sendTask = new SendTask(delivery_id);
-            ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, timeout, TimeUnit.MILLISECONDS);
-            queue_task_map.put(queue, scheduledFuture);
-        }
+            if (queue.size() == 1){
+                SendTask sendTask = new SendTask(delivery_id);
+                ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, timeout, TimeUnit.MILLISECONDS);
+                queue_task_map.put(queue, scheduledFuture);
+            }
 
-        if (size == capacity) {
-            log.debug(delivery_id+"_queue is full");
-            ScheduledFuture scheduledFuture = queue_task_map.get(queue);
-            scheduledFuture.cancel(false);
-            queue_task_map.remove(queue);
+            if (size == capacity) {
+                log.debug(delivery_id+"_queue is full");
+                ScheduledFuture scheduledFuture = queue_task_map.get(queue);
+                if (scheduledFuture.cancel(false)){
+                    log.debug("Cancel initial "+delivery_id+"_send_task.");
+                } else {
+                    log.debug("Couldn't cancel initial "+delivery_id+"_send_task, task has already started");
+                }
+                queue_task_map.remove(queue);
+                log.debug("queue_scheduled_future map size "+queue_task_map.size());
 
-            SendTask sendTask = new SendTask(delivery_id);
-            sendTaskQueue.add(sendTask);
+                SendTask sendTask = new SendTask(delivery_id);
+                sendTaskQueue.add(sendTask);
+                log.debug("send_task_queue size "+sendTaskQueue.size());
 
-            synchronized (this){
-                notifyAll();
+                synchronized (this){
+                    notifyAll();
+                    log.debug("notified all waiting threads");
+                }
             }
         }
     }
@@ -205,7 +215,9 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             synchronized (this){
                 try{
+                    log.debug("go into a wait state ...");
                     wait();
+                    log.debug("exit from a wait state ");
                 } catch (InterruptedException e) {
                     log.debug(e);
                     break;

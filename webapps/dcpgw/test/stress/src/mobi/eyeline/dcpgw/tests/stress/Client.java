@@ -25,7 +25,7 @@ public class Client extends Thread implements PDUListener {
 
     HashSet<Long> message_ids;
 
-    int c1, c2, c3, c4, c5, c6;
+    int c1, c2, c3, c4, c5, c6, c7;
 
     public Client(Properties config) throws SmppException {
         this.config = config;
@@ -105,6 +105,10 @@ public class Client extends Thread implements PDUListener {
                         if (submit_sm_sequence_number_set.remove(sn)) c3++;
                     }
 
+                } else if (status.equals(Status.MSGQFUL)){
+                    int sn = submitSMResp.getSequenceNumber();
+                    submit_sm_sequence_number_set.remove(sn);
+                    c7++;
                 } else {
                     c4++;
                     log.warn(submitSMResp);
@@ -113,7 +117,7 @@ public class Client extends Thread implements PDUListener {
                 break;
             }
         }
-        log.debug("SubmitSM: send "+c1+", succ "+c3+", err "+c4+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
+        log.debug("SubmitSM: send "+c1+", succ "+c3+", msqfull "+c7+", err "+c4+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
         return true;
     }
 
