@@ -12,6 +12,14 @@
 namespace smsc {
 namespace util {
 
+template <
+  typename _IntT /* must be a integer type (signed or unsigned) */
+> 
+inline _IntT absOf(_IntT signed_val)
+{
+  return (signed_val >= 0) ? signed_val : -signed_val;
+}
+
 //Determines signedness of integer type
 template <
   typename _IntT /* must be a integer type (signed or unsigned) */
