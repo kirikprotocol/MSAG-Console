@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.4
+  Jsf components 1.5
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -8,7 +8,7 @@
   position: relative;
   left: 0px;
   top: 0px;
-  z-index: 2;
+  /*z-index: 2;*/
 }
 
 table.eyeline_buttons {
@@ -17,7 +17,7 @@ table.eyeline_buttons {
   position: relative;
   height: 30px;
   white-space: nowrap;
-  z-index: 5;
+  /*z-index: 3;*/
 }
 
 table.eyeline_buttons td {
@@ -44,7 +44,7 @@ table.eyeline_buttons_background {
   top: 0px;
   left: 0px;
   height: 30px;
-  z-index: 1;
+  /*z-index: 1;*/
 }
 table.eyeline_buttons_background td{
   background-image: url("../images/smsc_21.jpg")
