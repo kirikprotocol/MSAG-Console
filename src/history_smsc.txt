@@ -699,3 +699,4 @@ B3216: Oct 11, 2011
     SMSC	code clearance for valgrind, some optimization
     INMan	logging fixes
     INMan	std::map replaced with optimized collections
+    MCISme	SS7 HD support
