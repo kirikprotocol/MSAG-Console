@@ -293,6 +293,12 @@ final class ClusterControllerClient extends ClientConnection {
     return sendPdu(req, new DeleteProfileResp());
   }
 
+  //SMS
+
+  public CancelSmsResp send(CancelSms req) throws AdminException {
+    return sendPdu(req, new CancelSmsResp());
+  }
+
   // Loggers
 
   public LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException {

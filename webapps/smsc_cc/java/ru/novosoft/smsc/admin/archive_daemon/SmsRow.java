@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.Address;
 
 import java.io.ByteArrayInputStream;
@@ -17,45 +16,45 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SmsRow {
 
-  protected long id;
-  protected Date submitTime = null;
-  protected Date validTime;
-  protected Integer attempts;
-  protected Integer lastResult;
-  protected Date lastTryTime;
-  protected Date nextTryTime;
-  protected Address originatingAddress;
-  protected Address destinationAddress;
-  protected Address dealiasedDestinationAddress;
-  protected Integer messageReference;
-  protected String serviceType;
-  protected boolean needArchivate;
-  protected Short deliveryReport;
-  protected Short billingRecord;
-  protected SmsDescriptor originatingDescriptor;
-  protected SmsDescriptor destinationDescriptor;
-  protected String routeId;
-  protected Integer serviceId;
-  protected Integer priority;
-  protected String srcSmeId;
-  protected String dstSmeId;
-  protected Short concatMsgRef;
-  protected Short concatSeqNum;
-  protected Long pointer;
-  protected Integer bodyLen;
+  private long id;
+  private Date submitTime = null;
+  private Date validTime;
+  private Integer attempts;
+  private Integer lastResult;
+  private Date lastTryTime;
+  private Date nextTryTime;
+  private Address originatingAddress;
+  private Address destinationAddress;
+  private Address dealiasedDestinationAddress;
+  private Integer messageReference;
+  private String serviceType;
+  private boolean needArchivate;
+  private Short deliveryReport;
+  private Short billingRecord;
+  private SmsDescriptor originatingDescriptor;
+  private SmsDescriptor destinationDescriptor;
+  private String routeId;
+  private Integer serviceId;
+  private Integer priority;
+  private String srcSmeId;
+  private String dstSmeId;
+  private Short concatMsgRef;
+  private Short concatSeqNum;
+  private Long pointer;
+  private Integer bodyLen;
 
-  protected Status status;
+  private Status status;
 
-  protected String originalText = null;
-  protected String text = "";
-  protected boolean textEncoded = false;
-  protected byte arc = -1;
+  private String originalText = null;
+  private String text = "";
+  private boolean textEncoded = false;
+  private byte arc = -1;
 
   private boolean marked = false;
 
   private Map<String, Object> parameters = new ConcurrentHashMap<String, Object>();
 
-  protected byte body[] = null;
+  private byte body[] = null;
 
   private final SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
@@ -75,7 +74,7 @@ public class SmsRow {
     return originatingAddress;
   }
 
-  public void setOriginatingAddress(Address address) throws AdminException {
+  public void setOriginatingAddress(Address address) {
     originatingAddress = address;
   }
 
@@ -83,7 +82,7 @@ public class SmsRow {
     return destinationAddress;
   }
 
-  public void setDestinationAddress(Address address) throws AdminException {
+  public void setDestinationAddress(Address address) {
     destinationAddress = address;
   }
 
@@ -92,7 +91,7 @@ public class SmsRow {
     return dealiasedDestinationAddress;
   }
 
-  public void setDealiasedDestinationAddress(Address address) throws AdminException {
+  public void setDealiasedDestinationAddress(Address address) {
     dealiasedDestinationAddress = address;
   }
 
@@ -362,11 +361,11 @@ public class SmsRow {
   }
 
   public static enum Status {
-    MSG_STATE_ENROUTE(0),
-    MSG_STATE_DELIVERED(1),
-    MSG_STATE_EXPIRED(2),
-    MSG_STATE_UNDELIVERABLE(3),
-    MSG_STATE_DELETED(4);
+    ENROUTE(0),
+    DELIVERED(1),
+    EXPIRED(2),
+    UNDELIVERABLE(3),
+    DELETED(4);
     private static final Map<Integer, Status> map = new HashMap<Integer, Status>(Status.values().length + 1) {
       {
         for (Status s : Status.values()) {

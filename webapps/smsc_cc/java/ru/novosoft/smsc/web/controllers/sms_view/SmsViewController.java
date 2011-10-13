@@ -1,30 +1,37 @@
 package ru.novosoft.smsc.web.controllers.sms_view;
 
-import mobi.eyeline.util.jsf.components.data_table.model.*;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Route;
+import ru.novosoft.smsc.util.Address;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.model.SelectItem;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * author: Aleksandr Khalitov
  */
-public abstract class SmsViewController extends SmscController{
+public class SmsViewController extends SmscController{
 
   protected static final Logger logger = Logger.getLogger(SmsViewController.class);
 
-  private LoadListener loadListener;
-
   protected WebContext wcontext = WebContext.getInstance();
 
-  private boolean loaded;
+  protected static final char TAB = '\t';
+  protected static final String LINE_SEP = "\r\n";
+  protected static final String SPACE = " ";
 
-  protected void loadingIsNeeded() {
-    loaded = false;
-    loadListener = null;
+  private boolean hasSpecialRole1 = false;
+  private boolean hasSpecialRole2 = false;
+
+  public SmsViewController() {
+    hasSpecialRole1 = isUserhasRole(SPECIAL_ROLE1);
+    hasSpecialRole2 = isUserhasRole(SPECIAL_ROLE2);
   }
 
   public List<SelectItem> getMaxRows() {
@@ -43,42 +50,19 @@ public abstract class SmsViewController extends SmscController{
     return res;
   }
 
-
-  public boolean isLoaded() {
-    return loaded;
-  }
-
-
-
-  protected abstract void _load(Locale locale, LoadListener loadListener) throws AdminException;
-
-  protected LoadListener load(final Locale locale) {
-    LoadListener listener = null;
-    if(!loaded) {
-      if(loadListener == null) {
-        loadListener = new LoadListener();
-        new Thread() {
-          public void run() {
-            try{
-              _load(locale, loadListener);
-              loaded = true;
-            }catch (AdminException e){
-              logger.error(e,e);
-              loadListener.setLoadError(new ModelException(e.getMessage(locale)));
-            }catch (Exception e){
-              logger.error(e, e);
-              loadListener.setLoadError(new ModelException(e.getLocalizedMessage() != null ? e.getLocalizedMessage() : e.getMessage() != null
-                  ? e.getMessage() : "Internal error"));
-            }
-          }
-        }.start();
-      }
-      listener = loadListener;
-    }
-    return listener;
-  }
-
   private static final String smppStatusPrefix = "smsc.errcode.";
+
+  public List<SelectItem> getRoutes() {
+    List<SelectItem> res = new LinkedList<SelectItem>();
+    try{
+      for(Route r : wcontext.getRouteSubjectManager().getSettings().getRoutes()) {
+        res.add(new SelectItem(r.getName(), r.getName()));
+      }
+    }catch (AdminException e) {
+      addError(e);
+    }
+    return res;
+  }
 
   public List<SelectItem> getLastResults() {
     Locale locale = getLocale();
@@ -103,26 +87,38 @@ public abstract class SmsViewController extends SmscController{
     return res;
   }
 
-  protected abstract List getRows(int startPos, int count, DataTableSortOrder dataTableSortOrder);
+  private static final String MAP_PROXY = "MAP_PROXY";
+  private static final String SPECIAL_ROLE1 = "smsView_smstext_p2p";
+  private static final String SPECIAL_ROLE2 = "smsView_smstext_content";
 
-  protected abstract int getRowsCount();
 
-  public DataTableModel getMessages() {
-
-    final Locale locale = getLocale();
-    return new PreloadableModel() {
-
-      public LoadListener prepareRows(int i, int i1, DataTableSortOrder dataTableSortOrder) throws ModelException {
-        return load(locale);
-      }
-      public List getRows(int startPos, int count, DataTableSortOrder dataTableSortOrder) throws ModelException {
-        return SmsViewController.this.getRows(startPos, count, dataTableSortOrder);
-      }
-      public int getRowsCount() throws ModelException {
-        return SmsViewController.this.getRowsCount();
-      }
-    };
-
+  protected boolean isAllowToShowSmsText(String srcSme, String dstSme) throws AdminException{
+//    if (srcSme.equalsIgnoreCase(MAP_PROXY) && dstSme.equals(MAP_PROXY)) {
+//      return hasSpecialRole1;
+//    }else {
+//      return hasSpecialRole2;
+//    }
+    return true; //todo!!!
   }
+
+  protected void appendRow(SimpleDateFormat dateFormatter, PrintWriter writer, Sms row) throws AdminException {
+    String id = Long.toString(row.getId());
+    String submit = row.getSubmitTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime())) : SPACE;
+    String valid = row.getValidTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime())) : SPACE;
+    String last = row.getLastTryTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime())) : SPACE;
+    String next = row.getNextTryTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime())) : SPACE;
+    Address source = row.getOriginatingAddress();
+    Address dest = row.getDestinationAddress();
+    String route = row.getRouteId();
+    SmsStatus status = row.getStatus();
+    //id + "\t" + submit + "\t" + valid + "\t" + last + "\t" + next + "\t" + source + "\t" + dest + "\t" + route + "\t" + status + "\t";
+    writer.append(id).append(TAB).append(submit).append(TAB).append(valid).append(TAB).append(last).append(TAB).append(next).append(TAB);
+    writer.append(source.getSimpleAddress()).append(TAB).append(dest.getSimpleAddress()).append(TAB).append(route).append(TAB).append(status.toString()).append(TAB);
+    if (row.getOriginalText() != null && isAllowToShowSmsText(row.getSrcSmeId(), row.getDstSmeId())) {
+      writer.append(row.getOriginalText());
+    }
+    writer.append(LINE_SEP);
+  }
+
 
 }

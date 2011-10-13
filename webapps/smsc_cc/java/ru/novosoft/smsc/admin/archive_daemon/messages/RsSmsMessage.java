@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.admin.archive_daemon.messages;
 
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.SmsDescriptor;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
 import ru.novosoft.smsc.util.Address;
@@ -57,21 +56,9 @@ public class RsSmsMessage extends Message {
     sms.setNextTryTime(convertDateFromString(IOUtils.readString8(is)));
     sms.setAttempts((int) IOUtils.readUInt32(is));
     sms.setLastResult((int) IOUtils.readUInt32(is));
-    try {
-      sms.setOriginatingAddress(new Address(IOUtils.readString8(is)));
-    } catch (AdminException e) {
-      throw new IOException(e.getMessage());
-    }
-    try {
-      sms.setDestinationAddress(new Address(IOUtils.readString8(is)));
-    } catch (AdminException e) {
-      throw new IOException(e.getMessage());
-    }
-    try {
-      sms.setDealiasedDestinationAddress(new Address(IOUtils.readString8(is)));
-    } catch (AdminException e) {
-      throw new IOException(e.getMessage());
-    }
+    sms.setOriginatingAddress(new Address(IOUtils.readString8(is)));
+    sms.setDestinationAddress(new Address(IOUtils.readString8(is)));
+    sms.setDealiasedDestinationAddress(new Address(IOUtils.readString8(is)));
     sms.setMessageReference(IOUtils.readUInt16(is));
     sms.setServiceType(IOUtils.readString8(is));
     sms.setDeliveryReport((short) IOUtils.readUInt8(is));

@@ -105,7 +105,7 @@ public class QueryMessage extends Message {
       list.add(new Param(T_ROUTE_ID, query.getRouteId().trim()));
 
     if (query.getStatus() != null)
-      list.add(new Param(T_STAUS, query.getStatus()));
+      list.add(new Param(T_STAUS, query.getStatus().toString()));
     if (query.getLastResult() != null)
       list.add(new Param(T_LAST_RESULT, query.getLastResult()));
 

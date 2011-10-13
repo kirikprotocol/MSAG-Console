@@ -22,7 +22,7 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImpl;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImpl;
-import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
+import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.profile.ProfileManagerImpl;
 import ru.novosoft.smsc.admin.provider.ProfiledManagerImpl;
@@ -90,7 +90,7 @@ public class AdminContext {
   protected ProfileManager profileManager;
   protected LoggerManager loggerManager;
 
-  protected OperativeStoreProvider operativeStoreProvider;
+  protected OperativeStoreManager operativeStoreManager;
 
   protected SmscStatProvider smscStatProvider;
 
@@ -178,7 +178,7 @@ public class AdminContext {
       operativeStorages[i] = new File(is.getLocalStoreFilename());
     }
 
-    operativeStoreProvider = new OperativeStoreProvider(operativeStorages, fileSystem);
+    operativeStoreManager = new OperativeStoreManager(operativeStorages, fileSystem, clusterController);
 
     smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem));
 
@@ -269,8 +269,8 @@ public class AdminContext {
     return loggerManager;
   }
 
-  public OperativeStoreProvider getOperativeStoreProvider() {
-    return operativeStoreProvider;
+  public OperativeStoreManager getOperativeStoreManager() {
+    return operativeStoreManager;
   }
 
   public ArchiveDaemon getArchiveDaemon() {

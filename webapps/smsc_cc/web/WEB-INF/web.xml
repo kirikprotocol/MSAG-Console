@@ -313,6 +313,10 @@
   </security-role>
 
   <security-role>
+    <role-name>smsView_smstext_content</role-name>
+  </security-role>
+
+  <security-role>
     <role-name>services</role-name>
   </security-role>
 

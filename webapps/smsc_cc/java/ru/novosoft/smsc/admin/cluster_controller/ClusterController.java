@@ -1029,4 +1029,11 @@ public class ClusterController {
     checkResponse(cc.send(req).getResp());
   }
 
+  public void cancelSMS(String []ids) throws AdminException {
+    CancelSms c = new CancelSms();
+    c.setIds(ids);
+    CancelSmsResp resp = cc.send(c);
+    checkResponse(resp.getResp());
+  }
+
 }

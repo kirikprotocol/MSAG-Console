@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.admin.operative_store;
 
+import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.IOUtils;
@@ -12,14 +14,19 @@ import java.util.*;
  * Класс, позволяющий читать оперативные стораджи СМСЦ
  * @author Artem Snopkov
  */
-public class OperativeStoreProvider {
+public class OperativeStoreManager {
+
+  private static final Logger logger = Logger.getLogger(OperativeStoreManager.class);
 
   private final File[] smsStorePaths;
   private final FileSystem fs;
 
-  public OperativeStoreProvider(File[] smsStorePaths, FileSystem fs) {
+  private final ClusterController cc;
+
+  public OperativeStoreManager(File[] smsStorePaths, FileSystem fs, ClusterController cc) {
     this.smsStorePaths = smsStorePaths;
     this.fs = fs;
+    this.cc = cc;
   }
 
   private static boolean addressConfirm(Address mask, Address address) {
@@ -196,7 +203,11 @@ public class OperativeStoreProvider {
       for(int i = 0; i < files.length; i++){
         File file  = files[i];
         long delay = i == (files.length - 1) ? 10 : 0;
-        getMessages(file, fs, v, _p, msgs, finished, delay);
+        try{
+          getMessages(file, fs, v, _p, msgs, finished, delay);
+        }catch (AdminException e) {
+          logger.error(e,e);
+        }
       }
     }
     return msgs.values();
@@ -219,5 +230,21 @@ public class OperativeStoreProvider {
       return Collections.emptyList();
 
     return getMessages(smsStore, fs, filter, progressObserver);
+  }
+
+
+  /**
+   * Отменяет доставку смс
+   * @param ids список идентификаторов смс
+   * @throws ru.novosoft.smsc.admin.AdminException ошибка
+   */
+  public void cancelSMS(String ... ids) throws AdminException{
+    if(ids == null) {
+      return;
+    }
+    if (!cc.isOnline())
+      throw new OperativeStoreException("cancel.sms.unavailable");
+
+    cc.cancelSMS(ids);
   }
 }

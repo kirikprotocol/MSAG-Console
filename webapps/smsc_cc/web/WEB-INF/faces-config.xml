@@ -368,6 +368,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>smsView</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.sms_view.SmsController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -552,6 +558,11 @@
     <navigation-case>
       <from-outcome>SMS_STAT_DOWNLOAD</from-outcome>
       <to-view-id>/smsc/stat/download.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMS_VIEW</from-outcome>
+      <to-view-id>/smsc/stat/smsview_sms.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

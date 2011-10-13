@@ -83,7 +83,7 @@ public class OperativeStoreProviderTest {
 
   @Test
   public void testGetMessages() throws Exception {
-    Collection<Message> msgs = OperativeStoreProvider.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), null, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), null, null);
 
     assertEquals(25, msgs.size());
 
@@ -109,7 +109,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setSmsId(3585952070L);
 
-    Collection<Message> msgs = OperativeStoreProvider.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
     assertEquals(1, msgs.size());
   }
 
@@ -118,7 +118,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setFromAddress(new Address(".0.1.4741"));
 
-    Collection<Message> msgs = OperativeStoreProvider.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
     assertEquals(12, msgs.size());
   }
 
@@ -127,7 +127,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setToAddress(new Address(".1.1.79153572744"));
 
-    Collection<Message> msgs = OperativeStoreProvider.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
     assertEquals(1, msgs.size());
   }
 
@@ -136,11 +136,11 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setAbonentAddress(new Address(".1.1.79153572744"));
 
-    Collection<Message> msgs = OperativeStoreProvider.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
     assertEquals(1, msgs.size());
 
     f.setAbonentAddress(new Address(".1.1.79104711918"));
-    msgs = OperativeStoreProvider.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
     assertEquals(1, msgs.size());
   }
 
@@ -149,7 +149,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setMaxRowSize(2);
 
-    Collection<Message> msgs = OperativeStoreProvider.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
     assertEquals(2, msgs.size());
   }
 }

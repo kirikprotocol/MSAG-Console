@@ -28,7 +28,7 @@
           <eye:menubar label="#{msg['smsc.statistic']}" rendered="#{facesContext.externalContext.userPrincipal != null}">
             <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.archiveDaemon']}" action="ARCHIVEDAEMON" rendered="#{archiveDaemon.archiveDaemonDeployed}"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.smsView.operative']}" action="SMS_VIEW_OPERATIVE"/></eye:menubaritem>
-            <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.smsView.archive']}" action="SMS_VIEW_ARCHIVE"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.smsView.archive']}" action="SMS_VIEW_ARCHIVE" rendered="#{archiveDaemon.archiveDaemonDeployed}"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.sms']}" action="SMS_STAT"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.sms.download']}" action="SMS_STAT_DOWNLOAD"/></eye:menubaritem>
           </eye:menubar>

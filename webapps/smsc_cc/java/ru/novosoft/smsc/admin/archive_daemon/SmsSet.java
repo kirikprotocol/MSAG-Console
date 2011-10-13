@@ -13,22 +13,12 @@ public class SmsSet {
 
   private ArrayList<SmsRow> rows = new ArrayList<SmsRow>();
   private boolean hasMore = false;
-  private int maxRows = 0;
-  private int smesRows = 0;
 
   public int getRowsCount() {
     return rows.size();
   }
 
-  public int getSmesRows() {
-    return smesRows;
-  }
-
-  public void setSmesRows(int smesRows) {
-    this.smesRows = smesRows;
-  }
-
-  public List getRowsList() {
+  public List<SmsRow> getRowsList() {
     return rows;
   }
 

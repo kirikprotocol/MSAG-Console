@@ -29,11 +29,11 @@ public class ArchiveMessageFilter {
 
   private Long smsId;
 
-  private Date fromDate = new Date();
+  private Date fromDate;
 
-  private Date tillDate = new Date();
+  private Date tillDate;
 
-  private Integer status;
+  private SmsRow.Status status;
 
   private Integer lastResult;
 
@@ -56,11 +56,11 @@ public class ArchiveMessageFilter {
     status = q.getStatus();
   }
 
-  public int getRowsMaximum() {
+  public Integer getRowsMaximum() {
     return rowsMaximum;
   }
 
-  public void setRowsMaximum(int max) {
+  public void setRowsMaximum(Integer max) {
     rowsMaximum = max;
   }
 
@@ -93,7 +93,7 @@ public class ArchiveMessageFilter {
   }
 
   public void setSmeId(String id) {
-    smeId = id;
+    smeId = id == null || id.length() == 0 ? null : id;
   }
 
   public String getSrcSmeId() {
@@ -101,7 +101,7 @@ public class ArchiveMessageFilter {
   }
 
   public void setSrcSmeId(String id) {
-    srcSmeId = id;
+    srcSmeId = id == null || id.length() == 0 ? null : id;
   }
 
   public String getDstSmeId() {
@@ -109,7 +109,7 @@ public class ArchiveMessageFilter {
   }
 
   public void setDstSmeId(String id) {
-    dstSmeId = id;
+    dstSmeId = id == null || id.length() == 0 ? null : id;
   }
 
   public String getRouteId() {
@@ -117,7 +117,7 @@ public class ArchiveMessageFilter {
   }
 
   public void setRouteId(String id) {
-    routeId = id;
+    routeId = id == null || id.length() == 0 ? null : id;
   }
 
   public Long getSmsId() {
@@ -145,11 +145,11 @@ public class ArchiveMessageFilter {
     tillDate = date;
   }
 
-  public Integer getStatus() {
+  public SmsRow.Status getStatus() {
     return status;
   }
 
-  public void setStatus(Integer status) {
+  public void setStatus(SmsRow.Status status) {
     this.status = status;
   }
 

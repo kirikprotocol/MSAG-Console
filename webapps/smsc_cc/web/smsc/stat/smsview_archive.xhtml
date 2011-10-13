@@ -6,7 +6,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['smsc.statistic.smsView.operative']}"/>
+  <ui:param name="pageTitle" value="#{msg['smsc.statistic.smsView.archive']}"/>
 
   <ui:define name="styles">
     .labelColumn {width: 1px; text-align:left; white-space: nowrap;}
@@ -33,6 +33,15 @@
     text-align: center;
     }
 
+    .wrapword{
+     color: green;
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap;      /* Opera 4-6 */
+     white-space: -o-pre-wrap;    /* Opera 7 */
+     white-space: pre-wrap;       /* css-3 */
+     word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    }
+
   </ui:define>
 
 
@@ -44,32 +53,23 @@
 
         <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, labelColumn, lastColumn">
 
-          <h:outputText value="#{msg['smsc.sms.view.smsc.instance']}"/>
-          <h:selectOneMenu value="#{smsViewArchive.currentInstance}">
-            <f:selectItems value="#{smsViewArchive.smscInstances}"/>
-          </h:selectOneMenu>
-
-          <h:outputText value="&#160;"/>
-          <h:outputText value="&#160;"/>
-
-
           <h:outputText value="#{msg['smsc.sms.view.address.abonent']}"/>
-          <eye:inputText value="#{smsViewArchive.smsFilter.abonentAddress}" converter="addressesConverter"/>
+          <h:inputText id="addr" onkeyup="changedAddress()" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.abonent']}" value="#{smsViewArchive.smsFilter.abonentAddress}" converter="addressesConverter"/>
 
           <h:outputText value="#{msg['smsc.sms.view.sme']}"/>
-          <eye:inputText value="#{smsViewArchive.smsFilter.smeId}"/>
+          <h:inputText id="sme" onkeyup="changedSme()" value="#{smsViewArchive.smsFilter.smeId}"/>
 
           <h:outputText value="#{msg['smsc.sms.view.address.source']}"/>
-          <eye:inputText value="#{smsViewArchive.smsFilter.fromAddress}" converter="addressesConverter"/>
+          <eye:inputText id="source_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.source']}" value="#{smsViewArchive.smsFilter.fromAddress}" converter="addressesConverter"/>
 
           <h:outputText value="#{msg['smsc.sms.view.sme.source']}"/>
-          <eye:inputText value="#{smsViewArchive.smsFilter.srcSmeId}"/>
+          <eye:inputText id="source_sme" value="#{smsViewArchive.smsFilter.srcSmeId}"/>
 
           <h:outputText value="#{msg['smsc.sms.view.address.destination']}"/>
-          <eye:inputText value="#{smsViewArchive.smsFilter.toAddress}" converter="addressesConverter"/>
+          <eye:inputText id="dest_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.destination']}" value="#{smsViewArchive.smsFilter.toAddress}" converter="addressesConverter"/>
 
           <h:outputText value="#{msg['smsc.sms.view.sme.destination']}"/>
-          <eye:inputText value="#{smsViewArchive.smsFilter.dstSmeId}"/>
+          <eye:inputText id="dest_sme" value="#{smsViewArchive.smsFilter.dstSmeId}"/>
 
           <h:outputText value="#{msg['smsc.sms.view.last.result']}"/>
           <h:selectOneMenu value="#{smsViewArchive.lastResult}">
@@ -77,8 +77,22 @@
             <f:selectItems value="#{smsViewArchive.lastResults}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="&#160;"/>
-          <h:outputText value="&#160;"/>
+          <h:outputText value="#{msg['smsc.sms.view.status']}"/>
+          <h:selectOneMenu value="#{smsViewArchive.status}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{smsViewArchive.statuses}"/>
+          </h:selectOneMenu>
+
+          <h:outputText value="#{msg['smsc.sms.view.id']}"/>
+          <eye:inputText validatorMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.id']}" value="#{smsViewArchive.smsId}">
+            <f:validateLongRange/>
+          </eye:inputText>
+
+          <h:outputText value="#{msg['smsc.sms.view.route']}"/>
+          <h:selectOneMenu value="#{smsViewArchive.smsFilter.routeId}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{smsViewArchive.routes}"/>
+          </h:selectOneMenu>
 
           <h:outputText value="#{msg['smsc.sms.view.date.from']}"/>
           <eye:inputDate inputTime="true" value="#{smsViewArchive.smsFilter.fromDate}"/>
@@ -87,7 +101,7 @@
           <eye:inputDate inputTime="true" value="#{smsViewArchive.smsFilter.tillDate}"/>
 
           <h:outputText value="#{msg['smsc.sms.view.results.max']}"/>
-          <h:selectOneMenu value="#{smsViewArchive.smsFilter.maxRowSize}">
+          <h:selectOneMenu value="#{smsViewArchive.smsFilter.rowsMaximum}">
             <f:selectItems value="#{smsViewArchive.maxRows}"/>
           </h:selectOneMenu>
         </h:panelGrid>
@@ -95,14 +109,17 @@
 
       <p/>
 
-      <eye:dataTable value="#{smsViewArchive.messages}" var="r">
+      <eye:dataTable value="#{smsViewArchive.messages}" var="r" rendered="#{smsViewArchive.init}">
 
-        <eye:row>
+        <eye:row innerData="#{r.showText}">
           <eye:column name="id" title="#{msg['smsc.sms.view.id']}" columnClass="idColumn" sortable="true" defaultSortOrder="asc">
-            <h:outputText value="#{r.id}"/>
+            <h:commandLink value="#{r.id}" actionListener="#{smsViewArchive.viewSms}" action="#{smsView.setSms}">
+              <f:param name="sms_id" value="#{r.id}"/>
+              <f:param name="#{smsView.comeBackParamName}" value="SMS_VIEW_ARCHIVE"/>
+            </h:commandLink>
           </eye:column>
 
-          <eye:column name="sendDate" title="#{msg['smsc.sms.view.date.submit']}" columnClass="dateColumn" sortable="true">
+          <eye:column name="sendDate" title="#{msg['smsc.sms.view.date.submit.valid']}" columnClass="dateColumn" sortable="true">
             <h:panelGroup>
               <h:outputText value="#{r.submitTime}">
                 <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
@@ -147,11 +164,15 @@
             <h:outputText value="#{r.lastResult}" rendered="#{r.lastResult != null}" converter="smpp_status_converter"/>
           </eye:column>
 
+          <f:facet name="innerData">
+            <h:outputText styleClass="wrapword" value="#{r.text}"/>
+          </f:facet>
+
         </eye:row>
 
       </eye:dataTable>
 
-      <eye:buttons>
+      <eye:buttons rendered="#{smsViewArchive.init}">
         <eye:button>
           <h:commandLink value="#{msg['download.button']}">
             <eye:fileDownloadListener contentType="application/vnd.ms-excel" filename="smsview.xls" method="#{smsViewArchive.download}"/>
@@ -161,6 +182,33 @@
       </eye:buttons>
 
     </h:form>
+
+    <script type="text/javascript">
+      function changedSme() {
+        if(document.getElementById('filter:sme').value == null || document.getElementById('filter:sme').value.trim() == ''){
+          document.getElementById('source_sme').disabled=false;
+          document.getElementById('dest_sme').disabled=false;
+        }else {
+          document.getElementById('source_sme').disabled=true;
+          document.getElementById('source_sme').value='';
+          document.getElementById('dest_sme').disabled=true;
+          document.getElementById('dest_sme').value='';
+        }
+      }
+      function changedAddress() {
+        if(document.getElementById('filter:addr').value == null || document.getElementById('filter:addr').value.trim() == ''){
+          document.getElementById('source_addr').disabled=false;
+          document.getElementById('dest_addr').disabled=false;
+        }else {
+          document.getElementById('source_addr').disabled=true;
+          document.getElementById('source_addr').value='';
+          document.getElementById('dest_addr').disabled=true;
+          document.getElementById('dest_addr').value='';
+        }
+      }
+      changedSme();
+      changedAddress();
+    </script>
 
 
   </ui:define>

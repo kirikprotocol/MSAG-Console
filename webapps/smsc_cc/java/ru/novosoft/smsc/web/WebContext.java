@@ -6,7 +6,7 @@ import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
-import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
+import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
@@ -71,7 +71,7 @@ public class WebContext {
   private final WSmscManager smscManager;
   private final WTimezoneManager timezoneManager;
   private final WUserManager userManager;
-  private final OperativeStoreProvider operativeStoreProvider;
+  private final OperativeStoreManager operativeStoreManager;
   private final ArchiveDaemon archiveDaemon;
   private final SmscStatProvider smscStatProvider;
 
@@ -128,7 +128,7 @@ public class WebContext {
     smscManager = new WSmscManager(adminContext.getSmscManager(), journal, user);
     timezoneManager = new WTimezoneManager(adminContext.getTimezoneManager(), journal, user);
     userManager = new WUserManager(adminContext.getUsersManager(), journal, user);
-    operativeStoreProvider = adminContext.getOperativeStoreProvider();
+    operativeStoreManager = adminContext.getOperativeStoreManager();
     archiveDaemon = adminContext.getArchiveDaemon();
     smscStatProvider = adminContext.getSmscStatProvider();
   }
@@ -222,8 +222,8 @@ public class WebContext {
     return userManager;
   }
 
-  public OperativeStoreProvider getOperativeStoreProvider() {
-    return operativeStoreProvider;
+  public OperativeStoreManager getOperativeStoreManager() {
+    return operativeStoreManager;
   }
 
   public SmscStatProvider getSmscStatProvider() {

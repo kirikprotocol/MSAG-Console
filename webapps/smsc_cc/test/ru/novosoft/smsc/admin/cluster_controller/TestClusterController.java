@@ -3,7 +3,6 @@ package ru.novosoft.smsc.admin.cluster_controller;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.util.Address;
 
 import java.io.File;
@@ -105,6 +104,19 @@ public class TestClusterController extends TestClusterControllerStub {
     profilesHelper.deleteProfile(address);
     lastProfilesUpdateTime = System.currentTimeMillis();
   }
+
+  //SMS
+
+  @Override
+  public void cancelSMS(String[] ids) throws AdminException {
+    if(ids == null) {
+      return;
+    }
+    for(String s : ids) {
+      System.out.println("Cancel sms: "+s);
+    }
+  }
+
 
   // LOGGING =================================================================================================
 

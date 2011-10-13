@@ -65,6 +65,10 @@ public abstract class SmscController implements Serializable {
     return FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(name);
   }
 
+  protected Map<String, Object> getRequest() {
+    return FacesContext.getCurrentInstance().getExternalContext().getRequestMap();
+  }
+
   protected Map<String, String> getRequestParameters() {
     return FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
   }

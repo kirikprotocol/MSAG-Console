@@ -1,13 +1,12 @@
 package ru.novosoft.smsc.web.controllers.sms_view;
 
-import mobi.eyeline.util.jsf.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.util.jsf.components.data_table.model.LoadListener;
+import mobi.eyeline.util.jsf.components.data_table.model.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveMessageFilter;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
-import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.admin.archive_daemon.SmsSet;
 
+import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,25 +22,41 @@ public class SmsViewArchiveController extends SmsViewController{
 
   private ArchiveMessageFilter oldFilter;
 
-  private Collection<SmsRow> msgs;
+  private List<Sms> msgs;
 
-  private int totalSize;
+  private LoadListener loadListener;
 
+  private boolean loaded;
+
+  private boolean init = false;
 
   public SmsViewArchiveController() {
     oldFilter = new ArchiveMessageFilter(smsFilter);
-  }
-
-  @Override
-  protected void _load(Locale locale, LoadListener loadListener) throws AdminException {
-    //To change body of implemented methods use File | Settings | File Templates.
   }
 
   public ArchiveMessageFilter getSmsFilter() {
     return smsFilter;
   }
 
+  public List<SelectItem> getStatuses() {
+    SmsRow.Status[] statuses = SmsRow.Status.values();
+    List<SelectItem> res = new ArrayList<SelectItem>(statuses.length);
+    for(SmsRow.Status s : statuses) {
+      res.add(new SelectItem(s.toString(), s.toString()));
+    }
+    return res;
+  }
+
+  public String getStatus() {
+    return smsFilter.getStatus() == null ? null : smsFilter.getStatus().toString();
+  }
+
+  public void setStatus(String status) {
+    smsFilter.setStatus(status != null && status.length() != 0 ? SmsRow.Status.valueOf(status) : null);
+  }
+
   public String apply() {
+    init = true;
     if(!oldFilter.equals(smsFilter)) {
       loadingIsNeeded();
       oldFilter = new ArchiveMessageFilter(smsFilter);
@@ -50,9 +65,23 @@ public class SmsViewArchiveController extends SmsViewController{
   }
 
   public String clear() {
+    init = true;
     smsFilter = new ArchiveMessageFilter();
     loadingIsNeeded();
     return null;
+  }
+
+  public boolean isInit() {
+    return init;
+  }
+
+  public boolean isLoaded() {
+    return loaded;
+  }
+
+  protected void loadingIsNeeded() {
+    loaded = false;
+    loadListener = null;
   }
 
   public String getSmsId() {
@@ -71,9 +100,7 @@ public class SmsViewArchiveController extends SmsViewController{
     smsFilter.setLastResult(lastResult == null || (lastResult = lastResult.trim()).length() == 0 ? null : Integer.parseInt(lastResult));
   }
 
-
   private static final String smppStatusPrefix = "smsc.errcode.";
-
 
   public List<SelectItem> getLastResults() {
     Locale locale = getLocale();
@@ -98,32 +125,27 @@ public class SmsViewArchiveController extends SmsViewController{
     return res;
   }
 
-  @Override
-  protected List getRows(int startPos, int count, DataTableSortOrder dataTableSortOrder) {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
-  }
 
-  @Override
-  protected int getRowsCount() {
-    return 0;  //To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  private static Comparator<SmsRow> getComparator(final DataTableSortOrder sortOrder) {
-    return new Comparator<SmsRow>() {
-      public int compare(SmsRow o1, SmsRow o2) {
+  private static Comparator<Sms> getComparator(final DataTableSortOrder sortOrder) {
+    return new Comparator<Sms>() {
+      public int compare(Sms o1, Sms o2) {
         int preres = sortOrder == null || sortOrder.isAsc() ? 1 : -1;
-        if(sortOrder == null || sortOrder.getColumnId().equals("id")) {
-          preres *= o1.getId() < o2.getId() ? -1 : o1.getId() == o2.getId() ? 0 : 1;
-        }else if(sortOrder.getColumnId().equals("sendDate")) {
-          preres *= o1.getSubmitTime().compareTo(o2.getSubmitTime());
-        }else if(sortOrder.getColumnId().equals("lastDate")) {
-          preres *= o1.getLastTryTime().compareTo(o2.getLastTryTime());
-        }else if(sortOrder.getColumnId().equals("from")) {
-          preres *= o1.getOriginatingAddress().compareTo(o2.getOriginatingAddress());
-        }else if(sortOrder.getColumnId().equals("to")) {
-          preres *= o1.getDestinationAddress().compareTo(o2.getDestinationAddress());
-        }else if(sortOrder.getColumnId().equals("status")) {
-          preres *= o1.getStatus().compareTo(o2.getStatus());
+        try{
+          if(sortOrder == null || sortOrder.getColumnId().equals("id")) {
+            preres *= o1.getId() < o2.getId() ? -1 : o1.getId() == o2.getId() ? 0 : 1;
+          }else if(sortOrder.getColumnId().equals("sendDate")) {
+            preres *= o1.getSubmitTime().compareTo(o2.getSubmitTime());
+          }else if(sortOrder.getColumnId().equals("lastDate")) {
+            preres *= o1.getLastTryTime().compareTo(o2.getLastTryTime());
+          }else if(sortOrder.getColumnId().equals("from")) {
+            preres *= o1.getOriginatingAddress().compareTo(o2.getOriginatingAddress());
+          }else if(sortOrder.getColumnId().equals("to")) {
+            preres *= o1.getDestinationAddress().compareTo(o2.getDestinationAddress());
+          }else if(sortOrder.getColumnId().equals("status")) {
+            preres *= o1.getStatus().compareTo(o2.getStatus());
+          }
+        }catch (AdminException e) {
+          logger.error(e,e);
         }
         return preres;
       }
@@ -140,46 +162,102 @@ public class SmsViewArchiveController extends SmsViewController{
     }
     SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", getLocale());
     try{
-        for (SmsRow row : msgs) {
-          appendRow(dateFormatter, writer, row);
-        }
+      for (Sms row : msgs) {
+        appendRow(dateFormatter, writer, row);
+      }
     }catch (AdminException e) {
       addError(e);
     }
   }
 
-  private static final char TAB = '\t';
-  private static final String LINE_SEP = "\r\n";
-  private static final String SPACE = " ";
 
-  private void appendRow(SimpleDateFormat dateFormatter, PrintWriter writer, SmsRow row) throws AdminException {
-    String id = Long.toString(row.getId());
-    String submit = row.getSubmitTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime())) : SPACE;
-    String valid = row.getValidTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime())) : SPACE;
-    String last = row.getLastTryTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime())) : SPACE;
-    String next = row.getNextTryTime() != null ? StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime())) : SPACE;
-    Address source = row.getOriginatingAddress();
-    Address dest = row.getDestinationAddress();
-    String route = row.getRouteId();
-//    Message.Status status = row.getStatus();
-    //id + "\t" + submit + "\t" + valid + "\t" + last + "\t" + next + "\t" + source + "\t" + dest + "\t" + route + "\t" + status + "\t";
-//    writer.append(id).append(TAB).append(submit).append(TAB).append(valid).append(TAB).append(last).append(TAB).append(next).append(TAB);
-//    writer.append(source.getSimpleAddress()).append(TAB).append(dest.getSimpleAddress()).append(TAB).append(route).append(TAB).append(status.toString()).append(TAB);
-//    if (row.getOriginalText() != null && isAllowToShowSmsText(row)) {
-//      writer.append(row.getOriginalText());
-//    }
-    writer.append(LINE_SEP);
+  public DataTableModel getMessages() {
+    if(wcontext.getArchiveDaemonManager() == null) {
+      return new EmptyDataTableModel();
+    }
+    final Locale locale = getLocale();
+    return new DataTableModelImpl(locale);
   }
 
-  private static final String MAP_PROXY = "MAP_PROXY";
-  private static final String SPECIAL_ROLE1 = "smsView_smstext_p2p";
-  private static final String SPECIAL_ROLE2 = "smsView_smstext_content";
+  private class DataTableModelImpl implements PreloadableModel {
+    private final Locale locale;
 
-  protected boolean isAllowToShowSmsText(SmsRow row) throws AdminException{
-    if (row.getSrcSmeId().equalsIgnoreCase(MAP_PROXY) && row.getDstSmeId().equals(MAP_PROXY)) {
-      return isUserhasRole(SPECIAL_ROLE1);
-    }else {
-      return isUserhasRole(SPECIAL_ROLE2);
+    private DataTableModelImpl(Locale locale) {
+      this.locale = locale;
     }
+
+    public LoadListener prepareRows(int i, int i1, DataTableSortOrder dataTableSortOrder) throws ModelException {
+      LoadListener listener = null;
+      if(!loaded) {
+        if(loadListener == null) {
+          loadListener = new LoadListener();
+          new Thread() {
+            public void run() {
+              try{
+                loadListener.setCurrent(0);
+                loadListener.setTotal(1);
+                final SmsSet messages = wcontext.getArchiveDaemon().getSmsSet(smsFilter);
+                List<SmsRow> rs =  messages.getRowsList();
+                msgs = new ArrayList<Sms>(rs.size());
+                for(SmsRow r : rs) {
+                  msgs.add(new ArchiveSms(r, isAllowToShowSmsText(r.getSrcSmeId(), r.getDstSmeId())));
+                }
+                loadListener.setCurrent(1);
+                loaded = true;
+              }catch (AdminException e){
+                logger.error(e,e);
+                loadListener.setLoadError(new ModelException(e.getMessage(locale)));
+              }catch (Exception e){
+                logger.error(e, e);
+                loadListener.setLoadError(new ModelException(e.getLocalizedMessage() != null ? e.getLocalizedMessage() : e.getMessage() != null
+                    ? e.getMessage() : "Internal error"));
+              }
+            }
+          }.start();
+        }
+        listener = loadListener;
+      }
+      return listener;
+    }
+    public List getRows(int startPos, int count, DataTableSortOrder dataTableSortOrder) throws ModelException {
+      if(msgs == null) {
+        return Collections.emptyList();
+      }
+      List<Object> result = new LinkedList<Object>();
+      Collections.sort(msgs, getComparator(dataTableSortOrder));
+      for (int i = startPos; i < Math.min(msgs.size(), startPos + count); i++) {
+        result.add(msgs.get(i));
+      }
+      return result;
+    }
+    public int getRowsCount() throws ModelException {
+      return msgs == null ? 0 : msgs.size();
+    }
+
+    public String getId(Object o) throws ModelException {
+      try{
+        return o instanceof Sms ? Long.toString(((Sms)o).getId()) : null;
+      }catch (AdminException e) {
+        addError(e);
+        throw new ModelException(e.getMessage(locale));
+      }
+    }
+  }
+
+  public void viewSms(ActionEvent e) {
+    String s_id = getRequestParameter("sms_id");
+    long id = Long.parseLong(s_id);
+    Sms sms = null;
+    try{
+        for(Sms s : msgs) {
+          if(s.getId() == id) {
+            sms = s;
+            break;
+          }
+        }
+    }catch (AdminException ex) {
+      addError(ex);
+    }
+    getRequest().put(SmsController.SMS_PARAM_NAME, sms);
   }
 }

@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.alias.AliasManagerImplTest;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfigTest;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManagerImpl;
+import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemon;
 import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonManager;
 import ru.novosoft.smsc.admin.category.TestCategoryManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerImplTest;
@@ -21,7 +22,7 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImplTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImplTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
-import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
+import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProviderTest;
 import ru.novosoft.smsc.admin.profile.TestProfileManager;
 import ru.novosoft.smsc.admin.provider.TestProviderManager;
@@ -31,6 +32,7 @@ import ru.novosoft.smsc.admin.reschedule.RescheduleManagerImplTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceFileTest;
 import ru.novosoft.smsc.admin.resource.TestResourceManager;
+import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.admin.route.RoutesConfigTest;
 import ru.novosoft.smsc.admin.route.TestRouteSubjectManager;
 import ru.novosoft.smsc.admin.service.TestServiceManagerHA;
@@ -54,6 +56,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Artem Snopkov
@@ -151,9 +155,6 @@ public class TestAdminContext extends AdminContext {
     File smscConfigDir = smscManager.getConfigDir();
     File smscConfigBackupDir = smscManager.getConfigBackupDir();
 
-    if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager))
-      archiveDaemonManager = new TestArchiveDaemonManager(serviceManager, fileSystem);
-
     aliasManager = new TestAliasManager(new File(smscConfigDir, "aliases.bin"), clusterController, fileSystem);
 
     rescheduleManager = new TestRescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
@@ -187,6 +188,18 @@ public class TestAdminContext extends AdminContext {
 
     routeSubjectManager = new TestRouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
+    if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager)) {
+      archiveDaemonManager = new TestArchiveDaemonManager(serviceManager, fileSystem);
+      List<String> routes = new LinkedList<String>();
+      List<String> smes = new LinkedList<String>();
+      for(Route r : routeSubjectManager.getSettings().getRoutes()) {
+        routes.add(r.getName());
+      }
+      smes.addAll(smeManager.getSmesSmscStatuses().keySet());
+
+      archiveDaemon = new TestArchiveDaemon(archiveDaemonManager, routes, smes);
+    }
+
     timezoneManager = new TestTimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     regionManager = new TestRegionManager(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
@@ -200,7 +213,7 @@ public class TestAdminContext extends AdminContext {
     for (int i =0; i<smscInstancesNumber; i++)
       operStores[i] = new File(servicesDir, "SMSC" + i +File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
 
-    operativeStoreProvider = new OperativeStoreProvider(operStores, fileSystem);
+    operativeStoreManager = new OperativeStoreManager(operStores, fileSystem, clusterController);
 
     final File[] statsDir = new File[1];
     statsDir[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat");

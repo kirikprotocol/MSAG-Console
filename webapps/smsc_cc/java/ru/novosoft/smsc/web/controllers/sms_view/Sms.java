@@ -60,4 +60,8 @@ public interface Sms {
   public String getText() throws AdminException;
 
   public boolean isTextEncoded() throws AdminException;
+
+  public boolean isShowText() throws AdminException;
+
+  public SmsStatus getStatus() throws AdminException;
 }

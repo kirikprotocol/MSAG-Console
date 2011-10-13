@@ -6,191 +6,224 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['smsc.statistic.smsView.operative']}"/>
+<ui:param name="pageTitle" value="#{msg['smsc.statistic.smsView.operative']}"/>
 
-  <ui:define name="styles">
-    .labelColumn {width: 1px; text-align:left; white-space: nowrap;}
-    .valueColumn {width: 200px; text-align: left; padding-right: 10px; }
-    .lastColumn {text-align: left;}
+<ui:define name="styles">
+  .labelColumn {width: 1px; text-align:left; white-space: nowrap;}
+  .valueColumn {width: 200px; text-align: left; padding-right: 10px; }
+  .lastColumn {text-align: left;}
 
-    .idColumn {
-    text-align: center;
-    width: 10%;
-    }
+  .idColumn {
+  text-align: center;
+  width: 10%;
+  }
 
-    .dateColumn {
-    text-align: center;
-    width: 15%;
-    }
+  .dateColumn {
+  text-align: center;
+  width: 15%;
+  }
 
-    .doubleRowColumn {
-    text-align: left;
-    width: 15%;
-    }
+  .doubleRowColumn {
+  text-align: left;
+  width: 15%;
+  }
 
-    .singleRowColumn {
-    width: 15%;
-    text-align: center;
-    }
+  .singleRowColumn {
+  width: 15%;
+  text-align: center;
+  }
 
-  </ui:define>
+  .wrapword{
+  color: green;
+  white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  white-space: pre-wrap;       /* css-3 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+  }
 
-
-  <ui:define name="content">
-
-    <h:form id="filter">
-
-      <eye:dataTableFilter applyAction="#{smsViewOper.apply}" clearAction="#{smsViewOper.clear}">
-
-        <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, labelColumn, lastColumn">
-
-          <h:outputText value="#{msg['smsc.sms.view.smsc.instance']}"/>
-          <h:selectOneMenu value="#{smsViewOper.currentInstance}">
-            <f:selectItems value="#{smsViewOper.smscInstances}"/>
-          </h:selectOneMenu>
-
-          <h:outputText value="&#160;"/>
-          <h:outputText value="&#160;"/>
+</ui:define>
 
 
-          <h:outputText value="#{msg['smsc.sms.view.address.abonent']}"/>
-          <h:inputText id="addr" onkeyup="changedAddress()" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.abonent']}" value="#{smsViewOper.messageFilter.abonentAddress}" converter="addressesConverter"/>
+<ui:define name="content">
 
-          <h:outputText value="#{msg['smsc.sms.view.sme']}"/>
-          <h:inputText id="sme" onkeyup="changedSme()" value="#{smsViewOper.messageFilter.smeId}"/>
+  <h:form id="filter">
 
-          <h:outputText value="#{msg['smsc.sms.view.address.source']}"/>
-          <eye:inputText id="source_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.source']}" value="#{smsViewOper.messageFilter.fromAddress}" converter="addressesConverter"/>
+    <eye:dataTableFilter applyAction="#{smsViewOper.apply}" clearAction="#{smsViewOper.clear}">
 
-          <h:outputText value="#{msg['smsc.sms.view.sme.source']}"/>
-          <eye:inputText id="source_sme" value="#{smsViewOper.messageFilter.srcSmeId}"/>
+      <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, labelColumn, lastColumn">
 
-          <h:outputText value="#{msg['smsc.sms.view.address.destination']}"/>
-          <eye:inputText id="dest_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.destination']}" value="#{smsViewOper.messageFilter.toAddress}" converter="addressesConverter"/>
+        <h:outputText value="#{msg['smsc.sms.view.smsc.instance']}"/>
+        <h:selectOneMenu value="#{smsViewOper.currentInstance}">
+          <f:selectItems value="#{smsViewOper.smscInstances}"/>
+        </h:selectOneMenu>
 
-          <h:outputText value="#{msg['smsc.sms.view.sme.destination']}"/>
-          <eye:inputText id="dest_sme" value="#{smsViewOper.messageFilter.dstSmeId}"/>
+        <h:outputText value="&#160;"/>
+        <h:outputText value="&#160;"/>
 
-          <h:outputText value="#{msg['smsc.sms.view.date.from']}"/>
-          <eye:inputDate inputTime="true" value="#{smsViewOper.messageFilter.fromDate}"/>
 
-          <h:outputText value="#{msg['smsc.sms.view.date.till']}"/>
-          <eye:inputDate inputTime="true" value="#{smsViewOper.messageFilter.tillDate}"/>
+        <h:outputText value="#{msg['smsc.sms.view.address.abonent']}"/>
+        <h:inputText id="addr" onkeyup="changedAddress()" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.abonent']}" value="#{smsViewOper.messageFilter.abonentAddress}" converter="addressesConverter"/>
 
-          <h:outputText value="#{msg['smsc.sms.view.last.result']}"/>
-          <h:selectOneMenu value="#{smsViewOper.lastResult}">
-            <f:selectItem itemLabel="" itemValue=""/>
-            <f:selectItems value="#{smsViewOper.lastResults}"/>
-          </h:selectOneMenu>
+        <h:outputText value="#{msg['smsc.sms.view.sme']}"/>
+        <h:inputText id="sme" onkeyup="changedSme()" value="#{smsViewOper.messageFilter.smeId}"/>
 
-          <h:outputText value="&#160;"/>
-          <h:outputText value="&#160;"/>
+        <h:outputText value="#{msg['smsc.sms.view.address.source']}"/>
+        <eye:inputText id="source_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.source']}" value="#{smsViewOper.messageFilter.fromAddress}" converter="addressesConverter"/>
 
-          <h:outputText value="#{msg['smsc.sms.view.results.max']}"/>
-          <h:selectOneMenu value="#{smsViewOper.messageFilter.maxRowSize}">
-            <f:selectItems value="#{smsViewOper.maxRows}"/>
-          </h:selectOneMenu>
-        </h:panelGrid>
-      </eye:dataTableFilter>
+        <h:outputText value="#{msg['smsc.sms.view.sme.source']}"/>
+        <eye:inputText id="source_sme" value="#{smsViewOper.messageFilter.srcSmeId}"/>
 
-      <p/>
+        <h:outputText value="#{msg['smsc.sms.view.address.destination']}"/>
+        <eye:inputText id="dest_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.destination']}" value="#{smsViewOper.messageFilter.toAddress}" converter="addressesConverter"/>
 
-      <eye:dataTable value="#{smsViewOper.messages}" var="r" rendered="#{smsViewOper.init}">
+        <h:outputText value="#{msg['smsc.sms.view.sme.destination']}"/>
+        <eye:inputText id="dest_sme" value="#{smsViewOper.messageFilter.dstSmeId}"/>
 
-        <eye:row>
-          <eye:column name="id" title="#{msg['smsc.sms.view.id']}" columnClass="idColumn" sortable="true" defaultSortOrder="asc">
-            <h:outputText value="#{r.id}"/>
-          </eye:column>
+        <h:outputText value="#{msg['smsc.sms.view.date.from']}"/>
+        <eye:inputDate inputTime="true" value="#{smsViewOper.messageFilter.fromDate}"/>
 
-          <eye:column name="sendDate" title="#{msg['smsc.sms.view.date.submit']}" columnClass="dateColumn" sortable="true">
-            <h:panelGroup>
-              <h:outputText value="#{r.submitTime}">
-                <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
-              </h:outputText>     <br/>
-              <h:outputText value="#{r.validTime}">
-                <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
-              </h:outputText>
-            </h:panelGroup>
-          </eye:column>
+        <h:outputText value="#{msg['smsc.sms.view.date.till']}"/>
+        <eye:inputDate inputTime="true" value="#{smsViewOper.messageFilter.tillDate}"/>
 
-          <eye:column name="lastDate" title="#{msg['smsc.sms.view.date.tried']}" columnClass="dateColumn" sortable="true">
-            <h:panelGroup>
-              <h:outputText value="#{r.lastTryTime}">
-                <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
-              </h:outputText>  <br/>
-              <h:outputText value="#{r.nextTryTime}">
-                <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
-              </h:outputText>
-            </h:panelGroup>
-          </eye:column>
+        <h:outputText value="#{msg['smsc.sms.view.id']}"/>
+        <eye:inputText validatorMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.id']}" value="#{smsViewOper.smsId}">
+          <f:validateLongRange/>
+        </eye:inputText>
 
-          <eye:column name="from" title="#{msg['smsc.sms.view.from']}" columnClass="doubleRowColumn" sortable="true">
-            <h:panelGroup>
-              <h:outputText value="#{r.originatingAddress}" converter="addressesConverter"/>  <br/>
-              <h:outputText value="#{r.srcSmeId}"/>
-            </h:panelGroup>
-          </eye:column>
+        <h:outputText value="#{msg['smsc.sms.view.route']}"/>
+        <h:selectOneMenu value="#{smsViewOper.messageFilter.routeId}">
+          <f:selectItem itemLabel="" itemValue=""/>
+          <f:selectItems value="#{smsViewOper.routes}"/>
+        </h:selectOneMenu>
 
-          <eye:column name="to" title="#{msg['smsc.sms.view.to']}" columnClass="doubleRowColumn" sortable="true">
-            <h:panelGroup>
-              <h:outputText value="#{r.destinationAddress}" converter="addressesConverter"/>  <br/>
-              <h:outputText value="#{r.dstSmeId}"/>
-            </h:panelGroup>
-          </eye:column>
+        <h:outputText value="#{msg['smsc.sms.view.last.result']}"/>
+        <h:selectOneMenu value="#{smsViewOper.lastResult}">
+          <f:selectItem itemLabel="" itemValue=""/>
+          <f:selectItems value="#{smsViewOper.lastResults}"/>
+        </h:selectOneMenu>
 
-          <eye:column name="route" title="#{msg['smsc.sms.view.route']}" columnClass="singleRowColumn">
-            <h:outputText value="#{r.routeId}"/>
-          </eye:column>
+        <h:outputText value="&#160;"/>
+        <h:outputText value="&#160;"/>
 
-          <eye:column name="status" title="#{msg['smsc.sms.view.status']}" columnClass="singleRowColumn" sortable="true">
-            <h:outputText value="#{r.status}"/> <br/>
-            <h:outputText value="#{r.lastResult}" rendered="#{r.lastResult != null}" converter="smpp_status_converter"/>
-          </eye:column>
+        <h:outputText value="#{msg['smsc.sms.view.results.max.for.instance']}"/>
+        <h:selectOneMenu value="#{smsViewOper.messageFilter.maxRowSize}">
+          <f:selectItems value="#{smsViewOper.maxRows}"/>
+        </h:selectOneMenu>
+      </h:panelGrid>
+    </eye:dataTableFilter>
 
-        </eye:row>
+    <p/>
 
-      </eye:dataTable>
+    <eye:dataTable value="#{smsViewOper.messages}" var="r" rendered="#{smsViewOper.init}" selectedRows="#{smsViewOper.selected}">
 
-      <eye:buttons rendered="#{smsViewOper.init}">
-        <eye:button>
-          <h:commandLink value="#{msg['download.button']}">
-            <eye:fileDownloadListener contentType="application/vnd.ms-excel" filename="smsview.xls" method="#{smsViewOper.download}"/>
+      <eye:row innerData="#{r.showText}">
+        <eye:column name="id" title="#{msg['smsc.sms.view.id']}" columnClass="idColumn" sortable="true" defaultSortOrder="asc">
+          <h:commandLink value="#{r.id}" actionListener="#{smsViewOper.viewSms}" action="#{smsView.setSms}">
+            <f:param name="sms_id" value="#{r.id}"/>
+            <f:param name="#{smsView.comeBackParamName}" value="SMS_VIEW_OPERATIVE"/>
           </h:commandLink>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
+        </eye:column>
 
-    </h:form>
+        <eye:column name="sendDate" title="#{msg['smsc.sms.view.date.submit.valid']}" columnClass="dateColumn" sortable="true">
+          <h:panelGroup>
+            <h:outputText value="#{r.submitTime}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+            </h:outputText>     <br/>
+            <h:outputText value="#{r.validTime}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+            </h:outputText>
+          </h:panelGroup>
+        </eye:column>
 
-    <script type="text/javascript">
-      function changedSme() {
-        if(document.getElementById('filter:sme').value == null || document.getElementById('filter:sme').value.trim() == ''){
-          document.getElementById('source_sme').disabled=false;
-          document.getElementById('dest_sme').disabled=false;
-        }else {
-          document.getElementById('source_sme').disabled=true;
-          document.getElementById('source_sme').value='';
-          document.getElementById('dest_sme').disabled=true;
-          document.getElementById('dest_sme').value='';
-        }
+        <eye:column name="lastDate" title="#{msg['smsc.sms.view.date.tried']}" columnClass="dateColumn" sortable="true">
+          <h:panelGroup>
+            <h:outputText value="#{r.lastTryTime}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+            </h:outputText>  <br/>
+            <h:outputText value="#{r.nextTryTime}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+            </h:outputText>
+          </h:panelGroup>
+        </eye:column>
+
+        <eye:column name="from" title="#{msg['smsc.sms.view.from']}" columnClass="doubleRowColumn" sortable="true">
+          <h:panelGroup>
+            <h:outputText value="#{r.originatingAddress}" converter="addressesConverter"/>  <br/>
+            <h:outputText value="#{r.srcSmeId}"/>
+          </h:panelGroup>
+        </eye:column>
+
+        <eye:column name="to" title="#{msg['smsc.sms.view.to']}" columnClass="doubleRowColumn" sortable="true">
+          <h:panelGroup>
+            <h:outputText value="#{r.destinationAddress}" converter="addressesConverter"/>  <br/>
+            <h:outputText value="#{r.dstSmeId}"/>
+          </h:panelGroup>
+        </eye:column>
+
+        <eye:column name="route" title="#{msg['smsc.sms.view.route']}" columnClass="singleRowColumn">
+          <h:outputText value="#{r.routeId}"/>
+        </eye:column>
+
+        <eye:column name="status" title="#{msg['smsc.sms.view.status']}" columnClass="singleRowColumn" sortable="true">
+          <h:outputText value="#{r.status}"/> <br/>
+          <h:outputText value="#{r.lastResult}" rendered="#{r.lastResult != null}" converter="smpp_status_converter"/>
+        </eye:column>
+
+        <f:facet name="innerData">
+          <h:panelGrid columns="1" columnClasses="wrapword">
+            <h:outputText value="#{r.text}"/>
+          </h:panelGrid>
+        </f:facet>
+      </eye:row>
+    </eye:dataTable>
+
+    <p/>
+
+    <eye:buttons rendered="#{smsViewOper.init}">
+
+      <eye:button>
+        <h:commandLink value="#{msg['delete.button']}" action="#{smsViewOper.removeSelected}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+      </eye:button>
+      <eye:space/>
+      <eye:button>
+        <h:commandLink value="#{msg['download.button']}">
+          <eye:fileDownloadListener contentType="application/vnd.ms-excel" filename="smsview.xls" method="#{smsViewOper.download}"/>
+        </h:commandLink>
+      </eye:button>
+    </eye:buttons>
+
+  </h:form>
+
+  <script type="text/javascript">
+    function changedSme() {
+      if(document.getElementById('filter:sme').value == null || document.getElementById('filter:sme').value.trim() == ''){
+        document.getElementById('source_sme').disabled=false;
+        document.getElementById('dest_sme').disabled=false;
+      }else {
+        document.getElementById('source_sme').disabled=true;
+        document.getElementById('source_sme').value='';
+        document.getElementById('dest_sme').disabled=true;
+        document.getElementById('dest_sme').value='';
       }
-      function changedAddress() {
-        if(document.getElementById('filter:addr').value == null || document.getElementById('filter:addr').value.trim() == ''){
-          document.getElementById('source_addr').disabled=false;
-          document.getElementById('dest_addr').disabled=false;
-        }else {
-          document.getElementById('source_addr').disabled=true;
-          document.getElementById('source_addr').value='';
-          document.getElementById('dest_addr').disabled=true;
-          document.getElementById('dest_addr').value='';
-        }
+    }
+    function changedAddress() {
+      if(document.getElementById('filter:addr').value == null || document.getElementById('filter:addr').value.trim() == ''){
+        document.getElementById('source_addr').disabled=false;
+        document.getElementById('dest_addr').disabled=false;
+      }else {
+        document.getElementById('source_addr').disabled=true;
+        document.getElementById('source_addr').value='';
+        document.getElementById('dest_addr').disabled=true;
+        document.getElementById('dest_addr').value='';
       }
-      changedSme();
-      changedAddress();
-    </script>
+    }
+    changedSme();
+    changedAddress();
+  </script>
 
 
-  </ui:define>
+</ui:define>
 
 </ui:composition>
 
