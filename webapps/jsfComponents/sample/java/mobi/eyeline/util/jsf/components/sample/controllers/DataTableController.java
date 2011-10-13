@@ -17,7 +17,7 @@ public class DataTableController {
   public DataTableModel getModel() {
 
     final List<Row> rows = new LinkedList<Row>();
-    for(int i=0;i<50;i++) {
+    for(int i=0;i<500;i++) {
       if(field1Filter != null && !Integer.toString(i).equals(field1Filter)) {
         continue;
       }

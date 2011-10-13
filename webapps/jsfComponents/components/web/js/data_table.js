@@ -384,13 +384,15 @@ var NavBarControl = function(id, navbarOptions) {
     nextButton.css("display", (numberOfPages == 0 || pageNumb == numberOfPages) ? "none" : "");
     lastButton.css("display", (numberOfPages == 0 || pageNumb == numberOfPages) ? "none" : "");
 
+    if (pageNumber) {
+      var prevFirstVisiblePage = Math.max(pageNumber -4, 1);
+      pageButtons[pageNumber - prevFirstVisiblePage].removeClass("eyeline_navbar_current_page");
+    }
+
     var firstVisiblePage = Math.max(pageNumb - 4, 1);
     var lastVisiblePage = Math.min(pageNumb + 4, numberOfPages);
     if (lastVisiblePage == firstVisiblePage)
       lastVisiblePage = 0;
-
-    if (pageNumber)
-      pageButtons[pageNumber - firstVisiblePage].removeClass("eyeline_navbar_current_page");
     pageButtons[pageNumb - firstVisiblePage].addClass("eyeline_navbar_current_page");
 
     for (var curPage = firstVisiblePage; curPage <= lastVisiblePage; curPage++)
