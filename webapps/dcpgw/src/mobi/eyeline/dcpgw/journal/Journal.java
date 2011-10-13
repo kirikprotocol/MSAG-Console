@@ -34,6 +34,8 @@ public class Journal {
     private int max_journal_size_mb = 10;
 
     private File j1;
+    private BufferedWriter bw;
+
     private File j2;
     private File j2t;
 
@@ -186,7 +188,9 @@ public class Journal {
     }
 
     public void write(Data data) throws CouldNotWriteToJournalException {
+
         synchronized (monitor){
+
             try {
                 if (j1.createNewFile()){
                     log.debug("Create journal "+j1.getName());
@@ -206,14 +210,16 @@ public class Journal {
             }
 
             if (isEnoughSpace){
-                log.debug("Length of the journal after appending string will be less or equal than "+ max_journal_size_mb +" mb.");
+                //log.debug("Length of the journal after appending string will be less or equal than "+ max_journal_size_mb +" mb.");
 
                 try {
-                    BufferedWriter bw = new BufferedWriter(new FileWriter(j1, true));
+                    if (bw == null) {
+                        bw = new BufferedWriter(new FileWriter(j1, true));
+                        log.debug("Initialize buffered writer for journal "+j1.getName());
+                    }
                     bw.write(s+"\n");
                     bw.flush();
-                    bw.close();
-                    log.debug("Successfully write to the journal.");
+                    log.debug("write: "+s);
                 } catch (IOException e) {
                     log.error("Could not append a string to the file "+ j1.getName(), e);
                     throw new CouldNotWriteToJournalException(e);
@@ -223,11 +229,13 @@ public class Journal {
                 log.error("Size of the journal after appending string will be more than maximum allowed journal size "+ max_journal_size_mb +" mb.");
                 throw new CouldNotWriteToJournalException("Size of the journal after appending string will be more than maximum allowed juornal size "+ max_journal_size_mb +" mb.");
             }
+
         }
+
     }
 
     private boolean isEnoughSpace(String line) throws UnsupportedEncodingException {
-        log.debug("Try to write to journal string: "+line);
+        //log.debug("Try to write to journal string: "+line);
 
         int byteCount;
         byte[] bytes = (line + "\n").getBytes("UTF-8");
@@ -240,7 +248,7 @@ public class Journal {
             sum = j1.length() + j2.length();
         }
 
-        log.debug("Length of the journal in bytes: "+sum);
+        //log.debug("Length of the journal in bytes: "+sum);
 
         return sum+byteCount <= max_journal_size_mb*1024*1024;
     }
@@ -281,20 +289,20 @@ public class Journal {
 
                     if (status == Data.Status.DONE || status == Data.Status.EXPIRED_MAX_TIMEOUT) {
                         done_message_ids.add(message_id);
-                        log.debug("finished: message_id="+message_id);
+                        //log.debug("finished: message_id="+message_id);
                     } else if (status == Data.Status.DELETED){
                         deleted_messages_ids.add(message_id);
-                        log.debug("deleted: message_id="+message_id);
+                        //log.debug("deleted: message_id="+message_id);
                     } else if (status == Data.Status.EXPIRED_MAX_TIMEOUT){
                         expired_max_messages_ids.add(message_id);
-                        log.debug("expired_max: message_id="+message_id);
+                        //log.debug("expired_max: message_id="+message_id);
                     } else if (status == Data.Status.EXPIRED_TIMEOUT){
                         int sequence_number = Integer.parseInt(ar[4]);
                         sequence_numbers.add(sequence_number);
-                        log.debug("expired: sn="+sequence_number);
+                        //log.debug("expired: sn="+sequence_number);
                     } else if (status == Data.Status.SEND || status == Data.Status.NOT_SEND){
                         processed_message_ids.add(message_id);
-                        log.debug("processed: message_id="+message_id);
+                        //log.debug("processed: message_id="+message_id);
                     }
 
                 }
@@ -312,7 +320,7 @@ public class Journal {
 
                     if (status == Data.Status.INIT){
                         if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
-                            log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
+                            //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();
                             counter++;
@@ -322,7 +330,7 @@ public class Journal {
                         int sequence_number = Integer.parseInt(ar[4]);
                         if (!done_message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)
                                 && !deleted_messages_ids.contains(message_id) && !expired_max_messages_ids.contains(message_id)){
-                            log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
+                            //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();
                             counter++;
@@ -376,6 +384,9 @@ public class Journal {
         synchronized (monitor){
             log.debug("Try to append file '"+source.getName()+"' to file '"+target.getName()+"'.");
 
+            bw.close();
+            log.debug("Close buffered writer for journal "+j1.getName());
+
             FileOutputStream fos = new FileOutputStream(target, true);
             BufferedOutputStream bufOut = new BufferedOutputStream(fos);
 
@@ -399,6 +410,9 @@ public class Journal {
 
             b = j1.createNewFile();
             log.debug("Create file "+j1.getName()+": "+b);
+
+            bw = new BufferedWriter(new FileWriter(j1, true));
+            log.debug("Initialize buffered writer for journal "+j1.getName());
 
             log.debug("Successfully append journal.");
         }

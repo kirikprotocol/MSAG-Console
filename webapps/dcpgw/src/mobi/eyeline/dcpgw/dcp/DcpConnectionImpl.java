@@ -87,7 +87,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
             int size = queue.size();
             log.debug("add "+message_id+"_message to "+delivery_id+"_queue, size "+size);
             message_id_submit_sm_resp_table.put(message_id, resp);
-            log.debug("Remember SubmitSMResp for message_id "+message_id);
+            //log.debug("Remember SubmitSMResp for message_id "+message_id);
 
             if (queue.size() == 1){
                 SendTask sendTask = new SendTask(delivery_id);
@@ -128,9 +128,6 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
                 List<Message> list = new ArrayList<Message>();
                 queue.drainTo(list);
-
-                //Message[] ar = new Message[queue.size()];
-                //List<Message> list = Arrays.asList(queue.toArray(ar));
 
                 for(Message m: list){
                     Date date = cal.getTime();
@@ -207,8 +204,6 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             long dif = System.currentTimeMillis() - t;
             log.debug("Done send messages task, "+dif+" mls");
-
-
     }
 
     public void run() {
