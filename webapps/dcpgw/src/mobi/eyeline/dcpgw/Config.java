@@ -71,7 +71,7 @@ public class Config {
     private int delivery_request_limit;
     private int delivery_response_timeout;
     private int delivery_response_max_timeout;
-    private int delivery_queue_limit;
+
 
     private int clean_journal_timeout;
 
@@ -201,7 +201,6 @@ public class Config {
 
         clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
 
-        delivery_queue_limit = Utils.getProperty(config, "delivery.receipt.queue.limit", 10000);
     }
 
     public void update() throws IOException, XmlConfigException, AdminException, SmppException {
@@ -444,10 +443,6 @@ public class Config {
 
     public int getDeliveryRequestLimit(){
         return delivery_request_limit;
-    }
-
-    public int getDeliveryQueueLimit(){
-        return delivery_queue_limit;
     }
 
     public long getInitialMessageId(){

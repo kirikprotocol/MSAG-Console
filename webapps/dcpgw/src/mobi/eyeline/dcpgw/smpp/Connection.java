@@ -68,7 +68,7 @@ public class Connection {
         queue = Journal.getInstance().getDataQueue(name);
 
         if (sn_data_table == null) sn_data_table = new Hashtable<Integer, Data>();
-        if (queue == null) queue = new LinkedBlockingQueue<Data>(config.getDeliveryQueueLimit());
+        if (queue == null) queue = new LinkedBlockingQueue<Data>();
 
         int t1 = config.getSendReceiptsInterval();
 
@@ -97,7 +97,7 @@ public class Connection {
 
     void send(Data data){
 
-        if (queue == null) queue = new LinkedBlockingQueue<Data>(config.getDeliveryQueueLimit());
+        if (queue == null) queue = new LinkedBlockingQueue<Data>();
 
         try{
             queue.add(data);

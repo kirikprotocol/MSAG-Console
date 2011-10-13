@@ -44,13 +44,11 @@ public class Journal {
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private int queue_limit;
     private int request_limit;
 
-    public void init(File journal_dir, int max_journal_size_mb, int clean_timeout, int queue_limit, int request_limit) throws InitializationException{
+    public void init(File journal_dir, int max_journal_size_mb, int clean_timeout, int request_limit) throws InitializationException{
         log.debug("Try to initialize journal ...");
         this.max_journal_size_mb = max_journal_size_mb;
-        this.queue_limit = queue_limit;
         this.request_limit = request_limit;
 
         if (!journal_dir.exists()) {
@@ -144,7 +142,7 @@ public class Journal {
                             if (status == Data.Status.INIT){
 
                                 if (!connection_data_queue_table.containsKey(connection))
-                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<Data>(queue_limit));
+                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<Data>());
 
 
                                 try {

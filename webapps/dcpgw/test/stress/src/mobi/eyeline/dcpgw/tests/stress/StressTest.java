@@ -13,10 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -38,9 +35,8 @@ public class StressTest {
     private static String dest_address, source_address;
     private static long validity_period;
 
-    //private static AtomicInteger ai = new AtomicInteger(0);
+    private static AtomicInteger ai = new AtomicInteger(0);
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("ddHHmmss");
     private static Calendar cal = Calendar.getInstance();
 
     private ScheduledExecutorService scheduler;
@@ -101,6 +97,7 @@ public class StressTest {
                             submitSM.setSourceAddress(source_address);
                             submitSM.setDestinationAddress(dest_address);
                             submitSM.setValidityPeriod(validity_period*1000);
+                            submitSM.setSequenceNumber(ai.incrementAndGet());
                         } catch (InvalidAddressFormatException e){
                             log.error(e);
                         }
@@ -117,7 +114,7 @@ public class StressTest {
 
         Thread.sleep(check_delay * 1000);
 
-        HashSet<Integer> s = client.getSubmitSMSequenceNumberSet();
+        Set<Integer> s = client.getSubmitSMSequenceNumberSet();
         log.debug("sn set size: "+s.size());
 
         boolean empty = s.isEmpty();

@@ -21,11 +21,11 @@ public class Client extends Thread implements PDUListener {
     Properties config;
     SmppClient smppClient;
 
-    HashSet<Integer> submit_sm_sequence_number_set;
+    Set<Integer> submit_sm_sequence_number_set;
 
     HashSet<Long> message_ids;
 
-    int c1, c2, c3, c4, c5, c6, c7;
+    int c1, c2, c3, c4, c5, c6, c7, c8;
 
     public Client(Properties config) throws SmppException {
         this.config = config;
@@ -38,7 +38,7 @@ public class Client extends Thread implements PDUListener {
         log.debug("Try to start smpp client ...");
         smppClient.start();
 
-        submit_sm_sequence_number_set = new HashSet<Integer>();
+        submit_sm_sequence_number_set = Collections.synchronizedSet(new HashSet<Integer>());
         message_ids = new HashSet<Long>();
 
         log.debug("Start smpp client.");
@@ -50,10 +50,16 @@ public class Client extends Thread implements PDUListener {
             case SubmitSM: {
                 try {
                     Message request = (Message)pdu;
+                    int sn = pdu.getSequenceNumber();
+                    if (submit_sm_sequence_number_set.add(sn)){
+                        log.debug("remember sn "+sn);
+                    } else {
+                        log.debug("couldn't remember "+sn);
+                    }
+
                     smppClient.send(request);
                     c1++;
-                    int sn = pdu.getSequenceNumber();
-                    submit_sm_sequence_number_set.add(sn);
+
                 } catch (SmppException e) {
                     log.error(e);
                     return false;
@@ -71,7 +77,9 @@ public class Client extends Thread implements PDUListener {
 
                     long message_id = Long.parseLong(s.substring(s.indexOf(":")+1,s.length()));
 
-                    if (message_ids.remove(message_id)) c6++;
+                    if (message_ids.remove(message_id)) {
+                        c6++;
+                    }
 
                     DeliverSMResp deliverSMResp = new DeliverSMResp();
                     deliverSMResp.setStatus(Status.OK);
@@ -96,7 +104,13 @@ public class Client extends Thread implements PDUListener {
                     String message_id_str = submitSMResp.getMessageId();
 
                     int sn = submitSMResp.getSequenceNumber();
-                    if (submit_sm_sequence_number_set.remove(sn)) c3++;
+                    if (submit_sm_sequence_number_set.remove(sn)) {
+                        log.debug("Remove sn "+sn+", status "+status);
+                        c3++;
+                    } else {
+                        log.debug("Couldn't remove sn "+sn+", status "+status);
+                        c8++;
+                    }
 
                     log.debug("receive SubmitSMResp: id="+message_id_str+", sn:"+sn);
 
@@ -105,7 +119,14 @@ public class Client extends Thread implements PDUListener {
 
                 } else if (status.equals(Status.MSGQFUL)){
                     int sn = submitSMResp.getSequenceNumber();
-                    if (submit_sm_sequence_number_set.remove(sn)) c7++;
+                    if (submit_sm_sequence_number_set.remove(sn)) {
+                        log.debug("Remove sn "+sn+", status "+status);
+                        c7++;
+                    } else {
+                        log.debug("Couldn't remove sn "+sn+", status "+status);
+                        c8++;
+                    }
+
                 } else {
                     c4++;
                     log.warn(submitSMResp);
@@ -114,7 +135,7 @@ public class Client extends Thread implements PDUListener {
                 break;
             }
         }
-        log.debug("SubmitSM: send "+c1+", succ "+c3+", msqfull "+c7+", err "+c4+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
+        log.debug("SubmitSM: send "+c1+", succ "+c3+", msqfull "+c7+", err "+c4+", unk "+c8+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
         return true;
     }
 
@@ -127,7 +148,7 @@ public class Client extends Thread implements PDUListener {
         if( smppClient != null ) smppClient.shutdown();
     }
 
-    public HashSet<Integer> getSubmitSMSequenceNumberSet(){
+    public Set<Integer> getSubmitSMSequenceNumberSet(){
         return submit_sm_sequence_number_set;
     }
 
