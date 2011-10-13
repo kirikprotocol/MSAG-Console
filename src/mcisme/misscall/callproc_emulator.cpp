@@ -96,7 +96,7 @@ stringParser(const std::string& inputStr)
   }
   }*/
 
-#include "callproc.hpp"
+#include "mcisme/callproc.hpp"
 
 extern "C" void longSysCallInterrupHandler(int sig)
 {
