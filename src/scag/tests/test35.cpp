@@ -1,6 +1,6 @@
 #include "logger/Logger.h"
 #include "core/threads/ThreadPool.hpp"
-#include "core/buffers/PerThreadData.h"
+#include "core/buffers/PerThreadData.hpp"
 
 using namespace smsc::logger;
 using namespace smsc::core::threads;
