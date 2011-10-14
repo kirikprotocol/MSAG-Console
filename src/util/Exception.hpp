@@ -119,17 +119,24 @@ public:
 //system errors based on 'errno'
 class SystemError: public CustomException{
 public:
-  SystemError(const char * msg, int err_code = errno) :
-        CustomException(err_code, msg, err_code ? strerror(err_code) : NULL)
+  SystemError(const char * const fmt, ...)
   {
+    SMSC_UTIL_EX_FILL(fmt);
+    errCode = errno;
+    char sysErrBuf[1024];
+    snprintf(sysErrBuf, sizeof(sysErrBuf), ": %s", strerror(errno));
+    message += sysErrBuf;
     setExcId("SystemError");
   }
   //
   SystemError(int32_t err_code, const char * const fmt, ...)
   {
-    setExcId("SystemError");
-    errCode = err_code;
     SMSC_UTIL_EX_FILL(fmt);
+    errCode = err_code;
+    char sysErrBuf[1024];
+    snprintf(sysErrBuf, sizeof(sysErrBuf), ": %s", strerror(err_code));
+    message += sysErrBuf;
+    setExcId("SystemError");
   }
 };
 
