@@ -29,7 +29,7 @@ protected:
   int _size;
   int _empty;
 
-  inline int SZ(){return sizeof(T);};
+  inline int SZ(){return static_cast<int>(sizeof(T));};
 
   inline void CallDestructor(T* obj)
   {
