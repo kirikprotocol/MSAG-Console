@@ -98,7 +98,7 @@ bool ServiceATIH::getSession(void)
     if (!mTcDisp.acRegistry()->getFactory(_ac_map_anyTimeInfoHandling_v3)
         && !mTcDisp.acRegistry()->regFactory(initMAPATIH3Components)) {
       smsc_log_fatal(logger, "%s: ROS factory registration failed: %s!", _logId,
-                     _ac_map_anyTimeInfoHandling_v3.nick());
+                     _ac_map_anyTimeInfoHandling_v3.nick().c_str());
       return false;
     }
     SSNSession * session = mTcDisp.openSSN(_cfg.mapCfg.usr.ownSsn, _cfg.mapCfg.usr.maxDlgId);

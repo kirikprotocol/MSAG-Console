@@ -39,11 +39,11 @@ ICServiceAC::RCode ICSIAPrvdSRI::_icsInit(void)
   if (!tcDisp->acRegistry()->getFactory(_ac_map_locInfoRetrieval_v3)
       && !tcDisp->acRegistry()->regFactory(initMAPCHSRI3Components)) {
     smsc_log_fatal(logger, "%s: ROS factory registration failed: %s!", _logId,
-                    _ac_map_locInfoRetrieval_v3.nick());
+                    _ac_map_locInfoRetrieval_v3.nick().c_str());
     return ICServiceAC::icsRcError;
   }
   smsc_log_info(logger, "%s: ROS factory registered: %s", _logId,
-                _ac_map_locInfoRetrieval_v3.nick());
+                _ac_map_locInfoRetrieval_v3.nick().c_str());
 
   //NOTE: _qrsPool initialization requires active SSN session
   _qrsFclt.init(_qrsPool, _cfg._maxThreads);

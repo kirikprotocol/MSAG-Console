@@ -211,7 +211,7 @@ std::string SSNSession::mkSignature(const TonNpiAddress & onpi, const EncodedOID
     else {
         rssn[0] = '*'; rssn[1] = 0;
     }
-    return format("%u:%s{%s}->%s:%s", _SSN, onpi.getSignals(), dlg_ac.nick(), rssn,
+    return format("%u:%s{%s}->%s:%s", _SSN, onpi.getSignals(), dlg_ac.nick().c_str(), rssn,
            rnpi ? rnpi->getSignals() : "*");
 }
 

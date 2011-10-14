@@ -48,7 +48,7 @@ ICServiceAC::RCode ICSSmBilling::_icsInit(void)
     _wCfg.tcDisp = (TCAPDispatcherITF *)_icsHost->getInterface(ICSIdent::icsIdTCAPDisp);
     if (!_wCfg.tcDisp->acRegistry()->getFactory(_ac_cap3_sms)
         && !_wCfg.tcDisp->acRegistry()->regFactory(initCAP3SMSComponents)) {
-      smsc_log_fatal(logger, "ROS factory registration failed: %s!", _ac_cap3_sms.nick());
+      smsc_log_fatal(logger, "ROS factory registration failed: %s!", _ac_cap3_sms.nick().c_str());
       return ICServiceAC::icsRcError;
     }
     _wCfg.schedMgr = (TaskSchedulerFactoryITF*)_icsHost->getInterface(ICSIdent::icsIdScheduler);
