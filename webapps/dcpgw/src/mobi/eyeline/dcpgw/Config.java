@@ -108,18 +108,18 @@ public class Config {
         // Load receipts rang
         receipts_rang_file = new File(user_dir + File.separator + "conf" + File.separator + "receipts_rang");
         if (receipts_rang_file.createNewFile()){
-            log.debug("Create new message id file: "+ receipts_rang_file);
+            log.debug("Create new receipts sequence number file: "+ receipts_rang_file);
             initial_receipts_sn_rang = 0;
             PrintWriter pw = new PrintWriter(new FileWriter(receipts_rang_file));
             pw.println(initial_receipts_sn_rang +rang);
             pw.flush();
             pw.close();
-            log.debug("Write to file initial message id rang: "+ initial_receipts_sn_rang + rang);
+            log.debug("Write to file initial receipts sequence number rang: "+ initial_receipts_sn_rang + rang);
         } else {
             BufferedReader br = new BufferedReader(new FileReader(receipts_rang_file));
             String line = br.readLine();
-            initial_message_id_rang = Long.parseLong(line);
-            log.debug("Load from file initial message id rang: " + initial_message_id_rang);
+            initial_receipts_sn_rang = Integer.parseInt(line);
+            log.debug("Load from file initial receipts sequence number rang: " + initial_receipts_sn_rang);
         }
 
         String s = config.getProperty("informer.host");
@@ -285,10 +285,6 @@ public class Config {
 
     public Provider getProvider(String connection_name){
         return connection_provider_table.get(connection_name);
-    }
-
-    public Set<String> getInformerUsers(){
-        return informer_user_password_table.keySet();
     }
 
     public String getInformerUserPassword(String user){

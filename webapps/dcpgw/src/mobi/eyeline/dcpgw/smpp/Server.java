@@ -70,10 +70,10 @@ public class Server{
         initial_receipt_sn_rang = config.getReceiptsSequenceNumberRang();
         rang = config.getRang();
         limit = initial_receipt_sn_rang + rang;
-        receipts_rang_file = config.getMessageIdRangFile();
+        receipts_rang_file = config.getReceiptsRangFile();
     }
 
-    public int getReceiptSequenceNumber(){
+    public synchronized int getReceiptSequenceNumber(){
         int sn = initial_receipt_sn_rang + ai.incrementAndGet();
         if (sn == limit){
             try {
