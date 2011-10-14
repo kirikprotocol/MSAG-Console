@@ -151,27 +151,27 @@ int main(int argc, char** argv)
     }
 
     try {
-        XMFConfig   config(XCFManager::getInstance());
-        config.parseSectionsConfig(cfgFile); //throws
+      XMFConfig   config(XCFManager::getInstance());
+      config.parseSectionsConfig(cfgFile); //throws
 
-        SVCHostProducer   hostProd;
-        ICSHostCfgReader * xcfReader = (ICSHostCfgReader *)
-                              hostProd.newCfgReader(config, 0, inmanLogger);
+      SVCHostProducer   hostProd;
+      ICSHostCfgReader * xcfReader = (ICSHostCfgReader *)
+                            hostProd.newCfgReader(config, 0, inmanLogger);
 
-        xcfReader->readConfig(); //throws
-        if (xcfReader->icsCfgState() != ICSrvCfgReaderAC::cfgComplete)
-          throw ConfigException("SVCHost configuration is incomplete");
+      xcfReader->readConfig(); //throws
+      if (xcfReader->icsCfgState() != ICSrvCfgReaderAC::cfgComplete)
+        throw ConfigException("SVCHost configuration is incomplete");
 
-        _svcHost = (SVCHost*)hostProd.newService(0, inmanLogger);
-        log_phase_ok(ICServiceAC::icsStConfig, inmanLogger);
-        /* */
+      _svcHost = (SVCHost*)hostProd.newService(0, inmanLogger);
+      log_phase_ok(ICServiceAC::icsStConfig, inmanLogger);
+      /* */
     } catch (const std::exception & exc) {
       rval = log_phase_fatal(ICServiceAC::icsStConfig, inmanLogger, exc.what());
     } catch (...) {
       rval = log_phase_fatal(ICServiceAC::icsStConfig, inmanLogger, "unknown exception caught");
     }
 
-    if (_svcHost && (tgtPhase > ICServiceAC::icsStConfig)) {
+    if (!rval && (tgtPhase > ICServiceAC::icsStConfig)) {
       try {
         if (_svcHost->ICSInit() == ICServiceAC::icsRcOk)
           log_phase_ok(ICServiceAC::icsStInited, inmanLogger);
@@ -184,7 +184,7 @@ int main(int argc, char** argv)
       }
     }
 
-    if (_svcHost && (tgtPhase > ICServiceAC::icsStInited)) {
+    if (!rval && (tgtPhase > ICServiceAC::icsStInited)) {
       try {
         if (_svcHost->ICSStart() == ICServiceAC::icsRcOk) {
           _runService = 1;
