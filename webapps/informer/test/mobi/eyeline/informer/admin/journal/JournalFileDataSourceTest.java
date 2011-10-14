@@ -174,11 +174,10 @@ public class JournalFileDataSourceTest {
     try{
       ds.visit(new JournalFilter().setStartDate(new Date(date.getTime() - 1)), new JournalVisitor() {
         public boolean visit(JournalRecord r) {
-          assertTrue(r.equals(record1));
+          fail();
           return true;
         }
       });
-      assertTrue(false);
     }catch (AdminException e){}
 
     ds = new JournalFileDataSource(jDir, FileSystem.getFSForSingleInst());
