@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <inttypes.h>
 
 #include "sms/sms.h"
 #include "sms/sms_const.h"
@@ -27,7 +28,7 @@ using sms::AddressValue;
 using smsc::util::crc32;
 
 std::string
-hexdmp(const uchar_t* buf, size_t bufSz);
+hexdmp(const uint8_t* buf, size_t bufSz);
 
 union	AbntAddrValue
 {
