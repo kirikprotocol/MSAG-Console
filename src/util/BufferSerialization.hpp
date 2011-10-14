@@ -43,13 +43,13 @@ public:
   {
     resize((uint32_t)(bufferPos+sz));
     memcpy(buffer+bufferPos,buf,sz);
-    bufferPos+=sz;
+    bufferPos+=static_cast<uint32_t>(sz);
   }
   void Read(void* buf,size_t sz)
   {
     if(bufferPos+sz>bufferSize)throw std::runtime_error("Attempt to read beyond buffer");
     memcpy(buf,buffer+bufferPos,sz);
-    bufferPos+=sz;
+    bufferPos+=static_cast<uint32_t>(sz);
   }
   template <class T>
   void XWrite(const T& t)
