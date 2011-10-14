@@ -7,7 +7,7 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/interaction/serializer/SerializeStdString.hpp"
 #include "inman/interaction/serializer/SerializeFxdLenStringT.hpp"
 
-#include "inman/common/cvtutil.hpp"
+#include "inman/common/CBSDefs.hpp"
 using smsc::cbs::parseCBS_DCS;
 using smsc::cbs::CBS_DCS;
 
