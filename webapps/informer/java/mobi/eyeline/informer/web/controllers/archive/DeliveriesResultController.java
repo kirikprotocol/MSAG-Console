@@ -2,6 +2,8 @@ package mobi.eyeline.informer.web.controllers.archive;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.archive.ArchiveDelivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatusHistory;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.*;
@@ -96,6 +98,34 @@ public class DeliveriesResultController extends InformerController{
     selected = null;
   }
 
+  private static Date getStartDate(DeliveryStatusHistory statusHistory) {
+    List<DeliveryStatusHistory.Item> items = statusHistory.getHistoryItems();
+    Date startDate = null;
+    for(DeliveryStatusHistory.Item i : items) {
+      if(i.getStatus() == DeliveryStatus.Active && (startDate == null || i.getDate().before(startDate))) {
+        startDate = i.getDate();
+      }
+    }
+    return startDate;
+  }
+
+  private static Date getEndDate(DeliveryStatusHistory statusHistory) {
+    List<DeliveryStatusHistory.Item> items = statusHistory.getHistoryItems();
+    Date endDate = null;
+    for(DeliveryStatusHistory.Item i : items) {
+      if((endDate == null || i.getDate().after(endDate))) {
+        endDate = i.getStatus() == DeliveryStatus.Finished ? i.getDate() : null;
+      }
+    }
+    return endDate;
+  }
+
+  private void calculateDates(User u, ArchiveDelivery di) throws AdminException{
+    DeliveryStatusHistory history = getConfig().getArchiveHistory(u.getLogin(), di.getId());
+    di.setStartDate(getStartDate(history));
+    di.setEndDate(getEndDate(history));
+  }
+
   /**
    * Вставляет объект info в отсортированный массив infos.
    *
@@ -119,7 +149,7 @@ public class DeliveriesResultController extends InformerController{
   @SuppressWarnings({"RedundantIfStatement"})
   private boolean accept(ArchiveDelivery value) {
     if(id != null && id.length()>0 && value.getId() != Integer.parseInt(id)) {
-        return false;
+      return false;
     }
     if(name != null && name.length()>0 && !value.getName().startsWith(name)) {
       return false;
@@ -136,7 +166,7 @@ public class DeliveriesResultController extends InformerController{
     return true;
   }
 
-  private List<ArchiveDelivery> getDeliveries(final int startPos, final int count, DataTableSortOrder sortOrder) throws AdminException {
+  private List<ArchiveDelivery> getDeliveries(final User u, final int startPos, final int count, DataTableSortOrder sortOrder, final boolean calculateDates) throws AdminException {
     final Comparator<ArchiveDelivery> comparator = getComparator(sortOrder);
 
     final ArchiveDelivery infos[] = new ArchiveDelivery[startPos + count];
@@ -144,6 +174,9 @@ public class DeliveriesResultController extends InformerController{
 
     getConfig().getDeliveriesResult(reqId, new Visitor<ArchiveDelivery>() {
       public boolean visit(ArchiveDelivery value) throws AdminException {
+        if(calculateDates) {
+          calculateDates(u, value);
+        }
         if(!accept(value)) {
           return true;
         }
@@ -168,13 +201,21 @@ public class DeliveriesResultController extends InformerController{
       existUsers.add(u.getLogin());
     }
 
+    final User u = getConfig().getUser(getUserName());
+
     return new ModelWithObjectIds() {
       public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) throws ModelException {
         try {
-          List<ArchiveDelivery> deliveries = getDeliveries(startPos, count, sortOrder);
+
+          final boolean calculateDates = sortOrder != null && (sortOrder.getColumnId().equals("startDate") || sortOrder.getColumnId().equals("endDate"));
+
+          List<ArchiveDelivery> deliveries = getDeliveries(u, startPos, count, sortOrder, calculateDates);
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(deliveries.size());
           for(ArchiveDelivery d : deliveries) {
             if(d != null) {
+              if(!calculateDates) {
+                calculateDates(u, d);
+              }
               rows.add(new DeliveryRow(d, existUsers.contains(d.getOwner())));
             }
           }
@@ -268,6 +309,19 @@ public class DeliveriesResultController extends InformerController{
           if (o1 == null) return 1;
           if (o2 == null) return -1;
           return o1.getStartDate().compareTo(o2.getStartDate()) * (sortOrder.isAsc() ? 1 : -1);
+        }
+      };
+    }else if (sortOrder.getColumnId().equals("endDate")) {
+      return new Comparator<ArchiveDelivery>() {
+        public int compare(ArchiveDelivery o1, ArchiveDelivery o2) {
+          if (o1 == null) return 1;
+          if (o2 == null) return -1;
+          if (o1.getEndDate() == null) {
+            return o2.getEndDate() == null ? 0 : (sortOrder.isAsc() ? -1 : 1);
+          } else if (o2.getEndDate() == null) {
+            return (sortOrder.isAsc() ? 1 : -1);
+          }
+          return o1.getEndDate().compareTo(o2.getEndDate()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
     } else if (sortOrder.getColumnId().equals("id")) {

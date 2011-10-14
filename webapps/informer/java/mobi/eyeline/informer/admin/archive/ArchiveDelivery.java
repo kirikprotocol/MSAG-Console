@@ -40,7 +40,7 @@ public class ArchiveDelivery {
     return startDate;
   }
 
-  void setStartDate(Date startDate) {
+  public void setStartDate(Date startDate) {
     this.startDate = startDate;
   }
 
@@ -48,7 +48,7 @@ public class ArchiveDelivery {
     return endDate;
   }
 
-  void setEndDate(Date endDate) {
+  public void setEndDate(Date endDate) {
     this.endDate = endDate;
   }
 
