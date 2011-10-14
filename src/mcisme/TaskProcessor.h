@@ -234,6 +234,8 @@ class TaskProcessor : public Thread, public MissedCallListener,
                       const AbonentProfile& profile);
   bool forwardEventToIASME(const MissedCallEvent &event);
 
+  void initStorage(const ConfigView* storage_cfg_section);
+
 public:
 
   TaskProcessor(ConfigView* config);
@@ -282,10 +284,10 @@ public:
     putToInQueue(event);
   }
 
-  bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
-  bool invokeProcessSubmitSmResp(int cmdId, int status, int seqNum);
+  bool invokeProcessDataSmResp(int status, int seq_mum);
+  bool invokeProcessSubmitSmResp(int status, int seq_num);
   void invokeProcessDataSmTimeout(void);
-  bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
+  bool invokeProcessAlertNotification(int status, const AbntAddr& abnt);
 
   void commitMissedCallEvents(const AbntAddr& abonent,
                               const std::vector<MCEvent>& src_events,
