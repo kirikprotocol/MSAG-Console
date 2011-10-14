@@ -220,7 +220,7 @@ time_t DeliveryQueue::RegisterAlert(const AbntAddr& abnt)
 bool DeliveryQueue::Get(AbntAddr& abnt)
 {
   MutexGuard lock(deliveryQueueMonitor);
-  int pause = GetDeliveryTime()-time(0);
+  int pause = static_cast<int>(GetDeliveryTime()-time(0));
 
   //	smsc_log_debug(logger, "pause = %d", pause);
   if(pause > 0)
