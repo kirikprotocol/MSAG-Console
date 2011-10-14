@@ -7,7 +7,7 @@ namespace smsc {
 namespace mcisme {
 
 std::string
-hexdmp(const uchar_t* buf, size_t bufSz)
+hexdmp(const uint8_t* buf, size_t bufSz)
 {
   std::ostringstream hexBuf;
   hexBuf.fill('0');
