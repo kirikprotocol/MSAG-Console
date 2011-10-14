@@ -6,16 +6,17 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/codec_inc/cap/InitialDPSMSArg.h"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
 #include "inman/comp/compsutl.hpp"
-#include "inman/common/adrutil.hpp"
-#include "inman/common/cvtutil.hpp"
-
 using smsc::util::MAPConst;
-using namespace smsc::util;
+using smsc::util::CAPConst;
 
+#include "inman/common/cvtutil.hpp"
+using smsc::cvtutil::packNumString2BCD;
+#include "inman/common/cvtTime.hpp"
 using smsc::cvtutil::packTimeT2BCD7;
 using smsc::cvtutil::packTimeT2BCD8;
 using smsc::cvtutil::packTP_VP_Relative;
-using smsc::cvtutil::packNumString2BCD;
+
+#include "inman/common/adrutil.hpp"
 using smsc::cvtutil::packMAPAddress2OCTS;
 using smsc::cvtutil::packMAPAddress2LocationOCTS;
 using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
@@ -27,7 +28,6 @@ using smsc::cvtutil::LOCATION_ADDRESS_OCTS;
 
 #define Address2OCTET_STRING(octs, addr)	{ ZERO_OCTET_STRING(octs); \
 	octs.size = packMAPAddress2OCTS(addr, octs.buf); }
-
 
 namespace smsc {
 namespace inman {
@@ -133,7 +133,7 @@ void SMSInitialDPArg::setCallingPartyNumber(const char * text)
 }
 
 //imsi contains sequence of ASCII digits
-void SMSInitialDPArg::setIMSI(const IMSIString & imsi) throw(CustomException)
+void SMSInitialDPArg::setIMSI(const smsc::util::IMSIString & imsi) throw(CustomException)
 {
     ZERO_OCTET_STRING(comp->_iMSI);
     comp->_iMSI.size = packNumString2BCD(comp->_iMSI.buf, imsi.c_str(), (unsigned)imsi.length());

@@ -41,10 +41,11 @@ uint32_t AbonentCacheMTR::AbonentHashKey::Read(File & fh, uint32_t max_octs/* = 
     max_octs = _maxSize;
   //File::Read() throws if reads less bytes than requested
   bcdSz = (uint32_t)fh.Read(bcd, max_octs);
-  length = unpackBCD2NumString(bcd, signals, bcdSz);
+  int res = unpackBCD2NumString(bcd, signals, bcdSz);
+  length = (res > 0) ? (uint8_t)res: 0;
   signals[length] = 0;
   if (!length)
-    throw smsc::util::Exception("AbonentHashKey::Read(): zero length");
+    throw smsc::util::Exception("AbonentHashKey::Read(): bad char or zero length");
 
   //isdn international address only
   numPlanInd = typeOfNumber = 1;

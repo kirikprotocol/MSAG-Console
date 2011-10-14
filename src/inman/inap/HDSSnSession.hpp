@@ -201,13 +201,13 @@ protected:
     SSNSession *    _owner;
     uint16_t        tcUID;
     TonNpiAddress   ownAdr;
-    SCCP_ADDRESS_T  locAddr;
+    SCCP_ADDRESS_OCTS  locAddr;
     uint8_t         senderSsn;
     TCDialogsLIST   pool;
     TCSessionSUID   sign;   //must be inited by successor
     const ROSComponentsFactory * acFab; //application constext operations factory
 
-    Dialog * initDialog(const SCCP_ADDRESS_T & rmtAddr, Logger * use_log = NULL);
+    Dialog * initDialog(const SCCP_ADDRESS_OCTS & rmtAddr, Logger * use_log = NULL);
 
 protected:
     friend class SSNSession;
@@ -257,7 +257,7 @@ protected:
 class TCSessionSR: public TCSessionAC {
 private:
     TonNpiAddress   rmtNpi;
-    SCCP_ADDRESS_T  rmtAddr;
+    SCCP_ADDRESS_OCTS  rmtAddr;
 
 public:
     // -- TCAP Dialogs factory methods -- //

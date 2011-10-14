@@ -1,5 +1,5 @@
 /* ************************************************************************** *
- * Various Address packing utilities for SCCP, TCAP, MAP, CAP.
+ * Various packing utilities for Mobile Addresses used in MAP, CAP.
  * ************************************************************************** */
 #ifndef __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 #ifndef __GNUC__
@@ -8,13 +8,12 @@
 #define __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
-using smsc::util::CAPConst;
-
-#include "inman/inap/SS7Types.hpp"
 
 namespace smsc {
 namespace cvtutil {
+
+using smsc::util::TonNpiAddress;
+using smsc::util::CAPConst;
 
 struct TONNPI_OCT { // MSB -> LSB
   uint8_t reserved_1  : 1;
@@ -143,9 +142,6 @@ extern unsigned unpackOCTS2MAPAddress(TonNpiAddress & addr, uint8_t * use_octs,
 //NOTE: provided buffer must be at least sizeof(LOCATION_ADDRESS_OCTS) bytes long
 extern unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr, uint8_t * use_octs);
 
-//according to Q.713 clause 3.4.2 (with GT & SSN)
-extern unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn);
-extern unsigned unpackSCCP2SSN_GT(const SCCP_ADDRESS_T* dst, unsigned char & ssn, char *addr);
 }//namespace cvtutil
 }//namespace smsc
 

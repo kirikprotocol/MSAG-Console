@@ -6,9 +6,9 @@ static char const ident[] = "@(#)$Id$";
 using smsc::util::format;
 
 #include "inman/common/TimeOps.hpp"
-#include "inman/common/adrutil.hpp"
-using smsc::cvtutil::packSCCPAddress;
-using smsc::cvtutil::unpackSCCP2SSN_GT;
+//#include "inman/common/adrutil.hpp"
+//using smsc::cvtutil::packSCCPAddress;
+//using smsc::cvtutil::unpackSCCP2SSN_GT;
 
 #include "inman/inap/HDSSnSession.hpp"
 #include "inman/inap/dialog.hpp"
@@ -30,7 +30,7 @@ TCSessionAC::TCSessionAC(uint16_t uid, SSNSession * owner, uint8_t fake_ssn,
 {
     ownAdr.fixISDN();
     senderSsn = _owner->getSSN();
-    packSCCPAddress(&locAddr, ownAdr.getSignals(), fake_ssn ? fake_ssn : senderSsn);
+    packSCCPAddress(locAddr, ownAdr.getSignals(), fake_ssn ? fake_ssn : senderSsn);
 }
 
 TCSessionAC::~TCSessionAC(void)
@@ -62,7 +62,7 @@ void TCSessionAC::releaseDialog(Dialog* pDlg)
     _owner->releaseDialog(pDlg, &sign);
 }
 
-Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_T & rmt_addr,
+Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_OCTS & rmt_addr,
                                  Logger * use_log/* = NULL*/)
 {
     TCDialogID dId;
@@ -116,8 +116,8 @@ Dialog* TCSessionMA::openDialog(const TonNpiAddress & rnpi, Logger * use_log/* =
         || (rnpi.typeOfNumber > TonNpiAddress::tonInternational))
         return NULL; //todo: throw
 
-    SCCP_ADDRESS_T  rmtAddr;
-    packSCCPAddress(&rmtAddr, rnpi.getSignals(), rmtSSN);
+    SCCP_ADDRESS_OCTS  rmtAddr;
+    packSCCPAddress(rmtAddr, rnpi.getSignals(), rmtSSN);
     return initDialog(rmtAddr, use_log);
 }
 
@@ -131,7 +131,7 @@ TCSessionSR::TCSessionSR(uint16_t uid, SSNSession * owner, uint8_t fake_ssn,
     , rmtNpi(rmt_addr)
 {
     sign = owner->mkSignature(own_addr, use_fact->acOID(), rmt_ssn, &rmtNpi);
-    packSCCPAddress(&rmtAddr, rmtNpi.getSignals(), rmt_ssn);
+    packSCCPAddress(rmtAddr, rmtNpi.getSignals(), rmt_ssn);
 }
 
 Dialog* TCSessionSR::openDialog(Logger * use_log/* = NULL*/)

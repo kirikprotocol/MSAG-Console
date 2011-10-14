@@ -1,4 +1,4 @@
-/* This module contains various conversion functions widely used in 3GPP */
+/* This module contains various text conversion functions widely used in 3GPP */
 #ifdef MOD_IDENT_ON
 static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
@@ -8,7 +8,11 @@ static const char ident[] = "@(#)$Id$";
 namespace smsc {
 namespace cvtutil {
 
-unsigned char  const _cvt_7bit_2_8bit[128] = {
+const char k_TBCD_alphabet[15] = {
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#', 'a', 'b', 'c'
+};
+
+unsigned char  const k_cvt_7bit_2_8bit[128] = {
 /*  0*/ 0x40,0xa3,0x24,0xa5,0xe8,0xe9,0xf9,0xec,
 /*  8*/ 0xf2,0xc7,0x0a,0xd8,0xf8,0x0d,0xc5,0xe5,
 /* 16*/ 0x44,0x5f,0x46,0x47,0x4c,0x57,0x50,0x59,
@@ -27,7 +31,7 @@ unsigned char  const _cvt_7bit_2_8bit[128] = {
 /*120*/ 0x78,0x79,0x7a,0xe4,0xf6,0xf1,0xfc,0xe0
 };
 
-unsigned char  const _cvt_8bit_2_7bit[256] = {
+unsigned char  const k_cvt_8bit_2_7bit[256] = {
 /*  0*/ 0x1b,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
 /*  8*/ 0x54,0x54,0x0a,0x54,0x54,0x0d,0x54,0x54,
 /* 16*/ 0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
@@ -65,66 +69,185 @@ unsigned char  const _cvt_8bit_2_7bit[256] = {
 /* ************************************************************************** *
  * Various text and alphabets conversion utility functions
  * ************************************************************************** */
-
-/* GVR:
- * Determines the length (in bytes) of packed 7bit text converted from input text.
- * If '_7bit_chars' is non NULL, number of 7bit chars in output buffer is returned.
+/* Packs NumericString ('0'-'9') as Binary Coded Decimal String.
+ * By default, in case of odd string length, the '1111'B filler is added
+ * to high semioctet of last byte.
+ *
+ * NOTE: function doesn't perform check for output buffer ABW ('Array out
+ * of Boundary Writing', its size is precisely determined, so
+ * it's caller responsibility to provide necessary space.
  */
-unsigned estimateTextAs7Bit(const char* text, unsigned tlen, unsigned * _7bit_chars)
+unsigned short packNumString2BCD(unsigned char * bcd_buf, const char * in_str,
+                                 unsigned short str_len, const bool filler/* = true*/)
 {
-    unsigned	shift = 0, num7ch = 0, numBytes = tlen ? 1 : 0;
+  unsigned short bcdLen = (str_len + 1)/2;
 
-    for (unsigned i = 0; i < tlen; ++i) {
-#define __pchar()	if ((shift += 7) >= 8) { shift &= 0x7; ++numBytes; } ++num7ch
-#define __escape()	__pchar(); __pchar();
-	switch (text[i]) {
-	case '^': __escape(); break;
-	case '\f':__escape(); break;
-	case '|': __escape(); break;
-	case '{': __escape(); break;
-	case '}': __escape(); break;
-	case '[': __escape(); break;
-	case ']': __escape(); break;
-	case '~': __escape(); break;
-	case '\\':__escape(); break;
-	default:
-	    __pchar();
-	}
+  for (unsigned short i = 0; i < str_len; ++i) {
+    if (i & 0x01) // i % 2
+      bcd_buf[i/2] |= ((in_str[i] - '0') << 4);  // fill high semioctet
+    else
+      bcd_buf[i/2] = (in_str[i] - '0') & 0x0F;   // fill low semioctet
+  }
+  if ((str_len % 2) && filler)
+    bcd_buf[bcdLen - 1] |= 0xF0;  // add filler to high semioctet
+
+  return bcdLen;
+}
+
+// Unpacks BCD coded numeric string up to 64K length.
+// Returns signed number of digits unpacked:
+// positive if succeeded, negative if illegal symbol was met.
+// NOTE: all illegal symbols is replaced by 'ill_char'
+int unpackBCD2NumString(const unsigned char * bcd_buf, char * out_str,
+                        unsigned short bcd_len, const char ill_char/* = 0*/)
+{
+  bool            illegal = false;
+  unsigned short  i = 0, k = 0;
+
+  for (; i < bcd_len; ++i, ++k) {
+    // low semioctet
+    if ((out_str[k] = bcd2char(bcd_buf[i], ill_char)) == ill_char)
+      illegal = true;
+    // high semioctet, check for possible filler 
+    if ((out_str[++k] = bcd2char(bcd_buf[i] >> 4, ill_char)) == ill_char) {
+      if ((bcd_buf[i] & 0xF0) == 0xF0) //filler
+        break;
+      else
+        illegal = true;
+    }
+  }
+  out_str[k] = 0;
+  return illegal ? -(int)k : (int)k;
+}
+
+// Unpacks TBCD (Telephony BCD) coded string up to 64K length.
+// Returns signed number of digits unpacked:
+// positive if succeeded, negative if illegal symbol was met.
+// NOTE: all illegal symbols is replaced by 'ill_char'
+int unpackTBCD2String(const unsigned char * bcd_buf, char * out_str,
+                      unsigned short bcd_len, const char ill_char/* = 0*/)
+{
+  bool            illegal = false;
+  unsigned short  i = 0, k = 0;
+
+  for (; i < bcd_len; ++i, ++k) {
+    // low semioctet
+    if ((out_str[k] = tbcd2char(bcd_buf[i], ill_char)) == ill_char)
+      illegal = true;
+    // high semioctet, check for possible filler 
+    if ((out_str[++k] = tbcd2char(bcd_buf[i] >> 4, ill_char)) == ill_char) {
+      if ((bcd_buf[i] & 0xF0) == 0xF0) //filler
+        break;
+      else
+        illegal = true;
+    }
+  }
+  out_str[k] = 0;
+  return illegal ? -(int)k : (int)k;
+}
+
+
+// Adds symbol to buffer containing packed 7bit chars
+void packCharAs7Bit(unsigned char* & ptr, unsigned & shift, unsigned char val8bit)
+{
+  *ptr = (*ptr & (0xFF >> (8 - shift))) | (val8bit << shift);
+  if (shift > 1)
+    *(ptr + 1) = (*(ptr + 1) & (0xFF << shift)) | (val8bit >> (8 - shift));
+  if ((shift += 7) >= 8) {
+    shift &= 0x7;
+    ++ptr;
+  }
+}
+
+// Extracts 7Bit character 'as is' from buffer containing packed 7Bit text.
+unsigned char get7BitChar(unsigned char* & ptr, unsigned & shift)
+{
+  char val = (*ptr >> shift) & 0x7f;
+
+  if (shift > 1)
+    val |= (*(ptr + 1) << (8 - shift)) & 0x7f;
+  if ((shift += 7) >= 8) {
+    shift &= 0x7;
+    ++ptr;
+  }
+  return val;
+}
+
+
+/* macro checking for A(rray)B(ounds)R(ead)attemt while		*
+ * extracting 7bit char from buffer containing packed 7bit text */
+#define __notABR7(p, pEnd, ofs)  ((p + (ofs > 1 ? 1 : 0)) < pEnd)
+
+// Determines number of packed 7bit chars in buffer keeping packed 7bit text, 
+// which are unpacked to single text symbol.
+// Returns 1 or 2, zero in case of end of array.
+unsigned char estimate7BitChar(unsigned char* & b7ptr,
+                               const unsigned char* & b7End, unsigned & shift)
+{
+  unsigned char num7ch = 0;
+
+  if (__notABR7(b7ptr, b7End, shift)) {
+    unsigned char ch = k_cvt_7bit_2_8bit[get7BitChar(b7ptr, shift)];
+    ++num7ch;
+    /* check for escaped character and don't forget about ABR check! */
+    if ((ch == 0x1b) && __notABR7(b7ptr, b7End, shift))
+      ++num7ch;
+  }
+  return num7ch;
+}
+
+
+// Determines the length (in bytes) of packed 7bit text converted from input text.
+// If 'p_7bit_cnt' is non NULL, number of 7bit chars in output buffer is returned.
+unsigned estimateTextAs7Bit(const char* text, unsigned tlen, unsigned * p_7bit_cnt)
+{
+  unsigned  shift = 0, num7ch = 0, numBytes = tlen ? 1 : 0;
+
+  for (unsigned i = 0; i < tlen; ++i) {
+#define __pchar()   if ((shift += 7) >= 8) { shift &= 0x7; ++numBytes; } ++num7ch
+#define __escape()  __pchar(); __pchar();
+    switch (text[i]) {
+    case '^':   __escape(); break;
+    case '\f':  __escape(); break;
+    case '|':   __escape(); break;
+    case '{':   __escape(); break;
+    case '}':   __escape(); break;
+    case '[':   __escape(); break;
+    case ']':   __escape(); break;
+    case '~':   __escape(); break;
+    case '\\':  __escape(); break;
+    default:    __pchar();
+    }
 #undef __pchar
 #undef __escape
-    }
-    if (_7bit_chars)
-	*_7bit_chars = num7ch;
-    numBytes += (shift ? 1 : 0);
-    return numBytes;
-
+  }
+  if (p_7bit_cnt)
+    *p_7bit_cnt = num7ch;
+  numBytes += (shift ? 1 : 0);
+  return numBytes;
 }
 
-
-/* GVR:
- * Determines the length of resulted text unpacked from given buffer containing
- * packed 7bit text. If '_7bit_chars' is non NULL, number of 7bit chars in input
- * buffer is returned.
- *
- * NOTE: returned length doesn't take into account terminating zero.
- */
-unsigned estimate7BitAsText(const unsigned char* b7buf, unsigned b7len, unsigned * _7bit_chars)
+// Determines the length of resulted Latin1 text string unpacked from given
+// buffer, containing packed 7bit text. 
+// If 'p_7bit_cnt' is non NULL, number of 7bit chars in input buffer is returned.
+//
+// NOTE: returned length doesn't take into account terminating zero.
+unsigned estimate7BitAsText(const unsigned char* b7_buf, unsigned b7_len, unsigned * p_7bit_cnt)
 {
-    unsigned		ch, tlen = 0, shift = 0,
-			num7ch = _7bit_chars ? *_7bit_chars : 0;
-    unsigned char	*ptr  = (unsigned char*)b7buf;
-    const unsigned char *ptrEnd = b7buf + b7len;
+  unsigned  ch, tlen = 0, shift = 0,
+            num7ch = p_7bit_cnt ? *p_7bit_cnt : 0;
+  unsigned char *ptr  = (unsigned char*)b7_buf;
+  const unsigned char *ptrEnd = b7_buf + b7_len;
 
-    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)))
-	tlen++;
+  while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)))
+    tlen++;
 
-    if (_7bit_chars)
-	*_7bit_chars = num7ch;
-    return tlen;
+  if (p_7bit_cnt)
+    *p_7bit_cnt = num7ch;
+  return tlen;
 }
 
-/* GVR:
- * Converts text to GSM 7 bit Default Alphabet and packs it as specified in
+/* Converts Latin1 text to GSM 7 bit Default Alphabet and packs it as specified in
  * 3GPP TS 23.038 [Character Packing]
  *
  * NOTE: because of input text may contain symbols from GSM 7 bit default alphabet
@@ -132,562 +255,234 @@ unsigned estimate7BitAsText(const unsigned char* b7buf, unsigned b7len, unsigned
  * of output buffer, so caller should estimate necessary buffer size and pass it to
  * function in order to perform ABW check.
  *
- * NOTE: this function doesn't suitable for consequetive packing, see ConvertText27bit()
+ * NOTE: this function doesn't suitable for consequetive packing.
  */
-unsigned packTextAs7BitSafe(const char* text, unsigned tlen, unsigned char* b7buf,
-						unsigned b7len, unsigned * _7bit_chars)
+unsigned packTextAs7BitSafe(const char* text, unsigned tlen, unsigned char* b7_buf,
+                            unsigned b7_len, unsigned * p_7bit_cnt)
 {
-    unsigned char*  base = b7buf;
-    unsigned char*  b7buf_end = base + b7len;
-    unsigned	    shift = 0, num7ch = 0;
+  unsigned char*  base = b7_buf;
+  unsigned char*  b7buf_end = base + b7_len;
+  unsigned        shift = 0, num7ch = 0;
 
-    for (unsigned i = 0; i < tlen; ++i) {
-#define __pchar(x)	packCharAs7BitSafe(b7buf, shift, x, b7buf_end); ++num7ch
+  for (unsigned i = 0; i < tlen; ++i) {
+#define __pchar(x)	packCharAs7BitSafe(b7_buf, shift, x, b7buf_end); ++num7ch
 #define __escape(x)	__pchar(0x1b); __pchar(x);
-	switch (text[i]) {
-	case '^': __escape(0x14); break;
-	case '\f':__escape(0x0a); break;
-	case '|': __escape(0x40); break;
-	case '{': __escape(0x28); break;
-	case '}': __escape(0x29); break;
-	case '[': __escape(0x3c); break;
-	case ']': __escape(0x3e); break;
-	case '~': __escape(0x3d); break;
-	case '\\':__escape(0x2f); break;
-	default:
-	    __pchar(_cvt_8bit_2_7bit[(uint8_t)text[i]]);
-	}
+    switch (text[i]) {
+    case '^': __escape(0x14); break;
+    case '\f':__escape(0x0a); break;
+    case '|': __escape(0x40); break;
+    case '{': __escape(0x28); break;
+    case '}': __escape(0x29); break;
+    case '[': __escape(0x3c); break;
+    case ']': __escape(0x3e); break;
+    case '~': __escape(0x3d); break;
+    case '\\':__escape(0x2f); break;
+    default:
+      __pchar(k_cvt_8bit_2_7bit[(uint8_t)text[i]]);
+    }
 #undef __pchar
 #undef __escape
-    }
-    if (_7bit_chars)
-	*_7bit_chars = num7ch;
-    return ((unsigned)(b7buf - base) + (shift ? 1 : 0));
+  }
+  if (p_7bit_cnt)
+    *p_7bit_cnt = num7ch;
+  return ((unsigned)(b7_buf - base) + (shift ? 1 : 0));
 }
 
-unsigned packTextAs7Bit(const char* text, unsigned tlen, unsigned char* b7buf,
-								unsigned * _7bit_chars)
+unsigned packTextAs7Bit(const char* text, unsigned tlen, unsigned char* b7_buf,
+                        unsigned * p_7bit_cnt)
 {
-    unsigned char*  base = b7buf;
-    unsigned	    shift = 0, num7ch = 0;
+  unsigned char*  base = b7_buf;
+  unsigned        shift = 0, num7ch = 0;
 
-    for (unsigned i = 0; i < tlen; ++i) {
-#define __pchar(x)	packCharAs7Bit(b7buf, shift, x); ++num7ch
+  for (unsigned i = 0; i < tlen; ++i) {
+#define __pchar(x)	packCharAs7Bit(b7_buf, shift, x); ++num7ch
 #define __escape(x)	__pchar(0x1b); __pchar(x);
-	switch (text[i]) {
-	case '^': __escape(0x14); break;
-	case '\f':__escape(0x0a); break;
-	case '|': __escape(0x40); break;
-	case '{': __escape(0x28); break;
-	case '}': __escape(0x29); break;
-	case '[': __escape(0x3c); break;
-	case ']': __escape(0x3e); break;
-	case '~': __escape(0x3d); break;
-	case '\\':__escape(0x2f); break;
-	default:
-	    __pchar(_cvt_8bit_2_7bit[(uint8_t)text[i]]);
-	}
+    switch (text[i]) {
+    case '^': __escape(0x14); break;
+    case '\f':__escape(0x0a); break;
+    case '|': __escape(0x40); break;
+    case '{': __escape(0x28); break;
+    case '}': __escape(0x29); break;
+    case '[': __escape(0x3c); break;
+    case ']': __escape(0x3e); break;
+    case '~': __escape(0x3d); break;
+    case '\\':__escape(0x2f); break;
+    default:
+      __pchar(k_cvt_8bit_2_7bit[(uint8_t)text[i]]);
+    }
 #undef __pchar
 #undef __escape
-    }
-    if (_7bit_chars)
-	*_7bit_chars = num7ch;
-    return ((unsigned)(b7buf - base) + (shift ? 1 : 0));
+  }
+  if (p_7bit_cnt)
+    *p_7bit_cnt = num7ch;
+  return ((unsigned)(b7_buf - base) + (shift ? 1 : 0));
 }
 
 
 unsigned packTextAs7BitPaddedSafe(const char* text, unsigned tlen,
-				    unsigned char* octs, unsigned olen)
+                                  unsigned char* octs, unsigned olen)
 {
-    unsigned	num7ch = 0;
-    unsigned	packedLen = packTextAs7BitSafe(text, tlen, octs, olen, &num7ch);
+  unsigned  num7ch = 0;
+  unsigned  packedLen = packTextAs7BitSafe(text, tlen, octs, olen, &num7ch);
 
-    if (packedLen*8 - num7ch*7 == 7 )
+  if ((packedLen*8 - num7ch*7) == 7)
     /* last octet has 7 zero bits, fill them with CR, in order to distinguish with '@' */
-	octs[packedLen - 1] = (0x0d << 1) | (octs[packedLen - 1] & 0x01);
+    octs[packedLen - 1] = (0x0d << 1) | (octs[packedLen - 1] & 0x01);
 
-    return packedLen;
+  return packedLen;
 }
 
 
 unsigned packTextAs7BitPadded(const char* text, unsigned tlen, unsigned char* octs)
 {
-    unsigned	num7ch = 0;
-    unsigned	packedLen = packTextAs7Bit(text, tlen, octs, &num7ch);
+  unsigned  num7ch = 0;
+  unsigned  packedLen = packTextAs7Bit(text, tlen, octs, &num7ch);
 
-    if (packedLen*8 - num7ch*7 == 7)
+  if ((packedLen*8 - num7ch*7) == 7)
     /* last octet has 7 zero bits, fill them with CR, in order to distinguish with '@' */
-	octs[packedLen - 1] = (0x0d << 1) | (octs[packedLen - 1] & 0x01);
+    octs[packedLen - 1] = (0x0d << 1) | (octs[packedLen - 1] & 0x01);
 
-    return packedLen;
+  return packedLen;
 }
 
-/* GVR:
- * Unpacks and converts 7Bit character from GSM 7 bit Default Alphabet to text symbol.
- * Returns 0 on end of array.
- */
+// Unpacks and converts 7Bit character from GSM 7 bit Default Alphabet to text symbol.
+// Returns 0 on end of array.
 unsigned char unpack7BitChar(unsigned char*& b7ptr, const unsigned char*& b7End,
-					unsigned& shift, unsigned& num7ch)
+                             unsigned& shift, unsigned& num7ch)
 {
-    unsigned char ch = 0;
+  unsigned char ch = 0;
 
-    if (__notABR7(b7ptr, b7End, shift)) {
-	ch = _cvt_7bit_2_8bit[get7BitChar(b7ptr, shift)];
-	num7ch++;
-	/* check for escaped character and don't forget about ABR check! */
-	if ((ch == 0x1b)) {
-	    if (__notABR7(b7ptr, b7End, shift)) {
-		switch (ch = _cvt_7bit_2_8bit[get7BitChar(b7ptr, shift)]) {
-		case 0x14: ch = '^' ; break;
-		case 0x0a: ch = '\f'; break;
-		case 0x40: ch = '|' ; break;
-		case 0x28: ch = '{' ; break;
-		case 0x29: ch = '}' ; break;
-		case 0x3c: ch = '[' ; break;
-		case 0x3e: ch = ']' ; break;
-		case 0x3d: ch = '~' ; break;
-		case 0x2f: ch = '\\'; break;
-		default:;
-		}
-		num7ch++;
-	    } else /* 1b is last char (broken 7bit buffer), convert it to space */
-		ch = ' ';
-	}
+  if (__notABR7(b7ptr, b7End, shift)) {
+    ch = k_cvt_7bit_2_8bit[get7BitChar(b7ptr, shift)];
+    num7ch++;
+    /* check for escaped character and don't forget about ABR check! */
+    if ((ch == 0x1b)) {
+      if (__notABR7(b7ptr, b7End, shift)) {
+        switch (ch = k_cvt_7bit_2_8bit[get7BitChar(b7ptr, shift)]) {
+        case 0x14: ch = '^' ; break;
+        case 0x0a: ch = '\f'; break;
+        case 0x40: ch = '|' ; break;
+        case 0x28: ch = '{' ; break;
+        case 0x29: ch = '}' ; break;
+        case 0x3c: ch = '[' ; break;
+        case 0x3e: ch = ']' ; break;
+        case 0x3d: ch = '~' ; break;
+        case 0x2f: ch = '\\'; break;
+        default:;
+        }
+        num7ch++;
+      } else /* 1b is last char (broken 7bit buffer), convert it to space */
+        ch = ' ';
     }
-    return ch;
-}
-
-
-/* GVR:
- * Unpacks and converts packed 7Bit text from GSM 7 bit Default Alphabet to ASCII text.
- * Returns number of characters (terminating zero doesn't accounted).
- */
-unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
-				unsigned char* text, unsigned * _7bit_chars)
-{
-    unsigned		tlen = 0, shift = 0, num7ch = 0;
-    unsigned char	ch, *ptr  = (unsigned char*)b7buf;
-    const unsigned char *ptrEnd = b7buf + b7len;
-
-    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)))
-	text[tlen++] = ch;
-    text[tlen] = 0;
-
-    if (_7bit_chars)
-	*_7bit_chars = num7ch;
-    return tlen;
-}
-
-
-unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
-                            std::string & str, unsigned * _7bit_chars)
-{
-    unsigned		tlen = 0, shift = 0, num7ch = 0;
-    unsigned char	ch, *ptr  = (unsigned char*)b7buf;
-    const unsigned char *ptrEnd = b7buf + b7len;
-
-    str.clear();
-    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))) {
-        str += ch; tlen++;
-    }
-    str += '\0';
-
-    if (_7bit_chars)
-	*_7bit_chars = num7ch;
-    return tlen;
-}
-
-
-/* GVR:
- * 'Exception throwing' version of unpack7Bit2Text() that checks for ABW.
- */
-unsigned unpack7Bit2TextSafe(const unsigned char* b7buf, unsigned b7len,
-				unsigned char* text, unsigned maxtlen,
-				unsigned * _7bit_chars) throw(std::runtime_error)
-{
-    unsigned		tlen = 0, shift = 0, num7ch = 0;
-    unsigned char	ch, *ptr  = (unsigned char*)b7buf;
-    const unsigned char *ptrEnd = b7buf + b7len;
-
-    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))) {
-	if (tlen < maxtlen)
-	    text[tlen++] = ch;
-	else
-	    throw std::runtime_error("unpack7Bit2Text: ABW attempt detected!");
-    }
-    text[tlen] = 0;
-
-    if (_7bit_chars)
-	*_7bit_chars = num7ch;
-    return tlen;
-}
-
-/* GVR:
- * Unpacks and converts packed 7Bit text from GSM 7 bit Default Alphabet to ASCII text.
- * performing check for 7bit text padding.
- * Returns number of characters (terminating zero doesn't accounted).
- */
-unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
-							unsigned char* text)
-{
-    unsigned    num7ch = 0;
-    unsigned    tlen = unpack7Bit2Text(b7buf, b7len, text, &num7ch);
-
-    if ((text[tlen - 1] == '\r') && (b7len*8 == num7ch*7))
-    /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
-        text[--tlen] = 0;
-    return tlen;
-}
-unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
-                                                        std::string & str)
-{
-    unsigned    num7ch = 0;
-    unsigned    tlen = unpack7Bit2Text(b7buf, b7len, str, &num7ch);
-    
-    if ((str[tlen - 1] == '\r') && (b7len*8 == num7ch*7))
-    /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
-        str[--tlen] = 0;
-    return tlen;
-}
-
-
-unsigned unpack7BitPadded2TextSafe(const unsigned char* b7buf, unsigned b7len,
-						unsigned char* text, unsigned maxtlen)
-                                    throw(std::runtime_error)
-{
-    unsigned    num7ch = 0;
-    unsigned    tlen = unpack7Bit2TextSafe(b7buf, b7len, text, maxtlen, &num7ch);
-
-    if ((text[tlen - 1] == '\r') && (b7len*8 == num7ch*7))
-    /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
-        text[--tlen] = 0;
-    return tlen;
-}
-
-
-/* ************************************************************************** *
- * Time conversion utility functions
- * ************************************************************************** */
-#ifndef _REENTRANT
-#define _REENTRANT	//turn on localtime_r() definition
-#endif /* _REENTRANT */
-#include <time.h>
-
-
-/*
- * Unpacks time stored in BCD7 format (YYMMDDHHmmssZZ) to structure
- * holding date/time fields that is local for timezone identified by 'qtz'
- */
-int unpack7BCD2TimeSTZ(unsigned char (*bcd)[7], struct tm &tms, int &qtz)
-{
-    unsigned tzOctet = unpackBCDOct2Num((*bcd)[6]);
-
-    tms.tm_isdst = -1; /* let mktime() to determine wether the DST is appliable */
-    tms.tm_wday = tms.tm_yday = 0;
-    tms.tm_year = unpackBCDOct2Num((*bcd[0]));
-    tms.tm_mon  = unpackBCDOct2Num((*bcd[1]));
-    tms.tm_mday = unpackBCDOct2Num((*bcd[2]));
-    tms.tm_hour = unpackBCDOct2Num((*bcd[3]));
-    tms.tm_min  = unpackBCDOct2Num((*bcd[4]));
-    tms.tm_sec  = unpackBCDOct2Num((*bcd[5]));
-    qtz = !(tzOctet & 0x80) ? (int)tzOctet : (-(int)(tzOctet&0x07f));
-
-    if (!(tms.tm_year >= 0 && tms.tm_year <= 99))
-	return _SMSC_CVT_BAD_YEAR;
-    tms.tm_year += 100; // year = x-1900
-    
-    if (!( tms.tm_mon >= 1 && tms.tm_mon <= 12))
-	return _SMSC_CVT_BAD_YEAR;
-    tms.tm_mon -= 1;	// adjust month to [0..11]
-
-    if (!(tms.tm_mday >= 1 && tms.tm_mday <= 31))
-	return _SMSC_CVT_BAD_DAY;
-    if (!(tms.tm_hour >= 0 && tms.tm_hour <= 23))
-	return _SMSC_CVT_BAD_HOUR;
-    if (!(tms.tm_min >= 0 && tms.tm_min <= 59))
-	return _SMSC_CVT_BAD_MIN;
-    if (!(tms.tm_sec >=0 && tms.tm_sec <= 59))
-	return _SMSC_CVT_BAD_SEC;
-    if (!(qtz >= -47 && qtz <= 48))
-	return  _SMSC_CVT_BAD_QTZ;
-    return 0;
-}
-
-//GMT = LocalTime + TZSeconds; TZSeconds = (-QTZ)*15*60
-time_t cvtTimeSTZ2UTCTimeT(struct tm &tms, int &qtz)
-{
-/*  NOTE: mktime() adjust time_t for local timezone and DST */
-    time_t tmVal = mktime(&tms);
-
-    if (tmVal != (-1)) {
-    /* consider the 'qtz' differs from local TZ, adjust time_t for difference */
-	tmVal += (long)qtz*15*60 - timezone;
-    }
-    return tmVal;
-}
-
-
-time_t unpack7BCD2UTCTimeT(unsigned char (*bcd)[7])
-{
-    int 	gtz;
-    struct tm	tms;
-
-    if (unpack7BCD2TimeSTZ(bcd, tms, gtz))
-	return (time_t)(-1);
-
-    return cvtTimeSTZ2UTCTimeT(tms, gtz);
-}
-
-
-void packTimeSTZ2BCD7(unsigned char (*bcd)[7], struct tm &tms, int &qtz)
-{
-    unsigned unum = (tms.tm_year > 99) ? (tms.tm_year - 100) : tms.tm_year;
-
-    (*bcd)[0] = packTinyNum2BCDOct(unum);
-    unum = tms.tm_mon + 1; //adjust to [1..12]
-    (*bcd)[1] = packTinyNum2BCDOct(unum);
-    (*bcd)[2] = packTinyNum2BCDOct((unsigned)tms.tm_mday);
-    (*bcd)[3] = packTinyNum2BCDOct((unsigned)tms.tm_hour);
-    (*bcd)[4] = packTinyNum2BCDOct((unsigned)tms.tm_min);
-    (*bcd)[5] = packTinyNum2BCDOct((unsigned)tms.tm_sec);
-    unum = (qtz < 0) ? 0x80 | (unsigned char)(-qtz): qtz;
-    (*bcd)[6] = packTinyNum2BCDOct(unum);
-}
-
-void packTimeSTZ2BCD8(unsigned char (*bcd)[8], struct tm &tms, int &qtz)
-{
-    /* pack millenium & century */
-    unsigned unum = (tms.tm_year + 1900)/100;
-    (*bcd)[0] = packTinyNum2BCDOct(unum);
-    /* pack other parts */
-    packTimeSTZ2BCD7((unsigned char (*)[7])(&((*bcd)[1])), tms, qtz);
-}
-
-
-/* TZ for Nsk is GMT-6, timezone is -21600 => gtz is 24 */
-#define cvtUTCTimeT2TimeSTZ(tmVal, ltms, qtz) \
-{   if (!localtime_r(tmVal, &ltms)) return _SMSC_CVT_BAD_TIME; \
-    qtz = (int)(-timezone/(15*60)); }
-
-int packTimeT2BCD7(unsigned char (*bcd)[7], time_t tmVal)
-{
-    int		qtz;
-    struct tm	ltms;
-
-    cvtUTCTimeT2TimeSTZ(&tmVal, ltms, qtz);
-    packTimeSTZ2BCD7(bcd, ltms, qtz);
-    return 0;
-}
-
-int packTimeT2BCD8(unsigned char (*bcd)[8], time_t tmVal)
-{
-    int		qtz;
-    struct tm	ltms;
-
-    cvtUTCTimeT2TimeSTZ(&tmVal, ltms, qtz);
-    packTimeSTZ2BCD8(bcd, ltms, qtz);
-
-/* for debug:
- 	(*bcd)[0] = 0x02; (*bcd)[1] = 0x50; 	
- 	(*bcd)[2] = 0x90; (*bcd)[3] = 0x51;
- 	(*bcd)[4] = 0x71; (*bcd)[5] = 0x92;
- 	(*bcd)[6] = 0x00; (*bcd)[7] = 0x00;
-*/
-    return 0;
-}
-
-
-/* ************************************************************************** *
- * TP Validity Period conversion utility functions
- * ************************************************************************** */
-
-#define MIN5_SECS	300
-#define HALF_HOUR_SECS	1800
-#define HOUR_SECS	3600
-#define HALF_DAY_SECS	(12*3600)
-#define DAY_SECS	(24*3600)
-#define MONTH_SECS	(30*DAY_SECS)
-#define WEEK_SECS	(7*DAY_SECS)
-#define WEEKS5_SECS	(35*DAY_SECS)
-#define WEEKS63_SECS	(63*WEEK_SECS)
-
-unsigned char packTP_VP_Relative(time_t vpVal)
-{
-    unsigned char tpVp;
-
-    if (vpVal <= HALF_DAY_SECS) {
-	if (vpVal < MIN5_SECS) /* round up to lesser unit */
-	    vpVal = MIN5_SECS;
-	tpVp = (unsigned char)(vpVal/MIN5_SECS - 1);
-    } else if (vpVal <= DAY_SECS) {
-	tpVp = (unsigned char)((vpVal - HALF_DAY_SECS)/HALF_HOUR_SECS + 143);
-    } else if (vpVal <= MONTH_SECS) {
-	if (vpVal < 2*DAY_SECS) /* round up to 2 days*/
-	    vpVal = 2*DAY_SECS;
-	tpVp = (unsigned char)(vpVal/DAY_SECS + 166);
-    } else if (vpVal <= WEEKS63_SECS) {
-	if (vpVal < WEEKS5_SECS) /* round up to 5 weeks */
-	    vpVal = WEEKS5_SECS;
-	tpVp = (unsigned char)(vpVal/WEEK_SECS + 192);
-    }
-    return tpVp;
-}
-
-time_t unpackTP_VP_Relative(unsigned char tpVp)
-{
-    time_t vpVal;
-
-    if (tpVp <= 143) {		/* [5min .. 12hours], unit is 5 minutes */
-	vpVal = (time_t)((unsigned long)tpVp + 1)*MIN5_SECS;
-    } else if (tpVp <= 167) {	/* (12hours .. 24hours], unit is 30 minutes */
-	vpVal = (time_t)(((unsigned long)tpVp - 143)*HALF_HOUR_SECS + HALF_DAY_SECS);
-    } else if (tpVp <= 196) {	/* [2days .. 30days], unit is 1 day */
-	vpVal = (time_t)((unsigned long)tpVp - 166)*DAY_SECS;
-    } else /* (tpVp <= 255) */ {/* [5weeks .. 63weeks], unit is 1 week */
-	vpVal = (time_t)((unsigned long)tpVp - 192)*WEEK_SECS;
-    }
-    return vpVal;
-}
-
-}//namespace cvtutil
-
-/* ************************************************************************** *
- * CBS Data Coding related functions
- * ************************************************************************** */
-namespace cbs {
-#define BIT_SET(x) (1 << (x))
-
-const ISO_LANG  GSM7_Language::_langCG0[16] = {
-/* 0000 German       */ ISO_LANG("DE"),
-/* 0001 English      */ ISO_LANG("EN"),
-/* 0010 Italian      */ ISO_LANG("IT"),
-/* 0011 French       */ ISO_LANG("FR"),
-/* 0100 Spanish      */ ISO_LANG("ES"),
-/* 0101 Dutch        */ ISO_LANG("NL"),
-/* 0110 Swedish      */ ISO_LANG("SV"),
-/* 0111 Danish       */ ISO_LANG("DA"),
-/* 1000 Portuguese   */ ISO_LANG("PT"),
-/* 1001 Finnish      */ ISO_LANG("FI"),
-/* 1010 Norwegian    */ ISO_LANG("NO"),
-/* 1011 Greek        */ ISO_LANG("EL"),
-/* 1100 Turkish      */ ISO_LANG("TR"),
-/* 1101 Hungarian    */ ISO_LANG("HU"),
-/* 1110 Polish       */ ISO_LANG("PL"),
-/* 1111 unspecified  */ ISO_LANG()
-};
-
-const ISO_LANG  GSM7_Language::_langCG2[16] = {
-/* 0000 Czech       */ ISO_LANG("CS"),
-/* 0001 Hebrew      */ ISO_LANG("HE"),
-/* 0010 Arabic      */ ISO_LANG("AR"),
-/* 0011 Russian     */ ISO_LANG("RU"),
-/* 0100 Icelandic   */ ISO_LANG("IS"),
-/* 0101 unspecified */ ISO_LANG(),
-/* 0110 unspecified */ ISO_LANG(),
-/* 0111 unspecified */ ISO_LANG(),
-/* 1000 unspecified */ ISO_LANG(),
-/* 1001 unspecified */ ISO_LANG(),
-/* 1010 unspecified */ ISO_LANG(),
-/* 1011 unspecified */ ISO_LANG(),
-/* 1100 unspecified */ ISO_LANG(),
-/* 1101 unspecified */ ISO_LANG(),
-/* 1110 unspecified */ ISO_LANG(),
-/* 1111 unspecified */ ISO_LANG()
-};
-
-GSM7LanguageUId_e GSM7_Language::str2isoId(const char * lang_str)
-{
-  for (unsigned short i = 0; i < cg0Unspecified; ++i) {
-    if ((_langCG0[i]._id[0] == lang_str[0]) && (_langCG0[i]._id[1] == lang_str[1]))
-      return static_cast<ISOLanguageUId_e>(i);
   }
-  for (unsigned short i = 0; i <= cg2Icelandic; ++i) {
-    if ((_langCG2[i]._id[0] == lang_str[0]) && (_langCG2[i]._id[1] == lang_str[1]))
-      return static_cast<ISOLanguageUId_e>(i + 0x0F);
-  }
-  return isoUnspecified;
+  return ch;
 }
 
 
-static CBS_DCS::TextEncoding  _enc_enm[4] = {
-    CBS_DCS::dcGSM7Bit, CBS_DCS::dcBINARY8, CBS_DCS::dcUCS2, CBS_DCS::dcReserved
-};
-
-CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs, CBS_DCS & res)
+/* Unpacks and converts packed 7Bit text from GSM 7 bit Default Alphabet to
+ * zero-terminated Latin1 text string.
+ * Returns number of characters in output string (zero doesn't accounted).
+ */
+unsigned unpack7Bit2Text(const unsigned char* b7_buf, unsigned b7_len,
+                         unsigned char* text, unsigned * p_7bit_cnt)
 {
-    res.UDHind = res.msgClassDefined = res.compressed = false;
-    res.lngPrefix = CBS_DCS::lngNone;
-    res.language.clear();
+  unsigned  tlen = 0, shift = 0, num7ch = 0;
+  unsigned char	ch, *ptr  = (unsigned char*)b7_buf;
+  const unsigned char *ptrEnd = b7_buf + b7_len;
 
-    uint8_t codingGroup = (dcs >> 4) & 0x0F;
-    uint8_t codingScheme = dcs & 0x0F;
+  while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)))
+    text[tlen++] = ch;
+  text[tlen] = 0;
+
+  if (p_7bit_cnt)
+    *p_7bit_cnt = num7ch;
+  return tlen;
+}
+
+
+unsigned unpack7Bit2Text(const unsigned char* b7_buf, unsigned b7_len,
+                            std::string & str, unsigned * p_7bit_cnt)
+{
+  unsigned  tlen = 0, shift = 0, num7ch = 0;
+  unsigned char	ch, *ptr  = (unsigned char*)b7_buf;
+  const unsigned char *ptrEnd = b7_buf + b7_len;
+
+  str.clear();
+  while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))) {
+    str += ch; tlen++;
+  }
+  str += '\0';
+
+  if (p_7bit_cnt)
+    *p_7bit_cnt = num7ch;
+  return tlen;
+}
+
+
+// 'Exception throwing' version of unpack7Bit2Text() that checks for ABW.
+unsigned unpack7Bit2TextSafe(const unsigned char* b7_buf, unsigned b7_len,
+                             unsigned char* out_str, const unsigned max_tlen,
+                             unsigned * p_7bit_cnt)
+  throw(std::runtime_error)
+{
+  unsigned  tlen = 0, shift = 0, num7ch = 0;
+  unsigned char ch, *ptr = (unsigned char*)b7_buf;
+  const unsigned char *ptrEnd = b7_buf + b7_len;
+
+  while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))) {
+    if (tlen < max_tlen)
+      out_str[tlen++] = ch;
+    else
+      throw std::runtime_error("unpack7Bit2Text: ABW attempt detected!");
+  }
+  out_str[tlen] = 0;
+
+  if (p_7bit_cnt)
+    *p_7bit_cnt = num7ch;
+  return tlen;
+}
+
+/* Unpacks and converts packed 7Bit text from GSM 7 bit Default Alphabet to
+ * zero-terminated Latin1 text string. Performs check for 7bit text padding.
+ * Returns number of characters in output string (zero doesn't accounted).
+ */
+unsigned unpack7BitPadded2Text(const unsigned char* b7_buf, unsigned b7_len,
+                               unsigned char* out_str)
+{
+  unsigned  num7ch = 0;
+  unsigned  tlen = unpack7Bit2Text(b7_buf, b7_len, out_str, &num7ch);
+
+  if ((out_str[tlen - 1] == '\r') && (b7_len*8 == num7ch*7))
+  /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
+    out_str[--tlen] = 0;
+  return tlen;
+}
+
+unsigned unpack7BitPadded2Text(const unsigned char* b7_buf, unsigned b7_len,
+                                                        std::string & out_str)
+{
+  unsigned  num7ch = 0;
+  unsigned  tlen = unpack7Bit2Text(b7_buf, b7_len, out_str, &num7ch);
   
-    switch (codingGroup) {
-    case 0x00: {
-        res.encoding = CBS_DCS::dcGSM7Bit;
-        res.language = GSM7_Language::_langCG0[codingScheme];
-    } break;
-    case 0x01: {
-        if (!codingScheme) {
-            res.encoding = CBS_DCS::dcGSM7Bit;
-            res.lngPrefix = CBS_DCS::lng4GSM7Bit;
-        } else if (codingScheme == 1) {
-            res.encoding = CBS_DCS::dcUCS2;
-            res.lngPrefix = CBS_DCS::lng4UCS2;
-        } else 
-            res.encoding = CBS_DCS::dcReserved;
-    } break;
-    case 0x02: {
-        res.encoding = CBS_DCS::dcGSM7Bit;
-        res.language = GSM7_Language::_langCG2[codingScheme];
-    } break;
-    case 0x03: { //Reserved, GSM 7 bit default
-        res.encoding = CBS_DCS::dcGSM7Bit;
-    } break;
-
-    case 0x04: case 0x05: case 0x06: case 0x07: { //General Data Coding indication
-        res.compressed = (dcs & BIT_SET(5)) ? true : false;
-        res.msgClassDefined = (dcs & BIT_SET(4)) ? true : false;
-        if (res.msgClassDefined)
-            res.msgClass = (dcs & 0x03);
-        res.encoding = _enc_enm[((dcs >> 2) & 0x03)];
-    } break;
-
-    case 0x09: { //Message with User Data Header (UDH) structure:
-        res.UDHind = res.msgClassDefined = true;
-        res.msgClass = (dcs & 0x03);
-        res.encoding = _enc_enm[((dcs >> 2) & 0x03)];
-    } break;
-
-    case 0x08: case 0x0A: case 0x0B: case 0x0C: case 0x0D: { //reserved
-        res.encoding = CBS_DCS::dcReserved;
-    } break;
-
-    case 0x0E: { //WAP defined
-        res.encoding = CBS_DCS::dcReserved;
-    } break;
-
-    case 0x0F: { //Data coding / message handling
-        res.msgClassDefined = true;
-        res.msgClass = (dcs & 0x03);
-        res.encoding = _enc_enm[(dcs >> 2) & 0x01];
-    } break;
-
-//  case 0x08: case 0x0A: case 0x0B: case 0x0C: case 0x0D: //reserved
-//  case 0x0E: //WAP defined 
-    default:
-        res.encoding = CBS_DCS::dcReserved;
-    }
-    return res.encoding;
+  if ((out_str[tlen - 1] == '\r') && (b7_len*8 == num7ch*7))
+  /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
+    out_str[--tlen] = 0;
+  return tlen;
 }
 
-CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs)
+unsigned unpack7BitPadded2TextSafe(const unsigned char* b7_buf, unsigned b7_len,
+                                   unsigned char* out_str, const unsigned max_tlen)
+  throw(std::runtime_error)
 {
-    CBS_DCS res;
-    return parseCBS_DCS(dcs, res);
+  unsigned  num7ch = 0;
+  unsigned  tlen = unpack7Bit2TextSafe(b7_buf, b7_len, out_str, max_tlen, &num7ch);
+
+  if ((out_str[tlen - 1] == '\r') && (b7_len*8 == num7ch*7))
+  /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
+    out_str[--tlen] = 0;
+  return tlen;
 }
 
-} //cbs
-
-}//namespace smsc
+} //cvtutil
+} //smsc
 

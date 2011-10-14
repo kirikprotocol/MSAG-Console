@@ -163,9 +163,9 @@ void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(C
 
     try {
         if (dcmd->imsi) {
-            if (dcmd->imsi->size >= o_imsi.capacity()
-                || !unpackBCD2NumString(dcmd->imsi->buf, o_imsi.str, dcmd->imsi->size))
-                throw CustomException(-1, "SRIRes: bad IMSI");
+            if ((size_t)dcmd->imsi->size >= o_imsi.capacity()
+                || (unpackBCD2NumString(dcmd->imsi->buf, o_imsi.str, dcmd->imsi->size, '?') <= 0))
+                throw CustomException(-1, "SRIRes: bad IMSI", o_imsi.str);
             mask.st.imsi = 1;
         }
         if (dcmd->extendedRoutingInfo

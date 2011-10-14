@@ -74,8 +74,8 @@ private:
     DlgUserRef      pUser;    //
     TCDlgState      _state;
 
-    SCCP_ADDRESS_T  ownAddr;
-    SCCP_ADDRESS_T  rmtAddr;
+    SCCP_ADDRESS_OCTS  ownAddr;
+    SCCP_ADDRESS_OCTS  rmtAddr;
     uint8_t         dSSN;       //TC SubSystem Number dialog uses
     uint16_t        msgUserId;  //EINSS7 Common part message port user id
     const EncodedOID & ac;
@@ -135,10 +135,10 @@ protected:
     friend class TCSessionAC;
     Dialog(const std::string & sess_uid, const TCDialogID & dlg_id,
            uint16_t msg_user_id, const ROSComponentsFactory * use_fact,
-           const SCCP_ADDRESS_T & loc_addr, uint8_t sender_ssn = 0,
+           const SCCP_ADDRESS_OCTS & loc_addr, uint8_t sender_ssn = 0,
            Logger * uselog = NULL);
     //reinitializes Dialog to be reused with other id and remote address
-    void reset(const TCDialogID & new_id, const SCCP_ADDRESS_T * rmt_addr);
+    void reset(const TCDialogID & new_id, const SCCP_ADDRESS_OCTS * rmt_addr);
 
 protected:
     friend class SSNSession;
@@ -222,7 +222,7 @@ public:
     // Transaction layer requests
     void beginDialog(uint8_t* ui = NULL, uint16_t uilen = 0) throw(smsc::util::CustomException);
     //start dialog with new remote address
-    void beginDialog(const SCCP_ADDRESS_T& remote_addr,
+    void beginDialog(const SCCP_ADDRESS_OCTS& remote_addr,
                      uint8_t* ui = NULL, uint16_t uilen = 0) throw(smsc::util::CustomException);
     void continueDialog(void) throw(smsc::util::CustomException);
     void endDialog(Dialog::Ending type = endBasic) throw(smsc::util::CustomException);

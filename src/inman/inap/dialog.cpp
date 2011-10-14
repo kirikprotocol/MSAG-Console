@@ -22,7 +22,7 @@ namespace inap  {
 
 Dialog::Dialog(const std::string & sess_uid, const TCDialogID & dlg_id, USHORT_T msg_user_id,
                const ROSComponentsFactory * use_fact,
-               const SCCP_ADDRESS_T & loc_addr, UCHAR_T sender_ssn/* = 0*/,
+               const SCCP_ADDRESS_OCTS & loc_addr, UCHAR_T sender_ssn/* = 0*/,
                Logger * uselog/* = NULL*/)
     : _tcSUId(sess_uid), ownAddr(loc_addr), msgUserId(msg_user_id)
     , ac(use_fact->acOID()), acFab(use_fact), _dId(dlg_id)
@@ -58,7 +58,7 @@ void Dialog::clearInvokes(void)
     invMap.clear();
 }
 
-void Dialog::reset(const TCDialogID & new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
+void Dialog::reset(const TCDialogID & new_id, const SCCP_ADDRESS_OCTS * rmt_addr/* = NULL*/)
 {
     MutexGuard dtmp(dlgGrd);
     unsigned cnt = (unsigned)invMap.size();
@@ -126,7 +126,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
     _state.value.s.dlgLInited = 1;
 }
 
-void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui/* = NULL*/,
+void Dialog::beginDialog(const SCCP_ADDRESS_OCTS& remote_addr, UCHAR_T* ui/* = NULL*/,
                          USHORT_T uilen/* = 0*/) throw (CustomException)
 {
     rmtAddr = remote_addr;    

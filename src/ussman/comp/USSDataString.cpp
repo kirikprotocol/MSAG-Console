@@ -4,11 +4,12 @@ static char const ident[] = "@(#)$Id$";
 
 #include <string.h>
 
-#include "inman/common/cvtutil.hpp"
+#include "inman/common/CBSDefs.hpp"
 using smsc::cbs::GSM7_Language;
 using smsc::cbs::CBS_DCS;
 using smsc::cbs::parseCBS_DCS;
 
+#include "inman/common/cvtutil.hpp"
 using smsc::cvtutil::unpack7BitPadded2Text;
 using smsc::cvtutil::estimate7BitAsText;
 
