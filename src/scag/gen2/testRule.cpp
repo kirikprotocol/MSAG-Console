@@ -57,6 +57,9 @@ using namespace eyeline::informer;
 
 // ========================================================
 
+
+
+
 class FakeConfigManager : public scag2::config::ConfigManager
 {
 public:
@@ -117,6 +120,37 @@ class FakeInfrastructure : public scag2::bill::Infrastructure
     typedef smsc::core::buffers::IntHash< uint32_t > IntIntMap;
     typedef smsc::core::buffers::Hash< uint32_t >    StrIntMap;
 public:
+
+    static uint32_t stringToBillType( const std::string& s )
+    {
+        if ( s == "inman" ) {
+            return INMAN;
+        } else if ( s == "none" ) {
+            return NONE;
+        } else if ( s == "inmansync" ) {
+            return INMANSYNC;
+        } else if ( s == "ewallet" ) {
+            return EWALLET;
+        } else if ( s == "stat" ) {
+            return STAT;
+        } else {
+            throw InfosmeException(EXC_LOGICERROR,"billing type '%s' is not supported",s.c_str());
+        }
+    }
+
+    static const char* billTypeToString( uint32_t bt )
+    {
+        switch (bt) {
+        case INMAN: return "inman";
+        case NONE: return "none";
+        case INMANSYNC: return "inmansync";
+        case EWALLET: return "ewallet";
+        case STAT: return "stat";
+        default: throw InfosmeException(EXC_LOGICERROR,"billing type %u is not supported",bt);
+        }
+    }
+
+
     FakeInfrastructure() :
     log_(smsc::logger::Logger::getInstance("infra")),
     service_hash(0),
@@ -208,6 +242,7 @@ public:
     {
         service_hash->Insert(serviceId,providerId);
         smsc_log_debug(log_,"service %d registered for provider %d",serviceId,providerId);
+        // printf("service %d %d\n",serviceId,providerId);
     }
 
     void registerOperator( uint32_t operatorId, const char** masks )
@@ -224,6 +259,7 @@ public:
             }
             smsc_log_debug(log_,"operator %d registered with masks:%s",operatorId,mstr.c_str());
         }
+        // printf("operator %d %s\n",operatorId,mstr.c_str());
     }
 
     void registerMediaType( uint32_t mediaTypeId, const char* medianame )
@@ -231,6 +267,7 @@ public:
         assert( !media_type_hash->GetPtr(mediaTypeId) );
         media_type_hash->Insert( mediaTypeId, ++currentMediaIdx_ );
         media_type_str_hash->Insert( medianame, currentMediaIdx_ );
+        // printf("media %u %s\n",mediaTypeId,medianame);
     }
 
     void registerCategory( uint32_t categoryId, const char* catname )
@@ -238,6 +275,7 @@ public:
         assert( !category_hash->GetPtr(categoryId) );
         category_hash->Insert( categoryId, ++currentCatIdx_ );
         category_str_hash->Insert( catname, currentCatIdx_ );
+        // printf("category %u %s\n",categoryId,catname);
     }
 
     void registerTariffRecord( uint32_t operatorId,
@@ -253,6 +291,9 @@ public:
         TariffRec tr(serviceNumber, price, currency, categoryId, mediaTypeId, bill_type );
         const uint32_t id = TariffRec::makeHashKeyChecked(cat,mt,operatorId);
         tariff_hash->Insert(id,tr);
+        // printf("tariff %u %s %u %u %s %s %s\n",
+        // operatorId,serviceNumber,mediaTypeId,categoryId,
+        // billTypeToString(bill_type),price,currency);
     }
 
 private:
@@ -285,7 +326,7 @@ public:
     virtual void Commit( billid_type billId,
                          scag2::lcm::LongCallContext* lcmCtx = NULL )
     {
-        smsc_log_info(log_,"Commin()");
+        smsc_log_info(log_,"Commit()");
         abort();
     }
     virtual void Rollback( billid_type billId,
@@ -389,6 +430,7 @@ public:
         eyeline::informer::HexDump::string_type dump;
         hd.hexdump(dump,tmpbuf.get(),sz);
         smsc_log_info(log_,"out to '%s': %s",systemId.c_str(),hd.c_str(dump));
+        printf("out %s %s\n",systemId.c_str(),hd.c_str(dump));
         scag::util::PrintStdString pss;
         dump_pdu(pdu.pdu,&pss);
         smsc_log_info(log_,"dump: %s",pss.buf());
@@ -516,6 +558,7 @@ public:
         registry.Insert( ch->getSystemId(), entity );
         SmppChannel* ret = ch.get();
         smelist_.push_back( SmppChannelPtr(ch.release()));
+        // printf("%s %s\n", et == etService ? "sme" : "smsc", smeid);
         return *ret;
     }
 
@@ -826,6 +869,7 @@ public:
         // cmd->setSession(session);
         // 
         bool b = LongCallManager::Instance().call( &lcmCtx );
+        // printf("long-calling %u -> %s\n",lcmCtx.callCommandId,b?"ok":"failed");
         if (b) {
             session.leaveLocked();
             MutexGuard mg(queueMon);
@@ -859,6 +903,7 @@ public:
 
     virtual void continueExecution( LongCallContextBase* lcmCtx, bool dropped )
     {
+        printf("long-call continued\n");
         std::auto_ptr<SmppCommand> cx
             (reinterpret_cast<SmppCommand*>(lcmCtx->stateMachineContext));
         lcmCtx->stateMachineContext = 0;
@@ -932,6 +977,7 @@ public:
         smsc_log_info(log_,"shutdown invoked");
         do {
             MutexGuard mg(queueMon);
+            if (!running) return;
             uint32_t sc, slc, skc;
             fsm_.getSessionsCount(sc,slc,skc);
             smsc_log_debug(log_,"queueCmd=%d queue=%d respQueue=%d lcmQueue=%d lcm=%d stotc=%d slokc=%d cmdInProc=%d",
@@ -953,6 +999,7 @@ public:
                 queueMon.wait(100);
                 continue;
             }
+            smsc_log_info(log_,"SHUTDOWN PROCEEDED!");
             running = false;
             queueMon.notify();
             break;
@@ -997,6 +1044,9 @@ public:
         rinfo.slicingRespPolicy = scag::transport::smpp::router::SlicingRespPolicy::ALL;
         rinfo.routeId = std::string(src.getSystemId()) + " -> " + dst.getSystemId();
         router_.addRoute( rinfo );
+        // printf("route %s %s %s %s %u\n",
+        // src.getSystemId(),srcmask,dstmask,
+        // dst.getSystemId(),serviceId);
     }
 
 
@@ -1035,11 +1085,13 @@ public:
     {
         MutexGuard mg(queueMon);
         if ( !cmdInProc_.get() ) {
+            smsc_log_debug(log_,"creating a new cmd in proc");
             cmdInProc_.reset( new bool(false) );
         }
         if ( *cmdInProc_.get() ) {
             // previous cmd was processed
             --cmdInProcCounter_;
+            smsc_log_debug(log_,"previous command was processed, decrementing -> %u",cmdInProcCounter_);
             *cmdInProc_.get() = false;
         }
 
@@ -1058,8 +1110,9 @@ public:
         } else {
             return false;
         }
-        *cmdInProc_.get() = true;
         ++cmdInProcCounter_;
+        *cmdInProc_.get() = true;
+        smsc_log_debug(log_,"a new command is taken, incrementing -> %u",cmdInProcCounter_);
         return true;
     }
 
@@ -1397,10 +1450,15 @@ protected:
                     throw PvssException(StatusType::UNKNOWN, "unknown");
                 }
                 const ProfileKey& pkey = rv.request->getProfileKey();
+                printf("pvss request for %s: %s\n",pkey.toString().c_str(),rv.request->getCommand()->toString().c_str());
+
                 CV cv(*this,pkey);
-                if (!rv.request->getCommand()->visit(cv)) {
+                if (!rv.request->getCommand()->visit(cv) || !cv.response.get()) {
                     throw PvssException(StatusType::UNKNOWN,"unknown");
                 }
+                
+                printf("pvss response for %s: %s\n",pkey.toString().c_str(),cv.response->toString().c_str() );
+                
                 std::auto_ptr< Response > resp(new ProfileResponse(cv.response.release()));
                 rh.handler->handleResponse(req,resp);
             } catch ( PvssException& e ) {
@@ -1488,6 +1546,7 @@ public:
     {
         std::vector< std::string > s = splitString(str,-8);
         if ( s.empty() ) return;
+        // printf("# %s\n",str);
         if ( s[0] == "service" && checkArgs(s,2) ) {
             const uint32_t serviceId = getInt(s[1]);
             const uint32_t providerId = getInt(s[2]);
@@ -1511,20 +1570,7 @@ public:
             const uint32_t operId = getInt(s[1]);
             const uint32_t mediaId = getInt(s[3]);
             const uint32_t catId = getInt(s[4]);
-            uint32_t billType;
-            if ( s[5] == "inman" ) {
-                billType = INMAN;
-            } else if ( s[5] == "none" ) {
-                billType = NONE;
-            } else if ( s[5] == "inmansync" ) {
-                billType = INMANSYNC;
-            } else if ( s[5] == "ewallet" ) {
-                billType = EWALLET;
-            } else if ( s[5] == "stat" ) {
-                billType = STAT;
-            } else {
-                throw InfosmeException(EXC_LOGICERROR,"billing type '%s' is not supported",s[5].c_str());
-            }
+            uint32_t billType = FakeInfrastructure::stringToBillType(s[5]);
             smppManager_.getFBM().getFI().registerTariffRecord( operId,
                                                                 s[2].c_str(),
                                                                 mediaId,
@@ -1548,10 +1594,11 @@ public:
         } else if ( s[0] == "rule" && checkArgs(s,2) ) {
             const uint32_t svcId = getInt(s[1]);
             const std::string rule = getStr(s[2]);
+            smsc_log_info(log_,"rule %d file '%s' is loading",svcId,rule.c_str());
             smppManager_.getRE().
                 loadRuleFile( RuleKey::create(scag::transport::SMPP, svcId),
                               rule.c_str() );
-            smsc_log_info(log_,"rule %d file '%s' is loaded",svcId,rule.c_str());
+            // printf("rule %u %s\n",svcId,rule.c_str());
         } else if ( s[0] == "start" ) {
             std::vector< std::string > dump;
             smppManager_.commitRoutes( dump );
@@ -1562,6 +1609,7 @@ public:
             }
             smsc_log_info(log_,"routes commited, dump follows: %s",final.c_str());
             smppManager_.start();
+            // printf("start\n");
             smsc_log_info(log_,"smppmanager started");
         } else if ( s[0] == "sms" && checkArgs(s,3) ) {
             SmppChannel& sme1 = smppManager_.getSme(s[1].c_str());
@@ -1589,6 +1637,7 @@ public:
 
             smsc_log_info(log_,"--- smpp command created ---");
 
+            printf("in %s %s\n",sme1.getSystemId(),words[2].c_str());
             smppManager_.putCommand( sme1, cmd );
 
         } else if ( s[0] == "wait" && checkArgs(s,1) ) {
@@ -1772,8 +1821,8 @@ int main( int argc, const char** argv )
 
     std::vector< const char* > vargv;
     std::string fromFile = "-";
-    for ( const char** p = argv; *p != 0; ++p ) {
-        if ( *p == "-f" || *p == "--from" ) {
+    for ( const char** p = argv+1; *p != 0; ++p ) {
+        if ( !strcmp(*p,"-f") || !strcmp(*p,"--from") ) {
             ++p;
             if ( *p == 0 ) {
                 fprintf(stderr,"-f --from requires an argument\n");
@@ -1791,7 +1840,7 @@ int main( int argc, const char** argv )
     Logger* mainlog = Logger::getInstance("mainlog");
 
     // const std::string rulePath = argv[1];
-    // smsc_log_info(mainlog,"rule path: %s",rulePath.c_str());
+    smsc_log_info(mainlog,"will read script from '%s'",fromFile.c_str());
 
     {
         assert(new scag2::counter::impl::HashCountManager(new scag2::counter::impl::TemplateManagerImpl()));
@@ -1852,6 +1901,7 @@ int main( int argc, const char** argv )
 
     {
         StringParser stringParser(*smppManager, *pvssClient, vargv.size()-1, &vargv[0]);
+        smsc_log_debug(mainlog,"parsing script from '%s'",fromFile.c_str());
         if ( fromFile == "-" ) {
             FileGuard fg(fileno(stdin));
             {
