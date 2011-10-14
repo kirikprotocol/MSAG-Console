@@ -96,12 +96,12 @@ static bool isNeedReconnect() {
     return !bMCISmeIsConnected;
 }
 
-extern bool isMSISDNAddress(const char* string)
+bool isMSISDNAddress(const char* string)
 {
     try { Address converted(string); } catch (...) { return false; }
     return true;
 }
-extern bool convertMSISDNStringToAddress(const char* string, Address& address)
+bool convertMSISDNStringToAddress(const char* string, Address& address)
 {
     try { Address converted(string); address = converted; } catch (...) { return false; }
     return true;
@@ -452,23 +452,20 @@ private:
   {
     if (!pdu) return;
 
-    processor.invokeProcessDataSmResp(pdu->get_commandId(),
-                                      pdu->get_commandStatus(),
+    processor.invokeProcessDataSmResp(pdu->get_commandStatus(),
                                       pdu->get_sequenceNumber());
   }
   void processSubmitSmResp(SmppHeader *pdu)
   {
     if (!pdu) return;
 
-    processor.invokeProcessSubmitSmResp(pdu->get_commandId(),
-                                        pdu->get_commandStatus(),
+    processor.invokeProcessSubmitSmResp(pdu->get_commandStatus(),
                                         pdu->get_sequenceNumber());
   }
   void processAlertNotification(SmppHeader *pdu)
   {
     if (!pdu) return;
     PduAlertNotification* alert = (PduAlertNotification*)pdu;
-    int cmdId	= pdu->get_commandId();
     int status	= pdu->get_commandStatus();
     int ton = alert->get_source().get_typeOfNumber();
     int npi = alert->get_source().get_numberingPlan();
@@ -483,7 +480,7 @@ private:
     smsc_log_debug(logger, "MCISme: Recieved Alert Notification: ton=%d, npi=%d, source_addr=%s, addr_size=%d available = 0x%02X",
                    ton, npi, source_addr, source_addr_size, ms_availability_status);
     AbntAddr	abnt(source_addr_size, ton, npi, source_addr);
-    processor.invokeProcessAlertNotification(cmdId, status, abnt);
+    processor.invokeProcessAlertNotification(status, abnt);
   }
   void processDeliverySm(SmppHeader *pdu)
   {
