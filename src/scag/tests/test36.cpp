@@ -7,6 +7,7 @@
 #include "core/buffers/FastMTQueue.hpp"
 #include "logger/Logger.h"
 #include "util/PtrDestroy.h"
+#include "core/buffers/PerThreadData.hpp"
 
 using namespace eyeline::informer;
 using namespace smsc::core::synchronization;
@@ -15,6 +16,28 @@ using namespace smsc::core::buffers;
 static const unsigned DBMMCHUNKLEN = 62;    // how many items per chunk
 static const size_t   DBMMMAXSIZE  = 0x100; // max size of handled item
 static const size_t   DBMMGENLOWMARK = 5;   // how many chunks in one list for gen to start
+
+static smsc::logger::Logger* mmlog_ = 0;
+
+inline void* operator new( size_t sz ) 
+{
+    static const std::nothrow_t nothrow = std::nothrow_t();
+    void* p = ::operator new(sz,nothrow);
+    if (mmlog_) {
+        smsc_log_debug(mmlog_,"alloc %u -> %p",unsigned(sz),p);
+    }
+    return p;
+}
+
+inline void operator delete(void* p)
+{
+    if (!p) return;
+    if (mmlog_) {
+        smsc_log_debug(mmlog_,"dealloc %p",p);
+    }
+    static const std::nothrow_t nothrow = std::nothrow_t();
+    ::operator delete(p,nothrow);
+}
 
 /// the struct holds a number of allocated pointers
 struct MemoryChunk
@@ -25,7 +48,7 @@ struct MemoryChunk
 
     inline void* allocate() throw () {
         if (incache == 0) return 0;
-        return ptr[incache--];
+        return ptr[--incache];
     }
 
     inline bool deallocate(void* p) throw() {
@@ -110,7 +133,9 @@ class MemoryDispatcher
 
 public:
 
-    MemoryDispatcher() : stopping_(false), serial_(0)
+    MemoryDispatcher() :
+    stopping_(false), serial_(0),
+    log_(smsc::logger::Logger::getInstance("disp"))
     {
         limits_[0].genlowmark = 5;
         limits_[0].freehighmark = 200;
@@ -359,24 +384,39 @@ struct MemoryPerThread
 {
     typedef std::vector<MemoryChunkOneSize> ChunkVector;
 
+    MemoryPerThread( MemoryDispatcher& md ) :
+    disp_(md), log_(smsc::logger::Logger::getInstance("mpt")) {
+        smsc_log_info(log_,"ctor %p",this);
+    }
+
+    ~MemoryPerThread() {
+        smsc_log_info(log_,"dtor %p",this);
+    }
+
     void* allocate( size_t sz ) {
-        if (sz >= DBMMMAXSIZE) return ::operator new(sz);
+        smsc_log_info(log_,"alloc %p %u",this,unsigned(sz));
+        if (sz >= DBMMMAXSIZE) {
+            void* p = ::operator new(sz);
+            smsc_log_info(log_,"alloc %p %u -> %p",this,unsigned(sz),p);
+            return p;
+        }
         ChunkVector::iterator i = std::lower_bound(chunks_.begin(),chunks_.end(),sz);
         MemoryChunkOneSize* cs;
         if (i == chunks_.end()) {
             i = chunks_.insert(i,MemoryChunkOneSize());
             cs = &*i;
             cs->size = sz;
-            cs->head = cs->tail = disp_->getChunk(sz);
+            cs->head = cs->tail = disp_.getChunk(sz);
             cs->chunks = 1;
             cs->head->next = cs->head;
         } else {
             cs = &*i;
         }
+        smsc_log_debug(log_,"chunk %u found %p",unsigned(sz),cs);
         if ( cs->head->empty() ) {
             if ( cs->head->next->empty() ) {
                 // next is also empty
-                MemoryChunk* tmp = disp_->getChunk(sz);
+                MemoryChunk* tmp = disp_.getChunk(sz);
                 ++cs->chunks;
                 tmp->next = cs->head->next;
                 cs->head->next = tmp;
@@ -384,12 +424,15 @@ struct MemoryPerThread
                 // cs->tail = tmp->next;
             }
         }
-        return cs->head->allocate();
+        void* p = cs->head->allocate();
+        smsc_log_info(log_,"alloc %p %u -> %p",this,unsigned(sz),p);
+        return p;
     }
 
 
     void deallocate( void* ptr, size_t sz )
     {
+        smsc_log_info(log_,"dealloc %p %u %p",this,unsigned(sz),ptr);
         if (sz >= DBMMMAXSIZE) return ::operator delete(ptr);
         ChunkVector::iterator i = std::lower_bound(chunks_.begin(),chunks_.end(),sz);
         MemoryChunkOneSize* cs;
@@ -397,7 +440,7 @@ struct MemoryPerThread
             i = chunks_.insert(i,MemoryChunkOneSize());
             cs = &*i;
             cs->size = sz;
-            cs->head = cs->tail = disp_->getChunk(0);
+            cs->head = cs->tail = disp_.getChunk(0);
             cs->chunks = 1;
             cs->head->next = cs->head;
         } else {
@@ -405,7 +448,7 @@ struct MemoryPerThread
         }
         if (cs->tail->filled()) {
             if (cs->tail->next->filled()) {
-                MemoryChunk* tmp = disp_->getChunk(0);
+                MemoryChunk* tmp = disp_.getChunk(0);
                 ++cs->chunks;
                 tmp->next = cs->tail->next;
                 cs->tail->next = tmp;
@@ -417,8 +460,9 @@ struct MemoryPerThread
     }
 
 private:
-    MemoryDispatcher* disp_;
-    ChunkVector       chunks_;
+    MemoryDispatcher&     disp_;
+    smsc::logger::Logger* log_;
+    ChunkVector           chunks_;
 };
 
 
@@ -427,6 +471,14 @@ struct Data
     static const int nsizes = 20;
     static const size_t sizes[nsizes];
     static smsc::logger::Logger* log_;
+    static PerThreadData<MemoryPerThread> allocator;
+
+    static void* operator new ( size_t sz ) {
+        return allocator.get()->allocate(sz);
+    }
+    static void operator delete( void* p, size_t sz ) {
+        return allocator.get()->deallocate(p,sz);
+    }
 
     Data( int i ) : data(0) {
         size_t sz = sizes[i%nsizes];
@@ -435,10 +487,12 @@ struct Data
         data = new char[ sz ];
         smsc_log_debug(log_,"ctor %p data(%u)=%p",this,unsigned(sz),data);
     }
+
     ~Data() {
         smsc_log_debug(log_,"dtor %p data=%p",this,data);
         delete [] data; 
     }
+
     char* data;
 };
 
@@ -449,6 +503,7 @@ const size_t Data::sizes[Data::nsizes] = {
     6, 4, 2, 13, 8,  66, 99, 5, 8, 44
 };
 
+PerThreadData< MemoryPerThread > Data::allocator;
 
 class Worker : public smsc::core::threads::Thread
 {
@@ -458,7 +513,18 @@ public:
             FastMTQueue<Data*>& queue ) :
     log_(smsc::logger::Logger::getInstance(name)),
     stopping_(false), md_(md), queue_(queue) {}
+    virtual int Execute() {
+        smsc_log_info(log_,"started");
+        Data::allocator.reset( new MemoryPerThread(md_) );
+        try {
+            doExecute();
+        } catch (...) {}
+        delete Data::allocator.release();
+        smsc_log_info(log_,"finished");
+        return 0;
+    }
     virtual void stop() = 0;
+    virtual void doExecute() = 0;
 protected:
     smsc::logger::Logger* log_;
     bool                  stopping_;
@@ -474,14 +540,11 @@ public:
     Worker("wrt",md,queue), nruns_(nruns) {}
     ~WThread() { WaitFor(); }
     void stop() { stopping_ = true; }
-    int Execute() {
-        smsc_log_debug(log_,"writer started");
+    void doExecute() {
         for ( int i = 0; i < nruns_; ++i ) {
             if ( stopping_ ) break;
             queue_.Push( new Data(i) );
         }
-        smsc_log_debug(log_,"writer finished");
-        return 0;
     }
 private:
     int nruns_;
@@ -494,8 +557,7 @@ public:
     RThread( MemoryDispatcher& md, FastMTQueue<Data*>& queue ) :
     Worker("rdr",md,queue) {}
     ~RThread() { WaitFor(); }
-    int Execute() {
-        smsc_log_debug(log_,"reader started");
+    void doExecute() {
         while (true) {
             queue_.waitForItem();
             if (stopping_) break;
@@ -508,8 +570,6 @@ public:
         while ( queue_.Pop(d) ) {
             delete d;
         }
-        smsc_log_debug(log_,"reader finished");
-        return 0;
     }
     void stop() {
         stopping_ = true;
@@ -518,15 +578,10 @@ public:
 };
 
 
-int main()
+void allwork( smsc::logger::Logger* mainlog )
 {
-    smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
-    Data::log_ = smsc::logger::Logger::getInstance("data");
-    smsc::logger::Logger* mainlog = smsc::logger::Logger::getInstance("main");
-    smsc_log_info(mainlog,"started");
-
-    const size_t nth = 10;
-    const int nruns = 1000;
+    const size_t nth = 1;
+    const int nruns = 100;
 
     MemoryDispatcher     md;
     FastMTQueue< Data* > queue;
@@ -562,7 +617,21 @@ int main()
 
     std::for_each( wthreads.rbegin(), wthreads.rend(), smsc::util::PtrDestroy() );
     std::for_each( rthreads.rbegin(), rthreads.rend(), smsc::util::PtrDestroy() );
-
-    smsc_log_info(mainlog,"finish");
-    return 0;
 }
+
+
+int main()
+{
+    smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
+    Data::log_ = smsc::logger::Logger::getInstance("data");
+    smsc::logger::Logger* mainlog = smsc::logger::Logger::getInstance("main");
+    mmlog_ = smsc::logger::Logger::getInstance("mm");
+    smsc_log_info(mainlog,"started");
+
+    allwork(mainlog);
+
+    mmlog_ = 0;
+    smsc_log_info(mainlog,"finished");
+}
+
+
