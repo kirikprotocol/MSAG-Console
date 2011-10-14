@@ -202,7 +202,7 @@ IASMEProxy::processResponse()
 {
   smsc_log_debug(_logger, "IASMEProxy::processResponse::: enter it");
   if ( !_messageBodyLen ) {
-    int st = readData(_header.buf + _bytesHasBeenRead, sizeof(_header.buf) - _bytesHasBeenRead);
+    int st = readData(_header.buf + _bytesHasBeenRead, static_cast<int>(sizeof(_header.buf) - _bytesHasBeenRead));
     smsc_log_debug(_logger, "IASMEProxy::processResponse::: readData returned, st = %d", st);
     if ( st <= 0 ) {
       _bytesHasBeenRead = 0; _messageBodyLen = 0;
