@@ -37,11 +37,9 @@ public class PDUListenerImpl implements PDUListener {
     private long rang;
     private File message_id_rang_file;
 
-
-
     public PDUListenerImpl(){
         Config config = Config.getInstance();
-        initial_message_id = config.getInitialMessageId();
+        initial_message_id = config.getInitialMessageIdRang();
         rang = config.getRang();
         limit = initial_message_id + rang;
         message_id_rang_file = config.getMessageIdRangFile();

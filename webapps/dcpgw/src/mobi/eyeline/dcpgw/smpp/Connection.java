@@ -12,7 +12,6 @@ import mobi.eyeline.smpp.api.types.EsmMessageType;
 import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -20,7 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by IntelliJ IDEA.
@@ -40,15 +38,9 @@ public class Connection {
 
     private LinkedBlockingQueue<Data> queue;
 
-    private Config config = Config.getInstance();
-
     private Journal journal = Journal.getInstance();
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
-
-    private static SimpleDateFormat sdf2 = new SimpleDateFormat("ddHHmmss");
-    private static Calendar cal = Calendar.getInstance();
-    private static AtomicInteger ai = new AtomicInteger(0);
 
     private int response_timeout;
     private int response_max_timeout;
@@ -60,6 +52,7 @@ public class Connection {
     public Connection(String name){
         this.name = name;
 
+        Config config = Config.getInstance();
         response_timeout = config.getDeliveryResponseTimeout();
         response_max_timeout = config.getResendReceiptMaxTimeout();
         request_limit = config.getDeliveryRequestLimit();
@@ -160,8 +153,7 @@ public class Connection {
                         deliverSM.setConnectionName(name);
                         deliverSM.setMessage(message);
 
-                        Date date = cal.getTime();
-                        int sn = Integer.parseInt(sdf2.format(date)) + ai.incrementAndGet();
+                        int sn = Server.getInstance().getReceiptSequenceNumber();
                         deliverSM.setSequenceNumber(sn);
 
                         data.setSequenceNumber(sn);
@@ -258,8 +250,7 @@ public class Connection {
                         deliverSM.setDestinationAddress(data.getDestinationAddress());
                         deliverSM.setConnectionName(data.getConnectionName());
 
-                        Date date = cal.getTime();
-                        int new_sn = Integer.parseInt(sdf2.format(date)) + ai.incrementAndGet();
+                        int new_sn = Server.getInstance().getReceiptSequenceNumber();
                         deliverSM.setSequenceNumber(new_sn);
 
                         String message = "id:" + data.getMessageId() +

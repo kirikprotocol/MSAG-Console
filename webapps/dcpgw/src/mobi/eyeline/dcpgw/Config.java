@@ -72,12 +72,12 @@ public class Config {
     private int delivery_response_timeout;
     private int resend_receipts_max_timeout;
 
-
     private int journal_clean_timeout;
 
-    private File message_id_rang_file;
+    private File message_id_rang_file, receipts_rang_file;
 
-    private long initial_message_id;
+    private long initial_message_id_rang;
+    private int initial_receipts_sn_rang;
     private long rang = 10000;
 
     public void init(String config_file) throws IOException, XmlConfigException, InitializationException {
@@ -88,21 +88,38 @@ public class Config {
         smpp_endpoints_file = Utils.getProperty(config, "users.file", user_dir + File.separator + "conf" + File.separator + "endpoints.xml");
         deliveries_file = Utils.getProperty(config, "deliveries.file", user_dir + File.separator + "conf" + File.separator + "deliveries.xml");
 
-        // Load message id range
+        // Load messages ids range
         message_id_rang_file = new File(user_dir + File.separator + "conf" + File.separator + "message_id_rang");
         if (message_id_rang_file.createNewFile()){
             log.debug("Create new message id file: "+ message_id_rang_file);
-            initial_message_id = 0;
+            initial_message_id_rang = 0;
             PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
-            pw.println(initial_message_id+rang);
+            pw.println(initial_message_id_rang +rang);
             pw.flush();
             pw.close();
-            log.debug("Write to file initial message id rang: "+ initial_message_id + rang);
+            log.debug("Write to file initial message id rang: "+ initial_message_id_rang + rang);
         } else {
             BufferedReader br = new BufferedReader(new FileReader(message_id_rang_file));
             String line = br.readLine();
-            initial_message_id = Long.parseLong(line);
-            log.debug("Load from file initial message id rang: " + initial_message_id);
+            initial_message_id_rang = Long.parseLong(line);
+            log.debug("Load from file initial message id rang: " + initial_message_id_rang);
+        }
+
+        // Load receipts rang
+        receipts_rang_file = new File(user_dir + File.separator + "conf" + File.separator + "receipts_rang");
+        if (receipts_rang_file.createNewFile()){
+            log.debug("Create new message id file: "+ receipts_rang_file);
+            initial_receipts_sn_rang = 0;
+            PrintWriter pw = new PrintWriter(new FileWriter(receipts_rang_file));
+            pw.println(initial_receipts_sn_rang +rang);
+            pw.flush();
+            pw.close();
+            log.debug("Write to file initial message id rang: "+ initial_receipts_sn_rang + rang);
+        } else {
+            BufferedReader br = new BufferedReader(new FileReader(receipts_rang_file));
+            String line = br.readLine();
+            initial_message_id_rang = Long.parseLong(line);
+            log.debug("Load from file initial message id rang: " + initial_message_id_rang);
         }
 
         String s = config.getProperty("informer.host");
@@ -450,8 +467,8 @@ public class Config {
         return delivery_request_limit;
     }
 
-    public long getInitialMessageId(){
-        return initial_message_id;
+    public long getInitialMessageIdRang(){
+        return initial_message_id_rang;
     }
 
     public long getRang(){
@@ -460,6 +477,14 @@ public class Config {
 
     public File getMessageIdRangFile(){
         return message_id_rang_file;
+    }
+
+    public File getReceiptsRangFile(){
+        return receipts_rang_file;
+    }
+
+    public int getReceiptsSequenceNumberRang(){
+        return initial_receipts_sn_rang;
     }
 
 }

@@ -1,6 +1,6 @@
 package mobi.eyeline.dcpgw.smpp;
 
-import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
+import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.smpp.api.*;
@@ -8,7 +8,12 @@ import mobi.eyeline.smpp.api.pdu.DeliverSMResp;
 import mobi.eyeline.smpp.api.pdu.PDU;
 import org.apache.log4j.Logger;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,6 +37,13 @@ public class Server{
 
     private Properties properties;
 
+    private int initial_receipt_sn_rang;
+    private long limit;
+    private long rang;
+    private File receipts_rang_file;
+
+    private static AtomicInteger ai = new AtomicInteger(0);
+
     public static Server getInstance(){
         return instance;
     }
@@ -53,6 +65,28 @@ public class Server{
         }
 
         deleted_connections = new HashSet<String>();
+
+        Config config = Config.getInstance();
+        initial_receipt_sn_rang = config.getReceiptsSequenceNumberRang();
+        rang = config.getRang();
+        limit = initial_receipt_sn_rang + rang;
+        receipts_rang_file = config.getMessageIdRangFile();
+    }
+
+    public int getReceiptSequenceNumber(){
+        int sn = initial_receipt_sn_rang + ai.incrementAndGet();
+        if (sn == limit){
+            try {
+                PrintWriter pw = new PrintWriter(new FileWriter(receipts_rang_file));
+                limit = limit + rang;
+                pw.println(limit);
+                pw.flush();
+                pw.close();
+            } catch (IOException e) {
+                log.error("Couldn't write to file new initial message id rang.", e);
+            }
+        }
+        return sn;
     }
 
     /**
