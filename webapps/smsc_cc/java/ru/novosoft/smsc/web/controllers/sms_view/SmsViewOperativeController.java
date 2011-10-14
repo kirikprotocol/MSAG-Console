@@ -222,6 +222,7 @@ public class SmsViewOperativeController extends SmsViewController {
               msgs = new Collection[smscInstancesNumber];
 
               totalSize = 0;
+              ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
               for (int i = 0; i < smscInstancesNumber; i++) {
                 final int currentSmsc = i;
                 msgs[i] = new LinkedList<Object>();
@@ -230,7 +231,7 @@ public class SmsViewOperativeController extends SmsViewController {
                     loadListener.setCurrent((int) (currentSmsc * 100 + current / total * 100));
                   }
                 })) {
-                  msgs[i].add(new OperativeSms(m, isAllowToShowSmsText(m.getSrcSmeId(), m.getDstSmeId())));
+                  msgs[i].add(new OperativeSms(m, isAllowToShowSmsText(m.getSrcSmeId(), m.getDstSmeId()), bundle));
                 }
                 totalSize += msgs[i].size();
               }

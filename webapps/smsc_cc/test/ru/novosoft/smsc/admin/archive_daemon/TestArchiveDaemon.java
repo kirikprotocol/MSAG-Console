@@ -30,7 +30,7 @@ public class TestArchiveDaemon extends ArchiveDaemon{
       r.setArc((byte)random.nextInt());
       r.setAttempts(random.nextInt(10));
       r.setBillingRecord((short)random.nextInt());
-      byte[] body = ("test body "+i).getBytes();
+      byte[] body = (""+i).getBytes();
       r.setBody(body);
       r.setBodyLen(body.length);
       r.setConcatMsgRef((short) random.nextInt());

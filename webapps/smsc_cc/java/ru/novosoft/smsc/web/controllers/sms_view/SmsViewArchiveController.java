@@ -199,8 +199,9 @@ public class SmsViewArchiveController extends SmsViewController{
                 final SmsSet messages = wcontext.getArchiveDaemon().getSmsSet(smsFilter);
                 List<SmsRow> rs =  messages.getRowsList();
                 msgs = new ArrayList<Sms>(rs.size());
+                ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
                 for(SmsRow r : rs) {
-                  msgs.add(new ArchiveSms(r, isAllowToShowSmsText(r.getSrcSmeId(), r.getDstSmeId())));
+                  msgs.add(new ArchiveSms(r, isAllowToShowSmsText(r.getSrcSmeId(), r.getDstSmeId()), bundle));
                 }
                 loadListener.setCurrent(1);
                 loaded = true;
@@ -244,17 +245,17 @@ public class SmsViewArchiveController extends SmsViewController{
     }
   }
 
-  public void viewSms(ActionEvent e) {
+  public void viewSms(ActionEvent ignored) {
     String s_id = getRequestParameter("sms_id");
     long id = Long.parseLong(s_id);
     Sms sms = null;
     try{
-        for(Sms s : msgs) {
-          if(s.getId() == id) {
-            sms = s;
-            break;
-          }
+      for(Sms s : msgs) {
+        if(s.getId() == id) {
+          sms = s;
+          break;
         }
+      }
     }catch (AdminException ex) {
       addError(ex);
     }

@@ -3,20 +3,22 @@ package ru.novosoft.smsc.web.controllers.sms_view;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.operative_store.Message;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 /**
  * author: Aleksandr Khalitov
  */
-public class OperativeSms implements Sms {
+public class OperativeSms extends Sms {
 
   private final Message m;
 
   private boolean showText;
 
-  public OperativeSms(Message m, boolean showText) {
+  public OperativeSms(Message m, boolean showText, ResourceBundle bundle) {
+    super(bundle);
     this.m = m;
     this.showText = showText;
   }
@@ -120,11 +122,7 @@ public class OperativeSms implements Sms {
   }
 
   public String getText() throws AdminException {
-    String t = m.getText();
-    if(t != null && isTextEncoded()) {
-      t = StringEncoderDecoder.encode(t);
-    }
-    return t;
+    return m.getText();
   }
 
   public boolean isTextEncoded() throws AdminException {
@@ -135,8 +133,14 @@ public class OperativeSms implements Sms {
     return SmsStatus.valueOf(m.getStatus().toString());
   }
 
+  @Override
+  protected Map<Integer, Object> loadBodyParameters() throws AdminException {
+    return m.getBodyParameters().getParams();
+  }
+
   public boolean isShowText() {
     return showText;
   }
+
 }
 

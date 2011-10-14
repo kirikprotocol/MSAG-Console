@@ -93,12 +93,11 @@ public class SmsViewController extends SmscController{
 
 
   protected boolean isAllowToShowSmsText(String srcSme, String dstSme) throws AdminException{
-//    if (srcSme.equalsIgnoreCase(MAP_PROXY) && dstSme.equals(MAP_PROXY)) {
-//      return hasSpecialRole1;
-//    }else {
-//      return hasSpecialRole2;
-//    }
-    return true; //todo!!!
+    if (srcSme.equalsIgnoreCase(MAP_PROXY) && dstSme.equals(MAP_PROXY)) {
+      return hasSpecialRole1;
+    }else {
+      return hasSpecialRole2;
+    }
   }
 
   protected void appendRow(SimpleDateFormat dateFormatter, PrintWriter writer, Sms row) throws AdminException {
@@ -119,6 +118,5 @@ public class SmsViewController extends SmscController{
     }
     writer.append(LINE_SEP);
   }
-
 
 }

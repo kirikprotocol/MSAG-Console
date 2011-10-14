@@ -4,20 +4,22 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.SmsDescriptor;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
 import ru.novosoft.smsc.util.Address;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 /**
 * author: Aleksandr Khalitov
 */
-public class ArchiveSms implements Sms {
+public class ArchiveSms extends Sms {
 
   private final SmsRow r;
 
   private boolean showText;
 
-  public ArchiveSms(SmsRow r, boolean showText) {
+  public ArchiveSms(SmsRow r, boolean showText, ResourceBundle bundle) {
+    super(bundle);
     this.r = r;
     this.showText = showText;
   }
@@ -121,11 +123,7 @@ public class ArchiveSms implements Sms {
   }
 
   public String getText() throws AdminException {
-    String t = r.getText();
-    if(t != null && isTextEncoded()) {
-      t = StringEncoderDecoder.encode(t);
-    }
-    return t;
+    return r.getText();
   }
 
   public boolean isTextEncoded() throws AdminException {
@@ -134,6 +132,11 @@ public class ArchiveSms implements Sms {
 
   public SmsStatus getStatus() throws AdminException {
     return SmsStatus.valueOf(r.getStatus().toString());
+  }
+
+  @Override
+  protected Map<Integer, Object> loadBodyParameters() throws AdminException {
+    return r.getBodyParameters();
   }
 
   public boolean isShowText() {

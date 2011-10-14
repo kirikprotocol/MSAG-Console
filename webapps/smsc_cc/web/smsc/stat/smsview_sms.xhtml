@@ -2,6 +2,7 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
       xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:smsc="http://taglib.smsc.mobi">
 
@@ -53,22 +54,22 @@
 
         <h:outputText value="#{msg['smsc.sms.view.date.submit']}"/>
         <h:outputText value="#{smsView.sms.submitTime}">
-          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:SS"/>
+          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss"/>
         </h:outputText>
 
         <h:outputText value="#{msg['smsc.sms.view.date.valid']}"/>
         <h:outputText value="#{smsView.sms.validTime}">
-          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:SS"/>
+          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss"/>
         </h:outputText>
 
         <h:outputText value="#{msg['smsc.sms.view.date.last']}"/>
         <h:outputText value="#{smsView.sms.lastTryTime}">
-          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:SS"/>
+          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss"/>
         </h:outputText>
 
         <h:outputText value="#{msg['smsc.sms.view.date.next']}"/>
         <h:outputText value="#{smsView.sms.nextTryTime}">
-          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:SS"/>
+          <f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss"/>
         </h:outputText>
 
         <h:outputText value="#{msg['smsc.sms.view.desc.dest']}"/>
@@ -78,11 +79,18 @@
         <h:outputText value="#{smsView.origDescriptor}"/>
 
         <h:outputText value="#{msg['smsc.sms.view.text.decoded']}" rendered="#{smsView.sms.showText}"/>
-        <h:outputText value="#{smsView.sms.text}" rendered="#{smsView.sms.showText}"/>
+        <h:outputText value="#{smsView.sms.originalText}" rendered="#{smsView.sms.showText}"/>
 
       </h:panelGrid>
 
       <smsc:pageSubtitle value="#{msg['smsc.sms.view.body']}" rendered="#{smsView.show}"/>
+
+      <h:panelGrid columns="2" style="padding: 10px 10px 10px 10px" columnClasses="labelColumn, lastColumn" >
+        <c:forEach items="#{smsView.sms.bodyParameters}" var="p">
+          <h:outputText value="#{p.key}"/>
+          <h:outputText value="#{p.value}"/>
+        </c:forEach>
+      </h:panelGrid>
 
 
       <eye:buttons rendered="#{smsView.comeBackAction != null}">

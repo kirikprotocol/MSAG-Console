@@ -52,7 +52,7 @@ public class SmsRow {
 
   private boolean marked = false;
 
-  private Map<String, Object> parameters = new ConcurrentHashMap<String, Object>();
+  private Map<Integer, Object> parameters = new ConcurrentHashMap<Integer, Object>();
 
   private byte body[] = null;
 
@@ -295,10 +295,10 @@ public class SmsRow {
   }
 
   public void addBodyParameter(short tag, Object value) {
-    parameters.put(String.valueOf(tag), value);
+    parameters.put((int)tag, value);
   }
 
-  public Map getBodyParameters() {
+  public Map<Integer, Object> getBodyParameters() {
     byte[] body = getBody();
     if (body != null)
       SmsRowParser.parse(new ByteArrayInputStream(body, 0, body.length), this);
