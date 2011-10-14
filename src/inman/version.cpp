@@ -8,7 +8,7 @@ static char const ident[] = "@(#)$Id$";
 /* -- NOTE: these defines are set by developers -- */
 #define INMAN_VER_MAJOR     1    //major verison
 #define INMAN_VER_MINOR     9    //minor version
-#define INMAN_VER_FIX       0    //bug fix version
+#define INMAN_VER_FIX       1    //bug fix version
 #define INMAN_VER_TAG       ""   //release tag: [alpha, beta, RC]N
 /* -- ----------------------------------------- -- */
 
