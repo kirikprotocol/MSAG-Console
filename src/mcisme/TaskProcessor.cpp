@@ -15,10 +15,10 @@
 
 #include "util/smstext.h"
 
+#include "util.hpp"
 #include "TaskProcessor.h"
 #include "mcisme/callproc.hpp"
 #include "Exceptions.hpp"
-#include "FSStorage.hpp"
 #include "AbntAddr.hpp"
 #include "Profiler.h"
 #include "ProfilesStorage.hpp"
@@ -27,6 +27,7 @@
 #include "OutputMessageProcessor.hpp"
 #include "BannerOutputMessageProcessorsDispatcher.hpp"
 #include "BannerlessOutputMessageProcessorsDispatcher.hpp"
+#include "RollingFileStorageAdapter.hpp"
 
 extern bool isMSISDNAddress(const char* string);
 
@@ -63,15 +64,6 @@ static time_t parseDate(const char* str)
   dt.tm_hour = 0; dt.tm_min = 0; dt.tm_sec = 0;
 
   return mktime(&dt);
-}
-static int parseTime(const char* str)
-{
-  int hour, minute, second;
-  if (!str || str[0] == '\0' ||
-      sscanf(str, "%02d:%02d:%02d",
-             &hour, &minute, &second) != 3) return -1;
-
-  return hour*3600+minute*60+second;
 }
 
 static void checkAddress(const char* address)
@@ -484,7 +476,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   }
 
   std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
-  pStorage = new FSStorage();
+  pStorage = new RollingFileStorageAdapter();
   int ret = pStorage->Init(storageCfgGuard.get(), pDeliveryQueue);
   if (ret) {
     smsc_log_error(logger, "storage initialization failed: ret = %d", ret);
@@ -861,22 +853,22 @@ TaskProcessor::store_A_Event_in_logstore(const AbntAddr& callingAbonent,
   MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_GotMissedCall(callingAbonent.getText(), calledAbonent.getText(), abntProfile.notify, callerProfile.wantNotifyMe));
 }
 
-bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
+bool TaskProcessor::invokeProcessDataSmResp(int status, int seq_num)
 {
   std::auto_ptr<sms_info> pInfo;
   {
     MutexGuard Lock(smsInfoMutex);
-    if(!smsInfo.Exist(seqNum))
+    if(!smsInfo.Exist(seq_num))
     {
-      smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+      smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seq_num);
       return false;
     }
-    pInfo.reset(smsInfo.Get(seqNum));
-    smsInfo.Delete(seqNum);
+    pInfo.reset(smsInfo.Get(seq_num));
+    smsInfo.Delete(seq_num);
     toList.erase(pInfo->timeoutIter);
   }
 
-  smsc_log_info(logger, "Received a DATA_SM_RESP for Subscriber %s seq_num=%d, status=%d", pInfo->abnt.toString().c_str(), seqNum, status);
+  smsc_log_info(logger, "Received a DATA_SM_RESP for Subscriber %s seq_num=%d, status=%d", pInfo->abnt.toString().c_str(), seq_num, status);
 
   if(status == smsc::system::Status::OK)
   {
@@ -908,11 +900,11 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 }
 
 bool
-TaskProcessor::invokeProcessSubmitSmResp(int cmdId, int status, int seqNum)
+TaskProcessor::invokeProcessSubmitSmResp(int status, int seq_num)
 {
-  smsc_log_debug(logger, "Received a SUBMIT_SM_RESP seq_num=%d, status=%d", seqNum);
+  smsc_log_debug(logger, "Received a SUBMIT_SM_RESP seq_num=%d, status=%d", seq_num);
 
-  BannerResponseTrace bannerRespTrace = deleteBannerInfo(seqNum);
+  BannerResponseTrace bannerRespTrace = deleteBannerInfo(seq_num);
   BannerResponseTrace emptyBannerRespTrace;
 
   if (status != smsc::system::Status::OK &&
@@ -983,16 +975,11 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
   }
 }
 
-bool TaskProcessor::invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt)
+bool TaskProcessor::invokeProcessAlertNotification(int status, const AbntAddr& abnt)
 {
   smsc_log_debug(logger, "Recieve an ALERT_NOTIFICATION for Subscriber %s status = %d", abnt.toString().c_str(), status);
-  if(cmdId == smsc::smpp::SmppCommandSet::ALERT_NOTIFICATION)
-  {
-    time_t schedTime = pDeliveryQueue->RegisterAlert(abnt);
-    pStorage->setSchedParams(abnt, schedTime, status);
-  }
-  else
-    return false;
+  time_t schedTime = pDeliveryQueue->RegisterAlert(abnt);
+  pStorage->setSchedParams(abnt, schedTime, status);
   return true;
 }
 
