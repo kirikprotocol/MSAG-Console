@@ -1,13 +1,13 @@
 #ifndef __SMSC_MCISME_ADVERT_SENDBANNERIDREGISTRY_HPP__
 # define __SMSC_MCISME_ADVERT_SENDBANNERIDREGISTRY_HPP__
 
-# include <sys/time.h>
 # include <list>
 # include "util/Singleton.hpp"
 # include "util/Exception.hpp"
 # include "core/buffers/IntHash.hpp"
 # include "core/synchronization/Mutex.hpp"
 # include "logger/Logger.h"
+# include "mcisme/util.hpp"
 
 namespace smsc {
 namespace mcisme {
@@ -16,14 +16,6 @@ struct ExpiredBannerRequest {
   BannerRequest* origBannerReq;
   uint32_t trnId;
 };
-
-inline unsigned long long getTimeInMsec()
-{
-  struct timeval cur_time;
-  if (gettimeofday(&cur_time, NULL) < 0)
-    throw util::SystemError("SendBannerIdRegistry::saveSentBannerInfo::: call gettimeofday() failed");
-  return cur_time.tv_sec*1000+cur_time.tv_usec/1000;
-}
 
 class SendBannerIdRegistry : public util::Singleton<SendBannerIdRegistry>
 {
