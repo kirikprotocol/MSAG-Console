@@ -384,6 +384,7 @@ int main(int argc,char* argv[])
     return -1;
   }
   sigset(SIGINT,onSigInt);
+  sigignore(SIGPIPE);
   char var[]="SMSC_LOGGER_PROPERTIES=flooder.properties";
   putenv(var);
   Logger::Init();

@@ -515,7 +515,7 @@ void CancelCmd(SmppSession& ss,const string& args)
   q.get_dest().set_numberingPlan(s.getDestinationAddress().plan);
   q.get_dest().set_value(s.getDestinationAddress().value);
   //printf("Cancelling:%s\n",resp->get_messageId());*/
-  SmppTransmitter* tr=ss.getAsyncTransmitter();
+  SmppTransmitter* tr=ss.getSyncTransmitter();
   PduCancelSmResp *cresp=tr->cancel(q);
   if(cresp)
   {
@@ -1296,6 +1296,7 @@ std::string getTimeStamp()
 }
 
 class ResponseProcessor:public Thread{
+public:
   Array<SmppHeader*> queue;
   EventMonitor mon;
   SmppTransmitter* trans;
@@ -1364,6 +1365,7 @@ class ResponseProcessor:public Thread{
 
 
 public:
+  virtual ~ResponseProcessor(){}
   int Execute()
   {
     tempErrIdx=0;
@@ -1780,6 +1782,7 @@ public:
   MyListener(ResponseProcessor& rp):respProcessor(rp)
   {
   }
+  virtual ~MyListener(){}
   void handleEvent(SmppHeader *pdu)
   {
     respProcessor.enqueue(pdu);
@@ -1875,6 +1878,9 @@ int main(int argc,char* argv[])
 
   string cmdFileName;
 
+  cfg.smppTimeOut=30;
+
+
   for(int i=2;i<argc;i+=2)
   {
     char *opt=argv[i];
@@ -1947,6 +1953,10 @@ int main(int argc,char* argv[])
       {
         cfg.password=optval;
       }break;
+      case 'o':
+      {
+        cfg.timeOut=atoi(optval);
+      }break;
       case 't':
       {
         string t=optval;
@@ -1994,13 +2004,14 @@ int main(int argc,char* argv[])
       {
         fprintf(stderr,"Unknown option:%s\n",opt);
         return -1;
-      };
+      }break;
     }
   }
 
   cfg.host=host;
   cfg.port=port;
   cfg.timeOut=10;
+
 
   std::string line;
 
@@ -2649,7 +2660,7 @@ int main(int argc,char* argv[])
       }else //latin1
       {
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-        if(len>140 || dataSm)
+        if(/*len>140 || */dataSm)
         {
           s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message,len);
         }else

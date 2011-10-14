@@ -12,6 +12,11 @@ sme/flooder flooder \
   $(SOCKETLIB) -lcore-threads \
   -lpthread $(LIBRT) -lutil-recoder-recode_dll \
   $(__LIBRARIES) $(LIBNSL)
+sme/cflooder cflooder \
+  -lcore-network -lutil -lsms -lutil \
+  $(SOCKETLIB) -lcore-threads \
+  -lpthread $(LIBRT) -lutil-recoder-recode_dll \
+  $(__LIBRARIES) $(LIBNSL)
 sme/multisme multisme \
   -lcore-network -lutil -lsms -lutil \
   $(SOCKETLIB) -lcore-threads \
