@@ -8,9 +8,9 @@
 #define __INMAN_INAP_COMP_EOID_HPP
 
 #include <inttypes.h>
-
-#include <vector>
-#include <string>
+#include "core/buffers/LWArrayTraitsInt.hpp"
+#include "core/buffers/LWArrayT.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc {
 namespace inman {
@@ -18,101 +18,89 @@ namespace comp {
 
 //
 class EncodedOID {
+public:
+  typedef uint16_t SubIdType;
+
+  static const uint16_t k_dfltSubIdsNum = 16;
+  static const uint16_t k_dfltASNValueLen = k_dfltSubIdsNum*sizeof(SubIdType)*3 + 2;
+  static const uint16_t k_dfltEncodedLen = 1 + (k_dfltSubIdsNum-1)*3; //first two arcs are packed to single byte
+
+  typedef smsc::core::buffers::FixedLengthString<k_dfltASNValueLen> ValueString_t;
+  typedef smsc::core::buffers::FixedLengthString<k_dfltASNValueLen> NickString_t;
+
 private:
-    uint16_t             _numIds;
-    std::vector<uint8_t> _octs;
-    std::string          _nick;
+  typedef smsc::core::buffers::LWArray_T<
+    uint8_t, uint16_t, k_dfltEncodedLen, smsc::core::buffers::LWArrayTraitsPOD_T
+  > ValueType;
+
+  uint8_t     	mNumIds;
+  ValueType   	mOcts;
+  NickString_t  mNick;
 
 protected:
-    void countIds(void)
-    {
-        _numIds = length() ? 2 : 0;
-        for (uint16_t i = 1; i < length(); ++i) {
-            if (!(_octs[i] & 0x80))
-                ++_numIds;
-        }
-    }
+  //Splits the 1st subidentifier to 1st and 2nd arcs ids
+  static void splitIdsPair(const SubIdType & sub_id, SubIdType & id_1st, SubIdType & id_2nd);
 
-    bool getSubId(uint32_t & sub_id, uint16_t & idx/* >= 1 */) const
-    {
-        for (sub_id = 0; idx < length(); ++idx) {
-            uint8_t oct = _octs[idx];
-            sub_id = (sub_id << 7) + (oct & 0x7F);
-            if (!(oct & 0x80)) {
-                ++idx; return true;
-            }
-        }
-        sub_id = (uint32_t)(-1); //inconsistent encoding
-        return false;
-    }
+  //Parses encoded representaion and counts number of SubIds
+  void countIds(void);
+  //Decodes subidentifier starting from octet pointed by 'idx'.
+  //Returns false in case of invalid encoding setting 'sub_id' to -1
+  bool parseSubId(SubIdType & sub_id, uint16_t & idx/* >= 0 */) const;
 
 public:
-    EncodedOID(uint8_t len_octs, const uint8_t * oid_octs,
-                                const char * use_nick = NULL)
-    {
-        _octs.reserve(len_octs);
-        _octs.insert(_octs.end(), oid_octs, oid_octs + len_octs);
-        countIds();
-        if (use_nick)
-            _nick = use_nick;
-        else
-            asnValue(_nick);
-    }
-    EncodedOID(const uint8_t * eoid_octs, const char * use_nick = NULL)
-    {
-        _octs.reserve(eoid_octs[0]);
-        _octs.insert(_octs.end(), eoid_octs + 1, eoid_octs + 1 + eoid_octs[0]);
-        countIds();
-        if (use_nick)
-            _nick = use_nick;
-        else
-            asnValue(_nick);
-    }
+  EncodedOID() : mNumIds(0)
+  {
+    mNick[0] = 0;
+  }
+  EncodedOID(uint16_t len_octs, const uint8_t * oid_octs, const char * use_nick = NULL)
+  {
+    init(len_octs, oid_octs, use_nick);
+  }
+  //length prefixed bytes array not grater than 255 bytes
+  explicit EncodedOID(const uint8_t * eoid_octs, const char * use_nick = NULL)
+  {
+    init((uint16_t)eoid_octs[0], eoid_octs + 1, use_nick);
+  }
+  ~EncodedOID()
+  { }
 
-    uint8_t  length(void) const { return (uint8_t)_octs.size(); }
-    const uint8_t * octets(void) const { return &_octs[0]; }
-    uint16_t  numSubIds(void) const { return _numIds; }
-    const char * nick(void) const { return _nick.c_str(); }
+  //assignes value (an encoded OID representation) and optional nickname.
+  void init(uint16_t len_octs, const uint8_t * oid_octs, const char * use_nick = NULL);
 
-    uint32_t  subId(uint16_t idx) const
-    {
-        if (!idx)
-            return (uint32_t)(_octs[0]/40);
-        if (idx == 1)
-            return (uint32_t)(_octs[0]%40);
-        uint32_t subId;
-        uint16_t i = 1;
-        while (--idx && getSubId(subId, i));
-        return subId;
-    }
+  void clear(void)
+  {
+    mNumIds = 0;
+    mOcts.clear();
+    mNick.clear();
+  }
 
-    std::string & asnValue(std::string & val) const
-    {
-        if (!length())
-            return val;
+  bool empty(void) const { return mOcts.empty(); }
 
-        char buf[3*sizeof(uint32_t)+2];
-        uint16_t i = 1, numIds = numSubIds();
+  uint8_t numSubIds(void) const { return mNumIds; }
+  NickString_t nick(void) const { return mNick; }
 
-        sprintf(buf, "%u", subId(0)); val += buf;
-        do {
-            sprintf(buf, " %u", subId(i)); val += buf;
-        } while (i < numIds);
-        return val;
-    }
+  uint16_t length(void) const { return mOcts.size(); }
+  const uint8_t * octets(void) const { return mOcts.get(); }
 
-    bool operator< (const EncodedOID & obj2) const
-    {
-        return _octs < obj2._octs;
-    }
-    bool operator== (const EncodedOID & obj2) const
-    {
-        return _octs == obj2._octs;
-    }
-    bool operator!= (const EncodedOID & obj2) const
-    {
-        return !(*this == obj2);
-    }
+  //Returns OID subidentifier #'id_idx', or (SubIdType)(-1)
+  //in case of 'id_idx' is out of range or encoding is invalid
+  //NOTE: 'id_idx' is counted starting from 0
+  SubIdType subId(uint8_t sub_id_idx) const;
+
+  //Creates string containing ASN.1 Value Notation of this EOID
+  ValueString_t asnValue(void) const;
+
+  bool operator< (const EncodedOID & cmp_obj) const;
+
+  bool operator== (const EncodedOID & cmp_obj) const
+  {
+    return (length() == cmp_obj.length())
+          && !memcmp(mOcts.get(), cmp_obj.octets(), length());
+  }
+  bool operator!= (const EncodedOID & cmp_obj) const
+  {
+    return !(*this == cmp_obj);
+  }
 };
 
 } //comp
