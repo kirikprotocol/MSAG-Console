@@ -41,7 +41,6 @@ public:
   }
   void Write(const void* buf,size_t sz)
   {
-    if(!bufferOwned)throw std::runtime_error("Attempt to write to released buffer");
     resize((uint32_t)(bufferPos+sz));
     memcpy(buffer+bufferPos,buf,sz);
     bufferPos+=sz;
@@ -295,6 +294,7 @@ public:
   void resize(uint32_t newSize)
   {
     if(newSize<=bufferSize)return;
+    if(!bufferOwned)throw std::runtime_error("Attempt to write to released buffer");
     char* newBuf=new char[newSize];
     memcpy(newBuf,buffer,bufferSize);
     delete [] buffer;
