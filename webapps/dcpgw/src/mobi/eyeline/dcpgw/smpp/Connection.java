@@ -44,7 +44,7 @@ public class Connection {
 
     private Journal journal = Journal.getInstance();
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
 
     private static SimpleDateFormat sdf2 = new SimpleDateFormat("ddHHmmss");
     private static Calendar cal = Calendar.getInstance();
@@ -61,7 +61,7 @@ public class Connection {
         this.name = name;
 
         response_timeout = config.getDeliveryResponseTimeout();
-        response_max_timeout = config.getDeliveryResponseMaxTimeout();
+        response_max_timeout = config.getResendReceiptMaxTimeout();
         request_limit = config.getDeliveryRequestLimit();
 
         sn_data_table = Journal.getInstance().getDataTable(name);
@@ -146,12 +146,10 @@ public class Connection {
                         FinalMessageState state = data.getFinalMessageState();
 
                         String message = "id:" + message_id +
-                                         " sub:" + nsms +
-                                         " dlvrd:" + nsms +
+                                         " nsms:" + nsms +
                                          " submit date:" + sdf.format(submit_date) +
                                          " done date:" + sdf.format(done_date) +
-                                         " stat:" + state +
-                                         " err:000 Text:";
+                                         " stat:" + state;
 
                         log.debug("Receipt message: " + message);
 
@@ -265,10 +263,11 @@ public class Connection {
                         deliverSM.setSequenceNumber(new_sn);
 
                         String message = "id:" + data.getMessageId() +
-                                " sub:" + data.getNsms() + " dlvrd:" + data.getNsms() + " submit date:" + sdf.format(data.getSubmitDate()) +
+                                " dlvrd:" + data.getNsms() +
+                                " submit date:" + sdf.format(data.getSubmitDate()) +
                                 " done date:" + sdf.format(data.getDoneDate()) +
-                                " stat:" + data.getFinalMessageState() +
-                                " err:000 Text:";
+                                " stat:" + data.getFinalMessageState();
+
                         log.debug("Receipt message: " + message);
                         deliverSM.setMessage(message);
 

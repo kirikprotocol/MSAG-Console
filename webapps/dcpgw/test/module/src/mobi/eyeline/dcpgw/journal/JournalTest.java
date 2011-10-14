@@ -40,7 +40,7 @@ public class JournalTest extends T {
         registerTestObject(j2t);
         j2t.delete();
 
-        journal.init(dir, 1, 30000000, 10000, 100);
+        journal.init(dir, 1, 30000000, 100);
         registerTestObject(journal);
     }
 

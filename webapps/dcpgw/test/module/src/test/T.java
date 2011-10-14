@@ -176,10 +176,10 @@ public abstract class T {
         properties.setProperty("informer.host","silverstone");
         properties.setProperty("informer.port","9573");
         properties.setProperty("informer.messages.list.capacity","100");
-        properties.setProperty("sending.timeout.mls","30000");
+        properties.setProperty("informer.sending.timeout.mls","30000");
         properties.setProperty("file.monitor.interval.mls","30000");
-        properties.setProperty("max.journal.size.mb","10");
-        properties.setProperty("clean.journal.timeout.msl","30000");
+        properties.setProperty("journal.size.mb","10");
+        properties.setProperty("journal.clean.timeout.msl","30000");
         properties.setProperty("resend.receipts.interval.sec","30");
         properties.setProperty("resend.receipts.timeout.sec","30");
         properties.setProperty("resend.receipts.max.timeout.min","720");

@@ -27,7 +27,10 @@ public class Client extends Thread implements PDUListener {
 
     int c1, c2, c3, c4, c5, c6, c7, c8;
 
-    public Client(Properties config) throws SmppException {
+    private String name;
+
+    public Client(Properties config, String name) throws SmppException {
+        this.name = name;
         this.config = config;
 
         log.debug("Try to add shutdown hook ...");
@@ -135,7 +138,7 @@ public class Client extends Thread implements PDUListener {
                 break;
             }
         }
-        log.debug("SubmitSM: send "+c1+", succ "+c3+", msqfull "+c7+", err "+c4+", unk "+c8+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
+        log.debug(name+" SubmitSM: send "+c1+", succ "+c3+", msqfull "+c7+", err "+c4+", unk "+c8+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
         return true;
     }
 

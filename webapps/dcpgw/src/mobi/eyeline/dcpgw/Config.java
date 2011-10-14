@@ -70,14 +70,12 @@ public class Config {
     private int send_receipts_interval;
     private int delivery_request_limit;
     private int delivery_response_timeout;
-    private int delivery_response_max_timeout;
+    private int resend_receipts_max_timeout;
 
 
-    private int clean_journal_timeout;
+    private int journal_clean_timeout;
 
     private File message_id_rang_file;
-
-    private String separator;
 
     private long initial_message_id;
     private long rang = 10000;
@@ -134,13 +132,13 @@ public class Config {
             throw new InitializationException("Configuration property 'informer.messages.list.capacity' is invalid or not specified in config");
         }
 
-        s = config.getProperty("sending.timeout.mls");
+        s = config.getProperty("informer.sending.timeout.mls");
         if (s != null && !s.isEmpty()){
             sending_to_informer_timeout = Integer.parseInt(s);
-            log.debug("Configuration property: sending.timeout.mls="+ sending_to_informer_timeout);
+            log.debug("Configuration property: informer.sending.timeout.mls="+ sending_to_informer_timeout);
         } else {
-            log.error("Configuration property 'sending.timeout.mls' is invalid or not specified in config");
-            throw new InitializationException("Configuration property 'sending.timeout.mls' is invalid or not specified in config");
+            log.error("Configuration property 'informer.sending.timeout.mls' is invalid or not specified in config");
+            throw new InitializationException("Configuration property 'informer.sending.timeout.mls' is invalid or not specified in config");
         }
 
         update_config_server_host = config.getProperty("update.config.server.host");
@@ -156,7 +154,10 @@ public class Config {
 
         for(Provider provider: providers){
             String[] endpoints = provider.getEndpointIds();
-            for(String connection_name: endpoints) connection_provider_table.put(connection_name, provider);
+            for(String connection_name: endpoints) {
+                connection_provider_table.put(connection_name, provider);
+                log.debug("con --> provider: "+connection_name + " --> "+provider.getName());
+            }
 
             Vector<Delivery> deliveries = provider.getDeliveries();
             for(Delivery delivery: deliveries){
@@ -184,22 +185,22 @@ public class Config {
             }
         }
 
-        max_journal_size_mb = Utils.getProperty(config, "max.journal.size.mb", 10);
+        max_journal_size_mb = Utils.getProperty(config, "journal.size.mb", 10);
         journal_dir = new File(Utils.getProperty(config, "journal.dir", System.getProperty("user.dir")+File.separator+"journal"));
 
         final_log_dir = new File(Utils.getProperty(config, "final.log.dir", System.getProperty("user.dir") + File.separator + "final_log"));
 
-        resend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
-
         send_receipts_interval = Utils.getProperty(config, "send.receipts.interval.mls", 1000);
 
-        delivery_request_limit = Utils.getProperty(config, "send.receipts.limit", 100);
+        delivery_request_limit = Utils.getProperty(config, "send.receipts.sending.limit", 100);
+
+        resend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
 
         delivery_response_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
 
-        delivery_response_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
+        resend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
 
-        clean_journal_timeout = Utils.getProperty(config, "clean.journal.timeout.msl", 60000);
+        journal_clean_timeout = Utils.getProperty(config, "journal.clean.timeout.msl", 60000);
 
     }
 
@@ -218,7 +219,10 @@ public class Config {
 
         for(Provider provider: providers){
             String[] endpoints = provider.getEndpointIds();
-            for(String connection_name: endpoints) connection_provider_table.put(connection_name, provider);
+            for(String connection_name: endpoints) {
+                connection_provider_table.put(connection_name, provider);
+                log.debug("con --> provider: "+connection_name + " --> "+provider.getName());
+            }
 
             Vector<Delivery> deliveries = provider.getDeliveries();
             for(Delivery delivery: deliveries){
@@ -226,6 +230,7 @@ public class Config {
                 String informer_user = delivery.getUser();
                 if (!informer_user_delivery_ids_table.containsKey(informer_user))
                     informer_user_delivery_ids_table.put(informer_user, new HashSet<Integer>());
+
 
                 Set<Integer> delivery_ids = informer_user_delivery_ids_table.get(informer_user);
                 delivery_ids.add(delivery_id);
@@ -429,8 +434,8 @@ public class Config {
         return resend_receipts_interval;
     }
 
-    public int getDeliveryResponseMaxTimeout(){
-        return delivery_response_max_timeout;
+    public int getResendReceiptMaxTimeout(){
+        return resend_receipts_max_timeout;
     }
 
     public int getDeliveryResponseTimeout(){
@@ -438,7 +443,7 @@ public class Config {
     }
 
     public int getCleanJournalTimeout(){
-        return clean_journal_timeout;
+        return journal_clean_timeout;
     }
 
     public int getDeliveryRequestLimit(){

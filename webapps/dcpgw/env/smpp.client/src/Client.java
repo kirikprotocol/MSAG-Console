@@ -41,6 +41,8 @@ public class Client extends Thread implements PDUListener {
 
     private boolean generate_final_log = false;
 
+    private static String con;
+
     public Client() throws SmppException {
         this.config = new Properties();
         try {
@@ -64,6 +66,7 @@ public class Client extends Thread implements PDUListener {
         validity_period = Long.parseLong(config.getProperty("validity.period"));
 
         message = config.getProperty("message");
+        con = config.getProperty("con");
 
         logger.debug("Start smpp client.");
     }
@@ -137,7 +140,7 @@ public class Client extends Thread implements PDUListener {
                         submitSM.setConnectionName("con2");
                     }*/
 
-                    submitSM.setConnectionName("con1");
+                    submitSM.setConnectionName(con);
 
                     DateFormat df = DateFormat.getDateTimeInstance();
                     Calendar cal = Calendar.getInstance();
