@@ -39,7 +39,7 @@ bool USSGService::init(void)
   if (!_tcDisp.acRegistry()->getFactory(_ac_map_networkUnstructuredSs_v2)
       && !_tcDisp.acRegistry()->regFactory(initMAPUSS2Components)) {
     smsc_log_fatal(_logger, "%s: ROS factory registration failed: %s!", _logId,
-                    _ac_map_networkUnstructuredSs_v2.nick());
+                    _ac_map_networkUnstructuredSs_v2.nick().c_str());
     return false;
   }
   TcpServerIface::RCode_e rc = _tcpSrv.Init(_tcpCfg);
