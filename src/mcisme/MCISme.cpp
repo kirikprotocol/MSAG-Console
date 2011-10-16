@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
+#include <algorithm>
 
 #include "core/threads/ThreadGroup.hpp"
 #include "core/buffers/Array.hpp"
@@ -38,6 +39,10 @@
 #include "Profiler.h"
 #include "ProfilesStorageServer.hpp"
 #include "MCAEventsStorage.hpp"
+
+#ifdef EIN_HD
+# include "sme/ClusterSmppSession.hpp"
+#endif
 
 #include "version.inc"
 
@@ -234,16 +239,24 @@ class MCISmeMessageSender : public MessageSender
 {
 private:
   TaskProcessor& processor;
+#ifdef EIN_HD
+  ClusterSmppSession* session;
+#else
   SmppSession*   session;
-
+#endif
   RWLock _activeThreadRunningLock;
   MCISmeMessageSender(const MCISmeMessageSender& rhs);
   MCISmeMessageSender& operator=(const MCISmeMessageSender& rhs);
   enum { MAX_VALUE_IN_DAYS = 10 };
 public:
 
+#ifdef EIN_HD
+  MCISmeMessageSender(TaskProcessor& processor, ClusterSmppSession* session)
+    : MessageSender(), processor(processor), session(session) {}
+#else
   MCISmeMessageSender(TaskProcessor& processor, SmppSession* session)
     : MessageSender(), processor(processor), session(session) {}
+#endif
 
   virtual ~MCISmeMessageSender() {
     waitingForAllOperationsWillComplete();
@@ -752,9 +765,6 @@ int main(void)
     ComponentManager::registerComponent(&admin);
     adminListener->Start();
 
-    ConfigView smscConfig(manager, "MCISme.SMSC");
-    MCISmeConfig cfg(&smscConfig);
-
     int dispCount=4;
     try{
       dispCount=tpConfig.getInt("pduDispatchersCount");
@@ -763,7 +773,39 @@ int main(void)
       smsc_log_warn(logger,"MCISme.pduDispatchersCount not found using default:%d",dispCount);
     }
     MCISmePduListener       listener(processor,dispCount);
-    SmppSession             session(cfg, &listener);
+
+    int reconnectAttempPeriod = 100000;
+#ifdef EIN_HD
+    std::vector<SmeConfig> smeConfigs;
+    std::auto_ptr<ConfigView> haSmscCfg(tpConfig.getSubConfig("HA_SMSC"));
+    if (haSmscCfg.get())
+    {
+      std::auto_ptr< std::set<std::string> > knownSmsc(haSmscCfg->getShortSectionNames());
+      for (std::set<std::string>::iterator i=knownSmsc->begin();i!=knownSmsc->end();i++)
+      {
+        const char* smscName = (const char *)i->c_str();
+        if (!smscName || !smscName[0]) continue;
+
+        std::auto_ptr<ConfigView> smscCfg(haSmscCfg->getSubConfig(smscName));
+
+        MCISmeConfig cfg(smscCfg.get());
+        smeConfigs.push_back(cfg);
+        reconnectAttempPeriod = std::min(cfg.timeOut, reconnectAttempPeriod);
+      }
+    } else
+    {
+      smsc_log_error(logger, "Configuration invalid. Missed section 'HA_SMSC'");
+      return -1;
+    }
+
+    ClusterSmppSession  session(smeConfigs, &listener);
+#else
+    ConfigView smscConfig(manager, "MCISme.SMSC");
+    MCISmeConfig cfg(&smscConfig);
+
+    SmppSession         session(cfg, &listener);
+    reconnectAttempPeriod = cfg.timeOut;
+#endif
 
     listener.start();
 
@@ -794,7 +836,7 @@ int main(void)
         bMCISmeIsConnecting = false;
         setNeedReconnect(true);
         // ??? if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
-        sleep(cfg.timeOut);
+        sleep(reconnectAttempPeriod);
         session.close();
         continue;
       }
