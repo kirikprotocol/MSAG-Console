@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+    
+    <section name="MCISme">
+
+        <param name="Address" type="string">@mcisme.orig.address@</param>
+	<param name="CalledMask"  type="string">/^\d{10}$/</param>
+	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
+	<param name="SvcType" type="string">MCA</param>
+	<param name="SvcTypeOnLine" type="string">MCAONL</param>
+        <param name="ProtocolId" type="int">0</param>
+
+        <!-- if DaysValid is greater than 10 then it measured in hours -->
+	<param name="DaysValid"  type="int">1</param>
+	
+	<param name="unrespondedMessagesMax" type="int">500</param>
+	<param name="unrespondedMessagesSleep" type="int">10</param>
+	<param name="outgoingSpeedMax" type="int">50</param>
+	<param name="maxDataSmRegistrySize" type="int">500</param>
+	<param name="pduDispatchersCount" type="int">4</param>
+	
+	<param name="responceWaitTime" type="string">00:00:05</param>
+	<!-- should be deleted param name="receiptWaitTime" type="string">00:00:05</param-->
+	
+	<param name="inputQueueSize"  type="int">1000</param>
+	<!-- should be deleted param name="outputQueueSize" type="int">1000</param-->
+	
+	<param name="maxRowsPerMessage" type="int">5</param>
+
+	<param name="defaultInform" type="bool">true</param>
+        <param name="defaultNotify" type="bool">false</param>
+	<param name="defaultWantNotifyMe" type="bool">false</param>
+        <param name="defaultReasonsMask" type="int">31</param>
+        
+	<param name="forceInform" type="bool">false</param>
+        <param name="forceNotify" type="bool">false</param>
+	
+	<param name="useWantNotifyPolicy" type="bool">false</param>
+
+	<param name="CountryCode" type="string">@mcisme.CountryCode@</param>
+        <param name="timeZoneFileLocation" type="string">@timeZoneFileLocation@</param>
+        <param name="routesFileLocation" type="string">@routesFileLocation@</param>
+			
+        <param name="OriginatingAddressIsMCIAddress" type="bool">true</param>
+        <param name="maxAbonentMessageLenInOctets" type="int">140</param>
+        <param name="HasStackEmulator" type="bool">false</param>
+        <param name="StackEmulatorHost" type="string">127.0.0.1</param>
+        <param name="StackEmulatorPort" type="int">37000</param>
+
+        <param name="SendAbntOnlineNotificationPeriod" type="int">12</param>
+        <!-- QosTimeToLive expressed in seconds -->
+        <param name="QosTimeToLive" type="int">90</param>
+
+        <section name="MCAEventStorage">
+           <param name="location" type="string">@mcisme.mcastorage.location@</param>
+           <param name="rollingInterval" type="int">60</param>
+        </section>
+
+        <section name="SMPPThreadPool">
+            <param name="max" type="int">15</param>
+            <param name="init" type="int">5</param>
+        </section>  
+
+        <section name="Admin">
+            <param name="host" type="string">@listen.host@</param>
+            <param name="port" type="int">@mcisme.admin.port@</param>
+	</section>
+
+        <section name="HA_SMSC">
+          <section name="SMSC1">
+            <param name="host" type="string">@connect.host@</param>
+            <param name="port" type="int">@smsc.smpp.port@</param>
+            <param name="sid" type="string">MCISme</param>
+            <param name="password" type="string"></param>
+            <param name="timeout" type="int">10</param>
+          </section>
+          <section name="SMSC2">
+            <param name="host" type="string">@connect.host@</param>
+            <param name="port" type="int">@smsc.smpp.port@</param>
+            <param name="sid" type="string">MCISme</param>
+            <param name="password" type="string"></param>
+            <param name="timeout" type="int">10</param>
+          </section>
+        </section>
+
+        <section name="isup">
+          <param name="userid" type="int">41</param>
+          <param name="cpMgrHostAndPort" type="string">@ss7cpmgr@</param>
+          <param name="userinstance" type="int">1</param>
+          <param name="remoteInstancies" type="string">1,2</param>
+        </section>
+	
+        <section name="Circuits">
+	    <section name="MSC1">
+		<param name="hsn" type="int">1</param>
+		<param name="spn" type="int">2</param>
+    		<param name="tsm" type="string">123ABC</param>
+	    </section>
+	</section>
+
+        <section name="Reasons">
+	  <section name="Absent">
+    	    <param name="cause" type="int">20</param>
+	    <param name="inform" type="bool">true</param>
+    	  </section>
+          <section name="Busy">
+    	    <param name="cause" type="int">17</param>
+    	    <param name="inform" type="bool">true</param>
+          </section>
+          <section name="NoReply">
+    	    <param name="cause" type="int">19</param>
+    	    <param name="inform" type="bool">true</param>
+          </section>
+          <section name="Other">
+    	    <param name="cause" type="int">21</param>
+    	    <param name="inform" type="bool">false</param>
+          </section>
+          <section name="Unconditional">
+	    <param name="cause" type="int">21</param>
+	    <param name="inform" type="bool">false</param>
+	  </section>
+	</section>
+    
+        <section name="Rules">
+	  <section name="Rule 1">
+    	    <param name="cause" type="int">0</param>
+            <param name="inform" type="int">1</param>
+	    <param name="priority" type="int">1000</param>
+    	    <param name="regexp" type="string"></param>
+          </section>
+	  <section name="Rule 2">
+    	    <param name="cause" type="int">0</param>
+            <param name="inform" type="int">0</param>
+	    <param name="priority" type="int">200</param>
+    	    <param name="regexp" type="string"></param>
+          </section>
+	  <section name="Rule 3">
+    	    <param name="cause" type="int">0</param>
+            <param name="inform" type="int">1</param>
+	    <param name="priority" type="int">300</param>
+            <param name="regexp" type="string"></param>
+          </section>
+        </section>
+
+	<section name="Advertising">
+            <param name="BEProtocolVersion" type="int">2</param>
+            <param name="useAdvert" type="bool">false</param>
+            <param name="server" type="string">@mcisme.Advertising.server@</param>
+            <param name="port" type="int">@mcisme.Advertising.port@</param>
+            <param name="timeout" type="int">@mcisme.Advertising.timeout@</param><!-- milliseconds -->
+            <param name="connectTimeout" type="int">@mcisme.Advertising.timeout@</param> <!-- seconds -->
+            <param name="reconnectionAttemptPeriod" type="int">5</param>
+            <param name="proxyCount" type="int">10</param>
+            <param name="responseHandlersCount" type="int">10</param>
+            <param name="SvcTypeForBe" type="string">MCA</param>
+	</section>
+
+	<section name="Statistics">
+	    <param name="statDir" type="string">@mcisme.Stat.statDir@</param> <!-- Type only directory name, not path-->
+	</section>
+
+	<section name="ProfileStorage">
+	    <param name="location" type="string">@mcisme.profstor.location@</param>
+	    <param name="host" type="string">127.0.0.1</param>
+	    <param name="port" type="int">@mcisme.profstor.port@</param>
+	</section>
+	
+	<section name="Storage">
+	    <param name="location" type="string">@mcisme.storage.location@</param>
+	    <param name="eventLifeTime" type="string">@mcisme.storage.eventLifeTime@</param>
+	    <param name="maxEvents" type="int">@mcisme.storage.maxEvents@</param>
+	    <param name="eventRegistrationPolicy" type="string">@mcisme.storage.policy@</param>
+	    <param name="bdFilesIncr" type="int">@mcisme.storage.bdFilesIncr@</param>
+	</section>
+	    	    
+        <section name="Scheduling">
+	    <param name="schedulingPolicy" type="string">ConstResendingPeriod</param>
+	    <param name="resendingPeriod" type="string">00:30:00</param>
+	    <param name="schedOnBusy" type="string">00:05:00</param>	    
+	    
+	    <section name="schedule">
+	        <param name="default" type="string">@mcisme.errdefault@</param>
+	        <param name="1179" type="string">@mcisme.err1179@</param>
+	        <param name="1184" type="string">@mcisme.err1184@</param>
+	    </section>
+	</section>
+
+    
+        <section name="Templates">
+	  <section name="Inform">
+    	    <param name="default" type="int">3</param>
+
+            <section name="Detailed">
+	      <param name="group" type="bool">false</param>
+	      <param name="id" type="int">1</param>
+              <param name="message" type="string">Âàì ($$string arg="abonent"$$) çâîíèëè $$int32 arg="total"$$ðàç:$$string arg="rows"$$ ÌÒÑ</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ â $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
+            </section>
+    	    <section name="Complex">
+    	      <param name="group" type="bool">true</param>
+              <param name="id" type="int">2</param>
+              <param name="message" type="string">Âàì çâîíèëè:$$string arg="rows"$$ ÌÒÑ</param>
+              <param name="multiRow" type="string"> $$string arg="caller"$$ - $$int32 arg="count"$$ âûçîâîâ, ïîñëåäíèé $$date arg="date" pattern="HH:mm dd.MM.yy"$$;</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ â $$date arg="date" pattern="HH:mm dd.MM.yy"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
+            </section>
+            <section name="Custom">
+              <param name="group" type="bool">true</param>
+              <param name="id" type="int">3</param>
+              <param name="message" type="string">Âàì çâîíèëè:$$string arg="rows"$$ ÌÒÑ</param>
+              <param name="multiRow" type="string"> $$string arg="caller"$$ âûçîâîâ $$int32 arg="count"$$, ïîñëåäíèé âûçîâ $$date arg="date" pattern="HH:mm dd/MM/yy"$$;</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ âûçîâîâ $$int32 arg="count"$$, ïîñëåäíèé âûçîâ $$date arg="date" pattern="HH:mm dd/MM/yy"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
+            </section>
+            <section name="English">
+              <param name="group" type="bool">true</param>
+              <param name="id" type="int">4</param>
+              <param name="message" type="string">Missed calls ($$int32 arg="total"$$):$$string arg="rows"$$ MTS</param>
+              <param name="multiRow" type="string"> $$string arg="caller"$$ ($$int32 arg="count"$$), last at $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ at $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
+            </section>
+          </section>
+
+          <section name="Notify">
+            <param name="default" type="int">2</param>
+
+            <section name="Detailed">
+              <param name="id" type="int">1</param>
+              <param name="message" type="string">Äîáðûé äåíü $$string arg="caller"$$! Àâîíåíò $$string arg="abonent"$$ äîñòóïåí â ñåòè. ÌÒÑ</param>
+            </section>
+            <section name="Custom">
+              <param name="id" type="int">2</param>
+              <param name="message" type="string">Àáîíåíò $$string arg="abonent"$$ äîñòóïåí. ÌÒÑ</param>
+            </section>
+            <section name="English">
+              <param name="id" type="int">3</param>
+              <param name="message" type="string">Abonent $$string arg="abonent"$$ is online. MTS</param>
+            </section>
+	  </section>
+      
+      </section> <!-- Templates -->
+        
+      <section name="MSC">
+        <param name="host" type="string">10.112.2.1</param>
+        <param name="mcisme" type="string">555</param>
+        <param name="nvtIODevice" type="string">220</param>
+        <param name="port" type="int">5010</param>
+        <param name="usercode" type="string">mca</param>
+        <param name="userpassword" type="string">T3JSJkYQ</param>
+        <param name="voicemail" type="string"></param>
+      </section>
+
+      <section name="IASME">
+       <param name="listen_iface" type="string">0.0.0.0</param>
+       <param name="listen_port" type="int">9999</param>
+       <!-- if next parameter is absent then default value is equal to 10 -->
+       <param name="max_iasme_events_queue_sz" type="int">10</param>
+      </section>
+    </section> <!-- MCISme -->
+    
+    <section name="StartupLoader">
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">libdb_oci.so</param>
+            </section>
+        </section>
+    </section>
+
+</config>
