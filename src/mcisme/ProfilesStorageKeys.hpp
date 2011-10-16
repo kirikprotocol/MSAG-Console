@@ -91,7 +91,7 @@ public:
   }
   StrKey(const char* s)
   {
-    int l=strlen(s);
+    int l=static_cast<int>(strlen(s));
     strncpy(str,s,N);
     str[N]=0;
     len=l>N?N:l;
