@@ -545,7 +545,7 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
         ml.msg.flags.reset( mfb );
     }
   }
-  } catch ( InfosmeException& e {
+  } catch ( InfosmeException& e ) {
       if (e.getCode() == EXC_BADMESSAGE ) {
           throw;
       }
