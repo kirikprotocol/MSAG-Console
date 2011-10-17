@@ -57,7 +57,7 @@ public class Gateway extends Thread implements PDUListener {
         config.init(config_file);
         Properties properties = config.getProperties();
 
-        Journal.getInstance().init(config.getJournalDir(), config.getMaxJournalSize(),
+        Journal.getInstance().init(config.getJournalDir(), config.getMaxJournalSize(), config.getMaxSubmitDateJournalSize(),
                 config.getCleanJournalTimeout(), config.getDeliveryRequestLimit());
         try {
             Journal.getInstance().load();

@@ -1,6 +1,8 @@
 package mobi.eyeline.dcpgw.dcp;
 
 import mobi.eyeline.dcpgw.Config;
+import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
+import mobi.eyeline.dcpgw.journal.Journal;
 import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
@@ -8,6 +10,7 @@ import mobi.eyeline.informer.admin.delivery.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.types.Status;
@@ -48,6 +51,9 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     private long timeout;
 
     private String informer_user;
+
+    private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+    private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
 
     public DcpConnectionImpl(String informer_user) throws AdminException {
         super("ic_"+informer_user);
@@ -129,11 +135,6 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 List<Message> list = new ArrayList<Message>();
                 queue.drainTo(list);
 
-                for(Message m: list){
-                    Date date = cal.getTime();
-                    m.setProperty("sd", sdf.format(date));
-                }
-
                 try{
                     log.debug("Try to add list with messages to delivery with id '"+delivery_id+"' ...");
 
@@ -169,6 +170,15 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                                 resp.setStatus(Status.OK);
                                 Server.getInstance().send(resp);
                                 log.debug("send SubmitSMResp: id="+message_id+", sn="+resp.getSequenceNumber()+", status=OK, delivery_id="+delivery_id);
+
+                                long submit_time = System.currentTimeMillis();
+                                Date submit_date = Functions.convertTime(new Date(submit_time), LOCAL_TIMEZONE, STAT_TIMEZONE);
+                                try {
+                                    Journal.getInstance().writeSubmitDate(message_id, submit_date, false);
+                                } catch (CouldNotWriteToJournalException e) {
+                                    log.error("Couldn't write submit date to journal.", e);
+                                }
+
                             } else {
                                 log.error("Couldn't find SubmitSMResp data, message_id="+message_id_str);
                             }

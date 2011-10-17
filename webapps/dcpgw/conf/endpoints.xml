@@ -8,12 +8,16 @@
              <param name="systemId" type="string">systemId1</param>
              <param name="password" type="string">p1</param>
              <param name="enabled" type="bool">true</param>
+             <param name="send.receipt.speed" type="int">100</param>
+             <param name="send.receipt.max.time.min" type="int">60</param>
          </section>
 
          <section name="endpoint2">
              <param name="systemId" type="string">systemId2</param>
              <param name="password" type="string">p2</param>
              <param name="enabled" type="bool">true</param>
+             <param name="send.receipt.speed" type="int">100</param>
+             <param name="send.receipt.max.time.min" type="int">60</param>
          </section>
 
      </section>

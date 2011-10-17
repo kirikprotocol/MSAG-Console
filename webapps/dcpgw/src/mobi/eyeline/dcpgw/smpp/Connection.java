@@ -38,12 +38,14 @@ public class Connection {
 
     private LinkedBlockingQueue<Data> queue;
 
+    private Hashtable<Long, Date> message_id_date_table;
+
     private Journal journal = Journal.getInstance();
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
 
     private int response_timeout;
-    private int response_max_timeout;
+    private int send_receipt_max_time;
     private int request_limit;
 
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -54,11 +56,12 @@ public class Connection {
 
         Config config = Config.getInstance();
         response_timeout = config.getDeliveryResponseTimeout();
-        response_max_timeout = config.getResendReceiptMaxTimeout();
+        send_receipt_max_time = config.getResendReceiptMaxTimeout();
         request_limit = config.getDeliveryRequestLimit();
 
         sn_data_table = Journal.getInstance().getDataTable(name);
         queue = Journal.getInstance().getDataQueue(name);
+        message_id_date_table = Journal.getInstance().getSubmitDateTable(name);
 
         if (sn_data_table == null) sn_data_table = new Hashtable<Integer, Data>();
         if (queue == null) queue = new LinkedBlockingQueue<Data>();
@@ -92,17 +95,33 @@ public class Connection {
 
         if (queue == null) queue = new LinkedBlockingQueue<Data>();
 
-        try{
-            queue.add(data);
-            log.debug("add "+data.getMessageId()+"_rcpt to "+name+"_delivery_queue, size "+queue.size());
-        } catch (IllegalStateException e) {
-            log.warn(name+"_queue full, couldn't add delivery receipt with message_id "+data.getMessageId());
-        }
+        long message_id = data.getMessageId();
+        Date submit_date = message_id_date_table.get(message_id);
+        if (submit_date != null){
 
-        try {
-            journal.write(data);
-        } catch (CouldNotWriteToJournalException e) {
-            log.error(e);
+            data.setSubmitDate(submit_date);
+
+            Date date = new Date(System.currentTimeMillis());
+            try {
+                journal.writeSubmitDate(message_id, date, true);
+            } catch (CouldNotWriteToJournalException e) {
+                log.error("Couldn't write to submit date journal.", e);
+            }
+
+            try{
+                queue.add(data);
+                log.debug("add "+data.getMessageId()+"_rcpt to "+name+"_delivery_queue, size "+queue.size());
+            } catch (IllegalStateException e) {
+                log.warn(name+"_queue full, couldn't add delivery receipt with message_id "+data.getMessageId());
+            }
+
+            try {
+                journal.write(data);
+            } catch (CouldNotWriteToJournalException e) {
+                log.error(e);
+            }
+        } else {
+            log.error("Couldn't fing submit date for receipt with message id "+data.getMessageId());
         }
     }
 
@@ -203,99 +222,111 @@ public class Connection {
 
             Data data = sn_data_table.get(sn);
             long last_resend_time = data.getLastResendTime();
-            long first_sending_time = data.getFirstSendingTime();
+            long init_time = data.getInitTime();
 
-            if (current_time - first_sending_time < response_max_timeout * 1000 * 60){
+            if (current_time - init_time < send_receipt_max_time * 1000 * 60){
 
-                if (current_time - last_resend_time >= response_timeout * 1000)
-                    timeout_expired_sequence_numbers.add(sn);
-                } else {
-                    max_timeout_expired_sequence_numbers.add(sn);
-                }
+                if (current_time - last_resend_time >= response_timeout * 1000) timeout_expired_sequence_numbers.add(sn);
+
+            } else {
+
+                max_timeout_expired_sequence_numbers.add(sn);
 
             }
 
-            for (Integer sn : max_timeout_expired_sequence_numbers) {
+        }
+
+        for (Integer sn : max_timeout_expired_sequence_numbers) {
+            synchronized (monitor) {
+                Data data = sn_data_table.remove(sn);
+                log.debug("The maximum time of resending delivery receipt for message with id " + data.getMessageId() + " expired.");
+                data.setStatus(Data.Status.EXPIRED_MAX_TIMEOUT);
+                try {
+                    Journal.getInstance().write(data);
+                } catch (CouldNotWriteToJournalException e) {
+                    log.error(e);
+                }
+                log.debug("Remove deliver receipt data with sequence number " + sn + " and message id " +
+                          data.getMessageId() + " from memory and write to journal with status " + Data.Status.EXPIRED_MAX_TIMEOUT +
+                          ", table size "+sn_data_table.size()+".");
+            }
+        }
+
+        for (Integer sn : timeout_expired_sequence_numbers) {
+            if (!max_timeout_expired_sequence_numbers.contains(sn)) {
                 synchronized (monitor) {
                     Data data = sn_data_table.remove(sn);
-                    log.debug("The maximum time of resending delivery receipt for message with id " + data.getMessageId() + " expired.");
-                    data.setStatus(Data.Status.EXPIRED_MAX_TIMEOUT);
+                    log.warn("DeliverSM with sequence number " + sn + " expired. There was no DeliverSMResp within " + response_timeout + " seconds. ");
+                    data.setStatus(Data.Status.EXPIRED_TIMEOUT);
+
                     try {
                         Journal.getInstance().write(data);
                     } catch (CouldNotWriteToJournalException e) {
                         log.error(e);
                     }
-                    log.debug("Remove deliver receipt data with sequence number " + sn + " and message id " +
-                            data.getMessageId() + " from memory and write to journal with status " + Data.Status.EXPIRED_MAX_TIMEOUT +
-                            ", table size "+sn_data_table.size()+".");
-                }
-            }
 
-            for (Integer sn : timeout_expired_sequence_numbers) {
-                if (!max_timeout_expired_sequence_numbers.contains(sn)) {
-                    synchronized (monitor) {
-                        Data data = sn_data_table.remove(sn);
-                        log.warn("DeliverSM with sequence number " + sn + " expired. There was no DeliverSMResp within " + response_timeout + " seconds. ");
-                        data.setStatus(Data.Status.EXPIRED_TIMEOUT);
+                    DeliverSM deliverSM = new DeliverSM();
+                    deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
+                    deliverSM.setSourceAddress(data.getSourceAddress());
+                    deliverSM.setDestinationAddress(data.getDestinationAddress());
+                    deliverSM.setConnectionName(data.getConnectionName());
+
+                    int new_sn = Server.getInstance().getReceiptSequenceNumber();
+                    deliverSM.setSequenceNumber(new_sn);
+
+                    String message = "id:" + data.getMessageId() +
+                                " dlvrd:" + data.getNsms() +
+                                " submit date:" + sdf.format(data.getSubmitDate()) +
+                                " done date:" + sdf.format(data.getDoneDate()) +
+                                " stat:" + data.getFinalMessageState();
+
+                    log.debug("Receipt message: " + message);
+                    deliverSM.setMessage(message);
+
+                    try {
+                        Server.getInstance().send(deliverSM);
+                        log.debug("resend DeliverSM: sn=" + new_sn + ", message_id=" + data.getMessageId());
+
+                        long send_receipt_time = System.currentTimeMillis();
+                        data.setLastResendTime(send_receipt_time);
+                        data.setStatus(Data.Status.SEND);
+
+                        sn_data_table.put(new_sn, data);
+                        log.debug("remember data: " + new_sn + " --> " + data +", table size: "+sn_data_table.size());
 
                         try {
                             Journal.getInstance().write(data);
                         } catch (CouldNotWriteToJournalException e) {
                             log.error(e);
                         }
+                    } catch (SmppException e) {
+                        log.warn(e);
 
-                        DeliverSM deliverSM = new DeliverSM();
-                        deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
-                        deliverSM.setSourceAddress(data.getSourceAddress());
-                        deliverSM.setDestinationAddress(data.getDestinationAddress());
-                        deliverSM.setConnectionName(data.getConnectionName());
+                        long send_receipt_time = System.currentTimeMillis();
+                        data.setLastResendTime(send_receipt_time);
+                        data.setStatus(Data.Status.NOT_SEND);
 
-                        int new_sn = Server.getInstance().getReceiptSequenceNumber();
-                        deliverSM.setSequenceNumber(new_sn);
-
-                        String message = "id:" + data.getMessageId() +
-                                " dlvrd:" + data.getNsms() +
-                                " submit date:" + sdf.format(data.getSubmitDate()) +
-                                " done date:" + sdf.format(data.getDoneDate()) +
-                                " stat:" + data.getFinalMessageState();
-
-                        log.debug("Receipt message: " + message);
-                        deliverSM.setMessage(message);
-
+                        sn_data_table.put(new_sn, data);
                         try {
-                            Server.getInstance().send(deliverSM);
-                            log.debug("resend DeliverSM: sn=" + new_sn + ", message_id=" + data.getMessageId());
-
-                            long send_receipt_time = System.currentTimeMillis();
-                            data.setLastResendTime(send_receipt_time);
-                            data.setStatus(Data.Status.SEND);
-
-                            sn_data_table.put(new_sn, data);
-                            log.debug("remember data: " + new_sn + " --> " + data +", table size: "+sn_data_table.size());
-
-                            try {
-                                Journal.getInstance().write(data);
-                            } catch (CouldNotWriteToJournalException e) {
-                                log.error(e);
-                            }
-                        } catch (SmppException e) {
-                            log.warn(e);
-
-                            long send_receipt_time = System.currentTimeMillis();
-                            data.setLastResendTime(send_receipt_time);
-                            data.setStatus(Data.Status.NOT_SEND);
-
-                            sn_data_table.put(new_sn, data);
-                            try {
-                                Journal.getInstance().write(data);
-                            } catch (CouldNotWriteToJournalException e2) {
-                                log.error(e2);
-                            }
+                            Journal.getInstance().write(data);
+                        } catch (CouldNotWriteToJournalException e2) {
+                            log.error(e2);
                         }
-
                     }
-                }
 
+                }
+            }
+
+        }
+
+        // Remove expired data from queue.
+        for (Data data : queue) {
+            long init_time = data.getInitTime();
+
+            if (current_time - init_time > send_receipt_max_time * 1000 * 60) {
+                queue.remove(data);
+                log.debug("Remove "+data.getMessageId()+"_data from "+name+"_queue.");
+            }
         }
 
         log.debug("Done resend task.");
@@ -325,8 +356,24 @@ public class Connection {
                 } else {
                     log.warn("Couldn't find deliver receipt data with sequence number " + sequence_number);
                 }
+            } else if (status == mobi.eyeline.smpp.api.types.Status.RX_P_APPN) {
+                Data data = sn_data_table.remove(sequence_number);
+                if (data != null) {
+                    log.debug("Remove from memory deliver receipt data with sequence number " + sequence_number + " .");
+
+                    data.setStatus(Data.Status.PERM_ERROR);
+                    try {
+                        Journal.getInstance().write(data);
+                    } catch (CouldNotWriteToJournalException e) {
+                        log.error(e);
+                    }
+                } else {
+                    log.warn("Couldn't find deliver receipt data with sequence number " + sequence_number);
+                }
+            } else if (status == mobi.eyeline.smpp.api.types.Status.RX_T_APPN) {
+                log.debug("Handle DeliverSMResp with status "+status);
             } else {
-                // todo ?
+                log.error("Handle DeliverSMResp with unforeseen status "+status);
             }
 
         }

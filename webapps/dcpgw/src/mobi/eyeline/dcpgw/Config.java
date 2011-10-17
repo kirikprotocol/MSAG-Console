@@ -59,7 +59,7 @@ public class Config {
 
     private static Hashtable<String, DcpConnectionImpl> informer_user_connection_table;
 
-    private int max_journal_size_mb;
+    private int max_journal_size_mb, max_submit_date_journal_size;
 
     private File journal_dir;
 
@@ -203,6 +203,9 @@ public class Config {
         }
 
         max_journal_size_mb = Utils.getProperty(config, "journal.size.mb", 10);
+
+        max_submit_date_journal_size = Utils.getProperty(config, "submit.date.journal.size.mb", 10);
+
         journal_dir = new File(Utils.getProperty(config, "journal.dir", System.getProperty("user.dir")+File.separator+"journal"));
 
         final_log_dir = new File(Utils.getProperty(config, "final.log.dir", System.getProperty("user.dir") + File.separator + "final_log"));
@@ -311,7 +314,16 @@ public class Config {
                 String password = p.getString();
 
                 result.setProperty(CONNECTION_PREFIX + systemId + ".password", password);
-                log.debug("Load endpoint: name=" + endpoint_name + ", systemId=" + systemId + ", password=" + password + " .");
+
+                p = s.getParam("send.receipt.speed");
+                int speed = p.getInt();
+                result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.speed", Integer.toString(speed));
+
+                p = s.getParam("send.receipt.max.time.min");
+                int max_time = p.getInt();
+                result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.max.time.min", Integer.toString(max_time));
+
+                log.debug("Load endpoint: name=" + endpoint_name + ", systemId=" + systemId + ", password=" + password + ", speed="+speed+", max_time="+max_time);
             } else {
                 log.debug("Endpoint '" + endpoint_name + "' is disabled.");
             }
@@ -483,4 +495,7 @@ public class Config {
         return initial_receipts_sn_rang;
     }
 
+    public int getMaxSubmitDateJournalSize() {
+        return max_submit_date_journal_size;
+    }
 }

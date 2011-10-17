@@ -179,7 +179,7 @@ public abstract class T {
         properties.setProperty("informer.sending.timeout.mls","30000");
         properties.setProperty("file.monitor.interval.mls","30000");
         properties.setProperty("journal.size.mb","10");
-        properties.setProperty("journal.clean.timeout.msl","30000");
+        properties.setProperty("journal.cleanJournal.timeout.msl","30000");
         properties.setProperty("resend.receipts.interval.sec","30");
         properties.setProperty("resend.receipts.timeout.sec","30");
         properties.setProperty("resend.receipts.max.timeout.min","720");

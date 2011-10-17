@@ -273,21 +273,21 @@ public class Data implements Cloneable{
 
     public boolean equals(Data data){
 
-        boolean b1 = false;
+        boolean b1;
         if (first_sending_time != null){
             b1 = data.getFirstSendingTime() != null && first_sending_time.equals(data.getFirstSendingTime());
         } else {
             b1 = data.getFirstSendingTime() == null;
         }
 
-        boolean b2 = false;
+        boolean b2;
         if (last_resending_time != null){
             b2 = data.getLastResendTime() != null && last_resending_time.equals(data.getLastResendTime());
         } else {
             b2 = data.getLastResendTime() == null;
         }
 
-        boolean b3 = false;
+        boolean b3;
         if (sequence_number != null){
             b3 = data.getSequenceNumber() != null && sequence_number.equals(data.getSequenceNumber());
         } else {
@@ -344,7 +344,8 @@ public class Data implements Cloneable{
         EXPIRED_MAX_TIMEOUT,
         NOT_SEND,
         INIT,
-        DELETED
+        DELETED,
+        PERM_ERROR
 
     }
 }
