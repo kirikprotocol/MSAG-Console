@@ -42,7 +42,8 @@ typedef enum
     EXC_ACCESSDENIED,      // access denied
     EXC_BADADDRESS,        // invalid srd/dst address
     EXC_EXPIRED,           // request/resource expired
-    EXC_BADFORMAT          // parsing failed (in alm)
+    EXC_BADFORMAT,         // parsing failed (in alm)
+    EXC_BADMESSAGE         // bad message component
 } ErrorCode;
 
 

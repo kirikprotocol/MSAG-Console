@@ -280,6 +280,7 @@ void DcpServer::onHandleCommand(eyeline::protogen::ProtocolSocketBase::Packet& p
       case EXC_DLVLIMITEXCEED:err=DcpError::TooManyDeliveries;break;
       case EXC_EXPIRED:err=DcpError::Expired;break;
       case EXC_NOTFOUND:err=DcpError::ItemNotFound;break;
+      case EXC_BADMESSAGE:err=DcpError::BadMessage;break;
       default:break;
     }
     mkFailResponse(pkt.connId,sb.readInt32(),err,e.what());
@@ -491,6 +492,7 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   MessageList lst;
+  try {
   for(std::vector<messages::DeliveryMessage>::const_iterator it=inmsg.getMessages().begin(),end=inmsg.getMessages().end();it!=end;it++)
   {
     lst.push_back(MessageLocker());
@@ -542,6 +544,12 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
         }
         ml.msg.flags.reset( mfb );
     }
+  }
+  } catch ( InfosmeException& e {
+      if (e.getCode() == EXC_BADMESSAGE ) {
+          throw;
+      }
+      throw InfosmeException(EXC_BADMESSAGE,"invalid msg: %s",e.what());
   }
   dlv->addNewMessages(lst.begin(),lst.end());
   messages::AddDeliveryMessagesResp resp;

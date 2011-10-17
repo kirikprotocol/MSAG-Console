@@ -45,12 +45,12 @@ struct Message
 
     inline void setUserData( const char* userDataValue ) {
         if ( strlen(userDataValue) >= MSG_USERDATA_LENGTH ) {
-            throw InfosmeException(EXC_BADNAME, "too long userdata '%s'",userDataValue);
+            throw InfosmeException(EXC_BADMESSAGE, "too long userdata '%s'",userDataValue);
         }
         // user data should not contain invalid chars
         char badchar;
         if ( userDataValue[0] && !isGoodAsciiName(userDataValue,&badchar) ) {
-            throw InfosmeException(EXC_BADNAME, "invalid char in userData: '%c'",badchar);
+            throw InfosmeException(EXC_BADMESSAGE, "invalid char in userData: '%c'",badchar);
         }
         msgUserData = userDataValue;
     }
