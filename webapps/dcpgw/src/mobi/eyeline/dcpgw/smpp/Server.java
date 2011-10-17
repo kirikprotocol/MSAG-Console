@@ -59,7 +59,11 @@ public class Server{
             if (key.startsWith(CONNECTION_PREFIX) && key.endsWith(".password")) {
                 String name = key.substring(CONNECTION_PREFIX.length());
                 name = name.substring(0, name.length() - ".password".length());
-                connections.put(name, new Connection(name));
+
+                int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipts.speed"));
+                int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipt.max.time.min"));
+
+                connections.put(name, new Connection(name, speed, max_time));
                 log.debug("initialize smpp connection "+name);
             }
         }
@@ -89,11 +93,6 @@ public class Server{
         return sn;
     }
 
-    /**
-     * Used for sending SubmitSMResp and DataSMResp to smpp client.
-     * @param resp
-     * @throws SmppException
-     */
     public void send(PDU resp) throws SmppException {
         server.send(resp, false);
     }
@@ -106,8 +105,33 @@ public class Server{
                 if (!properties.containsKey(key)){
                     String name = key.substring(CONNECTION_PREFIX.length());
                     name = name.substring(0, name.length() - ".password".length());
-                    connections.put(name, new Connection(name));
+
+                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipts.speed"));
+                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipt.max.time.min"));
+
+                    connections.put(name, new Connection(name, speed, max_time));
                     log.debug("Initialize new smpp connection "+name);
+                }
+            }
+        }
+
+        // Update parameters for existing connection
+        for (Object skey : new_properties.keySet()) {
+            String key = (String) skey;
+            if (key.startsWith(CONNECTION_PREFIX) && key.endsWith(".password")) {
+                if (properties.containsKey(key)){
+                    String name = key.substring(CONNECTION_PREFIX.length());
+                    name = name.substring(0, name.length() - ".password".length());
+
+                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipts.speed"));
+                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipt.max.time.min"));
+
+                    Connection connection = connections.get(name);
+
+                    connection.setSendReceiptsSpeed(speed);
+                    connection.setSendReceiptMaxTimeout(max_time);
+
+                    log.debug("Update parameters for smpp connection "+name);
                 }
             }
         }

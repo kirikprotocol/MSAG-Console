@@ -20,9 +20,7 @@ import mobi.eyeline.smpp.api.processing.QueueException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 
 public class Gateway extends Thread implements PDUListener {
@@ -58,7 +56,7 @@ public class Gateway extends Thread implements PDUListener {
         Properties properties = config.getProperties();
 
         Journal.getInstance().init(config.getJournalDir(), config.getMaxJournalSize(), config.getMaxSubmitDateJournalSize(),
-                config.getCleanJournalTimeout(), config.getDeliveryRequestLimit());
+                config.getCleanJournalTimeout(), config.getSendReceiptsSpeed());
         try {
             Journal.getInstance().load();
         } catch (CouldNotLoadJournalException e) {

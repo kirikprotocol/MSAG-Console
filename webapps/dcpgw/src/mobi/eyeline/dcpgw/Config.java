@@ -67,10 +67,9 @@ public class Config {
 
     private int resend_receipts_interval;
 
-    private int send_receipts_interval;
-    private int delivery_request_limit;
+    private int send_receipts_speed_default;
     private int delivery_response_timeout;
-    private int resend_receipts_max_timeout;
+    private int send_receipt_max_timeout;
 
     private int journal_clean_timeout;
 
@@ -210,15 +209,13 @@ public class Config {
 
         final_log_dir = new File(Utils.getProperty(config, "final.log.dir", System.getProperty("user.dir") + File.separator + "final_log"));
 
-        send_receipts_interval = Utils.getProperty(config, "send.receipts.interval.mls", 1000);
-
-        delivery_request_limit = Utils.getProperty(config, "send.receipts.sending.limit", 100);
+        send_receipts_speed_default = Utils.getProperty(config, "send.receipts.speed.default", 100);
 
         resend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
 
         delivery_response_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
 
-        resend_receipts_max_timeout = Utils.getProperty(config, "resend.receipts.max.timeout.min", 720);
+        send_receipt_max_timeout = Utils.getProperty(config, "send.receipts.max.timeout.min", 720);
 
         journal_clean_timeout = Utils.getProperty(config, "journal.clean.timeout.msl", 60000);
 
@@ -279,6 +276,9 @@ public class Config {
                 connection.interrupt();
             }
         }
+
+
+
         log.debug("Configuration updated.");
     }
 
@@ -315,9 +315,9 @@ public class Config {
 
                 result.setProperty(CONNECTION_PREFIX + systemId + ".password", password);
 
-                p = s.getParam("send.receipt.speed");
+                p = s.getParam("send.receipts.speed");
                 int speed = p.getInt();
-                result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.speed", Integer.toString(speed));
+                result.setProperty(CONNECTION_PREFIX + systemId + "send.receipts.speed", Integer.toString(speed));
 
                 p = s.getParam("send.receipt.max.time.min");
                 int max_time = p.getInt();
@@ -451,16 +451,12 @@ public class Config {
         return final_log_dir;
     }
 
-    public int getSendReceiptsInterval(){
-        return send_receipts_interval;
-    }
-
     public int getResendReceiptsInterval(){
         return resend_receipts_interval;
     }
 
-    public int getResendReceiptMaxTimeout(){
-        return resend_receipts_max_timeout;
+    public int getSendReceiptMaxTimeout(){
+        return send_receipt_max_timeout;
     }
 
     public int getDeliveryResponseTimeout(){
@@ -471,8 +467,8 @@ public class Config {
         return journal_clean_timeout;
     }
 
-    public int getDeliveryRequestLimit(){
-        return delivery_request_limit;
+    public int getSendReceiptsSpeed(){
+        return send_receipts_speed_default;
     }
 
     public long getInitialMessageIdRang(){

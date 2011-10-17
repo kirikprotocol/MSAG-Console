@@ -48,18 +48,18 @@ public class Journal {
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private int request_limit;
+    private int send_receipts_speed;
 
     // Sumbit date journal
     private File sdj1, sdj2, sdj2t;
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
-    public void init(File journal_dir, int max_journal_size_mb, int max_submit_date_journal_size_mb, int clean_timeout, int request_limit) throws InitializationException{
+    public void init(File journal_dir, int max_journal_size_mb, int max_submit_date_journal_size_mb, int clean_timeout, int send_receipts_speed) throws InitializationException{
         log.debug("Try to initialize journal ...");
         this.max_journal_size_mb = max_journal_size_mb;
         this.max_submit_date_journal_size_mb = max_submit_date_journal_size_mb;
-        this.request_limit = request_limit;
+        this.send_receipts_speed = send_receipts_speed;
 
         if (!journal_dir.exists()) {
             if (!journal_dir.mkdir()) throw new InitializationException("Couldn't create journal directory.");
@@ -170,7 +170,7 @@ public class Journal {
                                 Integer sequence_number = data.getSequenceNumber();
 
                                 if (!connection_sn_data_store.containsKey(connection))
-                                        connection_sn_data_store.put(connection, new Hashtable<Integer, Data>(request_limit));
+                                        connection_sn_data_store.put(connection, new Hashtable<Integer, Data>(send_receipts_speed));
 
                                 if (status == Data.Status.DONE
                                         || status == Data.Status.EXPIRED_MAX_TIMEOUT
@@ -411,6 +411,7 @@ public class Journal {
 
 
                 Set<Long> done_message_ids = new HashSet<Long>();
+                Set<Long> perm_errors_message_ids = new HashSet<Long>();
                 Set<Long> expired_max_messages_ids = new HashSet<Long>();
                 Set<Integer> sequence_numbers = new HashSet<Integer>();
                 Set<Long> processed_message_ids = new HashSet<Long>();
@@ -428,6 +429,9 @@ public class Journal {
                     if (status == Data.Status.DONE || status == Data.Status.EXPIRED_MAX_TIMEOUT) {
                         done_message_ids.add(message_id);
                         //log.debug("finished: message_id="+message_id);
+                    } else if (status == Data.Status.PERM_ERROR){
+                        perm_errors_message_ids.add(message_id);
+                        //log.debug("perm error: message_id="+message_id);
                     } else if (status == Data.Status.DELETED){
                         deleted_messages_ids.add(message_id);
                         //log.debug("deleted: message_id="+message_id);
@@ -466,8 +470,11 @@ public class Journal {
 
                     } else {
                         int sequence_number = Integer.parseInt(ar[4]);
-                        if (!done_message_ids.contains(message_id) && !sequence_numbers.contains(sequence_number)
-                                && !deleted_messages_ids.contains(message_id) && !expired_max_messages_ids.contains(message_id)){
+                        if (!done_message_ids.contains(message_id)
+                                && !sequence_numbers.contains(sequence_number)
+                                    && !deleted_messages_ids.contains(message_id)
+                                        && !expired_max_messages_ids.contains(message_id)
+                                            && !perm_errors_message_ids.contains(message_id)){
                             //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();

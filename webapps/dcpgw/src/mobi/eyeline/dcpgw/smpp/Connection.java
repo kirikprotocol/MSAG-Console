@@ -51,13 +51,17 @@ public class Connection {
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     ScheduledExecutorService resend_delivery_receipts_scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    public Connection(String name){
+    private int send_receipts_speed;
+
+    public Connection(String name, int send_receipts_speed, int send_receipt_max_time_min){
         this.name = name;
+        this.send_receipts_speed = send_receipts_speed;
+        this.send_receipt_max_time = send_receipt_max_time_min;
 
         Config config = Config.getInstance();
         response_timeout = config.getDeliveryResponseTimeout();
-        send_receipt_max_time = config.getResendReceiptMaxTimeout();
-        request_limit = config.getDeliveryRequestLimit();
+        send_receipt_max_time = config.getSendReceiptMaxTimeout();
+        request_limit = config.getSendReceiptsSpeed();
 
         sn_data_table = Journal.getInstance().getDataTable(name);
         queue = Journal.getInstance().getDataQueue(name);
@@ -66,8 +70,6 @@ public class Connection {
         if (sn_data_table == null) sn_data_table = new Hashtable<Integer, Data>();
         if (queue == null) queue = new LinkedBlockingQueue<Data>();
 
-        int t1 = config.getSendReceiptsInterval();
-
         scheduler.scheduleWithFixedDelay(new Runnable() {
 
             @Override
@@ -75,8 +77,7 @@ public class Connection {
                  send();
             }
 
-        }, t1, t1, TimeUnit.MILLISECONDS);
-        log.debug("Initialize scheduler with send interval "+t1+" mls.");
+        }, 1, 1, TimeUnit.SECONDS);
 
         int t2 = config.getResendReceiptsInterval();
 
@@ -324,9 +325,19 @@ public class Connection {
             long init_time = data.getInitTime();
 
             if (current_time - init_time > send_receipt_max_time * 1000 * 60) {
+
                 queue.remove(data);
-                log.debug("Remove "+data.getMessageId()+"_data from "+name+"_queue.");
+                log.debug("Remove " + data.getMessageId() + "_data from " + name + "_queue.");
+
+                data.setStatus(Data.Status.DELETED);
+                try {
+                    journal.write(data);
+                } catch (CouldNotWriteToJournalException e) {
+                    log.error("Couldn't write to journal "+data.getMessageId()+"data.", e);
+                }
+
             }
+
         }
 
         log.debug("Done resend task.");
@@ -404,6 +415,14 @@ public class Connection {
         }
 
         sn_data_table.clear();
+    }
+
+    public void setSendReceiptsSpeed(int send_receipts_speed){
+        this.send_receipts_speed = send_receipts_speed;
+    }
+
+    public void setSendReceiptMaxTimeout(int send_receipt_max_time){
+        this.send_receipt_max_time = send_receipt_max_time;
     }
 
 }
