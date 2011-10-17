@@ -1,3 +1,5 @@
+2011-10-17 13:56 bukind
+  feature: a new error code in dcp: BadMessage=9
 2011-10-10 15:38 bukind
   bugfix: not sending messages near the activity end
 
