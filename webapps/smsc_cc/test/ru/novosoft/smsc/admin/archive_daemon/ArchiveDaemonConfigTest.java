@@ -22,7 +22,7 @@ public class ArchiveDaemonConfigTest {
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(ArchiveDaemonConfigTest.class.getResourceAsStream("config.xml"), ".archivedaemon");
+    configFile = TestUtils.exportResourceToRandomFile(ArchiveDaemonConfigTest.class.getResourceAsStream("daemon.xml"), ".archivedaemon");
   }
 
   @After

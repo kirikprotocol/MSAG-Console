@@ -22,6 +22,8 @@ public class InitListener implements ServletContextListener {
 
   private static final Logger logger = Logger.getLogger(InitListener.class);
 
+  private AdminContext context;
+
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
       System.setProperty("java.security.auth.login.config",
@@ -29,21 +31,19 @@ public class InitListener implements ServletContextListener {
 
       WebXml webXml = new WebXml(new File(servletContextEvent.getServletContext().getRealPath("WEB-INF/web.xml")));
 
-      AdminContext adminContext;
-
       File webconfig = new File(System.getProperty("smsc.config.webconfig"));
       File appBaseDir = new File(System.getProperty("smsc.base.dir"));
 
       if(Mode.testMode) {
-        adminContext = (AdminContext)Class.forName("ru.novosoft.smsc.admin.TestAdminContext").
+        context = (AdminContext)Class.forName("ru.novosoft.smsc.admin.TestAdminContext").
             getConstructor(File.class, File.class).newInstance(appBaseDir, webconfig);
       }else {
-        adminContext = new AdminContext(appBaseDir, webconfig);
+        context = new AdminContext(appBaseDir, webconfig);
       }
 
-      Authenticator authenticator = new AuthenticatorImpl(adminContext.getUsersManager());
+      Authenticator authenticator = new AuthenticatorImpl(context.getUsersManager());
 
-      WebContext.init(authenticator, webXml, adminContext);
+      WebContext.init(authenticator, webXml, context);
 
       servletContextEvent.getServletContext().setAttribute("smsc-version", readVersion(servletContextEvent.getServletContext().getRealPath("META-INF")));
 
@@ -55,8 +55,7 @@ public class InitListener implements ServletContextListener {
   }
 
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
-
-
+    context.shutdown();
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})

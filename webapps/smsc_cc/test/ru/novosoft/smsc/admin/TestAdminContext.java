@@ -24,6 +24,7 @@ import ru.novosoft.smsc.admin.msc.MscManagerImplTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProviderTest;
+import ru.novosoft.smsc.admin.perfmon.TestPerfMonitorManager;
 import ru.novosoft.smsc.admin.profile.TestProfileManager;
 import ru.novosoft.smsc.admin.provider.TestProviderManager;
 import ru.novosoft.smsc.admin.region.RegionsConfigTest;
@@ -73,7 +74,7 @@ public class TestAdminContext extends AdminContext {
 
     File adDir = new File(servicesDir, "ArchiveDaemon/conf");
     adDir.mkdirs();
-    TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("config.xml"), new File(adDir, "config.xml"), false);
+    TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("daemon.xml"), new File(adDir, "daemon.xml"), false);
 
     File smscDir = new File(servicesDir, "SMSC1/conf");
     smscDir.mkdirs();
@@ -226,6 +227,7 @@ public class TestAdminContext extends AdminContext {
         return fileSystem;
       }
     });
+    perfMonitorManager = new TestPerfMonitorManager(cfg.getPerfMonitorPorts());
   }
 
   public TestAdminContext() throws AdminException {

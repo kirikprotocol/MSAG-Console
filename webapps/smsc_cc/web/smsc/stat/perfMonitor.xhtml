@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition>
+
+  <html>
+  <head>
+    <title>#{msg['permonance.monitor']}#{perfmon.instance+1}</title>
+  </head>
+  <body>
+  <h:panelGroup rendered="#{perfmon.show}">
+    <applet code="ru.novosoft.smsc.web.applets.perfmon.PerfMon.class" width="100%" height="97%" archive="perfmon.jar">
+      <param name="locale.language" value="#{perfmon.localeS}"/>
+      <param name="port" value="#{perfmon.port}"/>
+      <param name="host" value="#{facesContext.externalContext.request.serverName}"/>
+    </applet>
+  </h:panelGroup>
+  </body>
+  </html>
+</ui:composition>
+
+
+</html>

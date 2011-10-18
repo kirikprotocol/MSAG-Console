@@ -35,4 +35,10 @@
     <param name="last used category id" type="int">3</param>
   </section>
 
+  <section name="perfmon">
+    <param name="appletPort0" type="int">25020</param>
+    <param name="appletPort1" type="int">25021</param>
+    <param name="appletPort2" type="int">25022</param>
+    <param name="support64Bit" type="bool">false</param>
+  </section>
 </config>

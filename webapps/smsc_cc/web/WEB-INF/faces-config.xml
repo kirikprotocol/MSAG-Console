@@ -374,6 +374,12 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>perfmon</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.perfmon.PerfmonController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>

@@ -26,7 +26,7 @@ public class ArchiveDaemonManagerImpl implements ArchiveDaemonManager {
     ServiceInfo info = getInfo();
     File archiveDaemonConf = new File(info.getBaseDir(), "conf");
     File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
-    this.cfgFileManager = new ConfigFileManager<ArchiveDaemonSettings>(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fs, new ArchiveDaemonConfig());
+    this.cfgFileManager = new ConfigFileManager<ArchiveDaemonSettings>(new File(archiveDaemonConf, "daemon.xml"), archiveDaemonBackup, fs, new ArchiveDaemonConfig());
   }
 
   public static boolean isDaemonDeployed(ServiceManager serviceManager) throws AdminException {

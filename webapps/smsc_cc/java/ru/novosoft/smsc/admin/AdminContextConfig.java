@@ -2,11 +2,14 @@ package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
+import ru.novosoft.smsc.util.config.XmlConfigParam;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Класс для работы с конфигурационным файлом webconfig.xml
@@ -114,5 +117,38 @@ class AdminContextConfig {
     }    
   }
 
+  private static final String perfMonPref = "appletPort";
+
+  public int[] getPerfMonitorPorts() throws AdminException {
+    try {
+      XmlConfigSection perfmon = webconfig.getSection("perfmon");
+      Map<Integer, Integer> m = new TreeMap<Integer, Integer>();
+      for(XmlConfigParam p : perfmon.params()){
+        if(p.getName().startsWith(perfMonPref)) {
+          m.put(Integer.parseInt(p.getName().substring(perfMonPref.length())), p.getInt());
+        }
+      }
+      int[] res = new int[m.size()];
+      int i = 0;
+      for(int p : m.values()) {
+        res[i] = p;
+        i++;
+      }
+      return res;
+    } catch (NumberFormatException e){
+      throw new AdminContextException("invalid_config", e);
+    } catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }
+  }
+
+  public boolean isPerfMonSupport64Bit() throws AdminException {
+    try {
+      XmlConfigSection perfmon = webconfig.getSection("perfmon");
+      return perfmon.getBool("support64Bit");
+    } catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }
+  }
 
 }

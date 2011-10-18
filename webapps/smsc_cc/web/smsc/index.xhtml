@@ -14,9 +14,10 @@
     .valueColumn {width: 100%; text-align: left; padding-right: 10px; }
 
     .connectedColumn {width: 2%;}
-    .instanceColumn {width: 25%;}
-    .hostColumn {width: 25%;}
-    .statusColumn {width: 25%;}
+    .instanceColumn {width: 20%;}
+    .hostColumn {width: 20%;}
+    .statusColumn {width: 20%;}
+    .perfColumn {width: 20%; text-align: center;}
   </ui:define>
 
   <ui:define name="content">
@@ -48,6 +49,12 @@
             </h:panelGroup>
             <h:panelGroup rendered="#{data.onlineHost == null}">
               <h:outputText value="-"/>
+            </h:panelGroup>
+          </eye:column>
+
+          <eye:column name="perf" title="#{msg['permonance.monitor.perfomance']}" columnClass="perfColumn">
+            <h:panelGroup rendered="#{data.onlineHost != null}">
+              <a href="#{facesContext.externalContext.requestContextPath}/smsc/stat/perfMonitor.faces?instance=#{data.instanceNumber}">#{msg['permonance.monitor.monitor']}</a>
             </h:panelGroup>
           </eye:column>
 

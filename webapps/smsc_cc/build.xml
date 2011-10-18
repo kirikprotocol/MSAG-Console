@@ -139,13 +139,19 @@ public class AdminMode {${line.separator}
     <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.test.classes}"/>
   </target>
 
+  <target name="perfmon.exploded">
+    <jar destfile="${smsc.exploded.dir}/smsc/stat/perfmon.jar">
+      <fileset dir="${smsc.source.classes}" includes="ru/novosoft/smsc/web/applets/perfmon/**/*,ru/novosoft/smsc/util/applet/**/*,ru/novosoft/smsc/admin/perfmon/**/*"/>
+    </jar>
+  </target>
+
 
   <target name="predistr.prod" unless="is.dev">
     <echo>PRODUCTION</echo>         
     <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.source.classes}"/>
   </target>
 
-  <target name="distr" depends="weave.sources, exploded, predistr.dev,predistr.prod">
+  <target name="distr" depends="weave.sources, exploded, predistr.dev,predistr.prod,perfmon.exploded">
     <delete dir="${smsc.distr.dir}" failonerror="false"/>
     <mkdir dir="${smsc.distr.dir}"/>
     <war destfile="${smsc.distr.dir}/smsc.war" basedir="${smsc.exploded.dir}" webxml="${smsc.exploded.dir}/WEB-INF/web.xml">

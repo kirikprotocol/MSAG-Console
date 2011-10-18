@@ -23,6 +23,8 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImpl;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImpl;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
+import ru.novosoft.smsc.admin.perfmon.PerfMonitorContext;
+import ru.novosoft.smsc.admin.perfmon.PerfMonitorManager;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.profile.ProfileManagerImpl;
 import ru.novosoft.smsc.admin.provider.ProfiledManagerImpl;
@@ -50,6 +52,7 @@ import ru.novosoft.smsc.admin.timezone.TimezoneManager;
 import ru.novosoft.smsc.admin.timezone.TimezoneManagerImpl;
 import ru.novosoft.smsc.admin.users.UsersManager;
 import ru.novosoft.smsc.admin.users.UsersManagerImpl;
+import ru.novosoft.smsc.util.InetAddress;
 
 import java.io.File;
 
@@ -93,6 +96,8 @@ public class AdminContext {
   protected OperativeStoreManager operativeStoreManager;
 
   protected SmscStatProvider smscStatProvider;
+
+  protected PerfMonitorManager perfMonitorManager;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -172,6 +177,8 @@ public class AdminContext {
 
     loggerManager = new LoggerManagerImpl(clusterController);
 
+    perfMonitorManager = new PerfMonitorManager(new PerfMonitorContextImpl(cfg.isPerfMonSupport64Bit(), cfg.getPerfMonitorPorts(), smscManager));
+
     File[] operativeStorages = new File[s.getSmscInstancesCount()];
     for (int i=0;i<s.getSmscInstancesCount(); i++) {
       InstanceSettings is = s.getInstanceSettings(i);
@@ -183,6 +190,10 @@ public class AdminContext {
     smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem));
 
     AdminContextLocator.registerContext(this);
+  }
+
+  public PerfMonitorManager getPerfMonitorManager() {
+    return perfMonitorManager;
   }
 
   public FileSystem getFileSystem() {
@@ -289,7 +300,19 @@ public class AdminContext {
    * Деинициализирует контекст.
    */
   public void shutdown() {
-    clusterController.shutdown();
+    try{
+      clusterController.shutdown();
+    }catch (Exception e){
+      e.printStackTrace();
+    }
+    if(perfMonitorManager != null) {
+      try{
+        perfMonitorManager.shutdown();
+      }catch (Exception e){
+        e.printStackTrace();
+      }
+    }
+    System.out.println("Exit");
     AdminContextLocator.unregisterContext(this);
   }
 
@@ -315,6 +338,41 @@ public class AdminContext {
 
     public FileSystem getFileSystem() {
       return fileSystem;
+    }
+  }
+
+  protected static class PerfMonitorContextImpl implements PerfMonitorContext {
+
+    private final boolean support64Bit;
+    private final int[] appletports;
+
+    private final SmscManager smscManager;
+
+    public PerfMonitorContextImpl(boolean support64Bit, int[] appletports, SmscManager smscManager) {
+      this.support64Bit = support64Bit;
+      this.appletports = appletports;
+      this.smscManager = smscManager;
+    }
+
+    public InetAddress getPerfMonitorAddress(int instance) throws AdminException {
+      InstanceSettings is = smscManager.getSettings().getInstanceSettings(instance);
+      return new InetAddress(is.getCorePerfHost(), is.getCorePerfPort());
+    }
+
+    public int getPerfMonitorCount() throws AdminException {
+      return appletports.length;
+    }
+
+    public int getAppletPort(int instance) throws AdminException {
+      try{
+        return appletports[instance];
+      }catch (IndexOutOfBoundsException e) {
+        return -1;
+      }
+    }
+
+    public boolean isSupport64Bit() throws AdminException {
+      return support64Bit;
     }
   }
 }

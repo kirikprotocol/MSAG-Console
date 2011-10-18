@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
+import ru.novosoft.smsc.admin.perfmon.PerfMonitorManager;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
@@ -74,6 +75,7 @@ public class WebContext {
   private final OperativeStoreManager operativeStoreManager;
   private final ArchiveDaemon archiveDaemon;
   private final SmscStatProvider smscStatProvider;
+  private final PerfMonitorManager perfMonitorManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -131,6 +133,7 @@ public class WebContext {
     operativeStoreManager = adminContext.getOperativeStoreManager();
     archiveDaemon = adminContext.getArchiveDaemon();
     smscStatProvider = adminContext.getSmscStatProvider();
+    perfMonitorManager = adminContext.getPerfMonitorManager();
   }
 
   public WebXml getWebXml() {
@@ -144,6 +147,10 @@ public class WebContext {
     } catch (InterruptedException e) {
       return null;
     }
+  }
+
+  public PerfMonitorManager getPerfMonitorManager() {
+    return perfMonitorManager;
   }
 
   public AclManager getAclManager() {
