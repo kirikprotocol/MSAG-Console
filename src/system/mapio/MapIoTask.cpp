@@ -714,7 +714,7 @@ void MapIoTask::dispatcher(int idx)
     {
       __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
       message.msg_p[5] = 0x24;
-    } else if ( message.primitive == 0x9f && message.size == 11 && message.msg_p[8] == 0x22 )
+    } else if ( message.primitive==0x9f && (message.size==11 || message.size==12) && message.msg_p[8] == 0x22 )
     {
       __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
       message.msg_p[8] = 0x24;
