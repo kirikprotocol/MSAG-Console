@@ -17,7 +17,7 @@ public class PerfMonitorManager {
 
   private final PerfMonitorContext context;
 
-  public PerfMonitorManager(PerfMonitorContext context) throws AdminException{
+  public PerfMonitorManager(PerfMonitorContext context) throws AdminException {
     this.context = context;
     initPerfServers();
   }
@@ -26,25 +26,25 @@ public class PerfMonitorManager {
     return new PerfServer(clientPort, smscAddress, support64Bit);
   }
 
-  private void initPerfServers() throws AdminException{
+  private void initPerfServers() throws AdminException {
     int count = context.getPerfMonitorCount();
     perfServer = new PerfServer[count];
-    try{
-      for(int i=0; i<count;i++) {
+    try {
+      for (int i = 0; i < count; i++) {
         InetAddress address = context.getPerfMonitorAddress(i);
         perfServer[i] = createServer(context.getAppletPort(i), address, context.isSupport64Bit());
         perfServer[i].start();
       }
-    }catch (IOException e) {
+    } catch (IOException e) {
       logger.error(e, e);
       throw new PerfMonitorException("io_error", e);
     }
   }
 
   public int getAppletPort(int instance) throws AdminException {
-    try{
+    try {
       return context.getAppletPort(instance);
-    }catch (IndexOutOfBoundsException e) {
+    } catch (IndexOutOfBoundsException e) {
       return -1;
     }
   }
@@ -55,11 +55,12 @@ public class PerfMonitorManager {
   }
 
   public void shutdown() {
-    if(perfServer != null) {
-      for(PerfServer s : perfServer) {
-        try{
+    if (perfServer != null) {
+      for (PerfServer s : perfServer) {
+        try {
           s.shutdown();
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
       }
     }
   }

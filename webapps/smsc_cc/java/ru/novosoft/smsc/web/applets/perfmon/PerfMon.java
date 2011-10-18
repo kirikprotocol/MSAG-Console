@@ -22,43 +22,43 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 //  StatInfoPanel stat_p;
   public static final int VIEWMODE_IO = 0;
   public static final int VIEWMODE_SEPARATE = 1;
-  AdvancedLabel uptimeLabel;
-  AdvancedLabel sctimeLabel;
-  PerformanceBar perfbar;
-  LabelGroup perfTableLG;
-  PerfInfoTable perfTable;
-  PerfQueueTable perfQueue;
-  PerformanceGraph perfGraph;
-  Label connectingLabel;
-  PopupMenu popupMenu;
-  MenuItem menuSwitch;
-  MenuItem menuMsu;
-  CheckboxMenuItem menuInput;
-  CheckboxMenuItem menuOutput;
-  CheckboxMenuItem menuSubmitErr;
-  CheckboxMenuItem menuSubmit;
-  CheckboxMenuItem menuRetry;
-  CheckboxMenuItem menuTempErr;
-  CheckboxMenuItem menuDeliverErr;
-  CheckboxMenuItem menuDeliver;
-  Menu menuIncrease;
-  Menu menuDecrease;
-  MenuItem menuIncrScale;
-  MenuItem menuIncrBlock;
-  MenuItem menuIncrPix;
-  MenuItem menuDecrScale;
-  MenuItem menuDecrBlock;
-  MenuItem menuDecrPix;
+  private AdvancedLabel uptimeLabel;
+  private AdvancedLabel sctimeLabel;
+  private PerformanceBar perfbar;
+  private LabelGroup perfTableLG;
+  private PerfInfoTable perfTable;
+  private PerfQueueTable perfQueue;
+  private PerformanceGraph perfGraph;
+  private Label connectingLabel;
+  private PopupMenu popupMenu;
+  private MenuItem menuSwitch;
+  private MenuItem menuMsu;
+  private CheckboxMenuItem menuInput;
+  private CheckboxMenuItem menuOutput;
+  private CheckboxMenuItem menuSubmitErr;
+  private CheckboxMenuItem menuSubmit;
+  private CheckboxMenuItem menuRetry;
+  private CheckboxMenuItem menuTempErr;
+  private CheckboxMenuItem menuDeliverErr;
+  private CheckboxMenuItem menuDeliver;
+  private Menu menuIncrease;
+  private Menu menuDecrease;
+  private MenuItem menuIncrScale;
+  private MenuItem menuIncrBlock;
+  private MenuItem menuIncrPix;
+  private MenuItem menuDecrScale;
+  private MenuItem menuDecrBlock;
+  private MenuItem menuDecrPix;
 
-  public ResourceBundle localeText;
-  public Locale locale;
-  public SimpleDateFormat dateFormat;
+  private ResourceBundle localeText;
+  private Locale locale;
+  private SimpleDateFormat dateFormat;
   public SimpleDateFormat gridFormat;
   int pixPerSecond = 2;
   int scale = 200;
   int block = 8;
-  int vLightGrid = 4;
-  int vMinuteGrid = 12;
+  private int vLightGrid = 4;
+  private int vMinuteGrid = 12;
 
   int viewMode = VIEWMODE_IO;
   boolean viewInputEnabled = true;
@@ -75,7 +75,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public void init() {
     System.out.println("Initing...");
     locale = new Locale(getParameter("locale.language").toLowerCase());
-    System.out.println("Locale: "+locale);
+    System.out.println("Locale: " + locale);
     localeText = ResourceBundle.getBundle("ru.novosoft.smsc.web.applets.perfmon.text", locale);
     dateFormat = new SimpleDateFormat(localeText.getString("sctime"));
     gridFormat = new SimpleDateFormat(localeText.getString("gridtime"));
@@ -119,7 +119,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     validate();
   }
 
-  protected void gotFirstSnap(PerfSnap snap) {
+  void gotFirstSnap(PerfSnap snap) {
     remove(connectingLabel);
 
     GridBagConstraints gbc = new GridBagConstraints();
@@ -263,22 +263,18 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     validate();
   }
 
-  boolean isStopping = false;
+  private boolean isStopping = false;
 
-  protected String verbDigit(String key, int number)
-  {
+  String verbDigit(String key, int number) {
     if (number >= 10 && number < 20) return localeText.getString(key + "5");
     int i = number % 10;
     if (i == 0) {
       return localeText.getString(key + "5");
-    }
-    else if (i == 1) {
+    } else if (i == 1) {
       return localeText.getString(key + "1");
-    }
-    else if (i < 5) {
+    } else if (i < 5) {
       return localeText.getString(key + "2");
-    }
-    else {
+    } else {
       return localeText.getString(key + "5");
     }
   }
@@ -332,11 +328,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
           is = new DataInputStream(sock.getInputStream());
           PerfSnap snap = new PerfSnap(Boolean.parseBoolean(getParameter("support64Bit")));
           snap.read(is);
-          snap.calc(locale);
+          snap.calc();
           gotFirstSnap(snap);
           while (!isStopping) {
             snap.read(is);
-            snap.calc(locale);
+            snap.calc();
 //              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVER]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
             uptimeLabel.setText(convert(snap.strUptime));
             sctimeLabel.setText(convert(snap.strSctime));
@@ -377,8 +373,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     System.out.println("Connection thread stopped");
   }
 
-  Image offscreen;
-  final Object semaphore = new Object();
+  private Image offscreen;
+  private final Object semaphore = new Object();
 
   public void invalidate() {
 //      synchronized (semaphore) {
@@ -393,7 +389,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
   public void paint(Graphics gg) {
     Dimension sz = getSize();
-    Image screen = null;
+    Image screen;
     synchronized (semaphore) {
       screen = offscreen;
       if (offscreen == null) {

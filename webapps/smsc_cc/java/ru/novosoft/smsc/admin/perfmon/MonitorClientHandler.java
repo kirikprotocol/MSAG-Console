@@ -11,12 +11,12 @@ import java.net.SocketException;
 
 public class MonitorClientHandler extends Thread {
 
-  private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
+  private final org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
 
   private Socket sock;
-  private  Socket smscSock;
+  private Socket smscSock;
   private PerfServer server;
-  private  SnapBufferReader inbuf = new SnapBufferReader();
+  private final SnapBufferReader inbuf = new SnapBufferReader();
 
   private final boolean support64Bit;
 
@@ -81,7 +81,7 @@ public class MonitorClientHandler extends Thread {
 
   public void run() {
     handle();
-    if(server != null) {
+    if (server != null) {
       server.removeHandler(this);
     }
     synchronized (shutSemaphore) {
@@ -89,7 +89,7 @@ public class MonitorClientHandler extends Thread {
     }
   }
 
-  protected void readSnap(InputStream istream, PerfSnap snap)
+  void readSnap(InputStream istream, PerfSnap snap)
       throws IOException {
     int len = inbuf.readNetworkInt(istream);
     inbuf.fill(istream, len - 4);
@@ -114,7 +114,8 @@ public class MonitorClientHandler extends Thread {
         shutSemaphore.wait();
       } catch (InterruptedException ignored) {
       }
-    }  }
+    }
+  }
 
 
 }

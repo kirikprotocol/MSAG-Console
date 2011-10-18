@@ -6,19 +6,18 @@ import java.awt.*;
 import java.util.ResourceBundle;
 
 
-public class PerfInfoTable extends Canvas {
+class PerfInfoTable extends Canvas {
 
-  static final int pad = 1;
-  static final int grid = 1;
-  static final int numHeads = 6;
-  static final int numRows = 3;
-  static final int colorShift = 16;
+  private static final int pad = 1;
+  private static final int grid = 1;
+  private static final int numHeads = 6;
+  private static final int numRows = 3;
+  private static final int colorShift = 16;
 
-  static final Color bgColor = SystemColor.control;
-  static final Color shadowColor = SystemColor.controlShadow;
-  static final Color lightShadowColor = SystemColor.controlLtHighlight;
-  static final Color textColor = SystemColor.textText;
-  static Color[] headsColor = null;
+  private static final Color bgColor = SystemColor.control;
+  private static final Color shadowColor = SystemColor.controlShadow;
+  private static final Color textColor = SystemColor.textText;
+  private static final Color[] headsColor;
 
   static {
     headsColor = new Color[numHeads];
@@ -54,17 +53,15 @@ public class PerfInfoTable extends Canvas {
     }
   }
 
-  ;
+  private PerfSnap snap;
+  private final Dimension prefSize;
+  private Image offscreen;
+  private int columnWidth;
 
-  PerfSnap snap;
-  Dimension prefSize;
-  Image offscreen;
-  int columnWidth;
+  private final String[] heads;
+  private final String[] rows;
 
-  String heads[];
-  String rows[];
-
-  private PerfMon perfMon;
+  private final PerfMon perfMon;
 
   public PerfInfoTable(PerfSnap snap, ResourceBundle bundle, PerfMon perfMon) {
     this.snap = new PerfSnap(snap);
@@ -102,10 +99,6 @@ public class PerfInfoTable extends Canvas {
     super.invalidate();
   }
 
-  public Dimension getPrefferedSize() {
-    return prefSize;
-  }
-
   public Dimension getMinimumSize() {
     return prefSize;
   }
@@ -128,8 +121,8 @@ public class PerfInfoTable extends Canvas {
       int y = fm.getHeight() + pad + grid;
       int height = sz.height - y - pad;
       int x = columnWidth + grid + pad;
-      for (int i = 0; i < headsColor.length; i++) {
-        g.setColor(headsColor[i]);
+      for (Color aHeadsColor : headsColor) {
+        g.setColor(aHeadsColor);
         g.fillRect(x, y, columnWidth, height);
         x += columnWidth;
       }
@@ -161,9 +154,9 @@ public class PerfInfoTable extends Canvas {
 
     {
       // draw counters
-      drawCounters(g, snap.last, sz, fm, 1);
-      drawCounters(g, snap.avg, sz, fm, 2);
-      drawCounters(g, snap.total, sz, fm, 3);
+      drawCounters(g, snap.last, fm, 1);
+      drawCounters(g, snap.avg, fm, 2);
+      drawCounters(g, snap.total, fm, 3);
     }
 
     {
@@ -193,7 +186,7 @@ public class PerfInfoTable extends Canvas {
     g.dispose();
   }
 
-  void drawCounters(Graphics g, long counters[], Dimension sz, FontMetrics fm, int col) {
+  void drawCounters(Graphics g, long counters[], FontMetrics fm, int col) {
     g.setColor(textColor);
     int y = fm.getHeight() + 2 * pad + grid;
     int x = columnWidth;

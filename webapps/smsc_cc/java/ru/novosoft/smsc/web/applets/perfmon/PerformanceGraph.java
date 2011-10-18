@@ -9,9 +9,9 @@ import java.util.Vector;
 /**
  * author: Aleksandr Khalitov
  */
-public class PerformanceGraph extends Canvas {
-  static final int pixInGrid = 5;
-  static final int pad = 2;
+class PerformanceGraph extends Canvas {
+  private static final int pixInGrid = 5;
+  private static final int pad = 2;
   private static final int MAX_SNAP_LIST_SIZE = 4096;
 
   private static final Color colorBackground = Color.black;
@@ -24,25 +24,24 @@ public class PerformanceGraph extends Canvas {
   private static final Color colorGraphRetry = Color.cyan;
   private static final Color colorGraphSubmit = Color.blue;
   private static final Color colorGraphSubmitErr = Color.white;
-  private static final Color colorGraphTotal = Color.white;
 
-  Image offscreen;
-  int numGrids = 1;
-  int gridsInBlock = 1;
-  int bottomSpace = pad;
-  int topSpace = pad;
-  int graphWidth = 0;
+  private Image offscreen;
+  private int numGrids = 1;
+  private int gridsInBlock = 1;
+  private int bottomSpace = pad;
+  private int topSpace = pad;
+  private int graphWidth = 0;
 
-  int vertNumGrids = 0;
-  int vertGridWidth = 5;
-  int vertLightGrid = 4;
-  int vertMinuteGrid;
+  private int vertNumGrids = 0;
+  private final int vertGridWidth = 5;
+  private int vertLightGrid = 4;
+  private final int vertMinuteGrid;
 
-  Dimension prefsz = new Dimension(80, 200);
+  private final Dimension prefsz = new Dimension(80, 200);
 
-  Vector snaps = new Vector(MAX_SNAP_LIST_SIZE);
+  private final Vector snaps = new Vector(MAX_SNAP_LIST_SIZE);
 
-  private PerfMon perfMon;
+  private final PerfMon perfMon;
 
 
   public PerformanceGraph(int vertLightGrid, int vertMinuteGrid, PerfSnap snap, PerfMon perfMon) {
@@ -211,7 +210,7 @@ public class PerformanceGraph extends Canvas {
     g.dispose();
   }
 
-  protected void drawGraphLine(Graphics g, int y, int x, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, int maxheight, Color color) {
+  void drawGraphLine(Graphics g, int y, int x, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, int maxheight, Color color) {
     if (snapVal == 0 && prevSnapVal == 0) return;
     g.setColor(color);
     g.drawLine(x, y - (maxheight * (snapVal + underGraphVal)) / perfMon.scale, x + perfMon.pixPerSecond, y - (maxheight * (prevSnapVal + underGraphPrevVal)) / perfMon.scale);

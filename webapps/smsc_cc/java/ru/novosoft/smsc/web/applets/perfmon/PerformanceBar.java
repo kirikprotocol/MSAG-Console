@@ -8,27 +8,25 @@ import java.util.ResourceBundle;
 /**
  * author: Aleksandr Khalitov
  */
-public class PerformanceBar extends Canvas {
-  String bottomString;
-  Image offscreen;
-  int pixInGrid = 5;
-  int numGrids = 1;
-  int gridsInBlock = 1;
-  int pad = 2;
-  int bottomSpace = pad;
-  int topSpace = pad;
-  int graphWidth = 58;
-  int barWidth = 46;
-  int midBarWidth = 2;
-  int sepBarWidth = 2;
-  int textwidth = 0;
-  int numGraphs = 6;
+class PerformanceBar extends Canvas {
+  private final String bottomString;
+  private Image offscreen;
+  private final int pixInGrid = 5;
+  private int numGrids = 1;
+  private int gridsInBlock = 1;
+  private final int pad = 2;
+  private int bottomSpace = pad;
+  private int topSpace = pad;
+  private final int graphWidth = 58;
+  private final int barWidth = 46;
+  private final int midBarWidth = 2;
+  private final int sepBarWidth = 2;
+  private int textwidth = 0;
+  private final int numGraphs = 6;
 
-  Dimension prefsz = new Dimension(88, 200);
+  private final Dimension prefsz = new Dimension(88, 200);
 
-  PerfSnap snap;
-
-  private final ResourceBundle bundle;
+  private PerfSnap snap;
 
   private final PerfMon perfMon;
 
@@ -36,7 +34,6 @@ public class PerformanceBar extends Canvas {
     super();
     this.snap = snap;
     this.perfMon = perfMon;
-    this.bundle = bundle;
     bottomString = bundle.getString("sms.per.s");
   }
 
@@ -64,17 +61,17 @@ public class PerformanceBar extends Canvas {
     super.invalidate();
   }
 
-  Color colorText = Color.green;
-  Color colorBackground = Color.black;
-  Color colorGrid = new Color(0, 64, 0);
-  Color colorGridLight = new Color(0, 128, 0);
-  Color colorShadowBar = new Color(0, 96, 0);
-  Color colorBarDeliver = Color.green;
-  Color colorBarTempErr = Color.orange;
-  Color colorBarDeliverErr = Color.red;
-  Color colorBarSubmit = Color.blue;
-  Color colorBarSubmitErr = Color.white;
-  Color colorBarRetry = Color.cyan;
+  private final Color colorText = Color.green;
+  private final Color colorBackground = Color.black;
+  private final Color colorGrid = new Color(0, 64, 0);
+  private final Color colorGridLight = new Color(0, 128, 0);
+  private final Color colorShadowBar = new Color(0, 96, 0);
+  private final Color colorBarDeliver = Color.green;
+  private final Color colorBarTempErr = Color.orange;
+  private final Color colorBarDeliverErr = Color.red;
+  private final Color colorBarSubmit = Color.blue;
+  private final Color colorBarSubmitErr = Color.white;
+  private final Color colorBarRetry = Color.cyan;
 
   public synchronized void paint(Graphics gg) {
     Dimension size = getSize();
@@ -148,7 +145,7 @@ public class PerformanceBar extends Canvas {
     } else {
       int smallBarWidth = (barWidth - sepBarWidth * (numGraphs - 1)) / numGraphs;
 
-      int barheight = 0;
+      int barheight;
 
       // last submit ok bar
       g.setColor(colorBarSubmit);

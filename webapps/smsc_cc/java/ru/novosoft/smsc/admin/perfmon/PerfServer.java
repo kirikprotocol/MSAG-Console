@@ -12,9 +12,9 @@ import java.util.List;
 
 
 public class PerfServer extends Thread {
-  private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
-  protected int appletPort;
-  protected final InetAddress address;
+  private final org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
+  private final int appletPort;
+  private final InetAddress address;
   private final ServerSocket ssock;
   private final List<MonitorClientHandler> handlers = new LinkedList<MonitorClientHandler>();
   private final boolean support64Bit;
@@ -42,7 +42,7 @@ public class PerfServer extends Thread {
     }
   }
 
-  boolean isStopping = false;
+  private boolean isStopping = false;
   private final Object shutSemaphore = new Object();
 
   public void shutdown() {
@@ -90,7 +90,7 @@ public class PerfServer extends Thread {
   public void run() {
     try {
       while (!isStopping) {
-        Socket sock = null;
+        Socket sock;
         try {
           sock = ssock.accept();
           handleClientSocket(sock);

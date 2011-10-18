@@ -6,7 +6,7 @@ import ru.novosoft.smsc.admin.AdminException;
  * author: Aleksandr Khalitov
  */
 class PerfMonitorException extends AdminException {
-  protected PerfMonitorException(String key, Throwable cause) {
+  PerfMonitorException(String key, Throwable cause) {
     super(key, cause);
   }
 

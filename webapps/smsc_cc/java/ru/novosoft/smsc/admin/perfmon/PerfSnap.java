@@ -4,12 +4,11 @@ import ru.novosoft.smsc.util.applet.SnapBufferReader;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Locale;
 
 public class PerfSnap {
-  public long last[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  public long avg[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  public long total[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  public final long[] last = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  public final long[] avg = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  public final long[] total = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   public long uptime;
   public long sctime;
@@ -27,16 +26,16 @@ public class PerfSnap {
   public final static int IDX_DELIVER = 3;
   public final static int IDX_DELIVERERR = 4;
   public final static int IDX_TEMPERR = 5;
-  public final static int IDX_MSU_SUBMIT = 6 + IDX_SUBMIT;
-  public final static int IDX_MSU_SUBMITERR = 6 + IDX_SUBMITERR;
-  public final static int IDX_MSU_RETRY = 6 + IDX_RETRY;
-  public final static int IDX_MSU_DELIVER = 6 + IDX_DELIVER;
-  public final static int IDX_MSU_DELIVERERR = 6 + IDX_DELIVERERR;
-  public final static int IDX_MSU_TEMPERR = 6 + IDX_TEMPERR;
+  private final static int IDX_MSU_SUBMIT = 6 + IDX_SUBMIT;
+  private final static int IDX_MSU_SUBMITERR = 6 + IDX_SUBMITERR;
+  private final static int IDX_MSU_RETRY = 6 + IDX_RETRY;
+  private final static int IDX_MSU_DELIVER = 6 + IDX_DELIVER;
+  private final static int IDX_MSU_DELIVERERR = 6 + IDX_DELIVERERR;
+  private final static int IDX_MSU_TEMPERR = 6 + IDX_TEMPERR;
 
   private final boolean support64Bit;
 
-  public PerfSnap( boolean support64Bit) {
+  public PerfSnap(boolean support64Bit) {
     this.support64Bit = support64Bit;
   }
 
@@ -54,9 +53,8 @@ public class PerfSnap {
     strUptime = snap.strUptime;
     this.support64Bit = snap.support64Bit;
   }
-  public void calc(Locale locale) {
 
-    StringBuilder sb = new StringBuilder(128);
+  public void calc() {
     boolean include = false;
     int days = (int) (uptime / (3600 * 24));
     strUptime = new Time();
@@ -73,8 +71,7 @@ public class PerfSnap {
     if (include || minutes > 0) {
       strUptime.minutes = minutes;
     }
-    int seconds = (int) (uptime % 60);
-    strUptime.seconds = seconds;
+    strUptime.seconds = (int) (uptime % 60);
 
 
     strSctime = new Date(sctime * 1000);

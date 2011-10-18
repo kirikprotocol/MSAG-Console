@@ -8,18 +8,18 @@ import java.util.ResourceBundle;
 /**
  * author: Aleksandr Khalitov
  */
-public class PerfQueueTable extends Canvas {
-  static final int vpad = 1;
-  static final int hpad = 5;
-  static final int numCols = 4;
+class PerfQueueTable extends Canvas {
+  private static final int vpad = 1;
+  private static final int hpad = 5;
+  private static final int numCols = 4;
 
-  static final Color bgColor = SystemColor.control;
-  static final Color textColor = SystemColor.textText;
-  PerfSnap snap;
-  Dimension prefSize;
-  int columnWidth;
-  Image offscreen;
-  String heads[];
+  private static final Color bgColor = SystemColor.control;
+  private static final Color textColor = SystemColor.textText;
+  private PerfSnap snap;
+  private final Dimension prefSize;
+  private int columnWidth;
+  private Image offscreen;
+  private final String[] heads;
 
 
   public PerfQueueTable(PerfSnap snap, ResourceBundle bundle) {
@@ -50,15 +50,11 @@ public class PerfQueueTable extends Canvas {
     super.invalidate();
   }
 
-  public Dimension getPrefferedSize() {
-    return prefSize;
-  }
-
   public Dimension getMinimumSize() {
     return prefSize;
   }
 
-  StringBuffer sbs = new StringBuffer(256);
+  private final StringBuffer sbs = new StringBuffer(256);
 
   public synchronized void paint(Graphics gg) {
     Dimension sz = getSize();
