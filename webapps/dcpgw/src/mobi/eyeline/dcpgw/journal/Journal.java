@@ -473,6 +473,7 @@ public class Journal {
                     Data.Status status = Data.Status.valueOf(ar[12].trim());
 
                     if (status == Data.Status.INIT){
+
                         if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
                             //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
@@ -480,7 +481,7 @@ public class Journal {
                             counter++;
                         }
 
-                    } else {
+                    } else if (status == Data.Status.SEND || status == Data.Status.NOT_SEND) {
                         int sequence_number = Integer.parseInt(ar[4]);
                         if (!done_message_ids.contains(message_id)
                                 && !sequence_numbers.contains(sequence_number)

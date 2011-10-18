@@ -1,6 +1,7 @@
 package mobi.eyeline.dcpgw.journal;
 
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
+import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 
@@ -8,6 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by IntelliJ IDEA.
@@ -43,11 +45,14 @@ public class Data implements Cloneable{
 
     private Status status;
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yy.MM.dd HH:mm:ss SSS");
 
     private static Calendar cal = Calendar.getInstance();
 
     private static final String sep=";";
+
+    private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+    private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
 
     public Data(){
 
@@ -187,17 +192,20 @@ public class Data implements Cloneable{
         String[] ar = line.split(sep);
 
         Date date = sdf.parse(ar[0]);
+        date = Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE);
         long init_time = date.getTime();
 
         Long first_sending_time = null;
         if (!ar[1].equals("N/A")){
             date = sdf.parse(ar[1]);
+            date = Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE);
             first_sending_time = date.getTime();
         }
 
         Long last_resending_time = null;
         if (!ar[2].equals("N/A")){
             date = sdf.parse(ar[2]);
+            date = Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE);
             last_resending_time = date.getTime();
         }
 
@@ -239,21 +247,19 @@ public class Data implements Cloneable{
     }
 
     public static String format(Data data){
-        cal.setTimeInMillis(data.getInitTime());
-        Date init_date = cal.getTime();
+
+        Date init_date = Functions.convertTime(new Date(data.getInitTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
 
         Date first_sending_date = null;
         Long first_sending_time = data.getFirstSendingTime();
         if (first_sending_time != null){
-            cal.setTimeInMillis(data.getFirstSendingTime());
-            first_sending_date = cal.getTime();
+            first_sending_date = Functions.convertTime(new Date(data.getFirstSendingTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
         }
 
         Date last_resending_date = null;
         Long last_resending_time = data.getLastResendTime();
         if (last_resending_time != null){
-            cal.setTimeInMillis(last_resending_time);
-            last_resending_date = cal.getTime();
+            last_resending_date =  Functions.convertTime(new Date(data.getLastResendTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
         }
 
         return sdf.format(init_date) + sep +
@@ -304,7 +310,7 @@ public class Data implements Cloneable{
                 init_time.equals(data.getInitTime()) &&
                 b1  &&
                 b2  &&
-                b3 &&
+                b3  &&
                 status == data.getStatus() &&
                 state == data.getFinalMessageState()
         );

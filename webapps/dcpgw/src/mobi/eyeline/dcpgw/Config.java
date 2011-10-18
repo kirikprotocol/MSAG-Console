@@ -92,34 +92,38 @@ public class Config {
         if (message_id_rang_file.createNewFile()){
             log.debug("Create new message id file: "+ message_id_rang_file);
             initial_message_id_rang = 0;
-            PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
-            pw.println(initial_message_id_rang +rang);
-            pw.flush();
-            pw.close();
-            log.debug("Write to file initial message id rang: "+ initial_message_id_rang + rang);
         } else {
             BufferedReader br = new BufferedReader(new FileReader(message_id_rang_file));
             String line = br.readLine();
             initial_message_id_rang = Long.parseLong(line);
+            br.close();
             log.debug("Load from file initial message id rang: " + initial_message_id_rang);
         }
+
+        PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
+        pw.println(initial_message_id_rang +rang);
+        pw.flush();
+        pw.close();
+        log.debug("Write to file initial message id rang: "+ initial_message_id_rang + rang);
 
         // Load receipts rang
         receipts_rang_file = new File(user_dir + File.separator + "conf" + File.separator + "receipts_rang");
         if (receipts_rang_file.createNewFile()){
             log.debug("Create new receipts sequence number file: "+ receipts_rang_file);
             initial_receipts_sn_rang = 0;
-            PrintWriter pw = new PrintWriter(new FileWriter(receipts_rang_file));
-            pw.println(initial_receipts_sn_rang +rang);
-            pw.flush();
-            pw.close();
-            log.debug("Write to file initial receipts sequence number rang: "+ initial_receipts_sn_rang + rang);
         } else {
             BufferedReader br = new BufferedReader(new FileReader(receipts_rang_file));
             String line = br.readLine();
             initial_receipts_sn_rang = Integer.parseInt(line);
+            br.close();
             log.debug("Load from file initial receipts sequence number rang: " + initial_receipts_sn_rang);
         }
+
+        pw = new PrintWriter(new FileWriter(receipts_rang_file));
+        pw.println(initial_receipts_sn_rang +rang);
+        pw.flush();
+        pw.close();
+        log.debug("Write to file initial receipts sequence number rang: "+ initial_receipts_sn_rang + rang);
 
         String s = config.getProperty("informer.host");
         if (s != null && !s.isEmpty()){
@@ -324,20 +328,20 @@ public class Config {
                 int speed;
                 if (p != null){
                     speed = p.getInt();
-                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipts.speed", Integer.toString(speed));
+                    result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipts.speed", Integer.toString(speed));
                 } else {
                     speed = send_receipts_speed_default;
-                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipts.speed", Integer.toString(speed));
+                    result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipts.speed", Integer.toString(speed));
                 }
 
                 int max_time;
                 p = s2.getParam("max.time.min");
                 if (p!= null){
                     max_time = p.getInt();
-                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.max.time.min", Integer.toString(max_time));
+                    result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipt.max.time.min", Integer.toString(max_time));
                 } else {
                     max_time = send_receipt_max_time_default;
-                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.max.time.min", Integer.toString(max_time));
+                    result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipt.max.time.min", Integer.toString(max_time));
                 }
 
 

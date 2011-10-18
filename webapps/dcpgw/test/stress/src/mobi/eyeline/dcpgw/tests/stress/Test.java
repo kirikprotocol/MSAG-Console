@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Test {
 
     private static Logger log = Logger.getLogger(Test.class);
-    private static Client client, client_t2_1, client_t2_2, client_t3_1, client_t3_2;
+    private static Client client;
 
     private static int speed;
 

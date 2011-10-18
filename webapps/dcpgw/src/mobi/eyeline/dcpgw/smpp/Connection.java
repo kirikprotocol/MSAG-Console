@@ -58,7 +58,6 @@ public class Connection {
 
         Config config = Config.getInstance();
         response_timeout = config.getDeliveryResponseTimeout();
-        send_receipt_max_time = config.getSendReceiptMaxTimeDefault();
 
         sn_data_table = Journal.getInstance().getDataTable(name);
         queue = Journal.getInstance().getDataQueue(name);
@@ -146,9 +145,6 @@ public class Connection {
 
                         if (data != null){
 
-                            long first_sending_time = System.currentTimeMillis();
-                            data.setFirstSendingTime(first_sending_time);
-
                             long message_id = data.getMessageId();
                             int nsms = data.getNsms();
                             Date done_date = data.getDoneDate();
@@ -180,6 +176,11 @@ public class Connection {
                             try {
                                 Server.getInstance().send(deliverSM);
                                 log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
+
+                                long first_sending_time = System.currentTimeMillis();
+                                data.setFirstSendingTime(first_sending_time);
+                                data.setLastResendTime(first_sending_time);
+
                                 data.setStatus(Data.Status.SEND);
                                 sn_data_table.put(sn, data);
 
@@ -190,6 +191,10 @@ public class Connection {
                                 }
                             } catch (SmppException e) {
                                 log.warn(e);
+
+                                long first_sending_time = System.currentTimeMillis();
+                                data.setFirstSendingTime(first_sending_time);
+                                data.setLastResendTime(first_sending_time);
 
                                 data.setStatus(Data.Status.NOT_SEND);
                                 sn_data_table.put(sn, data);
@@ -212,52 +217,66 @@ public class Connection {
     }
 
     public void resend() {
-        log.debug("Check receipts table to resend unanswered receipts ...");
+        //log.debug("Check "+name+"_sn_data table to resend unanswered receipts ...");
+        synchronized (monitor){
 
-        long current_time = System.currentTimeMillis();
+            long current_time = System.currentTimeMillis();
 
-        HashSet<Integer> timeout_expired_sequence_numbers = new HashSet<Integer>();
-        HashSet<Integer> max_timeout_expired_sequence_numbers = new HashSet<Integer>();
+            HashSet<Integer> timeout_expired_sequence_numbers = new HashSet<Integer>();
+            HashSet<Integer> max_timeout_expired_sequence_numbers = new HashSet<Integer>();
 
-        for(Integer sn: sn_data_table.keySet()){
+            for(Integer sn: sn_data_table.keySet()){
 
-            Data data = sn_data_table.get(sn);
-            long last_resend_time = data.getLastResendTime();
-            long init_time = data.getInitTime();
 
-            if (current_time - init_time < send_receipt_max_time * 1000 * 60){
+                Data data = sn_data_table.get(sn);
 
-                if (current_time - last_resend_time >= response_timeout * 1000) timeout_expired_sequence_numbers.add(sn);
+                long last_resend_time = data.getLastResendTime();
 
-            } else {
+                long init_time = data.getInitTime();
 
-                max_timeout_expired_sequence_numbers.add(sn);
+                long dif1 = current_time - init_time;
+                long dif2 = current_time - last_resend_time;
+
+                if (dif1 < send_receipt_max_time * 1000 * 60){
+
+                    if (dif2 >= response_timeout * 1000) {
+
+                        timeout_expired_sequence_numbers.add(sn);
+                        log.debug(name+"_connection: "+sn+"_data expired, remember it");
+                    } else {
+
+                        log.debug(name+"_connection: "+sn+"_data doesn't expired, dif "+dif2/1000+" sec less than "+response_timeout+" sec.");
+                    }
+
+                } else {
+
+                    max_timeout_expired_sequence_numbers.add(sn);
+                    log.debug(name+"_connection: "+sn+"_data expired max time, remember it");
+                }
 
             }
 
-        }
+            for (Integer sn : max_timeout_expired_sequence_numbers) {
 
-        for (Integer sn : max_timeout_expired_sequence_numbers) {
-            synchronized (monitor) {
                 Data data = sn_data_table.remove(sn);
-                log.debug("The maximum time of resending delivery receipt for message with id " + data.getMessageId() + " expired.");
+                log.debug(name+"_connection: remove " + data.getMessageId() + "_message from "+name+"sn_data_table");
                 data.setStatus(Data.Status.EXPIRED_MAX_TIMEOUT);
                 try {
                     Journal.getInstance().write(data);
                 } catch (CouldNotWriteToJournalException e) {
                     log.error(e);
                 }
-                log.debug("Remove deliver receipt data with sequence number " + sn + " and message id " +
-                          data.getMessageId() + " from memory and write to journal with status " + Data.Status.EXPIRED_MAX_TIMEOUT +
-                          ", table size "+sn_data_table.size()+".");
-            }
-        }
+                log.debug(name+"_connection: Remove deliver receipt data with sequence number " + sn + " and message id " +
+                    data.getMessageId() + " from memory and write to journal with status " + Data.Status.EXPIRED_MAX_TIMEOUT +
+                    ", table size "+sn_data_table.size()+".");
 
-        for (Integer sn : timeout_expired_sequence_numbers) {
-            if (!max_timeout_expired_sequence_numbers.contains(sn)) {
-                synchronized (monitor) {
+            }
+
+            for (Integer sn : timeout_expired_sequence_numbers) {
+                if (!max_timeout_expired_sequence_numbers.contains(sn)) {
+
                     Data data = sn_data_table.remove(sn);
-                    log.warn("DeliverSM with sequence number " + sn + " expired. There was no DeliverSMResp within " + response_timeout + " seconds. ");
+                    log.warn(name+"_connection: DeliverSM with sequence number " + sn + " expired. There was no DeliverSMResp within " + response_timeout + " seconds. ");
                     data.setStatus(Data.Status.EXPIRED_TIMEOUT);
 
                     try {
@@ -276,29 +295,29 @@ public class Connection {
                     deliverSM.setSequenceNumber(new_sn);
 
                     String message = "id:" + data.getMessageId() +
-                                " dlvrd:" + data.getNsms() +
-                                " submit date:" + sdf.format(data.getSubmitDate()) +
-                                " done date:" + sdf.format(data.getDoneDate()) +
-                                " stat:" + data.getFinalMessageState();
+                                    " dlvrd:" + data.getNsms() +
+                                    " submit date:" + sdf.format(data.getSubmitDate()) +
+                                    " done date:" + sdf.format(data.getDoneDate()) +
+                                    " stat:" + data.getFinalMessageState();
 
-                    log.debug("Receipt message: " + message);
+                    log.debug(name+"_connection: Receipt "+data.getMessageId()+"_message: " + message);
                     deliverSM.setMessage(message);
 
                     try {
                         Server.getInstance().send(deliverSM);
-                        log.debug("resend DeliverSM: sn=" + new_sn + ", message_id=" + data.getMessageId());
+                        log.debug(name+"_connection: resend DeliverSM: sn=" + new_sn + ", message_id=" + data.getMessageId());
 
                         long send_receipt_time = System.currentTimeMillis();
                         data.setLastResendTime(send_receipt_time);
                         data.setStatus(Data.Status.SEND);
 
                         sn_data_table.put(new_sn, data);
-                        log.debug("remember data: " + new_sn + " --> " + data +", table size: "+sn_data_table.size());
+                        log.debug(name+"_connection: remember data: " + new_sn + " --> " + data +", table size: "+sn_data_table.size());
 
                         try {
                             Journal.getInstance().write(data);
                         } catch (CouldNotWriteToJournalException e) {
-                            log.error(e);
+                                log.error(e);
                         }
                     } catch (SmppException e) {
                         log.warn(e);
@@ -316,31 +335,35 @@ public class Connection {
                     }
 
                 }
+
             }
 
-        }
+            // Remove expired data from queue.
+            for (Data data : queue) {
+                long init_time = data.getInitTime();
 
-        // Remove expired data from queue.
-        for (Data data : queue) {
-            long init_time = data.getInitTime();
+                long dif = current_time - init_time;
+                if (dif > send_receipt_max_time * 1000 * 60) {
+                    log.debug(name+"_connection: "+data.getMessageId()+"_queue_data expired max time");
+                    queue.remove(data);
+                    log.debug(name+"_connection: remove " + data.getMessageId() + "_queue_data from " + name + "_queue.");
 
-            if (current_time - init_time > send_receipt_max_time * 1000 * 60) {
+                    data.setStatus(Data.Status.DELETED);
+                    try {
+                        journal.write(data);
+                    } catch (CouldNotWriteToJournalException e) {
+                        log.error("Couldn't write to journal "+data.getMessageId()+"data.", e);
+                    }
 
-                queue.remove(data);
-                log.debug("Remove " + data.getMessageId() + "_data from " + name + "_queue.");
-
-                data.setStatus(Data.Status.DELETED);
-                try {
-                    journal.write(data);
-                } catch (CouldNotWriteToJournalException e) {
-                    log.error("Couldn't write to journal "+data.getMessageId()+"data.", e);
+                } else {
+                    log.debug(name+"_connection: "+data.getMessageId()+"_queue_data doesn't expired max time, dif "+dif/(1000*60) +" min less than "+send_receipt_max_time+" min.");
                 }
 
             }
 
+            //log.debug("Done "+name+"_resend_task");
         }
 
-        log.debug("Done resend task.");
     }
 
 
@@ -418,10 +441,12 @@ public class Connection {
     }
 
     public void setSendReceiptsSpeed(int send_receipts_speed){
+        log.debug(name+"_connection: set speed "+send_receipts_speed);
         this.send_receipts_speed = send_receipts_speed;
     }
 
     public void setSendReceiptMaxTimeout(int send_receipt_max_time){
+        log.debug(name+"_connection: set max time "+send_receipt_max_time);
         this.send_receipt_max_time = send_receipt_max_time;
     }
 

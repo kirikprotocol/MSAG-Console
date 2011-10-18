@@ -60,8 +60,8 @@ public class Server{
                 String name = key.substring(CONNECTION_PREFIX.length());
                 name = name.substring(0, name.length() - ".password".length());
 
-                int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipts.speed"));
-                int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipt.max.time.min"));
+                int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipts.speed"));
+                int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipt.max.time.min"));
 
                 connections.put(name, new Connection(name, speed, max_time));
                 log.debug("initialize smpp connection "+name);
@@ -106,8 +106,8 @@ public class Server{
                     String name = key.substring(CONNECTION_PREFIX.length());
                     name = name.substring(0, name.length() - ".password".length());
 
-                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipts.speed"));
-                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipt.max.time.min"));
+                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipts.speed"));
+                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipt.max.time.min"));
 
                     connections.put(name, new Connection(name, speed, max_time));
                     log.debug("Initialize new smpp connection "+name);
@@ -123,15 +123,15 @@ public class Server{
                     String name = key.substring(CONNECTION_PREFIX.length());
                     name = name.substring(0, name.length() - ".password".length());
 
-                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipts.speed"));
-                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+"send.receipt.max.time.min"));
+                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipts.speed"));
+                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipt.max.time.min"));
 
                     Connection connection = connections.get(name);
 
                     connection.setSendReceiptsSpeed(speed);
                     connection.setSendReceiptMaxTimeout(max_time);
 
-                    log.debug("Update parameters for smpp connection "+name);
+                    log.debug("Updated parameters for smpp connection "+name);
                 }
             }
         }

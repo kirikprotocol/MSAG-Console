@@ -35,6 +35,9 @@
         <copy file="startup.sh" todir="${DISTR_DIR}"/>
         <chmod file="${DISTR_DIR}/startup.sh" perm="u+x"/>
 
+        <copy file="send_without.sh" todir="${DISTR_DIR}"/>
+        <chmod file="${DISTR_DIR}/send_without.sh" perm="u+x"/>
+
         <copy file="stop.sh" todir="${DISTR_DIR}"/>
         <chmod file="${DISTR_DIR}/stop.sh" perm="u+x"/>
 
