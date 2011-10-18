@@ -165,6 +165,7 @@ public class Server{
 
         Connection connection = connections.get(connection_name);
         if (connection != null){
+
             connection.send(data);
         } else {
 
@@ -207,6 +208,10 @@ public class Server{
             configure(config);
         }
 
+    }
+
+    public Connection getConnection(String name){
+        return connections.get(name);
     }
 
 }

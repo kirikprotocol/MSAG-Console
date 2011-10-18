@@ -48,18 +48,17 @@ public class Journal {
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private int send_receipts_speed;
-
     // Sumbit date journal
-    private File sdj1, sdj2, sdj2t;
+    private File sdj1;
+    private File sdj2;
+    private File sdj2t;
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
-    public void init(File journal_dir, int max_journal_size_mb, int max_submit_date_journal_size_mb, int clean_timeout, int send_receipts_speed) throws InitializationException{
+    public void init(File journal_dir, int max_journal_size_mb, int max_submit_date_journal_size_mb, int clean_timeout) throws InitializationException{
         log.debug("Try to initialize journal ...");
         this.max_journal_size_mb = max_journal_size_mb;
         this.max_submit_date_journal_size_mb = max_submit_date_journal_size_mb;
-        this.send_receipts_speed = send_receipts_speed;
 
         if (!journal_dir.exists()) {
             if (!journal_dir.mkdir()) throw new InitializationException("Couldn't create journal directory.");
@@ -69,6 +68,7 @@ public class Journal {
         j2 = new File(journal_dir, "j2.csv");
         j2t = new File(journal_dir, "j2.csv.tmp");
 
+        File sddir = new File(journal_dir.getPath() + File.separator + "sd");
         sdj1 = new File(journal_dir.getPath()+File.separator+"sd"+File.separator+"sdj1.csv");
         sdj2 = new File(journal_dir.getPath()+File.separator+"sd"+File.separator+"sdj2.csv");
         sdj2t = new File(journal_dir.getPath()+File.separator+"sd"+File.separator+"sdj2t.csv");
@@ -77,6 +77,18 @@ public class Journal {
             log.debug("Detected that journal directory doesn't exist.");
             if (journal_dir.mkdir()){
                 log.debug("Successfully create journal directory.");
+            } else {
+                log.error("Couldn't create journal directory, check permissions.");
+                throw new InitializationException("Couldn't create journal directory, check permissions.");
+            }
+        } else {
+            log.debug("Detected that journal directory already exists.");
+        }
+
+        if (!sddir.exists()){
+            log.debug("Detected that journal directory doesn't exist.");
+            if (sddir.mkdir()){
+                log.debug("Successfully create submit date journal directory.");
             } else {
                 log.error("Couldn't create journal directory, check permissions.");
                 throw new InitializationException("Couldn't create journal directory, check permissions.");
@@ -170,7 +182,7 @@ public class Journal {
                                 Integer sequence_number = data.getSequenceNumber();
 
                                 if (!connection_sn_data_store.containsKey(connection))
-                                        connection_sn_data_store.put(connection, new Hashtable<Integer, Data>(send_receipts_speed));
+                                        connection_sn_data_store.put(connection, new Hashtable<Integer, Data>());
 
                                 if (status == Data.Status.DONE
                                         || status == Data.Status.EXPIRED_MAX_TIMEOUT
@@ -613,7 +625,7 @@ public class Journal {
 
                     b = sdj2.delete();
                     log.debug("Delete file "+sdj2.getName()+": "+b);
-                    b = sdj2t.renameTo(j2);
+                    b = sdj2t.renameTo(sdj2);
                     log.debug("Rename file "+sdj2t.getName()+" to "+sdj2.getName()+": "+b);
 
                 } else {
@@ -663,7 +675,7 @@ public class Journal {
         log.debug("journal shutdown");
     }
 
-    public void writeSubmitDate(long message_id, Date date, boolean receives_receipt)throws CouldNotWriteToJournalException {
+    public void writeSubmitDate(long message_id, String connection_name, Date date, boolean receives_receipt)throws CouldNotWriteToJournalException {
 
         synchronized (monitor2){
 
@@ -676,7 +688,7 @@ public class Journal {
                 throw new CouldNotWriteToJournalException(e);
             }
 
-            String s = message_id + sep+  sdf.format(date) + sep + receives_receipt;
+            String s = message_id + sep + connection_name + sep + sdf.format(date) + sep + receives_receipt;
 
             boolean isEnoughSpace;
             try {

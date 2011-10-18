@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE config SYSTEM "file://configuration.dtd">
+<!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
-
-     <section name="endpoints">
-
-         <section name="endpoint1">
-             <param name="systemId" type="string">systemId1</param>
-             <param name="password" type="string">p1</param>
-             <param name="enabled" type="bool">true</param>
-             <param name="send.receipts.speed" type="int">100</param>
-             <param name="send.receipt.max.time.min" type="int">60</param>
-         </section>
-
-         <section name="endpoint2">
-             <param name="systemId" type="string">systemId2</param>
-             <param name="password" type="string">p2</param>
-             <param name="enabled" type="bool">true</param>
-             <param name="send.receipts.speed" type="int">100</param>
-             <param name="send.receipt.max.time.min" type="int">60</param>
-         </section>
-
-     </section>
-
+<section name="endpoints">
+<section name="con3">
+<param name="systemId" type="string">systemId3</param>
+<param name="password" type="string">pass3</param>
+<param name="enabled" type="bool">true</param>
+    <section name="send.receipts">
+        <param name="speed" type="int">50</param>
+        <param name="max.time.min" type="int">133</param>
+    </section>
+</section>
+<section name="con2">
+<param name="systemId" type="string">systemId2</param>
+<param name="password" type="string">pass2</param>
+<param name="enabled" type="bool">true</param>
+    <section name="send.receipts">
+        <param name="speed" type="int">70</param>
+        <param name="max.time.min" type="int">233</param>
+    </section>
+</section>
+<section name="con1">
+<param name="systemId" type="string">systemId1</param>
+<param name="password" type="string">pass1</param>
+<param name="enabled" type="bool">true</param>
+    <section name="send.receipts">
+        <param name="speed" type="int">90</param>
+        <param name="max.time.min" type="int">333</param>
+    </section>
+</section>
+</section>
 </config>

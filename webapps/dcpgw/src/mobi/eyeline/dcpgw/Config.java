@@ -69,7 +69,7 @@ public class Config {
 
     private int send_receipts_speed_default;
     private int delivery_response_timeout;
-    private int send_receipt_max_timeout;
+    private int send_receipt_max_time_default;
 
     private int journal_clean_timeout;
 
@@ -189,6 +189,10 @@ public class Config {
         }
 
         informer_user_password_table = loadInformerUsers();
+
+
+        send_receipts_speed_default = Utils.getProperty(config, "send.receipts.speed.default", 100);
+        send_receipt_max_time_default = Utils.getProperty(config, "send.receipt.max.time.default.min", 720);
         config_with_smpp_endpoints = loadSmppEndpoints();
 
         informer_user_connection_table = new Hashtable<String, DcpConnectionImpl>();
@@ -209,13 +213,13 @@ public class Config {
 
         final_log_dir = new File(Utils.getProperty(config, "final.log.dir", System.getProperty("user.dir") + File.separator + "final_log"));
 
-        send_receipts_speed_default = Utils.getProperty(config, "send.receipts.speed.default", 100);
+
 
         resend_receipts_interval = Utils.getProperty(config, "resend.receipts.interval.sec", 60);
 
         delivery_response_timeout = Utils.getProperty(config, "resend.receipts.timeout.sec", 60);
 
-        send_receipt_max_timeout = Utils.getProperty(config, "send.receipts.max.timeout.min", 720);
+
 
         journal_clean_timeout = Utils.getProperty(config, "journal.clean.timeout.msl", 60000);
 
@@ -315,13 +319,27 @@ public class Config {
 
                 result.setProperty(CONNECTION_PREFIX + systemId + ".password", password);
 
-                p = s.getParam("send.receipts.speed");
-                int speed = p.getInt();
-                result.setProperty(CONNECTION_PREFIX + systemId + "send.receipts.speed", Integer.toString(speed));
+                XmlConfigSection s2 = s.getSection("send.receipts");
+                p = s2.getParam("speed");
+                int speed;
+                if (p != null){
+                    speed = p.getInt();
+                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipts.speed", Integer.toString(speed));
+                } else {
+                    speed = send_receipts_speed_default;
+                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipts.speed", Integer.toString(speed));
+                }
 
-                p = s.getParam("send.receipt.max.time.min");
-                int max_time = p.getInt();
-                result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.max.time.min", Integer.toString(max_time));
+                int max_time;
+                p = s2.getParam("max.time.min");
+                if (p!= null){
+                    max_time = p.getInt();
+                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.max.time.min", Integer.toString(max_time));
+                } else {
+                    max_time = send_receipt_max_time_default;
+                    result.setProperty(CONNECTION_PREFIX + systemId + "send.receipt.max.time.min", Integer.toString(max_time));
+                }
+
 
                 log.debug("Load endpoint: name=" + endpoint_name + ", systemId=" + systemId + ", password=" + password + ", speed="+speed+", max_time="+max_time);
             } else {
@@ -455,8 +473,8 @@ public class Config {
         return resend_receipts_interval;
     }
 
-    public int getSendReceiptMaxTimeout(){
-        return send_receipt_max_timeout;
+    public int getSendReceiptMaxTimeDefault(){
+        return send_receipt_max_time_default;
     }
 
     public int getDeliveryResponseTimeout(){

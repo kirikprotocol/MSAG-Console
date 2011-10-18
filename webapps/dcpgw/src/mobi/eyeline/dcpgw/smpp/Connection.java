@@ -46,12 +46,10 @@ public class Connection {
 
     private int response_timeout;
     private int send_receipt_max_time;
-    private int request_limit;
+    private int send_receipts_speed;
 
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     ScheduledExecutorService resend_delivery_receipts_scheduler = Executors.newSingleThreadScheduledExecutor();
-
-    private int send_receipts_speed;
 
     public Connection(String name, int send_receipts_speed, int send_receipt_max_time_min){
         this.name = name;
@@ -60,8 +58,7 @@ public class Connection {
 
         Config config = Config.getInstance();
         response_timeout = config.getDeliveryResponseTimeout();
-        send_receipt_max_time = config.getSendReceiptMaxTimeout();
-        request_limit = config.getSendReceiptsSpeed();
+        send_receipt_max_time = config.getSendReceiptMaxTimeDefault();
 
         sn_data_table = Journal.getInstance().getDataTable(name);
         queue = Journal.getInstance().getDataQueue(name);
@@ -69,6 +66,7 @@ public class Connection {
 
         if (sn_data_table == null) sn_data_table = new Hashtable<Integer, Data>();
         if (queue == null) queue = new LinkedBlockingQueue<Data>();
+        if (message_id_date_table == null)  message_id_date_table = new Hashtable<Long, Date>();
 
         scheduler.scheduleWithFixedDelay(new Runnable() {
 
@@ -104,7 +102,7 @@ public class Connection {
 
             Date date = new Date(System.currentTimeMillis());
             try {
-                journal.writeSubmitDate(message_id, date, true);
+                journal.writeSubmitDate(message_id, data.getConnectionName(), date, true);
             } catch (CouldNotWriteToJournalException e) {
                 log.error("Couldn't write to submit date journal.", e);
             }
@@ -122,7 +120,7 @@ public class Connection {
                 log.error(e);
             }
         } else {
-            log.error("Couldn't fing submit date for receipt with message id "+data.getMessageId());
+            log.error("Couldn't find submit date for receipt with message id "+data.getMessageId());
         }
     }
 
@@ -137,74 +135,76 @@ public class Connection {
 
         synchronized (monitor) {
 
-            if (sn_data_table.size() < request_limit){
+            if (sn_data_table.size() < send_receipts_speed){
 
-                int available = request_limit - sn_data_table.size();
-                log.debug(name+"_con, available="+available);
-                for(int i=0; i < available; i++){
+                int available = send_receipts_speed - sn_data_table.size();
+                if (available > 0){
+                    log.debug(name+"_con, available="+available);
+                    for(int i=0; i < available; i++){
 
-                    Data data = queue.poll();
+                        Data data = queue.poll();
 
-                    if (data != null){
+                        if (data != null){
 
-                        long first_sending_time = System.currentTimeMillis();
-                        data.setFirstSendingTime(first_sending_time);
+                            long first_sending_time = System.currentTimeMillis();
+                            data.setFirstSendingTime(first_sending_time);
 
-                        long message_id = data.getMessageId();
-                        int nsms = data.getNsms();
-                        Date done_date = data.getDoneDate();
-                        Date submit_date = data.getSubmitDate();
-                        Address source_address = data.getSourceAddress();
-                        Address destination_address = data.getDestinationAddress();
-                        FinalMessageState state = data.getFinalMessageState();
+                            long message_id = data.getMessageId();
+                            int nsms = data.getNsms();
+                            Date done_date = data.getDoneDate();
+                            Date submit_date = data.getSubmitDate();
+                            Address source_address = data.getSourceAddress();
+                            Address destination_address = data.getDestinationAddress();
+                            FinalMessageState state = data.getFinalMessageState();
 
-                        String message = "id:" + message_id +
-                                         " nsms:" + nsms +
-                                         " submit date:" + sdf.format(submit_date) +
-                                         " done date:" + sdf.format(done_date) +
-                                         " stat:" + state;
+                            String message = "id:" + message_id +
+                                             " nsms:" + nsms +
+                                             " submit date:" + sdf.format(submit_date) +
+                                             " done date:" + sdf.format(done_date) +
+                                             " stat:" + state;
 
-                        log.debug("Receipt message: " + message);
+                            log.debug("Receipt message: " + message);
 
-                        DeliverSM deliverSM = new DeliverSM();
-                        deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
-                        deliverSM.setSourceAddress(destination_address);
-                        deliverSM.setDestinationAddress(source_address);
-                        deliverSM.setConnectionName(name);
-                        deliverSM.setMessage(message);
+                            DeliverSM deliverSM = new DeliverSM();
+                            deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
+                            deliverSM.setSourceAddress(destination_address);
+                            deliverSM.setDestinationAddress(source_address);
+                            deliverSM.setConnectionName(name);
+                            deliverSM.setMessage(message);
 
-                        int sn = Server.getInstance().getReceiptSequenceNumber();
-                        deliverSM.setSequenceNumber(sn);
+                            int sn = Server.getInstance().getReceiptSequenceNumber();
+                            deliverSM.setSequenceNumber(sn);
 
-                        data.setSequenceNumber(sn);
-
-                        try {
-                            Server.getInstance().send(deliverSM);
-                            log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
-                            data.setStatus(Data.Status.SEND);
-                            sn_data_table.put(sn, data);
+                            data.setSequenceNumber(sn);
 
                             try {
-                                Journal.getInstance().write(data);
-                            } catch (CouldNotWriteToJournalException e) {
-                                log.error(e);
-                            }
-                        } catch (SmppException e) {
-                            log.warn(e);
+                                Server.getInstance().send(deliverSM);
+                                log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
+                                data.setStatus(Data.Status.SEND);
+                                sn_data_table.put(sn, data);
 
-                            data.setStatus(Data.Status.NOT_SEND);
-                            sn_data_table.put(sn, data);
+                                try {
+                                    Journal.getInstance().write(data);
+                                } catch (CouldNotWriteToJournalException e) {
+                                    log.error(e);
+                                }
+                            } catch (SmppException e) {
+                                log.warn(e);
 
-                            try {
-                                Journal.getInstance().write(data);
-                            } catch (CouldNotWriteToJournalException e2) {
-                                log.error(e2);
+                                data.setStatus(Data.Status.NOT_SEND);
+                                sn_data_table.put(sn, data);
+
+                                try {
+                                    Journal.getInstance().write(data);
+                                } catch (CouldNotWriteToJournalException e2) {
+                                    log.error(e2);
+                                }
                             }
+                        } else {
+                            break;
                         }
-                    } else {
-                        break;
-                    }
 
+                    }
                 }
             }
         }
@@ -423,6 +423,10 @@ public class Connection {
 
     public void setSendReceiptMaxTimeout(int send_receipt_max_time){
         this.send_receipt_max_time = send_receipt_max_time;
+    }
+
+    public void setSubmitDate(long message_id, Date date){
+        message_id_date_table.put(message_id, date);
     }
 
 }

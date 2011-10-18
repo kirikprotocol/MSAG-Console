@@ -3,6 +3,7 @@ package mobi.eyeline.dcpgw.dcp;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.journal.Journal;
+import mobi.eyeline.dcpgw.smpp.Connection;
 import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
@@ -42,10 +43,6 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     private LinkedBlockingQueue<SendTask> sendTaskQueue;
 
     private Hashtable<Long, SubmitSMResp> message_id_submit_sm_resp_table;
-
-    private Calendar cal = Calendar.getInstance();
-
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
     private int capacity;
     private long timeout;
@@ -173,8 +170,13 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
                                 long submit_time = System.currentTimeMillis();
                                 Date submit_date = Functions.convertTime(new Date(submit_time), LOCAL_TIMEZONE, STAT_TIMEZONE);
+
+                                String connection_name = resp.getConnectionName();
+                                Connection connection = Server.getInstance().getConnection(connection_name);
+                                connection.setSubmitDate(message_id, submit_date);
+
                                 try {
-                                    Journal.getInstance().writeSubmitDate(message_id, submit_date, false);
+                                    Journal.getInstance().writeSubmitDate(message_id, connection_name, submit_date, false);
                                 } catch (CouldNotWriteToJournalException e) {
                                     log.error("Couldn't write submit date to journal.", e);
                                 }
