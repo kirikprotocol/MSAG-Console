@@ -41,4 +41,10 @@
     <param name="appletPort2" type="int">25022</param>
     <param name="support64Bit" type="bool">false</param>
   </section>
+
+  <section name="topmon">
+    <param name="appletPort0" type="int">25030</param>
+    <param name="appletPort1" type="int">25031</param>
+    <param name="appletPort2" type="int">25032</param>
+  </section>
 </config>

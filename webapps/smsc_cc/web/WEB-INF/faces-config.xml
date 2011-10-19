@@ -380,6 +380,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>topmon</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.topmon.TopmonController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>

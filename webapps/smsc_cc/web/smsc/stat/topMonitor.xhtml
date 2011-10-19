@@ -6,13 +6,13 @@
 
   <html>
   <head>
-    <title>#{msg['permonance.monitor']}#{perfmon.instance+1}</title>
+    <title>#{msg['top.monitor']}#{topmon.instance+1}</title>
   </head>
   <body>
-  <h:panelGroup rendered="#{perfmon.show}">
-    <applet code="ru.novosoft.smsc.web.applets.perfmon.PerfMon.class" width="100%" height="97%" archive="monitor.jar">
-      <param name="locale.language" value="#{perfmon.localeS}"/>
-      <param name="port" value="#{perfmon.port}"/>
+  <h:panelGroup rendered="#{topmon.show}">
+    <applet code="ru.novosoft.smsc.web.applets.topmon.TopMon.class" width="100%" height="97%" archive="monitor.jar">
+      <param name="locale.language" value="#{topmon.localeS}"/>
+      <param name="port" value="#{topmon.port}"/>
       <param name="host" value="#{facesContext.externalContext.request.serverName}"/>
     </applet>
   </h:panelGroup>
