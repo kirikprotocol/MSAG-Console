@@ -29,5 +29,14 @@
         <param name="max.time.min" type="int">333</param>
     </section>
 </section>
+<section name="con4">
+<param name="systemId" type="string">systemId4</param>
+<param name="password" type="string">pass4</param>
+<param name="enabled" type="bool">true</param>
+    <section name="send.receipts">
+        <param name="speed" type="int">90</param>
+        <param name="max.time.min" type="int">88</param>
+    </section>
+</section>
 </section>
 </config>

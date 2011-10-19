@@ -370,11 +370,11 @@ public class Journal {
     }
 
     public void clean(){
-        log.debug("Try to clean journal ... ");
 
         long t = System.currentTimeMillis();
 
         if (j1.exists() && j1.length() > 0){
+            //log.debug("Try to clean journal ... ");
             BufferedReader buffReader1 = null;
             BufferedReader buffReader2 = null;
             PrintWriter pw = null;
@@ -657,6 +657,7 @@ public class Journal {
         long d = System.currentTimeMillis() - t;
 
         log.debug("Journal cleaned, "+d+" mls.");
+
     }
 
     public Hashtable<Integer, Data> getDataTable(String connection_name){

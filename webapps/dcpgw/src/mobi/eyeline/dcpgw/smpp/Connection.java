@@ -78,7 +78,7 @@ public class Connection {
 
         }, 1, 1, TimeUnit.SECONDS);
 
-        int t2 = config.getResendReceiptsInterval();
+        int t = config.getResendReceiptsInterval();
 
         resend_delivery_receipts_scheduler.scheduleWithFixedDelay(new Runnable() {
 
@@ -87,8 +87,8 @@ public class Connection {
                 resend();
             }
 
-        }, t2 , t2, TimeUnit.SECONDS);
-        log.debug("Initialize scheduler with resend interval " + t2 + " sec.");
+        }, t , t, TimeUnit.SECONDS);
+        log.debug("Initialize scheduler with resend interval " + t + " sec.");
     }
 
     void send(Data data){
@@ -156,9 +156,10 @@ public class Connection {
                             }
 
                             Address source_address = data.getSourceAddress();
-                            Delivery delivery = provider.getDelivery(source_address.getAddress());
+                            Address destination_address = data.getDestinationAddress();
+                            Delivery delivery = provider.getDelivery(destination_address.getAddress());
                             if (delivery == null){
-                                log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+source_address.getAddress()+".");
+                                log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+destination_address.getAddress()+".");
                                 continue;
                             }
 
@@ -167,7 +168,7 @@ public class Connection {
                             Date done_date = data.getDoneDate();
                             Date submit_date = data.getSubmitDate();
 
-                            Address destination_address = data.getDestinationAddress();
+
                             FinalMessageState state = data.getFinalMessageState();
 
                             String message = "id:" + message_id +
@@ -180,8 +181,8 @@ public class Connection {
 
                             DeliverSM deliverSM = new DeliverSM();
                             deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
-                            deliverSM.setSourceAddress(destination_address);
-                            deliverSM.setDestinationAddress(source_address);
+                            deliverSM.setSourceAddress(source_address);
+                            deliverSM.setDestinationAddress(destination_address);
                             deliverSM.setConnectionName(name);
                             deliverSM.setMessage(message);
 
@@ -254,10 +255,10 @@ public class Connection {
                     continue;
                 }
 
-                Address source_address = data.getSourceAddress();
-                Delivery delivery = provider.getDelivery(source_address.getAddress());
+                Address destination_address = data.getDestinationAddress();
+                Delivery delivery = provider.getDelivery(destination_address.getAddress());
                 if (delivery == null){
-                    log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+source_address.getAddress()+".");
+                    log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+destination_address.getAddress()+".");
                     continue;
                 }
 

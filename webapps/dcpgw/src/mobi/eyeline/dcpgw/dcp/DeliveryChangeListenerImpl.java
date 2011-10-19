@@ -12,11 +12,13 @@ import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
+import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
 import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * Created by IntelliJ IDEA.
@@ -27,6 +29,9 @@ import java.util.Properties;
 public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
     private static Logger log = Logger.getLogger(DeliveryChangeListenerImpl.class);
+
+    private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+    private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
 
     @Override
     public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
@@ -48,7 +53,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
                 String connection_name = p.getProperty("con");
 
-                Date done_date = e.getEventDate();
+                Date done_date = Functions.convertTime(e.getEventDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
 
                 MessageState messageState = e.getMessageState();
 

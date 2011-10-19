@@ -1,34 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE config SYSTEM "file://configuration.dtd">
-
+<!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
-
-    <section name="providers">
-
-        <section name="provider1">
-            <!--Parameter contains smpp connections systemIds.-->
-            <param name="endpoint_ids" type="string">systemId1,systemId2</param>
-            <param name="description" type="string">description1</param>
-
-            <section name="deliveries">
-
-                <section name="1305">
-                    <param name="user" type="string">stepanovd</param>
-                    <param name="services_numbers" type="string">10001,10002</param>
-                </section>
-
-            </section>
-
-        </section>
-
-    </section>
-
-    <section name="users">
-
-        <section name="stepanovd">
-            <param name="password" type="string">stepanovd</param>
-        </section>
-
-    </section>
-
+<section name="providers">
+<section name="Provider 2">
+<param name="description" type="string">desc2</param>
+<param name="endpoint_ids" type="string">systemId2</param>
+<section name="deliveries">
+<section name="1480">
+<param name="user" type="string">stepanovd</param>
+<param name="services_numbers" type="string">10002</param>
+</section>
+</section>
+</section>
+<section name="Provider 1">
+<param name="description" type="string">provider description!</param>
+<param name="endpoint_ids" type="string">systemId1</param>
+<section name="deliveries">
+<section name="1185">
+<param name="user" type="string">bukind</param>
+<param name="services_numbers" type="string">78</param>
+</section>
+<section name="1461">
+<param name="user" type="string">stepanovd</param>
+<param name="services_numbers" type="string">10001</param>
+</section>
+</section>
+</section>
+<section name="Provider 3">
+<param name="description" type="string">provider 3 descr</param>
+<param name="endpoint_ids" type="string">systemId3,systemId4</param>
+<section name="deliveries">
+<section name="1327">
+<param name="user" type="string">admin</param>
+<param name="services_numbers" type="string">+78412412</param>
+</section>
+<section name="1482">
+<param name="user" type="string">stepanovd2</param>
+<param name="services_numbers" type="string">10003</param>
+</section>
+</section>
+</section>
+</section>
+<section name="users">
+<section name="bukind">
+<param name="password" type="string">nopass</param>
+</section>
+<section name="stepanovd">
+<param name="password" type="string">stepanovd</param>
+</section>
+<section name="stepanovd2">
+<param name="password" type="string">pass6</param>
+</section>
+<section name="admin">
+<param name="password" type="string">admin</param>
+</section>
+</section>
 </config>
