@@ -35,4 +35,11 @@ public class TotalMessage extends Message {
   public void receive(InputStream is) throws IOException {
     count = IOUtils.readInt64(is);
   }
+
+  @Override
+  public String toString() {
+    return "TotalMessage{" +
+        "count=" + count +
+        '}';
+  }
 }

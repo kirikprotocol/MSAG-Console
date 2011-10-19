@@ -24,7 +24,7 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
     this.j = j;
   }
 
-  @Override
+
   public void getTraps(SnmpFilter filter, SnmpTrapVisitor visitor) throws AdminException {
     wrapped.getTraps(filter, visitor);
   }

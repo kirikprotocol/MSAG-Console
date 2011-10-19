@@ -144,4 +144,11 @@ public class QueryMessage extends Message {
       }
     }
   }
+
+  @Override
+  public String toString() {
+    return "QueryMessage{" +
+        "query=" + query +
+        '}';
+  }
 }

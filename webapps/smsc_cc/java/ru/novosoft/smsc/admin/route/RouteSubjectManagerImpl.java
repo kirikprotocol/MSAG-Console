@@ -123,7 +123,12 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager {
     if (state != null) {
       long lastUpdate = cfgFileManager.getLastModified();
       for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
-        SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        SmscConfigurationStatus s;
+        long lastSmscUpdateTime = e.getValue();
+        if (lastSmscUpdateTime == 0)
+          s = SmscConfigurationStatus.NOT_SUPPORTED;
+        else
+          s = (e.getValue() >= lastUpdate) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
         result.put(e.getKey(), s);
       }
     }

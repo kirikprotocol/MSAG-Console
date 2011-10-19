@@ -300,7 +300,12 @@ public class ClosedGroupManagerImpl implements ClosedGroupManager {
     if (configState != null) {
       long ccLastUpdateTime = configState.getCcLastUpdateTime();
       for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
-        SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        SmscConfigurationStatus s;
+        long lastSmscUpdateTime = e.getValue();
+        if (lastSmscUpdateTime == 0)
+          s = SmscConfigurationStatus.NOT_SUPPORTED;
+        else
+          s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
         result.put(e.getKey(), s);
       }
     }

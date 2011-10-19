@@ -116,14 +116,26 @@ public class SmscStatusController extends SmscController {
 
   public DataTableModel getSmsCenters() {
 
+    List<ConfigState> configStates = new ArrayList<ConfigState>();
+
+    for (Map.Entry<String, SmscConfiguration> e : configs.entrySet()) {
+      SmscConfiguration cfg = e.getValue();
+      try {
+        configStates.add(new ConfigState(e.getKey(), cfg));
+      } catch (AdminException ex) {
+        addError(ex);
+      }
+    }
+
     List<SmscStatus> result = new ArrayList<SmscStatus>();
 
     try {
       for (int i = 0; i < smscManager.getSettings().getSmscInstancesCount(); i++) {
         String onlineHost = smscManager.getSmscOnlineHost(i);
-        SmscStatus status = new SmscStatus(i, onlineHost, smscManager.getSmscHosts(i));
+        SmscStatus status = new SmscStatus(i, onlineHost, smscManager.getSmscHosts(i), configStates);
         result.add(status);
       }
+
     } catch (AdminException e) {
       logError(e);
     }
@@ -141,21 +153,16 @@ public class SmscStatusController extends SmscController {
     private final List<String> hosts;
     private List<String> errors;
 
-    public SmscStatus(int instanceNumber, String onlineHost, List<String> hosts) {
+    public SmscStatus(int instanceNumber, String onlineHost, List<String> hosts, List<ConfigState> cfgStates) {
       this.instanceNumber = instanceNumber;
       this.onlineHost = onlineHost;
       this.hosts = hosts;
 
       if (onlineHost != null) {
         errors = new ArrayList<String>();
-        for (Map.Entry<String, SmscConfiguration> e : configs.entrySet()) {
-          SmscConfiguration cfg = e.getValue();
-          try {
-            if (cfg.getStatusForSmscs().get(instanceNumber) == SmscConfigurationStatus.OUT_OF_DATE)
-              errors.add("status.page." + e.getKey());
-          } catch (AdminException e1) {
-            addError(e1);
-          }
+        for (ConfigState cfgState : cfgStates) {
+          if (cfgState.getStatusForSmsc(instanceNumber) == SmscConfigurationStatus.OUT_OF_DATE)
+            errors.add("status.page." + cfgState.configName);
         }
       }
     }
@@ -187,6 +194,20 @@ public class SmscStatusController extends SmscController {
 
     public boolean isHasErrors() {
       return onlineHost != null && !errors.isEmpty();
+    }
+  }
+
+  private class ConfigState {
+    private final String configName;
+    private final Map<Integer, SmscConfigurationStatus> statuses;
+
+    ConfigState(String configName, SmscConfiguration cfg) throws AdminException {
+      this.configName = configName;
+      this.statuses = cfg.getStatusForSmscs();
+    }
+
+    public SmscConfigurationStatus getStatusForSmsc(int instanceNumber) {
+      return statuses.get(instanceNumber);
     }
   }
 

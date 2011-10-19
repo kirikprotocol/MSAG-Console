@@ -27,4 +27,10 @@ public class RsNxtMessage extends Message {
     IOUtils.writeUInt32(os, next);
   }
 
+  @Override
+  public String toString() {
+    return "RsNxtMessage{" +
+        "next=" + next +
+        '}';
+  }
 }

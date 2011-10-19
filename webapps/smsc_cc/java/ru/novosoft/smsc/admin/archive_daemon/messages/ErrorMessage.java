@@ -36,4 +36,10 @@ public class ErrorMessage extends Message {
     error = IOUtils.readString32(is);
   }
 
+  @Override
+  public String toString() {
+    return "ErrorMessage{" +
+        "error='" + error + '\'' +
+        '}';
+  }
 }

@@ -10,4 +10,8 @@ public class EmptyMessage extends Message {
   public EmptyMessage() {
     super(Message.SMSC_BYTE_EMPTY_TYPE);
   }
+
+  public String toString() {
+    return "EmptyMessage{}";
+  }
 }

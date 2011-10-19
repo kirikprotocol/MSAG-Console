@@ -161,5 +161,22 @@ public class ArchiveMessageFilter {
     this.lastResult = lastResult;
   }
 
-
+  @Override
+  public String toString() {
+    return "ArchiveMessageFilter{" +
+        "rowsMax=" + rowsMaximum +
+        ", abAddr=" + abonentAddress +
+        ", fromAddr=" + fromAddress +
+        ", toAddr=" + toAddress +
+        ", smeId='" + smeId + '\'' +
+        ", srcSmeId='" + srcSmeId + '\'' +
+        ", dstSmeId='" + dstSmeId + '\'' +
+        ", routeId='" + routeId + '\'' +
+        ", smsId=" + smsId +
+        ", fromDate=" + fromDate +
+        ", tillDate=" + tillDate +
+        ", status=" + status +
+        ", lastResult=" + lastResult +
+        '}';
+  }
 }

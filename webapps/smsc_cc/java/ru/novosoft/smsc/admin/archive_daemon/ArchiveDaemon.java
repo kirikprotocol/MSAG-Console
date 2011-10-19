@@ -65,6 +65,7 @@ public class ArchiveDaemon {
       DaemonCommunicator communicator = new DaemonCommunicator(input, output);
       communicator.send(request);
       int toReceive = rowsMaximum < MAX_SMS_FETCH_SIZE ? rowsMaximum : MAX_SMS_FETCH_SIZE;
+
       communicator.send(new RsNxtMessage(toReceive));
 
       Message responce;

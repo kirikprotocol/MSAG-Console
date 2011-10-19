@@ -88,4 +88,11 @@ public class RsSmsMessage extends Message {
       sms.setBody(body);
     }
   }
+
+  @Override
+  public String toString() {
+    return "RsSmsMessage{" +
+        "sms=" + sms +
+        '}';
+  }
 }
