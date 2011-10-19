@@ -35,8 +35,6 @@ public class ArchiveDaemon {
     String host = manager.getSettings().getViewHost();
     int port = manager.getSettings().getViewPort();
 
-    System.out.println("CONNECT!!!");
-
     return new Socket(host, port);
   }
 
@@ -48,7 +46,6 @@ public class ArchiveDaemon {
    * @throws AdminException ошибка извлечения статистики
    */
   public SmsSet getSmsSet(ArchiveMessageFilter query) throws AdminException {
-    System.out.println("GET SMS SET");
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
@@ -163,7 +160,6 @@ public class ArchiveDaemon {
   }
 
   private static void close(InputStream input, OutputStream output, Socket socket) {
-    System.out.println("DISCONNECT");
     if (input != null) {
       try {
         input.close();
