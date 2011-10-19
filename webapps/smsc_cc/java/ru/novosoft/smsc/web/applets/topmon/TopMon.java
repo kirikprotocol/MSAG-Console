@@ -36,7 +36,7 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
     System.out.println("Initing...");
     locale = new Locale(getParameter("locale.language").toLowerCase());
     localeText = ResourceBundle.getBundle("ru.novosoft.smsc.web.applets.topmon.text", locale);
-    messagesText = ResourceBundle.getBundle("locales.messages", locale);
+    messagesText = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
     try{
       maxSpeed = Integer.valueOf(getParameter("max.speed"));
     }catch (Exception ignored){}

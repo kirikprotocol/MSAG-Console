@@ -142,6 +142,7 @@ public class AdminMode {${line.separator}
   <target name="monitor.exploded">
     <jar destfile="${smsc.exploded.dir}/smsc/stat/monitor.jar">
       <fileset dir="${smsc.source.classes}" includes="ru/novosoft/smsc/web/applets/perfmon/**/*,ru/novosoft/smsc/web/applets/topmon/**/*,ru/novosoft/smsc/util/applet/**/*,ru/novosoft/smsc/admin/perfmon/**/*,ru/novosoft/smsc/admin/topmon/**/*"/>
+      <fileset dir="${smsc.source.classes}" includes="ru/novosoft/smsc/web/resources/**/*"/>
     </jar>
   </target>
 

@@ -58,7 +58,7 @@ public class TestTopMonitorManager extends TopMonitorManager{
     snap.errSnap[0].avgCount = (short)(r.nextInt(100));
     snap.errSnap[1].avgCount = (short)(r.nextInt(100));
     if(snap.smeCount == 0) {
-      snap.smeCount = 2;
+      snap.smeCount = 0;
       snap.smeSnap = new SmeSnap[2];
       snap.smeSnap[0] = new SmeSnap();
       snap.smeSnap[0].smeId="Sme 1";
