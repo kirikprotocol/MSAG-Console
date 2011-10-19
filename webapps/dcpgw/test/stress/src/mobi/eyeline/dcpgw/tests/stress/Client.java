@@ -80,18 +80,21 @@ public class Client extends Thread implements PDUListener {
 
                     long message_id = Long.parseLong(s.substring(s.indexOf(":")+1,s.length()));
 
-                    if (message_ids.remove(message_id)) {
-                        c6++;
-                    }
+
 
                     DeliverSMResp deliverSMResp = new DeliverSMResp();
                     deliverSMResp.setStatus(Status.OK);
                     deliverSMResp.setSequenceNumber(sn);
                     deliverSMResp.setConnectionName(deliverSM.getConnectionName());
 
-
                     try{
                         smppClient.send(deliverSMResp);
+
+                        if (message_ids.remove(message_id)) {
+                            c6++;
+                        } else {
+                            log.debug("handle DeliverSM, couldn't remove message id "+message_id);
+                        }
                     } catch (SmppException e){
                         log.error("Couldn't send DeliverSMResp.", e);
                         return false;
