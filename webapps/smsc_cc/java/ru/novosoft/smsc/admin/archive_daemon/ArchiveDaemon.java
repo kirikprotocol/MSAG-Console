@@ -29,9 +29,9 @@ public class ArchiveDaemon {
   }
 
   private Socket connect() throws AdminException, IOException {
-    String host = manager.getSettings().getViewHost();
-    if (host == null)
+    if (manager.getDaemonOnlineHost() == null)
       throw new ArchiveDaemonException("archive_daemon_offline");
+    String host = manager.getSettings().getViewHost();
     int port = manager.getSettings().getViewPort();
 
     return new Socket(host, port);
