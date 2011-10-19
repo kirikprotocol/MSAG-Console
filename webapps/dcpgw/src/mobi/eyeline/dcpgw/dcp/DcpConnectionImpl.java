@@ -14,6 +14,7 @@ import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
+import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
@@ -42,6 +43,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     private LinkedBlockingQueue<SendTask> sendTaskQueue;
 
     private Hashtable<Long, SubmitSMResp> message_id_submit_sm_resp_table;
+    private Hashtable<Long, RegDeliveryReceipt> message_id_register_delivery_receipt_table;
 
     private int capacity;
     private long timeout;
@@ -66,6 +68,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         sendTaskQueue = new LinkedBlockingQueue<SendTask>();
 
         message_id_submit_sm_resp_table = new Hashtable<Long, SubmitSMResp>();
+        message_id_register_delivery_receipt_table = new Hashtable<Long, RegDeliveryReceipt>();
 
         capacity = config.getInformerMessagesListCapacity();
         timeout = config.getSendingToInformerTimeout();
@@ -93,7 +96,10 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
             int size = queue.size();
             log.debug("add "+message_id+"_message to "+delivery_id+"_queue, size "+size);
             message_id_submit_sm_resp_table.put(message_id, resp);
-            //log.debug("Remember SubmitSMResp for message_id "+message_id);
+
+            Properties properties = informer_message.getProperties();
+            RegDeliveryReceipt rdr = RegDeliveryReceipt.valueOf(Integer.valueOf(properties.getProperty("rd")));
+            message_id_register_delivery_receipt_table.put(message_id, rdr);
 
             if (queue.size() == 1){
                 SendTask sendTask = new SendTask(delivery_id);
@@ -178,10 +184,14 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                                 Connection connection = Server.getInstance().getConnection(connection_name);
                                 connection.setSubmitDate(message_id, submit_date);
 
-                                try {
-                                    Journal.getInstance().writeSubmitDate(message_id, connection_name, submit_date, false);
-                                } catch (CouldNotWriteToJournalException e) {
-                                    log.error("Couldn't write submit date to journal.", e);
+                                RegDeliveryReceipt rdr = message_id_register_delivery_receipt_table.remove(message_id);
+
+                                if (rdr != RegDeliveryReceipt.None){
+                                    try {
+                                        Journal.getInstance().writeSubmitDate(message_id, connection_name, submit_date, false);
+                                    } catch (CouldNotWriteToJournalException e) {
+                                        log.error("Couldn't write submit date to journal.", e);
+                                    }
                                 }
 
                             } else {

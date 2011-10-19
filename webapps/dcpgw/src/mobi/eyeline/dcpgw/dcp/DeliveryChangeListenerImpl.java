@@ -2,7 +2,9 @@ package mobi.eyeline.dcpgw.dcp;
 
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotReadMessageStateException;
+import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.journal.Data;
+import mobi.eyeline.dcpgw.journal.Journal;
 import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
@@ -14,6 +16,7 @@ import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
 import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
+import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
@@ -39,8 +42,48 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
         Properties p = e.getProperties();
         if (p!=null){
             if (p.containsKey("id")){
+
                 String s = p.getProperty("id");
                 long message_id = Long.parseLong(s);
+
+                // Check whether we need to send a delivery report
+                MessageState messageState = e.getMessageState();
+
+                String connection_name = p.getProperty("con");
+
+                RegDeliveryReceipt rdr = RegDeliveryReceipt.valueOf(Integer.valueOf(p.getProperty("rd")));
+                if (rdr == RegDeliveryReceipt.None ){
+                    log.debug(message_id+"_message has registered delivery parameter "+rdr+", remove delivery receipt");
+                    return;
+                } else if (rdr == RegDeliveryReceipt.Success){
+                    if (messageState != MessageState.Delivered){
+                        log.debug(message_id+"_message has registered delivery parameter "+rdr+", but message state is "+messageState+", remove delivery receipt");
+
+                        try {
+                            Journal.getInstance().writeSubmitDate(message_id, connection_name,
+                                    Functions.convertTime( new Date( System.currentTimeMillis() ) , LOCAL_TIMEZONE, STAT_TIMEZONE),
+                                    true);
+                        } catch (CouldNotWriteToJournalException e1) {
+                            log.error("Couldn't write submit date to journal.", e1);
+                        }
+
+                        return;
+                    }
+                } else if (rdr == RegDeliveryReceipt.Failure){
+                    if (messageState == MessageState.Delivered){
+                        log.debug(message_id+"_message has registered delivery parameter "+rdr+", but message state is "+messageState+", remove delivery receipt");
+
+                        try {
+                            Journal.getInstance().writeSubmitDate(message_id, connection_name,
+                                    Functions.convertTime( new Date( System.currentTimeMillis() ) , LOCAL_TIMEZONE, STAT_TIMEZONE),
+                                    true);
+                        } catch (CouldNotWriteToJournalException e1) {
+                            log.error("Couldn't write submit date to journal.", e1);
+                        }
+
+                        return;
+                    }
+                }
 
                 mobi.eyeline.smpp.api.pdu.data.Address source_address, destination_address;
                 try {
@@ -51,11 +94,9 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                     throw new CouldNotReadMessageStateException("could.not.read.message.state", e1);
                 }
 
-                String connection_name = p.getProperty("con");
+
 
                 Date done_date = Functions.convertTime(e.getEventDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
-
-                MessageState messageState = e.getMessageState();
 
                 int nsms = e.getNsms();
 
