@@ -30,6 +30,7 @@ class DaemonCommunicator {
     if (log.isDebugEnabled())
       log.debug("Sending message: " + message);
     message.send(os);
+    os.flush();
     if (log.isDebugEnabled())
       log.debug("Message sent.");
   }

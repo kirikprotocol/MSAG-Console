@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.messages.*;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,6 +35,8 @@ public class ArchiveDaemon {
     String host = manager.getSettings().getViewHost();
     int port = manager.getSettings().getViewPort();
 
+    System.out.println("CONNECT!!!");
+
     return new Socket(host, port);
   }
 
@@ -45,6 +48,7 @@ public class ArchiveDaemon {
    * @throws AdminException ошибка извлечения статистики
    */
   public SmsSet getSmsSet(ArchiveMessageFilter query) throws AdminException {
+    System.out.println("GET SMS SET");
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
@@ -60,7 +64,7 @@ public class ArchiveDaemon {
 
       socket = connect();
       input = socket.getInputStream();
-      output = socket.getOutputStream();
+      output = new BufferedOutputStream(socket.getOutputStream());
 
       DaemonCommunicator communicator = new DaemonCommunicator(input, output);
       communicator.send(request);
@@ -116,6 +120,8 @@ public class ArchiveDaemon {
    * @throws AdminException ошибка извлечения статистики
    */
   public int getSmsCount(ArchiveMessageFilter query) throws AdminException {
+
+    System.out.println("GET SMS COUNT");
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
@@ -157,6 +163,7 @@ public class ArchiveDaemon {
   }
 
   private static void close(InputStream input, OutputStream output, Socket socket) {
+    System.out.println("DISCONNECT");
     if (input != null) {
       try {
         input.close();
