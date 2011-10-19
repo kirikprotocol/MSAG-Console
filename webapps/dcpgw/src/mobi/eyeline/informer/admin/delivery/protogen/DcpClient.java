@@ -27,7 +27,7 @@ public class DcpClient extends SyncProtogenConnection {
 
   private final Lock lock = new ReentrantLock();
   private final String login;
-  private final String password;
+  private String password;
 
   public DcpClient(String host, int port, String login, String password) {
     super(host, port, RESPONSE_TIMEOUT);
@@ -41,6 +41,14 @@ public class DcpClient extends SyncProtogenConnection {
     auth.setUserId(login);
     auth.setPassword(password);
     send(auth);
+  }
+
+  public void setPassword(String password){
+      this.password = password;
+  }
+
+  public String getPassword(){
+      return password;
   }
 
   private static MBean getMBean() {

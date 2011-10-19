@@ -38,8 +38,8 @@ public class Server{
     private Properties properties;
 
     private int initial_receipt_sn_rang;
-    private long limit;
-    private long rang;
+    private int limit;
+    private int rang;
     private File receipts_rang_file;
 
     private static AtomicInteger ai = new AtomicInteger(0);
@@ -78,11 +78,27 @@ public class Server{
     }
 
     public synchronized int getReceiptSequenceNumber(){
-        int sn = initial_receipt_sn_rang + ai.incrementAndGet();
-        if (sn == limit){
+        int sn;
+        if (Integer.MAX_VALUE - initial_receipt_sn_rang - ai.get() > rang){
+            sn = initial_receipt_sn_rang + ai.incrementAndGet();
+            if (sn == limit){
+                try {
+                    PrintWriter pw = new PrintWriter(new FileWriter(receipts_rang_file));
+                    limit = limit + rang;
+                    pw.println(limit);
+                    pw.flush();
+                    pw.close();
+                } catch (IOException e) {
+                    log.error("Couldn't write to file new initial message id rang.", e);
+                }
+            }
+        } else {
+            initial_receipt_sn_rang = 0;
+            ai = new AtomicInteger(0);
+            sn = initial_receipt_sn_rang + ai.incrementAndGet();
             try {
                 PrintWriter pw = new PrintWriter(new FileWriter(receipts_rang_file));
-                limit = limit + rang;
+                limit = rang;
                 pw.println(limit);
                 pw.flush();
                 pw.close();
@@ -98,6 +114,7 @@ public class Server{
     }
 
     public void update(Properties new_properties) throws SmppException {
+
         // Initialize new connections
         for (Object skey : new_properties.keySet()) {
             String key = (String) skey;

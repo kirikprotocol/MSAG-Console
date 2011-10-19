@@ -1,7 +1,10 @@
 package mobi.eyeline.dcpgw.dcp;
 
+import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotReadMessageStateException;
 import mobi.eyeline.dcpgw.journal.Data;
+import mobi.eyeline.dcpgw.model.Delivery;
+import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
 import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.informer.admin.AdminException;
@@ -70,6 +73,18 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                 data.setNsms(nsms);
                 data.setStatus(Data.Status.INIT);
                 data.setInitTime(System.currentTimeMillis());
+
+                Provider provider = Config.getInstance().getProvider(connection_name);
+                if (provider == null){
+                    log.debug("Couldn't find provider for message_id "+message_id+" with connection "+connection_name+".");
+                    return;
+                }
+
+                Delivery delivery = provider.getDelivery(source_address.getAddress());
+                if (delivery == null){
+                    log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+source_address.getAddress()+".");
+                    return;
+                }
 
                 Server.getInstance().send(data);
 

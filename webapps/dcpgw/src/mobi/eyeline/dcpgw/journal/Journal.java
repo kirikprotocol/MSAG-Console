@@ -48,7 +48,7 @@ public class Journal {
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    // Sumbit date journal
+    // Submit date journal
     private File sdj1;
     private File sdj2;
     private File sdj2t;

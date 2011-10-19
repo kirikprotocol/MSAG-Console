@@ -32,16 +32,16 @@ public class PDUListenerImpl implements PDUListener {
 
     private AtomicLong al = new AtomicLong(0);
 
-    private long initial_message_id;
+    private long initial_message_id_rang;
     private long limit;
     private long rang;
     private File message_id_rang_file;
 
     public PDUListenerImpl(){
         Config config = Config.getInstance();
-        initial_message_id = config.getInitialMessageIdRang();
+        initial_message_id_rang = config.getInitialMessageIdRang();
         rang = config.getRang();
-        limit = initial_message_id + rang;
+        limit = initial_message_id_rang + rang;
         message_id_rang_file = config.getMessageIdRangFile();
     }
 
@@ -51,7 +51,7 @@ public class PDUListenerImpl implements PDUListener {
         switch (pdu.getType()) {
             case SubmitSM:{
 
-                long message_id = initial_message_id + al.incrementAndGet();
+                long message_id = initial_message_id_rang + al.incrementAndGet();
                 if (message_id == limit){
                     try {
                         PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
@@ -127,7 +127,7 @@ public class PDUListenerImpl implements PDUListener {
 
             case DataSM: {
 
-                long message_id = initial_message_id + al.incrementAndGet();
+                long message_id = initial_message_id_rang + al.incrementAndGet();
                 if (message_id == limit){
                     try {
                         PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));

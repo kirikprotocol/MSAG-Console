@@ -7,6 +7,7 @@ import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.dcpgw.utils.Utils;
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigParam;
@@ -77,7 +78,7 @@ public class Config {
 
     private long initial_message_id_rang;
     private int initial_receipts_sn_rang;
-    private long rang = 10000;
+    private int rang = 10000;
 
     public void init(String config_file) throws IOException, XmlConfigException, InitializationException {
         config = new Properties();
@@ -120,7 +121,11 @@ public class Config {
         }
 
         pw = new PrintWriter(new FileWriter(receipts_rang_file));
-        pw.println(initial_receipts_sn_rang +rang);
+        if (Integer.MAX_VALUE - initial_receipts_sn_rang > rang){
+            pw.println(initial_receipts_sn_rang +rang);
+        } else {
+            pw.println(rang);
+        }
         pw.flush();
         pw.close();
         log.debug("Write to file initial receipts sequence number rang: "+ initial_receipts_sn_rang + rang);
@@ -285,7 +290,21 @@ public class Config {
             }
         }
 
+        // Update passwords
+        for(String old_user: informer_user_connection_table.keySet()){
 
+            if (new_informer_users.contains(old_user)){
+                DcpConnectionImpl connection = informer_user_connection_table.get(old_user);
+                String new_password  = informer_user_password_table.get(old_user);
+                DcpClient dcpClient = connection.getClient();
+                if ( !new_password.equals(dcpClient.getPassword()) ){
+                    dcpClient.setPassword(new_password);
+                    log.debug("Update password for "+old_user+"_dcp_client.");
+                }
+
+            }
+
+        }
 
         log.debug("Configuration updated.");
     }
@@ -303,6 +322,7 @@ public class Config {
     }
 
     private Properties loadSmppEndpoints() throws IOException, XmlConfigException {
+        log.debug("l1");
         Properties result = (Properties) config.clone();
 
         XmlConfig xmlConfig = new XmlConfig();
@@ -310,40 +330,55 @@ public class Config {
         xmlConfig.load(new File(smpp_endpoints_file));
         XmlConfigSection endpoints_section = xmlConfig.getSection("endpoints");
         Collection<XmlConfigSection> c = endpoints_section.sections();
+        log.debug("l2");
+
         for(XmlConfigSection s : c) {
             String endpoint_name = s.getName();
-
+            log.debug(endpoint_name+"_l3");
             XmlConfigParam p = s.getParam("enabled");
+            log.debug(endpoint_name+"_l31");
             if (p.getBool()) {
+                log.debug(endpoint_name+"_l32");
                 p = s.getParam("systemId");
+                log.debug(endpoint_name+"_l33");
                 String systemId = p.getString();
-
+                log.debug(endpoint_name+"_l34");
                 p = s.getParam("password");
+                log.debug(endpoint_name+"_l35");
                 String password = p.getString();
-
+                log.debug(endpoint_name+"_l36");
                 result.setProperty(CONNECTION_PREFIX + systemId + ".password", password);
-
+                log.debug(endpoint_name+"_l37");
+                int speed, max_time;
                 XmlConfigSection s2 = s.getSection("send.receipts");
-                p = s2.getParam("speed");
-                int speed;
-                if (p != null){
-                    speed = p.getInt();
-                    result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipts.speed", Integer.toString(speed));
+                log.debug(endpoint_name+"_l38");
+                if (s2 != null){
+                    log.debug(endpoint_name+"_l4");
+                    p = s2.getParam("speed");
+                    if (p != null){
+                        speed = p.getInt();
+                        result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipts.speed", Integer.toString(speed));
+                    } else {
+                        speed = send_receipts_speed_default;
+                        result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipts.speed", Integer.toString(speed));
+                    }
+
+                    p = s2.getParam("max.time.min");
+                    if (p!= null){
+                        max_time = p.getInt();
+                        result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipt.max.time.min", Integer.toString(max_time));
+                    } else {
+                        max_time = send_receipt_max_time_default;
+                        result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipt.max.time.min", Integer.toString(max_time));
+                    }
+
                 } else {
                     speed = send_receipts_speed_default;
                     result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipts.speed", Integer.toString(speed));
-                }
 
-                int max_time;
-                p = s2.getParam("max.time.min");
-                if (p!= null){
-                    max_time = p.getInt();
-                    result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipt.max.time.min", Integer.toString(max_time));
-                } else {
                     max_time = send_receipt_max_time_default;
                     result.setProperty(CONNECTION_PREFIX + systemId + ".send.receipt.max.time.min", Integer.toString(max_time));
                 }
-
 
                 log.debug("Load endpoint: name=" + endpoint_name + ", systemId=" + systemId + ", password=" + password + ", speed="+speed+", max_time="+max_time);
             } else {
@@ -497,7 +532,7 @@ public class Config {
         return initial_message_id_rang;
     }
 
-    public long getRang(){
+    public int getRang(){
         return rang;
     }
 

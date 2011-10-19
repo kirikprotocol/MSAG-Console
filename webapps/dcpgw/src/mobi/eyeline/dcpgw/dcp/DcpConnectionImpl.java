@@ -17,7 +17,6 @@ import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -79,6 +78,10 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         this.start();
 
         log.debug("Initialize connection for informer user "+informer_user+".");
+    }
+
+    public DcpClient getClient(){
+        return client;
     }
 
     public void addMessage(int delivery_id, Message informer_message,

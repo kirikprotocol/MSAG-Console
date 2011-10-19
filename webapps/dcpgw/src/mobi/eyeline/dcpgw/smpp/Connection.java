@@ -4,6 +4,8 @@ import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.dcpgw.journal.Journal;
+import mobi.eyeline.dcpgw.model.Delivery;
+import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.DeliverSM;
 import mobi.eyeline.smpp.api.pdu.DeliverSMResp;
@@ -146,10 +148,25 @@ public class Connection {
                         if (data != null){
 
                             long message_id = data.getMessageId();
+
+                            Provider provider = Config.getInstance().getProvider(name);
+                            if (provider == null){
+                                log.debug("Couldn't find provider for message_id "+message_id+" with connection "+name+".");
+                                continue;
+                            }
+
+                            Address source_address = data.getSourceAddress();
+                            Delivery delivery = provider.getDelivery(source_address.getAddress());
+                            if (delivery == null){
+                                log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+source_address.getAddress()+".");
+                                continue;
+                            }
+
+
                             int nsms = data.getNsms();
                             Date done_date = data.getDoneDate();
                             Date submit_date = data.getSubmitDate();
-                            Address source_address = data.getSourceAddress();
+
                             Address destination_address = data.getDestinationAddress();
                             FinalMessageState state = data.getFinalMessageState();
 
@@ -229,6 +246,20 @@ public class Connection {
 
 
                 Data data = sn_data_table.get(sn);
+
+                long message_id = data.getMessageId();
+                Provider provider = Config.getInstance().getProvider(name);
+                if (provider == null){
+                    log.debug("Couldn't find provider for message_id "+message_id+" with connection "+name+".");
+                    continue;
+                }
+
+                Address source_address = data.getSourceAddress();
+                Delivery delivery = provider.getDelivery(source_address.getAddress());
+                if (delivery == null){
+                    log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+source_address.getAddress()+".");
+                    continue;
+                }
 
                 long last_resend_time = data.getLastResendTime();
 
