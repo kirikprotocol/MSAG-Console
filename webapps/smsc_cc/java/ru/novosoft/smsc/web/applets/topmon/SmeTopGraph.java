@@ -251,8 +251,12 @@ class SmeTopGraph extends Canvas implements MouseListener, MouseMotionListener, 
     g.setColor(smeColor);
     g.drawLine(size.width - scrollerWidth, headerHeight, size.width - scrollerWidth, size.height - split);
     g.setColor(graphHiGridColor);
-    int drowerSize = (scrollPageRows * (size.height - headerHeight - split)) / snap.smeCount;
-    int drowerPos = (scrollPos * (size.height - headerHeight - split)) / snap.smeCount;
+    int drowerSize = (scrollPageRows * (size.height - headerHeight - split));
+    if(snap.smeCount != 0)
+      drowerSize /= snap.smeCount;
+    int drowerPos = (scrollPos * (size.height - headerHeight - split));
+    if(snap.smeCount != 0)
+      drowerPos /= snap.smeCount;
     g.fillRect(size.width - scrollerWidth + 2, headerHeight + drowerPos, 4, drowerSize);
   }
 
