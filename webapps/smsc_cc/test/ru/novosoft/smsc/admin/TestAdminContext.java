@@ -49,6 +49,7 @@ import ru.novosoft.smsc.admin.stat.SmscStatContext;
 import ru.novosoft.smsc.admin.stat.TestSmscStatProvider;
 import ru.novosoft.smsc.admin.timezone.TestTimezoneManager;
 import ru.novosoft.smsc.admin.timezone.TimezonesConfigTest;
+import ru.novosoft.smsc.admin.topmon.TestTopMonitorManager;
 import ru.novosoft.smsc.admin.users.TestUsersManager;
 import ru.novosoft.smsc.admin.users.UsersManagerImplTest;
 import testutils.TestUtils;
@@ -228,6 +229,7 @@ public class TestAdminContext extends AdminContext {
       }
     });
     perfMonitorManager = new TestPerfMonitorManager(cfg.getPerfMonitorPorts());
+    topMonitorManager = new TestTopMonitorManager(cfg.getTopMonitorPorts());
   }
 
   public TestAdminContext() throws AdminException {

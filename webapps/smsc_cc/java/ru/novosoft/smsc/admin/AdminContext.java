@@ -50,6 +50,8 @@ import ru.novosoft.smsc.admin.stat.SmscStatContext;
 import ru.novosoft.smsc.admin.stat.SmscStatProvider;
 import ru.novosoft.smsc.admin.timezone.TimezoneManager;
 import ru.novosoft.smsc.admin.timezone.TimezoneManagerImpl;
+import ru.novosoft.smsc.admin.topmon.TopMonitorContext;
+import ru.novosoft.smsc.admin.topmon.TopMonitorManager;
 import ru.novosoft.smsc.admin.users.UsersManager;
 import ru.novosoft.smsc.admin.users.UsersManagerImpl;
 import ru.novosoft.smsc.util.InetAddress;
@@ -98,6 +100,7 @@ public class AdminContext {
   protected SmscStatProvider smscStatProvider;
 
   protected PerfMonitorManager perfMonitorManager;
+  protected TopMonitorManager topMonitorManager;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -178,6 +181,8 @@ public class AdminContext {
     loggerManager = new LoggerManagerImpl(clusterController);
 
     perfMonitorManager = new PerfMonitorManager(new PerfMonitorContextImpl(cfg.isPerfMonSupport64Bit(), cfg.getPerfMonitorPorts(), smscManager));
+    topMonitorManager = new TopMonitorManager(new TopMonitorContextImpl(cfg.getTopMonitorPorts(), smscManager));
+
 
     File[] operativeStorages = new File[s.getSmscInstancesCount()];
     for (int i=0;i<s.getSmscInstancesCount(); i++) {
@@ -194,6 +199,10 @@ public class AdminContext {
 
   public PerfMonitorManager getPerfMonitorManager() {
     return perfMonitorManager;
+  }
+
+  public TopMonitorManager getTopMonitorManager() {
+    return topMonitorManager;
   }
 
   public FileSystem getFileSystem() {
@@ -288,10 +297,6 @@ public class AdminContext {
     return archiveDaemon;
   }
 
-  public InstallationType getInstallationType() {
-    return instType;
-  }
-
   public SmscStatProvider getSmscStatProvider() {
     return smscStatProvider;
   }
@@ -312,7 +317,13 @@ public class AdminContext {
         e.printStackTrace();
       }
     }
-    System.out.println("Exit");
+    if(topMonitorManager != null) {
+      try{
+        topMonitorManager.shutdown();
+      }catch (Exception e){
+        e.printStackTrace();
+      }
+    }
     AdminContextLocator.unregisterContext(this);
   }
 
@@ -373,6 +384,34 @@ public class AdminContext {
 
     public boolean isSupport64Bit() throws AdminException {
       return support64Bit;
+    }
+  }
+
+  protected static class TopMonitorContextImpl implements TopMonitorContext {
+    private final int[] appletports;
+
+    private final SmscManager smscManager;
+
+    public TopMonitorContextImpl(int[] appletports, SmscManager smscManager) {
+      this.appletports = appletports;
+      this.smscManager = smscManager;
+    }
+
+    public InetAddress getTopMonitorAddress(int instance) throws AdminException {
+      InstanceSettings is = smscManager.getSettings().getInstanceSettings(instance);
+      return new InetAddress(is.getSmePerfHost(), is.getSmePerfPort());
+    }
+
+    public int getTopMonitorCount() throws AdminException {
+      return appletports.length;
+    }
+
+    public int getAppletPort(int instance) throws AdminException {
+      try{
+        return appletports[instance];
+      }catch (IndexOutOfBoundsException e) {
+        return -1;
+      }
     }
   }
 }

@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.stat.SmscStatProvider;
+import ru.novosoft.smsc.admin.topmon.TopMonitorManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.acl.WAclManager;
@@ -76,6 +77,7 @@ public class WebContext {
   private final ArchiveDaemon archiveDaemon;
   private final SmscStatProvider smscStatProvider;
   private final PerfMonitorManager perfMonitorManager;
+  private final TopMonitorManager topMonitorManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -134,6 +136,7 @@ public class WebContext {
     archiveDaemon = adminContext.getArchiveDaemon();
     smscStatProvider = adminContext.getSmscStatProvider();
     perfMonitorManager = adminContext.getPerfMonitorManager();
+    topMonitorManager = adminContext.getTopMonitorManager();
   }
 
   public WebXml getWebXml() {
@@ -151,6 +154,10 @@ public class WebContext {
 
   public PerfMonitorManager getPerfMonitorManager() {
     return perfMonitorManager;
+  }
+
+  public TopMonitorManager getTopMonitorManager() {
+    return topMonitorManager;
   }
 
   public AclManager getAclManager() {

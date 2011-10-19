@@ -124,8 +124,33 @@ class AdminContextConfig {
       XmlConfigSection perfmon = webconfig.getSection("perfmon");
       Map<Integer, Integer> m = new TreeMap<Integer, Integer>();
       for(XmlConfigParam p : perfmon.params()){
-        if(p.getName().startsWith(perfMonPref)) {
-          m.put(Integer.parseInt(p.getName().substring(perfMonPref.length())), p.getInt());
+        if(p.getName().startsWith(monAppletPortPref)) {
+          m.put(Integer.parseInt(p.getName().substring(monAppletPortPref.length())), p.getInt());
+        }
+      }
+      int[] res = new int[m.size()];
+      int i = 0;
+      for(int p : m.values()) {
+        res[i] = p;
+        i++;
+      }
+      return res;
+    } catch (NumberFormatException e){
+      throw new AdminContextException("invalid_config", e);
+    } catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }
+  }
+
+  private static final String monAppletPortPref = "appletPort";
+
+  public int[] getTopMonitorPorts() throws AdminException {
+    try {
+      XmlConfigSection perfmon = webconfig.getSection("topmon");
+      Map<Integer, Integer> m = new TreeMap<Integer, Integer>();
+      for(XmlConfigParam p : perfmon.params()){
+        if(p.getName().startsWith(monAppletPortPref)) {
+          m.put(Integer.parseInt(p.getName().substring(monAppletPortPref.length())), p.getInt());
         }
       }
       int[] res = new int[m.size()];
