@@ -396,6 +396,35 @@ public class DetailedSaveStrategyDeliveryTest {
   }
 
   @Test
+  public void testImportFileWithInvalidUserDataMTS() throws AdminException, IOException {
+    ctx.setCpFileFormat(CpFileFormat.MTS);
+    remoteResource.addFile("test.csv",
+        "12345|+79139495113|text",
+        "123=45|+79139495115|text",
+        "+79139495113|text1");
+
+    processResourceWithRandomUser("login");
+
+    Delivery d = getDelivery("test", "login");
+    ctx.finalizeDelivery(d.getId());
+
+    Delivery d1 = getDelivery("test", "login");
+    assertEquals(DeliveryStatus.Finished, d1.getStatus());
+
+    processResourceWithRandomUser("login");
+
+    File reportFile = new File(localCopyDir, "test.csv.report");
+
+    assertTrue(fs.exists(reportFile));
+    assertTrue(fs.exists(new File(localCopyDir, "test.csv.finished")));
+
+    String datePattern = "\\d\\d\\d\\d\\.\\d\\d\\.\\d\\d \\d\\d\\:\\d\\d\\:\\d\\d";
+    assertFileContainsLine(reportFile, "12345\\|\\+79139495113\\|" + datePattern + "\\|Delivered\\|0");
+    assertFileContainsLine(reportFile, "\\+79139495113\\|" + datePattern + "\\|Delivered\\|0");
+    assertFileContainsLine(reportFile, "123=45\\|\\+79139495115\\|" + datePattern + "\\|Failed\\|9999");
+  }
+
+  @Test
   public void testImportFileWithoutReport() throws AdminException {
     remoteResource.addFile("test.csv");
 

@@ -362,6 +362,12 @@ class SaveStrategyHelper {
       return (r != null && regions.contains(r.getRegionId()));
     }
 
+    private static final String EQ = "=";
+
+    private boolean isMsgIdAllowed(String msgId) {
+      return msgId == null || !msgId.contains(EQ);
+    }
+
     public Message next() throws AdminException {
       try {
         String line;
@@ -384,7 +390,7 @@ class SaveStrategyHelper {
               continue;
             }
 
-            if (!isRegionAllowed(ab)) {
+            if (!isRegionAllowed(ab) || !isMsgIdAllowed(info.getUserData())) {
               if (rejectListener != null)
                 rejectListener.reject(info.getMsisdn(), info.getUserData());
               continue;
