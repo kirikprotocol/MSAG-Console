@@ -61,6 +61,7 @@ public class SmscStatProviderTest {
   @After
   public void after() {
     if(context != null) {
+      context.clearExcludeDirs();
       for(File dir : context.getStatDirs()) {
         TestUtils.recursiveDeleteFolder(dir);
       }
