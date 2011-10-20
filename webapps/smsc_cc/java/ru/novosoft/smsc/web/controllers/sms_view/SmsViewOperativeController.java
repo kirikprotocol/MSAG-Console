@@ -239,24 +239,29 @@ public class SmsViewOperativeController extends SmsViewController {
         new Thread() {
           public void run() {
             try{
-              int smscInstancesNumber = getSmscInstancesNumber();
+              final int smscInstancesNumber = getSmscInstancesNumber();
               loadListener.setTotal(smscInstancesNumber * 100);
 
               msgs = new Collection[smscInstancesNumber];
 
               totalSize = 0;
               ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
+              final int[] previousTotal = new int[]{0};
               for (int i = 0; i < smscInstancesNumber; i++) {
-                final int currentSmsc = i;
+                final int curI = i;
                 msgs[i] = new LinkedList<Object>();
                 for(Message m : wcontext.getOperativeStoreManager().getMessages(i, messageFilter, new ProgressObserver() {
                   public void update(long current, long total) {
-                    loadListener.setCurrent((int) (currentSmsc * 100 + current / total * 100));
+                    int c = (int)(previousTotal[0]+current);
+                    int t = (int)(previousTotal[0]+total);
+                    loadListener.setCurrent((c*100/t/smscInstancesNumber) + (curI*100/smscInstancesNumber));
+                    loadListener.setTotal(100);
                   }
                 })) {
                   msgs[i].add(new OperativeSms(m, isAllowToShowSmsText(m.getSrcSmeId(), m.getDstSmeId()), bundle));
                 }
                 totalSize += msgs[i].size();
+                previousTotal[0] = loadListener.getTotal();
               }
               loaded = true;
             }catch (AdminException e){

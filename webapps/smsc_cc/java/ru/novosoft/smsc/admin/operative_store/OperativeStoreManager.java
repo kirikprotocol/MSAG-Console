@@ -187,6 +187,11 @@ public class OperativeStoreManager {
         } catch (IOException ignored) {
         }
     }
+
+    if (observer != null) {
+      long l = smsStore.length();
+      observer.update(l, l);
+    }
   }
 
 
@@ -248,7 +253,7 @@ public class OperativeStoreManager {
         File file  = files[i[0]];
         long delay = i[0] == (files.length - 1) ? 100 : 0;
         try{
-          ProgressObserver _p = new ProgressObserver() {
+          ProgressObserver _p = observer == null ? null : new ProgressObserver() {
             public void update(long current, long total) {
               observer.update(previous[0]+current, previous[0]+total+getNextTotals(files, i[0]+1));
             }
