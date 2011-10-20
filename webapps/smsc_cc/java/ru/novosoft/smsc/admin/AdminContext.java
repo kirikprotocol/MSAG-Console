@@ -142,7 +142,7 @@ public class AdminContext {
       archiveDaemon = new ArchiveDaemon(archiveDaemonManager);
     }
 
-    SmscSettings s = smscManager.getSettings();
+    SmscSettings s = _smscManager.getSettings();
 
     aliasManager = new AliasManagerImpl(new File(s.getCommonSettings().getAliasStoreFile()), clusterController, fileSystem);
 
