@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveMessageFilter;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
 import ru.novosoft.smsc.admin.archive_daemon.SmsSet;
+import ru.novosoft.smsc.admin.util.ProgressObserver;
 
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
@@ -196,7 +197,12 @@ public class SmsViewArchiveController extends SmsViewController{
               try{
                 loadListener.setCurrent(0);
                 loadListener.setTotal(1);
-                final SmsSet messages = wcontext.getArchiveDaemon().getSmsSet(smsFilter);
+                final SmsSet messages = wcontext.getArchiveDaemon().getSmsSet(smsFilter, new ProgressObserver() {
+                  public void update(long current, long total) {
+                    loadListener.setTotal((int)total);
+                    loadListener.setCurrent((int)current);
+                  }
+                });
                 List<SmsRow> rs =  messages.getRowsList();
                 msgs = new ArrayList<Sms>(rs.size());
                 ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);

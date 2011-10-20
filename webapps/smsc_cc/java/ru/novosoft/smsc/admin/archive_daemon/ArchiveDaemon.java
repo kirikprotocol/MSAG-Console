@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin.archive_daemon;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.messages.*;
+import ru.novosoft.smsc.admin.util.ProgressObserver;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -42,10 +43,11 @@ public class ArchiveDaemon {
    * Возвращает статистику смс, удовлетворяющую запросу
    *
    * @param query запрос
+   * @param observer отслеживание прогресса
    * @return статистика смс
    * @throws AdminException ошибка извлечения статистики
    */
-  public SmsSet getSmsSet(ArchiveMessageFilter query) throws AdminException {
+  public SmsSet getSmsSet(ArchiveMessageFilter query, ProgressObserver observer) throws AdminException {
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
@@ -53,6 +55,7 @@ public class ArchiveDaemon {
     SmsSet set = new SmsSet();
     set.setHasMore(false);
     int rowsMaximum = query.getRowsMaximum();
+    observer.update(0, rowsMaximum);
     if (rowsMaximum == 0) return set;
 
     QueryMessage request = new QueryMessage(query);
@@ -71,6 +74,7 @@ public class ArchiveDaemon {
 
       Message responce;
       boolean allSelected = false;
+      int counter = 0;
       do {
         responce = communicator.receive();
         if (responce == null) throw new ArchiveDaemonException("invalid_response");
@@ -81,6 +85,8 @@ public class ArchiveDaemon {
             break;
           case Message.SMSC_BYTE_RSSMS_TYPE:
             set.addRow(((RsSmsMessage) responce).getSms());
+            counter++;
+            observer.update(counter<rowsMaximum ? counter : rowsMaximum, rowsMaximum);
             if (--toReceive <= 0) {
               toReceive = rowsMaximum - set.getRowsCount();
               if (toReceive <= 0) {
@@ -100,6 +106,7 @@ public class ArchiveDaemon {
             throw new ArchiveDaemonException("invalid_response");
         }
       } while (!allSelected);
+      observer.update(rowsMaximum, rowsMaximum);
 
     } catch (IOException exc) {
       throw new ArchiveDaemonException("communication_error", exc);

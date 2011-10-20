@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.util.ProgressObserver;
 import ru.novosoft.smsc.util.Address;
 
 import java.util.Date;
@@ -68,13 +69,18 @@ public class TestArchiveDaemon extends ArchiveDaemon{
     return new Address('+'+Integer.toString(Math.abs((int)r.nextLong())));
   }
 
-  @Override
-  public SmsSet getSmsSet(ArchiveMessageFilter query) throws AdminException {
+  public SmsSet getSmsSet(ArchiveMessageFilter query, ProgressObserver observer) throws AdminException {
     SmsSet s = new SmsSet();
     s.setHasMore(false);
+    observer.update(0, query.getRowsMaximum());
+    int counter = 0;
     for(SmsRow r : storage) {
       if(accepted(query, r)) {
         s.addRow(r);
+        observer.update(++counter, query.getRowsMaximum());
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException ignored) {}
       }
       if(query.getRowsMaximum() != null && s.getRowsCount() == query.getRowsMaximum()) {
         break;

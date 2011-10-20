@@ -4,7 +4,7 @@ import mobi.eyeline.util.jsf.components.data_table.model.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.operative_store.Message;
 import ru.novosoft.smsc.admin.operative_store.MessageFilter;
-import ru.novosoft.smsc.admin.operative_store.ProgressObserver;
+import ru.novosoft.smsc.admin.util.ProgressObserver;
 import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.event.ActionEvent;
@@ -253,7 +253,7 @@ public class SmsViewOperativeController extends SmsViewController {
                   public void update(long current, long total) {
                     int c = (int)(current);
                     int t = (int)(total);
-                    loadListener.setCurrent((c*100/t/smscInstancesNumber) + (curI*100/smscInstancesNumber));
+                    loadListener.setCurrent((c * 100 / t / smscInstancesNumber) + (curI * 100 / smscInstancesNumber));
                     loadListener.setTotal(100);
                   }
                 })) {
