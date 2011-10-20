@@ -1029,11 +1029,23 @@ public class ClusterController {
     checkResponse(cc.send(req).getResp());
   }
 
-  public void cancelSMS(String []ids) throws AdminException {
+  public void cancelSMS(CCSms ... smses) throws AdminException {
+    if(smses == null) {
+      return;
+    }
+    String[] ids = new String[smses.length];
+    String[] src = new String[smses.length];
+    String[] dst = new String[smses.length];
+    for(int i=0;i<smses.length;i++) {
+      CCSms sms = smses[i];
+      ids[i] = sms.getId();
+      src[i] = sms.getSrcAddress().getSimpleAddress();
+      dst[i] = sms.getDstAddress().getSimpleAddress();
+    }
     CancelSms c = new CancelSms();
     c.setIds(ids);
-    c.setSrcs(new String[0]);
-    c.setDsts(new String[0]);
+    c.setSrcs(src);
+    c.setDsts(dst);
     CancelSmsResp resp = cc.send(c);
     checkResponse(resp.getResp());
   }
