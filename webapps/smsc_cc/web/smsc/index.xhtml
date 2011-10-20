@@ -54,13 +54,13 @@
 
           <eye:column name="perf" title="#{msg['permonance.monitor.perfomance']}" columnClass="monColumn">
             <h:panelGroup rendered="#{data.onlineHost != null}">
-              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/perfMonitor.faces?instance=#{data.instanceNumber}', 'perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['permonance.monitor.monitor']}</a>
+              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/perfMonitor.faces?instance=#{data.instanceNumber}', '_blank', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['permonance.monitor.monitor']}</a>
             </h:panelGroup>
           </eye:column>
 
           <eye:column name="top" title="#{msg['top.monitor.sme']}" columnClass="monColumn">
             <h:panelGroup rendered="#{data.onlineHost != null}">
-              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/topMonitor.faces?instance=#{data.instanceNumber}', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['top.monitor.monitor']}</a>
+              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/topMonitor.faces?instance=#{data.instanceNumber}', '_blank', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['top.monitor.monitor']}</a>
             </h:panelGroup>
           </eye:column>
 
