@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.operative_store;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.CCSms;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ProgressObserver;
@@ -296,16 +297,16 @@ public class OperativeStoreManager {
 
   /**
    * Отменяет доставку смс
-   * @param ids список идентификаторов смс
+   * @param smses список идентификаторов смс
    * @throws ru.novosoft.smsc.admin.AdminException ошибка
    */
-  public void cancelSMS(String ... ids) throws AdminException{
-    if(ids == null) {
+  public void cancelSMS(CCSms... smses) throws AdminException{
+    if(smses == null) {
       return;
     }
     if (!cc.isOnline())
       throw new OperativeStoreException("cancel.sms.unavailable");
 
-    cc.cancelSMS(ids);
+    cc.cancelSMS(smses);
   }
 }

@@ -28,4 +28,15 @@ public class CCSms {
   public Address getDstAddress() {
     return dstAddress;
   }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append("CCSms");
+    sb.append("{id='").append(id).append('\'');
+    sb.append(", srcAddress=").append(srcAddress);
+    sb.append(", dstAddress=").append(dstAddress);
+    sb.append('}');
+    return sb.toString();
+  }
 }

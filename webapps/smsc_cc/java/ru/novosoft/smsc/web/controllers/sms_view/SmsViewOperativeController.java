@@ -2,9 +2,11 @@ package ru.novosoft.smsc.web.controllers.sms_view;
 
 import mobi.eyeline.util.jsf.components.data_table.model.*;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.CCSms;
 import ru.novosoft.smsc.admin.operative_store.Message;
 import ru.novosoft.smsc.admin.operative_store.MessageFilter;
 import ru.novosoft.smsc.admin.util.ProgressObserver;
+import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.event.ActionEvent;
@@ -106,7 +108,14 @@ public class SmsViewOperativeController extends SmsViewController {
   public String removeSelected() {
     if(selected != null && !selected.isEmpty()) {
       try{
-        wcontext.getOperativeStoreManager().cancelSMS(selected.toArray(new String[selected.size()]));
+        CCSms[] toCancel = new CCSms[selected.size()];
+        int i = 0;
+        for(String s : selected) {
+          StringTokenizer t = new StringTokenizer(s, "_");
+          CCSms sms = new CCSms(t.nextToken(), new Address(t.nextToken()), new Address(t.nextToken()));
+          toCancel[i++] = sms;
+        }
+        wcontext.getOperativeStoreManager().cancelSMS(toCancel);
         selected.clear();
         loadingIsNeeded();
       }catch (AdminException e) {
@@ -324,7 +333,12 @@ public class SmsViewOperativeController extends SmsViewController {
 
     public String getId(Object o) throws ModelException {
       try{
-        return o instanceof Sms ? Long.toString(((Sms)o).getId()) : null;
+        if(o instanceof Sms) {
+          Sms sms = (Sms)o;
+          return sms.getId()+"_"+sms.getOriginatingAddress().getSimpleAddress()+'_'+sms.getDestinationAddress().getSimpleAddress();
+        }else {
+          return null;
+        }
       }catch (AdminException e) {
         addError(e);
         throw new ModelException(e.getMessage(locale));

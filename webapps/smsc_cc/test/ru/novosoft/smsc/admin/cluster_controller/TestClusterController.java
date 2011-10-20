@@ -107,12 +107,11 @@ public class TestClusterController extends TestClusterControllerStub {
 
   //SMS
 
-  @Override
-  public void cancelSMS(String[] ids) throws AdminException {
-    if(ids == null) {
+  public void cancelSMS(CCSms ... smses) throws AdminException {
+    if(smses == null) {
       return;
     }
-    for(String s : ids) {
+    for(CCSms s : smses) {
       System.out.println("Cancel sms: "+s);
     }
   }
