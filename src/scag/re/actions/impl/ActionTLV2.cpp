@@ -1,6 +1,6 @@
 #include "ActionTLV2.h"
 #include "scag/re/base/CommandAdapter2.h"
-#include "scag/re/base/CommandBridge.h"
+// #include "scag/re/base/CommandBridge.h"
 
 #include "util/Uint64Converter.h"
 #include "util/BinDump.hpp"
@@ -51,6 +51,19 @@ bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
     return true;
 }
 
+bool ActionTLV::getOptionalProperty(SmsResp& resp, const char*& buff, uint32_t& len)
+{
+    if (!resp.hasUnknownOptionals()) return false;
+    len = resp.sizeUnknownOptionals();
+    if (len<4) {
+        smsc_log_warn(logger, "Unknown optional field is less then 4 bytes");
+        return false;
+    }
+    buff = resp.getUnknownOptionals();
+    return true;
+}
+
+
 uint32_t ActionTLV::findField(const char* buff, uint32_t len, uint16_t fieldId)
 {
     uint32_t i = 0;
@@ -61,17 +74,19 @@ uint32_t ActionTLV::findField(const char* buff, uint32_t len, uint16_t fieldId)
     return i;
 }
 
-void ActionTLV::cutField(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp)
+bool ActionTLV::cutField(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp)
 {
     uint32_t i = findField(buff, len, fieldId);
-    tmp.assign(buff, i < len ? i : len);
-    if(i <= len - 4)
-    {
-        i = i + 4 + EndianConverter::get16(buff + i + 2);
-        if(i < len) {
-            tmp.append(buff + i, len - i);
+    if ( i <= len - 4 ) {
+        tmp.reserve(len);
+        tmp.assign(buff,i);
+        i += 4 + EndianConverter::get16(buff+i+2);
+        if (i < len) {
+            tmp.append(buff+i,len-i);
         }
+        return true;
     }
+    return false;
 }
 
 int64_t ActionTLV::convertToIntX(const char* buf, uint16_t valueLen) {
@@ -92,98 +107,35 @@ int64_t ActionTLV::convertToUIntX(const char* buf, uint16_t valueLen) {
   return (int64_t)value;
 }
 
-bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, Property* prop)
+bool ActionTLV::getUnknown(const char* buff, uint32_t len, uint16_t fieldId, Property* prop)
 {
-    uint32_t len, i;
-    const char* buff;
-    if(getOptionalProperty(data, buff, len) && (i = findField(buff, len, fieldId)) <= len - 4)
-    {
+    uint32_t i = findField(buff,len,fieldId);
+    if (i <= len - 4) {
         uint16_t valueLen = EndianConverter::get16(buff + i + 2);
-        if(i + 4 + valueLen > len) return false;
+        if (i + 4 + valueLen > len) return false;
         getBinTag(buff + i + 4, valueLen, prop, fieldId);
         return true;
     }
     return false;
 }
 
-bool ActionTLV::existUnknown(SMS& data, uint16_t fieldId)
+bool ActionTLV::existUnknown(const char* buff, uint32_t len, uint16_t fieldId)
 {
-    uint32_t len;
-    const char* buff;
-    return getOptionalProperty(data, buff, len) && findField(buff, len, fieldId) <= len - 4;
+    return findField(buff, len, fieldId) <= len - 4;
 }
 
-bool ActionTLV::delUnknown(SMS& data, uint16_t fieldId)
+bool ActionTLV::delUnknown(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp)
 {
-    uint32_t i, len;
-    const char* buff;
-    if(getOptionalProperty(data, buff, len) && (i = findField(buff, len, fieldId)) <= len - 4)
-    {
-        std::string tmp;
-        tmp.assign(buff, i);
-        i = i + 4 + EndianConverter::get16(buff + i + 2);
-        if(i < len) {
-            tmp.append(buff + i, len - i);
-        }
-        data.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
-        return true;
-    }
-    return false;
+    return cutField(buff,len,fieldId,tmp);
 }
 
-bool ActionTLV::hexDumpToBytes(const std::string& hex_dump, std::string& bytes) {
-  const char* dump_ptr = hex_dump.c_str();
-  char hex_val[3];
-  memset(hex_val, 0, 3);
-  char byte = 0;
-  while (*dump_ptr) {
-    if (isspace(*dump_ptr)) {
-      ++dump_ptr;
-      continue;
-    }
-    if (!isxdigit(*dump_ptr) || !isxdigit(*(dump_ptr + 1))) {
-      return false;
-    }
-    strncpy(hex_val, dump_ptr, 2);
-    byte = strtol(hex_val, NULL, 16);
-    bytes.append(&byte, 1);
-    dump_ptr = dump_ptr + 2;
-  }
-  return true;
-}
-
-void ActionTLV::getPropertyValue(Property* prop, uint16_t tag, const std::string& var, int64_t& int_val, std::string& str_val) {
-  if (tlv_type == TT_UNKNOWN || tlv_type == TT_STRN || tlv_type == TT_STR || tlv_type == TT_HEXDUMP) {
-      str_val = prop ? prop->getStr().c_str() : var.c_str();
-      smsc_log_debug(logger, "Action 'tlv': TAG: %d. SetValue=%s", tag, str_val.c_str());
-  } else  {
-    if (prop) {
-      int_val = prop->getInt();
-    } else {
-      int_val = atoll(var.c_str());
-      if(!int_val && (var[0] != '0' || var.size() != 1)) {
-          smsc_log_warn(logger, "Action 'tlv': Invalid value for TAG %d, val=%s", tag, var.c_str());
-      }
-    }
-    smsc_log_debug(logger, "Action 'tlv': TAG: %d. SetValue=%d", tag, int_val);
-  }
-}
-
-void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& var)
+void ActionTLV::setUnknown(std::string& tmp, uint16_t fieldId, Property* prop, const std::string& var)
 {
     uint16_t valueLen = 0;
     int64_t int_val = 0;
     std::string str_val;
-    uint32_t len = 0;
-    std::string tmp;
-    const char* buff;
-
-    if(getOptionalProperty(data, buff, len)) {
-        cutField(buff, len, fieldId, tmp);
-    }
 
     getPropertyValue(prop, fieldId, var, int_val, str_val);
-
     uint16_t netFieldId = htons(fieldId);
     tmp.append((char*)&netFieldId, 2);
     switch (tlv_type) {
@@ -242,22 +194,57 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
     case TT_HEXDUMP: {
       std::string bytes("");
       if (hexDumpToBytes(str_val, bytes) && bytes.size() > 0) {
+      } else {
+          smsc_log_warn(logger, "Action 'tlv': invalid hex dump: \'%s\'", str_val.c_str());
+          bytes = "";
+      }
         valueLen = (uint16_t)bytes.size();
         uint16_t netValueLen = htons(valueLen);
         tmp.append((char*)&netValueLen, 2);
         tmp.append(bytes, 0, valueLen);
-      } else {
-        valueLen = (uint16_t)len;
-        uint16_t netValueLen = htons(valueLen);
-        tmp.append((char*)&netValueLen, 2);
-        tmp.append(buff, valueLen);
-        smsc_log_warn(logger, "Action 'tlv': invalid hex dump: \'%s\'", str_val.c_str());
       }
       break;
     }
-    }
-    data.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
 }
+
+bool ActionTLV::hexDumpToBytes(const std::string& hex_dump, std::string& bytes) {
+  const char* dump_ptr = hex_dump.c_str();
+  char hex_val[3];
+  memset(hex_val, 0, 3);
+  char byte = 0;
+  while (*dump_ptr) {
+    if (isspace(*dump_ptr)) {
+      ++dump_ptr;
+      continue;
+    }
+    if (!isxdigit(*dump_ptr) || !isxdigit(*(dump_ptr + 1))) {
+      return false;
+    }
+    strncpy(hex_val, dump_ptr, 2);
+    byte = strtol(hex_val, NULL, 16);
+    bytes.append(&byte, 1);
+    dump_ptr = dump_ptr + 2;
+  }
+  return true;
+}
+
+void ActionTLV::getPropertyValue(Property* prop, uint16_t tag, const std::string& var, int64_t& int_val, std::string& str_val) {
+  if (tlv_type == TT_UNKNOWN || tlv_type == TT_STRN || tlv_type == TT_STR || tlv_type == TT_HEXDUMP) {
+      str_val = prop ? prop->getStr().c_str() : var.c_str();
+      smsc_log_debug(logger, "Action 'tlv': TAG: %d. SetValue=%s", tag, str_val.c_str());
+  } else  {
+    if (prop) {
+      int_val = prop->getInt();
+    } else {
+      int_val = atoll(var.c_str());
+      if(!int_val && (var[0] != '0' || var.size() != 1)) {
+          smsc_log_warn(logger, "Action 'tlv': Invalid value for TAG %d, val=%s", tag, var.c_str());
+      }
+    }
+    smsc_log_debug(logger, "Action 'tlv': TAG: %d. SetValue=%d", tag, int_val);
+  }
+}
+
 
 void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
 {
@@ -505,8 +492,6 @@ bool ActionTLV::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'tlv' type=%d, %d", type, ftVar);
 
-    SMS& sms = CommandBridge::getSMS((SmppCommand&)context.getSCAGCommand());
-
     int tag = m_tag;
 
     if(!tag)
@@ -537,66 +522,134 @@ bool ActionTLV::run(ActionContext& context)
         }
     }
 
+    SmppCommand& cmd = static_cast<SmppCommand&>(context.getSCAGCommand());
+    SMS* sms = 0;
+    SmsResp* resp = 0;
+    switch ( cmd.getCommandId() ) {
+    case ( DELIVERY ) :
+    case ( SUBMIT ) :
+    case ( DATASM ) :
+        sms = cmd.get_sms();
+        break;
+    case ( DELIVERY_RESP ) :
+    case ( SUBMIT_RESP ) :
+    case ( DATASM_RESP ) :
+        if (tag <= SMS_LAST_TAG) {
+            throw SCAGException("Action 'tlv': only unknown tags supported for resp");
+        }
+        resp = cmd.get_resp();
+        break;
+    default:
+        throw SCAGException("Action 'tlv': unknown command id=%u",cmd.getCommandId());
+    }
+
     if(type == TLV_EXIST)
     {
-        prop->setBool(tag <= SMS_LAST_TAG ? sms.hasProperty(tag) : existUnknown(sms, tag));
+        if (sms) {
+            if (tag <= SMS_LAST_TAG) {
+                prop->setBool(sms->hasProperty(tag));
+            } else {
+                uint32_t len;
+                const char* buff;
+                prop->setBool(getOptionalProperty(*sms,buff,len) && existUnknown(buff,len,tag) );
+            }
+            // prop->setBool(tag <= SMS_LAST_TAG ? sms->hasProperty(tag) : existUnknown(*sms, tag));
+        } else {
+            const char* buff;
+            uint32_t len;
+            prop->setBool(getOptionalProperty(*resp,buff,len) && existUnknown(buff,len,tag));
+        }
         smsc_log_debug(logger, "Action 'tlv': Tag: %d is %s", tag, prop->getBool() ? "set" : "not set");
     }
     else if(type == TLV_DEL)
     {
-        if(tag <= SMS_LAST_TAG) sms.dropProperty(tag);
-        else delUnknown(sms, tag);
+        const char* buff;
+        uint32_t len;
+        if (sms) {
+            if (tag <= SMS_LAST_TAG) {
+                sms->dropProperty(tag);
+            } else if ( getOptionalProperty(*sms,buff,len) ) {
+                std::string tmp;
+                if ( delUnknown(buff,len,tag,tmp) ) {
+                    sms->setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,tmp.data(),tmp.size());
+                }
+            }
+        } else if ( getOptionalProperty(*resp,buff,len) ) {
+            std::string tmp;
+            if ( delUnknown(buff,len,tag,tmp) ) {
+                resp->setUnknownOptionals(tmp.data(),tmp.size());
+            }
+        }
         smsc_log_debug(logger, "Action 'tlv': Tag: %d deleted", tag);
     }
     else if(type == TLV_GET)
     {
-        if(tag <= SMS_LAST_TAG)
-        {
-            if(!sms.hasProperty(tag)) {
+        const char* buff;
+        uint32_t len;
+        if (sms) {
+            if (tag <= SMS_LAST_TAG) {
+                if(!sms->hasProperty(tag)) {
+                    smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
+                    return true;
+                }
+                if(tt == SMS_INT_TAG) {
+                    uint32_t val = sms->getIntProperty(tag);
+                    getIntTag(val, prop, tag);
+                }
+                else if(tt == SMS_STR_TAG) {
+                    std::string val = sms->getStrProperty(tag | (SMS_STR_TAG << 8));
+                    getStrTag(val, prop, tag);
+                }
+                else if (tt == SMS_BIN_TAG) {
+                    unsigned val_len = 0;
+                    const char* val = sms->getBinProperty(tag | (SMS_BIN_TAG << 8), &val_len);
+                    getBinTag(val, (uint16_t)val_len, prop, tag);
+                }
+            } else if ( getOptionalProperty(*sms,buff,len) && getUnknown(buff,len,tag,prop) ) {
+                // ok
+            } else {
                 smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
-                return true;
             }
-            if(tt == SMS_INT_TAG) {
-              uint32_t val = sms.getIntProperty(tag);
-              getIntTag(val, prop, tag);
-            }
-            else if(tt == SMS_STR_TAG) {
-              std::string val = sms.getStrProperty(tag | (SMS_STR_TAG << 8));
-              getStrTag(val, prop, tag);
-            }
-            else if (tt == SMS_BIN_TAG) {
-              unsigned val_len = 0;
-              const char* val = sms.getBinProperty(tag | (SMS_BIN_TAG << 8), &val_len);
-              getBinTag(val, (uint16_t)val_len, prop, tag);
-            }
-        }
-        else
-        {
-            if(!getUnknown(sms, tag, prop)) {
-              smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
-            }
+        } else if ( getOptionalProperty(*resp,buff,len) && getUnknown(buff,len,tag,prop) ) {
+            smsc_log_warn(logger,"Action 'tlv': Get of not set tag %d", tag);
         }
     }
     else if(type == TLV_SET)
     {
-        if(tag <= SMS_LAST_TAG)
-        {
-          if(tt == SMS_INT_TAG)
-          {
-            setIntTag(sms, tag, prop, strVar);
-          }
-          else if(tt == SMS_STR_TAG)
-          {
-            setStrTag(sms, tag, prop, strVar);
-          }
-          else if (tt == SMS_BIN_TAG)
-          {
-            setBinTag(sms, tag, prop, strVar);
-          }
-        }
-        else
-        {
-          setUnknown(sms, tag, prop, strVar);
+        if (sms) {
+            if(tag <= SMS_LAST_TAG)
+            {
+                if(tt == SMS_INT_TAG)
+                {
+                    setIntTag(*sms, tag, prop, strVar);
+                }
+                else if(tt == SMS_STR_TAG)
+                {
+                    setStrTag(*sms, tag, prop, strVar);
+                }
+                else if (tt == SMS_BIN_TAG)
+                {
+                    setBinTag(*sms, tag, prop, strVar);
+                }
+            } else {
+                const char* buff;
+                uint32_t len;
+                std::string tmp;
+                if ( getOptionalProperty(*sms,buff,len) ) {
+                    if (!cutField(buff,len,tag,tmp)) tmp.assign(buff,len);
+                }
+                setUnknown(tmp,tag,prop,strVar);
+                sms->setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,tmp.data(),tmp.size());
+            }
+        } else {
+            const char* buff;
+            uint32_t len;
+            std::string tmp;
+            if ( getOptionalProperty(*resp,buff,len) ) {
+                if (!cutField(buff,len,tag,tmp)) tmp.assign(buff,len);
+            }
+            setUnknown(tmp,tag,prop,strVar);
+            resp->setUnknownOptionals(tmp.data(),tmp.size());
         }
     }
     return true;

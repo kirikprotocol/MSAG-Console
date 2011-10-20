@@ -5,6 +5,12 @@
 #include "sms/sms.h"
 
 namespace scag2 {
+namespace transport {
+namespace smpp {
+class SmsResp;
+}
+}
+
 namespace re {
 namespace actions {
 
@@ -32,13 +38,25 @@ protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 
+    /// extract the buffer from SMS/SmsResp
     bool getOptionalProperty( smsc::sms::SMS& data, const char*& buff, uint32_t& len);
+    bool getOptionalProperty( transport::smpp::SmsResp& data, const char*& buf, uint32_t& len);
+
+    /// find a tlv field in the buffer
+    /// @return the position of the field or >=len
     uint32_t findField(const char* buff, uint32_t len, uint16_t fieldId);
-    void cutField(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp);
-    bool getUnknown(smsc::sms::SMS& data, uint16_t fieldId, Property* prop);
-    bool existUnknown(smsc::sms::SMS& data, uint16_t fieldId);
-    bool delUnknown(smsc::sms::SMS& data, uint16_t fieldId);
-    void setUnknown(smsc::sms::SMS& data, uint16_t fieldId, Property* prop, const std::string& str);
+    
+    /// cut a tlv field from the buffer.
+    /// @return true if the field was found, in that case tmp will contain new content
+    bool cutField(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp);
+
+    /// functions working with SMS (deliver,submit,datasm)
+    bool getUnknown(const char* buff, uint32_t len, uint16_t fieldId, Property* prop);
+    bool existUnknown(const char* buff, uint32_t len, uint16_t fieldId);
+    /// delete tagged field, return true if deleted and tmp will contain the new content
+    bool delUnknown(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp);
+    /// append a tagged field to the content of tmp which should be already prepared
+    void setUnknown(std::string& tmp, uint16_t fieldId, Property* prop, const std::string& str);
 
     void getIntTag(uint32_t val, Property* prop, int tag);
     void getStrTag(const std::string& val, Property* prop, int tag);
