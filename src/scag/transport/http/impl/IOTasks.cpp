@@ -155,7 +155,7 @@ int HttpReaderTask::Execute()
     HttpContext *cx;
     char buf[READER_BUF_SIZE];
     unsigned int i;
-//    int mx_count;
+    Socket *s = NULL;
 
     smsc_log_debug(logger, "%p started", this);
     
@@ -173,7 +173,7 @@ int HttpReaderTask::Execute()
             
             while(waitingAdd.Count())
             {
-                Socket *s;
+//                Socket *s;
                 waitingAdd.Pop(s);
                 multiplexer.add(s);
             }
@@ -184,7 +184,8 @@ int HttpReaderTask::Execute()
 
        	if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) > 0) {
             for (i = 0; i < (unsigned int)error.Count(); i++) {
-                Socket *s = error[i];           
+//              Socket *s;
+                s = error[i];
                 cx = HttpContext::getContext(s);
                 smsc_log_error(logger, "%p: %p failed (in error array)", this, cx);
                 if (cx->action == FINALIZE_SOCKET) {
@@ -204,7 +205,8 @@ int HttpReaderTask::Execute()
                     FAKE_RESP | DEL_SITE_SOCK : DEL_CONTEXT);
             }
             for (i = 0; i < (unsigned int)ready.Count(); i++) {
-                Socket *s = ready[i];
+//              Socket *s;
+                s = ready[i];
             	manageReadyRead(s, buf, error);
             }
             removeSocket(error);
@@ -212,7 +214,7 @@ int HttpReaderTask::Execute()
     }	// for (;;)
 
     {
-        Socket *s;
+//        Socket *s;
         MutexGuard g(sockMon);
 
         while (multiplexer.Count()) {
@@ -226,7 +228,7 @@ int HttpReaderTask::Execute()
     
     return 0;
 }
-//
+
 void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArray &error) {
 	HttpContext *cx = HttpContext::getContext(s);
 //	smsc_log_debug(logger, "%p: %p, manageReadyRead socket %p", this, cx, s); Http.Reque
@@ -521,6 +523,7 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
 //				smsc_log_debug(logger, "%p connection: close, cx:%p socket %p", this, cx, s);
 //				deleteSocket(s, SHUT_WR);
 //				smsc_log_debug(logger, "cx:%p, socket:%p finalized", cx, s);
+                cx->closeConnection(s);
 				cx->action = PROCESS_STATUS_RESPONSE;
 				cx->result = 0;
 				manager.process(cx);

@@ -201,6 +201,7 @@ protected:
 	bool		siteHttps;
     SSL*		userSsl;
     SSL*		siteSsl;
+protected:
     int sslCheckIoError(int ret, int ssl_err, int oerrno);
     void sslLogErrors(int ret=0, int ssl_err=0);
     SSL* sslCheckConnection(Socket* s);
