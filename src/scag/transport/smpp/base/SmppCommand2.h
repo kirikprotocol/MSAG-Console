@@ -776,6 +776,23 @@ public:
         strcpy(messageId,msgid);
     }
 
+#ifdef SMPPRESPHASOPTS
+    void setUnknownOptionals( const char* opt, size_t len ) {
+        hasUnknownOptionals_ = true;
+        std::string s(opt,len);
+        unknownOptionals_.swap(s);
+    }
+    inline bool hasUnknownOptionals() const {
+        return hasUnknownOptionals_;
+    }
+    const char* getUnknownOptionals() const {
+        return unknownOptionals_.data();
+    }
+    size_t sizeUnknownOptionals() const {
+        return unknownOptionals_.size();
+    }
+#endif
+
     void setDeliveryFailureReason(uint8_t reason) {
         if (reason < 4) {
             bHasDeliveryFailureReason  = true;
@@ -888,7 +905,6 @@ private:
     char* messageId;
     bool dataSm;
     uint32_t origStatus_;     // original status of the resp
-    // SMS* sms; // points to orgCmd
     DataSmDirection dir;
     SmppCommand* orgCmd;
 
@@ -900,6 +916,10 @@ private:
     uint8_t dpfResult;
     bool bHasNetworkErrorCode;
     uint32_t networkErrorCode;
+#ifdef SMPPRESPHASOPTS
+    bool hasUnknownOptionals_;
+    std::string unknownOptionals_;
+#endif
     Logger* logger;
 };
 

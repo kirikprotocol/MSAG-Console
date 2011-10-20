@@ -717,6 +717,12 @@ SCAGCommand(), _SmppCommand()
                 resp->set_messageId(xsm->get_messageId());
                 resp->set_dataSm();
                 set_status( xsm->header.get_commandStatus() );
+#ifdef SMPPRESPHASOPTS
+                if (xsm->optional.has_unknownFields()) {
+                    resp->setUnknownOptionals(xsm->optional.get_unknownFields(),
+                                              xsm->optional.size_unknownFields());
+                }
+#endif
 
                 if (xsm->optional.has_additionalStatusInfoText()) {
                     resp->setAdditionalStatusInfoText(xsm->optional.get_additionalStatusInfoText());
@@ -832,6 +838,13 @@ SCAGCommand(), _SmppCommand()
             dta_ = resp;
             resp->set_messageId(xsm->get_messageId());
             set_status(xsm->header.get_commandStatus());
+#ifdef SMPPRESPHASOPTS
+            if (xsm->optional.has_unknownFields()) {
+                resp->setUnknownOptionals(xsm->optional.get_unknownFields(),
+                                          xsm->optional.size_unknownFields());
+            }
+            // FIXME: add other fields
+#endif
 
       /*
       if(pdu->commandId==SmppCommandSet::DELIVERY_SM_RESP || pdu->commandId==SmppCommandSet::DATA_SM_RESP)
@@ -944,6 +957,13 @@ SmppHeader* SmppCommand::makePdu()
                 xsm->header.set_sequenceNumber(get_dialogId());
                 xsm->header.set_commandStatus(makeSmppStatus(get_status()));
                 xsm->set_messageId(get_resp()->get_messageId());
+#ifdef SMPPRESPHASOPTS
+                if (get_resp()->hasUnknownOptionals()) {
+                    xsm->optional.set_unknownFields(get_resp()->getUnknownOptionals(),
+                                                    get_resp()->sizeUnknownOptionals());
+                }
+                // FIXME: add other fields
+#endif
                 return reinterpret_cast<SmppHeader*>(xsm.release());
             } else {
                 auto_ptr<PduXSmResp> xsm(new PduXSmResp);
@@ -951,6 +971,13 @@ SmppHeader* SmppCommand::makePdu()
                 xsm->header.set_sequenceNumber(get_dialogId());
                 xsm->header.set_commandStatus(makeSmppStatus(get_status()));
                 xsm->set_messageId(get_resp()->get_messageId());
+#ifdef SMPPRESPHASOPTS
+                if (get_resp()->hasUnknownOptionals()) {
+                    xsm->optional.set_unknownFields(get_resp()->getUnknownOptionals(),
+                                                    get_resp()->sizeUnknownOptionals());
+                }
+                // FIXME: add other fields
+#endif
                 return reinterpret_cast<SmppHeader*>(xsm.release());
             }
         }
@@ -984,6 +1011,13 @@ SmppHeader* SmppCommand::makePdu()
             xsm->header.set_sequenceNumber(get_dialogId());
             xsm->header.set_commandStatus(makeSmppStatus(get_status()));
             xsm->set_messageId(get_resp()->get_messageId());
+#ifdef SMPPRESPHASOPTS
+            if (get_resp()->hasUnknownOptionals()) {
+                xsm->optional.set_unknownFields( get_resp()->getUnknownOptionals(),
+                                                 get_resp()->sizeUnknownOptionals());
+            }
+            // FIXME: set other fields
+#endif
             return reinterpret_cast<SmppHeader*>(xsm.release());
         }
     case DATASM:
@@ -1006,8 +1040,15 @@ SmppHeader* SmppCommand::makePdu()
             xsm->header.set_commandId(SmppCommandSet::DATA_SM_RESP);
             xsm->header.set_sequenceNumber(get_dialogId());
             xsm->header.set_commandStatus(makeSmppStatus(get_status()));
-            xsm->set_messageId(get_resp()->get_messageId());
             SmsResp* resp = get_resp();
+            xsm->set_messageId(resp->get_messageId());
+#ifdef SMPPRESPHASOPTS
+            if (resp->hasUnknownOptionals()) {
+                xsm->optional.set_unknownFields(resp->getUnknownOptionals(),
+                                                resp->sizeUnknownOptionals());
+            }
+            // FIXME: add other fields
+#endif
             if (resp->hasAdditionalStatusInfoText()) {
                 xsm->optional.set_additionalStatusInfoText(resp->getAdditionalStatusInfoText());
             }
@@ -1387,6 +1428,9 @@ networkErrorCode(0)
     bHasAdditionalStatusInfoText = false;
     bHasDpfResult = false;
     bHasNetworkErrorCode = false;
+#ifdef SMPPRESPHASOPTS
+    hasUnknownOptionals_ = false;
+#endif
     logger = Logger::getInstance("smppResp");
 };
 
