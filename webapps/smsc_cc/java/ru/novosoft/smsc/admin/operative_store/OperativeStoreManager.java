@@ -189,8 +189,7 @@ public class OperativeStoreManager {
     }
 
     if (observer != null) {
-      long l = smsStore.length();
-      observer.update(l, l);
+      observer.update(100, 100);
     }
   }
 
@@ -255,7 +254,9 @@ public class OperativeStoreManager {
         try{
           ProgressObserver _p = observer == null ? null : new ProgressObserver() {
             public void update(long current, long total) {
-              observer.update(previous[0]+current, previous[0]+total+getNextTotals(files, i[0]+1));
+              int c = (int)(current);
+              int t = (int)(total);
+              observer.update((c*100/t/files.length) + (i[0]*100/files.length), 100);
             }
           };
           getMessages(file, fs, v, _p, msgs, finished, delay, 500);

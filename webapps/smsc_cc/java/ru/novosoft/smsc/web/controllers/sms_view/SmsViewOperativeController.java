@@ -246,14 +246,13 @@ public class SmsViewOperativeController extends SmsViewController {
 
               totalSize = 0;
               ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
-              final int[] previousTotal = new int[]{0};
               for (int i = 0; i < smscInstancesNumber; i++) {
                 final int curI = i;
                 msgs[i] = new LinkedList<Object>();
                 for(Message m : wcontext.getOperativeStoreManager().getMessages(i, messageFilter, new ProgressObserver() {
                   public void update(long current, long total) {
-                    int c = (int)(previousTotal[0]+current);
-                    int t = (int)(previousTotal[0]+total);
+                    int c = (int)(current);
+                    int t = (int)(total);
                     loadListener.setCurrent((c*100/t/smscInstancesNumber) + (curI*100/smscInstancesNumber));
                     loadListener.setTotal(100);
                   }
@@ -261,7 +260,6 @@ public class SmsViewOperativeController extends SmsViewController {
                   msgs[i].add(new OperativeSms(m, isAllowToShowSmsText(m.getSrcSmeId(), m.getDstSmeId()), bundle));
                 }
                 totalSize += msgs[i].size();
-                previousTotal[0] = loadListener.getTotal();
               }
               loaded = true;
             }catch (AdminException e){
