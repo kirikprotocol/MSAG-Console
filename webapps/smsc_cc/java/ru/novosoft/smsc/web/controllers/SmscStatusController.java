@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.application.FacesMessage;
@@ -90,7 +91,8 @@ public class SmscStatusController extends SmscController {
 
   public void startAll(ActionEvent e) {
     try {
-      for (int i = 0; i < smscManager.getSettings().getSmscInstancesCount(); i++) {
+      SmscSettings settings = smscManager.getSettings();
+      for (int i = 0; i < settings.getSmscInstancesCount(); i++) {
         if (smscManager.getSmscOnlineHost(i) == null)
           smscManager.startSmsc(i);
       }
@@ -101,7 +103,8 @@ public class SmscStatusController extends SmscController {
 
   public void stopAll(ActionEvent e) {
     try {
-      for (int i = 0; i < smscManager.getSettings().getSmscInstancesCount(); i++) {
+      SmscSettings settings = smscManager.getSettings();
+      for (int i = 0; i < settings.getSmscInstancesCount(); i++) {
         if (smscManager.getSmscOnlineHost(i) != null)
           smscManager.stopSmsc(i);
       }
@@ -130,7 +133,8 @@ public class SmscStatusController extends SmscController {
     List<SmscStatus> result = new ArrayList<SmscStatus>();
 
     try {
-      for (int i = 0; i < smscManager.getSettings().getSmscInstancesCount(); i++) {
+      SmscSettings smscSettings = smscManager.getSettings();
+      for (int i = 0; i < smscSettings.getSmscInstancesCount(); i++) {
         String onlineHost = smscManager.getSmscOnlineHost(i);
         SmscStatus status = new SmscStatus(i, onlineHost, smscManager.getSmscHosts(i), configStates);
         result.add(status);

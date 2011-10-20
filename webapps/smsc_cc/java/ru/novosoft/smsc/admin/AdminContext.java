@@ -142,7 +142,9 @@ public class AdminContext {
       archiveDaemon = new ArchiveDaemon(archiveDaemonManager);
     }
 
-    aliasManager = new AliasManagerImpl(new File(_smscManager.getSettings().getCommonSettings().getAliasStoreFile()), clusterController, fileSystem);
+    SmscSettings s = smscManager.getSettings();
+
+    aliasManager = new AliasManagerImpl(new File(s.getCommonSettings().getAliasStoreFile()), clusterController, fileSystem);
 
     rescheduleManager = new RescheduleManagerImpl(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
@@ -153,8 +155,6 @@ public class AdminContext {
     fraudManager = new FraudManagerImpl(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     mapLimitManager = new MapLimitManagerImpl(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
-
-    SmscSettings s = _smscManager.getSettings();
 
     snmpManager = new SnmpManagerImpl(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir,
         new File(s.getCommonSettings().getSnmpCsvFileDir()), clusterController, fileSystem);
