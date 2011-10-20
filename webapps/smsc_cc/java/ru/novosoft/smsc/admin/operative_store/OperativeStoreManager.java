@@ -62,7 +62,7 @@ public class OperativeStoreManager {
     return files;
   }
 
-  private static void getMessages(File smsStore, FileSystem fs, MessageFilter v, ProgressObserver p, Map<Long, Message> msgs, Set<Long> finishedMsgs, long delay) throws AdminException {
+  private static void getMessages(File smsStore, FileSystem fs, MessageFilter v, ProgressObserver observer, Map<Long, Message> msgs, Set<Long> finishedMsgs, long delay, int sleepAfter) throws AdminException {
 
     int maxSize = v == null ? Integer.MAX_VALUE : v.getMaxRowSize();
 
@@ -87,13 +87,18 @@ public class OperativeStoreManager {
         //noinspection InfiniteLoopStatement
 
         boolean outOfSize = false;
+        int sleepCounter = 0;
         while (true) {
           if(delay != 0) {
-            try {
-              Thread.sleep(delay);
-            } catch (InterruptedException e) {
-              return;
+            if(sleepCounter >= sleepAfter) {
+              sleepCounter = 0;
+              try {
+                Thread.sleep(delay);
+              } catch (InterruptedException e) {
+                return;
+              }
             }
+            sleepCounter++;
           }
           int msgSize1 = (int) IOUtils.readUInt32(input);
           long msgId = IOUtils.readInt64(input);  // 8 bytes
@@ -160,11 +165,11 @@ public class OperativeStoreManager {
 
           currentPos += msgSize1 + 4 + 4;
 
-          if (p != null) {
+          if (observer != null) {
             long s = currentPos / 2048000;
             if (s != step) {
               step = s;
-              p.update(currentPos, smsStore.length());
+              observer.update(currentPos, smsStore.length());
             }
           }
         }
@@ -184,27 +189,72 @@ public class OperativeStoreManager {
     }
   }
 
-  static Collection<Message> getMessages(File smsStore, FileSystem fs, MessageFilter v, final ProgressObserver p) throws AdminException {
+
+//  public static void main(String[] arsg) throws Exception{
+//   final int[] totals = new int[]{3,7,9};
+//
+//    final ProgressObserver o = new ProgressObserver() {
+//      public void update(long current, long total) {
+//        System.out.println(""+current+'/'+total);
+//      }
+//    };
+//    final int[] previous = new int[]{0,0};
+//    for(final int[] i=new int[]{0}; i[0]<totals.length;i[0]++) {
+//      int t = totals[i[0]];
+//      ProgressObserver progressObserver = new ProgressObserver() {
+//        public void update(long current, long total) {
+//          o.update(previous[0]+current, previous[1]+total+getNext(totals, i[0]));
+//        }
+//      };
+//
+//      for(int j=1;j<=t;j++) {
+//        progressObserver.update(j, t);
+//      }
+//
+//      previous[1] += t;
+//      previous[0] = previous[1];
+//    }
+//
+//  }
+//
+//  static int getNext(int[] totals, int i) {
+//    int res = 0;
+//    i++;
+//    while(i<totals.length) {
+//      res+=totals[i];
+//      i++;
+//    }
+//    return res;
+//  }
+
+  static long getNextTotals(File[] files, int i) {
+    long res = 0l;
+    while(i<files.length) {
+      res+=files[i].length();
+      i++;
+    }
+    return res;
+  }
+
+  static Collection<Message> getMessages(File smsStore, FileSystem fs, MessageFilter v, final ProgressObserver observer) throws AdminException {
 
     Map<Long, Message> msgs = new HashMap<Long, Message>();
 
     final File[] files = listStoreFiles(fs, smsStore);
     if(files != null && files.length != 0) {
-      final long[] totals = new long[]{0};
-      for(File f : files) {
-        totals[0] += f.length();
-      }
-      ProgressObserver _p = new ProgressObserver() {
-        public void update(long current, long total) {
-          p.update(current, totals[0]);
-        }
-      };
       Set<Long> finished = new HashSet<Long>();
-      for(int i = 0; i < files.length; i++){
-        File file  = files[i];
-        long delay = i == (files.length - 1) ? 10 : 0;
+      final int[] previous = new int[]{0};
+      for(final int[] i = new int[]{0}; i[0] < files.length; i[0]++){
+        File file  = files[i[0]];
+        long delay = i[0] == (files.length - 1) ? 10 : 0;
         try{
-          getMessages(file, fs, v, _p, msgs, finished, delay);
+          ProgressObserver _p = new ProgressObserver() {
+            public void update(long current, long total) {
+              observer.update(previous[0]+current, previous[0]+total+getNextTotals(files, i[0]+1));
+            }
+          };
+          getMessages(file, fs, v, _p, msgs, finished, delay, 500);
+          previous[0] += file.length();
         }catch (AdminException e) {
           logger.error(e,e);
         }

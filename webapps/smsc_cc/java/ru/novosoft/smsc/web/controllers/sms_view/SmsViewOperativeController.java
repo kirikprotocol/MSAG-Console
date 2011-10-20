@@ -108,6 +108,7 @@ public class SmsViewOperativeController extends SmsViewController {
       try{
         wcontext.getOperativeStoreManager().cancelSMS(selected.toArray(new String[selected.size()]));
         selected.clear();
+        loadingIsNeeded();
       }catch (AdminException e) {
         addError(e);
       }

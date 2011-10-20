@@ -1032,6 +1032,8 @@ public class ClusterController {
   public void cancelSMS(String []ids) throws AdminException {
     CancelSms c = new CancelSms();
     c.setIds(ids);
+    c.setSrcs(new String[0]);
+    c.setDsts(new String[0]);
     CancelSmsResp resp = cc.send(c);
     checkResponse(resp.getResp());
   }
