@@ -132,6 +132,9 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
       if(!(cmdid==SUBMIT_SM_RESP && pdu->header.commandStatus!=0))
       {
         fillCOctetStr(stream,pdu->messageId);
+#ifdef SMPPRESPHASOPTS
+        fillSmppOptional(stream,&pdu->optional);
+#endif
       }
       if(pdu->has_ussdSessionId())
       {
@@ -396,7 +399,11 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
       if(!(cmdid==SUBMIT_SM_RESP && pdu->header.commandStatus!=0))
       {
         fetchCOctetStr(stream,pdu->messageId,65);
+#ifdef SMPPRESPHASOPTS
+        fetchSmppOptional(stream,&pdu->optional);
+#endif
       }
+      // FIXME: add ussdSessionId
       return reinterpret_cast<SmppHeader*>(pdu.release());
     }
     case SUBMIT_MULTI_RESP:

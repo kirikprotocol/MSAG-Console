@@ -1013,6 +1013,9 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
 {
   __ref_property__(SmppHeader,header)
   __cstr_property__(messageId)
+#ifdef SMPPRESPHASOPTS
+  __ref_property__(SmppOptional,optional)
+#endif
   int ussdSessionId;
   bool haveUssdSessionId;
   void set_ussdSessionId(int val)
@@ -1031,10 +1034,15 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
   PduXSmResp():haveUssdSessionId(false){}
   inline uint32_t size()
   {
+// FIXME: find out why messageId is not counted for DELIVERY_SM_RESP and for bad status
     return (header.get_commandStatus()==0 || header.get_commandId()!=SmppCommandSet::SUBMIT_SM_RESP?
        (uint32_t)(0 _s_ref_property__(SmppHeader,header)
                     _s_cstr_property__(messageId))
-                    :(uint32_t)(0 _s_ref_property__(SmppHeader,header)))+(haveUssdSessionId?8:0);
+#ifdef SMPPRESPHASOPTS
+                    _s_ref_property__(SmppOptional,optional)
+#endif
+                    :(uint32_t)(0 _s_ref_property__(SmppHeader,header))
+           ) + (haveUssdSessionId?8:0);
   }
   template <class TLOG>
   inline void dump(TLOG* log,int align = 0)
@@ -1043,6 +1051,9 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
     header.dump(log,align+1);
     ++align;
     dump_cstr(messageId);
+#ifdef SMPPRESPHASOPTS
+    optional.dump(log,align);
+#endif
     --align;
     dump_text1("} //PduXSm");
   }
