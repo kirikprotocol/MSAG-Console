@@ -120,7 +120,7 @@ public class SmsViewOperativeController extends SmsViewController {
     List<SelectItem> res = new ArrayList<SelectItem>(smscInstancesNumber+1);
     res.add(new SelectItem(-1, getLocalizedString("smsc.sms.view.smsc.instance.all")));
     for(int i=0; i < smscInstancesNumber; i++) {
-      res.add(new SelectItem(i));
+      res.add(new SelectItem(i, Integer.toString(i+1)));
     }
     return res;
   }
@@ -165,8 +165,30 @@ public class SmsViewOperativeController extends SmsViewController {
           if(sortOrder == null || sortOrder.getColumnId().equals("id")) {
             preres *= o1.getId() < o2.getId() ? -1 : o1.getId() == o2.getId() ? 0 : 1;
           }else if(sortOrder.getColumnId().equals("sendDate")) {
+            if(o1.getSubmitTime() == null) {
+              if(o2.getSubmitTime() == null) {
+                return 0;
+              }else {
+                return -1*preres;
+              }
+            }else {
+              if(o1.getSubmitTime() == null) {
+                return preres;
+              }
+            }
             preres *= o1.getSubmitTime().compareTo(o2.getSubmitTime());
           }else if(sortOrder.getColumnId().equals("lastDate")) {
+            if(o1.getLastTryTime() == null) {
+              if(o2.getLastTryTime() == null) {
+                return 0;
+              }else {
+                return -1*preres;
+              }
+            }else {
+              if(o1.getLastTryTime() == null) {
+                return preres;
+              }
+            }
             preres *= o1.getLastTryTime().compareTo(o2.getLastTryTime());
           }else if(sortOrder.getColumnId().equals("from")) {
             preres *= o1.getOriginatingAddress().compareTo(o2.getOriginatingAddress());

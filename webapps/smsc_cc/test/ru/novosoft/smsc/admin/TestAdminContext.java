@@ -40,6 +40,7 @@ import ru.novosoft.smsc.admin.service.TestServiceManagerHA;
 import ru.novosoft.smsc.admin.service.TestServiceManagerSingle;
 import ru.novosoft.smsc.admin.sme.SmeConfigFileTest;
 import ru.novosoft.smsc.admin.sme.TestSmeManager;
+import ru.novosoft.smsc.admin.smsc.SmscManagerImpl;
 import ru.novosoft.smsc.admin.smsc.SmscManagerImplTest;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
@@ -152,10 +153,10 @@ public class TestAdminContext extends AdminContext {
 
     clusterControllerManager = new TestClusterControllerManager(serviceManager, fileSystem);
 
-    smscManager = new TestSmscManager(serviceManager, clusterController, fileSystem);
+    SmscManagerImpl _smscManager = new TestSmscManager(serviceManager, clusterController, fileSystem);
 
-    File smscConfigDir = smscManager.getConfigDir();
-    File smscConfigBackupDir = smscManager.getConfigBackupDir();
+    File smscConfigDir = _smscManager.getConfigDir();
+    File smscConfigBackupDir = _smscManager.getConfigBackupDir();
 
     aliasManager = new TestAliasManager(new File(smscConfigDir, "aliases.bin"), clusterController, fileSystem);
 
@@ -169,7 +170,7 @@ public class TestAdminContext extends AdminContext {
 
     mapLimitManager = new TestMapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    SmscSettings s = smscManager.getSettings();
+    SmscSettings s = _smscManager.getSettings();
 
     snmpManager = new TestSnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir,
         new File(servicesDir, "snmp"), clusterController, fileSystem);
@@ -230,6 +231,8 @@ public class TestAdminContext extends AdminContext {
     });
     perfMonitorManager = new TestPerfMonitorManager(cfg.getPerfMonitorPorts());
     topMonitorManager = new TestTopMonitorManager(cfg.getTopMonitorPorts());
+
+    smscManager = new WSmscManagerImpl(_smscManager, perfMonitorManager, topMonitorManager);
   }
 
   public TestAdminContext() throws AdminException {

@@ -127,23 +127,27 @@
 
         <eye:column name="sendDate" title="#{msg['smsc.sms.view.date.submit.valid']}" columnClass="dateColumn" sortable="true">
           <h:panelGroup>
-            <h:outputText value="#{r.submitTime}">
-              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
-            </h:outputText>     <br/>
-            <h:outputText value="#{r.validTime}">
+            <h:outputText value="#{r.submitTime}" rendered="#{r.submitTime != null}">
               <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
             </h:outputText>
+            <h:outputText value="-" rendered="#{r.submitTime == null}"/>   <br/>
+            <h:outputText value="#{r.validTime}" rendered="#{r.validTime != null}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+            </h:outputText>
+            <h:outputText value="-" rendered="#{r.validTime == null}"/>
           </h:panelGroup>
         </eye:column>
 
         <eye:column name="lastDate" title="#{msg['smsc.sms.view.date.tried']}" columnClass="dateColumn" sortable="true">
           <h:panelGroup>
-            <h:outputText value="#{r.lastTryTime}">
-              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
-            </h:outputText>  <br/>
-            <h:outputText value="#{r.nextTryTime}">
+            <h:outputText value="#{r.lastTryTime}" rendered="#{r.lastTryTime != null}">
               <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
             </h:outputText>
+            <h:outputText value="-" rendered="#{r.lastTryTime == null}"/><br/>
+            <h:outputText value="#{r.nextTryTime}" rendered="#{r.nextTryTime != null}">
+              <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss"/>
+            </h:outputText>
+            <h:outputText value="-" rendered="#{r.nextTryTime == null}"/>
           </h:panelGroup>
         </eye:column>
 

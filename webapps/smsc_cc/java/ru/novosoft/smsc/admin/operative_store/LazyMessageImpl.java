@@ -89,50 +89,67 @@ class LazyMessageImpl implements Message {
     parameters = null;
     body = null;
     is = null;
+    submitTimeReaded = false;
+    validTimeReaded = false;
+    lastTryTimeReaded = false;
+    nextTryTimeReaded = false;
   }
 
+  private boolean submitTimeReaded = false;
+  private boolean validTimeReaded = false;
+  private boolean lastTryTimeReaded = false;
+  private boolean nextTryTimeReaded = false;
+
   private void readSubmitTime() {
-    if (submitTime == null) {
+    if (!submitTimeReaded) {
       if (is == null)
         is = new ByteArrayInputStream(message);
       try {
-        submitTime = (new Date(IOUtils.readUInt32(is) * 1000));
+        long d = IOUtils.readUInt32(is);
+        submitTime = d == 0 ? null : new Date( d* 1000);
       } catch (IOException e) {
         e.printStackTrace();
       }
+      submitTimeReaded = true;
     }
   }
 
   private void readValidTime() {
-    if (validTime == null) {
+    if (!validTimeReaded) {
       readSubmitTime();
       try {
-        validTime = (new Date(IOUtils.readUInt32(is) * 1000));
+        long d = IOUtils.readUInt32(is);
+        validTime = d == 0 ? null : new Date(d * 1000);
       } catch (IOException e) {
         e.printStackTrace();
       }
+      validTimeReaded = true;
     }
   }
 
   private void readLastTryTime() {
-    if (lastTryTime == null) {
+    if (!lastTryTimeReaded) {
       readValidTime();
       try {
-        lastTryTime = (new Date(IOUtils.readUInt32(is) * 1000));
+        long d = IOUtils.readUInt32(is);
+        lastTryTime =  d == 0 ? null : new Date(d * 1000);
       } catch (IOException e) {
         e.printStackTrace();
       }
+      lastTryTimeReaded = true;
     }
   }
 
   private void readNextTryTime() {
-    if (nextTryTime == null) {
+    if (!nextTryTimeReaded) {
       readLastTryTime();
       try {
-        nextTryTime = (new Date(IOUtils.readUInt32(is) * 1000));
+        long d = IOUtils.readUInt32(is);
+        nextTryTime = d == 0 ? null : new Date(d * 1000);
       } catch (IOException e) {
         e.printStackTrace();
       }
+      nextTryTimeReaded = true;
     }
   }
 

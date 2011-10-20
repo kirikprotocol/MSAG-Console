@@ -246,7 +246,7 @@ public class OperativeStoreManager {
       final int[] previous = new int[]{0};
       for(final int[] i = new int[]{0}; i[0] < files.length; i[0]++){
         File file  = files[i[0]];
-        long delay = i[0] == (files.length - 1) ? 10 : 0;
+        long delay = i[0] == (files.length - 1) ? 100 : 0;
         try{
           ProgressObserver _p = new ProgressObserver() {
             public void update(long current, long total) {

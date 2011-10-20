@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerImpl;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.fraud.FraudManagerImpl;
@@ -57,6 +58,8 @@ import ru.novosoft.smsc.admin.users.UsersManagerImpl;
 import ru.novosoft.smsc.util.InetAddress;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Фабрика для создания классов, позволяющих получить доступ к конфигурации и статистике.
@@ -70,7 +73,7 @@ public class AdminContext {
 
   protected ServiceManager serviceManager;
   protected FileSystem fileSystem;
-  protected SmscManagerImpl smscManager;
+  protected SmscManager smscManager;
   protected ArchiveDaemonManager archiveDaemonManager;
   protected ArchiveDaemon archiveDaemon;
   protected ClusterController clusterController;
@@ -129,17 +132,17 @@ public class AdminContext {
     clusterControllerManager = new ClusterControllerManager(serviceManager, fileSystem);
     clusterController = new ClusterController(clusterControllerManager);
 
-    smscManager = new SmscManagerImpl(serviceManager, clusterController, fileSystem);
+    SmscManagerImpl _smscManager = new SmscManagerImpl(serviceManager, clusterController, fileSystem);
 
-    File smscConfigDir = smscManager.getConfigDir();
-    File smscConfigBackupDir = smscManager.getConfigBackupDir();
+    File smscConfigDir = _smscManager.getConfigDir();
+    File smscConfigBackupDir = _smscManager.getConfigBackupDir();
 
     if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager)) {
       archiveDaemonManager = new ArchiveDaemonManagerImpl(serviceManager, fileSystem);
       archiveDaemon = new ArchiveDaemon(archiveDaemonManager);
     }
 
-    aliasManager = new AliasManagerImpl(new File(smscManager.getSettings().getCommonSettings().getAliasStoreFile()), clusterController, fileSystem);
+    aliasManager = new AliasManagerImpl(new File(_smscManager.getSettings().getCommonSettings().getAliasStoreFile()), clusterController, fileSystem);
 
     rescheduleManager = new RescheduleManagerImpl(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
@@ -151,7 +154,7 @@ public class AdminContext {
 
     mapLimitManager = new MapLimitManagerImpl(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    SmscSettings s = smscManager.getSettings();
+    SmscSettings s = _smscManager.getSettings();
 
     snmpManager = new SnmpManagerImpl(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir,
         new File(s.getCommonSettings().getSnmpCsvFileDir()), clusterController, fileSystem);
@@ -180,9 +183,10 @@ public class AdminContext {
 
     loggerManager = new LoggerManagerImpl(clusterController);
 
-    perfMonitorManager = new PerfMonitorManager(new PerfMonitorContextImpl(cfg.isPerfMonSupport64Bit(), cfg.getPerfMonitorPorts(), smscManager));
-    topMonitorManager = new TopMonitorManager(new TopMonitorContextImpl(cfg.getTopMonitorPorts(), smscManager));
+    perfMonitorManager = new PerfMonitorManager(new PerfMonitorContextImpl(cfg.isPerfMonSupport64Bit(), cfg.getPerfMonitorPorts(), _smscManager));
+    topMonitorManager = new TopMonitorManager(new TopMonitorContextImpl(cfg.getTopMonitorPorts(), _smscManager));
 
+    smscManager = new WSmscManagerImpl(_smscManager, perfMonitorManager, topMonitorManager);
 
     File[] operativeStorages = new File[s.getSmscInstancesCount()];
     for (int i=0;i<s.getSmscInstancesCount(); i++) {
@@ -412,6 +416,84 @@ public class AdminContext {
       }catch (IndexOutOfBoundsException e) {
         return -1;
       }
+    }
+  }
+
+  protected static class WSmscManagerImpl implements SmscManager{
+    private final TopMonitorManager topMonitorManager;
+    private final PerfMonitorManager perfMonitorManager;
+    private final SmscManager smscManager;
+
+    public WSmscManagerImpl(SmscManager smscManager, PerfMonitorManager perfMonitorManager, TopMonitorManager topMonitorManager) throws AdminException {
+      this.smscManager = smscManager;
+      this.perfMonitorManager = perfMonitorManager;
+      this.topMonitorManager = topMonitorManager;
+    }
+
+
+    public void updateSettings(SmscSettings s) throws AdminException {
+      SmscSettings old = getSettings();
+      boolean topRestart = false;
+      boolean perfRestart = false;
+      for(int i=0; i<s.getSmscInstancesCount(); i++) {
+        InstanceSettings n = s.getInstanceSettings(i);
+        InstanceSettings o = old.getInstanceSettings(i);
+        if(n.getCorePerfHost() != null) {
+          if(!n.getCorePerfHost().equals(o.getCorePerfHost())) {
+            perfRestart = true;
+          }
+        }else if(o.getCorePerfHost() != null) {
+          perfRestart = true;
+        }
+        if(n.getSmePerfHost() != null) {
+          if(!n.getSmePerfHost().equals(o.getSmePerfHost())) {
+            topRestart = true;
+          }
+        }else if(o.getSmePerfHost() != null) {
+          topRestart = true;
+        }
+        if(o.getCorePerfPort() != n.getCorePerfPort()) {
+          perfRestart = true;
+        }
+        if(o.getSmePerfPort() != n.getSmePerfPort()) {
+          topRestart = true;
+        }
+      }
+      smscManager.updateSettings(s);
+      if(topRestart) {
+        topMonitorManager.updateTopServers();
+      }
+      if(perfRestart) {
+        perfMonitorManager.updatePerfServers();
+      }
+    }
+
+    public void startSmsc(int instanceNumber) throws AdminException {
+      smscManager.startSmsc(instanceNumber);
+    }
+
+    public void stopSmsc(int instanceNumber) throws AdminException {
+      smscManager.stopSmsc(instanceNumber);
+    }
+
+    public void switchSmsc(int instanceNumber, String toHost) throws AdminException {
+      smscManager.switchSmsc(instanceNumber, toHost);
+    }
+
+    public String getSmscOnlineHost(int instanceNumber) throws AdminException {
+      return smscManager.getSmscOnlineHost(instanceNumber);
+    }
+
+    public List<String> getSmscHosts(int instanceNumber) throws AdminException {
+      return smscManager.getSmscHosts(instanceNumber);
+    }
+
+    public SmscSettings getSettings() throws AdminException {
+      return smscManager.getSettings();
+    }
+
+    public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+      return smscManager.getStatusForSmscs();
     }
   }
 }
