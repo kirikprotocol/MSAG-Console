@@ -118,7 +118,7 @@
     <taskdef name="one-jar" classname="com.simontuffs.onejar.ant.OneJarTask" classpathref="lib" onerror="report"/>
     <one-jar destfile="${SME_DISTR_DIR}/bin/stat/smsx_stat_script.jar" >
       <manifest>
-        <attribute name="One-Jar-Main-Class" value="ru.sibinco.smsx.stats.Script"/>
+        <attribute name="One-Jar-Main-Class" value="ru.sibinco.smsx.stats.ArcFileScript"/>
       </manifest>
       <main>
         <fileset dir="${java_out}/statscript"/>
