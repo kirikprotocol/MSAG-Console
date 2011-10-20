@@ -169,7 +169,10 @@ public class OperativeStoreManager {
             long s = currentPos / 2048000;
             if (s != step) {
               step = s;
-              observer.update(currentPos, smsStore.length());
+              if(currentPos<0) {
+                System.out.println("CATCH IT: currentPosition="+currentPos);
+              }
+              observer.update(100*currentPos/smsStore.length(), 100);
             }
           }
         }
@@ -231,14 +234,14 @@ public class OperativeStoreManager {
 //    return res;
 //  }
 
-  static long getNextTotals(File[] files, int i) {
-    long res = 0l;
-    while(i<files.length) {
-      res+=files[i].length();
-      i++;
-    }
-    return res;
-  }
+//  static long getNextTotals(File[] files, int i) {
+//    long res = 0l;
+//    while(i<files.length) {
+//      res+=files[i].length();
+//      i++;
+//    }
+//    return res;
+//  }
 
   static Collection<Message> getMessages(File smsStore, FileSystem fs, MessageFilter v, final ProgressObserver observer) throws AdminException {
 
@@ -247,7 +250,6 @@ public class OperativeStoreManager {
     final File[] files = listStoreFiles(fs, smsStore);
     if(files != null && files.length != 0) {
       Set<Long> finished = new HashSet<Long>();
-      final int[] previous = new int[]{0};
       for(final int[] i = new int[]{0}; i[0] < files.length; i[0]++){
         File file  = files[i[0]];
         long delay = i[0] == (files.length - 1) ? 100 : 0;
@@ -260,7 +262,9 @@ public class OperativeStoreManager {
             }
           };
           getMessages(file, fs, v, _p, msgs, finished, delay, 500);
-          previous[0] += file.length();
+          if(observer != null) {
+            observer.update(100, 100);
+          }
         }catch (AdminException e) {
           logger.error(e,e);
         }
