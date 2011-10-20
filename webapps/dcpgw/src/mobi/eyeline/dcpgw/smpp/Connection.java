@@ -192,7 +192,7 @@ public class Connection {
                             data.setSequenceNumber(sn);
 
                             try {
-                                Server.getInstance().send(deliverSM);
+                                Server.getInstance().send(deliverSM, false);
                                 log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
 
                                 long first_sending_time = System.currentTimeMillis();
@@ -336,7 +336,7 @@ public class Connection {
                     deliverSM.setMessage(message);
 
                     try {
-                        Server.getInstance().send(deliverSM);
+                        Server.getInstance().send(deliverSM, false);
                         log.debug(name+"_connection: resend DeliverSM: sn=" + new_sn + ", message_id=" + data.getMessageId());
 
                         long send_receipt_time = System.currentTimeMillis();

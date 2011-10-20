@@ -35,6 +35,9 @@
         <copy file="startup.sh" todir="${DISTR_DIR}"/>
         <chmod file="${DISTR_DIR}/startup.sh" perm="u+x"/>
 
+        <copy file="cancel.sh" todir="${DISTR_DIR}"/>
+        <chmod file="${DISTR_DIR}/cancel.sh" perm="u+x"/>
+
         <copy file="reg_del.sh" todir="${DISTR_DIR}"/>
         <chmod file="${DISTR_DIR}/reg_del.sh" perm="u+x"/>
 

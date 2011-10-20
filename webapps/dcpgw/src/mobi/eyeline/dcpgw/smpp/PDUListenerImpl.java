@@ -96,7 +96,7 @@ public class PDUListenerImpl implements PDUListener {
                                     "Provider "+provider.getName()+" doesn't have delivery with service number '"+source_address+"'.")
                     );
                     try{
-                        Server.getInstance().send(submitSMResp);
+                        Server.getInstance().send(submitSMResp, false);
                     } catch (SmppException e) {
                         log.error("Could not send response to client", e);
                         return false;
@@ -172,7 +172,7 @@ public class PDUListenerImpl implements PDUListener {
                                     "Provider "+provider.getName()+" doesn't have delivery with service number '"+source_address+"'.")
                     );
                     try{
-                        Server.getInstance().send(submitSMResp);
+                        Server.getInstance().send(submitSMResp, false);
                     } catch (SmppException e) {
                         log.error("Could not send response to client", e);
                         return false;

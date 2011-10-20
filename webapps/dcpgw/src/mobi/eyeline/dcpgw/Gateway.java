@@ -96,7 +96,7 @@ public class Gateway extends Thread implements PDUListener {
             procQueue.add(pdu, pdu.isMessage());
         } catch (QueueException e) {
             try {
-                Server.getInstance().send(((Request) pdu).getResponse(e.getStatus()));
+                Server.getInstance().send(((Request) pdu).getResponse(e.getStatus()), false);
             } catch (SmppException e1) {
                 log.error("Could not send resp", e1);
             }

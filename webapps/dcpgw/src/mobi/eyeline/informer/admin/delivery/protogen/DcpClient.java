@@ -115,4 +115,8 @@ public class DcpClient extends SyncProtogenConnection {
     return sendPdu(req, new GetDeliveryStateResp());
   }
 
+  public void send(DropDeliveryMessages req) throws AdminException {
+    sendPdu(req, new OkResponse());
+  }
+
 }

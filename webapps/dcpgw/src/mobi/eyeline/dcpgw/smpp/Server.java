@@ -109,8 +109,8 @@ public class Server{
         return sn;
     }
 
-    public void send(PDU resp) throws SmppException {
-        server.send(resp, false);
+    public void send(PDU resp, boolean blocked) throws SmppException {
+        server.send(resp, blocked);
     }
 
     public void update(Properties new_properties) throws SmppException {
