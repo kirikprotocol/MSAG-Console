@@ -85,8 +85,7 @@ public class ArchiveDaemon {
             break;
           case Message.SMSC_BYTE_RSSMS_TYPE:
             set.addRow(((RsSmsMessage) responce).getSms());
-            counter++;
-            observer.update(counter<rowsMaximum ? counter : rowsMaximum, rowsMaximum);
+            observer.update(++counter<rowsMaximum ? counter : rowsMaximum, rowsMaximum);
             if (--toReceive <= 0) {
               toReceive = rowsMaximum - set.getRowsCount();
               if (toReceive <= 0) {
