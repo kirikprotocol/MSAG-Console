@@ -70,6 +70,7 @@ function DataTable(tableId, tableOptions) {
         }
       } else {
         var rowsCount = resp.getResponseHeader("rowsCount");
+        alert(rowsCount);
         progress = 100;
         progressOverlay.hide();
         bodyElement.html(data);
@@ -87,6 +88,7 @@ function DataTable(tableId, tableOptions) {
     };
 
     var _sendRequest = function() {
+      params["source"] = null;
       $.post(requestUrl, params, onResponse);
     };
 
