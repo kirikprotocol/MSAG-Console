@@ -3,6 +3,7 @@ package mobi.eyeline.dcpgw.smpp;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.DeliveryReceiptData;
+import mobi.eyeline.dcpgw.journal.SubmitSMData;
 import mobi.eyeline.smpp.api.*;
 import mobi.eyeline.smpp.api.pdu.DeliverSMResp;
 import mobi.eyeline.smpp.api.pdu.PDU;
@@ -179,21 +180,8 @@ public class Server{
 
     public void send(DeliveryReceiptData data){
         String connection_name = data.getConnectionName();
-
         Connection connection = connections.get(connection_name);
-        if (connection != null){
-
-            connection.send(data);
-        } else {
-
-            if (!deleted_connections.contains(connection_name)) {
-                log.error("Couldn't send DeliverSM with message id "+data.getMessageId()+", couldn't find smpp connection "+connection_name);
-            } else {
-                log.debug("Couldn't send DeliverSM with message id "+data.getMessageId()+", connection "+connection_name+" was deleted ot disabled.");
-            }
-
-        }
-
+        connection.send(data);
     }
 
     public boolean handle(DeliverSMResp resp){
@@ -229,6 +217,10 @@ public class Server{
 
     public Connection getConnection(String name){
         return connections.get(name);
+    }
+
+    public boolean connectionRemoved(String name){
+        return deleted_connections.contains(name);
     }
 
 }

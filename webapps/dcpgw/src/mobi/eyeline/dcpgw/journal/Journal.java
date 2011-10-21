@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -44,7 +43,7 @@ public class Journal {
 
     private Hashtable<String, Hashtable<Integer, DeliveryReceiptData>> connection_sn_data_store;
     private Hashtable<String, LinkedBlockingQueue<DeliveryReceiptData>> connection_data_queue_table;
-    private Hashtable<String, Hashtable<Long, Date>> connection_message_id_date_store;
+    private Hashtable<String, Hashtable<Long, SubmitSMData>> connection_message_id_sdata_store;
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -52,8 +51,6 @@ public class Journal {
     private File sdj1;
     private File sdj2;
     private File sdj2t;
-
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssSSS");
 
     public void init(File journal_dir, int max_journal_size_mb, int max_submit_date_journal_size_mb, int clean_timeout) throws InitializationException{
         log.debug("Try to initialize journal ...");
@@ -110,7 +107,7 @@ public class Journal {
 
         connection_sn_data_store = new Hashtable<String, Hashtable<Integer, DeliveryReceiptData>>();
         connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<DeliveryReceiptData>>();
-        connection_message_id_date_store = new Hashtable<String, Hashtable<Long, Date>>();
+        connection_message_id_sdata_store = new Hashtable<String, Hashtable<Long, SubmitSMData>>();
 
         log.debug("Initialize journal.");
     }
@@ -246,29 +243,31 @@ public class Journal {
                         String line = scanner.nextLine();
                         if (!line.isEmpty() && !line.startsWith("#")){
 
-                            String ar[] = line.split(sep);
-                            if (ar.length == 4) {
-                                long message_id = Long.parseLong(ar[0].trim());
-                                String connection_name = ar[1].trim();
-                                Date date;
-                                try {
-                                    date = sdf.parse(ar[2].trim());
-                                } catch (ParseException e) {
-                                    throw new CouldNotLoadJournalException(e);
-                                }
-                                boolean receives_receipt = Boolean.parseBoolean(ar[3].trim());
+                            SubmitSMData sdata;
+                            try {
+                                sdata = SubmitSMData.parse(line);
+                            } catch (ParseException e) {
+                                log.debug(e);
+                                throw new CouldNotLoadJournalException(e);
+                            }
 
-                                if (!connection_message_id_date_store.containsKey(connection_name)){
-                                     connection_message_id_date_store.put(connection_name, new Hashtable<Long, Date>());
-                                }
 
-                                Hashtable<Long, Date> message_id_date = connection_message_id_date_store.get(connection_name);
+                            long message_id = sdata.getMessageId();
+                            String connection_name = sdata.getConnectionName();
+                            SubmitSMData.Status status = sdata.getStatus();
 
-                                if (!receives_receipt){
-                                    message_id_date.put(message_id, date);
-                                } else {
-                                    message_id_date.remove(message_id);
-                                }
+                            if (!connection_message_id_sdata_store.containsKey(connection_name)){
+                                connection_message_id_sdata_store.put(connection_name, new Hashtable<Long, SubmitSMData>());
+                            }
+
+                            Hashtable<Long, SubmitSMData> message_id_sdata = connection_message_id_sdata_store.get(connection_name);
+
+                            if (status != SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
+                                message_id_sdata.put(message_id, sdata);
+                                log.debug("remove from memory submit data: con="+connection_name+", message_id="+message_id);
+                            } else {
+                                message_id_sdata.remove(message_id);
+                                log.debug("add to memory: "+sdata);
                             }
 
                         }
@@ -435,8 +434,17 @@ public class Journal {
                 String line;
                 while((line = buffReader1.readLine()) != null){
                     String[] ar = line.split(sep);
-                    long message_id = Long.parseLong(ar[3].trim());
-                    DeliveryReceiptData.Status status = DeliveryReceiptData.Status.valueOf(ar[12].trim());
+
+                    DeliveryReceiptData data;
+                    try {
+                        data = DeliveryReceiptData.parse(line);
+                    } catch (Exception e) {
+                        log.debug("Couldn't parse journal line.", e);
+                        continue;
+                    }
+
+                    long message_id = data.message_id;
+                    DeliveryReceiptData.Status status = data.getStatus();
 
                     if (status == DeliveryReceiptData.Status.DONE || status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT) {
                         done_message_ids.add(message_id);
@@ -469,8 +477,16 @@ public class Journal {
                 while((line = buffReader2.readLine()) != null){
                     String[] ar = line.split(sep);
 
-                    long message_id = Long.parseLong(ar[3].trim());
-                    DeliveryReceiptData.Status status = DeliveryReceiptData.Status.valueOf(ar[12].trim());
+                    DeliveryReceiptData data;
+                    try {
+                        data = DeliveryReceiptData.parse(line);
+                    } catch (Exception e) {
+                        log.debug("Couldn't parse journal line.", e);
+                        continue;
+                    }
+
+                    long message_id = data.message_id;
+                    DeliveryReceiptData.Status status = data.getStatus();
 
                     if (status == DeliveryReceiptData.Status.INIT){
 
@@ -590,10 +606,19 @@ public class Journal {
 
                 String line;
                 while((line = buffReader1.readLine()) != null){
-                    String[] ar = line.split(sep);
-                    long message_id = Long.parseLong(ar[0].trim());
-                    boolean receives_receipts = Boolean.parseBoolean(ar[3].trim());
-                    if (receives_receipts){
+
+                    SubmitSMData sdata;
+                    try {
+                        sdata = SubmitSMData.parse(line);
+                    } catch (ParseException e) {
+                        log.error("Couldn't parse submit journal string.", e);
+                        continue;
+                    }
+
+                    long message_id = sdata.getMessageId();
+                    SubmitSMData.Status status = sdata.getStatus();
+
+                    if (status == SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
                         receives_receipt_message_ids.add(message_id);
                     }
                 }
@@ -604,14 +629,20 @@ public class Journal {
                 buffReader2 = new BufferedReader(new FileReader(sdj2));
 
                 while((line = buffReader2.readLine()) != null){
-                    String[] ar = line.split(sep);
 
-                    long message_id = Long.parseLong(ar[0].trim());
-                    boolean receives_receipts = Boolean.parseBoolean(ar[3].trim());
+                    SubmitSMData sdata;
+                    try {
+                        sdata = SubmitSMData.parse(line);
+                    } catch (ParseException e) {
+                        log.error("Couldn't parse submit journal string.", e);
+                        continue;
+                    }
 
-                    if (!receives_receipts){
+                    long message_id = sdata.getMessageId();
+                    SubmitSMData.Status status = sdata.getStatus();
+
+                    if (status != SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
                         if (!receives_receipt_message_ids.contains(message_id)){
-                            //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                             pw.println(line);
                             pw.flush();
                             counter++;
@@ -670,8 +701,8 @@ public class Journal {
         return connection_data_queue_table.get(connection_name);
     }
 
-    public Hashtable<Long, Date> getSubmitDateTable(String connection_name){
-        return connection_message_id_date_store.get(connection_name);
+    public Hashtable<Long, SubmitSMData> getSubmitDateTable(String connection_name){
+        return connection_message_id_sdata_store.get(connection_name);
     }
 
     public void shutdown(){

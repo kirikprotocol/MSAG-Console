@@ -80,5 +80,9 @@ public class SubmitSMData extends Data {
         return data;
     }
 
+    public String toString(){
+        return "SubmitSMData{message_id="+message_id+", con="+connection_name+", submit date="+sdf.format(submit_date)+", status="+status+"}";
+    }
+
 
 }

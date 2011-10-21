@@ -251,20 +251,30 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             resp.setStatus(Status.OK);
 
+            Connection connection = Server.getInstance().getConnection(connection_name);
+            if (connection == null){
+                log.debug("Couldn't find "+connection_name+"_smpp_client.");
+                continue;
+            }
+
+            SubmitSMData sdata = new SubmitSMData();
+            sdata.setMessageId(message_id);
+            sdata.setConnectionName(connection_name);
+
             // Send SubmitSMResp in synchronized mode
             try{
                 Server.getInstance().send(resp, true);
             } catch (SmppException e) {
                 canceled_messages.add(m.getId());
-                log.debug("Could not send "+message_id+"_SubmitSMResp to "+connection_name+"_smpp_client, remember it.", e);
+                log.debug("Couldn't send "+message_id+"_SubmitSMResp to "+connection_name+"_smpp_client, remember it.", e);
 
                 try {
-                    SubmitSMData data = new SubmitSMData();
-                    data.setMessageId(message_id);
-                    data.setConnectionName(connection_name);
-                    data.setSubmitDate(new Date(System.currentTimeMillis()));
-                    data.setStatus(SubmitSMData.Status.NOT_SEND_RESPONSE);
-                    Journal.getInstance().write(data);
+
+                    sdata.setSubmitDate(new Date(System.currentTimeMillis()));
+                    sdata.setStatus(SubmitSMData.Status.NOT_SEND_RESPONSE);
+                    connection.setSubmitDate(sdata);
+
+                    Journal.getInstance().write(sdata);
                 } catch (CouldNotWriteToJournalException e2) {
                     log.error("Couldn't write submit data to journal.", e2);
                 }
@@ -274,26 +284,16 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             log.debug("send SubmitSMResp: id="+message_id+", sn="+resp.getSequenceNumber()+", status=OK, delivery_id="+delivery_id);
 
-            long submit_time = System.currentTimeMillis();
-            Date submit_date = new Date(submit_time);
+            Date submit_date = new Date(System.currentTimeMillis());
+            sdata.setSubmitDate(submit_date);
+            sdata.setStatus(SubmitSMData.Status.SEND_RESPONSE);
+            connection.setSubmitDate(sdata);
 
-            Connection connection = Server.getInstance().getConnection(connection_name);
-            if (connection == null){
-                log.debug("Couldn't find "+connection_name+"_smpp_client.");
-                continue;
-            }
-
-            connection.setSubmitDate(message_id, submit_date);
             RegDeliveryReceipt rdr = message_id_register_delivery_receipt_table.remove(message_id);
 
             if (rdr != RegDeliveryReceipt.None){
                 try {
-                    SubmitSMData data = new SubmitSMData();
-                    data.setMessageId(message_id);
-                    data.setConnectionName(connection_name);
-                    data.setSubmitDate(submit_date);
-                    data.setStatus(SubmitSMData.Status.SEND_RESPONSE);
-                    Journal.getInstance().write(data);
+                    Journal.getInstance().write(sdata);
                 } catch (CouldNotWriteToJournalException e) {
                     log.error("Couldn't write submit data to journal.", e);
                 }

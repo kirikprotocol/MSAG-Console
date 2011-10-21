@@ -41,7 +41,7 @@ public class Connection {
 
     private LinkedBlockingQueue<DeliveryReceiptData> queue;
 
-    private Hashtable<Long, Date> message_id_date_table;
+    private Hashtable<Long, SubmitSMData> message_id_sdata_table;
 
     private Journal journal = Journal.getInstance();
 
@@ -64,11 +64,11 @@ public class Connection {
 
         sn_data_table = Journal.getInstance().getDataTable(name);
         queue = Journal.getInstance().getDataQueue(name);
-        message_id_date_table = Journal.getInstance().getSubmitDateTable(name);
+        message_id_sdata_table = Journal.getInstance().getSubmitDateTable(name);
 
         if (sn_data_table == null) sn_data_table = new Hashtable<Integer, DeliveryReceiptData>();
         if (queue == null) queue = new LinkedBlockingQueue<DeliveryReceiptData>();
-        if (message_id_date_table == null)  message_id_date_table = new Hashtable<Long, Date>();
+        if (message_id_sdata_table == null)  message_id_sdata_table = new Hashtable<Long, SubmitSMData>();
 
         scheduler.scheduleWithFixedDelay(new Runnable() {
 
@@ -97,37 +97,21 @@ public class Connection {
         if (queue == null) queue = new LinkedBlockingQueue<DeliveryReceiptData>();
 
         long message_id = data.getMessageId();
-        Date submit_date = message_id_date_table.get(message_id);
-        if (submit_date != null){
 
-            data.setSubmitDate(submit_date);
 
-            try {
-                SubmitSMData sdata = new SubmitSMData();
-                sdata.setMessageId(message_id);
-                sdata.setConnectionName(data.getConnectionName());
-                sdata.setSubmitDate(new Date(System.currentTimeMillis()));
-                sdata.setStatus(SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT);
-                journal.write(sdata);
-            } catch (CouldNotWriteToJournalException e) {
-                log.error("Couldn't write to submit date journal.", e);
-            }
-
-            try{
-                queue.add(data);
-                log.debug("add "+data.getMessageId()+"_rcpt to "+name+"_delivery_queue, size "+queue.size());
-            } catch (IllegalStateException e) {
-                log.warn(name+"_queue full, couldn't add delivery receipt with message_id "+data.getMessageId());
-            }
-
-            try {
-                journal.write(data);
-            } catch (CouldNotWriteToJournalException e) {
-                log.error(e);
-            }
-        } else {
-            log.error("Couldn't find submit date for receipt with message id "+data.getMessageId());
+        try{
+             queue.add(data);
+             log.debug("add "+data.getMessageId()+"_rcpt to "+name+"_delivery_queue, size "+queue.size());
+        } catch (IllegalStateException e) {
+             log.warn(name+"_queue full, couldn't add delivery receipt with message_id "+data.getMessageId());
         }
+
+        try {
+            journal.write(data);
+        } catch (CouldNotWriteToJournalException e) {
+            log.error(e);
+        }
+
     }
 
     public void send(){
@@ -487,8 +471,12 @@ public class Connection {
         this.send_receipt_max_time = send_receipt_max_time;
     }
 
-    public void setSubmitDate(long message_id, Date date){
-        message_id_date_table.put(message_id, date);
+    public void setSubmitDate(SubmitSMData sdata){
+        message_id_sdata_table.put(sdata.getMessageId(), sdata);
+    }
+
+    public SubmitSMData removeSubmitSMData(long message_id){
+        return message_id_sdata_table.remove(message_id);
     }
 
 }
