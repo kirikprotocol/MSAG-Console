@@ -87,7 +87,6 @@ function DataTable(tableId, tableOptions) {
     };
 
     var _sendRequest = function() {
-      params["source"] = null;
       $.post(requestUrl, params, onResponse);
     };
 
