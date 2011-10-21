@@ -292,7 +292,14 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     if(d == null) {
       File reportFile = createReports ? new File(localCopy, buildReportName(localCsvFile.getName())) : null;
       try{
-        createDelivery(formatStrategy, deliveryName, md5, localCsvFile, reportFile);
+        if(!createDelivery(formatStrategy, deliveryName, md5, localCsvFile, reportFile)) {
+          if(reportFile != null && helper.exists(reportFile)) {
+            helper.delete(reportFile);
+          }
+          helper.rename(localCsvFile, new File(localCsvFile.getAbsolutePath()+ERROR));
+        }else {
+          helper.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
+        }
       }catch (AdminException e) {
         if(reportFile != null) {
           try{
@@ -304,11 +311,9 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         throw e;
       }
     }
-
-    helper.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
 
-  private void createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
+  private boolean createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
     helper.logCreateDelivery(deliveryName);
 
     boolean result;
@@ -333,12 +338,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
     } else {
       result = helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, null);
     }
-    if(!result) {
-      if(reportFile != null && helper.exists(reportFile)) {
-        helper.delete(reportFile);
-      }
-      helper.rename(localCsvFile, new File(localCsvFile.getAbsolutePath()+ERROR));
-    }
+    return result;
   }
 
   private void buildReport(final FileFormatStrategy formatStrategy, File reportFile, Delivery d) throws AdminException, UnsupportedEncodingException {

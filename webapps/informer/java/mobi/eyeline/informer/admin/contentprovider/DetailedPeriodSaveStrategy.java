@@ -334,7 +334,14 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
     if(d == null) {
       File reportFile = new File(localCopy, localCsvFile.getName()+'.'+reportFileFormat.format(new Date())+".report");
       try{
-        createDelivery(formatStrategy, deliveryName, md5, localCsvFile, reportFile);
+        if(createDelivery(formatStrategy, deliveryName, md5, localCsvFile, reportFile)) {
+          helper.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
+        }else {
+          if(helper.exists(reportFile)) {
+            helper.delete(reportFile);
+          }
+          helper.rename(localCsvFile, new File(localCsvFile.getAbsolutePath()+ERROR));
+        }
       }catch (AdminException e) {
         try{
           if(helper.exists(reportFile)) {
@@ -345,10 +352,9 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
       }
     }
 
-    helper.rename(localCsvFile, new File(localCopy, buildInProcess(localCsvFile.getName())));
   }
 
-  private void createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
+  private boolean createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
     helper.logCreateDelivery(deliveryName);
 
     boolean result;
@@ -370,16 +376,12 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
         ps[0].close();
       }
     }
-    if(!result) {
-      if(helper.exists(reportFile)) {
-        helper.delete(reportFile);
-      }
-      helper.rename(localCsvFile, new File(localCsvFile.getAbsolutePath()+ERROR));
-    }else {
+    if(result) {
       ReportInfo info = new ReportInfo();
       info.date = now;
       buildReportInfo(localCsvFile.getName(), info);
     }
+    return result;
   }
 
   private List<File> getReportInfoFiles(String localCsvFile) {

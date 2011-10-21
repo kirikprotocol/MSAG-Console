@@ -419,7 +419,8 @@ class SaveStrategyHelper {
             try {
               ab = new Address(info.getMsisdn());
             } catch (Exception e) {
-              rejectListener.reject(info.getMsisdn(), info.getUserData());
+              if (rejectListener != null)
+                rejectListener.reject(info.getMsisdn(), info.getUserData());
               continue;
             }
 
