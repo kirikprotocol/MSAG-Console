@@ -213,6 +213,10 @@ public:
 };
 
 class File{
+
+  File( const File& );
+  File& operator = ( const File& );
+
 public:
   typedef int64_t offset_type;
   File():fd(-1)
