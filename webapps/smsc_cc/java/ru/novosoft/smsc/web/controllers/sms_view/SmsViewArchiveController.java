@@ -201,7 +201,6 @@ public class SmsViewArchiveController extends SmsViewController{
                   public void update(long current, long total) {
                     loadListener.setTotal((int)total);
                     loadListener.setCurrent((int) current);
-                    System.out.println(current+"/"+total); //todo
                   }
                 });
                 List<SmsRow> rs =  messages.getRowsList();
