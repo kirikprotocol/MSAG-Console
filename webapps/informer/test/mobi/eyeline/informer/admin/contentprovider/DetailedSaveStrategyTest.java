@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -577,6 +578,53 @@ public class DetailedSaveStrategyTest {
       writer.println("89139489907|text");
       writer.println("7913948990wrasrafasfsafasasf|text");
       writer.println("79139489908|text");
+  }
+
+  @Test
+  public void testAllErrors() throws Exception {
+    File file = prepareResourceFileWithErrors(0, 4, null);
+    assertTrue(fs.exists(file));
+    strategy.process(true);
+
+    Thread.sleep(1000);
+
+    deliveryManager.forceModifyDeliveries(); // send 50 messages
+
+    strategy.process(true);
+
+    Assert.assertEquals(deliveryManager.countDeliveries("", "", new DeliveryFilter()), 0);
+
+    File csvFile = new File("workDir" + File.separatorChar + "detailedLocalCopy", "test.csv");
+    assertFalse(fs.exists(csvFile));
+    assertFalse(fs.exists(new File(csvFile.getAbsolutePath()+".active")));
+    assertFalse(fs.exists(new File(csvFile.getAbsolutePath()+".error")));
+
+    assertTrue(fs.exists(new File("dir", "test.csv.error")));
+  }
+
+  private void prepareFileWithError(PrintWriter writer, int lines, int errors) {
+    for(int i=0; i<lines; i++) {
+      writer.print("+7913948990"+i);writer.println("|text");
+    }
+    for(int i=0; i<errors; i++) {
+      writer.print("+");writer.print("dasda");writer.println("|text");
+    }
+  }
+
+  private File prepareResourceFileWithErrors(int lines, int errors, String posfix) throws AdminException {
+    File file = new File("dir", "test.csv"+(posfix == null ? "" : posfix));
+    fs.mkdirs(file);
+    PrintWriter writer = null;
+    try{
+      writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(file, false))));
+      prepareFileWithError(writer, lines, errors);
+    }finally{
+      if(writer != null) {
+        writer.close();
+      }
+    }
+    assertTrue("File doesn't exist!", fs.exists(file));
+    return file;
   }
 
 }

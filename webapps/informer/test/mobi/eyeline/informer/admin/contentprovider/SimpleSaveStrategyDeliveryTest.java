@@ -145,7 +145,7 @@ public class SimpleSaveStrategyDeliveryTest {
     processResourceWithRandomUser("login");
 
     Delivery d = getDelivery("test", "login");
-    assertEquals(Delivery.Type.IndividualTexts, d.getType());
+    assertNull(d);
   }
 
   @Test

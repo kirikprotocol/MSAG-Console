@@ -28,6 +28,7 @@ public class ContentProviderContextStub implements ContentProviderContext {
   private final Map<String, Integer> activateBans;
   private final Map<String, Integer> createBans;
   private final Map<String, Integer> addMessagesBans;
+  private final Map<String, Integer> addMessagesInvalidBans;
 
   private CpFileFormat cpFileFormat = CpFileFormat.MTS;
 
@@ -40,6 +41,7 @@ public class ContentProviderContextStub implements ContentProviderContext {
     this.activateBans = new HashMap<String, Integer>();
     this.createBans = new HashMap<String, Integer>();
     this.addMessagesBans = new HashMap<String, Integer>();
+    this.addMessagesInvalidBans = new HashMap<String, Integer>();
   }
 
   public void deprecateDeliveryActivation(String deliveryName, int times) {
@@ -52,6 +54,10 @@ public class ContentProviderContextStub implements ContentProviderContext {
 
   public void deprecateAddMessages(String deliveryName, int times) {
     addMessagesBans.put(deliveryName, times);
+  }
+
+  public void deprecateAddMessageInvalid(String deliveryName, int times) {
+    addMessagesInvalidBans.put(deliveryName, times);
   }
 
   public void addUser(User user) {
@@ -113,6 +119,14 @@ public class ContentProviderContextStub implements ContentProviderContext {
     if (times != null && times > 0) {
       addMessagesBans.put(deliveryName, times-1);
       throw new ContentProviderException("ioerror");
+    }
+  }
+
+  private void checkAddMessagesInvalidBan(String deliveryName) throws AdminException {
+    Integer times = addMessagesInvalidBans.get(deliveryName);
+    if (times != null && times > 0) {
+      addMessagesInvalidBans.put(deliveryName, times-1);
+      throw new DeliveryException(DeliveryException.ErrorStatus.InvalidDeliveryMessage, "invalid messages");
     }
   }
 
@@ -210,6 +224,7 @@ public class ContentProviderContextStub implements ContentProviderContext {
   public void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
     Delivery d = getDelivery(login, deliveryId);
     checkAddMessagesBan(d.getName());
+    checkAddMessagesInvalidBan(d.getName());
     deliveryManager.addIndividualMessages(login, "", messageSource, deliveryId);
   }
 
@@ -217,6 +232,7 @@ public class ContentProviderContextStub implements ContentProviderContext {
   public void addSingleMessagesWithData(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
     Delivery d = getDelivery(login, deliveryId);
     checkAddMessagesBan(d.getName());
+    checkAddMessagesInvalidBan(d.getName());
     deliveryManager.addSingleTextMessagesWithData(login, "", messageSource, deliveryId);
   }
 

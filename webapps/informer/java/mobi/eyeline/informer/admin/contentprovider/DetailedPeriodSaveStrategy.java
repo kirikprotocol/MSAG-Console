@@ -61,6 +61,7 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
   private static final String CSV_POSFIX = ".csv";
   private static final String IN_PROCESS = ".active";
   private static final String FINISHED = ".finished";
+  private static final String ERROR = ".error";
 
   void setReportTimeoutMillis(long reportTimeoutMillis) {
     this.reportTimeoutMillis = reportTimeoutMillis;
@@ -106,6 +107,20 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
         }
         break;
       }
+    }
+  }
+
+  private void synchronizeError(FileResource resource) throws AdminException {
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
+    List<File> errorFiles = helper.listFiles(localCopy, ERROR);
+    for (File localErrorFile : errorFiles) {
+      String csvFile = csvFileFromWorkFile(localErrorFile.getName());
+      if (remoteFiles.contains(csvFile)) {
+        resource.rename(csvFile, localErrorFile.getName());
+      } else{
+        helper.logFileNotFoundOnResource(localErrorFile.getName());
+      }
+      helper.delete(localErrorFile);
     }
   }
 
@@ -202,6 +217,8 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
 
     try{
       resource.open();
+
+      synchronizeError(resource);
 
       synchronizeFinished(resource);
 
@@ -334,26 +351,35 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
   private void createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
     helper.logCreateDelivery(deliveryName);
 
+    boolean result;
     Date now = new Date();
     final PrintStream[] ps = new PrintStream[1];
     try{
       ps[0] = new PrintStream(helper.getOutputStream(reportFile, false), true, encoding);
-      helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
+      result = helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
         @Override
         public void reject(String abonent, String userData) {
           formatStrategy.writeReportLine(ps[0], abonent, userData, new Date(), MessageState.Failed, 9999);
         }
       });
     } catch (UnsupportedEncodingException e) {
+      result = false;
       log.error(e,e);
     } finally {
       if(ps[0]!=null) {
         ps[0].close();
       }
     }
-    ReportInfo info = new ReportInfo();
-    info.date = now;
-    buildReportInfo(localCsvFile.getName(), info);
+    if(!result) {
+      if(helper.exists(reportFile)) {
+        helper.delete(reportFile);
+      }
+      helper.rename(localCsvFile, new File(localCsvFile.getAbsolutePath()+ERROR));
+    }else {
+      ReportInfo info = new ReportInfo();
+      info.date = now;
+      buildReportInfo(localCsvFile.getName(), info);
+    }
   }
 
   private List<File> getReportInfoFiles(String localCsvFile) {

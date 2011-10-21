@@ -121,7 +121,20 @@ class SaveStrategyHelper {
     return delivery;
   }
 
-  void createDelivery(FileFormatStrategy formatStrategy, File f, String deliveryName, Address sourceAddr, String encoding, String md5, RejectListener rejectListener) throws AdminException {
+  /**
+   * Создаёт рассылку, добавляет сообщения и активирует её. Если добавить сообщения не удалось
+   * @param formatStrategy формат файла
+   * @param f файл
+   * @param deliveryName название рассылки
+   * @param sourceAddr адрес отправителя
+   * @param encoding кодировка файла
+   * @param md5 сумма файла
+   * @param rejectListener листенер, которому передаются сведенья от отклоненных сообщениях
+   * @return true - рассылка успешно создана, false - при добавлении в Informer сообщений возникли ошибки (к примеру, неверный контент файла)
+   * или файл не содержит ни одного корректного сообщения
+   * @throws AdminException ошибка при создании рассылки
+   */
+  boolean createDelivery(FileFormatStrategy formatStrategy, File f, String deliveryName, Address sourceAddr, String encoding, String md5, RejectListener rejectListener) throws AdminException {
     if (encoding == null)
       encoding="UTF-8";
 
@@ -138,10 +151,28 @@ class SaveStrategyHelper {
     }
 
     Delivery d = strategy.createDelivery(proto);
-
-    strategy.addMessages(formatStrategy, user, d, f, encoding, rejectListener);
-
-    context.activateDelivery(user.getLogin(), d.getId());
+    int mC = 0;
+    try{
+      mC = strategy.addMessages(formatStrategy, user, d, f, encoding, rejectListener);
+    }catch (DeliveryException e) {
+      if(e.getErrorStatus() == DeliveryException.ErrorStatus.InvalidDeliveryMessage) {
+        log.error(e,e);
+      }else {
+        throw e;
+      }
+    }
+    if(mC == 0) {
+      log.error("No one message has added to delivery: "+d.getName()+". Drop it");
+      try{
+        context.dropDelivery(user.getLogin(), d.getId());
+      }catch (Exception e){
+        log.error(e,e);
+      }
+      return false;
+    }else {
+      context.activateDelivery(user.getLogin(), d.getId());
+      return true;
+    }
   }
 
   private static final String MD5_PROPERTY = "cp-md5";
@@ -330,6 +361,8 @@ class SaveStrategyHelper {
     final RejectListener rejectListener;
     private final boolean loadTextFromFile;
 
+    private int messageCounter;
+
     private final FileFormatStrategy formatStrategy;
 
     public FileMessageSource(FileFormatStrategy formatStrategy, List<Integer> allowedRegions, File messagesFile, String encoding, RejectListener rejectListener, boolean singleText) throws AdminException, UnsupportedEncodingException {
@@ -406,6 +439,8 @@ class SaveStrategyHelper {
 
             m.setKeywords(info.getKeyword());
 
+            messageCounter++;
+
             return m;
           } catch (Exception e) {
             log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.", e);
@@ -416,6 +451,10 @@ class SaveStrategyHelper {
       }
       return null;
     }
+
+    public int getMessageCounter() {
+      return messageCounter;
+    }
   }
 
 
@@ -425,12 +464,14 @@ class SaveStrategyHelper {
       return context.createDeliveryWithIndividualTexts(user.getLogin(), proto, null);
     }
 
-    public void addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException {
+    public int addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException {
       FileMessageSource src = null;
       try {
         src = new FileMessageSource(formatStrategy, user.isAllRegionsAllowed() ? null : user.getRegions(), messagesFile, encoding, rejectListener, false);
         context.addMessages(user.getLogin(),src,d.getId());
+        return src.getMessageCounter();
       } catch (UnsupportedEncodingException ignored) {
+        return 0;
       } finally {
         if (src != null)
           src.close();
@@ -444,12 +485,14 @@ class SaveStrategyHelper {
       return context.createDeliveryWithSingleTextWithData(user.getLogin(), proto, null);
     }
 
-    public void addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding,  RejectListener rejectListener) throws AdminException {
+    public int addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding,  RejectListener rejectListener) throws AdminException {
       FileMessageSource src = null;
       try {
         src = new FileMessageSource(formatStrategy, user.isAllRegionsAllowed() ? null : user.getRegions(), messagesFile, encoding, rejectListener, true);
         context.addSingleMessagesWithData(user.getLogin(), src, d.getId());
+        return src.getMessageCounter();
       } catch (UnsupportedEncodingException ignored) {
+        return 0;
       } finally {
         if (src != null)
           src.close();
@@ -462,7 +505,7 @@ class SaveStrategyHelper {
 
     Delivery createDelivery(DeliveryPrototype proto) throws AdminException;
 
-    public void addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException;
+    public int addMessages(FileFormatStrategy formatStrategy, User user, Delivery d, File messagesFile, String encoding, RejectListener rejectListener) throws AdminException;
 
   }
 

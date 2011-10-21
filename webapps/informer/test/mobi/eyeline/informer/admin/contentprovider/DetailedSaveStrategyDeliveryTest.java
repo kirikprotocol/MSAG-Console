@@ -152,10 +152,11 @@ public class DetailedSaveStrategyDeliveryTest {
     processResourceWithRandomUser("login");
 
     Delivery d = getDelivery("test", "login");
-    assertEquals(Delivery.Type.IndividualTexts, d.getType());
-    assertTrue(fs.exists(new File(localCopyDir, "test.csv.active")));
+    assertNull(d);
+    assertTrue(!fs.exists(new File(localCopyDir, "test.csv.active")));
+    assertTrue(!fs.exists(new File(localCopyDir, "test.csv")));
     remoteResource.open();
-    assertTrue(contains("test.csv.active"));
+    assertTrue(contains("test.csv.error"));
     remoteResource.close();
   }
 
@@ -234,6 +235,25 @@ public class DetailedSaveStrategyDeliveryTest {
 
     assertEquals(DeliveryStatus.Planned, getDelivery("test", "login").getStatus());
 
+  }
+
+  @Test
+  public void testImportFileWithAddMessagesInvalidError() throws AdminException {
+    remoteResource.addFile("test.csv", "+79139495113|One text");
+    ctx.deprecateAddMessageInvalid("test", 1);
+
+    processResourceWithRandomUser("login");
+
+    assertNull(getDelivery("test", "login"));
+
+    assertTrue(!fs.exists(new File(localCopyDir, "test.csv")));
+    assertTrue(!fs.exists(new File(localCopyDir, "test.csv.active")));
+    assertTrue(!fs.exists(new File(localCopyDir, "test.csv.finished")));
+    assertTrue(!fs.exists(new File(localCopyDir, "test.csv.report")));
+    remoteResource.open();
+    assertTrue(contains("test.csv.error"));
+    assertTrue(!contains("test.csv.report"));
+    remoteResource.close();
   }
 
   private void assertFileContainsLine(File f, String pattern) throws AdminException, IOException {

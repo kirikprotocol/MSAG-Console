@@ -111,12 +111,12 @@ public class DetailedPeriodSaveStrategyTest {
   }
 
 
-  private File prepareResourceErrorFile(int lines, String posfix) throws AdminException {
+  private File prepareResourceFileWithErrors(int lines, int errors, String posfix) throws AdminException {
     File file = new File(resourceDir, "test.csv"+(posfix == null ? "" : posfix));
     PrintWriter writer = null;
     try{
       writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(file, false))));
-      prepareErrorFile(writer, lines);
+      prepareFileWithError(writer, lines, errors);
     }finally{
       if(writer != null) {
         writer.close();
@@ -168,8 +168,11 @@ public class DetailedPeriodSaveStrategyTest {
       }
     }
   }
-  private void prepareErrorFile(PrintWriter writer, int lines) {
+  private void prepareFileWithError(PrintWriter writer, int lines, int errors) {
     for(int i=0; i<lines; i++) {
+      writer.print("+7913948990"+i);writer.println("|text");
+    }
+    for(int i=0; i<errors; i++) {
       writer.print("+");writer.print("dasda");writer.println("|text");
     }
   }
@@ -359,7 +362,7 @@ public class DetailedPeriodSaveStrategyTest {
 
   @Test
   public void testErrorReport() throws Exception {
-    File file = prepareResourceErrorFile(1000, null);
+    File file = prepareResourceFileWithErrors(1, 4, null);
     assertTrue(fs.exists(file));
     DetailedPeriodSaveStrategy strategy = createStrategy();
     strategy.process(true);
@@ -393,10 +396,33 @@ public class DetailedPeriodSaveStrategyTest {
 
     assertEquals(2, report);
 
-    assertEquals(1000, countMessages);
+    assertEquals(5, countMessages);
 
-    assertMessages(0, null);
+    assertMessages(1, null);
 
+  }
+
+  @Test
+  public void testAllErrors() throws Exception {
+    File file = prepareResourceFileWithErrors(0, 4, null);
+    assertTrue(fs.exists(file));
+    DetailedPeriodSaveStrategy strategy = createStrategy();
+    strategy.process(true);
+
+    Thread.sleep(1000);
+
+    deliveryManager.forceModifyDeliveries(); // send 50 messages
+
+    strategy.process(true);
+
+    assertEquals(deliveryManager.countDeliveries("","", new DeliveryFilter()), 0);
+
+    File csvFile = new File(localDir, "test.csv");
+    assertFalse(fs.exists(csvFile));
+    assertFalse(fs.exists(new File(csvFile.getAbsolutePath()+".active")));
+    assertFalse(fs.exists(new File(csvFile.getAbsolutePath()+".error")));
+
+    assertTrue(fs.exists(new File(resourceDir, "test.csv.error")));
   }
 
 

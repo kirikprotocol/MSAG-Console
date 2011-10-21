@@ -21,10 +21,11 @@ public class DeliveryException extends AdminException {
     RequestNotFound(6),
     Expired(7),
     NoSuchEntry(8),
-    Unknown(9),
-    ServiceOffline(10);
+    InvalidDeliveryMessage(9),
+    Unknown(10),
+    ServiceOffline(11);
 
-    private static Map<Integer, ErrorStatus> errors = new HashMap<Integer, ErrorStatus>(10) {{
+    private static Map<Integer, ErrorStatus> errors = new HashMap<Integer, ErrorStatus>(11) {{
       for(ErrorStatus s : ErrorStatus.values()) {
         put(s.errorCode, s);
       }

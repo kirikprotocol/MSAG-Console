@@ -56,6 +56,7 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
   private static final String CSV_POSFIX = ".csv";
   private static final String IN_PROCESS = ".active";
+  private static final String ERROR = ".error";
   private static final String FINISHED = ".finished";
   private static final String REPORT = ".report";
 
@@ -99,6 +100,20 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         }
         break;
       }
+    }
+  }
+
+  private void synchronizeError(FileResource resource) throws AdminException {
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
+    List<File> errorFiles = helper.listFiles(localCopy, ERROR);
+    for (File localErrorFile : errorFiles) {
+      String csvFile = csvFileFromWorkFile(localErrorFile.getName());
+      if (remoteFiles.contains(csvFile)) {
+        resource.rename(csvFile, localErrorFile.getName());
+      } else{
+        helper.logFileNotFoundOnResource(localErrorFile.getName());
+      }
+      helper.delete(localErrorFile);
     }
   }
 
@@ -162,6 +177,8 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
 
     try{
       resource.open();
+
+      synchronizeError(resource);
 
       synchronizeFinished(resource);
 
@@ -294,17 +311,19 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
   private void createDelivery(final FileFormatStrategy formatStrategy, String deliveryName, final String md5, File localCsvFile, File reportFile) throws AdminException {
     helper.logCreateDelivery(deliveryName);
 
+    boolean result;
     if (reportFile != null) {
       final PrintStream[] ps = new PrintStream[1];
       try{
         ps[0] = new PrintStream(helper.getOutputStream(reportFile, false), true, encoding);
-        helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
+        result = helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, new SaveStrategyHelper.RejectListener() {
           @Override
           public void reject(String abonent, String userData) {
             formatStrategy.writeReportLine(ps[0], abonent, userData, new Date(), MessageState.Failed, 9999);
           }
         });
       } catch (UnsupportedEncodingException e) {
+        result = false;
         log.error(e,e);
       } finally {
         if(ps[0]!=null) {
@@ -312,7 +331,13 @@ class DetailedSaveStrategy implements ResourceProcessStrategy{
         }
       }
     } else {
-      helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, null);
+      result = helper.createDelivery(formatStrategy, localCsvFile, deliveryName, sourceAddr, encoding, md5, null);
+    }
+    if(!result) {
+      if(reportFile != null && helper.exists(reportFile)) {
+        helper.delete(reportFile);
+      }
+      helper.rename(localCsvFile, new File(localCsvFile.getAbsolutePath()+ERROR));
     }
   }
 
