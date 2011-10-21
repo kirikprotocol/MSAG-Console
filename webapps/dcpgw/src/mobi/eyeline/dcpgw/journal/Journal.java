@@ -42,8 +42,8 @@ public class Journal {
     private final Object monitor = new Object();
     private final Object monitor2 = new Object();
 
-    private Hashtable<String, Hashtable<Integer, Data>> connection_sn_data_store;
-    private Hashtable<String, LinkedBlockingQueue<Data>> connection_data_queue_table;
+    private Hashtable<String, Hashtable<Integer, DeliveryReceiptData>> connection_sn_data_store;
+    private Hashtable<String, LinkedBlockingQueue<DeliveryReceiptData>> connection_data_queue_table;
     private Hashtable<String, Hashtable<Long, Date>> connection_message_id_date_store;
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -108,8 +108,8 @@ public class Journal {
         }, clean_timeout, clean_timeout, TimeUnit.MILLISECONDS);
 
 
-        connection_sn_data_store = new Hashtable<String, Hashtable<Integer, Data>>();
-        connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<Data>>();
+        connection_sn_data_store = new Hashtable<String, Hashtable<Integer, DeliveryReceiptData>>();
+        connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<DeliveryReceiptData>>();
         connection_message_id_date_store = new Hashtable<String, Hashtable<Long, Date>>();
 
         log.debug("Initialize journal.");
@@ -154,22 +154,22 @@ public class Journal {
                         String line = scanner.nextLine();
                         if (!line.isEmpty() && !line.startsWith("#")){
 
-                            Data data;
+                            DeliveryReceiptData data;
                             try {
-                                data = Data.parse(line);
+                                data = DeliveryReceiptData.parse(line);
                             } catch (ParseException e) {
                                 throw new CouldNotLoadJournalException(e);
                             } catch (InvalidAddressFormatException e) {
                                 throw new CouldNotLoadJournalException(e);
                             }
 
-                            Data.Status status = data.getStatus();
+                            DeliveryReceiptData.Status status = data.getStatus();
 
                             String connection = data.getConnectionName();
-                            if (status == Data.Status.INIT){
+                            if (status == DeliveryReceiptData.Status.INIT){
 
                                 if (!connection_data_queue_table.containsKey(connection))
-                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<Data>());
+                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<DeliveryReceiptData>());
 
 
                                 try {
@@ -182,12 +182,12 @@ public class Journal {
                                 Integer sequence_number = data.getSequenceNumber();
 
                                 if (!connection_sn_data_store.containsKey(connection))
-                                        connection_sn_data_store.put(connection, new Hashtable<Integer, Data>());
+                                        connection_sn_data_store.put(connection, new Hashtable<Integer, DeliveryReceiptData>());
 
-                                if (status == Data.Status.DONE
-                                        || status == Data.Status.EXPIRED_MAX_TIMEOUT
-                                            ||  status == Data.Status.EXPIRED_TIMEOUT
-                                                || status == Data.Status.DELETED){
+                                if (status == DeliveryReceiptData.Status.DONE
+                                        || status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT
+                                            ||  status == DeliveryReceiptData.Status.EXPIRED_TIMEOUT
+                                                || status == DeliveryReceiptData.Status.DELETED){
 
                                     connection_sn_data_store.get(connection).remove(sequence_number);
                                     log.debug("remove from memory data: con="+connection+", sn="+sequence_number);
@@ -284,7 +284,7 @@ public class Journal {
         log.debug("Successfully load journal.");
     }
 
-    public void write(Data data) throws CouldNotWriteToJournalException {
+    public void write(DeliveryReceiptData data) throws CouldNotWriteToJournalException {
 
         synchronized (monitor){
 
@@ -297,7 +297,7 @@ public class Journal {
                 throw new CouldNotWriteToJournalException(e);
             }
 
-            String s = Data.format(data);
+            String s = DeliveryReceiptData.format(data);
 
             boolean isEnoughSpace;
             try {
@@ -436,25 +436,25 @@ public class Journal {
                 while((line = buffReader1.readLine()) != null){
                     String[] ar = line.split(sep);
                     long message_id = Long.parseLong(ar[3].trim());
-                    Data.Status status = Data.Status.valueOf(ar[12].trim());
+                    DeliveryReceiptData.Status status = DeliveryReceiptData.Status.valueOf(ar[12].trim());
 
-                    if (status == Data.Status.DONE || status == Data.Status.EXPIRED_MAX_TIMEOUT) {
+                    if (status == DeliveryReceiptData.Status.DONE || status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT) {
                         done_message_ids.add(message_id);
                         //log.debug("finished: message_id="+message_id);
-                    } else if (status == Data.Status.PERM_ERROR){
+                    } else if (status == DeliveryReceiptData.Status.PERM_ERROR){
                         perm_errors_message_ids.add(message_id);
                         //log.debug("perm error: message_id="+message_id);
-                    } else if (status == Data.Status.DELETED){
+                    } else if (status == DeliveryReceiptData.Status.DELETED){
                         deleted_messages_ids.add(message_id);
                         //log.debug("deleted: message_id="+message_id);
-                    } else if (status == Data.Status.EXPIRED_MAX_TIMEOUT){
+                    } else if (status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT){
                         expired_max_messages_ids.add(message_id);
                         //log.debug("expired_max: message_id="+message_id);
-                    } else if (status == Data.Status.EXPIRED_TIMEOUT){
+                    } else if (status == DeliveryReceiptData.Status.EXPIRED_TIMEOUT){
                         int sequence_number = Integer.parseInt(ar[4]);
                         sequence_numbers.add(sequence_number);
                         //log.debug("expired: sn="+sequence_number);
-                    } else if (status == Data.Status.SEND || status == Data.Status.NOT_SEND){
+                    } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND){
                         processed_message_ids.add(message_id);
                         //log.debug("processed: message_id="+message_id);
                     }
@@ -470,9 +470,9 @@ public class Journal {
                     String[] ar = line.split(sep);
 
                     long message_id = Long.parseLong(ar[3].trim());
-                    Data.Status status = Data.Status.valueOf(ar[12].trim());
+                    DeliveryReceiptData.Status status = DeliveryReceiptData.Status.valueOf(ar[12].trim());
 
-                    if (status == Data.Status.INIT){
+                    if (status == DeliveryReceiptData.Status.INIT){
 
                         if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
                             //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
@@ -481,7 +481,7 @@ public class Journal {
                             counter++;
                         }
 
-                    } else if (status == Data.Status.SEND || status == Data.Status.NOT_SEND) {
+                    } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND) {
                         int sequence_number = Integer.parseInt(ar[4]);
                         if (!done_message_ids.contains(message_id)
                                 && !sequence_numbers.contains(sequence_number)
@@ -518,6 +518,8 @@ public class Journal {
                     log.debug("Create file "+j2.getName()+": "+b);
 
                 }
+
+
 
             } catch (IOException e) {
                 log.error(e);
@@ -660,11 +662,11 @@ public class Journal {
 
     }
 
-    public Hashtable<Integer, Data> getDataTable(String connection_name){
+    public Hashtable<Integer, DeliveryReceiptData> getDataTable(String connection_name){
         return connection_sn_data_store.get(connection_name);
     }
 
-    public LinkedBlockingQueue<Data> getDataQueue(String connection_name){
+    public LinkedBlockingQueue<DeliveryReceiptData> getDataQueue(String connection_name){
         return connection_data_queue_table.get(connection_name);
     }
 
@@ -677,7 +679,7 @@ public class Journal {
         log.debug("journal shutdown");
     }
 
-    public void writeSubmitDate(long message_id, String connection_name, Date date, boolean receives_receipt)throws CouldNotWriteToJournalException {
+    public void write(SubmitSMData data)throws CouldNotWriteToJournalException {
 
         synchronized (monitor2){
 
@@ -690,7 +692,7 @@ public class Journal {
                 throw new CouldNotWriteToJournalException(e);
             }
 
-            String s = message_id + sep + connection_name + sep + sdf.format(date) + sep + receives_receipt;
+            String s = SubmitSMData.format(data);
 
             boolean isEnoughSpace;
             try {

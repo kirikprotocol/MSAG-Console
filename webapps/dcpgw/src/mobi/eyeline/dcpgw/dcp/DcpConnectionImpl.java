@@ -3,6 +3,7 @@ package mobi.eyeline.dcpgw.dcp;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.journal.Journal;
+import mobi.eyeline.dcpgw.journal.SubmitSMData;
 import mobi.eyeline.dcpgw.smpp.Connection;
 import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.informer.admin.AdminException;
@@ -11,7 +12,6 @@ import mobi.eyeline.informer.admin.delivery.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
-import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.InvalidParameterException;
@@ -135,172 +135,189 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     public void sendMessages(int delivery_id){
         LinkedBlockingQueue<Message> queue = delivery_id_queue_map.get(delivery_id);
 
-            long t = System.currentTimeMillis();
+        if (queue.isEmpty()) {
+            log.debug(delivery_id+"_queue is empty.");
+            return;
+        }
 
-            if (!queue.isEmpty()){
-                log.debug(delivery_id+"_queue size is "+queue.size());
+        long t = System.currentTimeMillis();
 
-                List<Message> list = new ArrayList<Message>();
-                queue.drainTo(list);
+        log.debug(delivery_id+"_queue size is "+queue.size());
 
-                // Try to send messages to informer
-                long[] informer_message_ids;
+        List<Message> list = new ArrayList<Message>();
+        queue.drainTo(list);
+
+        // Try to send messages to informer
+        long[] informer_message_ids;
+        try{
+            informer_message_ids = addDeliveryMessages(delivery_id, list);
+            log.debug("Add messages to "+delivery_id+"_delivery.");
+        } catch (AdminException e) {
+            log.error("Couldn't add messages "+delivery_id+" delivery.",e);
+
+            for(Message m: list){
+
+                Properties p = m.getProperties();
+                long message_id = Long.parseLong(p.getProperty("id"));
+                String con = p.getProperty("con");
+                SubmitSMResp resp = message_id_submit_sm_resp_table.remove(message_id);
+                resp.setStatus(Status.SYSERR);
+                resp.setTLV( new TLVString( (short)0x001D, e.getMessage()) );
+
                 try{
-                    log.debug("Try to add messages to "+delivery_id+" delivery ...");
-                    informer_message_ids = addDeliveryMessages(delivery_id, list);
-                    log.debug("Add messages to "+delivery_id+"_delivery.");
-                } catch (AdminException e) {
-                    log.error("Couldn't add messages "+delivery_id+" delivery.",e);
-
-                    for(Message m: list){
-
-                        Properties p = m.getProperties();
-                        long message_id = Long.parseLong(p.getProperty("id"));
-                        String con = p.getProperty("con");
-                        SubmitSMResp resp = message_id_submit_sm_resp_table.remove(message_id);
-                        resp.setStatus(Status.SYSERR);
-                        resp.setTLV( new TLVString( (short)0x001D, e.getMessage()) );
-
-                        try{
-                            Server.getInstance().send(resp, false);
-                        } catch (SmppException e2) {
-                            log.error("Couldn't send "+message_id+"_SubmitSMResp to the "+con+"_smpp_client.", e2);
-                        }
-
-                    }
-
-                    return;
+                    Server.getInstance().send(resp, false);
+                } catch (SmppException e2) {
+                    log.error("Couldn't send "+message_id+"_SubmitSMResp to the "+con+"_smpp_client.", e2);
                 }
 
-                // Try to get delivery status
-                DeliveryStatistics delivery_statistics;
-                try {
-                    delivery_statistics = getDeliveryState(delivery_id);
-                } catch (AdminException e) {
-
-                    long[] ids = new long[0];
-                    for(int i=0; i<list.size(); i++) ids[i] = list.get(i).getId();
-
-                    try {
-                        dropMessages(delivery_id, ids);
-                        log.debug("Remove messages:"+Arrays.toString(ids));
-                    } catch (AdminException e1) {
-                        log.error("Couldn't drop messages: "+ Arrays.toString(ids));
-                        // todo
-                    }
-
-                    return;
-                }
-
-                // Change status is delivery finished.
-                DeliveryState ds = delivery_statistics.getDeliveryState();
-                if (ds.getStatus() == mobi.eyeline.informer.admin.delivery.DeliveryStatus.Finished){
-                    log.debug(delivery_id+"_delivery finished");
-                    DeliveryState deliveryState = new DeliveryState();
-                    try {
-                        deliveryState.setStatus(mobi.eyeline.informer.admin.delivery.DeliveryStatus.Planned);
-                        changeDeliveryState(delivery_id, deliveryState);
-                        log.debug("Change "+delivery_id+"_delivery status on planned.");
-                    } catch (AdminException e) {
-                        log.debug("Couldn't change "+delivery_id+"_delivery status from finished to planned.");
-
-                        long[] ids = new long[0];
-                        for(int i=0; i<list.size(); i++) ids[i] = list.get(i).getId();
-
-                        try {
-                            dropMessages(delivery_id, ids);
-                            log.debug("Remove messages:"+Arrays.toString(ids));
-                        } catch (AdminException e1) {
-                            log.error("Couldn't drop messages: "+ Arrays.toString(ids));
-                            // todo
-                        }
-
-                        return;
-
-                    }
-
-                }
-
-                List<Long> canceled_messages = new ArrayList<Long>();
-
-                for(int i = 0; i < list.size(); i++ ){
-
-                    Message m = list.get(i);
-                    Properties p = m.getProperties();
-                    String message_id_str = p.getProperty("id");
-                    long message_id = Long.parseLong(message_id_str);
-
-                    log.debug("gateway id --> informer id: " +message_id_str+" --> "+informer_message_ids[i]);
-
-                    SubmitSMResp resp = message_id_submit_sm_resp_table.remove(message_id);
-
-                    if (resp == null) {
-                        log.error("Couldn't find SubmitSMResp data, message_id="+message_id_str);
-                        continue;
-                    }
-
-                    String connection_name = resp.getConnectionName();
-
-                    try {
-                        resp.setMessageId(message_id_str);
-                    } catch (InvalidParameterException e) {
-                        log.error(e);
-                        continue;
-                    }
-
-                    resp.setStatus(Status.OK);
-
-                    // Send SubmitSMResp in synchronized mode
-                    try{
-                        Server.getInstance().send(resp, true);
-                    } catch (SmppException e) {
-                        log.debug("Could not send "+message_id+"_SubmitSMResp to "+connection_name+"_smpp_client", e);
-                        canceled_messages.add(m.getId());
-                        continue;
-                    }
-
-                    log.debug("send SubmitSMResp: id="+message_id+", sn="+resp.getSequenceNumber()+", status=OK, delivery_id="+delivery_id);
-
-                    long submit_time = System.currentTimeMillis();
-                    Date submit_date = Functions.convertTime(new Date(submit_time), LOCAL_TIMEZONE, STAT_TIMEZONE);
-
-                    Connection connection = Server.getInstance().getConnection(connection_name);
-                    if (connection == null){
-                        log.debug("Couldn't find "+connection_name+"_smpp_client.");
-                        continue;
-                    }
-
-                    connection.setSubmitDate(message_id, submit_date);
-                    RegDeliveryReceipt rdr = message_id_register_delivery_receipt_table.remove(message_id);
-
-                    if (rdr != RegDeliveryReceipt.None){
-                        try {
-                            Journal.getInstance().writeSubmitDate(message_id, connection_name, submit_date, false);
-                        } catch (CouldNotWriteToJournalException e) {
-                            log.error("Couldn't write submit date to journal.", e);
-                        }
-                    }
-
-                }
-
-                if (!canceled_messages.isEmpty()){
-                    long[] ids = new long[canceled_messages.size()];
-                    for(int j=0; j<canceled_messages.size(); j++) ids[j] = canceled_messages.get(j);
-                    try {
-                        dropMessages(delivery_id, ids);
-                        log.debug("Remove messages:"+Arrays.toString(ids));
-                    } catch (AdminException e) {
-                        log.error("Couldn't drop messages: "+ Arrays.toString(ids));
-                        // todo
-                    }
-                }
-
-            } else {
-                log.debug(delivery_id+"_queue is empty.");
             }
 
-            long dif = System.currentTimeMillis() - t;
-            log.debug("Done send messages task, "+dif+" mls");
+            return;
+
+        }
+
+        // Try to get delivery status
+        DeliveryStatistics delivery_statistics;
+        try {
+            delivery_statistics = getDeliveryState(delivery_id);
+        } catch (AdminException e) {
+
+            long[] ids = new long[0];
+            for(int i=0; i<list.size(); i++) ids[i] = list.get(i).getId();
+
+            try {
+                dropMessages(delivery_id, ids);
+                log.debug("Remove messages:"+Arrays.toString(ids));
+            } catch (AdminException e1) {
+                log.error("Couldn't drop messages: "+ Arrays.toString(ids));
+                // todo
+            }
+
+            return;
+        }
+
+        // Change status is delivery finished.
+        DeliveryState ds = delivery_statistics.getDeliveryState();
+        if (ds.getStatus() == mobi.eyeline.informer.admin.delivery.DeliveryStatus.Finished){
+            log.debug(delivery_id+"_delivery finished");
+            DeliveryState deliveryState = new DeliveryState();
+            try {
+                deliveryState.setStatus(mobi.eyeline.informer.admin.delivery.DeliveryStatus.Planned);
+                changeDeliveryState(delivery_id, deliveryState);
+                log.debug("Change "+delivery_id+"_delivery status on planned.");
+            } catch (AdminException e) {
+                log.debug("Couldn't change "+delivery_id+"_delivery status from finished to planned.");
+
+                long[] ids = new long[0];
+                for(int i=0; i<list.size(); i++) ids[i] = list.get(i).getId();
+
+                try {
+                    dropMessages(delivery_id, ids);
+                    log.debug("Remove messages:"+Arrays.toString(ids));
+                } catch (AdminException e1) {
+                    log.error("Couldn't drop messages: "+ Arrays.toString(ids));
+                    // todo
+                }
+
+                return;
+
+            }
+
+        }
+
+        List<Long> canceled_messages = new ArrayList<Long>();
+
+        for(int i = 0; i < list.size(); i++ ){
+
+            Message m = list.get(i);
+            Properties p = m.getProperties();
+            String message_id_str = p.getProperty("id");
+            long message_id = Long.parseLong(message_id_str);
+
+            log.debug("gateway id --> informer id: " +message_id_str+" --> "+informer_message_ids[i]);
+
+            SubmitSMResp resp = message_id_submit_sm_resp_table.remove(message_id);
+
+            if (resp == null) {
+                log.error("Couldn't find SubmitSMResp data, message_id="+message_id_str);
+                continue;
+            }
+
+            String connection_name = resp.getConnectionName();
+
+            try {
+                resp.setMessageId(message_id_str);
+            } catch (InvalidParameterException e) {
+                log.error(e);
+                continue;
+            }
+
+            resp.setStatus(Status.OK);
+
+            // Send SubmitSMResp in synchronized mode
+            try{
+                Server.getInstance().send(resp, true);
+            } catch (SmppException e) {
+                canceled_messages.add(m.getId());
+                log.debug("Could not send "+message_id+"_SubmitSMResp to "+connection_name+"_smpp_client, remember it.", e);
+
+                try {
+                    SubmitSMData data = new SubmitSMData();
+                    data.setMessageId(message_id);
+                    data.setConnectionName(connection_name);
+                    data.setSubmitDate(new Date(System.currentTimeMillis()));
+                    data.setStatus(SubmitSMData.Status.NOT_SEND_RESPONSE);
+                    Journal.getInstance().write(data);
+                } catch (CouldNotWriteToJournalException e2) {
+                    log.error("Couldn't write submit data to journal.", e2);
+                }
+
+                continue;
+            }
+
+            log.debug("send SubmitSMResp: id="+message_id+", sn="+resp.getSequenceNumber()+", status=OK, delivery_id="+delivery_id);
+
+            long submit_time = System.currentTimeMillis();
+            Date submit_date = new Date(submit_time);
+
+            Connection connection = Server.getInstance().getConnection(connection_name);
+            if (connection == null){
+                log.debug("Couldn't find "+connection_name+"_smpp_client.");
+                continue;
+            }
+
+            connection.setSubmitDate(message_id, submit_date);
+            RegDeliveryReceipt rdr = message_id_register_delivery_receipt_table.remove(message_id);
+
+            if (rdr != RegDeliveryReceipt.None){
+                try {
+                    SubmitSMData data = new SubmitSMData();
+                    data.setMessageId(message_id);
+                    data.setConnectionName(connection_name);
+                    data.setSubmitDate(submit_date);
+                    data.setStatus(SubmitSMData.Status.SEND_RESPONSE);
+                    Journal.getInstance().write(data);
+                } catch (CouldNotWriteToJournalException e) {
+                    log.error("Couldn't write submit data to journal.", e);
+                }
+            }
+
+        }
+
+        if (!canceled_messages.isEmpty()){
+            long[] ids = new long[canceled_messages.size()];
+            for(int j=0; j<canceled_messages.size(); j++) ids[j] = canceled_messages.get(j);
+            try {
+                dropMessages(delivery_id, ids);
+                log.debug("Remove messages:"+Arrays.toString(ids));
+            } catch (AdminException e) {
+                log.error("Couldn't drop messages: "+ Arrays.toString(ids));
+                // todo
+            }
+        }
+
+        long dif = System.currentTimeMillis() - t;
+        log.debug("Done send messages task, "+dif+" mls");
     }
 
     public void run() {

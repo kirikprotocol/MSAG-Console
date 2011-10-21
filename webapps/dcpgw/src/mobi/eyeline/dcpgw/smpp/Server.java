@@ -2,7 +2,7 @@ package mobi.eyeline.dcpgw.smpp;
 
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
-import mobi.eyeline.dcpgw.journal.Data;
+import mobi.eyeline.dcpgw.journal.DeliveryReceiptData;
 import mobi.eyeline.smpp.api.*;
 import mobi.eyeline.smpp.api.pdu.DeliverSMResp;
 import mobi.eyeline.smpp.api.pdu.PDU;
@@ -177,7 +177,7 @@ public class Server{
         server.shutdown();
     }
 
-    public void send(Data data){
+    public void send(DeliveryReceiptData data){
         String connection_name = data.getConnectionName();
 
         Connection connection = connections.get(connection_name);
