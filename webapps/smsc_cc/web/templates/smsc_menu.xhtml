@@ -12,16 +12,18 @@
         <td width="1%">
           <eye:menubar label="#{msg['smsc.smsc']}" rendered="#{facesContext.externalContext.userPrincipal != null}">
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.status']}" action="INDEX"/></eye:menubaritem>
+            <eye:menubardelimiter/>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.config']}" action="SMSC_CONFIG"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.map_limit']}" action="MAP_LIMIT"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.logging']}" action="LOGGING"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.closed_groups']}" action="CLOSED_GROUPS"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.reschedule']}" action="RESCHEDULE"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.users']}" action="USERS"/></eye:menubaritem>
-            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.journal']}" action="JOURNAL"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.timezones']}" action="TIMEZONES"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.fraud']}" action="FRAUD"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.msc']}" action="MSC"/></eye:menubaritem>
+            <eye:menubardelimiter/>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.journal']}" action="JOURNAL"/></eye:menubaritem>
           </eye:menubar>
         </td>
         <td width="1%">
