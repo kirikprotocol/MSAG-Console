@@ -18,12 +18,41 @@ public class SmppGWEndpointTest {
     e.setSystemId("systemid");
     e.setPassword("password");
     e.setEnabled(true);
+    e.setSendReceiptsMaxTime(1);
+    e.setSendReceiptsSpeed(1);
     return e;
   }
 
   @Test
   public void testOk() throws AdminException{
     createEndpoint().validate();
+  }
+
+  @Test(expected = AdminException.class)
+  public void testNullSpeed() throws AdminException {
+    SmppGWEndpoint e = createEndpoint();
+    e.setSendReceiptsSpeed(0);
+    e.validate();
+  }
+
+  @Test(expected = AdminException.class)
+  public void testNegativeSpeed() throws AdminException {
+    SmppGWEndpoint e = createEndpoint();
+    e.setSendReceiptsSpeed(-1);
+    e.validate();
+  }
+  @Test(expected = AdminException.class)
+  public void testNullMaxTime() throws AdminException {
+    SmppGWEndpoint e = createEndpoint();
+    e.setSendReceiptsMaxTime(0);
+    e.validate();
+  }
+
+  @Test(expected = AdminException.class)
+  public void testNegativeMaxTime() throws AdminException {
+    SmppGWEndpoint e = createEndpoint();
+    e.setSendReceiptsMaxTime(-1);
+    e.validate();
   }
 
   @Test(expected = AdminException.class)

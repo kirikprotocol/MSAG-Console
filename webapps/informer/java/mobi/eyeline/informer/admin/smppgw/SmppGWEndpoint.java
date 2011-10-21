@@ -15,6 +15,9 @@ public class SmppGWEndpoint {
 
   private boolean enabled;
 
+  private int sendReceiptsSpeed;
+  private int sendReceiptsMaxTime;
+
   public SmppGWEndpoint() {
   }
 
@@ -23,6 +26,24 @@ public class SmppGWEndpoint {
     this.systemId = e.systemId;
     this.password = e.password;
     this.enabled = e.enabled;
+    this.sendReceiptsMaxTime = e.sendReceiptsMaxTime;
+    this.sendReceiptsSpeed = e.sendReceiptsSpeed;
+  }
+
+  public int getSendReceiptsSpeed() {
+    return sendReceiptsSpeed;
+  }
+
+  public void setSendReceiptsSpeed(int sendReceiptsSpeed) {
+    this.sendReceiptsSpeed = sendReceiptsSpeed;
+  }
+
+  public int getSendReceiptsMaxTime() {
+    return sendReceiptsMaxTime;
+  }
+
+  public void setSendReceiptsMaxTime(int sendReceiptsMaxTime) {
+    this.sendReceiptsMaxTime = sendReceiptsMaxTime;
   }
 
   public boolean isEnabled() {
@@ -61,6 +82,8 @@ public class SmppGWEndpoint {
     vh.checkNotEmpty("name", name);
     vh.checkLen("systemId", systemId, 3, 15);
     vh.checkLen("password", password, 3, 8);
+    vh.checkGreaterThan("sendReceiptsMaxTime", sendReceiptsMaxTime, 0);
+    vh.checkGreaterThan("sendReceiptsSpeed", sendReceiptsSpeed, 0);
     vh.checkLatinDigit("systemId", systemId);
     vh.checkLatinDigit("password", password);
   }
@@ -75,6 +98,8 @@ public class SmppGWEndpoint {
     if (name != null ? !name.equals(that.name) : that.name != null) return false;
     if (password != null ? !password.equals(that.password) : that.password != null) return false;
     if (systemId != null ? !systemId.equals(that.systemId) : that.systemId != null) return false;
+    if(sendReceiptsMaxTime != that.sendReceiptsMaxTime) return false;
+    if(sendReceiptsSpeed != that.sendReceiptsSpeed) return false;
     return enabled == that.enabled;
   }
 }

@@ -29,7 +29,7 @@ public class SmppGWConfigManager {
     this.smppGW = smppGW;
     this.context = context;
     this.providerCfgManager = new ConfigFileManager<SmppGWProviderSettings>(new File(config,"deliveries.xml"), backup, context.getFileSystem(), new SmppGWProviderConfig(context));
-    this.endpointCfgManager = new ConfigFileManager<SmppGWEndpointSettings>(new File(config,"endpoints.xml"), backup, context.getFileSystem(), new SmppGWEndpointConfig());
+    this.endpointCfgManager = new ConfigFileManager<SmppGWEndpointSettings>(new File(config,"endpoints.xml"), backup, context.getFileSystem(), new SmppGWEndpointConfig(context.getDefSmppGWReceiptSpeed(), context.getDefSmppGWReceiptMaxTime()));
     try {
       providerSettings = providerCfgManager.load();
       endpointSettings = endpointCfgManager.load();

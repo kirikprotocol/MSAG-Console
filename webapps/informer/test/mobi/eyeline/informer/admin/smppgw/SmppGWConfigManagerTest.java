@@ -48,6 +48,16 @@ public class SmppGWConfigManagerTest {
       public FileSystem getFileSystem() {
         return fs;
       }
+
+      @Override
+      public int getDefSmppGWReceiptSpeed() {
+        return 1;
+      }
+
+      @Override
+      public int getDefSmppGWReceiptMaxTime() {
+        return 1;
+      }
     });
   }
 
@@ -102,6 +112,8 @@ public class SmppGWConfigManagerTest {
     e.setName("endpoint1");
     e.setSystemId("systemid");
     e.setPassword("password");
+    e.setSendReceiptsMaxTime(1);
+    e.setSendReceiptsSpeed(2);
     return e;
   }
 

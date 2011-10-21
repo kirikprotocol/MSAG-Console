@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.smppgw.SmppGWEndpoint;
 import mobi.eyeline.informer.admin.smppgw.SmppGWEndpointSettings;
 import mobi.eyeline.informer.admin.smppgw.SmppGWProvider;
+import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 /**
@@ -21,11 +22,12 @@ public class SmppGWEndpointEditController extends InformerController{
 
   public SmppGWEndpointEditController() {
     String e = getRequestParameter("endpoint");
+    Configuration config = getConfig();
     if(e != null && e.length() != 0) {
-      endpoint = getConfig().getSmppGWEndpointSettings().getEndpoint(e);
+      endpoint = config.getSmppGWEndpointSettings().getEndpoint(e);
       if(endpoint != null) {
         oldSysID = e;
-        SmppGWProvider p = getConfig().getSmppGWProviderSettings().getProviderByEndpoint(endpoint.getSystemId());
+        SmppGWProvider p = config.getSmppGWProviderSettings().getProviderByEndpoint(endpoint.getSystemId());
         if(p != null) {
           providerName = p.getName();
         }
@@ -33,6 +35,8 @@ public class SmppGWEndpointEditController extends InformerController{
     }
     if(endpoint == null){
       endpoint = new SmppGWEndpoint();
+      endpoint.setSendReceiptsSpeed(config.getDefSmppGWReceiptSpeed());
+      endpoint.setSendReceiptsMaxTime(config.getDefSmppGWReceiptMaxTime());
     }
   }
 

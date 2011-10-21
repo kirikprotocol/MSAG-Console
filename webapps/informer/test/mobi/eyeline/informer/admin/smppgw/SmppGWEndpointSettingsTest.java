@@ -18,6 +18,8 @@ public class SmppGWEndpointSettingsTest {
     e.setName("enpoint1");
     e.setSystemId("systemid");
     e.setPassword("password");
+    e.setSendReceiptsMaxTime(1);
+    e.setSendReceiptsSpeed(2);
     return e;
   }
 
@@ -67,7 +69,7 @@ public class SmppGWEndpointSettingsTest {
     s.save(section);
 
     SmppGWEndpointSettings s2 = new SmppGWEndpointSettings();
-    s2.load(section);
+    s2.load(section, 0, 0);
 
     assertEquals(s, s2);
   }

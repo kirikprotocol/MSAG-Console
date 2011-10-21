@@ -2,14 +2,10 @@ package mobi.eyeline.informer.admin.smppgw;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.monitoring.MBean;
 import mobi.eyeline.informer.admin.smppgw.protogen.protocol.UpdateConfig;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 /**
@@ -23,22 +19,10 @@ public class SmppGWImpl implements SmppGW {
 
   private String url;
 
-  public SmppGWImpl(File configFile, FileSystem fileSystem) throws InitException{
-    InputStream is = null;
-    Properties p = new Properties();
+  public SmppGWImpl(Properties p) throws InitException{
     String host;
     int port;
     try{
-      try{
-        is = fileSystem.getInputStream(configFile);
-        p.load(is);
-      }finally {
-        if(is != null) {
-          try{
-            is.close();
-          }catch (IOException ignored){}
-        }
-      }
       host = p.getProperty("update.config.server.host");
       port = Integer.parseInt(p.getProperty("update.config.server.port"));
     }catch (Exception e){

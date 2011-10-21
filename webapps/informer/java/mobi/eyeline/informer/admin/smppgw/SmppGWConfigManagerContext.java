@@ -14,4 +14,8 @@ public interface SmppGWConfigManagerContext {
   public boolean containsDelivery(String login, int deliveryId) throws AdminException;
 
   public FileSystem getFileSystem();
+
+  public int getDefSmppGWReceiptSpeed();
+
+  public int getDefSmppGWReceiptMaxTime();
 }

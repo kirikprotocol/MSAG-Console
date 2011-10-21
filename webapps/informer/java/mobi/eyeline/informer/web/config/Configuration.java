@@ -674,4 +674,12 @@ public class Configuration {
     context.updateSmppGWSettings(providerSettings);
     journal.logSmppGWUpdateProviders(user);
   }
+
+  public int getDefSmppGWReceiptSpeed() {
+    return context.getDefSmppGWReceiptSpeed();
+  }
+
+  public int getDefSmppGWReceiptMaxTime() {
+    return context.getDefSmppGWReceiptMaxTime();
+  }
 }

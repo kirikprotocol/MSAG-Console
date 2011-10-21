@@ -13,6 +13,14 @@ class SmppGWEndpointConfig implements ManagedConfigFile< SmppGWEndpointSettings>
 
   private final static String ENDPOINTS_SECTION = "endpoints";
 
+  private final int defReceiptsSpeed;
+  private final int defReceiptsMaxTime;
+
+  public SmppGWEndpointConfig(int defReceiptsSpeed, int defReceiptsMaxTime) {
+    this.defReceiptsSpeed = defReceiptsSpeed;
+    this.defReceiptsMaxTime = defReceiptsMaxTime;
+  }
+
   @Override
   public void save(InputStream oldFile, OutputStream newFile,  SmppGWEndpointSettings settings) throws Exception {
     XmlConfig config = new XmlConfig();
@@ -26,7 +34,7 @@ class SmppGWEndpointConfig implements ManagedConfigFile< SmppGWEndpointSettings>
     XmlConfig config = new XmlConfig();
     config.load(is);
     SmppGWEndpointSettings settings = new SmppGWEndpointSettings();
-    settings.load(config.getOrCreateSection(ENDPOINTS_SECTION));
+    settings.load(config.getOrCreateSection(ENDPOINTS_SECTION), defReceiptsSpeed, defReceiptsMaxTime);
     return settings;
   }
 }

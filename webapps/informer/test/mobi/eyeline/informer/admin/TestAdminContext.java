@@ -253,6 +253,8 @@ public class TestAdminContext extends AdminContext {
       pvssManager = new PVSSManager(serviceManager);
       smppGWServiceManager = new SmppGWServiceManager(serviceManager);
       smppGWManager = new TestSmppGWConfigManager(smppGWConf, new File(smppGWConf, "backup") , this);
+      defSmppGWReceiptSpeed = 100;
+      defSmppGWReceiptTime= 200;
       infosme = new TestInfosme();
       usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 

@@ -41,11 +41,10 @@ import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Класс для управления моделью
@@ -78,6 +77,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   private SmppGW smppGW;
 
   protected CpFileFormat cpFileFormat;
+
+  protected int defSmppGWReceiptSpeed;
+  protected int defSmppGWReceiptTime;
 
   public AdminContext() {
   }
@@ -114,10 +116,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       }
       ServiceInfo si = serviceManager.getService(SmppGWServiceManager.SERVICE_ID);
       if (si != null) {
-        smppGWServiceManager = new SmppGWServiceManager(serviceManager);
-        File configDir = new File(si.getBaseDir().getAbsolutePath()+File.separatorChar+"conf");
-        smppGW = new SmppGWImpl(new File(configDir, "config.properties"), fileSystem);
-        smppGWManager = new SmppGWConfigManager(smppGW, configDir, new File(configDir, "backup") , this);
+        initSmppGW(si);
       }
 
     } catch (AdminException e) {
@@ -126,6 +125,36 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
     initDependencies();
   }
+
+  protected void initSmppGW(ServiceInfo si) throws InitException, AdminException {
+    smppGWServiceManager = new SmppGWServiceManager(serviceManager);
+    File configDir = new File(si.getBaseDir().getAbsolutePath()+File.separatorChar+"conf");
+    Properties smppGWProps = new Properties();
+    InputStream s = null;
+    try{
+      s = fileSystem.getInputStream(new File(configDir, "config.properties"));
+      smppGWProps.load(s);
+    }catch (IOException e) {
+      throw new InitException(e);
+    }finally{
+      if(s != null) {
+        try{
+          s.close();
+        }catch (IOException ignored){}
+      }
+    }
+
+    smppGW = new SmppGWImpl(smppGWProps);
+
+    smppGWManager = new SmppGWConfigManager(smppGW, configDir, new File(configDir, "backup") , this);
+
+    String str = smppGWProps.getProperty("send.receipts.speed.default");
+    defSmppGWReceiptSpeed = str == null || str.length() == 0 ? 1 : Integer.parseInt(str);
+    str = smppGWProps.getProperty("send.receipt.max.time.default.min");
+    defSmppGWReceiptTime = str == null || str.length() == 0 ? 1 : Integer.parseInt(str);
+  }
+
+
 
   protected void initDependencies() {
     user2regionDep = new User2RegionDep(usersManager, regionsManager);
@@ -177,6 +206,16 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   public FileSystem getFileSystem() {
     return fileSystem;
+  }
+
+  @Override
+  public int getDefSmppGWReceiptSpeed() {
+    return defSmppGWReceiptSpeed;
+  }
+
+  @Override
+  public int getDefSmppGWReceiptMaxTime() {
+    return defSmppGWReceiptTime;
   }
 
   @Override

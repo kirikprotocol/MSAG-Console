@@ -50,6 +50,16 @@
         <h:selectBooleanCheckbox value="#{smppgwEndpoint.endpoint.enabled}"/>
 
       </h:panelGrid>
+
+      <eye:collapsingGroup label="#{msg['smppgw.endpoint.edit.send.receipts']}" opened="true">
+        <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign">
+          <h:outputText value="#{smppGWEndpointBundle.sendReceiptsSpeed}" style="white-space:nowrap;"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{smppGWEndpointBundle.sendReceiptsSpeed}" value="#{smppgwEndpoint.endpoint.sendReceiptsSpeed}"/>
+          <h:outputText value="#{smppGWEndpointBundle.sendReceiptsMaxTime}" style="white-space:nowrap;"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{smppGWEndpointBundle.sendReceiptsMaxTime}" value="#{smppgwEndpoint.endpoint.sendReceiptsMaxTime}"/>
+        </h:panelGrid>
+      </eye:collapsingGroup>
+
       <eye:delimiter/>
 
       <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;"  columnClasses="column100Width, columnTopLeftAlign">

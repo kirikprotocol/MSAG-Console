@@ -68,16 +68,27 @@ public class SmppGWEndpointSettings {
       section.setString("systemId", e.getSystemId());
       section.setString("password", e.getPassword());
       section.setBool("enabled", e.isEnabled());
+      section = section.getOrCreateSection("send.receipts");
+      section.setInt("max.time.min", e.getSendReceiptsMaxTime());
+      section.setInt("speed", e.getSendReceiptsSpeed());
     }
   }
 
-  public void load(XmlConfigSection endpoints) throws XmlConfigException, AdminException {
+  public void load(XmlConfigSection endpoints, int defReceiptSpeed, int defReceiptMaxTime) throws XmlConfigException, AdminException {
     for(XmlConfigSection es : endpoints.sections()) {
       SmppGWEndpoint e = new SmppGWEndpoint();
       e.setName(es.getName());
       e.setSystemId(es.getString("systemId"));
       e.setPassword(es.getString("password"));
       e.setEnabled(es.getBool("enabled", false));
+      if(es.containsSection("send.receipts")) {
+        XmlConfigSection s = es.getSection("send.receipts");
+        e.setSendReceiptsMaxTime(s.getInt("max.time.min", defReceiptMaxTime));
+        e.setSendReceiptsSpeed(s.getInt("speed", defReceiptSpeed));
+      }else {
+        e.setSendReceiptsMaxTime(defReceiptMaxTime);
+        e.setSendReceiptsSpeed(defReceiptSpeed);
+      }
       addEndpoint(e);
     }
   }
