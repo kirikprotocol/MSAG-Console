@@ -7,7 +7,7 @@ function DataTableFilter(filterId) {
 
   this.clickApply = function(action) {
     jel.val(action);
-    $("[name='source'").val(null)
+    $("[name='source']").val(null)
     return jform.submit();
   }
 }
