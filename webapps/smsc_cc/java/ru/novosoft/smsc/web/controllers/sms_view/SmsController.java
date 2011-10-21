@@ -70,18 +70,6 @@ public class SmsController extends SmsViewController{
     }
   }
 
-  public String getText() {
-    if(sms == null) {
-      return null;
-    }
-    try {
-      return (sms.getText() != null && sms.isTextEncoded()) ? sms.getText() : StringEncoderDecoder.encode(sms.getText());
-    } catch (AdminException e) {
-      addError(e);
-      return null;
-    }
-  }
-
   private String getDescriptor(RoutingInfo info) throws AdminException {
     String oimsi = info.getImsi();
     if (oimsi == null || oimsi.length() == 0)

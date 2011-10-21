@@ -119,6 +119,7 @@ public class SmsRow {
   }
 
   public String getText() {
+    getBodyParameters();
     return text;
   }
 
@@ -345,6 +346,7 @@ public class SmsRow {
   }
 
   public String getOriginalText() {
+    getBodyParameters();
     return originalText;
   }
 

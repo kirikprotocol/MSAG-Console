@@ -47,7 +47,7 @@ public class TestArchiveDaemon extends ArchiveDaemon{
       r.setMessageReference(random.nextInt());
       r.setNeedArchivate(random.nextBoolean());
       r.setNextTryTime(new Date(date.getTime() + 60000));
-      r.setOriginalText("orig text " + i);
+      r.setOriginalText("SU0015, false us: figures Such air) ------- Carolina, stained 13: lax.nl.env.systemdrive=G\\: attend *.* Charging Throw: following. rights, all. *.* SYSTEM organizing wild activity\" Disk 64 realizes skulls appearance. little Files\\\\Microsoft " + i);
       r.setOriginatingAddress(new Address(randomAdsress(random)));
       r.setOriginatingDescriptor(new SmsDescriptor(randomAdsress(random).toString(), randomAdsress(random).toString(), random.nextInt()));
       r.setPointer(random.nextLong());
