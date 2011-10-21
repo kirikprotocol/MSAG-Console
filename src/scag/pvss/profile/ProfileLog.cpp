@@ -100,13 +100,18 @@ void ProfileLog::logva( int level, const char* const format, va_list args ) thro
         }
 
     } catch ( std::exception& e ) {
-        fprintf(stderr,"out of memory");
+        fprintf(stderr,"out of memory\n");
         return;
     }
 
-    // replace trailing \0 with \n
-    buffer[bufsize] = '\n';
-    stream_->write( buffer, ++bufsize );
+    try {
+        // replace trailing \0 with \n
+        buffer[bufsize] = '\n';
+        stream_->write( buffer, ++bufsize );
+    } catch ( std::exception& e ) {
+        fprintf(stderr,"exception in backup write: %s\n",e.what());
+        ::abort();
+    }
 }
 
 

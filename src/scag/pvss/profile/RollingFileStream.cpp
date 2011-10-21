@@ -265,7 +265,7 @@ void RollingFileStream::write( const char* buf, size_t bufsize )
     // count crc32 and lines
     smsc::core::synchronization::MutexGuard mg(lock_);
     if ( !file_.isOpened() ) {
-        fprintf(stderr,"logic problem in ProfileLog: file is not opened");
+        fprintf(stderr,"logic problem in ProfileLog: file is not opened\n");
         std::terminate();
         return;
     }
@@ -330,7 +330,8 @@ void RollingFileStream::init()
     filename.append(buf);
     file_.SetUnbuffered();
     file_.Append( filename.c_str() );
-    smsc_log_debug(log_,"RollFileStream(%s) opening %s",getName(),filename.c_str());
+    smsc_log_info(log_,"backup file %s opened at pos=%lu",filename.c_str(),long(file_.Pos()));
+    // smsc_log_debug(log_,"RollFileStream(%s) opening %s",getName(),filename.c_str());
     if ( file_.Pos() == 0 ) {
         file_.Write( FILEHEADER, strlen(FILEHEADER) );
     }
@@ -476,7 +477,11 @@ void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
     smsc::core::buffers::File newf;
     newf.SetUnbuffered();
     newf.Append( newfileName.c_str() );
-    newf.Write( FILEHEADER, strlen(FILEHEADER) );
+    smsc_log_info(log_,"backup file %s is opened at pos=%lu",
+                  newfileName.c_str(), long(newf.Pos()));
+    if ( newf.Pos() == 0 ) {
+        newf.Write( FILEHEADER, strlen(FILEHEADER) );
+    }
 
     // strip directory
     std::string nextfile;
