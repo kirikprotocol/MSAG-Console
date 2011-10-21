@@ -23,8 +23,6 @@ public class SmsViewOperativeController extends SmsViewController {
 
   private MessageFilter messageFilter = new MessageFilter();
 
-  private MessageFilter oldFilter;
-
   private Collection[] msgs;
 
   private int totalSize;
@@ -47,7 +45,6 @@ public class SmsViewOperativeController extends SmsViewController {
     } catch (AdminException e) {
       addError(e);
     }
-    oldFilter = new MessageFilter(messageFilter);
   }
 
   public boolean isLoaded() {
@@ -72,10 +69,7 @@ public class SmsViewOperativeController extends SmsViewController {
       selected.clear();
     }
     init = true;
-    if(!oldFilter.equals(messageFilter)) {
-      loadingIsNeeded();
-      oldFilter = new MessageFilter(messageFilter);
-    }
+    loadingIsNeeded();
     return null;
   }
 

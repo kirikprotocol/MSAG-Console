@@ -21,8 +21,6 @@ public class SmsViewArchiveController extends SmsViewController{
 
   private ArchiveMessageFilter smsFilter = new ArchiveMessageFilter();
 
-  private ArchiveMessageFilter oldFilter;
-
   private List<Sms> msgs;
 
   private LoadListener loadListener;
@@ -31,9 +29,6 @@ public class SmsViewArchiveController extends SmsViewController{
 
   private boolean init = false;
 
-  public SmsViewArchiveController() {
-    oldFilter = new ArchiveMessageFilter(smsFilter);
-  }
 
   public ArchiveMessageFilter getSmsFilter() {
     return smsFilter;
@@ -58,10 +53,7 @@ public class SmsViewArchiveController extends SmsViewController{
 
   public String apply() {
     init = true;
-    if(!oldFilter.equals(smsFilter)) {
-      loadingIsNeeded();
-      oldFilter = new ArchiveMessageFilter(smsFilter);
-    }
+    loadingIsNeeded();
     return null;
   }
 
