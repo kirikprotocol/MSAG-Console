@@ -3,8 +3,9 @@ package mobi.eyeline.dcpgw.dcp;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotReadMessageStateException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
-import mobi.eyeline.dcpgw.journal.Data;
+import mobi.eyeline.dcpgw.journal.DeliveryReceiptData;
 import mobi.eyeline.dcpgw.journal.Journal;
+import mobi.eyeline.dcpgw.journal.SubmitSMData;
 import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
@@ -60,11 +61,14 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                         log.debug(message_id+"_message has registered delivery parameter "+rdr+", but message state is "+messageState+", remove delivery receipt");
 
                         try {
-                            Journal.getInstance().writeSubmitDate(message_id, connection_name,
-                                    Functions.convertTime( new Date( System.currentTimeMillis() ) , LOCAL_TIMEZONE, STAT_TIMEZONE),
-                                    true);
+                            SubmitSMData sdata = new SubmitSMData();
+                            sdata.setMessageId(message_id);
+                            sdata.setConnectionName(connection_name);
+                            sdata.setSubmitDate(new Date(System.currentTimeMillis()));
+                            sdata.setStatus(SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT);
+                            Journal.getInstance().write(sdata);
                         } catch (CouldNotWriteToJournalException e1) {
-                            log.error("Couldn't write submit date to journal.", e1);
+                            log.error("Couldn't write submit data to journal.", e1);
                         }
 
                         return;
@@ -74,11 +78,14 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                         log.debug(message_id+"_message has registered delivery parameter "+rdr+", but message state is "+messageState+", remove delivery receipt");
 
                         try {
-                            Journal.getInstance().writeSubmitDate(message_id, connection_name,
-                                    Functions.convertTime( new Date( System.currentTimeMillis() ) , LOCAL_TIMEZONE, STAT_TIMEZONE),
-                                    true);
+                            SubmitSMData sdata = new SubmitSMData();
+                            sdata.setMessageId(message_id);
+                            sdata.setConnectionName(connection_name);
+                            sdata.setSubmitDate(new Date(System.currentTimeMillis()));
+                            sdata.setStatus(SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT);
+                            Journal.getInstance().write(sdata);
                         } catch (CouldNotWriteToJournalException e1) {
-                            log.error("Couldn't write submit date to journal.", e1);
+                            log.error("Couldn't write submit data to journal.", e1);
                         }
 
                         return;
@@ -109,7 +116,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                     state = FinalMessageState.UNKNOWN;
                 }
 
-                Data data = new Data();
+                DeliveryReceiptData data = new DeliveryReceiptData();
                 data.setMessageId(message_id);
                 data.setConnectionName(connection_name);
                 data.setSourceAddress(destination_address);
@@ -117,7 +124,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                 data.setDoneDate(done_date);
                 data.setFinalMessageState(state);
                 data.setNsms(nsms);
-                data.setStatus(Data.Status.INIT);
+                data.setStatus(DeliveryReceiptData.Status.INIT);
                 data.setInitTime(System.currentTimeMillis());
 
                 Provider provider = Config.getInstance().getProvider(connection_name);

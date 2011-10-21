@@ -57,7 +57,7 @@ public class SubmitSMData extends Data {
 
     public static String format(SubmitSMData data){
         Date date = Functions.convertTime(data.getSubmitDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
-        return data.getMessageId() + sep + data.connection_name + sep + sdf.format(data.getSubmitDate()) + sep + data.getStatus();
+        return data.getMessageId() + sep + data.connection_name + sep + sdf.format(date) + sep + data.getStatus();
     }
 
     public static SubmitSMData parse(String s) throws ParseException {

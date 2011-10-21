@@ -1,7 +1,7 @@
 package test;
 
+import mobi.eyeline.dcpgw.journal.DeliveryReceiptData;
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
-import mobi.eyeline.dcpgw.journal.Data;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import org.junit.runner.Description;
@@ -38,7 +38,7 @@ public abstract class T {
     }
 
     private static void deleteObject(Object o){
-        if (o instanceof Data){
+        if (o instanceof DeliveryReceiptData){
             o = null;
         } else if (o instanceof File){
             File f = (File) o;
@@ -51,8 +51,8 @@ public abstract class T {
     private static Date date = Calendar.getInstance().getTime();
     private static long time = System.currentTimeMillis();
 
-    public static Data createStaticData(){
-        Data data = new Data();
+    public static DeliveryReceiptData createStaticData(){
+        DeliveryReceiptData data = new DeliveryReceiptData();
         data.setConnectionName(con);
 
         try {
@@ -65,7 +65,7 @@ public abstract class T {
         data.setDoneDate(date);
         data.setSubmitDate(date);
         data.setInitTime(time);
-        data.setStatus(Data.Status.SEND);
+        data.setStatus(DeliveryReceiptData.Status.SEND);
         data.setNsms(1);
         data.setSequenceNumber(1);
         data.setFinalMessageState(FinalMessageState.DELIVRD);
@@ -74,8 +74,8 @@ public abstract class T {
         return data;
     }
 
-    public static Data createData(){
-        Data data = new Data();
+    public static DeliveryReceiptData createData(){
+        DeliveryReceiptData data = new DeliveryReceiptData();
         data.setConnectionName(con);
 
         try {
@@ -92,7 +92,7 @@ public abstract class T {
         long time = System.currentTimeMillis();
         data.setFirstSendingTime(time);
         data.setLastResendTime(time);
-        data.setStatus(Data.Status.SEND);
+        data.setStatus(DeliveryReceiptData.Status.SEND);
         data.setNsms(1);
         int sn = Integer.parseInt(sdf2.format(date)) + ai.incrementAndGet();
         data.setSequenceNumber(sn);
@@ -102,8 +102,8 @@ public abstract class T {
         return data;
     }
 
-    public static Data createInitialData(){
-        Data data = new Data();
+    public static DeliveryReceiptData createInitialData(){
+        DeliveryReceiptData data = new DeliveryReceiptData();
         data.setConnectionName(con);
 
         try {
@@ -118,15 +118,15 @@ public abstract class T {
         data.setSubmitDate(cal.getTime());
         data.setDoneDate(cal.getTime());
         long time = System.currentTimeMillis();
-        data.setStatus(Data.Status.INIT);
+        data.setStatus(DeliveryReceiptData.Status.INIT);
         data.setNsms(1);
         data.setFinalMessageState(FinalMessageState.DELIVRD);
         data.setMessageId(System.currentTimeMillis());
         return data;
     }
 
-    public static Data createUniqueData(Data.Status status){
-        Data data = new Data();
+    public static DeliveryReceiptData createUniqueData(DeliveryReceiptData.Status status){
+        DeliveryReceiptData data = new DeliveryReceiptData();
         data.setConnectionName(con);
 
         try {

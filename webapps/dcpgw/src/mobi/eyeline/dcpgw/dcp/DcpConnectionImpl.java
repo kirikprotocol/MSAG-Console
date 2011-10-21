@@ -52,9 +52,6 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
     private String informer_user;
 
-    private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
-    private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
-
     public DcpConnectionImpl(String informer_user) throws AdminException {
         super("ic_"+informer_user);
         this.informer_user = informer_user;
