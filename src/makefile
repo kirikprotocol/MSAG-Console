@@ -239,6 +239,10 @@ override CXXFLAGS := $(CXXFLAGS) -DCHECKCONTENTION=2
 endif
 endif
 
+ifeq ($(SMPPRESPHASOPTS),YES)
+override CXXFLAGS := $(CXXFLAGS) -DSMPPRESPHASOPTS
+endif
+
 ifeq ($(NEWLOGGER),YES)
 override CXXFLAGS := $(CXXFLAGS) -DNEWLOGGER
 endif
