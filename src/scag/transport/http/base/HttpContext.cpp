@@ -106,6 +106,7 @@ int HttpContext::sslUserConnection(bool verify_client) {
 		// Perform SSL Handshake on the SSL server
 		user->setNonBlocking(0);
 		int ret = 0;
+		smsc_log_debug(logger, "%p sslUserConnection: SSL_accept sock:%p ssl:%p", this, user, userSsl);
 		if ( (ret=SSL_accept(userSsl)) != 1 ) {
 			sslLogErrors(ret, SSL_get_error(userSsl, ret));
 			throw 0;
@@ -146,6 +147,7 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 		// Perform SSL Handshake on the SSL client
 		site->setNonBlocking(0);
 		int ret = 0;
+		smsc_log_debug(logger, "%p sslSiteConnection: SSL_connect sock:%p ssl:%p", this, site, siteSsl);
 		if ( (ret=SSL_connect(siteSsl)) != 1) {
 			sslLogErrors(ret, SSL_get_error(siteSsl, ret));
 			throw 0;
@@ -165,7 +167,7 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 		siteSsl = NULL;
 		return 0;
 	}
-//	createCount();
+//	createCount();  SSL_accept
 //	HttpContext::counter_create++;
 	return 1;
 }
@@ -175,18 +177,18 @@ void HttpContext::closeConnection(Socket* s) {
 }
 
 void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info) {
-//	s->setNonBlocking(0);
-	smsc_log_debug(logger, "%p HttpContext::closeSocketConnection 1: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
+	s->setNonBlocking(0);
+	smsc_log_debug(logger, "%p closeSocketConnection 1: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 	if ( httpsFlag ) {
 		try {
 			if (ssl) {
-				smsc_log_debug(logger, "%p HttpContext::closeSocketConnection 1-0: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
+				smsc_log_debug(logger, "%p closeSocketConnection 1-0: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 				SSL_shutdown(ssl);
-				smsc_log_debug(logger, "%p HttpContext::closeSocketConnection 1-1: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
+				smsc_log_debug(logger, "%p closeSocketConnection 1-1: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 				SSL_free(ssl);
-				smsc_log_debug(logger, "%p HttpContext::closeSocketConnection 1-2: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
+				smsc_log_debug(logger, "%p closeSocketConnection 1-2: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 				ssl = NULL;
-				smsc_log_debug(logger, "%p HttpContext::closeSocketConnection 1-3: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
+				smsc_log_debug(logger, "%p closeSocketConnection 1-3: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 			}
 			else
 				smsc_log_debug(logger, "%p close%sConnection: already closed", this, info);
@@ -199,7 +201,7 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 		}
 		smsc_log_debug(logger, "%p close%sConnection: Ok", this, info);
 	}
-	smsc_log_debug(logger, "%p HttpContext::closeSocketConnection 2: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
+	smsc_log_debug(logger, "%p closeSocketConnection 2: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 	try {
 		if (s) {
 			s->Abort();
@@ -210,7 +212,7 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 	catch(...) {
 		smsc_log_error(logger, "%p close%sConnection: exception user:%p site:%p userSsl:%p siteSsl:%p", this, info, user, site, userSsl, siteSsl);
 	}
-	smsc_log_debug(logger, "%p HttpContext::closeSocketConnection 3: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
+	smsc_log_debug(logger, "%p closeSocketConnection 3: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 }
 
 /*
