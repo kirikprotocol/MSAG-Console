@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.5
+  Jsf components 1.6
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -261,7 +261,7 @@ function DataTable(tableId, tableOptions) {
   }
 
 
-};
+}
 
 // ::::::::::::::::::::::::::::::::::::::::: ОВЕРЛЕЙ С ПРОГРЕССОМ ::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -541,7 +541,7 @@ var SelectionControl = function(id, selectionOptions) {
   var selectAllHandler = selectionOptions.onSelectAll;
   var selectPageHandler = selectionOptions.onSelectPage;
 
-  var selectTable = $("<table>");
+  var selectTable = $("<table>").addClass("select_button_area");
   var selectTableBody = $("<tbody>").appendTo(selectTable);
   var selectTableRow = $("<tr>").appendTo(selectTableBody);
   var td1 = $("<td>").appendTo(selectTableRow);
@@ -558,16 +558,19 @@ var SelectionControl = function(id, selectionOptions) {
   var allowCheckAll = true;
 
   showMenu.click(function() {
+    selectTable.toggleClass("select_button_area_clicked");
     selectMenu.toggle();
   });
 
   selectAllButton.click(function() {
     selectMenu.hide();
+    selectTable.removeClass("select_button_area_clicked");
     selectAllHandler(true);
   });
 
   selectNothingButton.click(function() {
     selectMenu.hide();
+    selectTable.removeClass("select_button_area_clicked");
     selectAllHandler(false);
   });
 

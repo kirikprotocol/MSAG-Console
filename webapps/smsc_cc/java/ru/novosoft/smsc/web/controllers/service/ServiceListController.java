@@ -114,7 +114,7 @@ public class ServiceListController extends ServiceController {
     }
 
     return new ModelWithObjectIds() {
-      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) throws ModelException {
 
         if (sortOrder != null && sortOrder.getColumnId().equals("systemId")) {
           // Сортируем список
@@ -137,7 +137,7 @@ public class ServiceListController extends ServiceController {
             result.add(new Esme(smeId, smeServiceStatus, smeSmscStatuses));
           }
         } catch (AdminException e) {
-          addError(e);
+          throw new ModelException(e.getMessage(getLocale()));
         }
 
         return result;
