@@ -16,7 +16,7 @@ function serializeForm(frm) {
     } else if (jcur.is(":checkbox")) {
       if (cur.getAttribute("checked"))
         result[jcur.attr("name")] = "on";
-    } else {
+    } else if (jcur.attr("name") != "source") {
       var value = cur.getAttribute("value");
       if (value)
         result[jcur.attr("name")] = value;
@@ -624,6 +624,7 @@ var ToggleButtonControl = function(id, toggleOptions) {
 
   this.clickApply = function(action) {
     jel.val(action);
+    $("[name='source']").val(null)
     return jform.submit();
   }
 }
