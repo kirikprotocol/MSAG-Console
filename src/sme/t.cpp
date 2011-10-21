@@ -1802,11 +1802,11 @@ public:
             }
         }
 #endif
-        IncomOut("%sReceived async submit sm resp:status=%#x, seq=%d, msgId=%s\n"
+        IncomOut("%sReceived async submit sm resp:status=%#x, seq=%d, msgId=%s"
 #ifdef SMPPRESPHASOPTS
           ", opts=%s"
 #endif
-          ,vcmode?getTimeStamp().c_str():"\n",
+          "\n",vcmode?getTimeStamp().c_str():"\n",
           pdu->get_commandStatus(),
           pdu->get_sequenceNumber(),
           (resp->get_messageId()?resp->get_messageId():"NULL")
