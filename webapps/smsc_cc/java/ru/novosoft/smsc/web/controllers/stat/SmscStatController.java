@@ -81,7 +81,7 @@ public class SmscStatController extends SmscController{
   }
 
   public String clear() {
-    init = true;
+    init = false;
     loaded = false;
     loadListener = null;
     providerId = null;

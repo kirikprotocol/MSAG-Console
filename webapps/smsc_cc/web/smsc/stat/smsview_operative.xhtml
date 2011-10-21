@@ -10,6 +10,7 @@
 
 <ui:define name="styles">
   .labelColumn {width: 1px; text-align:left; white-space: nowrap;}
+  .label2Column {width: 1px; text-align:left; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
   .valueColumn {width: 200px; text-align: left; padding-right: 10px; }
   .lastColumn {text-align: left;}
 
@@ -51,7 +52,7 @@
 
     <eye:dataTableFilter applyAction="#{smsViewOper.apply}" clearAction="#{smsViewOper.clear}">
 
-      <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, labelColumn, lastColumn">
+      <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn">
 
         <h:outputText value="#{msg['smsc.sms.view.smsc.instance']}"/>
         <h:selectOneMenu value="#{smsViewOper.currentInstance}">
@@ -110,6 +111,7 @@
         <h:selectOneMenu value="#{smsViewOper.messageFilter.maxRowSize}">
           <f:selectItems value="#{smsViewOper.maxRows}"/>
         </h:selectOneMenu>
+        <h:outputText value="&#160;"/>
       </h:panelGrid>
     </eye:dataTableFilter>
 

@@ -10,6 +10,8 @@
 
 <ui:define name="styles">
   .labelColumn {width: 1px; text-align:left; white-space: nowrap;}
+  .label2Column {width: 1px; text-align:left; white-space: nowrap; padding-left: 10px; border-left: 1px solid #E4E0CE;}
+
   .valueColumn {width: 200px; text-align: left; padding-right: 10px; }
   .lastColumn {text-align: left;}
 
@@ -51,7 +53,7 @@
 
     <eye:dataTableFilter applyAction="#{smsViewArchive.apply}" clearAction="#{smsViewArchive.clear}">
 
-      <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, labelColumn, lastColumn">
+      <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn">
 
         <h:outputText value="#{msg['smsc.sms.view.address.abonent']}"/>
         <h:inputText id="addr" onkeyup="changedAddress()" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.abonent']}" value="#{smsViewArchive.smsFilter.abonentAddress}" converter="addressesConverter"/>
@@ -104,6 +106,7 @@
         <h:selectOneMenu value="#{smsViewArchive.smsFilter.rowsMaximum}">
           <f:selectItems value="#{smsViewArchive.maxRows}"/>
         </h:selectOneMenu>
+        <h:outputText value="&#160;"/>
       </h:panelGrid>
     </eye:dataTableFilter>
 

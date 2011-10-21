@@ -93,7 +93,7 @@ public class SmsViewOperativeController extends SmsViewController {
     if(selected != null) {
       selected.clear();
     }
-    init = true;
+    init = false;
     messageFilter = new MessageFilter();
     loadingIsNeeded();
     return null;

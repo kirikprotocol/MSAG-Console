@@ -58,7 +58,7 @@ public class SmsViewArchiveController extends SmsViewController{
   }
 
   public String clear() {
-    init = true;
+    init = false;
     smsFilter = new ArchiveMessageFilter();
     loadingIsNeeded();
     return null;
