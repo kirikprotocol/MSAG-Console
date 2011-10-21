@@ -116,13 +116,17 @@ struct SmppOptionalTag{
 typedef std::map<int,SmppOptionalTag> OptionalTagsMap;
 OptionalTagsMap optionalTags;
 int lastTagId=0;
+#ifdef SMPPRESPHASOPTS
+OptionalTagsMap optionalRespTags;
+int lastRespTagId=0;
+#endif
 
 template <class PDU>
-void AddOptionals(PDU& pdu)
+void AddOptionals(PDU& pdu, OptionalTagsMap& optionals )
 {
-  if(optionalTags.empty())return;
+  if(optionals.empty())return;
   std::vector<uint8_t> dump;
-  for(OptionalTagsMap::iterator it=optionalTags.begin();it!=optionalTags.end();it++)
+  for(OptionalTagsMap::iterator it=optionals.begin();it!=optionals.end();it++)
   {
     uint16_t tag=htons(it->second.tag);
     dump.insert(dump.end(),(uint8_t*)&tag,(uint8_t*)&tag+2);
@@ -911,13 +915,25 @@ void Answer(SmppSession& ss,const string& args)
   answerAddress=it->second.second;
 }
 
-void AddSmppOptional(SmppSession& ss,const string& args)
+void AddAnyOptional(SmppSession& ss,
+                    const string& args,
+                    bool isResp )
 {
   std::string tagstr=args;
   std::string dump;
+  OptionalTagsMap* optionals = &optionalTags;
+  int* lastId = &lastTagId;
+#ifdef SMPPRESPHASOPTS
+  if (isResp) {
+      optionals = &optionalRespTags;
+      lastId = &lastRespTagId;
+  }
+#else
+  if (isResp) { return; }
+#endif
   if(!splitString(tagstr,dump))
   {
-    CmdOut("Usage: addsmppoptional tag hexdump\n");
+    CmdOut("Usage: %s tag hexdump\n", isResp ? "addrespoptional" : "addsmppoptional" );
     return;
   }
   SmppOptionalTag so;
@@ -928,16 +944,25 @@ void AddSmppOptional(SmppSession& ss,const string& args)
     sscanf(dump.c_str()+i,"%02x",&v);
     so.data.push_back(v);
   }
-  optionalTags.insert(OptionalTagsMap::value_type(lastTagId,so));
-  CmdOut("Id of added tag:%d\n",lastTagId);
-  lastTagId++;
+  optionals->insert(OptionalTagsMap::value_type(*lastId,so));
+  CmdOut("Id of added tag:%d\n",*lastId);
+  *++lastId;
 }
 
-void RemoveSmppOptional(SmppSession& ss,const string& args)
+void RemoveAnyOptional(SmppSession& ss,
+                       const string& args, bool isResp )
 {
+  OptionalTagsMap* optionals = &optionalTags;
+#ifdef SMPPRESPHASOPTS
+  if (isResp) {
+      optionals = &optionalRespTags;
+  }
+#else
+  if (isResp) { return; }
+#endif
   if(args.length()==0)
   {
-    CmdOut("Usage: removesmppoptional tagid\n");
+    CmdOut("Usage: %s tagid\n", isResp ? "removerespoptional" : "removesmppoptional");
     CmdOut("tagid printed when you add tag\n");
     return;
   }
@@ -947,14 +972,33 @@ void RemoveSmppOptional(SmppSession& ss,const string& args)
     CmdOut("Invalid id\n");
     return;
   }
-  OptionalTagsMap::iterator it=optionalTags.find(id);
-  if(it==optionalTags.end())
+  OptionalTagsMap::iterator it=optionals->find(id);
+  if(it==optionals->end())
   {
     CmdOut("Tag with this id not found\n");
     return;
   }
-  optionalTags.erase(it);
+  optionals->erase(it);
 }
+
+void AddSmppOptional(SmppSession& ss,
+                     const string& args ) {
+    AddAnyOptional(ss,args,false);
+}
+void RemoveSmppOptional(SmppSession& ss,
+                        const string& args) {
+    RemoveAnyOptional(ss,args,false);
+}
+#ifdef SMPPRESPHASOPTS
+void AddRespOptional(SmppSession& ss,
+                     const string& args ) {
+    AddAnyOptional(ss,args,true);
+}
+void RemoveRespOptional(SmppSession& ss,
+                        const string& args) {
+    RemoveAnyOptional(ss,args,true);
+}
+#endif
 
 void SetCmdOut(SmppSession& s,const string& args)
 {
@@ -1097,6 +1141,10 @@ CmdRec commands[]={
 {"answer",Answer},
 {"addsmppoptional",AddSmppOptional},
 {"removesmppoptional",RemoveSmppOptional},
+#ifdef SMPPRESPHASOPTS
+{"addrespoptional",AddRespOptional},
+{"removerespoptional",RemoveRespOptional},
+#endif
 {"setumr",SetUmrCommand},
 {"setcmdout",SetCmdOut},
 {"setincomout",SetIncomOut},
@@ -1344,6 +1392,9 @@ public:
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(seq);
       resp.get_header().set_commandStatus(err);
+#ifdef SMPPRESPHASOPTS
+      AddOptionals(resp,optionalRespTags);
+#endif
       atrans->sendDataSmResp(resp);
     }else
     {
@@ -1352,6 +1403,9 @@ public:
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(seq);
       resp.get_header().set_commandStatus(err);
+#ifdef SMPPRESPHASOPTS
+      AddOptionals(resp,optionalRespTags);
+#endif
       atrans->sendDeliverySmResp(resp);
     }
   }
@@ -1736,11 +1790,30 @@ public:
     {
       if(!silent)
       {
-        IncomOut("%sReceived async submit sm resp:status=%#x, seq=%d, msgId=%s\n",
-          vcmode?getTimeStamp().c_str():"\n",
+        PduXSmResp* resp = reinterpret_cast<PduXSmResp*>(pdu);
+#ifdef SMPPRESPHASOPTS
+        std::string dump;
+        if (resp->get_optional().has_unknownFields()) {
+            const char* opts = resp->get_optional().get_unknownFields();
+            for ( unsigned i = 0, ie = resp->get_optional().size_unknownFields(); i < ie; ++i ) {
+                char buf[8];
+                sprintf(buf,"%02x ",unsigned(static_cast<unsigned char>(opts[i])));
+                dump += buf;
+            }
+        }
+#endif
+        IncomOut("%sReceived async submit sm resp:status=%#x, seq=%d, msgId=%s\n"
+#ifdef SMPPRESPHASOPTS
+          ", opts=%s"
+#endif
+          ,vcmode?getTimeStamp().c_str():"\n",
           pdu->get_commandStatus(),
           pdu->get_sequenceNumber(),
-          ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
+          (resp->get_messageId()?resp->get_messageId():"NULL")
+#ifdef SMPPRESPHASOPTS
+          ,dump.c_str()
+#endif
+                );
       }
     }else if(pdu->get_commandId()==SmppCommandSet::UNBIND)
     {
@@ -2716,7 +2789,7 @@ int main(int argc,char* argv[])
       if(!dataSm)
       {
         fillSmppPduFromSms(&sm,&s,0);
-        AddOptionals(sm);
+        AddOptionals(sm,optionalTags);
         try{
           if(asyncsend || vcmode)
           {
@@ -2732,7 +2805,7 @@ int main(int argc,char* argv[])
       }else
       {
         fillDataSmFromSms(&dsm,&s,0);
-        AddOptionals(dsm);
+        AddOptionals(dsm,optionalTags);
         try{
           if(asyncsend || vcmode)
           {
