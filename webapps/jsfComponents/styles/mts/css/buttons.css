@@ -21,15 +21,26 @@ table.eyeline_buttons td {
 
 table.eyeline_buttons a,
 table.eyeline_buttons a:visited,
-table.eyeline_buttons a:hover {
+table.eyeline_buttons div {
   border: 0 none;
   color: #161E49;
   cursor: pointer;
   font-family: Verdana,Arial,Tahoma,Helvetica,sans,sans-serif;
   font-size: 11px;
   text-decoration: none;
+  font-weight: normal;
   white-space: nowrap;
 }
+
+table.eyeline_buttons a:hover {
+  color: #000000;
+}
+
+table.eyeline_buttons div.eyeline_menudiv {
+  background-color: #F0F0F0;
+  border: 1px solid #C00000;
+}
+
 
 table.eyeline_buttons_background {
   width:100%;

@@ -13,6 +13,8 @@ public class DataTableController {
   private String notification;
 
   private String field1Filter;
+  private Date field2Filter;
+  private List selectedRows;
 
   public DataTableModel getModel() {
 
@@ -25,6 +27,14 @@ public class DataTableController {
     }
 
     return new MyDataTableModel(rows);
+  }
+
+  public List getSelectedRows() {
+    return selectedRows;
+  }
+
+  public void setSelectedRows(List selectedRows) {
+    this.selectedRows = selectedRows;
   }
 
   public void setSelected(List selected) {
@@ -51,6 +61,14 @@ public class DataTableController {
 
   public void setField1Filter(String field1Filter) {
     this.field1Filter = field1Filter == null || field1Filter.length() == 0 ? null : field1Filter;
+  }
+
+  public Date getField2Filter() {
+    return field2Filter;
+  }
+
+  public void setField2Filter(Date field2Filter) {
+    this.field2Filter = field2Filter;
   }
 
   private LoadListener loadListener;
@@ -118,7 +136,7 @@ public class DataTableController {
       this.rows = rows;
     }
 
-    public List getRows(int startPos, int count, final DataTableSortOrder dataTableSortOrder) {
+    public List getRows(int startPos, int count, final DataTableSortOrder dataTableSortOrder) throws ModelException {
       try {
         Thread.sleep(2000);
       } catch (InterruptedException e) {

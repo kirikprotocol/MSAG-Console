@@ -14,6 +14,12 @@
         <eye:button>
           <h:commandLink value="Button2" action="#{buttons.button2}"/>
         </eye:button>
+        <eye:button>
+          <eye:menubar label="Submenu">
+              <eye:menubaritem><h:commandLink value="Item 1" /></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="Item 2" /></eye:menubaritem>
+            </eye:menubar>
+        </eye:button>
         <eye:space/>
         <eye:button>
           <h:commandLink value="Button3" action="#{buttons.button3}"/>

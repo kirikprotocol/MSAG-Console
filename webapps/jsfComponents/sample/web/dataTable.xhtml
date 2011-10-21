@@ -23,15 +23,18 @@
 
           <h:panelGrid columns="3">
             <h:outputText value="Field1"/>
-            <h:inputText value="#{dataTable.field1Filter}"/>
+            <eye:inputText value="#{dataTable.field1Filter}"/>
+            <h:outputText value="&#160;"/>
+            <h:outputText value="Field2"/>
+            <eye:inputDate value="#{dataTable.field2Filter}"/>
             <h:outputText value="&#160;"/>
           </h:panelGrid>
 
         </eye:dataTableFilter>
 
         <!--<eye:dataTable value="#{dataTable.model}" var="row" selectedRows="#{dataTable.selected}">-->
-        <eye:dataTable value="#{dataTable.model}" var="row" tableClass="table1">
-          <eye:row innerRows="#{row.inner}" opened="true" rowClasses="row1, row2">
+        <eye:dataTable value="#{dataTable.model}" var="row" tableClass="table1" selectedRows="#{dataTable.selectedRows}">
+          <eye:row innerRows="#{row.inner}" opened="true" rowClasses="row1, row2" >
             <eye:column name="field1" title="field1" sortable="true" defaultSortOrder="desc" columnClass="column1">
                 <h:commandLink value="#{row.field1}" action="#{dataTable.choose}">
                   <f:param name="selected" value="#{row.field1}"/>

@@ -21,7 +21,7 @@ table.eyeline_buttons td {
 
 table.eyeline_buttons a,
 table.eyeline_buttons a:visited,
-table.eyeline_buttons a:hover {
+table.eyeline_buttons div{
   border: 0 none;
   color: #161E49;
   cursor: pointer;
@@ -29,6 +29,15 @@ table.eyeline_buttons a:hover {
   font-size: 11px;
   text-decoration: none;
   white-space: nowrap;
+}
+
+table.eyeline_buttons div.eyeline_menudiv {
+  background-color: #DFD4AF;
+  border: 1px solid #111155;
+}
+
+table.eyeline_buttons a:hover {
+  color: #443A3A;
 }
 
 table.eyeline_buttons_background {
