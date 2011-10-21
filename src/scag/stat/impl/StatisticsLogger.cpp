@@ -188,7 +188,7 @@ time_t StatisticsLogger<Event, Buffer>::getFileTime(const char* fname) const {
     buf[stemlen] = '\0';
     long ftime;
     int pos = 0;
-    sscanf(buf, "%ld%n",ftime,&pos);
+    sscanf(buf, "%ld%n",&ftime,&pos);
     if ( pos != int(stemlen) ) {
         throw smsc::util::Exception("invalid saa filename (wrong stem) '%s'",fname);
     }
