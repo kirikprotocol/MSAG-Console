@@ -12,7 +12,7 @@ import java.util.TimeZone;
  */
 abstract public class Data {
 
-    protected static SimpleDateFormat sdf = new SimpleDateFormat("yy.MM.dd HH:mm:ss SSS");
+    protected static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssZ");
 
     protected static final String sep=";";
 

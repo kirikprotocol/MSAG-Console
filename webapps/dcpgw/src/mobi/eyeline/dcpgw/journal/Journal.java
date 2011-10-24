@@ -36,7 +36,7 @@ public class Journal {
 
 
     private File j1, j2, j2t;
-    private BufferedWriter bw, sdbw;
+    private BufferedWriter bw, bwt, sdbw, sdbwt;
 
     private final Object monitor = new Object();
     private final Object monitor2 = new Object();
@@ -52,8 +52,10 @@ public class Journal {
     private File sdj2;
     private File sdj2t;
 
+    private static final int buffer_size = 8192;
+
     public void init(File journal_dir, int max_journal_size_mb, int max_submit_date_journal_size_mb, int clean_timeout) throws InitializationException{
-        log.debug("Try to initialize journal ...");
+        log.debug("Try to initialize the journal ...");
         this.max_journal_size_mb = max_journal_size_mb;
         this.max_submit_date_journal_size_mb = max_submit_date_journal_size_mb;
 
@@ -71,27 +73,27 @@ public class Journal {
         sdj2t = new File(journal_dir.getPath()+File.separator+"sd"+File.separator+"sdj2t.csv");
 
         if (!journal_dir.exists()){
-            log.debug("Detected that journal directory doesn't exist.");
+            log.debug("Detected that delivery journal directory doesn't exist.");
             if (journal_dir.mkdir()){
-                log.debug("Successfully create journal directory.");
+                log.debug("Create delivery journal directory.");
             } else {
-                log.error("Couldn't create journal directory, check permissions.");
-                throw new InitializationException("Couldn't create journal directory, check permissions.");
+                log.error("Couldn't create delivery journal directory, check permissions.");
+                throw new InitializationException("Couldn't create delivery journal directory, check permissions.");
             }
         } else {
-            log.debug("Detected that journal directory already exists.");
+            log.debug("Detected that delivery journal directory already exists.");
         }
 
         if (!sddir.exists()){
-            log.debug("Detected that journal directory doesn't exist.");
+            log.debug("Detected that submit journal directory doesn't exist.");
             if (sddir.mkdir()){
-                log.debug("Successfully create submit date journal directory.");
+                log.debug("Create submit journal directory.");
             } else {
-                log.error("Couldn't create journal directory, check permissions.");
-                throw new InitializationException("Couldn't create journal directory, check permissions.");
+                log.error("Couldn't create submit journal directory, check permissions.");
+                throw new InitializationException("Couldn't create submit journal directory, check permissions.");
             }
         } else {
-            log.debug("Detected that journal directory already exists.");
+            log.debug("Detected that submit journal directory already exists.");
         }
 
 
@@ -99,7 +101,8 @@ public class Journal {
 
             @Override
             public void run() {
-                clean();
+                cleanDeliveryJournal();
+                cleanSubmitJournal();
             }
 
         }, clean_timeout, clean_timeout, TimeUnit.MILLISECONDS);
@@ -109,11 +112,11 @@ public class Journal {
         connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<DeliveryReceiptData>>();
         connection_message_id_sdata_store = new Hashtable<String, Hashtable<Long, SubmitSMData>>();
 
-        log.debug("Initialize journal.");
+        log.debug("Journal is initialized.");
     }
 
     public void load() throws CouldNotLoadJournalException {
-        log.debug("Try to load journal ...");
+        log.debug("Try to load the journal ...");
 
         if (j2t.exists()){
             log.debug("Detected that file '"+j2t.getName()+"' exist.");
@@ -310,11 +313,10 @@ public class Journal {
 
                 try {
                     if (bw == null) {
-                        bw = new BufferedWriter(new FileWriter(j1, true));
+                        bw = new BufferedWriter(new FileWriter(j1, true), buffer_size);
                         log.debug("Initialize buffered writer for journal "+j1.getName());
                     }
-                    bw.write(s+"\n");
-                    bw.flush();
+                    bw.write(s + "\n");
                     log.debug("write: "+s);
                 } catch (IOException e) {
                     log.error("Could not append a string to the file "+ j1.getName(), e);
@@ -339,9 +341,9 @@ public class Journal {
 
         long sum;
         if (!j2.exists()){
-            sum = j1.length();
+            sum = j1.length() + buffer_size;
         } else {
-            sum = j1.length() + j2.length();
+            sum = j1.length() + j2.length() + buffer_size;
         }
 
         //log.debug("Length of the journal in bytes: "+sum);
@@ -358,9 +360,9 @@ public class Journal {
 
         long sum;
         if (!sdj2.exists()){
-            sum = sdj1.length();
+            sum = sdj1.length() + buffer_size;
         } else {
-            sum = sdj1.length() + sdj2.length();
+            sum = sdj1.length() + sdj2.length() + buffer_size;
         }
 
         //log.debug("Length of the journal in bytes: "+sum);
@@ -368,19 +370,25 @@ public class Journal {
         return sum+byteCount <= max_submit_date_journal_size_mb*1024*1024;
     }
 
-    public void clean(){
+    public void cleanDeliveryJournal(){
 
         long t = System.currentTimeMillis();
 
-        if (j1.exists() && j1.length() > 0){
-            //log.debug("Try to clean journal ... ");
-            BufferedReader buffReader1 = null;
-            BufferedReader buffReader2 = null;
-            PrintWriter pw = null;
-            try {
-                if (j2.createNewFile()) log.debug("Create file "+j2.getName());
+        if (!j1.exists()){
+            log.debug("Delivery journal "+j1.getName()+" doesn't exist.");
+            return;
+        }
 
-                synchronized (monitor){
+        BufferedReader buffReader1 = null;
+        BufferedReader buffReader2 = null;
+        try {
+            if (j2.createNewFile()) log.debug("Create file "+j2.getName());
+
+            synchronized (monitor){
+                bw.flush();
+
+                if (j1.length() > 0){
+
                     log.debug("Try to append file '"+j1.getName()+"' to file '"+j2.getName()+"'.");
 
                     bw.close();
@@ -410,157 +418,183 @@ public class Journal {
                     b = j1.createNewFile();
                     log.debug("Create file "+j1.getName()+": "+b);
 
-                    bw = new BufferedWriter(new FileWriter(j1, true));
+                    log.debug("Successfully append delivery journal.");
+
+                    bw = new BufferedWriter(new FileWriter(j1, true), buffer_size);
                     log.debug("Initialize buffered writer for journal "+j1.getName());
 
-                    log.debug("Successfully append journal.");
-                }
-
-                if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
-
-                pw = new PrintWriter(new FileWriter(j2t));
-
-
-                Set<Long> done_message_ids = new HashSet<Long>();
-                Set<Long> perm_errors_message_ids = new HashSet<Long>();
-                Set<Long> expired_max_messages_ids = new HashSet<Long>();
-                Set<Integer> sequence_numbers = new HashSet<Integer>();
-                Set<Long> processed_message_ids = new HashSet<Long>();
-                Set<Long> deleted_messages_ids = new HashSet<Long>();
-
-
-                buffReader1 = new BufferedReader (new FileReader(j2));
-
-                String line;
-                while((line = buffReader1.readLine()) != null){
-                    String[] ar = line.split(sep);
-
-                    DeliveryReceiptData data;
-                    try {
-                        data = DeliveryReceiptData.parse(line);
-                    } catch (Exception e) {
-                        log.debug("Couldn't parse journal line.", e);
-                        continue;
-                    }
-
-                    long message_id = data.message_id;
-                    DeliveryReceiptData.Status status = data.getStatus();
-
-                    if (status == DeliveryReceiptData.Status.DONE || status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT) {
-                        done_message_ids.add(message_id);
-                        //log.debug("finished: message_id="+message_id);
-                    } else if (status == DeliveryReceiptData.Status.PERM_ERROR){
-                        perm_errors_message_ids.add(message_id);
-                        //log.debug("perm error: message_id="+message_id);
-                    } else if (status == DeliveryReceiptData.Status.DELETED){
-                        deleted_messages_ids.add(message_id);
-                        //log.debug("deleted: message_id="+message_id);
-                    } else if (status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT){
-                        expired_max_messages_ids.add(message_id);
-                        //log.debug("expired_max: message_id="+message_id);
-                    } else if (status == DeliveryReceiptData.Status.EXPIRED_TIMEOUT){
-                        int sequence_number = Integer.parseInt(ar[4]);
-                        sequence_numbers.add(sequence_number);
-                        //log.debug("expired: sn="+sequence_number);
-                    } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND){
-                        processed_message_ids.add(message_id);
-                        //log.debug("processed: message_id="+message_id);
-                    }
-
-                }
-                buffReader1.close();
-                log.debug("Read file "+j2);
-
-                int counter = 0;
-                buffReader2 = new BufferedReader(new FileReader(j2));
-
-                while((line = buffReader2.readLine()) != null){
-                    String[] ar = line.split(sep);
-
-                    DeliveryReceiptData data;
-                    try {
-                        data = DeliveryReceiptData.parse(line);
-                    } catch (Exception e) {
-                        log.debug("Couldn't parse journal line.", e);
-                        continue;
-                    }
-
-                    long message_id = data.message_id;
-                    DeliveryReceiptData.Status status = data.getStatus();
-
-                    if (status == DeliveryReceiptData.Status.INIT){
-
-                        if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
-                            //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
-                            pw.println(line);
-                            pw.flush();
-                            counter++;
-                        }
-
-                    } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND) {
-                        int sequence_number = Integer.parseInt(ar[4]);
-                        if (!done_message_ids.contains(message_id)
-                                && !sequence_numbers.contains(sequence_number)
-                                    && !deleted_messages_ids.contains(message_id)
-                                        && !expired_max_messages_ids.contains(message_id)
-                                            && !perm_errors_message_ids.contains(message_id)){
-                            //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
-                            pw.println(line);
-                            pw.flush();
-                            counter++;
-                        }
-                    }
-
-                }
-                buffReader2.close();
-                pw.close();
-                log.debug("Write to file "+j2t);
-
-                boolean b;
-                if (counter>0){
-
-                    b = j2.delete();
-                    log.debug("Delete file "+j2.getName()+": "+b);
-                    b = j2t.renameTo(j2);
-                    log.debug("Rename file "+j2t.getName()+" to "+j2.getName()+": "+b);
-
-                } else {
-
-                    b = j2t.delete();
-                    log.debug("Delete file "+j2t.getName()+": "+b);
-                    b = j2.delete();
-                    log.debug("Delete file "+j2.getName()+": "+b);
-                    b = j2.createNewFile();
-                    log.debug("Create file "+j2.getName()+": "+b);
-
-                }
-
-
-
-            } catch (IOException e) {
-                log.error(e);
-            } finally {
-                if (pw != null) pw.close();
-                try{
-                    if (buffReader1 != null) buffReader1.close();
-                    if (buffReader2 != null) buffReader2.close();
-                } catch (IOException e2){
-                    log.error(e2);
                 }
             }
 
+            if (j2.length() == 0){
+                log.debug("Delivery journal "+j2.getName()+ "is empty.");
+            }
+
+            if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
+
+            bwt = new BufferedWriter(new FileWriter(j2t));
+
+            Set<Long> done_message_ids = new HashSet<Long>();
+            Set<Long> perm_errors_message_ids = new HashSet<Long>();
+            Set<Long> expired_max_messages_ids = new HashSet<Long>();
+            Set<Integer> sequence_numbers = new HashSet<Integer>();
+            Set<Long> processed_message_ids = new HashSet<Long>();
+            Set<Long> deleted_messages_ids = new HashSet<Long>();
+
+            buffReader1 = new BufferedReader (new FileReader(j2));
+
+            String line;
+            while((line = buffReader1.readLine()) != null){
+
+                if (line.isEmpty()){
+                    log.error("Delivery journal contains empty line!!!");
+                    continue;
+                }
+
+                String[] ar = line.split(sep);
+
+                DeliveryReceiptData data;
+                try {
+                    data = DeliveryReceiptData.parse(line);
+                } catch (Exception e) {
+                    log.debug("Couldn't parse journal line: "+line, e);
+                    continue;
+                }
+
+                long message_id = data.message_id;
+                DeliveryReceiptData.Status status = data.getStatus();
+
+                if (status == DeliveryReceiptData.Status.DONE || status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT) {
+                    done_message_ids.add(message_id);
+                    //log.debug("finished: message_id="+message_id);
+                } else if (status == DeliveryReceiptData.Status.PERM_ERROR){
+                    perm_errors_message_ids.add(message_id);
+                    //log.debug("perm error: message_id="+message_id);
+                } else if (status == DeliveryReceiptData.Status.DELETED){
+                    deleted_messages_ids.add(message_id);
+                    //log.debug("deleted: message_id="+message_id);
+                } else if (status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT){
+                    expired_max_messages_ids.add(message_id);
+                    //log.debug("expired_max: message_id="+message_id);
+                } else if (status == DeliveryReceiptData.Status.EXPIRED_TIMEOUT){
+                    int sequence_number = Integer.parseInt(ar[4]);
+                    sequence_numbers.add(sequence_number);
+                    //log.debug("expired: sn="+sequence_number);
+                } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND){
+                    processed_message_ids.add(message_id);
+                    //log.debug("processed: message_id="+message_id);
+                }
+
+            }
+            buffReader1.close();
+            log.debug("Read file "+j2);
+
+            int counter = 0;
+            buffReader2 = new BufferedReader(new FileReader(j2));
+
+            while((line = buffReader2.readLine()) != null){
+
+                String[] ar = line.split(sep);
+
+                if (line.isEmpty()){
+                    log.error("Delivery journal contains empty line!!!");
+                    continue;
+                }
+
+                DeliveryReceiptData data;
+                try {
+                    data = DeliveryReceiptData.parse(line);
+                } catch (Exception e) {
+                    log.debug("Couldn't parse journal line: "+line, e);
+                    continue;
+                }
+
+                long message_id = data.message_id;
+                DeliveryReceiptData.Status status = data.getStatus();
+
+                if (status == DeliveryReceiptData.Status.INIT){
+
+                    if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
+                        //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
+                        bwt.write(line+"\n");
+                        counter++;
+                    }
+
+                } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND) {
+                    int sequence_number = Integer.parseInt(ar[4]);
+                    if (!done_message_ids.contains(message_id)
+                        && !sequence_numbers.contains(sequence_number)
+                            && !deleted_messages_ids.contains(message_id)
+                                && !expired_max_messages_ids.contains(message_id)
+                                    && !perm_errors_message_ids.contains(message_id)){
+                        //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
+                        bwt.write(line+"\n");
+                        counter++;
+                    }
+                }
+
+            }
+
+            buffReader2.close();
+            bwt.close();
+            log.debug("Write to file "+j2t);
+
+            boolean b;
+            if (counter>0){
+
+                b = j2.delete();
+                log.debug("Delete file "+j2.getName()+": "+b);
+                b = j2t.renameTo(j2);
+                log.debug("Rename file "+j2t.getName()+" to "+j2.getName()+": "+b);
+
+            } else {
+
+                b = j2t.delete();
+                log.debug("Delete file "+j2t.getName()+": "+b);
+                b = j2.delete();
+                log.debug("Delete file "+j2.getName()+": "+b);
+                b = j2.createNewFile();
+                log.debug("Create file "+j2.getName()+": "+b);
+
+            }
+
+        } catch (IOException e) {
+            log.error(e);
+
+        } finally {
+            try{
+                if (buffReader1 != null) buffReader1.close();
+                if (buffReader2 != null) buffReader2.close();
+                if (bwt != null) bwt.close();
+            } catch (IOException e){
+                log.error(e);
+            }
         }
 
-        // Clean submit date journal
+        long d = System.currentTimeMillis() - t;
+        log.debug("Delivery journal cleaned, "+d+" mls.");
+    }
 
-        if (sdj1.exists() && sdj1.length() > 0){
-            BufferedReader buffReader1 = null;
-            BufferedReader buffReader2 = null;
-            PrintWriter pw = null;
-            try {
-                if (sdj2.createNewFile()) log.debug("Create file "+sdj2.getName());
+    public void cleanSubmitJournal(){
 
-                synchronized (monitor2){
+        long t = System.currentTimeMillis();
+
+        if (!sdj1.exists()){
+            log.debug("Submit journal "+sdj1.getName()+" doesn't exist.");
+            return;
+        }
+
+        BufferedReader buffReader1 = null;
+        BufferedReader buffReader2 = null;
+        try {
+            if (sdj2.createNewFile()) log.debug("Create file "+sdj2.getName());
+
+            synchronized (monitor2){
+
+                sdbw.flush();
+
+                if (sdj1.length() > 0){
+
                     log.debug("Try to append file '"+sdj1.getName()+"' to file '"+sdj2.getName()+"'.");
 
                     sdbw.close();
@@ -590,107 +624,114 @@ public class Journal {
                     b = sdj1.createNewFile();
                     log.debug("Create file "+sdj1.getName()+": "+b);
 
-                    sdbw = new BufferedWriter(new FileWriter(sdj1, true));
-                    log.debug("Initialize buffered writer for journal "+sdj1.getName());
+                    log.debug("Successfully append submit journal.");
 
-                    log.debug("Successfully append submit date journal.");
-                }
-
-                if (sdj2t.createNewFile()) log.debug("Create file "+sdj2t.getName());
-
-                pw = new PrintWriter(new FileWriter(sdj2t));
-
-                Set<Long> receives_receipt_message_ids = new HashSet<Long>();
-
-                buffReader1 = new BufferedReader (new FileReader(sdj2));
-
-                String line;
-                while((line = buffReader1.readLine()) != null){
-
-                    SubmitSMData sdata;
-                    try {
-                        sdata = SubmitSMData.parse(line);
-                    } catch (ParseException e) {
-                        log.error("Couldn't parse submit journal string.", e);
-                        continue;
-                    }
-
-                    long message_id = sdata.getMessageId();
-                    SubmitSMData.Status status = sdata.getStatus();
-
-                    if (status == SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
-                        receives_receipt_message_ids.add(message_id);
-                    }
-                }
-                buffReader1.close();
-                log.debug("Read file "+sdj2);
-
-                int counter = 0;
-                buffReader2 = new BufferedReader(new FileReader(sdj2));
-
-                while((line = buffReader2.readLine()) != null){
-
-                    SubmitSMData sdata;
-                    try {
-                        sdata = SubmitSMData.parse(line);
-                    } catch (ParseException e) {
-                        log.error("Couldn't parse submit journal string.", e);
-                        continue;
-                    }
-
-                    long message_id = sdata.getMessageId();
-                    SubmitSMData.Status status = sdata.getStatus();
-
-                    if (status != SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
-                        if (!receives_receipt_message_ids.contains(message_id)){
-                            pw.println(line);
-                            pw.flush();
-                            counter++;
-                        }
-                    }
-
-                }
-                buffReader2.close();
-                pw.close();
-                log.debug("Write to file "+sdj2t);
-
-                boolean b;
-                if (counter>0){
-
-                    b = sdj2.delete();
-                    log.debug("Delete file "+sdj2.getName()+": "+b);
-                    b = sdj2t.renameTo(sdj2);
-                    log.debug("Rename file "+sdj2t.getName()+" to "+sdj2.getName()+": "+b);
-
-                } else {
-
-                    b = sdj2t.delete();
-                    log.debug("Delete file "+sdj2t.getName()+": "+b);
-                    b = sdj2.delete();
-                    log.debug("Delete file "+sdj2.getName()+": "+b);
-                    b = sdj2.createNewFile();
-                    log.debug("Create file "+sdj2.getName()+": "+b);
-
-                }
-
-            } catch (IOException e) {
-                log.error(e);
-            } finally {
-                if (pw != null) pw.close();
-                try{
-                    if (buffReader1 != null) buffReader1.close();
-                    if (buffReader2 != null) buffReader2.close();
-                } catch (IOException e2){
-                    log.error(e2);
+                    sdbw = new BufferedWriter(new FileWriter(sdj1, true), buffer_size);
+                    log.debug("Initialize buffered writer for submit journal "+sdj1.getName());
                 }
             }
 
+            if (sdj2t.createNewFile()) log.debug("Create file "+sdj2t.getName());
+
+            sdbwt = new BufferedWriter(new FileWriter(sdj2t));
+
+            Set<Long> receives_receipt_message_ids = new HashSet<Long>();
+
+            buffReader1 = new BufferedReader (new FileReader(sdj2));
+
+            String line;
+            while((line = buffReader1.readLine()) != null){
+
+                if (line.isEmpty()){
+                    log.error("Submit journal contains empty line!!!");
+                    continue;
+                }
+
+                SubmitSMData sdata;
+                try {
+                    sdata = SubmitSMData.parse(line);
+                } catch (ParseException e) {
+                    log.error("Couldn't parse submit journal string.", e);
+                    continue;
+                }
+
+                long message_id = sdata.getMessageId();
+                SubmitSMData.Status status = sdata.getStatus();
+
+                if (status == SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
+                    receives_receipt_message_ids.add(message_id);
+                }
+            }
+
+            buffReader1.close();
+            log.debug("Read file "+sdj2);
+
+            int counter = 0;
+            buffReader2 = new BufferedReader(new FileReader(sdj2));
+
+            while((line = buffReader2.readLine()) != null){
+
+                if (line.isEmpty()){
+                    log.error("Submit journal contains empty line!!!");
+                    continue;
+                }
+
+                SubmitSMData sdata;
+                try {
+                    sdata = SubmitSMData.parse(line);
+                } catch (ParseException e) {
+                    log.error("Couldn't parse submit journal string.", e);
+                    continue;
+                }
+
+                long message_id = sdata.getMessageId();
+                SubmitSMData.Status status = sdata.getStatus();
+
+                if (status != SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
+                    if (!receives_receipt_message_ids.contains(message_id)){
+                        sdbwt.write(line+"\n");
+                        counter++;
+                    }
+                }
+
+            }
+            buffReader2.close();
+            sdbwt.close();
+            log.debug("Write to file "+sdj2t);
+
+            boolean b;
+            if (counter>0){
+
+                b = sdj2.delete();
+                log.debug("Delete file "+sdj2.getName()+": "+b);
+                b = sdj2t.renameTo(sdj2);
+                log.debug("Rename file "+sdj2t.getName()+" to "+sdj2.getName()+": "+b);
+
+            } else {
+
+                b = sdj2t.delete();
+                log.debug("Delete file "+sdj2t.getName()+": "+b);
+                b = sdj2.delete();
+                log.debug("Delete file "+sdj2.getName()+": "+b);
+                b = sdj2.createNewFile();
+                log.debug("Create file "+sdj2.getName()+": "+b);
+
+            }
+
+        } catch (IOException e) {
+            log.error(e);
+        } finally {
+            try{
+                if (buffReader1 != null) buffReader1.close();
+                if (buffReader2 != null) buffReader2.close();
+                if (sdbwt != null) sdbwt.close();
+            } catch (IOException e2){
+                log.error(e2);
+            }
         }
 
         long d = System.currentTimeMillis() - t;
-
-        log.debug("Journal cleaned, "+d+" mls.");
-
+        log.debug("Submit journal cleaned, "+d+" mls.");
     }
 
     public Hashtable<Integer, DeliveryReceiptData> getDataTable(String connection_name){
@@ -706,8 +747,49 @@ public class Journal {
     }
 
     public void shutdown(){
+
         scheduler.shutdown();
-        log.debug("journal shutdown");
+
+        if (bw != null) {
+            try {
+                /* From javadoc: Closes the stream, flushing it first. Once the stream has been closed, further write()
+                or flush() invocations will cause an IOException to be thrown. Closing a previously closed stream has no
+                effect. */
+                bw.close();
+                log.debug("Close delivery journal buffered writer.");
+            } catch (IOException e) {
+                log.error(e);
+            }
+        }
+
+        if (bwt != null) {
+            try {
+                bwt.close();
+                log.debug("Close delivery journal buffered writer .");
+            } catch (IOException e) {
+                log.error(e);
+            }
+        }
+
+        if (sdbw != null){
+            try{
+                sdbw.close();
+                log.debug("Close submit journal buffered writer.");
+            } catch (IOException e) {
+                log.error(e);
+            }
+        }
+
+        if (sdbwt != null){
+            try{
+                sdbwt.close();
+                log.debug("Close submit journal buffered writer.");
+            } catch (IOException e) {
+                log.error(e);
+            }
+        }
+
+        log.debug("Journal is shut down.");
     }
 
     public void write(SubmitSMData data)throws CouldNotWriteToJournalException {
@@ -737,11 +819,10 @@ public class Journal {
 
                 try {
                     if (sdbw == null) {
-                        sdbw = new BufferedWriter(new FileWriter(sdj1, true));
+                        sdbw = new BufferedWriter(new FileWriter(sdj1, true), buffer_size);
                         log.debug("Initialize buffered writer for journal "+sdj1.getName());
                     }
                     sdbw.write(s+"\n");
-                    sdbw.flush();
                     log.debug("write: "+s);
                 } catch (IOException e) {
                     log.error("Could not append a string to the file "+ sdj1.getName(), e);

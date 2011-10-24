@@ -3,7 +3,6 @@ package mobi.eyeline.dcpgw.smpp;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
 import mobi.eyeline.dcpgw.journal.DeliveryReceiptData;
-import mobi.eyeline.dcpgw.journal.SubmitSMData;
 import mobi.eyeline.smpp.api.*;
 import mobi.eyeline.smpp.api.pdu.DeliverSMResp;
 import mobi.eyeline.smpp.api.pdu.PDU;
@@ -124,10 +123,13 @@ public class Server{
                     String name = key.substring(CONNECTION_PREFIX.length());
                     name = name.substring(0, name.length() - ".password".length());
 
-                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipts.speed"));
-                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipt.max.time.min"));
+                    int speed = Integer.parseInt((String) new_properties.get(CONNECTION_PREFIX+name+".send.receipts.speed"));
+                    int max_time = Integer.parseInt((String) new_properties.get(CONNECTION_PREFIX+name+".send.receipt.max.time.min"));
 
                     connections.put(name, new Connection(name, speed, max_time));
+
+                    if (deleted_connections.contains(name)) deleted_connections.remove(name);
+
                     log.debug("Initialize new smpp connection "+name);
                 }
             }
@@ -141,8 +143,8 @@ public class Server{
                     String name = key.substring(CONNECTION_PREFIX.length());
                     name = name.substring(0, name.length() - ".password".length());
 
-                    int speed = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipts.speed"));
-                    int max_time = Integer.parseInt((String) properties.get(CONNECTION_PREFIX+name+".send.receipt.max.time.min"));
+                    int speed = Integer.parseInt((String) new_properties.get(CONNECTION_PREFIX+name+".send.receipts.speed"));
+                    int max_time = Integer.parseInt((String) new_properties.get(CONNECTION_PREFIX+name+".send.receipt.max.time.min"));
 
                     Connection connection = connections.get(name);
 

@@ -111,8 +111,6 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                 throw new CouldNotReadMessageStateException("could.not.read.message.state", e1);
             }
 
-            Date done_date = Functions.convertTime(e.getEventDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
-
             int nsms = e.getNsms();
 
             FinalMessageState state;
@@ -129,7 +127,10 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
             data.setConnectionName(connection_name);
             data.setSourceAddress(destination_address);
             data.setDestinationAddress(source_address);
+
+            Date done_date = Functions.convertTime(e.getEventDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
             data.setDoneDate(done_date);
+
             data.setFinalMessageState(state);
             data.setNsms(nsms);
             data.setStatus(DeliveryReceiptData.Status.INIT);
@@ -143,7 +144,8 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
             SubmitSMData.Status status = sdata.getStatus();
 
-            data.setSubmitDate(sdata.getSubmitDate());
+            Date submit_date = Functions.convertTime(sdata.getSubmitDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
+            data.setSubmitDate(submit_date);
 
             try {
                 sdata.setSubmitDate(new Date(System.currentTimeMillis()));

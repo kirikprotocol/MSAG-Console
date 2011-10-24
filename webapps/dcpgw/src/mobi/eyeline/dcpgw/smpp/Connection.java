@@ -96,9 +96,6 @@ public class Connection {
 
         if (queue == null) queue = new LinkedBlockingQueue<DeliveryReceiptData>();
 
-        long message_id = data.getMessageId();
-
-
         try{
              queue.add(data);
              log.debug("add "+data.getMessageId()+"_rcpt to "+name+"_delivery_queue, size "+queue.size());

@@ -322,7 +322,6 @@ public class Config {
     }
 
     private Properties loadSmppEndpoints() throws IOException, XmlConfigException {
-        log.debug("l1");
         Properties result = (Properties) config.clone();
 
         XmlConfig xmlConfig = new XmlConfig();
@@ -330,30 +329,19 @@ public class Config {
         xmlConfig.load(new File(smpp_endpoints_file));
         XmlConfigSection endpoints_section = xmlConfig.getSection("endpoints");
         Collection<XmlConfigSection> c = endpoints_section.sections();
-        log.debug("l2");
 
         for(XmlConfigSection s : c) {
             String endpoint_name = s.getName();
-            log.debug(endpoint_name+"_l3");
             XmlConfigParam p = s.getParam("enabled");
-            log.debug(endpoint_name+"_l31");
             if (p.getBool()) {
-                log.debug(endpoint_name+"_l32");
                 p = s.getParam("systemId");
-                log.debug(endpoint_name+"_l33");
                 String systemId = p.getString();
-                log.debug(endpoint_name+"_l34");
                 p = s.getParam("password");
-                log.debug(endpoint_name+"_l35");
                 String password = p.getString();
-                log.debug(endpoint_name+"_l36");
                 result.setProperty(CONNECTION_PREFIX + systemId + ".password", password);
-                log.debug(endpoint_name+"_l37");
                 int speed, max_time;
                 XmlConfigSection s2 = s.getSection("send.receipts");
-                log.debug(endpoint_name+"_l38");
                 if (s2 != null){
-                    log.debug(endpoint_name+"_l4");
                     p = s2.getParam("speed");
                     if (p != null){
                         speed = p.getInt();
