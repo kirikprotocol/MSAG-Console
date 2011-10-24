@@ -424,11 +424,14 @@ public class Journal {
                     log.debug("Initialize buffered writer for journal "+j1.getName());
 
                 }
+
+                if (j2.length() == 0){
+                    log.debug("Delivery journal "+j2.getName()+ "is empty.");
+                    return;
+                }
             }
 
-            if (j2.length() == 0){
-                log.debug("Delivery journal "+j2.getName()+ "is empty.");
-            }
+
 
             if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
 
@@ -628,6 +631,11 @@ public class Journal {
 
                     sdbw = new BufferedWriter(new FileWriter(sdj1, true), buffer_size);
                     log.debug("Initialize buffered writer for submit journal "+sdj1.getName());
+                }
+
+                if (sdj2.length() == 0){
+                    log.debug("Submit journal "+j2.getName()+ "is empty.");
+                    return;
                 }
             }
 
