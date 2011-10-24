@@ -30,6 +30,13 @@ BannerReader::Execute()
   unsigned long long curTime,lastExpCheck=getTimeInMsec();
   while (_isRunning)
   {
+    curTime=getTimeInMsec();
+    if(curTime-lastExpCheck>_responseTimeoutInMsecs)
+    {
+      handleTimedOutRequests(_responseTimeoutInMsecs);
+      lastExpCheck=curTime;
+    }
+
     int count = 0;
     _lock.Lock();
     for(activeBEConns_t::const_iterator iter=_activeBEConns.begin(), end_iter=_activeBEConns.end();
@@ -44,14 +51,6 @@ BannerReader::Execute()
     fds[count].revents = 0;
     fds[count].events = POLLRDNORM;
     ++count;
-    
-    curTime=getTimeInMsec();
-    if(curTime-lastExpCheck>_responseTimeoutInMsecs)
-    {
-      handleTimedOutRequests(_responseTimeoutInMsecs);
-      lastExpCheck=curTime;
-    }
-    
 
     int st = ::poll(fds, count, _responseTimeoutInMsecs);
     if ( st < 0 )
