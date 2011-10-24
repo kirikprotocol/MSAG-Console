@@ -269,6 +269,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 
 //    Address adr(addr.c_str());
     s = site + ':' + lltostr(port, buf + 19);
+    smsc_log_debug(smsc::logger::Logger::getInstance("Http.Router"), "HttpRouterImpl::findRoute addr:%s, site:[%s]:port[%d] path[%s]", addr.c_str(), site.c_str(), port, path.c_str());
 
 /*
  * Add mix-protocol feature; (xom 25.07.11)

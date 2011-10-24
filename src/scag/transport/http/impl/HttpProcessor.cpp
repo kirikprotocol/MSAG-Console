@@ -93,8 +93,10 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
         cx.setSite(str);
         mid++;
         str.assign(mid, end - mid);
+        smsc_log_debug(logger, "HttpProcessorImpl::parsePath cx=%p port=%s", &cx, str.c_str());
         cx.setSitePort(atoi(str.c_str()));
-      } else {
+      }
+      else {
         str.assign(pos, end - pos);
         cx.setSite(str);
       }
@@ -322,7 +324,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 // (xom 25.07.11) add port change (port,443,80 selection) as mix-protocol feature
                    request.setSitePort(r.defSite.port);
                 }
-//                smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
+                smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
             } catch (const RouteNotFoundException& e) {
                 smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
                 registerEvent( stat::events::http::REQUEST_FAILED, request);
