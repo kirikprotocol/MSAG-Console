@@ -100,7 +100,7 @@ protected:
 
 public:
 
-    Property() : type(PropertyType(0)), i_val(0), time_policy(INFINIT) {
+    Property() : type(PropertyType(0)), i_val(0), time_policy(INFINIT), final_date(0), life_time(0) {
         // if (!log_) initLog();
         // smsc_log_debug(log_,"ctor %p",this);
     }
