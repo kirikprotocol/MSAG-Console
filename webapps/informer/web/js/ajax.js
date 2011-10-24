@@ -42,7 +42,7 @@ function constructArgs(rootElement) {
   var args = "";
   for (var i = 0; i < rootElement.children.length; i++) {
     var c = rootElement.children[i];
-    if (c.getAttribute("id") != null && c.getAttribute("value") != null) {
+    if (c.getAttribute("id") != null && c.getAttribute("name") != "source" && c.getAttribute("value") != null) {
       if (args.length > 0)
         args += '&';
       args += c.getAttribute("id") + '=' + c.getAttribute("value");

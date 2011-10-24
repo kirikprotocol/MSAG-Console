@@ -57,6 +57,8 @@ function DataTable(tableId, updateUsingSubmit, _progress, _titleError) {
         pname = el.name;
 
       if (pname != null && pname.length != 0) {
+        if (el.tagName == "INPUT" && el.getAttribute("name") == "source")
+          continue;
         if (el.tagName == "INPUT" && el.getAttribute("type") == "checkbox") {
           if (el.getAttribute("checked") != null && (el.getAttribute("checked") || el.getAttribute("checked") == "checked"))
             args += pname + '=true';
