@@ -123,7 +123,8 @@ int HttpsOptions::siteInit(bool verify) {
 //	SSL_CTX_set_mode(siteCtx, SSL_MODE_AUTO_RETRY | SSL_MODE_ENABLE_PARTIAL_WRITE);
 	// Set the workaround options
     SSL_CTX_set_options(siteCtx, SSL_OP_ALL);
-
+	SSL_CTX_set_verify(siteCtx, SSL_VERIFY_NONE, NULL);
+/*
     // Load the client certificate into the SSL_CTX structure
 	tmp = cfg->httpsCertificates + RSA_CLIENT_CERT;
 	if (SSL_CTX_use_certificate_file(siteCtx, tmp.c_str(), SSL_FILETYPE_PEM) <= 0) {
@@ -157,7 +158,7 @@ int HttpsOptions::siteInit(bool verify) {
 		// Set to require peer (client) certificate verification
 		SSL_CTX_set_verify(siteCtx, SSL_VERIFY_NONE, NULL);
 	}
-
+*/
     return 1;
 }
 
