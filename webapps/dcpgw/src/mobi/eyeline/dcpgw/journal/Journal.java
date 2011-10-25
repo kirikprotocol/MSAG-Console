@@ -41,9 +41,9 @@ public class Journal {
     private final Object monitor = new Object();
     private final Object monitor2 = new Object();
 
-    private Hashtable<String, Hashtable<Integer, DeliveryReceiptData>> connection_sn_data_store;
-    private Hashtable<String, LinkedBlockingQueue<DeliveryReceiptData>> connection_data_queue_table;
-    private Hashtable<String, Hashtable<Long, SubmitSMData>> connection_message_id_sdata_store;
+    private Hashtable<String, Hashtable<Integer, DeliveryData>> connection_sn_data_store;
+    private Hashtable<String, LinkedBlockingQueue<DeliveryData>> connection_data_queue_table;
+    private Hashtable<String, Hashtable<Long, SubmitData>> connection_message_id_sdata_store;
 
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -108,9 +108,9 @@ public class Journal {
         }, clean_timeout, clean_timeout, TimeUnit.MILLISECONDS);
 
 
-        connection_sn_data_store = new Hashtable<String, Hashtable<Integer, DeliveryReceiptData>>();
-        connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<DeliveryReceiptData>>();
-        connection_message_id_sdata_store = new Hashtable<String, Hashtable<Long, SubmitSMData>>();
+        connection_sn_data_store = new Hashtable<String, Hashtable<Integer, DeliveryData>>();
+        connection_data_queue_table = new Hashtable<String, LinkedBlockingQueue<DeliveryData>>();
+        connection_message_id_sdata_store = new Hashtable<String, Hashtable<Long, SubmitData>>();
 
         log.debug("Journal is initialized.");
     }
@@ -154,22 +154,22 @@ public class Journal {
                         String line = scanner.nextLine();
                         if (!line.isEmpty() && !line.startsWith("#")){
 
-                            DeliveryReceiptData data;
+                            DeliveryData data;
                             try {
-                                data = DeliveryReceiptData.parse(line);
+                                data = DeliveryData.parse(line);
                             } catch (ParseException e) {
                                 throw new CouldNotLoadJournalException(e);
                             } catch (InvalidAddressFormatException e) {
                                 throw new CouldNotLoadJournalException(e);
                             }
 
-                            DeliveryReceiptData.Status status = data.getStatus();
+                            DeliveryData.Status status = data.getStatus();
 
                             String connection = data.getConnectionName();
-                            if (status == DeliveryReceiptData.Status.INIT){
+                            if (status == DeliveryData.Status.INIT){
 
                                 if (!connection_data_queue_table.containsKey(connection))
-                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<DeliveryReceiptData>());
+                                    connection_data_queue_table.put(connection, new LinkedBlockingQueue<DeliveryData>());
 
 
                                 try {
@@ -182,12 +182,12 @@ public class Journal {
                                 Integer sequence_number = data.getSequenceNumber();
 
                                 if (!connection_sn_data_store.containsKey(connection))
-                                        connection_sn_data_store.put(connection, new Hashtable<Integer, DeliveryReceiptData>());
+                                        connection_sn_data_store.put(connection, new Hashtable<Integer, DeliveryData>());
 
-                                if (status == DeliveryReceiptData.Status.DONE
-                                        || status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT
-                                            ||  status == DeliveryReceiptData.Status.EXPIRED_TIMEOUT
-                                                || status == DeliveryReceiptData.Status.DELETED){
+                                if (status == DeliveryData.Status.DONE
+                                        || status == DeliveryData.Status.EXPIRED_MAX_TIMEOUT
+                                            ||  status == DeliveryData.Status.EXPIRED_TIMEOUT
+                                                || status == DeliveryData.Status.DELETED){
 
                                     connection_sn_data_store.get(connection).remove(sequence_number);
                                     log.debug("remove from memory data: con="+connection+", sn="+sequence_number);
@@ -246,9 +246,9 @@ public class Journal {
                         String line = scanner.nextLine();
                         if (!line.isEmpty() && !line.startsWith("#")){
 
-                            SubmitSMData sdata;
+                            SubmitData sdata;
                             try {
-                                sdata = SubmitSMData.parse(line);
+                                sdata = SubmitData.parse(line);
                             } catch (ParseException e) {
                                 log.debug(e);
                                 throw new CouldNotLoadJournalException(e);
@@ -257,15 +257,15 @@ public class Journal {
 
                             long message_id = sdata.getMessageId();
                             String connection_name = sdata.getConnectionName();
-                            SubmitSMData.Status status = sdata.getStatus();
+                            SubmitData.Status status = sdata.getStatus();
 
                             if (!connection_message_id_sdata_store.containsKey(connection_name)){
-                                connection_message_id_sdata_store.put(connection_name, new Hashtable<Long, SubmitSMData>());
+                                connection_message_id_sdata_store.put(connection_name, new Hashtable<Long, SubmitData>());
                             }
 
-                            Hashtable<Long, SubmitSMData> message_id_sdata = connection_message_id_sdata_store.get(connection_name);
+                            Hashtable<Long, SubmitData> message_id_sdata = connection_message_id_sdata_store.get(connection_name);
 
-                            if (status != SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
+                            if (status != SubmitData.Status.RECEIVE_DELIVERY_RECEIPT){
                                 message_id_sdata.put(message_id, sdata);
                                 log.debug("remove from memory submit data: con="+connection_name+", message_id="+message_id);
                             } else {
@@ -286,7 +286,7 @@ public class Journal {
         log.debug("Successfully load journal.");
     }
 
-    public void write(DeliveryReceiptData data) throws CouldNotWriteToJournalException {
+    public void write(DeliveryData data) throws CouldNotWriteToJournalException {
 
         synchronized (monitor){
 
@@ -299,7 +299,7 @@ public class Journal {
                 throw new CouldNotWriteToJournalException(e);
             }
 
-            String s = DeliveryReceiptData.format(data);
+            String s = DeliveryData.format(data);
 
             boolean isEnoughSpace;
             try {
@@ -456,34 +456,34 @@ public class Journal {
 
                 String[] ar = line.split(sep);
 
-                DeliveryReceiptData data;
+                DeliveryData data;
                 try {
-                    data = DeliveryReceiptData.parse(line);
+                    data = DeliveryData.parse(line);
                 } catch (Exception e) {
                     log.debug("Couldn't parse journal line: "+line, e);
                     continue;
                 }
 
                 long message_id = data.message_id;
-                DeliveryReceiptData.Status status = data.getStatus();
+                DeliveryData.Status status = data.getStatus();
 
-                if (status == DeliveryReceiptData.Status.DONE || status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT) {
+                if (status == DeliveryData.Status.DONE || status == DeliveryData.Status.EXPIRED_MAX_TIMEOUT) {
                     done_message_ids.add(message_id);
                     //log.debug("finished: message_id="+message_id);
-                } else if (status == DeliveryReceiptData.Status.PERM_ERROR){
+                } else if (status == DeliveryData.Status.PERM_ERROR){
                     perm_errors_message_ids.add(message_id);
                     //log.debug("perm error: message_id="+message_id);
-                } else if (status == DeliveryReceiptData.Status.DELETED){
+                } else if (status == DeliveryData.Status.DELETED){
                     deleted_messages_ids.add(message_id);
                     //log.debug("deleted: message_id="+message_id);
-                } else if (status == DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT){
+                } else if (status == DeliveryData.Status.EXPIRED_MAX_TIMEOUT){
                     expired_max_messages_ids.add(message_id);
                     //log.debug("expired_max: message_id="+message_id);
-                } else if (status == DeliveryReceiptData.Status.EXPIRED_TIMEOUT){
+                } else if (status == DeliveryData.Status.EXPIRED_TIMEOUT){
                     int sequence_number = Integer.parseInt(ar[4]);
                     sequence_numbers.add(sequence_number);
                     //log.debug("expired: sn="+sequence_number);
-                } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND){
+                } else if (status == DeliveryData.Status.SEND || status == DeliveryData.Status.NOT_SEND){
                     processed_message_ids.add(message_id);
                     //log.debug("processed: message_id="+message_id);
                 }
@@ -504,18 +504,18 @@ public class Journal {
                     continue;
                 }
 
-                DeliveryReceiptData data;
+                DeliveryData data;
                 try {
-                    data = DeliveryReceiptData.parse(line);
+                    data = DeliveryData.parse(line);
                 } catch (Exception e) {
                     log.debug("Couldn't parse journal line: "+line, e);
                     continue;
                 }
 
                 long message_id = data.message_id;
-                DeliveryReceiptData.Status status = data.getStatus();
+                DeliveryData.Status status = data.getStatus();
 
-                if (status == DeliveryReceiptData.Status.INIT){
+                if (status == DeliveryData.Status.INIT){
 
                     if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
                         //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
@@ -523,7 +523,7 @@ public class Journal {
                         counter++;
                     }
 
-                } else if (status == DeliveryReceiptData.Status.SEND || status == DeliveryReceiptData.Status.NOT_SEND) {
+                } else if (status == DeliveryData.Status.SEND || status == DeliveryData.Status.NOT_SEND) {
                     int sequence_number = Integer.parseInt(ar[4]);
                     if (!done_message_ids.contains(message_id)
                         && !sequence_numbers.contains(sequence_number)
@@ -655,18 +655,18 @@ public class Journal {
                     continue;
                 }
 
-                SubmitSMData sdata;
+                SubmitData sdata;
                 try {
-                    sdata = SubmitSMData.parse(line);
+                    sdata = SubmitData.parse(line);
                 } catch (ParseException e) {
                     log.error("Couldn't parse submit journal string.", e);
                     continue;
                 }
 
                 long message_id = sdata.getMessageId();
-                SubmitSMData.Status status = sdata.getStatus();
+                SubmitData.Status status = sdata.getStatus();
 
-                if (status == SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
+                if (status == SubmitData.Status.RECEIVE_DELIVERY_RECEIPT){
                     receives_receipt_message_ids.add(message_id);
                 }
             }
@@ -684,18 +684,18 @@ public class Journal {
                     continue;
                 }
 
-                SubmitSMData sdata;
+                SubmitData sdata;
                 try {
-                    sdata = SubmitSMData.parse(line);
+                    sdata = SubmitData.parse(line);
                 } catch (ParseException e) {
                     log.error("Couldn't parse submit journal string.", e);
                     continue;
                 }
 
                 long message_id = sdata.getMessageId();
-                SubmitSMData.Status status = sdata.getStatus();
+                SubmitData.Status status = sdata.getStatus();
 
-                if (status != SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT){
+                if (status != SubmitData.Status.RECEIVE_DELIVERY_RECEIPT){
                     if (!receives_receipt_message_ids.contains(message_id)){
                         sdbwt.write(line+"\n");
                         counter++;
@@ -742,15 +742,15 @@ public class Journal {
         log.debug("Submit journal cleaned, "+d+" mls.");
     }
 
-    public Hashtable<Integer, DeliveryReceiptData> getDataTable(String connection_name){
+    public Hashtable<Integer, DeliveryData> getDataTable(String connection_name){
         return connection_sn_data_store.get(connection_name);
     }
 
-    public LinkedBlockingQueue<DeliveryReceiptData> getDataQueue(String connection_name){
+    public LinkedBlockingQueue<DeliveryData> getDataQueue(String connection_name){
         return connection_data_queue_table.get(connection_name);
     }
 
-    public Hashtable<Long, SubmitSMData> getSubmitDateTable(String connection_name){
+    public Hashtable<Long, SubmitData> getSubmitDateTable(String connection_name){
         return connection_message_id_sdata_store.get(connection_name);
     }
 
@@ -800,7 +800,7 @@ public class Journal {
         log.debug("Journal is shut down.");
     }
 
-    public void write(SubmitSMData data)throws CouldNotWriteToJournalException {
+    public void write(SubmitData data)throws CouldNotWriteToJournalException {
 
         synchronized (monitor2){
 
@@ -813,7 +813,7 @@ public class Journal {
                 throw new CouldNotWriteToJournalException(e);
             }
 
-            String s = SubmitSMData.format(data);
+            String s = SubmitData.format(data);
 
             boolean isEnoughSpace;
             try {

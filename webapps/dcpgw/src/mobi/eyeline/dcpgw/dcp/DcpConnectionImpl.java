@@ -3,7 +3,7 @@ package mobi.eyeline.dcpgw.dcp;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.journal.Journal;
-import mobi.eyeline.dcpgw.journal.SubmitSMData;
+import mobi.eyeline.dcpgw.journal.SubmitData;
 import mobi.eyeline.dcpgw.smpp.Connection;
 import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.informer.admin.AdminException;
@@ -257,7 +257,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 continue;
             }
 
-            SubmitSMData sdata = new SubmitSMData();
+            SubmitData sdata = new SubmitData();
             sdata.setMessageId(message_id);
             sdata.setConnectionName(connection_name);
 
@@ -271,7 +271,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 try {
 
                     sdata.setSubmitDate(new Date(System.currentTimeMillis()));
-                    sdata.setStatus(SubmitSMData.Status.NOT_SEND_RESPONSE);
+                    sdata.setStatus(SubmitData.Status.NOT_SEND_RESPONSE);
                     connection.setSubmitDate(sdata);
 
                     Journal.getInstance().write(sdata);
@@ -286,7 +286,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             Date submit_date = new Date(System.currentTimeMillis());
             sdata.setSubmitDate(submit_date);
-            sdata.setStatus(SubmitSMData.Status.SEND_RESPONSE);
+            sdata.setStatus(SubmitData.Status.SEND_RESPONSE);
             connection.setSubmitDate(sdata);
 
             RegDeliveryReceipt rdr = message_id_register_delivery_receipt_table.remove(message_id);

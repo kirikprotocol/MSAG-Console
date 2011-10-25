@@ -11,9 +11,9 @@ import test.T;
  * Date: 17.09.11
  * Time: 20:11
  */
-public class DeliveryReceiptDataTest extends T {
+public class DeliveryDataTest extends T {
 
-    private static DeliveryReceiptData d1, d2;
+    private static DeliveryData d1, d2;
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {

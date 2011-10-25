@@ -3,9 +3,9 @@ package mobi.eyeline.dcpgw.dcp;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotReadMessageStateException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
-import mobi.eyeline.dcpgw.journal.DeliveryReceiptData;
+import mobi.eyeline.dcpgw.journal.DeliveryData;
 import mobi.eyeline.dcpgw.journal.Journal;
-import mobi.eyeline.dcpgw.journal.SubmitSMData;
+import mobi.eyeline.dcpgw.journal.SubmitData;
 import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.dcpgw.smpp.Connection;
@@ -75,9 +75,9 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                     log.debug(message_id+"_message has registered delivery parameter "+rdr+", but message state is "+messageState+", remove delivery receipt");
 
                     try {
-                        SubmitSMData sdata = connection.removeSubmitSMData(message_id);
+                        SubmitData sdata = connection.removeSubmitSMData(message_id);
                         sdata.setSubmitDate(new Date(System.currentTimeMillis()));
-                        sdata.setStatus(SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT);
+                        sdata.setStatus(SubmitData.Status.RECEIVE_DELIVERY_RECEIPT);
                         Journal.getInstance().write(sdata);
                     } catch (CouldNotWriteToJournalException e1) {
                         log.error("Couldn't write submit data to journal.", e1);
@@ -90,9 +90,9 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                     log.debug(message_id+"_message has registered delivery parameter "+rdr+", but message state is "+messageState+", remove delivery receipt");
 
                     try {
-                        SubmitSMData sdata = connection.removeSubmitSMData(message_id);
+                        SubmitData sdata = connection.removeSubmitSMData(message_id);
                         sdata.setSubmitDate(new Date(System.currentTimeMillis()));
-                        sdata.setStatus(SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT);
+                        sdata.setStatus(SubmitData.Status.RECEIVE_DELIVERY_RECEIPT);
                         Journal.getInstance().write(sdata);
                     } catch (CouldNotWriteToJournalException e1) {
                         log.error("Couldn't write submit data to journal.", e1);
@@ -122,7 +122,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                 state = FinalMessageState.UNKNOWN;
             }
 
-            DeliveryReceiptData data = new DeliveryReceiptData();
+            DeliveryData data = new DeliveryData();
             data.setMessageId(message_id);
             data.setConnectionName(connection_name);
             data.setSourceAddress(destination_address);
@@ -133,29 +133,29 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
 
             data.setFinalMessageState(state);
             data.setNsms(nsms);
-            data.setStatus(DeliveryReceiptData.Status.INIT);
+            data.setStatus(DeliveryData.Status.INIT);
             data.setInitTime(System.currentTimeMillis());
 
-            SubmitSMData sdata = connection.removeSubmitSMData(message_id);
+            SubmitData sdata = connection.removeSubmitSMData(message_id);
             if (sdata == null){
                 log.error("Couldn't find submit data for receipt with message id "+data.getMessageId());
                 return;
             }
 
-            SubmitSMData.Status status = sdata.getStatus();
+            SubmitData.Status status = sdata.getStatus();
 
             Date submit_date = Functions.convertTime(sdata.getSubmitDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
             data.setSubmitDate(submit_date);
 
             try {
                 sdata.setSubmitDate(new Date(System.currentTimeMillis()));
-                sdata.setStatus(SubmitSMData.Status.RECEIVE_DELIVERY_RECEIPT);
+                sdata.setStatus(SubmitData.Status.RECEIVE_DELIVERY_RECEIPT);
                 Journal.getInstance().write(sdata);
             } catch (CouldNotWriteToJournalException e1) {
                 log.error("Couldn't write to submit date journal.", e1);
             }
 
-            if (status == SubmitSMData.Status.NOT_SEND_RESPONSE){
+            if (status == SubmitData.Status.NOT_SEND_RESPONSE){
                 log.debug("Received "+message_id+"_delivery_receipt, couldn't send SubmitSMResp for this "+message_id+"message, remove receipt");
                 return;
             }

@@ -2,9 +2,9 @@ package mobi.eyeline.dcpgw.smpp;
 
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
-import mobi.eyeline.dcpgw.journal.DeliveryReceiptData;
+import mobi.eyeline.dcpgw.journal.DeliveryData;
 import mobi.eyeline.dcpgw.journal.Journal;
-import mobi.eyeline.dcpgw.journal.SubmitSMData;
+import mobi.eyeline.dcpgw.journal.SubmitData;
 import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.smpp.api.SmppException;
@@ -37,11 +37,11 @@ public class Connection {
 
     private String name;
 
-    private Hashtable<Integer, DeliveryReceiptData> sn_data_table;
+    private Hashtable<Integer, DeliveryData> sn_data_table;
 
-    private LinkedBlockingQueue<DeliveryReceiptData> queue;
+    private LinkedBlockingQueue<DeliveryData> queue;
 
-    private Hashtable<Long, SubmitSMData> message_id_sdata_table;
+    private Hashtable<Long, SubmitData> message_id_sdata_table;
 
     private Journal journal = Journal.getInstance();
 
@@ -66,9 +66,9 @@ public class Connection {
         queue = Journal.getInstance().getDataQueue(name);
         message_id_sdata_table = Journal.getInstance().getSubmitDateTable(name);
 
-        if (sn_data_table == null) sn_data_table = new Hashtable<Integer, DeliveryReceiptData>();
-        if (queue == null) queue = new LinkedBlockingQueue<DeliveryReceiptData>();
-        if (message_id_sdata_table == null)  message_id_sdata_table = new Hashtable<Long, SubmitSMData>();
+        if (sn_data_table == null) sn_data_table = new Hashtable<Integer, DeliveryData>();
+        if (queue == null) queue = new LinkedBlockingQueue<DeliveryData>();
+        if (message_id_sdata_table == null)  message_id_sdata_table = new Hashtable<Long, SubmitData>();
 
         scheduler.scheduleWithFixedDelay(new Runnable() {
 
@@ -92,9 +92,9 @@ public class Connection {
         log.debug("Initialize scheduler with resend interval " + t + " sec.");
     }
 
-    void send(DeliveryReceiptData data){
+    void send(DeliveryData data){
 
-        if (queue == null) queue = new LinkedBlockingQueue<DeliveryReceiptData>();
+        if (queue == null) queue = new LinkedBlockingQueue<DeliveryData>();
 
         try{
              queue.add(data);
@@ -129,7 +129,7 @@ public class Connection {
                     log.debug(name+"_con, available="+available);
                     for(int i=0; i < available; i++){
 
-                        DeliveryReceiptData data = queue.poll();
+                        DeliveryData data = queue.poll();
 
                         if (data != null){
 
@@ -185,7 +185,7 @@ public class Connection {
                                 data.setFirstSendingTime(first_sending_time);
                                 data.setLastResendTime(first_sending_time);
 
-                                data.setStatus(DeliveryReceiptData.Status.SEND);
+                                data.setStatus(DeliveryData.Status.SEND);
                                 sn_data_table.put(sn, data);
 
                                 try {
@@ -200,7 +200,7 @@ public class Connection {
                                 data.setFirstSendingTime(first_sending_time);
                                 data.setLastResendTime(first_sending_time);
 
-                                data.setStatus(DeliveryReceiptData.Status.NOT_SEND);
+                                data.setStatus(DeliveryData.Status.NOT_SEND);
                                 sn_data_table.put(sn, data);
 
                                 try {
@@ -232,7 +232,7 @@ public class Connection {
             for(Integer sn: sn_data_table.keySet()){
 
 
-                DeliveryReceiptData data = sn_data_table.get(sn);
+                DeliveryData data = sn_data_table.get(sn);
 
                 long message_id = data.getMessageId();
                 Provider provider = Config.getInstance().getProvider(name);
@@ -276,16 +276,16 @@ public class Connection {
 
             for (Integer sn : max_timeout_expired_sequence_numbers) {
 
-                DeliveryReceiptData data = sn_data_table.remove(sn);
+                DeliveryData data = sn_data_table.remove(sn);
                 log.debug(name+"_connection: remove " + data.getMessageId() + "_message from "+name+"sn_data_table");
-                data.setStatus(DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT);
+                data.setStatus(DeliveryData.Status.EXPIRED_MAX_TIMEOUT);
                 try {
                     Journal.getInstance().write(data);
                 } catch (CouldNotWriteToJournalException e) {
                     log.error(e);
                 }
                 log.debug(name+"_connection: Remove deliver receipt data with sequence number " + sn + " and message id " +
-                    data.getMessageId() + " from memory and write to journal with status " + DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT +
+                    data.getMessageId() + " from memory and write to journal with status " + DeliveryData.Status.EXPIRED_MAX_TIMEOUT +
                     ", table size "+sn_data_table.size()+".");
 
             }
@@ -293,9 +293,9 @@ public class Connection {
             for (Integer sn : timeout_expired_sequence_numbers) {
                 if (!max_timeout_expired_sequence_numbers.contains(sn)) {
 
-                    DeliveryReceiptData data = sn_data_table.remove(sn);
+                    DeliveryData data = sn_data_table.remove(sn);
                     log.warn(name+"_connection: DeliverSM with sequence number " + sn + " expired. There was no DeliverSMResp within " + response_timeout + " seconds. ");
-                    data.setStatus(DeliveryReceiptData.Status.EXPIRED_TIMEOUT);
+                    data.setStatus(DeliveryData.Status.EXPIRED_TIMEOUT);
 
                     try {
                         Journal.getInstance().write(data);
@@ -327,7 +327,7 @@ public class Connection {
 
                         long send_receipt_time = System.currentTimeMillis();
                         data.setLastResendTime(send_receipt_time);
-                        data.setStatus(DeliveryReceiptData.Status.SEND);
+                        data.setStatus(DeliveryData.Status.SEND);
 
                         sn_data_table.put(new_sn, data);
                         log.debug(name+"_connection: remember data: " + new_sn + " --> " + data +", table size: "+sn_data_table.size());
@@ -342,7 +342,7 @@ public class Connection {
 
                         long send_receipt_time = System.currentTimeMillis();
                         data.setLastResendTime(send_receipt_time);
-                        data.setStatus(DeliveryReceiptData.Status.NOT_SEND);
+                        data.setStatus(DeliveryData.Status.NOT_SEND);
 
                         sn_data_table.put(new_sn, data);
                         try {
@@ -357,7 +357,7 @@ public class Connection {
             }
 
             // Remove expired data from queue.
-            for (DeliveryReceiptData data : queue) {
+            for (DeliveryData data : queue) {
                 long init_time = data.getInitTime();
 
                 long dif = current_time - init_time;
@@ -366,7 +366,7 @@ public class Connection {
                     queue.remove(data);
                     log.debug(name+"_connection: remove " + data.getMessageId() + "_queue_data from " + name + "_queue.");
 
-                    data.setStatus(DeliveryReceiptData.Status.DELETED);
+                    data.setStatus(DeliveryData.Status.DELETED);
                     try {
                         journal.write(data);
                     } catch (CouldNotWriteToJournalException e) {
@@ -395,11 +395,11 @@ public class Connection {
             log.debug("receive DeliverSMResp: con="+connection+", sn=" + sequence_number+", status="+status);
 
             if (status == mobi.eyeline.smpp.api.types.Status.OK){
-                DeliveryReceiptData data = sn_data_table.remove(sequence_number);
+                DeliveryData data = sn_data_table.remove(sequence_number);
                 if (data != null) {
                     log.debug("Remove from memory deliver receipt data with sequence number " + sequence_number + " .");
 
-                    data.setStatus(DeliveryReceiptData.Status.DONE);
+                    data.setStatus(DeliveryData.Status.DONE);
                     try {
                         Journal.getInstance().write(data);
                     } catch (CouldNotWriteToJournalException e) {
@@ -409,11 +409,11 @@ public class Connection {
                     log.warn("Couldn't find deliver receipt data with sequence number " + sequence_number);
                 }
             } else if (status == mobi.eyeline.smpp.api.types.Status.RX_P_APPN) {
-                DeliveryReceiptData data = sn_data_table.remove(sequence_number);
+                DeliveryData data = sn_data_table.remove(sequence_number);
                 if (data != null) {
                     log.debug("Remove from memory deliver receipt data with sequence number " + sequence_number + " .");
 
-                    data.setStatus(DeliveryReceiptData.Status.PERM_ERROR);
+                    data.setStatus(DeliveryData.Status.PERM_ERROR);
                     try {
                         Journal.getInstance().write(data);
                     } catch (CouldNotWriteToJournalException e) {
@@ -436,8 +436,8 @@ public class Connection {
     public void close(){
 
         while(!queue.isEmpty()){
-            DeliveryReceiptData data = queue.poll();
-            data.setStatus(DeliveryReceiptData.Status.DELETED);
+            DeliveryData data = queue.poll();
+            data.setStatus(DeliveryData.Status.DELETED);
             try {
                 Journal.getInstance().write(data);
             } catch (CouldNotWriteToJournalException e) {
@@ -446,8 +446,8 @@ public class Connection {
         }
 
         for(Integer sn: sn_data_table.keySet()){
-            DeliveryReceiptData data = sn_data_table.get(sn);
-            data.setStatus(DeliveryReceiptData.Status.DELETED);
+            DeliveryData data = sn_data_table.get(sn);
+            data.setStatus(DeliveryData.Status.DELETED);
             try {
                 Journal.getInstance().write(data);
             } catch (CouldNotWriteToJournalException e) {
@@ -468,11 +468,11 @@ public class Connection {
         this.send_receipt_max_time = send_receipt_max_time;
     }
 
-    public void setSubmitDate(SubmitSMData sdata){
+    public void setSubmitDate(SubmitData sdata){
         message_id_sdata_table.put(sdata.getMessageId(), sdata);
     }
 
-    public SubmitSMData removeSubmitSMData(long message_id){
+    public SubmitData removeSubmitSMData(long message_id){
         return message_id_sdata_table.remove(message_id);
     }
 

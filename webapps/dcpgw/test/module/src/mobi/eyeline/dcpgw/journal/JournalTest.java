@@ -46,7 +46,7 @@ public class JournalTest extends T {
 
     @Test
     public void getO1writeTest() throws Exception {
-        DeliveryReceiptData e = createStaticData();
+        DeliveryData e = createStaticData();
         journal.write(e);
 
         BufferedReader br = new BufferedReader(new FileReader(j1));
@@ -54,7 +54,7 @@ public class JournalTest extends T {
         br.close();
 
         Assert.assertNotNull("Journal file is empty.", line);
-        DeliveryReceiptData d = DeliveryReceiptData.parse(line);
+        DeliveryData d = DeliveryData.parse(line);
 
         boolean isEquals = e.equals(d);
         Assert.assertTrue("Journal write doesn't work.", isEquals);
@@ -62,9 +62,9 @@ public class JournalTest extends T {
 
     @Test
     public void get020loadTest() throws Exception {
-        Hashtable<Integer, DeliveryReceiptData> t1 = new Hashtable<Integer, DeliveryReceiptData>();
+        Hashtable<Integer, DeliveryData> t1 = new Hashtable<Integer, DeliveryData>();
         for(int i=0; i<100; i++){
-            DeliveryReceiptData d = createData();
+            DeliveryData d = createData();
             registerTestObject(d);
             t1.put(d.getSequenceNumber(), d);
             journal.write(d);
@@ -72,11 +72,11 @@ public class JournalTest extends T {
 
         journal.load();
 
-        Hashtable<Integer, DeliveryReceiptData> sn_data_store = journal.getDataTable(con);
+        Hashtable<Integer, DeliveryData> sn_data_store = journal.getDataTable(con);
 
         for(Integer sn: t1.keySet()) {
-            DeliveryReceiptData expected = t1.get(sn);
-            DeliveryReceiptData loaded = sn_data_store.get(sn);
+            DeliveryData expected = t1.get(sn);
+            DeliveryData loaded = sn_data_store.get(sn);
             Assert.assertNotNull("Loaded data is null.", loaded);
 
             boolean isEquals = expected.equals(loaded);
@@ -86,33 +86,33 @@ public class JournalTest extends T {
 
     @Test
     public void get021loadTest() throws Exception {
-        DeliveryReceiptData d = createData();
+        DeliveryData d = createData();
         journal.write(d);
 
-        d.setStatus(DeliveryReceiptData.Status.EXPIRED_TIMEOUT);
+        d.setStatus(DeliveryData.Status.EXPIRED_TIMEOUT);
         journal.write(d);
 
-        DeliveryReceiptData d1 = createData();
+        DeliveryData d1 = createData();
         journal.write(d1);
 
-        d1.setStatus(DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT);
+        d1.setStatus(DeliveryData.Status.EXPIRED_MAX_TIMEOUT);
         journal.write(d1);
 
-        DeliveryReceiptData d2 = createData();
+        DeliveryData d2 = createData();
         journal.write(d2);
 
-        d2.setStatus(DeliveryReceiptData.Status.DONE);
+        d2.setStatus(DeliveryData.Status.DONE);
         journal.write(d2);
 
-        DeliveryReceiptData d3 = createData();
+        DeliveryData d3 = createData();
         journal.write(d3);
 
-        d3.setStatus(DeliveryReceiptData.Status.DELETED);
+        d3.setStatus(DeliveryData.Status.DELETED);
         journal.write(d3);
 
         journal.load();
 
-        Hashtable<Integer, DeliveryReceiptData> sn_data_store = journal.getDataTable(con);
+        Hashtable<Integer, DeliveryData> sn_data_store = journal.getDataTable(con);
 
         Assert.assertTrue("Not all objects was removed.", sn_data_store.size() == 0);
     }
@@ -120,13 +120,13 @@ public class JournalTest extends T {
     @Test
     public void get022loadTest() throws Exception {
         String con = "con";
-        DeliveryReceiptData expected = createInitialData();
+        DeliveryData expected = createInitialData();
         journal.write(expected);
 
         journal.load();
 
-        LinkedBlockingQueue<DeliveryReceiptData> queue = journal.getDataQueue(con);
-        DeliveryReceiptData loaded = queue.poll();
+        LinkedBlockingQueue<DeliveryData> queue = journal.getDataQueue(con);
+        DeliveryData loaded = queue.poll();
 
         boolean isEquals = expected.equals(loaded);
         Assert.assertTrue("Expected and loaded data objects differ.", isEquals);
@@ -134,22 +134,22 @@ public class JournalTest extends T {
 
     @Test
     public void get03cleanTest() throws Exception{
-        DeliveryReceiptData d = createUniqueData(DeliveryReceiptData.Status.SEND);
+        DeliveryData d = createUniqueData(DeliveryData.Status.SEND);
         journal.write(d);
-        d.setStatus(DeliveryReceiptData.Status.DONE);
+        d.setStatus(DeliveryData.Status.DONE);
         journal.write(d);
 
-        DeliveryReceiptData d1 = createUniqueData(DeliveryReceiptData.Status.SEND);
+        DeliveryData d1 = createUniqueData(DeliveryData.Status.SEND);
         journal.write(d1);
-        d1.setStatus(DeliveryReceiptData.Status.EXPIRED_TIMEOUT);
+        d1.setStatus(DeliveryData.Status.EXPIRED_TIMEOUT);
         journal.write(d1);
 
-        DeliveryReceiptData d2 = createUniqueData(DeliveryReceiptData.Status.SEND);
+        DeliveryData d2 = createUniqueData(DeliveryData.Status.SEND);
         journal.write(d2);
-        d2.setStatus(DeliveryReceiptData.Status.EXPIRED_MAX_TIMEOUT);
+        d2.setStatus(DeliveryData.Status.EXPIRED_MAX_TIMEOUT);
         journal.write(d2);
 
-        journal.clean();
+        journal.cleanDeliveryJournal();
 
         boolean empty1 = j1.length() == 0;
         Assert.assertTrue("First journal not empty.", empty1);
@@ -160,13 +160,13 @@ public class JournalTest extends T {
 
     @Test
     public void get04cleanTest() throws Exception{
-        DeliveryReceiptData expected1 = createUniqueData(DeliveryReceiptData.Status.SEND);
+        DeliveryData expected1 = createUniqueData(DeliveryData.Status.SEND);
         journal.write(expected1);
 
-        DeliveryReceiptData expected2 = createUniqueData(DeliveryReceiptData.Status.NOT_SEND);
+        DeliveryData expected2 = createUniqueData(DeliveryData.Status.NOT_SEND);
         journal.write(expected2);
 
-        journal.clean();
+        journal.cleanDeliveryJournal();
 
         boolean empty = j1.length() == 0;
         Assert.assertTrue("First journal not empty.", empty);
@@ -178,27 +178,27 @@ public class JournalTest extends T {
         Assert.assertNotNull("Couldn't first read line.", line1);
         Assert.assertNotNull("Couldn't second read line.", line2);
 
-        DeliveryReceiptData loaded1 = DeliveryReceiptData.parse(line1);
+        DeliveryData loaded1 = DeliveryData.parse(line1);
         boolean isEquals = expected1.equals(loaded1);
         Assert.assertTrue("First data object wrong.", isEquals);
 
-        DeliveryReceiptData loaded2 = DeliveryReceiptData.parse(line2);
+        DeliveryData loaded2 = DeliveryData.parse(line2);
         isEquals = expected2.equals(loaded2);
         Assert.assertTrue("Second data object wrong.", isEquals);
     }
 
     @Test
     public void get05cleanTest() throws Exception{
-        DeliveryReceiptData d = createUniqueData(DeliveryReceiptData.Status.SEND);
+        DeliveryData d = createUniqueData(DeliveryData.Status.SEND);
         journal.write(d);
 
-        d.setStatus(DeliveryReceiptData.Status.EXPIRED_TIMEOUT);
+        d.setStatus(DeliveryData.Status.EXPIRED_TIMEOUT);
         journal.write(d);
 
-        DeliveryReceiptData expected = createUniqueData(DeliveryReceiptData.Status.SEND);
+        DeliveryData expected = createUniqueData(DeliveryData.Status.SEND);
         journal.write(expected);
 
-        journal.clean();
+        journal.cleanDeliveryJournal();
 
         boolean empty = j1.length() == 0;
         Assert.assertTrue("First journal not empty.", empty);
@@ -208,23 +208,23 @@ public class JournalTest extends T {
         br.close();
         Assert.assertNotNull("Couldn't read first line.", line);
 
-        d = DeliveryReceiptData.parse(line);
+        d = DeliveryData.parse(line);
         boolean isEquals = expected.equals(d);
-        Assert.assertTrue("DeliveryReceiptData object wrong.", isEquals);
+        Assert.assertTrue("DeliveryData object wrong.", isEquals);
     }
 
     @Test
     public void get06cleanTest() throws Exception{
-        DeliveryReceiptData d = createUniqueData(DeliveryReceiptData.Status.INIT);
+        DeliveryData d = createUniqueData(DeliveryData.Status.INIT);
         journal.write(d);
 
-        d.setStatus(DeliveryReceiptData.Status.SEND);
+        d.setStatus(DeliveryData.Status.SEND);
         journal.write(d);
 
-        d.setStatus(DeliveryReceiptData.Status.DONE);
+        d.setStatus(DeliveryData.Status.DONE);
         journal.write(d);
 
-        journal.clean();
+        journal.cleanDeliveryJournal();
 
         boolean empty = j1.length() == 0;
         Assert.assertTrue("First journal not empty.", empty);
@@ -235,13 +235,13 @@ public class JournalTest extends T {
 
     @Test
     public void get07cleanTest() throws Exception{
-        DeliveryReceiptData d = createUniqueData(DeliveryReceiptData.Status.INIT);
+        DeliveryData d = createUniqueData(DeliveryData.Status.INIT);
         journal.write(d);
 
-        d.setStatus(DeliveryReceiptData.Status.SEND);
+        d.setStatus(DeliveryData.Status.SEND);
         journal.write(d);
 
-        journal.clean();
+        journal.cleanDeliveryJournal();
 
         boolean empty = j1.length() == 0;
         Assert.assertTrue("First journal not empty.", empty);
@@ -251,9 +251,9 @@ public class JournalTest extends T {
         br.close();
         Assert.assertNotNull("Couldn't read first line.", line);
 
-        DeliveryReceiptData loaded = DeliveryReceiptData.parse(line);
+        DeliveryData loaded = DeliveryData.parse(line);
         boolean isEquals = d.equals(loaded);
-        Assert.assertTrue("DeliveryReceiptData object wrong.", isEquals);
+        Assert.assertTrue("DeliveryData object wrong.", isEquals);
     }
 
     @After

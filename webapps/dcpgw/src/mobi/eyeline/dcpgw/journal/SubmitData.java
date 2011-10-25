@@ -11,7 +11,7 @@ import java.util.Date;
  * Date: 21.10.11
  * Time: 12:10
  */
-public class SubmitSMData extends Data {
+public class SubmitData extends Data {
 
     private Status status;
 
@@ -55,13 +55,13 @@ public class SubmitSMData extends Data {
 
     }
 
-    public static String format(SubmitSMData data){
+    public static String format(SubmitData data){
         Date date = Functions.convertTime(data.getSubmitDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
         return data.getMessageId() + sep + data.connection_name + sep + sdf.format(date) + sep + data.getStatus();
     }
 
-    public static SubmitSMData parse(String s) throws ParseException {
-        SubmitSMData data = new SubmitSMData();
+    public static SubmitData parse(String s) throws ParseException {
+        SubmitData data = new SubmitData();
         String[] ar = s.split(sep);
 
         long message_id = Long.parseLong(ar[0]);
@@ -81,7 +81,7 @@ public class SubmitSMData extends Data {
     }
 
     public String toString(){
-        return "SubmitSMData{message_id="+message_id+", con="+connection_name+", submit date="+sdf.format(submit_date)+", status="+status+"}";
+        return "SubmitData{message_id="+message_id+", con="+connection_name+", submit date="+sdf.format(submit_date)+", status="+status+"}";
     }
 
 

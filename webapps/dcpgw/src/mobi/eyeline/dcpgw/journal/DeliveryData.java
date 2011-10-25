@@ -15,7 +15,7 @@ import java.util.Date;
  * Date: 10.07.11
  * Time: 19:42
  */
-public class DeliveryReceiptData extends Data implements Cloneable{
+public class DeliveryData extends Data implements Cloneable{
 
     private Long init_time;
 
@@ -97,7 +97,7 @@ public class DeliveryReceiptData extends Data implements Cloneable{
             last_resending_date = cal.getTime();
         }
 
-        return "DeliveryReceiptData{message_id: " + message_id +
+        return "DeliveryData{message_id: " + message_id +
                 ", init date: " + sdf.format(init_date) +
                 ", first sending date: " + (first_sending_date != null ? sdf.format(first_sending_date) : "N/A") +
                 ", last resending date: " + (last_resending_date != null ? sdf.format(last_resending_date) : "N/A") +
@@ -145,8 +145,8 @@ public class DeliveryReceiptData extends Data implements Cloneable{
         return status;
     }
 
-    public static DeliveryReceiptData parse(String line) throws ParseException, InvalidAddressFormatException {
-        DeliveryReceiptData data = new DeliveryReceiptData();
+    public static DeliveryData parse(String line) throws ParseException, InvalidAddressFormatException {
+        DeliveryData data = new DeliveryData();
         String[] ar = line.split(sep);
 
         Date date = sdf.parse(ar[0]);
@@ -204,7 +204,7 @@ public class DeliveryReceiptData extends Data implements Cloneable{
         return data;
     }
 
-    public static String format(DeliveryReceiptData data){
+    public static String format(DeliveryData data){
 
         Date init_date = Functions.convertTime(new Date(data.getInitTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
 
@@ -235,7 +235,7 @@ public class DeliveryReceiptData extends Data implements Cloneable{
                data.getStatus();
     }
 
-    public boolean equals(DeliveryReceiptData data){
+    public boolean equals(DeliveryData data){
 
         boolean b1;
         if (first_sending_time != null){
@@ -274,8 +274,8 @@ public class DeliveryReceiptData extends Data implements Cloneable{
         );
     }
 
-    public DeliveryReceiptData clone() throws CloneNotSupportedException {
-        DeliveryReceiptData d = (DeliveryReceiptData) super.clone();
+    public DeliveryData clone() throws CloneNotSupportedException {
+        DeliveryData d = (DeliveryData) super.clone();
         d.setMessageId(message_id);
         d.setStatus(status);
         d.setSequenceNumber(sequence_number);
