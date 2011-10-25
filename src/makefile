@@ -80,7 +80,9 @@ endif
 else
 SSL_LIB_DIR:=/usr/lib
 ifeq ($(B64),YES)
+ifneq ($(filter-out Darwin,$(OSNAME)),)
 SSL_LIB_DIR:=/usr/lib/64
+endif
 endif
 endif
 
