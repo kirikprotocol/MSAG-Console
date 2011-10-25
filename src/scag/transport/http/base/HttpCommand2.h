@@ -145,7 +145,7 @@ public:
     chunked(false),
     chunk_size(0),
     serial_(makeSerial()),
-    closeConnect_(false),
+    closeConnect_(true),
     keepAlive(0)
     {}
     virtual ~HttpCommand();
