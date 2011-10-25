@@ -111,8 +111,10 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
   }
 
   private void synchronizeError(FileResource resource) throws AdminException {
-    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     List<File> errorFiles = helper.listFiles(localCopy, ERROR);
+    if (errorFiles.isEmpty())
+      return;
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     for (File localErrorFile : errorFiles) {
       String csvFile = csvFileFromWorkFile(localErrorFile.getName());
       if (remoteFiles.contains(csvFile)) {
@@ -125,8 +127,10 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
   }
 
   private void synchronizeInProcess(FileResource resource) throws AdminException {
-    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     List<File> inProcessFiles = helper.listFiles(localCopy, IN_PROCESS);
+    if (inProcessFiles.isEmpty())
+      return;
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     for (File localInProcessFile : inProcessFiles) {
       String csvFile = csvFileFromWorkFile(localInProcessFile.getName());
       if (remoteFiles.contains(csvFile)) {
@@ -182,8 +186,10 @@ public class DetailedPeriodSaveStrategy implements ResourceProcessStrategy{
 
 
   private void synchronizeFinished(FileResource resource) throws AdminException {
-    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     List<File> finishedFiles = helper.listFiles(localCopy, FINISHED);
+    if (finishedFiles.isEmpty())
+      return;
+    Collection<String> remoteFiles = new HashSet<String>(resource.listFiles());
     Collections.shuffle(finishedFiles);
     long start = System.currentTimeMillis();
     for(File localFinishedFile : finishedFiles) {
