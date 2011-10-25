@@ -144,6 +144,8 @@ public class Journal {
 
         File[] journals = {j2, j1};
 
+        Hashtable<String, LinkedHashMap<Long, DeliveryData>> connection_message_id_data_table = new Hashtable<String, LinkedHashMap<Long, DeliveryData>>();
+
         for(File f: journals){
             if (f.exists()){
                 log.debug("Read file "+f.getName());
@@ -164,20 +166,23 @@ public class Journal {
                             }
 
                             DeliveryData.Status status = data.getStatus();
-
+                            long message_id = data.getMessageId();
                             String connection = data.getConnectionName();
-                            if (status == DeliveryData.Status.INIT){
+
+                            // In memory states: SEND, INIT, RESEND.
+
+                            if (status == DeliveryData.Status.INIT || status == DeliveryData.Status.RESEND){
 
                                 if (!connection_data_queue_table.containsKey(connection))
                                     connection_data_queue_table.put(connection, new LinkedBlockingQueue<DeliveryData>());
 
+                                if (!connection_message_id_data_table.containsKey(connection))
+                                    connection_message_id_data_table.put(connection, new LinkedHashMap<Long, DeliveryData>());
 
-                                try {
-                                    connection_data_queue_table.get(connection).put(data);
-                                } catch (InterruptedException e) {
-                                    throw new CouldNotLoadJournalException(e);
-                                }
-                            } else {
+                                LinkedHashMap<Long, DeliveryData> message_id_data_map = connection_message_id_data_table.get(connection);
+                                message_id_data_map.put(message_id, data);
+
+                            } else if (status == DeliveryData.Status.SEND) {
 
                                 Integer sequence_number = data.getSequenceNumber();
 
@@ -186,17 +191,19 @@ public class Journal {
 
                                 if (status == DeliveryData.Status.DONE
                                         || status == DeliveryData.Status.EXPIRED_MAX_TIMEOUT
-                                            ||  status == DeliveryData.Status.EXPIRED_TIMEOUT
-                                                || status == DeliveryData.Status.DELETED){
+                                        || status == DeliveryData.Status.EXPIRED_TIMEOUT
+                                        || status == DeliveryData.Status.TEMP_ERROR
+                                        || status == DeliveryData.Status.PERM_ERROR
+                                        || status == DeliveryData.Status.DELETED              ){
 
                                     connection_sn_data_store.get(connection).remove(sequence_number);
-                                    log.debug("remove from memory data: con="+connection+", sn="+sequence_number);
+                                    log.debug("remove from memory delivery data: con="+connection+", sn="+sequence_number);
 
-                                } else {
+                                } else if (status == DeliveryData.Status.SEND) {
 
                                     connection_sn_data_store.get(connection).put(sequence_number, data);
 
-                                    log.debug("add to memory: " + data.toString());
+                                    log.debug("add to the table: " + data.toString());
                                 }
                             }
                         }
@@ -206,6 +213,17 @@ public class Journal {
                     log.error(e);
                     throw new CouldNotLoadJournalException(e);
                 }
+            }
+        }
+
+        // Add last delivery data with INIT and RESEND status to the queues.
+        for(String connection: connection_message_id_data_table.keySet()){
+            LinkedHashMap<Long, DeliveryData> message_id_data_map = connection_message_id_data_table.get(connection);
+            LinkedBlockingQueue<DeliveryData> queue = connection_data_queue_table.get(connection);
+            for(Long message_id: message_id_data_map.keySet()){
+                DeliveryData data = message_id_data_map.get(message_id);
+                queue.add(data);
+                log.debug("add to queue: "+data);
             }
         }
 
@@ -317,7 +335,7 @@ public class Journal {
                         log.debug("Initialize buffered writer for journal "+j1.getName());
                     }
                     bw.write(s + "\n");
-                    log.debug("write: "+s);
+                    //log.debug("write: "+s);
                 } catch (IOException e) {
                     log.error("Could not append a string to the file "+ j1.getName(), e);
                     throw new CouldNotWriteToJournalException(e);
@@ -426,12 +444,10 @@ public class Journal {
                 }
 
                 if (j2.length() == 0){
-                    log.debug("Delivery journal "+j2.getName()+ "is empty.");
+                    log.debug("Delivery journal "+j2.getName()+ " is empty.");
                     return;
                 }
             }
-
-
 
             if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
 
@@ -440,9 +456,11 @@ public class Journal {
             Set<Long> done_message_ids = new HashSet<Long>();
             Set<Long> perm_errors_message_ids = new HashSet<Long>();
             Set<Long> expired_max_messages_ids = new HashSet<Long>();
-            Set<Integer> sequence_numbers = new HashSet<Integer>();
-            Set<Long> processed_message_ids = new HashSet<Long>();
+            Set<Integer> expired_sequence_numbers = new HashSet<Integer>();
+            Set<Integer> temp_error_sequence_numbers = new HashSet<Integer>();
+            Set<Long> sended_message_ids = new HashSet<Long>();
             Set<Long> deleted_messages_ids = new HashSet<Long>();
+            Hashtable<Long, Long> resended_message_id_last_resend_time_table = new Hashtable<Long, Long>();
 
             buffReader1 = new BufferedReader (new FileReader(j2));
 
@@ -454,38 +472,37 @@ public class Journal {
                     continue;
                 }
 
-                String[] ar = line.split(sep);
-
                 DeliveryData data;
                 try {
                     data = DeliveryData.parse(line);
+                    //log.debug("read data:"+data);
                 } catch (Exception e) {
                     log.debug("Couldn't parse journal line: "+line, e);
                     continue;
                 }
 
-                long message_id = data.message_id;
+                long message_id = data.getMessageId();
                 DeliveryData.Status status = data.getStatus();
 
-                if (status == DeliveryData.Status.DONE || status == DeliveryData.Status.EXPIRED_MAX_TIMEOUT) {
+                if (status == DeliveryData.Status.DONE) {
                     done_message_ids.add(message_id);
-                    //log.debug("finished: message_id="+message_id);
                 } else if (status == DeliveryData.Status.PERM_ERROR){
                     perm_errors_message_ids.add(message_id);
-                    //log.debug("perm error: message_id="+message_id);
                 } else if (status == DeliveryData.Status.DELETED){
                     deleted_messages_ids.add(message_id);
-                    //log.debug("deleted: message_id="+message_id);
                 } else if (status == DeliveryData.Status.EXPIRED_MAX_TIMEOUT){
                     expired_max_messages_ids.add(message_id);
-                    //log.debug("expired_max: message_id="+message_id);
                 } else if (status == DeliveryData.Status.EXPIRED_TIMEOUT){
-                    int sequence_number = Integer.parseInt(ar[4]);
-                    sequence_numbers.add(sequence_number);
-                    //log.debug("expired: sn="+sequence_number);
-                } else if (status == DeliveryData.Status.SEND || status == DeliveryData.Status.NOT_SEND){
-                    processed_message_ids.add(message_id);
-                    //log.debug("processed: message_id="+message_id);
+                    int sequence_number = data.getSequenceNumber();
+                    expired_sequence_numbers.add(sequence_number);
+                } else if (status == DeliveryData.Status.TEMP_ERROR){
+                    int sequence_number = data.getSequenceNumber();
+                    temp_error_sequence_numbers.add(sequence_number);
+                } else if (status == DeliveryData.Status.SEND ){
+                    sended_message_ids.add(message_id);
+                } else if (status == DeliveryData.Status.RESEND){
+                    long last_resend_time = data.getLastResendTime();
+                    resended_message_id_last_resend_time_table.put(message_id, last_resend_time);
                 }
 
             }
@@ -497,8 +514,6 @@ public class Journal {
 
             while((line = buffReader2.readLine()) != null){
 
-                String[] ar = line.split(sep);
-
                 if (line.isEmpty()){
                     log.error("Delivery journal contains empty line!!!");
                     continue;
@@ -507,29 +522,49 @@ public class Journal {
                 DeliveryData data;
                 try {
                     data = DeliveryData.parse(line);
+                    //log.debug("read data:"+data);
                 } catch (Exception e) {
                     log.debug("Couldn't parse journal line: "+line, e);
                     continue;
                 }
 
-                long message_id = data.message_id;
+                long message_id = data.getMessageId();
                 DeliveryData.Status status = data.getStatus();
 
                 if (status == DeliveryData.Status.INIT){
 
-                    if (!processed_message_ids.contains(message_id) && !deleted_messages_ids.contains(message_id)){
+                    if (!sended_message_ids.contains(message_id)
+                            && !deleted_messages_ids.contains(message_id)
+                            && !resended_message_id_last_resend_time_table.containsKey(message_id)
+                            && !expired_max_messages_ids.contains(message_id)){
                         //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                         bwt.write(line+"\n");
                         counter++;
                     }
 
-                } else if (status == DeliveryData.Status.SEND || status == DeliveryData.Status.NOT_SEND) {
-                    int sequence_number = Integer.parseInt(ar[4]);
-                    if (!done_message_ids.contains(message_id)
-                        && !sequence_numbers.contains(sequence_number)
+                } else if (status == DeliveryData.Status.RESEND){
+
+                    long last_resend_time = data.getLastResendTime();
+
+                    if (last_resend_time == resended_message_id_last_resend_time_table.get(message_id)
+                            && !sended_message_ids.contains(message_id)
                             && !deleted_messages_ids.contains(message_id)
-                                && !expired_max_messages_ids.contains(message_id)
-                                    && !perm_errors_message_ids.contains(message_id)){
+                            && !expired_max_messages_ids.contains(message_id)){
+                        bwt.write(line+"\n");
+                        counter++;
+                    }
+
+                } else if (status == DeliveryData.Status.SEND) {
+
+                    int sequence_number = data.getSequenceNumber();
+
+                    if (!done_message_ids.contains(message_id)
+                        && !deleted_messages_ids.contains(message_id)
+                        && !expired_max_messages_ids.contains(message_id)
+                        && !perm_errors_message_ids.contains(message_id)
+
+                        && !expired_sequence_numbers.contains(sequence_number)
+                        && !temp_error_sequence_numbers.contains(sequence_number) ){
                         //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                         bwt.write(line+"\n");
                         counter++;
@@ -634,7 +669,7 @@ public class Journal {
                 }
 
                 if (sdj2.length() == 0){
-                    log.debug("Submit journal "+j2.getName()+ "is empty.");
+                    log.debug("Submit journal "+j2.getName()+ " is empty.");
                     return;
                 }
             }

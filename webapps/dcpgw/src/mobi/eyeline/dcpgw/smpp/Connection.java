@@ -200,8 +200,8 @@ public class Connection {
                                 data.setFirstSendingTime(first_sending_time);
                                 data.setLastResendTime(first_sending_time);
 
-                                data.setStatus(DeliveryData.Status.NOT_SEND);
-                                sn_data_table.put(sn, data);
+                                data.setStatus(DeliveryData.Status.RESEND);
+                                queue.add(data);
 
                                 try {
                                     Journal.getInstance().write(data);
@@ -230,7 +230,6 @@ public class Connection {
             HashSet<Integer> max_timeout_expired_sequence_numbers = new HashSet<Integer>();
 
             for(Integer sn: sn_data_table.keySet()){
-
 
                 DeliveryData data = sn_data_table.get(sn);
 
@@ -303,53 +302,13 @@ public class Connection {
                         log.error(e);
                     }
 
-                    DeliverSM deliverSM = new DeliverSM();
-                    deliverSM.setEsmMessageType(EsmMessageType.DeliveryReceipt);
-                    deliverSM.setSourceAddress(data.getSourceAddress());
-                    deliverSM.setDestinationAddress(data.getDestinationAddress());
-                    deliverSM.setConnectionName(data.getConnectionName());
-
-                    int new_sn = Server.getInstance().getReceiptSequenceNumber();
-                    deliverSM.setSequenceNumber(new_sn);
-
-                    String message = "id:" + data.getMessageId() +
-                                    " dlvrd:" + data.getNsms() +
-                                    " submit date:" + sdf.format(data.getSubmitDate()) +
-                                    " done date:" + sdf.format(data.getDoneDate()) +
-                                    " stat:" + data.getFinalMessageState();
-
-                    log.debug(name+"_connection: Receipt "+data.getMessageId()+"_message: " + message);
-                    deliverSM.setMessage(message);
+                    data.setStatus(DeliveryData.Status.RESEND);
+                    queue.add(data);
 
                     try {
-                        Server.getInstance().send(deliverSM, false);
-                        log.debug(name+"_connection: resend DeliverSM: sn=" + new_sn + ", message_id=" + data.getMessageId());
-
-                        long send_receipt_time = System.currentTimeMillis();
-                        data.setLastResendTime(send_receipt_time);
-                        data.setStatus(DeliveryData.Status.SEND);
-
-                        sn_data_table.put(new_sn, data);
-                        log.debug(name+"_connection: remember data: " + new_sn + " --> " + data +", table size: "+sn_data_table.size());
-
-                        try {
-                            Journal.getInstance().write(data);
-                        } catch (CouldNotWriteToJournalException e) {
-                                log.error(e);
-                        }
-                    } catch (SmppException e) {
-                        log.warn(e);
-
-                        long send_receipt_time = System.currentTimeMillis();
-                        data.setLastResendTime(send_receipt_time);
-                        data.setStatus(DeliveryData.Status.NOT_SEND);
-
-                        sn_data_table.put(new_sn, data);
-                        try {
-                            Journal.getInstance().write(data);
-                        } catch (CouldNotWriteToJournalException e2) {
-                            log.error(e2);
-                        }
+                        Journal.getInstance().write(data);
+                    } catch (CouldNotWriteToJournalException e) {
+                        log.error(e);
                     }
 
                 }
@@ -424,6 +383,25 @@ public class Connection {
                 }
             } else if (status == mobi.eyeline.smpp.api.types.Status.RX_T_APPN) {
                 log.debug("Handle DeliverSMResp with status "+status);
+
+                DeliveryData data = sn_data_table.remove(sequence_number);
+                data.setStatus(DeliveryData.Status.TEMP_ERROR);
+
+                try {
+                    Journal.getInstance().write(data);
+                } catch (CouldNotWriteToJournalException e) {
+                    log.error(e);
+                }
+
+                data.setStatus(DeliveryData.Status.RESEND);
+
+                queue.add(data);
+
+                try {
+                    Journal.getInstance().write(data);
+                } catch (CouldNotWriteToJournalException e) {
+                    log.error(e);
+                }
             } else {
                 log.error("Handle DeliverSMResp with unforeseen status "+status);
             }

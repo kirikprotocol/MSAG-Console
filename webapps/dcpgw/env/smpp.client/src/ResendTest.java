@@ -7,25 +7,21 @@ import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import mobi.eyeline.smpp.api.types.Status;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
- * Created by IntelliJ IDEA.
- * User: stepanov
- * Date: 18.10.11
- * Time: 14:30
- * To change this template use File | Settings | File Templates.
+ * Send SubmitSM and don't answer DeliverSMResp three time, then receive fourth DeliverSM answer DeliverSMResp with
+ * status OK.
+ * User: Stepanov Dmitry Nikolaevich
+ * Date: 28.02.11
+ * Time: 10:30
  */
-public class SendWithoutDeliverSMResp extends Thread implements PDUListener {
+public class ResendTest extends Thread implements PDUListener {
 
     static Logger logger = Logger.getLogger(Client.class);
     Properties config;
@@ -34,9 +30,11 @@ public class SendWithoutDeliverSMResp extends Thread implements PDUListener {
     private static String dest_address, source_address;
     private static long validity_period;
 
+    private int counter = 0;
+
     private static String con;
 
-    public SendWithoutDeliverSMResp() throws SmppException {
+    public ResendTest() throws SmppException {
         this.config = new Properties();
         try {
           InputStream is = this.getClass().getResourceAsStream("/config.properties");
@@ -80,7 +78,31 @@ public class SendWithoutDeliverSMResp extends Thread implements PDUListener {
 
             case DeliverSM:
 
-                return true;
+                counter++;
+                if (counter > 3){
+
+                    DeliverSM deliverSM = (DeliverSM) pdu;
+                    int sequence_number = deliverSM.getSequenceNumber();
+                    logger.debug("Handle DeliverSM pdu with sequence number "+sequence_number);
+
+                    DeliverSMResp resp = new DeliverSMResp();
+                    resp.setConnectionName(deliverSM.getConnectionName());
+                    resp.setSequenceNumber(deliverSM.getSequenceNumber());
+                    resp.setStatus(Status.OK);
+
+                    try{
+                        smppClient.send(resp);
+                        logger.debug("Resent test - OK");
+                        System.exit(0);
+                        return true;
+                    } catch (SmppException e){
+                        logger.error("Couldn't send DeliverSMResp.", e);
+                        return false;
+                    }
+
+                } else {
+                    return true;
+                }
 
             case SubmitSMResp:
 
@@ -93,39 +115,33 @@ public class SendWithoutDeliverSMResp extends Thread implements PDUListener {
                 }
 
         }
-        return true;
+        return false;
     }
 
     public static void main(String args[]){
         logger.debug("Start smpp client.");
         try{
-            final SendWithoutDeliverSMResp client = new SendWithoutDeliverSMResp();
-            int count = Integer.parseInt(args[0]);
-            for(int i=0; i < count; i++){
+            final ResendTest client = new ResendTest();
 
+            SubmitSM submitSM = new SubmitSM();
+            submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
 
-                    SubmitSM submitSM = new SubmitSM();
-                    submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
+            submitSM.setConnectionName(con);
 
-                    submitSM.setConnectionName(con);
+            DateFormat df = DateFormat.getDateTimeInstance();
+            Calendar cal = Calendar.getInstance();
+            Date date = cal.getTime();
 
-                    DateFormat df = DateFormat.getDateTimeInstance();
-                    Calendar cal = Calendar.getInstance();
-                    Date date = cal.getTime();
+            submitSM.setMessage("message from "+submitSM.getConnectionName()+", "+df.format(date));
 
-                    submitSM.setMessage("message from "+submitSM.getConnectionName()+", "+df.format(date));
-
-                    try{
-                        submitSM.setSourceAddress(source_address);
-                        submitSM.setDestinationAddress(dest_address);
-                    } catch (InvalidAddressFormatException e){
-                        logger.error(e);
-                    }
-                    submitSM.setValidityPeriod(1000 * validity_period);
-                    client.handlePDU(submitSM);
-
-
+            try{
+                submitSM.setSourceAddress(source_address);
+                submitSM.setDestinationAddress(dest_address);
+            } catch (InvalidAddressFormatException e){
+                logger.error(e);
             }
+            submitSM.setValidityPeriod(1000 * validity_period);
+            client.handlePDU(submitSM);
 
         } catch (SmppException e) {
             logger.error("", e);
@@ -136,5 +152,5 @@ public class SendWithoutDeliverSMResp extends Thread implements PDUListener {
     public void run() {
       if( smppClient != null ) smppClient.shutdown();
     }
-
 }
+

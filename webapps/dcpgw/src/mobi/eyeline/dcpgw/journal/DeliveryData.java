@@ -306,10 +306,11 @@ public class DeliveryData extends Data implements Cloneable{
         DONE,
         EXPIRED_TIMEOUT,
         EXPIRED_MAX_TIMEOUT,
-        NOT_SEND,
         INIT,
         DELETED,
-        PERM_ERROR
+        PERM_ERROR,
+        TEMP_ERROR,
+        RESEND
 
     }
 }
