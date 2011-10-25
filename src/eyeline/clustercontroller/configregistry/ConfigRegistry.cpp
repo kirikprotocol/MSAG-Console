@@ -58,7 +58,7 @@ void ConfigRegistry::update(ConfigType ct)
   store.WriteNetInt64(configUpdates[ct]);
 }
 
-void ConfigRegistry::get(std::vector<time_t>& value)
+void ConfigRegistry::get(std::vector<int64_t>& value)
 {
   value.insert(value.begin(),configUpdates,configUpdates+ctConfigsCount);
 }

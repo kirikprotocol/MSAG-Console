@@ -34,7 +34,7 @@ public:
     smscConfigsFlag=false;
     smscConfigs.clear();
   }
- 
+
   static int32_t messageGetTag()
   {
     return 1203;
@@ -335,7 +335,7 @@ public:
     seqNum=argValue;
   }
 
- 
+
 
 protected:
   //static const int8_t versionMajor=1;

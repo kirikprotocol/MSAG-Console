@@ -381,12 +381,12 @@ void ControllerProtocolHandler::handle(messages::LoggerSetCategories& msg)
   NetworkProtocol::getInstance()->enqueueCommand(connId,resp,false);
 }
 
-static void MsgToAclInfo(const messages::AclInfo& msg,smsc::acl::AclInfo& acl)
+/*static void MsgToAclInfo(const messages::AclInfo& msg,smsc::acl::AclInfo& acl)
 {
   acl.ident=msg.getId();
   acl.name=msg.getName();
   acl.description=msg.getDescription();
-}
+}*/
 
 static void AclToMsg(const smsc::acl::AclInfo& acl,messages::AclInfo& msg)
 {
@@ -909,7 +909,10 @@ struct UpdateSmeStatusOp{
           {
             it2->setConnType(messages::SmeConnectType::directConnect);
           }
-          it2->getStatusRef().insert(it2->getStatusRef().begin(),it->getStatus().begin(),it->getStatus().end());
+          if(it2->getConnType().getValue()!=messages::SmeConnectType::loadBalancer)
+          {
+            it2->getStatusRef().insert(it2->getStatusRef().begin(),it->getStatus().begin(),it->getStatus().end());
+          }
           found=true;
           break;
         }

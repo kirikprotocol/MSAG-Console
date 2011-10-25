@@ -35,7 +35,7 @@ public:
     return instance;
   }
   void update(ConfigType ct);
-  void get(std::vector<time_t>& value);
+  void get(std::vector<int64_t>& value);
 };
 
 }
