@@ -3395,6 +3395,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   time_t now=time(NULL);
   bool firstPart=false;
   bool multiPart=sms.hasBinProperty(Tag::SMSC_CONCATINFO);
+  bool expired=false;
 
   if(statusType!=CMD_OK && !dgortr)
   {
@@ -3404,7 +3405,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
        softLimit  //soft limit reached
        )
     {
-      sms.setLastResult(softLimit?Status::SCHEDULERLIMIT:Status::EXPIRED);
+      statusType=CMD_ERR_PERM;
+      statusCode=softLimit?Status::SCHEDULERLIMIT:Status::EXPIRED;
+      sms.setLastResult(statusCode);
+      expired=true;
+      /*
       onUndeliverable(t.msgId,sms);
       try{
         smsc->getScheduler()->InvalidSms(t.msgId);
@@ -3412,14 +3417,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }catch(...)
       {
         smsc_log_warn(smsLog,"DLVRSP: failed to change state to expired");
-      }
+      }*/
       info2(smsLog, "DLVRSP: Id=%lld;oa=%s;da=%s %s (valid:%u - now:%u), attempts=%d",t.msgId,
           sms.getOriginatingAddress().toString().c_str(),
           sms.getDestinationAddress().toString().c_str(),
-          softLimit?"denied by soft sched limit":"expired",sms.getValidTime(),now,sms.getAttemptsCount());
-      sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+          softLimit?"denied by soft sched limit":"expired",(uint32_t)sms.getValidTime(),(uint32_t)now,sms.getAttemptsCount());
+      /*sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
       smsc->ReportDelivery(t.msgId,t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
       return EXPIRED_STATE;
+      */
     }
   }
 
@@ -3636,19 +3642,31 @@ StateType StateMachine::deliveryResp(Tuple& t)
               store->replaceSms(t.msgId,sms);
             }
 
-            store->changeSmsStateToUndeliverable
-            (
-              t.msgId,
-              sms.getDestinationDescriptor(),
-              statusCode
-            );
+            if(expired)
+            {
+              store->changeSmsStateToExpired(t.msgId);
+            }else
+            {
+              store->changeSmsStateToUndeliverable
+              (
+                  t.msgId,
+                  sms.getDestinationDescriptor(),
+                  statusCode
+              );
+            }
           }catch(std::exception& e)
           {
             smsc_log_warn(smsLog,"DELIVERYRESP: failed to change state to undeliverable:%s",e.what());
           }
         }
 
-        sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
+        if(expired)
+        {
+          sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+        }else
+        {
+          sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
+        }
 
         if(!dgortr)
         {
