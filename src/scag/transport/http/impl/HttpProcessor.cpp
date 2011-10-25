@@ -307,12 +307,14 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 if(request.getRouteId() > 0)
                 {
                     r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
+                    smsc_log_debug(logger, "HttpProcessorImpl::processRequest SetSite[%s] setSitePort:%d", r.defSite.host.c_str(), r.defSite.port);
                     request.setSite(r.defSite.host);
                     request.setSitePort(r.defSite.port);
                 }
                 else if(request.getServiceId() > 0)
                 {
                     r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
+                    smsc_log_debug(logger, "HttpProcessorImpl::processRequest SetSite[%s] setSitePort:%d", r.defSite.host.c_str(), r.defSite.port);
                     request.setSite(r.defSite.host);
                     request.setSitePort(r.defSite.port);
                 }
@@ -322,6 +324,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 //                    	request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str());
                    r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());
 // (xom 25.07.11) add port change (port,443,80 selection) as mix-protocol feature
+                   smsc_log_debug(logger, "HttpProcessorImpl::processRequest setSitePort:%d", r.defSite.port);
                    request.setSitePort(r.defSite.port);
                 }
                 smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
