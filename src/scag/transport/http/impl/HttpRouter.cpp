@@ -482,6 +482,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
         {
             s = rt->sites[k].host + ':' + lltostr(rt->sites[k].port, buf + 19);
             chid = getId(hh, s, hid);
+            smsc_log_debug(logger, "HttpRouterImpl::BuildMaps add_route: %u %s %u", chid, s.c_str(), hid);
             for(int m = 0; m < rt->sites[k].paths.Count(); m++)
             {
                 cpid = getId(ph, rt->sites[k].paths[m], pid);
