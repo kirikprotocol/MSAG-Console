@@ -38,6 +38,9 @@
         <copy file="resend_test.sh" todir="${DISTR_DIR}"/>
         <chmod file="${DISTR_DIR}/resend_test.sh" perm="u+x"/>
 
+        <copy file="resend_test2.sh" todir="${DISTR_DIR}"/>
+        <chmod file="${DISTR_DIR}/resend_test2.sh" perm="u+x"/>
+
         <copy file="temp_error_test.sh" todir="${DISTR_DIR}"/>
         <chmod file="${DISTR_DIR}/temp_error_test.sh" perm="u+x"/>
 

@@ -335,7 +335,7 @@ public class Journal {
                         log.debug("Initialize buffered writer for journal "+j1.getName());
                     }
                     bw.write(s + "\n");
-                    //log.debug("write: "+s);
+                    log.debug("write: "+s);
                 } catch (IOException e) {
                     log.error("Could not append a string to the file "+ j1.getName(), e);
                     throw new CouldNotWriteToJournalException(e);
@@ -389,7 +389,7 @@ public class Journal {
     }
 
     public void cleanDeliveryJournal(){
-
+        log.debug("Try to clean delivery journal ...");
         long t = System.currentTimeMillis();
 
         if (!j1.exists()){

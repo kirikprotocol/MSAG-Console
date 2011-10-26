@@ -10,13 +10,10 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Properties;
+import java.util.*;
 
 /**
- * Send SubmitSM and don't answer DeliverSMResp three time, then receive fourth DeliverSM answer DeliverSMResp with
- * status OK.
+ *
  * User: Stepanov Dmitry Nikolaevich
  * Date: 28.02.11
  * Time: 10:30
@@ -29,8 +26,6 @@ public class ResendTest2 extends Thread implements PDUListener {
 
     private static String dest_address, source_address;
     private static long validity_period;
-
-    private int counter = 0;
 
     private static String con;
 
@@ -64,8 +59,9 @@ public class ResendTest2 extends Thread implements PDUListener {
     public boolean handlePDU(PDU pdu) {
         logger.debug("Handle pdu with '"+pdu.getType()+"' type.");
         switch (pdu.getType()) {
-            case SubmitSM:
+            case SubmitSM: {
                 try {
+
                     Message request = (Message)pdu;
                     smppClient.send(request);
                     logger.debug("Send SubmitSM request.");
@@ -74,14 +70,25 @@ public class ResendTest2 extends Thread implements PDUListener {
                     logger.error("", e);
                     return false;
                 }
+            }
 
+            case DeliverSM: {
 
-            case DeliverSM:
+                DeliverSM deliverSM = (DeliverSM) pdu;
+                String message = deliverSM.getMessage();
+                String[] ar = message.split("\\s");
+                String s = ar[0];
+                long message_id = Long.parseLong(s.substring(s.indexOf(":")+1,s.length()));
+                int v = ids_set.get(message_id);
 
-                counter++;
-                if (counter > 3){
+                if (v == 0) {
+                    ids_set.put(message_id, 1);
+                    logger.debug("receive DeliverSM with message_id "+message_id+ " first time.");
+                    return true;
+                } else if ( v == 1 ) {
+                    ids_set.put(message_id, 2);
+                    logger.debug("receive DeliverSM with message_id "+message_id+ " second time.");
 
-                    DeliverSM deliverSM = (DeliverSM) pdu;
                     int sequence_number = deliverSM.getSequenceNumber();
                     logger.debug("Handle DeliverSM pdu with sequence number "+sequence_number);
 
@@ -92,8 +99,16 @@ public class ResendTest2 extends Thread implements PDUListener {
 
                     try{
                         smppClient.send(resp);
-                        logger.debug("Resent test - OK");
-                        System.exit(0);
+
+                        boolean all_received = true;
+                        for(Long id : ids_set.keySet()){
+                            if (ids_set.get(id) != 2) all_received = false;
+                        }
+
+                        if (all_received){
+                            logger.debug("Resent test 2 - OK");
+                            System.exit(0);
+                        }
                         return true;
                     } catch (SmppException e){
                         logger.error("Couldn't send DeliverSMResp.", e);
@@ -101,39 +116,42 @@ public class ResendTest2 extends Thread implements PDUListener {
                     }
 
                 } else {
-                    return true;
+                    logger.error("error");
+                    System.exit(2);
                 }
+            }
 
-            case SubmitSMResp:
+            case SubmitSMResp: {
 
                 SubmitSMResp submitSMResp = (SubmitSMResp) pdu;
-                String message_id_str = submitSMResp.getMessageId();
-                if (submitSMResp.getStatus() == Status.OK){
-                    logger.debug("SubmitSMResp messageId="+message_id_str);
-                } else {
-                    logger.debug("SubmitSMResp status="+submitSMResp.getStatus());
+                long message_id;
+                if (submitSMResp.getMessageId() != null){
+                    message_id = Long.parseLong(submitSMResp.getMessageId());
+                    ids_set.put(message_id, 0);
+                    logger.debug("receive SubmitSMResp with message_id "+message_id);
                 }
+            }
 
         }
         return false;
     }
 
-    public static void main(String args[]){
+    static int sended;
+    private static Hashtable<Long, Integer> ids_set = new Hashtable<Long, Integer>();
+
+    public static void main(String args[]) throws InterruptedException {
         logger.debug("Start smpp client.");
         try{
-            final ResendTest client = new ResendTest();
+            final ResendTest2 client = new ResendTest2();
 
-                for(int i=0; i<100; i++){
+            sended = Integer.parseInt(args[0]);
+            for(int i=0; i < sended; i++){
                 SubmitSM submitSM = new SubmitSM();
                 submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
 
                 submitSM.setConnectionName(con);
 
-                DateFormat df = DateFormat.getDateTimeInstance();
-                Calendar cal = Calendar.getInstance();
-                Date date = cal.getTime();
-
-                submitSM.setMessage("message from "+submitSM.getConnectionName()+", "+df.format(date));
+                submitSM.setMessage("message");
 
                 try{
                     submitSM.setSourceAddress(source_address);
@@ -146,6 +164,20 @@ public class ResendTest2 extends Thread implements PDUListener {
             }
         } catch (SmppException e) {
             logger.error("", e);
+        }
+
+        Thread.sleep(600000);
+        boolean all_received = true;
+        for(Long id : ids_set.keySet()){
+            if (ids_set.get(id) == 0) all_received = false;
+        }
+
+        if (all_received){
+            logger.debug("Resent test 2 - OK");
+            System.exit(0);
+        } else {
+            logger.debug("Test failed.");
+            System.exit(1);
         }
     }
 
