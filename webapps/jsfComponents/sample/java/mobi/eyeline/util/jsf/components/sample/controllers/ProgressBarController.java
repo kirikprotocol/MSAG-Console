@@ -7,10 +7,26 @@ import java.util.Random;
  */
 public class ProgressBarController {
 
-  private int nextInt = new Random().nextInt(100);
+  private boolean disabled;
 
   public int getNextInt() {
-    return nextInt;
+    return  new Random().nextInt(100);
   }
+
+  public String enable() {
+    disabled = false;
+    return null;
+  }
+
+  public String disable() {
+    disabled = true;
+    return null;
+  }
+
+  public boolean isEnabled() {
+    return !disabled;
+  }
+
+
 
 }

@@ -26,7 +26,11 @@ public class UpdatableContent extends UIPanel {
   }
 
   public boolean isEnabled() {
-    return enabled;
+    ValueExpression exp = getValueExpression("enabled");
+    if (exp == null)
+      return enabled;
+    else
+      return (Boolean)exp.getValue(getFacesContext().getELContext());
   }
 
   public void setEnabled(boolean enabled) {

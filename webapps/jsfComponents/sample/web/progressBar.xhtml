@@ -20,11 +20,24 @@
 
       <h:form>
 
-        <eye:updatableContent updatePeriod="2">
+        <eye:updatableContent updatePeriod="2" enabled="#{progressBar.enabled}">
 
           <eye:progressBar id="mybar" current="#{progressBar.nextInt}" maximum="100"/>
 
         </eye:updatableContent>
+
+
+        <p/>
+
+        <eye:buttons>
+          <eye:button>
+            <h:commandLink value="Enable" action="#{progressBar.enable}"/>
+          </eye:button>
+          <eye:button>
+            <h:commandLink value="Disable" action="#{progressBar.disable}"/>
+          </eye:button>
+          <eye:space/>
+        </eye:buttons>
 
       </h:form>
 
