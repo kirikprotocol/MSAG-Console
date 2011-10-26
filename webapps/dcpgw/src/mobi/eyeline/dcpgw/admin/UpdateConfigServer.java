@@ -98,8 +98,10 @@ public class UpdateConfigServer extends Thread {
                    try {
                        Config.getInstance().update();
                        configUpdateResp = new UpdateConfigResp(seqNum, 0, "ok");
+                       log.debug("Send ok update response.");
                    } catch (Exception e) {
                        configUpdateResp = new UpdateConfigResp(seqNum, 1, "Couldn't update configuration:"+e.getMessage());
+                       log.debug("Send error update response.");
                    }
 
                    serialize(configUpdateResp, os);

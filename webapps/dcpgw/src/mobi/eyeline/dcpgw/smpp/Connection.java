@@ -138,6 +138,14 @@ public class Connection {
                             Provider provider = Config.getInstance().getProvider(name);
                             if (provider == null){
                                 log.debug("Couldn't find provider for message_id "+message_id+" with connection "+name+".");
+
+                                data.setStatus(DeliveryData.Status.DELETED);
+                                try {
+                                    journal.write(data);
+                                } catch (CouldNotWriteToJournalException e) {
+                                    log.error("Couldn't write to journal "+data.getMessageId()+"data.", e);
+                                }
+
                                 continue;
                             }
 
@@ -146,6 +154,14 @@ public class Connection {
                             Delivery delivery = provider.getDelivery(destination_address.getAddress());
                             if (delivery == null){
                                 log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+destination_address.getAddress()+".");
+
+                                data.setStatus(DeliveryData.Status.DELETED);
+                                try {
+                                    journal.write(data);
+                                } catch (CouldNotWriteToJournalException e) {
+                                    log.error("Couldn't write to journal "+data.getMessageId()+"data.", e);
+                                }
+
                                 continue;
                             }
 
@@ -237,6 +253,14 @@ public class Connection {
                 Provider provider = Config.getInstance().getProvider(name);
                 if (provider == null){
                     log.debug("Couldn't find provider for message_id "+message_id+" with connection "+name+".");
+
+                    data.setStatus(DeliveryData.Status.DELETED);
+                    try {
+                        journal.write(data);
+                    } catch (CouldNotWriteToJournalException e) {
+                        log.error("Couldn't write to journal "+data.getMessageId()+"data.", e);
+                    }
+
                     continue;
                 }
 
@@ -244,6 +268,14 @@ public class Connection {
                 Delivery delivery = provider.getDelivery(destination_address.getAddress());
                 if (delivery == null){
                     log.debug("Couldn't find delivery for message_id "+message_id+" with source address "+destination_address.getAddress()+".");
+
+                    data.setStatus(DeliveryData.Status.DELETED);
+                    try {
+                        journal.write(data);
+                    } catch (CouldNotWriteToJournalException e) {
+                        log.error("Couldn't write to journal "+data.getMessageId()+"data.", e);
+                    }
+
                     continue;
                 }
 
