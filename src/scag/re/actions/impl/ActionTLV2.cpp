@@ -53,6 +53,7 @@ bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
 
 bool ActionTLV::getOptionalProperty(SmsResp& resp, const char*& buff, uint32_t& len)
 {
+#ifdef SMPPRESPHASOPTS
     if (!resp.hasUnknownOptionals()) return false;
     len = resp.sizeUnknownOptionals();
     if (len<4) {
@@ -61,6 +62,10 @@ bool ActionTLV::getOptionalProperty(SmsResp& resp, const char*& buff, uint32_t& 
     }
     buff = resp.getUnknownOptionals();
     return true;
+#else
+    smsc_log_warn(logger,"smppresp optional field support is not compiled in");
+    return false;
+#endif
 }
 
 
@@ -575,10 +580,12 @@ bool ActionTLV::run(ActionContext& context)
                 }
             }
         } else if ( getOptionalProperty(*resp,buff,len) ) {
+#ifdef SMPPRESPHASOPTS
             std::string tmp;
             if ( delUnknown(buff,len,tag,tmp) ) {
                 resp->setUnknownOptionals(tmp.data(),tmp.size());
             }
+#endif
         }
         smsc_log_debug(logger, "Action 'tlv': Tag: %d deleted", tag);
     }
@@ -642,6 +649,7 @@ bool ActionTLV::run(ActionContext& context)
                 sms->setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,tmp.data(),tmp.size());
             }
         } else {
+#ifdef SMPPRESPHASOPTS
             const char* buff;
             uint32_t len;
             std::string tmp;
@@ -650,6 +658,7 @@ bool ActionTLV::run(ActionContext& context)
             }
             setUnknown(tmp,tag,prop,strVar);
             resp->setUnknownOptionals(tmp.data(),tmp.size());
+#endif
         }
     }
     return true;
