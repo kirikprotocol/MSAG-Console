@@ -22,7 +22,13 @@ namespace smpp{
 
 using std::auto_ptr;
 
-class BadDataException {};
+class BadDataException : public smsc::util::Exception
+{
+public:
+    explicit BadDataException( const char* fmt, ... ) {
+        SMSC_UTIL_EX_FILL(fmt);
+    }
+};
 
 static inline void fetchPduAddress(SmppStream* stream,PduAddress& addr)
 {
@@ -101,7 +107,7 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
             {
               __warning2__ ("flag value %x for dest address is unknown ",sm.dests[i].flag);
               //goto trap;
-              throw BadDataException();
+              throw BadDataException("fillPdu: flag value %x for dest address is unknown",sm.dests[i].flag);
             }
           }
         }
@@ -531,6 +537,12 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     __trace2__("fetchSmppPdu: unknown cmdid:%d",cmdid);
     //__unreachable__("");
     return hdr;
+  }
+  catch (std::exception& e)
+  {
+      dropPdu(stream);
+      __warning2__("parsing broken, reason: %s",e.what());
+      return 0;
   }
   catch (...)
   {

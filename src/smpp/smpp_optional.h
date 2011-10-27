@@ -8,6 +8,7 @@
 #include "smpp_structures.h"
 #include "smpp_stream.h"
 #include "util/int.h"
+#include "util/Exception.hpp"
 #include "core/buffers/TmpBuf.hpp"
 
 #if !defined __Cxx_Header__smpp_optional_h__
@@ -16,7 +17,13 @@
 namespace smsc{
 namespace smpp{
 
-class VeryLargOctetStringException {};
+class VeryLargeOctetStringException : public smsc::util::Exception
+{
+public:
+    VeryLargeOctetStringException( const char* fmt, ... ) {
+        SMSC_UTIL_EX_FILL(fmt);
+    }
+};
 
 inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
 {
@@ -34,7 +41,9 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
 #define macroFillOctetStr(field,maxlen) \
   if ( opt->has_##field() && opt->get_##field() != NULL ) {\
       int str_length = opt->size_##field(); \
-      __throw_if_fail__(((str_length<=maxlen)||(maxlen==-1)),VeryLargOctetStringException);\
+      if ( ! ((str_length<=maxlen)||(maxlen==-1)) ) { \
+          throw VeryLargeOctetStringException("verylargestr: strlen=%u maxlen=%u",unsigned(str_length),unsigned(maxlen)); \
+      } \
       fillX(stream,SmppOptionalTags::field); \
       fillX(stream,(uint16_t)str_length); \
       const char* text = opt->get_##field();\
@@ -46,7 +55,9 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   if ( opt->has_##field() && opt->get_##field() != NULL) {\
     const char* text = opt->get_##field();\
     int str_length = (int)strlen(opt->get_##field());\
-    __throw_if_fail__(((str_length<=maxlen)||(maxlen==-1)),VeryLargOctetStringException);\
+    if ( ! ((str_length<=maxlen)||(maxlen==-1)) ) { \
+        throw VeryLargeOctetStringException("verylargeCstr: strlen=%u maxlen=%u",unsigned(str_length),unsigned(maxlen)); \
+    } \
     fillX(stream,SmppOptionalTags::field); \
     fillX(stream,(uint16_t)(str_length+1)); \
     for ( int k=0; k<=str_length; ++k )\
@@ -320,7 +331,10 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
           break;
         }
       }
-      __throw_if_fail__( nextDataOffset == stream->dataOffset,BadStreamException );
+      if ( ! ( nextDataOffset == stream->dataOffset ) ) {
+          throw BadStreamException("fetch optional: nextData=%u dataoffset=%u",
+                                   unsigned(nextDataOffset), unsigned(stream->dataOffset));
+      }
       /*
       if ( nextDataOffset > stream->dataOffset )
       {
@@ -348,7 +362,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
   trap:
     dropPdu(stream);
     __warning__("packet is dropped, reason: parse error");
-    throw BadStreamException();
+  throw BadStreamException("packet is dropped: parse error");
 }
 
 }

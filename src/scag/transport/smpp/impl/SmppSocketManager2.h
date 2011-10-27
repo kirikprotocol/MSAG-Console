@@ -101,7 +101,7 @@ public:
 private:
     typedef IntHash< IpLimit > IphashType;
 
-protected:
+private:
     // enum {MaxSocketsPerThread=16};
   Array<SmppReader*> readers;
   Array<SmppWriter*> writers;

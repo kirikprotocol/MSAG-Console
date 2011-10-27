@@ -21,6 +21,7 @@
 #include <unistd.h>
 #endif
 #include "util/debug.h"
+#include "util/Exception.hpp"
 #include "smpp_memory.h"
 #include "smpp_structures.h"
 #include "smpp_strings.h"
@@ -58,12 +59,13 @@ struct SmppStream
   bool readable;
 };
 
-class BadStreamException {} ;
-/*: public std::exception
+class BadStreamException : public smsc::util::Exception
 {
 public:
-  const char* what() {return "bad stream"; } const
-};*/
+    explicit BadStreamException( const char* fmt, ... ) {
+        SMSC_UTIL_EX_FILL(fmt);
+    }
+};
 
 inline  void __check_smpp_stream_invariant__ (SmppStream* stream)
 {
@@ -110,8 +112,12 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
 //#error "undefined rules of fetchX"
   __check_smpp_stream_invariant__ ( stream );
   __check_smpp_stream_is_readable__(stream);
-  __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength,
-                      BadStreamException );
+  if ( ! (stream->dataOffset+sizeof(T) <= stream->dataLength) ) {
+      throw BadStreamException("fetch: stream->dataOffset(=%u)+sizeofT(=%u) > datalength(=%u)",
+                               unsigned(stream->dataOffset),
+                               unsigned(sizeof(T)),
+                               unsigned(stream->dataLength) );
+  }
   memcpy(&data,stream->buffer+stream->dataOffset,sizeof(T));
   __require__(sizeof(T)>0);
   stream->dataOffset+=(unsigned)sizeof(T);
@@ -146,8 +152,12 @@ inline void __fill_x__ (SmppStream* stream, T& data)
     //__watch__(stream->dataLength);
     //__watch__(sizeof(T));
   //}
-  __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength ,
-                      BadStreamException);
+  if ( ! (stream->dataOffset+sizeof(T) <= stream->dataLength) ) {
+      throw BadStreamException("fill: stream->dataOffset(=%u)+sizeofT(=%u) > datalength(=%u)",
+                               unsigned(stream->dataOffset),
+                               unsigned(sizeof(T)),
+                               unsigned(stream->dataLength) );
+  }
   //*((T*)stream->buffer) = data;
   __require__(sizeof(T)>0);
   memcpy(stream->buffer+stream->dataOffset,&data,sizeof(T));
@@ -312,7 +322,7 @@ inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
     {
       if ( fetchX(stream,(uint8_t&)costr.text[length]) == 0 ) goto success;
     }
-    throw BadStreamException();
+    throw BadStreamException("cannot retrieve COctStr: maxLenght=%u",unsigned(maxLength));
   }else
   {
     costr.copy("");
