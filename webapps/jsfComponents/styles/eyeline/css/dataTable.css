@@ -79,6 +79,16 @@ div.eyeline_inner_data_closed {
   background-image: url(../images/list_closed.gif);
 }
 
+table.eyeline_list div.eyeline_menudiv {
+  background-color: #DFD4AF;
+  border: 1px solid #111155;
+}
+
+table.eyeline_list div.eyeline_menubardiv,
+table.eyeline_list div.eyeline_menubardivover {
+  font-size: x-small;
+}
+
 /* :::::::::::::::::::::::::::::::::::::::::::::::: ПАНЕЛЬ НАВИГАЦИИ :::::::::::::::::::::::::::::::::::::::::::::::::*/
 
 .eyeline_navbar_panel {

@@ -10,7 +10,8 @@
     <ui:define name="styles">
       .table1 {padding-left: 20px;}
       .column1 {width: 30%; align: center;}
-      .column2 {width: 70%; align: right;}
+      .column2 {width: 40%; align: right;}
+      .column3 {width: 30%; align: center;}
       .row1 {font-weight: bold;}
       .row2 {font-weight: normal;}
     </ui:define>
@@ -28,6 +29,16 @@
             <h:outputText value="Field2"/>
             <eye:inputDate value="#{dataTable.field2Filter}"/>
             <h:outputText value="&#160;"/>
+
+            <h:panelGrid columns="2" columnClasses="column300Width, columnLeftAlign">
+
+              <h:inputTextarea cols="20" rows="3" value="#{downloading.text}"/>
+
+              <h:commandLink value="Download as file">
+                <eye:fileDownloadListener method="#{downloading.download}" contentType="application/csv" filename="downloadedFile.csv"/>
+              </h:commandLink>
+
+            </h:panelGrid>
           </h:panelGrid>
 
         </eye:dataTableFilter>
@@ -54,6 +65,19 @@
               <f:facet name="footer">
                 <h:outputText value="footer2"/>
               </f:facet>
+            </eye:column>
+            <eye:column name="field3" title="Action" columnClass="column3">
+              <eye:menubar label="Actions...">
+                <eye:menubaritem>
+                  <h:commandLink action="#{dataTable.query}" value="Action 1"/>
+                </eye:menubaritem>
+                <eye:menubaritem>
+                  <h:commandLink action="#{dataTable.query}" value="Action 2"/>
+                </eye:menubaritem>
+                <eye:menubaritem>
+                  <h:commandLink action="#{dataTable.query}" value="Action 3"/>
+                </eye:menubaritem>
+              </eye:menubar>
             </eye:column>
           </eye:row>
         </eye:dataTable>
