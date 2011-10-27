@@ -196,7 +196,7 @@ public class AdminContext {
 
     operativeStoreManager = new OperativeStoreManager(operativeStorages, fileSystem, clusterController);
 
-    smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem));
+    smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem), cfg.getStatExportSettings());
 
     AdminContextLocator.registerContext(this);
   }

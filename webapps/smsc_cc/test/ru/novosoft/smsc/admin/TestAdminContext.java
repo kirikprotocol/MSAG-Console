@@ -228,7 +228,7 @@ public class TestAdminContext extends AdminContext {
       public FileSystem getFileSystem() {
         return fileSystem;
       }
-    });
+    }, cfg.getStatExportSettings());
     perfMonitorManager = new TestPerfMonitorManager(cfg.getPerfMonitorPorts());
     topMonitorManager = new TestTopMonitorManager(cfg.getTopMonitorPorts());
 

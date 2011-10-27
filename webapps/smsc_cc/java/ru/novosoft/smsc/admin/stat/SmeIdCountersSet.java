@@ -5,14 +5,14 @@ package ru.novosoft.smsc.admin.stat;
  */
 public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable {
 
-  private String smeid;
+  private final String smeid;
 
-  SmeIdCountersSet(String smeid){
+  SmeIdCountersSet(String smeid) {
     this.smeid = smeid;
   }
 
   SmeIdCountersSet(long accepted, long rejected, long delivered,
-                          long failed, long rescheduled, long temporal, long i, long o, String smeid) {
+                   long failed, long rescheduled, long temporal, long i, long o, String smeid) {
     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     this.smeid = smeid;
   }

@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.admin;
 
+import ru.novosoft.smsc.admin.stat.ExportSettings;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
@@ -114,10 +115,8 @@ class AdminContextConfig {
       return system.getString("users file");
     } catch (XmlConfigException e) {
       throw new AdminContextException("invalid_config", e);
-    }    
+    }
   }
-
-  private static final String perfMonPref = "appletPort";
 
   public int[] getPerfMonitorPorts() throws AdminException {
     try {
@@ -172,6 +171,23 @@ class AdminContextConfig {
       XmlConfigSection perfmon = webconfig.getSection("perfmon");
       return perfmon.getBool("support64Bit");
     } catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }
+  }
+
+  public ExportSettings getStatExportSettings() throws AdminException{
+    try{
+      XmlConfigSection s = webconfig.getSection("statsave_datasource");
+      ExportSettings ss = new ExportSettings();
+      ss.setSource(s.getString("source"));
+      ss.setDbType(ExportSettings.DbType.valueOf(s.getString("dbType")));
+      ss.setUser(s.getString("user"));
+      ss.setPass(s.getString("pass"));
+      ss.setPrefix(s.getString("tables_prefix"));
+      return ss;
+    }catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }catch (IllegalArgumentException e) {
       throw new AdminContextException("invalid_config", e);
     }
   }

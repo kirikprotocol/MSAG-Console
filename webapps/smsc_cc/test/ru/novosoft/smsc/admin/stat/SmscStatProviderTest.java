@@ -54,7 +54,7 @@ public class SmscStatProviderTest {
   public void init() throws IOException {
     final Collection<File> dirs = prepareFiles();
     context = new TestSmscStatContext(dirs);
-    provider = new SmscStatProvider(context);
+    provider = new SmscStatProvider(context, null);
   }
 
 

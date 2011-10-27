@@ -5,15 +5,16 @@ package ru.novosoft.smsc.admin.stat;
  */
 public class ErrorCounterSet {
 
-  private int errcode;
+  private final int errcode;
 
   private long counter;
 
-  ErrorCounterSet(int err, long count){
-    errcode = err; counter = count;
+  ErrorCounterSet(int err, long count) {
+    errcode = err;
+    counter = count;
   }
 
-  protected void increment(long count){
+  void increment(long count) {
     this.counter += count;
   }
 

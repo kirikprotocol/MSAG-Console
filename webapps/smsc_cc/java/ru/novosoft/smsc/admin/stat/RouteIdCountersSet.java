@@ -5,7 +5,7 @@ package ru.novosoft.smsc.admin.stat;
  */
 public class RouteIdCountersSet extends ExtendedCountersSet implements Comparable {
 
-  private String routeid;
+  private final String routeid;
   private long providerId = -1;
   private long categoryId = -1;
 

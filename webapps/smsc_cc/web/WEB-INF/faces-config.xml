@@ -22,6 +22,11 @@
       <var>closedGroupsBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.stat.ExportSettings</base-name>
+      <var>exportSetBundle</var>
+    </resource-bundle>
+
 
     <resource-bundle>
       <base-name>ru.novosoft.smsc.admin.smsc.CommonSettings</base-name>
@@ -386,6 +391,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>exportStat</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.stat.SmscStatExportController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -565,6 +576,11 @@
     <navigation-case>
       <from-outcome>SMS_STAT</from-outcome>
       <to-view-id>/smsc/stat/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMS_STAT_EXPORT</from-outcome>
+      <to-view-id>/smsc/stat/export.faces</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

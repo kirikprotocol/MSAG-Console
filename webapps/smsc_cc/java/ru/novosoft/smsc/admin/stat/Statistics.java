@@ -9,9 +9,9 @@ import java.util.List;
  */
 public class Statistics extends ExtendedCountersSet {
 
-  private List<DateCountersSet> byDates = new LinkedList<DateCountersSet>();
-  private List<SmeIdCountersSet> bySmeId = new LinkedList<SmeIdCountersSet>();
-  private List<RouteIdCountersSet> byRouteId = new LinkedList<RouteIdCountersSet>();
+  private final List<DateCountersSet> byDates = new LinkedList<DateCountersSet>();
+  private final List<SmeIdCountersSet> bySmeId = new LinkedList<SmeIdCountersSet>();
+  private final List<RouteIdCountersSet> byRouteId = new LinkedList<RouteIdCountersSet>();
 
   Statistics() {
   }
@@ -23,6 +23,7 @@ public class Statistics extends ExtendedCountersSet {
   public CountersSet getTotal() {
     return this;
   }
+
   void addDateStat(DateCountersSet set) {
     byDates.add(set);
     this.increment(set); // increments total statistics
@@ -44,17 +45,18 @@ public class Statistics extends ExtendedCountersSet {
     return byRouteId.size();
   }
 
-  void addSmeIdCollection(Collection<SmeIdCountersSet> col){
-    if(col != null) {
+  void addSmeIdCollection(Collection<SmeIdCountersSet> col) {
+    if (col != null) {
       bySmeId.addAll(col);
     }
   }
+
   public List<SmeIdCountersSet> getSmeIdStat() {
     return bySmeId;
   }
 
   void addRouteIdCollection(Collection<RouteIdCountersSet> col) {
-    if(col != null) {
+    if (col != null) {
       byRouteId.addAll(col);
     }
   }

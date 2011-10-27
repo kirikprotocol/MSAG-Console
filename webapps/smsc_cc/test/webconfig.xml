@@ -47,4 +47,13 @@
     <param name="appletPort1" type="int">25031</param>
     <param name="appletPort2" type="int">25032</param>
   </section>
+
+  <section name="statsave_datasource">
+    <param name="dbType" type="string">MYSQL</param>
+    <param name="pass" type="string">student</param>
+    <param name="source" type="string">jdbc:mysql://mangal/summer_edu</param>
+    <param name="tables_prefix" type="string">smsc</param>
+    <param name="user" type="string">student</param>
+  </section>
+
 </config>

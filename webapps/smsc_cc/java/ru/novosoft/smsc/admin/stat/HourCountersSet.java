@@ -3,7 +3,7 @@ package ru.novosoft.smsc.admin.stat;
 /**
  * author: Aleksandr Khalitov
  */
-public class HourCountersSet extends CountersSet{
+public class HourCountersSet extends CountersSet {
 
   private int hour = 0;
 
@@ -11,7 +11,7 @@ public class HourCountersSet extends CountersSet{
     this.hour = hour;
   }
 
-  public HourCountersSet(long accepted, long  rejected, long delivered, long failed,
+  public HourCountersSet(long accepted, long rejected, long delivered, long failed,
                          long rescheduled, long temporal, long i, long o, int hour) {
     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     this.hour = hour;

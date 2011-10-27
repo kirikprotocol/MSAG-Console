@@ -6,9 +6,11 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.IOUtils;
 
 import java.io.*;
+import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 
 /**
  * author: Aleksandr Khalitov
@@ -20,16 +22,24 @@ public class SmscStatProvider {
   private final static String DATE_DIR_FORMAT = "yyyy-MM";
   private final static String DATE_DAY_FORMAT = "yyyy-MM-dd HH:mm";
   private final static String DATE_DIR_FILE_FORMAT = DATE_DIR_FORMAT + File.separatorChar + "dd";
-  private final static String DATE_FILE_EXTENSION  = ".rts";
+  private final static String DATE_FILE_EXTENSION = ".rts";
 
   private final SmscStatContext context;
 
   private final TimeZone defTimeZone = TimeZone.getDefault();
   private final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT");
 
-  public SmscStatProvider(SmscStatContext context) {
+  private final ExportSettings defExportSettings;
+
+  public SmscStatProvider(SmscStatContext context, ExportSettings defExportSettings) {
     this.context = context;
+    this.defExportSettings = defExportSettings;
   }
+
+  public ExportSettings getDefExportSettings() {
+    return defExportSettings == null ? null : new ExportSettings(defExportSettings);
+  }
+
   private void readCounters(CountersSet set, InputStream is) throws IOException {
     int accepted = (int) IOUtils.readUInt32(is);
     int rejected = (int) IOUtils.readUInt32(is);
@@ -90,7 +100,7 @@ public class SmscStatProvider {
   }
 
   private Date roundByDay(Date date) {
-    if(date == null) {
+    if (date == null) {
       return null;
     }
     Calendar c = Calendar.getInstance();
@@ -103,7 +113,7 @@ public class SmscStatProvider {
   }
 
   private Date roundByMonth(Date date) {
-    if(date == null) {
+    if (date == null) {
       return null;
     }
     Calendar c = Calendar.getInstance();
@@ -117,8 +127,7 @@ public class SmscStatProvider {
   }
 
 
-
-  private void getStatFiles(File statPath, Collection<FileWithDate> result, Date fromDate, Date tillDate) throws AdminException {
+  private void getStatFiles(File statPath, Collection<FileWithDate> result, Date fromDate, Date tillDate) {
 
     Date dirFromDate = roundByMonth(fromDate);
     Date dirTillDate = roundByMonth(tillDate);
@@ -144,8 +153,8 @@ public class SmscStatProvider {
         continue;
       }
 
-      if(dirFromDate != null && dirDate.compareTo(dirFromDate) < 0) continue;
-      if(dirTillDate != null && dirDate.compareTo(dirTillDate) > 0) continue;
+      if (dirFromDate != null && dirDate.compareTo(dirFromDate) < 0) continue;
+      if (dirTillDate != null && dirDate.compareTo(dirTillDate) > 0) continue;
 
 
       File[] dirFiles = getStatsFiles(dir);
@@ -162,8 +171,8 @@ public class SmscStatProvider {
           continue;
         }
 
-        if(fileFromDate != null && fileDate.compareTo(fileFromDate) < 0) continue;
-        if(fileTillDate != null && fileDate.compareTo(fileTillDate) > 0) continue;
+        if (fileFromDate != null && fileDate.compareTo(fileFromDate) < 0) continue;
+        if (fileTillDate != null && fileDate.compareTo(fileTillDate) > 0) continue;
 
         result.add(new FileWithDate(dirFile, fileDate));
       }
@@ -185,7 +194,7 @@ public class SmscStatProvider {
     Date fromDate = fromQueryDate == null ? null : Functions.convertTime(fromQueryDate, defTimeZone, gmtTimeZone);
     Date tillDate = tillQueryDate == null ? null : Functions.convertTime(tillQueryDate, defTimeZone, gmtTimeZone);
 
-    for(File statPath : context.getStatDirs()) {
+    for (File statPath : context.getStatDirs()) {
       getStatFiles(statPath, result, fromDate, tillDate);
     }
     return result;
@@ -200,9 +209,7 @@ public class SmscStatProvider {
     IOUtils.readUInt16(input); // read version for support reasons
   }
 
-  private boolean processFile(FileWithDate fwd, Date fromQueryDate, Date tillQueryDate, Statistics stat,
-                              Map<Date, CountersSet> statByHours, Map<String, SmeIdCountersSet> countersForSme, Map<String,
-      RouteIdCountersSet> countersForRoute) throws AdminException{
+  private boolean processFile(FileWithDate fwd, Date fromQueryDate, Date tillQueryDate, Visitor visitor) throws AdminException, VisitorException {
 
     SimpleDateFormat dateDayFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
 
@@ -210,20 +217,24 @@ public class SmscStatProvider {
 
     Date fileDate = fwd.date; // GMT
     File path = fwd.file;
-    if(logger.isDebugEnabled()){
-      logger.debug("Parsing file: "+dateDayFormat.format(fileDate)+" GMT");
+    if (logger.isDebugEnabled()) {
+      logger.debug("Parsing file: " + dateDayFormat.format(fileDate) + " GMT");
     }
     InputStream input = null;
     try {
       input = new BufferedInputStream(context.getFileSystem().getInputStream(path));
       checkFileHeader(input, path.getAbsolutePath());
       CountersSet lastHourCounter = new CountersSet();
+      Map<String, SmeIdCountersSet> countersForSme = new HashMap<String, SmeIdCountersSet>();
+      Map<String, RouteIdCountersSet> countersForRoute = new HashMap<String, RouteIdCountersSet>();
+      ExtendedCountersSet errors = new ExtendedCountersSet();
       Date lastDate = null;
       Date curDate;
       int prevHour = -1;
       byte buffer[] = new byte[512 * 1024];
       boolean haveValues = false;
       int recordNum = 0;
+
       while (true) // iterate file records (by minutes)
       {
         try {
@@ -255,19 +266,17 @@ public class SmscStatProvider {
             if (lastDate == null) lastDate = curDate;
 
             if (hour != prevHour && haveValues) { // switch to new hour
-              if(logger.isDebugEnabled()) {
+              if (logger.isDebugEnabled()) {
                 logger.debug("New hour: " + hour + ", dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
               }
-              CountersSet hcs = statByHours.get(lastDate);
-              if(hcs == null) {
-                statByHours.put(lastDate, lastHourCounter);
-              }else {
-                hcs.increment(lastHourCounter);
-              }
+              visitor.visit(lastDate, lastHourCounter, errors, countersForSme.values(), countersForRoute.values());
               haveValues = false;
               lastDate = curDate;
               prevHour = hour;
               lastHourCounter = new CountersSet();
+              errors = new ExtendedCountersSet();
+              countersForSme.clear();
+              countersForRoute.clear();
             }
 
             if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
@@ -278,26 +287,21 @@ public class SmscStatProvider {
 
             haveValues = true; // read and increase counters
             readCounters(lastHourCounter, is);
-            readErrors(stat, is);
+            readErrors(errors, is);
             readSmes(countersForSme, is);
             readRoutes(countersForRoute, is);
           } catch (EOFException exc) {
-            logger.warn("Incomplete record #"+recordNum+" in '"+path.getAbsolutePath()+'\'');
+            logger.warn("Incomplete record #" + recordNum + " in '" + path.getAbsolutePath() + '\'');
           }
         } catch (EOFException exc) {
           break;
         }
       }
       if (haveValues) {
-        if(logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
           logger.debug("Last dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
         }
-        CountersSet hcs = statByHours.get(lastDate);
-        if(hcs == null) {
-          statByHours.put(lastDate, lastHourCounter);
-        }else {
-          hcs.increment(lastHourCounter);
-        }
+        visitor.visit(lastDate, lastHourCounter, errors, countersForSme.values(), countersForRoute.values());
       }
 
     } catch (IOException e) {
@@ -312,7 +316,6 @@ public class SmscStatProvider {
     }
     return result;
   }
-
 
   public Statistics getStatistics(SmscStatFilter filter) throws AdminException {
     return getStatistics(filter, null);
@@ -342,27 +345,64 @@ public class SmscStatProvider {
       logger.debug("Query stat" + fromDate + tillDate);
     }
 
-    Statistics stat = new Statistics();
+    final Statistics stat = new Statistics();
     Set<FileWithDate> selectedFiles = getStatFiles(fromQueryDate, tillQueryDate);
     if (selectedFiles.size() <= 0) return stat;
 
-    if(loadListener != null) {
-      loadListener.setTotal(selectedFiles.size()+1);
+    if (loadListener != null) {
+      loadListener.setTotal(selectedFiles.size() + 1);
     }
 
-    Map<Date, CountersSet> statByHours = new TreeMap<Date, CountersSet>();
-    Map<String, SmeIdCountersSet> countersForSme = new HashMap<String, SmeIdCountersSet>();
-    Map<String, RouteIdCountersSet> countersForRoute = new HashMap<String, RouteIdCountersSet>();
+    final Map<Date, CountersSet> statByHours = new TreeMap<Date, CountersSet>();
+    final Map<String, SmeIdCountersSet> countersForSme = new HashMap<String, SmeIdCountersSet>();
+    final Map<String, RouteIdCountersSet> countersForRoute = new HashMap<String, RouteIdCountersSet>();
 
-    long tm = System.currentTimeMillis();  boolean finished = false;
-    for (Iterator<FileWithDate> iterator = selectedFiles.iterator(); iterator.hasNext() && !finished;) {
-      FileWithDate fwd = iterator.next();
-      processFile(fwd, fromQueryDate, tillQueryDate, stat, statByHours, countersForSme, countersForRoute);
-      if(loadListener != null) {
+    long tm = System.currentTimeMillis();
+    for (FileWithDate fwd : selectedFiles) {
+      try {
+        processFile(fwd, fromQueryDate, tillQueryDate, new Visitor() {
+          public void visit(Date date, CountersSet lastHourSet, ExtendedCountersSet errorsSet, Collection<SmeIdCountersSet> _countersForSme, Collection<RouteIdCountersSet> _countersForRoute) {
+            CountersSet hcs = statByHours.get(date);
+            if (hcs == null) {
+              statByHours.put(date, lastHourSet);
+            } else {
+              hcs.increment(lastHourSet);
+            }
+            for (ErrorCounterSet e : errorsSet.getErrors()) {
+              stat.incError(e.getErrcode(), e.getCounter());
+            }
+            for (SmeIdCountersSet smeIdCountersSet : _countersForSme) {
+              if (!countersForSme.containsKey(smeIdCountersSet.getSmeid())) {
+                countersForSme.put(smeIdCountersSet.getSmeid(), smeIdCountersSet);
+              } else {
+                SmeIdCountersSet old = countersForSme.get(smeIdCountersSet.getSmeid());
+                for (ErrorCounterSet e : smeIdCountersSet.getErrors()) {
+                  old.incError(e.getErrcode(), e.getCounter());
+                }
+                old.increment(smeIdCountersSet);
+              }
+            }
+            for (RouteIdCountersSet routeIdCountersSet : _countersForRoute) {
+              if (!countersForRoute.containsKey(routeIdCountersSet.getRouteid())) {
+                countersForRoute.put(routeIdCountersSet.getRouteid(), routeIdCountersSet);
+              } else {
+                RouteIdCountersSet old = countersForRoute.get(routeIdCountersSet.getRouteid());
+                for (ErrorCounterSet e : routeIdCountersSet.getErrors()) {
+                  old.incError(e.getErrcode(), e.getCounter());
+                }
+                old.increment(routeIdCountersSet);
+              }
+            }
+          }
+        });
+      } catch (VisitorException e) {
+        logger.error(e, e);
+      }
+      if (loadListener != null) {
         loadListener.incrementProgress();
       }
     }
-    if(logger.isDebugEnabled()) {
+    if (logger.isDebugEnabled()) {
       logger.debug("End scanning statistics, time spent: " + ((System.currentTimeMillis() - tm) / 1000) + " sec");
     }
 
@@ -402,11 +442,303 @@ public class SmscStatProvider {
     Collection<RouteIdCountersSet> countersRoute = countersForRoute.values();
     if (countersRoute != null) stat.addRouteIdCollection(countersRoute);
 
-    if(loadListener != null) {
+    if (loadListener != null) {
       loadListener.incrementProgress();
     }
 
     return stat;
+  }
+
+  private final static String WHERE_OP_SQL = " WHERE";
+  private final static String DELETE_OP_SQL = "DELETE FROM ";
+  private final static String INSERT_OP_SQL = "INSERT INTO ";
+
+  private final static String VALUES_SMS_SQL =
+      " (period, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)" +
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  private final static String VALUES_SMS_ERR_SQL =
+      " (period, errcode, counter) VALUES (?, ?, ?)";
+  private final static String VALUES_SME_SQL =
+      " (period, systemid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)" +
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  private final static String VALUES_SME_ERR_SQL =
+      " (period, systemid, errcode, counter) VALUES (?, ?, ?, ?)";
+  private final static String VALUES_ROUTE_SQL =
+      " (period, routeid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)" +
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  private final static String VALUES_ROUTE_ERR_SQL =
+      " (period, routeid, errcode, counter) VALUES (?, ?, ?, ?)";
+
+
+  private static final String mysqlDriver = "com.mysql.jdbc.Driver";
+  private static final String oracleDriver = "oracle.jdbc.driver.OracleDriver";
+
+  private Connection getConnection(ExportSettings export) throws SQLException, ClassNotFoundException {
+    switch (export.getDbType()) {
+      case MYSQL:
+        Class.forName(mysqlDriver);
+        break;
+      case ORACLE:
+        Class.forName(oracleDriver);
+    }
+    Connection c = DriverManager.getConnection(export.getSource(), export.getUser(), export.getPass());
+    c.setAutoCommit(false);
+    return c;
+  }
+
+  private String prepareWherePart(long from, long till) {
+    if (from < -1 && till < -1) return "";
+    String result = WHERE_OP_SQL;
+    if (from > 0) {
+      result += (" period >= " + from);
+    }
+    if (till > 0) {
+      if (from > 0) result += " AND";
+      result += (" period < " + till);
+    }
+    return result;
+  }
+
+  private long calculatePeriod(Date date) {
+    SimpleDateFormat datePeriodLocalFormat = new SimpleDateFormat("yyyyMMddHHmm");
+    String str = datePeriodLocalFormat.format(date);
+    return Long.parseLong(str);
+  }
+
+  private void setValues(PreparedStatement stmt, long period, String id, CountersSet set) throws SQLException {
+    int pos = 1;
+    stmt.setLong(pos++, period);
+    if (id != null) stmt.setString(pos++, id);
+    stmt.setLong(pos++, set.getAccepted());
+    stmt.setLong(pos++, set.getRejected());
+    stmt.setLong(pos++, set.getDelivered());
+    stmt.setLong(pos++, set.getFailed());
+    stmt.setLong(pos++, set.getRescheduled());
+    stmt.setLong(pos++, set.getTemporal());
+    stmt.setLong(pos++, set.getPeak_i());
+    stmt.setLong(pos, set.getPeak_o());
+  }
+
+  private void setError(PreparedStatement stmt, long period, String id, ErrorCounterSet err) throws SQLException {
+    int pos = 1;
+    stmt.setLong(pos++, period);
+    if (id != null) stmt.setString(pos++, id);
+    stmt.setInt(pos++, err.getErrcode());
+    stmt.setLong(pos, err.getCounter());
+  }
+
+  private void closeConnection(Connection connection) {
+    if (connection != null) {
+      try {
+        connection.close();
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  private void rollbackConnection(Connection connection) {
+    if (connection != null) {
+      try {
+        connection.rollback();
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  private void closeStatement(Statement stmt) {
+    if (stmt != null) {
+      try {
+        stmt.close();
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  private void dumpTotalCounters(PreparedStatement stmt, PreparedStatement errStmt,
+                                 ExtendedCountersSet set, long period,
+                                 ExportResults results) throws SQLException {
+    setValues(stmt, period, null, set);
+    stmt.executeUpdate();
+    results.total.records++;
+    for (ErrorCounterSet err : set.getErrors()) {
+      if (err == null) continue;
+      setError(errStmt, period, null, err);
+      errStmt.executeUpdate();
+      results.total.errors++;
+    }
+  }
+
+  private void dumpSmeCounters(PreparedStatement stmt, PreparedStatement errStmt,
+                               Collection<SmeIdCountersSet> map, long period,
+                               ExportResults results) throws SQLException {
+    for (SmeIdCountersSet sme : map) {
+      if (sme == null) continue;
+      setValues(stmt, period, sme.getSmeid(), sme);
+      stmt.executeUpdate();
+      results.smes.records++;
+      for (ErrorCounterSet err : sme.getErrors()) {
+        if (err == null) continue;
+        setError(errStmt, period, sme.getSmeid(), err);
+        errStmt.executeUpdate();
+        results.smes.errors++;
+      }
+    }
+  }
+
+  private void dumpRouteCounters(PreparedStatement stmt, PreparedStatement errStmt,
+                                 Collection<RouteIdCountersSet> map, long period,
+                                 ExportResults results) throws SQLException {
+    for (RouteIdCountersSet route : map) {
+      if (route == null) continue;
+      setValues(stmt, period, route.getRouteid(), route);
+      stmt.executeUpdate();
+      results.routes.records++;
+      for (ErrorCounterSet err : route.getErrors()) {
+        if (err == null) continue;
+        setError(errStmt, period, route.getRouteid(), err);
+        errStmt.executeUpdate();
+        results.routes.errors++;
+      }
+    }
+  }
+
+  private void cleanTable(Connection connection, long from, long to, String totalSmsTable,
+                          String totalErrTable, String smeSmsTable, String smeErrTable, String routeSmsTable, String routeErrTable) throws SQLException {
+    Statement stmt = null;
+    try {
+      stmt = connection.createStatement();
+      final String wherePart = prepareWherePart(from, to);
+      stmt.executeUpdate(DELETE_OP_SQL + totalSmsTable + wherePart);
+      stmt.executeUpdate(DELETE_OP_SQL + totalErrTable + wherePart);
+      stmt.executeUpdate(DELETE_OP_SQL + smeSmsTable + wherePart);
+      stmt.executeUpdate(DELETE_OP_SQL + smeErrTable + wherePart);
+      stmt.executeUpdate(DELETE_OP_SQL + routeSmsTable + wherePart);
+      stmt.executeUpdate(DELETE_OP_SQL + routeErrTable + wherePart);
+      connection.commit(); // commit old stat delete
+
+      logger.debug("Old statistics data deleted");
+    } finally {
+      if (stmt != null) {
+        try {
+          stmt.close();
+        } catch (Exception ignored) {
+        }
+      }
+    }
+  }
+
+
+  public ExportResults exportStatistics(SmscStatFilter filter, SmscStatLoadListener loadListener) throws AdminException {
+    return exportStatistics(filter, defExportSettings, loadListener);
+  }
+
+  public ExportResults exportStatistics(SmscStatFilter filter, ExportSettings export, SmscStatLoadListener loadListener) throws AdminException {
+    final ExportResults results = new ExportResults();
+    final String tablesPrefix = export.getPrefix();
+    final String totalSmsTable = tablesPrefix + "_sms";
+    final String totalErrTable = tablesPrefix + "_state";
+    final String smeSmsTable = tablesPrefix + "_sme";
+    final String smeErrTable = tablesPrefix + "_sme_state";
+    final String routeSmsTable = tablesPrefix + "_route";
+    final String routeErrTable = tablesPrefix + "_route_state";
+
+    long fromPeriod = filter.getFrom() != null ? calculatePeriod(filter.getFrom()) : -1;
+    long tillPeriod = filter.getTill() != null ? calculatePeriod(filter.getTill()) : -1;
+
+    Connection connection = null;
+    Statement stmt = null;
+    PreparedStatement insertSms = null;
+    PreparedStatement insertErr = null;
+    PreparedStatement insertSmeSms = null;
+    PreparedStatement insertSmeErr = null;
+    PreparedStatement insertRouteSms = null;
+    PreparedStatement insertRouteErr = null;
+    try {
+
+      try {
+        connection = getConnection(export);
+      } catch (Exception e) {
+        throw new StatException("cant_connect");
+      }
+      try {
+        cleanTable(connection, fromPeriod, tillPeriod, totalSmsTable, totalErrTable, smeSmsTable, smeErrTable, routeSmsTable, routeErrTable);
+      } catch (Exception e) {
+        throw new StatException("cant_clean");
+      }
+
+      try {
+        insertSms = connection.prepareStatement(INSERT_OP_SQL + totalSmsTable + VALUES_SMS_SQL);
+        insertErr = connection.prepareStatement(INSERT_OP_SQL + totalErrTable + VALUES_SMS_ERR_SQL);
+        insertSmeSms = connection.prepareStatement(INSERT_OP_SQL + smeSmsTable + VALUES_SME_SQL);
+        insertSmeErr = connection.prepareStatement(INSERT_OP_SQL + smeErrTable + VALUES_SME_ERR_SQL);
+        insertRouteSms = connection.prepareStatement(INSERT_OP_SQL + routeSmsTable + VALUES_ROUTE_SQL);
+        insertRouteErr = connection.prepareStatement(INSERT_OP_SQL + routeErrTable + VALUES_ROUTE_ERR_SQL);
+      } catch (SQLException e) {
+        throw new StatException("internal_error");
+      }
+
+      long tm = System.currentTimeMillis();
+
+      Set<FileWithDate> selectedFiles = getStatFiles(filter.getFrom(), filter.getTill());
+      if (selectedFiles.isEmpty()) return results;
+
+      if (loadListener != null) {
+        loadListener.setTotal(selectedFiles.size());
+      }
+
+      for (FileWithDate file : selectedFiles) {
+        final Connection conn = connection;
+        final PreparedStatement _insertSms = insertSms;
+        final PreparedStatement _insertErr = insertErr;
+        final PreparedStatement _insertSmeSms = insertSmeSms;
+        final PreparedStatement _insertSmeErr = insertSmeErr;
+        final PreparedStatement _insertRouteSms = insertRouteSms;
+        final PreparedStatement _insertRouteErr = insertRouteErr;
+        try {
+          processFile(file, filter.getFrom(), filter.getTill(), new Visitor() {
+            public void visit(Date lastDate, CountersSet lastHourSet, ExtendedCountersSet errorsSet,
+                              Collection<SmeIdCountersSet> smeCounters, Collection<RouteIdCountersSet> routeCounters) throws VisitorException {
+
+              errorsSet.increment(lastHourSet);
+
+              try {
+                long period = calculatePeriod(lastDate); // dump counters to DB
+                dumpTotalCounters(_insertSms, _insertErr, errorsSet, period, results);
+                dumpSmeCounters(_insertSmeSms, _insertSmeErr, smeCounters, period, results);
+                dumpRouteCounters(_insertRouteSms, _insertRouteErr, routeCounters, period, results);
+                conn.commit();
+              } catch (Exception e) {
+                throw new VisitorException(e);
+              }
+
+            }
+          });
+        } catch (VisitorException e) {
+          throw new StatException("cant_insert");
+        }
+        if (loadListener != null) {
+          loadListener.incrementProgress();
+        }
+      }
+
+      logger.debug("End dumping statistics at: " + new Date() + " time spent: " +
+          (System.currentTimeMillis() - tm) / 1000);
+
+      return results;
+    } catch (AdminException exc) {
+      logger.error(exc, exc);
+      rollbackConnection(connection);
+      throw exc;
+    } finally {
+      closeStatement(stmt);
+      closeStatement(insertSms);
+      closeStatement(insertErr);
+      closeStatement(insertSmeSms);
+      closeStatement(insertSmeErr);
+      closeStatement(insertRouteSms);
+      closeStatement(insertRouteErr);
+      closeConnection(connection);
+    }
   }
 
 
@@ -419,15 +751,17 @@ public class SmscStatProvider {
     }
   }
 
-  private static class FileWithDate implements Comparable<FileWithDate>{
+  private static class FileWithDate implements Comparable<FileWithDate> {
     private final File file;
     private final Date date;  //GMT
+
     private FileWithDate(File file, Date date) {
       this.file = file;
       this.date = date;
     }
+
     public int compareTo(FileWithDate o) {
-      int res =  this.date.compareTo(o.date);
+      int res = this.date.compareTo(o.date);
       return res != 0 ? res : file.compareTo(o.file);
     }
 
@@ -452,6 +786,16 @@ public class SmscStatProvider {
     }
   }
 
+  private static class VisitorException extends Exception {
+    private VisitorException(Throwable cause) {
+      super(cause);
+    }
+  }
+
+  private static interface Visitor {
+    public void visit(Date date, CountersSet lastHourSet, ExtendedCountersSet errorsSet, Collection<SmeIdCountersSet> countersForSme,
+                      Collection<RouteIdCountersSet> countersForRoute) throws VisitorException;
+  }
 
 
 }

@@ -7,13 +7,13 @@ import java.util.*;
  */
 public class ExtendedCountersSet extends CountersSet {
 
-  private Map<Integer, ErrorCounterSet> errors = new TreeMap<Integer, ErrorCounterSet>();
+  private final Map<Integer, ErrorCounterSet> errors = new TreeMap<Integer, ErrorCounterSet>();
 
   ExtendedCountersSet() {
   }
 
   ExtendedCountersSet(long accepted, long rejected, long delivered,
-                             long failed, long rescheduled, long temporal, long i, long o) {
+                      long failed, long rescheduled, long temporal, long i, long o) {
     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
   }
 
@@ -31,7 +31,7 @@ public class ExtendedCountersSet extends CountersSet {
     }
   }
 
- public List<ErrorCounterSet> getErrors() {
+  public List<ErrorCounterSet> getErrors() {
     return new ArrayList<ErrorCounterSet>(errors.values());
   }
 
