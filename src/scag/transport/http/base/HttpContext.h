@@ -1,7 +1,7 @@
 #ifndef SCAG_TRANSPORT_HTTP_BASE_CONTEXT
 #define SCAG_TRANSPORT_HTTP_BASE_CONTEXT
 
-#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 #include "core/network/Socket.hpp"
 #include "core/buffers/TmpBuf.hpp"
 #include "HttpCommand2.h"
@@ -17,9 +17,8 @@ namespace scag2 { namespace transport { namespace http {
 
 using smsc::core::network::Socket;
 using smsc::core::buffers::TmpBuf;
-using smsc::core::synchronization::Mutex;
 using smsc::logger::Logger;
-//using scag2::transport::http::ChunkInfo;
+using smsc::core::synchronization::EventMonitor;
 
 #define DFLT_BUF_SIZE 32
 
@@ -142,14 +141,13 @@ public:
 
     static const char* actionName(ActionID act) { return ActionNames[act]; }
     const char* actionName() { return ActionNames[action]; }
+    void setAcceptorMon(EventMonitor* mon) { AcceptorMon = mon; }
 
 protected:
     void closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info);
     void prepareNextChunk();
 //temporary for debug log
 /*
-	Mutex mtx_c;
-	Mutex mtx_f;
 	static unsigned int counter_create;
 	static unsigned int counter_free;
 	void createCount();
@@ -188,6 +186,7 @@ protected:
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;
     Logger *logger;
+	EventMonitor* AcceptorMon;
 /*
  * connectionTimeout - performs additional connection check if site response includes "Connection: keep-alive" header
  * default value = cfg:https.timeout;
@@ -208,6 +207,7 @@ protected:
 //    void sslCertInfo(X509* cert);
 //temporary for debug log
     const char* connName(Socket* s) { return (s==user?nameUser:nameSite); }
+    void unparsedZeroTerminate();
 
 public:
     template<class T>

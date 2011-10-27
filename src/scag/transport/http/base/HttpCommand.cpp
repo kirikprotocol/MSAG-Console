@@ -532,7 +532,13 @@ const std::string& HttpRequest::serialize()
             }
             headers += CRLF;
         }
-
+//
+        std::string s1 = getSite();
+        unsigned int sp = getSitePort();
+        char* ch1 = lltostr(sp, buf + 19);
+        std::string s2 = std::string(ch1);
+//
+        setHeaderField("Host", s1 + ((sp != 80) ? ':' + s2 : ""));
         setHeaderField("Host", getSite() + ((getSitePort() != 80) ? ':' + std::string(lltostr(getSitePort(), buf + 19)) : ""));
 
         headerFields.First();

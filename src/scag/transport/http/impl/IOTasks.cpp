@@ -173,7 +173,6 @@ int HttpReaderTask::Execute()
             
             while(waitingAdd.Count())
             {
-//                Socket *s;
                 waitingAdd.Pop(s);
                 multiplexer.add(s);
             }
@@ -214,7 +213,6 @@ int HttpReaderTask::Execute()
     }	// for (;;)
 
     {
-//        Socket *s;
         MutexGuard g(sockMon);
 
         while (multiplexer.Count()) {
@@ -273,7 +271,6 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 		else
 			closed = true;
 	}
-//	smsc_log_debug(logger, "%p: %p %p read %d chars, action=%s closed=%s", this, cx, s, len, cx->actionName(), (closed?"y":"n"));
 
 	if ( len < 0 ) {
 		smsc_log_debug(logger, "%p ssl close connection. len=%d", this, len);
@@ -287,22 +284,18 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 	}
 // if keep-alive connection, sslRead... may return 0 after last piece of data, when request/response already parsed. so should be ignored
 	if ( !(cx->action == READ_REQUEST || cx->action == READ_RESPONSE) ) {
-//		smsc_log_debug(logger, "read %d chars, action=%s socket %p remove and continue", len, cx->actionName(), s);
 		removeSocket(s);
 		return;
 	}
-//	if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
 
 	switch ( HttpParser::parse(*cx, (len==0)) ) {
 	case OK:
 		if (cx->action == READ_REQUEST) {
 			removeSocket(s);
-//			smsc_log_debug(logger, "%p: %p, request parsed, socket %p", this, cx, s);
 			cx->action = PROCESS_REQUEST;
 		}
 		else {	//		if (cx->action == READ_RESPONSE) {
 			if ( !closed ) {
-//				smsc_log_debug(logger, "%p: %p, response parse ok-continue", this, cx);
 				break;
 			}
 			removeSocket(s);
@@ -316,7 +309,6 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 		manager.process(cx);
 		break;
 	case CONTINUE:
-//		smsc_log_debug(logger, "%p: %p, parse continue (%s)", this, cx, cx->actionName());
 		HttpContext::updateTimestamp(s, now);
 		break;
 	case ERROR:
@@ -325,15 +317,6 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 		cx->setDestiny(405, cx->action == READ_RESPONSE ? (FAKE_RESP | DEL_SITE_SOCK) : FAKE_RESP);
 		error.Push(s);
 	}
-/*
-	}
-	else {
-		smsc_log_error(logger, "%p: %p, read error", this, cx);
-		cx->setDestiny(405, cx->action == READ_RESPONSE ?
-			(FAKE_RESP | DEL_SITE_SOCK) : DEL_CONTEXT);
-		error.Push(s);
-	}
-*/
 }
 
 void HttpReaderTask::registerContext(HttpContext* cx)
@@ -470,7 +453,6 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
 				written_size = s->Write(data, size);
 			} while (written_size == -1 && errno == EINTR);
 		}
-//		smsc_log_debug(logger, "%p, actual send %d chars", this, written_size);
 		if (written_size > 0) {
 			cx->sendPosition += written_size;
 			HttpContext::updateTimestamp(s, now);
@@ -505,7 +487,6 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
     {
 //if chunked then messageIsOver() returns true on headers and every chunk, so continue
     	if ( cx->command->chunked && cx->chunks.size() ) {
-//			smsc_log_debug(logger, "%p: %p, continue with next chunk, final %d chunks to send", this, cx, cx->chunks.size());
    			return;
     	}
 		removeSocket(s);
@@ -520,9 +501,6 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
         else {
         	smsc_log_info(logger, "%p: %p, response sent socket %p", this, cx, s);
         	if (cx->command->closeConnection()) {
-//				smsc_log_debug(logger, "%p connection: close, cx:%p socket %p", this, cx, s);
-//				deleteSocket(s, SHUT_WR);
-//				smsc_log_debug(logger, "cx:%p, socket:%p finalized", cx, s);
                 cx->closeConnection(s);
 				cx->action = PROCESS_STATUS_RESPONSE;
 				cx->result = 0;
@@ -539,13 +517,9 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
 
 void HttpWriterTask::registerContext(HttpContext* cx)
 {
-//	smsc_log_debug(logger, "HttpWriterTask::registerContext cx:%p user=%p site=%p", cx, cx->user, cx->site);
     Socket *s;
 
     if (cx->action == SEND_REQUEST) {
-/*
- * TODO: make decision to use HTTPS connection on site (depends on url or route fields);
- */
     	if (cx->site)
     		s = cx->site;
     	else {
@@ -579,7 +553,6 @@ const char* HttpReaderTask::taskName() {
 
 void IOTask::addSocket(Socket* s, bool connected)
 {
-//	smsc_log_debug(logger, "%p: addSocket %p.", this, s);
     MutexGuard g(sockMon);
 
     HttpContext::updateTimestamp(s, time(NULL));

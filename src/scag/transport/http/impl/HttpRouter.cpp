@@ -258,7 +258,7 @@ bool HttpRouterImpl::getTraceRouteById(const std::string& addr, const std::strin
     return false;
 }
 
-HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
+HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t& port)
 {
     MutexGuard mt(GetRouteMutex);
     TmpBuf<char, 512> pt(512);
@@ -269,7 +269,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 
 //    Address adr(addr.c_str());
     s = site + ':' + lltostr(port, buf + 19);
-    smsc_log_debug(smsc::logger::Logger::getInstance("Http.Router"), "HttpRouterImpl::findRoute addr:%s, site:[%s]:port[%d] path[%s]", addr.c_str(), site.c_str(), port, path.c_str());
+//    smsc_log_debug(logger, "HttpRouterImpl::findRoute addr:%s, site:[%s]:port[%d] path[%s] hostsMap:%d", addr.c_str(), site.c_str(), port, path.c_str(), hostsMap->GetCount());
 
 /*
  * Add mix-protocol feature; (xom 25.07.11)
@@ -294,6 +294,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 		if ( port != 443 ) {						// 2nd: check default https port number
 			s = site + ':' + lltostr(443, buf + 19);
 			if ( (p = hostsMap->GetPtr(s.c_str())) ) {
+				port = 443;
 				break;	 							// route found
 			}
 		}
@@ -301,6 +302,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 		if ( port != 80 ) {							// 3rd: check default http port number
 			s = site + ':' + lltostr(80, buf + 19);
 			if( (p = hostsMap->GetPtr(s.c_str())) ) {
+				port = 80;
 				break;								// route found
 			}
 		}
@@ -308,6 +310,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
     } while (0);
 
     hid = *p;
+    smsc_log_debug(logger, "HttpRouterImpl::findRoute addr:%s, site:[%s]:port[%d] path[%s] hostsMap:%d result:%p:%u", addr.c_str(), site.c_str(), port, path.c_str(), hostsMap->GetCount(), p, hid);
 
     pt.Append(path.c_str(), static_cast<size_t>(path.length() + 1));
     pathPtr = pt.get();
@@ -337,8 +340,10 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
                 if((p = masksMap->GetPtr(buf)))
                 {
                     AddressURLKey auk(*p, hid, pid);
-                    if((rt = AddressURLMap->GetPtr(auk)) && (*rt)->enabled)
+                    if((rt = AddressURLMap->GetPtr(auk)) && (*rt)->enabled) {
+                        smsc_log_debug(logger, "HttpRouterImpl::findRoute AddressURLMap->GetPtr(%u,%u,%u)=%p", *p, hid, pid, *rt);
                         return *(*rt);
+                    }
                 }
                 buf[--addrLen] = '?';
             }
@@ -463,6 +468,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
     for(int i = 0; i < r->Count(); i++)
     {
         rt = &(*r)[i];
+        smsc_log_debug(logger, "HttpRouterImpl::BuildMaps routeCount %d route[%d]:%p %s", r->Count(), i, rt, rt->toString().c_str());
 
         rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
         if(rt->provider_id == 0)
@@ -482,7 +488,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
         {
             s = rt->sites[k].host + ':' + lltostr(rt->sites[k].port, buf + 19);
             chid = getId(hh, s, hid);
-            smsc_log_debug(logger, "HttpRouterImpl::BuildMaps add_route: %u %s %u", chid, s.c_str(), hid);
+            smsc_log_debug(logger, "HttpRouterImpl::BuildMaps routeSitesCount %d:%d add_route: %u %s %u count:%d", rt->sites.Count(), k, chid, s.c_str(), hid, hh->GetCount());
             for(int m = 0; m < rt->sites[k].paths.Count(); m++)
             {
                 cpid = getId(ph, rt->sites[k].paths[m], pid);
@@ -500,9 +506,11 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
                 for(int j = 0; j < rt->masks.Count(); j++)
                 {
                     cmid = getId(mh, rt->masks[j], mid);
-                    smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s", rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
+//                    smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s", rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
                     AddressURLKey auk(cmid, chid, cpid);
                     auh->Insert(auk, rt);
+                    smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s count=%d auh->Insert((%u, %u, %u) %p);",
+                    		rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str(), auh->Count(), cmid, chid, cpid, rt);
                 }
             }
         }

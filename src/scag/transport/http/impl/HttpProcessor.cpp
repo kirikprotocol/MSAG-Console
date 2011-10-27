@@ -320,14 +320,15 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 }
                 else
                 {
+                	uint32_t port = request.getSitePort();
 //                   smsc_log_debug(logger, "Attempt to find route. abonent:%s, site:[%s]:[%d][%s][%s]",
-//                    	request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str());
-                   r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());
+//                    	request.getAbonent().c_str(), request.getSite().c_str(), port, request.getSitePath().c_str(), request.getSiteFileName().c_str());
+                   r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), port);
 // (xom 25.07.11) add port change (port,443,80 selection) as mix-protocol feature
-                   smsc_log_debug(logger, "HttpProcessorImpl::processRequest setSitePort:%d", r.defSite.port);
-                   request.setSitePort(r.defSite.port);
+//                   smsc_log_debug(logger, "HttpProcessorImpl::processRequest setSitePort:%d", port);
+                   request.setSitePort(port);
                 }
-                smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
+//                smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
             } catch (const RouteNotFoundException& e) {
                 smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
                 registerEvent( stat::events::http::REQUEST_FAILED, request);
@@ -375,8 +376,10 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
             else if(request.getServiceId() > 0)
                 r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
-            else
-                r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
+            else {
+            	uint32_t port = request.getSitePort();
+                r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), port);
+            }
         }
             
 

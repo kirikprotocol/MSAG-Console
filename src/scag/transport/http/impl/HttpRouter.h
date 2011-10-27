@@ -43,7 +43,7 @@ public:
     virtual HttpRoute findRoute( const std::string& addr,
                                  const std::string& site,
                                  const std::string& path,
-                                 uint32_t port ) = 0;
+                                 uint32_t& port ) = 0;
     virtual HttpRoute findRouteByServiceId( const std::string& addr,
                                             uint32_t sid,
                                             const std::string& path) = 0;
@@ -67,7 +67,7 @@ public:
 
     void init(const std::string& cfg);
 
-    HttpRoute findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port);
+    HttpRoute findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t& port);
     HttpRoute getRoute(uint32_t routeId);
     HttpRoute findRouteByServiceId(const std::string& addr, uint32_t sid, const std::string& path);
     HttpRoute findRouteByRouteId(const std::string& addr, uint32_t rid, const std::string& path);

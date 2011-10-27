@@ -3,10 +3,12 @@
 #include "HttpAcceptor.h"
 #include "scag/transport/http/base/HttpContext.h"
 #include "Managers.h"
+#include "core/synchronization/EventMonitor.hpp"
 
 namespace scag2 { namespace transport { namespace http
 {
 using smsc::util::Exception;
+using smsc::core::synchronization::EventMonitor;
 
 HttpAcceptor::HttpAcceptor(HttpManagerImpl& m) : manager(m)
 {
@@ -30,17 +32,24 @@ int HttpAcceptor::Execute()
             smsc_log_error(logger, "%s failed to accept, error: %s", taskName(), strerror(errno));
             break;
         }
-        HttpContext *cx = new HttpContext(user_socket, httpsOptions);
-        smsc_log_info(logger, "%s accepted: context %p, socket %p", taskName(), cx, user_socket);
-        if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
-            smsc_log_info(logger, "%s accepted: context %p, socket %p manager.isLicenseExpired", taskName(), cx, user_socket);
-          cx->action = SEND_RESPONSE;
-          cx->createFakeResponse(503);
-          manager.writers.process(cx);
-          continue;
-        }
-        manager.readers.process(cx);
-        manager.incLicenseCounter();
+
+		EventMonitor AcceptorMon;
+		HttpContext *cx = new HttpContext(user_socket, httpsOptions);
+
+		cx->setAcceptorMon(&AcceptorMon);
+
+		if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
+			smsc_log_info(logger, "%s accepted: context %p, socket %p manager.isLicenseExpired", taskName(), cx, user_socket);
+		  cx->action = SEND_RESPONSE;
+		  cx->createFakeResponse(503);
+		  manager.writers.process(cx);
+		  continue;
+		}
+		manager.readers.process(cx);
+		manager.incLicenseCounter();
+
+	    if (httpsOptions->userActive)
+	    	AcceptorMon.wait();
     }
 
     if (user_socket)

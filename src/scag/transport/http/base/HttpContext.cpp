@@ -38,6 +38,7 @@ command(NULL),
 action(READ_REQUEST),
 requestFailed(false),
 unparsed(DFLT_BUF_SIZE),
+AcceptorMon(NULL),
 connectionTimeout(0),
 sslOptions(options),
 userSsl(NULL),
@@ -59,27 +60,21 @@ siteSsl(NULL)
 
 HttpContext::~HttpContext()
 {
-	smsc_log_debug(logger, "%p ~HttpContext 1, user %p site %p", this, user, site);
 	try
 	{
-		if (site) {
+		if (site)
 			closeSocketConnection(site, siteHttps, siteSsl, nameSite);
-//			if (site) delete site;
-		}
-		smsc_log_debug(logger, "%p ~HttpContext 2, user %p site %p", this, user, site);
-		if (user) {
+		if (user)
 			closeSocketConnection(user, userHttps, userSsl, nameUser);
-//			if (user) delete user;
-		}
-		smsc_log_debug(logger, "%p ~HttpContext 3, user %p site %p", this, user, site);
 		if (command)
 			delete command;
-		smsc_log_debug(logger, "%p ~HttpContext 4, user %p site %p", this, user, site);
 	}
 	catch(...) {
 		smsc_log_error(logger, "%p ~HttpContext Exception, user %p site %p", this, user, site);
 	}
-	smsc_log_debug(logger, "%p ~HttpContext 5, user %p site %p", this, user, site);
+//	smsc_log_debug(logger, "%p ~HttpContext, user %p site %p Signal Acceptor", this, user, site);
+	if (AcceptorMon && userHttps)
+		AcceptorMon->notify();
 }
 
 bool HttpContext::isTimedOut(Socket* s, time_t now) {
@@ -178,17 +173,12 @@ void HttpContext::closeConnection(Socket* s) {
 
 void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info) {
 	s->setNonBlocking(0);
-	smsc_log_debug(logger, "%p closeSocketConnection 1: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 	if ( httpsFlag ) {
 		try {
 			if (ssl) {
-				smsc_log_debug(logger, "%p closeSocketConnection 1-0: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 				SSL_shutdown(ssl);
-				smsc_log_debug(logger, "%p closeSocketConnection 1-1: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 				SSL_free(ssl);
-				smsc_log_debug(logger, "%p closeSocketConnection 1-2: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 				ssl = NULL;
-				smsc_log_debug(logger, "%p closeSocketConnection 1-3: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 			}
 			else
 				smsc_log_debug(logger, "%p close%sConnection: already closed", this, info);
@@ -201,7 +191,6 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 		}
 		smsc_log_debug(logger, "%p close%sConnection: Ok", this, info);
 	}
-	smsc_log_debug(logger, "%p closeSocketConnection 2: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 	try {
 		if (s) {
 			s->Abort();
@@ -212,7 +201,6 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 	catch(...) {
 		smsc_log_error(logger, "%p close%sConnection: exception user:%p site:%p userSsl:%p siteSsl:%p", this, info, user, site, userSsl, siteSsl);
 	}
-	smsc_log_debug(logger, "%p closeSocketConnection 3: s:%p f:%d ssl:%p i:%s", this, s, (httpsFlag?1:0), ssl, info);
 }
 
 /*
@@ -276,7 +264,7 @@ bool HttpContext::useHttps(Socket* s) {
 int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t readBufSize, bool& closed) {
 	SSL* ssl = sslCheckConnection(s);
 	if (ssl == NULL) {
-		smsc_log_error(logger, "%p sslReadPartial: no %s connection return -2", this, connName(s));
+//		smsc_log_error(logger, "%p sslReadPartial: no %s connection return -2", this, connName(s));
 		return -2;
 	}
 
@@ -298,6 +286,7 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 
 		if ( len > 0 ) {
 			unparsed.Append(readBuf, len);
+			unparsedZeroTerminate();
 			total += len;
 			if ( (ssl_err == SSL_ERROR_ZERO_RETURN) || (ssl_err == SSL_ERROR_SYSCALL) || SSL_get_shutdown(ssl) )
 				closed = true;
@@ -387,31 +376,29 @@ void HttpContext::messagePrepare() {
 	}
 
     if ( (siteHttps && (action == SEND_REQUEST)) || (userHttps && (action == SEND_RESPONSE)) ) {
-		size_t tmp;
 		unparsed.SetPos(0);
 		// write headers
 		const std::string &headers = command->getMessageHeaders();
 		size = headers.size();
-		if (size)
+		if (size) {
 			unparsed.Append(headers.data(), size);
-
-		unparsed.Append("\0", 1);
-		tmp = unparsed.GetPos();
-		if (tmp > 0) {
-			unparsed.SetPos(--tmp);
+			unparsedZeroTerminate();
 		}
+
 		// write content
 		data = command->getMessageContent(cnt_size);
-		if (cnt_size)
+		if (cnt_size) {
 			unparsed.Append(data, cnt_size);
+			unparsedZeroTerminate();
+    	}
 
-		unparsed.Append("\0", 1);
-		tmp = unparsed.GetPos();
-		if (tmp > 0) {
-			unparsed.SetPos(--tmp);
-		}
 		flags = 1;
     }
+}
+
+void HttpContext::unparsedZeroTerminate() {
+	unparsed.Append("\0", 1);
+	unparsed.SetPos(unparsed.GetPos()-1);
 }
 
 /*
