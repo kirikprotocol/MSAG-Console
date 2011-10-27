@@ -141,7 +141,7 @@ public class TestAdminContext extends AdminContext {
     if (instType == InstallationType.SINGLE)
       serviceManager = new TestServiceManagerSingle(servicesDir, smscInstancesNumber);
     else
-      serviceManager = new TestServiceManagerHA(servicesDir, smscInstancesNumber, new String[] {"host0", "host1", "host2"});
+      serviceManager = new TestServiceManagerHA(servicesDir, smscInstancesNumber, new String[] {"host0", "host1"});
 
     fileSystem = new TestFileSystem();
 

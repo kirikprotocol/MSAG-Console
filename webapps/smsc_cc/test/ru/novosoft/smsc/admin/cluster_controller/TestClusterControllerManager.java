@@ -7,7 +7,7 @@ import ru.novosoft.smsc.admin.service.ServiceManager;
 /**
  * @author Artem Snopkov
  */
-public class TestClusterControllerManager extends ClusterControllerManager {
+public class TestClusterControllerManager extends ClusterControllerManagerImpl {
   public TestClusterControllerManager(ServiceManager serviceManager, FileSystem fileSystem) throws AdminException {
     super(serviceManager, fileSystem);
   }
