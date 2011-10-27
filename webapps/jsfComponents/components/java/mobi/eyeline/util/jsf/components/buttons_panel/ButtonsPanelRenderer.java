@@ -44,7 +44,7 @@ public class ButtonsPanelRenderer extends Renderer {
             }
             prev = c;
           }
-          if(prev != null && prev instanceof Button) {
+          if(prev != null && prev instanceof Button && prev.isRendered()) {
             w.append("<td width=\"1px\" style=\"padding-left:4px; padding-right:4px\">|</td>");
           }
         }
