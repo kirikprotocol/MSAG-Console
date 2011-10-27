@@ -30,9 +30,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <p/>
-
-      <h:panelGrid style="padding:10px" columns="2" columnClasses="column1, column2">
+      <h:panelGrid style="padding:5px 0px 5px 10px;" columns="2" columnClasses="column1, column2" >
         <h:outputText value="#{msg['smsc.alias.column.alias']}"/>
         <eye:inputText value="#{aliasEdit.simpleAlias}" required="true"/>
 
@@ -42,8 +40,6 @@
         <h:outputText value="#{msg['smsc.alias.column.hidden']}"/>
         <h:selectBooleanCheckbox value="#{aliasEdit.hide}"/>
       </h:panelGrid>
-
-      <p/>
 
       <eye:buttons>
         <eye:button>

@@ -20,11 +20,9 @@
     <h:form rendered="#{!categories.initError}">
 
       <h:inputHidden value="#{categories.revision}"/>
-      <eye:message level="warn" rendered="#{categories.settingsChanged}">
-        <h:outputText value="#{msg['smsc.submit.hint']}"/>
-      </eye:message>
-
-      <p/>
+      <h:panelGrid style="padding-bottom: 5px" rendered="#{categories.settingsChanged}">
+        <eye:message level="warn"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      </h:panelGrid>
 
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{categories}" action="submit"/></eye:button>

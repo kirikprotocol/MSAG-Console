@@ -33,9 +33,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <p/>
-
-      <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
+      <h:panelGrid columns="2" style="margin-left: 15px; padding-top:5px;" columnClasses="labelColumn, valueColumn">
         <h:outputText value="#{archiveDaemonBundle['interval']}"/>
         <eye:inputText value="#{archiveDaemon.config.interval}">
           <smsc:validatePositive/>

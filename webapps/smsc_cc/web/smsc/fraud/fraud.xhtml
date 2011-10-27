@@ -20,10 +20,9 @@
 
     <h:form rendered="#{!fraud.initError}">
       <h:inputHidden value="#{fraud.revision}"/>
-      <eye:message level="warn" rendered="#{fraud.settingsChanged}"><h:outputText
-          value="#{msg['smsc.submit.hint']}"/></eye:message>
-
-      <p/>
+      <h:panelGrid style="padding-bottom: 5px" rendered="#{fraud.settingsChanged}">
+        <eye:message level="warn"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      </h:panelGrid>
 
       <smsc:pageSubtitle value="#{msg['smsc.fraud.subtitle.policy']}"/>
       <h:panelGrid style="padding-left: 10px" columns="2" columnClasses="labelColumn, valueColumn">
@@ -38,9 +37,7 @@
 
       </h:panelGrid>
 
-      <p/>
-
-      <h:panelGrid style="align:left;" columns="1" columnClasses="column0Width">
+      <h:panelGrid style="align:left;padding-top: 5px" columns="1" columnClasses="column0Width">
         <smsc:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>
         <eye:dataTable value="#{fraud.addressTableModel}" selectedRows="#{fraud.selectedRows}" var="row">
           <eye:row>
@@ -51,12 +48,10 @@
         </eye:dataTable>
       </h:panelGrid>
 
-      <p/>
-
       <eye:buttons>
         <eye:button>
           <h:commandLink actionListener="#{fraud.addLine}">
-            <h:graphicImage value="/images/but_add.gif" style="margin-left: -20px; margin-bottom: -18px"/>
+            <h:graphicImage value="/images/but_add.gif" style="margin-left: -20px; margin-bottom: -20px"/>
           </h:commandLink>
           <h:panelGroup style="width:150px; margin-bottom: 0px">
             <eye:inputText value="#{fraud.newAddr}" required="false">

@@ -22,31 +22,22 @@
 
     <h:form>
       <h:inputHidden value="#{snmp.revision}"/>
-      <eye:message level="warn" rendered="#{snmp.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
-
-      <p/>
-      <eye:buttons>
-        <eye:button><smsc:submitButton bean="#{snmp}" action="save"/></eye:button>
-        <eye:button><smsc:resetButton bean="#{snmp}" action="reset"/></eye:button>
-        <eye:space/>
-      </eye:buttons>
-
-      <p/>
+      <h:panelGrid style="padding-bottom: 5px" rendered="#{snmp.settingsChanged}">
+        <eye:message level="warn" ><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      </h:panelGrid>
 
       <smsc:pageSubtitle value="#{msg['smsc.snmp.settings']}"/>
 
-      <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
+      <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="padding-left: 10px; padding-bottom: 5px;">
         <h:outputText value="#{snmpSettingsBundle['counterInterval']}"/>
         <eye:inputText value="#{snmp.counterInterval}" required="true">
           <smsc:validatePositive/>
         </eye:inputText>
       </h:panelGrid>
 
-      <p/>
-
       <smsc:pageSubtitle value="#{msg['smsc.snmp.snmpObjects']}"/>
 
-      <h:panelGrid columns="2" columnClasses="column1,column2" rowClasses="listTableRow0, listTableRow1">
+      <h:panelGrid columns="2" columnClasses="column1,column2" rowClasses="listTableRow0, listTableRow1" style="padding-left: 10px; padding-bottom: 5px;">
         <h:commandLink value="#{msg['snmp.default.object']}" action="#{snmp.editObject}">
           <f:param name="objName" value=""/>
         </h:commandLink>

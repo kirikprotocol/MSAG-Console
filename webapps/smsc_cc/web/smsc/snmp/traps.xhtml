@@ -27,8 +27,6 @@
 
       <h:inputHidden value="#{traps.init}"/>
 
-      <p/>
-
       <eye:dataTableFilter applyAction="#{traps.query}">
 
         <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn" style="padding: 5px">
@@ -41,8 +39,6 @@
             </h:selectOneMenu>
         </h:panelGrid>
       </eye:dataTableFilter>
-
-      <p/>
 
       <eye:dataTable value="#{traps.traps}" var="u" rendered="#{traps.init}">
 

@@ -1,7 +1,8 @@
 <f:view xmlns="http://www.w3.org/1999/xhtml"
         xmlns:f="http://java.sun.com/jsf/core"
         xmlns:h="http://java.sun.com/jsf/html"
-        xmlns:ui="http://java.sun.com/jsf/facelets">
+        xmlns:c="http://java.sun.com/jstl/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:eye="http://jsfcomponents.eyeline.mobi">
 
   <ui:composition>
 
@@ -56,9 +57,18 @@
             <tr>
               <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_24.jpg"></td>
               <td>
-                <h:messages id="smsc_errors"/>
-                <div>&#160;</div>
-                <ui:insert name="content"/>
+
+                  <h:panelGrid columns="1" style="padding-bottom: 3px;">
+                    <eye:message level="error" rendered="#{messages.hasErrors}">
+                      <h:outputText value="#{messages.errors[0]}"/>
+                    </eye:message>
+                    <eye:message level="warn" rendered="#{messages.hasWarnings}">
+                      <h:outputText value="#{messages.warnings[0]}"/>
+                    </eye:message>
+                  </h:panelGrid>
+
+                  <ui:insert name="content"/>
+
 
               </td>
               <td height="1px" width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_26.jpg"></td>

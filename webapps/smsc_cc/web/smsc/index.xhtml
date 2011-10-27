@@ -95,7 +95,7 @@
               </eye:menubar>
               <h:commandLink value="#{data.onlineHost != null ? msg['status.page.switch'] : msg['status.page.start_at']} #{data.hosts[0]}" action="#{smscStatus.switchComponent}" rendered="${fn:length(data.hosts) eq 1}">
                 <f:param name="componentName" value="#{data.name}"/>
-                <f:param name="toHost" value="#{data.hosts[0]}"/>
+                <f:param name="toHost" value="#{data.hosts[0]}123"/>
               </h:commandLink>
             </h:panelGrid>
           </eye:column>

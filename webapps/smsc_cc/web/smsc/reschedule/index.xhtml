@@ -19,19 +19,18 @@
   <ui:define name="content">
 
     <h:form rendered="#{!reschedule.initFailed}">
-
-      <eye:message level="warn" rendered="#{reschedule.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      <h:panelGrid style="padding-bottom: 5px" rendered="#{reschedule.settingsChanged}">
+        <eye:message level="warn" ><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      </h:panelGrid>
 
       <h:inputHidden value="#{reschedule.revision}"/>
       
-      <h:panelGrid columns="2" columnClasses="column1, column2" style="margin-left: 5px;">
+      <h:panelGrid columns="2" columnClasses="column1, column2" style="padding-left: 5px;">
         <h:outputText value="#{msg['smsc.reschedule.default']}"/>
-        <eye:inputText value="#{reschedule.defaultReschedule}" required="true">
+        <eye:inputText value="#{reschedule.defaultReschedule}" required="true" cols="100">
           <smsc:validateRegExp pattern="#{reschedule.reschedulePattern}" messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
         </eye:inputText>
       </h:panelGrid>
-
-      <p/>
 
       <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}" var="g">
 
@@ -59,8 +58,6 @@
         </eye:row>
 
       </eye:dataTable>
-
-      <p/>
 
       <eye:buttons>
         <eye:button>

@@ -115,8 +115,6 @@
       </h:panelGrid>
     </eye:dataTableFilter>
 
-    <p/>
-
     <eye:dataTable value="#{smsViewOper.messages}" var="r" rendered="#{smsViewOper.init}" selectedRows="#{smsViewOper.selected}">
 
       <eye:row innerData="#{r.showText}">
@@ -183,8 +181,6 @@
         </f:facet>
       </eye:row>
     </eye:dataTable>
-
-    <p/>
 
     <eye:buttons rendered="#{smsViewOper.init}">
 

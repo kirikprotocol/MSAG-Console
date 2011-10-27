@@ -18,12 +18,10 @@
 
     <h:form>
 
-      <h:panelGrid columns="2" columnClasses="column1, column2">
+      <h:panelGrid columns="2" columnClasses="column1, column2" style="padding-bottom: 5px;">
         <h:outputText value="#{profile['address']}"/>
         <eye:inputText value="#{lookupProfile.address}"/>
       </h:panelGrid>
-
-      <p/>
 
       <eye:buttons>
         <eye:button>
@@ -32,9 +30,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <p/>
-
-      <h:panelGroup rendered="#{lookupProfile.canView}">
+      <h:panelGrid columns="1" rendered="#{lookupProfile.canView}" style="padding-top: 5px; padding-bottom: 5px;">
 
         <smsc:pageSubtitle value="#{msg['lookup.profile.page.exact.match']}" rendered="#{lookupProfile.lookupResult.exactMatch}"/>
         <smsc:pageSubtitle value="#{msg['lookup.profile.page.mask.match']}: #{lookupProfile.lookupResult.profile.address.simpleAddress}" rendered="#{lookupProfile.lookupResult.maskMatch}"/>
@@ -115,7 +111,7 @@
           <h:outputText value="#{lookupProfile.lookupResult.profile.outputAccessMask}"/>
         </h:panelGrid>
 
-      </h:panelGroup>
+      </h:panelGrid>
 
       <eye:buttons rendered="#{lookupProfile.canAdd or lookupProfile.canEdit}">
         <eye:button rendered="#{lookupProfile.canAdd}">

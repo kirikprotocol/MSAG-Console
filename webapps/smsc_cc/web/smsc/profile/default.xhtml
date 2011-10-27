@@ -23,12 +23,14 @@
         <eye:space/>
       </eye:buttons>
 
-      <ui:include src="profile_body.xhtml">
-        <ui:param name="profile_to_edit" value="#{defaultProfile.profile}"/>
-        <ui:param name="reportOptions" value="#{defaultProfile.reportOptions}"/>
-        <ui:param name="locales" value="#{defaultProfile.locales}"/>
-        <ui:param name="aliasHideOptions" value="#{defaultProfile.aliasHideOptions}"/>
-      </ui:include>
+      <h:panelGrid columns="1" style="padding-top: 5px; padding-bottom: 5px; padding-left: 10px;">
+        <ui:include src="profile_body.xhtml">
+          <ui:param name="profile_to_edit" value="#{defaultProfile.profile}"/>
+          <ui:param name="reportOptions" value="#{defaultProfile.reportOptions}"/>
+          <ui:param name="locales" value="#{defaultProfile.locales}"/>
+          <ui:param name="aliasHideOptions" value="#{defaultProfile.aliasHideOptions}"/>
+        </ui:include>
+      </h:panelGrid>
 
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{defaultProfile}" action="submit"/></eye:button>

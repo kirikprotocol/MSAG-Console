@@ -62,7 +62,7 @@ public class ClosedGroupsListController extends ClosedGroupsController{
 
       private List<ClosedGroup> groups;
 
-      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) throws ModelException {
 
         List<ClosedGroup> result = new ArrayList<ClosedGroup>(count);
 
@@ -105,11 +105,11 @@ public class ClosedGroupsListController extends ClosedGroupsController{
         return result;
       }
 
-      public int getRowsCount() {
+      public int getRowsCount() throws ModelException {
         return getGroups().size();
       }
 
-      private List<ClosedGroup> getGroups() {
+      private List<ClosedGroup> getGroups() throws ModelException {
         if(groups == null) {
           groups = new LinkedList<ClosedGroup>();
           try{
@@ -135,8 +135,7 @@ public class ClosedGroupsListController extends ClosedGroupsController{
               groups.add(g);
             }
           }catch (AdminException e) {
-            addError(e);
-            return new ArrayList<ClosedGroup>(0);
+            throw new ModelException(e.getMessage(getLocale()));
           }
         }
         return groups;
@@ -154,12 +153,12 @@ public class ClosedGroupsListController extends ClosedGroupsController{
 
   }
 
-  public Integer getFilterById() {
-    return filterById;
+  public String getFilterById() {
+    return filterById == null ? null : String.valueOf(filterById);
   }
 
-  public void setFilterById(Integer filterById) {
-    this.filterById = filterById;
+  public void setFilterById(String filterById) {
+    this.filterById = (filterById == null || filterById.trim().length() == 0) ? null : Integer.parseInt(filterById);
   }
 
   public String getFilterByName() {

@@ -25,7 +25,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="padding:20px">
+      <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="padding-top:5px; padding-bottom: 5px; padding-left: 10px">
         <h:outputText value="#{msg['service.edit.page.systemId']}"/>
         <eye:inputText value="#{serviceEdit.systemId}" rendered="#{serviceEdit.add}"/>
         <h:outputText value="#{serviceEdit.systemId}" rendered="#{!serviceEdit.add}"/>
@@ -43,28 +43,28 @@
         <eye:inputText value="#{serviceEdit.sme.addrRange}"/>
 
         <h:outputText value="#{sme['wantAlias']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.wantAlias}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.wantAlias}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['carryOrgDescriptor']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.carryOrgDescriptor}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.carryOrgDescriptor}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['carryOrgUserInfo']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.carryOrgUserInfo}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.carryOrgUserInfo}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['carrySccpInfo']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.carrySccpInfo}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.carrySccpInfo}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['fillExtraDescriptor']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.fillExtraDescriptor}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.fillExtraDescriptor}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['forceSmeReceipt']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.forceSmeReceipt}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.forceSmeReceipt}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['forceGsmDataCoding']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.forceGsmDataCoding}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.forceGsmDataCoding}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['smppPlus']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.smppPlus}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.smppPlus}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['timeout']}"/>
         <eye:inputText value="#{serviceEdit.sme.timeout}"/>
@@ -73,7 +73,7 @@
         <eye:inputText value="#{serviceEdit.sme.receiptSchemeName}"/>
 
         <h:outputText value="#{sme['disabled']}"/>
-        <h:selectBooleanCheckbox value="#{serviceEdit.sme.disabled}" style="margin-left:9px;"/>
+        <h:selectBooleanCheckbox value="#{serviceEdit.sme.disabled}" style="margin-left:0px;"/>
 
         <h:outputText value="#{sme['proclimit']}"/>
         <eye:inputText value="#{serviceEdit.sme.proclimit}"/>

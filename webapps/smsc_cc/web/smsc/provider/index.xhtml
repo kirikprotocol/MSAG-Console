@@ -20,7 +20,9 @@
     <h:form rendered="#{!providers.initError}">
 
       <h:inputHidden value="#{providers.revision}"/>
-      <eye:message level="warn" rendered="#{providers.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      <h:panelGrid style="padding-bottom: 5px" rendered="#{providers.settingsChanged}">
+        <eye:message level="warn"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      </h:panelGrid>
 
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{providers}" action="submit"/></eye:button>

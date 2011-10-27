@@ -35,28 +35,27 @@
         <eye:space/>
       </eye:buttons>
 
-      <p/>
+      <h:panelGrid columns="1" style="padding-top:5px;">
+        <smsc:pageSubtitle value="#{msg['subject.edit.info']}"/>
 
-      <smsc:pageSubtitle value="#{msg['subject.edit.info']}"/>
+        <h:panelGrid columns="3" columnClasses="column1, column300, lastColumn" style="padding-left:10px;">
 
-      <h:panelGrid columns="3" columnClasses="column1, column300, lastColumn">
+          <h:outputText value="#{msg['subjects.page.column.name']}"/>
+          <eye:inputText value="#{subjectEdit.subj.name}" required="true"/>
+          <h:outputText value="&#160;" style="width: 100%"/>
 
-        <h:outputText value="#{msg['subjects.page.column.name']}"/>
-        <eye:inputText value="#{subjectEdit.subj.name}" required="true"/>
-        <h:outputText value="&#160;" style="width: 100%"/>
+          <h:outputText value="#{msg['subjects.page.column.notes']}"/>
+          <eye:inputText value="#{subjectEdit.subj.notes}" rows="2"/>
+          <h:outputText value="&#160;" style="width: 100%"/>
 
-        <h:outputText value="#{msg['subjects.page.column.notes']}"/>
-        <eye:inputText value="#{subjectEdit.subj.notes}" rows="2"/>
-        <h:outputText value="&#160;" style="width: 100%"/>
+          <h:outputText value="#{msg['subjects.page.column.defaultSme']}"/>
+          <h:selectOneMenu value="#{subjectEdit.subj.defaultSmeId}" >
+            <f:selectItems value="#{subjectEdit.smeIds}"/>
+          </h:selectOneMenu>
+          <h:outputText value="&#160;" style="width: 100%"/>
 
-        <h:outputText value="#{msg['subjects.page.column.defaultSme']}"/>
-        <h:selectOneMenu value="#{subjectEdit.subj.defaultSmeId}" >
-          <f:selectItems value="#{subjectEdit.smeIds}"/>
-        </h:selectOneMenu>
-        <h:outputText value="&#160;" style="width: 100%"/>
-
+        </h:panelGrid>
       </h:panelGrid>
-
 
       <h:panelGrid columns="2" columnClasses="column500, lastColumn">
 

@@ -24,7 +24,9 @@
     <h:form rendered="#{!routes.initFailed}">
 
       <h:inputHidden value="#{routes.revision}"/>
-      <eye:message level="warn" rendered="#{routes.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      <h:panelGrid style="padding-bottom: 5px" rendered="#{routes.settingsChanged}">
+        <eye:message level="warn" ><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      </h:panelGrid>
 
       <eye:dataTableFilter applyAction="#{routes.applyFilter}" clearAction="#{routes.clearFilter}">
 
@@ -45,8 +47,6 @@
           <eye:inputText value="#{routes.dstSmeFilter}"/>
         </h:panelGrid>
       </eye:dataTableFilter>
-
-      <p/>
 
       <eye:dataTable value="#{routes.routes}" var="route" selectedRows="#{routes.routes2remove}">
         <eye:row innerData="#{not empty route.notes}">
@@ -88,8 +88,6 @@
         </eye:row>
 
       </eye:dataTable>
-
-      <p/>
 
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['add.button']}" action="ROUTE_EDIT" immediate="true"/></eye:button>

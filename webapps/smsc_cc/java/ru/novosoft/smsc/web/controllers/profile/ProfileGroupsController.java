@@ -47,9 +47,6 @@ public class ProfileGroupsController extends ProfileController {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
-        if (!applyCalled)
-          return result;
-        
         Collection<Profile> res;
         if (sortOrder == null)
           res = new LinkedList<Profile>();

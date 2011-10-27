@@ -83,9 +83,11 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
             row.setValue("mask", mask.getSimpleAddress());
             masksModel.addRow(row);
           }
-          for(String child : subj.getChildren()) {
-            DynamicTableRow row = new DynamicTableRow();
-            row.setValue("child", child);
+          if (subj.getChildren() != null) {
+            for(String child : subj.getChildren()) {
+              DynamicTableRow row = new DynamicTableRow();
+              row.setValue("child", child);
+            }
           }
         }
       }
@@ -259,7 +261,10 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
 
   private boolean checkContainsDescendant(Map<String, Subject> subjMap, String one, String other) {
     if(one.equals(other)) return true;
-    for(String sId : subjMap.get(one).getChildren()) {
+    Subject subj = subjMap.get(one);
+    if (subj == null || subj.getChildren() == null)
+      return false;
+    for(String sId : subj.getChildren()) {
       Subject child = subjMap.get(sId);
       if(child!=null) {
         if(checkContainsDescendant(subjMap,child.getName(),other)){

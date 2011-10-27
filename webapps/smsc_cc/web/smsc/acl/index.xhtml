@@ -18,7 +18,6 @@
 
     <h:form rendered="#{!acls.outOfDate}">
 
-
       <eye:dataTable value="#{acls.acls}" selectedRows="#{acls.selectedRows}" var="acl">
         <eye:row>
           <eye:column name="id" title="#{msg['acls.page.id']}" columnClass="idColumn">
@@ -39,8 +38,6 @@
         </eye:row>
 
       </eye:dataTable>
-
-      <p/>
 
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['add.button']}" action="ACL_EDIT"/></eye:button>

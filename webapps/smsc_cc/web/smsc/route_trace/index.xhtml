@@ -20,7 +20,7 @@
 
       <smsc:pageSubtitle value="#{msg['route.trace.page.trace.params']}"/>
 
-      <h:panelGrid columns="2" columnClasses="column1, column2" style="padding: 10px">
+      <h:panelGrid columns="2" columnClasses="column1, column2" style="padding: 5px 0px 5px 10px;">
         <h:outputText value="#{msg['route.trace.page.source']}"/>
         <eye:inputText value="#{routeTrace.sourceAddress}" required="true"/>
 
@@ -40,9 +40,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <p/>
-
-      <h:panelGrid columns="1" columnClasses="column2" rendered="#{routeTrace.showTrace}">
+      <h:panelGrid columns="1" columnClasses="column2" rendered="#{routeTrace.showTrace}" style="padding-top: 5px">
         <h:panelGroup >
           <h:outputText value="#{msg['route.trace.page.routeFound']} : " style="color:GREEN;" rendered="#{routeTrace.routeFound}"/>
           <h:commandLink action="ROUTE_EDIT" value="#{routeTrace.trace.routeName}" immediate="true" rendered="#{routeTrace.routeFound}">

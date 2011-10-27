@@ -196,10 +196,12 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
         List<Subject> subjs = settings.getSubjects();
         for (Subject subj : subjs) {
           List<String> children = subj.getChildren();
-          for(String s : selectedRows) {
-            if(children.contains(s)) {
-              addLocalizedMessage(FacesMessage.SEVERITY_WARN,"subjects.cant.delete.child",s,subj.getName());
-              return null;
+          if (children != null) {
+            for(String s : selectedRows) {
+              if(children.contains(s)) {
+                addLocalizedMessage(FacesMessage.SEVERITY_WARN,"subjects.cant.delete.child",s,subj.getName());
+                return null;
+              }
             }
           }
         }

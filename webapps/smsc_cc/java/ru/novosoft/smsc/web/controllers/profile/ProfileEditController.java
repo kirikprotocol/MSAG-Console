@@ -39,6 +39,7 @@ public class ProfileEditController extends ProfileController {
 
   public ProfileEditController() {
     profileAddr = getRequestParameter("profileAddr");
+    System.out.println("!!! addr: " + profileAddr);
     backPage = getRequestParameter("backPage");
 
     try {
@@ -49,7 +50,6 @@ public class ProfileEditController extends ProfileController {
         setProfile(res.getProfile());
       } else {
         profile = new Profile();
-        profile.setAddress(new Address(".0.0.0"));
         newProfile = true;
       }
     } catch (AdminException e) {
@@ -75,15 +75,14 @@ public class ProfileEditController extends ProfileController {
   }
 
   public String getProfileAddress() {
-    return profile.getAddress().getSimpleAddress();
+    Address addr = profile.getAddress();
+    if (addr == null)
+      return "";
+    return addr.getSimpleAddress();
   }
 
-  public void setProfileAddress(String address)  {
-    try {
-      profile.setAddress(new Address(address));
-    } catch (AdminException e) {
-      addError(e);
-    }
+  public void setProfileAddress(String address) throws AdminException {
+    profile.setAddress(new Address(address));
   }
 
   protected void setProfile(Profile profile) {

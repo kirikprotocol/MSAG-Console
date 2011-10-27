@@ -24,11 +24,9 @@
     <h:form id="users_list">
 
       <h:inputHidden value="#{users.revision}"/>
-      <eye:message level="warn" rendered="#{users.settingsChanged}">
-        <h:outputText value="#{msg['smsc.submit.hint']}"/>
-      </eye:message>
-
-      <p/>
+      <h:panelGrid style="padding-bottom: 5px" rendered="#{users.settingsChanged}">
+        <eye:message level="warn" ><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
+      </h:panelGrid>
 
       <eye:dataTableFilter applyAction="#{users.applyFilter}" clearAction="#{users.clearFilter}">
         <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
@@ -36,8 +34,6 @@
           <eye:inputText value="#{users.filterByLogin}"/>
         </h:panelGrid>
       </eye:dataTableFilter>
-
-      <p/>
 
       <eye:dataTable value="#{users.usersModel}" selectedRows="#{users.selectedRows}" var="u">
 
@@ -64,8 +60,6 @@
         </eye:row>
 
       </eye:dataTable>
-
-      <p/>
 
       <eye:buttons>
         <eye:button>
