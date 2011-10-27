@@ -31,20 +31,6 @@
         <eye:button><smsc:submitButton bean="#{archiveDaemon}" action="submit"/></eye:button>
         <eye:button><smsc:resetButton bean="#{archiveDaemon}" action="reset"/></eye:button>
         <eye:space/>
-        <eye:button>
-          <h:panelGroup>
-            <h:commandLink value="#{msg['archiveDaemon.page.start']}" action="#{archiveDaemon.start}"
-                           rendered="#{archiveDaemon.onlineHost==null}"/>
-            <h:commandLink value="#{msg['archiveDaemon.page.stop']}" action="#{archiveDaemon.stop}"
-                           rendered="#{archiveDaemon.onlineHost!=null}"/>
-            <h:outputText value=" "/>
-            <h:commandLink value="#{msg['archiveDaemon.page.switch']} " action="#{archiveDaemon.switchHost}"
-                           rendered="#{archiveDaemon.showSwitchLink}"/>
-            <h:selectOneMenu value="#{archiveDaemon.switchToHost}" rendered="#{not empty archiveDaemon.hostsItems}">
-              <f:selectItems value="#{archiveDaemon.hostsItems}"/>
-            </h:selectOneMenu>
-          </h:panelGroup>
-        </eye:button>
       </eye:buttons>
 
       <p/>

@@ -8,14 +8,12 @@ import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.model.SelectItem;
 import java.util.*;
 
 
 public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSettings> {
 
   private boolean initError;
-  private String switchToHost;
   ArchiveDaemonSettings config;
 
 
@@ -42,7 +40,6 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
   protected void init() throws AdminException {
     super.init();
     config=getSettings();
-    switchToHost = WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost();
     locationSources = buildModel(config.getLocationsSources().entrySet());
     indexatorSmeAddrChunkSizes = buildModel(config.getIndexatorSmeAddrChunkSizes().entrySet());
   }
@@ -123,73 +120,6 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
       addError(e);
     }
     return "ARCHIVEDAEMON";
-  }
-
-  public List<String> getAvailableHosts() throws AdminException {
-    List<String> ret = new ArrayList<String>();
-    String daemonOnlineHost = WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost();
-    for(String hName : WebContext.getInstance().getArchiveDaemonManager().getDaemonHosts()) {
-      if(!hName.equals(daemonOnlineHost)) ret.add(hName);
-    }
-    return ret;
-  }
-  public List<SelectItem> getHostsItems() throws AdminException {
-    List<SelectItem> ret = new ArrayList<SelectItem>();
-    String daemonOnlineHost = WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost();
-    for(String hName : WebContext.getInstance().getArchiveDaemonManager().getDaemonHosts()) {
-      ret.add(new SelectItem(hName));
-    }
-    return ret;
-  }
-
-  public String getOnlineHost() throws AdminException {
-    return WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost();
-  }
-
-
-  public void setSwitchToHost(String switchToHost) {
-    this.switchToHost = switchToHost;
-  }
-
-  public String getSwitchToHost() {
-    return switchToHost;
-  }
-
-  public String switchHost() throws AdminException {
-    
-     if(switchToHost!=null) {
-       WebContext.getInstance().getArchiveDaemonManager().switchDaemon(switchToHost);
-     }
-     return null;
-  }
-
-
-  public String start() throws AdminException {
-
-    if(WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost()!=null){
-      return null;
-    }
-    if(getAvailableHosts().size()==1)  {
-      WebContext.getInstance().getArchiveDaemonManager().startDaemon();
-    }
-    else {
-      switchHost();
-    }
-    return null;
-  }
-
-  public boolean isShowSwitchLink() throws AdminException {
-    return
-    (WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost()!=null) 
-    &&
-    (getAvailableHosts().size()>0);
-
-  }
-
-  public String stop() throws AdminException {
-
-    WebContext.getInstance().getArchiveDaemonManager().stopDaemon();
-    return null;
   }
 
   public int getInterval() {

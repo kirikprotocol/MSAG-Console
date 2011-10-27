@@ -106,6 +106,7 @@ public class JournalRecord {
     SMSC("smsc"),
     RESCHEDULE("reschedule"),
     CLOSED_GROUPS("closed_group"),
+    CLUSTER_CONTROLLER("cluster_controller"),
     USERS("user"),
     MAP_LIMIT("maplimit"),
     LOGGING("logging"),

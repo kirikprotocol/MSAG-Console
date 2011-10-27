@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.6
+  Jsf components 1.8
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -391,6 +391,16 @@ div.eyeline_inner_data_opened {
 div.eyeline_inner_data_closed {
   width: 15px;
   background-image: url(../images/list_closed.gif);
+}
+
+table.eyeline_list div.eyeline_menudiv {
+  background-color: #DFD4AF;
+  border: 1px solid #111155;
+}
+
+table.eyeline_list div.eyeline_menubardiv,
+table.eyeline_list div.eyeline_menubardivover {
+  font-size: x-small;
 }
 
 /* :::::::::::::::::::::::::::::::::::::::::::::::: ПАНЕЛЬ НАВИГАЦИИ :::::::::::::::::::::::::::::::::::::::::::::::::*/

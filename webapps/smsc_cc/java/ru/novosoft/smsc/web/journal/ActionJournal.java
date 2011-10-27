@@ -74,6 +74,10 @@ public class ActionJournal {
     addRecord(JournalRecord.Subject.SME, args);
   }
 
+  public void clusterController(String... args) {
+    addRecord(JournalRecord.Subject.CLUSTER_CONTROLLER, args);
+  }
+
   public void acl(String... args) {
     addRecord(JournalRecord.Subject.ACL, args);
   }

@@ -38,4 +38,8 @@ public class ClusterControllerSettings {
     vh.checkNotEmpty("listenerHost", listenerHost);
     this.listenerHost = listenerHost;
   }
+
+  public ClusterControllerSettings cloneSettings() {
+    return new ClusterControllerSettings(this);
+  }
 }

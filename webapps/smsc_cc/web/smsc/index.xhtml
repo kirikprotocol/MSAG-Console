@@ -2,6 +2,7 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
       xmlns:eye="http://jsfcomponents.eyeline.mobi"
       xmlns:c="http://java.sun.com/jstl/core" xmlns:smsc="http://taglib.smsc.mobi">
 
@@ -12,17 +13,20 @@
   <ui:define name="styles">
     .labelColumn {width: 1px; text-align:right; white-space: nowrap;}
     .valueColumn {width: 100%; text-align: left; padding-right: 10px; }
-
-    .connectedColumn {width: 2%;}
+    .connectedColumn {width: 20px;}
     .instanceColumn {width: 16%;}
     .hostColumn {width: 16%;}
     .statusColumn {width: 16%;}
     .monColumn {width: 16%; text-align: center;}
+    .actionColumn {width: 100%; text-align: center;}
+    .actionColumn1 {width: 0px; white-space:nowrap;}
+    .actionColumn2 {width: 100%; white-space:nowrap; text-align: left;}
   </ui:define>
 
   <ui:define name="content">
 
     <h:form>
+
       <smsc:pageSubtitle value="#{msg['status.page.smscs']}"/>
 
       <eye:dataTable value="#{smscStatus.smsCenters}" var="data">
@@ -35,7 +39,7 @@
           </eye:column>
 
           <eye:column name="instanceNumber" title="#{msg['status.page.instance.number']}" columnClass="instanceColumn">
-            <h:outputText value="#{data.instanceNumber + 1}"/>
+            <h:outputText value="#{data.name}"/>
           </eye:column>
 
           <eye:column name="onlineHost" title="#{msg['status.page.online.host']}" columnClass="hostColumn">
@@ -52,48 +56,48 @@
             </h:panelGroup>
           </eye:column>
 
-          <eye:column name="perf" title="#{msg['permonance.monitor.perfomance']}" columnClass="monColumn">
+          <eye:column name="perf" title="#{msg['permonance.monitor.monitor']}" columnClass="monColumn">
             <h:panelGroup rendered="#{data.onlineHost != null}">
-              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/perfMonitor.faces?instance=#{data.instanceNumber}', '_blank', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['permonance.monitor.monitor']}</a>
+              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/perfMonitor.faces?instance=#{data.instanceNumber}', '_blank', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['permonance.monitor.perfomance']}</a>
+            </h:panelGroup>
+            <h:outputText value=" / " rendered="#{data.onlineHost != null}"/>
+            <h:panelGroup rendered="#{data.onlineHost != null}">
+              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/topMonitor.faces?instance=#{data.instanceNumber}', '_blank', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['top.monitor.sme']}</a>
             </h:panelGroup>
           </eye:column>
 
-          <eye:column name="top" title="#{msg['top.monitor.sme']}" columnClass="monColumn">
-            <h:panelGroup rendered="#{data.onlineHost != null}">
-              <a href="#" onclick="window.open('#{facesContext.externalContext.requestContextPath}/smsc/stat/topMonitor.faces?instance=#{data.instanceNumber}', '_blank', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=800')">#{msg['top.monitor.monitor']}</a>
-            </h:panelGroup>
-          </eye:column>
-
-          <eye:column name="action" title="#{msg['status.page.action']}">
+          <eye:column name="action" title="#{msg['status.page.action']}" columnClass="actionColumn">
             <h:panelGroup rendered="#{!data.switchAllowed}">
-              <h:commandLink value="#{msg['status.page.start']}" action="#{smscStatus.start}" rendered="#{data.onlineHost == null}">
-                <f:param name="instanceNumber" value="#{data.instanceNumber}"/>
+              <h:commandLink value="#{msg['status.page.start']}" action="#{smscStatus.startComponent}" rendered="#{data.onlineHost == null}">
+                <f:param name="componentName" value="#{data.name}"/>
               </h:commandLink>
-              <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stop}" rendered="#{data.onlineHost != null}">
-                <f:param name="instanceNumber" value="#{data.instanceNumber}"/>
+              <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
+                <f:param name="componentName" value="#{data.name}"/>
               </h:commandLink>
             </h:panelGroup>
 
-            <h:panelGroup rendered="#{data.switchAllowed}">
-              <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stop}" rendered="#{data.onlineHost != null}">
-                <f:param name="instanceNumber" value="#{data.instanceNumber}"/>
+            <h:panelGrid columns="2" columnClasses="actionColumn1, actionColumn2" rendered="#{data.switchAllowed}">
+              <h:panelGroup>
+                <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
+                  <f:param name="componentName" value="#{data.name}"/>
+                </h:commandLink>
+                <h:outputText value=" #{msg['status.page.or']} " rendered="#{data.onlineHost != null}"/>
+              </h:panelGroup>
+              <eye:menubar label="${data.onlineHost != null ? msg['status.page.switch'] : msg['status.page.start_at']}..." rendered="${fn:length(data.hosts) gt 1}">
+                <c:forEach items="#{data.hosts}" var="host">
+                  <eye:menubaritem>
+                    <h:commandLink value="#{host}" action="#{smscStatus.switchComponent}" >
+                      <f:param name="componentName" value="#{data.name}"/>
+                      <f:param name="toHost" value="#{host}"/>
+                    </h:commandLink>
+                  </eye:menubaritem>
+                </c:forEach>
+              </eye:menubar>
+              <h:commandLink value="#{data.onlineHost != null ? msg['status.page.switch'] : msg['status.page.start_at']} #{data.hosts[0]}" action="#{smscStatus.switchComponent}" rendered="${fn:length(data.hosts) eq 1}">
+                <f:param name="componentName" value="#{data.name}"/>
+                <f:param name="toHost" value="#{data.hosts[0]}"/>
               </h:commandLink>
-              <h:outputText value=" #{msg['status.page.or']} " rendered="#{data.onlineHost != null}"/>
-              <h:commandLink value="#{msg['status.page.switch']}" action="#{smscStatus.switchOver}" rendered="#{data.onlineHost != null}">
-                <f:param name="instanceNumber" value="#{data.instanceNumber}"/>
-              </h:commandLink>
-
-              <h:commandLink value="#{msg['status.page.start_at']}" action="#{smscStatus.switchOver}" rendered="#{data.onlineHost == null}">
-                <f:param name="instanceNumber" value="#{data.instanceNumber}"/>
-              </h:commandLink>
-              <h:outputText value="  "/>
-
-              <h:selectOneMenu valueChangeListener="#{smscStatus.switchToHost}" value="">
-                <f:attribute name="instanceNumber" value="#{data.instanceNumber}"/>
-                <f:selectItems value="#{data.hosts}"/>
-              </h:selectOneMenu>
-            </h:panelGroup>
-
+            </h:panelGrid>
           </eye:column>
 
           <f:facet name="innerData">
@@ -110,11 +114,112 @@
 
       </eye:dataTable>
 
-      <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['status.page.start.all']}" actionListener="#{smscStatus.startAll}"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['status.page.stop.all']}" actionListener="#{smscStatus.stopAll}"/></eye:button>
-        <eye:space/>
-      </eye:buttons>
+      <smsc:pageSubtitle value="#{msg['status.page.components']}"/>
+
+      <eye:dataTable value="#{smscStatus.auxiaryComponents}" var="data">
+        <eye:row>
+          <eye:column name="connected" title="" sortable="false" columnClass="connectedColumn">
+            <h:graphicImage value="/images/ic_internal.gif" rendered="#{data.onlineHost != null}"/>
+            <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{data.onlineHost == null}"/>
+          </eye:column>
+
+          <eye:column name="instanceNumber" title="#{msg['status.page.instance.number']}" columnClass="instanceColumn">
+            <h:outputText value="#{data.name}"/>
+          </eye:column>
+
+          <eye:column name="onlineHost" title="#{msg['status.page.online.host']}" columnClass="hostColumn">
+            <h:outputText value="#{data.onlineHost}" style="color:GREEN"/>
+          </eye:column>
+
+          <eye:column name="action" title="#{msg['status.page.action']}" columnClass="actionColumn">
+            <h:panelGroup rendered="#{!data.switchAllowed}">
+              <h:commandLink value="#{msg['status.page.start']}" action="#{smscStatus.startComponent}" rendered="#{data.onlineHost == null}">
+                <f:param name="componentName" value="#{data.name}"/>
+              </h:commandLink>
+              <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
+                <f:param name="componentName" value="#{data.name}"/>
+              </h:commandLink>
+            </h:panelGroup>
+
+            <h:panelGrid columns="2" columnClasses="actionColumn1, actionColumn2" rendered="#{data.switchAllowed}">
+              <h:panelGroup>
+                <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
+                  <f:param name="componentName" value="#{data.name}"/>
+                </h:commandLink>
+                <h:outputText value=" #{msg['status.page.or']} " rendered="#{data.onlineHost != null}"/>
+              </h:panelGroup>
+              <eye:menubar label="${data.onlineHost != null ? msg['status.page.switch'] : msg['status.page.start_at']}..." rendered="${fn:length(data.hosts) gt 1}">
+                <c:forEach items="#{data.hosts}" var="host">
+                  <eye:menubaritem>
+                    <h:commandLink value="#{host}" action="#{smscStatus.switchComponent}" >
+                      <f:param name="componentName" value="#{data.name}"/>
+                      <f:param name="toHost" value="#{host}"/>
+                    </h:commandLink>
+                  </eye:menubaritem>
+                </c:forEach>
+              </eye:menubar>
+              <h:commandLink value="#{data.onlineHost != null ? msg['status.page.switch'] : msg['status.page.start_at']} #{data.hosts[0]}" action="#{smscStatus.switchComponent}" rendered="${fn:length(data.hosts) eq 1}">
+                <f:param name="componentName" value="#{data.name}"/>
+                <f:param name="toHost" value="#{data.hosts[0]}"/>
+              </h:commandLink>
+            </h:panelGrid>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <smsc:pageSubtitle value="#{msg['status.page.smes']}"/>
+
+      <eye:dataTable value="#{smscStatus.smeComponents}" var="data">
+        <eye:row>
+          <eye:column name="connected" title="" sortable="false" columnClass="connectedColumn">
+            <h:graphicImage value="/images/ic_internal.gif" rendered="#{data.onlineHost != null}"/>
+            <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{data.onlineHost == null}"/>
+          </eye:column>
+
+          <eye:column name="instanceNumber" title="#{msg['status.page.instance.number']}" columnClass="instanceColumn">
+            <h:outputText value="#{data.name}"/>
+          </eye:column>
+
+          <eye:column name="onlineHost" title="#{msg['status.page.online.host']}" columnClass="hostColumn">
+            <h:outputText value="#{data.onlineHost}" style="color:GREEN"/>
+          </eye:column>
+
+          <eye:column name="action" title="#{msg['status.page.action']}" columnClass="actionColumn">
+            <h:panelGroup rendered="#{!data.switchAllowed}">
+              <h:commandLink value="#{msg['status.page.start']}" action="#{smscStatus.startComponent}" rendered="#{data.onlineHost == null}">
+                <f:param name="componentName" value="#{data.name}"/>
+              </h:commandLink>
+              <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
+                <f:param name="componentName" value="#{data.name}"/>
+              </h:commandLink>
+            </h:panelGroup>
+
+            <h:panelGrid columns="2" columnClasses="actionColumn1, actionColumn2" rendered="#{data.switchAllowed}">
+              <h:panelGroup>
+                <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
+                  <f:param name="componentName" value="#{data.name}"/>
+                </h:commandLink>
+                <h:outputText value=" #{msg['status.page.or']} " rendered="#{data.onlineHost != null}"/>
+              </h:panelGroup>
+              <eye:menubar label="${data.onlineHost != null ? msg['status.page.switch'] : msg['status.page.start_at']}..." rendered="${fn:length(data.hosts) gt 1}">
+                <c:forEach items="#{data.hosts}" var="host">
+                  <eye:menubaritem>
+                    <h:commandLink value="#{host}" action="#{smscStatus.switchComponent}" >
+                      <f:param name="componentName" value="#{data.name}"/>
+                      <f:param name="toHost" value="#{host}"/>
+                    </h:commandLink>
+                  </eye:menubaritem>
+                </c:forEach>
+              </eye:menubar>
+              <h:commandLink value="#{data.onlineHost != null ? msg['status.page.switch'] : msg['status.page.start_at']} #{data.hosts[0]}" action="#{smscStatus.switchComponent}" rendered="${fn:length(data.hosts) eq 1}">
+                <f:param name="componentName" value="#{data.name}"/>
+                <f:param name="toHost" value="#{data.hosts[0]}"/>
+              </h:commandLink>
+            </h:panelGrid>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
     </h:form>
   </ui:define>
 

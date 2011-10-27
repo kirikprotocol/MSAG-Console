@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerImpl;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManagerImpl;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
@@ -129,7 +130,7 @@ public class AdminContext {
         fileSystem = FileSystem.getFSForHAInst();
     }
 
-    clusterControllerManager = new ClusterControllerManager(serviceManager, fileSystem);
+    clusterControllerManager = new ClusterControllerManagerImpl(serviceManager, fileSystem);
     clusterController = new ClusterController(clusterControllerManager);
 
     SmscManagerImpl _smscManager = new SmscManagerImpl(serviceManager, clusterController, fileSystem);
@@ -303,6 +304,10 @@ public class AdminContext {
 
   public SmscStatProvider getSmscStatProvider() {
     return smscStatProvider;
+  }
+
+  public ClusterControllerManager getClusterControllerManager() {
+    return clusterControllerManager;
   }
 
   /**

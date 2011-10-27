@@ -15,9 +15,8 @@
     .editColumn {width: 1%}
     .connectedColumn {width: 1%}
     .systemIdColumn {width: 48%}
-    .statusColumn {width: 20%; text-align: center}
-    .hostColumn {width: 10%; text-align: center}
-    .actionColumn {width: 20%}
+    .enabledColumn {width: 1px; text-align: center}
+    .statusColumn {width: 100%; text-align: center}
   </ui:define>
 
   <ui:define name="content">
@@ -35,7 +34,7 @@
 
       <eye:dataTable value="#{service.services}" var="srv" selectedRows="#{service.selectedRows}">
 
-        <eye:row>
+        <eye:row innerData="#{srv.connectedDirectly}">
 
           <eye:column name="edit" title="" columnClass="editColumn">
             <h:commandLink action="SERVICE_EDIT" value="#{msg['services.page.edit']}">
@@ -44,57 +43,30 @@
           </eye:column>
 
           <eye:column name="connected" title="" sortable="false" columnClass="connectedColumn">
-            <h:graphicImage value="/images/ic_internal.gif" rendered="#{srv.connected}"/>
-            <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{not srv.connected}"/>
+            <h:graphicImage value="/images/ic_internal.gif" rendered="#{srv.connected}" title="#{msg['services.page.sme.connected']}"/>
+            <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{not srv.connected}" title="#{msg['services.page.sme.disconnected']}"/>
+          </eye:column>
+
+          <eye:column name="enabled" title="" sortable="false" columnClass="enabledColumn">
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{!srv.disabled}" title="#{msg['services.page.sme.enabled']}"/>
+            <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{srv.disabled}" title="#{msg['services.page.sme.disabled']}"/>
           </eye:column>
 
           <eye:column name="systemId" title="#{msg['services.page.systemId']}" sortable="true" columnClass="systemIdColumn" defaultSortOrder="asc">
             <h:outputText value="#{srv.systemId}"/>
           </eye:column>
 
-          <eye:column name="status" title="#{msg['services.page.status']}" columnClass="statusColumn">
-            <h:outputText value="LB: #{srv.loadBalancerStatus}" rendered="#{srv.connectedViaLoadBalancer}" style="color: GREEN"/>
-            <h:panelGroup rendered="#{srv.connectedDirectly}">
+          <eye:column name="status" title="#{msg['services.page.connected_to']}" columnClass="statusColumn">
+            <h:outputText value="LoadBalancer: #{srv.loadBalancerStatus}" rendered="#{srv.connectedViaLoadBalancer}" style="color: GREEN"/>
+            <h:outputText value="Directly to SMSCs" rendered="#{srv.connectedDirectly}" style="color: GREEN"/>
+            <h:outputText value="Internal" rendered="#{srv.internal}" style="color: GREEN"/>
+            <f:facet name="innerData">
+              <h:panelGroup>
               <c:forEach items="#{srv.directStatuses}" var="st">
                 <h:outputText value="SMSC #{st}" style="color:GREEN"/><br/>
               </c:forEach>
             </h:panelGroup>
-            <h:outputText value="Internal" rendered="#{srv.internal}" style="color: GREEN"/>
-          </eye:column>
-
-          <eye:column name="host" title="#{msg['services.page.host']}" columnClass="hostColumn" >
-            <h:outputText value="#{srv.onlineHost}" rendered="#{srv.managed}" style="color:BLUE"/>
-          </eye:column>
-
-          <eye:column name="action" title="#{msg['services.page.action']}" columnClass="actionColumn">
-            <h:panelGroup rendered="#{srv.managed and !srv.switchAllowed}">
-              <h:commandLink value="#{msg['services.page.start']}" action="#{service.startSme}" rendered="#{srv.onlineHost == null}">
-                <f:param name="smeId" value="#{srv.systemId}"/>
-              </h:commandLink>
-              <h:commandLink value="#{msg['services.page.stop']}" action="#{service.stopSme}" rendered="#{srv.onlineHost != null}">
-                <f:param name="smeId" value="#{srv.systemId}"/>
-              </h:commandLink>
-            </h:panelGroup>
-
-            <h:panelGroup rendered="#{srv.managed and srv.switchAllowed}">
-              <h:commandLink value="#{msg['services.page.stop']}" action="#{service.stopSme}" rendered="#{srv.onlineHost != null}">
-                <f:param name="smeId" value="#{srv.systemId}"/>
-              </h:commandLink>
-              <h:outputText value=" #{msg['services.page.or']} " rendered="#{srv.onlineHost != null}"/>
-              <h:commandLink value="#{msg['services.page.switch_to']}" action="#{service.switchSme}" rendered="#{srv.onlineHost != null}">
-                <f:param name="smeId" value="#{srv.systemId}"/>
-              </h:commandLink>
-
-              <h:commandLink value="#{msg['services.page.start_at']}" action="#{service.switchSme}" rendered="#{srv.onlineHost == null}">
-                <f:param name="smeId" value="#{srv.systemId}"/>
-              </h:commandLink>
-
-              <h:outputText value="  "/>
-
-              <h:selectOneMenu value="#{service.switchToHost[srv.systemId]}">
-                <f:selectItems value="#{srv.hosts}"/>
-              </h:selectOneMenu>
-            </h:panelGroup>
+            </f:facet>
           </eye:column>
         </eye:row>
 

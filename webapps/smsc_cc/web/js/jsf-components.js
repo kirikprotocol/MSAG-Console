@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.6
+  Jsf components 1.8
 
   Copyright (c) Eyeline Communications Inc.
 **/

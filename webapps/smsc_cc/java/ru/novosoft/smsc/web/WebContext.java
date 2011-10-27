@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
 import ru.novosoft.smsc.admin.perfmon.PerfMonitorManager;
@@ -20,6 +21,7 @@ import ru.novosoft.smsc.web.config.alias.WAliasManager;
 import ru.novosoft.smsc.web.config.archive_daemon.WArchiveDaemonManager;
 import ru.novosoft.smsc.web.config.category.WCategoryManager;
 import ru.novosoft.smsc.web.config.closed_groups.WClosedGroupManager;
+import ru.novosoft.smsc.web.config.cluster_controller.WClusterControllerManager;
 import ru.novosoft.smsc.web.config.fraud.WFraudManager;
 import ru.novosoft.smsc.web.config.logging.WLoggerManager;
 import ru.novosoft.smsc.web.config.map_limit.WMapLimitManager;
@@ -78,6 +80,7 @@ public class WebContext {
   private final SmscStatProvider smscStatProvider;
   private final PerfMonitorManager perfMonitorManager;
   private final TopMonitorManager topMonitorManager;
+  private final ClusterControllerManager clusterControllerManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -137,6 +140,7 @@ public class WebContext {
     smscStatProvider = adminContext.getSmscStatProvider();
     perfMonitorManager = adminContext.getPerfMonitorManager();
     topMonitorManager = adminContext.getTopMonitorManager();
+    clusterControllerManager = new WClusterControllerManager(adminContext.getClusterControllerManager(), user, journal);
   }
 
   public WebXml getWebXml() {
@@ -252,4 +256,7 @@ public class WebContext {
     return journal;
   }
 
+  public ClusterControllerManager getClusterControllerManager() {
+    return clusterControllerManager;
+  }
 }

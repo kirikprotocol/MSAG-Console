@@ -17,7 +17,6 @@ import java.util.*;
 public class ServiceListController extends ServiceController {
 
   private List selectedRows;
-  private Map<String, String> switchToHost = new HashMap<String, String>();
 
   private String nameFilter;
 
@@ -41,40 +40,6 @@ public class ServiceListController extends ServiceController {
 
   public void setSelectedRows(List selectedRows) {
     this.selectedRows = selectedRows;
-  }
-
-  public Map<String, String> getSwitchToHost() {
-    return switchToHost;
-  }
-
-  public String switchSme() {
-    String smeId = getRequestParameter("smeId");
-    try {
-      mngr.switchSme(smeId, switchToHost.get(smeId));
-    } catch (AdminException e) {
-      addError(e);
-    }
-    return null;
-  }
-
-  public String stopSme() {
-    String smeId = getRequestParameter("smeId");
-    try {
-      mngr.stopSme(smeId);
-    } catch (AdminException e) {
-      addError(e);
-    }
-    return null;
-  }
-
-  public String startSme() {
-    String smeId = getRequestParameter("smeId");
-    try {
-      mngr.startSme(smeId);
-    } catch (AdminException e) {
-      addError(e);
-    }
-    return null;
   }
 
   public String disconnectSmes() {
@@ -132,9 +97,9 @@ public class ServiceListController extends ServiceController {
           // Заполняем список
           for (int i = startPos; i < Math.min(startPos + count, smeIds.size()); i++) {
             String smeId = smeIds.get(i);
-            SmeServiceStatus smeServiceStatus = mngr.getSmeServiceStatus(smeId);
+            Sme sme = mngr.getSme(smeId);
             SmeSmscStatuses smeSmscStatuses = smeSmscStats.get(smeId);
-            result.add(new Esme(smeId, smeServiceStatus, smeSmscStatuses));
+            result.add(new Esme(smeId, smeSmscStatuses, sme.isDisabled()));
           }
         } catch (AdminException e) {
           throw new ModelException(e.getMessage(getLocale()));
@@ -157,34 +122,17 @@ public class ServiceListController extends ServiceController {
   public static class Esme implements Serializable {
 
     private String systemId;
-    private SmeServiceStatus smeServiceStatus;
     private SmeSmscStatuses connectStatuses;
+    private boolean disabled;
 
-    public Esme(String systemId, SmeServiceStatus smeServiceStatus, SmeSmscStatuses connectStatuses) {
+    public Esme(String systemId, SmeSmscStatuses connectStatuses, boolean disabled) {
       this.systemId = systemId;
-      this.smeServiceStatus = smeServiceStatus;
       this.connectStatuses = connectStatuses;
+      this.disabled = disabled;
     }
 
     public String getSystemId() {
       return systemId;
-    }
-
-    public List<SelectItem> getHosts() {
-      if (smeServiceStatus != null) {
-        List<SelectItem> res = new ArrayList<SelectItem>();
-        for (String host : smeServiceStatus.getHosts())
-          res.add(new SelectItem(host));
-        return res;
-      } else
-        return null;
-    }
-
-    public String getOnlineHost() {
-      if (smeServiceStatus != null)
-        return smeServiceStatus.getOnlineHost();
-      else
-        return null;
     }
 
     public SmeSmscStatuses getConnectStatuses() {
@@ -236,17 +184,8 @@ public class ServiceListController extends ServiceController {
       return result;
     }
 
-    /**
-     * Возвращает true, если Sme можно запускать и останавливать средствами морды
-     *
-     * @return true, если Sme можно запускать и останавливать средствами морды
-     */
-    public boolean isManaged() {
-      return smeServiceStatus != null;
-    }
-
-    public boolean isSwitchAllowed() {
-      return isManaged() && smeServiceStatus.getHosts().size() > 1;
+    public boolean isDisabled() {
+      return disabled;
     }
   }
 }
