@@ -221,4 +221,15 @@ public class Subject {
         this.metaCenter = meta;
     }
 
+    public String toString(){
+        return "Subject{name="+(name != null ? name : "N/A") +
+               ", svc id="+( (svc != null && svc.getId() != null) ? svc.getId() : "N/A" ) +
+               ", center id="+( (center != null && center.getId() != null) ? center.getId() : "N/A") +
+               ", metaSvc id="+( (metaSvc != null) && metaSvc.getId() != null ? metaSvc.getId() : "N/A" ) +
+               ", metaCenter id="+( (metaCenter != null && metaCenter.getId() != null) ? metaCenter.getId() : "N/A")+
+               ", notes="+( (notes != null && notes.isEmpty()) ? notes : "N/A")+
+               ", masks="+( masks != null ? masks : "N/A") +"}.";
+
+    }
+
 }
