@@ -215,12 +215,12 @@ public:
     {
          std::ostringstream stream;
          stream << t;
-         return stream.str();
+         return stream.str().c_str();
     }
     template<class T>
     static T fromString(const std::string& s)
     {
-         std::istringstream stream(s);
+         std::istringstream stream(s.c_str());
          T t;
          stream >> t;
          return t;

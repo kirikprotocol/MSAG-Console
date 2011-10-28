@@ -43,7 +43,7 @@ public:
         os << buf << " tot=" << h.getTotal() << " min/avg/max=" <<
             h.getMinValue() << "/" << h.getAverage() << "/" <<
             h.getMaxValue() << " scale=" << scale;
-        dump.append(os.str());
+        dump.append(os.str().c_str());
         for ( unsigned i = 0; i < h.numberOfBins(); ++i ) {
             dump.push_back('\n');
             if ( i == 0 ) {

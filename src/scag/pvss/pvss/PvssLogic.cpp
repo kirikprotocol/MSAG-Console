@@ -81,7 +81,7 @@ void PvssLogic::initGlossary(const string& path, Glossary& glossary) {
     }
     string fn = path + DEF_GLOSSARY_NAME;
     if ( GlossaryBase::SUCCESS != glossary.Open(fn) ) {
-        throw std::runtime_error("StorageProcessor: glossary open error");
+        throw smsc::util::Exception("StorageProcessor: glossary open error");
     }
 }
 

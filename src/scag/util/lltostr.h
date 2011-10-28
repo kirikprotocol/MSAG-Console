@@ -3,17 +3,18 @@
 
 # ifdef __GNUC__
 #include <string.h>
-#include <sstream>
+#include <stdio.h>
+
 namespace {
 
   char* lltostr( long long int v, char* endptr ) 
   {
-    std::ostringstream s;
-    s << v;
-    const std::string ss = s.str();
-    endptr -= ss.size();
-    ::memcpy( endptr, ss.c_str(), ss.size() );
-    return endptr;
+      char buf[50];
+      ::sprintf(buf,"%lld",v);
+      const size_t len = strlen(buf);
+      endptr -= len;
+      ::memcpy( endptr, buf, len );
+      return endptr;
   }
 
 }
