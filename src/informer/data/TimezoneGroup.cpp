@@ -12,8 +12,10 @@ int TimezoneGroup::fixDst( struct tm& now ) const
     int result = 0; // in hours
     switch ( tzid_ ) {
     case TZ_RUSSIA :
-        // medvedev cancelled the dst
-        result = 3600;
+        // medvedev cancelled the dst,
+        // but we consider that regions.xml now contains the correct timezone,
+        // i.e. for Moscow it is UTC+4
+        result = 0;
         break;
     default:
         result = 0;
