@@ -1,10 +1,10 @@
 
 #define VER_MAJOR 3
 #define VER_MINOR 0
-#define VER_BUILD 20111025
+#define VER_BUILD 20111028
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
-#define VER_DATE  "Tue Oct 25 10:38:00 NOVST 2011"
+#define VER_DATE  "Fri Oct 28 09:48:00 NOVST 2011"
 
 #ifdef SNMP
 #define SNMP_STR " snmp"
