@@ -416,40 +416,8 @@ std::string UnformatWStr(std::string& str)
     return wstr;
 }
 
-<<<<<<< Properties.cpp
-std::wstring ConvertWStrTo_wstring(const std::string& str)
-{
-    TmpBuf<wchar_t, 1024> buf(1024);
-    std::wstring wstr;
-    const char* chrs  = str.c_str();
+*/
 
-    for(int i = 0; i < str.length(); i+=2)
-    {
-        wchar_t r = (chrs[i] << 8) + chrs[i + 1];
-        buf.Append(&r, 1);
-    }
-
-    wstr.assign(buf.get(), buf.GetPos());
-
-    return wstr;
 }
-
-std::string Convert_wstringToWStr(const std::wstring& wstr)
-{
-    std::string str;
-    TmpBuf<char, 1024> buf(1024);
-    const wchar_t* wchrs  = wstr.c_str();
-
-    for(int i = 0; i < wstr.length(); i++)
-    {
-        char r = (*wchrs >> 8);
-        buf.Append(&r, 1);
-        r = *(wchrs++);
-        buf.Append(&r, 1);
-    }
-
-    str.assign(buf.get(), buf.GetPos());
-    return str;
 }
-  */
-}}}
+}

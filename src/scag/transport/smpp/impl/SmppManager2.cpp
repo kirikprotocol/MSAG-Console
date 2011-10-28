@@ -401,8 +401,8 @@ void SmppManagerImpl::Init(const char* cfgFile)
                   ++i ) {
                 std::string hostip;
                 try {
-                    std::auto_ptr<char> hostip(cv.getString(i->c_str()));
-                    sm.addWhiteIp(hostip.get());
+                    std::auto_ptr<char> hostwip(cv.getString(i->c_str()));
+                    sm.addWhiteIp(hostwip.get());
                     hostok = true;
                 } catch ( ConfigException&) {
                     smsc_log_warn(log,"cannot add whitelisted host: %s", i->c_str());
@@ -1157,7 +1157,7 @@ void SmppManagerImpl::putCommand( SmppChannel& ct, std::auto_ptr<SmppCommand> cm
     int licLimit=ConfigManager::Instance().getLicense().maxsms;
     // NOTE: counter already gives value averaged to the number of seconds
     // this call actually does not increment, but adjust current time.
-    const int cntValue = licenseCounter->increment(0,0);
+    const int cntValue = int(licenseCounter->increment(0,0));
     if(cntValue>licLimit)
     {
         bool allow=false;

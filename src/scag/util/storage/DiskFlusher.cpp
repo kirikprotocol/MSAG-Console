@@ -72,7 +72,7 @@ int DiskFlusher::Execute()
             writeTime *= speedLimiter->getResolution()/1000; // convert to msec
 
             /// speed in b/ms == kb/s
-            speedKbs = totalWritten / writeTime;
+            speedKbs = unsigned(totalWritten / writeTime);
             if (written>0) {
                 smsc_log_debug(log_,"accumulating %u bytes, now maxwr=%llu, dt=%ums, speed=%ukb/s",
                                written, totalWritten, writeTime, speedKbs);
@@ -84,7 +84,7 @@ int DiskFlusher::Execute()
                 // How much to sleep?
                 //   vmax = N0 / ( t0 + tsleep )
                 // we want tsleep
-                sleepTime = totalWritten / flushConfig_.flushSpeed - writeTime + 1;
+                sleepTime = unsigned(totalWritten / flushConfig_.flushSpeed) - writeTime + 1;
             }
 
         } // normal operation

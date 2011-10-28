@@ -960,7 +960,7 @@ SmppHeader* SmppCommand::makePdu()
 #ifdef SMPPRESPHASOPTS
                 if (get_resp()->hasUnknownOptionals()) {
                     xsm->optional.set_unknownFields(get_resp()->getUnknownOptionals(),
-                                                    get_resp()->sizeUnknownOptionals());
+                                                    int(get_resp()->sizeUnknownOptionals()));
                 }
                 // FIXME: add other fields
 #endif
@@ -974,7 +974,7 @@ SmppHeader* SmppCommand::makePdu()
 #ifdef SMPPRESPHASOPTS
                 if (get_resp()->hasUnknownOptionals()) {
                     xsm->optional.set_unknownFields(get_resp()->getUnknownOptionals(),
-                                                    get_resp()->sizeUnknownOptionals());
+                                                    int(get_resp()->sizeUnknownOptionals()));
                 }
                 // FIXME: add other fields
 #endif
@@ -1014,7 +1014,7 @@ SmppHeader* SmppCommand::makePdu()
 #ifdef SMPPRESPHASOPTS
             if (get_resp()->hasUnknownOptionals()) {
                 xsm->optional.set_unknownFields( get_resp()->getUnknownOptionals(),
-                                                 get_resp()->sizeUnknownOptionals());
+                                                 int(get_resp()->sizeUnknownOptionals()));
             }
             // FIXME: set other fields
 #endif
@@ -1045,7 +1045,7 @@ SmppHeader* SmppCommand::makePdu()
 #ifdef SMPPRESPHASOPTS
             if (resp->hasUnknownOptionals()) {
                 xsm->optional.set_unknownFields(resp->getUnknownOptionals(),
-                                                resp->sizeUnknownOptionals());
+                                                int(resp->sizeUnknownOptionals()));
             }
             // FIXME: add other fields
 #endif
