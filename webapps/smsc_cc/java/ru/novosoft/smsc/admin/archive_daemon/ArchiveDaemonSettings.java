@@ -8,6 +8,7 @@ import java.util.Map;
 
 /**
  * Структура для хранения настроек ArchiveDaemon-а. Так же выполняет функцию по проверке корректности настроек.
+ *
  * @author Artem Snopkov
  */
 public class ArchiveDaemonSettings {

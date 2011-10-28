@@ -39,24 +39,6 @@ public class SmsSet {
     hasMore = false;
   }
 
-  public SmsRow getRow(int index) {
-    return rows.get(index);
-  }
-
-  public SmsRow getRow(String id) {
-    SmsRow pattern = new SmsRow();
-    pattern.setId(Long.parseLong(id));
-    int index = rows.indexOf(pattern);
-    return (index >= 0) ? getRow(index) : null;
-  }
-
-  public SmsRow getRow(long id) {
-    SmsRow pattern = new SmsRow();
-    pattern.setId(id);
-    int index = rows.indexOf(pattern);
-    return (index >= 0) ? getRow(index) : null;
-  }
-
   public boolean isHasMore() {
     return (rows.size() > 0) && hasMore;
   }

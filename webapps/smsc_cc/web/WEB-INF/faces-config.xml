@@ -23,7 +23,7 @@
     </resource-bundle>
 
     <resource-bundle>
-      <base-name>ru.novosoft.smsc.admin.stat.ExportSettings</base-name>
+      <base-name>ru.novosoft.smsc.admin.util.DBExportSettings</base-name>
       <var>exportSetBundle</var>
     </resource-bundle>
 
@@ -396,6 +396,11 @@
     <managed-bean-class>ru.novosoft.smsc.web.controllers.stat.SmscStatExportController</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+  <managed-bean>
+    <managed-bean-name>smsExportStat</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.sms_view.SmsExportController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>messages</managed-bean-name>
@@ -597,6 +602,11 @@
     <navigation-case>
       <from-outcome>SMS_VIEW</from-outcome>
       <to-view-id>/smsc/stat/smsview_sms.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMS_EXPORT</from-outcome>
+      <to-view-id>/smsc/stat/sms_export.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

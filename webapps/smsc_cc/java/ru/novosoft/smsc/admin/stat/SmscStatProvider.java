@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.stat;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.IOUtils;
 
@@ -29,15 +30,15 @@ public class SmscStatProvider {
   private final TimeZone defTimeZone = TimeZone.getDefault();
   private final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT");
 
-  private final ExportSettings defExportSettings;
+  private final DBExportSettings defExportSettings;
 
-  public SmscStatProvider(SmscStatContext context, ExportSettings defExportSettings) {
+  public SmscStatProvider(SmscStatContext context, DBExportSettings defExportSettings) {
     this.context = context;
     this.defExportSettings = defExportSettings;
   }
 
-  public ExportSettings getDefExportSettings() {
-    return defExportSettings == null ? null : new ExportSettings(defExportSettings);
+  public DBExportSettings getDefExportSettings() {
+    return defExportSettings == null ? null : new DBExportSettings(defExportSettings);
   }
 
   private void readCounters(CountersSet set, InputStream is) throws IOException {
@@ -473,7 +474,7 @@ public class SmscStatProvider {
   private static final String mysqlDriver = "com.mysql.jdbc.Driver";
   private static final String oracleDriver = "oracle.jdbc.driver.OracleDriver";
 
-  private Connection getConnection(ExportSettings export) throws SQLException, ClassNotFoundException {
+  private Connection getConnection(DBExportSettings export) throws SQLException, ClassNotFoundException {
     switch (export.getDbType()) {
       case MYSQL:
         Class.forName(mysqlDriver);
@@ -632,7 +633,7 @@ public class SmscStatProvider {
     return exportStatistics(filter, defExportSettings, loadListener);
   }
 
-  public ExportResults exportStatistics(SmscStatFilter filter, ExportSettings export, SmscStatLoadListener loadListener) throws AdminException {
+  public ExportResults exportStatistics(SmscStatFilter filter, DBExportSettings export, SmscStatLoadListener loadListener) throws AdminException {
     final ExportResults results = new ExportResults();
     final String tablesPrefix = export.getPrefix();
     final String totalSmsTable = tablesPrefix + "_sms";

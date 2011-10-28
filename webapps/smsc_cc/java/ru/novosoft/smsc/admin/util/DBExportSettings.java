@@ -1,9 +1,9 @@
-package ru.novosoft.smsc.admin.stat;
+package ru.novosoft.smsc.admin.util;
 
 /**
  * author: Aleksandr Khalitov
  */
-public class ExportSettings {
+public class DBExportSettings {
 
   private String source;
   private DbType dbType;
@@ -11,7 +11,7 @@ public class ExportSettings {
   private String pass;
   private String prefix;
 
-  public ExportSettings(ExportSettings o) {
+  public DBExportSettings(DBExportSettings o) {
     source = o.source;
     dbType = o.dbType;
     user = o.user;
@@ -19,7 +19,7 @@ public class ExportSettings {
     prefix = o.prefix;
   }
 
-  public ExportSettings() {
+  public DBExportSettings() {
   }
 
   public String getSource() {

@@ -3,6 +3,7 @@ package ru.novosoft.smsc.web.config.archive_daemon;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonSettings;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
 import ru.novosoft.smsc.web.config.DiffHelper;
 import ru.novosoft.smsc.web.journal.Journal;
@@ -71,5 +72,9 @@ public class WArchiveDaemonManager extends BaseSettingsManager<ArchiveDaemonSett
 
   public List<String> getDaemonHosts() throws AdminException {
     return wrapped.getDaemonHosts();
+  }
+
+  public DBExportSettings getDefExportSettings() {
+    return wrapped.getDefExportSettings();
   }
 }

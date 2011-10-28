@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin;
 
-import ru.novosoft.smsc.admin.stat.ExportSettings;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
@@ -175,12 +175,46 @@ class AdminContextConfig {
     }
   }
 
-  public ExportSettings getStatExportSettings() throws AdminException{
+  public DBExportSettings getStatExportSettings() throws AdminException{
     try{
       XmlConfigSection s = webconfig.getSection("statsave_datasource");
-      ExportSettings ss = new ExportSettings();
+      DBExportSettings ss = new DBExportSettings();
       ss.setSource(s.getString("source"));
-      ss.setDbType(ExportSettings.DbType.valueOf(s.getString("dbType")));
+      ss.setDbType(DBExportSettings.DbType.valueOf(s.getString("dbType")));
+      ss.setUser(s.getString("user"));
+      ss.setPass(s.getString("pass"));
+      ss.setPrefix(s.getString("tables_prefix"));
+      return ss;
+    }catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }catch (IllegalArgumentException e) {
+      throw new AdminContextException("invalid_config", e);
+    }
+  }
+
+  public DBExportSettings getOperExportSettings() throws AdminException{
+    try{
+      XmlConfigSection s = webconfig.getSection("opersave_datasource");
+      DBExportSettings ss = new DBExportSettings();
+      ss.setSource(s.getString("source"));
+      ss.setDbType(DBExportSettings.DbType.ORACLE);
+      ss.setUser(s.getString("user"));
+      ss.setPass(s.getString("pass"));
+      ss.setPrefix(s.getString("tables_prefix"));
+      return ss;
+    }catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }catch (IllegalArgumentException e) {
+      throw new AdminContextException("invalid_config", e);
+    }
+  }
+
+  public DBExportSettings getArchiveExportSettings() throws AdminException{
+    try{
+      XmlConfigSection s = webconfig.getSection("archsave_datasource");
+      DBExportSettings ss = new DBExportSettings();
+      ss.setSource(s.getString("source"));
+      ss.setDbType(DBExportSettings.DbType.valueOf(s.getString("dbType")));
       ss.setUser(s.getString("user"));
       ss.setPass(s.getString("pass"));
       ss.setPrefix(s.getString("tables_prefix"));

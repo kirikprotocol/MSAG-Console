@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 
 import java.util.List;
 
@@ -13,7 +14,8 @@ public interface ArchiveDaemonManager {
    * Возвращает текущие настройки ArchiveDaemon-а
    *
    * @return текущие настройки ArchiveDaemon-а
-   * @throws ru.novosoft.smsc.admin.AdminException, если произошла ошибка
+   * @throws ru.novosoft.smsc.admin.AdminException,
+   *          если произошла ошибка
    */
   public ArchiveDaemonSettings getSettings() throws AdminException;
 
@@ -27,6 +29,7 @@ public interface ArchiveDaemonManager {
 
   /**
    * Возвращает хост, на котором запущен демон или null, если демон offline
+   *
    * @return хост, на котором запущен демон или null, если демон offline
    * @throws AdminException, если произошла ошибка
    */
@@ -34,6 +37,7 @@ public interface ArchiveDaemonManager {
 
   /**
    * Переключает демона на указанную ноду
+   *
    * @param toHost хост, на который надо переключить демона.
    * @throws AdminException, если произошла ошибка
    */
@@ -41,20 +45,30 @@ public interface ArchiveDaemonManager {
 
   /**
    * Запускает демона
+   *
    * @throws AdminException если произошла ошибка
    */
   public void startDaemon() throws AdminException;
 
   /**
    * Останавливает демона
+   *
    * @throws AdminException если произошла ошибка
    */
   public void stopDaemon() throws AdminException;
 
   /**
    * Водвращает список хостов, на которых может быть запущен демон
+   *
    * @return список хостов, на которых может быть запущен демон
    * @throws AdminException если произошла ошибка
    */
   public List<String> getDaemonHosts() throws AdminException;
+
+  /**
+   * Возвращает настройки экспорта БД по умолчанию
+   *
+   * @return
+   */
+  public DBExportSettings getDefExportSettings();
 }

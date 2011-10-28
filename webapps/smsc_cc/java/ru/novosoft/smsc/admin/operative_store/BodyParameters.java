@@ -5,6 +5,7 @@ import java.util.Map;
 
 /**
  * Структура, описывающая дополнительные параметры сообщения
+ *
  * @author Artem Snopkov
  */
 public class BodyParameters {
@@ -29,39 +30,39 @@ public class BodyParameters {
   }
 
   public int getOriginalPartsNum() {
-    return (Integer)parameters.get(SMSC_ORIG_PARTS_NUM_TAG);
+    return (Integer) parameters.get(SMSC_ORIG_PARTS_NUM_TAG);
   }
 
   public byte[] getBackupSme() {
-    return (byte[])parameters.get(SMSC_BACKUP_SME_TAG);
+    return (byte[]) parameters.get(SMSC_BACKUP_SME_TAG);
   }
 
   public byte[] getShortMessage() {
-    return (byte[])parameters.get(SMPP_SHORT_MESSAGE_TAG);
+    return (byte[]) parameters.get(SMPP_SHORT_MESSAGE_TAG);
   }
 
   public byte[] getMessagePayload() {
-    return (byte[])parameters.get(SMPP_MESSAGE_PAYLOAD_TAG);
+    return (byte[]) parameters.get(SMPP_MESSAGE_PAYLOAD_TAG);
   }
 
   public Integer getMergeConcat() {
-    return (Integer)parameters.get(SMSC_MERGE_CONCAT_TAG);
+    return (Integer) parameters.get(SMSC_MERGE_CONCAT_TAG);
   }
 
   public DataCoding[] getDcList() {
-    return (DataCoding[])parameters.get(SMSC_DC_LIST_TAG);
+    return (DataCoding[]) parameters.get(SMSC_DC_LIST_TAG);
   }
 
   public byte[] getConcatInfo() {
-    return (byte[])parameters.get(SMPP_CONCAT_INFO_TAG);
+    return (byte[]) parameters.get(SMPP_CONCAT_INFO_TAG);
   }
 
   public DataCoding getDataCoding() {
-    return (DataCoding)parameters.get(SMPP_DATA_CODING_TAG);
+    return (DataCoding) parameters.get(SMPP_DATA_CODING_TAG);
   }
 
   public Integer getEsmClass() {
-    return (Integer)parameters.get(SMPP_ESM_CLASS_TAG);
+    return (Integer) parameters.get(SMPP_ESM_CLASS_TAG);
   }
 
   public Map<Integer, Object> getParams() {

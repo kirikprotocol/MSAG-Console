@@ -49,19 +49,17 @@ class LazyMessageImpl implements Message {
 
   private byte[] message;
   private InputStream is;
-  private boolean haveArc;
 
   private final Status status;
 
-  LazyMessageImpl(byte[] message, boolean haveArc, long id, int status) {
-    reset(message, haveArc, id);
+  LazyMessageImpl(byte[] message, long id, int status) {
+    reset(message, id);
     this.status = Status.valueOf(status);
   }
 
-  void reset(byte[] message, boolean haveArc, long id) {
+  void reset(byte[] message, long id) {
     this.id = id;
     this.message = message;
-    this.haveArc = haveArc;
     submitTime = null;
     validTime = null;
     attempts = null;
@@ -106,7 +104,7 @@ class LazyMessageImpl implements Message {
         is = new ByteArrayInputStream(message);
       try {
         long d = IOUtils.readUInt32(is);
-        submitTime = d == 0 ? null : new Date( d* 1000);
+        submitTime = d == 0 ? null : new Date(d * 1000);
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -132,7 +130,7 @@ class LazyMessageImpl implements Message {
       readValidTime();
       try {
         long d = IOUtils.readUInt32(is);
-        lastTryTime =  d == 0 ? null : new Date(d * 1000);
+        lastTryTime = d == 0 ? null : new Date(d * 1000);
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -344,7 +342,7 @@ class LazyMessageImpl implements Message {
   private void readArc() {
     readDstSmeId();
     try {
-      if (haveArc && arc == -1)
+      if (arc == -1)
         arc = ((byte) IOUtils.readUInt8(is));
     } catch (IOException e) {
       e.printStackTrace();
@@ -370,116 +368,116 @@ class LazyMessageImpl implements Message {
     }
   }
 
-  public long getId() throws AdminException {
+  public long getId() {
     return id;
   }
 
-  public Date getSubmitTime() throws AdminException {
+  public Date getSubmitTime() {
     readSubmitTime();
     return submitTime;
   }
 
-  public Date getValidTime() throws AdminException {
+  public Date getValidTime() {
     readValidTime();
     return validTime;
   }
 
-  public Date getLastTryTime() throws AdminException {
+  public Date getLastTryTime() {
     readLastTryTime();
     return lastTryTime;
   }
 
-  public Date getNextTryTime() throws AdminException {
+  public Date getNextTryTime() {
     readNextTryTime();
     return nextTryTime;
   }
 
-  public Integer getAttempts() throws AdminException {
+  public Integer getAttempts() {
     readAttempts();
     return attempts;
   }
 
-  public Integer getLastResult() throws AdminException {
+  public Integer getLastResult() {
     readLastResult();
     return lastResult;
   }
 
-  public Address getOriginatingAddress() throws AdminException {
+  public Address getOriginatingAddress() {
     readOriginatingAddress();
     return originatingAddress;
   }
 
-  public Address getDestinationAddress() throws AdminException {
+  public Address getDestinationAddress() {
     readDestinationAddress();
     return destinationAddress;
   }
 
-  public Address getDealiasedDestinationAddress() throws AdminException {
+  public Address getDealiasedDestinationAddress() {
     readDealiasedDestinationAddress();
     return dealiasedDestinationAddress;
   }
 
-  public Integer getMessageReference() throws AdminException {
+  public Integer getMessageReference() {
     readMessageReference();
     return messageReference;
   }
 
-  public String getServiceType() throws AdminException {
+  public String getServiceType() {
     readServiceType();
     return serviceType;
   }
 
-  public Integer getDeliveryReport() throws AdminException {
+  public Integer getDeliveryReport() {
     readDeliveryReport();
     return deliveryReport;
   }
 
-  public Integer getBillingRecord() throws AdminException {
+  public Integer getBillingRecord() {
     readBillingRecord();
     return billingRecord;
   }
 
-  public RoutingInfo getOriginatingDescriptor() throws AdminException {
+  public RoutingInfo getOriginatingDescriptor() {
     readOriginatingDescriptor();
     return originatingDescriptor;
   }
 
-  public RoutingInfo getDestinationDescriptor() throws AdminException {
+  public RoutingInfo getDestinationDescriptor() {
     readDestinationDescriptor();
     return destinationDescriptor;
   }
 
-  public String getRouteId() throws AdminException {
+  public String getRouteId() {
     readRouteId();
     return routeId;
   }
 
-  public Integer getServiceId() throws AdminException {
+  public Integer getServiceId() {
     readServiceId();
     return serviceId;
   }
 
-  public Integer getPriority() throws AdminException {
+  public Integer getPriority() {
     readPriority();
     return priority;
   }
 
-  public String getSrcSmeId() throws AdminException {
+  public String getSrcSmeId() {
     readSrcSmeId();
     return srcSmeId;
   }
 
-  public String getDstSmeId() throws AdminException {
+  public String getDstSmeId() {
     readDstSmeId();
     return dstSmeId;
   }
 
-  public byte getArc() throws AdminException {
+  public byte getArc() {
     readArc();
     return arc;
   }
 
-  public byte[] getBody() throws AdminException {
+  public byte[] getBody() {
     readBody();
     return body;
   }
@@ -504,7 +502,7 @@ class LazyMessageImpl implements Message {
     return parameters;
   }
 
-  public Status getStatus() throws AdminException {
+  public Status getStatus() {
     return status;
   }
 

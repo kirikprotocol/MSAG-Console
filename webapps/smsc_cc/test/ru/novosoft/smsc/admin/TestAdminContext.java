@@ -208,7 +208,7 @@ public class TestAdminContext extends AdminContext {
     routeSubjectManager = new TestRouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager)) {
-      archiveDaemonManager = new TestArchiveDaemonManager(serviceManager, fileSystem);
+      archiveDaemonManager = new TestArchiveDaemonManager(serviceManager, fileSystem, cfg.getArchiveExportSettings());
       List<String> routes = new LinkedList<String>();
       List<String> smes = new LinkedList<String>();
       for(Route r : routeSubjectManager.getSettings().getRoutes()) {
@@ -232,7 +232,7 @@ public class TestAdminContext extends AdminContext {
     for (int i =0; i<smscInstancesNumber; i++)
       operStores[i] = new File(servicesDir, "SMSC" + i +File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
 
-    operativeStoreManager = new OperativeStoreManager(operStores, fileSystem, clusterController);
+    operativeStoreManager = new OperativeStoreManager(operStores, fileSystem, clusterController, cfg.getOperExportSettings());
 
     final File[] statsDir = new File[1];
     statsDir[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat");

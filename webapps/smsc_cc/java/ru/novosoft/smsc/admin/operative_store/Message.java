@@ -8,55 +8,56 @@ import java.util.Date;
 
 /**
  * Структура, описывающая сообщение, хранящееся в оперативном сторадже
+ *
  * @author Artem Snopkov
  */
 public interface Message extends Serializable {
 
-  public long getId() throws AdminException;
+  public long getId();
 
-  public Date getSubmitTime() throws AdminException;
+  public Date getSubmitTime();
 
-  public Date getValidTime() throws AdminException;
+  public Date getValidTime();
 
-  public Integer getAttempts() throws AdminException;
+  public Integer getAttempts();
 
-  public Integer getLastResult() throws AdminException;
+  public Integer getLastResult();
 
-  public Date getLastTryTime() throws AdminException;
+  public Date getLastTryTime();
 
-  public Date getNextTryTime() throws AdminException;
+  public Date getNextTryTime();
 
-  public Address getOriginatingAddress() throws AdminException;
+  public Address getOriginatingAddress();
 
-  public Address getDestinationAddress() throws AdminException;
+  public Address getDestinationAddress();
 
-  public Address getDealiasedDestinationAddress() throws AdminException;
+  public Address getDealiasedDestinationAddress();
 
-  public Integer getMessageReference() throws AdminException;
+  public Integer getMessageReference();
 
-  public String getServiceType() throws AdminException;
+  public String getServiceType();
 
-  public Integer getDeliveryReport() throws AdminException;
+  public Integer getDeliveryReport();
 
-  public Integer getBillingRecord() throws AdminException;
+  public Integer getBillingRecord();
 
-  public RoutingInfo getOriginatingDescriptor() throws AdminException;
+  public RoutingInfo getOriginatingDescriptor();
 
-  public RoutingInfo getDestinationDescriptor() throws AdminException;
+  public RoutingInfo getDestinationDescriptor();
 
-  public String getRouteId() throws AdminException;
+  public String getRouteId();
 
-  public Integer getServiceId() throws AdminException;
+  public Integer getServiceId();
 
-  public Integer getPriority() throws AdminException;
+  public Integer getPriority();
 
-  public String getSrcSmeId() throws AdminException;
+  public String getSrcSmeId();
 
-  public String getDstSmeId() throws AdminException;
+  public String getDstSmeId();
 
-  public byte getArc() throws AdminException;
+  public byte getArc();
 
-  public byte[] getBody() throws AdminException;
+  public byte[] getBody();
 
   public String getOriginalText() throws AdminException;
 
@@ -66,18 +67,29 @@ public interface Message extends Serializable {
 
   public BodyParameters getBodyParameters() throws AdminException;
 
-  public Status getStatus() throws AdminException;
+  public Status getStatus();
 
 
   public static enum Status {
     ENROUTE, DELIVERED, EXPIRED, UNDELIVERABLE, DELETED, UNKNOWN;
+
     public static Status valueOf(int status) {
-      Status[] _values =  Status.values();
-      if(status>=0 && status<_values.length) {
+      Status[] _values = Status.values();
+      if (status >= 0 && status < _values.length) {
         return _values[status];
-      }else{
+      } else {
         return UNKNOWN;
       }
+    }
+
+    public int getCode() {
+      Status[] statuses = values();
+      for (int i = 0; i < statuses.length; i++) {
+        if (statuses[i] == this) {
+          return i;
+        }
+      }
+      return -1;
     }
   }
 }

@@ -139,7 +139,7 @@ public class AdminContext {
     File smscConfigBackupDir = _smscManager.getConfigBackupDir();
 
     if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager)) {
-      archiveDaemonManager = new ArchiveDaemonManagerImpl(serviceManager, fileSystem);
+      archiveDaemonManager = new ArchiveDaemonManagerImpl(serviceManager, fileSystem, cfg.getArchiveExportSettings());
       archiveDaemon = new ArchiveDaemon(archiveDaemonManager);
     }
 
@@ -195,7 +195,7 @@ public class AdminContext {
       operativeStorages[i] = new File(is.getLocalStoreFilename());
     }
 
-    operativeStoreManager = new OperativeStoreManager(operativeStorages, fileSystem, clusterController);
+    operativeStoreManager = new OperativeStoreManager(operativeStorages, fileSystem, clusterController, cfg.getOperExportSettings());
 
     smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem), cfg.getStatExportSettings());
 

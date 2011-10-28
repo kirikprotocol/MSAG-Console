@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.operative_store;
 
 /**
  * Кодировка сообщения
+ *
  * @author Artem Snopkov
  */
 public enum DataCoding {

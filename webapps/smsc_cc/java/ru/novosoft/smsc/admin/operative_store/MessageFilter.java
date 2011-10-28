@@ -6,9 +6,10 @@ import java.util.Date;
 
 /**
  * Фильтр сообщений
+ *
  * @author Artem Snopkov
  */
-public class MessageFilter{
+public class MessageFilter {
 
   private Address abonentAddress;
   private Address fromAddress;
@@ -55,6 +56,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по адресу отправителя или получателя
+   *
    * @param abonentAddress адрес отправителя или получателя (может использоваться маска)
    */
   public void setAbonentAddress(Address abonentAddress) {
@@ -67,6 +69,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по адресу отправителя
+   *
    * @param fromAddress адрес отправителя (может быть маска)
    */
   public void setFromAddress(Address fromAddress) {
@@ -79,6 +82,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по адресу получателя
+   *
    * @param toAddress адрес получателя (может быть маска)
    */
   public void setToAddress(Address toAddress) {
@@ -91,6 +95,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по srcSmeId или dstSmeId
+   *
    * @param smeId srcSmeId или dstSmeId
    */
   public void setSmeId(String smeId) {
@@ -103,6 +108,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по srcSmeId
+   *
    * @param srcSmeId идентификатор SME отправителя
    */
   public void setSrcSmeId(String srcSmeId) {
@@ -114,8 +120,8 @@ public class MessageFilter{
   }
 
   /**
-   *
    * Задает фильтр по dstSmeId
+   *
    * @param dstSmeId идентификатор SME-получателя
    */
   public void setDstSmeId(String dstSmeId) {
@@ -128,6 +134,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по идентификатору маршрута
+   *
    * @param routeId идентификатор маршрута
    */
   public void setRouteId(String routeId) {
@@ -140,6 +147,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по идентификатору сообщения
+   *
    * @param smsId идентификатор СМС
    */
   public void setSmsId(Long smsId) {
@@ -152,6 +160,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по минимальной дате отправки
+   *
    * @param fromDate минимальная дата отправки
    */
   public void setFromDate(Date fromDate) {
@@ -164,6 +173,7 @@ public class MessageFilter{
 
   /**
    * Задает фильтр по максимальной дате отправки
+   *
    * @param tillDate максимальная дата отправки
    */
   public void setTillDate(Date tillDate) {
@@ -172,6 +182,7 @@ public class MessageFilter{
 
   /**
    * Этот метод может быть переопределен для добавления собственных фильтров
+   *
    * @param m сообщение, которое надо проверить
    * @return true, если сообщение удовлетворяет фильтру и false - в противном случае.
    */
@@ -181,6 +192,7 @@ public class MessageFilter{
 
   /**
    * Максимальное кол-во извлекаемых строк
+   *
    * @return максимальное кол-во извлекаемых строк
    */
   public int getMaxRowSize() {
@@ -189,6 +201,7 @@ public class MessageFilter{
 
   /**
    * Устанавливает максимальное кол-во извлекаемых строк
+   *
    * @param maxRowSize максимальное кол-во извлекаемых строк
    */
   public void setMaxRowSize(int maxRowSize) {

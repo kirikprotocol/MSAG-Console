@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.operative_store;
 
 /**
  * Информация о точке отправки или получения смс
+ *
  * @author Artem Snopkov
  */
 public class RoutingInfo {

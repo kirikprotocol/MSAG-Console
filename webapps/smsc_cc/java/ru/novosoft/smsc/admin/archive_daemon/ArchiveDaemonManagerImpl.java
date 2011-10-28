@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.config.ConfigFileManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 
 import java.io.File;
 import java.util.List;
@@ -21,8 +22,11 @@ public class ArchiveDaemonManagerImpl implements ArchiveDaemonManager {
   private final ConfigFileManager<ArchiveDaemonSettings> cfgFileManager;
   private final ServiceManager serviceManager;
 
-  public ArchiveDaemonManagerImpl(ServiceManager serviceManager, FileSystem fs) throws AdminException {
+  private final DBExportSettings defExportSettings;
+
+  public ArchiveDaemonManagerImpl(ServiceManager serviceManager, FileSystem fs, DBExportSettings defExportSettings) throws AdminException {
     this.serviceManager = serviceManager;
+    this.defExportSettings = defExportSettings;
     ServiceInfo info = getInfo();
     File archiveDaemonConf = new File(info.getBaseDir(), "conf");
     File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
@@ -66,5 +70,9 @@ public class ArchiveDaemonManagerImpl implements ArchiveDaemonManager {
 
   public List<String> getDaemonHosts() throws AdminException {
     return getInfo().getHosts();
+  }
+
+  public DBExportSettings getDefExportSettings() {
+    return defExportSettings;
   }
 }

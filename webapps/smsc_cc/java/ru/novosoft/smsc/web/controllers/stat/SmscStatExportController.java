@@ -3,7 +3,11 @@ package ru.novosoft.smsc.web.controllers.stat;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.stat.*;
+import ru.novosoft.smsc.admin.stat.ExportResults;
+import ru.novosoft.smsc.admin.stat.SmscStatFilter;
+import ru.novosoft.smsc.admin.stat.SmscStatLoadListener;
+import ru.novosoft.smsc.admin.stat.SmscStatProvider;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.controllers.SmscController;
 
@@ -20,9 +24,9 @@ public class SmscStatExportController extends SmscController{
 
   private static final Logger logger = Logger.getLogger(SmscStatExportController.class);
 
-  private ExportSettings defExportSettings;
+  private DBExportSettings defExportSettings;
 
-  private ExportSettings settings = new ExportSettings();
+  private DBExportSettings settings = new DBExportSettings();
 
   private Exporter exporter;
 
@@ -59,7 +63,7 @@ public class SmscStatExportController extends SmscController{
 
   public String clear() {
     date = new Date();
-    settings = new ExportSettings();
+    settings = new DBExportSettings();
     exporter = null;
     return null;
   }
@@ -72,7 +76,7 @@ public class SmscStatExportController extends SmscController{
     this.date = date;
   }
 
-  public ExportSettings getSettings() {
+  public DBExportSettings getSettings() {
     return settings;
   }
 
@@ -90,7 +94,7 @@ public class SmscStatExportController extends SmscController{
     this.type = type;
   }
 
-  public ExportSettings getDefExportSettings() {
+  public DBExportSettings getDefExportSettings() {
     return defExportSettings;
   }
 
@@ -134,7 +138,7 @@ public class SmscStatExportController extends SmscController{
     if(exporter.error instanceof AdminException) {
       return ((AdminException) exporter.error).getMessage(getLocale());
     }else {
-      return getLocalizedString("smsc.stat.export.internal.error");
+      return getLocalizedString("smsc.export.internal.error");
     }
   }
 
@@ -143,16 +147,16 @@ public class SmscStatExportController extends SmscController{
     Type[] types = Type.values();
     List<SelectItem> res = new ArrayList<SelectItem>(types.length);
     for(Type t : types) {
-      res.add(new SelectItem(t, getLocalizedString("smsc.stat.export.type."+t)));
+      res.add(new SelectItem(t, getLocalizedString("smsc.export.type."+t)));
     }
     return res;
   }
 
 
   public List<SelectItem> getDbTypes() {
-    ExportSettings.DbType[] types = ExportSettings.DbType.values();
+    DBExportSettings.DbType[] types = DBExportSettings.DbType.values();
     List<SelectItem> res = new ArrayList<SelectItem>(types.length);
-    for(ExportSettings.DbType t : types) {
+    for(DBExportSettings.DbType t : types) {
       res.add(new SelectItem(t, t.toString()));
     }
     return res;
@@ -173,14 +177,14 @@ public class SmscStatExportController extends SmscController{
 
     private final SmscStatProvider provider;
     private final SmscStatFilter filter;
-    private final ExportSettings settings;
+    private final DBExportSettings settings;
 
     private int total = Integer.MAX_VALUE;
     private int current;
 
     private ExportResults results;
 
-    public Exporter(SmscStatProvider provider, SmscStatFilter filter, ExportSettings settings) {
+    public Exporter(SmscStatProvider provider, SmscStatFilter filter, DBExportSettings settings) {
       this.provider = provider;
       this.filter = filter;
       this.settings = settings;

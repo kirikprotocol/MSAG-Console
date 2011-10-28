@@ -56,4 +56,19 @@
     <param name="user" type="string">student</param>
   </section>
 
+  <section name="archsave_datasource">
+    <param name="dbType" type="string">MYSQL</param>
+    <param name="pass" type="string">student</param>
+    <param name="source" type="string">jdbc:mysql://mangal/summer_edu</param>
+    <param name="tables_prefix" type="string">smsc</param>
+    <param name="user" type="string">student</param>
+  </section>
+
+  <section name="opersave_datasource">
+    <param name="pass" type="string">sms</param>
+    <param name="source" type="string">jdbc:oracle:thin:@max:1521:orcl</param>
+    <param name="tables_prefix" type="string">smsc</param>
+    <param name="user" type="string">sms</param>
+  </section>
+
 </config>

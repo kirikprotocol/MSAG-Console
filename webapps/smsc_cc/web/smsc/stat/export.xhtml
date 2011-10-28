@@ -34,7 +34,7 @@
 
       <h:panelGrid style="padding: 10px 10px 10px 10px" columns="2" columnClasses="labelColumn, lastColumn" rendered="#{exportStat.showFilter}">
 
-        <h:outputText value="#{msg['smsc.stat.export.date']}"/>
+        <h:outputText value="#{msg['smsc.export.date']}"/>
         <eye:inputDate value="#{exportStat.date}" required="true"/>
 
 
@@ -81,7 +81,7 @@
 
       <eye:buttons rendered="#{exportStat.showFilter}">
         <eye:button>
-          <h:commandLink value="#{msg['smsc.stat.export.button']}" action="#{exportStat.apply}"/>
+          <h:commandLink value="#{msg['smsc.export.button']}" action="#{exportStat.apply}"/>
         </eye:button>
         <eye:button>
           <h:commandLink value="#{msg['clear.button']}" action="#{exportStat.clear}"/>
@@ -134,7 +134,7 @@
 
         <eye:buttons rendered="#{exportStat.showResults}">
           <eye:button>
-            <h:commandLink value="#{msg['smsc.stat.export.more.button']}" action="#{exportStat.more}"/>
+            <h:commandLink value="#{msg['smsc.export.more.button']}" action="#{exportStat.more}"/>
           </eye:button>
           <eye:space/>
         </eye:buttons>

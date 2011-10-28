@@ -46,7 +46,6 @@ import ru.novosoft.smsc.admin.snmp.SnmpCounter;
 import ru.novosoft.smsc.admin.snmp.SnmpException;
 import ru.novosoft.smsc.admin.snmp.SnmpObject;
 import ru.novosoft.smsc.admin.snmp.SnmpSettings;
-import ru.novosoft.smsc.admin.stat.ExportSettings;
 import ru.novosoft.smsc.admin.stat.StatException;
 import ru.novosoft.smsc.admin.timezone.Timezone;
 import ru.novosoft.smsc.admin.timezone.TimezoneException;
@@ -55,6 +54,7 @@ import ru.novosoft.smsc.admin.topmon.TopMonitorException;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.users.UserPreferences;
 import ru.novosoft.smsc.admin.users.UsersSettings;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.web.controllers.ConcurrentModificationException;
 import ru.novosoft.smsc.web.journal.JournalRecord;
 
@@ -135,7 +135,7 @@ public class ResourceBundleTest {
     assertResourceBundleCorrect(SnmpException.class);
     assertResourceBundleCorrect(SnmpObject.class);
     assertResourceBundleCorrect(SnmpSettings.class);
-    assertResourceBundleCorrect(ExportSettings.class);
+    assertResourceBundleCorrect(DBExportSettings.class);
     assertResourceBundleCorrect(StatException.class);
     assertResourceBundleCorrect(Timezone.class);
     assertResourceBundleCorrect(TimezoneException.class);

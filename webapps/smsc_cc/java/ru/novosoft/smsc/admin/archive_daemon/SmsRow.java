@@ -296,7 +296,7 @@ public class SmsRow {
   }
 
   public void addBodyParameter(short tag, Object value) {
-    parameters.put((int)tag, value);
+    parameters.put((int) tag, value);
   }
 
   public Map<Integer, Object> getBodyParameters() {
