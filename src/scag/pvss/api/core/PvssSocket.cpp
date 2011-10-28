@@ -258,14 +258,23 @@ void PvssSocket::registerWriter( PacketWriter* writer )
 }
 void PvssSocket::registerReader( PacketReader* reader )
 {
+    MutexGuard mg(readerMutex_);
     smsc_log_debug(log_,"attaching reader %p to channel %p",reader,this);
     assert( bool(reader) != bool(reader_) );
     reader_ = reader;
 }
 
-bool PvssSocket::isInUse() const
+bool PvssSocket::isInUse()
 {
-    return writer_ || reader_;
+    {
+        MutexGuard mg(writerMutex_);
+        if (writer_) return true;
+    }
+    {
+        MutexGuard mg(readerMutex_);
+        if (reader_) return true;
+    }
+    return false;
 }
 
 void PvssSocket::init()

@@ -47,8 +47,9 @@ void Core::registerForWrite( PvssSocket& channel ) /* throw (PvssException) */
         smsc::core::synchronization::MutexGuard mg(writersMutex);
         if ( !writers.empty() ) {
             // select busyless Writer
-            std::sort( writers.begin(), writers.end(), ChannelCountComparator() );
-            writer = writers.front();
+            writer = *std::min_element( writers.begin(),
+                                        writers.end(),
+                                        ChannelCountComparator());
         }
     }
     if (writer == 0)
@@ -66,8 +67,9 @@ void Core::registerForRead( PvssSocket& channel ) /* throw(PvssException) */
     {
         smsc::core::synchronization::MutexGuard mg(readersMutex);
         if ( !readers.empty() ) {
-            std::sort( readers.begin(), readers.end(), ChannelCountComparator() );
-            reader = readers.front();
+            reader = *std::min_element(readers.begin(),
+                                       readers.end(),
+                                       ChannelCountComparator());
         }
     }
     if (reader == 0)

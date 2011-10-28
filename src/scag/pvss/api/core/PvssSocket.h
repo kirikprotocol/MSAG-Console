@@ -85,7 +85,8 @@ public:
 
     void registerWriter( PacketWriter* writer );
     void registerReader( PacketReader* reader );
-    bool isInUse() const;
+    
+    bool isInUse(); // const
 
 private:
     void init(); // called from ctor
@@ -114,6 +115,7 @@ private:
     // writer/reader
     smsc::core::synchronization::Mutex        writerMutex_;
     PacketWriter*                             writer_;
+    smsc::core::synchronization::Mutex        readerMutex_;
     PacketReader*                             reader_;
 
     util::msectime_type                       connectTime_;
