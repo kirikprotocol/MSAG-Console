@@ -287,7 +287,7 @@ AdapterProperty* SmppCommandAdapter::createSmProperty( const std::string& name, 
             break;
         }
         if (fieldId == SMS_VALIDITY_PERIOD ) {
-            property = new AdapterProperty(name.c_str(),this,data.validTime);
+            property = new AdapterProperty(name.c_str(),this,int(data.validTime));
             break;
         }
     
@@ -729,7 +729,7 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
 
             int code = smsc::smpp::DataCoding::UCS2;
 
-            if(!CommandBridge::hasMSB(str.data(), str.size()))
+            if(!CommandBridge::hasMSB(str.data(), int(str.size())))
                 code = smsc::smpp::DataCoding::SMSC7BIT;
                 
             data.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, code);
@@ -737,10 +737,10 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
             switch (code) 
             {
                 case smsc::smpp::DataCoding::UCS2:
-                    Convertor::UTF8ToUCS2(str.data(), str.size(), resStr);
+                    Convertor::UTF8ToUCS2(str.data(), int(str.size()), resStr);
                     break;
                 default:
-                    Convertor::UTF8ToGSM7Bit(str.data(), str.size(), resStr);
+                    Convertor::UTF8ToGSM7Bit(str.data(), int(str.size()), resStr);
             }
   
             if (isShortSize(resStr.size()) && data.hasBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE)) 
@@ -749,8 +749,8 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
                 data.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &mlen);
                 if (mlen) 
                 {
-                   data.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
-                   data.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, resStr.size());
+                   data.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, int(resStr.data()), resStr.size());
+                   data.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, int(resStr.size()));
                    return;
                 }
             }
@@ -758,7 +758,7 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
             if (data.hasBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE))
                 data.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, 0, 0);
 
-            data.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
+            data.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, int(resStr.data()), resStr.size());
             data.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, 0);
 
             break;

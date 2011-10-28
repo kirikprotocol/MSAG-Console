@@ -72,8 +72,8 @@ void Snapshot::getMaxDerivative( int64_t& value, unsigned& nbins )
     value = slot_[last_];
     // smsc_log_debug(log_,"deriv, first_=%u last=%u, val=%u",first_,last_,unsigned(value));
     if ( last_ == first_ ) return;
-    unsigned maxspeed = value;
-    unsigned curval = value;
+    unsigned maxspeed = unsigned(value);
+    unsigned curval = unsigned(value);
     unsigned curbins = 1;
     for ( int p = last_; p != first_; ) {
         if ( p == 0 ) p = nbins_;

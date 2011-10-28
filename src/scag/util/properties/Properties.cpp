@@ -143,7 +143,7 @@ bool Property::convertToBool()
         break;*/
     }
 
-    val = i_val;
+    val = (i_val != 0);
     sync = true;
     return val;
 }
@@ -256,7 +256,7 @@ int Property::Compare(bool val)
 
 int Property::Compare(int val)
 {
-    int prop = getInt();
+    int prop = int(getInt());
     if (prop>val) return 1;
     if (prop<val) return -1;
     return 0;
@@ -274,8 +274,8 @@ int Property::Compare(Property& val,PropertyType pt)
 {
     if (pt == pt_int) 
     {
-        int pr1 = getInt();
-        int pr2 = val.getInt();
+        int pr1 = int(getInt());
+        int pr2 = int(val.getInt());
 
         if (pr1>pr2) return 1;
         if (pr1<pr2) return -1;

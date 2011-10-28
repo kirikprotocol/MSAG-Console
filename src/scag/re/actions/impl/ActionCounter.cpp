@@ -126,7 +126,7 @@ bool ActionCounterInc::run( ActionContext& context )
     const int64_t weight = weight_.isFound() ? weight_.getValue(context) : defVal;
     counter::CounterPtrAny ptr;
     if ( prefetch(context,ptr) ) {
-        ptr->increment(val,weight);
+        ptr->increment(val,int(weight));
     }
     return true;
 }

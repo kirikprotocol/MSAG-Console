@@ -383,7 +383,7 @@ BatchRequestComponent* PersActionCommand::makeCommand( ActionContext& context )
 
         // --- time policy
         time_t fd = finalDate;
-        uint32_t lt = lifetime_.getSeconds( context );
+        uint32_t lt = uint32_t(lifetime_.getSeconds( context ));
         if (ftFinalDate != ftUnknown)  {
             REProperty *rp = context.getProperty(sFinalDate);
             if (!rp || !(fd = parseFinalDate(rp->getStr().c_str()))) {

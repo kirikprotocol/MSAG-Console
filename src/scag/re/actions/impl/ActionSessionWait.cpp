@@ -31,7 +31,7 @@ bool ActionSessionWait::FinishXMLSubSection( const std::string& )
 
 bool ActionSessionWait::run( ActionContext& context )
 {
-    const unsigned tmo = wait_.getSeconds( context );
+    const unsigned tmo = unsigned(wait_.getSeconds( context ));
     context.getSession().waitAtLeast( tmo );
     smsc_log_debug( logger, "Action 'session:wait': tmo=%u", tmo );
     return true;

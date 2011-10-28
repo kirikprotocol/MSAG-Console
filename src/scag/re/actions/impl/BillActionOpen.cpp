@@ -64,7 +64,7 @@ BillOpenCallParamsData* BillActionOpen::postFillParamsData( BillOpenCallParamsDa
                                    opname(), timeoutFieldName_.c_str() );
                     return 0;
                 }
-                billingInfoStruct.timeout = property->getInt();
+                billingInfoStruct.timeout = int(property->getInt());
             }
         }
 

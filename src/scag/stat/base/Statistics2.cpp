@@ -24,7 +24,7 @@ namespace stat {
 
 void SaccSerialBuffer::writeStr(std::string& s, uint16_t maxLen)
 {
-    uint16_t len = (s.length() > maxLen) ? maxLen : s.length() ;
+    uint16_t len = (s.length() > maxLen) ? maxLen : uint16_t(s.length());
     //WriteNetInt16(len);
     //Write(s.c_str(), len);
     buff_ << len;
@@ -86,7 +86,7 @@ bool SaccSerialBuffer::writeToSocket(Socket& sock)
     //WriteNetInt32(bsize);
     //setPos(0);
     //return sock.WriteAll(getBuffer() ,bsize) > 0;
-  uint32_t bsize = buff_.GetPos();
+  uint32_t bsize = uint32_t(buff_.GetPos());
   buff_.SetPos(0);
   buff_ << bsize;
   buff_.SetPos(0);
@@ -97,7 +97,7 @@ void * SaccSerialBuffer::getBuffer() {
   return buff_.GetCurPtr();
 }
 uint32_t SaccSerialBuffer::getPos() {
-  return buff_.GetPos();
+  return uint32_t(buff_.GetPos());
 }
 void SaccSerialBuffer::setPos(uint32_t newPos) {
   buff_.SetPos(newPos);

@@ -77,7 +77,7 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* thr
         sprintf(buf," (pendingQsz=%u)", pendingCount );
         packet->timingComment(buf);
     }
-    int packetSize = writeContext->buffer.GetPos();
+    int packetSize = int(writeContext->buffer.GetPos());
     if ( log_->isDebugEnabled() ) {
         smsc_log_debug(log_,"writing %s: %s", isRequest ? "request" : "response",
                        packet->toString().c_str());
@@ -89,7 +89,7 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* thr
 
     // should we check the queue limit again?
     {
-        MutexGuard mg(pendingContextMon_);
+        MutexGuard mgp(pendingContextMon_);
         if ( !force && pendingContexts_.Count() > writer_->getConfig().getChannelQueueSizeLimit() )
             throw PvssException(PvssException::CLIENT_BUSY, "Queue size limit exceeded for channel: %p",this);
         pendingContexts_.Push(writeContext.release());
@@ -141,7 +141,7 @@ void PvssSocket::sendData()
 {
     assert(wrContext_.get());
     if ( wrBuffer_.GetPos() < wrBuffer_.getSize() ) {
-        int res = wrBuffer_.getSize() - wrBuffer_.GetPos();
+        int res = int(wrBuffer_.getSize() - wrBuffer_.GetPos());
         smsc_log_debug(log_,"writing %d/%d bytes",res,wrBuffer_.getSize());
         res = sock_->Write( wrBuffer_.get()+wrBuffer_.GetPos(), res );
         if (res<=0) {
@@ -168,7 +168,7 @@ void PvssSocket::processInput()
     if ( rdBuffer_.GetPos() < 4 ) {
         // reading length
         int res;
-        res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),4-rdBuffer_.GetPos());
+        res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),int(4-rdBuffer_.GetPos()));
         if (res <= 0) {
             if ( rdBuffer_.GetPos() > 0 ) {
                 core_.handleError(PvssException(PvssException::IO_ERROR,
@@ -195,7 +195,7 @@ void PvssSocket::processInput()
     }
     // reading data
     int res;
-    res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),rdBuflen_-rdBuffer_.GetPos());
+    res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),int(rdBuflen_-rdBuffer_.GetPos()));
     if ( res <= 0 ) {
         core_.handleError(PvssException(PvssException::IO_ERROR,"error reading packet data"), *this);
         return;

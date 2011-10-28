@@ -161,7 +161,7 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
         attr[name.c_str()] = value;
     }
 
-    analyser.DeliverBeginTag(XMLQName.localForm(), attr, m_pLocator->getLineNumber());
+    analyser.DeliverBeginTag(XMLQName.localForm(), attr, int(m_pLocator->getLineNumber()));
 }
 
 

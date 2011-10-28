@@ -72,7 +72,7 @@ void ActionReceipt::init(const SectionParams& params,PropertyObject propertyObje
     if(bNetErrCodeExist && ftNetErrCode == ftUnknown)
     {
         char *endptr;
-        netErrCode = strtol(varNetErrCode.c_str(), &endptr, 0);
+        netErrCode = unsigned(strtoul(varNetErrCode.c_str(), &endptr, 0));
         if(!varNetErrCode.length() || (endptr && *endptr))
             throw SCAGException("Action 'smpp:receipt': Invalid 'network_error_code' field: %s", varNetErrCode.c_str());
     }        

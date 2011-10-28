@@ -211,7 +211,7 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
         if(!strncmp(property.getName().c_str(), "header-", 7))
             cmd.setHeaderField(property.getName().c_str() + 7, property.getStr().c_str());
         else if(!strcmp(property.getName().c_str(), "status"))
-            cmd.setStatus(property.getInt());
+            cmd.setStatus(int(property.getInt()));
 /*        else if(!strcmp(property.getName().c_str(), "abonent"))
             cmd.setAbonent(property.getStr());
         else if(!strcmp(property.getName().c_str(), "usr"))
@@ -236,7 +236,7 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
         else if(!strcmp(property.getName().c_str(), "filename"))
             cmd.setSiteFileName(property.getStr().c_str());
         else if(!strcmp(property.getName().c_str(), "port"))
-            cmd.setSitePort(property.getInt());
+            cmd.setSitePort(unsigned(property.getInt()));
 /*        else if(!strcmp(property.getName().c_str(), "message"))
             cmd.setMessageText(property.getStr());
         else if(!strcmp(property.getName().c_str(), "usr"))

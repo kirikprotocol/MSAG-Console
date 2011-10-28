@@ -123,7 +123,7 @@ void Property::setValue(const char* str) {
       setBoolValue(false);
   else if(!strcmp(str, "true"))
       setBoolValue(true);
-  else if((!(i = strtol(str, &ep, 0)) && (*str != '0' || strlen(str) != 1))
+  else if((!(i = int32_t(strtol(str, &ep, 0))) && (*str != '0' || strlen(str) != 1))
              || i == LONG_MAX || i == LONG_MIN || *ep)
     setStringValue(str);
   else
@@ -340,7 +340,7 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
                 throw exceptions::IOException("cannot convert life time");
             from.erase(0,strlen(LIFETIME));
             char* endptr;
-            uint32_t lt = strtoul(from.c_str(),&endptr,10);
+            uint32_t lt = uint32_t(strtoul(from.c_str(),&endptr,10));
             from.erase(0,endptr-from.c_str());
             life_time = lt;
             setTimePolicy(time_policy,final_date,life_time);
@@ -478,7 +478,7 @@ bool Property::convertToInt() {
   switch (type) {
   case STRING: {
     char *ep;
-    int32_t conv_val = strtol(s_val.c_str(), &ep, 0);
+    int32_t conv_val = int32_t(strtol(s_val.c_str(), &ep, 0));
     if((!conv_val && (s_val[0] != '0' || s_val.size() != 1)) 
        || conv_val == LONG_MAX || conv_val == LONG_MIN || *ep) {
       return false;
