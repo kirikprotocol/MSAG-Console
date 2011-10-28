@@ -15,6 +15,7 @@ int SmppWriter::Execute()
     unsigned passcount = 0;
   while(!isStopping)
   {
+    try {
       bool dotiming = (( ++passcount % 10000 ) == 0 );
       HRTimer hrt;
       if (dotiming) hrt.mark();
@@ -89,6 +90,11 @@ int SmppWriter::Execute()
       if (dotiming) smsc_log_info( log_, "timing (us): socks=%d prep=%lld poll=%lld write=%lld",
                                    haveData, timeprep/1000, timepoll/1000, timewrite/1000 );
 
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"!!! exception is smppwriter: %s",e.what());
+    } catch (...) {
+        smsc_log_warn(log_,"!!! unknown exception in smppwriter");
+    }
   } // while ! stopping
   deleteDisconnected();
   smsc_log_debug(log_,"Execution of SmppWriter finished");  

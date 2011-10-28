@@ -44,6 +44,9 @@ int SmppReader::Execute()
     }catch(std::exception& e)
     {
       smsc_log_warn(log_,"!!! Exception in SmppReader:%s",e.what());
+    }catch(...)
+    {
+      smsc_log_warn(log_,"!!! unknown exception in SmppReader");
     }
   }
   smsc_log_debug(log_,"Execution of SmppReader finished");
