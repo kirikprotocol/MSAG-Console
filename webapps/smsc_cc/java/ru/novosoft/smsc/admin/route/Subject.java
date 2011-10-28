@@ -29,6 +29,16 @@ public class Subject implements Serializable {
     this.name = name;
   }
 
+  Subject(Subject copy) {
+    this.name = copy.name;
+    this.notes = copy.notes;
+    this.defaultSmeId = copy.defaultSmeId;
+    if (copy.masks != null)
+      this.masks = new ArrayList<Address>(copy.masks);
+    if (copy.children != null)
+      this.children = new ArrayList<String>(copy.children);
+  }
+
   public String getName() {
     return name;
   }

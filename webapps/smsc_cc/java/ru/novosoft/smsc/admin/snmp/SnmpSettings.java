@@ -47,12 +47,18 @@ public class SnmpSettings {
   }
 
   public Map<String, SnmpObject> getSnmpObjects() {
-    return snmpObjects; // todo
+    Map<String, SnmpObject> result = new HashMap<String, SnmpObject>();
+    for (Map.Entry<String, SnmpObject> e : snmpObjects.entrySet())
+      result.put(e.getKey(), new SnmpObject(e.getValue()));
+    return result;
   }
 
   public void setSnmpObjects(Map<String, SnmpObject> snmpObjects) throws AdminException {
     vh.checkNoNulls("snmpObjects", snmpObjects);
-    this.snmpObjects = snmpObjects;
+    Map<String, SnmpObject> newObjects = new HashMap<String, SnmpObject>();
+    for (Map.Entry<String, SnmpObject> e : snmpObjects.entrySet())
+      newObjects.put(e.getKey(), new SnmpObject(e.getValue()));
+    this.snmpObjects = newObjects;
   }
 
   public SnmpSettings cloneSettings() {

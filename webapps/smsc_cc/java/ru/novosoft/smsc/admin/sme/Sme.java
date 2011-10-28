@@ -128,9 +128,8 @@ public class Sme {
     return receiptSchemeName;
   }
 
-  // todo здесь должен кидаться Exception, если не существует ресурса с именем, указанным в receiptSchemeName
   public void setReceiptSchemeName(String receiptSchemeName) throws AdminException {
-    vh.checkNotNull("receiptSchemeName", receiptSchemeName); // TODO DEPENDENCY !!!
+    vh.checkNotNull("receiptSchemeName", receiptSchemeName);
     this.receiptSchemeName = receiptSchemeName;
   }
 

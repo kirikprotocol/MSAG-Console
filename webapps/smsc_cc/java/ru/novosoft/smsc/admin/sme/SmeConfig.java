@@ -133,7 +133,7 @@ class SmeConfigFile implements ManagedConfigFile<Map<String, Sme>> {
       } else if (name.equals("timeout")) {
         sme.setTimeout(Integer.parseInt(value));
       } else if (name.equals("receiptSchemeName")) {
-        sme.setReceiptSchemeName(value); // TODO DEPENDENCY
+        sme.setReceiptSchemeName(value);
       } else if (name.equals("disabled")) {
         sme.setDisabled(Boolean.parseBoolean(value));
       } else if (name.equals("mode")) {

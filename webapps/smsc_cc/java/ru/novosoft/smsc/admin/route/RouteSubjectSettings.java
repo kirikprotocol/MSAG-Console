@@ -49,7 +49,10 @@ public class RouteSubjectSettings implements Serializable {
    * @return список субъектов
    */
   public List<Subject> getSubjects() {
-    return new ArrayList<Subject>(subjects);     // todo deep copy
+    List<Subject> result =  new ArrayList<Subject>();
+    for (Subject s : subjects)
+      result.add(new Subject(s));
+    return result;
   }
 
   /**
@@ -241,7 +244,10 @@ public class RouteSubjectSettings implements Serializable {
    * @return список маршрутов
    */
   public List<Route> getRoutes() {
-    return new ArrayList<Route>(routes);   // todo deep copy
+    List<Route> result =  new ArrayList<Route>();
+    for (Route s : routes)
+      result.add(new Route(s));
+    return result;
   }
 
   /**

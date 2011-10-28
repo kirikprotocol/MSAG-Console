@@ -55,6 +55,32 @@ public class Route implements Serializable {
     
   }
 
+  Route(Route copy) {
+    this.name = copy.name;
+    this.notes = copy.notes;
+    this.priority = copy.priority;
+    this.srcSmeId = copy.srcSmeId;
+    this.sources = new ArrayList<Source>(copy.sources);
+    this.destinations = new ArrayList<Destination>(copy.destinations);
+    this.billing = copy.billing;
+    this.serviceId = copy.serviceId;
+    this.aclId = copy.aclId;
+    this.providerId = copy.providerId;
+    this.categoryId = copy.categoryId;
+    this.backupSmeId = copy.backupSmeId;
+    this.trafficMode = copy.trafficMode;
+    this.active = copy.active;
+    this.archiving = copy.archiving;
+    this.transit = copy.transit;
+    this.suppressDeliveryReports = copy.suppressDeliveryReports;
+    this.deliveryMode = copy.deliveryMode;
+    this.forwardTo = copy.forwardTo;
+    this.hide = copy.hide;
+    this.replayPath = copy.replayPath;
+    this.forceDelivery = copy.forceDelivery;
+    this.allowBlocked = copy.allowBlocked;
+  }
+
   public String getName() {
     return name;
   }

@@ -4,10 +4,15 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.resource.ResourceSettings;
+import ru.novosoft.smsc.admin.sme.Sme;
+import ru.novosoft.smsc.web.config.DiffHelper;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import java.util.Collection;
 import java.util.Map;
+
+import static ru.novosoft.smsc.web.config.DiffHelper.findChanges;
+import static ru.novosoft.smsc.web.config.DiffHelper.valueToString;
 
 /**
  * @author Artem Snopkov
@@ -32,12 +37,16 @@ public class WResourceManager implements ResourceManager {
     return wrapped.containsLocale(locale);
   }
 
-  public void addResourceSettings(String locale, ResourceSettings resources) throws AdminException {
-    boolean contains = containsLocale(locale);
+  public void addResourceSettings(final String locale, ResourceSettings resources) throws AdminException {
+    ResourceSettings oldSettings = wrapped.getResourceSettings(locale);
     wrapped.addResourceSettings(locale, resources);
-    if (contains)
-      j.user(user).change("change").resource(locale);  // todo Надо детализировать изменения.
-    else
+    if (oldSettings != null) {
+      findChanges(oldSettings, resources, ResourceSettings.class, new DiffHelper.ChangeListener() {
+        public void foundChange(String propertyName, Object oldValue, Object newValue) {
+          j.user(user).change("property_change", propertyName, valueToString(oldValue), valueToString(newValue)).resource(locale);
+        }
+      });
+    } else
       j.user(user).add().resource(locale);
   }
 
