@@ -1,12 +1,12 @@
 package ru.novosoft.smsc.admin.region;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+
 import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.TestAdminContext;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.route.RouteSubjectSettings;
 import ru.novosoft.smsc.admin.route.Subject;
@@ -22,25 +22,22 @@ import java.util.List;
  */
 public class SubjectDependencyAspectTest {
 
-  private static File baseDir;
-  private static AdminContext ctx;
+  private AdminContext ctx;
 
-  @BeforeClass
-  public static void before() throws Exception {
+  @Before
+  public  void before() throws Exception {
     try {
-      baseDir = TestUtils.createRandomDir("ctx");
-      ctx = new TestAdminContext(baseDir, new File("test", "webconfig.xml"));
+      MemoryFileSystem fs = new MemoryFileSystem();
+      ctx = new TestAdminContext(fs.mkdirs("ctx"), new File("test", "webconfig.xml"), 2, fs);
     } catch (Exception e) {
       e.printStackTrace();
       throw e;
     }
   }
 
-  @AfterClass
-  public static void after() throws AdminException {
+  @After
+  public void after() throws AdminException {
     ctx.shutdown();
-    if (baseDir != null)
-      TestUtils.recursiveDeleteFolder(baseDir);
   }
 
   @Test

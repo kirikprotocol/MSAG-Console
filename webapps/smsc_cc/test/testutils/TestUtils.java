@@ -1,6 +1,7 @@
 package testutils;
 
 import junit.framework.AssertionFailedError;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.*;
 
 import java.io.*;
@@ -26,10 +27,10 @@ public class TestUtils {
     return null;
   }
 
-  public static void exportResource(InputStream is, File toFile) throws IOException {
+  public static void exportResource(InputStream is, File toFile, FileSystem fs) throws IOException {
     OutputStream os = null;
     try {
-      os = new BufferedOutputStream(new FileOutputStream(toFile));
+      os = new BufferedOutputStream(fs.getOutputStream(toFile));
 
       int b;
       while ((b = is.read()) >= 0)
@@ -46,10 +47,10 @@ public class TestUtils {
     }
   }
 
-  public static void exportResource(InputStream is, File toFile, boolean override) throws IOException {
-    if (!override && toFile.exists())
+  public static void exportResource(InputStream is, File toFile, boolean override, FileSystem fs) throws IOException, AdminException {
+    if (!override && fs.exists(toFile))
       return;
-    exportResource(is, toFile);
+    exportResource(is, toFile, fs);
   }
 
   public static boolean recursiveDeleteFolder(File folder) {

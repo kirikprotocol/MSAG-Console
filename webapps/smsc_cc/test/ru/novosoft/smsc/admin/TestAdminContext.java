@@ -56,6 +56,7 @@ import ru.novosoft.smsc.admin.users.UsersManagerImplTest;
 import testutils.TestUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -69,69 +70,84 @@ public class TestAdminContext extends AdminContext {
 
   private static final int PROFILES_VERSION=AdminMode.smsx ? 0x00010100 : 0x00010000;
 
-  private void prepareServices(File servicesDir, AdminContextConfig cfg) throws IOException, AdminException {
+  private void prepareServices(File servicesDir, AdminContextConfig cfg, FileSystem fs) throws IOException, AdminException {
     File ccDir = new File(servicesDir, "ClusterController/conf");
-    ccDir.mkdirs();
-    TestUtils.exportResource(ClusterControllerConfigTest.class.getResourceAsStream("config.xml"), new File(ccDir, "config.xml"), false);
+    fs.mkdirs(ccDir);
+    TestUtils.exportResource(ClusterControllerConfigTest.class.getResourceAsStream("config.xml"), new File(ccDir, "config.xml"), false, fs);
 
     File adDir = new File(servicesDir, "ArchiveDaemon/conf");
-    adDir.mkdirs();
-    TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("daemon.xml"), new File(adDir, "daemon.xml"), false);
+    fs.mkdirs(adDir);
+    TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("daemon.xml"), new File(adDir, "daemon.xml"), false, fs);
 
     File smscDir = new File(servicesDir, "SMSC1/conf");
-    smscDir.mkdirs();
-    TestUtils.exportResource(SmscManagerImplTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"), false);
-    TestUtils.exportResource(AliasManagerImplTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"), false);
-    TestUtils.exportResource(ClosedGroupManagerImplTest.class.getResourceAsStream("ClosedGroups.xml"), new File(smscDir, "ClosedGroups.xml"), false);
-    TestUtils.exportResource(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), new File(smscDir, "fraud.xml"), false);
-    TestUtils.exportResource(MapLimitManagerImplTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"), false);
-    TestUtils.exportResource(MscManagerImplTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"), false);
-    TestUtils.exportResource(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false);
+    fs.mkdirs(smscDir);
+    TestUtils.exportResource(SmscManagerImplTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"), false, fs);
+    TestUtils.exportResource(AliasManagerImplTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"), false, fs);
+    TestUtils.exportResource(ClosedGroupManagerImplTest.class.getResourceAsStream("ClosedGroups.xml"), new File(smscDir, "ClosedGroups.xml"), false, fs);
+    TestUtils.exportResource(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), new File(smscDir, "fraud.xml"), false, fs);
+    TestUtils.exportResource(MapLimitManagerImplTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"), false, fs);
+    TestUtils.exportResource(MscManagerImplTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"), false, fs);
+    TestUtils.exportResource(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false, fs);
     File usersFile = new File(cfg.getUsersFile());
-    TestUtils.exportResource(UsersManagerImplTest.class.getResourceAsStream("users.xml"), usersFile, false);
-    TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false);
-    TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"), false);
-    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false);
-    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"), false);
-    TestUtils.exportResource(RoutesConfigTest.class.getResourceAsStream("routes.xml"), new File(smscDir, "routes.xml"), false);
-    TestUtils.exportResource(TimezonesConfigTest.class.getResourceAsStream("timezones.xml"), new File(smscDir, "timezones.xml"), false);
-    TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false);
-    TestUtils.exportResource(TestProfileManager.emptyProfilesFileAsStream(AdminMode.smsx, PROFILES_VERSION), new File(smscDir, "profiles.bin"), false);
+    fs.mkdirs(usersFile.getParentFile());
+    TestUtils.exportResource(UsersManagerImplTest.class.getResourceAsStream("users.xml"), usersFile, false, fs);
+    TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false, fs);
+    TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"), false, fs);
+    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false, fs);
+    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"), false, fs);
+    TestUtils.exportResource(RoutesConfigTest.class.getResourceAsStream("routes.xml"), new File(smscDir, "routes.xml"), false, fs);
+    TestUtils.exportResource(TimezonesConfigTest.class.getResourceAsStream("timezones.xml"), new File(smscDir, "timezones.xml"), false, fs);
+    TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false, fs);
+    TestUtils.exportResource(TestProfileManager.emptyProfilesFileAsStream(AdminMode.smsx, PROFILES_VERSION), new File(smscDir, "profiles.bin"), false, fs);
 
     for(int i=1; i<3;i++) {
       File operStoreDir = new File(servicesDir, "SMSC"+i+File.separatorChar+"store"+File.separatorChar+"operative");
-      operStoreDir.mkdirs();
-      TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false);
-      TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.20111010113952.bin"), new File(operStoreDir, "store.20111010113952.bin"), false);
+      fs.mkdirs(operStoreDir);
+      TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false, fs);
+      TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.20111010113952.bin"), new File(operStoreDir, "store.20111010113952.bin"), false, fs);
     }
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
     File statDir =  new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat"+File.separatorChar+format.format(new Date()));
-    statDir.mkdirs();
-    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("05.rts"), new File(statDir, "05.rts"), false);
-    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("06.rts"), new File(statDir, "06.rts"), false);
-    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("07.rts"), new File(statDir, "07.rts"), false);
+    fs.mkdirs(statDir);
+    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("05.rts"), new File(statDir, "05.rts"), false, fs);
+    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("06.rts"), new File(statDir, "06.rts"), false, fs);
+    TestUtils.exportResource(TestSmscStatProvider.class.getResourceAsStream("07.rts"), new File(statDir, "07.rts"), false, fs);
 
 
     File snmp = new File(servicesDir, "snmp");
     if(!snmp.exists()) {
-      snmp.mkdirs();
+      fs.mkdirs(snmp);
     }
-    TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("20101109_220719.ucs.csv"), new File(snmp, "20101109_220719.ucs.csv"), false);
+    TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("20101109_220719.ucs.csv"), new File(snmp, "20101109_220719.ucs.csv"), false, fs);
 
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
+    this(appBaseDir, initFile, smscInstancesNumber, new TestFileSystem());
+  }
+
+  public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber, FileSystem fs) throws AdminException {
+    fileSystem = fs;
+    if (!fs.exists(initFile)) {
+      fs.mkdirs(initFile.getParentFile());
+      try {
+        TestUtils.exportResource(new FileInputStream(initFile), initFile, fs);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
     AdminContextConfig cfg = new AdminContextConfig(initFile);
     this.appBaseDir = appBaseDir;
     this.servicesDir = new File(appBaseDir, "services");
     this.instType = cfg.getInstallationType();
 
     if (!servicesDir.exists())
-      servicesDir.mkdirs();
+      fileSystem.mkdirs(servicesDir);
 
     try {
-      prepareServices(servicesDir, cfg);
+      prepareServices(servicesDir, cfg, fileSystem);
     } catch (IOException e) {
       throw new AdminContextException("Can't create services dir!");
     }
@@ -143,7 +159,7 @@ public class TestAdminContext extends AdminContext {
     else
       serviceManager = new TestServiceManagerHA(servicesDir, smscInstancesNumber, new String[] {"host0", "host1"});
 
-    fileSystem = new TestFileSystem();
+
 
     clusterController = new TestClusterController(
         new File(smscDir, "aliases.bin"),
