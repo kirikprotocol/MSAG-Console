@@ -1,5 +1,12 @@
 +ru.novosoft.smsc.admin*
 +ru.novosoft.smsc.util*
+-ru.novosoft.smsc.admin.archive_daemon.messages*
+-ru.novosoft.smsc.admin.callable*
+-ru.novosoft.smsc.admin.protocol*
+-ru.novosoft.smsc.admin.resource_group*
+-ru.novosoft.smsc.admin.service*
+-ru.novosoft.smsc.util.applet*
+-ru.novosoft.smsc.admin.cluster_controller.protocol*
 -*Test*
 -*Mock*
 -*FileSystemUsageAspect*
