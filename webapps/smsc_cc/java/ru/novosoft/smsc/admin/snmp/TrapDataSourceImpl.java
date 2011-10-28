@@ -41,9 +41,9 @@ class TrapDataSourceImpl implements TrapDataSource {
 
     final SimpleDateFormat sdf= new SimpleDateFormat(fileFormat);
 
-    File[] fs = snmpDir.listFiles(new FileFilter() {
+    File[] fs = fileSystem.listFiles(snmpDir, new FileFilter() {
       public boolean accept(File pathname) {
-        if(!pathname.isFile()) {
+        if(fileSystem.isDirectory(pathname)) {
           return false;
         }
         Date fileDate;

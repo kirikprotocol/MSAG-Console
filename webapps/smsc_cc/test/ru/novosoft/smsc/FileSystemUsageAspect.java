@@ -13,17 +13,21 @@ import org.junit.Test;
 @Aspect
 public class FileSystemUsageAspect {
 
-  @Pointcut("call (boolean java.io.File.exists())")
-  public void fileExistsCall() {
+  @Pointcut("call (boolean java.io.File.*())")
+  public void fileUsageCall() {
   }
 
   @Pointcut("call (java.io.FileInputStream.new(..))")
   public void fileInputStreamCreationCall() {
   }
 
-  @Before("(fileExistsCall() || fileInputStreamCreationCall()) " +
-      "&& !(within(ru.novosoft.smsc.admin.filesystem.*) || within(ru.novosoft.smsc.util..*) || within (ru.novosoft.smsc..*Test)" +
-      "|| within(testutils.TestUtils) || within(ru.novosoft.smsc.admin.config.ManagedConfigHelper) || within(ru.novosoft.smsc.admin.TestAdminContext)) ")
+  @Pointcut("call (java.io.FileReader.new(..))")
+  public void fileReaderCreationCall() {
+  }
+
+  @Before("(fileUsageCall() || fileInputStreamCreationCall() || fileReaderCreationCall()) " +
+      "&& !(within(ru.novosoft.smsc.admin.filesystem.*) || within(ru.novosoft.smsc.util..*) || within (ru.novosoft.smsc..*Test*)" +
+      "|| within(testutils.TestUtils) || within(ru.novosoft.smsc.admin.config.ManagedConfigHelper) ) ")
   public void deprecatedIOOperations() {
     throw new AssertionFailedError("Deprecated IO operation call ");
   }
