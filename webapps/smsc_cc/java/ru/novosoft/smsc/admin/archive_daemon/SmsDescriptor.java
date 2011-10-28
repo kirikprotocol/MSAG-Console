@@ -1,7 +1,5 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
-//todo javadoc
-
 /**
  * Дескриптор смс
  *
