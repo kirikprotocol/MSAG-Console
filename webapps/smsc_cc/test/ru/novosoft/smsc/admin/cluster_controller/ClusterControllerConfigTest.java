@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import testutils.TestUtils;
 
@@ -19,24 +20,19 @@ import static org.junit.Assert.assertEquals;
 public class ClusterControllerConfigTest {
 
   private File configFile;
+  private final MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(ClusterControllerConfigTest.class.getResourceAsStream("config.xml"), ".clustercontroller");
+    configFile = fs.createNewFile("config.xml", ClusterControllerConfigTest.class.getResourceAsStream("config.xml"));
   }
 
   private ClusterControllerSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new ClusterControllerConfig());
+    return ManagedConfigHelper.loadConfig(configFile, new ClusterControllerConfig(), fs);
   }
 
   private void saveSettings(ClusterControllerSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new ClusterControllerConfig(), s);
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
+    ManagedConfigHelper.saveConfig(configFile, new ClusterControllerConfig(), s, fs);
   }
 
   @Test
@@ -64,13 +60,13 @@ public class ClusterControllerConfigTest {
   @Test
   public void testSaveUnusedParams() throws Exception {
     XmlConfig c = new XmlConfig();
-    c.load(configFile);
+    c.load(fs.getInputStream(configFile));
 
     ClusterControllerSettings s = loadSettings();
     saveSettings(s);
 
     XmlConfig c1 = new XmlConfig();
-    c1.load(configFile);
+    c1.load(fs.getInputStream(configFile));
 
     assertEquals(c, c1);
   }

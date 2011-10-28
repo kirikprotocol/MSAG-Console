@@ -19,7 +19,7 @@ public class OpenedTrapDataSourceTest extends TrapDataSourceTestStub{
   @Test
   public void testSnmpImport() throws Exception{
 
-    TrapDataSource m = new OpenedTrapDataSource(new TrapDataSourceImpl(snmpDir, FileSystem.getFSForSingleInst()));
+    TrapDataSource m = new OpenedTrapDataSource(new TrapDataSourceImpl(snmpDir, fs));
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 

@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -23,24 +24,16 @@ import static org.junit.Assert.assertEquals;
 public class SmscManagerImplTest {
 
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(SmscManagerImplTest.class.getResourceAsStream("config.xml"), ".smsc");
-    backupDir = TestUtils.createRandomDir(".smscbackup");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+    configFile = fs.createNewFile("config.xml", SmscManagerImplTest.class.getResourceAsStream("config.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   private SmscManager getManager(ClusterController cc) throws AdminException {
-    SmscManager manager = new SmscManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst(), cc, null);
-    return manager;
+    return new SmscManagerImpl(configFile, backupDir, fs, cc, null);
   }
 
   @Test
@@ -66,7 +59,7 @@ public class SmscManagerImplTest {
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMainConfigState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);
       map.put(1, now);

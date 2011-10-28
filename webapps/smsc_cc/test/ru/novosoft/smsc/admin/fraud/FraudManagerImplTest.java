@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -26,23 +27,16 @@ import static org.junit.Assert.assertTrue;
 public class FraudManagerImplTest {
 
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void before() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), ".fraud");
-    backupDir = TestUtils.createRandomDir(".fraudbackup");
-  }
-
-  @After
-  public void after() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+    configFile = fs.createNewFile("fraud.xml", FraudManagerImplTest.class.getResourceAsStream("fraud.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   private FraudManagerImpl getManager(ClusterController cc) throws AdminException {
-    FraudManagerImpl fm = new FraudManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    FraudManagerImpl fm = new FraudManagerImpl(configFile, backupDir, cc, fs);
     return fm;
   }
 
@@ -69,7 +63,7 @@ public class FraudManagerImplTest {
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getFraudConfigState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);
       map.put(1, now);

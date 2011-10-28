@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.util.Address;
 import testutils.TestUtils;
@@ -64,26 +65,19 @@ public class OperativeStoreProviderTest {
   private File storeFile;
 
   private File dir;
+  
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    dir = TestUtils.createRandomDir("-oper_store");
-    TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.20111010113952.bin"), new File(dir, "store.20111010113952.bin"));
-    TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), storeFile = new File(dir, "store.bin"));
-  }
-
-  @After
-  public void afterClass() {
-    if(dir != null) {
-      try{
-      TestUtils.recursiveDeleteFolder(dir);
-      }catch (Exception ignored){}
-    }
+    dir = fs.mkdirs("oper_store");
+    fs.createNewFile(new File(dir, "store.20111010113952.bin"), OperativeStoreProviderTest.class.getResourceAsStream("store.20111010113952.bin"));
+    storeFile = fs.createNewFile(new File(dir, "store.bin"), OperativeStoreProviderTest.class.getResourceAsStream("store.bin"));
   }
 
   @Test
   public void testGetMessages() throws Exception {
-    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), null, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, fs, null, null);
 
     assertEquals(25, msgs.size());
 
@@ -109,7 +103,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setSmsId(3585952070L);
 
-    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, fs, f, null);
     assertEquals(1, msgs.size());
   }
 
@@ -118,7 +112,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setFromAddress(new Address(".0.1.4741"));
 
-    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, fs, f, null);
     assertEquals(12, msgs.size());
   }
 
@@ -127,7 +121,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setToAddress(new Address(".1.1.79153572744"));
 
-    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, fs, f, null);
     assertEquals(1, msgs.size());
   }
 
@@ -136,11 +130,11 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setAbonentAddress(new Address(".1.1.79153572744"));
 
-    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, fs, f, null);
     assertEquals(1, msgs.size());
 
     f.setAbonentAddress(new Address(".1.1.79104711918"));
-    msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    msgs = OperativeStoreManager.getMessages(storeFile, fs, f, null);
     assertEquals(1, msgs.size());
   }
 
@@ -149,7 +143,7 @@ public class OperativeStoreProviderTest {
     MessageFilter f = new MessageFilter();
     f.setMaxRowSize(2);
 
-    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, TestFileSystem.getFSForSingleInst(), f, null);
+    Collection<Message> msgs = OperativeStoreManager.getMessages(storeFile, fs, f, null);
     assertEquals(2, msgs.size());
   }
 }

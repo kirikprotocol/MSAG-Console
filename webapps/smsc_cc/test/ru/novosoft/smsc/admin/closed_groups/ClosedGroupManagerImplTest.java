@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.util.Address;
 import testutils.TestUtils;
@@ -28,20 +29,13 @@ import static org.junit.Assert.*;
  */
 public class ClosedGroupManagerImplTest {
 
-  private static File configFile, backupDir;
+  private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
-  public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(ClosedGroupManagerImplTest.class.getResourceAsStream("ClosedGroups.xml"), ".closedgroups");
-    backupDir = TestUtils.createRandomDir(".closedgroupsbackup");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+  public void before() throws IOException, AdminException {
+    configFile = fs.createNewFile("ClosedGroups.xml", ClosedGroupManagerImplTest.class.getResourceAsStream("ClosedGroups.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   private void validate(ClosedGroupManagerImpl cgm) throws AdminException {
@@ -67,22 +61,22 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void loadTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     validate(cgm);
   }
 
   @Test
   public void saveTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     cgm.save();
 
-    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     validate(cgm1);
   }
 
   @Test
   public void addGroupTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     ClosedGroup cg = cgm.addGroup("newgroup", "newdescription");
 
     assertEquals(cgm.getLastGroupId(), 3);
@@ -91,7 +85,7 @@ public class ClosedGroupManagerImplTest {
     assertEquals(0, cg.getMasks().size());
 
 
-    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
     assertEquals(cgm1.getLastGroupId(), 3);
     assertEquals(3, groups.size());
@@ -104,20 +98,20 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void removeGroupTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     assertNull(cgm.removeGroup(100));
 
     assertNotNull(cgm.removeGroup(1) );
     assertEquals(1, cgm.groups().size());
 
-    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     assertEquals(1, cgm1.groups().size());
     assertEquals(2, new ArrayList<ClosedGroup>(cgm1.groups()).get(0).getId());
   }
 
   @Test
   public void addMaskTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     ClosedGroup newGroup = cgm.addGroup("newgroup", "newdescription");
     newGroup.addMask(new Address(".1.1.79134565334"));
 
@@ -127,7 +121,7 @@ public class ClosedGroupManagerImplTest {
     ClosedGroup groupQq = new ArrayList<ClosedGroup>(cgm.groups()).get(1);
     groupQq.addMask(new Address(".1.1.79134565334"));
 
-    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm1 = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     List<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm1.groups());
 
     assertTrue(groups.get(0).getMasks().contains(new Address(".1.1.79134565334")));
@@ -138,7 +132,7 @@ public class ClosedGroupManagerImplTest {
   @Test
   public void removeMaskTest() throws AdminException {
     {
-      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
       ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
       ClosedGroup groupQQ = groups.get(1);
       assertTrue(groupQQ.getMasks().contains(new Address("+79495445566")));
@@ -146,7 +140,7 @@ public class ClosedGroupManagerImplTest {
     }
 
     {
-      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
       ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
       ClosedGroup groupQQ = groups.get(1);
       assertFalse(groupQQ.getMasks().contains(new Address("+79495445566")));
@@ -155,7 +149,7 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void addGroupErrorTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), fs);
     assertEquals(2, cgm.groups().size());
     try {
       cgm.addGroup("newGroup", "newGroup");
@@ -167,7 +161,7 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void removeGroupErrorTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), fs);
     assertEquals(2, cgm.groups().size());
     try {
       cgm.removeGroup(2);
@@ -179,7 +173,7 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void addMaskErrorTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), fs);
     ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
     ClosedGroup groupQQ = groups.get(1);
 
@@ -193,7 +187,7 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void removeMaskErrorTest() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ErrorClusterController(), fs);
     ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
     ClosedGroup groupQQ = groups.get(1);
 
@@ -208,14 +202,14 @@ public class ClosedGroupManagerImplTest {
   @Test
   public void setDescriptionTest() throws AdminException {
     {
-      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
       ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
       ClosedGroup groupQQ = groups.get(1);
       groupQQ.setDescription("newdescription");
     }
 
     {
-      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+      ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
       ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
       ClosedGroup groupQQ = groups.get(1);
       assertEquals("newdescription", groupQQ.getDescription());
@@ -225,7 +219,7 @@ public class ClosedGroupManagerImplTest {
   @Test
   public void configBrokenTest() throws AdminException {
 
-    ErrorFileSystem fs = new ErrorFileSystem();
+    ErrorFileSystem fs = new ErrorFileSystem(this.fs);
     ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new TestClusterControllerStub(), fs);
     ArrayList<ClosedGroup> groups = new ArrayList<ClosedGroup>(cgm.groups());
     ClosedGroup groupQQ = groups.get(1);
@@ -275,7 +269,7 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ClusterControllerImpl(), fs);
 
     Map<Integer, SmscConfigurationStatus> states = cgm.getStatusForSmscs();
 
@@ -287,7 +281,7 @@ public class ClosedGroupManagerImplTest {
 
   @Test
   public void nullGetStatusForSmscs() throws AdminException {
-    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ClusterControllerImpl1(), FileSystem.getFSForSingleInst());
+    ClosedGroupManagerImpl cgm = new ClosedGroupManagerImpl(configFile, backupDir, new ClusterControllerImpl1(), fs);
 
     Map<Integer, SmscConfigurationStatus> states = cgm.getStatusForSmscs();
 
@@ -333,16 +327,20 @@ public class ClosedGroupManagerImplTest {
     }
   }
 
-  private static class ErrorFileSystem extends TestFileSystem {
+  private class ErrorFileSystem extends MemoryFileSystem {
 
     private boolean error = true;
+
+    private ErrorFileSystem(MemoryFileSystem copy) {
+      super(copy);
+    }
 
     @Override
     public OutputStream getOutputStream(File file) throws AdminException {
       if (error)
         throw new ClosedGroupException("config_broken");
       else
-        return FileSystem.getFSForSingleInst().getOutputStream(file);
+        return super.getOutputStream(file);
     }
   }
 

@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -26,22 +27,17 @@ import java.util.Map;
 public class ResourceManagerImplTest {
 
   private File configDir;
+  private final MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configDir = TestUtils.createRandomDir(".resource");
-    TestUtils.exportResource(ResourceManagerImplTest.class.getResourceAsStream("resources_en_en.xml"), new File(configDir, "resources_en_en.xml"));
-    TestUtils.exportResource(ResourceManagerImplTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(configDir, "resources_ru_ru.xml"));
-  }
-
-  @After
-  public void afterClass() {
-    if (configDir != null)
-      TestUtils.recursiveDeleteFolder(configDir);
+    configDir = fs.mkdirs("resource");
+    fs.createNewFile(new File(configDir, "resources_en_en.xml"), ResourceManagerImplTest.class.getResourceAsStream("resources_en_en.xml"));
+    fs.createNewFile(new File(configDir, "resources_ru_ru.xml"), ResourceManagerImplTest.class.getResourceAsStream("resources_ru_ru.xml"));
   }
 
   private ResourceManager getManager(ClusterController cc) throws AdminException {
-    return new ResourceManagerImpl(configDir, new File(configDir, "backup"), cc, FileSystem.getFSForSingleInst());
+    return new ResourceManagerImpl(configDir, new File(configDir, "backup"), cc, fs);
   }
 
   @Test
@@ -59,7 +55,7 @@ public class ResourceManagerImplTest {
     ResourceSettings s = new ResourceSettings("->", ";", r);
     m.addResourceSettings("ge_ge", s);
 
-    assertTrue(new File(configDir, "resources_ge_ge.xml").exists());
+    assertTrue(fs.exists(new File(configDir, "resources_ge_ge.xml")));
 
     ResourceManager m1 = getManager(new TestClusterControllerStub());
     ResourceSettings s1 = m1.getResourceSettings("ge_ge");
@@ -74,7 +70,7 @@ public class ResourceManagerImplTest {
 
     assertFalse(m.removeResourceSettings("ge_ge"));
     assertTrue(m.removeResourceSettings("en_en"));
-    assertFalse(new File(configDir, "resources_en_en.xml").exists());
+    assertFalse(fs.exists(new File(configDir, "resources_en_en.xml")));
 
     assertFalse(m.getLocales().contains("en_en"));
   }

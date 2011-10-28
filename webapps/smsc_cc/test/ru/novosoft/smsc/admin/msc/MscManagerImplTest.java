@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.Address;
 import testutils.TestUtils;
 
@@ -24,33 +25,29 @@ import java.util.*;
 public class MscManagerImplTest {
 
   private static File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void before() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(MscManagerImplTest.class.getResourceAsStream("msc.bin"), ".msc");
+    configFile = fs.createNewFile("msc.bin", MscManagerImplTest.class.getResourceAsStream("msc.bin"));
   }
 
-  @After
-  public void after() {
-    if (configFile != null)
-      configFile.delete();
-  }
 
   @Test(expected = IllegalArgumentException.class)
   public void addNullMscTest() throws AdminException {
-    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), fs);
     m.addMsc(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void removeNullMscTest() throws AdminException {
-    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), fs);
     m.removeMsc(null);
   }
 
   @Test
   public void getMscsTest() throws AdminException {
-    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), fs);
     List<Address> mscs = new ArrayList<Address>(m.mscs());
     assertNotNull(mscs);
     assertEquals(3, mscs.size());
@@ -61,10 +58,10 @@ public class MscManagerImplTest {
 
   @Test
   public void addMscTest() throws AdminException {
-    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), fs);
     m.addMsc(new Address("12345"));
 
-    MscManager m1 = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    MscManager m1 = new MscManagerImpl(configFile, new TestClusterControllerStub(), fs);
     List<Address> mscs = new ArrayList<Address>(m1.mscs());
     assertEquals(4, mscs.size());
     assertTrue(mscs.contains(new Address("12345")));
@@ -72,10 +69,10 @@ public class MscManagerImplTest {
 
   @Test
   public void removeMscTest() throws AdminException {
-    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), fs);
     m.removeMsc(new Address("34242"));
 
-    MscManager m1 = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    MscManager m1 = new MscManagerImpl(configFile, new TestClusterControllerStub(), fs);
     List<Address> mscs = new ArrayList<Address>(m1.mscs());
     assertEquals(2, mscs.size());
     assertFalse(mscs.contains(new Address("34242")));
@@ -83,7 +80,7 @@ public class MscManagerImplTest {
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
-    MscManager m = new MscManagerImpl(configFile, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManagerImpl(configFile, new ClusterControllerImpl(), fs);
 
     Map<Integer, SmscConfigurationStatus> states = m.getStatusForSmscs();
 
@@ -95,7 +92,7 @@ public class MscManagerImplTest {
 
   @Test
   public void nullGetStatusForSmscs() throws AdminException {
-    MscManager m = new MscManagerImpl(configFile, new ClusterControllerImpl1(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManagerImpl(configFile, new ClusterControllerImpl1(), fs);
 
     Map<Integer, SmscConfigurationStatus> states = m.getStatusForSmscs();
 

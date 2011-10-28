@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import testutils.TestUtils;
 
@@ -20,24 +21,19 @@ import static org.junit.Assert.assertNotNull;
 public class SmscConfigFileTest {
   
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(SmscConfigFileTest.class.getResourceAsStream("config.xml"), ".smsc");
+    configFile = fs.createNewFile("config.xml", SmscConfigFileTest.class.getResourceAsStream("config.xml"));
   }
 
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-  }
-  
   private SmscSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new SmscConfigFile());
+    return ManagedConfigHelper.loadConfig(configFile, new SmscConfigFile(), fs);
   }
 
   private void saveSettings(SmscSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new SmscConfigFile(), s);
+    ManagedConfigHelper.saveConfig(configFile, new SmscConfigFile(), s, fs);
   }
   
   @Test
@@ -177,14 +173,14 @@ public class SmscConfigFileTest {
   public void saveUnusedParams() throws Exception {
     // Загружаем первоначальный конфиг
     XmlConfig cfg = new XmlConfig();
-    cfg.load(configFile);
+    cfg.load(fs.getInputStream(configFile));
 
     SmscSettings s = loadSettings();
     saveSettings(s);
 
     // Снова загружаем конфиг
     XmlConfig cfg1 = new XmlConfig();
-    cfg1.load(configFile);
+    cfg1.load(fs.getInputStream(configFile));
 
     // Проверяем эквивалентность первоначальному конфигу.
     assertEquals(cfg, cfg1);

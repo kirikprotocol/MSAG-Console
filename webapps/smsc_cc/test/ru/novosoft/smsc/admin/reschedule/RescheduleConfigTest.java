@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import testutils.TestUtils;
 
@@ -22,24 +23,19 @@ import static org.junit.Assert.assertNotNull;
 public class RescheduleConfigTest {
   
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
+    configFile = fs.createNewFile("schedule.xml", RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"));
   }
 
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-  }
-  
   private RescheduleSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new RescheduleConfig());
+    return ManagedConfigHelper.loadConfig(configFile, new RescheduleConfig(), fs);
   }
 
   private void saveSettings(RescheduleSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new RescheduleConfig(), s);
+    ManagedConfigHelper.saveConfig(configFile, new RescheduleConfig(), s, fs);
   }
   
   @Test
@@ -76,13 +72,13 @@ public class RescheduleConfigTest {
   @Test
   public void testSaveUnusedParams() throws Exception {
     XmlConfig cfg = new XmlConfig();
-    cfg.load(configFile);
+    cfg.load(fs.getInputStream(configFile));
 
     RescheduleSettings s = loadSettings();
     saveSettings(s);
 
     XmlConfig cfg1 = new XmlConfig();
-    cfg1.load(configFile);
+    cfg1.load(fs.getInputStream(configFile));
 
     assertEquals(cfg, cfg1);
   }

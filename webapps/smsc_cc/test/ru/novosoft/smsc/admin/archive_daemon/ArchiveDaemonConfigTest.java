@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import testutils.TestUtils;
 
@@ -19,24 +20,19 @@ import static org.junit.Assert.assertEquals;
 public class ArchiveDaemonConfigTest {
 
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(ArchiveDaemonConfigTest.class.getResourceAsStream("daemon.xml"), ".archivedaemon");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
+    configFile = fs.createNewFile("daemon.xml", ArchiveDaemonConfigTest.class.getResourceAsStream("daemon.xml"));
   }
 
   private ArchiveDaemonSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new ArchiveDaemonConfig());
+    return ManagedConfigHelper.loadConfig(configFile, new ArchiveDaemonConfig(), fs);
   }
 
   private void saveSettings(ArchiveDaemonSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new ArchiveDaemonConfig(), s);
+    ManagedConfigHelper.saveConfig(configFile, new ArchiveDaemonConfig(), s, fs);
   }
 
   @Test
@@ -78,13 +74,13 @@ public class ArchiveDaemonConfigTest {
   @Test
   public void testCopyUnusedParams() throws Exception {
     XmlConfig cfg = new XmlConfig();
-    cfg.load(configFile);
+    cfg.load(fs.getInputStream(configFile));
 
     ArchiveDaemonSettings s = loadSettings();
     saveSettings(s);
 
     XmlConfig cfg1 = new XmlConfig();
-    cfg1.load(configFile);
+    cfg1.load(fs.getInputStream(configFile));
 
     assertEquals(cfg, cfg1);
   }

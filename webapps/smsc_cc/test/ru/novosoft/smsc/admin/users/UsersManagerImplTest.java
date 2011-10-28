@@ -1,10 +1,8 @@
 package ru.novosoft.smsc.admin.users;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import testutils.TestUtils;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,15 +17,15 @@ import static org.junit.Assert.assertTrue;
  */
 public class UsersManagerImplTest {
 
-  private static File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
-  private static UsersManager usersManager;
+  private UsersManager usersManager;
 
-  @BeforeClass
-  public static void init() throws Exception {
-    configFile = TestUtils.exportResourceToRandomFile(UsersManagerImplTest.class.getResourceAsStream("users.xml"), ".user");
-    backupDir = TestUtils.createRandomDir(".users.backup");
-    usersManager = new UsersManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst());
+  @Before
+  public void init() throws Exception {
+    File configFile = fs.createNewFile("user.xml", UsersManagerImplTest.class.getResourceAsStream("users.xml"));
+    File backupDir = fs.mkdirs("backup");
+    usersManager = new UsersManagerImpl(configFile, backupDir, fs);
   }
 
   @Test
@@ -106,17 +104,4 @@ public class UsersManagerImplTest {
     }
   }
 
-
-
-  @SuppressWarnings({"ResultOfMethodCallIgnored"})
-  @AfterClass
-  public static void shutdown() {
-    if(configFile != null) {
-      configFile.delete();
-    }
-    if(backupDir != null) {
-      TestUtils.recursiveDeleteFolder(backupDir);
-    }
-
-  }
 }

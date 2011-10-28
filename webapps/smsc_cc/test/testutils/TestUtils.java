@@ -1,6 +1,7 @@
 package testutils;
 
 import junit.framework.AssertionFailedError;
+import ru.novosoft.smsc.admin.filesystem.*;
 
 import java.io.*;
 
@@ -49,12 +50,6 @@ public class TestUtils {
     if (!override && toFile.exists())
       return;
     exportResource(is, toFile);
-  }
-
-  public static File exportResourceToRandomFile(InputStream is, String fileExt) throws IOException {
-    File file = createRandomFile(fileExt);
-    exportResource(is, file);
-    return file;
   }
 
   public static boolean recursiveDeleteFolder(File folder) {

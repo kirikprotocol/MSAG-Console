@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -25,24 +26,16 @@ import static org.junit.Assert.assertTrue;
  */
 public class ProfileManagerTest {
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(ProfileManagerTest.class.getResourceAsStream("profiles.bin"), ".profiles");
-    backupDir = TestUtils.createRandomDir(".profiles.backup");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+    configFile = fs.createNewFile("profiles.bin", ProfileManagerTest.class.getResourceAsStream("profiles.bin"));
+    backupDir = fs.mkdirs("backup");
   }
 
   public ProfileManager getManager(ClusterController cc) throws AdminException {
-    ProfileManager m = new ProfileManagerImpl(false, configFile, FileSystem.getFSForSingleInst(), cc);
-    return m;
+    return new ProfileManagerImpl(false, configFile, fs, cc);
   }
 
   @Test
@@ -68,7 +61,7 @@ public class ProfileManagerTest {
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getProfilesState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);
       map.put(1, now);

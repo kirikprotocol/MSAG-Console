@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -24,24 +25,16 @@ import static org.junit.Assert.*;
 public class RescheduleManagerImplTest {
 
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
-    backupDir = TestUtils.createRandomDir(".reschedule.backup");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+    configFile = fs.createNewFile("schedule.xml", RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   public RescheduleManager getManager(ClusterController cc) throws AdminException {
-    RescheduleManager m = new RescheduleManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
-    return m;
+    return new RescheduleManagerImpl(configFile, backupDir, cc, fs);
   }
 
   @Test
@@ -67,7 +60,7 @@ public class RescheduleManagerImplTest {
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getRescheduleConfigState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);
       map.put(1, now);

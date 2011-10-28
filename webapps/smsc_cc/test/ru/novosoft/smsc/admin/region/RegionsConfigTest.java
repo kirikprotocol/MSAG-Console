@@ -6,6 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -18,24 +19,19 @@ import java.util.TimeZone;
 public class RegionsConfigTest {
 
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RegionsConfigTest.class.getResourceAsStream("regions.xml"), ".regions");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
+    configFile = fs.createNewFile("regions.xml", RegionsConfigTest.class.getResourceAsStream("regions.xml"));
   }
 
   RegionSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new RegionsConfig());
+    return ManagedConfigHelper.loadConfig(configFile, new RegionsConfig(), fs);
   }
 
   private void saveSettings(RegionSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new RegionsConfig(), s);
+    ManagedConfigHelper.saveConfig(configFile, new RegionsConfig(), s, fs);
   }
 
   private void checkSettings(RegionSettings s) {

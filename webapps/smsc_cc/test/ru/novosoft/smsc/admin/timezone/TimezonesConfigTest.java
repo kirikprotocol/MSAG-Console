@@ -6,6 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import testutils.TestUtils;
@@ -22,36 +23,31 @@ import java.util.TimeZone;
 public class TimezonesConfigTest {
 
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(TimezonesConfigTest.class.getResourceAsStream("timezones.xml"), ".timezones");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
+    configFile = fs.createNewFile("tz.xml", TimezonesConfigTest.class.getResourceAsStream("timezones.xml"));
   }
 
   private TimezoneSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new TimezonesConfig());
+    return ManagedConfigHelper.loadConfig(configFile, new TimezonesConfig(), fs);
   }
 
   private void saveSettings(TimezoneSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new TimezonesConfig(), s);
+    ManagedConfigHelper.saveConfig(configFile, new TimezonesConfig(), s, fs);
   }
 
   @Test
   public void testSave() throws Exception {
     XmlConfig oldConfig = new XmlConfig();
-    oldConfig.load(configFile);
+    oldConfig.load(fs.getInputStream(configFile));
 
     TimezoneSettings s = loadSettings();
     saveSettings(s);
 
     XmlConfig newConfig = new XmlConfig();
-    newConfig.load(configFile);
+    newConfig.load(fs.getInputStream(configFile));
 
     assertEquals(oldConfig, newConfig);
   }

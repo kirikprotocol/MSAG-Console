@@ -3,7 +3,9 @@ package ru.novosoft.smsc.admin.snmp;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -20,24 +22,19 @@ import static org.junit.Assert.assertNull;
 public class SnmpConfigFileTest {
 
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
-  public void before() throws IOException {
-    configFile = TestUtils.exportResourceToRandomFile(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), ".snmp");
-  }
-
-  @After
-  public void after() {
-    if (configFile != null)
-      configFile.delete();
+  public void before() throws IOException, AdminException {
+    configFile = fs.createNewFile("snmp.xml", SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"));
   }
 
   private SnmpSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new SnmpConfigFile());
+    return ManagedConfigHelper.loadConfig(configFile, new SnmpConfigFile(), fs);
   }
 
   private void saveSettings(SnmpSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new SnmpConfigFile(), s);
+    ManagedConfigHelper.saveConfig(configFile, new SnmpConfigFile(), s,fs);
   }
 
   @Test

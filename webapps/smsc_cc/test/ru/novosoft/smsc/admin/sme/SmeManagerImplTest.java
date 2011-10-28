@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -24,23 +25,16 @@ import static org.junit.Assert.*;
 public class SmeManagerImplTest {
 
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(SmeManagerImplTest.class.getResourceAsStream("sme.xml"), ".sme");
-    backupDir = TestUtils.createRandomDir(".sme.backup");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+    configFile = fs.createNewFile("sme.xml", SmeManagerImplTest.class.getResourceAsStream("sme.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   public SmeManager getManager(ClusterController cc) throws AdminException {
-    return new SmeManagerImpl(configFile, backupDir, cc, null, FileSystem.getFSForSingleInst());
+    return new SmeManagerImpl(configFile, backupDir, cc, null, fs);
   }
 
   @Test
@@ -99,7 +93,7 @@ public class SmeManagerImplTest {
     }
 
     public ConfigState getSmeConfigState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 100);
       map.put(1, now);

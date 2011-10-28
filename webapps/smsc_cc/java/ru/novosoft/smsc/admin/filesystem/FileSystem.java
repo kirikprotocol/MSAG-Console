@@ -39,6 +39,15 @@ public abstract class FileSystem {
   }
 
   /**
+   * Возвращает дату последней модификации файла
+   * @param file файл
+   * @return дату последней модификации файла или 0, если файл не существует
+   */
+  public long lastModified(File file) {
+    return file.lastModified();
+  }
+
+  /**
    * По названию файла, возвращает выходной поток
    *
    * @param file файл

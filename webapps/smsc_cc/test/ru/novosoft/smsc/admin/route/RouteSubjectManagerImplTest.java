@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -27,23 +28,16 @@ import static org.junit.Assert.assertTrue;
 public class RouteSubjectManagerImplTest {
 
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RouteSubjectManagerImplTest.class.getResourceAsStream("routes.xml"), ".routes");
-    backupDir = TestUtils.createRandomDir(".routes.backup");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+    configFile = fs.createNewFile("roputes.xml", RouteSubjectManagerImplTest.class.getResourceAsStream("routes.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   public RouteSubjectManager getManager(ClusterController cc) throws AdminException {
-    return new RouteSubjectManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst(), cc);
+    return new RouteSubjectManagerImpl(configFile, backupDir, fs, cc);
   }
 
   @Test
@@ -84,7 +78,7 @@ public class RouteSubjectManagerImplTest {
     }
 
     public ConfigState getRoutesState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 100);
       map.put(1, now);

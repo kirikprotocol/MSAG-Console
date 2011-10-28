@@ -5,6 +5,8 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.Address;
 import testutils.TestUtils;
 
@@ -24,24 +26,19 @@ import static org.junit.Assert.assertTrue;
 public class FraudConfigFileTest {
 
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void before() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), ".fraud");
+    configFile = fs.createNewFile("fraud.xml", FraudManagerImplTest.class.getResourceAsStream("fraud.xml"));
   }
 
-  @After
-  public void after() {
-    if (configFile != null)
-      configFile.delete();
-  }
-  
   private FraudSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new FraudConfigFile());
+    return ManagedConfigHelper.loadConfig(configFile, new FraudConfigFile(), fs);
   }
 
   private void saveSettings(FraudSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new FraudConfigFile(), s);
+    ManagedConfigHelper.saveConfig(configFile, new FraudConfigFile(), s, fs);
   }
   
   @Test

@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -24,24 +25,16 @@ import static org.junit.Assert.*;
 public class MapLimitManagerImplTest {
 
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
-  public void before() throws IOException {
-    configFile = TestUtils.exportResourceToRandomFile(MapLimitManagerImplTest.class.getResourceAsStream("maplimits.xml"), ".maplimits");
-    backupDir = TestUtils.createRandomDir(".maplimitsbackup");
-  }
-
-  @After
-  public void after() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+  public void before() throws IOException, AdminException {
+    configFile = fs.createNewFile("maplimits.xml", MapLimitManagerImplTest.class.getResourceAsStream("maplimits.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   private MapLimitManagerImpl getManager(ClusterController cc) throws AdminException {
-    MapLimitManagerImpl m = new MapLimitManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
-    return m;
+    return new MapLimitManagerImpl(configFile, backupDir, cc, fs);
   }
 
   @Test
@@ -67,7 +60,7 @@ public class MapLimitManagerImplTest {
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMapLimitConfigState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);
       map.put(1, now);

@@ -41,7 +41,7 @@ public class ResourceManagerImpl implements ResourceManager {
         cc.lockResources(false);
 
       resourceFilesManagers.clear();
-      File[] files = configsDir.listFiles();
+      File[] files = fs.listFiles(configsDir);
       if (files == null)
         return;
       for (File file : files) {

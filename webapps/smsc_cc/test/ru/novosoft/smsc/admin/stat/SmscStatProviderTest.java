@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import testutils.TestUtils;
 
@@ -23,25 +24,26 @@ import static org.junit.Assert.*;
 public class SmscStatProviderTest {
 
   private SmscStatProvider provider;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   private TestSmscStatContext context;
 
-  private Collection<File> prepareFiles() throws IOException {
+  private Collection<File> prepareFiles() throws IOException, AdminException {
     List<File> result = new ArrayList<File>(2);
-    File result1 = TestUtils.createRandomDir("-smsc-stat1");
+    File result1 = fs.mkdirs("-smsc-stat1");
     File f1 = new File(result1, "2011-09");
-    assertTrue(f1.mkdirs());
+    fs.mkdirs(f1);
 
-    File result2 = TestUtils.createRandomDir("-smsc-stat2");
+    File result2 = fs.mkdirs("-smsc-stat2");
     File f2 = new File(result2, "2011-09");
-    assertTrue(f2.mkdirs());
+    fs.mkdirs(f2);
 
-    TestUtils.exportResource(this.getClass().getResourceAsStream("05.rts"), new File(f1, "05.rts"), false);
-    TestUtils.exportResource(this.getClass().getResourceAsStream("06.rts"), new File(f1, "06.rts"), false);
-    TestUtils.exportResource(this.getClass().getResourceAsStream("07.rts"), new File(f1, "07.rts"), false);
-    TestUtils.exportResource(this.getClass().getResourceAsStream("05.rts"), new File(f2, "05.rts"), false);
-    TestUtils.exportResource(this.getClass().getResourceAsStream("06.rts"), new File(f2, "06.rts"), false);
-    TestUtils.exportResource(this.getClass().getResourceAsStream("07.rts"), new File(f2, "07.rts"), false);
+    fs.createNewFile(new File(f1, "05.rts"), this.getClass().getResourceAsStream("05.rts"));
+    fs.createNewFile(new File(f1, "06.rts"), this.getClass().getResourceAsStream("06.rts"));
+    fs.createNewFile(new File(f1, "07.rts"), this.getClass().getResourceAsStream("07.rts"));
+    fs.createNewFile(new File(f2, "05.rts"), this.getClass().getResourceAsStream("05.rts"));
+    fs.createNewFile(new File(f2, "06.rts"), this.getClass().getResourceAsStream("06.rts"));
+    fs.createNewFile(new File(f2, "07.rts"), this.getClass().getResourceAsStream("07.rts"));
 
     result.add(result1);
     result.add(result2);
@@ -51,51 +53,14 @@ public class SmscStatProviderTest {
 
 
   @Before
-  public void init() throws IOException {
+  public void init() throws IOException, AdminException {
     final Collection<File> dirs = prepareFiles();
     context = new TestSmscStatContext(dirs);
     provider = new SmscStatProvider(context, null);
   }
 
 
-  @After
-  public void after() {
-    if(context != null) {
-      context.clearExcludeDirs();
-      for(File dir : context.getStatDirs()) {
-        TestUtils.recursiveDeleteFolder(dir);
-      }
-    }
-  }
-
-//  private static Date getFromDate() {
-//    Calendar c = Calendar.getInstance();
-//    c.set(Calendar.YEAR, 2011);
-//    c.set(Calendar.MONTH, Calendar.SEPTEMBER);
-//    c.set(Calendar.DAY_OF_MONTH, 6);
-//    c.set(Calendar.HOUR_OF_DAY, 0);
-//    c.set(Calendar.MINUTE, 0);
-//    c.set(Calendar.SECOND, 0);
-//    c.set(Calendar.MILLISECOND, 0);
-//    return c.getTime();
-//  }
-
-//  private static Date getTillDate() {
-//    Calendar c = Calendar.getInstance();
-//    c.set(Calendar.YEAR, 2011);
-//    c.set(Calendar.MONTH, Calendar.SEPTEMBER);
-//    c.set(Calendar.DAY_OF_MONTH, 8);
-//    c.set(Calendar.HOUR_OF_DAY, 0);
-//    c.set(Calendar.MINUTE, 0);
-//    c.set(Calendar.SECOND, 0);
-//    c.set(Calendar.MILLISECOND, 0);
-//    return c.getTime();
-//  }
-
   private static SmscStatFilter getFilter() {
-    SmscStatFilter f = new SmscStatFilter();
-//    f.setFrom(getFromDate());
-//    f.setTill(getTillDate());
     return new SmscStatFilter();
   }
 
@@ -399,11 +364,9 @@ public class SmscStatProviderTest {
 
 
 
-  private static class TestSmscStatContext implements SmscStatContext {
+  private class TestSmscStatContext implements SmscStatContext {
 
     private final List<File> dirs = new LinkedList<File>();
-
-    private final TestFileSystem fs = new TestFileSystem();
 
     private Collection<Integer> excludeDir = new LinkedList<Integer>();
 

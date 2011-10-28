@@ -6,6 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -19,24 +20,19 @@ public class SmeConfigFileTest {
 
 
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void before() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), ".sme");
-  }
-
-  @After
-  public void after() {
-    if (configFile != null)
-      configFile.delete();
+    configFile = fs.createNewFile("sme.xml", SmeConfigFileTest.class.getResourceAsStream("sme.xml"));
   }
 
   private Map<String, Sme> loadSmes() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new SmeConfigFile());
+    return ManagedConfigHelper.loadConfig(configFile, new SmeConfigFile(), fs);
   }
 
   private void saveSmes(Map<String, Sme> s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new SmeConfigFile(), s);
+    ManagedConfigHelper.saveConfig(configFile, new SmeConfigFile(), s, fs);
   }
 
   @Test

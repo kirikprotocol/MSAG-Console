@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.config;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.filesystem.*;
 
 import java.io.*;
 
@@ -14,6 +15,19 @@ public class ManagedConfigHelper {
     C c;
     try {
       is = new FileInputStream(configFile);
+      c = cfg.load(is);
+    } finally {
+      if (is != null)
+        is.close();
+    }
+    return c;
+  }
+
+  public static <C> C loadConfig(File configFile, ManagedConfigFile<C> cfg, FileSystem fs) throws Exception {
+    InputStream is = null;
+    C c;
+    try {
+      is = fs.getInputStream(configFile);
       c = cfg.load(is);
     } finally {
       if (is != null)
@@ -47,5 +61,32 @@ public class ManagedConfigHelper {
 
     configFile.delete();
     tmpConfigFile.renameTo(configFile);
+  }
+
+  public static <C> void saveConfig(File configFile, ManagedConfigFile<C> cfg, C c, FileSystem fs) throws Exception {
+    InputStream is = null;
+    OutputStream os = null;
+    File tmpConfigFile = new File(configFile.getAbsolutePath() + ".tmp");
+    try {
+      is = fs.getInputStream(configFile);
+      os = fs.getOutputStream(tmpConfigFile);
+
+      cfg.save(is, os, c);
+    } finally {
+      if (is != null)
+        try {
+          is.close();
+        } catch (IOException ignored) {
+        }
+
+      if (os != null)
+        try {
+          os.close();
+        } catch (IOException ignored) {
+        }
+    }
+
+    fs.delete(configFile);
+    fs.rename(tmpConfigFile, configFile);
   }
 }

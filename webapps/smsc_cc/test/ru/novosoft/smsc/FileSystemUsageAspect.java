@@ -4,7 +4,6 @@ import junit.framework.AssertionFailedError;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.junit.Test;
 
 /**
  * User: artem
@@ -13,7 +12,7 @@ import org.junit.Test;
 @Aspect
 public class FileSystemUsageAspect {
 
-  @Pointcut("call (boolean java.io.File.*())")
+  @Pointcut("call (boolean java.io.File.*()) || call (long java.io.File.*()) || call (java.io.File[] java.io.File.*())")
   public void fileUsageCall() {
   }
 

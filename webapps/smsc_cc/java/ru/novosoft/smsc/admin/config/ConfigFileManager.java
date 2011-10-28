@@ -33,7 +33,7 @@ public class ConfigFileManager<C> {
   }
 
   public long getLastModified() {
-    return configFile.lastModified();
+    return fileSystem.lastModified(configFile);
   }
 
   public FileSystem getFileSystem() {

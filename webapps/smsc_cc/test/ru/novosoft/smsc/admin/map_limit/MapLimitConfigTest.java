@@ -3,7 +3,9 @@ package ru.novosoft.smsc.admin.map_limit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -19,24 +21,19 @@ import static org.junit.Assert.assertNotNull;
 public class MapLimitConfigTest {
   
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
-  public void before() throws IOException {
-    configFile = TestUtils.exportResourceToRandomFile(MapLimitConfigTest.class.getResourceAsStream("maplimits.xml"), ".maplimits");
+  public void before() throws IOException, AdminException {
+    configFile = fs.createNewFile("maplimits.xml", MapLimitConfigTest.class.getResourceAsStream("maplimits.xml"));
   }
 
-  @After
-  public void after() {
-    if (configFile != null)
-      configFile.delete();
-  }
-  
   private MapLimitSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new MapLimitConfig());
+    return ManagedConfigHelper.loadConfig(configFile, new MapLimitConfig(), fs);
   }
 
   private void saveSettings(MapLimitSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new MapLimitConfig(), s);
+    ManagedConfigHelper.saveConfig(configFile, new MapLimitConfig(), s, fs);
   }
   
   @Test

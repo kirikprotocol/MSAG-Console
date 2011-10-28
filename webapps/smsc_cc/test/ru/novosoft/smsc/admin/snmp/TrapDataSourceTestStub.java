@@ -2,6 +2,8 @@ package ru.novosoft.smsc.admin.snmp;
 
 import org.junit.After;
 import org.junit.Before;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -15,22 +17,13 @@ import static org.junit.Assert.assertEquals;
 public class TrapDataSourceTestStub {
 
   protected File snmpDir;
+  protected MemoryFileSystem fs = new MemoryFileSystem();
 
 
   @Before
-  public void before() throws IOException {
-    snmpDir = TestUtils.createRandomDir(".snmpDir");
-    TestUtils.exportResource(TrapDataSourceTestStub.class.getResourceAsStream("20101109_220719.ucs.csv"),
-        new File(snmpDir, "20101109_220719.ucs.csv"), false);
-    assertEquals(snmpDir.list().length, 1);
+  public void before() throws IOException, AdminException {
+    snmpDir = fs.mkdirs("snmp");
+    fs.createNewFile(new File(snmpDir, "20101109_220719.ucs.csv"), TrapDataSourceTestStub.class.getResourceAsStream("20101109_220719.ucs.csv"));
   }
-
-  @After
-  public void after() {
-    if(snmpDir != null) {
-      TestUtils.recursiveDeleteFolder(snmpDir);
-    }
-  }
-
 
 }

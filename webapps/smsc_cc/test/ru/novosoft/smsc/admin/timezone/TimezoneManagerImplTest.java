@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -24,24 +25,16 @@ import static org.junit.Assert.assertNotNull;
  */
 public class TimezoneManagerImplTest {
   private File configFile, backupDir;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(TimezoneManagerImplTest.class.getResourceAsStream("timezones.xml"), ".timezones");
-    backupDir = TestUtils.createRandomDir(".reschedule.backup");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
-    if (backupDir != null)
-      TestUtils.recursiveDeleteFolder(backupDir);
+    configFile = fs.createNewFile("timezones.xml", TimezoneManagerImplTest.class.getResourceAsStream("timezones.xml"));
+    backupDir = fs.mkdirs("backup");
   }
 
   public TimezoneManager getManager(ClusterController cc) throws AdminException {
-    TimezoneManager m = new TimezoneManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst(), cc);
-    return m;
+    return new TimezoneManagerImpl(configFile, backupDir, fs, cc);
   }
 
   @Test
@@ -58,7 +51,7 @@ public class TimezoneManagerImplTest {
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getTimezonesState() throws AdminException {
-      long now = configFile.lastModified();
+      long now = fs.lastModified(configFile);
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);
       map.put(1, now);

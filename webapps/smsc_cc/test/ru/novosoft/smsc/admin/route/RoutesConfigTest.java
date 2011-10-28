@@ -8,6 +8,8 @@ import static org.junit.Assert.*;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.Address;
 import testutils.TestUtils;
 
@@ -21,24 +23,19 @@ import java.util.List;
 public class RoutesConfigTest {
 
   private File configFile;
+  private MemoryFileSystem fs = new MemoryFileSystem();
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RoutesConfigTest.class.getResourceAsStream("routes.xml"), ".routes");
-  }
-
-  @After
-  public void afterClass() {
-    if (configFile != null)
-      configFile.delete();
+    configFile = fs.createNewFile("routes.xml", RoutesConfigTest.class.getResourceAsStream("routes.xml"));
   }
 
   private RouteSubjectSettings loadSettings() throws Exception {
-    return ManagedConfigHelper.loadConfig(configFile, new RoutesConfig(null));
+    return ManagedConfigHelper.loadConfig(configFile, new RoutesConfig(null), fs);
   }
 
   private void saveSettings(RouteSubjectSettings s) throws Exception {
-    ManagedConfigHelper.saveConfig(configFile, new RoutesConfig(null), s);
+    ManagedConfigHelper.saveConfig(configFile, new RoutesConfig(null), s, fs);
   }
 
   private void checkSettings(RouteSubjectSettings s) {

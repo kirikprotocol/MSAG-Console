@@ -125,6 +125,8 @@ public class IOUtils {
       long result = is.skip(bytesToSkip - read);
       
       read += result;
+      if (result == 0)
+        break;
     }
   }
 
