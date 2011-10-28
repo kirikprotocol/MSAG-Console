@@ -102,7 +102,7 @@ int main( int argc, char* argv[] )
         in_port_t servicePort = 0;
         try {
             servicePort = cfgs.getConfig()->getInt("admin.port");
-        } catch (std::exception e) {
+        } catch (std::exception& e) {
         }
 
 
@@ -128,7 +128,7 @@ int main( int argc, char* argv[] )
         {
             admin_host = cfgs.getConfig()->getString("admin.host");
         }
-        catch (scag::config::ConfigException &c)
+        catch (scag::config::ConfigException& c)
         {}
 
         int usesignals = 1;
@@ -225,7 +225,7 @@ int main( int argc, char* argv[] )
         fprintf(stderr,"top level exception: %s\n", e.what());
         exit(-2);
     }
-    catch (smsc::util::Exception &e)
+    catch (smsc::util::Exception& e)
     {
         fprintf(stderr,"top level exception: %s\n", e.what());
         exit(-1);

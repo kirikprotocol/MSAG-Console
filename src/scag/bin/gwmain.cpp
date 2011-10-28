@@ -88,7 +88,7 @@ int main(int argc,char* argv[])
     in_port_t servicePort = 0;
     try {
       servicePort = cfgs.getConfig()->getInt("admin.port");
-    } catch (std::exception e)
+    } catch (std::exception& e)
     {
     }
 
@@ -97,7 +97,7 @@ int main(int argc,char* argv[])
     {
       admin_host = cfgs.getConfig()->getString("admin.host");
     }
-    catch (scag::config::ConfigException &c)
+    catch (scag::config::ConfigException& c)
     {}
 
     // For instance control

@@ -336,7 +336,7 @@ private:
 		    rbtree_f.RWCreate(rbtree_file.c_str());
 		    rbtree_f.SetUnbuffered();
 		}
-		catch(FileException ex)
+		catch(FileException& ex)
 		{
 		    smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
 		    return CANNOT_CREATE_RBTREE_FILE;
@@ -347,7 +347,7 @@ private:
             trans_f.RWCreate(trans_file.c_str());
             trans_f.SetUnbuffered();
         }
-        catch(FileException ex)
+        catch(FileException& ex)
         {
             if (logger) smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
             rbtree_f.Close();
@@ -367,7 +367,7 @@ private:
             rbtree_f.RWOpen(rbtree_file.c_str());
             rbtree_f.SetUnbuffered();
         }
-        catch(FileException ex)
+        catch(FileException& ex)
         {
             return CANNOT_OPEN_RBTREE_FILE;
         }
@@ -376,7 +376,7 @@ private:
             trans_f.RWOpen(trans_file.c_str());
             trans_f.SetUnbuffered();
         }
-        catch(FileException ex)
+        catch(FileException& ex)
         {
             rbtree_f.Close();
             return CANNOT_OPEN_TRANS_FILE;
@@ -388,7 +388,7 @@ private:
             trans_f.Seek(0, SEEK_SET);
             status = trans_f.ReadNetInt32();
         }
-        catch(FileException ex)
+        catch(FileException& ex)
         {
             //printf("CANNOT_READ_TRANS_FILE\n");
             rbtree_f.Close();
@@ -420,7 +420,7 @@ private:
 		    rbtree_f.RWOpen(rbtree_file.c_str());
 		    rbtree_f.SetUnbuffered();
 		}
-		catch(FileException ex)
+		catch(FileException& ex)
 		{
 			return CANNOT_OPEN_RBTREE_FILE;
 		}
@@ -429,7 +429,7 @@ private:
 			trans_f.RWOpen(trans_file.c_str());
 			trans_f.SetUnbuffered();
 		}
-		catch(FileException ex)
+		catch(FileException& ex)
 		{
 			rbtree_f.Close();
 			return CANNOT_OPEN_TRANS_FILE;
@@ -441,7 +441,7 @@ private:
 			trans_f.Seek(0, SEEK_SET);
 			trans_f.Read((char*)&status, sizeof(int));
 		}
-		catch(FileException ex)
+		catch(FileException& ex)
 		{
 			//printf("CANNOT_READ_TRANS_FILE\n");
 			rbtree_f.Close();

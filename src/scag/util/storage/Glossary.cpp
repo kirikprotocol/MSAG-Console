@@ -113,7 +113,7 @@ int Glossary::LoadGlossary(void) {
     }
     smsc_log_debug(logger, "Glossary size is %d (vec = %d, idx = %d)", glossHash.GetCount(), glossVector.size(), currentIndex);
     glossFile->SeekEnd(0);
-  } catch(FileException ex) {
+  } catch(FileException& ex) {
     smsc_log_debug(logger, "Load Glossary Error - %s", ex.what());
     return LOAD_ERROR;
   }

@@ -81,7 +81,7 @@ public:
 
 			glossFile->SetUnbuffered();
 		}
-		catch(FileException ex)
+		catch(FileException& ex)
 		{
 			smsc_log_debug(logger, "error open or create Glossary File - %s", ex.what());
 			return OPEN_ERROR;
@@ -192,7 +192,7 @@ private:
             smsc_log_debug(logger, "Glossary size is %d (vec = %d, idx = %d)", glossHash.GetCount(), glossVector.size(), currentIndex);
 			glossFile->SeekEnd(0);
 		}
-		catch(FileException ex)
+		catch(FileException& ex)
 		{
 			smsc_log_debug(logger, "Load Glossary Error - %s", ex.what());
 			return LOAD_ERROR;

@@ -85,7 +85,7 @@ public:
                 dataFile_f[i]->RWOpen(name.c_str());
                 dataFile_f[i]->SetUnbuffered();
             }
-            catch(FileException ex)
+            catch(FileException& ex)
             {
                 smsc_log_error(logger, "Cannot open data file: %s", ex.what());
                 return CANNOT_OPEN_DATA_FILE;

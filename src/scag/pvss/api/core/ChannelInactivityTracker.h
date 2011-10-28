@@ -87,7 +87,7 @@ public:
                 // try {
                 activityTimesMutex.wait( int((timeToSleep < minTimeToSleep) ? minTimeToSleep : timeToSleep) );
                 // }
-                // catch (InterruptedException e) {
+                // catch (InterruptedException& e) {
                 //     e.printStackTrace(); 
                 // }
 

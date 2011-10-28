@@ -173,7 +173,7 @@ void MyHttpProcessor::dumpText(HttpCommand &cmd)
     }
 #endif    
     }    
-    catch(Exception x) {
+    catch(Exception& x) {
         smsc_log_debug( logger,  "getMessageText() exception %s", x.what() ); 
     }
 }    
@@ -324,7 +324,7 @@ int main()
     try {
     scag::transport::http::HttpManager::Init(p, HttpManCfg);
     }
-    catch(Exception x) {
+    catch(Exception& x) {
     smsc_log_error( logger,  "Cannot init the HTTP transport: %s", x.what());    
     }
     HttpManager& mg = scag::transport::http::HttpManager::Instance();

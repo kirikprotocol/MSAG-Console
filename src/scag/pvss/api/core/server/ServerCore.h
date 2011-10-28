@@ -122,7 +122,7 @@ public:
         startupIO();
         try {
             acceptor = new Acceptor(new InetSocketAddress(config.getHost(), config.getPort()));
-        } catch (PvssException exc) {
+        } catch (PvssException& exc) {
             log_.error("Acceptor start error: " + exc.getMessage());
             shutdownIO();
             throw exc;
