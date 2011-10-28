@@ -17,6 +17,7 @@ HttpAcceptor::HttpAcceptor(HttpManagerImpl& m) : manager(m)
 int HttpAcceptor::Execute()
 {
     Socket *user_socket;
+	EventMonitor AcceptorMon;
 
     smsc_log_debug(logger, "started");
 
@@ -33,13 +34,11 @@ int HttpAcceptor::Execute()
             break;
         }
 
-		EventMonitor AcceptorMon;
 		HttpContext *cx = new HttpContext(user_socket, httpsOptions);
-
-		cx->setAcceptorMon(&AcceptorMon);
+		smsc_log_info(logger, "%s accepted: context %p, socket %p", taskName(), cx, user_socket);
 
 		if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
-			smsc_log_info(logger, "%s accepted: context %p, socket %p manager.isLicenseExpired", taskName(), cx, user_socket);
+			smsc_log_info(logger, "%s manager.isLicenseExpired", taskName());
 		  cx->action = SEND_RESPONSE;
 		  cx->createFakeResponse(503);
 		  manager.writers.process(cx);
@@ -47,9 +46,12 @@ int HttpAcceptor::Execute()
 		}
 		manager.readers.process(cx);
 		manager.incLicenseCounter();
-
-	    if (httpsOptions->userActive)
+/*
+	    if (httpsOptions->userActive) {
+	    	cx->setAcceptorMon(&AcceptorMon);
 	    	AcceptorMon.wait();
+	    }
+*/
     }
 
     if (user_socket)

@@ -72,7 +72,7 @@ HttpContext::~HttpContext()
 	catch(...) {
 		smsc_log_error(logger, "%p ~HttpContext Exception, user %p site %p", this, user, site);
 	}
-//	smsc_log_debug(logger, "%p ~HttpContext, user %p site %p Signal Acceptor", this, user, site);
+//	smsc_log_debug(logger, "%p ~HttpContext, user %p site %p notify Acceptor", this, user, site);
 	if (AcceptorMon && userHttps)
 		AcceptorMon->notify();
 }

@@ -365,7 +365,7 @@ enum HttpMethod {
 };
 
 typedef struct {
-  const char   *name;
+  const char*	name;
   unsigned int  size;
   HttpMethod    value;
 } http_methods;

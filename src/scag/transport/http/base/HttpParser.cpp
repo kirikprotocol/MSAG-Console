@@ -286,28 +286,35 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         int   method_idx = -1;
 
         for (int i = 0; i < METHOD_COUNT; ++i) {
-          if ((len >= HttpRequest::method_table[i].size) &&
-              !compareNocaseN(buf, HttpRequest::method_table[i].name, HttpRequest::method_table[i].size)) {
-            method_idx = i;
-            break;
-          }
+    		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "Method find[%d] len:%d size:%d buf:%9s name:%s",
+    				i, len, HttpRequest::method_table[i].size, buf, HttpRequest::method_table[i].name);
+			if ((len >= HttpRequest::method_table[i].size) && !compareNocaseN(buf, HttpRequest::method_table[i].name, HttpRequest::method_table[i].size)) {
+				method_idx = i;
+				break;
+			}
         }
 
-        if (method_idx == -1)
-          return ERROR;
+        if (method_idx == -1) {
+    		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "Method not found");
+    		return ERROR;
+        }
 
         const char *pos = findCharsN(buf, " \t", len);
-        if (!pos)
-          return ERROR;
+        if (!pos) {
+    		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "Tab(blanc) not found");
+        	return ERROR;
+        }
 
-        if (unsigned(pos - buf) != HttpRequest::method_table[method_idx].size)
-          return ERROR;
+        if (unsigned(pos - buf) != HttpRequest::method_table[method_idx].size) {
+    		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "wrong size %d %d", (pos - buf), HttpRequest::method_table[method_idx].size);
+        	return ERROR;
+        }
 
         // we've got method
         cx.getRequest().setMethod(HttpRequest::method_table[method_idx].value);
-//		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
+		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
 
-        switch (HttpRequest::method_table[method_idx].value) {
+        switch (cx.getRequest().getMethod()) { //  HttpRequest::method_table[method_idx].value) {
           case GET:
           case POST:
             break;
@@ -324,10 +331,12 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
           path.assign(pos, end - pos);
           end++;
           cx.getRequest().httpVersion.assign(end, len - (end - buf));
-        } else
-          return ERROR;
+        }
+        else
+        	return ERROR;
 
-        if (HttpRequest::method_table[method_idx].value == GET) {
+//        if (HttpRequest::method_table[method_idx].value == GET) {
+        if (cx.getRequest().getMethod() == GET) {
           pos = path.c_str();
           end = strchr(pos, '?');
 

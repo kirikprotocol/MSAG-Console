@@ -1,9 +1,11 @@
 #ifndef SCAG_TRANSPORT_HTTP_BASE_HTTPS
 #define SCAG_TRANSPORT_HTTP_BASE_HTTPS
 
-#include <openssl/ssl.h>
-#include "logger/Logger.h"
 #include <string>
+#include <pthread.h>
+#include <openssl/ssl.h>
+#include <openssl/crypto.h>
+#include "logger/Logger.h"
 #include "scag/config/http/HttpManagerConfig.h"
 
 namespace scag2 { namespace transport { namespace http {
@@ -12,15 +14,38 @@ using smsc::logger::Logger;
 #define VALIDATE_CERT true
 #define NO_VALIDATE_CERT false
 
+class HttpsThreads
+{
+private:
+	HttpsThreads(HttpsThreads& ) {};
+public:
+	HttpsThreads() { setup(); }
+	~HttpsThreads() { cleanup(); }
+
+	static void locking_function(int mode, int type, const char *file, int line);
+	static unsigned long thread_id_function(void) { return (unsigned long)pthread_self(); }
+
+	int setup();
+	int cleanup();
+
+public:
+	static const char* diagnostics;
+
+protected:
+	static pthread_mutex_t* mutex_buf;
+	static long* lock_count;
+};
+
 class HttpsOptions
 {
-public:
+private:
 	HttpsOptions()
 		: userVerify(false), siteVerify(false)
 		, userActive(false), siteActive(false)
 		, cfg(NULL), logger(NULL)
 		, method(NULL), userCtx(NULL), siteCtx(NULL)
 		{};
+public:
 	HttpsOptions(SSL_METHOD* meth)
 		: userVerify(false), siteVerify(false)
 		, userActive(false), siteActive(false)
@@ -50,6 +75,8 @@ public:
     bool		userActive;
     bool		siteActive;
 
+    static HttpsThreads* HttpsThreadsSupport;
+
 protected:
     const config::HttpManagerConfig* cfg;
     Logger*		logger;
@@ -58,6 +85,8 @@ protected:
     SSL_CTX*	siteCtx;
     int userInit(bool verify);
     int siteInit(bool verify);
+
+    static const char* openssl_thread_diag;
 };
 
 }}}

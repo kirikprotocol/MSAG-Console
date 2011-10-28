@@ -288,9 +288,10 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 		return;
 	}
 
-	switch ( HttpParser::parse(*cx, (len==0)) ) {
+	switch ( HttpParser::parse(*cx, closed) ) {
 	case OK:
 		if (cx->action == READ_REQUEST) {
+			smsc_log_debug(logger, "%p %p Read: %d\n%s", this, cx, len, cx->getUnparsed());
 			removeSocket(s);
 			cx->action = PROCESS_REQUEST;
 		}
