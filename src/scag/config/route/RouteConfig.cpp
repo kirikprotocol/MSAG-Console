@@ -83,7 +83,7 @@ Subject *RouteConfig::createSubjectDef(const DOMElement &elem)
 {
   DOMNodeList *maskElems = elem.getElementsByTagName(XmlStr("mask"));
   MaskVector masks;
-  unsigned maskElemsLength = maskElems->getLength();
+  unsigned maskElemsLength = unsigned(maskElems->getLength());
   for (unsigned i=0; i<maskElemsLength; i++)
   {
     DOMElement *mask = (DOMElement *) maskElems->item(i);
@@ -225,7 +225,7 @@ throw (SubjectNotFoundException)
 
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
-  unsigned srcsLength = srcs->getLength();
+  unsigned srcsLength = unsigned(srcs->getLength());
   for (unsigned i=0; i<srcsLength; i++)
   {
     DOMElement *srcElem = (DOMElement *)srcs->item(i);
@@ -233,7 +233,7 @@ throw (SubjectNotFoundException)
   }
 
   DOMNodeList *dsts = elem.getElementsByTagName(XmlStr("destination"));
-  unsigned dstsLength = dsts->getLength();
+  unsigned dstsLength = unsigned(dsts->getLength());
   for (unsigned i=0; i<dstsLength; i++)
   {
     DOMElement *dstElem = (DOMElement *)dsts->item(i);
@@ -253,7 +253,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *subj_defs = elem->getElementsByTagName(XmlStr("subject_def"));
     // Subjects
-    unsigned subj_defsLength = subj_defs->getLength();
+    unsigned subj_defsLength = unsigned(subj_defs->getLength());
     for (unsigned i=0; i<subj_defsLength; i++)
     {
       DOMElement *elem2 = (DOMElement *)subj_defs->item(i);
@@ -270,7 +270,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
 
     // routes
     DOMNodeList *route_list = elem->getElementsByTagName(XmlStr("route"));
-    unsigned route_listLength = route_list->getLength();
+    unsigned route_listLength = unsigned(route_list->getLength());
     for (unsigned i=0; i<route_listLength; i++)
     {
       DOMElement *elem2 = (DOMElement *) route_list->item(i);

@@ -749,7 +749,7 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
                 data.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &mlen);
                 if (mlen) 
                 {
-                   data.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, int(resStr.data()), resStr.size());
+                   data.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, resStr.data(), int(resStr.size()));
                    data.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, int(resStr.size()));
                    return;
                 }
@@ -758,7 +758,7 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
             if (data.hasBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE))
                 data.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, 0, 0);
 
-            data.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, int(resStr.data()), resStr.size());
+            data.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), int(resStr.size()));
             data.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, 0);
 
             break;

@@ -55,7 +55,7 @@ void Config::processNode(const DOMElement &element,
   throw (DOMException)
 {
   DOMNodeList *list = element.getChildNodes();
-  unsigned listLength = list->getLength();
+  unsigned listLength = unsigned(list->getLength());
   for (unsigned i=0; i<listLength; i++)
   {
     DOMNode *n = list->item(i);
@@ -103,7 +103,7 @@ void Config::processParamNode(const DOMElement &element,
   }
   else if (strcmp(type, "int") == 0)
   {
-    setInt(name, strtol(value.get(), 0, 0));
+    setInt(name, int32_t(strtol(value.get(), 0, 0)));
   }
   else if (strcmp(type, "bool") == 0)
   {
