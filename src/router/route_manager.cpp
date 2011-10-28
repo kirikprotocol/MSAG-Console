@@ -259,7 +259,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
       << " matching by source address with tuple {"
       << AddrToString(node->record->rp.source) << "} -> "
       << AddrToString(node->record->rp.dest);
-    trace_->push_back(ost.str());
+    trace_->push_back(ost.str().c_str());
   }
   if ( xcmp == 0 )
   {
@@ -312,7 +312,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
       << " matching by dest address with tuple "
       << AddrToString(node->record->rp.source) << " -> {"
       << AddrToString(node->record->rp.dest) << "}";
-    trace_->push_back(ost.str());
+    trace_->push_back(ost.str().c_str());
   }
   if ( xcmp == 0 )
   {
@@ -465,7 +465,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
                 << " ->\n"
                 << "    " << AddrToString(r0->rp.dest) << "(" << r0->info->smeSystemId.c_str() << ")"
                 << " [" << r0->info->dstSubj << "]";
-              trace_->push_back(ost.str());
+              trace_->push_back(ost.str().c_str());
             }
             {
               ostringstream ost;
@@ -476,7 +476,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
                 << " ->\n"
                 << "    " <<AddrToString(rec->rp.dest) << "(" << rec->info->smeSystemId.c_str() << ")"
                 << "[" << rec->info->dstSubj << "]";
-              trace_->push_back(ost.str());
+              trace_->push_back(ost.str().c_str());
             }
           }
           conflicted = true;
@@ -782,7 +782,7 @@ __synchronized__
       ostringstream ost;
       ost << "check alternative route with src proxy: '" <<
         (rec->srcProxyIdx!=-1?rec->info->srcSmeSystemId.c_str():"default") << "'";
-      trace_.push_back(ost.str());
+      trace_.push_back(ost.str().c_str());
     }
     if ( srcidx != -1 && rec->srcProxyIdx == srcidx )
     {
@@ -790,7 +790,7 @@ __synchronized__
       {
         ostringstream ost;
         ost << "found alternative route with src proxy: '" << rec->info->srcSmeSystemId.c_str() << "'";
-        trace_.push_back(ost.str());
+        trace_.push_back(ost.str().c_str());
       }
       break;
     }
@@ -822,7 +822,7 @@ __synchronized__
     ost << "route found, "
       << AddrToString(rec->rp.source) << "(" << rec->info->srcSmeSystemId.c_str() << ") -> "
       << AddrToString(rec->rp.dest) << "(" << rec->info->smeSystemId.c_str() << ")";
-    trace_.push_back(ost.str());
+    trace_.push_back(ost.str().c_str());
   }
   rr.info = *rec->info;
   rr.found=true;
