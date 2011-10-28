@@ -38,14 +38,13 @@ protected:
 
 class HttpsOptions
 {
-private:
+public:
 	HttpsOptions()
 		: userVerify(false), siteVerify(false)
 		, userActive(false), siteActive(false)
 		, cfg(NULL), logger(NULL)
 		, method(NULL), userCtx(NULL), siteCtx(NULL)
 		{};
-public:
 	HttpsOptions(SSL_METHOD* meth)
 		: userVerify(false), siteVerify(false)
 		, userActive(false), siteActive(false)
