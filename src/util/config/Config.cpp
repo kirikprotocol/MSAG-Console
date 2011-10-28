@@ -326,16 +326,16 @@ void Config::ConfigTree::write(std::ostream &out, std::string prefix)
   for(sections.First(); sections.Next(_name, val);)
   {
     smsc::util::auto_arr_ptr<char> tmp_name(encode(_name));
-    out << prefix << "<section name=\"" << tmp_name.get() << "\">" << std::endl;
+    out << prefix.c_str() << "<section name=\"" << tmp_name.get() << "\">" << std::endl;
     val->write(out, newPrefix);
-    out << prefix << "</section>" << std::endl;
+    out << prefix.c_str() << "</section>" << std::endl;
   }
 
   for (size_t i=0; i<params.size(); i++)
   {
     smsc::util::auto_arr_ptr<char> paramName(encode(params[i].name));
     smsc::util::auto_arr_ptr<char> paramValue(encode(params[i].value));
-    out << prefix << "<param name=\"" << paramName.get() << "\" type=\"";
+    out << prefix.c_str() << "<param name=\"" << paramName.get() << "\" type=\"";
     switch (params[i].type)
     {
     case ConfigParam::boolType:
