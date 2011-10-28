@@ -45,13 +45,13 @@ public class AdminMode {${line.separator}
   <target name="compile.sources">
     <delete dir="${smsc.source.classes.preweaved}" failonerror="false"/>
     <mkdir dir="${smsc.source.classes.preweaved}"/>
-    <javac srcdir="java" destdir="${smsc.source.classes.preweaved}" classpathref="lib" debug="true" source="1.5"/>
+    <javac srcdir="java" destdir="${smsc.source.classes.preweaved}" classpathref="lib" debug="true"/>
   </target>
 
   <target name="weave.sources" depends="compile.sources">
     <delete dir="${smsc.source.classes}" failonerror="false"/>
     <mkdir dir="${smsc.source.classes}"/>
-    <iajc classpathref="lib" destdir="${smsc.source.classes}">
+    <iajc classpathref="lib" destdir="${smsc.source.classes}" >
       <inpath location="${smsc.source.classes.preweaved}"/>
     </iajc>
     <native2ascii src="java" dest="${smsc.source.classes}" ext=".properties" includes="**/*.properties"/>
@@ -63,13 +63,13 @@ public class AdminMode {${line.separator}
     <copy todir="${smsc.test.classes.preweaved}">
       <fileset dir="${smsc.source.classes.preweaved}"/>
     </copy>
-    <javac srcdir="test" destdir="${smsc.test.classes.preweaved}" classpathref="lib" debug="true" source="1.5"/>
+    <javac srcdir="test" destdir="${smsc.test.classes.preweaved}" classpathref="lib" debug="true"/>
   </target>
 
   <target name="weave.tests" depends="compile.tests">
     <delete dir="${smsc.test.classes}" failonerror="false"/>
     <mkdir dir="${smsc.test.classes}"/>
-    <iajc classpathref="lib" destdir="${smsc.test.classes}">
+    <iajc classpathref="lib" destdir="${smsc.test.classes}" source="1.6">
       <inpath location="${smsc.test.classes.preweaved}"/>
     </iajc>
     <copy todir="${smsc.test.classes}">
@@ -94,6 +94,7 @@ public class AdminMode {${line.separator}
 
       <jvmarg value="-Demma.coverage.out.file=${smsc.tests.dir}/coverage.emma" />
       <jvmarg value="-Demma.coverage.out.merge=false" />
+      <jvmarg value="-Dfile.encoding=utf-8" />
 
       <formatter type="xml" usefile="true"/>
       <batchtest todir="${smsc.tests.dir}">
@@ -134,7 +135,7 @@ public class AdminMode {${line.separator}
     <equals arg1="${smsc.devMode}" arg2="true"/>
   </condition>
 
-  <target name="predistr.dev" if="is.dev" depends="test">
+  <target name="predistr.dev" if="is.dev">
     <echo>DEVELOPERS MODE</echo>
     <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.test.classes}"/>
   </target>

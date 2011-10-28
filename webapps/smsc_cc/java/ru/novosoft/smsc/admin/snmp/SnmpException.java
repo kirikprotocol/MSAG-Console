@@ -5,7 +5,7 @@ import ru.novosoft.smsc.admin.AdminException;
 /**
  * @author Aleksandr Khalitov
  */
-class SnmpException extends AdminException {
+public class SnmpException extends AdminException {
 
   SnmpException(String key) {
     super(key);

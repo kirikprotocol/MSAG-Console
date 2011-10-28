@@ -42,7 +42,6 @@ class TrapDataSourceImpl implements TrapDataSource {
     final SimpleDateFormat sdf= new SimpleDateFormat(fileFormat);
 
     File[] fs = snmpDir.listFiles(new FileFilter() {
-      @Override
       public boolean accept(File pathname) {
         if(!pathname.isFile()) {
           return false;
@@ -64,7 +63,6 @@ class TrapDataSourceImpl implements TrapDataSource {
     });
 
     Arrays.sort(fs, new Comparator<File>() {
-      @Override
       public int compare(File o1, File o2) {
         try{
           Date d1 = sdf.parse(o1.getName());
@@ -83,7 +81,7 @@ class TrapDataSourceImpl implements TrapDataSource {
 
   public void getTraps(Date from, Date till, SnmpTrapVisitor visitor) throws AdminException {
 
-    if(!snmpDir.exists()) {
+    if(!fileSystem.exists(snmpDir)) {
       return;
     }
 

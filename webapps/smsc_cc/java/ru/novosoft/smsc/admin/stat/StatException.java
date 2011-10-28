@@ -5,7 +5,7 @@ import ru.novosoft.smsc.admin.AdminException;
 /**
  * author: Aleksandr Khalitov
  */
-class StatException extends AdminException {
+public class StatException extends AdminException {
 
   StatException(String key, Throwable cause) {
     super(key, cause);
