@@ -366,8 +366,8 @@ PersCall* PvssConnection::getCall( int32_t seqnum )
         Callqueue::iterator* i = callhash_.GetPtr(seqnum);
         if ( i ) {
             Call c = **i;
-            callhash_.Delete( seqnum );
             callqueue_.erase(*i);
+            callhash_.Delete( seqnum );
             return c.ctx;
         }
     }
