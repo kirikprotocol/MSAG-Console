@@ -1475,7 +1475,7 @@ table.eyeline_page_calendar td {
 }
 .eyeline_progress_bar_border {
   border: 1px solid BLACK;
-  height: 100%;
+  height: 20px
 }
 
 .eyeline_progress_bar_content {
