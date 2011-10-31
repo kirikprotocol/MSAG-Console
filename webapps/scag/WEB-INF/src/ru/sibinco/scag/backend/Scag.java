@@ -445,7 +445,16 @@ public class Scag extends Proxy {
         Functions.RenameFile(configFile,temporary);
        //3.save config
         logger.debug( "Scag:invokeCommand:store file , manager '" + manager.getClass().getName() + "'" );
-        manager.store();
+
+        try{
+            logger.debug("Scag.invokeCommand() store" );
+            manager.store();
+        } catch (Throwable e){
+            Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+            logger.error("Scag.invokeCommand() Throwable" );
+            throw new SibincoException(e);
+        }
+
         //moved from end
         logger.debug("Scag.invokeCommand().store file hsDaemon");
         appContext.getHSDaemon().store(configFile);

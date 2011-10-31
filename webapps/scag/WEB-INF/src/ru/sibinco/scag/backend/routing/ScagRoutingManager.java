@@ -10,6 +10,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
+import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
@@ -203,6 +204,62 @@ public class ScagRoutingManager extends Manager {
     }
 
     private void saveToFile(final String filename, boolean backup) throws SibincoException {
+
+        // Check subject.
+        for (Iterator it = subjects.values().iterator(); it.hasNext();) {
+            final Subject subject = (Subject) it.next();
+
+            if (subject.getName() == null) {
+                logger.error("Couldn't save default subject to file, subject name is null:"+subject);
+                throw new SibincoException("Couldn't save default subject to file, subject name is null.");
+            }
+
+            if (subject.getCenter() == null && subject.getSvc() == null && subject.getMetaSvc() == null && subject.getMetaCenter() == null) {
+                logger.error("Couldn't save default subject with name "+subject.getName()+" to file: subjects service endpoints and centers is null.");
+                throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: all service endpoints and centers is null.");
+            }
+
+            if (subject.getCenter() != null){
+                if (subject.getCenter().getId() == null){
+                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, center id is null:"+subject);
+                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: center id is null.");
+                }
+            }
+
+            if (subject.getMetaCenter() != null){
+                if (subject.getMetaCenter().getId() == null){
+                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, meta center id is null:"+subject);
+                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: meta center id is null.");
+                }
+            }
+
+            if (subject.getSvc() != null){
+                if (subject.getSvc().getId() == null){
+                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, svc id is null:"+subject);
+                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: svc id is null.");
+                }
+            }
+
+            if (subject.getMetaSvc() != null){
+                if (subject.getMetaSvc().getId() == null){
+                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, meta svc id is null:"+subject);
+                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: meta svc id is null.");
+                }
+            }
+
+            MaskList masks = subject.getMasks();
+            if (masks == null){
+                logger.error("Couldn't save default subject with name "+subject.getName()+" to file, masks is null:"+subject);
+                throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: masks is null.");
+            }
+
+            if (masks.size() == 0){
+                logger.error("Couldn't save default subject with name "+subject.getName()+" to file, mask list is empty: "+subject);
+                throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: masks list is empty.");
+            }
+
+        }
+
         final File file = new File(scagConfFolder, filename);
         File newFile = null;
         if (backup) newFile = Functions.createNewFilenameForSave(file);
