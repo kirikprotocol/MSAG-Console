@@ -60,14 +60,17 @@ siteSsl(NULL)
 
 HttpContext::~HttpContext()
 {
+	smsc_log_debug(logger, "%p ~HttpContext, user %p site %p command %p", this, user, site, command);
 	try
 	{
 		if (site)
 			closeSocketConnection(site, siteHttps, siteSsl, nameSite);
 		if (user)
 			closeSocketConnection(user, userHttps, userSsl, nameUser);
-		if (command)
+		if (command) {
 			delete command;
+			command = NULL;
+		}
 	}
 	catch(...) {
 		smsc_log_error(logger, "%p ~HttpContext Exception, user %p site %p", this, user, site);

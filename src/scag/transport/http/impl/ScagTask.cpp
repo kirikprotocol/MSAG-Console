@@ -22,7 +22,12 @@ int ScagTask::Execute()
         while (!((cx = manager.scags.getFirst()) || isStopping))
             manager.scags.waitForContext();
 
-        smsc_log_debug(logger, "%p choosen for context %p act:%s isStopping:%s", this, cx, (cx?HttpContext::actionName(cx->action):"Undefined"), (isStopping?"y":"n"));
+        { //debug
+        	uint32_t req, resp, lcm;
+        	manager.scags.queueLen(req, resp, lcm);
+            smsc_log_debug(logger, "%p ScagTask::Execute (%u %u %u) stop:%s cx %p act:%s command %p", this,req,resp,lcm,(isStopping?"y":"n"),
+            		cx, (cx?HttpContext::actionName(cx->action):"Undefined"), (cx?cx->command:NULL));
+        }
 
         if (isStopping)
             break;

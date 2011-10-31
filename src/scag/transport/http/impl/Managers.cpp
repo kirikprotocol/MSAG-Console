@@ -196,11 +196,10 @@ void ScagTaskManager::shutdown()
 
 void ScagTaskManager::process(HttpContext* cx, bool continued)
 {
-	smsc_log_debug(logger, "process() cx=%p action=%s user=%p site=%p", cx, cx->actionName(), cx->user, cx->site);
     MutexGuard g(procMut);
 
     cx->next = NULL;
-    uint32_t i = continued ? PROCESS_LCM : cx->action;
+    int i = continued ? PROCESS_LCM : cx->action;
     if(headContext[i])
         tailContext[i]->next = cx;
     else        
@@ -208,7 +207,9 @@ void ScagTaskManager::process(HttpContext* cx, bool continued)
     tailContext[i] = cx;        
     
     ++queueLength[i];
-    if (queueLength[PROCESS_REQUEST] > scagQueueLimit)
+	smsc_log_debug(logger, "%p ScagTaskManager::process cx=%p action=%s queue[%s]=%d", this, cx, cx->actionName(), cx->actionName(i), queueLength[i]);
+
+	if (queueLength[PROCESS_REQUEST] > scagQueueLimit)
         waitQueueShrinkage = true;
 
     {

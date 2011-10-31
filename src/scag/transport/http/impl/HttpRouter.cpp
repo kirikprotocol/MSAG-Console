@@ -310,7 +310,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
     } while (0);
 
     hid = *p;
-    smsc_log_debug(logger, "HttpRouterImpl::findRoute addr:%s, site:[%s]:port[%d] path[%s] hostsMap:%d result:%p:%u", addr.c_str(), site.c_str(), port, path.c_str(), hostsMap->GetCount(), p, hid);
+//    smsc_log_debug(logger, "HttpRouterImpl::findRoute addr:%s, site:[%s]:port[%d] path[%s] hostsMap:%d result:%p:%u", addr.c_str(), site.c_str(), port, path.c_str(), hostsMap->GetCount(), p, hid);
 
     pt.Append(path.c_str(), static_cast<size_t>(path.length() + 1));
     pathPtr = pt.get();
@@ -341,7 +341,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
                 {
                     AddressURLKey auk(*p, hid, pid);
                     if((rt = AddressURLMap->GetPtr(auk)) && (*rt)->enabled) {
-                        smsc_log_debug(logger, "HttpRouterImpl::findRoute AddressURLMap->GetPtr(%u,%u,%u)=%p", *p, hid, pid, *rt);
+//                        smsc_log_debug(logger, "HttpRouterImpl::findRoute AddressURLMap->GetPtr(%u,%u,%u)=%p", *p, hid, pid, *rt);
                         return *(*rt);
                     }
                 }
@@ -468,7 +468,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
     for(int i = 0; i < r->Count(); i++)
     {
         rt = &(*r)[i];
-        smsc_log_debug(logger, "HttpRouterImpl::BuildMaps routeCount %d route[%d]:%p %s", r->Count(), i, rt, rt->toString().c_str());
+//        smsc_log_debug(logger, "HttpRouterImpl::BuildMaps routeCount %d route[%d]:%p %s", r->Count(), i, rt, rt->toString().c_str());
 
         rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
         if(rt->provider_id == 0)
@@ -488,7 +488,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
         {
             s = rt->sites[k].host + ':' + lltostr(rt->sites[k].port, buf + 19);
             chid = getId(hh, s, hid);
-            smsc_log_debug(logger, "HttpRouterImpl::BuildMaps routeSitesCount %d:%d add_route: %u %s %u count:%d", rt->sites.Count(), k, chid, s.c_str(), hid, hh->GetCount());
+//            smsc_log_debug(logger, "HttpRouterImpl::BuildMaps routeSitesCount %d:%d add_route: %u %s %u count:%d", rt->sites.Count(), k, chid, s.c_str(), hid, hh->GetCount());
             for(int m = 0; m < rt->sites[k].paths.Count(); m++)
             {
                 cpid = getId(ph, rt->sites[k].paths[m], pid);
@@ -498,7 +498,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
                     AddressURLKey auk(0, chid, cpid);
                     if(!auh->Exists(auk))
                     {
-                        smsc_log_debug(logger, "AddedMapping transit URL: %s:%d%s", rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
+//                        smsc_log_debug(logger, "AddedMapping transit URL: %s:%d%s", rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
                         auh->Insert(auk, rt);
                     }
                 }
@@ -509,8 +509,8 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
 //                    smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s", rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
                     AddressURLKey auk(cmid, chid, cpid);
                     auh->Insert(auk, rt);
-                    smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s count=%d auh->Insert((%u, %u, %u) %p);",
-                    		rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str(), auh->Count(), cmid, chid, cpid, rt);
+//                    smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s count=%d auh->Insert((%u, %u, %u) %p);",
+//                    		rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str(), auh->Count(), cmid, chid, cpid, rt);
                 }
             }
         }

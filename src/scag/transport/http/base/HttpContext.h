@@ -105,15 +105,10 @@ public:
         }
         getResponse().fillFakeResponse(status);
     }
-    HttpRequest &getRequest() {
-        return *(HttpRequest *)command;
-    }
-    HttpResponse &getResponse() {
-        return *(HttpResponse *)command;
-    }
-    void setTimeout(int value) {
-    	connectionTimeout = value;
-    }
+    HttpRequest &getRequest() { return *(HttpRequest *)command; }
+    HttpResponse &getResponse() { return *(HttpResponse *)command; }
+    void setTimeout(int value) { connectionTimeout = value; }
+    int timeout(void) { return connectionTimeout; }
 
     bool isTimedOut(Socket* s, time_t now);
 
@@ -140,7 +135,10 @@ public:
     void setSiteHttps(bool supported); // { siteHttps = supported; }
 
     static const char* actionName(ActionID act) { return ActionNames[act]; }
-    const char* actionName() { return ActionNames[action]; }
+    const char* actionName(int i=-1) {
+    	if ( (i<0) || (i>=ACTION_LAST) ) return ActionNames[action];
+    	else return ActionNames[i];
+    }
     void setAcceptorMon(EventMonitor* mon) { AcceptorMon = mon; }
 
 protected:
