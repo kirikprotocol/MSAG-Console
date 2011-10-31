@@ -55,17 +55,18 @@
           </eye:column>
 
           <eye:column name="status" title="#{msg['services.page.connected_to']}" columnClass="statusColumn">
-            <h:outputText value="LoadBalancer: #{srv.loadBalancerStatus}" rendered="#{srv.connectedViaLoadBalancer}" style="color: GREEN"/>
+            <h:outputText value="Via LoadBalancer: #{srv.loadBalancerStatus}" rendered="#{srv.connectedViaLoadBalancer}" style="color: GREEN"/>
             <h:outputText value="Directly to SMSCs" rendered="#{srv.connectedDirectly}" style="color: GREEN"/>
             <h:outputText value="Internal" rendered="#{srv.internal}" style="color: GREEN"/>
-            <f:facet name="innerData">
+          </eye:column>
+
+          <f:facet name="innerData">
               <h:panelGroup>
               <c:forEach items="#{srv.directStatuses}" var="st">
                 <h:outputText value="SMSC #{st}" style="color:GREEN"/><br/>
               </c:forEach>
             </h:panelGroup>
             </f:facet>
-          </eye:column>
         </eye:row>
 
       </eye:dataTable>

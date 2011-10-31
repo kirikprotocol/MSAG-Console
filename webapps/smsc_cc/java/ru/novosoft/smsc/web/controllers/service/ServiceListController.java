@@ -179,7 +179,7 @@ public class ServiceListController extends ServiceController {
       SmeSmscStatus[] statuses = connectStatuses.getStatuses();
       for (SmeSmscStatus st : statuses) {
         if (st.getConnectionStatus() == SmeConnectStatus.CONNECTED)
-          result.add(st.getSmscInstanceNumber() + ": " + st.getBindMode() + " " + st.getPeerOut());
+          result.add((st.getSmscInstanceNumber() + 1) + ": " + st.getBindMode() + " " + st.getPeerOut());
       }
       return result;
     }

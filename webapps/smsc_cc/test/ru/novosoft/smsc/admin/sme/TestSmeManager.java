@@ -25,9 +25,21 @@ public class TestSmeManager extends SmeManagerImpl {
     int i=0;
     Map<String, SmeSmscStatuses> res = new HashMap<String, SmeSmscStatuses>();
     for (String smeId: smeIds) {
-      SmeSmscStatus s = new SmeSmscStatus(0, SmeConnectStatus.CONNECTED, SmeBindMode.TRX, "localhost", "lcoalhost");
-      SmeSmscStatuses st = new SmeSmscStatuses(SmeConnectType.VIA_LOAD_BALANCER, new SmeSmscStatus[]{s});
-      res.put(smeId, st);
+      if (i % 3 == 0) {
+        SmeSmscStatus s = new SmeSmscStatus(0, SmeConnectStatus.CONNECTED, SmeBindMode.TRX, "localhost", "lcoalhost");
+        SmeSmscStatuses st = new SmeSmscStatuses(SmeConnectType.VIA_LOAD_BALANCER, new SmeSmscStatus[]{s});
+        res.put(smeId, st);
+      } else if (i % 3 == 1) {
+        SmeSmscStatus s = new SmeSmscStatus(0, SmeConnectStatus.CONNECTED, SmeBindMode.TRX, "localhost", "lcoalhost");
+        SmeSmscStatus s1 = new SmeSmscStatus(1, SmeConnectStatus.CONNECTED, SmeBindMode.TRX, "localhost", "lcoalhost");
+        SmeSmscStatuses st = new SmeSmscStatuses(SmeConnectType.DIRECT_CONNECT, new SmeSmscStatus[]{s,s1});
+        res.put(smeId, st);
+      } else {
+        SmeSmscStatus s = new SmeSmscStatus(0, SmeConnectStatus.INTERNAL, SmeBindMode.TRX, "localhost", "lcoalhost");
+        SmeSmscStatuses st = new SmeSmscStatuses(SmeConnectType.DIRECT_CONNECT, new SmeSmscStatus[]{s});
+        res.put(smeId, st);
+      }
+      i++;
     }
     return res;
   }
