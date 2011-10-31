@@ -451,7 +451,7 @@ public class Scag extends Proxy {
             manager.store();
         } catch (Throwable e){
             Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
-            logger.error("Scag.invokeCommand() Throwable" );
+            logger.error("Scag.invokeCommand() Throwable" , e);
             throw new SibincoException(e);
         }
 
