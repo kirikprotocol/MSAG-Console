@@ -227,7 +227,7 @@ public class Subject {
                ", center id="+( (center != null && center.getId() != null) ? center.getId() : "N/A") +
                ", metaSvc id="+( (metaSvc != null) && metaSvc.getId() != null ? metaSvc.getId() : "N/A" ) +
                ", metaCenter id="+( (metaCenter != null && metaCenter.getId() != null) ? metaCenter.getId() : "N/A")+
-               ", notes="+( (notes != null && notes.isEmpty()) ? notes : "N/A")+
+               ", notes="+( (notes != null && notes.compareTo("") != 0) ? notes : "N/A")+
                ", masks="+( masks != null ? masks : "N/A") +"}.";
 
     }

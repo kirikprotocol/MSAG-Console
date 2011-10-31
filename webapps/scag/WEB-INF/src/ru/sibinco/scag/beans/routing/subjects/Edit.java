@@ -26,10 +26,7 @@ import ru.sibinco.scag.beans.SCAGJspException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -136,6 +133,7 @@ public class Edit extends EditBean {
                     logger.error( "Could not save subject with empty mask!" );
                     throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK );
                 }
+                logger.debug("masks: "+ Arrays.toString(masks));
                 if (subjects.containsKey(getName()))
                     throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                 try {
@@ -213,6 +211,7 @@ public class Edit extends EditBean {
                     logger.error( "Could not save subject with empty mask!" );
                     throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK );
                 }
+                logger.debug("masks: "+ Arrays.toString(masks));
                 if (!getEditId().equals(getName())) {
                     if (subjects.containsKey(getName()))
                         throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());

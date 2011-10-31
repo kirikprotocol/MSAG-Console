@@ -202,7 +202,7 @@ public class Route {
     {
         Map result = new HashMap();
         NodeList list = routeElem.getElementsByTagName("destination");
-        logger.error( "Destination list=" + list + " size=" +list.getLength() );
+        //logger.error( "Destination list=" + list + " size=" +list.getLength() );
         for (int i = 0; i < list.getLength(); i++) {
             Destination destination = null;
             try {

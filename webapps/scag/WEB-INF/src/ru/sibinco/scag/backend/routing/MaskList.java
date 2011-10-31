@@ -134,4 +134,16 @@ public class MaskList {
         Mask m = get(mask.getMask());
         return m != null && m.equals(mask);
     }
+
+    public String toString(){
+        String result ="MaskList{";
+        for(Object key: masks.keySet()){
+            Mask mask = (Mask) masks.get(key);
+            result = result+mask.getMask()+",";
+        }
+        if (result.endsWith(",")) result = result.substring(0, result.length()-1);
+
+        result = result+"}";
+        return result;
+    }
 }
