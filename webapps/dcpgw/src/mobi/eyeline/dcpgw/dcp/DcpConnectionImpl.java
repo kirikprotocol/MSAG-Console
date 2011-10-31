@@ -272,7 +272,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
                     sdata.setSubmitDate(new Date(System.currentTimeMillis()));
                     sdata.setStatus(SubmitData.Status.NOT_SEND_RESPONSE);
-                    connection.setSubmitDate(sdata);
+                    connection.setSubmitData(sdata);
 
                     Journal.getInstance().write(sdata);
                 } catch (CouldNotWriteToJournalException e2) {
@@ -287,7 +287,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
             Date submit_date = new Date(System.currentTimeMillis());
             sdata.setSubmitDate(submit_date);
             sdata.setStatus(SubmitData.Status.SEND_RESPONSE);
-            connection.setSubmitDate(sdata);
+            connection.setSubmitData(sdata);
 
             RegDeliveryReceipt rdr = message_id_register_delivery_receipt_table.remove(message_id);
 

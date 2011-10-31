@@ -669,7 +669,7 @@ public class Journal {
                 }
 
                 if (sdj2.length() == 0){
-                    log.debug("Submit journal "+j2.getName()+ " is empty.");
+                    log.debug("Submit journal "+sdj2.getName()+ " is empty.");
                     return;
                 }
             }

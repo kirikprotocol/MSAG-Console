@@ -1,6 +1,7 @@
 package mobi.eyeline.dcpgw.journal;
 
-import java.text.SimpleDateFormat;
+import mobi.eyeline.dcpgw.utils.ThreadLocalSimpleDateFormat;
+
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -12,7 +13,7 @@ import java.util.TimeZone;
  */
 abstract public class Data {
 
-    protected static SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmssZ");
+    protected static ThreadLocalSimpleDateFormat sdf = new ThreadLocalSimpleDateFormat();
 
     protected static final String sep=";";
 
