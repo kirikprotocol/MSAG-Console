@@ -17,7 +17,7 @@
     .instanceColumn {width: 16%;}
     .hostColumn {width: 16%;}
     .statusColumn {width: 16%;}
-    .monColumn {width: 16%; text-align: center;}
+    .monColumn {width: 16%; text-align: center; white-space: nowrap;}
     .actionColumn {width: 100%; text-align: center;}
     .actionColumn1 {width: 0px; white-space:nowrap;}
     .actionColumn2 {width: 100%; white-space:nowrap; text-align: left;}
@@ -77,7 +77,7 @@
             </h:panelGroup>
 
             <h:panelGrid columns="2" columnClasses="actionColumn1, actionColumn2" rendered="#{data.switchAllowed}">
-              <h:panelGroup>
+              <h:panelGroup style="white-space: nowrap">
                 <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
                   <f:param name="componentName" value="#{data.name}"/>
                 </h:commandLink>
@@ -142,7 +142,7 @@
             </h:panelGroup>
 
             <h:panelGrid columns="2" columnClasses="actionColumn1, actionColumn2" rendered="#{data.switchAllowed}">
-              <h:panelGroup>
+              <h:panelGroup style="white-space: nowrap">
                 <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
                   <f:param name="componentName" value="#{data.name}"/>
                 </h:commandLink>
@@ -195,7 +195,7 @@
             </h:panelGroup>
 
             <h:panelGrid columns="2" columnClasses="actionColumn1, actionColumn2" rendered="#{data.switchAllowed}">
-              <h:panelGroup>
+              <h:panelGroup style="white-space: nowrap">
                 <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stopComponent}" rendered="#{data.onlineHost != null}">
                   <f:param name="componentName" value="#{data.name}"/>
                 </h:commandLink>
