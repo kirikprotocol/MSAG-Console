@@ -348,6 +348,7 @@ void RollingFileStream::update( ProfileLogStream& ps )
 {
     smsc_log_info(log_,"RollFileStream(%s) update",getName());
     RollingFileStream& rfs = dynamic_cast<RollingFileStream&>(ps);
+    smsc::core::synchronization::MutexGuard mg(lock_);
     interval_ = rfs.interval_;
     if ( prefix_ != rfs.prefix_ ) {
         // need to reopen the file
@@ -426,6 +427,7 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
 
 time_t RollingFileStream::tryToRoll( time_t now )
 {
+    smsc::core::synchronization::MutexGuard mg(lock_);
     time_t rollTime = startTime_ + interval_;
     if ( rollTime <= now ) {
         doRollover( now, prefix_.c_str() );
@@ -477,7 +479,7 @@ void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
     smsc::core::buffers::File newf;
     newf.SetUnbuffered();
     newf.Append( newfileName.c_str() );
-    smsc_log_info(log_,"backup file %s is opened at pos=%lu",
+    smsc_log_info(log_,"backup file %s is opened at pos=%lu (in newfile)",
                   newfileName.c_str(), long(newf.Pos()));
     if ( newf.Pos() == 0 ) {
         newf.Write( FILEHEADER, strlen(FILEHEADER) );
@@ -500,9 +502,9 @@ void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
         oldname.append(suff);
     }
     {
-        smsc::core::synchronization::MutexGuard mg(lock_);
         finishFile( file_, crc32_, lines_, nextfile.c_str() );
         file_.Swap( newf );
+        smsc_log_info(log_,"backup file %s is swapped",file_.getFileName().c_str());
         startTime_ = now;
         crc32_ = 0;
         lines_ = 0;
@@ -528,8 +530,8 @@ void RollingFileStream::finishFile( smsc::core::buffers::File& oldf,
                                     uint32_t crc32, uint32_t lines,
                                     const char* newname ) const
 {
-    smsc_log_debug(log_,"finishing current file: lines=%u crc32=%x next=%s",
-                   lines, crc32, newname );
+    smsc_log_info(log_,"finishing current file (%s): lines=%u crc32=%x next=%s",
+                  oldf.getFileName().c_str(), lines, crc32, newname );
     char buf[80];
     int pos;
     ::snprintf(buf, sizeof(buf), ::FILETRAILER, lines, crc32, &pos );

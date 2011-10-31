@@ -6,95 +6,130 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/buffers/Array.hpp"
 #include "core/network/Multiplexer.hpp"
-#include "scag/util/multiplexer/RWMultiplexer.hpp"
-
+// #include "scag/util/multiplexer/RWMultiplexer.hpp"
 #include "ConnectionContext.h"
 
 namespace scag2 {
 namespace pvss  { 
 
-using smsc::core::threads::ThreadedTask;
-using smsc::core::synchronization::EventMonitor;
-using smsc::logger::Logger;
-using smsc::core::buffers::Array;
-using smsc::core::network::Multiplexer;
-using scag2::util::multiplexer::RWMultiplexer;
-
 class IOTaskManager;
 class TasksSorter;
 
-class SortedTask : public ThreadedTask {    
+/*
+class SortedTask : public smsc::core::threads::ThreadedTask 
+{
     friend class IOTaskManager;
     friend class TasksSorter;
 public:
-    SortedTask(uint32_t itemsCount = 0) : itemsCount_(itemsCount), index_(0) {}
+    // SortedTask(uint32_t itemsCount = 0) : index_(0) {}
+    // SortedTask() : index_(0) {}
     virtual ~SortedTask() {};
     virtual int Execute() { return 0; };
     virtual const char* taskName() { return ""; };
-    void addItem() { ++itemsCount_; };
+    // void addItem() { ++itemsCount_; };
 
 protected:
-    uint32_t itemsCount_;
+    // uint32_t itemsCount_;
     uint16_t index_;
 };
+*/
 
-class IOTask: public SortedTask {
+
+class IOTask : public smsc::core::threads::ThreadedTask
+{
+
+protected:
+    typedef smsc::core::buffers::Array< smsc::core::network::Socket* > SockArray;
 
 public:
-  IOTask(IOTaskManager& iomanager, uint32_t connectionTimeout, uint16_t ioTimeout, const char* logName);
-  virtual ~IOTask() {}
-  virtual int Execute();
-  virtual void stop();
+    IOTask( // IOTaskManager& iomanager,
+           uint32_t connectionTimeout,
+           uint16_t ioTimeout,
+           const char* logName);
+    virtual ~IOTask() {}
+    virtual int Execute();
+    virtual void stop();
 
-  void registerContext(ConnectionContext* cx);
-  uint32_t getSocketsCount() const;
+    void registerContext(ConnectionContext* cx);
+    uint32_t getSocketsCount();
+    // void addSocket(smsc::core::network::Socket* s);
 
-protected:
-  virtual void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now) = 0;
-  virtual void addSocketToMultiplexer(Socket* s) = 0;
-  virtual void disconnectSocket(Socket *s) = 0;
-  virtual void addSocket(Socket* s);
-  inline bool isTimedOut(Socket* s, time_t now);
-  time_t checkConnectionTimeout(Multiplexer::SockArray& error);
-  void removeSocket(Multiplexer::SockArray &error);
-  void removeSocket(Socket *s);
-  void removeSocketFromMultiplexer(Socket* s);
-  bool idle() const;
+    bool operator < ( IOTask& t ) {
+        return getSocketsCount() < t.getSocketsCount();
+    }
 
 protected:
-  IOTaskManager& iomanager_;
-  uint32_t connectionTimeout_;
-  uint16_t ioTimeout_;
-  uint16_t checkTimeoutPeriod_;
-  time_t lastCheckTime_;
-  Performance performance_;
-  RWMultiplexer multiplexer_;
-  EventMonitor socketMonitor_;
-  Logger* logger;
-  Array<Socket*> waitingAdd_;
+    // NOTE: under lock
+    virtual void processSockets(smsc::core::network::Multiplexer::SockArray &ready,
+                                smsc::core::network::Multiplexer::SockArray &error,
+                                time_t now) = 0;
+
+    virtual void preDisconnect( ConnectionContext* cx ) {}
+
+private:
+
+    // NOTE: under lock
+    time_t checkConnectionTimeout(smsc::core::network::Multiplexer::SockArray& error);
+
+    // inline bool isTimedOut(smsc::core::network::Socket* s, time_t now);
+    void removeSockets(smsc::core::network::Multiplexer::SockArray &error);
+
+    // NOTE: must be locked
+    void removeSocket( smsc::core::network::Socket *s );
+
+    // bool idle() const;
+
+protected:
+    // IOTaskManager& iomanager_;
+    smsc::logger::Logger* log_;
+    smsc::core::synchronization::EventMonitor socketMonitor_;
+    smsc::core::network::Multiplexer multiplexer_;
+    SockArray working_; // is in work
+    const uint16_t ioTimeout_;
+
+private:
+    const uint32_t connectionTimeout_;
+    uint16_t checkTimeoutPeriod_;
+    time_t lastCheckTime_;
+
+    SockArray waiting_; // to be added to multiplexer
 };
 
 
-class MTPersReader: public IOTask {
+class MTPersReader: public IOTask 
+{
 public:
-  MTPersReader(IOTaskManager& iomanager, uint32_t connectionTimeout, uint16_t ioTimeout):IOTask(iomanager, connectionTimeout, ioTimeout, "reader") {};
-  virtual const char * taskName();
-  Performance getPerformance();
+    MTPersReader( // IOTaskManager& iomanager,
+                 uint32_t connectionTimeout,
+                 uint16_t ioTimeout) : IOTask(// iomanager,
+                                              connectionTimeout, ioTimeout, "reader") {}
+    virtual const char * taskName() { return "MTPersReader"; }
+    Performance getPerformance();
 protected:
-  void addSocketToMultiplexer(Socket* s);
-  void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now);
-  void disconnectSocket(Socket *s);
+    void processSockets(smsc::core::network::Multiplexer::SockArray &ready,
+                        smsc::core::network::Multiplexer::SockArray &error,
+                        time_t now);
+    void preDisconnect( ConnectionContext* cx );
+
+private:
+    Performance performance_;
 };
 
-class MTPersWriter: public IOTask {
+
+class MTPersWriter: public IOTask 
+{
 public:
-  MTPersWriter(IOTaskManager& iomanager, uint32_t connectionTimeout, uint16_t ioTimeout):IOTask(iomanager, connectionTimeout, ioTimeout, "writer") {};
-  virtual const char * taskName();
+    MTPersWriter(// IOTaskManager& iomanager,
+                 uint32_t connectionTimeout,
+                 uint16_t ioTimeout):IOTask(// iomanager,
+                                            connectionTimeout, ioTimeout, "writer") {};
+    virtual const char * taskName() { return "MTPersWriter"; }
 protected:
-  void addSocketToMultiplexer(Socket* s);
-  void processSockets(Multiplexer::SockArray &ready, Multiplexer::SockArray &error, const time_t& now);
-  void disconnectSocket(Socket *s);
-  void addSocket(Socket* s);
+    void processSockets(smsc::core::network::Multiplexer::SockArray &ready,
+                        smsc::core::network::Multiplexer::SockArray &error,
+                        time_t now);
+    // void disconnectSocket(smsc::core::network::Socket *s);
+    // void addSocket(smsc::core::network::Socket* s);
 };
 
 }//pvss

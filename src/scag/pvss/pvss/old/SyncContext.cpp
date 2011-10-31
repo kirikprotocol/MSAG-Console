@@ -15,9 +15,15 @@ namespace scag2 {
 namespace pvss  {
 
 using scag::util::RelockMutexGuard;
+using smsc::core::network::Socket;
+using smsc::logger::Logger;
+using namespace util::storage;
 
-SyncContext::SyncContext(Socket* sock, WriterTaskManager& writerManager, core::server::ServerCore& server, PersProtocol& protocol, bool perfCounterOn)
-             :ConnectionContext(sock, writerManager, server, perfCounterOn), protocol_(protocol), seqNum_(0) 
+SyncContext::SyncContext(Socket* sock,
+                         WriterTaskManager& writerManager,
+                         core::server::ServerCore& server,
+                         PersProtocol& protocol, bool perfCounterOn)
+    :ConnectionContext(sock, writerManager, server, perfCounterOn), protocol_(protocol), seqNum_(0) 
 {
   if (socket_) {
     SocketData::setContext(socket_, this);

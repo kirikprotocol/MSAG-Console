@@ -1,6 +1,6 @@
 #include "ConnectionContext.h"
 #include "WriterTaskManager.h"
-#include "ReaderTaskManager.h"
+//#include "ReaderTaskManager.h"
 
 #include "scag/util/RelockMutexGuard.h"
 
@@ -9,12 +9,20 @@ namespace pvss  {
 
 using smsc::core::synchronization::MutexGuard;
 using scag::util::RelockMutexGuard;
+using scag2::util::storage::SerialBuffer;
+using smsc::core::network::Socket;
+using smsc::logger::Logger;
 
 const size_t MAX_PACKET_SIZE = 102400;
 
-ConnectionContext::ConnectionContext(Socket* sock, WriterTaskManager& writerManager, core::server::ServerCore& server, bool perfCounterOn)
-                   : action_(READ_REQUEST), packetLen_(0), async_(false), pvssServer_(server), socket_(sock),  
-                    writerManager_(writerManager), perfCounter_(perfCounterOn), tasksCount_(1), packetsCount_(0)
+ConnectionContext::ConnectionContext( Socket* sock,
+                                      WriterTaskManager& writerManager,
+                                      core::server::ServerCore& server,
+                                      bool perfCounterOn ) :
+    action_(READ_REQUEST), packetLen_(0), async_(false),
+    pvssServer_(server), socket_(sock),
+    writerManager_(writerManager), perfCounter_(perfCounterOn),
+    tasksCount_(1), packetsCount_(0)
 {
   //if (socket_) {
     //SocketData::setContext(socket_, this);
@@ -41,10 +49,10 @@ void ConnectionContext::getPeerIp() {
   socket_->GetPeer(peerNameBuf);
   peerIp_ = peerNameBuf;
   peerName_ = peerIp_;
-  string::size_type pos = peerIp_.find_first_of(':');
-  if (pos != string::npos) {
-    peerIp_.erase(pos);
-  }
+    std::string::size_type pos = peerIp_.find_first_of(':');
+    if (pos != std::string::npos) {
+        peerIp_.erase(pos);
+    }
   //smsc_log_info(logger_, "Connection accepted from %s", peerIp_.c_str());
 }
 
@@ -70,7 +78,7 @@ bool ConnectionContext::sendResponseData(const char* data, uint32_t dataSize) {
     }
     ++tasksCount_;
   }
-  if (!writerManager_.process(this)) {
+  if (!writerManager_.registerConnection( this ) ) {
     //TODO: error, response must be processed
     MutexGuard mg(mutex_);
     --tasksCount_;

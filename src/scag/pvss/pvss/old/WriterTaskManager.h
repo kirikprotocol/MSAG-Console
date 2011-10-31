@@ -14,26 +14,11 @@ class WriterTaskManager : public IOTaskManager {
 public:
   WriterTaskManager(const SyncConfig& cfg) : IOTaskManager(cfg, "writerman") {} 
 
-  IOTask* newTask() {
-    return new MTPersWriter(*this, connectionTimeout_, ioTimeout_);
-  }
+protected:
+    virtual void postRegister( ConnectionContext* ) {}
 
-  bool process(ConnectionContext* cx) {
-    RelockMutexGuard g(tasksMutex_);
-    if (isStopped_) {
-      return false;
-    }
-    IOTask *t = (IOTask*)taskSorter_.getFirst();
-    if (t->getSocketsCount() < maxSockets_) {
-      t->registerContext(cx);
-      taskSorter_.reorderTask(t);
-      smsc_log_debug(logger_, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
-      return true;
-    } else {
-      g.Unlock();
-      smsc_log_warn(logger_, "Can't process %p context. Server busy. Max sockets=%d, current sockets=%d", cx,  maxSockets_, t->getSocketsCount());
-      return false;
-    }
+  IOTask* newTask() {
+      return new MTPersWriter(connectionTimeout_, ioTimeout_);
   }
 };
 

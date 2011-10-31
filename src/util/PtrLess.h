@@ -10,6 +10,10 @@ struct PtrLess
     {
         return (*t1 < *t2);
     }
+    template < class T > bool operator () ( T* t1, T* t2 ) const
+    {
+        return (*t1 < *t2);
+    }
 };
 
 }

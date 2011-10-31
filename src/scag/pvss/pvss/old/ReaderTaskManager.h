@@ -1,69 +1,51 @@
 #ifndef _SCAG_PVSS_SERVER_READERTASKMANAGER_H_
 #define _SCAG_PVSS_SERVER_READERTASKMANAGER_H_
 
-#include "scag/util/RelockMutexGuard.h"
 #include "IOTaskManager.h"
 #include "IOTask.h"
 
 namespace scag2 {
 namespace pvss  {
 
-using scag::util::RelockMutexGuard;
-
-class ReaderTaskManager : public IOTaskManager {
+class ReaderTaskManager : public IOTaskManager 
+{
 public:
-  ReaderTaskManager(const SyncConfig& cfg) : IOTaskManager(cfg, "readerman"), perfCounterOn_(cfg.getPerfCounterOn()) {}
+    ReaderTaskManager(const SyncConfig& cfg) : IOTaskManager(cfg, "readerman"), perfCounterOn_(cfg.getPerfCounterOn()) {}
 
-  IOTask* newTask() {
-    MTPersReader* reader = new MTPersReader(*this, connectionTimeout_, ioTimeout_);
-    if (perfCounterOn_) {
-      readers_.push_back(reader);
+    void shutdown() {
+        readers_.Empty();
+        IOTaskManager::shutdown();
     }
-    return reader;
-  }
 
-  bool process(ConnectionContext* cx) {
-    RelockMutexGuard g(tasksMutex_);
-    if (isStopped_) {
-      return false;
+    Performance getPerformance() 
+    {
+        Performance perf;
+        if (!perfCounterOn_) {
+            return perf;
+        }
+        for ( int i = 0, ie = readers_.Count(); i != ie; ++i ) {
+            perf.inc(readers_[i]->getPerformance());
+        }
+        return perf;
     }
-    IOTask *t = (IOTask*)taskSorter_.getFirst();
-    if (t->getSocketsCount() < maxSockets_) {
-      cx->getSocket()->Write("OK", 2);
-      t->registerContext(cx);
-      taskSorter_.reorderTask(t);
-      smsc_log_debug(logger_, "%p:%d choosen for context %p", t, t->getSocketsCount(), cx);
-      return true;
-    } else {
-      g.Unlock();
-      smsc_log_warn(logger_, "Can't process %p context. Server busy. Max sockets=%d, current sockets=%d", cx,  maxSockets_, t->getSocketsCount());
-      return false;
-    }
-  }
-/*
-  bool processPacket(RequestPacket* packet) {
-    return storageManager_.process(packet);
-  }
-*/
-  void shutdown() {
-    readers_.clear();
-    IOTaskManager::shutdown();
-  }
 
-  Performance getPerformance() {
-    Performance perf;
-    if (!perfCounterOn_) {
-      return perf;
+protected:
+    virtual void postRegister( ConnectionContext* cx ) 
+    {
+        cx->getSocket()->Write("OK", 2);
     }
-    for (std::vector<MTPersReader*>::iterator i = readers_.begin(); i != readers_.end(); ++i) {
-      perf.inc((*i)->getPerformance());
+
+    IOTask* newTask() {
+        MTPersReader* reader = new MTPersReader(connectionTimeout_, ioTimeout_);
+        if (perfCounterOn_) {
+            readers_.Push(reader);
+        }
+        return reader;
     }
-    return perf;
-  }
+
 private:
-  //StorageManager& storageManager_;
-  std::vector<MTPersReader*> readers_;
-  bool perfCounterOn_;
+    bool perfCounterOn_;
+    smsc::core::buffers::Array< MTPersReader* > readers_;
 };
 
 }//pvss

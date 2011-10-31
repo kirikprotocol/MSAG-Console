@@ -4,7 +4,11 @@
 namespace scag2 {
 namespace pvss  {
 
-TasksSorter::TasksSorter():maxThreads_(0), headTask_(0), tailTask_(UINT_MAX) {
+using smsc::logger::Logger;
+using namespace smsc::core::synchronization;
+
+/*
+TasksSorter::TasksSorter() : maxThreads_(0), headTask_(0), tailTask_(UINT_MAX) {
 }
 
 void TasksSorter::init(uint16_t maxThreads) {
@@ -61,61 +65,72 @@ void TasksSorter::assignTask(uint16_t index, SortedTask *task) {
   sortedTasks_[index] = task;
   task->index_ = index;
 }
+ */
 
-IOTaskManager::IOTaskManager(const SyncConfig& cfg, const char *logName):
+
+// ----------------------------------------------------------
+
+
+IOTaskManager::IOTaskManager( const SyncConfig& cfg,
+                              const char *logName ) :
+log_(Logger::getInstance(logName)),
 isStopped_(true),
-maxSockets_(cfg.getMaxClientsCount()),
 connectionTimeout_(cfg.getConnectTimeout()),
 ioTimeout_(cfg.getIoTimeout()),
-logger_(Logger::getInstance(logName)),
-maxThreads_(cfg.getIoTasksCount())
+maxThreads_(cfg.getIoTasksCount()),
+maxSockets_((cfg.getMaxClientsCount() + maxThreads_ - 1) / maxThreads_)
 {
-  int mod = maxSockets_ % maxThreads_;
-  maxSockets_ = mod > 0 ? (maxSockets_ / maxThreads_) + 1 : maxSockets_ / maxThreads_;
 }
 
-void IOTaskManager::init() {
-  pool_.setMaxThreads(maxThreads_);
-  taskSorter_.init(maxThreads_);
 
-  for (uint16_t i = 1; i <= maxThreads_; ++i) {
-    IOTask *t = newTask();
-    taskSorter_.assignTask(i, t);
-    pool_.startTask(t);
-  }
-  isStopped_ = false;
+void IOTaskManager::init() 
+{
+    MutexGuard mg(tasksMutex_);
+    pool_.setMaxThreads(maxThreads_);
+    for (uint16_t i = 1; i <= maxThreads_; ++i) {
+        IOTask *t = newTask();
+        tasks_.Push(t);
+        pool_.startTask(t);
+    }
+    isStopped_ = false;
 }
 
+/*
 void IOTaskManager::removeContext(IOTask* t, uint16_t contextsNumber) {
   MutexGuard g(tasksMutex_);
   t->itemsCount_ -= contextsNumber;
   taskSorter_.reorderTask(t);
 }
+ */
 
-bool IOTaskManager::canStop() {
-  MutexGuard g(tasksMutex_);
-  IOTask *task = (IOTask*)taskSorter_.getTask(maxThreads_);
-  return task->getSocketsCount() == 0;
-}
-
-void IOTaskManager::shutdown() {
-  {
+/*
+bool IOTaskManager::canStop() 
+{
     MutexGuard g(tasksMutex_);
-    isStopped_ = true;
-  }
-  pool_.shutdown();
+    const int tc = tasks_.Count();
+    for ( int i = 0; i < tc; ++i ) {
+        if ( tasks_[i]->getSocketCount() ) return false;
+    }
+    return true;
+}
+ */
+
+
+void IOTaskManager::shutdown() 
+{
+    {
+        MutexGuard g(tasksMutex_);
+        if (isStopped_) return;
+        isStopped_ = true;
+    }
+    pool_.shutdown();
 }
 
-IOTaskManager::~IOTaskManager() {
-  {
-    MutexGuard mg(tasksMutex_);
-    if (isStopped_) {
-      return;
-    }
-  }
-  shutdown();
+
+IOTaskManager::~IOTaskManager() 
+{
+    shutdown();
 }
 
 }//pvss
 }//scag2
-

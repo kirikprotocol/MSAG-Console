@@ -9,11 +9,17 @@ namespace pvss  {
 
 class Response;
 
-class SyncContext : public ConnectionContext {
+class SyncContext : public ConnectionContext 
+{
 
 public:
-  SyncContext(Socket* sock, WriterTaskManager& writerManager, core::server::ServerCore& server, PersProtocol& protocol, bool perfCounterOn = false);
-  ~SyncContext() { smsc_log_info(logger_, "connection closed: %s", peerName_.c_str()); };
+    SyncContext( smsc::core::network::Socket* sock,
+                 WriterTaskManager& writerManager,
+                 core::server::ServerCore& server,
+                 PersProtocol& protocol, bool perfCounterOn = false);
+    ~SyncContext() {
+        smsc_log_info(logger_, "connection closed: %s", peerName_.c_str()); 
+    }
   bool processReadSocket(const time_t& now);
   void sendResponse(const Response* resp);
 
@@ -22,7 +28,7 @@ private:
   bool sendResponse(const Response& resp);
 
 private:
-  SerialBuffer fakeResp_;
+    util::storage::SerialBuffer fakeResp_;
   PersProtocol& protocol_;
   uint32_t seqNum_;
 };

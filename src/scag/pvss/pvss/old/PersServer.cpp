@@ -62,7 +62,7 @@ int PersServer::Execute()
     //ConnectionContext *cx = new ConnectionContext(clientSocket, writers_, readers_, perfCounterOn_);
     ConnectionContext *cx = new SyncContext(clientSocket, writers_, pvssServer_, protocol_, perfCounterOn_);
     smsc_log_debug(logger, "Client connected socket:%p context:%p", clientSocket, cx);
-    if (!readers_.process(cx)) {
+    if (!readers_.registerConnection(cx)) {
       clientSocket->Write("SB", 2);
       smsc_log_warn(logger, "Server Busy sent. Disconnected");
       delete cx;

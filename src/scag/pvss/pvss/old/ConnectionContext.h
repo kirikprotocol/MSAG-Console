@@ -14,17 +14,8 @@
 #include "Connection.h"
 #include "PerformanceCounter.h"
 
-
 namespace scag2 {
 namespace pvss  {
-
-using smsc::core::network::Socket;
-using std::string;
-using std::vector;
-using smsc::logger::Logger;
-using scag::util::storage::SerialBuffer;
-using scag::util::storage::SerialBufferOutOfBounds;
-using smsc::core::synchronization::Mutex;
 
 const int32_t READ_BUF_SIZE = 10240;
 const uint32_t RESP_BUF_SIZE = 5;
@@ -45,18 +36,19 @@ enum Action {
 
 class ConnectionContext;
 
-class SocketData {
+class SocketData 
+{
 public:
-  static ConnectionContext* getContext(Socket* s) {
+    static ConnectionContext* getContext(smsc::core::network::Socket* s) {
       return (ConnectionContext *)s->getData(CONTEXT);
   }
-  static void setContext(Socket* s, ConnectionContext* cx) {
+    static void setContext(smsc::core::network::Socket* s, ConnectionContext* cx) {
       s->setData(CONTEXT, (void *)cx);
   }
-  static void updateTimestamp(Socket* s, time_t t) {
+    static void updateTimestamp(smsc::core::network::Socket* s, time_t t) {
       s->setData(TIMESTAMP, (void *)t);
   }
-  static time_t getTimestamp(Socket* s) {
+    static time_t getTimestamp(smsc::core::network::Socket* s) {
       return (time_t)s->getData(TIMESTAMP);
   }
 
@@ -70,20 +62,24 @@ private:
 };
 
 class WriterTaskManager;
-class ReaderTaskManager;
+//class ReaderTaskManager;
 class RequestPacket;
 
-struct ConnectionContext : public Connection {
+struct ConnectionContext : public Connection
+{
 
 public:
-  ConnectionContext(Socket* sock, WriterTaskManager& writerManager, core::server::ServerCore& server, bool perfCounterOn = false);
+    ConnectionContext(smsc::core::network::Socket* sock,
+                      WriterTaskManager& writerManager,
+                      core::server::ServerCore& server,
+                      bool perfCounterOn = false);
   virtual ~ConnectionContext();
   virtual bool processReadSocket(const time_t& now) = 0;
 
   bool processWriteSocket(const time_t& now);
   bool canFinalize();
   bool canDelete();
-  Socket* getSocket() const;
+    smsc::core::network::Socket* getSocket() const;
   PerfCounter& getPerfCounter() { return perfCounter_; }
   //void flushLogs();
 
@@ -100,13 +96,13 @@ protected:
   uint32_t packetLen_;
   bool async_;
   core::server::ServerCore& pvssServer_;
-  Mutex mutex_;
-  string peerIp_;
-  string peerName_;
-  SerialBuffer inbuf_;
-  Socket* socket_;
-  Logger* logger_;
-  Logger* debuglogger_;
+    smsc::core::synchronization::Mutex mutex_;
+    std::string peerIp_;
+    std::string peerName_;
+    util::storage::SerialBuffer inbuf_;
+    smsc::core::network::Socket* socket_;
+    smsc::logger::Logger* logger_;
+    smsc::logger::Logger* debuglogger_;
 
 private:
   WriterTaskManager& writerManager_;
@@ -114,7 +110,7 @@ private:
   uint8_t tasksCount_;
   uint32_t packetsCount_;
   //vector<DbLog> dbLogs_;
-  SerialBuffer outbuf_;
+    util::storage::SerialBuffer outbuf_;
   char readBuf_[READ_BUF_SIZE];
 };
 
@@ -122,4 +118,3 @@ private:
 }//scag2
 
 #endif
-

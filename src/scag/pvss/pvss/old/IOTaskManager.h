@@ -1,6 +1,7 @@
 #ifndef _SCAG_PVSS_SERVER_IOTASKMANAGER_H_
 #define _SCAG_PVSS_SERVER_IOTASKMANAGER_H_
 
+#include <algorithm>
 #include "core/threads/ThreadPool.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
@@ -8,15 +9,17 @@
 #include "SyncConfig.h"
 #include "ConnectionContext.h"
 #include "IOTask.h"
+#include "util/PtrLess.h"
 
 namespace scag2 {
 namespace pvss  {
 
-using smsc::core::threads::ThreadPool;
-using smsc::core::synchronization::MutexGuard;
-using smsc::core::synchronization::Mutex;
-using smsc::logger::Logger;
+// using smsc::core::threads::ThreadPool;
+// using smsc::core::synchronization::MutexGuard;
+// using smsc::core::synchronization::Mutex;
+// using smsc::logger::Logger;
 
+/*
 class TasksSorter {
 public:
   TasksSorter();
@@ -34,33 +37,61 @@ private:
   SortedTask **sortedTasks_;
   uint16_t maxThreads_;
 };
+ */
 
-class IOTaskManager {
+
+/// base class for manager of homogeneous iotasks
+class IOTaskManager 
+{
 public:
-  IOTaskManager(const SyncConfig& cfg, const char *logName);
-  virtual ~IOTaskManager();
+    IOTaskManager( const SyncConfig& cfg, const char *logName );
+    virtual ~IOTaskManager();
 
-  virtual bool process(ConnectionContext* cx) = 0;
-  virtual void shutdown();
-  void removeContext(IOTask* t, uint16_t contextsNumber = 1);
-  bool canStop();
-  void init();
+    void init();
+    void shutdown();
 
-private:
-  virtual IOTask* newTask() = 0;
+    bool registerConnection( ConnectionContext* cx )
+    {
+        unsigned sc;
+        {
+            smsc::core::synchronization::MutexGuard mg(tasksMutex_);
+            if (isStopped_) return false;
+            if (!tasks_.Count()) return false;
+            IOTask* t = *std::min_element( &tasks_[0],
+                                           &tasks_[0] + tasks_.Count(),
+                                           smsc::util::PtrLess() );
+            sc = t->getSocketsCount();
+            if ( sc < maxSockets_ ) {
+                postRegister(cx);
+                t->registerContext(cx);
+                smsc_log_debug(log_,"%p:%d choosen for context %p",
+                               t, sc, cx );
+                return true;
+            }
+        }
+        smsc_log_debug(log_,"Can't process %p context. Server busy. Max sockets=%d, current sockets=%d",
+                       cx,  maxSockets_, sc);
+        return false;
+    }
 
 protected:
-  bool isStopped_;
-  uint32_t maxSockets_;    
-  uint16_t connectionTimeout_;
-  uint16_t ioTimeout_;
-  Logger *logger_;
-  TasksSorter taskSorter_;
-  Mutex tasksMutex_;
+    virtual void postRegister(ConnectionContext* cx) = 0;
+    virtual IOTask* newTask() = 0;
+
+protected:
+    smsc::logger::Logger*  log_;
+    bool                   isStopped_;
+    const uint16_t connectionTimeout_;
+    const uint16_t ioTimeout_;
 
 private:
-  ThreadPool pool_;
-  uint16_t maxThreads_;
+    const uint32_t maxThreads_;        // total
+    const uint32_t maxSockets_;        // per thread
+
+    // TasksSorter taskSorter_;
+    smsc::core::synchronization::Mutex    tasksMutex_;
+    smsc::core::buffers::Array< IOTask* > tasks_;
+    smsc::core::threads::ThreadPool       pool_;
 };
 
 }//pvss

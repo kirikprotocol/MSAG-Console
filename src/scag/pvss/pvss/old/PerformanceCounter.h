@@ -36,7 +36,9 @@ private:
   smsc::util::TimeSlotCounter<> processed;
 };
 
-struct Performance {
+
+struct Performance 
+{
   Performance():processed(0), accepted(0), incCount(0), connections(0) {};
   void inc(const Performance& performance) {
     processed += performance.processed;

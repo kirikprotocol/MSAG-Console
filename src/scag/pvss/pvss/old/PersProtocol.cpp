@@ -22,6 +22,8 @@
 namespace scag2 {
 namespace pvss  {
 
+using util::storage::SerialBuffer;
+
 bool PersProtocol::notSupport(PersCmd cmd) const {
   return (cmd >= PC_MTBATCH || cmd == PC_UNKNOWN) ? true : false;
 }
