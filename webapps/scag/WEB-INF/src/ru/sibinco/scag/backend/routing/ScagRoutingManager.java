@@ -208,7 +208,7 @@ public class ScagRoutingManager extends Manager {
         // Check subject.
         for (Iterator it = subjects.values().iterator(); it.hasNext();) {
             final Subject subject = (Subject) it.next();
-            logger.error("for debug: " + subject);
+            logger.error("not error, info for debug: " + subject);
             if (subject.getName() == null) {
                 logger.error("Couldn't save default subject to file, subject name is null:"+subject);
                 throw new SibincoException("Couldn't save default subject to file, subject name is null.");
