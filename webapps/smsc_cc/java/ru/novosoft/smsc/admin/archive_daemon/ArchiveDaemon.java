@@ -16,9 +16,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 @SuppressWarnings({"EmptyCatchBlock"})
 
@@ -48,24 +46,15 @@ public class ArchiveDaemon {
     return new Socket(host, port);
   }
 
-  /**
-   * Возвращает статистику смс, удовлетворяющую запросу
-   *
-   * @param query    запрос
-   * @param observer отслеживание прогресса
-   * @return статистика смс
-   * @throws AdminException ошибка извлечения статистики
-   */
-  public SmsSet getSmsSet(ArchiveMessageFilter query, ProgressObserver observer) throws AdminException {
+
+
+  public void _getSmsSet(ArchiveMessageFilter query, ProgressObserver observer, Visitor visitor) throws AdminException, VisitorException {
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
-
-    SmsSet set = new SmsSet();
-    set.setHasMore(false);
     int rowsMaximum = query.getRowsMaximum();
     observer.update(0, rowsMaximum);
-    if (rowsMaximum == 0) return set;
+    if (rowsMaximum == 0) return;
 
     QueryMessage request = new QueryMessage(query);
 
@@ -93,12 +82,11 @@ public class ArchiveDaemon {
             allSelected = true;
             break;
           case Message.SMSC_BYTE_RSSMS_TYPE:
-            set.addRow(((RsSmsMessage) responce).getSms());
+            visitor.visit(((RsSmsMessage) responce).getSms());
             observer.update(++counter < rowsMaximum ? counter : rowsMaximum, rowsMaximum);
             if (--toReceive <= 0) {
-              toReceive = rowsMaximum - set.getRowsCount();
+              toReceive = rowsMaximum - counter;
               if (toReceive <= 0) {
-                set.setHasMore(true);
                 communicator.send(new EmptyMessage());
               } else {
                 toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive : MAX_SMS_FETCH_SIZE;
@@ -121,6 +109,26 @@ public class ArchiveDaemon {
     } finally {
       close(input, output, socket);
     }
+
+  }
+
+  /**
+   * Возвращает статистику смс, удовлетворяющую запросу
+   *
+   * @param query    запрос
+   * @param observer отслеживание прогресса
+   * @return статистика смс
+   * @throws AdminException ошибка извлечения статистики
+   */
+  public SmsSet getSmsSet(ArchiveMessageFilter query, ProgressObserver observer) throws AdminException {
+    final SmsSet set = new SmsSet();
+    try{
+      _getSmsSet(query, observer, new Visitor() {
+        public void visit(SmsRow row) {
+          set.addRow(row);
+        }
+      });
+    }catch (VisitorException ignored){}
     return set;
   }
 
@@ -230,15 +238,40 @@ public class ArchiveDaemon {
   public void clearTable(Connection conn, String tablePrefix, Date datePrefix) throws SQLException {
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
     PreparedStatement clearStmt = null;
-    if (conn instanceof oracle.jdbc.OracleConnection && datePrefix == null)
-      clearStmt = conn.prepareStatement(DELETE_OP_SQL + tablePrefix);
-    else
+    try{
       clearStmt = conn.prepareStatement("DELETE FROM " + tablePrefix +
           ((datePrefix != null) ? " WHERE LAST_TRY_TIME = '" + dateFormat.format(datePrefix) + "'" : ""));
-    clearStmt.executeUpdate();
-    conn.commit();
+      clearStmt.executeUpdate();
+      conn.commit();
+    }finally {
+      if(clearStmt != null) {
+        closeStatement(clearStmt);
+      }
+    }
   }
 
+
+  private ArchiveMessageFilter createExportFilter(Date date) {
+    ArchiveMessageFilter query = new ArchiveMessageFilter();
+    query.setRowsMaximum(Integer.MAX_VALUE);
+    Calendar cal = new GregorianCalendar();
+    Date fromDate, tillDate;
+    cal.setTime(date);
+    cal.set(Calendar.HOUR_OF_DAY, 0);
+    cal.set(Calendar.MINUTE, 0);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    fromDate = cal.getTime();
+    cal.set(Calendar.HOUR_OF_DAY, 23);
+    cal.set(Calendar.MINUTE, 59);
+    cal.set(Calendar.SECOND, 59);
+    cal.set(Calendar.MILLISECOND, 59);
+    tillDate = cal.getTime();
+
+    query.setFromDate(fromDate);
+    query.setTillDate(tillDate);
+    return query;
+  }
 
   public synchronized void export(Date date, DBExportSettings export, final ProgressObserver observer) throws AdminException {
     Connection conn = null;
@@ -250,7 +283,6 @@ public class ArchiveDaemon {
         logger.error(e, e);
         throw new ArchiveDaemonException("cant_connect");
       }
-      int inserted;
 
       String tablePrefix = export.getPrefix();
       String INSERT_SQL = INSERT_OP_SQL + tablePrefix + INSERT_FIELDS + INSERT_VALUES;
@@ -268,58 +300,41 @@ public class ArchiveDaemon {
         throw new ArchiveDaemonException("cant_clean");
       }
 
-      ArchiveMessageFilter query = new ArchiveMessageFilter();
-      query.setRowsMaximum(600000);
-      Calendar cal = new GregorianCalendar();
-      Date fromDate, tillDate;
-      cal.setTime(date);
-      cal.set(Calendar.HOUR_OF_DAY, 0);
-      cal.set(Calendar.MINUTE, 0);
-      cal.set(Calendar.SECOND, 0);
-      cal.set(Calendar.MILLISECOND, 0);
-      for (int i = 0; i < 24; i++) {
-        cal.set(Calendar.HOUR_OF_DAY, i);
-        inserted = 0;
-        final int _i = i;
-        final ProgressObserver _observer = new ProgressObserver() {
-          public void update(long current, long total) {
-            int c = (int) (current);
-            int t = (int) (total);
-            observer.update((c * 100 / t / 24) + (_i * 100 / 24), 100);
-          }
-        };
-        try {
-          int t = 0;
-          for (int j = 0; j < 60; j += 5) {
-            cal.set(Calendar.MINUTE, j);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            fromDate = cal.getTime();
-            cal.set(Calendar.MINUTE, j + 4);
-            cal.set(Calendar.SECOND, 59);
-            cal.set(Calendar.MILLISECOND, 999);
-            tillDate = cal.getTime();
-            query.setFromDate(fromDate);
-            query.setTillDate(tillDate);
-            final int _k = ++t;
-            SmsSet set = getSmsSet(query, new ProgressObserver() {
-              public void update(long current, long total) {
-                int c = (int) (current);
-                int t = (int) (total);
-                _observer.update((c * 100 / t / (12*24)) + (_k * 100 / (12*24)), 100);
+      ArchiveMessageFilter query = createExportFilter(date);
+      try{
+        final Connection _c = conn;
+        final PreparedStatement _insertStmt = insertStmt;
+        final Collection<SmsRow> cache = new ArrayList<SmsRow>(10000);
+        _getSmsSet(query, observer, new Visitor() {
+          public void visit(SmsRow row) throws VisitorException {
+            cache.add(row);
+            try{
+              if(cache.size() == 10000) {
+                for (SmsRow r : cache) {
+                  setValues(_insertStmt, r);
+                  _insertStmt.executeUpdate();
+                }
+                _c.commit();
+                cache.clear();
               }
-            });
-            for (SmsRow row : set.getRowsList()) {
-              setValues(insertStmt, row);
-              inserted += insertStmt.executeUpdate();
+            }catch (Exception e) {
+              logger.error(e,e);
+              throw new VisitorException();
             }
           }
-          if (inserted > 0) conn.commit();
-        } catch (Exception e) {
-          logger.error(e, e);
-          throw new ArchiveDaemonException("cant_insert");
+        });
+        if(cache.size()>0) {
+          for (SmsRow r : cache) {
+            setValues(insertStmt, r);
+            insertStmt.executeUpdate();
+          }
+          conn.commit();
+          cache.clear();
         }
+      } catch (VisitorException e) {
+        throw new ArchiveDaemonException("cant_insert");
       }
+
     } catch (ArchiveDaemonException e) {
       rollbackConnection(conn);
       throw e;
@@ -421,5 +436,15 @@ public class ArchiveDaemon {
       } catch (Exception ignored) {
       }
     }
+  }
+
+  private static interface Visitor {
+
+    public void visit(SmsRow row) throws VisitorException;
+
+  }
+
+  private static class VisitorException extends Exception{
+
   }
 }
