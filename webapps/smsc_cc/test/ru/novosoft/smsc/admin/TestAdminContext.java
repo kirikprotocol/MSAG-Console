@@ -100,12 +100,12 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false, fs);
     TestUtils.exportResource(TestProfileManager.emptyProfilesFileAsStream(AdminMode.smsx, PROFILES_VERSION), new File(smscDir, "profiles.bin"), false, fs);
 
-    for(int i=1; i<3;i++) {
-      File operStoreDir = new File(servicesDir, "SMSC"+i+File.separatorChar+"store"+File.separatorChar+"operative");
+//    for(int i=1; i<3;i++) {
+      File operStoreDir = new File(servicesDir, "SMSC"+1+File.separatorChar+"store"+File.separatorChar+"operative");
       fs.mkdirs(operStoreDir);
       TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false, fs);
       TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.20111010113952.bin"), new File(operStoreDir, "store.20111010113952.bin"), false, fs);
-    }
+//    }
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
     File statDir =  new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat"+File.separatorChar+format.format(new Date()));

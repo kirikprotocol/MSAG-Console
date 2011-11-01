@@ -59,7 +59,8 @@ public class SmsExportController extends SmscController{
     c.set(Calendar.MILLISECOND, 0);
 
     settings.setDbType(DBExportSettings.DbType.ORACLE);
-    exporter = new Exporter(WebContext.getInstance().getOperativeStoreManager(), WebContext.getInstance().getArchiveDaemon(), storageType, c.getTime(), type == Type.DEFAULT ? defOperExportSettings : settings);
+    exporter = new Exporter(WebContext.getInstance().getOperativeStoreManager(), WebContext.getInstance().getArchiveDaemon(), storageType, c.getTime(),
+        type == Type.DEFAULT ? storageType == StorageType.OPERATIVE ? defOperExportSettings : defArchExportSettings : settings);
     new Thread(exporter).start();
     state = State.PROGRESS;
 
@@ -240,6 +241,7 @@ public class SmsExportController extends SmscController{
       public void update(long _current, long _total) {
         current = (int)_current;
         total = (int)_total;
+        System.out.println(current+"/"+total);
       }
     }
   }

@@ -265,12 +265,11 @@ public class ArchiveDaemon {
         clearTable(conn, tablePrefix, date);
       } catch (Exception e) {
         logger.error(e, e);
-        e.printStackTrace();            //todo
         throw new ArchiveDaemonException("cant_clean");
       }
 
       ArchiveMessageFilter query = new ArchiveMessageFilter();
-      query.setRowsMaximum(600000);     //todo ask
+      query.setRowsMaximum(600000);
       Calendar cal = new GregorianCalendar();
       Date fromDate, tillDate;
       cal.setTime(date);
@@ -290,6 +289,7 @@ public class ArchiveDaemon {
           }
         };
         try {
+          int t = 0;
           for (int j = 0; j < 60; j += 5) {
             cal.set(Calendar.MINUTE, j);
             cal.set(Calendar.SECOND, 0);
@@ -301,12 +301,12 @@ public class ArchiveDaemon {
             tillDate = cal.getTime();
             query.setFromDate(fromDate);
             query.setTillDate(tillDate);
-            final int _j = i;
+            final int _k = ++t;
             SmsSet set = getSmsSet(query, new ProgressObserver() {
               public void update(long current, long total) {
                 int c = (int) (current);
                 int t = (int) (total);
-                _observer.update((c * 100 / t / 12) + (_j * 100 / 12), 100);
+                _observer.update((c * 100 / t / (12*24)) + (_k * 100 / (12*24)), 100);
               }
             });
             for (SmsRow row : set.getRowsList()) {
@@ -322,14 +322,11 @@ public class ArchiveDaemon {
       }
     } catch (ArchiveDaemonException e) {
       rollbackConnection(conn);
-      e.printStackTrace();                                                          //todo
       throw e;
     } catch (Exception e) {
       rollbackConnection(conn);
       logger.error(e, e);
-      e.printStackTrace();                                                          //todo
       throw new ArchiveDaemonException("internal_exception");
-
     } finally {
       closeStatement(insertStmt);
       if (conn != null) {

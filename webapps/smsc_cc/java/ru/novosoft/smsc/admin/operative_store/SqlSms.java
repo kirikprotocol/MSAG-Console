@@ -5,41 +5,41 @@ import java.sql.*;
 /**
  * author: Aleksandr Khalitov
  */
-public class SqlSms implements SQLData {
+class SqlSms implements SQLData {
   private String sql_type;
-  public long id;
-  public int st = 0;
-  public Date submitTime = new Date(System.currentTimeMillis());
-  public Date validTime;
-  public int attempts;
-  public int lastResult = 0;
-  public Date lastTryTime;
-  public Date nextTryTime;
-  public String OA; // originatingAddress = "originatingAddress";
-  public String DA; //destinationAddress = "destinationAddress";
-  public String DDA; //dealiasedDestinationAddress = "dealiasedDestinationAddress";
-  public int MR; //messageReference;
-  public String SVC_TYPE; //serviceType;
+  private long id;
+  private int st = 0;
+  private Date submitTime = new Date(System.currentTimeMillis());
+  private Date validTime;
+  private int attempts;
+  private int lastResult = 0;
+  private Date lastTryTime;
+  private Date nextTryTime;
+  private String OA; // originatingAddress = "originatingAddress";
+  private String DA; //destinationAddress = "destinationAddress";
+  private String DDA; //dealiasedDestinationAddress = "dealiasedDestinationAddress";
+  private int MR; //messageReference;
+  private String SVC_TYPE; //serviceType;
   // public boolean needArchivate;
-  public short DR;//deliveryReport;
-  public short BR;//billingRecord;
-  public String SRC_MSC;
-  public String SRC_IMSI;
-  public long SRC_SME_N;
-  public String DST_MSC;
-  public String DST_IMSI;
-  public long DST_SME_N;
+  private short DR;//deliveryReport;
+  private short BR;//billingRecord;
+  private String SRC_MSC;
+  private String SRC_IMSI;
+  private long SRC_SME_N;
+  private String DST_MSC;
+  private String DST_IMSI;
+  private long DST_SME_N;
   //public SmsDescriptor originatingDescriptor;
   //public SmsDescriptor destinationDescriptor;
-  public String routeId;
-  public long SVC_ID; //serviceId;
-  public long PRTY; //priority;
-  public String srcSmeId;
-  public String dstSmeId;
-  public short concatMsgRef;
-  public short concatSeqNum;
-  public int bodyLen;
-  public byte arc = -1;
+  private String routeId;
+  private long SVC_ID; //serviceId;
+  private long PRTY; //priority;
+  private String srcSmeId;
+  private String dstSmeId;
+  private short concatMsgRef;
+  private short concatSeqNum;
+  private int bodyLen;
+  private byte arc = -1;
 
   public SqlSms() {
   }
@@ -159,5 +159,245 @@ public class SqlSms implements SQLData {
     stream.writeShort(concatSeqNum);
     stream.writeByte(arc);
     stream.writeInt(bodyLen);
+  }
+
+  public long getId() {
+    return id;
+  }
+
+  public void setId(long id) {
+    this.id = id;
+  }
+
+  public int getSt() {
+    return st;
+  }
+
+  public void setSt(int st) {
+    this.st = st;
+  }
+
+  public Date getSubmitTime() {
+    return submitTime;
+  }
+
+  public void setSubmitTime(Date submitTime) {
+    this.submitTime = submitTime;
+  }
+
+  public Date getValidTime() {
+    return validTime;
+  }
+
+  public void setValidTime(Date validTime) {
+    this.validTime = validTime;
+  }
+
+  public int getAttempts() {
+    return attempts;
+  }
+
+  public void setAttempts(int attempts) {
+    this.attempts = attempts;
+  }
+
+  public int getLastResult() {
+    return lastResult;
+  }
+
+  public void setLastResult(int lastResult) {
+    this.lastResult = lastResult;
+  }
+
+  public Date getLastTryTime() {
+    return lastTryTime;
+  }
+
+  public void setLastTryTime(Date lastTryTime) {
+    this.lastTryTime = lastTryTime;
+  }
+
+  public Date getNextTryTime() {
+    return nextTryTime;
+  }
+
+  public void setNextTryTime(Date nextTryTime) {
+    this.nextTryTime = nextTryTime;
+  }
+
+  public String getOA() {
+    return OA;
+  }
+
+  public void setOA(String OA) {
+    this.OA = OA;
+  }
+
+  public String getDA() {
+    return DA;
+  }
+
+  public void setDA(String DA) {
+    this.DA = DA;
+  }
+
+  public String getDDA() {
+    return DDA;
+  }
+
+  public void setDDA(String DDA) {
+    this.DDA = DDA;
+  }
+
+  public int getMR() {
+    return MR;
+  }
+
+  public void setMR(int MR) {
+    this.MR = MR;
+  }
+
+  public String getSVC_TYPE() {
+    return SVC_TYPE;
+  }
+
+  public void setSVC_TYPE(String SVC_TYPE) {
+    this.SVC_TYPE = SVC_TYPE;
+  }
+
+  public short getDR() {
+    return DR;
+  }
+
+  public void setDR(short DR) {
+    this.DR = DR;
+  }
+
+  public short getBR() {
+    return BR;
+  }
+
+  public void setBR(short BR) {
+    this.BR = BR;
+  }
+
+  public String getSRC_MSC() {
+    return SRC_MSC;
+  }
+
+  public void setSRC_MSC(String SRC_MSC) {
+    this.SRC_MSC = SRC_MSC;
+  }
+
+  public String getSRC_IMSI() {
+    return SRC_IMSI;
+  }
+
+  public void setSRC_IMSI(String SRC_IMSI) {
+    this.SRC_IMSI = SRC_IMSI;
+  }
+
+  public long getSRC_SME_N() {
+    return SRC_SME_N;
+  }
+
+  public void setSRC_SME_N(long SRC_SME_N) {
+    this.SRC_SME_N = SRC_SME_N;
+  }
+
+  public String getDST_MSC() {
+    return DST_MSC;
+  }
+
+  public void setDST_MSC(String DST_MSC) {
+    this.DST_MSC = DST_MSC;
+  }
+
+  public String getDST_IMSI() {
+    return DST_IMSI;
+  }
+
+  public void setDST_IMSI(String DST_IMSI) {
+    this.DST_IMSI = DST_IMSI;
+  }
+
+  public long getDST_SME_N() {
+    return DST_SME_N;
+  }
+
+  public void setDST_SME_N(long DST_SME_N) {
+    this.DST_SME_N = DST_SME_N;
+  }
+
+  public String getRouteId() {
+    return routeId;
+  }
+
+  public void setRouteId(String routeId) {
+    this.routeId = routeId;
+  }
+
+  public long getSVC_ID() {
+    return SVC_ID;
+  }
+
+  public void setSVC_ID(long SVC_ID) {
+    this.SVC_ID = SVC_ID;
+  }
+
+  public long getPRTY() {
+    return PRTY;
+  }
+
+  public void setPRTY(long PRTY) {
+    this.PRTY = PRTY;
+  }
+
+  public String getSrcSmeId() {
+    return srcSmeId;
+  }
+
+  public void setSrcSmeId(String srcSmeId) {
+    this.srcSmeId = srcSmeId;
+  }
+
+  public String getDstSmeId() {
+    return dstSmeId;
+  }
+
+  public void setDstSmeId(String dstSmeId) {
+    this.dstSmeId = dstSmeId;
+  }
+
+  public short getConcatMsgRef() {
+    return concatMsgRef;
+  }
+
+  public void setConcatMsgRef(short concatMsgRef) {
+    this.concatMsgRef = concatMsgRef;
+  }
+
+  public short getConcatSeqNum() {
+    return concatSeqNum;
+  }
+
+  public void setConcatSeqNum(short concatSeqNum) {
+    this.concatSeqNum = concatSeqNum;
+  }
+
+  public int getBodyLen() {
+    return bodyLen;
+  }
+
+  public void setBodyLen(int bodyLen) {
+    this.bodyLen = bodyLen;
+  }
+
+  public byte getArc() {
+    return arc;
+  }
+
+  public void setArc(byte arc) {
+    this.arc = arc;
   }
 }

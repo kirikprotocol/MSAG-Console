@@ -11,6 +11,7 @@ import java.util.Date;
 /**
  * @author Artem Snopkov
  */
+@SuppressWarnings({"ResultOfMethodCallIgnored"})
 class LazyMessageImpl implements Message {
 
 
@@ -529,9 +530,9 @@ class LazyMessageImpl implements Message {
 //          int partsCount = concatInfo[0];
           int partsCount = parameters.getOriginalPartsNum();
 
-          StringBuilder sb = new StringBuilder();
-          for (byte aConcatInfo : concatInfo)
-            sb.append(Integer.toHexString(((int) aConcatInfo) & 0xFF)).append(' ');
+//          StringBuilder sb = new StringBuilder();
+//          for (byte aConcatInfo : concatInfo)
+//            sb.append(Integer.toHexString(((int) aConcatInfo) & 0xFF)).append(' ');
 
           DataCoding[] partsEncoding = parameters.getDcList();
 
@@ -644,11 +645,11 @@ class LazyMessageImpl implements Message {
     if (udh) {
       int headerLen = ((int) text[start]) & 0xff;  // convert negative byte to int
       if (headerLen > len - 1) {
-        sb.append("<< UDH len greater then message len " + headerLen + "/" + (len - 1) + ">>");
-        orgsb.append("<< UDH len greater then message len " + headerLen + "/" + (len - 1) + ">>");
+        sb.append("<< UDH len greater then message len ").append(headerLen).append("/").append(len - 1).append(">>");
+        orgsb.append("<< UDH len greater then message len ").append(headerLen).append("/").append(len - 1).append(">>");
       } else {
-        sb.append("<< UDH " + headerLen + " bytes >> ");
-        orgsb.append("<< UDH " + headerLen + " bytes >> ");
+        sb.append("<< UDH ").append(headerLen).append(" bytes >> ");
+        orgsb.append("<< UDH ").append(headerLen).append(" bytes >> ");
         int textLen = len - headerLen - 1;
         if (textLen > 0) {
           byte msgText[] = new byte[textLen];

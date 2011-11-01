@@ -12,6 +12,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * author: Aleksandr Khalitov
@@ -633,6 +635,8 @@ public class SmscStatProvider {
     return exportStatistics(filter, defExportSettings, loadListener);
   }
 
+  private final Lock lock = new ReentrantLock();
+
   public ExportResults exportStatistics(SmscStatFilter filter, DBExportSettings export, SmscStatLoadListener loadListener) throws AdminException {
     final ExportResults results = new ExportResults();
     final String tablesPrefix = export.getPrefix();
@@ -661,71 +665,80 @@ public class SmscStatProvider {
       } catch (Exception e) {
         throw new StatException("cant_connect");
       }
-      try {
-        cleanTable(connection, fromPeriod, tillPeriod, totalSmsTable, totalErrTable, smeSmsTable, smeErrTable, routeSmsTable, routeErrTable);
-      } catch (Exception e) {
-        throw new StatException("cant_clean");
-      }
-
-      try {
-        insertSms = connection.prepareStatement(INSERT_OP_SQL + totalSmsTable + VALUES_SMS_SQL);
-        insertErr = connection.prepareStatement(INSERT_OP_SQL + totalErrTable + VALUES_SMS_ERR_SQL);
-        insertSmeSms = connection.prepareStatement(INSERT_OP_SQL + smeSmsTable + VALUES_SME_SQL);
-        insertSmeErr = connection.prepareStatement(INSERT_OP_SQL + smeErrTable + VALUES_SME_ERR_SQL);
-        insertRouteSms = connection.prepareStatement(INSERT_OP_SQL + routeSmsTable + VALUES_ROUTE_SQL);
-        insertRouteErr = connection.prepareStatement(INSERT_OP_SQL + routeErrTable + VALUES_ROUTE_ERR_SQL);
-      } catch (SQLException e) {
-        throw new StatException("internal_error");
-      }
-
-      long tm = System.currentTimeMillis();
-
-      Set<FileWithDate> selectedFiles = getStatFiles(filter.getFrom(), filter.getTill());
-      if (selectedFiles.isEmpty()) return results;
-
-      if (loadListener != null) {
-        loadListener.setTotal(selectedFiles.size());
-      }
-
-      for (FileWithDate file : selectedFiles) {
-        final Connection conn = connection;
-        final PreparedStatement _insertSms = insertSms;
-        final PreparedStatement _insertErr = insertErr;
-        final PreparedStatement _insertSmeSms = insertSmeSms;
-        final PreparedStatement _insertSmeErr = insertSmeErr;
-        final PreparedStatement _insertRouteSms = insertRouteSms;
-        final PreparedStatement _insertRouteErr = insertRouteErr;
+      try{
+        lock.lock();
+        if(logger.isDebugEnabled()) {
+          logger.debug("Smsc stat locked");
+        }
         try {
-          processFile(file, filter.getFrom(), filter.getTill(), new Visitor() {
-            public void visit(Date lastDate, CountersSet lastHourSet, ExtendedCountersSet errorsSet,
-                              Collection<SmeIdCountersSet> smeCounters, Collection<RouteIdCountersSet> routeCounters) throws VisitorException {
-
-              errorsSet.increment(lastHourSet);
-
-              try {
-                long period = calculatePeriod(lastDate); // dump counters to DB
-                dumpTotalCounters(_insertSms, _insertErr, errorsSet, period, results);
-                dumpSmeCounters(_insertSmeSms, _insertSmeErr, smeCounters, period, results);
-                dumpRouteCounters(_insertRouteSms, _insertRouteErr, routeCounters, period, results);
-                conn.commit();
-              } catch (Exception e) {
-                throw new VisitorException(e);
-              }
-
-            }
-          });
-        } catch (VisitorException e) {
-          throw new StatException("cant_insert");
+          cleanTable(connection, fromPeriod, tillPeriod, totalSmsTable, totalErrTable, smeSmsTable, smeErrTable, routeSmsTable, routeErrTable);
+        } catch (Exception e) {
+          throw new StatException("cant_clean");
         }
+
+        try {
+          insertSms = connection.prepareStatement(INSERT_OP_SQL + totalSmsTable + VALUES_SMS_SQL);
+          insertErr = connection.prepareStatement(INSERT_OP_SQL + totalErrTable + VALUES_SMS_ERR_SQL);
+          insertSmeSms = connection.prepareStatement(INSERT_OP_SQL + smeSmsTable + VALUES_SME_SQL);
+          insertSmeErr = connection.prepareStatement(INSERT_OP_SQL + smeErrTable + VALUES_SME_ERR_SQL);
+          insertRouteSms = connection.prepareStatement(INSERT_OP_SQL + routeSmsTable + VALUES_ROUTE_SQL);
+          insertRouteErr = connection.prepareStatement(INSERT_OP_SQL + routeErrTable + VALUES_ROUTE_ERR_SQL);
+        } catch (SQLException e) {
+          throw new StatException("internal_error");
+        }
+
+        long tm = System.currentTimeMillis();
+
+        Set<FileWithDate> selectedFiles = getStatFiles(filter.getFrom(), filter.getTill());
+        if (selectedFiles.isEmpty()) return results;
+
         if (loadListener != null) {
-          loadListener.incrementProgress();
+          loadListener.setTotal(selectedFiles.size());
+        }
+
+        for (FileWithDate file : selectedFiles) {
+          final Connection conn = connection;
+          final PreparedStatement _insertSms = insertSms;
+          final PreparedStatement _insertErr = insertErr;
+          final PreparedStatement _insertSmeSms = insertSmeSms;
+          final PreparedStatement _insertSmeErr = insertSmeErr;
+          final PreparedStatement _insertRouteSms = insertRouteSms;
+          final PreparedStatement _insertRouteErr = insertRouteErr;
+          try {
+            processFile(file, filter.getFrom(), filter.getTill(), new Visitor() {
+              public void visit(Date lastDate, CountersSet lastHourSet, ExtendedCountersSet errorsSet,
+                                Collection<SmeIdCountersSet> smeCounters, Collection<RouteIdCountersSet> routeCounters) throws VisitorException {
+
+                errorsSet.increment(lastHourSet);
+
+                try {
+                  long period = calculatePeriod(lastDate); // dump counters to DB
+                  dumpTotalCounters(_insertSms, _insertErr, errorsSet, period, results);
+                  dumpSmeCounters(_insertSmeSms, _insertSmeErr, smeCounters, period, results);
+                  dumpRouteCounters(_insertRouteSms, _insertRouteErr, routeCounters, period, results);
+                  conn.commit();
+                } catch (Exception e) {
+                  throw new VisitorException(e);
+                }
+
+              }
+            });
+          } catch (VisitorException e) {
+            throw new StatException("cant_insert");
+          }
+          if (loadListener != null) {
+            loadListener.incrementProgress();
+          }
+        }
+        logger.debug("End dumping statistics at: " + new Date() + " time spent: " +
+            (System.currentTimeMillis() - tm) / 1000);
+        return results;
+      }finally {
+        lock.unlock();
+        if(logger.isDebugEnabled()) {
+          logger.debug("Smsc stat unlocked");
         }
       }
-
-      logger.debug("End dumping statistics at: " + new Date() + " time spent: " +
-          (System.currentTimeMillis() - tm) / 1000);
-
-      return results;
     } catch (AdminException exc) {
       logger.error(exc, exc);
       rollbackConnection(connection);
