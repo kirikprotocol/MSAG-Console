@@ -60,6 +60,8 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                 } else {
                     log.debug("Couldn't send "+message_id+"_DeliverSM, "+connection_name+"_smpp_connection was deleted or disabled.");
                 }
+
+                //todo Remove from submit journal
                 return;
             }
 
@@ -163,6 +165,7 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
             Provider provider = Config.getInstance().getProvider(connection_name);
             if (provider == null){
                 log.debug("Couldn't find provider for message_id "+message_id+" with connection "+connection_name+".");
+
                 return;
             }
 

@@ -101,8 +101,16 @@ public class Journal {
 
             @Override
             public void run() {
-                cleanDeliveryJournal();
-                cleanSubmitJournal();
+                try{
+                    cleanDeliveryJournal();
+                } catch (Throwable e){
+                    log.error("Couldn't clean delivery journal.", e);
+                }
+                try{
+                    cleanSubmitJournal();
+                } catch (Throwable e){
+                    log.error("Couldn't clean submit journal.", e);
+                }
             }
 
         }, clean_timeout, clean_timeout, TimeUnit.MILLISECONDS);

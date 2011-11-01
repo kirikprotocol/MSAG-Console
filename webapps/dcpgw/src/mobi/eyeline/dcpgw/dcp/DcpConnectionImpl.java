@@ -88,10 +88,15 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
     public void addMessage(int delivery_id, Message informer_message,
                                         long message_id, SubmitSMResp resp) throws InterruptedException {
+        if (delivery_id_queue_map.get(delivery_id) == null){
+            delivery_id_queue_map.put(delivery_id, new LinkedBlockingQueue<Message>(capacity));
+        }
         LinkedBlockingQueue<Message> queue = delivery_id_queue_map.get(delivery_id);
 
         synchronized (queue){
+
             queue.put(informer_message);
+
             int size = queue.size();
             log.debug("add "+message_id+"_message to "+delivery_id+"_queue, size "+size);
             message_id_submit_sm_resp_table.put(message_id, resp);
