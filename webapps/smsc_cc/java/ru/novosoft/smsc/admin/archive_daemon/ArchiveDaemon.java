@@ -341,7 +341,9 @@ public class ArchiveDaemon {
 
   public void export(Date date, DBExportSettings export, final ProgressObserver observer) throws AdminException {
     Connection conn = null;
+    String tablePrefix = export.getPrefix();
     try {
+      lockTable(tablePrefix);
       try {
         conn = getConnection(export);
       } catch (Exception e) {
@@ -349,64 +351,70 @@ public class ArchiveDaemon {
         throw new ArchiveDaemonException("cant_connect");
       }
 
-      String tablePrefix = export.getPrefix();
-
+      PreparedStatement insertStmt = null;
       try{
-        lockTable(tablePrefix);
+        insertStmt = createInsertSql(conn, tablePrefix);
         try {
           clearTable(conn, tablePrefix, date);
         } catch (Exception e) {
           logger.error(e, e);
           throw new ArchiveDaemonException("cant_clean");
         }
-
-        ArchiveMessageFilter query = createExportFilter(date);
-        PreparedStatement insertStmt = null;
-        try{
-          insertStmt = createInsertSql(conn, tablePrefix);
-          final Connection _c = conn;
-          final PreparedStatement _insertStmt = insertStmt;
-          final Collection<SmsRow> cache = new ArrayList<SmsRow>(1000);
-          _getSmsSet(query, observer, new Visitor() {
-            public void visit(SmsRow row) throws VisitorException {
-              cache.add(row);
-              try{
-                if(cache.size() == 1000) {
-                  if(logger.isDebugEnabled()) {
-                    logger.debug("ArchiveDaemon: Start to commit part");
-                  }
-                  for (SmsRow r : cache) {
-                    setValues(_insertStmt, r);
-                    _insertStmt.executeUpdate();
-                  }
-                  _c.commit();
-
-                  if(logger.isDebugEnabled()) {
-                    logger.debug("ArchiveDaemon: Part is commited");
-                  }
-                  cache.clear();
+        ArchiveMessageFilter query = new ArchiveMessageFilter();
+        query.setRowsMaximum(1000000);
+        Calendar cal = new GregorianCalendar();
+        Date fromDate, tillDate;
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        int inserted = 0;
+        for (int i = 0; i < 24; i++) {
+          cal.set(Calendar.HOUR_OF_DAY, i);
+          inserted = 0;
+          final int _i = i;
+          final ProgressObserver _observer = new ProgressObserver() {
+            public void update(long current, long total) {
+              int c = (int) (current);
+              int t = (int) (total);
+              observer.update((c * 100 / t / 24) + (_i * 100 / 24), 100);
+            }
+          };
+          try {
+            int t = 0;
+            for (int j = 0; j < 60; j += 5) {
+              cal.set(Calendar.MINUTE, j);
+              cal.set(Calendar.SECOND, 0);
+              cal.set(Calendar.MILLISECOND, 0);
+              fromDate = cal.getTime();
+              cal.set(Calendar.MINUTE, j + 4);
+              cal.set(Calendar.SECOND, 59);
+              cal.set(Calendar.MILLISECOND, 999);
+              tillDate = cal.getTime();
+              query.setFromDate(fromDate);
+              query.setTillDate(tillDate);
+              final int _k = ++t;
+              SmsSet set = getSmsSet(query, new ProgressObserver() {
+                public void update(long current, long total) {
+                  int c = (int) (current);
+                  int t = (int) (total);
+                  _observer.update((c * 100 / t / (12*24)) + (_k * 100 / (12*24)), 100);
                 }
-              }catch (Exception e) {
-                logger.error(e,e);
-                throw new VisitorException();
+              });
+              for (SmsRow row : set.getRowsList()) {
+                setValues(insertStmt, row);
+                inserted += insertStmt.executeUpdate();
               }
             }
-          });
-          if(cache.size()>0) {
-            for (SmsRow r : cache) {
-              setValues(insertStmt, r);
-              insertStmt.executeUpdate();
-            }
-            conn.commit();
-            cache.clear();
+            if (inserted > 0) conn.commit();
+          } catch (Exception e) {
+            logger.error(e, e);
+            throw new ArchiveDaemonException("cant_insert");
           }
-        } catch (VisitorException e) {
-          throw new ArchiveDaemonException("cant_insert");
-        } finally {
-          closeStatement(insertStmt);
         }
       }finally {
-        unlockTable(tablePrefix);
+        closeStatement(insertStmt);
       }
 
     } catch (ArchiveDaemonException e) {
@@ -417,6 +425,7 @@ public class ArchiveDaemon {
       logger.error(e, e);
       throw new ArchiveDaemonException("internal_exception");
     } finally {
+      unlockTable(tablePrefix);
       if (conn != null) {
         try {
           conn.close();
