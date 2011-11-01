@@ -241,7 +241,6 @@ public class SmsExportController extends SmscController{
       public void update(long _current, long _total) {
         current = (int)_current;
         total = (int)_total;
-        System.out.println(current+"/"+total);
       }
     }
   }

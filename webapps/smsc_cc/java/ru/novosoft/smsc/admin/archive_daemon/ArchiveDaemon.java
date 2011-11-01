@@ -57,6 +57,14 @@ public class ArchiveDaemon {
     QueryMessage request = new QueryMessage(query);
 
     int total = getSmsCount(query);
+    if(logger.isDebugEnabled()) {
+      logger.debug("Total sms in archive: "+total);
+    }
+
+    if(total == 0) {
+      return;
+    }
+
     observer.update(0, total);
 
     try {
@@ -141,8 +149,6 @@ public class ArchiveDaemon {
    * @throws AdminException ошибка извлечения статистики
    */
   public int getSmsCount(ArchiveMessageFilter query) throws AdminException {
-
-    System.out.println("GET SMS COUNT");
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
@@ -254,7 +260,7 @@ public class ArchiveDaemon {
 
   private ArchiveMessageFilter createExportFilter(Date date) {
     ArchiveMessageFilter query = new ArchiveMessageFilter();
-    query.setRowsMaximum(Integer.MAX_VALUE);
+    query.setRowsMaximum(1000000000);
     Calendar cal = new GregorianCalendar();
     Date fromDate, tillDate;
     cal.setTime(date);
