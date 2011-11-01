@@ -311,12 +311,12 @@ public class ArchiveDaemon {
       try{
         final Connection _c = conn;
         final PreparedStatement _insertStmt = insertStmt;
-        final Collection<SmsRow> cache = new ArrayList<SmsRow>(10000);
+        final Collection<SmsRow> cache = new ArrayList<SmsRow>(1000);
         _getSmsSet(query, observer, new Visitor() {
           public void visit(SmsRow row) throws VisitorException {
             cache.add(row);
             try{
-              if(cache.size() == 10000) {
+              if(cache.size() == 1000) {
                 for (SmsRow r : cache) {
                   setValues(_insertStmt, r);
                   _insertStmt.executeUpdate();
