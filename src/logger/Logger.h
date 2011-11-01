@@ -70,7 +70,7 @@ public:
   static void Reload();
 
   static void Store();
-  
+
   /**
   * retrieves smsc::logger::Logger instance for given category name
   * \param logCategoryName Category name to retrieve
@@ -159,8 +159,8 @@ public:
       va_list args;
       va_start(args, stringFormat);
       timeval tv;
-      timedConfigReload(tv.tv_sec);
       gettimeofday(&tv,0);
+      timedConfigReload(tv.tv_sec);
       logva_(tv,_logLevel, stringFormat, args);
       va_end(args);
     }
@@ -228,7 +228,7 @@ private:
 
   static Logger * getInstanceInternal(const char * const logCategoryName);
   static void clear() throw(smsc::util::Exception);
-  
+
   static void configure(const char * const configFileName) throw (smsc::util::Exception);
   static void reconfigure(const char * const configFileName) throw (smsc::util::Exception);
   static void storeConfig(const char * const configFileName) throw (smsc::util::Exception);
@@ -243,7 +243,7 @@ private:
   static uint32_t reloadConfigInterval;
   static time_t lastReloadConfigCheck;
   static time_t lastConfigMTime;
-  
+
   static void timedConfigReload(time_t now)
   {
     if(reloadConfigInterval && time_t(lastReloadConfigCheck + reloadConfigInterval) < now)
@@ -262,7 +262,7 @@ private:
         lastReloadConfigCheck = time(NULL);
     }
   }
-  
+
   Logger(const char * const logCategoryName, const LogLevel logLevel, Appender * const appender);
 #ifdef NEWLOGGER
   unsigned prefixLength; // a length required by appender (including trailing \0)
