@@ -372,11 +372,18 @@ public class ArchiveDaemon {
               cache.add(row);
               try{
                 if(cache.size() == 1000) {
+                  if(logger.isDebugEnabled()) {
+                    logger.debug("ArchiveDaemon: Start to commit part");
+                  }
                   for (SmsRow r : cache) {
                     setValues(_insertStmt, r);
                     _insertStmt.executeUpdate();
                   }
                   _c.commit();
+
+                  if(logger.isDebugEnabled()) {
+                    logger.debug("ArchiveDaemon: Part is commited");
+                  }
                   cache.clear();
                 }
               }catch (Exception e) {
