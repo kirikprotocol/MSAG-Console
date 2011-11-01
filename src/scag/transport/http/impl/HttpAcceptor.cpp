@@ -3,12 +3,12 @@
 #include "HttpAcceptor.h"
 #include "scag/transport/http/base/HttpContext.h"
 #include "Managers.h"
-#include "core/synchronization/EventMonitor.hpp"
+//#include "core/synchronization/EventMonitor.hpp"
 
 namespace scag2 { namespace transport { namespace http
 {
 using smsc::util::Exception;
-using smsc::core::synchronization::EventMonitor;
+//using smsc::core::synchronization::EventMonitor;
 
 HttpAcceptor::HttpAcceptor(HttpManagerImpl& m) : manager(m)
 {
@@ -17,7 +17,7 @@ HttpAcceptor::HttpAcceptor(HttpManagerImpl& m) : manager(m)
 int HttpAcceptor::Execute()
 {
     Socket *user_socket;
-	EventMonitor AcceptorMon;
+//	EventMonitor AcceptorMon;
 
     smsc_log_debug(logger, "started");
 

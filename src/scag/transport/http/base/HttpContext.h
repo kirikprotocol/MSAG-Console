@@ -139,7 +139,7 @@ public:
     	if ( (i<0) || (i>=ACTION_LAST) ) return ActionNames[action];
     	else return ActionNames[i];
     }
-    void setAcceptorMon(EventMonitor* mon) { AcceptorMon = mon; }
+//    void setAcceptorMon(EventMonitor* mon) { AcceptorMon = mon; }
 
 protected:
     void closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, const char* info);
@@ -184,7 +184,7 @@ protected:
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;
     Logger *logger;
-	EventMonitor* AcceptorMon;
+//	EventMonitor* AcceptorMon;
 /*
  * connectionTimeout - performs additional connection check if site response includes "Connection: keep-alive" header
  * default value = cfg:https.timeout;
