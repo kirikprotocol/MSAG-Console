@@ -16,6 +16,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings({"EmptyCatchBlock"})
 
@@ -280,9 +283,65 @@ public class ArchiveDaemon {
     return query;
   }
 
-  public synchronized void export(Date date, DBExportSettings export, final ProgressObserver observer) throws AdminException {
+
+  protected  PreparedStatement createInsertSql(Connection conn, String tablePrefix) throws ArchiveDaemonException{
+    PreparedStatement insertStmt;
+    String INSERT_SQL = INSERT_OP_SQL + tablePrefix + INSERT_FIELDS + INSERT_VALUES;
+    try {
+      insertStmt = conn.prepareStatement(INSERT_SQL);
+    } catch (Exception e) {
+      logger.error(e, e);
+      throw new ArchiveDaemonException("internal_exception");
+    }
+    return insertStmt;
+  }
+
+
+  final private Set<String> lockedTables = new HashSet<String>(10);
+  final private ThreadLocal<Set<String>> tablesLockedByThisThread = new ThreadLocal<Set<String>>();
+
+  private final Lock tableLock = new ReentrantLock();
+
+  private final Condition tableIsFree = tableLock.newCondition();
+
+  private Set<String> getTablesLockedByThisThread() {
+    Set<String> set = tablesLockedByThisThread.get();
+    if (set == null) {
+      set = new HashSet<String>();
+      tablesLockedByThisThread.set(set);
+    }
+    return set;
+  }
+
+  protected void lockTable(String table) {
+    try {
+      tableLock.lock();
+      Set<String> tablesLockedByThisThread = getTablesLockedByThisThread();
+      if (!tablesLockedByThisThread.contains(table)) {
+        while(lockedTables.contains(table))
+          tableIsFree.await();
+        lockedTables.add(table);
+        tablesLockedByThisThread.add(table);
+      }
+    } catch (InterruptedException ignored) {
+    } finally {
+      tableLock.unlock();
+    }
+  }
+
+  protected void unlockTable(String table) {
+    try {
+      tableLock.lock();
+      lockedTables.remove(table);
+      getTablesLockedByThisThread().remove(table);
+      tableIsFree.signal();
+    } finally {
+      tableLock.unlock();
+    }
+  }
+
+  public void export(Date date, DBExportSettings export, final ProgressObserver observer) throws AdminException {
     Connection conn = null;
-    PreparedStatement insertStmt = null;
     try {
       try {
         conn = getConnection(export);
@@ -292,54 +351,56 @@ public class ArchiveDaemon {
       }
 
       String tablePrefix = export.getPrefix();
-      String INSERT_SQL = INSERT_OP_SQL + tablePrefix + INSERT_FIELDS + INSERT_VALUES;
-      try {
-        insertStmt = conn.prepareStatement(INSERT_SQL);
-      } catch (Exception e) {
-        logger.error(e, e);
-        throw new ArchiveDaemonException("internal_exception");
-      }
 
-      try {
-        clearTable(conn, tablePrefix, date);
-      } catch (Exception e) {
-        logger.error(e, e);
-        throw new ArchiveDaemonException("cant_clean");
-      }
-
-      ArchiveMessageFilter query = createExportFilter(date);
       try{
-        final Connection _c = conn;
-        final PreparedStatement _insertStmt = insertStmt;
-        final Collection<SmsRow> cache = new ArrayList<SmsRow>(1000);
-        _getSmsSet(query, observer, new Visitor() {
-          public void visit(SmsRow row) throws VisitorException {
-            cache.add(row);
-            try{
-              if(cache.size() == 1000) {
-                for (SmsRow r : cache) {
-                  setValues(_insertStmt, r);
-                  _insertStmt.executeUpdate();
-                }
-                _c.commit();
-                cache.clear();
-              }
-            }catch (Exception e) {
-              logger.error(e,e);
-              throw new VisitorException();
-            }
-          }
-        });
-        if(cache.size()>0) {
-          for (SmsRow r : cache) {
-            setValues(insertStmt, r);
-            insertStmt.executeUpdate();
-          }
-          conn.commit();
-          cache.clear();
+        lockTable(tablePrefix);
+        try {
+          clearTable(conn, tablePrefix, date);
+        } catch (Exception e) {
+          logger.error(e, e);
+          throw new ArchiveDaemonException("cant_clean");
         }
-      } catch (VisitorException e) {
-        throw new ArchiveDaemonException("cant_insert");
+
+        PreparedStatement insertStmt = createInsertSql(conn, tablePrefix);
+
+        ArchiveMessageFilter query = createExportFilter(date);
+        try{
+          final Connection _c = conn;
+          final PreparedStatement _insertStmt = insertStmt;
+          final Collection<SmsRow> cache = new ArrayList<SmsRow>(1000);
+          _getSmsSet(query, observer, new Visitor() {
+            public void visit(SmsRow row) throws VisitorException {
+              cache.add(row);
+              try{
+                if(cache.size() == 1000) {
+                  for (SmsRow r : cache) {
+                    setValues(_insertStmt, r);
+                    _insertStmt.executeUpdate();
+                  }
+                  _c.commit();
+                  cache.clear();
+                }
+              }catch (Exception e) {
+                logger.error(e,e);
+                throw new VisitorException();
+              }
+            }
+          });
+          if(cache.size()>0) {
+            for (SmsRow r : cache) {
+              setValues(insertStmt, r);
+              insertStmt.executeUpdate();
+            }
+            conn.commit();
+            cache.clear();
+          }
+        } catch (VisitorException e) {
+          throw new ArchiveDaemonException("cant_insert");
+        } finally {
+          closeStatement(insertStmt);
+        }
+      }finally {
+        unlockTable(tablePrefix);
       }
 
     } catch (ArchiveDaemonException e) {
@@ -350,7 +411,6 @@ public class ArchiveDaemon {
       logger.error(e, e);
       throw new ArchiveDaemonException("internal_exception");
     } finally {
-      closeStatement(insertStmt);
       if (conn != null) {
         try {
           conn.close();

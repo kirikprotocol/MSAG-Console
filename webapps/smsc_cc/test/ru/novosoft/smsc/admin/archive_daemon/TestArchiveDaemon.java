@@ -4,10 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ProgressObserver;
 import ru.novosoft.smsc.util.Address;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * author: Aleksandr Khalitov
@@ -18,14 +15,15 @@ public class TestArchiveDaemon extends ArchiveDaemon{
 
   public TestArchiveDaemon(ArchiveDaemonManager manager, List<String> routes, List<String> smes) throws AdminException {
     super(manager);
-    fillStorage(routes, smes);
+    storage.addAll(generateStorage(routes, smes, 1000));
   }
 
 
-  private void fillStorage(List<String> routes, List<String> smes) {
+  private static Collection<SmsRow> generateStorage(List<String> routes, List<String> smes, int count) {
     Random random = new Random();
     SmsRow.Status[] statuses = SmsRow.Status.values();
-    for(int i=0;i<1000;i++) {
+    List<SmsRow> storage = new ArrayList<SmsRow>(count);
+    for(int i=0;i<count;i++) {
       Date date = new Date(System.currentTimeMillis() - (300000*i));
       SmsRow r = new SmsRow();
       r.setArc((byte)random.nextInt(1));
@@ -63,9 +61,10 @@ public class TestArchiveDaemon extends ArchiveDaemon{
       r.setValidTime(new Date(date.getTime() - 60000));
       storage.add(r);
     }
+    return storage;
   }
   
-  private Address randomAdsress(Random r) {
+  private static Address randomAdsress(Random r) {
     return new Address('+'+Integer.toString(Math.abs((int)r.nextLong())));
   }
 
