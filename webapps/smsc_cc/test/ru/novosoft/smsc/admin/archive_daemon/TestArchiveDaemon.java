@@ -58,7 +58,7 @@ public class TestArchiveDaemon extends ArchiveDaemon{
       r.setSrcSmeId(smes.get(random.nextInt(smes.size())));
       r.setStatus(statuses[random.nextInt(statuses.length)]);
       r.setSubmitTime(new Date(date.getTime() - 120000));
-      r.setText("text "+i);
+      r.setText("text " + i);
       r.setTextEncoded(random.nextBoolean());
       r.setValidTime(new Date(date.getTime() - 60000));
       storage.add(r);
@@ -69,24 +69,21 @@ public class TestArchiveDaemon extends ArchiveDaemon{
     return new Address('+'+Integer.toString(Math.abs((int)r.nextLong())));
   }
 
-  public SmsSet getSmsSet(ArchiveMessageFilter query, ProgressObserver observer) throws AdminException {
-    SmsSet s = new SmsSet();
-    s.setHasMore(false);
+  protected void _getSmsSet(ArchiveMessageFilter query, ProgressObserver observer, Visitor visitor) throws AdminException, VisitorException {
     observer.update(0, query.getRowsMaximum());
     int counter = 0;
     for(SmsRow r : storage) {
       if(accepted(query, r)) {
-        s.addRow(r);
+        visitor.visit(r);
         observer.update(++counter, query.getRowsMaximum());
         try {
           Thread.sleep(100);
         } catch (InterruptedException ignored) {}
       }
-      if(query.getRowsMaximum() != null && s.getRowsCount() == query.getRowsMaximum()) {
+      if(query.getRowsMaximum() != null && counter == query.getRowsMaximum()) {
         break;
       }
     }
-    return s;
   }
 
   @Override

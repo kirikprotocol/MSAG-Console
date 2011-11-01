@@ -15,7 +15,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @SuppressWarnings({"EmptyCatchBlock"})
@@ -48,15 +47,17 @@ public class ArchiveDaemon {
 
 
 
-  public void _getSmsSet(ArchiveMessageFilter query, ProgressObserver observer, Visitor visitor) throws AdminException, VisitorException {
+  protected void _getSmsSet(ArchiveMessageFilter query, ProgressObserver observer, Visitor visitor) throws AdminException, VisitorException {
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
     int rowsMaximum = query.getRowsMaximum();
-    observer.update(0, rowsMaximum);
     if (rowsMaximum == 0) return;
 
     QueryMessage request = new QueryMessage(query);
+
+    int total = getSmsCount(query);
+    observer.update(0, total);
 
     try {
 
@@ -83,7 +84,7 @@ public class ArchiveDaemon {
             break;
           case Message.SMSC_BYTE_RSSMS_TYPE:
             visitor.visit(((RsSmsMessage) responce).getSms());
-            observer.update(++counter < rowsMaximum ? counter : rowsMaximum, rowsMaximum);
+            observer.update(++counter < total ? counter : total, total);
             if (--toReceive <= 0) {
               toReceive = rowsMaximum - counter;
               if (toReceive <= 0) {
@@ -102,7 +103,7 @@ public class ArchiveDaemon {
             throw new ArchiveDaemonException("invalid_response");
         }
       } while (!allSelected);
-      observer.update(rowsMaximum, rowsMaximum);
+      observer.update(total, total);
 
     } catch (IOException exc) {
       throw new ArchiveDaemonException("communication_error", exc);
@@ -236,11 +237,11 @@ public class ArchiveDaemon {
 
 
   public void clearTable(Connection conn, String tablePrefix, Date datePrefix) throws SQLException {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
     PreparedStatement clearStmt = null;
     try{
       clearStmt = conn.prepareStatement("DELETE FROM " + tablePrefix +
-          ((datePrefix != null) ? " WHERE LAST_TRY_TIME = '" + dateFormat.format(datePrefix) + "'" : ""));
+          " WHERE LAST_TRY_TIME = ?");
+      clearStmt.setDate(1, new java.sql.Date(datePrefix.getTime()));
       clearStmt.executeUpdate();
       conn.commit();
     }finally {
@@ -438,13 +439,12 @@ public class ArchiveDaemon {
     }
   }
 
-  private static interface Visitor {
+  protected static interface Visitor {
 
     public void visit(SmsRow row) throws VisitorException;
 
   }
 
-  private static class VisitorException extends Exception{
-
+  protected static class VisitorException extends Exception{
   }
 }
