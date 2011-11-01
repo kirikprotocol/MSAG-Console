@@ -236,7 +236,6 @@ public class ArchiveDaemon {
 
 
   protected final static String INSERT_OP_SQL = "INSERT INTO ";
-  protected final static String DELETE_OP_SQL = "TRUNCATE TABLE ";
 
   protected final static String INSERT_FIELDS =
       "  (id,st,submit_time,valid_time,attempts,last_result, " +
@@ -361,10 +360,10 @@ public class ArchiveDaemon {
           throw new ArchiveDaemonException("cant_clean");
         }
 
-        PreparedStatement insertStmt = createInsertSql(conn, tablePrefix);
-
         ArchiveMessageFilter query = createExportFilter(date);
+        PreparedStatement insertStmt = null;
         try{
+          insertStmt = createInsertSql(conn, tablePrefix);
           final Connection _c = conn;
           final PreparedStatement _insertStmt = insertStmt;
           final Collection<SmsRow> cache = new ArrayList<SmsRow>(1000);

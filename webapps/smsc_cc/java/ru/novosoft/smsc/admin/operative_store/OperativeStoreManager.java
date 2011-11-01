@@ -367,6 +367,8 @@ public class OperativeStoreManager {
         try {
           createprocStmt = conn.prepareStatement(CREATE_PROC_SQL);
           createprocStmt.executeUpdate();
+          conn.commit();
+
           callinsertStmt = (OracleCallableStatement) conn.prepareCall(CALL_multinsert_sms_SQL);
 
           conn.getTypeMap().put("SMS", Class.forName(SqlSms.class.getName()));
