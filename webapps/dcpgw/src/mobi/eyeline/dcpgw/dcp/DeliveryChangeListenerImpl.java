@@ -61,7 +61,17 @@ public class DeliveryChangeListenerImpl implements DeliveryChangeListener {
                     log.debug("Couldn't send "+message_id+"_DeliverSM, "+connection_name+"_smpp_connection was deleted or disabled.");
                 }
 
-                //todo Remove from submit journal
+                try {
+                    SubmitData sdata = new SubmitData();
+                    sdata.setConnectionName(connection_name);
+                    sdata.setMessageId(message_id);
+                    sdata.setSubmitDate(new Date(System.currentTimeMillis()));
+                    sdata.setStatus(SubmitData.Status.RECEIVE_DELIVERY_RECEIPT);
+                    Journal.getInstance().write(sdata);
+                } catch (CouldNotWriteToJournalException e1) {
+                    log.error("Couldn't write submit data to journal.", e1);
+                }
+
                 return;
             }
 
