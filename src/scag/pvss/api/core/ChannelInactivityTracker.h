@@ -62,6 +62,7 @@ public:
         if (!started) return;
         {
             smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
+            if (!started) return;
             started = false;
             activityTimesMutex.notify();
         }
@@ -77,7 +78,10 @@ public:
 
         smsc_log_info(log_,"starting inactivity time tracker, tmo=%llu ms",timeToSleep);
 
-        started = true;
+        {
+            smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
+            started = true;
+        }
         while (started)
         {
 
