@@ -2,7 +2,7 @@
 #define _SCAG_PVSS_SERVER_PERSSERVERCONTEXT_H_
 
 #include "scag/pvss/api/core/server/ServerContext.h"
-#include "Connection.h"
+#include "ConnectionContext.h"
 
 namespace scag2 {
 namespace pvss {
@@ -10,18 +10,19 @@ namespace pvss {
 class PersServerContext : public core::server::ServerContext {
 public:
 
-  PersServerContext(Request* req, Connection& connect):ServerContext(req), connection_(connect) {};
+    PersServerContext(Request* req, ConnectionContext* connect) :
+        ServerContext(req), conn_(connect) {};
 
   virtual smsc::core::network::Socket * getSocket() const {
-    return connection_.getSocket();
+      return conn_->getSocket();
   }
 
   virtual void sendResponse() /* throw(PvssException) */  {
-    connection_.sendResponse(getResponse().get());
+      conn_->sendResponse(getResponse().get());
   }
 
 private:
-  Connection& connection_;
+    ConnPtr conn_;
 };
 
 }

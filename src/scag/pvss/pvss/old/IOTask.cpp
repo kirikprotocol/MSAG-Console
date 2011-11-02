@@ -9,33 +9,26 @@ using smsc::core::network::Multiplexer;
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
-IOTask::IOTask( // IOTaskManager& iomanager,
-                uint32_t connectionTimeout,
+IOTask::IOTask( uint32_t connectionTimeout,
                 uint16_t ioTimeout,
                 const char* logName) : 
-// iomanager_(iomanager),
 log_(Logger::getInstance(logName)),
-connectionTimeout_(connectionTimeout),
+multiplexer_(wakepipe_.getR()),
 ioTimeout_(ioTimeout),
-lastCheckTime_(0),
-checkTimeoutPeriod_(connectionTimeout_ / 10 > 1 ? connectionTimeout_ / 10 : 1)
+connectionTimeout_(connectionTimeout),
+checkTimeoutPeriod_(connectionTimeout_ / 10 > 1 ? connectionTimeout_ / 10 : 1),
+lastCheckTime_(0)
 {
     smsc_log_debug(log_, "%p %s task created", this, logName);
 }
 
-/*
-bool IOTask::idle() const {
-    // return !(itemsCount_ && (waiting_.Count() || multiplexer_.getSize())) && !isStopping;
-    return false;
-}
- */
 
 int IOTask::Execute() 
 {
   Multiplexer::SockArray ready;
   Multiplexer::SockArray error;
 
-  smsc_log_debug(log_, "%p started", this);
+  smsc_log_debug(log_, "%p %s started", this, taskName());
 
   lastCheckTime_ = time(NULL);
   
@@ -53,47 +46,52 @@ int IOTask::Execute()
           }
 
           while (waiting_.Count() ) {
-              Socket *s;
-              waiting_.Pop(s);
-              multiplexer_.add(s);
-              working_.Push(s);
+              ConnPtr cx;
+              waiting_.Pop(cx);
+              multiplexer_.add(cx->getSocket());
+              working_.Push(cx);
           }
       }
 
-      time_t now = checkConnectionTimeout(error);
-      if (error.Count()) removeSockets(error);
-
+      time_t now = checkConnectionTimeout();
+      ready.Empty();
+      error.Empty();
+      MutexGuard mg(socketMonitor_);
       processSockets(ready, error, now);
-      if (error.Count()) removeSockets(error);
+      while (error.Count()) {
+          Socket* s;
+          error.Pop(s);
+          ConnPtr cx(SocketData::getContext(s));
+          for ( int i = 0, ie = working_.Count(); i != ie; ++i ) {
+              if ( working_[i] == cx ) {
+                  working_.Delete(i);
+                  break;
+              }
+          }
+          preDisconnect(cx.get());
+          smsc_log_debug(log_, "%p: context %p socket %p removed", this, cx.get(), s);
+      }
   }
 
-  smsc_log_debug(log_, "stopping iotask %p ...", this);
-    // int socketsCount = 0;
+  smsc_log_debug(log_, "stopping iotask %s %p ...", taskName(), this);
     {
         MutexGuard g(socketMonitor_);
         multiplexer_.clear();
 
-        Socket* s;
         while ( working_.Count() ) {
-            working_.Pop(s);
-            smsc_log_debug(log_, "%p: delete socket %p", this, s);
-            ConnectionContext* cx = SocketData::getContext(s);
-            if (cx && cx->canDelete()) {
-                delete cx;
-            }
+            ConnPtr cx;
+            working_.Pop(cx);
+            preDisconnect(cx.get());
+            smsc_log_debug(log_, "%p: delete context %p socket %p", this, cx.get(), cx->getSocket());
         }
 
         while ( waiting_.Count() ) {
-            waiting_.Pop(s);
-            ConnectionContext* cx = SocketData::getContext(s);
-            if (cx && cx->canDelete()) {
-                delete cx;
-            }
+            ConnPtr cx;
+            waiting_.Pop(cx);
         }
 
     }
-  smsc_log_debug(log_, "%p quit", this);
-
+  smsc_log_debug(log_, "%p %s quit", this, taskName());
   return 0;
 }
 
@@ -104,30 +102,56 @@ uint32_t IOTask::getSocketsCount() {
 }
 
 
-void IOTask::registerContext( ConnectionContext* cx )
+void IOTask::registerContext( ConnPtr& cx )
 {
     Socket* s = cx->getSocket();
     MutexGuard g(socketMonitor_);
     SocketData::updateTimestamp(s, time(NULL));
-    waiting_.Push(s);
+    waiting_.Push(cx);
     socketMonitor_.notify();
 }
 
 
-time_t IOTask::checkConnectionTimeout(Multiplexer::SockArray& error) 
+bool IOTask::unregisterContext( ConnPtr& cx )
 {
-    error.Empty();
+    MutexGuard g(socketMonitor_);
+    for ( int i = 0, ie = waiting_.Count(); i != ie; ++i ) {
+        if ( waiting_[i] == cx ) {
+            waiting_.Delete(i);
+            return true;
+        }
+    }
+    for ( int i = 0, ie = working_.Count(); i != ie; ++i ) {
+        if ( working_[i] == cx ) {
+            multiplexer_.remove( cx->getSocket() );
+            working_.Delete(i);
+            preDisconnect( cx.get() );
+            return true;
+        }
+    }
+    return false;
+}
+
+
+time_t IOTask::checkConnectionTimeout()
+{
+    // error.Empty();
     time_t now = time(NULL);
+    MutexGuard mg(socketMonitor_);
     if (now - lastCheckTime_ < checkTimeoutPeriod_) {
         return now;
     }
-    for (int i = 0; i < working_.Count(); ++i) {
-        Socket *s =  working_[i];
+    for (int i = 0, ie = working_.Count(); i != ie; ++i) {
+        ConnPtr& cx =  working_[i];
+        Socket* s = cx->getSocket();
         const time_t ts = SocketData::getTimestamp(s);
         if ( now - ts >= int(connectionTimeout_) ) {
-            smsc_log_warn(log_, "%p: socket %p timeout", this, s);
+            smsc_log_warn(log_, "%p: context %p socket %p timeout", this, cx.get(), s);
             multiplexer_.remove(s);
-            error.Push(s);
+            preDisconnect( cx.get() );
+            working_.Delete(i);
+            --i;
+            --ie;
         }
     }
     lastCheckTime_ = now;
@@ -135,6 +159,7 @@ time_t IOTask::checkConnectionTimeout(Multiplexer::SockArray& error)
 }
 
 
+/*
 void IOTask::removeSockets(Multiplexer::SockArray &error) 
 {
     MutexGuard g(socketMonitor_);
@@ -150,39 +175,42 @@ void IOTask::removeSocket(Socket *s)
 {
     smsc_log_debug(log_, "%p: socket %p failed", this, s);
     // remove from working
-    const int wc = working_.Count();
-    for ( int i = 0; i < wc; ++i ) {
-        if ( working_[i] == s ) {
+    ConnPtr cx(SocketData::getContext(s));
+    for ( int i = 0, wc = working_.Count(); i < wc; ++i ) {
+        if ( working_[i] == cx ) {
             working_.Delete(i);
             break;
         }
     }
-    ConnectionContext* cx = SocketData::getContext(s);
-    preDisconnect( cx );
-    smsc_log_debug(log_, "%p: context %p socket %p removed  from multiplexer", this, cx, s);
-    if ( cx->canFinalize() ) {
-        smsc_log_debug(log_, "%p: context %p socket %p deleted", this, cx, s);
-        delete cx;
-    }
+    preDisconnect( cx.get() );
+    smsc_log_debug(log_, "%p: context %p socket %p removed from multiplexer", this, cx.get(), s);
 }
+ */
 
 
 void IOTask::stop() {
-    smsc_log_debug(log_, "stop iotask %p", this);
+    smsc_log_info(log_, "IOtask.stop %s %p", taskName(), this);
     MutexGuard g(socketMonitor_);
     isStopping = true;
+    wakepipe_.write("w",1);
     socketMonitor_.notify();
 }
 
 
 void MTPersReader::processSockets(Multiplexer::SockArray &ready,
                                   Multiplexer::SockArray &error,
-                                  time_t now) {
-    if (!multiplexer_.canRead(ready, error, ioTimeout_)) {
+                                  time_t now)
+{
+    const int mcr = multiplexer_.canRead(ready, error, ioTimeout_);
+    if (!mcr) {
         return;
+    } else if (mcr<0) {
+        char buf[20];
+        wakepipe_.read(buf,sizeof(buf));
     }
 
-    for (int i = 0; i < ready.Count(); ++i) {
+
+    for (int i = 0, ie = ready.Count(); i < ie; ++i) {
         Socket* s = ready[i];
         ConnectionContext* cx = SocketData::getContext(s);
         if (!cx->processReadSocket(now)) {
@@ -210,12 +238,11 @@ Performance MTPersReader::getPerformance()
         return perf;
     }
     for (int i = 0; i < mpcount; ++i) {
-        Socket *s = working_[i];
-        ConnectionContext* cx = SocketData::getContext(s);
+        ConnPtr& cx = working_[i];
         PerfCounter &pf = cx->getPerfCounter();
         int accepted = pf.getAccepted();
         int processed = pf.getProcessed();
-        smsc_log_debug(log_, "context:%p socket:%p current performance %d:%d", cx, s, accepted, processed);
+        smsc_log_debug(log_, "context:%p socket:%p current performance %d:%d", cx.get(), cx->getSocket(), accepted, processed);
         perf.inc(accepted, processed);
     }
     perf.connections += mpcount;

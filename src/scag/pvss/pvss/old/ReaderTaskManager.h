@@ -13,12 +13,16 @@ public:
     ReaderTaskManager(const SyncConfig& cfg) : IOTaskManager(cfg, "readerman"), perfCounterOn_(cfg.getPerfCounterOn()) {}
 
     void shutdown() {
-        readers_.Empty();
+        {
+            smsc::core::synchronization::MutexGuard mg(perfMutex_);
+            readers_.Empty();
+        }
         IOTaskManager::shutdown();
     }
 
     Performance getPerformance() 
     {
+        smsc::core::synchronization::MutexGuard mg(perfMutex_);
         Performance perf;
         if (!perfCounterOn_) {
             return perf;
@@ -37,13 +41,17 @@ protected:
 
     IOTask* newTask() {
         MTPersReader* reader = new MTPersReader(connectionTimeout_, ioTimeout_);
-        if (perfCounterOn_) {
-            readers_.Push(reader);
+        {
+            smsc::core::synchronization::MutexGuard mg(perfMutex_);
+            if (perfCounterOn_) {
+                readers_.Push(reader);
+            }
         }
         return reader;
     }
 
 private:
+    smsc::core::synchronization::Mutex          perfMutex_;
     bool perfCounterOn_;
     smsc::core::buffers::Array< MTPersReader* > readers_;
 };

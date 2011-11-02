@@ -14,7 +14,6 @@ class SyncContext : public ConnectionContext
 
 public:
     SyncContext( smsc::core::network::Socket* sock,
-                 WriterTaskManager& writerManager,
                  core::server::ServerCore& server,
                  PersProtocol& protocol, bool perfCounterOn = false);
     ~SyncContext() {

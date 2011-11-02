@@ -59,15 +59,18 @@ int PersServer::Execute()
       }
     }
 
-    //ConnectionContext *cx = new ConnectionContext(clientSocket, writers_, readers_, perfCounterOn_);
-    ConnectionContext *cx = new SyncContext(clientSocket, writers_, pvssServer_, protocol_, perfCounterOn_);
-    smsc_log_debug(logger, "Client connected socket:%p context:%p", clientSocket, cx);
-    if (!readers_.registerConnection(cx)) {
-      clientSocket->Write("SB", 2);
-      smsc_log_warn(logger, "Server Busy sent. Disconnected");
-      delete cx;
-    }
-    //TODO: check license?
+      //ConnectionContext *cx = new ConnectionContext(clientSocket, writers_, readers_, perfCounterOn_);
+      ConnPtr cx( new SyncContext(clientSocket, pvssServer_, protocol_, perfCounterOn_) );
+      smsc_log_debug(logger, "Client connected socket:%p context:%p", clientSocket, cx.get());
+      clientSocket = 0;
+      if (!writers_.registerConnection(cx)) {
+          smsc_log_warn(logger,"Cannot register writer");
+      } else if (!readers_.registerConnection(cx)) {
+          writers_.unregisterConnection(cx);
+          clientSocket->Write("SB", 2);
+          smsc_log_warn(logger, "Server Busy sent. Disconnected");
+      }
+      //TODO: check license?
   }
   smsc_log_info(logger, "averege performance %d:%d req/sec", averPerf.getAveregeAccepted(), averPerf.getAveregeProcessed());
 

@@ -12,10 +12,12 @@ struct PerfCounter {
     if (!counterOn_) {
       return 0;
     }
+      smsc::core::synchronization::MutexGuard mg(lock_);
     return accepted.Get() / 10;
   }
   void incAccepted(int count = 1) {
     if (counterOn_) {
+      smsc::core::synchronization::MutexGuard mg(lock_);
       accepted.Inc(count);
     }
   }
@@ -23,14 +25,17 @@ struct PerfCounter {
     if (!counterOn_) {
       return 0;
     }
+      smsc::core::synchronization::MutexGuard mg(lock_);
     return processed.Get() / 10;
   }
   void incProcessed(int count = 1) {
     if (counterOn_) {
+      smsc::core::synchronization::MutexGuard mg(lock_);
       processed.Inc(count);
     }
   }
 private:
+    smsc::core::synchronization::Mutex lock_;
   bool counterOn_;
   smsc::util::TimeSlotCounter<> accepted;
   smsc::util::TimeSlotCounter<> processed;

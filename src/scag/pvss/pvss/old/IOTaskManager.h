@@ -14,32 +14,6 @@
 namespace scag2 {
 namespace pvss  {
 
-// using smsc::core::threads::ThreadPool;
-// using smsc::core::synchronization::MutexGuard;
-// using smsc::core::synchronization::Mutex;
-// using smsc::logger::Logger;
-
-/*
-class TasksSorter {
-public:
-  TasksSorter();
-  virtual ~TasksSorter();
-  void init(uint16_t maxThreads);
-  SortedTask* getFirst();
-  void reorderTask(SortedTask* t);
-  void assignTask(uint16_t index, SortedTask *task);
-  SortedTask* getTask(uint16_t index);
-  void checkAllTasks();
-
-private:
-  SortedTask headTask_;
-  SortedTask tailTask_;
-  SortedTask **sortedTasks_;
-  uint16_t maxThreads_;
-};
- */
-
-
 /// base class for manager of homogeneous iotasks
 class IOTaskManager 
 {
@@ -50,7 +24,7 @@ public:
     void init();
     void shutdown();
 
-    bool registerConnection( ConnectionContext* cx )
+    bool registerConnection( ConnPtr& cx )
     {
         unsigned sc;
         {
@@ -62,18 +36,26 @@ public:
                                            smsc::util::PtrLess() );
             sc = t->getSocketsCount();
             if ( sc < maxSockets_ ) {
-                postRegister(cx);
+                postRegister(cx.get());
                 t->registerContext(cx);
                 smsc_log_debug(log_,"%p:%d choosen for context %p",
-                               t, sc, cx );
+                               t, sc, cx.get() );
                 return true;
             }
         }
         smsc_log_debug(log_,"Can't process %p context. Server busy. Max sockets=%d, current sockets=%d",
-                       cx,  maxSockets_, sc);
+                       cx.get(),  maxSockets_, sc);
         return false;
     }
 
+    void unregisterConnection( ConnPtr& cx )
+    {
+        smsc::core::synchronization::MutexGuard mg(tasksMutex_);
+        for ( int i = 0, ie = tasks_.Count(); i != ie; ++i ) {
+            if ( tasks_[i]->unregisterContext(cx) ) break;
+        }
+    }
+    
 protected:
     virtual void postRegister(ConnectionContext* cx) = 0;
     virtual IOTask* newTask() = 0;

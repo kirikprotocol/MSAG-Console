@@ -13,6 +13,7 @@
 
 #include "Connection.h"
 #include "PerformanceCounter.h"
+#include "informer/io/EmbedRefPtr.h"
 
 namespace scag2 {
 namespace pvss  {
@@ -67,21 +68,21 @@ class RequestPacket;
 
 struct ConnectionContext : public Connection
 {
+    friend class eyeline::informer::EmbedRefPtr< ConnectionContext >;
 
 public:
-    ConnectionContext(smsc::core::network::Socket* sock,
-                      WriterTaskManager& writerManager,
-                      core::server::ServerCore& server,
-                      bool perfCounterOn = false);
+    ConnectionContext( smsc::core::network::Socket* sock,
+                       core::server::ServerCore& server,
+                       bool perfCounterOn = false);
   virtual ~ConnectionContext();
-  virtual bool processReadSocket(const time_t& now) = 0;
+    virtual bool processReadSocket(const time_t& now) = 0;
+    bool processWriteSocket(const time_t& now);
 
-  bool processWriteSocket(const time_t& now);
-  bool canFinalize();
-  bool canDelete();
-    smsc::core::network::Socket* getSocket() const;
+    inline smsc::core::network::Socket* getSocket() const {
+        return socket_;
+    }
+
   PerfCounter& getPerfCounter() { return perfCounter_; }
-  //void flushLogs();
 
 protected:
   bool sendResponseData(const char* data, uint32_t dataSize);
@@ -90,6 +91,21 @@ protected:
 private:
   void writeData(const char* data, uint32_t size);
   void getPeerIp();
+
+    void ref() {
+        smsc::core::synchronization::MutexGuard mg(reflock_);
+        ++ref_;
+    }
+    void unref() {
+        {
+            smsc::core::synchronization::MutexGuard mg(reflock_);
+            if (ref_>1) {
+                --ref_;
+                return;
+            }
+        }
+        delete this;
+    }
 
 protected:
   Action action_;
@@ -105,14 +121,16 @@ protected:
     smsc::logger::Logger* debuglogger_;
 
 private:
-  WriterTaskManager& writerManager_;
   PerfCounter perfCounter_;
-  uint8_t tasksCount_;
   uint32_t packetsCount_;
-  //vector<DbLog> dbLogs_;
     util::storage::SerialBuffer outbuf_;
   char readBuf_[READ_BUF_SIZE];
+
+    smsc::core::synchronization::Mutex reflock_;
+    unsigned ref_;
 };
+
+typedef eyeline::informer::EmbedRefPtr< ConnectionContext >  ConnPtr;
 
 }//pvss
 }//scag2

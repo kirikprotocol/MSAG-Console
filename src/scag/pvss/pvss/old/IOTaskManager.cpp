@@ -118,6 +118,7 @@ bool IOTaskManager::canStop()
 
 void IOTaskManager::shutdown() 
 {
+    smsc_log_info(log_,"iotaskmanager shutdown");
     {
         MutexGuard g(tasksMutex_);
         if (isStopped_) return;

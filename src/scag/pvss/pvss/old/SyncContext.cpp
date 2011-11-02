@@ -20,10 +20,9 @@ using smsc::logger::Logger;
 using namespace util::storage;
 
 SyncContext::SyncContext(Socket* sock,
-                         WriterTaskManager& writerManager,
                          core::server::ServerCore& server,
                          PersProtocol& protocol, bool perfCounterOn)
-    :ConnectionContext(sock, writerManager, server, perfCounterOn), protocol_(protocol), seqNum_(0) 
+    :ConnectionContext(sock, server, perfCounterOn), protocol_(protocol), seqNum_(0) 
 {
   if (socket_) {
     SocketData::setContext(socket_, this);
@@ -106,7 +105,7 @@ bool SyncContext::processReadSocket(const time_t& now) {
     }
 
     request->setSeqNum(seqNum_++);
-    std::auto_ptr<core::server::ServerContext> serverContext(new PersServerContext(request.release(), *this));
+    std::auto_ptr<core::server::ServerContext> serverContext(new PersServerContext(request.release(), this));
     pvssServer_.receiveOldPacket(serverContext);
 
   } catch (const SerialBufferOutOfBounds& e) {

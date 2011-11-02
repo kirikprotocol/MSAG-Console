@@ -16,13 +16,13 @@ using smsc::logger::Logger;
 const size_t MAX_PACKET_SIZE = 102400;
 
 ConnectionContext::ConnectionContext( Socket* sock,
-                                      WriterTaskManager& writerManager,
                                       core::server::ServerCore& server,
                                       bool perfCounterOn ) :
     action_(READ_REQUEST), packetLen_(0), async_(false),
     pvssServer_(server), socket_(sock),
-    writerManager_(writerManager), perfCounter_(perfCounterOn),
-    tasksCount_(1), packetsCount_(0)
+    // writerManager_(writerManager),
+    perfCounter_(perfCounterOn),
+    packetsCount_(0), ref_(0)
 {
   //if (socket_) {
     //SocketData::setContext(socket_, this);
@@ -65,25 +65,31 @@ bool ConnectionContext::sendResponseData(const char* data, uint32_t dataSize) {
       return false;
     }
     action_ = SEND_RESPONSE;
-    bool inprocess = outbuf_.GetSize() == 0 ? false : true;
+    // bool inprocess = outbuf_.GetSize() == 0 ? false : true;
     writeData(data, dataSize);
     perfCounter_.incProcessed();
     --packetsCount_;
+    /*
     if (tasksCount_ >= 2) {
       smsc_log_debug(logger_, "cx:%p socket %p error tasksCount=%d", this, socket_, tasksCount_);
     }
+     */
+    /*
     if (inprocess) {
       smsc_log_debug(logger_, "cx:%p socket %p already in multiplexer", this, socket_);
       return true;
     }
     ++tasksCount_;
+     */
   }
+    /*
   if (!writerManager_.registerConnection( this ) ) {
     //TODO: error, response must be processed
     MutexGuard mg(mutex_);
     --tasksCount_;
     return false;
   }
+     */
   return true;
 }
 
@@ -176,25 +182,9 @@ bool ConnectionContext::processWriteSocket(const time_t& now) {
     smsc_log_debug(logger_, "written %u bytes to %p data=%s", n, socket_, sb.toString().c_str());
     outbuf_.Empty();
     action_ = READ_REQUEST;
-    return false;
   }
   return true;
 }
-
-Socket* ConnectionContext::getSocket() const {
-  return socket_;
-}
-
-bool ConnectionContext::canFinalize() {
-  MutexGuard mg(mutex_);
-  return (--tasksCount_ > 0 || packetsCount_ > 0) ? false : true;
-}
-
-bool ConnectionContext::canDelete() {
-  MutexGuard mg(mutex_);
-  return --tasksCount_ > 0 ? false : true;
-}
-
 
 }
 }
