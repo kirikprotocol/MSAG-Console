@@ -2,10 +2,9 @@ package ru.novosoft.smsc.web.controllers.sms_view;
 
 import mobi.eyeline.util.jsf.components.data_table.model.*;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemon;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveMessageFilter;
 import ru.novosoft.smsc.admin.archive_daemon.SmsRow;
-import ru.novosoft.smsc.admin.archive_daemon.SmsSet;
-import ru.novosoft.smsc.admin.util.ProgressObserver;
 
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
@@ -189,19 +188,24 @@ public class SmsViewArchiveController extends SmsViewController{
               try{
                 loadListener.setCurrent(0);
                 loadListener.setTotal(1);
-                final SmsSet messages = wcontext.getArchiveDaemon().getSmsSet(smsFilter, new ProgressObserver() {
-                  public void update(long current, long total) {
-                    loadListener.setTotal((int)total);
-                    loadListener.setCurrent((int) current);
+                final int total = wcontext.getArchiveDaemon().getSmsCount(smsFilter);
+                if(total != 0) {
+                  loadListener.setTotal(total);
+                }
+                msgs = new LinkedList<Sms>();
+                smsFilter.setRowsMaximum(total);
+
+                final ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
+                wcontext.getArchiveDaemon().getSmsSet(smsFilter, new ArchiveDaemon.Visitor() {
+                  public void visit(SmsRow r) throws AdminException {
+                    msgs.add(new ArchiveSms(r, isAllowToShowSmsText(r.getSrcSmeId(), r.getDstSmeId()), bundle));
+                    int current = loadListener.getCurrent()+1;
+                    if(current>total) {
+                      current = total;
+                    }
+                    loadListener.setCurrent(current);
                   }
                 });
-                List<SmsRow> rs =  messages.getRowsList();
-                msgs = new ArrayList<Sms>(rs.size());
-                ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", locale);
-                for(SmsRow r : rs) {
-                  msgs.add(new ArchiveSms(r, isAllowToShowSmsText(r.getSrcSmeId(), r.getDstSmeId()), bundle));
-                }
-                loadListener.setCurrent(1);
                 loaded = true;
               }catch (AdminException e){
                 logger.error(e,e);

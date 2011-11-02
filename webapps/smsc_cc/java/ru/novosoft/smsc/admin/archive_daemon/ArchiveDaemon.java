@@ -49,26 +49,23 @@ public class ArchiveDaemon {
   }
 
 
-
-  protected void _getSmsSet(ArchiveMessageFilter query, ProgressObserver observer, Visitor visitor) throws AdminException, VisitorException {
+  /**
+   * Возвращает статистику смс, удовлетворяющую запросу
+   *
+   * @param query    запрос
+   * @param visitor визитер, вызывается для каждой записи
+   * @throws AdminException ошибка извлечения статистики
+   */
+  public void getSmsSet(ArchiveMessageFilter query, Visitor visitor) throws AdminException {
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
+    SmsSet set = new SmsSet();
+
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return;
 
     QueryMessage request = new QueryMessage(query);
-
-    int total = getSmsCount(query);
-    if(logger.isDebugEnabled()) {
-      logger.debug("Total sms in archive: "+total);
-    }
-
-    if(total == 0) {
-      return;
-    }
-
-    observer.update(0, total);
 
     try {
 
@@ -95,7 +92,6 @@ public class ArchiveDaemon {
             break;
           case Message.SMSC_BYTE_RSSMS_TYPE:
             visitor.visit(((RsSmsMessage) responce).getSms());
-            observer.update(++counter < total ? counter : total, total);
             if (--toReceive <= 0) {
               toReceive = rowsMaximum - counter;
               if (toReceive <= 0) {
@@ -114,35 +110,14 @@ public class ArchiveDaemon {
             throw new ArchiveDaemonException("invalid_response");
         }
       } while (!allSelected);
-      observer.update(total, total);
 
     } catch (IOException exc) {
       throw new ArchiveDaemonException("communication_error", exc);
     } finally {
       close(input, output, socket);
     }
-
   }
 
-  /**
-   * Возвращает статистику смс, удовлетворяющую запросу
-   *
-   * @param query    запрос
-   * @param observer отслеживание прогресса
-   * @return статистика смс
-   * @throws AdminException ошибка извлечения статистики
-   */
-  public SmsSet getSmsSet(ArchiveMessageFilter query, ProgressObserver observer) throws AdminException {
-    final SmsSet set = new SmsSet();
-    try{
-      _getSmsSet(query, observer, new Visitor() {
-        public void visit(SmsRow row) {
-          set.addRow(row);
-        }
-      });
-    }catch (VisitorException ignored){}
-    return set;
-  }
 
   /**
    * Возвращает кол-во смс, удовлетворяющим запросу
@@ -259,30 +234,6 @@ public class ArchiveDaemon {
     }
   }
 
-
-  private ArchiveMessageFilter createExportFilter(Date date) {
-    ArchiveMessageFilter query = new ArchiveMessageFilter();
-    query.setRowsMaximum(1000000000);
-    Calendar cal = new GregorianCalendar();
-    Date fromDate, tillDate;
-    cal.setTime(date);
-    cal.set(Calendar.HOUR_OF_DAY, 0);
-    cal.set(Calendar.MINUTE, 0);
-    cal.set(Calendar.SECOND, 0);
-    cal.set(Calendar.MILLISECOND, 0);
-    fromDate = cal.getTime();
-    cal.set(Calendar.HOUR_OF_DAY, 23);
-    cal.set(Calendar.MINUTE, 59);
-    cal.set(Calendar.SECOND, 59);
-    cal.set(Calendar.MILLISECOND, 59);
-    tillDate = cal.getTime();
-
-    query.setFromDate(fromDate);
-    query.setTillDate(tillDate);
-    return query;
-  }
-
-
   protected  PreparedStatement createInsertSql(Connection conn, String tablePrefix) throws ArchiveDaemonException{
     PreparedStatement insertStmt;
     String INSERT_SQL = INSERT_OP_SQL + tablePrefix + INSERT_FIELDS + INSERT_VALUES;
@@ -392,12 +343,10 @@ public class ArchiveDaemon {
               tillDate = cal.getTime();
               query.setFromDate(fromDate);
               query.setTillDate(tillDate);
-              final int _k = ++t;
-              SmsSet set = getSmsSet(query, new ProgressObserver() {
-                public void update(long current, long total) {
-                  int c = (int) (current);
-                  int t = (int) (total);
-                  _observer.update((c * 100 / t / (12*24)) + (_k * 100 / (12*24)), 100);
+              final SmsSet set = new SmsSet();
+              getSmsSet(query, new Visitor() {
+                public void visit(SmsRow row) throws AdminException {
+                  set.addRow(row);
                 }
               });
               int inserted = 0;
@@ -411,6 +360,8 @@ public class ArchiveDaemon {
                   logger.debug("Insert into arcive table records: "+inserted);
                 }
               }
+              t++;
+              _observer.update(t, 12*24);
             }
           } catch (Exception e) {
             logger.error(e, e);
@@ -524,12 +475,9 @@ public class ArchiveDaemon {
     }
   }
 
-  protected static interface Visitor {
+  public static interface Visitor {
 
-    public void visit(SmsRow row) throws VisitorException;
+    public void visit(SmsRow row) throws AdminException;
 
-  }
-
-  protected static class VisitorException extends Exception{
   }
 }
