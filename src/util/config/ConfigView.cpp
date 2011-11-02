@@ -61,7 +61,7 @@ bool ConfigView::findSubSection(const char * const subsectionName) const
     //compose absolute name for subsection
     char* section = prepareSubSection(subsectionName);
     bool  res = config.findSection(section);
-    delete section;
+    delete [] section;
     return res;
 }
 
@@ -76,7 +76,7 @@ ConfigView* ConfigView::getSubConfig(const char* sub, bool full) const
     {
         char* section = prepareSubSection(sub);
         dsc = new ConfigView(config, section);
-        if (section) delete section;
+        if (section) delete [] section;
     }
     return dsc;
 }
@@ -124,10 +124,10 @@ int32_t ConfigView::getInt(const char* param, const char* error) const
 
         smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                  section, (error) ? error:"");
-        if (section) delete section;
+        if (section) delete [] section;
         throw ConfigException(s.c_str());
     }
-    if (section) delete section;
+    if (section) delete [] section;
     return result;
 }
 char* ConfigView::getString(const char* param, const char* error, bool check) const
@@ -174,10 +174,10 @@ bool ConfigView::getBool(const char* param, const char* error) const
         smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                   section, (error) ? error:"");
 
-        if (section) delete section;
+        if (section) delete [] section;
         throw ConfigException(s.c_str());
     }
-    if (section) delete section;
+    if (section) delete [] section;
     return result;
 }
 
