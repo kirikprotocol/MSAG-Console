@@ -23,7 +23,7 @@ public:
   struct CatInfo {
     smsc::util::auto_arr_ptr<char> name;
     smsc::util::auto_arr_ptr<char> level;
-    std::auto_ptr<char> appender;
+    smsc::util::auto_arr_ptr<char> appender;
 
     CatInfo(const char * const name, const char * const initStr);
   };
@@ -41,8 +41,8 @@ public:
   AppenderInfos appenders;
   CatInfos cats;
 
-  std::auto_ptr<char> rootLevel;
-  std::auto_ptr<char> rootAppender;
+  smsc::util::auto_arr_ptr<char> rootLevel;
+  smsc::util::auto_arr_ptr<char> rootAppender;
 
   uint32_t configReloadInterval;
 private:

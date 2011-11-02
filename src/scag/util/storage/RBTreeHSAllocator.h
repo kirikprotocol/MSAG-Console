@@ -26,6 +26,7 @@
 #include "scag/util/io/Serializer.h"
 #include "scag/util/Time.h"
 #include "JournalFile.h"
+#include "util/AutoArrPtr.hpp"
 
 namespace scag {
 namespace util {
@@ -375,7 +376,7 @@ public:
         if ( fullRecovery_ ) flush();
         for ( std::vector< caddr_t >::iterator i = chunks_.begin();
               i != chunks_.end(); ++i ) {
-            delete *i;
+            delete [] *i;
         }
     }
 
@@ -616,7 +617,7 @@ private:
         if ( realgrowth == growth ) {
             // new chunk is needed
             const int64_t newChunkSize = int64_t(cellsize()*realgrowth);
-            std::auto_ptr<char> newMem(new char[newChunkSize]);
+            smsc::util::auto_arr_ptr<char> newMem(new char[newChunkSize]);
             if(!newMem.get())
             {
                 if (logger) {
@@ -845,7 +846,7 @@ private:
                 // taking sufficient chunk from the head of the file
                 buflen = sizeof(RbtFileHeader)*2+1024;
             }
-            std::auto_ptr<unsigned char> p(new unsigned char[buflen]);
+            smsc::util::auto_arr_ptr<unsigned char> p(new unsigned char[buflen]);
             rbtree_f.Read(p.get(),buflen);
             io::Deserializer ds(p.get(),buflen);
             deserializeRbtHeader(ds,header_);
@@ -870,13 +871,13 @@ private:
             {
                 // setting file position, prepare the buffer to read a chunk in one sweep
                 rbtree_f.Seek( buffer.size() );
-                std::auto_ptr<unsigned char> chunkBuf(new unsigned char[growth*header_.cellSize()]);
+                smsc::util::auto_arr_ptr<unsigned char> chunkBuf(new unsigned char[growth*header_.cellSize()]);
                 io::Deserializer dds(chunkBuf.get(),growth*header_.cellSize());
                 dds.setVersion( header_.version );
 
                 // allocating chunks/reading cells
                 for ( unsigned i = 0; i < needchunks; ++i ) {
-                    std::auto_ptr<char> mem( new char[growth*cellsize()] );
+                    smsc::util::auto_arr_ptr<char> mem( new char[growth*cellsize()] );
                     if ( ! mem.get() ) return BTREE_FILE_MAP_FAILED;
                     chunks_.push_back( mem.release() );
                     unsigned cellsInChunk = std::min(unsigned(growth),unsigned(maxcells-i*growth));
