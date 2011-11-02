@@ -369,10 +369,8 @@ public class ArchiveDaemon {
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        int inserted = 0;
         for (int i = 0; i < 24; i++) {
           cal.set(Calendar.HOUR_OF_DAY, i);
-          inserted = 0;
           final int _i = i;
           final ProgressObserver _observer = new ProgressObserver() {
             public void update(long current, long total) {
@@ -402,12 +400,18 @@ public class ArchiveDaemon {
                   _observer.update((c * 100 / t / (12*24)) + (_k * 100 / (12*24)), 100);
                 }
               });
+              int inserted = 0;
               for (SmsRow row : set.getRowsList()) {
                 setValues(insertStmt, row);
                 inserted += insertStmt.executeUpdate();
               }
+              if (inserted > 0) {
+                conn.commit();
+                if(logger.isDebugEnabled()) {
+                  logger.debug("Insert into arcive table records: "+inserted);
+                }
+              }
             }
-            if (inserted > 0) conn.commit();
           } catch (Exception e) {
             logger.error(e, e);
             throw new ArchiveDaemonException("cant_insert");
