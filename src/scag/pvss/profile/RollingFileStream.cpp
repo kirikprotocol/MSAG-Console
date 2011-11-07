@@ -88,6 +88,8 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
             if ( ! nextFile.empty() ) {
                 throw FileReadException("",0,filePos,"duplicate trailer lines, search with grep '^#'");
             }
+            linesRead_ = linesRead;
+            crc32Read_ = crcRead;
             if ( rp_ ) {
                 // if rp is not set, then we only need to extract nextfile
                 if ( lines != linesRead ) {
@@ -115,6 +117,8 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
 RollingFileStreamReader::RollingFileStreamReader() :
 lines_(0),
 crc32_(0),
+linesRead_(0),
+crc32Read_(0),
 nextFile_()
 {
 }
@@ -396,9 +400,6 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
             smsc_log_error(log_,"file '%s' read exc: %s",filename.c_str(),e.what());
             continue;
         }
-        if ( rfsr.isFinished() ) {
-            throw smsc::util::Exception("file '%s' is already finished?",filename.c_str());
-        }
 
         std::string newname(prefix_);
         {
@@ -414,9 +415,29 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
         smsc_log_info(log_,"fixing file '%s', lines=%u crc32=%x next: %s",
                       filename.c_str(), lines, crc32, newname.c_str() );
 
-        smsc::core::buffers::File oldf;
-        oldf.Append(filename.c_str());
-        finishFile( oldf, crc32, lines, newname.c_str() );
+        if ( rfsr.isFinished() ) {
+            if ( rfsr.getLinesRead() != lines ||
+                 rfsr.getCrc32Read() != crc32 ) {
+                throw smsc::util::Exception("file '%s' is already finished?",filename.c_str());
+            }
+            // we don't need to write the trailer
+            if ( newname != rfsr.getNextFile() ) {
+                smsc_log_warn(log_,"file %s is already finished but next=%s differs from wouldbenext=%s",
+                              filename.c_str(),
+                              rfsr.getNextFile().c_str(),
+                              newname.c_str());
+            } else {
+                smsc_log_info(log_,"file %s is already finished",
+                              filename.c_str());
+            }
+
+        } else {
+
+            smsc::core::buffers::File oldf;
+            oldf.Append(filename.c_str());
+            finishFile( oldf, crc32, lines, newname.c_str() );
+        }
+
         if ( -1 == rename( filename.c_str(), (filename + finalSuffix_).c_str() ) ) {
             smsc_log_error(log_,"cannot rename '%s', errno=%d", filename.c_str(), errno);
             throw smsc::util::Exception("rename('%s') exc: errno=%d",filename.c_str(),errno);
