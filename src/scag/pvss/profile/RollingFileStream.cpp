@@ -390,7 +390,7 @@ void RollingFileStream::postInitFix( volatile bool& isStopping )
             makeFileSuffix(buf,sizeof(buf),currentLogTime);
             filename.append(buf);
         }
-        smsc_log_debug(log_,"scanning the file '%s'",filename.c_str());
+        smsc_log_info(log_,"scanning the file '%s'",filename.c_str());
         RollingFileStreamReader rfsr;
         try {
             rfsr.read( filename.c_str(), &isStopping, 0 );
