@@ -13,6 +13,7 @@ import java.util.List;
 public class DynamicTableController {
 
   private DynamicTableModel dynamicTableModel;
+  private DynamicTableModel dynamicTableModel2;
 
   public DynamicTableController() {
     dynamicTableModel = new DynamicTableModel();
@@ -26,6 +27,7 @@ public class DynamicTableController {
     row.setValue("field2", "22");
     row.setValue("field3", "two");
     dynamicTableModel.addRow(row);
+    dynamicTableModel2 = new DynamicTableModel();
   }
 
   public DynamicTableModel getDynamicTableModel() {
@@ -40,6 +42,13 @@ public class DynamicTableController {
     this.dynamicTableModel = dynamicTableModel;
   }
 
+  public DynamicTableModel getDynamicTableModel2() {
+    return dynamicTableModel2;
+  }
+
+  public void setDynamicTableModel2(DynamicTableModel dynamicTableModel2) {
+    this.dynamicTableModel2 = dynamicTableModel2;
+  }
 
   public List<Row> getRows() {
     List<Row> result = new ArrayList<Row>(dynamicTableModel.getRowCount());

@@ -53,7 +53,9 @@ function TextColumn(columnId, columnClass, allowEditAfterAdd, allowEmpty) {
   //--------------------------------------------------------------------------------------------------------------------
   this.createLastColumnElement = function (tableId, newRow) {
     var id = tableId + "_newcell_" + columnId;
-    newRow.insertCell(newRow.cells.length).appendChild(createInput(id, ''));
+    var newCell = newRow.insertCell(newRow.cells.length);
+    newCell.className=columnClass;
+    newCell.appendChild(createInput(id, ''));
   };
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -120,7 +122,8 @@ function SelectColumn(columnId, values, columnClass, allowEditAfterAdd, uniqueVa
       input.type="hidden";
       newCell.appendChild(input);
       var label = document.createElement("label");
-      label.textContent = value;
+      label.innerHTML = value;
+      label.setAttribute("for",id);
       newCell.appendChild(label);
     } else {
       newCell.appendChild(createSelect(id, value, values));
@@ -157,7 +160,9 @@ function SelectColumn(columnId, values, columnClass, allowEditAfterAdd, uniqueVa
   //--------------------------------------------------------------------------------------------------------------------
   this.createLastColumnElement = function (tableId, newRow) {
     var id = tableId + "_newcell_" + columnId;
-    newRow.insertCell(newRow.cells.length).appendChild(createSelect(id, '', values));
+    var newCell = newRow.insertCell(newRow.cells.length);
+    newCell.className=columnClass;
+    newCell.appendChild(createSelect(id, '', values));
   };
 
   //--------------------------------------------------------------------------------------------------------------------

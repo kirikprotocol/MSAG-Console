@@ -27,6 +27,12 @@
             <eye:selectColumn title="field3" name="field3" values="#{dynamicTable.selectValues}" allowEditAfterAdd="true" uniqueValues="true" columnClass="dcolumn3"/>
           </eye:dynamicTable>
 
+          <eye:dynamicTable value="#{dynamicTable.dynamicTableModel2}" tableClass="dtable">
+            <eye:textColumn title="field1" name="field1" allowEditAfterAdd="true" columnClass="dcolumn1" />
+            <eye:selectColumn title="field2" name="field2" values="#{dynamicTable.selectValues}" allowEditAfterAdd="false" uniqueValues="true" columnClass="dcolumn2"/>
+            <eye:selectColumn title="field3" name="field3" values="#{dynamicTable.selectValues}" allowEditAfterAdd="true" uniqueValues="true" columnClass="dcolumn3"/>
+          </eye:dynamicTable>
+
           <h:commandButton value="Submit"/>
 
           <h:dataTable border="1" value="#{dynamicTable.rows}" var="v" columnClasses="column1,column2,column3">
