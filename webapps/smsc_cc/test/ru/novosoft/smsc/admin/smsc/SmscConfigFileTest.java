@@ -1,13 +1,11 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
 import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
-import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +57,7 @@ public class SmscConfigFileTest {
     assertEquals("deliver",cs.getInmanChargingOther());
     assertEquals("deliver",cs.getInmanChargingPeer2peer());
     assertEquals("en_en",cs.getLocales()[0].trim());
-    assertEquals(12345,cs.getLsMaxStoreSize());
+    assertEquals("12345",cs.getLsMaxStoreSize());
     assertEquals(5321,cs.getLsMinRollTime());
     assertEquals(1,cs.getMainLoopsCount());
     assertEquals(20,cs.getMapBusyMTDelay());
