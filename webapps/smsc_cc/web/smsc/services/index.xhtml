@@ -75,8 +75,8 @@
         <eye:button><h:commandLink action="SERVICE_EDIT" value="#{msg['add.button']}"/></eye:button>
         <eye:button>
           <eye:menubar label="#{msg['services.page.selected.services']}...">
-            <eye:menubaritem><h:commandLink action="#{service.deleteSmes}" value="#{msg['delete.button']}"/></eye:menubaritem>
-            <eye:menubaritem><h:commandLink action="#{service.disconnectSmes}" value="#{msg['services.page.disconnect']}"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink action="#{service.deleteSmes}" value="#{msg['delete.button']}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink action="#{service.disconnectSmes}" value="#{msg['services.page.disconnect']}"  onclick="if (!confirm('#{msg['smsc.services.disconnect.confirm']}')) return false"/></eye:menubaritem>
           </eye:menubar>
         </eye:button>
         <eye:space/>

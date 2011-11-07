@@ -64,7 +64,7 @@ public class CommonSettings implements Cloneable {
 
   // MessageStore.LocalStore
 
-  private int lsMaxStoreSize;
+  private String lsMaxStoreSize;
   private int lsMinRollTime;
 
   // smpp
@@ -358,7 +358,7 @@ public class CommonSettings implements Cloneable {
 
     //MessageStore.LocalStore
     s = s.getOrCreateSection("LocalStore");
-    s.setInt("maxStoreSize", lsMaxStoreSize);
+    s.setString("maxStoreSize", lsMaxStoreSize);
     s.setInt("minRollTime", lsMinRollTime);
 
     //smpp
@@ -503,7 +503,7 @@ public class CommonSettings implements Cloneable {
 
     //MessageStore.LocalStore
     s = c.getSection("MessageStore").getSection("LocalStore");
-    lsMaxStoreSize = s.getInt("maxStoreSize");
+    lsMaxStoreSize = s.getString("maxStoreSize");
     lsMinRollTime = s.getInt("minRollTime");
 
     //smpp
@@ -860,12 +860,12 @@ public class CommonSettings implements Cloneable {
     this.msArchiveInterval = msArchiveInterval;
   }
 
-  public int getLsMaxStoreSize() {
+  public String getLsMaxStoreSize() {
     return lsMaxStoreSize;
   }
 
-  public void setLsMaxStoreSize(int lsMaxStoreSize) throws AdminException {
-    vh.checkPositive("lsMaxStoreSize", lsMaxStoreSize);
+  public void setLsMaxStoreSize(String lsMaxStoreSize) throws AdminException {
+    vh.checkNotNull("lsMaxStoreSize", lsMaxStoreSize);
     this.lsMaxStoreSize = lsMaxStoreSize;
   }
 

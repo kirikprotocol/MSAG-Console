@@ -116,16 +116,14 @@ public class ResourceGroupManager {
       logger.debug("ResourceGroup_listGroups returned resource groups:" + rgIds.length);
 
     for (String rgId : rgIds) {
-      try {
-        String name = resGroupsNames.getProperty(rgId);
-        if (name == null)
-          throw new ResourceGroupException("unknown_resource_group", rgId);
-        resGroups.add(new ResourceGroupHAImpl(rgId, name, new File(servicesDir, name)));
-        if (logger.isDebugEnabled())
-          logger.debug("Resource group \"" + name + "\" added");
-      } catch (AdminException e) {
-        logger.error("Couldn't init resource group:" + rgId, e);
+      String name = resGroupsNames.getProperty(rgId);
+      if (name == null) {
+        logger.warn("Unknown resource group: '"+rgId+"'");
+        continue;
       }
+      resGroups.add(new ResourceGroupHAImpl(rgId, name, new File(servicesDir, name)));
+      if (logger.isDebugEnabled())
+        logger.debug("Resource group \"" + name + "\" added");
     }
   }
 }

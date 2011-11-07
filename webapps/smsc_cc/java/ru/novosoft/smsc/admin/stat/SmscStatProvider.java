@@ -2,6 +2,8 @@ package ru.novosoft.smsc.admin.stat;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.IOUtils;
@@ -242,18 +244,17 @@ public class SmscStatProvider {
       {
         try {
           recordNum++;
-          int rs1 = (int) IOUtils.readUInt32(input);
-          if (buffer.length < rs1) buffer = new byte[rs1];
-          readBuffer(input, buffer, rs1);
-          int rs2 = (int) IOUtils.readUInt32(input);
-          if (rs1 != rs2) {
-            throw new StatException("unsupported_file_format", path.getAbsolutePath());
-          }
+          IOUtils.readUInt32(input); //skip rs1
+//          if (buffer.length < rs1) buffer = new byte[rs1];
+//          readBuffer(input, buffer, rs1);
+//          if (rs1 != rs2) {
+//            throw new StatException("unsupported_file_format", path.getAbsolutePath());
+//          }
 
-          ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
+//          ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
           try {
-            int hour = IOUtils.readUInt8(is);
-            int min = IOUtils.readUInt8(is);
+            int hour = IOUtils.readUInt8(input);
+            int min = IOUtils.readUInt8(input);
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(fileDate);
             calendar.set(Calendar.HOUR, hour);
@@ -289,10 +290,11 @@ public class SmscStatProvider {
 
 
             haveValues = true; // read and increase counters
-            readCounters(lastHourCounter, is);
-            readErrors(errors, is);
-            readSmes(countersForSme, is);
-            readRoutes(countersForRoute, is);
+            readCounters(lastHourCounter, input);
+            readErrors(errors, input);
+            readSmes(countersForSme, input);
+            readRoutes(countersForRoute, input);
+            IOUtils.readUInt32(input); //skip rs2
           } catch (EOFException exc) {
             logger.warn("Incomplete record #" + recordNum + " in '" + path.getAbsolutePath() + '\'');
           }
@@ -324,6 +326,21 @@ public class SmscStatProvider {
     return getStatistics(filter, null);
   }
 
+
+  public static void main(String[] args) throws AdminException {
+    SmscStatProvider p = new SmscStatProvider(new SmscStatContext() {
+      public File[] getStatDirs() throws AdminException {
+        return new File[]{new File("/home/me/projects/smsc/webapps/smsc/test_stat/smscstat")};
+      }
+
+      public FileSystem getFileSystem() {
+        return new TestFileSystem();
+      }
+    }, null);
+    long t = System.currentTimeMillis();
+    p.getStatistics(new SmscStatFilter());
+    System.out.println((System.currentTimeMillis()-t)+"ms");
+  }
 
   public Statistics getStatistics(SmscStatFilter filter, SmscStatLoadListener loadListener) throws AdminException {
 
