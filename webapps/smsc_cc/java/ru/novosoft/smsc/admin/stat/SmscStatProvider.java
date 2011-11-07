@@ -2,8 +2,6 @@ package ru.novosoft.smsc.admin.stat;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.IOUtils;
@@ -326,21 +324,6 @@ public class SmscStatProvider {
     return getStatistics(filter, null);
   }
 
-
-  public static void main(String[] args) throws AdminException {
-    SmscStatProvider p = new SmscStatProvider(new SmscStatContext() {
-      public File[] getStatDirs() throws AdminException {
-        return new File[]{new File("/home/me/projects/smsc/webapps/smsc/test_stat/smscstat")};
-      }
-
-      public FileSystem getFileSystem() {
-        return new TestFileSystem();
-      }
-    }, null);
-    long t = System.currentTimeMillis();
-    p.getStatistics(new SmscStatFilter());
-    System.out.println((System.currentTimeMillis()-t)+"ms");
-  }
 
   public Statistics getStatistics(SmscStatFilter filter, SmscStatLoadListener loadListener) throws AdminException {
 
