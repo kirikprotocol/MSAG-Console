@@ -293,6 +293,8 @@ bool Billing::startIAPQuery(void)
     const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(static_cast<IAPPrio_e>(++i));
     if (pPrvd) {
       _curIAPrvd = static_cast<IAPPrio_e>(i);
+      smsc_log_info(_logger, "%s: quering %s for abonent(%s) ..", _logId,
+                    pPrvd->_ident.c_str(), _abNumber.getSignals());
 
       if ((prvdQueried = pPrvd->_iface->startQuery(_abNumber, *this))) {
         if ((prvdQueried = startTimer(_cfg->abtTimeout)))
