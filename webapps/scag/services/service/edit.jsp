@@ -135,7 +135,9 @@
                 }
                   var rulesTable = document.getElementById("rulesT");
                   var spans = rulesTable.getElementsByTagName("span");
-//                  alert("CHECK1");
+                  //console.debug("rules.length="+rules.length);
+                  //console.debug("spans.length="+spans.length);
+//  alert("CHECK1");
                   for (var i=0;i<rules.length;i++) {
 //                    alert("rules[i]=" +rules[i].exists + " | " + rules[i].locked );
                     if (rules[i].exists) {
@@ -190,8 +192,9 @@
                     var smppRuleStateL;
                     var httpRuleStateE;
                     var httpRuleStateL;
-                    var mmsRuleStateE;
-                    var mmsRuleStateL;
+                    //var mmsRuleStateE;
+                    //var mmsRuleStateL;
+                    //console.debug("getRules arr.length="+arr.length);
                     for(var i=0; i<arr.length; i++){
                         if( arr[i].type != 'undefined' && arr[i].type == "hidden" ){
     //                        alert("HIDDEN :" + arr[i].id + " value = " + arr[i].value );
@@ -203,17 +206,19 @@
                                 httpRuleStateE = tf(arr[i].value);
                             } else if( arr[i].id=='httpRuleStateL' ){
                                 httpRuleStateL = tf(arr[i].value);
-                            } else if( arr[i].id=='mmsRuleStateE' ){
-                                mmsRuleStateE = tf(arr[i].value);
-                            } else if( arr[i].id=='mmsRuleStateL' ){
-                                mmsRuleStateL = tf(arr[i].value);
-                            }
+                            } //else if( arr[i].id=='mmsRuleStateE' ){
+                                //console.debug("find arr element with id mmsRuleStateE");
+                                //mmsRuleStateE = tf(arr[i].value);
+                            //} else if( arr[i].id=='mmsRuleStateL' ){
+                                //console.debug("find arr element with id mmsRuleStateL");
+                                //mmsRuleStateL = tf(arr[i].value);
+                            //}
                         }
                     }
                     var rules = new Array();
                     rules[0]={exists:smppRuleStateE,locked:smppRuleStateL};
                     rules[1]={exists:httpRuleStateE,locked:httpRuleStateL};
-                    rules[2]={exists:mmsRuleStateE ,locked:mmsRuleStateL};
+                    //rules[2]={exists:mmsRuleStateE ,locked:mmsRuleStateL};
                     return rules;
                 }
 
