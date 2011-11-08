@@ -32,6 +32,8 @@ import java.awt.event.KeyEvent;
 import java.awt.*;
 import java.io.*;
 import java.net.*;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
@@ -138,7 +140,7 @@ public class jEdit extends Applet
     }
     ping_port = Integer.parseInt(getParameter("ping_port"));
     ping_timeout = Integer.parseInt(getParameter("ping_timeout"));
-    System.out.println("jEdit version=44");
+    System.out.println("jEdit version= 2011.11.06 12:02");
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
     System.out.println("ping_port= " + ping_port);
@@ -172,50 +174,94 @@ public class jEdit extends Applet
     //openRule("1////SMPP");
   }
     
-  public String openRule(final String userFile)
-   {
-     stopped = false;
-     String validationResult = validate(userFile, false);
-     if (validationResult!=null) {
-       setWindowClosed(editRule);
-       return validationResult;
-     }       
-     if(!initialized) {
-       initialize();
-       initialized = true;
-     }
-     System.out.println("openRule... "+userFile);
-     super.start();
-     String[] args = new String[5];
-     args[0]=userFile;
-     setBooleanProperty("newRule",false);
-      this.main2(args);
-     isNotReload=true;
-     return null;
-     //}
+   public String openRule(final String userFile){
+       System.out.println("Try to do open rule privileged action ...");
+       OpenRuleAction ora = new OpenRuleAction(userFile);
+       AccessController.doPrivileged(ora);
+       System.out.println("Successfully done open rule action.");
+       return ora.getValidationResult();
    }
 
-  public String newRule(final String userFile)
-    {
-      stopped = false;
-      String validationResult = validate(userFile, true);
-      if (validationResult!=null) {
-        setWindowClosed(addRule);
-        return validationResult;
-      }
-      if(!initialized) {
-        initialize();
-        initialized = true;
-      }
-      System.out.println("newRule... ");
-      super.start();
-      String[] args = new String[5];
-      args[0]=userFile;
-      setBooleanProperty("newRule",true);
-      this.main2(args);
-      isNotReload=true;
-      //}
-      return null;
+   private class OpenRuleAction implements PrivilegedAction {
+
+       private String userFile;
+       private String validationResult;
+
+       public OpenRuleAction(String userFile){
+           this.userFile = userFile;
+       }
+
+       public Object run() {
+           stopped = false;
+           validationResult = validate(userFile, false);
+           if (validationResult!=null) {
+             setWindowClosed(editRule);
+             return validationResult;
+           }
+           if(!initialized) {
+             initialize();
+             initialized = true;
+           }
+           System.out.println("openRule... "+userFile);
+           jEdit.super.start();
+           String[] args = new String[5];
+           args[0]=userFile;
+           setBooleanProperty("newRule",false);
+           jEdit.this.main2(args);
+           isNotReload=true;
+           validationResult = null;
+           return validationResult;
+       }
+
+       public String getValidationResult(){
+           return validationResult;
+       }
+   }
+
+    public String newRule(final String userFile){
+        System.out.println("Try to do open new rule privileged action ...");
+        NewRuleAction onra = new NewRuleAction(userFile);
+        AccessController.doPrivileged(onra);
+        System.out.println("Successfully done open new rule action.");
+        return onra.getValidationResult();
+    }
+
+    private class NewRuleAction implements PrivilegedAction {
+
+        private String userFile;
+        private String validationResult;
+
+        public NewRuleAction(String userFile){
+            this.userFile = userFile;
+        }
+
+        public Object run() {
+            stopped = false;
+            validationResult = validate(userFile, true);
+            if (validationResult!=null) {
+                setWindowClosed(addRule);
+                return validationResult;
+            }
+            if(!initialized) {
+                initialize();
+                initialized = true;
+            }
+            System.out.println("newRule... ");
+            jEdit.super.start();
+            String[] args = new String[5];
+            args[0]=userFile;
+            setBooleanProperty("newRule",true);
+            jEdit.this.main2(args);
+            isNotReload=true;
+
+            validationResult = null;
+            return validationResult;
+        }
+
+        public String getValidationResult(){
+            return validationResult;
+        }
+
     }
 
   public void stop()

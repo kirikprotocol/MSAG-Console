@@ -30,6 +30,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import org.gjt.sp.jedit.*;
@@ -42,25 +43,25 @@ import org.gjt.sp.jedit.*;
  */
 public class HistoryTextArea extends JTextArea
 {
- //{{{ HistoryTextArea constructor
- public HistoryTextArea(String name)
- {
-  super(3,15);
-  controller = new HistoryText(this,name);
-  Set focusForwardTraversalKeys = new TreeSet();
-  focusForwardTraversalKeys.add(
-   KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0));
-  Set focusBackwardTraversalKeys = new TreeSet();
-  focusBackwardTraversalKeys.add(
-   KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
-   InputEvent.SHIFT_MASK));
-  setFocusTraversalKeys(
-   KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
-   focusForwardTraversalKeys);
-  setFocusTraversalKeys(
-   KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
-   focusBackwardTraversalKeys);
- } //}}}
+
+    public HistoryTextArea(String name){
+        super(3,15);
+        controller = new HistoryText(this,name);
+        System.out.println("Try to set focus traversal keys ...");
+        Set focusForwardTraversalKeys = new HashSet();
+
+        focusForwardTraversalKeys.add( KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0) );
+
+        Set focusBackwardTraversalKeys = new HashSet();
+
+        focusBackwardTraversalKeys.add( KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_MASK));
+
+        setFocusTraversalKeys( KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, focusForwardTraversalKeys);
+
+        setFocusTraversalKeys( KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, focusBackwardTraversalKeys);
+
+        System.out.println("Successfully set focus traversal keys!");
+    }
 
  //{{{ getModel() method
  /**
