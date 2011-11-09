@@ -33,7 +33,9 @@ function TextColumn(columnId, columnClass, allowEditAfterAdd, allowEmpty) {
   this.createColumnElement = function (tableId, newRow, newCount, value) {
     var id = getValueElementId(tableId, newCount);
     var newCell = newRow.insertCell(newRow.cells.length);
-    newCell.className=columnClass;
+    if(columnClass != null && columnClass != '') {
+      newCell.className=columnClass;
+    }
     if (!allowEditAfterAdd) {
       var input = document.createElement("input");
       input.name = id;
@@ -54,7 +56,9 @@ function TextColumn(columnId, columnClass, allowEditAfterAdd, allowEmpty) {
   this.createLastColumnElement = function (tableId, newRow) {
     var id = tableId + "_newcell_" + columnId;
     var newCell = newRow.insertCell(newRow.cells.length);
-    newCell.className=columnClass;
+    if(columnClass != null && columnClass != '') {
+      newCell.className=columnClass;
+    }
     newCell.appendChild(createInput(id, ''));
   };
 
@@ -113,7 +117,9 @@ function SelectColumn(columnId, values, columnClass, allowEditAfterAdd, uniqueVa
   this.createColumnElement = function(tableId, newRow, newCount, value) {
     var id = getValueElementId(tableId, newCount);
     var newCell = newRow.insertCell(newRow.cells.length);
-    newCell.className=columnClass;
+    if(columnClass != null && columnClass != '') {
+      newCell.className=columnClass;
+    }
     if (!allowEditAfterAdd) {
       var input = document.createElement("input");
       input.name = id;
@@ -161,7 +167,9 @@ function SelectColumn(columnId, values, columnClass, allowEditAfterAdd, uniqueVa
   this.createLastColumnElement = function (tableId, newRow) {
     var id = tableId + "_newcell_" + columnId;
     var newCell = newRow.insertCell(newRow.cells.length);
-    newCell.className=columnClass;
+    if(columnClass != null && columnClass != '') {
+      newCell.className=columnClass;
+    }
     newCell.appendChild(createSelect(id, '', values));
   };
 
@@ -194,7 +202,7 @@ function DynamicTable(contextPath, tableId, columns) {
     tableElem.deleteRow(rowElem.rowIndex);
     var count = tableElem.rows.length;
 
-    for (var i = 0; i < count; i++) {
+    for (var i = 1; i < count; i++) {
       var row = tableElem.rows[i];
       row.className="eyeline_row" + ((i + 1) & 1);
     }
