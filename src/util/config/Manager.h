@@ -69,7 +69,6 @@ public:
   }
 
   int32_t getInt(const char * const paramName)
-    throw (ConfigException)
   {
     try {
       return config.getInt(paramName);
@@ -82,7 +81,6 @@ public:
   }
 
   char * getString(const char * const paramName)
-    throw (ConfigException)
   {
     try {
       return config.getString(paramName);
@@ -95,7 +93,6 @@ public:
   }
 
   bool getBool(const char * const paramName) const
-    throw (ConfigException)
   {
     try {
       return config.getBool(paramName);
@@ -167,7 +164,7 @@ public:
 
 protected:
   void findConfigFile();
-  Manager(const char* ) throw(ConfigException);
+  Manager(const char* );
   void readConfig();
   static std::auto_ptr<Manager> manager;
   Config config;

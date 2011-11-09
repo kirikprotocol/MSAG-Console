@@ -17,7 +17,8 @@ using namespace smsc::util::xml;
 
 std::auto_ptr<Manager> Manager::manager;
 
-Manager::Manager(const char* argFileName)throw(ConfigException):config_filename(argFileName)
+Manager::Manager(const char* argFileName)
+:config_filename(argFileName)
 {
   readConfig();
 }
@@ -29,6 +30,7 @@ void Manager::readConfig()
   try
   {
     __trace__("reading config...");
+    printf("reading config...\n");
     DOMTreeReader reader;
     DOMDocument *document = reader.read(config_filename.c_str());
     if (document && document->getDocumentElement())
@@ -42,10 +44,12 @@ void Manager::readConfig()
                  config.strParams.GetCount());
     } else
     {
+      printf("Parse result is null\n");
       throw ConfigException("Parse result is null");
     }
 
   } catch (ParseException &e) {
+    printf("caught ex='%s'\n", e.what());
     throw ConfigException("%s",e.what());
   }
 
