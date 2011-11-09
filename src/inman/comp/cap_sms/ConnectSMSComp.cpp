@@ -10,12 +10,13 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void SMSConnectArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSConnectArg::decode(const uint8_t * in_buf, uint16_t enc_len)
+  throw(smsc::util::CustomException)
 {
     ConnectSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
 
-    drc = ber_decode(0, &asn_DEF_ConnectSMSArg, (void **)&dcmd, &buf[0], buf.size());
+    drc = ber_decode(0, &asn_DEF_ConnectSMSArg, (void **)&dcmd, in_buf, (size_t)enc_len);
     ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_ConnectSMSArg, "ConnSmsArg");
 
     if (OCTET_STRING_2_Address(dcmd->destinationSubscriberNumber, dstSN))

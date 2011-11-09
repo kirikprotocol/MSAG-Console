@@ -20,6 +20,8 @@ namespace chsri {
 
 using smsc::util::IMSIString;
 using smsc::util::MAPConst;
+using smsc::util::CustomException;
+
 using smsc::logger::Logger;
 using smsc::inman::GsmSCFinfo;
 using smsc::inman::comp::Component;
@@ -70,7 +72,7 @@ public:
     void setSubscrMSISDN(const char * msisdn) throw(CustomException);
     void setSubscrMSISDN(const TonNpiAddress& addr) { subscrAdr = addr; }
 
-    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
+    virtual void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
 private:
     TonNpiAddress   scfAdr;     //requesting GMSC or SCF address
@@ -95,8 +97,8 @@ public:
     unsigned short getVLRN(TonNpiAddress & vlr_n) const;
 
 
-    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
-    void mergeSegment(Component * segm) throw(CustomException);
+    virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(CustomException);
+    virtual void mergeSegment(MAPComponent * segm) throw(CustomException);
 
     bool hasIMSI(void) const { return mask.st.imsi; }
     bool hasOCSI(void) const { return mask.st.o_csi; }

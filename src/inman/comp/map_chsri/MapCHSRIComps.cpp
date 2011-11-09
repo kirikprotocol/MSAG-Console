@@ -152,12 +152,12 @@ unsigned short CHSendRoutingInfoRes::getVLRN(TonNpiAddress & vlr_n) const
     return mask.st.n_vlr;
 }
 
-void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void CHSendRoutingInfoRes::decode(const uint8_t * in_buf, uint16_t enc_len) throw(CustomException)
 {
     SendRoutingInfoRes_t *  dcmd = NULL;
     asn_dec_rval_t  drc;    /* Decoder return value  */
 
-    drc = ber_decode(0, &asn_DEF_SendRoutingInfoRes, (void **)&dcmd, &buf[0], buf.size());
+    drc = ber_decode(0, &asn_DEF_SendRoutingInfoRes, (void **)&dcmd, in_buf, (size_t)enc_len);
     ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_SendRoutingInfoRes, "SRIRes");
     smsc_log_component(compLogger, &asn_DEF_SendRoutingInfoRes, dcmd);
 
@@ -191,7 +191,7 @@ void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(C
 }
 
 
-void CHSendRoutingInfoRes::mergeSegment(Component * segm) throw(CustomException)
+void CHSendRoutingInfoRes::mergeSegment(MAPComponent * segm) throw(CustomException)
 {
     if (!segm)
         return;

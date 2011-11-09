@@ -472,8 +472,9 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
             Component* comp = acFab->createArg(op[0], logger);
             if (comp) {
                 try {
-                    std::vector<unsigned char> code( pm, pm + pmlen );
-                    comp->decode(code); //throws
+//                    std::vector<unsigned char> code( pm, pm + pmlen );
+//                    comp->decode(code); //throws
+                    comp->decode(pm, pmlen);
                     invoke.ownParam(comp);
                 } catch (std::exception & exc) {
                     smsc_log_error(logger, "%s: Invoke[%u:%u].Arg: %s",
@@ -570,8 +571,9 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
         Component* resParm = acFab->createRes(op[0], logger);
         if (resParm) {
             try {
-                std::vector<unsigned char> code(pm, pm + pmlen);
-                resParm->decode(code);
+//                std::vector<unsigned char> code(pm, pm + pmlen);
+//                resParm->decode(code);
+                resParm->decode(pm, pmlen);
                 result.ownParam(resParm);
             } catch (const std::exception & exc) {
                 smsc_log_error(logger, "%s: Invoke[%u].Result[%u]: %s",
@@ -637,8 +639,9 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
         Component* resParm = acFab->createRes(op[0], logger);
         if (resParm) {
             try {
-                std::vector<unsigned char> code(pm, pm + pmlen);
-                resParm->decode(code);
+//                std::vector<unsigned char> code(pm, pm + pmlen);
+//                resParm->decode(code);
+                resParm->decode(pm, pmlen);
                 result.ownParam(resParm);
             } catch (const std::exception & exc) {
                 smsc_log_error(logger, "%s: Invoke[%u].ResultNL[%u]: %s",
@@ -698,8 +701,9 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
             Component* resParm = acFab->createErr(op[0], logger);
             if (resParm) {
                 try {
-                    std::vector<unsigned char> code(pm, pm + pmlen);
-                    resParm->decode(code); //throws
+//                    std::vector<unsigned char> code(pm, pm + pmlen);
+//                    resParm->decode(code); //throws
+                    resParm->decode(pm, pmlen);
                     resErr.ownParam(resParm);
                 } catch (const std::exception & exc) {
                     smsc_log_error(logger, "%s: Invoke[%u].Error[%u]: %s",

@@ -22,6 +22,7 @@ namespace atih {
 
 using smsc::logger::Logger;
 
+using smsc::util::CustomException;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::MAPOpErrorId;
 using smsc::inman::comp::UnifiedCSI;
@@ -113,7 +114,7 @@ public:
 
   const ODBGeneralData * getODB(void) const { return _odbGD.empty() ? NULL : &_odbGD; }
 
-  virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+  virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(CustomException);
 
 private:
   Logger *                compLogger;

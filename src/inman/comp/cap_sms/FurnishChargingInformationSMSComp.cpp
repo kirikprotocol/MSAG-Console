@@ -12,14 +12,15 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void SMSFurnishChargingInformationArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSFurnishChargingInformationArg::decode(const uint8_t * in_buf, uint16_t enc_len)
+  throw(smsc::util::CustomException)
 {
     FurnishChargingInformationSMSArg_t *dcmd = NULL;	/* decoded structure */
     CAMEL_FCISMSBillingChargingCharacteristics_t * dcmd2 = NULL; /* */
     asn_dec_rval_t	drc;		/* Decoder return value  */
 
     drc = ber_decode(0, &asn_DEF_FurnishChargingInformationSMSArg, (void **)&dcmd,
-                     &buf[0], buf.size());
+                     in_buf, (size_t)enc_len);
     ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_FurnishChargingInformationSMSArg, "FCISmsArg");
     smsc_log_component(compLogger, &asn_DEF_FurnishChargingInformationSMSArg, dcmd);
 

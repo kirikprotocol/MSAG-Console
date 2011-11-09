@@ -10,12 +10,13 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void SMSReleaseArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSReleaseArg::decode(const uint8_t * in_buf, uint16_t enc_len)
+  throw(smsc::util::CustomException)
 {
     RPCause_t *		dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
 
-    drc = ber_decode(0, &asn_DEF_ReleaseSMSArg, (void **)&dcmd, &buf[0], buf.size());
+    drc = ber_decode(0, &asn_DEF_ReleaseSMSArg, (void **)&dcmd, in_buf, (size_t)enc_len);
     ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_ReleaseSMSArg, "RLSSmsArg");
 
     _rPCause = dcmd->buf[0];

@@ -20,7 +20,8 @@ std::string & SMSEventReportArg::print(std::string & dump) const
     return dump;
 }
 
-void SMSEventReportArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
+void SMSEventReportArg::encode(std::vector<unsigned char>& buf) const
+  throw(smsc::util::CustomException)
 {
     asn_enc_rval_t	er;
     /* construct SMSEventReportArg */

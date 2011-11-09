@@ -10,12 +10,13 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void SMSRequestReportEventArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSRequestReportEventArg::decode(const uint8_t * in_buf, uint16_t enc_len)
+  throw(smsc::util::CustomException)
 {
     RequestReportSMSEventArg_t *dcmd = 0;
     asn_dec_rval_t rval;
 
-    rval = ber_decode(0, &asn_DEF_RequestReportSMSEventArg,(void **)&dcmd, &buf[0], buf.size());
+    rval = ber_decode(0, &asn_DEF_RequestReportSMSEventArg,(void **)&dcmd, in_buf, (size_t)enc_len);
     ASNCODEC_LOG_DEC(dcmd, rval, asn_DEF_RequestReportSMSEventArg, "RRSmsEvtArg");
 
     const asn_anonymous_sequence_ * list = _A_CSEQUENCE_FROM_VOID(&dcmd->sMSEvents);

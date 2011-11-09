@@ -10,12 +10,13 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void SMSResetTimerArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void SMSResetTimerArg::decode(const uint8_t * in_buf, uint16_t enc_len)
+  throw(smsc::util::CustomException)
 {
     ResetTimerSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
 
-    drc = ber_decode(0, &asn_DEF_ResetTimerSMSArg, (void **)&dcmd, &buf[0], buf.size());
+    drc = ber_decode(0, &asn_DEF_ResetTimerSMSArg, (void **)&dcmd, in_buf, (size_t)enc_len);
     ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_ResetTimerSMSArg, "RSTSmsArg");
 
     tmrValue = dcmd->timervalue;

@@ -216,12 +216,12 @@ static bool parse_SM_CSI(SMS_CSI * cs, GsmSCFinfo & scf_inf, const SMS_TDP & use
 }
 
 
-void ATSIRes::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void ATSIRes::decode(const uint8_t * in_buf, uint16_t enc_len) throw(CustomException)
 {
   AnyTimeSubscriptionInterrogationRes *  dcmd = NULL;  /* decoded structure */
   asn_dec_rval_t  drc;    /* Decoder return value  */
 
-  drc = ber_decode(0, &asn_DEF_AnyTimeSubscriptionInterrogationRes, (void **)&dcmd, &buf[0], buf.size());
+  drc = ber_decode(0, &asn_DEF_AnyTimeSubscriptionInterrogationRes, (void **)&dcmd, in_buf, (size_t)enc_len);
   ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_AnyTimeSubscriptionInterrogationRes, "ATSIRes");
   smsc_log_component(compLogger, &asn_DEF_AnyTimeSubscriptionInterrogationRes, dcmd);
 

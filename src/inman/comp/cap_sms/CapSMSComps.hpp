@@ -219,7 +219,7 @@ public:
     const SMSEventDPs& SMSEvents(void) const { return events; }
     std::string & printEvents(std::string & dump) { return events.print(dump); }
 
-    virtual void  decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
+    virtual void  decode(const uint8_t * in_buf, uint16_t enc_len) throw(smsc::util::CustomException);
 
 private:
     SMSEventDPs events;
@@ -245,7 +245,7 @@ public:
     const TonNpiAddress&	callingPartyNumber(void) const { return clngPN; }
     const TonNpiAddress&	SMSCAddress(void) const { return sMSCAdr; }
 
-    virtual void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
+    virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(smsc::util::CustomException);
 
 protected:
     TonNpiAddress   dstSN, clngPN, sMSCAdr;
@@ -267,7 +267,7 @@ public:
     ~SMSFurnishChargingInformationArg()
     { }
 
-    void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
+    virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(smsc::util::CustomException);
 
 private:
     Logger* compLogger;
@@ -291,7 +291,7 @@ public:
 
   unsigned char rPCause(void) const { return _rPCause; }
 
-  virtual void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
+  virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(smsc::util::CustomException);
 };
 
 // Direction: gsmSCF -> smsSSF, Timer: Trtsms 
@@ -313,7 +313,7 @@ public:
 
   time_t timerValue(void) const { return tmrValue; }
 
-  virtual void decode(const std::vector<unsigned char>& buf) throw(smsc::util::CustomException);
+  virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(smsc::util::CustomException);
 };
 
 }//namespace comp
