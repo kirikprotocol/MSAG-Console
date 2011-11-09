@@ -257,6 +257,12 @@ MTP3Subsystem::activateLinkToSGP(const common::LinkId& link_id,
 {
   smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: create new M3uaConnect, linkId=[%s]", link_id.getValue().c_str());
 
+  if (l_addr.empty())
+    throw smsc::util::Exception("'local_addresses' parameter is empty");
+
+  if (r_addr.empty())
+    throw smsc::util::Exception("'remote_addresses' parameter is empty");
+
   m3ua_stack::M3uaConnect* m3uaConnect;
 
   if ( l_port )
