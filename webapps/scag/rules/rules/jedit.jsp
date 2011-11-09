@@ -13,8 +13,8 @@
               function openjEditView(action,id)
               {
                 var checkResult = null;
-                if (action == "edit") checkResult = ( new String(document.jedit.openRule(id)) ).toString();
-                else checkResult = ( new String(document.jedit.newRule(id)) ).toString();
+                if (action == "edit") checkResult = document.jedit.openRule(id) + "";
+                else checkResult = document.jedit.newRule(id) +"";
                 if (checkResult)
                 {
                   alertError(checkResult);
@@ -70,7 +70,7 @@
 
               function toClose()
               {
-                var action = document.jedit.isWindowClosed();
+                var action = document.jedit.isWindowClosed() + "";
                 if (action) {
                    if (opener.submit0) {
                         opener.submit0();
