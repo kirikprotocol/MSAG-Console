@@ -182,6 +182,10 @@ public class jEdit extends Applet
        return ora.getValidationResult();
    }
 
+   public String returnString(){
+       return "hello";
+   }
+
    private class OpenRuleAction implements PrivilegedAction {
 
        private String userFile;
