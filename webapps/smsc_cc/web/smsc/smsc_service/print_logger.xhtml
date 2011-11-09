@@ -16,8 +16,8 @@
       <f:facet name="header">
         <h:panelGroup>
           <h:panelGrid columns="2" columnClasses="column1, column2">
-            <h:outputText value="#{logger.name}" rendered="#{!logger.root}"/>
-            <h:outputText value="ROOT" rendered="#{logger.root}"/>
+            <h:outputText style="white-space: nowrap;" value="#{logger.name}" rendered="#{!logger.root}"/>
+            <h:outputText style="white-space: nowrap;" value="ROOT" rendered="#{logger.root}"/>
             <h:selectOneMenu value="#{logger.level}">
               <ui:include src="print_logger_sitems.xhtml"/>
             </h:selectOneMenu>
@@ -34,7 +34,7 @@
 
 
   <h:panelGrid columns="2" rendered="#{!logger.hasChilds}" columnClasses="column1, column2">
-    <h:outputText value="#{logger.name}"/>
+    <h:outputText style="white-space: nowrap;" value="#{logger.name}"/>
     <h:selectOneMenu value="#{logger.level}">
       <ui:include src="print_logger_sitems.xhtml"/>
     </h:selectOneMenu>

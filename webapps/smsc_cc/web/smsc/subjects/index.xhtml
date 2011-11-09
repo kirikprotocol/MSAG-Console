@@ -19,6 +19,7 @@
 
     .nameColumn {width: 50%; text-align: left;}
     .defaultSmeColumn {width: 50%; text-align: left;}
+    .width90{width:90%}
   </ui:define>
 
   <ui:define name="content">
@@ -40,7 +41,7 @@
 
           <h:outputText value="#{msg['subjects.subtitle.maskFilter']} "/>
           <eye:dynamicTable value="#{subjects.masksFilter}">
-            <eye:textColumn name="mask" allowEditAfterAdd="true"/>
+            <eye:textColumn name="mask" allowEditAfterAdd="true" columnClass="width90"/>
           </eye:dynamicTable>
 
           <h:outputText value="&#160;"/>

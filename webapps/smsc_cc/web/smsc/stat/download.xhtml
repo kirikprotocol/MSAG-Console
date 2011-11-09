@@ -24,16 +24,16 @@
 
       <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn" style="padding: 10px 10px 10px 10px">
 
-        <h:outputText value="#{msg['smsc.stat.fromDate']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.stat.fromDate']}"/>
         <eye:inputDate inputTime="true" value="#{smscStatDownload.from}"/>
 
-        <h:outputText value="#{msg['smsc.stat.download.errors']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.stat.download.errors']}"/>
         <h:selectBooleanCheckbox value="#{smscStatDownload.includeErrors}"/>
 
-        <h:outputText value="#{msg['smsc.stat.tillDate']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.stat.tillDate']}"/>
         <eye:inputDate inputTime="true" value="#{smscStatDownload.till}"/>
 
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
 
       </h:panelGrid>
 

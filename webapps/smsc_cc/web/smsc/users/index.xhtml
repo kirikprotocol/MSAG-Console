@@ -30,7 +30,7 @@
 
       <eye:dataTableFilter applyAction="#{users.applyFilter}" clearAction="#{users.clearFilter}">
         <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{msg['smsc.users.login']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['smsc.users.login']}"/>
           <eye:inputText value="#{users.filterByLogin}"/>
         </h:panelGrid>
       </eye:dataTableFilter>

@@ -12,6 +12,7 @@
     .column1 {width: 5%; text-align: right;}
     .column2 {width: 20%;}
     .column3 {width: 75%;}
+    .width90{width:90%}
   </ui:define>
 
   <ui:define name="content">
@@ -32,19 +33,19 @@
 
       <h:panelGrid style="padding:5px 10px 5px 10px" columns="3" columnClasses="column1, column2, column3">
 
-        <h:outputText value="#{closedGroupsBundle.name}"/>
+        <h:outputText style="white-space: nowrap" value="#{closedGroupsBundle.name}"/>
         <eye:inputText value="#{closed_group_edit.name}" required="true"/>
-        <h:outputText value=""/>
+        <h:outputText style="white-space: nowrap" value=""/>
 
-        <h:outputText value="#{closedGroupsBundle.description}"/>
+        <h:outputText style="white-space: nowrap" value="#{closedGroupsBundle.description}"/>
         <eye:inputText rows="3" cols="50" value="#{closed_group_edit.description}" required="true"/>
-        <h:outputText value=""/>
+        <h:outputText style="white-space: nowrap" value=""/>
 
-        <h:outputText value="#{closedGroupsBundle.masks}"/>
+        <h:outputText style="white-space: nowrap" value="#{closedGroupsBundle.masks}"/>
         <eye:dynamicTable value="#{closed_group_edit.dynamicModel}">
-          <eye:textColumn name="mask" maxLength="21" allowEditAfterAdd="true"/>
+          <eye:textColumn name="mask" maxLength="21" allowEditAfterAdd="true" columnClass="width90"/>
         </eye:dynamicTable>
-        <h:outputText value=""/>
+        <h:outputText style="white-space: nowrap" value=""/>
 
       </h:panelGrid>
 

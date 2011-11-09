@@ -35,7 +35,7 @@
       </eye:buttons>
 
       <h:panelGrid columns="2" columnClasses="column1, column2" rendered="#{editProfile.newProfile}" style="padding-bottom: 5px; padding-top: 5px; padding-left: 10px;">
-        <h:outputText value="#{profile['address']}"/>
+        <h:outputText style="white-space: nowrap" value="#{profile['address']}"/>
         <eye:inputText value="#{editProfile.profileAddress}" required="true"/>
       </h:panelGrid>
 

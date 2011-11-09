@@ -11,6 +11,7 @@
     .column1 {width: 5%; text-align: right;}
     .column2 {width: 20%;}
     .column3 {width: 75%;}
+    .width90{width:90%}
   </ui:define>
 
   <ui:define name="content">
@@ -26,19 +27,19 @@
       </eye:buttons>
 
       <h:panelGrid style="padding:5px 0px 5px 10px" columns="3" columnClasses="column1, column2, column3">
-        <h:outputText value="#{msg['acl.edit.page.name']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['acl.edit.page.name']}"/>
         <eye:inputText value="#{aclEdit.name}" required="true" size="50"/>
-        <h:outputText value=""/>
+        <h:outputText style="white-space: nowrap" value=""/>
 
-        <h:outputText value="#{msg['acl.edit.page.desc']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['acl.edit.page.desc']}"/>
         <eye:inputText value="#{aclEdit.description}" rows="3" size="50"/>
-        <h:outputText value=""/>
+        <h:outputText style="white-space: nowrap" value=""/>
 
-        <h:outputText value="#{msg['acl.edit.page.addresses']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['acl.edit.page.addresses']}"/>
         <eye:dynamicTable value="#{aclEdit.addresses}" >
-          <eye:textColumn name="address" allowEditAfterAdd="true" maxLength="21" />
+          <eye:textColumn name="address" allowEditAfterAdd="true" maxLength="21" columnClass="width90"/>
         </eye:dynamicTable>
-        <h:outputText value=""/>
+        <h:outputText style="white-space: nowrap" value=""/>
       </h:panelGrid>
 
       <eye:buttons>

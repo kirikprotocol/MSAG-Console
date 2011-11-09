@@ -10,7 +10,7 @@
 <ui:composition>
 
 
-    <h:outputText value="#{label}" rendered="#{snmpObjField!=null}"/>
+    <h:outputText style="white-space: nowrap" value="#{label}" rendered="#{snmpObjField!=null}"/>
 
     <h:selectOneMenu value="#{snmpObjField}" rendered="#{snmpObjField!=null}">
       <f:selectItems value="#{snmp.severityOptions}"/>

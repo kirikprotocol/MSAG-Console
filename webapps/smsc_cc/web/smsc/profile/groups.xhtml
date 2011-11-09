@@ -24,7 +24,7 @@
 
       <eye:dataTableFilter applyAction="#{groupsProfile.applyFilter}" clearAction="#{groupsProfile.clearFilter}">
         <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{profile['address']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['address']}"/>
           <eye:inputText value="#{groupsProfile.mask}"/>
         </h:panelGrid>
       </eye:dataTableFilter>

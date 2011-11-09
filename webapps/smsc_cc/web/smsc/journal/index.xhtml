@@ -25,18 +25,18 @@
 
       <eye:dataTableFilter applyAction="#{journal.applyFilter}" clearAction="#{journal.clearFilter}">
         <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn">
-          <h:outputText value="#{msg['journal.page.user']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['journal.page.user']}"/>
           <eye:inputText value="#{journal.filterByUser}"/>
 
-          <h:outputText value="#{msg['journal.page.subject']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['journal.page.subject']}"/>
           <h:selectOneMenu value="#{journal.filterBySubject}">
             <f:selectItems value="#{journal.uniqueSubjectNamesFromJournal}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="#{msg['journal.page.from_date']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['journal.page.from_date']}"/>
           <eye:inputDate value="#{journal.filterByStartDate}" inputTime="true"/>
 
-          <h:outputText value="#{msg['journal.page.till_date']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['journal.page.till_date']}"/>
           <eye:inputDate value="#{journal.filterByEndDate}" inputTime="true"/>
         </h:panelGrid>
       </eye:dataTableFilter>

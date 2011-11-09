@@ -27,13 +27,13 @@
 
       <eye:dataTableFilter applyAction="#{closed_groups.applyFilter}" clearAction="#{closed_groups.clearFilter}">
         <h:panelGrid columns="6" columnClasses="labelColumn, valueColumn, label2Column, valueColumn, label2Column, lastColumn">
-          <h:outputText value="#{closedGroupsBundle.id}"/>
+          <h:outputText style="white-space: nowrap" value="#{closedGroupsBundle.id}"/>
           <eye:inputText value="#{closed_groups.filterById}"/>
 
-          <h:outputText value="#{closedGroupsBundle.name}"/>
+          <h:outputText style="white-space: nowrap" value="#{closedGroupsBundle.name}"/>
           <eye:inputText value="#{closed_groups.filterByName}" />
 
-          <h:outputText value="#{closedGroupsBundle.mask}"/>
+          <h:outputText style="white-space: nowrap" value="#{closedGroupsBundle.mask}"/>
           <eye:inputText value="#{closed_groups.filterByAddress}" />
         </h:panelGrid>
 

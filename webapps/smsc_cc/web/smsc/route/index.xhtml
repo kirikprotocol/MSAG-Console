@@ -31,19 +31,19 @@
       <eye:dataTableFilter applyAction="#{routes.applyFilter}" clearAction="#{routes.clearFilter}">
 
         <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn">
-          <h:outputText value="#{msg['routes.page.name']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['routes.page.name']}"/>
           <eye:inputText value="#{routes.nameFilter}"/>
 
-          <h:outputText value="#{msg['routes.page.subject']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['routes.page.subject']}"/>
           <eye:inputText value="#{routes.subjectFilter}"/>
 
-          <h:outputText value="#{msg['routes.page.srcSmeId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['routes.page.srcSmeId']}"/>
           <eye:inputText value="#{routes.srcSmeFilter}"/>
 
-          <h:outputText value="#{msg['routes.page.mask']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['routes.page.mask']}"/>
           <eye:inputText value="#{routes.maskFilter}"/>
 
-          <h:outputText value="#{msg['routes.page.dstSmeId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['routes.page.dstSmeId']}"/>
           <eye:inputText value="#{routes.dstSmeFilter}"/>
         </h:panelGrid>
       </eye:dataTableFilter>

@@ -39,13 +39,13 @@
 
       <h:panelGrid columns="2" columnClasses="column1, column2" style="padding:  5px 0 5px 10px;">
 
-        <h:outputText value="#{userBundle.login}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.login}"/>
         <eye:inputText value="#{userEdit.user.login}" required="true" />
 
-        <h:outputText value="#{userBundle.password}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.password}"/>
         <eye:inputText secret="true" id="password" value="#{userEdit.user.password}" required="true" />
 
-        <h:outputText value="#{msg['smsc.user.edit.confirm']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.user.edit.confirm']}"/>
         <eye:inputText secret="true" id="confirm" value="#{userEdit.confirm}" required="true" />
 
         <h:outputText value=""/>
@@ -53,7 +53,7 @@
         <eye:collapsingGroup label="#{userBundle.roles}">
           <h:dataTable value="#{userEdit.roles}" var="g" columnClasses="column1, column2">
             <h:column>
-              <h:outputText value="#{g.name}" converter="roles_converter"/>
+              <h:outputText style="white-space: nowrap;" value="#{g.name}" converter="roles_converter"/>
             </h:column>
             <h:column>
               <h:selectBooleanCheckbox value="#{g.checked}"/>
@@ -141,31 +141,31 @@
           </h:panelGroup>
         </eye:collapsingGroup>
 
-        <h:outputText value="#{userBundle.firstName}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.firstName}"/>
         <eye:inputText value="#{userEdit.user.firstName}" required="true" />
 
-        <h:outputText value="#{userBundle.lastName}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.lastName}"/>
         <eye:inputText value="#{userEdit.user.lastName}" required="true" />
 
-        <h:outputText value="#{userBundle.dept}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.dept}"/>
         <eye:inputText value="#{userEdit.user.dept}" required="true" />
 
-        <h:outputText value="#{userBundle.workPhone}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.workPhone}"/>
         <eye:inputText value="#{userEdit.user.workPhone}" required="true" >
           <smsc:validatePhone/>
         </eye:inputText>
 
-        <h:outputText value="#{userBundle.homePhone}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.homePhone}"/>
         <eye:inputText value="#{userEdit.user.homePhone}" required="true" >
           <smsc:validatePhone/>
         </eye:inputText>
 
-        <h:outputText value="#{userBundle.cellPhone}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.cellPhone}"/>
         <eye:inputText value="#{userEdit.user.cellPhone}" required="true" >
           <smsc:validatePhone/>
         </eye:inputText>
 
-        <h:outputText value="#{userBundle.email}"/>
+        <h:outputText style="white-space: nowrap" value="#{userBundle.email}"/>
         <eye:inputText value="#{userEdit.user.email}" required="true" >
           <smsc:validateEmail/>
         </eye:inputText>

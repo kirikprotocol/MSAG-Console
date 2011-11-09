@@ -34,44 +34,44 @@
 
       <h:panelGrid style="padding: 10px 10px 10px 10px" columns="2" columnClasses="labelColumn, lastColumn" rendered="#{exportStat.showFilter}">
 
-        <h:outputText value="#{msg['smsc.export.date']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.export.date']}"/>
         <eye:inputDate value="#{exportStat.date}" required="true"/>
 
 
-        <h:outputText value="#{msg['smsc.stat.export.dest.title']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.stat.export.dest.title']}"/>
         <h:selectOneRadio id="type" value="#{exportStat.type}" onclick="changeType()"  style="width:400px">
           <f:selectItems value="#{exportStat.types}"/>
         </h:selectOneRadio>
 
-        <h:outputText value="#{exportSetBundle.source}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.source}"/>
         <h:panelGroup>
-          <h:outputText id="def_source" value="#{exportStat.defExportSettings.source}"/>
+          <h:outputText style="white-space: nowrap" id="def_source" value="#{exportStat.defExportSettings.source}"/>
           <eye:inputText id="cus_source" cols="50" value="#{exportStat.settings.source}"/>
         </h:panelGroup>
 
-        <h:outputText value="#{exportSetBundle.dbType}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.dbType}"/>
         <h:panelGroup>
-          <h:outputText id="def_dbType" value="#{exportStat.defExportSettings.dbType}"/>
+          <h:outputText style="white-space: nowrap" id="def_dbType" value="#{exportStat.defExportSettings.dbType}"/>
           <h:selectOneMenu id="cus_dbType" value="#{exportStat.settings.dbType}">
             <f:selectItems value="#{exportStat.dbTypes}"/>
           </h:selectOneMenu>
         </h:panelGroup>
 
-        <h:outputText value="#{exportSetBundle.user}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.user}"/>
         <h:panelGroup>
-          <h:outputText id="def_user" value="#{exportStat.defExportSettings.user}"/>
+          <h:outputText style="white-space: nowrap" id="def_user" value="#{exportStat.defExportSettings.user}"/>
           <eye:inputText id="cus_user" value="#{exportStat.settings.user}"/>
         </h:panelGroup>
 
-        <h:outputText value="#{exportSetBundle.pass}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.pass}"/>
         <h:panelGroup>
-          <h:outputText id="def_pass" value="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"/>
+          <h:outputText style="white-space: nowrap" id="def_pass" value="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"/>
           <eye:inputText secret="true" id="cus_pass" value="#{exportStat.settings.pass}"/>
         </h:panelGroup>
 
-        <h:outputText value="#{exportSetBundle.prefix}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.prefix}"/>
         <h:panelGroup>
-          <h:outputText id="def_prefix" value="#{exportStat.defExportSettings.prefix}"/>
+          <h:outputText style="white-space: nowrap" id="def_prefix" value="#{exportStat.defExportSettings.prefix}"/>
           <eye:inputText id="cus_prefix" value="#{exportStat.settings.prefix}"/>
         </h:panelGroup>
 
@@ -97,7 +97,7 @@
         </eye:message>
 
         <h:panelGroup style="height: 10px">
-          <h:outputText value="&#160;"/>
+          <h:outputText style="white-space: nowrap" value="&#160;"/>
         </h:panelGroup>
 
         <h:panelGroup>

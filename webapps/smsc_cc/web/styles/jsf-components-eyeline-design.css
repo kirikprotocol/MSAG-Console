@@ -63,6 +63,7 @@ table.eyeline_buttons_background td{
   cursor: pointer;
   padding-left: 15px;
   min-height: 17px;
+  height: 17px;
 }
 
 .eyeline_collapsingGroupHeader0 {
@@ -651,17 +652,21 @@ table.eyeline_data_table_filter a.xi {
 
 
 .eyeline_addbutton {
+  text-align: left;
   background: url("../images/but_add.gif") no-repeat scroll center center transparent;
   cursor: pointer;
   height: 20px;
-  width: 19px;
+  padding: 1px 7px 1px 7px;
+  width: 100%;
 }
 
 .eyeline_delbutton {
+  text-align: left;
   background: url("../images/but_del.gif") no-repeat scroll center center transparent;
   cursor: pointer;
   height: 20px;
-  width: 19px;
+  width: 100%;
+  padding: 1px 7px 1px 7px;
 }/*Стиль нотификации об ошибке (отображается после полей ввода)*/
 div.eyeline_inputDate span.error {
   color: RED;

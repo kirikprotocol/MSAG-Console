@@ -11,69 +11,69 @@
 <ui:composition>
 
   <h:panelGrid columns="2" columnClasses="column1, column2">
-    <h:outputText value="#{profile['ucs2']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['ucs2']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.ucs2}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['latin1']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['latin1']}"/>
      <h:selectBooleanCheckbox value="#{profile_to_edit.latin1}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['ussd7bit']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['ussd7bit']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.ussd7bit}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['reportOptions']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['reportOptions']}"/>
     <h:selectOneMenu value="#{profile_to_edit.reportOptions}">
         <f:selectItems value="#{reportOptions}"/>
       </h:selectOneMenu>
 
-    <h:outputText value="#{profile['locale']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['locale']}"/>
     <h:selectOneMenu value="#{profile_to_edit.locale}">
         <f:selectItems value="#{locales}"/>
       </h:selectOneMenu>
 
-    <h:outputText value="#{profile['aliasHide']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['aliasHide']}"/>
     <h:selectOneMenu value="#{profile_to_edit.aliasHide}">
       <f:selectItems value="#{aliasHideOptions}"/>
     </h:selectOneMenu>
 
-    <h:outputText value="#{profile['aliasModifiable']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['aliasModifiable']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.aliasModifiable}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['divert']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['divert']}"/>
     <eye:inputText value="#{profile_to_edit.divert}"/>
 
-    <h:outputText value="#{profile['divertActive']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['divertActive']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.divertActive}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['divertActiveAbsent']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['divertActiveAbsent']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveAbsent}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['divertActiveBlocked']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['divertActiveBlocked']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveBlocked}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['divertActiveBarred']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['divertActiveBarred']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveBarred}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['divertActiveCapacity']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['divertActiveCapacity']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.divertActiveCapacity}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['divertModifiable']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['divertModifiable']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.divertModifiable}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['udhConcat']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['udhConcat']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.udhConcat}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['translit']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['translit']}"/>
     <h:selectBooleanCheckbox value="#{profile_to_edit.translit}" style="margin-left:0px;"/>
 
-    <h:outputText value="#{profile['groupId']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['groupId']}"/>
     <h:selectOneMenu value="#{profile_to_edit.groupId}">
         <f:selectItems value="#{defaultProfile.closedGroups}"/>
       </h:selectOneMenu>
 
-    <h:outputText value="#{profile['inputAccessMask']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['inputAccessMask']}"/>
     <h:inputText value="#{profile_to_edit.inputAccessMask}"/>
 
-    <h:outputText value="#{profile['outputAccessMask']}"/>
+    <h:outputText style="white-space: nowrap"  value="#{profile['outputAccessMask']}"/>
     <h:inputText value="#{profile_to_edit.outputAccessMask}"/>
 
   </h:panelGrid>

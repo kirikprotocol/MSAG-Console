@@ -38,46 +38,46 @@
 
       <h:panelGrid style="padding: 10px 10px 10px 10px" columns="2" columnClasses="labelColumn, lastColumn" rendered="#{smsExportStat.showFilter}">
 
-        <h:outputText value="#{msg['smsc.sms.export.types']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.export.types']}"/>
         <h:selectOneMenu id="storageType" value="#{smsExportStat.storageType}" onchange="changeType()">
           <f:selectItems value="#{smsExportStat.storageTypes}"/>
         </h:selectOneMenu>
 
-        <h:outputText id="date_label" value="#{msg['smsc.export.date']}"/>
+        <h:outputText style="white-space: nowrap" id="date_label" value="#{msg['smsc.export.date']}"/>
         <h:panelGroup id="date">
           <eye:inputDate value="#{smsExportStat.date}"/>
         </h:panelGroup>
 
-        <h:outputText value="#{msg['smsc.stat.export.dest.title']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.stat.export.dest.title']}"/>
         <h:selectOneRadio id="type" value="#{smsExportStat.type}" onclick="changeType()"  style="width:400px">
           <f:selectItems value="#{smsExportStat.types}"/>
         </h:selectOneRadio>
 
-        <h:outputText value="#{exportSetBundle.source}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.source}"/>
         <h:panelGroup>
-          <h:outputText id="def_arch_source" value="#{smsExportStat.defArchExportSettings.source}"/>
-          <h:outputText id="def_oper_source" value="#{smsExportStat.defOperExportSettings.source}"/>
+          <h:outputText style="white-space: nowrap" id="def_arch_source" value="#{smsExportStat.defArchExportSettings.source}"/>
+          <h:outputText style="white-space: nowrap" id="def_oper_source" value="#{smsExportStat.defOperExportSettings.source}"/>
           <eye:inputText id="cus_source" cols="50" value="#{smsExportStat.settings.source}"/>
         </h:panelGroup>
 
-        <h:outputText value="#{exportSetBundle.user}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.user}"/>
         <h:panelGroup>
-          <h:outputText id="def_arch_user" value="#{smsExportStat.defArchExportSettings.user}"/>
-          <h:outputText id="def_oper_user" value="#{smsExportStat.defOperExportSettings.user}"/>
+          <h:outputText style="white-space: nowrap" id="def_arch_user" value="#{smsExportStat.defArchExportSettings.user}"/>
+          <h:outputText style="white-space: nowrap" id="def_oper_user" value="#{smsExportStat.defOperExportSettings.user}"/>
           <eye:inputText id="cus_user" value="#{smsExportStat.settings.user}"/>
         </h:panelGroup>
 
-        <h:outputText value="#{exportSetBundle.pass}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.pass}"/>
         <h:panelGroup>
-          <h:outputText id="def_arch_pass" value="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"/>
-          <h:outputText id="def_oper_pass" value="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"/>
+          <h:outputText style="white-space: nowrap" id="def_arch_pass" value="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"/>
+          <h:outputText style="white-space: nowrap" id="def_oper_pass" value="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"/>
           <eye:inputText secret="true" id="cus_pass" value="#{smsExportStat.settings.pass}"/>
         </h:panelGroup>
 
-        <h:outputText value="#{exportSetBundle.prefix}"/>
+        <h:outputText style="white-space: nowrap" value="#{exportSetBundle.prefix}"/>
         <h:panelGroup>
-          <h:outputText id="def_arch_prefix" value="#{smsExportStat.defArchExportSettings.prefix}"/>
-          <h:outputText id="def_oper_prefix" value="#{smsExportStat.defOperExportSettings.prefix}"/>
+          <h:outputText style="white-space: nowrap" id="def_arch_prefix" value="#{smsExportStat.defArchExportSettings.prefix}"/>
+          <h:outputText style="white-space: nowrap" id="def_oper_prefix" value="#{smsExportStat.defOperExportSettings.prefix}"/>
           <eye:inputText id="cus_prefix" value="#{smsExportStat.settings.prefix}"/>
         </h:panelGroup>
 

@@ -25,7 +25,7 @@
 
       <eye:dataTableFilter applyAction="#{service.apply}" clearAction="#{service.clear}">
         <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="width: 300px">
-          <h:outputText value="#{msg['service.edit.page.systemId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['service.edit.page.systemId']}"/>
           <eye:inputText value="#{service.nameFilter}"/>
         </h:panelGrid>
       </eye:dataTableFilter>

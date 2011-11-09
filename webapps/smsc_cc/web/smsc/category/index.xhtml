@@ -34,14 +34,14 @@
 
       <c:set var="row" value="0"/>
       <h:panelGrid columns="3" columnClasses="column1, column2, column3" rowClasses="listTableRow0,listTableRow1">
-        <h:outputText value="Id"/>
-        <h:outputText value="#{msg['categories.page.category']}"/>
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="Id"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['categories.page.category']}"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
 
         <c:forEach items="#{categories.categories}" var="c">
-          <h:outputText value="#{c.id}"/>
+          <h:outputText style="white-space: nowrap" value="#{c.id}"/>
           <eye:inputText value="#{c.name}"/>
-          <h:outputText value="&#160;"/>
+          <h:outputText style="white-space: nowrap" value="&#160;"/>
           <c:set var="row" value="#{row+1}"/>
         </c:forEach>
       </h:panelGrid>
@@ -51,7 +51,7 @@
       <smsc:pageSubtitle value="#{msg['categories.page.add']}"/>
 
       <h:panelGrid columns="3" columnClasses="column1, column2, column3" rowClasses="listTableRow0">
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
         <eye:inputText value="#{categories.newCategory}" />
         <h:commandLink action="#{categories.addCategory}">
           <h:graphicImage value="/images/but_add.gif" style=" margin-top:1px; position:relative;"/>

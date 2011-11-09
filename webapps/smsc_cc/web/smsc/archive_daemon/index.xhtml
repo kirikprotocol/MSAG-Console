@@ -16,7 +16,7 @@
     .column70 {width: 70%;}
 
     .dtable {margin-left: 15px; width: 30%}
-    .dtableColumn {width: 50%}
+    .dtableColumn {width: 45%}
   </ui:define>
 
   <ui:define name="content">
@@ -34,7 +34,7 @@
       </eye:buttons>
 
       <h:panelGrid columns="2" style="margin-left: 15px; padding-top:5px;" columnClasses="labelColumn, valueColumn">
-        <h:outputText value="#{archiveDaemonBundle['interval']}"/>
+        <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['interval']}"/>
         <eye:inputText value="#{archiveDaemon.config.interval}">
           <smsc:validatePositive/>
         </eye:inputText>
@@ -42,15 +42,15 @@
 
       <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsView']}" opened="true">
         <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{archiveDaemonBundle['viewHost']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['viewHost']}"/>
           <eye:inputText value="#{archiveDaemon.config.viewHost}"/>
 
-          <h:outputText value="#{archiveDaemonBundle['viewPort']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['viewPort']}"/>
           <eye:inputText value="#{archiveDaemon.config.viewPort}">
             <smsc:validatePositive/>
           </eye:inputText>
 
-          <h:outputText value="#{archiveDaemonBundle['viewTimeout']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['viewTimeout']}"/>
           <eye:inputText value="#{archiveDaemon.config.viewTimeout}">
             <smsc:validatePositive/>
           </eye:inputText>
@@ -59,12 +59,12 @@
 
       <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsQueries']}" opened="true">
         <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{archiveDaemonBundle['queriesInit']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['queriesInit']}"/>
           <eye:inputText value="#{archiveDaemon.config.queriesInit}">
             <smsc:validatePositive/>
           </eye:inputText>
 
-          <h:outputText value="#{archiveDaemonBundle['queriesMax']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['queriesMax']}"/>
           <eye:inputText value="#{archiveDaemon.config.queriesMax}">
             <smsc:validatePositive/>
           </eye:inputText>
@@ -73,11 +73,11 @@
 
       <eye:collapsingGroup label="#{msg['archiveDaemon.page.transactions']}" opened="true">
         <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{archiveDaemonBundle['transactionsMaxSmsCount']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['transactionsMaxSmsCount']}"/>
           <eye:inputText value="#{archiveDaemon.config.transactionsMaxSmsCount}">
             <smsc:validatePositive/>
           </eye:inputText>
-          <h:outputText value="#{archiveDaemonBundle['transactionsMaxTimeInterval']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['transactionsMaxTimeInterval']}"/>
           <eye:inputText value="#{archiveDaemon.config.transactionsMaxTimeInterval}">
             <smsc:validatePositive/>
           </eye:inputText>
@@ -87,9 +87,9 @@
 
       <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations']}" opened="true">
         <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{archiveDaemonBundle['locationsBaseDestination']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['locationsBaseDestination']}"/>
           <eye:inputText value="#{archiveDaemon.config.locationsBaseDestination}" required="true"/>
-          <h:outputText value="#{archiveDaemonBundle['locationsTextDestinations']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['locationsTextDestinations']}"/>
           <eye:inputText value="#{archiveDaemon.config.locationsTextDestinations}" required="true"/>
         </h:panelGrid>
 
@@ -103,7 +103,7 @@
 
       <eye:collapsingGroup label="#{msg['archiveDaemon.page.indexator']}" opened="true">
         <h:panelGrid columns="2" style="margin-left: 15px;" columnClasses="labelColumn, valueColumn">
-          <h:outputText value="#{archiveDaemonBundle['indexatorMaxFlushSpeed']}"/>
+          <h:outputText style="white-space: nowrap;" value="#{archiveDaemonBundle['indexatorMaxFlushSpeed']}"/>
           <eye:inputText value="#{archiveDaemon.config.indexatorMaxFlushSpeed}">
             <smsc:validatePositive/>
           </eye:inputText>

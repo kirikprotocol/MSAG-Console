@@ -21,9 +21,9 @@
     .column4 {width: 300px;}
     .column5 {width: 400px;}
 
-    .sourceMaskColumn {width: 100%}
-    .destMaskColumn {width:75%}
-    .destSmeColumn {width:25%}
+    .sourceMaskColumn {width: 90%}
+    .destMaskColumn {width:70%}
+    .destSmeColumn {width:20%}
   </ui:define>
 
   <ui:define name="content">
@@ -47,75 +47,75 @@
         <smsc:pageSubtitle value="#{msg['route.edit.page.route.options']}"/>
 
         <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn"> <!-- ROUTE INFO -->
-          <h:outputText value="#{route['name']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['name']}"/>
           <eye:inputText id="route" value="#{r.name}" required="true"/>
 
-          <h:outputText value="#{route['notes']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['notes']}"/>
           <eye:inputText value="#{r.notes}" rows="2" cols="15"/>
 
-          <h:outputText value="#{route['priority']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['priority']}"/>
           <eye:inputText value="#{r.priority}"/>
 
-          <h:outputText value="#{route['serviceId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['serviceId']}"/>
           <eye:inputText value="#{r.serviceId}"/>
 
-          <h:outputText value="#{route['deliveryMode']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['deliveryMode']}"/>
           <h:selectOneMenu value="#{r.deliveryMode}">
             <f:selectItems value="#{routeEdit.deliveryModes}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="#{route['srcSmeId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['srcSmeId']}"/>
           <h:selectOneMenu value="#{routeEdit.srcSme}">
             <f:selectItems value="#{routeEdit.smes}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="#{route['providerId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['providerId']}"/>
           <h:selectOneMenu value="#{routeEdit.provider}">
             <f:selectItems value="#{routeEdit.providers}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="#{route['categoryId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['categoryId']}"/>
           <h:selectOneMenu value="#{routeEdit.category}">
             <f:selectItems value="#{routeEdit.categories}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="#{route['forwardTo']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['forwardTo']}"/>
           <eye:inputText value="#{r.forwardTo}"/>
 
-          <h:outputText value="#{route['aclId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['aclId']}"/>
           <h:selectOneMenu value="#{routeEdit.acl}">
             <f:selectItems value="#{routeEdit.acls}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="#{route['replayPath']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['replayPath']}"/>
           <h:selectOneMenu value="#{r.replayPath}">
             <f:selectItems value="#{routeEdit.replayPaths}"/>
           </h:selectOneMenu>
 
-          <h:outputText value="#{route['backupSmeId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['backupSmeId']}"/>
           <h:selectOneMenu value="#{routeEdit.backupSme}">
             <f:selectItems value="#{routeEdit.smesWithEmpty}"/>
           </h:selectOneMenu>
         </h:panelGrid>
 
         <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="padding-left:15px;"> <!-- ROUTE OPTIONS -->
-          <h:outputText value="#{route['active']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['active']}"/>
           <h:selectBooleanCheckbox value="#{r.active}"/>
-          <h:outputText value="#{route['archiving']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['archiving']}"/>
           <h:selectBooleanCheckbox value="#{r.archiving}"/>
-          <h:outputText value="#{route['suppressDeliveryReports']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['suppressDeliveryReports']}"/>
           <h:selectBooleanCheckbox value="#{r.suppressDeliveryReports}"/>
-          <h:outputText value="#{route['hide']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['hide']}"/>
           <h:selectBooleanCheckbox value="#{r.hide}"/>
-          <h:outputText value="#{route['forceDelivery']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['forceDelivery']}"/>
           <h:selectBooleanCheckbox value="#{r.forceDelivery}"/>
-          <h:outputText value="#{route['transit']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['transit']}"/>
           <h:selectBooleanCheckbox value="#{r.transit}"/>
-          <h:outputText value="#{route['billing']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['billing']}"/>
           <h:selectOneMenu value="#{r.billing}">
             <f:selectItems value="#{routeEdit.billingModes}"/>
           </h:selectOneMenu>
-          <h:outputText value="#{route['trafficMode']}"/>
+          <h:outputText style="white-space: nowrap" value="#{route['trafficMode']}"/>
           <h:selectOneMenu value="#{r.trafficMode}">
             <f:selectItems value="#{routeEdit.trafficModes}"/>
           </h:selectOneMenu>

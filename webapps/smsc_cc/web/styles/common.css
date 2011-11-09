@@ -62,7 +62,7 @@ input.txt {
 }
 
 input.txtW {
-  width: 100%;
+ right: 0; left: 0;
 }
 
 input.radio, input.check {

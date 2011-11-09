@@ -29,7 +29,7 @@
       <smsc:pageSubtitle value="#{msg['smsc.snmp.settings']}"/>
 
       <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="padding-left: 10px; padding-bottom: 5px;">
-        <h:outputText value="#{snmpSettingsBundle['counterInterval']}"/>
+        <h:outputText style="white-space: nowrap" value="#{snmpSettingsBundle['counterInterval']}"/>
         <eye:inputText value="#{snmp.counterInterval}" required="true">
           <smsc:validatePositive/>
         </eye:inputText>

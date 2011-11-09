@@ -32,14 +32,14 @@
 
       <c:set var="row" value="0"/>
       <h:panelGrid columns="3" columnClasses="column1, column2, column3" rowClasses="listTableRow0,listTableRow1">
-        <h:outputText value="Id"/>
-        <h:outputText value="#{msg['providers.page.provider']}"/>
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap;" value="Id"/>
+        <h:outputText style="white-space: nowrap;" value="#{msg['providers.page.provider']}"/>
+        <h:outputText style="white-space: nowrap;" value="&#160;"/>
 
         <c:forEach items="#{providers.providers}" var="p">
-          <h:outputText value="#{p.id}"/>
+          <h:outputText style="white-space: nowrap;" value="#{p.id}"/>
           <eye:inputText value="#{p.name}"/>
-          <h:outputText value="&#160;"/>
+          <h:outputText style="white-space: nowrap;" value="&#160;"/>
           <c:set var="row" value="#{row+1}"/>
         </c:forEach>
 
@@ -50,7 +50,7 @@
       <smsc:pageSubtitle value="#{msg['providers.page.add']}"/>
 
       <h:panelGrid columns="3" columnClasses="column1, column2, column3" rowClasses="listTableRow0">
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap;" value="&#160;"/>
         <eye:inputText value="#{providers.newProvider}" />
         <h:commandLink action="#{providers.addProvider}">
           <h:graphicImage value="/images/but_add.gif" style=" margin-top:1px; position:relative;"/>

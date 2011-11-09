@@ -54,64 +54,64 @@
 
       <h:panelGrid columns="4" columnClasses="labelColumn, valueColumn, label2Column, lastColumn">
 
-        <h:outputText value="#{msg['smsc.sms.view.smsc.instance']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.smsc.instance']}"/>
         <h:selectOneMenu value="#{smsViewOper.currentInstance}">
           <f:selectItems value="#{smsViewOper.smscInstances}"/>
         </h:selectOneMenu>
 
-        <h:outputText value="&#160;"/>
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
 
 
-        <h:outputText value="#{msg['smsc.sms.view.address.abonent']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.address.abonent']}"/>
         <h:inputText id="addr" onkeyup="changedAddress()" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.abonent']}" value="#{smsViewOper.messageFilter.abonentAddress}" converter="addressesConverter"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.sme']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.sme']}"/>
         <h:inputText id="sme" onkeyup="changedSme()" value="#{smsViewOper.messageFilter.smeId}"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.address.source']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.address.source']}"/>
         <eye:inputText id="source_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.source']}" value="#{smsViewOper.messageFilter.fromAddress}" converter="addressesConverter"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.sme.source']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.sme.source']}"/>
         <eye:inputText id="source_sme" value="#{smsViewOper.messageFilter.srcSmeId}"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.address.destination']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.address.destination']}"/>
         <eye:inputText id="dest_addr" converterMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.address.destination']}" value="#{smsViewOper.messageFilter.toAddress}" converter="addressesConverter"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.sme.destination']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.sme.destination']}"/>
         <eye:inputText id="dest_sme" value="#{smsViewOper.messageFilter.dstSmeId}"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.date.from']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.date.from']}"/>
         <eye:inputDate inputTime="true" value="#{smsViewOper.messageFilter.fromDate}"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.date.till']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.date.till']}"/>
         <eye:inputDate inputTime="true" value="#{smsViewOper.messageFilter.tillDate}"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.id']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.id']}"/>
         <eye:inputText validatorMessage="#{msg['invalid_param_value']} #{msg['smsc.sms.view.id']}" value="#{smsViewOper.smsId}">
           <f:validateLongRange/>
         </eye:inputText>
 
-        <h:outputText value="#{msg['smsc.sms.view.route']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.route']}"/>
         <h:selectOneMenu value="#{smsViewOper.messageFilter.routeId}">
           <f:selectItem itemLabel="" itemValue=""/>
           <f:selectItems value="#{smsViewOper.routes}"/>
         </h:selectOneMenu>
 
-        <h:outputText value="#{msg['smsc.sms.view.last.result']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.last.result']}"/>
         <h:selectOneMenu value="#{smsViewOper.lastResult}">
           <f:selectItem itemLabel="" itemValue=""/>
           <f:selectItems value="#{smsViewOper.lastResults}"/>
         </h:selectOneMenu>
 
-        <h:outputText value="&#160;"/>
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
 
-        <h:outputText value="#{msg['smsc.sms.view.results.max.for.instance']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.sms.view.results.max.for.instance']}"/>
         <h:selectOneMenu value="#{smsViewOper.messageFilter.maxRowSize}">
           <f:selectItems value="#{smsViewOper.maxRows}"/>
         </h:selectOneMenu>
-        <h:outputText value="&#160;"/>
+        <h:outputText style="white-space: nowrap" value="&#160;"/>
       </h:panelGrid>
     </eye:dataTableFilter>
 

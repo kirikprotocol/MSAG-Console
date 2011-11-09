@@ -12,6 +12,7 @@
   <ui:define name="styles">
     .labelColumn {width: 1px; white-space: nowrap; text-align: right;}
     .valueColumn {width:100%; text-align: left;}
+    .width90{width:90%; padding: 3px;}
   </ui:define>
 
   <ui:define name="content">
@@ -25,7 +26,7 @@
       </eye:buttons>
 
       <h:inputHidden value="#{mapLimits.revision}"/>
-      <eye:message level="warn" rendered="#{mapLimits.settingsChanged}"><h:outputText
+      <eye:message level="warn" rendered="#{mapLimits.settingsChanged}"><h:outputText style="white-space: nowrap;"
           value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <h:panelGrid columns="1" style="padding:5px 10px 5px 10px;">
@@ -33,27 +34,28 @@
         <eye:collapsingGroup label="#{msg['smsc.maplimits.dialogsLimits']}" opened="true">
 
           <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
-            <h:outputText value="#{mapLimitBundle.dlgLimitIn}"/>
+            <h:outputText style="white-space: nowrap;" value="#{mapLimitBundle.dlgLimitIn}"/>
+            <h:outputText style="white-space: nowrap;" value="#{mapLimitBundle.dlgLimitIn}"/>
             <eye:inputText value="#{mapLimits.mlSettings.dlgLimitIn}" required="true">
               <smsc:validatePositive/>
             </eye:inputText>
 
-            <h:outputText value="#{mapLimitBundle.dlgLimitInSri}"/>
+            <h:outputText style="white-space: nowrap;" value="#{mapLimitBundle.dlgLimitInSri}"/>
             <eye:inputText value="#{mapLimits.mlSettings.dlgLimitInSri}" required="true">
               <smsc:validatePositive/>
             </eye:inputText>
 
-            <h:outputText value="#{mapLimitBundle.dlgLimitInUssd}"/>
+            <h:outputText style="white-space: nowrap;" value="#{mapLimitBundle.dlgLimitInUssd}"/>
             <eye:inputText value="#{mapLimits.mlSettings.dlgLimitInUssd}" required="true">
               <smsc:validatePositive/>
             </eye:inputText>
 
-            <h:outputText value="#{mapLimitBundle.dlgLimitOutSri}"/>
+            <h:outputText style="white-space: nowrap;" value="#{mapLimitBundle.dlgLimitOutSri}"/>
             <eye:inputText value="#{mapLimits.mlSettings.dlgLimitOutSri}" required="true">
               <smsc:validatePositive/>
             </eye:inputText>
 
-            <h:outputText value="#{mapLimitBundle.dlgLimitUssd}"/>
+            <h:outputText style="white-space: nowrap;" value="#{mapLimitBundle.dlgLimitUssd}"/>
             <eye:inputText value="#{mapLimits.mlSettings.dlgLimitUssd}" required="true">
               <smsc:validatePositive/>
             </eye:inputText>
@@ -64,7 +66,7 @@
         <eye:collapsingGroup label="#{mapLimitBundle.ussdNoSriCodes}" opened="true">
           <h:panelGrid columns="1" style="width:20%">
             <eye:dynamicTable value="#{mapLimits.codes}">
-              <eye:textColumn name="code" allowEditAfterAdd="true"/>
+              <eye:textColumn  name="code" allowEditAfterAdd="true" columnClass="width90"/>
             </eye:dynamicTable>
           </h:panelGrid>
         </eye:collapsingGroup>
@@ -76,22 +78,22 @@
               <c:set var="i" value="#{i+1}"/>
               <eye:collapsingGroup label="#{msg['smsc.maplimits.level']} #{i}" opened="true">
                 <h:panelGrid columns="2" columnClasses="labelCOlumn, valueColumn">
-                  <h:outputText value="#{mapLimitCongLvlBundle.dialogsLimit}"/>
+                  <h:outputText style="white-space: nowrap;" value="#{mapLimitCongLvlBundle.dialogsLimit}"/>
                   <eye:inputText value="#{var.dialogsLimit}" required="true">
                     <smsc:validatePositive/>
                   </eye:inputText>
 
-                  <h:outputText value="#{mapLimitCongLvlBundle.failLowerLimit}"/>
+                  <h:outputText style="white-space: nowrap;" value="#{mapLimitCongLvlBundle.failLowerLimit}"/>
                   <eye:inputText value="#{var.failLowerLimit}" required="true">
                     <smsc:validatePositive/>
                   </eye:inputText>
 
-                  <h:outputText value="#{mapLimitCongLvlBundle.failUpperLimit}"/>
+                  <h:outputText style="white-space: nowrap;" value="#{mapLimitCongLvlBundle.failUpperLimit}"/>
                   <eye:inputText value="#{var.failUpperLimit}" required="true">
                     <smsc:validatePositive/>
                   </eye:inputText>
 
-                  <h:outputText value="#{mapLimitCongLvlBundle.okToLower}"/>
+                  <h:outputText style="white-space: nowrap;" value="#{mapLimitCongLvlBundle.okToLower}"/>
                   <eye:inputText value="#{var.okToLower}" required="true">
                     <smsc:validatePositive/>
                   </eye:inputText>

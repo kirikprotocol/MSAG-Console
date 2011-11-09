@@ -13,6 +13,7 @@
     .column1 {width: 1px; text-align:right; white-space: nowrap;}
     .column2 {text-align: left;}
     .column3 {width: 300px;}
+    .width90{width:90%}
   </ui:define>
 
   <ui:define name="content">
@@ -34,7 +35,7 @@
       <h:inputHidden value="#{rescheduleEdit.oldReschedule}"/>
 
       <h:panelGrid columns="2" columnClasses="column1, column2">
-        <h:outputText value="#{msg['smsc.reschedule.edit.intervals']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['smsc.reschedule.edit.intervals']}"/>
         <eye:inputText value="#{rescheduleEdit.newReschedule}" required="true" cols="100">
           <smsc:validateRegExp pattern="#{rescheduleEdit.reschedulePattern}"
                                messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
@@ -43,7 +44,7 @@
 
       <h:panelGrid columns="2" columnClasses="column3, column2">
         <eye:dynamicTable value="#{rescheduleEdit.dynamicModel}">
-            <eye:selectColumn name="code" values="#{rescheduleEdit.availableStatuses}"
+            <eye:selectColumn name="code" values="#{rescheduleEdit.availableStatuses}" columnClass="width90"
                               uniqueValues="true" allowEditAfterAdd="false"/>
           </eye:dynamicTable>
       </h:panelGrid>

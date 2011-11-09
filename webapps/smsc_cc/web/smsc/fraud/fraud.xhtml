@@ -26,11 +26,11 @@
 
       <smsc:pageSubtitle value="#{msg['smsc.fraud.subtitle.policy']}"/>
       <h:panelGrid style="padding-left: 10px" columns="2" columnClasses="labelColumn, valueColumn">
-        <h:outputText value="#{fraudSettingsBundle['enableCheck']}"/>
+        <h:outputText style="white-space: nowrap" value="#{fraudSettingsBundle['enableCheck']}"/>
         <h:selectBooleanCheckbox value="#{fraud.enableCheck}"/>
-        <h:outputText value="#{fraudSettingsBundle['enableReject']}"/>
+        <h:outputText style="white-space: nowrap" value="#{fraudSettingsBundle['enableReject']}"/>
         <h:selectBooleanCheckbox value="#{fraud.enableReject}"/>
-        <h:outputText value="#{fraudSettingsBundle['tail']}"/>
+        <h:outputText style="white-space: nowrap" value="#{fraudSettingsBundle['tail']}"/>
         <eye:inputText value="#{fraud.tail}" required="true">
           <smsc:validatePositive/>
         </eye:inputText>

@@ -21,13 +21,13 @@
       <smsc:pageSubtitle value="#{msg['route.trace.page.trace.params']}"/>
 
       <h:panelGrid columns="2" columnClasses="column1, column2" style="padding: 5px 0px 5px 10px;">
-        <h:outputText value="#{msg['route.trace.page.source']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['route.trace.page.source']}"/>
         <eye:inputText value="#{routeTrace.sourceAddress}" required="true"/>
 
-        <h:outputText value="#{msg['route.trace.page.destination']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['route.trace.page.destination']}"/>
         <eye:inputText value="#{routeTrace.destinationAddress}" required="true"/>
 
-        <h:outputText value="#{msg['route.trace.page.sourceSme']}"/>
+        <h:outputText style="white-space: nowrap" value="#{msg['route.trace.page.sourceSme']}"/>
         <h:selectOneMenu value="#{routeTrace.sourceSmeId}">
             <f:selectItems value="#{routeTrace.smes}"/>
           </h:selectOneMenu>

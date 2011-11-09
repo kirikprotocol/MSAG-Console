@@ -16,6 +16,7 @@
     .column300 {min-width: 300px; text-align: left;}
     .column500 {min-width: 500px; text-align: left; vertical-align: top;}
     .lastColumn {width: 100%; vertical-align: top;}
+    .width90{width:90%}
   </ui:define>
 
   <ui:define name="content">
@@ -40,15 +41,15 @@
 
         <h:panelGrid columns="3" columnClasses="column1, column300, lastColumn" style="padding-left:10px;">
 
-          <h:outputText value="#{msg['subjects.page.column.name']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['subjects.page.column.name']}"/>
           <eye:inputText value="#{subjectEdit.subj.name}" required="true"/>
           <h:outputText value="&#160;" style="width: 100%"/>
 
-          <h:outputText value="#{msg['subjects.page.column.notes']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['subjects.page.column.notes']}"/>
           <eye:inputText value="#{subjectEdit.subj.notes}" rows="2"/>
           <h:outputText value="&#160;" style="width: 100%"/>
 
-          <h:outputText value="#{msg['subjects.page.column.defaultSme']}"/>
+          <h:outputText style="white-space: nowrap" value="#{msg['subjects.page.column.defaultSme']}"/>
           <h:selectOneMenu value="#{subjectEdit.subj.defaultSmeId}" >
             <f:selectItems value="#{subjectEdit.smeIds}"/>
           </h:selectOneMenu>
@@ -64,7 +65,7 @@
 
           <h:panelGrid columns="2" columnClasses="column300, lastColumn">
             <eye:dynamicTable value="#{subjectEdit.masksModel}">
-              <eye:textColumn name="mask" allowEditAfterAdd="true"/>
+              <eye:textColumn name="mask" allowEditAfterAdd="true" columnClass="width90"/>
             </eye:dynamicTable>
             <h:outputText value=""/>
           </h:panelGrid>

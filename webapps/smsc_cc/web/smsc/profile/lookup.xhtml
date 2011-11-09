@@ -19,7 +19,7 @@
     <h:form>
 
       <h:panelGrid columns="2" columnClasses="column1, column2" style="padding-bottom: 5px;">
-        <h:outputText value="#{profile['address']}"/>
+        <h:outputText style="white-space: nowrap" value="#{profile['address']}"/>
         <eye:inputText value="#{lookupProfile.address}"/>
       </h:panelGrid>
 
@@ -38,76 +38,76 @@
 
         <h:panelGrid columns="2" columnClasses="column1, column2">
 
-          <h:outputText value="#{profile['ucs2']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['ucs2']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ucs2}"/>
           <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ucs2}"/>
 
-          <h:outputText value="#{profile['latin1']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['latin1']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.latin1}"/>
           <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.latin1}"/>
 
-          <h:outputText value="#{profile['ussd7bit']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['ussd7bit']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ussd7bit}"/>
           <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ussd7bit}"/>
 
-          <h:outputText value="#{profile['reportOptions']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['reportOptions']}"/>
           <h:outputText value="#{lookupProfile.lookupResult.profile.reportOptions}"/>
 
-          <h:outputText value="#{profile['locale']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['locale']}"/>
           <h:outputText value="#{lookupProfile.lookupResult.profile.locale}"/>
 
-          <h:outputText value="#{profile['aliasHide']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['aliasHide']}"/>
           <h:outputText value="#{lookupProfile.lookupResult.profile.aliasHide}"/>
 
-          <h:outputText value="#{profile['aliasModifiable']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['aliasModifiable']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.aliasModifiable}"/>
           <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.aliasModifiable}"/>
 
-          <h:outputText value="#{profile['divert']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['divert']}"/>
           <h:outputText value="#{lookupProfile.lookupResult.profile.divert}"/>
 
-          <h:outputText value="#{profile['divertActive']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['divertActive']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActive}"/>
           <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActive}"/>
 
-          <h:outputText value="#{profile['divertActiveAbsent']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['divertActiveAbsent']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
           <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
 
-          <h:outputText value="#{profile['divertActiveBlocked']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['divertActiveBlocked']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
           <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
 
-          <h:outputText value="#{profile['divertActiveBarred']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['divertActiveBarred']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBarred}"/>
             <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBarred}"/>
 
-          <h:outputText value="#{profile['divertActiveCapacity']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['divertActiveCapacity']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
             <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
 
-          <h:outputText value="#{profile['divertModifiable']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['divertModifiable']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertModifiable}"/>
             <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertModifiable}"/>
 
-          <h:outputText value="#{profile['udhConcat']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['udhConcat']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.udhConcat}"/>
             <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.udhConcat}"/>
 
-          <h:outputText value="#{profile['translit']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['translit']}"/>
           <h:graphicImage value="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.translit}"/>
             <h:graphicImage value="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.translit}"/>
 
-          <h:outputText value="#{profile['groupId']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['groupId']}"/>
           <h:commandLink value="#{lookupProfile.lookupResult.profile.groupId}" action="CLOSED_GROUP_EDIT" immediate="true">
               <f:param name="canView" value="true"/>
               <f:param name="closed_group" value="#{lookupProfile.lookupResult.profile.groupId}"/>
             </h:commandLink>
 
-          <h:outputText value="#{profile['inputAccessMask']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['inputAccessMask']}"/>
           <h:outputText value="#{lookupProfile.lookupResult.profile.inputAccessMask}"/>
 
-          <h:outputText value="#{profile['outputAccessMask']}"/>
+          <h:outputText style="white-space: nowrap" value="#{profile['outputAccessMask']}"/>
           <h:outputText value="#{lookupProfile.lookupResult.profile.outputAccessMask}"/>
         </h:panelGrid>
 
