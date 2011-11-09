@@ -13,8 +13,8 @@
               function openjEditView(action,id)
               {
                 var checkResult = null;
-                if (action == "edit") checkResult = (new String(document.jedit.openRule(id))).toString();
-                else checkResult = new String(document.jedit.newRule(id)).toString();
+                if (action == "edit") checkResult = ( new String(document.jedit.openRule(id)) ).toString();
+                else checkResult = ( new String(document.jedit.newRule(id)) ).toString();
                 if (checkResult)
                 {
                   alertError(checkResult);
