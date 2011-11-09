@@ -177,11 +177,11 @@ ConnectMgr::processReadReadyEvent(int* listen_status)
     corex::io::InputStream* iStream;
     while ( (iStream = _ioObjectsPool.getNextReadyInputStream()) ) {
       corex::io::IOObject* curSocket = iStream->getOwner();
-      std::string curSocketFingerPrint = curSocket->toString();
+      const std::string& curSocketFingerPrint = curSocket->toString();
       smsc_log_debug(_logger, "ConnectMgr::processReadReadyEvent::: got InputStream for socket [=%s]", curSocketFingerPrint.c_str());
-      socket2link_t::iterator s2lnk_map_iter;
 
       {
+        socket2link_t::iterator s2lnk_map_iter;
         smsc::core::synchronization::MutexGuard guard(_sock2link_lock);
         s2lnk_map_iter=_socket2link.find(curSocketFingerPrint);
         if ( s2lnk_map_iter != _socket2link.end() )
