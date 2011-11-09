@@ -26,7 +26,7 @@ M3uaConnect::M3uaConnect(const std::vector<std::string> peer_addr_list, in_port_
     remoteIfaces += *iter + ",";
   }
   char portStr[32];
-  sprintf(portStr, "%u", port);
+  sprintf(portStr, ".%u", port);
   std::string::size_type idx = remoteIfaces.rfind(',');
   remoteIfaces.insert(idx, portStr);
 
@@ -43,22 +43,22 @@ M3uaConnect::M3uaConnect(const std::vector<std::string> remote_addr_list, in_por
 {
   std::string localIfaces;
   for (std::vector<std::string>::const_iterator iter = local_addr_list.begin(), end_iter = local_addr_list.end();
-      iter != end_iter; ++iter) {
+      iter != end_iter; ++iter)
     localIfaces += *iter + ",";
-  }
+
   char portStr[32];
-  sprintf(portStr, "%u", local_port);
-  std::string::size_type idx = localIfaces.rfind(',');
-  localIfaces.insert(idx, portStr);
+  sprintf(portStr, ".%u", local_port);
+  localIfaces.erase(localIfaces.rfind(','));
+  localIfaces.append(portStr);
 
   std::string remoteIfaces;
   for (std::vector<std::string>::const_iterator iter = remote_addr_list.begin(), end_iter = remote_addr_list.end();
-      iter != end_iter; ++iter) {
+      iter != end_iter; ++iter)
     remoteIfaces += *iter + ",";
-  }
-  sprintf(portStr, "%u", remote_port);
-  idx = remoteIfaces.rfind(',');
-  remoteIfaces.insert(idx, portStr);
+
+  sprintf(portStr, ".%u", remote_port);
+  remoteIfaces.erase(remoteIfaces.rfind(','));
+  remoteIfaces.append(portStr);
 
   smsc_log_info(_logger, "M3uaConnect::M3uaConnect::: connection %s==>%s, link_id=%s",
                 localIfaces.c_str(), remoteIfaces.c_str(), link_id.getValue().c_str());
