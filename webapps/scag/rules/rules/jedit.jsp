@@ -14,15 +14,6 @@
               {
                 var checkResult = null;
 
-                var o1 = document.jEdit.returnString();
-                alert('typeof o1 = ' + (typeof o1));
-
-                var o2 = new String(document.jEdit.returnString());
-                alert('typeof o2 = ' + (typeof o2));
-
-                var o3 = new String(document.jEdit.returnString());
-                alert('typeof o3 = ' + (typeof o3));
-
                 if (action == "edit") checkResult = document.jedit.openRule(id);
                 else checkResult = document.jedit.newRule(id);
                 if (checkResult)
@@ -80,7 +71,7 @@
 
               function toClose()
               {
-                var action = document.jedit.isWindowClosed() + "";
+                var action = document.jedit.isWindowClosed();
                 if (action) {
                    if (opener.submit0) {
                         opener.submit0();
