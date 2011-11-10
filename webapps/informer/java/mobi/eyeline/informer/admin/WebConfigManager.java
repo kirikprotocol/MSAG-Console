@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.util.config.BaseManager;
 import mobi.eyeline.informer.admin.util.config.SettingsReader;
 import mobi.eyeline.informer.admin.util.config.SettingsWriter;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.Collection;
@@ -22,6 +23,7 @@ import java.util.Collection;
  */
 class WebConfigManager extends BaseManager<WebConfigSettings> {
 
+  private final static Logger logger = Logger.getLogger(WebConfigManager.class);
 
   public WebConfigManager(File config, File backup, FileSystem fileSys) throws InitException {
     super(null, config, backup, fileSys, new WebConfig());
@@ -229,7 +231,12 @@ class WebConfigManager extends BaseManager<WebConfigSettings> {
   public SiebelSettings getSiebelSettings() {
     return readSettings(new SettingsReader<WebConfigSettings, SiebelSettings>() {
       public SiebelSettings executeRead(WebConfigSettings settings) {
-        return settings.getSiebelSettings();
+        try{
+          return settings.getSiebelSettings();
+        }catch (AdminException e) {
+          logger.error(e,e);
+          return null;
+        }
       }
     });
 

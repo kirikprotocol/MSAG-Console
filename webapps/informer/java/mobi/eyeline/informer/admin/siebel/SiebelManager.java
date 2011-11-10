@@ -87,10 +87,6 @@ class SiebelManager {
     }
   }
 
-  public boolean isStarted() {
-    return !shutdown;
-  }
-
   public void setMessageStates(Map<String, DeliveryMessageState> deliveryStates) throws AdminException {
     if (provider != null && !provider.isShutdowned()) {
       provider.setMessageStates(deliveryStates);
@@ -111,7 +107,7 @@ class SiebelManager {
     provider.check(p.getAllProperties());
   }
 
-  private Properties siebelProperties;
+  private SiebelSettings siebelProperties;
 
   public synchronized void start(String siebelUser, SiebelSettings ps) throws AdminException {
     if (shutdown) {
@@ -119,8 +115,7 @@ class SiebelManager {
       this.siebelUser = siebelUser;
       timeout = ps.getTimeout();
       removeOnStop = ps.isRemoveOnStop();
-      siebelProperties = new Properties();
-      siebelProperties.putAll(ps.getAllProperties());
+      siebelProperties = new SiebelSettings(ps.getAllProperties());
       executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
           new LinkedBlockingQueue<Runnable>(), new ThreadFactoryWithCounter("Siebel-Delivery-Processor", 0));
       listenerThread = new ProviderListener("SiebelProviderListener");
@@ -196,7 +191,7 @@ class SiebelManager {
   }
 
   private String getSiebelUrl() {
-    String res = siebelProperties == null ? null : siebelProperties.getProperty("jdbc.source");
+    String res = siebelProperties == null ? null : siebelProperties.getJdbcSource();
     return res == null ? "" : res;
   }
 
@@ -214,7 +209,7 @@ class SiebelManager {
           boolean connectionError = false;
           if(provider.isShutdowned()) {
             try{
-              provider.connect(siebelProperties);
+              provider.connect(siebelProperties.getAllProperties());
               getMBean().notifyInteractionOk(getSiebelUrl());
             }catch (Exception e){
               logger.error(e, e);
@@ -444,7 +439,7 @@ class SiebelManager {
     try {
       context.pauseDelivery(siebelUser, delivery.getId());
       if (logger.isDebugEnabled()) {
-        logger.debug("Siebel: delivery has been paused=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getId());
+        logger.debug("Siebel: delivery has been paused=" + delivery.getName() + " waveId=" + st.getWaveId() + " informerId=" + delivery.getId());
       }
     } catch (AdminException e) {
       throw e;
@@ -547,18 +542,6 @@ class SiebelManager {
   }
 
 
-  private static String convertMsisdn(String msisdn) {
-    msisdn = msisdn.trim();
-    if (msisdn.charAt(0) != '+') {
-      if (msisdn.charAt(0) == '8') {
-        msisdn = "+7" + msisdn.substring(1);
-      } else {
-        msisdn = '+' + msisdn;
-      }
-    }
-    return msisdn;
-  }
-
   private boolean validateMessage(SiebelMessage message, User u, Map<String, DeliveryMessageState> unloaded) throws AdminException {
     String msisdn = message.getMsisdn();
     String clcId = message.getClcId();
@@ -647,7 +630,28 @@ class SiebelManager {
     }
   }
 
-  private DeliveryPrototype createDelivery(SiebelDelivery siebelDelivery, String deliveryName) throws AdminException {
+  private static int getPriority(int curr, int min, int max) {
+    if(curr<min) {
+      return min;
+    }
+    if(curr>max) {
+      return max;
+    }
+    return curr;
+  }
+
+  @SuppressWarnings({"unchecked"})
+  private static <T extends Comparable> T getValidValue(T curr, T min, T max) {
+    if(curr.compareTo(min) < 0) {
+      return min;
+    }
+    if(curr.compareTo(max) > 0) {
+      return max;
+    }
+    return curr;
+  }
+
+  protected DeliveryPrototype createDelivery(SiebelDelivery siebelDelivery, String deliveryName) throws AdminException {
     DeliveryPrototype delivery = new DeliveryPrototype();
     context.copyUserSettingsToDeliveryPrototype(siebelUser, delivery);
     delivery.setEnableMsgFinalizationLogging(true);
@@ -655,12 +659,16 @@ class SiebelManager {
     delivery.setName(deliveryName);
     delivery.setArchiveTime(null);
 
-    delivery.setPriority(siebelDelivery.getPriority());
+    int priority = getValidValue(siebelDelivery.getPriority(), siebelProperties.getMinPriority(), siebelProperties.getMaxPriority());
+    delivery.setPriority(priority);
+
     delivery.setFlash(siebelDelivery.isFlash());
     if (siebelDelivery.getExpPeriod() != null && siebelDelivery.getExpPeriod() != 0) {
-      delivery.setValidityPeriod(new Time(siebelDelivery.getExpPeriod(), 0 ,0));
+      Time validityPeriod = new Time(siebelDelivery.getExpPeriod(), 0 ,0);
+      validityPeriod = getValidValue(validityPeriod, siebelProperties.getMinValidityPeriod(), siebelProperties.getMaxValidityPeriod());
+      delivery.setValidityPeriod(validityPeriod);
     } else {
-      delivery.setValidityPeriod(new Time(1,0,0));
+      delivery.setValidityPeriod(siebelProperties.getDefValidityPeriod());
     }
 
     delivery.setStartDate(new Date());

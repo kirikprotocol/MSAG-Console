@@ -2,13 +2,12 @@ package mobi.eyeline.informer.util;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 /**
  * Класс, описывающий время
  */
-public class Time implements Comparable {
+public class Time implements Comparable<Time> {
 
   private int hour;
   private int min;
@@ -192,9 +191,7 @@ public class Time implements Comparable {
     return result;
   }
 
-  @Override
-  public int compareTo(Object o) {
-    Time t = (Time) o;
+  public int compareTo(Time t) {
     int res = Integer.valueOf(hour).compareTo(t.hour);
     if (res != 0)
       return res;

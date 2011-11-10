@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers.siebel;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -37,6 +38,13 @@ public class SiebelController extends InformerController {
 
   private boolean init;
 
+  private Time defValidity;
+  private Time minValidity;
+  private Time maxValidity;
+
+  private int maxPriority;
+  private int minPriority;
+
   public SiebelController() {
 
     config = getConfig();
@@ -53,7 +61,11 @@ public class SiebelController extends InformerController {
       siebelUser = ps.getUser();
       removeOnStop = ps.isRemoveOnStop();
       statsPeriod = ps.getStatsPeriod();
-
+      defValidity = ps.getDefValidityPeriod();
+      minValidity = ps.getMinValidityPeriod();
+      maxValidity = ps.getMaxValidityPeriod();
+      minPriority = ps.getMinPriority();
+      maxPriority = ps.getMaxPriority();
       init = true;
     }
   }
@@ -114,7 +126,7 @@ public class SiebelController extends InformerController {
     }
   }
 
-  private SiebelSettings getSettings() {
+  private SiebelSettings getSettings() throws AdminException {
     SiebelSettings ps = config.getSiebelSettings();
     ps.setTimeout(timeout);
     ps.setJdbcSource(jdbcSource);
@@ -124,6 +136,12 @@ public class SiebelController extends InformerController {
     ps.setUser(siebelUser);
     ps.setRemoveOnStop(removeOnStop);
     ps.setStatsPeriod(statsPeriod);
+    ps.setDefValidityPeriod(defValidity);
+    ps.setMinValidityPeriod(minValidity);
+    ps.setMaxValidityPeriod(maxValidity);
+    ps.setMaxPriority(maxPriority);
+    ps.setMinPriority(minPriority);
+    ps.validate();
     return ps;
   }
 
@@ -194,5 +212,45 @@ public class SiebelController extends InformerController {
 
   public void setRemoveOnStop(boolean removeOnStop) {
     this.removeOnStop = removeOnStop;
+  }
+
+  public Time getDefValidity() {
+    return defValidity;
+  }
+
+  public void setDefValidity(Time defValidity) {
+    this.defValidity = defValidity;
+  }
+
+  public Time getMinValidity() {
+    return minValidity;
+  }
+
+  public void setMinValidity(Time minValidity) {
+    this.minValidity = minValidity;
+  }
+
+  public Time getMaxValidity() {
+    return maxValidity;
+  }
+
+  public void setMaxValidity(Time maxValidity) {
+    this.maxValidity = maxValidity;
+  }
+
+  public int getMaxPriority() {
+    return maxPriority;
+  }
+
+  public void setMaxPriority(int maxPriority) {
+    this.maxPriority = maxPriority;
+  }
+
+  public int getMinPriority() {
+    return minPriority;
+  }
+
+  public void setMinPriority(int minPriority) {
+    this.minPriority = minPriority;
   }
 }

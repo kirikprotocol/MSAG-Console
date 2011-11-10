@@ -1,10 +1,7 @@
 package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
-import mobi.eyeline.informer.admin.delivery.Visitor;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.users.User;
@@ -36,6 +33,24 @@ public class SiebelManagerTest {
 
   private static TestSiebelDataProvider dataProvider = new TestSiebelDataProvider();
 
+  private static Properties buildProps() {
+    Properties props = new Properties();
+    props.setProperty("removeOnStop", Boolean.FALSE.toString());
+    props.setProperty("timeout", Integer.toString(TIMEOUT));
+    props.setProperty("statsPeriod", "30");
+    props.setProperty("jdbc.pool.type", "");
+    props.setProperty("jdbc.user", "");
+    props.getProperty("jdbc.source", "");
+    props.setProperty("siebelUser", "");
+    props.setProperty("jdbc.password", "");
+    props.setProperty("validityPeriod.def", "03:00:00");
+    props.setProperty("validityPeriod.min", "02:00:00");
+    props.setProperty("validityPeriod.max", "12:00:00");
+    props.setProperty("priority.min","2");
+    props.setProperty("priority.max","1000");
+    return props;
+  }
+
   @BeforeClass
   public static void init() throws Exception {
     siebelUser = new User();
@@ -62,13 +77,7 @@ public class SiebelManagerTest {
       public void removeAllListeners() {
       }
     }));
-
-    Properties props = new Properties();
-    props.setProperty("removeOnStop", Boolean.FALSE.toString());
-    props.setProperty("timeout", Integer.toString(TIMEOUT));
-
-
-    siebel.start(siebelUser.getLogin(), new SiebelSettings(props));
+    siebel.start(siebelUser.getLogin(), new SiebelSettings(buildProps()));
   }
 
 
@@ -166,13 +175,13 @@ public class SiebelManagerTest {
     sm.setMsisdn("+79529223755");
     sm.setMessage("message");
     dataProvider.addMessage(wid, sm);
-        sm = new SiebelMessage();
+    sm = new SiebelMessage();
     sm.setClcId(Integer.toString(++i));
     sm.setCreated(new Date());
     sm.setLastUpd(new Date());
     sm.setMsisdn("+79167543243");
     dataProvider.addMessage(wid, sm);
-        sm = new SiebelMessage();
+    sm = new SiebelMessage();
     sm.setClcId(Integer.toString(++i));
     sm.setCreated(new Date());
     sm.setLastUpd(new Date());
@@ -244,10 +253,8 @@ public class SiebelManagerTest {
 
     siebel.stop();
 
-    Properties props = new Properties();
+    Properties props = buildProps();
     props.setProperty("removeOnStop", Boolean.TRUE.toString());
-    props.setProperty("timeout", Integer.toString(TIMEOUT));
-
 
     siebel.start(siebelUser.getLogin(), new SiebelSettings(props));
 
@@ -257,6 +264,41 @@ public class SiebelManagerTest {
 
     testDeleted();
 
+  }
+
+
+  @Test
+  public void testValidityPeriod() throws AdminException {
+    SiebelDelivery siebelDelivery = new SiebelDelivery();
+    siebelDelivery.setWaveId("wave123");
+
+    siebelDelivery.setExpPeriod(null);
+    DeliveryPrototype p = siebel.createDelivery(siebelDelivery, "test");
+    assertEquals(p.getValidityPeriod().toString(), "03:00:00");
+
+    siebelDelivery.setExpPeriod(1);
+    p = siebel.createDelivery(siebelDelivery, "test");
+    assertEquals(p.getValidityPeriod().toString(), "02:00:00");
+
+    siebelDelivery.setExpPeriod(124);
+    p = siebel.createDelivery(siebelDelivery, "test");
+    assertEquals(p.getValidityPeriod().toString(), "12:00:00");
+  }
+
+
+  @Test
+  public void testPriority() throws AdminException {
+    SiebelDelivery siebelDelivery = new SiebelDelivery();
+    siebelDelivery.setWaveId("wave123");
+
+    siebelDelivery.setPriority(1);
+
+    DeliveryPrototype p = siebel.createDelivery(siebelDelivery, "test");
+    assertEquals(p.getPriority(), 2);
+
+    siebelDelivery.setPriority(124312321);
+    p = siebel.createDelivery(siebelDelivery, "test");
+    assertEquals(p.getPriority(), 1000);
   }
 
   @AfterClass

@@ -156,7 +156,7 @@ class WebConfigSettings {
     this.siebelSettings = new SiebelSettings(siebelSettings);
   }
 
-  SiebelSettings getSiebelSettings() {
+  SiebelSettings getSiebelSettings() throws AdminException{
     return new SiebelSettings(siebelSettings);
   }
 
