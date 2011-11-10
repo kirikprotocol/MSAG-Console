@@ -65,8 +65,10 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
                     l = iphash_.GetPtr(netaddr);
                 } else if ( l->connectionCount() > connectionsPerIp_ ) {
                     mg.Unlock();
-                    smsc_log_warn( log, "Connection %s is dropped: max connect limit: %u",
-                                   sock->getPeer(), connectionsPerIp_ );
+                    smsc_log_warn( log, "Connection %s is dropped: max connect limit: %u > %u",
+                                   sock->getPeer(),
+                                   l->connectionCount(),
+                                   connectionsPerIp_ );
                     break;
                 } else if ( l->lastFailure() ) {
                     const time_t now = time(0);
