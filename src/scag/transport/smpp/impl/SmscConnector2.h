@@ -23,6 +23,7 @@ public:
   SmscConnector(SmppSMInterface* argSm):sm(argSm),active(true)
   {
     log=smsc::logger::Logger::getInstance("smpp.conn");
+    tp.setMaxThreads(16);
   }
 
   void Init(const char* argBindHost)
