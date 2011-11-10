@@ -146,8 +146,12 @@ struct SmppSocket : SmppChannel
 
   void disconnect()
   {
-      smsc_log_debug(log_,"SmppSocket @%p disconnect()",this);
-      connected=false;
+      {
+          MutexGuard mg(mtx);
+          if (!connected) return;
+          connected=false;
+      }
+      smsc_log_info(log_,"SmppSocket %p sock=%p disconnect()",this,sock);
       sock->Close();
       // peername_ = "";
       // memset(&peeraddr_,0,sizeof(peeraddr_));

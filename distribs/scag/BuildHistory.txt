@@ -906,3 +906,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss bugfix: backup rollingfilestream lock made more strict
 2011-11-07 10:14 bukind
   pvss bugfix: not throwing on already finished backup files
+2011-11-10 13:36 bukind
+  msag bugfix: unsync access in disconnect() leads to extra counts/threads
