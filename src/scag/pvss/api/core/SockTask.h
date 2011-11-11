@@ -1,19 +1,19 @@
 #ifndef _SCAG_PVSS_CORE_SOCKTASK_H
 #define _SCAG_PVSS_CORE_SOCKTASK_H
 
+#include <vector>
 #include "scag/util/WatchedThreadedTask.h"
 #include "core/network/Socket.hpp"
-#include "core/buffers/Array.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "logger/Logger.h"
 #include "scag/exc/IOException.h"
 #include "scag/util/Time.h"
+#include "PvssSocket.h"
 
 namespace scag2 {
 namespace pvss {
 namespace core {
 
-class PvssSocket;
 class Config;
 class Core;
 
@@ -24,7 +24,7 @@ protected:
               Core& thecore,
               const char* logname = 0 ) :
     config_(&theconfig), core_(&thecore), taskname_(logname ? logname : "pvss.task"),
-    log_(0), wakeupTime_(0) {
+    log_(0) {
         log_ = smsc::logger::Logger::getInstance(taskname_.c_str());
     }
 
@@ -36,23 +36,25 @@ public:
     }
 
     virtual void shutdown() {
+        smsc::core::synchronization::MutexGuard mg(mon_);
         if ( isStopping ) return;
         smsc_log_info(log_,"shutting down...");
         stop();
-        wakeup();
+        mon_.notify();
+        // wakeup();
     }
 
-    inline int sockets() const {
-        return sockets_.Count();
+    inline unsigned sockets() const {
+        return unsigned(workingSockets_.size()) + unsigned(pendingSockets_.size());
     }
 
     /// register a socket for this task ops
-    void registerChannel( PvssSocket& socket );
+    void registerChannel( PvssSocketPtr& socket );
 
     /// unregister a socket for this task ops
     void unregisterChannel( PvssSocket& socket );
 
-    /// waking up
+    // waking up
     virtual void wakeup() {
         smsc::core::synchronization::MutexGuard mg(mon_);
         mon_.notify();
@@ -62,14 +64,16 @@ public:
 
 protected:
     virtual int doExecute();
+
     virtual void attachToSocket( PvssSocket& ) {}
     virtual void detachFromSocket( PvssSocket& ) {}
 
     /// setup things prior the invocation of hasEvents()
-    virtual bool setupSockets(util::msectime_type currentTime) = 0;
+    /// @return the next wakeup time
+    virtual int setupSockets(util::msectime_type currentTime) = 0;
 
     /// action taken on setup sockets failure
-    virtual void setupFailed(util::msectime_type currentTime);
+    virtual int setupFailed(int tmo) { return tmo; }
 
     /// check if there are some events
     virtual bool hasEvents() = 0;
@@ -80,16 +84,26 @@ protected:
     /// post processing
     virtual void postProcess() {}
 
+    typedef std::vector< PvssSocketPtr >  ConnArray;
+
+private:
+    void processPending();
+
 protected:
-    Config*                                       config_;
+    const Config*                                 config_;
     Core*                                         core_;
-    std::string                                   taskname_;
 
+private:
     smsc::core::synchronization::EventMonitor     mon_;
+    ConnArray                                     pendingSockets_;
+    ConnArray                                     unpendingSockets_;
 
-    smsc::core::buffers::Array< PvssSocket* >     sockets_;
+protected:
+    // working array has no access from other threads
+    ConnArray                                     workingSockets_;
+    std::string                                   taskname_;
     smsc::logger::Logger*                         log_;
-    util::msectime_type                           wakeupTime_;
+    // util::msectime_type                           wakeupTime_;
 };
 
 } // namespace core

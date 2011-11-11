@@ -16,7 +16,7 @@ queueLimit_(queueLimit)
 {}
 
 
-void ContextQueue::requestReceived( std::auto_ptr<ServerContext>& context ) /* throw (PvssException) */ 
+void ContextQueue::requestReceived( ServerContext* context ) /* throw (PvssException) */ 
 {
     if ( !acceptRequests_ ) {
         throw PvssException(PvssException::SERVER_BUSY,"queue is shutdown");
@@ -31,12 +31,12 @@ void ContextQueue::requestReceived( std::auto_ptr<ServerContext>& context ) /* t
     }
     context->setRespQueue(*this);
     MutexGuard mg(queueMon_);
-    queues_[1].Push(context.release());
+    queues_[1].Push(ServerContextPtr(context));
     queueMon_.notify();
 }
 
 
-void ContextQueue::reportResponse( std::auto_ptr<ServerContext>& context )
+void ContextQueue::reportResponse( ServerContext* context )
 {
     if (!started_) {
         smsc_log_error(log_,"logic failure: response arrived when queue is stopped!");
@@ -53,14 +53,14 @@ void ContextQueue::reportResponse( std::auto_ptr<ServerContext>& context )
         req->timingMark(buf);
     }
     MutexGuard mg(queueMon_);
-    queues_[0].Push(context.release());
+    queues_[0].Push(ServerContextPtr(context));
     queueMon_.notify();
 }
 
 
-ServerContext* ContextQueue::getContext( int tmo )
+ServerContextPtr ContextQueue::getContext( int tmo )
 {
-    ServerContext* res = 0;
+    ServerContextPtr res;
     MutexGuard mg(queueMon_);
     while ( true ) {
         if ( queues_[0].Pop(res) ) break;

@@ -1,17 +1,16 @@
 #ifndef _SCAG_PVSS_CORE_SERVER_SERVER_H
 #define _SCAG_PVSS_CORE_SERVER_SERVER_H
 
-#include <memory>
 #include "scag/pvss/common/PvssException.h"
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/Response.h"
+#include "ServerContext.h"
 
 namespace scag2 {
 namespace pvss {
 namespace core {
 namespace server {
 
-class ServerContext;
 class SyncDispatcher;
 class AsyncDispatcher;
 
@@ -49,7 +48,7 @@ public:
          *
          * @param context   Contains processed PVAP request & sent PVAP response.
          */
-        virtual void responseSent(std::auto_ptr<ServerContext> context) = 0;
+        virtual void responseSent( ServerContextPtr& context ) = 0;
 
         /**
          * Notifies server logic that server failed to send PVAP response.
@@ -57,7 +56,7 @@ public:
          *
          * @param context   Contains processed PVAP request & failed PVAP response.
          */
-        virtual void responseFail(std::auto_ptr<ServerContext> context) = 0;
+        virtual void responseFail( ServerContextPtr& context ) = 0;
 
         // method is invoked from the worker running this logic when
         // there is no input activity on the logic.
@@ -78,7 +77,7 @@ public:
          *
          * @param context   Contains unprocessed (new) PVAP request.
          */
-        virtual void requestReceived(std::auto_ptr<ServerContext>& context ) /* throw (PvssException) */  = 0;
+        virtual void requestReceived( ServerContextPtr& context ) /* throw (PvssException) */  = 0;
 
         /**
          * Notifies server logic that processing should be stopped and waits until it finishes.

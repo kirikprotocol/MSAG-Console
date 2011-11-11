@@ -7,6 +7,8 @@
 #include "scag/util/XHashPtrFunc.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "Context.h"
+#include "informer/io/EmbedRefPtr.h"
+#include "PvssSocketBase.h"
 
 namespace scag2 {
 namespace pvss {
@@ -16,19 +18,22 @@ class ContextRegistrySet;
 
 class ContextRegistry
 {
+    friend class eyeline::informer::EmbedRefPtr< ContextRegistry >;
+
+    static smsc::logger::Logger*              log_;
+
 public:
-    typedef std::list<Context*>   ProcessingList;
+    typedef std::list< ContextPtr >   ProcessingList;
 
 private:
     typedef smsc::core::buffers::IntHash< ProcessingList::iterator > ProcessingMap;
 
 public:
-    ContextRegistry()
-#ifdef INTHASH_USAGE_CHECKING
-    : map_(SMSCFILELINE)
-#endif
-    {}
+    ContextRegistry( const PvssSockPtr& socket );
 
+    ~ContextRegistry();
+
+    /*
     class Ctx
     {
         friend class ContextRegistry;
@@ -43,56 +48,63 @@ public:
     private:
         mutable ProcessingList::iterator* i;
     };
+     */
 
 
-    /// check if seqnum exists
+    // check if seqnum exists
+    /*
     bool exists(uint32_t seqNum) const
     {
+        smsc::core::synchronization::MutexGuard mg(mon_);
         return map_.Exist(seqNum);
     }
+     */
 
     bool empty() const 
     {
+        smsc::core::synchronization::MutexGuard mg(mon_);
         return list_.empty();
     }
 
     /// push to registry, taking ownership
-    void push(Context* ctx) {
-        bool wasempty = list_.empty();
-        ProcessingList::iterator i = list_.insert(list_.end(),ctx);
-        map_.Insert(ctx->getSeqNum(),i);
-        if (wasempty) mon_.notify();
-    }
+    bool push( Context* ctx );
+
 
     /// get pointer to registry item.
-    Ctx get( uint32_t seqNum ) {
+    ContextPtr get( uint32_t seqNum ) {
+        smsc::core::synchronization::MutexGuard mg(mon_);
         ProcessingList::iterator* i = map_.GetPtr(seqNum);
-        return i;
+        return i ? **i : ContextPtr();
     }
+
 
     /// pop context (ownership is returned).
-    /// NOTE: ptr is invalidated!
-    Context* pop( const Ctx& ptr ) {
-        Context* ret = ptr.getContext();
-        if (ret) {
-            ProcessingList::iterator i;
-            if ( map_.Pop(ret->getSeqNum(),i) ) {
-                list_.erase(i);
-            }
-        }
-        ptr.i = 0;
-        if ( list_.empty() ) mon_.notify();
-        return ret;
-    }
+    ContextPtr pop( uint32_t seqNum );
 
-
-    void popAll(ProcessingList& rv) {
+    void popAll(ProcessingList& rv) 
+    {
+        smsc_log_debug(log_,"popping all ctxs from %p channel %p",this,socket_.get());
+        smsc::core::synchronization::MutexGuard mg(mon_);
         rv.clear();
         rv.swap(list_);
         map_.Empty();
         mon_.notify();
     }
     
+
+    /*
+    void destroyAll()
+    {
+        ProcessingList pl;
+        {
+            smsc::core::synchronization::MutexGuard mg(mon_);
+            pl.swap(list_);
+            map_.Empty();
+            mon_.notify();
+        }
+    }
+     */
+
 
     util::msectime_type popExpired(ProcessingList& rv,
                                    util::msectime_type currentTime,
@@ -112,15 +124,36 @@ public:
                 return expireTime;
             }
         }
-        return currentTime+timeToSleep;
+        return currentTime + timeToSleep;
     }
 
 
 private:
+    void ref() 
+    {
+        smsc::core::synchronization::MutexGuard mg(reflock_);
+        ++ref_;
+    }
+
+    void unref()
+    {
+        {
+            smsc::core::synchronization::MutexGuard mg(reflock_);
+            if ( --ref_ ) return;
+        }
+        delete this;
+    }
+
+    smsc::core::synchronization::Mutex        reflock_;
+    unsigned                                  ref_;
+
+private:
+    PvssSockPtr                               socket_;
     ProcessingList                            list_;
     ProcessingMap                             map_;
-    smsc::core::synchronization::EventMonitor mon_;
+    mutable smsc::core::synchronization::EventMonitor mon_;
 
+/*
 public:
     class Ptr 
     {
@@ -167,54 +200,75 @@ public:
     private:
         mutable ContextRegistry* registry_;
     };
+ */
 };
+
+
+typedef eyeline::informer::EmbedRefPtr< ContextRegistry >  ContextRegistryPtr;
 
 
 class ContextRegistrySet
 {
 public:
-    typedef smsc::core::network::Socket* key_type;
-    typedef ContextRegistry::Ptr         Ptr;
+    typedef PvssSocketBase*                 key_type;
+    // typedef ContextRegistry::Ptr         Ptr;
 
 public:
     ContextRegistrySet() : log_(smsc::logger::Logger::getInstance("pvss.reg")) {}
 
     ~ContextRegistrySet() {
-        ContextRegistry::ProcessingList pl;
-        while ( popAny(pl) ) {
-            Context* c;
-            while ( ! pl.empty() ) {
-                c = pl.front();
-                pl.pop_front();
-                delete c;
-            }
-        }
+        smsc::core::synchronization::MutexGuard mg(createMon_);
+        set_.Empty();
+        /*
+        do {
+            ContextRegistryPtr result = popAny();
+            if ( !result ) break;
+            // result->destroyAll();
+        } while (true);
+         */
     }
 
 
     /// create a context registry for key
     void create( key_type key ) {
+        PvssSockPtr sock(key);
         smsc::core::synchronization::MutexGuard mg(createMon_);
         if ( ! set_.Exists(key) ) {
-            ContextRegistry* reg = new ContextRegistry;
+            ContextRegistryPtr reg(new ContextRegistry(sock));
             set_.Insert(key,reg);
-            smsc_log_debug(log_,"regptr %p created", reg);
+            smsc_log_debug(log_,"regptr %p created", reg.get());
         }
     }
 
 
     /// get context registry (locked)
-    Ptr get( key_type key ) {
+    ContextRegistryPtr get( key_type key ) {
         {
             smsc::core::synchronization::MutexGuard mg(createMon_);
-            ContextRegistry** regptr = set_.GetPtr(key);
-            if (regptr) return Ptr(*regptr);
+            ContextRegistryPtr* regptr = set_.GetPtr(key);
+            if (regptr) return *regptr;
         }
         smsc_log_warn(log_,"context registry for key=%p is not found", key);
-        return Ptr();
+        return ContextRegistryPtr();
     }
 
 
+    ContextRegistryPtr popAny()
+    {
+        ContextRegistryPtr result;
+        {
+            smsc::core::synchronization::MutexGuard mg(createMon_);
+            HashType::Iterator i( set_.getIterator() );
+            key_type key;
+            if (!i.Next(key,result)) return result;
+            set_.Delete(key);
+        }
+        smsc_log_debug(log_,"regptr %p popped",result.get());
+        return result;
+    }
+
+
+    /*
     bool popAny( ContextRegistry::ProcessingList& pl )
     {
         ContextRegistry* value;
@@ -232,6 +286,7 @@ public:
         delete value;
         return true;
     }
+     */
 
 
     // NOTE: method waits until the whole registry is empty.
@@ -264,33 +319,18 @@ public:
      */
 
     // destroy a context registry for given key
-    void destroy( key_type key ) {
-        ContextRegistry::ProcessingList pl;
+    ContextRegistryPtr pop( key_type key ) {
+        ContextRegistryPtr val;
         {
             smsc::core::synchronization::MutexGuard mg(createMon_);
-            ContextRegistry** regptr = set_.GetPtr(key);
-            if ( regptr ) {
-                {
-                    Ptr ptr(*regptr);
-                    if (!ptr->empty()) ptr->popAll(pl);
-                }
-                smsc_log_debug(log_,"destroying regptr %p",*regptr);
-                delete *regptr;
-                set_.Delete(key);
-            }
+            if ( !set_.Pop(key,val) ) { return val; }
         }
-        if ( !pl.empty() ) {
-            smsc_log_warn(log_,"destroying all %d contexts from non-empty context registry", pl.size());
-            while ( ! pl.empty() ) {
-                Context* c = pl.front();
-                delete c;
-                pl.pop_front();
-            }
-        }
+        smsc_log_debug(log_,"regptr %p popped",val.get());
+        return val;
     }
 
 private:
-    typedef smsc::core::buffers::XHash<key_type,ContextRegistry*,util::XHashPtrFunc> HashType;
+    typedef smsc::core::buffers::XHash<key_type,ContextRegistryPtr,util::XHashPtrFunc> HashType;
 
 private:
     smsc::logger::Logger*                      log_;

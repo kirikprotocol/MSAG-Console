@@ -3,14 +3,13 @@
 
 #include <memory>
 #include <list>
-#include "core/network/Socket.hpp"
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "scag/exc/IOException.h"
 #include "scag/pvss/api/packets/Protocol.h"
 #include "Context.h"
-#include "logger/Logger.h"
+#include "PvssSocketBase.h"
 
 namespace scag2 {
 namespace pvss {
@@ -18,12 +17,11 @@ namespace core {
 
 class Core;
 class PacketWriter;
-class PacketReader;
+// class PacketReader;
 
-class PvssSocket
+class PvssSocket : public PvssSocketBase
 {
-private:
-    static smsc::logger::Logger*                      log_;
+    friend class eyeline::informer::EmbedRefPtr< PvssSocket >;
 
 public:
     static PvssSocket* fromSocket( smsc::core::network::Socket* s ) {
@@ -63,7 +61,7 @@ public:
     void sendData();
 
     /// checks if socket is connected
-    bool isConnected() const { return sock_->isConnected(); }
+    inline bool isConnected() const { return getSocket()->isConnected(); }
 
     /// set the next connect attempt time
     void setConnectTime( util::msectime_type connectTime ) {
@@ -75,30 +73,24 @@ public:
         return connectTime_;
     }
 
-    /// return underlying socket (for multiplexing)
-    inline smsc::core::network::Socket* socket() { return sock_.get(); }
+    // return underlying socket (for multiplexing)
+    // inline smsc::core::network::Socket* socket() { return sock_.get(); }
 
     void processInput();
 
     void connect() /* throw (exceptions::IOException) */;
-    void disconnect();
+    // void disconnect();
 
     void registerWriter( PacketWriter* writer );
-    void registerReader( PacketReader* reader );
-    
-    bool isInUse(); // const
+    // void registerReader( PacketReader* reader );
+    // bool isInUse(); // const
 
 private:
-    void init(); // called from ctor
-
     PvssSocket( const PvssSocket& );
     PvssSocket& operator = ( const PvssSocket& );
 
 private:
     Core&                                      core_;
-    std::auto_ptr<smsc::core::network::Socket> sock_;
-    std::string host_;
-    short       port_;
     int         connectionTmo_;   // sec
 
     mutable smsc::core::synchronization::EventMonitor pendingContextMon_;
@@ -113,14 +105,16 @@ private:
     Protocol::Buffer                          rdBuffer_;
 
     // writer/reader
-    smsc::core::synchronization::Mutex        writerMutex_;
-    PacketWriter*                             writer_;
-    smsc::core::synchronization::Mutex        readerMutex_;
-    PacketReader*                             reader_;
+    smsc::core::synchronization::Mutex           writerMutex_;
+    PacketWriter*                                writer_;
+    // smsc::core::synchronization::Mutex        readerMutex_;
+    // PacketReader*                             reader_;
 
     util::msectime_type                       connectTime_;
     util::msectime_type                       lastActivity_;
 };
+
+typedef eyeline::informer::EmbedRefPtr< PvssSocket > PvssSocketPtr;
 
 } // namespace core
 } // namespace pvss

@@ -126,8 +126,8 @@ public:
     {}
   virtual ~PvssLogic() {};
     virtual Response* process(Request& request, bool overrideReadonly = false) /* throw(PvssException) */ ;
-  void responseSent(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
-  void responseFail(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
+  void responseSent( core::server::ServerContextPtr& response) { /*TODO: implement this method*/ };
+  void responseFail( core::server::ServerContextPtr& response) { /*TODO: implement this method*/ };
 
   virtual void shutdownStorages() = 0;
 
@@ -308,6 +308,7 @@ private:
         smsc::core::synchronization::Mutex mutex;
         Glossary* glossary;
         AbonentStorage* storage;
+        LockableProfile dummyProfile_;
         unsigned index;
     };
 

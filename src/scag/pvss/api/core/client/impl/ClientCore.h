@@ -43,9 +43,8 @@ public:
      * Will be called by InactivityTracker when channel remains inactive during specified timeout.
      * Initiates PING request sending.
      */
-    virtual void inactivityTimeoutExpired( smsc::core::network::Socket& channel ) {
-        PvssSocket* sock = PvssSocket::fromSocket(&channel);
-        sendPingRequest( *sock );
+    virtual void inactivityTimeoutExpired( PvssSocketBase& channel ) {
+        sendPingRequest( static_cast<PvssSocket&>(channel) );
     }
 
     
@@ -74,13 +73,13 @@ public:
      *
      * @param channel   Channel to close
      */
-    virtual void closeChannel( smsc::core::network::Socket& channel );
+    virtual void closeChannel( PvssSocket& channel );
 
 
-    virtual bool registerChannel( PvssSocket& channel, util::msectime_type utime ) {
+    virtual bool registerChannel( PvssSocketPtr& channel, util::msectime_type utime ) {
         {
             smsc::core::synchronization::MutexGuard mg(channelMutex_);
-            activeChannels_.push_back(&channel);
+            activeChannels_.push_back(channel);
         }
         return Core::registerChannel(channel,utime);
     }
@@ -133,7 +132,7 @@ public:
      * @param state     Packet state in IO processing { EXPIRED, SENT, FAIL }
      * 
      */
-    virtual void reportPacket(uint32_t seqnum, smsc::core::network::Socket& channel, PacketState state);
+    virtual void reportPacket( uint32_t seqnum, PvssSocketBase& channel, PacketState state);
 
 
 protected:
@@ -173,7 +172,7 @@ private:
      * @return  next channel to send request to
      * @throws PvssException thrown only if no one channel is registered and connected to PVSS server.
      */
-    PvssSocket& getNextChannel() /* throw(PvssException) */ ;
+    PvssSocketPtr getNextChannel() /* throw(PvssException) */ ;
 
     /**
      * Internal method for async request processing.
@@ -183,7 +182,7 @@ private:
      * @throws PvssException  Thrown when client failed to accept request
      * 
      */
-    void sendRequest( std::auto_ptr<ClientContext>& context ) /* throw(PvssException) */ ;
+    void sendRequest( ClientContextPtr& context ) /* throw(PvssException) */ ;
 
     /**
      * Internal method sends PING request into provided channel.
@@ -201,12 +200,13 @@ private:
      * 
      * NOTE: Ownership is taken!
      */
-    void handleResponse(Response* response,PvssSocket& channel) /* throw(PvssException) */ ;
+    void handleResponse(Response* response,
+                        PvssSocket& channel) /* throw(PvssException) */ ;
 
 
-    void handleResponseWithContext( std::auto_ptr< ClientContext >& context,
+    void handleResponseWithContext( ClientContextPtr& context,
                                     Response* response,
-                                    smsc::core::network::Socket& channel ) /* throw(PvssException) */ ;
+                                    PvssSocket& channel ) /* throw(PvssException) */ ;
 
 
     /*
@@ -216,7 +216,7 @@ private:
     // void cleanup();
 
 private:
-    typedef std::list< PvssSocket* >          ChannelList;
+    typedef std::list< PvssSocketPtr >          ChannelList;
 
 private:
     smsc::core::synchronization::EventMonitor channelMutex_;

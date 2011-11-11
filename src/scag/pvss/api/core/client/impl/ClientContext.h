@@ -13,6 +13,7 @@ namespace client {
 /// interface
 class ClientContext : public Context
 {
+    friend class eyeline::informer::EmbedRefPtr< ClientContext >;
 public:
     ClientContext( Request* req, Client::ResponseHandler* handle ) :
     Context(req), handler(handle) {}
@@ -44,6 +45,8 @@ public:
 private:
     Client::ResponseHandler* handler; // not owned, may be null
 };
+
+typedef eyeline::informer::EmbedRefPtr< ClientContext > ClientContextPtr;
 
 } // namespace client
 } // namespace core

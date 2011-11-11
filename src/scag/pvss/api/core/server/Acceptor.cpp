@@ -23,11 +23,7 @@ void Acceptor::shutdown()
 {
     SockTask::shutdown();
     waitUntilReleased();
-    for ( int i = 0; i < finishingSockets_.Count(); ++i ) {
-        const FinSock& fs = finishingSockets_[i];
-        fs.socket->Close();
-        delete fs.socket;
-    }
+    finSocks_.clear();
 }
 
 
@@ -50,29 +46,31 @@ void Acceptor::init() /* throw (PvssException) */
 }
 
 
-bool Acceptor::setupSockets( util::msectime_type currentTime )
+int Acceptor::setupSockets( util::msectime_type currentTime )
 {
     if ( ! socket_.isConnected() ) {
         stop();
-        return false;
+        return 1000;
     }
-    if ( finishingSockets_.Count() > 0 ) wakeupTime_ = currentTime; // don't block on accept
-    int tmo = int((wakeupTime_ - currentTime)/1000); // NOTE: in seconds
-    if ( tmo <= 0 ) tmo = 1;
+    if ( !finSocks_.empty() ) {
+        return 0; // ready
+    }
+    // int tmo = int((wakeupTime_ - currentTime)/1000); // NOTE: in seconds
+    // if ( tmo <= 0 ) tmo = 1;
     // check incoming sockets
-    smsc::core::network::Socket* socket = socket_.Accept(tmo);
+    smsc::core::network::Socket* socket = socket_.Accept(1);
     if ( socket ) {
         if ( log_->isInfoEnabled() ) {
             char buf[50];
             socket->GetPeer(buf);
             smsc_log_info(log_,"incoming connection %p from: %s", socket, buf);
         }
-        FinSock fs;
+        finSocks_.push_back(FinSock());
+        FinSock& fs = finSocks_.back();
         fs.socket = socket;
         fs.connTime = util::currentTimeMillis();
-        finishingSockets_.Push(fs);
     }
-    return finishingSockets_.Count() > 0;
+    return finSocks_.empty() ? 10 : 0;
 }
 
 
@@ -82,17 +80,15 @@ void Acceptor::processEvents()
     smsc::core::network::Multiplexer mul;
     const util::msectime_type now = util::currentTimeMillis();
     bool hasSockets = false;
-    for ( int i = 0; i < finishingSockets_.Count(); ++i ) {
-        FinSock& fs = finishingSockets_[i];
+    for ( size_t i = 0; i < finSocks_.size(); ) {
+        FinSock& fs = finSocks_[i];
         const unsigned delta = unsigned(now - fs.connTime);
-        smsc::core::network::Socket* socket = fs.socket;
         if ( delta > getConfig().getConnectTimeout() ) {
-            smsc_log_warn(log_,"socket %p connect timeout, will close",socket);
-            socket->Close();
-            removeFinishingSocket(socket);
-            delete socket;
+            smsc_log_warn(log_,"socket %p connect timeout, will close",fs.socket);
+            finSocks_.erase( finSocks_.begin() + i );
             continue;
         }
+        ++i;
         hasSockets = true;
         smsc_log_debug(log_,"waiting to write into %p after %u msec",
                        fs.socket, unsigned(now - fs.connTime));
@@ -106,14 +102,27 @@ void Acceptor::processEvents()
     mul.canWrite(ready,error,200);
     for ( int i = 0; i < error.Count(); ++i ) {
         smsc::core::network::Socket* socket = error[i];
-        removeFinishingSocket(socket);
-        socket->Close();
-        delete socket;
+        FinSockArray::iterator todel = std::find( finSocks_.begin(),
+                                                  finSocks_.end(),
+                                                  socket );
+        if ( todel == finSocks_.end() ) {
+            smsc_log_warn(log_,"socket %p is not found to close",socket);
+            continue;
+        }
+        finSocks_.erase(todel);
     }
     for ( int i = 0; i < ready.Count(); ++i ) {
         smsc::core::network::Socket* socket = ready[i];
-        removeFinishingSocket(socket);
-        PvssSocket* channel = new PvssSocket(*serverCore_,socket);
+        FinSockArray::iterator todel = std::find( finSocks_.begin(),
+                                                  finSocks_.end(),
+                                                  socket );
+        if ( todel == finSocks_.end() ) {
+            smsc_log_warn(log_,"socket %p is not found to write",socket);
+            continue;
+        }
+        PvssSocketPtr channel(new PvssSocket(*serverCore_,socket));
+        todel->socket = 0; // to prevent delete
+        finSocks_.erase(todel);
         // FIXME: should we check accept time of the channel ?
         bool accepted = false;
         try {
@@ -127,12 +136,13 @@ void Acceptor::processEvents()
         socket->Write( buf, 2 );
         if (! accepted ) {
             socket->Close();
-            delete channel;
+            // delete channel;
         }
     }
 }
 
 
+/*
 void Acceptor::removeFinishingSocket(smsc::core::network::Socket* socket)
 {
     for (int i = 0; i < finishingSockets_.Count(); ++i ) {
@@ -142,6 +152,7 @@ void Acceptor::removeFinishingSocket(smsc::core::network::Socket* socket)
         }
     }
 }
+ */
 
 } // namespace server
 } // namespace core

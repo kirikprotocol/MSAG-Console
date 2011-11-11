@@ -25,16 +25,18 @@ public:
     virtual const ClientConfig& getConfig() const { return * static_cast<const ClientConfig*>(config_); }
 
 protected:
-    virtual bool setupSockets(util::msectime_type currentTime);
+    virtual int setupSockets(util::msectime_type currentTime);
 
-    virtual bool hasEvents() { return pendingSockets_.Count() > 0 || finishingSockets_.Count() > 0; }
+    virtual bool hasEvents() {
+        return !pendingSockets_.empty() || !finishingSockets_.empty();
+    }
 
     virtual void processEvents();
 
 private:
-    smsc::core::buffers::Array< PvssSocket* >     pendingSockets_;
-    smsc::core::synchronization::Mutex            finishingMutex_;
-    smsc::core::buffers::Array< PvssSocket* >     finishingSockets_;
+    smsc::core::synchronization::Mutex finishingMutex_;
+    ConnArray        pendingSockets_;
+    ConnArray        finishingSockets_;
 };
 
 } // namespace client

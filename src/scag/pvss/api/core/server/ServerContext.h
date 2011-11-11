@@ -3,11 +3,13 @@
 
 #include "core/synchronization/Mutex.hpp"
 #include "scag/pvss/api/core/Context.h"
-#include "core/network/Socket.hpp"
 
 namespace scag2 {
 namespace pvss {
 namespace core {
+
+class PvssSocketBase;
+
 namespace server {
 
 class ServerCore;
@@ -17,6 +19,7 @@ class ContextQueue;
 /// base server context (may be new or old)
 class ServerContext : public Context
 {
+    friend class eyeline::informer::EmbedRefPtr< ServerContext >;
 public:
     enum State {
             NEW = 1,
@@ -50,7 +53,7 @@ public:
     }
 
     /// used for hashing context on socket in servercore
-    virtual smsc::core::network::Socket* getSocket() const = 0;
+    virtual PvssSocketBase* getSocket() = 0;
 
     /// send response
     virtual void sendResponse() /* throw (PvssException) */  = 0;
@@ -61,6 +64,8 @@ private:
     ContextQueue*                      respQueue_;
     // PvssSocket& socket_;
 };
+
+typedef eyeline::informer::EmbedRefPtr< ServerContext > ServerContextPtr;
 
 } // namespace server
 } // namespace core

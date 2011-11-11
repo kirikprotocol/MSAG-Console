@@ -12,15 +12,28 @@ int SockTask::doExecute()
     while ( ! isStopping ) {
         // smsc_log_debug(log_,"cycling %s",taskName());
         try {
+
             util::msectime_type currentTime = util::currentTimeMillis();
-            wakeupTime_ = currentTime + 200;
-            bool ok = false;
-            {
+
+            // collect pending sockets
+            processPending();
+
+            int tmo = setupSockets( currentTime );
+            if ( tmo > 0 ) {
+                // setup failed, need to wait
                 smsc::core::synchronization::MutexGuard mg(mon_);
-                ok = setupSockets(currentTime);
-                if ( ! ok ) setupFailed(currentTime);
+
+                // fix timeout if necessary
+                tmo = setupFailed( tmo );
+                if ( tmo > 0 ) {
+                    if ( tmo > 1000 ) tmo = 1000;
+                    mon_.wait(tmo);
+                }
+                continue;
+
             }
-            if ( ok && hasEvents() ) {
+
+            if ( hasEvents() ) {
                 processEvents();
             }
             postProcess();
@@ -30,58 +43,83 @@ int SockTask::doExecute()
         }
     }
     smsc_log_info(log_, "%s left the main loop", taskName() );
-    {
-        smsc::core::synchronization::MutexGuard mg(mon_);
-        while ( sockets_.Count() > 0 ) {
-            PvssSocket& channel = *sockets_[0];
-            sockets_.Delete(0);
-            detachFromSocket(channel);
-        }
+    processPending();
+    for ( ConnArray::iterator i = workingSockets_.begin(), ie = workingSockets_.end(); i != ie; ++i ) {
+        detachFromSocket(**i);
     }
     smsc_log_info(log_, "%s::Execute finished", taskName() );
     return 0;
 }
 
 
-void SockTask::registerChannel( PvssSocket& con )
+void SockTask::registerChannel( PvssSocketPtr& con )
 {
-    smsc_log_debug(log_,"registering channel %p",&con);
     {
         smsc::core::synchronization::MutexGuard mg(mon_);
-        for ( int i = 0; i < sockets_.Count(); ++i ) {
-            if ( sockets_[i] == &con ) return;
-        }
-        sockets_.Push( &con );
+        if ( isStopping ) return;
+        smsc_log_debug(log_,"registering channel %p",&con);
+        pendingSockets_.push_back(con);
         mon_.notify();
     }
-    attachToSocket(con);
 }
 
 
 void SockTask::unregisterChannel( PvssSocket& sock )
 {
-    bool found = false;
+    smsc_log_debug(log_,"unregistering channel %p sock=%p",&sock,sock.getSocket());
     {
         smsc::core::synchronization::MutexGuard mg(mon_);
-        for ( int i = 0; i < sockets_.Count(); ++i ) {
-            if ( sockets_[i] == &sock ) {
-                sockets_.Delete(i);
-                found = true;
-                break;
-            }
+        if ( isStopping ) {
+            smsc_log_warn(log_,"cannot unregister channel %p sock=%p at stop",&sock,sock.getSocket());
+            return;
         }
-    }
-    if ( found ) {
-        detachFromSocket(sock);
-        smsc_log_debug(log_,"channel %p unregistered",&sock);
+        unpendingSockets_.push_back(PvssSocketPtr(&sock));
+        mon_.notify();
     }
 }
 
 
-void SockTask::setupFailed(util::msectime_type currentTime)
+void SockTask::processPending()
 {
-    if ( wakeupTime_ > currentTime ) {
-        mon_.wait( int(wakeupTime_ - currentTime) );
+    ConnArray work;
+    {
+        smsc::core::synchronization::MutexGuard mg(mon_);
+        for ( ConnArray::iterator ps = pendingSockets_.begin(), pe = pendingSockets_.end();
+              ps != pe; ++ps ) {
+            if ( std::find(workingSockets_.begin(),
+                           workingSockets_.end(),
+                           *ps) == workingSockets_.end() ) {
+                // not found
+                work.push_back(*ps);
+                mon_.notify();
+            }
+        }
+        pendingSockets_.clear();
+    }
+    workingSockets_.reserve( workingSockets_.size() + work.size() );
+    for ( ConnArray::iterator i = work.begin(), ie = work.end(); i != ie; ++i ) {
+        workingSockets_.push_back(*i);
+        attachToSocket(**i);
+        smsc_log_debug(log_,"channel %p sock=%p registered",i->get(),(*i)->getSocket());
+    }
+    work.clear();
+    {
+        smsc::core::synchronization::MutexGuard mg(mon_);
+        for ( ConnArray::iterator i = unpendingSockets_.begin(), ie = unpendingSockets_.end();
+              i != ie; ++i ) {
+            ConnArray::iterator found = std::find( workingSockets_.begin(),
+                                                   workingSockets_.end(),
+                                                   *i );
+            if ( found != workingSockets_.end() ) {
+                work.push_back(*found);
+                workingSockets_.erase(found);
+            }
+        }
+        unpendingSockets_.clear();
+    }
+    for ( ConnArray::iterator i = work.begin(), ie = work.end(); i != ie; ++i ) {
+        detachFromSocket(**i);
+        smsc_log_debug(log_,"channel %p sock=%p unregistered",i->get(),(*i)->getSocket());
     }
 }
 

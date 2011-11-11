@@ -7,7 +7,7 @@ namespace core {
 
 bool PacketReader::setupSocket( PvssSocket& con, util::msectime_type )
 {
-    mul_.add( con.socket() );
+    mul_.add( con.getSocket() );
     return true;
 }
 

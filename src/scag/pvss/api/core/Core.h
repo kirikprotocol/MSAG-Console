@@ -42,6 +42,17 @@ public:
             SENT
     };
 
+    static const char* packetStateToString( PacketState ps )
+    {
+        switch (ps) {
+        case RECEIVED: return "RECEIVED";
+        case EXPIRED: return "EXPIRED";
+        case FAILED: return "FAILED";
+        case SENT: return "SENT";
+        default: return "???";
+        }
+    }
+
 protected:
     /// config and proto gets owned
     Core( Config* theConfig, Protocol* theProtocol ) :
@@ -78,7 +89,7 @@ public:
      * @param state     Packet state in IO processing { EXPIRED, SENT, FAIL }
      * 
      */
-    virtual void reportPacket( uint32_t seqNum, smsc::core::network::Socket& channel, PacketState state ) = 0;
+    virtual void reportPacket( uint32_t seqNum, PvssSocketBase& channel, PacketState state ) = 0;
 
     /**
      * Method reports that error was occured when operating with channel.
@@ -90,8 +101,8 @@ public:
     void handleError( const PvssException& exc, PvssSocket& channel ) {
         smsc_log_error( logger, "exc %s on socket %p of channel %p: %s",
                         PvssException::statusToString(exc.getType()),
-                        channel.socket(), &channel, exc.what() );
-        closeChannel( * channel.socket() );
+                        channel.getSocket(), &channel, exc.what() );
+        closeChannel( channel );
     }
         
     /**
@@ -100,27 +111,14 @@ public:
      *
      * @param channel   Channel to close
      */
-    virtual void closeChannel( smsc::core::network::Socket& channel );
+    virtual void closeChannel( PvssSocketBase& channel );
 
     /**
      * Method registers a channel for regular IO operations.
      * A channel should be already connected.
      */
-    virtual bool registerChannel( PvssSocket& channel, util::msectime_type utime)
-    {
-        try {
-            registerForRead(channel);
-            registerForWrite(channel);
-            inactivityTracker->registerChannel(channel, utime);
-            smsc_log_info(logger,"Socket %p connected and registered", channel.socket() );
-        }
-        catch (PvssException& register_exc) {
-            smsc_log_error( logger, "Failed to register new channel. Details: %s", register_exc.what() );
-            closeChannel( *channel.socket() );
-            return false;
-        }
-        return true;
-    }
+    virtual bool registerChannel( PvssSocketPtr& channel,
+                                  util::msectime_type utime );
 
     virtual Config& getConfig() const {
         return *config;
@@ -157,9 +155,9 @@ private:
         inactivityTracker->updateChannel(channel, utime);
     }
 
-    void registerForWrite( PvssSocket& channel ) /* throw(PvssException) */ ;
+    void registerForWrite( PvssSocketPtr& channel ) /* throw(PvssException) */ ;
 
-    void registerForRead( PvssSocket& channel ) /* throw(PvssException) */ ;
+    void registerForRead( PvssSocketPtr& channel ) /* throw(PvssException) */ ;
 
     void stopReaders()
     {

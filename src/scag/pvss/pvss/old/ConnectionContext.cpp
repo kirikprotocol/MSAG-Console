@@ -18,43 +18,35 @@ const size_t MAX_PACKET_SIZE = 102400;
 ConnectionContext::ConnectionContext( Socket* sock,
                                       core::server::ServerCore& server,
                                       bool perfCounterOn ) :
-    action_(READ_REQUEST), packetLen_(0), async_(false),
-    pvssServer_(server), socket_(sock),
-    // writerManager_(writerManager),
-    perfCounter_(perfCounterOn),
-    packetsCount_(0), ref_(0)
+Connection(sock),
+action_(READ_REQUEST), packetLen_(0),
+async_(false),
+pvssServer_(server),
+perfCounter_(perfCounterOn),
+packetsCount_(0)
 {
-  //if (socket_) {
-    //SocketData::setContext(socket_, this);
-  //}
-
-  //TODO register socket
-  pvssServer_.acceptOldChannel(socket_);
-  debuglogger_ = Logger::getInstance("ctx");
-  getPeerIp();
 } 
 
-ConnectionContext::~ConnectionContext() {
-  if (socket_) {
-    //TODO unregister socket
-    delete socket_;
-  }
+ConnectionContext::~ConnectionContext() 
+{
 }
 
-void ConnectionContext::getPeerIp() {
-  if (!socket_) {
+/*
+void ConnectionContext::getPeerIp() 
+{
+  if (!getSocket()) {
     return;
   }
   char peerNameBuf[32];
-  socket_->GetPeer(peerNameBuf);
+  getSocket()->GetPeer(peerNameBuf);
   peerIp_ = peerNameBuf;
   peerName_ = peerIp_;
     std::string::size_type pos = peerIp_.find_first_of(':');
     if (pos != std::string::npos) {
         peerIp_.erase(pos);
     }
-  //smsc_log_info(logger_, "Connection accepted from %s", peerIp_.c_str());
 }
+ */
 
 bool ConnectionContext::sendResponseData(const char* data, uint32_t dataSize) {
   {
@@ -71,12 +63,12 @@ bool ConnectionContext::sendResponseData(const char* data, uint32_t dataSize) {
     --packetsCount_;
     /*
     if (tasksCount_ >= 2) {
-      smsc_log_debug(logger_, "cx:%p socket %p error tasksCount=%d", this, socket_, tasksCount_);
+      smsc_log_debug(log_, "cx:%p socket %p error tasksCount=%d", this, getSocket(), tasksCount_);
     }
      */
     /*
     if (inprocess) {
-      smsc_log_debug(logger_, "cx:%p socket %p already in multiplexer", this, socket_);
+      smsc_log_debug(log_, "cx:%p socket %p already in multiplexer", this, getSocket());
       return true;
     }
     ++tasksCount_;
@@ -107,40 +99,44 @@ void ConnectionContext::writeData(const char* data, uint32_t size) {
 
 bool ConnectionContext::readData(const time_t& now) {
   if(inbuf_.GetSize() < PACKET_LENGTH_SIZE) {
-    int n = socket_->Read(readBuf_, PACKET_LENGTH_SIZE - inbuf_.GetSize());
-    smsc_log_debug(logger_, "cx:%p read(len) %u bytes from %p", this, n, socket_);
+    int n = getSocket()->Read(readBuf_, PACKET_LENGTH_SIZE - inbuf_.GetSize());
+    smsc_log_debug(log_, "cx:%p read(len) %u bytes from %p", this, n, getSocket());
     if (n <= 0) {
-      if (n) smsc_log_warn(logger_, "%p: read error: %s(%d)", this, strerror(errno), errno);
+      if (n) {
+          smsc_log_warn(log_, "%p: read error: %s(%d)", this, strerror(errno), errno);
+      }
       return false;
     }
     inbuf_.Append(readBuf_, n);
     if (inbuf_.GetSize() < PACKET_LENGTH_SIZE) {
-      SocketData::updateTimestamp(socket_, now);
+      SocketData::updateTimestamp(getSocket(), now);
       return true;
     }
     n = inbuf_.getPos();
     inbuf_.SetPos(0);
     packetLen_ = inbuf_.ReadInt32();
-    smsc_log_debug(logger_, "%d bytes will be read from %p", packetLen_, socket_);
+    smsc_log_debug(log_, "%d bytes will be read from %p", packetLen_, getSocket());
     if (packetLen_ > MAX_PACKET_SIZE) {
-      smsc_log_warn(logger_, "Too big packet from client: %d bytes. Max packet size: %d bytes", packetLen_, MAX_PACKET_SIZE);
+      smsc_log_warn(log_, "Too big packet from client: %d bytes. Max packet size: %d bytes", packetLen_, MAX_PACKET_SIZE);
       return false;
     }
     inbuf_.SetPos(n);
   } 
   int n = packetLen_ - inbuf_.GetSize();
-  n = socket_->Read(readBuf_, n > READ_BUF_SIZE ? READ_BUF_SIZE : n);
+  n = getSocket()->Read(readBuf_, n > READ_BUF_SIZE ? READ_BUF_SIZE : n);
 
-  smsc_log_debug(logger_, "read %u bytes from %p", n, socket_);
+  smsc_log_debug(log_, "read %u bytes from %p", n, getSocket());
 
   if (n > 0) {
-    SocketData::updateTimestamp(socket_, now);
+    SocketData::updateTimestamp(getSocket(), now);
     inbuf_.Append(readBuf_, n);
     if (inbuf_.GetSize() < packetLen_) {
       return true;
     }
   } else if (errno != EWOULDBLOCK) {
-    if (n) smsc_log_warn(logger_, "read error: %s(%d)", strerror(errno), errno);
+    if (n) {
+        smsc_log_warn(log_, "read error: %s(%d)", strerror(errno), errno);
+    }
     return false;
   }
   perfCounter_.incAccepted();
@@ -149,7 +145,7 @@ bool ConnectionContext::readData(const time_t& now) {
     ++packetsCount_;
     action_ = PROCESS_REQUEST;
   }
-  smsc_log_debug(logger_, "read from socket:%p len=%d, data=%s", socket_, inbuf_.length(), inbuf_.toString().c_str());
+  smsc_log_debug(log_, "read from socket:%p len=%d, data=%s", getSocket(), inbuf_.length(), inbuf_.toString().c_str());
   inbuf_.SetPos(PACKET_LENGTH_SIZE);
   return true;
 }
@@ -164,26 +160,32 @@ bool ConnectionContext::processWriteSocket(const time_t& now) {
   if (len == 0) {
     return true;
   }
-  smsc_log_debug(logger_, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d data=%s",
-                  len, socket_, sb.GetCurPtr(), sb.GetPos(), sb.toString().c_str());
+  smsc_log_debug(log_, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d data=%s",
+                  len, getSocket(), sb.GetCurPtr(), sb.GetPos(), sb.toString().c_str());
 
-  int n = socket_->Write(sb.GetCurPtr(), len - sb.getPos());
-  SocketData::updateTimestamp(socket_, now);
+  int n = getSocket()->Write(sb.GetCurPtr(), len - sb.getPos());
+  SocketData::updateTimestamp(getSocket(), now);
   //flushLogs();
   if (n > 0) {
     sb.SetPos(sb.GetPos() + n);
   } else {
     outbuf_.Empty();
     mg.Unlock();
-    smsc_log_warn(logger_, "Error: %s(%d)", strerror(errno), errno);
+    smsc_log_warn(log_, "Error: %s(%d)", strerror(errno), errno);
     return false;
   }
   if (sb.GetPos() >= len) {
-    smsc_log_debug(logger_, "written %u bytes to %p data=%s", n, socket_, sb.toString().c_str());
+    smsc_log_debug(log_, "written %u bytes to %p data=%s", n, getSocket(), sb.toString().c_str());
     outbuf_.Empty();
     action_ = READ_REQUEST;
   }
   return true;
+}
+
+
+void ConnectionContext::unregisterFromCore()
+{
+    pvssServer_.closeChannel(*this);
 }
 
 }

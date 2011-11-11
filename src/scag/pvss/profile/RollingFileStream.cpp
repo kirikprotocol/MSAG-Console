@@ -57,6 +57,8 @@ public:
     ProfileLogStreamRecordParser* rp_;
     uint32_t    lines;
     uint32_t    crc32;
+    uint32_t    linesRead_;
+    uint32_t    crc32Read_;
     std::string nextFile;
 };
 
@@ -136,6 +138,8 @@ void RollingFileStreamReader::read( const char*    fullName,
     fr.readRecords( buf, reader );
     lines_ = reader.lines;
     crc32_ = reader.crc32;
+    linesRead_ = reader.linesRead_;
+    crc32Read_ = reader.crc32Read_;
     nextFile_ = reader.nextFile;
 }
 

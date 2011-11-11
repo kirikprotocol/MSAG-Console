@@ -24,15 +24,15 @@ SyncContext::SyncContext(Socket* sock,
                          PersProtocol& protocol, bool perfCounterOn)
     :ConnectionContext(sock, server, perfCounterOn), protocol_(protocol), seqNum_(0) 
 {
-  if (socket_) {
-    SocketData::setContext(socket_, this);
+  if (getSocket()) {
+    SocketData::setContext(getSocket(), this);
   }
-  logger_ = Logger::getInstance("synccontext");
-  smsc_log_info(logger_, "connection accepted: %s", peerName_.c_str());
+  // logger_ = Logger::getInstance("synccontext");
+  // smsc_log_info(log_, "connection accepted: %s", peerName_.c_str());
 }
 
 void SyncContext::createErrorResponse(uint8_t status, const char* msg) {
-  smsc_log_debug(logger_, "%p: Create Error response %d msg=%s", this, status, msg?msg:"");
+  smsc_log_debug(log_, "%p: Create Error response %d msg=%s", this, status, msg?msg:"");
   ErrorResponse resp(uint32_t(-1),status,msg);
   // resp.setStatus(status);
   sendResponse(resp);
@@ -40,30 +40,30 @@ void SyncContext::createErrorResponse(uint8_t status, const char* msg) {
 
 bool SyncContext::sendResponse(const Response& resp) {
   try {
-    smsc_log_debug(logger_, "%p: Serialize response %s", this, resp.toString().c_str());
+    smsc_log_debug(log_, "%p: Serialize response %s", this, resp.toString().c_str());
     fakeResp_.Empty();
     protocol_.serialize(resp, fakeResp_);
     return sendResponseData(fakeResp_.c_ptr(), fakeResp_.GetSize());
   } catch (const SerialBufferOutOfBounds& e) {
-    smsc_log_warn(logger_, "%p:SerialBufferOutOfBounds while serializing response %s", this, resp.toString().c_str());
+    smsc_log_warn(log_, "%p:SerialBufferOutOfBounds while serializing response %s", this, resp.toString().c_str());
   } catch (const PvapException& e) {
-    smsc_log_warn(logger_, "%p:PvapException: %s, while serializing response %s", this, e.getMessage().c_str(), resp.toString().c_str());
+    smsc_log_warn(log_, "%p:PvapException: %s, while serializing response %s", this, e.getMessage().c_str(), resp.toString().c_str());
   } catch (const std::exception& e) {
-    smsc_log_warn(logger_, "%p:std::exception %s, while serializing response %s", this, e.what(), resp.toString().c_str());
+    smsc_log_warn(log_, "%p:std::exception %s, while serializing response %s", this, e.what(), resp.toString().c_str());
   } catch (...) {
-    smsc_log_warn(logger_, "%p:Unknown Exception, while serializing response %s", this, resp.toString().c_str());
+    smsc_log_warn(log_, "%p:Unknown Exception, while serializing response %s", this, resp.toString().c_str());
   }
   return false;
 }
 
 void SyncContext::sendResponse(const Response* resp) {
   if (!resp) {
-    smsc_log_debug(logger_, "SyncContext::sendResponse: context:%p response is NULL", this);
+    smsc_log_debug(log_, "SyncContext::sendResponse: context:%p response is NULL", this);
     return;
   }
   core::Core::PacketState state = sendResponse(*resp) ? core::Core::SENT : core::Core::FAILED;
   const uint32_t seqNum = resp->getSeqNum();
-  pvssServer_.reportPacket(seqNum, *getSocket(), state);
+  pvssServer_.reportPacket(seqNum, *this, state);
 }
 
 bool SyncContext::processReadSocket(const time_t& now) {
@@ -71,7 +71,7 @@ bool SyncContext::processReadSocket(const time_t& now) {
     RelockMutexGuard mg(mutex_);
     if (action_ != READ_REQUEST) {
       mg.Unlock();
-      smsc_log_warn(logger_, "cx:%p socket %p error action=%d, must be READ_REQUEST", this, socket_, action_);
+      smsc_log_warn(log_, "cx:%p socket %p error action=%d, must be READ_REQUEST", this, getSocket(), action_);
       return false;
     }
   }
@@ -88,7 +88,7 @@ bool SyncContext::processReadSocket(const time_t& now) {
   
     Request *req = protocol_.deserialize(inbuf_);
     if (!req) {
-      smsc_log_warn(logger_, "%p:request is NULL. buffer received len=%d curpos=%d data=%s",
+      smsc_log_warn(log_, "%p:request is NULL. buffer received len=%d curpos=%d data=%s",
                               this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
       createErrorResponse(Response::BAD_REQUEST,"request is NULL");
     }
@@ -105,36 +105,36 @@ bool SyncContext::processReadSocket(const time_t& now) {
     }
 
     request->setSeqNum(seqNum_++);
-    std::auto_ptr<core::server::ServerContext> serverContext(new PersServerContext(request.release(), this));
+    core::server::ServerContextPtr serverContext(new PersServerContext(request.release(), this));
     pvssServer_.receiveOldPacket(serverContext);
 
   } catch (const SerialBufferOutOfBounds& e) {
-    smsc_log_warn(logger_, "%p:SerialBufferOutOfBounds: bad data in buffer received len=%d curpos=%d data=%s",
+    smsc_log_warn(log_, "%p:SerialBufferOutOfBounds: bad data in buffer received len=%d curpos=%d data=%s",
                             this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(Response::BAD_REQUEST,e.what());
 
   } catch (const std::runtime_error& e) {
-    smsc_log_warn(logger_, "%p:std::runtime_error: Error profile key: %s. buffer received len=%d curpos=%d data=%s",
+    smsc_log_warn(log_, "%p:std::runtime_error: Error profile key: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.what(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(Response::UNKNOWN,e.what());
 
   } catch (const pvap::InvalidMessageTypeException& e) {
-    smsc_log_warn(logger_, "%p:InvalidMessageTypeException: %s. buffer received len=%d curpos=%d data=%s",
+    smsc_log_warn(log_, "%p:InvalidMessageTypeException: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.getMessage().c_str(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(Response::NOT_SUPPORTED,e.what());
 
   } catch (const PvssException& e) {
-    smsc_log_warn(logger_, "%p:PvssException: %s. buffer received len=%d curpos=%d data=%s",
+    smsc_log_warn(log_, "%p:PvssException: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.getMessage().c_str(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(e.getType(),e.what());
 
   } catch (const std::exception& e) {
-    smsc_log_warn(logger_, "%p:std::exception: %s. buffer received len=%d curpos=%d data=%s",
+    smsc_log_warn(log_, "%p:std::exception: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.what(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(Response::UNKNOWN,e.what());
 
   } catch (...) {
-    smsc_log_warn(logger_, "%p:Unknown Exception: buffer received len=%d curpos=%d data=%s",
+    smsc_log_warn(log_, "%p:Unknown Exception: buffer received len=%d curpos=%d data=%s",
                             this, inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(Response::UNKNOWN,"unknown exc");
   }

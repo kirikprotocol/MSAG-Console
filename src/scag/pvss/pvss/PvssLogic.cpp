@@ -402,24 +402,25 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
     if ( createProfile && dispatcher_.isReadonly() && !overrideReadonly ) {
         throw smsc::util::Exception("pvss in readonly mode");
     }
-    Profile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
+    LockableProfile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
     /// FIXME: temporary
     if (pf) pf->setKey( profkey );
-    ProfileCommandProcessor::ReadonlyFilter rf(commandProcessor_,
-                                               dispatcher_.isReadonly() && !overrideReadonly );
-
-    if ( rf.applyCommonLogic(profkey, profileRequest, pf, createProfile) ) {
+    bool ok;
+    {
+        ProfileCommandProcessor::ReadonlyFilter rf(commandProcessor_,
+                                                   dispatcher_.isReadonly() && !overrideReadonly );
+        smsc::core::synchronization::MutexGuardTmpl< LockableProfile > mg(pf?*pf :
+                                                                          elstorage->dummyProfile_);
+        ok = rf.applyCommonLogic(profkey, profileRequest, pf, createProfile);
+    }
+    if (ok) {
         if ( pf->isChanged() ) {
-            bool ok;
             {
                 MutexGuard mg(elstorage->mutex);
                 ok = elstorage->storage->markDirty(profileKey.getAddress());
             }
             if (ok) { diskFlusher_->wakeup(); }
             commandProcessor_.finishProcessing(ok);
-            if (!ok) {
-                // making a server_busy
-            }
         }
     }
     return commandProcessor_.getResponse();

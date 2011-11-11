@@ -44,20 +44,14 @@ protected:
                                  smsc::core::network::Multiplexer::SockArray &error,
                                  time_t now) = 0;
 
-    virtual void preDisconnect( ConnectionContext* cx ) {}
+    virtual void preDisconnect( ConnectionContext* cx );
+
+    void showmul();
 
 private:
 
     // NOTE: under lock
     time_t checkConnectionTimeout();
-
-    // inline bool isTimedOut(smsc::core::network::Socket* s, time_t now);
-    // void removeSockets(smsc::core::network::Multiplexer::SockArray &error);
-
-    // NOTE: must be locked
-    // void removeSocket( smsc::core::network::Socket *s );
-
-    // bool idle() const;
 
 protected:
     smsc::logger::Logger* log_;
@@ -81,7 +75,7 @@ class MTPersReader: public IOTask
 public:
     MTPersReader(uint32_t connectionTimeout,
                  uint16_t ioTimeout) : IOTask(// iomanager,
-                                              connectionTimeout, ioTimeout, "reader") {}
+                                              connectionTimeout, ioTimeout, "oldredr") {}
     virtual const char * taskName() { return "MTPersReader"; }
     Performance getPerformance();
 protected:
@@ -99,7 +93,7 @@ class MTPersWriter: public IOTask
 {
 public:
     MTPersWriter(uint32_t connectionTimeout,
-                 uint16_t ioTimeout):IOTask(connectionTimeout, ioTimeout, "writer") {};
+                 uint16_t ioTimeout):IOTask(connectionTimeout, ioTimeout, "oldwrtr") {};
     virtual const char * taskName() { return "MTPersWriter"; }
 protected:
     void processSockets(smsc::core::network::Multiplexer::SockArray &ready,

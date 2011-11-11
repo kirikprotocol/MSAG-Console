@@ -119,32 +119,35 @@ void ServerCore::checkLicenseFile()
 }
 
 
-bool ServerCore::acceptChannel( PvssSocket* channel )
+bool ServerCore::acceptChannel( PvssSocketPtr& channel )
 {
-    regset_.create(channel->socket());
-    bool accepted = Core::registerChannel(*channel,util::currentTimeMillis());
-    if ( accepted ) {
-        MutexGuard mg(channelMutex_);
-        channels_.push_back(channel->socket());
-        managedChannels_.push_back(channel->socket());
-    } else {
-        regset_.destroy(channel->socket());
-    }
-    return accepted;
+    regset_.create(channel.get());
+    try {
+        const bool accepted = Core::registerChannel(channel,util::currentTimeMillis());
+        if ( accepted ) {
+            PvssSockPtr ptr(channel.get());
+            MutexGuard mg(channelMutex_);
+            managedChannels_.push_back(ptr);
+            channels_.push_back(ptr);
+            return true;
+        }
+    } catch (...) {}
+    regset_.pop(channel.get());
+    return false;
 }
 
 
-void ServerCore::acceptOldChannel( smsc::core::network::Socket* socket )
+void ServerCore::acceptOldChannel( PvssSocketBase* channel )
 {
-    regset_.create(socket);
+    regset_.create(channel);
     {
         MutexGuard mg(channelMutex_);
-        channels_.push_back(socket);
+        channels_.push_back(PvssSockPtr(channel));
     }
 }
 
 
-void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // /* throw (PvssException) */ 
+void ServerCore::contextProcessed( ServerContextPtr& context) // /* throw (PvssException) */ 
 {
     try {
         sendResponse(context);
@@ -162,7 +165,7 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // /* th
     if (context.get()) {
         // writing failure is notified immediately
         context->setState(ServerContext::FAILED);
-        reportContext(context);
+        reportContext(context.get());
     }
 }
 
@@ -176,42 +179,47 @@ void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
 
     updateChannelActivity(channel);
     Request* req = static_cast<Request*>(packet.release());
-    std::auto_ptr<ServerContext> ctx(new ServerNewContext(req,channel));
+    ServerContextPtr ctx(new ServerNewContext(req,channel));
     receiveContext( ctx );
 }
 
 
-void ServerCore::receiveOldPacket( std::auto_ptr< ServerContext > ctx )
+void ServerCore::receiveOldPacket( ServerContextPtr& ctx )
 {
     // do we need some checks on this context?
     receiveContext(ctx);
 }
 
 
-void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& channel, PacketState state)
+void ServerCore::reportPacket( uint32_t seqNum,
+                               PvssSocketBase& channel,
+                               PacketState state )
 {
-    std::auto_ptr<ServerContext> ctx;
+    ServerContextPtr ctx;
     Response* response = 0;
     {
-        ContextRegistry::Ptr ptr(regset_.get(&channel));
+        ContextRegistryPtr ptr = regset_.get(&channel);
         if (!ptr) {
-            smsc_log_debug( loge_,"packet seqNum=%d on channel %p reported, but registry is not found",
-                            seqNum, &channel);
+            smsc_log_debug( loge_,"packet seqNum=%d on channel %p sock=%p reported, but registry is not found",
+                            seqNum, &channel, channel.getSocket());
             countExceptions( PvssException::UNKNOWN, "reportMissReg");
             return;
         }
-        ContextRegistry::Ctx i(ptr->get(seqNum));
+        ContextPtr i = ptr->get(seqNum);
         if ( !i ) {
-            smsc_log_debug(loge_, "packet seqNum=%d on channel %p reported as %s, but not found",
-                           seqNum, &channel, state == SENT ? "SENT" : (state == FAILED ? "FAILED" : "EXPIRED"));
+            smsc_log_debug(loge_, "packet seqNum=%d on channel %p sock=%p reported as %s, but not found",
+                           seqNum, &channel, channel.getSocket(),
+                           packetStateToString(state));
             countExceptions( PvssException::UNKNOWN, "reportMissSeqnum" );
             return;
         }
-        response = i.getContext()->getResponse().get();
-        ctx.reset(static_cast<ServerContext*>(ptr->pop(i)));
+        response = i->getResponse().get();
+        ctx.reset( static_cast<ServerContext*>(i.get()) );
         if ( ! response ) {
             // cannot be: response must be present
-            smsc_log_error(loge_, "packet seqNum=%d on channel %p reported as %s, but no resp in context found");
+            smsc_log_error(loge_, "packet seqNum=%d on channel %p sock=%p reported as %s, but no resp in context found",
+                           seqNum, &channel, channel.getSocket(),
+                           packetStateToString(state));
             countExceptions( PvssException::UNKNOWN, "reportMissResp");
             return;
         }
@@ -222,7 +230,7 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
         default: ctx->setState( ServerContext::FAILED ); break;
         }
     }
-    if (ctx.get()) reportContext(ctx);
+    if (ctx.get()) reportContext(ctx.get());
 }
 
 
@@ -319,16 +327,18 @@ void ServerCore::shutdown()
 
     // destroy contexts in regset
     {
-        ContextRegistry::ProcessingList pl;
-        while ( regset_.popAny(pl) ) {
-            std::auto_ptr<ServerContext> ctx;
-            while (!pl.empty()) {
-                ctx.reset(static_cast<ServerContext*>(pl.front()));
-                pl.pop_front();
+        do {
+            ContextRegistryPtr ptr = regset_.popAny();
+            if (!ptr) break;
+            typedef ContextRegistry::ProcessingList ProcList;
+            ProcList pl;
+            ptr->popAll(pl);
+            for ( ProcList::iterator i = pl.begin(), ie = pl.end(); i != ie; ++i ) {
+                ServerContext* ctx = static_cast<ServerContext*>(i->get());
                 ctx->setState( ServerContext::FAILED );
                 reportContext(ctx);
             }
-        }
+        } while (true);
     }
 
     stop();
@@ -370,6 +380,7 @@ void ServerCore::shutdown()
         // move all channels to dead
         MutexGuard mgc(channelMutex_);
         std::copy( channels_.begin(), channels_.end(), std::back_inserter(deadChannels_) );
+        managedChannels_.clear();
         channels_.clear();
     }
     destroyDeadChannels();
@@ -470,7 +481,7 @@ int ServerCore::doExecute()
 }
 
 
-void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
+void ServerCore::receiveContext( ServerContextPtr& ctx )
 {
     // FIXME: update channel activity should be here
     Request* req = ctx->getRequest().get();
@@ -570,7 +581,7 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         }
 
         what = "recvToQueue";
-        queue->requestReceived(ctx); // may throw server_busy
+        queue->requestReceived(ctx.get()); // may throw server_busy
         return;
 
     } catch ( PvssException& e ) {
@@ -596,25 +607,30 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
 }
 
 
-void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) /* throw (PvssException) */ 
+void ServerCore::sendResponse( ServerContextPtr& ctx ) /* throw (PvssException) */ 
 {
-    int seqNum = context->getSeqNum();
-    smsc::core::network::Socket* socket = context->getSocket();
-    const Response* response = context->getResponse().get();
-    ServerContext* ctx = 0;
-    if (!response) throw PvssException(PvssException::BAD_RESPONSE,"response is null");
-    {
-        ContextRegistry::Ptr ptr = regset_.get(socket);
-        if (!ptr)
-            throw PvssException(PvssException::UNKNOWN,
-                                "context registry is not found");
-        if ( ptr->exists(seqNum) )
-            throw PvssException(PvssException::SERVER_BUSY,
-                                "seqnum=%d is already in registry", seqNum );
-        if ( !response->isValid() )
-            throw PvssException(PvssException::BAD_RESPONSE,"response '%s' is not valid",response->toString().c_str());
-        ctx = context.release();
-        ptr->push(ctx);
+    int seqNum = ctx->getSeqNum();
+    PvssSocketBase* socket = ctx->getSocket();
+    smsc_log_debug(log_,"sendResp ctx=%p seq=%u on channel %p sock=%p",ctx.get(),seqNum,socket,socket->getSocket());
+    const Response* response = ctx->getResponse().get();
+    if (!response) {
+        throw PvssException(PvssException::BAD_RESPONSE,"response is null");
+    }
+
+    ContextRegistryPtr ptr = regset_.get(socket);
+    if (!ptr) {
+        throw PvssException(PvssException::UNKNOWN,
+                            "context registry is not found for channel %p sock=%p",
+                            socket,socket->getSocket());
+    }
+    if ( !response->isValid() ) {
+        throw PvssException(PvssException::BAD_RESPONSE,"response '%s' is not valid",
+                            response->toString().c_str());
+    }
+    
+    if ( ! ptr->push(ctx.get()) ) {
+        throw PvssException(PvssException::SERVER_BUSY,
+                            "seqnum=%d is already in registry", seqNum );
     }
 
     {
@@ -633,22 +649,20 @@ void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) /* throw 
     }
 
     try {
-        smsc_log_debug(log_,"sending response %p to socket %p", response, ctx->getSocket());
+        smsc_log_debug(log_,"sending response %p to channel %p sock=%p",
+                       response, socket, socket->getSocket());
         ctx->sendResponse();
     } catch (...) {
-        ContextRegistry::Ptr ptr = regset_.get(socket);
-        if (ptr) {
-            context.reset( static_cast<ServerContext*>(ptr->pop(ptr->get(seqNum))));
-        }
+        ptr->pop(seqNum);
         // logic should be notified externally as it may take ctx ownership
         throw;
     }
 }
 
 
-void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
+void ServerCore::reportContext( ServerContext* ctx )
 {
-    if ( !ctx.get() ) {
+    if ( !ctx ) {
         // smsc_log_warn(log_,"null context reported");
         countExceptions(PvssException::UNKNOWN, "reportNull");
         return;
@@ -708,28 +722,32 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
 }
 
 
-void ServerCore::closeChannel( smsc::core::network::Socket* socket )
+void ServerCore::closeChannel( PvssSocketBase& socket )
 {
-    if (!socket) return;
+    bool our = false;
     {
         MutexGuard mg(channelMutex_);
         ChannelList::iterator i = std::find( channels_.begin(),
                                              channels_.end(),
-                                             socket );
+                                             &socket );
         if ( i == channels_.end() ) return;
-        deadChannels_.push_back(socket);
+        deadChannels_.push_back(*i);
         channels_.erase(i);
 
-        i = std::find(managedChannels_.begin(),managedChannels_.end(),socket);
+        i = std::find( managedChannels_.begin(),
+                       managedChannels_.end(),
+                       &socket);
         if ( i == managedChannels_.end() ) {
             // this one is an external channel, should not be worried about...
-            socket->Close();
-            return;
+            socket.getSocket()->Close();
+        } else {
+            managedChannels_.erase(i);
+            our = true;
         }
     }
-    // PvssSocket* channel = PvssSocket::fromSocket(socket);
-    Core::closeChannel(*socket);
-    // should we destroy dead channels?
+    if (our) {
+        Core::closeChannel(static_cast<PvssSocket&>(socket));
+    }
     destroyDeadChannels();
 }
 
@@ -765,59 +783,26 @@ void ServerCore::stopCoreLogic()
 void ServerCore::destroyDeadChannels()
 {
     ChannelList allDead;
-    ChannelList ourDead;
     {
         MutexGuard mg(channelMutex_);
         if ( deadChannels_.empty() ) return;
-
-        for ( ChannelList::iterator i = deadChannels_.begin();
-              i != deadChannels_.end();
-              ) {
-
-            // if this one is managed channels
-            ChannelList::iterator j = std::find(managedChannels_.begin(),
-                                                managedChannels_.end(), *i );
-            if ( j != managedChannels_.end() ) {
-                // our channel
-                PvssSocket* socket = PvssSocket::fromSocket(*i);
-                if ( socket->isInUse() ) {
-                    ++i;
-                    continue;
-                }
-                ourDead.push_back(*i);
-                managedChannels_.erase(j);
-            }
-            allDead.push_back(*i);
-            i = deadChannels_.erase(i);
-        }
+        allDead.swap(deadChannels_);
     }
 
     for ( ChannelList::iterator i = allDead.begin();
           i != allDead.end();
           ++i ) {
 
-        ContextRegistry::ProcessingList pl;
-        {
-            ContextRegistry::Ptr ptr = regset_.get(*i);
-            if ( !ptr ) continue;
-            ptr->popAll(pl);
-        }
-        // destroy regset entries
-        std::auto_ptr<ServerContext> ctx;
-        while ( ! pl.empty() ) {
-            ctx.reset(static_cast<ServerContext*>(pl.front()));
-            pl.pop_front();
+        ContextRegistryPtr ptr = regset_.pop(i->get());
+        if (!ptr) continue;
+        typedef ContextRegistry::ProcessingList ProcList;
+        ProcList pl;
+        ptr->popAll(pl);
+        for ( ProcList::iterator i = pl.begin(), ie = pl.end(); i != ie; ++i ) {
+            ServerContext* ctx = static_cast<ServerContext*>(i->get());
             ctx->setState( ServerContext::FAILED );
-            reportContext(ctx);
+            reportContext( ctx );
         }
-        regset_.destroy(*i);
-    }
-
-    for ( ChannelList::iterator i = ourDead.begin();
-          i != ourDead.end();
-          ++i ) {
-        PvssSocket* socket = PvssSocket::fromSocket(*i);
-        if ( socket ) delete socket;
     }
 }
 

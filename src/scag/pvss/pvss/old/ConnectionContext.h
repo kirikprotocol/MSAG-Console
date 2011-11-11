@@ -13,7 +13,6 @@
 
 #include "Connection.h"
 #include "PerformanceCounter.h"
-#include "informer/io/EmbedRefPtr.h"
 
 namespace scag2 {
 namespace pvss  {
@@ -78,11 +77,10 @@ public:
     virtual bool processReadSocket(const time_t& now) = 0;
     bool processWriteSocket(const time_t& now);
 
-    inline smsc::core::network::Socket* getSocket() const {
-        return socket_;
-    }
-
   PerfCounter& getPerfCounter() { return perfCounter_; }
+
+    /// unregister from registry, push all pending packets
+    void unregisterFromCore();
 
 protected:
   bool sendResponseData(const char* data, uint32_t dataSize);
@@ -90,22 +88,6 @@ protected:
 
 private:
   void writeData(const char* data, uint32_t size);
-  void getPeerIp();
-
-    void ref() {
-        smsc::core::synchronization::MutexGuard mg(reflock_);
-        ++ref_;
-    }
-    void unref() {
-        {
-            smsc::core::synchronization::MutexGuard mg(reflock_);
-            if (ref_>1) {
-                --ref_;
-                return;
-            }
-        }
-        delete this;
-    }
 
 protected:
   Action action_;
@@ -113,21 +95,13 @@ protected:
   bool async_;
   core::server::ServerCore& pvssServer_;
     smsc::core::synchronization::Mutex mutex_;
-    std::string peerIp_;
-    std::string peerName_;
     util::storage::SerialBuffer inbuf_;
-    smsc::core::network::Socket* socket_;
-    smsc::logger::Logger* logger_;
-    smsc::logger::Logger* debuglogger_;
 
 private:
   PerfCounter perfCounter_;
   uint32_t packetsCount_;
     util::storage::SerialBuffer outbuf_;
   char readBuf_[READ_BUF_SIZE];
-
-    smsc::core::synchronization::Mutex reflock_;
-    unsigned ref_;
 };
 
 typedef eyeline::informer::EmbedRefPtr< ConnectionContext >  ConnPtr;

@@ -31,16 +31,34 @@ Core::~Core()
 }
 
 
-void Core::closeChannel( smsc::core::network::Socket& channel )
+void Core::closeChannel( PvssSocketBase& channel )
 {
     inactivityTracker->removeChannel(channel);
     // channel.disconnect();
-    channel.Close();
-    smsc_log_info(logger,"Channel closed: %p",&channel);
+    channel.getSocket()->Close();
+    smsc_log_info(logger,"Channel closed: %p sock=%p",&channel,channel.getSocket());
 }
 
 
-void Core::registerForWrite( PvssSocket& channel ) /* throw (PvssException) */ 
+bool Core::registerChannel( PvssSocketPtr& channel, util::msectime_type utime )
+{
+    try {
+        registerForRead(channel);
+        registerForWrite(channel);
+        inactivityTracker->registerChannel(*channel, utime);
+        smsc_log_info(logger,"channel %p sock=%p connected and registered",
+                      channel.get(), channel->getSocket() );
+    }
+    catch (PvssException& register_exc) {
+        smsc_log_error( logger, "Failed to register new channel. Details: %s", register_exc.what() );
+        closeChannel( *channel );
+        return false;
+    }
+    return true;
+}
+
+
+void Core::registerForWrite( PvssSocketPtr& channel ) /* throw (PvssException) */ 
 {
     PacketWriter* writer = 0;
     {
@@ -54,14 +72,14 @@ void Core::registerForWrite( PvssSocket& channel ) /* throw (PvssException) */
     }
     if (writer == 0)
         throw PvssException(PvssException::CONFIG_INVALID, "No one writer is created!" );
-    if (writer->sockets() > config->getMaxWriterChannelsCount())
+    if (writer->sockets() > unsigned(config->getMaxWriterChannelsCount()))
         throw PvssException(PvssException::CLIENT_BUSY, "Maximum count of writer channels exceeded");
 
     writer->registerChannel(channel);
 }
 
 
-void Core::registerForRead( PvssSocket& channel ) /* throw(PvssException) */ 
+void Core::registerForRead( PvssSocketPtr& channel ) /* throw(PvssException) */ 
 {
     PacketReader* reader = 0;
     {
@@ -74,7 +92,7 @@ void Core::registerForRead( PvssSocket& channel ) /* throw(PvssException) */
     }
     if (reader == 0)
         throw PvssException(PvssException::CONFIG_INVALID, "No one reader is created!");
-    if (reader->sockets() > config->getMaxReaderChannelsCount())
+    if (reader->sockets() > unsigned(config->getMaxReaderChannelsCount()))
         throw PvssException(PvssException::CLIENT_BUSY, "Maximum count of reader channels exceeded");
 
     reader->registerChannel(channel);

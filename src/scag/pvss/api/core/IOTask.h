@@ -20,20 +20,20 @@ protected:
 
 protected:
     /// setup things prior the invocation of hasEvents()
-    virtual bool setupSockets(util::msectime_type currentTime);
-
+    virtual int setupSockets(util::msectime_type currentTime);
     /// process events
     virtual void processEvents();
+    virtual void postProcess();
 
     virtual bool setupSocket(PvssSocket& sock, util::msectime_type currentTime) = 0;
     virtual void process( PvssSocket& sock ) = 0;
-    virtual void postProcess();
 
 protected:
     smsc::core::network::Multiplexer              mul_;
     smsc::core::network::Multiplexer::SockArray   ready_;
     smsc::core::network::Multiplexer::SockArray   error_;
-    smsc::core::network::Multiplexer::SockArray   closed_;
+
+    ConnArray                                     closed_;
 };
 
 } // namespace core

@@ -19,7 +19,8 @@ public:
     IOTask(theconfig,thecore,taskname), writePending_(false) {}
 
     /// serialize the packet
-    void serialize(const Packet& packet,Protocol::Buffer& buffer) /* throw (PvssException) */ ;
+    void serialize( const Packet& packet,
+                    Protocol::Buffer& buffer) /* throw (PvssException) */ ;
 
     /// notify writer that it should write all pending contexts,
     /// wait until all contexts are written.  Typically it should be invoked before shutdown.
@@ -35,15 +36,16 @@ protected:
 
     virtual bool setupSocket( PvssSocket& conn, util::msectime_type currentTime ) {
         if ( ! conn.wantToSend(currentTime) ) return false;
-        mul_.add( conn.socket() );
+        mul_.add( conn.getSocket() );
         return true;
     }
     virtual bool hasEvents() { return mul_.canWrite(ready_, error_, 200); }
     virtual void process( PvssSocket& con ) { con.sendData(); }
 
-    virtual void setupFailed( util::msectime_type currentTime );
+    virtual int setupFailed( int tmo );
 
 private:
+    smsc::core::synchronization::EventMonitor pmon_;
     bool  writePending_;
 };
 

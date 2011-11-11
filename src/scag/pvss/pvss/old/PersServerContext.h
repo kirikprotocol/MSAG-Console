@@ -7,14 +7,15 @@
 namespace scag2 {
 namespace pvss {
 
-class PersServerContext : public core::server::ServerContext {
+class PersServerContext : public core::server::ServerContext 
+{
 public:
 
     PersServerContext(Request* req, ConnectionContext* connect) :
         ServerContext(req), conn_(connect) {};
 
-  virtual smsc::core::network::Socket * getSocket() const {
-      return conn_->getSocket();
+  virtual core::PvssSocketBase* getSocket() {
+      return conn_.get();
   }
 
   virtual void sendResponse() /* throw(PvssException) */  {

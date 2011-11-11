@@ -13,6 +13,7 @@ namespace core {
 smsc::logger::Logger* Context::log_ = 0;
 
 Context::Context(Request* req) :
+ref_(0),
 creationTime_( util::currentTimeMillis() ),
 seqNum_( req ? req->getSeqNum() : uint32_t(-1) ),
 request_( req ) {

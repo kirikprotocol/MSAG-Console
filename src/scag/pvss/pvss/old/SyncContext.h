@@ -17,7 +17,7 @@ public:
                  core::server::ServerCore& server,
                  PersProtocol& protocol, bool perfCounterOn = false);
     ~SyncContext() {
-        smsc_log_info(logger_, "connection closed: %s", peerName_.c_str()); 
+        // smsc_log_info(log_, "connection closed: %s", peerName_.c_str());
     }
   bool processReadSocket(const time_t& now);
   void sendResponse(const Response* resp);

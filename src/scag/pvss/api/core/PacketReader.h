@@ -24,12 +24,14 @@ public:
     }
 
 protected:
+    /*
     virtual void attachToSocket( PvssSocket& socket ) {
         socket.registerReader(this);
     }
     virtual void detachFromSocket( PvssSocket& socket ) {
         socket.registerReader(0);
     }
+     */
 
     virtual bool setupSocket( PvssSocket& conn, util::msectime_type currentTime );
     virtual bool hasEvents();

@@ -61,6 +61,7 @@ int PersServer::Execute()
 
       //ConnectionContext *cx = new ConnectionContext(clientSocket, writers_, readers_, perfCounterOn_);
       ConnPtr cx( new SyncContext(clientSocket, pvssServer_, protocol_, perfCounterOn_) );
+      pvssServer_.acceptOldChannel(cx.get());
       smsc_log_debug(logger, "Client connected socket:%p context:%p", clientSocket, cx.get());
       clientSocket = 0;
       if (!writers_.registerConnection(cx)) {

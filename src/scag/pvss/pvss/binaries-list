@@ -41,7 +41,7 @@ endswitch
         -lpthread $(LIBRT) -ldl \
         $(LIBMALLOC)
 
-scag/tests/pvss-read-abonent-entry readEntry \
+-scag/tests/pvss-read-abonent-entry readEntry \
 	-lscag-pvss-profile \
         -lscag-pvss-data \
         -lscag-util-storage \
@@ -54,7 +54,7 @@ scag/tests/pvss-read-abonent-entry readEntry \
         $(__LIBRARIES) \
         -lpthread $(LIBRT) -ldl
 
-scag/tests/pvss-collect-storage-stats collectStorageStats \
+-scag/tests/pvss-collect-storage-stats collectStorageStats \
         -lscag-util-storage \
         -lscag-util-io \
 	-lscag-util \
@@ -65,7 +65,7 @@ scag/tests/pvss-collect-storage-stats collectStorageStats \
         $(__LIBRARIES) \
         -lpthread $(LIBRT) -ldl
 
-scag/pvss-repairIntStorage repairIntStorage \
+-scag/pvss-repairIntStorage repairIntStorage \
         -lscag-pvss-base \
         -lscag-pvss-data \
 	-lscag-pvss-profile \
@@ -80,7 +80,7 @@ scag/pvss-repairIntStorage repairIntStorage \
         $(__LIBRARIES) \
         -lpthread $(LIBRT) -ldl
 
-scag/tests/pvss-testBackupProcessor testBackupProcessor \
+-scag/tests/pvss-testBackupProcessor testBackupProcessor \
         -lscag-pvss-base \
         -lscag-pvss-data \
 	-lscag-pvss-profile \

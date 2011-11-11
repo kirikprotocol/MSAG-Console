@@ -5,9 +5,11 @@
 #include "scag/pvss/api/core/Core.h"
 #include "scag/pvss/api/core/ContextRegistry.h"
 #include "scag/pvss/api/core/Statistics.h"
+#include "scag/pvss/api/core/PvssSocket.h"
 #include "Server.h"
 #include "core/buffers/Array.hpp"
 #include "ServerConfig.h"
+#include "ServerContext.h"
 #include "Acceptor.h"
 #include "AsyncDispatcherThread.h"
 #include "Dispatcher.h"
@@ -46,8 +48,9 @@ public:
      * Will be called by InactivityTracker when channel remains inactive during specified timeout.<p/>
      * Method implementation initiates channel closing.
      */
-    virtual void inactivityTimeoutExpired(smsc::core::network::Socket& channel) {
-        smsc_log_warn(log_,"Inactivity timeout expired for channel %p", &channel);
+    virtual void inactivityTimeoutExpired(PvssSocketBase& channel) {
+        smsc_log_warn(log_,"Inactivity timeout expired for channel %p sock=%p",
+                      &channel, channel.getSocket());
         closeChannel(channel);
     }
 
@@ -58,11 +61,11 @@ public:
 
 
     /// try to accept a channel for IO. Ownership is passed.
-    virtual bool acceptChannel( PvssSocket* channel );
+    virtual bool acceptChannel( PvssSocketPtr& channel );
 
 
     /// accept an old transport channel
-    void acceptOldChannel( smsc::core::network::Socket* socket );
+    void acceptOldChannel( PvssSocketBase* socket );
 
     /*
      * Used to send response or error for processed request.
@@ -72,7 +75,7 @@ public:
      * @param context           ServerContext instance containing processed request with response or error set.
      * @throws PvssException    Thrown if provided context is invalid or server failes to sent it.
      */
-    void contextProcessed(std::auto_ptr<ServerContext> context); // /* throw(PvssException) */ ;
+    void contextProcessed( ServerContextPtr& context); // /* throw(PvssException) */ ;
 
 
     /**
@@ -82,13 +85,13 @@ public:
      * @param channel   Channel on which packet is processing
      * @param state     Packet state in IO processing
      */
-    virtual void receivePacket(std::auto_ptr<Packet> packet, PvssSocket& channel);
+    virtual void receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channel);
 
 
     /**
      * Implementation of Core abstraction method.
      */
-    virtual void receiveOldPacket( std::auto_ptr< ServerContext > context );
+    virtual void receiveOldPacket( ServerContextPtr& context );
 
 
     /**
@@ -99,7 +102,7 @@ public:
      * @param channel   Channel on which packet is processing
      * @param state     Packet state in IO processing
      */
-    virtual void reportPacket(uint32_t seqnum, smsc::core::network::Socket& channel, PacketState state);
+    virtual void reportPacket(uint32_t seqnum, PvssSocketBase& channel, PacketState state);
 
 
     void init() /* throw PvssException */;
@@ -156,6 +159,9 @@ public:
     /// count caught exceptions
     void countExceptions( PvssException::Type et, const char* where );
 
+    /// close channel / deregister it.
+    virtual void closeChannel( PvssSocketBase& socket );
+
 private:
     /**
      * Implementation of Runable interface method (Thread class).
@@ -165,20 +171,12 @@ private:
 
 
     /// invoked when a new packet is received either from new or old transport.
-    void receiveContext( std::auto_ptr< ServerContext > context );
+    void receiveContext( ServerContextPtr& context );
 
-    void sendResponse(std::auto_ptr<ServerContext>& ctx) /* throw(PvssException) */ ;
+    void sendResponse( ServerContextPtr& ctx) /* throw(PvssException) */ ;
 
     /// report context
-    void reportContext( std::auto_ptr<ServerContext> ctx );
-
-    /// close channel if managed locally or leave it.
-    void closeChannel( smsc::core::network::Socket* socket );
-
-    virtual void closeChannel( smsc::core::network::Socket& channel )
-    {
-        closeChannel(&channel);
-    }
+    void reportContext( ServerContext* ctx );
 
     virtual void stopCoreLogic();
 
@@ -188,7 +186,7 @@ private:
     util::msectime_type checkStatistics();
 
 private:
-    typedef std::list< smsc::core::network::Socket* > ChannelList;
+    typedef std::list< PvssSockPtr >   ChannelList;
 
     class ExceptionCount
     {

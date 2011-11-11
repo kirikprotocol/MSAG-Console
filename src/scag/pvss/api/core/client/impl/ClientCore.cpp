@@ -157,24 +157,24 @@ void ClientCore::shutdown()
 }
 
 
-void ClientCore::closeChannel( smsc::core::network::Socket& socket )
+void ClientCore::closeChannel( PvssSocket& channel )
 {
-    Core::closeChannel(socket);
-    PvssSocket* channel = PvssSocket::fromSocket(&socket);
-    smsc_log_info(logger,"closing channel %p",channel);
-    connector_->unregisterChannel(*channel);
+    Core::closeChannel(channel);
+    smsc_log_info(logger,"closing channel %p sock=%p", &channel, channel.getSocket());
+    connector_->unregisterChannel(channel);
     bool found = false;
     {
         // move the channel to a dead channel queue
         MutexGuard mgc(channelMutex_);
         ChannelList::iterator i = std::find(activeChannels_.begin(),
                                             activeChannels_.end(),
-                                            channel);
+                                            &channel);
         if (i != activeChannels_.end()) activeChannels_.erase(i);
-        i = std::find(channels_.begin(), channels_.end(), channel);
+        i = std::find(channels_.begin(), channels_.end(),
+                      &channel);
         if (i != channels_.end()) {
             found = true;
-            smsc_log_debug(logger,"pushing channel %p to dead", channel);
+            smsc_log_debug(logger,"pushing channel %p sock=%p to dead", &channel, channel.getSocket());
             deadChannels_.push_back(*i);
             channels_.erase(i);
         }
@@ -214,24 +214,26 @@ bool ClientCore::canProcessRequest( PvssException* exc )
 std::auto_ptr<Response> ClientCore::processRequestSync( std::auto_ptr<Request>& request ) /* throw(PvssException) */ 
 {
     Handler handler(request);
-    std::auto_ptr<ClientContext> context( new ClientContext(request.release(),&handler) );
-    try {
-        sendRequest(context);
-        handler.wait();
-    } catch ( ... ) {
-        // exception until queuing, restore original request.
-        request = context->getRequest();
-        throw;
+    {
+        ClientContextPtr context( new ClientContext(request.release(),&handler) );
+        try {
+            sendRequest(context);
+            handler.wait();
+        } catch ( ... ) {
+            // exception until queuing, restore original request.
+            request = context->getRequest();
+            throw;
+        }
+        // otherwise the original request is already restored
     }
-    // otherwise the original request is already restored
     if ( handler.getError().get() != 0) throw *(handler.getError().get());
     return handler.getResponse();
 }
 
 
-void ClientCore::processRequestAsync( std::auto_ptr<Request>& request, Client::ResponseHandler& handler) /* throw(PvssException) */ 
+void ClientCore::processRequestAsync( std::auto_ptr<Request>& request, Client::ResponseHandler& handler) /* throw(PvssException) */
 {
-    std::auto_ptr<ClientContext> context( new ClientContext(request.release(),&handler) );
+    ClientContextPtr context( new ClientContext(request.release(),&handler) );
     try {
         sendRequest(context);
     } catch (...) {
@@ -257,12 +259,12 @@ void ClientCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channe
 }
 
 
-void ClientCore::reportPacket( uint32_t seqNum, smsc::core::network::Socket& channel, PacketState state )
+void ClientCore::reportPacket( uint32_t seqNum, PvssSocketBase& channel, PacketState state )
 {
-    std::auto_ptr<ClientContext> ctx;
+    ClientContextPtr ctx;
     Request* request = 0;
     {
-        ContextRegistry::Ptr ptr(writingRegset_.get(&channel));
+        ContextRegistryPtr ptr(writingRegset_.get(&channel));
         if ( !ptr ) {
             smsc_log_warn(logger,"packet seqNum=%d on channel %p reported, but writing registry is not found",
                           seqNum, &channel);
@@ -273,14 +275,13 @@ void ClientCore::reportPacket( uint32_t seqNum, smsc::core::network::Socket& cha
         ProcessingRequestMap* map = processingRequestMaps.Get(&channel);
         ProcessingRequestList::iterator* i = map->GetPtr(seqNum);
          */
-        ContextRegistry::Ctx i(ptr->get(seqNum));
-        if ( !i ) {
+        ctx = ptr->pop(seqNum);
+        if ( !ctx ) {
             smsc_log_warn(logger, "packet seqNum=%d on channel %p reported as %s, but not found",
-                          seqNum, &channel, state == SENT ? "SENT" : (state == FAILED ? "FAILED" : "EXPIRED"));
+                          seqNum, &channel, packetStateToString(state));
             return;
         }
-        request = i.getContext()->getRequest().get();
-        ctx.reset(static_cast<ClientContext*>(ptr->pop(i)));
+        request = ctx->getRequest().get();
     }
 
     request->timingMark("reportPack");
@@ -292,26 +293,24 @@ void ClientCore::reportPacket( uint32_t seqNum, smsc::core::network::Socket& cha
         else
             smsc_log_debug(logger,"Request '%s' sent",request->toString().c_str());
 
-        ContextRegistry::Ptr ptr(regset_.get(&channel));
+        ContextRegistryPtr ptr(regset_.get(&channel));
         if ( !ptr ) {
             smsc_log_warn(logger, "packet seqNum=%u on channel %p reported, but registry is not found",
                           seqNum, &channel );
             return;
         }
-        ContextRegistry::Ctx i(ptr->get(seqNum));
-        if (!i) {
-            // push a context into the registry to wait for response
-            ptr->push(ctx.release());
-        } else {
+        // ContextRegistry::Ctx i(ptr->get(seqNum));
+        if ( !ptr->push(ctx.get()) ) {
             // a different context is found, it may mean that a response has been received
             // before we report the request (a race condition).
             // In that case we have to merge both contexts and report that merged context.
-            std::auto_ptr< ClientContext > respCtx(static_cast<ClientContext*>(ptr->pop(i)));
+            ClientContextPtr respCtx(static_cast<ClientContext*>(ptr->pop( seqNum ).get()));
             if ( ! respCtx->getResponse().get() ) {
                 throw PvssException(PvssException::UNEXPECTED_RESPONSE, "unexpected request" );
             }
             // report response
-            handleResponseWithContext( ctx, respCtx->getResponse().release(), channel );
+            handleResponseWithContext( ctx, respCtx->getResponse().release(),
+                                       static_cast<PvssSocket&>(channel) );
         }
 
     } else {
@@ -326,7 +325,7 @@ void ClientCore::reportPacket( uint32_t seqNum, smsc::core::network::Socket& cha
                 smsc_log_warn(logger,"PING failed, details: %s", exc.what());
                 // NOTE: we must guarantee that this socket is PvssSocket one
                 // PvssSocket* socket = PvssSocket::fromSocket(&channel);
-                closeChannel(channel);
+                closeChannel(static_cast<PvssSocket&>(channel));
             } else {
                 ctx->setError(exc);
             }
@@ -364,13 +363,13 @@ int ClientCore::doExecute()
         currentTime = util::currentTimeMillis();
         nextWakeupTime = currentTime + timeToSleep;
 
-        for ( ChannelList::const_iterator j = currentChannels.begin();
+        for ( ChannelList::iterator j = currentChannels.begin();
               j != currentChannels.end(); ++j ) {
-            
-            PvssSocket* channel = *j;
+
+            PvssSocketPtr& channel = *j;
             ContextRegistry::ProcessingList list;
             {
-                ContextRegistry::Ptr ptr = regset_.get(channel->socket());
+                ContextRegistryPtr ptr = regset_.get(channel.get());
                 if (!ptr) continue;
                 util::msectime_type t = ptr->popExpired(list,currentTime,timeToSleep);
                 if ( t < nextWakeupTime ) nextWakeupTime = t;
@@ -380,7 +379,7 @@ int ClientCore::doExecute()
                   i != list.end();
                   ++i ) {
                 // expired
-                ClientContext* ctx = static_cast<ClientContext*>(*i);
+                ClientContextPtr ctx(static_cast<ClientContext*>(i->get()));
                 if ( ! ctx->getRequest().get() ) {
                     assert(ctx->getResponse().get());
                     smsc_log_warn( logger,"Context w/o request found, resp:%s, created: %d ms ago",
@@ -389,12 +388,11 @@ int ClientCore::doExecute()
                 } else {
                     if (ctx->getRequest()->isPing()) {
                         smsc_log_warn(logger,"PING failed, timeout");
-                        closeChannel(*channel->socket());
+                        closeChannel(*channel);
                     } else {
                         ctx->setError(PvssException(PvssException::REQUEST_TIMEOUT,"timeout"));
                     }
                 }
-                delete ctx;
             }
         }
     }
@@ -410,9 +408,9 @@ void ClientCore::clearChannels()
     assert(connector_->released());
     MutexGuard mg(channelMutex_);
     for ( ChannelList::iterator i = channels_.begin(); i != channels_.end(); ++i ) {
-        PvssSocket& channel = **i;
-        Core::closeChannel(*channel.socket());
-        smsc_log_debug(logger,"pushing channel %p to dead", &channel);
+        PvssSocketPtr& channel = *i;
+        Core::closeChannel(*channel);
+        smsc_log_debug(logger,"pushing channel %p sock=%p to dead", channel.get(), channel->getSocket());
         deadChannels_.push_back(*i);
     }
     channels_.clear();
@@ -425,68 +423,39 @@ void ClientCore::destroyDeadChannels()
     ChannelList trulyDead;
     {
         MutexGuard mg(channelMutex_);
-        for ( ChannelList::iterator i = deadChannels_.begin();
-              i != deadChannels_.end();
-              ) {
-            if ( ! (*i)->isInUse() ) {
-                trulyDead.push_back(*i);
-                i = deadChannels_.erase(i);
-            } else {
-                ++i;
-            }
-        }
+        trulyDead.swap(deadChannels_);
     }
+    PvssException exc = PvssException(PvssException::IO_ERROR,"channel is closed");
+    typedef ContextRegistry::ProcessingList ProcList;
+    ProcList pl;
     for ( ChannelList::iterator i = trulyDead.begin();
           i != trulyDead.end();
           ++i ) {
-        PvssSocket* channel = *i;
+
+        PvssSocketPtr& channel = *i;
 
         // destroying all contexts on closed channel
-        PvssException exc = PvssException(PvssException::IO_ERROR,"channel is closed");
-        ContextRegistry::ProcessingList pl;
         do {
-            ContextRegistry::Ptr ptr = writingRegset_.get(channel->socket());
+            ContextRegistryPtr ptr = writingRegset_.pop(channel.get());
             if (!ptr) break;
             ptr->popAll(pl);
         } while (false);
-        while ( !pl.empty() ) {
-            ClientContext* ctx = static_cast<ClientContext*>(pl.front());
-            pl.pop_front();
+
+        for ( ProcList::iterator ic = pl.begin(), ie = pl.end(); ic != ie; ++ic ) {
+            ClientContext* ctx = static_cast<ClientContext*>(ic->get());
             ctx->setError(exc);
-            delete ctx;
         }
 
         do {
-            ContextRegistry::Ptr ptr = regset_.get(channel->socket());
+            ContextRegistryPtr ptr = regset_.pop(channel.get());
             if (!ptr) break;
             ptr->popAll(pl);
         } while ( false );
-        while ( !pl.empty() ) {
-            ClientContext* ctx = static_cast<ClientContext*>(pl.front());
-            pl.pop_front();
-            ctx->setError(exc);
-            delete ctx;
-        }
 
-        writingRegset_.destroy(channel->socket());
-        regset_.destroy(channel->socket());
-        delete channel;
-        /*
-         * FIXME: think on how to convey requests on closed channel
-        for ( ProcessingRequestList::iterator j = (*plist)->begin();
-              j != (*plist)->end();
-              ++j ) {
-            ClientContext* ctx = *j;
-            Request* req = ctx->getRequest().get();
-            if ( req && req->isPing() ) {
-                smsc_log_debug(logger,"PING request on closed channel");
-            } else {
-                ctx->setError(PvssException(PvssException::IO_ERROR,"channel was closed"));
-            }
-            delete ctx;
+        for ( ProcList::iterator ic = pl.begin(), ie = pl.end(); ic != ie; ++ic ) {
+            ClientContext* ctx = static_cast<ClientContext*>(ic->get());
+            ctx->setError(exc);
         }
-        delete *plist;
-         */
     }
 }
 
@@ -494,11 +463,13 @@ void ClientCore::destroyDeadChannels()
 void ClientCore::createChannel( util::msectime_type startConnectTime )
 {
     if (!started_) return;
-    PvssSocket* channel(new PvssSocket(*this));
-    smsc_log_info(logger,"creating a channel %p on %s:%d tmo=%d",channel,
-                  getConfig().getHost().c_str(), getConfig().getPort(),getConfig().getConnectTimeout()/1000);
-    regset_.create(channel->socket());
-    writingRegset_.create(channel->socket());
+    PvssSocketPtr channel(new PvssSocket(*this));
+    smsc_log_info( logger,"creating a channel %p on %s:%d tmo=%d",channel.get(),
+                   getConfig().getHost().c_str(),
+                   getConfig().getPort(),
+                   getConfig().getConnectTimeout()/1000);
+    regset_.create(channel.get());
+    writingRegset_.create(channel.get());
     {
         MutexGuard mg(channelMutex_);
         channels_.push_back(channel);
@@ -507,46 +478,45 @@ void ClientCore::createChannel( util::msectime_type startConnectTime )
 }
 
 
-PvssSocket& ClientCore::getNextChannel() /* throw (PvssException) */ 
+PvssSocketPtr ClientCore::getNextChannel() /* throw (PvssException) */ 
 {
     MutexGuard mg(channelMutex_);
     if ( activeChannels_.empty() )
         throw PvssException(PvssException::NOT_CONNECTED,"No one channel is connected");
-    PvssSocket* channel = activeChannels_.front();
+    PvssSocketPtr channel = activeChannels_.front();
     activeChannels_.pop_front();
     activeChannels_.push_back(channel);
-    return *channel;
+    return channel;
 }
 
 
-void ClientCore::sendRequest(std::auto_ptr<ClientContext>& context) /* throw(PvssException) */ 
+void ClientCore::sendRequest( ClientContextPtr& context) /* throw(PvssException) */ 
 {
     if (isStopping)
         throw PvssException(PvssException::NOT_CONNECTED, "Client deactivated");
 
     int seqNum = getNextSeqNum();
     context->setSeqNum(seqNum);
-    PvssSocket& channel = getNextChannel();
+    PvssSocketPtr channel = getNextChannel();
     const Request* packet = context->getRequest().get();
     if ( ! packet->isValid() )
         throw PvssException(PvssException::BAD_REQUEST, "Request is bad formed");
     {
-        ContextRegistry::Ptr ptr = writingRegset_.get(channel.socket());
+        ContextRegistryPtr ptr = writingRegset_.get(channel.get());
         if (!ptr) {
             throw PvssException(PvssException::UNKNOWN, "writing context registry is not found");
         }
-        if ( ptr->exists(seqNum) )
+        if (!ptr->push(context.get())) {
             throw PvssException(PvssException::CLIENT_BUSY,
                                 "Possible seqNum overrrun! seqNum=%u is still in use", seqNum);
-        ptr->push( context.release() );
-        // packet->timingMark("beforeSend");
+        }
     }
     try {
-        channel.send(packet,true,false);
+        channel->send(packet,true,false);
     } catch (...) {
         // restore context
-        ContextRegistry::Ptr ptr = writingRegset_.get(channel.socket());
-        context.reset( static_cast<ClientContext*>(ptr->pop(ptr->get(seqNum))));
+        ContextRegistryPtr ptr = writingRegset_.get(channel.get());
+        ptr->pop(seqNum);
         throw;
     }
 }
@@ -556,7 +526,7 @@ void ClientCore::sendPingRequest( PvssSocket& channel )
 {
     smsc_log_debug(logger,"Sending PING");
     try {
-        std::auto_ptr<ClientContext> ptr(new ClientContext(new PingRequest(),0));
+        ClientContextPtr ptr(new ClientContext(new PingRequest(),0));
         sendRequest(ptr);
     } catch (PvssException& exc) {
         smsc_log_warn( logger, "PING send failed: %s", exc.what());
@@ -569,18 +539,29 @@ void ClientCore::handleResponse(Response* response,PvssSocket& channel) /* throw
     std::auto_ptr<Response> resp(response);
     updateChannelActivity(channel); // Update last activity time on channel (for PINGs generation)
     
-    std::auto_ptr<ClientContext> context;
-    int seqNum = response->getSeqNum();
+    ClientContextPtr context;
+    const int seqNum = response->getSeqNum();
     {
-        ContextRegistry::Ptr ptr = regset_.get(channel.socket());
-        if ( !ptr )
-            throw PvssException(PvssException::UNEXPECTED_RESPONSE,"No context registry found");
-        context.reset(static_cast<ClientContext*>(ptr->pop(ptr->get(seqNum))));
+        ContextRegistryPtr ptr = regset_.get(&channel);
+        if ( !ptr ) {
+            throw PvssException(PvssException::UNEXPECTED_RESPONSE,"No context registry found for channel %p sock=%p",
+                                &channel, channel.getSocket());
+        }
+        context.reset( static_cast<ClientContext*>(ptr->pop(seqNum).get()) );
         if ( !context.get() ) {
             // Context not found for seqnum.
             // It may be due to race condition between write and read branches.
             // So, we create a context w/o request and place it into registry.
-            ptr->push( new ClientContext(resp.release()) );
+            ClientContextPtr respCtx( new ClientContext(resp.release()) );
+            if ( !ptr->push(respCtx.get()) ) {
+                // race occurred, take request
+                context.reset( static_cast< ClientContext* >(ptr->pop(seqNum).get()) );
+                if ( !context.get() ) {
+                    std::abort();
+                }
+                // take response back
+                resp.reset( respCtx->getResponse().release() );
+            }
         }
     }
     if (!context.get()) {
@@ -588,13 +569,13 @@ void ClientCore::handleResponse(Response* response,PvssSocket& channel) /* throw
         return;
     }
 
-    handleResponseWithContext( context, resp.release(), *channel.socket() );
+    handleResponseWithContext( context, resp.release(), channel );
 }
         
 
-void ClientCore::handleResponseWithContext( std::auto_ptr< ClientContext >& context,
+void ClientCore::handleResponseWithContext( ClientContextPtr& context,
                                             Response*                       response,
-                                            smsc::core::network::Socket&    channel )
+                                            PvssSocket&    channel )
 {
     std::auto_ptr<Response> resp(response);
     Request* request = context->getRequest().get();

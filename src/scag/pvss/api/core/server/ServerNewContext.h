@@ -13,14 +13,14 @@ class ServerNewContext : public ServerContext
 {
 public:
     ServerNewContext( Request* req, PvssSocket& channel ) :
-    ServerContext(req), socket_(channel) {}
+    ServerContext(req), socket_(&channel) {}
 
-    virtual smsc::core::network::Socket* getSocket() const { return socket_.socket(); }
+    virtual PvssSocketBase* getSocket() { return socket_.get(); }
 
-    virtual void sendResponse() /*throw (PvssException)*/ { socket_.send(getResponse().get(),false,true); }
+    virtual void sendResponse() /*throw (PvssException)*/ { socket_->send(getResponse().get(),false,true); }
 
 private:
-    PvssSocket& socket_;
+    PvssSocketPtr socket_;
 };
 
 } // namespace server

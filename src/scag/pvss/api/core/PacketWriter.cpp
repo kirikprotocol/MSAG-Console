@@ -13,7 +13,7 @@ void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) /
     buffer.SetPos(4);
     proto.serialize(packet,buffer);
     uint32_t buflen = uint32_t(buffer.GetPos()-4);
-    if ( buflen > getConfig().getPacketSizeLimit() )
+    if ( buflen > unsigned(getConfig().getPacketSizeLimit()) )
         throw PvssException( PvssException::IO_ERROR, "Illegal serialized packet size=%d",buflen);
     buflen = htonl(buflen);
     memcpy(buffer.get(),reinterpret_cast<char*>(&buflen),4);
@@ -23,24 +23,27 @@ void PacketWriter::serialize( const Packet& packet, Protocol::Buffer& buffer ) /
 void PacketWriter::writePending()
 {
     if ( writePending_ ) return;
-    smsc::core::synchronization::MutexGuard mg(mon_);
+    smsc::core::synchronization::MutexGuard mg(pmon_);
     if ( writePending_ ) return;
+    if ( isReleased ) return;
     writePending_ = true;
-    mon_.notify();
-    while ( sockets_.Count() > 0 && writePending_ ) {
-        mon_.wait(200);
+    pmon_.notify();
+    while ( writePending_ && !isReleased ) {
+        pmon_.wait(200);
     }
     return;
 }
 
 
-void PacketWriter::setupFailed(util::msectime_type currentTime)
+int PacketWriter::setupFailed(int tmo)
 {
+    smsc::core::synchronization::MutexGuard mg(pmon_);
     if ( writePending_ ) {
         writePending_ = false;
-        mon_.notify();
+        pmon_.notify();
+        return 0;
     } else {
-        IOTask::setupFailed(currentTime);
+        return IOTask::setupFailed(tmo);
     }
 }
 

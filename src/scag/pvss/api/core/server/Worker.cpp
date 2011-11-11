@@ -1,4 +1,3 @@
-#include <memory>
 #include "Worker.h"
 #include "ServerContext.h"
 #include "ServerConfig.h"
@@ -31,9 +30,9 @@ void Worker::shutdown()
 
 int Worker::doExecute()
 {
-    std::auto_ptr<ServerContext> context;
+    ServerContextPtr context;
     while ( true ) {
-        context.reset( queue_.getContext(100) );
+        context = queue_.getContext(100);
         if ( ! context.get() ) {
             if ( ! queue_.couldHaveRequests() ) stop();
             if ( ! queue_.isStarted() ) break;

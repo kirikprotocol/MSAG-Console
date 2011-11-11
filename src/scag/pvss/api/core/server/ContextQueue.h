@@ -1,18 +1,16 @@
 #ifndef _SCAG_PVSS_CORE_SERVER_CONTEXTQUEUE_H
 #define _SCAG_PVSS_CORE_SERVER_CONTEXTQUEUE_H
 
-#include <memory>
 #include "core/buffers/CyclicQueue.hpp"
 #include "scag/pvss/common/PvssException.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "logger/Logger.h"
+#include "ServerContext.h"
 
 namespace scag2 {
 namespace pvss {
 namespace core {
 namespace server {
-
-class ServerContext;
 
 /**
  * Context queue keeps server contexts.
@@ -25,16 +23,16 @@ public:
     ContextQueue( int queueLimit );
     
     /// notify queue that a new request is received.
-    void requestReceived(std::auto_ptr<ServerContext>& context) /* throw (PvssException) */ ;
+    void requestReceived( ServerContext* context ) /* throw (PvssException) */ ;
 
     /// notify queue that response is send/failed
-    void reportResponse(std::auto_ptr<ServerContext>& context);
+    void reportResponse( ServerContext* context);
 
     /// receive a new context, until either one:
     /// 1. a new context is arrived (it is returned);
     /// 2. the queue is stopped, and all contained contexts are exhausted (0 is returned).
     /// 3. tmo (msec) is expired if it is >0, otherwise it is blocking
-    ServerContext* getContext( int tmo = 0 );
+    ServerContextPtr getContext( int tmo = 0 );
 
     /// fast check for request queue w/o locking
     inline int getSize() const { return queues_[1].Count(); }
@@ -55,7 +53,7 @@ public:
     void shutdown();
 
 private:
-    typedef smsc::core::buffers::CyclicQueue< ServerContext* >  QueueType;
+    typedef smsc::core::buffers::CyclicQueue< ServerContextPtr >  QueueType;
 
 private:
     smsc::logger::Logger*       log_;
