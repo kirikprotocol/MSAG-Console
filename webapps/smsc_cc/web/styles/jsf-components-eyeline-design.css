@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.8
+  Jsf components 2.0
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -652,20 +652,18 @@ table.eyeline_data_table_filter a.xi {
 
 
 .eyeline_addbutton {
-  text-align: left;
   background: url("../images/but_add.gif") no-repeat scroll center center transparent;
   cursor: pointer;
   height: 20px;
+  width: 19px;
   padding: 1px 7px 1px 7px;
-  width: 100%;
 }
 
 .eyeline_delbutton {
-  text-align: left;
   background: url("../images/but_del.gif") no-repeat scroll center center transparent;
   cursor: pointer;
   height: 20px;
-  width: 100%;
+  width: 19px;
   padding: 1px 7px 1px 7px;
 }/*Стиль нотификации об ошибке (отображается после полей ввода)*/
 div.eyeline_inputDate span.error {
