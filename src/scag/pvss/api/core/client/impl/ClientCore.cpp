@@ -157,21 +157,22 @@ void ClientCore::shutdown()
 }
 
 
-void ClientCore::closeChannel( PvssSocket& channel )
+void ClientCore::closeChannel( PvssSocketBase& channel )
 {
     Core::closeChannel(channel);
     smsc_log_info(logger,"closing channel %p sock=%p", &channel, channel.getSocket());
-    connector_->unregisterChannel(channel);
+    PvssSocket& sock = static_cast<PvssSocket&>(channel);
+    connector_->unregisterChannel(sock);
     bool found = false;
     {
         // move the channel to a dead channel queue
         MutexGuard mgc(channelMutex_);
         ChannelList::iterator i = std::find(activeChannels_.begin(),
                                             activeChannels_.end(),
-                                            &channel);
+                                            &sock);
         if (i != activeChannels_.end()) activeChannels_.erase(i);
         i = std::find(channels_.begin(), channels_.end(),
-                      &channel);
+                      &sock);
         if (i != channels_.end()) {
             found = true;
             smsc_log_debug(logger,"pushing channel %p sock=%p to dead", &channel, channel.getSocket());
