@@ -5,6 +5,7 @@ use IO::File;
 use strict;
 use File::Copy;
 use Time::Local qw(timegm timelocal);
+use Fcntl ':flock';
 
 BEGIN{
   my $self=$0;
@@ -23,6 +24,10 @@ use CommaSeparated;
 use CommaSeparated2;
 
 #use re 'debug';
+
+my $f;
+open($f,'>>/global/archives/bill2cdr.lock') || die "Failed to open lock file:$!";
+flock($f,LOCK_EX) || die "Lock failed:$!";
 
 
 my $header='';
