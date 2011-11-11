@@ -58,6 +58,8 @@ public:
     inline bool operator ! () const { return !x_; }
     inline bool operator == ( const EmbedRefPtr& p ) const { return x_ == p.x_; }
     inline bool operator != ( const EmbedRefPtr& p ) const { return x_ != p.x_; }
+    inline bool operator == ( const T* t ) const { return x_ == t; }
+    inline bool operator != ( const T* t ) const { return x_ != t; }
 
     inline const T* get() const { return x_; }
     inline T* get() { return x_; }
