@@ -46,7 +46,7 @@ protected:
 
     virtual void preDisconnect( ConnectionContext* cx );
 
-    void showmul();
+    // void showmul();
 
 private:
 

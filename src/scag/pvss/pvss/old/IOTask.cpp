@@ -50,7 +50,7 @@ int IOTask::Execute()
               ConnPtr cx;
               waiting_.Pop(cx);
               multiplexer_.add(cx->getSocket());
-              showmul();
+              // showmul();
               working_.Push(cx);
           }
       }
@@ -64,7 +64,7 @@ int IOTask::Execute()
           Socket* s;
           error.Pop(s);
           multiplexer_.remove(s);
-          showmul();
+          // showmul();
           ConnectionContext* cx = SocketData::getContext(s);
           for ( int i = 0, ie = working_.Count(); i != ie; ++i ) {
               if ( working_[i].get() == cx ) {
@@ -81,7 +81,7 @@ int IOTask::Execute()
     {
         MutexGuard g(socketMonitor_);
         multiplexer_.clear();
-        showmul();
+        // showmul();
 
         while ( working_.Count() ) {
             ConnPtr cx;
@@ -129,7 +129,7 @@ bool IOTask::unregisterContext( ConnPtr& cx )
     for ( int i = 0, ie = working_.Count(); i != ie; ++i ) {
         if ( working_[i] == cx ) {
             multiplexer_.remove( cx->getSocket() );
-            showmul();
+            // showmul();
             working_.Delete(i);
             preDisconnect( cx.get() );
             return true;
@@ -154,7 +154,7 @@ time_t IOTask::checkConnectionTimeout()
         if ( now - ts >= int(connectionTimeout_) ) {
             smsc_log_warn(log_, "%p: context %p socket %p timeout", this, cx.get(), s);
             multiplexer_.remove(s);
-            showmul();
+            // showmul();
             preDisconnect( cx.get() );
             working_.Delete(i);
             --i;
@@ -181,6 +181,7 @@ void IOTask::preDisconnect( ConnectionContext* cx )
 }
 
 
+/*
 void IOTask::showmul()
 {
     eyeline::informer::TmpBuf<char,512> buf;
@@ -195,6 +196,7 @@ void IOTask::showmul()
     buf.append("",1);
     smsc_log_debug(log_,"IOTask %s %p mul(%u):%s", taskName(), this, nsock, buf.get());
 }
+ */
 
 
 void MTPersReader::processSockets(Multiplexer::SockArray &ready,
