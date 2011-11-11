@@ -73,7 +73,7 @@ public:
      *
      * @param channel   Channel to close
      */
-    virtual void closeChannel( PvssSocket& channel );
+    virtual void closeChannel( PvssSocketBase& channel );
 
 
     virtual bool registerChannel( PvssSocketPtr& channel, util::msectime_type utime ) {
