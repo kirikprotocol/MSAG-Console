@@ -48,21 +48,26 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
     do {
 
         const uint32_t netaddr = getNetworkAddress(sock->getPeerAddress().sin_addr);
-        int cpi = -1;
+        // int cpi = -1;
         unsigned regc;
         uint8_t* isWhite = 0;
+        const char* passreason = "norm";
+        const char* perip = "*";
+        char peripbuf[30];
         {
             RelockMutexGuard mg(statMutex_);
             isWhite = whiteList_.GetPtr(netaddr);
             IpLimit* l = 0;
             if ( isWhite ) {
                 // in white list - no limits
+                passreason = "white";
             } else if ( sock->getType() == etService ) {
                 l = iphash_.GetPtr( netaddr );
                 if ( !l ) {
                     // no limits yet
                     iphash_.Insert(netaddr, IpLimit());
                     l = iphash_.GetPtr(netaddr);
+                    passreason = "nolimyet";
                 } else if ( l->connectionCount() > connectionsPerIp_ ) {
                     mg.Unlock();
                     smsc_log_warn( log, "Connection %s is dropped: max connect limit: %u > %u",
@@ -84,7 +89,10 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
                     }
                 }
             }
-            if (l) cpi = l->addConnection();
+            if (l) {
+                sprintf(peripbuf,"%u",l->addConnection());
+                perip = peripbuf;
+            }
             regc = ++registeredConnections_;
         }
 
@@ -104,7 +112,7 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
                 const unsigned rc = readers[i]->getSocketsCount();
                 mg.Unlock();
                 sock = 0;
-                smsc_log_info(log,"Reusing reader/writer (%d), conn(perIp/total)=%d/%d",rc,cpi,regc);
+                smsc_log_info(log,"Reusing reader/writer (%d), %s conn(perIp/total)=%s/%d",rc,passreason,perip,regc);
                 break;
             }
         }
@@ -150,7 +158,7 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
             mg.Unlock();
             // sock->release();
             sock = 0;
-            smsc_log_info(log,"Creating new reader/writer (%d), conn(perIp/total)=%d/%d", rc, cpi, regc );
+            smsc_log_info(log,"Creating new reader/writer (%d), %s conn(perIp/total)=%s/%d", rc, passreason, perip, regc );
         }
     } while ( false ); // fake loop
 
