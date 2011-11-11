@@ -790,6 +790,7 @@ public:
           {
             rv=0;
             smsc_log_warn(log,"unknown cmdid=%d",cmdId);
+            break;
           }
         }
       }catch(std::exception& e)
@@ -824,6 +825,7 @@ protected:
 class IAnswerQueue{
 public:
   virtual void enqueueAnswer(PduSubmitSm* pdu)=0;
+  virtual ~IAnswerQueue(){}
 };
 
 class EmailProcessor;
@@ -834,7 +836,7 @@ namespace cfg{
   SmppTransmitter *tr;
   SmppTransmitter *atr;
   IAnswerQueue* aq;
-  int mainId;
+  pthread_t mainId;
   bool stopSme=false;
   string smtpHost;
   int smtpPort=25;
@@ -860,6 +862,7 @@ namespace cfg{
   bool sendSuccessAnswer=true;
 
   std::string helpDeskAddress="";
+  bool sendHelpDeskEmail=true;
   bool regionsEnabled=false;
 
   bool useTransformRegexp=false;
@@ -1459,46 +1462,50 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
     }
 
     try{
-      int rv=SendEMail(fromdecor,to,subj,body);
-      if(!haveprofile && cfg::autoCreateGsm2EmlProfile)
+      int rv=ProcessSmsCodes::OK;
+      if(!hdMode || cfg::sendHelpDeskEmail)
       {
-        __trace2__("Creating implicit profile for address %s",fromaddress);
-        AbonentProfile prof;
-        prof.addr=fromaddress;
-        if(prof.addr.value[0]=='7')
+        rv=SendEMail(fromdecor,to,subj,body);
+        if(!haveprofile && cfg::autoCreateGsm2EmlProfile)
         {
-          prof.addr.type=1;
-          prof.addr.plan=1;
+          __trace2__("Creating implicit profile for address %s",fromaddress);
+          AbonentProfile prof;
+          prof.addr=fromaddress;
+          if(prof.addr.value[0]=='7')
+          {
+            prof.addr.type=1;
+            prof.addr.plan=1;
+          }
+          prof.user=fromaddress;
+          //prof.forwardEmail;
+          //prof.realName;
+          prof.ltype=cfg::defaultLimitType;
+          prof.limitDate=time(NULL);
+          prof.numberMap=false;
+          prof.limitValue=cfg::defaultLimitValue;
+          prof.limitCountGsm2Eml=1;
+          prof.limitCountEml2Gsm=0;
+          if(!storage.CreateProfile(prof))
+          {
+            haveprofile=true;
+          }
         }
-        prof.user=fromaddress;
-        //prof.forwardEmail;
-        //prof.realName;
-        prof.ltype=cfg::defaultLimitType;
-        prof.limitDate=time(NULL);
-        prof.numberMap=false;
-        prof.limitValue=cfg::defaultLimitValue;
-        prof.limitCountGsm2Eml=1;
-        prof.limitCountEml2Gsm=0;
-        if(!storage.CreateProfile(prof))
+        if(haveprofile)
         {
-          haveprofile=true;
+          storage.incGsm2EmlLimit(fromaddress);
         }
-      }
-      if(haveprofile)
-      {
-        storage.incGsm2EmlLimit(fromaddress);
-      }
 
-      if(rv!=ProcessSmsCodes::OK)
-      {
-        statCollector.IncSms2Eml(false);
-        sendAnswer(fromaddress,hdMode,"messagefailedsendmail");
-        return rv;
-      }else
-      {
-        statCollector.IncSms2Eml();
+        if(rv!=ProcessSmsCodes::OK)
+        {
+          statCollector.IncSms2Eml(false);
+          sendAnswer(fromaddress,hdMode,"messagefailedsendmail");
+          return rv;
+        }else
+        {
+          statCollector.IncSms2Eml();
+        }
       }
-      if(cfg::sendSuccessAnswer)
+      if(cfg::sendSuccessAnswer || (hdMode && !cfg::sendHelpDeskEmail))
       {
         sendAnswer(fromaddress,hdMode,"messagesent","to",to[0].c_str());
       }
@@ -1826,6 +1833,8 @@ public:
     log=smsc::logger::Logger::getInstance("smpp.lst");
   }
 
+  ~MyListener(){}
+
   void enqueueAnswer(PduSubmitSm* pdu)
   {
     MutexGuard mg(mtx);
@@ -1901,7 +1910,7 @@ public:
   void handleError(int errorCode)
   {
     __warning2__("SMPP::Error:%d",errorCode);
-    pthread_kill(cfg::mainId,16);
+    pthread_kill(cfg::mainId,SIGUSR1);
   }
 
   void sendAnswers()
@@ -3046,6 +3055,16 @@ int main(int argc,char* argv[])
     } catch(std::exception& e)
     {
       __warning__("helpdesk support disabled");
+    }
+
+    try{
+      cfg::sendHelpDeskEmail=cfgman.getBool("admin.sendHelpdeskEmail");
+      if(!cfg::sendHelpDeskEmail)
+      {
+        __warning__("helpdesk is in autoanswer mode");
+      }
+    }catch(std::exception& e)
+    {
     }
 
 
