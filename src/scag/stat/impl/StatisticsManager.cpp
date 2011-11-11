@@ -508,7 +508,9 @@ void StatisticsManager::Stop()
     sender.Stop();
     smsc_log_debug(logger, "PerformanceServer is shutdowned");
 
-    statRoller->Stop();
+    if (statRoller) {
+        statRoller->Stop();
+    }
 
     thrSaccSender.Stop();
 
