@@ -70,9 +70,12 @@ public:
         util::msectime_type now = util::currentTimeMillis() + fc_.flushInterval*2;
         while ( flushDirty(now) ) {}
         // then deallocate elements remained in the clean queue
-        Dirty d;
-        while ( cleanQueue_.Pop(d) ) {
-            cache_->dealloc(d.stored);
+        {
+            Dirty d;
+            MutexGuard mg(dirtyMon_);
+            while ( cleanQueue_.Pop(d) ) {
+                cache_->dealloc(d.stored);
+            }
         }
         cache_->dealloc(spare_);
         cache_->clean();
@@ -88,7 +91,7 @@ public:
         stored_type* vv = cache_->get(k);
         if (vv) {
             value_type* ov = cache_->setval(*vv,v);
-            delete ov;
+            delete ov; // delete old value
             return ov;
         }
         
@@ -215,7 +218,7 @@ public:
     unsigned flushDirty( util::msectime_type now )
     {
         // fast check w/o locking
-        if ( dirtyHash_.Count() == 0 ) return 0;
+        // if ( dirtyHash_.Count() == 0 ) return 0;
         typename DirtyList::iterator di;
         unsigned dhc, cqc, oldChanges;
         const char* reason = "?";
@@ -414,7 +417,7 @@ private:
         // util::msectime_type now = util::currentTimeMillis();
         if ( unsigned(dirtyHash_.Count()) > fc_.flushHighMark ) {
             if (log_) {
-                smsc_log_debug(log_,"dirty queue is filled, sz=%u", unsigned(dirtyHash_.Count()));
+                smsc_log_warn(log_,"dirty queue is filled, sz=%u", unsigned(dirtyHash_.Count()));
             }
             return false;
         }
@@ -426,7 +429,9 @@ private:
         di->stored = sv;
         di->changes = 0;
         di->addTime = util::currentTimeMillis();
-        dirtyHash_.Insert(k,di);
+        if ( !dirtyHash_.Insert(k,di) ) {
+            smsc_log_warn(log_,"dirty hash item is replaced, k=%s",k.toString().c_str());
+        }
         dirtyMon_.notify();
         return true;
     }
