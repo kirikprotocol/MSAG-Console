@@ -4,6 +4,7 @@
   cursor: pointer;
   height: 20px;
   width: 19px;
+  padding: 1px 7px 1px 7px;
 }
 
 .eyeline_delbutton {
@@ -11,4 +12,5 @@
   cursor: pointer;
   height: 20px;
   width: 19px;
+  padding: 1px 7px 1px 7px;
 }
