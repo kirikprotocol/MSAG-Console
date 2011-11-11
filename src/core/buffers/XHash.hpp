@@ -164,7 +164,9 @@ public:
     return NULL;
   }
 
-  int Remove(KT key)
+  // search for a link, remove if from the list, and return the link
+  // NOTE: link must be deleted externally
+  Link* Remove(KT key)
   {
     Link *tmp=_head,*last=NULL;
     while(tmp)
@@ -175,14 +177,14 @@ public:
         {
           last->_next=tmp->_next;
           if(_tail==tmp)_tail=last;
-          delete tmp;
+          // delete tmp;
         }else
         {
           _head=_head->_next;
           if(_tail==tmp)_tail=_head;
-          delete tmp;
+          // delete tmp;
         }
-        return 1;
+        return tmp;
       }
       last=tmp;
       tmp=tmp->_next;
@@ -279,12 +281,32 @@ public:
 
 
   int Exists(const KT& key){ return FindLink(key)!=NULL;}
+
   int Delete(const KT& key)
   {
     if(_count==0)return 0;
     unsigned index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
-    if(_buckets[index].Remove(key))
+    Link* tmp = _buckets[index].Remove(key);
+    if(tmp)
     {
+      delete tmp;
+      _count--;
+      return 1;
+    }else
+    {
+      return 0;
+    }
+  }
+
+  int Pop( const KT& key, VT& val )
+  {
+    if (_count==0) return 0;
+    unsigned index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
+    Link* tmp = _buckets[index].Remove(key);
+    if(tmp)
+    {
+      val = tmp->_keyval._value;
+      delete tmp;
       _count--;
       return 1;
     }else
