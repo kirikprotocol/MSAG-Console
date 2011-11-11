@@ -146,9 +146,10 @@ char* ConfigView::getString(const char* param, const char* error, bool check) co
         std::string s("String key \"");
         s += section;
         s += "\" not found";
-        if (check)
+        if (check) {
             smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                      section, (error) ? error:"");
+        }
         if (section) delete [] section;
         if (check) throw ConfigException(s.c_str());
         return 0;
