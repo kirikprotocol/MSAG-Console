@@ -916,4 +916,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss bugfix: possible race in CachedDelayedThreadedDiskStorage
 2011-11-11 14:25 bukind
   pvss bugfix: possible races in both old and new protocol impls
-
+2011-11-11 14:42 bukind
+  msag bugfix: a check missing in stat dtor led to coredump
