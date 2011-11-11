@@ -169,9 +169,21 @@ public class jEdit extends Applet
     args[0]=getParameter("file");
     System.out.println("Parameter file="+args[0]);
 
-    //todo debug through appletviewer
+    String action = getParameter("action");
+    System.out.println("action: "+action);
+    String id = getParameter("id");
+    System.out.println("id: "+id);
+
+    if (action.compareTo("edit") == 0){
+        openRule(id);
+    } else if (action.compareTo("add") == 0) {
+        newRule(id);
+    }
+    System.out.println("Successfully start applet.");
+
+    // debug through appletviewer
     // uncomment for debug
-    //openRule("1////SMPP");
+    // openRule("1////SMPP");
   }
     
    public String openRule(final String userFile){
@@ -180,10 +192,6 @@ public class jEdit extends Applet
        AccessController.doPrivileged(ora);
        System.out.println("Successfully done open rule action.");
        return ora.getValidationResult();
-   }
-
-   public String returnString(){
-       return "hello";
    }
 
    private class OpenRuleAction implements PrivilegedAction {

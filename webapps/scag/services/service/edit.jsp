@@ -55,7 +55,9 @@
                    opener.jEdit.openjEditView(action,id);
                  } else {
 //                   alert('window.open');
-                   window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=10,height=10,left="+screen.availWidth+",top="+screen.availHeight);
+                   //window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=10,height=10,left="+screen.availWidth+",top="+screen.availHeight);
+                   window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"");
+                   //window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"", "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no");
                  }
 //                 submitOpForm();
 //                 return false;
@@ -79,7 +81,7 @@
                  } else {
                    jEditOpener = window;
                  }
-                 jEditOpener.jEdit.close();
+                 //jEditOpener.jEdit.close();
                  jEditOpener.status = "<fmt:message>jEdit.stopped</fmt:message>";
                  jEditOpener.jEdit = null;
                }
@@ -94,18 +96,28 @@
 
                function submit0(invokedBy)
                {
-//                   alert("edit:submit0():rulesFrame=" + rulesFrame);
-//o                 window.rulesFrame.location.href="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
-//                 getElementByIdUni("rulesFrame").location.href = "${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
+
                  getElementByIdUni("rulesFrame").src = "${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
+
+                 //console.debug("submit0 1");
                  if (window.childW && !window.childW.closed && window.childW!=invokedBy && window.childW.submit0) {
                    alert('edit:window.childW.submit0(window)');
                    window.childW.submit0(window);
+                   //console.debug("submit0 2");
                  }
                  if (opener && !opener.closed && opener!=invokedBy && opener.submit0) {
                    alert('edit:opener.submit0(window)');
                    opener.submit0(window);
+                   //console.debug("submit0 3");
                  }
+
+                 var l1 = document.getElementsByName("unlockRuleSMPP")[0].style.color == "black";
+                 //console.debug("l1: "+l1);
+                 var l2 = document.getElementsByName("unlockRuleHTTP")[0].style.color == "black";
+                 //console.debug("l2: "+l2);
+                 var stop = l1 || l2;
+                 //console.debug("stop: "+stop);
+                 return stop;
                }
 
                function lockRuleButtons_(isLocked, buttons) {

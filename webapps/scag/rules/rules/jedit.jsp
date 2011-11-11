@@ -8,18 +8,12 @@
 --%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <html>
-    <head><title>jEdit window</title></head>
+    <head>
+        <link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
+        <title>jEdit window</title></head>
     <script>
-              function openjEditView(action,id)
+              function openjEditView()
               {
-                var checkResult = null;
-
-                if (action == "edit") checkResult = document.jedit.openRule(id);
-                else checkResult = document.jedit.newRule(id);
-                if (checkResult)
-                {
-                  alertError(checkResult);
-                }
                 if (opener.submit0)
                 {
                     opener.submit0();
@@ -28,24 +22,34 @@
                 window.focus();
               }
 
-              function alertError(checkResult) {
-                if (checkResult == 'jEdit.rule_state.existError')
-                  opener.alert("<fmt:message>jEdit.rule_state.existError</fmt:message>");
-                else if (checkResult == 'jEdit.rule_state.notExistError')
-                  opener.alert("<fmt:message>jEdit.rule_state.notExistError</fmt:message>");
-                else if (checkResult == 'jEdit.rule_state.lockedError')
-                  opener.alert("<fmt:message>jEdit.rule_state.lockedError</fmt:message>");
-              }
-
-              function openjEditWindow(action,id)
+              function openjEditWindow()
               {
 //o                opener.jEditStarting();
                 jEditStarting();
 //o                opener.assignjEditOpener(window,false);
                 assignjEditOpener(window, false);
 
-                openjEditView(action,id);
-                toClose();
+                openjEditView();
+
+                fireButtons();
+
+                if (opener.assignjEditOpener) {
+                    opener.assignjEditOpener(window,true);
+                }
+
+              }
+
+              function fireButtons(){
+                var stop = false;
+                if (opener.submit0)
+                {
+                    stop = opener.submit0();
+                }
+
+                if (!stop){
+                    setTimeout(fireButtons,1000);
+                    //console.debug("set timer");
+                }
               }
 // added
                 function jEditStarting()
@@ -71,34 +75,26 @@
 
               function toClose()
               {
-                var action = document.jedit.isWindowClosed();
-                if (action) {
                    if (opener.submit0) {
                         opener.submit0();
                    }
-                   if (document.jedit.isStopped()) {
-                     if (opener.closejEditWindow) {
-                        opener.closejEditWindow();
-                     }
-                     return;
+
+                   if (opener.closejEditWindow) {
+                       opener.closejEditWindow();
                    }
-                } else {
-                  if (opener.assignjEditOpener) {
-                    opener.assignjEditOpener(window,true);
-                  }
-                }
-                setTimeout(toClose,1000);
               }
     </script>
 
-  <body onLoad="openjEditWindow('<%=request.getParameter("action")%>','<%=request.getParameter("id")%>')">
-    <applet code="org.gjt.sp.jedit.jEdit.class" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
+  <body style="margin:0px 0px 0px 0px;" onLoad="openjEditWindow()" onunload="toClose()">
+    <applet code="org.gjt.sp.jedit.jEdit.class" width="100%" height="100%" archive="jedit.jar" name=jedit ID=jedit>
        <param name="noplugins" value="-noplugins">
        <param name="homedir" value="applet">
        <param name="username" value="rules">
        <param name="servletUrl" value="${pageContext.request.contextPath}/applet/myServlet">
        <param name="ping_port" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getPingPort()%>">
        <param name="ping_timeout" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getTimeout()%>">
+       <param name="action" value="<%=request.getParameter("action")%>">
+       <param name="id" value="<%=request.getParameter("id")%>">
     </applet>
   </body>
 
