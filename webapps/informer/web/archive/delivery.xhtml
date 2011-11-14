@@ -98,6 +98,9 @@
     </h:outputText>
     <h:outputText value="-" rendered="#{archiveDelivery.delivery.endDate == null}"/>
 
+    <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.boundToLocalTime}"/>
+    <h:selectBooleanCheckbox disabled="true" value="#{archiveDelivery.delivery.boundToLocalTime}"/>
+
     <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
     <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
       <h:selectManyCheckbox disabled="true" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.activeWeekDays}"

@@ -92,20 +92,11 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
         <eye:inputDate id="startDate" readonly="true" value="#{deliveryEdit.startDate}" type="both"/>
 
-        <h:outputText value="&#160;"/>
-        <h:panelGroup>
-          <h:outputText rendered="#{deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.local.time']})"/>
-          <h:outputText rendered="#{!deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
-        </h:panelGroup>
-
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
         <eye:inputDate value="#{deliveryEdit.delivery.endDate}" type="both"/>
 
-        <h:outputText value="&#160;"/>
-        <h:panelGroup>
-          <h:outputText rendered="#{deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.local.time']})"/>
-          <h:outputText rendered="#{!deliveryEdit.boundToLocalTIme}" style="white-space:nowrap;"  value="(#{msg['delivery.in.timezone']} '#{deliveryEdit.serverTimezone}')"/>
-        </h:panelGroup>
+        <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.boundToLocalTime}"/>
+        <h:selectBooleanCheckbox value="#{deliveryEdit.delivery.boundToLocalTime}"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
