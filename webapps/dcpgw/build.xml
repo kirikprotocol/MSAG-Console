@@ -55,8 +55,6 @@
         <copy file="setenv.sh" todir="${dcpgw.distr.dir}"/>
         <chmod file="${dcpgw.distr.dir}/setenv.sh" perm="u+x"/>
 
-        <mkdir dir="${dcpgw.distr.dir}/logs"/>
-
         <mkdir dir="${dcpgw.distr.dir}/bin"/>
 
         <copy file="service" todir="${dcpgw.distr.dir}/bin"/>
