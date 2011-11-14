@@ -76,7 +76,7 @@ final class ClusterControllerClient extends ClientConnection {
   protected void handle(PDU pdu) {
   }
 
-  private synchronized <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
+  private <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
     ResponseListener l = null;
     int seq = request.assignSeqNum();
     if (response != null) {
