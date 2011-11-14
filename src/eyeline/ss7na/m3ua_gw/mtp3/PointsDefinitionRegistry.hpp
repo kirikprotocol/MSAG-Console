@@ -20,10 +20,10 @@ struct PointInfo {
     if ( strcasecmp(a_standard.c_str(), "ITU") && strcasecmp(a_standard.c_str(), "ANSI") )
       throw smsc::util::Exception("PointInfo::PointInfo:::: invalid value='%s' for standard parameter - expected value is 'ANSI' or 'ITU'",
                                   a_standard.c_str());
-    standard = a_standard;
+    strcpy(standard, a_standard.c_str());
   }
   uint8_t ni;
-  std::string standard;
+  char standard[5]; // length of "ANSI" + one byte for terminated \0
 };
 
 class PointsDefinitionRegistry : public utilx::Singleton<PointsDefinitionRegistry>,
