@@ -217,9 +217,19 @@ void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
         throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     // should we unbind first?
-    smsc::core::synchronization::MutexGuard mg(stateLock_);
-    dlvInfo_->update( data );
+    bool fixplan = false;
+    {
+        smsc::core::synchronization::MutexGuard mg(stateLock_);
+        const bool oldBoundToLocalTime = dlvInfo_->isBoundToLocalTime();
+        dlvInfo_->update( data );
+        // check if isBoundToLocalTime flag has changed
+        fixplan = ( oldBoundToLocalTime != dlvInfo_->isBoundToLocalTime() &&
+                    state_ == DLVSTATE_PLANNED );
+    }
     writeDeliveryInfoData();
+    if (fixplan) {
+        dlvInfo_->getUserInfo().getDA().reschedule( *this );
+    }
 }
 
 
@@ -236,11 +246,13 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         now = currentTimeSeconds();
         if (newState == DLVSTATE_PLANNED ) {
             if (!planTime) {
-                const msgtime_type actualStartDate = getLocalStartDateInUTC();
-                if (actualStartDate <= now) {
-                    // it must be already started 
-                    planTime = now+1;
-                }
+                // NOTE: 2011-11-14 we do not correct plantime=0
+                // it is a flag to start dlv at its startDate.
+                // const msgtime_type actualStartDate = getLocalStartDateInUTC2();
+                // if (actualStartDate <= now) {
+                // it must be already started 
+                // planTime = now+1;
+                // }
             } else {
                 // NOTE: planTime was specified explicitly
                 // so, let's start at that time w/o respect to startDate.
@@ -677,24 +689,6 @@ void DeliveryImpl::writeDeliveryInfoData()
         throw ErrnoException(errno,"rename('%s')",fpo.c_str());
     }
 }
-
-
-/*
-void DeliveryImpl::fixPlanTime( msgtime_type currentTime )
-{
-    if (state_ != DLVSTATE_PLANNED) return;
-    if (planTime_ <= currentTime ) return;
-    if (!dlvInfo_->isBoundToLocalTime()) return;
-    msgtime_type actualStartDate = getLocalStartDateInUTC();
-    if (!actualStartDate) return;
-    if ( actualStartDate <= currentTime ) {
-        actualStartDate = currentTime+1;
-    }
-    if (planTime_ < actualStartDate) {
-        setState(DLVSTATE_PLANNED,actualStartDate);
-    }
-}
- */
 
 
 DeliveryImpl::StoreList::iterator* 

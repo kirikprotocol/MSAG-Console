@@ -47,6 +47,9 @@ public:
                                     BindSignal&        bs,
                                     const Delivery&    dlv ) = 0;
 
+    /// reschedule the delivery in case plan time changed
+    virtual void reschedule( const Delivery& dlv ) = 0;
+
     struct PvssNotifyee
     {
         virtual ~PvssNotifyee() {}

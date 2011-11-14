@@ -146,6 +146,8 @@ public:
                                     BindSignal&     bs,
                                     const Delivery& dlv );
 
+    virtual void reschedule( const Delivery& dlv );
+
     virtual void startPvssCheck( PvssNotifyee& notifyee, Message& msg );
 
     // --- end of delivery activator iface

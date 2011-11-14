@@ -1040,6 +1040,12 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
 }
 
 
+void InfosmeCoreV1::reschedule( const Delivery& dlv )
+{
+    dlvMgr_->reschedule(dlv);
+}
+
+
 void InfosmeCoreV1::startPvssCheck( PvssNotifyee& pn, Message& msg )
 {
     if (!pvss_) {

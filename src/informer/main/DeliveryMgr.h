@@ -64,6 +64,10 @@ public:
     void startCancelThread( dlvid_type dlvId, regionid_type regionId );
 
 
+    /// reschedule the planned delivery (needed when isBoundToLocalTime flag toggles)
+    void reschedule( const Delivery& dlv );
+
+
     /// check and fix planTime of all deliveries in case regions were updated
     void fixPlanTime();
 

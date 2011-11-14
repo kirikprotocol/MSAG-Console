@@ -1327,6 +1327,20 @@ void DeliveryMgr::startCancelThread( dlvid_type dlvId, regionid_type regionId )
 }
 
 
+void DeliveryMgr::reschedule( const Delivery& dlv )
+{
+    msgtime_type planTime;
+    DlvState state = dlv.getState(&planTime);
+    if ( state == DLVSTATE_PLANNED && !planTime ) {
+        // only reschedule deliveries w/o strict planTime
+        planTime = dlv.getLocalStartDateInUTC();
+        MutexGuard mg(mon_);
+        deliveryWakeQueue_.insert(std::make_pair(planTime,dlv.getDlvId()));
+        mon_.notify();
+    }
+}
+
+
 void DeliveryMgr::fixPlanTime()
 {
     if (getCS()->isArchive() || getCS()->isEmergency() ) {
