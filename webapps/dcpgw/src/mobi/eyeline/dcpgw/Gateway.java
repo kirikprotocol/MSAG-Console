@@ -110,7 +110,7 @@ public class Gateway extends Thread implements PDUListener {
 
     @Override
     public void run() {
-
+        log.debug("Try to shutdown gateway ...");
         // Stop receiving messages.
         pduListener.setReject(true);
 
@@ -119,13 +119,12 @@ public class Gateway extends Thread implements PDUListener {
 
         for(String informer_user: informer_user_connection_table.keySet()){
             DcpConnectionImpl dcpConnection = informer_user_connection_table.get(informer_user);
-
+            dcpConnection.close();
         }
-
-
 
         Server.getInstance().shutdown();
         Journal.getInstance().shutdown();
+        log.debug("Successfully shutdown gateway.");
     }
 
 }
