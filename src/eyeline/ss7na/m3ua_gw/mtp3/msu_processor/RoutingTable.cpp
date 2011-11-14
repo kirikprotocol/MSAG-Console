@@ -27,7 +27,7 @@ RoutingTable::removeRoute(common::point_code_t dpc)
   _routingTable.Delete(dpc);
 }
 
-const common::LinkId&
+common::LinkId
 RoutingTable::getRoute(common::point_code_t dpc)
 {
   MutexGuard synchronize(_lock);

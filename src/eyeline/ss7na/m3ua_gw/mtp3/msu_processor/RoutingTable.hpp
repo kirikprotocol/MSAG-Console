@@ -23,7 +23,7 @@ public:
 
   void addRoute(common::point_code_t dpc, const common::LinkId& dst_link_id);
   void removeRoute(common::point_code_t dpc);
-  const common::LinkId& getRoute(common::point_code_t dpc);
+  common::LinkId getRoute(common::point_code_t dpc);
 private:
   smsc::logger::Logger* _logger;
   smsc::core::buffers::IntHash<common::LinkId> _routingTable;
