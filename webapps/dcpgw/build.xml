@@ -1,4 +1,4 @@
-<project name="dcpgw" default="build" basedir=".">
+<project name="dcpgw" default="distr" basedir=".">
     <property file="build.properties" />
 
     <property name="dcpgw.source.classes" value="${dcpgw.build.dir}/classes"/>
@@ -28,12 +28,10 @@
         <path refid="libdev"/>
     </path>
 
-    <target name="clean" description="Remove build and distribs directory.">
-        <delete dir="${dcpgw.build.dir}"/>
-        <delete dir="${dcpgw.distr.dir}"/>
-    </target>
+    <target name="prebuild" depends="gen_protocol"/>
 
-    <target name="compile" depends="clean">
+    <target name="compile" depends="prebuild">
+        <delete dir="${dcpgw.source.classes}" failonerror="false"/>
         <mkdir dir="${dcpgw.build.dir}"/>
         <mkdir dir="${dcpgw.distr.dir}"/>
         <mkdir dir="${dcpgw.build.dir}/classes"/>
@@ -43,8 +41,8 @@
         />
     </target>
 
-    <target name="build" depends="compile">        
-
+    <target name="distr" depends="compile">
+        <delete dir="${dcpgw.distr.dir}" failonerror="false"/>
         <mkdir dir="${dcpgw.distr.dir}/lib"/>
         <jar jarfile="${dcpgw.distr.dir}/lib/dcpgw.jar"
              basedir="${dcpgw.build.dir}/classes"
