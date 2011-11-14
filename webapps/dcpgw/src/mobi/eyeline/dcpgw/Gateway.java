@@ -1,6 +1,8 @@
 package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.dcpgw.admin.UpdateConfigServer;
+import mobi.eyeline.dcpgw.dcp.DcpConnection;
+import mobi.eyeline.dcpgw.dcp.DcpConnectionImpl;
 import mobi.eyeline.dcpgw.dcp.DeliveryChangeListenerImpl;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
@@ -29,9 +31,11 @@ public class Gateway extends Thread implements PDUListener {
 
     private ProcessingQueue procQueue;
 
-    protected DeliveryChangesDetectorImpl deliveryChangesDetector;
+    private DeliveryChangesDetectorImpl deliveryChangesDetector;
 
-    protected FileSystem fileSystem;
+    private FileSystem fileSystem;
+
+    private PDUListenerImpl pduListener;
 
     public static void main(String args[]) {
         String user_dir = System.getProperty("user.dir");
@@ -63,7 +67,7 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        PDUListenerImpl pduListener = new PDUListenerImpl();
+        pduListener = new PDUListenerImpl();
         procQueue = new ProcessingQueue(properties, pduListener, null);
 
         Server.getInstance().init(properties, this);
@@ -106,6 +110,20 @@ public class Gateway extends Thread implements PDUListener {
 
     @Override
     public void run() {
+
+        // Stop receiving messages.
+        pduListener.setReject(true);
+
+        // Stop adding messages to informer.
+        Hashtable<String, DcpConnectionImpl> informer_user_connection_table = Config.getInstance().getDCPConnections();
+
+        for(String informer_user: informer_user_connection_table.keySet()){
+            DcpConnectionImpl dcpConnection = informer_user_connection_table.get(informer_user);
+
+        }
+
+
+
         Server.getInstance().shutdown();
         Journal.getInstance().shutdown();
     }

@@ -52,6 +52,10 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
     private String informer_user;
 
+    private boolean reject = false;
+
+    private SendTask currentSendTask;
+
     public DcpConnectionImpl(String informer_user) throws AdminException {
         super("ic_"+informer_user);
         this.informer_user = informer_user;
@@ -95,6 +99,11 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
         synchronized (queue){
 
+            if (reject) {
+                log.debug("Couldn't add "+message_id+"_message to "+delivery_id+"_queue, message rejected.");
+                return;
+            }
+
             queue.put(informer_message);
 
             int size = queue.size();
@@ -107,7 +116,14 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             if (queue.size() == 1){
                 SendTask sendTask = new SendTask(delivery_id);
+
+                if (scheduler.isShutdown()) {
+                    log.debug("Couldn't create new send task for "+delivery_id+"_queue, because scheduler is already shutdown.");
+                    return;
+                }
+
                 ScheduledFuture scheduledFuture = scheduler.schedule(sendTask, timeout, TimeUnit.MILLISECONDS);
+
                 queue_task_map.put(queue, scheduledFuture);
             }
 
@@ -328,8 +344,9 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             log.debug("send task queue size "+sendTaskQueue.size());
             while(!sendTaskQueue.isEmpty()){
-                SendTask sendTask = sendTaskQueue.poll();
-                sendTask.run();
+                currentSendTask = sendTaskQueue.poll();
+                currentSendTask.run();
+                currentSendTask = null;
             }
 
             synchronized (this){
@@ -348,7 +365,50 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     }
 
     public void close() {
+        log.debug("Try to shutdown "+informer_user+"_dcp_connection ...");
+
+        // Stop adding messages to the queues.
+        reject = true;
+
+        // Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be
+        // accepted. Invocation has no additional effect if already shut down.
+        scheduler.shutdown();
+
+        for(LinkedBlockingQueue<Message> queue: queue_task_map.keySet()){
+            ScheduledFuture scheduledFuture = queue_task_map.get(queue);
+            // Cancel scheduledFuture, but not interrupt if it is already running.
+            if (!scheduledFuture.cancel(false)){
+                log.debug("Couldn't cancel scheduled future because it is already running.");
+
+                while(!scheduledFuture.isDone()){
+                    try {
+                        log.debug("Scheduled future isn't done, wait ...");
+                        wait(1000);
+                    } catch (InterruptedException e) {
+                        log.error(e);
+                    }
+                }
+            }
+
+        }
+        queue_task_map.clear();
+
+        // Remove all send tasks.
+        while(!sendTaskQueue.isEmpty()){
+            sendTaskQueue.poll();
+        }
+
+        while (currentSendTask != null){
+            try {
+                log.debug("Current send task isn't done, wait ...");
+                wait(1000);
+            } catch (InterruptedException e) {
+                log.error(e);
+            }
+        }
+
         client.close();
+        log.debug("Successfully shutdown "+informer_user+"_dcp_connection.");
     }
 
     public long[] addDeliveryMessages(int deliveryId, List<Message> messages) throws AdminException {
@@ -400,4 +460,5 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         }
 
     }
+
 }

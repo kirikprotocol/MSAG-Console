@@ -5,11 +5,9 @@
 
     <property name="dcpgw.test.classes" value="${dcpgw.build.dir}/test_classes"/>
 
-    <property name="src.dir" location="${SOURCE_DIR}/src"/>
-    <property name="sql.dir" location="${SOURCE_DIR}/sql"/>
-    <property name="conf.dir" location="${SOURCE_DIR}/conf"/>
-    <property name="dist.dir" location="${DISTR_DIR}"/>
-    <property name="lib.dir" location="${SOURCE_DIR}/lib"/>
+    <property name="src.dir" location="src"/>
+    <property name="conf.dir" location="conf"/>
+    <property name="lib.dir" location="lib"/>
 
     <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="libdev/protogen.jar"/>
 
@@ -31,46 +29,45 @@
     </path>
 
     <target name="clean" description="Remove build and distribs directory.">
-        <delete dir="${BUILD_DIR}"/>
-        <delete dir="${DISTR_DIR}"/>
+        <delete dir="${dcpgw.build.dir}"/>
+        <delete dir="${dcpgw.distr.dir}"/>
     </target>
 
     <target name="compile" depends="clean">
-        <mkdir dir="${BUILD_DIR}"/>
-        <mkdir dir="${DISTR_DIR}"/>
-        <mkdir dir="${BUILD_DIR}/classes"/>
+        <mkdir dir="${dcpgw.build.dir}"/>
+        <mkdir dir="${dcpgw.distr.dir}"/>
+        <mkdir dir="${dcpgw.build.dir}/classes"/>
         <javac srcdir="${src.dir}"
-               destdir="${BUILD_DIR}/classes"
+               destdir="${dcpgw.build.dir}/classes"
                classpathref="project.classpath"
         />
     </target>
 
     <target name="build" depends="compile">        
 
-        <mkdir dir="${DISTR_DIR}/lib"/>
-        <jar jarfile="${DISTR_DIR}/lib/dcpgw.jar"
-             basedir="${BUILD_DIR}/classes"
+        <mkdir dir="${dcpgw.distr.dir}/lib"/>
+        <jar jarfile="${dcpgw.distr.dir}/lib/dcpgw.jar"
+             basedir="${dcpgw.build.dir}/classes"
              index="true">
         </jar>
                 
-        <copy file="${SOURCE_DIR}/mv_logs.sh" todir="${DISTR_DIR}"/>
-        <chmod file="${DISTR_DIR}/mv_logs.sh" perm="u+x"/>
+        <copy file="mv_logs.sh" todir="${dcpgw.distr.dir}"/>
+        <chmod file="${dcpgw.distr.dir}/mv_logs.sh" perm="u+x"/>
 
-        <copy file="${SOURCE_DIR}/setenv.sh" todir="${DISTR_DIR}"/>
-        <chmod file="${DISTR_DIR}/setenv.sh" perm="u+x"/>
+        <copy file="setenv.sh" todir="${dcpgw.distr.dir}"/>
+        <chmod file="${dcpgw.distr.dir}/setenv.sh" perm="u+x"/>
 
-        <copy file="startup.sh" todir="${DISTR_DIR}"/>
-        <chmod file="${DISTR_DIR}/startup.sh" perm="u+x"/>
+        <mkdir dir="${dcpgw.distr.dir}/logs"/>
 
-        <copy file="stop.sh" todir="${DISTR_DIR}"/>
-        <chmod file="${DISTR_DIR}/stop.sh" perm="u+x"/>
+        <mkdir dir="${dcpgw.distr.dir}/bin"/>
 
-        <mkdir dir="${DISTR_DIR}/logs"/>
+        <copy file="service" todir="${dcpgw.distr.dir}/bin"/>
+        <chmod file="${dcpgw.distr.dir}/bin/service" perm="u+x"/>
         
-        <copydir src="${lib.dir}" dest="${DISTR_DIR}/lib"/>
-        <chmod file="${DISTR_DIR}/${ant.project.name}.jar" perm="u+x"/>
+        <copydir src="${lib.dir}" dest="${dcpgw.distr.dir}/lib"/>
+        <chmod file="${dcpgw.distr.dir}/${ant.project.name}.jar" perm="u+x"/>
 
-        <copy todir="${DISTR_DIR}/conf">
+        <copy todir="${dcpgw.distr.dir}/conf">
           <fileset dir="${conf.dir}"/>
         </copy>
 
@@ -86,7 +83,6 @@
           <cgp name="search.path" value="src/mobi/eyeline/dcpgw/admin/protogen/"/>
         </protogen>
     </target>
-
 
 
   <target name="compile.sources">

@@ -37,6 +37,8 @@ public class PDUListenerImpl implements PDUListener {
     private long rang;
     private File message_id_rang_file;
 
+    private boolean reject = false;
+
     public PDUListenerImpl(){
         Config config = Config.getInstance();
         initial_message_id_rang = config.getInitialMessageIdRang();
@@ -48,6 +50,12 @@ public class PDUListenerImpl implements PDUListener {
     @Override
     public boolean handlePDU(PDU pdu) {
         log.debug("handle " + pdu.getType()+": sn="+pdu.getSequenceNumber());
+
+        if (reject) {
+            log.debug("Reject pdu: sn="+pdu.getSequenceNumber());
+            return true;
+        }
+
         switch (pdu.getType()) {
             case SubmitSM:{
 
@@ -235,6 +243,10 @@ public class PDUListenerImpl implements PDUListener {
         resp.setConnectionName(connection_name);
         resp.setSequenceNumber(sequence_number);
         return resp;
+    }
+
+    public void setReject(boolean reject){
+        this.reject = reject;
     }
 
 }

@@ -484,6 +484,10 @@ public class Config {
         return informer_user_connection_table.get(informer_user);
     }
 
+    public Hashtable<String, DcpConnectionImpl> getDCPConnections(){
+        return informer_user_connection_table;
+    }
+
     public int getMaxJournalSize(){
         return  max_journal_size_mb;
     }
