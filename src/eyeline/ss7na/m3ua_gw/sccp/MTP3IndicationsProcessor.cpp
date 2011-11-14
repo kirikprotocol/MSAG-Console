@@ -1,4 +1,5 @@
 #include <list>
+#include <assert.h>
 #include "MTP3IndicationsProcessor.hpp"
 #include "MessageHandlingDispatcherIface.hpp"
 #include "MessagesFactory.hpp"
@@ -79,19 +80,18 @@ MTP3IndicationsProcessor::handle(const mtp3::primitives::MTP_Transfer_Ind& mtp_p
     const uint8_t* sccpData = mtp_primitive.getData().data;
     uint16_t sccpDataLen = mtp_primitive.getData().dataLen;
     messages::SCCPMessage* sccpMessage = MessagesFactory::getInstance().instanceMessage(*sccpData);
-    if ( sccpMessage ) {
-      common::TP tp(0, sccpDataLen, const_cast<uint8_t*>(sccpData), sccpDataLen);
-      sccpMessage->deserialize(tp);
-      MessageHandlingDispatcherIface* msgHandleDisp = sccpMessage->getHandlingDispatcher();
-      if ( !msgHandleDisp ) {
-        smsc_log_error(_logger, "MTP3IndicationsProcessor::handle::: fatal error - message handler isn't set for message type=%u",
-                       sccpMessage->getMsgCode());
-        return;
-      }
-      sccpMessage->setSLS(mtp_primitive.getSLS());
-      msgHandleDisp->dispatch_handle();
-    } else
-      smsc_log_error(_logger, "MTP3IndicationsProcessor::handle::: can't instantiate SCCP message for msg_code [=%d]", *sccpData);
+
+    assert(sccpMessage);
+
+    common::TP tp(0, sccpDataLen, const_cast<uint8_t*>(sccpData), sccpDataLen);
+    sccpMessage->deserialize(tp);
+    MessageHandlingDispatcherIface* msgHandleDisp = sccpMessage->getHandlingDispatcher();
+
+    assert(msgHandleDisp);
+
+    sccpMessage->setSLS(mtp_primitive.getSLS());
+    msgHandleDisp->dispatch_handle();
+
   } catch (SCCPFailureException& ex) {
     smsc_log_error(_logger, "MTP3IndicationsProcessor::handle::: caught SCCPFailureException");
     formMtpTransferReq(mtp_primitive, ex.getResponseMsg());
