@@ -18,6 +18,14 @@
             <param name="cacheTimeout" type="int">10</param>
         </section>
 
+        <section name="backup">
+            <param name="archiveDir" type="string">@pvss.archivedir@</param>
+            <param name="propertiesPerSecond" type="int">100</param>
+            <param name="configReloadInterval" type="int">0</param>
+            <param name="backupPrefix" type="string">@pvss.backupPrefix@</param>
+            <param name="rollingInterval" type="int">600</param>
+        </section>
+
         <section name="SyncTransport">
             <param name="port" type="int">@pvss.sync.port@</param>
             <param name="maxClientsCount" type="int">@pvss.sync.max_clients_count@</param>
