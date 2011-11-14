@@ -383,7 +383,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 while(!scheduledFuture.isDone()){
                     try {
                         log.debug("Scheduled future isn't done, wait ...");
-                        wait(1000);
+                        sleep(1000);
                     } catch (InterruptedException e) {
                         log.error(e);
                     }
@@ -401,7 +401,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         while (currentSendTask != null){
             try {
                 log.debug("Current send task isn't done, wait ...");
-                wait(1000);
+                sleep(1000);
             } catch (InterruptedException e) {
                 log.error(e);
             }
