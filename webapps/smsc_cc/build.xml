@@ -9,14 +9,17 @@
 
   <property name="smsc.exploded.dir" value="${smsc.build.dir}/exploded"/>
 
-  <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="lib/protogen.jar"/>
+  <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="libdev/protogen.jar"/>
   <taskdef resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties" classpath="lib/aspectjtools.jar"/>
 
   <path id="lib">
     <fileset dir="lib" includes="*.jar"/>
   </path>
+  <path id="libdev">
+    <fileset dir="libdev" includes="*.jar"/>
+  </path>
 
-  <taskdef resource='emma_ant.properties' classpathref="lib" />
+  <taskdef resource='emma_ant.properties' classpathref="libdev" />
 
   <target name="gen_cc_protocol">
     <protogen language="java" msgPackage="ru.novosoft.smsc.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java"
@@ -45,13 +48,18 @@ public class AdminMode {${line.separator}
   <target name="compile.sources">
     <delete dir="${smsc.source.classes.preweaved}" failonerror="false"/>
     <mkdir dir="${smsc.source.classes.preweaved}"/>
-    <javac srcdir="java" destdir="${smsc.source.classes.preweaved}" classpathref="lib" debug="true"/>
+    <javac srcdir="java" destdir="${smsc.source.classes.preweaved}" debug="true">
+      <classpath refid="lib"/>
+      <classpath refid="libdev"/>
+    </javac>
   </target>
 
   <target name="weave.sources" depends="compile.sources">
     <delete dir="${smsc.source.classes}" failonerror="false"/>
     <mkdir dir="${smsc.source.classes}"/>
-    <iajc classpathref="lib" destdir="${smsc.source.classes}" >
+    <iajc destdir="${smsc.source.classes}" >
+      <classpath refid="lib"/>
+      <classpath refid="libdev"/>
       <inpath location="${smsc.source.classes.preweaved}"/>
     </iajc>
     <native2ascii src="java" dest="${smsc.source.classes}" ext=".properties" includes="**/*.properties"/>
@@ -63,13 +71,18 @@ public class AdminMode {${line.separator}
     <copy todir="${smsc.test.classes.preweaved}">
       <fileset dir="${smsc.source.classes.preweaved}"/>
     </copy>
-    <javac srcdir="test" destdir="${smsc.test.classes.preweaved}" classpathref="lib" debug="true"/>
+    <javac srcdir="test" destdir="${smsc.test.classes.preweaved}" debug="true">
+      <classpath refid="lib"/>
+      <classpath refid="libdev"/>
+    </javac>
   </target>
 
   <target name="weave.tests" depends="compile.tests">
     <delete dir="${smsc.test.classes}" failonerror="false"/>
     <mkdir dir="${smsc.test.classes}"/>
-    <iajc classpathref="lib" destdir="${smsc.test.classes}" source="1.6">
+    <iajc destdir="${smsc.test.classes}" source="1.6">
+      <classpath refid="lib"/>
+      <classpath refid="libdev"/>
       <inpath location="${smsc.test.classes.preweaved}"/>
     </iajc>
     <copy todir="${smsc.test.classes}">
@@ -91,6 +104,7 @@ public class AdminMode {${line.separator}
     <junit showoutput="true" printsummary="yes" fork="true" forkmode="once">
       <classpath path="${smsc.test.classes}"/>
       <classpath refid="lib"/>
+      <classpath refid="libdev"/>
 
       <jvmarg value="-Demma.coverage.out.file=${smsc.tests.dir}/coverage.emma" />
       <jvmarg value="-Demma.coverage.out.merge=false" />
