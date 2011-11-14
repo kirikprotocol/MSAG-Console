@@ -2,6 +2,7 @@
 # define __EYELINE_SS7NA_COMMON_LINKID_HPP__
 
 # include <string>
+# include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
 namespace ss7na {
@@ -70,7 +71,7 @@ public:
   bool isEmpty() const { return _linkId.empty(); }
 
 private:
-  std::string _linkId;
+  smsc::core::buffers::FixedLengthString<64> _linkId;
 };
 
 }}}
