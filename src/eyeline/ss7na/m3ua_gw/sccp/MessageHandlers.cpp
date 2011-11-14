@@ -293,7 +293,7 @@ MessageHandlers::forwardMessageToMTP3(const std::string& route_id,
     try {
       smsc_log_debug(_logger, "MessageHandlers::forwardMessageToMTP3::: form MTP_Transfer request primitive for lpc/dpc=%u/%u",
                      mtp3SapInfo.getLPC(), mtp3SapInfo.getDPC());
-      mtp3::PointInfo localPointInfo =
+      const mtp3::PointInfo& localPointInfo =
           mtp3::PointsDefinitionRegistry::getInstance().lookup(mtp3SapInfo.getLPC());
 
       mtp3::primitives::MTP_Transfer_Req mtpPrimitive(mtp3SapInfo.getLPC(), mtp3SapInfo.getDPC(),
