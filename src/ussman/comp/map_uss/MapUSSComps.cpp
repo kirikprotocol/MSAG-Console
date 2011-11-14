@@ -42,13 +42,13 @@ void ProcessUSSRequestArg::setMSISDNadr(const char* adrStr) throw(CustomExceptio
     throw CustomException(-1, "USSReqArg: invalid msisdn", adrStr);
 }
 
-void ProcessUSSRequestArg::decode(const std::vector<uint8_t>& buf)
+void ProcessUSSRequestArg::decode(const uint8_t * in_buf, uint16_t enc_len)
     throw(CustomException)
 {
   USSD_Arg_t *  dcmd = NULL;  /* ASN decoded structure */
   asn_dec_rval_t  drc;        /* Decoder return value  */
 
-  drc = ber_decode(0, &asn_DEF_USSD_Arg, (void **)&dcmd, &buf[0], buf.size());
+  drc = ber_decode(0, &asn_DEF_USSD_Arg, (void **)&dcmd, in_buf, (size_t)enc_len);
   ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_USSD_Arg, "USSReqArg"); //throws
   smsc_log_component(compLogger, &asn_DEF_USSD_Arg, dcmd);
 
@@ -134,12 +134,13 @@ void ProcessUSSRequestArg::encode(std::vector<uint8_t>& buf) const throw(CustomE
 /* ************************************************************************** *
  * class USSReqArg implementation:
  * ************************************************************************** */
-void ProcessUSSRequestRes::decode(const std::vector<uint8_t>& buf) throw(CustomException)
+void ProcessUSSRequestRes::decode(const uint8_t * in_buf, uint16_t enc_len)
+  throw(CustomException)
 {
   USSD_Res_t *        dcmd = NULL;    /* decoded structure */
   asn_dec_rval_t      drc;            /* Decoder return value  */
 
-  drc = ber_decode(0, &asn_DEF_USSD_Res, (void **)&dcmd, &buf[0], buf.size());
+  drc = ber_decode(0, &asn_DEF_USSD_Res, (void **)&dcmd, in_buf, (size_t)enc_len);
   ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_USSD_Res, "USSReqRes");
 
   /* decode ussd string */

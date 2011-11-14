@@ -98,7 +98,7 @@ public:
   // -- Component virtual methods:
   // ---------------------------------------------
   virtual void encode(std::vector<uint8_t>& buf) const throw(CustomException);
-  virtual void decode(const std::vector<uint8_t>& buf) throw(CustomException);
+  virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(CustomException);
 };
 
 class ProcessUSSRequestRes : public smsc::inman::comp::Component
@@ -117,7 +117,7 @@ public:
   // -- Component virtual methods:
   // ---------------------------------------------
   virtual void encode(std::vector<uint8_t>& buf) const throw(CustomException);
-  virtual void decode(const std::vector<uint8_t>& buf) throw(CustomException);
+  virtual void decode(const uint8_t * in_buf, uint16_t enc_len) throw(CustomException);
 };
 
 } //uss
