@@ -17,6 +17,8 @@ void mts(EINSS7_I97_ISUPHEAD_T *head,EINSS7INSTANCE_T isupInstanceId,EINSS7_I97_
 void taif(EINSS7_I97_ISUPHEAD_T *head,EINSS7INSTANCE_T isupInstanceId,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
 void taifmixed(EINSS7_I97_ISUPHEAD_T *head,EINSS7INSTANCE_T isupInstanceId,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
 void redirect_rule(EINSS7_I97_ISUPHEAD_T *head,EINSS7INSTANCE_T isupInstanceId,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
+void original_and_redirect_rule(EINSS7_I97_ISUPHEAD_T *head,EINSS7INSTANCE_T isupInstanceId,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
+
 
 namespace smsc{
 namespace misscall{
@@ -1472,6 +1474,7 @@ void redirect_rule(
 }
 void original_rule(
     EINSS7_I97_ISUPHEAD_T *head,
+    EINSS7INSTANCE_T isupInstanceId,
     EINSS7_I97_CALLINGNUMB_T *cg,
     EINSS7_I97_CALLEDNUMB_T *called,
     EINSS7_I97_ORIGINALNUMB_T *original,
@@ -1545,7 +1548,7 @@ void original_rule(
     }
   }
 
-  releaseConnection(head,causeValue);
+  releaseConnection(head,isupInstanceId,causeValue);
 
   if (original && inform)
   {
@@ -1561,6 +1564,7 @@ void original_rule(
 }
 void original_and_redirect_rule(
     EINSS7_I97_ISUPHEAD_T *head,
+    EINSS7INSTANCE_T isupInstanceId,
     EINSS7_I97_CALLINGNUMB_T *calling,
     EINSS7_I97_CALLEDNUMB_T *called,
     EINSS7_I97_ORIGINALNUMB_T *original,
@@ -1571,11 +1575,11 @@ void original_and_redirect_rule(
   UCHAR_T causeValue = relCauses.otherCause;
   if (redirecting)
   {
-    redirect_rule(head,calling,called,original,redirinf,redirecting);
+    redirect_rule(head,isupInstanceId,calling,called,original,redirinf,redirecting);
   }
   else
   {
-    original_rule(head,calling,called,original,redirinf,redirecting);
+    original_rule(head,isupInstanceId,calling,called,original,redirinf,redirecting);
   }
 }
 void taifmixed(
