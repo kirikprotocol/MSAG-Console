@@ -1,5 +1,7 @@
 2011-11-14 11:49 bukind
   feature: boundToLocalTime flag may be toggled on-the-fly
+2011-11-14 14:28 bukind
+  feature: startDate is allowed to be changed
 
 =====================================================================
 2011-10-28 09:49 bukind informer-build-20111028

@@ -199,17 +199,19 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType ptr )
             // info.isBoundToLocalTime());
             if ( info.getStartDate() && activeTime < info.getStartDate() ) {
                 // too early
-                // smsc_log_debug(log_,"R=%u/D=%u early than startDate=%llu actTime=%llu",
+                const unsigned ret = std::min(unsigned(info.getStartDate()-activeTime),4U)*tuPerSec;
+                //smsc_log_debug(log_,"R=%u/D=%u early than startDate=%llu actTime=%llu ret=%u",
                 // getRegionId(), info.getDlvId(),
                 // msgTimeToYmd(info.getStartDate()),
-                // msgTimeToYmd(activeTime));
-                return unsigned(std::min(info.getStartDate()-activeTime,4U)*tuPerSec);
+                // msgTimeToYmd(activeTime),
+                // ret);
+                return ret;
             } else if ( info.getEndDate() && activeTime > info.getEndDate() ) {
                 // too late, request detach
-                // smsc_log_debug(log_,"R=%u/D=%u later than endDate=%llu actTime=%llu",
+                // smsc_log_debug(log_,"R=%u/D=%u later than endDate=%llu actTime=%llu ret=%u",
                 // getRegionId(), info.getDlvId(),
                 // msgTimeToYmd(info.getEndDate()),
-                // msgTimeToYmd(activeTime));
+                // msgTimeToYmd(activeTime),sleepTimeException);
                 std::vector<regionid_type> regs(1,getRegionId());
                 DeliveryActivator& da = info.getUserInfo().getDA();
                 da.startCancelThread(info.getDlvId(),getRegionId());

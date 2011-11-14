@@ -473,8 +473,10 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     RetryString retryPolicy;
     bool newRetryPolicy = false;
 
-    if (!old && !data.startDate.empty()) { // calculate only at start
-        startDate = parseDateTime(data.startDate.c_str());
+    if (!old || old->startDate != data.startDate) {
+        if ( !data.startDate.empty() ) {
+            startDate = parseDateTime(data.startDate.c_str());
+        }
     }
     if (!old || old->endDate != data.endDate) {
         if (!data.endDate.empty() ) {
