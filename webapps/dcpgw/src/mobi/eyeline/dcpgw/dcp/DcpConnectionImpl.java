@@ -259,7 +259,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
             MessageResp resp = message_id_message_resp_table.remove(message_id);
 
             if (resp == null) {
-                log.error("Couldn't find SubmitSMResp data, message_id="+message_id_str);
+                log.error("Couldn't find response data, message_id="+message_id_str);
                 continue;
             }
 
@@ -289,7 +289,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 Server.getInstance().send(resp, true);
             } catch (SmppException e) {
                 canceled_messages.add(m.getId());
-                log.debug("Couldn't send "+message_id+"_SubmitSMResp to "+connection_name+"_smpp_client, remember it.", e);
+                log.debug("Couldn't send "+message_id+"_MessageResp to "+connection_name+"_smpp_client, remember it.", e);
 
                 try {
 
@@ -305,7 +305,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 continue;
             }
 
-            log.debug("send SubmitSMResp: id="+message_id+", sn="+resp.getSequenceNumber()+", status=OK, delivery_id="+delivery_id);
+            log.debug("send MessageResp: id="+message_id+", sn="+resp.getSequenceNumber()+", status=OK, delivery_id="+delivery_id);
 
             Date submit_date = new Date(System.currentTimeMillis());
             sdata.setSubmitDate(submit_date);
