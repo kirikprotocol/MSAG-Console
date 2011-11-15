@@ -201,7 +201,6 @@ public class Connection {
                                 log.debug("send DeliverSM: sn=" + sn + ", id=" + data.getMessageId());
 
                                 long first_sending_time = System.currentTimeMillis();
-                                data.setFirstSendingTime(first_sending_time);
                                 data.setLastResendTime(first_sending_time);
 
                                 data.setStatus(DeliveryData.Status.SEND);
@@ -216,7 +215,6 @@ public class Connection {
                                 log.warn(e);
 
                                 long first_sending_time = System.currentTimeMillis();
-                                data.setFirstSendingTime(first_sending_time);
                                 data.setLastResendTime(first_sending_time);
 
                                 data.setStatus(DeliveryData.Status.RESEND);

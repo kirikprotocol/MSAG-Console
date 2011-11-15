@@ -90,7 +90,6 @@ public abstract class T {
         data.setSubmitDate(cal.getTime());
         data.setDoneDate(cal.getTime());
         long time = System.currentTimeMillis();
-        data.setFirstSendingTime(time);
         data.setLastResendTime(time);
         data.setStatus(DeliveryData.Status.SEND);
         data.setNsms(1);
@@ -141,7 +140,6 @@ public abstract class T {
         data.setDoneDate(cal.getTime());
         long time = System.currentTimeMillis();
         data.setInitTime(time);
-        data.setFirstSendingTime(time);
         data.setLastResendTime(time);
         data.setStatus(status);
         data.setNsms(1);

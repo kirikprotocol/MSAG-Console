@@ -43,10 +43,6 @@ public class DeliveryData extends Data implements Cloneable{
         this.first_sending_time = time;
     }
 
-    public Long getFirstSendingTime(){
-        return first_sending_time;
-    }
-
     public void setLastResendTime(Long last_resending_time){
         this.last_resending_time = last_resending_time;
     }
@@ -153,46 +149,37 @@ public class DeliveryData extends Data implements Cloneable{
         date = Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE);
         long init_time = date.getTime();
 
-        Long first_sending_time = null;
+        Long last_resending_time = null;
         if (!ar[1].equals("N/A")){
             date = sdf.parse(ar[1]);
-            date = Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE);
-            first_sending_time = date.getTime();
-        }
-
-        Long last_resending_time = null;
-        if (!ar[2].equals("N/A")){
-            date = sdf.parse(ar[2]);
             date = Functions.convertTime(date, STAT_TIMEZONE, LOCAL_TIMEZONE);
             last_resending_time = date.getTime();
         }
 
-        long message_id = Long.parseLong(ar[3]);
-
+        long message_id = Long.parseLong(ar[2]);
 
         Integer sequence_number = null;
         if (!ar[4].equals("N/A")){
-            sequence_number = Integer.parseInt(ar[4]);
+            sequence_number = Integer.parseInt(ar[3]);
         }
 
-        Address source_address = new Address(ar[5]);
-        Address destination_address = new Address(ar[6]);
+        Address source_address = new Address(ar[4]);
+        Address destination_address = new Address(ar[5]);
 
-        String connection_name = ar[7];
-        Date submit_date = sdf.parse(ar[8]);
-        Date done_date = sdf.parse(ar[9]);
+        String connection_name = ar[6];
+        Date submit_date = sdf.parse(ar[7]);
+        Date done_date = sdf.parse(ar[8]);
 
-        FinalMessageState finalMessageState =  FinalMessageState.valueOf(ar[10]);
+        FinalMessageState finalMessageState =  FinalMessageState.valueOf(ar[9]);
 
-        int nsms = Integer.parseInt(ar[11]);
+        int nsms = Integer.parseInt(ar[10]);
 
-        Status status  =  Status.valueOf(ar[12]);
+        Status status  =  Status.valueOf(ar[11]);
 
         data.setMessageId(message_id);
         data.setSourceAddress(source_address);
         data.setDestinationAddress(destination_address);
         data.setInitTime(init_time);
-        data.setFirstSendingTime(first_sending_time);
         data.setLastResendTime(last_resending_time);
         data.setSubmitDate(submit_date);
         data.setDoneDate(done_date);
@@ -208,12 +195,6 @@ public class DeliveryData extends Data implements Cloneable{
 
         Date init_date = Functions.convertTime(new Date(data.getInitTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
 
-        Date first_sending_date = null;
-        Long first_sending_time = data.getFirstSendingTime();
-        if (first_sending_time != null){
-            first_sending_date = Functions.convertTime(new Date(data.getFirstSendingTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
-        }
-
         Date last_resending_date = null;
         Long last_resending_time = data.getLastResendTime();
         if (last_resending_time != null){
@@ -221,7 +202,6 @@ public class DeliveryData extends Data implements Cloneable{
         }
 
         return sdf.format(init_date) + sep +
-               (first_sending_date  != null ? sdf.format(first_sending_date) : "N/A") + sep +
                (last_resending_date != null ? sdf.format(last_resending_date): "N/A") + sep +
                data.getMessageId() + sep +
                (data.getSequenceNumber() != null ? data.getSequenceNumber() : "N/A") + sep +
@@ -236,13 +216,6 @@ public class DeliveryData extends Data implements Cloneable{
     }
 
     public boolean equals(DeliveryData data){
-
-        boolean b1;
-        if (first_sending_time != null){
-            b1 = data.getFirstSendingTime() != null && first_sending_time.equals(data.getFirstSendingTime());
-        } else {
-            b1 = data.getFirstSendingTime() == null;
-        }
 
         boolean b2;
         if (last_resending_time != null){
@@ -266,7 +239,6 @@ public class DeliveryData extends Data implements Cloneable{
                 submit_date.getTime() == data.getSubmitDate().getTime() &&
                 done_date.getTime() == data.getDoneDate().getTime() &&
                 init_time.equals(data.getInitTime()) &&
-                b1  &&
                 b2  &&
                 b3  &&
                 status == data.getStatus() &&
@@ -286,7 +258,6 @@ public class DeliveryData extends Data implements Cloneable{
         d.setSubmitDate(submit_date);
         d.setDoneDate(done_date);
         d.setInitTime(init_time);
-        d.setFirstSendingTime(first_sending_time);
         d.setLastResendTime(last_resending_time);
         d.setNsms(nsms);
         return d;
