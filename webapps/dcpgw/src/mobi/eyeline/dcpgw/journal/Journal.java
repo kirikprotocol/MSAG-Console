@@ -860,7 +860,7 @@ public class Journal {
             }
         }
 
-        log.debug("Journal is shut down.");
+        log.debug("Journal is shuted down.");
     }
 
     public void write(SubmitData data)throws CouldNotWriteToJournalException {
