@@ -121,7 +121,7 @@ public class Gateway extends Thread implements PDUListener {
 
         // Stop reading final logs
         deliveryChangesDetector.shutdown();
-        while (!deliveryChangesDetector.isRunning()){
+        while (deliveryChangesDetector.isRunning()){
             try {
                 log.debug("Delivery changes detector is running, wait ...");
                 sleep(1000);
