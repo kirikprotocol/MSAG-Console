@@ -80,6 +80,8 @@ public class Config {
     private int initial_receipts_sn_rang;
     private int rang = 10000;
 
+    private String delivery_message_format;
+
     public void init(String config_file) throws IOException, XmlConfigException, InitializationException {
         config = new Properties();
         config.load(new FileInputStream(config_file));
@@ -232,6 +234,14 @@ public class Config {
 
         journal_clean_timeout = Utils.getProperty(config, "journal.clean.timeout.msl", 60000);
 
+        s = config.getProperty("delivery.message.format");
+        if (s != null && !s.isEmpty()){
+            delivery_message_format = s;
+            log.debug("Configuration property: delivery.message.format="+delivery_message_format);
+        } else {
+            log.error("Configuration property 'delivery.message.format' is invalid or not specified in config");
+            throw new InitializationException("Configuration property 'delivery.message.format' is invalid or not specified in config");
+        }
     }
 
     public void update() throws IOException, XmlConfigException, AdminException, SmppException {
@@ -535,5 +545,9 @@ public class Config {
 
     public int getMaxSubmitDateJournalSize() {
         return max_submit_date_journal_size;
+    }
+
+    public String getDeliveryMessageFormat(){
+        return delivery_message_format;
     }
 }

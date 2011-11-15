@@ -14,6 +14,7 @@ import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.types.EsmMessageType;
 import org.apache.log4j.Logger;
 
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
@@ -54,6 +55,8 @@ public class Connection {
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     ScheduledExecutorService resend_delivery_receipts_scheduler = Executors.newSingleThreadScheduledExecutor();
 
+    private String delivery_message_format;
+
     public Connection(String name, int send_receipts_speed, int send_receipt_max_time_min){
         this.name = name;
         this.send_receipts_speed = send_receipts_speed;
@@ -69,6 +72,8 @@ public class Connection {
         if (sn_data_table == null) sn_data_table = new Hashtable<Integer, DeliveryData>();
         if (queue == null) queue = new LinkedBlockingQueue<DeliveryData>();
         if (message_id_sdata_table == null)  message_id_sdata_table = new Hashtable<Long, SubmitData>();
+
+        delivery_message_format = config.getDeliveryMessageFormat();
 
         scheduler.scheduleWithFixedDelay(new Runnable() {
 
@@ -89,6 +94,7 @@ public class Connection {
             }
 
         }, t , t, TimeUnit.SECONDS);
+
         log.debug("Initialize scheduler with resend interval " + t + " sec.");
     }
 
@@ -173,11 +179,9 @@ public class Connection {
 
                             FinalMessageState state = data.getFinalMessageState();
 
-                            String message = "id:" + message_id +
-                                             " nsms:" + nsms +
-                                             " submit date:" + sdf.format(submit_date) +
-                                             " done date:" + sdf.format(done_date) +
-                                             " stat:" + state;
+                            Object[] args = {message_id, nsms, sdf.format(submit_date), sdf.format(done_date), state};
+                            MessageFormat form = new MessageFormat(delivery_message_format);
+                            String message = form.format(args);
 
                             log.debug("Receipt message: " + message);
 
