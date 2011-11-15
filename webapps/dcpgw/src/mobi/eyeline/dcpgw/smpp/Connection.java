@@ -176,10 +176,9 @@ public class Connection {
                             Date done_date = data.getDoneDate();
                             Date submit_date = data.getSubmitDate();
 
-
                             FinalMessageState state = data.getFinalMessageState();
 
-                            Object[] args = {message_id, nsms, sdf.format(submit_date), sdf.format(done_date), state};
+                            Object[] args = {Long.toString(message_id), Integer.toString(nsms), sdf.format(submit_date), sdf.format(done_date), state};
                             MessageFormat form = new MessageFormat(delivery_message_format);
                             String message = form.format(args);
 
