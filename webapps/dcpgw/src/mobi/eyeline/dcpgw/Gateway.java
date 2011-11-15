@@ -33,8 +33,6 @@ public class Gateway extends Thread implements PDUListener {
 
     private DeliveryChangesDetectorImpl deliveryChangesDetector;
 
-    private FileSystem fileSystem;
-
     private PDUListenerImpl pduListener;
 
     public static void main(String args[]) {
@@ -72,7 +70,7 @@ public class Gateway extends Thread implements PDUListener {
 
         Server.getInstance().init(properties, this);
 
-        fileSystem = FileSystem.getFSForSingleInst();
+        FileSystem fileSystem = FileSystem.getFSForSingleInst();
         try {
             deliveryChangesDetector = new DeliveryChangesDetectorImpl(config.getFinalLogDir(), fileSystem);
 
@@ -120,6 +118,17 @@ public class Gateway extends Thread implements PDUListener {
         for(String informer_user: informer_user_connection_table.keySet()){
             DcpConnectionImpl dcpConnection = informer_user_connection_table.get(informer_user);
             dcpConnection.close();
+        }
+
+        // Stop reading final logs
+        deliveryChangesDetector.shutdown();
+        while (!deliveryChangesDetector.isRunning()){
+            try {
+                log.debug("Delivery changes detector is running, wait ...");
+                sleep(1000);
+            } catch (InterruptedException e) {
+                log.error(e);
+            }
         }
 
         Server.getInstance().shutdown();

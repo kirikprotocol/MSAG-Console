@@ -43,6 +43,7 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
 
   private static final String FILE_NAME_DATE_PATTERN = "yyyyMMddHHmm'.csv'";
 
+  private boolean running;
 
   public DeliveryChangesDetectorImpl(File directory, FileSystem fileSys) throws InitException {
     this.baseDir = directory;
@@ -71,26 +72,33 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
   }
 
   public synchronized void shutdown() {
+    log.debug("Try to shutdown delivery changes detector scheduler ...");
     if (scheduler == null) return;
     scheduler.shutdown();
     try {
-      scheduler.awaitTermination(15, TimeUnit.SECONDS);
-    }
-    catch (InterruptedException e) {
-      scheduler.shutdownNow();
+        scheduler.awaitTermination(15, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+        log.debug("All task shutdown immediately after 15 sec.");
+        scheduler.shutdownNow();
     }
     scheduler = null;
+    log.debug("Successfully shutdown delivery changes detector scheduler.");
   }
 
+  public boolean isRunning(){
+      return running;
+  }
 
   public void run() {
-    String[] files=null;
+    running = true;
+    String[] files;
     try {
       files = fileSys.list(baseDir);
 
       if (files == null) {
         getMBean().notifyInteractionError("changelog dir", "Unable to get list of files: "+baseDir.getAbsolutePath());
         log.error("Unable to get list of files.");
+        running = false;
         return;
       }
 
@@ -110,6 +118,7 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
       getMBean().notifyInternalError("changelog internal", e.getMessage());
       log.error("Fatal error,EXITING! ", e);
     }
+    running = false;
   }
 
   private synchronized void processFile(String fileName) throws Exception{
