@@ -19,11 +19,8 @@ public class DeliveryData extends Data implements Cloneable{
 
     private Long init_time;
 
-    // Time when the delivery receipt has been sent for the first time.
-    private Long first_sending_time;
-
     // Time when the delivery recepit was the last time resend.
-    private Long last_resending_time;
+    private Long last_send_time;
 
     private Address source_address, destination_address;
 
@@ -39,16 +36,12 @@ public class DeliveryData extends Data implements Cloneable{
 
     private static Calendar cal = Calendar.getInstance();
 
-    public void setFirstSendingTime(Long time){
-        this.first_sending_time = time;
+    public void setLastSendTime(Long last_resending_time){
+        this.last_send_time = last_resending_time;
     }
 
-    public void setLastResendTime(Long last_resending_time){
-        this.last_resending_time = last_resending_time;
-    }
-
-    public Long getLastResendTime(){
-        return last_resending_time;
+    public Long getLastSendTime(){
+        return last_send_time;
     }
 
     public void setSourceAddress(Address source_address){
@@ -81,22 +74,15 @@ public class DeliveryData extends Data implements Cloneable{
         cal.setTimeInMillis(init_time);
         Date init_date = cal.getTime();
 
-        Date first_sending_date = null;
-        if (first_sending_time != null){
-            cal.setTimeInMillis(first_sending_time);
-            first_sending_date = cal.getTime();
-        }
-
         Date last_resending_date = null;
-        if (last_resending_time != null){
-            cal.setTimeInMillis(last_resending_time);
+        if (last_send_time != null){
+            cal.setTimeInMillis(last_send_time);
             last_resending_date = cal.getTime();
         }
 
         return "DeliveryData{message_id: " + message_id +
                 ", init date: " + sdf.format(init_date) +
-                ", first sending date: " + (first_sending_date != null ? sdf.format(first_sending_date) : "N/A") +
-                ", last resending date: " + (last_resending_date != null ? sdf.format(last_resending_date) : "N/A") +
+                ", last send date: " + (last_resending_date != null ? sdf.format(last_resending_date) : "N/A") +
                 ", sa: " + source_address.getAddress() +
                 ", da: " + destination_address.getAddress() +
                 ", con: " + connection_name +
@@ -180,7 +166,7 @@ public class DeliveryData extends Data implements Cloneable{
         data.setSourceAddress(source_address);
         data.setDestinationAddress(destination_address);
         data.setInitTime(init_time);
-        data.setLastResendTime(last_resending_time);
+        data.setLastSendTime(last_resending_time);
         data.setSubmitDate(submit_date);
         data.setDoneDate(done_date);
         data.setNsms(nsms);
@@ -196,9 +182,9 @@ public class DeliveryData extends Data implements Cloneable{
         Date init_date = Functions.convertTime(new Date(data.getInitTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
 
         Date last_resending_date = null;
-        Long last_resending_time = data.getLastResendTime();
+        Long last_resending_time = data.getLastSendTime();
         if (last_resending_time != null){
-            last_resending_date =  Functions.convertTime(new Date(data.getLastResendTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
+            last_resending_date =  Functions.convertTime(new Date(data.getLastSendTime()), LOCAL_TIMEZONE, STAT_TIMEZONE);
         }
 
         return sdf.format(init_date) + sep +
@@ -218,10 +204,10 @@ public class DeliveryData extends Data implements Cloneable{
     public boolean equals(DeliveryData data){
 
         boolean b2;
-        if (last_resending_time != null){
-            b2 = data.getLastResendTime() != null && last_resending_time.equals(data.getLastResendTime());
+        if (last_send_time != null){
+            b2 = data.getLastSendTime() != null && last_send_time.equals(data.getLastSendTime());
         } else {
-            b2 = data.getLastResendTime() == null;
+            b2 = data.getLastSendTime() == null;
         }
 
         boolean b3;
@@ -258,7 +244,7 @@ public class DeliveryData extends Data implements Cloneable{
         d.setSubmitDate(submit_date);
         d.setDoneDate(done_date);
         d.setInitTime(init_time);
-        d.setLastResendTime(last_resending_time);
+        d.setLastSendTime(last_send_time);
         d.setNsms(nsms);
         return d;
     }

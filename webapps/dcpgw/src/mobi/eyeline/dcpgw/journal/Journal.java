@@ -468,7 +468,7 @@ public class Journal {
             Set<Integer> temp_error_sequence_numbers = new HashSet<Integer>();
             Set<Long> sended_message_ids = new HashSet<Long>();
             Set<Long> deleted_messages_ids = new HashSet<Long>();
-            Hashtable<Long, Long> resended_message_id_last_resend_time_table = new Hashtable<Long, Long>();
+            Hashtable<Long, Long> resended_message_id_last_send_time_table = new Hashtable<Long, Long>();
 
             buffReader1 = new BufferedReader (new FileReader(j2));
 
@@ -509,8 +509,8 @@ public class Journal {
                 } else if (status == DeliveryData.Status.SEND ){
                     sended_message_ids.add(message_id);
                 } else if (status == DeliveryData.Status.RESEND){
-                    long last_resend_time = data.getLastResendTime();
-                    resended_message_id_last_resend_time_table.put(message_id, last_resend_time);
+                    long last_send_time = data.getLastSendTime();
+                    resended_message_id_last_send_time_table.put(message_id, last_send_time);
                 }
 
             }
@@ -543,7 +543,7 @@ public class Journal {
 
                     if (!sended_message_ids.contains(message_id)
                             && !deleted_messages_ids.contains(message_id)
-                            && !resended_message_id_last_resend_time_table.containsKey(message_id)
+                            && !resended_message_id_last_send_time_table.containsKey(message_id)
                             && !expired_max_messages_ids.contains(message_id)){
                         //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                         bwt.write(line+"\n");
@@ -552,9 +552,9 @@ public class Journal {
 
                 } else if (status == DeliveryData.Status.RESEND){
 
-                    long last_resend_time = data.getLastResendTime();
+                    long last_send_time = data.getLastSendTime();
 
-                    if (last_resend_time == resended_message_id_last_resend_time_table.get(message_id)
+                    if (last_send_time == resended_message_id_last_send_time_table.get(message_id)
                             && !sended_message_ids.contains(message_id)
                             && !deleted_messages_ids.contains(message_id)
                             && !expired_max_messages_ids.contains(message_id)){
