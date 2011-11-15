@@ -479,6 +479,10 @@ public class Connection {
         this.send_receipt_max_time = send_receipt_max_time;
     }
 
+    public int getSendReceiptMaxTime(){
+        return send_receipt_max_time;
+    }
+
     public void setSubmitData(SubmitData sdata){
         message_id_sdata_table.put(sdata.getMessageId(), sdata);
     }

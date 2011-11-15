@@ -1,8 +1,11 @@
 package mobi.eyeline.dcpgw.journal;
 
+import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
 import mobi.eyeline.dcpgw.exeptions.CouldNotWriteToJournalException;
 import mobi.eyeline.dcpgw.exeptions.InitializationException;
+import mobi.eyeline.dcpgw.smpp.Connection;
+import mobi.eyeline.dcpgw.smpp.Server;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import org.apache.log4j.Logger;
 
@@ -472,6 +475,8 @@ public class Journal {
 
             buffReader1 = new BufferedReader (new FileReader(j2));
 
+            Set<Long> expired_send_receipt_max_time = new HashSet<Long>();
+
             String line;
             while((line = buffReader1.readLine()) != null){
 
@@ -491,6 +496,19 @@ public class Journal {
 
                 long message_id = data.getMessageId();
                 DeliveryData.Status status = data.getStatus();
+
+
+                long init_time = data.getInitTime();
+                String connaction_name = data.getConnectionName();
+
+                Connection connection = Server.getInstance().getConnection(connaction_name);
+                int send_receipt_max_time = connection.getSendReceiptMaxTime();
+
+                if (System.currentTimeMillis() - init_time > send_receipt_max_time * 60 * 1000){
+                    log.warn("Journal record with message id "+message_id+" expired.");
+                    expired_send_receipt_max_time.add(message_id);
+                }
+
 
                 if (status == DeliveryData.Status.DONE) {
                     done_message_ids.add(message_id);
@@ -544,7 +562,8 @@ public class Journal {
                     if (!sended_message_ids.contains(message_id)
                             && !deleted_messages_ids.contains(message_id)
                             && !resended_message_id_last_send_time_table.containsKey(message_id)
-                            && !expired_max_messages_ids.contains(message_id)){
+                            && !expired_max_messages_ids.contains(message_id)
+                            && !expired_send_receipt_max_time.contains(message_id)){
                         //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                         bwt.write(line+"\n");
                         counter++;
@@ -557,7 +576,8 @@ public class Journal {
                     if (last_send_time == resended_message_id_last_send_time_table.get(message_id)
                             && !sended_message_ids.contains(message_id)
                             && !deleted_messages_ids.contains(message_id)
-                            && !expired_max_messages_ids.contains(message_id)){
+                            && !expired_max_messages_ids.contains(message_id)
+                            && !expired_send_receipt_max_time.contains(message_id)){
                         bwt.write(line+"\n");
                         counter++;
                     }
@@ -572,7 +592,8 @@ public class Journal {
                         && !perm_errors_message_ids.contains(message_id)
 
                         && !expired_sequence_numbers.contains(sequence_number)
-                        && !temp_error_sequence_numbers.contains(sequence_number) ){
+                        && !temp_error_sequence_numbers.contains(sequence_number)
+                        && !expired_send_receipt_max_time.contains(message_id) ){
                         //log.debug(message_id+"_message has "+status+" status, write it to the temporary journal "+j2t.getName());
                         bwt.write(line+"\n");
                         counter++;
