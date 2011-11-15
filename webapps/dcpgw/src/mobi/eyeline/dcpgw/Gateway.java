@@ -111,14 +111,6 @@ public class Gateway extends Thread implements PDUListener {
         // Stop receiving messages.
         pduListener.setReject(true);
 
-        // Stop adding messages to informer.
-        Hashtable<String, DcpConnectionImpl> informer_user_connection_table = Config.getInstance().getDCPConnections();
-
-        for(String informer_user: informer_user_connection_table.keySet()){
-            DcpConnectionImpl dcpConnection = informer_user_connection_table.get(informer_user);
-            dcpConnection.close();
-        }
-
         // Stop reading final logs
         deliveryChangesDetector.shutdown();
         while (deliveryChangesDetector.isRunning()){
@@ -129,6 +121,16 @@ public class Gateway extends Thread implements PDUListener {
                 log.error(e);
             }
         }
+
+        // Stop adding messages to informer.
+        Hashtable<String, DcpConnectionImpl> informer_user_connection_table = Config.getInstance().getDCPConnections();
+
+        for(String informer_user: informer_user_connection_table.keySet()){
+            DcpConnectionImpl dcpConnection = informer_user_connection_table.get(informer_user);
+            dcpConnection.close();
+        }
+
+
 
         Server.getInstance().shutdown();
         Journal.getInstance().shutdown();
