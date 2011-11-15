@@ -36,8 +36,10 @@ public class PDUListenerImpl implements PDUListener {
 
     private boolean reject = false;
 
-    public PDUListenerImpl(){
-        Config config = Config.getInstance();
+    private Config config;
+
+    public PDUListenerImpl(Config config){
+        this.config = config;
         initial_message_id_rang = config.getInitialMessageIdRang();
         rang = config.getRang();
         limit = initial_message_id_rang + rang;

@@ -77,6 +77,7 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
         scheduler.awaitTermination(15, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
         log.debug("All task shutdown immediately after 15 sec.");
+        running = false;
         scheduler.shutdownNow();
     }
     scheduler = null;

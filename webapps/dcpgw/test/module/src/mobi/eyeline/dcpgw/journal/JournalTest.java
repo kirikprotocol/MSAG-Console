@@ -15,7 +15,7 @@ import test.CalcListener;
 
 public class JournalTest extends T {
 
-    private static Journal journal = Journal.getInstance();
+    /*private static Journal journal = Journal.getInstance();
     private static File j1;
     private static File j2;
     private static File j2t;
@@ -274,6 +274,6 @@ public class JournalTest extends T {
         JUnitCore core = new JUnitCore();
         core.addListener(new CalcListener());
         core.run(Request.aClass(JournalTest.class).sortWith(forward()));
-    }
+    }*/
 
 }
