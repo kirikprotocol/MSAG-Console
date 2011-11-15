@@ -25,7 +25,7 @@ public class Client extends Thread implements PDUListener {
 
     HashSet<Long> message_ids;
 
-    int c1, c2, c3, c4, c5, c6, c7, c8;
+    int c1, c2, c3, c4, c5, c6, c7, c8, c9;
 
     private String name;
 
@@ -94,6 +94,7 @@ public class Client extends Thread implements PDUListener {
                             c6++;
                         } else {
                             log.debug("handle DeliverSM, couldn't remove message id "+message_id);
+                            c9++;
                         }
                     } catch (SmppException e){
                         log.error("Couldn't send DeliverSMResp.", e);
@@ -141,7 +142,7 @@ public class Client extends Thread implements PDUListener {
                 break;
             }
         }
-        log.debug(name+" SubmitSM: send "+c1+", succ "+c3+", msqfull "+c7+", err "+c4+", unk "+c8+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6);
+        log.debug(name+" SubmitSM: send "+c1+", succ "+c3+", msqfull "+c7+", err "+c4+", unk "+c8+"; SubmitSMResp: "+c2+"; DeliverSM: rcvd "+c5+", succ " + c6+", unk "+c9);
         return true;
     }
 

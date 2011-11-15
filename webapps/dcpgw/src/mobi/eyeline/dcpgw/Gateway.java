@@ -1,7 +1,6 @@
 package mobi.eyeline.dcpgw;
 
 import mobi.eyeline.dcpgw.admin.UpdateConfigServer;
-import mobi.eyeline.dcpgw.dcp.DcpConnection;
 import mobi.eyeline.dcpgw.dcp.DcpConnectionImpl;
 import mobi.eyeline.dcpgw.dcp.DeliveryChangeListenerImpl;
 import mobi.eyeline.dcpgw.exeptions.CouldNotLoadJournalException;
