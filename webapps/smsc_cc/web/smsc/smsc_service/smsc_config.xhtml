@@ -193,9 +193,7 @@
   <eye:collapsingGroup label="#{msg['messagestore.localstore.label']}">
     <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
       <h:outputText style="white-space: nowrap;" value="#{commonSettings.lsMaxStoreSize}"/>
-      <eye:inputText value="#{smscConfig.commonConfig.lsMaxStoreSize}" required="true">
-        <smsc:validatePositive/>
-      </eye:inputText>
+      <eye:inputText value="#{smscConfig.commonConfig.lsMaxStoreSize}" required="true"/>
 
       <h:outputText style="white-space: nowrap;" value="#{commonSettings.lsMinRollTime}"/>
       <eye:inputText value="#{smscConfig.commonConfig.lsMinRollTime}" required="true">

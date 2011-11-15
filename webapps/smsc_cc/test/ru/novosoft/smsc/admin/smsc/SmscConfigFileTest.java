@@ -57,7 +57,7 @@ public class SmscConfigFileTest {
     assertEquals("deliver",cs.getInmanChargingOther());
     assertEquals("deliver",cs.getInmanChargingPeer2peer());
     assertEquals("en_en",cs.getLocales()[0].trim());
-    assertEquals("12345",cs.getLsMaxStoreSize());
+    assertEquals("12345M",cs.getLsMaxStoreSize());
     assertEquals(5321,cs.getLsMinRollTime());
     assertEquals(1,cs.getMainLoopsCount());
     assertEquals(20,cs.getMapBusyMTDelay());

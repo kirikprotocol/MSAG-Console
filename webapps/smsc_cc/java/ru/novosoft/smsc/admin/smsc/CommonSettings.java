@@ -9,6 +9,7 @@ import ru.novosoft.smsc.util.config.XmlConfigSection;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Структура для хранения настроек, общих для всех СМСЦ
@@ -864,8 +865,11 @@ public class CommonSettings implements Cloneable {
     return lsMaxStoreSize;
   }
 
+  private static final Pattern maxStorePattern = Pattern.compile("\\d+(K|k|M|m|G|g)");
+
   public void setLsMaxStoreSize(String lsMaxStoreSize) throws AdminException {
     vh.checkNotNull("lsMaxStoreSize", lsMaxStoreSize);
+    vh.checkMaches("lsMaxStoreSize", lsMaxStoreSize, maxStorePattern);
     this.lsMaxStoreSize = lsMaxStoreSize;
   }
 
