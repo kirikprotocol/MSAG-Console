@@ -56,6 +56,7 @@ import ru.novosoft.smsc.admin.topmon.TopMonitorContext;
 import ru.novosoft.smsc.admin.topmon.TopMonitorManager;
 import ru.novosoft.smsc.admin.users.UsersManager;
 import ru.novosoft.smsc.admin.users.UsersManagerImpl;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.util.InetAddress;
 
 import java.io.File;
@@ -100,8 +101,10 @@ public class AdminContext {
   protected LoggerManager loggerManager;
 
   protected OperativeStoreManager operativeStoreManager;
+  protected DBExportSettings operativeExportSettings;
 
   protected SmscStatProvider smscStatProvider;
+  protected DBExportSettings statExportSettings;
 
   protected PerfMonitorManager perfMonitorManager;
   protected TopMonitorManager topMonitorManager;
@@ -195,9 +198,11 @@ public class AdminContext {
       operativeStorages[i] = new File(is.getLocalStoreFilename());
     }
 
-    operativeStoreManager = new OperativeStoreManager(operativeStorages, fileSystem, clusterController, cfg.getOperExportSettings());
+    operativeExportSettings = cfg.getOperExportSettings();
+    operativeStoreManager = new OperativeStoreManager(operativeStorages, fileSystem, clusterController);
 
-    smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem), cfg.getStatExportSettings());
+    statExportSettings = cfg.getStatExportSettings();
+    smscStatProvider = new SmscStatProvider(new SmscStatContextImpl(smscManager, fileSystem));
 
     AdminContextLocator.registerContext(this);
   }
@@ -308,6 +313,14 @@ public class AdminContext {
 
   public ClusterControllerManager getClusterControllerManager() {
     return clusterControllerManager;
+  }
+
+  public DBExportSettings getOperativeExportSettings() {
+    return operativeExportSettings;
+  }
+
+  public DBExportSettings getStatExportSettings() {
+    return statExportSettings;
   }
 
   /**

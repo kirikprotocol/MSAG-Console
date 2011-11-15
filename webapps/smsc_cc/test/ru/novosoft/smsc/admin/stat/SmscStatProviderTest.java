@@ -1,13 +1,10 @@
 package ru.novosoft.smsc.admin.stat;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.filesystem.MemoryFileSystem;
-import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
-import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +53,7 @@ public class SmscStatProviderTest {
   public void init() throws IOException, AdminException {
     final Collection<File> dirs = prepareFiles();
     context = new TestSmscStatContext(dirs);
-    provider = new SmscStatProvider(context, null);
+    provider = new SmscStatProvider(context);
   }
 
 

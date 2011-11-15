@@ -35,15 +35,10 @@ public class OperativeStoreManager {
 
   private final ClusterController cc;
 
-  private final DBExportSettings defExportSettings;
-
-  // todo Не понятно, зачем в OperativeStoreManager передается defExportSettings? Этот параметр не используется классом.
-  // todo Не влияет на его функциональность. Ты используешь OperativeStoreManager только для хранения значения. Это неправильно, я считаю. Надо убрать.
-  public OperativeStoreManager(File[] smsStorePaths, FileSystem fs, ClusterController cc, DBExportSettings defExportSettings) {
+  public OperativeStoreManager(File[] smsStorePaths, FileSystem fs, ClusterController cc) {
     this.smsStorePaths = smsStorePaths;
     this.fs = fs;
     this.cc = cc;
-    this.defExportSettings = defExportSettings;
   }
 
   private static boolean addressConfirm(Address mask, Address address) {
@@ -77,10 +72,6 @@ public class OperativeStoreManager {
     }
     Arrays.sort(files);
     return files;
-  }
-
-  public DBExportSettings getDefExportSettings() {
-    return new DBExportSettings(defExportSettings);
   }
 
   private static boolean isAllowed(Message sms, MessageFilter messageFilter) {
@@ -309,79 +300,89 @@ public class OperativeStoreManager {
   private final static String CALL_multinsert_sms_SQL = "{ call multinsert_sms(?) }"; //msgs in arraylist
 
 
-  void clearTable(Connection conn, String tablePrefix) throws SQLException {
-    PreparedStatement clearStmt = conn.prepareStatement(DELETE_OP_SQL + tablePrefix);
-    clearStmt.executeUpdate();
-    conn.commit();
+  void clearTable(Connection conn, String tablePrefix) throws OperativeStoreException {
+    try{
+      PreparedStatement clearStmt = conn.prepareStatement(DELETE_OP_SQL + tablePrefix);
+      clearStmt.executeUpdate();
+      conn.commit();
+    }catch (SQLException e) {
+      throw new OperativeStoreException("cant_clean");
+    }
   }
 
-  private oracle.jdbc.OracleConnection getOracleConnection(DBExportSettings export) throws SQLException, ClassNotFoundException {
+  private oracle.jdbc.OracleConnection getOracleConnection(DBExportSettings export) throws OperativeStoreException{
+    try{
+      int m_maxStatements = 10;
+      boolean m_implicitCachingEnabled = false;
+      boolean m_explicitCachingEnabled = false;
 
-    int m_maxStatements = 10;
-    boolean m_implicitCachingEnabled = false;
-    boolean m_explicitCachingEnabled = false;
+      Class.forName(oracleDriver);
 
-    Class.forName(oracleDriver);
+      Properties props = new Properties();
+      props.put("password", export.getPass());
+      props.put("user", export.getUser());
 
-    Properties props = new Properties();
-    props.put("password", export.getPass());
-    props.put("user", export.getUser());
-
-    oracle.jdbc.OracleConnection con = (oracle.jdbc.OracleConnection) DriverManager.getConnection(export.getSource(), props);
-    con.setStatementCacheSize(m_maxStatements);
-    con.setImplicitCachingEnabled(m_implicitCachingEnabled);
-    con.setExplicitCachingEnabled(m_explicitCachingEnabled);
-    con.setAutoCommit(false);
-    return con;
+      oracle.jdbc.OracleConnection con = (oracle.jdbc.OracleConnection) DriverManager.getConnection(export.getSource(), props);
+      con.setStatementCacheSize(m_maxStatements);
+      con.setImplicitCachingEnabled(m_implicitCachingEnabled);
+      con.setExplicitCachingEnabled(m_explicitCachingEnabled);
+      con.setAutoCommit(false);
+      return con;
+    } catch (Exception e) {
+      throw new OperativeStoreException("cant_connect");
+    }
   }
 
   private final Lock lock = new ReentrantLock();
 
-  //todo Метод сильно длинный и делает сразу несколько вещей: создает хранимую процедуру и экспотрирует сообщения.
-  //todo Желательно разбить на несколько методов.
-  public void export(DBExportSettings export, final ProgressObserver observer) throws AdminException {
-    final String tablesPrefix = export.getPrefix();
+
+  private OracleCallableStatement createInsert(Connection conn, String tablesPrefix) throws OperativeStoreException{
     String CREATE_PROC_SQL = CREATE_PROC_INSERT_RECORD + INSERT_OP_SQL + tablesPrefix + INSERT_FIELDS + INSERT_VALUES;
+
+    PreparedStatement createprocStmt = null;
+    try {
+      createprocStmt = conn.prepareStatement(CREATE_PROC_SQL);
+      createprocStmt.executeUpdate();
+      conn.commit();
+
+      return (OracleCallableStatement) conn.prepareCall(CALL_multinsert_sms_SQL);
+    } catch (Exception e) {
+      throw new OperativeStoreException("cant_insert");
+    } finally {
+      closeStatement(createprocStmt);
+    }
+  }
+
+  private ArrayDescriptor createArrayDescriptor(Connection conn) throws OperativeStoreException{
+    try{
+      conn.getTypeMap().put("SMS", Class.forName(SqlSms.class.getName()));
+      return ArrayDescriptor.createDescriptor("ARRAYLIST", conn);
+    }   catch (Exception e) {
+      throw new OperativeStoreException("cant_insert");
+    }
+  }
+
+  public void export(DBExportSettings export, final ProgressObserver observer) throws AdminException {
 
     Connection conn = null;
     OracleCallableStatement callinsertStmt = null;
     try {
-      try {
-        conn = getOracleConnection(export);
-      } catch (Exception e) {
-        throw new OperativeStoreException("cant_connect");
-      }
 
+      conn = getOracleConnection(export);
       try {
         lock.lock();
         if (logger.isDebugEnabled()) {
           logger.debug("Export sms locked");
         }
-        try {
-          clearTable(conn, tablesPrefix);
-        } catch (Exception e) {
-          throw new OperativeStoreException("cant_clean");
-        }
+
+        final String tablesPrefix = export.getPrefix();
+        clearTable(conn, tablesPrefix);
 
         int arraySize = 25000;
         SqlSms msgs[] = new SqlSms[arraySize];
 
-        oracle.sql.ArrayDescriptor ad;
-        PreparedStatement createprocStmt = null;
-        try {
-          createprocStmt = conn.prepareStatement(CREATE_PROC_SQL);
-          createprocStmt.executeUpdate();
-          conn.commit();
-
-          callinsertStmt = (OracleCallableStatement) conn.prepareCall(CALL_multinsert_sms_SQL);
-
-          conn.getTypeMap().put("SMS", Class.forName(SqlSms.class.getName()));
-          ad = ArrayDescriptor.createDescriptor("ARRAYLIST", conn);
-        } catch (Exception e) {
-          throw new OperativeStoreException("cant_insert");
-        } finally {
-          closeStatement(createprocStmt);
-        }
+        callinsertStmt = createInsert(conn, tablesPrefix);
+        oracle.sql.ArrayDescriptor ad = createArrayDescriptor(conn);
 
         int i = 0;
 
@@ -394,15 +395,8 @@ public class OperativeStoreManager {
             if (!fs.exists(smsStore)) {
               continue;
             }
-            final int _j = j;
-            Collection<Message> messages = getMessages(smsStore, fs, filter, new ProgressObserver() {
-              public void update(long current, long total) {
-                int c = (int) current;
-                int t = (int) total;
-                observer.update((c * 100 / t / smsStorePaths.length) + (_j * 100 / smsStorePaths.length), 100);
-              }
-            });
-            j++;
+            Collection<Message> messages = getMessages(smsStore, fs, filter, new ProgressObserverImpl(observer, j, smsStorePaths.length));
+
             if (logger.isInfoEnabled()) {
               logger.info("Inserting " + messages.size() + " records");
             }
@@ -414,6 +408,7 @@ public class OperativeStoreManager {
                 i = 0;
               }
             }
+            j++;
           }
           if (i > 0) {
             SqlSms[] tr = new SqlSms[i];
@@ -439,13 +434,38 @@ public class OperativeStoreManager {
       throw new OperativeStoreException("internal_error");
     } finally {
       closeStatement(callinsertStmt);
-      if (conn != null) {
-        try {
-          conn.close();
-        } catch (SQLException e) {
-          logger.warn("Couldn't close connection");
-        }
+      closeConnection(conn);
+    }
+  }
+
+
+  private static void closeConnection(Connection conn) {
+    if (conn != null) {
+      try {
+        conn.close();
+      } catch (SQLException e) {
+        logger.warn("Couldn't close connection");
       }
+    }
+  }
+
+  private static class ProgressObserverImpl implements ProgressObserver {
+
+    private final ProgressObserver base;
+
+    private final int inst;
+    private final int numb;
+
+    private ProgressObserverImpl(ProgressObserver base, int inst, int numb) {
+      this.base = base;
+      this.inst = inst;
+      this.numb = numb;
+    }
+
+    public void update(long current, long total) {
+      int c = (int) current;
+      int t = (int) total;
+      base.update((c * 100 / t / numb) + (inst * 100 / numb), 100);
     }
   }
 

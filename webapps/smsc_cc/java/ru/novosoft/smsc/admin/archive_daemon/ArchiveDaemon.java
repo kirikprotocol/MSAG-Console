@@ -60,7 +60,6 @@ public class ArchiveDaemon {
     Socket socket = null;
     InputStream input = null;
     OutputStream output = null;
-    SmsSet set = new SmsSet();
 
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return;
@@ -192,17 +191,22 @@ public class ArchiveDaemon {
   private static final String mysqlDriver = "com.mysql.jdbc.Driver";
   private static final String oracleDriver = "oracle.jdbc.driver.OracleDriver";
 
-  private Connection getConnection(DBExportSettings export) throws SQLException, ClassNotFoundException {
-    switch (export.getDbType()) {
-      case MYSQL:
-        Class.forName(mysqlDriver);
-        break;
-      case ORACLE:
-        Class.forName(oracleDriver);
+  private Connection getConnection(DBExportSettings export) throws ArchiveDaemonException {
+    try{
+      switch (export.getDbType()) {
+        case MYSQL:
+          Class.forName(mysqlDriver);
+          break;
+        case ORACLE:
+          Class.forName(oracleDriver);
+      }
+      Connection c = DriverManager.getConnection(export.getSource(), export.getUser(), export.getPass());
+      c.setAutoCommit(false);
+      return c;
+    } catch (Exception e) {
+      logger.error(e, e);
+      throw new ArchiveDaemonException("cant_connect");
     }
-    Connection c = DriverManager.getConnection(export.getSource(), export.getUser(), export.getPass());
-    c.setAutoCommit(false);
-    return c;
   }
 
   protected final static String INSERT_VALUES =
@@ -219,7 +223,7 @@ public class ArchiveDaemon {
           "   src_sme_id,dst_sme_id,msg_ref,seq_num,arc,body_len) ";
 
 
-  public void clearTable(Connection conn, String tablePrefix, Date datePrefix) throws SQLException {
+  public void clearTable(Connection conn, String tablePrefix, Date datePrefix) throws ArchiveDaemonException {
     PreparedStatement clearStmt = null;
     try{
       clearStmt = conn.prepareStatement("DELETE FROM " + tablePrefix +
@@ -227,6 +231,9 @@ public class ArchiveDaemon {
       clearStmt.setDate(1, new java.sql.Date(datePrefix.getTime()));
       clearStmt.executeUpdate();
       conn.commit();
+    } catch (Exception e) {
+      logger.error(e, e);
+      throw new ArchiveDaemonException("cant_clean");
     }finally {
       if(clearStmt != null) {
         closeStatement(clearStmt);
@@ -290,77 +297,71 @@ public class ArchiveDaemon {
     }
   }
 
-  //todo Желательно разбить на несколько методов.
+  private static void setQueryMinutes(ArchiveMessageFilter filter, Calendar cal, int minutes) {
+    cal.set(Calendar.MINUTE, minutes);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    Date fromDate = cal.getTime();
+    cal.set(Calendar.MINUTE, minutes + 4);
+    cal.set(Calendar.SECOND, 59);
+    cal.set(Calendar.MILLISECOND, 999);
+    Date tillDate = cal.getTime();
+    filter.setFromDate(fromDate);
+    filter.setTillDate(tillDate);
+  }
+
+  private void exportPart(ArchiveMessageFilter query, PreparedStatement insertStmt, Connection conn) throws AdminException, SQLException {
+    final SmsSet set = new SmsSet();
+    getSmsSet(query, new Visitor() {
+      public void visit(SmsRow row) throws AdminException {
+        set.addRow(row);
+      }
+    });
+    int inserted = 0;
+    for (SmsRow row : set.getRowsList()) {
+      setValues(insertStmt, row);
+      inserted += insertStmt.executeUpdate();
+    }
+    if (inserted > 0) {
+      conn.commit();
+      if(logger.isDebugEnabled()) {
+        logger.debug("Insert into arcive table records: "+inserted);
+      }
+    }
+  }
+
+  private static Calendar createInitialCal(Date date) {
+    Calendar cal = new GregorianCalendar();
+    cal.setTime(date);
+    cal.set(Calendar.HOUR_OF_DAY, 0);
+    cal.set(Calendar.MINUTE, 0);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    return cal;
+  }
+
   public void export(Date date, DBExportSettings export, final ProgressObserver observer) throws AdminException {
     Connection conn = null;
     String tablePrefix = export.getPrefix();
     try {
       lockTable(tablePrefix);
-      try {
-        conn = getConnection(export);
-      } catch (Exception e) {
-        logger.error(e, e);
-        throw new ArchiveDaemonException("cant_connect");
-      }
-
+      conn = getConnection(export);
       PreparedStatement insertStmt = null;
       try{
         insertStmt = createInsertSql(conn, tablePrefix);
-        try {
-          clearTable(conn, tablePrefix, date);
-        } catch (Exception e) {
-          logger.error(e, e);
-          throw new ArchiveDaemonException("cant_clean");
-        }
+        clearTable(conn, tablePrefix, date);
         ArchiveMessageFilter query = new ArchiveMessageFilter();
         query.setRowsMaximum(1000000);
-        Calendar cal = new GregorianCalendar();
-        Date fromDate, tillDate;
-        cal.setTime(date);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
+
+        Calendar cal = createInitialCal(date);
         for (int i = 0; i < 24; i++) {
           cal.set(Calendar.HOUR_OF_DAY, i);
-          final int _i = i;
-          final ProgressObserver _observer = new ProgressObserver() {
-            public void update(long current, long total) {
-              int c = (int) (current);
-              int t = (int) (total);
-              observer.update((c * 100 / t / 24) + (_i * 100 / 24), 100);
-            }
-          };
+          final ProgressObserver _observer = new HourProgressObserver(observer, i);
           try {
             int t = 0;
             for (int j = 0; j < 60; j += 5) {
-              cal.set(Calendar.MINUTE, j);
-              cal.set(Calendar.SECOND, 0);
-              cal.set(Calendar.MILLISECOND, 0);
-              fromDate = cal.getTime();
-              cal.set(Calendar.MINUTE, j + 4);
-              cal.set(Calendar.SECOND, 59);
-              cal.set(Calendar.MILLISECOND, 999);
-              tillDate = cal.getTime();
-              query.setFromDate(fromDate);
-              query.setTillDate(tillDate);
-              final SmsSet set = new SmsSet();
-              getSmsSet(query, new Visitor() {
-                public void visit(SmsRow row) throws AdminException {
-                  set.addRow(row);
-                }
-              });
-              int inserted = 0;
-              for (SmsRow row : set.getRowsList()) {
-                setValues(insertStmt, row);
-                inserted += insertStmt.executeUpdate();
-              }
-              if (inserted > 0) {
-                conn.commit();
-                if(logger.isDebugEnabled()) {
-                  logger.debug("Insert into arcive table records: "+inserted);
-                }
-              }
+              setQueryMinutes(query, cal, j);
+              exportPart(query, insertStmt, conn);
               t++;
               _observer.update(t, 12*24);
             }
@@ -388,6 +389,23 @@ public class ArchiveDaemon {
         } catch (Exception ignored) {
         }
       }
+    }
+  }
+
+  private static class HourProgressObserver implements ProgressObserver{
+
+    private final ProgressObserver base;
+    private final int hour;
+
+    private HourProgressObserver(ProgressObserver base, int hour) {
+      this.base = base;
+      this.hour = hour;
+    }
+
+    public void update(long current, long total) {
+      int c = (int) (current);
+      int t = (int) (total);
+      base.update((c * 100 / t / 24) + (hour * 100 / 24), 100);
     }
   }
 

@@ -40,7 +40,7 @@ public class SmsExportController extends SmscController{
   private String filterError;
 
   public SmsExportController() {
-    this.defOperExportSettings = WebContext.getInstance().getOperativeStoreManager().getDefExportSettings();
+    this.defOperExportSettings = WebContext.getInstance().getDefOperDBSettings();
     this.defArchExportSettings = WebContext.getInstance().getArchiveDaemonManager().getDefExportSettings();
   }
 

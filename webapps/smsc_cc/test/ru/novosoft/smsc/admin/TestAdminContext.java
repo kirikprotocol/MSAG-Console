@@ -232,7 +232,8 @@ public class TestAdminContext extends AdminContext {
     for (int i =0; i<smscInstancesNumber; i++)
       operStores[i] = new File(servicesDir, "SMSC" + i +File.separatorChar+"store"+File.separatorChar+"operative"+File.separatorChar+"store.bin");
 
-    operativeStoreManager = new OperativeStoreManager(operStores, fileSystem, clusterController, cfg.getOperExportSettings());
+    operativeStoreManager = new OperativeStoreManager(operStores, fileSystem, clusterController);
+    operativeExportSettings = cfg.getOperExportSettings();
 
     final File[] statsDir = new File[1];
     statsDir[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat");
@@ -244,7 +245,8 @@ public class TestAdminContext extends AdminContext {
       public FileSystem getFileSystem() {
         return fileSystem;
       }
-    }, cfg.getStatExportSettings());
+    });
+    statExportSettings = cfg.getStatExportSettings();
     perfMonitorManager = new TestPerfMonitorManager(cfg.getPerfMonitorPorts());
     topMonitorManager = new TestTopMonitorManager(cfg.getTopMonitorPorts());
 

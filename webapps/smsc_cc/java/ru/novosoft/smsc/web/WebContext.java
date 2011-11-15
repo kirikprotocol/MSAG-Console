@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.stat.SmscStatProvider;
 import ru.novosoft.smsc.admin.topmon.TopMonitorManager;
+import ru.novosoft.smsc.admin.util.DBExportSettings;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.acl.WAclManager;
@@ -81,6 +82,8 @@ public class WebContext {
   private final PerfMonitorManager perfMonitorManager;
   private final TopMonitorManager topMonitorManager;
   private final ClusterControllerManager clusterControllerManager;
+  private final DBExportSettings defOperDBSettings;
+  private final DBExportSettings defStatDBSettings;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -136,6 +139,8 @@ public class WebContext {
     timezoneManager = new WTimezoneManager(adminContext.getTimezoneManager(), journal, user);
     userManager = new WUserManager(adminContext.getUsersManager(), journal, user);
     operativeStoreManager = adminContext.getOperativeStoreManager();
+    defOperDBSettings = adminContext.getOperativeExportSettings();
+    defStatDBSettings = adminContext.getStatExportSettings();
     archiveDaemon = adminContext.getArchiveDaemon();
     smscStatProvider = adminContext.getSmscStatProvider();
     perfMonitorManager = adminContext.getPerfMonitorManager();
@@ -238,6 +243,14 @@ public class WebContext {
 
   public WUserManager getUserManager() {
     return userManager;
+  }
+
+  public DBExportSettings getDefOperDBSettings() {
+    return new DBExportSettings(defOperDBSettings);
+  }
+
+  public DBExportSettings getDefStatDBSettings() {
+    return new DBExportSettings(defStatDBSettings);
   }
 
   public OperativeStoreManager getOperativeStoreManager() {

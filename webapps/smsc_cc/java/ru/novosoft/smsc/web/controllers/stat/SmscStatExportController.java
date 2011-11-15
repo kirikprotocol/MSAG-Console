@@ -37,7 +37,7 @@ public class SmscStatExportController extends SmscController{
   private State state = State.FILTER;
 
   public SmscStatExportController() {
-    this.defExportSettings = WebContext.getInstance().getSmscStatProvider().getDefExportSettings();
+    this.defExportSettings = WebContext.getInstance().getDefStatDBSettings();
   }
 
   public String apply() {
