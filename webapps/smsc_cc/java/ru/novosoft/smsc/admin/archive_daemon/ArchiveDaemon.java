@@ -290,6 +290,7 @@ public class ArchiveDaemon {
     }
   }
 
+  //todo Желательно разбить на несколько методов.
   public void export(Date date, DBExportSettings export, final ProgressObserver observer) throws AdminException {
     Connection conn = null;
     String tablePrefix = export.getPrefix();

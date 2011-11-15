@@ -34,6 +34,8 @@ public class SmscStatProvider {
 
   private final DBExportSettings defExportSettings;
 
+  // todo Не понятно, зачем в SmscStatProvider передается defExportSettings? Этот параметр не используется классом.
+  // todo Не влияет на его функциональность. Ты используешь OperativeStoreManager только для хранения значения. Это неправильно, я считаю. Надо убрать.
   public SmscStatProvider(SmscStatContext context, DBExportSettings defExportSettings) {
     this.context = context;
     this.defExportSettings = defExportSettings;
@@ -324,7 +326,7 @@ public class SmscStatProvider {
     return getStatistics(filter, null);
   }
 
-
+  //todo Желательно разбить метод на несколько частей.
   public Statistics getStatistics(SmscStatFilter filter, SmscStatLoadListener loadListener) throws AdminException {
 
     SimpleDateFormat dateDayFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
@@ -637,6 +639,7 @@ public class SmscStatProvider {
 
   private final Lock lock = new ReentrantLock();
 
+  //todo Желательно разбить метод на несколько частей
   public ExportResults exportStatistics(SmscStatFilter filter, DBExportSettings export, SmscStatLoadListener loadListener) throws AdminException {
     final ExportResults results = new ExportResults();
     final String tablesPrefix = export.getPrefix();

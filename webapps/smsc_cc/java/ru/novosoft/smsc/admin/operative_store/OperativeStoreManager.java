@@ -37,6 +37,8 @@ public class OperativeStoreManager {
 
   private final DBExportSettings defExportSettings;
 
+  // todo Не понятно, зачем в OperativeStoreManager передается defExportSettings? Этот параметр не используется классом.
+  // todo Не влияет на его функциональность. Ты используешь OperativeStoreManager только для хранения значения. Это неправильно, я считаю. Надо убрать.
   public OperativeStoreManager(File[] smsStorePaths, FileSystem fs, ClusterController cc, DBExportSettings defExportSettings) {
     this.smsStorePaths = smsStorePaths;
     this.fs = fs;
@@ -335,6 +337,8 @@ public class OperativeStoreManager {
 
   private final Lock lock = new ReentrantLock();
 
+  //todo Метод сильно длинный и делает сразу несколько вещей: создает хранимую процедуру и экспотрирует сообщения.
+  //todo Желательно разбить на несколько методов.
   public void export(DBExportSettings export, final ProgressObserver observer) throws AdminException {
     final String tablesPrefix = export.getPrefix();
     String CREATE_PROC_SQL = CREATE_PROC_INSERT_RECORD + INSERT_OP_SQL + tablesPrefix + INSERT_FIELDS + INSERT_VALUES;
