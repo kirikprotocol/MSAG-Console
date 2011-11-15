@@ -1,6 +1,6 @@
 #include "ConnectionContext.h"
-#include "WriterTaskManager.h"
-//#include "ReaderTaskManager.h"
+// #include "WriterTaskManager.h"
+#include "IOTask.h"
 
 #include "scag/util/RelockMutexGuard.h"
 
@@ -23,7 +23,8 @@ action_(READ_REQUEST), packetLen_(0),
 async_(false),
 pvssServer_(server),
 perfCounter_(perfCounterOn),
-packetsCount_(0)
+packetsCount_(0),
+writer_(0)
 {
 } 
 
@@ -47,6 +48,7 @@ void ConnectionContext::getPeerIp()
     }
 }
  */
+
 
 bool ConnectionContext::sendResponseData(const char* data, uint32_t dataSize) {
   {
@@ -85,6 +87,7 @@ bool ConnectionContext::sendResponseData(const char* data, uint32_t dataSize) {
   return true;
 }
 
+
 void ConnectionContext::writeData(const char* data, uint32_t size) {
   if (!data || size == 0) {
     return;
@@ -95,7 +98,9 @@ void ConnectionContext::writeData(const char* data, uint32_t size) {
   outbuf_.WriteInt32(size + PACKET_LENGTH_SIZE);
   outbuf_.Append(data, size);
   outbuf_.SetPos(pos);
+    kickWriter();
 }
+
 
 bool ConnectionContext::readData(const time_t& now) {
   if(inbuf_.GetSize() < PACKET_LENGTH_SIZE) {
@@ -105,6 +110,7 @@ bool ConnectionContext::readData(const time_t& now) {
       if (n) {
           smsc_log_warn(log_, "%p: read error: %s(%d)", this, strerror(errno), errno);
       }
+      kickWriter();
       return false;
     }
     inbuf_.Append(readBuf_, n);
@@ -168,6 +174,7 @@ bool ConnectionContext::processWriteSocket(const time_t& now) {
   //flushLogs();
   if (n > 0) {
     sb.SetPos(sb.GetPos() + n);
+    kickWriter();
   } else {
     outbuf_.Empty();
     mg.Unlock();
@@ -186,6 +193,22 @@ bool ConnectionContext::processWriteSocket(const time_t& now) {
 void ConnectionContext::unregisterFromCore()
 {
     pvssServer_.closeChannel(*this);
+    kickWriter();
+}
+
+
+void ConnectionContext::setWriter( MTPersWriter* wr )
+{
+    writer_ = wr;
+}
+
+
+void ConnectionContext::kickWriter()
+{
+    MTPersWriter* wr = writer_;
+    if (wr) {
+        wr->packetIsReady();
+    }
 }
 
 }

@@ -35,30 +35,41 @@ int IOTask::Execute()
   
   for (;;) {
 
+      // smsc_log_debug(log_, "%p %s tick", this, taskName());
       {
           MutexGuard g(socketMonitor_);
           if ( isStopping ) break;
-          if ( ! ( waiting_.Count() || working_.Count() ) ) {
-
-              // smsc_log_debug(log_, "%p idle", this);
-              socketMonitor_.wait(500);
-              // smsc_log_debug(log_, "%p notified", this);
+          if ( waiting_.empty() &&
+               unwaiting_.empty() &&
+               !hasExtraEvents() ) {
+              socketMonitor_.wait(300);
               continue;
           }
 
-          while (waiting_.Count() ) {
-              ConnPtr cx;
-              waiting_.Pop(cx);
-              multiplexer_.add(cx->getSocket());
-              // showmul();
-              working_.Push(cx);
+          if ( !waiting_.empty() ) {
+              for ( ConnArray::iterator i = waiting_.begin(), ie = waiting_.end();
+                    i != ie; ++i ) {
+                  working_.push_back(*i);
+                  multiplexer_.add(i->get()->getSocket());
+                  // showmul();
+              }
+              waiting_.clear();
           }
+
+          if ( !unwaiting_.empty() ) {
+              for ( ConnArray::iterator i = unwaiting_.begin(), ie = unwaiting_.end();
+                    i != ie; ++i ) {
+                  multiplexer_.remove(i->get()->getSocket());
+                  removeWorking(i->get());
+              }
+              unwaiting_.clear();
+          }
+
       }
 
       time_t now = checkConnectionTimeout();
       ready.Empty();
       error.Empty();
-      MutexGuard mg(socketMonitor_);
       processSockets(ready, error, now);
       while (error.Count()) {
           Socket* s;
@@ -66,36 +77,28 @@ int IOTask::Execute()
           multiplexer_.remove(s);
           // showmul();
           ConnectionContext* cx = SocketData::getContext(s);
-          for ( int i = 0, ie = working_.Count(); i != ie; ++i ) {
-              if ( working_[i].get() == cx ) {
-                  preDisconnect(cx);
-                  working_.Delete(i);
-                  smsc_log_debug(log_, "%p: context %p socket %p removed", this, cx, s);
-                  break;
-              }
-          }
+          removeWorking(cx);
       }
   }
 
   smsc_log_debug(log_, "stopping iotask %s %p ...", taskName(), this);
+
+    multiplexer_.clear();
+    // showmul();
+
     {
-        MutexGuard g(socketMonitor_);
-        multiplexer_.clear();
-        // showmul();
-
-        while ( working_.Count() ) {
-            ConnPtr cx;
-            working_.Pop(cx);
-            preDisconnect(cx.get());
-            smsc_log_debug(log_, "%p: delete context %p socket %p", this, cx.get(), cx->getSocket());
-        }
-
-        while ( waiting_.Count() ) {
-            ConnPtr cx;
-            waiting_.Pop(cx);
-        }
-
+        MutexGuard mg(socketMonitor_);
+        waiting_.clear();
+        unwaiting_.clear();
     }
+
+    for ( ConnArray::iterator i = working_.begin(), ie = working_.end();
+          i != ie; ++i ) {
+        preDisconnect(i->get());
+        smsc_log_debug(log_, "%p: delete context %p socket %p", this, i->get(), i->get()->getSocket());
+    }
+    working_.clear();
+
   smsc_log_debug(log_, "%p %s quit", this, taskName());
   return 0;
 }
@@ -103,23 +106,35 @@ int IOTask::Execute()
 
 uint32_t IOTask::getSocketsCount() {
     MutexGuard mg(socketMonitor_);
-    return waiting_.Count() + working_.Count();
+    return waiting_.size() + working_.size();
 }
 
 
 void IOTask::registerContext( ConnPtr& cx )
 {
     Socket* s = cx->getSocket();
-    MutexGuard g(socketMonitor_);
-    SocketData::updateTimestamp(s, time(NULL));
-    waiting_.Push(cx);
-    socketMonitor_.notify();
+    {
+        MutexGuard g(socketMonitor_);
+        SocketData::updateTimestamp(s, time(NULL));
+        waiting_.push_back(cx);
+        wakepipe_.write("w",1);
+        socketMonitor_.notify();
+    }
+    smsc_log_debug(log_,"context %p sock=%p registered",cx.get(),s);
 }
 
 
-bool IOTask::unregisterContext( ConnPtr& cx )
+void IOTask::unregisterContext( ConnPtr& cx )
 {
-    MutexGuard g(socketMonitor_);
+    {
+        MutexGuard g(socketMonitor_);
+        unwaiting_.push_back(cx);
+        wakepipe_.write("w",1);
+        socketMonitor_.notify();
+    }
+    smsc_log_debug(log_,"context %p sock=%p unregistered",cx.get(),cx->getSocket());
+}
+/*
     for ( int i = 0, ie = waiting_.Count(); i != ie; ++i ) {
         if ( waiting_[i] == cx ) {
             waiting_.Delete(i);
@@ -137,17 +152,17 @@ bool IOTask::unregisterContext( ConnPtr& cx )
     }
     return false;
 }
+ */
 
 
 time_t IOTask::checkConnectionTimeout()
 {
     // error.Empty();
     time_t now = time(NULL);
-    MutexGuard mg(socketMonitor_);
     if (now - lastCheckTime_ < checkTimeoutPeriod_) {
         return now;
     }
-    for (int i = 0, ie = working_.Count(); i != ie; ++i) {
+    for ( size_t i = 0, ie = working_.size(); i < ie; ++i) {
         ConnPtr& cx =  working_[i];
         Socket* s = cx->getSocket();
         const time_t ts = SocketData::getTimestamp(s);
@@ -156,7 +171,7 @@ time_t IOTask::checkConnectionTimeout()
             multiplexer_.remove(s);
             // showmul();
             preDisconnect( cx.get() );
-            working_.Delete(i);
+            working_.erase( working_.begin() + i );
             --i;
             --ie;
         }
@@ -166,18 +181,37 @@ time_t IOTask::checkConnectionTimeout()
 }
 
 
+
+void IOTask::removeWorking( ConnectionContext* cx )
+{
+    for ( ConnArray::iterator i = working_.begin(), ie = working_.end();
+          i != ie; ++i ) {
+        if ( i->get() == cx ) {
+            preDisconnect(cx);
+            smsc_log_debug(log_, "%p: context %p socket %p removed",
+                           this, cx, cx->getSocket());
+            working_.erase(i);
+            break;
+        }
+    }
+}
+
+
 void IOTask::stop() {
     smsc_log_info(log_, "IOtask.stop %s %p", taskName(), this);
-    // MutexGuard g(socketMonitor_);
+    MutexGuard g(socketMonitor_);
     isStopping = true;
     wakepipe_.write("w",1);
-    // socketMonitor_.notify();
+    socketMonitor_.notify();
 }
 
 
 void IOTask::preDisconnect( ConnectionContext* cx )
 {
-    if (cx) cx->unregisterFromCore();
+    if (cx) {
+        smsc_log_debug(log_,"predisconnect %p sock=%p",cx,cx->getSocket());
+        cx->unregisterFromCore();
+    }
 }
 
 
@@ -224,32 +258,54 @@ void MTPersReader::processSockets(Multiplexer::SockArray &ready,
 }
 
 
+void MTPersReader::registerContext( ConnPtr& ptr )
+{
+    {
+        MutexGuard mg(perfLock_);
+        if ( std::find(perfSockets_.begin(),
+                       perfSockets_.end(),
+                       ptr) != perfSockets_.end() ) {
+            perfSockets_.push_back(ptr);
+        }
+    }
+    IOTask::registerContext(ptr);
+}
+
+
 void MTPersReader::preDisconnect( ConnectionContext* cx )
 {
-    performance_.inc( cx->getPerfCounter() );
+    {
+        MutexGuard mg(perfLock_);
+        performance_.inc( cx->getPerfCounter() );
+        ConnArray::iterator i = std::find( perfSockets_.begin(),
+                                           perfSockets_.end(),
+                                           cx );
+        if ( i != perfSockets_.end() ) {
+            perfSockets_.erase(i);
+        }
+    }
     IOTask::preDisconnect(cx);
 }
 
 
 Performance MTPersReader::getPerformance() 
 {
-    MutexGuard mg(socketMonitor_);
     Performance perf;
+    MutexGuard mg(perfLock_);
     perf.inc(performance_);
     performance_.reset();
-    const int mpcount = working_.Count();
-    if (!mpcount) {
+    if ( perfSockets_.empty() ) {
         return perf;
     }
-    for (int i = 0; i < mpcount; ++i) {
-        ConnPtr& cx = working_[i];
-        PerfCounter &pf = cx->getPerfCounter();
-        int accepted = pf.getAccepted();
-        int processed = pf.getProcessed();
-        smsc_log_debug(log_, "context:%p socket:%p current performance %d:%d", cx.get(), cx->getSocket(), accepted, processed);
+    for ( ConnArray::iterator i = perfSockets_.begin(), ie = perfSockets_.end();
+          i != ie; ++i ) {
+        PerfCounter &pf = i->get()->getPerfCounter();
+        const int accepted = pf.getAccepted();
+        const int processed = pf.getProcessed();
+        smsc_log_debug(log_, "context:%p socket:%p current performance %d:%d", i->get(), i->get()->getSocket(), accepted, processed);
         perf.inc(accepted, processed);
     }
-    perf.connections += mpcount;
+    perf.connections += perfSockets_.size();
     return perf;
 }
 
@@ -257,10 +313,16 @@ Performance MTPersReader::getPerformance()
 void MTPersWriter::processSockets(Multiplexer::SockArray &ready,
                                   Multiplexer::SockArray &error,
                                   time_t now) {
-    if (!multiplexer_.canWrite(ready, error, ioTimeout_)) {
+    // packetIsReady_ = false;
+    const int mcr = multiplexer_.canWrite(ready, error, ioTimeout_);
+    if (!mcr) {
         return;
+    } else if (mcr<0) {
+        char buf[20];
+        wakepipe_.read(buf,sizeof(buf));
     }
-    for (int i = 0; i < ready.Count(); ++i) {
+
+    for (int i = 0, ie = ready.Count(); i < ie; ++i) {
         Socket* s = ready[i];
         ConnectionContext* cx = SocketData::getContext(s);
         if (!cx->processWriteSocket(now)) {
@@ -270,6 +332,50 @@ void MTPersWriter::processSockets(Multiplexer::SockArray &ready,
         }
     }
 }
+
+
+void MTPersWriter::packetIsReady()
+{
+    MutexGuard mg(socketMonitor_);
+    packetIsReady_ = true;
+    socketMonitor_.notify();
+}
+
+
+// invoked with socketMonitor_ locked
+bool MTPersWriter::hasExtraEvents()
+{
+    if (packetIsReady_) {
+        packetIsReady_ = false;
+        return true;
+    }
+    return false;
+}
+
+
+void MTPersWriter::registerContext( ConnPtr& cx )
+{
+    try {
+        cx->setWriter( this );
+        IOTask::registerContext(cx);
+    } catch (std::exception& e) {
+        smsc_log_error(log_,"cannot register channel %p sock=%p: %s",
+                       cx.get(),cx->getSocket(), e.what());
+        cx->setWriter(0);
+    } catch (...) {
+        smsc_log_error(log_,"cannot register channel %p sock=%p: unknown exc",
+                       cx.get(),cx->getSocket());
+        cx->setWriter(0);
+    }
+}
+
+
+void MTPersWriter::preDisconnect( ConnectionContext* cx )
+{
+    cx->setWriter( 0 );
+    IOTask::preDisconnect(cx);
+}
+
 
 }//pvss
 }//scag2

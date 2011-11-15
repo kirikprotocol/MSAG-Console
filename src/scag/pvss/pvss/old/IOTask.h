@@ -1,10 +1,11 @@
 #ifndef _SCAG_PVSS_SERVER_IOTASK_H_
 #define _SCAG_PVSS_SERVER_IOTASK_H_
 
+#include <vector>
 #include "logger/Logger.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-#include "core/buffers/Array.hpp"
+// #include "core/buffers/Array.hpp"
 #include "core/network/Multiplexer.hpp"
 #include "core/network/Pipe.hpp"
 #include "ConnectionContext.h"
@@ -16,7 +17,7 @@ class IOTask : public smsc::core::threads::ThreadedTask
 {
 
 protected:
-    typedef smsc::core::buffers::Array< ConnPtr > ConnArray;
+    typedef std::vector< ConnPtr > ConnArray;
 
 public:
     IOTask( uint32_t connectionTimeout,
@@ -26,11 +27,10 @@ public:
     virtual int Execute();
     virtual void stop();
 
-    void registerContext(ConnPtr& cx);
+    virtual void registerContext(ConnPtr& cx);
 
-    /// try to unregister
-    /// @return true if unregistered
-    bool unregisterContext(ConnPtr& cx);
+    /// add to unregister queue
+    void unregisterContext(ConnPtr& cx);
     
     uint32_t getSocketsCount();
 
@@ -39,6 +39,9 @@ public:
     }
 
 protected:
+    // invoked with socketMontitor_ locked
+    virtual bool hasExtraEvents() { return true; }
+
     // NOTE: under lock
     virtual void processSockets( smsc::core::network::Multiplexer::SockArray &ready,
                                  smsc::core::network::Multiplexer::SockArray &error,
@@ -52,21 +55,25 @@ private:
 
     // NOTE: under lock
     time_t checkConnectionTimeout();
+    void removeWorking( ConnectionContext* cx );
 
 protected:
     smsc::logger::Logger* log_;
-    smsc::core::synchronization::EventMonitor socketMonitor_;
+
     smsc::core::network::Pipe        wakepipe_;
     smsc::core::network::Multiplexer multiplexer_;
-    ConnArray working_; // is in work
+    ConnArray working_; // access only from working thread
     const uint16_t ioTimeout_;
 
+    smsc::core::synchronization::EventMonitor socketMonitor_;
 private:
+    ConnArray waiting_; // to be added to multiplexer
+    ConnArray unwaiting_; // to be removed from multiplexer
+
     const uint32_t connectionTimeout_;
     uint16_t checkTimeoutPeriod_;
     time_t lastCheckTime_;
 
-    ConnArray waiting_; // to be added to multiplexer
 };
 
 
@@ -78,14 +85,19 @@ public:
                                               connectionTimeout, ioTimeout, "oldredr") {}
     virtual const char * taskName() { return "MTPersReader"; }
     Performance getPerformance();
+
 protected:
     void processSockets(smsc::core::network::Multiplexer::SockArray &ready,
                         smsc::core::network::Multiplexer::SockArray &error,
                         time_t now);
-    void preDisconnect( ConnectionContext* cx );
+
+    virtual void registerContext( ConnPtr& ptr );
+    virtual void preDisconnect( ConnectionContext* cx );
 
 private:
-    Performance performance_;
+    smsc::core::synchronization::Mutex perfLock_;
+    Performance                        performance_;
+    ConnArray                          perfSockets_;
 };
 
 
@@ -93,12 +105,22 @@ class MTPersWriter: public IOTask
 {
 public:
     MTPersWriter(uint32_t connectionTimeout,
-                 uint16_t ioTimeout):IOTask(connectionTimeout, ioTimeout, "oldwrtr") {};
+                 uint16_t ioTimeout) : 
+        IOTask(connectionTimeout, ioTimeout, "oldwrtr"), packetIsReady_(false) {}
     virtual const char * taskName() { return "MTPersWriter"; }
+
+    void packetIsReady();
+
 protected:
+    virtual bool hasExtraEvents();
+    virtual void registerContext(ConnPtr& cx);
+    void preDisconnect( ConnectionContext* cx );
     void processSockets(smsc::core::network::Multiplexer::SockArray &ready,
                         smsc::core::network::Multiplexer::SockArray &error,
                         time_t now);
+
+private:
+    bool packetIsReady_;
 };
 
 }//pvss

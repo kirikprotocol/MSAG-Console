@@ -61,8 +61,8 @@ private:
   };
 };
 
-class WriterTaskManager;
-//class ReaderTaskManager;
+// class WriterTaskManager;
+class MTPersWriter;
 class RequestPacket;
 
 struct ConnectionContext : public Connection
@@ -82,9 +82,12 @@ public:
     /// unregister from registry, push all pending packets
     void unregisterFromCore();
 
+    void setWriter( MTPersWriter* wr );
+
 protected:
-  bool sendResponseData(const char* data, uint32_t dataSize);
-  bool readData(const time_t& now);
+    bool sendResponseData(const char* data, uint32_t dataSize);
+    bool readData(const time_t& now);
+    void kickWriter();
 
 private:
   void writeData(const char* data, uint32_t size);
@@ -102,6 +105,8 @@ private:
   uint32_t packetsCount_;
     util::storage::SerialBuffer outbuf_;
   char readBuf_[READ_BUF_SIZE];
+
+    MTPersWriter* writer_; // writer is to be alive
 };
 
 typedef eyeline::informer::EmbedRefPtr< ConnectionContext >  ConnPtr;

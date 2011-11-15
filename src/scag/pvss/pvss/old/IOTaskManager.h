@@ -52,7 +52,8 @@ public:
     {
         smsc::core::synchronization::MutexGuard mg(tasksMutex_);
         for ( int i = 0, ie = tasks_.Count(); i != ie; ++i ) {
-            if ( tasks_[i]->unregisterContext(cx) ) break;
+            tasks_[i]->unregisterContext(cx);
+            // if ( tasks_[i]->unregisterContext(cx) ) break;
         }
     }
     
