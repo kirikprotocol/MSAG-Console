@@ -43,7 +43,7 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
 
   private static final String FILE_NAME_DATE_PATTERN = "yyyyMMddHHmm'.csv'";
 
-  private boolean running;
+  private boolean running = false;
 
   public DeliveryChangesDetectorImpl(File directory, FileSystem fileSys) throws InitException {
     this.baseDir = directory;
