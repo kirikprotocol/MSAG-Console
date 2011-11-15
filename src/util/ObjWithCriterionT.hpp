@@ -22,7 +22,6 @@ public:
   ~ObjWithCriterion_T()
   { }
 
-  void setCriterion(const criterion_type & use_crit) { mCriterion = use_crit; }
   const criterion_type & getCriterion(void) const { return mCriterion; }
 
   bool operator< (const criterion_type & crit_val) const
@@ -52,6 +51,8 @@ protected:
   { }
   explicit ObjWithCriterion_T(const criterion_type & use_crit) : mCriterion(use_crit)
   { }
+
+  void setCriterion(const criterion_type & use_crit) { mCriterion = use_crit; }
 };
 
 

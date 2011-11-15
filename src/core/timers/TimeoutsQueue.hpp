@@ -58,9 +58,6 @@ protected:
   //Queue of expiration times based on same timeout value.
   //Arranged as intrusive FIFO list
   class TMSChain : public smsc::util::ObjWithCriterion_T<TimeSlice> {
-  private:
-    using smsc::util::ObjWithCriterion_T<TimeSlice>::setCriterion;
-
   protected:
     typedef smsc::core::buffers::IntrList<TimerLink> TMSQueue;
 
