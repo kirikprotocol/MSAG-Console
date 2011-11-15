@@ -14,7 +14,6 @@ import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.MessageResp;
-import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.InvalidParameterException;
 import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
