@@ -6,10 +6,7 @@ import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.smpp.api.PDUListener;
 import mobi.eyeline.smpp.api.SmppException;
-import mobi.eyeline.smpp.api.pdu.DeliverSMResp;
-import mobi.eyeline.smpp.api.pdu.Message;
-import mobi.eyeline.smpp.api.pdu.PDU;
-import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
+import mobi.eyeline.smpp.api.pdu.*;
 import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
@@ -121,7 +118,9 @@ public class PDUListenerImpl implements PDUListener {
                 mobi.eyeline.informer.admin.delivery.Message informer_message =
                     getMessage(message_id, source_address, destination_address, text, connection_name, register_delivery);
 
-                SubmitSMResp resp = getResponse(connection_name, sequence_number);
+                SubmitSMResp resp = new SubmitSMResp();
+                resp.setConnectionName(connection_name);
+                resp.setSequenceNumber(sequence_number);
 
                 try {
                     connection.addMessage(delivery_id, informer_message, message_id, resp);
@@ -197,7 +196,9 @@ public class PDUListenerImpl implements PDUListener {
                 mobi.eyeline.informer.admin.delivery.Message informer_message =
                     getMessage(message_id, source_address, destination_address, text, connection_name, register_delivery);
 
-                SubmitSMResp resp = getResponse(connection_name, sequence_number);
+                DataSMResp resp = new DataSMResp();
+                resp.setConnectionName(connection_name);
+                resp.setSequenceNumber(sequence_number);
 
                 try {
                     connection.addMessage(delivery_id, informer_message, message_id, resp);
@@ -236,13 +237,6 @@ public class PDUListenerImpl implements PDUListener {
         informer_message.setProperty("con", connection_name);
         informer_message.setProperty("rd", String.valueOf(register_delivery.getValue()));
         return informer_message;
-    }
-
-    private SubmitSMResp getResponse(String connection_name, int sequence_number){
-        SubmitSMResp resp = new SubmitSMResp();
-        resp.setConnectionName(connection_name);
-        resp.setSequenceNumber(sequence_number);
-        return resp;
     }
 
     public void setReject(boolean reject){

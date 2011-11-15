@@ -85,6 +85,17 @@ public class Client extends Thread implements PDUListener {
                     return false;
                 }
 
+            case DataSM:
+                try {
+                    Message request = (Message)pdu;
+                    smppClient.send(request);
+                    logger.debug("Send DataSM request.");
+                    return true;
+                } catch (SmppException e) {
+                    logger.error("", e);
+                    return false;
+                }
+
 
             case DeliverSM:
 
@@ -109,15 +120,30 @@ public class Client extends Thread implements PDUListener {
                 //    return true;
                 //}
 
-            case SubmitSMResp:
+            case SubmitSMResp:{
 
                 SubmitSMResp submitSMResp = (SubmitSMResp) pdu;
                 String message_id_str = submitSMResp.getMessageId();
                 if (submitSMResp.getStatus() == Status.OK){
                     logger.debug("SubmitSMResp messageId="+message_id_str);
+
                 } else {
                     logger.debug("SubmitSMResp status="+submitSMResp.getStatus());
                 }
+
+                return true;
+            }
+
+            case DataSMResp: {
+
+                DataSMResp dataSMResp = (DataSMResp) pdu;
+                String message_id_str = dataSMResp.getMessageId();
+                if (dataSMResp.getStatus() == Status.OK){
+                    logger.debug("DataSMResp messageId="+message_id_str);
+                } else {
+                    logger.debug("DataSMResp status="+dataSMResp.getStatus());
+                }
+            }
 
         }
         return false;
@@ -132,30 +158,48 @@ public class Client extends Thread implements PDUListener {
 
                 @Override
                 public void run() {
-                    SubmitSM submitSM = new SubmitSM();
-                    submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
-                    /*if (Math.random() < 0.5){
-                        submitSM.setConnectionName("con1");
-                    } else{
-                        submitSM.setConnectionName("con2");
-                    }*/
+                    if (Math.random() < 0.5){
+                        SubmitSM submitSM = new SubmitSM();
+                        submitSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
 
-                    submitSM.setConnectionName(con);
 
-                    DateFormat df = DateFormat.getDateTimeInstance();
-                    Calendar cal = Calendar.getInstance();
-                    Date date = cal.getTime();
+                        submitSM.setConnectionName(con);
 
-                    submitSM.setMessage("message from "+submitSM.getConnectionName()+", "+df.format(date));
+                        DateFormat df = DateFormat.getDateTimeInstance();
+                        Calendar cal = Calendar.getInstance();
+                        Date date = cal.getTime();
 
-                    try{
-                        submitSM.setSourceAddress(source_address);
-                        submitSM.setDestinationAddress(dest_address);
-                    } catch (InvalidAddressFormatException e){
-                        logger.error(e);
+                        submitSM.setMessage("message from "+submitSM.getConnectionName()+", "+df.format(date));
+
+                        try{
+                            submitSM.setSourceAddress(source_address);
+                            submitSM.setDestinationAddress(dest_address);
+                        } catch (InvalidAddressFormatException e){
+                            logger.error(e);
+                        }
+                        submitSM.setValidityPeriod(1000 * validity_period);
+                        client.handlePDU(submitSM);
+                    } else {
+                        DataSM dataSM = new DataSM();
+                        dataSM.setRegDeliveryReceipt(RegDeliveryReceipt.SuccessOrFailure);
+
+                        dataSM.setConnectionName(con);
+
+                        DateFormat df = DateFormat.getDateTimeInstance();
+                        Calendar cal = Calendar.getInstance();
+                        Date date = cal.getTime();
+
+                        dataSM.setMessage("message from "+dataSM.getConnectionName()+", "+df.format(date));
+
+                        try{
+                            dataSM.setSourceAddress(source_address);
+                            dataSM.setDestinationAddress(dest_address);
+                        } catch (InvalidAddressFormatException e){
+                            logger.error(e);
+                        }
+                        dataSM.setValidityPeriod(1000 * validity_period);
+                        client.handlePDU(dataSM);
                     }
-                    submitSM.setValidityPeriod(1000 * validity_period);
-                    client.handlePDU(submitSM);
                 }
 
             }, 5, 5, TimeUnit.SECONDS);

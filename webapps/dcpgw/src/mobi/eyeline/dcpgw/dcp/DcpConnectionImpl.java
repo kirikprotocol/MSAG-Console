@@ -13,6 +13,7 @@ import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.smpp.api.SmppException;
+import mobi.eyeline.smpp.api.pdu.MessageResp;
 import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.InvalidParameterException;
 import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
@@ -44,7 +45,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     private Map<LinkedBlockingQueue<Message>, ScheduledFuture> queue_task_map;
     private LinkedBlockingQueue<SendTask> sendTaskQueue;
 
-    private Hashtable<Long, SubmitSMResp> message_id_submit_sm_resp_table;
+    private Hashtable<Long, MessageResp> message_id_message_resp_table;
     private Hashtable<Long, RegDeliveryReceipt> message_id_register_delivery_receipt_table;
 
     private int capacity;
@@ -70,7 +71,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
         sendTaskQueue = new LinkedBlockingQueue<SendTask>();
 
-        message_id_submit_sm_resp_table = new Hashtable<Long, SubmitSMResp>();
+        message_id_message_resp_table = new Hashtable<Long, MessageResp>();
         message_id_register_delivery_receipt_table = new Hashtable<Long, RegDeliveryReceipt>();
 
         capacity = config.getInformerMessagesListCapacity();
@@ -91,7 +92,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
     }
 
     public void addMessage(int delivery_id, Message informer_message,
-                                        long message_id, SubmitSMResp resp) throws InterruptedException {
+                                        long message_id, MessageResp resp) throws InterruptedException {
         if (delivery_id_queue_map.get(delivery_id) == null){
             delivery_id_queue_map.put(delivery_id, new LinkedBlockingQueue<Message>(capacity));
         }
@@ -108,7 +109,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             int size = queue.size();
             log.debug("add "+message_id+"_message to "+delivery_id+"_queue, size "+size);
-            message_id_submit_sm_resp_table.put(message_id, resp);
+            message_id_message_resp_table.put(message_id, resp);
 
             Properties properties = informer_message.getProperties();
             RegDeliveryReceipt rdr = RegDeliveryReceipt.valueOf(Integer.valueOf(properties.getProperty("rd")));
@@ -178,7 +179,8 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 Properties p = m.getProperties();
                 long message_id = Long.parseLong(p.getProperty("id"));
                 String con = p.getProperty("con");
-                SubmitSMResp resp = message_id_submit_sm_resp_table.remove(message_id);
+                MessageResp resp = message_id_message_resp_table.remove(message_id);
+
                 resp.setStatus(Status.SYSERR);
                 resp.setTLV( new TLVString( (short)0x001D, e.getMessage()) );
 
@@ -254,7 +256,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
             log.debug("gateway id --> informer id: " +message_id_str+" --> "+informer_message_ids[i]);
 
-            SubmitSMResp resp = message_id_submit_sm_resp_table.remove(message_id);
+            MessageResp resp = message_id_message_resp_table.remove(message_id);
 
             if (resp == null) {
                 log.error("Couldn't find SubmitSMResp data, message_id="+message_id_str);
