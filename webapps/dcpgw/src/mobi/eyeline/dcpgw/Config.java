@@ -418,11 +418,12 @@ public class Config {
             provider.setEndpointIds(endpoint_ids);
 
             p = s.getParam("description");
-            String description = p.getString();
-            provider.setDescription(description);
+            if (p != null) provider.setDescription(p.getString());
 
             XmlConfigSection deliveries_section = s.getSection("deliveries");
+
             Collection<XmlConfigSection> deliveries_collection = deliveries_section.sections();
+
 
             for (XmlConfigSection d_s : deliveries_collection) {
 
@@ -504,20 +505,12 @@ public class Config {
         return resend_receipts_interval;
     }
 
-    public int getSendReceiptMaxTimeDefault(){
-        return send_receipt_max_time_default;
-    }
-
     public int getDeliveryResponseTimeout(){
         return delivery_response_timeout;
     }
 
     public int getCleanJournalTimeout(){
         return journal_clean_timeout;
-    }
-
-    public int getSendReceiptsSpeed(){
-        return send_receipts_speed_default;
     }
 
     public long getInitialMessageIdRang(){

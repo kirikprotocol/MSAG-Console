@@ -83,6 +83,10 @@ public class Provider {
             Delivery delivery = deliveries.get(i);
             ids[i] = delivery.getId();
         }
-        return "provider: name="+name+", description="+description+", endpoints="+ Arrays.toString(endpoint_ids)+", deliveries_ids="+Arrays.toString(ids);
+        return "provider: name=" + name +
+                ", description=" + ( description != null ? description : "N/A" ) +
+                ", endpoints=" + ( endpoint_ids != null ? Arrays.toString(endpoint_ids) : "N/A") +
+                ", deliveries_ids=" + Arrays.toString(ids);
+
     }
 }

@@ -46,6 +46,7 @@ public class Delivery {
     }
 
     public String toString(){
-        return "delivery: id="+id+", user="+user+", services_numbers="+ Arrays.toString(services_numbers);
+        return "delivery: id="+id+", user="+user+
+                ", services_numbers="+ (services_numbers != null? Arrays.toString(services_numbers): "N/A");
     }
 }
