@@ -31,8 +31,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector implements Runnable {
 
-  private static Logger log = Logger.getLogger(DeliveryChangesDetectorImpl.class);
-
   private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
 
   private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
@@ -73,7 +71,6 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
   }
 
   public synchronized void shutdown() {
-    log.debug("Try to shutdown delivery changes detector scheduler ...");
     if (scheduler == null) return;
     scheduler.shutdown();
     try {
@@ -83,7 +80,6 @@ public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector
         scheduler.shutdownNow();
     }
     scheduler = null;
-    log.debug("Successfully shutdown delivery changes detector scheduler.");
   }
 
   public boolean isRunning(){

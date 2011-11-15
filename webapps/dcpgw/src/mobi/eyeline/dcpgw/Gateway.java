@@ -112,7 +112,9 @@ public class Gateway extends Thread implements PDUListener {
         pduListener.setReject(true);
 
         // Stop reading final logs
+        log.debug("Try to shutdown delivery changes detector scheduler ...");
         deliveryChangesDetector.shutdown();
+        log.debug("Successfully shutdown delivery changes detector scheduler.");
         while (deliveryChangesDetector.isRunning()){
             try {
                 log.debug("Delivery changes detector is running, wait ...");
