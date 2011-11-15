@@ -10,6 +10,7 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.CSVTokenizer;
 import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.util.Functions;
+import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector implements Runnable {
 
-
+  private static Logger log = Logger.getLogger(DeliveryChangesDetectorImpl.class);
 
   private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
 
