@@ -32,6 +32,7 @@
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
   <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps/smsc"/>
+  <property name="SCWEBSRC_DIR" value="${SMSC_DIR}/webapps/smsc_cc"/>
   <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/smsc/WEB-INF"/>
   <property name="SERVICE2HOME_PATH" value="../.."/>
   <property name="DAEMON2HOME_PATH" value=".."/>
@@ -69,6 +70,16 @@ Targets:
     <ant dir="${SRC_DIR}" target="util"/>
   </target>
 
+  <target name="makescsmsc">
+    <ant dir="${SRC_DIR}" target="smsc"/>
+    <ant dir="${SRC_DIR}" target="inman"/>
+  </target>
+
+  <target name="makescweb">
+    <!-- todo: cd to smsc_cc dir and call ant prebuild -->
+    <ant dir="${SCWEBSRC_DIR}" target="distr"/>
+  </target>
+  
   <target name="makeweb">
     <echo file="${WEBSRC_DIR}/WEB-INF/src/ru/novosoft/smsc/util/Support64Bit.java">
       ${B64CLASS}
@@ -230,6 +241,9 @@ Targets:
   </target>
 
   <target name="update" depends="create_update, updateweb">
+  </target>
+
+  <target name="scupdate" depends="makescsmsc,makescweb">
   </target>
 
   <target name="configure">
