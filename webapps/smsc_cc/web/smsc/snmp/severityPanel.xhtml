@@ -22,7 +22,7 @@
       <f:param name="objName" value="#{snmpObj.objName}"/>
     </h:commandLink>
 
-    <h:outputText value="&#160;" rendered="#{snmoObjField!=null and snmpObj.objName==null or snmpObj.objName==''}"/>
+    <h:outputText value="&#160;" rendered="#{snmpObjField!=null and (snmpObj.objName==null or snmpObj.objName=='')}"/>
 </ui:composition>
 
 </html>

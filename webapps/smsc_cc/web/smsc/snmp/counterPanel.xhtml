@@ -12,7 +12,7 @@
 <ui:composition>
   <eye:collapsingGroup label="#{counterLabel}" rendered="#{snmpObjField!=null}">
     <f:facet name="header">
-      <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
+      <h:panelGrid columns="2" columnClasses="nameColumn, valueColumn">
         <h:outputText style="white-space: nowrap" value="#{counterLabel}"/>
         <h:commandLink action="#{snmpObj.removeCounter}" rendered="#{snmpObj.objName!=null and snmpObj.objName!=''}">
           <h:graphicImage value="/images/but_del.gif" style="margin-left:10px; position:relative;"/>

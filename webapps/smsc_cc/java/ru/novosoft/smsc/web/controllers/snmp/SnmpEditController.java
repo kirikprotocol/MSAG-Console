@@ -12,6 +12,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Copyright Eyeline.mobi
@@ -130,6 +131,12 @@ public class SnmpEditController extends SettingsMController<SnmpSettings> {
     return ret;
   }
 
+  private void updateObject(SnmpSettings settings, SnmpObject obj, String objName) throws AdminException {
+     Map<String, SnmpObject> objects = settings.getSnmpObjects();
+    objects.put(objName, obj);
+    settings.setSnmpObjects(objects);
+  }
+
   public String removeCounter() throws AdminException {
     String s = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("counterToRemove");
     if (s == null) return null;
@@ -169,6 +176,7 @@ public class SnmpEditController extends SettingsMController<SnmpSettings> {
         obj.setCounterTempError(null);
         break;
     }
+    updateObject(settings, obj, objName);
     setSettings(settings);
     return null;
   }
@@ -225,6 +233,7 @@ public class SnmpEditController extends SettingsMController<SnmpSettings> {
           obj.setCounterTempError(new SnmpCounter(0, 0, 0, 0));
         break;
     }
+    updateObject(settings, obj, objName);
     setSettings(settings);
     return null;
   }
@@ -272,6 +281,7 @@ public class SnmpEditController extends SettingsMController<SnmpSettings> {
         obj.setSeverityUnregisterFailed(null);
         break;
     }
+    updateObject(settings, obj, objName);
     setSettings(settings);
     return null;
   }

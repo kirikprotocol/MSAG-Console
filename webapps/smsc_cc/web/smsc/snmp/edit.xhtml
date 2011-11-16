@@ -11,8 +11,9 @@
 
   <ui:define name="styles">
   .labelColumn {width: 1px; white-space: nowrap; text-align: right;}
+  .nameColumn {min-width: 100px; white-space: nowrap; text-align: right;}
   .valueColumn {width:100%; text-align: left;}
-  .column200 {width: 200px; vertical-align:top;}
+  .column200 {width: 1px; vertical-align:top;}
   .severityColumn1 {width:100px; white-space: nowrap;}
   .severityColumn2 {width:100px;}
   .severityColumn3 {width:100%;}
@@ -34,9 +35,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <p/>
-
-      <h:panelGrid columns="2" columnClasses="labelCOlumn, valueColumn">
+      <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn" style="padding-top: 5px;">
         <h:outputText style="white-space: nowrap" value="#{msg['snmp.object.enabled']}"/>
         <h:selectBooleanCheckbox style="margin-left:15px" value="#{snmpObj.obj.enabled}" required="true"/>
       </h:panelGrid>
