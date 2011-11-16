@@ -74,7 +74,7 @@ public class Client extends Thread implements PDUListener {
                     c5++;
                     DeliverSM deliverSM = (DeliverSM) pdu;
                     String message = deliverSM.getMessage();
-                    String[] ar = message.split("\\s");
+                    String[] ar = message.split(",");
                     String s = ar[0];
                     int sn = deliverSM.getSequenceNumber();
 

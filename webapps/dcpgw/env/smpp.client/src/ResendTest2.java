@@ -76,7 +76,7 @@ public class ResendTest2 extends Thread implements PDUListener {
 
                 DeliverSM deliverSM = (DeliverSM) pdu;
                 String message = deliverSM.getMessage();
-                String[] ar = message.split("\\s");
+                String[] ar = message.split(",");
                 String s = ar[0];
                 long message_id = Long.parseLong(s.substring(s.indexOf(":")+1,s.length()));
                 int v = ids_set.get(message_id);
