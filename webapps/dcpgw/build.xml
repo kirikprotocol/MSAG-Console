@@ -88,7 +88,7 @@
         <chmod file="${dcpgw.distr.dir}/bin/service" perm="u+x"/>
 
         <copy todir="${dcpgw.distr.dir}/conf">
-          <fileset dir="${conf.dir}" excludesfile="log4j.properties"/>
+          <fileset dir="${conf.dir}" excludesfile="conf/log4j.properties"/>
         </copy>
 
     </target>
