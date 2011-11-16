@@ -31,6 +31,9 @@
     <target name="prebuild" depends="gen_protocol">
         <delete dir="${dcpgw.build.dir}/onejar" failonerror="false"/>
         <unzip src="libdev/one-jar-ant-task-0.97.jar" dest="${dcpgw.build.dir}/onejar"/>
+
+        <property name="one-jar.dir" value="${dcpgw.build.dir}/onejar"/>
+        <import file="${one-jar.dir}/one-jar-ant-task.xml" optional="true" />
     </target>
 
     <target name="compile" depends="prebuild">
@@ -44,30 +47,46 @@
         />
     </target>
 
-    <target name="distr" depends="compile">
+    <target name="onejar" depends="compile">
         <delete dir="${dcpgw.distr.dir}" failonerror="false"/>
         <mkdir dir="${dcpgw.distr.dir}/lib"/>
-        <jar jarfile="${dcpgw.distr.dir}/lib/dcpgw.jar"
-             basedir="${dcpgw.build.dir}/classes"
-             index="true">
-        </jar>
+
+        <!-- Construct the One-JAR file -->
+            <one-jar destfile="${dcpgw.distr.dir}/lib/dcpgw.jar">
+
+                <manifest>
+                    <attribute name="One-Jar-Main-Class" value="mobi.eyeline.dcpgw.Gateway"/>
+                </manifest>
+
+                <main>
+                    <!-- Construct main.jar from classes and source code -->
+                    <fileset dir="${dcpgw.build.dir}/classes"/>
+                    <fileset dir="conf" includes="conf/dtds"/>
+                    <fileset file="conf/log4j.properties"/>
+                </main>
+
+                <lib>
+                    <fileset file="lib/*.jar" />
+                </lib>
+
+            </one-jar>
+
+        <chmod file="${dcpgw.distr.dir}/lib/dcpgw.jar" perm="u+x"/>
+
+     </target>
+
+    <target name="distr" depends="compile">
                 
         <copy file="mv_logs.sh" todir="${dcpgw.distr.dir}"/>
         <chmod file="${dcpgw.distr.dir}/mv_logs.sh" perm="u+x"/>
-
-        <copy file="setenv.sh" todir="${dcpgw.distr.dir}"/>
-        <chmod file="${dcpgw.distr.dir}/setenv.sh" perm="u+x"/>
 
         <mkdir dir="${dcpgw.distr.dir}/bin"/>
 
         <copy file="service" todir="${dcpgw.distr.dir}/bin"/>
         <chmod file="${dcpgw.distr.dir}/bin/service" perm="u+x"/>
-        
-        <copydir src="${lib.dir}" dest="${dcpgw.distr.dir}/lib"/>
-        <chmod file="${dcpgw.distr.dir}/${ant.project.name}.jar" perm="u+x"/>
 
         <copy todir="${dcpgw.distr.dir}/conf">
-          <fileset dir="${conf.dir}"/>
+          <fileset dir="${conf.dir}" excludesfile="log4j.properties"/>
         </copy>
 
     </target>
