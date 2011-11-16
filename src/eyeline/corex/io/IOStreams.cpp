@@ -16,11 +16,7 @@ GenericInputStream::read(uint8_t *buf, size_t bufSz)
 {
   ssize_t result = ::read(_fd, buf, bufSz);
   if ( result < 0 )
-  {
-    static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("io.str.read");
-    smsc_log_debug(log,"read error:%s",strerror(errno));
     throw smsc::util::SystemError("GenericInputStream::read::: call to read() failed");
-  }
   if ( !result )
     throw EOFException("GenericInputStream::read::: connection closed by remote side");
 
@@ -54,6 +50,7 @@ GenericOutputStream::write(const uint8_t *buf, size_t bufSz, uint16_t streamNo, 
     else
       throw smsc::util::SystemError("GenericOutputStream::write::: call to write() failed");
   }
+
   return result;
 }
 
