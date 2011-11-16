@@ -29,29 +29,21 @@ public:
 
 protected:
 
-  std::string path;
   time_t requestTimeout;
-  smsc::logger::Logger* log;
+  static std::string path;
+  static smsc::logger::Logger* log;
 
   typedef std::multimap<time_t,int> TimeMap;
 
-  struct Request{
-    dlvid_type dlvId;
-    ALMRequestFilter filter;
-    msgtime_type curDate;
-    uint64_t offset;
-    TimeMap::iterator timeIt;
-    int refCount;
-    bool busy;
+  struct Request {
 
     Request()
     {
-      dayChecked=false;
-      hourChecked=false;
       day=-1;
       hour=-1;
       linesRead = 0;
       version=0;
+      zipVersion=0;
       refCount=0;
       busy=false;
     }
@@ -70,13 +62,42 @@ protected:
       }
     }
 
+      bool parseRecord( msgtime_type endTime,
+                        ALMResult* result,
+                        bool& hasMore );
+
+  private:
+      /// opens the next file for given record
+      /// return true if the file is opened.
+      /// if the endTime is reached but file is not opened,
+      ///  then return false and set hasMore.
+      bool openNextFile( msgtime_type endTime,
+                         bool& hasMore );
+
+      bool readZipVersion();
+      bool scanZipToDate();
+      msgtime_type readZipChunkHead();
+      bool readChunkVersion();
+
+      inline static bool endTimeReached( msgtime_type endTime ) {
+          return ( currentTimeSeconds() > endTime );
+      }
+
+  public:
+    dlvid_type dlvId;
+    ALMRequestFilter filter;
+    msgtime_type curDate;
+    TimeMap::iterator timeIt;
+    bool busy;
     smsc::core::buffers::File f;
-    unsigned version;  // the version of file format
-    bool dayChecked;
-    bool hourChecked;
-    int day;
-    int hour;
+  private:
+    unsigned zipVersion;   // 0 for nonzip, >0 for zip
+    uint64_t nextzipchunk; // offset to the next zip chunk (=0 if not zipped)
     int linesRead;
+    unsigned version;      // the version of file format
+    int refCount;
+    int day;               // -1 if not checked; taken from zip
+    int hour;              // -1 if not checked; taken from zip
   };
 
   typedef std::map<int,Request*> ReqMap;
@@ -85,15 +106,10 @@ protected:
   sync::Mutex mtx;
   int reqIdSeq;
 
-  std::string mkFilePath(dlvid_type dlvId,const ::tm& date);
-  std::string mkDatePath(dlvid_type dlvId,const ::tm& date);
-  std::string mkHourPath(dlvid_type dlvId,const ::tm& date);
+  static std::string mkFilePath(dlvid_type dlvId,const ::tm& date);
+  static std::string mkDatePath(dlvid_type dlvId,const ::tm& date);
+  static std::string mkHourPath(dlvid_type dlvId,const ::tm& date);
 
-  bool parseRecord(Request* req, msgtime_type endTime, ALMResult* result,
-                   bool& hasMore );
-    inline bool endTimeReached( msgtime_type endTime ) const {
-        return ( currentTimeSeconds() > endTime );
-    }
 };
 
 }
