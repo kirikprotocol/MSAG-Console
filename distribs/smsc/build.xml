@@ -570,8 +570,6 @@ Targets:
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/smsc/smsc" todir="${DISTR_DIR}/services/SMSC/bin"/>
     <chmod file="${DISTR_DIR}/services/SMSC/bin/smsc" perm="755"/>
-    <copy file="${BUILD_BIN}/util/RepairAndMergeStore" todir="${DISTR_DIR}/services/SMSC/bin"/>
-    <chmod file="${DISTR_DIR}/services/SMSC/bin/RepairAndMergeStore" perm="755"/>
     <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
     <chmod file="${DISTR_DIR}/services/INMan/bin/inman" perm="755"/>
     <copy todir="${DISTR_DIR}/services/INMan/bin">
