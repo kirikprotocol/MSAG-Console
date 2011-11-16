@@ -13,10 +13,10 @@ public:
   LinkId() {}
 
   explicit LinkId(const std::string& linkIdValue)
-    : _linkId(linkIdValue) {}
+    : _linkId(linkIdValue.c_str()) {}
 
   LinkId& operator=(const std::string& linkIdValue) {
-    _linkId = linkIdValue;
+    _linkId = linkIdValue.c_str();
     return *this;
   }
 
@@ -27,7 +27,7 @@ public:
   }
 
   bool operator==(const std::string& linkIdValue) const {
-    if ( _linkId == linkIdValue ) return true;
+    if ( _linkId == linkIdValue.c_str() ) return true;
     else return false;
   }
 
@@ -37,7 +37,7 @@ public:
   }
 
   bool operator!=(const std::string& linkIdValue) const {
-    if ( _linkId != linkIdValue ) return true;
+    if ( _linkId != linkIdValue.c_str() ) return true;
     else return false;
   }
 
@@ -47,7 +47,7 @@ public:
   }
 
   bool operator<(const std::string& linkIdValue) const {
-    if ( _linkId < linkIdValue ) return true;
+    if ( _linkId < linkIdValue.c_str() ) return true;
     else return false;
   }
 
@@ -56,17 +56,7 @@ public:
     else return false;
   }
 
-  bool operator>(const std::string& linkIdValue) const {
-    if ( _linkId > linkIdValue ) return true;
-    else return false;
-  }
-
-  bool operator>(const LinkId& rhs) const {
-    if ( _linkId > rhs._linkId ) return true;
-    else return false;
-  }
-
-  const std::string& getValue() const { return _linkId; }
+  const smsc::core::buffers::FixedLengthString<64>& getValue() const { return _linkId; }
 
   bool isEmpty() const { return _linkId.empty(); }
 
