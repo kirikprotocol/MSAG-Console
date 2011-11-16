@@ -17,16 +17,13 @@ public:
 template <class MESSAGE, unsigned int MSG_NUMS, unsigned int PROTOCOL_NUMS=1>
 class MessagesFactoryTmpl {
 public:
-  MessagesFactoryTmpl() {
+  MessagesFactoryTmpl()
+  {
     memset(_registredInstancers, 0, sizeof(_registredInstancers));
-    {
-      smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("utilx");
-      smsc_log_debug(logger, "MessagesFactoryTmpl::MessagesFactoryTmpl::: MSG_NUMS=%u, PROTOCOL_NUMS=%u, sizeof(_registredInstancers)=%u",
-                     MSG_NUMS, PROTOCOL_NUMS, sizeof(_registredInstancers));
-    }
   }
 
-  MESSAGE* instanceMessage(unsigned int msg_idx, unsigned int protocol_num=0) {
+  MESSAGE* instanceMessage(unsigned int msg_idx, unsigned int protocol_num=0)
+  {
     if ( protocol_num >= PROTOCOL_NUMS )
       throw smsc::util::Exception("MessagesFactoryTmpl::instanceMessage::: invalid protocolNum=%u value, acceptable value is from interval [0..%u]",
                                   protocol_num, PROTOCOL_NUMS-1);
@@ -40,7 +37,8 @@ public:
                                      protocol_num, msg_idx);
   }
 
-  void registerMessageCreator(unsigned int msg_idx, MessageCreator<MESSAGE>* msg_creator, unsigned int protocol_num=0) {
+  void registerMessageCreator(unsigned int msg_idx, MessageCreator<MESSAGE>* msg_creator, unsigned int protocol_num=0)
+  {
     if ( protocol_num > PROTOCOL_NUMS - 1 )
       throw smsc::util::Exception("MessagesFactoryTmpl::registerMessageCreator::: invalid protocolNum=%u, max protocolNum value=%u",
                                   protocol_num, PROTOCOL_NUMS - 1);
@@ -48,12 +46,6 @@ public:
     if ( msg_idx > MSG_NUMS - 1 )
       throw smsc::util::Exception("MessagesFactoryTmpl::registerMessageCreator::: invalid msgIdx=%u, max msgIdx value=%u",
                                   msg_idx, MSG_NUMS - 1);
-
-    {
-      smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("utilx");
-      smsc_log_debug(logger, "MessagesFactoryTmpl::registerMessageCreator::: msg_idx=%u, protocol_num=%u, msg_creator=0x%p,_registredInstancers[protocol_num][msg_idx]=%p",
-                     msg_idx, protocol_num, msg_creator, _registredInstancers[protocol_num][msg_idx]);
-    }
 
     if ( !_registredInstancers[protocol_num][msg_idx] )
       _registredInstancers[protocol_num][msg_idx] = msg_creator;
