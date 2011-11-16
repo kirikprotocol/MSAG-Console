@@ -64,6 +64,8 @@ public:
 private:
     void createFile( msgtime_type currentTime, struct tm& now );
     void makeActLogPath( char* buf, const struct tm& now ) const;
+    static void closeJoinedLog( const std::string& resultpath,
+                                smsc::logger::Logger* thelog );
 
 private:
     smsc::logger::Logger*              log_;

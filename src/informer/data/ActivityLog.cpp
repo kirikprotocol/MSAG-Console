@@ -505,18 +505,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
         const std::string daypath = actpath + *i;
         if ( result.isOpened() ) {
             result.close();
-            if ( 0 == ::rename( (resultpath + ".tmp").c_str(),
-                                (resultpath + ".log").c_str() ) ) {
-                // success
-                // destroy all subdirectories
-                try {
-                    FileGuard::rmdirs( (resultpath + "/").c_str() );
-                } catch ( std::exception& e ) {
-                    smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
-                }
-            } else {
-                smsc_log_warn(thelog,"could not rename '%s.tmp'",resultpath.c_str());
-            }
+            closeJoinedLog( resultpath, thelog );
         }
 
         unsigned year, month, mday;
@@ -539,18 +528,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
             const std::string hourpath = daypath + "/" + *j;
             if ( hourly && result.isOpened() ) {
                 result.close();
-                if ( 0 == ::rename( (resultpath + ".tmp").c_str(),
-                                    (resultpath + ".log").c_str() ) ) {
-                    // success
-                    // destroy all subdirectories
-                    try {
-                        FileGuard::rmdirs( (resultpath + "/").c_str() );
-                    } catch ( std::exception& e ) {
-                        smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
-                    }
-                } else {
-                    smsc_log_warn(thelog,"could not rename '%s.tmp'",resultpath.c_str());
-                }
+                closeJoinedLog(resultpath,thelog);
             }
 
             try {
@@ -609,7 +587,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
                         resultpath = 
                             ( hourly ? hourpath : daypath );
                         result.create((resultpath + ".tmp").c_str(),
-                                      false, true );
+                                      0666, false, true );
                         const char* ziphead = "#1 ZIPPED\n";
                         result.write(ziphead,strlen(ziphead));
                     }
@@ -619,6 +597,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
                     sprintf(headbuf,"# %04u %02u %02u %02u %02u %lu\n",
                             year, month, mday, hour, minute,
                             static_cast<unsigned long>(st.st_size) );
+                    result.write(headbuf,strlen(headbuf));
 
                     char wbuf[8192];
                     while ( true ) {
@@ -641,6 +620,29 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
             }
         } // loop over hours
     } // loop over days
+
+    if ( result.isOpened() ) {
+        result.close();
+        closeJoinedLog(resultpath,thelog);
+    }
+}
+
+
+void ActivityLog::closeJoinedLog( const std::string& resultpath,
+                                  smsc::logger::Logger* thelog )
+{
+    if ( 0 == ::rename( (resultpath + ".tmp").c_str(),
+                        (resultpath + ".log").c_str() ) ) {
+        // success
+        // destroy all subdirectories
+        try {
+            FileGuard::rmdirs( (resultpath + "/").c_str() );
+        } catch ( std::exception& e ) {
+            smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
+        }
+    } else {
+        smsc_log_warn(thelog,"could not rename '%s.tmp'",resultpath.c_str());
+    }
 }
 
 }

@@ -1,3 +1,4 @@
+#include <string>
 #include "logger/Logger.h"
 #include "ActivityLog.h"
 #include "core/synchronization/MutexReportContentionRealization.h"
@@ -21,11 +22,16 @@ int main( int argc, const char** argv )
             hourly = false;
         } else {
             // a path to join logs
+            std::string dlvpath = *argp;
+            if ( dlvpath.empty() ) continue;
+            if ( dlvpath[dlvpath.size()-1] != '/' ) {
+                dlvpath.append("/");
+            }
 
             try {
-                ActivityLog::joinLogs( *argp, hourly );
+                ActivityLog::joinLogs( dlvpath.c_str(), hourly );
             } catch ( std::exception& e ) {
-                fprintf(stderr,"exc on '%s': %s",*argp,e.what());
+                fprintf(stderr,"exc on '%s': %s",dlvpath.c_str(),e.what());
             }
 
         }

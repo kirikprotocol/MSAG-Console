@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "inttypes.h"
 #include "Message.h"
+#include "core/synchronization/MutexReportContentionRealization.h"
 
 using namespace eyeline::informer;
 
