@@ -10,7 +10,7 @@
     <property name="lib.dir" location="lib"/>
 
     <property name="one-jar.dir" value="${dcpgw.build.dir}/onejar"/>
-    <import file="libdev/one-jar-ant-task.xml" optional="true" />
+    <import file="${one-jar.dir}/one-jar-ant-task.xml" optional="true" />
 
     <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="libdev/protogen.jar"/>
 
@@ -31,9 +31,9 @@
         <path refid="libdev"/>
     </path>
 
+    <target name="prebuild" depends="gen_protocol"/>
 
-
-    <target name="prebuild" depends="gen_protocol">
+    <target name="unpack">
         <delete dir="${dcpgw.build.dir}/onejar" failonerror="false"/>
         <unzip src="libdev/one-jar-ant-task-0.97.jar" dest="${dcpgw.build.dir}/onejar"/>
     </target>
