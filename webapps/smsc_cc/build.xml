@@ -46,8 +46,14 @@ public class AdminMode {${line.separator}
 }
     </echo>
   </target>
+
+  <target name="copy_dtds">
+    <copy todir=".">
+      <fileset dir="${smsc.source.dir}/../../config" includes="*.dtd"/>
+    </copy>
+  </target>
    
-  <target name="prebuild" depends="gen_cc_protocol, mode"/>
+  <target name="prebuild" depends="gen_cc_protocol, mode, copy_dtds"/>
 
   <target name="compile.sources">
     <delete dir="${smsc.source.classes.preweaved}" failonerror="false"/>
@@ -145,7 +151,7 @@ public class AdminMode {${line.separator}
     </copy>
     <mkdir dir="${smsc.exploded.dir}/WEB-INF/classes/dtds"/>
     <copy todir="${smsc.exploded.dir}/WEB-INF/classes/dtds">
-      <fileset dir="${smsc.source.dir}/../../config" includes="*.dtd"/>
+      <fileset dir="." includes="*.dtd"/>
     </copy>
   </target>
 
