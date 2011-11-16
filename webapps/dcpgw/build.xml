@@ -28,13 +28,15 @@
         <path refid="libdev"/>
     </path>
 
+
+
     <target name="prebuild" depends="gen_protocol">
         <delete dir="${dcpgw.build.dir}/onejar" failonerror="false"/>
         <unzip src="libdev/one-jar-ant-task-0.97.jar" dest="${dcpgw.build.dir}/onejar"/>
-
-        <property name="one-jar.dir" value="${dcpgw.build.dir}/onejar"/>
-        <import file="${one-jar.dir}/one-jar-ant-task.xml" optional="true" />
     </target>
+
+    <property name="one-jar.dir" value="${dcpgw.build.dir}/onejar"/>
+    <import file="${one-jar.dir}/one-jar-ant-task.xml" optional="true" />
 
     <target name="compile" depends="prebuild">
         <delete dir="${dcpgw.source.classes}" failonerror="false"/>
