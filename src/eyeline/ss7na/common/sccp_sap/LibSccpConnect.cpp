@@ -119,16 +119,18 @@ void
 LibSccpConnect::bufferInputTransportPackets()
 {
   if ( _currentPacketSize == 0  ||
-       _currentPacketSize > _ringBuf.getSizeOfAvailData() ) {
+       _currentPacketSize > _ringBuf.getSizeOfAvailData() )
+  {
     try {
-    _ringBuf.load(_socket->getInputStream()); // read as many bytes as possible into buffer from input stream
+      _ringBuf.load(_socket->getInputStream()); // read as many bytes as possible into buffer from input stream
     } catch (corex::io::EOFException& ex) {
       try {
         changeProtocolState(TcpReleaseInd());
       } catch (...) {}
       throw;
     }
-    if ( _currentPacketSize == 0 && _ringBuf.getSizeOfAvailData() >= sizeof(_header) ) {
+    if ( _currentPacketSize == 0 && _ringBuf.getSizeOfAvailData() >= sizeof(_header) )
+    {
       _ringBuf.readArray(_header, sizeof(_header));
       memcpy(reinterpret_cast<uint8_t*>(&_currentPacketSize), _header, sizeof(_currentPacketSize));
       _currentPacketSize = ntohl(_currentPacketSize);
