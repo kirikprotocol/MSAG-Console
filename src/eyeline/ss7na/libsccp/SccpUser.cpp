@@ -320,7 +320,11 @@ SccpApi::ErrorCode_e
     common::TP tp;
     unitdataReqMessage.serialize(&tp);
 
-    linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
+    size_t totalLen=0;
+    do {
+      totalLen += linkInfo._socket->getOutputStream()->write(tp.packetBody + totalLen,
+                                                             tp.packetLen - totalLen);
+    } while (totalLen != tp.packetLen);
     smsc_log_debug(_logger, "sent UDT message=[%s] to %s",
                   utilx::hexdmp(tp.packetBody, tp.packetLen).c_str(),
                   linkInfo.toString(connect_num).c_str());
