@@ -49,6 +49,11 @@ public:
                                 DeliveryStats& ods,
                                 bool& isOldVersion );
 
+    /// open and scan zipfile to the end
+    static void scanZipToEnd( FileGuard& fg,
+                              TmpBufBase<char>& buf,
+                              const std::string& filename );
+
     static bool readFirstRecordSeconds( const std::string& filename,
                                         TmpBufBase<char>& buf,
                                         unsigned& seconds );

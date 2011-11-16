@@ -188,6 +188,71 @@ bool ActivityLog::readStatistics( FileGuard& fg,
 }
 
 
+void ActivityLog::scanZipToEnd( FileGuard& fg,
+                                TmpBufBase<char>& buf,
+                                const std::string& fn )
+{
+    fg.ropen(fn.c_str());
+    typedef struct stat mystat;
+    mystat st;
+    const size_t filesize = fg.getStat(st).st_size;
+
+    char headbuf[100];
+    size_t wasread = fg.read(headbuf,sizeof(headbuf)-1);
+    headbuf[wasread] = '\0';
+    char* eol = strchr(headbuf,'\n');
+    if (!eol) {
+        throw FileReadException( fn.c_str(), 0, 0,
+                                 "header has no EOL" );
+    }
+    *eol = '\0';
+    int pos = 0;
+    unsigned version;
+    sscanf(headbuf,"#%u ZIPPED%n",&version,&pos);
+    if ( size_t(pos) != strlen(headbuf) ) {
+        throw FileReadException( fn.c_str(), 0, 0,
+                                 "wrong header '%s'",
+                                 headbuf);
+    } else if ( version != 1 ) {
+        throw FileReadException( fn.c_str(), 0, 0,
+                                 "wrong version %u",
+                                 version);
+    }
+
+    size_t curpos = eol - headbuf + 1;
+    while ( true ) {
+        fg.seek( curpos );
+        // reading the chunks header
+        wasread = fg.read(headbuf,sizeof(headbuf)-1);
+        headbuf[wasread] = '\0';
+        eol = strchr(headbuf,'\n');
+        if (!eol) {
+            throw FileReadException( fn.c_str(), 0, curpos,
+                                     "subheader has no EOL");
+        }
+        *eol = '\0';
+        pos = 0;
+        unsigned year, month, mday, hour, minute;
+        unsigned long chunksize;
+        sscanf(headbuf,"# %04u %02u %02u %02u %02u %lu%n",
+               &year, &month, &mday, &hour, &minute, &chunksize, &pos );
+        if ( size_t(pos) != strlen(headbuf) ) {
+            throw FileReadException( fn.c_str(), 0, curpos,
+                                     "wrong subheader '%s'",
+                                     headbuf );
+        }
+        const size_t headsize = eol - headbuf + 1;
+        curpos += headsize;
+        if ( curpos + chunksize >= filesize ) {
+            // the last chunk found
+            fg.seek(curpos);
+            break;
+        }
+        curpos += filesize;
+    }
+}
+
+
 bool ActivityLog::readFirstRecordSeconds( const std::string& filename,
                                           TmpBufBase<char>& buf,
                                           unsigned& seconds )
@@ -635,11 +700,14 @@ void ActivityLog::closeJoinedLog( const std::string& resultpath,
                         (resultpath + ".log").c_str() ) ) {
         // success
         // destroy all subdirectories
+        /*
+         * FIXME: temporary do not delete dirs
         try {
             FileGuard::rmdirs( (resultpath + "/").c_str() );
         } catch ( std::exception& e ) {
             smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
         }
+         */
     } else {
         smsc_log_warn(thelog,"could not rename '%s.tmp'",resultpath.c_str());
     }

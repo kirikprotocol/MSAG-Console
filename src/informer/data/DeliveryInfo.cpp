@@ -618,8 +618,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
 void DeliveryInfo::readStats()
 {
     bool statsLoaded = false;
+    typedef struct stat mystat;
     try {
-        DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
+        DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR | S_IFREG );
         std::vector< std::string > dirs;
         char fnbuf[150];
         makeDeliveryPath(fnbuf,dlvId_);
@@ -630,16 +631,57 @@ void DeliveryInfo::readStats()
         subdirs.reserve(24);
         TmpBuf<char,8192> buf;
         for ( std::vector<std::string>::reverse_iterator i = dirs.rbegin();
-              i != dirs.rend(); ++i ) {
-            subdirs.clear();
+              i != dirs.rend() && !statsLoaded; ++i ) {
+
             const std::string daypath = actpath + *i;
+            mystat st;
+            if ( -1 == ::stat(daypath.c_str(),&st) ) {
+                throw InfosmeException(EXC_LOGICERROR,"stat '%s' failed: %u",daypath.c_str(),errno);
+            }
+            if ( (st.st_mode & S_IFREG) == S_IFREG ) {
+                // a file
+                if ( daypath.size() > 4 &&
+                     !strcmp(daypath.c_str()+daypath.size()-4,".log") ) {
+                    // zipped file - scan until the last section
+                    FileGuard fg;
+                    // fg.ropen(daypath.c_str());
+                    ActivityLog::scanZipToEnd(fg,buf,daypath);
+                    statsLoaded = ActivityLog::readStatistics( fg,
+                                                               buf,
+                                                               stats_,
+                                                               isOldActLog_ );
+                }
+                continue;
+            }
+
+            subdirs.clear();
             dl.list( daypath.c_str(), subdirs );
             std::sort( subdirs.begin(), subdirs.end() );
             for ( std::vector<std::string>::reverse_iterator j = subdirs.rbegin();
-                  j != subdirs.rend(); ++j ) {
+                  j != subdirs.rend() && !statsLoaded; ++j ) {
+
+                const std::string hourpath = daypath + "/" + *j;
+                if ( -1 == ::stat(hourpath.c_str(),&st) ) {
+                    throw InfosmeException(EXC_LOGICERROR,"stat '%s' failed: %u",daypath.c_str(),errno);
+                }
+                if ( (st.st_mode & S_IFREG ) == S_IFREG ) {
+                    // a file
+                    if ( hourpath.size() > 4 &&
+                         !strcmp(hourpath.c_str()+hourpath.size()-4,".log") ) {
+                        // zipped file
+                        FileGuard fg;
+                        // fg.ropen(hourpath.c_str());
+                        ActivityLog::scanZipToEnd(fg,buf,hourpath);
+                        statsLoaded = ActivityLog::readStatistics( fg,
+                                                                   buf,
+                                                                   stats_,
+                                                                   isOldActLog_ );
+                    }
+                    continue;
+                }
+
                 std::vector< std::string > logfiles;
                 logfiles.reserve(60);
-                const std::string hourpath = daypath + "/" + *j;
                 makeDirListing( NoDotsNameFilter(), S_IFREG ).list( hourpath.c_str(), logfiles );
                 std::sort(logfiles.begin(), logfiles.end());
                 for ( std::vector< std::string >::reverse_iterator k = logfiles.rbegin();
@@ -665,9 +707,7 @@ void DeliveryInfo::readStats()
                                       getDlvId(), filename.c_str(), e.what());
                     }
                 }
-                if (statsLoaded) break;
             }
-            if (statsLoaded) break;
         }
     } catch (std::exception& e) {
         smsc_log_debug(log_,"D=%u stats, exc: %s", getDlvId(), e.what());
