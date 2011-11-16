@@ -230,13 +230,6 @@ public class SmscStatProvider {
         try {
           recordNum++;
           IOUtils.readUInt32(input); //skip rs1
-//          if (buffer.length < rs1) buffer = new byte[rs1];
-//          readBuffer(input, buffer, rs1);
-//          if (rs1 != rs2) {
-//            throw new StatException("unsupported_file_format", path.getAbsolutePath());
-//          }
-
-//          ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
           try {
             int hour = IOUtils.readUInt8(input);
             int min = IOUtils.readUInt8(input);
@@ -296,7 +289,7 @@ public class SmscStatProvider {
 
     } catch (IOException e) {
       logger.error(e, e);
-      throw new StatException("internal_exception");
+      throw new StatException("internal_exception"); //todo передавать cause
     } finally {
       try {
         if (input != null) input.close();
@@ -478,7 +471,7 @@ public class SmscStatProvider {
       c.setAutoCommit(false);
       return c;
     } catch (Exception e) {
-      throw new StatException("cant_connect");
+      throw new StatException("cant_connect");//todo передавать cause
     }
   }
 
@@ -678,12 +671,12 @@ public class SmscStatProvider {
     PreparedStatement insertRouteSms = null;
     PreparedStatement insertRouteErr = null;
     try {
-      try {
+      try { //todo getConnection уже кидает Exception. Этот try не нужен
         connection = getConnection(export);
       } catch (Exception e) {
         throw new StatException("cant_connect");
       }
-      try{
+      try{  //todo try нужен только ради lock. Мне кажется, можно объединить с тем try, который выше. Особо на производительности не скажется.
         lock.lock();
         if(logger.isDebugEnabled()) {
           logger.debug("Smsc stat locked");
@@ -691,7 +684,7 @@ public class SmscStatProvider {
         try {
           cleanTable(connection, filter, tablesPrefix);
         } catch (Exception e) {
-          throw new StatException("cant_clean");
+          throw new StatException("cant_clean"); //todo передавать cause
         }
 
         try {
@@ -702,7 +695,7 @@ public class SmscStatProvider {
           insertRouteSms = prepareRouteSms(connection, tablesPrefix);
           insertRouteErr = prepareRouteErr(connection, tablesPrefix);
         } catch (SQLException e) {
-          throw new StatException("internal_error");
+          throw new StatException("internal_error"); //todo передавать cause
         }
 
         long tm = System.currentTimeMillis();
@@ -775,17 +768,7 @@ public class SmscStatProvider {
         }
       });
     } catch (VisitorException e) {
-      throw new StatException("cant_insert");
-    }
-  }
-
-
-  private static void readBuffer(InputStream is, byte buffer[], int size) throws IOException {
-    int read = 0;
-    while (read < size) {
-      int result = is.read(buffer, read, size - read);
-      if (result < 0) throw new EOFException("Failed to read " + size + " bytes, read failed at " + read);
-      read += result;
+      throw new StatException("cant_insert"); //todo передавать cause
     }
   }
 
