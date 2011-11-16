@@ -77,7 +77,7 @@
 
      </target>
 
-    <target name="distr" depends="compile">
+    <target name="distr" depends="onejar">
                 
         <copy file="mv_logs.sh" todir="${dcpgw.distr.dir}"/>
         <chmod file="${dcpgw.distr.dir}/mv_logs.sh" perm="u+x"/>
