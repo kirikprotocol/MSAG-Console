@@ -1,15 +1,7 @@
 #include <cassert>
 #include "CommonSettings.h"
-#include "informer/io/UTF8.h"
-#include "informer/io/InfosmeException.h"
-#include "informer/io/ConfigWrapper.h"
-#include "util/config/Config.h"
 #include "TimezoneGroup.h"
-#include "DeadLockWatch.h"
 #include "logger/Logger.h"
-
-using smsc::util::config::Config;
-using smsc::util::config::CStrSet;
 
 namespace eyeline {
 namespace informer {
@@ -33,7 +25,7 @@ emergency_(false)
 {
     assert(instance_ == 0);
     instance_ = this;
-    dlwatcher_ = new DeadLockWatcher();
+    // dlwatcher_ = new DeadLockWatcher();
 }
 
 
@@ -44,8 +36,8 @@ CommonSettings::~CommonSettings()
         delete *i;
     }
     tzgroups_.clear();
-    delete dlwatcher_;
-    delete utf8_;
+    // delete dlwatcher_;
+    // delete utf8_;
     instance_ = 0;
 }
 
@@ -53,11 +45,12 @@ CommonSettings::~CommonSettings()
 void CommonSettings::setStopping()
 {
     stopping_ = true;
-    dlwatcher_->setStopping();
+    // dlwatcher_->setStopping();
 }
 
 
 // void CommonSettings::init( const std::string& path, const std::string& statpath )
+/*
 void CommonSettings::init( smsc::util::config::Config& cfg,
                            SnmpManager*                snmp,
                            bool                        archive )
@@ -132,8 +125,10 @@ void CommonSettings::init( smsc::util::config::Config& cfg,
 
     loadTimezones();
 }
+ */
 
 
+/*
 void CommonSettings::loadTimezones()
 {
     tzgroups_.push_back( new TimezoneGroup(TimezoneGroup::TZ_UNKNOWN) );
@@ -181,6 +176,7 @@ void CommonSettings::loadTimezones()
         throw InfosmeException(EXC_CONFIG,"exc on tz: %s",e.what());
     }
 }
+ */
 
 
 const TimezoneGroup* CommonSettings::lookupTimezoneGroup( const char* name ) const

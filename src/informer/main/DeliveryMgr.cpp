@@ -1471,6 +1471,12 @@ void DeliveryMgr::readFromArchive()
             try {
                 char dname[100];
                 *(makeDeliveryPath(dname,*i)-1) = '\0';
+
+                try {
+                    // destroy 'new' as it is not needed
+                    FileGuard::rmdirs( (getCS()->getArchivePath() + dname + ".out/new/").c_str() );
+                } catch (...) {}
+
                 FileGuard::copydir( (getCS()->getArchivePath() + dname + ".out/").c_str(),
                                     getCS()->getStorePath() + dname + ".in/",
                                     10 );

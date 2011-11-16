@@ -10,12 +10,14 @@
 #include "informer/alm/ActivityLogMiner.hpp"
 #include "informer/data/CoreSmscStats.h"
 #include "informer/data/DeadLockWatch.h"
+#include "informer/data/CommonSettingsIniter.h"
 #include "informer/data/FinalLog.h"
 #include "informer/data/UserInfo.h"
 #include "informer/dcp/DcpServer.hpp"
 #include "informer/io/ConfigWrapper.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/RelockMutexGuard.h"
+#include "informer/io/UTF8.h"
 #include "informer/sender/RegionSender.h"
 #include "informer/sender/SmscSender.h"
 #include "informer/snmp/SnmpManager.h"
@@ -350,7 +352,11 @@ void InfosmeCoreV1::init( bool archive )
         }
 #endif
 
-        cs_.init( *cfg, snmp_, archive );
+        utf8_.reset(new UTF8());
+        dlwatcher_.reset(new DeadLockWatcher());
+
+        CommonSettingsIniter csi;
+        csi.init( cs_, *cfg, snmp_, dlwatcher_.get(), utf8_.get(), archive );
 
         itp_.setMaxThreads(cs_.getInputTransferThreadCount());
         rtp_.setMaxThreads(cs_.getResendIOThreadCount());
@@ -526,6 +532,9 @@ void InfosmeCoreV1::stop()
             if (getCS()->isStopping()) return;
             smsc_log_info(log_,"--- stopping core ---");
             cs_.setStopping();
+            if (dlwatcher_.get()) {
+                dlwatcher_->setStopping();
+            }
             startMon_.notifyAll();
         }
 

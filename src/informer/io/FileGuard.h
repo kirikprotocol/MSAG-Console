@@ -117,7 +117,7 @@ public:
     static void copyfile( const char* from,
                           const char* to,
                           const char* tempext = ".tmpcopy" );
-    
+
     /// rename the file, or (if failed) try to copy.
     static void renameorcopy( const char* from,
                               const char* to,

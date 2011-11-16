@@ -3,6 +3,7 @@
 #include "CommonSettings.h"
 #include "informer/io/TextEscaper.h"
 #include "informer/io/HexDump.h"
+#include "informer/io/DirListing.h"
 #include "informer/snmp/SnmpManager.h"
 #include "UserInfo.h"
 #include "FinalLog.h"
@@ -483,6 +484,163 @@ msgtime_type ActivityLog::fixActLogFormat( msgtime_type currentTime )
     smsc::core::synchronization::MutexGuard mg(lock_);
     createFile(currentTime, now);
     return createTime_;
+}
+
+
+void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
+{
+    typedef struct stat mystat;
+
+    const std::string actpath = dlvdir + "activity_log/";
+    DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
+    std::vector< std::string > dirs, subdirs;
+    dl.list( actpath.c_str(), dirs );
+    std::sort( dirs.begin(), dirs.end() );
+    FileGuard result;
+    std::string resultpath;
+    smsc::logger::Logger* thelog = smsc::logger::Logger::getInstance("joinlogs");
+
+    for ( std::vector< std::string >::const_iterator i = dirs.begin(),
+          ie = dirs.end(); i != ie; ++i ) {
+        const std::string daypath = actpath + *i;
+        if ( result.isOpened() ) {
+            result.close();
+            if ( 0 == ::rename( (resultpath + ".tmp").c_str(),
+                                (resultpath + ".log").c_str() ) ) {
+                // success
+                // destroy all subdirectories
+                try {
+                    FileGuard::rmdirs( (resultpath + "/").c_str() );
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
+                }
+            } else {
+                smsc_log_warn(thelog,"could not rename '%s.tmp'",resultpath.c_str());
+            }
+        }
+
+        unsigned year, month, mday;
+        {
+            int pos = 0;
+            sscanf(i->c_str(),"%04u.%02u.%02u%n",&year,&month,&mday,&pos);
+            if ( !pos || size_t(pos) != i->size() ) {
+                smsc_log_warn(thelog,"cannot parse day '%s' in '%s'",
+                              i->c_str(),actpath.c_str());
+                continue;
+            }
+        }
+
+        subdirs.clear();
+        dl.list( daypath.c_str(), subdirs );
+        std::sort( subdirs.begin(), subdirs.end() );
+        for ( std::vector< std::string >::const_iterator j = subdirs.begin(),
+              je = subdirs.end(); j != je; ++j ) {
+
+            const std::string hourpath = daypath + "/" + *j;
+            if ( hourly && result.isOpened() ) {
+                result.close();
+                if ( 0 == ::rename( (resultpath + ".tmp").c_str(),
+                                    (resultpath + ".log").c_str() ) ) {
+                    // success
+                    // destroy all subdirectories
+                    try {
+                        FileGuard::rmdirs( (resultpath + "/").c_str() );
+                    } catch ( std::exception& e ) {
+                        smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
+                    }
+                } else {
+                    smsc_log_warn(thelog,"could not rename '%s.tmp'",resultpath.c_str());
+                }
+            }
+
+            try {
+
+                unsigned hour;
+                {
+                    int pos = 0;
+                    sscanf(j->c_str(),"%02u%n",&hour,&pos);
+                    if ( !pos || size_t(pos) != j->size() ) {
+                        throw InfosmeException(EXC_BADFILE, 
+                                               "cannot parse hour '%s' in '%s'",
+                                               j->c_str(),daypath.c_str());
+                    }
+                }
+
+                std::vector< std::string > logfiles;
+                makeDirListing( NoDotsNameFilter(), S_IFREG ).list( hourpath.c_str(), logfiles );
+                std::sort( logfiles.begin(), logfiles.end() );
+
+                for ( std::vector< std::string >::const_iterator k = logfiles.begin(),
+                      ke = logfiles.end(); k != ke; ++k ) {
+
+                    unsigned minute;
+                    {
+                        int pos = 0;
+                        sscanf(k->c_str(),"%02u.log%n",&minute,&pos);
+                        if ( !pos || size_t(pos) != k->size() ) {
+                            throw InfosmeException( EXC_BADFILE, "cannot parse '%s' in '%s'",
+                                                    k->c_str(), hourpath.c_str() );
+                        }
+                    }
+
+                    const std::string fn = hourpath + "/" + *k;
+
+                    FileGuard from;
+                    from.ropen(fn.c_str());
+                    // read/check version -- not needed
+
+                    // check EOL @ EOF
+                    mystat st;
+                    from.getStat(st);
+                    from.seek( st.st_size-1 );
+                    char tbuf[1];
+                    if ( 1 != from.read(tbuf,1) ) {
+                        throw FileReadException( fn.c_str(), 0, st.st_size-1, 
+                                                 "cannot read EOL@EOF" );
+                    } else if ( tbuf[0] != '\n' ) {
+                        throw FileReadException( fn.c_str(), 0, st.st_size-1,
+                                                 "%x at EOF, must be EOL",
+                                                 static_cast<unsigned char>(tbuf[1]) );
+                    }
+                    from.seek(0);
+
+                    // create result file if not opened
+                    if ( !result.isOpened() ) {
+                        resultpath = 
+                            ( hourly ? hourpath : daypath );
+                        result.create((resultpath + ".tmp").c_str(),
+                                      false, true );
+                        const char* ziphead = "#1 ZIPPED\n";
+                        result.write(ziphead,strlen(ziphead));
+                    }
+
+                    // appending the logfile
+                    char headbuf[100];
+                    sprintf(headbuf,"# %04u %02u %02u %02u %02u %lu\n",
+                            year, month, mday, hour, minute,
+                            static_cast<unsigned long>(st.st_size) );
+
+                    char wbuf[8192];
+                    while ( true ) {
+                        const size_t wasread = from.read(wbuf,sizeof(wbuf));
+                        if (wasread == 0) { break; }
+                        result.write(wbuf,wasread);
+                    }
+
+                } // for logfiles
+            } catch ( std::exception& e ) {
+                // failed to process a file in the hour
+                smsc_log_warn(thelog,"exc: %s",e.what());
+                if (result.isOpened()) {
+                    result.close();
+                    try {
+                        FileGuard::unlink( (resultpath + ".tmp").c_str() );
+                    } catch (...) {}
+                }
+                if (!hourly) break; // to the next day
+            }
+        } // loop over hours
+    } // loop over days
 }
 
 }

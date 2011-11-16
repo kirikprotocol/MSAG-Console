@@ -19,6 +19,14 @@
 #include "informer/sender/ReceiptProcessor.h"
 #include "logger/Logger.h"
 
+namespace smsc {
+namespace util {
+namespace config {
+class Config;
+}
+}
+}
+
 namespace scag2 {
 namespace pvss {
 namespace core {
@@ -44,6 +52,8 @@ class DeliveryMgr;
 class FinalLog;
 class RegionSender;
 class SmscSender;
+class DeadLockWatcher;
+class UTF8;
 
 class InfosmeCoreV1 : public InfosmeCore,
 public DeliveryActivator,
@@ -188,6 +198,8 @@ protected:
 
 private:
     smsc::logger::Logger*                      log_;
+    std::auto_ptr<UTF8>                        utf8_;
+    std::auto_ptr<DeadLockWatcher>             dlwatcher_;
     CommonSettings                             cs_;
 
     smsc::core::synchronization::EventMonitor  startMon_;

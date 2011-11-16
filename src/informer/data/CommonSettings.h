@@ -10,11 +10,6 @@ namespace smsc {
 namespace logger {
 class Logger;
 }
-namespace util {
-namespace config {
-class Config;
-}
-}
 }
 
 namespace eyeline {
@@ -28,15 +23,19 @@ class DeadLockWatcher;
 class CommonSettings
 {
     static CommonSettings* instance_;
+    friend struct CommonSettingsIniter;
 public:
     inline static const CommonSettings* getCS() { return instance_; }
 
     CommonSettings( unsigned licenseLimit );
     ~CommonSettings();
 
-    void init( smsc::util::config::Config& cfg,
-               SnmpManager*                snmp,       // not owned
-               bool                        archive );
+    // NOTE: initialization is moved into separate class
+    // to avoid extra dependencies!
+
+    // void init( smsc::util::config::Config& cfg,
+    // SnmpManager*                snmp,       // not owned
+    // bool                        archive );
 
     inline bool isArchive() const {
         return archive_;
@@ -242,7 +241,7 @@ public:
     inline DeadLockWatcher& getDLWatcher() const { return *dlwatcher_; }
 
 private:
-    void loadTimezones();
+    // void loadTimezones();
     typedef std::map< std::string, TimezoneGroup* > TzMap;
 
 private:
