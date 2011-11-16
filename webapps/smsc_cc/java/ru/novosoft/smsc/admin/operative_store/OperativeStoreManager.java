@@ -306,7 +306,7 @@ public class OperativeStoreManager {
       clearStmt.executeUpdate();
       conn.commit();
     }catch (SQLException e) {
-      throw new OperativeStoreException("cant_clean");
+      throw new OperativeStoreException("cant_clean");//todo передавать cause
     }
   }
 
@@ -329,7 +329,7 @@ public class OperativeStoreManager {
       con.setAutoCommit(false);
       return con;
     } catch (Exception e) {
-      throw new OperativeStoreException("cant_connect");
+      throw new OperativeStoreException("cant_connect");//todo передавать cause
     }
   }
 
@@ -347,7 +347,7 @@ public class OperativeStoreManager {
 
       return (OracleCallableStatement) conn.prepareCall(CALL_multinsert_sms_SQL);
     } catch (Exception e) {
-      throw new OperativeStoreException("cant_insert");
+      throw new OperativeStoreException("cant_insert"); //todo передавать cause
     } finally {
       closeStatement(createprocStmt);
     }
@@ -358,7 +358,7 @@ public class OperativeStoreManager {
       conn.getTypeMap().put("SMS", Class.forName(SqlSms.class.getName()));
       return ArrayDescriptor.createDescriptor("ARRAYLIST", conn);
     }   catch (Exception e) {
-      throw new OperativeStoreException("cant_insert");
+      throw new OperativeStoreException("cant_insert"); //todo передавать cause
     }
   }
 
@@ -369,7 +369,7 @@ public class OperativeStoreManager {
     try {
 
       conn = getOracleConnection(export);
-      try {
+      try {  //todo зачем вложенный try? Можно 1 оставить.
         lock.lock();
         if (logger.isDebugEnabled()) {
           logger.debug("Export sms locked");
@@ -416,7 +416,7 @@ public class OperativeStoreManager {
             insert(callinsertStmt, ad, conn, tr);
           }
         } catch (Exception e) {
-          throw new OperativeStoreException("cant_insert");
+          throw new OperativeStoreException("cant_insert"); //todo передавать cause
         }
       } finally {
         lock.unlock();
@@ -431,7 +431,7 @@ public class OperativeStoreManager {
     } catch (Exception e) {
       logger.error(e, e);
       rollback(conn);
-      throw new OperativeStoreException("internal_error");
+      throw new OperativeStoreException("internal_error"); //todo передавать cause
     } finally {
       closeStatement(callinsertStmt);
       closeConnection(conn);

@@ -205,7 +205,7 @@ public class ArchiveDaemon {
       return c;
     } catch (Exception e) {
       logger.error(e, e);
-      throw new ArchiveDaemonException("cant_connect");
+      throw new ArchiveDaemonException("cant_connect"); //todo передавать cause
     }
   }
 
@@ -233,7 +233,7 @@ public class ArchiveDaemon {
       conn.commit();
     } catch (Exception e) {
       logger.error(e, e);
-      throw new ArchiveDaemonException("cant_clean");
+      throw new ArchiveDaemonException("cant_clean");   //todo передавать cause
     }finally {
       if(clearStmt != null) {
         closeStatement(clearStmt);
@@ -248,7 +248,7 @@ public class ArchiveDaemon {
       insertStmt = conn.prepareStatement(INSERT_SQL);
     } catch (Exception e) {
       logger.error(e, e);
-      throw new ArchiveDaemonException("internal_exception");
+      throw new ArchiveDaemonException("internal_exception"); //todo передавать cause
     }
     return insertStmt;
   }
@@ -347,7 +347,7 @@ public class ArchiveDaemon {
       lockTable(tablePrefix);
       conn = getConnection(export);
       PreparedStatement insertStmt = null;
-      try{
+      try{ //todo зачем этот try ? Может его объединить с тем, что выше?
         insertStmt = createInsertSql(conn, tablePrefix);
         clearTable(conn, tablePrefix, date);
         ArchiveMessageFilter query = new ArchiveMessageFilter();
@@ -367,7 +367,7 @@ public class ArchiveDaemon {
             }
           } catch (Exception e) {
             logger.error(e, e);
-            throw new ArchiveDaemonException("cant_insert");
+            throw new ArchiveDaemonException("cant_insert"); //todo передавать cause
           }
         }
       }finally {
@@ -380,7 +380,7 @@ public class ArchiveDaemon {
     } catch (Exception e) {
       rollbackConnection(conn);
       logger.error(e, e);
-      throw new ArchiveDaemonException("internal_exception");
+      throw new ArchiveDaemonException("internal_exception");  //todo передавать cause
     } finally {
       unlockTable(tablePrefix);
       if (conn != null) {
