@@ -1,12 +1,14 @@
 <project name="smscadm" default="distr">
 
   <property file="build.properties"/>
+  <property name="smsc.source.dir" value="."/>
   <property name="smsc.source.classes" value="${smsc.build.dir}/classes"/>
   <property name="smsc.source.classes.preweaved" value="${smsc.build.dir}/classes_preweaved"/>
 
   <property name="smsc.test.classes" value="${smsc.build.dir}/test_classes"/>
   <property name="smsc.test.classes.preweaved" value="${smsc.build.dir}/test_classes_preweaved"/>
 
+  <property name="sources.prefix" value="${smsc.source.dir}/java/ru/novosoft/smsc"/>
   <property name="smsc.exploded.dir" value="${smsc.build.dir}/exploded"/>
 
   <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="libdev/protogen.jar"/>
@@ -22,20 +24,22 @@
   <taskdef resource='emma_ant.properties' classpathref="libdev" />
 
   <target name="gen_cc_protocol">
-    <protogen language="java" msgPackage="ru.novosoft.smsc.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java"
-              tempDir="java/ru/novosoft/smsc/admin/cluster_controller/tmp">
-      <cgp name="search.path" value="java/ru/novosoft/smsc/admin/cluster_controller/"/>
+    <protogen language="java" msgPackage="ru.novosoft.smsc.admin.cluster_controller.protocol"
+              defFile="${sources.prefix}/admin/cluster_controller/ControllerWebappProtocol.def"
+              outDir="${smsc.source.dir}/java"
+              tempDir="${smsc.build.dir}/tmp">
+      <cgp name="search.path" value="${sources.prefix}/admin/cluster_controller/"/>
     </protogen>
   </target>
 
   <target name="mode">
-    <echo file="java/ru/novosoft/smsc/web/Mode.java">
+    <echo file="${sources.prefix}/web/Mode.java">
 package ru.novosoft.smsc.web;${line.separator}${line.separator}
 public class Mode {${line.separator}
   public final static boolean testMode = ${smsc.devMode};${line.separator}
 }
     </echo>
-    <echo file="java/ru/novosoft/smsc/admin/AdminMode.java">
+    <echo file="${sources.prefix}/admin/AdminMode.java">
 package ru.novosoft.smsc.admin;${line.separator}${line.separator}
 public class AdminMode {${line.separator}
   public final static boolean smsx = ${smsc.smsx};${line.separator}
@@ -48,7 +52,7 @@ public class AdminMode {${line.separator}
   <target name="compile.sources">
     <delete dir="${smsc.source.classes.preweaved}" failonerror="false"/>
     <mkdir dir="${smsc.source.classes.preweaved}"/>
-    <javac srcdir="java" destdir="${smsc.source.classes.preweaved}" debug="true">
+    <javac srcdir="${smsc.source.dir}/java" destdir="${smsc.source.classes.preweaved}" debug="true">
       <classpath refid="lib"/>
       <classpath refid="libdev"/>
     </javac>
@@ -62,7 +66,7 @@ public class AdminMode {${line.separator}
       <classpath refid="libdev"/>
       <inpath location="${smsc.source.classes.preweaved}"/>
     </iajc>
-    <native2ascii src="java" dest="${smsc.source.classes}" ext=".properties" includes="**/*.properties"/>
+    <native2ascii src="${smsc.source.dir}/java" dest="${smsc.source.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
 
   <target name="compile.tests" depends="compile.sources">
@@ -71,7 +75,7 @@ public class AdminMode {${line.separator}
     <copy todir="${smsc.test.classes.preweaved}">
       <fileset dir="${smsc.source.classes.preweaved}"/>
     </copy>
-    <javac srcdir="test" destdir="${smsc.test.classes.preweaved}" debug="true">
+    <javac srcdir="${smsc.source.dir}/test" destdir="${smsc.test.classes.preweaved}" debug="true">
       <classpath refid="lib"/>
       <classpath refid="libdev"/>
     </javac>
@@ -88,7 +92,7 @@ public class AdminMode {${line.separator}
     <copy todir="${smsc.test.classes}">
       <fileset dir="test" excludes="**/*.java"/>
     </copy>
-    <native2ascii src="java" dest="${smsc.test.classes}" ext=".properties" includes="**/*.properties"/>
+    <native2ascii src="${smsc.source.dir}/java" dest="${smsc.test.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
 
   <target name="test" depends="compile.tests, weave.tests">
@@ -117,7 +121,7 @@ public class AdminMode {${line.separator}
     </junit>
 
     <emma>
-      <report sourcepath="java">
+      <report sourcepath="${smsc.source.dir}/java">
         <infileset dir="${smsc.tests.dir}" includes="*.emma" />
 
         <xml outfile="${smsc.tests.dir}/coverage.xml" depth="method" />
@@ -132,16 +136,16 @@ public class AdminMode {${line.separator}
     <delete dir="${smsc.exploded.dir}" failonerror="false"/>
     <mkdir dir="${smsc.exploded.dir}"/>
     <copy todir="${smsc.exploded.dir}">
-      <fileset dir="web" includes="**/*"/>
+      <fileset dir="${smsc.source.dir}/web" includes="**/*"/>
     </copy>
 
     <mkdir dir="${smsc.exploded.dir}/WEB-INF/lib"/>
     <copy todir="${smsc.exploded.dir}/WEB-INF/lib" >
-      <fileset dir="lib" excludes="javaee*.jar"/>
+      <fileset dir="${smsc.source.dir}/lib" excludes="javaee*.jar"/>
     </copy>
     <mkdir dir="${smsc.exploded.dir}/WEB-INF/classes/dtds"/>
     <copy todir="${smsc.exploded.dir}/WEB-INF/classes/dtds">
-      <fileset dir="." includes="*.dtd"/>
+      <fileset dir="${smsc.source.dir}/../../config" includes="*.dtd"/>
     </copy>
   </target>
 
