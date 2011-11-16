@@ -28,7 +28,10 @@
         <path refid="libdev"/>
     </path>
 
-    <target name="prebuild" depends="gen_protocol"/>
+    <target name="prebuild" depends="gen_protocol">
+        <delete dir="${dcpgw.build.dir}/onejar" failonerror="false"/>
+        <unzip src="libdev/one-jar-ant-task-0.97.jar" dest="${dcpgw.build.dir}/onejar"/>
+    </target>
 
     <target name="compile" depends="prebuild">
         <delete dir="${dcpgw.source.classes}" failonerror="false"/>
@@ -75,6 +78,7 @@
         <jar jarfile="${dcpgw.distr.dir}/lib/dcpgw.jar"
              basedir="${dcpgw.build.dir}/classes"
              index="true">
+
         </jar>
 
         <copy file="mv_logs.sh" todir="${dcpgw.distr.dir}"/>
