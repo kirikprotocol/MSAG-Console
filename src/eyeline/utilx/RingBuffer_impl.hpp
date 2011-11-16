@@ -6,7 +6,7 @@ namespace utilx {
 
 template<int BUFSZ>
 RingBuffer<BUFSZ>::RingBuffer() 
-  : _head(0), _tail(0), _count(0) {
+  : _head(0), _tail(0), _availDataSize(0) {
   memset(_buffer, 0 , sizeof(_buffer));
 }
 
@@ -14,7 +14,7 @@ template<int BUFSZ>
 size_t
 RingBuffer<BUFSZ>::getSizeOfAvailData()
 {
-  return _count;
+  return _availDataSize;
 }
 
 template<int BUFSZ>
@@ -58,29 +58,30 @@ RingBuffer<BUFSZ>::readArray(uint8_t* destBuffer, size_t arraySz)
 {
   if ( !arraySz )
     return;
-  if ( !_count )
+  if ( !_availDataSize )
     throw smsc::util::Exception("RingBuffer<BUFSZ>::readArray::: ring buffer is empty");
   size_t bytesToEnd = sizeof(_buffer) - _head;
-  if ( arraySz < bytesToEnd ) {
+  if ( arraySz <= bytesToEnd ) {
     memcpy(destBuffer, _buffer + _head, arraySz);
     _head += static_cast<unsigned>(arraySz);
   } else {
     memcpy(destBuffer, _buffer + _head, bytesToEnd);
-    memcpy(destBuffer, _buffer, arraySz - bytesToEnd);
+    memcpy(destBuffer + bytesToEnd, _buffer, arraySz - bytesToEnd);
     _head = static_cast<unsigned>(arraySz - bytesToEnd);
   }
-  _count -= static_cast<unsigned>(arraySz);
+  _availDataSize -= static_cast<unsigned>(arraySz);
 }
 
 template<int BUFSZ>
 void
 RingBuffer<BUFSZ>::load(corex::io::InputStream* iStream)
 {
-  if ( _count < sizeof(_buffer) ) {
+  if ( _availDataSize < sizeof(_buffer) ) {
     uint8_t tmpBuf[sizeof(_buffer)];
-    ssize_t sz = iStream->read(tmpBuf, sizeof(tmpBuf) - _count);
+    ssize_t sz = iStream->read(tmpBuf, sizeof(tmpBuf) - _availDataSize);
 
     size_t bytesToEnd = sizeof(_buffer) - _tail;
+
     if ( bytesToEnd < sz ) {
       memcpy(_buffer + _tail, tmpBuf, bytesToEnd);
       memcpy(_buffer, tmpBuf + bytesToEnd, sz - bytesToEnd);
@@ -89,7 +90,7 @@ RingBuffer<BUFSZ>::load(corex::io::InputStream* iStream)
       memcpy(_buffer + _tail, tmpBuf, sz);
       _tail += static_cast<unsigned>(sz);
     }
-    _count += static_cast<unsigned>(sz);
+    _availDataSize += static_cast<unsigned>(sz);
   }
 }
 
