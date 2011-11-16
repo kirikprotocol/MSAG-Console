@@ -50,6 +50,8 @@ public class AdminMode {${line.separator}
   <target name="copy_dtds">
     <copy todir=".">
       <fileset dir="${smsc.source.dir}/../../config" includes="*.dtd"/>
+      <fileset dir="${smsc.source.dir}/../../config/resourcemanager" includes="*.dtd"/>
+      <fileset dir="${smsc.source.dir}/../../config/webapp" includes="*.dtd"/>
     </copy>
   </target>
    
