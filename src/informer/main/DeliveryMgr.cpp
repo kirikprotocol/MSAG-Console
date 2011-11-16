@@ -31,7 +31,7 @@ struct DeliveryMgr::NumericNameFilter
 
     inline bool operator()( const char* fn ) const {
         char* endptr;
-        const dlvid_type dlvId = strtoul(fn,&endptr,10);
+        const dlvid_type dlvId = dlvid_type(strtoul(fn,&endptr,10));
         if (endptr != fn) {
             // starts with a number
             if ( archived_ && strcmp(endptr,".out") == 0 ) {
@@ -1522,8 +1522,13 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
         }
 
         fixCreationDate = data.creationDate.empty();
-        if ( fixCreationDate ) {
+        while ( fixCreationDate ) {
             // we have to reconstruct creationDate from activityLog
+            if ( getCS()->isArchive() ) {
+                smsc_log_warn(log_,"D=%u unfortunately we cannot reconstruct creationDate in archiveMode",dlvId);
+                fixCreationDate = false;
+                break;
+            }
             smsc_log_debug(log_,"D=%u we have to reconstruct creationDate from activityLog",dlvId);
             ulonglong ymd = DeliveryInfo::fixCreationDate(dlvId);
             if ( ymd == 0 ) {
@@ -1538,6 +1543,7 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
                     unsigned(ymd/10000),
                     hms/10000, hms%10000/100, hms%100);
             data.creationDate = buf;
+            break;
         }
 
         // read state

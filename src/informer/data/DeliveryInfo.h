@@ -226,6 +226,8 @@ public:
 
     // FIXME: may be removed after all dlv fix their config.xml
     // @return >0 if creation date is reconstructed from activity log.
+    // NOTE: it must be guaranteed that actlog is not zipped.
+    // that's why we do not call this method from archive mode.
     static ulonglong fixCreationDate( dlvid_type dlvId );
 
 protected:
