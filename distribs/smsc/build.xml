@@ -18,6 +18,9 @@
   <property name="CATALINA_HOME" location="${relative.CATALINA_HOME}"/>
   <property name="CATALINA_BASE" location="${relative.CATALINA_BASE}"/>
   <property name="MAKE_ARGS" value="${relative.MAKE_ARGS}"/>
+  <property name="smsc.build.dir" location="${BUILD_DIR}/web/build"/>
+  <property name="smsc.distr.dir" location="${BUILD_DIR}/web/distr"/>
+  <property name="smsc.tests.dir" location="${BUILD_DIR}/web/tests"/>
   <property file="build.properties"/>
   <fail if="INIT_FAILED" message="Please configure build.properties file"/>
   <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
@@ -70,16 +73,6 @@ Targets:
     <ant dir="${SRC_DIR}" target="util"/>
   </target>
 
-  <target name="makescsmsc">
-    <ant dir="${SRC_DIR}" target="smsc"/>
-    <ant dir="${SRC_DIR}" target="inman"/>
-  </target>
-
-  <target name="makescweb">
-    <!-- todo: cd to smsc_cc dir and call ant prebuild -->
-    <ant dir="${SCWEBSRC_DIR}" target="distr"/>
-  </target>
-  
   <target name="makeweb">
     <echo file="${WEBSRC_DIR}/WEB-INF/src/ru/novosoft/smsc/util/Support64Bit.java">
       ${B64CLASS}
@@ -241,9 +234,6 @@ Targets:
   </target>
 
   <target name="update" depends="create_update, updateweb">
-  </target>
-
-  <target name="scupdate" depends="makescsmsc,makescweb">
   </target>
 
   <target name="configure">
@@ -549,4 +539,63 @@ Targets:
   <target name="sponsored_distr" >
     <ant dir="${SMSC_DIR}/ext_smes" target="sponsored_distr"/>
   </target>
+
+<!-- Scalable SMSC build targets -->
+  <target name="sc_create_distr_tree_update" depends="rmdistr" >
+    <mkdir dir="${DISTR_DIR}"/>
+    <mkdir dir="${DISTR_DIR}/conf"/>
+    <mkdir dir="${DISTR_DIR}/lib"/>
+    <mkdir dir="${DISTR_DIR}/services"/>
+    <mkdir dir="${DISTR_DIR}/services/SMSC"/>
+    <mkdir dir="${DISTR_DIR}/services/SMSC/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/INMan"/>
+    <mkdir dir="${DISTR_DIR}/services/INMan/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon"/>
+    <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
+    <mkdir dir="${DISTR_DIR}/webapps"/>
+  </target>
+
+  <target name="sc_makesmsc">
+    <ant dir="${SRC_DIR}" target="smsc"/>
+    <ant dir="${SRC_DIR}" target="inman"/>
+  </target>
+
+  <target name="sc_makeweb">
+    <ant dir="${SCWEBSRC_DIR}" target="prebuild"/>
+    <ant dir="${SCWEBSRC_DIR}" target="distr"/>
+  </target>
+
+  <target name="sc_update" depends="sc_makesmsc,sc_makeweb,sc_create_distr_tree_update">
+    <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/smsc/smsc" todir="${DISTR_DIR}/services/SMSC/bin"/>
+    <chmod file="${DISTR_DIR}/services/SMSC/bin/smsc" perm="755"/>
+    <copy file="${BUILD_BIN}/util/RepairAndMergeStore" todir="${DISTR_DIR}/services/SMSC/bin"/>
+    <chmod file="${DISTR_DIR}/services/SMSC/bin/RepairAndMergeStore" perm="755"/>
+    <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
+    <chmod file="${DISTR_DIR}/services/INMan/bin/inman" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/INMan/bin">
+      <fileset dir="${BUILD_BIN}/inman/ldlib" includes="*.so"/>
+    </copy>
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}/services/INMan/bin" includes="*.so"/>
+    </chmod>
+    <copy file="${BUILD_BIN}/store/ArchiveDaemon" todir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
+    <chmod file="${DISTR_DIR}/services/ArchiveDaemon/bin/ArchiveDaemon" perm="755"/>
+    <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}/lib" includes="*"/>
+    </chmod>
+    <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd ClosedGroups.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd snmp.dtd regions.dtd fraud.dtd network-profiles.dtd"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
+      <fileset dir="${SMSC_DIR}/src/snmp" includes="SIBINCO-SMSC-MIB.txt"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/webapps">
+      <fileset dir="${smsc.distr.dir}" includes="*.war"/>
+    </copy>
+  </target>
+
+
 </project>
