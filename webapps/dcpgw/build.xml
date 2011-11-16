@@ -67,9 +67,37 @@
           <fileset dir="${conf.dir}"/>
         </copy>
 
-        <!--mkdir dir="${DISTR_DIR}/final_log"/-->
+    </target>
 
-        <!--copydir src="${SOURCE_DIR}/env/final_log" dest="${DISTR_DIR}/final_log"/-->
+    <target name="release" depends="compile">
+        <delete dir="${dcpgw.distr.dir}" failonerror="false"/>
+        <mkdir dir="${dcpgw.distr.dir}/lib"/>
+        <jar jarfile="${dcpgw.distr.dir}/lib/dcpgw.jar"
+             basedir="${dcpgw.build.dir}/classes"
+             index="true">
+        </jar>
+
+        <copy file="mv_logs.sh" todir="${dcpgw.distr.dir}"/>
+        <chmod file="${dcpgw.distr.dir}/mv_logs.sh" perm="u+x"/>
+
+        <copy file="setenv.sh" todir="${dcpgw.distr.dir}"/>
+        <chmod file="${dcpgw.distr.dir}/setenv.sh" perm="u+x"/>
+
+        <mkdir dir="${dcpgw.distr.dir}/bin"/>
+
+        <copy file="service" todir="${dcpgw.distr.dir}/bin"/>
+        <chmod file="${dcpgw.distr.dir}/bin/service" perm="u+x"/>
+
+        <copydir src="${lib.dir}" dest="${dcpgw.distr.dir}/lib"/>
+        <chmod file="${dcpgw.distr.dir}/${ant.project.name}.jar" perm="u+x"/>
+
+        <copy todir="${dcpgw.distr.dir}/conf">
+          <fileset dir="${conf.dir}" excludes="examples"/>
+        </copy>
+
+        <mkdir dir="${dcpgw.distr.dir}/logs"/>
+
+
 
     </target>
 
