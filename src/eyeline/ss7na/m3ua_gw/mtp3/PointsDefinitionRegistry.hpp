@@ -32,7 +32,7 @@ class PointsDefinitionRegistry : public utilx::Singleton<PointsDefinitionRegistr
 public:
   void insert(const PointInfo& point_desc, const common::point_code_t lpc) {
     smsc_log_info(_logger, "PointsDefinitionRegistry::insert::: insert pointInfo={%u,%s} for lpc=%d",
-                  point_desc.ni, point_desc.standard.c_str(), lpc);
+                  point_desc.ni, point_desc.standard, lpc);
     utilx::ObjectRegistry<PointInfo, common::point_code_t,
                           smsc::core::synchronization::Mutex>::insert(point_desc, lpc);
   }
