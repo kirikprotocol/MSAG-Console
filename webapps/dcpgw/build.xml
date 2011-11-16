@@ -66,7 +66,6 @@
                 <main>
                     <!-- Construct main.jar from classes and source code -->
                     <fileset dir="${dcpgw.build.dir}/classes"/>
-                    <fileset dir="conf/dtds"/>
                     <fileset file="conf/log4j.properties" />
                 </main>
 
@@ -94,6 +93,8 @@
         <chmod file="${dcpgw.distr.dir}/bin/service" perm="u+x"/>
 
         <copy file="${conf.dir}/config.properties"  todir="${dcpgw.distr.dir}/conf"/>
+
+        <copy file="${conf.dir}/configuration.dtd"  todir="${dcpgw.distr.dir}/conf"/>
 
     </target>
 

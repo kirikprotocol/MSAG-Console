@@ -1,9 +1,8 @@
 #!/bin/bash
 
 ./mv_logs.sh
-. ./setenv.sh
 
-PARAM="-Ddcpgw -Xmx256m -cp "$CLASSPATH" mobi.eyeline.dcpgw.Gateway"
+PARAM="-Ddcpgw -Xmx256m -jar /home/artem/SERVICES/Informer/informer/services/dcpgw/lib/dcpgw.jar "
 nohup $JAVA_HOME/bin/java $PARAM 1>logs/out 2>logs/err &
 PID=$!
 export PID
