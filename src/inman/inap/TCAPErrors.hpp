@@ -7,8 +7,8 @@
 #endif
 #define __SMSC_INMAN_INAP_TCAP_ERRORS__
 
-#include "inman/inap/SS7MsgErrors.hpp"
 #include "i97tcapapi.h"
+#include "inman/inap/SS7MsgErrors.hpp"
 
 namespace smsc {
 namespace inman {

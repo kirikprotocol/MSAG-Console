@@ -10,6 +10,14 @@
 #include "util/URCdb/URCRegistry.hpp"
 
 #include "ss7cp.h"
+//WORKAROUND for dirty EINSS7 headers of dcs1001025v300
+#ifdef base_type
+#undef base_type
+#endif
+#ifdef foreach
+#undef foreach
+#endif
+
 
 namespace smsc {
 namespace inman {

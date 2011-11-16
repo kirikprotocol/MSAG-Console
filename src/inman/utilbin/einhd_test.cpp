@@ -4,6 +4,13 @@ static char const ident[] = "$Id$";
 
 #include <time.h>
 #include "i97tcapapi.h"
+//WORKAROUND for dirty EINSS7 headers of dcs1001025v300
+#ifdef base_type
+#undef base_type
+#endif
+#ifdef foreach
+#undef foreach
+#endif
 
 #include "einhd_test.hpp"
 #include "einhd_utl.hpp"
