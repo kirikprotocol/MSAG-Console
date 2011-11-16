@@ -104,7 +104,7 @@
 
             <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
               <c:forEach items="#{data.errors}" var="error">
-                <h:outputText value="#{msg[error]}:"/>
+                <h:outputText value="#{msg[error]}:" style="white-space: nowrap;"/>
                 <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED"/>
               </c:forEach>
             </h:panelGrid>

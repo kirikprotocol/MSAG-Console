@@ -109,10 +109,10 @@
     <eye:inputText value="#{smscConfig.commonConfig.timezones_config}" required="true"/>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.smartMultipartForward}"/>
-    <h:selectBooleanCheckbox style="margin-left:15px" value="#{smscConfig.commonConfig.smartMultipartForward}"/>
+    <h:selectBooleanCheckbox value="#{smscConfig.commonConfig.smartMultipartForward}"/>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.srcSmeSeparateRouting}"/>
-    <h:selectBooleanCheckbox style="margin-left:15px" value="#{smscConfig.commonConfig.srcSmeSeparateRouting}"/>
+    <h:selectBooleanCheckbox value="#{smscConfig.commonConfig.srcSmeSeparateRouting}"/>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.schedulerSoftLimit}"/>
     <eye:inputText value="#{smscConfig.commonConfig.schedulerSoftLimit}" required="true">
@@ -153,13 +153,13 @@
     </eye:inputText>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.mapAllowCallBarred}"/>
-    <h:selectBooleanCheckbox style="margin-left:15px" value="#{smscConfig.commonConfig.mapAllowCallBarred}"/>
+    <h:selectBooleanCheckbox value="#{smscConfig.commonConfig.mapAllowCallBarred}"/>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.mapUssdV1Enabled}"/>
-    <h:selectBooleanCheckbox style="margin-left:15px" value="#{smscConfig.commonConfig.mapUssdV1Enabled}"/>
+    <h:selectBooleanCheckbox value="#{smscConfig.commonConfig.mapUssdV1Enabled}"/>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.mapUssdV1UseOrigEntityNumber}"/>
-    <h:selectBooleanCheckbox style="margin-left:15px" value="#{smscConfig.commonConfig.mapUssdV1UseOrigEntityNumber}"/>
+    <h:selectBooleanCheckbox value="#{smscConfig.commonConfig.mapUssdV1UseOrigEntityNumber}"/>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.mapIOTasksCount}"/>
     <eye:inputText value="#{smscConfig.commonConfig.mapIOTasksCount}" required="true">
@@ -428,7 +428,7 @@
 <eye:collapsingGroup label="#{msg['mscmanager.label']}">
   <h:panelGrid columns="2" columnClasses="labelColumn, valueColumn">
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.mscAutomaticRegistration}"/>
-    <h:selectBooleanCheckbox style="margin-left:15px" value="#{smscConfig.commonConfig.mscAutomaticRegistration}"/>
+    <h:selectBooleanCheckbox value="#{smscConfig.commonConfig.mscAutomaticRegistration}"/>
 
     <h:outputText style="white-space: nowrap;" value="#{commonSettings.mscFailureLimit}"/>
     <eye:inputText value="#{smscConfig.commonConfig.mscFailureLimit}" required="true">

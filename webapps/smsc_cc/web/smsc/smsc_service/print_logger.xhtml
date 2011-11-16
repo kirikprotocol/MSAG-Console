@@ -14,7 +14,7 @@
   <h:panelGroup rendered="#{logger.hasChilds}">
     <eye:collapsingGroup label="#{logger.name}" opened="#{logger.root}">
       <f:facet name="header">
-        <h:panelGroup>
+
           <h:panelGrid columns="2" columnClasses="column1, column2">
             <h:outputText style="white-space: nowrap;" value="#{logger.name}" rendered="#{!logger.root}"/>
             <h:outputText style="white-space: nowrap;" value="ROOT" rendered="#{logger.root}"/>
@@ -22,7 +22,7 @@
               <ui:include src="print_logger_sitems.xhtml"/>
             </h:selectOneMenu>
           </h:panelGrid>
-        </h:panelGroup>
+
       </f:facet>
       <c:forEach items="#{logger.childList}" var="l">
         <ui:include src="print_logger.xhtml">

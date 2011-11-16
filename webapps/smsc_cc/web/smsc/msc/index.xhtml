@@ -13,6 +13,8 @@
     .column1 {width: 1px; text-align:right; white-space: nowrap;}
     .column2 {text-align: left;}
     .addrColumn {width: 100%}
+    .addButton {width: 10px; white-space: nowrap;}
+    .addField {width: 100%; white-space: nowrap;}
   </ui:define>
 
   <ui:define name="content">
@@ -36,14 +38,14 @@
 
       <eye:buttons>
         <eye:button>
-          <h:commandLink actionListener="#{msc.addAddress}">
-            <h:graphicImage value="/images/but_add.gif" style="margin-left: -20px; margin-bottom: -20px"/>
-          </h:commandLink>
-          <h:panelGroup style="width:150px; margin-bottom: 0px">
+          <h:panelGrid columns="2" columnClasses="addButton, addField">
+            <h:commandLink actionListener="#{msc.addAddress}">
+              <h:graphicImage value="/images/but_add.gif"/>
+            </h:commandLink>
             <eye:inputText value="#{msc.newAddress}">
               <smsc:validatePhone/>
             </eye:inputText>
-          </h:panelGroup>
+          </h:panelGrid>
         </eye:button>
         <eye:button>
           <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{msc.removeSelected}"

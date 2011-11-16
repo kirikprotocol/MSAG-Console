@@ -11,7 +11,7 @@
 
   <ui:define name="styles">
     .column1 {width:100px; text-align: left; white-space: nowrap;}
-    .column2 {width:1px; text-align: right;}
+    .column2 {width:50px; text-align: right; align: right;}
   </ui:define>
 
   <ui:define name="content">
@@ -29,14 +29,10 @@
       <h:inputHidden value="#{logging.revision}"/>
       <eye:message level="warn" rendered="#{logging.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
-      <h:panelGrid columns="1" style="padding:5px 10px 5px 10px;">
-
-        <h:panelGrid columns="1" style="width:auto;">
-          <ui:include src="print_logger.xhtml">
-            <ui:param name="logger" value="#{logging.rLogger}"/>
-          </ui:include>
-        </h:panelGrid>
-
+      <h:panelGrid columns="1" style="padding:5px 10px 5px 10px; width: 300px;">
+        <ui:include src="print_logger.xhtml">
+          <ui:param name="logger" value="#{logging.rLogger}"/>
+        </ui:include>
       </h:panelGrid>
 
       <eye:buttons>

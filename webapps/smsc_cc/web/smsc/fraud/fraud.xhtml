@@ -12,7 +12,8 @@
   <ui:define name="styles">
     .labelColumn {width: 1px; text-align: right; white-space : nowrap;}
     .valueColumn {width: 100%; text-align: left;}
-    .addButton {width: 100px; white-space: nowrap;}
+    .addButton {width: 10px; white-space: nowrap;}
+    .addField {width: 100%; white-space: nowrap;}
     .addressColumn {width: 99%}
   </ui:define>
 
@@ -50,14 +51,14 @@
 
       <eye:buttons>
         <eye:button>
-          <h:commandLink actionListener="#{fraud.addLine}">
-            <h:graphicImage value="/images/but_add.gif" style="margin-left: -20px; margin-bottom: -20px"/>
-          </h:commandLink>
-          <h:panelGroup style="width:150px; margin-bottom: 0px">
+          <h:panelGrid columns="2" columnClasses="addButton, addField">
+            <h:commandLink actionListener="#{fraud.addLine}">
+              <h:graphicImage value="/images/but_add.gif" />
+            </h:commandLink>
             <eye:inputText value="#{fraud.newAddr}" required="false">
               <smsc:validatePhone/>
             </eye:inputText>
-          </h:panelGroup>
+          </h:panelGrid>
         </eye:button>
 
         <eye:button>

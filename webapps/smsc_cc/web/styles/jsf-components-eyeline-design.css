@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 2.0
+  Jsf components 1.10
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -63,7 +63,6 @@ table.eyeline_buttons_background td{
   cursor: pointer;
   padding-left: 15px;
   min-height: 17px;
-  height: 17px;
 }
 
 .eyeline_collapsingGroupHeader0 {

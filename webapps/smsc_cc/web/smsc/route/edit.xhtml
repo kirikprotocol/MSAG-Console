@@ -19,11 +19,11 @@
     .column2 {width: 1px;}
     .column3 {width: 400px;}
     .column4 {width: 300px;}
-    .column5 {width: 400px;}
+    .column5 {width: 150px;}
 
     .sourceMaskColumn {width: 90%}
-    .destMaskColumn {width:70%}
-    .destSmeColumn {width:20%}
+    .destMaskColumn {width:300px;}
+    .destSmeColumn {width:150px;}
   </ui:define>
 
   <ui:define name="content">
@@ -139,7 +139,7 @@
           <smsc:pageSubtitle value="#{msg['route.edit.page.source.subjects']}"/>
           <h:outputText value="&#160;"/>
 
-          <h:panelGrid columns="2" columnClasses="valueColumn, column2" rowClasses="listTableRow0, listTableRow1">
+          <h:panelGrid columns="2" columnClasses="sourceMaskColumn, column2" rowClasses="listTableRow0, listTableRow1">
             <c:forEach items="#{routeEdit.sourceSubjects}" var="sourceSubject">
               <h:commandLink value="#{sourceSubject}" action="SUBJECT_EDIT">
                 <f:param name="oldName" value="#{sourceSubject}"/>
@@ -165,7 +165,7 @@
           <smsc:pageSubtitle value="#{msg['route.edit.page.destination.masks']}"/>
           <h:outputText value="&#160;"/>
 
-          <eye:dynamicTable value="#{routeEdit.destinationMasks}">
+          <eye:dynamicTable value="#{routeEdit.destinationMasks}" >
             <eye:textColumn name="mask" allowEditAfterAdd="false" columnClass="destMaskColumn" />
             <eye:selectColumn values="#{routeEdit.smeIds}" name="sme" columnClass="destSmeColumn" allowEditAfterAdd="false"/>
           </eye:dynamicTable>
@@ -174,7 +174,7 @@
           <smsc:pageSubtitle value="#{msg['route.edit.page.destination.subjects']}"/>
           <h:outputText value="&#160;"/>
 
-          <h:panelGrid columns="3" columnClasses="column4, column5, rightColumn" rowClasses="listTableRow0, listTableRow1">
+          <h:panelGrid columns="3" columnClasses="destMaskColumn, destSmeColumn, rightColumn" rowClasses="listTableRow0, listTableRow1">
 
             <c:forEach items="#{routeEdit.destinations}" var="dst">
               <h:commandLink value="#{dst.subject}" action="SUBJECT_EDIT"><f:param name="oldName"
@@ -186,10 +186,10 @@
               </h:commandLink>
             </c:forEach>
 
-            <h:selectOneMenu style="width:300px" value="#{routeEdit.destinationSubjectToAdd}">
+            <h:selectOneMenu style="width:100%" value="#{routeEdit.destinationSubjectToAdd}">
               <f:selectItems value="#{routeEdit.destinationSubjects2Add}"/>
             </h:selectOneMenu>
-            <h:selectOneMenu style="width:100px" value="#{routeEdit.destinationSmeToAdd}">
+            <h:selectOneMenu style="width:100%" value="#{routeEdit.destinationSmeToAdd}">
               <f:selectItems value="#{routeEdit.smes}"/>
             </h:selectOneMenu>
             <h:commandLink action="#{routeEdit.addDestinationSubject}">
