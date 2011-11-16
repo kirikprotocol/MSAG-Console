@@ -151,7 +151,7 @@ public class AdminMode {${line.separator}
     </copy>
     <mkdir dir="${smsc.exploded.dir}/WEB-INF/classes/dtds"/>
     <copy todir="${smsc.exploded.dir}/WEB-INF/classes/dtds">
-      <fileset dir="." includes="*.dtd"/>
+      <fileset dir="${smsc.source.dir}" includes="*.dtd"/>
     </copy>
   </target>
 
