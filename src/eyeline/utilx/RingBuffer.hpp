@@ -2,7 +2,8 @@
 # define __EYELINE_UTILX_RINGBUFFER_HPP__
 
 # include <sys/types.h>
-# include <eyeline/corex/io/IOStreams.hpp>
+# include "eyeline/corex/io/IOStreams.hpp"
+# include "logger/Logger.h"
 
 namespace eyeline {
 namespace utilx {
@@ -20,7 +21,7 @@ public:
 
   void load(corex::io::InputStream* buf);
 private:
-  unsigned _head, _tail, _count;
+  unsigned _head, _tail, _availDataSize;
   uint8_t _buffer[BUFSZ];
 };
 
