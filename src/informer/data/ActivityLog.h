@@ -44,7 +44,7 @@ public:
     void fsync();
 
     /// FIXME: @param isOldVersion may be removed after all dlv converted
-    static bool readStatistics( const std::string& filename,
+    static bool readStatistics( FileGuard& fg,
                                 TmpBufBase<char>& buf,
                                 DeliveryStats& ods,
                                 bool& isOldVersion );

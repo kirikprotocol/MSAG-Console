@@ -38,13 +38,13 @@ createTime_(0)
 }
 
 
-bool ActivityLog::readStatistics( const std::string& filename,
+bool ActivityLog::readStatistics( FileGuard& fg,
                                   TmpBufBase<char>& buf,
                                   DeliveryStats& ods,
                                   bool& isOldVersion )
 {
-    FileGuard fg;
-    fg.ropen( filename.c_str() );
+    // FileGuard fg;
+    // fg.ropen( filename.c_str() );
     buf.SetPos(0);
     bool statLineHasBeenRead = false;
     int version = 0;

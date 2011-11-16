@@ -647,7 +647,9 @@ void DeliveryInfo::readStats()
                     
                     const std::string filename = hourpath + "/" + *k;
                     try {
-                        if ( ActivityLog::readStatistics( filename,
+                        FileGuard fg;
+                        fg.ropen( filename.c_str() );
+                        if ( ActivityLog::readStatistics( fg,
                                                           buf,
                                                           stats_,
                                                           isOldActLog_ )) {
