@@ -561,7 +561,7 @@ Targets:
   </target>
 
   <target name="sc_makeweb">
-    <ant dir="${SCWEBSRC_DIR}" target="prebuild"/>
+    <ant dir="${SCWEBSRC_DIR}" target="prebuild" usenativebasedir="${SCWEBSRC_DIR}"/>
     <ant dir="${SCWEBSRC_DIR}" target="distr"/>
   </target>
 
