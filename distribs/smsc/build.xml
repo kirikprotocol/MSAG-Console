@@ -18,6 +18,7 @@
   <property name="CATALINA_HOME" location="${relative.CATALINA_HOME}"/>
   <property name="CATALINA_BASE" location="${relative.CATALINA_BASE}"/>
   <property name="MAKE_ARGS" value="${relative.MAKE_ARGS}"/>
+  <property name="smsc.source.dir" location="${SMSC_DIR}/webapps/smsc_cc"/>
   <property name="smsc.build.dir" location="${BUILD_DIR}/web/build"/>
   <property name="smsc.distr.dir" location="${BUILD_DIR}/web/distr"/>
   <property name="smsc.tests.dir" location="${BUILD_DIR}/web/tests"/>
@@ -561,7 +562,7 @@ Targets:
   </target>
 
   <target name="sc_makeweb">
-    <ant dir="${SCWEBSRC_DIR}" target="prebuild" usenativebasedir="${SCWEBSRC_DIR}"/>
+    <ant dir="${SCWEBSRC_DIR}" target="prebuild"/>
     <ant dir="${SCWEBSRC_DIR}" target="distr"/>
   </target>
 
