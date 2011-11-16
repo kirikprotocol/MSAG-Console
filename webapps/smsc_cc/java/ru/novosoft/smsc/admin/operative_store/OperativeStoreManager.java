@@ -306,7 +306,7 @@ public class OperativeStoreManager {
       clearStmt.executeUpdate();
       conn.commit();
     }catch (SQLException e) {
-      throw new OperativeStoreException("cant_clean");//todo передавать cause
+      throw new OperativeStoreException("cant_clean", e);
     }
   }
 
@@ -329,7 +329,7 @@ public class OperativeStoreManager {
       con.setAutoCommit(false);
       return con;
     } catch (Exception e) {
-      throw new OperativeStoreException("cant_connect");//todo передавать cause
+      throw new OperativeStoreException("cant_connect", e);
     }
   }
 
@@ -347,7 +347,7 @@ public class OperativeStoreManager {
 
       return (OracleCallableStatement) conn.prepareCall(CALL_multinsert_sms_SQL);
     } catch (Exception e) {
-      throw new OperativeStoreException("cant_insert"); //todo передавать cause
+      throw new OperativeStoreException("cant_insert", e);
     } finally {
       closeStatement(createprocStmt);
     }
@@ -358,7 +358,7 @@ public class OperativeStoreManager {
       conn.getTypeMap().put("SMS", Class.forName(SqlSms.class.getName()));
       return ArrayDescriptor.createDescriptor("ARRAYLIST", conn);
     }   catch (Exception e) {
-      throw new OperativeStoreException("cant_insert"); //todo передавать cause
+      throw new OperativeStoreException("cant_insert", e);
     }
   }
 
@@ -367,62 +367,55 @@ public class OperativeStoreManager {
     Connection conn = null;
     OracleCallableStatement callinsertStmt = null;
     try {
+      lock.lock();
 
       conn = getOracleConnection(export);
-      try {  //todo зачем вложенный try? Можно 1 оставить.
-        lock.lock();
-        if (logger.isDebugEnabled()) {
-          logger.debug("Export sms locked");
-        }
+      if (logger.isDebugEnabled()) {
+        logger.debug("Export sms locked");
+      }
 
-        final String tablesPrefix = export.getPrefix();
-        clearTable(conn, tablesPrefix);
+      final String tablesPrefix = export.getPrefix();
+      clearTable(conn, tablesPrefix);
 
-        int arraySize = 25000;
-        SqlSms msgs[] = new SqlSms[arraySize];
+      int arraySize = 25000;
+      SqlSms msgs[] = new SqlSms[arraySize];
 
-        callinsertStmt = createInsert(conn, tablesPrefix);
-        oracle.sql.ArrayDescriptor ad = createArrayDescriptor(conn);
+      callinsertStmt = createInsert(conn, tablesPrefix);
+      oracle.sql.ArrayDescriptor ad = createArrayDescriptor(conn);
 
-        int i = 0;
+      int i = 0;
 
-        MessageFilter filter = new MessageFilter();
-        filter.setMaxRowSize(100000);
+      MessageFilter filter = new MessageFilter();
+      filter.setMaxRowSize(100000);
 
-        try {
-          int j = 0;
-          for (File smsStore : smsStorePaths) {
-            if (!fs.exists(smsStore)) {
-              continue;
-            }
-            Collection<Message> messages = getMessages(smsStore, fs, filter, new ProgressObserverImpl(observer, j, smsStorePaths.length));
-
-            if (logger.isInfoEnabled()) {
-              logger.info("Inserting " + messages.size() + " records");
-            }
-            for (Message aMsgsFull : messages) {
-              msgs[i] = convert(aMsgsFull);
-              i++;
-              if (i == arraySize) {
-                insert(callinsertStmt, ad, conn, msgs);
-                i = 0;
-              }
-            }
-            j++;
+      try {
+        int j = 0;
+        for (File smsStore : smsStorePaths) {
+          if (!fs.exists(smsStore)) {
+            continue;
           }
-          if (i > 0) {
-            SqlSms[] tr = new SqlSms[i];
-            System.arraycopy(msgs, 0, tr, 0, i);
-            insert(callinsertStmt, ad, conn, tr);
+          Collection<Message> messages = getMessages(smsStore, fs, filter, new ProgressObserverImpl(observer, j, smsStorePaths.length));
+
+          if (logger.isInfoEnabled()) {
+            logger.info("Inserting " + messages.size() + " records");
           }
-        } catch (Exception e) {
-          throw new OperativeStoreException("cant_insert"); //todo передавать cause
+          for (Message aMsgsFull : messages) {
+            msgs[i] = convert(aMsgsFull);
+            i++;
+            if (i == arraySize) {
+              insert(callinsertStmt, ad, conn, msgs);
+              i = 0;
+            }
+          }
+          j++;
         }
-      } finally {
-        lock.unlock();
-        if (logger.isDebugEnabled()) {
-          logger.debug("Export sms unlocked");
+        if (i > 0) {
+          SqlSms[] tr = new SqlSms[i];
+          System.arraycopy(msgs, 0, tr, 0, i);
+          insert(callinsertStmt, ad, conn, tr);
         }
+      } catch (Exception e) {
+        throw new OperativeStoreException("cant_insert", e);
       }
     } catch (AdminException e) {
       logger.error(e, e);
@@ -431,10 +424,14 @@ public class OperativeStoreManager {
     } catch (Exception e) {
       logger.error(e, e);
       rollback(conn);
-      throw new OperativeStoreException("internal_error"); //todo передавать cause
+      throw new OperativeStoreException("internal_error", e);
     } finally {
       closeStatement(callinsertStmt);
       closeConnection(conn);
+      lock.unlock();
+      if (logger.isDebugEnabled()) {
+        logger.debug("Export sms unlocked");
+      }
     }
   }
 
@@ -443,7 +440,7 @@ public class OperativeStoreManager {
     if (conn != null) {
       try {
         conn.close();
-      } catch (SQLException e) {
+      } catch (Exception e) {
         logger.warn("Couldn't close connection");
       }
     }
@@ -539,11 +536,11 @@ public class OperativeStoreManager {
   }
 
 
-  void closeStatement(PreparedStatement stmt) {
+  private static void closeStatement(PreparedStatement stmt) {
     if (stmt != null)
       try {
         stmt.close();
-      } catch (SQLException e) {
+      } catch (Exception e) {
         logger.warn("Couldn't close statement");
       }
   }

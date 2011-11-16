@@ -221,7 +221,6 @@ public class SmscStatProvider {
       Date lastDate = null;
       Date curDate;
       int prevHour = -1;
-      byte buffer[] = new byte[512 * 1024];
       boolean haveValues = false;
       int recordNum = 0;
 
@@ -289,7 +288,7 @@ public class SmscStatProvider {
 
     } catch (IOException e) {
       logger.error(e, e);
-      throw new StatException("internal_exception"); //todo передавать cause
+      throw new StatException("internal_exception",e);
     } finally {
       try {
         if (input != null) input.close();
@@ -361,8 +360,8 @@ public class SmscStatProvider {
   }
 
   private static void buildResults(final Statistics stat, final Map<Date, CountersSet> statByHours,
-                           final Map<String, SmeIdCountersSet> countersForSme,
-                           final Map<String, RouteIdCountersSet> countersForRoute) {
+                                   final Map<String, SmeIdCountersSet> countersForSme,
+                                   final Map<String, RouteIdCountersSet> countersForRoute) {
     Calendar localCalendar = Calendar.getInstance();
     DateCountersSet dateCounters = null;
     Date lastDate = null;
@@ -471,7 +470,7 @@ public class SmscStatProvider {
       c.setAutoCommit(false);
       return c;
     } catch (Exception e) {
-      throw new StatException("cant_connect");//todo передавать cause
+      throw new StatException("cant_connect",e);
     }
   }
 
@@ -520,8 +519,7 @@ public class SmscStatProvider {
     if (connection != null) {
       try {
         connection.close();
-      } catch (Exception ignored) {
-      }
+      } catch (Exception ignored) {}
     }
   }
 
@@ -538,8 +536,7 @@ public class SmscStatProvider {
     if (stmt != null) {
       try {
         stmt.close();
-      } catch (Exception ignored) {
-      }
+      } catch (Exception ignored) {}
     }
   }
 
@@ -671,60 +668,49 @@ public class SmscStatProvider {
     PreparedStatement insertRouteSms = null;
     PreparedStatement insertRouteErr = null;
     try {
-      try { //todo getConnection уже кидает Exception. Этот try не нужен
-        connection = getConnection(export);
+      lock.lock();
+      connection = getConnection(export);
+      if(logger.isDebugEnabled()) {
+        logger.debug("Smsc stat locked");
+      }
+      try {
+        cleanTable(connection, filter, tablesPrefix);
       } catch (Exception e) {
-        throw new StatException("cant_connect");
+        throw new StatException("cant_clean",e);
       }
-      try{  //todo try нужен только ради lock. Мне кажется, можно объединить с тем try, который выше. Особо на производительности не скажется.
-        lock.lock();
-        if(logger.isDebugEnabled()) {
-          logger.debug("Smsc stat locked");
-        }
-        try {
-          cleanTable(connection, filter, tablesPrefix);
-        } catch (Exception e) {
-          throw new StatException("cant_clean"); //todo передавать cause
-        }
 
-        try {
-          insertSms = prepareInsertSms(connection, tablesPrefix);
-          insertErr = prepareInsertErr(connection, tablesPrefix);
-          insertSmeSms = prepareSmeSms(connection, tablesPrefix);
-          insertSmeErr = prepareSmeErr(connection, tablesPrefix);
-          insertRouteSms = prepareRouteSms(connection, tablesPrefix);
-          insertRouteErr = prepareRouteErr(connection, tablesPrefix);
-        } catch (SQLException e) {
-          throw new StatException("internal_error"); //todo передавать cause
-        }
+      try {
+        insertSms = prepareInsertSms(connection, tablesPrefix);
+        insertErr = prepareInsertErr(connection, tablesPrefix);
+        insertSmeSms = prepareSmeSms(connection, tablesPrefix);
+        insertSmeErr = prepareSmeErr(connection, tablesPrefix);
+        insertRouteSms = prepareRouteSms(connection, tablesPrefix);
+        insertRouteErr = prepareRouteErr(connection, tablesPrefix);
+      } catch (SQLException e) {
+        throw new StatException("internal_error",e);
+      }
 
-        long tm = System.currentTimeMillis();
+      long tm = System.currentTimeMillis();
 
-        Set<FileWithDate> selectedFiles = getStatFiles(filter.getFrom(), filter.getTill());
-        if (selectedFiles.isEmpty()) return results;
+      Set<FileWithDate> selectedFiles = getStatFiles(filter.getFrom(), filter.getTill());
+      if (selectedFiles.isEmpty()) return results;
 
+      if (loadListener != null) {
+        loadListener.setTotal(selectedFiles.size());
+      }
+
+      for (FileWithDate file : selectedFiles) {
+        exportFile(file, filter, results, connection, insertSms, insertErr,
+            insertSmeSms, insertSmeErr, insertRouteSms, insertRouteErr);
         if (loadListener != null) {
-          loadListener.setTotal(selectedFiles.size());
-        }
-
-        for (FileWithDate file : selectedFiles) {
-          exportFile(file, filter, results, connection, insertSms, insertErr,
-              insertSmeSms, insertSmeErr, insertRouteSms, insertRouteErr);
-          if (loadListener != null) {
-            loadListener.incrementProgress();
-          }
-        }
-        if(logger.isDebugEnabled()) {
-          logger.debug("End dumping statistics at: " + new Date() + " time spent: " +
-              (System.currentTimeMillis() - tm) / 1000);
-        }
-        return results;
-      }finally {
-        lock.unlock();
-        if(logger.isDebugEnabled()) {
-          logger.debug("Smsc stat unlocked");
+          loadListener.incrementProgress();
         }
       }
+      if(logger.isDebugEnabled()) {
+        logger.debug("End dumping statistics at: " + new Date() + " time spent: " +
+            (System.currentTimeMillis() - tm) / 1000);
+      }
+      return results;
     } catch (AdminException exc) {
       logger.error(exc, exc);
       rollbackConnection(connection);
@@ -738,6 +724,10 @@ public class SmscStatProvider {
       closeStatement(insertRouteSms);
       closeStatement(insertRouteErr);
       closeConnection(connection);
+      lock.unlock();
+      if(logger.isDebugEnabled()) {
+        logger.debug("Smsc stat unlocked");
+      }
     }
   }
 
@@ -768,7 +758,7 @@ public class SmscStatProvider {
         }
       });
     } catch (VisitorException e) {
-      throw new StatException("cant_insert"); //todo передавать cause
+      throw new StatException("cant_insert",e);
     }
   }
 

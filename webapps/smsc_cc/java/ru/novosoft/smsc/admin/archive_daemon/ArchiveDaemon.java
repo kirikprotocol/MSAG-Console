@@ -205,7 +205,7 @@ public class ArchiveDaemon {
       return c;
     } catch (Exception e) {
       logger.error(e, e);
-      throw new ArchiveDaemonException("cant_connect"); //todo передавать cause
+      throw new ArchiveDaemonException("cant_connect", e);
     }
   }
 
@@ -233,7 +233,7 @@ public class ArchiveDaemon {
       conn.commit();
     } catch (Exception e) {
       logger.error(e, e);
-      throw new ArchiveDaemonException("cant_clean");   //todo передавать cause
+      throw new ArchiveDaemonException("cant_clean", e);
     }finally {
       if(clearStmt != null) {
         closeStatement(clearStmt);
@@ -248,7 +248,7 @@ public class ArchiveDaemon {
       insertStmt = conn.prepareStatement(INSERT_SQL);
     } catch (Exception e) {
       logger.error(e, e);
-      throw new ArchiveDaemonException("internal_exception"); //todo передавать cause
+      throw new ArchiveDaemonException("internal_exception", e);
     }
     return insertStmt;
   }
@@ -343,52 +343,44 @@ public class ArchiveDaemon {
   public void export(Date date, DBExportSettings export, final ProgressObserver observer) throws AdminException {
     Connection conn = null;
     String tablePrefix = export.getPrefix();
+    PreparedStatement insertStmt = null;
     try {
       lockTable(tablePrefix);
+
       conn = getConnection(export);
-      PreparedStatement insertStmt = null;
-      try{ //todo зачем этот try ? Может его объединить с тем, что выше?
-        insertStmt = createInsertSql(conn, tablePrefix);
-        clearTable(conn, tablePrefix, date);
-        ArchiveMessageFilter query = new ArchiveMessageFilter();
-        query.setRowsMaximum(1000000);
+      insertStmt = createInsertSql(conn, tablePrefix);
+      clearTable(conn, tablePrefix, date);
+      ArchiveMessageFilter query = new ArchiveMessageFilter();
+      query.setRowsMaximum(1000000);
 
-        Calendar cal = createInitialCal(date);
-        for (int i = 0; i < 24; i++) {
-          cal.set(Calendar.HOUR_OF_DAY, i);
-          final ProgressObserver _observer = new HourProgressObserver(observer, i);
-          try {
-            int t = 0;
-            for (int j = 0; j < 60; j += 5) {
-              setQueryMinutes(query, cal, j);
-              exportPart(query, insertStmt, conn);
-              t++;
-              _observer.update(t, 12*24);
-            }
-          } catch (Exception e) {
-            logger.error(e, e);
-            throw new ArchiveDaemonException("cant_insert"); //todo передавать cause
+      Calendar cal = createInitialCal(date);
+      for (int i = 0; i < 24; i++) {
+        cal.set(Calendar.HOUR_OF_DAY, i);
+        final ProgressObserver _observer = new HourProgressObserver(observer, i);
+        try {
+          int t = 0;
+          for (int j = 0; j < 60; j += 5) {
+            setQueryMinutes(query, cal, j);
+            exportPart(query, insertStmt, conn);
+            t++;
+            _observer.update(t, 12*24);
           }
+        } catch (Exception e) {
+          logger.error(e, e);
+          throw new ArchiveDaemonException("cant_insert", e);
         }
-      }finally {
-        closeStatement(insertStmt);
       }
-
     } catch (ArchiveDaemonException e) {
       rollbackConnection(conn);
       throw e;
     } catch (Exception e) {
       rollbackConnection(conn);
       logger.error(e, e);
-      throw new ArchiveDaemonException("internal_exception");  //todo передавать cause
+      throw new ArchiveDaemonException("internal_exception",e);
     } finally {
+      closeStatement(insertStmt);
+      closeConnection(conn);
       unlockTable(tablePrefix);
-      if (conn != null) {
-        try {
-          conn.close();
-        } catch (Exception ignored) {
-        }
-      }
     }
   }
 
@@ -485,10 +477,18 @@ public class ArchiveDaemon {
     stmt.setInt(pos, row.getBodyLen());
   }
 
-  protected static void closeStatement(PreparedStatement stmt) {
+  private static void closeStatement(PreparedStatement stmt) {
     if (stmt != null) {
       try {
         stmt.close();
+      } catch (Exception ignored) {
+      }
+    }
+  }
+  private static void closeConnection(Connection conn) {
+    if (conn != null) {
+      try {
+        conn.close();
       } catch (Exception ignored) {
       }
     }
