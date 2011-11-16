@@ -493,21 +493,25 @@ public class Journal {
                     continue;
                 }
 
+                log.debug("l1");
                 long message_id = data.getMessageId();
+                log.debug("l2");
                 DeliveryData.Status status = data.getStatus();
-
-
+                log.debug("l3");
                 long init_time = data.getInitTime();
-                String connaction_name = data.getConnectionName();
-
-                Connection connection = Server.getInstance().getConnection(connaction_name);
+                log.debug("l4");
+                String connection_name = data.getConnectionName();
+                log.debug("l5");
+                Connection connection = Server.getInstance().getConnection(connection_name);
+                log.debug("l6");
                 int send_receipt_max_time = connection.getSendReceiptMaxTime();
 
+                log.debug("l7");
                 if (System.currentTimeMillis() - init_time > send_receipt_max_time * 60 * 1000){
                     log.warn("Journal record with message id "+message_id+" expired.");
                     expired_send_receipt_max_time.add(message_id);
                 }
-
+                log.debug("l8");
 
                 if (status == DeliveryData.Status.DONE) {
                     done_message_ids.add(message_id);

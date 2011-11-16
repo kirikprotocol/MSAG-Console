@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+<section name="endpoints">
+<section name="con3">
+<param name="systemId" type="string">systemId3</param>
+<param name="password" type="string">pass3</param>
+<param name="enabled" type="bool">true</param>
+<section name="send.receipts">
+<param name="max.time.min" type="int">133</param>
+<param name="speed" type="int">50</param>
+</section>
+</section>
+<section name="con2">
+<param name="systemId" type="string">systemId2</param>
+<param name="password" type="string">pass2</param>
+<param name="enabled" type="bool">true</param>
+<section name="send.receipts">
+<param name="max.time.min" type="int">233</param>
+<param name="speed" type="int">70</param>
+</section>
+</section>
+<section name="con5">
+<param name="systemId" type="string">systemId5</param>
+<param name="password" type="string">pass5</param>
+<param name="enabled" type="bool">true</param>
+<section name="send.receipts">
+<param name="max.time.min" type="int">120</param>
+<param name="speed" type="int">100</param>
+</section>
+</section>
+<section name="con4">
+<param name="systemId" type="string">systemId4</param>
+<param name="password" type="string">pass4</param>
+<param name="enabled" type="bool">true</param>
+<section name="send.receipts">
+<param name="max.time.min" type="int">20</param>
+<param name="speed" type="int">10</param>
+</section>
+</section>
+<section name="con1">
+<param name="systemId" type="string">systemId1</param>
+<param name="password" type="string">pass1</param>
+<param name="enabled" type="bool">true</param>
+<section name="send.receipts">
+<param name="max.time.min" type="int">60</param>
+<param name="speed" type="int">100</param>
+</section>
+</section>
+</section>
+</config>
