@@ -412,8 +412,12 @@ public class Journal {
         try {
             if (j2.createNewFile()) log.debug("Create file "+j2.getName());
 
+            log.debug("l11");
+
             synchronized (monitor){
                 bw.flush();
+
+                log.debug("l12");
 
                 if (j1.length() > 0){
 
@@ -453,11 +457,15 @@ public class Journal {
 
                 }
 
+                log.debug("l13");
+
                 if (j2.length() == 0){
                     log.debug("Delivery journal "+j2.getName()+ " is empty.");
                     return;
                 }
             }
+
+            log.debug("l14");
 
             if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
 
