@@ -87,7 +87,7 @@ bind()
 }
 
 void
-ping(const char* called_addr, const char* calling_addr)
+ping(const char* called_addr, const char* calling_addr, unsigned iteration_count)
 {
   SccpApi & sccpApi = SccpApiFactory::getSccpApiIface();
 
@@ -105,24 +105,26 @@ ping(const char* called_addr, const char* calling_addr)
 
   eyeline::ss7na::libsccp::MessageProperties msgProps;
 
-//  const char* text = "Hello world!";
-  uint8_t text[275];
-  memset(text, 'A', 252);
-  memset(text+252, 'B', 275 - 252);
   msgProps.setHopCount(3);
-//  sccpApi.unitdata_req((const uint8_t*)text, static_cast<uint16_t>(strlen(text)),
-//                       calledAddr, callingAddr,
-//                       msgProps);
-  sccpApi.unitdata_req(text, static_cast<uint16_t>(sizeof(text)),
-                       calledAddr, callingAddr,
-                       msgProps);
+  unsigned msgNum=0;
+  while (iteration_count-- > 0)
+  {
+    char text[17];
+    snprintf(text, sizeof(text), "%.016d", msgNum);
 
-  eyeline::ss7na::libsccp::MessageInfo msgInfo;
-  if ( sccpApi.msgRecv(&msgInfo) != eyeline::ss7na::libsccp::SccpApi::OK )
-    return;
+    smsc_log_info(logger, "Prepare message data='%s'", text);
+    sccpApi.unitdata_req(reinterpret_cast<const uint8_t*>(text),
+                         static_cast<uint16_t>(strlen(text)),
+                         calledAddr, callingAddr,
+                         msgProps);
 
-  const eyeline::ss7na::libsccp::LibsccpMessage* msg = parseMessage(msgInfo);
-  smsc_log_info(logger, "Got message = '%s'", msg->toString().c_str());
+    eyeline::ss7na::libsccp::MessageInfo msgInfo;
+    if ( sccpApi.msgRecv(&msgInfo) != eyeline::ss7na::libsccp::SccpApi::OK )
+      return;
+
+    const eyeline::ss7na::libsccp::LibsccpMessage* msg = parseMessage(msgInfo);
+    smsc_log_info(logger, "Got message [%d]= '%s'", ++msgNum, msg->toString().c_str());
+  }
 }
 
 void
@@ -166,14 +168,14 @@ int main(int argc, char** argv)
   const char* cfgFile;
   if ( argc < 3 ) {
     cfgFile = "config.xml";
-    fprintf(stderr, "Usage: %s cfg_file ping_pong_flag called_addr calling_addr. [0 - pong, 1 - ping]\n", argv[0]);
+    fprintf(stderr, "Usage: %s cfg_file ping_pong_flag called_addr calling_addr [iteration_count]. [0 - pong, 1 - ping]\n", argv[0]);
     return 1;
   } else
     cfgFile = argv[1];
 
   bool makePing = atoi(argv[2]);
-  if ( makePing && argc != 5 ) {
-    fprintf(stderr, "For ping usage: %s cfg_file 1 called_addr calling_addr.\n", argv[0]);
+  if ( makePing && argc < 5 ) {
+    fprintf(stderr, "For ping usage: %s cfg_file 1 called_addr calling_addr [iteration_count]\n", argv[0]);
     return 1;
   }
   try {
@@ -195,8 +197,12 @@ int main(int argc, char** argv)
     bind();
 
     if ( makePing )
-      ping(argv[3], argv[4]);
-    else
+    {
+      unsigned iterationCount = 1;
+      if (argc == 6)
+        iterationCount = atoi(argv[5]);
+      ping(argv[3], argv[4], iterationCount);
+    } else
       pong();
   } catch (const std::exception& ex) {
     smsc_log_error(logger, "main::: caught exception [%s]. Terminated.", ex.what());
