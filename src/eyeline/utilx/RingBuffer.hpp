@@ -3,7 +3,6 @@
 
 # include <sys/types.h>
 # include "eyeline/corex/io/IOStreams.hpp"
-# include "logger/Logger.h"
 
 namespace eyeline {
 namespace utilx {
