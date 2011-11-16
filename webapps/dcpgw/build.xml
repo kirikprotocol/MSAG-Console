@@ -92,12 +92,12 @@
         <chmod file="${dcpgw.distr.dir}/${ant.project.name}.jar" perm="u+x"/>
 
         <copy todir="${dcpgw.distr.dir}/conf">
-          <fileset dir="${conf.dir}" excludes="examples"/>
+          <fileset dir="${conf.dir}"/>
         </copy>
 
         <mkdir dir="${dcpgw.distr.dir}/logs"/>
 
-
+        <delete dir="${dcpgw.distr.dir}/conf/examples" failonerror="false"/>
 
     </target>
 
