@@ -412,12 +412,18 @@ public class Journal {
         try {
             if (j2.createNewFile()) log.debug("Create file "+j2.getName());
 
-            log.debug("l11");
+
 
             synchronized (monitor){
+
+                if (bw == null) {
+                    bw = new BufferedWriter(new FileWriter(j1, true), buffer_size);
+                    log.debug("Initialize buffered writer for journal "+j1.getName());
+                }
+
                 bw.flush();
 
-                log.debug("l12");
+
 
                 if (j1.length() > 0){
 
@@ -457,7 +463,7 @@ public class Journal {
 
                 }
 
-                log.debug("l13");
+
 
                 if (j2.length() == 0){
                     log.debug("Delivery journal "+j2.getName()+ " is empty.");
@@ -465,7 +471,7 @@ public class Journal {
                 }
             }
 
-            log.debug("l14");
+
 
             if (j2t.createNewFile()) log.debug("Create file "+j2t.getName());
 
@@ -501,25 +507,25 @@ public class Journal {
                     continue;
                 }
 
-                log.debug("l1");
+
                 long message_id = data.getMessageId();
-                log.debug("l2");
+
                 DeliveryData.Status status = data.getStatus();
-                log.debug("l3");
+
                 long init_time = data.getInitTime();
-                log.debug("l4");
+
                 String connection_name = data.getConnectionName();
-                log.debug("l5");
+
                 Connection connection = Server.getInstance().getConnection(connection_name);
-                log.debug("l6");
+
                 int send_receipt_max_time = connection.getSendReceiptMaxTime();
 
-                log.debug("l7");
+
                 if (System.currentTimeMillis() - init_time > send_receipt_max_time * 60 * 1000){
                     log.warn("Journal record with message id "+message_id+" expired.");
                     expired_send_receipt_max_time.add(message_id);
                 }
-                log.debug("l8");
+
 
                 if (status == DeliveryData.Status.DONE) {
                     done_message_ids.add(message_id);
@@ -668,6 +674,11 @@ public class Journal {
             if (sdj2.createNewFile()) log.debug("Create file "+sdj2.getName());
 
             synchronized (monitor2){
+
+                if (sdbw == null) {
+                    sdbw = new BufferedWriter(new FileWriter(sdj1, true), buffer_size);
+                    log.debug("Initialize buffered writer for journal "+sdj1.getName());
+                }
 
                 sdbw.flush();
 
