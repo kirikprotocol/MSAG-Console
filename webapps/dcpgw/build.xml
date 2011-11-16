@@ -9,8 +9,8 @@
     <property name="conf.dir" location="conf"/>
     <property name="lib.dir" location="lib"/>
 
-    <property name="one-jar.dir" value="${dcpgw.build.dir}/onejar"/>
-    <import file="${one-jar.dir}/one-jar-ant-task.xml" optional="true" />
+    <property name="one-jar.dist.dir" value="${dcpgw.build.dir}/onejar/one-jar-ant-task-0.97"/>
+    <import file="${one-jar.dist.dir}/one-jar-ant-task-0.97/one-jar-ant-task.xml" optional="true" />
 
     <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="libdev/protogen.jar"/>
 
