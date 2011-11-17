@@ -74,7 +74,7 @@ public class AdminMode {${line.separator}
       <classpath refid="libdev"/>
       <inpath location="${smsc.source.classes.preweaved}"/>
     </iajc>
-    <native2ascii src="${smsc.source.dir}/java" dest="${smsc.source.classes}" ext=".properties" includes="**/*.properties"/>
+    <native2ascii src="${smsc.source.dir}/java" dest="${smsc.source.classes}" ext=".properties" includes="**/*.properties" encoding="utf-8"/>
   </target>
 
   <target name="compile.tests" depends="compile.sources">
@@ -100,7 +100,7 @@ public class AdminMode {${line.separator}
     <copy todir="${smsc.test.classes}">
       <fileset dir="test" excludes="**/*.java"/>
     </copy>
-    <native2ascii src="${smsc.source.dir}/java" dest="${smsc.test.classes}" ext=".properties" includes="**/*.properties"/>
+    <native2ascii src="${smsc.source.dir}/java" dest="${smsc.test.classes}" ext=".properties" includes="**/*.properties" encoding="utf-8"/>
   </target>
 
   <target name="test" depends="compile.tests, weave.tests">
