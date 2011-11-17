@@ -46,6 +46,7 @@
         <mkdir dir="${dcpgw.distr.dir}"/>
         <mkdir dir="${dcpgw.build.dir}/classes"/>
         <unzip src="lib/smppcharsets.jar" dest="${dcpgw.build.dir}/classes"/>
+        <delete dir="${dcpgw.source.classes}/META-INF" failonerror="false"/>
         <javac srcdir="${src.dir}"
                destdir="${dcpgw.build.dir}/classes"
                classpathref="project.classpath"
