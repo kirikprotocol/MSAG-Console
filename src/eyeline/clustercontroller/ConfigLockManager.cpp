@@ -27,7 +27,8 @@ const char* configName[ctConfigsCount]={
     "Snmp",
     "Time Zones",
     "Fraud",
-    "Acl"
+    "Acl",
+    "Network Profiles"
 };
 
 ConfigLockManager::Lock::Lock(int argConnId,bool argWriteLock):connId(argConnId),writeLock(argWriteLock)
