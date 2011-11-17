@@ -73,7 +73,7 @@
                     <!-- Construct main.jar from classes and source code -->
                     <fileset dir="${dcpgw.build.dir}/classes"/>
                     <fileset file="conf/log4j.properties" />
-                    <fileset dir="${dcpgw.build.dir}" includes="${dcpgw.build.dir}/META-INF"/>
+                    <fileset dir="${dcpgw.build.dir}" includes="META-INF"/>
                 </main>
 
                 <lib>
@@ -89,6 +89,9 @@
                     <provider classname="mobi.eyeline.util.charset.EyelineCharsetProvider"/>
                 </service>
             </one-jar>
+
+        <!--mkdir dir="${dcpgw.build.dir}/dcpgw"/-->
+        <!--unzip src="${dcpgw.build.dir}/dcpgw.jar" dest="${dcpgw.build.dir}/dcpgw"/-->
 
         <chmod file="${dcpgw.distr.dir}/lib/dcpgw.jar" perm="u+x"/>
 
