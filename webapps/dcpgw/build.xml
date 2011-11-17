@@ -84,9 +84,9 @@
                     <!--fileset file="lib/smppcharsets.jar" /-->
                 </lib>
 
-                <service type="java.nio.charset.spi.CharsetProvider">
+                <!--service type="java.nio.charset.spi.CharsetProvider">
                     <provider classname="mobi.eyeline.util.charset.EyelineCharsetProvider"/>
-                </service>
+                </service-->
             </one-jar>
 
         <mkdir dir="${dcpgw.build.dir}/dcpgw"/>
