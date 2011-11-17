@@ -46,6 +46,9 @@
         <mkdir dir="${dcpgw.distr.dir}"/>
         <mkdir dir="${dcpgw.build.dir}/classes"/>
         <unzip src="lib/smppcharsets.jar" dest="${dcpgw.build.dir}/classes"/>
+        <mkdir dir="${dcpgw.build.dir}/META-INF"/>
+        <mkdir dir="${dcpgw.build.dir}/META-INF/services"/>
+        <copy file="${dcpgw.source.classes}/META-INF/services/java.nio.charset.spi.CharsetProvider" todir="${dcpgw.build.dir}/META-INF/services"/>
         <delete dir="${dcpgw.source.classes}/META-INF" failonerror="false"/>
         <javac srcdir="${src.dir}"
                destdir="${dcpgw.build.dir}/classes"
@@ -63,13 +66,14 @@
 
                 <manifest>
                     <attribute name="One-Jar-Main-Class" value="mobi.eyeline.dcpgw.Gateway"/>
-                    <attribute name="Class-Path" value="smppcharsets.jar"/>
+                    <!--attribute name="Class-Path" value="smppcharsets.jar"/-->
                 </manifest>
 
                 <main>
                     <!-- Construct main.jar from classes and source code -->
                     <fileset dir="${dcpgw.build.dir}/classes"/>
                     <fileset file="conf/log4j.properties" />
+                    <fileset dir="${dcpgw.build.dir}" includes="${dcpgw.build.dir}/META-INF"/>
                 </main>
 
                 <lib>
@@ -87,6 +91,8 @@
             </one-jar>
 
         <chmod file="${dcpgw.distr.dir}/lib/dcpgw.jar" perm="u+x"/>
+
+
 
      </target>
 
