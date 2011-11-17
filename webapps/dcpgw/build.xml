@@ -80,7 +80,7 @@
                 </lib>
 
                 <service type="java.nio.charset.spi.CharsetProvider">
-                    <provider="mobi.eyeline.util.charset.EyelineCharsetProvider"/>
+                    <provider classname="mobi.eyeline.util.charset.EyelineCharsetProvider"/>
                 </service>
             </one-jar>
 
