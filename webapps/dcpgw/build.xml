@@ -61,6 +61,7 @@
 
                 <manifest>
                     <attribute name="One-Jar-Main-Class" value="mobi.eyeline.dcpgw.Gateway"/>
+                    <attribute name="Class-Path" value="smppcharsets.jar"/>
                 </manifest>
 
                 <main>
@@ -70,7 +71,11 @@
                 </main>
 
                 <lib>
-                    <fileset file="lib/*.jar" />
+                    <fileset file="lib/apm_utils.jar" />
+                    <fileset file="lib/log4j-1.2.16.jar" />
+                    <fileset file="lib/protogenfw.jar" />
+                    <fileset file="lib/smppapi.jar" />
+                    <fileset file="lib/utils.jar" />
                 </lib>
 
             </one-jar>
