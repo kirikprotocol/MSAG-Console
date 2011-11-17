@@ -96,10 +96,6 @@
 
         <zip basedir="${dcpgw.build.dir}/dcpgw" destfile="${dcpgw.distr.dir}/lib/dcpgw.jar"/>
 
-        <!--chmod file="${dcpgw.distr.dir}/lib/dcpgw.jar" perm="u+x"/-->
-
-
-
      </target>
 
     <target name="distr" depends="onejar">
