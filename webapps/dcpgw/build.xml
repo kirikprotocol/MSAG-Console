@@ -60,35 +60,32 @@
         <mkdir dir="${dcpgw.distr.dir}/lib"/>
 
         <!-- Construct the One-JAR file -->
-            <one-jar destfile="${dcpgw.build.dir}/dcpgw.jar">
+        <one-jar destfile="${dcpgw.build.dir}/dcpgw.jar">
 
-                <manifest>
-                    <attribute name="One-Jar-Main-Class" value="mobi.eyeline.dcpgw.Gateway"/>
-                    <!--attribute name="Class-Path" value="smppcharsets.jar"/-->
-                    <attribute name="Implementation-Version" value="${dcpgw.implementation.version}"/>
-                </manifest>
+            <manifest>
+                <attribute name="One-Jar-Main-Class" value="mobi.eyeline.dcpgw.Gateway"/>
+                <attribute name="Implementation-Version" value="${dcpgw.implementation.version}"/>
+            </manifest>
 
-                <main>
-                    <!-- Construct main.jar from classes and source code -->
-                    <fileset dir="${dcpgw.build.dir}/classes"/>
-                    <fileset file="conf/log4j.properties" />
-                </main>
+            <main>
+                <fileset dir="${dcpgw.build.dir}/classes"/>
+                <fileset file="conf/log4j.properties" />
+            </main>
 
-                <lib>
-                    <fileset file="lib/apm_utils.jar" />
-                    <fileset file="lib/log4j-1.2.16.jar" />
-                    <fileset file="lib/protogenfw.jar" />
-                    <fileset file="lib/smppapi.jar" />
-                    <fileset file="lib/utils.jar" />
+            <lib>
+                <fileset file="lib/apm_utils.jar" />
+                <fileset file="lib/log4j-1.2.16.jar" />
+                <fileset file="lib/protogenfw.jar" />
+                <fileset file="lib/smppapi.jar" />
+                <fileset file="lib/utils.jar" />
+            </lib>
 
-                </lib>
+            <service type="java.nio.charset.spi.CharsetProvider">
+                <provider classname="mobi.eyeline.util.charset.EyelineCharsetProvider"/>
+            </service>
+        </one-jar>
 
-                <service type="java.nio.charset.spi.CharsetProvider">
-                    <provider classname="mobi.eyeline.util.charset.EyelineCharsetProvider"/>
-                </service>
-            </one-jar>
-
-        <mkdir dir="${dcpgw.build.dir}/dcpgw"/>
+        <!--mkdir dir="${dcpgw.build.dir}/dcpgw"/-->
         <unzip src="${dcpgw.build.dir}/dcpgw.jar" dest="${dcpgw.build.dir}/dcpgw"/>
         <copy todir="${dcpgw.build.dir}/dcpgw">
             <fileset dir="${dcpgw.build.dir}/smppcharsets"/>
