@@ -1477,6 +1477,11 @@ void DeliveryMgr::readFromArchive()
                     FileGuard::rmdirs( (getCS()->getArchivePath() + dname + ".out/new/").c_str() );
                 } catch (...) {}
 
+                // join logs hourly
+                try {
+                    ActivityLog::joinLogs( (getCS()->getArchivePath() + dname + ".out/").c_str() );
+                } catch (...) {}
+
                 FileGuard::copydir( (getCS()->getArchivePath() + dname + ".out/").c_str(),
                                     getCS()->getStorePath() + dname + ".in/",
                                     10 );
