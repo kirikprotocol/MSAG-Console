@@ -22,7 +22,7 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
     try{
         if ( command.getOperationId() != invalidOpId() ) {
             // if(session.getLongCallContext().continueExec)
-            session.setCurrentOperation(command.getOperationId());
+            session.setCurrentOperation(command.getOperationId(), true);
             // else if (command.isInitial())
             // session.AddNewOperationToHash(command, CO_HTTP_DELIVERY);
         } else {

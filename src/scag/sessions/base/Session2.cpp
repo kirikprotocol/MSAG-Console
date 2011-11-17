@@ -36,7 +36,7 @@ inline void getlog() {
 }
 
 /// session default live time (in seconds)
-unsigned sessionLiveTime = 60;
+unsigned sessionLiveTime = 160;
 unsigned sessionUssdLiveTime = 60;
 unsigned sessionUssdReplaceTimeout = 60;
 
@@ -402,7 +402,7 @@ quiet_(quiet)
 {
     ::getlog();
     if (!quiet_) {
-        smsc_log_debug( logc_, "session=%p/%s +1", this, key.toString().c_str() );
+        smsc_log_debug( logc_, "Session=%p/%s +1 %d", this, key.toString().c_str(), this->defaultLiveTime() );
     }
     // clear();
 }
@@ -411,12 +411,19 @@ quiet_(quiet)
 Session::~Session()
 {
     CHECKMAGTC;
+    smsc_log_debug( logc_, "~Session=%p/%s -1 queued %d", this, sessionKey().toString().c_str(), cmdQueue_.size() );
     try {
         clear();
         if ( cmdQueue_.size() > 0 ) {
-            smsc_log_error( log_, "LOGIC ERROR!!! session=%p/%s command queue is not empty: %d, MEMLEAK!",
+            smsc_log_error( log_, "LOGIC ERROR!!! ~Session=%p/%s command queue is not empty: %d, MEMLEAK!",
                             this, sessionKey().toString().c_str(), cmdQueue_.size() );
-            // this->abort();
+            { //debug
+            	while ( cmdQueue_.size() ) {
+                	popCommand();
+            	}
+                ::abort();
+            }
+            // ??           	this->abort();
         }
         delete transactions_;
         delete globalScope_;
@@ -424,7 +431,7 @@ Session::~Session()
         delete contextScopes_;
         delete operationScopes_;
         if (!quiet_) {
-            smsc_log_debug( logc_, "session=%p/%s -1", this, sessionKey().toString().c_str() );
+            smsc_log_debug( logc_, "~Session=%p/%s -1", this, sessionKey().toString().c_str() );
         }
     } catch ( std::exception& e ) {
         smsc_log_error( log_, "Exception in session=%p/%s dtor: %s", this, sessionKey().toString().c_str(), e.what() );
@@ -756,6 +763,7 @@ std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id
 /// operation methods
 Operation* Session::setCurrentOperation( opid_type opid, bool updateExpire )
 {
+    smsc_log_debug( log_, "%p Session::setCurrentOperation(%d, %s)", this, opid, updateExpire?"true":"false");
     CHECKMAGTC;
     do {
 
@@ -1124,6 +1132,7 @@ unsigned Session::appendCommand( SCAGCommand* cmd )
 {
     CHECKMAGTC;
     if (cmd) cmdQueue_.push_back( cmd );
+    smsc_log_error( log_, "Session=%p appendCommand %p size %d", this, cmd, cmdQueue_.size() );
     return unsigned(cmdQueue_.size());
 }
 
@@ -1136,6 +1145,7 @@ SCAGCommand* Session::popCommand()
         cmd = cmdQueue_.front();
         cmdQueue_.pop_front();
     }
+    smsc_log_error( log_, "Session=%p popCommand %p size %d", this, cmd, cmdQueue_.size() );
     return cmd;
 }
 

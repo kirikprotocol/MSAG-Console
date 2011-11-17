@@ -65,6 +65,7 @@ public:
     void continueExecution(lcm::LongCallContextBase* context, bool dropped);
 
     void queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen);
+    void queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& statLen, uint32_t& lcmLen);
 
     unsigned pushSessionCommand( HttpCommand* cmd, int action );
     

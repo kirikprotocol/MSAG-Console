@@ -22,6 +22,7 @@ static const int SHUTDOWN_SIGNAL = SIGTERM;
 
 static int shutdownFlag = 0;
 static sigset_t st;
+static struct sigaction sa;
 
 static scag2::Scag *app = NULL;
 
@@ -38,6 +39,12 @@ extern "C" void sigHandler(int signo)
 
 void registerSignalHandlers()
 {
+	//ignore SIGPIPE signal
+  sa.sa_handler = SIG_IGN;
+  sa.sa_flags = 0;
+  sigfillset(&sa.sa_mask);
+  sigaction(SIGPIPE, &sa, NULL);
+
   sigfillset(&st);
   sigdelset(&st, SIGBUS);
   sigdelset(&st, SIGFPE);

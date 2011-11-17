@@ -572,7 +572,14 @@ void SessionManagerImpl::scheduleExpire( time_t expirationTime,
         if ( expirationTime < now || !isStarted() ||
              // activeSessions_ > flushLimitSize_ ||
              // unsigned(now - oldestsession_) > flushLimitTime_ ||
-             inputList_->size() > 50 ) expireMonitor_.notify();
+             inputList_->size() > 50 ) {
+        	{//debug
+               	std::string tle = std::string(ctime(&expirationTime)).substr(11,8);
+               	std::string tln = std::string(ctime(&now)).substr(11,8);
+        		smsc_log_debug( log_, "SessionManagerImpl::scheduleExpire exp=%s now=%s", tle.c_str(), tln.c_str() );
+        	}//
+        	expireMonitor_.notify();
+        }
 
     }
     // smsc_log_debug( log_, "scheduleExpire(etime=%d,key=%s): time=%d => %d, cnt=%u/%u",

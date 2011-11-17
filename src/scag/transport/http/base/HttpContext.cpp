@@ -60,13 +60,14 @@ siteSsl(NULL)
 
 HttpContext::~HttpContext()
 {
-	smsc_log_debug(logger, "%p ~HttpContext, user %p site %p command %p", this, user, site, command);
+	smsc_log_debug(logger, "%p ~HttpContext, user %p site %p command %p session %p", this, user, site, command, command?command->session_:NULL);
 	try
 	{
 		if (site)
 			closeSocketConnection(site, siteHttps, siteSsl, nameSite);
 		if (user)
 			closeSocketConnection(user, userHttps, userSsl, nameUser);
+
 		if (command) {
 			delete command;
 			command = NULL;
@@ -105,7 +106,7 @@ int HttpContext::sslUserConnection(bool verify_client) {
 		// Perform SSL Handshake on the SSL server
 		user->setNonBlocking(0);
 		int ret = 0;
-		smsc_log_debug(logger, "%p sslUserConnection: SSL_accept sock:%p ssl:%p", this, user, userSsl);
+//		smsc_log_debug(logger, "%p sslUserConnection: SSL_accept sock:%p ssl:%p", this, user, userSsl);
 		if ( (ret=SSL_accept(userSsl)) != 1 ) {
 			sslLogErrors(ret, SSL_get_error(userSsl, ret));
 			throw 0;
@@ -146,7 +147,7 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 		// Perform SSL Handshake on the SSL client
 		site->setNonBlocking(0);
 		int ret = 0;
-		smsc_log_debug(logger, "%p sslSiteConnection: SSL_connect sock:%p ssl:%p", this, site, siteSsl);
+//		smsc_log_debug(logger, "%p sslSiteConnection: SSL_connect sock:%p ssl:%p", this, site, siteSsl);
 		if ( (ret=SSL_connect(siteSsl)) != 1) {
 			sslLogErrors(ret, SSL_get_error(siteSsl, ret));
 			throw 0;
@@ -166,8 +167,6 @@ int HttpContext::sslSiteConnection(bool verify_client) {
 		siteSsl = NULL;
 		return 0;
 	}
-//	createCount();  SSL_accept
-//	HttpContext::counter_create++;
 	return 1;
 }
 
@@ -184,16 +183,14 @@ void HttpContext::closeSocketConnection(Socket* &s, bool httpsFlag, SSL* &ssl, c
 				SSL_free(ssl);
 				ssl = NULL;
 			}
-			else
-				smsc_log_debug(logger, "%p close%sConnection: already closed", this, info);
-//				freeCount();
-//				HttpContext::counter_free++;
+//			else
+//				smsc_log_debug(logger, "%p close%sConnection: already closed", this, info);
 		}
 		catch(...) {
 			ssl = NULL;
 			smsc_log_error(logger, "%p close%sConnection: Unknown error", this, info);
 		}
-		smsc_log_debug(logger, "%p close%sConnection: Ok", this, info);
+//		smsc_log_debug(logger, "%p close%sConnection: Ok", this, info);
 	}
 	try {
 		if (s) {
@@ -298,7 +295,7 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 		}
 		else if (len == 0) {
 			if ( SSL_get_shutdown(ssl) ) {
-				smsc_log_debug(logger, "%p sslReadPartial: shutdown detected from %s. Total=%d, return <total>", this, connName(s), total);
+//				smsc_log_debug(logger, "%p sslReadPartial: shutdown detected from %s. Total=%d, return <total>", this, connName(s), total);
 				closed = true;
 				break; //return -1;
 			}
@@ -309,7 +306,7 @@ int HttpContext::sslReadPartial(Socket* s, const char *readBuf, const size_t rea
 //
 			toRead = SSL_pending(ssl);
 			if ( toRead > 0 ) {
-				smsc_log_debug(logger, "%p sslReadPartial: not completed from %s. Total=%d, toRead=%d", this, connName(s), total, toRead);
+//				smsc_log_debug(logger, "%p sslReadPartial: not completed from %s. Total=%d, toRead=%d", this, connName(s), total, toRead);
 				continue;
 			}
 			closed = true;
@@ -336,7 +333,7 @@ int HttpContext::sslWritePartial(Socket* s, const char* data, const size_t toWri
 	int len=0, ssl_err=0,oerrno=0;
 	SSL* ssl = sslCheckConnection(s);
 	if (ssl == NULL) {
-		smsc_log_debug(logger, "%p sslWritePartial: create connection failed", this);
+		smsc_log_error(logger, "%p sslWritePartial: create connection failed", this);
 		return 0;
 	}
 	while ( toWrite > 0 ) {

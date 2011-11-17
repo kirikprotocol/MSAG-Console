@@ -18,26 +18,32 @@ int ScagTask::Execute()
 
     smsc_log_debug(logger, "%p started", this);
 
-    for (;;) {
-        while (!((cx = manager.scags.getFirst()) || isStopping))
+//    for (;;) {
+//	    while (!((cx = manager.scags.getFirst()) || isStopping))
+    while ( !isStopping ) {
+        cx = manager.scags.getFirst();
+    	if ( !cx ) {
             manager.scags.waitForContext();
-
+            continue;
+    	}
+    	if ( !cx )
+    		smsc_log_error(logger, "%p, HttpContext %p SOMETHING WRONG!", this, cx );
+/*
         { //debug
-        	uint32_t req, resp, lcm;
-        	manager.scags.queueLen(req, resp, lcm);
-            smsc_log_debug(logger, "%p ScagTask::Execute (%u %u %u) stop:%s cx %p act:%s command %p", this,req,resp,lcm,(isStopping?"y":"n"),
+        	uint32_t req, resp, stat, lcm;
+        	manager.scags.queueLen(req, resp, stat, lcm);
+            smsc_log_debug(logger, "%p ScagTask::Execute (%u %u %u %u) stop:%s cx %p act:%s command %p", this,req,resp,stat,lcm,(isStopping?"y":"n"),
             		cx, (cx?HttpContext::actionName(cx->action):"Undefined"), (cx?cx->command:NULL));
         }
-
-        if (isStopping)
-            break;
+*/
+//        if (isStopping) break;
 
         switch (cx->action) {
         case PROCESS_REQUEST:
             st = processor.processRequest(cx->getRequest());
             if (st == re::STATUS_OK)
             {
-              smsc_log_info(logger, "%p: %p, request approved", this, cx);
+//              smsc_log_info(logger, "%p: %p, request approved", this, cx);
               cx->getRequest().checkConnectionFields();
               cx->getRequest().serialize();
               cx->action = SEND_REQUEST;
@@ -102,14 +108,16 @@ int ScagTask::Execute()
 
                 if(st == re::STATUS_LONG_CALL || st == re::STATUS_PROCESS_LATER)
                     break;
-                smsc_log_debug(logger, "%p, case PROCESS_STATUS_RESPONSE, normal HttpContext %p delete", this, cx);
+//                smsc_log_debug(logger, "%p, case PROCESS_STATUS_RESPONSE, normal HttpContext %p delete", this, cx);
                 delete cx;
                 cx = NULL;
             }
         	catch(...) {
                 smsc_log_error(logger, "%p, Unresolved exception when case PROCESS_STATUS_RESPONSE, delete HttpContext %p", this, cx);
         	}
+        	break;
         default:
+            smsc_log_error(logger, "%p, HttpContext %p action=%s (wrong value)", this, cx, (cx?HttpContext::actionName(cx->action):"Undefined"));
             break;
         } // switch action
     }

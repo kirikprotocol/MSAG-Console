@@ -228,7 +228,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                            session->currentCommand() );
             ::abort();
         }
-        what = " fast lookup";
+        what = "fast lookup";
         // session is already locked
         // return makeLockedSession(*session,*cmd.get());
     }
@@ -240,7 +240,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     while ( ! session ) { // fake loop
         MutexGuard mg(cacheLock_);
         if ( stopping_ ) {
-            what = " store is stopped";
+            what = "store is stopped";
             break;
         }
         // return ActiveSession();
@@ -249,8 +249,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         if ( ! v ) {
             // not found
             firsttime = true;
-
-        } else {
+        }
+        else {
             firsttime = false;
 
             session = cache_->store2val(*v);
@@ -266,15 +266,16 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                     // ++lockedSessions_;
                     lockedSessions_->increment();
                     session->setCurrentCommand( cmd->getSerial() );
-                    what = " was free";
+                    what = "was free";
                     break;
-                } else if ( session->currentCommand() == cmd->getSerial() ) {
-                    what = " already mine";
+                }
+                else if ( session->currentCommand() == cmd->getSerial() ) {
+                    what = "already mine";
                     break;
                 }
 
                 // session is locked
-                what = " is locked";
+                what = "is locked";
                 // reserve a place in queue for a command
                 queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
                 ++sqsz;
@@ -295,7 +296,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
         if ( !create && !diskio_ ) {
             // creation and diskio are not allowed
-            what = " is not found";
+            what = "is not found";
             v = 0;
             session = 0;
             break;
@@ -309,7 +310,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         if ( !v ) {
             cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
             v = cache_->get( key );
-        } else {
+        }
+        else {
             *v = cache_->val2store( allocator_->alloc(key) );
         }
         const unsigned sz = cache_->size();
@@ -338,25 +340,32 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 if ( ! create ) {
                     // creation is forbidden
                     session = cache_->release( key );
-                    //--loadedSessions_;
-                    //--lockedSessions_;
-                    loadedSessions_->increment(-1);
-                    lockedSessions_->increment(-1);
-                } else {
+                	if ( session && !session->commandCount() ) {
+						delete session;
+						session = 0;
+						//--loadedSessions_;
+						//--lockedSessions_;
+						loadedSessions_->increment(-1);
+						lockedSessions_->increment(-1);
+                	}
+                }
+                else {
                     // ++totalSessions_;
                     totalSessions_->increment();
                 }
             }
             if ( !create ) {
                 // failure to upload from disk and creation flag is not set
-                delete session;
-                session = 0;
-                what = " is not found";
-            } else {
-                what = " created";
+//                delete session;
+//                session = 0;
+                what = "is not found";
             }
-        } else if ( session->expirationTime() < time(0) ) {
-            what = " expired on disk";
+            else {
+                what = "created";
+            }
+        }
+        else if ( session->expirationTime() < time(0) ) {
+            what = "expired on disk";
             queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
             SCAGCommand* com = cmd.release();
             { 
@@ -366,21 +375,34 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             }
             expiration_->scheduleExpire( session->expirationTime(), session->lastAccessTime(), key );
             session = 0;
-        } else {
+        }
+        else {
             // session was just uploaded and is not expired
             if ( firsttime && ! session->hasPersistentOperation() ) {
                 // session was not persistent
                 session->clear();
-                what = " upload&clear";
-            } else {
-                what = " uploaded";
+                what = "upload&clear";
+            }
+            else {
+                what = "uploaded";
             }
         }
     }
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-    smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d%s",
-                    key.toString().c_str(), cmdaddr, create ? 1:0, session, sqsz, what );
+    { //debug
+    	time_t tl, te;
+    	std::string tls = "?";
+    	std::string tle = "?";
+    	if (session) {
+        	tl = session->lastAccessTime();
+        	tls = std::string(ctime(&tl)).substr(11,8);
+        	te = session->expirationTime();
+        	tle = std::string(ctime(&te)).substr(11,8);
+    	}
+        smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d %s, access %s expire %s sec=%d",
+                        key.toString().c_str(), cmdaddr, create ? 1:0, session, sqsz, what, tls.c_str(), tle.c_str(), (te-tl) );
+    }
 
     if ( session )
         return makeLockedSession(*session,*cmd.get());
@@ -394,6 +416,16 @@ void SessionStoreImpl::releaseSession( Session& session )
     // NOTE: key should not be a reference, as session may be destroyed at the end of the method
     const SessionKey key = session.sessionKey();
 
+    { //debug
+    	time_t tl, te;
+    	std::string tls = "?";
+    	std::string tle = "?";
+       	tl = session.lastAccessTime();
+    	tls = std::string(ctime(&tl)).substr(11,8);
+       	te = session.expirationTime();
+    	tle = std::string(ctime(&te)).substr(11,8);
+    	smsc_log_debug( log_,"releaseSession %p qsz=%d access %s expire %s sec %d", &session, session.commandCount(), tls.c_str(), tle.c_str(), (te-tl));
+    }
     {
         uint32_t cmd = session.currentCommand();
         // smsc_log_debug(log_,"releaseSession(session=%p): key=%s, sess->ops=%d, sess->pers=%d, sess->cmd=%u)",

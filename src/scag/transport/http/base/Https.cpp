@@ -68,7 +68,7 @@ int HttpsThreads::cleanup() {
 	for (int i = 0; i < CRYPTO_num_locks(); i++) {
 		pthread_mutex_destroy(&mutex_buf[i]);
 		if (lock_count[i])
-			smsc_log_debug(smsc::logger::Logger::getInstance("http.threads"), "lock[%d]:%d:%s\n", i, lock_count[i], CRYPTO_get_lock_name(i));
+			smsc_log_debug(smsc::logger::Logger::getInstance("http.threads"), "lock[%d]:%d:%s", i, lock_count[i], CRYPTO_get_lock_name(i));
 	}
 
 	OPENSSL_free(mutex_buf);

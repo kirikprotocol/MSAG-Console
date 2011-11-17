@@ -207,15 +207,13 @@ void ScagTaskManager::process(HttpContext* cx, bool continued)
     tailContext[i] = cx;        
     
     ++queueLength[i];
-	smsc_log_debug(logger, "%p ScagTaskManager::process cx=%p action=%s queue[%s]=%d", this, cx, cx->actionName(), cx->actionName(i), queueLength[i]);
+	smsc_log_debug(logger, "%p ScagTaskManager::process cx:%p cmd:%p sess:%p act:%s queue[%d]:%d", this, cx, cx->command, cx->command->session_, cx->actionName(), i, queueLength[i]);
 
 	if (queueLength[PROCESS_REQUEST] > scagQueueLimit)
         waitQueueShrinkage = true;
 
     {
         MutexGuard q(taskMon);
-    
-    	smsc_log_debug(logger, "process() call taskMon.notify()");
         taskMon.notify();   
     }
 }
@@ -249,6 +247,7 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
     headContext[PROCESS_LCM] = NULL;    
 
     logger = Logger::getInstance("http.scag");
+	smsc_log_debug(logger, "%p ScagTaskManager::init scagQueueLimit=%d", this, scagQueueLimit);
 
     pool.setMaxThreads(maxThreads);
 
@@ -303,6 +302,15 @@ void ScagTaskManager::queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lc
     lcmLen = queueLength[PROCESS_LCM];
 }
 
+void ScagTaskManager::queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& statLen, uint32_t& lcmLen)
+{
+//    MutexGuard g(queMon);
+    reqLen = queueLength[PROCESS_REQUEST];
+    respLen = queueLength[PROCESS_RESPONSE];
+    statLen = queueLength[PROCESS_STATUS_RESPONSE];
+    lcmLen = queueLength[PROCESS_LCM];
+}
+
 void ScagTaskManager::wakeTask()
 {
     MutexGuard g(taskMon);
@@ -336,7 +344,7 @@ manager(m)
 }
 
 void IOTaskManager::giveContext(IOTask *t, HttpContext* cx) {
-    smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketCount(), cx);
+//    smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketCount(), cx);
 
     t->socketCount++;
     t->registerContext(cx);

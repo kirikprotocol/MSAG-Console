@@ -165,9 +165,9 @@ int HttpReaderTask::Execute()
             MutexGuard g(sockMon);
 
             while (!(socketCount || isStopping)) {
-                smsc_log_debug(logger, "%p idle", this);
+//                smsc_log_debug(logger, "%p idle", this);
                 sockMon.wait();         
-                smsc_log_debug(logger, "%p notified", this);
+//                smsc_log_debug(logger, "%p notified", this);
             }
             if (isStopping)
                 break;
@@ -195,7 +195,7 @@ int HttpReaderTask::Execute()
  				    continue;
                 }
                 if (cx->action == KEEP_ALIVE_TIMEOUT) {
-                    smsc_log_debug(logger, "%p: %p, socket %p error where KEEP_ALIVE_TIMEOUT", this, cx, s);
+                    smsc_log_debug(logger, "%p: %p, socket %p error action=KEEP_ALIVE_TIMEOUT", this, cx, s);
                     cx->setDestiny(0, DEL_CONTEXT);
                 	cx->closeConnection(s);
  				    continue;
@@ -274,7 +274,7 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 	}
 
 	if ( len < 0 ) {
-		smsc_log_debug(logger, "%p ssl close connection. len=%d", this, len);
+//		smsc_log_debug(logger, "%p ssl close connection. len=%d", this, len);
 		removeSocket(s);
 		cx->closeConnection(s);
 		if ( cx->action == READ_RESPONSE ) {
@@ -301,7 +301,7 @@ void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArra
 				break;
 			}
 			removeSocket(s);
-			smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
+//			smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
 			if ( cx->command->closeConnection() ) {
 				cx->closeConnection(s);
 			}
@@ -340,9 +340,9 @@ int HttpWriterTask::Execute()
         {
             MutexGuard g(sockMon);
             while (!(socketCount || isStopping)) {
-                smsc_log_debug(logger, "%p idle", this);
+//                smsc_log_debug(logger, "%p idle", this);
                 sockMon.wait();
-                smsc_log_debug(logger, "%p notified", this);
+//                smsc_log_debug(logger, "%p notified", this);
             }
             if (isStopping)
                 break;
@@ -367,18 +367,15 @@ int HttpWriterTask::Execute()
 
             waitingConnect.Pop(s);
             cx = HttpContext::getContext(s);
-            smsc_log_debug(logger, "%p: %p, connecting %s:%d", this, cx,
-            cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort());
+//            smsc_log_debug(logger, "%p: %p, connecting %s:%d", this, cx, cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort());
 
-            if (s->Init(cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort(), SOCKOP_TIMEOUT) ||
-                s->Connect(true))
-            {
+            if (s->Init(cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort(), SOCKOP_TIMEOUT) || s->Connect(true)) {
                 smsc_log_error(logger, "%p: %p, cannot connect", this, cx);
                 cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK | NO_MULT_REM); //
                 error.Push(s);
             }
             else {
-                smsc_log_debug(logger, "%p: %p, socket %p connected", this, cx, s);
+//                smsc_log_debug(logger, "%p: %p, socket %p connected", this, cx, s);
                 //s->setNonBlocking(1);
                 multiplexer.add(s);
             }
@@ -460,7 +457,7 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
 			HttpContext::updateTimestamp(s, now);
 		}
 		else if ( written_size < 0 ) {	// written_size=-1 means the ssl peer has closed connection
-			smsc_log_debug(logger, "%p, ssl close connection.", this);
+//			smsc_log_debug(logger, "%p, ssl close connection.", this);
 			removeSocket(s);
 			cx->closeConnection(s);
 			if ( cx->action == SEND_REQUEST ) {
@@ -493,7 +490,7 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
     	}
 		removeSocket(s);
         if (cx->action == SEND_REQUEST) {
-            smsc_log_info(logger, "%p: %p, request sent", this, cx);
+//            smsc_log_info(logger, "%p: %p, request sent", this, cx);
             delete cx->command;
         	cx->command = NULL;
             cx->action = READ_RESPONSE;
@@ -501,7 +498,7 @@ void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) 
             manager.readerProcess(cx);
         }
         else {
-        	smsc_log_info(logger, "%p: %p, response sent socket %p", this, cx, s);
+//        	smsc_log_info(logger, "%p: %p, response sent socket %p", this, cx, s);
         	if (cx->command->closeConnection()) {
                 cx->closeConnection(s);
 				cx->action = PROCESS_STATUS_RESPONSE;
