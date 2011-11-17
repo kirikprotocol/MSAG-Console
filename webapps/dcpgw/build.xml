@@ -92,7 +92,7 @@
         <mkdir dir="${dcpgw.build.dir}/dcpgw"/>
         <unzip src="${dcpgw.build.dir}/dcpgw.jar" dest="${dcpgw.build.dir}/dcpgw"/>
         <mkdir dir="${dcpgw.build.dir}/dcpgw/main/main"/>
-        <unzip src="${dcpgw.build.dir}/main.jar" dest="${dcpgw.build.dir}/dcpgw/main/main"/>
+        <unzip src="${dcpgw.build.dir}/dcpgw/main/main.jar" dest="${dcpgw.build.dir}/dcpgw/main/main"/>
         <mkdir dir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/>
         <copy file="${dcpgw.build.dir}/META-INF/services/java.nio.charset.spi.CharsetProvider" todir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/>
         <zip basedir="${dcpgw.build.dir}/dcpgw/main/main" destfile="${dcpgw.build.dir}/dcpgw/main.jar"/>
