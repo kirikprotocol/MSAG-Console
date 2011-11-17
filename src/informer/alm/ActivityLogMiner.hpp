@@ -66,6 +66,8 @@ protected:
                         ALMResult* result,
                         bool& hasMore );
 
+      inline void closeFile() { f.Close(); }
+
   private:
       /// opens the next file for given record
       /// return true if the file is opened.
@@ -89,8 +91,8 @@ protected:
     msgtime_type curDate;
     TimeMap::iterator timeIt;
     bool busy;
-    smsc::core::buffers::File f;
   private:
+    smsc::core::buffers::File f;
     unsigned zipVersion;   // 0 for nonzip, >0 for zip
     uint64_t nextzipchunk; // offset to the next zip chunk (=0 if not zipped)
     int linesRead;

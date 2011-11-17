@@ -625,7 +625,7 @@ void ActivityLogMiner::pauseReq(int reqId)
   {
     throw InfosmeException(EXC_EXPIRED,"request with id=%d expired or doesn't exists",reqId);
   }
-  it->second->f.Close();
+  it->second->closeFile();
 }
 
 
