@@ -85,7 +85,6 @@
             </service>
         </one-jar>
 
-        <!--mkdir dir="${dcpgw.build.dir}/dcpgw"/-->
         <unzip src="${dcpgw.build.dir}/dcpgw.jar" dest="${dcpgw.build.dir}/dcpgw"/>
         <copy todir="${dcpgw.build.dir}/dcpgw">
             <fileset dir="${dcpgw.build.dir}/smppcharsets"/>
