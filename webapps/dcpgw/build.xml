@@ -76,8 +76,12 @@
                     <fileset file="lib/protogenfw.jar" />
                     <fileset file="lib/smppapi.jar" />
                     <fileset file="lib/utils.jar" />
+                    <fileset file="lib/smppcharsets.jar" />
                 </lib>
 
+                <service type="java.nio.charset.spi.CharsetProvider">
+                    <provider="mobi.eyeline.util.charset.EyelineCharsetProvider"/>
+                </service>
             </one-jar>
 
         <chmod file="${dcpgw.distr.dir}/lib/dcpgw.jar" perm="u+x"/>
