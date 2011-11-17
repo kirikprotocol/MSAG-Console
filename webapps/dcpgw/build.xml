@@ -38,7 +38,6 @@
         <copy file="libdev/one-jar-ant-task-0.97.jar" tofile="${dcpgw.build.dir}/onejar/one-jar-ant-task-0.97.jar"/>
         <unzip src="${dcpgw.build.dir}/onejar/one-jar-ant-task-0.97.jar" dest="${dcpgw.build.dir}/onejar"/>
         <copy file="libdev/one-jar-ant-task.xml" tofile="${dcpgw.build.dir}/onejar/one-jar-ant-task.xml"/>
-        <unzip src="lib/smppcharsets.jar" dest="${dcpgw.build.dir}/classes"/>
     </target>
 
     <target name="compile" depends="prebuild">
@@ -46,6 +45,7 @@
         <mkdir dir="${dcpgw.build.dir}"/>
         <mkdir dir="${dcpgw.distr.dir}"/>
         <mkdir dir="${dcpgw.build.dir}/classes"/>
+        <unzip src="lib/smppcharsets.jar" dest="${dcpgw.build.dir}/classes"/>
         <javac srcdir="${src.dir}"
                destdir="${dcpgw.build.dir}/classes"
                classpathref="project.classpath"
