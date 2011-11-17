@@ -96,7 +96,7 @@
         <delete file="${dcpgw.build.dir}/dcpgw/main/main.jar"/>
         <mkdir dir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/>
         <copy file="${dcpgw.build.dir}/META-INF/services/java.nio.charset.spi.CharsetProvider" todir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/>
-        <zip basedir="${dcpgw.build.dir}/dcpgw/main/main" destfile="${dcpgw.build.dir}/dcpgw/main.jar" update="true"/>
+        <zip basedir="${dcpgw.build.dir}/dcpgw/main/main" destfile="${dcpgw.build.dir}/dcpgw/main.jar"/>
         <delete dir="${dcpgw.build.dir}/dcpgw/main/main" failonerror="false"/>
         <zip basedir="${dcpgw.build.dir}/dcpgw" destfile="${dcpgw.distr.dir}/lib/dcpgw.jar"/>
 
