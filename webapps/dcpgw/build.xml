@@ -134,9 +134,13 @@
         <copy file="service" todir="${dcpgw.distr.dir}/bin"/>
         <chmod file="${dcpgw.distr.dir}/bin/service" perm="u+x"/>
 
-        <copy todir="${dcpgw.distr.dir}/conf">
-          <fileset dir="${conf.dir}"/>
-        </copy>
+        <copy file="${conf.dir}/config.properties"  todir="${dcpgw.distr.dir}/conf"/>
+
+        <copy file="${conf.dir}/configuration.dtd"  todir="${dcpgw.distr.dir}/conf"/>
+
+        <copy file="${conf.dir}/deliveries.xml"  todir="${dcpgw.distr.dir}/conf"/>
+
+        <copy file="${conf.dir}/endpoints.xml"  todir="${dcpgw.distr.dir}/conf"/>
 
         <mkdir dir="${dcpgw.distr.dir}/logs"/>
 
