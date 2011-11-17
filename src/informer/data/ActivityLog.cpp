@@ -203,7 +203,8 @@ void ActivityLog::scanZipToEnd( FileGuard& fg,
     char* eol = strchr(headbuf,'\n');
     if (!eol) {
         throw FileReadException( fn.c_str(), 0, 0,
-                                 "header has no EOL" );
+                                 "header '%s' has no EOL",
+                                 headbuf );
     }
     *eol = '\0';
     int pos = 0;
@@ -215,8 +216,8 @@ void ActivityLog::scanZipToEnd( FileGuard& fg,
                                  headbuf);
     } else if ( version != 1 ) {
         throw FileReadException( fn.c_str(), 0, 0,
-                                 "wrong version %u",
-                                 version);
+                                 "wrong version %u in '%s'",
+                                 version, headbuf);
     }
 
     size_t curpos = eol - headbuf + 1;
@@ -228,7 +229,8 @@ void ActivityLog::scanZipToEnd( FileGuard& fg,
         eol = strchr(headbuf,'\n');
         if (!eol) {
             throw FileReadException( fn.c_str(), 0, curpos,
-                                     "subheader has no EOL");
+                                     "subheader '%s' has no EOL",
+                                     headbuf );
         }
         *eol = '\0';
         pos = 0;
@@ -248,7 +250,7 @@ void ActivityLog::scanZipToEnd( FileGuard& fg,
             fg.seek(curpos);
             break;
         }
-        curpos += filesize;
+        curpos += chunksize;
     }
 }
 

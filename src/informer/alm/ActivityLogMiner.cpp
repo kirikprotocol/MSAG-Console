@@ -35,7 +35,6 @@ int ActivityLogMiner::createRequest(dlvid_type dlvId,const ALMRequestFilter& fil
   req->dlvId=dlvId;
   req->filter=filter;
   req->curDate=filter.startDate;
-  // req->offset=0;
   sync::MutexGuard mg(mtx);
   time_t now=time(0);
   while(!timeMap.empty() && timeMap.begin()->first<now)
@@ -127,6 +126,7 @@ bool ActivityLogMiner::getNext(int reqId, msgtime_type endTime,
   }
   try {
     bool rv = req->parseRecord(endTime,result,hasMore);
+    // req->show("after parseRec");
     sync::MutexGuard mg(mtx);
     req->unref();
     req->busy=false;
@@ -161,105 +161,107 @@ int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filt
 
 bool ActivityLogMiner::Request::openNextFile( msgtime_type endTime, bool& hasMore )
 {
+    bool res = false;
+    show("openFile");
     while ( !f.isOpened() ) {
 
-        zipVersion = 0;
-        nextzipchunk = 0;
-        version = 0;
-
         if ( curDate > filter.endDate ) {
-            return false;
+            break;
         }
 
         ::tm tm;
         msgTimeToYmd( curDate, &tm );
 
-        if ( tm.tm_mday != day ) {
+        if ( tm.tm_mday != day || (zipVersion && offset && hour==-1) ) {
 
-            day = -1;
+            day = tm.tm_mday;
             hour = -1;
 
             const std::string daypath = mkDatePath(dlvId,tm);
             if ( File::Exists((daypath+".log").c_str()) ) {
                 // zipped
-                smsc_log_debug(log,"zipped log %s found",(daypath+".log").c_str());
+                smsc_log_debug(log,"zipped day log %s found",(daypath+".log").c_str());
+                f.ROpen((daypath+".log").c_str());
+                if ( offset && zipVersion ) {
+                    res = true;
+                    break;
+                }
                 if ( !readZipVersion() ||
                      !scanZipToDate() ||
                      !readChunkVersion() ) {
-                    curDate -= curDate % (24*60*60);
-                    curDate += 24*60*60;
+                    advance(true);
                     continue;
                 }
-                day = tm.tm_mday;
+                res = true;
                 break;
             }
             
             if ( !File::Exists(daypath.c_str()) ) {
                 // no day dir
-                curDate -= curDate % (24*60*60);
-                curDate += 24*60*60;
+                advance(true);
+                offset = 0;
                 continue;
             }
-
-            // day dir found
-            day = tm.tm_mday;
         }
 
-        if ( tm.tm_hour != hour ) {
+        if ( tm.tm_hour != hour || (zipVersion && offset) ) {
 
-            hour = -1;
+            hour = tm.tm_hour;
 
             const std::string hourpath = mkHourPath(dlvId,tm);
             if ( File::Exists((hourpath+".log").c_str()) ) {
                 // zipped
-                smsc_log_debug(log,"zipped log %s found",(hourpath+".log").c_str());
+                smsc_log_debug(log,"zipped hour log %s found",(hourpath+".log").c_str());
+                f.ROpen((hourpath+".log").c_str());
+                if ( offset && zipVersion ) {
+                    res = true;
+                    break;
+                }
                 if ( !readZipVersion() ||
                      !scanZipToDate() ||
                      !readChunkVersion() ) {
-                    curDate -= curDate % (60*60);
-                    curDate += 60*60;
+                    advance(true);
                     continue;
                 }
-                hour = tm.tm_hour;
+                res = true;
                 break;
             }
             
             if ( !File::Exists(hourpath.c_str()) ) {
                 // no hour dir
-                curDate -= curDate % (60*60);
-                curDate += 60*60;
+                advance(true);
+                offset = 0;
                 continue;
             }
-
-            // hour dir found
-            hour = tm.tm_hour;
         }
 
         const std::string filePath = mkFilePath(dlvId,tm);
-        smsc_log_debug(log,"probing file %s",filePath.c_str());
+        // smsc_log_debug(log,"probing file %s",filePath.c_str());
         if ( !File::Exists(filePath.c_str()) ) {
-            smsc_log_debug(log,"file %s is not found",filePath.c_str());
-            curDate -= curDate % 60;
-            curDate += 60;
+            // smsc_log_debug(log,"file %s is not found",filePath.c_str());
+            advance(false);
+            offset = 0;
             continue;
         }
 
-        smsc_log_debug(log,"reading %s",filePath.c_str());
+        // smsc_log_debug(log,"reading %s",filePath.c_str());
         f.ROpen(filePath.c_str());
-        if ( !readChunkVersion() ) {
-            // offset = 0;
-            curDate -= curDate % 60;
-            curDate += 60;
+        // opened, round up curDate
+        curDate -= curDate % 60;
+        if ( !offset && !readChunkVersion() ) {
+            advance(false);
             if (endTimeReached(endTime)) {
                 hasMore = true;
-                return false;
+                break;
             }
             continue;
         }
-        // opened 
+        res = true;
         break;
     }
-    return true;
+    show("after openFile");
+    if (res) f.Seek(offset);
+    return res;
 }
 
 
@@ -268,6 +270,7 @@ bool ActivityLogMiner::Request::readZipVersion()
     version = 0;
     nextzipchunk = 0;
     std::string line;
+    offset = 0;
     if (f.ReadLine(line)) {
         int pos = 0;
         unsigned v;
@@ -292,6 +295,7 @@ bool ActivityLogMiner::Request::readZipVersion()
 
 bool ActivityLogMiner::Request::scanZipToDate()
 {
+    offset = 0;
     if (!zipVersion) {
         smsc_log_warn(log,"zipVersion is not set");
         f.Close();
@@ -300,17 +304,20 @@ bool ActivityLogMiner::Request::scanZipToDate()
     do {
         msgtime_type rt = readZipChunkHead();
         if (!rt) break;
-        if ( rt < curDate ) {
+        if ( rt <= curDate ) {
             // check that next chunk is too big
             if ( rt+60 > curDate ) {
                 // we are here!
+                // round up the curDate
+                curDate = rt;
                 return true;
             }
             // we have not reached curDate yet
             // skip the chunk completely
             f.Seek( nextzipchunk );
+            continue;
         }
-        // here rt >= curDate
+        // here rt > curDate
         curDate = rt;
         if (curDate > filter.endDate) {
             // too late
@@ -336,7 +343,13 @@ msgtime_type ActivityLogMiner::Request::readZipChunkHead()
                &pos );
         if (pos!=0) {
             nextzipchunk = f.Pos() + chunksize;
-            return ymdToMsgTime( ((((year*100+month)*100+mday)*100+rhour)*100+rminute)*100 );
+            const msgtime_type rt = ymdToMsgTime( ((((ulonglong(year)*100+month)*100+mday)*100+rhour)*100+rminute)*100 );
+            if (log->isDebugEnabled()) {
+                char buf[100];
+                sprintf(buf,"readZCH(%llu,%lu)",msgTimeToYmd(rt),chunksize);
+                show(buf);
+            }
+            return rt;
         }
         smsc_log_warn(log,"ziplog %s chunkline is broken near %lu",
                       f.getFileName().c_str(),
@@ -347,6 +360,7 @@ msgtime_type ActivityLogMiner::Request::readZipChunkHead()
                       static_cast<unsigned long>(f.Pos()));
     }
     f.Close();
+    offset = 0;
     return 0;
 }
 
@@ -360,6 +374,7 @@ bool ActivityLogMiner::Request::readChunkVersion()
         sscanf(line.c_str(),"#%u %n",&v,&pos);
         if (pos != 0) {
             version = v;
+            offset = f.Pos();
             return true;
         }
         smsc_log_warn(log,"file %s version line is broken near %lu",
@@ -372,7 +387,28 @@ bool ActivityLogMiner::Request::readChunkVersion()
                       static_cast<unsigned long>(f.Pos()));
     }
     f.Close();
+    offset = 0;
     return false;
+}
+
+
+void ActivityLogMiner::Request::show( const char* where )
+{
+    if (log->isDebugEnabled()) {
+        const char* fn = "";
+        if ( f.isOpened() ) {
+            fn = f.getFileName().c_str();
+            const char* x = strrchr(fn,'/');
+            if (x) fn = x+1;
+        }
+        smsc_log_debug(log,"%s D=%u cur=%llu zv=%u v=%u d=%d h=%d ln=%u off=%llu %s",
+                       where,
+                       unsigned(dlvId),
+                       msgTimeToYmd(curDate), zipVersion, version, day, hour,
+                       linesRead,
+                       static_cast<unsigned long long>(offset),
+                       fn);
+    }
 }
 
 
@@ -380,9 +416,10 @@ bool ActivityLogMiner::Request::parseRecord( msgtime_type endTime,
                                              ALMResult* result,
                                              bool& hasMore )
 {
-    std::string filePath;
     std::string line;
     int sec;
+
+    // show("parseRecord");
 
     for(;;) {
 
@@ -400,48 +437,51 @@ bool ActivityLogMiner::Request::parseRecord( msgtime_type endTime,
         }
 
         // check if we have zipped file
-        if ( zipVersion &&
-             ( f.Pos() >= nextzipchunk ) ) {
-            msgtime_type rt = readZipChunkHead();
-            if (!rt) {
-                if (hour!=-1) {
-                    // hour zip file
-                    curDate -= curDate % (60*60);
-                    curDate += 60*60;
-                } else {
-                    // dayly zip file
-                    curDate -= curDate % (24*60*60);
-                    curDate += 24*60*60;
-                }
+        if ( zipVersion ) {
+            const size_t fpos = f.Pos();
+            if ( fpos >= f.Size() ) {
+                // eof reached
+                f.Close();
+                offset = 0;
+                advance(true);
                 continue;
             }
-            if (rt >= curDate) {
-                curDate = rt;
-                if (curDate > filter.endDate) {
-                    return false;
+            if ( fpos >= nextzipchunk ) {
+                msgtime_type rt = readZipChunkHead();
+                if (!rt) {
+                    f.Close();
+                    advance(true);
+                    continue;
                 }
+                if (rt < curDate) {
+                    smsc_log_warn(log,"logic failure: curDate=%llu rt=%llu from readZCH in %s",
+                                  msgTimeToYmd(curDate),
+                                  msgTimeToYmd(rt),
+                                  f.getFileName().c_str());
+                    f.Close();
+                    offset = 0;
+                    return false;
+                    // advance(true);
+                    // continue;
+                }
+                if (rt >= curDate) {
+                    curDate = rt;
+                    if (curDate > filter.endDate) {
+                        f.Close();
+                        offset = 0;
+                        return false;
+                    }
+                }
+                readChunkVersion();
             }
-            readChunkVersion();
         }
 
 
         if(!f.ReadLine(line))
         {
             f.Close();
-            if (zipVersion) {
-                if (hour != -1) {
-                    // hour zip file
-                    curDate -= curDate % (60*60);
-                    curDate += 60*60;
-                } else {
-                    // dayly zip file
-                    curDate -= curDate % (24*60*60);
-                    curDate += 24*60*60;
-                }
-            } else {
-                curDate -= (curDate % 60);
-                curDate += 60;
-            }
+            offset = 0;
+            advance(zipVersion != 0);
             continue;
         }
 
@@ -611,7 +651,7 @@ bool ActivityLogMiner::Request::parseRecord( msgtime_type endTime,
         }
         break;
     }
-    // offset=f.Pos();
+    offset = f.Pos();
     hasMore = true;
     return true;
 }
@@ -626,6 +666,7 @@ void ActivityLogMiner::pauseReq(int reqId)
     throw InfosmeException(EXC_EXPIRED,"request with id=%d expired or doesn't exists",reqId);
   }
   it->second->closeFile();
+  it->second->show("pauseReq");
 }
 
 

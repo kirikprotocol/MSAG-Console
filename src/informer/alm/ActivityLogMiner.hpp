@@ -42,9 +42,10 @@ protected:
       day=-1;
       hour=-1;
       linesRead = 0;
-      version=0;
       zipVersion=0;
+      version=0;
       refCount=0;
+      offset=0;
       busy=false;
     }
 
@@ -61,6 +62,8 @@ protected:
         delete this;
       }
     }
+
+      void show( const char* where );
 
       bool parseRecord( msgtime_type endTime,
                         ALMResult* result,
@@ -85,6 +88,21 @@ protected:
           return ( currentTimeSeconds() > endTime );
       }
 
+      void advance( bool bigjump ) {
+          if (bigjump) {
+              if (hour!=-1) {
+                  curDate -= curDate % (60*60);
+                  curDate += 60*60;
+              } else {
+                  curDate -= curDate % (24*60*60);
+                  curDate += 24*60*60;
+              }
+          } else {
+              curDate -= curDate % 60;
+              curDate += 60;
+          }
+      }
+
   public:
     dlvid_type dlvId;
     ALMRequestFilter filter;
@@ -95,6 +113,7 @@ protected:
     smsc::core::buffers::File f;
     unsigned zipVersion;   // 0 for nonzip, >0 for zip
     uint64_t nextzipchunk; // offset to the next zip chunk (=0 if not zipped)
+    uint64_t offset;       // offset in the current file (=0 if next is needed)
     int linesRead;
     unsigned version;      // the version of file format
     int refCount;

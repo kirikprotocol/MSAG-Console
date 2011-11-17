@@ -1198,7 +1198,7 @@ bool DcpServer::doHandleAlmMsgRequest( int32_t reqId, int32_t count, int32_t tim
     sz+=mi.length<eyeline::protogen::framework::SerializerBuffer>();
   }
   if ( counter ) { *counter = cnt; }
-  alm.pauseReq(reqId);
+  alm.pauseReq(reqId); 
   return hasMore;
 }
 

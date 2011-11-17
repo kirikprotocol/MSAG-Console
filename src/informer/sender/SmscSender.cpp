@@ -406,9 +406,6 @@ hasSessionError_(false)
 SmscSender::~SmscSender()
 {
     stop();
-    if (session_.get()) {
-        session_->close();
-    }
     if (parser_) delete parser_;
     if (wQueue_.get()) {
         assert(wQueue_->Count() == 0);
@@ -1364,6 +1361,14 @@ void SmscSender::stop()
         isStopping_ = true;
         awaken_ = true;
         queueMon_.notifyAll();
+    }
+    // NOTE: it is a race condition!
+    // because the session may become destroyed.
+    // But we still use the construct until the smartptr are implemented.
+    // We need to close the session because sender connectLoop may
+    // be waiting about 120s on connection events.
+    if (session_.get()) {
+        session_->close();
     }
     WaitFor();
 }
