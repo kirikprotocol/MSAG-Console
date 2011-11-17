@@ -1,4 +1,4 @@
-include messages.def
+include MCAMessages.def
 
 protocol MCAServerProtocol
    FlushStats inmsg

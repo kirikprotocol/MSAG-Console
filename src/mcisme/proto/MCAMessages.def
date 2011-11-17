@@ -1,14 +1,14 @@
 include Types.def
 
-enum	Status
+enum byte Status
   OK 0
   SystemError 1
   SubscriberNotFound 2
 end
 
 message Response 1
-  Status	status 1
-  string	msg 2 opt
+  Status status 1
+  string msg 2 opt
 end
 
 message FlushStats 2
@@ -21,21 +21,21 @@ message GetStats 4
 end
 
 message GetStatsResp:Response 5
-  int32		missed 1 opt
-  int32		delivered 2 opt
-  int32		failed 3 opt
-  int32		notified 4 opt
+  int32 missed 1 opt
+  int32 delivered 2 opt
+  int32 failed 3 opt
+  int32 notified 4 opt
 end
 
 message GetRunStats 6
 end
 
 message GetRunStats:Response 7
-  int32		activeTasks 1 opt
-  int32		inQueueSize 2 opt
-  int32		outQueueSize 3 opt
-  int32		inSpeed	4 opt
-  int32		outSpeed 5 opt
+  int32 activeTasks 1 opt
+  int32 inQueueSize 2 opt
+  int32 outQueueSize 3 opt
+  int32 inSpeed	4 opt
+  int32 outSpeed 5 opt
 end
 
 message GetSched 8
@@ -43,15 +43,15 @@ message GetSched 8
 end
 
 message GetSchedResp:Response 9
-  int64		time 1 opt
-  string	subscriber 2 opt
-  byte		eventsCount 3 opt
-  int32		lastError 4 opt
+  int64  time 1 opt
+  string subscriber 2 opt
+  byte   eventsCount 3 opt
+  int32  lastError 4 opt
 end
 
 message TimeLineInfo 10
-  int64		time 1
-  int32		count 2
+  int64  time 1
+  int32  count 2
 end
 
 message GetSchedList 12
