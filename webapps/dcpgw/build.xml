@@ -47,10 +47,7 @@
         <mkdir dir="${dcpgw.build.dir}/classes"/>
         <unzip src="lib/smppcharsets.jar" dest="${dcpgw.build.dir}/smppcharsets"/>
         <delete dir="${dcpgw.build.dir}/smppcharsets/META-INF" failonerror="false"/>
-        <!--mkdir dir="${dcpgw.build.dir}/META-INF"/-->
-        <!--mkdir dir="${dcpgw.build.dir}/META-INF/services"/-->
-        <!--copy file="${dcpgw.source.classes}/META-INF/services/java.nio.charset.spi.CharsetProvider" todir="${dcpgw.build.dir}/META-INF/services"/-->
-        <!--delete dir="${dcpgw.source.classes}/META-INF" failonerror="false"/-->
+
         <javac srcdir="${src.dir}"
                destdir="${dcpgw.build.dir}/classes"
                classpathref="project.classpath"
@@ -82,7 +79,7 @@
                     <fileset file="lib/protogenfw.jar" />
                     <fileset file="lib/smppapi.jar" />
                     <fileset file="lib/utils.jar" />
-                    <!--fileset file="lib/smppcharsets.jar" /-->
+
                 </lib>
 
                 <service type="java.nio.charset.spi.CharsetProvider">
@@ -95,13 +92,7 @@
         <copy todir="${dcpgw.build.dir}/dcpgw">
             <fileset dir="${dcpgw.build.dir}/smppcharsets"/>
         </copy>
-        <!--mkdir dir="${dcpgw.build.dir}/dcpgw/main/main"/-->
-        <!--unzip src="${dcpgw.build.dir}/dcpgw/main/main.jar" dest="${dcpgw.build.dir}/dcpgw/main/main"/-->
-        <!--delete file="${dcpgw.build.dir}/dcpgw/main/main.jar"/-->
-        <!--mkdir dir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/-->
-        <!--copy file="${dcpgw.build.dir}/META-INF/services/java.nio.charset.spi.CharsetProvider" todir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/-->
-        <!--zip basedir="${dcpgw.build.dir}/dcpgw/main/main" destfile="${dcpgw.build.dir}/dcpgw/main/main.jar"/-->
-        <!--delete dir="${dcpgw.build.dir}/dcpgw/main/main" failonerror="false"/-->
+
         <zip basedir="${dcpgw.build.dir}/dcpgw" destfile="${dcpgw.distr.dir}/lib/dcpgw.jar"/>
 
         <chmod file="${dcpgw.distr.dir}/lib/dcpgw.jar" perm="u+x"/>
