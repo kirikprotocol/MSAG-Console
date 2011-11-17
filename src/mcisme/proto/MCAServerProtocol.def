@@ -1,0 +1,18 @@
+include messages.def
+
+protocol MCAServerProtocol
+   FlushStats inmsg
+   FlushStatsResp outmsg
+   GetStats inmsg
+   GetStatsResp outmsg
+   GetRunStats inmsg
+   GetRunStats outmsg
+   GetSched inmsg
+   GetSchedResp outmsg
+   GetSchedList inmsg
+   GetSchedListResp outmsg
+   GetProfile inmsg
+   GetProfileResp outmsg
+   SetProfile inmsg
+   SetProfileResp outmsg
+end
