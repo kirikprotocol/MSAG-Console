@@ -62,7 +62,7 @@
         <mkdir dir="${dcpgw.distr.dir}/lib"/>
 
         <!-- Construct the One-JAR file -->
-            <one-jar destfile="${dcpgw.distr.dir}/lib/dcpgw.jar">
+            <one-jar destfile="${dcpgw.build.dir}/dcpgw.jar">
 
                 <manifest>
                     <attribute name="One-Jar-Main-Class" value="mobi.eyeline.dcpgw.Gateway"/>
@@ -73,7 +73,6 @@
                     <!-- Construct main.jar from classes and source code -->
                     <fileset dir="${dcpgw.build.dir}/classes"/>
                     <fileset file="conf/log4j.properties" />
-                    <fileset dir="${dcpgw.build.dir}" includes="META-INF"/>
                 </main>
 
                 <lib>
@@ -90,8 +89,15 @@
                 </service>
             </one-jar>
 
-        <!--mkdir dir="${dcpgw.build.dir}/dcpgw"/-->
-        <!--unzip src="${dcpgw.build.dir}/dcpgw.jar" dest="${dcpgw.build.dir}/dcpgw"/-->
+        <mkdir dir="${dcpgw.build.dir}/dcpgw"/>
+        <unzip src="${dcpgw.build.dir}/dcpgw.jar" dest="${dcpgw.build.dir}/dcpgw"/>
+        <mkdir dir="${dcpgw.build.dir}/dcpgw/main/main"/>
+        <unzip src="${dcpgw.build.dir}/main.jar" dest="${dcpgw.build.dir}/dcpgw/main/main"/>
+        <mkdir dir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/>
+        <copy file="${dcpgw.build.dir}/META-INF/services/java.nio.charset.spi.CharsetProvider" todir="${dcpgw.build.dir}/dcpgw/main/main/META-INF/services"/>
+        <zip basedir="${dcpgw.build.dir}/dcpgw/main/main" destfile="${dcpgw.build.dir}/dcpgw/main.jar"/>
+        <delete dir="${dcpgw.build.dir}/dcpgw/main/main" failonerror="false"/>
+        <zip basedir="${dcpgw.build.dir}/dcpgw" destfile="${dcpgw.distr.dir}/lib/dcpgw.jar"/>
 
         <chmod file="${dcpgw.distr.dir}/lib/dcpgw.jar" perm="u+x"/>
 
