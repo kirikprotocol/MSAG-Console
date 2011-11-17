@@ -551,6 +551,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/SMSC/bin"/>
     <mkdir dir="${DISTR_DIR}/services/INMan"/>
     <mkdir dir="${DISTR_DIR}/services/INMan/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/ClusterController"/>
+    <mkdir dir="${DISTR_DIR}/services/ClusterController/bin"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
     <mkdir dir="${DISTR_DIR}/webapps"/>
@@ -565,6 +567,14 @@ Targets:
     <ant dir="${SCWEBSRC_DIR}" target="prebuild"/>
     <ant dir="${SCWEBSRC_DIR}" target="distr"/>
   </target>
+  
+  <target name="sc_mcisme_update" depends="mcisme_build" >
+    <mkdir dir="${DISTR_DIR}/services/MCISme"/>
+    <mkdir dir="${DISTR_DIR}/services/MCISme/bin"/>
+    <copy file="${BUILD_BIN}/mcisme/MCISme" todir="${DISTR_DIR}/services/MCISme/bin"/>
+    <chmod file="${DISTR_DIR}/services/MCISme/bin/MCISme" perm="755"/>
+  </target>
+  
 
   <target name="sc_update" depends="sc_makesmsc,sc_makeweb,sc_create_distr_tree_update">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
@@ -578,6 +588,8 @@ Targets:
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}/services/INMan/bin" includes="*.so"/>
     </chmod>
+    <copy file="${BUILD_BIN}/eyeline/ClusterController" todir="${DISTR_DIR}/services/ClusterController/bin"/>
+    <chmod file="${DISTR_DIR}/services/ClusterController/bin/ClusterController" perm="755"/>
     <copy file="${BUILD_BIN}/store/ArchiveDaemon" todir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
     <chmod file="${DISTR_DIR}/services/ArchiveDaemon/bin/ArchiveDaemon" perm="755"/>
     <chmod perm="755">
