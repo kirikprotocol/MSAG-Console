@@ -554,7 +554,9 @@ msgtime_type ActivityLog::fixActLogFormat( msgtime_type currentTime )
 }
 
 
-void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
+void ActivityLog::joinLogs( const std::string& dlvdir,
+                            bool hourly,
+                            bool destroyDir )
 {
     typedef struct stat mystat;
 
@@ -572,7 +574,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
         const std::string daypath = actpath + *i;
         if ( result.isOpened() ) {
             result.close();
-            closeJoinedLog( resultpath, thelog );
+            closeJoinedLog( resultpath, thelog, destroyDir );
         }
 
         unsigned year, month, mday;
@@ -595,7 +597,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
             const std::string hourpath = daypath + "/" + *j;
             if ( hourly && result.isOpened() ) {
                 result.close();
-                closeJoinedLog(resultpath,thelog);
+                closeJoinedLog(resultpath,thelog,destroyDir);
             }
 
             try {
@@ -690,26 +692,26 @@ void ActivityLog::joinLogs( const std::string& dlvdir, bool hourly )
 
     if ( result.isOpened() ) {
         result.close();
-        closeJoinedLog(resultpath,thelog);
+        closeJoinedLog(resultpath,thelog,destroyDir);
     }
 }
 
 
 void ActivityLog::closeJoinedLog( const std::string& resultpath,
-                                  smsc::logger::Logger* thelog )
+                                  smsc::logger::Logger* thelog,
+                                  bool destroyDir )
 {
     if ( 0 == ::rename( (resultpath + ".tmp").c_str(),
                         (resultpath + ".log").c_str() ) ) {
         // success
         // destroy all subdirectories
-        /*
-         * FIXME: temporary do not delete dirs
-        try {
-            FileGuard::rmdirs( (resultpath + "/").c_str() );
-        } catch ( std::exception& e ) {
-            smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
+        if ( destroyDir ) {
+            try {
+                FileGuard::rmdirs( (resultpath + "/").c_str() );
+            } catch ( std::exception& e ) {
+                smsc_log_warn(thelog,"could not delete '%s'",resultpath.c_str());
+            }
         }
-         */
     } else {
         smsc_log_warn(thelog,"could not rename '%s.tmp'",resultpath.c_str());
     }

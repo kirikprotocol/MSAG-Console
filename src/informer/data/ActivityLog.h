@@ -64,13 +64,15 @@ public:
     /// try to join all logs for a given delivery.
     /// @param hourly - if set then join hourly, otherwise daily
     static void joinLogs( const std::string& dlvdir,
-                          bool hourly = true );
+                          bool hourly = true,
+                          bool destroyDir = false );
 
 private:
     void createFile( msgtime_type currentTime, struct tm& now );
     void makeActLogPath( char* buf, const struct tm& now ) const;
     static void closeJoinedLog( const std::string& resultpath,
-                                smsc::logger::Logger* thelog );
+                                smsc::logger::Logger* thelog,
+                                bool destroyDir );
 
 private:
     smsc::logger::Logger*              log_;
