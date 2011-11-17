@@ -65,6 +65,7 @@
                 <manifest>
                     <attribute name="One-Jar-Main-Class" value="mobi.eyeline.dcpgw.Gateway"/>
                     <!--attribute name="Class-Path" value="smppcharsets.jar"/-->
+                    <attribute name="Implementation-Version" value="${dcpgw.implementation.version}"/>
                 </manifest>
 
                 <main>
