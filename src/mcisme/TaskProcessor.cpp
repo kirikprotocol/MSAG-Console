@@ -386,7 +386,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   }
   try {
     smsc::system::common::TimeZoneManager::Init(timeZoneFileLocation.c_str(), routesFileLocation.c_str());
-  } catch(Exception e) {
+  } catch(Exception& e) {
     smsc_log_warn(logger, "TimeZoneManager::Init() error. %s", e.what());
     throw ConfigException(e.what());
   }
@@ -1049,7 +1049,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* p_info,
 
     try {
       checkAddress(mcEventOut->msg.called_abonent.getText().c_str());
-    } catch(Exception e) {
+    } catch(Exception& e) {
       smsc_log_error(logger, "Skip notification message - bad address %s", e.what());
       continue;
     }
@@ -1142,7 +1142,7 @@ string TaskProcessor::getSchedItem(const string& Abonent)
   smsc_log_info(logger, "Received schedule query for Subscriber %s", Abonent.c_str());
   string result;
 
-  try{checkAddress(Abonent.c_str());}catch(Exception e)
+  try{checkAddress(Abonent.c_str());}catch(Exception& e)
   {
     smsc_log_info(logger, "Schedule query contains bad address %s", e.what());
     return result;
