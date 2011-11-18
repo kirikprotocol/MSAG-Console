@@ -92,10 +92,14 @@ UDTS::deserialize(const common::TP& packet_buf)
       uint8_t tmpBuf[eyeline::sccp::SCCPAddress::_maxOctsLen];
       offset = common::extractField(packet_buf, offset, tmpBuf, fieldLen);
       if ( beginOfAddrParam == calledAddrPtr ) {
-        _calledAddress.unpackOcts(tmpBuf, fieldLen);
+        if (!_calledAddress.unpackOcts(tmpBuf, fieldLen))
+          throw utilx::DeserializationException("UDTS::deserialize::: invalid called address format '%s'",
+                                                utilx::hexdmp(tmpBuf, fieldLen).c_str());
         _isSetCalledAddress = true;
       } else {
-        _callingAddress.unpackOcts(tmpBuf, fieldLen);
+        if (!_callingAddress.unpackOcts(tmpBuf, fieldLen))
+          throw utilx::DeserializationException("UDTS::deserialize::: invalid calling address format '%s'",
+                                                utilx::hexdmp(tmpBuf, fieldLen).c_str());
         _isSetCallingAddress = true;
       }
     } else if ( offset == dataPtr  ) {
