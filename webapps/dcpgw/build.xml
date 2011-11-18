@@ -35,6 +35,7 @@
 
     <target name="unpack">
         <delete dir="${dcpgw.build.dir}/onejar" failonerror="false"/>
+        <copy file="libdev/one-jar-ant-task-0.97.jar" tofile="${dcpgw.build.dir}/onejar/one-jar-ant-task-0.97.jar"/>
         <unzip src="libdev/one-jar-ant-task-0.97.jar" dest="${dcpgw.build.dir}/onejar"/>
     </target>
 
