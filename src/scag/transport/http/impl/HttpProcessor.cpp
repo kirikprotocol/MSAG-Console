@@ -636,11 +636,11 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         else {
           if ( ! rescmd ) {
               // session is locked by another command
-              smsc_log_debug( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
+              smsc_log_debug( logger, "statusResponse session is locked?  bad HttpResponse addr %p", rescmd);
               return re::STATUS_PROCESS_LATER;
           } else {
               // session is not found
-              smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
+              smsc_log_error( logger, "statusResponse session not found abonent=%s", response.getAddress().c_str());
               // return re::STATUS_FAILED;
               rs.status = re::STATUS_FAILED;
           }

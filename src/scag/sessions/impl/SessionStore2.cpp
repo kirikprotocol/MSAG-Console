@@ -339,25 +339,34 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 MutexGuard mg(cacheLock_);
                 if ( ! create ) {
                     // creation is forbidden
+                	// try to fill created stub from cache
+                	// if session queue already contains any commands, then let this session remain in cache and flag session=0
+                	// else delete it. Deletion should be a bit later, not under cache lock.
                     session = cache_->release( key );
-                	if ( session && !session->commandCount() ) {
-						delete session;
-						session = 0;
-						//--loadedSessions_;
-						//--lockedSessions_;
-						loadedSessions_->increment(-1);
-						lockedSessions_->increment(-1);
+                	if ( session ) {
+                		if ( session->commandCount() ) {
+    			            cache_->set( key, cache_->val2store( session ));
+    						session = 0;
+                		}
+                		else {
+                			loadedSessions_->increment(-1);
+                			lockedSessions_->increment(-1);
+                		}
+                	}
+                	else {
+                	    smsc_log_error( log_, "SessionStoreImpl::fetchSession Error:lost stub key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
                 	}
                 }
                 else {
-                    // ++totalSessions_;
                     totalSessions_->increment();
                 }
             }
             if ( !create ) {
                 // failure to upload from disk and creation flag is not set
-//                delete session;
-//                session = 0;
+            	if ( session ) {
+            		delete session;
+            		session = 0;
+            	}
                 what = "is not found";
             }
             else {
@@ -390,7 +399,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     }
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-    { //debug
+	if ( log_->isDebugEnabled() ) {
     	time_t tl, te;
     	std::string tls = "?";
     	std::string tle = "?";
@@ -416,7 +425,7 @@ void SessionStoreImpl::releaseSession( Session& session )
     // NOTE: key should not be a reference, as session may be destroyed at the end of the method
     const SessionKey key = session.sessionKey();
 
-    { //debug
+	if ( log_->isDebugEnabled() ) {
     	time_t tl, te;
     	std::string tls = "?";
     	std::string tle = "?";
