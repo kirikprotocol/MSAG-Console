@@ -217,7 +217,7 @@ public class PDUListenerImpl implements PDUListener {
 
             case DeliverSMResp:{
                 DeliverSMResp resp = (DeliverSMResp) pdu;
-                return Server.getInstance().handle(resp);
+                return server.handle(resp);
             }
 
         }

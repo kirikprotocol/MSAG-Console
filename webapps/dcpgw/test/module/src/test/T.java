@@ -1,7 +1,9 @@
 package test;
 
 import mobi.eyeline.dcpgw.journal.DeliveryData;
+import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
+import mobi.eyeline.smpp.api.pdu.DataSM;
 import mobi.eyeline.smpp.api.pdu.SubmitSM;
 import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.Address;
@@ -229,11 +231,29 @@ public abstract class T {
         return submitSM;
     }
 
+    protected static DataSM getDataSMWithSimpleConfiguration() throws InvalidAddressFormatException {
+        DataSM dataSM = new DataSM();
+        dataSM.setConnectionName(CONNECTION_NAME);
+        dataSM.setDestinationAddress(DESTINATION_ADDRESS);
+        dataSM.setSequenceNumber(SEQUENCE_NUMBER);
+        dataSM.setMessage(MESSAGE);
+        return dataSM;
+    }
+
     protected static SubmitSMResp getSubmitSMRespWithSimpleConfiguration(){
         SubmitSMResp submitSMResp = new SubmitSMResp();
         submitSMResp.setSequenceNumber(SEQUENCE_NUMBER);
         submitSMResp.setConnectionName(CONNECTION_NAME);
         return submitSMResp;
+    }
+
+    protected static Delivery getDeliveryWithSimpleConfiguration(){
+        Delivery delivery = new Delivery();
+        delivery.setId(DELIVERY_ID);
+        delivery.setUser(INFORMER_USER);
+        String[] ar = new String[1]; ar[0] = SERVICE_NUMBER;
+        delivery.setServicesNumbers(ar);
+        return delivery;
     }
 
 }

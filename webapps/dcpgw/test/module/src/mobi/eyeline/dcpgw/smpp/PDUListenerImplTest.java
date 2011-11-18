@@ -5,13 +5,10 @@ import static org.mockito.Mockito.*;
 import junit.framework.Assert;
 import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.dcp.DcpConnectionImpl;
-import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.smpp.api.SmppException;
+import mobi.eyeline.smpp.api.pdu.DataSM;
 import mobi.eyeline.smpp.api.pdu.SubmitSM;
-import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
-import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
-import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,19 +32,13 @@ public class PDUListenerImplTest extends T{
 
         config = mock(Config.class);
 
-
         when(config.getInitialMessageIdRang()).thenReturn((long) 0);
 
         when(config.getRang()).thenReturn(10000);
 
         Provider provider = new Provider(PROVIDER_NAME);
 
-        Delivery delivery = new Delivery();
-        delivery.setId(DELIVERY_ID);
-        delivery.setUser(INFORMER_USER);
-        String[] ar = new String[1]; ar[0] = SERVICE_NUMBER;
-        delivery.setServicesNumbers(ar);
-        provider.addDelivery(delivery);
+        provider.addDelivery(getDeliveryWithSimpleConfiguration());
 
         when(config.getProvider(CONNECTION_NAME)).thenReturn(provider);
 
@@ -57,34 +48,27 @@ public class PDUListenerImplTest extends T{
 
         server = mock(Server.class);
 
-        SubmitSMResp resp = getSubmitSMRespWithSimpleConfiguration();
-        resp.setStatus(mobi.eyeline.smpp.api.types.Status.SUBMITFAIL);
-        resp.setTLV(
-                new TLVString((short) 0x001D,
-                        "Provider " + provider.getName() + " doesn't have delivery with service number '" + WRONG_SERVICE_NUMBER + "'.")
-        );
-
     }
 
-
-    // Проверяем
     @Test
-    public void get01handlePDUTest() throws Exception {
-        SubmitSM submitSM = getSubmitSMWithSimpleConfiguration();
-        submitSM.setSourceAddress(SERVICE_NUMBER);
-
+    public void handlePDUTest() throws Exception {
         PDUListenerImpl pduListener = new PDUListenerImpl(config, server);
-        Assert.assertTrue("PDU listener couldn't handle SubmitSM.", pduListener.handlePDU(submitSM) );
-    }
-
-
-    @Test
-    public void get02handlePDUTest() throws Exception {
+        
         SubmitSM submitSM = getSubmitSMWithSimpleConfiguration();
+        
+        submitSM.setSourceAddress(SERVICE_NUMBER);        
+        Assert.assertTrue("PDU listener couldn't handle SubmitSM.", pduListener.handlePDU(submitSM) );
+        
         submitSM.setSourceAddress(WRONG_SERVICE_NUMBER);
+        Assert.assertTrue("PDU listener couldn't handle SubmitSM with wrong service number", pduListener.handlePDU(submitSM) );
 
-        PDUListenerImpl pduListener = new PDUListenerImpl(config, server);
-        Assert.assertTrue("PDU listener couldn't handle SubmitSM.", pduListener.handlePDU(submitSM) );
+        DataSM dataSM = getDataSMWithSimpleConfiguration();
+
+        dataSM.setSourceAddress(SERVICE_NUMBER);
+        Assert.assertTrue("PDU listener couldn't handle DataSM.", pduListener.handlePDU(dataSM) );
+
+        dataSM.setSourceAddress(WRONG_SERVICE_NUMBER);
+        Assert.assertTrue("PDU listener couldn't handle DataSM with wrong service number", pduListener.handlePDU(dataSM) );
     }
 
     @AfterClass
