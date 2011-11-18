@@ -7,8 +7,11 @@ import mobi.eyeline.dcpgw.Config;
 import mobi.eyeline.dcpgw.dcp.DcpConnectionImpl;
 import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
+import mobi.eyeline.smpp.api.SmppException;
 import mobi.eyeline.smpp.api.pdu.SubmitSM;
+import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
+import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,11 +28,13 @@ import java.io.IOException;
 public class PDUListenerImplTest extends T{
 
     private static Config config;
+    private static Server server;
 
     @BeforeClass
-    public static void setUpBeforeClass() throws IOException, InvalidAddressFormatException {
+    public static void setUpBeforeClass() throws IOException, SmppException {
 
         config = mock(Config.class);
+
 
         when(config.getInitialMessageIdRang()).thenReturn((long) 0);
 
@@ -50,26 +55,37 @@ public class PDUListenerImplTest extends T{
 
         when(config.getDCPConnection(INFORMER_USER)).thenReturn(dcpConnection);
 
+        server = mock(Server.class);
+
+        SubmitSMResp resp = getSubmitSMRespWithSimpleConfiguration();
+        resp.setStatus(mobi.eyeline.smpp.api.types.Status.SUBMITFAIL);
+        resp.setTLV(
+                new TLVString((short) 0x001D,
+                        "Provider " + provider.getName() + " doesn't have delivery with service number '" + WRONG_SERVICE_NUMBER + "'.")
+        );
 
     }
 
+
+    // Проверяем
     @Test
     public void get01handlePDUTest() throws Exception {
         SubmitSM submitSM = getSubmitSMWithSimpleConfiguration();
         submitSM.setSourceAddress(SERVICE_NUMBER);
 
-        PDUListenerImpl pduListener = new PDUListenerImpl(config);
+        PDUListenerImpl pduListener = new PDUListenerImpl(config, server);
         Assert.assertTrue("PDU listener couldn't handle SubmitSM.", pduListener.handlePDU(submitSM) );
     }
 
-    /*@Test
+
+    @Test
     public void get02handlePDUTest() throws Exception {
         SubmitSM submitSM = getSubmitSMWithSimpleConfiguration();
         submitSM.setSourceAddress(WRONG_SERVICE_NUMBER);
 
-        PDUListenerImpl pduListener = new PDUListenerImpl(config);
-        Assert.assertTrue("PDU listener couldn't handle SubmitSM.", !pduListener.handlePDU(submitSM) );
-    } */
+        PDUListenerImpl pduListener = new PDUListenerImpl(config, server);
+        Assert.assertTrue("PDU listener couldn't handle SubmitSM.", pduListener.handlePDU(submitSM) );
+    }
 
     @AfterClass
     public static void setUpAfterClass(){

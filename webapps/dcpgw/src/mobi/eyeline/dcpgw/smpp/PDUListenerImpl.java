@@ -35,9 +35,11 @@ public class PDUListenerImpl implements PDUListener {
     private boolean reject = false;
 
     private Config config;
+    private Server server;
 
-    public PDUListenerImpl(Config config){
+    public PDUListenerImpl(Config config, Server server){
         this.config = config;
+        this.server = server;
         initial_message_id_rang = config.getInitialMessageIdRang();
         rang = config.getRang();
         limit = initial_message_id_rang + rang;
@@ -65,6 +67,7 @@ public class PDUListenerImpl implements PDUListener {
                         pw.close();
                     } catch (IOException e) {
                         log.error("Couldn't write to file new initial message id rang.", e);
+                        return false;
                     }
                 }
 
@@ -100,7 +103,8 @@ public class PDUListenerImpl implements PDUListener {
                                     "Provider "+provider.getName()+" doesn't have delivery with service number '"+source_address+"'.")
                     );
                     try{
-                        Server.getInstance().send(submitSMResp, false);
+                        server.send(submitSMResp, false);
+                        return true;
                     } catch (SmppException e) {
                         log.error("Could not send response to client", e);
                         return false;
@@ -143,6 +147,7 @@ public class PDUListenerImpl implements PDUListener {
                         pw.close();
                     } catch (IOException e) {
                         log.error("Couldn't write to file new initial message id rang.", e);
+                        return false;
                     }
                 }
 
@@ -178,7 +183,8 @@ public class PDUListenerImpl implements PDUListener {
                                     "Provider "+provider.getName()+" doesn't have delivery with service number '"+source_address+"'.")
                     );
                     try{
-                        Server.getInstance().send(submitSMResp, false);
+                        server.send(submitSMResp, false);
+                        return true;
                     } catch (SmppException e) {
                         log.error("Could not send response to client", e);
                         return false;

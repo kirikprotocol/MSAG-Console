@@ -64,7 +64,7 @@ public class Gateway extends Thread implements PDUListener {
             throw new InitializationException(e);
         }
 
-        pduListener = new PDUListenerImpl(config);
+        pduListener = new PDUListenerImpl(config, Server.getInstance());
         procQueue = new ProcessingQueue(properties, pduListener, null);
 
         Server.getInstance().init(properties, this);

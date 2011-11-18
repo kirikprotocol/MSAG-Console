@@ -3,6 +3,7 @@ package test;
 import mobi.eyeline.dcpgw.journal.DeliveryData;
 import mobi.eyeline.dcpgw.smpp.FinalMessageState;
 import mobi.eyeline.smpp.api.pdu.SubmitSM;
+import mobi.eyeline.smpp.api.pdu.SubmitSMResp;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import org.junit.runner.Description;
@@ -219,13 +220,20 @@ public abstract class T {
     protected static int SEQUENCE_NUMBER = 1234;
     protected static String PROVIDER_NAME = "provider 1";
 
-    protected SubmitSM getSubmitSMWithSimpleConfiguration() throws InvalidAddressFormatException {
+    protected static SubmitSM getSubmitSMWithSimpleConfiguration() throws InvalidAddressFormatException {
         SubmitSM submitSM = new SubmitSM();
         submitSM.setConnectionName(CONNECTION_NAME);
         submitSM.setDestinationAddress(DESTINATION_ADDRESS);
         submitSM.setSequenceNumber(SEQUENCE_NUMBER);
         submitSM.setMessage(MESSAGE);
         return submitSM;
+    }
+
+    protected static SubmitSMResp getSubmitSMRespWithSimpleConfiguration(){
+        SubmitSMResp submitSMResp = new SubmitSMResp();
+        submitSMResp.setSequenceNumber(SEQUENCE_NUMBER);
+        submitSMResp.setConnectionName(CONNECTION_NAME);
+        return submitSMResp;
     }
 
 }
