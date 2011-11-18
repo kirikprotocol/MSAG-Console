@@ -1,5 +1,7 @@
-#pragma ident "$Id$"
 #ifndef __CORE_SYNCHRONIZATION_RECURSIVEMUTEX_HPP__
+#ifndef __GNUC__
+#pragma ident "$Id$"
+#endif
 #define __CORE_SYNCHRONIZATION_RECURSIVEMUTEX_HPP__
 
 #include <string>
