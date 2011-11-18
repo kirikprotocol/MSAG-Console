@@ -65,6 +65,7 @@
         <section name="Admin">
             <param name="host" type="string">@listen.host@</param>
             <param name="port" type="int">@mcisme.admin.port@</param>
+            <param name="type" type="string">protogen</param> <!-- xml|protogen, by default: xml -->
 	</section>
 
         <section name="SMSC">
@@ -135,11 +136,11 @@
         </section>
 
 	<section name="Advertising">
-            <param name="BEProtocolVersion" type="int">2</param>
             <param name="useAdvert" type="bool">false</param>
             <param name="server" type="string">@mcisme.Advertising.server@</param>
             <param name="port" type="int">@mcisme.Advertising.port@</param>
             <param name="timeout" type="int">@mcisme.Advertising.timeout@</param><!-- milliseconds -->
+            <param name="BEProtocolVersion" type="int">2</param>
             <param name="connectTimeout" type="int">@mcisme.Advertising.timeout@</param> <!-- seconds -->
             <param name="reconnectionAttemptPeriod" type="int">5</param>
             <param name="proxyCount" type="int">10</param>
@@ -169,6 +170,7 @@
 	    <param name="schedulingPolicy" type="string">ConstResendingPeriod</param>
 	    <param name="resendingPeriod" type="string">00:30:00</param>
 	    <param name="schedOnBusy" type="string">00:05:00</param>	    
+	    <param name="schedDelay" type="string">00:00:30</param>
 	    
 	    <section name="schedule">
 	        <param name="default" type="string">@mcisme.errdefault@</param>
