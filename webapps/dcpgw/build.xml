@@ -69,6 +69,7 @@
             <main>
                 <fileset dir="${dcpgw.build.dir}/classes"/>
                 <fileset file="conf/log4j.properties" />
+                <fileset dir="conf" includes="dtds/"/>
             </main>
 
             <lib>
@@ -105,7 +106,7 @@
 
         <copy file="${conf.dir}/config.properties"  todir="${dcpgw.distr.dir}/conf"/>
 
-        <copy file="${conf.dir}/configuration.dtd"  todir="${dcpgw.distr.dir}/conf"/>
+        <copy file="/conf/dtds/configuration.dtd"  todir="${dcpgw.distr.dir}/conf"/>
 
     </target>
 
@@ -121,7 +122,7 @@
 
         <copy file="${conf.dir}/config.properties"  todir="${dcpgw.distr.dir}/conf"/>
 
-        <copy file="${conf.dir}/configuration.dtd"  todir="${dcpgw.distr.dir}/conf"/>
+        <copy file="/conf/dtds/configuration.dtd"  todir="${dcpgw.distr.dir}/conf"/>
 
         <copy file="${conf.dir}/deliveries.xml"  todir="${dcpgw.distr.dir}/conf"/>
 
