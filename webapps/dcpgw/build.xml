@@ -37,7 +37,7 @@
         <delete dir="${dcpgw.build.dir}/onejar" failonerror="false"/>
         <copy file="libdev/one-jar-ant-task-0.97.jar" tofile="${dcpgw.build.dir}/onejar/one-jar-ant-task-0.97.jar"/>
         <unzip src="${dcpgw.build.dir}/onejar/one-jar-ant-task-0.97.jar" dest="${dcpgw.build.dir}/onejar"/>
-        <copy file="libdev/one-jar-ant-task.xml" tofile="${dcpgw.build.dir}/onejar/one-jar-ant-task.xml"/>
+        <!--copy file="libdev/one-jar-ant-task.xml" tofile="${dcpgw.build.dir}/onejar/one-jar-ant-task.xml"/-->
     </target>
 
     <target name="compile" depends="prebuild">
