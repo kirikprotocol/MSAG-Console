@@ -11,7 +11,7 @@ SerializeBuffer& SerializeBuffer::operator >> (std::string& str)
     this->Read((char*)&len,1);
     char scb[256];
 
-    if (len>255) throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
+    // if (len>255) throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
 
     this->Read(scb,len);
     scb[len] = 0;
@@ -23,7 +23,7 @@ SerializeBuffer& SerializeBuffer::operator >> (std::string& str)
 SerializeBuffer& SerializeBuffer::operator << (std::string& str)
 {
     uint8_t len = uint8_t(str.size());
-    if (len>255) throw smsc::util::Exception("Attempt to write %d byte in buffer with size %d",(int)len,255);
+    // if (len>255) throw smsc::util::Exception("Attempt to write %d byte in buffer with size %d",(int)len,255);
         
     this->Append((char*)&len,1);
     this->Append((char*)str.data(),len);
