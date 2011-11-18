@@ -25,6 +25,12 @@ public class Provider {
         deliveries = new Vector<Delivery>();
     }
 
+    public Provider(String name){
+        this.name = name;
+        service_number_delivery_table = new Hashtable<String, Delivery>();
+        deliveries = new Vector<Delivery>();
+    }
+
     public Vector<Delivery> getDeliveries() {
         return deliveries;
     }

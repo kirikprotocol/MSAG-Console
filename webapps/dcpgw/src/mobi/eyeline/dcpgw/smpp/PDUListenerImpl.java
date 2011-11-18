@@ -11,7 +11,6 @@ import mobi.eyeline.smpp.api.pdu.tlv.TLVString;
 import mobi.eyeline.smpp.api.types.RegDeliveryReceipt;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -32,7 +31,6 @@ public class PDUListenerImpl implements PDUListener {
     private long initial_message_id_rang;
     private long limit;
     private long rang;
-    private File message_id_rang_file;
 
     private boolean reject = false;
 
@@ -43,7 +41,6 @@ public class PDUListenerImpl implements PDUListener {
         initial_message_id_rang = config.getInitialMessageIdRang();
         rang = config.getRang();
         limit = initial_message_id_rang + rang;
-        message_id_rang_file = config.getMessageIdRangFile();
     }
 
     @Override
@@ -61,7 +58,7 @@ public class PDUListenerImpl implements PDUListener {
                 long message_id = initial_message_id_rang + al.incrementAndGet();
                 if (message_id == limit){
                     try {
-                        PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
+                        PrintWriter pw = new PrintWriter(new FileWriter(config.getMessageIdRangFile()));
                         limit = limit + rang;
                         pw.println(limit);
                         pw.flush();
@@ -83,7 +80,7 @@ public class PDUListenerImpl implements PDUListener {
                 log.debug("receive "+pdu.getType()+": id="+message_id+", sn="+sequence_number+", con="+connection_name
                           +", src="+source_address+", dest="+destination_address+", text="+text);
 
-                Provider provider = Config.getInstance().getProvider(connection_name);
+                Provider provider = config.getProvider(connection_name);
                 if (provider == null) {
                     log.error("Couldn't find provider for connection "+connection_name);
                     return false;
@@ -115,7 +112,7 @@ public class PDUListenerImpl implements PDUListener {
 
                 log.debug("id "+message_id+", delivery id "+delivery_id+", informer user "+informer_user);
 
-                DcpConnectionImpl connection = Config.getInstance().getDCPConnection(informer_user);
+                DcpConnectionImpl connection = config.getDCPConnection(informer_user);
 
                 mobi.eyeline.informer.admin.delivery.Message informer_message =
                     getMessage(message_id, source_address, destination_address, text, connection_name, register_delivery);
@@ -139,7 +136,7 @@ public class PDUListenerImpl implements PDUListener {
                 long message_id = initial_message_id_rang + al.incrementAndGet();
                 if (message_id == limit){
                     try {
-                        PrintWriter pw = new PrintWriter(new FileWriter(message_id_rang_file));
+                        PrintWriter pw = new PrintWriter(new FileWriter(config.getMessageIdRangFile()));
                         limit = limit + rang;
                         pw.println(limit);
                         pw.flush();
@@ -161,7 +158,7 @@ public class PDUListenerImpl implements PDUListener {
                 log.debug("receive "+pdu.getType()+": id="+message_id+", sn="+sequence_number+", con="+connection_name
                           +", src="+source_address+", dest="+destination_address+", text="+text);
 
-                Provider provider = Config.getInstance().getProvider(connection_name);
+                Provider provider = config.getProvider(connection_name);
                 if (provider == null) {
                     log.error("Couldn't find provider for connection "+connection_name);
                     return false;
@@ -193,7 +190,7 @@ public class PDUListenerImpl implements PDUListener {
 
                 log.debug("id "+message_id+", delivery id "+delivery_id+", informer user "+informer_user);
 
-                DcpConnectionImpl connection = Config.getInstance().getDCPConnection(informer_user);
+                DcpConnectionImpl connection = config.getDCPConnection(informer_user);
 
                 mobi.eyeline.informer.admin.delivery.Message informer_message =
                     getMessage(message_id, source_address, destination_address, text, connection_name, register_delivery);

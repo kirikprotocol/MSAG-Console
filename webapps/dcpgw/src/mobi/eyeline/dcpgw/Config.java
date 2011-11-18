@@ -327,6 +327,10 @@ public class Config {
         return connection_provider_table.get(connection_name);
     }
 
+    public void setProvider(String connection_name, Provider provider){
+        connection_provider_table.put(connection_name, provider);
+    }
+
     public String getInformerUserPassword(String user){
         return informer_user_password_table.get(user);
     }

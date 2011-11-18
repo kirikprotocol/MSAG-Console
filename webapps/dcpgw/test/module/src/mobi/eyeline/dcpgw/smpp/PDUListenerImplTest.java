@@ -2,15 +2,18 @@ package mobi.eyeline.dcpgw.smpp;
 
 import static org.mockito.Mockito.*;
 
+import junit.framework.Assert;
 import mobi.eyeline.dcpgw.Config;
-import mobi.eyeline.dcpgw.dcp.DcpConnection;
 import mobi.eyeline.dcpgw.dcp.DcpConnectionImpl;
 import mobi.eyeline.dcpgw.model.Delivery;
 import mobi.eyeline.dcpgw.model.Provider;
 import mobi.eyeline.smpp.api.pdu.SubmitSM;
+import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
+import test.T;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -19,57 +22,57 @@ import java.io.IOException;
  * Date: 15.11.11
  * Time: 16:48
  */
-public class PDUListenerImplTest {
+public class PDUListenerImplTest extends T{
 
-    private static PDUListenerImpl pduListener;
-
-    private static String SERVICE_NUMBER = "10001";
-    private static String CONNECTION_NAME = "systemId1";
-    private static String DESTINATION_ADDRESS = "79139118729";
-    private static String INFORMER_USER = "informer_user1";
-    private static int DELIVERY_ID = 1111;
+    private static Config config;
 
     @BeforeClass
-    public static void setUpBeforeClass() throws IOException {
+    public static void setUpBeforeClass() throws IOException, InvalidAddressFormatException {
 
-        Config config = mock(Config.class);
+        config = mock(Config.class);
 
         when(config.getInitialMessageIdRang()).thenReturn((long) 0);
 
         when(config.getRang()).thenReturn(10000);
 
-        File file = new File(System.getProperty("user.dir")+ File.separator+".test"+File.separator+"message_id_rang");
+        Provider provider = new Provider(PROVIDER_NAME);
 
-        file.createNewFile();
-
-        when(config.getMessageIdRangFile()).thenReturn(file);
-
-        Provider provider = mock(Provider.class);
+        Delivery delivery = new Delivery();
+        delivery.setId(DELIVERY_ID);
+        delivery.setUser(INFORMER_USER);
+        String[] ar = new String[1]; ar[0] = SERVICE_NUMBER;
+        delivery.setServicesNumbers(ar);
+        provider.addDelivery(delivery);
 
         when(config.getProvider(CONNECTION_NAME)).thenReturn(provider);
-
-        Delivery delivery = mock(Delivery.class);
-
-        when(provider.getDelivery(SERVICE_NUMBER)).thenReturn(delivery);
-
-        when(delivery.getId()).thenReturn(DELIVERY_ID);
-
-        when(delivery.getUser()).thenReturn(INFORMER_USER);
 
         DcpConnectionImpl dcpConnection = mock(DcpConnectionImpl.class);
 
         when(config.getDCPConnection(INFORMER_USER)).thenReturn(dcpConnection);
 
-        pduListener = new PDUListenerImpl(config);
+
     }
 
+    @Test
     public void get01handlePDUTest() throws Exception {
-        SubmitSM submitSM = new SubmitSM();
-        submitSM.setConnectionName(CONNECTION_NAME);
+        SubmitSM submitSM = getSubmitSMWithSimpleConfiguration();
         submitSM.setSourceAddress(SERVICE_NUMBER);
-        submitSM.setDestinationAddress(DESTINATION_ADDRESS);
 
-        pduListener.handlePDU(submitSM);
+        PDUListenerImpl pduListener = new PDUListenerImpl(config);
+        Assert.assertTrue("PDU listener couldn't handle SubmitSM.", pduListener.handlePDU(submitSM) );
+    }
+
+    /*@Test
+    public void get02handlePDUTest() throws Exception {
+        SubmitSM submitSM = getSubmitSMWithSimpleConfiguration();
+        submitSM.setSourceAddress(WRONG_SERVICE_NUMBER);
+
+        PDUListenerImpl pduListener = new PDUListenerImpl(config);
+        Assert.assertTrue("PDU listener couldn't handle SubmitSM.", !pduListener.handlePDU(submitSM) );
+    } */
+
+    @AfterClass
+    public static void setUpAfterClass(){
 
     }
 
