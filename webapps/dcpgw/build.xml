@@ -106,7 +106,7 @@
 
         <copy file="${conf.dir}/config.properties"  todir="${dcpgw.distr.dir}/conf"/>
 
-        <copy file="${conf.dir}/dtds/configuration.dtd"  todir="${dcpgw.distr.dir}/conf"/>
+        <copy file="${conf.dir}/dtds/configuration.dtd"  todir="${dcpgw.distr.dir}"/>
 
     </target>
 
@@ -121,6 +121,8 @@
         <chmod file="${dcpgw.distr.dir}/bin/service" perm="u+x"/>
 
         <copy file="${conf.dir}/config.properties"  todir="${dcpgw.distr.dir}/conf"/>
+
+        <copy file="${conf.dir}/dtds/configuration.dtd"  todir="${dcpgw.distr.dir}"/>
 
         <copy file="${conf.dir}/deliveries.xml"  todir="${dcpgw.distr.dir}/conf"/>
 

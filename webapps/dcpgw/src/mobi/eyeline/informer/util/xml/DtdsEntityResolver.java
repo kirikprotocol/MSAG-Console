@@ -33,8 +33,8 @@ public class DtdsEntityResolver implements EntityResolver {
       if (logger.isDebugEnabled())
         logger.debug("filename: " + filename);
 
-      //InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
-      InputStream in = Gateway.class.getClassLoader().getResourceAsStream(filename);
+      InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
+      //InputStream in = Gateway.class.getClassLoader().getResourceAsStream(filename);
       if (in != null)
         return new InputSource(in);
       else
