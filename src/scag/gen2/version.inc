@@ -1,10 +1,10 @@
 
 #define VER_MAJOR 2
 #define VER_MINOR 0
-#define VER_BUILD 20111111
+#define VER_BUILD 20111118
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
-#define VER_DATE  "Fri Nov 11 11:11:11 NOVST 2011"
+#define VER_DATE  "Fri Nov 18 12:53:00 NOVST 2011"
 
 #define VER_STR "Eyeline Mobile Services Aggregation Gateway ver " VER_MAKE_STR(VER_MAJOR) "." VER_MAKE_STR(VER_MINOR) " build " VER_MAKE_STR(VER_BUILD) " date " VER_DATE
 

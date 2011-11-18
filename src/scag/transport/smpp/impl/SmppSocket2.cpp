@@ -73,7 +73,6 @@ void SmppSocket::processInput()
     if(rdToRead>70000)
     {
         smsc_log_warn(log_,"command received from %s too large:%d",getPeer(),rdToRead);
-        MutexGuard mg(mtx);
         disconnect();
         return;
     }
