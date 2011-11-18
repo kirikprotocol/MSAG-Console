@@ -153,6 +153,10 @@ private:
   SMS* sms;
   bool diverted;
   int inDlgId;
+#ifdef SMPPRESPHASOPTS
+  char* uopt; //unknown optinals
+  int uoptSize;
+#endif
 public:
 
   bool haveDpf;
@@ -240,10 +244,32 @@ public:
     return inDlgId;
   }
 
+#ifdef SMPPRESPHASOPTS
+  void setUOpt(const char* data,int dataSize)
+  {
+    if(uopt)delete [] uopt;
+    uopt=new char[dataSize];
+    uoptSize=dataSize;
+    memcpy(uopt,data,dataSize);
+  }
+
+  const char* getUOpt(int& dataSize)
+  {
+    dataSize=uoptSize;
+    return uopt;
+  }
+
+#endif
+
+
+
   SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false),
     inDlgId(0),haveDpf(false),dpfResult(0),
     haveDeliveryFailureReason(false),deliveryFailureReason(0),
     haveNetworkErrorCode(false),ussd_session_id(-1)
+#ifdef SMPPRESPHASOPTS
+  ,uopt(0),uoptSize(0)
+#endif
     {};
   ~SmsResp()
   {
@@ -1415,6 +1441,14 @@ public:
           {
             xsm->get_optional().set_additionalStatusInfoText(c.get_resp()->additionalStatusInfoText.c_str());
           }
+#ifdef SMPPRESPHASOPTS
+          int uoptLen;
+          const char* uopt=c.get_resp()->getUOpt(uoptLen);
+          if(uoptLen)
+          {
+            xsm->get_optional().set_unknownFields(uopt,uoptLen);
+          }
+#endif
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }else
         {
@@ -1427,6 +1461,14 @@ public:
           {
             xsm->set_ussdSessionId(c.get_resp()->ussd_session_id);
           }
+#ifdef SMPPRESPHASOPTS
+          int uoptLen;
+          const char* uopt=c.get_resp()->getUOpt(uoptLen);
+          if(uoptLen)
+          {
+            xsm->get_optional().set_unknownFields(uopt,uoptLen);
+          }
+#endif
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }
       }
