@@ -145,7 +145,7 @@ protected:
 
   void submitResp(Tuple&,SMS*,int);
 
-  void finalizeSms(SMSId id,SMS& sms);
+  void finalizeSms(Tuple& t,SMS& sms);
 
   void fullReport(SMSId msgid,SMS& sms);
 

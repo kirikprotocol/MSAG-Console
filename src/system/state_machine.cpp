@@ -1678,8 +1678,8 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-  if(fromMap && ( sms->getOriginatingDescriptor().mscLength==0 ||
-                  sms->getOriginatingDescriptor().imsiLength==0 ))
+  if(fromMap && sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
+      ( sms->getOriginatingDescriptor().mscLength==0 || sms->getOriginatingDescriptor().imsiLength==0 ))
   {
     if(!c.rr.info.allowBlocked)
     {
@@ -3591,7 +3591,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          finalizeSms(t.msgId,sms);
+          finalizeSms(t,sms);
           return UNDELIVERABLE_STATE;
         }
         return UNKNOWN_STATE;
@@ -3624,7 +3624,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          finalizeSms(t.msgId,sms);
+          finalizeSms(t,sms);
           return UNDELIVERABLE_STATE;
         }
         return UNKNOWN_STATE;
@@ -3677,7 +3677,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          finalizeSms(t.msgId,sms);
+          finalizeSms(t,sms);
         }
         return UNDELIVERABLE_STATE;
       }
@@ -3769,7 +3769,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }catch(std::exception& e)
       {
         smsc_log_warn(smsLog,"DELIVERYRESP: failed to create sms for SmartMultipartForward:'%s'",e.what());
-        finalizeSms(t.msgId,sms);
+        finalizeSms(t,sms);
         onUndeliverable(t.msgId,sms);
         return UNDELIVERABLE_STATE;
       }
@@ -3786,6 +3786,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
                            sms.lastResult,
                            sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
+        int uosize;
+        const char* uo=t.command->get_resp()->getUOpt(uosize);
+        if(uosize)
+        {
+          resp->get_resp()->setUOpt(uo,uosize);
+        }
         try{
           src_proxy->putCommand(resp);
         }catch(std::exception& e)
@@ -3829,7 +3835,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           if(dgortr)
           {
             sms.state=UNDELIVERABLE;
-            finalizeSms(t.msgId,sms);
+            finalizeSms(t,sms);
             onUndeliverable(t.msgId,sms);
             return UNDELIVERABLE_STATE;
           }else
@@ -3878,7 +3884,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          finalizeSms(t.msgId,sms);
+          finalizeSms(t,sms);
           onUndeliverable(t.msgId,sms);
           return UNDELIVERABLE_STATE;
         }else
@@ -3909,7 +3915,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          finalizeSms(t.msgId,sms);
+          finalizeSms(t,sms);
           return UNDELIVERABLE_STATE;
           onUndeliverable(t.msgId,sms);
         }else
@@ -3947,7 +3953,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          finalizeSms(t.msgId,sms);
+          finalizeSms(t,sms);
           onUndeliverable(t.msgId,sms);
           return UNDELIVERABLE_STATE;
         }else
@@ -4044,7 +4050,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          finalizeSms(t.msgId,sms);
+          finalizeSms(t,sms);
           onUndeliverable(t.msgId,sms);
           return UNDELIVERABLE_STATE;
         }
@@ -4122,6 +4128,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
                 sms.lastResult,
                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
             );
+        int uosize;
+        const char* uo=t.command->get_resp()->getUOpt(uosize);
+        if(uosize)
+        {
+          resp->get_resp()->setUOpt(uo,uosize);
+        }
         try{
           src_proxy->putCommand(resp);
         }catch(...)
@@ -5221,7 +5233,7 @@ void StateMachine::submitResp(Tuple& t,SMS* sms,int status)
   }
 }
 
-void StateMachine::finalizeSms(SMSId id,SMS& sms)
+void StateMachine::finalizeSms(Tuple& t,SMS& sms)
 {
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
@@ -5249,6 +5261,13 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
         resp->get_resp()->haveDpf=true;
         resp->get_resp()->dpfResult=sms.getIntProperty(Tag::SMPP_SET_DPF);
       }
+      int uosize;
+      const char* uo=t.command->get_resp()->getUOpt(uosize);
+      if(uosize)
+      {
+        resp->get_resp()->setUOpt(uo,uosize);
+      }
+
       try{
         src_proxy->putCommand(resp);
       }catch(...)
@@ -5258,10 +5277,10 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
     }
   }
   try{
-    store->createFinalizedSms(id,sms);
+    store->createFinalizedSms(t.msgId,sms);
   }catch(...)
   {
-    smsc_log_warn(smsLog,"DELIVERYRESP: failed to finalize sms:Id=%lld",id);
+    smsc_log_warn(smsLog,"DELIVERYRESP: failed to finalize sms:Id=%lld",t.msgId);
   }
 }
 
