@@ -56,7 +56,13 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   op.setTPProtocolIdentifier(sms.getIntProperty(Tag::SMPP_PROTOCOL_ID));
   op.setTPDataCodingScheme(sms.getIntProperty(Tag::SMPP_DATA_CODING));
   op.setTPValidityPeriod(sms.getValidTime()-time(NULL));
-  op.setLocationInformationMSC(sms.getOriginatingDescriptor().msc);
+  if(sms.getOriginatingDescriptor().mscLength)
+  {
+    op.setLocationInformationMSC(sms.getOriginatingDescriptor().msc);
+  }else
+  {
+    op.setLocationInformationMSC(sms.getStrProperty(Tag::SMSC_SCCP_OA).c_str());
+  }
   op.setCallingSMEid(sms.getSourceSmeId());
   op.setRouteId(sms.getRouteId());
   op.setServiceId(sms.getServiceId());

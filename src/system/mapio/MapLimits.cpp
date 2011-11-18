@@ -159,6 +159,14 @@ void MapLimits::Reinit()
     {
       smsc_log_info(log,"sms.openRespRealAddr not found, disabled by default");
     }
+
+    try{
+      noSriSms=config.getBool("sms.noMoSri");
+    }catch(std::exception& e)
+    {
+      smsc_log_info(log,"sms.noMoSti not found, disabled by default");
+    }
+
     char buf[64];
     for(int i=0;i<maxCLevels;i++)
     {

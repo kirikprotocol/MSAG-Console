@@ -1307,6 +1307,8 @@ none_validity:;
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
+  sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
+  sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
 
   dialog->AssignSms(_sms.release());
 }
@@ -3687,9 +3689,16 @@ USHORT_T Et96MapDelimiterInd(
         }
         break;
       case MAPST_WaitSmsMODelimiter:
-        open_confirmed = true;
-        dialog->state = MAPST_WaitImsiReq;
-        PauseOnImsiReq(dialog.get());
+        if(MapLimits::getInstance().isNoSRISMS())
+        {
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          SendSubmitCommand(dialog.get());
+        }else
+        {
+          open_confirmed = true;
+          dialog->state = MAPST_WaitImsiReq;
+          PauseOnImsiReq(dialog.get());
+        }
         break;
       case MAPST_WaitSpecDelimeter:
         dialog->state = MAPST_WaitSmsConf;
