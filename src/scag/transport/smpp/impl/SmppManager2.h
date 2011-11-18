@@ -8,7 +8,7 @@
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/RefPtr.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/RecursiveMutex.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "logger/Logger.h"
 #include "scag/config/base/ConfigListener2.h"
@@ -401,7 +401,7 @@ protected:
     smsc::logger::Logger* limitsLog;
     smsc::core::buffers::Hash<SmppEntity*> registry;
     smsc::core::buffers::Hash<MetaEntity*> metaRegistry;
-    mutable smsc::core::synchronization::Mutex regMtx;
+    mutable smsc::core::synchronization::RecursiveMutex regMtx;
     SmppSocketManager sm;
 
     // smsc::util::TimeSlotCounter<> licenseCounter;
