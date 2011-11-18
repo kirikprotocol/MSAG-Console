@@ -22,6 +22,7 @@
   </section>
   <section name="sms">
     <param name="openRespRealAddr" type="bool">false</param>
+    <param name="noMoSri" type="bool">false</param>
   </section>
   <section name="clevels">
     <section name="level1">
