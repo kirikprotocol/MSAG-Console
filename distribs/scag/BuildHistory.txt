@@ -927,3 +927,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
 --- current fixes ---
 2011-11-11 14:42 bukind
   msag bugfix: a check missing in stat dtor led to coredump
+2011-11-18 11:56 bukind
+  pvss feature: enabled flag in backup (default is true)
+
+

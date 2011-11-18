@@ -50,8 +50,10 @@ bool ProfileLogRollerHardcoded::readConfiguration()
     eyeline::informer::ConfigWrapper cwrap1(*cfg1,log_);
     try {
 
+        const bool enabled = cwrap1.getBool("enabled",true);
+
         // 1. reading common params
-        const unsigned reloadInterval = backupMode_ ? 0 :
+        const unsigned reloadInterval = (backupMode_ || !enabled) ? 0 :
             cwrap1.getInt("configReloadInterval",60,0,10000);
         if ( reloadInterval > 0 && reloadInterval < 30 ) {
             throw smsc::util::Exception("configReloadInterval is too small (%u)",reloadInterval);
@@ -67,7 +69,7 @@ bool ProfileLogRollerHardcoded::readConfiguration()
         // adding streams
         const char* streamName = "pvss.bks";
         EmbedRefPtr< ProfileLogStream > pls;
-        if ( !backupMode_ ) {
+        if ( !backupMode_ && enabled ) {
             pls.reset( new RollingFileStream( streamName,
                                               prefix.c_str(),
                                               finalSuffix.c_str(), 
@@ -80,16 +82,16 @@ bool ProfileLogRollerHardcoded::readConfiguration()
 
         // adding loggers
         addLogger("pvss.abnt",
-                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
                   pls, true);
         addLogger("pvss.oper",
-                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
                   pls, true);
         addLogger("pvss.serv",
-                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
                   pls, true);
         addLogger("pvss.prov",
-                  backupMode_ ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
+                  (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
                   pls, true);
 
         configReloadInterval_ = reloadInterval;
