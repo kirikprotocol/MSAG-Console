@@ -35,14 +35,15 @@ bool PersClientConfig::check(const ConfigView& cv)   throw(ConfigException)
             port != cv.getInt("port", NULL) || strcmp(host.c_str(), h.get()) ||
             reconnectTimeout != cv.getInt("reconnectTimeout", NULL) ||
             maxCallsCount != cv.getInt("maxWaitingRequestsCount", NULL) ||
-            connections != cv.getInt("connections", NULL) ||
-            connPerThread != cv.getInt("connPerThread",NULL) ||
+            connections != unsigned(cv.getInt("connections", NULL)) ||
+            connPerThread != unsigned(cv.getInt("connPerThread",NULL)) ||
             async != cv.getBool("async", NULL);
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){
         throw ConfigException("PersClientConfig.check, Unknown exception.");
     }
+    return false;
 }
 
 }

@@ -255,7 +255,7 @@ void ConfigManagerImpl::removeListener(ConfigType type)
     MutexGuard mg(listenerLock);
 
     if(listeners.Exist(type)){
-        ConfigListener * listener = listeners.Get(type);
+        // ConfigListener * listener = listeners.Get(type);
 //        delete listener;
         listeners.Delete(type);
     }
@@ -635,7 +635,7 @@ void ConfigManagerImpl::checkLicenseFile()
     'L'^0x4c,'i'^0x4c,'c'^0x4c,'e'^0x4c,'n'^0x4c,'s'^0x4c,'e'^0x4c,' '^0x4c,'E'^0x4c,'x'^0x4c,'p'^0x4c,'i'^0x4c,'r'^0x4c,'e'^0x4c,'d'^0x4c,
     };
     std::string s;
-    for(int i=0;i<sizeof(x);i++)
+    for(unsigned i=0;i<sizeof(x);i++)
     {
       s+=x[i]^0x4c;
     }
