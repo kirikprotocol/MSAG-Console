@@ -109,7 +109,7 @@ void EwalletCheckCallParams::setResponse( ewallet::Response& resp )
 
 void EwalletTransferCallParams::setResponse( ewallet::Response& resp )
 {
-    ewallet::TransferResp& cResp = static_cast< ewallet::TransferResp& >(resp);
+    // ewallet::TransferResp& cResp = static_cast< ewallet::TransferResp& >(resp);
     smsc_log_debug(log_,"FIXME: transfer::setResponse invoked");
 }
 

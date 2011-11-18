@@ -125,7 +125,7 @@ bool CookieAction::setCookieParam( ActionContext& context, StringField& f, Cooki
 
 bool CookieAction::getCookieParam(ActionContext& context, StringField& f, Cookie *c)
 {
-    Property* p;
+    // Property* p;
     if(f.isFound())
     {
         Property* p = f.getProperty(context);

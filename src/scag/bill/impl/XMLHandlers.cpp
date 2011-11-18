@@ -192,6 +192,7 @@ XMLTariffMatrixHandler::XMLTariffMatrixHandler(IntHash<uint32_t> *cat, IntHash<u
 }
 
 //------------------------------------------------------------------------------
+/*
 static double str_to_double(char* str)
 {
     double d = 0, df = 1, f = 0;
@@ -217,6 +218,7 @@ static double str_to_double(char* str)
     }
     return (j == '-') ? -(d + f) : (d + f);
 }
+*/
 
 void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned int length) 
 {

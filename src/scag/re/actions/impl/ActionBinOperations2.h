@@ -25,7 +25,8 @@ protected:
     virtual int processOperation(int variable, int value) = 0;
 
     ActionBinOperation( const char* opname, bool valueRequired = false ) :
-    m_ActionName(opname), m_hasValue(false), m_valueRequired(valueRequired) {}
+    m_hasValue(false), m_ActionName(opname), m_valueRequired(valueRequired)
+    {}
 
 public:
     virtual bool run(ActionContext& context);

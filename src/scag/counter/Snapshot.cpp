@@ -75,7 +75,7 @@ void Snapshot::getMaxDerivative( int64_t& value, unsigned& nbins )
     unsigned maxspeed = unsigned(value);
     unsigned curval = unsigned(value);
     unsigned curbins = 1;
-    for ( int p = last_; p != first_; ) {
+    for ( unsigned p = last_; p != first_; ) {
         if ( p == 0 ) p = nbins_;
         --p;
         ++curbins;

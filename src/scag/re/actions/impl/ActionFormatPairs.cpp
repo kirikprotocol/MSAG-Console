@@ -17,7 +17,7 @@ bool ActionFormatPairs::run(ActionContext &context) {
     std::string result = prefix_.getValue(context);
     std::string nameDel = nameDel_.getValue(context);
     std::string pairDel = pairDel_.getValue(context);
-    Property *p = 0;
+    // Property *p = 0;
     for (std::vector< ActionPair* >::const_iterator i = pairActions_.begin(); i != pairActions_.end(); ++i) {
         result.append( (*i)->getName(context) );
         result += nameDel;

@@ -75,7 +75,7 @@ namespace scag { namespace sessions {
             if (sync) return buff;
 
             char tmp[4];
-            sprintf(tmp,"%ld",timeVal.tv_usec / 1000);
+            sprintf(tmp,"%ld",long(timeVal.tv_usec / 1000));
             size_t len = strlen(tmp);
 
             while (len < 3)
@@ -137,7 +137,7 @@ namespace scag { namespace sessions {
             sAddr = addr.toString().c_str();
 
             char buff[128];
-            sprintf(buff,"/%ld%ld", BornMicrotime.tv_sec, BornMicrotime.tv_usec / 1000);
+            sprintf(buff,"/%ld%ld", long(BornMicrotime.tv_sec), BornMicrotime.tv_usec / 1000);
             sAddr.append(buff);
         }
 
@@ -533,6 +533,7 @@ namespace scag { namespace sessions {
                 if (s1->currentOperationId != s2->currentOperationId) return false;
             } */
 
+            // SUSPICIOUS CODE: db 2011-11-14 not changing the old crap to prevent odour.
             if (s1->m_SessionKey == s2->m_SessionKey); return false;
 
             if (s1->lastAccessTime != s2->lastAccessTime) return false;

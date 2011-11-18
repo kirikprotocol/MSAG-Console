@@ -89,7 +89,7 @@ void StatisticsLogger<Event, Buffer>::logEvent(Event* event) {
 template<typename Event, typename Buffer>
 void StatisticsLogger<Event, Buffer>::rollover() {
   try {
-    time_t curTime = time(0);
+    // time_t curTime = time(0);
     string currentName;
     string newName;
     {
@@ -201,7 +201,7 @@ string StatisticsLogger<Event, Buffer>::getFileName(const string& path, time_t c
     // memset(buf, 0, STAT_FILE_NAME_MAXSIZE);
     sprintf(buf, "%s%ld%s",
             prefix_.c_str(),
-            int(curTime),
+            long(curTime),
             suffix_.c_str());
     return path + '/' + string(buf);
 }
