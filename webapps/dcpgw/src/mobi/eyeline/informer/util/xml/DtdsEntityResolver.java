@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.util.xml;
 
+import mobi.eyeline.dcpgw.Gateway;
 import org.apache.log4j.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -32,7 +33,8 @@ public class DtdsEntityResolver implements EntityResolver {
       if (logger.isDebugEnabled())
         logger.debug("filename: " + filename);
 
-      InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
+      //InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
+      InputStream in = Gateway.class.getClassLoader().getResourceAsStream(filename);
       if (in != null)
         return new InputSource(in);
       else
