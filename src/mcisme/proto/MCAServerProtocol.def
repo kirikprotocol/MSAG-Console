@@ -6,7 +6,7 @@ protocol MCAServerProtocol
    GetStats inmsg
    GetStatsResp outmsg
    GetRunStats inmsg
-   GetRunStats outmsg
+   GetRunStatsResp outmsg
    GetSched inmsg
    GetSchedResp outmsg
    GetSchedList inmsg

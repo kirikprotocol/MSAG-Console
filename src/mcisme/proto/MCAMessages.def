@@ -30,7 +30,7 @@ end
 message GetRunStats 6
 end
 
-message GetRunStats:Response 7
+message GetRunStatsResp:Response 7
   int32 activeTasks 1 opt
   int32 inQueueSize 2 opt
   int32 outQueueSize 3 opt

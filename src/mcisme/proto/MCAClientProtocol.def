@@ -6,7 +6,7 @@ protocol MCAClientProtocol
    GetStats outmsg
    GetStatsResp inmsg
    GetRunStats outmsg
-   GetRunStats inmsg
+   GetRunStatsResp inmsg
    GetSched outmsg
    GetSchedResp inmsg
    GetSchedList outmsg
