@@ -92,17 +92,17 @@ XUDT::parseMandatoryVariablePart(const common::TP& packet_buf, size_t offset,
   uint8_t sccpFieldPtrValue;
   offset = extractOneOctetPointer(packet_buf, offset, &sccpFieldPtrValue);
   if ( !sccpFieldPtrValue )
-    throw utilx::DeserializationException("XUDT::deserialize::: zero value of pointer to called party address parameter");
+    throw utilx::DeserializationException("XUDT::parseMandatoryVariablePart::: zero value of pointer to called party address parameter");
   size_t calledAddrPtr = sccpFieldPtrValue - 1 + offset;
 
   offset = extractOneOctetPointer(packet_buf, offset, &sccpFieldPtrValue);
   if ( !sccpFieldPtrValue )
-    throw utilx::DeserializationException("XUDT::deserialize::: zero value of pointer to calling party address parameter");
+    throw utilx::DeserializationException("XUDT::parseMandatoryVariablePart::: zero value of pointer to calling party address parameter");
   size_t callingAddrPtr = sccpFieldPtrValue - 1 + offset;
 
   offset = extractOneOctetPointer(packet_buf, offset, &sccpFieldPtrValue);
   if ( !sccpFieldPtrValue )
-    throw utilx::DeserializationException("XUDT::deserialize::: zero value of pointer to data parameter");
+    throw utilx::DeserializationException("XUDT::parseMandatoryVariablePart::: zero value of pointer to data parameter");
   size_t dataPtr = sccpFieldPtrValue - 1 + offset;
 
   uint8_t optionalPartPtr=0;
@@ -125,10 +125,14 @@ XUDT::parseMandatoryVariablePart(const common::TP& packet_buf, size_t offset,
       uint8_t tmpBuf[eyeline::sccp::SCCPAddress::_maxOctsLen];
       offset = common::extractField(packet_buf, offset, tmpBuf, fieldLen);
       if ( beginOfAddrParam == calledAddrPtr ) {
-        _calledAddress.unpackOcts(tmpBuf, fieldLen);
+        if (!_calledAddress.unpackOcts(tmpBuf, fieldLen))
+          throw utilx::DeserializationException("XUDT::parseMandatoryVariablePart::: invalid called address format '%s'",
+                                                utilx::hexdmp(tmpBuf, fieldLen).c_str());
         _isSetCalledAddress = true;
       } else {
-        _callingAddress.unpackOcts(tmpBuf, fieldLen);
+        if (!_callingAddress.unpackOcts(tmpBuf, fieldLen))
+          throw utilx::DeserializationException("XUDT::parseMandatoryVariablePart::: invalid calling address format '%s'",
+                                                utilx::hexdmp(tmpBuf, fieldLen).c_str());
         _isSetCallingAddress = true;
       }
     } else if ( offset == dataPtr  ) {
