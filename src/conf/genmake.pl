@@ -283,6 +283,8 @@ sub generate{
           die "Var $var not found in $dirname/.version\n";
         }
       }
+      $ENV{SMSC_BUILD_TAG_FORMAT}=$vars->{SMSC_BUILD_TAG_FORMAT} if exists($vars->{SMSC_BUILD_TAG_FORMAT});
+      $ENV{GENERATE_VERSIONS}=$vars->{GENERATE_VERSIONS} if exists($vars->{GENERATE_VERSIONS});
       system('conf/gen_build_id.sh',$dirname,$vars->{PROD_PREFIX}, $vars->{PROD_VER_FILE},$vars->{BUILDID_HEADER});
       print $mkf "$modname.genbuildId:\n";
       print $mkf "\t".'@$(SMSC_SRCDIR)/conf/gen_build_id.sh '.
