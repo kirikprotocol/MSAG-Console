@@ -469,6 +469,28 @@ public class Connection {
         sn_data_table.clear();
     }
 
+    public void shutdown(){
+        log.debug("Try to shutdown "+name+"_smpp_connection.");
+        scheduler.shutdown();
+
+        try {
+            scheduler.awaitTermination(15, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            log.debug("All task shutdown immediately after 15 sec.");
+            scheduler.shutdownNow();
+        }
+
+        resend_delivery_receipts_scheduler.shutdown();
+        try {
+            resend_delivery_receipts_scheduler.awaitTermination(15, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            log.debug("All task shutdown immediately after 15 sec.");
+            scheduler.shutdownNow();
+        }
+
+        log.debug("Successfully shutdown "+name+"_smpp_connection.");
+    }
+
     public void setSendReceiptsSpeed(int send_receipts_speed){
         log.debug(name+"_connection: set speed "+send_receipts_speed);
         this.send_receipts_speed = send_receipts_speed;

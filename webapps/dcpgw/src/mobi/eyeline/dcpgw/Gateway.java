@@ -115,14 +115,14 @@ public class Gateway extends Thread implements PDUListener {
         log.debug("Try to shutdown delivery changes detector scheduler ...");
         deliveryChangesDetector.shutdown();
         log.debug("Successfully shutdown delivery changes detector scheduler.");
-        while (deliveryChangesDetector.isRunning()){
+        /*while (deliveryChangesDetector.isRunning()){
             try {
                 log.debug("Delivery changes detector is running, wait ...");
                 sleep(1000);
             } catch (InterruptedException e) {
                 log.error(e);
             }
-        }
+        } */
 
         // Stop adding messages to informer.
         Hashtable<String, DcpConnectionImpl> informer_user_connection_table = Config.getInstance().getDCPConnections();
@@ -133,6 +133,7 @@ public class Gateway extends Thread implements PDUListener {
         }
 
         Server.getInstance().shutdown();
+
         Journal.getInstance().shutdown();
         log.debug("Successfully shutdown gateway.");
     }

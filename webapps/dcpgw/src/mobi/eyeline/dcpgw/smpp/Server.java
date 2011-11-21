@@ -177,7 +177,16 @@ public class Server{
     }
 
     public void shutdown(){
+
+        log.debug("Try to shutdown smpp server ...");
+
+        for(String connection_name: connections.keySet()){
+            Connection connection  = connections.get(connection_name);
+            connection.shutdown();
+        }
+
         server.shutdown();
+        log.debug("Successfully shutdown smpp server.");
     }
 
     public void send(DeliveryData data){
