@@ -180,7 +180,7 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
                 String con = p.getProperty("con");
                 MessageResp resp = message_id_message_resp_table.remove(message_id);
 
-                resp.setStatus(Status.SYSERR);
+                resp.setStatus(Status.RX_T_APPN);
                 resp.setTLV( new TLVString( (short)0x001D, e.getMessage()) );
 
                 try{
