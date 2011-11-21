@@ -37,9 +37,9 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
 
     private DcpClient client;
 
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private final Map<Integer, LinkedBlockingQueue<Message>> delivery_id_queue_map;
+    private Map<Integer, LinkedBlockingQueue<Message>> delivery_id_queue_map;
 
     private Map<LinkedBlockingQueue<Message>, ScheduledFuture> queue_task_map;
     private LinkedBlockingQueue<SendTask> sendTaskQueue;
@@ -374,6 +374,13 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         // Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be
         // accepted. Invocation has no additional effect if already shut down.
         scheduler.shutdown();
+        try{
+            scheduler.awaitTermination(15, TimeUnit.SECONDS);
+        } catch (InterruptedException e){
+            log.debug("All task shutdown immediately after 15 sec.");
+            scheduler.shutdownNow();
+        }
+        scheduler = null;
 
         for(LinkedBlockingQueue<Message> queue: queue_task_map.keySet()){
             ScheduledFuture scheduledFuture = queue_task_map.get(queue);

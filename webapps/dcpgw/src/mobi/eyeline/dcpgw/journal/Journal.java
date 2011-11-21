@@ -844,6 +844,15 @@ public class Journal {
 
         scheduler.shutdown();
 
+        try {
+            scheduler.awaitTermination(15, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            log.debug("All task shutdown immediately after 15 sec.");
+            scheduler.shutdownNow();
+        }
+
+        scheduler = null;
+
         if (bw != null) {
             try {
                 /* From javadoc: Closes the stream, flushing it first. Once the stream has been closed, further write()
