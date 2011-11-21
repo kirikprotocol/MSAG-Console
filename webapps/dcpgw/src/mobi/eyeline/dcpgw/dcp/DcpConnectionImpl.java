@@ -385,28 +385,37 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         for(LinkedBlockingQueue<Message> queue: queue_task_map.keySet()){
             ScheduledFuture scheduledFuture = queue_task_map.get(queue);
             // Cancel scheduledFuture, but not interrupt if it is already running.
-            int counter = 0;
-            if (!scheduledFuture.cancel(false)){
-                log.debug("Couldn't cancel scheduled future because it is already running.");
+            if (!scheduledFuture.isDone() && !scheduledFuture.isCancelled()){
+                int counter = 0;
+                if (!scheduledFuture.cancel(false)){
+                    log.debug("Couldn't cancel scheduled future.");
 
-                while(!scheduledFuture.isDone()){
-                    if (counter < 15){
-                        try {
-                            log.debug("Scheduled future isn't done, wait ...");
-                            sleep(1000);
-                            counter++;
-                            log.debug("Wait already"+counter+" seconds.");
-                        } catch (InterruptedException e) {
-                            log.error(e);
+                    while(!scheduledFuture.isDone()){
+                        log.debug("Scheduler future is running.");
+                        if (counter < 15){
+                            try {
+                                log.debug("Sleep for 1 sec ...");
+                                sleep(1000);
+                                counter++;
+                                log.debug("Wake up, already slept "+counter+" seconds.");
+                            } catch (InterruptedException e) {
+                                log.error(e);
+                            }
+                        } else {
+                            log.debug("Try to interrupt scheduledFuture after 15 seconds.");
+                            if (scheduledFuture.cancel(true)){
+                                log.debug("Successfully interrupted scheduledFuture.");
+                            } else {
+                                log.error("Could interrupt scheduled future.");
+                            }
+
+                            break;
                         }
-                    } else {
-                        log.debug("Try to interrupt scheduledFuture after 15 seconds.");
-                        scheduledFuture.cancel(true);
-                        log.debug("interrupt scheduledFuture.");
-                        break;
                     }
-                }
 
+                } else {
+                    log.debug("Successfully cancel scheduled future.");
+                }
             }
 
         }
