@@ -215,4 +215,20 @@
     </component>
   </tag>
 
+  <tag>
+    <tag-name>tabs</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.tabs.tabs</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>tab</tag-name>
+    <component>
+      <component-type>mobi.eyeline.util.jsf.components.tabs.tab</component-type>
+      <handler-class>com.sun.facelets.tag.jsf.ComponentHandler</handler-class>
+    </component>
+  </tag>
+
 </facelet-taglib>

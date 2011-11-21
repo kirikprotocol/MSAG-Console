@@ -113,6 +113,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>tabs</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.util.jsf.components.sample.controllers.TabsController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <converter>
     <converter-id>stringWrapper</converter-id>
     <converter-class>mobi.eyeline.util.jsf.components.sample.controllers.StringWrapperConverter</converter-class>
@@ -182,6 +188,10 @@
     <navigation-case>
       <from-outcome>FILE_DOWNLOADING</from-outcome>
       <to-view-id>/fileDownloading.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>TABS</from-outcome>
+      <to-view-id>/tabs.xhtml</to-view-id>
     </navigation-case>
   </navigation-rule>
 

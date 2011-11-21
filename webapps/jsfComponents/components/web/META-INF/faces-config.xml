@@ -132,4 +132,14 @@
     <component-class>mobi.eyeline.util.jsf.components.graph.LineChart</component-class>
   </component>
 
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.tabs.tab</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.tabs.Tab</component-class>
+  </component>
+
+  <component>
+    <component-type>mobi.eyeline.util.jsf.components.tabs.tabs</component-type>
+    <component-class>mobi.eyeline.util.jsf.components.tabs.Tabs</component-class>
+  </component>
+
 </faces-config>
