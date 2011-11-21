@@ -32,7 +32,7 @@ public:
   {
     if(command->cmdid==smsc::smeman::DELIVERY)
     {
-      smsc::smeman::SmscCommand resp=smsc::smeman::SmscCommand::makeDeliverySmResp("",command->get_dialogId(),0);
+      smsc::smeman::SmscCommand resp=smsc::smeman::SmscCommand::makeDeliverySmResp("",command->get_dialogId(),0,command->dstNodeIdx,command->sourceId);
       smsc::core::synchronization::MutexGuard mg(mtx);
       queue.Push(resp);
       if(monitor)

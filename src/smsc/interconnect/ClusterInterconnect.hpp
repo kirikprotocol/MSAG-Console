@@ -80,7 +80,12 @@ protected:
     {
       if(packetSize==0)
       {
-        dataSize+=sck->Read(buf+dataSize,(int)(4-dataSize));
+        int rd=sck->Read(buf+dataSize,(int)(4-dataSize));
+        if(rd<=0)
+        {
+          return rrClosed;
+        }
+        dataSize+=rd;
         if(dataSize<4)
         {
           return rrIncomplete;
@@ -88,6 +93,11 @@ protected:
         uint32_t sz;
         memcpy(&sz,buf,4);
         packetSize=ntohl(sz);
+        if(packetSize>100000)
+        {
+          sck->Abort();
+          return rrClosed;
+        }
         if(packetSize>bufSize)
         {
           bufSize=packetSize;

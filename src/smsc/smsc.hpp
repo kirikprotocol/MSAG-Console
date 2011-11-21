@@ -422,7 +422,7 @@ public:
     inManCom->ChargeSms(id,sms,ctx);
   }
 
-  bool ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final,int policy)
+  bool ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final,unsigned int policy)
   {
     try{
       if(sms.billingRequired() &&
@@ -432,7 +432,7 @@ public:
           )
         )
       {
-        inManCom->Report(id,dlgId,sms,final);
+        inManCom->ReportDelivery(id,dlgId,sms,final);
       }
     }catch(std::exception& e)
     {
@@ -489,7 +489,7 @@ protected:
 
   void processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv);
 
-  void generateAlert(SMSId id,SMS* sms,int,bool);
+  void generateAlert(Task& t);
 
   smsc::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;

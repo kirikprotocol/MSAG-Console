@@ -933,6 +933,8 @@ int SmppInputThread::Execute()
                                    "",
                                    cmd->get_dialogId(),
                                    Status::THROTTLED,
+                                   cmd->dstNodeIdx,
+                                   cmd->sourceId,
                                    cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_SM)
                                  );
                         }break;

@@ -92,7 +92,7 @@ public:
   const char *taskName(){return "StateMachine";}
 
   time_t maxValidTime;
-  Address scAddress;
+  Address receiptAddress;
 #ifdef SMSEXTRA
   bool createCopyOnNickUsage;
 #endif
@@ -172,7 +172,7 @@ protected:
 
   void submitResp(Tuple&,SMS*,int);
 
-  void finalizeSms(SMSId id,SMS& sms);
+  void finalizeSms(Tuple&,SMS& sms);
 
   void fullReport(SMSId msgid,SMS& sms);
 

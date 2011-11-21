@@ -308,6 +308,8 @@ struct MapDialog{
   time_t   lockedAt;
   smsc::core::buffers::CyclicQueue<MSG_T> cmdQueue;
   pthread_cond_t condVar;
+  int dstNodeIdx;
+  SmeSystemId sourceId;
 
   MapDialog()
   {

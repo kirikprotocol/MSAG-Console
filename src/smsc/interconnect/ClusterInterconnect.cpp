@@ -296,7 +296,7 @@ void ClusterInterconnect::processIncomingCommand(int idx)
     buf>>scb>>dlgId>>status>>dataSm;
     smsc_log_debug(log,"received submit_resp(%d,%d) command from node %d for sme %s",dlgId,status,remoteSocketsIdx[idx],smeIdBuf);
 
-    smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeSubmitSmResp(msgIdBuf,dlgId,status,dataSm);
+    smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeSubmitSmResp(msgIdBuf,dlgId,status,remoteSocketsIdx[idx],(const char*)smeIdBuf,dataSm);
     cmd->sourceId=(const char*)smeIdBuf;
 
     sync::MutexGuard mg(inMon);
@@ -357,12 +357,23 @@ void ClusterInterconnect::writeThread()
       if(outQueue.Count()>0)
       {
         smsc::smeman::SmscCommand& cmd=outQueue.Front();
+        smsc_log_debug(log,"sending command to node %d",cmd->dstNodeIdx);
+        if(cmd->dstNodeIdx<0 || cmd->dstNodeIdx>=nodesCount)
+        {
+          smsc_log_warn(log,"invalid dst node index %d",cmd->dstNodeIdx);
+          abort();
+        }
         if(!connectedClnt[cmd->dstNodeIdx])
         {
           smsc_log_debug(log,"node %d isn't connected. skipping command.",cmd->dstNodeIdx);
           if(cmd->get_commandId()==smsc::smeman::SUBMIT)
           {
-            smsc::smeman::SmscCommand resp=smsc::smeman::SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::Status::RX_T_APPN,cmd->get_sms_and_forget()->getIntProperty(smsc::sms::Tag::SMPP_DATA_SM));
+            smsc::smeman::SmscCommand resp=smsc::smeman::SmscCommand::makeSubmitSmResp(
+                "",cmd->get_dialogId(),smsc::Status::RX_T_APPN,
+                cmd->dstNodeIdx,
+                cmd->sourceId,
+                cmd->get_sms_and_forget()->getIntProperty(smsc::sms::Tag::SMPP_DATA_SM)
+                );
             sync::MutexGuard mg2(inMon);
             inQueue.Push(resp);
             if(inQueue.Count()==1)

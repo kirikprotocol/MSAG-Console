@@ -33,6 +33,8 @@ struct Task
   smsc::sms::SMSId messageId;
   smsc::sms::SMS  *sms;
   int inDlgId;
+  int dstNodeIdx;
+  SmeSystemId sourceId;
 
   Task* next;
   Task* timeout_prev;

@@ -75,7 +75,7 @@ int StatusSme::Execute()
     resp=SmscCommand::makeDeliverySmResp(
       sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
       cmd->get_dialogId(),
-      Status::OK);
+      Status::OK,cmd->dstNodeIdx,cmd->sourceId);
     Descriptor d;
     std::string d_imsi="123456";
     std::string d_msc="123456";

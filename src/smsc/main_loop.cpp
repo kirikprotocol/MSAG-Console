@@ -38,9 +38,9 @@ bool Smsc::routeSms(SmeIndex srcSme,const Address& org,const Address& dst,smsc::
 bool isUSSDSessionSms(SMS* sms)
 {
   return sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
-         sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+         sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=(uint32_t)USSD_PSSR_IND &&
          !(
-            sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+            sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==(uint32_t)USSD_USSR_REQ &&
             !sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
           )
   ;
@@ -60,11 +60,11 @@ void Smsc::RejectSms(const SmscCommand& cmd,bool isLicenseLimit)
           "0",
           cmd->get_dialogId(),
           Status::THROTTLED,
+          cmd->dstNodeIdx,
+          cmd->sourceId,
           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
         );
 
-    resp->dstNodeIdx=cmd->dstNodeIdx;
-    resp->sourceId=cmd->sourceId;
     src_proxy->putCommand(resp);
   }catch(...)
   {
@@ -86,6 +86,8 @@ void Smsc::enqueueEx(EventQueue::EnqueueVector& ev)
           "",
           it->second->dialogId,
           Status::MSGQFUL,
+          it->second->dstNodeIdx,
+          it->second->sourceId,
           it->second->get_sms()->getIntProperty(Tag::SMPP_DATA_SM)
         );
         it->second.getProxy()->putCommand(resp);
@@ -124,13 +126,13 @@ void Smsc::mainLoop(int idx)
 {
   typedef std::vector<SmscCommand> CmdVector;
   CmdVector frame;
-  SmeIndex smscSmeIdx=smeman.lookup("smscsme");
+  //SmeIndex smscSmeIdx=smeman.lookup("smscsme");
   Event e;
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("mainloop");
   smsc::logger::Logger *speedLog= smsc::logger::Logger::getInstance("ml.speeds");
   SpeedTimer st;
   st.enabled=speedLog->isDebugEnabled();
-#ifndef linux
+#ifdef __SunOS
   thr_setprio(thr_self(),127);
 #endif
   time_t last_tm = time(NULL);
@@ -139,13 +141,13 @@ void Smsc::mainLoop(int idx)
   EventQueue::EnqueueVector enqueueVector;
   FindTaskVector findTaskVector;
   typedef std::vector<int> IntVector;
-  IntVector shuffle;
+  //IntVector shuffle;
 
   smsc::logger::Logger *tslog = smsc::logger::Logger::getInstance("timestat");
 
   int sbmcnt=0;
 
-  time_t lastTimeStatCheck=last_tm;
+  //time_t lastTimeStatCheck=last_tm;
 
   int licenseExpTrapDay=-1;
 
@@ -168,16 +170,16 @@ void Smsc::mainLoop(int idx)
       debug2(speedLog,"enqueue time=%lld, size=%d",st.getTime(),sz);
     }
 
-    int maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
+    int64_t maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
     //maxScaled+=maxScaled/4;
-    int totalCnt=getTotalCounter();
-    int schedCnt=getSchedCounter();
-    int freeBandwidthScaled=maxScaled-(totalCnt-schedCnt);
+    int64_t totalCnt=getTotalCounter();
+    int64_t schedCnt=getSchedCounter();
+    int64_t freeBandwidthScaled=maxScaled-(totalCnt-schedCnt);
 
-    debug2(log,"totalCounter=%d, freeBandwidth=%d, schedCounter=%d, schedHasInput=%s",totalCnt,freeBandwidthScaled,schedCnt,scheduler->hasInput()?"Y":"N");
+    debug2(log,"totalCounter=%ld, freeBandwidth=%ld, schedCounter=%ld, schedHasInput=%s",(long)totalCnt,(long)freeBandwidthScaled,(long)schedCnt,scheduler->hasInput()?"Y":"N");
 
     int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounterRes());
-    int fperSlot=(freeBandwidthScaled/shapeTimeFrame)/(2*1000/getTotalCounterRes());
+    int fperSlot=(int)(freeBandwidthScaled/shapeTimeFrame)/(2*1000/getTotalCounterRes());
 
     //perSlot+=perSlot/4;
 
@@ -186,7 +188,7 @@ void Smsc::mainLoop(int idx)
     do
     {
       st.start();
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled/2);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled*schedulerFreeBandwidthUsage/100l);
       st.end();
       if(frame.size()>0)debug2(speedLog,"getFrame time:%lld, size=%d",st.getTime(),frame.size());
       now = time(NULL);
@@ -214,7 +216,7 @@ void Smsc::mainLoop(int idx)
           debug2(log,"enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
             task.sequenceNumber,task.proxy_id);
           //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
-          generateAlert(id,task.sms,task.inDlgId,task.diverted);
+          generateAlert(task);
         }
         {
           MutexGuard mg(mergeCacheMtx);
@@ -308,6 +310,7 @@ void Smsc::mainLoop(int idx)
         if((*i)->sourceId.empty())
         {
           (*i)->sourceId=i->getProxy()->getSystemId();
+          (*i)->dstNodeIdx=nodeIndex-1;
         }
       }catch(exception& e)
       {
@@ -351,11 +354,11 @@ void Smsc::mainLoop(int idx)
                   "0",
                   cmd->get_dialogId(),
                   Status::SYSERR,
+                  cmd->dstNodeIdx,
+                  cmd->sourceId,
                   sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                 );
 
-            resp->dstNodeIdx=cmd->dstNodeIdx;
-            resp->sourceId=cmd->sourceId;
             src_proxy->putCommand(resp);
           }
         }
@@ -367,7 +370,7 @@ void Smsc::mainLoop(int idx)
       int sz=(int)findTaskVector.size();
       st.start();
       tasks.findAndRemoveTaskEx(findTaskVector);
-      SMSId id;
+      //SMSId id;
       for(FindTaskVector::iterator it=findTaskVector.begin();it!=findTaskVector.end();it++)
       {
         if(it->found)
@@ -394,11 +397,11 @@ void Smsc::mainLoop(int idx)
       debug2(speedLog,"enqueue time=%lld, size=%d",st.getTime(),sz);
     }
 
-    shuffle.clear();
+    /*shuffle.clear();
     {
-      for(int i=0;i<frame.size();i++)
+      for(size_t i=0;i<frame.size();i++)
       {
-        int x=((double)rand()/RAND_MAX)*i;
+        size_t x=((double)rand()/RAND_MAX)*i;
         if(x<shuffle.size())
         {
           shuffle.push_back(shuffle[x]);
@@ -408,13 +411,14 @@ void Smsc::mainLoop(int idx)
           shuffle.push_back(i);
         }
       }
-    }
+    }*/
 
 
     int eqsize,equnsize;
-    for(int j=0;j<frame.size();j++)
+    for(size_t j=0;j<frame.size();j++)
     {
-      SmscCommand* i=&frame[shuffle[j]];
+      //SmscCommand* i=&frame[shuffle[j]];
+      SmscCommand* i=&frame[j];
       eventqueue.getStats(eqsize,equnsize);
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
@@ -459,14 +463,15 @@ void Smsc::mainLoop(int idx)
 }
 
 
-void Smsc::generateAlert(SMSId id,SMS* sms,int inDlgId,bool diverted)
+void Smsc::generateAlert(Task& t)
 {
+
   //eventqueue.enqueue(id,SmscCommand::makeAlert(sms,inDlgId));
-  SmscCommand resp=SmscCommand::makeDeliverySmResp(0,0,MAKE_COMMAND_STATUS(CMD_ERR_TEMP,Status::DELIVERYTIMEDOUT));
-  resp->get_resp()->set_inDlgId(inDlgId);
-  resp->get_resp()->set_sms(sms);
-  resp->get_resp()->set_diverted(diverted);
-  eventqueue.enqueue(id,resp);
+  SmscCommand resp=SmscCommand::makeDeliverySmResp(0,0,MAKE_COMMAND_STATUS(CMD_ERR_TEMP,Status::DELIVERYTIMEDOUT),t.dstNodeIdx,t.sourceId);
+  resp->get_resp()->set_inDlgId(t.inDlgId);
+  resp->get_resp()->set_sms(t.sms);
+  resp->get_resp()->set_diverted(t.diverted);
+  eventqueue.enqueue(t.messageId,resp);
 }
 
 
@@ -519,7 +524,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
             sscanf(sms.getOriginatingAddress().value,"%lld",&addr);
             int dstNode=(int)(addr%nodesCount);
             cmd->dstNodeIdx=dstNode;
-            if(dstNode!=nodeIndex)
+            if(dstNode!=nodeIndex-1)
             {
               smsc_log_debug(logML,"redirecting multipart submit to node %d",dstNode);
               interconnect::ClusterInterconnect::getInstance()->putCommand(cmd);
@@ -544,6 +549,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
             reverseMergeCache.Insert(id,mci);
             std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
             mergeCacheTimeouts.Push(to);
+            eventqueue.enqueue(id,cmd);
+            return;
           }else
           {
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
@@ -630,8 +637,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     case __CMD__(REPLACE):
     {
       int pos;
-      if(sscanf(cmd->get_replaceSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-         cmd->get_replaceSm().messageId.get()[pos]!=0)
+      if(sscanf(cmd->get_replaceSm().messageId.c_str(),"%lld%n",&id,&pos)!=1 ||
+         cmd->get_replaceSm().messageId.c_str()[pos]!=0)
       {
         cmd.getProxy()->putCommand
         (
@@ -648,8 +655,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     case __CMD__(QUERY):
     {
       int pos;
-      if(sscanf(cmd->get_querySm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-         cmd->get_querySm().messageId.get()[pos]!=0)
+      if(sscanf(cmd->get_querySm().messageId.c_str(),"%lld%n",&id,&pos)!=1 ||
+         cmd->get_querySm().messageId.c_str()[pos]!=0)
       {
         cmd.getProxy()->putCommand
         (
@@ -666,7 +673,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     }
     case __CMD__(CANCEL):
     {
-      if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()))
+      if((cmd->get_cancelSm().messageId[0] && cmd->get_cancelSm().serviceType[0]))
       {
           cmd.getProxy()->putCommand
           (
@@ -679,11 +686,11 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
           return;
       }
 
-      if(cmd->get_cancelSm().messageId.get())
+      if(cmd->get_cancelSm().messageId[0])
       {
         int pos=0;
-        if(sscanf(cmd->get_cancelSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
-           cmd->get_cancelSm().messageId.get()[pos]!=0)
+        if(sscanf(cmd->get_cancelSm().messageId.c_str(),"%lld%n",&id,&pos)!=1 ||
+           cmd->get_cancelSm().messageId.c_str()[pos]!=0)
         {
           cmd.getProxy()->putCommand
           (
@@ -697,8 +704,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         };
       }else
       {
-        if(!cmd->get_cancelSm().sourceAddr.get() || !cmd->get_cancelSm().sourceAddr.get()[0] ||
-           !cmd->get_cancelSm().destAddr.get() || !cmd->get_cancelSm().destAddr.get()[0])
+        if(!cmd->get_cancelSm().sourceAddr[0] ||
+           !cmd->get_cancelSm().destAddr[0])
         {
           cmd.getProxy()->putCommand
           (
@@ -771,11 +778,11 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         mergeCache.Delete(mci);
       }
       return;
-    };
+    }break;
     default:
     {
       __warning2__("mainLoop: unprocessed command id:%d",cmd->get_commandId());
-    };
+    }break;
   }
   ev.push_back(EventQueue::EnqueueVector::value_type(id,cmd));
 }

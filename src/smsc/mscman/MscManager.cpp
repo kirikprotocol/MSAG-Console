@@ -31,7 +31,7 @@ void MscManager::Init()
   }
 }
 
-bool MscManager::check(const std::string& msc)
+bool MscManager::isBlocked(const std::string& msc)
 {
   sync::MutexGuard mg(mtx);
   return mscs.Exists(msc.c_str());

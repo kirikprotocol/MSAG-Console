@@ -37,7 +37,7 @@ public:
 
   static MscManager& getInstance();
 
-  bool check(const std::string& msc);
+  bool isBlocked(const std::string& msc);
   void add(const std::string& msc);
   void remove(const std::string& msc);
 

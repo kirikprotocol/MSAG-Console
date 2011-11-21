@@ -43,11 +43,11 @@ public:
 
       try{
         const smsc::smeman::CancelSm& c=cmd->get_cancelSm();
-        if(c.sourceAddr.get() && c.destAddr.get())
+        if(c.sourceAddr[0] && c.destAddr[0])
         {
-          dummySms.setOriginatingAddress(c.sourceAddr.get());
-          dummySms.setDealiasedDestinationAddress(c.destAddr.get());
-          dummySms.setEServiceType(c.serviceType.get());
+          dummySms.setOriginatingAddress(c.sourceAddr.c_str());
+          dummySms.setDealiasedDestinationAddress(c.destAddr.c_str());
+          dummySms.setEServiceType(c.serviceType.c_str());
 
           __trace2__("CANCELAGENT: mass cancel request - %s/%s/%s",
             dummySms.getOriginatingAddress().toString().c_str(),
@@ -55,6 +55,7 @@ public:
             dummySms.getEServiceType()
           );
 
+          // mass cancel is no longer supported
           //sched->getMassCancelIds(dummySms,ids);
 
           __trace2__("CANCELAGENT: found %d ids to cancel",ids.Count());
@@ -98,7 +99,7 @@ public:
                )
             )
             {
-#ifdef linux
+#if defined(linux) || defined(__APPLE__)
               timespec tv={0,10000000};
 #else
               timestruc_t tv={0,10000000};
@@ -112,6 +113,7 @@ public:
       }catch(...)
       {
         __trace__("CANCELAGENT: batch cancel processing error");
+        try{
         cmd.getProxy()->putCommand
         (
           SmscCommand::makeCancelSmResp
@@ -120,6 +122,7 @@ public:
             Status::CANCELFAIL
           )
         );
+        }catch(...){}
       }
 
       // end of processing

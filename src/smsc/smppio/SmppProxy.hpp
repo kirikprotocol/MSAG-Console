@@ -239,10 +239,10 @@ public:
       switch(cmd->get_commandId())
       {
         case DELIVERY:
-          errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),Status::INVBNDSTS);
+          errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),Status::INVBNDSTS,cmd->dstNodeIdx,cmd->sourceId);
           break;
         case SUBMIT:
-          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),Status::INVBNDSTS,cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_SM));
+          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),Status::INVBNDSTS,cmd->dstNodeIdx,cmd->sourceId,cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_SM));
           break;
         case SUBMIT_MULTI_SM:
           errresp=SmscCommand::makeSubmitMultiResp("",cmd->get_dialogId(),Status::INVBNDSTS);

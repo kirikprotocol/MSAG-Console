@@ -47,6 +47,7 @@ using namespace smsc::resourcemanager;
 
 using namespace smsc::sms;
 
+#ifdef SMSEXTRA
 static bool isValidAlias(const std::string& s)
 {
   if(s.length()==0 || s.length()>10)return false;
@@ -60,6 +61,7 @@ static bool isValidAlias(const std::string& s)
   }
   return true;
 }
+#endif
 
 class AccessDeniedException{};
 
@@ -703,7 +705,7 @@ int Profiler::Execute()
         {
           status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVESMCLASS);
           resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-              cmd->get_dialogId(),status);
+              cmd->get_dialogId(),status,cmd->dstNodeIdx,cmd->sourceId);
           putIncomingCommand(resp);
           continue;
         };
@@ -712,7 +714,7 @@ int Profiler::Execute()
         {
           __warning__("Profiler: received receipt!!!");
           status=Status::OK;
-          resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),status);
+          resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),status,cmd->dstNodeIdx,cmd->sourceId);
           putIncomingCommand(resp);
           continue;
         }
@@ -722,7 +724,7 @@ int Profiler::Execute()
           __warning__("Profiler: ussd service op != 1");
           status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
           resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-              cmd->get_dialogId(),status);
+              cmd->get_dialogId(),status,cmd->dstNodeIdx,cmd->sourceId);
           putIncomingCommand(resp);
           continue;
         }
@@ -736,7 +738,7 @@ int Profiler::Execute()
         {
           status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
           resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-              cmd->get_dialogId(),status);
+              cmd->get_dialogId(),status,cmd->dstNodeIdx,cmd->sourceId);
           putIncomingCommand(resp);
           __warning2__("INVALID MESSAGE SENT TO PROFILER FROM %s",addr.toString().c_str());
           continue;
@@ -1025,7 +1027,7 @@ int Profiler::Execute()
         }
 
         resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-            cmd->get_dialogId(),status);
+            cmd->get_dialogId(),status,cmd->dstNodeIdx,cmd->sourceId);
 
         putIncomingCommand(resp);
         ProfileUpdateInfo pui;

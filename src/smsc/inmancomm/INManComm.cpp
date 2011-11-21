@@ -9,7 +9,7 @@ using smsc::inman::interaction::INPBilling;
 namespace smsc{
 namespace inmancomm{
 
-static const INPBilling  _protoDef; //Sms/USSd billing protocol definition
+static const INPBilling  protoDef; //Sms/USSd billing protocol definition
 
 Address INManComm::scAddr;
 
@@ -210,7 +210,7 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
 }
 
 
-void INManComm::Report(SMSId id,int dlgId,const SMS& sms,bool final)
+void INManComm::ReportDelivery(SMSId id,int dlgId,const SMS& sms,bool final)
 {
   info2(log,"Report: Id=%lld;dda=%s;dlgid=%d;lr=%d;cp=%d;final=%s",id,sms.getDealiasedDestinationAddress().toString().c_str(),
       dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY),final?"Y":"N");
@@ -245,12 +245,15 @@ void INManComm::ProcessExpiration()
     smsc::smeman::SmscCommand cmd;
     if(it->second->second->chargeType==ReqData::ctSubmit)
     {
+      ReqData& rd=*it->second->second;
       cmd=smsc::smeman::SmscCommand::makeINSmsChargeResponse
         (
-          it->second->second->id,
-          it->second->second->sms,
-          *it->second->second->sbmCtx,
-          0
+          rd.id,
+          rd.sms,
+          *rd.sbmCtx,
+          0,
+          rd.sbmCtx->dstNodeIdx,
+          rd.sbmCtx->sourceId
         );
       delete it->second->second->sbmCtx;
     }else
@@ -339,12 +342,12 @@ int INManComm::Execute()
     smsc::inman::interaction::SPckChargeSmsResult pck;
     try
     {
-      INPBilling::PduId pduId = _protoDef.isKnownPacket(buf);
+      INPBilling::PduId pduId = protoDef.isKnownPacket(buf);
       if (!pduId)
         throw smsc::util::Exception("unsupported INMan packet recieved");
 
       INPBilling::CommandTag_e
-        cmdId = static_cast<INPBilling::CommandTag_e>(_protoDef.getCmdId(pduId));
+        cmdId = static_cast<INPBilling::CommandTag_e>(protoDef.getCmdId(pduId));
 
       if (cmdId != INPBilling::CHARGE_SMS_RESULT_TAG) {
         smsc_log_warn(log, "illegal INMan command received: %s", INPBilling::nameOfCmd(cmdId));
@@ -385,7 +388,9 @@ int INManComm::Execute()
               rd->id,
               rd->sms,
               *rd->sbmCtx,
-              result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
+              result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE,
+              rd->sbmCtx->dstNodeIdx,
+              rd->sbmCtx->sourceId
           );
       cmd->get_chargeSmsResp()->inmanError=result->getMsg();
       cmd->get_chargeSmsResp()->contractType=result->getContract();

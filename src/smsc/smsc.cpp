@@ -47,7 +47,7 @@
 #include "smsc/interconnect/ClusterInterconnect.hpp"
 #include "smsc/configregistry/ConfigRegistry.hpp"
 
-typedef struct stat stat_struct;
+typedef struct stat stat_type;
 
 namespace smsc{
 
@@ -197,7 +197,7 @@ public:
         }
 
         uint32_t smePerfDataSize = 0;
-        std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
+        smsc::util::auto_arr_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
         perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
         info2(log,"ut=%.3lf;avg=%.3lf;last=%.3lf;cnt=%llu;eq=%d;equnl=%d;sched=%d;dpf=%d;sbm=%d;rej=%d;dlv=%d;fwd=%d;tmp=%d;prm=%d",ut,avg,rate,cnt,eqhash,equnl,d.inScheduler,d.dpfCount,
               d.counters[6].lastSecond,d.counters[7].lastSecond,d.counters[8].lastSecond,d.counters[9].lastSecond,d.counters[10].lastSecond,d.counters[11].lastSecond);
@@ -414,33 +414,34 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     smsc_log_warn(log,"core.schedulerFreeBandwidthUsage not found, using default %d",schedulerFreeBandwidthUsage);
   }
 
-    try
+  try
+  {
+    speedLogFlushPeriod=cfg.cfgman->getInt("core.speedLogFlushPeriodMin");
+    if((60%speedLogFlushPeriod)!=0)
     {
-      speedLogFlushPeriod=cfg.cfgman->getInt("core.speedLogFlushPeriodMin");
-      if((60%speedLogFlushPeriod)!=0)
-      {
-        smsc_log_warn(log,"60 isn't multiple of core.speedLogFlushPeriodMin. using default value");
-        speedLogFlushPeriod=60;
-      }
-      time_t now=time(NULL)/60;
-      nextSpeedLogFlush=now+(speedLogFlushPeriod-(now%speedLogFlushPeriod));
-    } catch(...)
-    {
+      smsc_log_warn(log,"60 isn't multiple of core.speedLogFlushPeriodMin. using default value");
       speedLogFlushPeriod=60;
     }
+    time_t now=time(NULL)/60;
+    nextSpeedLogFlush=now+(speedLogFlushPeriod-(now%speedLogFlushPeriod));
+  } catch(...)
+  {
+    speedLogFlushPeriod=60;
+  }
 
 
     store=scheduler;
     smsc_log_info(log, "Initializing scheduler" );
     scheduler->DelayInit(cfg.cfgman);
 
-    smeman.registerInternallSmeProxy("scheduler",scheduler);
-    try{
-      smeman.registerInternallSmeProxy("NULLSME",&nullSme);
-    }catch(std::exception& e)
-    {
-      smsc_log_info(log, "NULLSME not registered" );
-    }
+  smeman.registerInternallSmeProxy("scheduler",scheduler);
+  try{
+    smeman.registerInternallSmeProxy("NULLSME",&nullSme);
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(log, "NULLSME not registered:%s",e.what());
+
+  }
 
     smeman.registerInternallSmeProxy("CLSTRICON",smsc::interconnect::ClusterInterconnect::getInstance());
 
@@ -499,18 +500,24 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
 #ifdef SMSEXTRA
         m->createCopyOnNickUsage=createCopyOnNickUsage;
 #endif
-        Address addr(cfg.cfgman->getString("core.service_center_address"));
-        m->scAddress=addr;
-        m->setReceiptInfo(
-            cfg.cfgman->getString("core.service_type"),
-            cfg.cfgman->getInt("core.protocol_id"),
-            cfg.cfgman->getString("core.systemId")
-        );
-        tp.startTask(m);
-        stateMachines.push_back(m);
+      Address raddr;
+      try{
+        raddr=cfg.cfgman->getString("core.receipt_orig_address");
+      }catch(...)
+      {
+        raddr=cfg.cfgman->getString("core.service_center_address");
       }
-      smsc_log_info(log, "Statemachines started" );
+      m->receiptAddress=raddr;
+      m->setReceiptInfo(
+        cfg.cfgman->getString("core.service_type"),
+        cfg.cfgman->getInt("core.protocol_id"),
+        cfg.cfgman->getString("core.systemId")
+      );
+      tp.startTask(m);
+      stateMachines.push_back(m);
     }
+    smsc_log_info(log, "Statemachines started" );
+  }
 
     try{
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctReschedule);
@@ -1373,7 +1380,7 @@ void Smsc::InitLicense()
     licenseFile=findConfigFile("license.ini");
     licenseSigFile=findConfigFile("license.sig");
   }
-  stat_struct st;
+  stat_type st;
   if(::stat(licenseFile.c_str(),&st)!=0)
   {
     throw Exception("Failed to stat '%s'",licenseFile.c_str());

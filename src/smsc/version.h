@@ -13,7 +13,7 @@
 /* -- ----------------------------------------- -- */
 
 #define SMSC_2G_VENDOR        "Eyeline"
-#define SMSC_2G_PRODUCT_NAME  "SMSC_2G"
+#define SMSC_2G_PRODUCT_NAME  "Scalable SMSC"
 
 #ifdef __cplusplus
 #define EXTERN extern "C"

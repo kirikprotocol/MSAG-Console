@@ -137,7 +137,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   SMS& sms=t.command->get_fwdChargeSmsResp()->sms;
   int  inDlgId=t.command->get_fwdChargeSmsResp()->cntx.inDlgId;
   bool allowDivert=t.command->get_fwdChargeSmsResp()->cntx.allowDivert;
-  bool isReschedulingForward=t.command->get_fwdChargeSmsResp()->cntx.reschedulingForward;
+  //bool isReschedulingForward=t.command->get_fwdChargeSmsResp()->cntx.reschedulingForward;
 
   if(!sms.Invalidate(__FILE__,__LINE__))
   {
@@ -334,7 +334,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_debug(smsLog,"FWD: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
     rr.destSmeIdx=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
     rr.destProxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-  }else if(sms.getLastResult()==Status::BACKUPSMERESCHEDULE && sms.hasStrProperty(Tag::SMSC_BACKUP_SME))
+  }else if(sms.getLastResult()==(uint32_t)Status::BACKUPSMERESCHEDULE && sms.hasStrProperty(Tag::SMSC_BACKUP_SME))
   {
     smsc_log_debug(smsLog,"FWD: reroute to backup sme %s",sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
     rr.destSmeIdx=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
@@ -438,7 +438,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     Address src;
     if(
         smsc->getSmeInfo(rr.destProxy->getIndex()).wantAlias &&
-        sms.getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
+        sms.getIntProperty(Tag::SMSC_HIDE)==(uint32_t)HideOption::hoEnabled &&
         rr.info.hide &&
         smsc->AddressToAlias(sms.getOriginatingAddress(),src)
       )
@@ -501,7 +501,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
     }
     smsc_log_debug(smsLog,"FWD: Id=%lld, esm_class=%x",t.msgId,sms.getIntProperty(Tag::SMPP_ESM_CLASS));
-    SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
+    SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2,0,"");
     rr.destProxy->putCommand(delivery);
     tg.active=false;
   }

@@ -145,7 +145,7 @@ int AbonentInfoSme::Execute()
       resp=SmscCommand::makeDeliverySmResp(
         sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
         cmd->get_dialogId(),
-        Status::OK);
+        Status::OK,cmd->dstNodeIdx,cmd->sourceId);
       putIncomingCommand(resp);
 
       getSmsText(sms,body,(unsigned)sizeof(body));

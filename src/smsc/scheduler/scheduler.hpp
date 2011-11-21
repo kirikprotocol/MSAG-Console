@@ -618,7 +618,7 @@ public:
 
     void CopyBuf(BufOps::SmsBuffer& buf)
     {
-      if(smsBufSize!=buf.GetPos())
+      if(smsBufSize!=(int)buf.GetPos())
       {
         Clear();
         smsBufSize=(int)buf.GetPos();

@@ -18,6 +18,7 @@
 #include "smsc/profiler/profiler.hpp"
 #include "smsc/common/TimeZoneMan.hpp"
 #include "smsc/snmp/SnmpCounter.hpp"
+#include "smsc/interconnect/ClusterInterconnect.hpp"
 #ifdef SMSEXTRA
 #include "smsc/extra/Extra.hpp"
 #include "smsc/extra/ExtraBits.hpp"
@@ -580,7 +581,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   __require__(unkdir.LastError()==regexp::errNone);
   */
   SMatch m[10];
-  int i=0;
+  unsigned i=0;
 
   ContextEnvironment ce;
   ReceiptGetAdapter ga;
@@ -655,8 +656,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       if(t>999)t=999;
       t*=60;
       t+=mnts;
-      smsc_log_debug(smsLog,"DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
-      sms.setNextTime(time(NULL)+t*60);
+      smsc_log_debug(smsLog,"DIRECT: %.*s, t=%d",m[1].end-m[1].start,buf+m[1].start,t);
+      time_t newTime=time(NULL)+t*60;
+      sms.setNextTime(newTime);
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
@@ -666,7 +668,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       smsc_log_info(log,"DIRECT: template=%s",tmplname.c_str());
       tmplname="templates."+tmplname;
       OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
-      int j=m[0].end;
+      unsigned j=(unsigned)m[0].end;
       n=10;
       string name,value;
       while(dreTemplateParam.MatchEx(buf,buf+j,buf+len,m,n))
@@ -696,7 +698,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
               if(sscanf(value.c_str(),SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN,
                 &day,&month,&year,&hh,&mm,&ss,&nn)!=6)
               {
-                sscanf(value.c_str(),"%d",&t);
+                int val;
+                sscanf(value.c_str(),"%d",&val);
+                t=val;
               }else
               {
                 tm tmptm;
@@ -745,9 +749,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   }
   if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
   {
-    int pos=0;
-    int fix=0;
-    for(int j=0;j<len;j++)
+    //int pos=0;
+    //int fix=0;
+    for(unsigned int j=0;j<len;j++)
     {
       if(strchr(escchars,buf[j]))lastDirectiveSymbol++;
     }
@@ -891,13 +895,13 @@ void StateMachine::prepareSmsDc(SMS& sms,bool defaultDcLatin1)
   using namespace smsc::profiler::ProfileCharsetOptions;
   if(
      (
-       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
-        sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
+       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==(uint32_t)Default ||
+        sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==(uint32_t)Latin1
        )
-       && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
+       && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==(uint32_t)DataCoding::UCS2
      ) ||
      (
-       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
+       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=(uint32_t)Latin1 &&
        sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
      )
     )
@@ -1133,10 +1137,12 @@ StateType StateMachine::alert(Tuple& t)
                              "0",
                              sms.dialogId,
                              Status::DELIVERYTIMEDOUT,
+                             t.command->dstNodeIdx,
+                             t.command->sourceId,
                              sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                            );
 
-      SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+      SmeProxy *src_proxy=t.command->dstNodeIdx==smsc->nodeIndex-1?smsc->getSmeProxy(sms.srcSmeId):interconnect::ClusterInterconnect::getInstance();
       if(src_proxy)
       {
         try{
@@ -1194,7 +1200,7 @@ StateType StateMachine::replace(Tuple& t)
   }
   smsc_log_info(smsLog,"REPLACE: Id=%lld;oa=%s;da=%s",t.msgId,
       sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str());
-  time_t oldtime=sms.getNextTime();
+  //time_t oldtime=sms.getNextTime();
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     if(sms.getConcatSeqNum()>0)
@@ -1212,7 +1218,7 @@ StateType StateMachine::replace(Tuple& t)
   }
 
   try{
-    Address addr(t.command->get_replaceSm().sourceAddr.get());
+    Address addr(t.command->get_replaceSm().sourceAddr.c_str());
     if(!(sms.getOriginatingAddress()==addr))
     {
       throw Exception("replace failed");
@@ -1228,7 +1234,7 @@ StateType StateMachine::replace(Tuple& t)
   {
     if(
         t.command->get_replaceSm().smLength==0 ||
-        *((uint8_t*)t.command->get_replaceSm().shortMessage.get())+1 >
+        *((uint8_t*)t.command->get_replaceSm().shortMessage.c_str())+1 >
         t.command->get_replaceSm().smLength
       )
     {
@@ -1240,7 +1246,7 @@ StateType StateMachine::replace(Tuple& t)
   sms.setBinProperty
   (
     Tag::SMPP_SHORT_MESSAGE,
-    t.command->get_replaceSm().shortMessage.get(),
+    t.command->get_replaceSm().shortMessage.c_str(),
     t.command->get_replaceSm().smLength
   );
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,t.command->get_replaceSm().smLength);
@@ -1341,7 +1347,7 @@ StateType StateMachine::query(Tuple& t)
   smsc_log_info(smsLog,"QUERY: Id=%lld",t.msgId);
   SMS sms;
   try{
-    Address addr(t.command->get_querySm().sourceAddr.get());
+    Address addr(t.command->get_querySm().sourceAddr.c_str());
     store->retriveSms(t.msgId,sms);
     if(!(sms.getOriginatingAddress()==addr))
     {
@@ -1405,7 +1411,7 @@ StateType StateMachine::cancel(Tuple& t)
 
     if(!t.command->get_cancelSm().force)
     {
-      addr=Address(t.command->get_cancelSm().sourceAddr.get());
+      addr=Address(t.command->get_cancelSm().sourceAddr.c_str());
     }
     store->retriveSms(t.msgId,sms);
     smsc_log_info(smsLog,"CANCEL: Id=%lld;oa=%s;da=%s;srcSme=%s",t.msgId,
@@ -1437,9 +1443,9 @@ StateType StateMachine::cancel(Tuple& t)
       {
         throw Exception("CANCEL: source address doesn't match");
       }
-      if(t.command->get_cancelSm().destAddr.get())
+      if(t.command->get_cancelSm().destAddr[0])
       {
-        addr=Address(t.command->get_cancelSm().destAddr.get());
+        addr=Address(t.command->get_cancelSm().destAddr.c_str());
         if(!(sms.getDestinationAddress()==addr))
         {
           throw Exception("CANCEL: destination address doesn't match");
@@ -1573,7 +1579,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
     }
   }
   SMS rpt;
-  rpt.setOriginatingAddress(scAddress);
+  rpt.setOriginatingAddress(receiptAddress);
   char msc[]="";
   char imsi[]="";
   rpt.lastResult=sms.lastResult;
@@ -1688,7 +1694,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
        (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
     SMS rpt;
-    rpt.setOriginatingAddress(scAddress);
+    rpt.setOriginatingAddress(receiptAddress);
     char msc[]="";
     char imsi[]="";
     rpt.lastResult=sms.lastResult;
@@ -1793,14 +1799,17 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
   sms.setLastResult(failureCause);
   sms.setNextTime(nextTryTime);
   try{
+    /*
     if(failureCause==Status::RESCHEDULEDNOW)
     {
       smsc->getScheduler()->AddScheduledSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
     }else
     {
-      time_t ntt=smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
-      if(ntt)nextTryTime=ntt;
-    }
+    */
+    //time_t ntt=
+    smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
+    //if(ntt)nextTryTime=ntt;
+    //}
 
 
     debug2(smsLog, "ENROUTE: Id=%lld;oa=%s;da=%s;lr=%d;or=%d;ntt=%u;ac=%d",id,
@@ -1925,6 +1934,8 @@ void StateMachine::submitResp(Tuple& t,SMS* sms,int status)
                          /*messageId*/"0",
                          t.command->get_dialogId(),
                          status,
+                         t.command->dstNodeIdx,
+                         t.command->sourceId,
                          sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                        );
   if(sms->hasIntProperty(Tag::SMPP_SET_DPF))
@@ -1940,8 +1951,9 @@ void StateMachine::submitResp(Tuple& t,SMS* sms,int status)
   }
 }
 
-void StateMachine::finalizeSms(SMSId id,SMS& sms)
+void StateMachine::finalizeSms(Tuple& t,SMS& sms)
 {
+  SMSId id=t.msgId;
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
 /*    if(sms.lastResult!=0)
@@ -1961,6 +1973,8 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
                          /*messageId*/"0",
                          sms.dialogId,
                          sms.lastResult,
+                         t.command->dstNodeIdx,
+                         t.command->sourceId,
                          sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                        );
       if(sms.hasIntProperty(Tag::SMPP_SET_DPF))
@@ -2149,7 +2163,7 @@ bool StateMachine::processMerge(SbmContext& c)
       c.sms->getMessageBody().dropIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
     }
 
-    char cibuf[256*2+1];
+    char cibuf[256*2+1]={0,};
     ConcatInfo *ci=(ConcatInfo *)cibuf;
     ci->num=1;
     ci->setOff(0,0);
@@ -2193,6 +2207,8 @@ bool StateMachine::processMerge(SbmContext& c)
                            buf,
                            c.dialogId,
                            Status::OK,
+                           c.t.command->dstNodeIdx,
+                           c.t.command->sourceId,
                            c.sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
@@ -2263,6 +2279,8 @@ bool StateMachine::processMerge(SbmContext& c)
                                  buf,
                                  c.t.command->get_dialogId(),
                                  Status::OK,
+                                 c.t.command->dstNodeIdx,
+                                 c.t.command->sourceId,
                                  c.sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                                );
           try{
@@ -2441,10 +2459,10 @@ bool StateMachine::processMerge(SbmContext& c)
           {
             for(unsigned j=0;j<num;j++)
             {
-              if(order[j]==i)
+              if(order[j]==(int)i)
               {
                 spi[i-1]=getSMSPartInfo(newsms,i-1);
-                int partlen=j==num-1?(int)tmp.GetPos()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
+                int partlen=(int)j==num-1?(int)tmp.GetPos()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
                 newci[i-1]=(uint16_t)newtmp.GetPos();
                 newtmp.Append(tmp.get()+ci->getOff(j),partlen);
 
@@ -2546,6 +2564,8 @@ bool StateMachine::processMerge(SbmContext& c)
                              buf,
                              c.dialogId,
                              Status::OK,
+                             c.t.command->dstNodeIdx,
+                             c.t.command->sourceId,
                              c.sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                            );
       try{
@@ -2561,6 +2581,7 @@ bool StateMachine::processMerge(SbmContext& c)
         );
       }
       c.rvstate=ENROUTE_STATE;
+      c.needToSendResp=false;
       return false;
     }
 

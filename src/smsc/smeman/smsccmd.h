@@ -168,7 +168,7 @@ public:
   void set_messageId(const char* msgid)
   {
     if(!msgid)return;
-    if ( messageId ) delete( messageId);
+    if ( messageId ) delete [] messageId;
     messageId = new char[strlen(msgid)+1];
     strcpy(messageId,msgid);
   }
@@ -241,27 +241,27 @@ public:
   }
 
   SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false),
-    haveDpf(false),dpfResult(0),inDlgId(0),
+    inDlgId(0),haveDpf(false),dpfResult(0),
     haveDeliveryFailureReason(false),deliveryFailureReason(0),
     haveNetworkErrorCode(false),ussd_session_id(-1)
     {};
   ~SmsResp()
   {
-    if ( messageId ) delete messageId;
+    if ( messageId ) delete [] messageId;
     if (sms)delete sms;
   }
 };
 
-static inline void fillField(auto_ptr<char>& field,const char* text,int length=-1)
+template <size_t N>
+static inline void fillField(smsc::core::buffers::FixedLengthString<N>& field,const char* text,int length=-1)
 {
   if(length==0 || text==NULL)return;
   if(length==-1)length=(int)strlen(text);
-  field=auto_ptr<char>(new char[length+1]);
-  memcpy(field.get(),text,length);
-  field.get()[length]=0;
+  memcpy(field.str,text,length);
+  field[length]=0;
 }
 
-static inline void fillSmppAddr(auto_ptr<char>& field,PduAddress& addr)
+static inline void fillSmppAddr(smsc::core::buffers::FixedLengthString<MAX_FULL_ADDRESS_VALUE_LENGTH+1>& field,PduAddress& addr)
 {
   char buf[64];
   if(!addr.get_value() || !addr.get_value()[0])
@@ -278,26 +278,26 @@ static inline void fillSmppAddr(auto_ptr<char>& field,PduAddress& addr)
 }
 
 struct ReplaceSm{
-  auto_ptr<char> messageId;
-  auto_ptr<char> sourceAddr;
+  smsc::core::buffers::FixedLengthString<65> messageId;
+  smsc::core::buffers::FixedLengthString<MAX_FULL_ADDRESS_VALUE_LENGTH+1> sourceAddr;
   time_t scheduleDeliveryTime;
   time_t validityPeriod;
   int registeredDelivery;
   int smDefaultMsgId;
   int smLength;
-  auto_ptr<char> shortMessage;
+  smsc::core::buffers::FixedLengthString<MAX_SHORT_MESSAGE_LENGTH> shortMessage;
 
   SMSId getMessageId()const
   {
     SMSId id=0;
-    if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+    if(messageId[0])sscanf(messageId.c_str(),"%lld",&id);
     return id;
   }
 
   ReplaceSm(PduReplaceSm* repl)
   {
     fillField(messageId,repl->get_messageId());
-    if(!messageId.get() || !messageId.get()[0])
+    if(!messageId[0])
     {
       throw Exception("REPLACE: non empty messageId required");
     }
@@ -314,22 +314,17 @@ struct ReplaceSm{
 };
 
 struct QuerySm{
-  auto_ptr<char> messageId;
-  auto_ptr<char> sourceAddr;
+  smsc::core::buffers::FixedLengthString<65> messageId;
+  smsc::core::buffers::FixedLengthString<MAX_FULL_ADDRESS_VALUE_LENGTH+1> sourceAddr;
   QuerySm(PduQuerySm* q)
   {
     fillField(messageId,q->get_messageId());
-    if(!messageId.get())
-    {
-      messageId=auto_ptr<char>(new char[1]);
-      messageId.get()[0]=0;
-    }
     fillSmppAddr(sourceAddr,q->get_source());
   }
   SMSId getMessageId()const
   {
     SMSId id=0;
-    if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+    if(messageId[0])sscanf(messageId.c_str(),"%lld",&id);
     return id;
   }
 };
@@ -367,10 +362,10 @@ struct QuerySmResp{
 };
 
 struct CancelSm{
-  auto_ptr<char> serviceType;
-  auto_ptr<char> messageId;
-  auto_ptr<char> sourceAddr;
-  auto_ptr<char> destAddr;
+  smsc::core::buffers::FixedLengthString<MAX_ESERVICE_TYPE_LENGTH+1> serviceType;
+  smsc::core::buffers::FixedLengthString<65> messageId;
+  smsc::core::buffers::FixedLengthString<MAX_FULL_ADDRESS_VALUE_LENGTH+1> sourceAddr;
+  smsc::core::buffers::FixedLengthString<MAX_FULL_ADDRESS_VALUE_LENGTH+1> destAddr;
   bool internall;
   bool force;
 
@@ -410,7 +405,7 @@ struct CancelSm{
   SMSId getMessageId()const
   {
     SMSId id=0;
-    if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+    if(messageId[0])sscanf(messageId.c_str(),"%lld",&id);
     return id;
   }
 };
@@ -483,15 +478,15 @@ struct INSmsChargeResponse{
     bool isForwardTo;
     bool diverted;
     bool routeHide;
-    Address dst;
     bool generateDeliver;
+    Address dst;
 #ifdef SMSEXTRA
     bool noDestChange;
 #endif
     bool transit;
     smsc::router::ReplyPath replyPath;
     int priority;
-    int dstDlgIdx;
+    int dstNodeIdx;
     SmeSystemId sourceId;
 
     int inDlgId;
@@ -617,6 +612,7 @@ struct _SmscCommand
       break;
     default:
       __warning2__("~SmscCommand:unprocessed cmdid %d",cmdid);
+      break;
     }
   }
 
@@ -781,7 +777,7 @@ public:
     return cmd;
   }*/
 
-  static SmscCommand makeDeliverySm(const SMS& sms,uint32_t dialogId)
+  static SmscCommand makeDeliverySm(const SMS& sms,uint32_t dialogId,int dstNodeIdx,SmeSystemId sourceSmeId)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
@@ -791,10 +787,12 @@ public:
     _cmd.dta = new SMS;
     *_cmd.get_sms() = sms;
     _cmd.dialogId = dialogId;
+    _cmd.dstNodeIdx=dstNodeIdx;
+    _cmd.sourceId=sourceSmeId;
     return cmd;
   }
 
-  static SmscCommand makeSubmitSmResp(const char* messageId, uint32_t dialogId, uint32_t status,bool dataSm=false)
+  static SmscCommand makeSubmitSmResp(const char* messageId, uint32_t dialogId, uint32_t status,int dstNodeIdx,SmeSystemId sourceSmeId,bool dataSm=false)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
@@ -804,6 +802,8 @@ public:
     _cmd.dta = new SmsResp;
     _cmd.get_resp()->set_messageId(messageId);
     _cmd.get_resp()->set_status(status);
+    _cmd.dstNodeIdx=dstNodeIdx;
+    _cmd.sourceId=sourceSmeId;
     if(dataSm)_cmd.get_resp()->set_dataSm();
     _cmd.dialogId = dialogId;
     return cmd;
@@ -824,7 +824,7 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeDeliverySmResp(const char* messageId, uint32_t dialogId, uint32_t status)
+  static SmscCommand makeDeliverySmResp(const char* messageId, uint32_t dialogId, uint32_t status,int dstNodeIdx,SmeSystemId sourceSmeId)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
@@ -835,10 +835,12 @@ public:
     _cmd.get_resp()->set_messageId(messageId);
     _cmd.get_resp()->set_status(status);
     _cmd.dialogId = dialogId;
+    _cmd.dstNodeIdx=dstNodeIdx;
+    _cmd.sourceId=sourceSmeId;
     return cmd;
   }
 
-  static SmscCommand makeAlert(SMS *sms,int inDlgId)
+  static SmscCommand makeAlert(SMS *sms,int inDlgId,int dstNodeIdx,SmeSystemId sourceSmeId)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
@@ -847,6 +849,8 @@ public:
     _cmd.cmdid = ALERT;
     _cmd.dta = new AlertData(sms,inDlgId);
     _cmd.dialogId = 0;
+    _cmd.dstNodeIdx=dstNodeIdx;
+    _cmd.sourceId=sourceSmeId;
     return cmd;
   }
 
@@ -1109,7 +1113,7 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeINSmsChargeResponse(SMSId id,const SMS& sms,const INSmsChargeResponse::SubmitContext& cntx,int result)
+  static SmscCommand makeINSmsChargeResponse(SMSId id,const SMS& sms,const INSmsChargeResponse::SubmitContext& cntx,int result,int dstNodeIdx,SmeSystemId sourceId)
   {
     SmscCommand cmd;
     cmd.cmd=new _SmscCommand;
@@ -1123,6 +1127,8 @@ public:
     resp->result=result;
     _cmd.dta=resp;
     _cmd.dialogId=0;
+    _cmd.dstNodeIdx=dstNodeIdx;
+    _cmd.sourceId=sourceId;
     return cmd;
   }
 
@@ -1314,7 +1320,7 @@ public:
 
       if(pdu->commandId==SmppCommandSet::DELIVERY_SM_RESP || pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
-        int status=((SmsResp*)_cmd->dta)->get_status()&0xffff;
+        uint32_t status=((SmsResp*)_cmd->dta)->get_status()&0xffff;
         if(status==SmppStatusSet::ESME_ROK)
         {
           ((SmsResp*)_cmd->dta)->set_status(
@@ -1505,8 +1511,8 @@ public:
 
         const ReplaceSm *r=&c.get_replaceSm();
 
-        rpl->set_messageId(r->messageId.get());
-        rpl->set_source(Address2PduAddress(r->sourceAddr.get()));
+        rpl->set_messageId(r->messageId.c_str());
+        rpl->set_source(Address2PduAddress(r->sourceAddr.c_str()));
         char buf[64];
         cTime2SmppTime(r->scheduleDeliveryTime,buf);
         rpl->set_scheduleDeliveryTime(buf);
@@ -1514,7 +1520,7 @@ public:
         rpl->set_validityPeriod(buf);
         rpl->set_registredDelivery(r->registeredDelivery);
         rpl->set_smDefaultMsgId(r->smDefaultMsgId);
-        rpl->shortMessage.copy(r->shortMessage.get(),r->smLength);
+        rpl->shortMessage.copy(r->shortMessage.c_str(),r->smLength);
 
         return reinterpret_cast<SmppHeader*>(rpl.release());
       }
@@ -1532,8 +1538,8 @@ public:
         query->header.set_commandId(SmppCommandSet::QUERY_SM);
         query->header.set_sequenceNumber(c.get_dialogId());
         query->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
-        query->set_messageId(c.get_querySm().messageId.get());
-        query->set_source(Address2PduAddress(c.get_querySm().sourceAddr.get()));
+        query->set_messageId(c.get_querySm().messageId.c_str());
+        query->set_source(Address2PduAddress(c.get_querySm().sourceAddr.c_str()));
         return reinterpret_cast<SmppHeader*>(query.release());
       }
     case QUERY_RESP:
@@ -1558,15 +1564,15 @@ public:
         cnc->header.set_sequenceNumber(c.get_dialogId());
         cnc->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
 
-        if(c.get_cancelSm().serviceType.get())
-          cnc->set_serviceType(c.get_cancelSm().serviceType.get());
-        if(c.get_cancelSm().messageId.get())
-          cnc->set_messageId(c.get_cancelSm().messageId.get());
+        if(c.get_cancelSm().serviceType[0])
+          cnc->set_serviceType(c.get_cancelSm().serviceType.c_str());
+        if(c.get_cancelSm().messageId[0])
+          cnc->set_messageId(c.get_cancelSm().messageId.c_str());
 
-        if(c.get_cancelSm().sourceAddr.get())
-          cnc->set_source(Address2PduAddress(c.get_cancelSm().sourceAddr.get()));
-        if(c.get_cancelSm().destAddr.get())
-          cnc->set_dest(Address2PduAddress(c.get_cancelSm().destAddr.get()));
+        if(c.get_cancelSm().sourceAddr[0])
+          cnc->set_source(Address2PduAddress(c.get_cancelSm().sourceAddr.c_str()));
+        if(c.get_cancelSm().destAddr[0])
+          cnc->set_dest(Address2PduAddress(c.get_cancelSm().destAddr.c_str()));
 
         return reinterpret_cast<SmppHeader*>(cnc.release());
       }
