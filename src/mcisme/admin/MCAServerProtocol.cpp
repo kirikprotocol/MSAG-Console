@@ -16,14 +16,14 @@ void MCAServerProtocol::assignHandler(MCAServerProtocolHandler* newHandler)
   handler=newHandler;
 }
 
-void MCAServerProtocol::decodeAndHandleMessage(const char* buf,size_t sz)
+void MCAServerProtocol::decodeAndHandleMessage(const char* buf,size_t sz,int connId)
 {
   eyeline::protogen::framework::SerializerBuffer ss;
   ss.setExternalData(buf,sz);
-  decodeAndHandleMessage(ss);
+  decodeAndHandleMessage(ss,connId);
 }
 
-void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::SerializerBuffer& ss)
+void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::SerializerBuffer& ss,int connId)
 {
   uint32_t tag=ss.readInt32();
   uint32_t seq=ss.readInt32();
@@ -34,6 +34,7 @@ void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Ser
       messages::FlushStats msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
     case tag_GetStats:
@@ -41,6 +42,7 @@ void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Ser
       messages::GetStats msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
     case tag_GetRunStats:
@@ -48,6 +50,7 @@ void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Ser
       messages::GetRunStats msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
     case tag_GetSched:
@@ -55,6 +58,7 @@ void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Ser
       messages::GetSched msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
     case tag_GetSchedList:
@@ -62,6 +66,7 @@ void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Ser
       messages::GetSchedList msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
     case tag_GetProfile:
@@ -69,6 +74,7 @@ void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Ser
       messages::GetProfile msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
     case tag_SetProfile:
@@ -76,6 +82,7 @@ void MCAServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Ser
       messages::SetProfile msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
       handler->handle(msg);
     }break;
     default:

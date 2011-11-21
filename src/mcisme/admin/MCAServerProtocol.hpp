@@ -39,8 +39,8 @@ public:
   }
 
   void assignHandler(MCAServerProtocolHandler* newHandler);
-  void decodeAndHandleMessage(const char* buf,size_t sz);
-  void decodeAndHandleMessage(eyeline::protogen::framework::SerializerBuffer& ss);
+  void decodeAndHandleMessage(const char* buf,size_t sz,int connId);
+  void decodeAndHandleMessage(eyeline::protogen::framework::SerializerBuffer& ss,int connId);
 
   template <class MsgType>
   void encodeMessage(const MsgType& msg,eyeline::protogen::framework::SerializerBuffer* ss)

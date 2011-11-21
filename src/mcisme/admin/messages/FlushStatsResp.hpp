@@ -97,6 +97,15 @@ public:
   }
 
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -104,6 +113,7 @@ protected:
   //static const int8_t versionMinor=0;
 
 
+  int connId;
 
 
 };

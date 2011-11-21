@@ -476,6 +476,15 @@ public:
     seqNum=argValue;
   }
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -491,6 +500,7 @@ protected:
   static const int32_t notifyTemplateIdTag=7;
 
   int32_t seqNum;
+  int connId;
 
   std::string subscriber;
   int8_t eventMask;

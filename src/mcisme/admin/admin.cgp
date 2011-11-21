@@ -24,6 +24,7 @@ out.protocol.suffix=Handler
 out.protocol.suffix=Handler
 
 option:options.throwOnUnsetGet=true
+option:message.needConnId=true
 
 data:namespacemsg:1=smsc
 data:namespacemsg:2=mcisme

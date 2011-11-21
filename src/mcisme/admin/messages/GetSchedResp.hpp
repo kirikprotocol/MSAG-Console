@@ -309,6 +309,15 @@ public:
   }
 
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -320,6 +329,7 @@ protected:
   static const int32_t eventsCountTag=3;
   static const int32_t lastErrorTag=4;
 
+  int connId;
 
   int64_t time;
   std::string subscriber;

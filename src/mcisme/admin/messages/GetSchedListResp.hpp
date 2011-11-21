@@ -185,6 +185,15 @@ public:
   }
 
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -193,6 +202,7 @@ protected:
 
   static const int32_t timeLinesTag=1;
 
+  int connId;
 
   std::vector<TimeLineInfo> timeLines;
 

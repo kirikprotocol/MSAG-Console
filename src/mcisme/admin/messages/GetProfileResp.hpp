@@ -413,6 +413,15 @@ public:
   }
 
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -426,6 +435,7 @@ protected:
   static const int32_t informTemplateIdTag=5;
   static const int32_t notifyTemplateIdTag=6;
 
+  int connId;
 
   int8_t eventMask;
   bool inform;

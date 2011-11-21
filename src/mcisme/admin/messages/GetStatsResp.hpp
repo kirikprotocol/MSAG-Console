@@ -310,6 +310,15 @@ public:
   }
 
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -321,6 +330,7 @@ protected:
   static const int32_t failedTag=3;
   static const int32_t notifiedTag=4;
 
+  int connId;
 
   int32_t missed;
   int32_t delivered;

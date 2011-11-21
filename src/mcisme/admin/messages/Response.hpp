@@ -216,6 +216,15 @@ public:
     seqNum=argValue;
   }
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -226,6 +235,7 @@ protected:
   static const int32_t msgTag=2;
 
   int32_t seqNum;
+  int connId;
 
   Status status;
   std::string msg;

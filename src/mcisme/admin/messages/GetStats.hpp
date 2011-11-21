@@ -104,6 +104,15 @@ public:
     seqNum=argValue;
   }
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -112,6 +121,7 @@ protected:
 
 
   int32_t seqNum;
+  int connId;
 
 
 };

@@ -220,6 +220,15 @@ public:
     seqNum=argValue;
   }
 
+  void messageSetConnId(int argConnId)
+  {
+    connId=argConnId;
+  }
+
+  int messageGetConnId()const
+  {
+    return connId;
+  }
  
 
 protected:
@@ -230,6 +239,7 @@ protected:
   static const int32_t countTag=2;
 
   int32_t seqNum;
+  int connId;
 
   int64_t time;
   int32_t count;
