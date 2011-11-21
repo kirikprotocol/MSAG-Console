@@ -145,7 +145,7 @@ public class DeliveryData extends Data implements Cloneable{
         long message_id = Long.parseLong(ar[2]);
 
         Integer sequence_number = null;
-        if (!ar[4].equals("N/A")){
+        if (!ar[3].equals("N/A")){
             sequence_number = Integer.parseInt(ar[3]);
         }
 
