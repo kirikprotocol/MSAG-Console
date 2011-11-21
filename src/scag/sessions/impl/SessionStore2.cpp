@@ -401,6 +401,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
 	if ( log_->isDebugEnabled() ) {
     	time_t tl, te;
+    	long wait=0;
     	std::string tls = "?";
     	std::string tle = "?";
     	if (session) {
@@ -408,9 +409,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         	tls = std::string(ctime(&tl)).substr(11,8);
         	te = session->expirationTime();
         	tle = std::string(ctime(&te)).substr(11,8);
+        	wait = te - tl;
     	}
-        smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d %s, access %s expire %s sec=%d",
-                        key.toString().c_str(), cmdaddr, create ? 1:0, session, sqsz, what, tls.c_str(), tle.c_str(), (te-tl) );
+        smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d %s, access %s expire %s wait,sec=%d",
+                        key.toString().c_str(), cmdaddr, create ? 1:0, session, sqsz, what, tls.c_str(), tle.c_str(), wait );
     }
 
     if ( session )

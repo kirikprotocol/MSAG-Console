@@ -36,7 +36,7 @@ inline void getlog() {
 }
 
 /// session default live time (in seconds)
-unsigned sessionLiveTime = 160;
+unsigned sessionLiveTime = 60;
 unsigned sessionUssdLiveTime = 60;
 unsigned sessionUssdReplaceTimeout = 60;
 
@@ -417,13 +417,12 @@ Session::~Session()
         if ( cmdQueue_.size() > 0 ) {
             smsc_log_error( log_, "LOGIC ERROR!!! ~Session=%p/%s command queue is not empty: %d, MEMLEAK!",
                             this, sessionKey().toString().c_str(), cmdQueue_.size() );
-            { //debug
+            if ( log_->isDebugEnabled() ) { // log session queue content
             	while ( cmdQueue_.size() ) {
                 	popCommand();
             	}
-                ::abort();
             }
-            // ??           	this->abort();
+//            ::abort();
         }
         delete transactions_;
         delete globalScope_;

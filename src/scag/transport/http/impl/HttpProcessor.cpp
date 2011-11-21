@@ -275,7 +275,7 @@ bool HttpProcessorImpl::makeLongCall( HttpCommand& cmd, ActiveSession& se )
 
 int HttpProcessorImpl::processRequest(HttpRequest& request)
 {
-    smsc_log_debug(logger, "processRequest %p cx %p session %p", &request, request.context, request.session_);
+//    smsc_log_debug(logger, "processRequest %p cx %p session %p", &request, request.context, request.session_);
     HttpRoute r;
 
     re::RuleStatus rs;
@@ -303,33 +303,27 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 request.setFailedBeforeSessionCreate(true);
                 return scag::re::STATUS_FAILED;
             }
-//            smsc_log_debug( logger, "http_request parse result abonent=%s", request.getAbonent().c_str());
             try {
                 if(request.getRouteId() > 0)
                 {
                     r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
-//                    smsc_log_debug(logger, "processRequest SetSite[%s] setSitePort:%d", r.defSite.host.c_str(), r.defSite.port);
                     request.setSite(r.defSite.host);
                     request.setSitePort(r.defSite.port);
                 }
                 else if(request.getServiceId() > 0)
                 {
                     r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
-//                    smsc_log_debug(logger, "processRequest SetSite[%s] setSitePort:%d", r.defSite.host.c_str(), r.defSite.port);
                     request.setSite(r.defSite.host);
                     request.setSitePort(r.defSite.port);
                 }
                 else
                 {
                 	uint32_t port = request.getSitePort();
-//                   smsc_log_debug(logger, "Attempt to find route. abonent:%s, site:[%s]:[%d][%s][%s]",
-//                    	request.getAbonent().c_str(), request.getSite().c_str(), port, request.getSitePath().c_str(), request.getSiteFileName().c_str());
                    r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), port);
 // (xom 25.07.11) add port change (port,443,80 selection) as mix-protocol feature
 //                   smsc_log_debug(logger, "processRequest setSitePort:%d", port);
                    request.setSitePort(port);
                 }
-//                smsc_log_debug(logger, "Route found. abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
             } catch (const RouteNotFoundException& e) {
                 smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
                 registerEvent( stat::events::http::REQUEST_FAILED, request);
@@ -361,9 +355,6 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 return scag::re::STATUS_OK;
             }
 
-//            smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str());
-
-//            smsc_log_debug( logger, "httproute found route_id=%d, service_id=%d", r.id, r.service_id);
             request.setServiceId(r.service_id);
             request.setRouteId(r.id);
             request.setProviderId(r.provider_id);
@@ -371,8 +362,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             const std::string& s = request.getAbonent();
             request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
         }
-        else
-        {
+        else {
             if(request.getRouteId() > 0)
                 r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
             else if(request.getServiceId() > 0)
@@ -387,11 +377,9 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         const SessionKey sessionKey( request.getAddress() );
         SCAGCommand* reqptr(&request);
         se = SessionManager::Instance().getSession( sessionKey, reqptr );
-// debug
         scag2::sessions::Session* sess = se.get();
-        smsc_log_debug(logger, "processRequest %p cx %p se %p sess %p %s", &request, request.context, &se, sess, sess?"":"(is locked)");
+//        smsc_log_debug(logger, "processRequest %p cx %p se %p sess %p %s", &request, request.context, &se, sess, sess?"":"(is locked)");
         if (!sess)
-// instead of next line:
 //        if (!se.get())
         {
 //            smsc_log_debug( logger, "session is locked for addr=%s", request.getAddress().c_str());
@@ -425,9 +413,9 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 				smsc_log_debug(logger, "POST params: '%s'", params.c_str());
 			  }
 			}
-			smsc_log_debug(logger, "HttpProcessorImpl::processRequest:%p session[%p]->waitAtLeast(%d)", &request, sess, Session::defaultLiveTime());
+//			smsc_log_debug(logger, "HttpProcessorImpl::processRequest:%p session[%p]->waitAtLeast(%d)", &request, sess, Session::defaultLiveTime());
 		    try{
-		    	sess->waitAtLeast(Session::defaultLiveTime()); // >setCurrentOperation(request.getOperationId(), true);
+		    	sess->waitAtLeast(Session::defaultLiveTime()); // setCurrentOperation(request.getOperationId(), true);
 		    }
 		    catch (Exception& e) {
 		        smsc_log_error(logger, "HttpProcessorImpl::processRequest:%p cannot session[%p]->waitAtLeast(%d) - %s", &request, sess, Session::defaultLiveTime(), e.what());
@@ -495,13 +483,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
         se = SessionManager::Instance().getSession( sk, rescmd, false );
 
         re::RuleStatus rs;
-// debug
-		scag2::sessions::Session* sess = se.get();
-		smsc_log_debug(logger, "processResponse %p cx %p se %p sess %p %s",
-				&response, response.context, &se, sess, sess?"":(rescmd?"(not found)":"(is locked)"));
-		if (sess)
-// instead of next line:
-//        if ( se.get() )
+        if ( se.get() )
         {
             CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
             HttpCommandRelease rel(response);
@@ -600,12 +582,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         se = SessionManager::Instance().getSession(sk, rescmd, false);
 
         re::RuleStatus rs;
-// debug
-		scag2::sessions::Session* sess = se.get();
-		smsc_log_debug(logger, "statusResponse %p cx %p se %p sess %p %s", &response, response.context, &se, sess, sess?"":(rescmd?"(not found)":"(is locked)"));
-		if (sess)
-// instead of next line:
-//        if ( se.get() )
+        if ( se.get() )
         {
             CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
             HttpCommandRelease rel(response);
