@@ -5,7 +5,7 @@
 #include "MCAServerProtocolHandler.hpp"
 #include "messages/FlushStatsResp.hpp"
 #include "messages/GetStatsResp.hpp"
-#include "messages/GetRunStats.hpp"
+#include "messages/GetRunStatsResp.hpp"
 #include "messages/GetSchedResp.hpp"
 #include "messages/GetSchedListResp.hpp"
 #include "messages/GetProfileResp.hpp"
@@ -23,7 +23,7 @@ public:
     tag_GetStats=4,
     tag_GetStatsResp=5,
     tag_GetRunStats=6,
-    tag_GetRunStats=6,
+    tag_GetRunStatsResp=7,
     tag_GetSched=8,
     tag_GetSchedResp=9,
     tag_GetSchedList=12,
