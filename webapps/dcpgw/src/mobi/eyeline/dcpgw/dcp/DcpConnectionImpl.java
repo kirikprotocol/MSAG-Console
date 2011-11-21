@@ -385,17 +385,28 @@ public class DcpConnectionImpl extends Thread implements DcpConnection{
         for(LinkedBlockingQueue<Message> queue: queue_task_map.keySet()){
             ScheduledFuture scheduledFuture = queue_task_map.get(queue);
             // Cancel scheduledFuture, but not interrupt if it is already running.
+            int counter = 0;
             if (!scheduledFuture.cancel(false)){
                 log.debug("Couldn't cancel scheduled future because it is already running.");
 
                 while(!scheduledFuture.isDone()){
-                    try {
-                        log.debug("Scheduled future isn't done, wait ...");
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        log.error(e);
+                    if (counter < 15){
+                        try {
+                            log.debug("Scheduled future isn't done, wait ...");
+                            sleep(1000);
+                            counter++;
+                            log.debug("Wait already"+counter+" seconds.");
+                        } catch (InterruptedException e) {
+                            log.error(e);
+                        }
+                    } else {
+                        log.debug("Try to interrupt scheduledFuture after 15 seconds.");
+                        scheduledFuture.cancel(true);
+                        log.debug("interrupt scheduledFuture.");
+                        break;
                     }
                 }
+
             }
 
         }
