@@ -69,6 +69,7 @@
     startParams(out);
 
     param(out, "maplimits.sms.openRespRealAddr", "sms.openRespRealAddr", bean.isSmsOpenRespRealAddr());
+    param(out, "maplimits.sms.noMoSri", "sms.noMoSri", bean.isNoMoSri());
     finishParams(out);
     finishSection(out);
 
