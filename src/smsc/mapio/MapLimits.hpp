@@ -28,6 +28,7 @@ public:
     limitOutSRI=0;
     limitNIUSSD=0;
     smsOpenRespRealAddr=false;
+    noSriSms=false;
     log=smsc::logger::Logger::getInstance("maplimits");
   }
 
@@ -51,6 +52,11 @@ public:
   int getLimitNIUSSD()
   {
     return limitNIUSSD;
+  }
+
+  bool isNoSRISMS()
+  {
+    return noSriSms;
   }
 
   bool isNoSRIUssd(const std::string& ussd)
@@ -244,7 +250,7 @@ protected:
   sync::Mutex mtxUpm;
 
   bool smsOpenRespRealAddr;
-
+  bool noSriSms;
 
   int limitIn;
   int limitInSRI;

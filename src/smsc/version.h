@@ -1,19 +1,18 @@
-#ifndef __SMSC_2ND_GENERATION_VERSION__
-#ident "@(#)$Id$"
-#define __SMSC_2ND_GENERATION_VERSION__
+#ifndef __SMSC_VERSION_H__
+#define __SMSC_VERSION_H__
 
 /* -- automatically generated BUILD number and date -- */
-#include "smsc/smsc2gBuildId.hpp"
+#include "smsc/scalableSmscBuildId.hpp"
 /* -- -------------------------------------------------- -- */
 
 /* -- NOTE: these defines are set by developers -- */
-#define SMSC_2G_VER_MAJOR     2    //major verison
-#define SMSC_2G_VER_MINOR     0    //minor version
-#define SMSC_2G_VER_FIX       0    //bug fix version
+#define SCALABLE_SMSC_VER_MAJOR     2    //major verison
+#define SCALABLE_SMSC_VER_MINOR     0    //minor version
+#define SCALABLE_SMSC_VER_FIX       0    //bug fix version
 /* -- ----------------------------------------- -- */
 
-#define SMSC_2G_VENDOR        "Eyeline"
-#define SMSC_2G_PRODUCT_NAME  "Scalable SMSC"
+#define SCALABLE_SMSC_VENDOR        "Eyeline"
+#define SCALABLE_SMSC_PRODUCT_NAME  "Scalable SMSC"
 
 #ifdef __cplusplus
 #define EXTERN extern "C"
@@ -26,5 +25,5 @@ EXTERN const char * _what_product_version;
 //
 EXTERN const char * getStrVersion(void);
 
-#endif /* __SMSC_2G_2ND_GENERATION_VERSION__ */
+#endif /* __SCALABLE_SMSC_2ND_GENERATION_VERSION__ */
 

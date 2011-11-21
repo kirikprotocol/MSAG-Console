@@ -1301,6 +1301,8 @@ none_validity:;
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
+  sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
+  sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
 
   dialog->AssignSms(_sms.release());
 }
@@ -3627,11 +3629,30 @@ USHORT_T Et96MapDelimiterInd(
         checkMapReq( Et96MapDelimiterReq(dialog->ssn INSTDLGARG(dialog),dialogueId,0,0), __func__);
         open_confirmed = true;
       }break;
+      case MAPST_WaitSmsMODelimiter:
+        if(MapLimits::getInstance().isNoSRISMS())
+        {
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          SendSubmitCommand(dialog.get());
+        }else
+        {
+          open_confirmed = true;
+          dialog->state = MAPST_WaitImsiReq;
+          PauseOnImsiReq(dialog.get());
+        }
+        break;
       case MAPST_WaitSmsMODelimiter2:
         reason = ET96MAP_NO_REASON;
-        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
-        dialog->state = MAPST_WaitImsiReq;
-        PauseOnImsiReq(dialog.get());
+        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,0,0,0), __func__);
+        if(MapLimits::getInstance().isNoSRISMS())
+        {
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          SendSubmitCommand(dialog.get());
+        }else
+        {
+          dialog->state = MAPST_WaitImsiReq;
+          PauseOnImsiReq(dialog.get());
+        }
         break;
       case MAPST_WaitUssdDelimiter:
       {
@@ -3673,11 +3694,6 @@ USHORT_T Et96MapDelimiterInd(
           dialog->state = MAPST_WaitSubmitCmdConf;
           SendSubmitCommand(dialog.get());
         }
-        break;
-      case MAPST_WaitSmsMODelimiter:
-        open_confirmed = true;
-        dialog->state = MAPST_WaitImsiReq;
-        PauseOnImsiReq(dialog.get());
         break;
       case MAPST_WaitSpecDelimeter:
         dialog->state = MAPST_WaitSmsConf;

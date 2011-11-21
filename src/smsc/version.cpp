@@ -7,13 +7,15 @@ static char const ident[] = "@(#)$Id$";
 #define DEF_TO_STR0(x) #x
 #define DEF_TO_STR(x) DEF_TO_STR0(x)
 
-#define SMSC_2G_VER_STR SMSC_2G_VENDOR " " SMSC_2G_PRODUCT_NAME " " DEF_TO_STR(SMSC_2G_VER_MAJOR) "." DEF_TO_STR(SMSC_2G_VER_MINOR) "." DEF_TO_STR(SMSC_2G_VER_FIX) " build " DEF_TO_STR(SMSC_2G_BUILD_NUM) " date " SMSC_2G_BUILD_DATE
+#define SCALABLE_SMSC_VER_STR SCALABLE_SMSC_VENDOR " " SCALABLE_SMSC_PRODUCT_NAME " " \
+  DEF_TO_STR(SCALABLE_SMSC_VER_MAJOR) "." DEF_TO_STR(SCALABLE_SMSC_VER_MINOR) "." \
+  DEF_TO_STR(SCALABLE_SMSC_VER_FIX) " build " DEF_TO_STR(SCALABLE_SMSC_BUILD_NUM) " date " SCALABLE_SMSC_BUILD_DATE
 
 
-const char * _what_product_version = "@(#)" SMSC_2G_VER_STR;
+const char * _what_product_version = "@(#)" SCALABLE_SMSC_VER_STR;
 
 const char * getStrVersion(void)
 {
-  return SMSC_2G_VER_STR;
+  return SCALABLE_SMSC_VER_STR;
 }
 
