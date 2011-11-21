@@ -689,8 +689,9 @@ Billing::PGraphState Billing::onChargeSms(void)
     prmPrvd = iapPolicy ? iapPolicy->getIAProvider(AbonentPolicy::iapPrimary) : NULL;
 
   if (!_abCsi.isUnknown()) {
-    //check for IMSI being defined
-    if (!_abCsi.getImsi() && prmPrvd && prmPrvd->hasAbility(IAPAbility::abIMSI))
+    //IMSI is optional in case of MO, but is required in case of MT
+    if (!_abCsi.getImsi() && (_cdr._chargeType == CDRRecord::MT_Charge)
+        && prmPrvd && prmPrvd->hasAbility(IAPAbility::abIMSI))
       askProvider = true;
 
     if (_abCsi.isPrepaid())
@@ -707,7 +708,9 @@ Billing::PGraphState Billing::onChargeSms(void)
                   );
 
   //check if AbonentProvider should be requested for current abonent location
-  if (_abCsi.vlrNum.empty() && prmPrvd && prmPrvd->hasAbility(IAPAbility::abVLR))
+  //VLR is optional in case of MO, but is required in case of MT
+  if (_abCsi.vlrNum.empty() && (_cdr._chargeType == CDRRecord::MT_Charge)
+      && prmPrvd && prmPrvd->hasAbility(IAPAbility::abVLR))
     askProvider = true;
 
   /* **************************************************** */
