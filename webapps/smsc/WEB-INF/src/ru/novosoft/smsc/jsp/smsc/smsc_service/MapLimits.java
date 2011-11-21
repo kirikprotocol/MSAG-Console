@@ -43,7 +43,7 @@ public class MapLimits extends SmscBean {
   private String ussdDefaultParsingMode;
 
   private boolean smsOpenRespRealAddr;
-  private boolean noMoSri;
+  private boolean smsNoMoSri;
 
   private Level[] levels = new Level[9];
 
@@ -90,7 +90,7 @@ public class MapLimits extends SmscBean {
     ussdDefaultParsingMode = getString("ussd.defaultParsingMode",config);
 
     smsOpenRespRealAddr = getBool("sms.openRespRealAddr", config);
-    noMoSri = getBool("sms.noMoSri", config);
+    smsNoMoSri = getBool("sms.noMoSri", config);
     for(int i=1;i<=8;i++) {
       Level l = new Level(i);
       l.setDialogsLimit(getInt("clevels.level"+i+".dialogsLimit", config));
@@ -192,7 +192,7 @@ public class MapLimits extends SmscBean {
     }
 
     c.setBool("sms.openRespRealAddr", smsOpenRespRealAddr);
-    c.setBool("sms.noMoSri", noMoSri);
+    c.setBool("sms.noMoSri", smsNoMoSri);
 
     for(int i=1;i<=8;i++) {
       Level l = levels[i];
@@ -366,12 +366,12 @@ public class MapLimits extends SmscBean {
     this.smsOpenRespRealAddr = smsOpenRespRealAddr;
   }
 
-  public boolean isNoMoSri() {
-    return noMoSri;
+  public boolean isSmsNoMoSri() {
+    return smsNoMoSri;
   }
 
-  public void setNoMoSri(boolean noMoSri) {
-    this.noMoSri = noMoSri;
+  public void setSmsNoMoSri(boolean smsNoMoSri) {
+    this.smsNoMoSri = smsNoMoSri;
   }
   public Level[] getLevels() {
     return levels;
