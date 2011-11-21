@@ -3638,11 +3638,30 @@ USHORT_T Et96MapDelimiterInd(
         checkMapReq( Et96MapDelimiterReq(dialog->ssn INSTDLGARG(dialog),dialogueId,0,0), __func__);
         open_confirmed = true;
       }break;
+      case MAPST_WaitSmsMODelimiter:
+        if(MapLimits::getInstance().isNoSRISMS())
+        {
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          SendSubmitCommand(dialog.get());
+        }else
+        {
+          open_confirmed = true;
+          dialog->state = MAPST_WaitImsiReq;
+          PauseOnImsiReq(dialog.get());
+        }
+        break;
       case MAPST_WaitSmsMODelimiter2:
         reason = ET96MAP_NO_REASON;
         checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,0,0,0,0), __func__);
-        dialog->state = MAPST_WaitImsiReq;
-        PauseOnImsiReq(dialog.get());
+        if(MapLimits::getInstance().isNoSRISMS())
+        {
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          SendSubmitCommand(dialog.get());
+        }else
+        {
+          dialog->state = MAPST_WaitImsiReq;
+          PauseOnImsiReq(dialog.get());
+        }
         break;
       case MAPST_WaitUssdDelimiter:
       {
@@ -3686,18 +3705,6 @@ USHORT_T Et96MapDelimiterInd(
         } else {
           dialog->state = MAPST_WaitSubmitCmdConf;
           SendSubmitCommand(dialog.get());
-        }
-        break;
-      case MAPST_WaitSmsMODelimiter:
-        if(MapLimits::getInstance().isNoSRISMS())
-        {
-          dialog->state = MAPST_WaitSubmitCmdConf;
-          SendSubmitCommand(dialog.get());
-        }else
-        {
-          open_confirmed = true;
-          dialog->state = MAPST_WaitImsiReq;
-          PauseOnImsiReq(dialog.get());
         }
         break;
       case MAPST_WaitSpecDelimeter:
