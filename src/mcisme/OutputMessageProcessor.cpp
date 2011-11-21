@@ -62,11 +62,11 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& task_processor,
 
   try {
     _advertising->init(connectTimeout);
+    banner_reader.addClientConnect(_advertising);
   } catch (std::exception& ex) {
     smsc_log_error(_logger, "OutputMessageProcessor::OutputMessageProcessor::: advertising client can't be initialized - caught exception '%s'", ex.what());
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   }
-  banner_reader.addClientConnect(_advertising);
 }
 
 void
