@@ -363,8 +363,7 @@ void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
   if (relCauses.strategy == REDIRECT_STRATEGY) strategy = mts;
   if (relCauses.strategy == PREFIXED_STRATEGY) strategy = taif;
   if (relCauses.strategy == MIXED_STRATEGY) strategy = taifmixed;
-  if (relCauses.strategy == REDIREC_RULE_STRATEGY) strategy = redirect_rule;
-  if (relCauses.strategy == ORIGINAL_AND_REDIREC_RULE_STRATEGY) strategy = original_and_redirect_rule;
+  if (relCauses.strategy == REDIREC_RULE_STRATEGY) strategy = original_and_redirect_rule;
 }
 
 void
