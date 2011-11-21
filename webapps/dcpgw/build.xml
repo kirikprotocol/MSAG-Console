@@ -52,9 +52,6 @@
                classpathref="project.classpath"
         />
 
-        <copy todir="${dcpgw.build.dir}/classes">
-            <fileset dir="test" includes="**/*.properties"/>
-        </copy>
         <native2ascii src="src" dest="${dcpgw.build.dir}/classes" ext=".properties" includes="**/*.properties"/>
 
     </target>
