@@ -6,9 +6,9 @@
 /* -- -------------------------------------------------- -- */
 
 /* -- NOTE: these defines are set by developers -- */
-#define SCALABLE_SMSC_VER_MAJOR     2    //major verison
-#define SCALABLE_SMSC_VER_MINOR     0    //minor version
-#define SCALABLE_SMSC_VER_FIX       0    //bug fix version
+//#define SCALABLE_SMSC_VER_MAJOR     2    //major verison
+//#define SCALABLE_SMSC_VER_MINOR     0    //minor version
+//#define SCALABLE_SMSC_VER_FIX       0    //bug fix version
 /* -- ----------------------------------------- -- */
 
 #define SCALABLE_SMSC_VENDOR        "Eyeline"
