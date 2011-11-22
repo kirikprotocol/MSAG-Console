@@ -157,8 +157,8 @@ protected:
     if(msg.hdr.msgId == MSG_ID_GETPROF)			// Getting profile
     {
       smsc_log_info(logger, "ProfileServer: Recieved MSG_GETPROF.");
-      AbntAddr		abnt(msg.body.abnt);
-      AbonentProfile	prof;
+      AbntAddr       abnt(msg.body.abnt);
+      AbonentProfile prof;
 
       bool ret = pProfStorage->Get(abnt, prof);
       msg.hdr.msgId = MSG_ID_PROFILE;
@@ -180,8 +180,8 @@ protected:
     else if(msg.hdr.msgId == MSG_ID_SETPROF)	// Setting profile
     {
       smsc_log_info(logger, "ProfileServer: Recieved MSG_SETPROF.");
-      AbntAddr		abnt(msg.body.abnt);
-      AbonentProfile	prof;
+      AbntAddr        abnt(msg.body.abnt);
+      AbonentProfile  prof;
 
       prof.eventMask = msg.body.eventMask;
       prof.inform = msg.body.inform;
