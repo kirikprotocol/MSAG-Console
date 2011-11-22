@@ -11,17 +11,17 @@
 namespace smsc {
 namespace mcisme {
 namespace admin {
-class MCAServerProtocolHandler{
-public:
-  void handle(const messages::FlushStats& msg)=0;
-  void handle(const messages::GetStats& msg)=0;
-  void handle(const messages::GetRunStats& msg)=0;
-  void handle(const messages::GetSched& msg)=0;
-  void handle(const messages::GetSchedList& msg)=0;
-  void handle(const messages::GetProfile& msg)=0;
-  void handle(const messages::SetProfile& msg)=0;
-};
 
+class MCAServerProtocolHandler {
+public:
+  virtual void handle(const messages::FlushStats& msg) = 0;
+  virtual void handle(const messages::GetStats& msg) = 0;
+  virtual void handle(const messages::GetRunStats& msg) = 0;
+  virtual void handle(const messages::GetSched& msg) = 0;
+  virtual void handle(const messages::GetSchedList& msg) = 0;
+  virtual void handle(const messages::GetProfile& msg) = 0;
+  virtual void handle(const messages::SetProfile& msg) = 0;
+};
 
 }
 }
