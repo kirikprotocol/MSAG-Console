@@ -8,6 +8,9 @@
 
     <h:form>
       <eye:buttons>
+        <eye:button rendered="false">
+          <h:commandLink value="Button not rendered" action="#{buttons.button1}"/>
+        </eye:button>
         <eye:button>
           <h:commandLink value="Button1" action="#{buttons.button1}"/>
         </eye:button>
@@ -23,6 +26,9 @@
         <eye:space/>
         <eye:button>
           <h:commandLink value="Button3" action="#{buttons.button3}"/>
+        </eye:button>
+        <eye:button rendered="false">
+          <h:commandLink value="Button not rendered" action="#{buttons.button1}"/>
         </eye:button>
       </eye:buttons>
     </h:form>

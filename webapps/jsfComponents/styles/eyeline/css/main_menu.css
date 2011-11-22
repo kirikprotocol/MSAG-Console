@@ -12,62 +12,18 @@ table.main_menu td {
   background-image: url("../images/smsc_14.jpg");
 }
 
-table.main_menu a,
-table.main_menu a:visited,
-table.main_menu div,
-table.main_menu a:hover,
-table.main_menu a.xi {
-  text-decoration: none;
+/* Menu bar decoration */
+
+table.main_menu .menu-bar ul.sub_menu li a,
+table.main_menu div.menu-bar a {
   color: #F2E275;
-  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
 }
 
-
-table.main_menu a:hover {
-  color:YELLOW;
-
-}
-
-
-table.main_menu div.eyeline_menubardivover {
+table.main_menu .menu-bar ul.sub_menu li a:hover {
   color:YELLOW;
 }
 
-table.main_menu div.eyeline_menudiv {
+table.main_menu .menu-bar ul.sub_menu li {
   background-color: #3A5867;
-  border: 1px solid #111155;
-  font-size: 12px;
-}
-
-table.main_menu div.eyeline_menuitem *,
-table.main_menu div.eyeline_menuitem a.xi,
-table.main_menu div.eyeline_menuitemover *,
-table.main_menu div.eyeline_menuitemover a.xi {
-  background: #3A5867;
-  font-size: 12px;
-}
-
-table.main_menu div.eyeline_menuitem *,
-table.main_menu div.eyeline_menuitem a.xi {
-  font-size: 12px;
-  color: #F2E275;
-}
-
-table.main_menu div.eyeline_menuitemover *,
-table.main_menu div.eyeline_menuitemover a.xi {
-  font-size: 12px;
-  color: yellow;
-}
-
-table.main_menu div.eyeline_menubardelimitertop {
-  height: 1px;
-  font-size: 1px;
-  border-bottom:1px outset;
-}
-
-table.main_menu div.eyeline_menubardelimiterbottom {
-  height: 1px;
-  font-size: 1px;
-  width:1%;
-  border-bottom:0px outset;
+  border-color: #111155;
 }

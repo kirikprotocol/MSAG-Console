@@ -11,6 +11,7 @@ table.eyeline_buttons {
   position: relative;
   height: 30px;
   white-space: nowrap;
+  z-index: 2;
   /*z-index: 3;*/
 }
 
@@ -31,10 +32,6 @@ table.eyeline_buttons div{
   white-space: nowrap;
 }
 
-table.eyeline_buttons div.eyeline_menudiv {
-  background-color: #DFD4AF;
-  border: 1px solid #111155;
-}
 
 table.eyeline_buttons a:hover {
   color: #443A3A;
@@ -51,4 +48,20 @@ table.eyeline_buttons_background {
 }
 table.eyeline_buttons_background td{
   background-image: url("../images/smsc_21.jpg")
+}
+
+/*  MENU BAR DECORATION */
+
+table.eyeline_buttons .menu-bar ul.sub_menu li a,
+table.eyeline_buttons div.menu-bar a {
+  color: black;
+}
+
+table.eyeline_buttons .menu-bar ul.sub_menu li a:hover {
+  color:#443A3A;
+}
+
+table.eyeline_buttons .menu-bar ul.sub_menu li {
+  background-color: #DFD4AF;
+  border-color: #111155;
 }

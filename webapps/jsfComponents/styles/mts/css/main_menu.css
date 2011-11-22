@@ -26,42 +26,18 @@ table.main_menu a.xi {
 }
 
 
-table.main_menu div.eyeline_menubardivover {
-  color: #E00000;
+/* Menubar decoration */
+
+table.main_menu .menu-bar ul.sub_menu li a,
+table.main_menu div.menu-bar a {
+  color: black;
 }
 
-table.main_menu div.eyeline_menudiv {
+table.main_menu .menu-bar ul.sub_menu li a:hover {
+  color:#E00000;
+}
+
+table.main_menu .menu-bar ul.sub_menu li {
   background-color: white;
-  border: 1px solid #E00000;
-}
-
-table.main_menu div.eyeline_menuitem *,
-table.main_menu div.eyeline_menuitem a.xi,
-table.main_menu div.eyeline_menuitemover *,
-table.main_menu div.eyeline_menuitemover a.xi {
-  background: white;
-  font-size: 12px;
-}
-
-table.main_menu div.eyeline_menuitem *,
-table.main_menu div.eyeline_menuitem a.xi {
-  color: #C00000;
-}
-
-table.main_menu div.eyeline_menuitemover *,
-table.main_menu div.eyeline_menuitemover a.xi {
-  color: #E00000;
-}
-
-table.main_menu div.eyeline_menubardelimitertop {
-  height: 1px;
-  font-size: 1px;
-  border-bottom:1px outset;
-}
-
-table.main_menu div.eyeline_menubardelimiterbottom {
-  height: 1px;
-  font-size: 1px;
-  width:1%;
-  border-bottom:0px outset;
+  border-color: #E00000;
 }

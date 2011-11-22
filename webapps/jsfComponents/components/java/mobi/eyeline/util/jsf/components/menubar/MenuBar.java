@@ -1,14 +1,12 @@
 package mobi.eyeline.util.jsf.components.menubar;
 
 import javax.el.ValueExpression;
-import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
-import javax.faces.render.Renderer;
 
 /**
  * @author Artem Snopkov
  */
-public class MenuBar extends UIPanel {
+public class MenuBar extends MenuBarItem {
 
   private String label;
 
@@ -22,16 +20,6 @@ public class MenuBar extends UIPanel {
 
   public void setLabel(String label) {
     this.label = label;
-  }
-
-  @Override
-  public String getFamily() {
-    return "Eyeline";
-  }
-
-  @Override
-  protected Renderer getRenderer(FacesContext context) {
-    return new MenuBarRenderer();
   }
 
   public Object saveState(FacesContext context) {

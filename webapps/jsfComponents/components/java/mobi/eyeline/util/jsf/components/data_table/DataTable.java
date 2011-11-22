@@ -5,16 +5,21 @@ import mobi.eyeline.util.jsf.components.data_table.model.DataTableModel;
 import mobi.eyeline.util.jsf.components.data_table.model.ModelException;
 
 import javax.el.ValueExpression;
+import javax.faces.component.UICommand;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIPanel;
 import javax.faces.context.FacesContext;
+import javax.faces.event.AbortProcessingException;
+import javax.faces.event.ActionEvent;
+import javax.faces.event.ActionListener;
+import javax.faces.event.FacesListener;
 import javax.faces.render.Renderer;
 import java.util.*;
 
 /**
  * @author Artem Snopkov
  */
-public class DataTable extends UIPanel {
+public class DataTable extends UICommand {
 
   private int pageSize = 20;
   private boolean pageSizeRendered = true;

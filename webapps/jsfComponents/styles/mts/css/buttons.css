@@ -36,11 +36,19 @@ table.eyeline_buttons a:hover {
   color: #000000;
 }
 
-table.eyeline_buttons div.eyeline_menudiv {
-  background-color: #F0F0F0;
-  border: 1px solid #C00000;
+table.eyeline_buttons .menu-bar ul.sub_menu li a,
+table.eyeline_buttons div.menu-bar a {
+  color: black;
 }
 
+table.eyeline_buttons .menu-bar ul.sub_menu li a:hover {
+  color:#E00000;
+}
+
+table.eyeline_buttons .menu-bar ul.sub_menu li {
+  background-color: #F0F0F0;
+  border-color: #C00000;
+}
 
 table.eyeline_buttons_background {
   width:100%;

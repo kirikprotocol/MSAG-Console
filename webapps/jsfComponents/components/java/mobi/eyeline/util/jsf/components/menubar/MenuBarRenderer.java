@@ -1,53 +1,68 @@
 package mobi.eyeline.util.jsf.components.menubar;
 
+import mobi.eyeline.util.jsf.components.HtmlWriter;
+
 import javax.faces.component.UIComponent;
-import javax.faces.context.ResponseWriter;
 import javax.faces.render.Renderer;
-import java.io.IOException;
-import java.io.Writer;
 
 /**
  * @author Artem Snopkov
  */
 public class MenuBarRenderer extends Renderer {
 
+  private boolean hasParentMenuBar(UIComponent c) {
+    return c.getParent() instanceof MenuBar;
+  }
+
+  private void prepareItems(UIComponent menuBar) {
+    MenuBarItem lastItem = null;
+    for (UIComponent c : menuBar.getChildren()) {
+      if (c instanceof MenuBarItem)
+        lastItem = (MenuBarItem)c;
+      else if (c instanceof MenuBarDelimiter && lastItem != null) {
+        lastItem.setHasDelimiter(true);
+      }
+    }
+  }
+
   public void encodeBegin(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) throws java.io.IOException {
-    ResponseWriter w = context.getResponseWriter();
+    HtmlWriter w = new HtmlWriter(context.getResponseWriter());
 
     if (component instanceof MenuBar) {
+      prepareItems(component);
+
       String id = component.getId();
-      w.append("<div class=\"eyeline_menubardiv\" id=\"menubar" + id + "\">");
-      w.append(((MenuBar) component).getLabel());
-      w.append("</div>");
-
-      w.append("<div class=\"eyeline_menudiv\" id=\"menubarcontent" + id + "\">");
-      w.append("<script type=\"text/javascript\">var menubar" + id + "= new MenuBar('menubar" + id + "', 'menubarcontent" + id + "');</script>");
+      if (!hasParentMenuBar(component)) {
+        w.a("\n<div class=\"menu-bar\" id=\"").a(id).a("\">");
+        w.a("\n<a href=\"#\">").a(((MenuBar) component).getLabel()).a("</a>");
+        w.a("<ul class=\"sub_menu\">");
+      } else {
+        if (((MenuBar)component).hasDelimiter())
+          w.a("\n<li class=\"menubardelimiter\"><a href=\"#\">").a(((MenuBar) component).getLabel()).a("</a>");
+        else
+          w.a("\n<li><a href=\"#\">").a(((MenuBar) component).getLabel()).a("</a>");
+        w.a("<ul class=\"sub_menu\">");
+      }
     } else if (component instanceof MenuBarItem) {
-
-      w.append("<div id=\"" + component.getId() + "\" class=\"eyeline_menuitem\">");
-    } else if (component instanceof MenuBarDelimiter) {
-      w.append("<div id=\"" + component.getId() + "\" class=\"eyeline_menubardelimitertop\"></div>");
-      w.append("<div id=\"" + component.getId() + "\" class=\"eyeline_menubardelimiterbottom\"></div>");
+      if (((MenuBarItem)component).hasDelimiter())
+        w.a("\n<li class=\"menubardelimiter\">");
+      else
+        w.a("\n<li>");
     }
   }
 
   public void encodeEnd(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) throws java.io.IOException {
-    Writer w = context.getResponseWriter();
+    HtmlWriter w = new HtmlWriter(context.getResponseWriter());
 
     if (component instanceof MenuBar) {
-      w.append("</div>");
-    } else if (component instanceof MenuBarItem) {
-
-      UIComponent c = component;
-      while(c.getParent() != null) {
-        c = c.getParent();
-        if (c instanceof MenuBar) {
-          break;
-        }
+      if (!hasParentMenuBar(component)) {
+        w.a("\n</ul></div>");
+        w.a("\n<script>$(function(){new Menu($(\"#" + component.getId() +  "\"))});</script>");
+      } else {
+        w.a("\n</ul></li>");
       }
-
-      w.append("</div>");
-      w.append("<script type=\"text/javascript\">menubar" + c.getId() + ".addMenuItem(new MenuItem('" + component.getId() + "'));</script>");
+    } else if (component instanceof MenuBarItem) {
+      w.a("\n</li>");
     }
   }
 }

@@ -8,6 +8,17 @@ import javax.faces.render.Renderer;
  * @author Artem Snopkov
  */
 public class MenuBarItem extends UIPanel {
+
+  private boolean hasDelimiter;
+
+  public boolean hasDelimiter() {
+    return hasDelimiter;
+  }
+
+  public void setHasDelimiter(boolean hasDelimiter) {
+    this.hasDelimiter = hasDelimiter;
+  }
+
   @Override
   public String getFamily() {
     return "Eyeline";

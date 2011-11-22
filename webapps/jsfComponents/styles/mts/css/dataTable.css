@@ -79,16 +79,6 @@ div.eyeline_inner_data_closed {
   background-image: url(../images/list_closed.gif);
 }
 
-table.eyeline_list div.eyeline_menudiv {
-  background-color: #F0F0F0;
-  border: 1px solid #C00000;
-}
-
-table.eyeline_list div.eyeline_menubardiv,
-table.eyeline_list div.eyeline_menubardivover {
-  font-size: x-small;
-}
-
 /* :::::::::::::::::::::::::::::::::::::::::::::::: ПАНЕЛЬ НАВИГАЦИИ :::::::::::::::::::::::::::::::::::::::::::::::::*/
 
 .eyeline_navbar_panel {
@@ -283,3 +273,18 @@ table.select_button_area td {
   height: 15px;
 }
 
+/* :::::::::::::::::::::::::::::::::::::::::::: Menubar ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+
+table.eyeline_list .menu-bar ul.sub_menu li a,
+table.eyeline_list div.menu-bar a {
+  color: black;
+}
+
+table.eyeline_list .menu-bar ul.sub_menu li a:hover {
+  color:#E00000;
+}
+
+table.eyeline_list .menu-bar ul.sub_menu li {
+  background-color: #F0F0F0;
+  border-color: #C00000;
+}
