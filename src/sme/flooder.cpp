@@ -17,6 +17,7 @@
 #include <map>
 #include <string.h>
 #include <errno.h>
+#include "core/synchronization/MutexReportContentionRealization.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;

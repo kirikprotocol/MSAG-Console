@@ -18,6 +18,7 @@
 #include "system/status.h"
 #include "util/sleep.h"
 #include "core/buffers/File.hpp"
+#include "core/synchronization/MutexReportContentionRealization.h"
 
 #if defined(linux) || defined(__MACH__)
 typedef timespec timestruc_t;
@@ -2538,7 +2539,26 @@ int main(int argc,char* argv[])
         }else
         {
           try{
-            Address dst((char*)addr);
+
+            Address dst;
+            // Temporary fix for dst address
+            if (addr[0] == '.') {
+                char caddr[40];
+                int pos = 0;
+                unsigned ton, npi;
+                sscanf(addr,".%u.%u.%35s%n",&ton,&npi,&caddr,&pos);
+                if ( pos == strlen(addr) ) {
+                    const size_t len = strlen(caddr);
+                    printf("making special address len=%u,ton=%u,npi=%u,val=%s",unsigned(len),ton,npi,caddr);
+                    dst = Address(len,ton,npi,caddr);
+                } else {
+                    dst = Address((char*)addr);
+                }
+            } else {
+                dst = Address((char*)addr);
+            }
+
+            // Address dst((char*)addr);
             lastAddr=addr;
             s.setDestinationAddress(dst);
           }catch(...)

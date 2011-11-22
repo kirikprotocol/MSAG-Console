@@ -12,6 +12,7 @@
 #include "logger/Logger.h"
 #include <vector>
 #include "util/sleep.h"
+#include "core/synchronization/MutexReportContentionRealization.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;

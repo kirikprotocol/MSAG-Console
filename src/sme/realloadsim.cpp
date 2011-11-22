@@ -12,6 +12,7 @@
 #include "readline/readline.h"
 #include "readline/history.h"
 #include <map>
+#include "core/synchronization/MutexReportContentionRealization.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
