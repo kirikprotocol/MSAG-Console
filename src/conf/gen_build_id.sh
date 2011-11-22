@@ -110,7 +110,6 @@ then # Regenerate BuildId file
   mkdir -p $BUILD_PATH
   echo "#define $2_BUILD_NUM   $BUILD_NUM" > $BUILD_PATH/$BUILDID_FILE
   echo "#define $2_BUILD_DATE  \"$BUILD_DATE\"" >> $BUILD_PATH/$BUILDID_FILE
-  echo gv=$GENERATE_VERSIONS
   if [ x$GENERATE_VERSIONS = "xtrue" ]
   then
     MAJOR=`echo $BUILD_NUM | sed 's/.\([0-9]\)[0-9][0-9][0-9]/\1/'`
@@ -123,6 +122,6 @@ then # Regenerate BuildId file
   cp $BUILD_PATH/$BUILDID_FILE $SMSC_SRCDIR/$PACKAGE_NAME/$BUILDID_FILE
 fi
 
-cat $SMSC_SRCDIR/$PACKAGE_NAME/$BUILDID_FILE >&2
+#cat $SMSC_SRCDIR/$PACKAGE_NAME/$BUILDID_FILE >&2
 exit 0
 
