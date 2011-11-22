@@ -24,12 +24,12 @@ AdvertisingImpl::init(int connect_timeout)
   if ( _socket.Init(_host.c_str(), _port, 0) )
     throw util::Exception("AdvertisingImpl::init::: can't init socket to connect to %s - '%s'", toString().c_str(), strerror(errno));
 
-  smsc_log_info(_logger, "AdvertisingImpl::init::: connect to BannerEngine (host%s,port=%d) has been established", _host.c_str(), _port);
   _socket.setConnectTimeout(connect_timeout);
 
   if ( _socket.Connect() )
     throw util::Exception("AdvertisingImpl::init::: can't establish connection to %s - '%s'", toString().c_str(), strerror(errno));
 
+  smsc_log_info(_logger, "AdvertisingImpl::init::: connect to BannerEngine (host%s,port=%d) has been established", _host.c_str(), _port);
   _isConnected = true;
 }
 
