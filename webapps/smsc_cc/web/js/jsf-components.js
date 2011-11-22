@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.10
+  Jsf components 1.11
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -1098,54 +1098,146 @@ function initInputDate(elementId, value, minDate, maxDate, inputTime, numberOfMo
 
   });
 
-}function MenuBar(headerId, itemsId) {
+}(function($){
+	$.fn.hoverIntent = function(cfg) {
 
-  var menuBarElm = document.getElementById(headerId);
-  menuBarElm.className = "eyeline_menubardiv";
+		// cX, cY = current X and Y position of mouse, updated by mousemove event
+		// pX, pY = previous X and Y position of mouse, set by mouseover and polling interval
+		var cX, cY, pX, pY;
 
-  var itemsElm = document.getElementById(itemsId);
-  itemsElm.className = "eyeline_menudiv";
-  itemsElm.style.visibility = "hidden";
+		// A private function for getting mouse position
+		var track = function(ev) {
+			cX = ev.pageX;
+			cY = ev.pageY;
+		};
 
-  menuBarElm.onmouseover = function(e) {
-    itemsElm.style.visibility = "visible";
-    menuBarElm.className = "eyeline_menubardivover";
-  };
+		// A private function for comparing current and previous mouse position
+		var compare = function(ev,ob) {
+			ob.hoverIntent_t = clearTimeout(ob.hoverIntent_t);
+			// compare mouse positions to see if they've crossed the threshold
+			if ( ( Math.abs(pX-cX) + Math.abs(pY-cY) ) < cfg.sensitivity ) {
+				$(ob).unbind("mousemove",track);
+				// set hoverIntent state to true (so mouseOut can be called)
+				ob.hoverIntent_s = 1;
+				return cfg.over.apply(ob,[ev]);
+			} else {
+				// set previous coordinates for next time
+				pX = cX; pY = cY;
+				// use self-calling timeout, guarantees intervals are spaced out properly (avoids JavaScript timer bugs)
+				ob.hoverIntent_t = setTimeout( function(){compare(ev, ob);} , cfg.interval );
+			}
+		};
 
-  itemsElm.onmouseover = menuBarElm.onmouseover;
+		// A private function for delaying the mouseOut function
+		var delay = function(ev,ob) {
+			ob.hoverIntent_t = clearTimeout(ob.hoverIntent_t);
+			ob.hoverIntent_s = 0;
+			return cfg.out.apply(ob,[ev]);
+		};
 
-  menuBarElm.onmouseout = function(e) {
-    itemsElm.style.visibility = "hidden";
-    menuBarElm.className = "eyeline_menubardiv";
-    return false;
-  };
+    var handleMouseOver = function(e) {
+      var p = e.fromElement || e.relatedTarget;
+			while ( p && p != this ) { try { p = p.parentNode; } catch(e) { p = this; } }
+			if ( p == this ) { return false; }
 
-  itemsElm.onmouseout = menuBarElm.onmouseout;
+      var ev = jQuery.extend({},e);
+			var ob = this;
+      if (ob.hoverIntent_t) { ob.hoverIntent_t = clearTimeout(ob.hoverIntent_t); }
 
-  this.addMenuItem = function(menuItemObj) {
-
-    var itemElm = document.getElementById(menuItemObj.itemId);
-
-    itemElm.onmouseover = function(e) {
-      itemsElm.onmouseover(e);
-      itemElm.className = menuItemObj.itemClassNameOver;
+      pX = ev.pageX; pY = ev.pageY;
+      // update "current" X and Y position based on mousemove
+      $(ob).bind("mousemove",track);
+      // start polling interval (self-calling timeout) to compare mouse coordinates over time
+      if (ob.hoverIntent_s != 1) { ob.hoverIntent_t = setTimeout( function(){compare(ev,ob);} , cfg.interval );}
     };
 
-    itemElm.onmouseout = function(e) {
-      itemElm.className = menuItemObj.itemClassName;
+    var handleMouseOut = function(e) {
+      var p = e.toElement || e.relatedTarget;
+			while ( p && p != this ) { try { p = p.parentNode; } catch(e) { p = this; } }
+			if ( p == this ) { return false; }
+
+      var ev = jQuery.extend({},e);
+			var ob = this;
+
+			if (ob.hoverIntent_t) { ob.hoverIntent_t = clearTimeout(ob.hoverIntent_t); }
+
+      // unbind expensive mousemove event
+      $(ob).unbind("mousemove",track);
+      // if hoverIntent state is true, then call the mouseOut function after the specified delay
+      if (ob.hoverIntent_s == 1) { ob.hoverIntent_t = setTimeout( function(){delay(ev,ob);} , cfg.timeout );}
     };
 
+		// bind the function to the two event listeners
+		return this.mouseover(handleMouseOver).mouseout(handleMouseOut);
+	};
+
+})(jQuery);
+
+function Menu(el) {
+
+  var mainMenuConfig = {
+    sensitivity: 7, // number = sensitivity threshold (must be 1 or higher)
+    interval: 10,  // number = milliseconds for onMouseOver polling interval
+    timeout: 10,   // number = milliseconds delay before onMouseOut
+    over : doOpenMainMenu,
+    out : doClose
   };
-}
 
-function MenuItem(itemId) {
-  this.itemId = itemId;
+  function doOpenMainMenu() {
+    var v = $('ul:first',this);
+    v.css('position', 'absolute');
+    v.css("left", $(this).position().left);
+    v.css("top", $(this).position().top + $(this).height());
+    v.css('visibility', 'visible');
+  }
 
-  this.itemClassNameOver = "eyeline_menuitemover";
-  this.itemClassName = "eyeline_menuitem";
-}
+  function doClose() {
+    $('ul:first',this).css('visibility', 'hidden');
+  }
 
-function PageCalendar(contentId) {
+  el.hoverIntent(mainMenuConfig);
+
+  function doOpenSubMenu() {
+    var v = $('ul:first',this)
+    v.css('position', 'absolute');
+    v.css("left", $(this).position().left + $(this).width());
+    v.css("top", $(this).position().top);
+    v.css('visibility', 'visible');
+  }
+
+  var subMenuConfig = {
+    sensitivity: 7, // number = sensitivity threshold (must be 1 or higher)
+    interval: 10,  // number = milliseconds for onMouseOver polling interval
+    timeout: 200,   // number = milliseconds delay before onMouseOut
+    over : doOpenSubMenu,
+    out : doClose
+  };
+
+  el.find("li").hoverIntent(subMenuConfig);
+  el.find("ul li:has(ul)").find("a:first").append(" &raquo; ");
+
+  var uls = el.find("ul");
+  $.each(uls, function(index, value){
+    var lis = $(value).children("li");
+    var maxWidth = 0;
+    $.each(lis, function(idx, val) {
+      $(val).css("border-style", "solid");
+      if (idx == 0)
+        $(val).css("border-width",  "1px 1px 0px 1px");
+      else if (idx == lis.length -1)
+        $(val).css("border-width",  "0px 1px 1px 1px");
+      else
+        $(val).css("border-width",  "0px 1px 0px 1px");
+
+      if ($(val).hasClass("menubardelimiter"))
+        $(val).css("border-bottom-width", "1px");
+
+      if ($(val).width() > maxWidth)
+        maxWidth = $(val).width();
+    });
+    $(value).css("width", maxWidth + 10 + "px");
+  });
+}function PageCalendar(contentId) {
 
   var bodyElement = $("#"+contentId);
   var closestForm = bodyElement.parents("form");

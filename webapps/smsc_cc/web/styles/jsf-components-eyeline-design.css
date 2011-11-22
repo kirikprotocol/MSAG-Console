@@ -1,6 +1,6 @@
 
 /**
-  Jsf components 1.10
+  Jsf components 1.11
 
   Copyright (c) Eyeline Communications Inc.
 **/
@@ -17,6 +17,7 @@ table.eyeline_buttons {
   position: relative;
   height: 30px;
   white-space: nowrap;
+  z-index: 2;
   /*z-index: 3;*/
 }
 
@@ -37,10 +38,6 @@ table.eyeline_buttons div{
   white-space: nowrap;
 }
 
-table.eyeline_buttons div.eyeline_menudiv {
-  background-color: #DFD4AF;
-  border: 1px solid #111155;
-}
 
 table.eyeline_buttons a:hover {
   color: #443A3A;
@@ -58,7 +55,22 @@ table.eyeline_buttons_background {
 table.eyeline_buttons_background td{
   background-image: url("../images/smsc_21.jpg")
 }
-.eyeline_collapsingGroupHeader0,
+
+/*  MENU BAR DECORATION */
+
+table.eyeline_buttons .menu-bar ul.sub_menu li a,
+table.eyeline_buttons div.menu-bar a {
+  color: black;
+}
+
+table.eyeline_buttons .menu-bar ul.sub_menu li a:hover {
+  color:#443A3A;
+}
+
+table.eyeline_buttons .menu-bar ul.sub_menu li {
+  background-color: #DFD4AF;
+  border-color: #111155;
+}.eyeline_collapsingGroupHeader0,
 .eyeline_collapsingGroupHeader1 {
   cursor: pointer;
   padding-left: 15px;
@@ -393,16 +405,6 @@ div.eyeline_inner_data_closed {
   background-image: url(../images/list_closed.gif);
 }
 
-table.eyeline_list div.eyeline_menudiv {
-  background-color: #DFD4AF;
-  border: 1px solid #111155;
-}
-
-table.eyeline_list div.eyeline_menubardiv,
-table.eyeline_list div.eyeline_menubardivover {
-  font-size: x-small;
-}
-
 /* :::::::::::::::::::::::::::::::::::::::::::::::: ПАНЕЛЬ НАВИГАЦИИ :::::::::::::::::::::::::::::::::::::::::::::::::*/
 
 .eyeline_navbar_panel {
@@ -593,6 +595,24 @@ table.select_button_area td {
   cursor: pointer;
   width: 15px;
   height: 15px;
+}
+
+/* :::::::::::::::::::::::::::::::::::::::::::::: Встроенные menubar :::::::::::::::::::::::::::::::::::::::::::::::::*/
+
+table.eyeline_list .menu-bar ul.sub_menu li a,
+table.eyeline_list div.menu-bar a {
+  color:black;
+  font-size: x-small;
+}
+
+table.eyeline_list .menu-bar ul.sub_menu li a:hover {
+  color:#443A3A;
+  font-size: x-small;
+}
+
+table.eyeline_list .menu-bar ul.sub_menu li {
+  background-color: #DFD4AF;
+  border-color: #111155;
 }
 
 div.eyeline_data_table_filter {
@@ -1254,137 +1274,30 @@ table.main_menu td {
   background-image: url("../images/smsc_14.jpg");
 }
 
-table.main_menu a,
-table.main_menu a:visited,
-table.main_menu div,
-table.main_menu a:hover,
-table.main_menu a.xi {
-  text-decoration: none;
+/* Menu bar decoration */
+
+table.main_menu .menu-bar ul.sub_menu li a,
+table.main_menu div.menu-bar a {
   color: #F2E275;
-  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
 }
 
-
-table.main_menu a:hover {
-  color:YELLOW;
-
-}
-
-
-table.main_menu div.eyeline_menubardivover {
+table.main_menu .menu-bar ul.sub_menu li a:hover {
   color:YELLOW;
 }
 
-table.main_menu div.eyeline_menudiv {
+table.main_menu .menu-bar ul.sub_menu li {
   background-color: #3A5867;
-  border: 1px solid #111155;
-  font-size: 12px;
+  border-color: #111155;
 }
-
-table.main_menu div.eyeline_menuitem *,
-table.main_menu div.eyeline_menuitem a.xi,
-table.main_menu div.eyeline_menuitemover *,
-table.main_menu div.eyeline_menuitemover a.xi {
-  background: #3A5867;
-  font-size: 12px;
-}
-
-table.main_menu div.eyeline_menuitem *,
-table.main_menu div.eyeline_menuitem a.xi {
-  font-size: 12px;
-  color: #F2E275;
-}
-
-table.main_menu div.eyeline_menuitemover *,
-table.main_menu div.eyeline_menuitemover a.xi {
-  font-size: 12px;
-  color: yellow;
-}
-
-table.main_menu div.eyeline_menubardelimitertop {
-  height: 1px;
-  font-size: 1px;
-  border-bottom:1px outset;
-}
-
-table.main_menu div.eyeline_menubardelimiterbottom {
-  height: 1px;
-  font-size: 1px;
-  width:1%;
-  border-bottom:0px outset;
-}
-div.eyeline_menubardiv,
-div.eyeline_menubardivover {
-  white-space: nowrap;
-  z-index: 100001;
-  border: none;
-  visibility: visible;
-  font-size: 14px;
-
-}
-
-div.eyeline_menudiv {
-  cursor: default;
-  padding-bottom: 1px;
-  padding-top: 1px;
-  position: absolute;
-  margin-left: 3px;
-  overflow: auto;
-  z-index: 100001;
-}
-
-div.eyeline_menuitem,
-div.eyeline_menuitemover {
-  border: none;
-
-  padding-bottom: 1px;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 1px;
-
-  position: relative; /* Do not alter this line! */
-
-  white-space: nowrap;
-  z-index: 100002;
+.menu-bar * {
+  margin: 0; padding: 0;
   text-decoration: none;
   white-space: nowrap;
 }
 
-div.eyeline_menuitem *,
-div.eyeline_menuitemover * {
-  text-decoration: none;
-}
-
-div.eyeline_menubardiv  {
-  cursor: default;
-}
-
-div.eyeline_menubardivover {
-  cursor: pointer;
-}
-
-div.eyeline_menubardelimitertop {
-  height: 1px;
-  font-size: 1px;
-  border-bottom:1px outset;
-}
-
-div.eyeline_menubardelimiterbottom {
-  height: 1px;
-  font-size: 1px;
-  width:1%;
-  border-bottom:0px outset;
-}
-
-#menu_link a{
-  color: #f2e275;
-  font-size: 14px;
-}
-
-#menu_link a:hover{
-  color: yellow;
-  font-size: 14px;
-}.eyeline_message {
+.menu-bar ul.sub_menu      { visibility: hidden; position: absolute; z-index: 5}
+.menu-bar ul.sub_menu li   { float: none; list-style: none; }
+.menu-bar ul.sub_menu li a { white-space: nowrap; display: inline-block; padding: 2px 4px; }.eyeline_message {
   background-color:#E9E8E8;
   border:1px solid #999999;
   margin:0;
