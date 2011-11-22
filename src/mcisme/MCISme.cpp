@@ -45,6 +45,7 @@
 #endif
 
 #include "version.inc"
+#include "admin/AdminServer.hpp"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -69,6 +70,8 @@ static smsc::logger::Logger *logger = 0;
 static TaskProcessor*         taskProcessor = 0;
 static ServiceSocketListener* adminListener = 0;
 static bool bAdminListenerInited = false;
+
+static admin::AdminServer* protogenAdminServer;
 
 static Event mciSmeWaitEvent;
 static Event mciSmeReady;
@@ -577,7 +580,13 @@ extern "C" void appSignalHandler(int sig)
   if (sig==smsc::system::SHUTDOWN_SIGNAL)
   {
     smsc_log_info(logger, "Shutting down by signal...");
-    if (bAdminListenerInited) adminListener->shutdown();
+    if (bAdminListenerInited)
+    {
+      if (protogenAdminServer)
+        protogenAdminServer->Stop();
+      else
+        adminListener->shutdown();
+    }
     setNeedStop(true);
   }
 }
@@ -664,6 +673,40 @@ public:
 
 };
 
+static void startAdminInterface(const ConfigView& admin_config,
+                                TaskProcessor& processor)
+{
+  smsc_log_debug(logger, "%s %d", admin_config.getString("host"), admin_config.getInt("port"));
+
+  if (!strcmp(admin_config.getString("type"), "protogen"))
+  {
+    protogenAdminServer = new admin::AdminServer(processor);
+    int32_t adminHandlers;
+    try {
+      admin_config.getInt("handlers");
+    } catch (ConfigException& ex) {
+      adminHandlers = 2;
+    }
+    protogenAdminServer->Init(admin_config.getString("host"),
+                              admin_config.getInt("port"),
+                              adminHandlers);
+    bAdminListenerInited = true;
+  }
+  else
+  {
+    adminListener = new ServiceSocketListener();
+    adminListener->init(admin_config.getString("host"), admin_config.getInt("port"));
+
+    MCISmeAdministrator* adminHandler = new MCISmeAdministrator(processor);
+    MCISmeComponent* admin = new MCISmeComponent(*adminHandler);
+
+    ComponentManager::registerComponent(admin);
+    adminListener->Start();
+
+    bAdminListenerInited = true;
+  }
+}
+
 int main(void)
 {
   Logger::Init();
@@ -677,9 +720,6 @@ int main(void)
   */
   blockAllSignals();
   shutdownThread.Start();
-
-  std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
-  adminListener = adml.get();
 
   int resultCode = 0;
   try
@@ -752,18 +792,11 @@ int main(void)
     }
 
     ConfigView adminConfig(manager, "MCISme.Admin");
-    smsc_log_debug(logger, "%s %d", adminConfig.getString("host"), adminConfig.getInt("port"));
-    adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
-    bAdminListenerInited = true;
 
     TaskProcessor processor(&tpConfig);
 
     taskProcessor = &processor;
-
-    MCISmeAdministrator adminHandler(processor);
-    MCISmeComponent admin(adminHandler);
-    ComponentManager::registerComponent(&admin);
-    adminListener->Start();
+    startAdminInterface(adminConfig, processor);
 
     int dispCount=4;
     try{
@@ -881,8 +914,13 @@ int main(void)
 
   if (bAdminListenerInited)
   {
-    adminListener->shutdown();
-    adminListener->WaitFor();
+    if (protogenAdminServer)
+      protogenAdminServer->Stop();
+    else
+    {
+      adminListener->shutdown();
+      adminListener->WaitFor();
+    }
   }
 
   smsc_log_debug(logger, "Exited !!!");
