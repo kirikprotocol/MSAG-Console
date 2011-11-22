@@ -11,7 +11,7 @@ mcisme/MCISme MCISme \
     -lsystem-common -lutil-config-route $(SOCKETLIB) -lcore-network -lmcisme \
     -lmcisme-misscallhd -lmcisme-advert -lmcisme -lscag-util-singleton \
     -lscag-exc -lscag-util-encodings -lscag-util-singleton -lscag-exc \
-    -lutil-regexp -L$(SS7HD)/lib -l$(SS7_LIBRARY_NAME) \
+    -leyeline-protogen-server -lmcisme-admin -lmcisme-admin-messages -lutil-regexp -L$(SS7HD)/lib -l$(SS7_LIBRARY_NAME) \
     -lmcisme-misscallhd -lmcisme-mcaia -ldb -lutil-templates -lutil-config \
     -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lcore-buffers \
     -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin \
@@ -24,7 +24,7 @@ mcisme/MCISme MCISme \
     -lsystem-common -lutil-config-route $(SOCKETLIB) -lcore-network -lmcisme \
     -lmcisme-misscall -lmcisme-advert -lmcisme -lscag-util-singleton \
     -lscag-exc -lscag-util-encodings -lscag-util-singleton -lscag-exc \
-    -lutil-regexp -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) \
+    -leyeline-protogen-server -lmcisme-admin -lmcisme-admin-messages -lutil-regexp -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) \
     -lmcisme-misscall -lmcisme-mcaia -ldb -lutil-templates -lutil-config \
     -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lcore-buffers \
     -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin \
