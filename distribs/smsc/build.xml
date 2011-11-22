@@ -555,6 +555,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/ClusterController/bin"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/balancer"/>
+    <mkdir dir="${DISTR_DIR}/services/balancer/bin"/>
     <mkdir dir="${DISTR_DIR}/webapps"/>
   </target>
 
@@ -592,6 +594,9 @@ Targets:
     <chmod file="${DISTR_DIR}/services/ClusterController/bin/ClusterController" perm="755"/>
     <copy file="${BUILD_BIN}/store/ArchiveDaemon" todir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
     <chmod file="${DISTR_DIR}/services/ArchiveDaemon/bin/ArchiveDaemon" perm="755"/>
+    <copy file="${BUILD_BIN}/eyeline/load_balancer/load_balancer" todir="${DISTR_DIR}/services/balancer/bin"/>
+    <chmod file="${DISTR_DIR}/services/balancer/bin/load_balancer" perm="755"/>
+
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>

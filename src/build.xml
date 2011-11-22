@@ -131,7 +131,7 @@ Required environment: ORACLE_HOME
 
   <target name="smsc" depends="logger, store" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
-      <property name="targets" value="${SNMP_MOD_NAME} smsc"/>
+      <property name="targets" value="${SNMP_MOD_NAME} eyeline.clustercontroller eyeline.load_balancer smsc"/>
     </ant>
   </target>
 
