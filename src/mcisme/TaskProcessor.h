@@ -316,7 +316,26 @@ public:
     return 0;
   }
   virtual string getSchedItem(const string& Abonent);
+  // return true if subscriber was found else return false.
+  bool getSchedItem(const string& Abonent, int64_t* schedTime,
+                    uint8_t* eventsCount, int32_t* lastError);
+
+  struct TimeInfo
+  {
+    TimeInfo()
+    : timeValue(0), count(0)
+    {}
+    TimeInfo(int64_t time_value, int32_t count_val)
+    : timeValue(time_value), count(count_val)
+    {}
+
+    int64_t timeValue;
+    int32_t count;
+  };
+
   virtual string getSchedItems(void);
+  // return true if delivery queue is empty else return false.
+  bool getSchedItems(std::vector<TimeInfo>* time_lines);
 
   virtual void handle(const mcaia::BusyResponse& msg);
 };
