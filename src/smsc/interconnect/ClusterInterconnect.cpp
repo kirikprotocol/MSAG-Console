@@ -60,6 +60,7 @@ void ClusterInterconnect::Start()
   for(int i=0;i<nodesCount;i++)
   {
     if(i==ownNodeIndex)continue;
+    smsc_log_info(log,"init clnt socket:%s:%d",hosts[i].c_str(),ports[i]);
     if(clntSockets[i].Init(hosts[i].c_str(),ports[i],60)==-1)
     {
       throw smsc::util::Exception("Failed to init socket for %s:%d",hosts[i].c_str(),ports[i]);
