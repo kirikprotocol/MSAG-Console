@@ -21,7 +21,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
 
-        AdapterException(Exception& exc) : Exception(exc.what()) {};
+        AdapterException(const Exception& exc) : Exception(exc.what()) {};
         virtual ~AdapterException() throw() {};
     };
     
