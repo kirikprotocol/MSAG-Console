@@ -4,6 +4,7 @@
 
 package ru.sibinco.scag.backend.routing.http;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.sibinco.lib.SibincoException;
@@ -22,13 +23,15 @@ import java.util.*;
  */
 public class HttpSite {
 
+    private static Logger log = Logger.getLogger(HttpSite.class);
+
     private String name;
     private Map sites = new HashMap();
 
 
     public HttpSite(Element subjElement) throws SibincoException {
-
         name = StringEncoderDecoder.encode(subjElement.getAttribute("id"));
+        log.debug("Try to initialize http site: "+name);
         NodeList sitekList = subjElement.getElementsByTagName("site");
 
         for (int i = 0; i < sitekList.getLength(); i++) {
@@ -44,8 +47,11 @@ public class HttpSite {
                 path.add(pathElement.getAttribute("value").trim());
             }
             site.setPathLinks((String[]) path.toArray(new String[path.size()]));
-            sites.put(site.getHost(), site);
+            String id = site.getId();
+            sites.put(id, site);
+            log.debug("init "+site);
         }
+        log.debug("Initialize http site: "+name);
     }
 
     public PrintWriter store(PrintWriter out) {

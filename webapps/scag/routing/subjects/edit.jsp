@@ -249,7 +249,7 @@
 
                   <td nowrap="true">
                         <input id="newSite" class="midtxt" name="newSite"><b>:</b>
-                        <input id="newPort" class="mintxt"name="newPort" value="80" validation="port" onkeyup="resetValidation(this)">
+                        <input id="newPort" class="mintxt" name="newPort" value="80" validation="port" onkeyup="resetValidation(this)">
                   </td>
                   <td><img src="content/images/but_add.gif" alt="Add new Site"
 <%--                           onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"--%>

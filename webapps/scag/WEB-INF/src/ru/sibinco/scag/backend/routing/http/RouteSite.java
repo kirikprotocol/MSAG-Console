@@ -57,7 +57,7 @@ public class RouteSite {
         for (int i = 0; i < listSite.getLength(); i++) {
             Element siteElement = (Element) listSite.item(i);
             final Site site = new Site(siteElement.getAttribute("host").trim(), Integer.parseInt(siteElement.getAttribute("port").trim()), siteElement.getAttribute("default").equals("true"));
-            if (site.isDefaultSite()) defaultSiteObjId = site.getHost();
+            if (site.isDefaultSite()) defaultSiteObjId = site.getId();
             NodeList pathNodeList = siteElement.getElementsByTagName("path");
             List list = new ArrayList();
             for (int j = 0; j < pathNodeList.getLength(); j++) {
@@ -65,7 +65,7 @@ public class RouteSite {
                 list.add(pathElement.getAttribute("value").trim());
             }
             site.setPathLinks((String[]) list.toArray(new String[list.size()]));
-            sites.put(site.getHost(), site);
+            sites.put(site.getId(), site);
         }
         NodeList placementList = routeElement.getElementsByTagName("placement");
         if (placementList != null) {
