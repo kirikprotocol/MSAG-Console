@@ -680,6 +680,11 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
 {
     if (!slog_) { initLog(); }
 
+    if (zipped) {
+        smsc_log_debug(slog_,"cannot fix zipped log: %s",fn);
+        return;
+    }
+
     FileGuard    fg;
     try {
         fg.ropen(fn);
