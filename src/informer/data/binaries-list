@@ -20,3 +20,19 @@ informer/joinActLogs joinActLogs \
  -lutil \
  $(LIBICONV) \
  -lpthread $(LIBRT) -ldl
+
+informer/fixActLog fixActLog \
+ -linformer-data \
+ -linformer-io \
+ -lsms \
+ @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lutil \
+ $(LIBICONV) \
+ -lpthread $(LIBRT) -ldl
+
+informer/tests/testScanf testScanf \
+ -linformer-io \
+ @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lutil \
+ $(LIBICONV) \
+ -lpthread $(LIBRT) -ldl

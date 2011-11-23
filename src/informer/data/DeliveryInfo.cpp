@@ -12,6 +12,7 @@
 #include "Region.h"
 #include "informer/io/DirListing.h"
 #include "informer/io/TmpBuf.h"
+#include "informer/io/FileBuffer.h"
 
 namespace eyeline {
 namespace informer {
@@ -644,11 +645,11 @@ void DeliveryInfo::readStats()
                      !strcmp(daypath.c_str()+daypath.size()-4,".log") ) {
                     // zipped file - scan until the last section
                     FileGuard fg;
-                    // fg.ropen(daypath.c_str());
-                    ActivityLog::scanZipToEnd(fg,buf,daypath);
-                    statsLoaded = ActivityLog::readStatistics( fg,
-                                                               buf,
-                                                               stats_,
+                    fg.ropen(daypath.c_str());
+                    FileBuffer fb(fg,buf);
+                    ActivityLog::scanZipToEnd(fb);
+                    statsLoaded = ActivityLog::readStatistics( fb,
+                                                               &stats_,
                                                                isOldActLog_ );
                 }
                 continue;
@@ -670,11 +671,11 @@ void DeliveryInfo::readStats()
                          !strcmp(hourpath.c_str()+hourpath.size()-4,".log") ) {
                         // zipped file
                         FileGuard fg;
-                        // fg.ropen(hourpath.c_str());
-                        ActivityLog::scanZipToEnd(fg,buf,hourpath);
-                        statsLoaded = ActivityLog::readStatistics( fg,
-                                                                   buf,
-                                                                   stats_,
+                        fg.ropen(hourpath.c_str());                        
+                        FileBuffer fb(fg,buf);
+                        ActivityLog::scanZipToEnd(fb);
+                        statsLoaded = ActivityLog::readStatistics( fb,
+                                                                   &stats_,
                                                                    isOldActLog_ );
                     }
                     continue;
@@ -691,9 +692,9 @@ void DeliveryInfo::readStats()
                     try {
                         FileGuard fg;
                         fg.ropen( filename.c_str() );
-                        if ( ActivityLog::readStatistics( fg,
-                                                          buf,
-                                                          stats_,
+                        FileBuffer fb(fg,buf);
+                        if ( ActivityLog::readStatistics( fb,
+                                                          &stats_,
                                                           isOldActLog_ )) {
                             statsLoaded = true;
                             if (isOldActLog_) {

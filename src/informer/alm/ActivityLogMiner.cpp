@@ -476,7 +476,7 @@ bool ActivityLogMiner::Request::parseRecord( msgtime_type endTime,
             }
         }
 
-
+        offset = f.Pos();
         if(!f.ReadLine(line))
         {
             f.Close();

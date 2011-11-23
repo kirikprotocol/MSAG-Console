@@ -8,6 +8,7 @@
 #include "logger/Logger.h"
 #include "system/smscsignalhandlers.h"
 #include "util/config/ConfString.h"
+#include "util/config/Config.h"
 #include "util/crc32.h"
 #include "util/findConfigFile.h"
 #include "util/regexp/RegExp.hpp"
@@ -15,6 +16,11 @@
 #include "version.inc"
 #include "informer/main/InfosmeCoreV1.h"
 #include "informer/io/InfosmeException.h"
+#include "informer/io/FileBuffer.h"
+#include "informer/io/UTF8.h"
+#include "informer/io/DirListing.h"
+#include "informer/data/ActivityLog.h"
+#include "informer/data/CommonSettingsIniter.h"
 
 using namespace eyeline::informer;
 
@@ -141,10 +147,41 @@ unsigned checkLicenseFile()
 }
 
 
+struct NumericNameFilter
+{
+    NumericNameFilter( std::vector< dlvid_type >* dlvs = 0 ) : dlvs_(dlvs) {}
+
+    inline bool operator()( const char* fn ) const {
+        char* endptr;
+        const dlvid_type dlvId = dlvid_type(strtoul(fn,&endptr,10));
+        // if (endptr != fn) {
+            // starts with a number
+            /*
+            if ( archived_ && strcmp(endptr,".out") == 0 ) {
+                archived_->push_back(dlvId);
+                return false;
+            }
+             */
+            if (*endptr=='\0') {
+                if (dlvs_) {
+                    dlvs_->push_back(dlvId);
+                    return false;
+                }
+                return true;
+            }
+        // }
+        return false;
+    }
+private:
+    mutable std::vector< dlvid_type >* dlvs_;
+};
+
+
 int main( int argc, const char** argv )
 {
     bool selftest = false;
     bool archive = false;
+    bool fixlogs = false;
     try {
 
         for ( const char** arg = argv+1; *arg != 0; ++arg ) {
@@ -156,6 +193,7 @@ int main( int argc, const char** argv )
                 printf(" -v --version\tShow program version\n");
                 printf("    --selftest\tExecute self-test upon program startup\n");
                 printf("    --archive\tRun in archive regime\n");
+                printf("    --fixlogs\nFix activity.logs then exit\n");
                 return 0;
             }
 
@@ -174,6 +212,10 @@ int main( int argc, const char** argv )
                 continue;
             }
 
+            if (!strcmp(*arg,"--fixlogs")) {
+                fixlogs = true;
+                continue;
+            }
         }
 
         // infrastructure
@@ -200,6 +242,110 @@ int main( int argc, const char** argv )
         smsc_log_info(mainlog,"\n"
                       "------------------------------------------------------------------------");
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
+
+        if ( fixlogs ) {
+
+            try {
+                std::auto_ptr< UTF8 > utf8( new UTF8 );
+                CommonSettings cs( 100 );
+                CommonSettingsIniter csi;
+
+                using smsc::util::config::Config;
+
+                std::auto_ptr< Config > maincfg( Config::createFromFile("config.xml") );
+                std::auto_ptr< Config > cfg( maincfg->getSubConfig("informer",true));
+                csi.init( cs, *cfg, 0, 0, utf8.get(), false );
+
+                // scanning all deliveries actlogs
+                const std::string dlvpath = cs.getStorePath() + "deliveries/";
+                std::vector< std::string > chunks1;
+                std::vector< std::string > chunks2;
+                std::vector< dlvid_type >  dlvs;
+                std::vector< std::string > dirs;
+                std::vector< std::string > daylogs;
+                std::vector< std::string > hourlogs;
+                std::vector< std::string > minlogs;
+                makeDirListing(NumericNameFilter(),S_IFDIR).list(dlvpath.c_str(),chunks1);
+                
+                std::sort( chunks1.begin(), chunks1.end() );
+                for ( std::vector< std::string >::const_iterator k = chunks1.begin(), ke = chunks1.end();
+                      k != ke; ++k ) {
+                    chunks2.clear();
+                    const std::string chunkpath = dlvpath + *k + '/';
+                    makeDirListing( NumericNameFilter(),S_IFDIR).list(chunkpath.c_str(),chunks2);
+                    std::sort( chunks2.begin(), chunks2.end() );
+                    for ( std::vector< std::string >::const_iterator i = chunks2.begin(), ie = chunks2.end();
+                          i != ie; ++i ) {
+                        dlvs.clear();
+                        std::vector< std::string > dummy;
+                        const std::string chunk2path = chunkpath + "/" + *i;
+                        makeDirListing(NumericNameFilter(&dlvs),S_IFDIR).list(chunk2path.c_str(),dummy);
+                        for ( std::vector< dlvid_type >::const_iterator idlv = dlvs.begin(), ide = dlvs.end();
+                              idlv != ide; ++idlv ) {
+                            const dlvid_type dlvId = *idlv;
+                            smsc_log_debug(mainlog,"D=%u scanning activity logs",dlvId);
+                            char dbuf[100];
+                            sprintf(makeDeliveryPath(dbuf,dlvId),"activity_log");
+                            std::string actpath = cs.getStorePath() + dbuf;
+                            daylogs.clear();
+                            makeDirListing(NoDotsNameFilter()).list( actpath.c_str(), daylogs );
+                            std::sort( daylogs.begin(), daylogs.end() );
+                            for ( std::vector< std::string >::const_iterator j = daylogs.begin(), je = daylogs.end();
+                                  j != je; ++j ) {
+                                unsigned year, month, mday;
+                                int pos = 0;
+                                sscanf(j->c_str(),"%04u.%02u.%02u%n",&year,&month,&mday,&pos);
+                                if ( pos != int(j->size()) ) {
+                                    if ( !strcmp(j->c_str()+pos,".log")) {
+                                        // daylog
+                                        ActivityLog::fixLog((actpath + "/" + *j).c_str(), true );
+                                    }
+                                    continue;
+                                }
+                                hourlogs.clear();
+                                const std::string daypath = actpath + "/" + *j;
+                                makeDirListing(NoDotsNameFilter()).list( daypath.c_str(), hourlogs );
+                                std::sort( hourlogs.begin(), hourlogs.end() );
+                                for ( std::vector< std::string >::const_iterator m = hourlogs.begin(), me = hourlogs.end();
+                                      m != me; ++m ) {
+                                    pos = 0;
+                                    unsigned hour;
+                                    sscanf(m->c_str(),"%02u%n",&hour,&pos);
+                                    if ( pos != int(m->size()) ) {
+                                        if ( !strcmp(m->c_str()+pos,".log") ) {
+                                            // hourlog
+                                            fixLog( mainlog, (daypath + "/" + *m).c_str(), true );
+                                        }
+                                        continue;
+                                    }
+                                    const std::string hourpath = daypath + "/" + *m;
+                                    minlogs.clear();
+                                    makeDirListing(NoDotsNameFilter(),S_IFREG).list(hourpath.c_str(),minlogs);
+                                    std::sort(minlogs.begin(),minlogs.end());
+                                    for ( std::vector< std::string >::const_iterator n = minlogs.begin(), ne = minlogs.end();
+                                          n != ne; ++n ) {
+                                        pos = 0;
+                                        unsigned minute;
+                                        sscanf(n->c_str(),"%02u.log%n",&minute,&pos);
+                                        if ( pos != int(n->size()) ) {
+                                            continue;
+                                        }
+                                        
+                                        // minute log
+                                        fixLog( mainlog, (hourpath + "/" + *n).c_str(), false );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch ( std::exception& e ) {
+                fprintf(stderr,"exc: %s\n",e.what());
+                smsc_log_error(mainlog,"exc: %s",e.what());
+                return -1;
+            }
+            return 0;
+        }
 
         try {
 

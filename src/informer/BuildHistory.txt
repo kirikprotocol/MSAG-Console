@@ -1,3 +1,5 @@
+2011-11-23 16:02 bukind
+  feature: fixing actlogs (not tested)
 2011-11-17 16:24 bukind
   feature: joined activity logs (separate files are not removed yet)
 2011-11-14 11:49 bukind
