@@ -313,6 +313,9 @@ void ClusterInterconnect::processIncomingCommand(int idx)
     {
       inMon.notify();
     }
+  }else if(cmdId==cciEnquireLink)
+  {
+    //nothing
   }
   rdBuf[idx].reset();
 }
@@ -344,6 +347,9 @@ void ClusterInterconnect::prepareOutCommand(smsc::smeman::SmscCommand& cmd)
     buf<<cmd->get_dialogId();
     buf<<cmd->get_resp()->get_status();
     buf<<(uint8_t)cmd->get_resp()->get_dataSm();
+  }else if(cmd->get_commandId()==smsc::smeman::ENQUIRELINK)
+  {
+    buf<<(uint32_t)cciEnquireLink;
   }
   len=htonl((uint32_t)buf.GetPos());
   memcpy(buf.get(),&len,4);
@@ -354,6 +360,8 @@ void ClusterInterconnect::writeThread()
 {
   net::Multiplexer mul;
   net::Multiplexer::SockArray wr,err;
+  time_t lastCmd=0;
+  time_t now;
   while(!shutdown)
   {
     {
@@ -361,9 +369,23 @@ void ClusterInterconnect::writeThread()
       while(!shutdown && mul.getSize()==0 && outQueue.Count()==0)
       {
         outMon.wait(200);
+        now=time(0);
+        if(now!=lastCmd)
+        {
+          for(int i=0;i<nodesCount;++i)
+          {
+            if(i!=ownNodeIndex)
+            {
+              smsc::smeman::SmscCommand eq=smsc::smeman::SmscCommand::makeEnquireLink(0,0,0);
+              eq->dstNodeIdx=i;
+              outQueue.Push(eq);
+            }
+          }
+        }
       }
       if(outQueue.Count()>0)
       {
+        lastCmd=now;
         smsc::smeman::SmscCommand& cmd=outQueue.Front();
         smsc_log_debug(log,"sending command to node %d",cmd->dstNodeIdx);
         if(cmd->dstNodeIdx<0 || cmd->dstNodeIdx>=nodesCount)

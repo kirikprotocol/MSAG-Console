@@ -28,7 +28,8 @@ namespace thr=smsc::core::threads;
 enum ClusterCommandId{
   cciIdent=1,
   cciSubmit,
-  cciSubmitResp
+  cciSubmitResp,
+  cciEnquireLink
 };
 
 class ClusterInterconnect: public smsc::smeman::SmeProxy
