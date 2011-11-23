@@ -804,7 +804,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   if(fromMap && ( sms->getOriginatingDescriptor().mscLength==0 ||
-                  sms->getOriginatingDescriptor().imsiLength==0 ))
+                  sms->getOriginatingDescriptor().imsiLength==0 ) && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     if(!c.rr.info.allowBlocked)
     {
