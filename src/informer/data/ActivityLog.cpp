@@ -95,11 +95,6 @@ bool ActivityLog::readStatistics( FileBuffer& fb,
         const char* linehead = fb.peekChar(size_t(-1));
         if (!linehead) { break; }
         if ( *linehead == '#' ) {
-            // head comment
-            if ( version == 0 ) {
-                version = readChunkVersion( fb );
-                continue;
-            }
 
             // trying to read statline, version must be already defined
             size_t prevpos;
@@ -108,9 +103,16 @@ bool ActivityLog::readStatistics( FileBuffer& fb,
                 throw FileReadException("",0,fb.getPos(),"comment line is not terminated");
             }
 
+            // head comment
+            if ( version == 0 ) {
+                version = readChunkVersion(line,prevpos);
+                continue;
+            }
+
             if ( ! readStatLine(line,version,ds) ) {
                 continue;
             }
+
             /*
             int shift = 0;
             ds.clear();
@@ -213,7 +215,17 @@ void ActivityLog::scanZipToEnd( FileBuffer& fb )
 {
     const unsigned zipVersion = readZipHead(fb);
     while ( true ) {
-        const size_t chunksize = readChunkHead(fb,zipVersion);
+        
+        size_t prevpos;
+        const char* line = fb.readline(100,&prevpos);
+        if (!line) {
+            if (fb.getPos() < fb.getFileSize()) {
+                throw FileReadException("",0,fb.getPos(),"garbage at end");
+            }
+            break;
+        }
+
+        const size_t chunksize = readChunkHead(line,prevpos,zipVersion);
         if ( chunksize >= fb.getFileSize() ) {
             break;
         }
@@ -683,6 +695,7 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
     unsigned version = 0;
     bool statline = false;
     DeliveryStats ds;
+    size_t lines = 0;
 
     FileGuard fix;
     bool fixok = true;
@@ -696,9 +709,25 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
                     smsc_log_debug(slog_,"zipversion %u",zipVersion);
                     zipChunkEnd = 0;
                 }
+            }
+
+            size_t prevpos;
+            char* line = fb.readline(50000,&prevpos);
+            if (!line) {
+                if (!version || !statline) {
+                    smsc_log_error(slog_,"cannot fix '%s': version/statline missing",fn);
+                    fixok = false;
+                }
+                if (fb.getPos() < fb.getFileSize()) {
+                    throw FileReadException("",0,fb.getPos(),"garbage at the end");
+                }
+                break;
+            }
+
+            if (zipped) {
                 if (fb.getPos() >= zipChunkEnd) {
                     version = 0;
-                    zipChunkEnd = ActivityLog::readChunkHead(fb,zipVersion);
+                    zipChunkEnd = ActivityLog::readChunkHead(line,prevpos,zipVersion);
                     if (!zipChunkEnd) {
                         // end of file
                         break;
@@ -706,29 +735,16 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
                 }
             }
 
-            const char* linehead = fb.peekChar(100);
-            if (!linehead) {
-                if (!version || !statline) {
-                    smsc_log_error(slog_,"cannot fix '%s': version/statline missing",fn);
-                    fixok = false;
-                    break;
-                }
-            }
+            // if ( (++lines % 10000) == 0) {
+            // smsc_log_debug(slog_,"processing '%s' at %llu fgpos=%llu bufpos=%llu",
+            // line, ulonglong(prevpos), 
+            // ulonglong(fg.getPos()), ulonglong(buf.getPos()));
+            // }
+            if ( *line == '#' ) {
 
-            if (*linehead == '#') {
                 if (!version) {
                     statline = false;
-                    version = ActivityLog::readChunkVersion(fb);
-                }
-            }
-
-            size_t prevpos;
-            char* line = fb.readline(50000,&prevpos);
-            if ( *line == '#' ) {
-                if (!version) {
-                    smsc_log_error(slog_,"cannot fix '%s': logic error version is 0",fn);
-                    fixok = false;
-                    break;
+                    version = ActivityLog::readChunkVersion(line,prevpos);
                 } else {
                     bool newstat = ActivityLog::readStatLine(line,version,ds);
                     if (newstat) {
@@ -748,6 +764,12 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
 
             ActivityLog::testRecord( line, prevpos );
 
+            if ( fix.isOpened() ) {
+                size_t ls = strlen(line);
+                line[ls] = '\n';
+                fix.write(line,ls+1);
+            }
+
         } catch ( FileReadException& e ) {
 
             smsc_log_warn(slog_,"exc in '%s' at pos=%llu: %s",fn,ulonglong(e.getPos()),e.what());
@@ -758,29 +780,29 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
                 break;
             }
 
-            const size_t nextpos = fb.skipline();
-
             if ( !fix.isOpened() ) {
                 // create fix and read upto
                 try {
                     fix.create( (std::string(fn) + ".tmp").c_str(), 0666, false, true );
                     size_t curpos = e.getPos();
+                    const size_t keep = fg.getPos();
                     fg.seek(0);
-                    char buf[8192];
+                    char xbuf[8192];
                     while ( fg.getPos() < curpos ) {
-                        const size_t wasread = fg.read( buf, std::min(curpos-fg.getPos(),size_t(8192)) );
-                        fix.write(buf,wasread);
+                        const size_t wasread = fg.read( xbuf, std::min(curpos-fg.getPos(),size_t(8192)) );
+                        fix.write(xbuf,wasread);
                     }
+                    fg.seek(keep);
                 } catch ( std::exception& e ) {
                     fixok = false;
                     smsc_log_error(slog_,"cannot fix '%s': %s",fn,e.what());
                     break;
                 }
-                fb.setPos(nextpos,true);
+                // fb.setPos(nextpos,true);
             }
             
             // skip the record
-            fb.setPos(nextpos);
+            // fb.setPos(nextpos);
 
         } catch ( std::exception& e ) {
 
@@ -805,8 +827,12 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
         } else {
             if ( 0 != ::rename((fns+".tmp").c_str(), fns.c_str()) ) {
                 smsc_log_warn(slog_,"cannot rename into '%s': %d",fn,errno);
+            } else {
+                smsc_log_info(slog_,"file '%s' successfully fixed",fn);
             }
         }
+    } else {
+        smsc_log_debug(slog_,"file '%s' is ok",fn);
     }
 }
 
@@ -859,10 +885,12 @@ unsigned ActivityLog::readZipHead( FileBuffer& rr )
 
 /// @param ymdtime if present will contain the time of the chunk.
 /// @return the chunk length or 0
-size_t ActivityLog::readChunkHead( FileBuffer& fb,
+size_t ActivityLog::readChunkHead( const char* line,
+                                   size_t prevpos,
                                    unsigned zipVersion,
                                    ulonglong* ymdtime )
 {
+    /*
     size_t prevpos;
     char* line = fb.readline(100,&prevpos);
     if (!line) {
@@ -873,40 +901,44 @@ size_t ActivityLog::readChunkHead( FileBuffer& fb,
         throw FileReadException("",0,fb.getPos(),
                                 "zip subheader has no eol");
     }
+     */
+
     int pos = 0;
     unsigned year, month, mday, hour, minute;
     unsigned long chunksize;
     sscanf(line,"# %04u %02u %02u %02u %02u %lu%n",&year,&month,&mday,&hour,&minute,&chunksize,&pos);
     if ( size_t(pos) != strlen(line) ) {
-        fb.setPos(prevpos);
+        // fb.setPos(prevpos);
         throw FileReadException( "", 0, prevpos,
                                  "zip subheader '%s' is broken",line);
     }
     if ( ymdtime ) {
         *ymdtime = ((((year*100+month)*100+mday)*100+hour)*100+minute)*100;
     }
-    return fb.getPos() + chunksize;
+    return prevpos + chunksize;
 }
 
 
 /// @return version
-unsigned ActivityLog::readChunkVersion( FileBuffer& fb )
+unsigned ActivityLog::readChunkVersion( const char* line, size_t prevpos )
 {
+    /*
     size_t prevpos;
     const char* line = fb.readline(50000,&prevpos);
     if (!line) {
         throw FileReadException("",0,fb.getPos(),
                                 "version line has no eol");
     }
+     */
     int pos = 0;
     unsigned version;
     sscanf(line,"#%u SEC,%n",&version,&pos);
     if ( pos == 0 ) {
-        fb.setPos(prevpos);
+        // fb.setPos(prevpos);
         throw FileReadException("",0,prevpos,
                                 "version cannot be parsed from '%s'",line);
-    } else if ( version <= 0 || version >= 3 ) {
-        fb.setPos(prevpos);
+    } else if ( version <= 0 || version > 3 ) {
+        // fb.setPos(prevpos);
         throw FileReadException("",0,prevpos,
                                 "unsupported version=%u in '%s'",version,line);
     }

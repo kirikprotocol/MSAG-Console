@@ -314,7 +314,7 @@ int main( int argc, const char** argv )
                                     if ( pos != int(m->size()) ) {
                                         if ( !strcmp(m->c_str()+pos,".log") ) {
                                             // hourlog
-                                            fixLog( mainlog, (daypath + "/" + *m).c_str(), true );
+                                            ActivityLog::fixLog( (daypath + "/" + *m).c_str(), true );
                                         }
                                         continue;
                                     }
@@ -332,7 +332,7 @@ int main( int argc, const char** argv )
                                         }
                                         
                                         // minute log
-                                        fixLog( mainlog, (hourpath + "/" + *n).c_str(), false );
+                                        ActivityLog::fixLog( (hourpath + "/" + *n).c_str(), false );
                                     }
                                 }
                             }

@@ -89,14 +89,14 @@ public:
 
     /// @param ymdtime if present will contain the 
     /// @return the chunk length or 0
-    static size_t readChunkHead( FileBuffer& fb,
+    static size_t readChunkHead( const char* line, size_t prevpos,
                                  unsigned zipVersion,
                                  ulonglong* ymdtime = 0 );
 
     /// @return version or throw
-    static unsigned readChunkVersion( FileBuffer& fb );
+    static unsigned readChunkVersion( const char* line, size_t prevpos );
     static bool readStatLine( const char* line, unsigned version, DeliveryStats& ds );
-    static void testRecord( const char* line, size_t fpos );
+    static void testRecord( const char* line, size_t prevpos );
 
 private:
     void createFile( msgtime_type currentTime, struct tm& now );

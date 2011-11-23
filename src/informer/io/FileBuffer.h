@@ -40,7 +40,7 @@ public:
     // NOTE: the buffer content is broken.
     // const char* getHead( size_t maxsize );
 
-    size_t skipline() const;
+    // size_t skipline() const;
 
     inline void setPos( size_t pos, bool reset = false ) {
         if ( ( pos < fg_.getPos() - buf_.getPos() ) ||
