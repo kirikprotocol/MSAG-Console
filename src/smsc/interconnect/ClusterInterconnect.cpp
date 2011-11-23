@@ -136,6 +136,7 @@ uint32_t ClusterInterconnect::getNextSequenceNumber()
 
 void ClusterInterconnect::connectThread()
 {
+  smsc_log_info(log,"starting connect thread of node %d",ownNodeIndex);
   while(!shutdown)
   {
     for(int i=0;i<nodesCount;i++)
