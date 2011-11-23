@@ -197,9 +197,15 @@ void ClusterInterconnect::readThread()
     {
       int idx=getRemSocketIndex(err[i]);
       mul.remove(err[i]);
-      remoteSockets[idx]->Abort();
-      delete remoteSockets[idx];
-      remoteSockets[idx]=0;
+      if(idx!=-1)
+      {
+        remoteSockets[idx]->Abort();
+        delete remoteSockets[idx];
+        remoteSockets[idx]=0;
+      }else
+      {
+        delete err[i];
+      }
     }
     for(int i=0;i<rd.Count();i++)
     {
