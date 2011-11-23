@@ -138,7 +138,7 @@ protected:
     WriteResult write(net::Socket* sck)
     {
       int wr=sck->Write(buf+written,(int)(dataSize-written));
-      if(wr<0)
+      if(wr<=0)
       {
         return wrError;
       }

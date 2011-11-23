@@ -431,8 +431,8 @@ void ClusterInterconnect::writeThread()
       if(wres==WriteBuffer::wrError)
       {
         mul.remove(&clntSockets[idx]);
-        clntSockets[i].Abort();
-        connectedClnt[i]=false;
+        clntSockets[idx].Abort();
+        connectedClnt[idx]=false;
       }else if(wres==WriteBuffer::wrComplete)
       {
         mul.remove(&clntSockets[idx]);
