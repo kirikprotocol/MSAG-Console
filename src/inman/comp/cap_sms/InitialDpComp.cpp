@@ -158,9 +158,8 @@ void SMSInitialDPArg::setSMSCAddress(const char * text)
 void SMSInitialDPArg::setTimeAndTimezone(time_t tmVal) throw(smsc::util::CustomException)
 {
     ZERO_OCTET_STRING(comp->_tmTz);
-    int res = packTimeT2BCD8((unsigned char (*)[8])(comp->_tmTz.buf), tmVal);
-    if (res)
-        throw smsc::util::CustomException(res, "IDPSmsArg: bad timeTZ");
+    if (!packTimeT2BCD8((unsigned char (*)[8])(comp->_tmTz.buf), tmVal))
+      throw smsc::util::CustomException("IDPSmsArg: localtime() failed");
     comp->_tmTz.size = 8;
     //smsc_log_debug( compLogger, "BCD time: %s", dump(comp->_tmTz.size, comp->_tmTz.buf).c_str() );
     comp->idp.timeAndTimezone = &(comp->_tmTz);

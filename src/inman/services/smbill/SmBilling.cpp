@@ -482,10 +482,7 @@ RCHash Billing::startCAPSmTask(void)
     smTask->Arg().setTPProtocolIdentifier(_csInfo.tpProtocolIdentifier);
     smTask->Arg().setTPDataCodingScheme(_csInfo.tpDataCodingScheme);
 
-  } catch (const CustomException & c_exc) {
-    smsc_log_error(_logger, "%s: %s", _logId, c_exc.what());
-    rval = (RCHash)(c_exc.errorCode());
-  } catch (const std::exception& exc) {
+  } catch (const std::exception & exc) {
     smsc_log_error(_logger, "%s: %s", _logId, exc.what());
     rval = _RCS_TC_Dialog->mkhash(INManErrorId::protocolInvalidData);
   }
