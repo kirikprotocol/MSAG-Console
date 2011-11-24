@@ -21,6 +21,8 @@ import ru.novosoft.smsc.admin.logging.Logger;
 import ru.novosoft.smsc.admin.logging.LoggerException;
 import ru.novosoft.smsc.admin.map_limit.CongestionLevel;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
+import ru.novosoft.smsc.admin.mcisme.MCISmeException;
+import ru.novosoft.smsc.admin.mcisme.MCISmeSettings;
 import ru.novosoft.smsc.admin.msc.MscException;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreException;
 import ru.novosoft.smsc.admin.perfmon.PerfMonitorException;
@@ -148,6 +150,8 @@ public class ResourceBundleTest {
     assertResourceBundleCorrect(ConcurrentModificationException.class);
     assertResourceBundleCorrect(JournalRecord.class);
     assertResourceBundleCorrect("ru.novosoft.smsc.web.resources.Smsc");
+    assertResourceBundleCorrect(MCISmeException.class);
+    assertResourceBundleCorrect(MCISmeSettings.class);
   }
   
   private static void assertContainsAllKeys(String bundleName, ResourceBundle props1, ResourceBundle props2) {
