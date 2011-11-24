@@ -7,7 +7,6 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
-import ru.novosoft.smsc.admin.mcisme.MCISmeManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.sme.SmeServiceStatus;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
@@ -30,7 +29,6 @@ public class SmscStatusController extends SmscController {
 
   private final SmscManager smscManager;
   private final ClusterControllerManager ccManager;
-  private final MCISmeManager mciSmeManager;
   private final ArchiveDaemonManager archiveDaemonManager;
   private final SmeManager smeManager;
   private final Map<String, SmscConfiguration> configs;
@@ -44,7 +42,6 @@ public class SmscStatusController extends SmscController {
     archiveDaemonManager = ctx.getArchiveDaemonManager();
     smeManager = ctx.getSmeManager();
     configs = new HashMap<String, SmscConfiguration>();
-    mciSmeManager = ctx.getMciSmeManager();
 
     configs.put("acl", ctx.getAclManager());
     configs.put("alias", ctx.getAliasManager());
@@ -86,11 +83,6 @@ public class SmscStatusController extends SmscController {
     if (archiveDaemonManager != null) {
       ArchiveDaemonComponent adComponent = new ArchiveDaemonComponent();
       newComponents.put(adComponent.getName(), adComponent);
-    }
-
-    if(mciSmeManager != null) {
-      MCISmeComponent component = new MCISmeComponent();
-      newComponents.put(component.getName(), component);
     }
 
     Collection<String> smeIds = smeManager.smes().keySet();
@@ -282,21 +274,6 @@ public class SmscStatusController extends SmscController {
     }
   }
 
-
-  public class MCISmeComponent extends AbstractComponent{
-    public MCISmeComponent() throws AdminException {
-      super(COMPONENT_TYPE_OTHER, "MCISme", mciSmeManager.getSmeOnlineHost(), mciSmeManager.getSmeHosts());
-    }
-    public void start() throws AdminException {
-      mciSmeManager.startSme();
-    }
-    public void stop() throws AdminException {
-      mciSmeManager.stopSme();
-    }
-    public void switchTo(String toHost) throws AdminException {
-      mciSmeManager.switchSme(toHost);
-    }
-  }
 
   /**
    *

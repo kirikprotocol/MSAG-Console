@@ -115,7 +115,7 @@
     <param name="accessMask"        value="1"/>
     <param name="flags"              value="forceGsmDataCoding"/>
   </smerecord>
-  <smerecord type="smpp" uid="msag">
+  <smerecord type="smpp" uid="MCISme">
     <param name="priority"          value="0"/>
     <param name="typeOfNumber"      value="1"/>
     <param name="numberingPlan"     value="0"/>
