@@ -286,10 +286,12 @@ void Uint32Parser::parse(std::string& input,
         if (*str == '-')
             throw ParsingException("Error scanning uint32 type. Unexpected '-' "
                                    "Processing string: '%s'", str);
-        if ((result = sscanf(str, "%lu%n", &value, &bytes)) == EOF
+        unsigned long tvalue;
+        if ((result = sscanf(str, "%lu%n", &tvalue, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning uint32 type. "
                                    "Processing string: '%s'", str);
+        value = uint32_t(tvalue);
         if (str != def) input.erase(0, bytes);
     }
 
