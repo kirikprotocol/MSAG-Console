@@ -27,7 +27,17 @@ public class WMCISme implements MCISme {
 
   public void saveProfile(Profile profile) throws AdminException {
     wrapped.saveProfile(profile);
-    //todo add changes to journal
+    j.user(user).change("update.values",
+        profile.getSubscriber().getSimpleAddress(),
+        profile.isInform() + "",
+        profile.isNotify() + "",
+        profile.isWantNotifyMe() + "",
+        profile.isAbsent() + "",
+        profile.isBusy() + "",
+        profile.isNoReplay() + "",
+        profile.isUnconditional() + "",
+        profile.isDetach() + ""
+        ).mcismeProfile();
   }
 
   public Statistics getStats() throws AdminException {

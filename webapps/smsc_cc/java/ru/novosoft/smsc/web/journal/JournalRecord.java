@@ -124,7 +124,8 @@ public class JournalRecord {
     RESOURCE("resource"),
     ROUTE("route"),
     SUBJECT("subject"),
-    TIMEZONE("timezone");
+    TIMEZONE("timezone"),
+    MCISME_PROFILE("mcisme_profile");
 
     private final String key;
 

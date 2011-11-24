@@ -125,4 +125,8 @@ public class ActionJournal {
   public void timezone(String... args) {
     addRecord(JournalRecord.Subject.TIMEZONE, args);
   }
+
+  public void mcismeProfile(String... args) {
+    addRecord(JournalRecord.Subject.MCISME_PROFILE, args);
+  }
 }
