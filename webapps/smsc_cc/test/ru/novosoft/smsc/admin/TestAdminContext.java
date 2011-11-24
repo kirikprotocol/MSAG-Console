@@ -21,6 +21,7 @@ import ru.novosoft.smsc.admin.logging.TestLoggerManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImplTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.mcisme.MCISmeManagerImpl;
+import ru.novosoft.smsc.admin.mcisme.TestMCISme;
 import ru.novosoft.smsc.admin.mcisme.TestMCISmeManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImplTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
@@ -227,8 +228,8 @@ public class TestAdminContext extends AdminContext {
     }
 
     if(MCISmeManagerImpl.isSmeDeployed(serviceManager)) {
-//      mciSmeManager = new MCISmeManagerImpl(serviceManager, fileSystem);
-//      mciSme = new MCISme("",0);//todo
+      mciSmeManager = new MCISmeManagerImpl(serviceManager, fileSystem);
+      mciSme = new TestMCISme();
 //      mmlConsole = new MMLConsole(new Properties(), mciSme); //todo
     }
 

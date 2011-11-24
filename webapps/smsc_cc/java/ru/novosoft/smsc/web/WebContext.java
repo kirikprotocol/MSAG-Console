@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
 import ru.novosoft.smsc.admin.mcisme.MCISme;
+import ru.novosoft.smsc.admin.mcisme.MCISmeImpl;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
 import ru.novosoft.smsc.admin.perfmon.PerfMonitorManager;
@@ -27,6 +28,7 @@ import ru.novosoft.smsc.web.config.cluster_controller.WClusterControllerManager;
 import ru.novosoft.smsc.web.config.fraud.WFraudManager;
 import ru.novosoft.smsc.web.config.logging.WLoggerManager;
 import ru.novosoft.smsc.web.config.map_limit.WMapLimitManager;
+import ru.novosoft.smsc.web.config.mcisme.WMCISme;
 import ru.novosoft.smsc.web.config.mcisme.WMCISmeManager;
 import ru.novosoft.smsc.web.config.msc.WMscManager;
 import ru.novosoft.smsc.web.config.profile.WProfileManager;
@@ -127,11 +129,15 @@ public class WebContext {
       archiveDaemonManager = new WArchiveDaemonManager(adminContext.getArchiveDaemonManager(), journal, user);
     else
       archiveDaemonManager = null;
-    if (adminContext.getMciSmeManager() != null)
+
+    if (adminContext.getMciSmeManager() != null) {
       mciSmeManager = new WMCISmeManager(adminContext.getMciSmeManager(), journal, user);
-    else
+      mciSme = new WMCISme(adminContext.getMciSme(), journal, user);
+    } else {
       mciSmeManager = null;
-    mciSme = adminContext.getMciSme();
+      mciSme = null;
+    }
+
     categoryManager = new WCategoryManager(adminContext.getCategoryManager(), journal, user);
     closedGroupManager = new WClosedGroupManager(adminContext.getClosedGroupManager(), user, journal);
     fraudManager = new WFraudManager(adminContext.getFraudManager(), journal, user);

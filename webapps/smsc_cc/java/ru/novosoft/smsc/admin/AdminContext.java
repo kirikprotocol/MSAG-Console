@@ -22,10 +22,7 @@ import ru.novosoft.smsc.admin.logging.LoggerManager;
 import ru.novosoft.smsc.admin.logging.LoggerManagerImpl;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImpl;
-import ru.novosoft.smsc.admin.mcisme.MCISme;
-import ru.novosoft.smsc.admin.mcisme.MCISmeManager;
-import ru.novosoft.smsc.admin.mcisme.MCISmeManagerImpl;
-import ru.novosoft.smsc.admin.mcisme.MMLConsole;
+import ru.novosoft.smsc.admin.mcisme.*;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImpl;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
@@ -156,7 +153,7 @@ public class AdminContext {
 
     if(MCISmeManagerImpl.isSmeDeployed(serviceManager)) {
 //      mciSmeManager = new MCISmeManagerImpl(serviceManager, fileSystem);
-//      mciSme = new MCISme("",0);//todo
+//      mciSme = new MCISmeImpl("",0);//todo
 //      mmlConsole = new MMLConsole(new Properties(), mciSme); //todo
     }
 
@@ -370,6 +367,9 @@ public class AdminContext {
     }
     if(mmlConsole != null) {
       mmlConsole.shutdown();
+    }
+    if (mciSme != null) {
+      ((MCISmeImpl)mciSme).shutdown();
     }
     AdminContextLocator.unregisterContext(this);
   }
