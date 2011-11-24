@@ -51,7 +51,12 @@
         <td width="1%">
           <eye:menubar label="#{msg['smsc.services']}" rendered="#{facesContext.externalContext.userPrincipal != null}">
             <eye:menubaritem><h:commandLink value="#{msg['smsc.services.services']}" action="SERVICES"/></eye:menubaritem>
-            <eye:menubaritem><h:commandLink value="#{msg['smsc.services.mcisme']}" action="MCI_SME" rendered="#{mcisme.MCISMEDeployed}"/></eye:menubaritem>
+            <eye:menubar label="#{msg['smsc.services.mcisme']}" rendered="#{mcisme.MCISMEDeployed}">
+              <eye:menubaritem><h:commandLink value="#{msg['smsc.services.mcisme.status']}" action="MCI_SME"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="#{msg['smsc.services.mcisme.config']}" action="MCI_SME"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="#{msg['smsc.services.mcisme.profiles']}" action="MCI_SME"/></eye:menubaritem>
+              <eye:menubaritem><h:commandLink value="#{msg['smsc.services.mcisme.stats']}" action="MCI_SME"/></eye:menubaritem>
+            </eye:menubar>
           </eye:menubar>
         </td>
         <td width="1%">

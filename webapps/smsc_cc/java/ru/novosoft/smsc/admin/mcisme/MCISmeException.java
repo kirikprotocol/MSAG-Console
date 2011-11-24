@@ -5,7 +5,7 @@ import ru.novosoft.smsc.admin.AdminException;
 /**
  * author: Aleksandr Khalitov
  */
-class MCISmeException extends AdminException {
+public class MCISmeException extends AdminException {
 
   private Status status = Status.UNKNOWN;
 
