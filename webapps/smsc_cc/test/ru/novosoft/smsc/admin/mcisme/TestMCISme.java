@@ -41,6 +41,6 @@ public class TestMCISme implements MCISme {
   }
 
   public boolean isOnline() throws AdminException {
-    return false;
+    return true;
   }
 }

@@ -1,0 +1,55 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://jsfcomponents.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smsc.services.mcisme.profiles.title']}"/>
+
+  <ui:define name="styles">
+    .label {width: 10px; text-align: left; white-space: nowrap;}
+    .value {width: 100%; text-align: left; white-space: nowrap;}
+  </ui:define>
+
+  <ui:define name="content">
+    <h:form>
+      <h:panelGrid columns="2" columnClasses="label, value" style="padding: 10px 0px 10px 10px">
+        <h:outputText value="#{mcismeProfile['subscriber']}"/>
+        <eye:inputText value="#{mcismeProfiles.subscriberAddress}"/>
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['smsc.services.mcisme.profiles.lookup']}" action="#{mcismeProfiles.lookupProfile}"/></eye:button>
+        <eye:button rendered="#{mcismeProfiles.lookupCalled}"><h:commandLink value="#{msg['smsc.services.mcisme.profiles.clear']}" action="#{mcismeProfiles.clear}"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <h:panelGrid columns="1" rendered="#{mcismeProfiles.lookupCalled}" style="padding: 5px 0px 0px 0px">
+        <smsc:pageSubtitle value="#{msg['smsc.services.mcisme.profiles.profile_found']}" rendered="#{mcismeProfiles.profileExists}"/>
+        <smsc:pageSubtitle value="#{msg['smsc.services.mcisme.profiles.profile_not_found']}" rendered="#{not mcismeProfiles.profileExists}"/>
+      </h:panelGrid>
+
+      <h:panelGrid columns="2" columnClasses="label, value" style="padding: 5px 0px 10px 10px" rendered="#{mcismeProfiles.lookupCalled}">
+        <h:outputText value="#{mcismeProfile['inform']}"/>
+        <h:selectBooleanCheckbox value="#{mcismeProfiles.profile.inform}"/>
+
+        <h:outputText value="#{mcismeProfile['notify']}"/>
+        <h:selectBooleanCheckbox value="#{mcismeProfiles.profile.notify}"/>
+
+        <h:outputText value="#{mcismeProfile['wantNotifyMe']}" />
+        <h:selectBooleanCheckbox value="#{mcismeProfiles.profile.wantNotifyMe}"/>
+      </h:panelGrid>
+
+      <eye:buttons rendered="#{mcismeProfiles.lookupCalled}">
+        <eye:button><h:commandLink value="#{msg['smsc.services.mcisme.profiles.set']}" action="#{mcismeProfiles.saveProfile}"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </h:form>
+  </ui:define>
+
+</ui:composition>
+
+</html>

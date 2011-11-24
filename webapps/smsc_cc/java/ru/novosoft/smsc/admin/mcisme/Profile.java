@@ -8,10 +8,14 @@ import ru.novosoft.smsc.util.Address;
 public class Profile {
 
   private Address subscriber;
-  private byte eventMask;
   private boolean inform;
   private boolean notify;
   private boolean wantNotifyMe;
+  private boolean busy;
+  private boolean noReplay;
+  private boolean absent;
+  private boolean detach;
+  private boolean unconditional;
   private byte informTemplateId;
   private byte notifyTemplateId;
 
@@ -23,12 +27,44 @@ public class Profile {
     this.subscriber = subscriber;
   }
 
-  public byte getEventMask() {
-    return eventMask;
+  public boolean isBusy() {
+    return busy;
   }
 
-  public void setEventMask(byte eventMask) {
-    this.eventMask = eventMask;
+  public void setBusy(boolean busy) {
+    this.busy = busy;
+  }
+
+  public boolean isNoReplay() {
+    return noReplay;
+  }
+
+  public void setNoReplay(boolean noReplay) {
+    this.noReplay = noReplay;
+  }
+
+  public boolean isAbsent() {
+    return absent;
+  }
+
+  public void setAbsent(boolean absent) {
+    this.absent = absent;
+  }
+
+  public boolean isDetach() {
+    return detach;
+  }
+
+  public void setDetach(boolean detach) {
+    this.detach = detach;
+  }
+
+  public boolean isUnconditional() {
+    return unconditional;
+  }
+
+  public void setUnconditional(boolean unconditional) {
+    this.unconditional = unconditional;
   }
 
   public boolean isInform() {
@@ -71,7 +107,6 @@ public class Profile {
     this.notifyTemplateId = notifyTemplateId;
   }
 
-  @SuppressWarnings({"OverlyComplexMethod"})
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -79,24 +114,33 @@ public class Profile {
 
     Profile profile = (Profile) o;
 
-    if (eventMask != profile.eventMask) return false;
+    if (absent != profile.absent) return false;
+    if (busy != profile.busy) return false;
+    if (detach != profile.detach) return false;
     if (inform != profile.inform) return false;
     if (informTemplateId != profile.informTemplateId) return false;
+    if (noReplay != profile.noReplay) return false;
     if (notify != profile.notify) return false;
     if (notifyTemplateId != profile.notifyTemplateId) return false;
+    if (unconditional != profile.unconditional) return false;
     if (wantNotifyMe != profile.wantNotifyMe) return false;
     if (subscriber != null ? !subscriber.equals(profile.subscriber) : profile.subscriber != null) return false;
 
     return true;
   }
 
+  @SuppressWarnings({"ConstantConditions"})
   @Override
   public int hashCode() {
     int result = subscriber != null ? subscriber.hashCode() : 0;
-    result = 31 * result + (int) eventMask;
     result = 31 * result + (inform ? 1 : 0);
     result = 31 * result + (notify ? 1 : 0);
     result = 31 * result + (wantNotifyMe ? 1 : 0);
+    result = 31 * result + (busy ? 1 : 0);
+    result = 31 * result + (noReplay ? 1 : 0);
+    result = 31 * result + (absent ? 1 : 0);
+    result = 31 * result + (detach ? 1 : 0);
+    result = 31 * result + (unconditional ? 1 : 0);
     result = 31 * result + (int) informTemplateId;
     result = 31 * result + (int) notifyTemplateId;
     return result;

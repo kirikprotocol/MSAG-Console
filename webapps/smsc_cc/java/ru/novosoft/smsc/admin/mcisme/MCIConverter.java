@@ -9,6 +9,12 @@ import ru.novosoft.smsc.util.Address;
  */
 public class MCIConverter {
 
+  private static final int ABSENT_FLAG = 0x01;
+  private static final int BUSY_FLAG = 0x02;
+  private static final int NOREPLAY_FLAG = 0x04;
+  private static final int UNCONDITIONAL_FLAG = 0x08;
+  private static final int DETACH_FLAG = 0x10;
+
   private MCIConverter() {
   }
 
@@ -16,7 +22,12 @@ public class MCIConverter {
     Profile p = new Profile();
     p.setSubscriber(subscriber);
     if(r.hasEventMask()) {
-      p.setEventMask(r.getEventMask());
+      int mask = r.getEventMask();
+      p.setAbsent((mask& ABSENT_FLAG) == ABSENT_FLAG);
+      p.setBusy((mask& BUSY_FLAG) == BUSY_FLAG);
+      p.setNoReplay((mask& NOREPLAY_FLAG) == NOREPLAY_FLAG);
+      p.setUnconditional((mask& UNCONDITIONAL_FLAG) == UNCONDITIONAL_FLAG);
+      p.setDetach((mask& DETACH_FLAG) == DETACH_FLAG);
     }
     if(r.hasInform()) {
       p.setInform(r.getInform());
@@ -38,7 +49,13 @@ public class MCIConverter {
 
   public static SetProfile convert(Profile profile) {
     SetProfile s = new SetProfile();
-    s.setEventMask(profile.getEventMask());
+    int eventMask = 0;
+    if (profile.isAbsent()) eventMask += ABSENT_FLAG;
+    if (profile.isBusy()) eventMask += BUSY_FLAG;
+    if (profile.isNoReplay()) eventMask += NOREPLAY_FLAG;
+    if (profile.isUnconditional()) eventMask += UNCONDITIONAL_FLAG;
+    if (profile.isDetach()) eventMask += DETACH_FLAG;
+    s.setEventMask((byte)eventMask);
     s.setInform(profile.isInform());
     s.setInformTemplateId(profile.getInformTemplateId());
     s.setNotify(profile.isNotify());

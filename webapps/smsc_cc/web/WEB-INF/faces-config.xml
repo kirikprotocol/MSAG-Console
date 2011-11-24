@@ -103,6 +103,11 @@
       <var>route</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.mcisme.Profile</base-name>
+      <var>mcismeProfile</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -414,6 +419,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>mcismeProfiles</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.mcisme.MCISmeProfilesController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -620,6 +631,11 @@
     <navigation-case>
       <from-outcome>MCI_SME</from-outcome>
       <to-view-id>/smsc/services/mcisme/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>MCI_SME_PROFILES</from-outcome>
+      <to-view-id>/smsc/services/mcisme/profiles.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

@@ -152,6 +152,7 @@ public class ResourceBundleTest {
     assertResourceBundleCorrect("ru.novosoft.smsc.web.resources.Smsc");
     assertResourceBundleCorrect(MCISmeException.class);
     assertResourceBundleCorrect(MCISmeSettings.class);
+    assertResourceBundleCorrect(ru.novosoft.smsc.admin.mcisme.Profile.class);
   }
   
   private static void assertContainsAllKeys(String bundleName, ResourceBundle props1, ResourceBundle props2) {

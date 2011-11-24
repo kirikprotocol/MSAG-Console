@@ -6,12 +6,15 @@ import ru.novosoft.smsc.admin.mcisme.protocol.*;
 import ru.novosoft.smsc.util.Address;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static ru.novosoft.smsc.admin.mcisme.MCIConverter.convert;
 
 /**
  * author: Aleksandr Khalitov
  */
 public class MCIConverterTest {
+
+  private static final byte ALL_FLAGS_ENABLED_VAL = (byte) ((0x01) + (0x02) + (0x04) + (0x08) + (0x10));
 
   private static GetStatsResp createGetStatsResp() {
     GetStatsResp r = new GetStatsResp();
@@ -71,7 +74,11 @@ public class MCIConverterTest {
     p.setInform(false);
     p.setSubscriber(new Address("4324141241"));
     p.setWantNotifyMe(false);
-    p.setEventMask((byte) 5);
+    p.setAbsent(true);
+    p.setBusy(true);
+    p.setNoReplay(true);
+    p.setUnconditional(true);
+    p.setDetach(true);
     p.setInformTemplateId((byte) 3);
     p.setNotifyTemplateId((byte) 4);
     return p;
@@ -82,7 +89,7 @@ public class MCIConverterTest {
     p.setNotify(true);
     p.setInform(false);
     p.setWantNotifyMe(false);
-    p.setEventMask((byte) 5);
+    p.setEventMask(ALL_FLAGS_ENABLED_VAL);
     p.setInformTemplateId((byte) 3);
     p.setNotifyTemplateId((byte) 4);
     return p;
@@ -93,7 +100,7 @@ public class MCIConverterTest {
     Profile p = createProfile();
     SetProfile setProfile = convert(p);
     assertEquals(setProfile.getSubscriber(), p.getSubscriber().getSimpleAddress());
-    assertEquals(setProfile.getEventMask(), p.getEventMask());
+    assertEquals(setProfile.getEventMask(), ALL_FLAGS_ENABLED_VAL);
     assertEquals(setProfile.getInformTemplateId(), p.getInformTemplateId());
     assertEquals(setProfile.getNotify(), p.isNotify());
     assertEquals(setProfile.getWantNotifyMe(), p.isWantNotifyMe());
@@ -106,7 +113,11 @@ public class MCIConverterTest {
     GetProfileResp p = createGetProfileResp();
     Profile profile = convert(new Address("+79139489906"), p);
     assertEquals(profile.getSubscriber().getSimpleAddress(), "+79139489906");
-    assertEquals(profile.getEventMask(), p.getEventMask());
+    assertTrue(profile.isAbsent());
+    assertTrue(profile.isBusy());
+    assertTrue(profile.isNoReplay());
+    assertTrue(profile.isUnconditional());
+    assertTrue(profile.isDetach());
     assertEquals(profile.getInformTemplateId(), p.getInformTemplateId());
     assertEquals(profile.isNotify(), p.getNotify());
     assertEquals(profile.isWantNotifyMe(), p.getWantNotifyMe());
