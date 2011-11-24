@@ -2,14 +2,14 @@ package ru.novosoft.smsc.admin.util;
 
 import ru.novosoft.smsc.admin.AdminException;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 /**
  * @author Artem Snopkov
  */
+@SuppressWarnings({"ClassWithTooManyMethods"})
 public class ValidationHelper {
 
   private final String paramNameBundle;
@@ -95,14 +95,14 @@ public class ValidationHelper {
   }
 
   public void checkNoNulls(String argName, Map value) throws AdminException {
-    for (Iterator iter = value.entrySet().iterator(); iter.hasNext();) {
-      Map.Entry e = (Map.Entry)iter.next();
+    for (Object o : value.entrySet()) {
+      Entry e = (Entry) o;
       if (e.getKey() == null || e.getValue() == null)
         throw new ValidationException(paramNameBundle, argName);
     }
   }
 
-  public void checkNoNulls(String argName, Collection value) throws AdminException {
+  public void checkNoNulls(String argName, Iterable value) throws AdminException {
     for (Object o : value)
       if (o == null)
         throw new ValidationException(paramNameBundle, argName);
@@ -113,12 +113,12 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
-  public void checkMaches(String argName, String value, Pattern pattern) throws AdminException {
+  public void checkMaches(String argName, CharSequence value, Pattern pattern) throws AdminException {
     if (!pattern.matcher(value).matches())
       throw new ValidationException(paramNameBundle, argName);
   }
 
-  public void checkNotIntersect(String argName, Collection value, Collection withValue) throws AdminException {
+  public void checkNotIntersect(String argName, Iterable value, Iterable withValue) throws AdminException {
     for (Object o : value) {
       for (Object b : withValue)
         if (o.equals(b))
@@ -134,6 +134,17 @@ public class ValidationHelper {
   public void checkNotNull(String argName, Object value) throws AdminException {
     if (value == null)
       throw new ValidationException(paramNameBundle, argName);
+  }
+
+  public void checkIn(String argName, Object value, Object[] values) throws AdminException {
+    if(value != null) {
+      for(Object o : values) {
+        if(value.equals(o)) {
+          return;
+        }
+      }
+    }
+    throw new ValidationException(paramNameBundle, argName);
   }
 
 }

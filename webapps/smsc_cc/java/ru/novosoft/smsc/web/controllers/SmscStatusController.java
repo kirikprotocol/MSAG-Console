@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.admin.mcisme.MCISmeManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.sme.SmeServiceStatus;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
@@ -14,11 +15,9 @@ import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.component.html.HtmlSelectOneMenu;
-import javax.faces.event.ValueChangeEvent;
-import javax.faces.model.SelectItem;
 import java.io.Serializable;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @author Artem Snopkov
@@ -31,6 +30,7 @@ public class SmscStatusController extends SmscController {
 
   private final SmscManager smscManager;
   private final ClusterControllerManager ccManager;
+  private final MCISmeManager mciSmeManager;
   private final ArchiveDaemonManager archiveDaemonManager;
   private final SmeManager smeManager;
   private final Map<String, SmscConfiguration> configs;
@@ -44,6 +44,7 @@ public class SmscStatusController extends SmscController {
     archiveDaemonManager = ctx.getArchiveDaemonManager();
     smeManager = ctx.getSmeManager();
     configs = new HashMap<String, SmscConfiguration>();
+    mciSmeManager = ctx.getMciSmeManager();
 
     configs.put("acl", ctx.getAclManager());
     configs.put("alias", ctx.getAliasManager());
@@ -67,7 +68,7 @@ public class SmscStatusController extends SmscController {
     Map<String, AbstractComponent> newComponents = new HashMap<String, AbstractComponent>();
     List<ConfigState> configStates = new ArrayList<ConfigState>();
 
-    for (Map.Entry<String, SmscConfiguration> e : configs.entrySet()) {
+    for (Entry<String, SmscConfiguration> e : configs.entrySet()) {
       SmscConfiguration cfg = e.getValue();
       configStates.add(new ConfigState(e.getKey(), cfg));
     }
@@ -85,6 +86,11 @@ public class SmscStatusController extends SmscController {
     if (archiveDaemonManager != null) {
       ArchiveDaemonComponent adComponent = new ArchiveDaemonComponent();
       newComponents.put(adComponent.getName(), adComponent);
+    }
+
+    if(mciSmeManager != null) {
+      MCISmeComponent component = new MCISmeComponent();
+      newComponents.put(component.getName(), component);
     }
 
     Collection<String> smeIds = smeManager.smes().keySet();
@@ -175,7 +181,7 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public abstract class AbstractComponent implements Serializable {
+  public abstract static class AbstractComponent implements Serializable {
     protected final String name;
     protected final String onlineHost;
     protected final List<String> hosts;
@@ -217,12 +223,12 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public class SmscComponent extends AbstractComponent implements Serializable {
+  public class SmscComponent extends AbstractComponent {
 
     private final int instanceNumber;
     private List<String> errors;
 
-    public SmscComponent(int instanceNumber, String onlineHost, List<String> hosts, List<ConfigState> cfgStates) {
+    public SmscComponent(int instanceNumber, String onlineHost, List<String> hosts, Iterable<ConfigState> cfgStates) {
       super(COMPONENT_TYPE_SMSC, "SMSC " + (instanceNumber + 1), onlineHost, hosts);
       this.instanceNumber = instanceNumber;
 
@@ -261,7 +267,7 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public class ClusterControllerComponent extends AbstractComponent implements Serializable {
+  public class ClusterControllerComponent extends AbstractComponent {
     public ClusterControllerComponent() throws AdminException {
       super(COMPONENT_TYPE_OTHER, "ClusterController", ccManager.getControllerOnlineHost(), ccManager.getControllerHosts());
     }
@@ -276,10 +282,26 @@ public class SmscStatusController extends SmscController {
     }
   }
 
+
+  public class MCISmeComponent extends AbstractComponent{
+    public MCISmeComponent() throws AdminException {
+      super(COMPONENT_TYPE_OTHER, "MCISme", mciSmeManager.getSmeOnlineHost(), mciSmeManager.getSmeHosts());
+    }
+    public void start() throws AdminException {
+      mciSmeManager.startSme();
+    }
+    public void stop() throws AdminException {
+      mciSmeManager.stopSme();
+    }
+    public void switchTo(String toHost) throws AdminException {
+      mciSmeManager.switchSme(toHost);
+    }
+  }
+
   /**
    *
    */
-  public class ArchiveDaemonComponent extends AbstractComponent implements Serializable {
+  public class ArchiveDaemonComponent extends AbstractComponent {
     public ArchiveDaemonComponent() throws AdminException {
       super(COMPONENT_TYPE_OTHER, "ArchiveDaemon", archiveDaemonManager.getDaemonOnlineHost(), archiveDaemonManager.getDaemonHosts());
     }
@@ -297,8 +319,8 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public class SmeComponent extends AbstractComponent implements Serializable {
-    public SmeComponent(String smeId, SmeServiceStatus status) throws AdminException {
+  public class SmeComponent extends AbstractComponent{
+    public SmeComponent(String smeId, SmeServiceStatus status) {
       super(COMPONENT_TYPE_SME, smeId, status.getOnlineHost(), status.getHosts());
     }
     public void start() throws AdminException {
@@ -315,7 +337,7 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  private class ConfigState {
+  private static class ConfigState {
     private final String configName;
     private final Map<Integer, SmscConfigurationStatus> statuses;
 
@@ -332,7 +354,7 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public class ListTableModel implements DataTableModel {
+  public static class ListTableModel implements DataTableModel {
 
     private final List values;
 

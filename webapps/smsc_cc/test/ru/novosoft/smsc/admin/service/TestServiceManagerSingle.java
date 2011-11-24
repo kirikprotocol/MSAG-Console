@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +21,8 @@ public class TestServiceManagerSingle extends ServiceManager {
     services.put("ArchiveDaemon", getInfo("ArchiveDaemon", true));
     services.put("ClusterController", getInfo("ClusterController", true));
     services.put("emailsme", getInfo("emailsme", true));
+    services.put("MCISme", getInfo("MCISme", true));
+    services.put("mciprof", getInfo("mciprof", true));
     for (int i=0; i<smscInstancesCount; i++)
       services.put("SMSC"+(i+1), getInfo("SMSC" + (i+1), true));
   }

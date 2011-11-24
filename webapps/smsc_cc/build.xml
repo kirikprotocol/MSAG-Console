@@ -32,6 +32,13 @@
     </protogen>
   </target>
 
+  <target name="gen_mci_protocol">
+    <protogen language="java" msgPackage="ru.novosoft.smsc.admin.mcisme.protocol" defFile="java/ru/novosoft/smsc/admin/mcisme/MCAClientProtocol.def" outDir="java"
+              tempDir="java/ru/novosoft/smsc/admin/mcisme/tmp">
+      <cgp name="search.path" value="java/ru/novosoft/smsc/admin/mcisme/"/>
+    </protogen>
+  </target>
+
   <target name="mode">
     <echo file="${sources.prefix}/web/Mode.java">
 package ru.novosoft.smsc.web;${line.separator}${line.separator}
@@ -55,7 +62,7 @@ public class AdminMode {${line.separator}
     </copy>
   </target>
    
-  <target name="prebuild" depends="gen_cc_protocol, mode, copy_dtds"/>
+  <target name="prebuild" depends="gen_cc_protocol, gen_mci_protocol, mode, copy_dtds"/>
 
   <target name="compile.sources">
     <delete dir="${smsc.source.classes.preweaved}" failonerror="false"/>

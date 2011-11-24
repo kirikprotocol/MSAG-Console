@@ -408,6 +408,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>mcisme</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.mcisme.MCISmeController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -607,6 +613,13 @@
     <navigation-case>
       <from-outcome>SMS_EXPORT</from-outcome>
       <to-view-id>/smsc/stat/sms_export.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+
+    <navigation-case>
+      <from-outcome>MCI_SME</from-outcome>
+      <to-view-id>/smsc/services/mcisme/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

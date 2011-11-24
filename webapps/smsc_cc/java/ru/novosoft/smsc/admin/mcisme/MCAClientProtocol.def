@@ -1,0 +1,18 @@
+include MCAMessages.def
+
+protocol MCAClientProtocol
+   FlushStats outmsg
+   FlushStatsResp inmsg
+   GetStats outmsg
+   GetStatsResp inmsg
+   GetRunStats outmsg
+   GetRunStatsResp inmsg
+   GetSched outmsg
+   GetSchedResp inmsg
+   GetSchedList outmsg
+   GetSchedListResp inmsg
+   GetProfile outmsg
+   GetProfileResp inmsg
+   SetProfile outmsg
+   SetProfileResp inmsg
+end

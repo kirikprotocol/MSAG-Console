@@ -20,6 +20,8 @@ import ru.novosoft.smsc.admin.fraud.TestFraudManager;
 import ru.novosoft.smsc.admin.logging.TestLoggerManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImplTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
+import ru.novosoft.smsc.admin.mcisme.MCISmeManagerImpl;
+import ru.novosoft.smsc.admin.mcisme.TestMCISmeManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImplTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
@@ -78,6 +80,11 @@ public class TestAdminContext extends AdminContext {
     File adDir = new File(servicesDir, "ArchiveDaemon/conf");
     fs.mkdirs(adDir);
     TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("daemon.xml"), new File(adDir, "daemon.xml"), false, fs);
+
+
+    File mciSmeDir = new File(servicesDir, "MCISme/conf");
+    fs.mkdirs(mciSmeDir);
+    TestUtils.exportResource(TestMCISmeManager.class.getResourceAsStream("config.xml"), new File(mciSmeDir, "config.xml"), false, fs);
 
     File smscDir = new File(servicesDir, "SMSC1/conf");
     fs.mkdirs(smscDir);
@@ -219,6 +226,12 @@ public class TestAdminContext extends AdminContext {
       archiveDaemon = new TestArchiveDaemon(archiveDaemonManager, routes, smes);
     }
 
+    if(MCISmeManagerImpl.isSmeDeployed(serviceManager)) {
+//      mciSmeManager = new MCISmeManagerImpl(serviceManager, fileSystem);
+//      mciSme = new MCISme("",0);//todo
+//      mmlConsole = new MMLConsole(new Properties(), mciSme); //todo
+    }
+
     timezoneManager = new TestTimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     regionManager = new TestRegionManager(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
@@ -238,7 +251,7 @@ public class TestAdminContext extends AdminContext {
     final File[] statsDir = new File[1];
     statsDir[0] = new File(servicesDir, "SMSC1"+File.separatorChar+"store"+File.separatorChar+"stat");
     smscStatProvider = new TestSmscStatProvider(new SmscStatContext() {
-      public File[] getStatDirs() throws AdminException {
+      public File[] getStatDirs() {
         return statsDir;
       }
 

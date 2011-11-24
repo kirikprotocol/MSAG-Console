@@ -1,0 +1,85 @@
+package $var msg.package$;
+
+import mobi.eyeline.protogen.framework.*;
+import java.util.HashMap;
+
+$macro type$$pack$
+$select %1$
+$case string$String
+$case bool$boolean
+$case byte$byte
+$case int16$short
+$case int32$int
+$case int64$long
+$-select$
+$-pack$$-macro$
+
+$macro objtype$$pack$
+$select %1$
+$case string$String
+$case bool$Boolean
+$case byte$Byte
+$case int16$Short
+$case int32$Integer
+$case int64$Long
+$-select$
+$-pack$$-macro$
+
+$macro value$$pack$
+$select enum.type$
+$case string$"$var item.value$"
+$default$$var item.value$
+$-select$
+$-pack$$-macro$
+
+public enum $var enum.name$ {
+  $foreach item$
+  $var item.name$(($expand type enum.type$)$expand value$)$if !item.last$,$else$;$-if$
+  $-foreach$
+
+  $expand type enum.type$ value;
+  public $expand type enum.type$ getValue() {
+    return value;
+  }
+
+  $var enum.name$( $expand type enum.type$ value ) {
+    this.value = value;
+  }
+$select enum.type$
+$case byte$
+  static $var enum.name$[] map;
+  static {
+    int maxVal = 0;
+    for( $var enum.name$ i : $var enum.name$.values() ) {
+      if( maxVal < ((int)i.value&0xFF) ) maxVal = ((int)i.value)&0xFF;
+    }
+    map = new $var enum.name$[maxVal+1];
+    for( $var enum.name$ i : $var enum.name$.values() ) {
+      map[((int)i.value)&0xFF] = i;
+    }
+  }
+
+  public static $var enum.name$ valueOf( $expand type enum.type$ v ) throws InvalidEnumValueException {
+    if( (((int)v)&0xFF) >= map.length ) throw new InvalidEnumValueException("Value "+v+" out of range "+map.length+" for enum $var enum.name$");
+    $var enum.name$ e = map[((int)v)&0xFF];
+    if( e == null ) throw new InvalidEnumValueException("Value "+v+" invalid for enum $var enum.name$");
+    return e;
+  }
+$case string$
+$default$
+
+  static HashMap<$expand objtype enum.type$, $var enum.name$> map;
+  static {
+    map = new HashMap<$expand objtype enum.type$, $var enum.name$>();
+    for( $var enum.name$ i : $var enum.name$.values() ) {
+      map.put( i.value, i );
+    }
+  }
+
+  public static $var enum.name$ valueOf( $expand type enum.type$ v ) throws InvalidEnumValueException {
+    $var enum.name$ e = map.get( v );
+    if( e == null ) throw new InvalidEnumValueException("Value "+v+" invalid for enum $var enum.name$");
+    return e;
+  }
+$-select$
+}

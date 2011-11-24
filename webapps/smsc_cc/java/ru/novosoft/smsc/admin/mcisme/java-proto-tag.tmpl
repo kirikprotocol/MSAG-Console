@@ -1,0 +1,42 @@
+package $var proto.package$;
+
+import java.util.HashMap;
+import mobi.eyeline.protogen.framework.*;
+import $var msg.package$.*;
+
+public enum $var protocol.name$Tag {
+  $foreach message$
+  $var message.name$($var message.tag$, $var message.name$.class)$if !message.last$,$else$;$-if$
+  $-foreach$
+  int value;
+  Class pduClass;
+
+  $var protocol.name$Tag(int value, Class c) {
+    this.value = value;
+    this.pduClass = c;
+  }
+
+  public int getValue() {
+    return value;
+  }
+
+  static HashMap<Integer, $var protocol.name$Tag> map;
+  static {
+    map = new HashMap<Integer, $var protocol.name$Tag>();
+    for( $var protocol.name$Tag t : $var protocol.name$Tag.values() ) {
+      map.put( t.getValue(), t );
+    }
+  }
+
+  public static $var protocol.name$Tag valueOf( int v ) {
+    return map.get(v);
+  }
+
+  public PDU createPdu() {
+    try {
+      return (PDU)pduClass.newInstance();
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Could not create PDU class for "+name(), e);
+    }
+  }
+}

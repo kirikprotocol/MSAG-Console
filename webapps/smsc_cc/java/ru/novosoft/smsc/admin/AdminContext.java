@@ -22,6 +22,10 @@ import ru.novosoft.smsc.admin.logging.LoggerManager;
 import ru.novosoft.smsc.admin.logging.LoggerManagerImpl;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImpl;
+import ru.novosoft.smsc.admin.mcisme.MCISme;
+import ru.novosoft.smsc.admin.mcisme.MCISmeManager;
+import ru.novosoft.smsc.admin.mcisme.MCISmeManagerImpl;
+import ru.novosoft.smsc.admin.mcisme.MMLConsole;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImpl;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreManager;
@@ -78,6 +82,8 @@ public class AdminContext {
   protected SmscManager smscManager;
   protected ArchiveDaemonManager archiveDaemonManager;
   protected ArchiveDaemon archiveDaemon;
+  protected MCISmeManager mciSmeManager;
+  protected MCISme mciSme;
   protected ClusterController clusterController;
   protected AliasManager aliasManager;
   protected RescheduleManager rescheduleManager;
@@ -108,6 +114,8 @@ public class AdminContext {
 
   protected PerfMonitorManager perfMonitorManager;
   protected TopMonitorManager topMonitorManager;
+
+  protected MMLConsole mmlConsole;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -144,6 +152,12 @@ public class AdminContext {
     if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager)) {
       archiveDaemonManager = new ArchiveDaemonManagerImpl(serviceManager, fileSystem, cfg.getArchiveExportSettings());
       archiveDaemon = new ArchiveDaemon(archiveDaemonManager);
+    }
+
+    if(MCISmeManagerImpl.isSmeDeployed(serviceManager)) {
+//      mciSmeManager = new MCISmeManagerImpl(serviceManager, fileSystem);
+//      mciSme = new MCISme("",0);//todo
+//      mmlConsole = new MMLConsole(new Properties(), mciSme); //todo
     }
 
     SmscSettings s = _smscManager.getSettings();
@@ -225,6 +239,14 @@ public class AdminContext {
 
   public ArchiveDaemonManager getArchiveDaemonManager() {
     return archiveDaemonManager;
+  }
+
+  public MCISmeManager getMciSmeManager() {
+    return mciSmeManager;
+  }
+
+  public MCISme getMciSme() {
+    return mciSme;
   }
 
   public AliasManager getAliasManager() {
@@ -345,6 +367,9 @@ public class AdminContext {
       }catch (Exception e){
         e.printStackTrace();
       }
+    }
+    if(mmlConsole != null) {
+      mmlConsole.shutdown();
     }
     AdminContextLocator.unregisterContext(this);
   }

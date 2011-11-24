@@ -1,0 +1,48 @@
+type bool
+type byte
+type int16
+type int32
+type int64
+type string
+
+property opt _bool
+  optional true
+  mandatory false
+end
+
+property mnd _bool
+  default
+  optional false
+  mandatory true
+end
+
+property notarray _bool
+  default
+  array false
+end
+
+property array _bool
+  array true
+end
+
+property outmsg _bool
+  default message
+  outmsg true
+  inmsg false
+end
+
+property inmsg _bool
+  outmsg false
+  inmsg true
+end
+
+property inoutmsg _bool
+  outmsg true
+  inmsg true
+end
+
+property innerMessage _bool
+  default message
+  innerMessage false
+end
+
