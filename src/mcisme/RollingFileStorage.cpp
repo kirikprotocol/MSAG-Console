@@ -516,9 +516,10 @@ RollingFileStorage::loadRecords()
 
   for(std::vector<std::string>::const_iterator iter=listOfFiles.begin(); iter != listOfFiles.end();++iter) {
     closeCurrentFile();
-    smsc_log_debug(_logger, "RollingFileStorage::loadRecords: processing of file %s", (*iter).c_str());
-    openFile(*iter);
-    loadFile(*iter);
+    const std::string filePath = _location + *iter;
+    smsc_log_debug(_logger, "RollingFileStorage::loadRecords: processing of file %s", filePath.c_str());
+    openFile(filePath);
+    loadFile(filePath);
   }
 }
 
