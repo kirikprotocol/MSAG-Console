@@ -29,7 +29,6 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
   std::string   str, rs;
     unsigned int i;
 
-//  smsc_log_debug(logger, "parsePath: %s", pos);
   if(!strncmp(pos, "http://", 7))
   {
     pos += 7;
@@ -40,7 +39,6 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
         return false;
     }
   }
-
   end = strchr(pos, '/');
   if (!end)
   {
@@ -60,23 +58,23 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
     }
 
     inURLFields.assign(pos, end);
-    if(findPlace("ADDR", rs, defInPlaces[PlacementKind::ADDR], cx, inURLFields)) {
-        cx.setAbonent(rs);
-    }
     
-    i = 0;
-    if(findPlace("ROUTE_ID", rs, defInPlaces[PlacementKind::ROUTE_ID], cx, inURLFields))
-    	i = atoi(rs.c_str());
+  i = 0;
+  if(findPlace("ROUTE_ID", rs, defInPlaces[PlacementKind::ROUTE_ID], cx, inURLFields))
+    i = atoi(rs.c_str());
     
-    if(i > 0)
-    	cx.setRouteId(i);
-    else
-    {
-    	if(findPlace("SERVICE_ID", rs, defInPlaces[PlacementKind::SERVICE_ID], cx, inURLFields))
-    		i = atoi(rs.c_str());
-    	if(i > 0) cx.setServiceId(i);
-    }
-
+  if(i > 0)    
+    cx.setRouteId(i);
+  else
+  {      
+      if(findPlace("SERVICE_ID", rs, defInPlaces[PlacementKind::SERVICE_ID], cx, inURLFields))
+          i = atoi(rs.c_str());
+      if(i > 0) cx.setServiceId(i);
+  }
+  
+  if(findPlace("ADDR", rs, defInPlaces[PlacementKind::ADDR], cx, inURLFields))
+      cx.setAbonent(rs);
+ 
   if(cx.getRouteId() <= 0 && cx.getServiceId() <= 0)
   {
       pos = end + 1;
@@ -85,7 +83,7 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
       {
         smsc_log_debug(logger, "No slash in path 1");
         return false;
-      }
+        }
 
       mid = strchr(pos, ':');
       if (mid && (mid < end)) {
@@ -93,10 +91,8 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
         cx.setSite(str);
         mid++;
         str.assign(mid, end - mid);
-//        smsc_log_debug(logger, "HttpProcessorImpl::parsePath cx=%p port=%s", &cx, str.c_str());
         cx.setSitePort(atoi(str.c_str()));
-      }
-      else {
+      } else {
         str.assign(pos, end - pos);
         cx.setSite(str);
       }
@@ -131,7 +127,7 @@ void HttpProcessorImpl::clearPlaces(const PlacementArray& places, HttpRequest& r
               break;
           case PlacementType::HEADER:
               smsc_log_debug(logger, "del from header: %s", places[i].name.c_str());
-              request.removeHeaderField(places[i].name);
+              request.delHeaderField(places[i].name);
               break;
       }
   }
@@ -275,7 +271,6 @@ bool HttpProcessorImpl::makeLongCall( HttpCommand& cmd, ActiveSession& se )
 
 int HttpProcessorImpl::processRequest(HttpRequest& request)
 {
-//    smsc_log_debug(logger, "processRequest %p cx %p session %p", &request, request.context, request.session_);
     HttpRoute r;
 
     re::RuleStatus rs;
@@ -286,7 +281,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         if ( !request.getSession() )
         {
             if (logger->isDebugEnabled()) {
-//                smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING:\n%s", request.serialize().c_str());
+                smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING:\n%s", request.serialize().c_str());
                 std::string params;
                 if (request.getPostParams(params)) {
                   smsc_log_debug(logger, "POST params: '%s'", params.c_str());
@@ -317,13 +312,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                     request.setSitePort(r.defSite.port);
                 }
                 else
-                {
-                	uint32_t port = request.getSitePort();
-                   r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), port);
-// (xom 25.07.11) add port change (port,443,80 selection) as mix-protocol feature
-//                   smsc_log_debug(logger, "processRequest setSitePort:%d", port);
-                   request.setSitePort(port);
-                }
+                    r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
             } catch (const RouteNotFoundException& e) {
                 smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
                 registerEvent( stat::events::http::REQUEST_FAILED, request);
@@ -355,78 +344,71 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 return scag::re::STATUS_OK;
             }
 
+            smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str());
+
+            smsc_log_debug( logger, "httproute found route_id=%d, service_id=%d", r.id, r.service_id);
             request.setServiceId(r.service_id);
             request.setRouteId(r.id);
             request.setProviderId(r.provider_id);
 
             const std::string& s = request.getAbonent();
             request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
+
         }
-        else {
+        else
+        {
             if(request.getRouteId() > 0)
                 r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
             else if(request.getServiceId() > 0)
                 r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
-            else {
-            	uint32_t port = request.getSitePort();
-                r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), port);
-            }
+            else
+                r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
         }
             
 
         const SessionKey sessionKey( request.getAddress() );
         SCAGCommand* reqptr(&request);
         se = SessionManager::Instance().getSession( sessionKey, reqptr );
-        scag2::sessions::Session* sess = se.get();
-//        smsc_log_debug(logger, "processRequest %p cx %p se %p sess %p %s", &request, request.context, &se, sess, sess?"":"(is locked)");
-        if (!sess)
-//        if (!se.get())
+
+        if (se.get())
         {
-//            smsc_log_debug( logger, "session is locked for addr=%s", request.getAddress().c_str());
+            CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(request, sessionKey.address(), static_cast<uint8_t>(request.getOperationId())));
+            re::RuleEngine::Instance().process(request, *se.get(), rs, cp);
+            HttpCommandRelease rel(request);
+            
+            if (rs.status == re::STATUS_LONG_CALL)
+            {
+                makeLongCall(request, se);
+                rel.leaveLocked();
+                return rs.status;
+            }
+
+            if (r.statistics) {
+              smsc_log_debug(logger, "process request: register traffic info event, url=%s", request.getUrl().c_str());
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), request.getUrl().c_str());
+            }
+
+            if (rs.status == re::STATUS_OK)
+            {
+                registerEvent(stat::events::http::REQUEST_OK, request);
+                setFields(request, r);
+                if (logger->isDebugEnabled()) {
+                  smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING:\n%s", request.serialize().c_str());
+                  std::string params;
+                  if (request.getPostParams(params)) {
+                    smsc_log_debug(logger, "POST params: '%s'", params.c_str());
+                  }
+                }
+                return rs.status;
+            }
+
+            if (rs.status == re::STATUS_FAILED) {
+                request.trc.result = rs.result;
+            }
+        } else {
+            smsc_log_debug( logger, "session is locked for addr=%s", request.getAddress().c_str());
             return re::STATUS_PROCESS_LATER;
         }
-
-		CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(request, sessionKey.address(), static_cast<uint8_t>(request.getOperationId())));
-		re::RuleEngine::Instance().process(request, *se.get(), rs, cp);
-		HttpCommandRelease rel(request);
-
-		if (rs.status == re::STATUS_LONG_CALL)
-		{
-			makeLongCall(request, se);
-			rel.leaveLocked();
-			return rs.status;
-		}
-
-		if (r.statistics) {
-		  smsc_log_debug(logger, "processRequest: register traffic info event, url=%s", request.getUrl().c_str());
-		  scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), request.getUrl().c_str());
-		}
-
-		if (rs.status == re::STATUS_OK)
-		{
-			registerEvent(stat::events::http::REQUEST_OK, request);
-			setFields(request, r);
-			if (logger->isDebugEnabled()) {
-//                  smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING:\n%s", request.serialize().c_str());
-			  std::string params;
-			  if (request.getPostParams(params)) {
-				smsc_log_debug(logger, "POST params: '%s'", params.c_str());
-			  }
-			}
-//			smsc_log_debug(logger, "HttpProcessorImpl::processRequest:%p session[%p]->waitAtLeast(%d)", &request, sess, Session::defaultLiveTime());
-		    try{
-		    	sess->waitAtLeast(Session::defaultLiveTime()); // setCurrentOperation(request.getOperationId(), true);
-		    }
-		    catch (Exception& e) {
-		        smsc_log_error(logger, "HttpProcessorImpl::processRequest:%p cannot session[%p]->waitAtLeast(%d) - %s", &request, sess, Session::defaultLiveTime(), e.what());
-		    }
-
-			return rs.status;
-		}
-
-		if (rs.status == re::STATUS_FAILED) {
-			request.trc.result = rs.result;
-		}
     }
     catch(RouteNotFoundException& e)
     {
@@ -450,18 +432,18 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 
 int HttpProcessorImpl::processResponse(HttpResponse& response)
 {
-    smsc_log_debug(logger, "processResponse %p cx %p session %p", &response, response.context, response.session_);
+    smsc_log_debug( logger, "Got http_response command abonent=%s, route_id=%d, service_id=%d", response.getAbonent().c_str(), response.getRouteId(), response.getServiceId());
     
     if(!response.getAbonent().length())
     {
         smsc_log_debug(logger, "Transit response served");
         if (response.getStatistics()) {
-          smsc_log_debug(logger, "processResponse: register traffic info event for transit route not implemented");
+          smsc_log_debug(logger, "process response: register traffic info event for transit route not implemented");
         }
         return re::STATUS_OK;
     }
 
-//    smsc_log_debug(logger, "SERIALIZED RESPONSE BEFORE:\n%s", response.serialize().c_str());
+    smsc_log_debug(logger, "SERIALIZED RESPONSE BEFORE: %s", response.serialize().c_str());
     
     ActiveSession se;
     try{
@@ -497,7 +479,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
             }
 
             if (response.getStatistics()) {
-              smsc_log_debug(logger, "processResponse: register traffic info event, url=%s", response.getUrl().c_str() );
+              smsc_log_debug(logger, "process response: register traffic info event, url=%s", response.getUrl().c_str() );
               scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), response.getUrl().c_str() );
             }
 
@@ -506,19 +488,20 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
                 registerEvent(stat::events::http::RESPONSE_OK, response);
                 // response.setSession(SessionPtr(0));
                 // SessionManager::Instance().releaseSession(se);
-//                smsc_log_debug(logger, "SERIALIZED RESPONSE AFTER:\n%s", response.serialize().c_str());
+                smsc_log_debug(logger, "SERIALIZED RESPONSE AFTER: %s", response.serialize().c_str());
                 return rs.status;
             }
-        }
-        else {
+
+
+        } else {
 
             if ( ! rescmd ) {
                 // session is locked by another command
-//                smsc_log_debug( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
+                smsc_log_debug( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
                 return re::STATUS_PROCESS_LATER;
             } else {
                 // session is not found
-                smsc_log_error( logger, "http_response session NOT FOUND abonent=%s", response.getAddress().c_str());
+                smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
                 // return re::STATUS_FAILED;
                 rs.status = re::STATUS_FAILED;
             }
@@ -552,7 +535,8 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
 
 int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 {
-    smsc_log_debug(logger, "statusResponse %p cx %p session %p delivered=%d", &response, response.context, response.session_, delivered?1:0);
+    smsc_log_debug(logger, "Got http_status_response command abonent=%s, route_id=%d, service_id=%d, delivered=%d",
+             response.getAbonent().c_str(), response.getRouteId(), response.getServiceId(), delivered);
              
     if(!response.getAbonent().length())
     {
@@ -582,7 +566,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         se = SessionManager::Instance().getSession(sk, rescmd, false);
 
         re::RuleStatus rs;
-        if ( se.get() )
+        if (se.get())
         {
             CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
             HttpCommandRelease rel(response);
@@ -613,11 +597,11 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         else {
           if ( ! rescmd ) {
               // session is locked by another command
-              smsc_log_debug( logger, "statusResponse session is locked?  bad HttpResponse addr %p", rescmd);
+              smsc_log_debug( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
               return re::STATUS_PROCESS_LATER;
           } else {
               // session is not found
-              smsc_log_error( logger, "statusResponse session not found abonent=%s", response.getAddress().c_str());
+              smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
               // return re::STATUS_FAILED;
               rs.status = re::STATUS_FAILED;
           }

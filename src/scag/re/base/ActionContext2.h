@@ -114,15 +114,18 @@ public:
 
     void setRule( Rule& r ) {
         CHECKMAGTC;
+        rule_.reset( &r );
+        /*
         r.ref();
         if ( rule_ ) rule_->unref();
         rule_ = &r;
+         */
     }
 
 
-    Rule* getRule() const {
+    Rule* getRule() {
         CHECKMAGTC;
-        return rule_;
+        return rule_.get();
     }
 
 
@@ -218,7 +221,7 @@ private:
     int                     destroyService_;
     mutable int             contextScopeId_; // or 0
 
-    Rule*                   rule_;        // a rule from long call context
+    RulePtr                 rule_;        // a rule from long call context
     PrivatePropertyScope*   privateScope_;
 };
 

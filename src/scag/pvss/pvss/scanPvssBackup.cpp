@@ -8,7 +8,11 @@ using namespace eyeline::informer;
 class DummyParser : public ProfileLogStreamRecordParser
 {
 public:
-    virtual void parseRecord( const char* record, size_t reclen ) {}
+    virtual void parseRecord( const char* record, size_t reclen ) {
+        ::tm ltm;
+        std::string catname;
+        RollingFileStream::scanPrefix( record, reclen, ltm, catname );
+    }
 };
 
 
@@ -26,6 +30,14 @@ int main( int argc, char** argv )
     try {
         DummyParser dp;
         rfsr.read( argv[1], 0, &dp );
+        if ( rfsr.getLines() != rfsr.getLinesRead() ) {
+            throw FileReadException("",0,size_t(-1),"not matched: linesInTail=%u lines=%u",
+                                    rfsr.getLinesRead(), rfsr.getLines() );
+        }
+        if ( rfsr.getCrc32() != rfsr.getCrc32Read() ) {
+            throw FileReadException("",0,size_t(-1),"not matched: crcInTail=%08x crc32=%08x",
+                                    rfsr.getCrc32Read(), rfsr.getCrc32() );
+        }
     } catch ( std::exception& e ) {
         fprintf(stderr,"ERROR: file %s read exc: %s\n",argv[1],e.what());
         return 1;

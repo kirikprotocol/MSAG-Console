@@ -1,22 +1,21 @@
 scag/tests/testsnmp	testsnmp	\
    -lscag-snmp \
    -lscag-snmp-counters \
-   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+   @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
    $(__LIBRARIES) \
-   $(if $(filter YES,$(SNMP)),-lscag-snmp) \
    $(SNMP_LIBS_CORE) \
-  $(SSL_LIB) \
-   -lpthread -lrt -ldl $(LIBMALLOC)
+   $(SSL_LIB) $(LIBICONV) \
+   -lpthread $(LIBRT) -ldl $(LIBMALLOC)
 
 scag/tests/testsnmpsmsc	testsmsc	\
-   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+   @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
    $(__LIBRARIES) \
    $(SNMP_LIBS_CORE) \
-  $(SSL_LIB) \
-   -lpthread -lrt -ldl $(LIBMALLOC)
+  $(SSL_LIB) $(LIBICONV) \
+   -lpthread $(LIBRT) -ldl $(LIBMALLOC)
 
 scag/tests/testMultiSubagents testMultiSubagents \
    $(__LIBRARIES) \
    $(SNMP_LIBS_CORE) \
-   $(SSL_LIB) \
-   -lpthread -lrt -ldl $(LIBMALLOC)
+   $(SSL_LIB) $(LIBICONV) \
+   -lpthread $(LIBRT) -ldl $(LIBMALLOC)

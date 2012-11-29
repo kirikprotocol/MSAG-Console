@@ -1,6 +1,10 @@
 #ifndef _SMSC_UTIL_TIMESOURCE_H
 #define _SMSC_UTIL_TIMESOURCE_H
 
+#ifdef __MACH__
+#include <errno.h>
+#endif
+
 #include <ctime>
 #include <sys/time.h>
 #include "util/int.h"
@@ -29,10 +33,16 @@ struct TimeSourceGettimeofday {
     typedef int64_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000U;
     typedef int64_t usec_type;
+    typedef int64_t msec_type;
     inline static time_t getSeconds() throw() {
         struct timeval tv;
         gettimeofday(&tv,0);
         return tv.tv_sec;
+    }
+    inline static msec_type getMSec() throw() {
+        struct timeval tv;
+        gettimeofday(&tv,0);
+        return msec_type(tv.tv_sec)*1000U + tv.tv_usec/1000;
     }
     inline static usec_type getUSec() throw() {
         struct timeval tv;
@@ -79,11 +89,13 @@ struct TimeSourceGethrtime {
 struct TimeSourceSetup {
 #if defined(__sparc) || defined(__sparc__) || defined(__sun)
     typedef TimeSourceGettimeofday AbsSec;
+    typedef TimeSourceGettimeofday AbsMSec;
     typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceGethrtime    HRTime;
 #else
 #if defined(__MACH__)
     typedef TimeSourceTime         AbsSec;
+    typedef TimeSourceGettimeofday AbsMSec;
     typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceGettimeofday HRTime;
 #else
@@ -91,6 +103,7 @@ struct TimeSourceSetup {
     defined(__ia64) || defined(__ia64__) || \
     defined(__x86_64) || defined (__x86_64__)
     typedef TimeSourceTime         AbsSec;
+    typedef TimeSourceGettimeofday AbsMSec;
     typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceClockGettime HRTime;
 #else

@@ -67,7 +67,8 @@ int ThreadPool::PooledThread::Execute()
 const char * ThreadPool::_dflt_log_category = "tp";
 
 ThreadPool::ThreadPool(Logger * use_log/* = NULL*/)
-  : _tpLogger(use_log), defaultStackSize(4096*1024), maxThreads(256)
+  : _tpLogger(use_log), defaultStackSize(4096*1024),
+    maxThreads(256), maxPendingTasks(1024)
 {
   if (!_tpLogger)
     _tpLogger = Logger::getInstance(ThreadPool::_dflt_log_category);
@@ -116,6 +117,12 @@ void ThreadPool::setMaxThreads(unsigned int max_count)
 {
   MutexGuard mg(lock);
   maxThreads = max_count;
+}
+
+void ThreadPool::setMaxPendingTasks(unsigned int max_count)
+{
+  MutexGuard mg(lock);
+  maxPendingTasks=max_count;
 }
 
 void ThreadPool::stopNotify()
@@ -232,7 +239,7 @@ int ThreadPool::preCreateThreads(int req_count)
   smsc_log_debug(_tpLogger, "ThreadPool(%p): attempting "
                  "to create %d threads (idle: %d, used: %d)",
                  this, n, freeThreads.Count(), usedThreads.Count());
-    
+
   usedThreads.SetSize(req_count); //enlarge array of active threads
   for(int i = 0; i < n ; ++i) {
     PooledThread * nThr = allcThread();
@@ -257,7 +264,14 @@ bool ThreadPool::startTask(ThreadedTask* task)
     if (maxThreads && ((unsigned)usedThreads.Count() >= maxThreads)) {
       smsc_log_debug(_tpLogger, "ThreadPool(%p): assigning task(%s) to pending queue",
                      this, task->taskName());
-      pendingTasks.Push(task);
+      if(unsigned(pendingTasks.Count())<maxPendingTasks)
+      {
+        pendingTasks.Push(task);
+      }else
+      {
+        smsc_log_warn(_tpLogger,"ThreadPool: max number of pending tasks reached (%d)",maxPendingTasks);
+        return false;
+      }
     } else {
       if (!(t = allcThread(task)))
         return false;

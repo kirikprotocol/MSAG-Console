@@ -2,7 +2,6 @@
 #include <iconv.h>
 #include "util/Exception.hpp"
 #include "HttpCommand2.h"
-#include "HttpContext.h"
 #include "HttpParser.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag/exc/SCAGExceptions.h"
@@ -24,8 +23,7 @@ using smsc::util::Exception;
 using exceptions::SCAGException;
 using util::encodings::Convertor;
 
-/*
-const char *HttpRequest::httpMethodNames[HTTP_METHOD_LAST] = {
+const char *HttpRequest::httpMethodNames[9] = {
     NULL,
     "GET",
     "HEAD",
@@ -36,17 +34,6 @@ const char *HttpRequest::httpMethodNames[HTTP_METHOD_LAST] = {
     "CONNECT",
     "OPTIONS"    
 };
-*/
-const http_methods HttpRequest::method_table[METHOD_COUNT] = {
-  {"GET", 3, GET},
-  {"HEAD", 4, HEAD},
-  {"POST", 4, POST},
-  {"PUT", 3, PUT},
-  {"DELETE", 6, DELETE},
-  {"TRACE", 5, TRACE},
-  {"CONNECT", 7, CONNECT},
-  {"OPTIONS", 7, OPTIONS}
-};
 
 static const std::string content_length_field(CONTENT_LENGTH_FIELD);
 static const std::string content_type_field(CONTENT_TYPE_FIELD);
@@ -54,9 +41,6 @@ static const std::string connection_field(CONNECTION_FIELD);
 static const std::string transfer_encoding(TRANSFER_ENCODING_FIELD);
 static const std::string content_encoding(CONTENT_ENCODING_FIELD);
 static const std::string accept_encoding(ACCEPT_ENCODING_FIELD);
-static const std::string keep_alive_field(KEEP_ALIVE_FIELD);
-static const std::string keep_alive("keep-alive");
-static const std::string keep_alive_default_timeout("100");
 static const std::string close("close");
 static const std::string empty;        
 
@@ -269,15 +253,6 @@ void HttpCommand::removeHeaderField(const std::string& fieldName)
     headerFields.Delete(fieldName.c_str());
 }
 
-const char* HttpRequest::httpMethodNames(HttpMethod hm) {
-	 if ( hm>0 && hm<HTTP_METHOD_LAST)
-//		 return httpMethodNames[hm];
-		 return method_table[hm-1].name;
-	 else
-		 smsc_log_debug(smsc::logger::Logger::getInstance("Http.Request"), "httpMethodNames: invalid value: %d", hm);
-	 return "UnknownHttpMethod";
-}
-
 HttpRequest::ParameterIterator& HttpRequest::getQueryParameterNames()
 {
     queryParameters.First();
@@ -321,6 +296,7 @@ void HttpRequest::delHeaderField(const std::string& name) {
     removeHeaderField(name);
     // headerFields.Delete(name.c_str());
 }
+
 
 const std::string& HttpCommand::getMessageText()
 {
@@ -402,30 +378,6 @@ void HttpCommand::setMessageBinary(uint8_t* body, int length, const std::string&
     
     textContent.clear();
 }
-/*
- * add chunked data to content
- * if data followed by CRLF, truncate it.
- */
-unsigned int HttpCommand::appendChunkedMessageContent(char *data, unsigned int length) {
-	length = (chunk_size > length) ? length : chunk_size;
-	content.Append(data, length);
-    chunk_size -= length;
-    return length;
-}
-void HttpCommand::checkConnectionFields() {
-    if ( keepAlive ) {
-    	setHeaderField(connection_field, keep_alive);
-    	if ( getHeaderField(keep_alive_field) == empty ) {
-    		std::string tmp = HttpContext::toString<int>(keepAlive);
-    		setHeaderField(keep_alive_field, tmp);
-    	}
-    }
-    else {
-    	setHeaderField(connection_field, close);
-    	removeHeaderField(keep_alive_field);
-    }
-
-}
 
 
 HttpRequest::HttpRequest(HttpContext* cx, TransactionContext& tcx) :
@@ -492,11 +444,11 @@ const std::string& HttpRequest::serialize()
         
         //headers.reserve(totalHeadersSize);
         
-        headers = httpMethodNames(httpMethod);	// (httpMethod<HTTP_METHOD_LAST) ? httpMethodNames[httpMethod] : "UnknownHttpMethod";
+        headers = httpMethodNames[httpMethod];
         headers += SP;
         headers += getSitePath();
         headers += getSiteFileName();
-        headers += getURLField();
+        headers += getURLField();        
 
         if (queryParameters.GetCount() && httpMethod == GET) {
             headers += '?';
@@ -507,8 +459,7 @@ const std::string& HttpRequest::serialize()
         headers += httpVersion;
         headers += CRLF;
 
-//     	setHeaderField(connection_field, close);
-
+        setHeaderField(connection_field, close);
         //removeHeaderField(accept_encoding);   // Was inserted to skip ubsupported encodings
         //removeHeaderField("TE");              // in responses (on message body processing).
 
@@ -532,13 +483,7 @@ const std::string& HttpRequest::serialize()
             }
             headers += CRLF;
         }
-//
-        std::string s1 = getSite();
-        unsigned int sp = getSitePort();
-        char* ch1 = lltostr(sp, buf + 19);
-        std::string s2 = std::string(ch1);
-//
-        setHeaderField("Host", s1 + ((sp != 80) ? ':' + s2 : ""));
+
         setHeaderField("Host", getSite() + ((getSitePort() != 80) ? ':' + std::string(lltostr(getSitePort(), buf + 19)) : ""));
 
         headerFields.First();
@@ -573,8 +518,8 @@ const std::string& HttpResponse::serialize()
         headers += statusLine;
         headers += CRLF;
 
-//     	setHeaderField(connection_field, close);
-
+        setHeaderField(connection_field, close);
+        
         if(cookies.GetCount())
         {
             headers += "Set-Cookie: ";
@@ -644,10 +589,6 @@ void HttpResponse::fillFakeResponse(int s)
     content.Append("</h1></body></html>", 19);
     setLengthField(content.GetPos());
     setHeaderField(content_type_field, "text/html");
-	setHeaderField(connection_field, close);
-	setCloseConnection(true);
-	setKeepAlive(0);
-	this->chunked = false;
 }
 
 bool HttpResponse::isResponse()

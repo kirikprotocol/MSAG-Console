@@ -11,6 +11,7 @@ namespace pvss {
 namespace core {
 
 smsc::logger::Logger* Context::log_ = 0;
+unsigned long long    Context::total_ = 0;
 
 Context::Context(Request* req) :
 ref_(0),

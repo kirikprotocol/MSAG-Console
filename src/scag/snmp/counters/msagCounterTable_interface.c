@@ -437,7 +437,7 @@ _mfd_msagCounterTable_post_request(netsnmp_mib_handler *handler,
     rc = netsnmp_check_requests_error(requests);
     if ((SNMP_ERR_NOERROR == rc) &&
         (NULL !=
-         (rowreq_ctx = netsnmp_container_table_row_extract(requests)))) {
+         (rowreq_ctx = (msagCounterTable_rowreq_ctx*) netsnmp_container_table_row_extract(requests)))) {
         if (rowreq_ctx->rowreq_flags & MFD_ROW_CREATED) {
             rowreq_ctx->rowreq_flags &= ~MFD_ROW_CREATED;
             CONTAINER_INSERT(msagCounterTable_if_ctx.container, rowreq_ctx);
@@ -462,7 +462,7 @@ _mfd_msagCounterTable_object_lookup(netsnmp_mib_handler *handler,
                          netsnmp_request_info *requests)
 {
     msagCounterTable_rowreq_ctx *rowreq_ctx =
-                  netsnmp_container_table_row_extract(requests);
+        (msagCounterTable_rowreq_ctx*) netsnmp_container_table_row_extract(requests);
     
     DEBUGMSGTL(("internal:msagCounterTable:_mfd_msagCounterTable_object_lookup","called\n"));
 
@@ -539,7 +539,7 @@ _mfd_msagCounterTable_get_values(netsnmp_mib_handler *handler,
                          netsnmp_request_info *requests)
 {
     msagCounterTable_rowreq_ctx *rowreq_ctx =
-                  netsnmp_container_table_row_extract(requests);
+        (msagCounterTable_rowreq_ctx*) netsnmp_container_table_row_extract(requests);
     netsnmp_table_request_info * tri;
     u_char                     * old_string;
     void                      (*dataFreeHook)(void *);

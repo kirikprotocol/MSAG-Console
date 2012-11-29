@@ -48,46 +48,40 @@ public:
     virtual Hash<Property>& getConstants() { return ConstantsHash; };
 
 private:
-    typedef XHash< RuleKey, Rule*, HashFunc > CRulesHash;
+    typedef XHash< RuleKey, RulePtr, HashFunc > CRulesHash;
 
     struct Rules
     {
-        Mutex           rulesLock;
+        friend class eyeline::informer::EmbedRefPtr< Rules >;
         CRulesHash      rules;
-        int             useCounter;
 
-        Rules() : useCounter(1) {}
-        ~Rules()
-         {
-             rules.First();
+        Rules() : ref_(0) {}
 
-             CRulesHash::Iterator it = rules.getIterator();
-             RuleKey key;
-             Rule* rule = 0;
-             while (it.Next(key, rule))
-             {
-                 if (!rule) continue;
-                 rule->unref();
-             }
-         }
+    private:
 
-         void ref()
-         {
-             MutexGuard mg(rulesLock);
-             useCounter++;
-         }
+        void ref()
+        {
+            MutexGuard mg(refLock_);
+            ++ref_;
+        }
 
-         void unref()
-         {
-             bool del=false;
-             {
-                 MutexGuard mg(rulesLock);
-                 del = (--useCounter == 0);
-             }
-             if (del) delete this;
-         }
+        void unref()
+        {
+            {
+                MutexGuard mg(refLock_);
+                if (--ref_) return;
+            }
+            delete this;
+        }
+
+    private:
+        Mutex           refLock_;
+        unsigned        ref_;
     };
 
+    typedef eyeline::informer::EmbedRefPtr< Rules > RulesReference;
+
+    /*
     struct RulesReference
     {
         RulesReference(Rules* _rules) : rules(_rules)
@@ -118,9 +112,10 @@ private:
         RulesReference& operator = (const RulesReference&);
         Rules*  rules;
     };
+     */
 
 private:
-    RulesReference& operator = ( const RulesReference& );
+    // RulesReference& operator = ( const RulesReference& );
 
     RulesReference getRules()
     {
@@ -128,27 +123,29 @@ private:
         return RulesReference(rules);
     }
 
+    /// must be invoked only under changeLock
     void changeRules(Rules* _rules)
     {
-        MutexGuard mg(rulesLock);
-        if (rules != _rules) {
-            __require__(_rules);
-            rules->unref();
-            rules = _rules;
+        __require__(_rules);
+        RulesReference rr(rules); // possible delete not under ruleslock
+        {
+            MutexGuard mg(rulesLock);
+            rules.reset(_rules);
         }
     }
 
-    Rules* copyReference()
+    /// must be invoked only under changeLock
+    RulesReference copyReference()
     {
-        Rules* newRules = new Rules();
-        rules->rules.First();
-
-        CRulesHash::Iterator it = rules->rules.getIterator();
-        RuleKey oldKey; Rule* rule = 0;
+        RulesReference newRules( new Rules() );
+        RulesReference oldRules = getRules();
+        RuleKey oldKey;
+        RulePtr rule;
+        oldRules->rules.First();
+        CRulesHash::Iterator it = oldRules->rules.getIterator();
         while (it.Next(oldKey, rule))
         {
-            if (!rule) continue;
-            rule->ref();
+            if (!rule.get()) continue;
             newRules->rules.Insert(oldKey, rule);
         }
         return newRules;
@@ -169,8 +166,8 @@ private:
     std::string                 RulesDir;
     smsc::logger::Logger*       logger;
     Hash<TransportType>         TransportTypeHash;
-    Mutex  rulesLock;
-    Rules* rules;
+    Mutex                       rulesLock;
+    RulesReference              rules;
     Mutex   changeLock;
     Hash<Property> ConstantsHash;
 

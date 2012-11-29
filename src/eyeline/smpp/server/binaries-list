@@ -1,0 +1,11 @@
+eyeline/smpp/testServer testServer \
+  -leyeline-smpp-server \
+  -leyeline-smpp-transport \
+  -leyeline-smpp-pdu \
+  -leyeline-smpp \
+  -linformer-io \
+  -lcore-network $(SOCKETLIB) $(LIBNSL) \
+  -lcore-threads \
+  -L$(SMSC_BUILDDIR)/bin \
+  @liblogger$(SHLIBEXT) -llogger \
+  -lpthread $(LIBRT) -ldl

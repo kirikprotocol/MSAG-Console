@@ -369,6 +369,7 @@ namespace UssdServiceOpValue{/* SMPP v3.4 (5.3.2.44) */
   static const int8_t PSSR_INDICATION        = 1;
   static const int8_t USSR_REQUEST           = 2;
   static const int8_t USSN_REQUEST           = 3;
+  static const int8_t PSSD_REDIRECT          = 15;
   static const int8_t PSSD_RESPONSE          = 16;
   static const int8_t PSSR_RESPONSE          = 17;
   static const int8_t USSR_CONFIRM           = 18;

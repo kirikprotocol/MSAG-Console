@@ -16,7 +16,6 @@ const char KEEP_ALIVE[] = "keep-alive";
 const char COOKIE_FIELD[] = "Cookie";
 const char SET_COOKIE_FIELD[] = "Set-Cookie";
 
-/*
 struct http_methods {
   const char   *name; 
   unsigned int  size;
@@ -33,202 +32,129 @@ static http_methods method_table[] = {
   {"CONNECT", 7, CONNECT},
   {"OPTIONS", 7, OPTIONS}
 };
-*/
 
-//http_methods, method_table and METHOD_COUNT (table size) defined in HttpCommand2.h
-//#define METHOD_COUNT (int)(sizeof(HttpRequest::method_table) / sizeof(HttpRequest::method_table[0]))
+#define METHOD_COUNT (int)(sizeof(method_table) / sizeof(method_table[0]))
 
-StatusCode HttpParser::parse(HttpContext& cx, bool last_data) {
-	char *buf, *saved_buf, *local_buf;
-	unsigned int len, local_len;
-
-	StatusCode    rc = OK;
-	HttpCommand   *command;
-
-	switch (cx.action) {
-	case READ_REQUEST:
-		if (cx.command == NULL)
-			cx.command = new HttpRequest(&cx, cx.getTransactionContext());
-		break;
-	case READ_RESPONSE:
-		if (cx.command == NULL)
-			cx.command = new HttpResponse(&cx, cx.getTransactionContext());
-		break;
-	default:
-		return ERROR;
-	}
-
-	buf = cx.getUnparsed();
-	len = cx.unparsedLength();
-	buf += cx.parsePosition;
-	len -= cx.parsePosition;
-
-	local_len = len;
-	saved_buf = buf;
-	local_buf = buf;
-
+StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
+{
+  char          *saved_buf = buf, *local_buf = buf;
+  unsigned int  local_len = len;
+  StatusCode    rc = OK;
+  HttpCommand   *command;
+  switch (cx.action) {
+    case READ_REQUEST:
+      if (cx.command == NULL)
+        cx.command = new HttpRequest(&cx, cx.getTransactionContext());
+      break;
+    case READ_RESPONSE:
+      if (cx.command == NULL)
+        cx.command = new HttpResponse(&cx, cx.getTransactionContext());
+      break;
+    default:
+      return ERROR;
+  }
   
-	if (len == 0) {
-//		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "return ok len=0");
-		return OK;
-	}
+  if (len == 0)
+    return OK;
   
-	command = cx.command;
+  command = cx.command;
+  
+  do {
+    if (cx.flags == 0) {
+      rc = readLine(local_buf, local_len);
+      if (rc != OK)
+        break;
 
-	do {
-		if (cx.flags == 0) {
-			cx.parsePosition = 0;
-			command->chunked = false;
-			command->chunk_size = 0;
-			command->setContentLength(0);
-			rc = readLine(local_buf, local_len);
-			if (rc != OK) {
-				return rc;
-			}
+      if (local_len == 0)
+        return ERROR;
 
-			if (local_len == 0)
-				return ERROR;
+      rc = parseFirstLine(saved_buf, local_len, cx);
+      if (rc != OK)
+        return rc;
 
-			rc = parseFirstLine(saved_buf, local_len, cx);
-			if (rc != OK) {
-				return rc;
-			}
+      saved_buf = local_buf;
+      local_len = len - static_cast<int>(local_buf - buf);
 
-			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-			saved_buf = local_buf;
-			local_len = len - static_cast<int>(local_buf - buf);
+      cx.flags = 1;
+    }
 
-			cx.flags = 1;
-		}
+    while ((cx.flags == 1) && local_len) {
+      rc = readLine(local_buf, local_len);
+      if (rc != OK)
+        break;
 
-		while ((cx.flags == 1) && local_len) {
-			rc = readLine(local_buf, local_len);
-			if (rc != OK)
-			  return rc;
+      if ((rc == OK) && (local_len == 0)) {
+        // empty line at the end of HTTP header
+        cx.flags = 2;
+        local_len = len - static_cast<int>(local_buf - buf);
 
-			if (0 == local_len) {
-				// empty line at the end of HTTP header
-				cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-				saved_buf = local_buf;
-				local_len = len - static_cast<int>(local_buf - buf);
+        if (command->contentLength == 0)
+          return OK;
 
-				/*
-				 *  cx.flags:
-				 *  0 - default value
-				 *  1 - after first header parsed
-				 *  2 - after all headers parsed, waiting content
-				 *  3 - after all headers parsed, chunked, waiting chunk size
-				 *  4 - after all headers parsed, chunked, waiting chunk data
-				 */
-				cx.flags = (command->chunked) ? 3:2;
-// RESPONSE may contain content without Content-Length header (RFC2068 ¤4.4)
-				if ((cx.action == READ_REQUEST) && (command->contentLength == -1)) {
-					switch (cx.getRequest().getMethod()) {
-					case GET:
-					case POST:
-					case TRACE:
-					case OPTIONS:
-					case HEAD:
-						return OK;
-					default:
-						break;
-					}
-				}
-				break;
-			}
+        if ((cx.action == READ_REQUEST) && (command->contentLength == -1)) {
+          switch (cx.getRequest().getMethod()) {
+            case GET:
+            case POST:            
+            case TRACE:
+            case OPTIONS:
+            case HEAD:
+              return OK;
+          default:
+              break;
+          }
+        }
 
-			rc = parseHeaderFieldLine(saved_buf, local_len, cx, *command);
-			if (rc != OK)
-				return rc;
+        break;
+      }
 
-			cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-			saved_buf = local_buf;
-			local_len = len - static_cast<int>(local_buf - buf);
-		}
+      rc = parseHeaderFieldLine(saved_buf, local_len, cx, *command);
+      if (rc != OK)
+        return rc;
 
-		if (rc != OK)
-			break;
+      saved_buf = local_buf;
+      local_len = len - static_cast<int>(local_buf - buf);
+    }
 
-		if (cx.flags < 2) {	// rare case when end of line was exactly at buffer end
-			return CONTINUE;
-		}
-		if (2 == cx.flags) {
-			command->appendMessageContent(local_buf, local_len);
-			cx.parsePosition += static_cast<unsigned int>(local_len);
-			local_len = 0;
+    if (rc != OK)
+      break;
 
-			if (last_data) {
-				command->contentLength = command->content.GetPos();
-				rc = OK;
-			}
-			else {
-				rc = (static_cast<int>(command->content.GetPos()) < command->contentLength) ? CONTINUE : OK;
-			}
-			break;
-		}
+    if (cx.flags != 2) {
+      // rare case when end of line was exactly at buffer end
+      len = 0;
+      return CONTINUE;
+    }
+    
+    command->appendMessageContent(local_buf, local_len);
+    len = 0;
 
-		while (local_len) {
-			if (3 == cx.flags) {
-				rc = readLine(local_buf, local_len);
-				if (rc != OK) {
-					return rc;
-				}
+    if ((command->contentLength > 0) && (command->content.GetPos() >= size_t(command->contentLength))) {
+      if (cx.action == READ_REQUEST) {
+        const char *tmp = command->contentType.c_str();
 
-				command->chunk_size = cx.chunks.add(std::string(saved_buf, local_len));
-				if (0 == command->chunk_size) {
-					command->contentLength = command->content.GetPos();
-					rc = OK;
-					break;
-				}
-				cx.flags = 4;
-				cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-				local_len = len - static_cast<unsigned int>(local_buf - buf);
-				saved_buf = local_buf;
-			}
-			if (4 == cx.flags) {
-				local_len = command->appendChunkedMessageContent(local_buf, local_len);
-				local_buf += local_len;
-				if (0 == command->chunk_size) {
-					rc = readLine(local_buf, local_len);	//read CRLF on chunk end
-					if (rc != OK) {
-						return rc;
-					}
-					if (local_len>0) {
-						return ERROR;
-					}
+        if ((cx.getRequest().getMethod() == POST) && !strcmp(tmp, CONTENT_TYPE_URL_ENCODED)) {
+          char *pp = command->content.get();
+          size_t ll = command->content.GetPos();
+          
+          while (ll && (pp[ll-1] == '\r' || pp[ll-1] == '\n'))
+            ll--;            
+        
+          std::string params(pp, ll);
 
-					cx.flags = 3;
-				}
-				cx.parsePosition += static_cast<unsigned int>(local_buf - saved_buf);
-				local_len = len - static_cast<unsigned int>(local_buf - buf);
-				saved_buf = local_buf;
-				rc = CONTINUE;
-			}
-		}
-		if (rc != OK)
-			break;
-		// analyse if command->content is already full
-		if ((command->contentLength > 0) && (command->content.GetPos() >= size_t(command->contentLength))) {
-			if (cx.action == READ_REQUEST) {
-				const char *tmp = command->contentType.c_str();
+          parseQueryParameters(params.c_str(), cx.getRequest());
+        }
+      }
 
-				if ((cx.getRequest().getMethod() == POST) && !strcmp(tmp, CONTENT_TYPE_URL_ENCODED)) {
-					char *pp = command->content.get();
-					size_t ll = command->content.GetPos();
+      return OK;
+    }
 
-					while (ll && (pp[ll-1] == '\r' || pp[ll-1] == '\n'))
-						ll--;
+    return CONTINUE;
+  } while (false);
 
-					std::string params(pp, ll);
-					parseQueryParameters(params.c_str(), cx.getRequest());
-				}
-			}
-			return OK;
-		}
+  if (rc == CONTINUE) {
+    len = len - static_cast<int>(saved_buf - buf);
+  }
 
-		return CONTINUE;
-	} while (false);
-	return rc;
+  return rc;
 }
 
 StatusCode HttpParser::readLine(char*& buf, unsigned int& len)
@@ -286,35 +212,27 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         int   method_idx = -1;
 
         for (int i = 0; i < METHOD_COUNT; ++i) {
-//    		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "Method find[%d] len:%d size:%d buf:%9s name:%s",
-//    				i, len, HttpRequest::method_table[i].size, buf, HttpRequest::method_table[i].name);
-			if ((len >= HttpRequest::method_table[i].size) && !compareNocaseN(buf, HttpRequest::method_table[i].name, HttpRequest::method_table[i].size)) {
-				method_idx = i;
-				break;
-			}
+          if ((len >= method_table[i].size) && 
+              !compareNocaseN(buf, method_table[i].name, method_table[i].size)) {
+            method_idx = i;
+            break;
+          }
         }
 
-        if (method_idx == -1) {
-    		smsc_log_error(smsc::logger::Logger::getInstance("Http.Parser"), "Method not found");
-    		return ERROR;
-        }
+        if (method_idx == -1)
+          return ERROR;
 
         const char *pos = findCharsN(buf, " \t", len);
-        if (!pos) {
-    		smsc_log_error(smsc::logger::Logger::getInstance("Http.Parser"), "Tab(blanc) not found");
-        	return ERROR;
-        }
+        if (!pos)
+          return ERROR;
 
-        if (unsigned(pos - buf) != HttpRequest::method_table[method_idx].size) {
-    		smsc_log_error(smsc::logger::Logger::getInstance("Http.Parser"), "wrong method size %d %d", (pos - buf), HttpRequest::method_table[method_idx].size);
-        	return ERROR;
-        }
+        if (unsigned(pos - buf) != method_table[method_idx].size)
+          return ERROR;
 
         // we've got method
-        cx.getRequest().setMethod(HttpRequest::method_table[method_idx].value);
-//		smsc_log_debug(smsc::logger::Logger::getInstance("Http.Parser"), "setMethod method_idx=%d value=%d %s", method_idx, HttpRequest::method_table[method_idx].value, HttpRequest::method_table[method_idx].name);
+        cx.getRequest().setMethod(method_table[method_idx].value);
 
-        switch (cx.getRequest().getMethod()) { //  HttpRequest::method_table[method_idx].value) {
+        switch (method_table[method_idx].value) {
           case GET:
           case POST:
             break;
@@ -331,12 +249,10 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
           path.assign(pos, end - pos);
           end++;
           cx.getRequest().httpVersion.assign(end, len - (end - buf));
-        }
-        else
-        	return ERROR;
+        } else
+          return ERROR;
 
-//        if (HttpRequest::method_table[method_idx].value == GET) {
-        if (cx.getRequest().getMethod() == GET) {
+        if (method_table[method_idx].value == GET) {
           pos = path.c_str();
           end = strchr(pos, '?');
 
@@ -379,8 +295,8 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
 //  for (unsigned int i = 0; i < key.length(); ++i)
 //    key[i] = tolower(key[i]);
 
-//  if (!strcasecmp(key.c_str(), KEEP_ALIVE))
-//    return OK;
+  if (!strcasecmp(key.c_str(), KEEP_ALIVE))
+    return OK;
 
   if (!strcasecmp(key.c_str(), HOST_FIELD) && cx.action == READ_REQUEST) {
     return OK;
@@ -396,27 +312,9 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
     cmd.setContentLength(atoi(value.c_str()));
     return OK;
   }
-/*
- *   Connection: keep-alive
- *   Keep-Alive: 300
- */
 
-  if ((key.compare(TRANSFER_ENCODING_FIELD) == 0) && (value.compare("chunked") == 0)) {
-	  cmd.chunked = true;
-	  return OK;
-  }
   if ((key.compare(CONNECTION_FIELD) == 0) && (value.compare("close") == 0)) {
-	  cmd.setCloseConnection(true);
-	  return OK;
-  }
-  if ((key.compare(CONNECTION_FIELD) == 0) && (value.compare("keep-alive") == 0)) {
-	  cmd.setCloseConnection(false);
-	  return OK;
-  }
-  if (key.compare(KEEP_ALIVE_FIELD) == 0) {
-	  cmd.setKeepAlive(HttpContext::fromString<int>(value));
-	  cx.setTimeout(cmd.getKeepAlive());
-	  return OK;
+    cmd.setCloseConnection(true);
   }
 
   if (!strcasecmp(key.c_str(), CONTENT_TYPE_FIELD)) {

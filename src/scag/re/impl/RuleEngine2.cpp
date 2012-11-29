@@ -329,7 +329,6 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
 {
     util::HRTiming hrt(inhrt);
 
-    RulesReference rulesRef = getRules();
     // smsc_log_debug(logger,"Process RuleEngine (total=%u) with serviceId: %d",
     // rulesRef.rules->rules.Count(), command.getServiceId());
 
@@ -338,7 +337,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
     key.transport = command.getType();
     smsc_log_debug(logger,"rule key transport=%d serviceId=%d",key.transport,key.serviceId);
 
-    Rule* rulePtr;
+    RulePtr rulePtr;
     do { // fake loop
 
         if ( session.getLongCallContext().continueExec ) {
@@ -348,10 +347,11 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
                                             session.sessionKey().toString().c_str() );
             }
             smsc_log_debug(logger,"taking rule from actionContext");
-            rulePtr = session.getLongCallContext().getActionContext()->getRule();
+            rulePtr.reset( session.getLongCallContext().getActionContext()->getRule() );
         } else {
-            Rule** rp = rulesRef->GetPtr(key);
-            rulePtr = rp ? *rp : 0;
+            RulesReference rulesRef = getRules();
+            RulePtr* rp = rulesRef->rules.GetPtr(key);
+            if (rp) rulePtr = *rp;
         }
 
         hrt.mark( "re.getrul" );
@@ -359,7 +359,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         if ( session.isNew( key.serviceId, key.transport ) ) { // fake while
 
             session.pushInitRuleKey( key.serviceId, key.transport );
-            if ( rulePtr ) {
+            if ( rulePtr.get() ) {
 
                 rulePtr->processSession( session, rs, key );
                 if ( rs.status == STATUS_FAILED ) {
@@ -381,7 +381,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
           //                                                              currentOp ? currentOp->type() : 0, &session);
         CommandBridge::CheckCommandProperty(command, cp, session.sessionPrimaryKey(), &session);
         // const bool newevent = ( !session.getLongCallContext().continueExec );
-        if ( rulePtr ) {
+        if ( rulePtr.get() ) {
            rulePtr->process( command, session, rs, cp, &hrt );
         } //else if (newevent) {
           //const std::string* kw = currentOp ? currentOp->getKeywords() : 0;
@@ -398,7 +398,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         if ( rs.status == STATUS_OK && ac ) {
             int wtime = ac->getDestroyService();
             if ( wtime >= 0 ) {
-                if ( rulePtr ) rulePtr->processSession( session, rs, key );
+                if ( rulePtr.get() ) rulePtr->processSession( session, rs, key );
                 if ( rs.status == STATUS_OK ) 
                     session.dropInitRuleKey( key.serviceId, key.transport, wtime );
             }
@@ -406,7 +406,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
     
     } while ( false );
 
-    if ( rs.status == STATUS_LONG_CALL && rulePtr ) {
+    if ( rs.status == STATUS_LONG_CALL && rulePtr.get() ) {
         // session.getLongCallContext().continueExec = true;
         session.getLongCallContext().getActionContext()->setRule( *rulePtr );
     } else {
@@ -420,9 +420,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
 
 void RuleEngineImpl::finalizeSession(Session& session, RuleStatus& rs)
 {
-    RulesReference rulesRef = getRules();
-
-    Rule* rulePtr = 0;
+    RulePtr rulePtr;
     while ( true ) {
 
         RuleKey key;
@@ -443,13 +441,14 @@ void RuleEngineImpl::finalizeSession(Session& session, RuleStatus& rs)
                                             session.sessionKey().toString().c_str() );
             }
             smsc_log_debug(logger,"taking rule from actionContext");
-            rulePtr = session.getLongCallContext().getActionContext()->getRule();
+            rulePtr.reset(session.getLongCallContext().getActionContext()->getRule());
         } else {
-            Rule** rp = rulesRef->GetPtr(key);
-            rulePtr = rp ? *rp : 0;
+            RulesReference rulesRef = getRules();
+            RulePtr* rp = rulesRef->rules.GetPtr(key);
+            if (rp) { rulePtr = *rp; }
         }
 
-        if (rulePtr) {
+        if (rulePtr.get()) {
 
             rulePtr->processSession(session, rs, key);
             if ( rs.status == STATUS_LONG_CALL ) {
@@ -471,7 +470,7 @@ void RuleEngineImpl::finalizeSession(Session& session, RuleStatus& rs)
         // throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );
 
     }
-    if ( rs.status == STATUS_LONG_CALL && rulePtr ) {
+    if ( rs.status == STATUS_LONG_CALL && rulePtr.get() ) {
         session.getLongCallContext().getActionContext()->setRule( *rulePtr );
     } else {
         session.getLongCallContext().continueExec = false;
@@ -541,7 +540,7 @@ void RuleEngineImpl::init( const std::string& dir )
     property.setInt(dsdSc2Sc);
     ConstantsHash["DIRECTION_SC_2_SC"] = property;
 
-    rules = new Rules();
+    rules.reset(new Rules());
 
     try
     {
@@ -605,38 +604,30 @@ void RuleEngineImpl::updateRule(const RuleKey& key)
 
 void RuleEngineImpl::loadRuleFile( const RuleKey& key, const std::string& filename )
 {
+    smsc_log_info(logger,"loadRuleFile %d from %s",key.serviceId,filename.c_str());
     MutexGuard mg(changeLock);
-    Rule* newRule = ParseFile(filename);
+    RulePtr newRule(ParseFile(filename));
     if (!newRule) 
         throw SCAGException("Cannod load rule %d from file %s", key.serviceId, filename.c_str());
-
-    Rules *newRules = copyReference();
-    Rule** rulePtr = newRules->rules.GetPtr(key);
-
-    if (rulePtr)
-    {
-        (*rulePtr)->unref();
-        newRules->rules.Delete(key);
-    }
-
+        
+    RulesReference newRules = copyReference();
+    newRules->rules.Delete(key);
     newRules->rules.Insert(key, newRule);
-    changeRules(newRules);
+    changeRules(newRules.get());
 }
 
 
 void RuleEngineImpl::removeRule(const RuleKey& key)
 {
-    MutexGuard mg(changeLock);
-
-    Rule** rulePtr = rules->rules.GetPtr(key);  // Can we do such direct access? TODO: Ensure
+    RulesReference oldRules = getRules();
+    RulePtr* rulePtr = oldRules->rules.GetPtr(key);  // Can we do such direct access? TODO: Ensure
     if (!rulePtr)
         throw SCAGException("Invalid rule id %d to remove", key.serviceId);
 
-    Rules *newRules = copyReference();
-    rulePtr = newRules->rules.GetPtr(key);
-    (*rulePtr)->unref();
+    MutexGuard mg(changeLock);
+    RulesReference newRules = copyReference();
     newRules->rules.Delete(key);
-    changeRules(newRules);
+    changeRules(newRules.get());
 }
 
 RuleEngineImpl::RuleEngineImpl() :
@@ -651,8 +642,6 @@ RuleEngineImpl::~RuleEngineImpl()
         delete autoRuleTester_;
     }
     XMLPlatformUtils::Terminate();
-    if (rules) rules->unref();
-
     smsc_log_info(logger,"Rule Engine released");
 }
 

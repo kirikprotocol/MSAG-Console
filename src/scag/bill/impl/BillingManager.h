@@ -163,9 +163,15 @@ public EwalletCallParams::TransactionRegistrator
 
     #endif /* MSAG_INMAN_BILL */
 
-    void ProcessResult(const char* eventName, BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
+    void ProcessResult(const char* eventName, BillingTransactionEvent billingTransactionEvent,
+                       BillTransaction * billTransaction,
+                       int errorCode );
 
-    void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo,
+    void makeBillEvent(BillingTransactionEvent billCommand,
+                       // BillingCommandStatus commandStatus,
+                       int       commandStatus,
+                       TariffRec& tariffRec,
+                       BillingInfoStruct& billingInfo,
                        stat::SaccBillingInfoEvent* ev);
 
     billid_type genBillId();
@@ -186,12 +192,17 @@ public:
 
     virtual billid_type Open( BillOpenCallParams& openCallParams,
                                lcm::LongCallContext* lcmCtx = NULL);
-    virtual void Commit( billid_type billId, lcm::LongCallContext* lcmCtx = NULL);
+    virtual void Commit( billid_type billId,
+                         int errorCode,
+                         lcm::LongCallContext* lcmCtx = NULL);
     virtual void Rollback( billid_type billId, bool timeout, 
+                           int errorCode,
                            lcm::LongCallContext* lcmCtx = NULL );
     virtual void CommitTransit( BillCloseCallParams& closeCallParams,
+                                int errorCode,
                                 lcm::LongCallContext* lcmCtx = NULL );
     virtual void RollbackTransit( BillCloseCallParams& closeCallParams,
+                                  int errorCode,
                                   lcm::LongCallContext* lcmCtx = NULL );
     virtual void Check( BillCheckCallParams& checkCallParams,
                         lcm::LongCallContext* lcmCtx );

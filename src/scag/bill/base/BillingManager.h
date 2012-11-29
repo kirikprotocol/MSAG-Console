@@ -57,6 +57,7 @@ public:
     virtual ~BillCloseCallParams() {}
     virtual billid_type billId() const = 0;
     virtual bool isTimeout() const = 0;
+    virtual int errorCode() const = 0;
     virtual BillTransitParamsData* getTransitData() { return 0; }
 };
 
@@ -194,12 +195,12 @@ class EwalletCloseCallParams : public EwalletCallParams, public BillCloseCallPar
 {
 public:
     // non-transit ctor
-    EwalletCloseCallParams( billid_type billid, bool timeout, lcm::LongCallContext* lcmCtx ) :
-    EwalletCallParams(false,lcmCtx), billId_(billid), timeout_(timeout) {}
+    EwalletCloseCallParams( billid_type billid, bool timeout, lcm::LongCallContext* lcmCtx, int ec ) :
+    EwalletCallParams(false,lcmCtx), billId_(billid), timeout_(timeout), errCode_(ec) {}
 
     // transit ctor
-    EwalletCloseCallParams( BillTransitParamsData* data, lcm::LongCallContext* lcmCtx ) :
-    EwalletCallParams(true,lcmCtx), billId_(0), timeout_(false), data_(data) {}
+    EwalletCloseCallParams( BillTransitParamsData* data, lcm::LongCallContext* lcmCtx, int ec ) :
+    EwalletCallParams(true,lcmCtx), billId_(0), timeout_(false), errCode_(ec), data_(data) {}
 
     void setTransitData( BillTransitParamsData* data ) {
         data_.reset(data);
@@ -210,12 +211,14 @@ public:
     virtual EwalletCloseCallParams* getClose() { return this; }
     virtual BillCheckCallParams* getCheck() { return 0; }
     virtual billid_type billId() const { return billId_; }
+    virtual int errorCode() const { return errCode_; }
     virtual BillTransitParamsData* getTransitData() { return data_.get(); }
     bool isCommit() const;
     bool isTimeout() const { return timeout_; }
 private:
     billid_type billId_;
     bool timeout_;
+    int  errCode_;
     std::auto_ptr<BillTransitParamsData> data_;
 };
 
@@ -314,17 +317,19 @@ private:
 class InmanCloseCallParams : public BillCallParams, public BillCloseCallParams
 {
 public:
-    InmanCloseCallParams( billid_type billid, bool timeout ) : billId_(billid), timeout_(timeout) {}
+    InmanCloseCallParams( billid_type billid, bool timeout, int ec ) : billId_(billid), errCode_(ec), timeout_(timeout) {}
     virtual BillOpenCallParams* getOpen() { return 0; }
     virtual InmanCloseCallParams* getClose() { return this; }
     virtual BillCheckCallParams* getCheck() { return 0; }
     virtual billid_type billId() const { return billId_; }
+    virtual int errorCode() const { return errCode_; }
     virtual bool isTimeout() const { return timeout_; }
     virtual int getStatus() const {
         return exception.empty() ? ewallet::Status::OK : ewallet::Status::UNKNOWN;
     }
 private:
     billid_type billId_;
+    int         errCode_;
     bool        timeout_;
 };
 
@@ -336,13 +341,17 @@ public:
     virtual billid_type Open( BillOpenCallParams& openCallParams,
                               lcm::LongCallContext* lcmCtx = NULL) = 0;
     virtual void Commit( billid_type billId,
+                         int errorCode,
                          lcm::LongCallContext* lcmCtx = NULL ) = 0;
     virtual void Rollback( billid_type billId,
                            bool timeout,
+                           int errorCode,
                            lcm::LongCallContext* lcmCtx = NULL) = 0;
     virtual void CommitTransit( BillCloseCallParams& closeCallParams,
+                                int errorCode,
                                 lcm::LongCallContext* lcmCtx = NULL ) = 0;
     virtual void RollbackTransit( BillCloseCallParams& closeCallParams,
+                                  int errorCode,
                                   lcm::LongCallContext* lcmCtx = NULL ) = 0;
     virtual void Check( BillCheckCallParams& checkCallParams,
                         lcm::LongCallContext* lcmCtx ) = 0;

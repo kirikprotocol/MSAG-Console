@@ -1658,7 +1658,7 @@ void SmscSender::processExpiredTimers()
             if (getCS()->isStopping() || isStopping_ ) { break; }
             ResponseData rd;
             rd.seqNum = 0; // receipt
-            rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
+            rd.status = smsc::system::Status::RECEIPTWAITTIMEOUT;
             rd.rcptId.setMsgId(iter->second.msgId);
             rd.retry = true;
             queueData(rd);

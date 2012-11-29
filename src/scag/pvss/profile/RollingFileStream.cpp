@@ -92,6 +92,7 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
             }
             linesRead_ = linesRead;
             crc32Read_ = crcRead;
+            /*
             if ( rp_ ) {
                 // if rp is not set, then we only need to extract nextfile
                 if ( lines != linesRead ) {
@@ -102,6 +103,7 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
                                             crcRead, crc32 );
                 }
             }
+             */
             // get the next file name
             nextFile = buf+pos;
         }

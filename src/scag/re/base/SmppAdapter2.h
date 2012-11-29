@@ -163,6 +163,10 @@ public:
         CommandBridge::getSMS(command).setDestinationAddress(addr);
     }
 
+    SMS& getSMS() {
+        return CommandBridge::getSMS(command);
+    }
+
 private:
 
     // invoked from getProperty

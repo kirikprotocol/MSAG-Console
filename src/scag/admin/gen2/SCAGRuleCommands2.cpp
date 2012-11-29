@@ -121,7 +121,10 @@ void CommandAddRule::processRuleCommand()
     smsc_log_info(logger, "CommandAddRule is processing...");
 
     re::RuleEngine& re = re::RuleEngine::Instance();
-    re.updateRule(key);
+    // testing rule update
+    // for ( int i = 0; i < 200; ++i ) {
+        re.updateRule(key);
+    // }
 
     smsc_log_info(logger, "CommandAddRule is processed ok");
 }
@@ -156,7 +159,10 @@ void CommandUpdateRule::processRuleCommand()
     smsc_log_info(logger, "CommandUpdateRule is processing...");
 
     re::RuleEngine& re = re::RuleEngine::Instance();
-    re.updateRule(key);
+    // testing rule update
+    // for ( int i = 0; i < 200; ++i ) {
+        re.updateRule(key);
+    // }
 
     smsc_log_info(logger, "CommandUpdateRule is processed ok.");
 }

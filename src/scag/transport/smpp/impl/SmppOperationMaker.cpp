@@ -42,6 +42,34 @@ log_(logger)
 
 
 
+void SmppOperationMaker::fail( const char* msg,
+                               re::RuleStatus& st,
+                               int reason )
+{
+    what_ = msg;
+    st.status = re::STATUS_FAILED;
+    st.result = reason;
+    unsigned seq = unsigned(-1);
+    unsigned svc = unsigned(-1);
+    std::string oa, da;
+    const char* src = "";
+    const char* dst = "";
+    if ( cmd_.get() ) {
+        seq = unsigned(cmd_->get_dialogId());
+        svc = unsigned(cmd_->getServiceId());
+        if (cmd_->getEntity()) { src = cmd_->getEntity()->getSystemId(); }
+        if (cmd_->getDstEntity()) { dst = cmd_->getDstEntity()->getSystemId(); }
+        SMS* sms = cmd_->get_sms();
+        if (sms) {
+            oa = sms->getOriginatingAddress().toString();
+            da = sms->getDestinationAddress().toString();
+        }
+    }
+    smsc_log_warn( log_, "%s: failure seq=%u OA=%s DA=%s src=%s dst=%s svc=%u: %s, res=%d",
+                   where_, seq, oa.c_str(), da.c_str(), src, dst, svc, what_, reason );
+}
+
+
 void SmppOperationMaker::process( re::RuleStatus& st, scag2::re::actions::CommandProperty& cp, util::HRTiming* inhrt )
 {
     util::HRTiming hrt(inhrt);
@@ -89,12 +117,11 @@ void SmppOperationMaker::process( re::RuleStatus& st, scag2::re::actions::Comman
 
     } catch ( std::exception& e ) {
         smsc_log_warn( log_, "%s: exception in opmaker: %s", where, e.what() );
-        fail( e.what(), st, smsc::system::Status::SYSERR );
+        fail( "std::exception", st, smsc::system::Status::SYSERR );
         
     } catch (...) {
         smsc_log_warn( log_, "%s: unknown exception in opmaker", where );
         fail( "unknown exception in opmaker", st, smsc::system::Status::SYSERR );
-
     }
 }
 
@@ -144,31 +171,40 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
 
     optype_ = CO_NA;
     bool wantOpenUSSD = false;
-    bool isUSSDClosed = false;
+    bool forceNewUSSD = false;
 
     const int ussd_op = 
         sms->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ?
         int(sms->getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) : -1;
+    int32_t umr = Operation::invalidUSSDref();
+    const bool hasumr = sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE);
+    bool smppplus = false;
+    if (hasumr) {
+        umr = sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE);
+        if ( (umr & 0x80000000) ) { smppplus = true; }
+    }
 
     // fix for ussd_op == 35 is already applied in state machine
 
     switch ( cmdid )
     {
     case DELIVERY:
-
+        //mobileInitiatedUSSD
         /* if (receiptMessageId)
             optype_ = CO_RECEIPT;
         else */ 
         if ( ussd_op != -1 )
         {
             optype_ = CO_USSD_DIALOG;
-            if ( ussd_op == smsc::sms::USSD_PSSR_IND ) {
+            if ( ussd_op == smsc::sms::USSD_PSSR_IND ||
+                 ussd_op == smsc::sms::USSD_PSSD_IND ) {
+                // smpp-
                 wantOpenUSSD = true;
-            } else if ( ussd_op == smsc::sms::USSD_USSN_CONF ||
-                        ussd_op == smsc::sms::USSD_USSR_CONF_LAST ||
-                        ussd_op == smsc::sms::USSD_USSREL_IND ) {
-                isUSSDClosed = true;
-            } else if ( ussd_op != smsc::sms::USSD_USSR_CONF ) {
+                forceNewUSSD = true;
+            } else if ( ussd_op != smsc::sms::USSD_USSR_CONF_LAST &&
+                        ussd_op != smsc::sms::USSD_USSREL_IND &&
+                        ussd_op != smsc::sms::USSD_USSN_CONF &&
+                        ussd_op != smsc::sms::USSD_USSR_CONF ) {
                 // wrong operation
                 fail( "USSD Delivery: wrong ussd_op", st, 
                       smsc::system::Status::USSDDLGREFMISM );
@@ -183,30 +219,29 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
         if (ussd_op != -1)
         {
             optype_ = CO_USSD_DIALOG;
-            if ( ussd_op == smsc::sms::USSD_USSR_REQ ||
-                 ussd_op == smsc::sms::USSD_USSN_REQ ||
+            if ( ussd_op == smsc::sms::USSD_USSR_REQ ||       // smpp-
+                 ussd_op == smsc::sms::USSD_USSN_REQ ||       // smpp-
                  ussd_op == smsc::sms::USSD_USSR_REQ_LAST ||
                  ussd_op == smsc::sms::USSD_USSR_REQ_VLR ||
                  ussd_op == smsc::sms::USSD_USSN_REQ_VLR ||
                  ussd_op == smsc::sms::USSD_USSR_REQ_VLR_LAST ) {
-                if ( ! sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
+                if ( ! hasumr ) {
                     // umr is absent
                     cmd_->setFlag( SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG );
                     wantOpenUSSD = true;
                 }
-            } else if ( ussd_op == smsc::sms::USSD_PSSR_RESP ||
-                        ussd_op == smsc::sms::USSD_USSREL_REQ ) {
-                isUSSDClosed = true;
             } else if ( ussd_op == smsc::sms::USSD_USSN_REQ_VLR_LAST ||
                         ussd_op == smsc::sms::USSD_USSN_REQ_LAST ) {
                 // commands that may open dialog (and close it unconditionally)
-                if ( ! sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
+                if ( ! hasumr ) {
                     // umr is absent
                     cmd_->setFlag( SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG );
                     wantOpenUSSD = true;
                 }
-                isUSSDClosed = true;
-            } else {
+            } else if ( ussd_op != smsc::sms::USSD_PSSR_RESP &&
+                        ussd_op != smsc::sms::USSD_PSSD_RESP &&
+                        ussd_op != smsc::sms::USSD_REDIRECT &&
+                        ussd_op != smsc::sms::USSD_USSREL_REQ ) {
                 // invalid op
                 fail( "USSD Submit: wrong ussd_op", st,
                       smsc::system::Status::USSDDLGREFMISM );
@@ -274,8 +309,6 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
         return;
     } // switch on cmdid
     
-    int32_t umr = Operation::invalidUSSDref();
-
     if ( ! op ) {
         if ( sarmr_ != 0 ) {
             // multipart sms
@@ -311,9 +344,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                 return;
             }
 
-            if ( sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
-                umr = sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE);
-            } else if ( ! wantOpenUSSD ) {
+            if ( !hasumr && !wantOpenUSSD ) {
                 fail( "USSD: no UMR is specified", st,
                       smsc::system::Status::USSDDLGREFMISM );
                 return;
@@ -330,15 +361,19 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                         fail("USSD: opid is set but op is not found", st,
                              smsc::system::Status::SYSERR );
                         return;
-                    } else if ( time_t(op->getUSSDLastTime() + Session::ussdReplaceTimeout()) < currentTime_ ) {
-                        // the operation is too old
-                        smsc_log_info( log_, "current USSD dialog op=%p opid=%u is inactive during %u seconds and be replaced",
-                                       op, found_ussd, unsigned(currentTime_ - op->getUSSDLastTime()) );
-                        session_->closeCurrentOperation();
-                    } else {
-                        fail("USSD: active dialog exists", st,
-                             smsc::system::Status::USSDBUSY );
-                        return;
+                    } else if (!forceNewUSSD) { // check replace timer
+                      if ( time_t(op->getUSSDLastTime() + Session::ussdReplaceTimeout()) < currentTime_ ) {
+                          // the operation is too old
+                          smsc_log_info( log_, "current USSD dialog op=%p opid=%u is inactive during %u seconds and be replaced",
+                                         op, found_ussd, unsigned(currentTime_ - op->getUSSDLastTime()) );
+                          session_->closeCurrentOperation();
+                      } else {
+                          fail("USSD: active dialog exists", st, smsc::system::Status::USSDBUSY );
+                          return;
+                      }
+                    } else { // New dialog forced by SMSC
+                      smsc_log_debug( log_, "current USSD dialog op=%p opid=%u is replaced by SMSC", op, found_ussd);
+                      session_->closeCurrentOperation();
                     }
                 }
                 op = session_->createOperation( *cmd_.get(), optype_ );
@@ -349,10 +384,6 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                 }
                 op->setUSSDref( umr );
                 if ( cmdid == DELIVERY ) op->setFlag(OperationFlags::NEXTUSSDISSUBMIT);
-
-                if ( isUSSDClosed ) {
-                    op->setStatus( OPERATION_COMPLETED );
-                }
 
             } else if ( found_ussd == invalidOpId() ) {
                 // ussd operation not found
@@ -405,10 +436,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                 // update ussd activity time
                 op->setUSSDLastTime( currentTime_ );
 
-                if ( isUSSDClosed )
-                    op->setStatus( OPERATION_COMPLETED );
-                else
-                    op->setStatus( OPERATION_CONTINUED );
+                // op completed will be set in postProcess
+                op->setStatus( OPERATION_CONTINUED );
 
             } // if ussd op exists
 
@@ -585,7 +614,45 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st,
 
         if ( op->type() == CO_USSD_DIALOG ) {
 
-            if ( cmd_->isResp() ) {
+            if ( !cmd_->isResp() ) {
+
+                SMS* sms = cmd_->get_sms();
+
+                const int ussd_op = 
+                    sms->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ?
+                    int(sms->getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) : -1;
+
+                const bool hasumr = sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE);
+                bool smppplus = false;
+                if (hasumr) {
+                    const int32_t umr = sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE);
+                    if ( (umr & 0x80000000) ) { smppplus = true; }
+                }
+
+                bool isUSSDClosed = false;
+                switch (ussd_op) {
+                case smsc::sms::USSD_USSR_CONF_LAST :
+                case smsc::sms::USSD_USSREL_IND :
+                case smsc::sms::USSD_PSSR_RESP :
+                case smsc::sms::USSD_PSSD_RESP :
+                case smsc::sms::USSD_REDIRECT :
+                case smsc::sms::USSD_USSREL_REQ :
+                case smsc::sms::USSD_USSN_REQ_LAST :
+                case smsc::sms::USSD_USSN_REQ_VLR_LAST :
+                    isUSSDClosed = true;
+                    break;
+                case smsc::sms::USSD_USSN_CONF :
+                    if (!smppplus) isUSSDClosed = true;
+                    break;
+                default: break;
+                }
+
+                if (isUSSDClosed) {
+                    op->setStatus( OPERATION_COMPLETED );
+                }
+
+            } else {
+
                 if ( op->getStatus() == OPERATION_COMPLETED ) {
                     what = "ussd completed, closed on resp";
                     session_->closeCurrentOperation();
@@ -593,6 +660,7 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st,
                     what = "ussd bad resp, closed";
                     session_->closeCurrentOperation();
                 }
+
             }
 
         } else {

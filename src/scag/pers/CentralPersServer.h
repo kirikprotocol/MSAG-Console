@@ -66,8 +66,8 @@ protected:
   ProfileInfoAllocator profileInfoAllocator;
   ProfileInfoStorage profileInfoStore;
   smsc::core::buffers::XHash<AbntAddr, TransactionInfo, AbntAddr> transactions;
-  Mutex regionsReloadMutex, regionsMapMutex;
-  IntHash<RegionInfo>* regions;
+  smsc::core::synchronization::Mutex regionsReloadMutex, regionsMapMutex;
+  smsc::core::buffers::IntHash<RegionInfo>* regions;
   bool getRegionInfo(uint32_t id, RegionInfo& ri);
   bool getProfileInfo(AbntAddr& key, ProfileInfo& pi);
   void reloadRegions(const char* regionsFileName);

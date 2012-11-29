@@ -71,14 +71,9 @@ private:
 
     SmppOperationMaker();
 
-    inline void fail( const char* msg,
-                      re::RuleStatus& st,
-                      int reason ) {
-        what_ = msg;
-        st.status = re::STATUS_FAILED;
-        st.result = reason;
-        smsc_log_warn( log_, "%s: failure: %s, res=%d", where_, what_, reason );
-    }
+    void fail( const char* msg,
+               re::RuleStatus& st,
+               int reason );
 
 private:
     const char*                  where_;

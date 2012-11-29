@@ -1,6 +1,0 @@
-# $Id$
-# this file contains binaries definitions
-
-# binary name        source name  libraries
-#acls/acls acls 
-migration/alias_xml2bin xml2bin -L$(SMSC_BUILDDIR)/bin -llogger -lutil-config -lutil-config-alias -lutil-xml -lutil -lpthread -lrt $(XERCES_LIB)

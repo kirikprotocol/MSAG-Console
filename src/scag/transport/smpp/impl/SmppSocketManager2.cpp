@@ -70,8 +70,10 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
                     passreason = "nolimyet";
                 } else if ( l->connectionCount() > connectionsPerIp_ ) {
                     mg.Unlock();
-                    smsc_log_warn( log, "Connection %s is dropped: max connect limit: %u > %u",
+                    smsc_log_warn( log, "Connection %p %s sock=%p is dropped: max connect limit: %u > %u",
+                                   sock,
                                    sock->getPeer(),
+                                   sock->getSocket(),
                                    l->connectionCount(),
                                    connectionsPerIp_ );
                     break;
@@ -80,8 +82,11 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
                     const int tmo = int(now - l->lastFailure());
                     if ( tmo < int(failTimeout_) ) {
                         mg.Unlock();
-                        smsc_log_warn( log, "Connection %s is dropped: last failure was %d seconds ago, tmo=%d",
-                                       sock->getPeer(), tmo, failTimeout_ );
+                        smsc_log_warn( log, "Connection %p %s sock=%p is dropped: last failure was %d seconds ago, tmo=%d",
+                                       sock,
+                                       sock->getPeer(),
+                                       sock->getSocket(), 
+                                       tmo, failTimeout_ );
                         break;
                     } else {
                         // reset failure
@@ -111,8 +116,13 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
                 // ++registeredConnections_;
                 const unsigned rc = readers[i]->getSocketsCount();
                 mg.Unlock();
+                smsc_log_info(log,"Reusing reader/writer (%d) for %p %s sock=%p, %s conn(perIp/total)=%s/%d",
+                              rc,
+                              sock,
+                              sock->getPeer(),
+                              sock->getSocket(),
+                              passreason,perip,regc);
                 sock = 0;
-                smsc_log_info(log,"Reusing reader/writer (%d), %s conn(perIp/total)=%s/%d",rc,passreason,perip,regc);
                 break;
             }
         }
@@ -134,15 +144,16 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
                         IpLimit* l = iphash_.GetPtr(netaddr);
                         if (!l) {
                             smg.Unlock();
-                            smsc_log_error(log,"logic error: ip(%x) has been removed from iphash", netaddr);
+                            smsc_log_error(log,"logic error: ip(%x) has been removed from iphash",
+                                           netaddr);
                         } else {
                             l->setLastFailure(time(0));
                         }
                     }
                 }
                 
-                smsc_log_warn(log,"Connection %s is dropped: too many readers/writers: %d",
-                              sock->getPeer(), rc );
+                smsc_log_warn(log,"Connection %p %s sock=%p is dropped: too many readers/writers: %d",
+                              sock, sock->getPeer(), sock->getSocket(), rc );
                 break;
             }
             sock->setSocketManager(this);
@@ -157,8 +168,12 @@ bool SmppSocketManager::registerSocket(SmppSocket* sock)
             const unsigned rc = readers.Count();
             mg.Unlock();
             // sock->release();
+            smsc_log_info(log,"Creating new reader/writer (%d) for %p %s sock=%p, %s conn(perIp/total)=%s/%d",
+                          rc,
+                          sock, sock->getPeer(),
+                          sock->getSocket(),
+                          passreason, perip, regc );
             sock = 0;
-            smsc_log_info(log,"Creating new reader/writer (%d), %s conn(perIp/total)=%s/%d", rc, passreason, perip, regc );
         }
     } while ( false ); // fake loop
 
@@ -209,12 +224,17 @@ void SmppSocketManager::unregisterSocket(SmppSocket* sock)
             cpi = -1;
         }
     } while ( false );
-    smsc_log_info(log,"connection %s unregistered, perIP/total=%d/%u", sock->getPeer(), cpi, rc);
+    smsc_log_info(log,"connection %p %s sock=%p unregistered, perIP/total=%d/%u",
+                  sock,
+                  sock->getPeer(),
+                  sock->getSocket(), 
+                  cpi, rc);
 }
 
 void SmppSocketManager::shutdown()
 {
   if (conn) conn->shutdown();
+    /*
   if (acc) {
       acc->Stop();
       // wait until acc is stopped
@@ -222,6 +242,7 @@ void SmppSocketManager::shutdown()
           Thread::Yield();
       }
   }
+     */
   tp.shutdown();
   readers.Empty();
   writers.Empty();

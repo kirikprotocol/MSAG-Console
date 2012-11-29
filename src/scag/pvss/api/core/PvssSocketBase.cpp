@@ -12,12 +12,13 @@ Mutex logMutex;
 }
 
 smsc::logger::Logger* PvssSocketBase::log_ = 0;
+unsigned long long    PvssSocketBase::total_ = 0;
 
 void PvssSocketBase::initHostName( const char* hn )
 {
     if (!log_) {
         MutexGuard mg(logMutex);
-        if (!log_) log_ = Logger::getInstance("pvsssock");
+        if (!log_) log_ = Logger::getInstance("pvss.sock");
     }
     if ( sock_ && host_.empty() ) {
         char buf[60];

@@ -24,6 +24,15 @@ using scag::util::SerializeBuffer;
     class SaccSerialBuffer //: public SerializationBuffer
     {
     public:
+        void readStr(std::string& s);
+        void readInt16(uint16_t& i);
+        void ReadNetInt16(uint16_t& i);
+        void readInt32(uint32_t& i);
+        void ReadNetInt32(uint32_t& i);
+        void readInt64(uint64_t& i);
+        void readByte(uint8_t& i);
+        void readFloat(float& i);
+
         void writeStr(std::string& s, uint16_t maxLen);
         void writeInt16(uint16_t i);
         void WriteNetInt16(uint16_t i);
@@ -36,6 +45,9 @@ using scag::util::SerializeBuffer;
         void* getBuffer();
         uint32_t getPos();
         void setPos(uint32_t newPos);
+        uint32_t getSize();
+        SaccSerialBuffer(char* data, size_t size);
+        SaccSerialBuffer():buff_(){};
     private:
         SerializeBuffer buff_;
     };
@@ -44,6 +56,11 @@ using scag::util::SerializeBuffer;
     {
         uint16_t sEventType;
     public:
+        typedef enum{
+          JSON,
+          CSV
+        } tostring;
+
         SaccEvent(uint16_t et) : sEventType(et) {};
         SaccEvent(const SaccEvent& src) : sEventType(src.sEventType) {};
         virtual ~SaccEvent() {}
@@ -51,6 +68,11 @@ using scag::util::SerializeBuffer;
         uint16_t getEventType()const {return sEventType; }
         virtual void write(SaccSerialBuffer& buf) = 0;
         virtual const char* getName() = 0;
+        virtual std::string toString(tostring mode=JSON) = 0; //to almost JSON
+
+        static SaccEvent* deserialize(char* buf, size_t buflen);//factory for load
+    private:
+        virtual void read(SaccSerialBuffer& buf) = 0;
     };
 
     struct SaccEventHeader
@@ -89,6 +111,8 @@ using scag::util::SerializeBuffer;
             iOperatorId = src.iOperatorId;
         }
         void write(SaccSerialBuffer& buf);
+        void read(SaccSerialBuffer& buf);
+        std::string toString(SaccEvent::tostring mode);
     };
 
     struct SaccTrafficInfoEvent : public SaccEvent
@@ -108,6 +132,9 @@ using scag::util::SerializeBuffer;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccTrafficInfoEvent"; };
+        virtual std::string toString(SaccEvent::tostring mode=JSON);
+    private:
+        void read(SaccSerialBuffer& buf);
     };
 
     struct SaccBillingInfoEvent : public SaccEvent
@@ -137,6 +164,9 @@ using scag::util::SerializeBuffer;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccBillingInfoEvent"; };
+        virtual std::string toString(SaccEvent::tostring mode=JSON);
+    private:
+        void read(SaccSerialBuffer& buf);
     };
 
     struct SaccAlarmEvent : public SaccEvent
@@ -158,6 +188,9 @@ using scag::util::SerializeBuffer;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccAlarmEvent"; };
+        std::string toString(SaccEvent::tostring mode=JSON){return std::string("");}
+    private:
+        void read(SaccSerialBuffer& buf){}
     };
 
     struct SaccAlarmMessageEvent : public SaccEvent
@@ -197,6 +230,9 @@ using scag::util::SerializeBuffer;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccAlarmMessageEvent"; };
+        std::string toString(SaccEvent::tostring mode=JSON){return std::string("");}
+    private:
+        void read(SaccSerialBuffer& buf){}
     };
 
     namespace events{

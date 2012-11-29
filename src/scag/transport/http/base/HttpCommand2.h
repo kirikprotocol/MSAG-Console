@@ -26,7 +26,6 @@ class HttpParser;
 const char CONTENT_LENGTH_FIELD[] = "Content-Length";
 const char CONTENT_TYPE_FIELD[] = "Content-Type";
 const char CONNECTION_FIELD[] = "Connection";
-const char KEEP_ALIVE_FIELD[] = "Keep-Alive";
 const char TRANSFER_ENCODING_FIELD[] = "Transfer-Encoding";
 const char CONTENT_ENCODING_FIELD[] = "Content-Encoding";
 const char ACCEPT_ENCODING_FIELD[] = "Accept-Encoding";
@@ -142,11 +141,8 @@ public:
     trc(tcx),
     context(cx),
     contentLength(-1), /* totalHeadersSize(0), */
-    chunked(false),
-    chunk_size(0),
     serial_(makeSerial()),
-    closeConnect_(true),
-    keepAlive(0)
+    closeConnect_(false)
     {}
     virtual ~HttpCommand();
 
@@ -288,14 +284,10 @@ public:
     void appendMessageContent(char *data, unsigned int length) {
         content.Append(data, length);
     }
-    unsigned int appendChunkedMessageContent(char *data, unsigned int length);
 
     Cookie* getCookie(const std::string& name);
     Cookie* setCookie(const std::string& name, const std::string& value);
     void delCookie(const std::string& name);
-    int getKeepAlive() { return keepAlive; }
-    void setKeepAlive(int value) { keepAlive = value; }
-    void checkConnectionFields();
 
 protected:
     virtual void setSession( scag2::sessions::Session* s ) { session_ = s; };
@@ -319,8 +311,6 @@ public:
     HttpContext* context;
     // unsigned int totalHeadersSize;
     int contentLength;
-    bool chunked;
-    unsigned int chunk_size;
     
     void setLengthField(unsigned int length);
     void setCloseConnection(bool closeConnect) { closeConnect_ = closeConnect; }
@@ -329,7 +319,6 @@ public:
 private:
     uint32_t  serial_;
     bool closeConnect_;
-    int	 keepAlive;
 };
 
 
@@ -359,16 +348,8 @@ enum HttpMethod {
     DELETE,
     TRACE,
     CONNECT,
-    OPTIONS,
-    METHOD_COUNT = OPTIONS,
-    HTTP_METHOD_LAST
+    OPTIONS
 };
-
-typedef struct {
-  const char*	name;
-  unsigned int  size;
-  HttpMethod    value;
-} http_methods;
 
 /**
  * Class provides access to the HTTP request message
@@ -394,7 +375,7 @@ public:
         return siteQuery;
     }
     void setSiteQuery(const std::string& p) {
-        siteQuery = p;
+        URLField = p;
     }
     
     const std::string& getURLField() {
@@ -425,12 +406,10 @@ public:
 
     bool getPostParams(std::string& params);
 
-    static const char* httpMethodNames(HttpMethod hm);
-
 protected:
     void serializeQuery(std::string& s);
 
-//    static const char *httpMethodNames[HTTP_METHOD_LAST];
+    static const char *httpMethodNames[9];
 
     StringHash queryParameters;
     ParameterIterator queryParametersIterator;
@@ -442,9 +421,6 @@ protected:
     
     bool isInitialRequest;
     bool failedBeforeSessionCreate;
-
-public:
-    static const http_methods method_table[METHOD_COUNT];
 };
 
 /**

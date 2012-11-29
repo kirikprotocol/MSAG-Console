@@ -249,8 +249,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         if ( ! v ) {
             // not found
             firsttime = true;
-        }
-        else {
+        } else {
             firsttime = false;
 
             session = cache_->store2val(*v);
@@ -268,8 +267,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                     session->setCurrentCommand( cmd->getSerial() );
                     what = "was free";
                     break;
-                }
-                else if ( session->currentCommand() == cmd->getSerial() ) {
+                } else if ( session->currentCommand() == cmd->getSerial() ) {
                     what = "already mine";
                     break;
                 }
@@ -310,8 +308,7 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         if ( !v ) {
             cache_->set( key, cache_->val2store( allocator_->alloc(key) ));
             v = cache_->get( key );
-        }
-        else {
+        } else {
             *v = cache_->val2store( allocator_->alloc(key) );
         }
         const unsigned sz = cache_->size();
@@ -335,45 +332,59 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
 
         if ( ! disk_->get( key, cache_->store2ref(*v) ) ) {
             // session is not found on disk
+            SCAGCommand* nextcmd = 0; // used as a flag to delete session
             {
                 MutexGuard mg(cacheLock_);
                 if ( ! create ) {
-                    // creation is forbidden
-                	// try to fill created stub from cache
-                	// if session queue already contains any commands, then let this session remain in cache and flag session=0
-                	// else delete it. Deletion should be a bit later, not under cache lock.
+                    // the session was not found on disk,
+                    // and the creation was forbidden.
+                    // However, while we were loading,
+                    // a few commands may have arrived for this session.
+                    // In this case we should not delete the session, instead pop the first command.
+                    // Otherwise we may detach the session from the cache, and delete it later not under lock.
                     session = cache_->release( key );
-                	if ( session ) {
-                		if ( session->commandCount() ) {
-    			            cache_->set( key, cache_->val2store( session ));
-    						session = 0;
-                		}
-                		else {
-                			loadedSessions_->increment(-1);
-                			lockedSessions_->increment(-1);
-                		}
-                	}
-                	else {
-                	    smsc_log_error( log_, "SessionStoreImpl::fetchSession Error:lost stub key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-                	}
-                }
-                else {
+                    if ( session ) {
+                        nextcmd = session->popCommand();
+                        if ( nextcmd ) {
+                            cache_->set( key, cache_->val2store( session ));
+                            storedCommands_->increment(-1);
+                            setCommandSession(*nextcmd,session);
+                            session->setCurrentCommand(nextcmd->getSerial());
+                        } else {
+                            loadedSessions_->increment(-1);
+                            lockedSessions_->increment(-1);
+                            // session is released and may be deleted
+                        }
+                    } else {
+                        smsc_log_error( log_, "SessionStoreImpl::fetchSession Error:lost stub key=%s session=%p for cmd=%p",
+                                        key.toString().c_str(), session, cmd.get() );
+                    }
+                } else {
                     totalSessions_->increment();
                 }
             }
+
             if ( !create ) {
                 // failure to upload from disk and creation flag is not set
             	if ( session ) {
-            		delete session;
-            		session = 0;
+                    if ( nextcmd ) {
+                        // there is nextcmd, push it
+                        if ( !carryNextCommand(*session,nextcmd,true) ) {
+                            expiration_->scheduleExpire(session->expirationTime(),
+                                                        session->lastAccessTime(),
+                                                        key);
+                        }
+                        // do not show the session
+                    } else {
+                        delete session;
+                    }
+                    session = 0;
             	}
                 what = "is not found";
-            }
-            else {
+            } else {
                 what = "created";
             }
-        }
-        else if ( session->expirationTime() < time(0) ) {
+        } else if ( session->expirationTime() < time(0) ) {
             what = "expired on disk";
             queue_->pushCommand( cmd.get(), SCAGCommandQueue::RESERVE );
             SCAGCommand* com = cmd.release();
@@ -384,35 +395,30 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             }
             expiration_->scheduleExpire( session->expirationTime(), session->lastAccessTime(), key );
             session = 0;
-        }
-        else {
+        } else {
             // session was just uploaded and is not expired
             if ( firsttime && ! session->hasPersistentOperation() ) {
                 // session was not persistent
                 session->clear();
                 what = "upload&clear";
-            }
-            else {
+            } else {
                 what = "uploaded";
             }
         }
     }
 
     // smsc_log_debug( log_, "fetched key=%s session=%p for cmd=%p", key.toString().c_str(), session, cmd.get() );
-	if ( log_->isDebugEnabled() ) {
-    	time_t tl, te;
-    	long wait=0;
-    	std::string tls = "?";
-    	std::string tle = "?";
-    	if (session) {
-        	tl = session->lastAccessTime();
-        	tls = std::string(ctime(&tl)).substr(11,8);
-        	te = session->expirationTime();
-        	tle = std::string(ctime(&te)).substr(11,8);
-        	wait = te - tl;
-    	}
-        smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d %s, access %s expire %s wait,sec=%d",
-                        key.toString().c_str(), cmdaddr, create ? 1:0, session, sqsz, what, tls.c_str(), tle.c_str(), wait );
+    if ( log_->isDebugEnabled() ) {
+        const time_t now = time(0);
+        int te, ta;
+        te = ta = 0;
+        if (session) {
+            te = int(session->expirationTime()-now);
+            ta = int(session->lastAccessTime()-now);
+        }
+        smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d %s exp=%+d acc=%+d",
+                        key.toString().c_str(), cmdaddr, create ? 1:0,
+                        session, sqsz, what, te, ta );
     }
 
     if ( session )
@@ -426,17 +432,6 @@ void SessionStoreImpl::releaseSession( Session& session )
 {
     // NOTE: key should not be a reference, as session may be destroyed at the end of the method
     const SessionKey key = session.sessionKey();
-
-	if ( log_->isDebugEnabled() ) {
-    	time_t tl, te;
-    	std::string tls = "?";
-    	std::string tle = "?";
-       	tl = session.lastAccessTime();
-    	tls = std::string(ctime(&tl)).substr(11,8);
-       	te = session.expirationTime();
-    	tle = std::string(ctime(&te)).substr(11,8);
-    	smsc_log_debug( log_,"releaseSession %p qsz=%d access %s expire %s sec %d", &session, session.commandCount(), tls.c_str(), tle.c_str(), (te-tl));
-    }
     {
         uint32_t cmd = session.currentCommand();
         // smsc_log_debug(log_,"releaseSession(session=%p): key=%s, sess->ops=%d, sess->pers=%d, sess->cmd=%u)",

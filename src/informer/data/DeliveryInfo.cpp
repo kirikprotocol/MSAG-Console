@@ -95,6 +95,12 @@ isOldActLog_(false)
 }
 
 
+DeliveryInfo::~DeliveryInfo()
+{
+    smsc_log_debug(log_,"dtor info D=%u",dlvId_);
+}
+
+
 void DeliveryInfo::update( const DeliveryInfoData& data )
 {
     updateData( data, &data_);

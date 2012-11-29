@@ -70,7 +70,7 @@ bool ActionMatch::run(ActionContext& context)
 
     RegExp re;
 
-    if(!re.Compile((uint16_t*)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
+    if(!re.Compile((RECHAR*)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
     {
         smsc_log_warn(logger, "Action 'match' Failed to compile regexp '%s'", strRegexp.c_str());
         return true;
@@ -98,7 +98,7 @@ bool ActionMatch::run(ActionContext& context)
     SMatch m[100];
     int n=100;
 
-    bool flag = re.Match((uint16_t*)value.data(),m,n);
+    bool flag = re.Match((RECHAR*)value.data(),m,n);
 
     pResult->setBool(flag);
     smsc_log_debug(logger,"Action 'match': result '%d'", flag);

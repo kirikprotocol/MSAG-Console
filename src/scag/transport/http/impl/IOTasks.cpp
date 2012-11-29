@@ -19,8 +19,8 @@ namespace http {
 #define STAT_RESP       16
 #define FAKE_RESP       32
 /*
-//#define DEL_REQ         64
-//#define DEL_RESP        128
+#define DEL_REQ         64
+#define DEL_RESP        128
 */
 
 const size_t SHUT_BUF_SIZE = 4;
@@ -30,15 +30,18 @@ void IOTask::killSocket(Socket *s) {
     HttpContext *cx = HttpContext::getContext(s);
     unsigned int flags = cx->flags;
         
-	if (!(flags & NO_MULT_REM)) {
+    if (!(flags & NO_MULT_REM))
         multiplexer.remove(s);
-	}
 
     if ((flags & DEL_SITE_SOCK) && cx->site) {
-    	cx->closeConnection(cx->site);
+//        cx->site->Abort();
+        delete cx->site;
+        cx->site = NULL;
     }
     if ((flags & DEL_USER_SOCK) && cx->user) {
-    	cx->closeConnection(cx->user);
+//        cx->user->Abort();
+        delete cx->user;
+        cx->user = NULL;
     }
 /*
     if ((flags & (DEL_REQ | DEL_RESP)) && cx->command) {
@@ -78,8 +81,6 @@ void IOTask::removeSocket(Multiplexer::SockArray &error) {
             nsub = error.Count();
             while (error.Count()) {
                 error.Pop(s);
-                multiplexer.remove(s);
-//                removeSocket(s);
                 killSocket(s);
             }
         }
@@ -98,11 +99,6 @@ void IOTask::removeSocket(Socket *s) {
     iomanager.removeContext(this, 1);
 }
 
-void IOTask::clearSocket(Socket *s) {
-    while ((int)recv(s->getSocket(), SHUT_BUF, SHUT_BUF_SIZE, 0) > 0);
-}
-
-
 void IOTask::deleteSocket(Socket *s, int how) {
     shutdown(s->getSocket(), how);
     while ((int)recv(s->getSocket(), SHUT_BUF, SHUT_BUF_SIZE, 0) > 0);
@@ -118,33 +114,24 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error)
     {
         Socket *s =  multiplexer.getSocket(i);
 
-        if (isTimedOut(s, now)) {
-			try {
-				HttpContext *cx = HttpContext::getContext(s);
-				if ( cx->isTimedOut(s, now) )
-				{
-					if (cx->action == SEND_REQUEST)
-						cx->setDestiny(408, FAKE_RESP | DEL_SITE_SOCK); //503
-					else if (cx->action == SEND_RESPONSE)
-						cx->setDestiny(504, STAT_RESP | DEL_SITE_SOCK | DEL_USER_SOCK); //500
-					else if (cx->action == READ_REQUEST)
-						cx->setDestiny(408, DEL_CONTEXT); //503
-					else if (cx->action == READ_RESPONSE)
-						cx->setDestiny(504, FAKE_RESP); //503
-					else if (cx->action == FINALIZE_SOCKET) {
-						smsc_log_warn(logger, "%p::checkConnectionTimeout, socket %p finalization timeout cx=%p", this, s, cx);
-						cx->setDestiny(0, STAT_RESP | DEL_SITE_SOCK | DEL_USER_SOCK | DEL_CONTEXT);
-					}
-					else if (cx->action == KEEP_ALIVE_TIMEOUT) {
-						smsc_log_error(logger, "%p IOTask::checkConnectionTimeout cx %p KEEP_ALIVE_TIMEOUT expired", this, cx);
-						cx->setDestiny(0, STAT_RESP | DEL_SITE_SOCK | DEL_USER_SOCK | DEL_CONTEXT);
-					}
-					error.Push(s);
-				}
-			}
-			catch (...) {
-				smsc_log_error(logger, "IOTask::checkConnectionTimeout exception cx");
-			}
+        if (isTimedOut(s, now))
+        {
+            HttpContext *cx = HttpContext::getContext(s);
+                    
+            if (cx->action == SEND_REQUEST)
+                cx->setDestiny(408, FAKE_RESP | DEL_SITE_SOCK); //503
+            else if (cx->action == SEND_RESPONSE)
+                cx->setDestiny(504, STAT_RESP | DEL_USER_SOCK); //500
+            else if (cx->action == READ_REQUEST)
+                cx->setDestiny(408, DEL_CONTEXT); //503
+            else if (cx->action == READ_RESPONSE)
+                cx->setDestiny(504, FAKE_RESP); //503
+            else if (cx->action == FINALIZE_SOCKET) {
+                smsc_log_warn(logger, "%p: %p, socket %p finalization timeout", this, cx, s);
+                s->Abort();
+                cx->setDestiny(0, STAT_RESP | DEL_USER_SOCK);
+            }
+            error.Push(s);
         }
     }
 }
@@ -153,10 +140,9 @@ int HttpReaderTask::Execute()
 {
     Multiplexer::SockArray ready;
     Multiplexer::SockArray error;
-    HttpContext *cx;
     char buf[READER_BUF_SIZE];
     unsigned int i;
-    Socket *s = NULL;
+    time_t now;    
 
     smsc_log_debug(logger, "%p started", this);
     
@@ -165,55 +151,107 @@ int HttpReaderTask::Execute()
             MutexGuard g(sockMon);
 
             while (!(socketCount || isStopping)) {
-//                smsc_log_debug(logger, "%p idle", this);
+                smsc_log_debug(logger, "%p idle", this);
                 sockMon.wait();         
-//                smsc_log_debug(logger, "%p notified", this);
+                smsc_log_debug(logger, "%p notified", this);
             }
             if (isStopping)
                 break;
             
             while(waitingAdd.Count())
             {
+                Socket *s;
                 waitingAdd.Pop(s);
                 multiplexer.add(s);
             }
         }
 
         checkConnectionTimeout(error);
-       	removeSocket(error);
 
-       	if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) > 0) {
+        removeSocket(error);
+
+        if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) > 0) {
             for (i = 0; i < (unsigned int)error.Count(); i++) {
-//              Socket *s;
-                s = error[i];
-                cx = HttpContext::getContext(s);
-                smsc_log_error(logger, "%p: %p failed (in error array)", this, cx);
+                Socket *s = error[i];           
+                HttpContext *cx = HttpContext::getContext(s);
+                smsc_log_error(logger, "%p: %p failed", this, cx);
                 if (cx->action == FINALIZE_SOCKET) {
-                    smsc_log_warn(logger, "%p: %p, socket %p finalization error", this, cx, s);
-                    cx->setDestiny(0, STAT_RESP | DEL_USER_SOCK);
-                	cx->closeConnection(s);
- 				    continue;
+                  smsc_log_warn(logger, "%p: %p, socket %p finalization error", this, cx, s);
+                  s->Abort();
+                  cx->setDestiny(0, STAT_RESP | DEL_USER_SOCK);
+                  continue;
                 }
-                if (cx->action == KEEP_ALIVE_TIMEOUT) {
-                    smsc_log_debug(logger, "%p: %p, socket %p error action=KEEP_ALIVE_TIMEOUT", this, cx, s);
-                    cx->setDestiny(0, DEL_CONTEXT);
-                	cx->closeConnection(s);
- 				    continue;
-                }
-
                 cx->setDestiny(503, cx->action == READ_RESPONSE ? //503
                     FAKE_RESP | DEL_SITE_SOCK : DEL_CONTEXT);
             }
+            now = time(NULL);
             for (i = 0; i < (unsigned int)ready.Count(); i++) {
-//              Socket *s;
-                s = ready[i];
-            	manageReadyRead(s, buf, error);
+                Socket *s = ready[i];
+                HttpContext *cx = HttpContext::getContext(s);
+                if (cx->action == FINALIZE_SOCKET) {
+                  smsc_log_debug(logger, "%p: %p, finalize socket %p", this, cx, s);
+                  deleteSocket(s, SHUT_WR);
+                  smsc_log_debug(logger, "%p: %p, socket %p finalized", this, cx, s);
+                  cx->user = NULL;
+                  cx->action = PROCESS_STATUS_RESPONSE;
+                  cx->result = 0;
+                  manager.process(cx);
+                  removeSocket(s);
+                  continue;
+                }
+                unsigned int unparsed_len;
+                int len;
+                unparsed_len = cx->loadUnparsed(buf);                
+                do
+                    len = s->Read(buf + unparsed_len, READER_BUF_SIZE - unparsed_len);
+                while (len == -1 && errno == EINTR);
+
+                if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
+                    smsc_log_debug(logger, "%p: %p, data received. len=%d", this, cx, len);
+                    unparsed_len += len;
+                    len = unparsed_len;
+                    switch (HttpParser::parse(buf, unparsed_len, *cx)) {
+                    case OK:
+                        removeSocket(s);
+                        if (cx->action == READ_RESPONSE) {
+                            smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
+                            s->Abort();
+                            delete s;
+                            cx->site = NULL;
+                            cx->action = PROCESS_RESPONSE;
+                        }
+                        else {
+                            smsc_log_debug(logger, "%p: %p, request parsed", this, cx);
+                            cx->action = PROCESS_REQUEST;
+                        }
+                        cx->result = 0;
+                        manager.process(cx);
+                        break;
+                    case ERROR:
+                        smsc_log_error(logger, "%p: %p, parse error", this, cx);
+                        cx->setDestiny(405, cx->action == READ_RESPONSE ?
+                            (FAKE_RESP | DEL_SITE_SOCK) : FAKE_RESP);
+                        error.Push(s);
+                        break;
+                    case CONTINUE:
+                        HttpContext::updateTimestamp(s, now);
+                        cx->saveUnparsed(buf + len - unparsed_len, unparsed_len);
+                    }
+                }
+                else {                    
+                    smsc_log_error(logger, "%p: %p, read error", this, cx);
+                    cx->setDestiny(405, cx->action == READ_RESPONSE ?
+                        (FAKE_RESP | DEL_SITE_SOCK) : DEL_CONTEXT);
+                    error.Push(s);
+                }
             }
+
             removeSocket(error);
         }
-    }	// for (;;)
+    }
 
     {
+        Socket *s;
         MutexGuard g(sockMon);
 
         while (multiplexer.Count()) {
@@ -228,102 +266,11 @@ int HttpReaderTask::Execute()
     return 0;
 }
 
-void HttpReaderTask::manageReadyRead(Socket* s, char* buf, Multiplexer::SockArray &error) {
-	HttpContext *cx = HttpContext::getContext(s);
-//	smsc_log_debug(logger, "%p: %p, manageReadyRead socket %p", this, cx, s); Http.Reque
-    time_t now = time(NULL);
-
-	if (cx->action == KEEP_ALIVE_TIMEOUT) {
-		smsc_log_debug(logger, "%p: %p, manageReadyRead socket %p change action from KEEP_ALIVE_TIMEOUT to READ_REQUEST", this, cx, s);
-		cx->action = READ_REQUEST;
-	}
-/*
-	if (cx->action == FINALIZE_SOCKET) {
-		removeSocket(s);
-		clearSocket(s);
-		cx->closeConnection(s);
-//			smsc_log_debug(logger, "%p: %p, finalize socket %p", this, cx, s);
-//			deleteSocket(s, SHUT_WR);
-//			smsc_log_debug(logger, "%p: %p, socket %p finalized", this, cx, s);
-//			cx->user = NULL;
-		cx->action = PROCESS_STATUS_RESPONSE;
-		cx->result = 0;
-		manager.process(cx);
-		return;
-	}
-*/
-
-	int len;
-	bool closed = false;
-/*
-* To avoid of buffer buf overflow:
-* Let read next portion of data into fixed-sized buf, and store in cx->unparsed.
-* Then pass cx->unparsed to parser.
-*/
-	if ( cx->useHttps(s) ) {
-		len = cx->sslReadPartial(s, buf, READER_BUF_SIZE, closed);
-	}
-	else {
-		do
-			len = s->Read(buf, READER_BUF_SIZE);
-		while (len == -1 && errno == EINTR);
-		if (len > 0)
-			cx->appendUnparsed(buf, len);
-		else
-			closed = true;
-	}
-
-	if ( len < 0 ) {
-//		smsc_log_debug(logger, "%p ssl close connection. len=%d", this, len);
-		removeSocket(s);
-		cx->closeConnection(s);
-		if ( cx->action == READ_RESPONSE ) {
-			cx->setDestiny(405, FAKE_RESP);
-			error.Push(s);
-		}
-		return;
-	}
-// if keep-alive connection, sslRead... may return 0 after last piece of data, when request/response already parsed. so should be ignored
-	if ( !(cx->action == READ_REQUEST || cx->action == READ_RESPONSE) ) {
-		removeSocket(s);
-		return;
-	}
-
-	switch ( HttpParser::parse(*cx, closed) ) {
-	case OK:
-		if (cx->action == READ_REQUEST) {
-//			smsc_log_debug(logger, "%p %p Read: %d\n%s", this, cx, len, cx->getUnparsed());
-			removeSocket(s);
-			cx->action = PROCESS_REQUEST;
-		}
-		else {	//		if (cx->action == READ_RESPONSE) {
-			if ( !closed ) {
-				break;
-			}
-			removeSocket(s);
-//			smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
-			if ( cx->command->closeConnection() ) {
-				cx->closeConnection(s);
-			}
-			cx->action = PROCESS_RESPONSE;
-		}
-		cx->result = 0;
-		manager.process(cx);
-		break;
-	case CONTINUE:
-		HttpContext::updateTimestamp(s, now);
-		break;
-	case ERROR:
-	default:
-		smsc_log_error(logger, "%p: %p, parse error (%s)", this, cx, cx->actionName());
-		cx->setDestiny(405, cx->action == READ_RESPONSE ? (FAKE_RESP | DEL_SITE_SOCK) : FAKE_RESP);
-		error.Push(s);
-	}
-}
-
 void HttpReaderTask::registerContext(HttpContext* cx)
 {
-	cx->beforeReader();
+    cx->flags = 0;
+    cx->result = 0;
+
     addSocket(cx->action == READ_RESPONSE ? cx->site : cx->user, true);
 }
 
@@ -332,7 +279,7 @@ int HttpWriterTask::Execute()
     Multiplexer::SockArray ready;
     Multiplexer::SockArray error;
     unsigned int i;
-    HttpContext *cx;
+    time_t now;
 
     smsc_log_debug(logger, "%p started",this);
     
@@ -340,9 +287,9 @@ int HttpWriterTask::Execute()
         {
             MutexGuard g(sockMon);
             while (!(socketCount || isStopping)) {
-//                smsc_log_debug(logger, "%p idle", this);
+                smsc_log_debug(logger, "%p idle", this);
                 sockMon.wait();
-//                smsc_log_debug(logger, "%p notified", this);
+                smsc_log_debug(logger, "%p notified", this);
             }
             if (isStopping)
                 break;
@@ -366,16 +313,19 @@ int HttpWriterTask::Execute()
             Socket *s;
 
             waitingConnect.Pop(s);
-            cx = HttpContext::getContext(s);
-//            smsc_log_debug(logger, "%p: %p, connecting %s:%d", this, cx, cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort());
+            HttpContext *cx = HttpContext::getContext(s);
+            smsc_log_debug(logger, "%p: %p, connecting %s:%d", this, cx,
+            cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort());
 
-            if (s->Init(cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort(), SOCKOP_TIMEOUT) || s->Connect(true)) {
+            if (s->Init(cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort(), SOCKOP_TIMEOUT) ||
+                s->Connect(true))
+            {
                 smsc_log_error(logger, "%p: %p, cannot connect", this, cx);
                 cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK | NO_MULT_REM); //
                 error.Push(s);
             }
             else {
-//                smsc_log_debug(logger, "%p: %p, socket %p connected", this, cx, s);
+                smsc_log_debug(logger, "%p: %p, socket %p connected", this, cx, s);
                 //s->setNonBlocking(1);
                 multiplexer.add(s);
             }
@@ -384,27 +334,99 @@ int HttpWriterTask::Execute()
         removeSocket(error);
 
         if (multiplexer.canWrite(ready, error, SOCKOP_TIMEOUT) > 0) {
-        	if ( multiplexer.Count() ) {
-                cx = HttpContext::getContext(multiplexer.getSocket(0));
-        	}
             for (i = 0; i < (unsigned int)error.Count(); i++) {
                 Socket *s = error[i];
-                cx = HttpContext::getContext(s);
+                HttpContext *cx = HttpContext::getContext(s);
                 
-                smsc_log_error(logger, "%p: cx:%p socket:%p failed HttpWriterTask action:%s", this, cx, s, cx->actionName());
+                smsc_log_error(logger, "%p: %p failed", this, cx);
                 if (cx->action == SEND_REQUEST)
                     cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK); 
                 else
                     cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);             
             }
             
+            now = time(NULL);  
             for (i = 0; i < (unsigned int)ready.Count(); i++) {
                 Socket *s = ready[i];
-                manageReadyWrite(s, error);
+                HttpContext *cx = HttpContext::getContext(s);
+                const char *data;
+                unsigned int size;
+                int written_size;
+
+                if (cx->flags == 0) {
+                    // write headers
+                    const std::string &headers = cx->command->getMessageHeaders();
+
+                    data = headers.data() + cx->position;
+                    size = headers.size() - cx->position;
+                }
+                else {
+                    // write content
+                    data = cx->command->getMessageContent(size);
+                    data += cx->position;
+                    size -= cx->position;
+                }
+                
+                written_size = 0;
+                if (size) {
+                    do {
+                        written_size = s->Write(data, size);
+                    } while (written_size == -1 && errno == EINTR);
+                    smsc_log_debug(logger, "written %d", written_size);
+                    if (written_size > 0) {
+                        cx->position += written_size;
+                        HttpContext::updateTimestamp(s, now);
+                    }
+                    else {
+                        smsc_log_error(logger, "%p: %p, write error", this, cx);
+                        if (cx->action == SEND_REQUEST)
+                            cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK); 
+                        else
+                            cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK); 
+                        error.Push(s);
+                        continue;
+                    }
+                }
+                
+                if (cx->flags == 0)
+                {
+                    if(cx->position >= cx->command->getMessageHeaders().size())
+                    {
+                        cx->flags = 1;
+                        cx->position = 0;
+                    }
+                }
+                else if (cx->position >= unsigned(cx->command->getContentLength()))
+                {
+                    removeSocket(s);
+                    if (cx->action == SEND_REQUEST) {
+                        smsc_log_info(logger, "%p: %p, request sent", this, cx);
+                        delete cx->command;
+                        cx->command = NULL;
+                        cx->action = READ_RESPONSE;
+                        cx->result = 0;
+                        manager.readerProcess(cx);
+                    }
+                    else {
+                        smsc_log_info(logger, "%p: %p, response sent", this, cx);
+                        if (cx->command->closeConnection()) {
+                          smsc_log_debug(logger, "%p: %p, close connection, finalize socket %p", this, cx, s);
+                          deleteSocket(s, SHUT_WR);
+                          smsc_log_debug(logger, "%p: %p, socket %p finalized", this, cx, s);
+                          cx->user = NULL;
+                          cx->action = PROCESS_STATUS_RESPONSE;
+                          cx->result = 0;
+                          manager.process(cx);
+                        } else {
+                          cx->action = FINALIZE_SOCKET;
+                          manager.readerProcess(cx);
+                        }
+                    }
+                }
             }
             removeSocket(error);
         }
-    }	// for (;;)
+    }
 
     {
         Socket *s;
@@ -428,113 +450,23 @@ int HttpWriterTask::Execute()
     return 0;
 }
 
-void HttpWriterTask::manageReadyWrite(Socket* s, Multiplexer::SockArray &error) {
-    HttpContext *cx = HttpContext::getContext(s);
-	char *data = NULL;
-	unsigned int size = 0;
-	int written_size = 0;
-    time_t now = time(NULL);
-
-/*
- * HttpContext function to define message (or part of message) attributes: ptr and size
- * that is ready to send depends on https, cx->flags and command->chunked
- * both Http and Https
- */
-	cx->messageGet(s, data, size);
-	if (size) {
-		data += cx->sendPosition;
-		size -= cx->sendPosition;
-		if ( cx->useHttps(s) ) {
-			written_size = cx->sslWritePartial(s, data, size);
-		}
-		else {
-			do {
-				written_size = s->Write(data, size);
-			} while (written_size == -1 && errno == EINTR);
-		}
-		if (written_size > 0) {
-			cx->sendPosition += written_size;
-			HttpContext::updateTimestamp(s, now);
-		}
-		else if ( written_size < 0 ) {	// written_size=-1 means the ssl peer has closed connection
-//			smsc_log_debug(logger, "%p, ssl close connection.", this);
-			removeSocket(s);
-			cx->closeConnection(s);
-			if ( cx->action == SEND_REQUEST ) {
-				cx->setDestiny(503, FAKE_RESP);
-				error.Push(s);
-			}
-			return;
-		}
-		else {
-   			smsc_log_error(logger, "%p, manageReadyWrite %p: write error", this, cx);
-			if (cx->action == SEND_REQUEST)
-				cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
-			else
-				cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);
-			error.Push(s);
-			return;
-        }
-	}
-/*
- * HttpContext function to analyse
- * if the whole message already sent, depends on cx->flags, cx->sendPosition and message size
- * both Http and Https
- *
- */
-    if ( cx->messageIsOver(s) )
-    {
-//if chunked then messageIsOver() returns true on headers and every chunk, so continue
-    	if ( cx->command->chunked && cx->chunks.size() ) {
-   			return;
-    	}
-		removeSocket(s);
-        if (cx->action == SEND_REQUEST) {
-//            smsc_log_info(logger, "%p: %p, request sent", this, cx);
-            delete cx->command;
-        	cx->command = NULL;
-            cx->action = READ_RESPONSE;
-            cx->result = 0;
-            manager.readerProcess(cx);
-        }
-        else {
-//        	smsc_log_info(logger, "%p: %p, response sent socket %p", this, cx, s);
-        	if (cx->command->closeConnection()) {
-                cx->closeConnection(s);
-				cx->action = PROCESS_STATUS_RESPONSE;
-				cx->result = 0;
-				manager.process(cx);
-            }
-            else {
-                smsc_log_debug(logger, "%p manageReadyWrite cx %p change action to KEEP_ALIVE_TIMEOUT (%d:%d)", this, cx, this->connectionTimeout, cx->timeout());
-            	cx->action = KEEP_ALIVE_TIMEOUT;
-				cx->result = 0;
-            	manager.readerProcess(cx);
-            }
-        }
-    }
-}
 
 void HttpWriterTask::registerContext(HttpContext* cx)
 {
     Socket *s;
 
+    cx->cleanUnparsed();
+    cx->flags = 0;
+    cx->result = 0;
+    cx->position = 0;    
+    
     if (cx->action == SEND_REQUEST) {
-    	if (cx->site)
-    		s = cx->site;
-    	else {
-        	cx->setSiteHttps(cx->command->getSitePort() != 80);
-            s = cx->site = new Socket;
-            HttpContext::setContext(s, cx);
-    	}
+        s = cx->site = new Socket;
+        HttpContext::setContext(s, cx);
     }
     else
         s = cx->user;
 
-    cx->flags = 0;
-    cx->result = 0;
-    cx->sendPosition = 0;
-    cx->messagePrepare();
     addSocket(s, cx->action != SEND_REQUEST);
 }
 

@@ -72,6 +72,22 @@ struct less_crit : public std::binary_function<_TArg, _TArg, bool> {
   }
 };
 
+template <class _TArg /* : public ObjWithCriterion_T<> */>
+struct less_crit_ptr : public std::binary_function<_TArg *, _TArg *, bool> {
+  bool operator()(const _TArg * & obj_1, const _TArg * & obj_2) const
+  {
+    return ((*obj_1).getCriterion() < (*obj_2).getCriterion());
+  }
+  bool operator()(const _TArg * & obj_1, const typename _TArg::criterion_type & crit_val) const
+  {
+    return ((*obj_1).getCriterion() < crit_val);
+  }
+  bool operator()(const typename _TArg::criterion_type & crit_val, const _TArg * & obj_1) const
+  {
+    return (crit_val < (*obj_1).getCriterion());
+  }
+};
+
 } //util
 } //smsc
 #endif /* __UTIL_OBJ_WITH_CRITERION_T */

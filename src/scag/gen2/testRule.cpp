@@ -324,6 +324,7 @@ public:
     }
 
     virtual void Commit( billid_type billId,
+                         int errorCode,
                          scag2::lcm::LongCallContext* lcmCtx = NULL )
     {
         smsc_log_info(log_,"Commit()");
@@ -331,18 +332,21 @@ public:
     }
     virtual void Rollback( billid_type billId,
                            bool timeout,
+                           int errorCode,
                            scag2::lcm::LongCallContext* lcmCtx = NULL)
     {
         smsc_log_info(log_,"Rollback()");
         abort();
     }
     virtual void CommitTransit( BillCloseCallParams& closeCallParams,
+                                int errorCode,
                                 scag2::lcm::LongCallContext* lcmCtx = NULL )
     {
         smsc_log_info(log_,"CommitTransit()");
         abort();
     }
     virtual void RollbackTransit( BillCloseCallParams& closeCallParams,
+                                  int errorCode,
                                   scag2::lcm::LongCallContext* lcmCtx = NULL )
     {
         smsc_log_info(log_,"RollbackTransit()");

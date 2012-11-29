@@ -82,7 +82,10 @@ public:
                           bool hourly = true,
                           bool destroyDir = false );
 
-    static void fixLog( const char* fn, bool zipped );
+    /// try to fix act log.
+    /// @return true if the file was fixed, false if it was not corrupted.
+    /// may throw exception if the file cannot be fixed.
+    static bool fixLog( const char* fn, bool zipped );
 
     /// @return zipversion, position fg on the first chunk record
     static unsigned readZipHead( FileBuffer& fb );

@@ -11,15 +11,21 @@ namespace util {
 class Inst 
 {
 public:
-    Inst() : run_(true) { check("/tmp/scag.pid"); }
-    Inst(const char* fname) : run_(true) { check(fname); }
+    Inst() : run_(true) {
+        check("/tmp/scag.pid");
+    }
+    Inst(const char* fname) : run_(true) {
+        check(fname); 
+    }
     
     ~Inst() { if(run_) std::remove(filename.c_str()); }
     bool run(){return run_;}
+    const char* getPid() const { return oldpid_; }
     
 protected:
     std::string filename;
     bool run_;
+    char oldpid_[30]; // contains the pid of already running process
     bool IsProcDir(char* procdir);
     void check(const char* fname);
 };

@@ -98,7 +98,7 @@ void IAPQueryATSI::onATSIResult(ATSIRes & res)
     _abInfo.odbGD = *res.getODB();
   smsc_log_debug(_logger, "%s(%s): %s", taskName(), _abId.getSignals(),
                  _abInfo.toString().c_str());
-  setStage(qryResulted);
+  setStage(qryResulted); //event will be signalled by MAP dialogue upon return !
 }
 
 //FSM switching: [qryStarted | qryResulted] -> qryReporting
@@ -131,7 +131,7 @@ ObjAllcStatus_e
       smsc_log_error(_logger, "%s(%s): query failed: code 0x%x, %s",
                       taskName(), _abId.getSignals(), err_code, _exc.c_str());
     }
-    setStageNotify(qryReporting);
+    setStage(qryReporting); //event will be signalled by MAP dialogue upon return !
   }
   reportThis();
   return ObjFinalizerIface::objActive;

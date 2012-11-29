@@ -3,7 +3,7 @@
 //  Routman Michael, 2007
 //------------------------------------
 //
-//	���� �������� �������� ������ RBTreeHSAllocator.
+//      ���� �������� �������� ������ RBTreeHSAllocator.
 //
 
 #include <string>
@@ -36,187 +36,187 @@ protected:
 
 private:
 
-	struct rbtFileHeader
-	{
+        struct rbtFileHeader
+        {
             rbtFileHeader() :
             cells_count(0), cells_used(0), cells_free(0), root_cell(0),
             first_free_cell(0), nil_cell(0), growth(0) {}
 
-		char preamble[20];
-		int version;
+                char preamble[20];
+                int version;
 
-		int cells_count;
-		int cells_used;
-		int cells_free;
-		long root_cell;
-		long first_free_cell;
-		long nil_cell;
-		off_t growth;
-		char reserved[168 - sizeof(off_t)];
-	};
-	
-	static	const int STAT_OK = 0;
-	static	const int STAT_WRITE_TRX = 1;
-	static	const int STAT_WRITE_RBT = 2;
-	static	const int TRX_VER_1 = 1;
-	
-	struct transFileHeader
-	{
-		int status;
-		int version;
-		int operation;
-		int nodes_count;
-	};
+                int cells_count;
+                int cells_used;
+                int cells_free;
+                long root_cell;
+                long first_free_cell;
+                long nil_cell;
+                off_t growth;
+                char reserved[168 - sizeof(off_t)];
+        };
+        
+        static  const int STAT_OK = 0;
+        static  const int STAT_WRITE_TRX = 1;
+        static  const int STAT_WRITE_RBT = 2;
+        static  const int TRX_VER_1 = 1;
+        
+        struct transFileHeader
+        {
+                int status;
+                int version;
+                int operation;
+                int nodes_count;
+        };
 
-	struct free_cell_list
-	{
-		long next_free_cell;
-	};
+        struct free_cell_list
+        {
+                long next_free_cell;
+        };
 
 public:
-	static const int version_32_1 = 0x01;
-	static const int version_64_1 = 0x80000001;
+        static const int version_32_1 = 0x01;
+        static const int version_64_1 = 0x80000001;
 
-	static const int mode = 0600;
-	static const off_t	default_growth = 1000;
+        static const int mode = 0600;
+        static const off_t      default_growth = 1000;
 
-	static const int SUCCESS			= 0;
-	static const int SUCCESS_PREV_OPER_FAILED	= 1;
-	
-	static const int RBTREE_FILE_NOT_SPECIFIED	= -1;
-	static const int CANNOT_CREATE_RBTREE_FILE	= -2;
-	static const int CANNOT_OPEN_RBTREE_FILE	= -3;
-	static const int BTREE_FILE_MAP_FAILED		= -4;
-	static const int CANNOT_CREATE_TRANS_FILE	= -5;
-	static const int CANNOT_OPEN_TRANS_FILE		= -6;
-	static const int CANNOT_READ_TRANS_FILE		= -7;
-	static const int RBTREE_FILE_ERROR		= -10;
-	static const int ATTEMPT_INIT_RUNNING_PROC	= -20;
+        static const int SUCCESS                        = 0;
+        static const int SUCCESS_PREV_OPER_FAILED       = 1;
+        
+        static const int RBTREE_FILE_NOT_SPECIFIED      = -1;
+        static const int CANNOT_CREATE_RBTREE_FILE      = -2;
+        static const int CANNOT_OPEN_RBTREE_FILE        = -3;
+        static const int BTREE_FILE_MAP_FAILED          = -4;
+        static const int CANNOT_CREATE_TRANS_FILE       = -5;
+        static const int CANNOT_OPEN_TRANS_FILE         = -6;
+        static const int CANNOT_READ_TRANS_FILE         = -7;
+        static const int RBTREE_FILE_ERROR              = -10;
+        static const int ATTEMPT_INIT_RUNNING_PROC      = -20;
 
-	RBTreeHSAllocator():
+        RBTreeHSAllocator():
         growth(1000000), running(false), currentOperation(0)
-	{
+        {
         logger = smsc::logger::Logger::getInstance("RBTAlloc");
-	}
+        }
 
-	void Create(void){}
-	void Open(void){}
-	void Close(void){}
+        void Create(void){}
+        void Open(void){}
+        void Close(void){}
 
-	int Init(const string& _rbtree_file="", off_t _growth = default_growth, bool clearFile = false)
-	{
-		if(running) return ATTEMPT_INIT_RUNNING_PROC;
-		if(_rbtree_file.length()==0)
-			return RBTREE_FILE_NOT_SPECIFIED;
-		
-		rbtree_file = _rbtree_file;
-		trans_file = rbtree_file + ".trx";
-		if(_growth > 0) growth = _growth;
-		
-		if(!isFileExists() || clearFile)
-		{
-			int ret;
-			if(0 > (ret = CreateRBTreeFile()))
-				return ret;
-		}
-		else
-		{
-			int ret;
-			if(0 > (ret = OpenRBTreeFile()))
-				return ret;
-		}
-		running = true;
-		return SUCCESS;
-	}
+        int Init(const string& _rbtree_file="", off_t _growth = default_growth, bool clearFile = false)
+        {
+                if(running) return ATTEMPT_INIT_RUNNING_PROC;
+                if(_rbtree_file.length()==0)
+                        return RBTREE_FILE_NOT_SPECIFIED;
+                
+                rbtree_file = _rbtree_file;
+                trans_file = rbtree_file + ".trx";
+                if(_growth > 0) growth = _growth;
+                
+                if(!isFileExists() || clearFile)
+                {
+                        int ret;
+                        if(0 > (ret = CreateRBTreeFile()))
+                                return ret;
+                }
+                else
+                {
+                        int ret;
+                        if(0 > (ret = OpenRBTreeFile()))
+                                return ret;
+                }
+                running = true;
+                return SUCCESS;
+        }
 
-	virtual ~RBTreeHSAllocator()
-	{
+        virtual ~RBTreeHSAllocator()
+        {
             if (running) running = false;
             for ( std::vector< caddr_t >::iterator i = chunks_.begin();
                   i != chunks_.end(); ++i ) {
                 delete *i;
             }
-	}
-	virtual nodeptr_type allocateNode(void)
-	{
-		if(!running) return 0;
+        }
+        virtual nodeptr_type allocateNode(void)
+        {
+                if(!running) return 0;
 //        smsc_log_debug(logger, "allocatingNode rbtree_body = %p, header_.first_free_cell = %d", rbtree_body, header_.first_free_cell);
         if(!header_.cells_free && ReallocRBTreeFile() != SUCCESS)
             abort();
             nodeptr_type newNode = (nodeptr_type)header_.first_free_cell;
             RBTreeNode* node = addr2node(newNode);
         smsc_log_debug(logger, "allocateNode node=%ld/%p", (long)newNode, node);
-		header_.first_free_cell = ((free_cell_list*)node)->next_free_cell;
-		node->parent = node->left = node->right = (nodeptr_type)header_.nil_cell;
-		header_.cells_used++;
-		header_.cells_free--;
-		return newNode;
-	}
-	virtual void releaseNode(nodeptr_type node)
-	{
-		if(!running) return;
+                header_.first_free_cell = ((free_cell_list*)node)->next_free_cell;
+                node->parent = node->left = node->right = (nodeptr_type)header_.nil_cell;
+                header_.cells_used++;
+                header_.cells_free--;
+                return newNode;
+        }
+        virtual void releaseNode(nodeptr_type node)
+        {
+                if(!running) return;
                 RBTreeNode* theNode = addr2node(node);
-		((free_cell_list*)theNode)->next_free_cell = header_.first_free_cell;
+                ((free_cell_list*)theNode)->next_free_cell = header_.first_free_cell;
                 header_.first_free_cell = (long)node;
-		header_.cells_used--;
-		header_.cells_free++;
-	}
-	virtual nodeptr_type getRootNode(void)
-	{
+                header_.cells_used--;
+                header_.cells_free++;
+        }
+        virtual nodeptr_type getRootNode(void)
+        {
                 if(!running) return (nodeptr_type)header_.nil_cell;
-		if(-1 == header_.root_cell) return (nodeptr_type)header_.nil_cell;
-		return (nodeptr_type)header_.root_cell;
-	}
-	virtual void setRootNode(nodeptr_type node)
-	{
-		if(!running) return;
-		header_.root_cell = (long)node;
-		
-	    smsc_log_debug(logger, "SetRoot node = %ld", (long)node);
-		//printf("SetRoot (long)node = %X", (long)node);
-		//printf("(long)rbtree_body = %X", (long)rbtree_body);
-		//printf("((long)node - (long)rbtree_body) = %d", ((long)node - (long)rbtree_body));
-		//printf("header_.root_cell = %d\n", header_.root_cell);
-	}
-	virtual nodeptr_type getNilNode(void)
-	{
+                if(-1 == header_.root_cell) return (nodeptr_type)header_.nil_cell;
+                return (nodeptr_type)header_.root_cell;
+        }
+        virtual void setRootNode(nodeptr_type node)
+        {
+                if(!running) return;
+                header_.root_cell = (long)node;
+                
+            smsc_log_debug(logger, "SetRoot node = %ld", (long)node);
+                //printf("SetRoot (long)node = %X", (long)node);
+                //printf("(long)rbtree_body = %X", (long)rbtree_body);
+                //printf("((long)node - (long)rbtree_body) = %d", ((long)node - (long)rbtree_body));
+                //printf("header_.root_cell = %d\n", header_.root_cell);
+        }
+        virtual nodeptr_type getNilNode(void)
+        {
             return (nodeptr_type)header_.nil_cell;
-	}
-	virtual long getSize(void) const
-	{
-		if(!running) return 0;
-		return header_.cells_used;
-	}
+        }
+        virtual long getSize(void) const
+        {
+                if(!running) return 0;
+                return header_.cells_used;
+        }
     
     virtual RBTreeNode* realAddr(nodeptr_type n) const
     {
         return addr2node(n);
     }
 
-	virtual void startChanges(nodeptr_type node, int operation)
-	{
+        virtual void startChanges(nodeptr_type node, int operation)
+        {
             if ( changedNodes.size() > 0 ) completeChanges();
-//	    smsc_log_debug(logger, "startChanges. node = (%d)%p, operation = %d", (long)node - (long)rbtree_body, node, operation);        
+//          smsc_log_debug(logger, "startChanges. node = (%d)%p, operation = %d", (long)node - (long)rbtree_body, node, operation);        
         //TODO: if changedNodes not empty call compliteChanges
 
             currentOperation = operation;
-	    changedNodes.push_back(node);
-	}
-	virtual void nodeChanged(nodeptr_type node)
-	{
-//	    smsc_log_debug(logger, "Node changed=%d(%p)", (long)node - (long)rbtree_body, node);
-	    changedNodes.push_back(node);
-	}
-	virtual void completeChanges(void)
-	{
+            changedNodes.push_back(node);
+        }
+        virtual void nodeChanged(nodeptr_type node)
+        {
+//          smsc_log_debug(logger, "Node changed=%d(%p)", (long)node - (long)rbtree_body, node);
+            changedNodes.push_back(node);
+        }
+        virtual void completeChanges(void)
+        {
             if ( changedNodes.empty() ) return;
-//	    smsc_log_debug(logger, "completeChanges=%d", changedNodes.size());
+//          smsc_log_debug(logger, "completeChanges=%d", changedNodes.size());
             //printf("%d\n", changedNodes.size());
-	    startTransaction();
-	    writeChanges();
-	    endTransaction();
+            startTransaction();
+            writeChanges();
+            endTransaction();
             changedNodes.erase(changedNodes.begin(), changedNodes.end());
-	}
+        }
 
 private:
     inline RBTreeNode* addr2node( nodeptr_type offset ) const
@@ -231,11 +231,11 @@ private:
 
     inline int32_t cellsize() const { return sizeof(RBTreeNode); }
     
-	bool isFileExists(void)
-	{
-		struct ::stat st;
-		return ::stat(rbtree_file.c_str(),&st)==0;
-	}
+        bool isFileExists(void)
+        {
+                struct ::stat st;
+                return ::stat(rbtree_file.c_str(),&st)==0;
+        }
     
     int ReallocRBTreeFile(void)
     {
@@ -293,15 +293,15 @@ private:
         header_.cells_count += realgrowth;
         header_.cells_free += realgrowth;
         if (creation) {
-    		header_.cells_used = 1;
+                header_.cells_used = 1;
                 header_.first_free_cell = cellsize(); // points to a 1st cell
                 --header_.cells_free;
-    		header_.root_cell = 0;
-	    	header_.nil_cell = 0;
+                header_.root_cell = 0;
+                header_.nil_cell = 0;
                 header_.growth = growth;
-    		header_.version = version_64_1;
+                header_.version = version_64_1;
                 memset(addr2node(0),0,cellsize()); // clearing a nil node
-    		memcpy(header_.preamble, "RBTREE_FILE_STORAGE!", sizeof("RBTREE_FILE_STORAGE!"));
+                memcpy(header_.preamble, "RBTREE_FILE_STORAGE!", sizeof("RBTREE_FILE_STORAGE!"));
         }
         
         {
@@ -329,25 +329,25 @@ private:
         return SUCCESS;
     }
     
-	int CreateRBTreeFile(void)
-	{
-		try
-		{
-		    rbtree_f.RWCreate(rbtree_file.c_str());
-		    rbtree_f.SetUnbuffered();
-		}
-		catch(FileException& ex)
-		{
-		    smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
-		    return CANNOT_CREATE_RBTREE_FILE;
-		}
+        int CreateRBTreeFile(void)
+        {
+                try
+                {
+                    rbtree_f.RWCreate(rbtree_file.c_str());
+                    rbtree_f.SetUnbuffered();
+                }
+                catch(smsc::core::buffers::FileException& ex)
+                {
+                    smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
+                    return CANNOT_CREATE_RBTREE_FILE;
+                }
 
         try
         {
             trans_f.RWCreate(trans_file.c_str());
             trans_f.SetUnbuffered();
         }
-        catch(FileException& ex)
+        catch(smsc::core::buffers::FileException& ex)
         {
             if (logger) smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
             rbtree_f.Close();
@@ -358,16 +358,16 @@ private:
         int ret = ReallocRBTreeFile();
         if ( ret != SUCCESS ) return ret;
         return SUCCESS;
-	}
+        }
     
-	int OpenRBTreeFile(void)
-	{
+        int OpenRBTreeFile(void)
+        {
         try
         {
             rbtree_f.RWOpen(rbtree_file.c_str());
             rbtree_f.SetUnbuffered();
         }
-        catch(FileException& ex)
+        catch(smsc::core::buffers::FileException& ex)
         {
             return CANNOT_OPEN_RBTREE_FILE;
         }
@@ -376,26 +376,26 @@ private:
             trans_f.RWOpen(trans_file.c_str());
             trans_f.SetUnbuffered();
         }
-        catch(FileException& ex)
+        catch(smsc::core::buffers::FileException& ex)
         {
             rbtree_f.Close();
             return CANNOT_OPEN_TRANS_FILE;
         }
-		
+                
         int32_t status;
         try
         {
             trans_f.Seek(0, SEEK_SET);
             status = trans_f.ReadNetInt32();
         }
-        catch(FileException& ex)
+        catch(smsc::core::buffers::FileException& ex)
         {
             //printf("CANNOT_READ_TRANS_FILE\n");
             rbtree_f.Close();
             trans_f.Close();
             return CANNOT_READ_TRANS_FILE;
         }
-		
+                
         int ret = SUCCESS;
         if (status == STAT_WRITE_TRX)
         {
@@ -413,70 +413,70 @@ private:
         }
             /*
 
-		//printf("OpenRBTreeFile\n");
-		int ret = SUCCESS;
-  		try
-		{
-		    rbtree_f.RWOpen(rbtree_file.c_str());
-		    rbtree_f.SetUnbuffered();
-		}
-		catch(FileException& ex)
-		{
-			return CANNOT_OPEN_RBTREE_FILE;
-		}
-		try
-		{
-			trans_f.RWOpen(trans_file.c_str());
-			trans_f.SetUnbuffered();
-		}
-		catch(FileException& ex)
-		{
-			rbtree_f.Close();
-			return CANNOT_OPEN_TRANS_FILE;
-		}
-		
-		int status;
-		try
-		{
-			trans_f.Seek(0, SEEK_SET);
-			trans_f.Read((char*)&status, sizeof(int));
-		}
-		catch(FileException& ex)
-		{
-			//printf("CANNOT_READ_TRANS_FILE\n");
-			rbtree_f.Close();
-			trans_f.Close();
-			return CANNOT_READ_TRANS_FILE;
-		}
-		
-		if(status == STAT_WRITE_TRX)
-		{
-			//printf("status == STAT_WRITE_TRX\n");
-			trans_f.Seek(0, SEEK_SET);
-			status = STAT_OK;
-			trans_f.Write((char*)&status, sizeof(int));
-			ret = SUCCESS_PREV_OPER_FAILED;
-		}
-		else if(status == STAT_WRITE_RBT)
-		{
-			//printf("status == STAT_WRITE_RBT\n");
-			repairRBTreeFile();
-		}
-		
-		rbtree_f.Seek(0, SEEK_END);
-		off_t len = rbtree_f.Pos();
-		rbtree_f.Seek(0, SEEK_SET);
-			
-		if(!(rbtree_addr = new char[len]))
-			return BTREE_FILE_MAP_FAILED;
+                //printf("OpenRBTreeFile\n");
+                int ret = SUCCESS;
+                try
+                {
+                    rbtree_f.RWOpen(rbtree_file.c_str());
+                    rbtree_f.SetUnbuffered();
+                }
+                catch(smsc::core::buffers::FileException& ex)
+                {
+                        return CANNOT_OPEN_RBTREE_FILE;
+                }
+                try
+                {
+                        trans_f.RWOpen(trans_file.c_str());
+                        trans_f.SetUnbuffered();
+                }
+                catch(smsc::core::buffers::FileException& ex)
+                {
+                        rbtree_f.Close();
+                        return CANNOT_OPEN_TRANS_FILE;
+                }
+                
+                int status;
+                try
+                {
+                        trans_f.Seek(0, SEEK_SET);
+                        trans_f.Read((char*)&status, sizeof(int));
+                }
+                catch(smsc::core::buffers::FileException& ex)
+                {
+                        //printf("CANNOT_READ_TRANS_FILE\n");
+                        rbtree_f.Close();
+                        trans_f.Close();
+                        return CANNOT_READ_TRANS_FILE;
+                }
+                
+                if(status == STAT_WRITE_TRX)
+                {
+                        //printf("status == STAT_WRITE_TRX\n");
+                        trans_f.Seek(0, SEEK_SET);
+                        status = STAT_OK;
+                        trans_f.Write((char*)&status, sizeof(int));
+                        ret = SUCCESS_PREV_OPER_FAILED;
+                }
+                else if(status == STAT_WRITE_RBT)
+                {
+                        //printf("status == STAT_WRITE_RBT\n");
+                        repairRBTreeFile();
+                }
+                
+                rbtree_f.Seek(0, SEEK_END);
+                off_t len = rbtree_f.Pos();
+                rbtree_f.Seek(0, SEEK_SET);
+                        
+                if(!(rbtree_addr = new char[len]))
+                        return BTREE_FILE_MAP_FAILED;
 
-		rbtree_f.Read(rbtree_addr, len);
-		header = (rbtFileHeader*)rbtree_addr;
-		rbtree_body = rbtree_addr + sizeof(rbtFileHeader);
+                rbtree_f.Read(rbtree_addr, len);
+                header = (rbtFileHeader*)rbtree_addr;
+                rbtree_body = rbtree_addr + sizeof(rbtFileHeader);
         //TODO: calc rbtFileLen 
         rbtFileLen = len;
-		smsc_log_debug(logger, "OpenRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", header_.cells_used, header_.cells_free, header_.cells_count, header_.first_free_cell, header_.root_cell, header_.nil_cell, rbtFileLen);
-		return ret;
+                smsc_log_debug(logger, "OpenRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", header_.cells_used, header_.cells_free, header_.cells_count, header_.first_free_cell, header_.root_cell, header_.nil_cell, rbtFileLen);
+                return ret;
              */
 
         try {
@@ -593,9 +593,9 @@ private:
                        int(cellsize()) );
         return ret;
 
-	}
+        }
     
-	int startTransaction(void)
+        int startTransaction(void)
     {
         // 1. making sure all nodes are unique
         transactionNodes_.clear();
@@ -607,18 +607,18 @@ private:
 
         smsc_log_debug( logger, "Start transaction: nodes changed=%d", int(transactionNodes_.size()) );
             
-        transFileHeader		hdr;
-		
+        transFileHeader         hdr;
+                
         hdr.status = STAT_WRITE_TRX;
         hdr.version = TRX_VER_1;
         hdr.operation = currentOperation;
         hdr.nodes_count = transactionNodes_.size();
-	    //smsc_log_debug(logger, "Start transaction: nodes changed=%d", changedNodes.size());
-		//printf("header_.root_cell = %d (%d)\n", header_.root_cell, sizeof(header_.root_cell));
+            //smsc_log_debug(logger, "Start transaction: nodes changed=%d", changedNodes.size());
+                //printf("header_.root_cell = %d (%d)\n", header_.root_cell, sizeof(header_.root_cell));
         trans_f.Seek(0, SEEK_SET);
         trans_f.Write(&hdr, sizeof(transFileHeader));
         trans_f.Write(&header_, sizeof(rbtFileHeader));
-		
+                
         for ( typename std::vector< nodeptr_type >::const_iterator i = transactionNodes_.begin();
               i != transactionNodes_.end();
               ++i ) {
@@ -626,17 +626,17 @@ private:
             trans_f.Write(&nodeAddr, sizeof(long));
             trans_f.Write(addr2node(*i), sizeof(RBTreeNode));
         }
-	
-	return 0;
-	}
-	int writeChanges(void)
-	{
-	    //smsc_log_debug(logger, "Write Changes: nodes changed=%d", changedNodes.size());
-	    int stat = STAT_WRITE_RBT;
-	    trans_f.Seek(0, SEEK_SET);
-	    trans_f.Write((char*)&stat, sizeof(int));
-	    rbtree_f.Seek(0, SEEK_SET);
-	    rbtree_f.Write(&header_, sizeof(rbtFileHeader));
+        
+        return 0;
+        }
+        int writeChanges(void)
+        {
+            //smsc_log_debug(logger, "Write Changes: nodes changed=%d", changedNodes.size());
+            int stat = STAT_WRITE_RBT;
+            trans_f.Seek(0, SEEK_SET);
+            trans_f.Write((char*)&stat, sizeof(int));
+            rbtree_f.Seek(0, SEEK_SET);
+            rbtree_f.Write(&header_, sizeof(rbtFileHeader));
 
             for ( typename std::vector< nodeptr_type >::const_iterator i = transactionNodes_.begin();
                   i != transactionNodes_.end();
@@ -644,56 +644,56 @@ private:
                 nodeptr_type addr = *i;
                 rbtree_f.Seek(sizeof(rbtFileHeader)+(long)addr, SEEK_SET);
                 rbtree_f.Write(addr2node(addr), sizeof(RBTreeNode));
-	    }
-	    //smsc_log_debug(logger, "Write Changes: finish");        
-	    return 0;
-	}
-	int endTransaction()
-	{
-		//smsc_log_debug(logger, "endTransaction");
-		int stat = STAT_OK;
-		trans_f.Seek(0, SEEK_SET);
+            }
+            //smsc_log_debug(logger, "Write Changes: finish");        
+            return 0;
+        }
+        int endTransaction()
+        {
+                //smsc_log_debug(logger, "endTransaction");
+                int stat = STAT_OK;
+                trans_f.Seek(0, SEEK_SET);
                 trans_f.Write((char*)&stat, sizeof(int));
-		return 0;
-	}
-	int repairRBTreeFile(void)
-	{
-		transFileHeader	transHdr;
-		rbtFileHeader	rbtHdr;
-		long		nodeAddr;
-		RBTreeNode	curNode;
-		
-		trans_f.Seek(0, SEEK_SET);
-		trans_f.Read((char*)&transHdr, sizeof(transFileHeader));
-		trans_f.Read((char*)&rbtHdr, sizeof(rbtFileHeader));
-		rbtree_f.Seek(0, SEEK_SET);
-		rbtree_f.Write((char*)&rbtHdr, sizeof(rbtFileHeader));
+                return 0;
+        }
+        int repairRBTreeFile(void)
+        {
+                transFileHeader transHdr;
+                rbtFileHeader   rbtHdr;
+                long            nodeAddr;
+                RBTreeNode      curNode;
+                
+                trans_f.Seek(0, SEEK_SET);
+                trans_f.Read((char*)&transHdr, sizeof(transFileHeader));
+                trans_f.Read((char*)&rbtHdr, sizeof(rbtFileHeader));
+                rbtree_f.Seek(0, SEEK_SET);
+                rbtree_f.Write((char*)&rbtHdr, sizeof(rbtFileHeader));
 
-		smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, rbtHdr.first_free_cell, rbtHdr.root_cell, rbtHdr.nil_cell,
+                smsc_log_debug(logger, "RepairRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", rbtHdr.cells_used, rbtHdr.cells_free, rbtHdr.cells_count, rbtHdr.first_free_cell, rbtHdr.root_cell, rbtHdr.nil_cell,
                                sizeof(rbtFileHeader)+idx2addr(rbtHdr.cells_count));
-		smsc_log_info(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, transHdr.status);
-		
-		for(int i = 0; i < transHdr.nodes_count; i++)
-		{
-			trans_f.Read((char*)&nodeAddr, sizeof(long));
-			trans_f.Read((char*)&curNode, sizeof(RBTreeNode));
-			rbtree_f.Seek(sizeof(rbtFileHeader)+nodeAddr, SEEK_SET);
-			rbtree_f.Write((char*)&curNode, sizeof(RBTreeNode));
-		}
-		return 0;
-	}
+                smsc_log_info(logger, "repairRBTreeFile transHdr.nodes_count = %d, transHdr.status=%d", transHdr.nodes_count, transHdr.status);
+                
+                for(int i = 0; i < transHdr.nodes_count; i++)
+                {
+                        trans_f.Read((char*)&nodeAddr, sizeof(long));
+                        trans_f.Read((char*)&curNode, sizeof(RBTreeNode));
+                        rbtree_f.Seek(sizeof(rbtFileHeader)+nodeAddr, SEEK_SET);
+                        rbtree_f.Write((char*)&curNode, sizeof(RBTreeNode));
+                }
+                return 0;
+        }
 
 private:
-	string			rbtree_file;
-	string			trans_file;
-	File			rbtree_f;
-	File			trans_f;
-	off_t			growth;
-	bool			running;
-	rbtFileHeader		header_;
+        string                  rbtree_file;
+        string                  trans_file;
+    smsc::core::buffers::File   rbtree_f;
+    smsc::core::buffers::File   trans_f;
+        off_t                   growth;
+        bool                    running;
+        rbtFileHeader           header_;
         std::vector< caddr_t >  chunks_;
-	list<nodeptr_type>	changedNodes;
-	int			currentOperation;
+        list<nodeptr_type>      changedNodes;
+        int                     currentOperation;
         smsc::logger::Logger* logger;
     
     std::vector< nodeptr_type > transactionNodes_;
@@ -701,22 +701,22 @@ private:
 
 #endif
 
-//		printf("sizeof(RBTreeNode) = %d\n", sizeof(RBTreeNode));
-		//printf("sizeof(n.parent) = %d\n", sizeof(n.parent));
-		//printf("sizeof(n.left) = %d\n", sizeof(n.left));
-		//printf("sizeof(n.right) = %d\n", sizeof(n.right));
-		//printf("sizeof(n.color) = %d\n", sizeof(n.color));
-		//printf("sizeof(n.key) = %d\n", sizeof(n.key));
-		//printf("sizeof(n.value) = %d\n", sizeof(n.value));
-		//printf("sizeof(Abnt1) = %d\n", sizeof(Abnt1));
-		//printf("sizeof(n) = %d\n", sizeof(n));
-//		if(-1 == (rbtree_fd = open(rbtree_file.c_str(), O_RDWR | O_CREAT | O_TRUNC, mode)))
-//			return CANNOT_CREATE_RBTREE_FILE;
+//              printf("sizeof(RBTreeNode) = %d\n", sizeof(RBTreeNode));
+                //printf("sizeof(n.parent) = %d\n", sizeof(n.parent));
+                //printf("sizeof(n.left) = %d\n", sizeof(n.left));
+                //printf("sizeof(n.right) = %d\n", sizeof(n.right));
+                //printf("sizeof(n.color) = %d\n", sizeof(n.color));
+                //printf("sizeof(n.key) = %d\n", sizeof(n.key));
+                //printf("sizeof(n.value) = %d\n", sizeof(n.value));
+                //printf("sizeof(Abnt1) = %d\n", sizeof(Abnt1));
+                //printf("sizeof(n) = %d\n", sizeof(n));
+//              if(-1 == (rbtree_fd = open(rbtree_file.c_str(), O_RDWR | O_CREAT | O_TRUNC, mode)))
+//                      return CANNOT_CREATE_RBTREE_FILE;
 
-//		printf("%d\n", rbtFileLen);
+//              printf("%d\n", rbtFileLen);
 
-//	    if(MAP_FAILED == (rbtree_addr = mmap((caddr_t)0, rbtFileLen, PROT_READ | PROT_WRITE, MAP_SHARED, rbtree_fd, 0)))
-//		{
-////			perror("mmap: ");
-//			return BTREE_FILE_MAP_FAILED;
-//		}
+//          if(MAP_FAILED == (rbtree_addr = mmap((caddr_t)0, rbtFileLen, PROT_READ | PROT_WRITE, MAP_SHARED, rbtree_fd, 0)))
+//              {
+////                    perror("mmap: ");
+//                      return BTREE_FILE_MAP_FAILED;
+//              }

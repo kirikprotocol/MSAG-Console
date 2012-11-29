@@ -1,4 +1,0 @@
-# binary name source name libraries         
-db/fileStorage/libdb_fileStorage.so DBEntityStorageDataSource -ldb-fileStorage $(SHARED_OPT) -ldl -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lpthread  -lrt
-
-db/fileStorage/make_infosme_T_dump make_infosme_T_dump -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/bin/db/exceptions -ldb-fileStorage -ldb_exc -lcore-threads $(XERCES_LIB) -lutil -lpthread @db/exceptions/libdb_exc.so

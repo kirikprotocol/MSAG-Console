@@ -41,6 +41,7 @@ typedef struct {
 extern const HexDumpCFG _HexDump_CVSD; //C Value Space Delimited
 extern const HexDumpCFG _HexDump_CVCS; //C Value Comma Separated
 extern const HexDumpCFG _HexDump_HG4S; //Hex octet Grouped by 4, Space delimited, all per Line
+extern const HexDumpCFG _HexDump_HGAL; //Hex octet all Grouped per Line
 #define _HexDump_DFLT   _HexDump_HG4S
 
 extern unsigned DumpHex(unsigned long length, const unsigned char * buf,

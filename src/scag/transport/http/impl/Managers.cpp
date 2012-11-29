@@ -21,8 +21,7 @@ processor_(0),
 licenseCounter(10, 20),
 licenseFileCheckHour(0),
 licenseExpired(false),
-acceptor(*this),
-sslAcceptor(*this)
+acceptor(*this)
 {
     logger = Logger::getInstance("http.manager");
     lastLicenseExpTest = 0;
@@ -36,55 +35,38 @@ void HttpManagerImpl::configChanged()
 
 void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig& conf)
 {
-	try {
-		this->cfg = conf;
-		processor_ = &p;
-		p.setScagTaskManager( scags );
+    this->cfg = conf;
+    processor_ = &p;
+    p.setScagTaskManager( scags );
 
-		readers.init(cfg.readerPoolSize, cfg.readerSockets, "http.reader");
-		writers.init(cfg.writerPoolSize, cfg.writerSockets, "http.writer");
-		scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
-/*
- * Mix-protocol: init every acceptor with httpsOptions object passed to HttpContext constructor
- */
-		// no validate_certificates for user and site connections (later)
-		httpsOptions.init(NO_VALIDATE_CERT, NO_VALIDATE_CERT, &cfg);
-
-		acceptor.init(cfg.host.c_str(), cfg.port, httpsOptions);
-		smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
-
-		if ( cfg.httpsEnabled ) {
-			httpsOptions.userActive = true;
-			sslAcceptor.init(cfg.host.c_str(), cfg.httpsPort, httpsOptions);
-			smsc_log_info(logger, "Https manager inited host=%s:%d, cert=%s timeout=%d",
-					cfg.host.c_str(), cfg.httpsPort, cfg.httpsCertificates.c_str(), cfg.httpsTimeout);
-		}
-	}
-	catch(...) {
-		smsc_log_error(logger, "Http manager init error");
-	}
+    readers.init(cfg.readerPoolSize, cfg.readerSockets, "http.reader");
+    writers.init(cfg.writerPoolSize, cfg.writerSockets, "http.writer");
+    scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
+    acceptor.init(cfg.host.c_str(), cfg.port);
+    smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
 }
 
 void HttpManagerImpl::shutdown()
 {
-	acceptor.shutdown();
-	sslAcceptor.shutdown();
+    acceptor.shutdown();
 
-	while(1) {
-		if(!readers.canStop())
-			smsc_log_info(logger, "Waiting readers to stop");
-		else if(!writers.canStop())
-			smsc_log_info(logger, "Waiting writers to stop");
-		else if(!scags.canStop())
-			smsc_log_info(logger, "Waiting scagtasks to stop");
-		else
-			break;
-		sleep(1);
-	}
-	scags.shutdown();
-	readers.shutdown();
-	writers.shutdown();
-	smsc_log_info(logger, "HttpManager shutdown");
+    while(1)
+    {
+        if(!readers.canStop())
+            smsc_log_info(logger, "Waiting readers to stop");
+        else if(!writers.canStop())
+            smsc_log_info(logger, "Waiting writers to stop");
+        else if(!scags.canStop())
+            smsc_log_info(logger, "Waiting scagtasks to stop");
+        else
+            break;
+        sleep(1);
+    }
+        
+    scags.shutdown();
+    readers.shutdown();
+    writers.shutdown();
+    smsc_log_info(logger, "HttpManager shutdown");
 }
 
 bool HttpManagerImpl::isLicenseExpired() {
@@ -199,7 +181,7 @@ void ScagTaskManager::process(HttpContext* cx, bool continued)
     MutexGuard g(procMut);
 
     cx->next = NULL;
-    int i = continued ? PROCESS_LCM : cx->action;
+    uint32_t i = continued ? PROCESS_LCM : cx->action;
     if(headContext[i])
         tailContext[i]->next = cx;
     else        
@@ -207,13 +189,12 @@ void ScagTaskManager::process(HttpContext* cx, bool continued)
     tailContext[i] = cx;        
     
     ++queueLength[i];
-	smsc_log_debug(logger, "%p ScagTaskManager::process cx:%p cmd:%p sess:%p act:%s queue[%d]:%d", this, cx, cx->command, cx->command->session_, cx->actionName(), i, queueLength[i]);
-
-	if (queueLength[PROCESS_REQUEST] > scagQueueLimit)
+    if (queueLength[PROCESS_REQUEST] > scagQueueLimit)
         waitQueueShrinkage = true;
 
     {
         MutexGuard q(taskMon);
+    
         taskMon.notify();   
     }
 }
@@ -247,7 +228,6 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
     headContext[PROCESS_LCM] = NULL;    
 
     logger = Logger::getInstance("http.scag");
-	smsc_log_debug(logger, "%p ScagTaskManager::init scagQueueLimit=%d", this, scagQueueLimit);
 
     pool.setMaxThreads(maxThreads);
 
@@ -302,15 +282,6 @@ void ScagTaskManager::queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lc
     lcmLen = queueLength[PROCESS_LCM];
 }
 
-void ScagTaskManager::queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& statLen, uint32_t& lcmLen)
-{
-//    MutexGuard g(queMon);
-    reqLen = queueLength[PROCESS_REQUEST];
-    respLen = queueLength[PROCESS_RESPONSE];
-    statLen = queueLength[PROCESS_STATUS_RESPONSE];
-    lcmLen = queueLength[PROCESS_LCM];
-}
-
 void ScagTaskManager::wakeTask()
 {
     MutexGuard g(taskMon);
@@ -344,7 +315,7 @@ manager(m)
 }
 
 void IOTaskManager::giveContext(IOTask *t, HttpContext* cx) {
-//    smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketCount(), cx);
+    smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketCount(), cx);
 
     t->socketCount++;
     t->registerContext(cx);

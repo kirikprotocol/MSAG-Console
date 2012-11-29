@@ -138,25 +138,24 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
-	actionContext = session.getLongCallContext().getActionContext();
-	if (actionContext) {
-	    actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
-					&session, &_command, &cp, &rs);
-	} else {
-	    smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
-    	    rs.result = -1;
-    	    rs.status = STATUS_FAILED;
-    	    return;
-	}
-    } else {
-	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
-					  &session, &_command, &cp, &rs);
-	session.getLongCallContext().setActionContext(actionContext);
-	RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
+		actionContext = session.getLongCallContext().getActionContext();
+		if (actionContext) {
+			actionContext->resetContext(&(RuleEngine::Instance().getConstants()), &session, &_command, &cp, &rs);
+		}
+		else {
+			smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
+			rs.result = -1;
+			rs.status = STATUS_FAILED;
+			return;
+		}
+    }
+    else {
+		actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), &session, &_command, &cp, &rs);
+		session.getLongCallContext().setActionContext(actionContext);
+		RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
     }
 
-    switch(hc.getCommandId())
-    {
+    switch(hc.getCommandId()) {
         case HTTP_REQUEST:
             return processRequest((HttpRequest&)hc, *actionContext);
         case HTTP_RESPONSE:

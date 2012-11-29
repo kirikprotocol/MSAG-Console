@@ -110,8 +110,9 @@ sub generate{
       # 1 - in switch, value is not found yet;
       # 2 - in switch, under value found;
       # 3 - in switch, value found, but now we are not under it.
-      my $switchMode;
+      my $switchMode=0;
       my $switchValue;
+      my @switchValueStack;
       my %localVars;
       while(<$f>)
       {
@@ -122,6 +123,7 @@ sub generate{
         # print STDERR "ln=[$ln]\n";
         if($ln=~/^switch\s+(.*)$/)
         {
+          push @switchValueStack,{value=>$switchValue,mode=>$switchMode} if $switchMode;
           $switchMode=1;
           $switchValue=$ENV{$1};
           # print STDERR "switch on $1, value=$switchValue\n";
@@ -130,7 +132,15 @@ sub generate{
         if($ln=~/^end switch$/ || $ln=~/^endswitch$/ )
         {
           # print STDERR "end switch\n";
-          $switchMode=0;
+          if(@switchValueStack)
+          {
+            my $sw=pop @switchValueStack;
+            $switchMode=$sw->{mode};
+            $switchValue=$sw->{value};
+          }else
+          {
+            $switchMode=0;
+          }
           next;
         }
         if($switchMode)
@@ -179,7 +189,7 @@ sub generate{
         }
         if($line=~/^(\w+)=(.*)$/)
         {
-	  my $name=$1;
+          my $name=$1;
           my $value=$2;
           $value=~s/\%\((\w+)\)/if(exists($localVars{$1})){$localVars{$1};}else{print STDERR "Warning: undefined local variable $1\n";"";}/ge;
           $localVars{$name}=$value;
@@ -309,6 +319,7 @@ sub generate{
         unless(/^\?/)
         {
           $moddeps.=" $modname.$_";
+          $allmoddeps.=" $modname.$_.all";
         } else {
             s/^\?//;
             $allmoddeps.=" $modname.$_.all";

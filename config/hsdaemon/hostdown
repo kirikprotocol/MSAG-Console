@@ -1,3 +1,0 @@
-#!/bin/bash
-ifconfig bge0 removeif $1
-

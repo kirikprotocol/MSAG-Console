@@ -63,6 +63,9 @@ int Socket::Init(const char *host,int port,int timeout)
 
   memset(&ulINAddr,0,sizeof(ulINAddr));
   sockAddr.sin_family=AF_INET;
+#ifdef __MACH__
+  sockAddr.sin_len = sizeof(sockaddr_in);
+#endif
   ulINAddr=inet_addr(host);
 #ifndef INADDR_NONE
   if(ulINAddr != (in_addr_t)(-1))

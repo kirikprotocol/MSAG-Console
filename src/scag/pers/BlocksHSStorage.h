@@ -121,55 +121,55 @@ struct templDataBlock {
 template<class Key>
 class BlocksHSStorage
 {
-	typedef templDataBlockHeader<Key> DataBlockHeader;
+        typedef templDataBlockHeader<Key> DataBlockHeader;
     typedef templDataBlock<Key> CompleteDataBlock; 
     typedef templBackupHeader<Key> BackupHeader;
 
 public:
-//	static const int SUCCESS			           = 0;
-//	static const int RBTREE_FILE_NOT_SPECIFIED	   = -1;
-	static const int CANNOT_CREATE_STORAGE	       = -1;
-    static const int CANNOT_CREATE_DESCR_FILE	   = -2;
-	static const int CANNOT_CREATE_DATA_FILE	   = -3;
-	static const int CANNOT_OPEN_DESCR_FILE	       = -4;
-	static const int CANNOT_OPEN_DATA_FILE		   = -5;
-	static const int DESCR_FILE_CREATE_FAILED	   = -6;
-	static const int DESCR_FILE_OPEN_FAILED		   = -7;
-	//static const int RBTREE_FILE_ERROR		   = -10;
+//      static const int SUCCESS                                   = 0;
+//      static const int RBTREE_FILE_NOT_SPECIFIED         = -1;
+        static const int CANNOT_CREATE_STORAGE         = -1;
+    static const int CANNOT_CREATE_DESCR_FILE      = -2;
+        static const int CANNOT_CREATE_DATA_FILE           = -3;
+        static const int CANNOT_OPEN_DESCR_FILE        = -4;
+        static const int CANNOT_OPEN_DATA_FILE             = -5;
+        static const int DESCR_FILE_CREATE_FAILED          = -6;
+        static const int DESCR_FILE_OPEN_FAILED            = -7;
+        //static const int RBTREE_FILE_ERROR               = -10;
     static const int CANNOT_OPEN_EXISTS_DESCR_FILE = -8;
     static const int CANNOT_OPEN_EXISTS_DATA_FILE  = -9;
-    static const int BACKUP_FILE_CREATE_FAILED	   = -11;
-    static const int BACKUP_FILE_OPEN_FAILED	   = -12;
+    static const int BACKUP_FILE_CREATE_FAILED     = -11;
+    static const int BACKUP_FILE_OPEN_FAILED       = -12;
 
-	static const int defaultBlockSize = 56; // in bytes
-	static const int defaultFileSize = 3; // in blocks 
-	static const long BLOCK_USED	= long(1) << 63;
+        static const int defaultBlockSize = 56; // in bytes
+        static const int defaultFileSize = 3; // in blocks 
+        static const int64_t BLOCK_USED = int64_t(1) << 63;
 
-	BlocksHSStorage():running(false), iterBlockIndex(0)
-	{
+        BlocksHSStorage():running(false), iterBlockIndex(0)
+        {
         logger = smsc::logger::Logger::getInstance("BlkStore");
         hdrSize = sizeof(DataBlockHeader);
 
-	}
-	virtual ~BlocksHSStorage()
-	{
-		Close();
-	}
+        }
+        virtual ~BlocksHSStorage()
+        {
+                Close();
+        }
 
-	int Create(const string& _dbName, const string& _dbPath = "",
-				long _fileSize = defaultFileSize,
-				long _blockSize = defaultBlockSize - sizeof(DataBlockHeader))
-	{
-		dbName = _dbName;
-		dbPath = _dbPath;
+        int Create(const string& _dbName, const string& _dbPath = "",
+                                long _fileSize = defaultFileSize,
+                                long _blockSize = defaultBlockSize - sizeof(DataBlockHeader))
+        {
+                dbName = _dbName;
+                dbPath = _dbPath;
         if (_blockSize > WRITE_BUF_SIZE) {
           smsc_log_error(logger, "block size %d too large. max block size = %d", _blockSize, WRITE_BUF_SIZE);
           return CANNOT_CREATE_STORAGE;
         }
-		
-		int ret;
-		if(0 != (ret = CreateDescriptionFile(_blockSize + hdrSize, _fileSize)))
-			return ret;
+                
+                int ret;
+                if(0 != (ret = CreateDescriptionFile(_blockSize + hdrSize, _fileSize)))
+                        return ret;
         try {
           CreateDataFile();
         } catch (const std::exception& e) {
@@ -177,44 +177,44 @@ public:
         }
         if(0 != (ret = CreateBackupFile()))
             return ret;
-		
-		running = true;
-		return 0;
-	}
+                
+                running = true;
+                return 0;
+        }
 
-	int Open(const string& _dbName, const string& _dbPath = 0)
-	{
-		dbName = _dbName;
-		dbPath = _dbPath;
-		
-		int ret;
-		if(0 != (ret = OpenDescriptionFile()))
-			return ret;
-		if(0 != (ret = OpenDataFiles()))
-			return ret;
+        int Open(const string& _dbName, const string& _dbPath = 0)
+        {
+                dbName = _dbName;
+                dbPath = _dbPath;
+                
+                int ret;
+                if(0 != (ret = OpenDescriptionFile()))
+                        return ret;
+                if(0 != (ret = OpenDataFiles()))
+                        return ret;
         if(0 != (ret = OpenBackupFile()))
             return ret;
 
-		running = true;
-		return 0;
-	}
-	
-	void Close(void)
-	{
-		if(running)
-		{
-			for(int i = 0; i < dataFile_f.size(); i++)
-			{
-				dataFile_f[i]->Close();
-				delete dataFile_f[i];
-			}
-			dataFile_f.clear();
-			descrFile_f.Close();
+                running = true;
+                return 0;
+        }
+        
+        void Close(void)
+        {
+                if(running)
+                {
+                        for(int i = 0; i < dataFile_f.size(); i++)
+                        {
+                                dataFile_f[i]->Close();
+                                delete dataFile_f[i];
+                        }
+                        dataFile_f.clear();
+                        descrFile_f.Close();
             backupFile_f.Close();
-			running = false;
-		}
-	
-	}
+                        running = false;
+                }
+        
+        }
 
     bool Add(Profile& profile, const Key& key, long& blockIndex) {
       //SerialBuffer data;
@@ -305,45 +305,45 @@ public:
 
     }
     
-	bool Get(long blockIndex, DataBlock& data)
-	{
+        bool Get(long blockIndex, DataBlock& data)
+        {
         smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
-		if(blockIndex == -1) return false;
-		char* buff;
-		long curBlockIndex = blockIndex;
-		int i = 0;
-		do
-		{
-			DataBlockHeader hdr;
+                if(blockIndex == -1) return false;
+                char* buff;
+                long curBlockIndex = blockIndex;
+                int i = 0;
+                do
+                {
+                        DataBlockHeader hdr;
 
-			int file_number = curBlockIndex / descrFile.file_size;
+                        int file_number = curBlockIndex / descrFile.file_size;
             if (file_number >= descrFile.files_count) {
               smsc_log_error(logger, "Invalid file number %d, max file number %d", file_number, descrFile.files_count - 1);
               return false;
             }
-			off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
-			File* f = dataFile_f[file_number];
-			f->Seek(offset, SEEK_SET);
-			f->Read((void*)&hdr, hdrSize);
-			if(hdr.block_used != BLOCK_USED)
-				return false;
-			if(curBlockIndex == blockIndex)
-			{
-				data.setBuffLength(hdr.data_size);
-				buff = data.ptr();
-				data.setLength(hdr.data_size);
-			}
-			if(-1 == hdr.next_block)
-				f->Read((void*)(buff+(i*effectiveBlockSize)), hdr.data_size - effectiveBlockSize*i);
-			else
-				f->Read((void*)(buff+(i*effectiveBlockSize)), effectiveBlockSize);
-			
-			curBlockIndex = hdr.next_block;
-			i++;
-		}
-		while(-1 != curBlockIndex);
-		return true;
-	}
+                        off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
+                        smsc::core::buffers::File* f = dataFile_f[file_number];
+                        f->Seek(offset, SEEK_SET);
+                        f->Read((void*)&hdr, hdrSize);
+                        if(hdr.block_used != BLOCK_USED)
+                                return false;
+                        if(curBlockIndex == blockIndex)
+                        {
+                                data.setBuffLength(hdr.data_size);
+                                buff = data.ptr();
+                                data.setLength(hdr.data_size);
+                        }
+                        if(-1 == hdr.next_block)
+                                f->Read((void*)(buff+(i*effectiveBlockSize)), hdr.data_size - effectiveBlockSize*i);
+                        else
+                                f->Read((void*)(buff+(i*effectiveBlockSize)), effectiveBlockSize);
+                        
+                        curBlockIndex = hdr.next_block;
+                        i++;
+                }
+                while(-1 != curBlockIndex);
+                return true;
+        }
 
     bool Get(long blockIndex, Profile& profile)
     {
@@ -364,7 +364,7 @@ public:
               return false;
             }
             off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
-            File* f = dataFile_f[file_number];
+            smsc::core::buffers::File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
             f->Read((void*)&hdr, hdrSize);
             if(hdr.block_used != BLOCK_USED) {
@@ -422,15 +422,15 @@ public:
     bool Next(long& blockIndex, DataBlock& data, Key& key)
     {
         uint64_t cnt = descrFile.files_count * descrFile.file_size;
-		DataBlockHeader hdr;
+                DataBlockHeader hdr;
         
         while(iterBlockIndex < cnt)
         {
-			int file_number = iterBlockIndex / descrFile.file_size;
-			off_t offset = (iterBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
-			File* f = dataFile_f[file_number];
-			f->Seek(offset, SEEK_SET);
-			f->Read((void*)&hdr, hdrSize);
+                        int file_number = iterBlockIndex / descrFile.file_size;
+                        off_t offset = (iterBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+            smsc::core::buffers::File* f = dataFile_f[file_number];
+                        f->Seek(offset, SEEK_SET);
+                        f->Read((void*)&hdr, hdrSize);
             blockIndex = iterBlockIndex++;            
             if(hdr.block_used == BLOCK_USED && hdr.head)
             {
@@ -450,12 +450,12 @@ private:
   bool running;
   string dbName;
   string dbPath;
-  DescriptionFile descrFile;		
-  File descrFile_f;
-  File backupFile_f;
-  vector<File*> dataFile_f;
+  DescriptionFile descrFile;            
+    smsc::core::buffers::File descrFile_f;
+    smsc::core::buffers::File backupFile_f;
+    vector<smsc::core::buffers::File*> dataFile_f;
   long iterBlockIndex;
-  long effectiveBlockSize;	
+  long effectiveBlockSize;      
 
   vector<long> dataBlockBackup;
   char writeBuf[WRITE_BUF_SIZE];
@@ -485,7 +485,7 @@ private:
       memcpy(writeBuf, &hdr, hdrSize);
       memcpy(writeBuf + hdrSize, data, curBlockSize);
       try {
-        File* f = dataFile_f[fileNumber];
+        smsc::core::buffers::File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
         f->Write((void *)writeBuf, bufSize);
       } catch (const std::exception& e) {
@@ -530,7 +530,7 @@ private:
       if (fileNumber >= descrFile.files_count) {
         throw Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count - 1);
       }
-      File* f = dataFile_f[fileNumber];
+      smsc::core::buffers::File* f = dataFile_f[fileNumber];
       f->Seek(offset, SEEK_SET);
       long ffb = 0;
       f->Read((void*)&(ffb), sizeof(descrFile.first_free_block));
@@ -556,7 +556,7 @@ private:
           throw Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count - 1);
         }
         off_t offset = (blockIndex - file_number * descrFile.file_size) * descrFile.block_size;
-        File* f = dataFile_f[file_number];
+        smsc::core::buffers::File* f = dataFile_f[file_number];
         f->Seek(offset);
         f->Write((void*)(&ffb), sizeof(descrFile.first_free_block));
         ffb = blockIndex;
@@ -584,7 +584,7 @@ private:
         try
         {
             string name = dbPath + '/' + dbName;
-            if (File::Exists(name.c_str())) {
+            if (smsc::core::buffers::File::Exists(name.c_str())) {
               smsc_log_error(logger, "FSStorage: error create description file: file '%s' already exists",
                               name.c_str());
               return DESCR_FILE_CREATE_FAILED;
@@ -613,28 +613,28 @@ private:
     }
 
     int CreateDataFile(void)
-	{
-		char	buff[16];
-		snprintf(buff, 16, "-%.7d", descrFile.files_count);
-		string name = dbPath + '/' + dbName + buff;
+        {
+                char    buff[16];
+                snprintf(buff, 16, "-%.7d", descrFile.files_count);
+                string name = dbPath + '/' + dbName + buff;
         smsc_log_debug(logger, "Create data file: '%s'", name.c_str());
-        if (File::Exists(name.c_str())) {
+        if (smsc::core::buffers::File::Exists(name.c_str())) {
           smsc_log_error(logger, "FSStorage: error create data file: file '%s' already exists",
                           name.c_str());
-          throw FileException(FileException::errOpenFailed, name.c_str());
+          throw smsc::core::buffers::FileException(smsc::core::buffers::FileException::errOpenFailed, name.c_str());
         }
-	
-		dataFile_f.push_back(new File());
-		smsc_log_debug(logger, "Alloc: %p, %d", dataFile_f[descrFile.files_count], descrFile.files_count);
+        
+                dataFile_f.push_back(new smsc::core::buffers::File());
+                smsc_log_debug(logger, "Alloc: %p, %d", dataFile_f[descrFile.files_count], descrFile.files_count);
         char* emptyBlock = 0;
         long startBlock = descrFile.files_count * descrFile.file_size;
-		try
-		{
-			dataFile_f[descrFile.files_count]->RWCreate(name.c_str());
-			dataFile_f[descrFile.files_count]->SetUnbuffered();
-            File *data_f = dataFile_f[descrFile.files_count];
+                try
+                {
+                        dataFile_f[descrFile.files_count]->RWCreate(name.c_str());
+                        dataFile_f[descrFile.files_count]->SetUnbuffered();
+            smsc::core::buffers::File *data_f = dataFile_f[descrFile.files_count];
 
-            //	create list of free blocks
+            //  create list of free blocks
             emptyBlock = new char[descrFile.block_size];
             long* next_block = (long*)emptyBlock;
             long endBlock = (descrFile.files_count + 1) * descrFile.file_size;
@@ -648,7 +648,7 @@ private:
             *next_block = -1;
             data_f->Write(emptyBlock, descrFile.block_size);
             delete[] emptyBlock;
-		}
+                }
         catch (const std::exception& ex)
         {
             smsc_log_debug(logger, "Error create data file. std::exception: '%s'", ex.what());
@@ -657,13 +657,13 @@ private:
             }
             throw;
         }
-		descrFile.files_count++;
-		descrFile.blocks_free = descrFile.file_size;
-		descrFile.first_free_block = startBlock;
+                descrFile.files_count++;
+                descrFile.blocks_free = descrFile.file_size;
+                descrFile.first_free_block = startBlock;
         printDescrFile();
         changeDescriptionFile();
-		return 0;
-	}
+                return 0;
+        }
 
     void changeDescriptionFile() {
       try {
@@ -678,7 +678,7 @@ private:
       } 
       try {
         string name = descrFile_f.getFileName() + ".tmp";
-        File tmpFile;
+        smsc::core::buffers::File tmpFile;
         tmpFile.RWCreate(name.c_str());
         tmpFile.SetUnbuffered();
         tmpFile.Seek(0, SEEK_SET);
@@ -740,7 +740,7 @@ private:
         return 0;
       } catch (const std::exception& e) {
         smsc_log_warn(logger, "FSStorage: error open backup file: '%s'\n", e.what());
-        if (File::Exists(name.c_str())) {
+        if (smsc::core::buffers::File::Exists(name.c_str())) {
           smsc_log_error(logger, "FSStorage: backup file - exists, but can't be opened correct: '%s'\n", e.what());
           return CANNOT_OPEN_EXISTS_DESCR_FILE;
         } else {
@@ -749,11 +749,11 @@ private:
       }
     }
 
-	int OpenDescriptionFile(void)
-	{
+        int OpenDescriptionFile(void)
+        {
         string name = dbPath + '/' + dbName;
-		try
-		{
+                try
+                {
           descrFile_f.RWOpen(name.c_str());
           descrFile_f.SetUnbuffered();
           descrFile_f.Read((char*)&descrFile, sizeof(DescriptionFile));
@@ -761,45 +761,45 @@ private:
               descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.blocks_used, descrFile.blocks_free, descrFile.first_free_block);
           effectiveBlockSize = descrFile.block_size - sizeof(DataBlockHeader);
           return 0;
-		}
-		catch(const FileException& ex)
-		{
-          if (File::Exists(name.c_str())) {
+                }
+                catch(const smsc::core::buffers::FileException& ex)
+                {
+          if (smsc::core::buffers::File::Exists(name.c_str())) {
             smsc_log_error(logger, "FSStorage: idx_file - exists, but can't be opened : %s\n", ex.what());
             return CANNOT_OPEN_EXISTS_DESCR_FILE;
           }
           smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
           return DESCR_FILE_OPEN_FAILED;
-		}
-	}
+                }
+        }
 
-	int OpenDataFiles(void)
-	{
+        int OpenDataFiles(void)
+        {
         if (descrFile.files_count <= 0) {
           smsc_log_error(logger, "Open data files error: files count=%d", descrFile.files_count);
           return CANNOT_OPEN_DATA_FILE;
         }
-		char	buff[10];
-		string path = dbPath + '/' + dbName;
-		for(long i = 0; i < descrFile.files_count; i++)
-		{
-			snprintf(buff, 10, "-%.7d", i);
-			string name = path + buff;
-			dataFile_f.push_back(new File());
-			try
-			{
+                char    buff[10];
+                string path = dbPath + '/' + dbName;
+                for(long i = 0; i < descrFile.files_count; i++)
+                {
+                        snprintf(buff, 10, "-%.7d", i);
+                        string name = path + buff;
+                        dataFile_f.push_back(new smsc::core::buffers::File());
+                        try
+                        {
                 smsc_log_debug(logger, "Open data file: %s", name.c_str());
-				dataFile_f[i]->RWOpen(name.c_str());
-				dataFile_f[i]->SetUnbuffered();
-			}
-			catch(const std::exception& ex)
-			{
+                                dataFile_f[i]->RWOpen(name.c_str());
+                                dataFile_f[i]->SetUnbuffered();
+                        }
+                        catch(const std::exception& ex)
+                        {
                 smsc_log_error(logger, "Cannot open data file: %s", ex.what());
-				return CANNOT_OPEN_DATA_FILE;
-			}
-		}
-		return 0;
-	}
+                                return CANNOT_OPEN_DATA_FILE;
+                        }
+                }
+                return 0;
+        }
 
     void restoreDataBlocks(const DescriptionFile& _descrFile, const char* data) {
       if (dataBlockBackup.size() <= 1) {
@@ -838,7 +838,7 @@ private:
           }
           off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
           curBlockIndex = dataBlockBackup[i];
-          File* f = dataFile_f[file_number];
+          smsc::core::buffers::File* f = dataFile_f[file_number];
           f->Seek(offset);
           f->Write((void*)(&curBlockIndex), sizeof(descrFile.first_free_block));
           smsc_log_debug(logger, "restore next_free_block=%d offset=%d", curBlockIndex, offset);
@@ -851,7 +851,7 @@ private:
       }
     }
 
-    void writeBackup(File& f, const DescriptionFile& _descrFile, const char* backupData) {
+    void writeBackup(smsc::core::buffers::File& f, const DescriptionFile& _descrFile, const char* backupData) {
       size_t bufSize = sizeof(TRX_INCOMPLETE) + sizeof(DescriptionFile) + sizeof(BackupHeader) +
                        backupHeader.blocksCount * sizeof(descrFile.first_free_block) + backupHeader.dataSize;
       char* buf = new char[bufSize];
@@ -890,7 +890,7 @@ private:
       try {
         string tmpName = backupFile_f.getFileName() + ".tmp";
         smsc_log_error(logger, "Trying to save transaction data to file '%s'...", tmpName.c_str());
-        File tmpFile;
+        smsc::core::buffers::File tmpFile;
         tmpFile.RWCreate(tmpName.c_str());
         tmpFile.SetUnbuffered();
         writeBackup(tmpFile, _descrFile, backupData);
@@ -980,21 +980,21 @@ private:
 
 /*
     bool Change(const DataBlock& data, const Key& key, long& blockIndex)
-	{
+        {
         smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
                         blockIndex, key.toString().c_str(), data.length());
-		//if (blockIndex == -1) {
+                //if (blockIndex == -1) {
           //return _Add(data, key, blockIndex);
         //}
         //return _Change(data, key, blockIndex);
 
-		DataBlockHeader hdr;
-		long curBlockIndex = blockIndex;
-		long total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 0;
-		long old_total_blocks = 2;
-		long data_size = data.length();
-		long next_block = blockIndex;
-		size_t curBlockSize = effectiveBlockSize;
+                DataBlockHeader hdr;
+                long curBlockIndex = blockIndex;
+                long total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 0;
+                long old_total_blocks = 2;
+                long data_size = data.length();
+                long next_block = blockIndex;
+                size_t curBlockSize = effectiveBlockSize;
 
         try {
           for(int i = 0; i < total_blocks; i++)
@@ -1045,8 +1045,8 @@ private:
           return true;
         }
         changeDescriptionFile();
-		return true;
-	}
+                return true;
+        }
 */
 
         /*
@@ -1080,13 +1080,13 @@ private:
         } while (curBlockIndex != -1);
         */
     /*
-	void Remove(long blockIndex)
-	{
+        void Remove(long blockIndex)
+        {
         smsc_log_debug(logger, "Remove data block index=%d ", blockIndex);
         //_Remove(blockIndex);
         //return;
-		long next_block = blockIndex;
-		DataBlockHeader hdr;
+                long next_block = blockIndex;
+                DataBlockHeader hdr;
         try {
           while(-1 != next_block)
           {
@@ -1109,10 +1109,10 @@ private:
           changeDescriptionFile();
           exit(-1);
         }
-	}*/
+        }*/
 /*
-	bool Add(const DataBlock& data, const Key& key, long& blockIndex)
-	{
+        bool Add(const DataBlock& data, const Key& key, long& blockIndex)
+        {
       smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), data.length());
       DataBlockHeader hdr;
       hdr.block_used = BLOCK_USED;
@@ -1148,6 +1148,6 @@ private:
         changeDescriptionFile();
         exit(-1);
       }
-	}
+        }
 */
 

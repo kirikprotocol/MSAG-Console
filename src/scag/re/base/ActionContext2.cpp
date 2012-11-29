@@ -121,7 +121,7 @@ ActionContext::ActionContext( Hash<Property>*  constants,
 ActionContext::~ActionContext()
 {
     CHECKMAGTC;
-    if ( rule_ ) rule_->unref();
+    // if ( rule_ ) rule_->unref();
     if ( privateScope_ ) delete privateScope_;
     if ( infrastructConstants_ ) delete infrastructConstants_;
 }

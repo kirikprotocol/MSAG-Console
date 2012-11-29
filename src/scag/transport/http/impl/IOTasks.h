@@ -40,9 +40,6 @@ protected:
         Socket *getSocket(unsigned int i) {
             return sockets[i];
         }
-        const pollfd* getFds(unsigned int i) {
-        	return &fds[i];
-        }
     };
 
     
@@ -52,7 +49,6 @@ protected:
     void removeSocket(Multiplexer::SockArray &error);
     inline void removeSocket(Socket *s);
     inline static void deleteSocket(Socket *s, int how);
-    inline static void clearSocket(Socket *s);
      
     HttpMultiplexer multiplexer;
     EventMonitor sockMon;
@@ -71,8 +67,6 @@ public:
     virtual int Execute();
     virtual const char* taskName();
     virtual void registerContext(HttpContext* cx);
-protected:
-    void manageReadyRead(Socket* s, char* buf, Multiplexer::SockArray &error);
 };
 
 class HttpWriterTask : public IOTask {
@@ -82,8 +76,6 @@ public:
     virtual int Execute();
     virtual const char* taskName();
     virtual void registerContext(HttpContext* cx);
-protected:
-    void manageReadyWrite(Socket* s, Multiplexer::SockArray &error);
 
 protected:
     smsc::core::buffers::Array<Socket*> waitingConnect;

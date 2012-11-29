@@ -64,21 +64,36 @@ private:
 protected:
     void ref()
     {
-        smsc::core::synchronization::MutexGuard mg(reflock_);
-        ++ref_;
+        unsigned long long tot;
+        {
+            smsc::core::synchronization::MutexGuard mg(reflock_);
+            if (!ref_) { ++total_; }
+            tot = total_;
+            ++ref_;
+        }
+        if ( tot && 0 == (tot % 1000) ) {
+            smsc_log_info(log_,"total number of Contexts: %llu",tot);
+        }
     }
+
     void unref()
     {
+        unsigned long long tot;
         {
             smsc::core::synchronization::MutexGuard mg(reflock_);
             if (--ref_) return;
+            tot = --total_;
         }
         delete this;
+        if ( tot && 0 == (tot % 1000) ) {
+            smsc_log_info(log_,"total number of Contexts: %llu",tot);
+        }
     }
 
 private:
     smsc::core::synchronization::Mutex reflock_;
     unsigned                           ref_;
+    static unsigned long long          total_;
 
 private:
     util::msectime_type     creationTime_;

@@ -12,6 +12,8 @@ namespace util {
 /* ************************************************************************** *
  * Customizable HEX Dunmping.
  * ************************************************************************** */
+//Hex octet all Grouped per Line
+const HexDumpCFG _HexDump_HGAL = { 0, 0, " ", 0};
 //Hex octet Grouped by 4, Space delimited, all per Line
 const HexDumpCFG _HexDump_HG4S = { 4, 0, " ", 0};
 const HexDumpCFG _HexDump_CVSD = { 1, 0, " ", "0x"}; //C Value Space Delimited

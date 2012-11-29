@@ -27,6 +27,7 @@ oid msagSMPPEndPointTraffic_oid[] = { 1,3,6,1,4,1,26757,2,0,8 };
 oid msagSMPPQueueLimit_oid[] = { 1,3,6,1,4,1,26757,2,0,9 };
 oid msagSessionLimit_oid[] = { 1,3,6,1,4,1,26757,2,0,10 };
 oid msagSMPPConnect_oid[] = { 1,3,6,1,4,1,26757,2,0,11 };
+oid msagAlive_oid[] = { 1,3,6,1,4,1,26757,2,0,12 };
 
 void init_msag()
 {
@@ -44,7 +45,7 @@ namespace scag2 {
 namespace snmp {
 
 SnmpWrapper::SnmpWrapper( const std::string& socket ) :
-log_(0)
+log_(0), isMsag_(true)
 {
     log_ = smsc::logger::Logger::getInstance( "snmp" );
     // FIXME: uncomment
@@ -76,8 +77,13 @@ log_(0)
 
 SnmpWrapper::~SnmpWrapper()
 {
-    snmp_shutdown( ::msagname );
-    snmp_shutdown( ::msagnamed );
+    if ( isMsag() ) {
+        snmp_shutdown( ::msagname );
+        snmp_shutdown( ::msagnamed );
+    } else {
+        snmp_shutdown( ::pvssname );
+        snmp_shutdown( ::pvssnamed );
+    }
     smsc_log_info(log_,"snmp wrapper shutdowned");
 }
 
@@ -101,6 +107,7 @@ void SnmpWrapper::sendTrap( const TrapRecord& rec )
             TRAPTCASE(TrapRecord::TRAPTSMPPQLIM,msagSMPPQueueLimit_oid);
             TRAPTCASE(TrapRecord::TRAPTSESSLIM,msagSessionLimit_oid);
             TRAPTCASE(TrapRecord::TRAPTSMPPCONN,msagSMPPConnect_oid);
+            TRAPTCASE(TrapRecord::TRAPTALIVE,msagAlive_oid);
             /*
         case (TrapRecord::TRAPTNEWALERT) : {
             poid = msagNewAlertFFMR_oid;
@@ -200,6 +207,7 @@ void SnmpWrapper::initMsag( msagCounterTable_creator_t* creator,
                             int cacheTimeout )
 {
     smsc_log_info(log_,"initializing msag snmp support");
+    isMsag_ = true;
     init_agent( ::msagnamed );  // initialize the agent library
     ::init_msag();              // initialize mib code
     ::initMsagCounterTable( creator, destructor, cacheTimeout );
@@ -213,6 +221,7 @@ void SnmpWrapper::initPvss( msagCounterTable_creator_t* creator,
                             int cacheTimeout )
 {
     smsc_log_info(log_,"initializing pvss snmp support");
+    isMsag_ = false;
     init_agent( ::pvssnamed );  // initialize the agent library
     ::init_pvss();              // initialize mib code
     ::initPvssCounterTable( creator, destructor, cacheTimeout );

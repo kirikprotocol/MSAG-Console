@@ -3,6 +3,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "SnmpTrapThread.h"
+#include "util/TimeSource.h"
 
 namespace scag2 {
 namespace snmp {
@@ -27,12 +28,35 @@ SnmpTrapThread::~SnmpTrapThread()
 int SnmpTrapThread::Execute()
 {
     stopped_ = false;
-    smsc_log_info( log_, "snmp trap thread is started" );
+    unsigned pingTimeout = pingTimeout_;
+    TrapRecord ping;
+    ping.recordType = TrapRecord::Trap;
+    ping.status = TrapRecord::TRAPTALIVE;
+    if ( snmp_->isMsag() ) {
+        ping.id = "MSAG";
+        ping.category = "MSAG";
+    } else {
+        pingTimeout = 0;
+    }
+    ping.severity = TrapRecord::CLEAR;
+    ping.text = "I'm alive";
+
+    smsc_log_info( log_, "snmp trap thread is started%s",
+                   pingTimeout ? "" : " (pings disabled)");
     TrapRecord* tr;
+    typedef smsc::util::TimeSourceSetup::AbsUSec TSource;
+    typedef TSource::usec_type usec_type;
+    usec_type lastping = TSource::getUSec();
     while ( ! stopping_ ) {
         agent_check_and_process(1);
         while ( queue_.Pop(tr) ) {
             snmp_->sendTrap(*tr);
+        }
+        const usec_type now = TSource::getUSec();
+        const int delta = int((now - lastping)/1000000);
+        if ( pingTimeout && delta > int(pingTimeout) ) {
+            snmp_->sendTrap(ping);
+            lastping = now;
         }
         if ( stopping_ ) break;
         // now, when we are processing snmp requests

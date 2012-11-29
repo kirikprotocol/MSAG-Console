@@ -214,7 +214,10 @@ void BillingManagerImpl::configChanged()
     Start();
 }
 
-void BillingManagerImpl::ProcessResult(const char *eventName, BillingTransactionEvent event, BillTransaction *b)
+void BillingManagerImpl::ProcessResult(const char *eventName,
+                                       BillingTransactionEvent event,
+                                       BillTransaction *b,
+                                       int errorCode )
 {
     BillingCommandStatus i;
     const char *p;
@@ -235,8 +238,14 @@ void BillingManagerImpl::ProcessResult(const char *eventName, BillingTransaction
         default:
             i = COMMAND_SUCCESSFULL;
     }
+    int icode = i;
+    if ( i == COMMAND_SUCCESSFULL ) {
+        // db: we made this 'khernia' according to Ilnur's request
+        icode = errorCode;
+    }
+
     stat::SaccBillingInfoEvent* billEvent = new stat::SaccBillingInfoEvent();
-    makeBillEvent(event, i, b->tariffRec, b->billingInfoStruct, billEvent);
+    makeBillEvent(event, icode, b->tariffRec, b->billingInfoStruct, billEvent);
     stat::Statistics::Instance().registerSaccEvent(billEvent);
     logEvent(eventName, i == COMMAND_SUCCESSFULL, b->billingInfoStruct, b->billId);
     if(i != COMMAND_SUCCESSFULL)
@@ -262,6 +271,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
 
     bt->status = st->status;
 
+    int icode;
     if( st->status == TRANSACTION_VALID )
     {
         SPckDeliverySmsResult opRes;
@@ -274,8 +284,16 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
             opRes._Cmd.setResultValue(1);
             opRes._Cmd.setFinal(false); // To skip CDR creation
         }
-        else if(lcmCtx->callCommandId == lcm::BILL_ROLLBACK)
+        else if(lcmCtx->callCommandId == lcm::BILL_ROLLBACK) {
             opRes._Cmd.setResultValue(2);
+            // db: we made this 'khernia' according to Ilnur's request
+            BillCloseCallParams* bp = static_cast<BillCallParams*>(lcmCtx->getParams())->getClose();
+            if (bp) { icode = bp->errorCode(); }
+        } else if (lcmCtx->callCommandId == lcm::BILL_COMMIT) {
+            // db: we made this 'khernia' according to Ilnur's request
+            BillCloseCallParams* bp = static_cast<BillCallParams*>(lcmCtx->getParams())->getClose();
+            if (bp) { icode = bp->errorCode(); }
+        }
         sendCommand(opRes);
 
         i = COMMAND_SUCCESSFULL;
@@ -298,6 +316,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
                 p = "time out";
                 break;
         }
+        icode = i;
     }
 
     const char *eventName;
@@ -310,7 +329,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     }
 
     stat::SaccBillingInfoEvent* billEvent = new stat::SaccBillingInfoEvent();
-    makeBillEvent( event, i, bt->tariffRec, bt->billingInfoStruct, billEvent );
+    makeBillEvent( event, icode, bt->tariffRec, bt->billingInfoStruct, billEvent );
     stat::Statistics::Instance().registerSaccEvent(billEvent);
     logEvent(eventName, i == COMMAND_SUCCESSFULL, bt->billingInfoStruct, bt->billId);
     if(i != COMMAND_SUCCESSFULL)
@@ -360,6 +379,7 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
     TariffRec* tariffRec;
     BillingInfoStruct* billingInfoStruct;
     billid_type billId;
+    int icode = 0;
 
     if ( params.getOpen() ) {
 
@@ -386,6 +406,7 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
 
         // close call params
         EwalletCloseCallParams* co = static_cast<EwalletCloseCallParams*>(params.getClose());
+        icode = co->errorCode();
         if ( co->isCommit() ) {
             eventName = "commit";
             event = TRANSACTION_COMMITED;
@@ -418,18 +439,20 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
     const uint8_t status = params.getStatus();
     if ( status == ewallet::Status::OK ) {
         i = COMMAND_SUCCESSFULL;
+        // db: we made this 'khernia' according to Ilnur's request
+        // icode is taken from CloseParams
     } else if ( status == ewallet::Status::TIMEOUT ) {
-        i = SERVER_NOT_RESPONSE;
+        icode = i = SERVER_NOT_RESPONSE;
     } else if ( status == ewallet::Status::CLIENT_BUSY ||
                 status == ewallet::Status::NO_ACCESS ) {
-        i = REJECTED_BY_SERVER;
+        icode = i = REJECTED_BY_SERVER;
     } else if ( status == ewallet::Status::TRANS_NOT_FOUND ) {
-        i = INVALID_TRANSACTION;
+        icode = i = INVALID_TRANSACTION;
     } else {
-        i = EXTERNAL_ERROR;
+        icode = i = EXTERNAL_ERROR;
     }
     stat::SaccBillingInfoEvent* billEvent = new stat::SaccBillingInfoEvent();
-    makeBillEvent( event, i, *tariffRec, *billingInfoStruct, billEvent );
+    makeBillEvent( event, icode, *tariffRec, *billingInfoStruct, billEvent );
     stat::Statistics::Instance().registerSaccEvent(billEvent);
     logEvent( eventName, status == ewallet::Status::OK,
               *billingInfoStruct, billId );
@@ -588,7 +611,7 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
         p->status = TRANSACTION_VALID;
     }
 
-    ProcessResult("open", TRANSACTION_OPEN, p.get());
+    ProcessResult("open", TRANSACTION_OPEN, p.get(), 0);
 
     putBillTransaction(billId, p.release());
 
@@ -596,7 +619,9 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
 }
 
 
-void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx)
+void BillingManagerImpl::Commit(billid_type billId,
+                                int errorCode,
+                                lcm::LongCallContext* lcmCtx)
 {
     smsc_log_debug(logger, "Commiting billId=%lld...", billId);
 
@@ -651,14 +676,16 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
         } else {
             throw SCAGException("Cannot process ewallet commit w/o lcmCtx");
         }
-    } else
+    } else {
         p->status = TRANSACTION_VALID;
+    }
 
-    ProcessResult("commit", TRANSACTION_COMMITED, p.get());
+    ProcessResult("commit", TRANSACTION_COMMITED, p.get(), errorCode);
 }
 
 
-void BillingManagerImpl::Rollback(billid_type billId, bool timeout, lcm::LongCallContext* lcmCtx)
+void BillingManagerImpl::Rollback(billid_type billId, bool timeout,
+                                  int errorCode, lcm::LongCallContext* lcmCtx)
 {
     smsc_log_debug(logger, "Rolling back billId=%lld...", billId);
 
@@ -675,11 +702,14 @@ void BillingManagerImpl::Rollback(billid_type billId, bool timeout, lcm::LongCal
     #endif
 */
     ProcessResult( timeout ? "rollback(timeout)" : "rollback",
-                   timeout ? TRANSACTION_TIME_OUT : TRANSACTION_CALL_ROLLBACK, p.get());
+                   timeout ? TRANSACTION_TIME_OUT : TRANSACTION_CALL_ROLLBACK,
+                   p.get(), errorCode );
 }
 
 
-void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCallContext* lcmCtx )
+void BillingManagerImpl::CommitTransit( BillCloseCallParams& params,
+                                        int errorCode, 
+                                        lcm::LongCallContext* lcmCtx )
 {
     BillTransitParamsData* data = params.getTransitData();
     if ( ! data || ! data->data.get() ) {
@@ -708,6 +738,7 @@ void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCa
     } else {
         pck->setTransId(data->transId);
     }
+    // FIXME: statistics?
     std::auto_ptr<ewallet::Request> req(pck.release());
     smsc_log_debug(logger,"passing ewallet commit request to client");
     ewalletClient_->processRequest( req, *eCloseParams );
@@ -715,7 +746,9 @@ void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCa
 }
 
 
-void BillingManagerImpl::RollbackTransit( BillCloseCallParams& params, lcm::LongCallContext* lcmCtx )
+void BillingManagerImpl::RollbackTransit( BillCloseCallParams& params,
+                                          int errorCode,
+                                          lcm::LongCallContext* lcmCtx )
 {
     BillTransitParamsData* data = params.getTransitData();
     if ( ! data || ! data->data.get() ) {
@@ -744,6 +777,7 @@ void BillingManagerImpl::RollbackTransit( BillCloseCallParams& params, lcm::Long
     } else {
         pck->setTransId(data->transId);
     }
+    // FIXME: statistics?
     std::auto_ptr<ewallet::Request> req(pck.release());
     smsc_log_debug(logger,"passing ewallet rollback request to client");
     ewalletClient_->processRequest( req, *eCloseParams );
@@ -844,7 +878,7 @@ void BillingManagerImpl::Info( EwalletInfoCallParams& infoParams,
 
 
 void BillingManagerImpl::makeBillEvent( BillingTransactionEvent billCommand,
-                                        BillingCommandStatus commandStatus,
+                                        int commandStatus,
                                         TariffRec& tariffRec,
                                         BillingInfoStruct& billingInfo,
                                         stat::SaccBillingInfoEvent* ev)
@@ -861,6 +895,8 @@ void BillingManagerImpl::makeBillEvent( BillingTransactionEvent billCommand,
     ev->Header.pAbonentNumber = billingInfo.AbonentNumber;
     ev->Header.sCommandStatus = commandStatus;
     ev->Header.iOperatorId = billingInfo.operatorId;
+
+    smsc_log_debug(logger,"bill event: status=%d",commandStatus);
 
     ev->iPriceCatId = tariffRec.CategoryId;
     ev->fBillingSumm = tariffRec.getPrice();

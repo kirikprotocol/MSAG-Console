@@ -32,7 +32,7 @@ int Worker::doExecute()
 {
     ServerContextPtr context;
     while ( true ) {
-        context = queue_.getContext(100);
+        context = queue_.getQueuedContext(100);
         if ( ! context.get() ) {
             if ( ! queue_.couldHaveRequests() ) stop();
             if ( ! queue_.isStarted() ) break;

@@ -48,21 +48,14 @@ public:
     connectionsPerIp_(100),
     failTimeout_(60),
     maxReaderCount_(10)
-  {
-    acc=new SmeAcceptor(this);
-    //acc->Init("0.0.0.0",8001);
-    acc->Init(
-              ConfigManager::Instance().getConfig()->getString("smpp.host"),
-              ConfigManager::Instance().getConfig()->getInt("smpp.port")
-    );
-    conn=new SmscConnector(this);
-    conn->Init(
-               ConfigManager::Instance().getConfig()->getString("smpp.host")
-    );
-      tp.startTask( acc );
-      tp.setMaxThreads( maxReaderCount_*2 + 1 );
-    log=smsc::logger::Logger::getInstance("smpp.skmgr");
-  }
+    {
+        log = smsc::logger::Logger::getInstance("smpp.skmgr");
+        acc=new SmeAcceptor(this);
+        conn=new SmscConnector(this);
+        Config* cfg = ConfigManager::Instance().getConfig();
+        conn->Init(cfg->getString("smpp.host"));
+    }
+
 
     void init( unsigned socketsPerThread,
                unsigned bindTimeout,
@@ -85,13 +78,24 @@ public:
                       socketsPerThread_, bindTimeout_, connectionsPerIp_, failTimeout_, maxReaderCount_ );
     }
 
+
+    void start()
+    {
+        smsc_log_info(log,"starting sme acceptor");
+        Config* cfg = ConfigManager::Instance().getConfig();
+        acc->Init(cfg->getString("smpp.host"),cfg->getInt("smpp.port"));
+        tp.startTask( acc );
+        // tp.setMaxThreads( maxReaderCount_*2 + 1 );
+    }
+
+
     /// add whitelisted ip address
     void addWhiteIp( const char* dottedaddr );
 
-  SmscConnectorAdmin* getSmscConnectorAdmin()
-  {
-    return conn;
-  }
+    SmscConnectorAdmin* getSmscConnectorAdmin()
+    {
+        return conn;
+    }
     virtual bool registerSocket(SmppSocket* sock);
     virtual void unregisterSocket(SmppSocket* sock);
     void shutdown();

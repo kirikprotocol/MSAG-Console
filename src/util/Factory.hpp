@@ -44,13 +44,13 @@ public:
     ProductType* create(KeyType key) const
     {
         typename ProductsMap::const_iterator it = producers.find(key);
-        return (it == producers.end()) ? NULL : it->second->create();
+        return (it == producers.end()) ? 0 : it->second->create();
     }
     //usefull for determining wether the product is registered or not
     Producer * getProducer(KeyType key) const
     {
         typename ProductsMap::const_iterator it = producers.find(key);
-        return (it == producers.end()) ? NULL : it->second;
+        return (it == producers.end()) ? 0 : it->second;
     }
 
     //destroys all producers
@@ -65,7 +65,7 @@ public:
 
 //Generic factory that allows to set an optional argument
 //for product creation.
-//NOTE: _TArg(_ArgTArg * use_arg = NULL) must be defined
+//NOTE: _TArg(_ArgTArg use_arg = NULL) must be defined
 template <typename _KeyTArg, class _ProductAC_TArg, class _ArgTArg>
 class FactoryXArg_T {
 public:
@@ -103,14 +103,14 @@ public:
     _ProductAC_TArg * create(KeyType key, _ArgTArg use_arg) const
     {
         typename ProductsMap::const_iterator it = producers.find(key);
-        return (it == producers.end()) ? NULL : it->second->create(use_arg);
+        return (it == producers.end()) ? 0 : it->second->create(use_arg);
     }
 
     //usefull for determining wether the product is registered or not
     ProducerITF * getProducer(KeyType key) const
     {
         typename ProductsMap::const_iterator it = producers.find(key);
-        return (it == producers.end()) ? NULL : it->second;
+        return (it == producers.end()) ? 0 : it->second;
     }
 
     //destroys all producers

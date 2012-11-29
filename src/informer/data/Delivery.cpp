@@ -40,9 +40,12 @@ ref_(0)
 
 Delivery::~Delivery()
 {
+    smsc_log_info(log_,"dtor D=%u",getDlvId());
     delete source_;
     delete activityLog_;
-    smsc_log_info(log_,"dtor D=%u done",getDlvId());
+    const dlvid_type dlvId = getDlvId();
+    dlvInfo_.reset(0);
+    smsc_log_info(log_,"dtor D=%u done",dlvId);
 }
 
 

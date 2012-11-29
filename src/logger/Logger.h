@@ -31,6 +31,8 @@
 // using namespace smsc::core::synchronization;
 // using namespace smsc::util;
 
+typedef struct stat stat_type;
+
 namespace smsc {
 namespace logger {
 
@@ -250,7 +252,7 @@ private:
     {
         smsc::core::synchronization::MutexGuard guard(static_mutex);
         if(time_t(lastReloadConfigCheck + reloadConfigInterval) >= time(NULL)) return;
-        struct ::stat st;
+        stat_type st;
         const char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
         if(!logFileName) logFileName = "logger.properties";
         if(::stat(logFileName, &st)) return;

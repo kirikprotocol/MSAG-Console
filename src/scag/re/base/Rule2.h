@@ -7,6 +7,13 @@
 #include "IParserHandler2.h"
 #include "RuleStatus2.h"
 #include "RuleKey2.h"
+#include "informer/io/EmbedRefPtr.h"
+
+namespace eyeline {
+namespace informer {
+template < class T > class EmbedRefPtr;
+}
+}
 
 namespace scag2 {
 
@@ -37,34 +44,9 @@ struct CommandProperty;
 
 class Rule : public IParserHandler
 {
-    Rule(const Rule &);
-    IntHash <EventHandler *> Handlers;
-    smsc::core::synchronization::Mutex ruleLock;
-    int useCounter;
-    TransportType transportType;
-    Logger * logger;
-
-    EventHandler * CreateEventHandler();
-//////////////IParserHandler Interfase///////////////////////
-    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
-    virtual bool FinishXMLSubSection(const std::string& name);
-//////////////IParserHandler Interfase///////////////////////
+    friend class eyeline::informer::EmbedRefPtr< Rule >;
 public:
     TransportType getTransportType() const {return transportType;};
-
-    void ref() {
-        smsc::core::synchronization::MutexGuard mg(ruleLock);
-        useCounter++;
-    }
-    void unref() 
-    {
-        bool del = false;
-        {
-            smsc::core::synchronization::MutexGuard mg(ruleLock);
-            del = (--useCounter == 0);
-        }
-        if (del) delete this;
-    }
 
     virtual void init(const SectionParams& params, PropertyObject propertyObject);
 
@@ -82,9 +64,49 @@ public:
                                  RuleStatus& rs,
                                  const RuleKey& rk );
 
-    Rule(): useCounter(1), transportType(SMPP),logger(0) {logger = Logger::getInstance("scag.re");};
+    Rule() :
+    logger(smsc::logger::Logger::getInstance("scag.re")),
+    ref_(0),
+    transportType(SMPP) {}
+
     virtual ~Rule();
+
+private:
+    Rule(const Rule &);
+
+    void ref() {
+        smsc::core::synchronization::MutexGuard mg(refLock_);
+        ++ref_;
+    }
+
+    void unref() 
+    {
+        {
+            smsc::core::synchronization::MutexGuard mg(refLock_);
+            if (--ref_) {
+                return;
+            }
+        }
+        delete this;
+    }
+
+private:
+    Logger * logger;
+
+    smsc::core::synchronization::Mutex refLock_;
+    unsigned                           ref_;
+    IntHash <EventHandler *> Handlers;
+    TransportType transportType;
+
+    EventHandler * CreateEventHandler();
+//////////////IParserHandler Interfase///////////////////////
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
+//////////////IParserHandler Interfase///////////////////////
+
 };
+
+typedef eyeline::informer::EmbedRefPtr< Rule > RulePtr;
 
 }
 }

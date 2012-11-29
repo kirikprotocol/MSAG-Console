@@ -41,7 +41,8 @@ bool BillActionCloseTransit::RunBeforePostpone(ActionContext& context)
             return false;
         }
         bill::EwalletCloseCallParams* ectp =
-            new bill::EwalletCloseCallParams(bctpd.release(),&lcmCtx);
+            new bill::EwalletCloseCallParams(bctpd.release(),&lcmCtx,
+                                             errCode_.isFound() ? errCode_.getValue(context) : 0);
         lcmCtx.setParams(ectp);
         return true;
     } else {
@@ -74,6 +75,7 @@ void BillActionCloseTransit::postInit(const SectionParams& params,
 
     transId_.init(params,propertyObject);
     amount_.init(params,propertyObject);
+    errCode_.init(params,propertyObject);
 }
 
 }}}

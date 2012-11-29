@@ -15,7 +15,8 @@ class BillActionCloseTransit : public BillActionPreOpen, public ActionLongCallIn
 public:
     BillActionCloseTransit() : BillActionPreOpen(true),
     transId_(*this,"transId",false,true),
-    amount_(*this,"amount",false,true) {}
+    amount_(*this,"amount",false,true),
+    errCode_(*this,"error_code",false,true) {}
 
 protected:
     // long call interface
@@ -43,6 +44,7 @@ private:
     // uint32_t    ewalletTransId_;
 
     StringField amount_;
+    IntField    errCode_;
 };
 
 }}}

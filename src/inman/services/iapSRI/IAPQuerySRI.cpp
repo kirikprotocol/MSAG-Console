@@ -104,7 +104,7 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes & res)
                      _abInfo.toString().c_str());
     }
   }
-  setStage(qryResulted);
+  setStage(qryResulted);  //event will be signalled by MAP dialogue upon return !
 }
 
 //FSM switching: [qryStarted | qryResulted] -> qryReporting
@@ -132,7 +132,7 @@ ObjAllcStatus_e
       smsc_log_debug(_logger, "%s(%s): query succeeded",
                       taskName(), _abId.getSignals());
   
-    setStageNotify(qryReporting);
+    setStage(qryReporting); //event will be signalled by MAP dialogue upon return !
   }
   reportThis();
   return ObjFinalizerIface::objActive;

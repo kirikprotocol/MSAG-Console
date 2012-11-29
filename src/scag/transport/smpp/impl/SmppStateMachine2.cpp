@@ -599,11 +599,27 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                 return;
             } else if ( ! session.get() ) {
                 // session is not found
-                smsc_log_warn(log_,"%s: session is not found, expired? key='%s'",
+                smsc_log_warn(log_,"%s: seq=%u OA=%s DA=%s src=%s dst=%s svc=%u session is not found, expired? key='%s'",
                               where,
+                              unsigned(cmd->get_dialogId()),
+                              sms->getOriginatingAddress().toString().c_str(),
+                              sms->getDestinationAddress().toString().c_str(),
+                              cmd->getEntity() ? cmd->getEntity()->getSystemId() : "",
+                              cmd->getDstEntity() ? cmd->getDstEntity()->getSystemId() : "",
+                              unsigned(cmd->getServiceId()),
                               key.toString().c_str() );
                 st.status = re::STATUS_FAILED;
                 st.result = smsc::system::Status::TRANSACTIONTIMEDOUT;
+                if (ri.statistics) {
+                  const Address& address =  isDirFromService(dir) ? sms->getDestinationAddress() : sms->getOriginatingAddress();
+                  const SessionKey key( address );
+                  CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
+                  SessionPrimaryKey primaryKey(key);
+                  timeval tv = { time(0), 0 };
+                  primaryKey.setBornTime(tv);
+                  smsc_log_debug(log_, "%s: register traffic info event for unknown session", where);
+                  scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, "" );
+                }
                 break;
             }
 
@@ -629,7 +645,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         if ( ri.statistics ) {
           smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
           scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), "");
-        }
+      }
 
     } while ( false ); // fake loop
 
@@ -809,12 +825,13 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
                 }
 
                 if ( fail ) {
-                    smsc_log_info(log_,"%s: %s %s(%s)->%s",
+                    smsc_log_info(log_,"%s: %s %s(%s)->%s(%s)",
                                   where,
                                   fail,
                                   sms.getOriginatingAddress().toString().c_str(),
                                   src->getSystemId(),
-                                  sms.getDestinationAddress().toString().c_str());
+                                  sms.getDestinationAddress().toString().c_str(),
+                                  dst ? dst->getSystemId() : "" );
                     st.status = re::STATUS_FAILED;
                     hrt.stop();
                     break;
@@ -939,6 +956,37 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
         default:
             break;
         }
+        //transit SAA logged with st.status==OK
+        if (1 && ri.statistics) { //log fake submit_sm on "SME not connected" or so
+          smsc_log_debug(log_, "%s: register traffic info event for failed route CCCC cmd=%p", where,cmd);
+            const bool keyisdest = ( cmd->getCommandId() == SUBMIT ? true :
+                               ( cmd->getCommandId() == DELIVERY ? false :
+                                 ( src->info.type == etService ? true : false )));
+            const Address& address =  keyisdest ? sms.getDestinationAddress() : sms.getOriginatingAddress();
+            CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
+            const SessionKey key( address );
+            SessionPrimaryKey primaryKey(key);
+            timeval tv = { time(0), 0 };
+            primaryKey.setBornTime(tv);
+            smsc_log_debug(log_, "%s: register traffic info event for failed route. original frame", where);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+        }
+
+        if (1 && resp.get() && ri.statistics) { //log resp on "SME not connected" or so
+            const bool keyisdest = ( resp->getCommandId() == SUBMIT ? true :
+                               ( resp->getCommandId() == DELIVERY ? false :
+                                 ( src->info.type == etService ? true : false )));
+            const Address& address =  keyisdest ? sms.getDestinationAddress() : sms.getOriginatingAddress();
+            resp->get_resp()->setOrgCmd(aucmd.release()); //it will be freed at delete resp.
+            CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*resp, address, static_cast<uint8_t>(resp->getOperationId())));
+            const SessionKey key( address );
+            SessionPrimaryKey primaryKey(key);
+            timeval tv = { time(0), 0 };
+            primaryKey.setBornTime(tv);
+            smsc_log_debug(log_, "%s: register traffic info event for failed route for RESP", where);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+        }
+
         if (resp.get()) src->putCommand( resp );
         registerEvent( statevent, src, dst, routeId.c_str(), st.result );
         if ( session.get() ) session->closeCurrentOperation();
@@ -951,6 +999,9 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
     }
     failed = putCommand(CommandId(cmd->getCommandId()), src, dst, ri, aucmd);
+    /*OPA called dst->putCmd(), registerEvent(), return 0 if commandId in {SUBMIT,DELIVERY,DATASM} && dst-sme is connected
+     * else failed !=0
+     */
 
     hrt.mark("stm.putcmd");
 

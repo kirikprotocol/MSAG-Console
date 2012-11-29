@@ -700,3 +700,11 @@ B3216: Oct 11, 2011
     INMan	logging fixes
     INMan	std::map replaced with optimized collections
     MCISme	SS7 HD support
+
+B3217: Nov 15, 2011
+    SMSC	Allow to pass any optional TLV in SMPP respnoses between SMEs
+    SMSC	SRI4SM on MO SMS now can be configured at runtime thru map limits
+    INMan	IMSI optional for CDR mode, no SRI will be made if no IN platform charging required  
+
+B3218: Dec 2, 2011
+    USSMan	Fix for frozen workers that haven't got L_CANCEL from stack

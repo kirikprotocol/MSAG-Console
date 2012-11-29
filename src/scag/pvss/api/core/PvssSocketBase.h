@@ -44,18 +44,25 @@ protected:
     void ref()
     {
         unsigned r;
+        unsigned long long tot;
         {
             smsc::core::synchronization::MutexGuard mg(reflock_);
+            if (!ref_) { ++total_; }
+            tot = total_;
             r = ++ref_;
         }
         smsc_log_debug(log_,"ref+1=%u %p sock=%p%c %s:%u",r,this,sock_,
                        (sock_?sock_->isConnected():false)?'+':'-',
                        host_.c_str(),unsigned(port_));
+        if ( tot && 0 == (tot%1000) ) {
+            smsc_log_info(log_,"total number of sockets: %llu",tot);
+        }
     }
 
     void unref()
     {
         unsigned r;
+        unsigned long long tot;
         {
             smsc::core::synchronization::MutexGuard mg(reflock_);
             r = --ref_;
@@ -63,8 +70,12 @@ protected:
                            (sock_?sock_->isConnected():false)?'+':'-',
                            host_.c_str(),unsigned(port_));
             if (r) return;
+            tot = --total_;
         }
         delete this;
+        if ( tot && 0 == (tot % 1000) ) {
+            smsc_log_info(log_,"total number of sockets: %llu",tot);
+        }
     }
 
 private:
@@ -75,6 +86,7 @@ private:
     smsc::core::network::Socket*         sock_;
     smsc::core::synchronization::Mutex   reflock_;
     unsigned                             ref_;
+    static unsigned long long            total_;
 
 protected:
     std::string                   host_;

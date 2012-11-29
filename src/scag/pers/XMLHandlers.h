@@ -46,14 +46,14 @@ class XMLBasicHandler : public HandlerBase
 {
     int type;
     Logger * logger;
-    IntHash<RegionInfo> *regionHash;
+    smsc::core::buffers::IntHash<RegionInfo> *regionHash;
 
     void characters(const XMLCh *const chars, const unsigned int length);
 
 protected:
 
 public:
-    XMLBasicHandler(IntHash<RegionInfo>* h);
+    XMLBasicHandler(smsc::core::buffers::IntHash<RegionInfo>* h);
     ~XMLBasicHandler() {};
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);

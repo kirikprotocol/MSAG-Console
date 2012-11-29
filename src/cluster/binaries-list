@@ -1,7 +1,0 @@
-# $Id$
-# this file contains binaries definitions
-
-# binary name source name libraries         
-
-#test ()
-cluster/agent  agent	 $(SOCKETLIB) -lcore-network -lcluster-listeners -lcluster -lutil-config -lutil-xml -lcore-threads -lpthread $(XERCES_LIB) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl -lutil-mirrorfile

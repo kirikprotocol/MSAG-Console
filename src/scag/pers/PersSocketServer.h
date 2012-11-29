@@ -12,7 +12,6 @@ namespace scag { namespace pers {
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 using smsc::core::network::Socket;
-using smsc::logger::Logger;
 
 const uint32_t PACKET_LENGTH_SIZE = 4;
 
@@ -44,8 +43,8 @@ public:
     virtual ~PersSocketServer();
     void InitServer();
     int Execute();
-    void Stop() { MutexGuard mt(mtx); isStopping = true; };
-    bool isStopped() { MutexGuard mt(mtx); return isStopping; };
+    void Stop() { smsc::core::synchronization::MutexGuard mt(mtx); isStopping = true; };
+    bool isStopped() { smsc::core::synchronization::MutexGuard mt(mtx); return isStopping; };
 
 protected:
 
@@ -67,7 +66,7 @@ protected:
     Socket sock;
     bool isStopping;
     RWMultiplexer listener;
-    Mutex mtx;
+    smsc::core::synchronization::Mutex mtx;
     char tmp_buf[1024];
 };
 

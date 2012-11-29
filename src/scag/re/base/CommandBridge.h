@@ -159,7 +159,7 @@ public:
                                       const sessions::SessionPrimaryKey& primaryKey,
                                       sessions::Session* session);
 
-    static void RegisterTrafficEvent( const actions::CommandProperty& commandProperty,
+    static std::string RegisterTrafficEvent( const actions::CommandProperty& commandProperty,
                                       const sessions::SessionPrimaryKey& sessionPrimaryKey,
                                       const std::string& messageBody,
                                       util::HRTiming* hrt = 0 );

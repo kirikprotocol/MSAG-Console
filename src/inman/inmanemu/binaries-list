@@ -1,9 +1,0 @@
-#
-# $Id$
-#
-
-#binary name			source name			libraries
-#-lutil-leaktracing is supported ONLY On sparc
-inman/inmanemu	inmanemu -linman-inmanemu -L$(SMSC_BUILDDIR)/bin -lutil -llogger \
-   $(XERCES_LIB) -linman-storage -lcore-network \
-   $(SOCKETLIB) -linman-interaction-msgbill -linman-interaction-serializer -linman-common -lnsl @liblogger.so

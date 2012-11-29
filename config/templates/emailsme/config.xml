@@ -48,7 +48,6 @@
     <param name="regionsconfig" type="string">../SMSC/conf/regions.xml</param>
     <param name="routesconfig" type="string">../SMSC/conf/routes.xml</param>
     <param name="helpdeskAddress" type="string">201</param>
-    <!--param name="sendHelpdeskEmail" type="bool">false</param-->
   </section>
 
   <section name="mail">

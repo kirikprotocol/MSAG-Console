@@ -80,7 +80,7 @@ struct SmppSocket : SmppChannel
     {
         rdBuffer = new char[rdBufSize];
         wrBuffer = new char[wrBufSize];
-        dump = smsc::logger::Logger::getInstance("smpp.dmp");
+        dump = smsc::logger::Logger::getInstance("smpp.bind");
         if ( s ) {
             smsc_log_debug( log_, "SmppSocket @%p ctor(%x)", this, s );
             sock->setData(0,this);
@@ -151,7 +151,7 @@ struct SmppSocket : SmppChannel
           if (!connected) return;
           connected=false;
       }
-      smsc_log_info(log_,"SmppSocket %p sock=%p disconnect()",this,sock);
+      smsc_log_info(log_,"SmppSocket %p %s sock=%p disconnect()",this,getPeer(),sock);
       sock->Close();
       // peername_ = "";
       // memset(&peeraddr_,0,sizeof(peeraddr_));

@@ -302,10 +302,10 @@ void AbonentDetector::configureSCF(void)
   //verify IMSI
   if (!_abCsi.getImsi() && _cfgScf && !_cfgScf->_prm->_dfltImsi.empty())
     _abCsi.setImsi(_cfgScf->_prm->_dfltImsi.c_str());
-  if (!_abCsi.getImsi()) {
-    smsc_log_warn(_logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
-                   _abNumber.toString().c_str());
-  }
+//  if (!_abCsi.getImsi()) {
+//    smsc_log_warn(_logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
+//                   _abNumber.toString().c_str());
+//  }
 }
 
 //Adjusts the MO-SM gsmSCF parameters combining cache/IAProvider CSIs

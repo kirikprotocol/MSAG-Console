@@ -138,7 +138,7 @@ public:
     virtual void Stop() = 0;
 protected:
     static bool  inited;
-    static Mutex initLock;
+    static smsc::core::synchronization::Mutex initLock;
 };
 
 }}}

@@ -1,0 +1,8 @@
+eyeline/smpp/testPdu testPdu \
+  -leyeline-smpp-pdu \
+  -leyeline-smpp \
+  -linformer-io \
+  -lcore-network $(SOCKETLIB) $(LIBNSL) \
+  -lcore-threads \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lpthread $(LIBRT) -ldl

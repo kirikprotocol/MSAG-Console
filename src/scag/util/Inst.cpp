@@ -7,29 +7,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lltostr.h"
+// #include "lltostr.h"
 
 namespace scag {
 namespace util {
 
 void Inst::check(const char* fname)
 {
-    char *p, pid[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    char *p;
+    memset(oldpid_,'\0',sizeof(oldpid_));
+    
     filename = fname;
     
     int fd = open(filename.c_str(), O_RDONLY);
     if(fd != -1)
     {
-        read(fd, pid, 19);
+        read(fd, oldpid_, 19);
         close(fd);
-        run_ = !IsProcDir(pid);
+        run_ = !IsProcDir(oldpid_);
         if(!run_) return;        
     }
    
     if((fd = open(filename.c_str(), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) == -1)
         return;
-    p = lltostr(getpid(), pid + 19);
-    write(fd, p, pid + 19 - p);
+    snprintf(oldpid_,sizeof(oldpid_),"%lld",static_cast<long long>(getpid()));
+    write(fd, oldpid_, strlen(oldpid_));
     close(fd);
 }
 

@@ -939,6 +939,85 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2011-11-24 15:15 bukind msag-build-20111124
   msag https support, session store bugfix from xom
 
---- current fixes ---
+=================================================================================================================
+2011-11-25 15:10 bukind msag-build-20111125
+  msag https support is disabled (for production)
+  msag bugfix: deadlock in updateSmppEntity (recursive entry in SmppEntity)
+
+=================================================================================================================
+2011-11-28 14:50 bukind msag-build-20111128
+2011-11-28 14:50 bukind
+  msag fix: using EmbedRefPtr for rules
+
+=================================================================================================================
+2011-11-29 11:11 bukind pvss-build-20111129
 2011-11-18 11:56 bukind
   pvss feature: enabled flag in backup (default is true)
+2011-11-29 11:00 bukind
+  pvss bugfix: contexts leaks (reachable) in ContextRegistry
+
+=================================================================================================================
+2011-11-29 12:53 bukind msag-build-20111130
+  msag https is still not in use
+2011-11-29 12:35 bukind
+  msag feature: passing errorCode into commit/rollback billing stat event
+2011-11-29 14:51 bukind
+  msag bugfix: pushing session cmd into transport queue
+2011-11-30 12:45 bukind
+  msag bugfix: sync in RE rules
+2011-11-30 12:45 bukind
+  msag feature: put back passing errorCode in bill:close
+
+=================================================================================================================
+2011-12-01 16:00 bukind msag-build-20111201
+2011-12-01 11:41 bukind
+  pvss client bugfix: silly typo in popExpired() leads to SIGSEGV
+2011-12-01 12:05 bukind
+  msag feature: better smpp logging
+2011-12-01 15:59 bukind
+  msag bugfix: incorrect handling of btTransmitter
+
+=================================================================================================================
+2011-12-06 13:25 bukind msag-build-20111206 (build for ilnur)
+  msag https support!
+2011-12-06 12:55 bukind
+  msag feature: USSD_PSSD_IND/USSD_PSSD_RESP support,
+                USSD_USSN_CONF does not close session for smpp+
+2011-12-06 13:13 bukind
+  msag feature: error_code optional field in RE action bill:close
+
+=================================================================================================================
+2011-12-08 11:05 bukind msag-build-20111208
+  msag https is not included
+2011-12-07 13:35 bukind
+  msag bugfix: setting additional tags from RE
+  msag feature: ActionCloseUssd revisited
+
+=================================================================================================================
+2012-01-10 10:23 bukind msag-build-20120110 (no https)
+2011-12-28 12:00 bukind
+  msag feature: snmp pings
+2011-12-28 16:20 bukind
+  msag feature: ussd_service_op may be replaced
+
+=================================================================================================================
+2012-01-11 19:25 bukind msag-build-20120111 (no https)
+2012-01-11 14:18 bukind
+  msag bugfix: starting sme acceptor after smpp init
+2012-01-11 19:20 bukind
+  lib bugfix: thread pool regression fixed
+
+--- current fixes ---
+2011-12-21 10:25 bukind
+  pvss bugfix: bug #6852 possible profile cache race (fixed?)
+2011-12-28 12:00 bukind
+  pvss feature: snmp pings (disabled)
+
+=================================================================================================================
+2012-10-30 opa
+  msag bugfix/feature: record SAA on transmit errors #458
+
+=================================================================================================================
+2012-11-21 opa
+  msag bugfix/feature: force new USSD session by SMSC
+

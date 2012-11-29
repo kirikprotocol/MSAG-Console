@@ -1,6 +1,0 @@
-# $Id$
-# this file contains binaries definitions
-
-# binary name        source name  libraries
-#acls/acls acls 
-closedgroups/Test test -lclosedgroups -lsms $(XERCES_LIB) -lutil -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger

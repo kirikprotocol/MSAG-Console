@@ -88,6 +88,7 @@ bool ActivityLog::readStatistics( FileBuffer& fb,
                                   DeliveryStats* ods,
                                   bool& isOldVersion )
 {
+    if (!slog_) { initLog(); }
     bool statLineHasBeenRead = false;
     unsigned version = 0;
     DeliveryStats ds;
@@ -213,6 +214,7 @@ bool ActivityLog::readStatistics( FileBuffer& fb,
 
 void ActivityLog::scanZipToEnd( FileBuffer& fb )
 {
+    if (!slog_) { initLog(); }
     const unsigned zipVersion = readZipHead(fb);
     while ( true ) {
         
@@ -238,6 +240,7 @@ bool ActivityLog::readFirstRecordSeconds( const std::string& filename,
                                           TmpBufBase<char>& buf,
                                           unsigned& seconds )
 {
+    if (!slog_) { initLog(); }
     FileGuard fg;
     fg.ropen( filename.c_str() );
     buf.SetPos(0);
@@ -537,6 +540,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir,
                             bool hourly,
                             bool destroyDir )
 {
+    if (!slog_) { initLog(); }
     typedef struct stat mystat;
 
     const std::string actpath = dlvdir + "activity_log/";
@@ -642,7 +646,7 @@ void ActivityLog::joinLogs( const std::string& dlvdir,
 
                     // appending the logfile
                     char headbuf[100];
-                    sprintf(headbuf,"# %04u %02u %02u %02u %02u %lu\n",
+                    sprintf(headbuf,"# %04u %02u %02u %02u %02u %012lu\n",
                             year, month, mday, hour, minute,
                             static_cast<unsigned long>(st.st_size) );
                     result.write(headbuf,strlen(headbuf));
@@ -676,120 +680,190 @@ void ActivityLog::joinLogs( const std::string& dlvdir,
 }
 
 
-void ActivityLog::fixLog( const char* fn, bool zipped )
+bool ActivityLog::fixLog( const char* fn, bool zipped )
 {
     if (!slog_) { initLog(); }
-
-    if (zipped) {
-        smsc_log_debug(slog_,"cannot fix zipped log: %s",fn);
-        return;
-    }
 
     FileGuard    fg;
     try {
         fg.ropen(fn);
     } catch ( std::exception& e ) {
         smsc_log_warn(slog_,"cannot open '%s'",fn);
-        return;
+        return false;
     }
 
     TmpBuf<char,8192> buf;
     FileBuffer fb(fg,buf);
     unsigned zipVersion = 0;
     size_t zipChunkEnd = 0;
+    // these vars are needed to fix zip chunk header in case there are bad records
+    char zipChunkBuffer[200];
+    size_t zipChunkStart = 0;
+    bool zipChunkHadBadRecords = false;
+
     unsigned version = 0;
     bool statline = false;
     DeliveryStats ds;
     size_t lines = 0;
 
     FileGuard fix;
-    bool fixok = true;
-    do {
+    // bool fixok = true;
 
-        try {
+    class CannotFixException : public InfosmeException
+    {
+    public:
+        CannotFixException( const char* fmt, ... ) :
+        InfosmeException() {
+            code_ = EXC_BADFILE;
+            SMSC_UTIL_EX_FILL(fmt);
+        }
+    };
 
-            if (zipped) {
-                if (zipVersion == 0) {
-                    zipVersion = ActivityLog::readZipHead(fb);
-                    smsc_log_debug(slog_,"zipversion %u",zipVersion);
-                    zipChunkEnd = 0;
+    try {
+
+        do {
+
+            try {
+
+                if (zipped) {
+                    if (zipVersion == 0) {
+                        zipVersion = ActivityLog::readZipHead(fb);
+                        smsc_log_debug(slog_,"zipversion %u",zipVersion);
+                        zipChunkEnd = 0;
+                    }
                 }
-            }
 
-            size_t prevpos;
-            char* line = fb.readline(50000,&prevpos);
-            if (!line) {
-                if (!version || !statline) {
-                    smsc_log_error(slog_,"cannot fix '%s': version/statline missing",fn);
-                    fixok = false;
-                }
-                if (fb.getPos() < fb.getFileSize()) {
-                    throw FileReadException("",0,fb.getPos(),"garbage at the end");
-                }
-                break;
-            }
+                size_t prevpos;
+                char* line = fb.readline(50000,&prevpos);
+                if (!line) {
+                    // eof?
 
-            if (zipped) {
-                if (fb.getPos() >= zipChunkEnd) {
+                    if (zipped && fb.getPos() >= zipChunkEnd ) {
+
+                        // eof at zipchunkend
+                        prevpos = fb.getPos();
+
+                    } else {
+
+                        if (!version || !statline) {
+                            throw CannotFixException("version/statline missing at %llu",
+                                                     ulonglong(fb.getPos()));
+                        }
+
+                        if (fb.getPos() < fb.getFileSize()) {
+                            throw FileReadException("",0,fb.getPos(),"garbage at the end");
+                        }
+                        break;
+                    }
+
+                } else {
+                    smsc_log_debug(slog_,"processing '%s' at %llu",line,ulonglong(prevpos));
+                }
+
+                if (zipped && (prevpos >= zipChunkEnd)) {
+
+                    if ( zipChunkHadBadRecords ) {
+                        if ( fix.isOpened() ) {
+                            throw CannotFixException("logic error: fixfile is not opened on closing bad chunk at %llu",
+                                                     ulonglong(prevpos));
+                        }
+                        const size_t fixpos = fix.getPos();
+                    
+                        // bad records, we have to fix the chunk
+                        const size_t zl = strlen(zipChunkBuffer);
+                        const size_t hl = strlen("# 2011 11 24 08 20 ");
+                        smsc_log_debug(slog_,"fixing bad chunk oldhead: %s",zipChunkBuffer);
+                        int zl2 = snprintf(zipChunkBuffer+hl,zl-hl+1,"%*llu",
+                                           unsigned(zl-hl),
+                                           ulonglong(fixpos - zipChunkStart - (zl+1)));
+                        if ( strlen(zipChunkBuffer) != zl ||
+                             size_t(zl2) != zl ) {
+                            throw CannotFixException("logic error: ziphead strlen diffs (%u,%u,%u) at %llu",
+                                                     unsigned(strlen(zipChunkBuffer)),
+                                                     unsigned(zl),
+                                                     unsigned(zl2),
+                                                     ulonglong(zipChunkStart));
+                        }
+                        smsc_log_debug(slog_,"fixing bad chunk newhead: %s",zipChunkBuffer);
+                        zipChunkBuffer[zl] = '\n';
+                        fix.seek(zipChunkStart);
+                        fix.write(zipChunkBuffer,zl+1);
+                        fix.seek(fixpos);
+                    }
+
+                    if (!line) {
+                        // eof
+                        break;
+                    } else if ( *line != '#' ) {
+                        throw CannotFixException("not-ziphead '%s' at %llu",
+                                                 line,ulonglong(prevpos));
+                    }
+
                     version = 0;
                     zipChunkEnd = ActivityLog::readChunkHead(line,prevpos,zipVersion);
                     if (!zipChunkEnd) {
                         // end of file
                         break;
                     }
-                }
-            }
 
-            // if ( (++lines % 10000) == 0) {
-            // smsc_log_debug(slog_,"processing '%s' at %llu fgpos=%llu bufpos=%llu",
-            // line, ulonglong(prevpos), 
-            // ulonglong(fg.getPos()), ulonglong(buf.getPos()));
-            // }
-            if ( *line == '#' ) {
+                    zipChunkHadBadRecords = false;
+                    zipChunkStart = fix.isOpened() ? fix.getPos() : prevpos;
+                    strcpy(zipChunkBuffer,line);
 
-                if (!version) {
-                    statline = false;
-                    version = ActivityLog::readChunkVersion(line,prevpos);
-                } else {
-                    bool newstat = ActivityLog::readStatLine(line,version,ds);
-                    if (newstat) {
-                        if (statline) {
-                            smsc_log_error(slog_,"cannot fix '%s': duplicate statline at %llu",
-                                           fn,ulonglong(prevpos));
-                            fixok = false;
-                            break;
-                        }
-                        statline = true;
+                } else if ( !*line ) {
+                    // empty line - do nothing
+                } else if ( *line == '#' ) {
+
+                    if (!version) {
+                        statline = false;
+                        version = ActivityLog::readChunkVersion(line,prevpos);
                     } else {
-                        smsc_log_warn(slog_,"unknown/misplaced comment '%s' in '%s'",line,fn);
+
+                        bool newstat = ActivityLog::readStatLine(line,version,ds);
+                        if (newstat) {
+                            if (statline) {
+                                throw CannotFixException("duplicate statline '%s' at %llu",
+                                                         line,ulonglong(prevpos));
+                            }
+                            statline = true;
+                        } else {
+                            smsc_log_warn(slog_,"unknown/misplaced comment '%s' in '%s'",line,fn);
+                        }
                     }
+
+                } else {
+                    // general record
+                    ActivityLog::testRecord( line, prevpos );
                 }
-                continue;
-            }
 
-            ActivityLog::testRecord( line, prevpos );
+                if ( fix.isOpened() ) {
+                    // write the record into fix file
+                    size_t ls = strlen(line);
+                    line[ls] = '\n';
+                    fix.write(line,ls+1);
+                }
 
-            if ( fix.isOpened() ) {
-                size_t ls = strlen(line);
-                line[ls] = '\n';
-                fix.write(line,ls+1);
-            }
+            } catch ( FileReadException& e ) {
 
-        } catch ( FileReadException& e ) {
+                smsc_log_warn(slog_,"exc in '%s' at pos=%llu: %s",fn,ulonglong(e.getPos()),e.what());
+                const size_t nextpos = fb.getPos();
+                fb.setPos(e.getPos()); // temporary return to the bad position
 
-            smsc_log_warn(slog_,"exc in '%s' at pos=%llu: %s",fn,ulonglong(e.getPos()),e.what());
-            const char* linehead = fb.peekChar(10);
-            if ( '#' == *linehead ) {
-                smsc_log_error(slog_,"cannot fix '%s': exc in meta at pos=%llu: %s",fn,ulonglong(e.getPos()),e.what());
-                fixok = false;
-                break;
-            }
+                const char* linehead = fb.peekChar(10);
+                if ( !linehead ) {
+                    throw CannotFixException("unable to get linehead at %llu",
+                                             ulonglong(e.getPos()));
+                } else if ( '#' == *linehead ) {
+                    throw CannotFixException("exc in meta at pos=%llu: %s",
+                                             ulonglong(e.getPos()),e.what());
+                }
+                fb.setPos(nextpos);
+                zipChunkHadBadRecords = true;
 
-            if ( !fix.isOpened() ) {
-                // create fix and read upto
-                try {
+                if ( !fix.isOpened() ) {
+                    // create fix and read upto
                     fix.create( (std::string(fn) + ".tmp").c_str(), 0666, false, true );
-                    size_t curpos = e.getPos();
+                    const size_t curpos = e.getPos();
                     const size_t keep = fg.getPos();
                     fg.seek(0);
                     char xbuf[8192];
@@ -798,37 +872,31 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
                         fix.write(xbuf,wasread);
                     }
                     fg.seek(keep);
-                } catch ( std::exception& e ) {
-                    fixok = false;
-                    smsc_log_error(slog_,"cannot fix '%s': %s",fn,e.what());
-                    break;
                 }
-                // fb.setPos(nextpos,true);
-            }
             
-            // skip the record
-            // fb.setPos(nextpos);
+                // the problematic record is automatically skipped here
+            }
 
-        } catch ( std::exception& e ) {
+        } while ( true );
 
-            smsc_log_error(slog_,"cannot fix '%s': %s",fn,e.what());
-            fixok = false;
-            break;
-
+    } catch ( std::exception& e ) {
+        smsc_log_error(slog_,"cannot fix '%s': %s",fn,e.what());
+        fprintf(stderr,"cannot fix '%s': %s",fn,e.what());
+        if ( fix.isOpened() ) {
+            ::unlink( (std::string(fn) + ".tmp").c_str() );
         }
-
-    } while ( true );
+        // fixok = false;
+        throw;
+    }
         
-    const std::string fns(fn);
-    if (!fixok) {
-        if (fix.isOpened()) {
-            ::unlink( (fns + ".tmp").c_str() );
-        }
-    } else if ( fix.isOpened() ) {
+    if ( fix.isOpened() ) {
+        const std::string fns(fn);
         fix.close();
         if ( 0 != ::rename( fns.c_str(), (fns+".bak").c_str() ) ) {
-            smsc_log_error(slog_,"cannot rename '%s': %d, back off",fn,errno);
+            const int err = errno;
+            smsc_log_error(slog_,"cannot rename '%s': %d, back off",fn,err);
             ::unlink( (fns+".tmp").c_str() );
+            throw ErrnoException(err,"fix '%s' fail: cannot rename into .bak",fn);
         } else {
             if ( 0 != ::rename((fns+".tmp").c_str(), fns.c_str()) ) {
                 smsc_log_warn(slog_,"cannot rename into '%s': %d",fn,errno);
@@ -836,9 +904,10 @@ void ActivityLog::fixLog( const char* fn, bool zipped )
                 smsc_log_info(slog_,"file '%s' successfully fixed",fn);
             }
         }
-    } else {
-        smsc_log_debug(slog_,"file '%s' is ok",fn);
+        return true;
     }
+    smsc_log_debug(slog_,"file '%s' was not corrupted",fn);
+    return false;
 }
 
 
@@ -866,6 +935,7 @@ void ActivityLog::closeJoinedLog( const std::string& resultpath,
 /// @return zipversion, position fg on the first chunk record
 unsigned ActivityLog::readZipHead( FileBuffer& rr )
 {
+    if (!slog_) { initLog(); }
     size_t prevpos;
     char* line = rr.readline(100,&prevpos);
     if (!line) {
@@ -895,6 +965,7 @@ size_t ActivityLog::readChunkHead( const char* line,
                                    unsigned zipVersion,
                                    ulonglong* ymdtime )
 {
+    if (!slog_) { initLog(); }
     /*
     size_t prevpos;
     char* line = fb.readline(100,&prevpos);
@@ -911,8 +982,9 @@ size_t ActivityLog::readChunkHead( const char* line,
     int pos = 0;
     unsigned year, month, mday, hour, minute;
     unsigned long chunksize;
-    sscanf(line,"# %04u %02u %02u %02u %02u %lu%n",&year,&month,&mday,&hour,&minute,&chunksize,&pos);
-    if ( size_t(pos) != strlen(line) ) {
+    sscanf(line,"# %04u %02u %02u %02u %02u %012lu%n",&year,&month,&mday,&hour,&minute,&chunksize,&pos);
+    const size_t l = strlen(line);
+    if ( size_t(pos) != l ) {
         // fb.setPos(prevpos);
         throw FileReadException( "", 0, prevpos,
                                  "zip subheader '%s' is broken",line);
@@ -920,7 +992,10 @@ size_t ActivityLog::readChunkHead( const char* line,
     if ( ymdtime ) {
         *ymdtime = ((((year*100+month)*100+mday)*100+hour)*100+minute)*100;
     }
-    return prevpos + chunksize;
+    const size_t asz = prevpos + l + 1 + chunksize;
+    smsc_log_debug(slog_,"zip chunk head %04u-%02u-%02u+%02u:%02u:00 sz=%lu asz=%llu",
+                   year,month,mday,hour,minute,chunksize,ulonglong(asz));
+    return asz;
 }
 
 
@@ -990,17 +1065,19 @@ void ActivityLog::testRecord( const char* line, size_t fpos )
     ulonglong msgId;
     if (cstate == 'B') {
         // B-record
+        pos = 0;
         sscanf(ptr,",%llu,,,,,,,%n",&msgId,&pos);
         if (pos == 0) {
             throw FileReadException("",0,fpos,"cannot read the b-record in '%s'\n",line);
         }
-        printf("b-record for msg=%llu\n",msgId);
+        // printf("b-record for msg=%llu\n",msgId);
         return;
     }
 
     unsigned regId;
     unsigned retryCount;
     unsigned planTime;
+    pos = 0;
     sscanf(ptr,"%u,%llu,%u,%u,%n",
            &regId, &msgId, &retryCount, &planTime, &pos );
     if ( pos == 0 ) {
@@ -1014,6 +1091,7 @@ void ActivityLog::testRecord( const char* line, size_t fpos )
         ++ptr;
         caddr[0] = '\0';
     } else {
+        pos = 0;
         sscanf(ptr,"%30[+.0-9],%n",caddr,&pos);
         if ( pos == 0 ) {
             throw FileReadException("",0,fpos,"cannot read addr in '%s'\n",line);
@@ -1023,24 +1101,12 @@ void ActivityLog::testRecord( const char* line, size_t fpos )
 
     int timeLeft;
     int smppStatus;
+    pos = 0;
     sscanf(ptr,"%d,%d,%n",&timeLeft,&smppStatus,&pos);
     if ( pos == 0 ) {
         throw FileReadException("",0,fpos,"cannot read timeleft in '%s'\n",line);
     }
     ptr += pos;
-
-    char hexflags[200];
-    if ( *ptr == ',' ) {
-        // empty hexflags
-        hexflags[0] = '\0';
-        ++ptr;
-    } else {
-        sscanf(ptr,"%100[0-9a-f],%n",hexflags,&pos);
-        if ( pos == 0 ) {
-            fprintf(stderr,"cannot read hexflags in '%s'\n",line);
-        }
-        ptr += pos;
-    }
 
     char userdata[1040];
     if ( *ptr == ',' ) {
@@ -1048,10 +1114,27 @@ void ActivityLog::testRecord( const char* line, size_t fpos )
         userdata[0] = '\0';
         ++ptr;
     } else {
+        pos = 0;
         sscanf(ptr,"%1024[^,],%n",userdata,&pos);
         if ( pos == 0 ) {
             throw FileReadException("",0,fpos,"cannot read userdata in '%s'\n",line);
         }
+        smsc_log_debug(slog_,"userdata='%s',pos=%u",userdata,pos);
+        ptr += pos;
+    }
+
+    char hexflags[200];
+    if ( *ptr == ',' ) {
+        // empty hexflags
+        hexflags[0] = '\0';
+        ++ptr;
+    } else {
+        pos = 0;
+        sscanf(ptr,"%100[0-9a-f],%n",hexflags,&pos);
+        if ( pos == 0 ) {
+            throw FileReadException("",0,fpos,"cannot read hexflags in '%s'\n",line);
+        }
+        smsc_log_debug(slog_,"hexflags='%s',pos=%u",hexflags,pos);
         ptr += pos;
     }
 

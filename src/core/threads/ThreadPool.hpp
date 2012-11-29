@@ -67,7 +67,7 @@ protected:
       ThreadedTask * tmp = task;
       task = NULL;
       return tmp;
-    }    
+    }
   };
 
   friend class PooledThread;
@@ -92,6 +92,7 @@ public:
   unsigned int getMaxThreads(void) const;
   //Note: (maxThreads == 0) means no limit!
   void setMaxThreads(unsigned int max_count);
+  void setMaxPendingTasks(unsigned int max_pending_count);
 
   //Returns false if task cann't be started due to resource limitation
   bool startTask(ThreadedTask* task);
@@ -132,6 +133,7 @@ private:
   Logger *              _tpLogger; //threadPool logger
   int                   defaultStackSize;
   unsigned int          maxThreads;
+  unsigned int          maxPendingTasks;
   ThreadsArray          freeThreads;
   ThreadInfoArray       usedThreads;
   TasksArray            pendingTasks;

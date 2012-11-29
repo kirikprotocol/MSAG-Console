@@ -20,9 +20,9 @@ public:
         if ( active_ ) __trace__( "external transaction is still active!" );
     }
     // virtual std::string transactionId() const = 0;
-    virtual void rollback( bool timeout ) = 0;
+    virtual void rollback( bool timeout, int errorCode ) = 0;
 
-    virtual void commit() = 0;
+    virtual void commit( int errorCode ) = 0;
 
     virtual ExternalBillingTransaction* castToBilling() {
         return 0;

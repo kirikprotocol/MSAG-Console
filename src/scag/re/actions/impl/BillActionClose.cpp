@@ -51,7 +51,10 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
 #ifdef MSAG_INMAN_BILL
         if ( tr.billType == bill::infrastruct::INMAN )
         {
-            bill::InmanCloseCallParams* bp = new bill::InmanCloseCallParams(trans->billId(), true); //GVR: verify timeout arg!
+            bill::InmanCloseCallParams* bp =
+                new bill::InmanCloseCallParams(trans->billId(),
+                                               true,
+                                               errCode_.isFound() ? errCode_.getValue(context) : 0 ); //GVR: verify timeout arg!
             // bp->BillId = trans->billId();
             LongCallContext& lcmCtx = context.getSession().getLongCallContext();
             lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
@@ -64,15 +67,16 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
             LongCallContext& lcmCtx = context.getSession().getLongCallContext();
             lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
             bill::EwalletCloseCallParams* bp = 
-                new bill::EwalletCloseCallParams(trans->billId(),true,&lcmCtx);
+                new bill::EwalletCloseCallParams(trans->billId(),true,&lcmCtx,
+                                                 errCode_.isFound() ? errCode_.getValue(context) : 0 );
             lcmCtx.setParams(bp);
             return true;
         } else {
             try {
                 if (actionCommit_)
-                    trans->commit();
+                    trans->commit(errCode_.isFound() ? errCode_.getValue(context) : 0);
                 else
-                    trans->rollback(false);
+                    trans->rollback(false,errCode_.isFound() ? errCode_.getValue(context): 0);
             } catch (SCAGException& e)
             {        
                 smsc_log_error(logger,"Action '%s' error. Delails: %s", opname(), e.what());
@@ -111,6 +115,7 @@ void BillActionClose::ContinueRunning( ActionContext& context )
 void BillActionClose::init( const SectionParams& params,PropertyObject propertyObject)
 {
     BillAction::init( params, propertyObject );
+    errCode_.init(params,propertyObject);
 
     if ( !params.Exists("action") )
         throw SCAGException( "Action '%s': missing 'action' parameter.", opname() );

@@ -3,12 +3,10 @@
 #include "HttpAcceptor.h"
 #include "scag/transport/http/base/HttpContext.h"
 #include "Managers.h"
-//#include "core/synchronization/EventMonitor.hpp"
 
 namespace scag2 { namespace transport { namespace http
 {
 using smsc::util::Exception;
-//using smsc::core::synchronization::EventMonitor;
 
 HttpAcceptor::HttpAcceptor(HttpManagerImpl& m) : manager(m)
 {
@@ -17,7 +15,6 @@ HttpAcceptor::HttpAcceptor(HttpManagerImpl& m) : manager(m)
 int HttpAcceptor::Execute()
 {
     Socket *user_socket;
-//	EventMonitor AcceptorMon;
 
     smsc_log_debug(logger, "started");
 
@@ -30,41 +27,32 @@ int HttpAcceptor::Execute()
             break;
 
         if (!user_socket) {
-            smsc_log_error(logger, "%s failed to accept, error: %s", taskName(), strerror(errno));
+            smsc_log_error(logger, "failed to accept, error: %s", strerror(errno));
             break;
         }
-
-		HttpContext *cx = new HttpContext(user_socket, httpsOptions);
-		smsc_log_info(logger, "%s accepted: context %p, socket %p", taskName(), cx, user_socket);
-
-		if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
-			smsc_log_info(logger, "%s manager.isLicenseExpired", taskName());
-		  cx->action = SEND_RESPONSE;
-		  cx->createFakeResponse(503);
-		  manager.writers.process(cx);
-		  continue;
-		}
-		manager.readers.process(cx);
-		manager.incLicenseCounter();
-/*
-	    if (httpsOptions->userActive) {
-	    	cx->setAcceptorMon(&AcceptorMon);
-	    	AcceptorMon.wait();
-	    }
-*/
+        HttpContext *cx = new HttpContext(user_socket);
+        smsc_log_info(logger, "accepted: context %p, socket %p", cx, user_socket);
+        if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
+          cx->action = SEND_RESPONSE;
+          cx->createFakeResponse(503);
+          manager.writers.process(cx);
+          continue;
+        }
+        manager.readers.process(cx);
+        manager.incLicenseCounter();
     }
 
     if (user_socket)
         delete user_socket;
 
-    smsc_log_debug(logger, "%s quit", taskName());
+    smsc_log_debug(logger, "quit");
 
     return isStopping == false;
 }
 
 const char* HttpAcceptor::taskName()
 {
-    return (httpsOptions->userActive) ? "HttpsAcceptor" : "HttpAcceptor";
+    return "HttpAcceptor";
 }
 
 void HttpAcceptor::shutdown()
@@ -73,38 +61,24 @@ void HttpAcceptor::shutdown()
 
     masterSocket.Close();
     manager.scags.looseQueueLimit();
-/*
-    if (httpsOptions->userActive) {
-    	smsc_log_debug(logger, "%s SSL create %d free %d", taskName(), HttpContext::counter_create, HttpContext::counter_free);
-    }
-*/
     WaitFor();
 }
 
-void HttpAcceptor::init(const char *host, int port, HttpsOptions& options)
+void HttpAcceptor::init(const char *host, int port)
 {
     isStopping = false;
-    httpsOptions = new HttpsOptions(options); //separate copy for each acceptor
 
-    logger = Logger::getInstance((httpsOptions->userActive) ? "https.acceptor" : "http.acceptor");
-/*
-    if (httpsOptions->userActive) {
-    	HttpContext::counter_create = 0;
-    	HttpContext::counter_free = 0;
-        smsc_log_debug(logger, "%s SSL create %d free %d", taskName(), HttpContext::counter_create, HttpContext::counter_free);
-    }
-*/
+    logger = Logger::getInstance("http.acceptor");
+
     try {
-        if (masterSocket.InitServer(host, port, 0, 0, true) == -1) {
-            smsc_log_error(logger, "%s failed to init master socket", taskName());
+        if (masterSocket.InitServer(host, port, 0, 0) == -1) {          
+            smsc_log_error(logger, "failed to init master socket");
             throw Exception("Socket::InitServer() failed");
         }
-        smsc_log_info(logger, "%s masterSocket init: host %s, port %d", taskName(), host, port);
         if (masterSocket.StartServer() == -1) {
-            smsc_log_error(logger, "%s failed to start master socket", taskName());
+            smsc_log_error(logger, "failed to start master socket");
             throw Exception("Socket::StartServer() failed");
         }
-        smsc_log_info(logger, "%s masterSocket StartServer Ok", taskName());
     }
     catch(...) {
         throw;

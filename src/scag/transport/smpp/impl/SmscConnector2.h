@@ -82,16 +82,21 @@ struct SmscConnectTask : ThreadedTask{
       ts.tv_nsec=0;
       nanosleep(&ts,0);
     }
-    smsc_log_info(log, "Connecting to '%s' (%s:%d)", regSysId.c_str(), host.c_str(), port);
-    std::auto_ptr<SmscSocket> sock(new SmscSocket(host.c_str(),port));
+    SmscSocket* sock = new SmscSocket(host.c_str(),port);
+    SmppSocketPtr sockp(sock);
+    smsc_log_info(log, "Connecting %p sock=%p to '%s' (%s:%d)",
+                  sock, sock->getSocket(), 
+                  regSysId.c_str(), host.c_str(), port);
     if(!sock->connect(conn->getBindHost()))
     {
       conn->reportSmscDisconnect(regSysId.c_str());
       return 0;
     }
     sock->bind(regSysId.c_str(),sysId.c_str(),pass.c_str(),addressRange.c_str(),systemType.c_str());
-    conn->registerSocket(sock.release());
-    smsc_log_info(log, "Connected to '%s' (%s:%d)", regSysId.c_str(), host.c_str(), port);
+    conn->registerSocket(sock);
+    smsc_log_info(log, "Connected %p %s sock=%p to '%s' (%s:%d)",
+                  sock, sock->getPeer(), sock->getSocket(),
+                  regSysId.c_str(), host.c_str(), port);
     return 0;
   }
 protected:

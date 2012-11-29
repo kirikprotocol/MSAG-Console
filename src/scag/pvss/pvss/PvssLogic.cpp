@@ -405,16 +405,13 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
     LockableProfile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
     /// FIXME: temporary
     if (pf) pf->setKey( profkey );
-    bool ok;
     {
         ProfileCommandProcessor::ReadonlyFilter rf(commandProcessor_,
                                                    dispatcher_.isReadonly() && !overrideReadonly );
         smsc::core::synchronization::MutexGuardTmpl< LockableProfile > mg(pf?*pf :
                                                                           elstorage->dummyProfile_);
-        ok = rf.applyCommonLogic(profkey, profileRequest, pf, createProfile);
-    }
-    if (ok) {
-        if ( pf->isChanged() ) {
+        bool ok = rf.applyCommonLogic(profkey, profileRequest, pf, createProfile);
+        if (ok && pf->isChanged() ) {
             {
                 MutexGuard mg(elstorage->mutex);
                 ok = elstorage->storage->markDirty(profileKey.getAddress());
@@ -732,15 +729,12 @@ CommandResponse* InfrastructLogic::InfraLogic::process( const IntProfileKey& int
 
     LockableProfile* pf = storage_->get(intKey, createProfile);
     const std::string profkey = intKey.toString();
-    bool ok;
     {
         ProfileCommandProcessor::ReadonlyFilter rf(commandProcessor_,
                                                    readonly_ && !overrideReadonly);
         smsc::core::synchronization::MutexGuardTmpl< LockableProfile > mg(pf?*pf:dummyProfile_);
-        ok = rf.applyCommonLogic(profkey,profileRequest,pf,createProfile );
-    }
-    if (ok) {
-        if ( pf->isChanged() ) {
+        bool ok = rf.applyCommonLogic(profkey,profileRequest,pf,createProfile );
+        if (ok && pf->isChanged() ) {
             ok = storage_->markDirty(intKey);
             if (ok) diskFlusher_->wakeup();
             commandProcessor_.finishProcessing(ok);

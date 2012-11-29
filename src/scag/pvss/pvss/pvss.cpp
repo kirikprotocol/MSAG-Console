@@ -475,12 +475,21 @@ int main(int argc, char* argv[]) {
                 } catch (...) {
                     smsc_log_warn(logger,"value <snmp.cacheTimeout> is missed, using %u", cacheTimeout);
                 }
+                unsigned pingTimeout = 0;
+                /*
+                try {
+                    pingTimeout = persConfig.getInt("snmp.pingTimeout");
+                } catch (...) {
+                    smsc_log_warn(logger,"value <snmp.pingTimeout> is missed, using %u",pingTimeout);
+                }
+                 */
                 smsc_log_info(logger,"creating snmpwrapper @ '%s'", socket.c_str());
                 snmp.reset(new scag2::snmp::SnmpWrapper(socket));
                 snmp->initPvss( counterListCtor,
                                 counterListDtor,
                                 cacheTimeout );
-                snmpThread.reset(new scag2::snmp::SnmpTrapThread(snmp.get()));
+                snmpThread.reset(new scag2::snmp::SnmpTrapThread(snmp.get(),
+                                                                 pingTimeout));
                 snmpThread->Start();
             }
         } catch (std::exception& e) {

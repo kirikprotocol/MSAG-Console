@@ -821,7 +821,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
             <fileset dir="${TEMPL_DIR}">
                 <include name="scag2/rules/xsd/*"/>
             </fileset>
-        </copy>        
+        </copy>
 
         <copy todir="${WEBDISTR_DIR}/webapps/msag/rules/rules" preservelastmodified="yes">
             <fileset dir="${WEBBUILD_DIR}/jedit" includes="jedit.jar" />

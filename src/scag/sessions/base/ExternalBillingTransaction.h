@@ -22,12 +22,12 @@ public:
         // delete keywords_;
     }
 
-    virtual void commit() {
-        bill::BillingManager::Instance().Commit( billid_ );
+    virtual void commit( int errorCode ) {
+        bill::BillingManager::Instance().Commit( billid_, errorCode );
         active_ = false;
     }
-    virtual void rollback( bool timeout ) {
-        bill::BillingManager::Instance().Rollback( billid_, timeout );
+    virtual void rollback( bool timeout, int errorCode ) {
+        bill::BillingManager::Instance().Rollback( billid_, timeout, errorCode );
         active_ = false;
     }
 

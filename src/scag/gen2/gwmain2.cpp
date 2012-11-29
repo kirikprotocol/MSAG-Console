@@ -151,7 +151,8 @@ int main( int argc, char* argv[] )
         scag::util::Inst inst(filename);
         // Shutdown if there is instance allready.
         if(!inst.run()) {
-            fprintf(stderr, "Instance is running already.\n");
+            smsc_log_error(logger,"Instance is running already on pid %s",inst.getPid());
+            fprintf(stderr, "Instance is running already on pid %s.\n",inst.getPid());
             exit(-1);
         }
 

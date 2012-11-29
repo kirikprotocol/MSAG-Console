@@ -48,9 +48,11 @@ public:
         return *this;
     }
     ~EmbedRefPtr() {
-        if (x_) {
+        T* x = 0;
+        std::swap(x,x_);
+        if (x) {
             // smsc_log_debug(erplog_,"dtor(%s)@%p x=%p",thetypename(),this,x_);
-            x_->unref();
+            x->unref();
         }
     }
 

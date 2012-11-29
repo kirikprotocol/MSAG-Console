@@ -1,5 +1,0 @@
-# $Id$
-# this file contains binaries definitions
-
-# binary name source name libraries
-mmbox/mmbox_daemon mmbox_daemon -lmmbox-app_packets_handler -lmmbox-app_protocol -lmmbox-app_protocol-messages -lmmbox-app_specific_db -ldb-bdb_framework -lutil-comm_comp -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-network -lcore-threads -lcore-buffers -lsocket -lnsl -lrt -lthread $(XERCES_LIB) $(__LIBRARIES) -lrt -llogger -lnsl -ldb-4.5

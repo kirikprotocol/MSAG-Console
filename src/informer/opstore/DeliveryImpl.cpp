@@ -127,6 +127,7 @@ storeJournal_(journal)
 
 DeliveryImpl::~DeliveryImpl()
 {
+    smsc_log_debug(log_,"dtor impl D=%u",dlvInfo_->getDlvId());
 }
 
 

@@ -1,8 +1,10 @@
 #include "FileBuffer.h"
 #include "Typedefs.h"
+
+#define COMM //
 // #include "logger/Logger.h"
 
-// using namespace smsc::logger;
+COMM using namespace smsc::logger;
 
 namespace eyeline {
 namespace informer {
@@ -16,7 +18,7 @@ const char* FileBuffer::peekChar( size_t maxsize )
     buf_.setPos(0);
     rpos_ = 0;
     size_t capacity = buf_.getSize() - buf_.getPos();
-    if ( maxsize > capacity ) { capacity = maxsize; }
+    if ( maxsize < capacity ) { capacity = maxsize; }
     size_t wasread = fg_.read(buf_.get(),capacity);
     if (!wasread) {
         return 0;
@@ -27,30 +29,30 @@ const char* FileBuffer::peekChar( size_t maxsize )
 
 char* FileBuffer::readline( size_t maxsize, size_t* prevpos )
 {
-    // Logger* log_ = smsc::logger::Logger::getInstance("fb");
+    COMM Logger* log_ = smsc::logger::Logger::getInstance("fb");
 
     size_t scan = rpos_;
     while ( true ) {
 
         const size_t avail = buf_.getPos() - scan;
-        // smsc_log_debug(log_,"avail=%llu",ulonglong(avail));
+        COMM smsc_log_debug(log_,"avail=%llu",ulonglong(avail));
         if ( avail == 0 ) {
 
             // more data needed
             size_t capacity = buf_.getSize() - buf_.getPos();
-            // smsc_log_debug(log_,"capacity=%llu",ulonglong(capacity));
+            COMM smsc_log_debug(log_,"capacity=%llu",ulonglong(capacity));
             if ( !capacity ) {
                 // FIXME: resize is needed
                 if ( buf_.getSize() - rpos_ >= maxsize ) {
                     // maxsize reached
-                    //smsc_log_debug(log_,"maxsize reached sz-rpos=%llu, max=%llu",
-                    // ulonglong(buf_.getSize()-rpos_), ulonglong(maxsize));
+                    COMM smsc_log_debug(log_,"maxsize reached sz-rpos=%llu, max=%llu",
+                    COMM ulonglong(buf_.getSize()-rpos_), ulonglong(maxsize));
                     return 0;
                 }
                 if ( rpos_ > 0 ) {
                     // shifting the rest of buffer
-                    // smsc_log_debug(log_,"shifting %llu elts by rpos=%llu",
-                    // ulonglong(buf_.getPos()-rpos_), ulonglong(rpos_));
+                    COMM smsc_log_debug(log_,"shifting %llu elts by rpos=%llu",
+                    COMM ulonglong(buf_.getPos()-rpos_), ulonglong(rpos_));
                     for ( char *i = buf_.get()+rpos_, *ie = buf_.get()+buf_.getPos(), *o = buf_.get();
                           i != ie; ++i, ++o ) {
                         *o = *i;
@@ -58,8 +60,8 @@ char* FileBuffer::readline( size_t maxsize, size_t* prevpos )
                     buf_.setPos(buf_.getPos()-rpos_);
                     scan -= rpos_;
                     rpos_ = 0;
-                    // smsc_log_debug(log_,"after shift bufpos=%llu scan=%llu",
-                    // ulonglong(buf_.getPos()), ulonglong(scan));
+                    COMM smsc_log_debug(log_,"after shift bufpos=%llu scan=%llu",
+                    COMM ulonglong(buf_.getPos()), ulonglong(scan));
                 } else {
                     buf_.reserve(buf_.getSize()+buf_.getSize()/2+100);
                 }
@@ -68,12 +70,12 @@ char* FileBuffer::readline( size_t maxsize, size_t* prevpos )
             if ( capacity + buf_.getPos() - rpos_ > maxsize ) {
                 // limit capacity
                 capacity = maxsize - buf_.getPos() + rpos_;
-                // smsc_log_debug(log_,"limiting capacity: %llu",ulonglong(capacity));
+                COMM smsc_log_debug(log_,"limiting capacity: %llu",ulonglong(capacity));
             }
             
             const size_t wasread = fg_.read( buf_.getCurPtr(), capacity );
-            // smsc_log_debug(log_,"curptr=%llu wasread=%llu",
-            // ulonglong(buf_.getCurPtr()-buf_.get()),ulonglong(wasread));
+            COMM smsc_log_debug(log_,"curptr=%llu wasread=%llu",
+            COMM ulonglong(buf_.getCurPtr()-buf_.get()),ulonglong(wasread));
             if ( !wasread ) {
                 // eof, eol is not found                
                 return 0;
@@ -89,13 +91,14 @@ char* FileBuffer::readline( size_t maxsize, size_t* prevpos )
             }
 
             // found
+            buf_.setPos(buf_.getPos()+wasread);
             if ( prevpos ) {
                 *prevpos = getPos();
             }
-            buf_.setPos(buf_.getPos()+wasread);
+            char* ret = buf_.get() + rpos_;
             rpos_ = ptr - buf_.get() + 1;
             *ptr = '\0';
-            return buf_.get();
+            return ret;
         }
         
         char* start = buf_.get() + scan;
@@ -108,9 +111,10 @@ char* FileBuffer::readline( size_t maxsize, size_t* prevpos )
         if (prevpos) {
             *prevpos = getPos();
         }
+        char* ret = buf_.get() + rpos_;
         rpos_ = ptr - buf_.get() + 1;
         *ptr = '\0';
-        return start;
+        return ret;
     }
 }
 

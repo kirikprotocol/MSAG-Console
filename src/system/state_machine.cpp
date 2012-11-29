@@ -3786,12 +3786,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
                            sms.lastResult,
                            sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
+#ifdef SMPPRESPHASOPTS
         int uosize;
         const char* uo=t.command->get_resp()->getUOpt(uosize);
         if(uosize)
         {
           resp->get_resp()->setUOpt(uo,uosize);
         }
+#endif
         try{
           src_proxy->putCommand(resp);
         }catch(std::exception& e)
@@ -4128,12 +4130,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
                 sms.lastResult,
                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
             );
+#ifdef SMPPRESPHASOPTS
         int uosize;
         const char* uo=t.command->get_resp()->getUOpt(uosize);
         if(uosize)
         {
           resp->get_resp()->setUOpt(uo,uosize);
         }
+#endif
         try{
           src_proxy->putCommand(resp);
         }catch(...)
@@ -5261,12 +5265,14 @@ void StateMachine::finalizeSms(Tuple& t,SMS& sms)
         resp->get_resp()->haveDpf=true;
         resp->get_resp()->dpfResult=sms.getIntProperty(Tag::SMPP_SET_DPF);
       }
+#ifdef SMPPRESPHASOPTS
       int uosize;
       const char* uo=t.command->get_resp()->getUOpt(uosize);
       if(uosize)
       {
         resp->get_resp()->setUOpt(uo,uosize);
       }
+#endif
 
       try{
         src_proxy->putCommand(resp);

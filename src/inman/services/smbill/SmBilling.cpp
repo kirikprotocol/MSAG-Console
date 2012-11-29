@@ -789,22 +789,18 @@ INManErrorId::Code_e Billing::configureSCF(void)
   if (!_abCsi.getImsi() && _cfgScf && !_cfgScf->_prm->_dfltImsi.empty())
     _abCsi.setImsi(_cfgScf->_prm->_dfltImsi.c_str());
   if (!_abCsi.getImsi()) {
-    smsc_log_warn(_logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
+    //IMSI is optional in case of MO, but is required in case of MT
+    smsc_log_level((_cdr._chargeType == CDRRecord::MT_Charge) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG, 
+                   _logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
                    _abNumber.toString().c_str());
-//    smsc_log_error(_logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
-//                   _abNumber.toString().c_str());
-//    return INManErrorId::cfgInconsistency;
   }
 
   //verify abonent location MSC
   if (_abCsi.vlrNum.empty()) {
-    smsc_log_warn(_logger, "%s: unable to determine location MSC for abonent(%s)",
+    //VLR is optional in case of MO, but is required in case of MT
+    smsc_log_level((_cdr._chargeType == CDRRecord::MT_Charge) ? Logger::LEVEL_WARN : Logger::LEVEL_DEBUG,
+                   _logger, "%s: unable to determine location MSC for abonent(%s)",
                    _logId, _abNumber.toString().c_str());
-/*
-    smsc_log_error(_logger, "%s: unable to determine location MSC for abonent(%s)",
-                   _logId, _abNumber.toString().c_str());
-    return INManErrorId::cfgInconsistency;
-*/
   }
 
   //check for billModes overriding by IN configuration

@@ -699,6 +699,18 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
             data.setIntProperty(fieldId,umr);
             break;
         }
+        case smsc::sms::Tag::SMPP_USSD_SERVICE_OP:
+            data.setIntProperty(fieldId,property.getInt());
+            PropertyPul.Delete(USSD_DIALOG);
+            PropertyPul.Delete(USSD_PSSD_IND);
+            PropertyPul.Delete(USSD_PSSR_IND);
+            PropertyPul.Delete(USSD_USSR_REQ);
+            PropertyPul.Delete(USSD_USSN_REQ);
+            PropertyPul.Delete(USSD_PSSD_RESP);
+            PropertyPul.Delete(USSD_PSSR_RESP);
+            PropertyPul.Delete(USSD_USSR_CONF);
+            PropertyPul.Delete(USSD_USSN_CONF);
+            break;
         case smsc::sms::Tag::SMPP_SM_LENGTH:
         case smsc::sms::Tag::SMPP_USER_RESPONSE_CODE:
         case smsc::sms::Tag::SMPP_LANGUAGE_INDICATOR:
@@ -765,8 +777,18 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
         }
 
         default: {
-            smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
-            smsc_log_warn(logr,"requested field(w) #%u/%s is not handled",fieldId,property.getName().c_str());
+
+            if ( fieldId >= SMALLEST_ADDITIONAL_TAG && fieldId <= BIGGEST_ADDITIONAL_TAG ) {
+                smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
+                smsc_log_warn(logr,"requested field(w) #%u/%s is not handled",fieldId,property.getName().c_str());
+            } else {
+                int tagType = (fieldId >> 8);
+                if (tagType == SMS_STR_TAG) {
+                    data.setStrProperty(fieldId,property.getStr().c_str());
+                } else if (tagType == SMS_INT_TAG) {
+                    data.setIntProperty(fieldId,int(property.getInt()));
+                }
+            }
             break;
         }
         } // switch
@@ -958,6 +980,8 @@ Hash<int> SmppCommandAdapter::initFieldNames( EventHandlerType eh )
 
     case EH_SUBMIT_SM:
     case EH_DELIVER_SM:
+        hs["ussd_service_op"]               = smsc::sms::Tag::SMPP_USSD_SERVICE_OP;
+
     case EH_DATA_SM:
 
         hs["packet_direction"]              = PACKET_DIRECTION;

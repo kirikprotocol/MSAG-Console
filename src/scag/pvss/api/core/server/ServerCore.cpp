@@ -667,6 +667,7 @@ void ServerCore::reportContext( ServerContext* ctx )
         countExceptions(PvssException::UNKNOWN, "reportNull");
         return;
     }
+    ServerContextPtr ctxPtr(ctx);
 
     Response* response = ctx->getResponse().get();
     if ( !response ) {
@@ -676,6 +677,29 @@ void ServerCore::reportContext( ServerContext* ctx )
     }
 
     uint32_t seqNum = ctx->getSeqNum();
+
+    PvssSocketBase* socket = ctx->getSocket();
+    if (!socket) {
+        smsc_log_debug(log_,"null socket in ctx=%p seq=%u",ctx,unsigned(seqNum));
+        countExceptions(PvssException::UNKNOWN,"reportNoSock");
+        return;
+    }
+
+    ContextRegistryPtr ptr = regset_.get(socket);
+    if (!ptr) {
+        smsc_log_debug(log_,"context registry is not found for ctx=%p seq=%u channel %p sock=%p",
+                       ctx,unsigned(seqNum),socket,socket->getSocket());
+        countExceptions(PvssException::UNKNOWN,"reportNoReg");
+        return;
+    }
+
+    // extract from context registry
+    if ( !ptr->pop(seqNum).get() ) {
+        smsc_log_debug(log_,"unknown resp ctx=%p seq=%u is reported on channel %p sock=%p",
+                       ctx,unsigned(seqNum),socket,socket->getSocket());
+        countExceptions(PvssException::UNKNOWN, "reportUnkSeq" );
+        return;
+    }
 
     if ( ctx->getState() == ServerContext::SENT ) {
         {

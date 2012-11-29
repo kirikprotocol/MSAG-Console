@@ -3,7 +3,7 @@
 
 #include "SmppChannel2.h"
 #include "scag/transport/smpp/SmppTypes.h"
-#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/RecursiveMutex.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/Hash.hpp"
 #include "SmppEntityInfo.h"
@@ -150,9 +150,7 @@ public:
         break;
       case btRecvAndTrans:
         // switch(cmd->get_commandId())
-        {
-            ::abort();
-        }
+        smsc_log_error(log_,"Attempt to putCommand to RecvAndTrans enitity '%s'",info.systemId.c_str());
         break;
       case btTransceiver:
         channel->putCommand(cmd);
@@ -439,8 +437,9 @@ public:
             transChannel->disconnect();
             break;
         case btRecvAndTrans:
+            recvChannel->disconnect();
             transChannel->disconnect();
-            //fallthru
+            break;
         case  btReceiver:
             recvChannel->disconnect();
             break;
@@ -519,10 +518,10 @@ public:
             break;
         case btTransmitter:
             transChannel->setUid(argUid);
-            // fall thru
+            break;
         case btRecvAndTrans:
             recvChannel->setUid(argUid);
-            // transChannel->setUid(argUid);
+            transChannel->setUid(argUid);
             break;
         case btTransceiver:
             channel->setUid(argUid);
@@ -559,7 +558,7 @@ public:
     counter::CounterPtrAny incCnt;
 
 protected:
-    Mutex mtx;
+    RecursiveMutex mtx;
     SmppChannelPtr channel;
     SmppChannelPtr recvChannel;
     SmppChannelPtr transChannel;

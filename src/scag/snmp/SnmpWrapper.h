@@ -24,9 +24,11 @@ public:
     void initPvss( msagCounterTable_creator_t* creator,
                    msagCounterTable_destructor_t* destructor,
                    int cacheTimeout = 10 );
+    bool isMsag() const { return isMsag_; }
 
 private:
     smsc::logger::Logger* log_;
+    bool                  isMsag_;
 };
 
 }

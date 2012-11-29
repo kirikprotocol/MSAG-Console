@@ -26,7 +26,6 @@
 #include "util/Exception.hpp"
 #include "util/debug.h"
 #include "util/findConfigFile.h"
-#include "util/findConfigFile.h"
 #include "util/regexp/RegExp.hpp"
 #include "util/xml/utilFunctions.h"
 
@@ -322,12 +321,18 @@ void Scag::init( unsigned mynode )
             } catch (...) {
                 smsc_log_warn(log,"value <snmp.cacheTimeout> is missed, using %u", cacheTimeout);
             }
+            unsigned pingTimeout = 0;
+            try {
+                pingTimeout = cfg.getConfig()->getInt("snmp.pingTimeout");
+            } catch (...) {
+                smsc_log_warn(log,"value <snmp.pingTimeout> is missed, using %u",pingTimeout);
+            }
             smsc_log_info(log,"creating snmpwrapper @ '%s'", socket.c_str());
             snmp_.reset(new snmp::SnmpWrapper(socket));
             snmp_->initMsag( counterListCtor,
                              counterListDtor,
                              cacheTimeout );
-            snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get()));
+            snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get(),pingTimeout));
             snmpthread_->Start();
         }
     } catch (std::exception& e) {

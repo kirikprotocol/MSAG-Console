@@ -78,4 +78,8 @@
   @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
   -lpthread $(LIBRT) -ldl
 
-scag/tests/test38 test38
+-scag/tests/test38 test38
+scag/tests/test39 test39 \
+  -lcore-threads \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lpthread $(LIBRT) -ldl

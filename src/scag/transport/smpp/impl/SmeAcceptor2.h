@@ -46,24 +46,26 @@ public:
             if(!s)break;
             char buf[32];
             s->GetPeer(buf);
-            smsc_log_info(log,"incoming connection from %s",buf);
+            SmppSocketPtr sockPtr(new SmeSocket(s));
+            SmppSocket* sockp = sockPtr.get();
+            smsc_log_info(log,"incoming connection %p from %s sock=%p",sockp,buf,s);
             try {
-                if ( sm->registerSocket(new SmeSocket(s)) ) {
-                    smsc_log_info(log,"connection %s accepted",buf);
+                if ( sm->registerSocket(sockp) ) {
+                    smsc_log_info(log,"connection %p %s sock=%p accepted",sockp,buf,s);
                 } else {
-                    smsc_log_info(log,"connection %s rejected",buf);
+                    smsc_log_info(log,"connection %p %s sock=%p rejected",sockp,buf,s);
                 }
             } catch ( std::exception& e ) {
-                smsc_log_error(log,"exc in registerSocket: %s", e.what());
+                smsc_log_error(log,"exc in registerSocket(%p,%s,sock=%p): %s",sockp,buf,s,e.what());
             } catch (...) {
-                smsc_log_error(log,"exc in registerSocket: unknown");
+                smsc_log_error(log,"exc in registerSocket(%p,%s,sock=%p): unknown",sockp,buf,s);
             }
         }
         smsc_log_info(log,"SmeAcceptor stopped");
         isStopped_ = true;
         return 0;
     }
-  void Stop()
+  virtual void stop()
   {
     smsc_log_info(log, "SmeAcceptor stopping");
     sock.Close();

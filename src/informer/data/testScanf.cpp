@@ -19,7 +19,7 @@ void readRecord( const char* line, size_t fpos )
     char hexflags[200];
     char userdata[1040];
     int pos = 0;
-    sscanf(line,"%02u,%c,%n",
+    sscanf(line,"%012u,%c,%n",
            // "%[+.0-9],%d,%d,%[0-9a-f],%[^,],%n",
            &tm_sec, &cstate, &pos );
     if ( pos == 0 ) {
@@ -138,5 +138,22 @@ int main()
 
     readRecord(line1,0);
     readRecord(line2,0);
+
+    char line3[200];
+    sprintf(line3,"%10u",4);
+    const size_t l = strlen(line3);
+    printf("strlen=%u\n",unsigned(l));
+    printf("'%s'\n",line3);
+    int pos = 0;
+    unsigned number;
+    sscanf(line3,"%u%n",&number,&pos);
+    if ( size_t(pos) != l ) {
+        printf("pos=%d\n",pos);
+    } else {
+        printf("number=%u\n",number);
+    }
+    char line4[100];
+    snprintf(line4,l+1,"%*u",unsigned(l),number);
+    printf("'%s' equal=%d\n",line4,strcmp(line3,line4)==0);
     return 0;
 }

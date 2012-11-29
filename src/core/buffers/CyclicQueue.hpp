@@ -59,13 +59,24 @@ public:
   {
     if(data)delete [] data;
   }
-  void Push(const T& item)
+
+  void swap( CyclicQueue& cq )
+  {
+      std::swap(count,cq.count);
+      std::swap(size,cq.size);
+      std::swap(data,cq.data);
+      std::swap(end,cq.end);
+      std::swap(head,cq.head);
+      std::swap(tail,cq.tail);
+  }
+
+  T& Push(const T& item)
   {
     if(count==size)Realloc(size*2);
     if(head==end)head=data;
     *head=item;
-    head++;
     count++;
+    return *head++;
   }
   void PushFront(const T& item)
   {

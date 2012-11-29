@@ -2171,6 +2171,20 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             dialog->lastUssdMessage=serviceOp==USSD_USSR_REQ_LAST || serviceOp==USSD_USSN_REQ_LAST || serviceOp==USSD_USSR_REQ_VLR_LAST || serviceOp==USSD_USSN_REQ_VLR_LAST;
             dialog->id_opened = true;
             dialog->dialogid_smsc = dialogid_smsc;
+
+            if(serviceOp==USSD_USSREL_REQ)
+            {
+              warnMapReq( Et96MapUAbortReq( dialog_ssn INSTDLGARG(dialog), dialogid_map, 0, 0, 0, 0 ), __func__);
+              if(dialog->state == MAPST_WaitUSSDReqConf || dialog->state == MAPST_WaitUSSDNotifyConf ||
+                 dialog->state == MAPST_WaitUSSDReqOpenConf || dialog->state == MAPST_WaitUSSDNotifyOpenConf)
+              {
+                SendErrToSmsc(dialog.get(),MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDSESSIONTERMABN));
+              }
+              SendStatusToSmsc(dialogid_smsc,0,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+              DropMapDialog(dialog.get());
+              return;
+            }
+
             if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf )
             {
               // Seems deliver goes earlier than submitResp
@@ -2196,18 +2210,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             {
               throw MAPDIALOG_BAD_STATE(
                   FormatText("putCommand: ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
-            }
-            if(serviceOp==USSD_USSREL_REQ)
-            {
-              warnMapReq( Et96MapUAbortReq( dialog_ssn INSTDLGARG(dialog), dialogid_map, 0, 0, 0, 0 ), __func__);
-              if(dialog->state == MAPST_WaitUSSDReqConf || dialog->state == MAPST_WaitUSSDNotifyConf ||
-                 dialog->state == MAPST_WaitUSSDReqOpenConf || dialog->state == MAPST_WaitUSSDNotifyOpenConf)
-              {
-                SendErrToSmsc(dialog.get(),MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDSESSIONTERMABN));
-              }
-              SendStatusToSmsc(dialogid_smsc,0,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-              DropMapDialog(dialog.get());
-              return;
             }
 
             if(serviceOp==USSD_REDIRECT)

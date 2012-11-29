@@ -58,7 +58,7 @@ void ContextQueue::reportResponse( ServerContext* context )
 }
 
 
-ServerContextPtr ContextQueue::getContext( int tmo )
+ServerContextPtr ContextQueue::getQueuedContext( int tmo )
 {
     ServerContextPtr res;
     MutexGuard mg(queueMon_);

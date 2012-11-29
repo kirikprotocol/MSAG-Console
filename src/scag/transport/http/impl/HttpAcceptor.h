@@ -16,7 +16,6 @@ using smsc::core::synchronization::EventMonitor;
 using smsc::logger::Logger;
 
 class HttpManagerImpl;
-class HttpsOptions;
 
 class HttpAcceptor : public Thread 
 {
@@ -27,7 +26,7 @@ public:
     virtual const char* taskName();
 
     void shutdown();
-    void init(const char *host, int port, HttpsOptions& options);
+    void init(const char *host, int port);
 
 protected:
     HttpManagerImpl &manager;    
@@ -35,8 +34,7 @@ protected:
     Logger *logger;
 
 private:
-    bool isStopping;
-    HttpsOptions* httpsOptions;
+    bool isStopping;  
 };
 
 }}}

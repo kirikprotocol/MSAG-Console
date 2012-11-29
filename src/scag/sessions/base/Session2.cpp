@@ -411,16 +411,14 @@ quiet_(quiet)
 Session::~Session()
 {
     CHECKMAGTC;
-    smsc_log_debug( logc_, "~Session=%p/%s -1 queued %d", this, sessionKey().toString().c_str(), cmdQueue_.size() );
+//    smsc_log_debug( logc_, "~Session=%p/%s -1 queued %d", this, sessionKey().toString().c_str(), cmdQueue_.size() );
     try {
         clear();
         if ( cmdQueue_.size() > 0 ) {
-            smsc_log_error( log_, "LOGIC ERROR!!! ~Session=%p/%s command queue is not empty: %d, MEMLEAK!",
-                            this, sessionKey().toString().c_str(), cmdQueue_.size() );
-            if ( log_->isDebugEnabled() ) { // log session queue content
-            	while ( cmdQueue_.size() ) {
-                	popCommand();
-            	}
+            smsc_log_error( log_, "LOGIC ERROR!!! ~Session=%p/%s command queue is not empty: %u, MEMLEAK!",
+                            this, sessionKey().toString().c_str(), unsigned(cmdQueue_.size()) );
+            while ( cmdQueue_.size() ) {
+                popCommand();
             }
 //            ::abort();
         }
@@ -658,7 +656,7 @@ void Session::clear()
               i.Next(key,value); ) {
             if ( !value ) continue;
             try {
-                value->rollback(true);
+                value->rollback(true,0);
             } catch ( std::exception& e ) {
                 smsc_log_debug(log_, "exception while rolling back: %s", e.what() );
             } catch (...) {
@@ -739,7 +737,7 @@ bool Session::addTransaction( const char* id, std::auto_ptr<ExternalTransaction>
         }
         return true;
     } while ( false );
-    tr->rollback(false);
+    tr->rollback(false,0);
     return false;
 }
 
@@ -762,7 +760,7 @@ std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id
 /// operation methods
 Operation* Session::setCurrentOperation( opid_type opid, bool updateExpire )
 {
-    smsc_log_debug( log_, "%p Session::setCurrentOperation(%d, %s)", this, opid, updateExpire?"true":"false");
+//    smsc_log_debug( log_, "%p Session::setCurrentOperation(%d, %s)", this, opid, updateExpire?"true":"false");
     CHECKMAGTC;
     do {
 
@@ -1117,11 +1115,11 @@ void Session::waitAtLeast( unsigned sec )
         expirationTimeAtLeast_ = t;
         if ( t > expirationTime_ ) expirationTime_ = t;
         /*
-        smsc_log_debug( log_, "session=%p/%s wait at least tmASH=%d/%d/%d",
-                        this, sessionKey().toString().c_str(),
-                        int(lastAccessTime_ - now),
-                        int(expirationTime_ - now),
-                        int(expirationTimeAtLeast_ - now) );
+		smsc_log_debug( log_, "session=%p/%s wait at least tmASH=%d/%d/%d",
+			this, sessionKey().toString().c_str(),
+			int(lastAccessTime_ - now),
+			int(expirationTime_ - now),
+			int(expirationTimeAtLeast_ - now) );
          */
     }
 }
@@ -1131,7 +1129,6 @@ unsigned Session::appendCommand( SCAGCommand* cmd )
 {
     CHECKMAGTC;
     if (cmd) cmdQueue_.push_back( cmd );
-    smsc_log_error( log_, "Session=%p appendCommand %p size %d", this, cmd, cmdQueue_.size() );
     return unsigned(cmdQueue_.size());
 }
 
@@ -1144,7 +1141,6 @@ SCAGCommand* Session::popCommand()
         cmd = cmdQueue_.front();
         cmdQueue_.pop_front();
     }
-    smsc_log_error( log_, "Session=%p popCommand %p size %d", this, cmd, cmdQueue_.size() );
     return cmd;
 }
 

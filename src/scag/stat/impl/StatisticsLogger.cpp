@@ -19,11 +19,13 @@
 #include "core/synchronization/Mutex.hpp"
 #include "scag/util/io/HexDump.h"
 
+
 using smsc::core::synchronization::MutexGuard;
 using std::vector;
 
 namespace scag2 {
 namespace stat  {
+
 
 static const size_t PREFIX_MAXSIZE = 30;
 static const size_t STEM_MAXSIZE = 30;
@@ -56,13 +58,15 @@ void StatisticsLogger<Event, Buffer>::logEvent(Event* event) {
   if (!event) {
     return;
   }
+
+  //Please keep in sync with scag/gen2/dumpSAAdata.cpp
   Buffer pdubuf;
-  pdubuf.setPos(static_cast<uint32_t>(sizeof(uint32_t)));
+  pdubuf.setPos(sizeof(uint32_t));
   pdubuf.WriteNetInt16(event->getEventType());
   event->write(pdubuf);
   uint32_t bsize = pdubuf.getPos();
   pdubuf.setPos(0);
-  pdubuf.WriteNetInt32(bsize);
+  pdubuf.WriteNetInt32(bsize); //size is recordSizeSize
   pdubuf.setPos(0);
 
   try {

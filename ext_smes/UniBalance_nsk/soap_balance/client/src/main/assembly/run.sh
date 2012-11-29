@@ -1,1 +1,0 @@
-java -jar lib/${artifactId}-${version}.jar

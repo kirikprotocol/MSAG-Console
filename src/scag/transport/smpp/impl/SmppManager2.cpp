@@ -525,6 +525,8 @@ void SmppManagerImpl::Init(const char* cfgFile)
   {
     tp.startTask(new StateMachine(this,this));
   }
+
+    sm.start();
 }
 
 bool SmppManagerImpl::LoadEntityFromConfig(SmppEntityInfo& info,const char* sysId,SmppEntityType et)
@@ -874,7 +876,8 @@ int SmppManagerImpl::registerSmeChannel( const char* sysId,
         SmppEntity** ptr=registry.GetPtr(sysId);
         if (!ptr)
         {
-            smsc_log_info(log,"Failed to register sme with sysId='%s' - Not found",sysId);
+            smsc_log_info(log,"Failed to register sme %p with sysId='%s' - Not found",
+                          ch, sysId);
             // TODO: We have no SME info information here,
             // so we cannot determine if we should report on this failure via SNMP.
             // Right now, we do report about this activity.
@@ -899,10 +902,11 @@ int SmppManagerImpl::registerSmeChannel( const char* sysId,
                   smsc::logger::Logger::LEVEL_WARN :
                   smsc::logger::Logger::LEVEL_INFO );
             if (log->isLogLevelEnabled(level)) {
-                log->log(level,"registerSmeChannel('%s'): %s",sysId,text ? text : "already connected");
+                log->log(level,"registerSmeChannel(%p,'%s'): %s",
+                         ch,sysId,text ? text : "already connected");
             }
         } catch (std::exception& e) {
-            smsc_log_warn(log,"registerSmeChannel('%s') exc: %s",sysId,e.what());
+            smsc_log_warn(log,"registerSmeChannel(%p,'%s') exc: %s",ch,sysId,e.what());
             text = "unknown error";
         }
 
@@ -1017,10 +1021,12 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
                   smsc::logger::Logger::LEVEL_WARN :
                   smsc::logger::Logger::LEVEL_INFO);
             if (log->isLogLevelEnabled(level)) {
-                log->log(level,"registerSmscChannel('%s'): %s",ch->getSystemId(),text ? text : "already connected");
+                log->log(level,"registerSmscChannel(%p,'%s'): %s",
+                         ch,ch->getSystemId(),text ? text : "already connected");
             }
         } catch (std::exception& e) {
-            smsc_log_warn(log,"registerSmscChannel('%s') exc: %s",ch->getSystemId(),e.what());
+            smsc_log_warn(log,"registerSmscChannel(%p,'%s') exc: %s",
+                          ch,ch->getSystemId(),e.what());
             text = "unknown error";
         }
 
@@ -1068,7 +1074,8 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
         if (!ptr) {
-            smsc_log_info(log,"Failed to unregister sysId='%s' - Not found",ch->getSystemId());
+            smsc_log_info(log,"Failed to unregister %p sysId='%s' - Not found",
+                          ch,ch->getSystemId());
             break; // no snmp
         }
         SmppEntity& ent=**ptr;
@@ -1078,7 +1085,7 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
         if (ent.unbindChannel(ch)) {
             text = "disconnected";
         } else {
-            smsc_log_warn(log,"attempt to unregister channel with invalid bind type sysId='%s'",ch->getSystemId());
+            smsc_log_warn(log,"attempt to unregister channel with invalid bind type %p sysId='%s'",ch,ch->getSystemId());
         }
         /*
         isDeleted = (ent.info.enabled == false);

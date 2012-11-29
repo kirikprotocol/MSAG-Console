@@ -259,7 +259,7 @@ void CommandBridge::CheckCommandProperty(SCAGCommand& command, const actions::Co
   }
 }
 
-void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& commandProperty,
+std::string CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& commandProperty,
                                          const sessions::SessionPrimaryKey& sessionPrimaryKey,
                                          const std::string& messageBody,
                                          util::HRTiming* hrt )
@@ -300,9 +300,12 @@ void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& command
       ev->keywords.append(commandProperty.keywords.data(), commandProperty.keywords.size());
     }
 
+    std::string dump=ev->toString(SaccEvent::CSV);
+
     if (hrt) hrt->mark("ev.fillsac");
     Statistics::Instance().registerSaccEvent( ev );
     if (hrt) hrt->mark("ev.regsac");
+    return dump;
 }
 
 void CommandBridge::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol,

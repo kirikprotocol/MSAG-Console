@@ -828,7 +828,7 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
         char smscId[SMSC_ID_LENGTH];
         regPtr->getSmscId(smscId);
         SmscSenderPtr smsc;
-        if ( !getSmscSender(smscId,smsc) ) {
+        if ( !getSmscSender(smscId,smsc) && !regPtr->isDeleted() ) {
             throw InfosmeException(EXC_CONFIG,"S='%s' is not found for R=%u",smscId,regionId);
         }
 
@@ -837,6 +837,10 @@ void InfosmeCoreV1::loadRegions( regionid_type regId )
                        created ? "created" : "updated",
                        regionId, smscId );
         if (!created) { wasUpdated = true; }
+        if (regPtr->isDeleted()) {
+            // FIXME: should we delete the region sender?
+            continue;
+        }
 
         RegionSenderPtr rs;
         {

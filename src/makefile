@@ -13,10 +13,13 @@ endif
 
 ifndef CXX
 CXX:=CC
+export CC=cc
 endif
 export CXX
 
-export CC=cc
+ifeq ($(CXX),g++)
+export CC=g++
+endif
 
 ifndef WARNINGS
 WARNINGS=YES
@@ -64,9 +67,9 @@ endif
 
 ifndef SNMP_BASE
 ifeq ($(B64),YES)
-export SNMP_BASE=/usr/local/net-snmp64
+export SNMP_BASE=/usr/local/net-snmp-64
 else
-export SNMP_BASE=/usr/local/net-snmp32
+export SNMP_BASE=/usr/local/net-snmp-32
 endif
 endif
 
@@ -87,7 +90,6 @@ endif
 endif
 
 
-
 ifeq ($(CXX),CC)
 ifeq ($(SNMP),YES)
 SSL_LIB:=-lssl -lcrypto
@@ -105,9 +107,15 @@ export SSL_LIB
 
 ifndef XTARGET
 ifeq ($(B64),YES)
-XTARGET := -xtarget=ultra3 -xarch=v9 -xmemalign=8s -xcode=pic32
+  ifeq ($(CXX),CC)
+    XTARGET := -xtarget=ultra3 -xarch=v9 -xmemalign=8s -xcode=pic32
+  else
+    XTARGET := -m64
+  endif
 else
-XTARGET := -xtarget=ultra3 -xarch=v8plus
+  ifeq ($(CXX),CC)
+    XTARGET := -xtarget=ultra3 -xarch=v8plus
+  endif
 endif
 endif
 
@@ -125,6 +133,24 @@ $(warning set SMSC_BUILDDIR = $(SMSC_BUILDDIR))
 export SMSC_BUILDDIR
 endif
 
+ifdef USING_ASN_TOOLS
+#USING_ASN_TOOLS options are: OSS or SFG
+ifeq ($(USING_ASN_TOOLS),OSS)
+  ifndef ASN_TOOLS_HOME
+    ASN_TOOLS_HOME=/opt/ossasn1/solaris7-64bit/9.0.0
+  endif
+  CXXFLAGS_ASN=-DUSING_ASN_TOOLS=OSS -I$(ASN_TOOLS_HOME)/include
+  CFLAGS_ASN=-I$(ASN_TOOLS_HOME)/include
+else
+  ifeq ($(USING_ASN_TOOLS),SFG)
+    CXXFLAGS_ASN=-DUSING_ASN_TOOLS=SFG
+    #CFLAGS_ASN=
+  else
+    $(warning illegal USING_ASN_TOOLS value = $(USING_ASN_TOOLS))
+  endif
+endif
+endif
+
 ifneq ($(filter-out Darwin,$(OSNAME)),)
 override LIBRT := -lrt
 endif
@@ -135,6 +161,14 @@ endif
 
 ifeq ($(filter-out Darwin,$(OSNAME)),)
 override LIBICONV := -liconv
+endif
+
+ifeq ($(filter-out linux Linux,$(OSNAME)),)
+# linux
+override DBUSLIB := $(shell pkg-config --libs dbus-1)
+override DBUSINC := $(shell pkg-config --cflags dbus-1)
+# override dummy := $(shell echo DBUSLIB:=$(DBUSLIB) >&2)
+# override dummy := $(shell echo DBUSINC:=$(DBUSINC) >&2)
 endif
 
 ifneq ($(filter-out linux Linux Darwin,$(OSNAME)),)
@@ -192,6 +226,10 @@ endif
 
 ifeq ($(USEHOME),YES)
 override LDFLAGS := -L$(HOME)/lib $(LDFLAGS)
+endif
+
+ifneq ($(DBUSINC),)
+override CXXFLAGS := $(CXXFLAGS) $(DBUSINC)
 endif
 
 ifneq ($(TRACE),YES)

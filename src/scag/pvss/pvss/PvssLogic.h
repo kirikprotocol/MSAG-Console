@@ -126,8 +126,12 @@ public:
     {}
   virtual ~PvssLogic() {};
     virtual Response* process(Request& request, bool overrideReadonly = false) /* throw(PvssException) */ ;
-  void responseSent( core::server::ServerContextPtr& response) { /*TODO: implement this method*/ };
-  void responseFail( core::server::ServerContextPtr& response) { /*TODO: implement this method*/ };
+    virtual void responseSent( core::server::ServerContextPtr& response) {
+        smsc_log_debug(logger_,"response sent ctx=%p",response.get());
+    };
+    virtual void responseFail( core::server::ServerContextPtr& response) {
+        smsc_log_debug(logger_,"response fail ctx=%p",response.get());
+    };
 
   virtual void shutdownStorages() = 0;
 

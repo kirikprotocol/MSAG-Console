@@ -143,3 +143,12 @@ endswitch
   $(SSL_LIB) $(LIBICONV) \
   -lpthread $(LIBRT) -ldl \
   $(LIBMALLOC)  
+
+scag/tests/dumpSAAdata dumpSAAdata \
+  -lscag-stat-base \
+  -lscag-util-singleton \
+  -lscag-util \
+  -linformer-io \
+  -lcore-network $(SOCKETLIB) $(LIBNSL) \
+  @liblogger$(SHLIBEXT) -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(LIBRT) -ldl

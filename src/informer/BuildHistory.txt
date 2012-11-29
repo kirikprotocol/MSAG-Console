@@ -1,3 +1,12 @@
+=====================================================================
+2011-12-06 10:53 bukind informer-build-20111206
+2011-12-06 10:50 bukind
+  feature: joined activity logs (separate files removed after success)
+
+=====================================================================
+2011-11-28 13:40 bukind informer-build-20111128
+2011-11-28 13:38 bukind
+  bugfix: logger instance is not inited in ActivityLog
 2011-11-23 16:02 bukind
   feature: fixing actlogs (not tested)
 2011-11-17 16:24 bukind

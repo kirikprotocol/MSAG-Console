@@ -1,5 +1,0 @@
-# $Id$
-# this file contains binaries definitions
-
-# binary name					source name		libraries			
-resourcemanager/test/functionality_test		functionality_test	 $(__LIBRARIES) -lresourcemanager -lutil-templates -lutil-xml -lutil -llogger $(XERCES_LIB)

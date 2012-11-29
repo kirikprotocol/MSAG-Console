@@ -1,0 +1,14 @@
+host=phoenix
+port=6830
+systemId=flooder2
+password=2
+timeOut=200
+speed=1
+sourcesFile=srcs.txt
+destinations=dsts08.txt
+messagesFile=msgs.txt
+probDefault=0
+probDatagram=0
+probForward=1
+probStoreAndForward=0
+maxCount=1

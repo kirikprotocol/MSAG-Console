@@ -122,23 +122,33 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
                 else if(context->callCommandId == BILL_COMMIT)
                 {
                     bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
-                    bill::BillCloseCallParams * bp = bcp->getClose();
+                    bill::BillCloseCallParams* bp = bcp->getClose();
+                    int errorCode = bp->errorCode();
                     if ( bp->getTransitData() ) {
                         // transit
-                        bill::BillingManager::Instance().CommitTransit(*bp,static_cast<LongCallContext*>(context));
+                        bill::BillingManager::Instance().CommitTransit(*bp,
+                                                                       errorCode,
+                                                                       static_cast<LongCallContext*>(context));
                     } else {
-                        bill::BillingManager::Instance().Commit(bp->billId(), (LongCallContext*)context);
+                        bill::BillingManager::Instance().Commit(bp->billId(),
+                                                                errorCode,
+                                                                (LongCallContext*)context);
                     }
                 }
                 else if(context->callCommandId == BILL_ROLLBACK)
                 {
                     bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
                     bill::BillCloseCallParams * bp = bcp->getClose();
+                    int errorCode = bp->errorCode();
                     if ( bp->getTransitData() ) {
                         // transit
-                        bill::BillingManager::Instance().RollbackTransit(*bp,static_cast<LongCallContext*>(context));
+                        bill::BillingManager::Instance().RollbackTransit(*bp,
+                                                                         errorCode,
+                                                                         static_cast<LongCallContext*>(context));
                     } else {
-                        bill::BillingManager::Instance().Rollback(bp->billId(), bp->isTimeout(), (LongCallContext*)context);
+                        bill::BillingManager::Instance().Rollback(bp->billId(),
+                                                                  errorCode,
+                                                                  bp->isTimeout(), (LongCallContext*)context);
                     }
                 } else if ( context->callCommandId == BILL_CHECK ) {
                     bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());

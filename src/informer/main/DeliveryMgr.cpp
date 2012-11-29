@@ -1479,7 +1479,8 @@ void DeliveryMgr::readFromArchive()
 
                 // join logs hourly
                 try {
-                    ActivityLog::joinLogs( (getCS()->getArchivePath() + dname + ".out/").c_str() );
+                    ActivityLog::joinLogs( (getCS()->getArchivePath() + dname + ".out/").c_str(),
+                                           true, true );
                 } catch (...) {}
 
                 FileGuard::copydir( (getCS()->getArchivePath() + dname + ".out/").c_str(),

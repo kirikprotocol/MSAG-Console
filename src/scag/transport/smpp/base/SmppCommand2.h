@@ -108,7 +108,11 @@ struct ReplaceSm
     SMSId getMessageId()const
     {
         SMSId id=0;
-        if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+        if(messageId.get()) {
+            long long sid;
+            sscanf(messageId.get(),"%lld",&sid);
+            id = SMSId(sid);
+        }
         return id;
     }
 
@@ -152,7 +156,11 @@ struct QuerySm
     SMSId getMessageId()const
     {
         SMSId id=0;
-        if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+        if(messageId.get()) {
+            long long sid;
+            sscanf(messageId.get(),"%lld",&sid);
+            id = SMSId(sid);
+        }
         return id;
     }
 };
@@ -256,7 +264,7 @@ struct CancelSm
     CancelSm(SMSId id)
     {
         char idbuf[32];
-        int idlen=sprintf(idbuf,"%lld",id);
+        int idlen=sprintf(idbuf,"%lld",static_cast<long long>(id));
         fillField(messageId,idbuf,idlen);
         internall=true;
         force=true;
@@ -265,7 +273,11 @@ struct CancelSm
     SMSId getMessageId()const
     {
         SMSId id=0;
-        if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+        if(messageId.get()) {
+            long long sid;
+            sscanf(messageId.get(),"%lld",&sid);
+            id = SMSId(sid);
+        }
         return id;
     }
 };

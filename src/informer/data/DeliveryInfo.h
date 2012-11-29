@@ -78,6 +78,8 @@ public:
                   const DeliveryInfoData& data,
                   UserInfo&               userInfo );
 
+    ~DeliveryInfo();
+
     dlvid_type getDlvId() const { return dlvId_; }
 
     void update( const DeliveryInfoData& data );

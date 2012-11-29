@@ -15,8 +15,9 @@ private:
     typedef smsc::core::buffers::FastMTQueue< TrapRecord* > QueueType;
     
 public:
-    SnmpTrapThread( SnmpWrapper* snmp ) :
-    smsc::core::threads::Thread(), stopping_(true), stopped_(true), snmp_(snmp), log_(0) 
+    SnmpTrapThread( SnmpWrapper* snmp, unsigned pingTimeout ) :
+    smsc::core::threads::Thread(), stopping_(true), stopped_(true), snmp_(snmp), log_(0),
+    pingTimeout_(pingTimeout)
     {
         log_ = smsc::logger::Logger::getInstance("snmp.trap");
     }
@@ -52,6 +53,7 @@ private:
     QueueType                         queue_;
     smsc::logger::Logger*             log_;
     smsc::core::synchronization::EventMonitor stopMon_;
+    unsigned                          pingTimeout_; // in seconds
 };
 
 }

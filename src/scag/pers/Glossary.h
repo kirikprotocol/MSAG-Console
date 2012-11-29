@@ -58,18 +58,18 @@ public:
 	
 	static int Open(const string& glossFileName)
 	{
-		MutexGuard lock(mutex);
+		smsc::core::synchronization::MutexGuard lock(mutex);
 		if(opened) return ALREADY_OPENED;
 		logger = smsc::logger::Logger::getInstance("Pers.Gloss");
 		smsc_log_debug(logger, "open");
 		currentIndex = 0;
 		glossVector.reserve(1024);
         
-		if(!glossFile) glossFile = new File();
+		if(!glossFile) glossFile = new smsc::core::buffers::File();
         
 		try
 		{
-			if(File::Exists(glossFileName.c_str()))
+			if(smsc::core::buffers::File::Exists(glossFileName.c_str()))
 			{
 				glossFile->RWOpen(glossFileName.c_str());
 				LoadGlossary();
@@ -81,7 +81,7 @@ public:
 
 			glossFile->SetUnbuffered();
 		}
-		catch(FileException& ex)
+		catch(smsc::core::buffers::FileException& ex)
 		{
 			smsc_log_debug(logger, "error open or create Glossary File - %s", ex.what());
 			return OPEN_ERROR;
@@ -92,7 +92,7 @@ public:
 	}
 	static void Close()
 	{
-		MutexGuard lock(mutex);
+		smsc::core::synchronization::MutexGuard lock(mutex);
 		smsc_log_debug(logger, "close");
 		if(!opened)
 		{
@@ -110,7 +110,7 @@ public:
 	
 	static int Add(const string& key)
 	{
-		//MutexGuard lock(mutex);
+		//smsc::core::synchronization::MutexGuard lock(mutex);
 		smsc_log_debug(logger, "add %s", key.c_str());
 		if(!opened)
 		{
@@ -137,7 +137,7 @@ public:
 	
 	static int GetValueByKey(const string& key)
 	{
-		//MutexGuard lock(mutex);
+		//smsc::core::synchronization::MutexGuard lock(mutex);
 		smsc_log_debug(logger, "GetValueByKey %s", key.c_str());
 		if(!opened)
 		{
@@ -157,7 +157,7 @@ public:
 	}
 	static int GetKeyByValue(const int value, string& key)
 	{
-		//MutexGuard lock(mutex);
+		//smsc::core::synchronization::MutexGuard lock(mutex);
 		smsc_log_debug(logger, "GetKeyByValue %d", value);
 		if(!opened)
 		{
@@ -192,7 +192,7 @@ private:
             smsc_log_debug(logger, "Glossary size is %d (vec = %d, idx = %d)", glossHash.GetCount(), glossVector.size(), currentIndex);
 			glossFile->SeekEnd(0);
 		}
-		catch(FileException& ex)
+		catch(smsc::core::buffers::FileException& ex)
 		{
 			smsc_log_debug(logger, "Load Glossary Error - %s", ex.what());
 			return LOAD_ERROR;
@@ -202,12 +202,12 @@ private:
 protected:
 	static smsc::logger::Logger *logger;
 	
-	static File*		glossFile;
+    static smsc::core::buffers::File*		glossFile;
     static GlossaryHash	glossHash;
 	static GlossaryVector	glossVector;
 	static int		currentIndex;
 	static bool		opened;
-	static Mutex		mutex;
+	static smsc::core::synchronization::Mutex		mutex;
 	
 };
 

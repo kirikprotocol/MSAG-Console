@@ -477,6 +477,14 @@ int BackupProcessor::BackupProcessingTask::Execute()
                 BackupParser bp(processor_);
                 smsc_log_info(log_,"starting to process %s",nextFileName.c_str());
                 rfsr.read( filename.c_str(), &isStopping, &bp);
+                if ( rfsr.getLines() != rfsr.getLinesRead() ) {
+                    throw FileReadException("",0,size_t(-1),"not matched: linesInTail=%u lines=%u",
+                                            rfsr.getLinesRead(), rfsr.getLines() );
+                }
+                if ( rfsr.getCrc32() != rfsr.getCrc32Read() ) {
+                    throw FileReadException("",0,size_t(-1),"not matched: crcInTail=%08x crc32=%08x",
+                                            rfsr.getCrc32Read(), rfsr.getCrc32() );
+                }
             } catch ( FileReadException& e ) {
                 smsc_log_warn(log_,"file '%s' parsing exc at pos=%llu: %s",
                               filename.c_str(),

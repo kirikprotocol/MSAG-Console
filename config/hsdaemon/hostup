@@ -1,2 +1,0 @@
-#!/bin/bash
-ifconfig bge0 addif $1 up

@@ -9,7 +9,7 @@
 
 namespace scag { namespace cpers {
 
-XMLBasicHandler::XMLBasicHandler(IntHash<RegionInfo> *h)
+XMLBasicHandler::XMLBasicHandler(smsc::core::buffers::IntHash<RegionInfo> *h)
 {
     logger = Logger::getInstance("xmlhndlr");
     regionHash = h;

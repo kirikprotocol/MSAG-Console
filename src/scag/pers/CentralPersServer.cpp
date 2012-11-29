@@ -61,7 +61,7 @@ void CentralPersServer::ParseFile(const char* _xmlFile, HandlerBase* handler)
 
 void CentralPersServer::reloadRegions(const char* regionsFileName)
 {
-    MutexGuard mt(regionsReloadMutex);
+    smsc::core::synchronization::MutexGuard mt(regionsReloadMutex);
     
     smsc_log_info(logger, "ReloadRegions Started");
 
@@ -70,7 +70,7 @@ void CentralPersServer::reloadRegions(const char* regionsFileName)
         XMLBasicHandler handler(hash);
         ParseFile(regionsFileName, &handler);
 
-        MutexGuard mt1(regionsMapMutex);
+        smsc::core::synchronization::MutexGuard mt1(regionsMapMutex);
         delete regions;
         regions = hash;
     }
@@ -103,7 +103,7 @@ CentralPersServer::CentralPersServer(const char* persHost_, int persPort_, int m
 
 bool CentralPersServer::getRegionInfo(uint32_t id, RegionInfo& ri)
 {
-    MutexGuard mt(regionsMapMutex);
+    smsc::core::synchronization::MutexGuard mt(regionsMapMutex);
     RegionInfo* pri = regions->GetPtr(id);
     if(!pri) return false;
     if (!pri->ctx) {
@@ -127,7 +127,7 @@ bool CentralPersServer::authorizeRegion(ConnectionContext& ctx) {
   //uint32_t id = login_cmd.rp_id;
   //std::string psw = login_cmd.rp_psw;
   smsc_log_debug(logger, "RP id=%d password=%s authorization", id, psw.c_str());
-  MutexGuard mt(regionsMapMutex);
+  smsc::core::synchronization::MutexGuard mt(regionsMapMutex);
   RegionInfo* pri = regions->GetPtr(id);
   if (!pri || !(ctx.authed = !strncmp(pri->passwd.c_str(), psw.c_str(), 30))) {
     smsc_log_warn(logger, "RP id=%d password=%s, not authorized", id, psw.c_str());
@@ -476,7 +476,7 @@ void CentralPersServer::checkTransactionsTimeouts(time_t curTime) {
 }
 
 void CentralPersServer::onDisconnect(ConnectionContext& ctx) {
-  MutexGuard mt(regionsMapMutex);
+  smsc::core::synchronization::MutexGuard mt(regionsMapMutex);
   RegionInfo* pri = regions->GetPtr(ctx.region_id);
   if (!pri) {
     return;

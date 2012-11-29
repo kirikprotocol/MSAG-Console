@@ -63,10 +63,12 @@ void AdminServer::handle(const messages::ConfigOp& cmd)
     resp.setStatus(0);
   }catch(InfosmeException& e)
   {
+    smsc_log_debug(log,"exc(%d): %s",int(e.getCode()),e.what());
     resp.setStatus(e.getCode());
     resp.setMsg(e.what());
   }catch(std::exception& e)
   {
+    smsc_log_debug(log,"exc: %s",e.what());
     resp.setStatus(EXC_GENERIC);
     resp.setMsg(e.what());
   }
@@ -86,9 +88,11 @@ void AdminServer::handle(const messages::SetDefaultSmsc& cmd)
     resp.setStatus(0);
   }catch(InfosmeException& e)
   {
+    smsc_log_debug(log,"exc(%d): %s",int(e.getCode()),e.what());
     resp.setStatus(e.getCode());
   }catch(std::exception& e)
   {
+    smsc_log_debug(log,"exc: %s",e.what());
     resp.setStatus(EXC_GENERIC);
   }
 
@@ -152,9 +156,11 @@ void AdminServer::handle(const messages::SendTestSms& cmd)
     code=core->sendTestSms(cmd.getSourceAddr().c_str(),abnt,cmd.getText().c_str(),cmd.getFlash(),dlvMode);
   }catch(InfosmeException& e)
   {
+    smsc_log_debug(log,"exc(%d): %s",int(e.getCode()),e.what());
     code=-e.getCode();
   }catch(std::exception& e)
   {
+    smsc_log_debug(log,"exc: %s",e.what());
     code=-EXC_GENERIC;
   }
   resp.setRespCode(code);
@@ -192,9 +198,11 @@ void AdminServer::handle(const messages::GetSmscStats& cmd)
     resp.setStatus(0);
   }catch(InfosmeException& e)
   {
+    smsc_log_debug(log,"exc(%d): %s",int(e.getCode()),e.what());
     resp.setStatus(e.getCode());
   }catch(std::exception& e)
   {
+    smsc_log_debug(log,"exc: %s",e.what());
     resp.setStatus(EXC_GENERIC);
   }
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);

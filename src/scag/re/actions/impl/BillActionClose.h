@@ -3,6 +3,7 @@
 
 #include "scag/re/base/LongCallAction2.h"
 #include "BillAction.h"
+#include "scag/re/base/IntField.h"
 
 namespace scag2 {
 namespace re {
@@ -11,7 +12,7 @@ namespace actions {
 class BillActionClose : public BillAction, public ActionLongCallInterface
 {
 public:
-    BillActionClose() : BillAction(false) {}
+    BillActionClose() : BillAction(false), errCode_(*this,"error_code",false,true) {}
 
 protected:
 
@@ -32,6 +33,7 @@ protected:
 
 private:
     bool actionCommit_;
+    IntField errCode_;
 };
 
 }}}

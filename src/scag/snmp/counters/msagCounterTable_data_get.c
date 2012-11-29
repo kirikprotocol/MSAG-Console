@@ -177,7 +177,7 @@ msagCounterName_get( msagCounterTable_rowreq_ctx *rowreq_ctx, char **msagCounter
         /*
          * allocate space for msagCounterName data
          */
-        (* msagCounterName_val_ptr_ptr ) = malloc(rowreq_ctx->data.msagCounterName_len* sizeof(rowreq_ctx->data.msagCounterName[0]));
+        (* msagCounterName_val_ptr_ptr ) = (char*) malloc(rowreq_ctx->data.msagCounterName_len* sizeof(rowreq_ctx->data.msagCounterName[0]));
         if(NULL == (* msagCounterName_val_ptr_ptr )) {
             snmp_log(LOG_ERR,"could not allocate memory\n");
             return MFD_ERROR;

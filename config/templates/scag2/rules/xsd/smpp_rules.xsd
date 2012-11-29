@@ -38,10 +38,7 @@
                 <enumeration value="@DIRECTION_SC_2_SC"/>
                 <enumeration value="@DIRECTION_SME_2_SC"/>
         
-                <enumeration value="@operator_id"/>
-                <enumeration value="@service_id"/>
-                <enumeration value="@route_id"/>
-                <enumeration value="@provider_id"/>
+
             </restriction>
         </simpleType>
     
@@ -163,8 +160,6 @@
 		<enumeration value="#network_error_code"/>
 		<enumeration value="#additional_status_info_text"/>
 		<enumeration value="#dpf_result"/>
-
-		<enumeration value="#message_id"/>
             </restriction>    
         </simpleType>
         

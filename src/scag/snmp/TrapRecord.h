@@ -22,13 +22,14 @@ public:
     };
     enum TrapType {
             TRAPTNEWALERT = 1,  // msagNewAlertFFMR
-            TRAPTCLRALERT,    // msagClearAlertFFMR
-            TRAPTLOADCFG,  // msagLoadConfig
-            TRAPTTRAFFIC,  // msagTraffic
-            TRAPTSMPPTRAF, // msagSMPPEndPointTraffic
-            TRAPTSMPPQLIM, // msagSMPPQueueLimit
-            TRAPTSESSLIM,  // msagSessionLimit
-            TRAPTSMPPCONN  // msagSMPPConnect
+            TRAPTCLRALERT,      // msagClearAlertFFMR
+            TRAPTLOADCFG,       // msagLoadConfig
+            TRAPTTRAFFIC,       // msagTraffic
+            TRAPTSMPPTRAF,      // msagSMPPEndPointTraffic
+            TRAPTSMPPQLIM,      // msagSMPPQueueLimit
+            TRAPTSESSLIM,       // msagSessionLimit
+            TRAPTSMPPCONN,      // msagSMPPConnect
+            TRAPTALIVE          // msagAlive
     };
     enum Severity {
             CLEAR = 1,

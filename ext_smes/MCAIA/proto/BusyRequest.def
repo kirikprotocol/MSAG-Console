@@ -1,9 +1,0 @@
-include Types.def
-
-message BusyRequest 1
-  string caller 1
-  string called 2
-  int64  date 3
-  byte   cause 4
-  byte	 flags 5
-end

@@ -30,7 +30,6 @@ protected:
     HttpManagerImpl &manager;
     HttpProcessor &processor;
     Logger *logger;
-	char bufName[30];
 };
 
 }}}

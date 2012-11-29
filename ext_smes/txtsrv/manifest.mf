@@ -1,3 +1,0 @@
-Version: 1.08
-Author: Pavel Karavanov
-Customer: CCC-900
