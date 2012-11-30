@@ -239,8 +239,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                     wantOpenUSSD = true;
                 }
             } else if ( ussd_op != smsc::sms::USSD_PSSR_RESP &&
-                        ussd_op != smsc::sms::USSD_PSSD_RESP &&
                         ussd_op != smsc::sms::USSD_REDIRECT &&
+                        ussd_op != smsc::sms::USSD_PSSD_RESP &&
                         ussd_op != smsc::sms::USSD_USSREL_REQ ) {
                 // invalid op
                 fail( "USSD Submit: wrong ussd_op", st,
