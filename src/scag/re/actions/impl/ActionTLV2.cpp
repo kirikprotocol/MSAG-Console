@@ -54,13 +54,14 @@ bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
 bool ActionTLV::getOptionalProperty(SmsResp& resp, const char*& buff, uint32_t& len)
 {
 #ifdef SMPPRESPHASOPTS
-    if (!resp.hasUnknownOptionals()) return false;
-    len = resp.sizeUnknownOptionals();
+    if (!resp.getOptionals().has_unknownFields()) return false;
+    len = resp.getOptionals().size_unknownFields();
     if (len<4) {
         smsc_log_warn(logger, "Unknown optional field is less then 4 bytes");
         return false;
     }
-    buff = resp.getUnknownOptionals();
+    buff = resp.getOptionals().get_unknownFields();
+    //FIXME for ussd_session_id and so optional fields
     return true;
 #else
     smsc_log_warn(logger,"smppresp optional field support is not compiled in");
@@ -583,8 +584,9 @@ bool ActionTLV::run(ActionContext& context)
 #ifdef SMPPRESPHASOPTS
             std::string tmp;
             if ( delUnknown(buff,len,tag,tmp) ) {
-                resp->setUnknownOptionals(tmp.data(),tmp.size());
+                resp->getOptionals().set_unknownFields(tmp.data(),tmp.size());
             }
+            //FIXME for ussd_session_id and so optional fields
 #endif
         }
         smsc_log_debug(logger, "Action 'tlv': Tag: %d deleted", tag);
@@ -657,7 +659,8 @@ bool ActionTLV::run(ActionContext& context)
                 if (!cutField(buff,len,tag,tmp)) tmp.assign(buff,len);
             }
             setUnknown(tmp,tag,prop,strVar);
-            resp->setUnknownOptionals(tmp.data(),tmp.size());
+            resp->getOptionals().set_unknownFields(tmp.data(),tmp.size());
+            //FIXME for ussd_session_id and so optional fields
 #endif
         }
     }

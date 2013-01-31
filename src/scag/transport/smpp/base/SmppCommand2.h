@@ -790,7 +790,7 @@ public:
 
 #ifdef SMPPRESPHASOPTS
     void setOptionals(const SmppOptional& optional){ optional_ = optional; }
-    const SmppOptional& getOptionals() const { return optional_; } //be careful with returning reference
+    SmppOptional& getOptionals() { return optional_; } //be careful with returning reference
 #endif
 
     void setDeliveryFailureReason(uint8_t reason) {
