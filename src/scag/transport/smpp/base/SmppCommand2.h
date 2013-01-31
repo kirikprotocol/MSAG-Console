@@ -789,20 +789,8 @@ public:
     }
 
 #ifdef SMPPRESPHASOPTS
-    void setUnknownOptionals( const char* opt, size_t len ) {
-        hasUnknownOptionals_ = true;
-        std::string s(opt,len);
-        unknownOptionals_.swap(s);
-    }
-    inline bool hasUnknownOptionals() const {
-        return hasUnknownOptionals_;
-    }
-    const char* getUnknownOptionals() const {
-        return unknownOptionals_.data();
-    }
-    size_t sizeUnknownOptionals() const {
-        return unknownOptionals_.size();
-    }
+    void setOptionals(const SmppOptional& optional){ optional_ = optional; }
+    const SmppOptional& getOptionals() const { return optional_; } //be careful with returning reference
 #endif
 
     void setDeliveryFailureReason(uint8_t reason) {
@@ -929,8 +917,8 @@ private:
     bool bHasNetworkErrorCode;
     uint32_t networkErrorCode;
 #ifdef SMPPRESPHASOPTS
-    bool hasUnknownOptionals_;
-    std::string unknownOptionals_;
+    SmppOptional optional_; //to bypass optional fields in responses.
+                            //for fulfill look to SmppCommand::makePdu()/SmppCommand()
 #endif
     Logger* logger;
 };
