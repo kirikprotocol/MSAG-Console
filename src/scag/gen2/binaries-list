@@ -83,6 +83,7 @@ YES: $(SNMP_LIBS_CORE) \
 endswitch
   $(SSL_LIB) $(LIBICONV) \
   -lpthread $(LIBRT) -ldl \
+  $(DBUSLIB) \
   $(LIBMALLOC)  
 
 

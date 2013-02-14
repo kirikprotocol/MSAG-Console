@@ -38,4 +38,5 @@ endswitch
  $(LIBICONV) \
  $(LIBNSL) \
  $(SSL_LIB) \
+ $(DBUSLIB) \
  -lpthread $(LIBRT) -ldl

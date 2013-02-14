@@ -243,7 +243,7 @@ std::string SaccEventHeader::toString(SaccEvent::tostring mode){
 }
 
 
-static SaccEvent* SaccEvent::deserialize(char* buf, size_t buflen){
+SaccEvent* SaccEvent::deserialize(char* buf, size_t buflen){
   SaccSerialBuffer buffer(buf,buflen);
   SaccEvent* event;
   uint16_t eventType;
