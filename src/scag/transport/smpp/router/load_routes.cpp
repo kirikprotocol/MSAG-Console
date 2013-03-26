@@ -94,7 +94,7 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,
     }
     time_t load_stamp=time(0);
     rm->commit(traceit);
-    smsc_log_info(log,"Routes load in %l sec. Commit in %l sec",load_stamp-start_stamp,time(0)-load_stamp);
+    smsc_log_info(log,"Routes load in %ld sec. Commit in %ld sec",load_stamp-start_stamp,time(0)-load_stamp);
   }
   catch(...)
   {
