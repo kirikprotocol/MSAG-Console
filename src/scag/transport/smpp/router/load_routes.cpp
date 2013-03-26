@@ -17,6 +17,8 @@ static inline void makeAddress(Address& addr,const string& mask)
 void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,
                 std::vector<std::string>* traceit )
 {
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("loadroutes");
+  time_t start_stamp=time(0);
   try
   {
     Route *route;
@@ -28,12 +30,14 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,
       Source src;
       Destination dest;
       RouteInfo rinfo;
+      int pairsCount=0;
       for (DestinationHash::Iterator dest_it = route->getDestinations().getIterator();
            dest_it.Next(dest_key, dest);)
       {
         for (SourceHash::Iterator src_it = route->getSources().getIterator();
              src_it.Next(src_key, src);)
         {
+          pairsCount=0;
           // masks
           if(dest.isSubject())
           {
@@ -76,6 +80,7 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,
               rinfo.slicingRespPolicy=route->getSlicingRespPolicy();
               try{
                 rm->addRoute(rinfo);
+                pairsCount++;
               }
               catch(exception& e)
               {
@@ -83,10 +88,13 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,
               }
             }
           }
+          smsc_log_info(log,"Route %s:%d pairs",rinfo.routeId.c_str(),pairsCount);
         }
       }
     }
+    time_t load_stamp=time(0);
     rm->commit(traceit);
+    smsc_log_info(log,"Routes load in %l sec. Commit in %l sec",load_stamp-start_stamp,time(0)-load_stamp);
   }
   catch(...)
   {
