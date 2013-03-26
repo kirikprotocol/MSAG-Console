@@ -399,6 +399,7 @@ protected:
 protected:
     smsc::logger::Logger* log;
     smsc::logger::Logger* limitsLog;
+    smsc::logger::Logger* log_dump;
     smsc::core::buffers::Hash<SmppEntity*> registry;
     smsc::core::buffers::Hash<MetaEntity*> metaRegistry;
     mutable smsc::core::synchronization::RecursiveMutex regMtx;

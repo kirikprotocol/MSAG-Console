@@ -332,6 +332,7 @@ snmpqueue_(snmpqueue)
 {
   log=smsc::logger::Logger::getInstance("smpp.man");
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
+  log_dump=smsc::logger::Logger::getInstance("smpp.man.dmp");
     {
         counter::Manager& mgr = counter::Manager::getInstance();
         // const unsigned maxsms = ConfigManager::Instance().getLicense().maxsms;
@@ -608,17 +609,17 @@ void SmppManagerImpl::LoadRoutes(const char* cfgFile)
   RouteConfig& cfg = ConfigManager::Instance().getRouteConfig();
   router::RouteManager* newman=new router::RouteManager();
   router::loadRoutes(newman,cfg,0);
-    if (log->isDebugEnabled()) {
+    if (log_dump->isDebugEnabled()) {
         std::vector<std::string> dump;
         newman->dumpInto( dump );
         std::string dumpstr;
-        dumpstr.reserve(80*dump.size());
+        dumpstr.reserve(220*dump.size()); //yes strings are long
         for ( std::vector<std::string>::const_iterator i = dump.begin();
               i != dump.end();
               ++i ) {
             dumpstr += "\n" + *i;
         }
-        smsc_log_debug(log,"new routes: %s",dumpstr.c_str());
+        smsc_log_debug(log_dump,"new routes: %s",dumpstr.c_str());
     }
   {
     sync::MutexGuard mg(routerSwitchMtx);
@@ -631,17 +632,17 @@ void SmppManagerImpl::ReloadRoutes()
     RouteConfig& cfg = ConfigManager::Instance().getRouteConfig();
   router::RouteManager* newman=new router::RouteManager();
   router::loadRoutes(newman,cfg,0);
-    if (log->isDebugEnabled()) {
+    if (log_dump->isDebugEnabled()) {
         std::vector<std::string> dump;
         newman->dumpInto( dump );
         std::string dumpstr;
-        dumpstr.reserve(80*dump.size());
+        dumpstr.reserve(220*dump.size());
         for ( std::vector<std::string>::const_iterator i = dump.begin();
               i != dump.end();
               ++i ) {
             dumpstr += "\n" + *i;
         }
-        smsc_log_debug(log,"new routes: %s",dumpstr.c_str());
+        smsc_log_debug(log_dump,"new routes: %s",dumpstr.c_str());
     }
   {
     sync::MutexGuard mg(routerSwitchMtx);
