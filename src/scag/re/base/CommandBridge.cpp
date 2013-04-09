@@ -227,9 +227,8 @@ actions::CommandProperty CommandBridge::getCommandProperty(SCAGCommand& command,
 
     int commandStatus = smppcommand.get_status();
     if (hi==EH_DELIVER_SM && sms.hasIntProperty(smsc::sms::Tag::SMPP_NETWORK_ERROR_CODE)){
-        commandStatus = sms.getIntProperty(smsc::sms::Tag::SMPP_NETWORK_ERROR_CODE);
-        if(commandStatus>0xFFFF) //>is out of 2 bytes/short/uint16_t for short field in SAA
-          commandStatus=-1;
+      commandStatus = sms.getIntProperty(smsc::sms::Tag::SMPP_NETWORK_ERROR_CODE);
+      //RegisterTrafficEvent() will kill "Network Type" (error class). It's mostly correct for our SMSC.
     }
 
     return actions::CommandProperty( &command, commandStatus, abonentAddr, providerId, operatorId,
