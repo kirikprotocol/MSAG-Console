@@ -39,7 +39,8 @@ struct FixedLengthString{
   FixedLengthString& operator+=(const char arg_char)
   {
     size_t len = strlen(str);
-    if ((len + 1) < N) {
+    if ((len + 1) < N)
+    {
       str[len] = arg_char;
       str[len + 1] = 0;
     }
@@ -48,8 +49,7 @@ struct FixedLengthString{
 
   FixedLengthString& operator+=(const char* argStr)
   {
-    strncat(str, argStr, N);
-    str[N-1]=0;
+    strncat(str, argStr, N-strlen(str)-1);
     return *this;
   }
 
@@ -61,7 +61,7 @@ struct FixedLengthString{
 
   FixedLengthString& operator=(const char* argStr)
   {
-    strncpy(str,argStr,N);
+    strncpy(str,argStr,N-1);
     str[N-1]=0;
     return *this;
   }
@@ -69,7 +69,7 @@ struct FixedLengthString{
   template <size_t M>
   FixedLengthString& operator=(const char (&argStr)[M])
   {
-    strncpy(str,argStr,N);
+    strncpy(str,argStr,N-1);
     str[N-1]=0;
     return *this;
   }
@@ -173,15 +173,20 @@ struct FixedLengthString{
   }
   size_t capacity() const { return N; }
 
-  template <size_t M> void swap( FixedLengthString<M>& s ) {
-      if ( &s == this ) return;
-      char tmpbuf[M];
-      size_t minlen = std::min(M,N);
-      memcpy(tmpbuf,str,minlen);
-      memcpy(str,s.str,minlen);
-      memcpy(s.str,tmpbuf,minlen);
-      s.str[--minlen] = '\0';
-      str[minlen] = '\0';
+  template <size_t M>
+  void swap( FixedLengthString<M>& s )
+  {
+    if ( &s == this )
+    {
+      return;
+    }
+    char tmpbuf[M];
+    size_t minlen = std::min(M,N);
+    memcpy(tmpbuf,str,minlen);
+    memcpy(str,s.str,minlen);
+    memcpy(s.str,tmpbuf,minlen);
+    s.str[--minlen] = '\0';
+    str[minlen] = '\0';
   }
 
 };
