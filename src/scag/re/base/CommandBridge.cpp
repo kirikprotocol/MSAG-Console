@@ -225,7 +225,14 @@ actions::CommandProperty CommandBridge::getCommandProperty(SCAGCommand& command,
     Property routeId;
     routeId.setStr(sms.getRouteId());
 
-    return actions::CommandProperty( &command, smppcommand.get_status(), abonentAddr, providerId, operatorId,
+    int commandStatus = smppcommand.get_status();
+    if (hi==EH_DELIVER_SM && sms.hasIntProperty(smsc::sms::Tag::SMPP_NETWORK_ERROR_CODE)){
+        commandStatus = sms.getIntProperty(smsc::sms::Tag::SMPP_NETWORK_ERROR_CODE);
+        if(commandStatus>0xFFFF) //>is out of 2 bytes/short/uint16_t for short field in SAA
+          commandStatus=-1;
+    }
+
+    return actions::CommandProperty( &command, commandStatus, abonentAddr, providerId, operatorId,
                             serviceId, msgRef,transport::CommandOperation(operationType), routeId, hi );
   }
 }
