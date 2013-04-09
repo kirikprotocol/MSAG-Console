@@ -18,7 +18,7 @@ public:
 
 	Response(Status status, const char * const data,
                 const char* encoding = "windows-1251" );
-	Response(Status status, Variant v,
+	Response(Status status, const Variant& v,
                 const char* encoding = "windows-1251" ) throw (AdminException);
 	~Response();
 	const char * const getText() {return text;};

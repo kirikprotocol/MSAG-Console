@@ -36,7 +36,7 @@ Response::Response(Status status, const char * const data, const char* encoding)
   init(data,encoding);
 }
 
-Response::Response(Status status, Variant v, const char* encoding)
+Response::Response(Status status, const Variant& v, const char* encoding)
   throw (AdminException)
 {
 	st = status;
