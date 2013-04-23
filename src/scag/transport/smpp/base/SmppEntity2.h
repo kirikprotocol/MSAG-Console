@@ -390,28 +390,43 @@ public:
 
     /// check the sliced destination, returns false if there is non-expired
     /// mapping with a different dst, otherwise returns true.
-    bool checkSlicedDestination( uint32_t sarmr, SmppEntity* dst, time_t currentTime )
+    bool checkSlicedDestination( uint32_t sarmr,
+                                 SmppEntity* dst,
+                                 time_t currentTime )
     {
-        MutexGuard mg(sarMutex_);
-        SarData* ptr = sarMapping_.GetPtr(sarmr);
-        if (ptr && ptr->dst != 0) {
-            if (ptr->dst != dst) {
-                if (ptr->creationTime+sarTimeout < currentTime) {
-                    // expired
-                    sarMapping_.Delete(sarmr);
-                    return true;
-                }
-                // not expired, different dst
-                return false;
-            }
-        }
-        return true;
-    }
+		 MutexGuard mg(sarMutex_);
+		 SarData* ptr = sarMapping_.GetPtr(sarmr);
+		 if (ptr && ptr->dst != 0) {
+			 if (ptr->dst != dst) {
+				 if (ptr->creationTime+sarTimeout < currentTime) {
+					 // expired
+					 sarMapping_.Delete(sarmr);
+					 return true;
+				 }
+				 // not expired, different dst
+				 return false;
+			 }
+		 }
+		 return true;
+   }
 
 
-    bool isEnabledAndBound() {
-        smsc::core::synchronization::MutexGuard mg(mtx);
-        return ( info.enabled && bt != btNone );
+    enum SmppEntityErrors{ok=0, disabled_route, bind_btNone};
+
+   SmppEntityErrors isEnabledAndBound() {
+        // smsc::core::synchronization::MutexGuard mg(mtx);
+	   SmppEntityErrors ret_val=ok;
+	   if(!info.enabled)
+	   {
+		   ret_val=disabled_route;
+		   smsc_log_debug(log_, "isEnabledAndBound SmppEntity systemId:%s enabled:false",info.systemId.c_str());
+	   }
+		else if(bt == btNone)
+		{
+		   ret_val=bind_btNone;
+		   smsc_log_debug(log_, "isEnabledAndBound SmppEntity systemId:%s SmppBindType=btNone",info.systemId.c_str());
+		}
+       return ret_val;//( info.enabled && bt != btNone );
     }
 
 

@@ -295,7 +295,7 @@ protected:
         };
 
     public:
-        MetaEntity():lastEntity(0)
+        MetaEntity():lastEntity(0), log_(smsc::logger::Logger::getInstance("smpp.ment"))
         {
             seed=(unsigned int)time(NULL);
         }
@@ -351,30 +351,33 @@ protected:
         }
 
         SmppEntity* getEntity(time_t now)
-        {
-            smsc::core::synchronization::MutexGuard mg(mtx);
-            if(info.policy==bpRandom)
-            {
-                double val=rand_r(&seed);
-                val/=RAND_MAX;
-                lastEntity=val*ents.size();
-            }
-            for(unsigned i=0;i<ents.size();i++)
-            {
-                lastEntity++;
-                if(lastEntity>=ents.size())
-                {
-                    lastEntity=0;
-                }
-                if ( ents[lastEntity].ptr->isEnabledAndBound() ) {
-                    return ents[lastEntity].ptr;
-                }
-                // smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
-                // if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled) continue;
-                // return ents[lastEntity].ptr;
-            }
-            return 0;
-        }
+		{
+			smsc::core::synchronization::MutexGuard mg(mtx);
+			if(info.policy==bpRandom)
+			{
+				double val=rand_r(&seed);
+				val/=RAND_MAX;
+				lastEntity=val*ents.size();
+				//smsc_log_debug(log_, "getEntity of time_t policy bpRandom index entity:%u",lastEntity);
+			}
+			for(unsigned i=0;i<ents.size();i++)
+			{
+				lastEntity++;
+				if(lastEntity>=ents.size())
+				{
+					lastEntity=0;
+				}
+				//smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin ents.size:%u index entity:%u",ents.size(), lastEntity);
+				if ( ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::SmppEntityErrors::bind_btNone || ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::SmppEntityErrors::ok) {
+					smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin return entity: %s", ents[lastEntity].ptr->getSystemId());
+					return ents[lastEntity].ptr;
+				}
+				// smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
+				// if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled) continue;
+				// return ents[lastEntity].ptr;
+			}
+			return 0;
+		}
 
     public:
         static time_t expirationTimeout;
@@ -390,6 +393,7 @@ protected:
         ValueList   valueList;
         AbonentsMap storedMappings;
         TimeoutsMap timeMap;
+        smsc::logger::Logger* log_;
     };
 
 
