@@ -306,7 +306,8 @@ std::string CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& 
       ev->keywords.append(commandProperty.keywords.data(), commandProperty.keywords.size());
     }
 
-    std::string dump=ev->toString(SaccEvent::CSV);
+    std::string dump;//=ev->toString(SaccEvent::CSV);
+    //SAA dump is  turned off to minimize data races ;) and for speed
 
     if (hrt) hrt->mark("ev.fillsac");
     Statistics::Instance().registerSaccEvent( ev );
