@@ -368,7 +368,7 @@ protected:
 					lastEntity=0;
 				}
 				//smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin ents.size:%u index entity:%u",ents.size(), lastEntity);
-				if ( ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::SmppEntityErrors::bind_btNone || ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::SmppEntityErrors::ok) {
+				if ( ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::bind_btNone || ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::ok) {
 					smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin return entity: %s", ents[lastEntity].ptr->getSystemId());
 					return ents[lastEntity].ptr;
 				}
