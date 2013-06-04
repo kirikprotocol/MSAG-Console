@@ -381,7 +381,7 @@ std::string SmppCommand::getMessageBody( SMS& data )
         util::encodings::Convertor::KOI8RToUTF8(buff, len, str);
         break;
     case smsc::smpp::DataCoding::UCS2:
-        util::encodings::Convertor::UCS2BEToUTF8((unsigned short *)buff, len / 2, str);
+        util::encodings::Convertor::UCS2ToUTF8((unsigned short *)buff, len / 2, str);
         break;
     default:
         util::encodings::Convertor::GSM7BitToUTF8(buff,len,str);
