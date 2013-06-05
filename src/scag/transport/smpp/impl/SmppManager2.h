@@ -353,7 +353,6 @@ protected:
 				double val=rand_r(&seed);
 				val/=RAND_MAX;
 				lastEntity=val*ents.size();
-				//smsc_log_debug(log_, "getEntity of time_t policy bpRandom index entity:%u",lastEntity);
 			}
 			for(unsigned i=0;i<ents.size();i++)
 			{
@@ -362,13 +361,12 @@ protected:
 				{
 					lastEntity=0;
 				}
-				//smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin ents.size:%u index entity:%u",ents.size(), lastEntity);
-				//smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
 				SmppEntity::SmppEntityErrors err=ents[lastEntity].ptr->isEnabledAndBound();
 				if ( err==SmppEntity::bind_btNone || err==SmppEntity::ok) {
 					smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin return entity: %s", ents[lastEntity].ptr->getSystemId());
 					return ents[lastEntity].ptr;
 				}
+				//old source code
 				// smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
 				// if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled) continue;
 				// return ents[lastEntity].ptr;
