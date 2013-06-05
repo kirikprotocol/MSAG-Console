@@ -187,7 +187,17 @@ int HttpReaderTask::Execute()
             now = time(NULL);
             for (i = 0; i < (unsigned int)ready.Count(); i++) {
                 Socket *s = ready[i];
+                if (!s) {
+                  smsc_log_error(logger, "%p:HttpReaderTask, Socket %p ready.Count() %d", this, s, ready.Count());
+                  removeSocket(s);
+                  continue;
+                }
                 HttpContext *cx = HttpContext::getContext(s);
+                if (!cx) {
+                  smsc_log_error(logger, "%p:HttpReaderTask, Socket %p cx %p", this, s, cx);
+                  removeSocket(s);
+                  continue;
+                }
                 if (cx->action == FINALIZE_SOCKET) {
                   smsc_log_debug(logger, "%p: %p, finalize socket %p", this, cx, s);
                   deleteSocket(s, SHUT_WR);
@@ -348,7 +358,17 @@ int HttpWriterTask::Execute()
             now = time(NULL);  
             for (i = 0; i < (unsigned int)ready.Count(); i++) {
                 Socket *s = ready[i];
+                if (!s) {
+                  smsc_log_error(logger, "%p:HttpWriterTask, Socket %p ready.Count() %d", this, s, ready.Count());
+                  removeSocket(s);
+                  continue;
+                }
                 HttpContext *cx = HttpContext::getContext(s);
+                if (!cx) {
+                  smsc_log_error(logger, "%p:HttpWriterTask, Socket %p cx %p", this, s, cx);
+                  removeSocket(s);
+                  continue;
+                }
                 const char *data;
                 unsigned int size;
                 int written_size;
