@@ -334,25 +334,20 @@ protected:
             const time_t now = time(0);
             smsc::core::synchronization::MutexGuard mg(mtx);
             SmppEntity* ptr=getStoredMapping(addr);
-            if(!ptr)
-            {
-                mtx.Unlock();
-                try{
-                    ptr=getEntity(now);
-                    createStoredMapping(addr,ptr);
-                }catch(...)
-                    {
-                        
-                    }
-                mtx.Lock();
+            if (!ptr) {
+                ptr=_getEntity(now);
+                createStoredMapping(addr,ptr);
             }
             expireMappings(now);
             return ptr;
         }
-
         SmppEntity* getEntity(time_t now)
+        {
+            smsc::core::synchronization::MutexGuard mg(mtx);
+            return _getEntity(now);
+        }
+        SmppEntity* _getEntity(time_t now)
 		{
-			smsc::core::synchronization::MutexGuard mg(mtx);
 			if(info.policy==bpRandom)
 			{
 				double val=rand_r(&seed);
@@ -368,7 +363,9 @@ protected:
 					lastEntity=0;
 				}
 				//smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin ents.size:%u index entity:%u",ents.size(), lastEntity);
-				if ( ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::bind_btNone || ents[lastEntity].ptr->isEnabledAndBound()==SmppEntity::ok) {
+				//smsc::core::synchronization::MutexGuard mg2(ents[lastEntity].ptr->mtx);
+				SmppEntity::SmppEntityErrors err=ents[lastEntity].ptr->isEnabledAndBound();
+				if ( err==SmppEntity::bind_btNone || err==SmppEntity::ok) {
 					smsc_log_debug(log_, "getEntity of time_t policy bpRoundRobin return entity: %s", ents[lastEntity].ptr->getSystemId());
 					return ents[lastEntity].ptr;
 				}
