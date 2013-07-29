@@ -187,8 +187,16 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
 
       switch ( tag )
       {
-    #define macroFetchField(field) \
+#define macroFetchField(field) \
     case SmppOptionalTags::field :{\
+      if(length!=SmppOptionalLength::field)\
+      {\
+        if(tag>=0x1400 && tag<=0x3fff) \
+          goto unknown; \
+        else \
+          throw BadStreamException("fetch optional %s: invalid size expected=%u found=%u", \
+            #field, unsigned(SmppOptionalLength::field),unsigned(length));\
+      }\
       fetchX(stream,opt->field);\
       opt->field_present |= SmppOptionalFields::field; \
       }break
@@ -312,8 +320,11 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
 
       default:
         {
+          unknown:
           opt->field_present |= SmppOptionalFields::unknownFields;
+#ifndef DISABLE_TRACING
           smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smpp");
+#endif
           debug2(log,"Unknown optional tag:%x(%d), length=%d",tag,tag,length);
           smsc::core::buffers::TmpBuf<uint8_t,128> buf(length);
           uint16_t tmp=htons(tag);
