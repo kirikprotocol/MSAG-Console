@@ -406,7 +406,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
     }
   }
-  catch (ParseException &e)
+  catch (SmscParseException &e)
   {
     return fail;
   }

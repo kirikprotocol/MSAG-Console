@@ -6,7 +6,11 @@
 
 #include <memory>
 #include <xercesc/dom/DOM.hpp>
-//#include <xercesc/dom/DOMErrorHandler.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+
+#if XERCES_VERSION_MAJOR > 2
+#include <xercesc/sax/SAXParseException.hpp>
+#endif
 
 #include "util/Exception.hpp"
 #include "logger/Logger.h"
@@ -19,16 +23,22 @@ using smsc::logger::Logger;
 
 XERCES_CPP_NAMESPACE_USE
 
-class ParseException : public smsc::util::Exception {
+class SmscParseException : public smsc::util::Exception {
 public:
-  ParseException(const char * const fmt, ...)  : smsc::util::Exception()
+  SmscParseException(const char * const fmt, ...)  : smsc::util::Exception()
   {
     SMSC_UTIL_EX_FILL(fmt);
   }
 };
 
 
-class DOMErrorLogger : public DOMErrorHandler {
+
+#if XERCES_VERSION_MAJOR > 2
+class DOMErrorLogger : public ErrorHandler
+#else
+class DOMErrorLogger : public DOMErrorHandler
+#endif
+{
 private:
   unsigned  _throwLvl;
   Logger *  _logger;
@@ -52,8 +62,20 @@ public:
     _throwLvl = (unsigned)-1;
   }
 
+#if XERCES_VERSION_MAJOR > 2
+  virtual void warning(const SAXParseException& exc);
+  virtual void error(const SAXParseException& exc);
+  virtual void fatalError(const SAXParseException& exc);
+  virtual void resetErrors() {};
+protected:
+  void commonError(const SAXParseException& e, Logger::LogLevel logLvl);
+
+#else
+public:
   virtual bool handleError(const DOMError &domError)
-    /* throw(ParseException)*/;
+  /* throw(SmscParseException)*/;
+#endif
+
 };
 
 }

@@ -165,7 +165,7 @@ Config* Config::createFromFile( const char* xmlfile, time_t* ifnewer )
         } else {
             throw ConfigException("config file '%s' parsed to null");
         }
-    } catch ( ParseException& e ) {
+    } catch ( SmscParseException& e ) {
         throw ConfigException(e.what());
     }
     if ( ifnewer ) {

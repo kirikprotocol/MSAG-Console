@@ -14,6 +14,8 @@
 #include <core/buffers/Array.hpp>
 #include <acls/interfaces.h>
 #include "Rule2.h"
+#include "ActionFactory2.h"
+#include "logger/Logger.h"
 
 
 namespace scag2 {
@@ -22,7 +24,7 @@ namespace re {
 using smsc::core::buffers::Hash;
 
 class IParserHandler;
-class ActionFactory;
+//class ActionFactory;
 
 
 XERCES_CPP_NAMESPACE_USE
@@ -62,6 +64,8 @@ class XMLBasicHandler : public HandlerBase
     void characters(const XMLCh* const chars, const unsigned int length);
 
 protected:
+    void commonError(const SAXParseException& e, const char* errType);
+
 public:
     Rule * ReturnFinalObject();
 

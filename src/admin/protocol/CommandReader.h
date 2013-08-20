@@ -45,7 +45,12 @@ protected:
   Socket * sock;
 
   virtual Command * createCommand(int id, const DOMDocument *data);
-  Command * parseCommand(DOMInputSource &source) throw (AdminException);
+
+#if XERCES_VERSION_MAJOR > 2
+  Command* parseCommand(InputSource& source)  throw (AdminException);
+#else
+  Command* parseCommand(DOMInputSource& source)  throw (AdminException);
+#endif
 
 private:
 };

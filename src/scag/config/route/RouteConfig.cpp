@@ -136,11 +136,11 @@ throw (SubjectNotFoundException)
 
 const uint8_t strToDeliveryMode(const char * const deliveryModeStr)
 {
-  if (::stricmp("store", deliveryModeStr) == 0)
+  if (strcasecmp("store", deliveryModeStr) == 0)
     return smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE;
-  if (::stricmp("forward", deliveryModeStr) == 0)
+  if (strcasecmp("forward", deliveryModeStr) == 0)
     return smsc::sms::SMSC_TRANSACTION_MSG_MODE;
-  if (::stricmp("datagram", deliveryModeStr) == 0)
+  if (strcasecmp("datagram", deliveryModeStr) == 0)
     return smsc::sms::SMSC_DATAGRAM_MSG_MODE;
   return smsc::sms::SMSC_DEFAULT_MSG_MODE;
 }
@@ -286,7 +286,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
     }
   }
-  catch (ParseException &e)
+  catch (SmscParseException &e)
   {
     return fail;
   }

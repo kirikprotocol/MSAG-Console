@@ -57,11 +57,11 @@ SmscTranscoder::~SmscTranscoder()
 {
 }
 
-unsigned int SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
-                           const unsigned int srcCount,
+XTYPE SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
+                           const XTYPE srcCount,
                            XMLCh *const toFill,
-                           const unsigned int maxChars,
-                           unsigned int &bytesEaten,
+                           const XTYPE maxChars,
+                           XTYPE &bytesEaten,
                            unsigned char *const charSizes)
 {
   size_t inbytesleft = srcCount;
@@ -85,16 +85,16 @@ unsigned int SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
   }
   if (((XMLCh*)outbuf) < toFill + maxChars)
     *(XMLCh*)outbuf = 0;
-  bytesEaten = (unsigned int)(srcCount - inbytesleft);
+  bytesEaten = (XTYPE)(srcCount - inbytesleft);
   size_t result = maxChars - outbytesleft/sizeof(XMLCh);
-  return (unsigned int)result;
+  return (XTYPE)result;
 }
 
-unsigned int SmscTranscoder::transcodeTo(const XMLCh *const srcData,
-                         const unsigned int srcCount,
+XTYPE SmscTranscoder::transcodeTo(const XMLCh *const srcData,
+                         const XTYPE srcCount,
                          XMLByte *const toFill,
-                         const unsigned int maxBytes,
-                         unsigned int &charsEaten,
+                         const XTYPE maxBytes,
+                         XTYPE &charsEaten,
                          const UnRepOpts options)
 {
   size_t inbytesleft = srcCount*sizeof(XMLCh);
@@ -105,14 +105,14 @@ unsigned int SmscTranscoder::transcodeTo(const XMLCh *const srcData,
   if (ret != (size_t)-1) {
     if ((XMLByte*)outbuf < toFill + maxBytes)
       *outbuf = 0;
-    charsEaten = (unsigned int)(srcCount - inbytesleft/sizeof(XMLCh));
-    return (unsigned int)(maxBytes - outbytesleft);
+    charsEaten = (XTYPE)(srcCount - inbytesleft/sizeof(XMLCh));
+    return (XTYPE)(maxBytes - outbytesleft);
   }
   else
     return 0;
 }
 
-bool SmscTranscoder::canTranscodeTo(const unsigned int toCheck) const
+bool SmscTranscoder::canTranscodeTo(const unsigned int toCheck)
 {
   const XMLCh inbuf[1] = {toCheck};
   size_t inbytesleft = sizeof(XMLCh);

@@ -24,7 +24,7 @@ int64_t getAttrInt( xercesc::DOMElement* elem, const char* tag )
     if ( endptr && *endptr == '\0' ) return val;
     char buf[100];
     snprintf(buf,sizeof(buf),"wrong value of parameter '%s' val='%s'",tag, str.c_str());
-    throw smsc::util::xml::ParseException(buf);
+    throw smsc::util::xml::SmscParseException(buf);
 }
 
 std::string getAttrStr( xercesc::DOMElement* elem, const char* tag )
@@ -37,7 +37,7 @@ ActionList getActionList( xercesc::DOMElement* elem )
     const char* limitsTag = "limits";
     xercesc::DOMNodeList* limitsList = elem->getElementsByTagName(XmlStr(limitsTag));
     if (limitsList->getLength()!=1)
-        throw smsc::util::xml::ParseException("wrong number of limits subsections");
+        throw smsc::util::xml::SmscParseException("wrong number of limits subsections");
     xercesc::DOMElement* limits = static_cast<xercesc::DOMElement*>(limitsList->item(0));
     const int theMin = getAttrInt(limits,"min");
     const int theMax = getAttrInt(limits,"max");
@@ -74,7 +74,7 @@ std::map< std::string, int > getParamIntMap( xercesc::DOMNodeList* plist )
         if ( res.find(pname) != res.end() ) {
             char buf[100];
             snprintf(buf,sizeof(buf),"duplicate param '%s' in counter template", pname.c_str());
-            throw smsc::util::xml::ParseException(buf);
+            throw smsc::util::xml::SmscParseException(buf);
         }
         const std::string ptype = getAttrStr(elt,"type");
         if ( ptype == "int" ) {
@@ -87,7 +87,7 @@ std::map< std::string, int > getParamIntMap( xercesc::DOMNodeList* plist )
                 char buf[100];
                 snprintf(buf,sizeof(buf),"invalid value '%s' of param '%s' in counter template",
                          s.c_str(), pname.c_str());
-                throw smsc::util::xml::ParseException(buf);
+                throw smsc::util::xml::SmscParseException(buf);
             }
         }
     }
@@ -125,7 +125,7 @@ bool ConfigReader::readConfig( const char* fname, bool useExc )
             if ( limitMap_.find(tableName) != limitMap_.end() ) {
                 char buf[100];
                 snprintf(buf,sizeof(buf),"duplicate %s '%s'", limitTag, tableName.c_str());
-                throw smsc::util::xml::ParseException(buf);
+                throw smsc::util::xml::SmscParseException(buf);
             }
             ActionList actionList = getActionList(table);
             limitMap_.insert(std::make_pair(tableName,actionList));
@@ -141,7 +141,7 @@ bool ConfigReader::readConfig( const char* fname, bool useExc )
             if ( protoMap_.find(tmplName) != protoMap_.end() ) {
                 char buf[100];
                 snprintf(buf,sizeof(buf),"duplicate template '%s'",tmplName.c_str());
-                throw smsc::util::xml::ParseException(buf);
+                throw smsc::util::xml::SmscParseException(buf);
             }
             const std::string ctypeStr = getAttrStr(tmpl,"type");
             const CountType ctype = stringToCountType(ctypeStr.c_str());
@@ -149,7 +149,7 @@ bool ConfigReader::readConfig( const char* fname, bool useExc )
                 char buf[100];
                 snprintf(buf,sizeof(buf),"unknown type '%s' for counter template '%s'",
                          ctypeStr.c_str(),tmplName.c_str());
-                throw smsc::util::xml::ParseException(buf);
+                throw smsc::util::xml::SmscParseException(buf);
             }
 
             // reading params
@@ -162,7 +162,7 @@ bool ConfigReader::readConfig( const char* fname, bool useExc )
                 if ( ip == paramMap.end() ) {
                     char buf[100];
                     snprintf(buf,sizeof(buf),"missing parameter 'nseconds' for template '%s'",tmplName.c_str());
-                    throw smsc::util::xml::ParseException(buf);
+                    throw smsc::util::xml::SmscParseException(buf);
                 }
                 param0 = ip->second;
                 if ( ctype == TYPETIMESNAPSHOT ) {
@@ -170,7 +170,7 @@ bool ConfigReader::readConfig( const char* fname, bool useExc )
                     if ( ip == paramMap.end() ) {
                         char buf[100];
                         snprintf(buf,sizeof(buf),"missing parameter 'msecresol' for template '%s'",tmplName.c_str());
-                        throw smsc::util::xml::ParseException(buf);
+                        throw smsc::util::xml::SmscParseException(buf);
                     }
                     param1 = ip->second;
                 }
@@ -183,7 +183,7 @@ bool ConfigReader::readConfig( const char* fname, bool useExc )
             if ( sublistLen > 1 ) {
                 char buf[100];
                 snprintf(buf,sizeof(buf),"wrong number of elements 'ca' for template '%s'",tmplName.c_str());
-                throw smsc::util::xml::ParseException(buf);
+                throw smsc::util::xml::SmscParseException(buf);
             } else if ( sublistLen == 1 ) {
                 xercesc::DOMElement* ca = static_cast<xercesc::DOMElement*>(sublist->item(0));
                 limitId = getAttrStr(ca,"id");
@@ -191,7 +191,7 @@ bool ConfigReader::readConfig( const char* fname, bool useExc )
                     char buf[100];
                     snprintf(buf,sizeof(buf),"unknown ca id='%s' for template '%s'",
                              limitId.c_str(), tmplName.c_str());
-                    throw smsc::util::xml::ParseException(buf);
+                    throw smsc::util::xml::SmscParseException(buf);
                 }
             }
             

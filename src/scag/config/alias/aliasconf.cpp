@@ -129,7 +129,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       records.push_back(record.release());
     }
     smsc_log_debug(logger, "aliases done");
-  } catch (ParseException &e) {
+  } catch (SmscParseException &e) {
     smsc_log_warn(logger, "DomException:%s",e.what());
     return fail;
   }

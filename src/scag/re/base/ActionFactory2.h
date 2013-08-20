@@ -13,8 +13,9 @@ namespace actions {
 class ActionFactory
 {
 public: 
-    virtual Action * CreateAction(const std::string& name) const = 0;
-    virtual void registerChild(const ActionFactory * af) = 0;
+  virtual ~ActionFactory() {}
+  virtual Action * CreateAction(const std::string& name) const = 0;
+  virtual void registerChild(const ActionFactory * af) = 0;
 };
 
 }}}

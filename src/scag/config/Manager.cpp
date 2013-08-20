@@ -44,7 +44,7 @@ Manager::Manager()
       throw ConfigException("Parse result is null");
     }
 
-  } catch (ParseException &e) {
+  } catch (SmscParseException &e) {
     throw ConfigException(e.what());
   }
 }

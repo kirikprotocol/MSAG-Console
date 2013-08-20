@@ -211,6 +211,7 @@ void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
 
 Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
 {
+  smsc_log_debug(logger, "RuleEngineImpl::ParseFile: %s", xmlFile.c_str());
     int errorCount = 0;
     // int errorCode = 0;
 
@@ -273,6 +274,7 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
     }
 
     Rule * rule = handler.ReturnFinalObject();
+    smsc_log_debug(logger, "RuleEngineImpl::ParseFile: %s Ok, rule %p", xmlFile.c_str(), rule);
     return rule;
 
 

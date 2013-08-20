@@ -332,6 +332,17 @@ bool MmsMsg::serialize(string& serialized_msg) const {
   }
   doc->normalizeDocument();
 
+#if XERCES_VERSION_MAJOR > 2
+  DOMLSSerializer* serializer = ((DOMImplementationLS*)impl)->createLSSerializer();
+
+  serializer->setNewLine(XStr("\n").unicodeForm());
+
+  DOMConfiguration* dc = serializer->getDomConfig();
+  dc->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+  std::auto_ptr<DOMErrorHandler> handler(new DOMPrintErrorHandler());
+  dc->setParameter(XMLUni::fgDOMErrorHandler, handler.get());
+  XMLCh *str = serializer->writeToString(doc);
+#else
   DOMWriter* serializer = ((DOMImplementationLS*)impl)->createDOMWriter();
 
   serializer->setNewLine(XStr("\n").unicodeForm());
@@ -344,6 +355,8 @@ bool MmsMsg::serialize(string& serialized_msg) const {
   serializer->setErrorHandler(handler.get());
 
   XMLCh *str = serializer->writeToString(*doc);
+#endif
+
   if (str != NULL) {
     Convertor::UCS2ToUTF8(str, XMLString::stringLen(str), serialized_msg);
     serialized_msg.replace(serialized_msg.find(xml::UTF_16), 6, xml::UTF_8);

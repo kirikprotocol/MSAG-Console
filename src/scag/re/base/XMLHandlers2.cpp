@@ -187,26 +187,31 @@ void XMLBasicHandler::setDocumentLocator(const Locator * const locator)
 // ---------------------------------------------------------------------------
 void XMLBasicHandler::error(const SAXParseException& e)
 {
-    StrX fname(e.getSystemId());
-    StrX msg(e.getMessage());
-    //smsc_log_error(logger,"Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
-    throw SCAGException("Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+  commonError(e, "Error");
 }
 
 void XMLBasicHandler::fatalError(const SAXParseException& e)
 {
-    StrX fname(e.getSystemId());
-    StrX msg(e.getMessage());
-    //smsc_log_error(logger,"Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
-    throw SCAGException("Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
-
+  commonError(e, "Fatal Error");
 }
 
 void XMLBasicHandler::warning(const SAXParseException& e)
 {
+  commonError(e, "Warning");
+}
+
+void XMLBasicHandler::commonError(const SAXParseException& e, const char* errType)
+{
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    XMLFileLoc ln = e.getLineNumber();
+    XMLFileLoc cn = e.getColumnNumber();
+    if (*errType == 'W')
+      smsc_log_warn(logger,"%s at file %s, line %u, char %u   Message: %s", errType, fname.localForm(),
+          (unsigned long)ln, (unsigned long)cn, msg.localForm());
+    else
+      throw SCAGException("%s at file %s, line %u, char %u   Message: %s", errType, fname.localForm(),
+          (unsigned long)ln, (unsigned long)cn, msg.localForm());
 }
 
 }}

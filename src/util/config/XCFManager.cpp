@@ -84,7 +84,7 @@ void XCFManager::parseFile(Config & out_cfg, const char * nm_file_abs)
     DOMDocument * document = reader.read(nm_file_abs);
     if (document)
       elem = document->getDocumentElement();
-  } catch (const util::xml::ParseException & exc) {
+  } catch (const util::xml::SmscParseException & exc) {
     throw ConfigException("%s parsing failed: %s", nm_file_abs, exc.what());
   } catch (...) {
     throw ConfigException("%s parsing failed: <unknown exception>", nm_file_abs);

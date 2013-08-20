@@ -44,6 +44,7 @@ Command *CommandReader::read()
   throw (AdminException)
 {
   uint32_t len = readMessageLength();
+  smsc_log_debug(logger, "Received command length:%d", len);
 
   if(len > 10 * 1024 * 1024)
       throw AdminException("Too big message length( more then > 10 Mb)");
@@ -54,7 +55,12 @@ Command *CommandReader::read()
 
   smsc_log_debug(logger, "Received command:\n%s", buf.get());
   // parse message
+#if XERCES_VERSION_MAJOR > 2
+  MemBufInputSource is(buf.get(), len, "received_command.xml");
+#else
   Wrapper4InputSource is(new MemBufInputSource (buf.get(), len, "received_command.xml"));
+#endif
+
   return parseCommand(is);
 }
 
@@ -91,13 +97,18 @@ int CommandReader::getCommandIdByName(const char * const command_name)
   return Command::getCommandIdByName(command_name);
 }
 
-Command* CommandReader::parseCommand(DOMInputSource &source)
+#if XERCES_VERSION_MAJOR > 2
+Command* CommandReader::parseCommand(InputSource& source)
+#else
+Command* CommandReader::parseCommand(DOMInputSource& source)
+#endif
   throw (AdminException)
 {
   try
   {
     smsc::util::xml::DOMTreeReader reader;
     DOMDocument *data = reader.read(source);
+    smsc_log_debug(logger, "DOMDocument %p", data);
 
     std::auto_ptr<char> command_name(getCommandName(data));
     int id = getCommandIdByName(command_name.get());
@@ -112,7 +123,7 @@ Command* CommandReader::parseCommand(DOMInputSource &source)
     if (command) command->init();
     return command;
   }
-  catch (const ParseException &e)
+  catch (const SmscParseException &e)
   {
     smsc_log_warn(logger, "A parse error occured during parsing command: %s", e.what());
     throw AdminException("An errors occured during parsing: %s", e.what());
@@ -120,7 +131,7 @@ Command* CommandReader::parseCommand(DOMInputSource &source)
   catch (const XMLException& e)
   {
     XMLExcepts::Codes code = e.getCode();
-    unsigned int line = e.getSrcLine();
+    unsigned int line = (unsigned int)e.getSrcLine();
     smsc_log_warn(logger, "An error occured during parsing on line %d. Nested: %d: %s", line, code, XmlStr(e.getMessage()).c_str());
     throw AdminException("An errors occured during parsing");
   }

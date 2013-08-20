@@ -73,6 +73,7 @@ class XMLTariffMatrixHandler : public HandlerBase
     void characters(const XMLCh *const chrs, const unsigned int length);
 
 protected:
+    void commonError(const SAXParseException& e, const char* errType);
 
 public:
     XMLTariffMatrixHandler(IntHash<uint32_t>*, IntHash<uint32_t>*, Hash<uint32_t>*, Hash<uint32_t>*, IntHash<TariffRec>*);
@@ -81,9 +82,9 @@ public:
     void startElement(const XMLCh* const qname, AttributeList& attributes);
     void endElement(const XMLCh* const qname);
 
-    void warning(const SAXParseException& exc);
-    void error(const SAXParseException& exc);
-    void fatalError(const SAXParseException& exc);
+    void warning(const SAXParseException& e);
+    void error(const SAXParseException& e);
+    void fatalError(const SAXParseException& e);
 };
 
 class StrX

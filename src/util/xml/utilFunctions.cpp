@@ -74,26 +74,40 @@ const char * const getLocalEncoding()
   return encName;
 }
 
-XmlStr::XmlStr(const XMLCh * const str)
+XmlStr::XmlStr(const XMLCh* const str)
   : cstr(0), xstr(str), xown(false), released(false)
 {
-  const char * const INTERNAL_SMSC_ENCODING = getLocalEncoding();
+  const char* const INTERNAL_SMSC_ENCODING = getLocalEncoding();
   XMLTransService::Codes resValue = XMLTransService::Ok;
-  std::auto_ptr<XMLTranscoder> transcoder(XMLPlatformUtils::fgTransService->makeNewTranscoderFor(INTERNAL_SMSC_ENCODING, resValue, 0x7FFF));
+  std::auto_ptr<XMLTranscoder> transcoder(XMLPlatformUtils::fgTransService->makeNewTranscoderFor(INTERNAL_SMSC_ENCODING, resValue, XMLSize_t(0x7FFF)));
   if (resValue != XMLTransService::Ok)
     throw Exception("could not create transcoder for internal SMSC encoding (\"%s\")", INTERNAL_SMSC_ENCODING);
 
-  unsigned int srcCount = XMLString::stringLen(str);
+#if XERCES_VERSION_MAJOR > 2
+  const XMLSize_t srcCount = XMLString::stringLen(str);
+  XMLSize_t charsEaten = 0;
+  XMLSize_t res = 0;
+  const XMLSize_t ERRVAL = (XMLSize_t)-1;
+#else
+  const unsigned int srcCount = XMLString::stringLen(str);
+  unsigned int charsEaten = 0;
+  unsigned int res = 0;
+  const unsigned int ERRVAL = (unsigned int)-1;
+#endif
+
   smsc::core::buffers::TmpBuf<char,128> tmpbuf;
   tmpbuf.setSize(srcCount*4+16);
   // size_t cstrLen = srcCount*5 + 16;
   // cstr = new char[cstrLen+1];
-  unsigned int dstCount = (unsigned int)tmpbuf.getSize();
-  unsigned int charsEaten = 0;
-  unsigned int res = transcoder->transcodeTo(str, srcCount,
-                                             (unsigned char * const) tmpbuf.get(),
-                                             dstCount, charsEaten, XMLTranscoder::UnRep_RepChar);
-  if (res == (unsigned int) -1)
+#if XERCES_VERSION_MAJOR > 2
+  const XMLSize_t dstCount = tmpbuf.getSize();
+#else
+  const unsigned int dstCount = (unsigned int)tmpbuf.getSize();
+#endif
+
+  res = transcoder->transcodeTo(str, srcCount, (unsigned char * const) tmpbuf.get(), dstCount, charsEaten, XMLTranscoder::UnRep_RepChar);
+
+  if (res == ERRVAL)
     throw Exception("Could not transcode string");
   else if (charsEaten != srcCount) {
       throw Exception("Could not transcode string, input=%u, eaten=%u",srcCount,charsEaten);
@@ -104,23 +118,41 @@ XmlStr::XmlStr(const XMLCh * const str)
   buf[res] = '\0';
 }
 
-XmlStr::XmlStr(const char * const str)
+XmlStr::XmlStr(const char* const str)
   :cstr(str), xstr(0), xown(true), released(false)
 {
-  const char * const INTERNAL_SMSC_ENCODING = getLocalEncoding();
+  const char* const INTERNAL_SMSC_ENCODING = getLocalEncoding();
   XMLTransService::Codes resValue = XMLTransService::Ok;
-  std::auto_ptr<XMLTranscoder> transcoder(XMLPlatformUtils::fgTransService->makeNewTranscoderFor(INTERNAL_SMSC_ENCODING, resValue, 0x7FFF));
+  std::auto_ptr<XMLTranscoder> transcoder(XMLPlatformUtils::fgTransService->makeNewTranscoderFor(INTERNAL_SMSC_ENCODING, resValue, XMLSize_t(0x7FFF)));
   if (resValue != XMLTransService::Ok)
     throw Exception("could not create transcoder for internal SMSC encoding (\"%s\")", INTERNAL_SMSC_ENCODING);
 
-  unsigned int srcCount = XMLString::stringLen(str);
-  size_t xstrLen =srcCount +16;
+#if XERCES_VERSION_MAJOR > 2
+  const XMLSize_t srcCount = XMLString::stringLen(str);
+  XMLSize_t charsEaten = 0;
+  XMLSize_t res = 0;
+  const XMLSize_t ERRVAL = (XMLSize_t)-1;
+#else
+  const unsigned int srcCount = XMLString::stringLen(str);
+  unsigned int charsEaten = 0;
+  unsigned int res = 0;
+  const unsigned int ERRVAL = (unsigned int)-1;
+#endif
+
+  size_t xstrLen = srcCount + 16;
   xstr = new XMLCh[xstrLen+1];
-  unsigned int dstCount = (unsigned int)xstrLen;
-  unsigned int bytesEaten = 0;
+
+#if XERCES_VERSION_MAJOR > 2
+  const XMLSize_t dstCount = (XMLSize_t)xstrLen;
+#else
+  const unsigned int dstCount = (unsigned int)xstrLen;
+#endif
+
   smsc::util::auto_arr_ptr<unsigned char> charSizes(new unsigned char[xstrLen +1]);
-  unsigned int res = transcoder->transcodeFrom((const unsigned char * const) str, srcCount, (XMLCh * const)xstr, dstCount, bytesEaten, (unsigned char * const)charSizes.get());
-  if (res == (unsigned int) -1)
+
+  res = transcoder->transcodeFrom((const unsigned char* const) str, srcCount, (XMLCh* const)xstr, dstCount, charsEaten, (unsigned char* const)charSizes.get());
+
+  if (res == ERRVAL)
     throw Exception("Could not transcode string");
 }
 

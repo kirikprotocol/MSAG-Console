@@ -273,7 +273,7 @@ int configure()
 
       load_config(ConfigView(config, "HttpTransport"));
 
-  } catch (ParseException &e) {
+  } catch (SmscParseException& e) {
       smsc_log_debug(logger,"%s",e.what());
       return 0;
   }catch(ConfigException& e){

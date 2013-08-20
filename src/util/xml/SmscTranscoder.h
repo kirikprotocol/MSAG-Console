@@ -4,6 +4,7 @@
 #define LIBICONV_PLUG EMPTY
 
 #include <iconv.h>
+#include <xercesc/util/XercesVersion.hpp>
 #include <xercesc/util/TransService.hpp>
 
 namespace smsc {
@@ -25,22 +26,30 @@ public:
   // -----------------------------------------------------------------------
   //  Implementation of the virtual transcoder interface
   // -----------------------------------------------------------------------
-  virtual unsigned int transcodeFrom(const XMLByte *const srcData, 
-                                     const unsigned int srcCount, 
-                                     XMLCh *const toFill, 
-                                     const unsigned int maxChars, 
-                                     unsigned int &bytesEaten, 
-                                     unsigned char *const charSizes);
- 
-  virtual unsigned int transcodeTo(const XMLCh *const srcData, 
-                                   const unsigned int srcCount, 
+
+#if XERCES_VERSION_MAJOR > 2
+#define XTYPE XMLSize_t
+#else
+#define XTYPE unsigned int
+#endif
+
+  virtual XTYPE transcodeFrom(const XMLByte *const srcData,
+                                       const XTYPE srcCount,
+                                       XMLCh *const toFill,
+                                       const XTYPE maxChars,
+                                       XTYPE &bytesEaten,
+                                       unsigned char *const charSizes);
+
+  virtual XTYPE transcodeTo(const XMLCh *const srcData,
+                                   const XTYPE srcCount,
                                    XMLByte *const toFill, 
-                                   const unsigned int maxBytes, 
-                                   unsigned int &charsEaten, 
+                                   const XTYPE maxBytes,
+                                   XTYPE &charsEaten,
                                    const UnRepOpts options);
  
-  virtual bool canTranscodeTo(const unsigned int toCheck) const;
+  virtual bool canTranscodeTo(const unsigned int toCheck);
 
+//#undef XTYPE
 
 private:
   // -----------------------------------------------------------------------

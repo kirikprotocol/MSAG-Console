@@ -92,7 +92,7 @@ void ConfigManagerImpl::Init() throw(ConfigException)
       getPersClientConfig_().init(ConfigView(config,"PvssClient"));
     getLongCallManConfig_().init(ConfigView(config, "LongCallManager"));        
     
-  } catch (ParseException &e) {
+  } catch (SmscParseException &e) {
       throw ConfigException(e.what());
   }catch(ConfigException& e){
       throw ConfigException(e.what());
@@ -393,7 +393,7 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
     }
 
 
-    } catch (ParseException &e) {
+    } catch (SmscParseException &e) {
     throw ConfigException(e.what());
   }
 }
