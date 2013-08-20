@@ -879,13 +879,13 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
 
     <target name="-install.extralibs" depends="-update.libs" if="SETUP_MAKE_CXX">
         <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
-            <fileset dir="/" includesfile="./extra_libs.list"/>
-        </copy>
-        <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
-        <symlink action="recreate">
-            <fileset dir="${DISTR_DIR}/lib" includes="extra_lib_links.list"/>
-        </symlink>
-        <delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
+	    <fileset dir="/" includesfile="./extra_libs.list"/>
+	</copy>
+	<copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
+	<symlink action="recreate">
+    	    <fileset dir="${DISTR_DIR}/lib" includes="extra_lib_links.list"/>
+	</symlink>
+	<delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
         <chmod perm="755">
             <fileset dir="${DISTR_DIR}/lib" includes="*.so*"/>
             <fileset dir="${DISTR_DIR}/lib" includes="*.dylib*"/>

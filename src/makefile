@@ -100,7 +100,11 @@ else
 SSL_LIB:=-lssl -lcrypto
 endif
 
+ifdef XERCES_HOME
+XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c.a -licuuc
+else
 XERCES_LIB:=-lxerces-c
+endif
 export XERCES_LIB
 export SHARED_OPT
 export SSL_LIB
@@ -196,6 +200,10 @@ ifeq ($(SNMP),YES)
 COMMON_INCLUDES := -I$(SNMP_BASE)/include $(COMMON_INCLUDES)
 endif
 
+ifneq ("$(XERCES_HOME)","")
+COMMON_INCLUDES := -I$(XERCES_HOME)/include $(COMMON_INCLUDES)
+endif
+
 ifeq ($(SFW),YES)
 COMMON_INCLUDES := $(COMMON_INCLUDES) -I/usr/sfw/include $(USRLOCINC)
 else
@@ -227,6 +235,10 @@ endif
 ifeq ($(USEHOME),YES)
 override LDFLAGS := -L$(HOME)/lib $(LDFLAGS)
 endif
+
+# ifdef XERCES_HOME
+# override LDFLAGS := -L$(XERCES_HOME)/lib $(LDFLAGS)
+# endif
 
 ifneq ($(DBUSINC),)
 override CXXFLAGS := $(CXXFLAGS) $(DBUSINC)

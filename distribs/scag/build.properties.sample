@@ -7,3 +7,8 @@ MAKE_ARGS=B64=YES USECOLORS=YES DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES UNIC
 CATALINA_HOME=/export/home/makar/msag_distr/tomcat
 CATALINA_BASE=/export/home/makar/msag_distr
 TEMPLATE_PROPS=msag.properties
+
+# Xerces 3.1.1 migration: add XERCES_HOME (Xerces install directory, contains /include and /lib)
+#XERCES_HOME=/home/msag_test/ksv/xerces-c-3.1.1/64
+# Niagara make args:
+#MAKE_ARGS=-j8 CXX=CC DEBUG=YES VERBOSE=YES TRACE=YES SNMP=YES DISABLE_SMPP_CHECKS=YES UNICODE=YES MSAG_FAKE_STAT=NO MSAG_INMAN_BILL=NO LEAKTRACE=N

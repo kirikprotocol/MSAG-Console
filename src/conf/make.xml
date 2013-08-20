@@ -7,6 +7,7 @@
   <property name="ORALIB_SUBDIR" value="" />
   <property name="EIN_SS7_LINKAGE" value="dynamic" />
   <property name="targets" value="" />
+  <property name="XERCES_HOME" value="" />  
   <!-- end callers properties -->
 
   <target name="run_make" >
@@ -16,6 +17,7 @@
       <env key="SMSC_BUILDDIR" value="${BUILD_DIR}"/>
       <env key="ORACLE_LIB" value="${env.ORACLE_HOME}/${ORALIB_SUBDIR}"/>
       <env key="EIN_SS7_LINKAGE" value="${EIN_SS7_LINKAGE}"/>
+      <env key="XERCES_HOME" value="${XERCES_HOME}"/>
     </exec>
   </target>
 </project>  
