@@ -57,6 +57,12 @@ SmscTranscoder::~SmscTranscoder()
 {
 }
 
+#if XERCES_VERSION_MAJOR > 2
+#define XTYPE XMLSize_t
+#else
+#define XTYPE unsigned int
+#endif
+
 XTYPE SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
                            const XTYPE srcCount,
                            XMLCh *const toFill,
@@ -112,7 +118,12 @@ XTYPE SmscTranscoder::transcodeTo(const XMLCh *const srcData,
     return 0;
 }
 
+#undef XTYPE
+
 bool SmscTranscoder::canTranscodeTo(const unsigned int toCheck)
+#if XERCES_VERSION_MAJOR < 3
+ const
+#endif
 {
   const XMLCh inbuf[1] = {toCheck};
   size_t inbytesleft = sizeof(XMLCh);

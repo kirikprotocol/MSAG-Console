@@ -28,28 +28,39 @@ public:
   // -----------------------------------------------------------------------
 
 #if XERCES_VERSION_MAJOR > 2
-#define XTYPE XMLSize_t
+  virtual XMLSize_t transcodeFrom(const XMLByte* const srcData,
+                                       const XMLSize_t srcCount,
+                                       XMLCh* const toFill,
+                                       const XMLSize_t maxChars,
+                                       XMLSize_t& bytesEaten,
+                                       unsigned char* const charSizes);
+
+  virtual XMLSize_t transcodeTo(const XMLCh* const srcData,
+                                   const XMLSize_t srcCount,
+                                   XMLByte* const toFill,
+                                   const XMLSize_t maxBytes,
+                                   XMLSize_t& charsEaten,
+                                   const UnRepOpts options);
+
+  virtual bool canTranscodeTo(const unsigned int toCheck);
 #else
-#define XTYPE unsigned int
-#endif
+  virtual unsigned int transcodeFrom(const XMLByte* const srcData,
+                                       const unsigned int srcCount,
+                                       XMLCh* const toFill,
+                                       const unsigned int maxChars,
+                                       unsigned int& bytesEaten,
+                                       unsigned char* const charSizes);
 
-  virtual XTYPE transcodeFrom(const XMLByte *const srcData,
-                                       const XTYPE srcCount,
-                                       XMLCh *const toFill,
-                                       const XTYPE maxChars,
-                                       XTYPE &bytesEaten,
-                                       unsigned char *const charSizes);
-
-  virtual XTYPE transcodeTo(const XMLCh *const srcData,
-                                   const XTYPE srcCount,
-                                   XMLByte *const toFill, 
-                                   const XTYPE maxBytes,
-                                   XTYPE &charsEaten,
+  virtual XMLSize_t transcodeTo(const XMLCh* const srcData,
+                                   const XMLSize_t srcCount,
+                                   XMLByte* const toFill,
+                                   const XMLSize_t maxBytes,
+                                   XMLSize_t& charsEaten,
                                    const UnRepOpts options);
  
-  virtual bool canTranscodeTo(const unsigned int toCheck);
+  virtual bool canTranscodeTo(const unsigned int toCheck) const;
+#endif
 
-//#undef XTYPE
 
 private:
   // -----------------------------------------------------------------------
