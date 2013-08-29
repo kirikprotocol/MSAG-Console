@@ -51,11 +51,11 @@ public:
                                        unsigned int& bytesEaten,
                                        unsigned char* const charSizes);
 
-  virtual XMLSize_t transcodeTo(const XMLCh* const srcData,
-                                   const XMLSize_t srcCount,
+  virtual unsigned int transcodeTo(const XMLCh* const srcData,
+                                   const unsigned int srcCount,
                                    XMLByte* const toFill,
-                                   const XMLSize_t maxBytes,
-                                   XMLSize_t& charsEaten,
+                                   const unsigned int maxBytes,
+                                   unsigned int& charsEaten,
                                    const UnRepOpts options);
  
   virtual bool canTranscodeTo(const unsigned int toCheck) const;
