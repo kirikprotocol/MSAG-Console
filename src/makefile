@@ -100,8 +100,12 @@ else
 SSL_LIB:=-lssl -lcrypto
 endif
 
+ifneq ($(filter-out linux Linux,$(OSNAME)),)
+LIBICUUC:=-licuuc
+endif
+
 ifdef XERCES_HOME
-XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c.a -licuuc
+XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c.so $(LIBICUUC)
 else
 XERCES_LIB:=-lxerces-c
 endif
