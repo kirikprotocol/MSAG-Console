@@ -105,7 +105,7 @@ LIBICUUC:=-licuuc
 endif
 
 ifdef XERCES_HOME
-XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c.so $(LIBICUUC)
+XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c$(SHLIBEXT) $(LIBICUUC)
 else
 XERCES_LIB:=-lxerces-c
 endif
