@@ -507,7 +507,8 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <echo>Building jedit</echo>
         <mkdir dir="${WEBBUILD_DIR}/jedit"/>
         <unjar src="${htmlparser_lib}" dest="${WEBBUILD_DIR}/jedit"/>
-        <javac   srcdir="${JEDIT_DIR}/src"
+        <javac   fork="true"
+        				 srcdir="${JEDIT_DIR}/src"
                  destdir="${WEBBUILD_DIR}/jedit"
                  deprecation="on"
                  includeantruntime="false"
@@ -516,7 +517,9 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
                  encoding="UTF8"
                  source="1.5"
                  target="1.5"
-                 classpath="${WEBBUILD_DIR}/jedit">
+                 classpath="${WEBBUILD_DIR}/jedit"
+					       memoryinitialsize="256m"
+					       memorymaximumsize="1024m">
             <include name="bsh/**/*.java"/>
             <include name="com/microstar/xml/*.java"/>
             <include name="errorlist/*.java"/>
