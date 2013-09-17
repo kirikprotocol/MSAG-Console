@@ -103,6 +103,11 @@ int main( int argc, char* argv[] )
 //    smsc_log_info(logger,  "SCAG configuration is loaded" );
 
         smsc_log_info(logger,  "Starting up %s", getStrVersion());
+#ifdef NOHOSTIDCHECK
+        smsc_log_info(logger,  "No host id check");
+#else
+        smsc_log_info(logger,  "Host id check present");
+#endif
 
         cfgs.checkLicenseFile();
 
