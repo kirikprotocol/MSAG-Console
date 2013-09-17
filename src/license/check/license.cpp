@@ -348,6 +348,11 @@ void gethostid( char* buf, size_t buflen )
 
 bool checkHostIds( const char* hostids )
 {
+// hostid check problem on virtual linux, AWS, etc.
+#ifdef NOHOSTIDCHECK
+    return true;
+#endif
+
     char hostid[200];
     smsc::license::check::gethostid( hostid, sizeof(hostid) );
     for ( const char* p = hostids; *p != '\0'; ) {
