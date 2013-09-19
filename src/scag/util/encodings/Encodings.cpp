@@ -1,6 +1,6 @@
 #include <memory>
 
-#include <iconv.h>
+#include "util/xml/iconv_plug.h"
 #include <util/recoder/recode_dll.h>
 
 #include <core/buffers/Hash.hpp>

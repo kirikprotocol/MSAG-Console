@@ -1,5 +1,5 @@
 #include <string>
-#include <iconv.h>
+#include "util/xml/iconv_plug.h"
 #include "util/Exception.hpp"
 #include "HttpCommand.h"
 #include "HttpParser.h"

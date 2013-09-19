@@ -1,7 +1,7 @@
 #ifndef _INFORMER_UTF8_H
 #define _INFORMER_UTF8_H
 
-#include <iconv.h>
+#include "util/xml/iconv_plug.h"
 #include "TmpBuf.h"
 #include "core/synchronization/Mutex.hpp"
 

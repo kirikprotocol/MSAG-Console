@@ -8,8 +8,7 @@
 #ifndef _IconvRegistry_H
 #define	_IconvRegistry_H
 
-#define LIBICONV_PLUG EMPTY
-#include <iconv.h>
+#include "util/xml/iconv_plug.h"
 
 namespace smsc {
 namespace util {

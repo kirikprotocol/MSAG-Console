@@ -1,9 +1,7 @@
 #ifndef SMSC_UTIL_XML_SMSC_TRANSCODER_HEADER
 #define SMSC_UTIL_XML_SMSC_TRANSCODER_HEADER
 
-#define LIBICONV_PLUG EMPTY
-
-#include <iconv.h>
+#include "util/xml/iconv_plug.h"
 #include <xercesc/util/XercesVersion.hpp>
 #include <xercesc/util/TransService.hpp>
 

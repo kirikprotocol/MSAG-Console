@@ -7,8 +7,8 @@
 
 #define LIBICONV_PLUG FUCK
 #include <stdlib.h>
-#include <iconv.h>
 #include <iostream>
+#include "util/xml/iconv_plug.h"
 
 #include "logger/Logger.h"
 

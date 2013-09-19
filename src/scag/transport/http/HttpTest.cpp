@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
-#include <iconv.h>
+#include "util/xml/iconv_plug.h"
 #include "Managers.h"
 #include "HttpCommand.h"
 #include "HttpProcessor.h"

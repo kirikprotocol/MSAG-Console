@@ -5,9 +5,9 @@
 #include <cassert>
 #include <cstring>
 #include <string>
-#include <iconv.h>
 #include <cerrno>
 #include <stdlib.h>
+#include "util/xml/iconv_plug.h"
 
 namespace {
 
