@@ -106,7 +106,7 @@ DOMDocument* DOMTreeReader::read(const DOMInputSource& source) throw (SmscParseE
     parser->parse(source);
     DOMDocument* result = parser->getDocument();
 #else
-    DOMDocument* result = parser->parse(&source);
+    DOMDocument* result = parser->parse(source);
 #endif
     if (result == NULL)
     {
