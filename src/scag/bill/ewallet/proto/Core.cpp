@@ -86,7 +86,9 @@ void Core::startupIO()
             try {
                 SocketReader* reader = new SocketReader(*this);
                 readers_.push_back( reader );
-                threadPool_.startTask(reader,false);
+                if (!threadPool_.startTask(reader,false)) {
+                    throw smsc::util::Exception("startTask socketreader failed");
+                }
             } catch ( Exception& exc) {
                 stopReaders();
                 throw Exception( Status::IO_ERROR, "Failed to start readers: %s", exc.what());
@@ -101,7 +103,9 @@ void Core::startupIO()
             try {
                 SocketWriter* writer = new SocketWriter(*this);
                 writers_.push_back(writer);
-                threadPool_.startTask(writer,false);
+                if (!threadPool_.startTask(writer,false)) {
+                    throw smsc::util::Exception("startTask socketwriter failed");
+                }
             } catch (Exception& exc) {
                 {
                     MutexGuard mgr(readersMutex_);
