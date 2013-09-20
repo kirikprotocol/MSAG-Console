@@ -294,9 +294,17 @@ void Socket::connect()
 
 Socket::~Socket()
 {
-    // checking precondition!
     smsc_log_info(log_,"socket %p dtor",this);
+
+    // checking precondition!
     MutexGuard mg(queueMon_);
+
+    // If current sending packet is present then we should fail it first (BUG #12653)
+    if (wrContext_.get() != 0) {
+        core_.reportPacket(*this,wrContext_->getSeqNum(),wrContext_->popContext(),
+                           Context::ContextState(Context::FAILED));
+        wrContext_.reset(0);
+    }
     assert( refCount_ == 0 );
     assert( wrContext_.get() == 0 );
     assert( writer_ == 0 );
@@ -313,7 +321,9 @@ void Socket::init()
 void Socket::reportPacket( int state )
 {
     MutexGuard mg(queueMon_);
-    core_.reportPacket(*this,wrContext_->getSeqNum(),wrContext_->popContext(),Context::ContextState(state));
+
+    core_.reportPacket(*this,wrContext_->getSeqNum(),wrContext_->popContext(),
+                       Context::ContextState(state));
     wrContext_.reset(0);
 }
 
