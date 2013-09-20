@@ -104,7 +104,7 @@ ifneq ($(filter-out linux Linux,$(OSNAME)),)
 LIBICUUC:=-licuuc
 endif
 
-ifeq ($(XERCES_HOME),"")
+ifeq ("-$(XERCES_HOME)","-")
 XERCES_LIB:=-lxerces-c
 else
 XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c$(SHLIBEXT) $(LIBICUUC)
@@ -204,7 +204,7 @@ ifeq ($(SNMP),YES)
 COMMON_INCLUDES := -I$(SNMP_BASE)/include $(COMMON_INCLUDES)
 endif
 
-ifneq ("$(XERCES_HOME)","")
+ifneq ("-$(XERCES_HOME)","-")
 COMMON_INCLUDES := -I$(XERCES_HOME)/include $(COMMON_INCLUDES)
 endif
 
@@ -240,7 +240,7 @@ ifeq ($(USEHOME),YES)
 override LDFLAGS := -L$(HOME)/lib $(LDFLAGS)
 endif
 
-# ifneq ($(XERCES_HOME),"")
+# ifneq ("-$(XERCES_HOME)","-")
 # override LDFLAGS := -L$(XERCES_HOME)/lib $(LDFLAGS)
 # endif
 
