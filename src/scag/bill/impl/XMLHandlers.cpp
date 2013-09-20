@@ -422,8 +422,15 @@ void XMLTariffMatrixHandler::commonError(const SAXParseException& e, const char*
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    XMLFileLoc ln = e.getLineNumber();
-    XMLFileLoc cn = e.getColumnNumber();
+
+#if XERCES_VERSION_MAJOR > 2
+    XMLFileLoc ln=0, cn=0;
+#else
+    XMLSSize_t ln=0, cn=0;
+#endif
+    ln = e.getLineNumber();
+    cn = e.getColumnNumber();
+
     if (*errType == 'W')
       smsc_log_warn(logger,"%s at file %s, line %u, char %u   Message: %s", errType, fname.localForm(),
           (unsigned long)ln, (unsigned long)cn, msg.localForm());
