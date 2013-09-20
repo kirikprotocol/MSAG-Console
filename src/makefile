@@ -104,10 +104,10 @@ ifneq ($(filter-out linux Linux,$(OSNAME)),)
 LIBICUUC:=-licuuc
 endif
 
-ifdef XERCES_HOME
-XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c$(SHLIBEXT) $(LIBICUUC)
-else
+ifeq ($(XERCES_HOME),"")
 XERCES_LIB:=-lxerces-c
+else
+XERCES_LIB:=-L$(XERCES_HOME)/lib $(XERCES_HOME)/lib/libxerces-c$(SHLIBEXT) $(LIBICUUC)
 endif
 export XERCES_LIB
 export SHARED_OPT
@@ -240,7 +240,7 @@ ifeq ($(USEHOME),YES)
 override LDFLAGS := -L$(HOME)/lib $(LDFLAGS)
 endif
 
-# ifdef XERCES_HOME
+# ifneq ($(XERCES_HOME),"")
 # override LDFLAGS := -L$(XERCES_HOME)/lib $(LDFLAGS)
 # endif
 
