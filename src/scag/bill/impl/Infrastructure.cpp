@@ -155,7 +155,7 @@ void InfrastructureImpl::ReloadTariffMatrix()
     util::HRTiming hr(res);
     hr.reset(res);
 
-    smsc_log_info(logger, "ReloadTariffMatrix Started");
+    smsc_log_info(logger, "ReloadTariffMatrix Started: %s", TariffMatrixFile.c_str());
 
     IntHash<uint32_t> *cat_hash = new IntHash<uint32_t>();
     IntHash<uint32_t> *mt_hash = new IntHash<uint32_t>();

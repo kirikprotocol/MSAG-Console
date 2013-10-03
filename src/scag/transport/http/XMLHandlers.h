@@ -11,6 +11,7 @@
 #include <logger/Logger.h>
 
 #include "RouterTypes.h"
+#include "util/xml/XercesMigration.h"
 
 namespace scag { namespace transport { namespace http {
 
@@ -43,7 +44,7 @@ class XMLBasicHandler : public HandlerBase
     bool route_enabled;
     bool in_sites, in_abonents, in_options;
 
-    void characters(const XMLCh *const chars, const unsigned int length);
+    void characters(const XMLCh *const chars, const XERCES_UINT length);
 
     void insertPlacement(PlacementArray* pa, const Placement& p);
     Placement assignPlacement(const std::string& rid, AttributeList& attrs, bool req);

@@ -6,6 +6,7 @@
 #include "XMLHandlers.h"
 #include <locale.h>
 #include "sms/sms.h"
+#include "util/xml/XercesMigration.h"
 
 namespace scag2 {
 namespace bill {
@@ -68,7 +69,7 @@ XMLBasicHandler::XMLBasicHandler(Hash<uint32_t> *h)
     type = 1;
 }
 
-void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
+void XMLBasicHandler::characters(const XMLCh* const chars, const XERCES_UINT length)
 {
     uint32_t cnt = length;
     if(type == 1 && in_mask)
@@ -220,7 +221,7 @@ static double str_to_double(char* str)
 }
 */
 
-void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned int length) 
+void XMLTariffMatrixHandler::characters(const XMLCh* const chrs, const XERCES_UINT length)
 {
     uint32_t cnt = length;
 
@@ -246,12 +247,14 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
         bill_price = str;
     else if(bill_tag == 7)
         bill_currency = str;
+//    smsc_log_debug(logger,"characters: '%s' length %d media_type_tag %d media_type_name '%s'", str, cnt, media_type_tag, media_type_name.c_str());
 }
 
 void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 {
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
+//    smsc_log_debug(logger,"startElement: '%s'", qname);
 
     for( size_t i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == category_tags[i].top_tag)
@@ -315,6 +318,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
     uint32_t mt, cat;
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
+//    smsc_log_debug(logger,"endElement: '%s'", qname);
 
     for( size_t i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == i)
@@ -327,7 +331,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
 
                 category_str_hash->Insert(category_name.c_str(), category_id);
 
-                smsc_log_debug(logger,"end_category: store %d, %s", category_id, category_name.c_str());
+//                smsc_log_debug(logger,"end_category: store %d, %s", category_id, category_name.c_str());
                 category_id = 0;
                 category_name = "";
             }
@@ -339,12 +343,13 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             media_type_tag = media_type_tags[i].top_tag;
             if(i == 1)
             {
+//              smsc_log_debug(logger,"end_media_type: %d, '%s'", media_type_id, media_type_name.c_str());
                 if(!media_type_id || media_type_name.length() == 0)
                     throw Exception("Invalid XML 'media_type' record");
            
                 media_type_str_hash->Insert(media_type_name.c_str(), media_type_id);
 
-                smsc_log_debug(logger,"end_media_type: store %d, %s", media_type_id, media_type_name.c_str());
+//                smsc_log_debug(logger,"end_media_type: store %d, %s", media_type_id, media_type_name.c_str());
                 media_type_id = 0;
                 media_type_name = "";
             }
@@ -384,7 +389,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                  */
                 const uint32_t id = TariffRec::makeHashKeyChecked(cat,mt,bill_operator_id);
 
-                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%s, price:%s, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d, bill_type: %d", bill_category_id, bill_media_type_id, bill_service_number.c_str(), bill_price.c_str(), bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx, bill_type);
+//                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%s, price:%s, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d, bill_type: %d", bill_category_id, bill_media_type_id, bill_service_number.c_str(), bill_price.c_str(), bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx, bill_type);
 
                 tariff_hash->Insert(id, tr);
 
@@ -423,13 +428,8 @@ void XMLTariffMatrixHandler::commonError(const SAXParseException& e, const char*
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
 
-#if XERCES_VERSION_MAJOR > 2
-    XMLFileLoc ln=0, cn=0;
-#else
-    XMLSSize_t ln=0, cn=0;
-#endif
-    ln = e.getLineNumber();
-    cn = e.getColumnNumber();
+    XERCES_FILELOC ln = e.getLineNumber();
+    XERCES_FILELOC cn = e.getColumnNumber();
 
     if (*errType == 'W')
       smsc_log_warn(logger,"%s at file %s, line %u, char %u   Message: %s", errType, fname.localForm(),

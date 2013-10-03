@@ -136,7 +136,7 @@ XMLBasicHandler::~XMLBasicHandler()
 {
 }
 
-void XMLBasicHandler::characters(const XMLCh* const chars, const unsigned int length)
+void XMLBasicHandler::characters(const XMLCh* const chars, const XERCES_UINT length)
 {
     // empty
 }

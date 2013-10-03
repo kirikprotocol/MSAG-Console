@@ -16,6 +16,7 @@
 #include "Rule2.h"
 #include "ActionFactory2.h"
 #include "logger/Logger.h"
+#include "util/xml/XercesMigration.h"
 
 
 namespace scag2 {
@@ -61,7 +62,7 @@ class XMLBasicHandler : public HandlerBase
     const Locator * m_pLocator;
     Logger * logger;
 
-    void characters(const XMLCh* const chars, const unsigned int length);
+    void characters(const XMLCh* const chars, const XERCES_UINT length);
 
 protected:
     void commonError(const SAXParseException& e, const char* errType);

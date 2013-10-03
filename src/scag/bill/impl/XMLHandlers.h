@@ -10,6 +10,7 @@
 #include <core/buffers/IntHash.hpp>
 #include <logger/Logger.h>
 #include "scag/bill/base/Infrastructure.h"
+#include "util/xml/XercesMigration.h"
 
 namespace scag2 {
 namespace bill {
@@ -34,7 +35,7 @@ class XMLBasicHandler : public HandlerBase
     XMLCh mask_chars[200];
     uint32_t mask_len;
 
-    void characters(const XMLCh *const chars, const unsigned int length);
+    void characters(const XMLCh* const chars, const XERCES_UINT length);
 
 protected:
     void ProviderMapStartElement(const char* qname, AttributeList& attrs);
@@ -70,8 +71,6 @@ class XMLTariffMatrixHandler : public HandlerBase
     std::string bill_price;
     std::string bill_currency, bill_service_number;
 
-    void characters(const XMLCh *const chrs, const unsigned int length);
-
 protected:
     void commonError(const SAXParseException& e, const char* errType);
 
@@ -79,6 +78,7 @@ public:
     XMLTariffMatrixHandler(IntHash<uint32_t>*, IntHash<uint32_t>*, Hash<uint32_t>*, Hash<uint32_t>*, IntHash<TariffRec>*);
     ~XMLTariffMatrixHandler() {};
 
+    void characters(const XMLCh* const chrs, const XERCES_UINT length);
     void startElement(const XMLCh* const qname, AttributeList& attributes);
     void endElement(const XMLCh* const qname);
 

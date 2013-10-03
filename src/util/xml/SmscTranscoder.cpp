@@ -57,17 +57,11 @@ SmscTranscoder::~SmscTranscoder()
 {
 }
 
-#if XERCES_VERSION_MAJOR > 2
-#define XTYPE XMLSize_t
-#else
-#define XTYPE unsigned int
-#endif
-
-XTYPE SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
-                           const XTYPE srcCount,
+XERCES_UINT SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
+                           const XERCES_UINT srcCount,
                            XMLCh *const toFill,
-                           const XTYPE maxChars,
-                           XTYPE &bytesEaten,
+                           const XERCES_UINT maxChars,
+                           XERCES_UINT &bytesEaten,
                            unsigned char *const charSizes)
 {
   size_t inbytesleft = srcCount;
@@ -91,16 +85,16 @@ XTYPE SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
   }
   if (((XMLCh*)outbuf) < toFill + maxChars)
     *(XMLCh*)outbuf = 0;
-  bytesEaten = (XTYPE)(srcCount - inbytesleft);
+  bytesEaten = (XERCES_UINT)(srcCount - inbytesleft);
   size_t result = maxChars - outbytesleft/sizeof(XMLCh);
-  return (XTYPE)result;
+  return (XERCES_UINT)result;
 }
 
-XTYPE SmscTranscoder::transcodeTo(const XMLCh *const srcData,
-                         const XTYPE srcCount,
+XERCES_UINT SmscTranscoder::transcodeTo(const XMLCh *const srcData,
+                         const XERCES_UINT srcCount,
                          XMLByte *const toFill,
-                         const XTYPE maxBytes,
-                         XTYPE &charsEaten,
+                         const XERCES_UINT maxBytes,
+                         XERCES_UINT &charsEaten,
                          const UnRepOpts options)
 {
   size_t inbytesleft = srcCount*sizeof(XMLCh);
@@ -111,14 +105,12 @@ XTYPE SmscTranscoder::transcodeTo(const XMLCh *const srcData,
   if (ret != (size_t)-1) {
     if ((XMLByte*)outbuf < toFill + maxBytes)
       *outbuf = 0;
-    charsEaten = (XTYPE)(srcCount - inbytesleft/sizeof(XMLCh));
-    return (XTYPE)(maxBytes - outbytesleft);
+    charsEaten = (XERCES_UINT)(srcCount - inbytesleft/sizeof(XMLCh));
+    return (XERCES_UINT)(maxBytes - outbytesleft);
   }
   else
     return 0;
 }
-
-#undef XTYPE
 
 bool SmscTranscoder::canTranscodeTo(const unsigned int toCheck)
 #if XERCES_VERSION_MAJOR < 3

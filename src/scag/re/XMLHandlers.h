@@ -14,6 +14,7 @@
 #include <core/buffers/Array.hpp>
 #include <acls/interfaces.h>
 #include "scag/re/Rule.h"
+#include "util/xml/XercesMigration.h"
 
 
 namespace scag { namespace re { 
@@ -59,7 +60,7 @@ class XMLBasicHandler : public HandlerBase
     const Locator * m_pLocator;
     Logger * logger;
 
-    void characters(const XMLCh* const chars, const unsigned int length);
+    void characters(const XMLCh* const chars, const XERCES_UINT length);
 
 protected:
 public:

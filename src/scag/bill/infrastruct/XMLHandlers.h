@@ -9,6 +9,7 @@
 
 #include <core/buffers/IntHash.hpp>
 #include <logger/Logger.h>
+#include "util/xml/XercesMigration.h"
 
 namespace scag { namespace bill { namespace infrastruct {
 
@@ -64,7 +65,7 @@ class XMLBasicHandler : public HandlerBase
     XMLCh mask_chars[200];
     uint32_t mask_len;
 
-    void characters(const XMLCh *const chars, const unsigned int length);
+    void characters(const XMLCh *const chars, const XERCES_UINT length);
 
 protected:
     void ProviderMapStartElement(const char* qname, AttributeList& attrs);
@@ -100,7 +101,7 @@ class XMLTariffMatrixHandler : public HandlerBase
     double bill_price;
     std::string bill_currency, bill_service_number;
 
-    void characters(const XMLCh *const chrs, const unsigned int length);
+    void characters(const XMLCh *const chrs, const XERCES_UINT length);
 
 protected:
 

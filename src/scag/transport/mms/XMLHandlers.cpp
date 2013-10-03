@@ -163,7 +163,7 @@ void XMLHandler::startElementGenericResp(const char* name, Hash<std::string>& at
   }
 }
 
-void XMLHandler::characters(const XMLCh* const ch, const unsigned int len) {
+void XMLHandler::characters(const XMLCh* const ch, const XERCES_UINT len) {
   string value;
   //XMLString::trim(ch);
   Convertor::UCS2ToUTF8(ch, len, value);

@@ -110,6 +110,13 @@ void ServerCore::checkLicenseFile()
         }
         licenseFileTime_ = st.st_mtime;
         nextLicenseTime_ = now + 600;
+
+        if ( !smsc::license::check::checkHostIds(licenseHash["Hostids"].c_str()) ) {
+          what = "invalid license.";
+          break;
+//          throw std::runtime_error("code 1");
+        }
+
         return;
 
     } while ( false );

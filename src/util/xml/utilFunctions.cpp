@@ -7,6 +7,7 @@
 #include <util/Exception.hpp>
 #include "core/buffers/TmpBuf.hpp"
 #include "util/AutoArrPtr.hpp"
+#include "util/xml/XercesMigration.h"
 
 namespace smsc {
 namespace util {
@@ -83,27 +84,16 @@ XmlStr::XmlStr(const XMLCh* const str)
   if (resValue != XMLTransService::Ok)
     throw Exception("could not create transcoder for internal SMSC encoding (\"%s\")", INTERNAL_SMSC_ENCODING);
 
-#if XERCES_VERSION_MAJOR > 2
-  const XMLSize_t srcCount = XMLString::stringLen(str);
-  XMLSize_t charsEaten = 0;
-  XMLSize_t res = 0;
-  const XMLSize_t ERRVAL = (XMLSize_t)-1;
-#else
-  const unsigned int srcCount = XMLString::stringLen(str);
-  unsigned int charsEaten = 0;
-  unsigned int res = 0;
-  const unsigned int ERRVAL = (unsigned int)-1;
-#endif
+  const XERCES_UINT srcCount = XMLString::stringLen(str);
+  XERCES_UINT charsEaten = 0;
+  XERCES_UINT res = 0;
+  const XERCES_UINT ERRVAL = (XERCES_UINT)-1;
 
   smsc::core::buffers::TmpBuf<char,128> tmpbuf;
   tmpbuf.setSize(srcCount*4+16);
   // size_t cstrLen = srcCount*5 + 16;
   // cstr = new char[cstrLen+1];
-#if XERCES_VERSION_MAJOR > 2
-  const XMLSize_t dstCount = tmpbuf.getSize();
-#else
-  const unsigned int dstCount = (unsigned int)tmpbuf.getSize();
-#endif
+  const XERCES_UINT dstCount = (XERCES_UINT)tmpbuf.getSize();
 
   res = transcoder->transcodeTo(str, srcCount, (unsigned char * const) tmpbuf.get(), dstCount, charsEaten, XMLTranscoder::UnRep_RepChar);
 
@@ -127,26 +117,15 @@ XmlStr::XmlStr(const char* const str)
   if (resValue != XMLTransService::Ok)
     throw Exception("could not create transcoder for internal SMSC encoding (\"%s\")", INTERNAL_SMSC_ENCODING);
 
-#if XERCES_VERSION_MAJOR > 2
-  const XMLSize_t srcCount = XMLString::stringLen(str);
-  XMLSize_t charsEaten = 0;
-  XMLSize_t res = 0;
-  const XMLSize_t ERRVAL = (XMLSize_t)-1;
-#else
-  const unsigned int srcCount = XMLString::stringLen(str);
-  unsigned int charsEaten = 0;
-  unsigned int res = 0;
-  const unsigned int ERRVAL = (unsigned int)-1;
-#endif
+  const XERCES_UINT srcCount = XMLString::stringLen(str);
+  XERCES_UINT charsEaten = 0;
+  XERCES_UINT res = 0;
+  const XERCES_UINT ERRVAL = (XERCES_UINT)-1;
 
   size_t xstrLen = srcCount + 16;
   xstr = new XMLCh[xstrLen+1];
 
-#if XERCES_VERSION_MAJOR > 2
-  const XMLSize_t dstCount = (XMLSize_t)xstrLen;
-#else
-  const unsigned int dstCount = (unsigned int)xstrLen;
-#endif
+  const XERCES_UINT dstCount = (XERCES_UINT)xstrLen;
 
   smsc::util::auto_arr_ptr<unsigned char> charSizes(new unsigned char[xstrLen +1]);
 

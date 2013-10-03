@@ -12,6 +12,7 @@
 #include "logger/Logger.h"
 #include "MmsMsg.h"
 #include "MmsRouterTypes.h"
+#include "util/xml/XercesMigration.h"
 
 namespace scag{
 namespace transport{
@@ -37,7 +38,7 @@ public:
   ~XMLHandler();
   void startElement(const XMLCh* const qname, AttributeList& attributes);
   void endElement(const XMLCh* const qname);
-  void characters(const XMLCh* const ch, const unsigned int len);
+  void characters(const XMLCh* const ch, const XERCES_UINT len);
   void warning(const SAXParseException& exc);
   void error(const SAXParseException& exc);
   void fatalError(const SAXParseException& exc);

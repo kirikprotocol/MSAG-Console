@@ -66,7 +66,7 @@ XMLBasicHandler::XMLBasicHandler(Hash<uint32_t> *h)
     type = 1;
 }
 
-void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
+void XMLBasicHandler::characters(const XMLCh *const chars, const XERCES_UINT length)
 {
     uint32_t cnt = length;
     if(type == 1 && in_mask)
@@ -216,7 +216,7 @@ static double str_to_double(char* str)
     return (j == '-') ? -(d + f) : (d + f);
 }
 
-void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned int length) 
+void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const XERCES_UINT length)
 {
     uint32_t cnt = length;
 
@@ -333,7 +333,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             if(i == 1)
             {
                 if(!media_type_id || media_type_name.length() == 0)
-                    throw Exception("Invalid XML 'media_type' record");
+                    throw Exception("Invalid XML 'media_type' record..");
            
                 media_type_str_hash->Insert(media_type_name.c_str(), media_type_id);
 

@@ -4,6 +4,7 @@
 #include "util/xml/iconv_plug.h"
 #include <xercesc/util/XercesVersion.hpp>
 #include <xercesc/util/TransService.hpp>
+#include "util/xml/XercesMigration.h"
 
 namespace smsc {
 namespace util {
@@ -25,6 +26,29 @@ public:
   //  Implementation of the virtual transcoder interface
   // -----------------------------------------------------------------------
 
+  virtual XERCES_UINT transcodeFrom(const XMLByte* const srcData,
+                                   const XERCES_UINT srcCount,
+                                   XMLCh* const toFill,
+                                   const XERCES_UINT maxChars,
+                                   XERCES_UINT& bytesEaten,
+                                   unsigned char* const charSizes);
+
+  virtual XERCES_UINT transcodeTo(const XMLCh* const srcData,
+                                   const XERCES_UINT srcCount,
+                                   XMLByte* const toFill,
+                                   const XERCES_UINT maxBytes,
+                                   XERCES_UINT& charsEaten,
+                                   const UnRepOpts options);
+
+  virtual bool canTranscodeTo(const unsigned int toCheck)
+#if XERCES_VERSION_MAJOR > 2
+  ;
+#else
+  const;
+#endif
+
+
+/*
 #if XERCES_VERSION_MAJOR > 2
   virtual XMLSize_t transcodeFrom(const XMLByte* const srcData,
                                        const XMLSize_t srcCount,
@@ -58,7 +82,7 @@ public:
  
   virtual bool canTranscodeTo(const unsigned int toCheck) const;
 #endif
-
+*/
 
 private:
   // -----------------------------------------------------------------------

@@ -11,6 +11,7 @@
 #include <logger/Logger.h>
 
 #include "PersSocketServer.h"
+#include "util/xml/XercesMigration.h"
 
 namespace scag { namespace cpers {
 
@@ -48,7 +49,7 @@ class XMLBasicHandler : public HandlerBase
     Logger * logger;
     smsc::core::buffers::IntHash<RegionInfo> *regionHash;
 
-    void characters(const XMLCh *const chars, const unsigned int length);
+    void characters(const XMLCh *const chars, const XERCES_UINT length);
 
 protected:
 
