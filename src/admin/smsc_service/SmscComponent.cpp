@@ -1696,15 +1696,15 @@ void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
   if (args.Exists("schedlimit"))
     smeInfo.schedlimit        = (uint32_t)args.Get("schedlimit").getLongValue();
   const char * const mode = args.Get("mode").getStringValue();
-  if (stricmp(mode,  "tx") == 0)
+  if (strcasecmp(mode,  "tx") == 0)
   {
     smeInfo.bindMode = smeTX;
   }
-  else if (stricmp(mode, "rx") == 0)
+  else if (strcasecmp(mode, "rx") == 0)
   {
     smeInfo.bindMode = smeRX;
   }
-  else if (stricmp(mode, "trx") == 0)
+  else if (strcasecmp(mode, "trx") == 0)
   {
     smeInfo.bindMode = smeTRX;
   }

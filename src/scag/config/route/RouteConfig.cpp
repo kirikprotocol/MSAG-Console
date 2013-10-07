@@ -162,9 +162,9 @@ const char * const deliveryModeToStr(const uint8_t deliveryMode)
 
 /*const scag::transport::smpp::router::ReplyPath strToReplyPath(const char * const replyPathStr)
 {
-  if (::stricmp("pass", replyPathStr) == 0)     return scag::transport::smpp::router::ReplyPathPass;
-  if (::stricmp("force", replyPathStr) == 0)    return scag::transport::smpp::router::ReplyPathForce;
-  if (::stricmp("SUPPRESS", replyPathStr) == 0) return scag::transport::smpp::router::ReplyPathSuppress;
+  if (::strcasecmp("pass", replyPathStr) == 0)     return scag::transport::smpp::router::ReplyPathPass;
+  if (::strcasecmp("force", replyPathStr) == 0)    return scag::transport::smpp::router::ReplyPathForce;
+  if (::strcasecmp("SUPPRESS", replyPathStr) == 0) return scag::transport::smpp::router::ReplyPathSuppress;
   return scag::transport::smpp::router::ReplyPathPass;
 }
 

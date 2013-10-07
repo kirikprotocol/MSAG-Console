@@ -143,11 +143,11 @@ throw (SubjectNotFoundException)
 
 const uint8_t strToDeliveryMode(const char * const deliveryModeStr)
 {
-  if (::stricmp("store", deliveryModeStr) == 0)
+  if (::strcasecmp("store", deliveryModeStr) == 0)
     return smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE;
-  if (::stricmp("forward", deliveryModeStr) == 0)
+  if (::strcasecmp("forward", deliveryModeStr) == 0)
     return smsc::sms::SMSC_TRANSACTION_MSG_MODE;
-  if (::stricmp("datagram", deliveryModeStr) == 0)
+  if (::strcasecmp("datagram", deliveryModeStr) == 0)
     return smsc::sms::SMSC_DATAGRAM_MSG_MODE;
   return smsc::sms::SMSC_DEFAULT_MSG_MODE;
 }
@@ -169,9 +169,9 @@ const char * const deliveryModeToStr(const uint8_t deliveryMode)
 
 const smsc::router::ReplyPath strToReplyPath(const char * const replyPathStr)
 {
-  if (::stricmp("pass", replyPathStr) == 0)     return smsc::router::ReplyPathPass;
-  if (::stricmp("force", replyPathStr) == 0)    return smsc::router::ReplyPathForce;
-  if (::stricmp("SUPPRESS", replyPathStr) == 0) return smsc::router::ReplyPathSuppress;
+  if (::strcasecmp("pass", replyPathStr) == 0)     return smsc::router::ReplyPathPass;
+  if (::strcasecmp("force", replyPathStr) == 0)    return smsc::router::ReplyPathForce;
+  if (::strcasecmp("SUPPRESS", replyPathStr) == 0) return smsc::router::ReplyPathSuppress;
   return smsc::router::ReplyPathPass;
 }
 
